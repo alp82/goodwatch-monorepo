@@ -1,5 +1,15 @@
 """Social-owned tables, also registered in the repository's central Crate schema."""
 SOCIAL_SCHEMAS = {
+    'social_relevance': {
+        'columns': {
+            'media_type': 'TEXT', 'media_tmdb_id': 'BIGINT', 'post_id': 'TEXT',
+            'version': 'TEXT', 'content_hash': 'TEXT',
+            'status': "TEXT CHECK (status IN ('keep','drop'))",
+            'kind': "TEXT CHECK (kind IN ('official_video','review','news','interview','social'))",
+            'score': 'DOUBLE', 'dup_group': 'TEXT', 'reasons': 'ARRAY(TEXT)', 'judged_at': 'TIMESTAMP',
+        },
+        'primary_key': ['media_type', 'media_tmdb_id', 'post_id'], 'shards': 1, 'replicas': '0-1', 'timestamps': False,
+    },
     'social_content_quality': {
         'columns': {
             'post_id': 'TEXT', 'content_hash': 'TEXT', 'version': 'TEXT',

@@ -8,13 +8,16 @@ layout chosen in [#542](https://github.com/alp82/goodwatch-monorepo/issues/542) 
 
 Between the fingerprint and About: one large video and a feed beside it.
 
-- **Lead:** the newest wide YouTube video (a Short only when there is no wide one). Several videos get a strip to
-  switch the lead. A title without a video leads with its newest headline over its backdrop.
+- **What shows:** only links judged worth showing (`doc.social_relevance`, see [relevance](../relevance/README.md)),
+  best-ranked first, one of each duplicate group.
+- **Lead:** the best-ranked wide YouTube video (a Short only when there is no wide one). Several videos get a strip to
+  switch the lead. A title without a video leads with its best-ranked headline over its backdrop.
 - **Feed:** Bluesky and Mastodon posts, six at first. Without posts the headlines are the feed; with posts the other
   headlines go under the lead ("More headlines").
 - **Line under the heading:** the Wikipedia lift when the title is in the day's buzz top 20 (`doc.buzz_snapshot`,
   #555), naming the source and the day, and how many items the last 30 days brought.
-- **Hidden** when the title has no visible posts, or the tables are missing or empty.
+- **Hidden** when the title has no visible posts judged worth showing, or the tables (the relevance table too) are
+  missing or empty.
 - **"Wrong title?"** on every item: the item goes at once, `POST /api/social/wrong-title` records the report, and the
   next read leaves the link out for everyone.
 
@@ -67,8 +70,9 @@ check the flag again: off answers an empty section and refuses reports with 404.
 ## Data
 
 `server/talked-about-now/social-store.server.ts` runs #556's reference read (`Store.read_title`) and report
-(`Store.report`) over `doc.social_post`, `doc.social_title_link` and `doc.social_link_report`. A missing table or
-schema reads as nothing. The read is cached per title for 5 minutes (`talked-about-now-title-v1`, reset-guarded);
+(`Store.report`) over `doc.social_post`, `doc.social_title_link` and `doc.social_link_report`, with the content-quality
+gate (`contentQualityJoin`) and the relevance gate (`relevanceJoin`) as inner joins, ranked by the relevance score. A
+missing table or schema reads as nothing. The read is cached per title for 5 minutes (`talked-about-now-title-v1`, reset-guarded);
 a report resets that entry before it answers. A surface with its own cache of posts adds its reset to `afterReport`
 in `title-social.server.ts`.
 
@@ -85,8 +89,10 @@ Two settings for development only (ignored when `NODE_ENV=production`):
   from a dev machine.
 - `SOCIAL_FIXTURE=<path>`: the rows come from a JSON file. `fixture.json` here holds real public posts about
   Resident Evil (movie 1423191) from the #542 prototype, including a Short and a Mastodon post; its times move so
-  that the newest post is two hours old. Its `quality` rows are the posts' passing content-quality verdicts: the fixture store
-  applies the same gate as the Crate read, so a post without one doesn't show.
+  that the newest post is two hours old. Its `quality` rows are the posts' passing content-quality verdicts and its
+  `relevance` rows the links' relevance verdicts: the fixture store applies the same gates as the Crate read, so a post
+  without a pass or a link without a `keep` doesn't show. `../relevance/fixture.json` holds the start page's board of
+  15 October 2026.
 
 Neither reaches the data cache. A dev server for the real pages without Valkey and without `APP_ORIGIN`:
 

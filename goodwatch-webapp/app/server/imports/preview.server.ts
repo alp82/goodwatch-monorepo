@@ -9,7 +9,22 @@ import type {
 	ParsedImport,
 } from "~/domain/imports"
 import { canonicalTitleId } from "~/utils/title-identity"
-import { parseImportFile } from "./files.server.ts"
+import {
+	IMPORT_MAX_ROWS,
+	canImportWantToSee,
+	isApplicableStatus,
+} from "../../domain/imports.ts"
+import { PROTECTED_STATES } from "../../domain/tracking/machine.ts"
+import type {
+	ImportStatusItem,
+	ImportTrackingPlan,
+} from "../tracking.server.ts"
+import {
+	createCatalogAnimeLookup,
+	resolveAnimeParent,
+} from "./anime-mapping-data.server.ts"
+import { createCatalogEpisodeResolver } from "./episode-resolver-data.server.ts"
+import { ImportFileError, parseImportFile } from "./files.server.ts"
 import {
 	type Param,
 	chunks,
@@ -21,7 +36,6 @@ import {
 	select,
 	summarize,
 } from "./store.server.ts"
-import { prepareImportTrackingPlan } from "./tracking.server.ts"
 
 const key = (type: "movie" | "show", id: number) => `${type}:${id}`
 type CatalogRow = {
@@ -32,6 +46,28 @@ type CatalogRow = {
 }
 
 async function matchCatalog(source: ImportSource, rows: ImportObservation[]) {
+	const animeMappings = createCatalogAnimeLookup()
+	// Tracker identities locate the parent; episode placement is validated separately below.
+	for (const row of rows) {
+		if (row.animeEntry && (row.kind === "rating" || row.kind === "review")) {
+			row.problem = {
+				outcome: "unsupported",
+				reason:
+					"Anime cour ratings and reviews cannot be applied to the whole show.",
+			}
+			continue
+		}
+		if (
+			!row.animeEntry ||
+			row.problem ||
+			row.mediaType !== "show" ||
+			row.tmdbId != null
+		)
+			continue
+		const parent = await resolveAnimeParent(row.animeEntry, animeMappings)
+		if (parent.status === "matched") row.tmdbId = parent.mapping.showId
+		else row.problem = { outcome: "unmatched", reason: parent.reason }
+	}
 	const found = new Map<
 		number,
 		{ tmdbId: number; mediaType: "movie" | "show" }
@@ -86,7 +122,7 @@ async function matchCatalog(source: ImportSource, rows: ImportObservation[]) {
 		}
 		// Letterboxd has no stable ID in some CSVs. Exact title and year is the sole safe fallback.
 		const titleMatches = new Map<string, CatalogRow[]>()
-		if (source === "letterboxd")
+		if (source === "letterboxd" || source === "csv")
 			for (const x of typed) {
 				if (found.has(x.index) || x.row.year === null || !x.row.title.trim())
 					continue
@@ -106,60 +142,40 @@ async function matchCatalog(source: ImportSource, rows: ImportObservation[]) {
 					})
 			}
 	}
-	// An episode is accepted only when it belongs to the matched show. TMDB ID wins; season/number is a fallback
-	// only when it identifies exactly one current catalog episode.
-	const shows = [
-		...new Set(
-			rows
-				.map((row, index) => ({ row, index }))
-				.filter(
-					(x) =>
-						found.get(x.index)?.mediaType === "show" &&
-						(x.row.episodeTmdbId != null ||
-							x.row.season != null ||
-							x.row.episode != null),
-				)
-				.flatMap((x) => {
-					const match = found.get(x.index)
-					return match ? [match.tmdbId] : []
-				}),
-		),
-	]
-	for (const showId of shows) {
-		const episodes = await select<{
-			tmdb_id: number
-			season_number: number
-			episode_number: number
-		}>(
-			"SELECT tmdb_id, season_number, episode_number FROM episode WHERE show_id = ? AND removed_at IS NULL LIMIT 50001",
-			[showId],
+	const resolveEpisode = createCatalogEpisodeResolver(animeMappings)
+	for (const [index, title] of found) {
+		const row = rows[index]
+		if (
+			title.mediaType !== "show" ||
+			(row.episodeTmdbId == null &&
+				!(row.animeEntry && row.kind === "watch") &&
+				row.episodeTvdbId == null &&
+				!row.episodeGroup &&
+				!row.episodeName &&
+				row.season == null &&
+				row.episode == null)
 		)
-		for (const [index, title] of found) {
-			const row = rows[index]
-			if (
-				title.mediaType !== "show" ||
-				title.tmdbId !== showId ||
-				(row.episodeTmdbId == null && row.season == null && row.episode == null)
-			)
-				continue
-			const candidates =
-				row.episodeTmdbId != null
-					? episodes.filter(
-							(episode) => Number(episode.tmdb_id) === row.episodeTmdbId,
-						)
-					: episodes.filter(
-							(episode) =>
-								Number(episode.season_number) === row.season &&
-								Number(episode.episode_number) === row.episode,
-						)
-			if (candidates.length !== 1) found.delete(index)
-			else {
-				row.episodeTmdbId = Number(candidates[0].tmdb_id)
-				row.season = Number(candidates[0].season_number)
-				row.episode = Number(candidates[0].episode_number)
+			continue
+		const result = await resolveEpisode({
+			...row,
+			showId: title.tmdbId,
+			numbering: row.episodeNumbering,
+		})
+		if (result.status === "unmatched") {
+			found.delete(index)
+			row.problem = { outcome: "unmatched", reason: result.reason }
+		} else {
+			if (result.datePolicy === "unknown" && row.kind === "watch") {
+				row.watchedAt = null
+				row.precision = "unknown"
 			}
+			row.episodeTmdbId = result.episodeTmdbId
+			row.season = result.season
+			row.episode = result.episode
+			if (result.special) row.episodeSpecial = true
 		}
 	}
+
 	return found
 }
 
@@ -227,6 +243,9 @@ async function classifyWatchDuplicates(
 		const ref = `${item.mediaType}:${item.tmdbId}`
 		groups.set(ref, [...(groups.get(ref) ?? []), item])
 	}
+	const plans = new Map<string, ImportTrackingPlan>()
+	if (!groups.size) return plans
+	const { prepareImportTrackingPlan } = await import("./tracking.server.ts")
 	for (const group of groups.values()) {
 		const first = group[0]
 		if (!first || first.tmdbId === null) continue
@@ -240,13 +259,20 @@ async function classifyWatchDuplicates(
 			watchDates: "preserve",
 			now: Date.now(),
 		})
+		plans.set(`${first.mediaType}:${first.tmdbId}`, plan)
 		const kept = new Set(plan.keptKeys)
 		for (const item of group)
 			if (kept.has(item.key)) {
 				item.outcome = "unchanged"
-				item.reason = "This watch is already in your GoodWatch watch log."
+				item.reason = [
+					item.reason,
+					"This watch is already in your GoodWatch watch log.",
+				]
+					.filter(Boolean)
+					.join(" ")
 			}
 	}
+	return plans
 }
 
 function classify(
@@ -255,11 +281,19 @@ function classify(
 	current: Awaited<ReturnType<typeof currentValues>>,
 ): ImportItem[] {
 	return rows.map((row, index): ImportItem => {
-		const base = { ...row, index, reason: null, currentScore: null }
+		const base = {
+			...row,
+			index,
+			reason: row.episodeSpecial
+				? "This episode maps to a TMDB special. It is imported but does not count toward regular show progress."
+				: null,
+			currentScore: null,
+		}
 		if (row.problem)
 			return {
 				...base,
 				outcome: row.problem.outcome,
+				...(row.problem.outcome === "unmatched" ? { tmdbId: null } : {}),
 				reason: row.problem.reason,
 			}
 		const title = matched.get(index)
@@ -326,7 +360,10 @@ function classify(
 				_preview: known ?? null,
 			} as ImportItem
 		}
-		if (row.kind === "want")
+		if (
+			row.kind === "want" ||
+			(row.kind === "show_status" && row.showStatus === "plan_to_watch")
+		)
 			return {
 				...base,
 				...title,
@@ -404,15 +441,76 @@ export async function createPreview(
 	source: ImportSource,
 	fileName: string,
 	bytes: Uint8Array,
+	wishlist?: Uint8Array,
 ): Promise<ImportSummary> {
-	const parsed: ParsedImport = await parseImportFile(source, bytes)
+	const parsed: ParsedImport = await parseImportFile(source, bytes, wishlist)
+	const fileHash = createHash("sha256").update(bytes)
+	if (wishlist)
+		fileHash.update(`\0wishlist:${wishlist.length}:`).update(wishlist)
+	return createParsedPreview(userId, fileName, parsed, fileHash.digest("hex"))
+}
+
+/** Trusted server adapters can preview normalized observations without inventing an upload format. */
+export async function createParsedPreview(
+	userId: string,
+	fileName: string,
+	input: ParsedImport,
+	hash = createHash("sha256").update(JSON.stringify(input)).digest("hex"),
+): Promise<ImportSummary> {
+	const parsed = input
+	if (parsed.observations.length > IMPORT_MAX_ROWS)
+		throw new ImportFileError(
+			"That source produces more than 50,000 import items.",
+		)
+	for (const row of parsed.observations) {
+		if (row.kind !== "show_status") continue
+		if (row.mediaType !== "show")
+			row.problem = {
+				outcome: "unsupported",
+				reason: "Movies have no show status.",
+			}
+		else if (
+			row.episodeTmdbId != null ||
+			row.episodeTvdbId != null ||
+			row.season != null ||
+			row.episode != null ||
+			row.episodeGroup ||
+			row.episodeName
+		)
+			row.problem = {
+				outcome: "unsupported",
+				reason:
+					"A show status must describe the matched show, not an episode, season or part.",
+			}
+		else if (
+			!isApplicableStatus(row.showStatus) &&
+			row.showStatus !== "plan_to_watch"
+		)
+			row.problem = {
+				outcome: "invalid",
+				reason: "This show status has no supported value.",
+			}
+		else if (row.showStatus === "completed" && row.completionScope !== "show")
+			row.problem = {
+				outcome: "unsupported",
+				reason:
+					"Completed does not establish completion of the whole TMDB show. A part or cour never marks the whole show Seen.",
+			}
+	}
+	const source = parsed.source
 	const [matched, current] = await Promise.all([
 		matchCatalog(source, parsed.observations),
 		currentValues(userId),
 	])
 	const items = classify(parsed.observations, matched, current)
+	const specials = items.filter((item) => item.episodeSpecial).length
+	if (specials)
+		parsed.warnings.push(
+			`${specials} episode row(s) map to TMDB specials. They are imported but do not count toward regular show progress.`,
+		)
 	const id = randomUUID()
-	await classifyWatchDuplicates(userId, source, id, items)
+	const watchPlans = await classifyWatchDuplicates(userId, source, id, items)
+	await classifyShowStatuses(userId, items, watchPlans)
 	const countRecord = {
 		rows: items.length,
 		new: 0,
@@ -429,10 +527,11 @@ export async function createPreview(
 		want: 0,
 		favorite: 0,
 		review: 0,
+		show_status: 0,
 	}
 	for (const item of items) if (item.kind !== "unsupported") kinds[item.kind]++
 	const now = new Date()
-	const hash = createHash("sha256").update(bytes).digest("hex")
+
 	try {
 		await insertItems(id, userId, items)
 		await refreshItems()
@@ -460,4 +559,65 @@ export async function createPreview(
 		throw error
 	}
 	return summarize(await getImportRow(userId, id))
+}
+
+async function classifyShowStatuses(
+	userId: string,
+	items: ImportItem[],
+	watchPlans: Map<string, ImportTrackingPlan>,
+) {
+	const statuses: ImportStatusItem[] = items.filter(
+		(x) => x.kind === "show_status" && x.outcome === "new" && x.tmdbId !== null,
+	)
+	if (!statuses.length) return
+	const { getImportStatusSnapshots } = await import("../tracking.server.ts")
+	const byShow = new Map<number, ImportStatusItem[]>()
+	for (const item of statuses) {
+		if (item.tmdbId !== null)
+			byShow.set(item.tmdbId, [...(byShow.get(item.tmdbId) ?? []), item])
+	}
+	const snapshots = await getImportStatusSnapshots(userId, [...byShow.keys()])
+	for (const item of statuses) {
+		if (item.tmdbId === null) continue
+		if ((byShow.get(item.tmdbId)?.length ?? 0) > 1) {
+			item.outcome = "invalid"
+			item.reason =
+				"Multiple show statuses resolve to this show. The source must supply one status per TMDB show."
+			continue
+		}
+		const snapshot = snapshots.get(item.tmdbId)
+		const plan = watchPlans.get(`show:${item.tmdbId}`)
+		const before = snapshot?.state ?? null
+		const after = plan?.afterState ?? before
+		if (item.showStatus === "plan_to_watch") {
+			if (
+				!canImportWantToSee(
+					after?.state,
+					!!snapshot?.hasWatches || !!plan?.watches.length,
+				)
+			) {
+				item.outcome = "unchanged"
+				item.reason =
+					"Plan to watch becomes Want to See only for a show you have not started."
+			} else item.reason = "Plan to watch becomes Want to See."
+			continue
+		}
+		if (before?.state === "watching" && item.showStatus === "dropped")
+			item.reason =
+				"The file sets this Watching show to Dropped, even if you resumed it after an earlier import."
+		else if (item.showStatus === "completed")
+			item.reason =
+				"Whole-show Completed marks aired regular episodes as watched. The show stays Watching while a season is still airing; otherwise it becomes Seen."
+		item._previewStatus = before
+			? { _seq_no: before._seq_no, _primary_term: before._primary_term }
+			: null
+		if (
+			after &&
+			(PROTECTED_STATES.includes(after.state) ||
+				(after.state === item.showStatus && !plan?.watches.length))
+		) {
+			item.outcome = "unchanged"
+			item.reason = "Your GoodWatch show status is kept."
+		}
+	}
 }

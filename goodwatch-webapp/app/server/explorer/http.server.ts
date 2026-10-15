@@ -15,7 +15,9 @@ import {
 import type { TasteInteraction } from "~/ui/taste/types"
 import { ExplorerUnavailable } from "./index.server"
 
-export const EXPLORER_OVERLAY_MAX_TITLES = 200
+// The production world held 502 unique titles for a new guest and 704 for a guest with ten ratings (2026-10-15), so
+// 200 left most groupings in English. 800 covers both in four overlay batches; anything beyond stays canonical.
+export const EXPLORER_OVERLAY_MAX_TITLES = 800
 const MAX_BODY_CHARS = 256 * 1024
 const headers = { "Cache-Control": "private, no-store" }
 

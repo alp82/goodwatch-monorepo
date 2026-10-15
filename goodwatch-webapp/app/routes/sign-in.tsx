@@ -1,3 +1,5 @@
+import { getAuthPosters } from "~/server/auth-posters.server"
+import type { AuthPoster } from "~/ui/auth/PosterSpotlight"
 import { discoveryReturnTo } from "~/utils/account-transfer"
 import type {
 	LoaderFunction,
@@ -48,6 +50,7 @@ export const meta: MetaFunction = () => {
 
 export type LoaderData = {
 	redirectUri: string;
+	posters: AuthPoster[];
 	/** An app such as Claude waits for this sign-in (#570): the provider sent the member here with a signed query. */
 	connecting: ConnectState | null;
 };
@@ -71,7 +74,7 @@ export const loader: LoaderFunction = async ({
 	const connecting = await connectingApp(request);
 
 	return json<LoaderData>(
-		{ redirectUri, connecting },
+		{ redirectUri, connecting, posters: await getAuthPosters() },
 		// The signed query is the member's own request: never shared by a cache.
 		connecting ? { headers: { "Cache-Control": "private, no-store" } } : undefined,
 	);

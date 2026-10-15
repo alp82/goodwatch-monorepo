@@ -18,7 +18,7 @@ mkdir -p "$(dirname "$output")"
 cleanup() {
   "${compose[@]}" logs --no-color > "$(dirname "$output")/containers.log" 2>&1 || true
   "${compose[@]}" down --volumes --remove-orphans
-  rm -f baseline-crate.ts backend-timeout.ts
+  rm -f baseline-crate.ts backend-timeout.ts crate-diagnostics.ts page-loaders.generated.mjs
   if [[ -n "$("${compose[@]}" ps -aq)" ]]; then
     echo 'Cleanup failed: owned containers still exist.' >&2
     return 1
@@ -39,9 +39,15 @@ JS
 }
 trap cleanup EXIT
 if [[ "${CRATE_PROOF_BASELINE:-0}" == 1 ]]; then
-  baseline_commit=$(git merge-base origin/main HEAD)
+  baseline_commit=${CRATE_PROOF_BASELINE_COMMIT:-$(git merge-base origin/main HEAD)}
+  export CRATE_PROOF_BASELINE_COMMIT=$(git rev-parse "$baseline_commit")
   git show "$baseline_commit:goodwatch-webapp/app/utils/crate.ts" > baseline-crate.ts
   git show "$baseline_commit:goodwatch-webapp/app/utils/backend-timeout.ts" > backend-timeout.ts
+  # Preserve the baseline's source and share the HTTP request context with its diagnostics import.
+  echo 'export * from "../../app/utils/crate-diagnostics.ts"' > crate-diagnostics.ts
+fi
+if [[ "${CRATE_PROOF_PAGES:-0}" == 1 ]]; then
+  node build-page-proof.mjs
 fi
 "${compose[@]}" up -d
 node verify.mjs "$output"

@@ -1,3 +1,4 @@
+import { getAuthPosters } from "~/server/auth-posters.server"
 import { authFetch } from "~/utils/auth-session"
 import type { LoaderFunctionArgs, MetaFunction, ActionFunction } from "@remix-run/node"
 import { json } from "@remix-run/node"
@@ -183,3 +184,5 @@ function Expired() {
 		</AuthSplit>
 	)
 }
+
+export const loader = async () => json({ posters: await getAuthPosters() })

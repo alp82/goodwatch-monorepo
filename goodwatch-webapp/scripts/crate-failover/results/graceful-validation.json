@@ -1,0 +1,35 @@
+{
+  "fullWebappSuite": {
+    "command": "node --test --test-concurrency=1 'app/**/*.test.ts'",
+    "passed": 2687,
+    "failed": 0,
+    "skipped": 1,
+    "skip": "Optional throwaway Valkey cluster"
+  },
+  "typecheck": {
+    "command": "npm run typecheck",
+    "baselineDiagnostics": 174,
+    "followupDiagnostics": 174,
+    "newDiagnostics": []
+  },
+  "productionBuild": {
+    "command": "npm run build",
+    "passed": true,
+    "precompressedFiles": 812
+  },
+  "targetedTrackingAndClientTests": {
+    "passed": 119,
+    "failed": 0
+  },
+  "gracefulProof": {
+    "passed": true,
+    "routeRequests": 1378,
+    "routeFailures": 0,
+    "probeReads": 2247,
+    "guardedWrites": 634,
+    "indeterminateGenericWrites": 2,
+    "lostResponseCases": 8,
+    "sourceHashesVerified": true
+  },
+  "productionChanges": "Only PR #604 release was merged and deployed; follow-up recovery changes are local only"
+}

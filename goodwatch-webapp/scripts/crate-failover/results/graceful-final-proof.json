@@ -1,0 +1,1287 @@
+{
+  "startedAt": "2026-10-15T17:34:56.905Z",
+  "client": "../../app/utils/crate.ts",
+  "clientSha256": "8441e2b9ccd46699b4cc28c623462b972a2d7547ae19bb46dd33277ce4c69ea6",
+  "baselineCommit": null,
+  "nodeVersion": "v26.8.1",
+  "endpointScope": [
+    "http://127.0.0.1:17430",
+    "http://127.0.0.2:17430",
+    "http://127.0.0.3:17430"
+  ],
+  "assertions": [
+    {
+      "label": "Pinned cluster nodes",
+      "actual": [
+        [
+          "node1",
+          "5.10.16"
+        ],
+        [
+          "node2",
+          "5.10.16"
+        ],
+        [
+          "node3",
+          "5.10.16"
+        ]
+      ],
+      "expected": [
+        [
+          "node1",
+          "5.10.16"
+        ],
+        [
+          "node2",
+          "5.10.16"
+        ],
+        [
+          "node3",
+          "5.10.16"
+        ]
+      ]
+    },
+    {
+      "label": "No failed page loaders/actions",
+      "actual": 0,
+      "expected": 0
+    },
+    {
+      "label": "No failed reads during node loss",
+      "actual": 0,
+      "expected": 0
+    },
+    {
+      "label": "No keyed insert failures",
+      "actual": 0,
+      "expected": 0
+    },
+    {
+      "label": "No upsert failures",
+      "actual": 0,
+      "expected": 0
+    },
+    {
+      "label": "All acknowledged keyed rows exist",
+      "actual": 329,
+      "expected": 329
+    },
+    {
+      "label": "All acknowledged upsert rows exist",
+      "actual": 305,
+      "expected": 305
+    },
+    {
+      "label": "No row mutated twice",
+      "actual": 0,
+      "expected": 0
+    },
+    {
+      "label": "Two surviving cluster members",
+      "actual": [
+        [
+          "node2"
+        ],
+        [
+          "node3"
+        ]
+      ],
+      "expected": [
+        [
+          "node2"
+        ],
+        [
+          "node3"
+        ]
+      ]
+    },
+    {
+      "label": "Every acknowledged route watch stored once",
+      "actual": 60,
+      "expected": 60
+    },
+    {
+      "label": "No duplicate route watch ids",
+      "actual": 60,
+      "expected": 60
+    },
+    {
+      "label": "lost-increment-reset: one durable effect",
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "label": "lost-increment-reset: no second application after lost response",
+      "actual": 419,
+      "expected": 419
+    },
+    {
+      "label": "lost-increment-reset: transport write attempts",
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "label": "lost-increment-timeout: one durable effect",
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "label": "lost-increment-timeout: no second application after lost response",
+      "actual": 461,
+      "expected": 461
+    },
+    {
+      "label": "lost-increment-timeout: transport write attempts",
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "label": "lost-upsert-reset: one durable effect",
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "label": "lost-upsert-reset: no second application after lost response",
+      "actual": 421,
+      "expected": 421
+    },
+    {
+      "label": "lost-upsert-reset: transport write attempts",
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "label": "lost-upsert-timeout: one durable effect",
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "label": "lost-upsert-timeout: no second application after lost response",
+      "actual": 463,
+      "expected": 463
+    },
+    {
+      "label": "lost-upsert-timeout: transport write attempts",
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "label": "lost-insert-reset: one durable effect",
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "label": "lost-insert-reset: no second application after lost response",
+      "actual": 466,
+      "expected": 466
+    },
+    {
+      "label": "lost-insert-reset: transport write attempts",
+      "actual": 2,
+      "expected": 2
+    },
+    {
+      "label": "lost-insert-timeout: one durable effect",
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "label": "lost-insert-timeout: no second application after lost response",
+      "actual": 506,
+      "expected": 506
+    },
+    {
+      "label": "lost-insert-timeout: transport write attempts",
+      "actual": 2,
+      "expected": 2
+    },
+    {
+      "label": "lost-tracking-cas-reset: no second application after lost CAS response",
+      "actual": 52,
+      "expected": 52
+    },
+    {
+      "label": "lost-tracking-cas-reset: one dispatched CAS",
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "label": "lost-tracking-cas-timeout: no second application after lost CAS response",
+      "actual": 53,
+      "expected": 53
+    },
+    {
+      "label": "lost-tracking-cas-timeout: one dispatched CAS",
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "label": "No proxy errors",
+      "actual": [],
+      "expected": []
+    }
+  ],
+  "failures": [
+    {
+      "phase": "generic",
+      "id": "generic-50",
+      "atMs": 21210,
+      "message": "socket hang up",
+      "code": "ECONNRESET"
+    },
+    {
+      "phase": "generic",
+      "id": "generic-119",
+      "atMs": 36625,
+      "message": "socket hang up",
+      "code": "ECONNRESET"
+    }
+  ],
+  "sourceSha256": {
+    "../../app/utils/crate.ts": "8441e2b9ccd46699b4cc28c623462b972a2d7547ae19bb46dd33277ce4c69ea6",
+    "../../app/utils/crate-diagnostics.ts": "1e4e070a8f1d73c7ee509e15bcf3b276ad15b110c65c1469f31dad2cd25f4e18",
+    "../../app/server/tracking.server.ts": "56ca2333400a369d04d2d262d019dba2a2ce509d4017059641bbc271917394aa",
+    "../../app/server/combined-search/catalog.server.ts": "fe39f57efc8af5032624d4637254d48a0aa35687af4e846c854a7adb5aae9800",
+    "../../app/server/search-ranking/search-index-build.server.ts": "9689e434bcdf6f3fd1569283be4a4ca0ed0cc592834ef3cc0bfbc655396bfcd6",
+    "../../app/server/page-cache.server.ts": "c2dbf91e0ec380c5306cc6ce373ea603236a7081af019e756647238901e1fcb4",
+    "./verify.mjs": "f48f95c3f1798f5b08e17583cf08c0cea3fdd4089b5d97d345a184096204e9d2",
+    "./page-proof.mjs": "02b6694f4f1748c63a0dade5ad0113475f01be2d89d7fe361056c36d37a1535d",
+    "./build-page-proof.mjs": "e66f48d3b7b76c2431aecac00657087fb59c9d77d2e33e9157a938ff8115aa6d",
+    "./page-loaders.ts": "90002519d551019f3a02ce8d78c80589a5cefc3957a4156620270c04b38686da",
+    "./compose.yaml": "f10623e22b45f15205cbb89c6e15527d14e49e0831f936ab42286f7c5de35355",
+    "./run.sh": "4cc542cbbd698c6c95703aa35c534c48546c52a0bfc92b29fb925efaf5f35bc4",
+    "./page-loaders.generated.mjs": "c04f24e71029d5e6c16a4b5b81f2399c6e5fc8511e7832b7b1535573c6a4aec2"
+  },
+  "nodes": [
+    [
+      "node1",
+      "5.10.16"
+    ],
+    [
+      "node2",
+      "5.10.16"
+    ],
+    [
+      "node3",
+      "5.10.16"
+    ]
+  ],
+  "beforeShards": [
+    [
+      0,
+      true,
+      "node1",
+      "STARTED"
+    ],
+    [
+      0,
+      false,
+      "node2",
+      "STARTED"
+    ],
+    [
+      0,
+      false,
+      "node3",
+      "STARTED"
+    ],
+    [
+      1,
+      true,
+      "node2",
+      "STARTED"
+    ],
+    [
+      1,
+      false,
+      "node1",
+      "STARTED"
+    ],
+    [
+      1,
+      false,
+      "node3",
+      "STARTED"
+    ],
+    [
+      2,
+      true,
+      "node3",
+      "STARTED"
+    ],
+    [
+      2,
+      false,
+      "node1",
+      "STARTED"
+    ],
+    [
+      2,
+      false,
+      "node2",
+      "STARTED"
+    ]
+  ],
+  "pageTables": [
+    "crawl_priority",
+    "age_certification",
+    "country",
+    "job",
+    "language",
+    "timezone",
+    "genre",
+    "streaming_service",
+    "movie",
+    "show",
+    "movie_series",
+    "season",
+    "episode",
+    "season_translation",
+    "episode_translation",
+    "imdb_episode",
+    "imdb_season",
+    "rotten_tomatoes_season",
+    "metacritic_season",
+    "media_image",
+    "media_video",
+    "trope",
+    "alternative_title",
+    "translation",
+    "release_event",
+    "production_company",
+    "network",
+    "person",
+    "person_appeared_in",
+    "person_worked_on",
+    "streaming_evidence",
+    "streaming_availability",
+    "user_setting",
+    "user_skipped",
+    "user_not_interested",
+    "user_wishlist",
+    "user_list_exposure",
+    "user_score",
+    "user_favorite",
+    "user_watch_log",
+    "user_watch_state",
+    "search_terms",
+    "search_embedding_inputs",
+    "search_embedding_state",
+    "search_index_builds",
+    "search_control",
+    "search_interpretations",
+    "search_spending",
+    "search_history",
+    "search_shadow",
+    "user_list",
+    "user_profile",
+    "user_handle",
+    "user_import",
+    "user_import_item",
+    "social_relevance",
+    "social_content_quality",
+    "social_post",
+    "social_title_link",
+    "social_link_report",
+    "social_ingest_run"
+  ],
+  "pageRoutes": {
+    "movie": {
+      "succeeded": 138,
+      "failed": 0,
+      "maxMs": 3796.4254960000108,
+      "examples": []
+    },
+    "show": {
+      "succeeded": 159,
+      "failed": 0,
+      "maxMs": 3486.603719999999,
+      "examples": []
+    },
+    "person": {
+      "succeeded": 134,
+      "failed": 0,
+      "maxMs": 3369.615703000003,
+      "examples": []
+    },
+    "library": {
+      "succeeded": 160,
+      "failed": 0,
+      "maxMs": 5025.101127000002,
+      "examples": []
+    },
+    "explore": {
+      "succeeded": 225,
+      "failed": 0,
+      "maxMs": 3588.979447000005,
+      "examples": []
+    },
+    "watch": {
+      "succeeded": 60,
+      "failed": 0,
+      "maxMs": 6239.763773999999,
+      "examples": []
+    },
+    "score": {
+      "succeeded": 53,
+      "failed": 0,
+      "maxMs": 10097.755686999997,
+      "examples": []
+    },
+    "catalog": {
+      "succeeded": 449,
+      "failed": 0,
+      "maxMs": 2693.6434389999995,
+      "examples": []
+    }
+  },
+  "beforeHealth": [
+    [
+      "GREEN",
+      62
+    ]
+  ],
+  "stop": {
+    "requestedAt": "2026-10-15T17:35:39.734Z",
+    "elapsedMs": 3003,
+    "command": "ALTER CLUSTER DECOMMISSION node1",
+    "settings": [
+      [
+        {
+          "min_availability": "PRIMARIES",
+          "timeout": "2h",
+          "force": false
+        }
+      ]
+    ],
+    "acknowledgedAt": "2026-10-15T17:35:52.933Z",
+    "state": {
+      "Status": "exited",
+      "Running": false,
+      "Paused": false,
+      "Restarting": false,
+      "OOMKilled": false,
+      "Dead": false,
+      "Pid": 0,
+      "ExitCode": 0,
+      "Error": "",
+      "StartedAt": "2026-10-15T17:34:56.031646849Z",
+      "FinishedAt": "2026-10-15T17:35:58.180385155Z"
+    },
+    "completedAt": "2026-10-15T17:35:58.494Z"
+  },
+  "stoppedContainers": [
+    {
+      "Command": "\"/docker-entrypoint.…\"",
+      "CreatedAt": "2026-10-15 19:34:55 +0200 CEST",
+      "Engine": "",
+      "ExitCode": 0,
+      "Health": "",
+      "ID": "e23e6c9eb158",
+      "Image": "crate:5.10.16@sha256:5d7cd92eb84d56d538e2222a436e432164b853fdf186aebb17c446787f23a307",
+      "Labels": "com.docker.compose.config-hash=83e409a996f019f51a8ebb3b4652bacbf5653a0ffa584b23735142009a8371a8,com.docker.compose.project.working_dir=/home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover,org.opencontainers.image.source=https://github.com/crate/docker-crate,org.opencontainers.image.url=https://crate.io/products/cratedb/,org.opencontainers.image.vendor=Crate.io,com.docker.compose.depends_on=,com.docker.compose.version=5.5.1,org.opencontainers.image.created=2025-12-10T13:54:12.012567,org.opencontainers.image.title=crate,org.opencontainers.image.version=5.10.16,com.docker.compose.container-number=1,com.docker.compose.image=sha256:9946365265397a39897876cdbc3d2c2a3c5c19c77a2c626a017dd22e96deb98f,com.docker.compose.project.config_files=/home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/compose.yaml,org.opencontainers.image.description=CrateDB is a distributed SQL database that handles massive amounts of machine data in real-time.,com.docker.compose.oneoff=False,com.docker.compose.project=goodwatch-client-588,com.docker.compose.service=node1,maintainer=Crate.io <office@crate.io>",
+      "LocalVolumes": "1",
+      "Mounts": "goodwatch-clie…",
+      "Name": "goodwatch-client-588-node1-1",
+      "Names": "goodwatch-client-588-node1-1",
+      "Networks": "goodwatch-client-588_default",
+      "Ports": "",
+      "Project": "goodwatch-client-588",
+      "Publishers": [],
+      "RunningFor": "About a minute ago",
+      "Service": "node1",
+      "Size": "0B",
+      "State": "exited",
+      "Status": "Exited (0) Less than a second ago"
+    },
+    {
+      "Command": "\"/docker-entrypoint.…\"",
+      "CreatedAt": "2026-10-15 19:34:55 +0200 CEST",
+      "Engine": "",
+      "ExitCode": 0,
+      "Health": "",
+      "ID": "4a495c352485",
+      "Image": "crate:5.10.16@sha256:5d7cd92eb84d56d538e2222a436e432164b853fdf186aebb17c446787f23a307",
+      "Labels": "com.docker.compose.container-number=1,com.docker.compose.oneoff=False,com.docker.compose.project.working_dir=/home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover,maintainer=Crate.io <office@crate.io>,com.docker.compose.config-hash=bf436c157529f01bab0efff3b1fe87f1d5145ec3d95872e6702f56f74a145dfd,com.docker.compose.image=sha256:9946365265397a39897876cdbc3d2c2a3c5c19c77a2c626a017dd22e96deb98f,com.docker.compose.version=5.5.1,org.opencontainers.image.version=5.10.16,com.docker.compose.depends_on=,com.docker.compose.project=goodwatch-client-588,com.docker.compose.service=node2,org.opencontainers.image.source=https://github.com/crate/docker-crate,org.opencontainers.image.url=https://crate.io/products/cratedb/,com.docker.compose.project.config_files=/home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/compose.yaml,org.opencontainers.image.created=2025-12-10T13:54:12.012567,org.opencontainers.image.description=CrateDB is a distributed SQL database that handles massive amounts of machine data in real-time.,org.opencontainers.image.title=crate,org.opencontainers.image.vendor=Crate.io",
+      "LocalVolumes": "1",
+      "Mounts": "goodwatch-clie…",
+      "Name": "goodwatch-client-588-node2-1",
+      "Names": "goodwatch-client-588-node2-1",
+      "Networks": "goodwatch-client-588_default",
+      "Ports": "4300/tcp, 5432/tcp, 127.0.0.2:17430->4200/tcp",
+      "Project": "goodwatch-client-588",
+      "Publishers": [
+        {
+          "URL": "127.0.0.2",
+          "TargetPort": 4200,
+          "PublishedPort": 17430,
+          "Protocol": "tcp"
+        },
+        {
+          "URL": "",
+          "TargetPort": 4300,
+          "PublishedPort": 0,
+          "Protocol": "tcp"
+        },
+        {
+          "URL": "",
+          "TargetPort": 5432,
+          "PublishedPort": 0,
+          "Protocol": "tcp"
+        }
+      ],
+      "RunningFor": "About a minute ago",
+      "Service": "node2",
+      "Size": "0B",
+      "State": "running",
+      "Status": "Up About a minute"
+    },
+    {
+      "Command": "\"/docker-entrypoint.…\"",
+      "CreatedAt": "2026-10-15 19:34:55 +0200 CEST",
+      "Engine": "",
+      "ExitCode": 0,
+      "Health": "",
+      "ID": "1ff09d4856ee",
+      "Image": "crate:5.10.16@sha256:5d7cd92eb84d56d538e2222a436e432164b853fdf186aebb17c446787f23a307",
+      "Labels": "com.docker.compose.config-hash=905a9620ceef990632c0af3d1599862cd42425f66e862125184b37613e8a1356,com.docker.compose.container-number=1,com.docker.compose.depends_on=,com.docker.compose.project=goodwatch-client-588,com.docker.compose.service=node3,maintainer=Crate.io <office@crate.io>,com.docker.compose.oneoff=False,com.docker.compose.project.working_dir=/home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover,org.opencontainers.image.created=2025-12-10T13:54:12.012567,org.opencontainers.image.description=CrateDB is a distributed SQL database that handles massive amounts of machine data in real-time.,org.opencontainers.image.source=https://github.com/crate/docker-crate,org.opencontainers.image.title=crate,org.opencontainers.image.url=https://crate.io/products/cratedb/,org.opencontainers.image.vendor=Crate.io,com.docker.compose.image=sha256:9946365265397a39897876cdbc3d2c2a3c5c19c77a2c626a017dd22e96deb98f,com.docker.compose.project.config_files=/home/alper/projects/goodwatch-crate-graceful-recovery/goodwatch-webapp/scripts/crate-failover/compose.yaml,com.docker.compose.version=5.5.1,org.opencontainers.image.version=5.10.16",
+      "LocalVolumes": "1",
+      "Mounts": "goodwatch-clie…",
+      "Name": "goodwatch-client-588-node3-1",
+      "Names": "goodwatch-client-588-node3-1",
+      "Networks": "goodwatch-client-588_default",
+      "Ports": "4300/tcp, 5432/tcp, 127.0.0.3:17430->4200/tcp",
+      "Project": "goodwatch-client-588",
+      "Publishers": [
+        {
+          "URL": "127.0.0.3",
+          "TargetPort": 4200,
+          "PublishedPort": 17430,
+          "Protocol": "tcp"
+        },
+        {
+          "URL": "",
+          "TargetPort": 4300,
+          "PublishedPort": 0,
+          "Protocol": "tcp"
+        },
+        {
+          "URL": "",
+          "TargetPort": 5432,
+          "PublishedPort": 0,
+          "Protocol": "tcp"
+        }
+      ],
+      "RunningFor": "About a minute ago",
+      "Service": "node3",
+      "Size": "0B",
+      "State": "running",
+      "Status": "Up About a minute"
+    }
+  ],
+  "afterStopNodes": [
+    [
+      "node2"
+    ],
+    [
+      "node3"
+    ]
+  ],
+  "restartedAt": "2026-10-15T17:36:01.235Z",
+  "rejoinedDuringLoad": {
+    "elapsedMs": 38983,
+    "reads": 1109,
+    "pages": {
+      "movie": 72,
+      "show": 83,
+      "person": 72,
+      "library": 85,
+      "explore": 122,
+      "watch": 33,
+      "score": 25,
+      "catalog": 239
+    }
+  },
+  "load": {
+    "durationMs": 75121,
+    "stats": {
+      "reads": {
+        "succeeded": 2247,
+        "failed": 0,
+        "maxMs": 3569.774338999996
+      },
+      "keyed": {
+        "succeeded": 329,
+        "failed": 0
+      },
+      "upsert": {
+        "succeeded": 305,
+        "failed": 0
+      },
+      "generic": {
+        "succeeded": 288,
+        "failed": 2
+      }
+    },
+    "acknowledgedWrites": {
+      "keyed": 329,
+      "upsert": 305,
+      "generic": 288
+    }
+  },
+  "writeAudit": [
+    [
+      "generic",
+      400,
+      0,
+      1,
+      288
+    ],
+    [
+      "keyed",
+      329,
+      1,
+      1,
+      329
+    ],
+    [
+      "seed",
+      60,
+      7,
+      7,
+      420
+    ],
+    [
+      "upsert",
+      305,
+      1,
+      1,
+      305
+    ]
+  ],
+  "pageWatchAudit": {
+    "acknowledged": 60,
+    "stored": 60,
+    "unique": 60
+  },
+  "lostResponses": [
+    {
+      "id": "lost-increment-reset",
+      "timeout": false,
+      "kind": "increment",
+      "writes": 1,
+      "seqBefore": 418,
+      "appliedSeq": 419,
+      "seqAfter": 419,
+      "n": 1,
+      "outcome": "Returned indeterminate error without replay"
+    },
+    {
+      "id": "lost-increment-timeout",
+      "timeout": true,
+      "kind": "increment",
+      "writes": 1,
+      "seqBefore": 460,
+      "appliedSeq": 461,
+      "seqAfter": 461,
+      "n": 1,
+      "outcome": "Returned indeterminate error without replay"
+    },
+    {
+      "id": "lost-upsert-reset",
+      "timeout": false,
+      "kind": "upsert",
+      "writes": 1,
+      "seqBefore": 420,
+      "appliedSeq": 421,
+      "seqAfter": 421,
+      "n": 1,
+      "outcome": "Recovered by key readback"
+    },
+    {
+      "id": "lost-upsert-timeout",
+      "timeout": true,
+      "kind": "upsert",
+      "writes": 1,
+      "seqBefore": 462,
+      "appliedSeq": 463,
+      "seqAfter": 463,
+      "n": 1,
+      "outcome": "Recovered by key readback"
+    },
+    {
+      "id": "lost-insert-reset",
+      "timeout": false,
+      "kind": "insert",
+      "writes": 2,
+      "seqBefore": 464,
+      "appliedSeq": 466,
+      "seqAfter": 466,
+      "n": 1,
+      "outcome": "Replayed fixed key with DO NOTHING"
+    },
+    {
+      "id": "lost-insert-timeout",
+      "timeout": true,
+      "kind": "insert",
+      "writes": 2,
+      "seqBefore": 504,
+      "appliedSeq": 506,
+      "seqAfter": 506,
+      "n": 1,
+      "outcome": "Replayed fixed key with DO NOTHING"
+    },
+    {
+      "id": "lost-tracking-cas-reset",
+      "timeout": false,
+      "kind": "tracking-cas",
+      "writes": 1,
+      "seqBefore": 51,
+      "appliedSeq": 52,
+      "seqAfter": 52,
+      "outcome": "Real score action recovered CAS by versioned state readback"
+    },
+    {
+      "id": "lost-tracking-cas-timeout",
+      "timeout": true,
+      "kind": "tracking-cas",
+      "writes": 1,
+      "seqBefore": 52,
+      "appliedSeq": 53,
+      "seqAfter": 53,
+      "outcome": "Real score action recovered CAS by versioned state readback"
+    }
+  ],
+  "passed": true,
+  "diagnostics": {
+    "events": 184,
+    "byEvent": {
+      "crate.attempt_failed": 55,
+      "crate.failover_attempt": 41,
+      "crate.query": 49,
+      "crate.http": 21,
+      "crate.replay": 4,
+      "crate.readback": 5,
+      "crate.recovery": 9
+    },
+    "byErrorClass": {
+      "CrateTimeoutError": 31,
+      "Error": 25,
+      "JobKilledException": 1,
+      "NodeNotConnectedException": 11,
+      "SocketError": 1
+    },
+    "failedQueries": [
+      {
+        "time": "2026-10-15T17:35:57.941Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": null,
+        "route": "background",
+        "queryId": "89b78b49-a119-424f-9cb9-8a5b64215088",
+        "sqlShape": "UPDATE client_failover_588 SET n = n + ? WHERE id = ?",
+        "sqlShapeId": "27a918db2725a401",
+        "source": "crate",
+        "host": "127.0.0.1:17430",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 6733.666406999997,
+        "errorClass": "Error",
+        "errorCode": "ECONNRESET"
+      },
+      {
+        "time": "2026-10-15T17:35:57.942Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": null,
+        "route": "background",
+        "operationId": "04442212-2a12-4c79-b7c2-53ac20be3803",
+        "operation": "upsert",
+        "queryId": "026f8a49-00ac-4e46-bc97-ba7c59032e71",
+        "sqlShape": "INSERT INTO client_failover_588 (\"id\", \"kind\", \"n\", \"created_at\", \"updated_at\") VALUES (?, ?, ?, ?, ?) ON CONFLICT (\"id\") DO UPDATE SET \"kind\" = excluded.\"kind\", \"n\" = excluded.\"n\", \"updated_at\" = excluded.\"updated_at\"",
+        "sqlShapeId": "a94f16229c2d814e",
+        "source": "crate",
+        "host": "127.0.0.1:17430",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 7650.830585999996,
+        "errorClass": "Error",
+        "errorCode": "ECONNRESET"
+      },
+      {
+        "time": "2026-10-15T17:35:57.944Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": "534b8881-3d38-4e5d-a0ea-499ce4292ab3",
+        "route": "/api/update-scores",
+        "method": "POST",
+        "queryId": "e3ac3479-96cf-45d4-820f-20d8962b6b08",
+        "sqlShape": "DELETE FROM user_not_interested WHERE user_id = ? AND tmdb_id = ? AND media_type = ?",
+        "sqlShapeId": "2ff6383c7e352194",
+        "source": "crate",
+        "host": "127.0.0.1:17430",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 6864.143163000001,
+        "errorClass": "Error",
+        "errorCode": "ECONNRESET"
+      },
+      {
+        "time": "2026-10-15T17:35:57.945Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": null,
+        "route": "background",
+        "operationId": "d00c2d53-4da5-4223-8d07-0a8fdce8cfa1",
+        "operation": "insertRows",
+        "queryId": "58cae8ea-850d-4501-9a83-49edf390980b",
+        "sqlShape": "INSERT INTO client_failover_588 (\"id\", \"kind\", \"n\") VALUES (?, ?, ?) ON CONFLICT (\"id\") DO NOTHING",
+        "sqlShapeId": "03895f1744ca6000",
+        "source": "crate",
+        "host": "127.0.0.1:17430",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 7378.338364999996,
+        "errorClass": "Error",
+        "errorCode": "ECONNRESET"
+      },
+      {
+        "time": "2026-10-15T17:36:08.350Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": null,
+        "route": "background",
+        "operationId": "d268eb0e-50b3-4658-b4c8-335d57112771",
+        "operation": "insertRows",
+        "queryId": "6ba05ad3-6ca5-4ed8-912f-9c4388b3c182",
+        "sqlShape": "INSERT INTO client_failover_588 (\"id\", \"kind\", \"n\") VALUES (?, ?, ?) ON CONFLICT (\"id\") DO NOTHING",
+        "sqlShapeId": "03895f1744ca6000",
+        "source": "crate",
+        "host": "127.0.0.1:17430",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 9.163730000000214,
+        "errorClass": "Error",
+        "errorCode": "ECONNRESET"
+      },
+      {
+        "time": "2026-10-15T17:36:13.356Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": null,
+        "route": "background",
+        "queryId": "23a50f32-f808-45a8-96a9-fdae51fff18f",
+        "sqlShape": "UPDATE client_failover_588 SET n = n + ? WHERE id = ?",
+        "sqlShapeId": "27a918db2725a401",
+        "source": "crate",
+        "host": "127.0.0.1:17430",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 4.4979719999973895,
+        "errorClass": "Error",
+        "errorCode": "ECONNRESET"
+      },
+      {
+        "time": "2026-10-15T17:36:52.228Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": null,
+        "route": "background",
+        "queryId": "d41ba98b-8c22-4939-9708-1e5d0a3bdfee",
+        "sqlShape": "UPDATE client_failover_588 SET n = n + ? WHERE id = ?",
+        "sqlShapeId": "27a918db2725a401",
+        "source": "crate",
+        "host": "127.0.0.1:34045",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 34.028802000000724,
+        "errorClass": "Error",
+        "errorCode": "ECONNRESET"
+      },
+      {
+        "time": "2026-10-15T17:37:02.301Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": null,
+        "route": "background",
+        "queryId": "fac00cbd-19c6-40f8-854d-48b1f89d8818",
+        "sqlShape": "UPDATE client_failover_588 SET n = n + ? WHERE id = ?",
+        "sqlShapeId": "27a918db2725a401",
+        "source": "crate",
+        "host": "127.0.0.1:34999",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 10001.858523000003,
+        "errorClass": "CrateTimeoutError"
+      },
+      {
+        "time": "2026-10-15T17:37:02.389Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": null,
+        "route": "background",
+        "operationId": "cdecf40e-0a74-42fd-a7a9-99d7a6c033ee",
+        "operation": "upsert",
+        "queryId": "fbb189a7-0541-4b66-a3d9-3a0afe214e81",
+        "sqlShape": "INSERT INTO client_failover_588 (\"id\", \"kind\", \"n\", \"created_at\", \"updated_at\") VALUES (?, ?, ?, ?, ?) ON CONFLICT (\"id\") DO UPDATE SET \"kind\" = excluded.\"kind\", \"n\" = excluded.\"n\", \"updated_at\" = excluded.\"updated_at\"",
+        "sqlShapeId": "a94f16229c2d814e",
+        "source": "crate",
+        "host": "127.0.0.1:40945",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 55.471059999996214,
+        "errorClass": "Error",
+        "errorCode": "ECONNRESET"
+      },
+      {
+        "time": "2026-10-15T17:37:12.446Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": null,
+        "route": "background",
+        "operationId": "3c075f50-56bb-4c85-b7aa-9480b17b559b",
+        "operation": "upsert",
+        "queryId": "9661fa8d-b2ef-4ed6-9fc2-aec9510e9bdb",
+        "sqlShape": "INSERT INTO client_failover_588 (\"id\", \"kind\", \"n\", \"created_at\", \"updated_at\") VALUES (?, ?, ?, ?, ?) ON CONFLICT (\"id\") DO UPDATE SET \"kind\" = excluded.\"kind\", \"n\" = excluded.\"n\", \"updated_at\" = excluded.\"updated_at\"",
+        "sqlShapeId": "a94f16229c2d814e",
+        "source": "crate",
+        "host": "127.0.0.1:44395",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 10000.674362999984,
+        "errorClass": "CrateTimeoutError"
+      },
+      {
+        "time": "2026-10-15T17:37:12.524Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": null,
+        "route": "background",
+        "operationId": "8efe1cd7-af54-441a-8cf1-7bbf1fdf7522",
+        "operation": "insertRows",
+        "queryId": "ed515b6e-3214-44ed-8984-67e221365d25",
+        "sqlShape": "INSERT INTO client_failover_588 (\"id\", \"kind\", \"n\") VALUES (?, ?, ?) ON CONFLICT (\"id\") DO NOTHING",
+        "sqlShapeId": "03895f1744ca6000",
+        "source": "crate",
+        "host": "127.0.0.1:43977",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 27.312536999990698,
+        "errorClass": "Error",
+        "errorCode": "ECONNRESET"
+      },
+      {
+        "time": "2026-10-15T17:37:22.590Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": null,
+        "route": "background",
+        "operationId": "c0808d5c-5f8d-4997-b556-3cb2610387ec",
+        "operation": "insertRows",
+        "queryId": "ec1a3153-7928-4ce7-bb5d-2f98d3fe8e4c",
+        "sqlShape": "INSERT INTO client_failover_588 (\"id\", \"kind\", \"n\") VALUES (?, ?, ?) ON CONFLICT (\"id\") DO NOTHING",
+        "sqlShapeId": "03895f1744ca6000",
+        "source": "crate",
+        "host": "127.0.0.1:42805",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 10001.437709999998,
+        "errorClass": "CrateTimeoutError"
+      },
+      {
+        "time": "2026-10-15T17:37:22.662Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": "703f0ed2-87b6-446d-8bfa-66cddd29f689",
+        "route": "/api/update-scores",
+        "method": "POST",
+        "operationId": "4e878538-490a-4662-8f06-e6ae78a3bd4c",
+        "operation": "tracking.writeState",
+        "queryId": "c47ed7c1-0b89-4ef0-9495-c97c04772686",
+        "sqlShape": "UPDATE user_watch_state SET state = ?, state_changed_at = ?, pass = ?, seen_press_group = ?, seen_press_from = ?, rate_prompt_dismissed_at = ?, seen_question = ?, updated_at = ? WHERE user_id = ? AND tmdb_id = ? AND media_type = ? AND _seq_no = ? AND _primary_term = ?",
+        "sqlShapeId": "e24aa23dae7eb14d",
+        "source": "crate",
+        "host": "127.0.0.1:43331",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 17.920020000019576,
+        "errorClass": "Error",
+        "errorCode": "ECONNRESET"
+      },
+      {
+        "time": "2026-10-15T17:37:32.760Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": "71b37ce6-d16e-4ca2-b5ac-9aaa8356adb2",
+        "route": "/api/update-scores",
+        "method": "POST",
+        "operationId": "539f268f-4998-4983-b1a3-60f2d5065e02",
+        "operation": "tracking.writeState",
+        "queryId": "e49b1aa3-07f6-4d79-a2bc-83c0ce6a5320",
+        "sqlShape": "UPDATE user_watch_state SET state = ?, state_changed_at = ?, pass = ?, seen_press_group = ?, seen_press_from = ?, rate_prompt_dismissed_at = ?, seen_question = ?, updated_at = ? WHERE user_id = ? AND tmdb_id = ? AND media_type = ? AND _seq_no = ? AND _primary_term = ?",
+        "sqlShapeId": "e24aa23dae7eb14d",
+        "source": "crate",
+        "host": "127.0.0.1:42507",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 10001.196664000017,
+        "errorClass": "CrateTimeoutError"
+      }
+    ],
+    "httpOutcomes": [
+      {
+        "time": "2026-10-15T17:35:44.431Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "3b88e49b-c085-4f21-bd50-f8081ddae63b",
+        "route": "/api/my-library",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 3863.926944000006
+      },
+      {
+        "time": "2026-10-15T17:35:45.135Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "e4333270-dff9-4f38-80aa-30eae81153b2",
+        "route": "/api/watch-log",
+        "method": "POST",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 4447.171952000004
+      },
+      {
+        "time": "2026-10-15T17:35:53.012Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "7f16911e-4715-44e8-b58e-efefaa6f7af4",
+        "route": "/api/proof-catalog",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 2689.9235180000032
+      },
+      {
+        "time": "2026-10-15T17:35:53.120Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "24111029-d208-4b9f-b2ab-76250640e898",
+        "route": "/api/watch-log",
+        "method": "POST",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 6237.744034000003
+      },
+      {
+        "time": "2026-10-15T17:35:53.214Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "8a884c2e-04e4-4506-8985-b9745bd91955",
+        "route": "/api/my-library",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 5021.947895999998
+      },
+      {
+        "time": "2026-10-15T17:35:53.240Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "bdee7766-83b6-4c68-89dc-c1584b40f82d",
+        "route": "/person/:personKey",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 3362.843258000001
+      },
+      {
+        "time": "2026-10-15T17:35:53.649Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "8dac60f1-1dab-411a-b7fd-db67f1f645d8",
+        "route": "/show/:showKey",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 3352.642473
+      },
+      {
+        "time": "2026-10-15T17:35:53.919Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "bf61d805-5d66-49c7-964e-a6444b17bb2a",
+        "route": "/api/explorer/world",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 3546.1063270000013
+      },
+      {
+        "time": "2026-10-15T17:35:54.639Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "e8da3475-2551-4963-80c4-2b9aaecd5a8b",
+        "route": "/movie/:movieKey",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 3681.7913709999993
+      },
+      {
+        "time": "2026-10-15T17:35:58.337Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "0bee0e00-f563-4ffc-82e3-ed4cc3b79692",
+        "route": "/api/explorer/world",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 275.7638569999981
+      },
+      {
+        "time": "2026-10-15T17:35:58.430Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "9c54f3bf-bed3-4e15-a50b-9835b485be4d",
+        "route": "/show/:showKey",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 355.7458639999968
+      },
+      {
+        "time": "2026-10-15T17:35:58.445Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "66f74f4d-ba1d-427f-8182-31ffcf574c5d",
+        "route": "/person/:personKey",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 558.4175269999978
+      },
+      {
+        "time": "2026-10-15T17:35:58.631Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "2c930cda-bf6e-4fc0-aaa4-87286296ef58",
+        "route": "/movie/:movieKey",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 759.2143290000022
+      },
+      {
+        "time": "2026-10-15T17:35:58.731Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "534b8881-3d38-4e5d-a0ea-499ce4292ab3",
+        "route": "/api/update-scores",
+        "method": "POST",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 7661.710987000006
+      },
+      {
+        "time": "2026-10-15T17:36:03.433Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "bc81849f-dd96-4765-bbb9-0c120a8a98f3",
+        "route": "/api/proof-catalog",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 182.65509099999326
+      },
+      {
+        "time": "2026-10-15T17:36:13.743Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "ce410a0e-6cd7-4091-a75a-9441f5fe08d3",
+        "route": "/api/update-scores",
+        "method": "POST",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 673.1382819999999
+      },
+      {
+        "time": "2026-10-15T17:36:21.368Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "4846a44f-1c82-4e09-b426-f3375a39f6a9",
+        "route": "/api/proof-catalog",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 2672.6560219999956
+      },
+      {
+        "time": "2026-10-15T17:36:22.144Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "b22a16df-208f-40c3-b264-90121893295c",
+        "route": "/show/:showKey",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 3482.9068960000004
+      },
+      {
+        "time": "2026-10-15T17:36:22.446Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "fe97c00e-fea9-4fc8-975a-a8dc7d33f643",
+        "route": "/movie/:movieKey",
+        "method": "GET",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 3791.046091000011
+      },
+      {
+        "time": "2026-10-15T17:37:22.701Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "703f0ed2-87b6-446d-8bfa-66cddd29f689",
+        "route": "/api/update-scores",
+        "method": "POST",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 89.84261300001526
+      },
+      {
+        "time": "2026-10-15T17:37:32.821Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "71b37ce6-d16e-4ca2-b5ac-9aaa8356adb2",
+        "route": "/api/update-scores",
+        "method": "POST",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 10095.305854999984
+      }
+    ]
+  },
+  "finishedAt": "2026-10-15T17:37:32.846Z"
+}

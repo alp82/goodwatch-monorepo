@@ -1,0 +1,14 @@
+summary: Regenerate and live-check the weekly sitemap
+description: Reuses main's generator; commits sitemap files only after every URL passes.
+lock: '!inline f/seo/regenerate_sitemaps.script.lock'
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties:
+    dry_run:
+      type: boolean
+      default: true
+      description: Generate and check without retrieving the GitHub token or writing to GitHub.
+  required: []
+timeout: 14400

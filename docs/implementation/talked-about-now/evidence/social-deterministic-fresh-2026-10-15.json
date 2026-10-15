@@ -1,0 +1,1242 @@
+{
+ "captured_at": "2026-10-15T04:41Z",
+ "matcher": "deterministic-1 @ feat/talked-about-now-social-nollm",
+ "scope": "latest quality-passing posts per source (rss 400, bluesky 400, youtube 108, mastodon 68), read-only via Windmill preview",
+ "review_method": "Manual headline/card reading by the cloud orchestrator that wrote the rules (not independent). Primary-work policy as in the 2026-10-14 reviews.",
+ "counts": {
+  "rss": {
+   "right": 77,
+   "wrong": 4,
+   "unsure": 1
+  },
+  "bluesky": {
+   "right": 2
+  },
+  "youtube": {
+   "wrong": 1,
+   "right": 37
+  }
+ },
+ "links": [
+  {
+   "source": "rss",
+   "text": "Meagan Good on Her ‘Reasonable Doubt’ Role, Learning From Husband Jonathan Majors and Breaking Out of the Pretty Box",
+   "card": null,
+   "url": "https://www.hollywoodreporter.com/tv/tv-features/meagan-good-reasonable-doubt-jonathan-majors-interview-1236730012/",
+   "key": "tv:205272",
+   "reason": "deterministic-1: quoted mention 'Reasonable Doubt' = Reasonable Doubt (2022); signals: person, slug",
+   "llm_also_linked": false,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "'Lanterns' Season 2 Fate Officially Revealed [Exclusive]",
+   "card": null,
+   "url": "https://collider.com/lanterns-season-2-renewal-potential/",
+   "key": "tv:95350",
+   "reason": "deterministic-1: quoted mention 'Lanterns' = Lanterns (2026); signals: season, slug",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "The Perfect ‘Star Trek: The Original Series’ Cast if It Were Made in 2026",
+   "card": null,
+   "url": "https://collider.com/star-trek-the-original-series-cast-made-today-2026/",
+   "key": "tv:253",
+   "reason": "deterministic-1: quoted mention 'Star Trek: The Original Series' = Star Trek (1966); signals: unique_name, slug",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "‘Game of Thrones’ Officially Meets ‘Gladiator’ in the Forgotten Epic Leaving Streaming",
+   "card": null,
+   "url": "https://collider.com/kit-harington-pompeii-leaving-netflix-october-2026/",
+   "key": "tv:1399",
+   "reason": "deterministic-1: quoted mention 'Game of Thrones' = Game of Thrones (2011); signals: person",
+   "llm_also_linked": false,
+   "manual_verdict": "wrong"
+  },
+  {
+   "source": "rss",
+   "text": "Harvey Keitel Threw ‘Bad Lieutenant’ in the Trash Before Giving One of His Greatest Performances",
+   "card": null,
+   "url": "https://www.hollywoodreporter.com/movies/movie-features/harvey-keitel-bad-lieutenant-abel-ferrara-1236730183/",
+   "key": "movie:12143",
+   "reason": "deterministic-1: quoted mention 'Bad Lieutenant' = Bad Lieutenant (1992); signals: person, slug",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "Prime Video’s NASA Limited Series ‘The Challenger’ Adds 11 To Cast",
+   "card": null,
+   "url": "https://deadline.com/2026/10/nasa-limited-series-the-challenger-cast-prime-video-1237157313/",
+   "key": "tv:256415",
+   "reason": "deterministic-1: quoted mention 'The Challenger' = The Challenger (None); signals: person, slug",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "Variety’s 2026 Artisans to Watch: ‘Obsession’ Makeup Head, ‘Project Hail Mary’ Animation Supervisor, ‘La Bola Negra’ Composer and More",
+   "card": null,
+   "url": "https://variety.com/lists/varietys-2026-artisans-to-watch-obsession-la-bola-negra/",
+   "key": "movie:687163",
+   "reason": "deterministic-1: quoted mention 'Project Hail Mary' = Project Hail Mary (2026); signals: year",
+   "llm_also_linked": false,
+   "manual_verdict": "unsure"
+  },
+  {
+   "source": "rss",
+   "text": "Ben Affleck Hating Justice League Just Confirms He’s the Perfect Batman",
+   "card": null,
+   "url": "https://www.denofgeek.com/movies/ben-affleck-hating-justice-league-confirms-hes-batman/",
+   "key": "movie:141052",
+   "reason": "deterministic-1: subrun mention 'Justice League' = Justice League (2017); signals: person, slug",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "Love of Your Life",
+   "card": null,
+   "url": "https://www.film-rezensionen.de/2026/10/love-of-your-life-amazon-prime-video/",
+   "key": "movie:1381078",
+   "reason": "deterministic-1: segment mention 'Love of Your Life' = Love of Your Life (2026); signals: unique_name, slug",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "“It Was Unpitchable”: How ‘Wicker’ Became the Horniest, Most Tender Film of the Year",
+   "card": null,
+   "url": "https://www.hollywoodreporter.com/movies/movie-features/how-wicker-horniest-tender-film-directors-interview-1236728674/",
+   "key": "movie:1195803",
+   "reason": "deterministic-1: quoted mention 'Wicker' = Wicker (2026); signals: person, slug",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "‘Maximum Pleasure Guaranteed’ Renewed for Season 2 at Apple TV",
+   "card": null,
+   "url": "https://variety.com/2026/tv/news/maximum-pleasure-guaranteed-season-2-apple-tv-1236912202/",
+   "key": "tv:285404",
+   "reason": "deterministic-1: quoted mention 'Maximum Pleasure Guaranteed' = Maximum Pleasure Guaranteed (2026); signals: person, season, slug",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "‘Maximum Pleasure Guaranteed’ Scores Season 2 Renewal at Apple TV",
+   "card": null,
+   "url": "https://www.hollywoodreporter.com/tv/tv-news/maximum-pleasure-guaranteed-renewed-season-2-apple-tv-1236729947/",
+   "key": "tv:285404",
+   "reason": "deterministic-1: quoted mention 'Maximum Pleasure Guaranteed' = Maximum Pleasure Guaranteed (2026); signals: season, slug",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "‘Maximum Pleasure Guaranteed’ Renewed For Season 2 By Apple TV",
+   "card": null,
+   "url": "https://deadline.com/2026/10/maximum-pleasure-guaranteed-renewed-season-2-apple-tv-1237157176/",
+   "key": "tv:285404",
+   "reason": "deterministic-1: quoted mention 'Maximum Pleasure Guaranteed' = Maximum Pleasure Guaranteed (2026); signals: person, season, slug",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "Box Office: ‘Street Fighter’ Aims for $30 Million Opening, ‘You Can See Everything’ Could Score $8 Million Start",
+   "card": null,
+   "url": "https://variety.com/2026/film/box-office/street-fighter-box-office-opening-weekend-projections-1236910614/",
+   "key": "movie:1765072",
+   "reason": "deterministic-1: quoted mention 'You Can See Everything' = You Can See Everything (2026); signals: unique_name",
+   "llm_also_linked": false,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "Austin Film Society to Open New John H. McCall Theater with Screenings of ‘Paper Tiger,’ 4K Restorations",
+   "card": null,
+   "url": "https://www.indiewire.com/news/general-news/austin-film-society-john-h-mccall-theater-open-paper-tiger-1235221860/",
+   "key": "movie:1381273",
+   "reason": "deterministic-1: quoted mention 'Paper Tiger' = Paper Tiger (2026); signals: person, slug",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "The Whale at the Center of ‘Whalefall’ is “the Good Guy,” Actually",
+   "card": null,
+   "url": "https://www.hollywoodreporter.com/movies/movie-news/whale-whalefall-good-guy-austin-abrams-1236729944/",
+   "key": "movie:1255833",
+   "reason": "deterministic-1: quoted mention 'Whalefall' = Whalefall (2026); signals: person, slug",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "‘The Lowdown’ Season 2 Review: Ethan Hawke and Betty Gilpin Light Up a Rollicking, Moving Mystery",
+   "card": null,
+   "url": "https://www.indiewire.com/criticism/shows/the-lowdown-season-2-review-ethan-hawke-betty-gilpin-1235221639/",
+   "key": "tv:273247",
+   "reason": "deterministic-1: quoted mention 'The Lowdown' = The Lowdown (2025); signals: person, season, slug",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "Everything We Know About ‘The Gilded Age’ Season 4 So Far",
+   "card": null,
+   "url": "https://deadline.com/feature/the-gilded-age-season-4-news-updates-everything-we-know-1236748421/",
+   "key": "tv:81723",
+   "reason": "deterministic-1: quoted mention 'The Gilded Age' = The Gilded Age (2022); signals: person, season, slug",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "How Matthew Gray Gubler Went Back To The Drawing Board For ‘Einstein’",
+   "card": null,
+   "url": "https://deadline.com/2026/10/atthew-gray-gubler-art-behind-cbs-einstein-1237156953/",
+   "key": "tv:289566",
+   "reason": "deterministic-1: quoted mention 'Einstein' = Einstein (None); signals: person, slug",
+   "llm_also_linked": false,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "‘Abbott Elementary’ Welcomes Miranda Cosgrove, Edi Patterson & Ali Wong As Season 6 Guest Stars",
+   "card": null,
+   "url": "https://deadline.com/2026/10/abbott-elementary-miranda-cosgrove-edi-patterson-ali-wong-1237156972/",
+   "key": "tv:125935",
+   "reason": "deterministic-1: quoted mention 'Abbott Elementary' = Abbott Elementary (2021); signals: season, slug",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "VisionQuest: Tommy Maximoff’s Story Is Even Weirder in the Comics",
+   "card": null,
+   "url": "https://www.denofgeek.com/tv/visionquest-tommy-maximoff-story-even-weirder-comics/",
+   "key": "tv:213375",
+   "reason": "deterministic-1: segment mention 'VisionQuest' = VisionQuest (2026); signals: person, season, slug",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "SFFILM’s Doc Stories To Open With Ava DuVernay’s ‘14th,’ Showcase ‘Tutu,’ ‘Black Sunflowers,’ ’Soul Patrol’ & More",
+   "card": null,
+   "url": "https://deadline.com/2026/10/sffilm-doc-stories-2026-lineup-announcement-1237156521/",
+   "key": "movie:1744043",
+   "reason": "deterministic-1: quoted mention 'Black Sunflowers' = Black Sunflowers (2026); signals: unique_name",
+   "llm_also_linked": false,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "Liam Neeson’s Stunt Double of Nearly 30 Years Steps Behind the Camera for ‘The Mongoose’",
+   "card": null,
+   "url": "https://www.indiewire.com/features/interviews/liam-neeson-stunt-double-directs-the-mongoose-interview-1235220493/",
+   "key": "movie:1294189",
+   "reason": "deterministic-1: quoted mention 'The Mongoose' = The Mongoose (2026); signals: person, slug",
+   "llm_also_linked": false,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "Aaron Sorkin On ‘The West Wing’ Revival: “It Would Be Very, Very Tricky To Do In The Current Environment”",
+   "card": null,
+   "url": "https://deadline.com/2026/10/aaron-sorkin-the-west-wing-revival-1237156887/",
+   "key": "tv:688",
+   "reason": "deterministic-1: quoted mention 'The West Wing' = The West Wing (1999); signals: person, slug",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "In 'Whalefall,' the Only Thing More Dangerous Than the Sea Is Guilt | Review",
+   "card": null,
+   "url": "https://collider.com/whalefall-movie-review-austin-abrams/",
+   "key": "movie:1255833",
+   "reason": "deterministic-1: quoted mention 'Whalefall' = Whalefall (2026); signals: person, slug",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "‘Elsbeth’ Officially Puts a ‘Succession’ Star in the Hot Seat in New Season 4 Sneak Peek [Exclusive]",
+   "card": null,
+   "url": "https://collider.com/elsbeth-season-4-sneak-peek-isaac-powell-nicholas-braun-tommy-dorfman/",
+   "key": "tv:226285",
+   "reason": "deterministic-1: quoted mention 'Elsbeth' = Elsbeth (2024); signals: season, slug",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "Idris Elba’s 85-Minute Sci-Fi Thriller 'Above the Below' Debuts First Images [Exclusive]",
+   "card": null,
+   "url": "https://collider.com/idris-elba-sci-fi-thriller-above-the-below-first-images/",
+   "key": "movie:1198746",
+   "reason": "deterministic-1: quoted mention 'Above the Below' = Above the Below (2026); signals: person, slug",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "‘Whalefall’ Review: Austin Abrams Gets Swallowed by a Whale in an Unintentionally Preposterous Thriller — a Tale of Human Perseverance and Mammalian Stomach Lining",
+   "card": null,
+   "url": "https://variety.com/2026/film/reviews/whalefall-review-austin-abrams-josh-brolin-1236910135/",
+   "key": "movie:1255833",
+   "reason": "deterministic-1: quoted mention 'Whalefall' = Whalefall (2026); signals: person, slug",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "‘Whalefall’ Review: Austin Abrams Battles a Bellyful of Daddy Issues in Brutal Survival Thriller",
+   "card": null,
+   "url": "https://www.indiewire.com/criticism/movies/whalefall-review-austin-abrams-1235221552/",
+   "key": "movie:1255833",
+   "reason": "deterministic-1: quoted mention 'Whalefall' = Whalefall (2026); signals: person, slug",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "‘American Doctor,’ ‘NAZA,’ ‘Musk,’ Elizabeth Holmes Doc And More Make DOC NYC’s Prestigious Short List",
+   "card": null,
+   "url": "https://deadline.com/2026/10/doc-nyc-2026-short-lists-announcement-1237156501/",
+   "key": "movie:1596332",
+   "reason": "deterministic-1: quoted mention 'American Doctor' = American Doctor (2026); signals: unique_name",
+   "llm_also_linked": false,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "‘Josephine’ Trailer: Channing Tatum and Gemma Chan Can’t Parent Away an Act of Violence",
+   "card": null,
+   "url": "https://www.indiewire.com/news/trailers/josephine-trailer-channing-tatum-beth-de-arujo-mason-reeves-1235221908/",
+   "key": "movie:1299329",
+   "reason": "deterministic-1: quoted mention 'Josephine' = Josephine (2026); signals: person, slug",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "From ’You Can See Everything’ to ’14th’ and ‘Musk,’ DOC NYC 2026 Reveals Influential Awards Short List",
+   "card": null,
+   "url": "https://www.indiewire.com/awards/industry/doc-nyc-2026-awards-short-list-you-can-see-everything-musk-1235221889/",
+   "key": "movie:1096228",
+   "reason": "deterministic-1: quoted mention 'Musk' = Musk (2026); signals: year, slug",
+   "llm_also_linked": false,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "‘Whalefall’ Review: Austin Abrams Struggles to Escape the Digestive Tract of a Whopper Mammal in a Dumb Thriller That Takes Itself Way Too Seriously",
+   "card": null,
+   "url": "https://www.hollywoodreporter.com/movies/movie-reviews/whalefall-review-austin-abrams-josh-brolin-brian-duffield-1236729610/",
+   "key": "movie:1255833",
+   "reason": "deterministic-1: quoted mention 'Whalefall' = Whalefall (2026); signals: person, slug",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "How ‘Everest: The Other Side’ Explores the “Ethical Complexity of Big Ambitions”",
+   "card": null,
+   "url": "https://www.hollywoodreporter.com/movies/movie-news/everest-the-other-side-film-interview-lff-2026-free-solo-1236729809/",
+   "key": "movie:1603262",
+   "reason": "deterministic-1: quoted mention 'Everest: The Other Side' = Everest: The Other Side (2026); signals: person, slug",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "Eli Manning, Robin Roberts Board ‘Panther Pat’ Documentary Short as Executive Producers (Exclusive)",
+   "card": null,
+   "url": "https://www.hollywoodreporter.com/movies/movie-news/eli-manning-robin-roberts-panther-pat-doc-executive-produce-1236729760/",
+   "key": "movie:1626328",
+   "reason": "deterministic-1: quoted mention 'Panther Pat' = Panther Pat (2026); signals: person, slug",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "John Wilson’s ‘The History of Concrete’ Crosses $2 Million at Box Office, Becoming a Major Documentary Hit for Magnolia",
+   "card": null,
+   "url": "https://www.indiewire.com/news/box-office/john-wilson-history-of-concrete-crosses-2-million-1235221888/",
+   "key": "movie:1596296",
+   "reason": "deterministic-1: quoted mention 'The History of Concrete' = The History of Concrete (2026); signals: unique_name",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "‘Hazara Town,’ About the Hazara Community in Pakistan, Acquired by Filmotor Ahead of IDFA World Premiere (EXCLUSIVE)",
+   "card": null,
+   "url": "https://variety.com/2026/film/global/hazara-town-filmotor-idfa-1236911984/",
+   "key": "movie:1622483",
+   "reason": "deterministic-1: quoted mention 'Hazara Town' = Hazara Town (None); signals: person, slug",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "Chuck Lorre Says CBS “Hated” Melissa McCarthy Casting In ‘Mike & Molly’: “They Wanted A Hot Young Woman”",
+   "card": null,
+   "url": "https://deadline.com/2026/10/chuck-lorre-cbs-hated-melissa-mccarthy-mike-and-molly-1237156854/",
+   "key": "tv:32709",
+   "reason": "deterministic-1: quoted mention 'Mike & Molly' = Mike & Molly (2010); signals: person",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "‘Guarding Stars’ Trailer: Leighton Meester, Jared Padalecki Star in Fake-Dating Holiday Romance",
+   "card": null,
+   "url": "https://www.hollywoodreporter.com/movies/movie-news/guarding-stars-trailer-leighton-meester-jared-padalecki-1236729835/",
+   "key": "movie:1551025",
+   "reason": "deterministic-1: quoted mention 'Guarding Stars' = Guarding Stars (2026); signals: person, slug",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "Nia Long Joins Teyana Taylor’s Directorial Debut ‘Get Lite’ at Paramount (EXCLUSIVE)",
+   "card": null,
+   "url": "https://variety.com/2026/film/news/nia-long-teyana-taylor-get-lite-cast-1236910445/",
+   "key": "movie:1263022",
+   "reason": "deterministic-1: quoted mention 'Get Lite' = Get Lite (2027); signals: unique_name, slug",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "Gewinnt Tickets für die exklusive Premiere von \"Der perfekte Urlaub\" in Berlin – mit den Stars live vor Ort!",
+   "card": null,
+   "url": "https://www.filmstarts.de/nachrichten/1000227396.html",
+   "key": "movie:1525072",
+   "reason": "deterministic-1: quoted mention 'Der perfekte Urlaub' = The Perfect Holiday (2026); signals: person",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "The ‘Yellowjackets’ Officially Come Home in First Season 4 Trailer",
+   "card": null,
+   "url": "https://collider.com/yellowjackets-season-4-final-season-trailer-release-date/",
+   "key": "tv:117488",
+   "reason": "deterministic-1: quoted mention 'Yellowjackets' = Yellowjackets (2021); signals: season, slug",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "‘Yellowjackets’ Season 4 Trailer: The Wilderness Survivors Return Home",
+   "card": null,
+   "url": "https://variety.com/2026/tv/news/yellowjackets-season-4-trailer-shauna-mista-van-1236910976/",
+   "key": "tv:117488",
+   "reason": "deterministic-1: quoted mention 'Yellowjackets' = Yellowjackets (2021); signals: season, slug",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "Sex, Love and War: How the Racy Gay Epic ‘La Bola Negra’ Could Win Netflix’s First Best Picture Oscar",
+   "card": null,
+   "url": "https://variety.com/2026/film/features/la-bola-negra-netflix-sexy-gay-oscar-contender-1236909149/",
+   "key": "movie:1422041",
+   "reason": "deterministic-1: quoted mention 'La Bola Negra' = La bola negra (2026); signals: person, slug",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "Why Project Hail Mary Used An Animatronic Rocky Instead Of A Puppet In One Scene [Exclusive]",
+   "card": null,
+   "url": "https://www.slashfilm.com/2283844/project-hail-mary-movie-animatronic-rocky-scene/",
+   "key": "movie:687163",
+   "reason": "deterministic-1: subrun mention 'Project Hail Mary' = Project Hail Mary (2026); signals: person, slug",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "‘Yaga’ Cast Teases Timely Take on Female Rage, Double Hudson Williams and “A Lot of Chicken Stuff”",
+   "card": null,
+   "url": "https://www.hollywoodreporter.com/tv/tv-features/yaga-cast-female-rage-hudson-williams-chicken-1236726711/",
+   "key": "tv:314360",
+   "reason": "deterministic-1: quoted mention 'Yaga' = YAGA (2026); signals: person, slug",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "Street Fighter (2026)",
+   "card": null,
+   "url": "https://www.film-rezensionen.de/2026/10/street-fighter-2026/",
+   "key": "movie:1153576",
+   "reason": "deterministic-1: segment mention 'Street Fighter' = Street Fighter (2026); signals: year, slug",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "\"Ich mag es, in den Kopf von anderen zu kriechen\": Die \"Liebes Kind\"-Macherin über ihre neue Netflix-Serie \"Die Falle\"",
+   "card": null,
+   "url": "https://www.filmstarts.de/nachrichten/1000227251.html",
+   "key": "tv:283371",
+   "reason": "deterministic-1: quoted mention 'Die Falle' = The Trap (2026); signals: person",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "Jonathan Bailey and Natalie Portman Thriller ‘Pumping Black’ Adds Daniel Quinn-Toye, Lucas Lynggaard Tønnesen, Arieh Worthalter and Tony Hale (EXCLUSIVE)",
+   "card": null,
+   "url": "https://variety.com/2026/film/global/jonathan-bailey-natalie-portman-pumping-black-starts-shoot-1236911027/",
+   "key": "movie:1455541",
+   "reason": "deterministic-1: quoted mention 'Pumping Black' = Pumping Black (None); signals: person, slug",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "The New ‘Sense and Sensibility’ Introduces a Different Marianne Dashwood, and a Breakout Star in Esmé Creed-Miles",
+   "card": null,
+   "url": "https://www.indiewire.com/features/interviews/sense-and-sensibility-movie-star-esme-creed-miles-interview-1235221468/",
+   "key": "movie:1503762",
+   "reason": "deterministic-1: quoted mention 'Sense and Sensibility' = Sense and Sensibility (2026); signals: person, slug",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "‘Clayface’ First Reactions Praise DC Body Horror as ‘Freakishly Awesome’ and ‘Loaded With Brutal Scenes’",
+   "card": null,
+   "url": "https://variety.com/2026/film/news/clayface-first-reactions-dc-body-horror-freakishly-awesome-1236911184/",
+   "key": "movie:1400940",
+   "reason": "deterministic-1: quoted mention 'Clayface' = Clayface (2026); signals: person, slug",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "‘Cameron Winter at Carnegie Hall’ Trailer: Paul Thomas Anderson Films the Geese Frontman in 35mm",
+   "card": null,
+   "url": "https://www.indiewire.com/news/trailers/cameron-winter-at-carnegie-hall-trailer-1235221796/",
+   "key": "movie:1597242",
+   "reason": "deterministic-1: quoted mention 'Cameron Winter at Carnegie Hall' = Cameron Winter at Carnegie Hall (2026); signals: person, slug",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "‘A Long Winter’: Watch First Trailer For Andrew Haigh Drama Starring Fred Hechinger, Ebon Moss-Bachrach, Caitríona Balfe & Kit Connor",
+   "card": null,
+   "url": "https://deadline.com/2026/10/a-long-winter-first-trailer-fred-hechinger-kit-connor-1237156587/",
+   "key": "movie:1534221",
+   "reason": "deterministic-1: quoted mention 'A Long Winter' = A Long Winter (2027); signals: person, slug",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "Heute im TV: \"Der beste Film aller Zeiten\" – aber wie gut ist er wirklich?",
+   "card": null,
+   "url": "https://www.filmstarts.de/nachrichten/1000227255.html",
+   "key": "movie:668640",
+   "reason": "deterministic-1: quoted mention 'Der beste Film aller Zeiten' = Official Competition (2021); signals: person",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "750.000 Dollar pro Folge und völlig neue Regeln: Für diesen Star sollte \"Two And A Half Men\" umgebaut werden",
+   "card": null,
+   "url": "https://www.filmstarts.de/nachrichten/1000227309.html",
+   "key": "tv:2691",
+   "reason": "deterministic-1: quoted mention 'Two And A Half Men' = Two and a Half Men (2003); signals: person",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "Aaron Sorkin Thinks About Reviving ‘The West Wing’ for a ‘Couple of Seconds Every Day’: ‘I Miss It’",
+   "card": null,
+   "url": "https://variety.com/2026/tv/news/the-west-wing-aaron-sorkin-thinks-reviving-series-every-day-1236911060/",
+   "key": "tv:688",
+   "reason": "deterministic-1: quoted mention 'The West Wing' = The West Wing (1999); signals: person, slug",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "‘La Bola Negra’, ‘Woman Unknown’, ‘NAZA’ & ‘Fjord’ Among 68 Films On Shortlist For 39th European Film Awards",
+   "card": null,
+   "url": "https://deadline.com/2026/10/short-list-39th-european-film-awards-1237156545/",
+   "key": "movie:1422041",
+   "reason": "deterministic-1: quoted mention 'La Bola Negra' = La bola negra (2026); signals: unique_name",
+   "llm_also_linked": false,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "‘La Bola Negra’, ‘Woman Unknown’, ‘NAZA’ & ‘Fjord’ Among 68 Films On Shortlist For 39th European Film Awards",
+   "card": null,
+   "url": "https://deadline.com/2026/10/short-list-39th-european-film-awards-1237156545/",
+   "key": "movie:1511780",
+   "reason": "deterministic-1: quoted mention 'Woman Unknown' = Woman Unknown (2027); signals: unique_name",
+   "llm_also_linked": false,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "Noah Centineo, Andrew Koji’s ‘Street Fighter’: First Reactions",
+   "card": null,
+   "url": "https://www.hollywoodreporter.com/movies/movie-news/street-fighter-2026-movie-first-reactions-1236729666/",
+   "key": "movie:1153576",
+   "reason": "deterministic-1: quoted mention 'Street Fighter' = Street Fighter (2026); signals: person, slug",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "Todd Haynes on Pedro Pascal-Led ‘De Noche,’ What You Can’t See on Screen and the Radical Power of Love",
+   "card": null,
+   "url": "https://variety.com/2026/film/global/todd-haynes-pedro-pascal-de-noche-christine-vachon-1236910991/",
+   "key": "movie:1536826",
+   "reason": "deterministic-1: quoted mention 'De Noche' = De Noche (None); signals: person, slug",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "The Negative Melted, the Legend Didn’t: Inside the Resurrection of Kamal Amrohi and Meena Kumari’s Storied Indian Epic ‘Pakeezah’",
+   "card": null,
+   "url": "https://variety.com/2026/film/festivals/kamal-amrohi-meena-kumari-pakeezah-rescued-melted-negative-1236909987/",
+   "key": "movie:54966",
+   "reason": "deterministic-1: quoted mention 'Pakeezah' = Pakeezah (1972); signals: person, slug",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "DC Studios’ ‘Clayface’: First Reactions",
+   "card": null,
+   "url": "https://www.hollywoodreporter.com/movies/movie-news/dc-studios-clayface-first-reactions-1236729618/",
+   "key": "movie:1400940",
+   "reason": "deterministic-1: quoted mention 'Clayface' = Clayface (2026); signals: person, slug",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "‘Clayface’ Red Carpet Premiere Photos: Tom Rhys Harries, Naomi Ackie & More",
+   "card": null,
+   "url": "https://deadline.com/gallery/clayface-red-carpet-premiere-photos-dc-studios/",
+   "key": "movie:1400940",
+   "reason": "deterministic-1: quoted mention 'Clayface' = Clayface (2026); signals: person, slug",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "Ben Affleck Calls Filming ‘Justice League’ a “Low Point” in His Career: “About as Gross as It Gets”",
+   "card": null,
+   "url": "https://www.hollywoodreporter.com/movies/movie-news/ben-affleck-calls-justice-league-low-point-career-1236729523/",
+   "key": "movie:141052",
+   "reason": "deterministic-1: quoted mention 'Justice League' = Justice League (2017); signals: person, slug",
+   "llm_also_linked": false,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "‘All About Corinne’ Review: Isabelle Huppert Stalks Sandrine Kiberlain in a Witty, Deliciously Acted French Industry Satire",
+   "card": null,
+   "url": "https://variety.com/2026/film/news/all-about-corinne-review-isabelle-huppert-1236908606/",
+   "key": "movie:1429592",
+   "reason": "deterministic-1: quoted mention 'All About Corinne' = All About Corinne (2026); signals: person, slug",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "‘The White Lotus’ Filming In Cannes As Season 4 Production Enters Final Stretch, Hôtel Martinez Transformation Confirms New Resort Logo",
+   "card": null,
+   "url": "https://deadline.com/2026/10/white-lotus-season-4-production-cannes-final-stretch-1237155644/",
+   "key": "tv:111803",
+   "reason": "deterministic-1: quoted mention 'The White Lotus' = The White Lotus (2021); signals: season",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "New ‘Avatar’ Projects Are Everywhere — but the Best One Succeeds by Leaving ‘The Last Airbender’ Behind",
+   "card": null,
+   "url": "https://www.indiewire.com/features/animation/avatar-seven-havens-adaptations-animation-styles-1235221514/",
+   "key": "tv:246",
+   "reason": "deterministic-1: quoted mention 'Avatar' = Avatar: The Last Airbender (2005); signals: person, slug",
+   "llm_also_linked": false,
+   "manual_verdict": "wrong"
+  },
+  {
+   "source": "rss",
+   "text": "‘Clean Hands’ Review: Zach Braff Is a Cop on a Crusade to Save His Addict Daughter in an Uneasy Fact-Based Crime Drama",
+   "card": null,
+   "url": "https://variety.com/2026/film/reviews/clean-hands-review-1236910791/",
+   "key": "movie:1452110",
+   "reason": "deterministic-1: quoted mention 'Clean Hands' = Clean Hands (2026); signals: person, slug",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "Highdee Kuan on ‘Brothers’ and Getting Her Very Own ‘True Detective’ Moment on the Apple Comedy",
+   "card": null,
+   "url": "https://www.hollywoodreporter.com/tv/tv-news/highdee-kuan-brothers-interview-1236722976/",
+   "key": "tv:46648",
+   "reason": "deterministic-1: quoted mention 'True Detective' = True Detective (2014); signals: person",
+   "llm_also_linked": false,
+   "manual_verdict": "wrong"
+  },
+  {
+   "source": "rss",
+   "text": "Doc Talk Podcast: David And Liani Greaves On Their Oscar Contender ‘Once Upon A Time In Harlem’",
+   "card": null,
+   "url": "https://deadline.com/2026/10/once-upon-a-time-in-harlem-david-liani-greaves-podcast-1237156136/",
+   "key": "movie:1596300",
+   "reason": "deterministic-1: quoted mention 'Once Upon A Time In Harlem' = Once Upon a Time in Harlem (2026); signals: unique_name, slug",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "New York Times Op-Docs Acquires ‘The Revolution Against Death,’ Oscar Nominee Joshua Oppenheimer’s Film On Quest For Immortality",
+   "card": null,
+   "url": "https://deadline.com/2026/10/the-revolution-against-death-new-york-times-op-docs-acquisition-1237156214/",
+   "key": "movie:1645880",
+   "reason": "deterministic-1: quoted mention 'The Revolution Against Death' = The Revolution Against Death (2026); signals: person, slug",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "‘Once Upon a Time in the Middle East’ Review: China’s Oscar Entry Is a Breakneck Blockbuster That Mixes Food Porn With Wartime Devastation",
+   "card": null,
+   "url": "https://variety.com/2026/film/reviews/once-upon-in-the-middle-east-review-1236910775/",
+   "key": "movie:1391021",
+   "reason": "deterministic-1: quoted mention 'Once Upon a Time in the Middle East' = Once Upon a Time in the Middle East (2026); signals: unique_name",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "Milo Manheim Boards Amazon MGM & Miramax’s ‘Serendipity’ Redo From Michael Showalter",
+   "card": null,
+   "url": "https://deadline.com/2026/10/milo-manheim-to-star-serendipity-michael-showalter-1237156184/",
+   "key": "movie:1753866",
+   "reason": "deterministic-1: quoted mention 'Serendipity' = Serendipity (None); signals: person, slug",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "Crazy Old Lady",
+   "card": null,
+   "url": "https://www.film-rezensionen.de/2026/10/crazy-old-lady-vieja-loca/",
+   "key": "movie:1255674",
+   "reason": "deterministic-1: segment mention 'Crazy Old Lady' = Crazy Old Lady (2025); signals: unique_name, slug",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "Chuck Lorre Tells All: His 10 Years in Scientology, Clashes With Stars Like Roseanne and Brett Butler, and How ‘The Big Bang Theory’ Cast Shocked Him",
+   "card": null,
+   "url": "https://variety.com/2026/tv/news/chuck-lorre-scientology-roseanne-brett-butler-big-bang-1236910668/",
+   "key": "tv:1418",
+   "reason": "deterministic-1: quoted mention 'The Big Bang Theory' = The Big Bang Theory (2007); signals: person",
+   "llm_also_linked": true,
+   "manual_verdict": "wrong"
+  },
+  {
+   "source": "rss",
+   "text": "Stephen Amell Says Putting on the ‘Baywatch’ Red Trunks Felt ‘So Familiar’ Because ‘It’s a Superhero Show’",
+   "card": null,
+   "url": "https://variety.com/2026/tv/global/stephen-amell-baywatch-superhero-show-1236910083/",
+   "key": "tv:248172",
+   "reason": "deterministic-1: quoted mention 'Baywatch' = Baywatch (None); signals: person, slug",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "‘Behemoth!’ Wouldn’t Have Been Possible Without ‘Andor’ Success, Says Tony Gilroy",
+   "card": null,
+   "url": "https://www.hollywoodreporter.com/movies/movie-news/behemoth-london-film-festival-tony-gilroy-pedro-pascal-1236729199/",
+   "key": "movie:1452168",
+   "reason": "deterministic-1: quoted mention 'Behemoth' = Behemoth! (2026); signals: person, slug",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "Junkies of Dreaming – Mahler 3 Currentzis",
+   "card": null,
+   "url": "https://www.film-rezensionen.de/2026/10/junkies-of-dreaming-mahler-3-currentzis/",
+   "key": "movie:1646767",
+   "reason": "deterministic-1: titlecase mention 'Junkies of Dreaming Mahler 3 Currentzis' = Junkies of Dreaming (2026); signals: unique_name, slug",
+   "llm_also_linked": false,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "‘Below’ Attracts Record Debut For A Netflix Canadian Series",
+   "card": null,
+   "url": "https://deadline.com/2026/10/below-netflix-premiere-ratings-record-canadian-1237155959/",
+   "key": "tv:285322",
+   "reason": "deterministic-1: quoted mention 'Below' = Below (2026); signals: person, slug",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "Banned in Iran, Denied a U.K. Visa: Mohsen Amiryousefi’s New Film ‘The Banning Curse’ Premieres at London",
+   "card": null,
+   "url": "https://www.hollywoodreporter.com/movies/movie-news/the-banning-curse-iran-film-interview-mohsen-amiryousefi-lff-1236728620/",
+   "key": "movie:1760623",
+   "reason": "deterministic-1: quoted mention 'The Banning Curse' = The Banning Curse (2026); signals: unique_name, slug",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "‘Elsinore’ And ‘La Bola Negra’ Continue Awards Momentum With Wins At Hamptons Film Festival",
+   "card": null,
+   "url": "https://deadline.com/2026/10/elsinore-la-bola-negra-awards-hamptons-film-festival-1237155925/",
+   "key": "movie:1422041",
+   "reason": "deterministic-1: quoted mention 'La Bola Negra' = La bola negra (2026); signals: unique_name, slug",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "rss",
+   "text": "20 Great Films That Flopped At The Box Office From ‘Digger’ To ‘Fight Club’ And ‘Citizen Kane’",
+   "card": null,
+   "url": "https://deadline.com/gallery/20-great-movies-that-flopped-at-the-box-office/",
+   "key": "movie:1248832",
+   "reason": "deterministic-1: quoted mention 'Digger' = Digger (2026); signals: person",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "bluesky",
+   "text": "Obsessed with the reality of Jason Mantzoukas and Brennan Lee Mulligan existing in the same television series. \n\nvariety.com/2026/tv/news...",
+   "card": "Amy Poehler’s ‘Dig’ Adds Max Greenfield, Jason Mantzoukas, Noma Dumezweni and More (EXCLUSIVE) Max Greenfield, Jason Mantzoukas and more have joined the cast of Amy Poehler's new Peacock sitcom 'Dig.'",
+   "url": "https://bsky.app/profile/did:plc:sz477pknhj3jimhsyyp7pzo7/post/3mxuhmev6bs2g",
+   "key": "tv:290826",
+   "reason": "deterministic-1: quoted mention 'Dig' = Dig (2026); signals: person",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "bluesky",
+   "text": "Great news: Maximum Pleasure Guaranteed’ Renewed for Season 2 \n\n“This is all pretty amazing for a show whose title came from a spam email”\n\nvariety.com/2026/tv/news...",
+   "card": "‘Maximum Pleasure Guaranteed’ Renewed for Season 2 at Apple TV Apple TV renewed 'Maximum Pleasure Guaranteed,' starring Tatiana Maslany and Jake Johnson, for a second season.",
+   "url": "https://bsky.app/profile/did:plc:3mgx3lwdljrjssy4temt2nf5/post/3mxue24qolk2r",
+   "key": "tv:285404",
+   "reason": "deterministic-1: quoted mention 'Maximum Pleasure Guaranteed' = Maximum Pleasure Guaranteed (2026); signals: person, season",
+   "llm_also_linked": false,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "youtube",
+   "text": "PRÓXIMA PARADA: NIGHT CITY",
+   "card": null,
+   "url": "https://www.youtube.com/watch?v=-9DZPH471D4",
+   "key": "movie:663192",
+   "reason": "deterministic-1: segment mention 'NIGHT CITY' = Night City (2015); signals: unique_name",
+   "llm_also_linked": false,
+   "manual_verdict": "wrong"
+  },
+  {
+   "source": "youtube",
+   "text": "Bass X Machina | Official Trailer | Netflix",
+   "card": null,
+   "url": "https://www.youtube.com/watch?v=jjr5mf9i42Q",
+   "key": "tv:314271",
+   "reason": "deterministic-1: segment mention 'Bass X Machina' = Bass X Machina (2026); signals: person",
+   "llm_also_linked": false,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "youtube",
+   "text": "James is Attacked Trying to Help Sydney 💥 #TheInvisibleMan #Shorts",
+   "card": null,
+   "url": "https://www.youtube.com/watch?v=I3wy0uxmHEc",
+   "key": "movie:570670",
+   "reason": "deterministic-1: subrun mention 'Invisible Man' = The Invisible Man (2020); signals: person",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "youtube",
+   "text": "Fjord - Trust Featurette - Now Playing In Select Theaters",
+   "card": null,
+   "url": "https://www.youtube.com/watch?v=xpbAHPaOVw0",
+   "key": "movie:1401459",
+   "reason": "deterministic-1: segment mention 'Fjord' = Fjord (2026); signals: person",
+   "llm_also_linked": false,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "youtube",
+   "text": "Forever young(ish) | 🎬 Death Becomes Her (1992)",
+   "card": null,
+   "url": "https://www.youtube.com/watch?v=wW-f4VLim9s",
+   "key": "movie:9374",
+   "reason": "deterministic-1: segment mention '🎬 Death Becomes Her' = Death Becomes Her (1992); signals: year",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "youtube",
+   "text": "GHOST SOLDIER - New Trailer | Starring Jim Caviezel (4K)",
+   "card": null,
+   "url": "https://www.youtube.com/watch?v=UKaWzMf9Ybc",
+   "key": "movie:1562642",
+   "reason": "deterministic-1: segment mention 'GHOST SOLDIER' = Ghost Soldier (2026); signals: person",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "youtube",
+   "text": "Von Fiesta bis Fiasko: DER PERFEKTE URLAUB - Ab 22. Oktober im Kino!",
+   "card": null,
+   "url": "https://www.youtube.com/watch?v=ZmjWHS6o5t0",
+   "key": "movie:1525072",
+   "reason": "deterministic-1: segment mention 'DER PERFEKTE URLAUB' = The Perfect Holiday (2026); signals: unique_name",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "youtube",
+   "text": "Guarding Stars | Leighton Meester & Jared Padalecki | Official Trailer | Netflix",
+   "card": null,
+   "url": "https://www.youtube.com/watch?v=mFvtVPMa5ak",
+   "key": "movie:1551025",
+   "reason": "deterministic-1: segment mention 'Guarding Stars' = Guarding Stars (2026); signals: person",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "youtube",
+   "text": "Enna Vilai | Official Trailer | Karunas, Nimisha Sajayan | Netflix India",
+   "card": null,
+   "url": "https://www.youtube.com/watch?v=wl4mqPQCBnU",
+   "key": "movie:1686999",
+   "reason": "deterministic-1: segment mention 'Enna Vilai' = Enna Vilai (2026); signals: person",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "youtube",
+   "text": "Fatima Sana Shaikh’s EPIC LAST MOVE 🤼 Ft. Aamir Khan | Dangal | Netflix India",
+   "card": null,
+   "url": "https://www.youtube.com/watch?v=H0Zbjd140oY",
+   "key": "movie:360814",
+   "reason": "deterministic-1: segment mention 'Dangal' = Dangal (2016); signals: person",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "youtube",
+   "text": "Coven Academy | Sienna Spiro \"You Stole the Show\" Lyric Video",
+   "card": null,
+   "url": "https://www.youtube.com/watch?v=4WZO9lHgiI4",
+   "key": "tv:298505",
+   "reason": "deterministic-1: segment mention 'Coven Academy' = Coven Academy (2026); signals: season",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "youtube",
+   "text": "Skyler Gisondo & Austin Abrams | Primetime | The A24 Podcast",
+   "card": null,
+   "url": "https://www.youtube.com/watch?v=3Qm55Fzi8NM",
+   "key": "movie:1375441",
+   "reason": "deterministic-1: segment mention 'Primetime' = Primetime (2026); signals: person",
+   "llm_also_linked": false,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "youtube",
+   "text": "NARNIA: THE MAGICIAN’S NEPHEW | Official Trailer | Netflix",
+   "card": null,
+   "url": "https://www.youtube.com/watch?v=3g28OdIj6cY",
+   "key": "movie:1147572",
+   "reason": "deterministic-1: segment mention 'NARNIA' = Narnia: The Magician's Nephew (2027); signals: person",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "youtube",
+   "text": "NARNIA: THE MAGICIAN’S NEPHEW | Official Trailer | Netflix",
+   "card": null,
+   "url": "https://www.youtube.com/watch?v=O8hR2dQGv0k",
+   "key": "movie:1147572",
+   "reason": "deterministic-1: segment mention 'NARNIA' = Narnia: The Magician's Nephew (2027); signals: person",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "youtube",
+   "text": "Nárnia: O Sobrinho do Mago | Trailer oficial | Netflix",
+   "card": null,
+   "url": "https://www.youtube.com/watch?v=pDvjN6h-mRo",
+   "key": "movie:1147572",
+   "reason": "deterministic-1: segment mention 'Nárnia' = Narnia: The Magician's Nephew (2027); signals: person",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "youtube",
+   "text": "NARNIA: THE MAGICIAN’S NEPHEW | Official Trailer | Netflix",
+   "card": null,
+   "url": "https://www.youtube.com/watch?v=gDJ-ini7fF0",
+   "key": "movie:1147572",
+   "reason": "Allowlisted channel and unique official catalog video ID",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "youtube",
+   "text": "Are you ready to face your fear? Get tickets now for #ClayfaceMovie",
+   "card": null,
+   "url": "https://www.youtube.com/watch?v=gk_yGpCGrk4",
+   "key": "movie:1400940",
+   "reason": "Allowlisted channel and unique official catalog video ID",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "youtube",
+   "text": "The Child | Official Trailer | Netflix",
+   "card": null,
+   "url": "https://www.youtube.com/watch?v=vsXs3Km6UDw",
+   "key": "movie:1506401",
+   "reason": "deterministic-1: segment mention 'The Child' = The Child (2026); signals: person",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "youtube",
+   "text": "Naveen Polishetty is Hilarious | Anaganaga Oka Raju | Netflix India",
+   "card": null,
+   "url": "https://www.youtube.com/watch?v=CfT9GNAlS_E",
+   "key": "movie:1407432",
+   "reason": "deterministic-1: segment mention 'Anaganaga Oka Raju' = Anaganaga Oka Raju (2026); signals: person",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "youtube",
+   "text": "Look at what they’ve done. Get tickets NOW for #ClayfaceMovie",
+   "card": null,
+   "url": "https://www.youtube.com/watch?v=L6hnv8H2ndc",
+   "key": "movie:1400940",
+   "reason": "Allowlisted channel and unique official catalog video ID",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "youtube",
+   "text": "Theo Von: I’m Doing Fine | Official Trailer | Netflix",
+   "card": null,
+   "url": "https://www.youtube.com/watch?v=r0H-oWUFJbk",
+   "key": "movie:1795934",
+   "reason": "Allowlisted channel and unique official catalog video ID",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "youtube",
+   "text": "The MOST IRRESPONSIBLE Lover | Modha Rathri | Netflix India",
+   "card": null,
+   "url": "https://www.youtube.com/watch?v=0mATG9k_1cQ",
+   "key": "movie:1685882",
+   "reason": "deterministic-1: segment mention 'Modha Rathri' = Modha Rathri (2026); signals: unique_name",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "youtube",
+   "text": "The Mosquito Bowl | Trailer oficial | Netflix",
+   "card": null,
+   "url": "https://www.youtube.com/watch?v=rFMyHeRy3i4",
+   "key": "movie:1458300",
+   "reason": "deterministic-1: subrun mention 'Mosquito Bowl' = The Mosquito Bowl (2026); signals: person",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "youtube",
+   "text": "The Mosquito Bowl | Official Trailer | Netflix",
+   "card": null,
+   "url": "https://www.youtube.com/watch?v=CPFkLjHfKoc",
+   "key": "movie:1458300",
+   "reason": "deterministic-1: segment mention 'The Mosquito Bowl' = The Mosquito Bowl (2026); signals: person",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "youtube",
+   "text": "Chris Escapes The Sunken Place 🏠 #GetOut #Shorts",
+   "card": null,
+   "url": "https://www.youtube.com/watch?v=XXEsjd0B5es",
+   "key": "movie:419430",
+   "reason": "deterministic-1: subrun mention 'Get Out' = Get Out (2017); signals: person",
+   "llm_also_linked": false,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "youtube",
+   "text": "Confidence is key | 🎬 Trolls (2016)",
+   "card": null,
+   "url": "https://www.youtube.com/watch?v=_LAZ6ixjuGA",
+   "key": "movie:136799",
+   "reason": "deterministic-1: segment mention '🎬 Trolls' = Trolls (2016); signals: year",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "youtube",
+   "text": "Spiraling out of place. Get tickets NOW for #ClayfaceMovie",
+   "card": null,
+   "url": "https://www.youtube.com/watch?v=LSga_I4hroo",
+   "key": "movie:1400940",
+   "reason": "Allowlisted channel and unique official catalog video ID",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "youtube",
+   "text": "Like his face? Get tickets NOW for #ClayfaceMovie",
+   "card": null,
+   "url": "https://www.youtube.com/watch?v=sEkH64NFfbY",
+   "key": "movie:1400940",
+   "reason": "Allowlisted channel and unique official catalog video ID",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "youtube",
+   "text": "Get Out | Chris Finally Escapes The Sunken Place and Armitage Family",
+   "card": null,
+   "url": "https://www.youtube.com/watch?v=eDoCI0WWJfU",
+   "key": "movie:419430",
+   "reason": "Allowlisted channel and unique official catalog video ID",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "youtube",
+   "text": "Heute startet die neue Krimireihe FRANKFURT MORD um 20:15 Uhr im ZDF.",
+   "card": null,
+   "url": "https://www.youtube.com/watch?v=7vuLDgOPatw",
+   "key": "tv:337367",
+   "reason": "deterministic-1: subrun mention 'FRANKFURT MORD' = Frankfurt Mord (2026); signals: person",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "youtube",
+   "text": "My Universal Story: Molly Miller | Other Mommy",
+   "card": null,
+   "url": "https://www.youtube.com/watch?v=cT4PltL58Ts",
+   "key": "movie:1400837",
+   "reason": "deterministic-1: segment mention 'Other Mommy' = Other Mommy (2026); signals: unique_name",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "youtube",
+   "text": "The Exorcist: Martyrs | Official Trailer",
+   "card": null,
+   "url": "https://www.youtube.com/watch?v=iIEYfH-jg1Y",
+   "key": "movie:1297467",
+   "reason": "deterministic-1: titlecase mention 'The Exorcist Martyrs' = The Exorcist: Martyrs (2027); signals: person",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "youtube",
+   "text": "Least Eligible Bachelor | Official Trailer | Harsha Chemudu | Hyper Aadhi | Netflix India",
+   "card": null,
+   "url": "https://www.youtube.com/watch?v=2CbtUlW4Smk",
+   "key": "tv:337806",
+   "reason": "deterministic-1: segment mention 'Least Eligible Bachelor' = Least Eligible Bachelor (2026); signals: person",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "youtube",
+   "text": "Phoebe Bridgers | Sound Check at Cherry Lane Theatre",
+   "card": null,
+   "url": "https://www.youtube.com/watch?v=G2bQHdPU0r0",
+   "key": "movie:1792739",
+   "reason": "Allowlisted channel and unique official catalog video ID",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "youtube",
+   "text": "Mommy's laugh is contagious 🖤 | 🎬 Other Mommy (2026)",
+   "card": null,
+   "url": "https://www.youtube.com/watch?v=idkLYLw284Y",
+   "key": "movie:1400837",
+   "reason": "deterministic-1: segment mention '🎬 Other Mommy' = Other Mommy (2026); signals: year",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "youtube",
+   "text": "Primetime | Robert Pattinson Camera Test | A24",
+   "card": null,
+   "url": "https://www.youtube.com/watch?v=kVOLubAG9-A",
+   "key": "movie:1375441",
+   "reason": "deterministic-1: segment mention 'Primetime' = Primetime (2026); signals: person",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "youtube",
+   "text": "Misty Green | Official First Look | A24",
+   "card": null,
+   "url": "https://www.youtube.com/watch?v=mkJVHTBuv9Y",
+   "key": "movie:1381221",
+   "reason": "deterministic-1: segment mention 'Misty Green' = Misty Green (2026); signals: person",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  },
+  {
+   "source": "youtube",
+   "text": "Spider-Man: Brand New Day | Fans Unite Around The World ft. Destin Daniel Cretton",
+   "card": null,
+   "url": "https://www.youtube.com/watch?v=CPzqXzpH-p8",
+   "key": "movie:969681",
+   "reason": "Allowlisted channel and unique official catalog video ID",
+   "llm_also_linked": true,
+   "manual_verdict": "right"
+  }
+ ]
+}
