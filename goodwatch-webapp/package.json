@@ -35,7 +35,6 @@
 		"@resvg/resvg-js": "^2.6.2",
 		"@sentry/remix": "^10.22.0",
 		"@sentry/vite-plugin": "^4.6.0",
-		"@supabase/auth-ui-react": "^0.4.7",
 		"@supabase/ssr": "^0.5.1",
 		"@tanstack/db": "^0.4.20",
 		"@tanstack/query-core": "^5.90.7",

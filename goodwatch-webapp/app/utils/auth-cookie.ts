@@ -41,3 +41,20 @@ export function hasAuthCookie(
 	}
 	return matcher(cookieHeader)
 }
+
+const SUPABASE_SIGN_IN = /^sb-[^=;\s]+-auth-token(?:\.[0-9]+)?$/
+
+/** Whether the request carries a Supabase sign-in, of any project. With Better Auth on, it is one from before the move. */
+export function hasSupabaseCookie(cookieHeader: string | null | undefined): boolean {
+	return (cookieHeader ?? "")
+		.split(";")
+		.some((part) => SUPABASE_SIGN_IN.test(part.split("=")[0].trim()))
+}
+
+/** Removes this browser's Supabase sign-in, which the page itself set (it isn't HttpOnly). Only in the browser. */
+export function forgetSupabaseSignIn(): void {
+	for (const part of document.cookie.split(";")) {
+		const name = part.split("=")[0].trim()
+		if (SUPABASE_SIGN_IN.test(name)) document.cookie = `${name}=; Max-Age=0; Path=/; SameSite=Lax`
+	}
+}

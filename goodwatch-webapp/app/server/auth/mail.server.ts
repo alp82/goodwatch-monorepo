@@ -20,7 +20,7 @@ export function smtpTransport(options: {
 	const port = options.port ?? 465
 	if (
 		options.localCatcher &&
-		(host !== "127.0.0.1" || ![15525, 15625].includes(port))
+		(host !== "127.0.0.1" || ![15525, 15625, 15925].includes(port))
 	)
 		throw new Error("Local SMTP catcher required")
 	if (
@@ -51,7 +51,12 @@ export class AuthMailQueue {
 	private readonly transport: AuthMailTransport
 	private readonly retryDelayMs: number
 	private readonly reportFailure: () => void
-	private readonly jobs: { to: string; subject: string; text: string }[] = []
+	private readonly jobs: {
+		to: string
+		subject: string
+		text: string
+		html?: string
+	}[] = []
 	private worker: Promise<void> | null = null
 	constructor(
 		transport: AuthMailTransport,
@@ -65,13 +70,13 @@ export class AuthMailQueue {
 				captureMessage("Auth SMTP delivery exhausted retries", "error")
 			})
 	}
-	enqueue(to: string, subject: string, text: string) {
+	enqueue(to: string, subject: string, text: string, html?: string) {
 		if (this.jobs.length >= 1000) {
 			deliveries.inc(["failed"])
 			this.reportFailure()
 			throw new Error("Auth mail queue full")
 		}
-		this.jobs.push({ to, subject, text })
+		this.jobs.push({ to, subject, text, html })
 		this.worker ??= Promise.resolve().then(() => this.run())
 	}
 	private async run() {

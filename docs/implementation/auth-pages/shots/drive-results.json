@@ -1,0 +1,147 @@
+[
+  {
+    "name": "sign-up shows what the guest's data brings",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "create is disabled under 10 characters",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "sign-up goes to Check your inbox with the address",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "resend waits for its cooldown",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "confirmation email comes from hello@goodwatch.app",
+    "ok": true,
+    "detail": "hello@goodwatch.app"
+  },
+  {
+    "name": "confirmation email has the prototype's subject",
+    "ok": true,
+    "detail": "Confirm your email for GoodWatch"
+  },
+  {
+    "name": "unconfirmed sign-in shows the shared notice",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "confirmation link signs in",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "confirmed page",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "guest data is bound to the new account for transfer",
+    "ok": true,
+    "detail": "[{\"a\":true,\"auto\":true}]"
+  },
+  {
+    "name": "used confirmation link lands on the expired page",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "sign-in returns to the page it came from",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "'Stay signed in' off gives a cookie that ends with the browser",
+    "ok": true,
+    "detail": "expires=-1"
+  },
+  {
+    "name": "'Stay signed in' on gives a 90-day cookie",
+    "ok": true,
+    "detail": "expires=1799792101.344862"
+  },
+  {
+    "name": "settings password change",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "password-changed email after the settings change",
+    "ok": true,
+    "detail": "Your GoodWatch password changed"
+  },
+  {
+    "name": "an unknown address gets the same answer",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "reset email subject",
+    "ok": true,
+    "detail": "Set a new GoodWatch password"
+  },
+  {
+    "name": "reset signs the member in",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "a used reset link shows the expired page",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "duplicate sign-up answers Check your inbox",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "duplicate sign-up emails the owner",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "the sixth request for one address is held back",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "Continue with Google goes to Google with the client and PKCE",
+    "ok": true,
+    "detail": "https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=local-google-client&state=X5Eb6k5TcyfYg7D3GhdE"
+  },
+  {
+    "name": "the banner shows with an old Supabase sign-in",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "Sign in leads to Sign in again",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "following the banner removes the old sign-in",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "the banner does not come back",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "dismissing the banner is for good",
+    "ok": true,
+    "detail": ""
+  }
+]

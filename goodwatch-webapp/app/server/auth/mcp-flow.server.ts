@@ -1,5 +1,5 @@
 import { verifyOAuthQueryParams } from "@goodwatch/auth-stack/oauth-provider"
-import type { createGoodwatchAuth } from "./auth.server.ts"
+import { type createGoodwatchAuth, setCookiesOf } from "./auth.server.ts"
 import { renderMcpConsent, renderMcpLogin } from "./mcp-pages.server.ts"
 
 type AuthService = ReturnType<typeof createGoodwatchAuth>
@@ -109,7 +109,7 @@ export async function handleMcpAccountRequest(
 		if (typeof data.url !== "string")
 			return new Response("Connection could not continue", { status: 503 })
 		const redirects = new Headers({ Location: data.url })
-		for (const cookie of result.headers.getSetCookie())
+		for (const cookie of setCookiesOf(result.headers))
 			redirects.append("Set-Cookie", cookie)
 		return new Response(null, { status: 302, headers: redirects })
 	}
