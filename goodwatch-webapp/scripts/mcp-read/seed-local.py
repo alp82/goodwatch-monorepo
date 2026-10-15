@@ -2,6 +2,7 @@
 import importlib.util
 import json
 import os
+import sys
 from pathlib import Path
 from urllib.request import Request, build_opener, ProxyHandler
 
@@ -16,6 +17,8 @@ def sql(stmt, args=None):
         return json.load(response)
 assert sql('SELECT name FROM sys.cluster')['rows'] == [[cluster]], 'Wrong local cluster; refusing to seed'
 source = Path(__file__).resolve().parents[3] / 'goodwatch-flows/windmill/f/sync/models/crate_schemas.py'
+# Shared schemas import other Windmill modules through the top-level f package.
+sys.path.insert(0, str(source.parents[3]))
 spec = importlib.util.spec_from_file_location('schemas', source)
 module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
