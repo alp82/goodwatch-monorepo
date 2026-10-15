@@ -10,7 +10,7 @@ import * as nodeModule from "node:module"
 import { test } from "node:test"
 import ts from "typescript"
 import { FakeTrackingCrate } from "../tracking-fake-crate.ts"
-import { moneyHeist } from "./episode-fixtures.test-support.ts"
+import { friends, moneyHeist, office } from "./episode-fixtures.test-support.ts"
 import type { Param } from "./store.server.ts"
 import { zipFixture } from "./zip-fixture.test-support.ts"
 
@@ -53,29 +53,13 @@ const { setImportDbForTest } = await import("./store.server.ts")
 const { previewImport, getImportItems } = await import("./service.server.ts")
 
 test("Trakt preview keeps canonical TMDB identities and reports specials without dropping them", async (t) => {
-	const catalog = [
-		{
-			tmdb_id: 101,
-			show_id: 1668,
-			season_number: 4,
-			episode_number: 23,
-			name: "The One with Ross's Wedding",
-			tvdb_id: null,
-		},
-		{
-			tmdb_id: 201,
-			show_id: 2316,
-			season_number: 4,
-			episode_number: 14,
-			name: "Goodbye, Toby",
-			tvdb_id: null,
-		},
-		...moneyHeist,
-	]
+	const catalog = [...friends, ...office, ...moneyHeist]
+
 	type Row = Record<string, unknown>
 	const imports: Row[] = []
 	const items: Row[] = []
-	setCrateClientForTest(new FakeTrackingCrate())
+	const trackingDb = new FakeTrackingCrate()
+	setCrateClientForTest(trackingDb)
 	setImportDbForTest({
 		select: async <T extends {}>(sql: string, params: Param[]) => {
 			let result: Row[]
@@ -163,14 +147,49 @@ test("Trakt preview keeps canonical TMDB identities and reports specials without
 			["new", 101, 4, 23],
 			["new", 201, 4, 14],
 			["new", 1014, 0, 14],
-			["unmatched", 999, 4, 23],
+			["new", 101, 4, 23],
 			["new", 201, 4, 14],
 		],
 	)
-	assert.equal(summary.counts.new, 4)
-	assert.equal(summary.counts.unmatched, 1)
+	assert.equal(summary.counts.new, 5)
+	assert.equal(summary.counts.unmatched, 0)
 	assert.equal(receipt.items[2].episodeSpecial, true)
 	assert.match(receipt.items[2].reason ?? "", /special/i)
 	assert.ok(summary.warnings.some((w) => /special/i.test(w)))
-	assert.match(receipt.items[3].reason ?? "", /episode ID/i)
+	assert.equal(receipt.items[3].reason, null)
+	assert.equal("episodeSpecial" in receipt.items[0], false)
+	assert.equal(receipt.items[0].episodeNumbering, "tmdb")
+	const { importWatchId } = await import("./tracking.server.ts")
+	trackingDb.seed("user_watch_log", [
+		{
+			user_id: "member",
+			watch_id: importWatchId("trakt", "trakt:watch:3"),
+			media_type: "show",
+			tmdb_id: 71446,
+			episode_tmdb_id: 1014,
+			season_number: 0,
+			episode_number: 14,
+			watched_at: Date.parse("2024-01-02T12:00:00Z"),
+			watched_at_precision: "moment",
+			origin: "import",
+			import_id: "earlier",
+			group_id: null,
+			pass: 1,
+			created_at: Date.now(),
+			updated_at: Date.now(),
+		},
+	])
+	const repeated = await previewImport("member", "trakt", "trakt.zip", zip)
+	const repeatedItems = await getImportItems(
+		"member",
+		repeated.id,
+		undefined,
+		0,
+		50,
+	)
+	assert.equal(repeatedItems.items[2].outcome, "unchanged")
+	assert.equal(
+		repeatedItems.items[2].reason,
+		"This episode maps to a TMDB special. It is imported but does not count toward regular show progress. This watch is already in your GoodWatch watch log.",
+	)
 })

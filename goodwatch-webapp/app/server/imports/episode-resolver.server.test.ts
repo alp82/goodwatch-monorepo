@@ -2,22 +2,29 @@ import "node-crate"
 import "../title-filter/test-alias.ts"
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { createEpisodeResolver } from "./episode-resolver.server.ts"
+import {
+	type EpisodeResolverData,
+	createEpisodeResolver,
+} from "./episode-resolver.server.ts"
 
-// Synthetic episode IDs, real show identities and numbering examples from #610's research.
-const friends = [
-	{
-		tmdb_id: 101,
-		show_id: 1668,
-		season_number: 4,
-		episode_number: 23,
-		name: "The One with Ross's Wedding",
-		tvdb_id: null as number | null,
-	},
-]
+function resolver(
+	data: Partial<EpisodeResolverData> & Pick<EpisodeResolverData, "episodes">,
+) {
+	return createEpisodeResolver({
+		findTvdb: async () => ({ tv_episode_results: [] }),
+		groups: async () => [],
+		group: async () => {
+			throw new Error("Unexpected group lookup")
+		},
+		cacheTvdb: async () => true,
+		...data,
+	})
+}
+
+const friendsEpisode = friends[22]
 
 test("Friends resolves by TMDB identity despite different source numbering", async () => {
-	const resolve = createEpisodeResolver({ episodes: async () => friends })
+	const resolve = resolver({ episodes: async () => structuredClone(friends) })
 	assert.deepEqual(
 		await resolve({ showId: 1668, episodeTmdbId: 101, season: 4, episode: 24 }),
 		{
@@ -31,17 +38,7 @@ test("Friends resolves by TMDB identity despite different source numbering", asy
 })
 
 test("The Office only trusts season/episode coordinates explicitly numbered like TMDB", async () => {
-	const office = [
-		{
-			...friends[0],
-			tmdb_id: 201,
-			show_id: 2316,
-			name: "Goodbye, Toby",
-			season_number: 4,
-			episode_number: 14,
-		},
-	]
-	const resolve = createEpisodeResolver({ episodes: async () => office })
+	const resolve = resolver({ episodes: async () => office })
 	assert.deepEqual(
 		await resolve({ showId: 2316, numbering: "tmdb", season: 4, episode: 14 }),
 		{
@@ -59,7 +56,7 @@ test("The Office only trusts season/episode coordinates explicitly numbered like
 })
 
 test("a nameless number is never guessed, but a unique case-insensitive episode name resolves within its show", async () => {
-	const resolve = createEpisodeResolver({ episodes: async () => friends })
+	const resolve = resolver({ episodes: async () => structuredClone(friends) })
 	assert.deepEqual(
 		await resolve({
 			showId: 1668,
@@ -97,7 +94,7 @@ test("a nameless number is never guessed, but a unique case-insensitive episode 
 
 test("TVDB lookup accepts only episode results belonging to the matched show and caches the identity", async () => {
 	const catalog = friends.map((e) => ({ ...e }))
-	const resolve = createEpisodeResolver({
+	const resolve = resolver({
 		episodes: async () => catalog,
 		findTvdb: async () => ({
 			tv_results: [{ id: 999 }],
@@ -106,7 +103,8 @@ test("TVDB lookup accepts only episode results belonging to the matched show and
 		cacheTvdb: async (showId, episodeId, tvdbId) => {
 			assert.equal(showId, 1668)
 			assert.equal(episodeId, 101)
-			catalog[0].tvdb_id = tvdbId
+			assert.equal(tvdbId, 555)
+			return true
 		},
 	})
 	assert.deepEqual(
@@ -119,7 +117,7 @@ test("TVDB lookup accepts only episode results belonging to the matched show and
 			special: false,
 		},
 	)
-	const cached = createEpisodeResolver({
+	const cached = resolver({
 		episodes: async () => catalog,
 		findTvdb: async () => {
 			throw new Error("Offline")
@@ -131,10 +129,15 @@ test("TVDB lookup accepts only episode results belonging to the matched show and
 	)
 })
 
-import { moneyHeist, netflixParts } from "./episode-fixtures.test-support.ts"
+import {
+	friends,
+	moneyHeist,
+	netflixParts,
+	office,
+} from "./episode-fixtures.test-support.ts"
 
 test("Money Heist Netflix parts resolve to canonical specials and regular episodes", async () => {
-	const resolve = createEpisodeResolver({
+	const resolve = resolver({
 		episodes: async () => moneyHeist,
 		groups: async () => [
 			{
@@ -197,7 +200,7 @@ test("community episode groups with gaps, duplicate identities or foreign episod
 	]) {
 		const group = structuredClone(netflixParts)
 		damage(group)
-		const resolve = createEpisodeResolver({
+		const resolve = resolver({
 			episodes: async () => moneyHeist,
 			groups: async () => [
 				{
@@ -223,8 +226,8 @@ test("community episode groups with gaps, duplicate identities or foreign episod
 	}
 })
 
-test("a numberless Money Heist row can match its name only inside the selected part", async () => {
-	const resolve = createEpisodeResolver({
+test("a numberless Money Heist row tries the selected part before the show-wide name", async () => {
+	const resolve = resolver({
 		episodes: async () => moneyHeist,
 		groups: async () => [
 			{
@@ -259,46 +262,48 @@ test("a numberless Money Heist row can match its name only inside the selected p
 				episodeName: "Episode 0-14",
 			})
 		).status,
-		"unmatched",
+		"matched",
 	)
 })
 
-test("the shared resolver reads and writes the TVDB cache through the import database boundary", async (t) => {
+test("an empty TVDB cache is filled with a guarded update through the database helpers", async (t) => {
 	const { setImportDbForTest } = await import("./store.server.ts")
 	const { createCatalogEpisodeResolver } = await import(
 		"./episode-resolver-data.server.ts"
 	)
-	const catalog = friends.map((e) => ({ ...e }))
+	const writes: { sql: string; params: unknown[] }[] = []
 	setImportDbForTest({
 		select: async <T extends {}>() =>
-			structuredClone(catalog) as unknown as T[],
+			structuredClone(friends) as unknown as T[],
 		run: async (sql, params) => {
-			assert.match(sql, /UPDATE episode SET tvdb_id = \?/)
-			assert.deepEqual(params, [555, 1668, 101])
-			catalog[0].tvdb_id = 555
+			writes.push({ sql, params })
 			return { rowcount: 1 }
 		},
 	})
 	t.after(() => setImportDbForTest())
-	t.mock.method(globalThis, "fetch", async (input: string) => {
-		const url = new URL(input)
-		assert.equal(url.pathname, "/3/find/555")
-		assert.equal(url.searchParams.get("external_source"), "tvdb_id")
-		return Response.json({ tv_episode_results: [{ id: 101, show_id: 1668 }] })
-	})
-	assert.equal(
-		(await createCatalogEpisodeResolver()({ showId: 1668, episodeTvdbId: 555 }))
-			.status,
-		"matched",
+	t.mock.method(globalThis, "fetch", async () =>
+		Response.json({ tv_episode_results: [{ id: 101, show_id: 1668 }] }),
 	)
-	t.mock.method(globalThis, "fetch", async () => {
-		throw new Error("Offline")
-	})
-	assert.equal(
-		(await createCatalogEpisodeResolver()({ showId: 1668, episodeTvdbId: 555 }))
-			.status,
-		"matched",
+	assert.deepEqual(
+		await createCatalogEpisodeResolver()({ showId: 1668, episodeTvdbId: 555 }),
+		{
+			status: "matched",
+			episodeTmdbId: 101,
+			season: 4,
+			episode: 23,
+			special: false,
+		},
 	)
+	assert.deepEqual(writes, [
+		{
+			sql: "UPDATE episode SET tvdb_id = ? WHERE show_id = ? AND tmdb_id = ? AND removed_at IS NULL AND tvdb_id IS NULL",
+			params: [555, 1668, 101],
+		},
+		{
+			sql: "UPDATE episode SET tvdb_id = NULL WHERE show_id = ? AND tmdb_id <> ? AND tvdb_id = ?",
+			params: [1668, 101, 555],
+		},
+	])
 })
 
 test("a group with self-consistent counts still cannot omit the show's final season", async () => {
@@ -306,7 +311,7 @@ test("a group with self-consistent counts still cannot omit the show's final sea
 	incomplete.groups.pop()
 	incomplete.group_count = 4
 	incomplete.episode_count = 38
-	const resolve = createEpisodeResolver({
+	const resolve = resolver({
 		episodes: async () => moneyHeist,
 		groups: async () => [
 			{
@@ -331,9 +336,9 @@ test("a group with self-consistent counts still cannot omit the show's final sea
 	)
 })
 
-test("ambiguous or foreign identities never fall through to a weaker number match", async () => {
-	const resolve = createEpisodeResolver({
-		episodes: async () => [...friends, { ...friends[0], tmdb_id: 102 }],
+test("fallbacks still reject ambiguous coordinates and names", async () => {
+	const resolve = resolver({
+		episodes: async () => [...friends, { ...friendsEpisode, tmdb_id: 102 }],
 		findTvdb: async () => ({
 			tv_episode_results: [{ id: 101, show_id: 2316 }],
 		}),
@@ -350,12 +355,18 @@ test("ambiguous or foreign identities never fall through to a weaker number matc
 			...evidence,
 		})
 		assert.equal(result.status, "unmatched")
-		if (result.status === "unmatched") assert.ok(result.reason.length > 0)
+		assert.deepEqual(result, {
+			status: "unmatched",
+			reason:
+				"episodeName" in evidence
+					? "Episode name did not match uniquely within this show."
+					: "Season and episode did not match uniquely within this show.",
+		})
 	}
 })
 
 test("TVDB zero is invalid and must not match uncached NULL ids", async () => {
-	const resolve = createEpisodeResolver({ episodes: async () => friends })
+	const resolve = resolver({ episodes: async () => structuredClone(friends) })
 	assert.equal(
 		(await resolve({ showId: 1668, episodeTvdbId: 0 })).status,
 		"unmatched",
@@ -407,7 +418,13 @@ test("an empty community group does not prevent resolving a complete Netflix gro
 })
 
 test("TVDB ambiguity, removed catalog episodes and transport failures stay unmatched", async () => {
-	for (const findTvdb of [
+	const reasons = [
+		"TVDB episode ID did not match uniquely within this show.",
+		"TVDB episode ID did not match uniquely within this show.",
+		"The TVDB episode is missing or ambiguous in this show's current catalog.",
+		"TMDB's TVDB lookup is unavailable; retry this import later.",
+	]
+	for (const [index, findTvdb] of [
 		async () => ({ tv_episode_results: [] }),
 		async () => ({
 			tv_episode_results: [
@@ -419,9 +436,9 @@ test("TVDB ambiguity, removed catalog episodes and transport failures stay unmat
 		async () => {
 			throw new Error("TMDB unavailable")
 		},
-	]) {
-		const resolve = createEpisodeResolver({
-			episodes: async () => friends,
+	].entries()) {
+		const resolve = resolver({
+			episodes: async () => structuredClone(friends),
 			findTvdb,
 			cacheTvdb: async () => {
 				assert.fail("Unmatched identities must not be cached")
@@ -429,16 +446,16 @@ test("TVDB ambiguity, removed catalog episodes and transport failures stay unmat
 		})
 		const result = await resolve({ showId: 1668, episodeTvdbId: 555 })
 		assert.equal(result.status, "unmatched")
-		if (result.status === "unmatched") assert.ok(result.reason)
+		assert.deepEqual(result, { status: "unmatched", reason: reasons[index] })
 	}
 })
 
 test("an incomplete catalog cannot establish episode uniqueness", async () => {
 	const catalog = Array.from({ length: 50001 }, (_, i) => ({
-		...friends[0],
+		...friendsEpisode,
 		tmdb_id: i + 1,
 	}))
-	const resolve = createEpisodeResolver({ episodes: async () => catalog })
+	const resolve = resolver({ episodes: async () => catalog })
 	assert.equal(
 		(await resolve({ showId: 1668, episodeTmdbId: 101 })).status,
 		"unmatched",
@@ -479,4 +496,321 @@ test("the TMDB boundary rejects malformed responses and HTTP errors, and bounds 
 		assert.equal(result.status, "unmatched")
 		if (result.status === "unmatched") assert.match(result.reason, /retry/i)
 	}
+})
+
+test("a failed TVDB cache write is logged and does not discard a settled match", async (t) => {
+	const failure = new Error("Cache unavailable")
+	const logged: unknown[][] = []
+	t.mock.method(console, "error", (...args: unknown[]) => {
+		logged.push(args)
+	})
+	const resolve = resolver({
+		episodes: async () => structuredClone(friends),
+		findTvdb: async () => ({
+			tv_episode_results: [{ id: 101, show_id: 1668 }],
+		}),
+		cacheTvdb: async () => {
+			throw failure
+		},
+	})
+	assert.deepEqual(await resolve({ showId: 1668, episodeTvdbId: 555 }), {
+		status: "matched",
+		episodeTmdbId: 101,
+		season: 4,
+		episode: 23,
+		special: false,
+	})
+	assert.equal(logged.length, 1)
+	assert.equal(logged[0][0], "Could not cache import episode TVDB identity")
+})
+
+test("3 Body Problem: Season 1: Countdown ignores an untrusted season in name fallback", async () => {
+	const resolve = resolver({
+		episodes: async () => [
+			{
+				...friendsEpisode,
+				show_id: 108545,
+				tmdb_id: 301,
+				season_number: 1,
+				episode_number: 1,
+				name: "Countdown",
+			},
+		],
+	})
+	assert.deepEqual(
+		await resolve({ showId: 108545, season: 1, episodeName: "Countdown" }),
+		{
+			status: "matched",
+			episodeTmdbId: 301,
+			season: 1,
+			episode: 1,
+			special: false,
+		},
+	)
+	assert.deepEqual(
+		await resolve({
+			showId: 108545,
+			numbering: "tmdb",
+			season: 2,
+			episodeName: "Countdown",
+		}),
+		{
+			status: "unmatched",
+			reason: "Episode name did not match uniquely within this show.",
+		},
+	)
+})
+
+test("failed TMDB identity falls through to TVDB before trusting coordinates", async () => {
+	const resolve = resolver({
+		episodes: async () => structuredClone(friends),
+		findTvdb: async () => ({
+			tv_episode_results: [{ id: 101, show_id: 1668 }],
+		}),
+		cacheTvdb: async () => true,
+	})
+	assert.deepEqual(
+		await resolve({
+			showId: 1668,
+			episodeTmdbId: 999,
+			episodeTvdbId: 555,
+			numbering: "tmdb",
+			season: 4,
+			episode: 1,
+		}),
+		{
+			status: "matched",
+			episodeTmdbId: 101,
+			season: 4,
+			episode: 23,
+			special: false,
+		},
+	)
+})
+
+test("failed IDs reach a group before coordinates, then trusted coordinates or a numberless name", async () => {
+	const resolve = resolver({
+		episodes: async () => moneyHeist,
+		findTvdb: async () => ({ tv_episode_results: [] }),
+		groups: async () => [
+			{
+				id: netflixParts.id,
+				name: "Parts",
+				type: 4,
+				network: { name: "Netflix" },
+				group_count: 5,
+			},
+		],
+		group: async () => netflixParts,
+	})
+	assert.deepEqual(
+		await resolve({
+			showId: 71446,
+			episodeTmdbId: 999,
+			episodeTvdbId: 555,
+			episodeGroup: { label: "Part 2" },
+			numbering: "tmdb",
+			season: 3,
+			episode: 1,
+		}),
+		{
+			status: "matched",
+			episodeTmdbId: 1014,
+			season: 0,
+			episode: 14,
+			special: true,
+		},
+	)
+	assert.deepEqual(
+		await resolve({
+			showId: 71446,
+			episodeTmdbId: 999,
+			episodeTvdbId: 555,
+			episodeGroup: { label: "Absent" },
+			numbering: "tmdb",
+			season: 3,
+			episode: 1,
+		}),
+		{
+			status: "matched",
+			episodeTmdbId: 1301,
+			season: 3,
+			episode: 1,
+			special: false,
+		},
+	)
+	assert.deepEqual(
+		await resolve({
+			showId: 71446,
+			episodeTmdbId: 999,
+			episodeTvdbId: 555,
+			episodeName: "Episode 3-1",
+		}),
+		{
+			status: "matched",
+			episodeTmdbId: 1301,
+			season: 3,
+			episode: 1,
+			special: false,
+		},
+	)
+})
+
+test("fresh TMDB evidence corrects a stale TVDB cache hit and an occupied target", async () => {
+	const catalog = [
+		{ ...friendsEpisode, tvdb_id: 555 },
+		{ ...friendsEpisode, tmdb_id: 102, episode_number: 22, tvdb_id: 777 },
+	]
+	let online = true
+	const resolve = resolver({
+		episodes: async () => catalog,
+		findTvdb: async () => {
+			if (!online) throw new Error("Offline")
+			return { tv_episode_results: [{ id: 102, show_id: 1668 }] }
+		},
+		cacheTvdb: async () => true,
+	})
+	assert.deepEqual(await resolve({ showId: 1668, episodeTvdbId: 555 }), {
+		status: "matched",
+		episodeTmdbId: 102,
+		season: 4,
+		episode: 22,
+		special: false,
+	})
+	online = false
+	assert.deepEqual(await resolve({ showId: 1668, episodeTvdbId: 555 }), {
+		status: "matched",
+		episodeTmdbId: 102,
+		season: 4,
+		episode: 22,
+		special: false,
+	})
+	assert.deepEqual(await resolve({ showId: 1668, episodeTvdbId: 777 }), {
+		status: "unmatched",
+		reason: "TMDB's TVDB lookup is unavailable; retry this import later.",
+	})
+})
+
+test("a cache compare-and-set miss does not invent an in-memory cache entry", async () => {
+	const responses = [true, false]
+	const catalog = structuredClone(friends)
+	const resolve = resolver({
+		episodes: async () => catalog,
+		findTvdb: async () => {
+			if (responses.shift())
+				return { tv_episode_results: [{ id: 101, show_id: 1668 }] }
+			throw new Error("Offline")
+		},
+		cacheTvdb: async () => false,
+	})
+	assert.equal(
+		(await resolve({ showId: 1668, episodeTvdbId: 555 })).status,
+		"matched",
+	)
+	assert.deepEqual(await resolve({ showId: 1668, episodeTvdbId: 555 }), {
+		status: "unmatched",
+		reason: "TMDB's TVDB lookup is unavailable; retry this import later.",
+	})
+})
+
+test("fresh TVDB evidence updates only the observed cache identity through database helpers", async (t) => {
+	const { setImportDbForTest } = await import("./store.server.ts")
+	const { createCatalogEpisodeResolver } = await import(
+		"./episode-resolver-data.server.ts"
+	)
+	const catalog = [{ ...friendsEpisode, tvdb_id: 777 }]
+	const statements: { sql: string; params: unknown[] }[] = []
+	setImportDbForTest({
+		select: async <T extends {}>() =>
+			structuredClone(catalog) as unknown as T[],
+		run: async (sql, params) => {
+			statements.push({ sql, params })
+			return { rowcount: 0 } // A concurrent update won; do not clear any other row.
+		},
+	})
+	t.after(() => setImportDbForTest())
+	t.mock.method(globalThis, "fetch", async () =>
+		Response.json({ tv_episode_results: [{ id: 101, show_id: 1668 }] }),
+	)
+	assert.deepEqual(
+		await createCatalogEpisodeResolver()({ showId: 1668, episodeTvdbId: 555 }),
+		{
+			status: "matched",
+			episodeTmdbId: 101,
+			season: 4,
+			episode: 23,
+			special: false,
+		},
+	)
+	assert.deepEqual(statements, [
+		{
+			sql: "UPDATE episode SET tvdb_id = ? WHERE show_id = ? AND tmdb_id = ? AND removed_at IS NULL AND tvdb_id = ?",
+			params: [555, 1668, 101, 777],
+		},
+	])
+})
+
+test("two complete episode groups agreeing on one TMDB episode are one unique match", async () => {
+	const resolve = resolver({
+		episodes: async () => moneyHeist,
+		groups: async () =>
+			["first", "second"].map((id) => ({
+				id,
+				name: "Parts",
+				type: 4,
+				network: { name: "Netflix" },
+				group_count: 5,
+			})),
+		group: async (id) => ({ ...netflixParts, id }),
+	})
+	assert.deepEqual(
+		await resolve({
+			showId: 71446,
+			episodeGroup: { label: "Part 2" },
+			episode: 1,
+		}),
+		{
+			status: "matched",
+			episodeTmdbId: 1014,
+			season: 0,
+			episode: 14,
+			special: true,
+		},
+	)
+})
+
+test("TVDB S4E19 of The Office and S4E24 of Friends cannot be guessed from TMDB seasons", async () => {
+	const resolve = resolver({
+		episodes: async (showId) => (showId === 2316 ? office : friends),
+	})
+	assert.deepEqual(await resolve({ showId: 2316, season: 4, episode: 19 }), {
+		status: "unmatched",
+		reason:
+			"This source does not use TMDB episode numbering; an episode ID or group is needed.",
+	})
+	assert.deepEqual(
+		await resolve({ showId: 2316, numbering: "tmdb", season: 4, episode: 19 }),
+		{
+			status: "unmatched",
+			reason: "Season and episode did not match uniquely within this show.",
+		},
+	)
+	assert.deepEqual(await resolve({ showId: 1668, season: 4, episode: 24 }), {
+		status: "unmatched",
+		reason:
+			"This source does not use TMDB episode numbering; an episode ID or group is needed.",
+	})
+})
+
+test("a fresh negative TVDB response defeats a stored cache hit", async () => {
+	const resolve = resolver({
+		episodes: async () => [{ ...friendsEpisode, tvdb_id: 555 }],
+		findTvdb: async () => ({
+			tv_episode_results: [{ id: 101, show_id: 2316 }],
+		}),
+	})
+	assert.deepEqual(await resolve({ showId: 1668, episodeTvdbId: 555 }), {
+		status: "unmatched",
+		reason: "TVDB episode ID did not match uniquely within this show.",
+	})
 })

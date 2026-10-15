@@ -54,7 +54,7 @@ export interface ImportObservation {
 	episodeNumbering?: "tmdb" | "unknown"
 	/** Explicit TMDB group, or a Netflix/part-count hint; label names its part/volume. */
 	episodeGroup?: { id?: string; label: string; groupCount?: number }
-	/** Canonical season zero: applied, but never contributes to regular progress. */
+	/** Special: applied, but never contributes to regular progress. */
 	episodeSpecial?: boolean
 	season?: number | null
 	episode?: number | null

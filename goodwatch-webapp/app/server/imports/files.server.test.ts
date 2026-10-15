@@ -172,6 +172,7 @@ describe("native import files", () => {
 				tmdbId: 66,
 				imdbId: "tt2345678",
 				episodeTmdbId: 77,
+				episodeNumbering: "tmdb",
 				season: 2,
 				episode: 3,
 				watchedAt: null,

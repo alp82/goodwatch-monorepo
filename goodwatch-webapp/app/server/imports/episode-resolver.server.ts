@@ -1,3 +1,8 @@
+export const EPISODE_CATALOG_LIMIT = 50_000
+const DIGITAL_EPISODE_GROUP = 4
+const normalize = (value: string | null | undefined) =>
+	value?.trim().toLowerCase() ?? ""
+
 /** Canonical import identities; never changes the presentation or stored catalog numbering. */
 export interface CatalogEpisode {
 	tmdb_id: number
@@ -44,13 +49,18 @@ export interface EpisodeGroup {
 	}[]
 }
 export interface EpisodeResolverData {
-	groups?(showId: number): Promise<EpisodeGroupSummary[]>
-	group?(id: string): Promise<EpisodeGroup>
+	groups(showId: number): Promise<EpisodeGroupSummary[]>
+	group(id: string): Promise<EpisodeGroup>
 	episodes(showId: number): Promise<CatalogEpisode[]>
-	findTvdb?(
+	findTvdb(
 		id: number,
 	): Promise<{ tv_episode_results: { id: number; show_id: number }[] }>
-	cacheTvdb?(showId: number, episodeId: number, tvdbId: number): Promise<void>
+	cacheTvdb(
+		showId: number,
+		episodeId: number,
+		tvdbId: number,
+		expectedTvdbId: number | null,
+	): Promise<boolean>
 }
 const unmatched = (reason: string): EpisodeResolution => ({
 	status: "unmatched",
@@ -63,143 +73,179 @@ const matched = (episode: CatalogEpisode): EpisodeResolution => ({
 	episode: Number(episode.episode_number),
 	special: Number(episode.season_number) === 0,
 })
+function resolveTmdb(
+	episodeTmdbId: number,
+	episodes: CatalogEpisode[],
+): EpisodeResolution {
+	if (!Number.isSafeInteger(episodeTmdbId) || episodeTmdbId <= 0)
+		return unmatched("Invalid TMDB episode ID.")
+	const candidates = episodes.filter((e) => Number(e.tmdb_id) === episodeTmdbId)
+	return candidates.length === 1
+		? matched(candidates[0])
+		: unmatched("TMDB episode ID did not match uniquely within this show.")
+}
+
+async function resolveTvdb(
+	showId: number,
+	episodeTvdbId: number,
+	episodes: CatalogEpisode[],
+	data: EpisodeResolverData,
+): Promise<EpisodeResolution> {
+	if (!Number.isSafeInteger(episodeTvdbId) || episodeTvdbId <= 0)
+		return unmatched("Invalid TVDB episode ID.")
+	const cached = episodes.filter(
+		(e) => e.tvdb_id != null && Number(e.tvdb_id) === episodeTvdbId,
+	)
+
+	let result: Awaited<ReturnType<EpisodeResolverData["findTvdb"]>>
+	try {
+		result = await data.findTvdb(episodeTvdbId)
+	} catch {
+		if (cached.length === 1) return matched(cached[0])
+		if (cached.length > 1)
+			return unmatched("TVDB episode ID is ambiguous within this show.")
+		return unmatched(
+			"TMDB's TVDB lookup is unavailable; retry this import later.",
+		)
+	}
+	const hits = result.tv_episode_results
+	if (hits.length !== 1 || hits[0].show_id !== showId)
+		return unmatched("TVDB episode ID did not match uniquely within this show.")
+	const candidates = episodes.filter((e) => Number(e.tmdb_id) === hits[0].id)
+	if (candidates.length !== 1)
+		return unmatched(
+			"The TVDB episode is missing or ambiguous in this show's current catalog.",
+		)
+	const episode = candidates[0]
+
+	try {
+		const written = await data.cacheTvdb(
+			showId,
+			Number(episode.tmdb_id),
+			episodeTvdbId,
+			episode.tvdb_id,
+		)
+		if (written) {
+			for (const old of cached) old.tvdb_id = null
+			episode.tvdb_id = episodeTvdbId
+		}
+	} catch (error) {
+		console.error("Could not cache import episode TVDB identity", {
+			showId,
+			episodeId: episode.tmdb_id,
+			error,
+		})
+	}
+	return matched(episode)
+}
+
+async function resolveGroup(
+	row: EpisodeEvidence,
+	hint: NonNullable<EpisodeEvidence["episodeGroup"]>,
+	episodes: CatalogEpisode[],
+	data: EpisodeResolverData,
+): Promise<EpisodeResolution> {
+	let groups: EpisodeGroupSummary[]
+	try {
+		groups = await data.groups(row.showId)
+	} catch {
+		return unmatched(
+			"TMDB episode groups are unavailable; retry this import later.",
+		)
+	}
+	const eligible = groups.filter((g) =>
+		hint.id
+			? g.id === hint.id
+			: (g.type === DIGITAL_EPISODE_GROUP && g.network?.name === "Netflix") ||
+				(/part|volume/i.test(g.name) && hint.groupCount === g.group_count),
+	)
+	const candidates: CatalogEpisode[] = []
+	try {
+		for (const summary of eligible) {
+			const group = await data.group(summary.id)
+			if (
+				!group ||
+				group.id !== summary.id ||
+				group.group_count !== summary.group_count ||
+				!completeGroup(group, episodes)
+			)
+				continue
+			const label = normalize(hint.label)
+			const part = group.groups.filter((g) => normalize(g.name) === label)
+			if (part.length !== 1) continue
+			const ids = part[0].episodes
+				.filter((e) => row.episode == null || e.order === row.episode - 1)
+				.map((e) => e.id)
+			candidates.push(
+				...episodes.filter(
+					(e) =>
+						ids.includes(Number(e.tmdb_id)) &&
+						(row.episode != null ||
+							(row.episodeName?.trim() &&
+								normalize(e.name) === normalize(row.episodeName))),
+				),
+			)
+		}
+	} catch {
+		return unmatched(
+			"TMDB episode groups are unavailable; retry this import later.",
+		)
+	}
+	const unique = [
+		...new Map(
+			candidates.map((episode) => [Number(episode.tmdb_id), episode]),
+		).values(),
+	]
+	return unique.length === 1
+		? matched(unique[0])
+		: unmatched("Episode group did not match uniquely within this show.")
+}
+
 export function createEpisodeResolver(data: EpisodeResolverData) {
 	return async (row: EpisodeEvidence): Promise<EpisodeResolution> => {
 		const catalog = await data.episodes(row.showId)
-		if (catalog.length > 50000)
+		if (catalog.length > EPISODE_CATALOG_LIMIT)
 			return unmatched(
 				"The episode catalog is too large to establish a unique match.",
 			)
 		const episodes = catalog.filter((e) => Number(e.show_id) === row.showId)
+		let reason: string | undefined
 		if (row.episodeTmdbId != null) {
-			if (!Number.isSafeInteger(row.episodeTmdbId) || row.episodeTmdbId <= 0)
-				return unmatched("Invalid TMDB episode ID.")
-			const candidates = episodes.filter(
-				(e) => Number(e.tmdb_id) === row.episodeTmdbId,
-			)
-			return candidates.length === 1
-				? matched(candidates[0])
-				: unmatched("TMDB episode ID did not match uniquely within this show.")
+			const result = resolveTmdb(row.episodeTmdbId, episodes)
+			if (result.status === "matched") return result
+			reason = result.reason
 		}
 		if (row.episodeTvdbId != null) {
-			if (!Number.isSafeInteger(row.episodeTvdbId) || row.episodeTvdbId <= 0)
-				return unmatched("Invalid TVDB episode ID.")
-			const cached = episodes.filter(
-				(e) => e.tvdb_id != null && Number(e.tvdb_id) === row.episodeTvdbId,
-			)
-			if (cached.length)
-				return cached.length === 1
-					? matched(cached[0])
-					: unmatched("TVDB episode ID is ambiguous within this show.")
-			let result:
-				| { tv_episode_results: { id: number; show_id: number }[] }
-				| undefined
-			try {
-				result = await data.findTvdb?.(row.episodeTvdbId)
-			} catch {
-				return unmatched(
-					"TMDB's TVDB lookup is unavailable; retry this import later.",
-				)
-			}
-			const hits = result?.tv_episode_results ?? []
-			if (hits.length !== 1 || hits[0].show_id !== row.showId)
-				return unmatched(
-					"TVDB episode ID did not match uniquely within this show.",
-				)
-			const candidates = episodes.filter(
-				(e) => Number(e.tmdb_id) === hits[0].id,
-			)
-			if (candidates.length !== 1)
-				return unmatched(
-					"The TVDB episode is missing or ambiguous in this show's current catalog.",
-				)
-			const episode = candidates[0]
-			if (
-				episode.tvdb_id != null &&
-				Number(episode.tvdb_id) !== row.episodeTvdbId
-			)
-				return unmatched(
-					"The TVDB episode ID conflicts with the cached catalog identity.",
-				)
-			await data.cacheTvdb?.(
+			const result = await resolveTvdb(
 				row.showId,
-				Number(episode.tmdb_id),
 				row.episodeTvdbId,
+				episodes,
+				data,
 			)
-			episode.tvdb_id = row.episodeTvdbId
-			return matched(episode)
+			if (result.status === "matched") return result
+			reason = result.reason
 		}
 		if (row.episodeGroup) {
-			const hint = row.episodeGroup
-			let groups: EpisodeGroupSummary[]
-			try {
-				groups = (await data.groups?.(row.showId)) ?? []
-			} catch {
-				return unmatched(
-					"TMDB episode groups are unavailable; retry this import later.",
-				)
-			}
-			const eligible = groups.filter((g) =>
-				hint.id
-					? g.id === hint.id
-					: (g.type === 4 && g.network?.name === "Netflix") ||
-						(/part|volume/i.test(g.name) && hint.groupCount === g.group_count),
-			)
-			const candidates: CatalogEpisode[] = []
-			try {
-				for (const summary of eligible) {
-					const group = await data.group?.(summary.id)
-					if (
-						!group ||
-						group.id !== summary.id ||
-						group.group_count !== summary.group_count ||
-						!completeGroup(group, episodes)
-					)
-						continue
-					const label = hint.label.trim().toLowerCase()
-					const part = group.groups.filter(
-						(g) => g.name.trim().toLowerCase() === label,
-					)
-					if (part.length !== 1) continue
-					const ids = part[0].episodes
-						.filter((e) => row.episode == null || e.order === row.episode - 1)
-						.map((e) => e.id)
-					candidates.push(
-						...episodes.filter(
-							(e) =>
-								ids.includes(Number(e.tmdb_id)) &&
-								(row.episode != null ||
-									(row.episodeName?.trim() &&
-										e.name?.trim().toLowerCase() ===
-											row.episodeName.trim().toLowerCase())),
-						),
-					)
-				}
-			} catch {
-				return unmatched(
-					"TMDB episode groups are unavailable; retry this import later.",
-				)
-			}
-			return candidates.length === 1
-				? matched(candidates[0])
-				: unmatched("Episode group did not match uniquely within this show.")
+			const result = await resolveGroup(row, row.episodeGroup, episodes, data)
+			if (result.status === "matched") return result
+			reason = result.reason
 		}
 		if (row.episode == null && row.episodeName?.trim()) {
 			const candidates = episodes.filter(
 				(e) =>
-					e.name?.trim().toLowerCase() ===
-						row.episodeName?.trim().toLowerCase() &&
+					normalize(e.name) === normalize(row.episodeName) &&
 					(row.season == null ||
-						(row.numbering === "tmdb" &&
-							Number(e.season_number) === row.season)),
+						row.numbering !== "tmdb" ||
+						Number(e.season_number) === row.season),
 			)
 			return candidates.length === 1
 				? matched(candidates[0])
 				: unmatched("Episode name did not match uniquely within this show.")
 		}
-		if (row.numbering !== "tmdb")
+		if (row.numbering !== "tmdb" || row.season == null || row.episode == null)
 			return unmatched(
-				"This source does not use TMDB episode numbering; an episode ID or group is needed.",
+				reason ??
+					"This source does not use TMDB episode numbering; an episode ID or group is needed.",
 			)
 		const candidates = episodes.filter(
 			(e) =>

@@ -555,6 +555,7 @@ function trakt(entries: ArchiveEntry[]): ParsedImport {
 					...(type === "episode"
 						? {
 								episodeTmdbId: validId(episodeIds?.tmdb),
+								episodeNumbering: "tmdb" as const,
 								season:
 									validId(episodeObject?.season) ??
 									(episodeObject?.season === 0 ? 0 : null),

@@ -1,7 +1,7 @@
 import type { CatalogEpisode } from "./episode-resolver.server.ts"
 
 // Synthetic episode IDs and names. Counts/placements are the Money Heist measurements
-// in docs/research/imports/episode-numbering.md on research/episode-numbering.
+// in https://github.com/alp82/goodwatch-monorepo/blob/research/episode-numbering/docs/research/imports/episode-numbering.md
 export const moneyHeist: CatalogEpisode[] = [22, 15, 16, 10].flatMap(
 	(count, season) =>
 		Array.from({ length: count }, (_, i) => ({
@@ -29,3 +29,22 @@ export const netflixParts = {
 		episodes: episodes.map((e, order) => ({ id: e.tmdb_id, order })),
 	})),
 }
+
+// TMDB S4 has 23 Friends episodes versus TVDB's 24; The Office has 14 versus 19.
+// IDs are synthetic; the finale names identify the rows used by the regression tests.
+export const friends: CatalogEpisode[] = Array.from({ length: 23 }, (_, i) => ({
+	tmdb_id: i === 22 ? 101 : 2000 + i,
+	show_id: 1668,
+	season_number: 4,
+	episode_number: i + 1,
+	name: i === 22 ? "The One with Ross's Wedding" : `Friends episode ${i + 1}`,
+	tvdb_id: null,
+}))
+export const office: CatalogEpisode[] = Array.from({ length: 14 }, (_, i) => ({
+	tmdb_id: i === 13 ? 201 : 3000 + i,
+	show_id: 2316,
+	season_number: 4,
+	episode_number: i + 1,
+	name: i === 13 ? "Goodbye, Toby" : `The Office episode ${i + 1}`,
+	tvdb_id: null,
+}))

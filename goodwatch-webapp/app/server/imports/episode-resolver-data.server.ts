@@ -6,6 +6,7 @@ import {
 } from "../../utils/backend-timeout.ts"
 import {
 	type CatalogEpisode,
+	EPISODE_CATALOG_LIMIT,
 	createEpisodeResolver,
 } from "./episode-resolver.server.ts"
 import { run, select } from "./store.server.ts"
@@ -57,67 +58,67 @@ async function tmdb<T>(
 	)
 }
 
+/** Memoize per preview, including failed requests, without retaining a global cache. */
+function memoize<K, V>(load: (key: K) => Promise<V>) {
+	const pending = new Map<K, Promise<V>>()
+	return (key: K): Promise<V> => {
+		let result = pending.get(key)
+		if (!result) {
+			result = load(key)
+			pending.set(key, result)
+		}
+		return result
+	}
+}
+
 /** One resolver per preview: no process-wide data or credentials retained. */
 export function createCatalogEpisodeResolver() {
-	const episodes = new Map<number, Promise<CatalogEpisode[]>>()
-	const finds = new Map<number, ReturnType<typeof find>>()
-	const lists = new Map<number, ReturnType<typeof list>>()
-	const groups = new Map<string, ReturnType<typeof details>>()
-	const find = (tvdbId: number) =>
-		tmdb(
-			`find/${tvdbId}`,
-			z.object({
-				tv_episode_results: z.array(z.object({ id, show_id: id })),
-			}),
-			{ external_source: "tvdb_id" },
-		)
-	const list = (showId: number) =>
-		tmdb(`tv/${showId}/episode_groups`, z.object({ results: z.array(summary) }))
-	const details = (groupId: string) =>
-		tmdb(`tv/episode_group/${encodeURIComponent(groupId)}`, group)
 	return createEpisodeResolver({
-		episodes: (showId) => {
-			let result = episodes.get(showId)
-			if (!result) {
-				result = select<CatalogEpisode>(
-					"SELECT tmdb_id, show_id, season_number, episode_number, name, tvdb_id FROM episode WHERE show_id = ? AND removed_at IS NULL LIMIT 50001",
-					[showId],
-				)
-				episodes.set(showId, result)
-			}
-			return result
-		},
-		findTvdb: (tvdbId) => {
-			let result = finds.get(tvdbId)
-			if (!result) {
-				result = find(tvdbId)
-				finds.set(tvdbId, result)
-			}
-			return result
-		},
-		cacheTvdb: async (showId, episodeId, tvdbId) => {
-			// Never overwrite another identity or resurrect a removed episode. Existing DB
-			// helpers provide the timeout/error handling; no direct database client here.
-			await run(
-				"UPDATE episode SET tvdb_id = ? WHERE show_id = ? AND tmdb_id = ? AND removed_at IS NULL AND tvdb_id IS NULL",
-				[tvdbId, showId, episodeId],
+		episodes: memoize((showId: number) =>
+			select<CatalogEpisode>(
+				`SELECT tmdb_id, show_id, season_number, episode_number, name, tvdb_id FROM episode WHERE show_id = ? AND removed_at IS NULL LIMIT ${EPISODE_CATALOG_LIMIT + 1}`,
+				[showId],
+			),
+		),
+		findTvdb: memoize((tvdbId: number) =>
+			tmdb(
+				`find/${tvdbId}`,
+				z.object({
+					tv_episode_results: z.array(z.object({ id, show_id: id })),
+				}),
+				{ external_source: "tvdb_id" },
+			),
+		),
+		groups: memoize(
+			async (showId: number) =>
+				(
+					await tmdb(
+						`tv/${showId}/episode_groups`,
+						z.object({ results: z.array(summary) }),
+					)
+				).results,
+		),
+		group: memoize((groupId: string) =>
+			tmdb(`tv/episode_group/${encodeURIComponent(groupId)}`, group),
+		),
+		cacheTvdb: async (showId, episodeId, tvdbId, expectedTvdbId) => {
+			// Fresh TMDB evidence may correct an old mapping, but never overwrite a value
+			// that changed since the catalog read or resurrect a removed episode.
+			const result = await run(
+				`UPDATE episode SET tvdb_id = ? WHERE show_id = ? AND tmdb_id = ? AND removed_at IS NULL AND ${expectedTvdbId == null ? "tvdb_id IS NULL" : "tvdb_id = ?"}`,
+				[
+					tvdbId,
+					showId,
+					episodeId,
+					...(expectedTvdbId == null ? [] : [expectedTvdbId]),
+				],
 			)
-		},
-		groups: async (showId) => {
-			let result = lists.get(showId)
-			if (!result) {
-				result = list(showId)
-				lists.set(showId, result)
-			}
-			return (await result).results
-		},
-		group: (groupId) => {
-			let result = groups.get(groupId)
-			if (!result) {
-				result = details(groupId)
-				groups.set(groupId, result)
-			}
-			return result
+			if (result.rowcount !== 1) return false
+			await run(
+				"UPDATE episode SET tvdb_id = NULL WHERE show_id = ? AND tmdb_id <> ? AND tvdb_id = ?",
+				[showId, episodeId, tvdbId],
+			)
+			return true
 		},
 	})
 }

@@ -122,8 +122,7 @@ async function matchCatalog(source: ImportSource, rows: ImportObservation[]) {
 		const result = await resolveEpisode({
 			...row,
 			showId: title.tmdbId,
-			numbering:
-				row.episodeNumbering ?? (source === "trakt" ? "tmdb" : "unknown"),
+			numbering: row.episodeNumbering,
 		})
 		if (result.status === "unmatched") {
 			found.delete(index)
@@ -132,7 +131,7 @@ async function matchCatalog(source: ImportSource, rows: ImportObservation[]) {
 			row.episodeTmdbId = result.episodeTmdbId
 			row.season = result.season
 			row.episode = result.episode
-			row.episodeSpecial = result.special
+			if (result.special) row.episodeSpecial = true
 		}
 	}
 
@@ -222,7 +221,12 @@ async function classifyWatchDuplicates(
 		for (const item of group)
 			if (kept.has(item.key)) {
 				item.outcome = "unchanged"
-				item.reason = "This watch is already in your GoodWatch watch log."
+				item.reason = [
+					item.reason,
+					"This watch is already in your GoodWatch watch log.",
+				]
+					.filter(Boolean)
+					.join(" ")
 			}
 	}
 }
