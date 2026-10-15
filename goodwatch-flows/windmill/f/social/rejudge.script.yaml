@@ -1,0 +1,15 @@
+summary: Social relevance re-judge
+description: Read-only preview by default; apply writes only doc.social_relevance.
+lock: '!inline f/social/rejudge.script.lock'
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties:
+    apply:
+      type: boolean
+      description: Read-only preview by default; apply writes only doc.social_relevance.
+      default: false
+  required: []
+concurrent_limit: 1
+concurrency_time_window_s: 0

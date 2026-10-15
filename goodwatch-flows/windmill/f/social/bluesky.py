@@ -1,5 +1,5 @@
 """Bounded first-page search, with post AND author opt-out checks before storage."""
-from f.social.common import http_get, post, stamp
+from f.social.common import http_get, now, post, stamp
 
 BASE = 'https://api.bsky.app/xrpc/'
 QUERIES = ('movie', 'film', 'trailer', 'TV show', 'series', 'episode', 'netflix', 'cinema')
@@ -47,6 +47,7 @@ def collect(settings, start, end, *, get=http_get, pages=1, queries=QUERIES):
     allowed = profiles_for(sorted({p['author_id'] for p in posts.values()}), get=get)
     for uri, p in posts.items():
         p['quality_evidence'] = evidence_for(records[uri], allowed.get(p['author_id']))
+        p['relevance_evidence'] = relevance_evidence(records[uri], allowed.get(p['author_id']))
     return {'status': 'partial' if errors else 'ok', 'posts': [p for p in posts.values() if p['author_id'] in allowed],
             'audit': audit, 'errors': errors}
 
@@ -82,6 +83,16 @@ def evidence_for(item, profile):
     return evidence
 
 
+def relevance_evidence(item, profile):
+    """Metrics are ephemeral here; only social_relevance persists these values."""
+    profile = profile or {}
+    card = (item.get('embed') or {}).get('external') or ((item.get('record') or {}).get('embed') or {}).get('external') or {}
+    return {'likes': item.get('likeCount'), 'reposts': item.get('repostCount'),
+            'quotes': item.get('quoteCount'), 'replies': item.get('replyCount'),
+            'followers': profile.get('followersCount'), 'observed_at': now().isoformat(),
+            'card_text': (card.get('title', '') + ' ' + card.get('description', ''))[:1800]}
+
+
 def hydrate_quality(posts, *, get=http_get):
     """Revalidate existing rows with current public records and profiles, fail closed.
 
@@ -111,6 +122,7 @@ def hydrate_quality(posts, *, get=http_get):
     for p in posts:
         item = records.get(p['source_id']) or {}
         p['quality_evidence'] = evidence_for(item, profiles.get(p['author_id']))
+        p['relevance_evidence'] = relevance_evidence(item, profiles.get(p['author_id']))
         if item and plain(item.get('record', {}).get('text'))[:1000] != p['text']:
             p['quality_evidence']['source_content_changed'] = True
     return errors
