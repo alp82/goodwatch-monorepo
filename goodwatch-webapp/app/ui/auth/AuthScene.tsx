@@ -66,7 +66,7 @@ function AuroraCard({ children }: { children: React.ReactNode }) {
 	)
 }
 
-export function AuthScene({ posters, children }: { posters: AuthPoster[]; children: React.ReactNode }) {
+export function AuthScene({ posters, children, aside }: { posters: AuthPoster[]; children: React.ReactNode; aside?: React.ReactNode }) {
 	return (
 		<div className="relative min-h-[max(calc(100svh-4rem),680px)] w-full overflow-hidden bg-gray-950">
 			<style dangerouslySetInnerHTML={{ __html: SCENE_CSS }} />
@@ -75,7 +75,7 @@ export function AuthScene({ posters, children }: { posters: AuthPoster[]; childr
 			<PosterSpotlight posters={posters} />
 			<div className="pointer-events-none absolute inset-0 bg-gradient-to-l from-gray-950 via-gray-950/40 to-transparent" />
 			<div className="pointer-events-none relative mx-auto flex min-h-[max(calc(100svh-4rem),680px)] max-w-7xl items-center justify-center gap-10 px-4 py-10 sm:px-8 lg:justify-between">
-				<Headline />
+				{aside ? <div className="hidden lg:block">{aside}</div> : <Headline />}
 				<div className="pointer-events-auto flex w-full max-w-md justify-center">
 					<AuroraCard>{children}</AuroraCard>
 				</div>
