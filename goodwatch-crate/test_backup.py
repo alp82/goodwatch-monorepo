@@ -3,12 +3,16 @@
 Run: uv run --with requests python -m unittest discover -s goodwatch-crate
 """
 
+import base64
 import contextlib
 import datetime
 import fcntl
+import http.server
 import io
+import json
 import re
 import tempfile
+import threading
 import time
 import unittest
 from pathlib import Path
@@ -255,6 +259,122 @@ class BackupTests(unittest.TestCase):
         import cleanup_legacy
 
         self.assertEqual(cleanup_legacy.KNOWN_PREFIXES, tuple(backup.RETENTION))
+
+
+class SqlServer:
+    """A loopback HTTP server that answers every POST like Crate and records the Authorization header."""
+
+    def __init__(self):
+        seen = self.authorization = []
+
+        class Handler(http.server.BaseHTTPRequestHandler):
+            def do_POST(self):
+                self.rfile.read(int(self.headers["Content-Length"]))
+                seen.append(self.headers.get("Authorization"))
+                body = json.dumps({"cols": ["name"], "rows": [], "rowcount": 0}).encode()
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+
+            def log_message(self, *args):
+                pass
+
+        self.server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        self.url = f"http://127.0.0.1:{self.server.server_address[1]}/_sql"
+        threading.Thread(target=self.server.serve_forever, daemon=True).start()
+
+    def close(self):
+        self.server.shutdown()
+        self.server.server_close()
+
+
+class CredentialTests(unittest.TestCase):
+    """The backup user (#562). Without the two variables the run sends no credentials, as before."""
+
+    def setUp(self):
+        self.directory = tempfile.TemporaryDirectory()
+        self.addCleanup(self.directory.cleanup)
+        self.crate = SqlServer()
+        self.addCleanup(self.crate.close)
+        for name, value in (
+            ("SQL_URL", self.crate.url),
+            ("LOCK_FILE", str(Path(self.directory.name) / "backup.lock")),
+            ("AUTH", None),
+        ):
+            patcher = mock.patch.object(backup, name, value)
+            patcher.start()
+            self.addCleanup(patcher.stop)
+
+    def password_file(self, content, mode=0o600):
+        path = Path(self.directory.name) / "crate-backup-password"
+        path.write_text(content)
+        path.chmod(mode)
+        return str(path)
+
+    def run_main(self, environ):
+        output = io.StringIO()
+        with (
+            mock.patch.dict(backup.os.environ, environ, clear=True),
+            contextlib.redirect_stdout(output),
+        ):
+            code = backup.main(NOW)
+        return code, output.getvalue()
+
+    def test_without_the_variables_no_credentials_are_sent(self):
+        self.run_main({})
+        self.assertTrue(self.crate.authorization)
+        self.assertEqual(set(self.crate.authorization), {None})
+
+    def test_the_backup_user_and_its_password_file_are_sent_on_every_statement(self):
+        secret = "p@ss:w/rd #1 ä"
+        path = self.password_file(secret + "\n")
+        self.run_main({"CRATE_BACKUP_USER": "goodwatch_backup", "CRATE_BACKUP_PASSWORD_FILE": path})
+
+        expected = "Basic " + base64.b64encode(f"goodwatch_backup:{secret}".encode()).decode()
+        self.assertTrue(self.crate.authorization)
+        self.assertEqual(set(self.crate.authorization), {expected})
+
+    def test_a_user_without_a_password_file_fails_before_any_statement(self):
+        code, output = self.run_main({"CRATE_BACKUP_USER": "goodwatch_backup"})
+        self.assertEqual(code, backup.EXIT_FAILED)
+        self.assertEqual(self.crate.authorization, [])
+        self.assertIn("BACKUP FAILED: CRATE_BACKUP_USER and CRATE_BACKUP_PASSWORD_FILE", output)
+
+    def test_a_password_file_without_a_user_fails_before_any_statement(self):
+        code, output = self.run_main({"CRATE_BACKUP_PASSWORD_FILE": self.password_file("x")})
+        self.assertEqual(code, backup.EXIT_FAILED)
+        self.assertEqual(self.crate.authorization, [])
+        self.assertIn("BACKUP FAILED: CRATE_BACKUP_USER and CRATE_BACKUP_PASSWORD_FILE", output)
+
+    def test_a_password_file_that_others_can_read_is_refused(self):
+        path = self.password_file("secret", mode=0o644)
+        code, output = self.run_main({"CRATE_BACKUP_USER": "goodwatch_backup", "CRATE_BACKUP_PASSWORD_FILE": path})
+        self.assertEqual(code, backup.EXIT_FAILED)
+        self.assertEqual(self.crate.authorization, [])
+        self.assertIn("readable by group or others", output)
+        self.assertNotIn("secret", output)
+
+    def test_a_missing_or_empty_password_file_is_refused(self):
+        for path in (str(Path(self.directory.name) / "absent"), self.password_file("\n")):
+            code, output = self.run_main({"CRATE_BACKUP_USER": "goodwatch_backup", "CRATE_BACKUP_PASSWORD_FILE": path})
+            self.assertEqual(code, backup.EXIT_FAILED)
+        self.assertEqual(self.crate.authorization, [])
+
+    def test_cleanup_legacy_sends_the_same_credentials(self):
+        import cleanup_legacy
+
+        path = self.password_file("secret")
+        with mock.patch.dict(
+            backup.os.environ,
+            {"CRATE_BACKUP_USER": "goodwatch_backup", "CRATE_BACKUP_PASSWORD_FILE": path},
+            clear=True,
+        ), contextlib.redirect_stdout(io.StringIO()):
+            backup.configure_auth()
+            self.assertEqual(cleanup_legacy.list_snapshots(), [])
+        expected = "Basic " + base64.b64encode(b"goodwatch_backup:secret").decode()
+        self.assertEqual(self.crate.authorization, [expected])
 
 
 if __name__ == "__main__":

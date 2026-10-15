@@ -8,6 +8,8 @@
 
 import datetime
 import fcntl
+import os
+import stat
 import sys
 import time
 
@@ -51,6 +53,14 @@ EXIT_LOCKED = 75
 
 SQL_URL = f"{CRATE_HOST}/_sql"
 
+# The backup user (#562). Set both, or neither: without them the run sends no
+# credentials, which works only while the cluster does not enforce passwords.
+# The password lives in a file that only its owner can read, so it stays out of
+# the crontab and the process list. One trailing newline is ignored.
+USER_VARIABLE = "CRATE_BACKUP_USER"
+PASSWORD_FILE_VARIABLE = "CRATE_BACKUP_PASSWORD_FILE"
+AUTH = None  # (user, password) once configure_auth() has found them
+
 
 class BackupError(Exception):
     """A step of the backup failed. The run stops and exits non-zero."""
@@ -62,11 +72,40 @@ def log(message):
     print(f"{now:%Y-%m-%dT%H:%M:%SZ} {message}", flush=True)
 
 
+def read_auth(environ):
+    """Returns (user, password) from the two variables, or None when neither is set."""
+    user = environ.get(USER_VARIABLE, "")
+    path = environ.get(PASSWORD_FILE_VARIABLE, "")
+    if not user and not path:
+        return None
+    if not user or not path:
+        raise BackupError(f"{USER_VARIABLE} and {PASSWORD_FILE_VARIABLE} must be set together.")
+    try:
+        mode = os.stat(path).st_mode
+        if mode & (stat.S_IRWXG | stat.S_IRWXO):
+            raise BackupError(f"{PASSWORD_FILE_VARIABLE} {path} is readable by group or others. Run chmod 600.")
+        with open(path, encoding="utf-8") as file:
+            password = file.read()
+    except OSError as e:
+        raise BackupError(f"Could not read {PASSWORD_FILE_VARIABLE} {path}: {e.strerror}")
+    password = password[:-1] if password.endswith("\n") else password
+    if not password:
+        raise BackupError(f"{PASSWORD_FILE_VARIABLE} {path} is empty.")
+    # Bytes, so that requests sends UTF-8 rather than Latin-1.
+    return user.encode("utf-8"), password.encode("utf-8")
+
+
+def configure_auth(environ=None):
+    """Reads the backup user for every following run_sql call."""
+    global AUTH
+    AUTH = read_auth(os.environ if environ is None else environ)
+
+
 def run_sql(stmt, timeout=DROP_TIMEOUT):
     """Executes a SQL statement via HTTP API. Returns None on any error."""
     try:
         response = requests.post(
-            SQL_URL, json={"stmt": stmt}, timeout=(CONNECT_TIMEOUT, timeout)
+            SQL_URL, json={"stmt": stmt}, auth=AUTH, timeout=(CONNECT_TIMEOUT, timeout)
         )
         response.raise_for_status()
         return response.json()
@@ -185,6 +224,7 @@ def main(now=None):
         return EXIT_LOCKED
 
     try:
+        configure_auth()
         run_backup(now or datetime.datetime.now())
     except BackupError as e:
         log(f"BACKUP FAILED: {e}")

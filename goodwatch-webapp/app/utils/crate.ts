@@ -77,7 +77,10 @@ let captureRequest: ((request: ClientRequest) => void) | undefined
 
 type NodeCrate = typeof crate & {
 	getNewInstance(): NodeCrate
-	connectionPool: { getSqlRequest(callback: (response: IncomingMessage) => void): ClientRequest }
+	connectionPool: {
+		getSqlRequest(callback: (response: IncomingMessage) => void): ClientRequest
+		httpOptions: { httpOpt: { auth: string | null } }[]
+	}
 }
 
 const HOST_COOLDOWN_MS = 5_000
@@ -136,11 +139,14 @@ class CrateClient {
 	private readonly hosts: { driver: NodeCrate; unavailableUntil: number }[]
 	private nextHost = 0
 
-	constructor(hosts: string[]) {
+	// `auth` is "user:password" for a Basic header, or null for none. node-crate would take it from a URL, but sends it
+	// percent-encoded there, and a password with "#", "/" or "?" is no valid URL (#562).
+	constructor(hosts: string[], auth: string | null = null) {
 		this.hosts = hosts.map((host) => {
 			const driver = (crate as NodeCrate).getNewInstance()
 			driver.connect(host)
 			const pool = driver.connectionPool
+			for (const options of pool.httpOptions) options.httpOpt.auth = auth
 			const getSqlRequest = pool.getSqlRequest
 			pool.getSqlRequest = function(this: typeof pool, callback: (response: IncomingMessage) => void) {
 				const request = getSqlRequest.call(this, callback)
@@ -395,8 +401,9 @@ export const getCrateClient = () => {
 		const port = Number.parseInt(process.env.CRATE_PORT || "4200")
 		const user = process.env.CRATE_USER || ""
 		const pass = process.env.CRATE_PASS || ""
-		const urls = hosts.map((host) => `http://${user}:${pass}@${host}:${port}`)
-		client = new CrateClient(urls)
+		const urls = hosts.map((host) => `http://${host}:${port}`)
+		// Without CRATE_USER no credentials are sent, as before.
+		client = new CrateClient(urls, user ? `${user}:${pass}` : null)
 	}
 	return client
 }

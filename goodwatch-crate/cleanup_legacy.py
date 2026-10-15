@@ -9,7 +9,7 @@
 # One-shot: drops snapshots in the CrateDB backup repo that don't match
 # the tiered-retention prefixes used by backup.py. Safe to re-run.
 
-from backup import REPO_NAME, RETENTION, run_sql
+from backup import REPO_NAME, RETENTION, configure_auth, run_sql
 
 KNOWN_PREFIXES = tuple(RETENTION.keys())
 
@@ -23,6 +23,7 @@ def list_snapshots():
 
 
 def main():
+    configure_auth()  # the same CRATE_BACKUP_USER and CRATE_BACKUP_PASSWORD_FILE as backup.py
     names = list_snapshots()
     legacy = [n for n in names if not n.startswith(KNOWN_PREFIXES)]
 
