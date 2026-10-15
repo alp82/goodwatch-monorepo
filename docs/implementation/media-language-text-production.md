@@ -53,6 +53,8 @@ Release policy confirmed: **canonical season text only where a canonical stable 
 
 The smallest future stable bucket identity is `(show_id, alignment_namespace, explicit_bucket_key)`, with the key owned by the reviewed mapping and independent of its display ordinal. Keep the sorted member-TMDB-ID hash as a separate **text source revision**, not as identity: adding/renumbering an episode should not create a different bucket, but must invalidate misleading bucket prose. A direct canonical-season join is permissible only with proved equivalent membership. No synthetic identity/table or inferred membership was introduced in this release.
 
+Design note with the reading rule and when to build it: [regrouped display seasons](media-language-regrouped-seasons.md).
+
 ## Read-side safeguards and preview
 
 Ordinary grids enrich IMDb cells with proved canonical TMDB IDs in one show-scoped query per cold grid build. Unique external IDs win; otherwise a unique real title on each side of the same season proves the match (including renumbering). Equal numbers, placeholders, contradictory external IDs and ambiguous names do not join. Ratings, numbering and membership are untouched. `episode-grid-media-v2` separates older cached grids without IDs. Reviewed grids retain their mapping-owned IDs. A failed identity read preserves the rated grid without localization rather than hiding it.
