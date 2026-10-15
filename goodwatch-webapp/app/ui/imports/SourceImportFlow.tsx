@@ -3,7 +3,9 @@ import {
 	IMPORT_SOURCE_NAMES,
 	type ImportSource,
 	type ImportSummary,
+	isFileImportSource,
 } from "~/domain/imports"
+import { sourceImportCopy } from "./SourceImportCopy"
 import { SourceImportCurrent } from "./SourceImportCurrent"
 import { type ImportListResponse, useSourceImports } from "./SourceImportHooks"
 import { SourceImportUploadPanel } from "./SourceImportUploadPanel"
@@ -93,9 +95,7 @@ export function SourceImportFlow({
 										className={primaryButton}
 										onClick={upload}
 									>
-										{source === "tmdb"
-											? "Connect TMDB again"
-											: "Upload a newer export"}
+										{sourceImportCopy(source).newer}
 									</button>
 								)}
 								<button
@@ -109,7 +109,7 @@ export function SourceImportFlow({
 						</section>
 					)}
 					{(!latest || uploadOpen || connectState) &&
-						(source === "tmdb" ? (
+						(!isFileImportSource(source) ? (
 							<TmdbConnectPanel state={connectState} />
 						) : (
 							<SourceImportUploadPanel

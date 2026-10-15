@@ -7,6 +7,7 @@ import type {
 } from "~/domain/imports"
 import { Spinner } from "~/ui/wait/Spinner"
 import { FocusHeading } from "./FocusHeading"
+import { sourceImportCopy } from "./SourceImportCopy"
 import { SourceOutcomeRow } from "./SourceImportCounts"
 import {
 	sourceSkippedDownloadUrl,
@@ -175,9 +176,7 @@ export function SourceImportCurrent({
 							className={secondaryButton}
 							onClick={onUploadAnother}
 						>
-							{summary.source === "tmdb"
-								? "Connect TMDB again"
-								: "Choose another file"}
+							{sourceImportCopy(summary.source).restart}
 						</button>
 					)}
 				</div>
@@ -263,9 +262,7 @@ function Receipt({
 					className={secondaryButton}
 					onClick={onUploadAnother}
 				>
-					{summary.source === "tmdb"
-						? "Connect TMDB again"
-						: "Import another export"}
+					{sourceImportCopy(summary.source).another}
 				</button>
 			</div>
 			{summary.canUndo &&

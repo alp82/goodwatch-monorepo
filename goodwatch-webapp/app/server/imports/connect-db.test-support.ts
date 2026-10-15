@@ -7,8 +7,9 @@ export class ConnectDb extends ImportDb {
 		string,
 		{
 			user_id: string
+			slot: number
 			payload: string
-			cleanup_at: Date
+			cleanup_at: Date | null
 			lease_until: Date
 			_seq_no: number
 			_primary_term: number
@@ -23,26 +24,45 @@ export class ConnectDb extends ImportDb {
 			return { rowcount: 0 }
 		if (
 			sql ===
-			"INSERT INTO doc.user_import_connection (id,user_id,payload,cleanup_at,lease_until) VALUES (?,?,?,?,?)"
+			"INSERT INTO doc.user_import_connection (id,user_id,slot,payload,cleanup_at,lease_until) VALUES (?,?,?,?,?,?) ON CONFLICT (user_id,slot) DO NOTHING"
 		) {
+			if (
+				[...this.connections.values()].some(
+					(row) => row.user_id === params[1] && row.slot === params[2],
+				)
+			)
+				return { rowcount: 0 }
 			this.connections.set(String(params[0]), {
 				user_id: String(params[1]),
-				payload: String(params[2]),
-				cleanup_at: new Date(params[3] ?? 0),
-				lease_until: new Date(params[4] ?? 0),
+				slot: Number(params[2]),
+				payload: String(params[3]),
+				cleanup_at: new Date(params[4] ?? 0),
+				lease_until: new Date(params[5] ?? 0),
 				_seq_no: 1,
 				_primary_term: 1,
 			})
+			return { rowcount: 1 }
+		}
+		if (
+			sql ===
+			"UPDATE doc.user_import_connection SET cleanup_at = NULL WHERE id = ?"
+		) {
+			const row = this.connections.get(String(params[0]))
+			if (!row) return { rowcount: 0 }
+			row.cleanup_at = null
+			row._seq_no++
 			return { rowcount: 1 }
 		}
 		if (sql === "DELETE FROM doc.user_import_connection WHERE id = ?")
 			return { rowcount: Number(this.connections.delete(String(params[0]))) }
 		if (
 			sql ===
-			"UPDATE doc.user_import_connection SET lease_until = ? WHERE id = ? AND _seq_no = ? AND _primary_term = ?"
+			"UPDATE doc.user_import_connection SET lease_until = ? WHERE user_id = ? AND slot = ? AND _seq_no = ? AND _primary_term = ?"
 		) {
-			const row = this.connections.get(String(params[1]))
-			if (!row || row._seq_no !== params[2] || row._primary_term !== params[3])
+			const row = [...this.connections.values()].find(
+				(row) => row.user_id === params[1] && row.slot === params[2],
+			)
+			if (!row || row._seq_no !== params[3] || row._primary_term !== params[4])
 				return { rowcount: 0 }
 			row.lease_until = new Date(params[0] ?? 0)
 			row._seq_no++
@@ -66,7 +86,7 @@ export class ConnectDb extends ImportDb {
 			const row = this.connections.get(String(params[3]))
 			if (!row) return { rowcount: 0 }
 			row.payload = String(params[0])
-			row.cleanup_at = new Date(params[1] ?? 0)
+			row.cleanup_at = params[1] === null ? null : new Date(params[1] ?? 0)
 			row.lease_until = new Date(params[2] ?? 0)
 			row._seq_no++
 			return { rowcount: 1 }
@@ -81,7 +101,7 @@ export class ConnectDb extends ImportDb {
 			return super.select<T>(sql, params)
 		if (
 			sql ===
-			"SELECT user_id,payload,lease_until,_seq_no,_primary_term FROM doc.user_import_connection WHERE id = ?"
+			"SELECT user_id,slot,payload,lease_until,_seq_no,_primary_term FROM doc.user_import_connection WHERE id = ?"
 		) {
 			const row = this.connections.get(String(params[0]))
 			return (row ? [{ ...row }] : []) as unknown as T[]
@@ -93,6 +113,7 @@ export class ConnectDb extends ImportDb {
 			return [...this.connections.entries()]
 				.filter(
 					([, row]) =>
+						row.cleanup_at !== null &&
 						row.cleanup_at <= new Date(params[0] ?? 0) &&
 						row.lease_until <= new Date(params[1] ?? 0),
 				)

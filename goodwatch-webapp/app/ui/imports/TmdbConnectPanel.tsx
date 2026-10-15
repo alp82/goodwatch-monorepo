@@ -1,4 +1,5 @@
 import { useFetcher } from "@remix-run/react"
+import { assetUrl } from "~/utils/asset-url"
 import { errorBox, primaryButton, secondaryButton, stepHeading } from "./shared"
 
 export function TmdbConnectControls({
@@ -19,7 +20,23 @@ export function TmdbConnectControls({
 				TMDB grants read and write access. GoodWatch only reads your lists, then
 				deletes the connection before showing your preview. Finish within 10
 				minutes. Closing this page or canceling also schedules disconnection.
+				Only approve links you opened yourself from this page, never forwarded
+				links.
 			</p>
+			<div className="space-y-2 text-sm text-gray-400">
+				<a href="https://www.themoviedb.org" aria-label="The Movie Database">
+					<img
+						src={assetUrl("/tmdb-logo.svg")}
+						alt="TMDB"
+						width={100}
+						height={13}
+					/>
+				</a>
+				<p>
+					This product uses the TMDB API but is not endorsed or certified by
+					TMDB.
+				</p>
+			</div>
 			{state && <input type="hidden" name="state" value={state} />}
 			<div className="flex flex-wrap gap-3">
 				<button

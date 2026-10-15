@@ -172,3 +172,7 @@ export interface ImportSummary {
 // POST /api/imports/:id/undo: returns { import }.
 // GET /api/imports/:id/skipped: CSV of unapplied rows and reasons.
 // All errors: { error: string }, all routes require a member and private/no-store responses.
+
+/** Opaque IDs used in import return URLs and connect cookies. */
+export const IMPORT_ID_PATTERN =
+	/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/

@@ -1,7 +1,9 @@
 import { randomUUID } from "node:crypto"
 import { createCookie } from "@remix-run/node"
-import type { ParsedImport } from "../../domain/imports.ts"
+import { IMPORT_ID_PATTERN, type ParsedImport } from "../../domain/imports.ts"
 import { type TmdbClient, TmdbError } from "./tmdb-client.server.ts"
+
+export const CONNECTION_WINDOW_MS = 10 * 60_000
 
 export interface Connection {
 	id: string
@@ -11,17 +13,19 @@ export interface Connection {
 	accessToken?: string
 	accountId?: string
 	canceled?: boolean
+	cleanupAttempts?: number
 }
 export interface ConnectionStore {
-	create(value: Connection, available: number): Promise<void>
+	create(value: Connection, available: number): Promise<boolean>
 	/** Atomic lease, enforcing ownership when requested. A lease lasts ten minutes. */
 	claim(
 		id: string,
 		userId: string | undefined,
 		now: number,
 	): Promise<Connection | null>
-	/** Without available, retain the lease; otherwise release it for that retry time. */
-	save(value: Connection, available?: number): Promise<void>
+	/** Omitted: retain the lease. A time releases for retry; null pauses for operator recovery. */
+	save(value: Connection, available?: number | null): Promise<void>
+	pause(id: string): Promise<void>
 	remove(id: string): Promise<void>
 	due(now: number): Promise<string[]>
 }
@@ -33,7 +37,7 @@ const cookie = createCookie("tmdb-connect", {
 })
 const invalid = () =>
 	new TmdbError(
-		"This TMDB connection expired or is already being used. Start again from Imports.",
+		"Connection expired, start again from Imports, or wait for the current connection to finish.",
 		404,
 	)
 
@@ -45,49 +49,79 @@ export function createTmdbConnect(deps: {
 	) => Promise<{ userId: string | null; headers: Headers }>
 	origin: () => string | null
 	now?: () => number
+	alert?: (connectionId: string) => void
 }) {
 	const { store, client } = deps
 	const now = deps.now ?? Date.now
+	const alert =
+		deps.alert ??
+		((connectionId: string) =>
+			console.error("TMDB Connect cleanup paused; operator action required.", {
+				connectionId,
+			}))
 	const retryAt = (error: unknown) =>
 		now() +
 		Math.max(60_000, error instanceof TmdbError ? (error.retryAfterMs ?? 0) : 0)
 	async function disconnect(connection: Connection) {
-		if (connection.accessToken) await client.revoke(connection.accessToken)
+		if (connection.accessToken)
+			await client.revoke(connection.accessToken, connection.accountId)
 		await store.remove(connection.id)
 	}
 	return {
 		/** Cleanup needs no browser. Expired leases recover work interrupted by a process restart. */
 		async sweep(): Promise<void> {
 			for (const id of await store.due(now())) {
-				const connection = await store.claim(id, undefined, now())
-				if (!connection) continue
-				connection.canceled = true
 				try {
-					if (!connection.accessToken) {
-						Object.assign(
-							connection,
-							await client.exchange(connection.requestToken),
+					const connection = await store.claim(id, undefined, now())
+					if (!connection) continue
+					connection.canceled = true
+					if (!connection.requestToken && !connection.accessToken) {
+						await store.remove(id)
+						continue
+					}
+					try {
+						if (!connection.accessToken) {
+							Object.assign(
+								connection,
+								await client.exchange(connection.requestToken),
+							)
+							try {
+								await store.save(connection)
+							} catch {
+								// Even without a durable write, revoke the token we just received.
+								await disconnect(connection)
+								continue
+							}
+						}
+						await disconnect(connection)
+					} catch (error) {
+						// Unapproved request tokens expire on TMDB after 15 min. Retry until then,
+						// including late approval after Cancel; never discard a known access token.
+						if (
+							!connection.accessToken &&
+							now() >= connection.expiresAt + 5 * 60_000 &&
+							error instanceof TmdbError &&
+							[401, 403, 422].includes(error.status)
 						)
-						try {
-							await store.save(connection)
-						} catch {
-							// Even without a durable write, revoke the token we just received.
-							await disconnect(connection)
-							continue
+							await store.remove(connection.id)
+						else {
+							const pendingApproval =
+								!connection.accessToken &&
+								error instanceof TmdbError &&
+								[401, 403, 422].includes(error.status)
+							if (!pendingApproval)
+								connection.cleanupAttempts =
+									(connection.cleanupAttempts ?? 0) + 1
+							if ((connection.cleanupAttempts ?? 0) >= 8) {
+								await store.save(connection, null)
+								alert(id)
+							} else await store.save(connection, retryAt(error))
 						}
 					}
-					await disconnect(connection)
-				} catch (error) {
-					// Unapproved request tokens expire on TMDB after 15 min. Retry until then,
-					// including late approval after Cancel; never discard a known access token.
-					if (
-						!connection.accessToken &&
-						now() >= connection.expiresAt + 5 * 60_000 &&
-						error instanceof TmdbError &&
-						[401, 403].includes(error.status)
-					)
-						await store.remove(connection.id)
-					else await store.save(connection, retryAt(error))
+				} catch {
+					// One bad row must not hold up other members. Keep credentials for operator recovery.
+					await store.pause(id).catch(() => {})
+					alert(id)
 				}
 			}
 		},
@@ -109,22 +143,33 @@ export function createTmdbConnect(deps: {
 			try {
 				if (step === "start") {
 					const id = randomUUID()
-					const requestToken = await client.createRequest(
-						`${origin}/settings/imports?source=tmdb&connect=${id}`,
-					)
-					const connection = {
+					const connection: Connection = {
 						id,
 						userId,
-						requestToken,
-						expiresAt: now() + 10 * 60_000,
+						requestToken: "",
+						expiresAt: now() + CONNECTION_WINDOW_MS,
 					}
-					await store.create(connection, connection.expiresAt)
+					if (!(await store.create(connection, connection.expiresAt)))
+						return fail(
+							"You have three open connections. Finish or cancel one, or wait for disconnection before starting again.",
+							429,
+						)
+					try {
+						connection.requestToken = await client.createRequest(
+							`${origin}/settings/imports?source=tmdb&connect=${id}`,
+						)
+						await store.save(connection, connection.expiresAt)
+					} catch (error) {
+						// No approval URL has left this server; no member access token can have been granted.
+						await store.remove(id)
+						throw error
+					}
 					headers.append(
 						"Set-Cookie",
 						await cookie.serialize(id, { secure: origin.startsWith("https:") }),
 					)
 					return redirect(
-						`https://www.themoviedb.org/auth/access?request_token=${encodeURIComponent(requestToken)}`,
+						`https://www.themoviedb.org/auth/access?request_token=${encodeURIComponent(connection.requestToken)}`,
 					)
 				}
 				if (step !== "return" && step !== "abandon")
@@ -133,7 +178,7 @@ export function createTmdbConnect(deps: {
 				const id = form.get("state")
 				if (
 					typeof id !== "string" ||
-					!/^[a-f0-9-]{36}$/.test(id) ||
+					!IMPORT_ID_PATTERN.test(id) ||
 					(await cookie.parse(request.headers.get("Cookie"))) !== id
 				)
 					throw invalid()
@@ -147,6 +192,8 @@ export function createTmdbConnect(deps: {
 					const credentials = await client.exchange(connection.requestToken)
 					Object.assign(connection, credentials)
 					await store.save(connection)
+					if (step === "return" && connection.expiresAt <= now())
+						throw new TmdbError("Connection expired, start again.", 410)
 					if (!credentials.accountId) throw new TmdbError()
 					if (step === "return" && connection.expiresAt > now())
 						parsed = await client.readAccount(
@@ -160,7 +207,7 @@ export function createTmdbConnect(deps: {
 							step === "abandon" &&
 							!connection.accessToken &&
 							error instanceof TmdbError &&
-							[401, 403].includes(error.status)
+							[401, 403, 422].includes(error.status)
 						)
 					)
 						failure =
@@ -195,11 +242,10 @@ export function createTmdbConnect(deps: {
 				if (!parsed) return redirect("/settings/imports?source=tmdb")
 				try {
 					const { previewFetchedImport } = await import("./service.server.ts")
-					const observations = parsed
 					const summary = await previewFetchedImport(
 						userId,
 						"TMDB account",
-						async () => observations,
+						parsed,
 					)
 					return redirect(`/settings/imports?source=tmdb&import=${summary.id}`)
 				} catch {

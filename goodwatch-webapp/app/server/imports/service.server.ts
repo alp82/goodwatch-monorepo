@@ -62,10 +62,10 @@ export type { ImportOptions }
 export const previewFetchedImport = async (
 	userId: string,
 	displayName: string,
-	fetchObservations: () => Promise<ParsedImport>,
+	observations: ParsedImport,
 ) =>
 	(await import("./preview.server.ts")).createObservationPreview(
 		userId,
 		displayName,
-		await fetchObservations(),
+		observations,
 	)

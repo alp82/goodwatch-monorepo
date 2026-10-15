@@ -7,7 +7,10 @@ import { createTmdbClient } from "./tmdb-client.server.ts"
 import { createTmdbConnect } from "./tmdb-connect.server.ts"
 
 export const tmdbConnect = createTmdbConnect({
-	store: createConnectionStore(() => process.env.TMDB_API_TOKEN ?? ""),
+	store: createConnectionStore(
+		() => process.env.TMDB_CONNECT_KEY ?? "",
+		() => process.env.TMDB_CONNECT_PREVIOUS_KEY ?? "",
+	),
 	client: createTmdbClient({ appToken: process.env.TMDB_API_TOKEN ?? "" }),
 	origin: siteOrigin,
 	member: async (request) => {
@@ -18,7 +21,13 @@ export const tmdbConnect = createTmdbConnect({
 let timer: ReturnType<typeof setTimeout> | undefined
 let stopped = false
 export function startTmdbConnectionCleanup() {
-	if (timer || !process.env.TMDB_API_TOKEN || processRole() === "search") return
+	if (
+		timer ||
+		!process.env.TMDB_API_TOKEN ||
+		!process.env.TMDB_CONNECT_KEY ||
+		processRole() === "search"
+	)
+		return
 	stopped = false
 	const tick = async () => {
 		try {

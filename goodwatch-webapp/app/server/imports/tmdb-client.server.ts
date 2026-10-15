@@ -15,6 +15,7 @@ import {
 export class TmdbError extends Error {
 	readonly status: number
 	retryAfterMs?: number
+	code?: number
 	constructor(
 		message = "TMDB could not complete this connection. Please try again.",
 		status = 502,
@@ -23,6 +24,10 @@ export class TmdbError extends Error {
 		this.status = status
 	}
 }
+const isMissingToken = (error: unknown): error is TmdbError =>
+	error instanceof TmdbError &&
+	((error.status === 401 && error.code === 35) ||
+		(error.status === 404 && error.code === 37))
 const ratingDate = z.string().datetime({ offset: true })
 const pageSchema = z.object({
 	page: z.number().int().positive(),
@@ -54,6 +59,7 @@ export function createTmdbClient(options: {
 		token: string,
 		method = "GET",
 		body?: object,
+		version: 3 | 4 = 4,
 	): Promise<unknown> {
 		for (let attempt = 0; ; attempt++) {
 			let wait = 0
@@ -63,7 +69,7 @@ export function createTmdbClient(options: {
 					timeoutSetting("TMDB_TIMEOUT_MS", TMDB_TIMEOUT_DEFAULT_MS),
 					async (signal) => {
 						const response = await send(
-							`https://api.themoviedb.org/4/${path}`,
+							`https://api.themoviedb.org/${version}/${path}`,
 							{
 								method,
 								signal,
@@ -85,7 +91,17 @@ export function createTmdbClient(options: {
 									: 1000 * 2 ** attempt
 							await response.body?.cancel()
 						}
-						if (!response.ok) throw new TmdbError(undefined, response.status)
+						if (!response.ok) {
+							const error = new TmdbError(undefined, response.status)
+							// Preserve only a numeric provider code; response text may contain credentials.
+							if (response.status !== 429) {
+								const body = z
+									.object({ status_code: z.number().int() })
+									.safeParse(await response.json().catch(() => null))
+								if (body.success) error.code = body.data.status_code
+							}
+							throw error
+						}
 						return await response.json()
 					},
 				)
@@ -148,7 +164,7 @@ export function createTmdbClient(options: {
 						: "",
 			}
 		},
-		async revoke(accessToken: string): Promise<void> {
+		async revoke(accessToken: string, accountId?: string): Promise<void> {
 			for (let attempt = 0; ; attempt++) {
 				try {
 					const result = z.object({ status_code: z.literal(13) }).safeParse(
@@ -159,6 +175,39 @@ export function createTmdbClient(options: {
 					if (!result.success) throw new TmdbError()
 					return
 				} catch (error) {
+					if (accountId && isMissingToken(error)) {
+						// Confirm both that the application bearer works and that the member token no longer reads its account.
+						try {
+							const auth = z
+								.object({ success: z.literal(true) })
+								.safeParse(
+									await request(
+										"authentication",
+										options.appToken,
+										"GET",
+										undefined,
+										3,
+									),
+								)
+							if (auth.success) {
+								try {
+									await request(
+										`account/${encodeURIComponent(accountId)}/movie/rated?page=1`,
+										accessToken,
+									)
+								} catch (probeError) {
+									if (isMissingToken(probeError)) return
+									throw probeError
+								}
+							}
+						} catch (validationError) {
+							if (
+								validationError instanceof TmdbError &&
+								validationError.status === 429
+							)
+								throw validationError
+						}
+					}
 					if (error instanceof TmdbError && error.status === 429) throw error
 					if (attempt === 2)
 						throw new TmdbError(
@@ -206,17 +255,29 @@ export function createTmdbClient(options: {
 								"TMDB returned an unreadable account list. Please try again.",
 							)
 						const data = result.data
+						if (data.page !== page)
+							throw new TmdbError(
+								"TMDB returned an unexpected page. Please try again.",
+							)
 						if (
-							data.page !== page ||
-							data.total_pages > IMPORT_MAX_ROWS ||
-							(page > 1 &&
-								(data.total_pages !== pages || data.total_results !== expected))
+							data.total_pages * 20 > IMPORT_MAX_ROWS ||
+							data.total_results > IMPORT_MAX_ROWS
 						)
 							throw new TmdbError(
-								"TMDB returned an incomplete or changing account list. Please try again.",
+								"That account produces more than 50,000 import items.",
+								400,
 							)
-						pages = data.total_pages
-						expected = data.total_results
+						if (page === 1) {
+							pages = data.total_pages
+							expected = data.total_results
+						} else if (
+							data.total_pages !== pages ||
+							data.total_results !== expected
+						) {
+							warnings.push(
+								`The TMDB ${mediaType} ${list} count changed while reading. Review this partial import or connect again.`,
+							)
+						}
 						for (const item of data.results) {
 							if (ids.has(item.id))
 								throw new TmdbError(
@@ -238,7 +299,10 @@ export function createTmdbClient(options: {
 									: null
 							if (kind === "rating" && date != null && !addedAt) invalidDates++
 							if (kind === "rating" && addedAt)
-								timestamps.set(addedAt, (timestamps.get(addedAt) ?? 0) + 1)
+								timestamps.set(
+									addedAt.slice(0, 10),
+									(timestamps.get(addedAt.slice(0, 10)) ?? 0) + 1,
+								)
 							const release =
 								mediaType === "movie" ? item.release_date : item.first_air_date
 							observations.push({
@@ -276,8 +340,8 @@ export function createTmdbClient(options: {
 						}
 					}
 					if (ids.size !== expected)
-						throw new TmdbError(
-							"TMDB returned an incomplete account list. Please try again.",
+						warnings.push(
+							`Read ${ids.size} of ${expected} TMDB ${mediaType} ${list} items. The list may have changed; review this partial import or connect again.`,
 						)
 				}
 			}
@@ -286,7 +350,7 @@ export function createTmdbClient(options: {
 			const cluster = Math.max(0, ...timestamps.values())
 			if (cluster >= 100)
 				warnings.push(
-					`${cluster} ratings share one TMDB timestamp. These may be migration dates; the original rating dates were preserved.`,
+					`${cluster} ratings share one UTC calendar day on TMDB. These may be migration dates; the original rating dates were preserved.`,
 				)
 			return { source: "tmdb", observations, warnings }
 		},

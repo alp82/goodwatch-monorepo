@@ -133,16 +133,17 @@ test("invalid ratings stay visible, clustered dates warn, and partial or repeate
 		title: "Example",
 		account_rating: {
 			value: i === 0 ? 0 : 8.5,
-			created_at: "2020-02-01T12:00:00Z",
+			created_at: new Date(
+				Date.parse("2020-02-01T12:00:00Z") + i * 1000,
+			).toISOString(),
 		},
 	}))
 	const parsed = await build(rows).readAccount("account", "secret")
 	assert.equal(parsed.observations[0].problem?.outcome, "invalid")
-	assert.match(parsed.warnings.join(" "), /100 ratings share/)
-	await assert.rejects(
-		build(rows, 101).readAccount("account", "secret"),
-		/incomplete/,
-	)
+	assert.match(parsed.warnings.join(" "), /100 ratings share.*day/)
+	const partial = await build(rows, 101).readAccount("account", "secret")
+	assert.equal(partial.observations.length, 100)
+	assert.match(partial.warnings.join(" "), /100 of 101.*movie rated/)
 	await assert.rejects(
 		build([rows[0], rows[0]]).readAccount("account", "secret"),
 		/duplicate/,
@@ -214,4 +215,98 @@ test("incomplete or impossible rating dates stay undated rather than inventing a
 		[null, null, "2020-02-01T10:00:00.000Z"],
 	)
 	assert.match(parsed.warnings.join(" "), /invalid rating dates/)
+})
+
+test("revocation accepts confirmed invalid or missing tokens but never an application auth failure or generic 404", async () => {
+	for (const [status, code, accepted] of [
+		[401, 35, true],
+		[404, 37, true],
+		[401, 7, false],
+		[404, 34, false],
+	] as const) {
+		let deletes = 0
+		const client = createTmdbClient({
+			appToken: "app",
+			sleep: async () => {},
+			fetch: async (url, init) => {
+				if (String(url).endsWith("/3/authentication"))
+					return Response.json({ success: true })
+				if (String(url).includes("/account/account/"))
+					return Response.json(
+						{ status_code: 35, success: false },
+						{ status: 401 },
+					)
+				assert.equal(init?.method, "DELETE")
+				deletes++
+				return Response.json(
+					{ success: false, status_code: code, status_message: "secret" },
+					{ status },
+				)
+			},
+		})
+		if (accepted) {
+			await client.revoke("member", "account")
+			assert.equal(deletes, 1)
+		} else
+			await assert.rejects(
+				client.revoke("member"),
+				/not confirmed disconnection/,
+			)
+	}
+	const invalidApp = createTmdbClient({
+		appToken: "bad-app",
+		sleep: async () => {},
+		fetch: async () =>
+			Response.json({ success: false, status_code: 35 }, { status: 401 }),
+	})
+	await assert.rejects(
+		invalidApp.revoke("member", "account"),
+		/not confirmed disconnection/,
+	)
+})
+
+test("page counts are bounded in items, and changing counts warn while keeping the pages read", async () => {
+	let huge = true
+	const client = createTmdbClient({
+		appToken: "app",
+		sleep: async () => {},
+		fetch: async (url) => {
+			const path = new URL(String(url))
+			const page = Number(path.searchParams.get("page"))
+			return Response.json({
+				page,
+				total_pages: huge ? 2501 : page === 1 ? 2 : 1,
+				total_results: page === 1 ? 2 : 1,
+				results: [{ id: page, title: "Title" }],
+			})
+		},
+	})
+	await assert.rejects(client.readAccount("account", "secret"), /50,000/)
+	huge = false
+	const parsed = await client.readAccount("account", "secret")
+	assert.equal(parsed.observations.length, 12)
+	assert.match(parsed.warnings.join(" "), /changed/)
+})
+
+test("an invalid-token logout response cannot discard a member token that still reads its account", async () => {
+	const client = createTmdbClient({
+		appToken: "app",
+		sleep: async () => {},
+		fetch: async (url, init) => {
+			if (String(url).endsWith("/3/authentication"))
+				return Response.json({ success: true })
+			if (init?.method === "GET")
+				return Response.json({
+					page: 1,
+					total_pages: 0,
+					total_results: 0,
+					results: [],
+				})
+			return Response.json({ status_code: 35, success: false }, { status: 401 })
+		},
+	})
+	await assert.rejects(
+		client.revoke("member", "account"),
+		/not confirmed disconnection/,
+	)
 })

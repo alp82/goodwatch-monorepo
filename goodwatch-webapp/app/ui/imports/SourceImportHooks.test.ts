@@ -212,6 +212,15 @@ test("TMDB offers Connect and an explicit return/cancel step without a file inpu
 	assert.match(rendered.start, /Connect TMDB/)
 	assert.match(rendered.start, /\/api\/imports\/tmdb\/start/)
 	assert.match(rendered.start, /read and write/)
+	assert.match(
+		rendered.start,
+		/This product uses the TMDB API but is not endorsed or certified by TMDB/,
+	)
+	assert.match(rendered.start, /alt="TMDB"/)
+	assert.match(
+		rendered.start,
+		/src="https:\/\/static.goodwatch.test\/tmdb-logo.svg"/,
+	)
 	assert.doesNotMatch(rendered.start, /type="file"/)
 	assert.match(rendered.returned, /Preview TMDB import/)
 	assert.match(rendered.returned, /\/api\/imports\/tmdb\/return/)
@@ -221,5 +230,11 @@ test("TMDB offers Connect and an explicit return/cancel step without a file inpu
 	assert.match(rendered.failed, /role="alert"/)
 	assert.match(rendered.failed, /Please try again/)
 	assert.match(rendered.failed, /Start a new connection/)
+	assert.doesNotMatch(rendered.preview, /export|Choose another file/i)
+	assert.match(rendered.preview, /TMDB data/)
+	assert.match(rendered.preview, /Connect TMDB again/)
+	assert.match(rendered.filePreview, /Rows in your export/)
+	assert.match(rendered.filePreview, /Use the export instead/)
+	assert.match(rendered.filePreview, /Choose another file/)
 	assert.match(rendered.failed, /\/api\/imports\/tmdb\/start/)
 })

@@ -4,58 +4,16 @@ import { afterEach, test } from "node:test"
 import { ConnectDb } from "./connect-db.test-support.ts"
 const { setImportDbForTest } = await import("./store.server.ts")
 import type { TmdbClient } from "./tmdb-client.server.ts"
-import {
-	type Connection,
-	type ConnectionStore,
-	createTmdbConnect,
-} from "./tmdb-connect.server.ts"
-
-class MemoryConnections implements ConnectionStore {
-	rows = new Map<
-		string,
-		{ value: Connection; available: number; lease: number }
-	>()
-	async create(value: Connection, available: number) {
-		this.rows.set(value.id, {
-			value: structuredClone(value),
-			available,
-			lease: 0,
-		})
-	}
-	async claim(id: string, userId: string | undefined, now: number) {
-		const row = this.rows.get(id)
-		if (
-			!row ||
-			(userId !== undefined && row.value.userId !== userId) ||
-			row.lease > now
-		)
-			return null
-		row.lease = now + 10 * 60_000
-		return structuredClone(row.value)
-	}
-	async save(value: Connection, available?: number) {
-		const row = this.rows.get(value.id)
-		assert.ok(row)
-		row.value = structuredClone(value)
-		if (available !== undefined) {
-			row.available = available
-			row.lease = 0
-		}
-	}
-	async remove(id: string) {
-		this.rows.delete(id)
-	}
-	async due(now: number) {
-		return [...this.rows.values()]
-			.filter((x) => x.available <= now)
-			.map((x) => x.value.id)
-	}
-}
+import { createTmdbConnect } from "./tmdb-connect.server.ts"
 const { createConnectionStore } = await import("./connect-store.server.ts")
-function fixture(persistent = false) {
+function fixture(keys = { current: "11".repeat(32), previous: "" }) {
 	let now = Date.parse("2026-10-15T12:00:00Z")
-	const store = new MemoryConnections()
+	const store = createConnectionStore(
+		() => keys.current,
+		() => keys.previous,
+	)
 	const revoked: string[] = []
+	const alerts: string[] = []
 	const client: TmdbClient = {
 		createRequest: async () => "request-secret",
 		exchange: async () => ({
@@ -92,8 +50,11 @@ function fixture(persistent = false) {
 	]
 	setImportDbForTest(db)
 	const flow = createTmdbConnect({
-		store: persistent ? createConnectionStore(() => "app-secret") : store,
+		store,
 		client,
+		alert: (id: string) => {
+			alerts.push(id)
+		},
 		now: () => now,
 		member: async (request) => ({
 			userId: request.headers.get("Member"),
@@ -117,6 +78,7 @@ function fixture(persistent = false) {
 		)
 	return {
 		flow,
+		alerts,
 		store,
 		client,
 		revoked,
@@ -142,7 +104,7 @@ test("start and return bind approval to the member and browser, then revoke befo
 	assert.match(cookie, /HttpOnly/)
 	assert.match(cookie, /SameSite=Lax/i)
 	assert.doesNotMatch(cookie, /request-secret|member-secret/)
-	const id = [...f.store.rows.keys()][0]
+	const id = [...f.db.connections.keys()][0]
 	assert.equal(
 		(await f.request("return", id, cookie, "other-member")).status,
 		404,
@@ -154,7 +116,7 @@ test("start and return bind approval to the member and browser, then revoke befo
 		/settings\/imports\?source=tmdb&import=/,
 	)
 	assert.deepEqual(f.revoked, ["member-secret"])
-	assert.equal(f.store.rows.size, 0)
+	assert.equal(f.db.connections.size, 0)
 	assert.equal(f.db.imports.length, 1)
 	assert.doesNotMatch(
 		JSON.stringify(f.db.imports) + JSON.stringify(f.db.items),
@@ -167,15 +129,19 @@ test("abandon, read failure and preview failure all delete the token and server 
 	for (const mode of ["abandon", "read-failure", "preview-failure"]) {
 		const f = fixture()
 		const start = await f.request("start")
-		const id = [...f.store.rows.keys()][0]
+		const id = [...f.db.connections.keys()][0]
 		if (mode === "read-failure")
 			f.client.readAccount = async () => {
 				throw new Error("member-secret")
 			}
-		if (mode === "preview-failure")
-			f.db.select = async () => {
-				throw new Error("database unavailable")
+		if (mode === "preview-failure") {
+			const select = f.db.select.bind(f.db)
+			f.db.select = async (sql, params) => {
+				if (!sql.includes("user_import_connection"))
+					throw new Error("database unavailable")
+				return select(sql, params)
 			}
+		}
 		const response = await f.request(
 			mode === "abandon" ? "abandon" : "return",
 			id,
@@ -183,7 +149,7 @@ test("abandon, read failure and preview failure all delete the token and server 
 		)
 		assert.equal(response.status, mode === "abandon" ? 303 : 502)
 		assert.deepEqual(f.revoked, ["member-secret"])
-		assert.equal(f.store.rows.size, 0)
+		assert.equal(f.db.connections.size, 0)
 		assert.doesNotMatch(await response.text(), /member-secret/)
 	}
 })
@@ -196,10 +162,10 @@ test("closing the browser still revokes an approved connection; failed deletion 
 		throw new Error("TMDB unavailable: member-secret")
 	}
 	await f.flow.sweep()
-	assert.equal(f.store.rows.size, 1)
+	assert.equal(f.db.connections.size, 1)
 	// A new server instance shares only the durable store, not the old handler's memory.
 	const restarted = createTmdbConnect({
-		store: f.store,
+		store: createConnectionStore(() => "11".repeat(32)),
 		client: {
 			...f.client,
 			revoke: async (token) => {
@@ -212,14 +178,14 @@ test("closing the browser still revokes an approved connection; failed deletion 
 	})
 	await restarted.sweep()
 	assert.deepEqual(f.revoked, ["member-secret"])
-	assert.equal(f.store.rows.size, 0)
+	assert.equal(f.db.connections.size, 0)
 	assert.equal(f.db.imports.length, 0)
 })
 
 test("canceling before approval retains only cleanup work and catches a later approval", async () => {
 	const f = fixture()
 	const start = await f.request("start")
-	const id = [...f.store.rows.keys()][0]
+	const id = [...f.db.connections.keys()][0]
 	const { TmdbError } = await import("./tmdb-client.server.ts")
 	f.client.exchange = async () => {
 		throw new TmdbError(undefined, 401)
@@ -230,7 +196,7 @@ test("canceling before approval retains only cleanup work and catches a later ap
 		start.headers.get("Set-Cookie") ?? "",
 	)
 	assert.equal(canceled.status, 303)
-	assert.equal(f.store.rows.size, 1)
+	assert.equal(f.db.connections.size, 1)
 	f.client.exchange = async () => ({
 		accessToken: "late-secret",
 		accountId: "account",
@@ -238,7 +204,7 @@ test("canceling before approval retains only cleanup work and catches a later ap
 	f.advance(60_000)
 	await f.flow.sweep()
 	assert.deepEqual(f.revoked, ["late-secret"])
-	assert.equal(f.store.rows.size, 0)
+	assert.equal(f.db.connections.size, 0)
 	assert.equal(f.db.imports.length, 0)
 })
 
@@ -251,10 +217,10 @@ test("a denied or never-approved request expires without creating an import", as
 	}
 	f.advance(10 * 60_000)
 	await f.flow.sweep()
-	assert.equal(f.store.rows.size, 1)
+	assert.equal(f.db.connections.size, 1)
 	f.advance(5 * 60_000)
 	await f.flow.sweep()
-	assert.equal(f.store.rows.size, 0)
+	assert.equal(f.db.connections.size, 0)
 	assert.equal(f.revoked.length, 0)
 })
 
@@ -278,9 +244,9 @@ test("unauthenticated, cross-origin, wrong browser and GET requests cannot mint 
 			status,
 		)
 	}
-	assert.equal(f.store.rows.size, 0)
+	assert.equal(f.db.connections.size, 0)
 	await f.request("start")
-	const id = [...f.store.rows.keys()][0]
+	const id = [...f.db.connections.keys()][0]
 	assert.equal((await f.request("return", id, "")).status, 404)
 	assert.equal(f.revoked.length, 0)
 })
@@ -288,7 +254,7 @@ test("unauthenticated, cross-origin, wrong browser and GET requests cannot mint 
 test("simultaneous return and abandon never exchange or import twice", async () => {
 	const f = fixture()
 	const start = await f.request("start")
-	const id = [...f.store.rows.keys()][0]
+	const id = [...f.db.connections.keys()][0]
 	const cookie = start.headers.get("Set-Cookie") ?? ""
 	const responses = await Promise.all([
 		f.request("return", id, cookie),
@@ -300,7 +266,7 @@ test("simultaneous return and abandon never exchange or import twice", async () 
 })
 
 test("the real server store encrypts credentials, prevents concurrent claims and erases them after return", async () => {
-	const f = fixture(true)
+	const f = fixture()
 	const start = await f.request("start")
 	const id = [...f.db.connections.keys()][0]
 	assert.doesNotMatch(
@@ -321,7 +287,7 @@ test("the real server store encrypts credentials, prevents concurrent claims and
 })
 
 test("credential storage failure after exchange still revokes the newly minted token", async () => {
-	const f = fixture(true)
+	const f = fixture()
 	const start = await f.request("start")
 	const id = [...f.db.connections.keys()][0]
 	f.db.failCredentialSave = true
@@ -337,7 +303,7 @@ test("credential storage failure after exchange still revokes the newly minted t
 })
 
 test("an access token in a malformed exchange response is revoked without reading an account", async () => {
-	const f = fixture(true)
+	const f = fixture()
 	const start = await f.request("start")
 	const id = [...f.db.connections.keys()][0]
 	f.client.exchange = async () => ({
@@ -361,7 +327,7 @@ test("an access token in a malformed exchange response is revoked without readin
 })
 
 test("abandoned approval cleanup revokes even when saving the exchanged credential fails", async () => {
-	const f = fixture(true)
+	const f = fixture()
 	await f.request("start")
 	f.db.failCredentialSave = true
 	f.advance(10 * 60_000)
@@ -373,7 +339,7 @@ test("abandoned approval cleanup revokes even when saving the exchanged credenti
 test("a rate-limited read defers cleanup until Retry-After instead of making another TMDB call", async () => {
 	const f = fixture()
 	const start = await f.request("start")
-	const id = [...f.store.rows.keys()][0]
+	const id = [...f.db.connections.keys()][0]
 	const { TmdbError } = await import("./tmdb-client.server.ts")
 	const busy = new TmdbError("TMDB is busy", 429)
 	busy.retryAfterMs = 120_000
@@ -385,6 +351,11 @@ test("a rate-limited read defers cleanup until Retry-After instead of making ano
 			.status,
 		429,
 	)
+	assert.equal(
+		(await f.request("return", id, start.headers.get("Set-Cookie") ?? ""))
+			.status,
+		404,
+	)
 	assert.equal(f.revoked.length, 0)
 	f.advance(119_000)
 	await f.flow.sweep()
@@ -392,11 +363,11 @@ test("a rate-limited read defers cleanup until Retry-After instead of making ano
 	f.advance(1000)
 	await f.flow.sweep()
 	assert.deepEqual(f.revoked, ["member-secret"])
-	assert.equal(f.store.rows.size, 0)
+	assert.equal(f.db.connections.size, 0)
 })
 
 test("a revocation outage withholds preview and retains encrypted cleanup until deletion succeeds", async () => {
-	const f = fixture(true)
+	const f = fixture()
 	const start = await f.request("start")
 	const id = [...f.db.connections.keys()][0]
 	f.client.revoke = async () => {
@@ -422,4 +393,160 @@ test("a revocation outage withholds preview and retains encrypted cleanup until 
 	await f.flow.sweep()
 	assert.deepEqual(f.revoked, ["member-secret"])
 	assert.equal(f.db.connections.size, 0)
+})
+
+test("return after the connection deadline revokes access and explains how to restart", async () => {
+	const f = fixture()
+	const start = await f.request("start")
+	const id = [...f.db.connections.keys()][0]
+	f.advance(10 * 60_000)
+	const response = await f.request(
+		"return",
+		id,
+		start.headers.get("Set-Cookie") ?? "",
+	)
+	assert.equal(response.status, 410)
+	assert.match(await response.text(), /Connection expired, start again/)
+	assert.deepEqual(f.revoked, ["member-secret"])
+	assert.equal(f.db.connections.size, 0)
+	assert.equal(f.db.imports.length, 0)
+})
+
+test("rotated encryption keys still clean up pending approvals using the previous key and write a key-id prefix", async () => {
+	const keys = { current: "11".repeat(32), previous: "" }
+	const f = fixture(keys)
+	await f.request("start")
+	const oldPayload = [...f.db.connections.values()][0].payload
+	assert.match(oldPayload, /^v1:[a-f0-9]{16}:/)
+	keys.previous = keys.current
+	keys.current = "22".repeat(32)
+	const next = await f.request("start", "", "", "another-member")
+	assert.equal(next.status, 303)
+	const newPayload = [...f.db.connections.values()][1].payload
+	assert.notEqual(oldPayload.split(":")[1], newPayload.split(":")[1])
+	f.advance(10 * 60_000)
+	await f.flow.sweep()
+	assert.deepEqual(f.revoked, ["member-secret", "member-secret"])
+	assert.equal(f.db.connections.size, 0)
+})
+
+test("persistent revocation failure pauses after eight cleanup attempts with one credential-free alert", async () => {
+	const f = fixture()
+	await f.request("start")
+	const id = [...f.db.connections.keys()][0]
+	let attempts = 0
+	f.client.revoke = async () => {
+		attempts++
+		throw new Error("member-secret")
+	}
+	f.advance(10 * 60_000)
+	for (let i = 0; i < 12; i++) {
+		await f.flow.sweep()
+		f.advance(60_000)
+	}
+	assert.equal(attempts, 8)
+	assert.deepEqual(f.alerts, [id])
+	assert.equal(f.db.connections.size, 1)
+	assert.equal(f.db.connections.get(id)?.cleanup_at, null)
+})
+
+test("an unreadable credential row is paused and alerted without blocking other members' cleanup", async () => {
+	const f = fixture()
+	await f.request("start")
+	const id = [...f.db.connections.keys()][0]
+	const row = f.db.connections.get(id)
+	assert.ok(row)
+	row.payload = "unreadable-secret"
+	await f.request("start", "", "", "another-member")
+	f.advance(10 * 60_000)
+	await f.flow.sweep()
+	assert.deepEqual(f.alerts, [id])
+	assert.deepEqual(f.revoked, ["member-secret"])
+	assert.equal(f.db.connections.size, 1)
+	assert.equal(f.db.connections.get(id)?.cleanup_at, null)
+	f.advance(10 * 60_000)
+	await f.flow.sweep()
+	assert.deepEqual(f.alerts, [id])
+})
+
+test("a member can have at most three open connections, including concurrent starts and paused cleanup", async () => {
+	const f = fixture()
+	let minted = 0
+	f.client.createRequest = async () => {
+		minted++
+		return "request-secret"
+	}
+	const responses = await Promise.all(
+		Array.from({ length: 6 }, () => f.request("start")),
+	)
+	assert.deepEqual(
+		responses.map((r) => r.status).sort(),
+		[303, 303, 303, 429, 429, 429],
+	)
+	assert.equal(minted, 3)
+	const paused = [...f.db.connections.values()][2]
+	paused.cleanup_at = null
+	assert.equal((await f.request("start")).status, 429)
+	assert.equal(f.db.connections.size, 3)
+	const blocked = responses.find((r) => r.status === 429)
+	assert.ok(blocked)
+	assert.match(await blocked.text(), /open connections/)
+	assert.equal((await f.request("start", "", "", "other-member")).status, 303)
+	const first = responses.find((r) => r.status === 303)
+	assert.ok(first)
+	const id = [...f.db.connections.keys()][0]
+	assert.equal(
+		(await f.request("abandon", id, first.headers.get("Set-Cookie") ?? ""))
+			.status,
+		303,
+	)
+	assert.equal((await f.request("start")).status, 303)
+})
+
+test("cleanup respects the real store lease while a member's account is being read", async () => {
+	const f = fixture()
+	const start = await f.request("start")
+	const id = [...f.db.connections.keys()][0]
+	f.advance(9 * 60_000)
+	let enteredResolve = () => {}
+	let finishResolve = () => {}
+	const entered = new Promise<void>((resolve) => {
+		enteredResolve = resolve
+	})
+	const finish = new Promise<void>((resolve) => {
+		finishResolve = resolve
+	})
+	const read = f.client.readAccount
+	f.client.readAccount = async (...args) => {
+		enteredResolve()
+		await finish
+		return read(...args)
+	}
+	const returned = f.request(
+		"return",
+		id,
+		start.headers.get("Set-Cookie") ?? "",
+	)
+	await entered
+	f.advance(60_000)
+	await f.flow.sweep()
+	assert.equal(f.revoked.length, 0)
+	finishResolve()
+	assert.equal((await returned).status, 303)
+	assert.deepEqual(f.revoked, ["member-secret"])
+	assert.equal(f.db.connections.size, 0)
+})
+
+test("missing or malformed encryption keys reject start before any TMDB request", async () => {
+	for (const current of ["", "not-a-32-byte-key"]) {
+		const f = fixture({ current, previous: "" })
+		let minted = 0
+		f.client.createRequest = async () => {
+			minted++
+			return "request-secret"
+		}
+		assert.equal((await f.request("start")).status, 503)
+		assert.equal(minted, 0)
+		assert.equal(f.db.connections.size, 0)
+	}
 })

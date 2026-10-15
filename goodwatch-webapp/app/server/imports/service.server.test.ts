@@ -1451,27 +1451,23 @@ it("a fetched source uses the shared preview, receipt and undo without a file", 
 		async () => {},
 	)
 	const { previewFetchedImport } = await import("./service.server.ts")
-	const preview = await previewFetchedImport(
-		"member",
-		"TMDB account",
-		async () => ({
-			source: "tmdb",
-			warnings: ["Half steps round up: 7.5 becomes 8."],
-			observations: [
-				{
-					key: "tmdb:rating:movie:862",
-					kind: "rating",
-					mediaType: "movie",
-					title: "Toy Story",
-					year: 1995,
-					tmdbId: 862,
-					imdbId: null,
-					score: 8,
-					addedAt: "2020-02-01T12:00:00.000Z",
-				},
-			],
-		}),
-	)
+	const preview = await previewFetchedImport("member", "TMDB account", {
+		source: "tmdb",
+		warnings: ["Half steps round up: 7.5 becomes 8."],
+		observations: [
+			{
+				key: "tmdb:rating:movie:862",
+				kind: "rating",
+				mediaType: "movie",
+				title: "Toy Story",
+				year: 1995,
+				tmdbId: 862,
+				imdbId: null,
+				score: 8,
+				addedAt: "2020-02-01T12:00:00.000Z",
+			},
+		],
+	})
 	assert.equal(preview.fileName, "TMDB account")
 	assert.equal(preview.source, "tmdb")
 	assert.equal(preview.counts.new, 1)
@@ -1532,7 +1528,11 @@ it("TMDB's six fetched lists share kind selection, skipped receipts, repeat prev
 		},
 	})
 	const read = () => client.readAccount("account", "member-token")
-	const preview = await previewFetchedImport("member", "TMDB account", read)
+	const preview = await previewFetchedImport(
+		"member",
+		"TMDB account",
+		await read(),
+	)
 	assert.deepEqual(preview.kinds, {
 		rating: 3,
 		watch: 0,
@@ -1549,10 +1549,18 @@ it("TMDB's six fetched lists share kind selection, skipped receipts, repeat prev
 	const receipt = await getImport("member", preview.id)
 	assert.equal(receipt.applied.added, 6)
 	assert.match(await getSkippedCsv("member", preview.id), /Missing title/)
-	const repeat = await previewFetchedImport("member", "TMDB account", read)
+	const repeat = await previewFetchedImport(
+		"member",
+		"TMDB account",
+		await read(),
+	)
 	assert.equal(repeat.counts.unchanged, 6)
 	await undoImport("member", preview.id)
 	assert.equal((await getImport("member", preview.id)).status, "undone")
-	const afterUndo = await previewFetchedImport("member", "TMDB account", read)
+	const afterUndo = await previewFetchedImport(
+		"member",
+		"TMDB account",
+		await read(),
+	)
 	assert.equal(afterUndo.counts.new, 6)
 })

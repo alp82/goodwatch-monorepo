@@ -1071,22 +1071,26 @@ SCHEMAS = {
         "replicas": "0-1",
     },
     # ============================
-    # ===== Webapp: IMDb ratings import (goodwatch-webapp/app/server/imdb-import) =====
+    # ===== Webapp: Connect import credentials (goodwatch-webapp/app/server/imports) =====
     # ============================
     # Encrypted short-lived connect credentials, separate from the import journal.
     "user_import_connection": {
         "columns": {
-            "id": "TEXT",
+            "id": "TEXT NOT NULL",
             "user_id": "TEXT NOT NULL",
+            "slot": "INTEGER NOT NULL",
             "payload": "TEXT INDEX OFF STORAGE WITH (columnstore = false)",
-            "cleanup_at": "TIMESTAMP WITH TIME ZONE NOT NULL",
+            "cleanup_at": "TIMESTAMP WITH TIME ZONE",
             "lease_until": "TIMESTAMP WITH TIME ZONE NOT NULL",
         },
-        "primary_key": ["id"],
+        "primary_key": ["user_id", "slot"],
         "shards": 1,
         "timestamps": False,
         "replicas": "0-1",
     },
+    # ============================
+    # ===== Webapp: Import journal (IMDb and native imports) =====
+    # ============================
     # One row per uploaded file or fetched account snapshot. status: preview (nothing written to user_score yet), running, done, failed, undone.
     # counts is the preview's outcome counts as JSON text. added, updated, kept and failed count what the apply
     # wrote. updated_at is the apply's heartbeat: the webapp instance that applies the import sets it from Crate's

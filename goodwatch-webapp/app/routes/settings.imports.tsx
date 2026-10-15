@@ -1,17 +1,9 @@
-import {
-	type LoaderFunctionArgs,
-	type MetaFunction,
-	json,
-} from "@remix-run/node"
+import type { MetaFunction } from "@remix-run/node"
 import { useLoaderData } from "@remix-run/react"
 import { type KeyboardEvent, useId, useState } from "react"
-import type { ImdbImportListResponse } from "~/domain/imdb-import"
-import type { ImportSource, ImportSummary } from "~/domain/imports"
-import { listImportRows, summarize } from "~/server/imdb-import/store.server"
-import { listImports } from "~/server/imports/service.server"
+import { type ImportSource, isFileImportSource } from "~/domain/imports"
 import { ImdbImportFlow } from "~/ui/imports/ImdbImportFlow"
 import { SourceImportFlow } from "~/ui/imports/SourceImportFlow"
-import { getAuthFromRequest } from "~/utils/auth"
 
 export { pageHeaders as headers } from "~/utils/headers"
 
@@ -25,53 +17,8 @@ export const meta: MetaFunction = () => [
 	{ name: "robots", content: "noindex, nofollow" },
 ]
 
-// The earlier imports come with the page, so it shows at once. They are an extra: if they can't be read,
-// the page still offers the upload.
-interface LoaderData extends ImdbImportListResponse {
-	sourceImports: ImportSummary[]
-	connectState?: string
-	openImport?: string
-	initialSource?: "tmdb"
-}
-
-export async function loader({ request }: LoaderFunctionArgs) {
-	const { user, headers } = await getAuthFromRequest({ request })
-	headers.set("Cache-Control", "private, no-store")
-	if (!user)
-		return json<LoaderData>({ imports: [], sourceImports: [] }, { headers })
-	const [imdb, native] = await Promise.all([
-		listImportRows(user.id)
-			.then((rows) => rows.map(summarize))
-			.catch((error) => {
-				console.error("IMDb import: reading history failed:", error)
-				return []
-			}),
-		listImports(user.id).catch((error) => {
-			console.error("Source import: reading history failed:", error)
-			return []
-		}),
-	])
-	const url = new URL(request.url)
-	const connectState = url.searchParams.get("connect") ?? ""
-	const openImport = url.searchParams.get("import") ?? ""
-	return json<LoaderData>(
-		{
-			imports: imdb,
-			sourceImports: native,
-			initialSource:
-				url.searchParams.get("source") === "tmdb" ? "tmdb" : undefined,
-			connectState: /^[a-f0-9-]{36}$/.test(connectState)
-				? connectState
-				: undefined,
-			openImport: native.some(
-				(item) => item.source === "tmdb" && item.id === openImport,
-			)
-				? openImport
-				: undefined,
-		},
-		{ headers },
-	)
-}
+export { loader } from "~/server/imports/settings-loader.server"
+import type { loader } from "~/server/imports/settings-loader.server"
 
 type ImportTab = "imdb" | ImportSource
 const TABS: { id: ImportTab; label: string }[] = [
@@ -114,7 +61,7 @@ export default function SettingsImports() {
 					</h2>
 					<p className="mt-2 text-gray-400">
 						Bring your ratings and activity into GoodWatch. Choose where your
-						export comes from, preview it, and decide what to import.
+						data comes from, preview it, and decide what to import.
 					</p>
 				</div>
 				<div
@@ -151,8 +98,12 @@ export default function SettingsImports() {
 							key={`${source}:${data.openImport ?? ""}:${data.connectState ?? ""}`}
 							source={source}
 							initial={{ imports: data.sourceImports }}
-							connectState={source === "tmdb" ? data.connectState : undefined}
-							initialId={source === "tmdb" ? data.openImport : undefined}
+							connectState={
+								!isFileImportSource(source) ? data.connectState : undefined
+							}
+							initialId={
+								!isFileImportSource(source) ? data.openImport : undefined
+							}
 						/>
 					)}
 				</div>

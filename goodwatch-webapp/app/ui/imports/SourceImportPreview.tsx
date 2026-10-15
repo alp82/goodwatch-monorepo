@@ -7,6 +7,7 @@ import {
 	type ImportSummary,
 } from "~/domain/imports"
 import { FocusHeading } from "./FocusHeading"
+import { sourceImportCopy } from "./SourceImportCopy"
 import { SourceOutcomeRow } from "./SourceImportCounts"
 import { sourceImportRequirements } from "./SourceImportPreviewModel"
 import { errorBox, formatCount, primaryButton, secondaryButton } from "./shared"
@@ -43,6 +44,7 @@ export function SourceImportPreview({
 	onConfirm: (options: ImportOptions) => void
 	onBack: () => void
 }) {
+	const copy = sourceImportCopy(summary.source)
 	const available = IMPORT_KINDS.filter((kind) => summary.kinds[kind] > 0)
 	const [kinds, setKinds] = useState<ImportKind[]>(available)
 	const [conflictChoice, setConflictChoice] =
@@ -80,7 +82,7 @@ export function SourceImportPreview({
 					// biome-ignore lint/a11y/useSemanticElements: a warning group contains block content
 					role="status"
 				>
-					<p className="font-semibold">Check these export details</p>
+					<p className="font-semibold">{copy.details}</p>
 					<ul className="mt-2 list-disc space-y-1 pl-5">
 						{summary.warnings.map((warning) => (
 							<li key={warning}>{warning}</li>
@@ -130,7 +132,7 @@ export function SourceImportPreview({
 						),
 					)}
 					<li className="flex items-center justify-between border-t-2 border-slate-600 bg-slate-800/60 px-4 py-3 font-semibold">
-						<span>Rows in your export</span>
+						<span>Rows in your {copy.data}</span>
 						<span className="tabular-nums">
 							{formatCount(summary.counts.rows)}
 						</span>
@@ -152,8 +154,8 @@ export function SourceImportPreview({
 					name="source-conflict"
 					checked={conflictChoice === "source"}
 					onChange={() => setConflictChoice("source")}
-					label="Use the export instead"
-					detail="Replaces conflicting ratings and reviews with the source export."
+					label={copy.conflict}
+					detail={copy.conflictDetail}
 				/>
 			</fieldset>
 			{importsWatches && (
@@ -169,8 +171,8 @@ export function SourceImportPreview({
 						name="watch-dates"
 						checked={watchDates === "preserve"}
 						onChange={() => setWatchDates("preserve")}
-						label="Preserve dates from the export"
-						detail="Uses each exported watch date with its stated precision."
+						label={`Preserve dates from the ${copy.data}`}
+						detail={copy.watchDates}
 					/>
 					<Radio
 						name="watch-dates"
@@ -227,9 +229,7 @@ export function SourceImportPreview({
 					disabled={confirming}
 					onClick={onBack}
 				>
-					{summary.source === "tmdb"
-						? "Connect TMDB again"
-						: "Choose another file"}
+					{copy.restart}
 				</button>
 			</div>
 			<div aria-live="assertive">

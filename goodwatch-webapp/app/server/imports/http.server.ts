@@ -12,7 +12,12 @@ export async function withMember(
 ) {
 	const { user, headers } = await getAuthFromRequest({ request })
 	headers.set("Cache-Control", "private, no-store")
-	if (!user) return fail("Sign in to import your library.", 401, headers)
+	if (!user)
+		return fail(
+			"Sign in to import your Letterboxd or Trakt data.",
+			401,
+			headers,
+		)
 	try {
 		return await handler(user.id, headers)
 	} catch (error) {

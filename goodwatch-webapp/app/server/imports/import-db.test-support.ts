@@ -33,6 +33,7 @@ const supportedImportSql = new Set([
 	"SELECT created_at, updated_at, _seq_no, _primary_term FROM user_favorite WHERE user_id = ? AND tmdb_id = ? AND media_type = ?",
 	"SELECT created_at, updated_at, _seq_no, _primary_term FROM user_wishlist WHERE user_id = ? AND tmdb_id = ? AND media_type = ?",
 	"SELECT id, user_id, source, status, file_name, counts, processed, total, added, updated, kept, failed, error, created_at, updated_at, confirmed_at, finished_at, options, warnings, kinds, CURRENT_TIMESTAMP AS read_at, _seq_no, _primary_term FROM doc.user_import WHERE id = ?",
+	"SELECT id, user_id, source, status, file_name, counts, processed, total, added, updated, kept, failed, error, created_at, updated_at, confirmed_at, finished_at, options, warnings, kinds, CURRENT_TIMESTAMP AS read_at, _seq_no, _primary_term FROM doc.user_import WHERE user_id = ? AND source IN (?) AND status <> 'preview' ORDER BY created_at DESC LIMIT 100",
 	"SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind <> 'state' AND (apply_state IS NULL OR apply_state = 'failed') ORDER BY row_index LIMIT 100001",
 	"SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind <> 'state' ORDER BY row_index LIMIT 100001",
 	"SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind <> 'state' ORDER BY row_index LIMIT ? OFFSET ?",
@@ -178,6 +179,16 @@ export class ImportDb {
 			return rows as T[]
 		}
 		if (s.includes("FROM user_watch_log")) return []
+		if (s.includes("FROM doc.user_import WHERE user_id = ?"))
+			return this.imports
+				.filter(
+					(row) =>
+						row.user_id === params[0] &&
+						params.slice(1).includes(String(row.source)) &&
+						row.status !== "preview",
+				)
+				.slice(0, 100)
+				.map((row) => ({ ...row, read_at: new Date() })) as unknown as T[]
 		if (s.includes("FROM doc.user_import WHERE id = ?")) {
 			const row = this.imports.find((x) => x.id === params[0])
 			return (row ? [{ ...row, read_at: new Date() }] : []) as unknown as T[]
