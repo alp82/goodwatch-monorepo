@@ -99,8 +99,18 @@ function paletteKeys(index: SearchIndex, q: string, side: Side): string[] {
 	)
 }
 
-/** The palette's 20 rows as the search's local title lookup, blended without TMDB and without a ranked list. */
-function blendKeys(index: SearchIndex, q: string, side: Side): string[] {
+// The ranked list the blend mixes in. The ranker itself (encoder, Qdrant) doesn't run here; two stand-ins over the
+// lookup's rows: by votes (the ranker has a vote prior), and an adversarial one that ranks the rows found by a localized
+// name first, to check that the fusion doesn't lift them past title matches of their kind.
+type Ranking = "none" | "votes" | "aliases first"
+
+/** The palette's 20 rows as the search's local title lookup, blended without TMDB, with a stand-in ranked list. */
+function blendKeys(
+	index: SearchIndex,
+	q: string,
+	side: Side,
+	ranking: Ranking = "none",
+): string[] {
 	const t = index.titleTable
 	const { rows, aliases } = palette(index, q, 20, side)
 	const lookup: TitleLookupRow[] = rows.map((row) => {
@@ -117,11 +127,26 @@ function blendKeys(index: SearchIndex, q: string, side: Side): string[] {
 				: { matchedAlias: matchedAlias(index.aliases, alias) }),
 		}
 	})
+	const byVotes = [...rows].sort((a, b) => t.votes[b] - t.votes[a])
+	const list =
+		ranking === "none"
+			? []
+			: ranking === "votes"
+				? byVotes
+				: [
+						...byVotes.filter((row) => aliases.has(row)),
+						...byVotes.filter((row) => !aliases.has(row)),
+					]
 	const started = performance.now()
-	const out = blend(index, q, lookup, [], new Set(), all).map((r) =>
-		keyOf(r.id),
-	)
-	timings.blend[side].push(performance.now() - started)
+	const out = blend(
+		index,
+		q,
+		lookup,
+		list.map((row) => t.pointIds[row]),
+		new Set(),
+		all,
+	).map((r) => keyOf(r.id))
+	if (ranking === "none") timings.blend[side].push(performance.now() - started)
 	return out
 }
 
@@ -172,9 +197,14 @@ const cases: Case[] = [
 	),
 ]
 
-interface Result extends Case {
-	palette: Record<Side, string[]>
-	blend: Record<Side, string[]>
+const PATHS = [
+	"palette",
+	"blend",
+	"blend, ranked by votes",
+	"blend, aliases ranked first",
+] as const
+type Path = (typeof PATHS)[number]
+interface Result extends Case, Record<Path, Record<Side, string[]>> {
 	like: Record<Side, string | null> | null
 }
 const results: Result[] = cases.map((c) => ({
@@ -187,6 +217,14 @@ const results: Result[] = cases.map((c) => ({
 		before: blendKeys(before, c.query, "before"),
 		after: blendKeys(after, c.query, "after"),
 	},
+	"blend, ranked by votes": {
+		before: blendKeys(before, c.query, "before", "votes"),
+		after: blendKeys(after, c.query, "after", "votes"),
+	},
+	"blend, aliases ranked first": {
+		before: blendKeys(before, c.query, "before", "aliases first"),
+		after: blendKeys(after, c.query, "after", "aliases first"),
+	},
 	like:
 		c.variant === "full" && c.group !== "ambiguous"
 			? { before: likeKey(before, c.query), after: likeKey(after, c.query) }
@@ -197,7 +235,7 @@ const results: Result[] = cases.map((c) => ({
 
 const pct = (n: number, d: number) =>
 	d ? `${Math.round((100 * n) / d)}%` : "-"
-function rates(rows: Result[], path: "palette" | "blend", side: Side) {
+function rates(rows: Result[], path: Path, side: Side) {
 	const top1 = rows.filter((r) => r[path][side][0] === r.expect).length
 	const top5 = rows.filter((r) =>
 		r[path][side].slice(0, 5).includes(r.expect),
@@ -242,11 +280,25 @@ for (const [name, pick] of groups) {
 }
 lines.push("")
 lines.push(
-	"Canonical and ambiguous queries whose top 5 changed (palette, blend):",
+	"With a ranked list mixed into the blend, top-1 / top-5, before -> after",
 )
+lines.push("group | variant | n | ranked by votes | aliases ranked first")
+for (const [name, pick] of groups.filter(([name]) => !name.startsWith(" "))) {
+	for (const variant of ["full", "first word", "first 3"] as const) {
+		const rows = results.filter((r) => pick(r) && r.variant === variant)
+		if (!rows.length) continue
+		const votes = "blend, ranked by votes"
+		const first = "blend, aliases ranked first"
+		lines.push(
+			`${name} | ${variant} | ${rows.length} | ${rates(rows, votes, "before")} -> ${rates(rows, votes, "after")} | ${rates(rows, first, "before")} -> ${rates(rows, first, "after")}`,
+		)
+	}
+}
+lines.push("")
+lines.push("Canonical and ambiguous queries whose top 5 changed:")
 let changed = 0
 for (const r of results.filter((r) => r.group !== "localized")) {
-	for (const path of ["palette", "blend"] as const) {
+	for (const path of PATHS) {
 		const a = r[path].before.slice(0, 5).join(" ")
 		const b = r[path].after.slice(0, 5).join(" ")
 		if (a === b) continue

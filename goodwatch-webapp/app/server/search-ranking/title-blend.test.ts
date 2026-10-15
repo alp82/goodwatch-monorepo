@@ -178,3 +178,30 @@ test("a row found by a localized name that neither name matches ranks after the 
 	)
 	assert.equal(order[1].matchedAlias, undefined)
 })
+
+test("with the ranked list mixed in, an alias match stays below the title matches of its kind", () => {
+	// Both start with the query (prefix, 0.9). The alias row is the ranked list's first title, which would lift it to
+	// 0.9 + 0.89 x 0.15; the title row isn't ranked at all.
+	const byAlias = {
+		...lookup(1, "Knights", 9),
+		matchedAlias: { text: "Kastell der Ritter Teil 3", language: "de" },
+	}
+	const byTitle = lookup(701, "Kastell der Ritter Teil 2", 0)
+	const order = blend(
+		index,
+		"kastell der ritter",
+		[byAlias, byTitle],
+		ranked,
+		new Set(),
+		all,
+	)
+	assert.deepEqual(
+		order.slice(0, 2).map((row) => row.id),
+		[movie(701), movie(1)],
+	)
+	assert.equal(order[0].score, 0.9)
+	assert.ok(order[1].score < 0.9)
+	assert.equal(order[1].matchedAlias?.text, "Kastell der Ritter Teil 3")
+	// Rows of a lower kind aren't capped by it: the ranked titles without a match keep their fusion scores.
+	assert.equal(order.find((row) => row.id === movie(2))?.score, 0.8182)
+})

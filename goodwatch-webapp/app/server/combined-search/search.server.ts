@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import { fetch } from "undici";
 import { withBackendTimeout } from "../../utils/backend-timeout.ts";
 import {
@@ -67,6 +66,7 @@ import {
 import { runsSearch } from "../role.server";
 import { paletteLookupTitles } from "../command-palette.server";
 import { loadedAliasVersion } from "../search-ranking/search-index.server";
+import { titleLookupKey } from "./title-lookup-key.server";
 
 // A page instance loads none of it (see role.server.ts).
 if (runsSearch()) {
@@ -120,11 +120,7 @@ function titles(
 	policy: Eligibility,
 	signal: AbortSignal,
 ): Promise<TitleLookup> {
-	const key = createHash("sha256")
-		.update(
-			`${loadedAliasVersion()}:${policy.includeAdult ? 1 : 0}:${q.trim().toLowerCase()}`,
-		)
-		.digest("hex");
+	const key = titleLookupKey(q, policy.includeAdult, loadedAliasVersion());
 	const hit = titleCache.get(key);
 	if (hit && Date.now() - hit.at < TITLE_TTL_MS) {
 		// Refresh recency so eviction drops the least recently used entry.

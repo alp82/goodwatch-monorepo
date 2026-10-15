@@ -33,9 +33,7 @@ const INDEX_FILES = [
 	"intent_examples",
 	"mix_vectors",
 ] as const
-// Loaded when the manifest lists it: a build without it has no aliases, and roles before it ignore it.
-const OPTIONAL_FILES = ["alias_table"] as const
-type IndexFile = (typeof INDEX_FILES)[number] | (typeof OPTIONAL_FILES)[number]
+type IndexFile = (typeof INDEX_FILES)[number]
 
 // Votes a title needs to belong to a franchise ("like X" pulls in the titles containing X's title).
 const FRANCHISE_VOTES = 2000
@@ -318,20 +316,34 @@ export async function loadBuild(manifest: Manifest): Promise<SearchIndex> {
 	const started = performance.now()
 	const timings: Record<string, number> = {}
 	const docs = {} as Record<IndexFile, Json>
+	const read = async (name: string, sha1: string) => {
+		const t = performance.now()
+		const doc = JSON.parse((await gunzip(await readBlob(sha1))).toString("utf8"))
+		timings[name] = performance.now() - t
+		return doc
+	}
+	// The localized names are extra recall: any failure of their file (missing, gunzip, JSON) leaves the build without
+	// aliases, and never fails the load or starts the re-read of the current build that a missing required file does.
+	// Roles before alias_table ignore it.
+	const aliasFile = manifest.files.alias_table
+	const aliasDoc = aliasFile
+		? read("alias_table", aliasFile.sha1).catch((error) => {
+				console.error(
+					`Search index build ${manifest.build_id}: alias_table skipped`,
+					error,
+				)
+				return undefined
+			})
+		: undefined
 	await Promise.all(
-		[
-			...INDEX_FILES,
-			...OPTIONAL_FILES.filter((name) => manifest.files[name]),
-		].map(async (name) => {
+		INDEX_FILES.map(async (name) => {
 			const file = manifest.files[name]
 			if (!file)
 				throw new Error(`Search index build ${manifest.build_id} lacks ${name}`)
-			const t = performance.now()
-			const gz = await readBlob(file.sha1)
-			docs[name] = JSON.parse((await gunzip(gz)).toString("utf8"))
-			timings[name] = performance.now() - t
+			docs[name] = await read(name, file.sha1)
 		}),
 	)
+	const aliases = await aliasDoc
 	const title = titleTable(docs.title_table)
 	const mix = docs.mix_vectors
 	const mixIds = mix.point_ids as number[]
@@ -372,7 +384,7 @@ export async function loadBuild(manifest: Manifest): Promise<SearchIndex> {
 			english: quantized(mix.text_en_v1),
 		},
 		...derivedTitles(title),
-		aliases: buildAliasTable(docs.alias_table, title.size, manifest.build_id),
+		aliases: buildAliasTable(aliases, title.size, manifest.build_id),
 		timings,
 	}
 	timings.total = performance.now() - started

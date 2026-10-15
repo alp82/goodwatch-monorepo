@@ -36,6 +36,15 @@ function adult(index: SearchIndex, row: number): boolean {
 	return bit >= 0 && ((titleTable.flags[row] >> bit) & 1) === 1
 }
 
+/**
+ * The Redis entry of a palette prefix: a build's answer for it depends on its localized names, so the entry carries the
+ * alias rules version and an alias-free answer cached before the names arrived isn't served after.
+ */
+export const paletteCacheEntry = (prefix: string, aliasVersion: number) => ({
+	name: "command-palette-titles-v5",
+	params: { prefix, aliases: aliasVersion },
+})
+
 // Tiers, best first: the start of a title (or original title), a later word of one, then the same for the localized
 // names. Aliases only fill the places the titles leave, so they never push a title match out of the palette or the
 // search's title lookup.

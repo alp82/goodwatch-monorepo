@@ -74,6 +74,12 @@ export function emptyAliasTable(titles: number): AliasTable {
 /** The decoded `alias_table` of a build whose title table has `titles` rows. Rows are ascending in the file. */
 export function aliasTable(d: Json | undefined, titles: number): AliasTable {
 	if (!d) return emptyAliasTable(titles)
+	const columns = [d.rows, d.names, d.languages]
+	if (
+		!columns.every(Array.isArray) ||
+		columns.some((column) => column.length !== d.names.length)
+	)
+		throw new Error("alias_table columns differ in length")
 	const names = d.names as string[]
 	const size = names.length
 	const rows = Int32Array.from(d.rows as number[])

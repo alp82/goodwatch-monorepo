@@ -267,25 +267,49 @@ function findReference(
 	const but = toks.indexOf("but", 1)
 	if (but > 0 && but + 1 < toks.length && !NOT_AFTER_BUT.has(toks[but + 1]))
 		starts.push([0, 0, but])
-	for (const [markerStart, s, end] of starts) {
-		for (let k = Math.min(toks.length - s, TITLE_MAX_WORDS); k >= 1; k--) {
-			const key = toks.slice(s, s + k).join(" ")
-			if (
-				keyTooShort(key) ||
-				STOPWORDS.has(key) ||
-				(end !== null && s + k !== end)
-			)
-				continue
-			// A title first, then a localized name of the same length (aliases.server.ts).
-			const row = index.referenceTitles.get(key) ?? aliasReference(index, key)
-			if (row !== undefined) {
-				const used = new Set<number>()
-				for (let p = markerStart; p < s + k; p++) used.add(p)
-				return { row, used }
+	// The titles first, over every span; a localized name only when no title matched at all (aliases.server.ts), and
+	// never with the key of a title, even one below the reference vote floor.
+	const lookups: ((key: string) => number | undefined)[] = [
+		(key) => index.referenceTitles.get(key),
+		(key) =>
+			titleKeys(index).has(key) ? undefined : aliasReference(index, key),
+	]
+	for (const lookup of lookups) {
+		for (const [markerStart, s, end] of starts) {
+			for (let k = Math.min(toks.length - s, TITLE_MAX_WORDS); k >= 1; k--) {
+				const key = toks.slice(s, s + k).join(" ")
+				if (
+					keyTooShort(key) ||
+					STOPWORDS.has(key) ||
+					(end !== null && s + k !== end)
+				)
+					continue
+				const row = lookup(key)
+				if (row !== undefined) {
+					const used = new Set<number>()
+					for (let p = markerStart; p < s + k; p++) used.add(p)
+					return { row, used }
+				}
 			}
 		}
 	}
 	return null
+}
+
+const titleKeysByIndex = new WeakMap<SearchIndex, Set<string>>()
+
+/** Every title's and original title's "like X" keys (normalized, also without a leading "the"), whatever its votes. */
+function titleKeys(index: SearchIndex): Set<string> {
+	let keys = titleKeysByIndex.get(index)
+	if (!keys) {
+		keys = new Set()
+		for (const { name } of index.titleNames) {
+			keys.add(name)
+			if (name.startsWith("the ")) keys.add(name.slice(4))
+		}
+		titleKeysByIndex.set(index, keys)
+	}
+	return keys
 }
 
 /** The reference and the titles whose title contains its the-less title, when that is distinctive. */

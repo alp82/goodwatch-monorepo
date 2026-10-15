@@ -215,6 +215,35 @@ function fuzzyAlias(
 	return rows[row] ? { row, alias: best.alias } : null
 }
 
+// The kind of a lexical match (exact, phrase or fuzzy, prefix, word share, ...) is its score; an alias match of a kind
+// scores ALIAS_STEP less. Rounded, so the subtraction's float error doesn't split a kind.
+const kindOf = (lexical: number) => Math.round(lexical * 1e6)
+// How far below the title rows of its kind an alias row's blended score is kept.
+const BELOW_TITLES = ALIAS_STEP / 100
+
+/**
+ * A row matched by a localized name stays below every title row of the same kind, whatever the ranked list adds: the
+ * fusion lifts a row by its rank, so a ranked alias row could otherwise pass a title row of its kind that the ranker
+ * placed lower or not at all. Its score is capped just below the lowest title row of its kind; title rows keep theirs.
+ */
+function keepAliasesBelowTitles(rows: Iterable<Row>): void {
+	const lowest = new Map<number, number>()
+	const byAlias: Row[] = []
+	for (const row of rows) {
+		if (row.matchedAlias) {
+			byAlias.push(row)
+			continue
+		}
+		const kind = kindOf(row.lexical)
+		lowest.set(kind, Math.min(lowest.get(kind) ?? row.score, row.score))
+	}
+	for (const row of byAlias) {
+		const floor = lowest.get(kindOf(row.lexical + ALIAS_STEP))
+		if (floor !== undefined && row.score > floor - BELOW_TITLES)
+			row.score = floor - BELOW_TITLES
+	}
+}
+
 interface Row {
 	id: number
 	title: string
@@ -374,6 +403,7 @@ export function blend(
 				? 3 + 0.1 * fingerprint
 				: Math.max(lex, fingerprint * 0.9) + Math.min(lex, fingerprint) * 0.15
 	}
+	keepAliasesBelowTitles(rows.values())
 	const key = (row: Row) => `${row.mediaType}:${row.id % TMDB_ID_RANGE}`
 	const ordered = [...rows.values()]
 		.sort(

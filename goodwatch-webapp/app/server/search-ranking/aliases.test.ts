@@ -11,8 +11,9 @@ import {
 	exactAliases,
 	matchedAlias,
 } from "./aliases.server.ts"
-import { matchingRows } from "./name-prefix.server.ts"
+import { matchingRows, paletteCacheEntry } from "./name-prefix.server.ts"
 import type { SearchIndex } from "./search-index.server.ts"
+import { normalized } from "./text-rules.server.ts"
 
 // references.server.ts reads a JSON file, which Node imports only with an import attribute.
 const { registerHooks } = nodeModule as unknown as {
@@ -90,6 +91,13 @@ function fixture(aliases = aliasTable(aliasDoc, titles.length)): SearchIndex {
 			["star wars", 2],
 		]),
 		franchiseTitles: [],
+		// As search-index-build.server.ts derives them: every row's normalized title and original title.
+		titleNames: titles.flatMap((t, row) =>
+			[...new Set([t[0], t[1]])].map((name) => ({
+				name: normalized(name),
+				row,
+			})),
+		),
 		aliases,
 	} as unknown as SearchIndex
 }
@@ -136,6 +144,24 @@ test("a build without the file, or with rows outside the title table, has no ali
 		console.error = logged
 	}
 	assert.equal(buildAliasTable(aliasDoc, 7, "test").size, 9)
+})
+
+test("columns of different lengths throw, and the build loads without aliases", () => {
+	for (const broken of [
+		{ ...aliasDoc, languages: aliasDoc.languages.slice(1) },
+		{ ...aliasDoc, names: aliasDoc.names.slice(1) },
+		{ ...aliasDoc, rows: aliasDoc.rows.slice(1) },
+		{ ...aliasDoc, rows: undefined },
+	]) {
+		assert.throws(() => aliasTable(broken, titles.length), /differ in length/)
+		const logged = console.error
+		console.error = () => {}
+		try {
+			assert.equal(buildAliasTable(broken, titles.length, "test").size, 0)
+		} finally {
+			console.error = logged
+		}
+	}
 })
 
 test("the palette finds a title by a localized name, whatever the language", () => {
@@ -232,6 +258,45 @@ test("like X takes a localized name after the titles, with the vote floor", () =
 	assert.equal(aliasReference(low, "einsamer stern"), undefined)
 })
 
+test("like X takes a title over a longer localized name, and never a localized name with a title's key", () => {
+	// The Dark Knight is called "Star Wars Kriege", "Lone Star" and "Ritter der Nacht" here; Lone Star has fewer votes
+	// than the floor.
+	const index = fixture(
+		aliasTable(
+			{
+				version: 1,
+				rows: [1, 1, 1],
+				names: ["Star Wars Kriege", "Lone Star", "Ritter der Nacht"],
+				languages: ["de", "fr", "de"],
+			},
+			titles.length,
+		),
+	)
+	;(index.titleTable.votes as Float64Array)[3] = 9_000
+	const seeds = (q: string) => {
+		const text = `like ${q}`
+		const ref = resolveReference(index, text, text, false)
+		return ref?.kind === "title" ? ref.seeds : null
+	}
+	assert.deepEqual(
+		seeds("star wars kriege"),
+		[2],
+		"the title Star Wars, not the longer alias",
+	)
+	assert.equal(
+		seeds("lone star"),
+		null,
+		"the title Lone Star blocks the alias below the vote floor",
+	)
+	assert.equal(
+		aliasReference(index, "lone star"),
+		1,
+		"the alias itself is there",
+	)
+	// A localized name no title has still resolves.
+	assert.deepEqual(seeds("ritter der nacht"), [1])
+})
+
 test("the evaluation set holds five localized names per launch language, 20 titles, and 10 shared names", () => {
 	const set = JSON.parse(
 		readFileSync(new URL("./alias-eval.fixture.json", import.meta.url), "utf8"),
@@ -275,4 +340,15 @@ test("like X takes a two-character Chinese, Japanese or Korean name, and still n
 	assert.deepEqual(seeds("대부"), [7])
 	assert.equal(seeds("pa"), null)
 	assert.equal(aliasReference(index, "pa"), 7, "the alias itself is there")
+})
+
+test("the palette's Redis entry carries the alias rules version", () => {
+	assert.deepEqual(paletteCacheEntry("der pate", 1), {
+		name: "command-palette-titles-v5",
+		params: { prefix: "der pate", aliases: 1 },
+	})
+	assert.notDeepEqual(
+		paletteCacheEntry("der pate", 0),
+		paletteCacheEntry("der pate", 1),
+	)
 })

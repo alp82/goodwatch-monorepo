@@ -1,5 +1,8 @@
 import { matchedAlias } from "~/server/search-ranking/aliases.server"
-import { matchingRows } from "~/server/search-ranking/name-prefix.server"
+import {
+	matchingRows,
+	paletteCacheEntry,
+} from "~/server/search-ranking/name-prefix.server"
 import {
 	type SearchIndex,
 	getSearchIndex,
@@ -47,8 +50,7 @@ export async function getPaletteTitles(text: string): Promise<PaletteTitles> {
 		return tmdbTitles(prefix)
 	}
 	return cached({
-		name: "command-palette-titles-v5",
-		params: { prefix, aliases: loadedAliasVersion() },
+		...paletteCacheEntry(prefix, loadedAliasVersion()),
 		ttlMinutes: CACHE_MINUTES,
 		target: () => indexTitles(prefix),
 	})

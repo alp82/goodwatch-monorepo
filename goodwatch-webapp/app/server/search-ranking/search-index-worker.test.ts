@@ -133,6 +133,33 @@ test("worker matches inline loading and terminates after success and missing blo
 		2,
 		"the optional alias_table loads when listed",
 	)
+	// A broken alias_table (gone, not gzip, not JSON) leaves the build without aliases; the required files still load.
+	const stored = (bytes: Buffer) => {
+		const sha1 = createHash("sha1").update(bytes).digest("hex")
+		blobs.set(sha1, bytes)
+		return { sha1, bytes: bytes.length }
+	}
+	const logged = console.error
+	const errors: unknown[] = []
+	console.error = (...args: unknown[]) => errors.push(args)
+	try {
+		for (const file of [
+			{ sha1: "0".repeat(40), bytes: 1 },
+			stored(Buffer.from("not gzip")),
+			stored(gzipSync("{not json")),
+		]) {
+			const broken = {
+				...fromManifest,
+				files: { ...fromManifest.files, alias_table: file },
+			}
+			const index = await loadBuild(broken)
+			assert.equal(index.aliases.size, 0)
+			assert.equal(index.titleTable.size, 1)
+		}
+	} finally {
+		console.error = logged
+	}
+	assert.equal(errors.length, 3, "each skipped alias_table is logged")
 	missing = true
 	await assert.rejects(loadIndexBuild(fromManifest, source), BlobMissing)
 	assert.equal(workers.length, 2)
