@@ -239,10 +239,29 @@ test(
 		const original = Object.fromEntries(
 			names.map((name) => [name, globalThis[name]]),
 		)
-		// The server's order: remix-serve installs the polyfill, then the server entry fills its gaps.
-		installGlobals()
+		// remix-serve's order: it imports the server build first, so the entry's fill sees the native classes and does
+		// nothing, and only then installs the polyfill. The handler has to fill the gaps when a request arrives.
 		fillWebFetchGaps()
+		installGlobals()
 		try {
+			const anonymous = await createReadMcpHandler({
+				resource,
+				authorization: verifier,
+				limiter: unlimited,
+			})(
+				new Request(resource, {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: "{}",
+				}),
+			)
+			assert.equal(anonymous.status, 401, await anonymous.clone().text())
+			assert.match(anonymous.headers.get("WWW-Authenticate") ?? "", /^Bearer /)
+			const unconfigured = await createReadMcpHandler({
+				authorization: verifier,
+				limiter: unlimited,
+			})(new Request(resource))
+			assert.equal(unconfigured.status, 401)
 			const cookies = new Headers()
 			cookies.append("Set-Cookie", "gw.session_token=local; Path=/; HttpOnly")
 			cookies.append(
