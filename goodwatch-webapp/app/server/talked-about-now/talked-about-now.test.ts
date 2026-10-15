@@ -6,12 +6,13 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 
 const { talkedAboutNowEnabled, talkedAboutNowMode } = await import("./flags.server.ts")
-const { CONTENT_QUALITY_VERSION, crateSocialStore, fixtureSocialStore, isMissingTable, readTitleSql, reportId, withMemoryReports } =
+const { CONTENT_QUALITY_VERSION, RELEVANCE_VERSION, crateSocialStore, fixtureSocialStore, isMissingTable, readTitleSql, reportId, withMemoryReports } =
 	await import("./social-store.server.ts")
 const { readBuzzTop, readTitleItems, toItem } = await import("./title-social.server.ts")
 const { createRateLimit } = await import("./rate-limit.server.ts")
 const { handleWrongTitle } = await import("./wrong-title.server.ts")
 type SocialFixture = import("./social-store.server.ts").SocialFixture
+type FixtureRelevance = import("./social-store.server.ts").FixtureRelevance
 
 const NOW = new Date("2026-10-14T12:00:00Z")
 const hex = (n: number) => n.toString(16).padStart(64, "0")
@@ -49,6 +50,34 @@ function fixture(): SocialFixture {
 			version: "content-quality-1",
 			status: "pass" as const,
 		})),
+		// Every link was judged worth showing for its post's current content, the newer the higher here.
+		relevance: [
+			keep(1, 0.7),
+			keep(2, 0.7),
+			keep(3, 0.8),
+			keep(4, 0.9),
+			keep(5, 0.95),
+			keep(6, 0.6),
+			{ ...keep(7, 0.6), content_hash: "new" },
+			keep(8, 0.6),
+			keep(9, 0.5),
+			{ ...keep(4, 0.4), media_type: "tv" },
+		],
+	}
+}
+
+function keep(n: number, score: number, change: Partial<FixtureRelevance> = {}): FixtureRelevance {
+	return {
+		media_type: "movie",
+		media_tmdb_id: 1147572,
+		post_id: hex(n),
+		version: "relevance-1",
+		content_hash: "a",
+		status: "keep",
+		kind: "news",
+		score,
+		dup_group: null,
+		...change,
 	}
 }
 
@@ -71,7 +100,7 @@ test("the flag is off unless set to preview or on, and preview shows only the li
 
 // --- The read ---
 
-test("the fixture store applies the read query's filters and keeps one post per duplicate group, newest first", async () => {
+test("the fixture store applies the read query's filters and keeps one post per duplicate group, best-ranked first", async () => {
 	const store = fixtureSocialStore(fixture(), () => NOW)
 	assert.deepEqual(await read(store), [hex(4), hex(3), hex(1), hex(9)])
 	assert.deepEqual(await read(store, ["vector_context"]), [hex(4), hex(3), hex(1)])
@@ -117,6 +146,63 @@ test("the Crate read joins the passing content-quality verdict of the post's cur
 	assert.equal(CONTENT_QUALITY_VERSION, "content-quality-1")
 })
 
+test("only a `keep` relevance verdict of the current version for the link and the post's current content shows it", async () => {
+	const judged = (relevance: SocialFixture["relevance"]) => fixtureSocialStore({ ...fixture(), relevance }, () => NOW)
+	assert.deepEqual(await read(judged([keep(4, 0.9), keep(3, 0.8), keep(1, 0.7), keep(9, 0.5)])), [hex(4), hex(3), hex(1), hex(9)])
+	assert.deepEqual(
+		await read(
+			judged([
+				keep(4, 0.9, { status: "drop" }),
+				keep(3, 0.8, { version: "relevance-0" }),
+				keep(1, 0.7, { content_hash: "before-an-edit" }),
+				keep(9, 0.5),
+			]),
+		),
+		[hex(9)],
+	)
+	// A verdict on the same post for another title doesn't count for this one.
+	assert.deepEqual(await read(judged([keep(4, 0.9, { media_type: "tv" })])), [])
+	// No verdict at all, as before the relevance table exists: nothing shows (fail closed).
+	assert.deepEqual(await read(judged(undefined)), [])
+	assert.deepEqual(await read(judged([])), [])
+	assert.equal(RELEVANCE_VERSION, "relevance-1")
+})
+
+test("the read ranks by the relevance score, not by time, and keeps the best of each duplicate group", async () => {
+	const judged = (relevance: SocialFixture["relevance"]) => fixtureSocialStore({ ...fixture(), relevance }, () => NOW)
+	// The oldest visible post ranks first.
+	assert.deepEqual(await read(judged([keep(4, 0.2), keep(3, 0.5), keep(1, 0.1), keep(9, 0.9)])), [hex(9), hex(3), hex(4), hex(1)])
+	// The same story from two sources: the better-ranked one, though older.
+	assert.deepEqual(
+		await read(judged([keep(4, 0.9, { dup_group: "story" }), keep(3, 0.95, { dup_group: "story" }), keep(9, 0.5)])),
+		[hex(3), hex(9)],
+	)
+	// The trailer group's older upload ranks higher, so it is the one shown; a dropped one never stands in.
+	assert.deepEqual(await read(judged([keep(1, 0.3), keep(2, 0.6)])), [hex(2)])
+	assert.deepEqual(await read(judged([keep(1, 0.3, { status: "drop" }), keep(2, 0.6, { status: "drop" })])), [])
+	const [row] = await judged([keep(9, 0.42)]).readTitle(NARNIA, { limit: 5, disabledLanes: [] })
+	assert.equal(row.score, 0.42)
+})
+
+test("the Crate read joins the link's `keep` relevance verdict, ranks by its score and groups by its duplicate group", () => {
+	const sql = readTitleSql("doc", [])
+	assert.match(
+		sql,
+		/JOIN doc\.social_relevance rel ON rel\.media_type = l\.media_type AND rel\.media_tmdb_id = l\.media_tmdb_id\s+AND rel\.post_id = l\.post_id AND rel\.content_hash = p\.content_hash\s+AND rel\.version = 'relevance-1' AND rel\.status = 'keep'/,
+	)
+	assert.doesNotMatch(sql, /LEFT JOIN doc\.social_relevance/)
+	assert.match(sql, /PARTITION BY COALESCE\(rel\.dup_group, l\.duplicate_group, l\.post_id\)\s+ORDER BY rel\.score DESC NULLS LAST, p\.published_at DESC/)
+	assert.match(sql, /WHERE duplicate_rank = 1 ORDER BY score DESC NULLS LAST, published_at DESC, post_id DESC LIMIT \?$/)
+})
+
+test("before the relevance table exists, the read is empty: never pieces without a verdict", async () => {
+	const missing = Object.assign(new Error("RelationUnknown[Relation 'doc.social_relevance' unknown]"), { code: 4041 })
+	const store = crateSocialStore({ select: async () => Promise.reject(missing) })
+	assert.deepEqual(await store.readTitle(NARNIA, { limit: 5, disabledLanes: [] }), [])
+	// The message alone, as some drivers report it, is enough.
+	assert.equal(isMissingTable({ message: "RelationUnknown[Relation 'doc.social_relevance' unknown]" }), true)
+})
+
 test("a fixture can be moved in time so that its newest post is recent", async () => {
 	const store = fixtureSocialStore({ ...fixture(), shiftToHoursAgo: 2 }, () => new Date("2026-11-30T00:00:00Z"))
 	const [newest] = await store.readTitle(NARNIA, { limit: 1, disabledLanes: [] })
@@ -128,7 +214,7 @@ test("the Crate read sends the title, the disabled lanes and a bounded limit, an
 	const store = crateSocialStore({
 		select: async <T,>(sql: string, params: unknown[]) => {
 			calls.push({ sql, params })
-			return [{ post_id: hex(1), source: "youtube", source_id: "abc", url: "https://youtu.be/x", author: "A", published_at: new Date(1791994499000), text: "T", lane: "official_video_id" }] as T[]
+			return [{ post_id: hex(1), source: "youtube", source_id: "abc", url: "https://youtu.be/x", author: "A", published_at: new Date(1791994499000), text: "T", lane: "official_video_id", score: 0.8 }] as T[]
 		},
 	})
 	const rows = await store.readTitle({ mediaType: "tv", tmdbId: 1396 }, { limit: 500, disabledLanes: ["vector_context", "foreground_fuzzy"] })
@@ -136,6 +222,7 @@ test("the Crate read sends the title, the disabled lanes and a bounded limit, an
 	assert.match(calls[0].sql, /l\.lane NOT IN \(\?, \?\)/)
 	assert.match(calls[0].sql, /r\.status IN \('open', 'confirmed'\)/)
 	assert.equal(rows[0].published_at, "2026-10-14T16:14:59.000Z")
+	assert.equal(rows[0].score, 0.8)
 	assert.doesNotMatch(readTitleSql("doc", []), /NOT IN/)
 })
 
@@ -151,7 +238,7 @@ test("missing tables read as nothing; other failures are thrown", async () => {
 })
 
 test("rows become facade items: news for RSS, purged posts left out, long text cut", () => {
-	const base = { post_id: hex(1), source_id: null, author: null, published_at: "2026-10-13T00:00:00.000Z", lane: "x" }
+	const base = { post_id: hex(1), source_id: null, author: null, published_at: "2026-10-13T00:00:00.000Z", lane: "x", score: 0.5 }
 	assert.deepEqual(toItem({ ...base, source: "rss", url: "https://www.variety.com/a", text: "Headline" }), {
 		id: hex(1),
 		source: "news",

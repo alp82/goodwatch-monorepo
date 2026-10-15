@@ -1,5 +1,5 @@
 {
- "note": "Real public posts about Resident Evil (2026, movie 1423191) from the #542 prototype (social.ts), shaped as doc.social_post and doc.social_title_link rows of #556. For a dev server: SOCIAL_FIXTURE=<this file>. Times shift so that the newest post is 2 hours old.",
+ "note": "Real public posts about Resident Evil (2026, movie 1423191) from the #542 prototype (social.ts), shaped as doc.social_post and doc.social_title_link rows of #556. For a dev server: SOCIAL_FIXTURE=<this file>. Times shift so that the newest post is 2 hours old. Its relevance rows (doc.social_relevance) are judged by hand for the relevance gate: the promo Short and the reposted numbers are dropped, and each outlet's post shares a duplicate group with its own article.",
  "shiftToHoursAgo": 2,
  "posts": [
   {
@@ -197,6 +197,120 @@
    "content_hash": "h",
    "version": "content-quality-1",
    "status": "pass"
+  }
+ ],
+ "relevance": [
+  {
+   "media_type": "movie",
+   "media_tmdb_id": 1423191,
+   "post_id": "c852d08985ec59ff7a5e2571ee2292c02df975f5d8d7d0e7c9cb58181ed0ecd5",
+   "version": "relevance-1",
+   "content_hash": "h",
+   "status": "keep",
+   "kind": "official_video",
+   "score": 0.95,
+   "dup_group": "resident evil|trailer|1|",
+   "reasons": [
+    "Official trailer from the studio channel."
+   ]
+  },
+  {
+   "media_type": "movie",
+   "media_tmdb_id": 1423191,
+   "post_id": "e97c0572038c3cb80761f34602ecb39b6158d5fec6b1ce33560aec99e6621e8e",
+   "version": "relevance-1",
+   "content_hash": "h",
+   "status": "keep",
+   "kind": "official_video",
+   "score": 0.75,
+   "dup_group": "e97c0572038c3cb80761f34602ecb39b6158d5fec6b1ce33560aec99e6621e8e",
+   "reasons": [
+    "IMAX scene breakdown: a substantive official featurette."
+   ]
+  },
+  {
+   "media_type": "movie",
+   "media_tmdb_id": 1423191,
+   "post_id": "65f0f83ed9ec8ea420b15d540121f119a6dda1bd1db4be4ac445aca6be6b637a",
+   "version": "relevance-1",
+   "content_hash": "h",
+   "status": "drop",
+   "kind": "official_video",
+   "score": 0.1,
+   "dup_group": "65f0f83ed9ec8ea420b15d540121f119a6dda1bd1db4be4ac445aca6be6b637a",
+   "reasons": [
+    "Promo Short with no substance (\"out now\")."
+   ]
+  },
+  {
+   "media_type": "movie",
+   "media_tmdb_id": 1423191,
+   "post_id": "b0fbb5500f186d9e20f9e3eeb36645b5ee585db4006f7e0f9e6fc32092a592a5",
+   "version": "relevance-1",
+   "content_hash": "h",
+   "status": "keep",
+   "kind": "social",
+   "score": 0.7,
+   "dup_group": "box-office-weekend",
+   "reasons": [
+    "Deadline sharing its own box office report: the same story as its article."
+   ]
+  },
+  {
+   "media_type": "movie",
+   "media_tmdb_id": 1423191,
+   "post_id": "cc6425e444ae56609a2b73f7a4ef1bff0a509528d6554a1bd36cd6bb0dce31a7",
+   "version": "relevance-1",
+   "content_hash": "h",
+   "status": "keep",
+   "kind": "social",
+   "score": 0.65,
+   "dup_group": "box-office-records",
+   "reasons": [
+    "Polygon sharing its own report: the same story as its article."
+   ]
+  },
+  {
+   "media_type": "movie",
+   "media_tmdb_id": 1423191,
+   "post_id": "df6b2d1cebeb63a0bb27d5ef78d4f0cf7ccf85e087145b0d179c7949b9792937",
+   "version": "relevance-1",
+   "content_hash": "h",
+   "status": "drop",
+   "kind": "social",
+   "score": 0.05,
+   "dup_group": "df6b2d1cebeb63a0bb27d5ef78d4f0cf7ccf85e087145b0d179c7949b9792937",
+   "reasons": [
+    "Repost of box office numbers by an account without reach or a role."
+   ]
+  },
+  {
+   "media_type": "movie",
+   "media_tmdb_id": 1423191,
+   "post_id": "2c5cfbbadec6a75e7e702a2a6de07431a7b50034c410aef551f58db5a1995185",
+   "version": "relevance-1",
+   "content_hash": "h",
+   "status": "keep",
+   "kind": "news",
+   "score": 0.85,
+   "dup_group": "box-office-weekend",
+   "reasons": [
+    "Deadline box office report on the film."
+   ]
+  },
+  {
+   "media_type": "movie",
+   "media_tmdb_id": 1423191,
+   "post_id": "08ee8d86417c04fce228054e7057132907320e1017331ce1b8e17525564f29ac",
+   "version": "relevance-1",
+   "content_hash": "h",
+   "status": "keep",
+   "kind": "news",
+   "score": 0.8,
+   "dup_group": "box-office-records",
+   "reasons": [
+    "Polygon on the film's box office records."
+   ]
   }
  ]
 }
