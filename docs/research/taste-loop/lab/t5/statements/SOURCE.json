@@ -1,0 +1,25 @@
+{
+  "description": "Lab-only adaptation of sequential statement fits and selection, rendered examples, rating-free structure/tag recipe. No old module is imported or executed.",
+  "sources": [
+    {
+      "path": "docs/research/taste-prediction/lab/agents/profile/lib.py",
+      "sha256": "e7f5eac65daf803c02d83751476240c8e0b3427fb425bd34756172d9f40d8c86"
+    },
+    {
+      "path": "docs/research/taste-prediction/lab/agents/profile/feats.py",
+      "sha256": "3c5ba6a689d060f0a71bc6a3b199a825dd28bc5506589d8834142e61bf3fb9fc"
+    },
+    {
+      "path": "docs/research/taste-prediction/lab/agents/profile/render.py",
+      "sha256": "97e2fad5a2578ca59979e97a97e1e072ce665179ab141e8d7bd1f71364c76c33"
+    },
+    {
+      "path": "docs/research/taste-prediction/lab/agents/structure/common.py",
+      "sha256": "714eb39b379684e1008cbd1a30e5e2e8fbb29c683ff2290d4eee8dd450138642"
+    },
+    {
+      "path": "docs/research/taste-prediction/lab/agents/text/feats.py",
+      "sha256": "b2585d45c231a7314c20cdc5b9748f1a93f637ed89c2123be14b76c51cb78222"
+    }
+  ]
+}

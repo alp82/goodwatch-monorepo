@@ -1,0 +1,49 @@
+{
+  "commit": "6082cadcbed75c0d792d778b431ba8ece4389e9b",
+  "files": {
+    "prod/server/taste-portrait/person.server.ts": {
+      "source": "goodwatch-webapp/app/server/taste-portrait/person.server.ts",
+      "sha256": "8a670a85f2a4188c16e55c14ccdee356bea26eb857cf0ae17772760da5bc6855"
+    },
+    "prod/server/taste-portrait/sides.server.ts": {
+      "source": "goodwatch-webapp/app/server/taste-portrait/sides.server.ts",
+      "sha256": "c5c0c39fdf9af11dcc72febbb928e0736e34e4fd732f9bfe8a338732e93b9908"
+    },
+    "prod/server/taste-portrait/words.server.ts": {
+      "source": "goodwatch-webapp/app/server/taste-portrait/words.server.ts",
+      "sha256": "e10ac580960d1ad8cd103daea373cc85738e8b9ec1a0112640e4f2b9b6273854"
+    },
+    "prod/server/taste-portrait/view.ts": {
+      "source": "goodwatch-webapp/app/server/taste-portrait/view.ts",
+      "sha256": "6fde051703fea1158a9c9eb67d7ba911e9fc41de4eaba8adfa97c6bce1dfb466"
+    },
+    "prod/server/utils/fingerprint.ts": {
+      "source": "goodwatch-webapp/app/server/utils/fingerprint.ts",
+      "sha256": "bc42b46bbfc565f3b507202fcfa59cc587a71c36a6b339161e6d3dc86695bcb7"
+    },
+    "prod/ui/fingerprint/fingerprintMeta.ts": {
+      "source": "goodwatch-webapp/app/ui/fingerprint/fingerprintMeta.ts",
+      "sha256": "811beb6f3f7680e173de9d3185ee44dbe8f076e219b0e57716f1c3bf8226fdcd"
+    },
+    "prod/domain/taste-match.ts": {
+      "source": "goodwatch-webapp/app/domain/taste-match.ts",
+      "sha256": "1ed1080a4a0248d801cb4ad76d3d24d1cc77202061b56596673e3717fdc63967"
+    },
+    "prod/utils/title-key.ts": {
+      "source": "goodwatch-webapp/app/utils/title-key.ts",
+      "sha256": "771c33506f1236aacd2bd3af777ec9bea05ebd4bce1a422dff55063aa0a71ed2"
+    },
+    "prod/server/taste/taste.server.ts": {
+      "source": "goodwatch-webapp/app/server/taste/taste.server.ts",
+      "sha256": "62b2b2fa2bffb53f4b034c0598e71000cf214dc2e2b4aca3924b5ec38f8e44b9"
+    },
+    "prod/server/taste/formula.server.ts": {
+      "source": "goodwatch-webapp/app/server/taste/formula.server.ts",
+      "sha256": "f9799dd2c7c443aea6ad9fb17531297ab37d6f2fa302abdc030b202d1a7c6c32"
+    },
+    "prod/server/taste/pool.server.ts": {
+      "source": "goodwatch-webapp/app/server/taste/pool.server.ts",
+      "sha256": "bcab12d9ebcb6174fbcd4f1189965f8b730ebc0c9d9f724a2d36cb717ec111c6"
+    }
+  }
+}

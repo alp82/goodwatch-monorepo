@@ -79,6 +79,20 @@ Read this first. Rewritten at the end of every session.
   yet; fixes listed); fixes done: every DECISIONS cell filled (Sol 6.1), the orchestrator's five checks of G1,
   `verify.py` on both registered runs, shuffled control on G1 (inconclusive, leaning against a win)
 
+- [ ] **015 Whose Taste is this (T5, ticket #656)** (`items/015-t5-whose-taste/`), harness built October 16, 2026;
+  **not run: the pack is not on the machine `alppc`** (see the handover below)
+  - [x] Fable plan review (`REVIEW-fable.md`): S (Sides of you) is the sole primary and the only format that decides
+        the words gate; L and SL left out of this run; numbers-only control added, and S must beat it
+  - [x] The three statement-list errors fixed in the lab (`lab/t5/statements/`, 20 synthetic tests): later
+        franchise entry from `movie_series_id` and dates, trust table from out-of-fold predictions, six kinds fitted
+        on the reference pool. Production (`taste-portrait/`) never had these errors: no production change.
+  - [x] S harness (`lab/t5/`): pinned production Sides code under Bun, matching with up to four triples per member,
+        franchise-sibling removal, shortcut baselines, confined reader broker, scorer, fresh-process replay
+  - [x] Both readers answer through the broker on an invented case (Haiku 5.5 and GPT-6 Astra, confined)
+  - [x] Fable harness review (`REVIEW-fable-harness.md`): no leakage; "ready after P1 fixes"; fixes in `REPORT-fixes.md`
+  - [ ] On the pack machine: build cases, check baselines, coverage and final-n power, register, run both readers
+        apart, score, verify; then resolve #656
+
 ## Next action
 
 Phase 2, D1 route chosen by the owner (October 14, 2026):
@@ -111,9 +125,12 @@ Plan, Fable review and adopted fixes in items/014-g1-rollout/. Built by Sol, Ast
 
 October 15, 21:20 UTC: renamed to "personal order" (PR #648, `13038e85`; flag `REC_G1_ORDER` kept). Production: exposure columns renamed (64 rows), `f/sync/personal_order_members` = [owner], owner payload `personal-order:v1:<owner>` published (737 KB), schedule `f/sync/copy/personal_order_dirty` every 3 minutes (empty runs take 1 ms), old `g1_order`/`g1_trigger` archived. Merges to main deploy Windmill scripts automatically. Waiting: owner redeploys the webapp; old variable `f/sync/g1_preview_members` still to delete.
 
-## Handover, October 16, 2026 (continued on the owner's other machine)
+## Handover, October 16, 2026 (item 015 on `alppc`)
 
 - Map: [Map: personal order and Sides of you across GoodWatch](https://github.com/alp82/goodwatch-monorepo/issues/652) (#652), tickets #653–#662 and #526. "Personal order" is in CONTEXT.md (#663).
-- Item 015 (T5, ticket #656, claimed): Sol's plan in items/015-t5-whose-taste/PLAN.md, not yet reviewed. Limitation: at most 21 matched non-owner cases, weak power for a 10-point gain.
-- Open check: no `user_list_exposure` rows from anyone since the redeploy at about 21:20 UTC on October 15 (checked 00:10 UTC). Either nobody visited or the renamed writer fails; first thing to verify.
-- Local-only data (not in git, machine-bound): ~/goodwatch-research/taste/ (packs 514 MB, work 436 MB, gate 45 MB, results, out, ops/wm.py). The lab cannot run elsewhere without it.
+- **Blocked:** `~/goodwatch-research/taste/` (pack, gate, tiers, secret hash key) exists only on `alp-laptop`, which refuses SSH. The pack cannot be rebuilt here: without the secret key the tier split changes and gate members could enter development. T5 runs where the pack is, or after the owner copies the data root (mode 700) here.
+- The remote branch `research/taste-loop` was missing from origin on October 16; it was recreated from the last known commit 4eeb8e73.
+- To run T5: see `items/015-t5-whose-taste/REPORT.md` ("Running") and `PREREG-draft.md`. Python: NumPy, SciPy, scikit-learn, pytest; `bun` for the adapter. Two existing lab tests (`test_t2a_controls`, `test_t2b_controls`) fail on stale counts (18 expected, 21 runs since `g1_mix` joined the shuffled control); not fixed.
+- Planning power stays low: at most 21 matched non-owner anchors; a pass needs about +24 to +29 points in both readers. A null keeps the words gate closed and is absence of evidence, not proof that descriptions carry nothing personal.
+- Open check from before: no `user_list_exposure` rows since the redeploy at about 21:20 UTC on October 15; not rechecked in this session.
+- Local-only data (not in git, machine-bound, on `alp-laptop`): ~/goodwatch-research/taste/ (packs 514 MB, work 436 MB, gate 45 MB, results, out, ops/wm.py).
