@@ -163,6 +163,10 @@ whatever the count is.
 
 ### `user_watch_state`
 
+The Q32 recovery draft adds an immutable first-insert receipt and retains an empty physical show row after logical
+removal; see [first-insert recovery](first-insert-recovery.md) for the storage invariant, migration and proof.
+The logical state and the state machine below are unchanged.
+
 ```python
     # Where a member stands with a title (docs/implementation/tracking/data-model.md, ADR 0009). Only what can't be
     # computed from user_watch_log: no counts and no dates of watches. A show's state is the state machine's. A

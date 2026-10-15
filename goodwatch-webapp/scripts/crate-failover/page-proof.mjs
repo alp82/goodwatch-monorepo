@@ -32,6 +32,8 @@ export async function preparePageProof(sql) {
 	const schemas = JSON.parse(stdout)
 	for (const [table, schema] of Object.entries(schemas)) {
 		const columns = { ...schema.columns }
+		// Exercise the additive rollout against the previous physical schema, not just CREATE with the new field.
+		if (table === "user_watch_state") delete columns.insert_token
 		if (schema.timestamps !== false)
 			for (const col of ["created_at", "updated_at"])
 				columns[col] ??= "TIMESTAMP"
@@ -45,6 +47,14 @@ export async function preparePageProof(sql) {
 			`CREATE TABLE "${table}" (${definitions.join(",")}) CLUSTERED ${schema.clustered_by ? `BY ("${schema.clustered_by}") ` : ""}INTO 1 SHARDS WITH (number_of_replicas = '1', "translog.durability" = 'REQUEST')`,
 		)
 	}
+	const legacyState = ["proof-legacy-member", 42, "show", "watching", Date.UTC(2020, 0, 1), 1, Date.UTC(2020, 0, 1), Date.UTC(2020, 0, 1)]
+	await sql("INSERT INTO user_watch_state (user_id,tmdb_id,media_type,state,state_changed_at,pass,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?)", legacyState)
+	const legacyKey = legacyState.slice(0, 3)
+	const legacyBefore = (await sql("SELECT state,pass,_seq_no FROM user_watch_state WHERE user_id = ? AND tmdb_id = ? AND media_type = ?", legacyKey)).rows
+	await sql("ALTER TABLE user_watch_state ADD COLUMN insert_token TEXT")
+	const legacyAfter = (await sql("SELECT state,pass,_seq_no,insert_token FROM user_watch_state WHERE user_id = ? AND tmdb_id = ? AND media_type = ?", legacyKey)).rows
+	assert.deepEqual(legacyAfter, legacyBefore.map((row) => [...row, null]), "Additive migration preserves old rows and versions without backfill")
+	const migration = { legacyRowsPreserved: true, insertTokenNullable: true, backfillNeeded: false }
 	if (!schemas.user_not_interested)
 		await sql(
 			`CREATE TABLE user_not_interested (user_id TEXT,tmdb_id INTEGER,media_type TEXT,created_at TIMESTAMP,updated_at TIMESTAMP,PRIMARY KEY(user_id,tmdb_id,media_type)) CLUSTERED INTO 1 SHARDS WITH(number_of_replicas='1')`,
@@ -145,6 +155,7 @@ export async function preparePageProof(sql) {
 		{ id: "explore", path: "/api/explorer/world", loader: loaders.explore },
 		{ id: "watch", path: "/api/watch-log", action: loaders.watch },
 		{ id: "score", path: "/api/update-scores", action: loaders.score },
+		{ id: "tracking", path: "/api/tracking/show", action: loaders.tracking },
 		{
 			id: "catalog",
 			path: "/api/proof-catalog",
@@ -284,7 +295,9 @@ export async function preparePageProof(sql) {
 				assert.equal(data.refused, null)
 				acknowledgedWatches.push(payload.action.watchId)
 			}
+			if (kind === "tracking") assert.equal(data.status, "applied")
 			row.succeeded++
+			return data
 		} catch (error) {
 			row.failed++
 			if (row.examples.length < 8)
@@ -300,8 +313,10 @@ export async function preparePageProof(sql) {
 	}
 	return {
 		tables: Object.keys(schemas),
+		migration,
 		stats,
 		acknowledgedWatches,
+		trackingAction: (id, event, actionId) => request(["tracking", "/api/tracking/show", () => ({ id, event, actionId })]),
 		requestRoute: (kind) => request(cases.find(([name]) => name === kind)),
 		warm: async () => {
 			const errors = []

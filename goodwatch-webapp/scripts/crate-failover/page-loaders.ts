@@ -5,6 +5,7 @@ export { loader as person } from "../../app/routes/person.$personKey.tsx"
 export { loader as library } from "../../app/routes/api.my-library.ts"
 export { loader as explore } from "../../app/routes/api.explorer.world.ts"
 export { action as watch } from "../../app/routes/api.watch-log.ts"
+export { action as tracking } from "../../app/routes/api.tracking.show.ts"
 export { action as score } from "../../app/routes/api.update-scores.tsx"
 export { searchQuery as catalog } from "../../app/server/combined-search/catalog.server.ts"
 import {

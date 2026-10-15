@@ -12,7 +12,7 @@
 // writers call in here with `rate` after their write (scores.server.ts, the guest transfer) or settle their movies
 // (the IMDb import). wishList.server.ts and not-interested.server.ts do not call in yet: the only row of the table
 // they would take is Want to See on a Dropped show, and nothing in the interface drops a show yet.
-import { createHash } from "node:crypto"
+import { createHash, randomUUID } from "node:crypto"
 import { isDeepStrictEqual } from "node:util"
 import { crateEvent, withCrateOperation } from "~/utils/crate-diagnostics"
 import type { ImportItem, ImportSource } from "~/domain/imports"
@@ -207,6 +207,8 @@ const STATE_KEY = ["user_id", "tmdb_id", "media_type"]
 const DELETE_CHUNK = 500
 
 type StoredState = StateRow & {
+	/** Immutable receipt for the first physical show-state insert, retained through logical deletion. */
+	insert_token: string | null
 	_seq_no: number
 	_primary_term: number
 	updated_at: number
@@ -231,6 +233,7 @@ async function readState(
 			(row.seen_press_from as StateRow["seen_press_from"]) ?? null,
 		rate_prompt_dismissed_at: ms(row.rate_prompt_dismissed_at),
 		seen_question: (row.seen_question as StateRow["seen_question"]) ?? null,
+		insert_token: (row.insert_token as string | null) ?? null,
 		_seq_no: Number(row._seq_no),
 		_primary_term: Number(row._primary_term),
 		updated_at: ms(row.updated_at) ?? 0,
@@ -239,7 +242,15 @@ async function readState(
 
 const stateOnly = (row: StoredState | null): StateRow | null => {
 	if (!row) return null
-	const { _seq_no, _primary_term, updated_at, ...state } = row
+	const { _seq_no, _primary_term, updated_at, insert_token, ...state } = row
+	// The empty Not started row is a physical fence/receipt, not a member state or a remembered prompt.
+	if (
+		state.state === "not_started" &&
+		state.pass === 1 &&
+		state.rate_prompt_dismissed_at === null &&
+		state.seen_question === null
+	)
+		return null
 	return state
 }
 
@@ -319,22 +330,68 @@ async function insertState(
 	row: StateRow,
 	now: number,
 ): Promise<boolean> {
-	const { rowcount } = await insertRows(
-		"user_watch_state",
-		STATE_COLUMNS,
-		[
+	if (title.mediaType === "movie") {
+		const { rowcount } = await insertRows(
+			"user_watch_state",
+			STATE_COLUMNS,
 			[
-				userId,
-				title.tmdbId,
-				title.mediaType,
-				...stateValues(row),
-				new Date(now),
-				new Date(now),
+				[
+					userId,
+					title.tmdbId,
+					title.mediaType,
+					...stateValues(row),
+					new Date(now),
+					new Date(now),
+				],
 			],
-		],
-		{ conflict: STATE_KEY },
-	)
-	return rowcount === 1
+			{ conflict: STATE_KEY },
+		)
+		return rowcount === 1
+	}
+	// A show key is never removed by a tracking action. This token identifies our first insert even after
+	// a later action replaces its values with an empty receipt. An identical delayed insert cannot recreate it.
+	const token = randomUUID()
+	const columns = [...STATE_COLUMNS, "insert_token"]
+	const params: CrateValue[] = [
+		userId,
+		title.tmdbId,
+		title.mediaType,
+		...stateValues(row),
+		new Date(now),
+		new Date(now),
+		token,
+	]
+	const statement = `INSERT INTO user_watch_state (${columns.map((c) => `"${c}"`).join(", ")}) VALUES (${marks(columns.length)}) ON CONFLICT (${STATE_KEY.map((c) => `"${c}"`).join(", ")}) DO NOTHING`
+	return withCrateOperation("tracking.insertState", async () => {
+		let lost: unknown
+		for (let attempt = 1; attempt <= 2; attempt++) {
+			try {
+				const result = await run(statement, params)
+				if ((result.rowcount || 0) === 1) return true
+				if (!lost) return false // A known conflict: the original was not applied.
+			} catch (error) {
+				if (!isCrateRecoveryError(error)) throw error
+				lost = error
+			}
+			const current = await readState(userId, title)
+			const ours = current?.insert_token === token
+			crateEvent("crate.readback", {
+				attempt,
+				outcome: ours ? "applied" : current ? "conflict" : "absent",
+				guard: "insert_token",
+			})
+			if (ours) return true
+			// A different creator is ambiguous to the domain event: its log effects may already have been observed
+			// and undone. Never restart that event over a newer action after an indeterminate first insert.
+			if (current || attempt === 2) throw lost
+			crateEvent("crate.replay", {
+				attempt: 2,
+				outcome: "started",
+				guard: "retained_title_key",
+			})
+		}
+		throw lost
+	})
 }
 
 /**
@@ -350,8 +407,19 @@ async function writeState(
 	now: number,
 ): Promise<boolean> {
 	if (write === "none") return true
-	if (write === "insert")
+	if (write === "insert" && !before)
 		return row ? insertState(userId, title, row, now) : true
+	// Logical removal retains the physical key and its immutable receipt. Even a still-running original INSERT
+	// loses ON CONFLICT after an unwatch. A later real watch updates this key by its original CAS version.
+	const storedRow: StateRow = row ?? {
+		state: "not_started",
+		state_changed_at: now,
+		pass: 1,
+		seen_press_group: null,
+		seen_press_from: null,
+		rate_prompt_dismissed_at: null,
+		seen_question: null,
+	}
 	if (!before) return false
 	const key: CrateValue[] = [
 		userId,
@@ -365,24 +433,28 @@ async function writeState(
 	// Keep this statement, its values, timestamp and version unchanged through recovery. The version predicate
 	// permits at most one application, including when the first response is lost while its request still runs.
 	const submit = () =>
-		write === "update" && row
-			? run(
-					`UPDATE user_watch_state
+		run(
+			`UPDATE user_watch_state
 					 SET state = ?, state_changed_at = ?, pass = ?, seen_press_group = ?, seen_press_from = ?,
 					     rate_prompt_dismissed_at = ?, seen_question = ?, updated_at = ?
 					 ${unchanged}`,
-					[...stateValues(row), new Date(now), ...key],
-				)
-			: run(`DELETE FROM user_watch_state ${unchanged}`, key)
+			[...stateValues(storedRow), new Date(now), ...key],
+		)
 	return withCrateOperation("tracking.writeState", async () => {
 		const inspect = async () => {
 			const current = await readState(userId, title)
-			const applied = write === "delete" ? current === null : Boolean(
-				current && current._seq_no !== before._seq_no && current.updated_at === now &&
-				isDeepStrictEqual(stateOnly(current), row),
+			const applied = Boolean(
+				current &&
+					current._seq_no !== before._seq_no &&
+					current.updated_at === now &&
+					isDeepStrictEqual(stateOnly(current), row),
 			)
-			const stillBefore = current?._seq_no === before._seq_no && current?._primary_term === before._primary_term
-			crateEvent("crate.readback", { outcome: applied ? "applied" : stillBefore ? "unchanged" : "conflict" })
+			const stillBefore =
+				current?._seq_no === before._seq_no &&
+				current?._primary_term === before._primary_term
+			crateEvent("crate.readback", {
+				outcome: applied ? "applied" : stillBefore ? "unchanged" : "conflict",
+			})
 			return { applied, stillBefore }
 		}
 		try {
@@ -394,7 +466,11 @@ async function writeState(
 			// Another version without ours is ambiguous: ours may have landed and then been superseded by that
 			// writer. False would make the caller apply this event again over the newer state, so fail instead.
 			if (!checked.stillBefore) throw error
-			crateEvent("crate.replay", { attempt: 2, outcome: "started", guard: "original_version" })
+			crateEvent("crate.replay", {
+				attempt: 2,
+				outcome: "started",
+				guard: "original_version",
+			})
 			try {
 				if (((await submit()).rowcount || 0) >= 1) return true
 			} catch (retryError) {

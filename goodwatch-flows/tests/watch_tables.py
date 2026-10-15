@@ -92,11 +92,13 @@ class WatchTables:
         assert table in WRITABLE, f"the jobs must not write {table}"
         schema = SCHEMAS[table]
         assert conflict == schema["primary_key"], conflict
-        assert set(columns) == set(schema["columns"]), set(columns) ^ set(schema["columns"])
+        # The historical migration remains valid after the nullable first-insert receipt is added.
+        optional = {"insert_token"} if table == "user_watch_state" else set()
+        assert set(columns) | optional == set(schema["columns"]), set(columns) ^ set(schema["columns"])
         self.bulk_sizes.append(len(data))
         results = []
         for values in data:
-            row = dict(zip(columns, values, strict=True))
+            row = {column: None for column in optional} | dict(zip(columns, values, strict=True))
             for column, definition in schema["columns"].items():
                 assert row[column] is not None or ("NOT NULL" not in definition and column not in conflict), (column, row)
             key = {column: row[column] for column in conflict}
