@@ -382,15 +382,18 @@ function prune(
 ): PortraitView {
 	const list = (keys: TitleKey[]) => keys.filter(has)
 	const one = (key: TitleKey | null) => (key !== null && has(key) ? key : null)
-	const onePer = (keys: TitleKey[]) => {
+	// Unseen titles are kept once per franchise on the person's services and once elsewhere, so On my services still
+	// finds the franchise's title it carries.
+	const onePer = (keys: TitleKey[], services?: (key: TitleKey) => unknown) => {
 		const seen = new Set<string>()
 		return list(keys).filter((key) => {
-			const name = franchise(key)
+			const name = `${franchise(key)}|${services?.(key) === true}`
 			if (seen.has(name)) return false
 			seen.add(name)
 			return true
 		})
 	}
+	const onServices = (key: TitleKey) => view.titles[key]?.onMyServices
 	if (view.tab === "sides")
 		return {
 			...view,
@@ -398,11 +401,11 @@ function prune(
 				...side,
 				here: onePer(side.here).slice(0, HERE),
 				image: one(side.image),
-				moreOfThis: onePer(side.moreOfThis),
+				moreOfThis: onePer(side.moreOfThis, onServices),
 				edges: side.edges.map((edge) => ({
 					...edge,
 					rated: onePer(edge.rated),
-					suggestions: onePer(edge.suggestions),
+					suggestions: onePer(edge.suggestions, onServices),
 					image: one(edge.image),
 				})),
 			})),

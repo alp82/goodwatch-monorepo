@@ -164,8 +164,13 @@ function group(loved: RatedTitle[], person: Person) {
 			})
 			assigned = loved.map((p) => nearest(p.z, centers).index)
 		}
-		// Fewer than two sides big enough to stand: this k has no sides.
-		const sizes = centers.map((_, i) => assigned.filter((a) => a === i).length)
+		// A side too small to stand, once its titles that fit no side are out: this k has no sides.
+		const sizes = centers.map(
+			(center, i) =>
+				loved.filter(
+					(r, j) => assigned[j] === i && cosine(r.z, center) >= FITS_NO_SIDE,
+				).length,
+		)
 		if (centers.length < 2 || sizes.some((size) => size < minSize)) continue
 		const closeness = average(
 			loved.map((p, j) => cosine(p.z, centers[assigned[j]])),
@@ -257,16 +262,18 @@ function sideMoods(members: RatedTitle[]): MoodKey[] {
 		.map((m) => m.mood)
 }
 
-/** "The Lord of the Rings: The Two Towers" and "...: The Return of the King" are one franchise: "lord of the". */
+/**
+ * A title's franchise when its name says so: the part before a subtitle or a sequel number. "The Lord of the Rings:
+ * The Two Towers" and "Toy Story 2" give "lord of the rings" and "toy story"; titles that only share their first words,
+ * such as "Once Upon a Time in America" and "...in Hollywood", stay apart.
+ */
 export function franchiseOf(title: string): string {
 	return title
 		.toLowerCase()
 		.replace(/^(the|a|an) /, "")
-		.split(/:| part | \d| - /)[0]
+		.split(/:| - | part /)[0]
+		.replace(/\s+(\d+|ii|iii|iv|v|vi)$/, "")
 		.trim()
-		.split(/\s+/)
-		.slice(0, 3)
-		.join(" ")
 }
 
 // ---------- More of this ----------

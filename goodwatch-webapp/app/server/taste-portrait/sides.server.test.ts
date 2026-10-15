@@ -170,6 +170,10 @@ describe("franchiseOf", () => {
 			franchiseOf("The Dark Knight"),
 			franchiseOf("The Dark Crystal"),
 		)
+		assert.notEqual(
+			franchiseOf("Once Upon a Time in America"),
+			franchiseOf("Once Upon a Time in Hollywood"),
+		)
 	})
 })
 
