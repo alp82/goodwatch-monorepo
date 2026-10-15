@@ -351,9 +351,9 @@ For each target:
    Results must be 0, 0, false. Check target StopSignal is unset/SIGTERM/15. If still running:
 
    ```bash
-   ssh root@10.0.0.12 systemd-run --unit=gw-crate-stop-562-02 --property=Type=exec --property=TimeoutStopSec=infinity --property=SendSIGKILL=no /usr/bin/docker stop --timeout=-1 crate-02
+   ssh root@10.0.0.12 systemd-run --unit=gw-crate-stop-562-12-$(date -u +%H%M%S) --property=Type=exec --property=TimeoutStopSec=infinity --property=SendSIGKILL=no /usr/bin/docker stop --timeout=-1 crate-02
    # Poll through an independent SSH session; do not stop/cancel this unit.
-   ssh root@10.0.0.12 systemctl show gw-crate-stop-562-02 -p ActiveState -p Result -p ExecMainStatus
+   ssh root@10.0.0.12 systemctl show <recorded-unit-name> -p ActiveState -p Result -p ExecMainStatus
    ssh root@10.0.0.12 docker inspect crate-02 --format '{{.State.Status}} {{.State.ExitCode}} {{.State.OOMKilled}}'
    ```
 
@@ -369,7 +369,11 @@ For each target:
    restart always. Check container-loopback `SELECT current_user` returns crate. Initial startup readiness may
    need several seconds; begin the hard client gate only after users/metadata are available.
 6. Run the hard client gate in step 7 immediately after metadata readiness, before allocating replicas back.
-   On success, restore allocation through the observer:
+   On success, restore allocation through the observer. On a failed client gate, **also restore allocation all and
+   wait for GREEN/STARTED/all checks before the rollback drain**. This predetermined recovery path preserves the
+   strict GREEN precondition in the drain executor; it does not permit another node restart. Then set only this node
+   HBA=false, disable its restart policy and repeat the same drain/zero-primary/unlimited-grace/rejoin procedure.
+   Verify HBA off, restore allocation all and stop after GREEN. Exact allocation command:
 
    ```bash
    crate_sql 10.0.0.11 crate-01 "SET GLOBAL TRANSIENT \"cluster.routing.allocation.enable\" = 'all'"
