@@ -107,6 +107,100 @@ class TranslationIngestionTest(unittest.TestCase):
         with self.assertRaises(ValueError): ingest_titles([1,2,3], lambda _: None)
         with self.assertRaises(ValueError): Bounds(requests_per_second=6).validate()
 
+    def long_show(self, title, seasons=3, episodes=3):
+        """A show with `seasons` seasons of `episodes` episodes, each with German text."""
+        fixture = {f'tv/{title}': {'id': title, 'seasons': [
+            {'id': title*10 + n, 'season_number': n} for n in range(1, seasons + 1)]}}
+        for n in range(1, seasons + 1):
+            path = f'tv/{title}/season/{n}'
+            fixture[path] = {'id': title*10 + n, 'season_number': n, 'episodes': [
+                {'id': title*1000 + n*100 + e, 'show_id': title, 'season_number': n, 'episode_number': e}
+                for e in range(1, episodes + 1)]}
+            fixture[path + '/translations'] = payload(title*10 + n, name=f'Staffel {n}')
+            for e in range(1, episodes + 1):
+                fixture[path + f'/episode/{e}/translations'] = payload(title*1000 + n*100 + e, name=f'Folge {e}')
+        return fixture
+
+    def run_paths(self, fixture, ids, **kwargs):
+        paths = []
+        def get(path): paths.append(path); return fixture[path]
+        return ingest_titles(ids, get, sleep=lambda _: None, **kwargs), paths
+
+    def test_per_title_caps_cut_one_title_and_move_on(self):
+        fixture = self.long_show(1396) | self.long_show(1399)
+        bounds = Bounds(seasons=100, episodes=1000, seasons_per_title=2, episodes_per_title=4)
+        result, paths = self.run_paths(fixture, [1396, 1399], bounds=bounds)
+        self.assertEqual(result['seasons'], 4)
+        self.assertEqual(result['episodes'], 8)
+        self.assertTrue(result['truncated'])
+        self.assertEqual(result['continuation'], [
+            {'tmdb_id': 1396, 'season_number': 2, 'episode_number': 2},
+            {'tmdb_id': 1399, 'season_number': 2, 'episode_number': 2}])
+        self.assertEqual(result['unstarted'], [])
+        self.assertNotIn('tv/1396/season/3', paths)
+        with self.assertRaises(ValueError): Bounds(seasons=10, seasons_per_title=11).validate()
+        with self.assertRaises(ValueError): Bounds(episodes_per_title=0).validate()
+
+    def test_season_cap_cursor_resumes_at_the_next_season(self):
+        fixture = self.long_show(1396)
+        first, _ = self.run_paths(fixture, [1396], bounds=Bounds(seasons_per_title=1))
+        self.assertEqual(first['continuation'], [{'tmdb_id': 1396, 'season_number': 2, 'episode_number': None}])
+        second, paths = self.run_paths(fixture, [1396], resume=first['continuation'])
+        self.assertNotIn('tv/1396/season/1', paths)
+        self.assertIn('tv/1396/season/2/translations', paths)
+        self.assertEqual((second['seasons'], second['episodes'], second['continuation']), (2, 6, []))
+        self.assertFalse(second['truncated'])
+
+    def test_mid_season_resume_skips_fetched_text_and_covers_everything_once(self):
+        fixture = self.long_show(1396)
+        fetched, resume = [], None
+        for runs in range(1, 10):
+            result, paths = self.run_paths(fixture, [1396], bounds=Bounds(episodes_per_title=2), resume=resume)
+            fetched += [p for p in paths if p.endswith('/translations')]
+            if not result['continuation']:
+                break
+            resume = result['continuation']
+        self.assertEqual(runs, 5)
+        # Every season and episode text is fetched exactly once across the runs.
+        expected = [p for p in fixture if p.endswith('/translations')]
+        self.assertEqual(sorted(fetched), sorted(expected))
+
+    def test_request_cap_reports_cursor_and_unstarted_titles(self):
+        fixture = self.long_show(1396) | self.long_show(1399)
+        # Show, season 1, its text and two episode texts: the third episode text is refused.
+        result, _ = self.run_paths(fixture, [1396, 1399], bounds=Bounds(requests=5))
+        self.assertEqual(result['continuation'], [{'tmdb_id': 1396, 'season_number': 1, 'episode_number': 3}])
+        self.assertEqual(result['unstarted'], [1399])
+        resumed, paths = self.run_paths(fixture, [1396], resume=result['continuation'])
+        self.assertEqual(paths[:3], ['tv/1396', 'tv/1396/season/1', 'tv/1396/season/1/episode/3/translations'])
+        self.assertEqual(resumed['episodes'], 7)
+
+    def test_run_wide_cap_lists_later_titles_as_unstarted(self):
+        fixture = self.long_show(1396, seasons=1) | self.long_show(1399, seasons=1)
+        result, paths = self.run_paths(fixture, [1396, 1399], bounds=Bounds(episodes=3))
+        self.assertEqual(result['episodes'], 3)
+        self.assertEqual(result['unstarted'], [1399])
+        self.assertTrue(result['truncated'])
+        self.assertNotIn('tv/1399', paths)
+
+    def test_resume_rejects_bad_cursors_and_reports_a_vanished_season(self):
+        fixture = self.long_show(1396)
+        for cursor in ({'tmdb_id': 1399, 'season_number': 1}, {'tmdb_id': 1396, 'season_number': -1},
+                       {'tmdb_id': 1396, 'season_number': 1, 'episode_number': 0}):
+            with self.assertRaises(ValueError):
+                ingest_titles([1396], fixture.__getitem__, resume=[cursor])
+        result, _ = self.run_paths(fixture, [1396], resume=[{'tmdb_id': 1396, 'season_number': 9}])
+        self.assertEqual(result['failures'], [{'path': 'tv/1396', 'error': 'LookupError'}])
+        self.assertEqual(result['rows'], 0)
+
+    def test_a_resumed_title_cut_before_its_show_request_keeps_its_cursor(self):
+        fixture = self.long_show(1399, seasons=1, episodes=1) | self.long_show(1396)
+        cursor = {'tmdb_id': 1396, 'season_number': 2, 'episode_number': 3}
+        # 1399 takes all four requests, so 1396 is refused at its show request.
+        result, _ = self.run_paths(fixture, [1399, 1396], bounds=Bounds(requests=4), resume=[cursor])
+        self.assertEqual(result['continuation'], [cursor])
+        self.assertEqual(result['unstarted'], [])
+
     def test_schema_registry_and_migration_match_stable_locale_keys(self):
         from f.sync.models.crate_schemas import SCHEMAS
         sql = (Path(__file__).parents[2] / 'docs/implementation/media-language-text-schema.sql').read_text()
