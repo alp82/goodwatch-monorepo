@@ -104,3 +104,7 @@ list plausible.
 - No import pairs with two ratings exist, and only one applied import: no free re-rating data.
 - Only 1 member has a show status other than Seen: the watch-state branch stays parked.
 - 31 members rated in two or more sittings; 200 in one.
+
+## 014 G1 rollout (October 15, 2026)
+
+Plan, Fable review and adopted fixes in items/014-g1-rollout/. Built by Sol, Astra review (2 × P2) fixed and passed; merged as PR #632 (`a9aa22e8`). Waiting for the owner's word on the production steps: create `f/sync/g1_members` = [owner], deploy the scripts, owner redeploys the webapp, backfill the owner's `g1:v2`, add the 3-minute dirty schedule. Then the 5–10 member cohort (second owner decision), then `on`, then the rename.
