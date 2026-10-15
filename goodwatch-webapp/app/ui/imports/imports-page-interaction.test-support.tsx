@@ -208,7 +208,9 @@ async function page(props: Partial<PageProps> = {}) {
 		/** Chooses a file in the file input whose label holds `label`. */
 		choose: async (label: string, file: File) => {
 			const input = [...container.querySelectorAll('input[type="file"]')].find(
-				(element) => element.getAttribute("aria-label")?.includes(label),
+				(element) =>
+					element.getAttribute("aria-label")?.includes(label) ||
+					element.closest("label")?.textContent?.includes(label),
 			) as unknown as HTMLInputElement | undefined
 			if (!input) throw new Error(`No file input "${label}"`)
 			Object.defineProperty(input, "files", {
@@ -223,6 +225,10 @@ async function page(props: Partial<PageProps> = {}) {
 			// Recognition reads the file, then the upload and the preview follow.
 			for (let i = 0; i < 5; i++) await settle()
 		},
+		/** The source row that holds keyboard focus, if any. */
+		focusedRow: () =>
+			document.activeElement?.closest("li")?.querySelector("[data-source-name]")
+				?.textContent ?? null,
 		unmount: () => act(async () => root.unmount()),
 	}
 }
@@ -242,6 +248,26 @@ const traktZip = () =>
 const results: Record<string, unknown> = {}
 
 {
+	const { renderToStaticMarkup } = await import("react-dom/server")
+	results.serverMarkup = renderToStaticMarkup(
+		h(
+			QueryClientProvider,
+			{ client: new QueryClient() },
+			h(
+				MemoryRouter,
+				null,
+				h(ImportSourcesPage, {
+					imdbImports: [],
+					sourceImports: [
+						summary("letterboxd", "done", "2026-10-11T23:30:00.000Z"),
+					],
+				}),
+			),
+		),
+	)
+}
+
+{
 	const view = await page({
 		imdbImports: [imdbSummary("done", "2026-10-02T12:00:00.000Z")],
 		sourceImports: [
@@ -259,7 +285,7 @@ const results: Record<string, unknown> = {}
 	results.tvTime = { rows: view.rows(), text: view.text() }
 	await view.click("Open the Trakt import")
 	results.tvTimeOpened = { rows: view.rows(), text: view.text() }
-	await view.search("Plex")
+	await view.search("Blockbuster")
 	results.noMatch = { rows: view.rows(), text: view.text() }
 	await view.unmount()
 }
@@ -267,6 +293,7 @@ const results: Record<string, unknown> = {}
 {
 	const view = await page()
 	await view.choose("any source", traktZip())
+	results.oneBoxTraktFocus = view.focusedRow()
 	results.oneBoxTrakt = {
 		rows: view.rows(),
 		text: view.text(),
@@ -330,6 +357,77 @@ const results: Record<string, unknown> = {}
 		),
 	)
 	results.oneBoxMovieLens = {
+		rows: view.rows(),
+		text: view.text(),
+		sent: [...sent],
+	}
+	await view.unmount()
+}
+
+const movielens = (wishlist: boolean) =>
+	new File(
+		[
+			wishlist
+				? "movie_id,imdb_id,tmdb_id,average_rating,title\n1,0114709,862,3.9,Toy Story (1995)\n"
+				: "movie_id,imdb_id,tmdb_id,rating,average_rating,title\n1,0114709,862,4.5,3.9,Toy Story (1995)\n",
+		],
+		wishlist ? "movielens-wishlist.csv" : "movielens-ratings.csv",
+	)
+
+{
+	const view = await page()
+	await view.choose("any source", movielens(false))
+	await view.choose("any source", movielens(true))
+	results.movielensBoth = {
+		rows: view.rows(),
+		text: view.text(),
+		sent: [...sent],
+	}
+	await view.click("Preview import")
+	for (let i = 0; i < 5; i++) await settle()
+	results.movielensBothSent = {
+		rows: view.rows(),
+		text: view.text(),
+		sent: [...sent],
+	}
+	await view.unmount()
+}
+
+{
+	const view = await page()
+	await view.click("MovieLens")
+	await view.choose("MovieLens ratings CSV", movielens(true))
+	results.movielensSwap = {
+		rows: view.rows(),
+		text: view.text(),
+		sent: [...sent],
+	}
+	await view.click("Use it as the wishlist")
+	results.movielensSwapped = {
+		rows: view.rows(),
+		text: view.text(),
+		sent: [...sent],
+	}
+	await view.choose("MovieLens wishlist CSV", traktZip())
+	results.movielensWishlistCaught = {
+		rows: view.rows(),
+		text: view.text(),
+		sent: [...sent],
+	}
+	await view.unmount()
+}
+
+{
+	const view = await page()
+	await view.click("Trakt")
+	await view.choose(
+		"Trakt",
+		new File(
+			['<?xml version="1.0"?><myanimelist></myanimelist>'],
+			"kitsu-alp82-anime.xml",
+		),
+	)
+	results.kitsuCaught = {
 		rows: view.rows(),
 		text: view.text(),
 		sent: [...sent],

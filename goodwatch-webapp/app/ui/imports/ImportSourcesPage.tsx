@@ -5,16 +5,20 @@ import { MagnifyingGlassIcon } from "@heroicons/react/20/solid"
 import { useEffect, useId, useState } from "react"
 import type { ImdbImportSummary } from "~/domain/imdb-import"
 import { type ImportSummary, isFileImportSource } from "~/domain/imports"
+import { useHydrated } from "~/utils/hydrated"
 import { ImdbImportFlow } from "./ImdbImportFlow"
 import {
 	AnyFileBox,
 	ImportFileRouting,
 	type ImportHandoff,
+	type MovieLensFiles,
+	MovieLensFilesContext,
 } from "./ImportFileRouting"
 import {
 	IMPORT_SOURCE_LIST,
 	type ImportSourceEntry,
 	type ImportSourceId,
+	importSourceName,
 	lastImported,
 	searchImportSources,
 } from "./ImportSources"
@@ -62,18 +66,26 @@ export function ImportSourcesPage({
 		setHandoff(null)
 		setOpen(open === id ? null : id)
 	}
+	// Focus moves to the source that took the file, so it is announced, and the page scrolls to it.
 	useEffect(() => {
-		if (handoff)
-			document
-				.getElementById(`${listId}-${handoff.recognition.source}-row`)
-				?.scrollIntoView?.({ block: "start", behavior: "smooth" })
+		if (!handoff) return
+		const row = document.getElementById(
+			`${listId}-${handoff.recognition.source}-row`,
+		)
+		row?.querySelector("button")?.focus({ preventScroll: true })
+		row?.scrollIntoView?.({ block: "start", behavior: "smooth" })
 	}, [handoff, listId])
+	const movieLensFiles = useState<MovieLensFiles>({})
+	// The date follows the member's time zone, which the server doesn't know.
+	const hydrated = useHydrated()
 
 	const row = (source: ImportSourceEntry) => {
 		const expanded = open === source.id
 		const at = imported.get(source.id)
 		const label = at
-			? `Imported ${formatDate(at)}`
+			? hydrated
+				? `Imported ${formatDate(at)}`
+				: "Imported"
 			: source.connect
 				? "Connect"
 				: null
@@ -154,76 +166,80 @@ export function ImportSourcesPage({
 
 	return (
 		<ImportFileRouting.Provider value={route}>
-			<div className="px-2 md:px-4 lg:px-8">
-				<div className="flex max-w-2xl flex-col gap-6 text-base text-gray-300">
-					<div>
-						<h2 className="font-bold tracking-tight text-gray-100 text-base sm:text-lg md:text-xl lg:text-2xl">
-							Import your library
-						</h2>
-						<p className="mt-2 text-gray-400">
-							Bring your ratings, watches, and Want to See from another site or
-							app. GoodWatch shows you everything before your library changes.
-						</p>
-					</div>
-					<AnyFileBox />
-					<section
-						aria-labelledby={`${listId}-heading`}
-						className="flex flex-col gap-3"
-					>
-						<h3 id={`${listId}-heading`} className={stepHeading}>
-							Or choose where your library is now
-						</h3>
-						<label className="relative block">
-							<span className="sr-only">Search sources</span>
-							<MagnifyingGlassIcon
-								className="pointer-events-none absolute left-3 top-1/2 size-5 -translate-y-1/2 text-gray-500"
-								aria-hidden
-							/>
-							<input
-								type="search"
-								value={query}
-								onChange={(event) => setQuery(event.target.value)}
-								placeholder={`Search ${IMPORT_SOURCE_LIST.length} sources, for example Letterboxd`}
-								className="min-h-11 w-full rounded-lg border border-slate-600 bg-slate-900 py-2 pl-10 pr-3 text-base text-gray-100 placeholder:text-gray-500 focus:border-indigo-400 focus:outline-none"
-							/>
-						</label>
-						{found.length > 0 && (
-							<ul className="divide-y divide-slate-800 overflow-hidden rounded-lg border border-slate-700 bg-slate-900/60">
-								{found.map(row)}
-							</ul>
-						)}
-						{found.length === 0 && (
-							<p className="text-gray-400">
-								No source called "{query.trim()}". If your site can save a CSV
-								file, try Any other site (CSV).
+			<MovieLensFilesContext.Provider value={movieLensFiles}>
+				<div className="px-2 md:px-4 lg:px-8">
+					<div className="flex max-w-2xl flex-col gap-6 text-base text-gray-300">
+						<div>
+							<h2 className="font-bold tracking-tight text-gray-100 text-base sm:text-lg md:text-xl lg:text-2xl">
+								Import your library
+							</h2>
+							<p className="mt-2 text-gray-400">
+								Bring your ratings, watches, and Want to See from another site
+								or app. GoodWatch shows you everything before your library
+								changes.
 							</p>
-						)}
-						<div className="flex flex-col items-start text-sm text-gray-400">
-							<p>
-								Coming from TV Time? TV Time closed on July 15, 2026. Trakt
-								imports a saved TV Time file: import it on Trakt, then upload
-								your Trakt export here.
-							</p>
-							<button
-								type="button"
-								className={`${textLink} min-h-11`}
-								onClick={() => {
-									if (!found.some((source) => source.id === "trakt"))
-										setQuery("")
-									setOpen("trakt")
-								}}
-							>
-								Open the Trakt import
-							</button>
 						</div>
-						<p className="text-xs text-gray-500">
-							The logos show where a file comes from; no source endorses
-							GoodWatch. IMDb, IMDbPro, STARmeter, and all related logos are
-							trademarks of IMDb.com, Inc. or its affiliates.
-						</p>
-					</section>
+						<AnyFileBox />
+						<section
+							aria-labelledby={`${listId}-heading`}
+							className="flex flex-col gap-3"
+						>
+							<h3 id={`${listId}-heading`} className={stepHeading}>
+								Or choose where your library is now
+							</h3>
+							<label className="relative block">
+								<span className="sr-only">Search sources</span>
+								<MagnifyingGlassIcon
+									className="pointer-events-none absolute left-3 top-1/2 size-5 -translate-y-1/2 text-gray-500"
+									aria-hidden
+								/>
+								<input
+									type="search"
+									value={query}
+									onChange={(event) => setQuery(event.target.value)}
+									placeholder={`Search ${IMPORT_SOURCE_LIST.length} sources, for example Letterboxd`}
+									className="min-h-11 w-full rounded-lg border border-slate-600 bg-slate-900 py-2 pl-10 pr-3 text-base text-gray-100 placeholder:text-gray-500 focus:border-indigo-400 focus:outline-none"
+								/>
+							</label>
+							{found.length > 0 && (
+								<ul className="divide-y divide-slate-800 overflow-hidden rounded-lg border border-slate-700 bg-slate-900/60">
+									{found.map(row)}
+								</ul>
+							)}
+							{found.length === 0 && (
+								<p className="text-gray-400">
+									No source called "{query.trim()}". If your site can save a CSV
+									file, try {importSourceName("csv")}.
+								</p>
+							)}
+							<div className="flex flex-col items-start text-sm text-gray-400">
+								<p>
+									Coming from TV Time? TV Time closed on July 15, 2026. Trakt
+									imports a saved TV Time file: import it on Trakt, then upload
+									your Trakt export here.
+								</p>
+								<button
+									type="button"
+									className={`${textLink} min-h-11`}
+									onClick={() => {
+										if (!found.some((source) => source.id === "trakt"))
+											setQuery("")
+										setOpen("trakt")
+									}}
+								>
+									Open the Trakt import
+								</button>
+							</div>
+							<p className="text-xs text-gray-500">
+								The logos show where a file comes from; no source endorses
+								GoodWatch. IMDb, IMDbPro, STARmeter, and all related logos are
+								trademarks of IMDb.com, Inc. or its affiliates. This product
+								uses the TMDB API but is not endorsed or certified by TMDB.
+							</p>
+						</section>
+					</div>
 				</div>
-			</div>
+			</MovieLensFilesContext.Provider>
 		</ImportFileRouting.Provider>
 	)
 }

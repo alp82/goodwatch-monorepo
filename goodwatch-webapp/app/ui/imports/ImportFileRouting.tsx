@@ -3,19 +3,28 @@
 // from another source as that source instead of sending it to the wrong import.
 import { ArrowUpTrayIcon } from "@heroicons/react/24/solid"
 import {
+	type Dispatch,
 	type DragEvent,
 	type ReactNode,
+	type SetStateAction,
 	createContext,
 	useContext,
+	useEffect,
+	useId,
 	useRef,
 	useState,
 } from "react"
 import {
+	type ImportFileRecognition,
 	type ImportFileTarget,
 	type RecognizedImportFile,
 	recognizeImportFile,
 } from "./ImportFileRecognition"
-import { importSourceName } from "./ImportSources"
+import {
+	IMPORT_SOURCE_LIST,
+	importAsName,
+	importFileNoun,
+} from "./ImportSources"
 import {
 	errorBox,
 	infoBox,
@@ -35,10 +44,38 @@ export const ImportFileRouting = createContext<
 	((handoff: ImportHandoff) => void) | null
 >(null)
 
+export interface MovieLensFiles {
+	ratings?: File
+	wishlist?: File
+}
+/** MovieLens's two files, kept by the page so a file handed over later fills the other slot. */
+export const MovieLensFilesContext = createContext<
+	[MovieLensFiles, Dispatch<SetStateAction<MovieLensFiles>>] | null
+>(null)
+
+/** The MovieLens files: the page's when it keeps them, otherwise the panel's own. */
+export function useMovieLensFiles() {
+	const shared = useContext(MovieLensFilesContext)
+	const own = useState<MovieLensFiles>({})
+	return shared ?? own
+}
+
+/** "a, b, and c". */
+const list = (names: string[]) =>
+	names.length < 3
+		? names.join(" and ")
+		: `${names.slice(0, -1).join(", ")}, and ${names.at(-1)}`
+/** "a, b, or c". */
+const either = (names: string[]) =>
+	names.length < 3
+		? names.join(" or ")
+		: `${names.slice(0, -1).join(", ")}, or ${names.at(-1)}`
+
 const reading = "Reading your file. Nothing is uploaded yet."
 
 export function AnyFileBox() {
 	const route = useContext(ImportFileRouting)
+	const id = useId()
 	const inputRef = useRef<HTMLInputElement>(null)
 	const [dragging, setDragging] = useState(false)
 	const [busy, setBusy] = useState(false)
@@ -66,9 +103,10 @@ export function AnyFileBox() {
 		setDragging(false)
 		take(event.dataTransfer.files[0])
 	}
+	const connect = IMPORT_SOURCE_LIST.filter((source) => source.connect)
 	return (
-		<section aria-labelledby="any-file-heading" className="flex flex-col gap-3">
-			<h3 id="any-file-heading" className={stepHeading}>
+		<section aria-labelledby={`${id}-heading`} className="flex flex-col gap-3">
+			<h3 id={`${id}-heading`} className={stepHeading}>
 				Upload an export
 			</h3>
 			<div
@@ -81,7 +119,7 @@ export function AnyFileBox() {
 				className={`flex flex-col items-center gap-3 rounded-lg border-2 border-dashed px-4 py-10 text-center ${dragging ? "border-indigo-400 bg-indigo-950/60" : "border-slate-600 bg-slate-900/60"}`}
 			>
 				<ArrowUpTrayIcon className="size-10 text-gray-500" aria-hidden />
-				<p id="any-file-hint" aria-live="polite">
+				<p id={`${id}-hint`} aria-live="polite">
 					{busy
 						? reading
 						: "Drop the file a site gave you here, or choose it from your device. GoodWatch works out where it's from."}
@@ -90,7 +128,7 @@ export function AnyFileBox() {
 					type="button"
 					className={primaryButton}
 					disabled={busy}
-					aria-describedby="any-file-hint"
+					aria-describedby={`${id}-hint`}
 					onClick={() => inputRef.current?.click()}
 				>
 					Choose file
@@ -108,9 +146,15 @@ export function AnyFileBox() {
 				/>
 			</div>
 			<p className="text-sm text-gray-400">
-				Reads exports from IMDb, Letterboxd, Trakt, MyAnimeList, Kitsu, Kodi,
-				and MovieLens, and CSV files in Letterboxd's import format. For TMDB,
-				choose TMDB in the list to connect your account.
+				Reads files from{" "}
+				{list(
+					IMPORT_SOURCE_LIST.filter((source) => !source.connect).map(
+						(source) => source.name,
+					),
+				)}
+				.
+				{connect.length > 0 &&
+					` To bring ${either(connect.map((source) => source.name))}, open it in the list and connect your account.`}
 			</p>
 			<div aria-live="assertive">
 				{unknown && (
@@ -126,23 +170,25 @@ export function AnyFileBox() {
 }
 
 /**
- * For a source's own upload panel: `check` resolves true when a chosen file may go to this source's import, and
- * otherwise holds the file back and shows `note`, which offers its real source. A file nobody recognizes still goes
+ * For a source's own upload panel. `check` reads a chosen file: `send` is true when it may go to this source's
+ * import, and otherwise the file is held back and `note` offers its real source. A file nobody recognizes still goes
  * to the chosen import, whose own check explains what is wrong with it.
  */
 export function useWrongSourceCatch(source: ImportFileTarget): {
-	check: (file: File) => Promise<boolean>
+	check: (
+		file: File,
+	) => Promise<{ send: boolean; recognition: ImportFileRecognition | null }>
 	note: ReactNode
 } {
 	const route = useContext(ImportFileRouting)
 	const [caught, setCaught] = useState<ImportHandoff | null>(null)
 	const check = async (file: File) => {
 		setCaught(null)
-		if (!route) return true
 		const recognition = await recognizeImportFile(file).catch(() => null)
-		if (!recognition?.source || recognition.source === source) return true
+		if (!route || !recognition?.source || recognition.source === source)
+			return { send: true, recognition }
 		setCaught({ file, recognition })
-		return false
+		return { send: false, recognition }
 	}
 	// The live region stays in place, so the note is announced when it appears.
 	const note = (
@@ -151,8 +197,8 @@ export function useWrongSourceCatch(source: ImportFileTarget): {
 				<div className={`${infoBox} flex flex-col gap-3`}>
 					<p>
 						<span className="break-all font-semibold">{caught.file.name}</span>{" "}
-						looks like {article(caught.recognition.label)}, not {fileOf(source)}
-						.
+						looks like {article(caught.recognition.label)}, not{" "}
+						{importFileNoun(source)}.
 					</p>
 					<div className="flex flex-wrap gap-3">
 						<button
@@ -160,7 +206,7 @@ export function useWrongSourceCatch(source: ImportFileTarget): {
 							className={primaryButton}
 							onClick={() => route?.(caught)}
 						>
-							Import it as {shortName(caught.recognition)}
+							Import it as {importAsName(caught.recognition)}
 						</button>
 						<button
 							type="button"
@@ -177,34 +223,33 @@ export function useWrongSourceCatch(source: ImportFileTarget): {
 	return { check, note }
 }
 
-/** What a file for this source is called in a sentence. */
-const fileOf = (source: ImportFileTarget) =>
-	source === "csv"
-		? "a CSV file in Letterboxd's import format"
-		: source === "myanimelist"
-			? "a MyAnimeList or Kitsu file"
-			: article(`${importSourceName(source)} file`)
-
-/** The source a recognized file belongs to, as a short name. */
-const shortName = (recognition: RecognizedImportFile) =>
-	recognition.source === "csv"
-		? "a CSV file"
-		: recognition.source === "myanimelist"
-			? recognition.label.startsWith("Kitsu")
-				? "Kitsu"
-				: "MyAnimeList"
-			: importSourceName(recognition.source)
-
 /** "a Trakt export", "an IMDb ratings export". */
 const article = (noun: string) =>
 	`${/^[AEIOU]/i.test(noun) ? "an" : "a"} ${noun}`
 
+/** Sends a handed-off file once, the first time the panel shows it. */
+export function useHandoffUpload(
+	handoff: ImportHandoff | undefined,
+	upload: (file: File) => void,
+) {
+	const sent = useRef<File | null>(null)
+	useEffect(() => {
+		if (!handoff || sent.current === handoff.file) return
+		sent.current = handoff.file
+		upload(handoff.file)
+	})
+}
+
 /** The line a panel shows above a file the one box handed it. */
-export function RecognizedLine({ handoff }: { handoff: ImportHandoff }) {
+export function RecognizedLine({
+	handoff,
+	next,
+}: { handoff: ImportHandoff; next?: string }) {
 	return (
 		<p className="text-sm text-emerald-200">
 			Recognized {handoff.recognition.label}:{" "}
 			<span className="break-all">{handoff.file.name}</span>
+			{next && `. ${next}`}
 		</p>
 	)
 }

@@ -1,8 +1,14 @@
 // The sources on the Imports page, most common first. Only sources with a live import are listed; a source is
 // added here when its import ships. Logos are each platform's official mark, used unchanged; a source without one
-// GoodWatch may use gets a letter tile.
+// GoodWatch may use gets a letter tile. Names come from the import contract, so the page, the history, and the
+// receipt call a source the same.
 import type { ImdbImportSummary } from "~/domain/imdb-import"
-import type { ImportSource, ImportSummary } from "~/domain/imports"
+import {
+	IMPORT_SOURCE_NAMES,
+	type ImportSource,
+	type ImportSummary,
+} from "~/domain/imports"
+import type { RecognizedImportFile } from "./ImportFileRecognition"
 
 export type ImportSourceId = "imdb" | ImportSource
 
@@ -19,13 +25,19 @@ export interface ImportSourceEntry {
 	wait: string
 	/** Other words a member may search for. */
 	aliases: string
+	/** How a sentence names this source's file, for a source that takes one: "a Trakt file". */
+	fileNoun?: string
 	connect?: true
 }
 
-export const IMPORT_SOURCE_LIST: readonly ImportSourceEntry[] = [
+const NAMES: Record<ImportSourceId, string> = {
+	imdb: "IMDb",
+	...IMPORT_SOURCE_NAMES,
+}
+
+const SOURCES: Omit<ImportSourceEntry, "name">[] = [
 	{
 		id: "imdb",
-		name: "IMDb",
 		logo: "/images/import-sources/imdb.svg",
 		tile: { text: "IMDb", className: "bg-yellow-400 text-black" },
 		gets: ["Ratings"],
@@ -34,7 +46,6 @@ export const IMPORT_SOURCE_LIST: readonly ImportSourceEntry[] = [
 	},
 	{
 		id: "letterboxd",
-		name: "Letterboxd",
 		logo: "/images/import-sources/letterboxd.svg",
 		tile: { text: "Lb", className: "bg-emerald-600 text-white" },
 		gets: [
@@ -50,7 +61,6 @@ export const IMPORT_SOURCE_LIST: readonly ImportSourceEntry[] = [
 	},
 	{
 		id: "trakt",
-		name: "Trakt",
 		logo: "/images/import-sources/trakt.svg",
 		tile: { text: "Tr", className: "bg-red-600 text-white" },
 		gets: [
@@ -67,7 +77,6 @@ export const IMPORT_SOURCE_LIST: readonly ImportSourceEntry[] = [
 	},
 	{
 		id: "tmdb",
-		name: "TMDB",
 		logo: "/images/import-sources/tmdb.svg",
 		tile: { text: "TMDB", className: "bg-sky-700 text-white" },
 		gets: ["Ratings", "Want to See", "Favorites"],
@@ -77,17 +86,16 @@ export const IMPORT_SOURCE_LIST: readonly ImportSourceEntry[] = [
 	},
 	{
 		id: "myanimelist",
-		name: "MyAnimeList / Kitsu",
 		// MyAnimeList allows its marks only with written permission; Kitsu publishes no usage terms.
 		logo: null,
 		tile: { text: "MAL", className: "bg-blue-700 text-white" },
 		gets: ["Episodes", "Show statuses", "Want to See"],
 		wait: "Right away",
 		aliases: "mal anime kitsu",
+		fileNoun: "a MyAnimeList or Kitsu file",
 	},
 	{
 		id: "kodi",
-		name: "Kodi",
 		// Kodi's guidelines ask for ® on the logo, which doesn't fit a tile this small.
 		logo: null,
 		tile: { text: "K", className: "bg-sky-500 text-white" },
@@ -97,7 +105,6 @@ export const IMPORT_SOURCE_LIST: readonly ImportSourceEntry[] = [
 	},
 	{
 		id: "movielens",
-		name: "MovieLens",
 		// GroupLens publishes no brand assets.
 		logo: null,
 		tile: { text: "ML", className: "bg-orange-700 text-white" },
@@ -107,18 +114,37 @@ export const IMPORT_SOURCE_LIST: readonly ImportSourceEntry[] = [
 	},
 	{
 		id: "csv",
-		name: "Any other site (CSV)",
 		logo: null,
 		tile: { text: "CSV", className: "bg-slate-600 text-white" },
 		gets: ["Ratings", "Watches with dates", "Reviews"],
 		wait: "Depends on the tool",
 		aliases:
-			"generic csv spreadsheet mubi filmweb csfd senscritique douban kinopoisk filmaffinity rotten tomatoes icheckmovies",
+			"any other site spreadsheet mubi filmweb csfd senscritique douban kinopoisk filmaffinity rotten tomatoes icheckmovies",
+		fileNoun: "a CSV file in Letterboxd's import format",
 	},
 ]
 
-export const importSourceName = (id: ImportSourceId) =>
-	IMPORT_SOURCE_LIST.find((source) => source.id === id)?.name ?? id
+export const IMPORT_SOURCE_LIST: readonly ImportSourceEntry[] = SOURCES.map(
+	(source) => ({ ...source, name: NAMES[source.id] }),
+)
+
+const entry = (id: ImportSourceId) =>
+	IMPORT_SOURCE_LIST.find((source) => source.id === id) as ImportSourceEntry
+
+export const importSourceName = (id: ImportSourceId) => entry(id).name
+
+/** How a sentence names a source's file: "a Trakt file", "a CSV file in Letterboxd's import format". */
+export const importFileNoun = (id: ImportSourceId) =>
+	entry(id).fileNoun ??
+	`${/^[AEIOU]/i.test(entry(id).name) ? "an" : "a"} ${entry(id).name} file`
+
+/** The source a recognized file is offered as: "Trakt", "Kitsu". */
+export const importAsName = (recognition: RecognizedImportFile) =>
+	recognition.source === "myanimelist"
+		? recognition.kitsu
+			? "Kitsu"
+			: "MyAnimeList"
+		: importSourceName(recognition.source)
 
 /** The sources whose name or other words hold the query. */
 export function searchImportSources(query: string) {

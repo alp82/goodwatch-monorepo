@@ -30,7 +30,7 @@ test("the page lists every live source, most common first, and hides sources not
 			"MyAnimeList / Kitsu",
 			"Kodi",
 			"MovieLens",
-			"Any other site (CSV)",
+			"Generic CSV",
 		],
 	)
 	assert.ok(runs.list.rows.every((row) => !row.open))
@@ -66,7 +66,7 @@ test("a search with no source says what to try instead", () => {
 	assert.deepEqual(runs.noMatch.rows, [])
 	assert.match(
 		runs.noMatch.text,
-		/No source called "Plex"\. If your site can save a CSV file, try Any other site \(CSV\)\./,
+		/No source called "Blockbuster"\. If your site can save a CSV file, try Generic CSV\./,
 	)
 })
 
@@ -138,4 +138,68 @@ test("a MovieLens file in the one box waits in the MovieLens upload for its part
 		run.text,
 		/Recognized MovieLens ratings: movielens-ratings\.csv\. Add your wishlist file if you have one, then preview\./,
 	)
+})
+
+test("focus follows a file the one box routes, so the opened source is announced", () => {
+	assert.equal(runs.oneBoxTraktFocus as unknown as string, "Trakt")
+})
+
+test("a second MovieLens file fills the empty slot instead of replacing the first", () => {
+	assert.deepEqual(previews(runs.movielensBoth), [])
+	assert.match(runs.movielensBoth.text, /Chosen: movielens-ratings\.csv/)
+	assert.match(runs.movielensBoth.text, /Chosen: movielens-wishlist\.csv/)
+	assert.deepEqual(previews(runs.movielensBothSent), [
+		{
+			url: "/api/imports/preview",
+			body: {
+				source: "movielens",
+				file: "file:movielens-ratings.csv",
+				wishlist: "file:movielens-wishlist.csv",
+			},
+		},
+	])
+})
+
+test("a MovieLens file in the wrong box is offered to the other box, and the wishlist box catches other sources too", () => {
+	assert.match(
+		runs.movielensSwap.text,
+		/movielens-wishlist\.csv is your MovieLens wishlist, not your ratings\.Use it as the wishlist/,
+	)
+	assert.doesNotMatch(runs.movielensSwap.text, /Chosen: movielens-wishlist/)
+	assert.match(
+		runs.movielensSwapped.text,
+		/MovieLens wishlist CSV \(optional\)Chosen: movielens-wishlist\.csv/,
+	)
+	assert.match(
+		runs.movielensWishlistCaught.text,
+		/trakt-export-alp82\.zip looks like a Trakt export, not a MovieLens file\.Import it as Trakt/,
+	)
+	assert.deepEqual(previews(runs.movielensWishlistCaught), [])
+})
+
+test("a Kitsu library caught in another source's box is offered as Kitsu", () => {
+	assert.match(
+		runs.kitsuCaught.text,
+		/kitsu-alp82-anime\.xml looks like a Kitsu anime library, not a Trakt file\.Import it as Kitsu/,
+	)
+})
+
+test("the notices cover every logo in the list, TMDB's included", () => {
+	assert.match(
+		runs.list.text,
+		/This product uses the TMDB API but is not endorsed or certified by TMDB\./,
+	)
+})
+
+test("the box's help names the sources from the list itself", () => {
+	assert.match(
+		runs.list.text,
+		/Reads files from IMDb, Letterboxd, Trakt, MyAnimeList \/ Kitsu, Kodi, MovieLens, and Generic CSV\. To bring TMDB, open it in the list and connect your account\./,
+	)
+})
+
+test("the server's HTML says Imported without a date, which only the member's browser knows the time zone of", () => {
+	const markup = runs.serverMarkup as unknown as string
+	assert.match(markup, /data-source-label="[^"]*"[^>]*>Imported<\/span>/)
+	assert.doesNotMatch(markup, /October/)
 })

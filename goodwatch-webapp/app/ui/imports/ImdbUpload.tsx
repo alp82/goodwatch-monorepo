@@ -1,11 +1,12 @@
 // The first thing on the IMDb import page: choose or drop the CSV file. It is read in the browser and sent for a preview.
 import { ArrowUpTrayIcon } from "@heroicons/react/24/solid"
-import { type DragEvent, useEffect, useRef, useState } from "react"
+import { type DragEvent, useRef, useState } from "react"
 import type { ImdbImportSummary } from "~/domain/imdb-import"
 import { Spinner } from "~/ui/wait/Spinner"
 import {
 	type ImportHandoff,
 	RecognizedLine,
+	useHandoffUpload,
 	useWrongSourceCatch,
 } from "./ImportFileRouting"
 import { usePreviewImdbImport } from "./api"
@@ -30,14 +31,9 @@ export function ImdbUpload({
 		})
 	const send = async (file: File | undefined) => {
 		if (!file || preview.isPending) return
-		if (await wrongSource.check(file)) upload(file)
+		if ((await wrongSource.check(file)).send) upload(file)
 	}
-	const handedOff = useRef<File | null>(null)
-	useEffect(() => {
-		if (!handoff || handedOff.current === handoff.file) return
-		handedOff.current = handoff.file
-		upload(handoff.file)
-	})
+	useHandoffUpload(handoff, upload)
 
 	const onDrop = (event: DragEvent<HTMLDivElement>) => {
 		event.preventDefault()
@@ -92,7 +88,6 @@ export function ImdbUpload({
 					hidden
 					tabIndex={-1}
 					aria-hidden
-					aria-label="Choose IMDb ratings CSV file"
 					onChange={(event) => {
 						send(event.target.files?.[0])
 						// Let the same file be chosen again after an error.
