@@ -1,0 +1,6 @@
+summary: Checked sitemap publication
+display_name: seo
+extra_perms:
+  u/Alp: true
+owners:
+  - u/Alp
