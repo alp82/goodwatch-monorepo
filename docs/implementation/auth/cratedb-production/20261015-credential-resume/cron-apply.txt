@@ -1,0 +1,1 @@
+Installed: exact credential schedule verified; rollback and staged files retained

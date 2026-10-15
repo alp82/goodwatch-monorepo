@@ -6,46 +6,62 @@ Prepared from direct, read-only SSH inspection beginning **2026-10-15 22:14 UTC*
 [#547 execution record](https://github.com/alp82/goodwatch-monorepo/blob/098a6d431376cdcad99d9a5d0a63ff6b52e33816/docs/implementation/auth/cratedb-prereqs.md).
 This supersedes the old document's production inventory/order and its statement that crate-01 still needs upgrading.
 
-## Credential staging outcome — 2026-10-15 22:45 UTC
+## Current outcome — 2026-10-15 23:14 UTC
 
-**Owner restored the original backup crontab at 22:49 UTC and authorized resumption.** Read-only verification
-confirmed an exact match with the protected original. The failure was a typo in the operator updater: after a
-successful install it called `crontab -` again instead of `crontab -l`. Inherited EOF silently installed an empty
-schedule. This was reproduced with real crontab in a disposable local container; it was not an Ansible or stdin
-transport failure. See the [staging record](cratedb-production/20261015-credential-stage/) for historical receipts.
+**Stopped after the first Q37-authorized individual KILL did not clear its stale contexts.** Crate-02 job ID
+`073377a6-6825-8e6c-49db-ded701488ab3` had no matching `sys.jobs` row immediately before KILL at **23:13:03 UTC**.
+KILL returned **rowcount 0**, and its two operation rows remained after 30 seconds. No further KILL or restart
+followed. All coordinators still report 13 stale entries on crate-02 and 33 on crate-03, with **96 GREEN health
+rows, 962 STARTED/STARTED copies and 21 passing node checks**. See the
+[resumed execution record, exact KILL receipt and remaining IDs](cratedb-production/20261015-credential-resume/).
 
-The corrected, tested `goodwatch-crate/configure_backup_cron.py` installs a protected named file, lists with
-`crontab -l`, verifies exact readback, preserves unrelated entries and refuses changed/duplicate/missing backup
-jobs. Ansible keeps the provisioned role/file in `host_vars/db1.yml`, validates file ownership/mode, backs up cron
-and verifies the installed entry. **Do not touch production cron until the restored 23:05 UTC run succeeds.**
-No restart, KILL or HBA change is authorized pending the owner's stale-context answer.
+The credential-only work completed before that stop:
 
-The owner separately authorized credential-only staging before stale-context resolution: six users/secrets/grants
-now exist; search-a then search-b were rolled and checked; Windmill variables and Kuma 16–18 were configured and
-checked; the backup helper was patched and read-tested. Scripts and worker-container/job checks were not completed.
-No Coolify setting, Crate restart, HBA enforcement or KILL was performed. The webapp secret is now on crate-01 at
-`/root/.config/goodwatch/crate-credentials/goodwatch_webapp` (root, 0600).
+- Six roles, secrets and grants exist. Search-a/b use `goodwatch_search`; Windmill uses `goodwatch_windmill`;
+  Kuma 16–18 use `goodwatch_monitoring`. All relevant identity/transport checks passed while HBA stayed off.
+- The owner restored backup cron at 22:49 UTC. The **23:05 run succeeded at 23:05:47 UTC** with the installed code.
+  Only afterwards, the corrected helper installed `goodwatch_backup` and the protected password-file path in cron.
+  Two exact readbacks and scoped Ansible reconciliation passed; Ansible reported **changed=0, failed=0**.
+- The cron incident was an operator typo: the would-be readback called **`crontab -` instead of `crontab -l`**,
+  consuming inherited EOF and replacing the schedule with an empty one. This was reproduced in a disposable
+  container and fixed with named-file installation, explicit listing, regression tests and exact readback.
+- Inventory now covers **15 default-worker hosts and all 19 worker containers**. All 57 worker/coordinator checks
+  passed, as did real default/highperf canaries and ordinary ingestion, sync and monitoring jobs.
+- Manual readonly profiles and tested script sources are installed on all 15 hosts. The actual Buzz benchmark
+  passed after a Python 3.8 compatibility fix. See the execution record for paths, usage and bounded probe scope.
+- **Q37 makes the webapp role switch optional.** Both page containers retained `admin`, and their installed driver
+  sent the exact credential bytes and returned that identity on all three coordinators. Actual password rejection
+  and the stored admin-password match cannot be proven while HBA is off; verify immediately on the first enforcing node.
 
-The following inventory and preparation commands retain the original preflight baseline. **Do not rerun user/secret
-creation or repeat completed staging steps.** Use the execution record for current client state and remaining work.
+The dedicated webapp secret remains on crate-01 at
+`/root/.config/goodwatch/crate-credentials/goodwatch_webapp` (root, 0600), if the owner chooses that separation later.
+No Coolify setting was changed by this operator. No Crate/worker restart, HBA enablement or PR merge into main occurred.
+The next credential-bearing scheduled backup is **2026-10-16 00:05 UTC**, not yet observed in this session.
+
+Q37 permits individually revalidated orphan-ID KILLs on crate-02/03, but Q35 requires stopping when they do not clear.
+**Do not infer permission for a restart with unresolved contexts or reuse Q34's stop workaround.** The owner must
+resolve this failed gate before enforcement resumes. The inventory below is the original six-host baseline;
+the execution record supplies expanded current coverage. Do not regenerate existing secrets/users or blindly
+repeat completed staging steps. The [first staging record](cratedb-production/20261015-credential-stage/) is retained
+as historical evidence, including the now-resolved cron incident.
 
 ## Authorization and preflight stop (historical)
 
 Q35 authorizes the operator to execute this rollout **after this runbook and every pre-check pass**, credentials first,
-then one restart at a time and GREEN between nodes. Stop/report the first unexpected result. No KILL of member queries
-without another owner decision. The subsequent owner constraint reserves **all Coolify settings, variables and secrets
-to the owner's Coolify UI**. Never write to coolify-db or the Coolify API. Read-only DB inspection is allowed.
+then one restart at a time and GREEN between nodes. Stop/report the first unexpected result. No KILL of member queries. Q37 authorizes only individually revalidated orphan IDs on crate-02/03 as above.
+The subsequent owner constraint reserves **all Coolify settings, variables and secrets to the owner's Coolify UI**. Never write to coolify-db or the Coolify API. Read-only DB inspection is allowed.
 Merging #599 to main is authorized only **after a successful rollout and passing tests**.
 
-**Original preparation stop, superseded for credential staging only by the owner’s later go.** Two enforcement gates remain unresolved:
+**Original preparation stop, superseded for credential staging only by the owner’s later go.** These were the original enforcement gates; the current stop is recorded above:
 
 1. Crate-02 has 13 old operation entries across seven job IDs; crate-03 has 33 across eleven. They persisted across repeated
    observations and were reported identically by all coordinators. Crate-01 had none older
    than one hour. No matching IDs were present in the final full `sys.jobs` samples. Age/zero bytes/absence from jobs are evidence of possible orphan contexts,
    not proof of safe cancellation or of the internal shutdown counter. Q34's 69 KILLs returned rowcount 0 and did **not**
    remove its old operation rows; normal SIGTERM required separate approval. Do not repeat that workaround by inference.
-2. Page credentials require the owner's Coolify UI action below. The original read-only preparation made no production
-   changes; later authorized staging and its operational stop are recorded above.
+2. Page credentials must work from both app hosts. Under Q37 the existing `admin` credential may remain; the
+   dedicated role is optional. Any Coolify change is still owner-UI-only. The original read-only preparation made no
+   production changes; later staging and recovery are recorded above.
 
 ## Observed cluster and restart gates
 
@@ -54,7 +70,7 @@ All endpoints report **96 GREEN health rows, 962 STARTED/STARTED shard copies, 2
 graceful timeout `2h`, minimum availability `PRIMARIES`, force `false`. Master is crate-02. At initial preflight, users were `crate` (superuser)
 and `admin` (not superuser), with no `goodwatch_*` users or auth tables. Six client users now exist; no auth tables were created. HBA is off; command still contains the folded
 comment that causes later flags to be ignored. Published 4200/4300/5432 remain bound only to each host's private address.
-Latest sampled snapshot `hourly_20261015_220501` is SUCCESS. This is a point-in-time observation, not a rollout gate waiver.
+Latest independently verified snapshot `hourly_20261015_230501` is SUCCESS (23:19 UTC, using the installed cron credential). This is a point-in-time observation, not a rollout gate waiver.
 
 | Node | Private host | Existing ID | Old operations / job IDs | Started UTC |
 | --- | --- | --- | --- | --- |
@@ -65,8 +81,9 @@ Latest sampled snapshot `hourly_20261015_220501` is SUCCESS. This is a point-in-
 Crate-02's old entries started Oct 15 **04:01:09 UTC**, around the prior crate-03 restart. Crate-03's started
 **20:37:12 UTC**, around the prior crate-01 stop. Causality remains unproven. The complete candidate IDs are in
 `operations-final.json`; re-query before proposing any individual cancellation. **No KILL ALL, automatic KILL,
-forced stop, shortened grace, or changing force=true.** Unresolved stale contexts block starting the rollout even
-though data health is GREEN. No cleanup proposal is authorized by this document.
+forced stop, shortened grace, or changing force=true.** Unresolved stale contexts block starting enforcement even
+though data health is GREEN. Q37 permits individual orphan-ID KILLs, with an immediate `sys.jobs` recheck before each;
+it does not authorize killing active member queries, forced stops, or proceeding with uncleared contexts.
 
 ## Production client inventory
 
@@ -85,7 +102,7 @@ This table is the original baseline; the execution record above identifies the i
 | Manual sitemap / scripts in production checkouts | Variable-dependent, usually inherited `admin` or no header; first host for manual sitemap | `CRATE_USER=goodwatch_readonly`, `CRATE_PASS`; separate driver args now tolerate URL characters | Scheduled sitemap is separate above. Do not run bulk generators merely to test authentication. |
 | `bench_buzz.py` from abio; measure/benchmark/evidence/search acceptance/Qdrant diagnostics; flows backfills | Bench pinned .11 with no header; others env-dependent | Bench now accepts `CRATE_USER` plus `CRATE_PASSWORD_FILE` or `CRATE_PASS`. Read probes use readonly; approved writers use a scoped maintenance identity | Unconfigured ad-hoc scripts will fail; archived URL-userinfo scripts require hex passwords. Local operator environments cannot be completely inventoried from server snapshots. |
 | `crash`, Admin UI, one-off curl/SQL / all hosts | Unauthenticated becomes `crate`; no running crash/backup/cleanup process found in sampled process lists | Prefer trusted loopback via `docker exec` on a Crate host; remote crash requires named credential via prompt, never password argv | Remote credentialless administration will fail. Never grant remote passwordless crate access. |
-| Uptime Kuma, hq .10 | Active JSON GET monitors **16 CrateDB (#1), 17 CrateDB (#2), 18 CrateDB (#3)** hit .11/.12/.13 root endpoints without headers or authentication | Set HTTP Basic Authentication in each monitor to `goodwatch_monitoring` and its own server-generated password; no SQL grants required | **All three break with HTTP 401 under HBA.** Local 5.10.16 proof: missing/wrong 401; correct no-grant user 200. Configure through Kuma UI, not backing SQLite. |
+| Uptime Kuma, hq .10 | Active JSON GET monitors **16 CrateDB (#1), 17 CrateDB (#2), 18 CrateDB (#3)** hit .11/.12/.13 root endpoints without headers or authentication | HTTP Basic Authentication is configured in each monitor to `goodwatch_monitoring` and its own server-generated password; no SQL grants required | **All three break with HTTP 401 under HBA.** Local 5.10.16 proof: missing/wrong 401; correct no-grant user 200. Configure through Kuma UI, not backing SQLite. |
 | Grafana Alloy / node-exporter, all six hosts | Live Alloy configs scrape node metrics; .20/.21 also scrape app/search metrics; no Crate SQL/4200/5432 targets found | No direct Crate credential needed for inspected configs | Windmill Crate monitoring is separate above. External Grafana datasource configuration was not independently inventoried; owner must confirm none bypasses these collectors. |
 | Future auth adapter + maintenance CLI | Not deployed; no `goodwatch_auth` | `AUTH_CRATEDB_ORIGINS`, `AUTH_CRATEDB_USERNAME`, `AUTH_CRATEDB_PASSWORD` in owner UI for both page hosts | Separate #547/#548 stage after enforcement; no auth tables/user creation during this run. |
 
@@ -101,18 +118,21 @@ No blanket grant on every schema. Auth-table migration must apply DENY to every 
 
 ## Owner checklist before the operator resumes
 
-1. Resolve the **46 persistent operation entries / 18 job IDs** under #644. Approve a specific revalidated remediation
-   if required; no inherited Q34 KILL or SIGTERM approval. Require empty stale-context results before rollout.
+1. Resolve the **46 persistent operation entries / 18 job IDs** under #644. Q37 allows individual KILLs only after
+   rechecking no matching `sys.jobs` row immediately before each; record ID/result on #562 and stop if they do not clear.
+   No inherited Q34 SIGTERM/force approval. Require empty stale-context results before enforcement.
 2. Six role secrets/users/grants are now created. Do not regenerate them. Files are mode 0600 under
    `/root/.config/goodwatch/crate-credentials/` on crate-01. Transfer the webapp secret to owner custody through a
-   secure channel; never put values in chat, logs, shell arguments or issues. Confirm the restored 23:05 UTC backup succeeds, then apply the corrected credential schedule.
-3. In **Coolify UI only**, application **Goodwatch Webapp / gk4owk8**, production environment, covering **abio .21 and
+   secure channel; never put values in chat, logs, shell arguments or issues. The restored 23:05 UTC backup and corrected credential schedule are now verified.
+3. **Optional under Q37:** the webapp may retain its current `admin` credential if verified from both app hosts.
+   Dedicated-role migration can wait. If the owner chooses it, in **Coolify UI only**, application **Goodwatch Webapp / gk4owk8**, production environment, covering **abio .21 and
    vector1 .20**: set runtime **CRATE_USER=goodwatch_webapp** and secret runtime **CRATE_PASS** from
    `/root/.config/goodwatch/crate-credentials/goodwatch_webapp` on crate-01. Preserve `CRATE_HOSTS` and `CRATE_PORT` above.
    Review the existing preview values: no preview deployment may keep a bypass/obsolete identity against production.
    Select the reviewed #599 build through the UI and redeploy both page destinations. Do not merge main to obtain a
    build before the rollout: Q35 permits that merge afterwards. Kuma monitors 16/17/18 have now been configured and their fresh heartbeats verified UP through the supported API, separately from Coolify. Record the exact image SHA and verify runtime values
-   by username/presence only. The operator must stop here until this UI action is confirmed and runtime reads pass.
+   by username/presence only. A dedicated-role UI switch is no longer a gate. Runtime credentials must pass on both app hosts;
+   client build compatibility and all other enforcement checks still apply.
 4. Confirm scope for operator-managed search/Windmill/backup credentials, outstanding first-host job quiescence,
    external Grafana/ad-hoc clients, and the maintenance window. Q35 already supplies rollout go conditional on gates;
    it does not waive a failed gate. A critical-change adversarial review remains a shipping gate from map #529.
@@ -209,7 +229,7 @@ DENY DDL ON SCHEMA backup_20260925_deleted_titles TO goodwatch_backup;
 SELECT grantee,class,ident,type,state FROM sys.privileges WHERE grantee LIKE 'goodwatch_%';
 ```
 
-**STOP for Coolify owner UI before enforcement.** The owner authorized non-Coolify credential staging first, now partially
+**Coolify remains owner-UI-only; the role switch is optional under Q37.** The owner authorized non-Coolify credential staging first, now partially
 completed as recorded above. Deploy the reviewed credential client build before enforcing passwords. Configure
 search `.env` with its own secret and deploy search-a then search-b using the reviewed `goodwatch-search/deploy.sh SHA`.
 Set HTTP Basic Auth on Kuma monitors 16/17/18 to `goodwatch_monitoring`, using the secret file of that name on .11; require all three green before enforcement and after each node. This identity needs no SQL grants.
@@ -260,8 +280,8 @@ ssh root@10.0.0.20 docker exec -i -e CRATE_VERIFY_MODE=credentials goodwatch-sea
 
 Require `actual=goodwatch_search` or `goodwatch_webapp` as appropriate, through all three coordinators. Run equivalent
 `SELECT current_user` with supplied credentials through `CrateConnector` on every eligible worker host and via the
-backup helper (read only, never call backup.main as a probe). Confirm no active jobs still use `admin`/`crate` except
-explicit operator checks. **HBA off accepts wrong passwords**: these checks establish identity/grants and credential
+backup helper (read only, never call backup.main as a probe). Review active `admin`/`crate` jobs before maintenance; Q37 explicitly permits the verified page
+`admin` identity. Let older worker jobs finish or establish that their retained credentials remain valid; never kill them. **HBA off accepts wrong passwords**: these checks establish identity/grants and credential
 plumbing, not enforcement. The first enforcing node must immediately pass both positive and negative checks.
 
 ## Rolling switch: crate-01, crate-03, crate-02 (master last)

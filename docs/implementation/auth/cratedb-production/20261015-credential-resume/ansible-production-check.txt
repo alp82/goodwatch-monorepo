@@ -1,0 +1,41 @@
+
+PLAY [Remove the daily Windmill kill cron job] *********************************
+
+TASK [Gathering Facts] *********************************************************
+ok: [db1]
+
+PLAY [Configure Backup Cron Job for CrateDB] ***********************************
+
+TASK [Gathering Facts] *********************************************************
+ok: [db1]
+
+TASK [Validate optional CrateDB backup credentials] ****************************
+ok: [db1] => {
+    "changed": false,
+    "msg": "All assertions passed"
+}
+
+TASK [Inspect provisioned backup password file] ********************************
+ok: [db1]
+
+TASK [Require the provisioned root-only backup password file] ******************
+ok: [db1] => {
+    "changed": false,
+    "msg": "All assertions passed"
+}
+
+TASK [Cron: CrateDB Backup (Hourly at :05)] ************************************
+ok: [db1]
+
+TASK [Read back the installed root crontab without modifying it] ***************
+ok: [db1]
+
+TASK [Verify exactly one credential-bearing backup entry] **********************
+skipping: [db1]
+
+PLAY [Configure Backup Cron Job for Qdrant] ************************************
+skipping: no hosts matched
+
+PLAY RECAP *********************************************************************
+db1                        : ok=7    changed=0    unreachable=0    failed=0    skipped=1    rescued=0    ignored=0   
+
