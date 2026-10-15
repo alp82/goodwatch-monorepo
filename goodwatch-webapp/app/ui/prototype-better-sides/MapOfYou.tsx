@@ -75,14 +75,14 @@ export function MapOfYou({ view }: { view: ProtoView }) {
 										<img key={t.key} src={posterUrl(t, "w185")} alt="" className="w-6 rounded opacity-70 md:w-8" />
 									))}
 								</span>
-								<span className="whitespace-nowrap rounded-full bg-gray-950/85 px-2 py-0.5 text-[11px] font-semibold text-gray-200">{edge.chip}</span>
+								<span className="hidden whitespace-nowrap rounded-full bg-gray-950/85 px-2 py-0.5 text-[11px] font-semibold text-gray-200 sm:inline">{edge.chip}</span>
 							</button>
 						))}
 						<button
 							type="button"
 							onClick={() => setFocusId(focus === side ? null : side.id)}
 							aria-pressed={focus === side}
-							className="absolute -translate-x-1/2 -translate-y-[170%] cursor-pointer whitespace-nowrap rounded-full border-2 bg-gray-950/90 px-3 py-1 text-xs font-bold shadow-xl md:text-sm"
+							className="absolute max-w-[40%] -translate-x-1/2 -translate-y-[170%] cursor-pointer truncate whitespace-nowrap rounded-full border-2 bg-gray-950/90 px-3 py-1 text-xs font-bold shadow-xl md:max-w-none md:text-sm"
 							style={{ left: pct(side.x), top: pct(side.y), borderColor: color(side) }}
 						>
 							{side.name}
