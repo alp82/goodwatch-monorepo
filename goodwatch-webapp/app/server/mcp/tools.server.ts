@@ -6,6 +6,7 @@ import {
 	histogram,
 } from "../metrics/registry.server.ts"
 import { readToolEnabled } from "./policy.server.ts"
+import type { RankedSearch } from "./ranked.server.ts"
 import { paging, selected } from "./schemas.ts"
 import { registerWriteTools } from "./write-tools.server.ts"
 
@@ -34,6 +35,7 @@ export interface ReadArgs {
 	cursor?: string
 	limit?: number
 	query?: string
+	ranked?: boolean
 	filter?: string
 	title_id?: string
 	title_name?: string
@@ -49,10 +51,23 @@ const definitions: {
 		name: "search_titles",
 		title: "Search all catalog titles",
 		description:
-			"Cheap catalog name lookup of all titles, separate from your library. Does not run ranked search or spend its daily budget.",
+			"Search all catalog titles, separate from your library. Cheap name lookup by default; ranked=true explicitly opts into ranked search: 20 uncached searches per member per UTC day, one in flight, normalized queries cached for 60 seconds and paging is free.",
 		schema: z
-			.object({ query: z.string().trim().max(120).default(""), ...paging })
-			.strict(),
+			.object({
+				query: z.string().trim().max(120).default(""),
+				ranked: z.boolean().default(false),
+				...paging,
+				cursor: z
+					.string()
+					.regex(/^(offset:[0-9]{1,8}|ranked:[a-f0-9]{32}:[0-9]{1,8})$/)
+					.optional(),
+			})
+			.strict()
+			.refine(
+				(value) =>
+					!value.cursor || value.ranked === value.cursor.startsWith("ranked:"),
+				"Ranked searches use ranked result cursors; name lookup uses offset cursors",
+			),
 	},
 	{
 		name: "get_title",
@@ -119,6 +134,7 @@ export function createToolServer(
 	userId: string,
 	origin: string,
 	writes = false,
+	rankedSearch?: RankedSearch,
 ) {
 	const server = new McpServer({ name: "goodwatch", version: "1.0.0" })
 	for (const tool of definitions) {
@@ -136,7 +152,7 @@ export function createToolServer(
 					openWorldHint: false,
 				},
 			},
-			async (args: ReadArgs) => {
+			async (args: ReadArgs, context) => {
 				const start = performance.now()
 				let outcome = "ok"
 				let data: Record<string, unknown>
@@ -148,12 +164,18 @@ export function createToolServer(
 							message: "This tool is disabled for this member",
 						}
 					} else {
-						data = await (await import("./data.server.ts")).readMemberTool(
-							userId,
-							origin,
-							tool.name,
-							args,
-						)
+						data =
+							tool.name === "search_titles" && args.ranked
+								? await (
+										rankedSearch ??
+										(await import("./ranked.server.ts")).rankedSearch
+									)(userId, origin, args, context.mcpReq.signal)
+								: await (await import("./data.server.ts")).readMemberTool(
+										userId,
+										origin,
+										tool.name,
+										args,
+									)
 						if (
 							typeof data.status === "string" &&
 							![

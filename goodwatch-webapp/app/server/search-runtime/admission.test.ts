@@ -1,8 +1,18 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { createSearchAdmission, searchBusyResponse, SEARCH_BUSY_MESSAGE, SEARCH_BUSY_RETRY_SECONDS } from "./admission.server.ts"
-import { encoderThreads, readingsConfigured, searchInFlightLimit, SEARCH_MAX_IN_FLIGHT_DEFAULT } from "./limits.server.ts"
 import { renderMetrics } from "../metrics/registry.server.ts"
+import {
+	SEARCH_BUSY_MESSAGE,
+	SEARCH_BUSY_RETRY_SECONDS,
+	createSearchAdmission,
+	searchBusyResponse,
+} from "./admission.server.ts"
+import {
+	SEARCH_MAX_IN_FLIGHT_DEFAULT,
+	encoderThreads,
+	readingsConfigured,
+	searchInFlightLimit,
+} from "./limits.server.ts"
 
 test("admission respects the limit and release returns a slot only once", () => {
 	const admission = createSearchAdmission({ limit: () => 2 })
@@ -31,6 +41,33 @@ test("admission reads its limit on every entry", () => {
 	assert.equal(admission.enter(), null)
 	limit = 2
 	assert.ok(admission.enter())
+})
+
+test("concurrent searches observe only their own detached holds", async () => {
+	const admission = createSearchAdmission()
+	const seen: Promise<unknown>[][] = [[], []]
+	const gates = [0, 1].map(() => {
+		let resolve!: () => void
+		const promise = new Promise<void>((settle) => {
+			resolve = settle
+		})
+		return { promise, resolve }
+	})
+	const work = [Promise.resolve("first"), Promise.resolve("second")]
+	const searches = gates.map((gate, index) =>
+		admission.track(
+			(held) => seen[index].push(held),
+			async () => {
+				await gate.promise
+				admission.hold(work[index])
+			},
+		),
+	)
+	gates[1].resolve()
+	gates[0].resolve()
+	await Promise.all(searches)
+	assert.deepEqual(seen, [[work[0]], [work[1]]])
+	assert.equal(admission.inFlight(), 0)
 })
 
 for (const rejected of [false, true]) {
@@ -62,7 +99,8 @@ test("busy response supplies private retry headers, JSON and a metric", async ()
 		"Retry-After": String(SEARCH_BUSY_RETRY_SECONDS),
 		"X-Robots-Tag": "noindex",
 		"Referrer-Policy": "no-referrer",
-	})) assert.equal(response.headers.get(name), value)
+	}))
+		assert.equal(response.headers.get(name), value)
 	assert.deepEqual(await response.json(), { error: SEARCH_BUSY_MESSAGE })
 	assert.match(renderMetrics(), /goodwatch_search_busy_total 1\n/)
 })
@@ -70,25 +108,59 @@ test("busy response supplies private retry headers, JSON and a metric", async ()
 test("search limit accepts positive safe integers and defaults otherwise", () => {
 	assert.equal(SEARCH_MAX_IN_FLIGHT_DEFAULT, 4)
 	assert.equal(searchInFlightLimit({}), 4)
-	for (const value of ["0", "-1", "abc", "2.5", "", "Infinity", "9007199254740992"])
+	for (const value of [
+		"0",
+		"-1",
+		"abc",
+		"2.5",
+		"",
+		"Infinity",
+		"9007199254740992",
+	])
 		assert.equal(searchInFlightLimit({ SEARCH_MAX_IN_FLIGHT: value }), 4)
 	for (const value of [1, 7, Number.MAX_SAFE_INTEGER])
-		assert.equal(searchInFlightLimit({ SEARCH_MAX_IN_FLIGHT: String(value) }), value)
+		assert.equal(
+			searchInFlightLimit({ SEARCH_MAX_IN_FLIGHT: String(value) }),
+			value,
+		)
 })
 
 test("encoder threads use valid settings or half the cores capped at four", () => {
-	for (const [cores, expected] of [[1, 1], [2, 1], [4, 2], [8, 4], [16, 4]]) {
+	for (const [cores, expected] of [
+		[1, 1],
+		[2, 1],
+		[4, 2],
+		[8, 4],
+		[16, 4],
+	]) {
 		assert.equal(encoderThreads({}, cores), expected)
 		for (const value of ["0", "-1", "abc", "2.5", "65", "", "Infinity"])
-			assert.equal(encoderThreads({ SEARCH_ENCODER_THREADS: value }, cores), expected)
+			assert.equal(
+				encoderThreads({ SEARCH_ENCODER_THREADS: value }, cores),
+				expected,
+			)
 	}
 	for (const value of [1, 2, 4, 64])
-		assert.equal(encoderThreads({ SEARCH_ENCODER_THREADS: String(value) }, 1), value)
+		assert.equal(
+			encoderThreads({ SEARCH_ENCODER_THREADS: String(value) }, 1),
+			value,
+		)
 })
 
 test("readings require exactly 64 hexadecimal characters", () => {
 	assert.equal(readingsConfigured({}), false)
-	for (const value of ["0", "-1", "abc", "2.5", "a".repeat(63), "a".repeat(65), "g".repeat(64)])
+	for (const value of [
+		"0",
+		"-1",
+		"abc",
+		"2.5",
+		"a".repeat(63),
+		"a".repeat(65),
+		"g".repeat(64),
+	])
 		assert.equal(readingsConfigured({ SEARCH_STORAGE_KEY: value }), false)
-	assert.equal(readingsConfigured({ SEARCH_STORAGE_KEY: "aB09".repeat(16) }), true)
+	assert.equal(
+		readingsConfigured({ SEARCH_STORAGE_KEY: "aB09".repeat(16) }),
+		true,
+	)
 })

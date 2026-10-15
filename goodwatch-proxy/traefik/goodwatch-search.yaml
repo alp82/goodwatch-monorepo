@@ -1,15 +1,16 @@
 # Sends the search paths of goodwatch.app to the search roles on vector1. Installed on abio's proxy on October 9, 2026.
+# The #569 /mcp extension is not installed: upgrade the role image and configure #566 authorization first.
 #
 # Where it goes: the proxy on abio (Traefik v2.10), as a dynamic configuration. In Coolify: Servers > abio > Proxy >
 # Dynamic Configurations > + Add, file name goodwatch-search.yaml. Traefik loads it without a restart. Deleting the
-# file there sends the two paths back to the page instances at once, because goodwatch-balance.yaml and Coolify's
+# file there sends the three paths back to the page instances at once, because goodwatch-balance.yaml and Coolify's
 # own routers stay in place underneath.
 #
 # Before you paste it: replace VECTOR1_PRIVATE_ADDRESS with vector1's private address. It's the address that the
 # second server of goodwatch-balance.yaml already has. The repository is public, so the address isn't written here.
 #
 # How it works:
-# - The router matches exactly two paths, POST /api/combined-search and GET /api/command-palette, with any query
+# - The router matches exactly three paths: /api/combined-search, /api/command-palette and /mcp, with any query
 #   string. It doesn't match the method: the app answers a wrong method itself. Its priority is 1100, above the
 #   routers of goodwatch-balance.yaml (1000 and 1001) and Coolify's (the length of their rule, 39). Every other
 #   request keeps going to the page instances.
@@ -40,7 +41,7 @@ http:
     gw-search-https:
       entryPoints:
         - https
-      rule: Host(`goodwatch.app`) && (Path(`/api/combined-search`) || Path(`/api/command-palette`))
+      rule: Host(`goodwatch.app`) && (Path(`/api/combined-search`) || Path(`/api/command-palette`) || Path(`/mcp`))
       priority: 1100
       middlewares:
         - gw-search-mark

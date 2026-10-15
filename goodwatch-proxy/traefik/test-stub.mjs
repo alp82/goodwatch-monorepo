@@ -38,6 +38,7 @@ const server = createServer(async (request, response) => {
 		path: request.url,
 		received,
 		cookie: request.headers.cookie,
+		authorization: request.headers.authorization,
 		origin: request.headers.origin,
 		contentType: request.headers["content-type"],
 		acceptLanguage: request.headers["accept-language"],
