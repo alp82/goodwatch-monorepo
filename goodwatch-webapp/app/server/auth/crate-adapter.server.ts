@@ -72,7 +72,11 @@ type Row = Record<string, any>
 export const authModels = ["user", "account", "session", "verification", "jwks", "oauthClient", "oauthResource", "oauthClientResource", "oauthConsent", "oauthAccessToken", "oauthRefreshToken", "oauthClientAssertion", "rateLimit"]
 const indexedFields = ["userId", "clientId", "sessionId", "referenceId", "resourceId", "identifier", "refreshId", "authorizationCodeId", "lastRequest", "count"]
 export function authLookupHints(model: string, row: Record<string, unknown>, secret: string) {
- return Object.fromEntries(indexedFields.map(field => [field, model === "verification" && field === "identifier" && row[field] != null ? createHmac("sha256", secret).update(JSON.stringify(["verification-identifier", row[field]])).digest("hex") : row[field] ?? null]))
+	return Object.fromEntries(indexedFields.map(field => [field,
+		model === "verification" && field === "identifier" && row[field] != null
+			? createHmac("sha256", secret).update(JSON.stringify(["verification-identifier", row[field]])).digest("hex")
+			: row[field] ?? null,
+	]))
 }
 type Receipt = { operation: string; baseSeq: number; at?: string }
 type Stored = { envelope: Record<string, any>; row: Row; seq: number; term: number; deleted: boolean; receipts: Receipt[]; emailClaim?: string }
@@ -106,7 +110,7 @@ export async function migrateAuthTables(sql: AuthSql, additionalModels: string[]
 
 export const localAuthEncryptionSecret = "disposable-local-auth-integration-key-548"
 
-export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumeration = 10000, encryptionSecret, encryptionKeys, populationBounds, enforceGrantRevocation = false, validateSessionCredentials = false }: { sql: AuthSql; testOnlyConformance?: boolean; maxEnumeration?: number; encryptionSecret?: string; encryptionKeys?: AuthEncryptionKeys; populationBounds?: true | AuthPopulationBounds; enforceGrantRevocation?: boolean; validateSessionCredentials?: boolean }) {
+export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumeration = 10000, encryptionSecret, encryptionKeys, populationBounds, enforceGrantRevocation = false, validateSessionCredentials = false, onSessionRevoked }: { sql: AuthSql; testOnlyConformance?: boolean; maxEnumeration?: number; encryptionSecret?: string; encryptionKeys?: AuthEncryptionKeys; populationBounds?: true | AuthPopulationBounds; enforceGrantRevocation?: boolean; validateSessionCredentials?: boolean; onSessionRevoked?: (token: string) => Promise<unknown> }) {
 	if (testOnlyConformance && !localTransports.has(sql)) throw new Error("Conformance mode requires the disposable local transport")
 	if (!Number.isSafeInteger(maxEnumeration) || maxEnumeration < 1 || maxEnumeration > 10000) throw new Error("Invalid auth enumeration bound")
 	if (!encryptionSecret && !localTransports.has(sql)) throw new Error("Auth payload encryption secret is required")
@@ -266,14 +270,20 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumerat
 				} catch (error) { if (error instanceof CrateAuthRequestError && error.definitelyNotApplied) throw error }
 				if (response?.rowcount === 1) {
 					if (model === "user" && (deleting || result.email !== original.row.email)) await releaseEmail(original.row.email, original.row.id, original.emailClaim)
-                    if(deleting) await releaseAuthAdmission(sql,codec,id,original.envelope.admission)
+					if (deleting) {
+						await releaseAuthAdmission(sql,codec,id,original.envelope.admission)
+						if (model === "session" && typeof original.row.token === "string") await onSessionRevoked?.(original.row.token)
+					}
 					return result
 				}
 				let current: Stored | null
 				try { current = await stored(model, id) } catch { throw new IndeterminateAuthWriteError() }
 				const receipt = current?.receipts.find(r => r.operation === operation)
 				if (receipt) {
-                    if(deleting) await releaseAuthAdmission(sql,codec,id,original.envelope.admission)
+					if (deleting) {
+						await releaseAuthAdmission(sql,codec,id,original.envelope.admission)
+						if (model === "session" && typeof original.row.token === "string") await onSessionRevoked?.(original.row.token)
+					}
 					if (model === "user" && (deleting || result.email !== original.row.email)) await releaseEmail(original.row.email, original.row.id, original.emailClaim)
 					return result
 				}
@@ -308,13 +318,13 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumerat
 					row.id = key(model, row)
 					const actor = authPopulationActor(model, row)
 					const admission = bounds && actor !== undefined && !testOnlyConformance ? await admitAuthRow(sql, codec, model, row.id, populationBounds === true ? authActorBounds(model) : bounds, actor,
-                            model === "session" && populationBounds === true ? async (id, admission) => {
-                                const oldest = await stored("session", id)
-                                if (!oldest || oldest.envelope.admission?.generation !== admission.generation || (!oldest.deleted && oldest.row.userId !== row.userId)) return false
-                                if (!oldest.deleted && !(await mutate("session", oldest, {}, true))) return false
-                                await releaseAuthAdmission(sql,codec,id,admission)
-                                return true
-                            } : undefined) : undefined
+							model === "session" && populationBounds === true ? async (id, admission) => {
+								const oldest = await stored("session", id)
+								if (!oldest || oldest.envelope.admission?.generation !== admission.generation || (!oldest.deleted && oldest.row.userId !== row.userId)) return false
+								if (!oldest.deleted && !(await mutate("session", oldest, {}, true))) return false
+								await releaseAuthAdmission(sql,codec,id,admission)
+								return true
+							} : undefined) : undefined
 					const operation = randomUUID()
 					try {
 						const inserted = await sql(`INSERT INTO ${authModelTable(model)} (id,payload,created_at,expires_at,receipts,lookup) VALUES (?,CASE WHEN CURRENT_TIMESTAMP < ? THEN ? ELSE NULL END,?,?,?,?)`,
@@ -331,15 +341,15 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumerat
 						const receipt = existing?.receipts.find(r => r.operation === operation)
 						if (receipt) return row as typeof data
 						if (Date.now() >= writeDeadline) throw new IndeterminateAuthWriteError()
-                        if (admission && existing && Number(existing.envelope.admissionFence ?? 0) >= admission.generation) throw new Error("Auth population capacity reservation was fenced; retry with a new operation")
+						if (admission && existing && Number(existing.envelope.admissionFence ?? 0) >= admission.generation) throw new Error("Auth population capacity reservation was fenced; retry with a new operation")
 						if ((error as {code?: number}).code === 4091 && model === "user" && existing?.deleted && existing.envelope.abandonedClaim && existing.envelope.abandonedClaim !== emailClaim) {
-                            const claim = (await sql("SELECT user_id,operation_id FROM doc.auth_user_email WHERE email_norm=?", [emailKey(row.email)])).rows[0]
-                            if (claim?.[0] === row.id && claim[1] === emailClaim) {
-                                const adopted = await mutate(model, existing, row, false, true)
-                                if (adopted) return adopted as typeof data
-                                throw new AuthMutationConflictError()
-                            }
-                        }
+							const claim = (await sql("SELECT user_id,operation_id FROM doc.auth_user_email WHERE email_norm=?", [emailKey(row.email)])).rows[0]
+							if (claim?.[0] === row.id && claim[1] === emailClaim) {
+								const adopted = await mutate(model, existing, row, false, true)
+								if (adopted) return adopted as typeof data
+								throw new AuthMutationConflictError()
+							}
+						}
 						if ((error as { code?: number }).code === 4091 && existing?.deleted && (["account", "oauthConsent", "oauthClientResource", "oauthResource"].includes(model) || model === "oauthClient" && existing.envelope.unusedClient === true)) {
 							const recreated = await mutate(model, existing, row, false, true, admission)
 							if (recreated) return recreated as typeof data
@@ -430,22 +440,22 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumerat
 				if (input.sortBy) normalized.sortBy = { ...input.sortBy, field: context.getDefaultFieldName({ model, field: input.sortBy.field }) }
 				if (!testOnlyConformance) assertAuthMutation(model, action, normalized)
 				const output = await fn(normalized)
-                // Persist authorization history in the authenticated client envelope.
-                // A collector races this CAS: either the marker wins, or issuance fails closed.
-                if(model === "oauthConsent" && action === "create" && output) {
-                    let marked = false
-                    for(let attempt=0;attempt<64;attempt++) {
-                        const clientId = String(normalized.data.clientId)
-                        const client = await stored("oauthClient",clientId)
-                        if(!client) { if(enforceGrantRevocation) throw new Error("OAuth client no longer exists"); marked=true; break }
-                        if(client.deleted || client.row.disabled) throw new Error("OAuth client no longer exists")
-                        if(client.envelope.authorizedAt) { marked=true; break }
-                        const aad = `${authModelTable("oauthClient")}:${clientId}:payload`
-                        const result = await sql("UPDATE doc.auth_oauth_client SET payload=? WHERE id=? AND _seq_no=? AND _primary_term=?",[codec.encode({...client.envelope,authorizedAt:new Date().toISOString()},aad),clientId,client.seq,client.term])
-                        if(result.rowcount===1) {marked=true;break}
-                    }
-                    if(!marked) throw new AuthMutationConflictError()
-                }
+				// Persist authorization history in the authenticated client envelope.
+				// A collector races this CAS: either the marker wins, or issuance fails closed.
+				if (model === "oauthConsent" && action === "create" && output) {
+					let marked = false
+					for (let attempt = 0; attempt < 64; attempt++) {
+						const clientId = String(normalized.data.clientId)
+						const client = await stored("oauthClient",clientId)
+						if (!client) { if(enforceGrantRevocation) throw new Error("OAuth client no longer exists"); marked=true; break }
+						if (client.deleted || client.row.disabled) throw new Error("OAuth client no longer exists")
+						if (client.envelope.authorizedAt) { marked=true; break }
+						const aad = `${authModelTable("oauthClient")}:${clientId}:payload`
+						const result = await sql("UPDATE doc.auth_oauth_client SET payload=? WHERE id=? AND _seq_no=? AND _primary_term=?",[codec.encode({...client.envelope,authorizedAt:new Date().toISOString()},aad),clientId,client.seq,client.term])
+						if (result.rowcount === 1) {marked=true;break}
+					}
+					if (!marked) throw new AuthMutationConflictError()
+				}
 				const selected = input.select?.map((field: string) => context.getDefaultFieldName({ model, field }))
 				const mapped = (row: Row) => Object.fromEntries(Object.entries(row).filter(([field]) => !selected || selected.includes(field)).map(([field, value]) =>
 					[context.getFieldName({ model, field }), value != null && context.schema[model]?.fields[field]?.type === "date" ? new Date(value) : value]))

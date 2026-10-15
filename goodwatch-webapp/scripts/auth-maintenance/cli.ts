@@ -41,18 +41,26 @@ try {
 			let cursor: string | undefined
 			let rotated = 0
 			let conflicted = 0
+			let skipped = 0
 			for (;;) {
 				const report = await rotateAuthEncryption({ ...options, model, cursor })
 				rotated += report.rotated
 				conflicted += report.conflicted
+				skipped += report.skipped
 				if (report.complete) break
 				if (!report.cursor) throw new Error("Auth rotation cursor missing")
 				cursor = report.cursor
 			}
 			console.log(
-				JSON.stringify({ job: "encryption", model, rotated, conflicted }),
+				JSON.stringify({
+					job: "encryption",
+					model,
+					rotated,
+					conflicted,
+					skipped,
+				}),
 			)
-			if (conflicted) process.exitCode = 2
+			if (conflicted || skipped) process.exitCode = 2
 		}
 	} else {
 		const report = await runAuthMaintenancePass({
@@ -60,7 +68,11 @@ try {
 			auditOnly: command === "audit",
 		})
 		console.log(JSON.stringify(report))
-		if (report.jobs.some((job) => Number(job.unsafe ?? 0) > 0))
+		if (
+			report.jobs.some(
+				(job) => Number(job.unsafe ?? 0) > 0 || Number(job.skipped ?? 0) > 0,
+			)
+		)
 			process.exitCode = 2
 	}
 } catch {

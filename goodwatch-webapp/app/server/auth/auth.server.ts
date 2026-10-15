@@ -24,6 +24,7 @@ import {
 	type AuthEncryptionKeys,
 	authCredentialVersion,
 } from "./payload-codec.server.ts"
+import { maxMemberSessions } from "./population.server.ts"
 import type { ValkeyAuthStorage } from "./secondary-storage.server.ts"
 
 export function createGoodwatchAuth(options: {
@@ -68,6 +69,7 @@ export function createGoodwatchAuth(options: {
 			populationBounds: true,
 			enforceGrantRevocation: true,
 			validateSessionCredentials: true,
+			onSessionRevoked: (token) => options.storage.delete(token),
 		}),
 		plugins: options.mcp
 			? [
@@ -203,7 +205,16 @@ export function createGoodwatchAuth(options: {
 				})
 				return user ? JSON.stringify({ session, user }) : null
 			},
-			set: (key, value, ttl) => options.storage.set(key, value, ttl),
+			set: (key, value, ttl) => {
+				let storedValue = value
+				if (key.startsWith("active-sessions-")) {
+					const references = JSON.parse(value)
+					if (!Array.isArray(references))
+						throw new Error("Invalid auth session index")
+					storedValue = JSON.stringify(references.slice(-maxMemberSessions))
+				}
+				return options.storage.set(key, storedValue, ttl)
+			},
 			delete: (key) => options.storage.delete(key),
 			getAndDelete: (key) => options.storage.getAndDelete(key),
 			increment: (key, ttl) => options.storage.increment(key, ttl),

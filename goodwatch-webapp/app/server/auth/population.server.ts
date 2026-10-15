@@ -18,6 +18,8 @@ export type CapacityLedger = {
 	bounds: AuthPopulationBounds
 	slots: Record<string, { generation: number; createdAt: string }>
 }
+export const maxMemberSessions = 20
+
 export const launchPopulationBounds: AuthPopulationBounds = {
 	buckets: 1,
 	limitPerBucket: 128,
@@ -43,7 +45,7 @@ export function authActorBounds(model: string): AuthPopulationBounds {
 		buckets: 1,
 		limitPerBucket:
 			model === "session"
-				? 20
+				? maxMemberSessions
 				: ["oauthAccessToken", "oauthRefreshToken"].includes(model)
 					? 1024
 					: 128,

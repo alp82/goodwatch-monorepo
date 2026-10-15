@@ -986,3 +986,35 @@ test("a scrypt sign-in paused before session insertion cannot survive a concurre
 	assert.equal(response.status, 401)
 	assert.equal(cookie(response), "")
 })
+
+test("signing in on a twenty-first device revokes the oldest session and removes its Valkey entry", async () => {
+	const member = await confirmed()
+	const first = await (
+		await call("/get-session", undefined, member.cookies)
+	).json()
+	assert.ok(await storage.get(first.session.token))
+	let newestCookie = member.cookies
+	for (let i = 0; i < 20; i++) {
+		const login = await call("/sign-in/email", {
+			email: member.address,
+			password,
+		})
+		assert.equal(login.status, 200, await login.clone().text())
+		newestCookie = cookie(login)
+	}
+	assert.equal(await storage.get(first.session.token), null)
+	assert.equal(
+		JSON.parse((await storage.get(`active-sessions-${first.user.id}`)) ?? "[]")
+			.length,
+		20,
+	)
+	assert.equal(
+		await (await call("/get-session", undefined, member.cookies)).json(),
+		null,
+	)
+	assert.equal(
+		(await (await call("/get-session", undefined, newestCookie)).json()).user
+			.email,
+		member.address,
+	)
+})

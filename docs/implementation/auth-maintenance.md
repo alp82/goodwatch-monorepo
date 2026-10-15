@@ -96,14 +96,15 @@ member. The runtime uses the following isolated actor ledgers:
 
 | Model | Actor | Live/pending allowance |
 | --- | --- | --- |
-| Browser sessions | Member | 20; a new session revokes the oldest reservation's session |
+| Browser sessions | Member | 20; a new session revokes the oldest reservation's session and removes its Valkey entry |
 | OAuth access/refresh tokens | Member | 1,024 per model |
 | OAuth consents / owned clients | Member | 128 per model |
 | Client resources / client assertions with an owner | Client | 128 per model |
 | Verification rows | Identifier | 128 |
 
 Actor identifiers are SHA-256 hashes inside bucket IDs. A full allowance refuses
-only that actor. The reservation CAS includes pending inserts, so concurrent writers
+only that actor. The Valkey active-session index is also clamped to 20 entries;
+a missing cache index still falls back to the authoritative database. The reservation CAS includes pending inserts, so concurrent writers
 cannot overbook it. Deletion and refresh-parent archiving install a generation fence
 and return the matching slot immediately; a sweep handles crashed pending inserts
 after 15 minutes. Generations survive ordinary reconnect/cleanup cycles. The
@@ -273,7 +274,7 @@ Each serial maintenance test suite resets only this runner's fixture rows.
 Ignored results are under `scripts/auth-maintenance/results/`.
 
 `npm run auth:maintenance -- audit` is read-only apart from index refreshes;
-nonzero unsafe results exit 2. `run-once` runs cleanup/reconciliation/rotation,
+unsafe/quarantined results exit 2. `run-once` also exits 2 after completing a pass with quarantined rows; `rotate` reports skipped counts and exits 2 for skipped/conflicting rows. Never retire a key after that incomplete result. `run-once` runs cleanup/reconciliation/rotation,
 and `rotate` rewrites every encrypted storage table. They require explicit auth
 CrateDB origins/credentials, permanent root and JSON key ring in the environment;
 no dotenv, SMTP or production startup task is loaded. Successful output contains job counts; quarantined rows additionally log their table and physical ID. The manual CLI has no Valkey connection; surviving cache keys expire
