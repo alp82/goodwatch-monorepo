@@ -1,0 +1,139 @@
+{
+  "startedAt": "2026-10-15T19:09:23.866502+00:00",
+  "backupDirectory": "/root/cratedb-maintenance/547-20261015190551",
+  "blobFiles": [
+    {
+      "sha1": "7eef817198615e93351fe35cfb4c4c0224fa76b8",
+      "bytes": 1534571,
+      "verified": true
+    },
+    {
+      "sha1": "173b21043fbe2123f6744c969f093edf3cf1653d",
+      "bytes": 5078658,
+      "verified": true
+    },
+    {
+      "sha1": "324f6c47bfface2a61d571ff1cbf0b9e72c94140",
+      "bytes": 259125,
+      "verified": true
+    },
+    {
+      "sha1": "0788ad935727ae5e7a589a2cb276b63f1183d7b1",
+      "bytes": 603997,
+      "verified": true
+    },
+    {
+      "sha1": "c49827c1b1421ab236350ac6cc5592888b42d67d",
+      "bytes": 1790875,
+      "verified": true
+    },
+    {
+      "sha1": "34371984b4440f85d5f9ccc914d5cd0b4eece17f",
+      "bytes": 797122,
+      "verified": true
+    },
+    {
+      "sha1": "dcd5905eec5c56687ea0bad2e5a348b71ac67f14",
+      "bytes": 3577985,
+      "verified": true
+    },
+    {
+      "sha1": "b064ec055a2a67731f2467d4d58873b227b541b8",
+      "bytes": 893,
+      "verified": true
+    },
+    {
+      "sha1": "b207b1d10fdd684e8b85570b473c68744d16e2d9",
+      "bytes": 60395,
+      "verified": true
+    },
+    {
+      "sha1": "6fd03b133b11e42c86456a31a21cf144b2d782ed",
+      "bytes": 49720610,
+      "verified": true
+    },
+    {
+      "sha1": "fbb03bc18d97955a54e832b9ee372f55b2483fe7",
+      "bytes": 1537603,
+      "verified": true
+    },
+    {
+      "sha1": "8d99dade030da3c97cc07a0bf4f09e55cbc92d75",
+      "bytes": 5096525,
+      "verified": true
+    },
+    {
+      "sha1": "590a1398bda8fe3a6448117c80f86ca350a566d6",
+      "bytes": 259658,
+      "verified": true
+    },
+    {
+      "sha1": "f98349cb7bf356224f9ca474940d970b9076ed73",
+      "bytes": 604492,
+      "verified": true
+    },
+    {
+      "sha1": "7113b876a602763975e7499d855eb952278942ee",
+      "bytes": 1791725,
+      "verified": true
+    },
+    {
+      "sha1": "47f105e4543b88ab5677795e4e18bd2136c196ba",
+      "bytes": 798084,
+      "verified": true
+    },
+    {
+      "sha1": "3c1fc2427957306f5d43ff08ae5679426cfa88e2",
+      "bytes": 3589671,
+      "verified": true
+    },
+    {
+      "sha1": "27511ba67ea95cb017615bd4595c8b15e1b157cf",
+      "bytes": 49786197,
+      "verified": true
+    }
+  ],
+  "snapshotName": "pre_auth_547_20261015190551",
+  "repository": "goodwatch-db-backup-v2",
+  "blobRetentionFinishedAt": "2026-10-15T19:09:24.574599+00:00",
+  "snapshotStartedAt": "2026-10-15T19:09:24.574674+00:00",
+  "create": {
+    "status": 200,
+    "result": {
+      "cols": [],
+      "rows": [
+        []
+      ],
+      "rowcount": 1,
+      "duration": 13654.822
+    },
+    "elapsedSeconds": 13.659
+  },
+  "snapshotCreateFinishedAt": "2026-10-15T19:09:38.233692+00:00",
+  "verification": {
+    "status": 200,
+    "result": {
+      "cols": [
+        "name",
+        "state",
+        "started",
+        "finished",
+        "failures"
+      ],
+      "rows": [
+        [
+          "pre_auth_547_20261015190551",
+          "SUCCESS",
+          1792091364515,
+          1792091376723,
+          []
+        ]
+      ],
+      "rowcount": 1,
+      "duration": 17597.936
+    },
+    "elapsedSeconds": 17.602
+  },
+  "passed": true,
+  "finishedAt": "2026-10-15T19:09:55.835801+00:00"
+}

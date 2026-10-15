@@ -1,0 +1,6 @@
+{
+  "logicalShards": 479,
+  "copies": 958,
+  "minimumDistinctHosts": 2,
+  "allStarted": true
+}

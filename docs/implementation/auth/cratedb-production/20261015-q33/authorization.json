@@ -1,0 +1,24 @@
+{
+  "ownerGo": "Q33",
+  "receivedBefore": "2026-10-15T19:05:51Z",
+  "recordedAt": "2026-10-15T19:07:25.077575+00:00",
+  "node": "crate-01",
+  "target": "5.10.16",
+  "restoreValidationWaived": true,
+  "gracefulTimeout": "2h",
+  "httpDecommissionTimeoutSeconds": 7500,
+  "sshTimeoutSeconds": 7530,
+  "knownConcurrentTablesAccepted": true,
+  "stopFor": "Real health/recovery/decommission problems; expected YELLOW while a node is absent is allowed; require all GREEN/STARTED before and after",
+  "excluded": [
+    "HBA",
+    "auth user/tables",
+    "application code/config",
+    "manual firewall",
+    "table settings",
+    "member-data write probe"
+  ],
+  "supersedesPriorAttemptCutoffsAndMaintenanceHolds": true,
+  "diagnostics": "crate.query failed/recovered by route and error class; distinguish crate.attempt_failed/crate.recovery/crate.http; HTTP counters and public probes",
+  "issueClosure": "Only if original #547 acceptance criteria fulfilled; no user creation under Q33"
+}

@@ -1,0 +1,32 @@
+{
+  "host": 12,
+  "stmt": "SELECT build_id, status, manifest FROM doc.search_index_builds WHERE status = 'complete'",
+  "args": [],
+  "response": {
+    "startedAt": "2026-10-15T19:07:29.640259+00:00",
+    "status": 200,
+    "result": {
+      "cols": [
+        "build_id",
+        "status",
+        "manifest"
+      ],
+      "rows": [
+        [
+          "20261014T041503Z",
+          "complete",
+          "{\"format\": 1, \"build_id\": \"20261014T041503Z\", \"created_at\": \"2026-10-14T04:15:03.377132+00:00\", \"previous_build_id\": \"20261013T041503Z\", \"files\": {\"title_table\": {\"sha1\": \"7eef817198615e93351fe35cfb4c4c0224fa76b8\", \"bytes\": 1534571}, \"term_statistics\": {\"sha1\": \"173b21043fbe2123f6744c969f093edf3cf1653d\", \"bytes\": 5078658}, \"word_frequencies\": {\"sha1\": \"324f6c47bfface2a61d571ff1cbf0b9e72c94140\", \"bytes\": 259125}, \"collocations\": {\"sha1\": \"0788ad935727ae5e7a589a2cb276b63f1183d7b1\", \"bytes\": 603997}, \"name_index\": {\"sha1\": \"c49827c1b1421ab236350ac6cc5592888b42d67d\", \"bytes\": 1790875}, \"peers\": {\"sha1\": \"34371984b4440f85d5f9ccc914d5cd0b4eece17f\", \"bytes\": 797122}, \"negation_labels\": {\"sha1\": \"dcd5905eec5c56687ea0bad2e5a348b71ac67f14\", \"bytes\": 3577985}, \"alternate_cuts\": {\"sha1\": \"b064ec055a2a67731f2467d4d58873b227b541b8\", \"bytes\": 893}, \"intent_examples\": {\"sha1\": \"b207b1d10fdd684e8b85570b473c68744d16e2d9\", \"bytes\": 60395}, \"mix_vectors\": {\"sha1\": \"6fd03b133b11e42c86456a31a21cf144b2d782ed\", \"bytes\": 49720610}}, \"profiles\": {\"collection\": \"search_reference_profiles\", \"points\": 12225}, \"stats\": {\"titles\": 43076, \"persons\": 94305, \"studios\": 32856, \"name_keys\": 193301, \"resolved_keys\": 17934, \"entities\": 12225, \"terms\": 654779, \"terms_without_id\": 0, \"shows_with_fallback_creators\": 1289, \"profiles\": 12225, \"peers\": 2510, \"negation_labels\": 112962, \"alternate_cut_pairs\": 107, \"collocations\": 93473, \"words\": 55222, \"spell_vocabulary\": 8105}}"
+        ],
+        [
+          "20261015T041503Z",
+          "complete",
+          "{\"format\": 1, \"build_id\": \"20261015T041503Z\", \"created_at\": \"2026-10-15T04:15:03.445570+00:00\", \"previous_build_id\": \"20261014T041503Z\", \"files\": {\"title_table\": {\"sha1\": \"fbb03bc18d97955a54e832b9ee372f55b2483fe7\", \"bytes\": 1537603}, \"term_statistics\": {\"sha1\": \"8d99dade030da3c97cc07a0bf4f09e55cbc92d75\", \"bytes\": 5096525}, \"word_frequencies\": {\"sha1\": \"590a1398bda8fe3a6448117c80f86ca350a566d6\", \"bytes\": 259658}, \"collocations\": {\"sha1\": \"f98349cb7bf356224f9ca474940d970b9076ed73\", \"bytes\": 604492}, \"name_index\": {\"sha1\": \"7113b876a602763975e7499d855eb952278942ee\", \"bytes\": 1791725}, \"peers\": {\"sha1\": \"47f105e4543b88ab5677795e4e18bd2136c196ba\", \"bytes\": 798084}, \"negation_labels\": {\"sha1\": \"3c1fc2427957306f5d43ff08ae5679426cfa88e2\", \"bytes\": 3589671}, \"alternate_cuts\": {\"sha1\": \"b064ec055a2a67731f2467d4d58873b227b541b8\", \"bytes\": 893}, \"intent_examples\": {\"sha1\": \"b207b1d10fdd684e8b85570b473c68744d16e2d9\", \"bytes\": 60395}, \"mix_vectors\": {\"sha1\": \"27511ba67ea95cb017615bd4595c8b15e1b157cf\", \"bytes\": 49786197}}, \"profiles\": {\"collection\": \"search_reference_profiles\", \"points\": 12228}, \"stats\": {\"titles\": 43133, \"persons\": 94376, \"studios\": 32893, \"name_keys\": 193453, \"resolved_keys\": 17937, \"entities\": 12228, \"terms\": 656972, \"terms_without_id\": 0, \"shows_with_fallback_creators\": 1290, \"profiles\": 12228, \"peers\": 2513, \"negation_labels\": 113642, \"alternate_cut_pairs\": 107, \"collocations\": 93553, \"words\": 55337, \"spell_vocabulary\": 8129}}"
+        ]
+      ],
+      "rowcount": 2,
+      "duration": 6.060666
+    },
+    "at": "2026-10-15T19:07:29.652761+00:00",
+    "elapsedSeconds": 0.013
+  }
+}
