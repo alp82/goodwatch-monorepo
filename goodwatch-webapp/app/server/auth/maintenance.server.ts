@@ -40,6 +40,7 @@ type Envelope = {
 	deleted: boolean
 	archived?: boolean
 	authorizedAt?: string
+	unusedClient?: boolean
 	emailClaim?: string
 	deletedAt?: string
 	admission?: AuthAdmission
@@ -713,6 +714,7 @@ export async function reconcileAuthRows(
 			deleted: true,
             admissionFence: Math.max(stored.envelope.admissionFence ?? 0, stored.envelope.admission?.generation ?? 0),
 			deletedAt: now.toISOString(),
+            unusedClient: targetModel === "oauthClient" && !stored.envelope.authorizedAt,
 			emailClaim: undefined,
 		}
 		const receipts = [

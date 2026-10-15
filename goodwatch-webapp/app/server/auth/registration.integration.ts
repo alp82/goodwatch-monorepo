@@ -60,3 +60,13 @@ test("a client that was authorized is retained after its last grant is disconnec
  await runAuthMaintenancePass({sql,encryptionSecret:authOptions.encryptionSecret,now:new Date(Date.now()+25*3600000)})
  assert.ok(await context.adapter.findOne({model:"oauthClient",where:[{field:"clientId",value:client.client_id}]}))
 })
+
+test("a collected unused metadata URL can register again without waiting for tombstone retention",async()=>{
+ const context = await auth.$context
+ const clientId = `https://example.test/${crypto.randomUUID()}.json`
+ await context.adapter.create({model:"oauthClient",data:{clientId,clientDiscoveryId:clientId,name:"Metadata client",createdAt:new Date(Date.now()-25*3600000)}})
+ await runAuthMaintenancePass({sql,encryptionSecret:authOptions.encryptionSecret})
+ assert.equal(await context.adapter.findOne({model:"oauthClient",where:[{field:"clientId",value:clientId}]}),null)
+ await context.adapter.create({model:"oauthClient",data:{clientId,clientDiscoveryId:clientId,name:"Metadata client",createdAt:new Date()}})
+ assert.ok(await context.adapter.findOne({model:"oauthClient",where:[{field:"clientId",value:clientId}]}))
+})
