@@ -71,6 +71,9 @@ const normalizeEmail = (value: unknown) => String(value).trim().toLowerCase()
 type Row = Record<string, any>
 export const authModels = ["user", "account", "session", "verification", "jwks", "oauthClient", "oauthResource", "oauthClientResource", "oauthConsent", "oauthAccessToken", "oauthRefreshToken", "oauthClientAssertion", "rateLimit"]
 const indexedFields = ["userId", "clientId", "sessionId", "referenceId", "resourceId", "identifier", "refreshId", "authorizationCodeId", "lastRequest", "count"]
+export function authLookupHints(model: string, row: Record<string, unknown>, secret: string) {
+ return Object.fromEntries(indexedFields.map(field => [field, model === "verification" && field === "identifier" && row[field] != null ? createHmac("sha256", secret).update(JSON.stringify(["verification-identifier", row[field]])).digest("hex") : row[field] ?? null]))
+}
 type Receipt = { operation: string; baseSeq: number; at?: string }
 type Stored = { envelope: Record<string, any>; row: Row; seq: number; term: number; deleted: boolean; receipts: Receipt[]; emailClaim?: string }
 export class IndeterminateAuthWriteError extends Error {
@@ -114,7 +117,7 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumerat
 	const privateKey = (purpose: string, value: unknown) => createHmac("sha256", payloadSecret).update(JSON.stringify([purpose, value])).digest("hex")
 	const emailKey = (email: unknown) => privateKey("email-claim", normalizeEmail(email))
 	const indexValue = (model: string, field: string, value: unknown) => model === "verification" && field === "identifier" && value != null ? privateKey("verification-identifier", value) : value
-	const lookup = (model: string, row: Row) => Object.fromEntries(indexedFields.map(field => [field, indexValue(model, field, row[field] ?? null)]))
+	const lookup = (model: string, row: Row) => authLookupHints(model, row, payloadSecret)
 	return createAdapterFactory({
 		config: { adapterId: "goodwatch-cratedb", adapterName: "Strict CrateDB", supportsDates: true,
 			supportsBooleans: true, supportsJSON: true, supportsArrays: true, transaction: false },

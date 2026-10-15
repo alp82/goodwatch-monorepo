@@ -1,9 +1,11 @@
+import { isDeepStrictEqual } from "node:util"
 import { createHash, createHmac, randomUUID } from "node:crypto"
 import {
 	type AuthSql,
 	CrateAuthRequestError,
 	IndeterminateAuthWriteError,
 	authModelTable,
+	authLookupHints,
 	authModels,
 } from "./crate-adapter.server.ts"
 import {
@@ -292,8 +294,9 @@ export async function collectAuthGarbage(
 				: envelope.deleted && !envelope.deletedAt
 					? { ...envelope, deletedAt: now.toISOString() }
 					: envelope
+		const hints = next.deleted || next.archived ? {} : authLookupHints(model, next.row, options.encryptionSecret)
 		const repaired =
-			Boolean(envelope.deleted || envelope.archived) !== current[5]
+			Boolean(envelope.deleted || envelope.archived) !== current[5] || !isDeepStrictEqual(hints, current[4])
 		if (
 			!expired &&
 			next === envelope &&
@@ -308,7 +311,7 @@ export async function collectAuthGarbage(
 				codec.encode(next, `${name}:${id}:payload`),
 				codec.encode(kept, `${name}:${id}:receipts`),
 				Boolean(next.deleted || next.archived),
-				next.deleted || next.archived ? {} : current[4],
+				hints,
 				next.deleted ? null : (envelope.row.createdAt ?? null),
 				next.deleted ? null : (envelope.row.expiresAt ?? null),
 				id,

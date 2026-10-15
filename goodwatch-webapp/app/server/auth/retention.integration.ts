@@ -173,3 +173,13 @@ test("maintenance restores a flipped enumeration hint from the authenticated liv
 		1,
 	)
 })
+
+
+test("maintenance repairs a tampered owner lookup so sign-out-everywhere sees the session", async () => {
+ const userId = randomUUID()
+ const session = await adapter.create({model: "session", data: {userId, token: randomUUID(), expiresAt: new Date(Date.now()+86400000)}})
+ await sql("UPDATE doc.auth_session SET lookup['userId']=? WHERE id=?", ["someone-else", session.id])
+ assert.equal(await adapter.deleteMany({model: "session", where: [{field: "userId", value: userId}]}), 0)
+ await collectAuthGarbage({sql, encryptionSecret, model: "session"})
+ assert.equal(await adapter.deleteMany({model: "session", where: [{field: "userId", value: userId}]}), 1)
+})
