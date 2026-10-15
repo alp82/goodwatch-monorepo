@@ -365,6 +365,7 @@ export function watchStateEntryOf(copy: ShowCopy): WatchStateEntry | null {
 	const watchingSince =
 		state !== "watching" ||
 		changed === null ||
+		changed === 0 ||
 		(imported !== null && changed <= imported)
 			? null
 			: changed

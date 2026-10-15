@@ -1,7 +1,7 @@
 export const REC_MODES = ["off", "shadow", "preview", "on"] as const
 export type RecMode = (typeof REC_MODES)[number]
 
-export function resolveRecG1(
+export function resolveRecPersonalOrder(
 	mode: string | undefined,
 	previewUsers: string | undefined,
 	userId: string | null,

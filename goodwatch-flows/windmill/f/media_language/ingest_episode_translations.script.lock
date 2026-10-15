@@ -17,3 +17,6 @@ typing-inspection==0.4.4
 urllib3==2.7.0
 verlib2==26.2
 wmill==1.808.0
+dnspython==2.8.0
+mongoengine==0.29.3
+pymongo==4.18.1

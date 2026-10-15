@@ -1,7 +1,7 @@
 // Keeps the search indexes that f/search/build_indexes writes to Crate loaded and current.
 //
-// A build is ten gzipped JSON files in the blob table `search_index_files`, listed by the manifest in the
-// `search_index_builds` row `build_id = 'current'`. A load downloads every file, checks its SHA-1, parses it into
+// A build is ten gzipped JSON files (eleven with the optional alias_table) in the blob table `search_index_files`,
+// listed by the manifest in the `search_index_builds` row `build_id = 'current'`. A load downloads every file, checks its SHA-1, parses it into
 // typed tables, and swaps the new build in only when all files have loaded, so a search never sees two builds at once.
 // The loader checks the current row every few minutes and loads a new build in the background.
 //
@@ -35,6 +35,8 @@ export interface Manifest {
 	created_at: string
 	previous_build_id: string | null
 	files: Record<string, { sha1: string; bytes: number }>
+	/** The rules version of alias_table; absent in builds without the file. */
+	alias_version?: number
 	profiles: { collection: string; points: number }
 }
 
@@ -56,6 +58,44 @@ export interface TitleTable {
 	flags: Int32Array
 	productionMethods: (string | null)[]
 	rowOf: Map<number, number>
+}
+
+/**
+ * The localized names of the eligible titles (aliases.server.ts), in title row order. Empty for a build without
+ * alias_table.
+ */
+export interface AliasTable {
+	/** The rules version the names were built with; 0 when the table is empty. Cache keys of name lookups carry it. */
+	version: number
+	size: number
+	/** The title row of each alias, ascending. */
+	rows: Int32Array
+	/** The names as stored. */
+	names: string[]
+	/** Index into languageNames per alias. */
+	languages: Uint8Array
+	languageNames: string[]
+	/** Each name folded (fold in text-rules.server.ts) without its spaces. */
+	squashed: string[]
+	/** Where each word starts in the squashed name: alias i's starts are wordStarts[startAt[i]] to [startAt[i + 1]]. */
+	wordStarts: Uint16Array
+	startAt: Int32Array
+	/**
+	 * The two-character grams at word starts of the squashed names, sorted; gram g's aliases (in table order) are
+	 * gramAliases[gramStart[g]] to [gramStart[g + 1]]. The candidates of a prefix and of an exact name.
+	 */
+	grams: string[]
+	gramStart: Int32Array
+	gramAliases: Int32Array
+	/** Alias indices by length; the aliases of length n are byLength[lengthStart[n]] to [lengthStart[n + 1]]. */
+	byLength: Int32Array
+	lengthStart: Int32Array
+	/**
+	 * Character counts of each squashed name (aliases.server.ts ALIAS_BUCKETS per alias, capped at 255), and its
+	 * length in code points.
+	 */
+	counts: Uint8Array
+	lengths: Uint16Array
 }
 
 export interface TermStatistics {
@@ -152,6 +192,8 @@ export interface SearchIndex {
 	franchiseTitles: { row: number; title: string; original: string }[]
 	/** Normalized titles and original titles with their rows, for fuzzy title matching. */
 	titleNames: { name: string; row: number }[]
+	/** The localized names, for name recognition only (never ranking, vectors, or BM25F). */
+	aliases: AliasTable
 	/** Load time per file and in total. */
 	timings: Record<string, number>
 }
@@ -236,6 +278,11 @@ export async function getSearchIndex(): Promise<SearchIndex> {
 /** The id of the loaded build, or null before the first build has loaded. */
 export function loadedSearchIndexBuild(): string | null {
 	return current?.buildId ?? null
+}
+
+/** The alias rules version of the loaded build: 0 before the first load and for a build without aliases. */
+export function loadedAliasVersion(): number {
+	return current?.aliases.version ?? 0
 }
 
 /** Starts loading the index in the background, so the first search doesn't wait for it. */

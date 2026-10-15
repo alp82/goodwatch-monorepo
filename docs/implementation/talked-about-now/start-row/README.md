@@ -7,7 +7,7 @@ Implements [#557](https://github.com/alp82/goodwatch-monorepo/issues/557), varia
 A board of the eight titles read about most on Wikipedia against their own 28-day usual, each with its 14-day curve,
 "×N its usual", the reason of the day (a trailer, a premiere, a season, Netflix's Top 10) and one line of what is said
 about it. One title is featured beside the board, large, with its curve and up to three pieces as they are on their
-platforms: a video, a Bluesky or Mastodon post, a headline. Pressing a row features that title. From 1024 px the
+platforms: the best-ranked of what was judged worth showing, whatever its source; none when nothing was. Pressing a row features that title. From 1024 px the
 featured title stands beside the board; on a phone it opens in the board, under its row. The row is the same for every
 visitor.
 
@@ -64,16 +64,18 @@ went into the shell chunk that every page loads (rule 3 in `vite.config.js`).
 4. One read of the visible links of the eight titles to their posts, with the filters of social discovery's reference
    read (`Store.read_title` of #556, `docs/implementation/talked-about-now/social.md`): a passing content-quality
    verdict (`social_content_quality`, `status = 'pass'`, `version = 'content-quality-1'`, the post's current
-   `content_hash`), as an inner join from `contentQualityJoin` in `social-store.server.ts`, the same as the title
-   section's read; no reported
-   (open or confirmed), hidden, deleted, outdated (content hash) or expired (30 days) link, no lane in
-   `SOCIAL_DISABLED_LANES`, one of each duplicate group per title. If the tables are missing, empty or refuse the read,
-   the titles show without what is said.
+   `content_hash`), as an inner join from `contentQualityJoin` in `social-store.server.ts`, and a `keep` relevance
+   verdict for the link (`social_relevance`, `version = 'relevance-1'`, the post's current `content_hash`), an inner
+   join from `relevanceJoin` beside it; both the same as the title section's read. No reported (open or confirmed),
+   hidden, deleted, outdated (content hash) or expired (30 days) link, no lane in `SOCIAL_DISABLED_LANES`, one of each
+   duplicate group per title (the verdict's `dup_group`, else the link's `duplicate_group`), the best-ranked by the
+   verdict's `score`. If the tables are missing (the relevance table too), empty or refuse the read, the titles show
+   without what is said: never pieces without a verdict.
 
-A title's pieces (`pickItems`): the newest video (only one: the official channels post the same trailer more than
-once), a post, a headline, then the newest of the rest; at most three. The start page is in English, so a piece in
-another language comes after every English one. The board's preview line is an English post first, else an English
-headline, else a post or a headline in any language, else the video.
+A title's pieces (`pickItems`, see [relevance](../relevance/README.md)): the best-ranked by score, at most three, at
+most one video and one of each duplicate group. No source has a place of its own and nothing fills a gap: a title whose
+links were all dropped shows none. Between equal scores an English piece comes first (the start page is in English),
+then the newer. The board's preview line is the best-ranked piece, whatever its kind.
 
 Whether a piece reads as English is a guess on the server (`isEnglish`): short words common in English against short
 words common in German, Spanish, French, Italian and Portuguese, accents, and non-Latin scripts. An article from a
@@ -114,8 +116,12 @@ need them.
 phone screenshots, measures the two heights, checks that a fresh visit asks for nothing of the row, and checks that
 nothing reaches a third party before a press.
 
-`shots/` has the row at 1440 × 900 (`desktop.png`) and at 390 × 844 on a phone (`phone.png`), taken on 14 October
-2026 with production data, and the script's `report.json` from that run.
+`shots/` has the row at 1440 × 900 (`desktop.png`) and at 390 × 844 on a phone (`phone.png`), taken on 15 October
+2026 with the board of the day and `SOCIAL_FIXTURE=../relevance/fixture.json` (production has no relevance table yet),
+and the script's `report.json` from that run.
+
+With `SOCIAL_FIXTURE` set (development only), the board's pieces come from that file through the fixture store, the
+same filters as the title section's read of it; the ranking still comes from Crate.
 
 Tests: `node --test app/domain/talked-about-now.test.ts app/server/talked-about-now/start-row.test.ts`.
 

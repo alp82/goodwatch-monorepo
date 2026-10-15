@@ -32,16 +32,16 @@ import type { ViewerContext } from "~/server/viewer.server"
 import { query } from "~/utils/crate"
 import { type TitleKey, parseTitleKey, titleKey } from "~/utils/title-key"
 
-import { recG1Order } from "./features.server.ts"
+import { recPersonalOrder } from "./features.server.ts"
 import { createWatchNextPlanStore } from "./watch-next-plans.server.ts"
 import {
-	loadG1,
-	g1Exposure,
-	orderG1,
-	mixFitting,
-	logG1,
-	type G1Read,
-} from "./g1/reader.server.ts"
+	loadPersonalOrder,
+	personalOrderExposure,
+	orderPersonalOrder,
+	mixPersonalOrderFitting,
+	logPersonalOrder,
+	type PersonalOrderRead,
+} from "./personal-order/reader.server.ts"
 
 export interface WatchNextOptions {
 	/** Null or unavailable (Best match without taste): the default sort. */
@@ -289,7 +289,7 @@ export function planWatchNext(
 	outside: ReadonlyMap<TitleKey, SortFacts | null> = new Map(),
 	/** Minutes per movie, for My movies with a time chosen (see movieRuntimes). */
 	runtimes: ReadonlyMap<TitleKey, number | null> = new Map(),
-	g1Read?: G1Read,
+	personalOrderRead?: PersonalOrderRead,
 ) {
 	const movies = options.kind === "movie"
 	const time = movies ? (options.time ?? null) : null
@@ -356,26 +356,32 @@ export function planWatchNext(
 			Math.sign(a.over) - Math.sign(b.over) || b.fit - a.fit || a.over - b.over,
 	)
 	// The snapshot may reload while planFor awaits Valkey; never use mapping from another version.
-	if (g1Read?.data && g1Read.data.payload.snapshotVersion !== snapshot?.version)
-		g1Read = {
+	if (
+		personalOrderRead?.data &&
+		personalOrderRead.data.payload.snapshotVersion !== snapshot?.version
+	)
+		personalOrderRead = {
 			data: null,
 			fallbackReason: snapshot ? "snapshot-mismatch" : "snapshot-unavailable",
 		}
-	const flag = recG1Order(
+	const flag = recPersonalOrder(
 		ctx.viewer.kind === "member" ? ctx.viewer.userId : null,
 	)
-	const g1 = g1Exposure(flag, g1Read ?? { data: null, fallbackReason: null })
-	if (sort === "match" && g1Read && (flag.enabled || flag.shadow)) {
+	const personalOrder = personalOrderExposure(
+		flag,
+		personalOrderRead ?? { data: null, fallbackReason: null },
+	)
+	if (sort === "match" && personalOrderRead && (flag.enabled || flag.shadow)) {
 		const today = ranked.map((e) => e.key)
-		if (g1Read.data && snapshot) {
-			const f3 = orderG1(
+		if (personalOrderRead.data && snapshot) {
+			const franchiseGroups = orderPersonalOrder(
 				entries.map((e) => e.key),
-				g1Read.data,
+				personalOrderRead.data,
 				snapshot,
 				false,
 			)
 			const byKey = new Map(entries.map((e) => [e.key, e]))
-			let next = f3.keys
+			let next = franchiseGroups.keys
 				.map((k) => byKey.get(k)!)
 				.sort(
 					(a, b) =>
@@ -387,33 +393,42 @@ export function planWatchNext(
 			const fittingKeys = next
 				.filter((e) => e.fit === need && !e.over && !passed.has(e.key))
 				.map((e) => e.key)
-			const mix = mixFitting(fittingKeys, g1Read.data, snapshot, f3.ranks)
+			const mix = mixPersonalOrderFitting(
+				fittingKeys,
+				personalOrderRead.data,
+				snapshot,
+				franchiseGroups.ranks,
+			)
 			const replace = new Set(fittingKeys)
 			let i = 0
 			next = next.map((e) =>
 				replace.has(e.key) ? byKey.get(mix.keys[i++])! : e,
 			)
-			// The composed F3 metadata is cached. This plan's fitting mix must not mutate it.
-			g1.titles = new Map(
-				[...f3.titles].map(([key, value]) => [key, { ...value }]),
+			// The composed franchise grouping metadata is cached. This plan's fitting mix must not mutate it.
+			personalOrder.titles = new Map(
+				[...franchiseGroups.titles].map(([key, value]) => [key, { ...value }]),
 			)
-			for (const key of mix.placed) g1.titles.get(key)!.mixPlaced = true
-			logG1(
+			for (const key of mix.placed)
+				personalOrder.titles.get(key)!.mixPlaced = true
+			logPersonalOrder(
 				ctx.viewer.kind === "member" ? ctx.viewer.userId : "",
 				"watch-next",
-				g1,
+				personalOrder,
 				today,
 				next.map((e) => e.key),
 			)
 			if (flag.enabled) {
-				g1.todayFirst100 = today.slice(0, 100)
+				personalOrder.todayFirst100 = today.slice(0, 100)
 				ranked = next
-			} else g1.g1First100 = next.slice(0, 100).map((e) => e.key)
+			} else
+				personalOrder.personalOrderFirst100 = next
+					.slice(0, 100)
+					.map((e) => e.key)
 		} else
-			logG1(
+			logPersonalOrder(
 				ctx.viewer.kind === "member" ? ctx.viewer.userId : "",
 				"watch-next",
-				g1,
+				personalOrder,
 				today,
 			)
 	}
@@ -496,7 +511,7 @@ export function planWatchNext(
 
 	return {
 		sort,
-		g1,
+		personalOrder,
 		defaultSort,
 		moods,
 		onMyServices,
@@ -700,15 +715,22 @@ async function planFor(
 		timed ? movieRuntimes(ctx.wishlist.keys()) : undefined,
 	])
 	const member = ctx.viewer.kind === "member" ? ctx.viewer.userId : null
-	const flag = recG1Order(member)
+	const flag = recPersonalOrder(member)
 	const match =
 		(!options.sort || options.sort === "match") &&
 		bestMatchOf(ctx, taste).available
-	const g1Read =
+	const personalOrderRead =
 		member && match && (flag.enabled || flag.shadow)
-			? await loadG1(member, getTitleSnapshot())
+			? await loadPersonalOrder(member, getTitleSnapshot())
 			: undefined
-	return planWatchNext(ctx, taste, options, outside, runtimes, g1Read)
+	return planWatchNext(
+		ctx,
+		taste,
+		options,
+		outside,
+		runtimes,
+		personalOrderRead,
+	)
 }
 
 /** Watch next for the viewer: the hero, its Then column, the tiers, mood counts and pictures, and suggestions. */
@@ -779,7 +801,7 @@ export async function getWatchNext(
 		listId,
 		planId:
 			ctx.viewer.kind === "member" &&
-			(plan.g1.flag.enabled || plan.g1.flag.shadow)
+			(plan.personalOrder.flag.enabled || plan.personalOrder.flag.shadow)
 				? plans.put(
 						ctx.viewer.userId,
 						planChoice(options),
@@ -841,7 +863,7 @@ export async function getWatchNextCardsPage(
 	refreshRequired: boolean
 }> {
 	let retained: Plan | null = null
-	const flag = recG1Order(
+	const flag = recPersonalOrder(
 		ctx.viewer.kind === "member" ? ctx.viewer.userId : null,
 	)
 	if (ctx.viewer.kind === "member" && (planId || flag.enabled || flag.shadow)) {
@@ -891,9 +913,9 @@ function watchNextExposure(
 ) {
 	return recordListExposure(ctx, {
 		surface: "watch-next",
-		ordering: plan.g1.todayFirst100 ? "g1" : "taste-v2",
-		flags: { REC_G1_ORDER: plan.g1.flag.enabled },
-		g1: plan.g1,
+		ordering: plan.personalOrder.todayFirst100 ? "personal-order" : "taste-v2",
+		flags: { REC_G1_ORDER: plan.personalOrder.flag.enabled },
+		personalOrder: plan.personalOrder,
 		watchNextTiers: new Map([
 			...plan.head.map((e, i) => [e.key, i === 0 ? "hero" : "then"] as const),
 			...plan.tiers.flatMap((t) => t.keys.map((k) => [k, t.key] as const)),

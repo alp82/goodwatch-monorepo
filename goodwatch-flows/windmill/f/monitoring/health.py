@@ -259,6 +259,12 @@ def assess_pipeline(
         "next_due": next_due.isoformat() if next_due else None,
         "last_useful_at": last_useful.isoformat() if last_useful else None,
         "latest_job_id": str(roots[-1]["id"]) if roots else None,
+        "attention_job_id": next(
+            (str(job["id"]) for job in reversed(roots)
+             if job.get("running") and timestamp(job.get("started_at"))
+             and (now - timestamp(job["started_at"])).total_seconds() > runtime),
+            str(meaningful[-1]["id"]) if meaningful and consecutive else None,
+        ),
         "material_child_failure_count": material_count,
         "tolerable_external_failure_count": sum(
             job.get("tolerable_external_failure_count", 0) for job in roots
@@ -279,7 +285,7 @@ def incident_transition(
     previous_state: dict[str, Any] | None,
     report: dict[str, Any],
     now: datetime,
-    reminder_seconds: int = 21600,
+    reminder_seconds: int | None = None,
     retry_seconds: int = 1800,
 ) -> dict[str, Any]:
     """Plan durable notification delivery; caller persists before external I/O.
@@ -291,26 +297,33 @@ def incident_transition(
     state: dict[str, Any] = dict(
         previous_state or {"active": False, "pending_notification": None}
     )
+    # Legacy delivered incidents have no announced_causes field.
+    announced = set(state.get("announced_causes", state.get("causes", []) if state.get("last_notified_at") else []))
+    state.setdefault("announced_causes", sorted(announced))
+    if (state.get("pending_notification") or {}).get("kind") == "reminder":
+        state["pending_notification"] = None
     transition = "unchanged"
     kind = None
     if report["status"] == "unhealthy":
         if not state.get("active"):
             state.update(active=True, opened_at=now.isoformat())
+            state["announced_causes"] = []
+            state["last_notified_at"] = None
             transition = "opened"
             kind = "incident"
         state["causes"] = list(report.get("causes", []))
-        last_notified = timestamp(state.get("last_notified_at"))
         if (
             kind is None
             and not state.get("pending_notification")
-            and last_notified
-            and (now - last_notified).total_seconds() >= reminder_seconds
+            and set(report.get("causes", [])) - announced
         ):
-            kind = "reminder"
+            kind = "escalation" if state.get("last_notified_at") else "incident"
     elif report["status"] == "healthy" and state.get("active"):
         state.update(active=False, recovered_at=now.isoformat())
         transition = "recovered"
-        kind = "recovery"
+        # Do not announce recovery from an incident that was never delivered.
+        kind = "recovery" if state.get("last_notified_at") else None
+        state["pending_notification"] = None
     if kind:
         state["last_delivery_attempt_at"] = None
         identity = f"{report['path']}:{state.get('opened_at')}:{kind}:{now.isoformat()}"
@@ -319,7 +332,7 @@ def incident_transition(
             "kind": kind,
             "pipeline": report["path"],
             "causes": list(state.get("causes", [])),
-            "job_id": report.get("latest_job_id"),
+            "job_id": report.get("attention_job_id") or report.get("latest_job_id"),
         }
         for field in [
             "source_pipeline",

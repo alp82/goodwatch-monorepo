@@ -2,7 +2,7 @@ import { canonicalTitleId } from "~/utils/title-identity"
 import { resetOnboardingMediaCache } from "~/server/onboarding-media.server"
 import { resetUserDataCache } from "~/server/userData.server"
 import { execute, upsert } from "~/utils/crate"
-import { markG1Changed } from "./g1/rebuild.server.ts"
+import { markPersonalOrderChanged } from "./personal-order/rebuild.server.ts"
 
 interface UpdateSkippedParams {
 	user_id?: string
@@ -61,7 +61,7 @@ export const updateSkipped = async ({
 		result = await execute(sql, params)
 	}
 
-	if (result.rowcount) markG1Changed(user_id)
+	if (result.rowcount) markPersonalOrderChanged(user_id)
 	await resetUserDataCache({ user_id })
 	await resetOnboardingMediaCache({ userId: user_id, searchTerm: "" })
 

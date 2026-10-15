@@ -111,6 +111,7 @@ as JSON; the [index files](#index-files) section has the formats:
 | `peers` (4.5k people and studios) | 1.4 MB | 2 MB | peers |
 | `word_frequencies`, `collocations`, `alternate_cuts`, `intent_examples` | 1 MB | 3 MB | spell correction, name tests, units, cut folding, intent |
 | `mix_vectors` (int8 text vectors of the eligible titles) | 58 MB | 78 MB | z statistics of the non-English mix |
+| `alias_table` (optional; 319,960 localized names of 43,133 titles, dry build of 2026-10-15) | 4.2 MB | 11 MB | names only: palette, title lookup, fuzzy titles, "like X" |
 
 Held as typed arrays, `mix_vectors` takes 58 MB of memory and the other tables about 100 MB.
 
@@ -428,7 +429,8 @@ Gzip's timestamp is fixed, so an unchanged index has the same digest and isn't w
   - Terms: `f/search/terms` (`tokens`, `stem`, `terms`), which the webapp ports for the query side.
 
 The manifest in `search_index_builds` is `{format: 1, build_id, created_at, previous_build_id, files: {<name>:
-{sha1, bytes}}, profiles: {collection, points}, stats}`.
+{sha1, bytes}}, alias_version, profiles: {collection, points}, stats}`. `alias_table` is optional: a build without it
+(or a role before it) has no aliases, and `alias_version` (the alias rules version) is absent there.
 
 **Loading.** The webapp reads `SELECT manifest FROM search_index_builds WHERE build_id = 'current'` (a primary-key
 read, always current), downloads each file with `GET http://<crate host>:4200/_blobs/search_index_files/<sha1>`
@@ -449,6 +451,7 @@ downloading, checking and parsing all ten files of the first build took 3.5 seco
 | `alternate_cuts` | `pairs` of point ids | cut folding: keep the first title of every linked set in rank order |
 | `intent_examples` | `labels`, `texts`, `model`, `prefix` (`query: `), `vectors` (float32 `[39, 384]`, multilingual-e5-small of prefix + text) | the intent is the label of the example with the highest dot product with the query (names replaced by `X`) |
 | `mix_vectors` | `point_ids`, `text_multi_v1` and `text_en_v1`, each `{scale: float32 [d], values: int8 [n, d]}` (vector = values x scale; a title without the vector has zeros) | z statistics of the non-English mix, see below |
+| `alias_table` (optional) | `version` (alias rules version), `rows` (title row, ascending), `names` (the `translation.title` as stored), `languages` (base language). From `translation` in the launch base languages (en, de, fr, es, it, pt, ja, ko, zh, pl, ru, ar); a name is kept once per title by its `fold`, in that language order, and only when it differs from the fold of the title and the original title; a Latin-script name needs 2 characters after folding | name recognition only, never vectors, BM25F or the ranking: the palette's prefix tiers after every title tier, the title blend's lexical score one step (0.01) below a title match of the same kind, the fuzzy match when no title is close, and "like X" after the titles (votes >= 10,000). See [search by localized names](../media-language-search-aliases-plan.md) |
 
 **The non-English mix statistics.** The mix z-scores the multilingual cosine and the chips' bge-base cosine over
 every filtered title (#137). Those statistics depend on the query vectors, so no number can be stored per filter.

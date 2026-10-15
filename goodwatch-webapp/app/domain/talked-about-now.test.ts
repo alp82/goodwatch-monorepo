@@ -189,68 +189,108 @@ const row = (
 	...extra,
 })
 
-test("a title's pieces: the newest video first, then a voice and a headline", () => {
+const ids = (items: { id: string }[]) => items.map((item) => item.id)
+
+test("a title's pieces: the best-ranked, whatever their source, with no place kept for any source", () => {
 	const items = pickItems([
-		row("rss", "h1", 1),
-		row("youtube", "v1", 2),
-		row("youtube", "v2", 3, { source_id: "abcdefghijk" }),
-		row("rss", "h2", 4),
-		row("bluesky", "b1", 5),
+		row("bluesky", "b1", 1, { score: 0.2 }),
+		row("rss", "h1", 2, { score: 0.9 }),
+		row("youtube", "v1", 3, { score: 0.7 }),
+		row("rss", "h2", 4, { score: 0.8 }),
+		row("rss", "h3", 5, { score: 0.6 }),
 	])
+	// The newest piece, a post, ranks last and isn't shown: a voice has no place of its own.
+	assert.deepEqual(ids(items), ["h1", "h2", "v1"])
+	assert.equal(items[0].publisher, "Deadline")
+	assert.equal(items[2].video, "gDJ-ini7fF0")
+	assert.equal(items[0].at, "2026-10-14T10:00:00.000Z")
+	// A post ranked high enough is shown, before a video.
 	assert.deepEqual(
-		items.map((item) => item.id),
-		["v1", "b1", "h1"],
+		ids(
+			pickItems([
+				row("youtube", "v1", 1, { score: 0.5 }),
+				row("bluesky", "b1", 2, { score: 0.6 }),
+			]),
+		),
+		["b1", "v1"],
 	)
-	assert.equal(items[0].video, "gDJ-ini7fF0")
-	assert.equal(items[2].publisher, "Deadline")
-	assert.equal(items[1].publisher, "someone.bsky.social")
-	assert.equal(items[1].at, "2026-10-14T07:00:00.000Z")
 })
 
-test("without a video or a voice, the newest pieces fill the three", () => {
+test("at most one video and one piece of each duplicate group, and nothing fills a gap", () => {
+	// A second video, however good, gives its place to the next piece.
 	assert.deepEqual(
-		pickItems([
-			row("rss", "h1", 1),
-			row("rss", "h2", 2),
-			row("rss", "h3", 3),
-			row("rss", "h4", 4),
-		]).map((item) => item.id),
+		ids(
+			pickItems([
+				row("youtube", "v1", 1, { score: 0.9 }),
+				row("youtube", "v2", 2, { score: 0.8, source_id: "abcdefghijk" }),
+				row("rss", "h1", 3, { score: 0.1 }),
+			]),
+		),
+		["v1", "h1"],
+	)
+	// The same story from two sources: the better-ranked one.
+	assert.deepEqual(
+		ids(
+			pickItems([
+				row("rss", "h1", 1, { score: 0.7, dup_group: "story" }),
+				row("bluesky", "b1", 2, { score: 0.8, dup_group: "story" }),
+				row("rss", "h2", 3, { score: 0.1 }),
+			]),
+		),
+		["b1", "h2"],
+	)
+	// Fewer than three relevant pieces stay fewer; none stay none.
+	assert.deepEqual(ids(pickItems([row("rss", "h1", 1, { score: 0.3 })])), [
+		"h1",
+	])
+	assert.deepEqual(pickItems([]), [])
+	// Never more than three.
+	assert.deepEqual(
+		ids(
+			pickItems(
+				["h1", "h2", "h3", "h4"].map((id, i) =>
+					row("rss", id, i, { score: 1 - i / 10 }),
+				),
+			),
+		),
 		["h1", "h2", "h3"],
 	)
-	// One video is enough: a channel's other upload of the same trailer doesn't take a second place.
-	assert.deepEqual(
-		pickItems([row("youtube", "v1", 1), row("youtube", "v2", 2)]).map(
-			(item) => item.id,
-		),
-		["v1"],
-	)
-	assert.deepEqual(pickItems([]), [])
 })
 
-test("a piece in another language comes after every English one", () => {
-	const items = pickItems([
+test("English first only between equal scores, then the newer", () => {
+	const german = (score: number) =>
 		row("rss", "german", 1, {
 			url: "https://www.filmstarts.de/nachrichten/1.html",
-		}),
-		row("rss", "english", 5),
-		row("mastodon", "m1", 9, { url: "https://mastodon.social/@a/1" }),
-	])
+			score,
+		})
+	// A better German review stays first.
+	const items = pickItems([german(0.9), row("rss", "english", 5, { score: 0.5 })])
+	assert.deepEqual(ids(items), ["german", "english"])
+	assert.equal(items[0].publisher, "Filmstarts")
+	// On a tie the English piece goes first, however much older.
 	assert.deepEqual(
-		items.map((item) => item.id),
-		["m1", "english", "german"],
+		ids(pickItems([german(0.5), row("rss", "english", 20, { score: 0.5 })])),
+		["english", "german"],
 	)
-	assert.equal(items[2].publisher, "Filmstarts")
-	// A Portuguese post gives its place to an English one, however much older.
+	// On a tie in the same language, the newer.
 	assert.deepEqual(
-		pickItems([
-			row("bluesky", "pt", 1, {
-				text: "Netflix demitirá cerca de 1.000 funcionários em maior corte desde 2022",
-			}),
-			row("bluesky", "en", 20, {
-				text: "I'm watching the first episode and it is so good",
-			}),
-		]).map((item) => item.id),
-		["en", "pt"],
+		ids(
+			pickItems([
+				row("rss", "older", 9, { score: 0.5 }),
+				row("rss", "newer", 1, { score: 0.5 }),
+			]),
+		),
+		["newer", "older"],
+	)
+	// A row without a score comes after every scored one.
+	assert.deepEqual(
+		ids(
+			pickItems([
+				row("rss", "unscored", 1, { score: null }),
+				row("rss", "scored", 9, { score: 0.01 }),
+			]),
+		),
+		["scored", "unscored"],
 	)
 })
 
@@ -305,32 +345,15 @@ test("a row without what a card needs is no piece", () => {
 	)
 })
 
-test("the preview line is a voice first, else a headline, else the video, English before any other language", () => {
-	const video = itemOf(row("youtube", "v", 1))
-	const headline = itemOf(row("rss", "h", 1))
-	const post = itemOf(row("bluesky", "b", 1))
-	assert.ok(video && headline && post)
-	assert.equal(previewOf([video, headline, post]), post)
-	assert.equal(previewOf([video, headline]), headline)
-	assert.equal(previewOf([video]), video)
+test("the preview line is the best-ranked piece, whatever its kind", () => {
+	const items = pickItems([
+		row("bluesky", "b", 1, { score: 0.4 }),
+		row("youtube", "v", 2, { score: 0.9 }),
+		row("rss", "h", 3, { score: 0.6 }),
+	])
+	assert.equal(previewOf(items)?.id, "v")
+	assert.equal(previewOf(items.slice(1))?.id, "h")
 	assert.equal(previewOf([]), null)
-	const spanish = itemOf(
-		row("bluesky", "es", 1, {
-			text: "Hechizo: bienvenidos a la nueva serie, que buena",
-		}),
-	)
-	const german = itemOf(
-		row("rss", "de", 1, {
-			url: "https://www.moviepilot.de/news/1",
-			text: "Neu auf Disney+: Die Fortsetzung",
-		}),
-	)
-	assert.ok(spanish && german)
-	assert.equal(spanish.english, false)
-	// An English headline goes before a post in another language; without English, any language.
-	assert.equal(previewOf([video, spanish, headline]), headline)
-	assert.equal(previewOf([video, spanish, german]), spanish)
-	assert.equal(previewOf([video, german]), german)
 })
 
 test("the row's words", () => {

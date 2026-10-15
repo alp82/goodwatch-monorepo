@@ -1,0 +1,12 @@
+summary: Enqueue one Personal order rollout or dirty build
+description: Uses f/sync/personal_order_members (a JSON list or all). Snapshot/nightly calls reconcile the rollout. Create schedule f/sync/copy/personal_order_dirty every three minutes with dirty_only true; both paths enqueue the serialized personal_order script. Missing or empty rollout disables triggers.
+kind: script
+lock: '!inline f/sync/copy/personal_order_trigger.script.lock'
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties:
+    dirty_only:
+      type: boolean
+      default: false
+      description: Enqueue one dirty-set run instead of a full rollout reconciliation.

@@ -868,7 +868,7 @@ test("off switch disables page-cache offers but preserves request media-health i
 			request: { socket: { localPort: Number(process.env.PORT) || 3000 } },
 		})
 		assert.equal(server.listeners("request").length, 1)
-		server.emit("request", {}, {})
+		server.emit("request", {}, new ServerResponse({ method: "GET" } as IncomingMessage))
 		assert.equal(called, true)
 		assert.equal(mediaReadFailed(), false)
 		assert.equal(

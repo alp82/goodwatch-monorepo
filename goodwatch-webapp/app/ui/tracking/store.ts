@@ -20,7 +20,7 @@ import {
 	viewOf,
 	watchStateEntryOf,
 } from "~/domain/tracking/show-page"
-import { ShowSession } from "~/domain/tracking/show-session"
+import { ActionConflict, ShowSession } from "~/domain/tracking/show-session"
 import type { LogRow } from "~/domain/tracking/storage"
 import { useIsOnWishlist, useUserScore } from "~/hooks/useUserDataAccessors"
 import { getQueryKeyUserData } from "~/routes/api.user-data"
@@ -84,6 +84,8 @@ async function sendAction(showId: number, body: object): Promise<ActionAnswer> {
 		method: "POST",
 		body: JSON.stringify({ id: showId, ...body }),
 	})
+	// Another action on the show came in between. Its body is not read: the page has its own words for it.
+	if (response.status === 409) throw new ActionConflict()
 	if (!response.ok)
 		throw new Error(`The action was not applied: ${response.status}`)
 	return response.json()

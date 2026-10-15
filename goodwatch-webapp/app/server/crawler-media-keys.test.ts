@@ -48,7 +48,7 @@ registerHooks({
 			source = `export const presentCatalogLoader=load=>load;export const liveMediaLanguage=async request=>request.headers.get("User-Agent")==="Googlebot"?"en":"fr";export const localizeTitlePayload=async(value,language,_a,_b,options)=>{globalThis.__crawlerExplorerOverlays.push({language,limit:options.maxTitles});return value}`
 		else if (url.endsWith("/server/explorer/http.server.ts"))
 			source =
-				"export const explorerQueryOf=()=>({});export const EXPLORER_OVERLAY_MAX_TITLES=200"
+				"export const explorerQueryOf=()=>({});export const EXPLORER_OVERLAY_MAX_TITLES=800"
 		else if (url.endsWith("/server/explorer/index.server.ts"))
 			source = "export class ExplorerUnavailable extends Error {}"
 		else if (url.endsWith("/server/explorer/world.server.ts"))
@@ -171,7 +171,7 @@ test("Explorer SSR uses the live locale without API opt-in and labels initialDat
 		assert.deepEqual(data.world?.maps, [])
 		assert.deepEqual(
 			explorerOverlays,
-			agent === "Googlebot" ? [] : [{ language: "fr", limit: 200 }],
+			agent === "Googlebot" ? [] : [{ language: "fr", limit: 800 }],
 		)
 		assert.equal(response.headers.get("Cache-Control"), "private, no-store")
 	}

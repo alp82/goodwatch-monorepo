@@ -1,5 +1,9 @@
 # G1 offline job, stage 1
 
+> Naming note (2026-10-15): G1 ships as **personal order**; B3 = own taste rank,
+> B5 = pooled rating predictor, F3 = franchise grouping. Historical names below are retained.
+> See [the mapping and current deploy order](personal-order-rename.md).
+
 `goodwatch-flows/windmill/f/sync/copy/g1_order.py` builds ordering components for an explicit,
 nonempty list of preview member ids. Initially the caller passes only the owner's id. Its Windmill
 entrypoint defaults to `dry_run=True`. The stage 2 review fixes require every supplied member id

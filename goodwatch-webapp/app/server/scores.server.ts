@@ -5,7 +5,7 @@ import { markTasteChanged } from "~/server/taste/index.server"
 import { applyTrackingEvent } from "~/server/tracking.server"
 import { resetUserDataCache } from "~/server/userData.server"
 import { execute, upsert } from "~/utils/crate"
-import { markG1Changed } from "./g1/rebuild.server.ts"
+import { markPersonalOrderChanged } from "./personal-order/rebuild.server.ts"
 
 export type Score = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10
 
@@ -82,7 +82,7 @@ export const updateScores = async ({
 		result = await execute(sql, params)
 	}
 
-	if (result.rowcount) markG1Changed(user_id)
+	if (result.rowcount) markPersonalOrderChanged(user_id)
 	if (score != null) await clearNotInterested(user_id, tmdb_id, media_type)
 
 	let wasReset = false

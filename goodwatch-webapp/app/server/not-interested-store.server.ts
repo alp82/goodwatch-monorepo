@@ -1,7 +1,7 @@
 import type { MediaType } from "~/types/user-data"
 import { execute, query } from "~/utils/crate"
 import { canonicalTitleId } from "~/utils/title-identity"
-import { markG1Changed } from "./g1/rebuild.server.ts"
+import { markPersonalOrderChanged } from "./personal-order/rebuild.server.ts"
 
 export function isMissingNotInterestedTable(error: unknown): boolean {
 	const message = String((error as { message?: unknown } | null)?.message ?? error)
@@ -28,7 +28,7 @@ export async function clearNotInterested(userId: string, tmdbId: number, mediaTy
 			"DELETE FROM user_not_interested WHERE user_id = ? AND tmdb_id = ? AND media_type = ?",
 			[userId, canonicalTitleId(mediaType, tmdbId), mediaType],
 		)
-		if (result.rowcount) markG1Changed(userId)
+		if (result.rowcount) markPersonalOrderChanged(userId)
 	} catch (error) {
 		if (!isMissingNotInterestedTable(error)) console.error("Clearing Not interested failed:", error)
 	}

@@ -6,9 +6,10 @@
 // - The catalog's fields (backdrop, year) for the board's titles, as every card reads them (getDisplayFields).
 // - What is said: one read of the visible links of the board's titles to their posts (`doc.social_title_link`,
 //   `doc.social_post`), with the filters of social discovery's reference read (`Store.read_title` of #556): a
-//   passing content-quality verdict for the post's current content (`social_content_quality`, the same join as the
-//   title section's read), no reported, hidden, deleted, outdated or expired link, no switched-off lane, one of each
-//   group of the same trailer. Missing or empty tables answer nothing, and the row shows its titles without what is said.
+//   passing content-quality verdict for the post's current content (`social_content_quality`) and a `keep` relevance
+//   verdict for the link (`social_relevance`), the same joins as the title section's read; no reported, hidden,
+//   deleted, outdated or expired link, no switched-off lane, one of each duplicate group, best-ranked first. Missing or
+//   empty tables (the relevance table too) answer nothing, and the row shows its titles without what is said.
 //
 // Nothing here writes: no Crate table, no Valkey key of its own.
 import {
@@ -25,7 +26,11 @@ import {
 import type { TitleDisplay } from "~/server/title-cards.server"
 import { query } from "~/utils/crate"
 import { titleKey } from "~/utils/title-key"
-import { contentQualityJoin } from "./social-store.server"
+import {
+	contentQualityJoin,
+	getSocialStore,
+	relevanceJoin,
+} from "./social-store.server"
 
 /** How long one answer is shared: the score changes once a day, discovery runs hourly. */
 export const TALKED_TTL_MS = 10 * 60 * 1000
@@ -40,7 +45,7 @@ export const disabledLanes = () =>
 		.split(/[\s,]+/)
 		.filter((lane) => lane)
 
-/** The visible links of these titles to their posts, newest first, one of each duplicate group per title. */
+/** The relevant visible links of these titles to their posts, best-ranked first, one of each duplicate group per title. */
 export function socialQuery(
 	titles: Pick<BuzzTitle, "mediaType" | "tmdbId">[],
 	lanes: string[] = disabledLanes(),
@@ -56,19 +61,49 @@ export function socialQuery(
 		? ` AND l.lane NOT IN (${lanes.map(() => "?").join(", ")})`
 		: ""
 	params.push(...lanes)
-	const sql = `SELECT media_type, media_tmdb_id, post_id, source, source_id, url, author, published_at, text FROM (
+	const sql = `SELECT media_type, media_tmdb_id, post_id, source, source_id, url, author, published_at, text, score, dup_group FROM (
   SELECT l.media_type, l.media_tmdb_id, p.post_id, p.source, p.source_id, p.url, p.author, p.published_at, p.text,
-    ROW_NUMBER() OVER (PARTITION BY l.media_type, l.media_tmdb_id, COALESCE(l.duplicate_group, p.post_id)
-      ORDER BY p.published_at DESC, p.post_id DESC) AS duplicate_rank
+    rel.score, COALESCE(rel.dup_group, l.duplicate_group, p.post_id) AS dup_group,
+    ROW_NUMBER() OVER (PARTITION BY l.media_type, l.media_tmdb_id, COALESCE(rel.dup_group, l.duplicate_group, p.post_id)
+      ORDER BY rel.score DESC NULLS LAST, p.published_at DESC, p.post_id DESC) AS duplicate_rank
   FROM doc.social_title_link l JOIN doc.social_post p ON p.post_id = l.post_id
   ${contentQualityJoin("doc")}
+  ${relevanceJoin("doc")}
   LEFT JOIN doc.social_link_report r ON r.media_type = l.media_type AND r.media_tmdb_id = l.media_tmdb_id
     AND r.post_id = l.post_id AND r.status IN ('open', 'confirmed')
   WHERE (${which}) AND l.hidden_at IS NULL AND p.deleted_at IS NULL
     AND p.published_at >= CURRENT_TIMESTAMP - INTERVAL '30 days'
     AND l.content_hash = p.content_hash AND r.report_id IS NULL${lane}
-) visible WHERE duplicate_rank = 1 ORDER BY published_at DESC, post_id DESC LIMIT 400`
+) visible WHERE duplicate_rank = 1 ORDER BY score DESC NULLS LAST, published_at DESC, post_id DESC LIMIT 400`
 	return { sql, params }
+}
+
+/** Whether SOCIAL_FIXTURE (development only, see social-store.server.ts) stands in for the social tables. */
+const fixtureInUse = (env = process.env) =>
+	env.NODE_ENV !== "production" && Boolean(env.SOCIAL_FIXTURE?.trim())
+
+/** The board's rows from the fixture, through the same filters as the title section's read of it. */
+export async function fixtureRows(titles: BuzzTitle[]): Promise<SocialRow[]> {
+	const store = getSocialStore()
+	const lanes = disabledLanes()
+	const rows = await Promise.all(
+		titles.map(async (title) => {
+			const media_type = title.mediaType === "show" ? "tv" : "movie"
+			const posts = await store.readTitle(
+				{ mediaType: media_type, tmdbId: title.tmdbId },
+				{ limit: 100, disabledLanes: lanes },
+			)
+			return posts.map(
+				({ lane, ...post }): SocialRow => ({
+					...post,
+					media_type,
+					media_tmdb_id: title.tmdbId,
+					dup_group: null,
+				}),
+			)
+		}),
+	)
+	return rows.flat()
 }
 
 type Reads = {
@@ -83,6 +118,7 @@ const crateReads: Reads = {
 			await query<{ day: string; payload: unknown }>(SNAPSHOT_QUERY, [key])
 		)[0] ?? null,
 	social: async (titles) => {
+		if (fixtureInUse()) return fixtureRows(titles)
 		const { sql, params } = socialQuery(titles)
 		return query<SocialRow>(sql, params)
 	},

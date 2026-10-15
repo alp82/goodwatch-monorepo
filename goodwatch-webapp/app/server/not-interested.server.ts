@@ -3,7 +3,7 @@ import { canonicalTitleId } from "~/utils/title-identity"
 import { resetOnboardingMediaCache } from "~/server/onboarding-media.server"
 import { resetUserDataCache } from "~/server/userData.server"
 import { execute, upsert } from "~/utils/crate"
-import { markG1Changed } from "./g1/rebuild.server.ts"
+import { markPersonalOrderChanged } from "./personal-order/rebuild.server.ts"
 
 interface UpdateNotInterestedParams {
 	user_id?: string
@@ -49,7 +49,7 @@ export const updateNotInterested = async ({
 				conflictColumns: ["user_id", "tmdb_id", "media_type"],
 				ignoreUpdate: true, // Just ignore if already exists
 			})
-			if (result.rowcount) markG1Changed(user_id)
+			if (result.rowcount) markPersonalOrderChanged(user_id)
 		} else {
 			// Use execute for deleting Not interested titles
 			const sql = `
@@ -58,7 +58,7 @@ export const updateNotInterested = async ({
 			`
 			const params = [user_id, tmdb_id, media_type]
 			const result = await execute(sql, params)
-			if (result.rowcount) markG1Changed(user_id)
+			if (result.rowcount) markPersonalOrderChanged(user_id)
 		}
 
 		if (action === "add") {

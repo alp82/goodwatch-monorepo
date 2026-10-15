@@ -4,7 +4,7 @@ import { randomUUID } from "node:crypto"
 export function createWatchNextPlanStore<T>({
 	now = Date.now,
 	ttl = 10 * 60_000,
-	maxEntries = 40,
+	maxEntries = 300,
 	maxTitles = 100_000,
 } = {}) {
 	const plans = new Map<
