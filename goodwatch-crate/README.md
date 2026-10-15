@@ -91,13 +91,45 @@ every node. Afterward:
 2. Wait for the next hourly run, or run the cron command by hand, and check the
    log for `Backup run finished.`
 
+## The backup user
+
+Without configuration `backup.py` and `cleanup_legacy.py` send no
+credentials. That works only while the cluster does not enforce passwords.
+Before password authentication is switched on (#562), they log in as
+`goodwatch_backup`:
+
+- `CRATE_BACKUP_USER`: the user name.
+- `CRATE_BACKUP_PASSWORD_FILE`: a file that holds only the password, owned by
+  root, mode `600`. One trailing newline is ignored.
+
+Set both or neither. With one of them, or with a file that group or others can
+read, the run logs `BACKUP FAILED:` and exits with code 1 before it sends a
+statement. The cron line then becomes:
+
+```sh
+CRATE_BACKUP_USER=goodwatch_backup CRATE_BACKUP_PASSWORD_FILE=/root/.config/goodwatch/crate-backup-password /root/.local/bin/uv run /root/goodwatch/goodwatch-monorepo/goodwatch-crate/backup.py >> /var/log/backup_crate.log 2>&1
+```
+
+The user and its grants are in
+[cratedb-credentials.md](../docs/implementation/auth/cratedb-credentials.md).
+
+## Password authentication on the nodes
+
+`docker-compose.yml` switches host-based authentication on only when the
+host's `.env` has `CRATE_HBA_ENABLED=true`. Without it the node behaves as
+before. Keep comments out of the `command:` block: Compose passes a `#` line on
+as arguments, and the node ignores every `-C` setting after them.
+
 ## Tests
 
-The tests stub `run_sql`, so no request leaves the process.
+The backup tests stub `run_sql` or use a loopback HTTP server, so no request
+leaves the machine. The Compose test renders `docker-compose.yml` with
+`docker compose config` and is skipped without Docker.
 
 ```sh
 cd goodwatch-crate
 uv run --no-project --with requests python -m unittest test_backup
+python3 -m unittest test_compose
 ```
 
 ## The two repositories
