@@ -336,3 +336,37 @@ test("The write-scope preflight bounds the body and rejects malformed JSON", asy
 	assert.equal(response.status, 400)
 	assert.match(response.headers.get("Cache-Control") ?? "", /no-transform/)
 })
+
+test("tools/list and the rate-limit answer work under remix-serve's fetch polyfill", { timeout: 15_000 }, async () => {
+	// remix-serve installs @remix-run/web-fetch (the app has no v3_singleFetch): its Response has no static json(),
+	// which the MCP SDK calls while it answers. Without the server entry's fill, tools/list never settled.
+	const { installGlobals } = await import("@remix-run/node")
+	const { fillWebFetchGaps } = await import("../web-fetch-gaps.server.ts")
+	const names = ["fetch", "Request", "Response", "Headers", "FormData"] as const
+	const original = Object.fromEntries(names.map((name) => [name, globalThis[name]]))
+	// The server's order: remix-serve installs the polyfill, then the server entry fills its gaps.
+	installGlobals()
+	fillWebFetchGaps()
+	try {
+		const listed = await createReadMcpHandler({
+			resource,
+			authorization: verifier,
+			limiter: unlimited,
+		})(rpc("tools/list"))
+		assert.equal(listed.status, 200, await listed.clone().text())
+		assert.ok((await result(listed)).result.tools.length > 0)
+		const limited = await createReadMcpHandler({
+			resource,
+			authorization: verifier,
+			limiter: {
+				async take() {
+					return { allowed: false, store: "valkey", retryAfterSeconds: 17 }
+				},
+			},
+		})(rpc("tools/list"))
+		assert.equal(limited.status, 429)
+		assert.deepEqual(await limited.json(), { error: "rate_limited" })
+	} finally {
+		Object.assign(globalThis, original)
+	}
+})

@@ -96,13 +96,14 @@ export function createReadMcpHandler(
 			{ limit: 1000, seconds: 3600 },
 		])
 		if (!verdict.allowed)
-			return Response.json(
-				{ error: "rate_limited" },
-				{
-					status: 429,
-					headers: { "Retry-After": String(verdict.retryAfterSeconds) },
+			// Not Response.json: remix-serve's polyfilled Response has no static json().
+			return new Response(JSON.stringify({ error: "rate_limited" }), {
+				status: 429,
+				headers: {
+					"Content-Type": "application/json",
+					"Retry-After": String(verdict.retryAfterSeconds),
 				},
-			)
+			})
 		const handler = createMcpHandler(
 			() =>
 				createToolServer(

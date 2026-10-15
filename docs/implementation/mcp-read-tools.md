@@ -6,9 +6,9 @@ The Remix resource route `goodwatch-webapp/app/routes/mcp.ts` serves a stateless
 
 ## Authorization handoff to #566
 
-`app/server/mcp/authorization.server.ts` exports the single SDK `OAuthTokenVerifier` seam, `mcpAuthorization`. It currently rejects every token. There is no development token, member override header, session-cookie fallback, or environment switch that bypasses authorization in the application route.
+`app/server/mcp/authorization.server.ts` exports the single SDK `OAuthTokenVerifier` seam, `mcpAuthorization`. It is wired to the durable Better Auth JWKS and grant verifier by #566; see [MCP authorization](mcp-authorization.md). There is no development token, member override header, session-cookie fallback, or environment switch that bypasses authorization in the application route.
 
-Replace that verifier with Better Auth JWKS verification in #566. Its returned `AuthInfo` must contain the verified token, OAuth client ID, scopes, expiration in epoch seconds, resource audience as a `URL`, and `extra.userId` mapped from the verified member subject. Missing identity, missing/expired expiration, an audience other than this resource, or missing `mcp:read` cannot reach member data. JWT signature verification, issuer checks, grant revocation/last-use, OAuth metadata and token refresh belong to #566. The local integration probe supplies a verifier only to its private handler instance, never to the Remix route.
+The verifier checks Better Auth JWKS and current member, client and grant state. Its returned `AuthInfo` must contain the verified token, OAuth client ID, scopes, expiration in epoch seconds, resource audience as a `URL`, and `extra.userId` mapped from the verified member subject. Missing identity, missing/expired expiration, an audience other than this resource, or missing `mcp:read` cannot reach member data. JWT signature verification, issuer checks, grant revocation/last-use, OAuth metadata and token refresh belong to #566. The local integration probe supplies a verifier only to its private handler instance, never to the Remix route.
 
 Set `MCP_RESOURCE_URL` to the canonical external `/mcp` URL. The gate advertises `/.well-known/oauth-protected-resource/mcp` at that origin; #566 must serve that metadata. Requests must arrive with that origin, and browser `Origin` headers must match it. Requests without an `Origin` header are supported. Every response gets `Cache-Control: private, no-store, no-transform`, and `/mcp` is excluded before the HTML page cache can resolve an identity or allocate an entry.
 
@@ -30,7 +30,7 @@ Watch dates come only from stored watches. Progress retains earlier passes in it
 
 ## Member policy, limits and metrics
 
-`main` removed the old recommendation rollout helpers. The small MCP policy reads `REC_MCP_READ` plus each tool's `REC_MCP_*` flag both when registering/listing tools and immediately before a call. Each accepts `on`, `off`, or a comma-separated member ID allowlist. Unset means enabled for all members; authorization still fails closed until #566.
+`main` removed the old recommendation rollout helpers. The small MCP policy reads `REC_MCP_READ` plus each tool's `REC_MCP_*` flag both when registering/listing tools and immediately before a call. Each accepts `on`, `off`, or a comma-separated member ID allowlist. Unset means enabled for all members; authorization requires the enabled Better Auth service and an active grant.
 
 Tool flags are `REC_MCP_SEARCH_TITLES`, `REC_MCP_TITLE`, `REC_MCP_MY_SHOWS`, `REC_MCP_SHOW_PROGRESS`, `REC_MCP_TONIGHT`, `REC_MCP_LIBRARY` and `REC_MCP_TASTE`. Hidden tools cannot be forced by name. A policy change after registration is also checked in the callback.
 

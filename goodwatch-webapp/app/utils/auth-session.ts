@@ -37,6 +37,12 @@ const memo = new Map<
 >()
 const jwksCache = new Map<string, ReturnType<typeof createRemoteJWKSet>>()
 const algorithms = ["ES256", "RS256", "EdDSA"]
+let betterAuthResolver: ((cookie: string | null) => Promise<ResolvedSession>) | undefined
+// The server entry supplies this boundary; shared client utilities never import
+// the database, SMTP transport or Better Auth server implementation.
+export function registerBetterAuthResolver(resolver: typeof betterAuthResolver) {
+	betterAuthResolver = resolver
+}
 
 function definitive(error: { status?: number; name?: string } | null): boolean {
 	return (
@@ -52,6 +58,19 @@ export function resolveSession(
 	cookieHeader: string | null,
 	options?: { fresh?: boolean },
 ): Promise<ResolvedSession> {
+	if (process.env.BETTER_AUTH_ENABLED === "true") {
+		if (!/(?:^|;)[ \t]*(?:__Secure-)?gw\.session_token=/.test(cookieHeader ?? "")) {
+			authCheckCounts.none++
+			return Promise.resolve({ user: null, setCookies: [], source: "none" })
+		}
+		// No memo or cookie cache: signing out takes effect on the next request.
+		return Promise.resolve().then(() => {
+			if (!betterAuthResolver) throw new Error("Better Auth session resolver unavailable")
+			return betterAuthResolver(cookieHeader)
+		})
+			.then(result => { authCheckCounts.server++; return result })
+			.catch(() => { authCheckCounts.error++; return { user: null, setCookies: [], source: "server" as const } })
+	}
 	if (!hasAuthCookie(cookieHeader)) {
 		authCheckCounts.none++
 		return Promise.resolve({ user: null, setCookies: [], source: "none" })
