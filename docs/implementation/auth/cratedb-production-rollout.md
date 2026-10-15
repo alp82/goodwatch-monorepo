@@ -62,8 +62,8 @@ No Coolify setting was changed by this operator. No Crate/worker restart, HBA en
 The next credential-bearing scheduled backup is **2026-10-16 00:05 UTC**, not yet observed in this session.
 
 Q37 permits individually revalidated orphan-ID KILLs on crate-02/03, but Q35 requires stopping when they do not clear.
-**Do not infer permission for a restart with unresolved contexts or reuse Q34's stop workaround.** The owner must
-resolve this failed gate before enforcement resumes. The inventory below is the original six-host baseline;
+**Historical restriction, now superseded:** the subsequent owner decision above explicitly permits the zero-primary
+unlimited-grace normal stop with these contexts still present. The inventory below is the original six-host baseline;
 the execution record supplies expanded current coverage. Do not regenerate existing secrets/users or blindly
 repeat completed staging steps. The [first staging record](cratedb-production/20261015-credential-stage/) is retained
 as historical evidence, including the now-resolved cron incident.
@@ -104,9 +104,8 @@ Latest independently verified snapshot `hourly_20261015_230501` is SUCCESS (23:1
 Crate-02's old entries started Oct 15 **04:01:09 UTC**, around the prior crate-03 restart. Crate-03's started
 **20:37:12 UTC**, around the prior crate-01 stop. Causality remains unproven. The complete candidate IDs are in
 `operations-final.json`; re-query before proposing any individual cancellation. **No KILL ALL, automatic KILL,
-forced stop, shortened grace, or changing force=true.** Unresolved stale contexts block starting enforcement even
-though data health is GREEN. Q37 permits individual orphan-ID KILLs, with an immediate `sys.jobs` recheck before each;
-it does not authorize killing active member queries, forced stops, or proceeding with uncleared contexts.
+forced stop, shortened grace, or changing force=true.** The original stale-context block is superseded by the explicit normal-stop continuation above; data health must still be GREEN before drain. Q37 permits individual orphan-ID KILLs, with an immediate `sys.jobs` recheck before each;
+It does not authorize killing active member queries or forced stops. The later continuation authorizes normal SIGTERM after zero primaries despite uncleared contexts.
 
 ## Production client inventory
 
@@ -143,7 +142,7 @@ No blanket grant on every schema. Auth-table migration must apply DENY to every 
 
 1. Resolve the **46 persistent operation entries / 18 job IDs** under #644. Q37 allows individual KILLs only after
    rechecking no matching `sys.jobs` row immediately before each; record ID/result on #562 and stop if they do not clear.
-   No inherited Q34 SIGTERM/force approval. Require empty stale-context results before enforcement.
+   This historical requirement is superseded by the subsequent explicit normal-SIGTERM approval above. No more KILLs; force remains false.
 2. Six role secrets/users/grants are now created. Do not regenerate them. Files are mode 0600 under
    `/root/.config/goodwatch/crate-credentials/` on crate-01. Transfer the webapp secret to owner custody through a
    secure channel; never put values in chat, logs, shell arguments or issues. The restored 23:05 UTC backup and corrected credential schedule are now verified.
@@ -197,7 +196,7 @@ crate_sql 10.0.0.11 crate-01 "SELECT name,state,finished FROM sys.snapshots ORDE
 ```
 
 Require all current health rows GREEN, every current copy STARTED/STARTED, three expected IDs on 5.10.16, all node checks
-passing, zero old operations after owner-approved resolution, no active drain/snapshot job, and baseline settings above.
+passing, existing orphan-context inventory recorded under the approved normal-stop continuation, no active drain/snapshot job, and baseline settings above.
 Re-read operations twice separated by at least one minute. Inspect IDs and timestamps, never member SQL/arguments.
 Capture current settings layers for rollback; never RESET GLOBAL blindly. Verify latest backup success and mounted snapshot
 path on all hosts. #563's recorded restore drill must cover this cluster/repository; record its link and separate BLOB
@@ -290,8 +289,9 @@ The Ansible inventory now retains `crate_backup_user=goodwatch_backup` and
 Deploy the reviewed `cron.yml` and that inventory file on hq. For a scoped reconciliation use
 `ansible-playbook -i hosts.ini cron.yml --limit db1 --tags crate-backup-cron`; never run the other cron plays as a rollout probe.
 The task checks the root-only secret, keeps a cron backup and verifies exactly one intended entry using `crontab -l`.
-Observe a successful scheduled run and one full day of ordinary jobs before enforcement. Exercise infrequent job
-classes through approved non-destructive canaries or their normal schedules. Do not invoke cleanup_legacy as a test.
+The owner-authorized continuation uses the successful 23:05 scheduled run, credentialed helper checks, ordinary
+job results and bounded representative canaries as the preflight evidence. Continue observing the next credential-bearing
+scheduled run; do not represent a full day of observation as completed. Exercise infrequent classes through bounded canaries. Do not invoke cleanup_legacy as a test.
 
 From each actual page/search container, stream the Node verifier (no Python needed):
 
@@ -301,7 +301,7 @@ ssh root@10.0.0.20 docker exec -i -e CRATE_VERIFY_MODE=credentials goodwatch-sea
 # Repeat for search-b and the current gk4owk8-* page container on .20 and .21.
 ```
 
-Require `actual=goodwatch_search` or `goodwatch_webapp` as appropriate, through all three coordinators. Run equivalent
+Require `actual=goodwatch_search` for search or `admin` for pages under Q37, through all three coordinators. Run equivalent
 `SELECT current_user` with supplied credentials through `CrateConnector` on every eligible worker host and via the
 backup helper (read only, never call backup.main as a probe). Review active `admin`/`crate` jobs before maintenance; Q37 explicitly permits the verified page
 `admin` identity. Let older worker jobs finish or establish that their retained credentials remain valid; never kill them. **HBA off accepts wrong passwords**: these checks establish identity/grants and credential
@@ -351,12 +351,14 @@ For each target:
    Results must be 0, 0, false. Check target StopSignal is unset/SIGTERM/15. If still running:
 
    ```bash
-   ssh root@10.0.0.12 docker stop --timeout=-1 crate-02
+   ssh root@10.0.0.12 systemd-run --unit=gw-crate-stop-562-02 --property=Type=exec --property=TimeoutStopSec=infinity --property=SendSIGKILL=no /usr/bin/docker stop --timeout=-1 crate-02
+   # Poll through an independent SSH session; do not stop/cancel this unit.
+   ssh root@10.0.0.12 systemctl show gw-crate-stop-562-02 -p ActiveState -p Result -p ExecMainStatus
    ssh root@10.0.0.12 docker inspect crate-02 --format '{{.State.Status}} {{.State.ExitCode}} {{.State.OOMKilled}}'
    ```
 
    Require exited, exit 0 or 143, no OOM/SIGKILL. Never wrap this stop in a finite grace/kill timeout. If it does not
-   exit, stop and report; no further KILLs or forced stop. Original orphan-context rows alone are covered by this approval.
+   exit within 15 minutes, leave its unlimited-grace stop running and report; no further KILLs or forced stop. Original orphan-context rows alone are covered by this approval.
 5. Only after exit, recreate on the same volume/image:
 
    ```bash
@@ -366,7 +368,8 @@ For each target:
    Require original ID/version rejoin, exact expected HBA command, private bindings/mounts/image unchanged and
    restart always. Check container-loopback `SELECT current_user` returns crate. Initial startup readiness may
    need several seconds; begin the hard client gate only after users/metadata are available.
-6. Restore allocation through the observer immediately after rejoin:
+6. Run the hard client gate in step 7 immediately after metadata readiness, before allocating replicas back.
+   On success, restore allocation through the observer:
 
    ```bash
    crate_sql 10.0.0.11 crate-01 "SET GLOBAL TRANSIENT \"cluster.routing.allocation.enable\" = 'all'"
@@ -409,6 +412,7 @@ allocation=primaries remains while awaiting a decision.
 - **Mixed cluster:** revert only already-changed nodes, one at a time, GREEN between; never disable all at once. Retain
   dedicated credentials/users: they work while HBA is off. If permissions are wrong, any return to previous `admin`
   credentials on pages is another owner UI action; do not drop users/erase secrets during incident response.
+- **Node never rejoins:** verify via a surviving coordinator that it holds zero primaries and retains no new assigned shards. Use the same host-managed unlimited-grace normal stop, restore its saved HBA-off config, recreate the same volume/image and stop/report after health recovery. Never use Compose to stop a running node.
 - **Recovery validation:** correct credentials work on every node, original private binds/volume/ID persist, restart always,
   allocation recorded baseline, all GREEN/STARTED, scheduled backup and monitoring pass. With HBA disabled, explicitly
   report that password enforcement remains incomplete. Do not call a reverted rollout successful.
