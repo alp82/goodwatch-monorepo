@@ -233,4 +233,4 @@ movie ratings (theirs and two members matched on early mean), and picks one. 12 
 Reading: **the registered screen does not pass**, because it needs both readers and Haiku's excess interval
 includes zero. Both readers point the same way, and Astra clears every rule. Unreplicated, small (12 members,
 movie-only lists), with three triples carrying a residual title link (verdict unchanged without them). The words
-gate on map #652 stays closed. Replication waits for tier C ratings.
+gate on map #652 stays closed. Version tested: the production Sides code pinned at `6082cadc`, which predates "Better Sides of you" (#666, live October 16) and the "taste groups" copy rename; `sides.server.ts` changed by about 940 lines since. The verdict is about those earlier descriptions. No T5 result exists yet for the live ones; replication on the live Sides is #674.

@@ -8,6 +8,10 @@ only. An earlier job in `run-20261016e` ran the harness's fake reader; it was ne
 line and beats its numbers-only control, but its excess over chance has a 95% interval that includes zero, and the
 rule needs both readers. Both readers point the same way. Unreplicated: 12 members, movie-only lists.
 
+Version tested: the production Sides code pinned at `6082cadc`, which predates "Better Sides of you" (#666, live
+October 16) and the "taste groups" copy rename; `sides.server.ts` changed by about 940 lines since. The verdict is
+about those earlier descriptions. No T5 result exists yet for the live ones; replication on the live Sides is #674.
+
 ## Run
 
 - 12 members, 47 triples (movie-only later lists, amendment A1). Readers ran apart: Haiku 5.5 (`claude-haiku-5-5`,

@@ -83,6 +83,7 @@ Read this first. Rewritten at the end of every session.
   **the registered screen does not pass**. Astra 75.0% (56.2–89.6), +39.6 over numbers-only; Haiku 46.5%
   (30.6–62.5), excess interval −2.8 to +29.2; both readers point the same way. 12 members, 47 triples, movie-only
   lists (A1, after a 43.4% media-type shortcut found before any call). Words gate stays closed.
+  Tested the pre-#666 Sides code (`6082cadc`); the live Sides are untested (#674). #656 closed, map line added.
   - [x] Fable reviews: plan, harness, pre-call amendment ("go"), result (verdict correct, no integrity problem)
   - [x] Three statement-list errors fixed in the lab (`lab/t5/statements/`); production never had them
   - [x] Incident: a first job ran the fake reader (never scored); fixed with tests, re-registered
