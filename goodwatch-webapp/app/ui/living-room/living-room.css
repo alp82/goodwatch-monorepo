@@ -1300,6 +1300,30 @@ html[data-tv-transition] .tvr-bracket {
 		border-radius: 999px;
 		font-weight: 700;
 	}
+	/* An entry of home's guide (#673, HomeGuide.tsx). Its plate fades in and it comes forward: opacity and transform
+	   only, so a move along the list paints its words once and nothing per frame. */
+	.tvc-entry {
+		transition: transform 0.18s cubic-bezier(0.2, 0.8, 0.2, 1);
+	}
+	.tvc-entry::before {
+		content: "";
+		position: absolute;
+		inset: 0;
+		border-radius: inherit;
+		background: #fff;
+		opacity: 0;
+		transition: opacity 0.18s;
+	}
+	.tvc-entry > * {
+		position: relative;
+	}
+	.tvc-entry.tvc-on {
+		color: #000;
+		transform: scale(1.04);
+	}
+	.tvc-entry.tvc-on::before {
+		opacity: 1;
+	}
 	.tvc-btn.tvc-on,
 	.tvc-act.tvc-on {
 		background: #fff;

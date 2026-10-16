@@ -131,7 +131,7 @@ export function HomeGuide({
 				}}
 			>
 				<div
-					className="relative transition-transform duration-200 ease-out motion-reduce:transition-none"
+					className="relative transition-transform duration-200 ease-out will-change-transform motion-reduce:transition-none"
 					style={{ transform: `translateY(${-slide}px)`, height: total }}
 				>
 					<div
@@ -162,7 +162,7 @@ export function HomeGuide({
 											)
 										: undefined
 								}
-								className={`tvc-act absolute inset-x-2 flex items-center gap-4 px-4 ${lit ? "bg-white/[.14]" : ""}`}
+								className={`tvc-entry absolute inset-x-2 flex items-center gap-4 px-4 font-bold ${lit ? "bg-white/[.14]" : "bg-black/40"}`}
 								style={{ top: box.top, height: box.h, borderRadius: 14 }}
 							>
 								{entry.side ? (
