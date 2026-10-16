@@ -569,3 +569,67 @@ describe("placeTitle", () => {
 		assert.equal(edgeOfTitle(named, unbridged, mix, facts()), null)
 	})
 })
+
+describe("placeTitle with a place's own bars", () => {
+	const { titles, pool } = twoStrands()
+	const someone = person(titles, pool)
+	const named = namedSides(someone)
+	assert.ok(named)
+	const built = buildSides(someone).sides
+	const crimeSide = named.sides.findIndex((side) =>
+		side.members.some((r) => r.facts.moods.includes("crime")),
+	)
+	const center = named.sides[crimeSide].center
+	// Along the crime side's center, plus enough of something else to bring the closeness down to about `closeness`.
+	const at = (closeness: number) => {
+		const away = new Float64Array(K)
+		away[KEYS.indexOf("romance")] = 1
+		const t = Math.sqrt(1 / closeness ** 2 - 1)
+		const norm = Math.sqrt([...center].reduce((a, x) => a + x * x, 0))
+		return center.map((x, k) => x / norm + t * away[k])
+	}
+	const bars = { on: 0.6, past: 0.45 }
+
+	it("is on the side only above the on bar", async () => {
+		// Facts like the crime strand's, so the side's name ("crime dramas") describes the title.
+		const crime = () => facts({ genres: ["Crime", "Drama"] })
+		const close = at(0.8)
+		assert.deepEqual(
+			await placeTitle(named, close, crime(), async () => built, bars),
+			{
+				at: "on",
+				side: crimeSide,
+			},
+		)
+		// On the side by its own rule, but below the bar: in no place just past it either, so nothing.
+		const loose = at(0.5)
+		assert.equal(sideOfTitle(named, { z: loose, facts: crime() }), crimeSide)
+		assert.equal(
+			await placeTitle(named, loose, crime(), async () => built, bars),
+			null,
+		)
+	})
+
+	it("is just past the side between the bars, in a place just past it", async () => {
+		const place = await placeTitle(
+			named,
+			at(0.5),
+			facts({ origin: "KR" }),
+			async () => built,
+			bars,
+		)
+		assert.ok(place?.at === "edge")
+		assert.equal(place.edge.kind, "country")
+		// Below the past bar: nothing.
+		assert.equal(
+			await placeTitle(
+				named,
+				at(0.35),
+				facts({ origin: "KR" }),
+				async () => built,
+				bars,
+			),
+			null,
+		)
+	})
+})

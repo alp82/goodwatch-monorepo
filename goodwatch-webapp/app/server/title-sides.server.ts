@@ -12,6 +12,8 @@
 // - Cost: the grouping is kept in process memory per member for 10 minutes, keyed by everything it reads (ratings,
 //   seen, Want to See, skipped) and the snapshot version. The edges come from the Taste page's view, cached in Redis
 //   for 10 minutes; building it when it isn't cached also warms the Taste page.
+// - How often: the title page asks more than the sides' own rule (BARS), so it speaks about as often as the prototype
+//   the owner chose did: on a side when at least 0.6 close to its center, just past it when at least 0.45.
 // - The page doesn't wait long: past its budget the line is left out for this request (titleSidesWithin).
 import { createHash } from "node:crypto"
 import type { MoodKey } from "~/domain/moods"
@@ -46,6 +48,9 @@ const NEAR = 3
 const NEAR_BETWEEN = 2
 // The closest loved titles looked up for their posters, before one per franchise.
 const NEAR_POOL = 12
+// The title page speaks less often than a side holds titles (#661: as often as the prototype did): on a side only when
+// at least 0.6 close to its center, and just past it only when at least 0.45 close (0.15 short of on).
+const BARS = { on: 0.6, past: 0.45 }
 const KEEP_MS = 10 * 60_000
 const MAX_KEPT = 500
 /** How long a title page waits for the line, from the loader's start. */
@@ -195,13 +200,19 @@ export async function titleSides(
 	const named = await memberNamed(ctx, userId)
 	if (!named) return null
 	// The edges are the Taste page's: its view, from its cache when there.
-	const place = await placeTitle(named, z, facts, async () => {
-		const view = await getTastePortrait(
-			{ ...who, context: () => context },
-			"sides",
-		)
-		return view.status === "ready" ? view.sides : null
-	})
+	const place = await placeTitle(
+		named,
+		z,
+		facts,
+		async () => {
+			const view = await getTastePortrait(
+				{ ...who, context: () => context },
+				"sides",
+			)
+			return view.status === "ready" ? view.sides : null
+		},
+		BARS,
+	)
 	if (!place) return null
 	if (place.at === "on")
 		return {

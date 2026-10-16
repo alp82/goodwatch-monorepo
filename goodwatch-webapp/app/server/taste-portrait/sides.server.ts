@@ -383,11 +383,22 @@ function placesOf(facts: RatedTitle["facts"]): Place[] {
 // ---------- a title at an edge ----------
 
 // A title on no side is just past its nearest side only when at least this close to it: half what a side's own titles
-// need (FITS_NO_SIDE).
+// need (FITS_NO_SIDE). A place can ask for closer (Bars).
 const JUST_PAST = FITS_NO_SIDE / 2
 // Between two sides: at least this close to both and about as close to each, as a bridge's titles are.
 const BETWEEN = 0.2
 const BETWEEN_GAP = 0.12
+
+/**
+ * How close a title must be to its side's center to count, where a place asks for more than the sides' own rule: `on`
+ * to be on its side (on top of sideOfTitle), `past` to be in a place or a step just past it.
+ */
+export interface Bars {
+	on: number
+	past: number
+}
+
+const ANY_BARS: Bars = { on: FITS_NO_SIDE, past: JUST_PAST }
 
 /** The edge a title on no side sits at: the side it is just past (its index), the edge, and for a bridge the other side. */
 export interface TitleEdge {
@@ -407,6 +418,7 @@ export function edgeOfTitle(
 	sides: Side[],
 	z: ArrayLike<number>,
 	facts: TitleFacts,
+	bars: Bars = ANY_BARS,
 ): TitleEdge | null {
 	const { index, similarity } = nearest(
 		z,
@@ -416,7 +428,7 @@ export function edgeOfTitle(
 	if (at === null) return null
 	const side = named.sides[at]
 	const edges = sides.find((s) => s.id === side.id)?.edges ?? []
-	if (similarity >= JUST_PAST) {
+	if (similarity >= bars.past) {
 		const places = new Set(
 			placesOf(facts).map((p) => `${side.id}-${p.kind}-${p.id}`),
 		)
@@ -459,19 +471,21 @@ export type TitlePlace =
 	| ({ at: "edge" } & TitleEdge)
 
 /**
- * On a side first (sideOfTitle), else at an edge (edgeOfTitle). The sides with their edges are asked for only when the
- * title is on no side: they cost a full build when not kept.
+ * On a side first (sideOfTitle, at least `bars.on` close to its center), else at an edge (edgeOfTitle). The sides with
+ * their edges are asked for only when the title is on no side: they cost a full build when not kept.
  */
 export async function placeTitle(
 	named: NamedSides,
 	z: ArrayLike<number>,
 	facts: TitleFacts,
 	sides: () => Promise<Side[] | null>,
+	bars: Bars = ANY_BARS,
 ): Promise<TitlePlace | null> {
 	const on = sideOfTitle(named, { z, facts })
-	if (on !== null) return { at: "on", side: on }
+	if (on !== null && cosine(z, named.sides[on].center) >= bars.on)
+		return { at: "on", side: on }
 	const built = await sides()
-	const edge = built && edgeOfTitle(named, built, z, facts)
+	const edge = built && edgeOfTitle(named, built, z, facts, bars)
 	return edge ? { at: "edge", ...edge } : null
 }
 
