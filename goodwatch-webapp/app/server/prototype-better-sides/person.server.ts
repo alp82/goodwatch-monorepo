@@ -1,5 +1,5 @@
 // PROTOTYPE - throwaway (#657). Reads one member's Person the way the Taste page does, read-only, kept in process for
-// 10 minutes per member, plus their personal order when one is published (members in the personal order group only).
+// 60 minutes per member (#662: a cold load takes up to 45 s), plus their personal order when one is published (members in the personal order group only).
 import { orderPersonalOrder, loadPersonalOrder } from "~/server/personal-order/reader.server"
 import { readPerson, type Person, type PortraitInput } from "~/server/taste-portrait/person.server"
 import { loadTaste } from "~/server/taste/index.server"
@@ -20,7 +20,7 @@ const kept = new Map<string, { at: number; value: Promise<ProtoPerson | null> }>
 export function protoPerson(userId: string): Promise<ProtoPerson | null> {
 	if (!getTitleSnapshot()) return Promise.resolve(null)
 	const hit = kept.get(userId)
-	if (hit && Date.now() - hit.at < 10 * 60_000) return hit.value
+	if (hit && Date.now() - hit.at < 60 * 60_000) return hit.value
 	const value = build(userId)
 	kept.set(userId, { at: Date.now(), value })
 	value.catch(() => kept.delete(userId))

@@ -60,7 +60,7 @@ function keep(person: Person, built: Built) {
 const kept = new Map<string, { at: number; value: Promise<State> }>()
 function stateOf(cacheKey: string, make: () => Person): Promise<State> {
 	const hit = kept.get(cacheKey)
-	if (hit && Date.now() - hit.at < 10 * 60_000) return hit.value
+	if (hit && Date.now() - hit.at < 60 * 60_000) return hit.value
 	const value = Promise.resolve().then(() => {
 		const person = make()
 		const built = buildTighter(person)

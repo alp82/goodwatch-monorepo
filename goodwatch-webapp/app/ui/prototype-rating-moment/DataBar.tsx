@@ -12,7 +12,7 @@ export function outcomeText(o: Outcome, view: MomentView) {
 		case "none":
 			return "Not rated yet in this page. Rate it with the score button."
 		case "low":
-			return `5 or less: sides don't change; the #526 why row shows.${o.inside ? ` It sits close to ${o.inside}.` : ""}`
+			return `5 or less: sides don't change; the #526 why row shows (once per title).${o.inside ? ` It sits close to side ${view.before.sides.findIndex((x) => x.id === o.inside) + 1}.` : ""}`
 		case "middle":
 			return `Not loved (loved is ${view.lovedFrom}+ for this member): sides don't change.`
 		case "loose":
@@ -22,7 +22,7 @@ export function outcomeText(o: Outcome, view: MomentView) {
 		case "new":
 			return `Loved, and lands in a side that wasn't there before (${o.sidesBefore} sides → ${o.sidesAfter}).`
 		case "joins":
-			return `Joins ${o.was} (closeness 0.3 or more, not against its name): ${pct(o.shareBefore)} → ${pct(o.shareAfter)} of what they love; size rank ${o.rankBefore + 1} → ${o.rankAfter + 1}${o.reshaped ? "; the number of sides changed" : ""}.`
+			return `Joins side ${(view.after?.sides.findIndex((x) => x.id === o.side) ?? -1) + 1} (closeness 0.3 or more, not against its name): ${pct(o.shareBefore)} → ${pct(o.shareAfter)} of what they love; size rank ${o.rankBefore + 1} → ${o.rankAfter + 1}${o.reshaped ? "; the number of sides changed" : ""}.`
 	}
 }
 
@@ -111,7 +111,7 @@ export function DataBar({ base, moment, loading, names }: { base: MomentView | n
 				</>
 			)}
 			<PrototypeSwitcher
-				position="bottom-24 left-2 lg:bottom-4 lg:left-4"
+				position="bottom-24 left-2 lg:bottom-4 lg:left-auto lg:right-24"
 				variants={Object.fromEntries(Object.entries(VARIANTS).map(([k, v]) => [k, `${v.name} (${v.style})`]))}
 			/>
 		</div>

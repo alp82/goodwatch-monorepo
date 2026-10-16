@@ -58,6 +58,9 @@ export function useRatingMoment(media: ScoredMedia): RatingMoment | null {
 	// #526 asks once per title: the rating that first went to 5 or less.
 	const [whyId, setWhyId] = useState<number | null>(null)
 	const barSlot = useSlot("bar")
+	// The body exists only in the browser: the toast and the takeover render after the page mounts.
+	const [body, setBody] = useState<HTMLElement | null>(null)
+	useEffect(() => setBody(document.body), [])
 	const heroSlot = useSlot("hero")
 
 	useEffect(() => {
@@ -112,10 +115,10 @@ export function useRatingMoment(media: ScoredMedia): RatingMoment | null {
 			<>
 				{barSlot && createPortal(<DataBar base={base} moment={ready} loading={loading} variant={variant} names={names} />, barSlot)}
 				{/* The toast and the takeover go to the body: the overview card is its own stacking context. */}
-				{variant === "toast" && createPortal(<MomentToast key={id} view={ready} score={score} names={names} why={why} />, document.body)}
-				{variant === "sheet" && why && createPortal(<MomentToast key={id} view={null} score={score} names={names} why />, document.body)}
+				{body && variant === "toast" && createPortal(<MomentToast key={id} view={ready} score={score} names={names} why={why} />, body)}
+				{body && variant === "sheet" && why && createPortal(<MomentToast key={id} view={null} score={score} names={names} why />, body)}
 				{variant === "hero" && heroSlot && createPortal(<HeroBand key={id} view={ready} score={score} names={names} why={why} />, heroSlot)}
-				{variant === "shape" && createPortal(<ShapeTakeover key={id} view={ready} score={score} names={names} why={why} />, document.body)}
+				{body && variant === "shape" && createPortal(<ShapeTakeover key={id} view={ready} score={score} names={names} why={why} />, body)}
 			</>
 		),
 	}
