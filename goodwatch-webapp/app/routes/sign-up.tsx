@@ -74,8 +74,18 @@ export type SentState = { email: string; returnTo: string }
 export const action = ({ request }: ActionFunctionArgs) => backToForm(request)
 
 export default function SignUpPage() {
-	const { maintenance } = useLoaderData<LoaderData>()
-	return maintenance ? <MaintenanceCard /> : <SignUpRoute />
+	const { maintenance, redirectUri } = useLoaderData<LoaderData>()
+	return maintenance ? <SignedInMovesOn redirectUri={redirectUri} /> : <SignUpRoute />
+}
+
+// The notice stands in for the form, but a member who is signed in already still goes on, as the form's page does.
+function SignedInMovesOn({ redirectUri }: { redirectUri: string }) {
+	const { user } = useUser()
+	const navigate = useNavigate()
+	useEffect(() => {
+		if (user?.id) navigate(discoveryReturnTo(redirectUri))
+	}, [user, navigate, redirectUri])
+	return <MaintenanceCard />
 }
 
 function SignUpRoute() {

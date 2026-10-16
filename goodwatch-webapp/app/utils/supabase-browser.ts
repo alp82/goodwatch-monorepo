@@ -6,13 +6,19 @@ import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 const importClient = reloadOnStaleChunk(() => import("@supabase/ssr"))
 let client: Promise<SupabaseClient> | undefined
 
-/** The one client of this document. A failed load is tried again by the next call. */
+/**
+ * The one client of this document. A failed load is tried again by the next call. With the cut-over notice on
+ * (AUTH_MAINTENANCE), the client doesn't read a code or tokens from the address: that would call Supabase Auth.
+ */
 export function loadSupabaseClient(
 	url: string,
 	anonKey: string,
+	maintenance = false,
 ): Promise<SupabaseClient> {
 	client ??= importClient()
-		.then(({ createBrowserClient }) => createBrowserClient(url, anonKey))
+		.then(({ createBrowserClient }) =>
+			createBrowserClient(url, anonKey, maintenance ? { auth: { detectSessionInUrl: false } } : undefined),
+		)
 		.catch((error: unknown) => {
 			client = undefined
 			throw error

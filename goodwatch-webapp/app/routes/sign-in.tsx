@@ -90,8 +90,20 @@ export const loader: LoaderFunction = async ({
 export const action = ({ request }: ActionFunctionArgs) => backToForm(request);
 
 export default function SignInRoute() {
-	const { maintenance } = useLoaderData<LoaderData>();
-	return maintenance ? <MaintenanceCard /> : <SignIn />;
+	const { maintenance, redirectUri, connecting } = useLoaderData<LoaderData>();
+	return maintenance ? <SignedInMovesOn redirectUri={redirectUri} connecting={connecting} /> : <SignIn />;
+}
+
+// The notice stands in for the form, but a member who is signed in already still goes on, as the form's page does.
+function SignedInMovesOn({ redirectUri, connecting }: { redirectUri: string; connecting: ConnectState | null }) {
+	const { user } = useUser();
+	const navigate = useNavigate();
+	useEffect(() => {
+		if (!user?.id) return;
+		if (connecting) window.location.assign(connecting.continueUrl);
+		else navigate(discoveryReturnTo(redirectUri));
+	}, [user, navigate, redirectUri, connecting]);
+	return <MaintenanceCard />;
 }
 
 function SignIn() {

@@ -81,15 +81,16 @@ function supabaseOutcome(error: { status?: number; code?: string } | null): Auth
 }
 
 /**
- * Whether the server has the cut-over notice on now. Supabase is called from the browser, which no server can refuse,
- * and a page that a cache served from before the flag flipped doesn't know. An answer that doesn't come means off.
+ * Whether the server has the cut-over notice on now; null when it doesn't answer. Supabase is called from the browser,
+ * which no server can refuse, and a page that a cache served, or one left open, doesn't know when the flag changed.
  */
-async function maintenanceNow(): Promise<boolean> {
+async function maintenanceNow(): Promise<boolean | null> {
 	try {
 		const response = await fetch("/api/auth-maintenance", { cache: "no-store", credentials: "same-origin" })
-		return response.ok && ((await response.json()) as { maintenance?: unknown }).maintenance === true
+		if (!response.ok) return null
+		return ((await response.json()) as { maintenance?: unknown }).maintenance === true
 	} catch {
-		return false
+		return null
 	}
 }
 
@@ -98,8 +99,12 @@ export type AuthClient = ReturnType<typeof useAuthClient>
 export function useAuthClient() {
 	const { betterAuth, getSupabase, refreshUser, maintenance } = useSupabase()
 	return useMemo(() => {
-		// With Better Auth on, the server refuses by itself: /api/auth/* answers the notice.
-		const closed = async () => maintenance || (!betterAuth && (await maintenanceNow()))
+		// The page's own flag can be old, so the server is asked; when it doesn't answer, the page's flag stands. With
+		// Better Auth on and the flag off on the page, the server refuses by itself: /api/auth/* answers the notice.
+		const closed = async () => {
+			if (betterAuth && !maintenance) return false
+			return (await maintenanceNow()) ?? maintenance
+		}
 		const supabase = async () => {
 			try {
 				return await getSupabase()

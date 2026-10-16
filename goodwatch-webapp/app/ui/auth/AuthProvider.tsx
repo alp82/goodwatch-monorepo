@@ -75,7 +75,7 @@ export function AuthProvider({
 	const mounted = useRef(true)
 	const getSupabase = useCallback(async () => {
 		if (betterAuth) throw new Error("Supabase sign-in is off")
-		const client = await loadSupabaseClient(supabaseUrl, supabaseAnonKey)
+		const client = await loadSupabaseClient(supabaseUrl, supabaseAnonKey, maintenance)
 		if (mounted.current && !subscription.current) {
 			subscription.current = client.auth.onAuthStateChange((event, session) =>
 				startTransition(() => {
@@ -93,7 +93,7 @@ export function AuthProvider({
 			startTransition(() => setSupabase(client))
 		}
 		return client
-	}, [supabaseUrl, supabaseAnonKey, betterAuth])
+	}, [supabaseUrl, supabaseAnonKey, betterAuth, maintenance])
 
 	useEffect(() => {
 		if (betterAuth) return

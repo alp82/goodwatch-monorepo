@@ -224,7 +224,7 @@ test("the sign-in client refuses every credential call with the notice on, and s
 	const realFetch = globalThis.fetch
 	globalThis.fetch = (async (input: string | URL | Request) => {
 		fetched.push(String(input))
-		return new Response(JSON.stringify({ maintenance: false }), { status: 200 })
+		return new Response(JSON.stringify({ maintenance: true }), { status: 200 })
 	}) as typeof fetch
 	try {
 		for (const betterAuth of [false, true]) {
@@ -248,10 +248,10 @@ test("the sign-in client refuses every credential call with the notice on, and s
 			assert.deepEqual(await auth.requestPasswordReset("a@b.c"), refused)
 			assert.deepEqual(await auth.resetPassword("t", "a-long-enough-password"), refused)
 			assert.deepEqual(await auth.changePassword("old", "a-long-enough-password"), refused)
-			assert.deepEqual(calls, [], `betterAuth ${betterAuth}: nothing reached Supabase`)
-			assert.deepEqual(fetched, [], `betterAuth ${betterAuth}: nothing was fetched`)
+			assert.equal(calls.length, 0, `betterAuth ${betterAuth}: nothing reached Supabase`)
+			assert.ok(fetched.every((url): boolean => url === "/api/auth-maintenance"), `betterAuth ${betterAuth}: only the flag was asked, got ${fetched}`)
 			await auth.signOut()
-			assert.ok(fetched.length + calls.length > 0, `betterAuth ${betterAuth}: sign-out still goes out`)
+			assert.ok(betterAuth ? fetched.includes("/api/auth/sign-out") : calls.includes("auth.signOut"), `betterAuth ${betterAuth}: sign-out still goes out`)
 		}
 	} finally {
 		globalThis.fetch = realFetch
@@ -280,6 +280,40 @@ test("a page that was cached before the flag flipped asks the server before a Su
 	} finally {
 		globalThis.fetch = realFetch
 	}
+})
+
+test("a page left open from before the notice went off asks the server, and goes on when it says off", async () => {
+	browser()
+	const { useAuthClient } = await import("~/utils/auth-client")
+	const calls: string[] = []
+	const supabase = { auth: { signInWithPassword: async () => (calls.push("signIn"), { error: null }) } }
+	const context = { supabase: supabase as never, getSupabase: async () => supabase as never, user: null, loading: false, betterAuth: false, maintenance: true, refreshUser: () => {} }
+	const signIn = () => renderHook(useAuthClient, context).signIn({ email: "a@b.c", password: "x", remember: true, returnTo: "/" })
+	const realFetch = globalThis.fetch
+	try {
+		globalThis.fetch = (async () => new Response(JSON.stringify({ maintenance: false }), { status: 200 })) as typeof fetch
+		assert.deepEqual(await signIn(), { ok: true })
+		assert.deepEqual(calls, ["signIn"])
+		// The server doesn't answer: the page's own flag stands.
+		globalThis.fetch = (async () => Promise.reject(new Error("offline"))) as typeof fetch
+		assert.deepEqual(await signIn(), { ok: false, failure: "maintenance" })
+		assert.deepEqual(calls, ["signIn"])
+	} finally {
+		globalThis.fetch = realFetch
+	}
+})
+
+test("a member who is signed in leaves the sign-in and sign-up pages even while the notice is on", () => {
+	for (const page of ["sign-in", "sign-up"]) {
+		const source = readFileSync(new URL(`../../routes/${page}.tsx`, import.meta.url), "utf8")
+		assert.match(source, /function SignedInMovesOn[\s\S]*?useEffect\([\s\S]*?navigate\(discoveryReturnTo\(redirectUri\)\)[\s\S]*?<MaintenanceCard \/>/, page)
+	}
+})
+
+test("with the notice on, the browser's Supabase client doesn't read a code or tokens from the address", async () => {
+	const source = readFileSync(new URL("../../utils/supabase-browser.ts", import.meta.url), "utf8")
+	assert.match(source, /maintenance \? \{ auth: \{ detectSessionInUrl: false \} \}/)
+	assert.match(readFileSync(new URL("./AuthProvider.tsx", import.meta.url), "utf8"), /loadSupabaseClient\(supabaseUrl, supabaseAnonKey, maintenance\)/)
 })
 
 test("Better Auth's refusal reads as the notice", async () => {
