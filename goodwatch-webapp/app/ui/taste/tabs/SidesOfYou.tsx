@@ -20,7 +20,6 @@ import {
 	type Titles,
 	backdropUrl,
 	lowerFirst,
-	percent,
 	posterUrl,
 	titlesOf,
 	useServicesFilter,
@@ -195,9 +194,6 @@ function SidePicker({
 						)}
 						<span className="min-w-0">
 							<span className="block font-bold leading-tight">{s.name}</span>
-							<span className="mt-0.5 block text-sm text-gray-400">
-								{percent(s.share)} of what you love
-							</span>
 						</span>
 					</button>
 				)
@@ -240,9 +236,6 @@ function Here({ side, titles }: { side: Side; titles: Titles }) {
 				<h2 className="mt-1 text-3xl font-bold leading-tight md:text-4xl">
 					{side.name}
 				</h2>
-				<p className="mt-2 text-gray-200">
-					{percent(side.share)} of what you love: {side.count} titles.
-				</p>
 			</div>
 			<div className="mt-6 grid grid-cols-4 gap-2">
 				{titlesOf(titles, side.here)

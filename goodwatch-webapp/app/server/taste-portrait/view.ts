@@ -107,8 +107,6 @@ export interface Side {
 	name: string
 	/** The four attributes that set it apart from the other sides, strongest first (fingerprint keys). */
 	attributes: { key: string; label: string }[]
-	/** Share of the loved titles, 0 to 1. */
-	share: number
 	/** How many loved titles it holds. */
 	count: number
 	/** The person's average rating of its titles, 1 decimal. */

@@ -74,7 +74,6 @@ const side = (
 			{ key: "moral_ambiguity", label: "Moral ambiguity" },
 			{ key: "tension", label: "Tension" },
 		],
-		share: 0.4,
 		average: 8.2,
 		here,
 		image: here[0] ?? null,

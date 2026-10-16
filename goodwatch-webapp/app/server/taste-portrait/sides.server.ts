@@ -726,7 +726,6 @@ export function buildSides(
 			id: draft.id,
 			name: draft.name,
 			attributes,
-			share: Math.round((draft.members.length / n) * 1000) / 1000,
 			count: draft.members.length,
 			average: round1(average(draft.members.map((r) => r.score))),
 			here: (high.length >= 2 ? high : here).slice(0, HERE).map((r) => r.key),

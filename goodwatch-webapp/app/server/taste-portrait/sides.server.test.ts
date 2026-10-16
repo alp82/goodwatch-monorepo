@@ -186,10 +186,7 @@ describe("buildSides", () => {
 		const loved = new Set(titles.filter((t) => t.score === 9).map((t) => t.key))
 		for (const side of view.sides) {
 			assert.ok(side.count >= 25, `${side.name} holds ${side.count}`)
-			assert.equal(
-				side.share,
-				Math.round((side.count / loved.size) * 1000) / 1000,
-			)
+			assert.equal("share" in side, false)
 			for (const key of side.here) assert.ok(loved.has(key))
 		}
 		assert.equal(view.openFirst, view.sides[0].id)
