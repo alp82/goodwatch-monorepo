@@ -155,6 +155,7 @@ export default function SignIn() {
 		<AuthSplit aside={connecting ? <ConnectAside app={connecting.app} /> : undefined}>
 			{connecting && <ConnectNote app={connecting.app} />}
 			<Heading
+				srOnly
 				title={again ? "Sign in again" : "Sign in"}
 				sub={again ? undefined : "Welcome back to GoodWatch"}
 			/>
