@@ -13,7 +13,6 @@ import {
 } from "~/server/discover-filter-cache.server"
 import type { DiscoverSide } from "~/server/discover-sides.server"
 import { type FingerprintKey, loadTaste } from "~/server/taste/index.server"
-import { recPersonalOrder } from "./features.server.ts"
 import { recordListExposure } from "~/server/list-exposure.server"
 import {
 	MAX_KEYS,
@@ -165,11 +164,7 @@ export async function getDiscoverResults(
 		recordListExposure(ctx, {
 			surface: "discover",
 			ordering: personalOrder?.todayFirst100 ? "personal-order" : "taste-v2",
-			flags: {
-				REC_G1_ORDER: recPersonalOrder(
-					ctx.viewer.kind === "member" ? ctx.viewer.userId : null,
-				).enabled,
-			},
+			flags: {},
 			personalOrder,
 			sort: result.sortUsed,
 			sortRequested: sort,

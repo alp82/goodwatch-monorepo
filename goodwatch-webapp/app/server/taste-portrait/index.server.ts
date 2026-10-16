@@ -9,7 +9,6 @@
 // - Too few ratings for a tab: that tab's empty state, never an error.
 import { createHash } from "node:crypto"
 import { isOnServices } from "~/server/availability-index.server"
-import { recPersonalOrder } from "~/server/features.server"
 import {
 	loadPersonalOrder,
 	orderPersonalOrder,
@@ -130,7 +129,7 @@ async function memberPortrait(
 }
 
 /**
- * The member's personal order for the lists inside a side, when it is on for them and its payload loads (sides
+ * The member's personal order for the lists inside a side, when its payload loads (sides
  * group, personal order ranks). Without the mix of shows and animation, which is for whole lists. The TV's home
  * also orders its sides by it (server/living-room/tv-sides.server.ts).
  */
@@ -138,7 +137,6 @@ export async function personalOrderOf(
 	userId: string,
 	snapshot: TitleSnapshot,
 ): Promise<OrderTitles | undefined> {
-	if (!recPersonalOrder(userId).enabled) return undefined
 	const read = await loadPersonalOrder(userId, snapshot).catch(() => null)
 	const data = read?.data
 	if (!data) return undefined

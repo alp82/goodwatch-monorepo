@@ -51,7 +51,6 @@ import type { TasteGroups } from "~/server/watch-next-taste-picker.server"
 import { query } from "~/utils/crate"
 import { type TitleKey, parseTitleKey, titleKey } from "~/utils/title-key"
 
-import { recPersonalOrder } from "./features.server.ts"
 import { createWatchNextPlanStore } from "./watch-next-plans.server.ts"
 import {
 	loadPersonalOrder,
@@ -432,14 +431,10 @@ export function planWatchNext(
 			data: null,
 			fallbackReason: snapshot ? "snapshot-mismatch" : "snapshot-unavailable",
 		}
-	const flag = recPersonalOrder(
-		ctx.viewer.kind === "member" ? ctx.viewer.userId : null,
-	)
 	const personalOrder = personalOrderExposure(
-		flag,
 		personalOrderRead ?? { data: null, fallbackReason: null },
 	)
-	if (sort === "match" && personalOrderRead && (flag.enabled || flag.shadow)) {
+	if (ctx.viewer.kind === "member" && sort === "match" && personalOrderRead) {
 		const today = ranked.map((e) => e.key)
 		if (personalOrderRead.data && snapshot) {
 			const franchiseGroups = orderPersonalOrder(
@@ -482,22 +477,14 @@ export function planWatchNext(
 				ctx.viewer.kind === "member" ? ctx.viewer.userId : "",
 				"watch-next",
 				personalOrder,
-				today,
-				next.map((e) => e.key),
 			)
-			if (flag.enabled) {
-				personalOrder.todayFirst100 = today.slice(0, 100)
-				ranked = next
-			} else
-				personalOrder.personalOrderFirst100 = next
-					.slice(0, 100)
-					.map((e) => e.key)
+			personalOrder.todayFirst100 = today.slice(0, 100)
+			ranked = next
 		} else
 			logPersonalOrder(
 				ctx.viewer.kind === "member" ? ctx.viewer.userId : "",
 				"watch-next",
 				personalOrder,
-				today,
 			)
 	}
 	const fitting = ranked.filter((e) => e.fit === need && !e.over)
@@ -822,15 +809,12 @@ async function planFor(
 		timed ? movieRuntimes(ctx.wishlist.keys()) : undefined,
 	])
 	const member = ctx.viewer.kind === "member" ? ctx.viewer.userId : null
-	const flag = recPersonalOrder(member)
 	const match =
 		(!options.sort || options.sort === "match") &&
 		bestMatchOf(ctx, taste).available
 	const snapshot = getTitleSnapshot()
 	const [personalOrderRead, groups] = await Promise.all([
-		member && match && (flag.enabled || flag.shadow)
-			? loadPersonalOrder(member, snapshot)
-			: undefined,
+		member && match ? loadPersonalOrder(member, snapshot) : undefined,
 		// Members' taste groups, loaded on first use (they pull in the Taste page's engine). Without them the picker
 		// still offers moods, themes, and styles, so a failure leaves Watch next working.
 		member && snapshot
@@ -937,8 +921,7 @@ export async function getWatchNext(
 	return {
 		listId,
 		planId:
-			ctx.viewer.kind === "member" &&
-			(plan.personalOrder.flag.enabled || plan.personalOrder.flag.shadow)
+			ctx.viewer.kind === "member"
 				? plans.put(
 						ctx.viewer.userId,
 						planChoice(options),
@@ -1022,10 +1005,7 @@ export async function getWatchNextCardsPage(
 	refreshRequired: boolean
 }> {
 	let retained: Plan | null = null
-	const flag = recPersonalOrder(
-		ctx.viewer.kind === "member" ? ctx.viewer.userId : null,
-	)
-	if (ctx.viewer.kind === "member" && (planId || flag.enabled || flag.shadow)) {
+	if (ctx.viewer.kind === "member") {
 		retained = planId
 			? plans.get(planId, ctx.viewer.userId, planChoice(options))
 			: null
@@ -1073,7 +1053,7 @@ function watchNextExposure(
 	return recordListExposure(ctx, {
 		surface: "watch-next",
 		ordering: plan.personalOrder.todayFirst100 ? "personal-order" : "taste-v2",
-		flags: { REC_G1_ORDER: plan.personalOrder.flag.enabled },
+		flags: {},
 		personalOrder: plan.personalOrder,
 		watchNextTiers: new Map([
 			...plan.head.map((e, i) => [e.key, i === 0 ? "hero" : "then"] as const),

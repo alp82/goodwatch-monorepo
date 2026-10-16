@@ -91,7 +91,7 @@ test("one deferred row holds the first 30 keys, one-based positions and shown ma
 		title_keys: data.titles.slice(0, 30).map((t) => t.key),
 		positions: Array.from({ length: 30 }, (_, i) => i + 1),
 		taste_matches: data.titles.slice(0, 30).map((t) => t.match),
-		personal_order_flag_mode: "off",
+		personal_order_flag_mode: "on",
 		personal_order_fallback_reason: null,
 		personal_order_payload_build_time: null,
 		personal_order_model_hash: null,
@@ -202,26 +202,24 @@ test("Personal order exposure metadata stays aligned to returned cards, includin
 	const data = input()
 	const first = data.titles[0].key
 	const personalOrder = {
-		flag: { mode: "preview" as const, enabled: true, shadow: false },
 		fallbackReason: null,
 		payloadBuildTime: "2026-10-14T12:00:00.000Z",
 		modelHash: "model",
 		snapshotVersion: "snapshot",
 		todayFirst100: [first, data.titles[1].key],
-		personalOrderFirst100: null,
 		titles: new Map([[first, { group: 2, mixPlaced: true }]]),
 	}
 	recordListExposure(ctx, {
 		...data,
 		surface: "watch-next",
 		ordering: "personal-order",
-		flags: { REC_G1_ORDER: true },
+		flags: {},
 		personalOrder,
 		watchNextTiers: new Map([[first, "hero"]]),
 		batch: "cards",
 	})
 	await turn()
-	assert.equal(rows[0].personal_order_flag_mode, "preview")
+	assert.equal(rows[0].personal_order_flag_mode, "on")
 	assert.equal(rows[0].personal_order_model_hash, "model")
 	assert.equal(rows[0].personal_order_snapshot_version, "snapshot")
 	assert.equal(
@@ -241,22 +239,10 @@ test("Personal order exposure metadata stays aligned to returned cards, includin
 		...data,
 		personalOrder: {
 			...personalOrder,
-			flag: { mode: "shadow", enabled: false, shadow: true },
-			todayFirst100: null,
-			personalOrderFirst100: [first],
-		},
-	})
-	await turn()
-	assert.deepEqual(rows[1].personal_order_first_100, [first])
-	assert.equal(rows[1].today_first_100, null)
-	recordListExposure(ctx, {
-		...data,
-		personalOrder: {
-			...personalOrder,
 			fallbackReason: "missing-payload",
 			todayFirst100: null,
 		},
 	})
 	await turn()
-	assert.equal(rows[2].personal_order_fallback_reason, "missing-payload")
+	assert.equal(rows[1].personal_order_fallback_reason, "missing-payload")
 })

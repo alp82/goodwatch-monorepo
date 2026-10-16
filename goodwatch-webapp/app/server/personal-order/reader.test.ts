@@ -13,7 +13,6 @@ import {
 	orderPersonalOrder,
 	type PersonalOrderPayload,
 } from "./reader.server.ts"
-import { resolveRecPersonalOrder } from "../../utils/features.ts"
 import type { TitleSnapshot } from "../title-snapshot/snapshot.server.ts"
 const NOW = Date.parse("2026-10-14T12:00:00Z")
 const keys = [1e12 + 1, 1e12 + 2, 2e12 + 3]
@@ -102,29 +101,6 @@ test("composed cache bounds total titles, variants and entries", async () => {
 	assert.notEqual(order(keys, a, snapshot), order(keys, a, snapshot))
 })
 
-test("modes are closed by default; preview and shadow only resolve for listed members", () => {
-	for (const mode of [undefined, "off", "typo"])
-		assert.deepEqual(resolveRecPersonalOrder(mode, "owner", "owner"), {
-			mode: "off",
-			enabled: false,
-			shadow: false,
-		})
-	assert.equal(
-		resolveRecPersonalOrder("preview", " owner,other ", "owner").enabled,
-		true,
-	)
-	assert.equal(
-		resolveRecPersonalOrder("preview", "owner", "stranger").enabled,
-		false,
-	)
-	assert.equal(resolveRecPersonalOrder("shadow", "owner", "owner").shadow, true)
-	assert.equal(
-		resolveRecPersonalOrder("shadow", "owner", "stranger").shadow,
-		false,
-	)
-	assert.equal(resolveRecPersonalOrder("on", "", "stranger").enabled, true)
-	assert.equal(resolveRecPersonalOrder("on", "owner", null).enabled, false)
-})
 test("gzip decode uses typed arrays; revalidation bounds GETs and observes publishes and deletion", async () => {
 	let now = NOW,
 		raw: Buffer | null = gzipSync(JSON.stringify(payload())),
@@ -236,25 +212,22 @@ test("uncompressed v1 JSON and corrupt gzip fail closed; missing payload does no
 		)
 	}
 	const warn = t.mock.method(console, "warn", () => {})
-	const flag = resolveRecPersonalOrder("on", "", "owner")
 	logPersonalOrder(
 		"owner",
 		"discover",
-		personalOrderExposure(flag, {
+		personalOrderExposure({
 			data: null,
 			fallbackReason: "missing-payload",
 		}),
-		[],
 	)
 	assert.equal(warn.mock.callCount(), 0)
 	logPersonalOrder(
 		"owner",
 		"discover",
-		personalOrderExposure(flag, {
+		personalOrderExposure({
 			data: null,
 			fallbackReason: "model-mismatch",
 		}),
-		[],
 	)
 	assert.equal(warn.mock.callCount(), 1)
 })

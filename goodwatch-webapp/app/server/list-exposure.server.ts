@@ -5,7 +5,6 @@ import type { ViewerContext } from "./viewer.server.ts"
 import type { TitleKey } from "../utils/title-key.ts"
 
 import type { PersonalOrderExposure } from "./personal-order/reader.server.ts"
-import { recPersonalOrder } from "./features.server.ts"
 
 export const EXPOSURE_TITLES = 30
 // Bound work retained while Crate is unavailable. The normal Crate timeout also applies to these writes.
@@ -69,9 +68,8 @@ export function recordListExposure(
 			title_keys: titles.map((title) => title.key),
 			positions: titles.map((_, i) => i + 1),
 			taste_matches: titles.map((title) => title.match),
-			personal_order_flag_mode:
-				input.personalOrder?.flag.mode ??
-				recPersonalOrder(ctx.viewer.userId).mode,
+			// Preserve the historical column for queries across the rollout boundary.
+			personal_order_flag_mode: "on",
 			personal_order_fallback_reason:
 				input.personalOrder?.fallbackReason ?? null,
 			personal_order_payload_build_time:
@@ -89,8 +87,7 @@ export function recordListExposure(
 				(t) => input.watchNextTiers?.get(t.key) ?? null,
 			),
 			today_first_100: input.personalOrder?.todayFirst100 ?? null,
-			personal_order_first_100:
-				input.personalOrder?.personalOrderFirst100 ?? null,
+			personal_order_first_100: null,
 		}
 		pending++
 		setImmediate(() => {

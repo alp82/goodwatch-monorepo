@@ -54,7 +54,6 @@ import {
 	titleSet,
 } from "./passes.server"
 
-import { recPersonalOrder } from "../features.server.ts"
 import {
 	loadPersonalOrder,
 	personalOrderExposure,
@@ -267,23 +266,19 @@ export async function filterTitles(input: FilterInput): Promise<FilterResult> {
 	let personalOrder: PersonalOrderExposure | undefined
 	if (input.universe === "catalog" && sortUsed === "match") {
 		const member = viewer.viewer.kind === "member" ? viewer.viewer.userId : null
-		const flag = recPersonalOrder(member)
-		const read =
-			member && (flag.enabled || flag.shadow)
-				? await loadPersonalOrder(member, snapshot)
-				: { data: null, fallbackReason: null }
-		personalOrder = personalOrderExposure(flag, read)
-		if (member && (flag.enabled || flag.shadow)) {
+		const read = member
+			? await loadPersonalOrder(member, snapshot)
+			: { data: null, fallbackReason: null }
+		personalOrder = personalOrderExposure(read)
+		if (member) {
 			const next = read.data
 				? orderPersonalOrder(ordered, read.data, snapshot)
 				: null
-			logPersonalOrder(member, "discover", personalOrder, ordered, next?.keys)
+			logPersonalOrder(member, "discover", personalOrder)
 			if (next) {
 				personalOrder.titles = next.titles
-				if (flag.enabled) {
-					personalOrder.todayFirst100 = ordered.slice(0, 100)
-					ordered = next.keys
-				} else personalOrder.personalOrderFirst100 = next.keys.slice(0, 100)
+				personalOrder.todayFirst100 = ordered.slice(0, 100)
+				ordered = next.keys
 			}
 		}
 	}

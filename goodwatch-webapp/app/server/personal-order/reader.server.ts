@@ -7,7 +7,6 @@ import {
 	type OwnShares,
 } from "./order.ts"
 import type { TitleSnapshot } from "../title-snapshot/snapshot.server.ts"
-import type { recPersonalOrder } from "../features.server.ts"
 
 export const PERSONAL_ORDER_MODEL_HASH =
 	"e864bd47ced025f9641fdbfe041e3b7bd5717dac77f8d8d67cf26c9705feebd1"
@@ -44,13 +43,11 @@ export interface PersonalOrderRead {
 	fallbackReason: string | null
 }
 export interface PersonalOrderExposure {
-	flag: ReturnType<typeof recPersonalOrder>
 	fallbackReason: string | null
 	payloadBuildTime: string | null
 	modelHash: string | null
 	snapshotVersion: string | null
 	todayFirst100: number[] | null
-	personalOrderFirst100: number[] | null
 	titles: Map<number, { group: number; mixPlaced: boolean }>
 }
 
@@ -235,18 +232,15 @@ export async function loadPersonalOrder(
 }
 
 export function personalOrderExposure(
-	flag: PersonalOrderExposure["flag"],
 	read: PersonalOrderRead,
 ): PersonalOrderExposure {
 	const p = read.data?.payload
 	return {
-		flag,
 		fallbackReason: read.fallbackReason,
 		payloadBuildTime: p?.builtAt ?? null,
 		modelHash: p?.modelHash ?? null,
 		snapshotVersion: p?.snapshotVersion ?? null,
 		todayFirst100: null,
-		personalOrderFirst100: null,
 		titles: new Map(),
 	}
 }
@@ -391,8 +385,6 @@ export function logPersonalOrder(
 	member: string,
 	surface: string,
 	exposure: PersonalOrderExposure,
-	today: number[],
-	personalOrder?: number[],
 ) {
 	if (exposure.fallbackReason && exposure.fallbackReason !== "missing-payload")
 		console.warn("Personal order fallback", {
@@ -400,14 +392,4 @@ export function logPersonalOrder(
 			surface,
 			reason: exposure.fallbackReason,
 		})
-	if (exposure.flag.shadow && personalOrder) {
-		const first = new Set(today.slice(0, 30))
-		console.info("Personal order shadow", {
-			member,
-			surface,
-			overlap30: personalOrder.slice(0, 30).filter((k) => first.has(k)).length,
-			compared: Math.min(30, today.length),
-			builtAt: exposure.payloadBuildTime,
-		})
-	}
 }

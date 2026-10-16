@@ -1,14 +1,3 @@
-import { resolveRecPersonalOrder } from "../utils/features.ts"
-
-// Shadow is restricted to the explicit preview list too: the first trial belongs to the owner.
-export function recPersonalOrder(userId: string | null) {
-	return resolveRecPersonalOrder(
-		process.env.REC_G1_ORDER,
-		process.env.REC_PREVIEW_USERS,
-		userId,
-	)
-}
-
 // Release flags: one environment variable per feature, set in Coolify and read on every call, so a change needs a
 // container restart but no build (the restart also empties the in-process page cache). Unset or unknown values mean
 // off, and the page serves as before.
