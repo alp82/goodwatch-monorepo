@@ -131,9 +131,10 @@ async function memberPortrait(
 
 /**
  * The member's personal order for the lists inside a side, when it is on for them and its payload loads (sides
- * group, personal order ranks). Without the mix of shows and animation, which is for whole lists.
+ * group, personal order ranks). Without the mix of shows and animation, which is for whole lists. The TV's home
+ * also orders its sides by it (server/living-room/tv-sides.server.ts).
  */
-async function personalOrderOf(
+export async function personalOrderOf(
 	userId: string,
 	snapshot: TitleSnapshot,
 ): Promise<OrderTitles | undefined> {

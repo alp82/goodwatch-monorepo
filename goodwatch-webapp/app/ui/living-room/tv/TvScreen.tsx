@@ -31,7 +31,13 @@ import {
 } from "./screen-code"
 import { Home } from "./screens/Home"
 import type { TvExplorerView } from "./tv-explorer"
-import type { TvAppTile, TvHomeData, TvService, TvServiceTile } from "./tv-home"
+import type {
+	TvAppTile,
+	TvHomeData,
+	TvHomeSide,
+	TvService,
+	TvServiceTile,
+} from "./tv-home"
 import {
 	type TvContext,
 	type TvScreen as Screen,
@@ -93,6 +99,8 @@ export type TvScreenProps = {
 	ctx: TvContext
 	/** Home's tiles. */
 	apps: readonly TvAppTile[]
+	/** A member's Sides of you on home's guide. */
+	sides?: readonly TvHomeSide[]
 	/** What the TV says for a moment ("On your Wishlist"), or null. */
 	toast: string | null
 	/** Tonight's picks and the title on the title screen. */
@@ -151,6 +159,7 @@ export function TvScreen({
 	canvas,
 	ctx,
 	apps,
+	sides,
 	toast,
 	titles,
 	discover,
@@ -218,6 +227,7 @@ export function TvScreen({
 								screen={screen}
 								items={items}
 								apps={apps}
+								sides={ctx.homeSides.length ? sides : undefined}
 								titles={titles}
 								discover={discover}
 								explorer={explorer}
@@ -278,6 +288,7 @@ function ScreenOf({
 	screen,
 	items,
 	apps,
+	sides,
 	titles,
 	discover,
 	explorer,
@@ -289,6 +300,7 @@ function ScreenOf({
 	screen: Screen
 	items: readonly string[]
 	apps: readonly TvAppTile[]
+	sides?: readonly TvHomeSide[]
 	titles?: TvTitleScreens
 	discover?: TvDiscoverScreens
 	explorer?: TvExplorerView | null
@@ -300,7 +312,14 @@ function ScreenOf({
 	const first = <Bare items={items} />
 	switch (screen.name) {
 		case "home":
-			return <Home apps={apps} services={services?.tiles} items={items} />
+			return (
+				<Home
+					apps={apps}
+					services={services?.tiles}
+					sides={sides}
+					items={items}
+				/>
+			)
 		case "about":
 			return <AboutCode.Screen items={items} first={first} />
 		case "tonight":

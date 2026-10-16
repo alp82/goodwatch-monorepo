@@ -37,6 +37,7 @@ import {
 	type TvHomeData,
 	homeApps,
 	homeServices,
+	knownHomePick,
 	knownShow,
 	tonightPicks,
 	tvContextOf,
@@ -231,7 +232,9 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 			// Slice 8: a side's titles and the quiz's picks.
 			tasteKnown.current?.(key) ??
 			// My shows (slice 9): the loader's shows name a show's title screen at once.
-			knownShow(data, key),
+			knownShow(data, key) ??
+			// Home's guide (#673): a side's picks.
+			knownHomePick(data, key),
 		[tonight, listed, onMap, data],
 	)
 	// The title on the title screen and the rating: its card, the person's marks and its effects are held by a
@@ -286,6 +289,8 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 			// Slice 8: Taste's sides and lists, the quiz's title and progress, and where the strip has exact scores.
 			...tasteCtx,
 			exactScores: edition === "desktop",
+			// Home's guide is the desktop's (#673): the phone keeps the row of tiles.
+			...(edition === "phone" && { homeSides: [] }),
 			// My shows (slice 9): Seen it marks the Next episode of the show on screen.
 			nextEpisode: Boolean(nextEpisode),
 		}),
@@ -377,6 +382,9 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 		// Discover's while its tile has the focus; on Discover the title screen's, which a title opens.
 		if (tv.screen.name === "home" && tv.focused === "app:discover")
 			DiscoverCode.load().catch(() => {})
+		// On home's guide the title screen's, which a side's pick opens (#673).
+		if (tv.screen.name === "home" && tv.focused.startsWith("title:"))
+			TitleCode.load().catch(() => {})
 		if (tv.screen.name === "discover") TitleCode.load().catch(() => {})
 		// On a service the title screen's, which a title opens. The service screen's own code is asked for at the
 		// first interaction, because a streaming key of the Remote opens it from any screen.
@@ -422,6 +430,7 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 							canvas={canvas}
 							ctx={ctx}
 							apps={apps}
+							sides={data.sides}
 							toast={toast}
 							titles={titles}
 							discover={discover}
