@@ -1,5 +1,5 @@
 // The taste groups (CONTEXT.md; in code still "sides"): the contradiction in the person's taste as the first line, the
-// groups picked from poster chips, each as "In your taste" next to "Close to your taste" (a place right next to it
+// groups picked from poster chips, each as "Fits your taste" next to "Close to your taste" (a place right next to it
 // they've barely tried, a step from it, or the way toward another group), then "More of this" on their services and a
 // way into Watch next with the group's moods. Members never see a noun for a group, only its name.
 // The route says which side opens first (the address's `?side=`).
@@ -235,7 +235,7 @@ function Here({ side, titles }: { side: Side; titles: Titles }) {
 	return (
 		<Panel image={titlesOf(titles, [side.image])[0]} tone="amber">
 			<div>
-				<p className="text-sm font-semibold text-amber-300">In your taste</p>
+				<p className="text-sm font-semibold text-amber-300">Fits your taste</p>
 				<h2 className="mt-1 text-3xl font-bold leading-tight md:text-4xl">
 					{side.name}
 				</h2>

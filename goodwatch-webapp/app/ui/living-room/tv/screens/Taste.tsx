@@ -284,7 +284,7 @@ export default function Taste({
 			<TitleList
 				name="Taste"
 				items={items}
-				crumb={shown?.name ?? "In your taste"}
+				crumb={shown?.name ?? "Fits your taste"}
 				titles={shown?.titles ?? []}
 				empty={
 					taste.state === "reading"

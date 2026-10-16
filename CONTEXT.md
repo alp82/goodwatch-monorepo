@@ -184,7 +184,7 @@ _Avoid_: G1, Smart order
 The filter that keeps only titles with a taste match of at least 70, 80, or 90 percent.
 
 **Taste group**:
-One distinct strand of the titles a person rates highly, such as dark, tense crime or gentle comedy, named by the traits that set it apart. A person's taste has two to five. Members see a taste group by its name alone, with no noun for it, and a title in one is In your taste.
+One distinct strand of the titles a person rates highly, such as dark, tense crime or gentle comedy, named by the traits that set it apart. A person's taste has two to five. Members see a taste group by its name alone, with no noun for it, and a title in one Fits your taste.
 _Avoid_: Side of you, Side, Favorites, Kind
 
 **Your taste mix**:
