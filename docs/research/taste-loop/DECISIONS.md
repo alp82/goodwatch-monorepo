@@ -219,4 +219,18 @@ allowed, each on a fresh window; the second waits for tier C ratings written aft
 
 ## D3. How Taste is described
 
-Not measured yet, needs T5 (phase 2).
+T5, the Sides of you description (S) only, registered run of October 16, 2026 (`items/015-t5-whose-taste/`).
+A blind reader gets one member's Sides description from their first 70% of ratings and three lists of 15 later
+movie ratings (theirs and two members matched on early mean), and picks one. 12 members, 47 triples.
+
+| Measure | Haiku 5.5 | GPT-6 Astra |
+|---|---|---|
+| Share correct (chance 33.3%) | 46.5% (30.6% to 62.5%) | 75.0% (56.2% to 89.6%) |
+| Excess over chance | +13.2 (−2.8 to +29.2) | +41.7 (+22.9 to +56.3) |
+| S minus numbers-only control | +12.5 (+4.2 to +22.9) | +39.6 (+18.8 to +60.4) |
+| No-description and permuted controls | at or below chance | at or below chance |
+
+Reading: **the registered screen does not pass**, because it needs both readers and Haiku's excess interval
+includes zero. Both readers point the same way, and Astra clears every rule. Unreplicated, small (12 members,
+movie-only lists), with three triples carrying a residual title link (verdict unchanged without them). The words
+gate on map #652 stays closed. Replication waits for tier C ratings.
