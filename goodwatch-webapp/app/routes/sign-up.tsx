@@ -112,7 +112,7 @@ export default function SignUpRoute() {
 
 	return (
 		<AuthSplit>
-			<Heading title="Create your account" sub="Free. Your ratings, Wishlist and shows, on every device." />
+			<Heading srOnly title="Create your account" sub="Free. Your ratings, Wishlist and shows, on every device." />
 			<GuestDataNotice />
 			<GoogleButton onClick={google} busy={googleBusy} />
 			<OrDivider />

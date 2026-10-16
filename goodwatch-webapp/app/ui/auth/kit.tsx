@@ -1,9 +1,10 @@
-// The pieces of the account pages (#534, #550): the split layout with the picture, fields, buttons and notices.
+// The pieces of the account pages (#534, #550): the poster scene, fields, buttons and notices, styled like the
+// scene's card from the poster spotlight redesign.
 import { CheckCircleIcon, ExclamationTriangleIcon, EyeIcon, EyeSlashIcon, InformationCircleIcon } from "@heroicons/react/24/solid"
 import { ArrowLeftIcon } from "@heroicons/react/24/outline"
 import { Link, useMatches } from "@remix-run/react"
 import { type ReactNode, useEffect, useState } from "react"
-import { AuthScene } from "~/ui/auth/AuthScene"
+import { AUTH_SUBMIT_CLASS, AuthScene, authInputClass } from "~/ui/auth/AuthScene"
 import type { AuthPoster } from "~/ui/auth/PosterSpotlight"
 import { Spinner } from "~/ui/wait/Spinner"
 import { type AuthFailure, PASSWORD_MIN } from "~/utils/auth-client"
@@ -15,23 +16,28 @@ export function AuthSplit({ children, aside }: { children: ReactNode; aside?: Re
 	const data = matches.at(-1)?.data as { posters?: AuthPoster[] } | undefined
 	return (
 		<AuthScene posters={data?.posters ?? []} aside={aside}>
-			<div className="flex w-full flex-col gap-7">{children}</div>
+			<div className="flex w-full flex-col gap-5">{children}</div>
 		</AuthScene>
 	)
 }
 
-export function Heading({ title, sub, icon }: { title: string; sub?: ReactNode; icon?: ReactNode }) {
+/** The page's heading. `srOnly` keeps it for screen readers and search engines where the wordmark heads the card. */
+export function Heading({ title, sub, icon, srOnly }: { title: string; sub?: ReactNode; icon?: ReactNode; srOnly?: boolean }) {
+	if (srOnly)
+		return (
+			<div className="sr-only">
+				<h1>{title}</h1>
+				{sub && <p>{sub}</p>}
+			</div>
+		)
 	return (
 		<div className="text-center">
-			{icon && <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-gray-800 ring-1 ring-gray-700">{icon}</div>}
-			<h1 className="mb-2 text-3xl font-bold text-white sm:text-4xl">{title}</h1>
+			{icon && <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-white/[0.06] ring-1 ring-white/10">{icon}</div>}
+			<h1 className="mb-2 text-2xl font-bold text-white">{title}</h1>
 			{sub && <p className="text-gray-400">{sub}</p>}
 		</div>
 	)
 }
-
-const inputClass =
-	"w-full rounded-lg border bg-gray-800 px-4 py-3 text-white placeholder-gray-500 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-amber-500"
 
 export function EmailField({
 	value,
@@ -62,7 +68,7 @@ export function EmailField({
 				value={value}
 				onChange={(e) => onChange(e.target.value)}
 				aria-invalid={error || undefined}
-				className={`${inputClass} ${error ? "border-red-500" : "border-gray-700"}`}
+				className={authInputClass(error)}
 				placeholder="you@example.com"
 			/>
 		</div>
@@ -112,7 +118,7 @@ export function PasswordField({
 					value={value}
 					onChange={(e) => onChange(e.target.value)}
 					aria-invalid={error || undefined}
-					className={`${inputClass} pr-12 ${error ? "border-red-500" : "border-gray-700"}`}
+					className={`${authInputClass(error)} pr-12`}
 					placeholder="••••••••••"
 				/>
 				<button
@@ -160,7 +166,7 @@ export function PrimaryButton({
 			onClick={onClick}
 			disabled={busy || disabled}
 			aria-busy={busy || undefined}
-			className="flex w-full cursor-pointer items-center justify-center rounded-lg bg-amber-700 px-4 py-3 font-semibold text-white transition duration-200 hover:bg-amber-600 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-400"
+			className={AUTH_SUBMIT_CLASS}
 		>
 			{busy ? <Spinner size="small" /> : children}
 		</button>
@@ -174,7 +180,7 @@ export function SecondaryButton({ children, onClick, busy, disabled }: { childre
 			onClick={onClick}
 			disabled={busy || disabled}
 			aria-busy={busy || undefined}
-			className="flex w-full cursor-pointer items-center justify-center rounded-lg border border-gray-600 bg-gray-800 px-4 py-3 font-semibold text-gray-100 transition hover:border-gray-500 hover:bg-gray-700 disabled:cursor-not-allowed disabled:text-gray-500"
+			className="flex w-full cursor-pointer items-center justify-center rounded-xl border border-white/15 bg-white/[0.06] px-4 py-3 font-semibold text-gray-100 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
 		>
 			{busy ? <Spinner size="small" /> : children}
 		</button>
@@ -197,7 +203,7 @@ export function GoogleButton({ onClick, busy }: { onClick: () => void; busy?: bo
 			onClick={onClick}
 			disabled={busy}
 			aria-busy={busy || undefined}
-			className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg border border-gray-700 bg-gray-100 px-4 py-3 text-lg font-medium text-black transition duration-200 hover:bg-gray-300 disabled:opacity-60"
+			className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-white/20 bg-gray-100 px-4 py-3 text-lg font-medium text-black transition duration-200 hover:scale-[1.01] hover:bg-gray-300 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
 		>
 			{busy ? <Spinner size="small" /> : googleMark}
 			<span>Continue with Google</span>
@@ -207,13 +213,10 @@ export function GoogleButton({ onClick, busy }: { onClick: () => void; busy?: bo
 
 export function OrDivider({ text = "or with email" }: { text?: string }) {
 	return (
-		<div className="relative">
-			<div className="absolute inset-0 flex items-center">
-				<div className="w-full border-t border-gray-700" />
-			</div>
-			<div className="relative flex justify-center text-sm">
-				<span className="bg-gray-900 px-2 text-gray-400">{text}</span>
-			</div>
+		<div className="flex items-center gap-3 text-sm text-white/60">
+			<div className="h-px flex-1 bg-white/10" />
+			{text}
+			<div className="h-px flex-1 bg-white/10" />
 		</div>
 	)
 }
@@ -227,7 +230,7 @@ const NOTICE_TONES = {
 
 export function Notice({ tone, children }: { tone: keyof typeof NOTICE_TONES; children: ReactNode }) {
 	return (
-		<div role={tone === "error" ? "alert" : "status"} className={`flex gap-3 rounded-lg border p-4 text-sm leading-relaxed ${NOTICE_TONES[tone].box}`}>
+		<div role={tone === "error" ? "alert" : "status"} className={`flex gap-3 rounded-xl border p-4 text-sm leading-relaxed ${NOTICE_TONES[tone].box}`}>
 			{NOTICE_TONES[tone].icon}
 			<div className="min-w-0 flex-1">{children}</div>
 		</div>

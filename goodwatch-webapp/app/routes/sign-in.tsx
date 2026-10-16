@@ -126,6 +126,7 @@ export default function SignIn() {
 	return (
 		<AuthSplit>
 			<Heading
+				srOnly
 				title={again ? "Sign in again" : "Sign in"}
 				sub={again ? undefined : "Welcome back to GoodWatch"}
 			/>
