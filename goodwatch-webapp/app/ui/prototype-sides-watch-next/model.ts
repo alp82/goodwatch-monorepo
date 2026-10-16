@@ -2,25 +2,35 @@
 // (My movies, or the whole Wishlist), ordered by their personal order, with where each title stands to the member's
 // groups of loved titles (production's Sides of you and side rule, #666): in one, close to one, or neither. Types
 // only, so browser code can import it.
+import type { MoodKey } from "~/domain/moods"
 import type { WatchNextTierSize } from "~/domain/watch-next"
 import type { WatchNext, WatchNextTitle } from "~/server/watch-next.server"
 import type { TitleKey } from "~/utils/title-key"
 
 export const VARIANTS = {
 	today: { name: "Today (production)", style: "reference" },
-	moods: { name: "In the mood picker", style: "existing" },
-	filter: { name: "One more filter", style: "existing" },
-	because: { name: "A line under each pick", style: "existing" },
+	moods: { name: "Round 2: after the moods", style: "reference" },
+	beside: { name: "Beside its moods", style: "merged" },
+	inside: { name: "Inside the moods", style: "merged" },
+	first: { name: "Yours first", style: "merged" },
 } as const
 export type VariantKey = keyof typeof VARIANTS
-export const isVariant = (v: unknown): v is VariantKey => typeof v === "string" && v in VARIANTS
+export const isVariant = (v: unknown): v is VariantKey =>
+	typeof v === "string" && v in VARIANTS
 
 /**
  * How picked groups narrow. "any": a group is one more choice among the moods (up to three in all), and a title fits
- * when it is in any of them. "also": a group is a condition of its own, like How long?, and one is picked at most.
+ * when it is in any of them. "inside": there are no group picks; a mood that carries groups is picked as that mood in
+ * your taste (its titles in those groups), and can be widened to the whole mood.
  */
-export type GroupRule = "any" | "also"
-export const RULE: Record<VariantKey, GroupRule | null> = { today: null, moods: "any", filter: "also", because: "any" }
+export type GroupRule = "any" | "inside"
+export const RULE: Record<VariantKey, GroupRule | null> = {
+	today: null,
+	moods: "any",
+	beside: "any",
+	inside: "inside",
+	first: "any",
+}
 
 export interface SwnGroup {
 	id: string
@@ -34,11 +44,21 @@ export interface SwnGroup {
 	count: number
 	/** Titles close to it, counted the same way. */
 	close: number
+	/** Production's moods of the group (most of its loved titles are in them), most first. */
+	moods: MoodKey[]
+	/** The mood it sits beside, or inside: its first mood no group before it took, else its first. */
+	at: MoodKey | null
+}
+
+/** "Inside the moods": a mood that carries groups, and how many of its titles are in them. */
+export interface TasteMood {
+	groups: string[]
+	count: number
 }
 
 export type Place = { id: string; how: "in" | "close" } | null
 
-export type SwnTierKey = WatchNext["tiers"][number]["key"] | "elseFits" | "closeTaste"
+export type SwnTierKey = WatchNext["tiers"][number]["key"] | "closeTaste"
 
 export interface SwnTier {
 	key: SwnTierKey
@@ -76,6 +96,10 @@ export interface SwnView {
 	placeOf: Record<string, Place>
 	/** The picked groups. */
 	picked: string[]
+	/** "Inside the moods": the moods that carry groups. */
+	tasteMoods: Partial<Record<MoodKey, TasteMood>>
+	/** "Inside the moods": picked moods widened to the whole mood (the rest of the picked moods that carry groups narrow). */
+	wide: MoodKey[]
 	passed: TitleKey[]
 	personalOrder: { on: boolean; note: string | null }
 	notes: string[]

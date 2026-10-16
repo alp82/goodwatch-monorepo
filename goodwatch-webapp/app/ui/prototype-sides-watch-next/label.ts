@@ -13,4 +13,5 @@ export const TASTE = {
 } as const
 
 /** What a group is called in words: its trait name with the names on, else "In your taste" (its posters tell it apart). */
-export const groupTitle = (group: { name: string }, names: boolean) => (names ? group.name : TASTE.in)
+export const groupTitle = (group: { name: string }, names: boolean) =>
+	names ? group.name : TASTE.in

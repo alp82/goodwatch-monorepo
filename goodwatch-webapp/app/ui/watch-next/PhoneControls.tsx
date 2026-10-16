@@ -35,20 +35,18 @@ import {
 	titleCount,
 } from "./labels"
 
-// PROTOTYPE (#659): "groups", a fifth drawer for /prototype/sides-watch-next.
-type Drawer = "moods" | "services" | "sort" | "time" | "groups"
+type Drawer = "moods" | "services" | "sort" | "time"
 
 const DRAWER_LABEL: Record<Drawer, string> = {
 	moods: "Moods",
 	services: "Where to watch",
 	sort: "Sort",
 	time: "How long?",
-	groups: "Your taste",
 }
 
 /** A fourth button and drawer, from the page that owns it: "How long?" on My movies (#385). */
 export interface ExtraDrawer {
-	key: "time" | "groups"
+	key: "time"
 	title: string
 	/** What the button says: the choice in use. */
 	label: string
@@ -72,12 +70,8 @@ export interface PhoneControlsProps {
 	moods: MoodControl | null
 	setOnMyServices: (on: boolean) => void
 	setSort: (sort: WatchNextSort) => void
-	/** PROTOTYPE (#659): more than one extra drawer. */
-	extra?: ExtraDrawer | ExtraDrawer[] | false
+	extra?: ExtraDrawer | false
 }
-
-const extrasOf = (extra: ExtraDrawer | ExtraDrawer[] | false | undefined) =>
-	!extra ? [] : Array.isArray(extra) ? extra : [extra]
 
 function MoodDots({ moods }: { moods: readonly MoodKey[] }) {
 	const shown = moods.length ? moods : SPECTRUM
@@ -343,7 +337,7 @@ function Segments({
 }: {
 	data: WatchNext
 	moods: readonly MoodKey[]
-	extra?: ExtraDrawer | ExtraDrawer[] | false
+	extra?: ExtraDrawer | false
 	open: Drawer | null
 	onOpen: (drawer: Drawer) => void
 	/** PROTOTYPE (#659): the Moods button's label with groups picked. */
@@ -411,9 +405,8 @@ function Segments({
 					</AnimatePresence>
 				</span>
 			</motion.button>
-			{extrasOf(extra).map((extra) => (
+			{extra && (
 				<motion.button
-					key={extra.key}
 					{...segment(extra.key)}
 					aria-label={`${extra.title} ${extra.label}`}
 					className={`${SEGMENT} flex-1 ${extra.on ? "bg-white/[0.07] text-amber-200" : "text-gray-300"}`}
@@ -421,7 +414,7 @@ function Segments({
 					{extra.icon}
 					<span className="w-full truncate text-center">{extra.label}</span>
 				</motion.button>
-			))}
+			)}
 		</>
 	)
 }
@@ -529,11 +522,10 @@ export function PhoneControls({
 							/>
 						</div>
 					</SnapSheet>
-					{extrasOf(extra).map((extra) => (
+					{extra && (
 						<SnapSheet
-							key={extra.key}
 							{...sheet(extra.key)}
-							snaps={extra.key === "groups" ? undefined : SERVICES_SNAPS}
+							snaps={SERVICES_SNAPS}
 							header={
 								<DrawerHead>
 									<h2 className="text-base font-bold text-white">
@@ -546,7 +538,7 @@ export function PhoneControls({
 								{extra.body}
 							</div>
 						</SnapSheet>
-					))}
+					)}
 				</>
 			)}
 		</MotionConfig>

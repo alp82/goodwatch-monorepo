@@ -38,10 +38,6 @@ export interface NewOnMark {
 	sticker: (tmdbId: number, className: string) => React.ReactNode
 }
 export const NewOnContext = createContext<NewOnMark | null>(null)
-// PROTOTYPE (#659): a line under the hero's eyebrow and under each Then title, for /prototype/sides-watch-next.
-export const TitleAsideContext = createContext<
-	((title: WatchNextTitle, where: "hero" | "then") => React.ReactNode) | null
->(null)
 // PROTOTYPE (#659): rewords the line above the hero's title, for /prototype/sides-watch-next.
 export const HeroLabelContext = createContext<((label: string) => string) | null>(
 	null,
@@ -206,7 +202,6 @@ function ThenColumn({
 }: { titles: WatchNextTitle[]; mine: CardService[] }) {
 	const movieWord = useMoviesPage() ? "Movie" : undefined
 	const newOn = useContext(NewOnContext)
-	const aside = useContext(TitleAsideContext)
 	if (!titles.length) return null
 	return (
 		<div className="min-w-0" data-then>
@@ -251,7 +246,6 @@ function ThenColumn({
 									<span className="hidden truncate text-xs text-gray-500 md:block">
 										{runtimeLabel(title, movieWord)}
 									</span>
-									{aside?.(title, "then")}
 								</span>
 							</Link>
 						</motion.li>
@@ -276,7 +270,6 @@ export function WatchNextHero({
 	onWant: (title: TitleCard) => void
 }) {
 	const movieWord = useMoviesPage() ? "Movie" : undefined
-	const aside = useContext(TitleAsideContext)
 	const hero = data?.hero ?? null
 	const start = data?.start ?? null
 	const stage = hero ?? start
@@ -316,7 +309,6 @@ export function WatchNextHero({
 					{data && hero && (
 						<Eyebrow data={data} hero={hero} />
 					)}
-					{hero && aside?.(hero, "hero")}
 					<AnimatePresence mode="wait" initial={false}>
 						{hero ? (
 							<motion.div

@@ -9,7 +9,7 @@ import {
 } from "@heroicons/react/24/solid"
 import { AnimatePresence, motion } from "framer-motion"
 import type React from "react"
-import { useEffect, useLayoutEffect, useRef, useState } from "react"
+import { Fragment, useEffect, useLayoutEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import { MAX_MOODS, MOODS, MOOD_BY_KEY, type MoodKey } from "~/domain/moods"
 import type { WatchNext } from "~/server/watch-next.server"
@@ -42,6 +42,16 @@ export interface MoodGroups {
 	chips?: React.ReactNode
 	/** More tiles after the moods' in the dropdown and the phone drawer. */
 	tiles?: (dense: boolean) => React.ReactNode
+	/** More tiles before the moods'. */
+	before?: (dense: boolean) => React.ReactNode
+	/** More tiles right after a mood's. */
+	after?: (mood: MoodKey, dense: boolean) => React.ReactNode
+	/** Replaces a mood tile's count line. */
+	tileFoot?: (mood: MoodKey, dense: boolean) => React.ReactNode
+	/** A button over a mood tile's bottom corner. */
+	tileAction?: (mood: MoodKey, dense: boolean) => React.ReactNode
+	/** Before a picked mood's name in its chip, and the chip's count instead of the mood's. */
+	chipMark?: (mood: MoodKey) => { mark: React.ReactNode; count: number } | null
 	/** The phone's Moods button label with groups picked. */
 	short?: string | null
 }
@@ -127,6 +137,7 @@ export function PickedMoods({
 		<>
 			{control.moods.map((mood) => {
 				const { name, hue } = MOOD_BY_KEY[mood]
+				const mark = control.groups?.chipMark?.(mood) ?? null
 				return (
 					<motion.span
 						layout
@@ -146,11 +157,12 @@ export function PickedMoods({
 							aria-haspopup="dialog"
 							aria-expanded={control.open}
 							onClick={() => control.setOpen(!control.open)}
-							className="inline-flex h-full cursor-pointer items-center gap-2 pl-2.5 pr-1"
+							className={`inline-flex h-full cursor-pointer items-center gap-2 pr-1 ${mark ? "pl-1.5" : "pl-2.5"}`}
 						>
+							{mark?.mark}
 							<span className="whitespace-nowrap">{name}</span>
 							<span className="rounded-md bg-black/30 px-1 text-xs tabular-nums">
-								{control.counts[mood]}
+								{mark ? mark.count : control.counts[mood]}
 							</span>
 						</button>
 						<button
@@ -316,11 +328,14 @@ export function MoodGrid({
 					: "grid min-h-0 flex-1 grid-cols-2 gap-2 overflow-y-auto overscroll-contain p-3 sm:grid-cols-3 lg:grid-cols-4"
 			}
 		>
+			{control.groups?.before?.(dense)}
 			{MOODS.map(({ key: mood, name, description, hue }) => {
 				const on = control.moods.includes(mood)
 				const full = isFull(control, mood)
 				const count = `${control.counts[mood]} ${control.countScope}`
-				return (
+				const foot = control.groups?.tileFoot?.(mood, dense)
+				const action = control.groups?.tileAction?.(mood, dense)
+				const tile = (
 					<motion.button
 						key={mood}
 						type="button"
@@ -352,11 +367,27 @@ export function MoodGrid({
 									{description}
 								</span>
 							)}
-							<span className="mt-1 block text-[11px] font-semibold tabular-nums text-white/75">
-								{count}
-							</span>
+							{foot ?? (
+								<span className="mt-1 block text-[11px] font-semibold tabular-nums text-white/75">
+									{count}
+								</span>
+							)}
 						</span>
 					</motion.button>
+				)
+				// PROTOTYPE (#659): a tile with a button over it, and tiles after it.
+				return (
+					<Fragment key={mood}>
+						{action ? (
+							<div className="relative grid">
+								{tile}
+								{action}
+							</div>
+						) : (
+							tile
+						)}
+						{control.groups?.after?.(mood, dense)}
+					</Fragment>
 				)
 			})}
 			{control.groups?.tiles?.(dense)}

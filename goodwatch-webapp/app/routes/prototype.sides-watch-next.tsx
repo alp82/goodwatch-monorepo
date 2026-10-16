@@ -1,7 +1,8 @@
 // PROTOTYPE - throwaway (#659, map #652). How the groups of titles a member loves (production's Sides of you) appear
-// on Watch next, inside its own controls: three variants on one member's real list, beside today's page.
-// ?variant=today|moods|filter|because, ?as=owner|m1..m5 (members picked at runtime by rating count; "me" when signed
-// in), ?list=all for the whole Wishlist (default: My movies), ?like=g1,g2 for the picked groups, ?names=1 for their trait names (words gate, #656), plus Watch next's own
+// on Watch next, merged into its mood picker: three variants on one member's real list, beside today's page and round
+// 2's picker. ?variant=today|moods|beside|inside|first, ?as=owner|m1..m5 (members picked at runtime by rating count; "me" when signed
+// in), ?list=all for the whole Wishlist (default: My movies), ?like=g1,g2 for the picked groups, ?wide=crime for moods
+// widened past your taste ("inside"), ?names=1 for their trait names (words gate, #656), plus Watch next's own
 // moods, services, and time, and ?nt= for the titles passed with Not tonight. Read-only: nothing is written.
 import { type LoaderFunctionArgs, json } from "@remix-run/node"
 import { useLoaderData } from "@remix-run/react"
@@ -13,7 +14,8 @@ import { timeOf } from "~/ui/watch-next/labels"
 import type { TitleKey } from "~/utils/title-key"
 
 export async function loader({ request }: LoaderFunctionArgs) {
-	if (process.env.NODE_ENV === "production") throw new Response("Not found", { status: 404 })
+	if (process.env.NODE_ENV === "production")
+		throw new Response("Not found", { status: 404 })
 	const p = new URL(request.url).searchParams
 	const variant = p.get("variant")
 	const list = p.get("list") === "all" ? "all" : "movies"
@@ -28,6 +30,11 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		onMyServices: p.get("services") !== "all",
 		time: list === "movies" ? timeOf(p.get("time")) : null,
 		groups: (p.get("like") ?? "").split(",").filter(Boolean),
+		wide: (p.get("wide") ?? "")
+			.split(",")
+			.filter((m): m is MoodKey =>
+				(MOOD_KEYS as readonly string[]).includes(m),
+			),
 		names: p.get("names") === "1",
 		passed: (p.get("nt") ?? "")
 			.split(",")
