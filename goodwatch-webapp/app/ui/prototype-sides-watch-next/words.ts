@@ -1,4 +1,4 @@
-// PROTOTYPE - throwaway (#659, round 4). The filters' three kinds of words (mood, theme, style) as one vocabulary, so
+// PROTOTYPE - throwaway (#659, rounds 4 and 5). The filters' three kinds of words (mood, theme, style) as one vocabulary, so
 // the round 4 variants can put them next to the member's taste groups. Browser-safe.
 //
 // The three overlap (research, round 4): Coming of age (mood) and Growing up (theme) are the same rule, so the theme
@@ -26,6 +26,8 @@ export interface Word {
 	bit: number
 	/** What it is, in one line (moods only; production's description). */
 	description?: string
+	/** Its color, as the filters show it: the mood's hue, or the theme's or style's color. */
+	hue: string
 }
 
 /** Theme names that would read twice next to a mood, by the noun the taste group names use. */
@@ -44,6 +46,7 @@ export const WORDS: readonly Word[] = [
 		name: m.name,
 		bit: MOOD_KEYS.indexOf(m.key),
 		description: m.description,
+		hue: m.hue,
 	})),
 	...THEMES.filter((t) => !SAME_AS_MOOD.includes(t.id)).map((t) => ({
 		id: `t:${t.id}`,
@@ -51,6 +54,7 @@ export const WORDS: readonly Word[] = [
 		key: t.id,
 		name: THEME_NAMES[t.id] ?? t.name,
 		bit: THEME_KEYS.indexOf(t.id),
+		hue: t.color,
 	})),
 	...STYLES.map((s) => ({
 		id: `s:${s.id}`,
@@ -58,6 +62,7 @@ export const WORDS: readonly Word[] = [
 		key: s.id,
 		name: s.name,
 		bit: STYLE_KEYS.indexOf(s.id),
+		hue: s.color,
 	})),
 ]
 
@@ -69,6 +74,13 @@ export const KIND_NAME: Record<WordKind, string> = {
 	mood: "Mood",
 	theme: "Theme",
 	style: "Style",
+}
+
+/** A kind's words, as a heading says them. */
+export const KINDS_NAME: Record<WordKind, string> = {
+	mood: "Moods",
+	theme: "Themes",
+	style: "Styles",
 }
 
 /** A title's three masks, as the snapshot holds them. */

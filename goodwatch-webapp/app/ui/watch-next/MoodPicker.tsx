@@ -62,6 +62,8 @@ export interface MoodGroups {
 	sub?: string
 	/** Tiles in place of the eleven moods' (before, after, and tiles still apply). */
 	grid?: (dense: boolean) => React.ReactNode
+	/** A row in the strip in place of the picked moods and the mood button; the button that opens the dropdown is its own. */
+	row?: (buttonRef: React.RefObject<HTMLButtonElement>) => React.ReactNode
 }
 
 /** Moods and groups picked together (PROTOTYPE #659: groups). */

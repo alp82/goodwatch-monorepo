@@ -3,7 +3,7 @@
 //
 // - today:  production, for reference (personal order, no groups).
 // - inside, beside: round 3, for reference: the member's taste inside the moods, or a group tile beside its mood.
-// - Round 4 (round4.tsx): the filters' moods, themes, and styles together with the taste groups, six ways.
+// - Round 5 (round5.tsx): six structures for picking among moods, themes, styles, and taste groups, colored.
 // With your taste narrowing, titles close to it that fit everything else follow the fits as "Close to your taste".
 import { useEffect, useState } from "react"
 import {
@@ -37,7 +37,7 @@ import {
 } from "./groups"
 import { TASTE } from "./label"
 import { type SwnView, VARIANTS } from "./model"
-import { badgeMark, round4Control, round4Phrase, usePicks } from "./round4"
+import { Row, badgeMark, round5Control, round5Phrase, usePicks } from "./round5"
 
 function DataBar({ view }: { view: SwnView }) {
 	const set = useParam()
@@ -57,9 +57,6 @@ function DataBar({ view }: { view: SwnView }) {
 								like: null,
 								nt: null,
 								pick: null,
-								widen: null,
-								up: null,
-								from: null,
 							})
 						}
 						aria-pressed={m.slot === view.member.slot}
@@ -229,7 +226,7 @@ function useControls(view: SwnView) {
 			text: `Three is the most. Remove one to add ${name}.`,
 		}),
 	)
-	const control4 = view.words ? round4Control(view, moods, picks) : moods
+	const control5 = view.words ? round5Control(view, moods, picks) : moods
 	const setOnMyServices = (on: boolean) => set({ services: on ? null : "all" })
 	const time = data.time ?? null
 	const setTime = (t: number | null) => set({ time: t ? String(t) : null })
@@ -242,7 +239,7 @@ function useControls(view: SwnView) {
 	) : (
 		<DockedStrip
 			data={data}
-			moods={control4}
+			moods={control5}
 			setOnMyServices={setOnMyServices}
 			setSort={() => {}}
 			extra={movies ? MOVIES_PAGE.timeControl(time, setTime) : undefined}
@@ -259,13 +256,19 @@ function useControls(view: SwnView) {
 	const phone = mounted && (
 		<PhoneControls
 			data={data}
-			moods={control4}
+			moods={control5}
 			setOnMyServices={setOnMyServices}
 			setSort={() => {}}
 			extra={extra}
 		/>
 	)
-	return { strip, phone }
+	// "row" on phones: the same row above the hero, scrolling sideways; the Moods button opens every choice.
+	const phoneRow = view.variant === "row" && view.words && (
+		<div className="px-4 pt-3 lg:hidden">
+			<Row view={view} control={control5} picks={picks} />
+		</div>
+	)
+	return { strip, phone, phoneRow }
 }
 
 export function SidesWatchNextPage({ view }: { view: SwnView | null }) {
@@ -281,7 +284,7 @@ export function SidesWatchNextPage({ view }: { view: SwnView | null }) {
 
 function Page({ view }: { view: SwnView }) {
 	const set = useParam()
-	const { strip, phone } = useControls(view)
+	const { strip, phone, phoneRow } = useControls(view)
 	const movies = view.list === "movies"
 	const { data } = view
 	const pass = (title: WatchNextTitle) =>
@@ -313,15 +316,15 @@ function Page({ view }: { view: SwnView }) {
 				: name
 		})
 	const insideNarrows = data.moods.some((m) => tasteOf(view, m)?.narrowed)
-	const phrase4 = round4Phrase(view)
+	const phrase5 = round5Phrase(view)
 	const relabel = (label: string) => {
 		if (view.words) {
-			if (!phrase4) return label
+			if (!phrase5) return label
 			const prefix = movies ? "Tonight's movie · " : ""
 			const limit = data.time ? `, ${timeLabel(data.time).toLowerCase()}` : ""
 			if (!view.fitting.length)
-				return `${prefix}Nothing for ${phrase4} fits tonight; the closest`
-			return `${prefix}Best match for ${phrase4} tonight${limit}`
+				return `${prefix}Nothing for ${phrase5} fits tonight; the closest`
+			return `${prefix}Best match for ${phrase5} tonight${limit}`
 		}
 		if (!likes.length && !insideNarrows) return label
 		const prefix = movies ? "Tonight's movie · " : ""
@@ -367,6 +370,7 @@ function Page({ view }: { view: SwnView }) {
 			) : (
 				<h1 className="sr-only">Watch next</h1>
 			)}
+			{phoneRow}
 			{body}
 			{phone}
 			<PrototypeSwitcher

@@ -11,12 +11,12 @@ export const VARIANTS = {
 	today: { name: "Today (production)", style: "reference" },
 	inside: { name: "Round 3: inside the moods", style: "reference" },
 	beside: { name: "Round 3: beside its moods", style: "reference" },
-	presets: { name: "Taste as presets", style: "round 4" },
-	refine: { name: "Taste, then words", style: "round 4" },
-	vocab: { name: "One vocabulary", style: "round 4" },
-	yours: { name: "Only your words", style: "round 4" },
-	insideall: { name: "Inside every word", style: "round 4" },
-	sorts: { name: "Taste sorts", style: "round 4" },
+	tabs: { name: "Tabs by kind", style: "round 5" },
+	steps: { name: "Kind, then choice", style: "round 5" },
+	shelf: { name: "Your row, then the rest", style: "round 5" },
+	row: { name: "One row in the strip", style: "round 5" },
+	search: { name: "Search with suggestions", style: "round 5" },
+	shades: { name: "Moods, then shades", style: "round 5" },
 } as const
 export type VariantKey = keyof typeof VARIANTS
 export const isVariant = (v: unknown): v is VariantKey =>
@@ -25,41 +25,28 @@ export const isVariant = (v: unknown): v is VariantKey =>
 /**
  * How picked groups narrow. "any": a group is one more choice among the moods (up to three in all), and a title fits
  * when it is in any of them. "inside": there are no group picks; a mood that carries groups is picked as that mood in
- * your taste (its titles in those groups), and can be widened to the whole mood.
+ * your taste (its titles in those groups), and can be widened to the whole mood. "words": round 5's pickers, where
+ * groups, moods, themes, and styles are picked together by Discover's rule (any within a kind, every kind picked).
  */
 export type GroupRule = "any" | "inside" | "words"
 export const RULE: Record<VariantKey, GroupRule | null> = {
 	today: null,
 	beside: "any",
 	inside: "inside",
-	presets: "words",
-	refine: "words",
-	vocab: "words",
-	yours: "words",
-	insideall: "words",
-	sorts: "words",
+	tabs: "words",
+	steps: "words",
+	shelf: "words",
+	row: "words",
+	search: "words",
+	shades: "words",
 }
 
-/**
- * Round 4: how the picks combine. "any": a title fits when it has any pick (today's mood rule). "all": every pick
- * narrows. "kinds": Discover's rule, any within a kind (mood, theme, style), every kind picked.
- */
-export type Combine = "any" | "all" | "kinds"
-export const COMBINE: Partial<Record<VariantKey, Combine>> = {
-	presets: "kinds",
-	refine: "any",
-	vocab: "all",
-	yours: "any",
-	insideall: "any",
-	sorts: "any",
-}
-
-/** Round 4: a word of the filters (words.ts) as the member's list holds it. */
+/** A word of the filters (words.ts) as the member's list holds it. */
 export interface SwnWord {
 	id: string
 	/** Titles with the word, counted as the moods are. */
 	count: number
-	/** The titles it would leave, with the picks so far ("vocab": every pick narrows). */
+	/** The titles left with the picks so far and this word (the count itself when picked). */
 	leaves: number
 	/** A backdrop from a title on the list with the word. */
 	backdrop: string | null
@@ -69,26 +56,21 @@ export interface SwnWord {
 	inTaste: number
 }
 
-/** Round 4: where a title stands to the taste picked (or the whole taste): "Fits your taste" or "Close to your taste". */
+/** Where a title stands to the taste picked (or the whole taste): "Fits your taste" or "Close to your taste". */
 export type Badge = "fits" | "close"
 
 export interface SwnWords {
-	combine: Combine
 	/** The picks: groups (g1) and words (m:funny), in the order picked. */
 	picks: string[]
-	/** "insideall": picked words widened past your taste. */
-	wide: string[]
-	/** "refine": words that bring titles up, without hiding any. */
-	boost: string[]
-	/** "presets": the group whose preset is picked, while its words all are. */
-	from: string | null
 	words: SwnWord[]
-	/** Per group: its preset (a mood, and a theme or style, that set it apart), and how much of it the preset finds. */
-	presets: Record<string, { words: string[]; count: number; inGroup: number }>
-	/** Groups as picks: the titles each would leave ("vocab"). */
+	/** Per group: the words it carries, the one that most sets it apart first. */
+	carries: Record<string, string[]>
+	/** Per group: its two colors, from the mood and the theme or style that most set it apart. */
+	blend: Record<string, string[]>
+	/** Groups as picks: the titles each would leave. */
 	groupLeaves: Record<string, number>
-	/** "refine": per boost word, how many fitting titles it brings up. */
-	boostCounts: Record<string, number>
+	/** The titles the picks leave, counted as the words are. */
+	fitting: number
 	badges: Record<string, Badge>
 }
 
@@ -160,7 +142,7 @@ export interface SwnView {
 	tasteMoods: Partial<Record<MoodKey, TasteMood>>
 	/** "Inside the moods": picked moods widened to the whole mood (the rest of the picked moods that carry groups narrow). */
 	wide: MoodKey[]
-	/** Round 4. */
+	/** Round 5. */
 	words: SwnWords | null
 	passed: TitleKey[]
 	personalOrder: { on: boolean; note: string | null }

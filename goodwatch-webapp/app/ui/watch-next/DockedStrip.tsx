@@ -119,6 +119,8 @@ function StripBody({
 	const anchor = useRef<HTMLDivElement>(null)
 	const moodButton = useRef<HTMLButtonElement>(null)
 	const picked = moods.moods.length > 0 || Boolean(moods.groups?.picked)
+	// PROTOTYPE (#659): a row of picks and suggestions on a line of its own, in place of the moods.
+	const row = moods.groups?.row?.(moodButton)
 	return (
 		<div
 			ref={anchor}
@@ -126,10 +128,10 @@ function StripBody({
 			data-strip={pinned ? "pinned" : "docked"}
 		>
 			<div
-				className={`flex flex-wrap items-center gap-2 ${pinned ? "min-h-12 py-1.5" : "min-h-14 rounded-2xl bg-black/45 p-2 ring-1 ring-white/10 backdrop-blur-md md:flex-nowrap md:py-0"}`}
+				className={`flex flex-wrap items-center gap-2 ${pinned ? "min-h-12 py-1.5" : `min-h-14 rounded-2xl bg-black/45 p-2 ring-1 ring-white/10 backdrop-blur-md ${row ? "md:py-2" : "md:flex-nowrap md:py-0"}`}`}
 			>
 				<div className="flex min-w-0 flex-1 items-center gap-1.5">
-					{picked && (
+					{!row && picked && (
 						<div
 							className="-my-1 flex min-w-0 items-center gap-1.5 overflow-x-auto py-1 [scrollbar-width:none]"
 							// biome-ignore lint/a11y/useSemanticElements: a fieldset can't scroll sideways as a flex row
@@ -139,7 +141,7 @@ function StripBody({
 							<PickedMoods control={moods} pinned={pinned} />
 						</div>
 					)}
-					<MoodButton control={moods} buttonRef={moodButton} />
+					{!row && <MoodButton control={moods} buttonRef={moodButton} />}
 					<FitCount
 						data={data}
 						narrowed={Boolean(moods.groups?.picked || moods.groups?.narrowing)}
@@ -159,6 +161,7 @@ function StripBody({
 						onPick={setSort}
 					/>
 				</div>
+				{row && <div className="order-last flex basis-full">{row}</div>}
 			</div>
 			<MoodPanel control={moods} anchor={anchor} returnFocus={moodButton} />
 		</div>

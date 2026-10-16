@@ -1,9 +1,7 @@
 import type {
 	Badge,
-	Combine,
 	Place,
 	SwnWords,
-	VariantKey,
 } from "~/ui/prototype-sides-watch-next/model"
 import {
 	type Masks,
@@ -13,9 +11,12 @@ import {
 	hasWord,
 	sameGround,
 } from "~/ui/prototype-sides-watch-next/words"
-// PROTOTYPE - throwaway (#659, round 4). The filters' moods, themes, and styles next to the member's taste groups:
-// which words a group carries, each group's preset, how the picks combine, where "Fits your taste" and "Close to your
-// taste" go, and what brings titles up. Pure: index.server.ts hands in the list and the groups.
+// PROTOTYPE - throwaway (#659, rounds 4 and 5). The filters' moods, themes, and styles next to the member's taste
+// groups: which words a group carries, the two that color it, how the picks combine, and where "Fits your taste" and
+// "Close to your taste" go. Pure: index.server.ts hands in the list and the groups.
+//
+// Round 5 picks by Discover's rule: any within a kind (mood, theme, style, or taste group), every kind picked. With
+// moods only, that is today's Watch next rule; a theme or a group next to a mood narrows it.
 import type { TitleKey } from "~/utils/title-key"
 
 /** A word carries a group when at least this share of the group's loved titles has it... */
@@ -24,7 +25,7 @@ const CARRIES = 0.4
 const LIFT = 1.15
 export const MAX_PICKS = 3
 /** Styles in most of what anyone loves (Music in 42 to 100% of every group): they never set a group apart. */
-const NO_PRESET = ["s:music", "s:talky"]
+const NEVER_APART = ["s:music", "s:talky"]
 
 interface Entry {
 	key: TitleKey
@@ -32,8 +33,6 @@ interface Entry {
 }
 
 export interface WordsInput {
-	variant: VariantKey
-	combine: Combine
 	entries: Entry[]
 	onMyServices: boolean
 	masksOf: (key: TitleKey) => Masks | null
@@ -42,22 +41,19 @@ export interface WordsInput {
 	/** The groups by id (g1...), with the loved titles each holds. */
 	groups: { id: string; loved: TitleKey[] }[]
 	picks: string[]
-	wide: string[]
-	boost: string[]
-	from: string | null
 }
 
 export interface WordsModel {
 	view: Omit<SwnWords, "words"> & {
 		words: Omit<SwnWords["words"][number], "backdrop">[]
 	}
-	/** The title has the picks, as the variant combines them; "relaxed" lets your taste go (a group: close to it too). */
+	/** The title has the picks; "relaxed" lets a picked group take titles close to it too. */
 	hit: (key: TitleKey, relaxed?: boolean) => boolean
-	/** The groups your taste narrows to tonight, or those the badges and order go by. */
+	/** The picked groups: the badges go by them. */
 	focus: string[]
-	/** Your taste narrows tonight: a group is picked, or a picked word is taken in your taste. */
+	/** A group is picked, so titles close to your taste follow the fits. */
 	narrows: boolean
-	/** How far up a fitting title goes (higher first; personal order keeps the rest). */
+	/** How far up a fitting title goes (higher first; personal order keeps the rest). Round 5 keeps the order. */
 	lift: (key: TitleKey) => number
 }
 
@@ -80,74 +76,47 @@ export function wordsModel(i: WordsInput): WordsModel {
 		const share = shareIn(lovedMasks.get(id) ?? [], w)
 		return share >= CARRIES ? share / Math.max(0.01, shareIn(allLoved, w)) : 0
 	}
+	const carries: SwnWords["carries"] = {}
+	const blend: SwnWords["blend"] = {}
+	for (const g of i.groups) {
+		const ranked = WORDS.filter((w) => !NEVER_APART.includes(w.id))
+			.map((w) => ({ w, lift: lift(g.id, w) }))
+			.filter((x) => x.lift >= LIFT)
+			.sort((a, b) => b.lift - a.lift)
+			.map((x) => x.w)
+		carries[g.id] = ranked.map((w) => w.id)
+		// Its colors: the mood that most sets it apart, then the theme or style that most does (not the same ground).
+		const mood = ranked.find((w) => w.kind === "mood")
+		const other = ranked.find(
+			(w) => w.kind !== "mood" && !(mood && sameGround(mood.id, w.id)),
+		)
+		blend[g.id] = [mood, other].filter((w): w is Word => !!w).map((w) => w.hue)
+	}
 	const carried = new Map<string, string[]>(
 		WORDS.map((w) => [
 			w.id,
-			i.groups.filter((g) => lift(g.id, w) >= LIFT).map((g) => g.id),
+			i.groups.filter((g) => carries[g.id].includes(w.id)).map((g) => g.id),
 		]),
 	)
 
 	const counted = i.entries.filter(
 		(e) => !i.onMyServices || e.onServices !== false,
 	)
-	// Each group's preset: the mood that most sets it apart, and the theme or style that most does.
-	const presets: SwnWords["presets"] = {}
-	for (const g of i.groups) {
-		const best = (kinds: Word["kind"][], next?: string) =>
-			WORDS.filter(
-				(w) =>
-					kinds.includes(w.kind) &&
-					!NO_PRESET.includes(w.id) &&
-					!(next && sameGround(next, w.id)),
-			)
-				.map((w) => ({ w, lift: lift(g.id, w) }))
-				.filter((x) => x.lift >= LIFT)
-				.sort((a, b) => b.lift - a.lift)[0]?.w.id
-		const mood = best(["mood"])
-		const words = [mood, best(["theme", "style"], mood)].filter(
-			(x): x is string => !!x,
-		)
-		const fits = counted.filter((e) =>
-			words.every((id) => has(e.key, WORD_BY_ID[id])),
-		)
-		presets[g.id] = {
-			words,
-			count: words.length ? fits.length : 0,
-			inGroup: fits.filter((e) => i.groupOf(e.key) === g.id).length,
-		}
-	}
 
 	// ---- the picks ----
 	const isGroup = (id: string) => ids.has(id)
 	const picks = [
 		...new Set(i.picks.filter((p) => isGroup(p) || WORD_BY_ID[p])),
 	].slice(0, MAX_PICKS)
-	const wide = i.wide.filter((w) => picks.includes(w))
-	const inTasteWord = (id: string) =>
-		i.variant === "insideall" && (carried.get(id)?.length ?? 0) > 0
-	const narrowedWord = (id: string) => inTasteWord(id) && !wide.includes(id)
 	const match = (key: TitleKey, pick: string, relaxed: boolean) => {
 		if (isGroup(pick)) {
 			if (i.groupOf(key) === pick) return true
 			return relaxed && i.placeOf(key)?.id === pick
 		}
-		const w = WORD_BY_ID[pick]
-		if (!has(key, w)) return false
-		if (relaxed || !narrowedWord(pick)) return true
-		return (carried.get(pick) ?? []).includes(i.groupOf(key) ?? "")
+		return has(key, WORD_BY_ID[pick])
 	}
+	// Discover's rule: any within a kind, every kind picked (a group is a kind of its own).
 	const combineHit = (list: string[], key: TitleKey, relaxed: boolean) => {
-		if (!list.length) return true
-		if (i.combine === "any") return list.some((p) => match(key, p, relaxed))
-		if (i.combine === "all") {
-			// Every pick narrows, but taste groups add up: a title is in one group only.
-			const groups = list.filter(isGroup)
-			return (
-				(!groups.length || groups.some((p) => match(key, p, relaxed))) &&
-				list.filter((p) => !isGroup(p)).every((p) => match(key, p, relaxed))
-			)
-		}
-		// Discover's rule: any within a kind, every kind picked (a group is a kind of its own).
 		const kinds = new Map<string, string[]>()
 		for (const p of list) {
 			const kind = isGroup(p) ? "group" : WORD_BY_ID[p].kind
@@ -161,51 +130,12 @@ export function wordsModel(i: WordsInput): WordsModel {
 		combineHit(picks, key, relaxed)
 
 	// ---- whose taste ----
-	const pickedGroups = picks.filter(isGroup)
-	const narrowedWords = picks.filter(narrowedWord)
-	const from =
-		i.variant === "presets" &&
-		i.from &&
-		ids.has(i.from) &&
-		presets[i.from].words.length > 0 &&
-		presets[i.from].words.length === picks.length &&
-		presets[i.from].words.every((w) => picks.includes(w))
-			? i.from
-			: null
-	const focus =
-		i.variant === "presets"
-			? from
-				? [from]
-				: []
-			: i.variant === "sorts"
-				? picks.length
-					? [...ids]
-					: []
-				: i.variant === "yours"
-					? [
-							...new Set(
-								picks.flatMap((p) =>
-									isGroup(p) ? [] : (carried.get(p) ?? []),
-								),
-							),
-						]
-					: i.variant === "insideall"
-						? [...new Set(narrowedWords.flatMap((p) => carried.get(p) ?? []))]
-						: pickedGroups
-	const narrows = pickedGroups.length > 0 || narrowedWords.length > 0
+	const focus = picks.filter(isGroup)
 	const badges: Record<string, Badge> = {}
 	for (const e of i.entries) {
 		const place = i.placeOf(e.key)
 		if (place && focus.includes(place.id))
 			badges[e.key] = place.how === "in" ? "fits" : "close"
-	}
-	const boost =
-		i.variant === "refine" ? i.boost.filter((b) => WORD_BY_ID[b]) : []
-	const liftOf = (key: TitleKey) => {
-		if (boost.length) return boost.some((b) => has(key, WORD_BY_ID[b])) ? 1 : 0
-		if (i.variant === "sorts")
-			return badges[key] === "fits" ? 2 : badges[key] === "close" ? 1 : 0
-		return 0
 	}
 
 	// ---- the words as the list holds them ----
@@ -234,27 +164,20 @@ export function wordsModel(i: WordsInput): WordsModel {
 				: leavesWith(g.id),
 		]),
 	)
-	const fittingNow = counted.filter((e) => hit(e.key))
-	const boostCounts = Object.fromEntries(
-		WORDS.map((w) => [w.id, fittingNow.filter((e) => has(e.key, w)).length]),
-	)
 
 	return {
 		view: {
-			combine: i.combine,
 			picks,
-			wide,
-			boost,
-			from,
 			words,
-			presets,
+			carries,
+			blend,
 			groupLeaves,
-			boostCounts,
+			fitting: counted.filter((e) => hit(e.key)).length,
 			badges,
 		},
 		hit,
 		focus,
-		narrows,
-		lift: liftOf,
+		narrows: focus.length > 0,
+		lift: () => 0,
 	}
 }

@@ -1,6 +1,6 @@
 // PROTOTYPE - throwaway (#659, map #652). How the groups of titles a member loves (production's Sides of you) appear
-// on Watch next, merged into its mood picker: three variants on one member's real list, beside today's page and round
-// 2's picker. ?variant=today|moods|beside|inside|first, ?as=owner|m1..m5 (members picked at runtime by rating count; "me" when signed
+// on Watch next, merged into its mood picker, on one member's real list. ?variant=today|inside|beside (references) or
+// round 5's tabs|steps|shelf|row|search|shades, ?pick=g1,m:funny,t:crime for round 5's picks, ?as=owner|m1..m5 (members picked at runtime by rating count; "me" when signed
 // in), ?list=all for the whole Wishlist (default: My movies), ?like=g1,g2 for the picked groups, ?wide=crime for moods
 // widened past your taste ("inside"), ?names=1 for their trait names (words gate, #656), plus Watch next's own
 // moods, services, and time, and ?nt= for the titles passed with Not tonight. Read-only: nothing is written.
@@ -44,9 +44,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			),
 		names: p.get("names") === "1",
 		picks: (p.get("pick") ?? "").split(",").filter(Boolean),
-		wideWords: (p.get("widen") ?? "").split(",").filter(Boolean),
-		boost: (p.get("up") ?? "").split(",").filter(Boolean),
-		from: p.get("from"),
 		passed: (p.get("nt") ?? "")
 			.split(",")
 			.map(Number)
@@ -61,6 +58,8 @@ export const meta = () => [
 ]
 
 export default function SidesWatchNextPrototype() {
-	const { view } = useLoaderData<typeof loader>()
-	return <SidesWatchNextPage view={view as never} />
+	const data = useLoaderData<typeof loader>()
+	return (
+		<SidesWatchNextPage view={("view" in data ? data.view : null) as never} />
+	)
 }

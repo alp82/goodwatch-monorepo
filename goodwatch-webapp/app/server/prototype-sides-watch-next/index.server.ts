@@ -35,7 +35,6 @@ import {
 } from "~/server/watch-next.server"
 import { TASTE } from "~/ui/prototype-sides-watch-next/label"
 import {
-	COMBINE,
 	RULE,
 	type SwnGroup,
 	type SwnTier,
@@ -71,11 +70,8 @@ export interface SwnOptions {
 	wide: MoodKey[]
 	/** The groups' trait names, behind the toggle (words gate, #656). */
 	names: boolean
-	/** Round 4: the picks (groups g1 and words m:funny), widened words, words that bring titles up, the preset. */
+	/** Round 5: the picks (groups g1 and words m:funny). */
 	picks: string[]
-	wideWords: string[]
-	boost: string[]
-	from: string | null
 	passed: TitleKey[]
 }
 
@@ -106,7 +102,7 @@ export async function swnView(
 	const rule = RULE[o.variant]
 	const options = {
 		sort: "match" as const,
-		// Round 4 picks its own words; production's moods stay unpicked.
+		// Round 5 picks its own words; production's moods stay unpicked.
 		moods: rule === "words" ? [] : o.moods,
 		onMyServices: o.onMyServices,
 		notTonight: o.passed,
@@ -149,13 +145,11 @@ export async function swnView(
 	const inMood = (e: { moodMask: number }, mood: MoodKey) =>
 		(e.moodMask & (1 << MOOD_KEYS.indexOf(mood))) !== 0
 
-	// ---- round 4: the filters' words next to the groups ----
+	// ---- round 5: the filters' words next to the groups ----
 	const { columns } = snapshot
 	const wm =
 		rule === "words"
 			? wordsModel({
-					variant: o.variant,
-					combine: COMBINE[o.variant] ?? "any",
 					entries: [...plan.entries.values()],
 					onMyServices: plan.onMyServices,
 					masksOf: (key) => {
@@ -176,9 +170,6 @@ export async function swnView(
 							built.protoGroups.find((g) => g.side === side.id)?.members ?? [],
 					})),
 					picks: o.picks,
-					wide: o.wideWords,
-					boost: o.boost,
-					from: o.from,
 				})
 			: null
 
@@ -323,7 +314,7 @@ export async function swnView(
 			groups.ranks,
 		)
 		const replace = new Set(fittingKeys)
-		// Round 4: words that bring titles up, or your taste, go first among the fits; personal order keeps the rest.
+		// Words could bring titles up among the fits (round 4); personal order keeps the rest.
 		const mixed = wm
 			? [...mix.keys].sort((a, b) => wm.lift(b) - wm.lift(a))
 			: mix.keys
@@ -481,7 +472,7 @@ export async function swnView(
 		entries: new Map(entries.map((e) => [e.key, e])),
 	} as Plan
 	const pictures = pictureKeys(plan, snapshot)
-	// Round 4: a picture for each theme and style, from a title on the list with it (moods keep production's).
+	// A picture for each theme and style, from a title on the list with it (moods keep production's).
 	const wordPictures = new Map<string, TitleKey>()
 	if (wm) {
 		const used = new Set<TitleKey>(Object.values(pictures))
