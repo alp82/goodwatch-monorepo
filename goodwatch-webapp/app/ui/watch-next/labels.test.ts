@@ -55,3 +55,33 @@ test("a closed group is hidden at every width, not re-shown by a desktop display
 		assert.ok(!open.includes("hidden"))
 	}
 })
+
+test("the taste picker's picks in words: one kind with or, kinds with and (#677)", async () => {
+	const { picksWords, picksShort, tierNote } = await import("./labels.ts")
+	const picker = {
+		picks: [] as string[],
+		fitting: 0,
+		groups: [{ id: "g1", name: "Dark, psychological thrillers", hues: [], madeOf: [] }],
+		choices: [],
+		forYou: [],
+		narrow: [],
+	}
+	assert.deepEqual(picksWords({ ...picker, picks: ["m:funny", "m:scary"] }), {
+		words: "Funny or Scary",
+		beyondMoods: false,
+	})
+	const mixed = { ...picker, picks: ["g1", "s:slow"] }
+	assert.deepEqual(picksWords(mixed), {
+		words: "Dark, psychological thrillers and Slow burn",
+		beyondMoods: true,
+	})
+	assert.equal(picksShort(mixed), "Dark, psychological thrillers +1")
+	assert.equal(picksShort(picker), "Any mood")
+	assert.equal(
+		heroLabel("match", [], null, picksWords(mixed)),
+		"Best match for Dark, psychological thrillers and Slow burn tonight",
+	)
+	assert.equal(heroLabel("match", [], "closestToMoods", picksWords(mixed)), "Closest to your picks")
+	assert.equal(tierNote("otherMoods", false), "In another mood.")
+	assert.equal(tierNote("otherPicks", true), "Some of what you picked, not all.")
+})

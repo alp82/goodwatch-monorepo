@@ -22,13 +22,23 @@ test("Top rated keeps working under its earlier key", () => {
 })
 
 test("the choice without parameters: the default sort, no moods, On my services", () => {
-	assert.deepEqual(choice(""), { sort: null, moods: [], onMyServices: true })
+	assert.deepEqual(choice(""), {
+		sort: null,
+		moods: [],
+		themes: [],
+		styles: [],
+		taste: [],
+		onMyServices: true,
+	})
 })
 
 test("the choice reads sort, moods, and services as the filter bar writes them", () => {
 	assert.deepEqual(choice("sort=waiting&moods=funny,scary&services=all"), {
 		sort: "waiting",
 		moods: ["funny", "scary"],
+		themes: [],
+		styles: [],
+		taste: [],
 		onMyServices: false,
 	})
 	assert.equal(choice("services=mine").onMyServices, true)
@@ -45,6 +55,22 @@ test("other filter bar parameters don't touch the choice", () => {
 	assert.deepEqual(choice("genres=Drama&score=80&match=90&unseen=1"), {
 		sort: null,
 		moods: [],
+		themes: [],
+		styles: [],
+		taste: [],
 		onMyServices: true,
 	})
+})
+
+test("the taste picker's themes, styles, and taste groups count toward three picks (#677)", () => {
+	assert.deepEqual(choice("themes=crime&styles=slow&taste=2"), {
+		sort: null,
+		moods: [],
+		themes: ["crime"],
+		styles: ["slow"],
+		taste: [2],
+		onMyServices: true,
+	})
+	const full = choice("moods=funny,scary&themes=crime&styles=slow&taste=1")
+	assert.deepEqual([full.taste, full.moods, full.themes, full.styles], [[1], ["funny", "scary"], [], []])
 })

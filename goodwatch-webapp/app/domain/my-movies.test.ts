@@ -43,6 +43,9 @@ test("a movie that does not fit says why, the time first", () => {
 	assert.equal(misfitWords({ why: "time", over: 60 }), "1h over")
 	assert.equal(misfitWords({ why: "time", over: 75 }), "1h 15m over")
 	assert.equal(misfitWords({ why: "mood" }), "Another mood")
+	// The taste picker (#677): with picks beyond moods, a movie misses the picks.
+	assert.deepEqual(misfitOf({ over: 0, inMood: false, onServices: true, beyondMoods: true }), { why: "picks" })
+	assert.equal(misfitWords({ why: "picks" }), "Not what you picked")
 	assert.equal(misfitWords({ why: "services" }), "Not on your services")
 })
 

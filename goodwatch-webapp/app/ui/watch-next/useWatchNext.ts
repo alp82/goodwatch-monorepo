@@ -1,9 +1,9 @@
 import useLocale from "~/utils/locale"
 import { mediaLanguageUrl } from "~/utils/media-presentation"
-// The Watch next page's state and data. The sort, moods, and On my services live in the URL (`sort=waiting&
-// moods=funny,scary&services=all`, defaults left out) so a view can be shared and reloaded; titles passed over with
-// Not tonight live only in this visit. Members read /api/watch-next with GET; a guest's Wishlist and ratings live in
-// their browser, so guests POST their guest progress to the same URL.
+// The Watch next page's state and data. The sort, the picks, and On my services live in the URL (`sort=waiting&
+// moods=funny,scary&themes=crime&taste=1&services=all`, defaults left out) so a view can be shared and reloaded;
+// titles passed over with Not tonight live only in this visit. Members read /api/watch-next with GET; a guest's
+// Wishlist and ratings live in their browser, so guests POST their guest progress to the same URL.
 import { useSearchParams } from "@remix-run/react"
 import {
 	keepPreviousData,
@@ -44,9 +44,13 @@ export const pageChoiceOf = (
 /** The page URL's parameters for a choice, keeping any others. */
 function choiceToParams(choice: PageChoice, current: URLSearchParams) {
 	const params = new URLSearchParams(current)
-	for (const key of ["sort", "moods", "services"]) params.delete(key)
+	for (const key of ["sort", "moods", "themes", "styles", "taste", "services"])
+		params.delete(key)
 	if (choice.sort) params.set("sort", choice.sort)
 	if (choice.moods.length) params.set("moods", choice.moods.join(","))
+	if (choice.themes.length) params.set("themes", choice.themes.join(","))
+	if (choice.styles.length) params.set("styles", choice.styles.join(","))
+	if (choice.taste.length) params.set("taste", choice.taste.join(","))
 	if (!choice.onMyServices) params.set("services", "all")
 	if (choice.time !== undefined) {
 		params.delete("time")

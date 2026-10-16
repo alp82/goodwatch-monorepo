@@ -12,7 +12,8 @@ import { Link } from "@remix-run/react"
 import { AnimatePresence, MotionConfig, motion } from "framer-motion"
 import type React from "react"
 import { useRef, useState } from "react"
-import { MAX_MOODS, MOOD_BY_KEY, type MoodKey } from "~/domain/moods"
+import { MOOD_BY_KEY } from "~/domain/moods"
+import { MAX_PICKS } from "~/domain/taste-picker"
 import type { WatchNextSort } from "~/domain/watch-next"
 import type { WatchNext } from "~/server/watch-next.server"
 import { SnapSheet } from "~/ui/filter-bar"
@@ -26,11 +27,13 @@ import {
 	SPECTRUM,
 	useRefusalHint,
 } from "./MoodPicker"
+import { choiceHues } from "./TasteShelf"
 import {
 	RATE_MORE,
 	SORT_LABEL,
 	SORT_OPTIONS,
-	moodsShort,
+	pickName,
+	picksShort,
 	titleCount,
 } from "./labels"
 
@@ -72,20 +75,24 @@ export interface PhoneControlsProps {
 	extra?: ExtraDrawer | false
 }
 
-function MoodDots({ moods }: { moods: readonly MoodKey[] }) {
-	const shown = moods.length ? moods : SPECTRUM
+/** The picks' colors, or the moods' fan with nothing picked. */
+function MoodDots({ control }: { control: MoodControl }) {
+	const { picks } = control.picker
+	const shown = picks.length
+		? picks.map((id) => ({ id, hue: choiceHues(control.picker, id)[0] }))
+		: SPECTRUM.map((mood) => ({ id: mood, hue: MOOD_BY_KEY[mood].hue }))
 	return (
 		<span className="flex -space-x-1" aria-hidden>
-			{shown.map((mood) => (
+			{shown.map((dot) => (
 				<motion.span
-					key={mood}
+					key={dot.id}
 					layout
 					initial={{ scale: 0.4 }}
 					animate={{ scale: 1 }}
 					className="h-3.5 w-3.5 rounded-full ring-2 ring-gray-950"
 					style={{
-						background: MOOD_BY_KEY[mood].hue,
-						opacity: moods.length ? 1 : 0.55,
+						background: dot.hue,
+						opacity: picks.length ? 1 : 0.55,
 					}}
 				/>
 			))}
@@ -97,7 +104,8 @@ function MoodDots({ moods }: { moods: readonly MoodKey[] }) {
 function showLabel(data: WatchNext | null): string {
 	if (!data) return "Done"
 	const timed = Boolean(data.time)
-	const filtered = data.moods.length > 0 || data.onMyServices || timed
+	const picked = data.picker.picks.length > 0
+	const filtered = picked || data.onMyServices || timed
 	const n = filtered ? data.fitting : data.total
 	if (!n) return "Done"
 	// `time` is there on My movies only, also for any length.
@@ -105,9 +113,7 @@ function showLabel(data: WatchNext | null): string {
 		return data.time === undefined
 			? `Show ${titleCount(n)}`
 			: `Show ${n} ${n === 1 ? "movie" : "movies"}`
-	return data.moods.length || timed
-		? `Show ${n} that fit`
-		: `Show ${n} on your services`
+	return picked || timed ? `Show ${n} that fit` : `Show ${n} on your services`
 }
 
 function ShowButton({
@@ -137,7 +143,7 @@ function DrawerHead({ children }: { children: React.ReactNode }) {
 }
 
 function MoodsHead({ control }: { control: MoodControl }) {
-	const k = control.moods.length
+	const k = control.picker.picks.length
 	const hint = useRefusalHint(control)
 	return (
 		<DrawerHead>
@@ -162,7 +168,7 @@ function MoodsHead({ control }: { control: MoodControl }) {
 						exit={{ opacity: 0, transition: { duration: 0.08 } }}
 						className="min-w-0 flex-1 text-base font-bold text-white"
 					>
-						Moods{" "}
+						Pick{" "}
 						<span className="text-sm font-normal text-gray-400">
 							up to three
 						</span>
@@ -170,9 +176,9 @@ function MoodsHead({ control }: { control: MoodControl }) {
 				)}
 			</AnimatePresence>
 			<span
-				className={`shrink-0 text-sm tabular-nums ${k === MAX_MOODS ? "font-semibold text-amber-300" : "text-gray-400"}`}
+				className={`shrink-0 text-sm tabular-nums ${k === MAX_PICKS ? "font-semibold text-amber-300" : "text-gray-400"}`}
 			>
-				{k} of {MAX_MOODS}
+				{k} of {MAX_PICKS}
 			</span>
 			{k > 0 && (
 				<button
@@ -331,12 +337,13 @@ function Segments({
 	extra,
 }: {
 	data: WatchNext
-	moods: readonly MoodKey[]
+	moods: MoodControl
 	extra?: ExtraDrawer | false
 	open: Drawer | null
 	onOpen: (drawer: Drawer) => void
 }) {
-	const picked = moods.length > 0
+	const { picker } = moods
+	const picked = picker.picks.length > 0
 	const segment = (drawer: Drawer) => ({
 		type: "button" as const,
 		"aria-haspopup": "dialog" as const,
@@ -354,11 +361,13 @@ function Segments({
 		<>
 			<motion.button
 				{...segment("moods")}
-				aria-label={`Moods: ${picked ? moods.map((m) => MOOD_BY_KEY[m].name).join(", ") : "any"}`}
+				aria-label={`Picks: ${picked ? picker.picks.map((id) => pickName(picker, id)).join(", ") : "any mood"}`}
 				className={`${SEGMENT} flex-[1.25] ${picked ? "bg-white/[0.07] text-white" : "text-gray-300"}`}
 			>
-				<MoodDots moods={moods} />
-				<span className="w-full truncate text-center">{moodsShort(moods)}</span>
+				<MoodDots control={moods} />
+				<span className="w-full truncate text-center">
+					{picksShort(picker)}
+				</span>
 			</motion.button>
 			<motion.button
 				{...segment("services")}
@@ -443,7 +452,7 @@ export function PhoneControls({
 		data && moods ? (
 			<Segments
 				data={data}
-				moods={moods.moods}
+				moods={moods}
 				open={open}
 				onOpen={setOpen}
 				extra={extra}

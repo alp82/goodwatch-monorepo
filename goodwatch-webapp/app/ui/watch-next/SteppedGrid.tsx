@@ -22,12 +22,12 @@ import { NewOnContext, titleHref, useMoviesPage } from "./WatchNextHero"
 import {
 	SORT_WORDS,
 	TIER_LABEL,
-	TIER_NOTE,
-	moodWords,
+	picksWords,
 	runtimeLabel,
 	sortFact,
 	tierGridClass,
 	tierHeadingClass,
+	tierNote,
 	titleCount,
 } from "./labels"
 import { misfitWords } from "./labels"
@@ -64,11 +64,14 @@ function TierRow({
 	state,
 	sort,
 	mine,
+	beyondMoods,
 }: {
 	tier: WatchNextTier
 	state: WatchNextState
 	sort: WatchNext["sort"]
 	mine: CardService[]
+	/** The picks go beyond moods: the notes speak of picks. */
+	beyondMoods: boolean
 }) {
 	const [all, setAll] = useState(false)
 	const [ref, near] = useNear<HTMLLIElement>()
@@ -90,7 +93,7 @@ function TierRow({
 	)
 	const titleOf = (key: TitleKey) => given.get(key) ?? loaded.get(key)
 	const big = tier.size === "xl" || tier.size === "lg"
-	const note = TIER_NOTE[tier.key]
+	const note = tierNote(tier.key, beyondMoods)
 	const count = movies
 		? `${tier.keys.length} ${tier.keys.length === 1 ? "movie" : "movies"}`
 		: titleCount(tier.keys.length)
@@ -222,9 +225,10 @@ export function SteppedGrid({
 }) {
 	const movies = useMoviesPage()
 	if (!data.tiers.length) return null
-	const filtered = data.moods.length > 0 || data.onMyServices
-	const fitWords = data.moods.length
-		? `${moodWords(data.moods)}${data.onMyServices ? " on your services" : ""}`
+	const picked = data.picker.picks.length > 0
+	const filtered = picked || data.onMyServices
+	const fitWords = picked
+		? `${picksWords(data.picker).words}${data.onMyServices ? " on your services" : ""}`
 		: "What's on your services"
 	const by = SORT_WORDS[data.sort]
 	const list = movies ? "movies" : "Wishlist"
@@ -253,6 +257,7 @@ export function SteppedGrid({
 						state={state}
 						sort={data.sort}
 						mine={data.myServices}
+						beyondMoods={picksWords(data.picker).beyondMoods}
 					/>
 				))}
 			</ol>

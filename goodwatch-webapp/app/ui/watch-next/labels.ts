@@ -2,6 +2,12 @@
 // names, and counts. Pure, so the words stay in one place.
 import { MOOD_BY_KEY, type MoodKey } from "~/domain/moods"
 import { timeLabel } from "~/domain/my-movies"
+import {
+	WORD_BY_ID,
+	WORD_KINDS,
+	groupNumber,
+	kindOf,
+} from "~/domain/taste-picker"
 
 // My movies' rules, for the page's parts: they read them from here, so that the module stays in this chunk.
 export {
@@ -78,6 +84,47 @@ export function moodsShort(moods: readonly MoodKey[]): string {
 	return moods.length === 1 ? first : `${first} +${moods.length - 1}`
 }
 
+/** A pick's name: a taste group's ("Dark, psychological thrillers") or a word's ("Slow burn"). */
+export function pickName(picker: WatchNext["picker"], id: string): string {
+	const number = groupNumber(id)
+	if (number !== null) return picker.groups.find((g) => g.id === id)?.name ?? ""
+	return WORD_BY_ID[id]?.name ?? ""
+}
+
+/** The phone slab's button with the taste picker: "Any mood", "Slow burn", "Dark, psychological thrillers +1". */
+export function picksShort(picker: WatchNext["picker"]): string {
+	if (!picker.picks.length) return "Any mood"
+	const first = pickName(picker, picker.picks[0])
+	return picker.picks.length === 1
+		? first
+		: `${first} +${picker.picks.length - 1}`
+}
+
+/**
+ * The picks in a sentence: names of one kind joined with "or", kinds with "and" ("Funny or Scary", "Dark,
+ * psychological thrillers and Slow burn"). With moods only, the same as moodWords.
+ */
+export function picksWords(picker: WatchNext["picker"]): {
+	words: string
+	beyondMoods: boolean
+} {
+	const kinds = ["taste", ...WORD_KINDS] as const
+	const words = kinds
+		.map((kind) => {
+			const names = picker.picks
+				.filter((id) => kindOf(id) === kind)
+				.map((id) => pickName(picker, id))
+			if (names.length < 2) return names[0] ?? ""
+			return `${names.slice(0, -1).join(", ")} or ${names[names.length - 1]}`
+		})
+		.filter(Boolean)
+		.join(" and ")
+	return {
+		words,
+		beyondMoods: picker.picks.some((id) => kindOf(id) !== "mood"),
+	}
+}
+
 /** "Funny", "Funny or Scary", "Funny, Scary or Heavy". */
 export function moodWords(moods: readonly MoodKey[]): string {
 	const names = moods.map((mood) => MOOD_BY_KEY[mood].name)
@@ -90,10 +137,15 @@ export function heroLabel(
 	sort: WatchNextSort,
 	moods: readonly MoodKey[],
 	note: WatchNext["heroNote"],
+	/** The taste picker's picks in words (picksWords), in place of the moods'. */
+	picks?: { words: string; beyondMoods: boolean },
 ): string {
-	if (note === "closestToMoods") return "Closest to your moods"
+	if (note === "closestToMoods")
+		return picks?.beyondMoods
+			? "Closest to your picks"
+			: "Closest to your moods"
 	if (note) return "Nothing on your services; closest"
-	const m = moodWords(moods)
+	const m = picks ? picks.words : moodWords(moods)
 	switch (sort) {
 		case "match":
 			return m ? `Best match for ${m} tonight` : "Best match for you tonight"
@@ -121,11 +173,12 @@ export function movieHeroLabel(
 	moods: readonly MoodKey[],
 	note: WatchNext["heroNote"],
 	time: number | null,
+	picks?: { words: string; beyondMoods: boolean },
 ): string {
 	const limit = time === null ? "" : timeLabel(time).toLowerCase()
 	if (note === "nothingInTime")
 		return `Tonight's movie · Nothing ${limit}; the closest`
-	const line = heroLabel(sort, moods, note).replace(
+	const line = heroLabel(sort, moods, note, picks).replace(
 		/ (on|to) your Wishlist/,
 		" of your movies",
 	)
@@ -202,6 +255,7 @@ export const TIER_LABEL: Record<WatchNextTierKey, string> = {
 	later: "Later",
 	someday: "Someday",
 	otherMoods: "Other moods",
+	otherPicks: "Almost",
 	elsewhere: "Elsewhere",
 	close: "Close",
 	notTonight: "Not tonight",
@@ -215,6 +269,24 @@ export const TIER_NOTE: Partial<Record<WatchNextTierKey, string>> = {
 	close:
 		"In one of these but not on your services, or on them but in another mood.",
 	notTonight: "Another mood and not on your services.",
+}
+
+/** A tier's note, in words of picks when the picks go beyond moods (the taste picker, #677). */
+export function tierNote(
+	key: WatchNextTierKey,
+	beyondMoods: boolean,
+): string | undefined {
+	if (!beyondMoods) return TIER_NOTE[key]
+	switch (key) {
+		case "otherPicks":
+			return "Some of what you picked, not all."
+		case "close":
+			return "What you picked but not on your services, or on them but not all you picked."
+		case "notTonight":
+			return "Not all you picked, and not on your services."
+		default:
+			return TIER_NOTE[key]
+	}
 }
 
 export const tierHeadingClass: Record<WatchNextTierSize, string> = {

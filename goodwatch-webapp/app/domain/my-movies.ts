@@ -34,16 +34,22 @@ export const minutesOver = (runtime: number | null, limit: number | null) =>
 export type Misfit =
 	| { why: "time"; over: number }
 	| { why: "mood" }
+	/** Not what was picked, when the picks go beyond moods (the taste picker, #677). */
+	| { why: "picks" }
 	| { why: "services" }
 
-/** The first reason a movie does not fit tonight: the time, then the moods, then the services. Null: it fits. */
+/** The first reason a movie does not fit tonight: the time, then the picks, then the services. Null: it fits. */
 export function misfitOf(movie: {
 	over: number
+	/** It has the picks (moods, and with the taste picker themes, styles, and taste groups). */
 	inMood: boolean
 	onServices: boolean
+	/** Something besides moods is picked. */
+	beyondMoods?: boolean
 }): Misfit | null {
 	if (movie.over > 0) return { why: "time", over: movie.over }
-	if (!movie.inMood) return { why: "mood" }
+	if (!movie.inMood)
+		return movie.beyondMoods ? { why: "picks" } : { why: "mood" }
 	if (!movie.onServices) return { why: "services" }
 	return null
 }
@@ -53,4 +59,6 @@ export const misfitWords = (misfit: Misfit) =>
 		? `${durationWords(misfit.over)} over`
 		: misfit.why === "mood"
 			? "Another mood"
-			: "Not on your services"
+			: misfit.why === "picks"
+				? "Not what you picked"
+				: "Not on your services"

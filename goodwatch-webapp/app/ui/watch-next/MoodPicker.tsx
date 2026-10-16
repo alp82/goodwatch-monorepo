@@ -1,37 +1,34 @@
-// The moods control in the docked strip: the picked moods as small poster chips with a remove button, a button that
-// opens the grid dropdown, and the dropdown itself: the 11 moods as poster tiles with how many Wishlist titles fit
-// each, "k of 3", Clear, and Done. A fourth pick is refused with a hint (the page announces it in a live region).
-// The phone's Moods drawer reuses the grid and the hint.
-import {
-	CheckIcon,
-	ChevronDownIcon,
-	XMarkIcon,
-} from "@heroicons/react/24/solid"
+// The picker in the docked strip (#677, decided in #659): the picks as small poster chips with a remove button, a
+// button that opens the dropdown, and the dropdown itself: the taste shelf (TasteShelf.tsx) with moods, themes,
+// styles, and the member's taste groups, "k of 3", Clear, and Done. A fourth pick is refused with a hint (the page
+// announces it in a live region). The phone's drawer reuses the shelf and the hint.
+import { ChevronDownIcon } from "@heroicons/react/24/solid"
 import { AnimatePresence, motion } from "framer-motion"
 import type React from "react"
 import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
-import { MAX_MOODS, MOODS, MOOD_BY_KEY, type MoodKey } from "~/domain/moods"
+import { MOOD_BY_KEY, type MoodKey } from "~/domain/moods"
+import { MAX_PICKS } from "~/domain/taste-picker"
 import type { WatchNext } from "~/server/watch-next.server"
-import { EASE, backdropUrl } from "./style"
+import { PickChip, TasteShelf, pickHint } from "./TasteShelf"
+import { EASE } from "./style"
 
 export interface MoodControl {
-	moods: MoodKey[]
-	counts: WatchNext["moodCounts"]
-	pictures: WatchNext["moodPictures"]
+	/** The choices, their counts, and the picks. */
+	picker: WatchNext["picker"]
 	/** "on your services" or "on your Wishlist": what the counts count. */
 	countScope: string
 	open: boolean
 	setOpen: (open: boolean) => void
-	/** Picks or unpicks a mood; a fourth pick is refused. */
-	toggle: (mood: MoodKey) => void
+	/** Picks or unpicks a choice ("m:funny", "t:crime", "g1"); a fourth pick is refused. */
+	toggle: (id: string) => void
 	clear: () => void
-	/** The mood last refused, with a counter so the same refusal shows again. */
-	refused: { mood: MoodKey; at: number } | null
+	/** The choice last refused, by name, with a counter so the same refusal shows again. */
+	refused: { name: string; at: number } | null
 }
 
-export const refusalText = (mood: MoodKey) =>
-	`Three is the most. Remove one to add ${MOOD_BY_KEY[mood].name}.`
+export const refusalText = (name: string) =>
+	`Three is the most. Remove one to add ${name}.`
 
 /** The mood colors that stand for "Any mood". */
 export const SPECTRUM: readonly MoodKey[] = [
@@ -40,45 +37,6 @@ export const SPECTRUM: readonly MoodKey[] = [
 	"crime",
 	"worlds",
 ]
-
-const isFull = (control: MoodControl, mood: MoodKey) =>
-	control.moods.length >= MAX_MOODS && !control.moods.includes(mood)
-
-// A mood's picture: the backdrop of one of its titles, washed in the mood's color.
-function MoodArt({
-	mood,
-	path,
-	className = "",
-}: {
-	mood: MoodKey
-	path: string | null
-	className?: string
-}) {
-	const hue = MOOD_BY_KEY[mood].hue
-	return (
-		<span
-			className={`absolute inset-0 -z-10 overflow-hidden ${className}`}
-			aria-hidden
-		>
-			<span className="absolute inset-0" style={{ background: hue }} />
-			{path && (
-				<img
-					src={backdropUrl(path, "w300")}
-					alt=""
-					loading="lazy"
-					className="absolute inset-0 h-full w-full object-cover opacity-85"
-				/>
-			)}
-			<span
-				className="absolute inset-0"
-				style={{
-					background: `linear-gradient(90deg, ${hue}f0 0%, ${hue}a6 40%, ${hue}1f 100%)`,
-				}}
-			/>
-			<span className="absolute inset-0 bg-linear-to-t from-black/55 via-black/10 to-transparent" />
-		</span>
-	)
-}
 
 // Four mood colors in a small fan, for the "Any mood" button.
 function Spectrum() {
@@ -95,7 +53,7 @@ function Spectrum() {
 	)
 }
 
-/** The picked moods as poster chips. Each opens the dropdown; its × removes the mood. */
+/** The picks as poster chips. Each opens the dropdown; its × removes the pick. */
 export function PickedMoods({
 	control,
 	pinned,
@@ -105,45 +63,9 @@ export function PickedMoods({
 }) {
 	return (
 		<>
-			{control.moods.map((mood) => {
-				const { name, hue } = MOOD_BY_KEY[mood]
-				return (
-					<motion.span
-						layout
-						key={mood}
-						initial={{ opacity: 0, scale: 0.9 }}
-						animate={{ opacity: 1, scale: 1 }}
-						className={`relative isolate inline-flex shrink-0 items-center overflow-hidden rounded-xl text-sm font-bold text-white ring-1 ring-white/25 [text-shadow:0_1px_4px_rgba(0,0,0,.6)] ${pinned ? "h-8" : "h-9"}`}
-						style={{ boxShadow: `0 4px 18px -6px ${hue}` }}
-					>
-						<MoodArt
-							mood={mood}
-							path={control.pictures[mood]?.backdropPath ?? null}
-						/>
-						<button
-							type="button"
-							data-moodbutton
-							aria-haspopup="dialog"
-							aria-expanded={control.open}
-							onClick={() => control.setOpen(!control.open)}
-							className="inline-flex h-full cursor-pointer items-center gap-2 pl-2.5 pr-1"
-						>
-							<span className="whitespace-nowrap">{name}</span>
-							<span className="rounded-md bg-black/30 px-1 text-xs tabular-nums">
-								{control.counts[mood]}
-							</span>
-						</button>
-						<button
-							type="button"
-							aria-label={`Remove ${name}`}
-							onClick={() => control.toggle(mood)}
-							className="mr-1.5 flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-full bg-black/25 hover:bg-black/50"
-						>
-							<XMarkIcon className="h-3.5 w-3.5" />
-						</button>
-					</motion.span>
-				)
-			})}
+			{control.picker.picks.map((id) => (
+				<PickChip key={id} control={control} id={id} pinned={pinned} />
+			))}
 		</>
 	)
 }
@@ -156,7 +78,7 @@ export function MoodButton({
 	control: MoodControl
 	buttonRef: React.RefObject<HTMLButtonElement>
 }) {
-	const picked = control.moods.length > 0
+	const picked = control.picker.picks.length > 0
 	return (
 		<button
 			ref={buttonRef}
@@ -164,12 +86,12 @@ export function MoodButton({
 			data-moodbutton
 			aria-haspopup="dialog"
 			aria-expanded={control.open}
-			aria-label={picked ? "Change moods" : undefined}
+			aria-label={picked ? "Change picks" : undefined}
 			onClick={() => control.setOpen(!control.open)}
 			className={`inline-flex h-9 shrink-0 cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-full text-sm font-semibold text-white ring-1 ring-white/15 transition-colors hover:bg-white/20 ${picked ? "px-2.5" : "pl-1.5 pr-3"} ${control.open ? "bg-white/15" : "bg-white/10"}`}
 		>
 			{picked ? (
-				control.moods.length < MAX_MOODS ? (
+				control.picker.picks.length < MAX_PICKS ? (
 					"Add"
 				) : (
 					"Change"
@@ -188,23 +110,12 @@ export function MoodButton({
 	)
 }
 
-function Tick({ on }: { on: boolean }) {
-	return (
-		<span
-			className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${on ? "bg-white text-black" : "bg-black/30 ring-1 ring-white/50"}`}
-			aria-hidden
-		>
-			{on && <CheckIcon className="h-3.5 w-3.5" />}
-		</span>
-	)
-}
-
 /** The refusal of a fourth pick, shown for a few seconds in place of the title. */
 export function useRefusalHint(control: MoodControl): string | null {
 	const [hint, setHint] = useState<string | null>(null)
 	useEffect(() => {
 		if (!control.refused) return
-		setHint(refusalText(control.refused.mood))
+		setHint(refusalText(control.refused.name))
 		const id = setTimeout(() => setHint(null), 3200)
 		return () => clearTimeout(id)
 	}, [control.refused])
@@ -219,7 +130,7 @@ function PanelHead({
 	control: MoodControl
 	onDone: () => void
 }) {
-	const k = control.moods.length
+	const k = control.picker.picks.length
 	const hint = useRefusalHint(control)
 	return (
 		<div className="flex min-h-9 shrink-0 items-center gap-3 border-b border-white/8 px-3 py-2">
@@ -244,19 +155,17 @@ function PanelHead({
 						exit={{ opacity: 0, transition: { duration: 0.08 } }}
 						className="min-w-0 flex-1 text-sm text-gray-300"
 					>
-						<span className="font-semibold text-white">
-							Pick up to three moods
-						</span>
+						<span className="font-semibold text-white">Pick up to three</span>
 						<span className="hidden sm:inline">
-							. A title fits when it is in any of them.
+							. {pickHint(control.picker)}
 						</span>
 					</motion.p>
 				)}
 			</AnimatePresence>
 			<span
-				className={`shrink-0 text-sm tabular-nums ${k === MAX_MOODS ? "font-semibold text-amber-300" : "text-gray-400"}`}
+				className={`shrink-0 text-sm tabular-nums ${k === MAX_PICKS ? "font-semibold text-amber-300" : "text-gray-400"}`}
 			>
-				{k} of {MAX_MOODS}
+				{k} of {MAX_PICKS}
 			</span>
 			{k > 0 && (
 				<button
@@ -279,9 +188,8 @@ function PanelHead({
 }
 
 /**
- * The grid of the 11 moods as poster tiles. Tiles are checkboxes; a refused one stays focusable and says why. `dense`
- * is the phone drawer's: two columns of shorter tiles with the name and count (the description stays in the label),
- * scrolling with the drawer.
+ * The shelf's grid: two, three, or four columns in the dropdown, scrolling inside it. `dense` is the phone drawer's:
+ * two columns of shorter tiles with the name and count (the rest stays in the label), scrolling with the drawer.
  */
 export function MoodGrid({
 	control,
@@ -295,49 +203,7 @@ export function MoodGrid({
 					: "grid min-h-0 flex-1 grid-cols-2 gap-2 overflow-y-auto overscroll-contain p-3 sm:grid-cols-3 lg:grid-cols-4"
 			}
 		>
-			{MOODS.map(({ key: mood, name, description, hue }) => {
-				const on = control.moods.includes(mood)
-				const full = isFull(control, mood)
-				const count = `${control.counts[mood]} ${control.countScope}`
-				return (
-					<motion.button
-						key={mood}
-						type="button"
-						// biome-ignore lint/a11y/useSemanticElements: a poster tile that acts as a checkbox, with the tile's picture and lines inside
-						role="checkbox"
-						aria-checked={on}
-						aria-disabled={full || undefined}
-						aria-label={`${name}. ${description} ${count}.`}
-						data-mood={mood}
-						onClick={() => control.toggle(mood)}
-						whileTap={{ scale: full ? 1 : 0.97 }}
-						className={`group relative isolate flex cursor-pointer flex-col justify-between overflow-hidden rounded-xl p-2.5 text-left text-white transition-[opacity,box-shadow] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${dense ? "h-[4.75rem]" : "h-[6.5rem] md:h-28"} ${on ? "ring-2 ring-white" : "ring-1 ring-white/10"} ${full ? "opacity-40" : ""}`}
-						style={{ boxShadow: on ? `0 8px 28px -8px ${hue}` : undefined }}
-					>
-						<MoodArt
-							mood={mood}
-							path={control.pictures[mood]?.backdropPath ?? null}
-							className="transition-transform duration-500 group-hover:scale-105 motion-reduce:transition-none"
-						/>
-						<span className="flex items-start justify-between gap-2">
-							<span className="text-[15px] font-bold leading-tight [text-shadow:0_1px_6px_rgba(0,0,0,.6)]">
-								{name}
-							</span>
-							<Tick on={on} />
-						</span>
-						<span className="block">
-							{!dense && (
-								<span className="line-clamp-2 text-xs leading-snug text-white/90 [text-shadow:0_1px_4px_rgba(0,0,0,.8)]">
-									{description}
-								</span>
-							)}
-							<span className="mt-1 block text-[11px] font-semibold tabular-nums text-white/75">
-								{count}
-							</span>
-						</span>
-					</motion.button>
-				)
-			})}
+			<TasteShelf control={control} dense={dense} />
 		</div>
 	)
 }
@@ -421,11 +287,11 @@ export function MoodPanel({
 		}
 	}, [open, setOpen, returnFocus])
 
-	// Focus moves to the first mood when the dropdown opens.
+	// Focus moves to the first choice when the dropdown opens.
 	useEffect(() => {
 		if (!open || !box) return
 		const id = requestAnimationFrame(() =>
-			panel.current?.querySelector<HTMLElement>("[data-mood]")?.focus(),
+			panel.current?.querySelector<HTMLElement>("[data-choice]")?.focus(),
 		)
 		return () => cancelAnimationFrame(id)
 	}, [open, !box])
@@ -439,7 +305,7 @@ export function MoodPanel({
 					ref={panel}
 					// biome-ignore lint/a11y/useSemanticElements: an animated, non-modal popover positioned under the strip
 					role="dialog"
-					aria-label="Moods"
+					aria-label="Picks"
 					data-panel
 					initial={{ opacity: 0, y: -8, scale: 0.985 }}
 					animate={{ opacity: 1, y: 0, scale: 1 }}

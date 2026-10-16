@@ -1,7 +1,7 @@
 // The Watch next page: the docked strip on the hero (phones: the slab's buttons and drawers at the bottom), the hero
 // with its Then column, the stepped grid, suggestions while the Wishlist is short, and the sign-up prompt for guests.
 import { type ReactNode, useCallback, useState } from "react"
-import { type MoodKey, toggleMood } from "~/domain/moods"
+import { togglePick } from "~/domain/taste-picker"
 import type { WatchNextSort } from "~/domain/watch-next"
 import { useWishlistMutation } from "~/hooks/useUserDataMutations"
 import { useUserData } from "~/routes/api.user-data"
@@ -16,6 +16,7 @@ import { type MoodControl, refusalText } from "./MoodPicker"
 import { PhoneControls } from "./PhoneControls"
 import { SteppedGrid, WorthAdding } from "./SteppedGrid"
 import { MoviesPageContext, WatchNextHero } from "./WatchNextHero"
+import { pickName } from "./labels"
 import { WRAP } from "./style"
 import { useFinish } from "./useFinish"
 import {
@@ -77,26 +78,27 @@ export function WatchNextPage({
 	)
 	const dismissHid = useCallback(() => setHid(null), [])
 
-	// Moods: the dropdown's state and the refusal of a fourth pick, announced politely.
+	// The picker: the dropdown's state and the refusal of a fourth pick, announced politely.
 	const [moodsOpen, setMoodsOpen] = useState(false)
 	const [refused, setRefused] = useState<MoodControl["refused"]>(null)
 	const [announcement, setAnnouncement] = useState("")
 	const toggle = useCallback(
-		(mood: MoodKey) => {
-			const result = toggleMood(choice.moods, mood)
+		(id: string) => {
+			const result = togglePick(choice, id)
 			if (result.refused) {
-				setRefused({ mood, at: Date.now() })
+				const name = data ? pickName(data.picker, id) : ""
+				setRefused({ name, at: Date.now() })
 				// A trailing space when the text repeats, so screen readers announce it again.
 				setAnnouncement((before) =>
-					before === refusalText(mood)
-						? `${refusalText(mood)} `
-						: refusalText(mood),
+					before === refusalText(name)
+						? `${refusalText(name)} `
+						: refusalText(name),
 				)
 				return
 			}
-			setChoice({ moods: result.moods })
+			setChoice(result.picks)
 		},
-		[choice.moods, setChoice],
+		[choice, data, setChoice],
 	)
 
 	const want = useCallback(
@@ -119,9 +121,7 @@ export function WatchNextPage({
 		Boolean(userData?.wishlist[`${card.media_type}-${card.tmdb_id}`])
 
 	const moods: MoodControl | null = data && {
-		moods: data.moods,
-		counts: data.moodCounts,
-		pictures: data.moodPictures,
+		picker: data.picker,
 		countScope: data.onMyServices
 			? "on your services"
 			: movies
@@ -130,7 +130,7 @@ export function WatchNextPage({
 		open: moodsOpen,
 		setOpen: setMoodsOpen,
 		toggle,
-		clear: () => setChoice({ moods: [] }),
+		clear: () => setChoice({ moods: [], themes: [], styles: [], taste: [] }),
 		refused,
 	}
 

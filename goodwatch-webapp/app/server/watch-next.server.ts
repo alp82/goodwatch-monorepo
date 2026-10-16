@@ -2,7 +2,17 @@
 // stepped grid. Everything runs in memory over the viewer's Wishlist: facts and moods from the title snapshot, services
 // from the availability index, and match from the person's taste. Only the titles the page shows first (the hero, its
 // Then column, and the first two tiers) are read from Crate as cards; later tiers load as they scroll into view.
-import { MAX_MOODS, MOOD_KEYS, type MoodKey, maskOfMoods } from "~/domain/moods"
+import { MOOD_KEYS, type MoodKey, maskOfMoods } from "~/domain/moods"
+import {
+	type Picks,
+	WORD_BY_ID,
+	type WordMasks,
+	groupNumber,
+	kindsMet,
+	pickIds,
+	trimPicks,
+} from "~/domain/taste-picker"
+import type { StyleKey, ThemeKey } from "~/domain/themes-styles"
 import {
 	type BestMatchPrompt,
 	TIER_CAPS,
@@ -14,6 +24,13 @@ import { type Misfit, minutesOver, misfitOf } from "~/domain/my-movies"
 import { isOnServices } from "~/server/availability-index.server"
 import { recordListExposure } from "~/server/list-exposure.server"
 import { movieRuntimes } from "~/server/movie-runtimes.server"
+import {
+	type PickerChoice,
+	type PickerGroup,
+	hasChoice,
+	masksOf,
+	pickerCounts,
+} from "~/server/taste-picker-counts"
 import { type Taste, loadTaste } from "~/server/taste/index.server"
 import {
 	type CardService,
@@ -29,6 +46,7 @@ import {
 } from "~/server/title-snapshot/index.server"
 import { VALID_FINGERPRINT_KEYS } from "~/server/utils/fingerprint"
 import type { ViewerContext } from "~/server/viewer.server"
+import type { TasteGroups } from "~/server/watch-next-taste-picker.server"
 import { query } from "~/utils/crate"
 import { type TitleKey, parseTitleKey, titleKey } from "~/utils/title-key"
 
@@ -47,6 +65,10 @@ export interface WatchNextOptions {
 	/** Null or unavailable (Best match without taste): the default sort. */
 	sort?: WatchNextSort | null
 	moods?: MoodKey[]
+	/** The taste picker's themes, styles, and taste groups (#677): up to three picks in all, moods included. */
+	themes?: ThemeKey[]
+	styles?: StyleKey[]
+	taste?: number[]
 	/** Ignored for a viewer without services. */
 	onMyServices?: boolean
 	/** Titles passed over with Not tonight during this visit: they go to the end of the view. */
@@ -64,7 +86,7 @@ export interface WatchNextTitle extends TitleCard {
 	/** A film's release date or a show's last air date (YYYY-MM-DD). */
 	releaseDate: string | null
 	moods: MoodKey[]
-	/** Passes On my services (when on) and belongs to a picked mood (when any); on My movies, runs no longer than the time too. */
+	/** Passes On my services (when on) and has the picks (when any); on My movies, runs no longer than the time too. */
 	fits: boolean
 	/** On My movies: why the movie does not fit tonight. Left out when it fits, and on Watch next. */
 	misfit?: Misfit
@@ -87,6 +109,12 @@ export interface WatchNext {
 	sort: WatchNextSort
 	defaultSort: WatchNextSort
 	moods: MoodKey[]
+	/** The taste picker's picks besides the moods (#677). */
+	themes: ThemeKey[]
+	styles: StyleKey[]
+	taste: number[]
+	/** The taste picker's choices and counts (#677). */
+	picker: WatchNextPicker
 	onMyServices: boolean
 	hasServices: boolean
 	/** The viewer's own services, one per name, for the On my services control. */
@@ -116,6 +144,22 @@ export interface WatchNext {
 	time?: number | null
 }
 
+/** The taste picker's choices on this list (#677). */
+export interface WatchNextPicker {
+	/** The picks as choice ids ("g1", "m:funny", "t:crime"), taste groups first. */
+	picks: string[]
+	/** Titles with the picks, under the services choice. */
+	fitting: number
+	/** The member's taste groups, largest first. */
+	groups: Omit<PickerGroup, "carries">[]
+	/** The taste groups, every mood, and the themes and styles the list holds (or that are picked), with counts. */
+	choices: (PickerChoice & { picture: string | null })[]
+	/** The tiles under "For you". */
+	forYou: string[]
+	/** After a pick: choices of another kind that would leave fewer titles. */
+	narrow: string[]
+}
+
 const THEN = 3
 export const SMALL_WISHLIST = 12
 const WORTH_ADDING = 18
@@ -133,6 +177,9 @@ const planChoice = (options: WatchNextOptions) =>
 	JSON.stringify([
 		options.sort ?? null,
 		options.moods ?? [],
+		options.themes ?? [],
+		options.styles ?? [],
+		options.taste ?? [],
 		options.onMyServices ?? true,
 		options.notTonight ?? [],
 		options.kind ?? null,
@@ -143,6 +190,9 @@ interface Entry {
 	key: TitleKey
 	addedAt: number
 	moodMask: number
+	/** The taste picker's words (null without a title analysis) and taste group (#677). */
+	masks: WordMasks | null
+	group: number | null
 	hasBackdrop: boolean
 	releaseDay: number | null
 	score: number | null
@@ -249,7 +299,7 @@ export function bestMatchOf(
 
 function sortValue(
 	sort: WatchNextSort,
-	entry: Omit<Entry, "value" | "fit" | "over">,
+	entry: Omit<Entry, "value" | "fit" | "over" | "masks" | "group">,
 	today: number,
 ): number | null {
 	switch (sort) {
@@ -290,6 +340,8 @@ export function planWatchNext(
 	/** Minutes per movie, for My movies with a time chosen (see movieRuntimes). */
 	runtimes: ReadonlyMap<TitleKey, number | null> = new Map(),
 	personalOrderRead?: PersonalOrderRead,
+	/** The member's taste groups for the taste picker (#677); null for a guest or a member with fewer than two. */
+	groups: TasteGroups | null = null,
 ) {
 	const movies = options.kind === "movie"
 	const time = movies ? (options.time ?? null) : null
@@ -300,8 +352,17 @@ export function planWatchNext(
 		options.sort && (options.sort !== "match" || bestMatch.available)
 			? options.sort
 			: defaultSort
-	const moods = [...new Set(options.moods ?? [])].slice(0, MAX_MOODS)
-	const moodMask = maskOfMoods(moods)
+	// Up to three picks of any kind; a taste group the member doesn't have is left out.
+	const picks: Picks = trimPicks({
+		moods: options.moods ?? [],
+		themes: options.themes ?? [],
+		styles: options.styles ?? [],
+		taste: (options.taste ?? []).filter(
+			(n) => n <= (groups?.groups.length ?? 0),
+		),
+	})
+	const { moods } = picks
+	const ids = pickIds(picks)
 	const hasServices = ctx.services.length > 0
 	const onMyServices = (options.onMyServices ?? true) && hasServices
 	const today = Math.floor(Date.now() / DAY_MS)
@@ -324,6 +385,8 @@ export function planWatchNext(
 			key,
 			addedAt: ctx.wishlist.get(key)?.getTime() ?? 0,
 			moodMask: facts ? maskOfMoods(facts.moods) : 0,
+			masks: snapshot ? masksOf(snapshot, key) : null,
+			group: groups?.groupOf(key) ?? null,
 			hasBackdrop: facts?.hasBackdrop ?? false,
 			releaseDay: sortFacts?.releaseDay ?? null,
 			score: sortFacts?.score ?? null,
@@ -334,16 +397,20 @@ export function planWatchNext(
 		return {
 			...base,
 			value: sortValue(sort, base, today),
-			// While availability loads, On my services doesn't narrow.
+			// One for each kind picked the title meets (any mood picked, any theme...), one for On my services. While
+			// availability loads, On my services doesn't narrow.
 			fit:
-				(moods.length && base.moodMask & moodMask ? 1 : 0) +
+				kindsMet(ids, (id) => hasChoice(base, id)).met +
 				(onMyServices && onServices !== false ? 1 : 0),
 			over: minutesOver(runtimes.get(key) ?? null, time),
 		}
 	})
 	entries.sort(compareEntries)
 
-	const need = (moods.length ? 1 : 0) + (onMyServices ? 1 : 0)
+	const kindsPicked = kindsMet(ids, () => true).picked
+	// Picks beyond moods: the tiers and captions speak of picks, not moods.
+	const beyondMoods = ids.length > moods.length
+	const need = kindsPicked + (onMyServices ? 1 : 0)
 	const passed = new Set(options.notTonight ?? [])
 	const order = [
 		...entries.filter((e) => !passed.has(e.key)),
@@ -477,10 +544,12 @@ export function planWatchNext(
 			tier("soon", "lg", fits.slice(4, 16)),
 			tier("later", "md", fits.slice(16)),
 			tier(
-				moods.length && onMyServices
+				kindsPicked && onMyServices
 					? "close"
-					: moods.length
-						? "otherMoods"
+					: kindsPicked
+						? beyondMoods
+							? "otherPicks"
+							: "otherMoods"
 						: "elsewhere",
 				"md",
 				close,
@@ -514,6 +583,10 @@ export function planWatchNext(
 		personalOrder,
 		defaultSort,
 		moods,
+		picks,
+		pickIds: ids,
+		beyondMoods,
+		groups,
 		onMyServices,
 		hasServices,
 		servicesPending,
@@ -527,7 +600,7 @@ export function planWatchNext(
 			: // Only the time keeps every movie out: the hero is the one that runs over the least.
 				ranked.some((e) => e.fit === need)
 				? ("nothingInTime" as const)
-				: moods.length
+				: ids.length
 					? ("closestToMoods" as const)
 					: ("nothingOnServices" as const),
 		movies,
@@ -680,6 +753,34 @@ function pictureKeys(plan: Plan, snapshot: TitleSnapshot | null) {
 	return pictures
 }
 
+/**
+ * The taste picker's choices with their counts, and a picture for each theme, style, and taste group: the first title
+ * of the list with it in Best match order (as the moods'), a backdrop no mood or other choice uses where one is left.
+ * A taste group with none of its titles on the list shows one of its loved titles.
+ */
+function pickerOf(plan: Plan, moodPictures: Set<TitleKey>) {
+	const counted = plan.pictureOrder
+	const groups = plan.groups?.groups ?? []
+	const counts = pickerCounts(counted, plan.pickIds, groups)
+	const used = new Set(moodPictures)
+	const pictures = new Map<string, TitleKey>()
+	for (const choice of counts.choices) {
+		if (choice.id.startsWith("m:")) continue
+		const candidates = counted
+			.filter((e) => e.hasBackdrop && hasChoice(e, choice.id))
+			.map((e) => e.key)
+		const number = groupNumber(choice.id)
+		const loved =
+			number === null ? null : (plan.groups?.lovedPicture(number) ?? null)
+		if (loved !== null) candidates.push(loved)
+		const pick = candidates.find((key) => !used.has(key)) ?? candidates[0]
+		if (pick === undefined) continue
+		used.add(pick)
+		pictures.set(choice.id, pick)
+	}
+	return { counts, groups, pictures }
+}
+
 const isoDay = (day: number | null) =>
 	day === null ? null : new Date(day * DAY_MS).toISOString().slice(0, 10)
 
@@ -697,8 +798,10 @@ function wishlistTitle(plan: Plan, card: TitleCard): WatchNextTitle {
 	const misfit = misfitOf({
 		over: entry.over,
 		inMood:
-			!plan.moods.length || Boolean(entry.moodMask & maskOfMoods(plan.moods)),
+			kindsMet(plan.pickIds, (id) => hasChoice(entry, id)).met ===
+			kindsMet(plan.pickIds, () => true).picked,
 		onServices: !plan.onMyServices || entry.onServices !== false,
+		beyondMoods: plan.beyondMoods,
 	})
 	return misfit ? { ...title, misfit } : title
 }
@@ -719,10 +822,22 @@ async function planFor(
 	const match =
 		(!options.sort || options.sort === "match") &&
 		bestMatchOf(ctx, taste).available
-	const personalOrderRead =
+	const snapshot = getTitleSnapshot()
+	const [personalOrderRead, groups] = await Promise.all([
 		member && match && (flag.enabled || flag.shadow)
-			? await loadPersonalOrder(member, getTitleSnapshot())
-			: undefined
+			? loadPersonalOrder(member, snapshot)
+			: undefined,
+		// Members' taste groups, loaded on first use (they pull in the Taste page's engine). Without them the picker
+		// still offers moods, themes, and styles, so a failure leaves Watch next working.
+		member && snapshot
+			? import("./watch-next-taste-picker.server")
+					.then((m) => m.tasteGroupsFor(ctx, taste, snapshot))
+					.catch((error: unknown) => {
+						console.warn("Watch next: taste groups unavailable", error)
+						return null
+					})
+			: null,
+	])
 	return planWatchNext(
 		ctx,
 		taste,
@@ -730,6 +845,7 @@ async function planFor(
 		outside,
 		runtimes,
 		personalOrderRead,
+		groups,
 	)
 }
 
@@ -757,6 +873,7 @@ export async function getWatchNext(
 				})
 			: []
 	const pictures = pictureKeys(plan, snapshot)
+	const picker = pickerOf(plan, new Set(Object.values(pictures)))
 	const cardKeys = [
 		...plan.head.map((e) => e.key),
 		...shown.flat(),
@@ -764,7 +881,7 @@ export async function getWatchNext(
 	].slice(0, MAX_KEYS)
 	const [cards, backdrops, myServices] = await Promise.all([
 		getTitleCards(cardKeys, ctx, taste),
-		getDisplayFields(Object.values(pictures)),
+		getDisplayFields([...Object.values(pictures), ...picker.pictures.values()]),
 		getServiceCards(ctx.services),
 	])
 	const cardOf = new Map(cards.map((card) => [card.key, card]))
@@ -823,6 +940,28 @@ export async function getWatchNext(
 		heroNote: plan.heroNote,
 		thenColumn: headTitles.slice(1),
 		tiers,
+		themes: plan.picks.themes,
+		styles: plan.picks.styles,
+		taste: plan.picks.taste,
+		picker: {
+			picks: plan.pickIds,
+			fitting: picker.counts.fitting,
+			groups: picker.groups.map(({ carries: _, ...g }) => g),
+			choices: picker.counts.choices.map((choice) => {
+				const key = choice.id.startsWith("m:")
+					? pictures[WORD_BY_ID[choice.id].key as MoodKey]
+					: picker.pictures.get(choice.id)
+				return {
+					...choice,
+					picture:
+						key === undefined
+							? null
+							: (backdrops.get(key)?.backdrop_path ?? null),
+				}
+			}),
+			forYou: picker.counts.forYou,
+			narrow: picker.counts.narrow,
+		},
 		moodCounts: plan.moodCounts,
 		moodPictures: Object.fromEntries(
 			MOOD_KEYS.map((mood) => {
@@ -929,6 +1068,9 @@ function watchNextExposure(
 			type: options.kind ?? "all",
 			onMyServices: plan.onMyServices,
 			moods: plan.moods,
+			themes: plan.picks.themes,
+			styles: plan.picks.styles,
+			taste: plan.picks.taste,
 			minMatch: 0,
 			notTonight: options.notTonight ?? [],
 			time: plan.time,

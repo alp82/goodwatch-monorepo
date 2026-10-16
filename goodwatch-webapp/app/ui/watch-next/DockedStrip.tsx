@@ -1,4 +1,4 @@
-// The glass strip docked on the hero's top edge: moods, how many titles fit, On my services, and the sort. Once it
+// The glass strip docked on the hero's top edge: the picks, how many titles fit, On my services, and the sort. Once it
 // scrolls away, the same line pins under the site header. From the large breakpoint up; phones use PhoneControls.
 import { PlusIcon } from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
@@ -72,14 +72,15 @@ function ServicesToggle({
 	)
 }
 
-// "23 fit" with moods, "151 on your services" without, or the Wishlist's size with no filter.
+// "23 fit" with picks, "151 on your services" without, or the Wishlist's size with no filter.
 function FitCount({
 	data,
 	className = "",
 }: { data: WatchNext; className?: string }) {
 	const word = useMoviesPage() ? "movie" : "title"
 	const timed = Boolean(data.time)
-	const filtered = data.moods.length > 0 || data.onMyServices || timed
+	const picked = data.picker.picks.length > 0
+	const filtered = picked || data.onMyServices || timed
 	if (!filtered)
 		return (
 			<span
@@ -101,7 +102,7 @@ function FitCount({
 			>
 				{data.fitting}
 			</motion.span>{" "}
-			{data.moods.length || timed ? "fit" : "on your services"}
+			{picked || timed ? "fit" : "on your services"}
 		</span>
 	)
 }
@@ -116,7 +117,7 @@ function StripBody({
 }: StripProps & { pinned: boolean }) {
 	const anchor = useRef<HTMLDivElement>(null)
 	const moodButton = useRef<HTMLButtonElement>(null)
-	const picked = moods.moods.length > 0
+	const picked = moods.picker.picks.length > 0
 	return (
 		<div
 			ref={anchor}
@@ -132,7 +133,7 @@ function StripBody({
 							className="-my-1 flex min-w-0 items-center gap-1.5 overflow-x-auto py-1 [scrollbar-width:none]"
 							// biome-ignore lint/a11y/useSemanticElements: a fieldset can't scroll sideways as a flex row
 							role="group"
-							aria-label="Picked moods"
+							aria-label="Picks"
 						>
 							<PickedMoods control={moods} pinned={pinned} />
 						</div>

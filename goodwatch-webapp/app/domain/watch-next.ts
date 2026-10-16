@@ -6,6 +6,8 @@
 // exist only here.
 import { filterStateFromParams } from "./filter-state"
 import type { MoodKey } from "./moods"
+import { tasteNumbersOf, trimPicks } from "./taste-picker"
+import type { StyleKey, ThemeKey } from "./themes-styles"
 
 // Every sort reads a stored, populated field. Titles missing the value go last; ties go to the newest added.
 export const WATCH_NEXT_SORTS = [
@@ -35,11 +37,18 @@ export function watchNextSortOf(
 	return isWatchNextSort(value) ? value : (EARLIER_SORT_KEYS[value] ?? null)
 }
 
-/** What a person chooses on the page, as the URL carries it: `sort=waiting&moods=funny,scary&services=all`. */
+/**
+ * What a person chooses on the page, as the URL carries it: `sort=waiting&moods=funny,scary&services=all`. With the
+ * taste picker (#677), also `themes=crime&styles=slow&taste=1`: up to three picks in all.
+ */
 export interface WatchNextChoice {
 	/** Null: the viewer's default sort (Best match, or Last added without taste). */
 	sort: WatchNextSort | null
 	moods: MoodKey[]
+	/** The taste picker's themes, styles, and taste groups (by number, 1 for the largest); empty without it. */
+	themes: ThemeKey[]
+	styles: StyleKey[]
+	taste: number[]
 	onMyServices: boolean
 }
 
@@ -49,9 +58,15 @@ const CHOICE_DEFAULTS = { onMyServices: true, notSeenYet: false }
 /** The choice from the URL. Moods and services read as the filter bar reads them (`moods`, `services=mine|all`). */
 export function watchNextChoiceOf(params: URLSearchParams): WatchNextChoice {
 	const filters = filterStateFromParams(params, CHOICE_DEFAULTS)
+	const picks = trimPicks({
+		moods: filters.moods,
+		themes: filters.themes,
+		styles: filters.styles,
+		taste: tasteNumbersOf(params.get("taste")),
+	})
 	return {
 		sort: watchNextSortOf(params.get("sort")),
-		moods: filters.moods,
+		...picks,
 		onMyServices: filters.onMyServices,
 	}
 }
@@ -69,6 +84,8 @@ export type WatchNextTierKey =
 	| "later"
 	| "someday"
 	| "otherMoods"
+	// The taste picker (#677): one pick short, when the picks go beyond moods.
+	| "otherPicks"
 	| "elsewhere"
 	| "close"
 	| "notTonight"

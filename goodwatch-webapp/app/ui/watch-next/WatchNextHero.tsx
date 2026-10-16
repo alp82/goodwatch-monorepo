@@ -16,6 +16,7 @@ import {
 	heroLabel,
 	misfitWords,
 	movieHeroLabel,
+	picksWords,
 	runtimeLabel,
 	sortFact,
 } from "./labels"
@@ -128,8 +129,14 @@ function Eyebrow({
 							data.moods,
 							data.heroNote,
 							data.time ?? null,
+							picksWords(data.picker),
 						)
-					: heroLabel(data.sort, data.moods, data.heroNote)}
+					: heroLabel(
+							data.sort,
+							data.moods,
+							data.heroNote,
+							picksWords(data.picker),
+						)}
 			</span>
 			{fact && <span className="text-gray-300">{fact}</span>}
 			{hero.misfit?.why === "time" && (
