@@ -133,6 +133,11 @@ export interface FilterInput {
 	/** The For you switch: the surface whose rule applies, or null when it's off. */
 	forYou: ForYouSurface | null
 	viewer: ViewerContext
+	/**
+	 * Narrows the universe before anything is counted, like the viewer's hidden titles: no filter brings back a title
+	 * it leaves out (Discover narrowed to one Side of you).
+	 */
+	keep?: (key: TitleKey) => boolean
 }
 
 export class SnapshotNotLoaded extends Error {
@@ -181,6 +186,12 @@ export async function filterTitles(input: FilterInput): Promise<FilterResult> {
 		const kept = Array.from(keys, (_, i) => i).filter(
 			(i) => !viewer.hidden.has(keys[i]),
 		)
+		rows = Int32Array.from(kept, (i) => rows[i])
+		keys = Float64Array.from(kept, (i) => keys[i])
+	}
+	if (input.keep) {
+		const keep = input.keep
+		const kept = Array.from(keys, (_, i) => i).filter((i) => keep(keys[i]))
 		rows = Int32Array.from(kept, (i) => rows[i])
 		keys = Float64Array.from(kept, (i) => keys[i])
 	}

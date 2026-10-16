@@ -37,7 +37,8 @@ export const ROW_TITLES = 12
 /** The loved titles that stand for a side in its header. */
 const HERE = 4
 const KEEP_MS = 10 * 60_000
-const MAX_KEPT = 500
+// Each member kept holds one byte per snapshot title (about 250 KB at 250,000 titles).
+const MAX_KEPT = 100
 
 /** A side as Discover shows it, or (id "none") the titles that fit no side. */
 export interface DiscoverSide {

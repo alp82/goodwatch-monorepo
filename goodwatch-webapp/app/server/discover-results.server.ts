@@ -11,14 +11,7 @@ import {
 	discoverFilterCache,
 	discoverFilterKey,
 } from "~/server/discover-filter-cache.server"
-import {
-	type DiscoverSide,
-	ROW_TITLES,
-	discoverSide,
-	memberSides,
-	requestedGroup,
-	sideOf,
-} from "~/server/discover-sides.server"
+import type { DiscoverSide } from "~/server/discover-sides.server"
 import { type FingerprintKey, loadTaste } from "~/server/taste/index.server"
 import { recPersonalOrder } from "./features.server.ts"
 import { recordListExposure } from "~/server/list-exposure.server"
@@ -134,7 +127,7 @@ export async function getDiscoverResults(
 				? "ready"
 				: "needsTaste"
 
-	const compute = () =>
+	const compute = (keep?: (key: TitleKey) => boolean) =>
 		filterTitles({
 			universe: searching ? ranked : "catalog",
 			includeNotInterested: searching,
@@ -143,6 +136,7 @@ export async function getDiscoverResults(
 			taste,
 			forYou: input.forYou ? (searching ? "search" : "browse") : null,
 			viewer: ctx,
+			keep,
 		})
 	const snapshot = searching ? null : getTitleSnapshot()
 	const key = snapshot
@@ -158,10 +152,11 @@ export async function getDiscoverResults(
 		: null
 	const result = await (searching
 		? compute()
-		: discoverFilterCache.run(key, compute))
+		: discoverFilterCache.run(key, () => compute()))
 	// With Best match the order is the taste match already: For you has nothing to blend.
 	const applied = result.moved !== undefined
-	const { keys: all, moved, personalOrder, ...counts } = result
+	const { keys: all, moved, personalOrder } = result
+	let counts = countsOf(result)
 	const ladder = state.ageLimit === undefined ? null : result.ladder
 	const record = (
 		titles: readonly { key: TitleKey; match: number | null }[],
@@ -186,28 +181,44 @@ export async function getDiscoverResults(
 			titles,
 		})
 
-	// Sides of you: a member's browse list under Best match, when they have sides and the page asks for them.
-	const member =
-		input.sides && result.sortUsed === "match" && all.length > 0 && snapshot
-			? await memberSides(ctx, taste, snapshot)
+	// Sides of you: a member's browse list under Best match (the snapshot is null while searching), when they have
+	// sides and the page asks for rows of a list with titles, or for one side.
+	const wantsSides =
+		(input.sides?.rows === true && all.length > 0) || Boolean(input.sides?.side)
+	const engine =
+		wantsSides && result.sortUsed === "match" && snapshot
+			? await loadSides()
 			: null
-	const narrowedTo = member
-		? requestedGroup(member, input.sides?.side)
+	const member =
+		engine && snapshot ? await engine.memberSides(ctx, taste, snapshot) : null
+	const at = engine && member ? { engine, member } : null
+	const narrowedTo = at
+		? at.engine.requestedGroup(at.member, input.sides?.side)
 		: undefined
 	let list = all
 	let sides: DiscoverSides | null = null
-	if (member && narrowedTo !== undefined) {
-		list = all.filter((key) => sideOf(member, key) === narrowedTo)
+	if (at && narrowedTo !== undefined) {
+		const inSide = (key: TitleKey) =>
+			at.engine.sideOf(at.member, key) === narrowedTo
+		// The titles: the whole list's, in its order. The filter bar's counts: the side's alone, the other sides' titles
+		// out like hidden ones, so no recovery or option promises titles the side doesn't hold.
+		list = all.filter(inSide)
+		counts = countsOf(await compute(inSide))
 		sides = {
 			layout: "side",
-			side: discoverSide(member, narrowedTo, list.length),
+			side: at.engine.discoverSide(at.member, narrowedTo, list.length),
 		}
-	} else if (member && input.sides?.rows && page === 1) {
-		const groups = groupInListOrder(
-			all,
-			(key) => sideOf(member, key),
-			ROW_TITLES,
-		)
+	}
+	const groups =
+		at && !sides && input.sides?.rows && page === 1
+			? groupInListOrder(
+					all,
+					(key) => at.engine.sideOf(at.member, key),
+					at.engine.ROW_TITLES,
+				)
+			: []
+	// A list whose titles all fall in one group shows as the grid: one row would group nothing.
+	if (at && groups.length >= 2) {
 		const rowKeys = groups.flatMap((group) => group.keys)
 		const found = new Map<TitleKey, TitleCard>()
 		for (let i = 0; i < rowKeys.length; i += MAX_KEYS)
@@ -220,7 +231,7 @@ export async function getDiscoverResults(
 				found.set(card.key, card)
 		// Each row is its own list in the exposure log, in display order, with the row's place among the rows.
 		const rows = groups.map((group, i): DiscoverSideRow => {
-			const side = discoverSide(member, group.side, group.total)
+			const side = at.engine.discoverSide(at.member, group.side, group.total)
 			const cards = group.keys.flatMap((key) => found.get(key) ?? [])
 			return {
 				...side,
@@ -264,8 +275,6 @@ export async function getDiscoverResults(
 	)
 	return {
 		...counts,
-		// Narrowed to a side, the count and the pages are the side's.
-		total: sides ? list.length : counts.total,
 		listId,
 		page,
 		pageSize: DISCOVER_PAGE_SIZE,
@@ -360,4 +369,23 @@ export function forYouFromParams(
 ): boolean {
 	const value = params.get("foryou")
 	return value === "0" || value === "1" ? value === "1" : ctx.forYou
+}
+
+/** A filter result without its titles: the counts and what the filter bar reads. */
+function countsOf({
+	keys: _keys,
+	moved: _moved,
+	personalOrder: _personalOrder,
+	...counts
+}: FilterResult) {
+	return counts
+}
+
+/** The sides module, loaded on the first request that asks for Sides of you: it reads the Taste portrait's engine. */
+let sidesEngine: Promise<
+	typeof import("~/server/discover-sides.server")
+> | null = null
+const loadSides = () => {
+	sidesEngine ??= import("~/server/discover-sides.server")
+	return sidesEngine
 }
