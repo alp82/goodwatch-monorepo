@@ -2,8 +2,7 @@
 // - beside: each group a tile among the moods, right after the mood it is mostly made of, in that mood's color.
 // - inside: no group tiles; a mood the member's taste is mostly made of carries that taste's loved posters, and is
 //   picked as that mood in your taste, with "In your taste" on the picked tile to widen it to the whole mood.
-// - first: the groups' tiles first, then the moods, in one grid with no heading between.
-// Round 2's "moods" (the groups after the moods under "Your taste") stays for comparison. Words come from label.ts; a
+// Round 2's "moods" and round 3's "first" are gone (commit 9b0c01ea has them). Words come from label.ts; a
 // group is told apart by the posters of titles the member loved, and by its trait name only with the names on. No
 // color tells groups apart: beside a mood a group takes that mood's color, elsewhere none.
 import { CheckIcon, XMarkIcon } from "@heroicons/react/24/solid"
@@ -231,34 +230,6 @@ function GroupTile({
 	)
 }
 
-/** Round 2: "Your taste", the groups as tiles after the eleven moods under a heading of their own. */
-export function GroupTiles({
-	view,
-	control,
-	dense,
-}: { view: SwnView; control: MoodControl; dense: boolean }) {
-	if (!view.groups.length) return null
-	return (
-		<>
-			<p className="col-span-full mt-2 px-0.5 text-sm text-gray-300">
-				<span className="font-semibold text-white">{TASTE.heading}</span>
-				<span className="hidden sm:inline">
-					. Each is shown by titles you loved; they count toward the three.
-				</span>
-			</p>
-			{view.groups.map((group) => (
-				<GroupTile
-					key={group.id}
-					view={view}
-					control={control}
-					group={group}
-					dense={dense}
-				/>
-			))}
-		</>
-	)
-}
-
 /** "Beside its moods": the groups that sit after a mood (the ones with no mood after the last). */
 export function GroupsAfter({
 	view,
@@ -280,27 +251,6 @@ export function GroupsAfter({
 						dense={dense}
 					/>
 				))}
-		</>
-	)
-}
-
-/** "Yours first": the groups' tiles before the moods, with no heading. */
-export function GroupsFirst({
-	view,
-	control,
-	dense,
-}: { view: SwnView; control: MoodControl; dense: boolean }) {
-	return (
-		<>
-			{view.groups.map((group) => (
-				<GroupTile
-					key={group.id}
-					view={view}
-					control={control}
-					group={group}
-					dense={dense}
-				/>
-			))}
 		</>
 	)
 }

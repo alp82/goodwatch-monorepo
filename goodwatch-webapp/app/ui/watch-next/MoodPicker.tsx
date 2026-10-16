@@ -58,6 +58,10 @@ export interface MoodGroups {
 	head?: string
 	/** Refuses a fourth pick that is not a mood. */
 	refuse?: () => void
+	/** The dropdown's line after its title, when picks combine another way. */
+	sub?: string
+	/** Tiles in place of the eleven moods' (before, after, and tiles still apply). */
+	grid?: (dense: boolean) => React.ReactNode
 }
 
 /** Moods and groups picked together (PROTOTYPE #659: groups). */
@@ -285,7 +289,8 @@ function PanelHead({
 							{control.groups?.head ?? "Pick up to three moods"}
 						</span>
 						<span className="hidden sm:inline">
-							. A title fits when it is in any of them.
+							{control.groups?.sub ??
+								". A title fits when it is in any of them."}
 						</span>
 					</motion.p>
 				)}
@@ -333,67 +338,69 @@ export function MoodGrid({
 			}
 		>
 			{control.groups?.before?.(dense)}
-			{MOODS.map(({ key: mood, name, description, hue }) => {
-				const on = control.moods.includes(mood)
-				const full = isFull(control, mood)
-				const count = `${control.counts[mood]} ${control.countScope}`
-				const foot = control.groups?.tileFoot?.(mood, dense)
-				const action = control.groups?.tileAction?.(mood, dense)
-				const tile = (
-					<motion.button
-						key={mood}
-						type="button"
-						// biome-ignore lint/a11y/useSemanticElements: a poster tile that acts as a checkbox, with the tile's picture and lines inside
-						role="checkbox"
-						aria-checked={on}
-						aria-disabled={full || undefined}
-						aria-label={`${name}. ${description} ${count}.`}
-						data-mood={mood}
-						onClick={() => control.toggle(mood)}
-						whileTap={{ scale: full ? 1 : 0.97 }}
-						className={`group relative isolate flex cursor-pointer flex-col justify-between overflow-hidden rounded-xl p-2.5 text-left text-white transition-[opacity,box-shadow] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${dense ? "h-[4.75rem]" : "h-[6.5rem] md:h-28"} ${on ? "ring-2 ring-white" : "ring-1 ring-white/10"} ${full ? "opacity-40" : ""}`}
-						style={{ boxShadow: on ? `0 8px 28px -8px ${hue}` : undefined }}
-					>
-						<MoodArt
-							mood={mood}
-							path={control.pictures[mood]?.backdropPath ?? null}
-							className="transition-transform duration-500 group-hover:scale-105 motion-reduce:transition-none"
-						/>
-						<span className="flex items-start justify-between gap-2">
-							<span className="text-[15px] font-bold leading-tight [text-shadow:0_1px_6px_rgba(0,0,0,.6)]">
-								{name}
+			{control.groups?.grid?.(dense)}
+			{!control.groups?.grid &&
+				MOODS.map(({ key: mood, name, description, hue }) => {
+					const on = control.moods.includes(mood)
+					const full = isFull(control, mood)
+					const count = `${control.counts[mood]} ${control.countScope}`
+					const foot = control.groups?.tileFoot?.(mood, dense)
+					const action = control.groups?.tileAction?.(mood, dense)
+					const tile = (
+						<motion.button
+							key={mood}
+							type="button"
+							// biome-ignore lint/a11y/useSemanticElements: a poster tile that acts as a checkbox, with the tile's picture and lines inside
+							role="checkbox"
+							aria-checked={on}
+							aria-disabled={full || undefined}
+							aria-label={`${name}. ${description} ${count}.`}
+							data-mood={mood}
+							onClick={() => control.toggle(mood)}
+							whileTap={{ scale: full ? 1 : 0.97 }}
+							className={`group relative isolate flex cursor-pointer flex-col justify-between overflow-hidden rounded-xl p-2.5 text-left text-white transition-[opacity,box-shadow] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${dense ? "h-[4.75rem]" : "h-[6.5rem] md:h-28"} ${on ? "ring-2 ring-white" : "ring-1 ring-white/10"} ${full ? "opacity-40" : ""}`}
+							style={{ boxShadow: on ? `0 8px 28px -8px ${hue}` : undefined }}
+						>
+							<MoodArt
+								mood={mood}
+								path={control.pictures[mood]?.backdropPath ?? null}
+								className="transition-transform duration-500 group-hover:scale-105 motion-reduce:transition-none"
+							/>
+							<span className="flex items-start justify-between gap-2">
+								<span className="text-[15px] font-bold leading-tight [text-shadow:0_1px_6px_rgba(0,0,0,.6)]">
+									{name}
+								</span>
+								<Tick on={on} />
 							</span>
-							<Tick on={on} />
-						</span>
-						<span className="block">
-							{!dense && (
-								<span className="line-clamp-2 text-xs leading-snug text-white/90 [text-shadow:0_1px_4px_rgba(0,0,0,.8)]">
-									{description}
-								</span>
+							<span className="block">
+								{!dense && (
+									<span className="line-clamp-2 text-xs leading-snug text-white/90 [text-shadow:0_1px_4px_rgba(0,0,0,.8)]">
+										{description}
+									</span>
+								)}
+								{foot ?? (
+									<span className="mt-1 block text-[11px] font-semibold tabular-nums text-white/75">
+										{count}
+									</span>
+								)}
+							</span>
+						</motion.button>
+					)
+					// PROTOTYPE (#659): a tile with a button over it, and tiles after it.
+					return (
+						<Fragment key={mood}>
+							{action ? (
+								<div className="relative grid">
+									{tile}
+									{action}
+								</div>
+							) : (
+								tile
 							)}
-							{foot ?? (
-								<span className="mt-1 block text-[11px] font-semibold tabular-nums text-white/75">
-									{count}
-								</span>
-							)}
-						</span>
-					</motion.button>
-				)
-				// PROTOTYPE (#659): a tile with a button over it, and tiles after it.
-				return (
-					<Fragment key={mood}>
-						{action ? (
-							<div className="relative grid">
-								{tile}
-								{action}
-							</div>
-						) : (
-							tile
-						)}
-						{control.groups?.after?.(mood, dense)}
-					</Fragment>
-				)
-			})}
+							{control.groups?.after?.(mood, dense)}
+						</Fragment>
+					)
+				})}
 			{control.groups?.tiles?.(dense)}
 		</div>
 	)

@@ -1,4 +1,4 @@
-// PROTOTYPE - throwaway (#659). A copy of production's Sides of you (origin/main 3b91631c, app/server/taste-portrait/sides.server.ts,
+// PROTOTYPE - throwaway (#659). A copy of production's Sides of you (origin/main 3b91631c, names from ac091294, app/server/taste-portrait/sides.server.ts,
 // with #666's rule: a title is on a side only when at least 0.3 close and not far below the catalog on an attribute
 // the side's name claims). The only change: buildSides also returns each side's center and its name's attributes, so
 // Watch next titles can be judged by the same rule (sideOfTitle).
@@ -6,8 +6,6 @@
 // apart from the others, each with the places just past it (its edges) and More of this. Lists of unseen titles inside
 // a side are ordered by the person's personal order when it is on for them: sides group, personal order ranks.
 import { MOOD_KEYS, type MoodKey } from "~/domain/moods"
-import type { TitleKey } from "~/server/title-snapshot/index.server"
-import { familyOf } from "~/server/taste-portrait/families.server"
 import {
 	K,
 	KEYS,
@@ -22,8 +20,14 @@ import {
 	round1,
 	yearOf,
 } from "~/server/taste-portrait/person.server"
+import {
+	adjective,
+	capitalize,
+	label,
+} from "~/server/taste-portrait/words.server"
+import type { TitleKey } from "~/server/title-snapshot/index.server"
+import { nameGroup } from "./group-names.server"
 import type { Side, SideEdge, SidesView } from "./production-view"
-import { adjective, capitalize, label, noun } from "~/server/taste-portrait/words.server"
 
 // The person's services with their logos are added with the titles (index.server.ts).
 type SidesResult = Omit<SidesView, "titles" | "subject" | "services">
@@ -219,64 +223,6 @@ function standout(center: Vec, others: Vec[]) {
 	return NON_CRAFT.filter((k) => !UNNAMED.has(KEYS[k]))
 		.map((k) => ({ key: KEYS[k], weight: center[k] - base[k] }))
 		.sort((a, b) => b.weight - a.weight || a.key.localeCompare(b.key))
-}
-
-/**
- * The names a side can take, best first, from the two attributes that most set it apart: "Bleak stories about crime
- * and justice" when one is a World attribute (an adjective from the other, the noun from the World one), else
- * "Hopeful, heartwarming stories", and two kinds of humor as one: "Physically and situationally funny stories". Then
- * the first attribute with the next ones, and its noun alone.
- */
-function sideNames(order: ReturnType<typeof standout>) {
-	const names: { name: string; keys: string[] }[] = []
-	for (let shift = 0; shift < 4; shift++) {
-		const a = order[0]
-		const b = order[1 + shift]
-		if (!a || !b) break
-		const world = [a, b].find((x) => familyOf(x.key) === "world")
-		const other = world === a ? b : a
-		const [x, y] = [adjective(a.key), adjective(b.key)]
-		const name = world
-			? `${capitalize(adjective(other.key))} ${noun(world.key)}`
-			: x.endsWith(" funny") && y.endsWith(" funny")
-				? `${capitalize(x.replace(/ funny$/, ""))} and ${y.replace(/ funny$/, "")} funny stories`
-				: `${capitalize(x)}, ${y} stories`
-		names.push({ name, keys: [a.key, b.key] })
-	}
-	if (order[0])
-		names.push({ name: capitalize(noun(order[0].key)), keys: [order[0].key] })
-	return names
-}
-
-/**
- * The side's name and the titles it describes: the first name not taken that still describes most of the side (three
- * in four of its titles), else the one that describes the most. Null when no name describes two.
- */
-function nameSide(
-	order: ReturnType<typeof standout>,
-	members: RatedTitle[],
-	taken: Set<string>,
-) {
-	let best: { name: string; keys: string[]; members: RatedTitle[] } | null = null
-	for (const { name, keys } of sideNames(order)) {
-		if (taken.has(name)) continue
-		const described = describedBy(members, keys)
-		if (described.length >= Math.max(2, Math.ceil(0.75 * members.length))) {
-			best = { name, keys, members: described }
-			break
-		}
-		if (!best || described.length > best.members.length)
-			best = { name, keys, members: described }
-	}
-	if (!best || best.members.length < 2) return null
-	taken.add(best.name)
-	return best
-}
-
-/** The side's titles its name describes: none strongly against an attribute the name claims. */
-function describedBy(members: RatedTitle[], keys: string[]) {
-	const at = keys.map((key) => KEYS.indexOf(key))
-	return members.filter((r) => at.every((k) => r.z[k] >= AGAINST_NAME))
 }
 
 /** The most typical titles among the best rated, one per franchise (a franchise's films read alike). */
@@ -662,13 +608,18 @@ export interface ProtoGroup {
 	center: Vec
 	side: string | null
 	keys: string[]
+	/** The loved titles the side holds (round 4: what its moods, themes, and styles are read from). */
+	members: TitleKey[]
 }
 
 /**
  * PROTOTYPE (#659): the side a title belongs to by production's rule for loved titles: its nearest group, at least
  * FITS_NO_SIDE close, and not far below the catalog on an attribute the side's name claims. Null: no side.
  */
-export function sideOfTitle(z: ArrayLike<number>, groups: ProtoGroup[]): string | null {
+export function sideOfTitle(
+	z: ArrayLike<number>,
+	groups: ProtoGroup[],
+): string | null {
 	let best: ProtoGroup | null = null
 	let closest = Number.NEGATIVE_INFINITY
 	for (const g of groups) {
@@ -679,7 +630,9 @@ export function sideOfTitle(z: ArrayLike<number>, groups: ProtoGroup[]): string 
 		}
 	}
 	if (!best?.side || closest < FITS_NO_SIDE) return null
-	return best.keys.every((key) => z[KEYS.indexOf(key)] >= AGAINST_NAME) ? best.side : null
+	return best.keys.every((key) => z[KEYS.indexOf(key)] >= AGAINST_NAME)
+		? best.side
+		: null
 }
 
 /**
@@ -688,7 +641,10 @@ export function sideOfTitle(z: ArrayLike<number>, groups: ProtoGroup[]): string 
  * claims): the edge, "Close to your taste".
  */
 export const CLOSE_TO_SIDE = 0.15
-export function placeOfTitle(z: ArrayLike<number>, groups: ProtoGroup[]): { side: string; how: "in" | "close" } | null {
+export function placeOfTitle(
+	z: ArrayLike<number>,
+	groups: ProtoGroup[],
+): { side: string; how: "in" | "close" } | null {
 	let best: ProtoGroup | null = null
 	let closest = Number.NEGATIVE_INFINITY
 	for (const g of groups) {
@@ -700,7 +656,10 @@ export function placeOfTitle(z: ArrayLike<number>, groups: ProtoGroup[]): { side
 	}
 	if (!best?.side || closest < CLOSE_TO_SIDE) return null
 	const named = best.keys.every((key) => z[KEYS.indexOf(key)] >= AGAINST_NAME)
-	return { side: best.side, how: closest >= FITS_NO_SIDE && named ? "in" : "close" }
+	return {
+		side: best.side,
+		how: closest >= FITS_NO_SIDE && named ? "in" : "close",
+	}
 }
 
 export function buildSides(
@@ -726,7 +685,7 @@ export function buildSides(
 	const taken = new Set<string>()
 	// Each side keeps the titles its name describes; a side no name describes two titles of goes.
 	const named = groups.flatMap((g, i) => {
-		const side = nameSide(
+		const side = nameGroup(
 			standout(
 				g.center,
 				groupCenters.filter((_, j) => j !== i),
@@ -747,7 +706,12 @@ export function buildSides(
 	}))
 	const protoGroups: ProtoGroup[] = groups.map((g, i) => {
 		const at = named.findIndex((n) => n.group === i)
-		return { center: g.center, side: at < 0 ? null : drafts[at].id, keys: at < 0 ? [] : named[at].keys }
+		return {
+			center: g.center,
+			side: at < 0 ? null : drafts[at].id,
+			keys: at < 0 ? [] : named[at].keys,
+			members: at < 0 ? [] : drafts[at].members.map((r) => r.key),
+		}
 	})
 	const centers = drafts.map((d) => d.center)
 

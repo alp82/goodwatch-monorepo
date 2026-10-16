@@ -35,6 +35,7 @@ import {
 } from "~/server/watch-next.server"
 import { TASTE } from "~/ui/prototype-sides-watch-next/label"
 import {
+	COMBINE,
 	RULE,
 	type SwnGroup,
 	type SwnTier,
@@ -42,6 +43,7 @@ import {
 	type TasteMood,
 	type VariantKey,
 } from "~/ui/prototype-sides-watch-next/model"
+import { WORD_BY_ID } from "~/ui/prototype-sides-watch-next/words"
 import { TIER_LABEL, TIER_NOTE, misfitWords } from "~/ui/watch-next/labels"
 import { getUserIdFromRequest } from "~/utils/auth"
 import type { TitleKey } from "~/utils/title-key"
@@ -51,6 +53,7 @@ import {
 	franchiseOf,
 	placeOfTitle,
 } from "./production-sides.server"
+import { wordsModel } from "./words.server"
 
 const THEN = 3
 const CARDED = 600
@@ -68,6 +71,11 @@ export interface SwnOptions {
 	wide: MoodKey[]
 	/** The groups' trait names, behind the toggle (words gate, #656). */
 	names: boolean
+	/** Round 4: the picks (groups g1 and words m:funny), widened words, words that bring titles up, the preset. */
+	picks: string[]
+	wideWords: string[]
+	boost: string[]
+	from: string | null
 	passed: TitleKey[]
 }
 
@@ -95,9 +103,11 @@ export async function swnView(
 	if (!proto) return null
 	const { person } = proto
 	const movies = o.list === "movies"
+	const rule = RULE[o.variant]
 	const options = {
 		sort: "match" as const,
-		moods: o.moods,
+		// Round 4 picks its own words; production's moods stay unpicked.
+		moods: rule === "words" ? [] : o.moods,
 		onMyServices: o.onMyServices,
 		notTonight: o.passed,
 		...(movies ? { kind: "movie" as const, time: o.time } : {}),
@@ -130,7 +140,6 @@ export async function swnView(
 	}
 	const groupOf = (key: TitleKey) =>
 		placeOf.get(key)?.how === "in" ? placeOf.get(key)!.id : null
-	const rule = RULE[o.variant]
 	const known = o.groups.filter((g) => [...idOf.values()].includes(g))
 	const picked =
 		rule === "any"
@@ -139,6 +148,39 @@ export async function swnView(
 	const inPicked = (key: TitleKey) => picked.includes(groupOf(key) ?? "")
 	const inMood = (e: { moodMask: number }, mood: MoodKey) =>
 		(e.moodMask & (1 << MOOD_KEYS.indexOf(mood))) !== 0
+
+	// ---- round 4: the filters' words next to the groups ----
+	const { columns } = snapshot
+	const wm =
+		rule === "words"
+			? wordsModel({
+					variant: o.variant,
+					combine: COMBINE[o.variant] ?? "any",
+					entries: [...plan.entries.values()],
+					onMyServices: plan.onMyServices,
+					masksOf: (key) => {
+						const row = snapshot.rowOf(key)
+						return row < 0
+							? null
+							: {
+									moods: columns.moods[row],
+									themes: columns.themes[row],
+									styles: columns.styles[row],
+								}
+					},
+					groupOf,
+					placeOf: (key) => placeOf.get(key) ?? null,
+					groups: built.sides.map((side) => ({
+						id: idOf.get(side.id) ?? "",
+						loved:
+							built.protoGroups.find((g) => g.side === side.id)?.members ?? [],
+					})),
+					picks: o.picks,
+					wide: o.wideWords,
+					boost: o.boost,
+					from: o.from,
+				})
+			: null
 
 	// Where each group sits among the moods: the mood most of its listed titles are in, so that picking that mood in
 	// your taste reaches the group (production's moods for the group break ties). Pairs go best first, one group per
@@ -194,8 +236,13 @@ export async function swnView(
 	const inTasteOf = (e: { key: TitleKey }, m: MoodKey) =>
 		tasteMoods[m]?.groups.includes(groupOf(e.key) ?? "") ?? false
 	// The groups that narrow tonight: the picked ones, or those inside the narrowed moods.
-	const focus =
-		rule === "any" ? picked : narrowed.flatMap((m) => tasteMoods[m]!.groups)
+	const focus = wm
+		? wm.narrows
+			? wm.focus
+			: []
+		: rule === "any"
+			? picked
+			: narrowed.flatMap((m) => tasteMoods[m]!.groups)
 	const closeToPicked = (key: TitleKey) => {
 		const place = placeOf.get(key)
 		if (place?.how !== "close" || !focus.includes(place.id)) return false
@@ -213,14 +260,18 @@ export async function swnView(
 	const passed = new Set(o.passed)
 	const moodMask = maskOfMoods(plan.moods)
 	const moodCondition =
-		plan.moods.length > 0 || (rule === "any" && picked.length > 0)
+		plan.moods.length > 0 ||
+		(rule === "any" && picked.length > 0) ||
+		(wm?.view.picks.length ?? 0) > 0
 	const onServices = (e: { onServices: boolean | null }) =>
 		plan.onMyServices && e.onServices !== false ? 1 : 0
-	const need =
-		rule === "any" && picked.length
+	const need = wm
+		? (wm.view.picks.length ? 1 : 0) + (plan.onMyServices ? 1 : 0)
+		: rule === "any" && picked.length
 			? (moodCondition ? 1 : 0) + (plan.onMyServices ? 1 : 0)
 			: plan.need
 	const entries = [...plan.entries.values()].map((e) => {
+		if (wm) return { ...e, fit: (wm.hit(e.key) ? 1 : 0) + onServices(e) }
 		if (narrowed.length) {
 			const hit = plan.moods.some(
 				(m) => inMood(e, m) && (!narrowed.includes(m) || inTasteOf(e, m)),
@@ -248,6 +299,8 @@ export async function swnView(
 			? read.data
 			: null
 	let ranked: typeof entries
+	const fitsAllOf = (e: (typeof entries)[number]) =>
+		e.fit === need && !e.over && !passed.has(e.key)
 	if (data) {
 		const groups = orderPersonalOrder(
 			entries.map((e) => e.key),
@@ -266,15 +319,25 @@ export async function swnView(
 			groups.ranks,
 		)
 		const replace = new Set(fittingKeys)
+		// Round 4: words that bring titles up, or your taste, go first among the fits; personal order keeps the rest.
+		const mixed = wm
+			? [...mix.keys].sort((a, b) => wm.lift(b) - wm.lift(a))
+			: mix.keys
 		let i = 0
 		ranked = ranked.map((e) =>
-			replace.has(e.key) ? byKey.get(mix.keys[i++])! : e,
+			replace.has(e.key) ? byKey.get(mixed[i++])! : e,
 		)
 	} else {
 		const at = new Map(todayOrder.map((k, i) => [k, i]))
 		ranked = [...entries]
 			.sort((a, b) => (at.get(a.key) ?? 1e9) - (at.get(b.key) ?? 1e9))
 			.sort(tiered)
+		if (wm)
+			ranked = ranked.sort(
+				(a, b) =>
+					Number(fitsAllOf(b)) - Number(fitsAllOf(a)) ||
+					(fitsAllOf(a) ? wm.lift(b.key) - wm.lift(a.key) : 0),
+			)
 		notes.push(
 			`Personal order not loaded (${read.data ? "snapshot-mismatch" : (read.fallbackReason ?? "none")}): today's Best match order instead`,
 		)
@@ -293,19 +356,40 @@ export async function swnView(
 	// With your taste narrowing: titles close to it that fit everything else ("Close to your taste").
 	const servicesOk = (e: (typeof entries)[number]) =>
 		onServices(e) === (plan.onMyServices ? 1 : 0)
-	const closeTaste = focus.length
-		? rest.filter(
-				(e) =>
-					closeToPicked(e.key) &&
-					!e.over &&
-					e.fit === need - 1 &&
-					servicesOk(e),
-			)
-		: []
+	const closeTaste = wm
+		? wm.narrows
+			? rest.filter(
+					(e) =>
+						!wm.hit(e.key) &&
+						wm.hit(e.key, true) &&
+						placeOf.get(e.key)?.how === "close" &&
+						focus.includes(placeOf.get(e.key)?.id ?? "") &&
+						!e.over &&
+						servicesOk(e),
+				)
+			: []
+		: focus.length
+			? rest.filter(
+					(e) =>
+						closeToPicked(e.key) &&
+						!e.over &&
+						e.fit === need - 1 &&
+						servicesOk(e),
+				)
+			: []
 	const isCloseTaste = new Set(closeTaste.map((e) => e.key))
 	const later = rest.filter((e) => !isCloseTaste.has(e.key))
 	// Production's notes speak of moods; with your taste narrowing they say which choices a title misses.
 	const groupNote = (key: SwnTier["key"]): string | null | undefined => {
+		if (wm) {
+			if (!wm.view.picks.length) return undefined
+			if (key === "otherMoods") return "In none of your picks."
+			if (key === "close")
+				return "In one of your picks but not on your services, or on them but in none of your picks."
+			if (key === "notTonight")
+				return "In none of your picks, and not on your services."
+			return undefined
+		}
 		if (!focus.length) return undefined
 		const moods = plan.moods.length > 0
 		const none = moods ? "In none of your picks" : `Not ${TASTE.inline}`
@@ -393,6 +477,32 @@ export async function swnView(
 		entries: new Map(entries.map((e) => [e.key, e])),
 	} as Plan
 	const pictures = pictureKeys(plan, snapshot)
+	// Round 4: a picture for each theme and style, from a title on the list with it (moods keep production's).
+	const wordPictures = new Map<string, TitleKey>()
+	if (wm) {
+		const used = new Set<TitleKey>(Object.values(pictures))
+		for (const w of wm.view.words) {
+			const word = WORD_BY_ID[w.id]
+			if (word.kind === "mood") {
+				const k = pictures[word.key as MoodKey]
+				if (k !== undefined) wordPictures.set(w.id, k)
+				continue
+			}
+			const mask = (e: { key: TitleKey }) => {
+				const row = snapshot.rowOf(e.key)
+				if (row < 0) return 0
+				return word.kind === "theme" ? columns.themes[row] : columns.styles[row]
+			}
+			const candidates = plan.pictureOrder.filter(
+				(e) => e.hasBackdrop && mask(e) & (1 << word.bit),
+			)
+			const pick = candidates.find((e) => !used.has(e.key)) ?? candidates[0]
+			if (pick) {
+				used.add(pick.key)
+				wordPictures.set(w.id, pick.key)
+			}
+		}
+	}
 	const faceKeys = [
 		...new Set(
 			built.sides.flatMap((s) => [
@@ -405,7 +515,9 @@ export async function swnView(
 		Promise.all(chunks.map((chunk) => getTitleCards(chunk, ctx, taste))).then(
 			(c) => c.flat(),
 		),
-		getDisplayFields(Object.values(pictures)),
+		getDisplayFields([
+			...new Set([...Object.values(pictures), ...wordPictures.values()]),
+		]),
 		getDisplayFields(faceKeys.slice(0, MAX_KEYS)),
 		getServiceCards(ctx.services),
 	])
@@ -414,7 +526,25 @@ export async function swnView(
 	// What each movie misses tonight, first reason first (production's: time, mood, services), with your taste
 	// narrowing: "Not in your taste", or "Close to your taste" for one near it.
 	const misfits: Record<string, string> = {}
-	if (movies && focus.length)
+	if (movies && wm && wm.view.picks.length)
+		for (const e of entries) {
+			if ((e.fit === need && !e.over) || isCloseTaste.has(e.key)) continue
+			const offServices = plan.onMyServices && e.onServices === false
+			const words =
+				e.over > 0
+					? misfitWords({ why: "time", over: e.over })
+					: !wm.hit(e.key)
+						? wm.hit(e.key, true)
+							? placeOf.get(e.key)?.how === "close"
+								? TASTE.close
+								: `Not ${TASTE.inline}`
+							: "Not in your picks"
+						: offServices
+							? "Not on your services"
+							: null
+			if (words) misfits[e.key] = words
+		}
+	else if (movies && focus.length)
 		for (const e of entries) {
 			// The "Close to your taste" step says so in its heading.
 			if ((e.fit === need && !e.over) || isCloseTaste.has(e.key)) continue
@@ -547,6 +677,21 @@ export async function swnView(
 		picked,
 		tasteMoods,
 		wide,
+		words: wm
+			? {
+					...wm.view,
+					words: wm.view.words.map((w) => {
+						const k = wordPictures.get(w.id)
+						return {
+							...w,
+							backdrop:
+								k === undefined
+									? null
+									: (backdrops.get(k)?.backdrop_path ?? null),
+						}
+					}),
+				}
+			: null,
 		passed: o.passed,
 		personalOrder: {
 			on: data !== null,

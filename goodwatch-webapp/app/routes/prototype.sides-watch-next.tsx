@@ -8,6 +8,7 @@ import { type LoaderFunctionArgs, json } from "@remix-run/node"
 import { useLoaderData } from "@remix-run/react"
 import { MOOD_KEYS, type MoodKey } from "~/domain/moods"
 import { swnView } from "~/server/prototype-sides-watch-next/index.server"
+import { swnResearch } from "~/server/prototype-sides-watch-next/research.server"
 import { isVariant } from "~/ui/prototype-sides-watch-next/model"
 import { SidesWatchNextPage } from "~/ui/prototype-sides-watch-next/page"
 import { timeOf } from "~/ui/watch-next/labels"
@@ -17,6 +18,12 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	if (process.env.NODE_ENV === "production")
 		throw new Response("Not found", { status: 404 })
 	const p = new URL(request.url).searchParams
+	// Round 4's research, as JSON.
+	if (p.get("research") === "1")
+		return json(
+			{ research: await swnResearch() },
+			{ headers: { "Cache-Control": "private, no-store" } },
+		)
 	const variant = p.get("variant")
 	const list = p.get("list") === "all" ? "all" : "movies"
 	const view = await swnView(request, {
@@ -36,6 +43,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
 				(MOOD_KEYS as readonly string[]).includes(m),
 			),
 		names: p.get("names") === "1",
+		picks: (p.get("pick") ?? "").split(",").filter(Boolean),
+		wideWords: (p.get("widen") ?? "").split(",").filter(Boolean),
+		boost: (p.get("up") ?? "").split(",").filter(Boolean),
+		from: p.get("from"),
 		passed: (p.get("nt") ?? "")
 			.split(",")
 			.map(Number)

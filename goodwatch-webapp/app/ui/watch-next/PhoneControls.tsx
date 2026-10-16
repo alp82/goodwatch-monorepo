@@ -1,4 +1,3 @@
-import { mediaFieldLanguage } from "~/utils/media-presentation"
 // Watch next's controls on phones (below the large breakpoint): the slab's three buttons at the bottom, moods,
 // services, and sort, each opening its own drawer (owner addendum on #176). The buttons dock above the site's dock.
 // Every drawer is a labeled modal sheet with a focus trap, closing with Escape, the backdrop, a drag down, or its
@@ -20,6 +19,7 @@ import { ServiceStack, radioKeys } from "~/ui/filter-bar/controls"
 import { Knob, SPRING, TAP } from "~/ui/filter-bar/motion"
 import { DockStrip } from "~/ui/navigation"
 import { SignUpPrompt } from "~/ui/sign-up-prompt/SignUpPrompt"
+import { mediaFieldLanguage } from "~/utils/media-presentation"
 import {
 	type MoodControl,
 	MoodGrid,
@@ -166,10 +166,14 @@ function MoodsHead({ control }: { control: MoodControl }) {
 						exit={{ opacity: 0, transition: { duration: 0.08 } }}
 						className="min-w-0 flex-1 text-base font-bold text-white"
 					>
-						Moods{" "}
-						<span className="text-sm font-normal text-gray-400">
-							up to three
-						</span>
+						{control.groups?.head ?? (
+							<>
+								Moods{" "}
+								<span className="text-sm font-normal text-gray-400">
+									up to three
+								</span>
+							</>
+						)}
 					</motion.h2>
 				)}
 			</AnimatePresence>
@@ -365,7 +369,9 @@ function Segments({
 				className={`${SEGMENT} flex-[1.25] ${picked ? "bg-white/[0.07] text-white" : "text-gray-300"}`}
 			>
 				<MoodDots moods={moods} />
-				<span className="w-full truncate text-center">{short ?? moodsShort(moods)}</span>
+				<span className="w-full truncate text-center">
+					{short ?? moodsShort(moods)}
+				</span>
 			</motion.button>
 			<motion.button
 				{...segment("services")}

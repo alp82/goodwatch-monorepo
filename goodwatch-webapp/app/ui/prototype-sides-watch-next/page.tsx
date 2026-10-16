@@ -1,15 +1,9 @@
-// PROTOTYPE - throwaway (#659). How the groups of titles a member loves (production's Sides of you) appear on Watch
-// next, on one member's real list (My movies, or the whole Wishlist), ordered by their personal order. Round 3: the
-// member's taste and the moods are one picker, one way of choosing. Words (label.ts): "In your taste", "Close to your
-// taste"; a group is shown by its loved posters, and by its trait name only with the names on (words gate, #656).
+// PROTOTYPE - throwaway (#659). How the groups of titles a member loves (taste groups) appear on Watch next, on one
+// member's real list (My movies, or the whole Wishlist), ordered by their personal order.
 //
 // - today:  production, for reference (personal order, no groups).
-// - moods:  round 2, for reference: "Your taste" tiles after the eleven moods, under a heading of their own.
-// - beside: each group a tile right after the mood it is mostly made of, in that mood's color.
-// - inside: no group tiles: a mood the member's taste is mostly made of carries its loved posters and is picked as
-//           that mood in your taste; "In your taste" on the picked tile widens it to the whole mood.
-// - first:  the groups' tiles first, then the moods, in one grid with no heading between.
-// A picked group is one more choice among the moods (up to three in all; a title fits when it is in any of them).
+// - inside, beside: round 3, for reference: the member's taste inside the moods, or a group tile beside its mood.
+// - Round 4 (round4.tsx): the filters' moods, themes, and styles together with the taste groups, six ways.
 // With your taste narrowing, titles close to it that fit everything else follow the fits as "Close to your taste".
 import { useEffect, useState } from "react"
 import {
@@ -34,9 +28,7 @@ import { WRAP } from "~/ui/watch-next/style"
 import { AfterThat, Tiers, useParam } from "./bits"
 import {
 	GroupChips,
-	GroupTiles,
 	GroupsAfter,
-	GroupsFirst,
 	InsideAction,
 	InsideFoot,
 	groupsShort,
@@ -45,6 +37,7 @@ import {
 } from "./groups"
 import { TASTE } from "./label"
 import { type SwnView, VARIANTS } from "./model"
+import { badgeMark, round4Control, round4Phrase, usePicks } from "./round4"
 
 function DataBar({ view }: { view: SwnView }) {
 	const set = useParam()
@@ -58,7 +51,17 @@ function DataBar({ view }: { view: SwnView }) {
 					<button
 						key={m.slot}
 						type="button"
-						onClick={() => set({ as: m.slot, like: null, nt: null })}
+						onClick={() =>
+							set({
+								as: m.slot,
+								like: null,
+								nt: null,
+								pick: null,
+								widen: null,
+								up: null,
+								from: null,
+							})
+						}
 						aria-pressed={m.slot === view.member.slot}
 						className={pill(m.slot === view.member.slot)}
 					>
@@ -88,14 +91,16 @@ function DataBar({ view }: { view: SwnView }) {
 					Whole Wishlist
 				</button>
 				<span className="mx-1 text-gray-500">|</span>
-				<button
-					type="button"
-					onClick={() => set({ names: view.names ? null : "1" })}
-					aria-pressed={view.names}
-					className={pill(view.names)}
-				>
-					Trait names {view.names ? "on" : "off"}
-				</button>
+				{!view.words && (
+					<button
+						type="button"
+						onClick={() => set({ names: view.names ? null : "1" })}
+						aria-pressed={view.names}
+						className={pill(view.names)}
+					>
+						Trait names {view.names ? "on" : "off"}
+					</button>
+				)}
 				<span className="text-gray-400">
 					· {view.member.listed} listed, {view.groups.length} groups · personal
 					order{" "}
@@ -163,12 +168,6 @@ function useControls(view: SwnView) {
 			picked: view.picked.length,
 			narrowing: view.picked.length > 0,
 			chips: <GroupChips view={view} control={control} />,
-			tiles:
-				view.variant === "moods"
-					? (dense) => (
-							<GroupTiles view={view} control={control} dense={dense} />
-						)
-					: undefined,
 			after:
 				view.variant === "beside"
 					? (mood, dense) => (
@@ -178,12 +177,6 @@ function useControls(view: SwnView) {
 								mood={mood}
 								dense={dense}
 							/>
-						)
-					: undefined,
-			before:
-				view.variant === "first"
-					? (dense) => (
-							<GroupsFirst view={view} control={control} dense={dense} />
 						)
 					: undefined,
 			short: groupsShort(
@@ -229,6 +222,16 @@ function useControls(view: SwnView) {
 			chipMark: (mood) => insideChip(view, mood),
 		}
 	}
+	const picks = usePicks(view, () =>
+		setRefused({
+			mood: "funny",
+			at: Date.now(),
+			text: "Three is the most. Remove one to add this one.",
+		}),
+	)
+	const control4 = view.words
+		? round4Control(view, moods, setRefused, picks)
+		: moods
 	const setOnMyServices = (on: boolean) => set({ services: on ? null : "all" })
 	const time = data.time ?? null
 	const setTime = (t: number | null) => set({ time: t ? String(t) : null })
@@ -241,7 +244,7 @@ function useControls(view: SwnView) {
 	) : (
 		<DockedStrip
 			data={data}
-			moods={moods}
+			moods={control4}
 			setOnMyServices={setOnMyServices}
 			setSort={() => {}}
 			extra={movies ? MOVIES_PAGE.timeControl(time, setTime) : undefined}
@@ -258,7 +261,7 @@ function useControls(view: SwnView) {
 	const phone = mounted && (
 		<PhoneControls
 			data={data}
-			moods={moods}
+			moods={control4}
 			setOnMyServices={setOnMyServices}
 			setSort={() => {}}
 			extra={extra}
@@ -312,7 +315,16 @@ function Page({ view }: { view: SwnView }) {
 				: name
 		})
 	const insideNarrows = data.moods.some((m) => tasteOf(view, m)?.narrowed)
+	const phrase4 = round4Phrase(view)
 	const relabel = (label: string) => {
+		if (view.words) {
+			if (!phrase4) return label
+			const prefix = movies ? "Tonight's movie · " : ""
+			const limit = data.time ? `, ${timeLabel(data.time).toLowerCase()}` : ""
+			if (!view.fitting.length)
+				return `${prefix}Nothing for ${phrase4} fits tonight; the closest`
+			return `${prefix}Best match for ${phrase4} tonight${limit}`
+		}
 		if (!likes.length && !insideNarrows) return label
 		const prefix = movies ? "Tonight's movie · " : ""
 		const limit = data.time ? `, ${timeLabel(data.time).toLowerCase()}` : ""
@@ -340,7 +352,7 @@ function Page({ view }: { view: SwnView }) {
 			/>
 			<div className={`${WRAP} pt-8`}>
 				<AfterThat view={view} />
-				<Tiers view={view} />
+				<Tiers view={view} mark={badgeMark(view)} />
 			</div>
 		</HeroLabelContext.Provider>
 	)

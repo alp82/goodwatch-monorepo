@@ -5,6 +5,8 @@
 
 export const TASTE = {
 	in: "In your taste",
+	/** Round 4's badge on a title in the taste picked. */
+	fits: "Fits your taste",
 	close: "Close to your taste",
 	/** For the middle of a sentence. */
 	inline: "in your taste",
