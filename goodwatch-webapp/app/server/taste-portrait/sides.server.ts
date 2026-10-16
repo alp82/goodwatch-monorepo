@@ -420,15 +420,12 @@ export function edgeOfTitle(
 	facts: TitleFacts,
 	bars: Bars = ANY_BARS,
 ): TitleEdge | null {
-	const { index, similarity } = nearest(
-		z,
-		named.groups.map((g) => g.center),
-	)
-	const at = named.groups[index].side
-	if (at === null) return null
+	const reach = edgeReach(named, z, bars)
+	if (!reach) return null
+	const { at } = reach
 	const side = named.sides[at]
 	const edges = sides.find((s) => s.id === side.id)?.edges ?? []
-	if (similarity >= bars.past) {
+	if (reach.past) {
 		const places = new Set(
 			placesOf(facts).map((p) => `${side.id}-${p.kind}-${p.id}`),
 		)
@@ -441,19 +438,8 @@ export function edgeOfTitle(
 		)
 		if (step) return { side: at, edge: step, other: null }
 	}
-	const next = named.sides
-		.map((s, i) => ({ i, similarity: cosine(z, s.center) }))
-		.filter((s) => s.i !== at)
-		.sort((a, b) => b.similarity - a.similarity || a.i - b.i)[0]
-	if (!next) return null
-	const here = cosine(z, side.center)
-	if (
-		here <= BETWEEN ||
-		next.similarity <= BETWEEN ||
-		Math.abs(here - next.similarity) >= BETWEEN_GAP
-	)
-		return null
-	const other = named.sides[next.i]
+	if (reach.toward === null) return null
+	const other = named.sides[reach.toward]
 	const bridge = sides
 		.flatMap((s) => s.edges)
 		.find(
@@ -462,7 +448,35 @@ export function edgeOfTitle(
 				(e.id === `${side.id}-toward-${other.id}` ||
 					e.id === `${other.id}-toward-${side.id}`),
 		)
-	return bridge ? { side: at, edge: bridge, other: next.i } : null
+	return bridge ? { side: at, edge: bridge, other: reach.toward } : null
+}
+
+/**
+ * What edges a title could be at, from the sides' centers alone: its nearest group's side, whether it is close enough
+ * for a place or a step there (`past`), and the other side it sits between that one and (`toward`). Null when it can be
+ * at no edge, so the title page doesn't build the sides' edges for it.
+ */
+function edgeReach(named: NamedSides, z: ArrayLike<number>, bars: Bars) {
+	const { index, similarity } = nearest(
+		z,
+		named.groups.map((g) => g.center),
+	)
+	const at = named.groups[index].side
+	if (at === null) return null
+	const past = similarity >= bars.past
+	const next = named.sides
+		.map((s, i) => ({ i, similarity: cosine(z, s.center) }))
+		.filter((s) => s.i !== at)
+		.sort((a, b) => b.similarity - a.similarity || a.i - b.i)[0]
+	const here = cosine(z, named.sides[at].center)
+	const toward =
+		next &&
+		here > BETWEEN &&
+		next.similarity > BETWEEN &&
+		Math.abs(here - next.similarity) < BETWEEN_GAP
+			? next.i
+			: null
+	return past || toward !== null ? { at, past, toward } : null
 }
 
 /** Where a title sits among the person's sides: on one (its index), at an edge of one, or nowhere (null). */
@@ -472,7 +486,8 @@ export type TitlePlace =
 
 /**
  * On a side first (sideOfTitle, at least `bars.on` close to its center), else at an edge (edgeOfTitle). The sides with
- * their edges are asked for only when the title is on no side: they cost a full build when not kept.
+ * their edges are asked for only when the title is on no side and close enough to be at an edge: they cost a full
+ * build when not kept.
  */
 export async function placeTitle(
 	named: NamedSides,
@@ -484,6 +499,8 @@ export async function placeTitle(
 	const on = sideOfTitle(named, { z, facts })
 	if (on !== null && cosine(z, named.sides[on].center) >= bars.on)
 		return { at: "on", side: on }
+	// At no edge whatever the edges are: don't build them.
+	if (!edgeReach(named, z, bars)) return null
 	const built = await sides()
 	const edge = built && edgeOfTitle(named, built, z, facts, bars)
 	return edge ? { at: "edge", ...edge } : null

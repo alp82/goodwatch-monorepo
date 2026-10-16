@@ -632,4 +632,19 @@ describe("placeTitle with a place's own bars", () => {
 			null,
 		)
 	})
+
+	it("doesn't build the edges for a title that can be at no edge", async () => {
+		let asked = 0
+		const edges = async () => {
+			asked++
+			return built
+		}
+		assert.equal(
+			await placeTitle(named, at(0.35), facts({ origin: "KR" }), edges, bars),
+			null,
+		)
+		assert.equal(asked, 0)
+		await placeTitle(named, at(0.5), facts({ origin: "KR" }), edges, bars)
+		assert.equal(asked, 1)
+	})
 })
