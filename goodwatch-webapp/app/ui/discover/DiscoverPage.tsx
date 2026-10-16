@@ -291,8 +291,9 @@ export function DiscoverPage({
 		forYou: forYou.on,
 		sort: sortShown(filters.sort, searching, taste),
 	})
+	// Browsing only: while searching, the last answer is stale and hidden anyway, and the status line speaks for the search.
 	const layoutPending =
-		!grouped && Boolean(first?.sides) && browse.isPlaceholderData
+		!searching && !grouped && Boolean(first?.sides) && browse.isPlaceholderData
 	const rows = stale || layoutPending ? null : sideRowsOf(first)
 	const narrowed =
 		!stale && !layoutPending && first?.sides?.layout === "side"
