@@ -116,7 +116,7 @@ describe("nameGroup", () => {
 			...titles(2, ["Crime"], { tension: 1 }),
 			...titles(2, ["Drama"], { mystery: 1, tension: 1 }),
 		]
-		assert.equal(name(standout, members), "Dark, gripping thrillers")
+		assert.equal(name(standout, members), "Dark, psychological thrillers")
 		// Tense, but neither crime nor mystery: four in eight.
 		const tense = [
 			...titles(4, ["Thriller"]),
@@ -216,6 +216,14 @@ describe("nameGroup", () => {
 		assert.equal(
 			name(order("social_commentary", "class_and_capitalism"), members),
 			"Socially critical sports stories",
+		)
+	})
+
+	it("takes a name with two traits up to 29 characters", () => {
+		// "Cathartic, exciting thrillers" is 29 characters.
+		assert.equal(
+			name(order("catharsis", "adrenaline"), titles(8, ["Thriller"])),
+			"Cathartic, exciting thrillers",
 		)
 	})
 
