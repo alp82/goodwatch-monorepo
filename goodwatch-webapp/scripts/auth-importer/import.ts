@@ -1,28 +1,51 @@
 import { Client } from "pg"
 import { crateAuthTransport } from "../../app/server/auth/crate-adapter.server.ts"
+import { parseAuthEncryptionKeys } from "../../app/server/auth/payload-codec.server.ts"
 import {
 	SupabaseImportError,
 	importSupabaseAuth,
 } from "../../app/server/auth/supabase-importer.server.ts"
+import { productionBinding, productionImport } from "./production.ts"
 
-// This entry point deliberately cannot connect to hosted databases. A real
-// rehearsal restores backups locally; neither dotenv nor application DB config
-// is loaded. Markers must be installed explicitly on the restored copy.
+// Sources remain isolated loopback copies. Production targets require a verified
+// SSH tunnel, explicit opt-in and a frozen source; no dotenv/app config is loaded.
 let source: Client | undefined
 let failureCode = "configuration_refused"
 try {
 	const args = process.argv.slice(2)
-	if (args.length > 1 || args.some((arg) => arg !== "--apply"))
-		throw new Error()
 	const sourceUrl = new URL(process.env.AUTH_IMPORT_SOURCE_URL ?? "")
 	const targetUrl = new URL(process.env.AUTH_IMPORT_CRATE_ORIGIN ?? "")
 	const encryptionSecret = process.env.AUTH_IMPORT_PAYLOAD_SECRET ?? ""
 	const crateUsername = process.env.AUTH_IMPORT_CRATE_USERNAME
 	const cratePassword = process.env.AUTH_IMPORT_CRATE_PASSWORD
 	const targetProfile = process.env.AUTH_IMPORT_TARGET_PROFILE ?? "fake-551"
+	const production = targetProfile === "production"
+	const encryptionKeys = process.env.AUTH_IMPORT_ENCRYPTION_KEYS
+		? parseAuthEncryptionKeys(process.env.AUTH_IMPORT_ENCRYPTION_KEYS)
+		: undefined
 	if (
-		!["fake-551", "restored-563"].includes(targetProfile) ||
-		process.env.AUTH_IMPORT_COPY_ONLY !== "yes" ||
+		!["fake-551", "restored-563", "production"].includes(targetProfile) ||
+		new Set(args).size !== args.length ||
+		args.some(
+			(arg) =>
+				!(
+					production
+						? ["--allow-production", "--apply", "--rerun"]
+						: ["--apply"]
+				).includes(arg),
+		) ||
+		(args.includes("--rerun") && !args.includes("--apply")) ||
+		(production
+			? !args.includes("--allow-production") ||
+				process.env.AUTH_IMPORT_COPY_ONLY !== undefined ||
+				process.env.AUTH_IMPORT_WRITERS_STOPPED !== "yes" ||
+				crateUsername !== "goodwatch_auth" ||
+				!cratePassword ||
+				!encryptionKeys ||
+				!process.env.AUTH_IMPORT_RECEIPT ||
+				sourceUrl.username !== "auth_copy_reader" ||
+				!sourceUrl.password
+			: process.env.AUTH_IMPORT_COPY_ONLY !== "yes") ||
 		encryptionSecret.length < 32 ||
 		((crateUsername !== undefined || cratePassword !== undefined) &&
 			(!crateUsername || !cratePassword || /[:\r\n]/.test(crateUsername))) ||
@@ -64,7 +87,9 @@ try {
 	).rows
 	if (
 		marker.length !== 1 ||
-		!["fake", "restored-copy"].includes(marker[0].kind)
+		!(
+			production ? ["frozen-production-552"] : ["fake", "restored-copy"]
+		).includes(marker[0].kind)
 	)
 		throw new Error()
 	const sql = crateAuthTransport(
@@ -74,8 +99,9 @@ try {
 			? { username: crateUsername, password: cratePassword }
 			: undefined,
 	)
-	const expectedCluster =
-		targetProfile === "restored-563"
+	const expectedCluster = production
+		? "crate-cluster"
+		: targetProfile === "restored-563"
 			? "goodwatch-restore-563-551"
 			: "goodwatch-local-importer-551"
 	if (
@@ -83,21 +109,44 @@ try {
 	)
 		throw new Error()
 	const nodes = (await sql("SELECT name,version['number'] FROM sys.nodes")).rows
-	const expectedNodes =
-		targetProfile === "restored-563"
+	const expectedNodes = production
+		? [1, 2, 3].map((i) => [`crate-0${i}`, "5.10.16"])
+		: targetProfile === "restored-563"
 			? [1, 2, 3].map((i) => [`restore-563-${i}`, "5.10.16"])
 			: [["importer-551", "5.10.12"]]
 	if (JSON.stringify([...nodes].sort()) !== JSON.stringify(expectedNodes))
 		throw new Error()
 	if (targetProfile === "restored-563" && marker[0].kind !== "restored-copy")
 		throw new Error()
+	failureCode = "production_preflight_refused"
+	const binding =
+		production && encryptionKeys
+			? await productionBinding(source, sql, encryptionKeys)
+			: undefined
 	failureCode = "import_failed"
-	const report = await importSupabaseAuth({
-		source,
-		sql,
-		encryptionSecret,
-		apply: args.includes("--apply"),
-	})
+	const connectedSource = source
+	const run = (guards = {}) =>
+		importSupabaseAuth({
+			source: connectedSource,
+			sql,
+			encryptionSecret,
+			encryptionKeys,
+			apply: args.includes("--apply"),
+			...guards,
+		})
+	const report = production
+		? await productionImport({
+				phase: args.includes("--rerun")
+					? "rerun"
+					: args.includes("--apply")
+						? "apply"
+						: "dry",
+				receiptPath: process.env.AUTH_IMPORT_RECEIPT ?? "",
+				secret: encryptionSecret,
+				binding,
+				run,
+			})
+		: await run()
 	process.stdout.write(`${JSON.stringify(report, null, 2)}\n`)
 } catch (error) {
 	process.stdout.write(

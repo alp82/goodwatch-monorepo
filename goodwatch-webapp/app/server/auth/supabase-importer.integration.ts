@@ -1,8 +1,8 @@
 import assert from "node:assert/strict"
 import { after, before, beforeEach, test } from "node:test"
-import { compare } from "bcryptjs"
 import { type Account, type User, betterAuth } from "@goodwatch/auth-stack"
 import { verifyPassword } from "@goodwatch/auth-stack/crypto"
+import { compare } from "bcryptjs"
 import { SignJWT, generateKeyPair, jwtVerify } from "jose"
 import { Client } from "pg"
 import {
@@ -843,3 +843,170 @@ for (const changedSide of ["source", "target"] as const)
 			newMember.id,
 		)
 	})
+
+test("production source and target receipts reject drift before writes; versioned payloads import and rerun", async () => {
+	const encryptionKeys = {
+		active: "launch",
+		keys: { launch: "fake-production-payload-key-at-least-32-characters" },
+		allowLegacy: false,
+	}
+	const options = { source, sql, encryptionSecret, encryptionKeys }
+	const dry = await importSupabaseAuth(options)
+	let writes = 0
+	const guardedSql: typeof sql = async (stmt, args) => {
+		if (/^(INSERT|UPDATE|DELETE)\b/.test(stmt)) writes++
+		return sql(stmt, args)
+	}
+	await source.query(
+		'UPDATE auth.users SET raw_user_meta_data = \'{"name":"changed"}\' WHERE id=$1',
+		[ids.password],
+	)
+	await assert.rejects(
+		importSupabaseAuth({
+			...options,
+			sql: guardedSql,
+			apply: true,
+			expectedSourceFingerprint: dry.sourceFingerprint,
+			expectedTargetCounts: dry.after,
+		}),
+		(error: unknown) =>
+			error instanceof SupabaseImportError &&
+			error.report.issues.some(
+				(i) => i.code === "source_changed_since_receipt",
+			),
+	)
+	assert.equal(writes, 0)
+	const fresh = await importSupabaseAuth(options)
+	await assert.rejects(
+		importSupabaseAuth({
+			...options,
+			sql: guardedSql,
+			apply: true,
+			expectedTargetCounts: { ...fresh.after, users: 1 },
+		}),
+		(error: unknown) =>
+			error instanceof SupabaseImportError &&
+			error.report.issues.some(
+				(i) => i.code === "target_changed_since_receipt",
+			),
+	)
+	await assert.rejects(
+		importSupabaseAuth({
+			...options,
+			sql: guardedSql,
+			apply: true,
+			requireExactRerun: true,
+		}),
+		(error: unknown) =>
+			error instanceof SupabaseImportError &&
+			error.report.issues.some((i) => i.code === "rerun_would_create_rows"),
+	)
+	assert.equal(writes, 0)
+	const imported = await importSupabaseAuth({
+		...options,
+		apply: true,
+		expectedSourceFingerprint: fresh.sourceFingerprint,
+		expectedTargetCounts: fresh.after,
+	})
+	assert.equal(imported.created.users, 6)
+	const payloads = (await sql("SELECT payload FROM doc.auth_user")).rows
+	assert.ok(
+		payloads.every(([payload]) => String(payload).startsWith("v3.launch.")),
+	)
+	const rerun = await importSupabaseAuth({
+		...options,
+		apply: true,
+		expectedSourceFingerprint: imported.sourceFingerprint,
+		expectedTargetCounts: imported.after,
+		requireExactRerun: true,
+	})
+	assert.deepEqual(rerun.created, { users: 0, accounts: 0 })
+	assert.deepEqual(rerun.before, rerun.after)
+})
+
+test("production preflight uses a real SELECT-only frozen source and receipts drive a real import", async () => {
+	const { productionBinding, productionImport } = await import(
+		"../../../scripts/auth-importer/production.ts"
+	)
+	const { mkdtemp, rm } = await import("node:fs/promises")
+	const { tmpdir } = await import("node:os")
+	const { join } = await import("node:path")
+	const dir = await mkdtemp(join(tmpdir(), "gw-production-fixture-"))
+	await source.query(`ALTER TABLE public.goodwatch_auth_import_copy ADD COLUMN IF NOT EXISTS snapshot_id text;
+  ALTER TABLE public.goodwatch_auth_import_copy ADD COLUMN IF NOT EXISTS frozen_at timestamptz;
+  UPDATE public.goodwatch_auth_import_copy SET kind='frozen-production-552',snapshot_id='fake-snapshot-552',frozen_at=now() WHERE id=551;
+  CREATE ROLE auth_copy_reader LOGIN PASSWORD 'fake-source-only';
+  GRANT USAGE ON SCHEMA auth,public TO auth_copy_reader;
+  GRANT SELECT ON auth.users,auth.identities,public.goodwatch_auth_import_copy TO auth_copy_reader;`)
+	const reader = new Client({
+		host: "127.0.0.1",
+		port: 15651,
+		database: "auth_copy",
+		user: "auth_copy_reader",
+		password: "fake-source-only",
+	})
+	await reader.connect()
+	// Only metadata identity is simulated; source privileges and every adapter
+	// read/write use the disposable real databases. This is never a live profile test.
+	const identitySql: typeof sql = async (stmt, args) =>
+		stmt === "SELECT current_user"
+			? { rows: [["goodwatch_auth"]], rowcount: 1, cols: ["current_user"] }
+			: sql(stmt, args)
+	const encryptionKeys = {
+		active: "launch",
+		keys: { launch: "fake-launch-payload-key-at-least-32-characters" },
+		allowLegacy: false,
+	}
+	try {
+		await assert.rejects(productionBinding(source, identitySql, encryptionKeys))
+		await assert.rejects(productionBinding(reader, sql, encryptionKeys))
+		for (const changed of [
+			"frozen_at=now()-interval '25 hours'",
+			"frozen_at=now()+interval '1 hour'",
+			"snapshot_id=''",
+			"kind='restored-copy'",
+		]) {
+			await source.query(
+				`UPDATE public.goodwatch_auth_import_copy SET ${changed} WHERE id=551`,
+			)
+			await assert.rejects(
+				productionBinding(reader, identitySql, encryptionKeys),
+			)
+			await source.query(
+				"UPDATE public.goodwatch_auth_import_copy SET kind='frozen-production-552',snapshot_id='fake-snapshot-552',frozen_at=now() WHERE id=551",
+			)
+		}
+		await source.query("GRANT UPDATE ON auth.users TO auth_copy_reader")
+		await assert.rejects(productionBinding(reader, identitySql, encryptionKeys))
+		await source.query("REVOKE UPDATE ON auth.users FROM auth_copy_reader")
+		const binding = await productionBinding(reader, identitySql, encryptionKeys)
+		for (const phase of ["dry", "apply", "rerun"] as const) {
+			const report = await productionImport({
+				phase,
+				receiptPath: join(dir, "receipt.json"),
+				secret: encryptionSecret,
+				binding,
+				run: (guards) =>
+					importSupabaseAuth({
+						source: reader,
+						sql,
+						encryptionSecret,
+						encryptionKeys,
+						apply: phase !== "dry",
+						...guards,
+					}),
+			})
+			assert.equal(report.status, phase === "dry" ? "planned" : "complete")
+			assert.deepEqual(report.created, {
+				users: phase === "apply" ? 6 : 0,
+				accounts: phase === "apply" ? 7 : 0,
+			})
+		}
+	} finally {
+		await reader.end()
+		await source.query(
+			"UPDATE public.goodwatch_auth_import_copy SET kind='fake' WHERE id=551",
+		)
+		await rm(dir, { recursive: true, force: true })
+	}
+})

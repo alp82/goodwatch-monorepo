@@ -25,6 +25,8 @@ test("auth cookies match exact project names and numeric chunks, irrespective of
 	for (const cookie of [
 		memberCookie,
 		"sb-testref-auth-token=",
+		"gw.session_token=x",
+		"a=b;\t__Secure-gw.session_token=x",
 		"a=b; sb-testref-auth-token.0=x",
 		"sb-testref-auth-token.1=x; a=b",
 	])
@@ -36,6 +38,9 @@ test("auth cookies match exact project names and numeric chunks, irrespective of
 		"sb-other-auth-token=x",
 		"xsb-testref-auth-token=x",
 		"other=sb-testref-auth-token=x",
+		"other=gw.session_token=x",
+		"not-gw.session_token=x",
+		"__Secure-gw.session_token.0=x",
 		"sb-testref-auth-token.foo=x",
 		"_ga=GA1.1.1.1; ph_session=x; gw_browser=1",
 	])
