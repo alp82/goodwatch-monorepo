@@ -148,10 +148,13 @@ def copy_shows(connector, db, shows: list[dict], now: datetime) -> dict:
         if removals:
             connector.run_many(MARK_REMOVED, removals)
 
-    # Last, so a show is only marked once its rows are written.
+    # Last, so a show is only marked once its rows are written. A show TMDB deleted keeps its
+    # fetch time in Mongo after its Crate row is deleted, so a missing row is skipped; failing
+    # the batch would hold the checkpoint at it for good.
     connector.run_many(
         MARK_SHOW,
         [(millis(show["episodes_updated_at"]), aired_counts[show["tmdb_id"]], show["tmdb_id"]) for show in shows],
+        missing_ok=True,
     )
     return stats
 

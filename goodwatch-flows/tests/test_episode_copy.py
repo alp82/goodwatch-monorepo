@@ -25,8 +25,10 @@ def millis(moment: datetime) -> int:
 class EpisodeTable:
     """A fake Crate connector holding the episode table and what the copy writes on the show rows."""
 
-    def __init__(self, rows=()):
+    def __init__(self, rows=(), missing_shows=()):
         self.rows = {(row["show_id"], row["tmdb_id"]): dict(row) for row in rows}
+        # Shows with no row in the Crate show table, as after delete-on-sync removed them.
+        self.missing_shows = set(missing_shows)
         self.checked_shows = {}
         # show.aired_episode_count; a show the copy never wrote has no entry, which is NULL in Crate.
         self.aired_counts = {}
@@ -51,14 +53,20 @@ class EpisodeTable:
         self.upserted += len(records)
         return {"records_received": len(records), "rows_upserted": len(records)}
 
-    def run_many(self, sql, params):
+    def run_many(self, sql, params, missing_ok=False):
         if sql == "UPDATE episode SET removed_at = ?, updated_at = ? WHERE show_id = ? AND tmdb_id = ANY(?)":
             for removed_at, _, show_id, episode_ids in params:
                 for episode_id in episode_ids:
                     self.rows[(show_id, episode_id)]["removed_at"] = removed_at
         elif sql == "UPDATE show SET episodes_updated_at = ?, aired_episode_count = ? WHERE tmdb_id = ?":
-            self.checked_shows.update({show_id: checked_at for checked_at, _, show_id in params})
-            self.aired_counts.update({show_id: count for _, count, show_id in params})
+            # Crate updates the rows that exist and answers DocumentMissingException for the others.
+            present = [row for row in params if row[2] not in self.missing_shows]
+            self.checked_shows.update({show_id: checked_at for checked_at, _, show_id in present})
+            self.aired_counts.update({show_id: count for _, count, show_id in present})
+            missing = len(params) - len(present)
+            if missing and not missing_ok:
+                raise RuntimeError(f"{missing} of {len(params)} statements failed; first: DocumentMissingException")
+            return missing
         else:
             raise AssertionError(sql)
 
@@ -136,6 +144,22 @@ class EpisodeCopyTests(unittest.TestCase):
         self.assertEqual(result["episodes_upserted"], 2)
         self.assertEqual(self.crate.rows[(7, 51)]["overview"], "Walt cooks again.")
         self.assertIsNone(self.crate.rows[(7, 53)]["overview"])
+
+    def test_a_show_deleted_from_crate_does_not_hold_up_the_others(self):
+        # 2026-10-13: TMDB deleted 15 shows seconds after their episodes were fetched, and
+        # delete-on-sync removed their show rows. Every run then failed on marking them and
+        # kept the checkpoint where it was.
+        self.crate = EpisodeTable(missing_shows={8})
+        fetched_show(self.db, 7, {1: [tmdb_episode(51, 1)]}, fetched_at=FETCHED_AT - timedelta(minutes=1))
+        fetched_show(self.db, 8, {1: [tmdb_episode(61, 1)]}, fetched_at=FETCHED_AT - timedelta(minutes=1))
+        copy(self.crate, self.db)
+        fetched_show(self.db, 9, {1: [tmdb_episode(71, 1)]}, fetched_at=FETCHED_AT + timedelta(hours=1))
+
+        result = copy(self.crate, self.db, now=NOW + timedelta(hours=1))
+
+        self.assertEqual(self.crate.episodes_of(9), [(1, 1, 71)])
+        self.assertEqual(set(self.crate.checked_shows), {7, 9})
+        self.assertEqual(result["copied_until"], (FETCHED_AT + timedelta(hours=1)).isoformat())
 
     def test_the_show_is_marked_with_the_time_its_episodes_were_fetched(self):
         fetched_show(self.db, 7, {1: [tmdb_episode(51, 1)]})
