@@ -585,7 +585,7 @@ function stepEdges(
 			name: `+ ${capitalize(word)}`,
 			tail: `but ${word}`,
 			toward: null,
-			why: `Close to ${side.name.toLowerCase()}, you rate ${word} titles ${round1(step.avg)} on average (usually ${round1(person.mu)}), yet ${step.carriers === 0 ? "none" : share < 1 ? "less than 1%" : `only ${share}%`} of your ${side.name.toLowerCase()} titles are ${word}.`,
+			why: `Close to ${side.name.toLowerCase()}, you rate ${word} titles ${round1(step.avg)} on average (usually ${round1(person.mu)}), yet ${step.carriers === 0 ? "none" : share < 1 ? "less than 1%" : `only ${share}%`} of what you love there is ${word}.`,
 			average: round1(step.avg),
 			count: step.hit.length,
 			rated: ratedKeys(step.hit),

@@ -71,7 +71,7 @@ export function YouVsEveryone({ view }: { view: EveryoneView }) {
 	const more = n < MOST && (allHigher.length > n || allLower.length > n)
 	const filtered = !isAllTitleTypes(type)
 	const none = filtered ? (
-		<NoTitlesOfType value={type} onReset={setType} where="on this side" />
+		<NoTitlesOfType value={type} onReset={setType} where="in this list" />
 	) : (
 		"None of these in what you've rated."
 	)

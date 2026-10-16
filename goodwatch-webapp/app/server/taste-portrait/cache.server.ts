@@ -11,7 +11,7 @@ import Redis from "ioredis"
 import { PORTRAIT_TABS, type PortraitTab, type PortraitView } from "./view"
 
 // Bump when a view's shape or computation changes, so cached views of the old kind are never read.
-const CACHE_VERSION = "v6"
+const CACHE_VERSION = "v7"
 const TTL_SECONDS = 10 * 60
 const SETTLE_MS = 1_500
 
