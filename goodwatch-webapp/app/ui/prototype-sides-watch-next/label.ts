@@ -1,20 +1,16 @@
-// PROTOTYPE - throwaway (#659). The one place that words a group of the titles a member loves: by two titles they
-// loved that are most typical of it ("Like Se7en and Zodiac"), with no category noun. Swap the wording here.
+// PROTOTYPE - throwaway (#659). The one place for the words (owner, 2026-10-16): everything is "taste". A title in
+// one of the member's groups is "In your taste"; near one, "Close to your taste" (the edge). A group is shown by the
+// posters of titles the member loved; its trait name ("Bleak, tense stories") is descriptive, so it shows only behind
+// the names toggle until the words test (#656) passes. No share line anywhere.
 
-export interface GroupWords {
-	/** "Se7en and Zodiac" */
-	pair: string
-	/** The group's label in pickers and chips. */
-	like: string
-	/** The line under a pick that belongs to the group. */
-	because: string
-}
+export const TASTE = {
+	in: "In your taste",
+	close: "Close to your taste",
+	/** For the middle of a sentence. */
+	inline: "in your taste",
+	/** The cluster or control that holds the groups. */
+	heading: "Your taste",
+} as const
 
-export function groupWords(titles: string[]): GroupWords {
-	const [a, b] = titles
-	const pair = b ? `${a} and ${b}` : (a ?? "")
-	return { pair, like: `Like ${pair}`, because: `Because you loved ${pair}` }
-}
-
-/** "like Se7en and Zodiac", for the middle of a sentence. */
-export const likeInline = (words: GroupWords) => `like ${words.pair}`
+/** What a group is called in words: its trait name with the names on, else "In your taste" (its posters tell it apart). */
+export const groupTitle = (group: { name: string }, names: boolean) => (names ? group.name : TASTE.in)

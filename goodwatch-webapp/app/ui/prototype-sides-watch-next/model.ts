@@ -1,16 +1,16 @@
 // PROTOTYPE - throwaway (#659, map #652). The view model of /prototype/sides-watch-next: one member's real Watch next
-// (My movies, or the whole Wishlist), ordered by their personal order, with the group of loved titles each title
-// belongs to (production's Sides of you and side rule, #666). Types only, so browser code can import it.
+// (My movies, or the whole Wishlist), ordered by their personal order, with where each title stands to the member's
+// groups of loved titles (production's Sides of you and side rule, #666): in one, close to one, or neither. Types
+// only, so browser code can import it.
 import type { WatchNextTierSize } from "~/domain/watch-next"
 import type { WatchNext, WatchNextTitle } from "~/server/watch-next.server"
 import type { TitleKey } from "~/utils/title-key"
-import type { GroupWords } from "./label"
 
 export const VARIANTS = {
 	today: { name: "Today (production)", style: "reference" },
 	moods: { name: "In the mood picker", style: "existing" },
 	filter: { name: "One more filter", style: "existing" },
-	because: { name: "Because you loved", style: "existing" },
+	because: { name: "A line under each pick", style: "existing" },
 } as const
 export type VariantKey = keyof typeof VARIANTS
 export const isVariant = (v: unknown): v is VariantKey => typeof v === "string" && v in VARIANTS
@@ -24,16 +24,21 @@ export const RULE: Record<VariantKey, GroupRule | null> = { today: null, moods: 
 
 export interface SwnGroup {
 	id: string
-	words: GroupWords
-	/** The loved titles it is worded by, first. */
-	faces: TitleKey[]
+	/** Its trait name ("Bleak, tense stories"): only with the names on (words gate, #656). */
+	name: string
+	/** Its most typical loved titles: how it is told apart with the names off. */
+	posters: { key: TitleKey; title: string; poster: string | null }[]
 	/** A backdrop for its tile, from one of its loved titles. */
 	backdrop: string | null
 	/** Its titles on the list, counted as the moods are (on your services when that is on). */
 	count: number
+	/** Titles close to it, counted the same way. */
+	close: number
 }
 
-export type SwnTierKey = WatchNext["tiers"][number]["key"] | "elseFits"
+export type Place = { id: string; how: "in" | "close" } | null
+
+export type SwnTierKey = WatchNext["tiers"][number]["key"] | "elseFits" | "closeTaste"
 
 export interface SwnTier {
 	key: SwnTierKey
@@ -62,9 +67,13 @@ export interface SwnView {
 	/** Every title that fits tonight, in order, the hero first. */
 	fitting: TitleKey[]
 	titles: Record<string, WatchNextTitle>
+	/** With a group picked: what each movie misses tonight, in words (production's captions know no groups). */
+	misfits: Record<string, string>
+	/** The groups' trait names, behind the toggle. */
+	names: boolean
 	groups: SwnGroup[]
-	/** Each listed title's group; null when it fits none. */
-	groupOf: Record<string, string | null>
+	/** Where each listed title stands: in a group, close to one, or neither (null). */
+	placeOf: Record<string, Place>
 	/** The picked groups. */
 	picked: string[]
 	passed: TitleKey[]

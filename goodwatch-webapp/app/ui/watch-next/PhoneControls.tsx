@@ -24,6 +24,7 @@ import {
 	type MoodControl,
 	MoodGrid,
 	SPECTRUM,
+	pickedCount,
 	useRefusalHint,
 } from "./MoodPicker"
 import {
@@ -42,7 +43,7 @@ const DRAWER_LABEL: Record<Drawer, string> = {
 	services: "Where to watch",
 	sort: "Sort",
 	time: "How long?",
-	groups: "From what you love",
+	groups: "Your taste",
 }
 
 /** A fourth button and drawer, from the page that owns it: "How long?" on My movies (#385). */
@@ -145,7 +146,8 @@ function DrawerHead({ children }: { children: React.ReactNode }) {
 }
 
 function MoodsHead({ control }: { control: MoodControl }) {
-	const k = control.moods.length
+	// PROTOTYPE (#659): picked groups count toward the three.
+	const k = pickedCount(control)
 	const hint = useRefusalHint(control)
 	return (
 		<DrawerHead>

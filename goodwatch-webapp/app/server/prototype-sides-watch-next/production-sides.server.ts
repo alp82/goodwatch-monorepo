@@ -682,6 +682,27 @@ export function sideOfTitle(z: ArrayLike<number>, groups: ProtoGroup[]): string 
 	return best.keys.every((key) => z[KEYS.indexOf(key)] >= AGAINST_NAME) ? best.side : null
 }
 
+/**
+ * PROTOTYPE (#659): where a title stands to the sides. "in": production's rule above. "close": its nearest side is at
+ * least CLOSE_TO_SIDE close but misses the rule (not close enough, or far below the catalog on an attribute the name
+ * claims): the edge, "Close to your taste".
+ */
+export const CLOSE_TO_SIDE = 0.15
+export function placeOfTitle(z: ArrayLike<number>, groups: ProtoGroup[]): { side: string; how: "in" | "close" } | null {
+	let best: ProtoGroup | null = null
+	let closest = Number.NEGATIVE_INFINITY
+	for (const g of groups) {
+		const c = cosine(z, g.center)
+		if (c > closest) {
+			closest = c
+			best = g
+		}
+	}
+	if (!best?.side || closest < CLOSE_TO_SIDE) return null
+	const named = best.keys.every((key) => z[KEYS.indexOf(key)] >= AGAINST_NAME)
+	return { side: best.side, how: closest >= FITS_NO_SIDE && named ? "in" : "close" }
+}
+
 export function buildSides(
 	person: Person,
 	order: OrderTitles = (keys) => keys,

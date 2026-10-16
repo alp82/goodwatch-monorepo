@@ -83,7 +83,9 @@ function TierRow({ tier, view, mark, keys }: { tier: SwnTier; view: SwnView; mar
 									loading="lazy"
 									className={`aspect-[2/3] w-full rounded-md bg-white/5 object-cover ring-1 ring-white/5 ${tier.size === "sm" || misfits ? "opacity-75 hover:opacity-100" : ""}`}
 								/>
-								{title.misfit && <span className="mt-1 block truncate text-xs text-gray-400">{misfitWords(title.misfit)}</span>}
+								{(view.misfits[key] || title.misfit) && (
+									<span className="mt-1 block truncate text-xs text-gray-400">{view.misfits[key] ?? (title.misfit ? misfitWords(title.misfit) : "")}</span>
+								)}
 							</Link>
 							{mark?.(title, tier.size)}
 						</div>

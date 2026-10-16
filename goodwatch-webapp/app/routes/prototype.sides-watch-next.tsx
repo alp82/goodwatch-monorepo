@@ -1,7 +1,7 @@
 // PROTOTYPE - throwaway (#659, map #652). How the groups of titles a member loves (production's Sides of you) appear
 // on Watch next, inside its own controls: three variants on one member's real list, beside today's page.
 // ?variant=today|moods|filter|because, ?as=owner|m1..m5 (members picked at runtime by rating count; "me" when signed
-// in), ?list=all for the whole Wishlist (default: My movies), ?like=g1,g2 for the picked groups, plus Watch next's own
+// in), ?list=all for the whole Wishlist (default: My movies), ?like=g1,g2 for the picked groups, ?names=1 for their trait names (words gate, #656), plus Watch next's own
 // moods, services, and time, and ?nt= for the titles passed with Not tonight. Read-only: nothing is written.
 import { type LoaderFunctionArgs, json } from "@remix-run/node"
 import { useLoaderData } from "@remix-run/react"
@@ -28,6 +28,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		onMyServices: p.get("services") !== "all",
 		time: list === "movies" ? timeOf(p.get("time")) : null,
 		groups: (p.get("like") ?? "").split(",").filter(Boolean),
+		names: p.get("names") === "1",
 		passed: (p.get("nt") ?? "")
 			.split(",")
 			.map(Number)

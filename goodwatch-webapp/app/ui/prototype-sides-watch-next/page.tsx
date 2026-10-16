@@ -1,14 +1,16 @@
 // PROTOTYPE - throwaway (#659). How the groups of titles a member loves (production's Sides of you) appear on Watch
 // next, on one member's real list (My movies, or the whole Wishlist), ordered by their personal order. Round 2: the
-// groups live inside Watch next's own controls, worded by two loved titles ("Like Se7en and Zodiac", label.ts).
+// groups live inside Watch next's own controls. Words (label.ts): "In your taste", "Close to your taste"; a group is
+// shown by its loved posters, and by its trait name only with the names on (words gate, #656).
 //
 // - today:   production, for reference (personal order, no groups).
-// - moods:   "From what you love" tiles after the eleven moods in the mood picker; a picked group is one more choice
-//            among the moods (up to three in all; a title fits when it is in any of them).
-// - filter:  one more choice next to How long? (a select on desktop, a fifth button and drawer on phones); a group is
-//            its own condition, and what fits everything else follows in its own step.
-// - because: no grouping: "Because you loved Se7en and Zodiac" under the hero, Then, and the bigger posters; tapping
-//            it narrows as a picked group does in the mood picker (its chip joins the picked moods).
+// - moods:   "Your taste" tiles after the eleven moods in the mood picker; a picked group is one more choice among the
+//            moods (up to three in all; a title fits when it is in any of them).
+// - filter:  one more choice next to How long? (a short list on desktop, a fifth button and drawer on phones); a group
+//            is its own condition, and what fits everything else follows in its own step.
+// - because: no grouping: "In your taste" or "Close to your taste" with the group's posters under the hero and each
+//            Then title; tapping it narrows as a picked group does in the mood picker.
+// With a group picked, titles close to it that fit everything else follow the fits as "Close to your taste".
 import { useEffect, useState } from "react"
 import { MAX_MOODS, MOOD_BY_KEY, type MoodKey, toggleMood } from "~/domain/moods"
 import type { WatchNextTitle } from "~/server/watch-next.server"
@@ -21,8 +23,8 @@ import { HeroLabelContext, MoviesPageContext, TitleAsideContext, WatchNextHero }
 import { moodWords, timeLabel } from "~/ui/watch-next/labels"
 import { WRAP } from "~/ui/watch-next/style"
 import { AfterThat, Tiers, useParam } from "./bits"
-import { BecauseLine, GroupChips, GroupDrawer, GroupSelect, GroupTiles, groupButtonIcon, groupsShort } from "./groups"
-import { likeInline } from "./label"
+import { GroupChips, GroupDrawer, GroupMenu, GroupTiles, TasteLine, groupButtonIcon, groupsShort } from "./groups"
+import { TASTE } from "./label"
 import { VARIANTS, type SwnView } from "./model"
 
 function DataBar({ view }: { view: SwnView }) {
@@ -45,6 +47,10 @@ function DataBar({ view }: { view: SwnView }) {
 				</button>
 				<button type="button" onClick={() => set({ list: "all", time: null })} aria-pressed={view.list === "all"} className={pill(view.list === "all")}>
 					Whole Wishlist
+				</button>
+				<span className="mx-1 text-gray-500">|</span>
+				<button type="button" onClick={() => set({ names: view.names ? null : "1" })} aria-pressed={view.names} className={pill(view.names)}>
+					Trait names {view.names ? "on" : "off"}
 				</button>
 				<span className="text-gray-400">
 					· {view.member.listed} listed, {view.groups.length} groups · personal order {view.personalOrder.on ? "ranks the list" : `not loaded (${view.personalOrder.note ?? "none"})`} · {view.computedMs} ms
@@ -119,7 +125,7 @@ function useControls(view: SwnView) {
 				movies || filter ? (
 					<>
 						{movies && MOVIES_PAGE.timeControl(time, setTime)}
-						{filter && <GroupSelect view={view} />}
+						{filter && <GroupMenu view={view} scope={scope} />}
 					</>
 				) : undefined
 			}
@@ -139,9 +145,9 @@ function useControls(view: SwnView) {
 		const group = view.groups.find((g) => g.id === view.picked[0])
 		extras.push({
 			key: "groups",
-			title: "From what you love",
-			label: group ? group.words.like : "Loved",
-			icon: groupButtonIcon(Boolean(group)),
+			title: TASTE.heading,
+			label: group ? (view.names ? group.name : TASTE.heading) : TASTE.heading,
+			icon: groupButtonIcon(view),
 			on: Boolean(group),
 			body: <GroupDrawer view={view} scope={scope} />,
 		})
@@ -166,22 +172,22 @@ function Page({ view }: { view: SwnView }) {
 	// The line above the hero's title says what the picked groups narrowed to, as it does for moods.
 	const likes = view.picked.flatMap((id) => {
 		const g = view.groups.find((x) => x.id === id)
-		return g ? [likeInline(g.words)] : []
+		return g ? [view.names ? `in ${g.name.toLowerCase()}` : TASTE.inline] : []
 	})
 	const relabel = (label: string) => {
 		if (!likes.length) return label
 		const prefix = movies ? "Tonight's movie · " : ""
 		const limit = data.time ? `, ${timeLabel(data.time).toLowerCase()}` : ""
-		if (!view.fitting.length) return `${prefix}Nothing ${view.rule === "also" ? likes[0] : "like that"} fits tonight; the closest`
+		if (!view.fitting.length) return `${prefix}Nothing ${[...new Set(likes)].join(" or ")} fits tonight; the closest`
 		const m = moodWords(data.moods)
-		const phrase = view.rule === "also" ? (m ? `for ${m}, ${likes[0]},` : likes[0]) : [m && `for ${m}`, ...likes].filter(Boolean).join(" or ")
+		const uniq = [...new Set(likes)]
+		const phrase = view.rule === "also" ? (m ? `for ${m} ${uniq[0]}` : uniq[0]) : [m && `for ${m}`, ...uniq].filter(Boolean).join(" or ")
 		return `${prefix}Best match ${phrase} tonight${limit}`
 	}
 	const because = view.variant === "because"
-	const aside = because ? (title: WatchNextTitle, where: "hero" | "then") => <BecauseLine view={view} title={title} where={where} /> : null
-	const mark = because
-		? (title: WatchNextTitle, size: string) => (size === "xl" || size === "lg" ? <BecauseLine view={view} title={title} where="poster" /> : null)
-		: undefined
+	const aside = because ? (title: WatchNextTitle, where: "hero" | "then") => <TasteLine view={view} title={title} where={where} /> : null
+	// Under the hero and Then only: under every poster the steps read as grouped again (Fable cross-check).
+	const mark = undefined
 
 	const body = (
 		<HeroLabelContext.Provider value={view.rule ? relabel : null}>
