@@ -1,0 +1,27 @@
+{
+  "name": "@goodwatch/auth-stack",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./index.js",
+    "./api": "./api.js",
+    "./adapters": "./adapters.js",
+    "./crypto": "./crypto.js",
+    "./cookies": "./cookies.js",
+    "./plugins": "./plugins.js",
+    "./oauth-provider": "./oauth-provider.js",
+    "./mcp": "./mcp.js",
+    "./cimd": "./cimd.js",
+    "./cimd-node": "./cimd-node.js"
+  },
+  "dependencies": {
+    "better-auth": "1.7.7",
+    "@better-auth/core": "1.7.7",
+    "@better-auth/mcp": "1.7.7",
+    "@better-auth/cimd": "1.7.7",
+    "@better-auth/oauth-provider": "1.7.7",
+    "better-call": "1.4.0",
+    "zod": "4.6.7"
+  }
+}

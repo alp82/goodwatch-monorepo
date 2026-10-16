@@ -1,0 +1,49 @@
+name: Better Auth CrateDB adapter
+
+on:
+  pull_request:
+    paths:
+      - "goodwatch-webapp/app/server/auth/**"
+      - "goodwatch-webapp/scripts/auth-cratedb/**"
+      - "goodwatch-webapp/package*.json"
+      - ".github/workflows/auth-cratedb.yml"
+  push:
+    branches: [main]
+    paths:
+      - "goodwatch-webapp/app/server/auth/**"
+      - "goodwatch-webapp/scripts/auth-cratedb/**"
+      - "goodwatch-webapp/package*.json"
+      - ".github/workflows/auth-cratedb.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  auth-cratedb:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - name: Install exact locked dependencies
+        working-directory: goodwatch-webapp
+        run: |
+          npm ci --ignore-scripts
+          npm ci --ignore-scripts --prefix scripts/auth-cratedb/conformance
+      - name: Configure disposable runner for CrateDB
+        run: sudo sysctl -w vm.max_map_count=262144
+      - name: Better Auth endpoints, OAuth logout, conformance and failover on three CrateDB nodes
+        working-directory: goodwatch-webapp
+        run: npm run test:auth
+      - name: Keep test and container evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: auth-cratedb-results
+          path: goodwatch-webapp/scripts/auth-cratedb/results/

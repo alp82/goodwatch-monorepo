@@ -27,11 +27,14 @@ import {
 export function AuthProvider({
 	supabaseUrl,
 	supabaseAnonKey,
+	betterAuth = false,
 	initialUser,
 	children,
 }: {
 	supabaseUrl: string
 	supabaseAnonKey: string
+	/** With Better Auth the member is the root loader's alone: no client, and a sign-in reruns the loader. */
+	betterAuth?: boolean
 	initialUser: User | null
 	children: ReactNode
 }) {
@@ -52,10 +55,13 @@ export function AuthProvider({
 		// so the next navigation asks again.
 		if (keptLoaderData("root")) return
 		rootRevalidated()
+		// With Better Auth no client hears a signed-out page load, so the loader's "no one" ends a marker that an
+		// earlier member left in this tab. Otherwise a later sign-in as that member would skip adopting the guest's choices.
+		if (betterAuth && !initialUser) clearMediaSession()
 		setUser((current) =>
 			current && current.id === initialUser?.id ? current : initialUser,
 		)
-	}, [initialUser])
+	}, [initialUser, betterAuth])
 
 	// The client's code loads on first use. Whoever asks for the client gets it after the provider has subscribed to
 	// its auth changes, so a sign-in that follows can't be missed.
@@ -65,6 +71,7 @@ export function AuthProvider({
 	const subscription = useRef<{ unsubscribe: () => void }>()
 	const mounted = useRef(true)
 	const getSupabase = useCallback(async () => {
+		if (betterAuth) throw new Error("Supabase sign-in is off")
 		const client = await loadSupabaseClient(supabaseUrl, supabaseAnonKey)
 		if (mounted.current && !subscription.current) {
 			subscription.current = client.auth.onAuthStateChange((event, session) =>
@@ -83,9 +90,10 @@ export function AuthProvider({
 			startTransition(() => setSupabase(client))
 		}
 		return client
-	}, [supabaseUrl, supabaseAnonKey])
+	}, [supabaseUrl, supabaseAnonKey, betterAuth])
 
 	useEffect(() => {
+		if (betterAuth) return
 		mounted.current = true
 		const load = () => {
 			getSupabase().catch(() => {})
@@ -104,14 +112,14 @@ export function AuthProvider({
 			subscription.current = undefined
 		}
 		// Decided once, when the page opens: a later sign-in comes through getSupabase.
-	}, [getSupabase])
+	}, [getSupabase, betterAuth])
 
 	useEffect(() => {
 		const targetUserId = user?.id
 		const userChanged = previousUserId.current !== targetUserId
 		const establishSession = Boolean(
 			targetUserId &&
-				sessionUserId === targetUserId &&
+				(betterAuth || sessionUserId === targetUserId) &&
 				establishedUserId.current !== targetUserId,
 		)
 		if (!userChanged && !establishSession) return
@@ -143,7 +151,7 @@ export function AuthProvider({
 				}
 			} else clearMediaSession()
 			if (
-				(changed || userChanged) &&
+				(changed || (userChanged && !betterAuth)) &&
 				mounted.current &&
 				currentUserId.current === targetUserId
 			) {
@@ -157,11 +165,23 @@ export function AuthProvider({
 			}
 		}
 		void reconcile()
-	}, [user?.id, sessionUserId, queryClient, revalidate])
+	}, [user?.id, sessionUserId, queryClient, revalidate, betterAuth])
+
+	const refreshUser = useCallback(() => {
+		requestRootRevalidation()
+		revalidate()
+	}, [revalidate])
 
 	const value = useMemo(
-		() => ({ supabase, getSupabase, user, loading: false }),
-		[supabase, getSupabase, user],
+		() => ({
+			supabase,
+			getSupabase,
+			user,
+			loading: false,
+			betterAuth,
+			refreshUser,
+		}),
+		[supabase, getSupabase, user, betterAuth, refreshUser],
 	)
 	return (
 		<AuthContext.Provider value={value}>

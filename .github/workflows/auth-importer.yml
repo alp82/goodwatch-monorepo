@@ -1,0 +1,38 @@
+name: Supabase auth importer (fake local databases)
+on:
+  pull_request:
+    paths:
+      - "goodwatch-webapp/app/server/auth/**"
+      - "goodwatch-webapp/scripts/auth-importer/**"
+      - "goodwatch-webapp/packages/auth-stack/**"
+      - "goodwatch-webapp/package*.json"
+      - ".github/workflows/auth-importer.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  auth-importer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - name: Install locked dependencies
+        working-directory: goodwatch-webapp
+        run: npm ci --ignore-scripts
+      - name: Configure disposable runner for CrateDB
+        run: sudo sysctl -w vm.max_map_count=262144
+      - name: Import and sign in against fake Postgres and CrateDB
+        working-directory: goodwatch-webapp
+        run: npm run test:auth-importer
+      - name: Keep fake-data reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: auth-importer-fake-results
+          path: goodwatch-webapp/scripts/auth-importer/results/

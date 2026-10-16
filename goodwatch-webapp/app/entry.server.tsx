@@ -4,12 +4,17 @@
 // - The HTML goes out in one chunk per React pass instead of about 2 KB at a time (see html-stream.server.ts).
 // - The abort timer is cleared when the response is done. The default entry leaves it running, so every request keeps
 //   its render and loader data alive for 5 seconds.
+// First: what remix-serve's fetch polyfill lacks. Under remix-serve this runs before the polyfill exists, so the MCP and
+// auth handlers fill the gaps again per request (see web-fetch-gaps.server.ts).
+import "~/server/web-fetch-gaps.server"
 
 import type { AppLoadContext, EntryContext } from "@remix-run/node"
 import { createReadableStreamFromReadable } from "@remix-run/node"
 import { RemixServer } from "@remix-run/react"
 import { isbot } from "isbot"
 import { renderToPipeableStream } from "react-dom/server"
+import { registerAuthCluster, registerLazyAuthResolver } from "./server/auth/boot.server.ts"
+import { getRedisCluster } from "./utils/cache"
 import {
 	currentAssetBase,
 	manifestForBase,
@@ -35,6 +40,10 @@ import { logProcessRole, processRole } from "~/server/role.server"
 import { startStaticFiles } from "~/server/static-files.server"
 import { startTitleSnapshot } from "~/server/title-snapshot/index.server"
 import { startCrateDiagnostics } from "~/utils/crate-diagnostics"
+
+// Better Auth itself loads on its first use with BETTER_AUTH_ENABLED on (boot.server.ts).
+registerAuthCluster(getRedisCluster)
+registerLazyAuthResolver()
 
 // While the server build loads, before `remix-serve` registers its signal listeners and before the first request:
 // readiness and the shutdown sequence (see lifecycle.server.ts), and the title snapshot's first load, which readiness

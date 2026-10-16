@@ -4,9 +4,8 @@ import React from "react";
 import { useSetUserSettings } from "~/routes/api.user-settings.set";
 import SubmitButton from "~/ui/button/SubmitButton";
 import { PasswordInput } from "~/ui/form/PasswordInput";
-import { useSupabase, useUser } from "~/utils/auth";
-import { useAutoFocus } from "~/utils/form";
-import { validatePassword } from "~/utils/password";
+import { useSupabase } from "~/utils/auth";
+import { PASSWORD_MIN, useAuthClient } from "~/utils/auth-client";
 
 const googleLogo = (
 	<svg aria-hidden="true" viewBox="0 0 24 24">
@@ -42,19 +41,24 @@ export const meta: MetaFunction = () => {
 };
 
 export default function SettingsAccount() {
-	const autoFocusRef = useAutoFocus<HTMLInputElement>();
-	const { getSupabase } = useSupabase();
-	const { user } = useUser();
+	const { betterAuth } = useSupabase();
+	const auth = useAuthClient();
 
-	const userIdentityProviders = (user?.identities || []).map(
-		(identity) => identity.provider,
-	);
-	const userHasEmailIdentity = userIdentityProviders.some(
-		(provider) => provider === "email",
-	);
+	// How the member signs in: shown as icons, and only a member with a password can change it.
+	const [methods, setMethods] = React.useState<("email" | "google")[]>([]);
+	React.useEffect(() => {
+		let current = true;
+		auth.signInMethods().then((found) => {
+			if (current && found) setMethods(found);
+		});
+		return () => {
+			current = false;
+		};
+	}, [auth]);
+	const userHasEmailIdentity = methods.includes("email");
 
+	const [currentPassword, setCurrentPassword] = React.useState("");
 	const [password, setPassword] = React.useState("");
-	const [confirmPassword, setConfirmPassword] = React.useState("");
 	const [status, setStatus] = React.useState<
 		"idle" | "loading" | "success" | "error"
 	>("idle");
@@ -63,41 +67,36 @@ export default function SettingsAccount() {
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 
-		// Reset status and errors
 		setStatus("idle");
 		setErrors([]);
 
-		// Validate password
-		const validation = validatePassword(password);
-		if (!validation.isValid) {
-			setErrors(validation.errors);
+		if (password.length < PASSWORD_MIN) {
+			setErrors([`Choose a password with at least ${PASSWORD_MIN} characters`]);
 			setStatus("error");
 			return;
 		}
 
-		// Check if passwords match
-		if (password !== confirmPassword) {
-			setErrors(["Passwords do not match"]);
-			setStatus("error");
-			return;
-		}
-
-		// Simulate API call
 		setStatus("loading");
-		const supabase = await getSupabase();
-		const { data, error } = await supabase.auth.updateUser({
-			password,
-		});
-
-		if (error) {
-			setErrors([error.message]);
+		const result = await auth.changePassword(currentPassword, password);
+		if (!result.ok) {
+			setErrors([
+				result.failure === "invalid"
+					? betterAuth
+						? "Your current password isn't right"
+						: "The password could not be changed"
+					: result.failure === "password"
+						? `Choose a password with at least ${PASSWORD_MIN} characters`
+						: result.failure === "throttled"
+							? "Too many tries in a row. Wait a few minutes, then try again"
+							: "Changing the password isn't working right now. Try again in a few minutes",
+			]);
 			setStatus("error");
 			return;
 		}
 
 		setStatus("success");
+		setCurrentPassword("");
 		setPassword("");
-		setConfirmPassword("");
 	};
 
 	const setUserSettings = useSetUserSettings();
@@ -120,7 +119,7 @@ export default function SettingsAccount() {
 
 				<div className="flex gap-2 items-center text-base md:text-lg">
 					<span>You are logged in via:</span>
-					{userIdentityProviders.map((provider) => (
+					{methods.map((provider) => (
 						<span key={provider} className="h-5 w-5">
 							{provider === "google" && (
 								<span title="Google">{googleLogo}</span>
@@ -138,29 +137,35 @@ export default function SettingsAccount() {
 
 						{status === "success" ? (
 							<p className="py-3 px-5 text-lg border-l-8 border-green-700 text-green-200 bg-green-900">
-								Password changed successfully
+								Password changed. Other devices are signed out.
 							</p>
 						) : null}
 
 						<div className="max-w-80 flex flex-col gap-2">
+							{betterAuth && (
+								<PasswordInput
+									id="password-current"
+									label="Current Password"
+									placeholder=""
+									value={currentPassword}
+									onChange={setCurrentPassword}
+								/>
+							)}
+
 							<PasswordInput
 								id="password-new"
 								label="New Password"
-								placeholder="at least 10 characters"
+								placeholder={`at least ${PASSWORD_MIN} characters`}
 								value={password}
 								error={errors.length > 0 ? errors[0] : undefined}
 								onChange={setPassword}
-								ref={autoFocusRef}
 							/>
 
-							<PasswordInput
-								id="password-repeat"
-								label="Repeat Password"
-								placeholder=""
-								value={confirmPassword}
-								error={errors.length > 0 ? errors[0] : undefined}
-								onChange={setConfirmPassword}
-							/>
+							<p className="text-sm text-gray-400">
+								Other devices are signed out.
+								{/* Apps connect through the new sign-in only (#570). */}
+								{betterAuth && " Connected apps keep working."}
+							</p>
 
 							<SubmitButton
 								loading={status === "loading"}

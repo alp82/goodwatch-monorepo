@@ -44,6 +44,11 @@ import {
 	stripTracking,
 } from "./page-cache.server.ts"
 
+test("MCP is never eligible for the HTML page cache, with or without a bearer token", () => {
+	assert.equal(pageCacheKey({ url: "/mcp", method: "GET" }), null)
+	assert.equal(pageCacheKey({ url: "/mcp", method: "HEAD" }), null)
+})
+
 const tick = () => new Promise<void>((resolve) => setImmediate(resolve))
 function deferred<T = void>() {
 	let resolve!: (value: T) => void

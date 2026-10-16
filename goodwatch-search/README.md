@@ -2,7 +2,9 @@
 
 The compose file and the deploy script for the two search roles on vector1. A search role is the webapp image
 started with `WEBAPP_ROLE=search`: it holds the query models and the indexes, and the proxy sends it
-`POST /api/combined-search` and `GET /api/command-palette`.
+`POST /api/combined-search` and `GET /api/command-palette`. The repository configuration also includes exact `/mcp`
+routing. Install that extension separately after the roles run an MCP-capable image; see
+[the MCP runbook](../docs/implementation/mcp-ranked-search.md).
 
 - What a role is and loads: [docs/search-role.md](../docs/search-role.md).
 - The first setup, step by step, with a check and an undo each:

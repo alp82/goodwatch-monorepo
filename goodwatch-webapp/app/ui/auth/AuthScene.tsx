@@ -7,9 +7,11 @@ import { type AuthPoster, PosterSpotlight } from "~/ui/auth/PosterSpotlight"
 
 const HEADLINE = "Somewhere in here is your next favorite."
 
-// The fields and the main button of the forms inside the card.
-export const AUTH_INPUT_CLASS =
-	"w-full rounded-xl border border-white/10 bg-white/[0.06] px-4 py-3 text-white placeholder-white/30 transition focus:border-transparent focus:outline-none focus:ring-2 focus:ring-amber-400/70"
+// The fields and the main button of the forms inside the card. A field the server turned away gets a red border.
+const AUTH_INPUT_BASE =
+	"w-full rounded-xl border bg-white/[0.06] px-4 py-3 text-white placeholder-white/30 transition focus:border-transparent focus:outline-none focus:ring-2 focus:ring-amber-400/70"
+export const authInputClass = (error?: boolean) => `${AUTH_INPUT_BASE} ${error ? "border-red-500" : "border-white/10"}`
+export const AUTH_INPUT_CLASS = authInputClass()
 export const AUTH_SUBMIT_CLASS =
 	"flex w-full cursor-pointer items-center justify-center rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 px-4 py-3 font-semibold text-white shadow-lg shadow-amber-900/40 transition duration-200 hover:from-amber-500 hover:to-orange-500 disabled:cursor-not-allowed disabled:opacity-60"
 const EASE = [0.22, 1, 0.36, 1] as const
@@ -66,7 +68,7 @@ function AuroraCard({ children }: { children: React.ReactNode }) {
 	)
 }
 
-export function AuthScene({ posters, children }: { posters: AuthPoster[]; children: React.ReactNode }) {
+export function AuthScene({ posters, children, aside }: { posters: AuthPoster[]; children: React.ReactNode; aside?: React.ReactNode }) {
 	return (
 		<div className="relative min-h-[max(calc(100svh-4rem),680px)] w-full overflow-hidden bg-gray-950">
 			<style dangerouslySetInnerHTML={{ __html: SCENE_CSS }} />
@@ -75,7 +77,7 @@ export function AuthScene({ posters, children }: { posters: AuthPoster[]; childr
 			<PosterSpotlight posters={posters} />
 			<div className="pointer-events-none absolute inset-0 bg-gradient-to-l from-gray-950 via-gray-950/40 to-transparent" />
 			<div className="pointer-events-none relative mx-auto flex min-h-[max(calc(100svh-4rem),680px)] max-w-7xl items-center justify-center gap-10 px-4 py-10 sm:px-8 lg:justify-between">
-				<Headline />
+				{aside ? <div className="hidden lg:block">{aside}</div> : <Headline />}
 				<div className="pointer-events-auto flex w-full max-w-md justify-center">
 					<AuroraCard>{children}</AuroraCard>
 				</div>

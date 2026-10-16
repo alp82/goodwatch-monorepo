@@ -276,6 +276,8 @@ function MemberSession({
 			// biome-ignore lint/suspicious/noExplicitAny: a member who does not exist; only the id is read.
 			user: { id: HARNESS_MEMBER } as any,
 			loading: false,
+			betterAuth: false,
+			refreshUser: () => {},
 		}),
 		[],
 	)
