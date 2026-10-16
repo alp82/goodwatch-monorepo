@@ -283,10 +283,21 @@ export function DiscoverPage({
 	// Best match is the sort in use: For you shows on, with nothing to move.
 	const bestMatch = sortShown(filters.sort, searching, taste) === "match"
 
-	// Sides of you: the rows, or the side the grid is narrowed to. Turning For you off (or searching) leaves the side.
-	const rows = stale ? null : sideRowsOf(first)
+	// Sides of you: the rows, or the side the grid is narrowed to, while the grouping applies (For you on, or Best match
+	// as shown). While the last answer, laid out with rows, stands in for a grid, a spinner waits for the new one.
+	// Turning For you off, a search, or Best match falling back leaves the side.
+	const grouped = groupsByTaste({
+		searching,
+		forYou: forYou.on,
+		sort: sortShown(filters.sort, searching, taste),
+	})
+	const layoutPending =
+		!grouped && Boolean(first?.sides) && browse.isPlaceholderData
+	const rows = stale || layoutPending ? null : sideRowsOf(first)
 	const narrowed =
-		!stale && first?.sides?.layout === "side" ? first.sides.side : null
+		!stale && !layoutPending && first?.sides?.layout === "side"
+			? first.sides.side
+			: null
 	const goToSide = (id: string | null) => {
 		setParams(
 			(previous) => {
@@ -301,11 +312,6 @@ export function DiscoverPage({
 		window.scrollTo({ top: 0 })
 	}
 	useEffect(() => {
-		const grouped = groupsByTaste({
-			searching,
-			forYou: forYou.on,
-			sort: bestMatch ? "match" : filters.sort,
-		})
 		if (side === null || grouped || !first || stale) return
 		setParams(
 			(previous) => {
@@ -315,16 +321,7 @@ export function DiscoverPage({
 			},
 			{ replace: true, preventScrollReset: true },
 		)
-	}, [
-		side,
-		searching,
-		forYou.on,
-		bestMatch,
-		filters.sort,
-		first,
-		stale,
-		setParams,
-	])
+	}, [side, grouped, first, stale, setParams])
 	const applied = Boolean(first?.forYou.applied) && forYou.on
 	const movedUp = applied && !stale ? (first?.movedUp ?? 0) : 0
 	const leanings = first?.explanation?.leanings ?? []
@@ -467,7 +464,7 @@ export function DiscoverPage({
 						<p className="py-16 text-center text-gray-400">
 							Discover couldn't load right now. Try again in a moment.
 						</p>
-					) : !first ? (
+					) : !first || layoutPending ? (
 						<div className="flex justify-center py-16">
 							<Spinner size="large" />
 						</div>
