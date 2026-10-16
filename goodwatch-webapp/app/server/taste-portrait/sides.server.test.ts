@@ -296,6 +296,56 @@ describe("buildSides", () => {
 		}
 	})
 
+	it("leaves out a loved title its side's name doesn't describe", () => {
+		// A side with many strong attributes: a title can be close to it overall and still lack one its name claims.
+		const WARM = {
+			wonder: 2.2,
+			hopefulness: 2,
+			wholesome: 1.8,
+			nostalgia: 1.6,
+			family_dynamics: 1.6,
+			coming_of_age: 1.5,
+			fantasy: 1.5,
+		}
+		const build = (extra: RatedTitle[]) =>
+			buildSides(
+				person(
+					[
+						...Array.from({ length: 30 }, () => rated(CRIME, 9)),
+						...Array.from({ length: 30 }, () => rated(WARM, 9)),
+						...Array.from({ length: 10 }, () => rated({}, 5)),
+						...extra,
+					],
+					[
+						...Array.from({ length: 160 }, () => unseen(CRIME)),
+						...Array.from({ length: 160 }, () => unseen(WARM)),
+					],
+				),
+			)
+		const warmSide = (view: ReturnType<typeof build>) =>
+			view.sides.find((side) => side.attributes.some((a) => a.key in WARM))
+		const plain = warmSide(build([]))
+		assert.ok(plain)
+		const claimed = plain.attributes.slice(0, 2).map((a) => a.key)
+		// Like the side in all but one claimed attribute, which it is far below the catalog on (John Wick in a hopeful side).
+		const against = rated({ ...WARM, [claimed[1]]: -2 }, 9)
+		const alike = rated(WARM, 9)
+		assert.equal(warmSide(build([alike]))?.count, plain.count + 1)
+		assert.equal(warmSide(build([against]))?.count, plain.count)
+	})
+
+	it("orders the sides by how many titles they keep", () => {
+		const { titles, pool } = twoStrands()
+		titles.push(...Array.from({ length: 8 }, () => rated(CRIME, 9)))
+		const view = buildSides(person(titles, pool))
+		const counts = view.sides.map((side) => side.count)
+		assert.deepEqual(
+			counts,
+			[...counts].sort((a, b) => b - a),
+		)
+		assert.equal(view.openFirst, view.sides[0].id)
+	})
+
 	it("shows one title of a franchise among a side's titles", () => {
 		const { titles, pool } = twoStrands()
 		// Three films that read alike, rated 10.

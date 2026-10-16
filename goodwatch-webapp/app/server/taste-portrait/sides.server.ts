@@ -39,8 +39,10 @@ const EDGE_MIN_SUGGESTIONS = 4
 const MAX_SIDES = 5
 // A side holds together when its titles are, on average, at least this close to its center.
 const HOLDS_TOGETHER = 0.55
-// A loved title this far from its side's center fits no side and is left out.
-const FITS_NO_SIDE = 0.15
+// A loved title less close than this to its side's center fits no side and is left out.
+const FITS_NO_SIDE = 0.3
+// A title this far below the catalog on an attribute a side's name claims (z) is not described by that name.
+const AGAINST_NAME = -1
 // Candidates for "You're here": the view keeps four after leaving out a franchise's second title.
 const HERE = 8
 // Titles above z 1.2 on an attribute carry it strongly.
@@ -220,7 +222,10 @@ function standout(center: Vec, others: Vec[]) {
  * attribute (an adjective from the other, the noun from the World one), else "Hopeful, heartwarming stories", and two
  * kinds of humor as one: "Physically and situationally funny stories".
  */
-function sideName(order: ReturnType<typeof standout>, taken: Set<string>) {
+function sideName(
+	order: ReturnType<typeof standout>,
+	taken: Set<string>,
+): { name: string; keys: string[] } {
 	for (let shift = 0; shift < 4; shift++) {
 		const a = order[0]
 		const b = order[1 + shift]
@@ -235,12 +240,18 @@ function sideName(order: ReturnType<typeof standout>, taken: Set<string>) {
 				: `${capitalize(x)}, ${y} stories`
 		if (!taken.has(name)) {
 			taken.add(name)
-			return name
+			return { name, keys: [a.key, b.key] }
 		}
 	}
 	const fallback = capitalize(noun(order[0].key))
 	taken.add(fallback)
-	return fallback
+	return { name: fallback, keys: [order[0].key] }
+}
+
+/** The side's titles its name describes: none strongly against an attribute the name claims. */
+function describedBy(members: RatedTitle[], keys: string[]) {
+	const at = keys.map((key) => KEYS.indexOf(key))
+	return members.filter((r) => at.every((k) => r.z[k] >= AGAINST_NAME))
 }
 
 /** The most typical titles among the best rated, one per franchise (a franchise's films read alike). */
@@ -638,20 +649,30 @@ export function buildSides(
 	const groups = group(loved, person)
 	if (groups.length < 2) return empty
 
-	const centers = groups.map((g) => g.center)
+	const groupCenters = groups.map((g) => g.center)
 	const taken = new Set<string>()
-	const drafts: SideDraft[] = groups.map((g, i) => ({
-		id: `side-${i + 1}`,
-		name: sideName(
+	// Each side keeps the titles its name describes; a side left with fewer than two goes.
+	const named = groups.flatMap((g, i) => {
+		const { name, keys } = sideName(
 			standout(
 				g.center,
-				centers.filter((_, j) => j !== i),
+				groupCenters.filter((_, j) => j !== i),
 			),
 			taken,
-		),
-		center: g.center,
-		members: g.members,
+		)
+		const members = describedBy(g.members, keys)
+		return members.length >= 2 ? [{ name, center: g.center, members }] : []
+	})
+	if (named.length < 2) return empty
+	named.sort(
+		(a, b) =>
+			b.members.length - a.members.length || a.name.localeCompare(b.name),
+	)
+	const drafts: SideDraft[] = named.map((g, i) => ({
+		id: `side-${i + 1}`,
+		...g,
 	}))
+	const centers = drafts.map((d) => d.center)
 
 	const stepsTaken = new Set<string>()
 	const bridged = new Set<string>()
