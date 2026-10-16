@@ -12,12 +12,7 @@ export const streaming: Record<string, PageData> = {
 			streamingPreset: "custom",
 			withStreamingProviders: "8",
 		},
-		faq: [
-			{
-				q: "",
-				a: "",
-			},
-		],
+		faq: [],
 	},
 	"amazon-prime": {
 		type: "all",
@@ -30,12 +25,7 @@ export const streaming: Record<string, PageData> = {
 			streamingPreset: "custom",
 			withStreamingProviders: "9",
 		},
-		faq: [
-			{
-				q: "",
-				a: "",
-			},
-		],
+		faq: [],
 	},
 	"disney-plus": {
 		type: "all",
@@ -48,12 +38,7 @@ export const streaming: Record<string, PageData> = {
 			streamingPreset: "custom",
 			withStreamingProviders: "337",
 		},
-		faq: [
-			{
-				q: "",
-				a: "",
-			},
-		],
+		faq: [],
 	},
 	// hulu: {
 	// 	type: "all",

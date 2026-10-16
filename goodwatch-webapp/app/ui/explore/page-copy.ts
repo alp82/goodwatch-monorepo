@@ -86,7 +86,7 @@ export const explorePageCopy = (
 			heading: capitalize(`${typeWord} on ${provider}`),
 			intro: withDescription(
 				pageData,
-				`The most popular ${typeWord} included with ${provider} or free to stream there come first. Open a title to see its ratings and every service that streams it.`,
+				`The most popular ${typeWord} you can stream on ${provider} come first. Open a title to see its ratings and every service that streams it.`,
 			),
 		}
 	}

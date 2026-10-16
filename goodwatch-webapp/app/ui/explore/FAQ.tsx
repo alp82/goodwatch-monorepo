@@ -6,6 +6,9 @@ interface FAQProps {
 }
 
 export default function FAQ({ faq }: FAQProps) {
+	const answered = faq.filter((item) => item.q.trim() && item.a.trim())
+	if (!answered.length) return null
+
 	return (
 		<div className="max-w-7xl mx-auto px-8 py-12">
 			<h2 className="text-4xl font-serif font-medium text-gray-100 mb-12">
@@ -13,7 +16,7 @@ export default function FAQ({ faq }: FAQProps) {
 			</h2>
 
 			<div className="space-y-12">
-				{faq.map((item) => (
+				{answered.map((item) => (
 					<div key={item.q} className="group">
 						<h3 className="text-xl font-semibold text-gray-100 mb-4 tracking-tight">
 							{item.q}
