@@ -351,9 +351,10 @@ For each target:
    Results must be 0, 0, false. Check target StopSignal is unset/SIGTERM/15. If still running:
 
    ```bash
-   ssh root@10.0.0.12 systemd-run --unit=gw-crate-stop-562-12-$(date -u +%H%M%S) --property=Type=exec --property=TimeoutStopSec=infinity --property=SendSIGKILL=no /usr/bin/docker stop --timeout=-1 crate-02
+   stop_unit="gw-crate-stop-562-12-$(date -u +%H%M%S)"
+   ssh root@10.0.0.12 systemd-run "--unit=$stop_unit" --property=Type=exec --property=TimeoutStopSec=infinity --property=SendSIGKILL=no /usr/bin/docker stop --timeout=-1 crate-02
    # Poll through an independent SSH session; do not stop/cancel this unit.
-   ssh root@10.0.0.12 systemctl show <recorded-unit-name> -p ActiveState -p Result -p ExecMainStatus
+   ssh root@10.0.0.12 systemctl show "$stop_unit" -p ActiveState -p Result -p ExecMainStatus
    ssh root@10.0.0.12 docker inspect crate-02 --format '{{.State.Status}} {{.State.ExitCode}} {{.State.OOMKilled}}'
    ```
 
