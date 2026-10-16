@@ -1,5 +1,5 @@
-// Sides of you: the fewest groups of what the person loves (2 to 5) that each hold together, named by what sets each
-// apart from the others, each with the places just past it (its edges) and More of this. Lists of unseen titles inside
+// Taste groups (CONTEXT.md; "sides" in code): the fewest groups of what the person loves (2 to 5) that each hold together, named by what sets each
+// apart from the others, each with what is close to it (its edges, Close to your taste) and More of this. Lists of unseen titles inside
 // a side are ordered by the person's personal order when it is on for them: sides group, personal order ranks.
 import { MOOD_KEYS, type MoodKey } from "~/domain/moods"
 import type { TitleKey } from "~/server/title-snapshot/index.server"
@@ -496,7 +496,7 @@ function placeEdges(
 			toward: null,
 			why:
 				avg === null
-					? "Common right next to this side, and you haven't rated any of it yet."
+					? `Common right next to ${side.name.toLowerCase()}, and you haven't rated any of it yet.`
 					: `You've rated ${titles(rated.length)} like this, ${round1(avg)} on average. Usually you give ${round1(person.mu)}.`,
 			average: avg === null ? null : round1(avg),
 			count: rated.length,
@@ -585,7 +585,7 @@ function stepEdges(
 			name: `+ ${capitalize(word)}`,
 			tail: `but ${word}`,
 			toward: null,
-			why: `Near this side, you rate ${word} titles ${round1(step.avg)} on average (usually ${round1(person.mu)}), yet ${step.carriers === 0 ? "none" : share < 1 ? "less than 1%" : `only ${share}%`} of this side ${share === 1 ? "is" : "are"}.`,
+			why: `Close to ${side.name.toLowerCase()}, you rate ${word} titles ${round1(step.avg)} on average (usually ${round1(person.mu)}), yet ${step.carriers === 0 ? "none" : share < 1 ? "less than 1%" : `only ${share}%`} of your ${side.name.toLowerCase()} titles are ${word}.`,
 			average: round1(step.avg),
 			count: step.hit.length,
 			rated: ratedKeys(step.hit),
@@ -639,8 +639,8 @@ function bridgeEdge(
 		toward: other.id,
 		why:
 			avg === null
-				? "Titles right between these two sides. You haven't rated any yet."
-				: `You've rated ${titles(rated.length)} between these two sides, ${round1(avg)} on average. Usually you give ${round1(person.mu)}.`,
+				? "Titles right between the two. You haven't rated any yet."
+				: `You've rated ${titles(rated.length)} between the two, ${round1(avg)} on average. Usually you give ${round1(person.mu)}.`,
 		average: avg === null ? null : round1(avg),
 		count: rated.length,
 		rated: ratedKeys(rated),

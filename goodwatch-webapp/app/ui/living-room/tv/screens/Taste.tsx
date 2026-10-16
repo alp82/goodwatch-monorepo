@@ -7,6 +7,7 @@
 import { type ReactNode, useRef } from "react"
 import { useTasteQuiz } from "~/ui/taste-quiz/use-taste-quiz"
 import { tmdbImageUrl } from "~/utils/tmdb-image"
+import { TASTE_GROUPS_NAME } from "../../../taste/taste-groups-name"
 import { TitleList } from "../TitleList"
 import {
 	Frame,
@@ -18,12 +19,7 @@ import {
 	useTvView,
 } from "../kit"
 import type { TvScreen } from "../tv-machine"
-import {
-	type TvSide,
-	type TvTasteOnScreen,
-	sidesCrumb,
-	startWords,
-} from "../tv-taste"
+import { type TvSide, type TvTasteOnScreen, startWords } from "../tv-taste"
 import {
 	type TvTasteRead,
 	type TvTasteReport,
@@ -216,7 +212,7 @@ function Sides({
 	)
 	const frame = {
 		name: "Taste",
-		crumb: sidesCrumb(sides.length),
+		crumb: TASTE_GROUPS_NAME.title,
 		items,
 		art: shown?.backdrop
 			? tmdbImageUrl(shown.backdrop, backdropSize(canvas))
@@ -288,12 +284,12 @@ export default function Taste({
 			<TitleList
 				name="Taste"
 				items={items}
-				crumb={shown?.name ?? "A side of you"}
+				crumb={shown?.name ?? "In your taste"}
 				titles={shown?.titles ?? []}
 				empty={
 					taste.state === "reading"
 						? "Reading your taste."
-						: "This side of you isn't there any more."
+						: "This isn't in your taste any more."
 				}
 			/>
 		)

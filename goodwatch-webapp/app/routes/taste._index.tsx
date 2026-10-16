@@ -39,7 +39,7 @@ export const meta: MetaFunction<typeof loader> = () => {
 	const pageMeta: PageMeta = {
 		title: "Your taste - GoodWatch",
 		description:
-			"The sides of your movie and TV taste, the places just past them, and more of what you love on your services.",
+			"The movies and shows you love, grouped by what they share, what's close to your taste, and more of what you love on your services.",
 		url: "https://goodwatch.app/taste",
 		image: "https://goodwatch.app/images/heroes/hero-movies.png",
 		alt: "Your taste on GoodWatch",
@@ -80,7 +80,7 @@ export default function TasteRoute() {
 }
 
 /**
- * Sides of you, opened on the side the address asks for (`?side=`, ui/taste/side-address.ts). An address that names
+ * The taste groups (CONTEXT.md), opened on the side the address asks for (`?side=`, ui/taste/side-address.ts). An address that names
  * no side of the person's is the page as without one, and loses the parameter. Kept in this file: the address's
  * module then has one importer and stays out of the shell every page loads.
  */

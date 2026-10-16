@@ -6,6 +6,7 @@ import { execFileSync } from "node:child_process"
 import { test } from "node:test"
 import { scoreLabels } from "../../../utils/ratings.ts"
 import { RATING_LEVELS } from "../../taste-quiz/quiz-flow.ts"
+import { TASTE_GROUPS_NAME } from "../../taste/taste-groups-name.ts"
 
 type Drawn = { items: string[]; focus: string; html: string }
 type Editions = { desktop: Drawn; phone: Drawn }
@@ -150,17 +151,18 @@ test("Taste while the portrait is read keeps its one key", () => {
 	}
 })
 
-test("the sides are tiles, two to five of them, counted in the bar, with Rate more after them", () => {
+test("the sides are tiles, two to five of them, under the view's name in the bar, with Rate more after them", () => {
 	const { two, three, four, five } = rendered.taste
-	for (const [screen, word, sides] of [
-		[two, "Two", 2],
-		[three, "Three", 3],
-		[four, "Four", 4],
-		[five, "Five", 5],
+	for (const [screen, sides] of [
+		[two, 2],
+		[three, 3],
+		[four, 4],
+		[five, 5],
 	] as const)
 		for (const edition of EDITIONS) {
 			const { html, items } = screen[edition]
-			assert.match(html, new RegExp(`>${word} sides of you<`))
+			assert.ok(html.includes(`>${TASTE_GROUPS_NAME.title}<`))
+			assert.ok(!/\bsides? of you\b/i.test(html))
 			assert.equal(
 				items.filter((item) => item.startsWith("side:")).length,
 				sides,
@@ -240,7 +242,7 @@ test("a side's screen lists the titles of it the person rated, under the side's 
 		assert.deepEqual(drawn(sideGone[edition].items), BAR)
 		assert.match(
 			sideGone[edition].html,
-			/>This side of you isn&#x27;t there any more\.</,
+			/>This isn&#x27;t in your taste any more\.</,
 		)
 	}
 	assert.equal(count(side.desktop.html, "/t/p/w1280/backdrop-10.jpg"), 1)

@@ -14,6 +14,7 @@ import type React from "react"
 import type { SignalWords } from "~/domain/new-episodes-signal"
 import { landedWords, showsWords } from "~/domain/newly-available-words"
 import { myListsPath } from "~/ui/share-card/links"
+import { TASTE_GROUPS_NAME } from "~/ui/taste/taste-groups-name"
 import { useUser } from "~/utils/auth"
 import { useOpenAfterMount } from "~/utils/first-use"
 import { useNavigation } from "./NavigationContext"
@@ -288,7 +289,7 @@ function HubContent() {
 				/>
 				<Tile
 					destination={d.taste}
-					subtitle="Sides of you"
+					subtitle={TASTE_GROUPS_NAME.title}
 					here={here === "taste"}
 				/>
 				<Tile

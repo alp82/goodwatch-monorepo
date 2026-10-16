@@ -1,7 +1,8 @@
 import { NavLink } from "@remix-run/react"
+import { TASTE_GROUPS_NAME } from "../taste-groups-name"
 
 export const TASTE_TABS = [
-	{ path: "/taste", name: "Sides of you" },
+	{ path: "/taste", name: TASTE_GROUPS_NAME.tab },
 	{ path: "/taste/everyone", name: "You vs everyone" },
 	{ path: "/taste/fingerprint", name: "Fingerprint" },
 ] as const

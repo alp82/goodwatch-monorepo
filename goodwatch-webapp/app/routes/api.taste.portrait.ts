@@ -14,7 +14,7 @@ import {
 import type { GuestProgress } from "~/server/viewer.server"
 import type { TasteInteraction } from "~/ui/taste/types"
 
-// One Taste page tab's view model: ?tab=sides (Sides of you, the default), everyone (You vs everyone), or fingerprint.
+// One Taste page tab's view model: ?tab=sides (the taste groups, the default), everyone (You vs everyone), or fingerprint.
 // - Members: GET /api/taste/portrait?tab=sides
 // - Guests: POST /api/taste/portrait?tab=sides with { guest: { interactions, country, services } }, the guest
 //   progress their browser holds. With fewer than 5 guest ratings, the view is the sample taste. A signed-in member's

@@ -28,7 +28,6 @@ import {
 	quizTitle,
 	quizWords,
 	sideLine,
-	sidesCrumb,
 	startWords,
 	tasteContext,
 	tasteKnown,
@@ -204,14 +203,6 @@ describe("the sides on the TV", () => {
 			sides: ["a", "b", "c", "d", "e", "f"].map((id) => side(id, id, [1])),
 		})
 		assert.equal(tvSides(six).length, 5)
-	})
-
-	it("are counted in words: there are two to five, not always three", () => {
-		assert.equal(sidesCrumb(2), "Two sides of you")
-		assert.equal(sidesCrumb(3), "Three sides of you")
-		assert.equal(sidesCrumb(4), "Four sides of you")
-		assert.equal(sidesCrumb(5), "Five sides of you")
-		assert.equal(sidesCrumb(1), "One side of you")
 	})
 
 	it("a side's line is its first three attributes, or nothing", () => {

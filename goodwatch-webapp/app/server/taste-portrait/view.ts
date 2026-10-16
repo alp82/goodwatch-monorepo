@@ -67,7 +67,7 @@ interface ViewBase {
 	titles: Record<string, PortraitTitle>
 }
 
-// ---------- Sides of you ----------
+// ---------- Taste groups ("sides" in code) ----------
 
 export interface SideEdge {
 	id: string

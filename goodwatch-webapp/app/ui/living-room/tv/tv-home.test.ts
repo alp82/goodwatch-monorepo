@@ -2,6 +2,7 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import type { TitleCard } from "~/server/title-cards.server"
+import { TASTE_GROUPS_NAME } from "../../taste/taste-groups-name.ts"
 import type { StartTitle } from "../living-room-data"
 import {
 	type TvHomeData,
@@ -151,6 +152,10 @@ test("a member's Tonight and My shows come with the loader, and need no pool", (
 	)
 	assert.deepEqual(apps[0].art, { kind: "backdrop", path: "/backdrop-10.jpg" })
 	assert.equal(apps[0].line, "One pick at a time, your next episode first.")
+	assert.equal(
+		homeApps(member, null, true)[3].line,
+		`${TASTE_GROUPS_NAME.title}.`,
+	)
 	assert.equal(apps[4].name, "My shows")
 	// The first show to continue is Tonight's pick: the My shows tile shows the next show.
 	assert.deepEqual(apps[4].art, { kind: "backdrop", path: "/backdrop-11.jpg" })

@@ -13,6 +13,7 @@ import { copyMediaPresentation } from "../../../utils/media-presentation.ts"
 // the apps stand for them.
 import type { TitleCard } from "~/server/title-cards.server"
 import { QUIZ_GOAL } from "../../taste-quiz/quiz-flow.ts"
+import { TASTE_GROUPS_NAME } from "../../taste/taste-groups-name.ts"
 import type { StartTitle } from "../living-room-data"
 import type { TvListTitle } from "./TitleList.tsx"
 import {
@@ -349,7 +350,7 @@ export function homeApps(
 		explorer: { line: "Sail a small map of islands.", art: { kind: "map" } },
 		taste: {
 			line: taste
-				? "The sides of you."
+				? `${TASTE_GROUPS_NAME.title}.`
 				: `Rate ${QUIZ_GOAL} titles, get picks made for you.`,
 			art: { kind: "print" },
 		},

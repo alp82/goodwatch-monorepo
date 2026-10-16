@@ -166,12 +166,6 @@ export function tvSides(view: Pick<SidesView, "sides" | "titles">): TvSide[] {
 	}))
 }
 
-const COUNT = ["No", "One", "Two", "Three", "Four", "Five"]
-
-/** "Three sides of you": there are two to five, not always three. */
-export const sidesCrumb = (count: number) =>
-	`${COUNT[count] ?? count} ${count === 1 ? "side" : "sides"} of you`
-
 /** What Taste says before the person has five scores. */
 export function startWords(rated: number): {
 	headline: string

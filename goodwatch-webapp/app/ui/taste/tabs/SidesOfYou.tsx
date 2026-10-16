@@ -1,6 +1,7 @@
-// Sides of you: the contradiction in the person's taste as the first line, the sides picked from poster chips, each
-// side as "You're here" next to "Just past it" (a place right next to it they've barely tried, a step from it, or the
-// way toward another side), then "More of this" on their services and a way into Watch next with the side's moods.
+// The taste groups (CONTEXT.md; in code still "sides"): the contradiction in the person's taste as the first line, the
+// groups picked from poster chips, each as "In your taste" next to "Close to your taste" (a place right next to it
+// they've barely tried, a step from it, or the way toward another group), then "More of this" on their services and a
+// way into Watch next with the group's moods. Members never see a noun for a group, only its name.
 // The route says which side opens first (the address's `?side=`).
 import { Link } from "@remix-run/react"
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
@@ -12,6 +13,7 @@ import type {
 	SidesView,
 } from "~/server/taste-portrait/view"
 import { getFingerprintMeta } from "~/ui/fingerprint/fingerprintMeta"
+import { TASTE_GROUPS_NAME } from "../taste-groups-name"
 import {
 	RatedPoster,
 	type ServicesFilter,
@@ -63,8 +65,8 @@ export function SidesOfYou({
 					</h1>
 				)}
 				<p className="mt-3 max-w-2xl text-gray-400">
-					{view.sides.length} sides of what you rate highly, and for each one,
-					the places just past it you've barely tried.
+					What you rate highly, grouped by what it shares, and close to each,
+					what you've barely tried.
 				</p>
 				<SidePicker
 					sides={view.sides}
@@ -103,7 +105,8 @@ export function SidesOfYou({
 							/>
 						) : (
 							<div className="flex items-center rounded-2xl border border-dashed border-gray-700 p-8 text-gray-400">
-								Nothing you've barely tried sits close to this side yet.
+								Nothing you've barely tried is close to {lowerFirst(side.name)}{" "}
+								yet.
 							</div>
 						)}
 					</div>
@@ -163,7 +166,7 @@ function SidePicker({
 	return (
 		<div
 			role="tablist"
-			aria-label="Sides of your taste"
+			aria-label={TASTE_GROUPS_NAME.title}
 			className="-mx-4 mt-8 flex gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] md:mx-0 md:px-0 [&::-webkit-scrollbar]:hidden"
 		>
 			{sides.map((s, i) => {
@@ -232,7 +235,7 @@ function Here({ side, titles }: { side: Side; titles: Titles }) {
 	return (
 		<Panel image={titlesOf(titles, [side.image])[0]} tone="amber">
 			<div>
-				<p className="text-sm font-semibold text-amber-300">You're here</p>
+				<p className="text-sm font-semibold text-amber-300">In your taste</p>
 				<h2 className="mt-1 text-3xl font-bold leading-tight md:text-4xl">
 					{side.name}
 				</h2>
@@ -280,7 +283,9 @@ function JustPastIt({
 		<Panel image={titlesOf(titles, [edge.image])[0]} tone="sky">
 			<div>
 				<div className="flex flex-wrap items-center gap-2">
-					<p className="text-sm font-semibold text-sky-300">Just past it</p>
+					<p className="text-sm font-semibold text-sky-300">
+						Close to your taste
+					</p>
 					{edges.length > 1 &&
 						edges.map((e) => (
 							<button

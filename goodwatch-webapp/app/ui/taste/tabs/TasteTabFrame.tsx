@@ -9,7 +9,7 @@ import { useTasteView } from "./useTasteView"
 const RATE_PATH = QUIZ_PATH
 
 const EMPTY_LINES: Record<PortraitTab, string> = {
-	sides: "Rate a few more titles you love to see the sides of your taste.",
+	sides: "Rate a few more titles you love to see what they have in common.",
 	everyone:
 		"Rate a few more titles you love to see where you and everyone part ways.",
 	fingerprint: "Rate a few more titles you love to see your fingerprint.",

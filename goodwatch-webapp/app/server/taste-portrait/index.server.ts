@@ -1,4 +1,4 @@
-// The Taste page's portrait: one view model per tab (Sides of you, You vs everyone, Fingerprint), computed from the
+// The Taste page's portrait: one view model per tab (taste groups, You vs everyone, Fingerprint), computed from the
 // person's ratings, the title snapshot, and the catalog statistics. It reads no people or credits: the only Crate reads
 // are the viewer context (the person's own rows) and the display fields of the titles a view shows.
 //
