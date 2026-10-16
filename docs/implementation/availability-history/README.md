@@ -39,7 +39,11 @@ are always unknown. Do not infer precision just from timestamp arithmetic.
 For a licensed arrival, the current payload must have a valid, fresh provider
 proof showing the offer, and the previous UTC day's fresh proof must show its
 absence. A drop must likewise have yesterday's presence and today's absence.
-The current observation's day must match the API read day. Multiple reads today
+TMDB supplies the observation timestamp only when it lists an arriving offer or
+includes the country of a drop. Otherwise use the verified scrape's timestamp,
+then copy time; these fallbacks cannot establish exact days. An exact drop also
+requires the current proof to omit the offer. The current observation's day must
+match the API read day. Multiple reads today
 retain yesterday's proof. A two-minute gap over UTC midnight qualifies; a gap of
 two calendar days, a cached read, legacy payloads without proof, a failed request,
 or an unrelated source timestamp does not. There is no minus-one correction.
@@ -104,10 +108,12 @@ or changes a schedule.
 1. Re-review the fix commit. **Do not push to main yet: pushing deploys the writer.**
 2. Run `goodwatch-flows/scripts/backfill_availability_history.py` with workspace
    credentials for a SELECT-only dry run. Record all six grouped counts and size.
-3. Disable both existing Windmill schedules: `f/sync/copy/tmdb_streaming`
-   (02:00, 08:00, 14:00, 20:00 UTC) and `f/priority/crawl_all` (every 20 minutes).
-   Wait for all active jobs from both callers to finish, including targeted copies.
-   Keep other offer-deletion jobs/manual publishes paused during the baseline too.
+3. Disable all four schedules identified in the re-review:
+   `f/sync/copy/tmdb_streaming` (02:00, 08:00, 14:00, 20:00 UTC),
+   `f/priority/crawl_all` (every 20 minutes), `f/sync/copy/tmdb_details`
+   (04:00 and 16:00 UTC), and `f/sync/copy/orphaned_titles` (Sundays 11:00 UTC).
+   Wait for all active jobs from these callers to finish, including targeted copies.
+   Keep manual publishes paused during the baseline too.
 4. Create only [ddl.sql](ddl.sql), then compare `information_schema.columns`.
    Do not run the broad schema initializer merely to create this table.
 5. Run the reviewed script with `--apply`. It runs **six INSERT SELECT statements**
@@ -122,7 +128,8 @@ or changes a schedule.
    deletion helper, details queue/fetch, and proof modules match main.
 7. Re-enable `f/sync/copy/tmdb_streaming` first. Watch a full run, its duration,
    pending markers/errors, and non-backfill row counts. Then re-enable
-   `f/priority/crawl_all`. No new flow or schedule is needed for this ticket.
+   `f/priority/crawl_all`, `f/sync/copy/tmdb_details`, and
+   `f/sync/copy/orphaned_titles`. No new flow or schedule is needed for this ticket.
 8. After daily recent-release rechecks (13:00 UTC) have run on two days, inspect
    exact title-derived stays. Member-awaited rechecks also provide fresh evidence.
 
@@ -130,9 +137,10 @@ The baseline can be retried before writer activation (deterministic key plus
 ON CONFLICT DO NOTHING). It refuses application after writer-created or closed
 stays exist, and refuses source rows without `created_at`.
 
-For rollback, pause both schedules and wait for active jobs, revert through the
-normal main deployment, then re-enable both. Preserve history. Before re-enabling
-the history writer after rollback or repairing a pause gap, pause both callers
+For rollback, pause all four schedules and wait for active jobs, revert through the
+normal main deployment, then re-enable all four. Preserve history; never drop the
+table while the new writer/deletion code is live. Before re-enabling the history
+writer after rollback or repairing a pause gap, pause all four schedules
 again and use `--reconcile` for a **SELECT-only preview**, then
 `--reconcile --apply` after reviewing counts. Reconcile closes open stays whose
 offer is gone and opens unknown stays for offers without an open stay, in batches
@@ -303,3 +311,19 @@ paired rounds (200 titles, 10,000 offers). Raw samples are in `evidence.json`:
 | Replace 1% of offers | 759.3 ms | 812.9 ms | 8.16% |
 
 These remain local measurements, not production timing.
+
+## Re-review fixes for 39986ccf
+
+The scrape-only arrival/drop regressions now use the scrape day instead of an
+unrelated old TMDB day. Regression tests reproduced a 20-day backdated arrival and
+a scrape-only drop before the fix. The defensive exact-drop check again requires
+absence from the current API proof. Reconcile joins bind both media and offer-type
+filters on both sides; local Crate `EXPLAIN` confirms filtered `Collect` operations
+on both inputs of each `HashJoin[LEFT]`.
+
+Rebased cleanly onto `origin/main` at `3e75921e`. The full Python suite after rebase
+ran **1,533 tests: 1,490 passed, 42 skipped, one pre-existing social-table deletion
+coverage failure** described above. Local Crate integration tests passed. No
+production access, deployment, push, or schedule change was performed for this
+re-review; the owner runs the rollout. The four-schedule pause/resume sequence
+above incorporates the re-review's operations findings.

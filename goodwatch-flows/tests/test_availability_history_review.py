@@ -43,6 +43,54 @@ class HistoryReviewTests(unittest.TestCase):
     observe = fixtures.HistoryTests.observe
     publish = fixtures.HistoryTests.publish
 
+    def test_scrape_only_arrival_uses_scrape_day_not_twenty_day_old_tmdb_read(self):
+        from test_provider_identity import clickout_url
+        self.observe('2026-09-25T12:00:00', ())
+        self.db.tmdb_tv_providers.insert_one({'tmdb_id': 42, 'country_code': 'US',
+            'updated_at': datetime(2026, 10, 15, 12), 'streaming_links': [{
+                'stream_url': clickout_url('Netflix'), 'provider_name': 'Netflix',
+                'stream_type': 'flatrate', 'quality': 'HD'}]})
+        self.publish()
+        stay = next(iter(self.crate.history.values()))
+        self.assertEqual(stay['observed_at'], day('2026-10-15T12:00:00'))
+        self.assertEqual(stay['appeared_on'], day('2026-10-15'))
+        self.assertEqual(stay['appeared_precision'], 'unknown')
+
+    def test_scrape_only_drop_without_tmdb_country_uses_scrape_day(self):
+        from test_provider_identity import clickout_url
+        self.observe('2026-09-25T12:00:00', ())
+        self.db.tmdb_tv_details.update_one({'tmdb_id': 42}, {'$set': {'watch_providers': {'results': {}}}})
+        self.db.tmdb_tv_providers.insert_one({'tmdb_id': 42, 'country_code': 'US',
+            'updated_at': datetime(2026, 10, 14, 12), 'streaming_links': [{
+                'stream_url': clickout_url('Netflix'), 'provider_name': 'Netflix',
+                'stream_type': 'flatrate', 'quality': 'HD'}]})
+        self.publish()
+        self.db.tmdb_tv_providers.update_one({'tmdb_id': 42}, {'$set': {
+            'updated_at': datetime(2026, 10, 15, 12), 'streaming_links': []}})
+        self.publish()
+        stay = next(iter(self.crate.history.values()))
+        self.assertEqual(stay['dropped_on'], day('2026-10-15'))
+        self.assertEqual(stay['dropped_precision'], 'unknown')
+
+    def test_drop_is_not_exact_when_current_tmdb_proof_still_lists_offer(self):
+        from f.sync.availability_history import HistoryTitle, availability_key, publish_history
+        self.observe('2026-10-14T12:00:00')
+        self.publish()
+        payload = self.db.tmdb_tv_details.find_one({'tmdb_id': 42})['watch_providers']
+        previous = capture_provider_check({'id': 42, 'watch/providers': payload},
+                                           42, datetime(2026, 10, 14, 12), bypass_cache=True)
+        proof = capture_provider_check({'id': 42, 'watch/providers': payload},
+                                       42, datetime(2026, 10, 15, 12), previous=previous, bypass_cache=True)
+        details = {'watch_providers': payload, 'watch_providers_check': proof}
+        # Exercise the history boundary defensively: a caller asks to remove an
+        # offer that both fresh API reads still list.
+        title = HistoryTitle(42, details, {}, {}, self.crate.rows,
+                             [availability_key(row) for row in self.crate.rows])
+        publish_history(self.crate, 'show', [title], lambda: None)
+        stay = next(iter(self.crate.history.values()))
+        self.assertEqual(stay['dropped_on'], day('2026-10-15'))
+        self.assertEqual(stay['dropped_precision'], 'unknown')
+
     def test_backfill_clock_skew_clamps_drop_to_open_day(self):
         self.observe('2026-10-15T12:00:00')
         self.publish()

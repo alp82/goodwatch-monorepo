@@ -50,3 +50,27 @@ class BackfillTests(unittest.TestCase):
         self.assertIn(('REFRESH TABLE availability_history', None), crate.calls)
         self.assertIn('FROM availability_history', crate.calls[-1][0])
         self.assertTrue(report['counts_match'])
+
+    def test_reconcile_scopes_both_sides_of_each_join_to_the_requested_group(self):
+        spec = importlib.util.spec_from_file_location('backfill_history', SCRIPT)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        class ReadOnlyCrate:
+            def __init__(self):
+                self.calls = []
+            def select(self, sql, params=None):
+                self.calls.append((sql, params))
+                return [{'records': 0}]
+            def run(self, *args):
+                raise AssertionError('Reconcile preview must remain read-only')
+        crate = ReadOnlyCrate()
+        module.reconcile(crate)
+        self.assertEqual(len(crate.calls), 12)
+        for sql, params in crate.calls:
+            joined = 'a' if 'LEFT JOIN streaming_availability a' in sql else 'h'
+            on = sql.split(' ON ', 1)[1] if ' ON ' in sql else sql.split('ON ', 1)[1]
+            on = on.split('WHERE', 1)[0]
+            self.assertIn(f'{joined}.media_type = ?', on)
+            self.assertIn(f'{joined}.streaming_type = ?', on)
+            self.assertEqual(params[:2], params[2:])
+            self.assertEqual(len(params), 4)

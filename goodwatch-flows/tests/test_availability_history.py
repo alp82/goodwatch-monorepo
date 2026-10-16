@@ -212,7 +212,7 @@ class HistoryTests(unittest.TestCase):
 
     def test_unknown_arrival_prefers_api_day_over_newer_scrape_day(self):
         from test_provider_identity import clickout_url
-        self.observe('2026-10-12T12:00:00', ())
+        self.observe('2026-10-12T12:00:00', (8,))
         self.db.tmdb_tv_providers.insert_one({'tmdb_id': 42, 'country_code': 'US',
             'updated_at': datetime(2026, 10, 15, 12), 'streaming_links': [{
                 'stream_url': clickout_url('Netflix'), 'provider_name': 'Netflix',

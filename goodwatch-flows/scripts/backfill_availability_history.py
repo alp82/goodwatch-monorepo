@@ -1,6 +1,6 @@
 """#681 baseline and repair. SELECT-only dry run by default; --apply writes.
 
-Pause both streaming copy callers and wait for active jobs before any apply.
+Pause all four writer/deletion schedules in the rollout guide and wait for active jobs before any apply.
 Backfill precedes deployment; --reconcile repairs drift after deployment/rollback.
 Neither mode creates tables, changes schedules, or writes source offers.
 """
@@ -32,10 +32,11 @@ FROM streaming_availability WHERE media_type = ? AND streaming_type = ?
 ON CONFLICT DO NOTHING
 """
 MATCH_KEY = ' AND '.join(f'h.{column} = a.{column}' for column in KEY)
-MISSING_OFFER = f"""FROM availability_history h LEFT JOIN streaming_availability a ON {MATCH_KEY}
+MISSING_OFFER = f"""FROM availability_history h LEFT JOIN streaming_availability a
+    ON {MATCH_KEY} AND a.media_type = ? AND a.streaming_type = ?
     WHERE h.media_type = ? AND h.streaming_type = ? AND h.dropped_on IS NULL AND a.media_tmdb_id IS NULL"""
 MISSING_STAY = f"""FROM streaming_availability a LEFT JOIN availability_history h
-    ON {MATCH_KEY} AND h.dropped_on IS NULL
+    ON {MATCH_KEY} AND h.media_type = ? AND h.streaming_type = ? AND h.dropped_on IS NULL
     WHERE a.media_type = ? AND a.streaming_type = ? AND h.media_tmdb_id IS NULL"""
 
 
@@ -77,15 +78,15 @@ def backfill(connector, dry_run=True):
         report['counts_match'] = grouped_counts(actual) == grouped_counts(groups)
         if not report['counts_match']:
             print(json.dumps(report, sort_keys=True, indent=2))
-            raise ValueError('Backfill grouped counts differ from source preview; keep both schedules paused')
+            raise ValueError('Backfill grouped counts differ from source preview; keep all four schedules paused')
     print(json.dumps(report, sort_keys=True, indent=2))
     return report
 
 
 def repair_counts(connector):
     return [{'media_type': media, 'streaming_type': kind,
-             'to_close': connector.select('SELECT count(*) AS records ' + MISSING_OFFER, (media, kind))[0]['records'],
-             'to_open': connector.select('SELECT count(*) AS records ' + MISSING_STAY, (media, kind))[0]['records']}
+             'to_close': connector.select('SELECT count(*) AS records ' + MISSING_OFFER, (media, kind, media, kind))[0]['records'],
+             'to_open': connector.select('SELECT count(*) AS records ' + MISSING_STAY, (media, kind, media, kind))[0]['records']}
             for media, kind in GROUPS]
 
 
@@ -94,7 +95,7 @@ def repair_group(connector, group, close):
     source = MISSING_OFFER if close else MISSING_STAY
     alias = 'h' if close else 'a'
     while True:
-        rows = connector.select(f'SELECT {alias}.* {source} LIMIT ?', (*group, REPAIR_BATCH_SIZE))
+        rows = connector.select(f'SELECT {alias}.* {source} LIMIT ?', (*group, *group, REPAIR_BATCH_SIZE))
         if not rows:
             return changed
         now = utc_ms(datetime.utcnow())
@@ -135,7 +136,7 @@ def reconcile(connector, dry_run=True):
         remaining = repair_counts(connector)
         report['remaining'] = remaining
         if any(row['to_close'] or row['to_open'] for row in remaining):
-            raise ValueError('Reconcile still has drift; keep both schedules paused')
+            raise ValueError('Reconcile still has drift; keep all four schedules paused')
     print(json.dumps(report, sort_keys=True, indent=2))
     return report
 

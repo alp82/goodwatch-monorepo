@@ -134,6 +134,7 @@ and [owner-applied DDL](../docs/implementation/availability-history/ddl.sql).
 `scripts/backfill_availability_history.py` defaults to a SELECT-only count/size
 preview. `--apply` fills the baseline in six groups and verifies counts;
 `--reconcile` previews drift and `--reconcile --apply` repairs it with unknown
-precision. Pause both `f/sync/copy/tmdb_streaming` and `f/priority/crawl_all`
-and wait for active jobs before applying. Finish the baseline before pushing to
+precision. Pause `f/sync/copy/tmdb_streaming`, `f/priority/crawl_all`,
+`f/sync/copy/tmdb_details`, and `f/sync/copy/orphaned_titles`, and wait for active
+jobs before applying. Finish the baseline before pushing to
 main, because that push deploys the writer. See the report for the full sequence.

@@ -130,20 +130,23 @@ class Observation:
         return cls(api_at, results, offers, prior_at, set(prior.get('offers') or []),
                    fresh_prior, bool(valid and proof.get('cache_bypassed') is True), title.verified, copy_at)
 
-    def source_time(self, key):
-        if self.api_at is not None:
+    def api_supports(self, key, row=None):
+        if row is not None:
+            return key.proof_identity in self.api_offers
+        return key.country_code in (self.results or {})
+
+    def source_time(self, key, row=None):
+        if self.api_at is not None and self.api_supports(key, row):
             return self.api_at
         provider = self.verified.get(key.country_code) or {}
         return utc_ms(provider.get('updated_at'))
 
     def read(self, key, row=None):
-        """Prefer the API's day; scrape/copy fallbacks never establish exact days."""
-        at = self.source_time(key)
+        """Use the supporting source's day; scrape/copy fallbacks cannot establish exact days."""
+        at = self.source_time(key, row)
         if at is None:
             at = self.copy_at
-        api_supports = (key.proof_identity in self.api_offers if row is not None else
-                        self.results is not None and (not self.results or key.country_code in self.results))
-        consecutive = (self.fresh_current and self.fresh_prior and api_supports
+        consecutive = (self.fresh_current and self.fresh_prior and self.api_supports(key, row)
                        and utc_day(self.prior_at) == utc_day(at) - DAY)
         return at, consecutive
 
@@ -196,7 +199,7 @@ def title_writes(transition, previous, media_type, pending, copy_at):
         today = utc_day(at)
         exact = consecutive and not collision and key.proof_identity not in observation.prior_offers
         premiere = None
-        if key not in latest and observation.source_time(key) is not None:
+        if key not in latest and observation.source_time(key, row) is not None:
             premiere = premiere_day(title.details, media_type, key.streaming_service_id, today, key.country_code)
         appeared_after = (utc_day(observation.prior_at) if observation.fresh_prior
                           and key.proof_identity not in observation.prior_offers else None)
@@ -212,7 +215,8 @@ def title_writes(transition, previous, media_type, pending, copy_at):
         at, consecutive = observation.read(key)
         today = utc_day(at)
         dropped_on = max(today, utc_day(old['observed_at']))
-        exact = consecutive and dropped_on == today and key.proof_identity in observation.prior_offers
+        exact = (consecutive and dropped_on == today and key.proof_identity in observation.prior_offers
+                 and key.proof_identity not in observation.api_offers)
         last_seen = old.get('last_seen_on')
         if observation.fresh_prior and key.proof_identity in observation.prior_offers:
             last_seen = max(last_seen or 0, utc_day(observation.prior_at))
