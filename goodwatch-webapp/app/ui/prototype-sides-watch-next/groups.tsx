@@ -29,7 +29,11 @@ const hueOf = (view: SwnView, group: SwnGroup) =>
 	view.variant === "beside" && group.at ? MOOD_BY_KEY[group.at].hue : null
 
 /** Picks or unpicks a group; a fourth pick (moods and groups together) is not taken. */
-export function useToggleGroup(view: SwnView, moods: readonly MoodKey[]) {
+export function useToggleGroup(
+	view: SwnView,
+	moods: readonly MoodKey[],
+	refuse?: () => void,
+) {
 	const set = useParam()
 	return (id: string | null) => {
 		if (id === null) return set({ like: null })
@@ -39,6 +43,7 @@ export function useToggleGroup(view: SwnView, moods: readonly MoodKey[]) {
 				",",
 			) || null
 		if (on || moods.length + view.picked.length < MAX_MOODS) set({ like })
+		else refuse?.()
 	}
 }
 
@@ -123,7 +128,7 @@ export function GroupChips({
 						key={id}
 						initial={{ opacity: 0, scale: 0.9 }}
 						animate={{ opacity: 1, scale: 1 }}
-						className="relative isolate inline-flex h-9 max-w-[16rem] shrink-0 items-center overflow-hidden rounded-xl text-sm font-bold text-white ring-1 ring-white/25 [text-shadow:0_1px_4px_rgba(0,0,0,.6)]"
+						className={`relative isolate inline-flex h-9 shrink-0 ${view.names ? "max-w-[16rem]" : ""} items-center overflow-hidden rounded-xl text-sm font-bold text-white ring-1 ring-white/25 [text-shadow:0_1px_4px_rgba(0,0,0,.6)]`}
 						style={hue ? { boxShadow: `0 4px 18px -6px ${hue}` } : undefined}
 						data-group-chip={id}
 					>
@@ -138,7 +143,9 @@ export function GroupChips({
 							className="inline-flex h-full min-w-0 cursor-pointer items-center gap-2 pl-1.5 pr-1"
 						>
 							<Posters posters={group.posters} size="xs" />
-							<span className="truncate">{groupTitle(group, view.names)}</span>
+							<span className={view.names ? "truncate" : "whitespace-nowrap"}>
+								{groupTitle(group, view.names)}
+							</span>
 							<span className="shrink-0 rounded-md bg-black/30 px-1 text-xs tabular-nums">
 								{group.count}
 							</span>
@@ -176,7 +183,7 @@ function GroupTile({
 	group,
 	dense,
 }: { view: SwnView; control: MoodControl; group: SwnGroup; dense: boolean }) {
-	const toggle = useToggleGroup(view, control.moods)
+	const toggle = useToggleGroup(view, control.moods, control.groups?.refuse)
 	const on = view.picked.includes(group.id)
 	const full = !on && pickedCount(control) >= MAX_MOODS
 	const count = `${group.count} ${control.countScope}`
@@ -328,6 +335,8 @@ export function tasteOf(view: SwnView, mood: MoodKey) {
 		count: t.count,
 		words,
 		narrowed: view.data.moods.includes(mood) && !view.wide.includes(mood),
+		/** Every title of the mood is in your taste: narrowing changes nothing. */
+		same: t.count === view.data.moodCounts[mood],
 	}
 }
 
@@ -354,16 +363,15 @@ export function InsideFoot({
 }: { view: SwnView; control: MoodControl; mood: MoodKey; dense: boolean }) {
 	const t = tasteOf(view, mood)
 	if (!t) return null
-	if (control.moods.includes(mood))
+	if (control.moods.includes(mood) && !t.same)
 		return (
 			<span className={`mt-1 block ${dense ? "h-4" : "h-6"}`} aria-hidden />
 		)
 	return (
 		<span className="mt-1 flex min-w-0 items-center gap-1.5 text-[11px] font-semibold tabular-nums text-white/85">
-			<Posters posters={t.posters} size="xs" />
-			<span className="truncate">
-				{t.count}
-				{dense ? "" : ` of ${control.counts[mood]}`}{" "}
+			<Posters posters={dense ? t.posters.slice(0, 2) : t.posters} size="xs" />
+			<span className={dense ? "truncate tracking-tight" : "truncate"}>
+				{t.count} of {control.counts[mood]}{" "}
 				{view.names ? `in ${t.words.toLowerCase()}` : TASTE.inline}
 			</span>
 		</span>
@@ -379,7 +387,8 @@ export function InsideAction({
 }: { view: SwnView; control: MoodControl; mood: MoodKey; dense: boolean }) {
 	const toggle = useToggleWide(view)
 	const t = tasteOf(view, mood)
-	if (!t || !control.moods.includes(mood)) return null
+	// Nothing to widen when every title of the mood is in your taste.
+	if (!t || !control.moods.includes(mood) || t.same) return null
 	const { name } = MOOD_BY_KEY[mood]
 	return (
 		<span

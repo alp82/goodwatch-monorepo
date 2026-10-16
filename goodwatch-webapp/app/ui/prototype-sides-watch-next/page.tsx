@@ -190,6 +190,13 @@ function useControls(view: SwnView) {
 				view,
 				data.moods.map((m) => MOOD_BY_KEY[m].name),
 			),
+			head: "Pick up to three",
+			refuse: () =>
+				setRefused({
+					mood: data.moods[0] ?? "funny",
+					at: Date.now(),
+					text: "Three is the most. Remove one to add this one.",
+				}),
 		}
 	if (view.rule === "inside") {
 		// Unpicking a mood forgets that it was widened.
@@ -288,13 +295,22 @@ function Page({ view }: { view: SwnView }) {
 		return g ? [view.names ? `in ${g.name.toLowerCase()}` : TASTE.inline] : []
 	})
 	// "Inside the moods": each mood in your taste says so ("Crime & mystery in your taste").
-	const insideWords = data.moods.map((m) => {
-		const t = tasteOf(view, m)
-		const { name } = MOOD_BY_KEY[m]
-		return t?.narrowed
-			? `${name} ${view.names ? `in ${t.words.toLowerCase()}` : TASTE.inline}`
-			: name
-	})
+	// Moods in your taste come first; a widened mood next to them says "all of", so "in your taste" reads as theirs only.
+	const insideWords = [...data.moods]
+		.sort(
+			(a, b) =>
+				Number(Boolean(tasteOf(view, b)?.narrowed)) -
+				Number(Boolean(tasteOf(view, a)?.narrowed)),
+		)
+		.map((m) => {
+			const t = tasteOf(view, m)
+			const { name } = MOOD_BY_KEY[m]
+			if (t?.narrowed)
+				return `${name} ${view.names ? `in ${t.words.toLowerCase()}` : TASTE.inline}`
+			return data.moods.some((x) => tasteOf(view, x)?.narrowed)
+				? `all of ${name}`
+				: name
+		})
 	const insideNarrows = data.moods.some((m) => tasteOf(view, m)?.narrowed)
 	const relabel = (label: string) => {
 		if (!likes.length && !insideNarrows) return label

@@ -140,27 +140,32 @@ export async function swnView(
 	const inMood = (e: { moodMask: number }, mood: MoodKey) =>
 		(e.moodMask & (1 << MOOD_KEYS.indexOf(mood))) !== 0
 
-	// Where each group sits among the moods: its first mood (production's, most of its loved titles in it) that no group
-	// before it took, else its first; a group with none takes the mood most of its listed titles are in.
+	// Where each group sits among the moods: the mood most of its listed titles are in, so that picking that mood in
+	// your taste reaches the group (production's moods for the group break ties). Pairs go best first, one group per
+	// mood; a group left over takes its best mood anyway, and a group with no listed titles in any mood sits nowhere.
+	const listed = [...plan.entries.values()]
+	const pairs = built.sides.flatMap((side, rank) => {
+		const id = idOf.get(side.id) ?? ""
+		const mine = listed.filter((e) => groupOf(e.key) === id)
+		return MOOD_KEYS.map((m) => ({
+			id,
+			m,
+			n: mine.filter((e) => inMood(e, m)).length,
+			prod: side.moods.includes(m) ? side.moods.indexOf(m) : 9,
+			rank,
+		})).filter((p) => p.n > 0)
+	})
+	pairs.sort((a, b) => b.n - a.n || a.prod - b.prod || a.rank - b.rank)
 	const taken = new Set<MoodKey>()
-	const atOf = new Map<string, MoodKey | null>()
-	for (const side of built.sides) {
-		const id = idOf.get(side.id)!
-		let at: MoodKey | null =
-			side.moods.find((m) => !taken.has(m)) ?? side.moods[0] ?? null
-		if (!at) {
-			const mine = [...plan.entries.values()].filter(
-				(e) => groupOf(e.key) === id,
-			)
-			const top = MOOD_KEYS.map((m) => ({
-				m,
-				n: mine.filter((e) => inMood(e, m)).length,
-			})).sort((a, b) => b.n - a.n)[0]
-			at = top?.n ? top.m : null
+	const atOf = new Map<string, MoodKey | null>(
+		built.sides.map((side) => [idOf.get(side.id) ?? "", null]),
+	)
+	for (const p of pairs)
+		if (!atOf.get(p.id) && !taken.has(p.m)) {
+			atOf.set(p.id, p.m)
+			taken.add(p.m)
 		}
-		if (at) taken.add(at)
-		atOf.set(id, at)
-	}
+	for (const p of pairs) if (!atOf.get(p.id)) atOf.set(p.id, p.m)
 	// "Inside the moods": a mood that carries groups is picked as that mood in your taste, unless widened.
 	const tasteMoods: Partial<Record<MoodKey, TasteMood>> = {}
 	for (const [id, at] of atOf) {
@@ -411,8 +416,10 @@ export async function swnView(
 	const misfits: Record<string, string> = {}
 	if (movies && focus.length)
 		for (const e of entries) {
-			if (e.fit === need && !e.over) continue
-			const taste = closeToPicked(e.key) ? TASTE.close : `Not ${TASTE.inline}`
+			// The "Close to your taste" step says so in its heading.
+			if ((e.fit === need && !e.over) || isCloseTaste.has(e.key)) continue
+			const offServices = plan.onMyServices && e.onServices === false
+			const taste = `${closeToPicked(e.key) ? TASTE.close : `Not ${TASTE.inline}`}${offServices ? ", not on your services" : ""}`
 			const anyMood = plan.moods.length > 0 && (e.moodMask & moodMask) !== 0
 			const words =
 				e.over > 0

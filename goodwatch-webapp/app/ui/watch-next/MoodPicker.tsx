@@ -27,7 +27,7 @@ export interface MoodControl {
 	toggle: (mood: MoodKey) => void
 	clear: () => void
 	/** The mood last refused, with a counter so the same refusal shows again. */
-	refused: { mood: MoodKey; at: number } | null
+	refused: { mood: MoodKey; at: number; text?: string } | null
 	/** PROTOTYPE (#659): groups of loved titles in the mood picker, for /prototype/sides-watch-next. */
 	groups?: MoodGroups
 }
@@ -54,6 +54,10 @@ export interface MoodGroups {
 	chipMark?: (mood: MoodKey) => { mark: React.ReactNode; count: number } | null
 	/** The phone's Moods button label with groups picked. */
 	short?: string | null
+	/** The dropdown's title, when more than moods count toward the three. */
+	head?: string
+	/** Refuses a fourth pick that is not a mood. */
+	refuse?: () => void
 }
 
 /** Moods and groups picked together (PROTOTYPE #659: groups). */
@@ -237,7 +241,7 @@ export function useRefusalHint(control: MoodControl): string | null {
 	const [hint, setHint] = useState<string | null>(null)
 	useEffect(() => {
 		if (!control.refused) return
-		setHint(refusalText(control.refused.mood))
+		setHint(control.refused.text ?? refusalText(control.refused.mood))
 		const id = setTimeout(() => setHint(null), 3200)
 		return () => clearTimeout(id)
 	}, [control.refused])
@@ -278,7 +282,7 @@ function PanelHead({
 						className="min-w-0 flex-1 text-sm text-gray-300"
 					>
 						<span className="font-semibold text-white">
-							Pick up to three moods
+							{control.groups?.head ?? "Pick up to three moods"}
 						</span>
 						<span className="hidden sm:inline">
 							. A title fits when it is in any of them.
