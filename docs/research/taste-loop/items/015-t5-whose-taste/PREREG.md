@@ -21,12 +21,18 @@ Where the draft says execution stays blocked, this file is the registration that
 - **What a null means here:** with 12 members and 9% power at the +10-point floor, a null says nothing about
   absence of personal signal. Only a pass that clears the numbers-only control in both readers means anything.
 
+- **Incident, October 16, 2026, 06:10 UTC (after commit `04f515b2`):** the first registered read job ran the
+  harness's fake reader, because `run.py` passed the synthetic reader unconditionally. 141 fake answers ("A" every
+  time), no model call, not scored. Folder `run-20261016e` is kept as the record and not used. Fixed in `run.py`
+  (fake reader only in synthetic runs; a real run refuses fake records at read and score time), two tests added,
+  cases rebuilt unchanged (same `cases_digest`) into `run-20261016f`. Only the source digest changes.
+
 ## Frozen run
 
 | Item | Value |
 |---|---|
-| Run folder | `~/goodwatch-research/taste/work/t5/run-20261016e` (private) |
-| `source_digest`: `08ba944ab7ddf81945faa214d00ce62e05e48feed9165ec9a92e44935d35ec4b` | |
+| Run folder | `~/goodwatch-research/taste/work/t5/run-20261016f` (private) |
+| `source_digest`: `0571b5780e159c93bf2fb3e5995bbef662ca5ce4d92b781a51370c849013a1c5 c0bd7d82c571fd10da38c3e78168949afd729bb10253617926dea0f6bb398e95 True` | |
 | `cases_digest`: `c0bd7d82c571fd10da38c3e78168949afd729bb10253617926dea0f6bb398e95` | |
 | `input_digest`: `1330419888451291dd68c994fdbdff2f004d840411b410bd7ff384a3fc0bbc59` | |
 | `descriptions_digest`: `365379a87deeba928b9906624c53e74875e8e2e9aea199e39c6a2bd39dea515f` | |

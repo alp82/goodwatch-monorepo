@@ -156,7 +156,7 @@ def read_suite(root, reader, synthetic):
     # terminal transport/tool-use record is immutable and must never be retried.
     for c, control, folder in jobs:
         if (folder / 'record.json').exists():
-            record = stored_record(folder, control_payload(c, control), reader)
+            record = stored_record(folder, control_payload(c, control), reader, synthetic)
             existing[(control, c['id'])] = record
             if record['result']['status'] in VOID_STATUSES:
                 voided.add(c['id'])
@@ -176,8 +176,10 @@ def read_suite(root, reader, synthetic):
                 if remaining <= 0:
                     totals['status'] = 'timeout'
                     raise TimeoutError('30 minute reader job cap; resume the same frozen suite')
-                fake = [sys.executable, str(HERE / 'synthetic.py'), reader]
+                fake = [sys.executable, str(HERE / 'synthetic.py'), reader] if synthetic else None
                 record = broker.invoke(control_payload(c, control), reader, folder, fake_command=fake, timeout=remaining / 2)
+                if record['fake'] != synthetic:
+                    raise ValueError('reader kind does not match the run: fake answers in a real run or the reverse')
                 totals['calls'] += 1
                 totals['attempts'] += len(record['attempts'])
                 totals['cost'] += record['result']['cost'] or 0
@@ -199,8 +201,10 @@ def read_suite(root, reader, synthetic):
     return totals
 
 
-def stored_record(folder, payload, reader):
+def stored_record(folder, payload, reader, synthetic=None):
     record = broker.replay(folder)
+    if synthetic is not None and record.get('fake') != synthetic:
+        raise ValueError('a fake record in a real run, or a real record in a synthetic run')
     prompt = broker.PROMPT + '\n\n' + json.dumps(payload, ensure_ascii=False, sort_keys=True)
     if record['prompt_sha256'] != hashlib.sha256(prompt.encode()).hexdigest() or record['reader'] != reader:
         raise ValueError('changed prompt or reader')
@@ -212,7 +216,8 @@ def collect(root, frozen):
     for reader in ('haiku', 'astra'):
         for control in ('s', 'numbers', 'none'):
             for c in frozen['cases']:
-                record = stored_record(root / f'{reader}-{control}-{c["id"]}', control_payload(c, control), reader)
+                record = stored_record(root / f'{reader}-{control}-{c["id"]}', control_payload(c, control), reader,
+                                       frozen['synthetic'])
                 records[(reader, control, c['id'])] = record
     return records
 

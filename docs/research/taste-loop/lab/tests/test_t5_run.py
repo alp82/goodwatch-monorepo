@@ -96,3 +96,33 @@ def test_t5_read_stops_and_ledgers_incomplete_above_void_cap(tmp_path, monkeypat
     monkeypatch.setattr(broker, 'invoke', lambda *a, **kw: pytest.fail('incomplete suite recalled'))
     with pytest.raises(ValueError, match='10% voided'):
         run.read_suite(root, 'haiku', True)
+
+
+def test_t5_real_read_never_uses_the_fake_reader(tmp_path, monkeypatch):
+    from t5 import run, broker
+    root = private_root(tmp_path / 'real', True)
+    frozen = build(root, True)
+    monkeypatch.setattr(run, 'checked', lambda r, s: {**json.loads((root / 'frozen.json').read_text()), 'synthetic': s})
+    monkeypatch.setattr(run, 'registered', lambda f: None)
+    seen = []
+    def real(payload, reader, folder, **kwargs):
+        seen.append(kwargs.get('fake_command'))
+        raise RuntimeError('stop after the first call')
+    monkeypatch.setattr(broker, 'invoke', real)
+    with pytest.raises(RuntimeError):
+        run.read_suite(root, 'haiku', False)
+    assert seen == [None]
+
+
+def test_t5_fake_records_refused_in_a_real_run(tmp_path):
+    from t5 import run
+    from t5.cases import control_payload
+    root = private_root(tmp_path / 'mixed', True)
+    build(root, True)
+    run.read_suite(root, 'haiku', True)
+    frozen = json.loads((root / 'frozen.json').read_text())
+    case = frozen['cases'][0]
+    folder = root / f'haiku-s-{case["id"]}'
+    run.stored_record(folder, control_payload(case, 's'), 'haiku', True)
+    with pytest.raises(ValueError, match='fake record in a real run'):
+        run.stored_record(folder, control_payload(case, 's'), 'haiku', False)
