@@ -72,8 +72,9 @@ test("the taste picker's themes, styles, and taste groups count toward three pic
 		onMyServices: true,
 	})
 	const full = choice("moods=funny,scary&themes=crime&styles=slow&taste=1")
+	// Three words; the server keeps three picks in all, the taste group first.
 	assert.deepEqual(
 		[full.taste, full.moods, full.themes, full.styles],
-		[["1"], ["funny", "scary"], [], []],
+		[["1"], ["funny", "scary"], ["crime"], []],
 	)
 })

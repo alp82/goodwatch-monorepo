@@ -1010,6 +1010,40 @@ test("My movies puts the movies close to the taste picked before what doesn't fi
 	})
 })
 
+test("a title close to the taste picked that runs over the time chosen doesn't fit tonight", () => {
+	// Movie 3 runs 121 minutes: over 120. Movie 1 (in the group, 155 minutes) misses less, so it goes first.
+	const plan = plan680({ taste: ["movie-11"], kind: "movie", time: 120 })
+	assert.deepEqual(tiers680(plan), {
+		closeToTaste: ["M4"],
+		notTonightsFit: ["M1", "M3"],
+	})
+})
+
+test("the tier keeps the list's order: another sort, another order inside it", () => {
+	// Waiting longest: Movie 4 was added before Movie 3.
+	const ctx = wishCtx() as unknown as { wishlist: Map<number, Date> }
+	ctx.wishlist.set(M + 4, new Date(daysAgo(30)))
+	const plan = planWatchNext(
+		ctx as never,
+		taste as never,
+		{ sort: "waiting", taste: ["movie-11"] },
+		OUTSIDE,
+		RUNTIMES,
+		undefined,
+		fakeGroups().groups,
+	)
+	assert.deepEqual(tiers680(plan).closeToTaste, ["M4", "M3"])
+})
+
+test("two keys for one group take one pick, leaving room for the rest", () => {
+	const plan = plan680({
+		taste: ["movie-11", "1"],
+		moods: ["funny"],
+		themes: ["crime"],
+	})
+	assert.deepEqual(plan.pickIds, ["g1", "m:funny", "t:crime"])
+})
+
 test("a link names a taste group by its key; older links by size order; unknown ones are left out", () => {
 	assert.deepEqual(plan680({ taste: ["2"] }).picks.taste, [2])
 	assert.deepEqual(plan680({ taste: ["movie-99"] }).picks.taste, [])

@@ -99,6 +99,8 @@ export async function tasteGroupsFor(
 		describedGroups.set(member, groups)
 	}
 	const count = groups.length
+	// The edges for this request, looked up once.
+	let edges: SideEdges[] | null = null
 	return {
 		groups,
 		groupOf: (key) => {
@@ -109,7 +111,7 @@ export async function tasteGroupsFor(
 			const z = titleZ(member.snapshot, key)
 			const facts = member.snapshot.facts(key)
 			if (!z || !facts) return []
-			const edges = edgesOf(member, ctx, taste)
+			edges ??= edgesOf(member, ctx, taste)
 			const inGroup = sideOf(member, key)
 			return closeSides(member.named, edges, z, facts, MEMBER_BARS)
 				.filter((index) => index !== inGroup)

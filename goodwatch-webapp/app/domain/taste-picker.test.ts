@@ -59,13 +59,18 @@ test("the URL names a taste group by its key, or by its size order in older link
 	assert.equal(titleOfGroupKey("movie-1949"), 1_000_000_001_949)
 	assert.equal(titleOfGroupKey("show-1396"), 2_000_000_001_396)
 	assert.equal(titleOfGroupKey("person-1"), null)
+	// Three words and three taste groups at most: the server keeps three in all once it knows the groups.
 	const choice = watchNextChoiceOf(
-		new URLSearchParams("taste=movie-1949,show-1396&moods=funny,scary"),
+		new URLSearchParams(
+			"taste=movie-1949,show-1396,movie-1,movie-2&moods=funny,scary,heavy,romance",
+		),
 	)
-	// Three picks at most, taste groups first.
 	assert.deepEqual(
 		[choice.taste, choice.moods],
-		[["movie-1949", "show-1396"], ["funny"]],
+		[
+			["movie-1949", "show-1396", "movie-1"],
+			["funny", "scary", "heavy"],
+		],
 	)
 })
 
@@ -77,7 +82,7 @@ test("the URL holds at most three picks, taste groups first", () => {
 	)
 	assert.deepEqual(
 		[choice.taste, choice.moods, choice.themes, choice.styles],
-		[["1"], ["funny", "scary"], [], []],
+		[["1"], ["funny", "scary"], ["crime"], []],
 	)
 	assert.deepEqual(
 		trimPicks({ ...NONE, moods: ["funny", "scary", "heavy", "romance"] }).moods,

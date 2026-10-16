@@ -6,7 +6,7 @@
 // exist only here.
 import { filterStateFromParams } from "./filter-state"
 import type { MoodKey } from "./moods"
-import { tasteRefsOf, trimPicks } from "./taste-picker"
+import { MAX_PICKS, tasteRefsOf, trimPicks } from "./taste-picker"
 import type { StyleKey, ThemeKey } from "./themes-styles"
 
 // Every sort reads a stored, populated field. Titles missing the value go last; ties go to the newest added.
@@ -58,18 +58,18 @@ const CHOICE_DEFAULTS = { onMyServices: true, notSeenYet: false }
 /** The choice from the URL. Moods and services read as the filter bar reads them (`moods`, `services=mine|all`). */
 export function watchNextChoiceOf(params: URLSearchParams): WatchNextChoice {
 	const filters = filterStateFromParams(params, CHOICE_DEFAULTS)
-	const taste = tasteRefsOf(params.get("taste"))
-	// Three picks at most, taste groups first: the groups stand in by their place in the URL while the rest is trimmed.
-	const picks = trimPicks({
+	// Three words at most, and three taste groups. The server keeps three picks in all, taste groups first, once it
+	// knows which groups the URL names (two keys can name one group).
+	const words = trimPicks({
 		moods: filters.moods,
 		themes: filters.themes,
 		styles: filters.styles,
-		taste: taste.map((_, i) => i + 1),
+		taste: [],
 	})
 	return {
 		sort: watchNextSortOf(params.get("sort")),
-		...picks,
-		taste: taste.slice(0, picks.taste.length),
+		...words,
+		taste: tasteRefsOf(params.get("taste")).slice(0, MAX_PICKS),
 		onMyServices: filters.onMyServices,
 	}
 }

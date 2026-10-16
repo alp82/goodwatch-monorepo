@@ -200,7 +200,7 @@ function TierRow({
 								)}
 								{title.closeToTaste && (
 									<span
-										className="mt-1 block truncate text-xs text-gray-400"
+										className="mt-1 block text-xs leading-tight text-gray-400"
 										data-close-to-taste
 									>
 										{CLOSE_TO_TASTE}
