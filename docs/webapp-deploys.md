@@ -198,12 +198,14 @@ Agents don't change the proxy. Traefik loads a dynamic configuration without a r
    grep HeadersRegexp /data/coolify/proxy/dynamic/goodwatch-balance.yaml
    ```
 
-   It must show `` HeadersRegexp(`Cookie`, `(^|;) *sb-[^=; ]+-auth-token([.][0-9]+)?=`) ``.
+   It must show `` HeadersRegexp(`Cookie`, `(^|;)[[:blank:]]*(sb-[^=;[:blank:]]+-auth-token([.][0-9]+)?|(__Secure-)?gw[.]session_token)=`) ``.
 5. From any machine, check both cases. The first command must print nothing. The second must print one `set-cookie: gw_instance=...` line.
 
    ```sh
    curl -sI https://goodwatch.app/ | grep -i '^set-cookie: gw_instance'
-   curl -sI -H 'Cookie: sb-check-auth-token=x' https://goodwatch.app/ | grep -i '^set-cookie: gw_instance'
+   for name in sb-check-auth-token gw.session_token __Secure-gw.session_token; do
+     curl -sI -H "Cookie: $name=x" https://goodwatch.app/ | grep -i '^set-cookie: gw_instance'
+   done
    ```
 
 6. Run `./bench.sh smoke` in `goodwatch-benchmark`.
@@ -264,3 +266,8 @@ cd goodwatch-benchmark
 ```
 
 It sends 2 requests per second over the public address, and reads Docker's events, the containers' state and health, and their logs on the serving host. It changes nothing there. The report lists the events, the `Shutdown:` log lines of the old container, and every failed request.
+
+The member rule accepts Supabase and both Better Auth session-cookie names during
+the transition. Repository merges do not install these Traefik files: the owner
+pastes them in Coolify at cut-over checklist step 2.4. The webapp cache identity
+and metrics audience use the shared `auth-cookie.ts` matcher for the same names.

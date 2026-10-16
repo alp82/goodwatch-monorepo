@@ -30,7 +30,7 @@ done
 if [[ "$ready" != true ]]; then echo 'Disposable Postgres did not become ready.' >&2; exit 1; fi
 node scripts/auth-importer/prepare-fake.ts
 npm run typecheck:auth-importer | tee scripts/auth-importer/results/typecheck.log
-node --test --test-concurrency=1 scripts/auth-importer/cli.test.ts app/server/auth/supabase-importer.integration.ts | tee scripts/auth-importer/results/tests.log
+node --test --test-concurrency=1 scripts/auth-importer/cli.test.ts scripts/auth-importer/production.test.ts app/server/auth/supabase-importer.integration.ts | tee scripts/auth-importer/results/tests.log
 node scripts/auth-importer/prepare-fake.ts
 export AUTH_IMPORT_COPY_ONLY=yes
 export AUTH_IMPORT_SOURCE_URL=postgresql://importer:local-fake-only@127.0.0.1:15651/auth_copy

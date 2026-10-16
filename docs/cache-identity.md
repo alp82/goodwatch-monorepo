@@ -13,7 +13,7 @@ A cache key is the full URL plus the identity. The identity has three parts. Onl
 
 | Part | Values | Where it comes from |
 | --- | --- | --- |
-| Audience | `anon` or `member` | The auth cookie. A request is a member when its `Cookie` header has a cookie named `sb-<ref>-auth-token` or `sb-<ref>-auth-token.<n>`. `<ref>` is the first label of the `SUPABASE_URL` hostname. The value doesn't matter: a forged or expired cookie still makes a member. |
+| Audience | `anon` or `member` | The auth cookie. A request is a member when its `Cookie` header has a cookie named `sb-<ref>-auth-token` or `sb-<ref>-auth-token.<n>`, `gw.session_token` or `__Secure-gw.session_token`. `<ref>` is the first label of the `SUPABASE_URL` hostname. The value doesn't matter: a forged or expired cookie still makes a member. |
 | Country | Two uppercase letters | A valid `gw_loc` cookie first; otherwise the `GW-Cache-Identity` request header. Without either: the region of the most preferred `Accept-Language` entry that has one (`de-DE` gives `DE`). Without that: `US`. |
 | Language | A bounded supported tag, including pt-BR/pt-PT/zh-Hans/zh-Hant | An explicit `gw_loc` language first; browser mode negotiates q-ordered Accept-Language. Without a saved pair: a valid identity header, then browser negotiation, then English. Country never determines language. |
 
@@ -84,7 +84,7 @@ Compression adds `Accept-Encoding` to `Vary`. Without a front cache, HTML remain
 
 | Input | Decision |
 | --- | --- |
-| Auth cookie `sb-<ref>-auth-token[.n]` | Makes the request a member. Never cacheable. |
+| Auth cookie `sb-<ref>-auth-token[.n]`, `gw.session_token`, `__Secure-gw.session_token` | Makes the request a member. Never cacheable. |
 | `gw_browser` | Not part of the key. An unfiltered page doesn't read it. The gate requires it for filtered person URLs and for `/sign-in` and `/sign-up` with `redirectTo`. A cache forwards `Cookie` on a miss, never stores the 403, and may serve a stored filtered 200 page to anyone. |
 | `gw_loc` | One validated country/language preference envelope. It is resolved before lookup; saved-cookie guests remain cacheable under the same effective pair as other guests. The cookie revision, writer metadata and provenance are never in shared HTML or its key. |
 | Analytics cookies (`_ga*`, `ph_*`) | Irrelevant. The server doesn't read them. |

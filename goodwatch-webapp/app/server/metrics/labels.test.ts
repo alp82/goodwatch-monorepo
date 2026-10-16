@@ -45,6 +45,9 @@ test("audience tests exact cookie names and numeric chunks, with a fallback", ()
 		undefined,
 		"",
 		"other=sb-example-auth-token=x",
+		"other=gw.session_token=x",
+		"not-gw.session_token=x",
+		"__Secure-gw.session_token.0=x",
 		"sb-other-auth-token=x",
 		"xsb-example-auth-token=x",
 		"sb-example-auth-token.other=x",
@@ -52,6 +55,8 @@ test("audience tests exact cookie names and numeric chunks, with a fallback", ()
 		assert.equal(label(header), "anon")
 	for (const header of [
 		"sb-example-auth-token=",
+		"gw.session_token=x",
+		"a=b;\t__Secure-gw.session_token=x",
 		"a=b; sb-example-auth-token.0=secret",
 		"sb-example-auth-token.1=x; a=b",
 	])

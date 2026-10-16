@@ -136,7 +136,7 @@ or an explicitly designed delta procedure, not repeated stale imports.
    the source marker to be `restored-copy`, never `fake`. The loopback source
    and target URL restrictions remain. A loopback SSH forward may point only
    to that independently verified throwaway cluster on its internal Docker
-   network. Never forward the importer to a live database.
+   network. These copy profiles must never forward to a live database; the separately guarded production route is below.
    Do not run `prepare-fake.ts`, `fixtures.ts`, `run.sh`, or integration tests on
    restored real copies: those deliberately reset fake data.
 2. **Prepare target storage.** With all auth/member writers stopped, explicitly
@@ -242,7 +242,7 @@ The future production run still needs the owner's cutover approval, source write
 freeze, final consistent backup/copy, complete sample evidence, tested rollback,
 encryption-key custody and resolution of #564's launch limitations. Supabase's
 30-day read-only retention and the chosen session policy belong to map #529's
-cutover plan. This importer has no production-mode flag.
+cutover plan. The guarded production profile below is implemented; executing it still needs the owner’s cut-over go.
 
 ## Sources
 
@@ -283,3 +283,132 @@ Follow-up verification on Node **24.22.0** passed **28/28 integration and CLI
 cases**, focused importer/auth types, and authenticated dry/import/exact-rerun
 reports against the pinned disposable Postgres 16.10 and CrateDB 5.10.12. This is
 still fake-data verification; it does not complete #551's real-copy rehearsal.
+
+## Production route for #552 step 2.3
+
+Implemented by `scripts/auth-importer/import.ts` and `production.ts`. Nothing
+invokes this CLI automatically. These commands are **for the owner's chosen
+cut-over window only**, after step 2.2's source freeze. Do not run the fake-data
+harness, fixture reset or `prepare-fake.ts` with real data.
+
+The source remains a freshly exported, isolated Postgres `auth_copy` on
+`127.0.0.1:15651`, read with `auth_copy_reader`. The target is production through
+an owned SSH forward on `127.0.0.1:15648`. The `production` profile requires
+`--allow-production` on **every** command, no `AUTH_IMPORT_COPY_ONLY`, a writers
+stopped declaration, a frozen source marker less than 24 hours old, SELECT-only
+source privileges, the `goodwatch_auth` password, the permanent root, and the
+same versioned payload key ring as runtime. It checks `crate-cluster`, exactly
+`crate-01`–`crate-03` on 5.10.16 and the authenticated target username. A version
+change requires a reviewed profile update, never a runtime bypass.
+
+Before opening the tunnel, independently verify `.11` and the three node names
+via private SSH. Keep all Better Auth services/maintenance and other target
+writers stopped until the rerun and audit pass. The marker and environment
+statement are operator attestations: they cannot prove that hosted Supabase is
+frozen or prevent another process using a different source copy. Use one source
+copy, one operator and one receipt sequence. Anonymous browsing can continue;
+auth changes are unavailable during the freeze.
+
+Storage/grants are step 1.4, not performed by this CLI: all 15 `auth_*` tables,
+reviewed settings/DENY rules and `DQL,DML` on each approved table for
+`goodwatch_auth`. Also grant `DQL ON TABLE sys.cluster, sys.nodes` for the
+identity checks; no schema/cluster-wide privilege and no catalog/member grants.
+Back up the source, target and keys first. The root and key ring must be identical
+to the owner-backed-up runtime secrets; imports now write v3 encrypted payloads.
+
+On the **local source copy only**, after independently verifying the final export
+and its freeze timestamp, the copy administrator creates the marker below. Replace
+the two quoted example values with the recorded snapshot ID (8–100 letters,
+digits, `_` or `-`) and actual UTC freeze time; never stamp an old export as new.
+Create the password-authenticated `auth_copy_reader` role with no elevated
+attributes or memberships using the private secret mechanism first.
+
+```sql
+CREATE TABLE public.goodwatch_auth_import_copy (
+  id integer PRIMARY KEY, kind text NOT NULL,
+  snapshot_id text NOT NULL, frozen_at timestamptz NOT NULL
+);
+INSERT INTO public.goodwatch_auth_import_copy VALUES
+  (551, 'frozen-production-552', 'cutover_552_YYYYMMDDTHHMMSSZ',
+   'YYYY-MM-DD HH:MM:SS+00');
+GRANT USAGE ON SCHEMA auth, public TO auth_copy_reader;
+GRANT SELECT ON auth.users, auth.identities,
+  public.goodwatch_auth_import_copy TO auth_copy_reader;
+```
+
+Prepare a mode-0600 shell environment file at
+`/private/goodwatch-auth-552/import.env`, in a mode-0700 directory owned by the
+operator. Load it from the approved secret store without printing its contents.
+It exports these four secret variables (no values belong in terminal history):
+
+| Variable | Value source |
+| --- | --- |
+| `AUTH_IMPORT_SOURCE_URL` | `postgresql://auth_copy_reader:<URL-encoded-copy-password>@127.0.0.1:15651/auth_copy` |
+| `AUTH_IMPORT_CRATE_PASSWORD` | Existing crate-01 `/root/.config/goodwatch/crate-credentials/goodwatch_auth`; do not regenerate |
+| `AUTH_IMPORT_PAYLOAD_SECRET` | Runtime `AUTH_CRATEDB_ENCRYPTION_SECRET` |
+| `AUTH_IMPORT_ENCRYPTION_KEYS` | Runtime `AUTH_CRATEDB_ENCRYPTION_KEYS` JSON |
+
+With the working directory `goodwatch-webapp`, run the following. Keep the SSH
+process in a separate terminal; `ExitOnForwardFailure` prevents reuse of somebody
+else's listener. Closing that terminal removes the forward. No Coolify DB/API is
+used; the owner handles the matching runtime secrets in Coolify's UI.
+
+```bash
+ssh -N -o ExitOnForwardFailure=yes -o ServerAliveInterval=30 \
+  -L 127.0.0.1:15648:10.0.0.11:4200 root@10.0.0.11
+```
+
+```bash
+set -euo pipefail
+set +x
+umask 077
+source /private/goodwatch-auth-552/import.env
+unset AUTH_IMPORT_COPY_ONLY
+export AUTH_IMPORT_TARGET_PROFILE=production
+export AUTH_IMPORT_CRATE_ORIGIN=http://127.0.0.1:15648
+export AUTH_IMPORT_CRATE_USERNAME=goodwatch_auth
+export AUTH_IMPORT_WRITERS_STOPPED=yes
+export AUTH_IMPORT_RECEIPT=/private/goodwatch-auth-552/receipt.json
+
+node scripts/auth-importer/import.ts --allow-production \
+  > /private/goodwatch-auth-552/dry-run.json
+node scripts/auth-importer/import.ts --allow-production --apply \
+  > /private/goodwatch-auth-552/import.json
+node scripts/auth-importer/import.ts --allow-production --apply --rerun \
+  > /private/goodwatch-auth-552/rerun.json
+
+export AUTH_CRATEDB_ORIGINS="$AUTH_IMPORT_CRATE_ORIGIN"
+export AUTH_CRATEDB_USERNAME="$AUTH_IMPORT_CRATE_USERNAME"
+export AUTH_CRATEDB_PASSWORD="$AUTH_IMPORT_CRATE_PASSWORD"
+export AUTH_CRATEDB_ENCRYPTION_SECRET="$AUTH_IMPORT_PAYLOAD_SECRET"
+export AUTH_CRATEDB_ENCRYPTION_KEYS="$AUTH_IMPORT_ENCRYPTION_KEYS"
+npm run auth:maintenance -- audit > /private/goodwatch-auth-552/audit.log
+```
+
+Require all four exit codes zero. Independently reconcile source totals with the
+final export. Dry-run must be `planned`, zero issues and unchanged counts. Apply
+must be `complete`; for a fresh target users/email claims equal source users,
+accounts equal credential + Google identities. Rerun must be `complete` with
+zero created users/accounts and identical before/after counts. Audit must exit 0;
+exit 2 is incomplete and blocks launch. Do not start services without reviewing
+these results. Publish only aggregate counts/timings, never member identifiers or
+source fingerprints; failed reports can contain UUIDs and remain private.
+
+The CLI creates a signed, mode-0600 receipt after a successful dry run, advances
+it after apply and marks it complete after exact rerun. It binds the complete
+source snapshot (keyed fingerprint), target counts, node IDs, source marker,
+permanent root and key ring. Apply without a dry receipt, rerun without apply,
+changed source/key/cluster, changed counts, tampering and receipts older than
+24 hours fail closed. The rerun checks that it would create zero rows **before**
+writing. Same-path processes are excluded by an exclusive lock; the importer
+also keeps its source advisory lock. Failed/partial writes never advance receipts.
+
+If apply partially succeeds, **stop** and inspect the private report. With the
+same frozen source and keys, unchanged target writers and no orphan claim, an
+owner-approved recovery may use a new private receipt path: dry-run again to
+reconcile the partial insert-only state, then apply and exact rerun. Do not edit a
+receipt, reset keys, remove claims or label a stale snapshot fresh. A crash may
+leave `.lock`/`.next`; exclude any surviving importer and reconcile the target
+before removing only those local files. Unknown-outcome claims need adapter
+recovery or the approved snapshot restore. The profile never migrates schema,
+changes source data, modifies existing accounts, or starts production services.

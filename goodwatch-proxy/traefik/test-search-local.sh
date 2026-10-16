@@ -138,9 +138,11 @@ for path in / /api/search-config /health/ready /api/combined-search/more /api/co
   check "$path stays with the page instances" "$(grep -c 'search-' <<< "$result")" '0'
 done
 auth='sb-abcdefghijklmnopqrst-auth-token'
-check 'a member search reaches the search roles' "$(who 20 "${search[@]}" -H "Cookie: $auth=x")" "$roles"
-check 'a member search gets no sticky cookie' "$(get "${search[@]}" -H "Cookie: $auth=x" -o /dev/null -w '%header{set-cookie}')" ''
-check 'a member page still gets the sticky cookie' "$(get / -H "Cookie: $auth=x" -o /dev/null -w '%header{set-cookie}' | grep -c '^gw_instance=')" '1'
+for auth_name in "$auth" gw.session_token __Secure-gw.session_token; do
+  check "$auth_name search reaches the search roles" "$(who 20 "${search[@]}" -H "Cookie: $auth_name=x")" "$roles"
+  check "$auth_name search gets no sticky cookie" "$(get "${search[@]}" -H "Cookie: $auth_name=x" -o /dev/null -w '%header{set-cookie}')" ''
+  check "$auth_name page gets the sticky cookie" "$(get / -H "Cookie: $auth_name=x" -o /dev/null -w '%header{set-cookie}' | grep -c '^gw_instance=')" '1'
+done
 # The repository balance file uses a permanent redirect; the older installed copy uses a temporary one.
 check 'plain HTTP redirects to HTTPS' "$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' --resolve goodwatch.app:38421:$abio "http://goodwatch.app:38421$palette" | sed -E 's/^30[12] /redirect /')" "redirect https://goodwatch.app$palette"
 check 'the role header from a visitor moves no other path' "$(who 4 / -H 'X-Gw-Role: search' | grep -c 'search-')" '0'

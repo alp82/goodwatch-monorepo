@@ -20,7 +20,7 @@
 #   it sent any response, for example in the seconds between a crash on abio and the next health check. It can't
 #   cover a crash on vector1: vector1's proxy answers 502 for it, until the next health check.
 # - Sticky sessions, for members only: a request with the auth cookie (sb-<ref>-auth-token, also in its numbered
-#   parts) matches the member router, whose service sets the cookie gw_instance once and sends that member to the
+#   parts), gw.session_token or __Secure-gw.session_token) matches the member router, whose service sets the cookie gw_instance once and sends that member to the
 #   same instance afterwards, while it is healthy. Sessions don't need it: both instances verify the same signed
 #   cookie. It keeps what one process remembers for a member in use (the taste portrait, Explorer layouts, Watch
 #   next, the guard against a second undo of an import). Member responses are private, so the cookie costs no cache
@@ -52,7 +52,7 @@ http:
     gw-webapp-member-https:
       entryPoints:
         - https
-      rule: Host(`goodwatch.app`) && HeadersRegexp(`Cookie`, `(^|;) *sb-[^=; ]+-auth-token([.][0-9]+)?=`)
+      rule: Host(`goodwatch.app`) && HeadersRegexp(`Cookie`, `(^|;)[[:blank:]]*(sb-[^=;[:blank:]]+-auth-token([.][0-9]+)?|(__Secure-)?gw[.]session_token)=`)
       priority: 1001
       middlewares:
         - gw-webapp-retry

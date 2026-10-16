@@ -131,6 +131,14 @@ check 'ten member requests with the cookie reach one instance' "$(count -H "Cook
 check 'a member with the cookie gets no second one' "$(set_cookie / -H "Cookie: $auth=x; $cookie")" ''
 check 'the auth cookie in numbered parts, after other cookies, is a member' "$(set_cookie / -H "Cookie: _ga=GA1.1.1; $auth.0=x; $auth.1=y" | grep -c '^gw_instance=')" '1'
 check 'the member rule also holds over HTTP/1.1' "$(set_cookie / --http1.1 -H "Cookie: $auth=x" | grep -c '^gw_instance=')" '1'
+for auth_name in gw.session_token __Secure-gw.session_token; do
+  first=$(set_cookie / -H "Cookie: gw_browser=1; $auth_name=x")
+  member_cookie=$(cut -d';' -f1 <<< "$first")
+  check "$auth_name gets the sticky cookie" "$(grep -c '^gw_instance=' <<< "$first")" '1'
+  check "$auth_name stays on one instance" "$(count -H "Cookie: $auth_name=x; $member_cookie" | grep -cE '^(abio|vector1)=10$')" '1'
+  check "$auth_name rejects prefixed names and cookie values" "$(set_cookie / -H "Cookie: not-$auth_name=x; other=$auth_name=x")" ''
+  check "$auth_name rejects suffixes" "$(set_cookie / -H "Cookie: $auth_name.0=x; ${auth_name}_extra=x")" ''
+done
 check 'a signed-out visitor with a leftover sticky cookie alternates' "$(count -H "Cookie: $cookie")" 'abio=5 vector1=5'
 check 'and gets no cookie' "$(set_cookie / -H "Cookie: $cookie")" ''
 

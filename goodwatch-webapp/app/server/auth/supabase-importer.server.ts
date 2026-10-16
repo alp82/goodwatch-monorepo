@@ -1,7 +1,10 @@
 import { createHmac } from "node:crypto"
 import type { Client } from "pg"
 import { type AuthSql, crateAuthAdapter } from "./crate-adapter.server.ts"
-import { authPayloadCodec } from "./payload-codec.server.ts"
+import {
+	type AuthEncryptionKeys,
+	authPayloadCodec,
+} from "./payload-codec.server.ts"
 
 type Document = Record<string, unknown>
 type ImportRow = { model: "user" | "account"; data: Document }
@@ -14,6 +17,7 @@ export type TargetCounts = {
 	emailClaims: number
 }
 export type ImportReport = {
+	sourceFingerprint?: string
 	status: "planned" | "complete" | "rejected" | "failed"
 	source: {
 		users: number
@@ -45,11 +49,19 @@ export async function importSupabaseAuth({
 	source,
 	sql,
 	encryptionSecret,
+	encryptionKeys,
+	expectedSourceFingerprint,
+	expectedTargetCounts,
+	requireExactRerun = false,
 	apply = false,
 }: {
 	source: Client
 	sql: AuthSql
 	encryptionSecret: string
+	encryptionKeys?: AuthEncryptionKeys
+	expectedSourceFingerprint?: string
+	expectedTargetCounts?: TargetCounts
+	requireExactRerun?: boolean
 	apply?: boolean
 }): Promise<ImportReport> {
 	const started = Date.now()
@@ -77,8 +89,8 @@ export async function importSupabaseAuth({
 		issues: [],
 		elapsedMs: 0,
 	}
-	const codec = authPayloadCodec(encryptionSecret)
-	const adapter = crateAuthAdapter({ sql, encryptionSecret })({
+	const codec = authPayloadCodec(encryptionSecret, encryptionKeys)
+	const adapter = crateAuthAdapter({ sql, encryptionSecret, encryptionKeys })({
 		verification: { storeIdentifier: "hashed" },
 		advanced: { database: { defaultFindManyLimit: 10000 } },
 	})
@@ -133,6 +145,13 @@ export async function importSupabaseAuth({
 	try {
 		report.before = await counts()
 		report.after = { ...report.before }
+		if (
+			expectedTargetCounts &&
+			Object.entries(expectedTargetCounts).some(
+				([key, value]) => report.before[key as keyof TargetCounts] !== value,
+			)
+		)
+			issue("target_changed_since_receipt")
 		sourceLocked =
 			(await source.query("SELECT pg_try_advisory_lock(551,551) AS locked"))
 				.rows[0].locked === true
@@ -174,6 +193,14 @@ export async function importSupabaseAuth({
 			await source.query("ROLLBACK")
 			throw new Error("Source snapshot failed")
 		}
+		report.sourceFingerprint = createHmac("sha256", encryptionSecret)
+			.update(JSON.stringify(["import-source-552", users, identities]))
+			.digest("hex")
+		if (
+			expectedSourceFingerprint &&
+			expectedSourceFingerprint !== report.sourceFingerprint
+		)
+			issue("source_changed_since_receipt")
 		const uuid =
 			/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 		const byUser = new Map<string, Document[]>()
@@ -345,6 +372,7 @@ export async function importSupabaseAuth({
 				report.unchanged[model === "user" ? "users" : "accounts"]++
 			} else pending.push(row)
 		}
+		if (requireExactRerun && pending.length) issue("rerun_would_create_rows")
 		if (report.issues.length) {
 			report.status = "rejected"
 			throw new SupabaseImportError(report)
