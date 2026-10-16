@@ -6,6 +6,10 @@ schema:
   $schema: 'https://json-schema.org/draft/2020-12/schema'
   type: object
   properties:
+    bypass_cache:
+      type: boolean
+      description: Add a unique query parameter for fresh daily rechecks; regular refreshes keep cached URLs.
+      default: false
     next_ids:
       type: object
       description: ''

@@ -25,6 +25,7 @@ class Catalog:
         self.connection.row_factory = sqlite3.Row
         self.connection.execute("CREATE TABLE movie (tmdb_id INTEGER, release_date INTEGER)")
         self.connection.execute("CREATE TABLE show (tmdb_id INTEGER, first_air_date INTEGER)")
+        self.connection.execute("CREATE TABLE release_event (media_type TEXT, media_tmdb_id INTEGER, release_type INTEGER, release_date INTEGER)")
 
     def select(self, sql, params):
         return [dict(row) for row in self.connection.execute(sql, params)]
@@ -44,16 +45,16 @@ class RecentReleaseSelectionTests(unittest.TestCase):
         collection = "tmdb_movie_details" if kind == "movie" else "tmdb_tv_details"
         return self.db[collection].insert_one({"tmdb_id": tmdb_id, **fields}).inserted_id
 
-    def test_thirty_utc_release_days_including_today_for_movies_and_shows(self):
+    def test_thirty_utc_release_days_and_seven_upcoming_days_for_movies_and_shows(self):
         for kind in ("movie", "show"):
-            for tmdb_id, day in enumerate(("2026-09-16", "2026-09-17", "2026-10-01", "2026-10-16", "2026-10-17", None), 1):
+            for tmdb_id, day in enumerate(("2026-09-16", "2026-09-17", "2026-10-01", "2026-10-16", "2026-10-23", "2026-10-24", None), 1):
                 self.title(kind, tmdb_id, day)
 
         plan = select_recheck(self.crate, self.db, NOW)
 
         self.assertEqual([(t["media_type"], t["tmdb_id"]) for t in plan["titles"]],
-                         [("movie", 2), ("movie", 3), ("movie", 4),
-                          ("show", 2), ("show", 3), ("show", 4)])
+                         [("movie", 2), ("movie", 3), ("movie", 4), ("movie", 5),
+                          ("show", 2), ("show", 3), ("show", 4), ("show", 5)])
 
     def test_only_successful_checks_after_the_daily_tmdb_batch_are_skipped(self):
         for tmdb_id, checked_at, error in (
@@ -63,7 +64,7 @@ class RecentReleaseSelectionTests(unittest.TestCase):
             (4, "2026-10-16T12:30:00", "provider_request_failed"),
         ):
             self.title("movie", tmdb_id, "2026-10-01",
-                       watch_providers_check={"checked_at": milliseconds(checked_at)},
+                       watch_providers_check={"checked_at": milliseconds(checked_at), "cache_bypassed": True},
                        watch_providers_error=error)
         # A previous selection is not a successful provider check.
         self.title("movie", 5, "2026-10-01", selected_at=NOW, is_selected=False)
@@ -72,6 +73,38 @@ class RecentReleaseSelectionTests(unittest.TestCase):
 
         self.assertEqual([t["tmdb_id"] for t in plan["titles"]], [1, 3, 4, 5])
         self.assertEqual(plan["already_checked"], 1)
+
+    def test_a_recent_cached_regular_fetch_does_not_replace_the_fresh_recheck(self):
+        self.title("movie", 1, "2026-10-01", watch_providers_check={"checked_at": milliseconds("2026-10-16T12:30:00")})
+        plan = select_recheck(self.crate, self.db, NOW)
+        self.assertEqual([t["tmdb_id"] for t in plan["titles"]], [1])
+        self.assertEqual(plan["already_checked"], 0)
+
+    def test_digital_movie_releases_extend_the_window_without_duplicating_titles(self):
+        for tmdb_id in range(1, 8):
+            self.title("movie", tmdb_id, "2020-01-01" if tmdb_id != 3 else "2026-10-01")
+        self.title("show", 1, "2020-01-01", last_air_date=NOW, next_episode_to_air={"season_number": 2})
+        for kind, tmdb_id, release_type, day in (
+            ("movie", 1, 4, "2026-09-17"),
+            ("movie", 1, 4, "2026-10-01"),  # Another country's digital release.
+            ("movie", 2, 4, "2026-10-23"),
+            ("movie", 3, 4, "2026-10-01"),  # Also in the primary release window.
+            ("movie", 4, 4, "2026-09-16"),
+            ("movie", 5, 4, "2026-10-24"),
+            ("movie", 6, 3, "2026-10-01"),
+            ("movie", 7, 5, "2026-10-01"),
+            ("show", 1, 4, "2026-10-01"),
+        ):
+            self.crate.connection.execute("INSERT INTO release_event VALUES (?, ?, ?, ?)",
+                                          (kind, tmdb_id, release_type, milliseconds(day)))
+
+        plan = select_recheck(self.crate, self.db, NOW)
+
+        self.assertEqual([(t["media_type"], t["tmdb_id"]) for t in plan["titles"]],
+                         [("movie", 1), ("movie", 2), ("movie", 3)])
+        self.assertEqual(plan["candidates"], 3)
+        self.assertEqual(plan["digital_movies"], 3)
+        self.assertEqual(plan["digital_only_movies"], 2)
 
     def test_titles_reserved_by_the_regular_queue_are_left_alone(self):
         for kind in ("movie", "show"):
@@ -127,7 +160,7 @@ class RecentReleaseSelectionTests(unittest.TestCase):
 
     def test_the_release_window_follows_utc_across_local_midnight(self):
         self.title("movie", 1, "2026-09-17")
-        self.title("movie", 2, "2026-10-17")
+        self.title("movie", 2, "2026-10-24")
         local_time = datetime.fromisoformat("2026-10-17T00:30:00+02:00")
         plan = select_recheck(self.crate, self.db, local_time)
         self.assertEqual([t["tmdb_id"] for t in plan["titles"]], [1])

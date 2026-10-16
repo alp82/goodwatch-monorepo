@@ -2,6 +2,7 @@ import asyncio
 import re
 from datetime import datetime
 from typing import Union
+from uuid import uuid4
 
 from mongoengine import EmbeddedDocumentField, EmbeddedDocumentListField
 import requests
@@ -92,13 +93,14 @@ def is_tmdb_deleted_response(response) -> bool:
 
 
 async def fetch_api_data(
-    next_entry: Union[TmdbMovieDetails, TmdbTvDetails],
+    next_entry: Union[TmdbMovieDetails, TmdbTvDetails], bypass_cache: bool = False,
 ) -> tuple[dict, Union[TmdbMovieDetails, TmdbTvDetails]]:
+    options = {"bypass_cache": True} if bypass_cache else {}
     try:
         if isinstance(next_entry, TmdbMovieDetails):
-            return fetch_movie_data(next_entry)
+            return fetch_movie_data(next_entry, **options)
         elif isinstance(next_entry, TmdbTvDetails):
-            return fetch_tv_data(next_entry)
+            return fetch_tv_data(next_entry, **options)
         raise TypeError("Unexpected TMDB media model")
     except requests.HTTPError as e:
         if is_tmdb_deleted_response(e.response):
@@ -122,30 +124,34 @@ async def fetch_api_data(
         raise
 
 
-def fetch_movie_data(next_entry: TmdbMovieDetails) -> tuple[dict, TmdbMovieDetails]:
+def fetch_movie_data(next_entry: TmdbMovieDetails, bypass_cache: bool = False) -> tuple[dict, TmdbMovieDetails]:
     url = (
         f"https://api.themoviedb.org/3/movie/{next_entry.tmdb_id}"
         f"?api_key={TMDB_API_KEY}"
         f"&append_to_response=alternative_titles,credits,images,keywords,recommendations,release_dates,similar,translations,videos,watch/providers"
     )
+    if bypass_cache:
+        url += f"&cb={uuid4().hex}"
     response = requests.get(url, timeout=REQUEST_TIMEOUT_SECONDS)
     response.raise_for_status()
     return response.json(), next_entry
 
 
-def fetch_tv_data(next_entry: TmdbTvDetails) -> tuple[dict, TmdbTvDetails]:
+def fetch_tv_data(next_entry: TmdbTvDetails, bypass_cache: bool = False) -> tuple[dict, TmdbTvDetails]:
     url = (
         f"https://api.themoviedb.org/3/tv/{next_entry.tmdb_id}"
         f"?api_key={TMDB_API_KEY}"
         f"&append_to_response=aggregate_credits,alternative_titles,content_ratings,external_ids,images,keywords,recommendations,similar,translations,videos,watch/providers"
     )
+    if bypass_cache:
+        url += f"&cb={uuid4().hex}"
     response = requests.get(url, timeout=REQUEST_TIMEOUT_SECONDS)
     response.raise_for_status()
     return response.json(), next_entry
 
 
 async def convert_and_save_details(
-    next_entry: Union[TmdbMovieDetails, TmdbTvDetails], details: dict
+    next_entry: Union[TmdbMovieDetails, TmdbTvDetails], details: dict, bypass_cache: bool = False
 ):
     now = datetime.utcnow()
     try:
@@ -156,6 +162,8 @@ async def convert_and_save_details(
     next_entry.watch_providers_attempted_at = now
     next_entry.watch_providers_error = "" if proof else "missing_or_invalid_provider_response"
     if proof:
+        if bypass_cache:
+            proof["cache_bypassed"] = True
         next_entry.watch_providers_check = proof
     else:
         # Keep prior payload and proof together; omission must never refresh them.
@@ -306,7 +314,7 @@ def clean_empty_strings(data):
 
 
 async def tmdb_fetch_details_from_api(
-    next_entries: list[Union[TmdbMovieDetails, TmdbTvDetails]],
+    next_entries: list[Union[TmdbMovieDetails, TmdbTvDetails]], bypass_cache: bool = False,
 ):
     print("Fetch detailed data from TMDB API")
 
@@ -321,7 +329,7 @@ async def tmdb_fetch_details_from_api(
 
     list_of_details = await asyncio.gather(
         *[
-            isolate_failure(next_entry, fetch_api_data(next_entry))
+            isolate_failure(next_entry, fetch_api_data(next_entry, bypass_cache=bypass_cache))
             for next_entry in next_entries
         ]
     )
@@ -341,7 +349,7 @@ async def tmdb_fetch_details_from_api(
     ]
     converted_details = await asyncio.gather(
         *[
-            isolate_failure(next_entry, convert_and_save_details(next_entry, details))
+            isolate_failure(next_entry, convert_and_save_details(next_entry, details, bypass_cache=bypass_cache))
             for details, next_entry in list_of_details
         ]
     )
@@ -395,13 +403,13 @@ async def tmdb_fetch_details_from_api(
     }
 
 
-def main(next_ids: dict):
+def main(next_ids: dict, bypass_cache: bool = False):
     init_mongodb()
     next_entries = get_documents_for_ids(
         next_ids=next_ids,
         movie_model=TmdbMovieDetails,
         tv_model=TmdbTvDetails,
     )
-    result = asyncio.run(tmdb_fetch_details_from_api(next_entries))
+    result = asyncio.run(tmdb_fetch_details_from_api(next_entries, bypass_cache=bypass_cache))
     close_mongodb()
     return result

@@ -1,7 +1,7 @@
 summary: Recheck offers for recent releases daily
 description: >-
-  Run at 13:00 UTC after TMDB's daily offer update. Select the last 30 UTC release
-  dates, fetch through the existing details script, and let the regular streaming
+  Run at 13:00 UTC; TMDB's update time is unconfirmed. Select recent and upcoming
+  premieres and digital movie releases, fetch fresh through the existing details script, and let the regular streaming
   publication write offers. Does not reserve or advance the 30-day details cycle.
 value:
   modules:
@@ -25,6 +25,9 @@ value:
               type: script
               path: f/tmdb_api/tmdb_fetch_details_from_api/fetch
               input_transforms:
+                bypass_cache:
+                  type: static
+                  value: true
                 next_ids:
                   type: javascript
                   expr: flow_input.iter.value

@@ -56,10 +56,10 @@ class RecentReleaseFlowTests(unittest.TestCase):
             "type": "rawscript", "language": "python3", "lock": "",
             "input_transforms": fetch["input_transforms"],
             "content": (
-                "def main(next_ids: dict):\n"
+                "def main(next_ids: dict, bypass_cache: bool = False):\n"
                 f"    if set(next_ids['movie_ids']) & set({crash_ids!r}): raise RuntimeError('Inert batch failure')\n"
                 "    return dict(count_new_entries=len(next_ids['movie_ids']) + len(next_ids['tv_ids']), "
-                f"count_failed_entries={failed}, next_ids=next_ids)\n"
+                f"count_failed_entries={failed}, next_ids=next_ids, bypass_cache=bypass_cache)\n"
             ),
         }
         job_id = api("/jobs/run/preview_flow", {
@@ -84,6 +84,7 @@ class RecentReleaseFlowTests(unittest.TestCase):
         loop = next(m for m in job["flow_status"]["modules"] if m["id"] == "fetch")
         observed = [api("/jobs_u/get/" + child)["result"]["next_ids"] for child in loop["flow_jobs"]]
         self.assertEqual(observed, batches)
+        self.assertTrue(all(api("/jobs_u/get/" + child)["result"]["bypass_cache"] for child in loop["flow_jobs"]))
 
     def test_empty_selection_does_not_fetch_anything(self):
         job = self.preview([])

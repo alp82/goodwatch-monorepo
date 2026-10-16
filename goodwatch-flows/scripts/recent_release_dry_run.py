@@ -5,11 +5,12 @@ Before deployment, inline f/tmdb_api/recent_releases.py in place of its import
 Only SELECT/find and TMDB GET are used. Nothing reserves, fetches through the
 production writer, publishes, refreshes a table, or creates an index.
 """
-from collections import defaultdict
+from collections import Counter, defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from threading import Lock
 import time
+from uuid import uuid4
 
 import requests
 import wmill
@@ -60,7 +61,7 @@ def main():
                     request_count += 1
                 time.sleep(delay)
                 try:
-                    response = requests.get(url, params={"api_key": api_key}, timeout=30)
+                    response = requests.get(url, params={"api_key": api_key, "cb": uuid4().hex}, timeout=30)
                 except requests.RequestException:
                     # Never print requests exceptions: their URLs contain the key.
                     continue
@@ -88,6 +89,7 @@ def main():
                     "existing_offers": len(prior), "added_offers": len(added),
                     "added_subscription_free_ads": sum(key[4] in ("flatrate", "free", "ads") for key in added),
                     "added_countries": len({key[2] for key in added}),
+                    "cache_status": response.headers.get("X-Cache", "unknown"),
                 }
             return {"media_type": kind, "tmdb_id": tmdb_id, "error": "Request retries exhausted"}
 
@@ -101,6 +103,8 @@ def main():
         successful = [r for r in results if "error" not in r]
         return plan | {
             "measured_at": now.isoformat(), "tmdb_requests": request_count,
+            "cache_bypassed": True,
+            "cloudfront_cache_status": dict(Counter(r["cache_status"] for r in successful)),
             "compared": len(successful), "failures": failures,
             "titles_gaining_offers": sum(r["added_offers"] > 0 for r in successful),
             "titles_gaining_first_offers": sum(r["added_offers"] > 0 and not r["existing_offers"] for r in successful),

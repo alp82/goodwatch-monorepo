@@ -1,0 +1,138 @@
+{
+  "added_offers": 16209,
+  "added_subscription_free_ads": 13200,
+  "already_checked": 0,
+  "by_media_type": {
+    "movie": {
+      "compared": 5277,
+      "titles_gaining_offers": 320
+    },
+    "show": {
+      "compared": 987,
+      "titles_gaining_offers": 239
+    }
+  },
+  "cache_bypassed": true,
+  "candidates": 6334,
+  "cloudfront_cache_status": {
+    "Miss from cloudfront": 6264
+  },
+  "compared": 6264,
+  "completed_at": "2026-10-16T23:08:21.817758Z",
+  "details_cache_preview": {
+    "job_id": "01a146f0-e15e-950b-41b9-6e78b70d0629",
+    "result": {
+      "movie_id": 603,
+      "requests": [
+        {
+          "age": null,
+          "cache": "Miss from cloudfront",
+          "has_cb": true,
+          "status": 200
+        },
+        {
+          "age": null,
+          "cache": "Miss from cloudfront",
+          "has_cb": true,
+          "status": 200
+        }
+      ],
+      "show_id": 258165
+    },
+    "success": true
+  },
+  "digital_movies": 1435,
+  "digital_only_movies": 404,
+  "duration_ms": 649999,
+  "failed_tmdb_ids": {
+    "HTTP 404": {
+      "movie": [
+        1495373,
+        1520641,
+        1576271,
+        1679675,
+        1739303,
+        1765503,
+        1767072,
+        1773454,
+        1775049,
+        1775988,
+        1776159,
+        1776812,
+        1776947,
+        1777846,
+        1780338,
+        1780352,
+        1780453,
+        1781332,
+        1781336,
+        1781519,
+        1781599,
+        1782263,
+        1782293,
+        1784078,
+        1784088,
+        1784097,
+        1784164,
+        1784285,
+        1785241,
+        1786241,
+        1786422,
+        1786801,
+        1786853,
+        1786999,
+        1787697,
+        1787723,
+        1788752,
+        1790265,
+        1790469,
+        1794163,
+        1795304,
+        1795899,
+        1796121,
+        1796729
+      ],
+      "show": [
+        324504,
+        326788,
+        335442,
+        336073,
+        336168,
+        336455,
+        336480,
+        336945,
+        337139,
+        337211,
+        337334,
+        337744,
+        337908,
+        338611,
+        338612,
+        338613,
+        338614,
+        338615,
+        338616,
+        338617,
+        338618,
+        338619,
+        338620,
+        338621,
+        338622,
+        338623
+      ]
+    }
+  },
+  "failure_count": 70,
+  "measured_at": "2026-10-16T22:57:33.571807+00:00",
+  "movies": 5321,
+  "preview_job_id": "01a146ef-5297-95d8-ba7c-add2b92bcb17",
+  "preview_source_sha256": "2e68cf211f0af55ff48087f3edf98c5c3566264618f555c1b61d4e2034545220",
+  "release_from": "2026-09-17",
+  "release_through": "2026-10-23",
+  "selected": 6334,
+  "shows": 1013,
+  "titles_gaining_first_offers": 386,
+  "titles_gaining_offers": 559,
+  "tmdb_requests": 6334,
+  "unavailable": 0
+}
