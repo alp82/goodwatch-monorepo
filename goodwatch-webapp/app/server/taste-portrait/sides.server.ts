@@ -3,7 +3,7 @@
 // a side are ordered by the person's personal order when it is on for them: sides group, personal order ranks.
 import { MOOD_KEYS, type MoodKey } from "~/domain/moods"
 import type { TitleKey } from "~/server/title-snapshot/index.server"
-import { familyOf } from "./families.server"
+import { nameGroup } from "./group-names.server"
 import {
 	K,
 	KEYS,
@@ -19,7 +19,7 @@ import {
 	yearOf,
 } from "./person.server"
 import type { Side, SideEdge, SidesView } from "./view"
-import { adjective, capitalize, label, noun } from "./words.server"
+import { adjective, capitalize, label } from "./words.server"
 
 // The person's services with their logos are added with the titles (index.server.ts).
 type SidesResult = Omit<SidesView, "titles" | "subject" | "services">
@@ -41,8 +41,6 @@ const MAX_SIDES = 5
 const HOLDS_TOGETHER = 0.55
 // A loved title less close than this to its side's center fits no side and is left out.
 const FITS_NO_SIDE = 0.3
-// A title this far below the catalog on an attribute a side's name claims (z) is not described by that name.
-const AGAINST_NAME = -1
 // Candidates for "You're here": the view keeps four after leaving out a franchise's second title.
 const HERE = 8
 // Titles above z 1.2 on an attribute carry it strongly.
@@ -215,64 +213,6 @@ function standout(center: Vec, others: Vec[]) {
 	return NON_CRAFT.filter((k) => !UNNAMED.has(KEYS[k]))
 		.map((k) => ({ key: KEYS[k], weight: center[k] - base[k] }))
 		.sort((a, b) => b.weight - a.weight || a.key.localeCompare(b.key))
-}
-
-/**
- * The names a side can take, best first, from the two attributes that most set it apart: "Bleak stories about crime
- * and justice" when one is a World attribute (an adjective from the other, the noun from the World one), else
- * "Hopeful, heartwarming stories", and two kinds of humor as one: "Physically and situationally funny stories". Then
- * the first attribute with the next ones, and its noun alone.
- */
-function sideNames(order: ReturnType<typeof standout>) {
-	const names: { name: string; keys: string[] }[] = []
-	for (let shift = 0; shift < 4; shift++) {
-		const a = order[0]
-		const b = order[1 + shift]
-		if (!a || !b) break
-		const world = [a, b].find((x) => familyOf(x.key) === "world")
-		const other = world === a ? b : a
-		const [x, y] = [adjective(a.key), adjective(b.key)]
-		const name = world
-			? `${capitalize(adjective(other.key))} ${noun(world.key)}`
-			: x.endsWith(" funny") && y.endsWith(" funny")
-				? `${capitalize(x.replace(/ funny$/, ""))} and ${y.replace(/ funny$/, "")} funny stories`
-				: `${capitalize(x)}, ${y} stories`
-		names.push({ name, keys: [a.key, b.key] })
-	}
-	if (order[0])
-		names.push({ name: capitalize(noun(order[0].key)), keys: [order[0].key] })
-	return names
-}
-
-/**
- * The side's name and the titles it describes: the first name not taken that still describes most of the side (three
- * in four of its titles), else the one that describes the most. Null when no name describes two.
- */
-function nameSide(
-	order: ReturnType<typeof standout>,
-	members: RatedTitle[],
-	taken: Set<string>,
-) {
-	let best: { name: string; members: RatedTitle[] } | null = null
-	for (const { name, keys } of sideNames(order)) {
-		if (taken.has(name)) continue
-		const described = describedBy(members, keys)
-		if (described.length >= Math.max(2, Math.ceil(0.75 * members.length))) {
-			best = { name, members: described }
-			break
-		}
-		if (!best || described.length > best.members.length)
-			best = { name, members: described }
-	}
-	if (!best || best.members.length < 2) return null
-	taken.add(best.name)
-	return best
-}
-
-/** The side's titles its name describes: none strongly against an attribute the name claims. */
-function describedBy(members: RatedTitle[], keys: string[]) {
-	const at = keys.map((key) => KEYS.indexOf(key))
-	return members.filter((r) => at.every((k) => r.z[k] >= AGAINST_NAME))
 }
 
 /** The most typical titles among the best rated, one per franchise (a franchise's films read alike). */
@@ -674,7 +614,7 @@ export function buildSides(
 	const taken = new Set<string>()
 	// Each side keeps the titles its name describes; a side no name describes two titles of goes.
 	const named = groups.flatMap((g, i) => {
-		const side = nameSide(
+		const side = nameGroup(
 			standout(
 				g.center,
 				groupCenters.filter((_, j) => j !== i),

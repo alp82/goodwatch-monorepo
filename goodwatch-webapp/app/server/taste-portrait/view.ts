@@ -103,7 +103,10 @@ export interface SideEdge {
 
 export interface Side {
 	id: string
-	/** "Bleak stories about crime and justice": from the two attributes that most set it apart from the other sides. */
+	/**
+	 * "Dark, tense crime": two traits that set it apart from the other sides and the most specific kind of title that
+	 * describes it (group-names.server.ts).
+	 */
 	name: string
 	/** The four attributes that set it apart from the other sides, strongest first (fingerprint keys). */
 	attributes: { key: string; label: string }[]

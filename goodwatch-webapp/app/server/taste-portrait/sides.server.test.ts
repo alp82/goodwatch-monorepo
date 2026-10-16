@@ -139,9 +139,11 @@ function person(ratedTitles: RatedTitle[], pool: PoolTitle[]): Person {
 /** 30 loved crime titles, 30 loved comedies, a few middling ones, and an unseen pool next to each strand. */
 function twoStrands() {
 	const titles = [
-		...Array.from({ length: 30 }, () => rated(CRIME, 9, { moods: ["crime"] })),
 		...Array.from({ length: 30 }, () =>
-			rated(COMEDY, 9, { moods: ["funny", "feelgood"] }),
+			rated(CRIME, 9, { moods: ["crime"], genres: ["Crime", "Drama"] }),
+		),
+		...Array.from({ length: 30 }, () =>
+			rated(COMEDY, 9, { moods: ["funny", "feelgood"], genres: ["Comedy"] }),
 		),
 		...Array.from({ length: 10 }, () => rated({}, 5)),
 	]
@@ -210,8 +212,8 @@ describe("buildSides", () => {
 			),
 		)
 		assert.ok(crime && comedy && crime !== comedy)
-		assert.match(crime.name, /crime/)
-		assert.match(comedy.name, /funny/)
+		assert.equal(crime.name, "Dark, tense crime")
+		assert.match(comedy.name, /comedies$/)
 	})
 
 	it("opens Watch next with the moods most of a side's titles carry", () => {
@@ -332,12 +334,15 @@ describe("buildSides", () => {
 	})
 
 	it("orders the sides by how many titles they keep, after leaving some out", () => {
-		// 34 crime titles, 12 of them far below the catalog on crime itself, which every name of the side claims: the
-		// side keeps 22 and falls behind the 30 comedies.
+		// 34 crime titles, 12 of them far below the catalog on the three traits every name of the side claims one of:
+		// the side keeps 22 and falls behind the 30 comedies.
 		const STRONG_CRIME = { ...CRIME, crime: 6 }
+		const AGAINST = { bleakness: -1.2, tension: -1.2, intrigue: -1.2 }
 		const titles = [
 			...Array.from({ length: 22 }, () => rated(STRONG_CRIME, 9)),
-			...Array.from({ length: 12 }, () => rated({ ...CRIME, crime: -1.5 }, 9)),
+			...Array.from({ length: 12 }, () =>
+				rated({ ...STRONG_CRIME, ...AGAINST }, 9),
+			),
 			...Array.from({ length: 30 }, () => rated(COMEDY, 9)),
 			...Array.from({ length: 10 }, () => rated({}, 5)),
 		]
