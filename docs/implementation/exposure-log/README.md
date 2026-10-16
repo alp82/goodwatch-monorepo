@@ -19,20 +19,36 @@ all filter state, country, expanded saved services, taste key version, and order
 For you switch, so both fields are false. Its `filters.type` distinguishes My movies. Discover has a page number;
 Watch next has a `batch` of `page` or `cards`. Empty pages also record their state.
 
-Today's ordering is `taste-v2`; stage 2 can use `personal-order` for the flagged catalogue Best match and
-Watch next lists. `ordering_flags.REC_G1_ORDER` carries the resolved enabled state; `personal_order_flag_mode`
-carries off/shadow/preview/on. The nullable personal order fields record fallback reason, payload build time,
-model hash and snapshot version; `personal_order_groups`, `personal_order_mix_placed`, and `watch_next_tiers` align to the
-returned cards. Under personal order, `today_first_100` records today's same-list control before paging;
-under shadow, `personal_order_first_100` records the candidate while cards retain today's order. See
-[rename and deploy order](../personal-order-rename.md) and apply
-[personal-order-rename.sql](personal-order-rename.sql) to the existing table while writers are stopped.
+Personal order serves every eligible member's catalogue Best match and Watch next lists (#654/#655).
+`ordering` records `personal-order` when used, or `taste-v2` on safe fallback. There is no rollout switch or
+preview allowlist. The historical `personal_order_flag_mode` column stays `on` for new member rows;
+`ordering_flags` is empty. Old off/shadow/preview rows remain unchanged. The nullable personal order fields record
+fallback reason, payload build time, model hash and snapshot version; `personal_order_groups`,
+`personal_order_mix_placed`, and `watch_next_tiers` align to the returned cards. Under personal order,
+`today_first_100` records the same-list taste-order control before paging. The former shadow-only
+`personal_order_first_100` column stays null for new rows. Historical migration instructions are in
+[rename and deploy order](../personal-order-rename.md).
 Ordering identity stays separate from the displayed card taste version.
 
 The server returns `listId` immediately and schedules the Crate write on the next event-loop turn, without waiting.
 Errors are logged. At 1,000 outstanding writes, further records are dropped and logged; the list still succeeds.
 Normal Crate timeouts apply. A returned id is not a durability guarantee. Guests get `listId: null` and no write.
 No consent-dependent browser telemetry or extra first-view request is involved.
+
+Only a deployed production process writes exposures: `NODE_ENV=production` and a full 40-character hexadecimal
+`SOURCE_COMMIT` are both required. Coolify already supplies the commit at runtime. No new Coolify value or
+feature switch is needed. Local `npm start` without that deployment marker returns `listId: null`, as do dev
+and test processes. Do not copy the deployment marker into local environments. Tests explicitly supply a
+synthetic commit with an in-memory Crate client.
+
+Known historical contamination (October 16, 2026): 55 Watch next Best match rows have
+`personal_order_flag_mode='off'`, `ordering='taste-v2'`, `batch='page'`, and timestamps from
+`2026-10-16T22:11:15.641Z` through `2026-10-16T22:24:35.945Z` inclusive. Their `filters` objects contain
+`styles`, `themes`, and `taste`, which the deployed app did not emit until the subsequent picker deployment
+at 22:28–22:29 UTC. Fetch that bounded selection and verify those object keys to identify the contaminated
+rows without member identifiers. Exclude these from production rollout measurements; retain the immutable
+rows. This identifies the known sample, not every possible historical non-production write.
+
 
 Follow-up: carry `listId` and page/batch position through title opens, Want to See, Not interested, and ratings, and
 persist that attribution. The shared card actions, Watch next's hero/suggestions, and subsequent title-page actions

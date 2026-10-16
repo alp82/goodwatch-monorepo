@@ -71,8 +71,12 @@ const ctx = (): ViewerContext => ({
 	forYou: true,
 })
 const turn = () => new Promise<void>((resolve) => setImmediate(resolve))
+const originalNodeEnv = process.env.NODE_ENV
+const originalCommit = process.env.SOURCE_COMMIT
 let rows: Record<string, unknown>[]
 beforeEach(() => {
+	process.env.NODE_ENV = "production"
+	process.env.SOURCE_COMMIT = "a".repeat(40)
 	rows = []
 	setCrateClientForTest({
 		async execute(sql, params = []) {
@@ -99,6 +103,11 @@ beforeEach(() => {
 afterEach(async () => {
 	await turn()
 	setCrateClientForTest(null)
+	if (originalNodeEnv === undefined)
+		Reflect.deleteProperty(process.env, "NODE_ENV")
+	else process.env.NODE_ENV = originalNodeEnv
+	if (originalCommit === undefined) delete process.env.SOURCE_COMMIT
+	else process.env.SOURCE_COMMIT = originalCommit
 })
 
 test("Discover first view and subsequent pages record returned cards, excluding missing titles", async () => {
@@ -164,8 +173,9 @@ test("Watch next logs hero, Then and loaded tiers, then separately logs a later 
 	})
 	const later = await getWatchNextCardsPage(
 		ctx(),
-		[1e12 + 45, 1e12 + 46, 1e12 + 999],
-		{ sort: "waiting" },
+		[1e12 + 45, 1e12 + 46, 1e12 + 2],
+		{ sort: "added", moods: ["funny"], onMyServices: false },
+		first.planId,
 	)
 	await turn()
 	assert.equal(rows.length, 2)
@@ -192,7 +202,7 @@ test("Watch next logs hero, Then and loaded tiers, then separately logs a later 
 	assert.deepEqual(rows[1].title_keys, [1e12 + 45, 1e12 + 46])
 	assert.deepEqual(
 		[rows[1].list_id, rows[1].sort, rows[1].batch, rows[1].positions],
-		[later.listId, "waiting", "cards", [1, 2]],
+		[later.listId, "added", "cards", [1, 2]],
 	)
 	assert.notEqual(first.listId, later.listId)
 })
