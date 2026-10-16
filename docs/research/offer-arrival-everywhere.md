@@ -45,6 +45,9 @@ wrote the row.
 9. **TMDB changes offers once a day, at about 11:30 to 12:00 UTC.** 60 lists read 10 times over 18 hours did not
    change for 17 hours, then gained 50 titles and lost 16 of 155,702 in one batch. One read a day after that batch
    is all a list can tell. A day's change is small: a few titles per list.
+   *Correction (2026-10-16):* these reads used plain URLs, which TMDB serves from a CloudFront cache up to 7.7 hours
+   old, so the change could have happened hours earlier. See
+   [availability-history.md](availability-history.md), finding 3.
 10. **TMDB lists a new original one to three days after its premiere,** some later or never: 19 of 24 network
     originals of 2026-10-01 to 10-13 had an offer on 10-16, 1 of the 9 of 10-14 to 10-16 (none in the United
     States).
@@ -260,6 +263,9 @@ in the middle of a change at 11:56.
   before it. A list read twice a day sees nothing a list read once a day does not, as long as it is read after the
   batch. TMDB serves discover with `Cache-Control: max-age` of 3.5 to 4 hours, so more frequent reads would mostly
   hit the cache anyway.
+  *Correction (2026-10-16):* `max-age` is fixed per URL and ranges from 0 to about 7.7 hours, and these reads hit the
+  cache. The hour of the change is therefore not known. A fresh read (an unknown query parameter) bypasses the cache.
+  See [availability-history.md](availability-history.md), finding 3.
 - **During the batch, paging is unreliable for an hour or more.** At 11:56 and 12:41, 10 and 26 of the 60 lists
   returned fewer unique titles than `total_results` when sorted by title. At 12:58, sorted by release date with a
   second pass by vote count where the first fell short, 58 of 60 were complete.
