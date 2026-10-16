@@ -60,7 +60,7 @@ type LoaderData = {
 	countryIsFallback: boolean
 	/** Whether the viewer gets the "Talked about now" section (TALKED_ABOUT_NOW_TITLE). */
 	talkedAboutNow: boolean
-	/** Where the title sits in the signed-in member's Taste (Sides of you, TITLE_SIDES); null for everyone else. */
+	/** Where the title sits in the signed-in member's taste (taste groups, TITLE_SIDES); null for everyone else. */
 	sides: TitleSides | null
 }
 
@@ -71,7 +71,7 @@ export const loader: LoaderFunction = async ({
 	const showId = (params.showKey || "").split("-")[0]
 
 	const userId = await getUserIdFromRequest({ request })
-	// Sides of you for a signed-in member, alongside the reads below; the page waits for it within its budget only.
+	// Taste groups for a signed-in member, alongside the reads below; the page waits for it within its budget only.
 	const sidesStart = Date.now()
 	const sidesWork = titleSides(request, userId, "show", Number(showId))
 	sidesWork.catch(() => {})

@@ -16,9 +16,9 @@ interface TitleSidesLineProps {
 	tmdbId: number
 }
 
-// Sides of you in the overview card (#672): one row between the banner and the actions. A small stack of the loved
-// titles closest to this one, one sentence for where the title sits in the member's Taste, and Watch next with the
-// side's moods. The server decides it (title-sides.server.ts) and renders it with the page, so the card doesn't move.
+// Taste groups in the overview card (#672): one row between the banner and the actions. A small stack of the loved
+// titles closest to this one, the group's name, a badge for how the title fits the member's taste, and Watch next
+// with the group's moods. The server decides it (title-sides.server.ts) and renders it with the page, so the card doesn't move.
 // Rating, watching, or dismissing the title on the page takes the line away: it is no longer a recommendation.
 export default function TitleSidesLine({
 	sides,
@@ -32,8 +32,6 @@ export default function TitleSidesLine({
 	if (score || watchState || notInterested || skipped) return null
 
 	const { side, other } = sides
-	const near = side.near.map((t) => t.title)
-	const otherNear = other?.near.map((t) => t.title) ?? []
 	const between = sides.edge === "between" && other
 	const sentence =
 		sides.at === "on"
@@ -41,12 +39,6 @@ export default function TitleSidesLine({
 			: between
 				? COPY.between(side.name, other.name)
 				: COPY.edge(side.name, sides.edgeTail)
-	const detail =
-		sides.at === "on"
-			? COPY.onDetail(near, side.share)
-			: between
-				? COPY.betweenDetail(near, otherNear)
-				: COPY.edgeDetail(near)
 	const stack = [...side.near, ...(other?.near ?? [])]
 	const edge = sides.at === "edge"
 	return (
@@ -77,13 +69,17 @@ export default function TitleSidesLine({
 				))}
 			</div>
 			<div className="min-w-0 flex-1">
-				<p
-					className={`text-[11px] font-semibold uppercase tracking-[0.08em] ${edge ? "text-sky-300" : "text-amber-300"}`}
+				{sentence && (
+					<p className="font-bold leading-snug text-white md:text-lg">
+						{sentence}
+					</p>
+				)}
+				{/* The title page's badge, as About's essence tags (ui/fingerprint/Badges). */}
+				<span
+					className={`inline-block rounded-md border border-gray-600 bg-gray-800 px-2 py-1 text-xs font-medium text-gray-300 ${sentence ? "mt-1.5" : ""}`}
 				>
-					{COPY.eyebrow}
-				</p>
-				<p className="font-bold leading-snug text-white">{sentence}</p>
-				<p className="mt-0.5 text-sm leading-snug text-gray-400">{detail}</p>
+					{edge ? COPY.close : COPY.fits}
+				</span>
 			</div>
 			<Link
 				to={

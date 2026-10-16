@@ -1,4 +1,4 @@
-// Sides of you on the title page (#672, decided in #661): one line in the overview card that tells a signed-in member
+// Taste groups on the title page (#672, decided in #661): one line in the overview card that tells a signed-in member
 // where an unseen title sits in their Taste: on one of their sides, or just past one (in a place or a step just past
 // it, or between two sides). A title that fits no side says nothing, and so does a title the member has rated,
 // watched, marked Not interested, dropped, or passed on: it can't be a recommendation.
@@ -62,8 +62,6 @@ export interface TitleSidesSide {
 	number: number
 	/** Its name, only while TITLE_SIDE_NAMES is on (the words gate, #656). */
 	name: string | null
-	/** Its share of what the member loves, 0 to 1. */
-	share: number
 	/** The moods Watch next opens the side with. */
 	moods: MoodKey[]
 	/** Its loved titles closest to this title, closest first, one per franchise. */
@@ -172,7 +170,6 @@ async function sideOf(
 	return {
 		number: index + 1,
 		name: titleSideNames() ? side.name : null,
-		share: Math.round((side.members.length / named.loved) * 1000) / 1000,
 		moods: sideMoods(side.members),
 		near: await nearOf(side, z, n),
 	}

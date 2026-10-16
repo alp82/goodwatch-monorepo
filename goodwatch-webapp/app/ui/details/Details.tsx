@@ -27,7 +27,7 @@ export interface DetailsProps {
 	episodeGrid?: EpisodeGrid | null
 	/** Whether the viewer gets the "Talked about now" section. */
 	talkedAboutNow?: boolean
-	/** Where the title sits in the signed-in member's Taste (Sides of you). */
+	/** Where the title sits in the signed-in member's taste (taste groups). */
 	sides?: TitleSides | null
 }
 

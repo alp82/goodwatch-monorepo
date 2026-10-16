@@ -23,7 +23,7 @@ export interface DetailsHeroProps {
 	/** The show's episode grid, when it has one: the ratings row draws its miniature from it. */
 	episodeGrid?: EpisodeGrid | null
 	sectionProps: SectionProps<SectionIds>
-	/** Where the title sits in the signed-in member's Taste (Sides of you); null when the page says nothing about it. */
+	/** Where the title sits in the signed-in member's taste (taste groups); null when the page says nothing about it. */
 	sides?: TitleSides | null
 }
 
@@ -32,7 +32,7 @@ export interface DetailsHeroProps {
 // The banner is the backdrop, with the trailer button in its corner. On it: the poster, which opens full screen,
 // and the ratings as one group. The GoodWatch score and the person's own score, then one chip per site and, for a
 // show, the miniature of its episode ratings. Under the banner, for a member, where the title sits in their Taste
-// (Sides of you, one line), then two blocks: the person's actions with the title
+// (taste groups, one line), then two blocks: the person's actions with the title
 // (for a tracked show also its status line), and where to watch.
 //
 // Every row runs from its left edge to its right edge: the GoodWatch ring starts the scores and the own score ends
