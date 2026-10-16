@@ -324,7 +324,8 @@ export function DiscoverPage({
 		)
 	}, [side, grouped, first, stale, setParams])
 	const applied = Boolean(first?.forYou.applied) && forYou.on
-	const movedUp = applied && !stale ? (first?.movedUp ?? 0) : 0
+	// "↑N moved" describes the grid's order: rows have no movement to show.
+	const movedUp = applied && !stale && !rows ? (first?.movedUp ?? 0) : 0
 	const leanings = first?.explanation?.leanings ?? []
 	const ratings = first?.explanation?.ratings ?? first?.forYou.ratings ?? 0
 	const forYouControl: ForYouControl = {
