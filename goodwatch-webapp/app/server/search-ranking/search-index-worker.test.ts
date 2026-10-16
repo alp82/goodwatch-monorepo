@@ -124,7 +124,18 @@ test("worker matches inline loading and terminates after success and missing blo
 	t.after(() => process.off("worker", track))
 	const source = new URL("./search-index.worker.ts", import.meta.url)
 	const fromManifest = await readManifest()
+	const logged = { info: console.info, warn: console.warn }
+	const infos: unknown[][] = []
+	const warnings: unknown[][] = []
+	console.info = (...args: unknown[]) => infos.push(args)
+	console.warn = (...args: unknown[]) => warnings.push(args)
+	t.after(() => Object.assign(console, logged))
 	const expected = await loadBuild(fromManifest)
+	assert.match(
+		String(infos[0]?.[0]),
+		/^Search index build test alias_table \(alias_version 1, 2 aliases\) loaded in \d+ ms$/,
+		"the loaded alias_table is logged",
+	)
 	const actual = await loadIndexBuild(fromManifest, source)
 	const comparable = ({ loadedAt, timings, ...index }: typeof expected) => index
 	assert.deepStrictEqual(comparable(actual), comparable(expected))
@@ -133,33 +144,42 @@ test("worker matches inline loading and terminates after success and missing blo
 		2,
 		"the optional alias_table loads when listed",
 	)
+	// A build without alias_table loads without aliases, with a warning.
+	const { alias_table, ...required } = fromManifest.files
+	const bare = await loadBuild({ ...fromManifest, files: required })
+	assert.equal(bare.aliases.size, 0)
+	assert.match(
+		String(warnings.at(-1)?.[0]),
+		/^Search index build test has no alias_table, searching without localized names$/,
+	)
 	// A broken alias_table (gone, not gzip, not JSON) leaves the build without aliases; the required files still load.
 	const stored = (bytes: Buffer) => {
 		const sha1 = createHash("sha1").update(bytes).digest("hex")
 		blobs.set(sha1, bytes)
 		return { sha1, bytes: bytes.length }
 	}
-	const logged = console.error
-	const errors: unknown[] = []
-	console.error = (...args: unknown[]) => errors.push(args)
-	try {
-		for (const file of [
-			{ sha1: "0".repeat(40), bytes: 1 },
-			stored(Buffer.from("not gzip")),
-			stored(gzipSync("{not json")),
-		]) {
-			const broken = {
-				...fromManifest,
-				files: { ...fromManifest.files, alias_table: file },
-			}
-			const index = await loadBuild(broken)
-			assert.equal(index.aliases.size, 0)
-			assert.equal(index.titleTable.size, 1)
+	warnings.length = 0
+	for (const file of [
+		{ sha1: "0".repeat(40), bytes: 1 },
+		stored(Buffer.from("not gzip")),
+		stored(gzipSync("{not json")),
+	]) {
+		const broken = {
+			...fromManifest,
+			files: { ...fromManifest.files, alias_table: file },
 		}
-	} finally {
-		console.error = logged
+		const index = await loadBuild(broken)
+		assert.equal(index.aliases.size, 0)
+		assert.equal(index.titleTable.size, 1)
 	}
-	assert.equal(errors.length, 3, "each skipped alias_table is logged")
+	// The Crate client warns too (the missing blob's failed attempt).
+	assert.equal(
+		warnings.filter(([message]) =>
+			String(message).includes("alias_table skipped"),
+		).length,
+		3,
+		"each skipped alias_table is a warning, not an error",
+	)
 	missing = true
 	await assert.rejects(loadIndexBuild(fromManifest, source), BlobMissing)
 	assert.equal(workers.length, 2)

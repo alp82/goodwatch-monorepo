@@ -212,7 +212,13 @@ Fixes after review, all on the side of the titles and of a build that always loa
   its blended score is capped just below the lowest title row of the same lexical kind.
 - **A broken `alias_table` (missing blob, gunzip or JSON error, columns of different lengths, rows that don't fit
   the title table) loads the build without aliases**, and a failed `translation` read writes an empty table of
-  version 0 instead of failing the nightly build.
+  version 0 instead of failing the nightly build. Each search role logs the loaded table ("Search index build …
+  alias_table (alias_version 1, 320314 aliases) loaded in N ms"), and warns when the build has none or skips it.
+- **"Like X" takes a title or localized name over a person, team or studio it holds** (2026-10-16): "like Der Pate"
+  named the Pate brothers, because the single word "pate" is their name and names were looked up before titles. A
+  name still wins when it is the whole key ("like Chaplin" stays Charlie Chaplin, "like Brad Pitt" the person). That
+  lifts "like X" over the localized set from 88% to 93% (de and it to 100%), and canonical from 90% to 95% (Forrest
+  Gump).
 
 **Evaluation**, `scripts/search-alias-eval.ts` with `app/server/search-ranking/alias-eval.fixture.json`, top-1 / top-5
 before → after, rerun after the review fixes. The palette is its 8 rows; the title lookup + blend is the palette's 20
@@ -220,10 +226,10 @@ rows through `title-blend.server.ts`, without TMDB and without the ranked list.
 
 | queries | n | palette | title lookup + blend | "like X" top-1 |
 |---|---|---|---|---|
-| localized, full name | 60 | 0% / 0% → 98% / 100% | 0% / 0% → 100% / 100% | 0% → 88% |
+| localized, full name | 60 | 0% / 0% → 98% / 100% | 0% / 0% → 100% / 100% | 0% → 88% (93% after the name fix) |
 | localized, first word | 52 | 0% / 2% → 37% / 56% | 0% / 2% → 21% / 56% | |
 | localized, first 3 characters | 51 | 0% / 0% → 20% / 35% | 0% / 2% → 10% / 37% | |
-| canonical, full name | 20 | 95% / 100% → 95% / 100% | 95% / 100% → 95% / 100% | 90% → 90% |
+| canonical, full name | 20 | 95% / 100% → 95% / 100% | 95% / 100% → 95% / 100% | 90% → 90% (95% after the name fix) |
 | canonical, first word | 12 | 67% / 92% → 67% / 92% | 17% / 67% → 17% / 67% | |
 | canonical, first 3 characters | 19 | 74% / 95% → 74% / 95% | 32% / 74% → 32% / 74% | |
 | ambiguous names | 10 | 80% / 90% → 90% / 100% | 60% / 90% → 70% / 100% | |
@@ -255,9 +261,9 @@ resolves to The Thing (1982) by votes.
 "Like X" finds every Chinese and Korean name with the 2-character keys (80% → 100% each). Over the localized set it
 is 88%, as before the CJK keys: titles now win over longer localized names, so "Dracula: A Love Tale" finds Dracula
 (1931) and "Love Doesn't Understand Words" the film Love (2015), by their first word. The other misses come from existing rules:
-two titles below 10,000 votes ("Cranberry Sorbet", "The Blood Lands"), the 2-letter Latin key "up", and names that
-resolve to a person or team first: "Krieg der Sterne" (Jim Krieg), "Der Pate" (Jonas and Josh Pate), "Il Trono di
-Spade" (David Spade) and, before aliases too, "Forrest Gump" (Frederic Forrest). Prefixes of localized names miss
+two titles below 10,000 votes ("Cranberry Sorbet", "The Blood Lands"), the 2-letter Latin key "up", and, until the
+name fix above, names that resolved to a person or team first: "Krieg der Sterne" (Jim Krieg), "Der Pate" (Jonas and
+Josh Pate), "Il Trono di Spade" (David Spade) and, before aliases too, "Forrest Gump" (Frederic Forrest). Prefixes of localized names miss
 mostly on their first word ("Le", "El", "Der", "Il"), which many titles share. The set types names from their start;
 its CJK names and their prefixes all hit their titles in the top 5, so phase 1 adds no substring scan.
 

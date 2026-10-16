@@ -207,17 +207,28 @@ function gramOf(table: AliasTable, gram: string): number {
 
 /**
  * The build's alias table, or none when its file is missing or doesn't fit the title table: the localized names are
- * extra recall, so they never keep a build from loading.
+ * extra recall, so they never keep a build from loading. Logs the loaded table (`readMs`: the file's read before), or
+ * a warning when it is skipped.
  */
 export function buildAliasTable(
 	d: Json | undefined,
 	titles: number,
 	buildId: string,
+	readMs = 0,
 ): AliasTable {
+	if (!d) return emptyAliasTable(titles)
+	const started = performance.now()
 	try {
-		return aliasTable(d, titles)
+		const table = aliasTable(d, titles)
+		console.info(
+			`Search index build ${buildId} alias_table (alias_version ${table.version}, ${table.size} aliases) loaded in ${Math.round(readMs + performance.now() - started)} ms`,
+		)
+		return table
 	} catch (error) {
-		console.error(`Search index build ${buildId}: alias_table skipped`, error)
+		console.warn(
+			`Search index build ${buildId}: alias_table skipped, searching without localized names`,
+			error,
+		)
 		return emptyAliasTable(titles)
 	}
 }

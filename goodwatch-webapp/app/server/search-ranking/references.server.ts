@@ -249,12 +249,12 @@ const keyTooShort = (key: string) =>
 
 /**
  * The longest title (up to 8 words) right after a like-marker, or at the start of the query running up to "but"
- * ("breaking bad but funny", not "... but not ..."): (row, used token positions), or null.
+ * ("breaking bad but funny", not "... but not ..."): (row, used token positions, the matched key), or null.
  */
 function findReference(
 	index: SearchIndex,
 	toks: string[],
-): { row: number; used: Set<number> } | null {
+): { row: number; used: Set<number>; key: string } | null {
 	const starts: [number, number, number | null][] = []
 	for (let i = 0; i < toks.length; i++) {
 		for (const m of LIKE_MARKERS) {
@@ -288,7 +288,7 @@ function findReference(
 				if (row !== undefined) {
 					const used = new Set<number>()
 					for (let p = markerStart; p < s + k; p++) used.add(p)
-					return { row, used }
+					return { row, used, key }
 				}
 			}
 		}
@@ -329,6 +329,19 @@ function franchiseRows(index: SearchIndex, row: number): Set<number> {
 // --- The reference --------------------------------------------------------------------------------------------------
 
 /**
+ * Whether a "like X" title names every detected name inside a longer title: "der pate" holds the team Pate, "forrest
+ * gump" the person Forrest, so the query means the title. A title that is only the name ("like chaplin") stays the name.
+ */
+function titleHoldsNames(key: string, det: Detection): boolean {
+	const title = fold(key)
+	const length = title.split(" ").length
+	return det.entities.every(({ span }) => {
+		const name = det.tokens.slice(span[0], span[1])
+		return name.length < length && ` ${title} `.includes(` ${name.join(" ")} `)
+	})
+}
+
+/**
  * (residual text, negated clauses): the tokens outside the reference, spell-corrected (English only), negated clauses
  * split off, filler words dropped; the text is empty when no content word is left.
  */
@@ -357,8 +370,9 @@ function residual(
 }
 
 /**
- * The person, team, studio or "like X" title the query names, or null. `intent` of an entity reference with a
- * residual stays null until the caller has encoded detection.intentText (see nearestIntent).
+ * The person, team, studio or "like X" title the query names, or null. A name wins over a title, unless the title
+ * holds every name and is longer ("like der pate" is The Godfather, not the Pate brothers). `intent` of an entity
+ * reference with a residual stays null until the caller has encoded detection.intentText (see nearestIntent).
  */
 export function resolveReference(
 	index: SearchIndex,
@@ -367,7 +381,10 @@ export function resolveReference(
 	nonEnglish: boolean,
 ): (Omit<Reference, "intent"> & { intent: Intent | null }) | null {
 	const t = index.titleTable
-	const det = detect(index, query)
+	const found = detect(index, query)
+	const toks = words(text)
+	const hit = findReference(index, toks)
+	const det = found && hit && titleHoldsNames(hit.key, found) ? null : found
 	let ref: Omit<Reference, "intent" | "own"> & { intent: Intent | null }
 	if (det) {
 		const weights = titleWeights(index, det.entities)
@@ -391,8 +408,6 @@ export function resolveReference(
 			detection: det,
 		}
 	} else {
-		const toks = words(text)
-		const hit = findReference(index, toks)
 		if (!hit) return null
 		const ws = new Set([
 			...[...hit.used].map((i) => toks[i]),

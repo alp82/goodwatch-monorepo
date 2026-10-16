@@ -328,13 +328,17 @@ export async function loadBuild(manifest: Manifest): Promise<SearchIndex> {
 	const aliasFile = manifest.files.alias_table
 	const aliasDoc = aliasFile
 		? read("alias_table", aliasFile.sha1).catch((error) => {
-				console.error(
-					`Search index build ${manifest.build_id}: alias_table skipped`,
+				console.warn(
+					`Search index build ${manifest.build_id}: alias_table skipped, searching without localized names`,
 					error,
 				)
 				return undefined
 			})
 		: undefined
+	if (!aliasFile)
+		console.warn(
+			`Search index build ${manifest.build_id} has no alias_table, searching without localized names`,
+		)
 	await Promise.all(
 		INDEX_FILES.map(async (name) => {
 			const file = manifest.files[name]
@@ -384,7 +388,12 @@ export async function loadBuild(manifest: Manifest): Promise<SearchIndex> {
 			english: quantized(mix.text_en_v1),
 		},
 		...derivedTitles(title),
-		aliases: buildAliasTable(aliases, title.size, manifest.build_id),
+		aliases: buildAliasTable(
+			aliases,
+			title.size,
+			manifest.build_id,
+			timings.alias_table,
+		),
 		timings,
 	}
 	timings.total = performance.now() - started

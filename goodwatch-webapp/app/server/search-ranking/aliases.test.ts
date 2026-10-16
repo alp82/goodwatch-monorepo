@@ -12,7 +12,7 @@ import {
 	matchedAlias,
 } from "./aliases.server.ts"
 import { matchingRows, paletteCacheEntry } from "./name-prefix.server.ts"
-import type { SearchIndex } from "./search-index.server.ts"
+import type { NameEntity, SearchIndex } from "./search-index.server.ts"
 import { normalized } from "./text-rules.server.ts"
 
 // references.server.ts reads a JSON file, which Node imports only with an import attribute.
@@ -40,7 +40,7 @@ const { resolveReference } = await import("./references.server.ts")
 
 const movie = (id: number) => 1e12 + id
 // Rows: Spirited Away, The Dark Knight, Star Wars, Lone Star (a canonical word match for "star"), an adult title, and
-// The Thing (1982) and The Thing (1951), which share their German name.
+// The Thing (1982) and The Thing (1951), which share their German name, The Godfather and Forrest Gump.
 const titles = [
 	["Spirited Away", "千と千尋の神隠し", 900_000],
 	["The Dark Knight", "The Dark Knight", 3_000_000],
@@ -50,6 +50,7 @@ const titles = [
 	["The Thing", "The Thing", 500_000],
 	["The Thing from Another World", "The Thing from Another World", 30_000],
 	["The Godfather", "The Godfather", 2_400_000],
+	["Forrest Gump", "Forrest Gump", 2_200_000],
 ] as const
 const aliasDoc = {
 	version: 1,
@@ -136,12 +137,12 @@ test("a build without the file, or with rows outside the title table, has no ali
 		/don't match/,
 	)
 	// A load never fails for its aliases: a table that doesn't fit is skipped.
-	const logged = console.error
-	console.error = () => {}
+	const logged = console.warn
+	console.warn = () => {}
 	try {
 		assert.equal(buildAliasTable({ ...aliasDoc, rows: [9] }, 7, "test").size, 0)
 	} finally {
-		console.error = logged
+		console.warn = logged
 	}
 	assert.equal(buildAliasTable(aliasDoc, 7, "test").size, 9)
 })
@@ -154,12 +155,12 @@ test("columns of different lengths throw, and the build loads without aliases", 
 		{ ...aliasDoc, rows: undefined },
 	]) {
 		assert.throws(() => aliasTable(broken, titles.length), /differ in length/)
-		const logged = console.error
-		console.error = () => {}
+		const logged = console.warn
+		console.warn = () => {}
 		try {
 			assert.equal(buildAliasTable(broken, titles.length, "test").size, 0)
 		} finally {
-			console.error = logged
+			console.warn = logged
 		}
 	}
 })
@@ -340,6 +341,70 @@ test("like X takes a two-character Chinese, Japanese or Korean name, and still n
 	assert.deepEqual(seeds("대부"), [7])
 	assert.equal(seeds("pa"), null)
 	assert.equal(aliasReference(index, "pa"), 7, "the alias itself is there")
+})
+
+test("like X takes a title or localized name that holds a name, and a name alone stays the name", () => {
+	const index = fixture(
+		aliasTable(
+			{
+				version: 1,
+				rows: [7, 7, 7, 7],
+				names: ["Der Pate", "教父", "대부", "ゴッドファーザー"],
+				languages: ["de", "zh", "ko", "ja"],
+			},
+			titles.length,
+		),
+	)
+	index.referenceTitles
+		.set("the godfather", 7)
+		.set("godfather", 7)
+		.set("forrest gump", 8)
+	// "pate" names the Pate brothers (as on the live index), "forrest" Frederic Forrest.
+	const entity = (
+		kind: NameEntity["kind"],
+		name: string,
+		row: number,
+	): NameEntity => ({
+		id: name,
+		kind,
+		name,
+		members: [],
+		mass: 1,
+		titles: new Map([[movie(row + 1), 1]]),
+		codirected: [],
+		mention: [],
+	})
+	index.names = {
+		entityOf: new Map([
+			["pate", 0],
+			["forrest", 1],
+			["brad pitt", 2],
+		]),
+		entities: [
+			entity("team", "Jonas Pate & Josh Pate", 1),
+			entity("person", "Frederic Forrest", 2),
+			entity("person", "Brad Pitt", 3),
+		],
+		fullNames: ["jonas pate and josh pate", "frederic forrest", "brad pitt"],
+	} as SearchIndex["names"]
+	const ref = (q: string, nonEnglish = true) => {
+		const text = `like ${q}`
+		const found = resolveReference(index, text, text, nonEnglish)
+		return found && { kind: found.kind, seeds: found.seeds }
+	}
+	const godfather = { kind: "title", seeds: [7] }
+	assert.deepEqual(ref("Der Pate"), godfather, "the alias, not the Pates")
+	assert.deepEqual(ref("The Godfather", false), godfather)
+	for (const q of ["教父", "대부", "ゴッドファーザー"])
+		assert.deepEqual(ref(q), godfather, q)
+	assert.deepEqual(
+		ref("Forrest Gump", false),
+		{ kind: "title", seeds: [8] },
+		"a canonical title that holds a name",
+	)
+	assert.equal(ref("asdfqwer zz"), null)
+	assert.deepEqual(ref("Brad Pitt", false), { kind: "entity", seeds: [3] })
+	assert.deepEqual(ref("Pate"), { kind: "entity", seeds: [1] })
 })
 
 test("the palette's Redis entry carries the alias rules version", () => {
