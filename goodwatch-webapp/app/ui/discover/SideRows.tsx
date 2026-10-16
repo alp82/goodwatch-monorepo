@@ -1,19 +1,19 @@
-// Sides of you on Discover (#671): under Best match, a row per side and a row of the titles that fit no side ("More
-// for you"), in the order the server gives (each row where its first title sits in the list). Inside a row, titles
-// keep the list's order. A side shows as "Side N" with the loved titles that stand for it; its name only when the
-// server sends one, and no summary line, until the words test passes (#656). "See all" narrows Discover to the side;
-// the side's moods open Watch next.
+// Sides of you on Discover (#671): while For you is on, a row per group of the member's taste and a row of the titles
+// that fit none ("More for you"), in the order the server gives (each row where its first title sits in the list).
+// Inside a row, titles keep the list's order. A group shows its trait name and the loved titles that stand for it, with
+// no summary line. "More like this" narrows Discover to the group; the group's moods open Watch next. Wording:
+// side-rows-copy.ts.
 import { Link } from "@remix-run/react"
 import type {
-	DiscoverSideRow,
 	DiscoverResults,
+	DiscoverSideRow,
 } from "~/server/discover-results.server"
 import type { DiscoverSide } from "~/server/discover-sides.server"
 import { TitlePosterCard } from "~/ui/title-card/TitlePosterCard"
 import { gridPosterPriority, tmdbImageUrl } from "~/utils/tmdb-image"
 import { SIDE_ROWS_COPY as COPY } from "./side-rows-copy"
 
-// Telling sides apart starts with their posters and number; the hue only helps.
+// Telling groups apart starts with their names and posters; the hue only helps.
 const HUES = ["#f59e0b", "#38bdf8", "#e879f9", "#4ade80", "#fb7185"]
 const NO_SIDE_HUE = "#9ca3af"
 // Cards a wide screen shows in a row without scrolling: the first two rows' load first.
@@ -21,8 +21,7 @@ const IN_VIEW = 6
 
 const hueOf = (side: DiscoverSide) =>
 	side.number === null ? NO_SIDE_HUE : HUES[(side.number - 1) % HUES.length]
-const labelOf = (side: DiscoverSide) =>
-	side.name ?? (side.number === null ? COPY.noSide : COPY.side(side.number))
+const labelOf = (side: DiscoverSide) => side.name ?? COPY.noGroup
 
 export function SideRows({
 	rows,
@@ -89,7 +88,7 @@ export function SideBanner({
 				onClick={onAll}
 				className="cursor-pointer text-sm font-bold text-amber-400 hover:text-amber-300"
 			>
-				{COPY.allSides}
+				{COPY.backToAll}
 			</button>
 		</div>
 	)
@@ -114,13 +113,13 @@ function SideHeader({ side }: { side: DiscoverSide }) {
 				</span>
 			)}
 			<div className="min-w-0">
-				<div className="flex items-center gap-2">
+				<div className="flex items-start gap-2">
 					<span
-						className="h-2.5 w-2.5 shrink-0 rounded-full"
+						className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full"
 						style={{ background: hueOf(side) }}
 						aria-hidden
 					/>
-					<h2 className="truncate text-lg font-bold text-white md:text-xl">
+					<h2 className="line-clamp-2 text-lg leading-tight font-bold text-white md:text-xl">
 						{labelOf(side)}
 					</h2>
 				</div>
@@ -128,7 +127,7 @@ function SideHeader({ side }: { side: DiscoverSide }) {
 					<Link
 						to={`/watch-next?moods=${side.moods.join(",")}`}
 						prefetch="intent"
-						className="whitespace-nowrap text-sm font-semibold text-amber-200 underline-offset-2 hover:text-amber-100 hover:underline"
+						className="text-sm font-semibold text-amber-200 underline-offset-2 hover:text-amber-100 hover:underline"
 					>
 						{COPY.watchNext}
 					</Link>

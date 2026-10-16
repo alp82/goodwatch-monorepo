@@ -1,19 +1,19 @@
-// Sides of you on Discover (#671, decided in #658): under Best match, a signed-in member's list as a row per side,
+// Sides of you on Discover (#671, decided in #658): while For you is on, a signed-in member's list as a row per side,
 // plus a row of the titles that fit no side ("More for you"). Rows sit where their first title sits in the list and
-// keep the list's order inside, so personal order decides both: sides group, personal order ranks. A side's "See all"
-// narrows the list to that side's titles (`side=<id>`, or `side=none`), still in the list's order.
+// keep the list's order inside, so the list's order decides both (personal order under Best match): sides group, the
+// list ranks. A row's "More like this" narrows the list to that side's titles (`side=<id>`, or `side=none`), still in
+// the list's order.
 //
 // The sides are the Taste page's (taste-portrait/sides.server.ts), and a title belongs to a side by the same rule as
 // a loved title: its nearest side, when at least 0.3 close to its center and the side's name describes it.
 //
-// Words gate (#656): a side shows as "Side N" with the loved titles that stand for it, and no summary line. Its name
-// reaches Discover only with DISCOVER_SIDE_NAMES=on, which stays off until the gate passes.
+// A side shows as its trait name with the loved titles that stand for it, and no summary line. Names are words: the
+// rows ship only once the words test (#656) passes.
 //
 // Per member, the sides and each title's side are kept in process memory for 10 minutes, keyed by everything the
 // grouping reads (ratings, seen, Want to See, skipped) and the snapshot version.
 import { createHash } from "node:crypto"
 import type { MoodKey } from "~/domain/moods"
-import { discoverSideNames } from "~/server/features.server"
 import { titleDisplays } from "~/server/taste-portrait/display.server"
 import { portraitInput } from "~/server/taste-portrait/index.server"
 import { readPerson, titleZ } from "~/server/taste-portrait/person.server"
@@ -44,9 +44,9 @@ const MAX_KEPT = 100
 export interface DiscoverSide {
 	/** "side-1", "side-2", and so on as on the Taste page; "none" for the titles that fit no side. */
 	id: string
-	/** "Side 2"; null for the titles that fit no side. */
+	/** The side's place by size (1 is the largest), for its hue; null for the titles that fit no side. */
 	number: number | null
-	/** The side's name, only while the side names switch is on (the words gate, #656). */
+	/** The side's trait name ("Bleak, tense stories"); null for the titles that fit no side. */
 	name: string | null
 	/** Its titles in this list. */
 	total: number
@@ -113,7 +113,6 @@ async function build(
 	if (!named) return null
 	const here = named.sides.map((side) => sideHere(person, side))
 	const displays = await titleDisplays(new Set(here.flat()))
-	const names = discoverSideNames()
 	const sides = named.sides.map((side, i) => {
 		// One title per franchise: a franchise's posters read alike.
 		const franchises = new Set<string>()
@@ -129,7 +128,7 @@ async function build(
 		return {
 			id: side.id,
 			number: i + 1,
-			name: names ? side.name : null,
+			name: side.name,
 			moods: sideMoods(side.members),
 			here: shown,
 		}

@@ -1,18 +1,16 @@
-// Every word members read in Discover's Sides of you rows (SideRows), in one place: the wording is still being
-// decided (#671), and side names wait on the words gate (#656), so they arrive from the server only when it's on.
-// No summary line under a side's label (no share of what you love) until the words test passes (owner, Q44).
+// Every word members read in Discover's taste rows (SideRows), in one place. A group's title is its trait name from
+// the server ("Bleak, tense stories"); there is no summary line under it (owner, Q44). The wording is the owner's
+// (#671): "taste", never "side".
 
 const count = (n: number) => n.toLocaleString("en-US")
 
 export const SIDE_ROWS_COPY = {
-	/** A side's label when the server sends no name: "Side 2". */
-	side: (number: number) => `Side ${number}`,
-	/** The row of titles that fit no side. */
-	noSide: "More for you",
+	/** The row of the titles that fit none of the member's groups. */
+	noGroup: "More for you",
 	/** Narrows Discover to the row's titles. */
-	seeAll: (total: number) => `See all ${count(total)}`,
+	seeAll: (total: number) => `More like this · ${count(total)}`,
 	/** Leaves the narrowed list for the rows. */
-	allSides: "All sides",
-	/** Opens Watch next with the side's moods. */
+	backToAll: "All of your taste",
+	/** Opens Watch next with the group's moods. */
 	watchNext: "Open in Watch next",
 }

@@ -11,8 +11,9 @@
 // the viewer has it. Under Best match For you shows on and flipping it leads to another sort (see the filter bar's
 // useForYouUnderBestMatch).
 //
-// Sides of you: under Best match, a member with sides sees a row per side instead of the grid (SideRows). A row's "See
-// all" narrows the grid to that side (`side` in the URL) until "All sides" or another sort.
+// Sides of you: while For you is on (with any sort; Best match counts as on), a member with sides sees a row per group
+// of their taste instead of the grid (SideRows). A row's "More like this" narrows the grid to that group (`side` in
+// the URL) until "All of your taste", For you turned off, or a search.
 import { ArrowPathIcon } from "@heroicons/react/20/solid"
 import { useLocation, useNavigation, useSearchParams } from "@remix-run/react"
 import { MotionConfig } from "framer-motion"
@@ -28,6 +29,7 @@ import {
 	secondaryFilterCount,
 	stateAsApplied,
 } from "~/domain/filter-state"
+import { groupsByTaste } from "~/domain/side-rows"
 import type { DiscoverResults } from "~/server/discover-results.server"
 import { NextPageLink } from "~/ui/explore/GridUtils"
 import {
@@ -281,7 +283,7 @@ export function DiscoverPage({
 	// Best match is the sort in use: For you shows on, with nothing to move.
 	const bestMatch = sortShown(filters.sort, searching, taste) === "match"
 
-	// Sides of you: the rows, or the side the grid is narrowed to. Leaving Best match leaves the side too.
+	// Sides of you: the rows, or the side the grid is narrowed to. Turning For you off (or searching) leaves the side.
 	const rows = stale ? null : sideRowsOf(first)
 	const narrowed =
 		!stale && first?.sides?.layout === "side" ? first.sides.side : null
@@ -299,7 +301,12 @@ export function DiscoverPage({
 		window.scrollTo({ top: 0 })
 	}
 	useEffect(() => {
-		if (side === null || bestMatch || !first || stale) return
+		const grouped = groupsByTaste({
+			searching,
+			forYou: forYou.on,
+			sort: bestMatch ? "match" : filters.sort,
+		})
+		if (side === null || grouped || !first || stale) return
 		setParams(
 			(previous) => {
 				const out = new URLSearchParams(previous)
@@ -308,7 +315,16 @@ export function DiscoverPage({
 			},
 			{ replace: true, preventScrollReset: true },
 		)
-	}, [side, bestMatch, first, stale, setParams])
+	}, [
+		side,
+		searching,
+		forYou.on,
+		bestMatch,
+		filters.sort,
+		first,
+		stale,
+		setParams,
+	])
 	const applied = Boolean(first?.forYou.applied) && forYou.on
 	const movedUp = applied && !stale ? (first?.movedUp ?? 0) : 0
 	const leanings = first?.explanation?.leanings ?? []

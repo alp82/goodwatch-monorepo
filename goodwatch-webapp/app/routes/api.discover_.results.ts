@@ -29,7 +29,7 @@ import type { TitleKey } from "~/utils/title-key"
 // Parameters are the filter bar's URL state (services, unseen, type, moods, genres, score, match, released, similar,
 // people, sort, foryou, and the legacy Discover filters). In search mode, `ranked` carries the search's ranked list in its plain
 // order (title keys, comma-separated, at most SEARCH_RESULTS; empty when the search found nothing), and the results are
-// that list filtered in memory, with Relevance as the default sort. Sides of you, for a member under Best match:
+// that list filtered in memory, with Relevance as the default sort. Sides of you, for a member while For you is on:
 // `sides=rows` asks for a row per side on the first page, `side=<id>` narrows the list to one side (see
 // discover-sides.server.ts).
 

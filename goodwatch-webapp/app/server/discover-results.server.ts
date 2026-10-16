@@ -2,10 +2,10 @@
 // memory by the filter bar's state, taste applied (the taste match filter, Best match, For you), and one page of title
 // cards. Serves the Discover route's first
 // view and /api/discover/results for every page after. Plain guests share browse filter results in process memory.
-// Under Best match a member with Sides of you gets a row per side instead of the first page, when the page asks for
-// rows (discover-sides.server.ts).
+// While For you is on (Best match counts as on), a member with Sides of you gets a row per side instead of the first
+// page, when the page asks for rows (discover-sides.server.ts).
 import type { FilterState, SortKey } from "~/domain/filter-state"
-import { groupInListOrder } from "~/domain/side-rows"
+import { groupInListOrder, groupsByTaste } from "~/domain/side-rows"
 import { availabilityLoadedAt } from "~/server/availability-index.server"
 import {
 	discoverFilterCache,
@@ -110,7 +110,7 @@ export async function getDiscoverResults(
 		page: number
 		ranked?: TitleKey[]
 		/**
-		 * Sides of you, for a member under Best match: `rows` asks for a row per side on the first page (Discover's web
+		 * Sides of you, for a member while For you is on: `rows` asks for a row per side on the first page (Discover's web
 		 * page; the TV and dev pages keep the grid), `side` narrows the list to one side ("none": no side).
 		 */
 		sides?: { rows: boolean; side: string | null }
@@ -181,12 +181,18 @@ export async function getDiscoverResults(
 			titles,
 		})
 
-	// Sides of you: a member's browse list under Best match (the snapshot is null while searching), when they have
-	// sides and the page asks for rows of a list with titles, or for one side.
+	// Sides of you: a member's browse list while For you is on (any sort; Best match counts as on), when they have
+	// sides and the page asks for rows of a list with titles, or for one side. The snapshot is null while searching.
 	const wantsSides =
 		(input.sides?.rows === true && all.length > 0) || Boolean(input.sides?.side)
+	const explanation =
+		applied && !searching
+			? { leanings: taste.leanings(LEANINGS), ratings: taste.ratings }
+			: null
 	const engine =
-		wantsSides && result.sortUsed === "match" && snapshot
+		wantsSides &&
+		groupsByTaste({ searching, forYou: input.forYou, sort: result.sortUsed }) &&
+		snapshot
 			? await loadSides()
 			: null
 	const member =
@@ -257,7 +263,7 @@ export async function getDiscoverResults(
 			matches: [],
 			moved: [],
 			forYou: { on: input.forYou, applied, status, ratings: taste.ratings },
-			explanation: null,
+			explanation,
 			searching,
 			sides: { layout: "rows", rows },
 		}
@@ -286,10 +292,7 @@ export async function getDiscoverResults(
 		matches: taste.match(keys),
 		moved: (moved ?? []).filter((m) => onPage.has(m.key)),
 		forYou: { on: input.forYou, applied, status, ratings: taste.ratings },
-		explanation:
-			applied && !searching
-				? { leanings: taste.leanings(LEANINGS), ratings: taste.ratings }
-				: null,
+		explanation,
 		searching,
 		sides,
 	}

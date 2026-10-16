@@ -35,3 +35,15 @@ export function groupInListOrder(
 	// A Map keeps insertion order: the order of each group's first title.
 	return [...groups.values()]
 }
+
+/**
+ * Whether a list shows the member's taste grouping: while browsing (not searching), whenever For you is on, with any
+ * sort, and never while it's off. Best match counts as on: For you always shows on under it (owner, #671).
+ */
+export function groupsByTaste(input: {
+	searching: boolean
+	forYou: boolean
+	sort: string
+}): boolean {
+	return !input.searching && (input.forYou || input.sort === "match")
+}

@@ -40,7 +40,7 @@ export const browseKey = (
 	`${query}${query ? "&" : ""}foryou=${forYou ? 1 : 0}${ranked ? `&ranked=${ranked.join(",")}` : ""}${language ? `&displayLanguage=${encodeURIComponent(language)}` : ""}`
 
 /**
- * Discover's query with Sides of you: a row per side under Best match (`sides=rows`), and the side the list is
+ * Discover's query with Sides of you: a row per side while For you is on (`sides=rows`), and the side the list is
  * narrowed to (`side`). The server applies them only for a member with sides.
  */
 export const withSides = (query: string, side: string | null) =>

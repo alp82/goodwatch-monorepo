@@ -55,3 +55,24 @@ test("a side without a title in the list has no row", () => {
 	])
 	assert.deepEqual(groupInListOrder([], sideOf, 12), [])
 })
+
+test("the taste grouping shows while For you is on, with any sort, and never while it's off", async () => {
+	const { groupsByTaste } = await import("./side-rows.ts")
+	for (const sort of ["popular", "top", "newest", "match"])
+		assert.equal(groupsByTaste({ searching: false, forYou: true, sort }), true)
+	for (const sort of ["popular", "top", "newest"])
+		assert.equal(
+			groupsByTaste({ searching: false, forYou: false, sort }),
+			false,
+		)
+	// Under Best match For you shows on, whatever the URL says.
+	assert.equal(
+		groupsByTaste({ searching: false, forYou: false, sort: "match" }),
+		true,
+	)
+	// A search keeps its grid.
+	assert.equal(
+		groupsByTaste({ searching: true, forYou: true, sort: "match" }),
+		false,
+	)
+})
