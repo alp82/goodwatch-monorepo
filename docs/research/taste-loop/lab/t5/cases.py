@@ -54,10 +54,19 @@ def forbidden(named, titles):
             return blocked
 
 
+# Amendment A1 (October 16, 2026, before any reader call): later lists hold movies only. On the real cases a
+# reader matching the lists' show share to the named titles' show share picked right 43.4% of the time, and no
+# rematch on show share removed it; matching movies against shows is not the words of a Side.
+LIST_MEDIA = 'movie'
+
+
 def remaining(rows, blocked, facts):
     unique = {}
     for r in rows:
-        if r['title_key'] not in blocked and facts.get(r['title_key'], {}).get('title'):
+        fact = facts.get(r['title_key'], {})
+        if LIST_MEDIA and fact.get('media_type') != LIST_MEDIA:
+            continue
+        if r['title_key'] not in blocked and fact.get('title'):
             unique.setdefault(r['title_key'], r)
     return list(unique.values())
 
@@ -137,6 +146,7 @@ def build(population, titles, descriptions, rematch=False):
                           'numbers_only': desc['numbers_only'], 'printed_mean': desc['printed_mean'],
                           'sources': sources, 'selected_keys': {k: [r['title_key'] for r in samples[k]] for k in sources},
                           'early_size': len(s['early']), 'show_share': shows_for(samples[anchor], facts),
+                          'named_show_share': named_shows(desc['named_titles'], facts),
                           'displayed_mean_rank': rank,
                           'edited_labels': sum(r.get('edited', False) for rows in samples.values() for r in rows)})
             reuse.update(pair)
@@ -153,6 +163,12 @@ def control_payload(case, kind):
     return {'description': descriptions[kind], 'lists': case['payload']['lists']}
 
 
+def named_shows(keys, facts):
+    """Show share of the titles the description names: what a reader can infer about movies against shows."""
+    known = [facts[k]['media_type'] == 'show' for k in keys if k in facts]
+    return statistics.mean(known) if known else None
+
+
 def shows_for(rows, facts):
     return statistics.mean(facts[r['title_key']]['media_type'] == 'show' for r in rows)
 
@@ -166,14 +182,20 @@ def baselines(cases):
         median = sorted(means.values())[1]
         choices = {'middle_mean': {k: abs(v - median) for k, v in means.items()},
                    'closest_printed_mean': {k: abs(v - c['printed_mean']) for k, v in means.items()}}
+        if c.get('named_show_share') is not None:
+            # Added before any reader call on October 16, 2026: the list whose show share is closest to the named
+            # titles' show share. Matching movies against shows is not the words of a Side.
+            choices['media_type'] = {k: abs(statistics.mean(r['type'] == 'show' for r in rows) - c['named_show_share'])
+                                     for k, rows in c['payload']['lists'].items()}
         for label in LABELS:
             choices['position_' + label] = {k: int(k != label) for k in LABELS}
         for name, costs in choices.items():
             choice = min(LABELS, key=lambda k: (costs[k], order('baseline_tie', c['id'], name, k)))
             outcomes[name][c['member']].append(int(choice == c['answer']))
     result = {name: statistics.mean(statistics.mean(v) for v in members.values()) for name, members in outcomes.items()}
-    return {'accuracy': result, 'stop': not cases or any(result[name] > .4 for name in
-                                                       ('middle_mean', 'closest_printed_mean'))}
+    # With single-type lists (LIST_MEDIA) the media-type baseline ties on every list: reported, never a stop.
+    stops = ('middle_mean', 'closest_printed_mean') + (() if LIST_MEDIA else ('media_type',))
+    return {'accuracy': result, 'stop': not cases or any(result.get(name, 0) > .4 for name in stops)}
 
 
 def freeze(population, titles, descriptions):

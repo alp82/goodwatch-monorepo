@@ -120,10 +120,28 @@ def checked(root, synthetic):
     return frozen
 
 
+PREREG = Path(__file__).resolve().parents[2] / 'items' / '015-t5-whose-taste' / 'PREREG.md'
+
+
+def registered(frozen):
+    """Live readers run only against the frozen cases named in a committed, unmodified PREREG.md."""
+    import subprocess
+    text = PREREG.read_text() if PREREG.exists() else ''
+    for name in ('source_digest', 'cases_digest'):
+        if f'`{name}`: `{frozen[name]}`' not in text:
+            raise ValueError(f'PREREG.md does not register this {name}')
+    folder = str(PREREG.parent)
+    tracked = subprocess.run(['git', '-C', folder, 'ls-files', '--error-unmatch', PREREG.name], capture_output=True)
+    dirty = subprocess.run(['git', '-C', folder, 'status', '--porcelain', '--', PREREG.name, str(Path(__file__).parent)],
+                           capture_output=True, text=True)
+    if tracked.returncode or dirty.stdout.strip():
+        raise ValueError('PREREG.md and lab/t5 must be committed and unchanged before live reader calls')
+
+
 def read_suite(root, reader, synthetic):
     frozen = checked(root, synthetic)
     if not synthetic:
-        raise ValueError('live reader execution requires the reviewed registration/wrapper extension; preparation only')
+        registered(frozen)
     if not frozen['ready']:
         raise ValueError('heuristic baseline exceeds 40% after rematch; reader suite stopped')
     started = time.monotonic()

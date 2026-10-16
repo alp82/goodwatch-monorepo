@@ -219,3 +219,38 @@ def test_t5_edited_labels_include_distractor_lists(made):
             row['edited'] = True
     cases, _ = build(p['population'], p['titles'], descriptions)
     assert all(c['edited_labels'] >= 30 for c in cases if c['member'] == p['population'][0]['token'])
+
+
+def test_t5_media_type_baseline_stops_a_movie_show_shortcut(monkeypatch):
+    import t5.cases
+    monkeypatch.setattr(t5.cases, 'LIST_MEDIA', None)
+    cases = []
+    for i, answer in enumerate('ABCABC'):
+        # Means sit at chance, but the anchor's list matches the named titles' show share every time.
+        lists = {}
+        for k, mean in zip('ABC', (5, 6, 7)):
+            kind = 'movie' if k == answer else 'show'
+            lists[k] = [{'rating': mean, 'type': kind}] * 15
+        cases.append({'id': str(i), 'member': str(i), 'answer': answer, 'printed_mean': 0,
+                      'named_show_share': 0.0, 'payload': {'lists': lists}})
+    out = baselines(cases)
+    assert out['accuracy']['media_type'] == 1
+    assert out['stop']
+    for c in cases:
+        c['named_show_share'] = None
+    assert 'media_type' not in baselines(cases)['accuracy']
+
+
+def test_t5_later_lists_hold_movies_only():
+    from t5.cases import remaining
+    facts = {1: {'title': 'M', 'media_type': 'movie'}, 2: {'title': 'S', 'media_type': 'show'}}
+    rows = [{'title_key': 1, 'score': 7}, {'title_key': 2, 'score': 8}]
+    assert [r['title_key'] for r in remaining(rows, set(), facts)] == [1]
+
+
+def test_t5_media_type_baseline_never_stops_single_type_lists():
+    lists = {k: [{'rating': m, 'type': 'show' if k == 'A' else 'movie'}] * 15 for k, m in zip('ABC', (5, 6, 7))}
+    cases = [{'id': str(i), 'member': str(i), 'answer': 'A', 'printed_mean': 6, 'named_show_share': 1.0,
+              'payload': {'lists': lists}} for i in range(3)]
+    out = baselines(cases)
+    assert out['accuracy']['media_type'] == 1 and not out['stop']
