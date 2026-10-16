@@ -32,7 +32,7 @@ Where the draft says execution stays blocked, this file is the registration that
 | Item | Value |
 |---|---|
 | Run folder | `~/goodwatch-research/taste/work/t5/run-20261016f` (private) |
-| `source_digest`: `0571b5780e159c93bf2fb3e5995bbef662ca5ce4d92b781a51370c849013a1c5 c0bd7d82c571fd10da38c3e78168949afd729bb10253617926dea0f6bb398e95 True` | |
+| `source_digest`: `0571b5780e159c93bf2fb3e5995bbef662ca5ce4d92b781a51370c849013a1c5` | |
 | `cases_digest`: `c0bd7d82c571fd10da38c3e78168949afd729bb10253617926dea0f6bb398e95` | |
 | `input_digest`: `1330419888451291dd68c994fdbdff2f004d840411b410bd7ff384a3fc0bbc59` | |
 | `descriptions_digest`: `365379a87deeba928b9906624c53e74875e8e2e9aea199e39c6a2bd39dea515f` | |
