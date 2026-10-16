@@ -2,12 +2,13 @@
 // space above it offers one side for tonight. The side is the one holding the best of all sides' picks in personal
 // order, so the order across sides is still personal order's. Three of its picks stand as backdrop cards, with
 // Another side (to step through the others) and Watch next for its moods.
+import { useSearchParams } from "@remix-run/react"
 import { useState } from "react"
 import { CornerBar, Cross, Img, Item, Shade, backdropSize, useTvView } from "~/ui/living-room/tv/kit"
 import { TV_ROW_ATTR } from "~/ui/living-room/tv/tv-dom"
 import { tmdbImageUrl } from "~/utils/tmdb-image"
 import { BackdropItem, LovedStrip, MoodChips, TileItem, Wordmark, useHomeTiles } from "./bits"
-import { useHooks, useHost, watchNextLabel } from "./host"
+import { WatchNextWords, useHooks, useHost, watchNextLabel } from "./host"
 import { Tiles } from "./Tiles"
 import { shareWords, sideTitle } from "./model"
 
@@ -19,7 +20,12 @@ export function Tonight() {
 	const { apps, services } = useHomeTiles(view)
 	const tiles = [...apps, ...services]
 	// Tonight's side first, then the others in the order of their best pick.
-	const order = [...view.sides].sort((a, b) => a.rank - b.rank)
+	// `&tonight=day` turns the featured side each day instead (open question for the owner).
+	const [params] = useSearchParams()
+	const daily = params.get("tonight") === "day"
+	const byBest = [...view.sides].sort((a, b) => a.rank - b.rank)
+	const day = Math.floor(Date.now() / 86_400_000)
+	const order = daily && byBest.length ? [...view.sides.slice(day % view.sides.length), ...view.sides.slice(0, day % view.sides.length)] : byBest
 	const [at, setAt] = useState(0)
 	const side = order[at % Math.max(1, order.length)]
 	useHooks({
@@ -32,6 +38,7 @@ export function Tonight() {
 	// Without sides the home is today's.
 	if (!side) return <Tiles />
 	const cards = side.picks.slice(0, CARDS)
+	const focusedTile = tiles.find((t) => t.id === focused)
 	const pickKey = focused.startsWith("pick:") ? focused.split(":").slice(2).join(":") : null
 	const shown = cards.find((t) => t.key === pickKey) ?? cards[0]
 	const files = shown?.backdrop ? [tmdbImageUrl(shown.backdrop, backdropSize(canvas))] : []
@@ -45,8 +52,8 @@ export function Tonight() {
 			<div className="absolute left-14 top-[104px] w-[1090px]">
 				<div key={side.id} className="tvc-fade">
 					<div className="flex items-center gap-4 text-[24px] text-white/75">
-						<span>{at === 0 ? "Tonight, from one side of you" : `Another side of you · ${(at % order.length) + 1} of ${order.length}`}</span>
-						<MoodChips side={side} />
+						<span>{at === 0 ? (daily ? "Today's side of you" : "Tonight, from one side of you") : `Another side of you · ${(at % order.length) + 1} of ${order.length}`}</span>
+						{names && <MoodChips side={side} />}
 					</div>
 					<div className="mt-2 flex items-end justify-between gap-6">
 						<div className="min-w-0">
@@ -64,16 +71,22 @@ export function Tonight() {
 					))}
 					<div className="ml-2 flex flex-col gap-3">
 						{order.length > 1 && (
-							<Item id="another" className="tvc-btn flex h-[68px] items-center whitespace-nowrap px-7 text-[24px]">
+							<Item id="another" className="tvc-btn flex h-[68px] w-[250px] items-center whitespace-nowrap px-7 text-[24px]">
 								Another side
 							</Item>
 						)}
-						<Item id={`watch:${side.id}`} label={`${watchNextLabel(side)}, on Watch next`} className="tvc-btn flex h-[68px] items-center whitespace-nowrap px-7 text-[24px]">
-							Watch next
+						<Item id={`watch:${side.id}`} label={`${watchNextLabel(side)}, on Watch next`} className="tvc-btn flex min-h-[76px] w-[250px] items-center px-7 py-2 text-[24px]">
+							<WatchNextWords side={side} />
 						</Item>
 					</div>
 				</div>
 			</div>
+			{/* The focused home tile says what it is, as the home's large caption does today. */}
+			{focusedTile && (
+				<div key={focusedTile.id} className="tvc-fade absolute bottom-[150px] left-14 right-14 truncate text-[26px] text-white/85">
+					<span className="font-bold text-white">{focusedTile.name}</span> · {focusedTile.line}
+				</div>
+			)}
 			<div {...{ [TV_ROW_ATTR]: "" }} className="absolute inset-x-0 bottom-0 flex gap-[22px] overflow-hidden px-14 pb-8 pt-6">
 				{tiles.map((t) => (
 					<TileItem key={t.id} tile={t} width={180} height={104} />

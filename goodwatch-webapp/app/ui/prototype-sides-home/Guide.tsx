@@ -71,7 +71,6 @@ export function Guide() {
 			}
 			if (k === "watch" && dir === "left") return `side:${a}`
 			if (k === "pick" && dir === "down") return `watch:${a}`
-			if (k === "pick" && dir === "up") return null
 			return undefined
 		},
 	})
@@ -127,8 +126,11 @@ export function Guide() {
 					{side ? (
 						<>
 							<div className="flex items-center gap-4 text-[24px] text-white/80">
-								<span>{shareWords(side.share)}</span>
-								<MoodChips side={side} />
+								<span>
+									{shareWords(side.share)}
+									{view.hasServices && !side.onServices && " · few on your services"}
+								</span>
+								{names && <MoodChips side={side} />}
 							</div>
 							{/* With the edge line under it, the name keeps to one line so the picks keep their place. */}
 							<div className={`mt-2 font-bold tracking-tight ${names && side.edges[0] ? "truncate pb-1 leading-tight" : "line-clamp-2 leading-[1.02]"}`} style={{ fontSize: names && side.edges[0] ? 44 : on.name.length > 28 ? 46 : 58 }}>
@@ -160,7 +162,12 @@ export function Guide() {
 						<Item id={`watch:${side.id}`} label={`${watchNextLabel(side)}, on Watch next`} className="tvc-btn flex h-[56px] items-center whitespace-nowrap px-7 text-[22px]">
 							{watchNextLabel(side)}
 						</Item>
-						{pick && <span className="truncate text-[22px] text-white/75">{pick.title} · {pick.facts}</span>}
+						{pick && (
+							<span className="min-w-0 text-[20px] leading-tight text-white/75">
+								<span className="block truncate font-bold text-white">{pick.title}</span>
+								<span className="block truncate">{pick.facts}</span>
+							</span>
+						)}
 					</div>
 				</div>
 			)}

@@ -75,7 +75,7 @@ export function SidesHomePage({ view }: { view: SidesHomeView | null }) {
 					</div>
 					<details className="mt-2 text-gray-300">
 						<summary className="cursor-pointer">
-							{view.sides.length} sides · {view.member.loved} loved, {view.loose} in no side · personal order {view.personalOrder.on ? "orders the picks" : `not loaded (${view.personalOrder.note ?? "none"})`} · {view.computedMs} ms
+							{view.floor ? "Under Home's floor (fewer than 20 loved titles or 2 sides of 8): no sides on Home" : `${view.sides.length} sides`} · {view.member.loved} loved, {view.loose} in no side · personal order {view.personalOrder.on ? "orders the picks" : `not loaded (${view.personalOrder.note ?? "none"})`} · {view.computedMs} ms
 						</summary>
 						<ul className="mt-1 list-disc pl-5">
 							{view.sides.map((s) => (
@@ -84,7 +84,7 @@ export function SidesHomePage({ view }: { view: SidesHomeView | null }) {
 								</li>
 							))}
 						</ul>
-						<p className="mt-1">Arrows, Enter, Escape and H drive the TV, as on the start page. [ and ] switch the variant.</p>
+						<p className="mt-1">Arrows, Enter, Escape and H drive the TV, as on the start page. [ and ] switch the variant. On tonight, &amp;tonight=day turns the side each day instead of taking the side of the best pick.</p>
 					</details>
 				</div>
 			)}

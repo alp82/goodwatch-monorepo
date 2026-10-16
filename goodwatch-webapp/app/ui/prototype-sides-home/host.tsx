@@ -49,7 +49,17 @@ export function useHooks(hooks: Hooks) {
 	}, [setHooks])
 }
 
-/** The Watch next key's words for a side: its moods. */
+/** The Watch next key's words, on two lines: "Watch next" and the side's moods. */
+export function WatchNextWords({ side }: { side: HomeSide }) {
+	return (
+		<span className="block min-w-0 leading-tight">
+			<span className="block">Watch next</span>
+			{side.moods.length > 0 && <span className="block text-[0.8em] opacity-75">{side.moods.map((m) => m.name).join(" + ")}</span>}
+		</span>
+	)
+}
+
+/** The Watch next key's words for a side, in one line: for a screen reader and the side's screen. */
 export const watchNextLabel = (side: HomeSide) => (side.moods.length ? `Watch next: ${side.moods.map((m) => m.name).join(" + ")}` : "Watch next")
 
 function SideScreen({ side, names }: { side: HomeSide; names: boolean }) {

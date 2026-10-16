@@ -8,7 +8,7 @@ import { AppArt, HOME_HEADLINE } from "~/ui/living-room/tv/screens/Home"
 import { TV_ROW_ATTR } from "~/ui/living-room/tv/tv-dom"
 import { tmdbImageUrl } from "~/utils/tmdb-image"
 import { MoodChips, PosterItem, TileItem, Wordmark, useHomeTiles, wholeArt } from "./bits"
-import { useHost, watchNextLabel } from "./host"
+import { WatchNextWords, useHooks, useHost, watchNextLabel } from "./host"
 import { type HomeSide, shareWords, sideTitle } from "./model"
 
 const BAND = 648
@@ -23,13 +23,21 @@ const sideOfItem = (focused: string) => {
 	return kind === "pick" || kind === "watch" ? side : null
 }
 
-function SideRow({ side, title, top, hidden }: { side: HomeSide; title: string; top: number; hidden: boolean }) {
+function SideRow({ side, title, top, hidden, names, marks }: { side: HomeSide; title: string; top: number; hidden: boolean; names: boolean; marks: boolean }) {
 	return (
 		<div className="absolute inset-x-0 transition-opacity duration-200" style={{ top, opacity: hidden ? 0 : 1 }}>
 			<div className="flex items-baseline gap-4 px-14">
-				<span className="truncate text-[30px] font-bold leading-none">{title}</span>
-				<span className="shrink-0 text-[22px] text-white/70">{shareWords(side.share)}</span>
-				<MoodChips side={side} />
+				<span className="min-w-0 truncate pb-1 text-[30px] font-bold leading-tight">{title}</span>
+				<span className="shrink-0 whitespace-nowrap text-[22px] text-white/70">
+					{shareWords(side.share)}
+					{marks && " · few on your services"}
+				</span>
+				{/* With names off the moods stay on the Watch next key: next to the title they'd describe the person. */}
+				{names && (
+					<span className="shrink-0">
+						<MoodChips side={side} />
+					</span>
+				)}
 			</div>
 			<div className="flex items-center gap-6 pr-14">
 				<div {...{ [TV_ROW_ATTR]: "" }} className="relative flex min-w-0 flex-1 gap-[22px] overflow-hidden py-5 pl-14 pr-4">
@@ -37,8 +45,8 @@ function SideRow({ side, title, top, hidden }: { side: HomeSide; title: string; 
 						<PosterItem key={t.key} id={`pick:${side.id}:${t.key}`} title={t} width={150} height={225} />
 					))}
 				</div>
-				<Item id={`watch:${side.id}`} label={`${watchNextLabel(side)}, on Watch next`} className="tvc-btn flex h-[68px] shrink-0 items-center whitespace-nowrap px-7 text-[24px]">
-					Watch next
+				<Item id={`watch:${side.id}`} label={`${watchNextLabel(side)}, on Watch next`} className="tvc-btn flex min-h-[76px] w-[260px] shrink-0 items-center px-7 py-2 text-[24px]">
+					<WatchNextWords side={side} />
 				</Item>
 			</div>
 		</div>
@@ -51,6 +59,16 @@ export function Rows() {
 	const { apps, services } = useHomeTiles(view)
 	const tiles = [...apps, ...services]
 	const backdrop = backdropSize(canvas)
+	// Down from a row's Watch next key starts the next row at its first title, as Down from its posters would.
+	useHooks({
+		move: (dir, from) => {
+			if (!from.startsWith("watch:")) return undefined
+			const at = view.sides.findIndex((s) => `watch:${s.id}` === from)
+			const next = view.sides[at + (dir === "down" ? 1 : dir === "up" ? -1 : 0)]
+			if ((dir !== "down" && dir !== "up") || !next || at < 0) return undefined
+			return next.picks[0] ? `pick:${next.id}:${next.picks[0].key}` : `watch:${next.id}`
+		},
+	})
 
 	const sideId = sideOfItem(focused)
 	const rowAt = view.sides.findIndex((s) => s.id === sideId)
@@ -108,7 +126,7 @@ export function Rows() {
 					</div>
 				</div>
 				{view.sides.map((side, i) => (
-					<SideRow key={side.id} side={side} title={sideTitle(side, names)} top={FIRST + i * ROW} hidden={inRows ? i < row : false} />
+					<SideRow key={side.id} side={side} title={sideTitle(side, names)} top={FIRST + i * ROW} hidden={inRows ? i < row : false} names={names} marks={view.hasServices && !side.onServices} />
 				))}
 			</div>
 			{/* The bar stays in its corner. */}

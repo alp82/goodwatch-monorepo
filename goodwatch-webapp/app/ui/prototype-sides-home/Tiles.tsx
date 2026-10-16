@@ -17,7 +17,8 @@ export function Tiles() {
 	const { canvas, focused } = useTvView()
 	const { apps, services } = useHomeTiles(view)
 	const sides = view.sides.map((side) => sideTile(side, sideTitle(side, names)))
-	const tiles = [...apps, ...sides, ...services]
+	// After the services, so the Remote's two services stay as near as today.
+	const tiles = [...apps, ...services, ...sides]
 	const last = useRef(tiles[0].id)
 	if (tiles.some((t) => t.id === focused)) last.current = focused
 	const shown = tiles.find((t) => t.id === last.current) ?? tiles[0]
@@ -50,13 +51,13 @@ export function Tiles() {
 					)}
 				</div>
 			</div>
-			<div {...{ [TV_ROW_ATTR]: "" }} className="absolute inset-x-0 bottom-0 flex gap-[22px] overflow-hidden px-14 pb-12 pt-11">
+			<div {...{ [TV_ROW_ATTR]: "" }} className="absolute inset-x-0 bottom-0 flex gap-[22px] overflow-hidden px-14 pb-12 pt-[60px]">
 				{tiles.map((tile, i) => (
 					// Not positioned: the row pages by its items' offsets (tv-dom.ts).
 					<div key={tile.id} className="shrink-0">
 						{/* Where the sides start, a quiet label over the first. */}
-						{tile.side && i === apps.length && (
-							<span className="absolute -translate-y-[30px] whitespace-nowrap text-[20px] font-semibold text-white/70">Sides of you</span>
+						{tile.side && i === apps.length + services.length && (
+							<span className="absolute -translate-y-[42px] whitespace-nowrap text-[20px] font-semibold text-white/70">Sides of you</span>
 						)}
 						<TileItem tile={tile} />
 					</div>

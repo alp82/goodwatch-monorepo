@@ -31,6 +31,8 @@ export interface HomeSide {
 	count: number
 	/** The side's own loved titles, most typical first, one per franchise. */
 	loved: TvListTitle[]
+	/** The two best-known of them: the names-off title ("Like Se7en and Zodiac"). */
+	known: string[]
 	/** Unseen titles of the side, in the member's personal order. */
 	picks: HomePick[]
 	/** The picks are the ones on the member's services. */
@@ -50,6 +52,9 @@ export interface SidesHomeView {
 	home: TvHomeData
 	sides: HomeSide[]
 	loose: number
+	/** The member is under Home's floor: no sides on Home. */
+	floor: boolean
+	hasServices: boolean
 	headline: string | null
 	personalOrder: { on: boolean; note: string | null }
 	computedMs: number
@@ -72,9 +77,10 @@ export function shareWords(share: number): string {
  */
 export function sideTitle(side: HomeSide, names: boolean): string {
 	if (names && side.name) return side.name
-	const [a, b] = side.loved.map((t) => short(t.title))
+	const [a, b] = (side.known.length ? side.known : side.loved.map((t) => t.title)).map(short)
 	if (!a) return `Side ${side.n}`
-	return b && a.length + b.length <= 30 ? `Like ${a} and ${b}` : `Like ${a}`
+	// The whole title stays short enough for one line of a row's header.
+	return b && `Like ${a} and ${b}`.length <= 34 ? `Like ${a} and ${b}` : `Like ${a}`
 }
 
 /** A title's main name: "Robin Hood: Men in Tights" is "Robin Hood". */

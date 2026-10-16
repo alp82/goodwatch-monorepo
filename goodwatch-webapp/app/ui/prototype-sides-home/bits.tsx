@@ -34,7 +34,7 @@ export function sideTile(side: HomeSide, title: string): HomeTile {
 	return {
 		id: `side:${side.id}`,
 		name: title,
-		line: `${shareWords(side.share)}. ${side.picks.length} picks${side.onServices ? " on your services" : ""}.`,
+		line: `${shareWords(side.share)}: ${side.count} titles you love.`,
 		art: { kind: "posters", paths: side.loved.flatMap((t) => t.poster ?? []).slice(0, 3) },
 		side,
 	}
@@ -53,7 +53,7 @@ export function TileItem({ tile, width = 200, height = 128 }: { tile: HomeTile; 
 					{!hasDrawnMark(tile.service) && <span className="truncate text-[23px] font-bold leading-none">{tile.name}</span>}
 				</span>
 			) : tile.side ? (
-				<span className="absolute inset-x-3 bottom-2.5 line-clamp-2 text-[21px] font-bold leading-[1.05]">{tile.name}</span>
+				<span className="absolute inset-x-3 bottom-2.5 line-clamp-3 text-[20px] font-bold leading-[1.05]">{tile.name}</span>
 			) : (
 				<span className="absolute bottom-3 left-4 text-[26px] font-bold leading-none">{tile.name}</span>
 			)}
