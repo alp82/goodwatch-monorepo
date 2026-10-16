@@ -7,10 +7,7 @@ import { ArrowUpIcon } from "@heroicons/react/20/solid"
 import { FingerPrintIcon } from "@heroicons/react/24/solid"
 import { AnimatePresence, motion } from "framer-motion"
 import { useEffect, useId, useRef, useState } from "react"
-import {
-	BROWSE_QUALITY_FLOOR,
-	browseLiftRange,
-} from "~/domain/for-you"
+import { BROWSE_QUALITY_FLOOR, browseLiftRange } from "~/domain/for-you"
 import { ReasonChips } from "~/ui/title-card/ReasonChips"
 import { compactCount } from "./labels"
 import { Knob, MENU, TAP } from "./motion"
@@ -52,7 +49,8 @@ export function ForYouExplanation({
 	/** Fingerprint attribute keys the person's taste leans to. */
 	leanings?: string[]
 	ratings?: number
-	movedUp: number
+	/** Titles For you moved up; null when the list on screen has no movement to tell (Discover's taste rows). */
+	movedUp: number | null
 }) {
 	if (bestMatch)
 		return (
@@ -110,15 +108,17 @@ export function ForYouExplanation({
 					)}
 				</>
 			)}
-			<p
-				className={`mt-2.5 text-[13px] ${on ? "text-amber-300" : "text-gray-500"}`}
-			>
-				{!on
-					? "Off: the same order everyone sees."
-					: movedUp
-						? `Right now ${movedUp.toLocaleString("en")} ${searching ? "results" : "titles"} moved up.`
-						: "Right now your taste agrees with this order."}
-			</p>
+			{(!on || movedUp !== null) && (
+				<p
+					className={`mt-2.5 text-[13px] ${on ? "text-amber-300" : "text-gray-500"}`}
+				>
+					{!on
+						? "Off: the same order everyone sees."
+						: movedUp
+							? `Right now ${movedUp.toLocaleString("en")} ${searching ? "results" : "titles"} moved up.`
+							: "Right now your taste agrees with this order."}
+				</p>
+			)}
 		</div>
 	)
 }
