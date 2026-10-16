@@ -20,6 +20,27 @@ routing. Install that extension separately after the roles run an MCP-capable im
 | `deploy.sh` | Deploy, status, stop, and start. Run it as root on vector1, in this directory. |
 | `test-deploy.sh` | Tests `deploy.sh` against a stand-in for the `docker` command. It starts and contacts nothing. |
 
+## The database user
+
+The roles connect to Crate as `goodwatch_search` (`CRATE_USER` in `.env`). The user was created by hand, so these
+are its grants, as `sys.privileges` lists them on 2026-10-16:
+
+| Grant | On | Why |
+| --- | --- | --- |
+| DQL | schema `doc` | The roles read titles, indexes, and settings. |
+| DML | `doc.search_control` | Search control state. |
+| DML | `doc.search_history` | One row per search. Added on 2026-10-16: without it every history insert failed with `MissingPrivilegeException` (4011), and searches still answered. |
+| DML | `doc.search_interpretations` | Cached query interpretations. |
+| DML | `doc.search_spending` | Model spending per day. |
+
+When the roles write to a new table, grant it before the deploy, as `admin`:
+
+```sql
+GRANT DML ON TABLE doc.<table> TO goodwatch_search;
+```
+
+Check with `SELECT class, ident, type FROM sys.privileges WHERE grantee = 'goodwatch_search';`.
+
 ## The image
 
 Nothing is built here. Coolify builds the webapp image on abio for every deploy of the webapp and pushes it to the
