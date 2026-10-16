@@ -1,21 +1,20 @@
 // PROTOTYPE - throwaway (#659, map #652). One member's real Watch next with their Sides of you, read-only: nothing is
 // written (no list exposure, no plan store). The Wishlist is planned as production plans it (fit, time, Not tonight),
 // ordered by the member's personal order as production orders it (franchise groups, then the fitting mix), and every
-// title is given the side whose center it is closest to. Sides are #657's "tighter" sides (even groups of 2 to 5 that
-// each hold together). Sides group, personal order ranks: a side never moves a title ahead of another.
+// title is judged by production's rule for loved titles (#666): its nearest side, at least 0.3 close, and not far
+// below the catalog on an attribute the side's name claims; others fit no side. Sides are production's (a copy of
+// origin/main's taste-portrait/sides.server.ts in production-sides.server.ts). Sides group, personal order ranks: a side never moves a title ahead of another.
 import { MOOD_KEYS, type MoodKey } from "~/domain/moods"
 import type { WatchNextTierKey, WatchNextTierSize } from "~/domain/watch-next"
 import { movieRuntimes } from "~/server/movie-runtimes.server"
 import { loadPersonalOrder, mixPersonalOrderFitting, orderPersonalOrder } from "~/server/personal-order/reader.server"
-import { buildTighter } from "~/server/prototype-better-sides/engine.server"
 import { protoPerson } from "~/server/prototype-better-sides/person.server"
-import { cosine } from "~/server/taste-portrait/person.server"
-import { lovedTitles } from "~/server/taste-portrait/sides.server"
 import { loadTaste } from "~/server/taste/index.server"
 import { MAX_KEYS, getDisplayFields, getServiceCards, getTitleCards } from "~/server/title-cards.server"
 import { getTitleSnapshot } from "~/server/title-snapshot/index.server"
 import { getMemberViewerContext } from "~/server/viewer.server"
 import { membersNote, swnMembers } from "./members.server"
+import { buildSides, sideOfTitle } from "./production-sides.server"
 import {
 	type Plan,
 	type WatchNext,
@@ -32,8 +31,6 @@ import type { TitleKey } from "~/utils/title-key"
 
 // Side colors, apart from the amber the page uses for "fits" and from the mood hues' most used reds and greens.
 const COLORS = ["#38bdf8", "#f472b6", "#a3e635", "#a78bfa", "#fb923c"]
-// A listed title belongs to its nearest side only this close to the side's center (the loved titles' own cut, #657).
-const NEAR = 0.15
 const THEN = 3
 const CARDED = 600
 
@@ -82,19 +79,12 @@ export async function swnView(request: Request, o: SwnOptions): Promise<SwnView 
 	const notes: string[] = []
 
 	// ---- sides ----
-	const built = buildTighter(person)
+	const built = buildSides(person)
 	const sideIds = built.sides.map((s) => s.id)
 	const sideOf = new Map<TitleKey, string | null>()
 	for (const key of plan.entries.keys()) {
 		const z = person.zOf(key)
-		let best: { id: string; c: number } | null = null
-		if (z)
-			built.centers.forEach((center, i) => {
-				const c = cosine(z, center)
-				if (!best || c > best.c) best = { id: sideIds[i], c }
-			})
-		const found = best as { id: string; c: number } | null
-		sideOf.set(key, found && found.c >= NEAR ? found.id : null)
+		sideOf.set(key, z ? sideOfTitle(z, built.protoGroups) : null)
 	}
 	const picked = o.variant === "picker" && o.side && sideIds.includes(o.side) ? o.side : null
 
@@ -188,17 +178,9 @@ export async function swnView(request: Request, o: SwnOptions): Promise<SwnView 
 	}
 
 	// ---- the sides' summaries and moods ----
-	const loved = lovedTitles(person)
-	const moodShare = (keys: TitleKey[], mood: MoodKey) =>
-		keys.filter((k) => snapshot.facts(k)?.moods.includes(mood)).length / Math.max(1, keys.length)
-	const lovedKeys = loved.map((r) => r.key)
+	// Production's side moods (what a side opens Watch next with).
 	const sides: SwnSide[] = built.sides.map((side, i) => {
-		const memberKeys = built.memberKeys[i]
-		const moods = MOOD_KEYS.map((m) => ({ m, here: moodShare(memberKeys, m), all: moodShare(lovedKeys, m) }))
-			.filter((x) => x.here >= 0.3 && x.here >= 1.3 * x.all)
-			.sort((a, b) => b.here / Math.max(0.01, b.all) - a.here / Math.max(0.01, a.all))
-			.slice(0, 2)
-			.map((x) => x.m)
+		const moods = side.moods
 		const listedKeys = [...sideOf].filter(([, s]) => s === side.id).map(([k]) => k)
 		return {
 			id: side.id,
@@ -212,7 +194,7 @@ export async function swnView(request: Request, o: SwnOptions): Promise<SwnView 
 		}
 	})
 	const unsided = [...sideOf.values()].filter((s) => s === null).length
-	notes.push(membersNote, ...built.notes, `${unsided} of ${sideOf.size} listed titles fit no side (closeness under ${NEAR})`)
+	notes.push(membersNote, `Production's sides (#666 rule): ${built.sides.length} sides`, `${unsided} of ${sideOf.size} listed titles fit no side`)
 
 	// ---- what production's hero, Then column, and strip read ----
 	const headTitles = head.flatMap((e) => (titles[e.key] ? [titles[e.key]] : []))
