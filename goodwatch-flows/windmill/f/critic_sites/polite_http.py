@@ -46,8 +46,10 @@ HEADERS = {
 }
 # Interstitial pages. Metacritic's normal pages load Cloudflare's
 # `/cdn-cgi/challenge-platform/` detection script, so that path alone is not a challenge.
+# The phrase must be the whole title: the film "Access Denied | Rotten Tomatoes" is a real page.
 CHALLENGE_TITLE = re.compile(
-    r"<title>\s*(just a moment|attention required|access denied|verify you are human|pardon our interruption)",
+    r"<title>\s*(just a moment|attention required|access denied|verify you are human|pardon our interruption)"
+    r"[\s.!…]*(\|\s*cloudflare\s*)?</title>",
     re.IGNORECASE)
 
 

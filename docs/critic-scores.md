@@ -107,6 +107,21 @@ URL their unique slug match (`url_source: "sitemap"`). It then schedules every t
 `f/critic_sites/repair_urls` was a one-off (`dry_run` defaults to true). Windmill passes `null` for omitted arguments,
 so the entry points apply their defaults themselves.
 
+## False Rotten Tomatoes block, 2026-09-29 to 2026-10-17
+
+Rotten Tomatoes never blocked the crawler. All 16 entries in `critic_site_blocks` (2026-09-29 15:00 UTC to
+2026-10-16 18:12 UTC) are `HTTP 200 challenge page` at `https://www.rottentomatoes.com/m/access_denied`: the RT page of
+the 1996 film *Access Denied* (TMDB 28713). Its title, `Access Denied | Rotten Tomatoes`, matched the challenge-title
+check, which only looked at how a title starts. Every block set a 24 h deadline and put the film back in the queue at
+that deadline. 30 to 90 minutes after each lapse the crawl reached it again, so the site was blocked about 23 h a day.
+Between blocks a run fetched about 725 pages in 25 minutes (about 1,450 an hour, 2.1 s apart) and got no 403, 429 or
+challenge. The weekly `directory_rotten_tomatoes` runs on 2026-10-04 and 2026-10-11 failed with `SiteBlocked` because
+they started inside a block.
+
+Fix: a challenge title must now be the whole title (`Just a moment...`, `Attention Required! | Cloudflare`,
+`Access Denied`, ...), see `CHALLENGE_TITLE` in `f/critic_sites/polite_http.py`. Two 2022 films at
+`/m/access_denied_2022` (TMDB 1043578, 1208860) were waiting in the queue and would have tripped it next.
+
 ## First run, 2026-09-25
 
 URL repair without fetching (a group keeps its URL on the Wikidata holder, or on the one holder whose release year

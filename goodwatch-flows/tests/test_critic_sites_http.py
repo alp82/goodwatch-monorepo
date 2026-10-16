@@ -138,6 +138,19 @@ class PoliteClientTests(unittest.TestCase):
         page = self.client([FakeResponse(200, text)], site="metacritic").get("https://www.metacritic.com/tv/x/")
         self.assertEqual(page.status, 200)
 
+    def test_interstitial_titles_are_challenges(self):
+        for title in ("Just a moment...", "Attention Required! | Cloudflare", "Access Denied",
+                      "Pardon Our Interruption", "Verify you are human"):
+            self.assertIsNotNone(polite_http.block_reason(200, {}, f"<html><title>{title}</title>"), title)
+
+    def test_a_title_named_like_a_challenge_is_not_a_block(self):
+        # The 1996 film Access Denied (TMDB 28713) blocked Rotten Tomatoes for a day, every day,
+        # from 2026-09-29 to 2026-10-17.
+        text = "<html><head><title>Access Denied | Rotten Tomatoes</title></head></html>"
+        page = self.client([FakeResponse(200, text)]).get("https://www.rottentomatoes.com/m/access_denied")
+        self.assertEqual(page.status, 200)
+        self.assertIsNone(polite_http.block_reason(200, {}, "<title>Just a Moment | Metacritic</title>"))
+
     def test_404_and_server_errors_are_returned_not_raised(self):
         client = self.client([FakeResponse(404), FakeResponse(500)])
         self.assertEqual(client.get("https://www.rottentomatoes.com/tv/x").status, 404)
