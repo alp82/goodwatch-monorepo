@@ -1,0 +1,2 @@
+2026-10-16T00:19:41Z SQL SELECT failed at http://10.0.0.11:4200/_sql: ConnectionError; trying next coordinator
+{"crate01_process_stopped": true, "actual_installed_cron_credentials": true, "unmodified_coordinator_order": true, "attempted": ["http://10.0.0.11:4200/_sql", "http://10.0.0.12:4200/_sql"], "identity": "goodwatch_backup", "actual_failover_passed": true}

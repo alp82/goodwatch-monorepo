@@ -1,0 +1,6 @@
+{"variable": "u/Alp/CRATE_PASS", "updated_and_readback_verified": true, "secret": true}
+{"variable": "u/Alp/CRATE_USER", "updated_and_readback_verified": true, "secret": false}
+{"host": "10.0.0.11:4200", "user": "goodwatch_windmill", "workspace_variables_and_queries_pass": true}
+{"host": "10.0.0.12:4200", "user": "goodwatch_windmill", "workspace_variables_and_queries_pass": true}
+{"host": "10.0.0.13:4200", "user": "goodwatch_windmill", "workspace_variables_and_queries_pass": true}
+{"utc": "2026-10-15T22:42:20.900760+00:00", "rollback": "/root/.config/goodwatch/crate-rollout-562/windmill.variables.before.json"}

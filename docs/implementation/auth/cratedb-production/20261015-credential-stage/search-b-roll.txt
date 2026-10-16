@@ -1,0 +1,7 @@
+Starting search-b
+ Container goodwatch-search-b  Recreate
+ Container goodwatch-search-b  Recreated
+ Container goodwatch-search-b  Starting
+ Container goodwatch-search-b  Started
+  waiting for search-b: health starting
+  search-b is ready: healthy, query models loaded, commit 3b52c297, after 16 s

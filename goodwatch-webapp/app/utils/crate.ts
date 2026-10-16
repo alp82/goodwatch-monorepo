@@ -38,6 +38,17 @@ export class CrateError extends Error {
 	}
 }
 
+// Host-based authentication refused the request before any statement ran: Crate answers HTTP 401 with plain text
+// ("password authentication failed for user ..."), not its JSON error. A wrong password is refused by every node. A
+// node that has just restarted also refuses valid credentials for a moment, until it has the users from the cluster
+// state (#562), so the client tries the next coordinator, for writes too: a refused request never ran.
+export class CrateAuthenticationError extends CrateError {
+	constructor(message: string) {
+		super(message)
+		this.name = "CrateAuthenticationError"
+	}
+}
+
 export const toCrateError = (error: unknown): Error => {
 	if (error instanceof Error) return error
 	const refused = (error ?? {}) as { message?: unknown; code?: unknown }
@@ -79,7 +90,10 @@ let captureRequest: ((request: ClientRequest) => void) | undefined
 
 type NodeCrate = typeof crate & {
 	getNewInstance(): NodeCrate
-	connectionPool: { getSqlRequest(callback: (response: IncomingMessage) => void): ClientRequest }
+	connectionPool: {
+		getSqlRequest(callback: (response: IncomingMessage) => void): ClientRequest
+		httpOptions: { httpOpt: { auth: string | null } }[]
+	}
 }
 
 const HOST_COOLDOWN_MS = 5_000
@@ -90,7 +104,7 @@ const isConnectionError = (error: unknown): boolean =>
 		.includes((error as NodeJS.ErrnoException).code ?? "")
 
 const isAvailabilityError = (error: unknown): boolean =>
-	isConnectionError(error) || error instanceof CrateTimeoutError ||
+	isConnectionError(error) || error instanceof CrateAuthenticationError || error instanceof CrateTimeoutError ||
 	(error instanceof Error && UNAVAILABLE_STATUSES.includes((error as Error & { statusCode?: number }).statusCode ?? 0))
 
 // A healthy coordinator can briefly retain shard routes to a node that just
@@ -113,8 +127,8 @@ export const isCrateRecoveryError = isRecoverableError
 
 // A refused TCP connection cannot have sent SQL. Trying another host is safe even for a CAS or increment.
 // Do not extend this to resets, broken pipes or timeouts: those may happen after a write was applied.
-const wasNotDispatched = (error: unknown): boolean => error instanceof Error &&
-	(error as NodeJS.ErrnoException).code === "ECONNREFUSED"
+const wasNotDispatched = (error: unknown): boolean => error instanceof CrateAuthenticationError ||
+	(error instanceof Error && (error as NodeJS.ErrnoException).code === "ECONNREFUSED")
 
 // Conservative recognition only: never infer replay safety for a write from its
 // ON CONFLICT text. Helpers below own the keys and values that make replay safe.
@@ -154,19 +168,24 @@ export interface CrateReadOptions {
 	timeoutMs?: number
 	signal?: AbortSignal
 	/** Search keeps its undici transport and never prints raw SQL/search text. The retry policy is shared. */
-	transport?: (url: string, signal: AbortSignal) => ReturnType<typeof crate.execute>
+	transport?: (url: string, signal: AbortSignal, authorization: string | undefined) => ReturnType<typeof crate.execute>
 	source?: "catalog"
 }
 
 class CrateClient {
 	private readonly hosts: { driver: NodeCrate; url: string; address: string; unavailableUntil: number }[]
 	private nextHost = 0
+	private readonly authorization: string | undefined
 
-	constructor(hosts: string[]) {
+	// `auth` is "user:password" for a Basic header, or null for none. node-crate would take it from a URL, but sends it
+	// percent-encoded there, and a password with "#", "/" or "?" is no valid URL (#562).
+	constructor(hosts: string[], auth: string | null = null) {
+		this.authorization = auth === null ? undefined : `Basic ${Buffer.from(auth).toString("base64")}`
 		this.hosts = hosts.map((host) => {
 			const driver = (crate as NodeCrate).getNewInstance()
 			driver.connect(host)
 			const pool = driver.connectionPool
+			for (const options of pool.httpOptions) options.httpOpt.auth = auth
 			const getSqlRequest = pool.getSqlRequest
 			pool.getSqlRequest = function(this: typeof pool, callback: (response: IncomingMessage) => void) {
 				const request = getSqlRequest.call(this, callback)
@@ -199,6 +218,7 @@ class CrateClient {
 			let request: ClientRequest | undefined
 			let responseError: Error | undefined
 			let statusCode: number | undefined
+			let refusal = ""
 			const previousCapture = captureRequest
 			let pending: ReturnType<typeof crate.execute>
 			// node-crate creates the request synchronously, before another statement can run.
@@ -213,6 +233,7 @@ class CrateClient {
 			request?.once("response", (response) => {
 				statusCode = response.statusCode
 				response.once("error", (error) => { responseError = error })
+				if (statusCode === 401) response.on("data", (chunk) => { if (refusal.length < 300) refusal += chunk })
 			})
 			const destroy = () => { request?.destroy(signal.reason) }
 			signal.addEventListener("abort", destroy, { once: true })
@@ -221,6 +242,10 @@ class CrateClient {
 				if (UNAVAILABLE_STATUSES.includes(statusCode ?? 0)) throw new CrateError(`CrateDB HTTP ${statusCode}`)
 				return withNullTimestamps(result)
 			} catch (error) {
+				// node-crate fails to parse the plain-text refusal; a refused statement (missing privilege) is JSON.
+				if (!responseError && statusCode === 401 && !(toCrateError(error) instanceof CrateError)) {
+					throw new CrateAuthenticationError(`CrateDB HTTP 401: ${refusal.trim().slice(0, 200)}`)
+				}
 				throw responseError ?? Object.assign(toCrateError(error), { statusCode })
 			} finally {
 				signal.removeEventListener("abort", destroy)
@@ -267,7 +292,7 @@ class CrateClient {
 				if (attempts > 1) crateEvent("crate.failover_attempt", { ...attempt, outcome: "started" })
 				try {
 					result = options.transport
-						? await withBackendTimeout("CrateDB", attemptTimeoutMs, (signal) => options.transport!(host.url, signal),
+						? await withBackendTimeout("CrateDB", attemptTimeoutMs, (signal) => options.transport!(host.url, signal, this.authorization),
 							{ error: () => new CrateTimeoutError(attemptTimeoutMs), signal: options.signal })
 						: await this.executeOnHost(host.driver, query, params, attemptTimeoutMs, options.signal)
 				} catch (error) {
@@ -441,8 +466,8 @@ export const getCrateClient = () => {
 		const port = Number.parseInt(process.env.CRATE_PORT || "4200")
 		const user = process.env.CRATE_USER || "crate"
 		const pass = process.env.CRATE_PASS || ""
-		const urls = hosts.map((host) => `http://${encodeURIComponent(user)}:${encodeURIComponent(pass)}@${host.trim()}:${port}`)
-		client = new CrateClient(urls)
+		const urls = hosts.map((host) => `http://${host.trim()}:${port}`)
+		client = new CrateClient(urls, `${user}:${pass}`)
 	}
 	return client
 }

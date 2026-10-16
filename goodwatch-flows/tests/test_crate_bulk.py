@@ -72,3 +72,24 @@ class BulkResultTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+DOCUMENT_MISSING = {"rowcount": -2, "error": {"code": 40411, "message": "DocumentMissingException[[default][338131]: document missing]"}}
+
+
+class RunManyTest(unittest.TestCase):
+    def run_many(self, results, **kwargs):
+        db = module.CrateConnector.__new__(module.CrateConnector)
+        db.cur = SimpleNamespace(executemany=Mock(return_value=results))
+        return db.run_many("UPDATE show SET x = ? WHERE tmdb_id = ?", [[1, 1]] * len(results), **kwargs)
+
+    def test_a_missing_row_fails_the_batch_by_default(self):
+        with self.assertRaisesRegex(RuntimeError, "1 of 2 statements failed"):
+            self.run_many([{"rowcount": 1}, DOCUMENT_MISSING])
+
+    def test_missing_ok_counts_missing_rows_instead_of_failing(self):
+        self.assertEqual(self.run_many([{"rowcount": 1}, DOCUMENT_MISSING, DOCUMENT_MISSING], missing_ok=True), 2)
+
+    def test_missing_ok_still_fails_on_other_errors(self):
+        with self.assertRaisesRegex(RuntimeError, "1 of 2 statements failed"):
+            self.run_many([DOCUMENT_MISSING, IO_ERROR], missing_ok=True)

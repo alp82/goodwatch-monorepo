@@ -3,22 +3,37 @@ import { ArrowUpTrayIcon } from "@heroicons/react/24/solid"
 import { type DragEvent, useRef, useState } from "react"
 import type { ImdbImportSummary } from "~/domain/imdb-import"
 import { Spinner } from "~/ui/wait/Spinner"
+import {
+	type ImportHandoff,
+	RecognizedLine,
+	useHandoffUpload,
+	useWrongSourceCatch,
+} from "./ImportFileRouting"
 import { usePreviewImdbImport } from "./api"
 import { errorBox, primaryButton, stepHeading } from "./shared"
 
 export function ImdbUpload({
 	onPreview,
-}: { onPreview: (summary: ImdbImportSummary) => void }) {
+	handoff,
+}: {
+	onPreview: (summary: ImdbImportSummary) => void
+	/** A file the page recognized as an IMDb ratings export; it is sent at once. */
+	handoff?: ImportHandoff
+}) {
 	const inputRef = useRef<HTMLInputElement>(null)
 	const [dragging, setDragging] = useState(false)
 	const preview = usePreviewImdbImport()
+	const wrongSource = useWrongSourceCatch("imdb")
 
-	const send = (file: File | undefined) => {
-		if (!file || preview.isPending) return
+	const upload = (file: File) =>
 		preview.mutate(file, {
 			onSuccess: (response) => onPreview(response.import),
 		})
+	const send = async (file: File | undefined) => {
+		if (!file || preview.isPending) return
+		if ((await wrongSource.check(file)).send) upload(file)
 	}
+	useHandoffUpload(handoff, upload)
 
 	const onDrop = (event: DragEvent<HTMLDivElement>) => {
 		event.preventDefault()
@@ -34,6 +49,7 @@ export function ImdbUpload({
 			<h3 id="imdb-upload-heading" className={stepHeading}>
 				Upload your file
 			</h3>
+			{handoff && <RecognizedLine handoff={handoff} />}
 			<div
 				onDragOver={(event) => {
 					event.preventDefault()
@@ -79,6 +95,7 @@ export function ImdbUpload({
 					}}
 				/>
 			</div>
+			{wrongSource.note}
 			<p className="text-sm text-gray-400">
 				You'll see what's in the file before anything is saved.
 			</p>

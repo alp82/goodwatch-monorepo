@@ -16,9 +16,9 @@ import {
 	type TvContext,
 	type TvEffect,
 	type TvScreen,
+	readTvState,
 	transition,
 	tvItems,
-	readTvState,
 } from "./tv-machine.ts"
 import {
 	type TvTasteScreens,
@@ -196,17 +196,22 @@ describe("the sides on the TV", () => {
 		)
 	})
 
-	it("are four at most", () => {
-		const many = view({
+	it("are every side of the portrait, five at most", () => {
+		const five = view({
 			sides: ["a", "b", "c", "d", "e"].map((id) => side(id, id, [1])),
 		})
-		assert.equal(tvSides(many).length, 4)
+		assert.equal(tvSides(five).length, 5)
+		const six = view({
+			sides: ["a", "b", "c", "d", "e", "f"].map((id) => side(id, id, [1])),
+		})
+		assert.equal(tvSides(six).length, 5)
 	})
 
-	it("are counted in words: there are two to four, not always three", () => {
+	it("are counted in words: there are two to five, not always three", () => {
 		assert.equal(sidesCrumb(2), "Two sides of you")
 		assert.equal(sidesCrumb(3), "Three sides of you")
 		assert.equal(sidesCrumb(4), "Four sides of you")
+		assert.equal(sidesCrumb(5), "Five sides of you")
 		assert.equal(sidesCrumb(1), "One side of you")
 	})
 

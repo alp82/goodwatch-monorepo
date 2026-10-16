@@ -21,6 +21,7 @@ import {
 	navLabel,
 } from "~/ui/explore/config"
 import { mainHierarchy, mainNavigation } from "~/ui/explore/main-nav"
+import { exploreCategoryCopy } from "~/ui/explore/page-copy"
 import Breadcrumbs from "~/ui/nav/Breadcrumbs"
 import { buildDiscoverParams } from "~/utils/discover"
 import { type PageItem, type PageMeta, buildMeta } from "~/utils/meta"
@@ -117,6 +118,7 @@ const canonicalLoader: LoaderFunction = async ({
 
 export default function MoviesCategory_index() {
 	const { type, category, path, pageResults } = useLoaderData<LoaderData>()
+	const copy = exploreCategoryCopy(type, category)
 	const discoverType = type === "shows" ? "show" : type
 
 	const pageItems = Object.values<PageData>(mainHierarchy[category as keyof typeof mainHierarchy]).filter(
@@ -130,13 +132,12 @@ export default function MoviesCategory_index() {
 			<Breadcrumbs path={path} />
 
 			<div className="max-w-7xl mx-auto p-4 flex flex-col gap-12">
-				<h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-medium text-gray-100">
-					The best{" "}
-					<span className="font-extrabold accent">
-						{mainNavigation[category].label}
-					</span>{" "}
-					{type === "movies" ? "Movies" : "TV Shows"}
-				</h2>
+				<div className="flex flex-col gap-2">
+					<h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-medium text-gray-100">
+						{copy.heading}
+					</h1>
+					<p className="text-lg text-gray-400">{copy.intro}</p>
+				</div>
 
 				{pageResults.map((pageResult) => (
 					<div key={pageResult.path} className="flex flex-col gap-4">

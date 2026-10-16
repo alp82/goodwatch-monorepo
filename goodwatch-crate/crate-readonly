@@ -1,0 +1,9 @@
+#!/bin/sh
+# Root-only credentials for manual read tools; no service restart or dotenv copying.
+# Tools that require --env/--env-file should receive $CRATE_ENV_FILE explicitly.
+set +x
+set -eu
+set -a
+. /root/.config/goodwatch/crate-readonly.env
+set +a
+exec "$@"

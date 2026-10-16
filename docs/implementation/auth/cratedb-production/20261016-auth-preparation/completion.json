@@ -1,0 +1,2389 @@
+{
+  "observed_at": "2026-10-16T00:38:48.387703+00:00",
+  "created_user": "goodwatch_auth",
+  "superuser": false,
+  "privileges": [],
+  "secret_file": "/root/.config/goodwatch/crate-credentials/goodwatch_auth",
+  "secret_owner_uid": 0,
+  "secret_mode": "0o600",
+  "tables": [
+    "age_certification",
+    "alternative_title",
+    "anime_mapping_snapshot",
+    "buzz_pageview",
+    "buzz_score",
+    "buzz_snapshot",
+    "buzz_title",
+    "buzz_trending",
+    "country",
+    "crawl_priority",
+    "episode",
+    "episode_translation",
+    "genre",
+    "imdb_episode",
+    "imdb_season",
+    "job",
+    "language",
+    "media_image",
+    "media_video",
+    "metacritic_season",
+    "movie",
+    "movie_series",
+    "network",
+    "person",
+    "person_appeared_in",
+    "person_worked_on",
+    "production_company",
+    "release_event",
+    "rotten_tomatoes_season",
+    "search_control",
+    "search_embedding_inputs",
+    "search_embedding_state",
+    "search_history",
+    "search_index_builds",
+    "search_interpretations",
+    "search_shadow",
+    "search_spending",
+    "search_terms",
+    "season",
+    "season_translation",
+    "show",
+    "social_content_quality",
+    "social_ingest_run",
+    "social_link_report",
+    "social_post",
+    "social_relevance",
+    "social_title_link",
+    "streaming_availability",
+    "streaming_evidence",
+    "streaming_service",
+    "timezone",
+    "translation",
+    "trope",
+    "user_favorite",
+    "user_handle",
+    "user_import",
+    "user_import_connection",
+    "user_import_item",
+    "user_list",
+    "user_list_exposure",
+    "user_not_interested",
+    "user_profile",
+    "user_score",
+    "user_setting",
+    "user_skipped",
+    "user_watch_log",
+    "user_watch_state",
+    "user_wishlist",
+    "workflow_monitoring"
+  ],
+  "coordinators": [
+    {
+      "host": "10.0.0.11",
+      "identity": "goodwatch_auth",
+      "correct_password_http": 200,
+      "denials": [
+        {
+          "table": "age_certification",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "alternative_title",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "anime_mapping_snapshot",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "buzz_pageview",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "buzz_score",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "buzz_snapshot",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "buzz_title",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "buzz_trending",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "country",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "crawl_priority",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "episode",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "episode_translation",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "genre",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "imdb_episode",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "imdb_season",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "job",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "language",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "media_image",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "media_video",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "metacritic_season",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "movie",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "movie_series",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "network",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "person",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "person_appeared_in",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "person_worked_on",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "production_company",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "release_event",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "rotten_tomatoes_season",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "search_control",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "search_embedding_inputs",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "search_embedding_state",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "search_history",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "search_index_builds",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "search_interpretations",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "search_shadow",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "search_spending",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "search_terms",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "season",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "season_translation",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "show",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "social_content_quality",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "social_ingest_run",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "social_link_report",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "social_post",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "social_relevance",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "social_title_link",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "streaming_availability",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "streaming_evidence",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "streaming_service",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "timezone",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "translation",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "trope",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "user_favorite",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "user_handle",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "user_import",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "user_import_connection",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "user_import_item",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "user_list",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "user_list_exposure",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "user_not_interested",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "user_profile",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "user_score",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "user_setting",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "user_skipped",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "user_watch_log",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "user_watch_state",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "user_wishlist",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "workflow_monitoring",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        }
+      ],
+      "missing_password_http": 401,
+      "wrong_password_http": 401
+    },
+    {
+      "host": "10.0.0.12",
+      "identity": "goodwatch_auth",
+      "correct_password_http": 200,
+      "denials": [
+        {
+          "table": "age_certification",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "alternative_title",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "anime_mapping_snapshot",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "buzz_pageview",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "buzz_score",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "buzz_snapshot",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "buzz_title",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "buzz_trending",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "country",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "crawl_priority",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "episode",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "episode_translation",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "genre",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "imdb_episode",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "imdb_season",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "job",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "language",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "media_image",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "media_video",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "metacritic_season",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "movie",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "movie_series",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "network",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "person",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "person_appeared_in",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "person_worked_on",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "production_company",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "release_event",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "rotten_tomatoes_season",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "search_control",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "search_embedding_inputs",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "search_embedding_state",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "search_history",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "search_index_builds",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "search_interpretations",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "search_shadow",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "search_spending",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "search_terms",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "season",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "season_translation",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "show",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "social_content_quality",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "social_ingest_run",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "social_link_report",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "social_post",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "social_relevance",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "social_title_link",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "streaming_availability",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "streaming_evidence",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "streaming_service",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "timezone",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "translation",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "trope",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "user_favorite",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "user_handle",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "user_import",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "user_import_connection",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "user_import_item",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "user_list",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "user_list_exposure",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "user_not_interested",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "user_profile",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "user_score",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "user_setting",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "user_skipped",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "user_watch_log",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "user_watch_state",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "user_wishlist",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "workflow_monitoring",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        }
+      ],
+      "missing_password_http": 401,
+      "wrong_password_http": 401
+    },
+    {
+      "host": "10.0.0.13",
+      "identity": "goodwatch_auth",
+      "correct_password_http": 200,
+      "denials": [
+        {
+          "table": "age_certification",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "alternative_title",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "anime_mapping_snapshot",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "buzz_pageview",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "buzz_score",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "buzz_snapshot",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "buzz_title",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "buzz_trending",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "country",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "crawl_priority",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "episode",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "episode_translation",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "genre",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "imdb_episode",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "imdb_season",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "job",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "language",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "media_image",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "media_video",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "metacritic_season",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "movie",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "movie_series",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "network",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "person",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "person_appeared_in",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "person_worked_on",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "production_company",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "release_event",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "rotten_tomatoes_season",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "search_control",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "search_embedding_inputs",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "search_embedding_state",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "search_history",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "search_index_builds",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "search_interpretations",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "search_shadow",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "search_spending",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "search_terms",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "season",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "season_translation",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "show",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "social_content_quality",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "social_ingest_run",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "social_link_report",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "social_post",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "social_relevance",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "social_title_link",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "streaming_availability",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "streaming_evidence",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "streaming_service",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "timezone",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "translation",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "trope",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "user_favorite",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "user_handle",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "user_import",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "user_import_connection",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "user_import_item",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "user_list",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "user_list_exposure",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "user_not_interested",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "user_profile",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "user_score",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "user_setting",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "user_skipped",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "user_watch_log",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "user_watch_state",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "user_wishlist",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        },
+        {
+          "table": "workflow_monitoring",
+          "read": {
+            "http": 404,
+            "error_code": 4045
+          },
+          "write": {
+            "http": 404,
+            "error_code": 4045
+          }
+        }
+      ],
+      "missing_password_http": 401,
+      "wrong_password_http": 401
+    }
+  ],
+  "completed_at": "2026-10-16T00:39:59.174410+00:00",
+  "write_probe": "DELETE FROM doc.<table> WHERE false",
+  "read_probe": "SELECT * FROM doc.<table> LIMIT 0"
+}

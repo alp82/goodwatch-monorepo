@@ -73,6 +73,14 @@ Catalog reads and TMDB requests are memoized per preview, including lookup failu
 
 Tests use synthetic episode IDs with Friends, The Office and Money Heist numbering/count examples from [the episode-numbering research note on its origin branch](https://github.com/alp82/goodwatch-monorepo/blob/research/episode-numbering/docs/research/imports/episode-numbering.md). Database and TMDB boundaries are faked locally. Anime placement tests additionally cover Frieren, Spy x Family, Attack on Titan, Bleach and One Piece. Translated-name lookups and new source parsers remain separate work.
 
+## Imports page and file recognition
+
+`/settings/imports` (#649) has one upload box on top and a searchable list of every live source below it, most common first (`app/ui/imports/ImportSources.ts`). A row opens in place with that source's own flow: its steps, its upload box, and its history. A row shows "Imported <date>" after a finished import. `?source=<id>` opens a row, so the IMDb entry links to `?source=imdb`. Sources whose import isn't built are not listed; TV Time members are pointed to Trakt.
+
+`recognizeImportFile` (`app/ui/imports/ImportFileRecognition.ts`) reads a file in the browser without uploading it: a ZIP's file names, a CSV header, or an XML root, after gunzip for gzip. Each rule mirrors what that source's import accepts, so the one box only routes a file to an import that can read it. A file that matches no rule stays unrecognized and is never sent. The one box hands a recognized file to its source's upload panel, which sends it. A source's own box holds back a file recognized as another source's and offers **Import it as …**. A MovieLens file waits in the MovieLens panel for its partner file.
+
+When a new source's import ships, add its entry to `ImportSources.ts` and its rule to `ImportFileRecognition.ts`, with a test built from the header or file names its adapter reads.
+
 ## Getting an export
 
 - [Letterboxd](https://letterboxd.com/user/exportdata/): sign in on the web, open Settings → Data and choose Export Data. Upload the resulting ZIP intact.

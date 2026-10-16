@@ -1,5 +1,5 @@
 import { ArrowUpTrayIcon } from "@heroicons/react/24/solid"
-import { type DragEvent, useRef, useState } from "react"
+import { type DragEvent, useEffect, useId, useRef, useState } from "react"
 import {
 	type FileImportSource,
 	IMPORT_SOURCE_NAMES,
@@ -7,41 +7,56 @@ import {
 	type ImportSummary,
 } from "~/domain/imports"
 import { Spinner } from "~/ui/wait/Spinner"
+import {
+	type ImportHandoff,
+	type MovieLensFiles,
+	RecognizedLine,
+	useHandoffUpload,
+	useMovieLensFiles,
+	useWrongSourceCatch,
+} from "./ImportFileRouting"
 import { usePreviewSourceImport } from "./SourceImportHooks"
-import { errorBox, primaryButton, stepHeading } from "./shared"
+import { errorBox, infoBox, primaryButton, stepHeading } from "./shared"
 
 const sourceName = (source: FileImportSource) => IMPORT_SOURCE_NAMES[source]
 
-function SingleFileUploadPanel({
-	source,
-	onPreview,
-}: { source: FileImportSource; onPreview: (summary: ImportSummary) => void }) {
+type PanelProps = {
+	source: FileImportSource
+	onPreview: (summary: ImportSummary) => void
+	/** A file the page recognized as this source's; it is sent at once. */
+	handoff?: ImportHandoff
+}
+
+function SingleFileUploadPanel({ source, onPreview, handoff }: PanelProps) {
 	const descriptor = IMPORT_SOURCE_UPLOAD[source]
 	const fileLabel = descriptor.label
+	const id = useId()
 	const inputRef = useRef<HTMLInputElement>(null)
 	const [dragging, setDragging] = useState(false)
 	const preview = usePreviewSourceImport()
-	const send = (file?: File) => {
-		if (!file || preview.isPending) return
+	const wrongSource = useWrongSourceCatch(source)
+	const upload = (file: File) =>
 		preview.mutate(
 			{ source, file },
 			{ onSuccess: (response) => onPreview(response.import) },
 		)
+	const send = async (file?: File) => {
+		if (!file || preview.isPending) return
+		if ((await wrongSource.check(file)).send) upload(file)
 	}
+	useHandoffUpload(handoff, upload)
 	const drop = (event: DragEvent<HTMLDivElement>) => {
 		event.preventDefault()
 		setDragging(false)
 		send(event.dataTransfer.files[0])
 	}
 	return (
-		<section
-			aria-labelledby="source-upload-heading"
-			className="flex flex-col gap-4"
-		>
-			<h3 id="source-upload-heading" className={stepHeading}>
+		<section aria-labelledby={`${id}-heading`} className="flex flex-col gap-4">
+			<h3 id={`${id}-heading`} className={stepHeading}>
 				Upload your {sourceName(source)} export
 			</h3>
 			<UploadInstructions source={source} />
+			{handoff && <RecognizedLine handoff={handoff} />}
 			<div
 				onDragOver={(event) => {
 					event.preventDefault()
@@ -56,7 +71,7 @@ function SingleFileUploadPanel({
 				) : (
 					<ArrowUpTrayIcon className="size-8 text-gray-500" aria-hidden />
 				)}
-				<p id="source-upload-hint" aria-live="polite">
+				<p id={`${id}-hint`} aria-live="polite">
 					{preview.isPending
 						? "Uploading and checking your export. This can take a moment."
 						: descriptor.hint}
@@ -65,7 +80,7 @@ function SingleFileUploadPanel({
 					type="button"
 					className={primaryButton}
 					disabled={preview.isPending}
-					aria-describedby="source-upload-hint"
+					aria-describedby={`${id}-hint`}
 					onClick={() => inputRef.current?.click()}
 				>
 					Choose {fileLabel} file
@@ -82,6 +97,7 @@ function SingleFileUploadPanel({
 					}}
 				/>
 			</div>
+			{wrongSource.note}
 			<p className="text-sm text-gray-400">
 				You will review everything before GoodWatch changes your library.
 			</p>
@@ -119,60 +135,138 @@ function UploadInstructions({ source }: { source: FileImportSource }) {
 	)
 }
 
-export function SourceImportUploadPanel(props: {
-	source: FileImportSource
-	onPreview: (summary: ImportSummary) => void
-}) {
+export function SourceImportUploadPanel(props: PanelProps) {
 	return IMPORT_SOURCE_UPLOAD[props.source].optionalWishlist ? (
-		<MovieLensUploadPanel onPreview={props.onPreview} />
+		<MovieLensUploadPanel {...props} />
 	) : (
 		<SingleFileUploadPanel {...props} />
 	)
 }
 
-function MovieLensUploadPanel({
-	onPreview,
-}: { onPreview: (summary: ImportSummary) => void }) {
-	const [ratings, setRatings] = useState<File>()
-	const [wishlist, setWishlist] = useState<File>()
+type Slot = keyof MovieLensFiles
+const SLOT_NAME: Record<Slot, string> = {
+	ratings: "ratings",
+	wishlist: "wishlist",
+}
+const other = (slot: Slot): Slot =>
+	slot === "ratings" ? "wishlist" : "ratings"
+
+/**
+ * MovieLens takes two files. The page keeps them, so a file handed over later fills the empty slot. Each box checks
+ * its file: one from another source is offered as that source, and the other MovieLens file is offered to its box.
+ */
+function MovieLensUploadPanel({ onPreview, handoff }: PanelProps) {
+	const id = useId()
+	const [files, setFiles] = useMovieLensFiles()
+	const [misplaced, setMisplaced] = useState<{ file: File; slot: Slot } | null>(
+		null,
+	)
 	const preview = usePreviewSourceImport()
+	const catches = {
+		ratings: useWrongSourceCatch("movielens"),
+		wishlist: useWrongSourceCatch("movielens"),
+	}
+	const place = (slot: Slot, file: File | undefined) =>
+		setFiles((current) => ({ ...current, [slot]: file }))
+	// A handed-off file goes to its slot; the other slot keeps what it has.
+	useEffect(() => {
+		if (handoff?.recognition.source !== "movielens") return
+		const { file, recognition } = handoff
+		setFiles((current) => ({
+			...current,
+			[recognition.wishlist ? "wishlist" : "ratings"]: file,
+		}))
+	}, [handoff, setFiles])
+	const choose = async (slot: Slot, file: File | undefined) => {
+		setMisplaced(null)
+		if (!file) return place(slot, undefined)
+		const { send, recognition } = await catches[slot].check(file)
+		if (!send) return
+		const belongs =
+			recognition?.source === "movielens"
+				? recognition.wishlist
+					? "wishlist"
+					: "ratings"
+				: slot
+		if (belongs === slot) place(slot, file)
+		else setMisplaced({ file, slot: belongs })
+	}
+	const next = files.ratings
+		? files.wishlist
+			? "Both files are ready. Preview the import."
+			: "Add your wishlist file if you have one, then preview."
+		: "Choose your ratings file too, then preview."
+	const box = (slot: Slot, label: string) => (
+		<>
+			<label className="flex flex-col gap-2">
+				{label}
+				<input
+					type="file"
+					accept={IMPORT_SOURCE_UPLOAD.movielens.accept}
+					disabled={preview.isPending}
+					onChange={(event) => {
+						choose(slot, event.target.files?.[0])
+					}}
+				/>
+				{files[slot] && (
+					<span className="break-all text-sm text-gray-400">
+						Chosen: {files[slot].name}
+					</span>
+				)}
+			</label>
+			{catches[slot].note}
+		</>
+	)
 	return (
-		<section
-			aria-labelledby="source-upload-heading"
-			className="flex flex-col gap-4"
-		>
-			<h3 id="source-upload-heading" className={stepHeading}>
+		<section aria-labelledby={`${id}-heading`} className="flex flex-col gap-4">
+			<h3 id={`${id}-heading`} className={stepHeading}>
 				Upload your MovieLens export
 			</h3>
 			<UploadInstructions source="movielens" />
-			<label className="flex flex-col gap-2">
-				MovieLens ratings CSV
-				<input
-					type="file"
-					accept={IMPORT_SOURCE_UPLOAD.movielens.accept}
-					disabled={preview.isPending}
-					onChange={(event) => setRatings(event.target.files?.[0])}
-				/>
-			</label>
-			<label className="flex flex-col gap-2">
-				MovieLens wishlist CSV (optional)
-				<input
-					type="file"
-					accept={IMPORT_SOURCE_UPLOAD.movielens.accept}
-					disabled={preview.isPending}
-					onChange={(event) => setWishlist(event.target.files?.[0])}
-				/>
-			</label>
-
+			{handoff && <RecognizedLine handoff={handoff} next={next} />}
+			{box("ratings", "MovieLens ratings CSV")}
+			{box("wishlist", "MovieLens wishlist CSV (optional)")}
+			<div aria-live="polite">
+				{misplaced && (
+					<div className={`${infoBox} flex flex-col gap-3`}>
+						<p>
+							<span className="break-all font-semibold">
+								{misplaced.file.name}
+							</span>{" "}
+							is your MovieLens {SLOT_NAME[misplaced.slot]}, not your{" "}
+							{SLOT_NAME[other(misplaced.slot)]}.
+						</p>
+						<button
+							type="button"
+							className={`${primaryButton} self-start`}
+							onClick={() => {
+								place(misplaced.slot, misplaced.file)
+								setMisplaced(null)
+							}}
+						>
+							Use it as the {SLOT_NAME[misplaced.slot]}
+						</button>
+					</div>
+				)}
+			</div>
 			<button
 				type="button"
 				className={primaryButton}
-				disabled={!ratings || preview.isPending}
+				disabled={!files.ratings || preview.isPending}
 				onClick={() => {
-					if (ratings)
+					if (files.ratings)
 						preview.mutate(
-							{ source: "movielens", file: ratings, wishlist },
-							{ onSuccess: (response) => onPreview(response.import) },
+							{
+								source: "movielens",
+								file: files.ratings,
+								wishlist: files.wishlist,
+							},
+							{
+								onSuccess: (response) => {
+									setFiles({})
+									onPreview(response.import)
+								},
+							},
 						)
 				}}
 			>

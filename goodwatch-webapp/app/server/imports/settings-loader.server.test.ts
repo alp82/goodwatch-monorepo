@@ -58,3 +58,24 @@ test("Plex return opens its owned fetched preview and does not cross sources", a
 	assert.equal(data.openImport, preview.id)
 	assert.equal((await load("tmdb")).openImport, undefined)
 })
+
+test("the page opens any live source named in the address, and ignores other names", async () => {
+	setImportDbForTest(new ImportDb())
+	const initialSource = (source: string) =>
+		loader({
+			request: new Request(
+				`https://goodwatch.test/settings/imports?source=${source}`,
+				{ headers: { Member: "member" } },
+			),
+			params: {},
+			context: {},
+		} as LoaderFunctionArgs)
+			.then((r) => r.json())
+			.then((data) => data.initialSource)
+	assert.equal(await initialSource("imdb"), "imdb")
+	assert.equal(await initialSource("letterboxd"), "letterboxd")
+	assert.equal(await initialSource("tmdb"), "tmdb")
+	assert.equal(await initialSource("plex"), "plex")
+	assert.equal(await initialSource("netflix"), undefined)
+	assert.equal(await initialSource("constructor"), undefined)
+})

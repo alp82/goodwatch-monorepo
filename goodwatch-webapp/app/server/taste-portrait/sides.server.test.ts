@@ -296,6 +296,107 @@ describe("buildSides", () => {
 		}
 	})
 
+	it("leaves out a loved title its side's name doesn't describe", () => {
+		// A side with many strong attributes: a title can be close to it overall and still lack one its name claims.
+		const WARM = {
+			wonder: 2.2,
+			hopefulness: 2,
+			wholesome: 1.8,
+			nostalgia: 1.6,
+			family_dynamics: 1.6,
+			coming_of_age: 1.5,
+			fantasy: 1.5,
+		}
+		const build = (extra: RatedTitle[]) =>
+			buildSides(
+				person(
+					[
+						...Array.from({ length: 30 }, () => rated(CRIME, 9)),
+						...Array.from({ length: 30 }, () => rated(WARM, 9)),
+						...Array.from({ length: 10 }, () => rated({}, 5)),
+						...extra,
+					],
+					[
+						...Array.from({ length: 160 }, () => unseen(CRIME)),
+						...Array.from({ length: 160 }, () => unseen(WARM)),
+					],
+				),
+			)
+		const warmSide = (view: ReturnType<typeof build>) =>
+			view.sides.find((side) => side.attributes.some((a) => a.key in WARM))
+		const plain = warmSide(build([]))
+		assert.ok(plain)
+		const claimed = plain.attributes.slice(0, 2).map((a) => a.key)
+		// Like the side in all but one claimed attribute, which it is far below the catalog on (John Wick in a hopeful side).
+		const against = rated({ ...WARM, [claimed[1]]: -2 }, 9)
+		const alike = rated(WARM, 9)
+		assert.equal(warmSide(build([alike]))?.count, plain.count + 1)
+		assert.equal(warmSide(build([against]))?.count, plain.count)
+	})
+
+	it("orders the sides by how many titles they keep, after leaving some out", () => {
+		// 34 crime titles, 12 of them far below the catalog on crime itself, which every name of the side claims: the
+		// side keeps 22 and falls behind the 30 comedies.
+		const STRONG_CRIME = { ...CRIME, crime: 6 }
+		const titles = [
+			...Array.from({ length: 22 }, () => rated(STRONG_CRIME, 9)),
+			...Array.from({ length: 12 }, () => rated({ ...CRIME, crime: -1.5 }, 9)),
+			...Array.from({ length: 30 }, () => rated(COMEDY, 9)),
+			...Array.from({ length: 10 }, () => rated({}, 5)),
+		]
+		const view = buildSides(person(titles, []))
+		assert.equal(view.sides.length, 2)
+		assert.ok(view.sides[0].attributes.some((a) => a.key in COMEDY))
+		assert.deepEqual(
+			view.sides.map((side) => side.count),
+			[30, 22],
+		)
+		assert.equal(view.openFirst, view.sides[0].id)
+		assert.deepEqual(view.headline, {
+			first: view.sides[0].id,
+			second: view.sides[1].id,
+		})
+	})
+
+	it("leaves out a loved title that is only loosely like its side", () => {
+		const { titles, pool } = twoStrands()
+		const plain = buildSides(person(titles, pool))
+		const crimeCount = () =>
+			plain.sides.find((side) => side.attributes.some((a) => a.key === "crime"))
+				?.count ?? 0
+		// A little crime in a title about something else: about 0.2 close to the crime side.
+		const loose = rated(
+			{
+				crime: 0.9,
+				bleakness: 0.8,
+				warfare: 3,
+				political: 3,
+				spectacle: 3,
+				historical: 3,
+			},
+			9,
+		)
+		const view = buildSides(person([...titles, loose], pool))
+		const crime = view.sides.find((side) =>
+			side.attributes.some((a) => a.key === "crime"),
+		)
+		assert.equal(crime?.count, crimeCount())
+	})
+
+	it("keeps a small side under another of its names when the first leaves out too many", () => {
+		// 14 loved titles: 12 crime and two comedies, one of them far below the catalog on slapstick.
+		const titles = [
+			...Array.from({ length: 12 }, () => rated(CRIME, 9)),
+			rated({ ...COMEDY, physical_comedy: 5.5 }, 9),
+			rated({ ...COMEDY, physical_comedy: -1.1 }, 9),
+			...Array.from({ length: 20 }, () => rated({}, 5)),
+		]
+		const view = buildSides(person(titles, []))
+		assert.equal(view.status, "ready")
+		assert.equal(view.sides.length, 2)
+		assert.equal(view.sides[1].count, 2)
+	})
+
 	it("shows one title of a franchise among a side's titles", () => {
 		const { titles, pool } = twoStrands()
 		// Three films that read alike, rated 10.

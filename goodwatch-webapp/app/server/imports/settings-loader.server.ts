@@ -1,7 +1,12 @@
 import { type LoaderFunctionArgs, json } from "@remix-run/node"
 import { getAuthFromRequest } from "~/utils/auth"
 import type { ImdbImportListResponse } from "../../domain/imdb-import.ts"
-import { IMPORT_ID_PATTERN, type ImportSummary } from "../../domain/imports.ts"
+import {
+	IMPORT_ID_PATTERN,
+	IMPORT_SOURCES,
+	type ImportSource,
+	type ImportSummary,
+} from "../../domain/imports.ts"
 import { listImportRows, summarize } from "../imdb-import/store.server.ts"
 import { getImport, listImports } from "./service.server.ts"
 
@@ -11,8 +16,14 @@ interface LoaderData extends ImdbImportListResponse {
 	sourceImports: ImportSummary[]
 	connectState?: string
 	openImport?: string
-	initialSource?: "tmdb" | "plex"
+	/** The source the page opens, from `?source=`. */
+	initialSource?: "imdb" | ImportSource
 }
+
+const pageSource = (value: string | null) =>
+	value === "imdb" || IMPORT_SOURCES.some((source) => source === value)
+		? (value as "imdb" | ImportSource)
+		: undefined
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const { user, headers } = await getAuthFromRequest({ request })
@@ -32,9 +43,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		}),
 	])
 	const url = new URL(request.url)
-	const source = url.searchParams.get("source")
-	const initialSource =
-		source === "tmdb" || source === "plex" ? source : undefined
+	const initialSource = pageSource(url.searchParams.get("source"))
 	const connectState = url.searchParams.get("connect") ?? ""
 	const openImport = url.searchParams.get("import") ?? ""
 	const selected = IMPORT_ID_PATTERN.test(openImport)

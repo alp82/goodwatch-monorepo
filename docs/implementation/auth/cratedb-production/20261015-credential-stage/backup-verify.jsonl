@@ -1,0 +1,4 @@
+{"endpoint": "http://10.0.0.11:4200/_sql", "user": "goodwatch_backup", "helper_identity_pass": true}
+{"endpoint": "http://10.0.0.12:4200/_sql", "user": "goodwatch_backup", "helper_identity_pass": true}
+{"endpoint": "http://10.0.0.13:4200/_sql", "user": "goodwatch_backup", "helper_identity_pass": true}
+{"snapshot_read_pass": true, "latest": [["hourly_20261015_220501", "SUCCESS"]], "utc": "2026-10-15T22:44:31.403049+00:00"}

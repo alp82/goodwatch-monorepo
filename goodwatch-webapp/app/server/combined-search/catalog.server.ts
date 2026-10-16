@@ -3,7 +3,7 @@ import { ELIGIBLE_VOTES } from "../search-ranking/search-filter.server"
 import type { Eligibility } from "./reading-retrieval.server"
 import type { Title } from "~/ui/search/search-model"
 import { withBackendTimeout } from "../../utils/backend-timeout.ts"
-import { getCrateClient, toCrateError } from "../../utils/crate.ts"
+import { CrateAuthenticationError, getCrateClient, toCrateError } from "../../utils/crate.ts"
 
 // Search text never passes through the general-purpose SQL logger.
 export async function searchStatement(
@@ -14,18 +14,16 @@ export async function searchStatement(
 	if (!process.env.CRATE_HOSTS) throw new Error("Catalog unavailable")
 	return getCrateClient().execute(stmt, undefined, {
 		timeoutMs: METADATA_TIMEOUT_MS, signal, source: "catalog",
-		transport: async (host, attemptSignal) => {
+		transport: async (host, attemptSignal, authorization) => {
 			const url = new URL(host)
-			const authorization = `Basic ${Buffer.from(`${decodeURIComponent(url.username)}:${decodeURIComponent(url.password)}`).toString("base64")}`
-			url.username = ""
-			url.password = ""
 			url.pathname = "/_sql"
 			try {
 				const response = await fetch(url, {
-					method: "POST", headers: { "Content-Type": "application/json", Authorization: authorization },
+					method: "POST", headers: { "Content-Type": "application/json", ...(authorization ? { Authorization: authorization } : {}) },
 					body: JSON.stringify({ stmt, args }), signal: attemptSignal,
 				})
 				const data = await response.json().catch((error) => {
+					if (response.status === 401) throw new CrateAuthenticationError("CrateDB HTTP 401")
 					if (response.ok) throw error
 					return {}
 				}) as { cols: string[]; rows: object[][]; rowcount: number; duration: number; error?: unknown }

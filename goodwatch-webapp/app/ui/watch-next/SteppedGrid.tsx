@@ -26,6 +26,7 @@ import {
 	moodWords,
 	runtimeLabel,
 	sortFact,
+	tierGridClass,
 	tierHeadingClass,
 	titleCount,
 } from "./labels"
@@ -34,12 +35,6 @@ import { offersOf } from "./services"
 import { DISPLAY, posterUrl } from "./style"
 import { type WatchNextState, useTierCards } from "./useWatchNext"
 
-const GRID: Record<WatchNextTierSize, string> = {
-	xl: "grid grid-cols-2 gap-3 md:flex md:flex-wrap md:gap-4",
-	lg: "grid grid-cols-3 gap-2 md:flex md:flex-wrap md:gap-3",
-	md: "grid grid-cols-4 gap-1.5 md:flex md:flex-wrap md:gap-2",
-	sm: "grid grid-cols-6 gap-1 md:flex md:flex-wrap md:gap-1.5",
-}
 const ITEM: Record<WatchNextTierSize, string> = {
 	xl: "md:w-56",
 	lg: "md:w-36",
@@ -143,7 +138,7 @@ function TierRow({
 					{count}
 				</p>
 			</div>
-			<div className={`min-w-0 ${GRID[tier.size]} ${open ? "" : "hidden"}`}>
+			<div className={`min-w-0 ${tierGridClass(tier.size, open)}`}>
 				{shownKeys.map((key) => {
 					const title = titleOf(key)
 					if (!title)

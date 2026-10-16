@@ -1,0 +1,44 @@
+[
+  {
+    "id": 16,
+    "name": "CrateDB (#1)",
+    "type": "json-query",
+    "active": 1,
+    "url": "http://10.0.0.11:4200",
+    "method": "GET",
+    "authMethod": null,
+    "basic_user": null,
+    "password_present": false,
+    "headers_present": false,
+    "body_present": false,
+    "config_path": "/var/lib/docker/volumes/goodwatch-monitoring_uptime-kuma-data/_data/kuma.db"
+  },
+  {
+    "id": 17,
+    "name": "CrateDB (#2)",
+    "type": "json-query",
+    "active": 1,
+    "url": "http://10.0.0.12:4200",
+    "method": "GET",
+    "authMethod": null,
+    "basic_user": null,
+    "password_present": false,
+    "headers_present": false,
+    "body_present": false,
+    "config_path": "/var/lib/docker/volumes/goodwatch-monitoring_uptime-kuma-data/_data/kuma.db"
+  },
+  {
+    "id": 18,
+    "name": "CrateDB (#3)",
+    "type": "json-query",
+    "active": 1,
+    "url": "http://10.0.0.13:4200",
+    "method": "GET",
+    "authMethod": null,
+    "basic_user": null,
+    "password_present": false,
+    "headers_present": false,
+    "body_present": false,
+    "config_path": "/var/lib/docker/volumes/goodwatch-monitoring_uptime-kuma-data/_data/kuma.db"
+  }
+]

@@ -1,0 +1,1 @@
+{"endpoint": "10.0.0.12", "protocol": "postgresql", "password_supplied": true, "identity": "goodwatch_readonly", "pre_enforcement": true}

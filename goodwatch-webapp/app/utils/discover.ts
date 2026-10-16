@@ -7,6 +7,7 @@ import type { FilterMediaType } from "~/server/search.server"
 import { getUserSettings } from "~/server/user-settings.server"
 import { getUserIdFromRequest } from "~/utils/auth"
 import { getLocaleFromRequest } from "~/server/cache-identity.server"
+import { discoverCountry } from "~/server/discover-country.server"
 
 export const buildDiscoverParams = async (request: Request) => {
 	const userId = await getUserIdFromRequest({ request })
@@ -15,8 +16,7 @@ export const buildDiscoverParams = async (request: Request) => {
 	const { locale } = getLocaleFromRequest(request)
 	const url = new URL(request.url)
 	const type = (url.searchParams.get("type") || "all") as FilterMediaType
-	const country =
-		url.searchParams.get("country") || userSettings?.country_default || ""
+	const country = discoverCountry(request, userSettings?.country_default)
 	const language = url.searchParams.get("language") || locale.language
 	const minAgeRating = url.searchParams.get("minAgeRating") || ""
 	const maxAgeRating = url.searchParams.get("maxAgeRating") || ""

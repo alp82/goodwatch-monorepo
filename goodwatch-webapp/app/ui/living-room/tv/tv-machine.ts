@@ -59,7 +59,8 @@ export const TONIGHT_PICKS = 3
 export const LIST_TITLES = 4
 export const MAP_ISLANDS = 6
 export const ISLAND_HOPS = 2
-export const TASTE_SIDES = 4
+/** Every side of a taste: the portrait has two to five. */
+export const TASTE_SIDES = 5
 export const SHOWS_PER_GROUP = 3
 /** A service's row pages through this many titles. */
 export const SERVICE_TITLES = 12
@@ -875,8 +876,7 @@ function moveInDiscover(
 	const s = state.screen
 	if (s.name !== "discover" || s.choice || state.menuOpen) return null
 	if (!to?.startsWith("tab:")) return null
-	if (!from.startsWith("tab:"))
-		return none({ ...state, focus: `tab:${s.tab}` })
+	if (!from.startsWith("tab:")) return none({ ...state, focus: `tab:${s.tab}` })
 	return openTab({ ...state, focus: to }, s, to.slice("tab:".length))
 }
 

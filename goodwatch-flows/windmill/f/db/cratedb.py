@@ -29,6 +29,14 @@ def _transient(result: dict) -> bool:
     return any(name in message for name in TRANSIENT_ERRORS)
 
 
+def _document_missing(result: dict) -> bool:
+    """Crate answers an UPDATE by primary key of a missing row with DocumentMissingException."""
+    error = result.get("error")
+    code = error.get("code") if isinstance(error, dict) else None
+    message = str(result.get("error_message") or error or "")
+    return code == 40411 or "DocumentMissingException" in message
+
+
 class CrateConnector:
     def __init__(self):
         try:
@@ -57,14 +65,23 @@ class CrateConnector:
         print(f"Executing SQL: {sql}", flush=True)
         self.cur.execute(sql, params or ())
 
-    def run_many(self, sql: str, params: list) -> None:
-        """Run one statement for each parameter row in a single bulk request."""
+    def run_many(self, sql: str, params: list, missing_ok: bool = False) -> int:
+        """Run one statement for each parameter row in a single bulk request.
+
+        With `missing_ok`, an UPDATE by primary key whose row is gone counts as updating
+        nothing instead of failing the batch. Returns how many rows were missing.
+        """
         print(f"Executing SQL {len(params)} times: {sql}", flush=True)
         results = self.cur.executemany(sql, params)
         errors = [result for result in results or [] if result.get("error_message") or result.get("error")
                   or result.get("rowcount", 0) < 0]
+        missing = [result for result in errors if missing_ok and _document_missing(result)]
+        errors = [result for result in errors if not (missing_ok and _document_missing(result))]
         if errors:
             raise RuntimeError(f"{len(errors)} of {len(params)} statements failed; first: {errors[0]}")
+        if missing:
+            print(f"{len(missing)} of {len(params)} rows were missing; first: {missing[0]}", flush=True)
+        return len(missing)
 
     def select(self, sql: str, params: tuple | None = None) -> list[dict]:
         self.run(sql, params)

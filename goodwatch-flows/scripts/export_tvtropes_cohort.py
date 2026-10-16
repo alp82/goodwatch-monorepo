@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """Read-only snapshot of the approved >=200k cohort and targeted existing-page audit.
 
-Run from the repository root. Uses goodwatch-webapp/.env for read-only Crate
+Run from the repository root. Uses --env-file (or CRATE_ENV_FILE, default
+goodwatch-webapp/.env), with environment overrides, for read-only Crate
 queries and the existing goodwatch Windmill CLI profile for Mongo credentials.
 """
 
 import argparse
 import json
+import os
 import re
 import sys
 from datetime import datetime, timezone
@@ -23,6 +25,7 @@ from f.tvtropes_web.title_variations import title_variations
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("output", type=Path)
+parser.add_argument("--env-file", default=os.environ.get("CRATE_ENV_FILE", "goodwatch-webapp/.env"))
 args = parser.parse_args()
 out = args.output
 out.mkdir(parents=True, exist_ok=True)
@@ -30,7 +33,7 @@ if (out / "cohort.json").exists():
     raise SystemExit(
         "Use a new output directory to preserve the earlier cohort and evidence"
     )
-c = dotenv_values("goodwatch-webapp/.env")
+c = {**dotenv_values(args.env_file), **os.environ}
 h = c["CRATE_HOSTS"].split(",")[0].strip()
 h = h if "://" in h else "http://" + h
 if urlsplit(h).port is None:

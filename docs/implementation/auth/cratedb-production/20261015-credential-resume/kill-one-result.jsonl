@@ -1,0 +1,4 @@
+{"node": "crate-02", "id": "073377a6-6825-8e6c-49db-ded701488ab3", "checked_utc": "2026-10-15T23:13:03.116969+00:00", "kill_completed_utc": "2026-10-15T23:13:03.250022+00:00", "matching_jobs": 0, "operations_before": 2, "kill_sent": true, "kill_rowcount": 0}
+{"node": "crate-02", "id": "073377a6-6825-8e6c-49db-ded701488ab3", "utc": "2026-10-15T23:13:03.449501+00:00", "operations_remaining": [["crate-02", 2]]}
+{"node": "crate-02", "id": "073377a6-6825-8e6c-49db-ded701488ab3", "utc": "2026-10-15T23:13:08.632639+00:00", "operations_remaining": [["crate-02", 2]]}
+{"node": "crate-02", "id": "073377a6-6825-8e6c-49db-ded701488ab3", "utc": "2026-10-15T23:13:33.852226+00:00", "operations_remaining": [["crate-02", 2]]}

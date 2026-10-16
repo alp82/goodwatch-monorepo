@@ -1,0 +1,17 @@
+[
+  {
+    "host": "10.0.0.11",
+    "uncommented_active_ipv4_ipv6_rules": 268,
+    "docker_user_private_source_allowlist": false
+  },
+  {
+    "host": "10.0.0.12",
+    "uncommented_active_ipv4_ipv6_rules": 242,
+    "docker_user_private_source_allowlist": false
+  },
+  {
+    "host": "10.0.0.13",
+    "uncommented_active_ipv4_ipv6_rules": 237,
+    "docker_user_private_source_allowlist": false
+  }
+]

@@ -1,0 +1,595 @@
+[
+  {
+    "host": "10.0.0.10",
+    "container": "/windmill-highperf_worker-1",
+    "image": "windmill-highperf_worker",
+    "started": "2026-10-03T10:03:01.442094511Z",
+    "restarts": 1,
+    "cwd": "/root/goodwatch/goodwatch-monorepo/goodwatch-remote/default",
+    "mounts": [
+      {
+        "source": "/var/lib/docker/volumes/windmill_worker_dependency_cache/_data",
+        "dest": "/tmp/windmill/cache"
+      },
+      {
+        "source": "/var/run/docker.sock",
+        "dest": "/var/run/docker.sock"
+      }
+    ],
+    "crate_env": {}
+  },
+  {
+    "host": "10.0.0.10",
+    "container": "/windmill-default_worker-1",
+    "image": "windmill-default_worker",
+    "started": "2026-10-03T10:03:01.374136243Z",
+    "restarts": 1,
+    "cwd": "/root/goodwatch/goodwatch-monorepo/goodwatch-remote/default",
+    "mounts": [
+      {
+        "source": "/var/run/docker.sock",
+        "dest": "/var/run/docker.sock"
+      },
+      {
+        "source": "/var/lib/docker/volumes/windmill_worker_dependency_cache/_data",
+        "dest": "/tmp/windmill/cache"
+      }
+    ],
+    "crate_env": {}
+  },
+  {
+    "host": "10.0.0.10",
+    "container": "/goodwatch-hq-windmill_server-1",
+    "image": "ghcr.io/windmill-labs/windmill:main",
+    "started": "2026-10-03T10:02:59.640283798Z",
+    "restarts": 0,
+    "cwd": "/root/goodwatch/goodwatch-monorepo/goodwatch-hq",
+    "mounts": [],
+    "crate_env": {}
+  },
+  {
+    "host": "10.0.0.10",
+    "container": "/goodwatch-hq-windmill_worker_native-2",
+    "image": "ghcr.io/windmill-labs/windmill:main",
+    "started": "2026-10-03T10:02:59.778845351Z",
+    "restarts": 0,
+    "cwd": "/root/goodwatch/goodwatch-monorepo/goodwatch-hq",
+    "mounts": [],
+    "crate_env": {}
+  },
+  {
+    "host": "10.0.0.10",
+    "container": "/goodwatch-hq-windmill_server-2",
+    "image": "ghcr.io/windmill-labs/windmill:main",
+    "started": "2026-10-03T10:02:59.634606767Z",
+    "restarts": 0,
+    "cwd": "/root/goodwatch/goodwatch-monorepo/goodwatch-hq",
+    "mounts": [],
+    "crate_env": {}
+  },
+  {
+    "host": "10.0.0.10",
+    "container": "/goodwatch-hq-windmill_worker_native-1",
+    "image": "ghcr.io/windmill-labs/windmill:main",
+    "started": "2026-10-03T10:02:59.495015334Z",
+    "restarts": 0,
+    "cwd": "/root/goodwatch/goodwatch-monorepo/goodwatch-hq",
+    "mounts": [],
+    "crate_env": {}
+  },
+  {
+    "host": "10.0.0.10",
+    "container": "/grafana-alloy",
+    "image": "grafana/alloy:v1.7.5",
+    "started": "2026-10-04T00:48:51.919682569Z",
+    "restarts": 0,
+    "cwd": "/root/goodwatch/goodwatch-monorepo/goodwatch-metrics",
+    "mounts": [
+      {
+        "source": "/root/goodwatch/goodwatch-monorepo/goodwatch-metrics/config.alloy",
+        "dest": "/etc/alloy/config.alloy"
+      }
+    ],
+    "crate_env": {}
+  },
+  {
+    "host": "10.0.0.10",
+    "alloy": "/root/goodwatch/goodwatch-monorepo/goodwatch-metrics/config.alloy",
+    "direct_crate_refs": false,
+    "scrape_components": [
+      "prometheus.scrape \"node\""
+    ]
+  },
+  {
+    "host": "10.0.0.11",
+    "container": "/crate-01",
+    "image": "crate:5.10.16@sha256:5d7cd92eb84d56d538e2222a436e432164b853fdf186aebb17c446787f23a307",
+    "started": "2026-10-15T20:37:27.191817292Z",
+    "restarts": 0,
+    "cwd": "/root/goodwatch/goodwatch-monorepo/goodwatch-crate",
+    "mounts": [
+      {
+        "source": "/var/lib/docker/volumes/goodwatch-crate_crate_data/_data",
+        "dest": "/data"
+      },
+      {
+        "source": "/mnt/backup-cratedb/snapshots",
+        "dest": "/snapshots"
+      }
+    ],
+    "crate_env": {
+      "CRATE_HEAP_SIZE": true
+    },
+    "auth_args": [
+      "-Cauth.host_based.config.0.user=crate",
+      "-Cauth.host_based.config.0.address=127.0.0.1",
+      "-Cauth.host_based.config.0.method=trust",
+      "-Cauth.host_based.config.1.method=password"
+    ],
+    "restart_policy": {
+      "Name": "always",
+      "MaximumRetryCount": 0
+    },
+    "ports": {
+      "4200/tcp": [
+        {
+          "HostIp": "10.0.0.11",
+          "HostPort": "4200"
+        }
+      ],
+      "4300/tcp": [
+        {
+          "HostIp": "10.0.0.11",
+          "HostPort": "4300"
+        }
+      ],
+      "5432/tcp": [
+        {
+          "HostIp": "10.0.0.11",
+          "HostPort": "5432"
+        }
+      ]
+    }
+  },
+  {
+    "host": "10.0.0.11",
+    "container": "/grafana-alloy",
+    "image": "grafana/alloy:v1.7.5",
+    "started": "2026-10-04T00:43:49.440618429Z",
+    "restarts": 0,
+    "cwd": "/root/goodwatch/goodwatch-monorepo/goodwatch-metrics",
+    "mounts": [
+      {
+        "source": "/root/goodwatch/goodwatch-monorepo/goodwatch-metrics/config.alloy",
+        "dest": "/etc/alloy/config.alloy"
+      }
+    ],
+    "crate_env": {}
+  },
+  {
+    "host": "10.0.0.11",
+    "container": "/windmill-default_worker-1",
+    "image": "windmill-default_worker",
+    "started": "2026-09-26T21:31:02.41320871Z",
+    "restarts": 16,
+    "cwd": "/root/goodwatch/goodwatch-monorepo/goodwatch-remote/default",
+    "mounts": [
+      {
+        "source": "/var/run/docker.sock",
+        "dest": "/var/run/docker.sock"
+      },
+      {
+        "source": "/var/lib/docker/volumes/windmill_worker_dependency_cache/_data",
+        "dest": "/tmp/windmill/cache"
+      }
+    ],
+    "crate_env": {}
+  },
+  {
+    "host": "10.0.0.11",
+    "cron_file": "/var/spool/cron/crontabs/root",
+    "schedule": "5 * * * *",
+    "scripts": [
+      "/root/goodwatch/goodwatch-monorepo/goodwatch-crate/backup.py"
+    ],
+    "crate": true,
+    "credential_keys": []
+  },
+  {
+    "host": "10.0.0.11",
+    "alloy": "/root/goodwatch/goodwatch-monorepo/goodwatch-metrics/config.alloy",
+    "direct_crate_refs": false,
+    "scrape_components": [
+      "prometheus.scrape \"node\""
+    ]
+  },
+  {
+    "host": "10.0.0.12",
+    "container": "/crate-02",
+    "image": "crate:5.10.16@sha256:5d7cd92eb84d56d538e2222a436e432164b853fdf186aebb17c446787f23a307",
+    "started": "2026-10-14T21:06:05.742555871Z",
+    "restarts": 0,
+    "cwd": "/root/goodwatch/goodwatch-monorepo/goodwatch-crate",
+    "mounts": [
+      {
+        "source": "/var/lib/docker/volumes/goodwatch-crate_crate_data/_data",
+        "dest": "/data"
+      },
+      {
+        "source": "/mnt/backup-cratedb/snapshots",
+        "dest": "/snapshots"
+      }
+    ],
+    "crate_env": {
+      "CRATE_HEAP_SIZE": true
+    },
+    "auth_args": [
+      "-Cauth.host_based.config.0.user=crate",
+      "-Cauth.host_based.config.0.address=127.0.0.1",
+      "-Cauth.host_based.config.0.method=trust",
+      "-Cauth.host_based.config.1.method=password"
+    ],
+    "restart_policy": {
+      "Name": "always",
+      "MaximumRetryCount": 0
+    },
+    "ports": {
+      "4200/tcp": [
+        {
+          "HostIp": "10.0.0.12",
+          "HostPort": "4200"
+        }
+      ],
+      "4300/tcp": [
+        {
+          "HostIp": "10.0.0.12",
+          "HostPort": "4300"
+        }
+      ],
+      "5432/tcp": [
+        {
+          "HostIp": "10.0.0.12",
+          "HostPort": "5432"
+        }
+      ]
+    }
+  },
+  {
+    "host": "10.0.0.12",
+    "container": "/grafana-alloy",
+    "image": "grafana/alloy:v1.7.5",
+    "started": "2026-10-04T00:44:14.887504046Z",
+    "restarts": 0,
+    "cwd": "/root/goodwatch/goodwatch-monorepo/goodwatch-metrics",
+    "mounts": [
+      {
+        "source": "/root/goodwatch/goodwatch-monorepo/goodwatch-metrics/config.alloy",
+        "dest": "/etc/alloy/config.alloy"
+      }
+    ],
+    "crate_env": {}
+  },
+  {
+    "host": "10.0.0.12",
+    "container": "/windmill-default_worker-1",
+    "image": "windmill-default_worker",
+    "started": "2026-09-26T21:31:02.471171285Z",
+    "restarts": 16,
+    "cwd": "/root/goodwatch/goodwatch-monorepo/goodwatch-remote/default",
+    "mounts": [
+      {
+        "source": "/var/run/docker.sock",
+        "dest": "/var/run/docker.sock"
+      },
+      {
+        "source": "/var/lib/docker/volumes/windmill_worker_dependency_cache/_data",
+        "dest": "/tmp/windmill/cache"
+      }
+    ],
+    "crate_env": {}
+  },
+  {
+    "host": "10.0.0.12",
+    "alloy": "/root/goodwatch/goodwatch-monorepo/goodwatch-metrics/config.alloy",
+    "direct_crate_refs": false,
+    "scrape_components": [
+      "prometheus.scrape \"node\""
+    ]
+  },
+  {
+    "host": "10.0.0.13",
+    "container": "/crate-03",
+    "image": "crate:5.10.16@sha256:5d7cd92eb84d56d538e2222a436e432164b853fdf186aebb17c446787f23a307",
+    "started": "2026-10-15T04:01:48.196212552Z",
+    "restarts": 0,
+    "cwd": "/root/goodwatch/goodwatch-monorepo/goodwatch-crate",
+    "mounts": [
+      {
+        "source": "/var/lib/docker/volumes/goodwatch-crate_crate_data/_data",
+        "dest": "/data"
+      },
+      {
+        "source": "/mnt/backup-cratedb/snapshots",
+        "dest": "/snapshots"
+      }
+    ],
+    "crate_env": {
+      "CRATE_HEAP_SIZE": true
+    },
+    "auth_args": [
+      "-Cauth.host_based.config.0.user=crate",
+      "-Cauth.host_based.config.0.address=127.0.0.1",
+      "-Cauth.host_based.config.0.method=trust",
+      "-Cauth.host_based.config.1.method=password"
+    ],
+    "restart_policy": {
+      "Name": "always",
+      "MaximumRetryCount": 0
+    },
+    "ports": {
+      "4200/tcp": [
+        {
+          "HostIp": "10.0.0.13",
+          "HostPort": "4200"
+        }
+      ],
+      "4300/tcp": [
+        {
+          "HostIp": "10.0.0.13",
+          "HostPort": "4300"
+        }
+      ],
+      "5432/tcp": [
+        {
+          "HostIp": "10.0.0.13",
+          "HostPort": "5432"
+        }
+      ]
+    }
+  },
+  {
+    "host": "10.0.0.13",
+    "container": "/grafana-alloy",
+    "image": "grafana/alloy:v1.7.5",
+    "started": "2026-10-04T00:44:40.095040888Z",
+    "restarts": 0,
+    "cwd": "/root/goodwatch/goodwatch-monorepo/goodwatch-metrics",
+    "mounts": [
+      {
+        "source": "/root/goodwatch/goodwatch-monorepo/goodwatch-metrics/config.alloy",
+        "dest": "/etc/alloy/config.alloy"
+      }
+    ],
+    "crate_env": {}
+  },
+  {
+    "host": "10.0.0.13",
+    "container": "/windmill-default_worker-1",
+    "image": "windmill-default_worker",
+    "started": "2026-09-26T21:31:01.875188496Z",
+    "restarts": 16,
+    "cwd": "/root/goodwatch/goodwatch-monorepo/goodwatch-remote/default",
+    "mounts": [
+      {
+        "source": "/var/run/docker.sock",
+        "dest": "/var/run/docker.sock"
+      },
+      {
+        "source": "/var/lib/docker/volumes/windmill_worker_dependency_cache/_data",
+        "dest": "/tmp/windmill/cache"
+      }
+    ],
+    "crate_env": {}
+  },
+  {
+    "host": "10.0.0.13",
+    "alloy": "/root/goodwatch/goodwatch-monorepo/goodwatch-metrics/config.alloy",
+    "direct_crate_refs": false,
+    "scrape_components": [
+      "prometheus.scrape \"node\""
+    ]
+  },
+  {
+    "host": "10.0.0.20",
+    "container": "/gk4owk8-20261015T221622",
+    "image": "ghcr.io/alp82/goodwatch-webapp:6082cadcbed75c0d792d778b431ba8ece4389e9b",
+    "started": "2026-10-15T22:16:55.905143408Z",
+    "restarts": 0,
+    "cwd": "/artifacts/clf2vccdok3zxmehkxxjyey9/goodwatch-webapp",
+    "mounts": [],
+    "crate_env": {
+      "CRATE_HOSTS": "10.0.0.11,10.0.0.12,10.0.0.13",
+      "CRATE_PASS": true,
+      "CRATE_PORT": "4200",
+      "WEBAPP_ROLE": "page",
+      "CRATE_USER": "admin"
+    }
+  },
+  {
+    "host": "10.0.0.20",
+    "container": "/goodwatch-search-b",
+    "image": "ghcr.io/alp82/goodwatch-webapp:3b52c297d2c04b6332cc6379709b03cc425ec4b4",
+    "started": "2026-10-15T21:35:08.603853547Z",
+    "restarts": 0,
+    "cwd": "/root/goodwatch/goodwatch-monorepo/goodwatch-search",
+    "mounts": [],
+    "crate_env": {
+      "CRATE_USER": "admin",
+      "WEBAPP_ROLE": "search",
+      "CRATE_HOSTS": "10.0.0.11,10.0.0.12,10.0.0.13",
+      "CRATE_PASS": true,
+      "CRATE_PORT": "4200"
+    }
+  },
+  {
+    "host": "10.0.0.20",
+    "container": "/goodwatch-search-a",
+    "image": "ghcr.io/alp82/goodwatch-webapp:3b52c297d2c04b6332cc6379709b03cc425ec4b4",
+    "started": "2026-10-15T21:34:40.838553695Z",
+    "restarts": 0,
+    "cwd": "/root/goodwatch/goodwatch-monorepo/goodwatch-search",
+    "mounts": [],
+    "crate_env": {
+      "CRATE_PORT": "4200",
+      "CRATE_USER": "admin",
+      "CRATE_HOSTS": "10.0.0.11,10.0.0.12,10.0.0.13",
+      "CRATE_PASS": true,
+      "WEBAPP_ROLE": "search"
+    }
+  },
+  {
+    "host": "10.0.0.20",
+    "container": "/grafana-alloy",
+    "image": "grafana/alloy:v1.7.5",
+    "started": "2026-10-09T12:20:52.663417618Z",
+    "restarts": 0,
+    "cwd": "/root/goodwatch/goodwatch-monorepo/goodwatch-metrics",
+    "mounts": [
+      {
+        "source": "/root/goodwatch/goodwatch-monorepo/goodwatch-metrics/config.alloy",
+        "dest": "/etc/alloy/config.alloy"
+      },
+      {
+        "source": "/root/goodwatch/goodwatch-monorepo/goodwatch-metrics/webapp.alloy",
+        "dest": "/etc/alloy/webapp.alloy"
+      },
+      {
+        "source": "/root/goodwatch/goodwatch-monorepo/goodwatch-metrics/search-role.alloy",
+        "dest": "/etc/alloy/search-role.alloy"
+      }
+    ],
+    "crate_env": {}
+  },
+  {
+    "host": "10.0.0.20",
+    "container": "/windmill-highperf_worker-1",
+    "image": "windmill-highperf_worker",
+    "started": "2026-09-26T21:31:02.530758587Z",
+    "restarts": 16,
+    "cwd": "/root/goodwatch/goodwatch-monorepo/goodwatch-remote/default",
+    "mounts": [
+      {
+        "source": "/var/run/docker.sock",
+        "dest": "/var/run/docker.sock"
+      },
+      {
+        "source": "/var/lib/docker/volumes/windmill_worker_dependency_cache/_data",
+        "dest": "/tmp/windmill/cache"
+      }
+    ],
+    "crate_env": {}
+  },
+  {
+    "host": "10.0.0.20",
+    "container": "/windmill-default_worker-1",
+    "image": "windmill-default_worker",
+    "started": "2026-09-26T21:31:02.536318759Z",
+    "restarts": 16,
+    "cwd": "/root/goodwatch/goodwatch-monorepo/goodwatch-remote/default",
+    "mounts": [
+      {
+        "source": "/var/run/docker.sock",
+        "dest": "/var/run/docker.sock"
+      },
+      {
+        "source": "/var/lib/docker/volumes/windmill_worker_dependency_cache/_data",
+        "dest": "/tmp/windmill/cache"
+      }
+    ],
+    "crate_env": {}
+  },
+  {
+    "host": "10.0.0.20",
+    "alloy": "/root/goodwatch/goodwatch-monorepo/goodwatch-metrics/config.alloy",
+    "direct_crate_refs": false,
+    "scrape_components": [
+      "prometheus.scrape \"node\""
+    ]
+  },
+  {
+    "host": "10.0.0.20",
+    "alloy": "/root/goodwatch/goodwatch-monorepo/goodwatch-metrics/webapp.alloy",
+    "direct_crate_refs": false,
+    "scrape_components": [
+      "prometheus.scrape \"webapp\""
+    ]
+  },
+  {
+    "host": "10.0.0.20",
+    "alloy": "/root/goodwatch/goodwatch-monorepo/goodwatch-metrics/search-role.alloy",
+    "direct_crate_refs": false,
+    "scrape_components": [
+      "prometheus.scrape \"search_role\""
+    ]
+  },
+  {
+    "host": "10.0.0.21",
+    "container": "/gk4owk8-20261015T221417",
+    "image": "ghcr.io/alp82/goodwatch-webapp:6082cadcbed75c0d792d778b431ba8ece4389e9b",
+    "started": "2026-10-15T22:16:01.558759681Z",
+    "restarts": 0,
+    "cwd": "/artifacts/r9wjup4uapeh8al1hkrfcgfe/goodwatch-webapp",
+    "mounts": [],
+    "crate_env": {
+      "WEBAPP_ROLE": "page",
+      "CRATE_USER": "admin",
+      "CRATE_PORT": "4200",
+      "CRATE_PASS": true,
+      "CRATE_HOSTS": "10.0.0.11,10.0.0.12,10.0.0.13"
+    }
+  },
+  {
+    "host": "10.0.0.21",
+    "container": "/grafana-alloy",
+    "image": "grafana/alloy:v1.7.5",
+    "started": "2026-10-04T00:48:21.98783366Z",
+    "restarts": 0,
+    "cwd": "/root/goodwatch/goodwatch-monorepo/goodwatch-metrics",
+    "mounts": [
+      {
+        "source": "/root/goodwatch/goodwatch-monorepo/goodwatch-metrics/config.alloy",
+        "dest": "/etc/alloy/config.alloy"
+      },
+      {
+        "source": "/root/goodwatch/goodwatch-monorepo/goodwatch-metrics/webapp.alloy",
+        "dest": "/etc/alloy/webapp.alloy"
+      }
+    ],
+    "crate_env": {}
+  },
+  {
+    "host": "10.0.0.21",
+    "container": "/windmill-default_worker-1",
+    "image": "windmill-default_worker",
+    "started": "2026-10-03T10:02:49.324305745Z",
+    "restarts": 0,
+    "cwd": "/root/goodwatch/goodwatch-monorepo/goodwatch-remote/default",
+    "mounts": [
+      {
+        "source": "/var/lib/docker/volumes/windmill_worker_dependency_cache/_data",
+        "dest": "/tmp/windmill/cache"
+      },
+      {
+        "source": "/var/run/docker.sock",
+        "dest": "/var/run/docker.sock"
+      }
+    ],
+    "crate_env": {}
+  },
+  {
+    "host": "10.0.0.21",
+    "alloy": "/root/goodwatch/goodwatch-monorepo/goodwatch-metrics/config.alloy",
+    "direct_crate_refs": false,
+    "scrape_components": [
+      "prometheus.scrape \"node\""
+    ]
+  },
+  {
+    "host": "10.0.0.21",
+    "alloy": "/root/goodwatch/goodwatch-monorepo/goodwatch-metrics/webapp.alloy",
+    "direct_crate_refs": false,
+    "scrape_components": [
+      "prometheus.scrape \"webapp\""
+    ]
+  }
+]

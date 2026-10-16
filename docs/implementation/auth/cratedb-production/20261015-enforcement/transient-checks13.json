@@ -1,0 +1,1 @@
+{"absent_node": "crate-03", "nodes": [["crate-02"], ["crate-01"]], "failed_checks": [[1], [1]], "expected_gateway_node_count_only": true}

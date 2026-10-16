@@ -10,6 +10,7 @@ import re
 from crate import client
 from dotenv import load_dotenv
 
+from sitemap_crate import connect_args
 from sitemap_lastmod import title_lastmod
 from sitemap_query import detail_query
 from utils import title_to_dashed
@@ -189,16 +190,8 @@ def remove_old_sitemaps():
 def init_crate():
     """Initialize CrateDB connection."""
     print("Initializing CrateDB...")
-    hosts = os.getenv("CRATE_HOSTS", "").split(",")
-    port = os.getenv("CRATE_PORT", "4200")
-    user = os.getenv("CRATE_USER", "")
-    password = os.getenv("CRATE_PASS", "")
-
-    if not hosts or not hosts[0]:
-        raise ValueError("CRATE_HOSTS environment variable is not set")
-
-    connection_string = f"http://{user}:{password}@{hosts[0]}:{port}"
-    connection = client.connect(connection_string)
+    servers, credentials = connect_args(os.environ)
+    connection = client.connect(servers, **credentials)
     print("Successfully initialized CrateDB")
     return connection
 

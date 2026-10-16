@@ -1,0 +1,1 @@
+{"utc": "2026-10-16T00:07:58.341065+00:00", "host": 12, "result": {"cols": ["name", "state"], "rows": [["daily_20261016_000501", "SUCCESS"], ["hourly_20261016_000501", "SUCCESS"]], "rowcount": 2, "duration": 17471.975}}

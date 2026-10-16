@@ -1,0 +1,1 @@
+{"client": "search", "host": "10.0.0.20", "env_configured": true, "user": "goodwatch_search", "mode": "0600", "rollback": "/root/.config/goodwatch/crate-rollout-562/search.env.before", "utc": "2026-10-15T22:40:25.109777+00:00"}

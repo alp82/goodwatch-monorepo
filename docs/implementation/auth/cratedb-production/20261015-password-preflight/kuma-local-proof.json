@@ -1,0 +1,10 @@
+{
+  "environment": "disposable local CrateDB 5.10.16, loopback only",
+  "role": "goodwatch_monitoring",
+  "grants": [],
+  "GET /": {
+    "missing": 401,
+    "wrong": 401,
+    "correct": 200
+  }
+}
