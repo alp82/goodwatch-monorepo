@@ -9,17 +9,17 @@ import type { MomentView } from "./model"
 
 const SHOW_MS = 7000
 
-export function MomentToast({ view, score, names }: { view: MomentView | null; score: number | null; names: boolean }) {
+export function MomentToast({ view, score, names, why }: { view: MomentView | null; score: number | null; names: boolean; why: boolean }) {
 	const [gone, setGone] = useState(false)
 	const o = view?.outcome
-	const low = score !== null && score <= 5
+	const low = score !== null && score <= 5 && why
 	const speaks = o && (o.kind === "joins" || o.kind === "new" || o.kind === "forming")
 	useEffect(() => {
 		if (!speaks) return
 		const timer = setTimeout(() => setGone(true), SHOW_MS)
 		return () => clearTimeout(timer)
 	}, [speaks])
-	if (gone || score === null || (!low && !speaks)) return null
+	if (gone || score === null || (score <= 5 && !why) || (!low && !speaks)) return null
 	return (
 		<div className="pointer-events-none fixed inset-x-0 bottom-28 z-[1050] flex justify-center px-4 lg:bottom-20" aria-live="polite">
 			<div className="pointer-events-auto w-full max-w-md animate-[protoUp_.22s_ease-out] rounded-2xl border border-white/10 bg-stone-900 p-3 text-sm text-white shadow-2xl shadow-black/60">
@@ -47,6 +47,7 @@ function Line({ view, names }: { view: MomentView; names: boolean }) {
 					{o.kind === "new" ? "Starts " : "Joins "}
 					<SideRef view={view} side={side} names={names} />
 					{o.kind === "joins" && o.rankAfter < o.rankBefore && o.rankAfter === 0 ? ", now your biggest" : ""}.{" "}
+					{o.kind === "joins" && o.reshaped && <span className="text-gray-400">Your sides regrouped around it. </span>}
 					<span className="text-gray-400">{pct(side.share)} of what you love.</span>
 				</p>
 				<Link to="/taste" className="shrink-0 rounded-full bg-white/10 px-3 py-1 font-semibold hover:bg-white/20">
@@ -60,7 +61,7 @@ function Line({ view, names }: { view: MomentView; names: boolean }) {
 		return (
 			<p className="leading-snug text-gray-200">
 				This, <b className="text-white">{others[0]?.title}</b> and <b className="text-white">{others[1]?.title}</b> fit none of your sides yet, but they go
-				together. <span className="text-gray-400">A few more like them make a new side.</span>
+				together. <span className="text-gray-400">{o.needs > 0 ? `${o.needs} more like them make a side of their own.` : "Together they could be a side of their own."}</span>
 			</p>
 		)
 	}

@@ -162,7 +162,7 @@ function contrast(center: Vec, others: Vec[]) {
  * From the two attributes that most set the side apart: "Bleak stories about inner struggles" when one is a World
  * attribute (adjective from the other, noun from the World one), else "Heartwarming, physically funny stories".
  */
-function contrastName(order: ReturnType<typeof contrast>, taken: Set<string>) {
+function contrastName(order: ReturnType<typeof contrast>, taken: Set<string>, keysOut?: string[]) {
 	for (let shift = 0; shift < 4; shift++) {
 		const [a, b] = [order[shift === 0 ? 0 : 0], order[1 + shift]]
 		const world = [a, b].find((x) => FAMILY.get(x.key) === "world")
@@ -175,9 +175,11 @@ function contrastName(order: ReturnType<typeof contrast>, taken: Set<string>) {
 				: `${capitalize(x)}, ${y} stories`
 		if (!taken.has(name)) {
 			taken.add(name)
+			keysOut?.push(a.key, b.key)
 			return name
 		}
 	}
+	keysOut?.push(order[0].key)
 	return capitalize(noun(order[0].key))
 }
 
@@ -422,7 +424,9 @@ export function buildTighter(person: Person): Built {
 		),
 	)
 	for (const side of sides) {
-		side.name = contrastName(contrast(side.center, sides.filter((s) => s !== side).map((s) => s.center)), taken)
+		const keys: string[] = []
+		side.name = contrastName(contrast(side.center, sides.filter((s) => s !== side).map((s) => s.center)), taken, keys)
+		side.nameKeys = keys
 	}
 	const sideCenters = sides.map((s) => s.center)
 	const used = new Set<string>()

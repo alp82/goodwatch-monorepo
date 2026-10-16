@@ -16,13 +16,13 @@ export function outcomeText(o: Outcome, view: MomentView) {
 		case "middle":
 			return `Not loved (loved is ${view.lovedFrom}+ for this member): sides don't change.`
 		case "loose":
-			return "Loved, but fits no side: left out quietly."
+			return "Loved, but fits no side by production's rule (closeness 0.3 or more, not far below the catalog on what the side's name claims): left out quietly."
 		case "forming":
-			return `Loved, fits no side well, and is alike with ${o.with.length} other loved titles that fit no side well: a side may be forming (${o.needs} more to hold).`
+			return `Loved, fits no side by production's rule, and is alike with ${o.with.length} other loved titles that fit no side: a side may be forming (${o.needs} more to hold; shown only when 3 or fewer).`
 		case "new":
 			return `Loved, and lands in a side that wasn't there before (${o.sidesBefore} sides → ${o.sidesAfter}).`
 		case "joins":
-			return `Joins ${o.was}: ${pct(o.shareBefore)} → ${pct(o.shareAfter)} of what they love; size rank ${o.rankBefore + 1} → ${o.rankAfter + 1}${o.reshaped ? "; the number of sides changed" : ""}.`
+			return `Joins ${o.was} (closeness 0.3 or more, not against its name): ${pct(o.shareBefore)} → ${pct(o.shareAfter)} of what they love; size rank ${o.rankBefore + 1} → ${o.rankAfter + 1}${o.reshaped ? "; the number of sides changed" : ""}.`
 	}
 }
 
@@ -110,7 +110,10 @@ export function DataBar({ base, moment, loading, names }: { base: MomentView | n
 					</p>
 				</>
 			)}
-			<PrototypeSwitcher variants={Object.fromEntries(Object.entries(VARIANTS).map(([k, v]) => [k, `${v.name} (${v.style})`]))} />
+			<PrototypeSwitcher
+				position="bottom-24 left-2 lg:bottom-4 lg:left-4"
+				variants={Object.fromEntries(Object.entries(VARIANTS).map(([k, v]) => [k, `${v.name} (${v.style})`]))}
+			/>
 		</div>
 	)
 }

@@ -62,6 +62,8 @@ export interface ProtoSide {
 	moreOfThis: TitleKey[]
 	/** Titles it shares with other sides (moods, anchored). */
 	shared: number
+	/** The attributes the side's name claims (#662 uses them for production's membership rule). */
+	nameKeys?: string[]
 	/** Map: region center and the posters placed on it. */
 	x?: number
 	y?: number

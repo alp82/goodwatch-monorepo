@@ -16,12 +16,8 @@ export function SheetResult({ view, loading, score, names, close }: { view: Mome
 		return () => clearTimeout(timer)
 	}, [quiet, close])
 	if (score === null) return null
-	if (score <= 5)
-		return (
-			<Section>
-				<WhyRow score={score} onDone={close} />
-			</Section>
-		)
+	// 5 or less closes the sheet as today; the why row comes up as a toast (#526 never blocks).
+	if (score <= 5) return null
 	if (loading || !view || !o) return <Section><p className="h-24 animate-pulse text-sm text-gray-500">…</p></Section>
 	if (o.kind === "joins" || o.kind === "new") {
 		const side = sideById(view.after?.sides, o.side)
@@ -34,7 +30,7 @@ export function SheetResult({ view, loading, score, names, close }: { view: Mome
 					{o.kind === "new" ? "A new side" : "Joins a side"}
 				</p>
 				<h3 className="mt-0.5 text-lg font-bold leading-snug">
-					{o.kind === "new" ? "It starts " : "It goes with "}
+					{o.kind === "new" ? "It starts " : "It joins "}
 					<SideRef view={view} side={side} names={names} />
 				</h3>
 				<div className="mt-3 grid grid-cols-5 gap-1.5">
@@ -45,7 +41,8 @@ export function SheetResult({ view, loading, score, names, close }: { view: Mome
 				</div>
 				<style>{"@keyframes protoIn{from{transform:translateY(-10px) scale(1.08);opacity:0}to{transform:none;opacity:1}}"}</style>
 				<ShareBar before={was?.share ?? 0} after={side.share} count={side.count} hue={side.hue} />
-				{view.more.length > 0 && (
+				{/* Only in personal order: without one, the list would be ranked by the side. */}
+				{view.personalOrder && view.more.length > 0 && (
 					<>
 						<p className="mt-4 text-sm font-semibold text-gray-300">Next from this side</p>
 						<div className="mt-2 grid grid-cols-6 gap-1.5">

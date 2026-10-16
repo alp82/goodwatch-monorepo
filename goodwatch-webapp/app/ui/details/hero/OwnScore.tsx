@@ -114,7 +114,7 @@ export default function OwnScore({ media, className = "" }: { media: ScoredMedia
 						onRate={(value) => {
 							if (moment) {
 								moment.rate(value)
-								if (!moment.keepOpen) setOpen(false)
+								if (!moment.keepOpen(value)) setOpen(false)
 								return
 							}
 							// A guest at the rating limit gets the sign-up prompt instead; either way this dialog is done.

@@ -22,6 +22,8 @@ export interface MomentSide {
 	/** Most typical loved titles, for posters. */
 	here: TitleKey[]
 	members: TitleKey[]
+	/** The side's index in the engine's sides (its center). */
+	at: number
 	/** For the Watch next link. */
 	moods: MoodKey[]
 	/** Grouping color, carried over from the matching side before the rating. */

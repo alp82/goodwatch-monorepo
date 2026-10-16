@@ -11,7 +11,7 @@
 //
 // Read-only: nothing is written; the member's real ratings are read as the Taste page reads them.
 import { MOOD_BY_KEY, type MoodKey } from "~/domain/moods"
-import { cosine, readPerson, type Person, type RatedTitle } from "~/server/taste-portrait/person.server"
+import { KEYS, cosine, readPerson, type Person, type RatedTitle } from "~/server/taste-portrait/person.server"
 import { lovedTitles } from "~/server/taste-portrait/sides.server"
 import { enrich } from "~/server/prototype-better-sides/index.server"
 import { buildTighter, type Built } from "~/server/prototype-better-sides/engine.server"
@@ -22,8 +22,12 @@ import { getUserIdFromRequest } from "~/utils/auth"
 import type { TitleKey } from "~/utils/title-key"
 
 const HUES = ["#f59e0b", "#38bdf8", "#f472b6", "#34d399", "#a78bfa", "#fb923c"]
-/** Below this closeness to its side's center a loved title counts as fitting no side well (for "forming"). */
-const MISFIT = 0.3
+// Production's membership rule (main, #666): a loved title belongs to a side only when it is at least 0.3 close to
+// the side's center and not far below the catalog (z -1) on an attribute the side's name claims; the rest fit no side.
+const FITS = 0.3
+const AGAINST_NAME = -1
+/** A forming group is news only when it is this close to holding as a side. */
+const FORMING_NEEDS = 3
 /** Two misfits this alike or more could hold together as a side. */
 const ALIKE = 0.5
 /** A low score this close to a side's center sits "inside" that side. */
@@ -33,6 +37,24 @@ interface State {
 	person: Person
 	built: Built
 	loved: RatedTitle[]
+	/** The engine's sides with production's membership rule applied; `at` is the side's index in `built`. */
+	kept: { at: number; members: TitleKey[] }[]
+	/** Loved titles on a side. */
+	onSide: Set<TitleKey>
+}
+
+/** Whether a title belongs to the engine's side `i` by production's rule. */
+function belongs(built: Built, i: number, z: ArrayLike<number>) {
+	if (cosine(z, built.centers[i]) < FITS) return false
+	return (built.sides[i].nameKeys ?? []).every((key) => z[KEYS.indexOf(key)] >= AGAINST_NAME)
+}
+
+function keep(person: Person, built: Built) {
+	const kept = built.sides
+		.map((_, i) => ({ at: i, members: built.memberKeys[i].filter((k) => belongs(built, i, person.zOf(k) ?? [])) }))
+		.filter((s) => s.members.length >= 2)
+		.sort((a, b) => b.members.length - a.members.length)
+	return { kept, onSide: new Set(kept.flatMap((s) => s.members)) }
 }
 
 const kept = new Map<string, { at: number; value: Promise<State> }>()
@@ -41,7 +63,8 @@ function stateOf(cacheKey: string, make: () => Person): Promise<State> {
 	if (hit && Date.now() - hit.at < 10 * 60_000) return hit.value
 	const value = Promise.resolve().then(() => {
 		const person = make()
-		return { person, built: buildTighter(person), loved: lovedTitles(person) }
+		const built = buildTighter(person)
+		return { person, built, loved: lovedTitles(person), ...keep(person, built) }
 	})
 	kept.set(cacheKey, { at: Date.now(), value })
 	value.catch(() => kept.delete(cacheKey))
@@ -88,10 +111,17 @@ export async function momentView(request: Request, slot: string | null, key: Tit
 			: await stateOf(`${member.userId}:${key}:${score}`, () => withScores(now, new Map([...without, [key, score]])))
 	let afterSides: MomentSide[] | null = null
 	let outcome: Outcome = { kind: "none" }
+	// What the moment says instead when a forming group isn't close to holding.
+	let fallback: Outcome | null = null
 	if (score !== null && placement === "nearest") {
 		const placed = placeNearest(before, beforeSides, key, score, lovedFrom, lovedBefore)
 		afterSides = placed.sides
 		outcome = placed.outcome
+		if (outcome.kind === "forming") {
+			const plain = placeNearest(before, beforeSides, key, score, lovedFrom, lovedBefore, false)
+			fallback = plain.outcome
+			if (plain.outcome.kind === "joins") afterSides = plain.sides
+		}
 	} else if (after) {
 		afterSides = sidesOf(after, beforeSides)
 		outcome = outcomeOf(before, after, beforeSides, afterSides, key, score as number)
@@ -122,15 +152,18 @@ export async function momentView(request: Request, slot: string | null, key: Tit
 			seen.add(f)
 			return true
 		})
-		if (others.length < 2) outcome = { kind: "loose" }
-		else outcome = { ...outcome, with: others, size: others.length + 1, needs: Math.max(0, outcome.needs + outcome.with.length - others.length) }
+		const needs = Math.max(0, outcome.needs + outcome.with.length - others.length)
+		// Far from holding ("26 more like them") isn't news: the title joins its nearest side, or stays out quietly.
+		if (others.length < 2 || needs > FORMING_NEEDS) outcome = fallback ?? { kind: "loose" }
+		else outcome = { ...outcome, with: others, size: others.length + 1, needs }
 	}
 
 	// The forming demo: the first candidate whose alike titles span two other franchises.
+	const minSize = Math.max(3, Math.ceil(0.07 * current.loved.length))
 	const formingDemo = formingCandidates.find((c) => {
 		const seen = new Set([franchise(titles[c.key]?.title)])
 		for (const k of c.with) seen.add(franchise(titles[k]?.title))
-		return seen.size >= 3
+		return seen.size >= 3 && minSize - seen.size <= FORMING_NEEDS
 	})
 	if (formingDemo && !demos.some((d) => d.key === formingDemo.key))
 		demos.splice(Math.min(demos.length, current.built.sides.length), 0, {
@@ -147,12 +180,16 @@ export async function momentView(request: Request, slot: string | null, key: Tit
 		score,
 		lovedFrom,
 		placement,
-		before: { sides: beforeSides, loose: before.built.loose, loved: lovedBefore },
+		before: { sides: beforeSides, loose: lovedBefore - beforeSides.reduce((n, s) => n + s.count, 0), loved: lovedBefore },
 		after: !afterSides
 			? null
 			: after
-				? { sides: afterSides, loose: after.built.loose, loved: after.loved.length }
-				: { sides: afterSides, loose: before.built.loose + (outcome.kind === "loose" || outcome.kind === "forming" ? 1 : 0), loved: lovedBefore + (outcome.kind === "middle" || outcome.kind === "low" ? 0 : 1) },
+				? { sides: afterSides, loose: after.loved.length - after.onSide.size, loved: after.loved.length }
+				: {
+						sides: afterSides,
+						loose: lovedBefore - beforeSides.reduce((n, s) => n + s.count, 0) + (outcome.kind === "loose" || outcome.kind === "forming" ? 1 : 0),
+						loved: lovedBefore + (outcome.kind === "middle" || outcome.kind === "low" ? 0 : 1),
+					},
 		outcome,
 		more,
 		demos,
@@ -166,8 +203,8 @@ export async function momentView(request: Request, slot: string | null, key: Tit
 function sidesOf(state: State, previous: MomentSide[] | null): MomentSide[] {
 	const { built, loved } = state
 	const used = new Set<string>()
-	const sides = built.sides.map((side, i) => {
-		const members = built.memberKeys[i]
+	const sides = state.kept.map(({ at, members }) => {
+		const side = built.sides[at]
 		let matched: MomentSide | null = null
 		if (previous) {
 			let best = 0
@@ -185,9 +222,10 @@ function sidesOf(state: State, previous: MomentSide[] | null): MomentSide[] {
 		return {
 			id: side.id,
 			name: side.name,
-			share: side.share,
-			count: side.count,
-			here: side.here.slice(0, 5),
+			share: Math.round((members.length / Math.max(1, loved.length)) * 1000) / 1000,
+			count: members.length,
+			here: side.here.filter((k) => members.includes(k)).slice(0, 5),
+			at,
 			members,
 			moods: sideMoods(members, loved, state.person),
 			hue: matched?.hue ?? "",
@@ -216,16 +254,31 @@ function sideMoods(members: TitleKey[], loved: RatedTitle[], person: Person): Mo
 		.map((x) => x.m)
 }
 
-function fitOf(z: ArrayLike<number>, built: Built) {
-	return Math.max(-1, ...built.centers.map((c) => cosine(z, c)))
+/** For a low score: the side it sits closest to, when it is close (no claim that it belongs). */
+function insideOf(state: State, sides: MomentSide[], z: ArrayLike<number> | null) {
+	let inside: string | null = null
+	let best = INSIDE
+	if (z)
+		for (const s of sides) {
+			const sim = cosine(z, state.built.centers[s.at])
+			if (sim >= best) {
+				best = sim
+				inside = s.id
+			}
+		}
+	return inside
 }
 
-/** Loved titles that fit no side well and are alike enough to the title to hold together with it. */
+function onAnySide(state: State, z: ArrayLike<number>) {
+	return state.kept.some((s) => belongs(state.built, s.at, z))
+}
+
+/** Loved titles that fit no side and are alike enough to the title to hold together with it. */
 function formingWith(state: State, key: TitleKey) {
 	const z = state.person.zOf(key)
-	if (!z || fitOf(z, state.built) >= MISFIT) return []
+	if (!z || onAnySide(state, z)) return []
 	return state.loved
-		.filter((r) => r.key !== key && fitOf(r.z, state.built) < MISFIT)
+		.filter((r) => r.key !== key && !state.onSide.has(r.key))
 		.map((r) => ({ key: r.key, alike: cosine(r.z, z) }))
 		.filter((r) => r.alike >= ALIKE)
 		.sort((a, b) => b.alike - a.alike)
@@ -233,25 +286,12 @@ function formingWith(state: State, key: TitleKey) {
 }
 
 function outcomeOf(before: State, after: State, beforeSides: MomentSide[], afterSides: MomentSide[], key: TitleKey, score: number): Outcome {
-	const z = after.person.zOf(key)
-	if (score <= 5) {
-		let inside: string | null = null
-		let best = INSIDE
-		if (z)
-			before.built.centers.forEach((c, i) => {
-				const s = cosine(z, c)
-				if (s >= best) {
-					best = s
-					inside = beforeSides[i]?.id ?? null
-				}
-			})
-		return { kind: "low", inside }
-	}
+	if (score <= 5) return { kind: "low", inside: insideOf(before, beforeSides, before.person.zOf(key)) }
 	if (!after.loved.some((r) => r.key === key)) return { kind: "middle" }
 	const minSize = Math.max(3, Math.ceil(0.07 * after.loved.length))
 	const at = afterSides.findIndex((s) => s.members.includes(key))
-	const forming = formingWith(after, key)
-	if (at < 0 || (forming.length >= 2 && afterSides[at] && fitOf(z ?? [], after.built) < MISFIT)) {
+	if (at < 0) {
+		const forming = formingWith(after, key)
 		if (forming.length >= 2) return { kind: "forming", with: forming, size: forming.length + 1, needs: Math.max(0, minSize - forming.length - 1) }
 		return { kind: "loose" }
 	}
@@ -268,42 +308,37 @@ function outcomeOf(before: State, after: State, beforeSides: MomentSide[], after
 		countAfter: side.count,
 		rankBefore: was,
 		rankAfter: at,
-		reshaped: beforeSides.length !== afterSides.length,
+		// One title more but the side didn't grow: the sides regrouped around it.
+		reshaped: beforeSides.length !== afterSides.length || side.count <= beforeSides[was].count,
 	}
 }
 
-/** The sides stay as they are; a loved title joins the nearest one (or none, by the engine's own loose rule). */
-function placeNearest(before: State, sides: MomentSide[], key: TitleKey, score: number, lovedFrom: number, lovedBefore: number): { sides: MomentSide[]; outcome: Outcome } {
+/** The sides stay as they are; a loved title joins the closest side it belongs to by production's rule, or none. */
+function placeNearest(before: State, sides: MomentSide[], key: TitleKey, score: number, lovedFrom: number, lovedBefore: number, mayForm = true): { sides: MomentSide[]; outcome: Outcome } {
 	const z = before.person.zOf(key)
 	const same = sides.map((s) => ({ ...s, was: s.id }))
-	if (score <= 5) {
-		let inside: string | null = null
-		let best = INSIDE
-		if (z)
-			before.built.centers.forEach((c, i) => {
-				const sim = cosine(z, c)
-				if (sim >= best) {
-					best = sim
-					inside = sides[i]?.id ?? null
-				}
-			})
-		return { sides: same, outcome: { kind: "low", inside } }
-	}
+	if (score <= 5) return { sides: same, outcome: { kind: "low", inside: insideOf(before, sides, z) } }
 	if (score < lovedFrom || !z) return { sides: same, outcome: { kind: "middle" } }
 	const loved = lovedBefore + 1
-	const sims = before.built.centers.map((c) => cosine(z, c))
+	const sims = sides.map((s) => (belongs(before.built, s.at, z) ? cosine(z, before.built.centers[s.at]) : Number.NEGATIVE_INFINITY))
 	const at = sims.indexOf(Math.max(...sims))
 	const minSize = Math.max(3, Math.ceil(0.07 * loved))
-	const forming = Math.max(...sims) < MISFIT ? formingWith(before, key) : []
+	const fitsNone = !Number.isFinite(sims[at] ?? Number.NEGATIVE_INFINITY)
+	const forming = mayForm && fitsNone ? formingWith(before, key) : []
 	const reshare = (joinedAt: number) =>
 		sides.map((s, i) => {
 			const count = s.count + (i === joinedAt ? 1 : 0)
 			return { ...s, was: s.id, count, share: Math.round((count / loved) * 1000) / 1000, members: i === joinedAt ? [...s.members, key] : s.members }
 		})
 	if (forming.length >= 2) return { sides: reshare(-1), outcome: { kind: "forming", with: forming, size: forming.length + 1, needs: Math.max(0, minSize - forming.length - 1) } }
-	if (sims[at] < 0.15) return { sides: reshare(-1), outcome: { kind: "loose" } }
+	if (fitsNone) return { sides: reshare(-1), outcome: { kind: "loose" } }
 	const after = reshare(at)
-	const rank = (list: MomentSide[], id: string) => [...list].sort((a, b) => b.count - a.count || (a.id === id ? -1 : b.id === id ? 1 : 0)).findIndex((s) => s.id === id)
+	// By size; a tie keeps the order before the rating, so a side moves up only by passing another.
+	const rank = (list: MomentSide[], id: string) =>
+		list
+			.map((s, i) => ({ s, i }))
+			.sort((a, b) => b.s.count - a.s.count || a.i - b.i)
+			.findIndex((x) => x.s.id === id)
 	const id = sides[at].id
 	return {
 		sides: after,
@@ -332,23 +367,26 @@ function demosOf(state: State, order: (keys: TitleKey[]) => TitleKey[]): { demos
 		taken.add(key)
 		demos.push({ key, label, mine: (person.input.scores.get(key) as number | undefined) ?? null })
 	}
-	built.sides.forEach((side, i) => push(side.here[1] ?? side.here[0], `Loved, in side ${i + 1}`))
-	const misfits = loved.filter((r) => fitOf(r.z, built) < MISFIT)
+	state.kept.forEach((side, i) => {
+		const here = built.sides[side.at].here.filter((k) => side.members.includes(k))
+		push(here[1] ?? here[0], `Loved, in side ${i + 1}`)
+	})
+	const misfits = loved.filter((r) => !state.onSide.has(r.key))
 	const formingCandidates = misfits
 		.map((r) => ({ key: r.key, with: misfits.filter((o) => o !== r && cosine(o.z, r.z) >= ALIKE).map((o) => o.key) }))
 		.filter((x) => x.with.length >= 2)
 		.sort((a, b) => b.with.length - a.with.length)
 		.slice(0, 8)
-	const loosest = [...loved].sort((a, b) => fitOf(a.z, built) - fitOf(b.z, built))[0]
-	push(loosest?.key, "Loved, loosest fit")
+	push(misfits.find((r) => !formingCandidates.some((c) => c.key === r.key))?.key ?? misfits[0]?.key, "Loved, fits no side")
+	const closest = (z: ArrayLike<number>) => Math.max(-1, ...state.kept.map((k) => cosine(z, built.centers[k.at])))
 	const low = person.rated
 		.filter((r) => r.score <= 5)
-		.map((r) => ({ r, fit: fitOf(r.z, built) }))
+		.map((r) => ({ r, fit: closest(r.z) }))
 		.sort((a, b) => b.fit - a.fit)[0]
 	push(low?.r.key, "Rated 5 or less")
 	const cut = Math.max(8, Math.round(person.mu + 0.6 * person.sigma))
 	push(person.rated.find((r) => r.score >= 6 && r.score < cut)?.key, "Liked, not loved")
-	push(order(built.sides[0]?.moreOfThis ?? [])[0], "Not rated yet")
+	push(order(built.sides[state.kept[0]?.at ?? 0]?.moreOfThis ?? [])[0], "Not rated yet")
 	for (const c of formingCandidates) taken.add(c.key)
 	return { demos, formingCandidates: formingCandidates.filter((c) => !demos.some((d) => d.key === c.key)) }
 }

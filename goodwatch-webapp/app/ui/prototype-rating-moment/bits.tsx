@@ -49,7 +49,7 @@ export function SideRef({ view, side, names }: { view: MomentView; side: MomentS
 	if (names)
 		return (
 			<>
-				your <b style={{ color: side.hue }}>{side.name}</b> side
+				your side of <b style={{ color: side.hue }}>{side.name.charAt(0).toLowerCase() + side.name.slice(1)}</b>
 			</>
 		)
 	const [a, b] = sideTitles(view, side, 2)

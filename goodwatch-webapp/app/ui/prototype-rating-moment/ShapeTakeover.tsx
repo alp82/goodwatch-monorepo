@@ -12,10 +12,11 @@ import type { MomentSide, MomentView, Outcome } from "./model"
 export function changesShape(o: Outcome | undefined) {
 	if (!o) return false
 	if (o.kind === "new" || o.kind === "forming") return true
+	// The rank keeps the order before the rating on a tie, so a side moves up only by passing another.
 	return o.kind === "joins" && (o.reshaped || o.rankAfter < o.rankBefore)
 }
 
-export function ShapeTakeover({ view, score, names }: { view: MomentView | null; score: number | null; names: boolean }) {
+export function ShapeTakeover({ view, score, names, why }: { view: MomentView | null; score: number | null; names: boolean; why: boolean }) {
 	const [closed, setClosed] = useState(false)
 	const box = useRef<HTMLDivElement>(null)
 	const o = view?.outcome
@@ -32,7 +33,7 @@ export function ShapeTakeover({ view, score, names }: { view: MomentView | null;
 			document.body.style.overflow = overflow
 		}
 	}, [open])
-	if (score !== null && score <= 5 && !closed)
+	if (score !== null && score <= 5 && why && !closed)
 		return (
 			<div className="fixed inset-x-0 bottom-28 z-[1050] flex justify-center px-4 lg:bottom-20">
 				<div className="w-full max-w-md rounded-2xl border border-white/10 bg-stone-900 p-3 text-sm text-white shadow-2xl shadow-black/60">
@@ -54,7 +55,7 @@ export function ShapeTakeover({ view, score, names }: { view: MomentView | null;
 					: "This side just moved up"
 	const homeSide = sides.find((s) => s.id === home)
 	return (
-		<div className="fixed inset-0 z-[1200] overflow-y-auto bg-stone-950/95" role="dialog" aria-modal="true" aria-label={headline}>
+		<div className="fixed inset-0 z-[1200] overflow-y-auto bg-stone-950/95 pb-24 lg:pb-0" role="dialog" aria-modal="true" aria-label={headline}>
 			<div className="flex min-h-full items-end justify-center md:items-center">
 			<style>
 				{"@keyframes protoDrop{0%{transform:translateY(-38vh) scale(2.2);opacity:0}25%{opacity:1}100%{transform:none;opacity:1}}@keyframes protoRise{from{transform:translateY(16px);opacity:0}}"}
@@ -116,8 +117,8 @@ function Pile({ view, side, names, drop, delay }: { view: MomentView; side: Mome
 }
 
 function Stack({ posters, hue, drop, dropRing, dashed = false }: { posters: MomentView["titles"][string][]; hue: string; drop?: MomentView["titles"][string]; dropRing: string; dashed?: boolean }) {
-	// Room for the fan above the front poster, and for the dropped poster on top.
-	const above = (posters.length - 1 + (drop ? 1 : 0)) * STEP
+	// The same room above every pile (a fan of three plus a dropped poster), so the piles line up.
+	const above = 3 * STEP
 	return (
 		<div className={`relative w-full ${dashed ? "rounded-lg outline-2 outline-offset-4 outline-dashed outline-white/40" : ""}`} style={{ paddingTop: above }}>
 			<div className="relative aspect-[2/3] w-full">

@@ -26,8 +26,8 @@ export interface RatingMoment {
 	score: number | null
 	rate: (score: number) => void
 	clear: () => void
-	/** The sheet variant keeps the score sheet open to answer in it. */
-	keepOpen: boolean
+	/** The sheet variant keeps the score sheet open to answer in it (not after 5 or less: #526 never blocks). */
+	keepOpen: (score: number) => boolean
 	/** What the sheet shows under the score control (sheet variant). */
 	sheet: (close: () => void) => ReactNode
 	/** Everything else: data bar, toast, hero band, takeover. */
@@ -55,6 +55,8 @@ export function useRatingMoment(media: ScoredMedia): RatingMoment | null {
 	const [loading, setLoading] = useState(false)
 	// Each rating gets a new id, so the reaction to it shows once.
 	const [id, setId] = useState(0)
+	// #526 asks once per title: the rating that first went to 5 or less.
+	const [whyId, setWhyId] = useState<number | null>(null)
 	const barSlot = useSlot("bar")
 	const heroSlot = useSlot("hero")
 
@@ -63,6 +65,7 @@ export function useRatingMoment(media: ScoredMedia): RatingMoment | null {
 		setScore(null)
 		setMoment(null)
 		setBase(null)
+		setWhyId(null)
 		const controller = new AbortController()
 		fetch(`/prototype/rating-moment/api?as=${slot}&key=${key}`, { signal: controller.signal })
 			.then((r) => r.json())
@@ -76,7 +79,10 @@ export function useRatingMoment(media: ScoredMedia): RatingMoment | null {
 			setScore(value)
 			setMoment(null)
 			setLoading(true)
-			setId((i) => i + 1)
+			setId((i) => {
+				if (value <= 5) setWhyId((w) => w ?? i + 1)
+				return i + 1
+			})
 			fetch(`/prototype/rating-moment/api?as=${slot}&key=${key}&score=${value}&place=${place}`)
 				.then((r) => r.json())
 				.then((d) => setMoment(d.view))
@@ -92,20 +98,24 @@ export function useRatingMoment(media: ScoredMedia): RatingMoment | null {
 
 	if (!active || !isVariant(variant)) return null
 	const ready = moment && moment.score === score ? moment : null
+	// The why row shows for the first low rating of this title only; a later low score is quiet.
+	const why = score !== null && score <= 5 && whyId === id
 	return {
 		variant,
 		names,
 		score,
 		rate,
 		clear,
-		keepOpen: variant === "sheet",
+		keepOpen: (value) => variant === "sheet" && value > 5,
 		sheet: (close) => <SheetResult view={ready} loading={loading} score={score} names={names} close={close} />,
 		node: (
 			<>
 				{barSlot && createPortal(<DataBar base={base} moment={ready} loading={loading} variant={variant} names={names} />, barSlot)}
-				{variant === "toast" && <MomentToast key={id} view={ready} score={score} names={names} />}
-				{variant === "hero" && heroSlot && createPortal(<HeroBand key={id} view={ready} score={score} names={names} />, heroSlot)}
-				{variant === "shape" && <ShapeTakeover key={id} view={ready} score={score} names={names} />}
+				{/* The toast and the takeover go to the body: the overview card is its own stacking context. */}
+				{variant === "toast" && createPortal(<MomentToast key={id} view={ready} score={score} names={names} why={why} />, document.body)}
+				{variant === "sheet" && why && createPortal(<MomentToast key={id} view={null} score={score} names={names} why />, document.body)}
+				{variant === "hero" && heroSlot && createPortal(<HeroBand key={id} view={ready} score={score} names={names} why={why} />, heroSlot)}
+				{variant === "shape" && createPortal(<ShapeTakeover key={id} view={ready} score={score} names={names} why={why} />, document.body)}
 			</>
 		),
 	}
