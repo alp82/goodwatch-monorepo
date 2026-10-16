@@ -1,13 +1,14 @@
 // The pieces of the account pages (#534, #550): the poster scene, fields, buttons and notices, styled like the
 // scene's card from the poster spotlight redesign.
 import { CheckCircleIcon, ExclamationTriangleIcon, EyeIcon, EyeSlashIcon, InformationCircleIcon } from "@heroicons/react/24/solid"
-import { ArrowLeftIcon } from "@heroicons/react/24/outline"
+import { ArrowLeftIcon, WrenchScrewdriverIcon } from "@heroicons/react/24/outline"
 import { Link, useMatches } from "@remix-run/react"
 import { type ReactNode, useEffect, useState } from "react"
 import { AUTH_SUBMIT_CLASS, AuthScene, authInputClass } from "~/ui/auth/AuthScene"
 import type { AuthPoster } from "~/ui/auth/PosterSpotlight"
 import { Spinner } from "~/ui/wait/Spinner"
 import { type AuthFailure, PASSWORD_MIN } from "~/utils/auth-client"
+import { MAINTENANCE_SUB, MAINTENANCE_TITLE } from "~/utils/auth-maintenance"
 
 // Keep main's poster scene around the Better Auth forms. Every credential form posts so that a submission
 // before hydration can never place a password in the address.
@@ -237,8 +238,31 @@ export function Notice({ tone, children }: { tone: keyof typeof NOTICE_TONES; ch
 	)
 }
 
+/** The cut-over notice (AUTH_MAINTENANCE) in a small box: where a form would be, or after a press that ran into it. */
+export function MaintenanceMessage() {
+	return (
+		<Notice tone="info">
+			<p className="font-semibold">{MAINTENANCE_TITLE}.</p>
+			<p className="mt-1">{MAINTENANCE_SUB}</p>
+		</Notice>
+	)
+}
+
+/** The account page while the cut-over notice is on: the poster card says so, and the way back to browsing stays. */
+export function MaintenanceCard() {
+	return (
+		<AuthSplit>
+			<Heading icon={<WrenchScrewdriverIcon className="h-7 w-7 text-amber-400" />} title={MAINTENANCE_TITLE} sub={MAINTENANCE_SUB} />
+			<Link to="/" className={AUTH_SUBMIT_CLASS}>
+				Keep browsing
+			</Link>
+		</AuthSplit>
+	)
+}
+
 /** The notice for a request the server turned away for being too many or for being down. */
 export function ServiceNotice({ failure }: { failure: AuthFailure | null }) {
+	if (failure === "maintenance") return <MaintenanceMessage />
 	if (failure === "throttled") return <Notice tone="warn">Too many tries in a row. Wait a few minutes, then try again.</Notice>
 	if (failure === "unavailable") return <Notice tone="error">Sign-in isn't working right now. Try again in a few minutes.</Notice>
 	return null

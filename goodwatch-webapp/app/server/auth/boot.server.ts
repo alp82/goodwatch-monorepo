@@ -4,6 +4,7 @@
 // it and starts as fast as before.
 import type { Cluster } from "ioredis"
 import { registerBetterAuthResolver } from "../../utils/auth-session.ts"
+import { authMaintenanceGuard } from "./cutover-notice.server.ts"
 
 let clusterProvider: () => Cluster | null = () => null
 
@@ -32,5 +33,8 @@ export async function handleAuthRequest(request: Request): Promise<Response> {
 			status: 404,
 			headers: { "Cache-Control": "private, no-store" },
 		})
+	// The cut-over notice (AUTH_MAINTENANCE) turns away sign-in, sign-up and password routes before the runtime loads.
+	const refused = authMaintenanceGuard(request)
+	if (refused) return refused
 	return (await loadAuthRuntime()).handleAuthRequest(request)
 }

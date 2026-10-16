@@ -10,6 +10,7 @@ import {
 } from "~/utils/account-transfer"
 import { useSupabase } from "~/utils/auth"
 import { adoptServerSession, routeOutcome } from "~/utils/auth-answers"
+import { MAINTENANCE_CODE } from "~/utils/auth-maintenance"
 import { forgetSupabaseSignIn } from "~/utils/auth-cookie"
 
 export const PASSWORD_MIN = 10
@@ -21,6 +22,8 @@ export type AuthFailure =
 	| "unavailable"
 	/** The password is too short. */
 	| "password"
+	/** The cut-over notice is on (AUTH_MAINTENANCE): sign-in, sign-up and passwords are paused for a while. */
+	| "maintenance"
 /** `message` is the sign-in service's own reason, when it gave one the member can act on. */
 export type AuthResult = { ok: true } | { ok: false; failure: AuthFailure; message?: string }
 /** A sign-in for an app that is waiting: where the provider sends the member next (its consent page). */
@@ -61,6 +64,7 @@ async function call(
 }
 
 function outcome({ status, data }: Answer): AuthResult {
+	if (data && !Array.isArray(data) && data.code === MAINTENANCE_CODE) return fail("maintenance")
 	if (status >= 200 && status < 300) return OK
 	if (status === 429) return fail("throttled")
 	if (status === 0 || status >= 500) return fail("unavailable")
@@ -76,11 +80,26 @@ function supabaseOutcome(error: { status?: number; code?: string } | null): Auth
 	return fail("invalid")
 }
 
+/**
+ * Whether the server has the cut-over notice on now. Supabase is called from the browser, which no server can refuse,
+ * and a page that a cache served from before the flag flipped doesn't know. An answer that doesn't come means off.
+ */
+async function maintenanceNow(): Promise<boolean> {
+	try {
+		const response = await fetch("/api/auth-maintenance", { cache: "no-store", credentials: "same-origin" })
+		return response.ok && ((await response.json()) as { maintenance?: unknown }).maintenance === true
+	} catch {
+		return false
+	}
+}
+
 export type AuthClient = ReturnType<typeof useAuthClient>
 
 export function useAuthClient() {
-	const { betterAuth, getSupabase, refreshUser } = useSupabase()
+	const { betterAuth, getSupabase, refreshUser, maintenance } = useSupabase()
 	return useMemo(() => {
+		// With Better Auth on, the server refuses by itself: /api/auth/* answers the notice.
+		const closed = async () => maintenance || (!betterAuth && (await maintenanceNow()))
 		const supabase = async () => {
 			try {
 				return await getSupabase()
@@ -97,6 +116,7 @@ export function useAuthClient() {
 		}
 		return {
 			async signIn(input: { email: string; password: string; remember: boolean; returnTo: string }) {
+				if (await closed()) return fail("maintenance")
 				beginAuthentication("sign-in", input.returnTo)
 				if (betterAuth)
 					return signedIn(
@@ -116,6 +136,7 @@ export function useAuthClient() {
 
 			/** A new account waits for its email to be confirmed; an address that has one already gets an email. */
 			async signUp(input: { email: string; password: string; returnTo: string }) {
+				if (await closed()) return fail("maintenance")
 				beginAuthentication("sign-up", input.returnTo)
 				if (betterAuth)
 					return outcome(
@@ -143,6 +164,7 @@ export function useAuthClient() {
 			 * The member stays on the page until the browser leaves for `next`. Better Auth only.
 			 */
 			async signInToConnect(input: { email: string; password: string; remember: boolean; oauthQuery: string }): Promise<ConnectResult> {
+				if (await closed()) return { ok: false, failure: "maintenance" }
 				const answer = await call("/sign-in/email", {
 					email: input.email,
 					password: input.password,
@@ -157,6 +179,7 @@ export function useAuthClient() {
 			},
 
 			async google(returnTo: string, oauthQuery?: string): Promise<AuthResult> {
+				if (await closed()) return fail("maintenance")
 				const back = discoveryReturnTo(returnTo)
 				beginAuthentication("oauth", back)
 				if (betterAuth) {
@@ -196,6 +219,7 @@ export function useAuthClient() {
 			},
 
 			async resendConfirmation(email: string, returnTo: string): Promise<AuthResult> {
+				if (await closed()) return fail("maintenance")
 				if (betterAuth)
 					return outcome(await call("/send-verification-email", { email, callbackURL: confirmedHref(returnTo) }))
 				const client = await supabase()
@@ -209,12 +233,14 @@ export function useAuthClient() {
 			},
 
 			async requestPasswordReset(email: string): Promise<AuthResult> {
+				if (await closed()) return fail("maintenance")
 				if (betterAuth) return outcome(await call("/request-password-reset", { email, redirectTo: "/reset-password" }))
 				return routeAction("/forgot-password", { email })
 			},
 
 			/** `token` is Better Auth's reset token, or Supabase's one-time code. Better Auth signs the member in. */
 			async resetPassword(token: string, password: string): Promise<AuthResult> {
+				if (await closed()) return fail("maintenance")
 				if (betterAuth) return signedIn(outcome(await call("/reset-password", { token, newPassword: password })))
 				const result = await routeAction("/reset-password", { code: token, password })
 				// The action set the session cookies, also with a rejected password. The browser's client takes them up
@@ -225,6 +251,7 @@ export function useAuthClient() {
 
 			/** Other devices are signed out; this one stays signed in. Better Auth asks for the current password. */
 			async changePassword(current: string, next: string): Promise<AuthResult> {
+				if (await closed()) return fail("maintenance")
 				if (betterAuth)
 					return signedIn(
 						outcome(
@@ -254,7 +281,7 @@ export function useAuthClient() {
 				return (data?.user?.identities ?? []).map((identity) => (identity.provider === "google" ? "google" : "email"))
 			},
 		}
-	}, [betterAuth, getSupabase, refreshUser])
+	}, [betterAuth, getSupabase, refreshUser, maintenance])
 }
 
 // The Supabase path of the password pages runs on their own server actions, as before.
@@ -280,5 +307,13 @@ export { whenAuthFails } from "~/utils/auth-answers"
 /** The one-press save: Continue with Google, then back to `returnTo`. The guest's ratings move to the account once the sign-in lands. */
 export function useContinueWithGoogle() {
 	const auth = useAuthClient()
-	return useCallback((returnTo: string) => auth.google(returnTo), [auth])
+	return useCallback(
+		async (returnTo: string) => {
+			const result = await auth.google(returnTo)
+			// With the cut-over notice on, the sign-in page says why nothing happens.
+			if (!result.ok && result.failure === "maintenance") window.location.assign("/sign-in")
+			return result
+		},
+		[auth],
+	)
 }

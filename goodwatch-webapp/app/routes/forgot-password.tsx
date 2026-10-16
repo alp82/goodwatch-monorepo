@@ -2,12 +2,14 @@ import { getAuthPosters } from "~/server/auth-posters.server"
 import { authFetch } from "~/utils/auth-session"
 import type { LoaderFunctionArgs, MetaFunction, ActionFunction } from "@remix-run/node"
 import { json } from "@remix-run/node"
+import { useLoaderData } from "@remix-run/react"
+import { authMaintenanceOn, maintenanceResponse, withMaintenance } from "~/server/auth/cutover-notice.server"
 import { EnvelopeIcon, KeyIcon } from "@heroicons/react/24/outline"
 import { type FormEvent, useState } from "react"
 import { createServerClient } from "@supabase/ssr"
 import { parse, serialize } from "@supabase/ssr"
 import { type PageMeta, buildMeta } from "~/utils/meta"
-import { AuthSplit, BackToSignIn, EmailField, Heading, PrimaryButton, ServiceNotice } from "~/ui/auth/kit"
+import { AuthSplit, BackToSignIn, EmailField, Heading, MaintenanceCard, PrimaryButton, ServiceNotice } from "~/ui/auth/kit"
 import { type AuthFailure, useAuthClient } from "~/utils/auth-client"
 
 export { pageHeaders as headers } from "~/utils/headers"
@@ -27,6 +29,8 @@ export const meta: MetaFunction = () => {
 // The Supabase path (BETTER_AUTH_ENABLED off) asks for the link here; Better Auth's is `/api/auth/request-password-reset`.
 export const action: ActionFunction = async ({ request }: LoaderFunctionArgs) => {
 	if (process.env.BETTER_AUTH_ENABLED === "true") throw new Response(null, { status: 404 })
+	// The cut-over notice (AUTH_MAINTENANCE): nothing reaches Supabase Auth.
+	if (authMaintenanceOn()) return maintenanceResponse()
 	const formData = await request.formData()
 	const email = formData.get("email") as string
 
@@ -71,7 +75,12 @@ export const action: ActionFunction = async ({ request }: LoaderFunctionArgs) =>
 	)
 }
 
-export default function ForgotPassword() {
+export default function ForgotPasswordRoute() {
+	const { maintenance } = useLoaderData<typeof loader>()
+	return maintenance ? <MaintenanceCard /> : <ForgotPassword />
+}
+
+function ForgotPassword() {
 	const auth = useAuthClient()
 	const [email, setEmail] = useState("")
 	const [busy, setBusy] = useState(false)
@@ -122,4 +131,7 @@ export default function ForgotPassword() {
 	)
 }
 
-export const loader = async () => json({ posters: await getAuthPosters() })
+export const loader = async () => {
+	const { data, headers } = withMaintenance({ posters: await getAuthPosters() })
+	return json(data, headers ? { headers } : undefined)
+}

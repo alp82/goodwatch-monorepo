@@ -6,6 +6,7 @@ import { json, redirect } from "@remix-run/node"
 import { Link, useLoaderData, useNavigate } from "@remix-run/react"
 import { hasBrowserCookie, isCrawler } from "~/server/crawlers.server"
 import { backToForm } from "~/server/auth/form-fallback.server"
+import { withMaintenance } from "~/server/auth/cutover-notice.server"
 import { useUser } from "~/utils/auth"
 import { type FormEvent, useEffect, useState } from "react"
 import { type PageMeta, buildMeta } from "~/utils/meta"
@@ -17,6 +18,7 @@ import {
 	EmailField,
 	GoogleButton,
 	Heading,
+	MaintenanceCard,
 	Notice,
 	OrDivider,
 	PasswordField,
@@ -43,6 +45,8 @@ export const meta: MetaFunction = () => {
 export type LoaderData = {
 	redirectUri: string
 	posters: AuthPoster[]
+	/** The cut-over notice is on (AUTH_MAINTENANCE): the page shows it instead of the form. */
+	maintenance: boolean
 }
 
 export const loader: LoaderFunction = async ({ request }: LoaderFunctionArgs) => {
@@ -60,7 +64,8 @@ export const loader: LoaderFunction = async ({ request }: LoaderFunctionArgs) =>
 	}
 	const redirectUri = url.searchParams.get("redirectTo") || ""
 
-	return json({ redirectUri, posters: await getAuthPosters() })
+	const { data, headers } = withMaintenance({ redirectUri, posters: await getAuthPosters() })
+	return json(data, headers ? { headers } : undefined)
 }
 
 /** What the "Check your inbox" page knows from here: the address, and where a confirmed account goes. */
@@ -68,7 +73,12 @@ export type SentState = { email: string; returnTo: string }
 
 export const action = ({ request }: ActionFunctionArgs) => backToForm(request)
 
-export default function SignUpRoute() {
+export default function SignUpPage() {
+	const { maintenance } = useLoaderData<LoaderData>()
+	return maintenance ? <MaintenanceCard /> : <SignUpRoute />
+}
+
+function SignUpRoute() {
 	const { redirectUri } = useLoaderData<LoaderData>()
 	const { user } = useUser()
 	const navigate = useNavigate()

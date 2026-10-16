@@ -20,6 +20,7 @@ import {
 	EmailField,
 	GoogleButton,
 	Heading,
+	MaintenanceCard,
 	Notice,
 	OrDivider,
 	PasswordField,
@@ -34,6 +35,7 @@ import { connectingApp } from "~/server/auth/mcp-flow.server";
 import { backToForm } from "~/server/auth/form-fallback.server";
 import type { ConnectState } from "~/utils/mcp-connect";
 import { ConnectAside, ConnectNote } from "~/ui/auth/connect";
+import { withMaintenance } from "~/server/auth/cutover-notice.server";
 
 export { pageHeaders as headers } from "~/utils/headers"
 
@@ -55,6 +57,8 @@ export type LoaderData = {
 	posters: AuthPoster[];
 	/** An app such as Claude waits for this sign-in (#570): the provider sent the member here with a signed query. */
 	connecting: ConnectState | null;
+	/** The cut-over notice is on (AUTH_MAINTENANCE): the page shows it instead of the form. */
+	maintenance: boolean;
 };
 
 export const loader: LoaderFunction = async ({
@@ -75,16 +79,22 @@ export const loader: LoaderFunction = async ({
 	const redirectUri = url.searchParams.get("redirectTo") || "";
 	const connecting = await connectingApp(request);
 
+	const { data, headers } = withMaintenance({ redirectUri, connecting, posters: await getAuthPosters() });
 	return json<LoaderData>(
-		{ redirectUri, connecting, posters: await getAuthPosters() },
-		// The signed query is the member's own request: never shared by a cache.
-		connecting ? { headers: { "Cache-Control": "private, no-store" } } : undefined,
+		data,
+		// The signed query is the member's own request: never shared by a cache. Nor is the page with the notice.
+		connecting ? { headers: { "Cache-Control": "private, no-store" } } : headers ? { headers } : undefined,
 	);
 };
 
 export const action = ({ request }: ActionFunctionArgs) => backToForm(request);
 
-export default function SignIn() {
+export default function SignInRoute() {
+	const { maintenance } = useLoaderData<LoaderData>();
+	return maintenance ? <MaintenanceCard /> : <SignIn />;
+}
+
+function SignIn() {
 	const { redirectUri, connecting } = useLoaderData<LoaderData>();
 	const [params] = useSearchParams();
 	const again = params.get("reason") === SIGN_IN_AGAIN_REASON;

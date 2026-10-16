@@ -3,8 +3,9 @@ import { authFetch } from "~/utils/auth-session"
 import { resetSupabasePassword } from "~/server/auth/supabase-reset.server"
 import type { LoaderFunctionArgs, MetaFunction, ActionFunction } from "@remix-run/node"
 import { json } from "@remix-run/node"
+import { authMaintenanceOn, maintenanceResponse, withMaintenance } from "~/server/auth/cutover-notice.server"
 import { KeyIcon, LinkSlashIcon, ShieldCheckIcon } from "@heroicons/react/24/outline"
-import { useNavigate, useSearchParams } from "@remix-run/react"
+import { useLoaderData, useNavigate, useSearchParams } from "@remix-run/react"
 import { type FormEvent, useState } from "react"
 import { createServerClient } from "@supabase/ssr"
 import { parse, serialize } from "@supabase/ssr"
@@ -14,6 +15,7 @@ import {
 	BackToSignIn,
 	EmailField,
 	Heading,
+	MaintenanceCard,
 	Notice,
 	PasswordField,
 	PasswordRule,
@@ -41,6 +43,8 @@ export const meta: MetaFunction = () => {
 // The Supabase path (BETTER_AUTH_ENABLED off) saves the password here; Better Auth's is `/api/auth/reset-password`.
 export const action: ActionFunction = async ({ request }: LoaderFunctionArgs) => {
 	if (process.env.BETTER_AUTH_ENABLED === "true") throw new Response(null, { status: 404 })
+	// The cut-over notice (AUTH_MAINTENANCE): nothing reaches Supabase Auth.
+	if (authMaintenanceOn()) return maintenanceResponse()
 	const formData = await request.formData()
 	const password = String(formData.get("password") ?? "")
 	const code = String(formData.get("code") ?? "")
@@ -72,7 +76,12 @@ export const action: ActionFunction = async ({ request }: LoaderFunctionArgs) =>
 }
 
 // Better Auth's link arrives with `?token=`, or `?error=INVALID_TOKEN` when it no longer works; Supabase's with `?code=`.
-export default function ResetPassword() {
+export default function ResetPasswordRoute() {
+	const { maintenance } = useLoaderData<typeof loader>()
+	return maintenance ? <MaintenanceCard /> : <ResetPassword />
+}
+
+function ResetPassword() {
 	const [params] = useSearchParams()
 	const token = params.get("token") ?? params.get("code")
 	const [state, setState] = useState<"form" | "done" | "expired">(token && !params.has("error") ? "form" : "expired")
@@ -182,4 +191,7 @@ function Expired() {
 	)
 }
 
-export const loader = async () => json({ posters: await getAuthPosters() })
+export const loader = async () => {
+	const { data, headers } = withMaintenance({ posters: await getAuthPosters() })
+	return json(data, headers ? { headers } : undefined)
+}

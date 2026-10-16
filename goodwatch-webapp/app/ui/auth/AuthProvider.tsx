@@ -28,6 +28,7 @@ export function AuthProvider({
 	supabaseUrl,
 	supabaseAnonKey,
 	betterAuth = false,
+	maintenance = false,
 	initialUser,
 	children,
 }: {
@@ -35,6 +36,8 @@ export function AuthProvider({
 	supabaseAnonKey: string
 	/** With Better Auth the member is the root loader's alone: no client, and a sign-in reruns the loader. */
 	betterAuth?: boolean
+	/** The cut-over notice is on (AUTH_MAINTENANCE). */
+	maintenance?: boolean
 	initialUser: User | null
 	children: ReactNode
 }) {
@@ -179,9 +182,10 @@ export function AuthProvider({
 			user,
 			loading: false,
 			betterAuth,
+			maintenance,
 			refreshUser,
 		}),
-		[supabase, getSupabase, user, betterAuth, refreshUser],
+		[supabase, getSupabase, user, betterAuth, maintenance, refreshUser],
 	)
 	return (
 		<AuthContext.Provider value={value}>

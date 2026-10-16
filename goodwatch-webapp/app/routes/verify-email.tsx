@@ -2,8 +2,8 @@
 // comes back to `?state=confirmed`. A link that no longer works (24 hours, only the newest) lands on `?state=expired`,
 // and the sign-in page sends a member who never got one to `?state=resend`.
 import { EnvelopeIcon, LinkSlashIcon, ShieldCheckIcon } from "@heroicons/react/24/outline"
-import type { ActionFunctionArgs, MetaFunction } from "@remix-run/node"
-import { useLocation, useNavigate, useSearchParams } from "@remix-run/react"
+import { type ActionFunctionArgs, type MetaFunction, json } from "@remix-run/node"
+import { useLoaderData, useLocation, useNavigate, useSearchParams } from "@remix-run/react"
 import { type FormEvent, useState } from "react"
 import type { SentState } from "~/routes/sign-up"
 import {
@@ -11,6 +11,7 @@ import {
 	BackToSignIn,
 	EmailField,
 	Heading,
+	MaintenanceCard,
 	Notice,
 	PrimaryButton,
 	SecondaryButton,
@@ -19,6 +20,8 @@ import {
 	useCooldown,
 } from "~/ui/auth/kit"
 import { backToForm } from "~/server/auth/form-fallback.server"
+import { withMaintenance } from "~/server/auth/cutover-notice.server"
+import { getAuthPosters } from "~/server/auth-posters.server"
 import { discoveryReturnTo, safeReturnTo } from "~/utils/account-transfer"
 import { type AuthFailure, useAuthClient } from "~/utils/auth-client"
 
@@ -33,7 +36,18 @@ const RESEND_SECONDS = 45
 
 export const action = ({ request }: ActionFunctionArgs) => backToForm(request)
 
-export default function VerifyEmail() {
+// This page never had a poster wall; the notice's card gets the same one as the other account pages.
+export const loader = async () => {
+	const { data, headers } = withMaintenance({})
+	return json(data.maintenance ? { ...data, posters: await getAuthPosters() } : data, headers ? { headers } : undefined)
+}
+
+export default function VerifyEmailRoute() {
+	const { maintenance } = useLoaderData<typeof loader>()
+	return maintenance ? <MaintenanceCard /> : <VerifyEmail />
+}
+
+function VerifyEmail() {
 	const [params] = useSearchParams()
 	const state = params.get("state")
 	// A link that failed after the checks before it (core's own errors) comes back with `error`.

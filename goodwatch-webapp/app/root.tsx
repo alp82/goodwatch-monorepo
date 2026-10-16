@@ -1,4 +1,5 @@
 import { isCrawler } from "~/server/crawlers.server"
+import { authMaintenanceOn } from "~/server/auth/cutover-notice.server"
 import { TelemetryBoot } from "~/telemetry/TelemetryBoot"
 import { EARLY_TELEMETRY_SCRIPT } from "~/telemetry/early"
 import { GOOGLE_TAG_INLINE_SCRIPT } from "~/telemetry/google-tag"
@@ -120,6 +121,8 @@ type LoaderData = {
 		SUPABASE_URL: string
 		SUPABASE_ANON_KEY: string
 		BETTER_AUTH_ENABLED: boolean
+		/** The cut-over notice is on (AUTH_MAINTENANCE, #552). */
+		AUTH_MAINTENANCE: boolean
 	}
 	/** This browser still holds a Supabase sign-in from before the move to Better Auth: ask once to sign in again. */
 	signInAgain: boolean
@@ -163,6 +166,7 @@ export const loader: LoaderFunction = async ({
 				SUPABASE_URL: process.env.SUPABASE_URL!,
 				SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY!,
 				BETTER_AUTH_ENABLED: betterAuth,
+				AUTH_MAINTENANCE: authMaintenanceOn(),
 			},
 			signInAgain:
 				betterAuth && !user && hasSupabaseCookie(request.headers.get("Cookie")),
@@ -259,6 +263,7 @@ export function ErrorBoundary() {
 								supabaseUrl={root.env.SUPABASE_URL}
 								supabaseAnonKey={root.env.SUPABASE_ANON_KEY}
 								betterAuth={root.env.BETTER_AUTH_ENABLED}
+								maintenance={root.env.AUTH_MAINTENANCE}
 								initialUser={root.user}
 							>
 								<HydrationBoundary state={root.dehydratedState}>
@@ -287,6 +292,7 @@ const NO_CLIENT = {
 	getSupabase: () => Promise.reject(new Error("No auth client")),
 	user: null,
 	betterAuth: false,
+	maintenance: false,
 	refreshUser: () => {},
 }
 
@@ -354,6 +360,7 @@ function Root() {
 							supabaseUrl={env.SUPABASE_URL}
 							supabaseAnonKey={env.SUPABASE_ANON_KEY}
 							betterAuth={env.BETTER_AUTH_ENABLED}
+							maintenance={env.AUTH_MAINTENANCE}
 							initialUser={user}
 						>
 							<HydrationBoundary state={dehydratedState}>

@@ -48,6 +48,8 @@ interface AuthContext {
 	loading: boolean
 	/** Better Auth is on (BETTER_AUTH_ENABLED): there is no Supabase client, and the member comes from the root loader. */
 	betterAuth: boolean
+	/** The cut-over notice is on (AUTH_MAINTENANCE): the pages show it instead of their forms. */
+	maintenance: boolean
 	/** Asks the server who is signed in now, after a sign-in or sign-out through Better Auth. */
 	refreshUser: () => void
 }
@@ -58,6 +60,7 @@ export const AuthContext = createContext<AuthContext>({
 	user: null,
 	loading: true,
 	betterAuth: false,
+	maintenance: false,
 	refreshUser: () => {},
 })
 
