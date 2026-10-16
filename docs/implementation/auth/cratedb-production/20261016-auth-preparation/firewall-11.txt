@@ -1,0 +1,13 @@
+-A DOCKER -d 172.19.0.2/32 ! -i br-bdbb13d29272 -o br-bdbb13d29272 -p tcp -m tcp --dport 5432 -j ACCEPT
+-A DOCKER -d 172.19.0.2/32 ! -i br-bdbb13d29272 -o br-bdbb13d29272 -p tcp -m tcp --dport 4300 -j ACCEPT
+-A DOCKER -d 172.19.0.2/32 ! -i br-bdbb13d29272 -o br-bdbb13d29272 -p tcp -m tcp --dport 4200 -j ACCEPT
+-A ufw-user-input -s 10.0.0.0/24 -p tcp -m tcp --dport 5432 -j ACCEPT
+-A ufw-user-input -s 172.18.0.0/16 -d 10.0.0.11/32 -i br-53bc77700b24 -p tcp -m tcp --dport 4200 -j ACCEPT
+-A DOCKER -d 10.0.0.11/32 ! -i br-bdbb13d29272 -p tcp -m tcp --dport 4200 -j DNAT --to-destination 172.19.0.2:4200
+-A DOCKER -d 10.0.0.11/32 ! -i br-bdbb13d29272 -p tcp -m tcp --dport 4300 -j DNAT --to-destination 172.19.0.2:4300
+-A DOCKER -d 10.0.0.11/32 ! -i br-bdbb13d29272 -p tcp -m tcp --dport 5432 -j DNAT --to-destination 172.19.0.2:5432
+Status: active
+Default: deny (incoming), allow (outgoing), deny (routed)
+5432/tcp                   ALLOW IN    10.0.0.0/24                # Crate SQL - private clients
+10.0.0.11 4200/tcp on br-53bc77700b24 ALLOW IN    172.18.0.0/16              # gw-worker:windmill_default:4200
+{"4200/tcp":[{"HostIp":"10.0.0.11","HostPort":"4200"}],"4300/tcp":[{"HostIp":"10.0.0.11","HostPort":"4300"}],"5432/tcp":[{"HostIp":"10.0.0.11","HostPort":"5432"}]}
