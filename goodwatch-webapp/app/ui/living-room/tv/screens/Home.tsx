@@ -44,7 +44,7 @@ export function Home({
 	apps: readonly TvAppTile[]
 	/** The person's two streaming services, after the apps. */
 	services?: readonly TvServiceTile[]
-	/** A member's Sides of you: with any, the desktop's home is the guide. */
+	/** A member's taste groups: with any, the desktop's home is the guide. */
 	sides?: readonly TvHomeSide[]
 	/** The screen's items, from `tvItems`. */
 	items: readonly string[]

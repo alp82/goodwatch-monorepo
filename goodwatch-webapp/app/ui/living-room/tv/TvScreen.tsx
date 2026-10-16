@@ -99,7 +99,7 @@ export type TvScreenProps = {
 	ctx: TvContext
 	/** Home's tiles. */
 	apps: readonly TvAppTile[]
-	/** A member's Sides of you on home's guide. */
+	/** A member's taste groups on home's guide. */
 	sides?: readonly TvHomeSide[]
 	/** What the TV says for a moment ("On your Wishlist"), or null. */
 	toast: string | null

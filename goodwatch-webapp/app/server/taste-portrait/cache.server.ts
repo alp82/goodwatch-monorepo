@@ -1,4 +1,4 @@
-// Members' portraits, cached in Redis per person and tab for 10 minutes at `taste-portrait:v6:<user_id>:<tab>`, and
+// Members' portraits, cached in Redis per person and tab for 10 minutes at `taste-portrait:v7:<user_id>:<tab>`, and
 // cleared when their taste changes (markTasteChanged calls clearTastePortrait).
 //
 // A cached view is used only when it was built after the person's latest write had settled: Crate shows a write to

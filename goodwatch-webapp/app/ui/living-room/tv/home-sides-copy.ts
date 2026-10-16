@@ -1,11 +1,11 @@
-// Every word a member sees or hears of Sides of you on the TV's home (#673), in one place, so a change of wording
+// Every word a member sees or hears of their taste groups (CONTEXT.md) on the TV's home (#673), in one place, so a change of wording
 // changes this file alone.
 //
 // The owner's direction (2026-10-16): no "side", no "just past", no "favorites"; everything is "taste". A group is
 // named by its traits ("Dark, tense crime"), which are descriptive words: they reach the home only through `words`
 // (server/living-room/home-sides.server.ts), off until the words gate (#656) passes. Until then a group is shown by
-// its loved posters alone, without a caption. No share line. The Taste app's own line on home stays with a separate
-// rename of the Taste screens.
+// its loved posters alone, without a caption. No share line. The Taste app's own line on home is the view's name
+// (ui/taste/taste-groups-name.ts, used in tv-home.ts).
 
 // The machine's module, imported for nothing it holds: it keeps this small module with the TV. A small module that
 // several chunks share and whose imports are all on every page is moved into every page's shell (vite.config.js,
