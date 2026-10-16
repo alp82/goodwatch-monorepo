@@ -10,7 +10,6 @@ import { useRef } from "react"
 import { tmdbImageUrl } from "~/utils/tmdb-image"
 import {
 	FEW_ON_SERVICES,
-	LOVED_LABEL,
 	NO_PICKS,
 	SIDES_HEADING,
 	WATCH_NEXT_LABEL,
@@ -306,7 +305,7 @@ function SideEntry({ side }: { side: TvHomeSide }) {
 	)
 }
 
-/** Over a side's picks: its name once the words gate lets it through, and the loved titles it is shown by. */
+/** Over a side's picks: its name once the words gate lets it through, and the loved posters it is shown by, without a caption. */
 function SideHeader({ side }: { side: TvHomeSide }) {
 	const name = side.words?.name
 	return (
@@ -317,9 +316,6 @@ function SideHeader({ side }: { side: TvHomeSide }) {
 				</div>
 			)}
 			<div className={`flex items-center gap-3 ${name ? "mt-3" : ""}`}>
-				<span className="mr-1 w-[110px] text-[20px] leading-tight text-white/70">
-					{LOVED_LABEL}
-				</span>
 				{side.loved.map((title) => (
 					<span
 						key={title.key}

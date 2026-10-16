@@ -1,25 +1,19 @@
 // Every word a member sees or hears of Sides of you on the TV's home (#673), in one place, so a change of wording
 // changes this file alone.
 //
-// The owner's direction (2026-10-16): no "side", no "just past", no "favorites"; everything is "taste". A title in
-// one of the member's groups is "In your taste", one near a group "Close to your taste". A group is named by its
-// traits ("Dark, tense crime"), which are descriptive words: they reach the home only through `words`
+// The owner's direction (2026-10-16): no "side", no "just past", no "favorites"; everything is "taste". A group is
+// named by its traits ("Dark, tense crime"), which are descriptive words: they reach the home only through `words`
 // (server/living-room/home-sides.server.ts), off until the words gate (#656) passes. Until then a group is shown by
-// its loved posters alone. No share line. The last details come after the owner sees this.
+// its loved posters alone, without a caption. No share line. The Taste app's own line on home stays with a separate
+// rename of the Taste screens.
 
 // The machine's module, imported for nothing it holds: it keeps this small module with the TV. A small module that
 // several chunks share and whose imports are all on every page is moved into every page's shell (vite.config.js,
 // rule 3), as tv-title.ts says too.
 import "./tv-machine.ts"
 
-/** What home says of the Taste app while it is on, for a member with a taste. */
-export const TASTE_APP_LINE = "What your taste is made of."
-
 /** Over the groups in home's list, under the apps. */
 export const SIDES_HEADING = "Your taste"
-
-/** Beside a group's loved posters, on the right while the group is on. */
-export const LOVED_LABEL = "In your taste"
 
 /** What a screen reader hears for a group's entry in the list. With the words gate open, the group's name. */
 export function sideEntryLabel(

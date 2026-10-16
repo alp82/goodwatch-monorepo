@@ -4,12 +4,7 @@
 import assert from "node:assert/strict"
 import { execFileSync } from "node:child_process"
 import { test } from "node:test"
-import {
-	FEW_ON_SERVICES,
-	LOVED_LABEL,
-	NO_PICKS,
-	SIDES_HEADING,
-} from "./home-sides-copy.ts"
+import { FEW_ON_SERVICES, NO_PICKS, SIDES_HEADING } from "./home-sides-copy.ts"
 
 type Drawn = { html: string; items: string[]; focus: string }
 const rendered = JSON.parse(
@@ -95,7 +90,6 @@ test("a side without picks says so and keeps its Watch next key", () => {
 test("with the words gate closed, a side is its loved posters: no name, no moods, no share", () => {
 	const { html } = rendered.onSide
 	assert.ok(html.includes("/loved-b-1.jpg"))
-	assert.ok(html.includes(LOVED_LABEL))
 	assert.ok(html.includes(SIDES_HEADING))
 	assert.ok(!/of what you love|titles you love|Heavy/.test(html))
 	// A screen reader hears which side it is and the loved titles it is shown by.

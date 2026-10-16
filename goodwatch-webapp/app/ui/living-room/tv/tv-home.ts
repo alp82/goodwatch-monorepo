@@ -14,7 +14,6 @@ import { copyMediaPresentation } from "../../../utils/media-presentation.ts"
 import type { TitleCard } from "~/server/title-cards.server"
 import { QUIZ_GOAL } from "../../taste-quiz/quiz-flow.ts"
 import type { StartTitle } from "../living-room-data"
-import { TASTE_APP_LINE } from "./home-sides-copy.ts"
 import type { TvListTitle } from "./TitleList.tsx"
 import {
 	EMPTY_CONTEXT,
@@ -350,7 +349,7 @@ export function homeApps(
 		explorer: { line: "Sail a small map of islands.", art: { kind: "map" } },
 		taste: {
 			line: taste
-				? TASTE_APP_LINE
+				? "The sides of you."
 				: `Rate ${QUIZ_GOAL} titles, get picks made for you.`,
 			art: { kind: "print" },
 		},
