@@ -74,6 +74,15 @@ test("counts, what a pick leaves, For you, and Narrow it", () => {
 	// Themes and styles the list holds; every mood, as always.
 	assert.equal(of(none, "t:war"), undefined)
 	assert.deepEqual(of(none, "m:scary"), { id: "m:scary", count: 0, leaves: 0 })
+	// Every taste group shows in For you, also one with none of its titles on the list.
+	const five = [1, 2, 3, 4, 5].map((n) => ({ id: `g${n}`, carries: [] }))
+	assert.deepEqual(pickerCounts(list, [], five).forYou.slice(0, 5), [
+		"g1",
+		"g2",
+		"g3",
+		"g4",
+		"g5",
+	])
 	// An empty list still offers the moods.
 	assert.equal(pickerCounts([], [], []).forYou.length, 8)
 	assert.equal(pickerCounts([], [], []).choices.length, 11)

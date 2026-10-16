@@ -16,7 +16,6 @@ import { motion } from "framer-motion"
 import { type ReactNode, useState } from "react"
 import { MOOD_KEYS } from "~/domain/moods"
 import {
-	type ChoiceKind,
 	MAX_PICKS,
 	WORD_BY_ID,
 	WORD_KINDS,
@@ -237,7 +236,17 @@ function SuggestionChip({ control, id }: { control: MoodControl; id: string }) {
 			type="button"
 			aria-label={`Add ${name}${group ? ", your taste" : ""}. ${tap.text}.`}
 			data-choice={id}
-			onClick={() => control.toggle(id)}
+			onClick={(event) => {
+				// The suggestion leaves once picked: keep the keyboard in the shelf, on the pick's tile when it shows.
+				const shelf = event.currentTarget.closest("[data-shelf]")
+				const tile =
+					shelf?.querySelector<HTMLElement>(
+						`[role="checkbox"][data-choice="${id}"]`,
+					) ??
+					shelf?.querySelector<HTMLElement>('[role="checkbox"][data-choice]')
+				tile?.focus()
+				control.toggle(id)
+			}}
 			className="relative isolate inline-flex h-9 max-w-[20rem] shrink-0 cursor-pointer items-center gap-1.5 overflow-hidden rounded-xl pl-2 pr-2.5 text-sm font-bold text-white ring-1 ring-white/20 [text-shadow:0_1px_4px_rgba(0,0,0,.6)] hover:ring-white/50"
 		>
 			<ChoiceArt
@@ -332,31 +341,6 @@ function Dots({ hues }: { hues: string[] }) {
 			))}
 		</span>
 	)
-}
-
-/** The dropdown's line after its title: what another pick would do, by kind. */
-export function pickHint(picker: Picker): string {
-	if (!picker.picks.length)
-		return picker.groups.length
-			? "Mix moods, themes, styles, and your taste."
-			: "Mix moods, themes, and styles."
-	const one: Record<ChoiceKind, string> = {
-		taste: "taste group",
-		mood: "mood",
-		theme: "theme",
-		style: "style",
-	}
-	const kinds: ChoiceKind[] = [
-		...(picker.groups.length ? (["taste"] as const) : []),
-		...WORD_KINDS,
-	]
-	const picked = kinds.filter((k) => picker.picks.some((p) => kindOf(p) === k))
-	const others = kinds.filter((k) => !picked.includes(k))
-	const list = (names: string[]) =>
-		names.length > 1
-			? `${names.slice(0, -1).join(", ")}${names.length > 2 ? "," : ""} or ${names[names.length - 1]}`
-			: names[0]
-	return `Another ${list(picked.map((k) => one[k]))} adds titles; a ${list(others.map((k) => one[k]))} narrows them.`
 }
 
 /**

@@ -10,7 +10,8 @@ import { createPortal } from "react-dom"
 import { MOOD_BY_KEY, type MoodKey } from "~/domain/moods"
 import { MAX_PICKS } from "~/domain/taste-picker"
 import type { WatchNext } from "~/server/watch-next.server"
-import { PickChip, TasteShelf, pickHint } from "./TasteShelf"
+import { PickChip, TasteShelf } from "./TasteShelf"
+import { pickHint } from "./labels"
 import { EASE } from "./style"
 
 export interface MoodControl {
@@ -197,6 +198,7 @@ export function MoodGrid({
 }: { control: MoodControl; dense?: boolean }) {
 	return (
 		<div
+			data-shelf
 			className={
 				dense
 					? "grid grid-cols-2 gap-2"

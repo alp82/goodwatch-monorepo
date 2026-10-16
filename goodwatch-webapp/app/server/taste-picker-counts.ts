@@ -28,8 +28,6 @@ const CARRIES = 0.4
 const LIFT = 1.15
 /** The tiles under "For you". */
 export const FOR_YOU = 8
-/** Taste groups among them, at most. */
-const FOR_YOU_GROUPS = 4
 /** The "Narrow it" suggestions after a pick. */
 export const NARROW = 6
 /** The words a group's line names. */
@@ -169,8 +167,8 @@ export function pickerCounts(
 		)
 	const byId = new Map(choices.map((c) => [c.id, c]))
 
-	// For you: the groups with titles here, then the words the member's taste carries, most of its titles in the
-	// groups that carry them first, then the moods with most titles.
+	// For you: every taste group (2 to 5; it is the only place they show), then the words the member's taste carries,
+	// most of its titles in the groups that carry them first, then the moods with most titles.
 	const inTaste = (id: string) =>
 		counted.filter(
 			(e) =>
@@ -188,14 +186,7 @@ export function pickerCounts(
 		(a, b) => (byId.get(b)?.count ?? 0) - (byId.get(a)?.count ?? 0),
 	)
 	const forYou = [
-		...new Set([
-			...groups
-				.filter((g) => (byId.get(g.id)?.count ?? 0) > 0)
-				.slice(0, FOR_YOU_GROUPS)
-				.map((g) => g.id),
-			...carried,
-			...moods,
-		]),
+		...new Set([...groups.map((g) => g.id), ...carried, ...moods]),
 	].slice(0, FOR_YOU)
 
 	// Narrow it: only once something is picked and there is room for another pick.

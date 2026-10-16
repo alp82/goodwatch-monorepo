@@ -3,6 +3,8 @@
 import { MOOD_BY_KEY, type MoodKey } from "~/domain/moods"
 import { timeLabel } from "~/domain/my-movies"
 import {
+	type ChoiceKind,
+	MAX_PICKS,
 	WORD_BY_ID,
 	WORD_KINDS,
 	groupNumber,
@@ -123,6 +125,35 @@ export function picksWords(picker: WatchNext["picker"]): {
 		words,
 		beyondMoods: picker.picks.some((id) => kindOf(id) !== "mood"),
 	}
+}
+
+/** The dropdown's line after its title: what another pick would do, by kind. */
+export function pickHint(picker: WatchNext["picker"]): string {
+	if (!picker.picks.length)
+		return picker.groups.length
+			? "Mix moods, themes, styles, and your taste."
+			: "Mix moods, themes, and styles."
+	if (picker.picks.length >= MAX_PICKS) return "Remove one to pick another."
+	const one: Record<ChoiceKind, string> = {
+		taste: "taste group",
+		mood: "mood",
+		theme: "theme",
+		style: "style",
+	}
+	const kinds: ChoiceKind[] = [
+		...(picker.groups.length ? (["taste"] as const) : []),
+		...WORD_KINDS,
+	]
+	const picked = kinds.filter((k) => picker.picks.some((p) => kindOf(p) === k))
+	const others = kinds.filter((k) => !picked.includes(k))
+	const list = (names: string[]) =>
+		names.length > 1
+			? `${names.slice(0, -1).join(", ")}${names.length > 2 ? "," : ""} or ${names[names.length - 1]}`
+			: names[0]
+	const adds = `Another ${list(picked.map((k) => one[k]))} adds titles`
+	return others.length
+		? `${adds}; a ${list(others.map((k) => one[k]))} narrows them.`
+		: `${adds}.`
 }
 
 /** "Funny", "Funny or Scary", "Funny, Scary or Heavy". */
@@ -279,11 +310,11 @@ export function tierNote(
 	if (!beyondMoods) return TIER_NOTE[key]
 	switch (key) {
 		case "otherPicks":
-			return "Some of what you picked, not all."
+			return "Missing something you picked."
 		case "close":
-			return "What you picked but not on your services, or on them but not all you picked."
+			return "One short: missing something you picked, or not on your services."
 		case "notTonight":
-			return "Not all you picked, and not on your services."
+			return "Further from what you picked and your services."
 		default:
 			return TIER_NOTE[key]
 	}

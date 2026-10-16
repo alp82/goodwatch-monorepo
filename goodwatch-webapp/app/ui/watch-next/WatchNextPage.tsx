@@ -1,7 +1,7 @@
 // The Watch next page: the docked strip on the hero (phones: the slab's buttons and drawers at the bottom), the hero
 // with its Then column, the stepped grid, suggestions while the Wishlist is short, and the sign-up prompt for guests.
 import { type ReactNode, useCallback, useState } from "react"
-import { togglePick } from "~/domain/taste-picker"
+import { picksOf, togglePick } from "~/domain/taste-picker"
 import type { WatchNextSort } from "~/domain/watch-next"
 import { useWishlistMutation } from "~/hooks/useUserDataMutations"
 import { useUserData } from "~/routes/api.user-data"
@@ -84,7 +84,8 @@ export function WatchNextPage({
 	const [announcement, setAnnouncement] = useState("")
 	const toggle = useCallback(
 		(id: string) => {
-			const result = togglePick(choice, id)
+			// From the picks the server kept: a taste group from the URL the viewer doesn't have neither shows nor counts.
+			const result = togglePick(data ? picksOf(data.picker.picks) : choice, id)
 			if (result.refused) {
 				const name = data ? pickName(data.picker, id) : ""
 				setRefused({ name, at: Date.now() })

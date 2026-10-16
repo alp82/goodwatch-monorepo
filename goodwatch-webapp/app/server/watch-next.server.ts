@@ -7,6 +7,7 @@ import {
 	type Picks,
 	WORD_BY_ID,
 	type WordMasks,
+	fitsPicks,
 	groupNumber,
 	kindsMet,
 	pickIds,
@@ -694,6 +695,8 @@ export function worthwhileSuggestions(
 		count: number
 		/** My movies suggests movies only. */
 		kind?: "movie"
+		/** The taste picker's picks beyond moods (#677): a suggestion has them too. */
+		fits?: (key: TitleKey) => boolean
 	},
 ): TitleKey[] {
 	const snapshot = getTitleSnapshot()
@@ -716,6 +719,7 @@ export function worthwhileSuggestions(
 		// While the country's availability loads, services don't narrow.
 		if (onMyServices && isOnServices(ctx.country, ctx.services, key) === false)
 			continue
+		if (options.fits && !options.fits(key)) continue
 		eligible.push(i)
 	}
 	const direction =
@@ -870,6 +874,22 @@ export async function getWatchNext(
 					onMyServices: plan.onMyServices,
 					count: WORTH_ADDING + (plan.total === 0 ? 1 : 0),
 					...(plan.movies ? { kind: "movie" as const } : {}),
+					// Themes, styles, and taste groups picked: suggestions have them too, as the list's titles do.
+					...(plan.beyondMoods && snapshot
+						? {
+								fits: (key: TitleKey) =>
+									fitsPicks(plan.pickIds, (id) =>
+										hasChoice(
+											{
+												key,
+												masks: masksOf(snapshot, key),
+												group: plan.groups?.groupOf(key) ?? null,
+											},
+											id,
+										),
+									),
+							}
+						: {}),
 				})
 			: []
 	const pictures = pictureKeys(plan, snapshot)
