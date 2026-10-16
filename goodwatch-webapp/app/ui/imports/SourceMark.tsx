@@ -8,9 +8,9 @@ export function SourceMark({ source }: { source: ImportSourceEntry }) {
 		return (
 			<span
 				aria-hidden
-				className={`${source.tile.className} flex size-10 shrink-0 items-center justify-center rounded-lg text-sm font-black tracking-tight`}
+				className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-zinc-600 text-sm font-black tracking-tight text-white"
 			>
-				{source.tile.text}
+				{source.tile}
 			</span>
 		)
 	// TMDB's mark is wider than tall; it sits on TMDB's own dark blue.

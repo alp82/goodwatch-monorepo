@@ -3,7 +3,13 @@ import { execFileSync } from "node:child_process"
 import test from "node:test"
 
 type Row = { name: string; label: string | null; open: boolean }
-type Run = { rows: Row[]; text: string; sent: { url: string; body: unknown }[] }
+type Mark = { name: string; logo?: string; tile?: string; className?: string }
+type Run = {
+	rows: Row[]
+	text: string
+	sent: { url: string; body: unknown }[]
+	marks: Mark[]
+}
 
 const runs = JSON.parse(
 	execFileSync(
@@ -184,6 +190,26 @@ test("a Kitsu library caught in another source's box is offered as Kitsu", () =>
 		runs.kitsuCaught.text,
 		/kitsu-alp82-anime\.xml looks like a Kitsu anime library, not a Trakt file\.Import it as Kitsu/,
 	)
+})
+
+test("only IMDb, Trakt, and TMDB show a logo; every other source has the same neutral letter tile", () => {
+	assert.deepEqual(
+		runs.list.marks.filter((mark) => mark.logo).map((mark) => mark.logo),
+		["imdb.svg", "trakt.svg", "tmdb.svg"],
+	)
+	const tiles = runs.list.marks.filter((mark) => !mark.logo)
+	assert.deepEqual(
+		tiles.map((mark) => `${mark.name}: ${mark.tile}`),
+		[
+			"Letterboxd: Lb",
+			"Plex: Px",
+			"MyAnimeList / Kitsu: MAL",
+			"Kodi: K",
+			"MovieLens: ML",
+			"Generic CSV: CSV",
+		],
+	)
+	assert.equal(new Set(tiles.map((mark) => mark.className)).size, 1)
 })
 
 test("the notices cover every logo in the list, TMDB's included", () => {

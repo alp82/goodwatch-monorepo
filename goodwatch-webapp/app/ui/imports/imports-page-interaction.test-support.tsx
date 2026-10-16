@@ -189,6 +189,23 @@ async function page(props: Partial<PageProps> = {}) {
 						button.querySelector("[data-source-label]")?.textContent ?? null,
 					open: button.getAttribute("aria-expanded") === "true",
 				})),
+		/** Each row's mark: the logo's file, or the letter tile's text and classes. */
+		marks: () =>
+			buttons()
+				.filter((button) => button.hasAttribute("aria-expanded"))
+				.map((button) => {
+					const name =
+						button.querySelector("[data-source-name]")?.textContent ?? ""
+					const mark = button.querySelector("[aria-hidden]")
+					const logo = mark?.querySelector("img")?.getAttribute("src")
+					return logo
+						? { name, logo: logo.split("/").at(-1) }
+						: {
+								name,
+								tile: mark?.textContent ?? "",
+								className: mark?.getAttribute("class") ?? "",
+							}
+				}),
 		click: async (label: string) => {
 			const button = buttons().find((b) => b.textContent?.includes(label))
 			if (!button) throw new Error(`No button "${label}"`)
@@ -281,7 +298,7 @@ const results: Record<string, unknown> = {}
 			summary("trakt", "undone", "2026-10-11T12:00:00.000Z"),
 		],
 	})
-	results.list = { rows: view.rows(), text: view.text() }
+	results.list = { rows: view.rows(), text: view.text(), marks: view.marks() }
 	await view.unmount()
 }
 

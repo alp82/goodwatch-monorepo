@@ -1,6 +1,6 @@
 // The sources on the Imports page, most common first. Only sources with a live import are listed; a source is
-// added here when its import ships. Logos are each platform's official mark, used unchanged; a source without one
-// GoodWatch may use gets a letter tile. Names come from the import contract, so the page, the history, and the
+// added here when its import ships. Logos are each platform's official mark, used unchanged; every other source gets
+// the same neutral letter tile, which borrows no platform's colors or shapes. Names come from the import contract, so the page, the history, and the
 // receipt call a source the same.
 import type { ImdbImportSummary } from "~/domain/imdb-import"
 import {
@@ -17,8 +17,8 @@ export interface ImportSourceEntry {
 	name: string
 	/** Official mark under public/, or null for a letter tile. */
 	logo: string | null
-	/** The letter tile's text and colour when there is no logo. */
-	tile: { text: string; className: string }
+	/** The letter tile's text when there is no logo. */
+	tile: string
 	/** What GoodWatch takes from the file or account. */
 	gets: string[]
 	/** How long getting the file takes. */
@@ -39,15 +39,16 @@ const SOURCES: Omit<ImportSourceEntry, "name">[] = [
 	{
 		id: "imdb",
 		logo: "/images/import-sources/imdb.svg",
-		tile: { text: "IMDb", className: "bg-yellow-400 text-black" },
+		tile: "IMDb",
 		gets: ["Ratings"],
 		wait: "A few minutes",
 		aliases: "internet movie database",
 	},
 	{
 		id: "letterboxd",
-		logo: "/images/import-sources/letterboxd.svg",
-		tile: { text: "Lb", className: "bg-emerald-600 text-white" },
+		// The owner chose a letter tile: Letterboxd's brand page forbids commercial use of its marks without consent.
+		logo: null,
+		tile: "Lb",
 		gets: [
 			"Ratings",
 			"Watches with dates",
@@ -62,7 +63,7 @@ const SOURCES: Omit<ImportSourceEntry, "name">[] = [
 	{
 		id: "trakt",
 		logo: "/images/import-sources/trakt.svg",
-		tile: { text: "Tr", className: "bg-red-600 text-white" },
+		tile: "Tr",
 		gets: [
 			"Ratings",
 			"Watches with dates",
@@ -78,7 +79,7 @@ const SOURCES: Omit<ImportSourceEntry, "name">[] = [
 	{
 		id: "tmdb",
 		logo: "/images/import-sources/tmdb.svg",
-		tile: { text: "TMDB", className: "bg-sky-700 text-white" },
+		tile: "TMDB",
 		gets: ["Ratings", "Want to See", "Favorites"],
 		wait: "Seconds",
 		aliases: "the movie database themoviedb",
@@ -86,10 +87,9 @@ const SOURCES: Omit<ImportSourceEntry, "name">[] = [
 	},
 	{
 		id: "plex",
-		// Plex's kit has only a wide wordmark, and its guidelines forbid icons derived from its marks, so the tile
-		// stays neutral: no gold-and-black and no play shapes.
+		// Plex's kit has only a wide wordmark, and its guidelines forbid icons derived from its marks.
 		logo: null,
-		tile: { text: "Px", className: "bg-zinc-600 text-white" },
+		tile: "Px",
 		// Each play from the member's own server, and Want to See from the personal watchlist feed.
 		gets: ["Watches with dates", "Rewatches", "Episodes", "Want to See"],
 		wait: "About a minute",
@@ -100,7 +100,7 @@ const SOURCES: Omit<ImportSourceEntry, "name">[] = [
 		id: "myanimelist",
 		// MyAnimeList allows its marks only with written permission; Kitsu publishes no usage terms.
 		logo: null,
-		tile: { text: "MAL", className: "bg-blue-700 text-white" },
+		tile: "MAL",
 		gets: ["Episodes", "Show statuses", "Want to See"],
 		wait: "Right away",
 		aliases: "mal anime kitsu",
@@ -108,9 +108,9 @@ const SOURCES: Omit<ImportSourceEntry, "name">[] = [
 	},
 	{
 		id: "kodi",
-		// Kodi's guidelines ask for ® on the logo, which doesn't fit a tile this small.
+		// The owner chose a letter tile: Kodi's guidelines ask for ® and a trademark notice with the logo.
 		logo: null,
-		tile: { text: "K", className: "bg-sky-500 text-white" },
+		tile: "K",
 		gets: ["Ratings", "Watches", "Episodes"],
 		wait: "Right away",
 		aliases: "xbmc media center",
@@ -119,7 +119,7 @@ const SOURCES: Omit<ImportSourceEntry, "name">[] = [
 		id: "movielens",
 		// GroupLens publishes no brand assets.
 		logo: null,
-		tile: { text: "ML", className: "bg-orange-700 text-white" },
+		tile: "ML",
 		gets: ["Ratings", "Want to See"],
 		wait: "Right away",
 		aliases: "grouplens",
@@ -127,7 +127,7 @@ const SOURCES: Omit<ImportSourceEntry, "name">[] = [
 	{
 		id: "csv",
 		logo: null,
-		tile: { text: "CSV", className: "bg-slate-600 text-white" },
+		tile: "CSV",
 		gets: ["Ratings", "Watches with dates", "Reviews"],
 		wait: "Depends on the tool",
 		aliases:
