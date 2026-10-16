@@ -90,14 +90,22 @@ def _clear(summary):
     return lower is not None and lower > 1 / 3
 
 
+def _beats(difference):
+    """The 95% interval for a paired difference lies above zero."""
+    lower = difference.get('lo')
+    return lower is not None and lower > 0
+
+
 def astra_share_rule(primary):
-    """Owner's rule for #674 (October 16, 2026): Astra's share correct clearly above chance; Haiku descriptive.
-    Validity guard: if any Astra control (numbers only, no description, permuted key) is clearly above chance, a
-    shortcut exists and the run is invalid rather than a pass."""
+    """Owner's rule for #674 (October 16, 2026): Astra's share correct clearly above chance and (Q67) clearly above
+    its numbers-only share; Haiku descriptive. Validity guard: if any Astra control (numbers only, no description,
+    permuted key) is clearly above chance, a shortcut exists and the run is invalid rather than a pass."""
     astra = primary['readers']['astra']
     shortcut = [c for c in ('numbers', 'none', 'permuted') if _clear(astra[c])]
-    return {'rule': 'astra_share', 'astra_clear': _clear(astra['s']), 'shortcut_controls': shortcut,
-            'pass': bool(primary['members'] and _clear(astra['s']) and not shortcut)}
+    beats = _beats(astra['s_minus_numbers'])
+    return {'rule': 'astra_share', 'astra_clear': _clear(astra['s']), 'astra_beats_numbers': beats,
+            'shortcut_controls': shortcut,
+            'pass': bool(primary['members'] and _clear(astra['s']) and beats and not shortcut)}
 
 
 def score(cases, records, rule='both_readers'):
@@ -195,8 +203,10 @@ def markdown(aggregate):
         void = aggregate['voids'][reader]
         lines.append(f"{reader}: {void['cases']} void triples ({number(void['share'])}); incomplete: {void['incomplete']}.")
     if aggregate.get('rule') == 'astra_share':
-        lines += ["Rule: GPT-6 Astra's share correct must have a 95% interval above 1/3; Haiku is descriptive. "
+        lines += ["Rule: GPT-6 Astra's share correct must have a 95% interval above 1/3, and its S minus numbers only "
+                  "a 95% interval above zero; Haiku is descriptive. "
                   f"Astra clearly above chance: {aggregate['astra_clear']}. "
+                  f"Astra clearly above numbers only: {aggregate['astra_beats_numbers']}. "
                   f"Astra controls clearly above chance (shortcut): {', '.join(aggregate['shortcut_controls']) or 'none'}."]
     lines += [f"Screen passes: {aggregate['pass']}. Invalid/incomplete: {aggregate['invalid']}.",
               aggregate['binomial_note'] + '.', 'A null is absence of evidence at the reported SDE.',

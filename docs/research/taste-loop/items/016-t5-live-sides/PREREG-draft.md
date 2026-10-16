@@ -37,18 +37,30 @@ prompt, readers and their confinement, controls, void rule, bootstrap (10,000 me
 
 ## Pass rule (owner, October 16, 2026)
 
-- **The words gate opens if GPT-6 Astra clearly beats chance:** the lower bound of the 95% member-bootstrap interval
-  for its share correct (description shown) is above 33.3%.
+The words gate opens only if GPT-6 Astra meets both conditions, and the validity guard holds:
+
+1. **Clearly beats chance (Q62):** the lower bound of the 95% member-bootstrap interval for its share correct
+   (description shown) is above 33.3%.
+2. **Clearly beats numbers only (Q67):** the lower bound of the 95% member-bootstrap interval for S minus numbers only
+   (average ratings, movie and show mix, no names) is above zero. Same bootstrap draws and members as condition 1.
+
+Further:
+
 - **Validity guard:** if any Astra control (numbers only, no description, permuted answer key) has its share interval
   above 33.3%, a shortcut exists and the run is invalid, not a pass. Voids above 10% make the run incomplete.
 - Haiku 5.5 runs as a secondary, descriptive reader and does not decide.
-- S minus numbers only and S minus nouns only are reported for both readers and do not decide (open question to
-  the owner: should S also have to beat numbers only?).
+- S minus nouns only is reported for both readers and does not decide. Haiku's S minus numbers only is descriptive.
 - This rule applies to #674 only, never to #656 after the fact.
 
 ## Build on the short-names pin (`344e7ba3`), not yet final
 
 The owner may still change one word in the names. Rebuild after the final pin; the digests below then change.
+
+Preview of Q65 and Q66, October 16, 2026: a private build pinned to the names thread's uncommitted edit ("realistic"
+everywhere except before "comedies", which keeps "everyday"; "grotesque" kept) produced byte-identical descriptions,
+the same cases, and the same `cases_digest` (`0eb5f08dccdf…`). No group these members see takes its word from
+`contemporary_realism`. Only `source_digest` changes. The preview is not the pin: the final commit is pinned and rebuilt
+fresh.
 
 | Item | Value |
 |---|---|
