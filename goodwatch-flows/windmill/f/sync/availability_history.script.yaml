@@ -1,0 +1,8 @@
+summary: Availability history helpers
+description: Internal shared module for the streaming publisher
+kind: script
+lock: '!inline f/sync/availability_history.script.lock'
+schema:
+  type: object
+  properties: {}
+  required: []

@@ -21,6 +21,7 @@ ROOT = Path(__file__).parents[1] / "windmill" / "f"
 sys.path.insert(0, str(ROOT.parent))
 from f.tmdb_web.provider_identity import provider_name_from_url
 from f.sync.copy.deleted_titles import flagged_among
+from f.sync.availability_history import acknowledge_history, publish_history
 from f.sync.availability_evidence import build_evidence, quarantine_evidence
 from f.sync.models.crate_models import StreamingEvidence
 from f.tmdb_api.provider_evidence import snapshot_id, utc_ms, validated_results
@@ -43,6 +44,8 @@ class Crate:
         if "FROM streaming_service" in sql:
             return [{"tmdb_id": 8, "name": "Netflix"}, {"tmdb_id": 9, "name": "Amazon"}]
         assert params is not None
+        if "FROM availability_history" in sql:
+            return []
         if "FROM streaming_evidence" in sql:
             return deepcopy([r for r in self.evidence.values() if r["media_tmdb_id"] in params[0] and r["media_type"] == params[1]])
         return deepcopy([r for r in self.rows if r["media_tmdb_id"] in params[0] and r["media_type"] == params[1]])
@@ -51,6 +54,8 @@ class Crate:
         self.writes.append(table)
         for record in records:
             row = record.model_dump()
+            if table == "availability_history":
+                continue
             if table == "streaming_evidence":
                 self.evidence[(row["media_tmdb_id"], row["media_type"], row["country_code"])] = row
             elif table == "streaming_availability":
@@ -96,6 +101,7 @@ def load_copy(db: Any) -> Callable[..., dict]:
                      SCHEMAS={name: {"primary_key": ["tmdb_id"]} for name in ("movie", "show", "streaming_availability", "streaming_evidence")},
                      get_db=lambda: db, provider_name_from_url=provider_name_from_url,
                      flagged_among=flagged_among,
+                     publish_history=publish_history, acknowledge_history=acknowledge_history,
                      snapshot_id=snapshot_id, utc_ms=utc_ms, validated_results=validated_results)
     model_tree = ast.parse((ROOT / "sync" / "models" / "crate_models.py").read_text())
     model = next(node for node in model_tree.body if isinstance(node, ast.ClassDef) and node.name == "StreamingAvailability")

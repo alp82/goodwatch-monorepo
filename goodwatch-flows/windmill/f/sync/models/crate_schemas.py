@@ -662,6 +662,28 @@ SCHEMAS = {
         "primary_key": ["media_tmdb_id", "media_type", "country_code"],
         "shards": 6,
     },
+    "availability_history": {
+        "columns": {
+            "media_tmdb_id": "INTEGER",
+            "media_type": "TEXT CHECK (media_type IN ('movie','show'))",
+            "country_code": "TEXT",
+            "streaming_service_id": "INTEGER",
+            "streaming_type": "TEXT CHECK (streaming_type IN ('flatrate','free','ads'))",
+            # UTC midnight milliseconds: Crate has timestamp types, not a DATE type.
+            "observed_at": "TIMESTAMP WITH TIME ZONE",
+            "appeared_on": "TIMESTAMP WITH TIME ZONE NOT NULL",
+            "appeared_after": "TIMESTAMP WITH TIME ZONE",
+            "appeared_source": "TEXT NOT NULL CHECK (appeared_source IN ('title','premiere','backfill','list'))",
+            "appeared_precision": "TEXT NOT NULL CHECK (appeared_precision IN ('exact','unknown'))",
+            "last_seen_on": "TIMESTAMP WITH TIME ZONE",
+            "dropped_on": "TIMESTAMP WITH TIME ZONE",
+            "dropped_precision": "TEXT CHECK (dropped_precision IN ('exact','unknown'))",
+        },
+        # A day alone cannot distinguish two stays that start on the same day.
+        "primary_key": ["media_tmdb_id", "media_type", "country_code", "streaming_service_id", "streaming_type", "observed_at"],
+        "clustered_by": "media_tmdb_id",
+        "shards": 12,
+    },
     "streaming_availability": {
         "columns": {
             "media_tmdb_id": "INTEGER",

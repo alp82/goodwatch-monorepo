@@ -155,15 +155,14 @@ async def convert_and_save_details(
 ):
     now = datetime.utcnow()
     try:
-        proof = capture_provider_check(details, next_entry.tmdb_id, now)
+        proof = capture_provider_check(details, next_entry.tmdb_id, now,
+                                       previous=next_entry.watch_providers_check, bypass_cache=bypass_cache)
     except ValueError:
         next_entry.update(set__watch_providers_attempted_at=now, set__watch_providers_error="identity_mismatch")
         raise
     next_entry.watch_providers_attempted_at = now
     next_entry.watch_providers_error = "" if proof else "missing_or_invalid_provider_response"
     if proof:
-        if bypass_cache:
-            proof["cache_bypassed"] = True
         next_entry.watch_providers_check = proof
     else:
         # Keep prior payload and proof together; omission must never refresh them.

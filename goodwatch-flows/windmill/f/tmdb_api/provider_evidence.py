@@ -31,7 +31,7 @@ def validated_results(payload):
     return payload["results"]
 
 
-def capture_provider_check(details, tmdb_id, now):
+def capture_provider_check(details, tmdb_id, now, *, previous=None, bypass_cache=False):
     """Absent countries remain unknown. Bind proof to the exact stored payload."""
     if type(details.get("id")) is not int or details["id"] != tmdb_id:
         raise ValueError("TMDB response identity does not match requested media")
@@ -39,7 +39,30 @@ def capture_provider_check(details, tmdb_id, now):
     results = validated_results(payload)
     if results is None:
         return None
-    return {"checked_at": utc_ms(now), "payload_hash": snapshot_id(payload), "countries": sorted(results)}
+    checked_at = utc_ms(now)
+    proof = {"checked_at": checked_at, "payload_hash": snapshot_id(payload), "countries": sorted(results),
+             "cache_bypassed": bypass_cache, "offers": sorted(
+                 f"{country}:{offer['provider_id']}:{kind}" for country, data in results.items()
+                 for kind in OFFER_TYPES for offer in data.get(kind, []))}
+    previous = previous or {}
+    # Keep uncached evidence across ordinary cached queue reads. Two bounded
+    # snapshots suffice: yesterday's read and (only when current is cached) the
+    # latest uncached read. Neither changes the current read's freshness marker.
+    candidates = [candidate for candidate in
+                  (previous, previous.get("last_uncached", {}), previous.get("previous_day", {}))
+                  if candidate.get("cache_bypassed") is True
+                  and isinstance(candidate.get("offers"), list)
+                  and isinstance(candidate.get("checked_at"), int)
+                  and candidate["checked_at"] < checked_at]
+    earlier_days = [candidate for candidate in candidates
+                    if candidate["checked_at"] // 86400000 < checked_at // 86400000]
+    if earlier_days:
+        prior = max(earlier_days, key=lambda candidate: candidate["checked_at"])
+        proof["previous_day"] = {key: prior[key] for key in ("checked_at", "cache_bypassed", "offers")}
+    if not bypass_cache and candidates:
+        latest = max(candidates, key=lambda candidate: candidate["checked_at"])
+        proof["last_uncached"] = {key: latest[key] for key in ("checked_at", "cache_bypassed", "offers")}
+    return proof
 
 
 def main():

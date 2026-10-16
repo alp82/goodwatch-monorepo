@@ -1,0 +1,6 @@
+# py: 3.11
+annotated-types==0.7.0
+pydantic==2.12.3
+pydantic-core==2.41.4
+typing-extensions==4.15.0
+typing-inspection==0.4.2

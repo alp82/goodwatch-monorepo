@@ -24,6 +24,7 @@ from f.sync.models.crate_models import (
     StreamingEvidence,
 )
 from f.sync.models.crate_schemas import SCHEMAS
+from f.sync.availability_history import acknowledge_history, publish_history
 from f.sync.availability_evidence import build_evidence, quarantine_evidence
 from f.tmdb_api.provider_evidence import snapshot_id, utc_ms, validated_results
 from f.tmdb_web.provider_identity import provider_name_from_url
@@ -84,6 +85,10 @@ def fetch_documents_in_batch(tmdb_ids: list[int], collection: Any) -> dict:
         "watch_providers_attempted_at": 1,
         "watch_providers_error": 1,
         "updated_at": 1,
+        "networks": 1,
+        "first_air_date": 1,
+        "production_companies": 1,
+        "release_dates": 1,
     }
     return {
         doc["tmdb_id"]: doc for doc in collection.find({"tmdb_id": {"$in": tmdb_ids}}, projection)
@@ -403,6 +408,11 @@ def scheduled_candidates(
         candidates.update(row.get("tmdb_id") for row in mongo_providers.find(
             query_selector | marked, only_ids).hint(f"evidence_{marker}"))
     if not query_selector:
+        # Interrupted targeted publishes may be older than the normal watermark.
+        # Anchored _id prefixes use Mongo's built-in index; successful titles
+        # leave no marker behind.
+        candidates.update(int(row['_id'].split(':', 1)[1]) for row in
+                          mongo_db.streaming_history_pending.find({'_id': {'$regex': f'^{"movie" if is_movie else "show"}:'}}))
         quarantine_query = {"media": "movie" if is_movie else "tv", "status": {"$in": ["unresolved", "resolved_alias"]}}
         candidates.update(row.get("tmdb_id") for row in mongo_db.provider_identity_unresolved.find(quarantine_query, only_ids))
     # ObjectId selectors refer to provider documents in this entrypoint.
@@ -568,6 +578,11 @@ def publish_title(
         evidence, changed, removed, media = publication_writes(
             tmdb_id, media_type, MediaClass, existing, details, providers, rows, verified, api_results,
             service_ids, [record["country_code"] for record in prior_evidence])
+        history_pending = []
+        if media is not None:
+            history_pending = publish_history(connector, media_type,
+                [(tmdb_id, details, rows, verified, existing, removed)], check_owned,
+                mongo_db.streaming_history_pending)
         if evidence:
             check_owned()
             connector.upsert_many(table="streaming_evidence", records=evidence,
@@ -594,6 +609,7 @@ def publish_title(
         result = upsert_in_batches(connector, "movie" if media_type == "movie" else "show", [media])
         check_owned()
         add_counts(entity_counts, "movies" if media_type == "movie" else "shows", result)
+        acknowledge_history(mongo_db.streaming_history_pending, history_pending, check_owned)
 
 
 def publish_batch(
@@ -634,6 +650,7 @@ def publish_batch(
         changed: list[BaseModel] = []
         removed: list[tuple] = []
         media: list[BaseModel] = []
+        history_titles = []
         for tmdb_id in owned:
             details = details_by_id.get(tmdb_id, {})
             providers = providers_by_id.get(tmdb_id, [])
@@ -654,6 +671,9 @@ def publish_batch(
             removed += title_removed
             if title_media is not None:
                 media.append(title_media)
+                history_titles.append((tmdb_id, details, rows, verified, existing, title_removed))
+        history_pending = publish_history(connector, media_type, history_titles, check_owned,
+                                          mongo_db.streaming_history_pending)
         if evidence:
             check_owned()
             connector.upsert_many(table="streaming_evidence", records=evidence,
@@ -675,6 +695,7 @@ def publish_batch(
             check_owned()
             result = upsert_in_batches(connector, "movie" if media_type == "movie" else "show", media)
             add_counts(entity_counts, "movies" if media_type == "movie" else "shows", result)
+        acknowledge_history(mongo_db.streaming_history_pending, history_pending, check_owned)
     return left
 
 

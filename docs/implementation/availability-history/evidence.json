@@ -1,0 +1,145 @@
+{
+  "baseline_commit": "56f62ee392260db8916882f5004e9fb12f4b6e21",
+  "production_read_utc_date": "2026-10-16",
+  "production_backfill_dry_run": {
+    "dry_run": true,
+    "estimate_excludes_replicas": true,
+    "estimated_bytes_per_record": 240,
+    "estimated_primary_bytes": 2500212240,
+    "groups": [
+      {
+        "countries": 138,
+        "media_type": "movie",
+        "missing_created_at": 0,
+        "offers": 2554663,
+        "streaming_type": "ads"
+      },
+      {
+        "countries": 139,
+        "media_type": "movie",
+        "missing_created_at": 0,
+        "offers": 4515828,
+        "streaming_type": "flatrate"
+      },
+      {
+        "countries": 139,
+        "media_type": "movie",
+        "missing_created_at": 0,
+        "offers": 1316816,
+        "streaming_type": "free"
+      },
+      {
+        "countries": 139,
+        "media_type": "show",
+        "missing_created_at": 0,
+        "offers": 315766,
+        "streaming_type": "ads"
+      },
+      {
+        "countries": 139,
+        "media_type": "show",
+        "missing_created_at": 0,
+        "offers": 1634919,
+        "streaming_type": "flatrate"
+      },
+      {
+        "countries": 139,
+        "media_type": "show",
+        "missing_created_at": 0,
+        "offers": 79559,
+        "streaming_type": "free"
+      }
+    ],
+    "open_records": 10417551,
+    "source_primary_storage": {
+      "bytes": 6182218227,
+      "rows": 18936178
+    }
+  },
+  "benchmark": {
+    "crate_version": "5.10.16",
+    "titles": 200,
+    "offers": 10000,
+    "rounds_per_case": 9,
+    "mongo": "real local MongoDB 8.0",
+    "sql": "real local Crate",
+    "order": "alternating paired rounds",
+    "timing": {
+      "before": {
+        "unchanged_fresh_read": {
+          "seconds": [
+            0.672910391993355,
+            0.6594057590118609,
+            0.6499031290004496,
+            0.6227581819985062,
+            0.6599036980042001,
+            0.6236216709949076,
+            0.6642559589963639,
+            0.617069784013438,
+            0.6324648540030466
+          ],
+          "median_seconds": 0.6499031290004496
+        },
+        "one_percent_change": {
+          "seconds": [
+            0.6703338069928577,
+            0.6905849670001771,
+            0.6741727299959166,
+            0.6289478999970015,
+            0.6568856439989759,
+            0.657993931992678,
+            0.6592993089871015,
+            0.6669450939953094,
+            0.6476332129968796
+          ],
+          "median_seconds": 0.6592993089871015
+        }
+      },
+      "after": {
+        "unchanged_fresh_read": {
+          "seconds": [
+            0.6682290010066936,
+            0.6404304369934835,
+            0.6475151430058759,
+            0.695581846011919,
+            0.6318021040060557,
+            0.6893704490066739,
+            0.6344133600068744,
+            0.6668061939999461,
+            0.6590246299892897
+          ],
+          "median_seconds": 0.6590246299892897
+        },
+        "one_percent_change": {
+          "seconds": [
+            0.695836895989487,
+            0.9313897940010065,
+            0.7751721880049445,
+            0.6854378170100972,
+            0.6782640109886415,
+            0.6642976489965804,
+            0.7183373009902425,
+            0.6989795789995696,
+            0.6990652099921135
+          ],
+          "median_seconds": 0.6989795789995696
+        }
+      },
+      "paired_median_overhead_percent": {
+        "unchanged_fresh_read": -0.3674372207203236,
+        "one_percent_change": 7.941531713180017
+      }
+    },
+    "includes_durable_retry_markers": true,
+    "includes_full_catalog_selection_and_watermark": true
+  },
+  "verification": {
+    "tests_run": 127,
+    "passed": 122,
+    "skipped": 5,
+    "skipped_reason": "Windmill previews are opt-in; no jobs submitted",
+    "production_writes": 0,
+    "rebased_onto": "cf418d9faf56c4ba2c7cf780ab33bc2bb33f6fe3",
+    "includes_recent_release_fresh_and_cached_reads": true
+  }
+}
