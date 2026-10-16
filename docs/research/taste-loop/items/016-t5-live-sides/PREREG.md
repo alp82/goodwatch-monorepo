@@ -1,8 +1,8 @@
-# T5 on the live Sides of you (#674): registration draft
+# T5 on the live Sides of you (#674): registration
 
-Draft, October 16, 2026. Not a registration. It becomes `PREREG.md` once the shorter taste group names are on main,
-the adapter is re-pinned to that commit, the cases are rebuilt, and the frozen digests below are filled in. Live reads
-refuse to start until a committed `PREREG.md` in this folder names the frozen source and cases digests.
+Registered October 16, 2026, before any reader call on these cases. The adapter is pinned to production commit
+`0da351cd` (final short taste group names, Q65 and Q66). Live reads refuse to start unless this committed file names
+the frozen source and cases digests under "Frozen run."
 
 Everything not stated here is as registered for item 015 (`../015-t5-whose-taste/PREREG.md`): pack, split, removal,
 prompt, readers and their confinement, controls, void rule, bootstrap (10,000 member draws, seed 20261013), replay.
@@ -52,15 +52,10 @@ Further:
 - S minus nouns only is reported for both readers and does not decide. Haiku's S minus numbers only is descriptive.
 - This rule applies to #674 only, never to #656 after the fact.
 
-## Build on the short-names pin (`344e7ba3`), not yet final
+## Build on the final pin (`0da351cd`)
 
-The owner may still change one word in the names. Rebuild after the final pin; the digests below then change.
-
-Preview of Q65 and Q66, October 16, 2026: a private build pinned to the names thread's uncommitted edit ("realistic"
-everywhere except before "comedies", which keeps "everyday"; "grotesque" kept) produced byte-identical descriptions,
-the same cases, and the same `cases_digest` (`0eb5f08dccdf…`). No group these members see takes its word from
-`contemporary_realism`. Only `source_digest` changes. The preview is not the pin: the final commit is pinned and rebuilt
-fresh.
+The build is byte-identical in its descriptions and cases to the earlier `344e7ba3` build and to a preview of the names
+thread's edit: no group these members see takes its word from `contemporary_realism`. Only `source_digest` differs.
 
 | Item | Value |
 |---|---|
@@ -71,11 +66,21 @@ fresh.
 | Calls | 36 triples × 4 inputs (S, nouns only, numbers only, none) × 2 readers = 288, plus at most one retry each |
 | Numbers-only note | Live numbers only keeps digits inside titles (3 tokens across the descriptions); stated, not changed |
 
-## Frozen run (to fill in after the final pin)
+## Frozen run
 
 | Item | Value |
 |---|---|
-| Production commit | |
-| Run folder | |
-| `source_digest` | |
-| `cases_digest` | |
+| Production commit | `0da351cd7d7bd5a0f8bbf122ec7f961dffd13095` |
+| Run folder | `~/goodwatch-research/taste/work/t5/run-016-0da351cd` (private) |
+| Descriptions digest | `8484df6a41206a2658f2d05228b60d5abcab3be84c2ed39862530ae672ccec3c` |
+| Prompt digest | `8fb4b8a4977357e3618b53b7d320f92eecb3c12aa1c90c455fea39680eaf87ca` |
+
+- `source_digest`: `6f70076ad5da719f81c9b4fca0ecfc87b0b865a05cb4a99bd694fd82c1733acf`
+- `cases_digest`: `0eb5f08dccdf04c238ae8bc042558dc4c9b3a95191f1226d45d8df679148f287`
+
+## Run order
+
+1. `read --reader haiku`, then `read --reader astra`, each as its own process with stdin closed.
+2. `score`, then `verify` (fresh-process rebuild must match the cases digest and baselines).
+3. No rerun, rematch, or prompt change after any reader call. A void rate above 10% makes the run incomplete, not
+   repeatable.

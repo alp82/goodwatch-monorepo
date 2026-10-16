@@ -149,14 +149,15 @@ const NAME_WORDS: Record<string, string> = {
 	slow_burn: "slow-burn",
 	spectacle: "epic",
 	wholesome: "warm",
-	contemporary_realism: "everyday",
+	contemporary_realism: "realistic",
 	situational_comedy: "funny",
 	physical_comedy: "funny",
 	cringe_humor: "funny",
 	absurdist_humor: "funny",
 }
-// Humor traits before "comedies": what kind of funny.
+// Words before "comedies": what kind of funny, and "everyday" for grounded ones ("Awkward, everyday comedies").
 const COMIC_WORDS: Record<string, string> = {
+	contemporary_realism: "everyday",
 	situational_comedy: "situational",
 	wit_wordplay: "witty",
 	physical_comedy: "slapstick",
