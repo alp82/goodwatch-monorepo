@@ -23,6 +23,8 @@ const CARRIES = 0.4
 /** ...and this many times the share of the member's other loved titles: what sets the group apart. */
 const LIFT = 1.15
 export const MAX_PICKS = 3
+/** Styles in most of what anyone loves (Music in 42 to 100% of every group): they never set a group apart. */
+const NO_PRESET = ["s:music", "s:talky"]
 
 interface Entry {
 	key: TitleKey
@@ -93,7 +95,10 @@ export function wordsModel(i: WordsInput): WordsModel {
 	for (const g of i.groups) {
 		const best = (kinds: Word["kind"][], next?: string) =>
 			WORDS.filter(
-				(w) => kinds.includes(w.kind) && !(next && sameGround(next, w.id)),
+				(w) =>
+					kinds.includes(w.kind) &&
+					!NO_PRESET.includes(w.id) &&
+					!(next && sameGround(next, w.id)),
 			)
 				.map((w) => ({ w, lift: lift(g.id, w) }))
 				.filter((x) => x.lift >= LIFT)
@@ -134,7 +139,14 @@ export function wordsModel(i: WordsInput): WordsModel {
 	const combineHit = (list: string[], key: TitleKey, relaxed: boolean) => {
 		if (!list.length) return true
 		if (i.combine === "any") return list.some((p) => match(key, p, relaxed))
-		if (i.combine === "all") return list.every((p) => match(key, p, relaxed))
+		if (i.combine === "all") {
+			// Every pick narrows, but taste groups add up: a title is in one group only.
+			const groups = list.filter(isGroup)
+			return (
+				(!groups.length || groups.some((p) => match(key, p, relaxed))) &&
+				list.filter((p) => !isGroup(p)).every((p) => match(key, p, relaxed))
+			)
+		}
 		// Discover's rule: any within a kind, every kind picked (a group is a kind of its own).
 		const kinds = new Map<string, string[]>()
 		for (const p of list) {
@@ -156,6 +168,7 @@ export function wordsModel(i: WordsInput): WordsModel {
 		i.from &&
 		ids.has(i.from) &&
 		presets[i.from].words.length > 0 &&
+		presets[i.from].words.length === picks.length &&
 		presets[i.from].words.every((w) => picks.includes(w))
 			? i.from
 			: null
@@ -165,7 +178,9 @@ export function wordsModel(i: WordsInput): WordsModel {
 				? [from]
 				: []
 			: i.variant === "sorts"
-				? [...ids]
+				? picks.length
+					? [...ids]
+					: []
 				: i.variant === "yours"
 					? [
 							...new Set(

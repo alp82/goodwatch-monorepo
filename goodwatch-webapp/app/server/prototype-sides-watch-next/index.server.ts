@@ -271,7 +271,11 @@ export async function swnView(
 			? (moodCondition ? 1 : 0) + (plan.onMyServices ? 1 : 0)
 			: plan.need
 	const entries = [...plan.entries.values()].map((e) => {
-		if (wm) return { ...e, fit: (wm.hit(e.key) ? 1 : 0) + onServices(e) }
+		if (wm)
+			return {
+				...e,
+				fit: (wm.view.picks.length && wm.hit(e.key) ? 1 : 0) + onServices(e),
+			}
 		if (narrowed.length) {
 			const hit = plan.moods.some(
 				(m) => inMood(e, m) && (!narrowed.includes(m) || inTasteOf(e, m)),

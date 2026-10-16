@@ -222,16 +222,14 @@ function useControls(view: SwnView) {
 			chipMark: (mood) => insideChip(view, mood),
 		}
 	}
-	const picks = usePicks(view, () =>
+	const picks = usePicks(view, (name) =>
 		setRefused({
 			mood: "funny",
 			at: Date.now(),
-			text: "Three is the most. Remove one to add this one.",
+			text: `Three is the most. Remove one to add ${name}.`,
 		}),
 	)
-	const control4 = view.words
-		? round4Control(view, moods, setRefused, picks)
-		: moods
+	const control4 = view.words ? round4Control(view, moods, picks) : moods
 	const setOnMyServices = (on: boolean) => set({ services: on ? null : "all" })
 	const time = data.time ?? null
 	const setTime = (t: number | null) => set({ time: t ? String(t) : null })

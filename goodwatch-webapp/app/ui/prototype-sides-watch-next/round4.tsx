@@ -9,7 +9,7 @@
 import { CheckIcon, XMarkIcon } from "@heroicons/react/24/solid"
 import { motion } from "framer-motion"
 import { type ReactNode, useState } from "react"
-import { MAX_MOODS, type MoodKey } from "~/domain/moods"
+import { MAX_MOODS } from "~/domain/moods"
 import type { WatchNextTierSize } from "~/domain/watch-next"
 import type { WatchNextTitle } from "~/server/watch-next.server"
 import type { MoodControl, MoodGroups } from "~/ui/watch-next/MoodPicker"
@@ -36,23 +36,27 @@ const narrowedWord = (view: SwnView, id: string) => {
 }
 
 /** Picks and unpicks, in the URL; a fourth pick is refused with the hint. */
-function usePicks(view: SwnView, refuse: () => void) {
+function usePicks(view: SwnView, refuse: (name: string) => void) {
 	const set = useParam()
 	const w = wordsOf(view)
 	const write = (picks: string[], extra: Record<string, string | null> = {}) =>
 		set({
 			pick: picks.join(",") || null,
-			// A word unpicked forgets that it was widened; a preset holds while all of its words are picked.
+			// A word unpicked forgets that it was widened; a preset holds while its words, and only they, are picked.
 			widen: w.wide.filter((x) => picks.includes(x)).join(",") || null,
 			from:
-				w.from && w.presets[w.from]?.words.every((x) => picks.includes(x))
+				w.from &&
+				picks.length === w.presets[w.from]?.words.length &&
+				w.presets[w.from].words.every((x) => picks.includes(x))
 					? w.from
 					: null,
+			// Nothing picked, nothing to bring up.
+			up: picks.length ? w.boost.join(",") || null : null,
 			...extra,
 		})
 	const toggle = (id: string) => {
 		if (w.picks.includes(id)) return write(w.picks.filter((p) => p !== id))
-		if (w.picks.length >= MAX_MOODS) return refuse()
+		if (w.picks.length >= MAX_MOODS) return refuse(pickName(view, id))
 		write([...w.picks, id])
 	}
 	/** "presets": a group's tile puts its words in place of the picks. */
@@ -157,7 +161,7 @@ export function Tile({
 			data-mood={id}
 			onClick={onClick}
 			whileTap={{ scale: full ? 1 : 0.97 }}
-			className={`group relative isolate flex cursor-pointer flex-col justify-between overflow-hidden rounded-xl p-2.5 text-left text-white transition-[opacity,box-shadow] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${dense ? "h-[4.75rem]" : "h-[6.5rem] md:h-28"} ${on ? "ring-2 ring-white" : "ring-1 ring-white/10"} ${full || dim ? "opacity-40" : ""}`}
+			className={`group relative isolate flex cursor-pointer flex-col justify-between overflow-hidden rounded-xl p-2.5 text-left text-white transition-[opacity,box-shadow] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${dense ? "min-h-[4.75rem]" : "h-[6.5rem] md:h-28"} ${on ? "ring-2 ring-white" : "ring-1 ring-white/10"} ${full || dim ? "opacity-40" : ""}`}
 		>
 			<Art
 				path={art}
@@ -165,7 +169,7 @@ export function Tile({
 			/>
 			<span className="flex items-start justify-between gap-2">
 				<span
-					className={`line-clamp-2 font-bold leading-tight [text-shadow:0_1px_6px_rgba(0,0,0,.6)] ${dense && name.length > 18 ? "text-[13px]" : "text-[15px]"}`}
+					className={`font-bold leading-tight [text-shadow:0_1px_6px_rgba(0,0,0,.6)] ${dense && name.length > 18 ? "line-clamp-3 text-[13px]" : "line-clamp-2 text-[15px]"}`}
 				>
 					{name}
 				</span>
@@ -313,7 +317,7 @@ function Chip({
 			layout
 			initial={{ opacity: 0, scale: 0.9 }}
 			animate={{ opacity: 1, scale: 1 }}
-			className="relative isolate inline-flex h-9 max-w-[17rem] shrink-0 items-center overflow-hidden rounded-xl text-sm font-bold text-white ring-1 ring-white/25 [text-shadow:0_1px_4px_rgba(0,0,0,.6)]"
+			className="relative isolate inline-flex h-9 max-w-[12rem] shrink-0 items-center overflow-hidden rounded-xl text-sm font-bold text-white ring-1 ring-white/25 [text-shadow:0_1px_4px_rgba(0,0,0,.6)]"
 			data-pick={id}
 		>
 			<Art path={art} />
@@ -472,9 +476,6 @@ function BringUp({ view, picks }: { view: SwnView; picks: Picks }) {
 
 // ---------- the variants ----------
 
-const MOODS_OF = (w: SwnWords) =>
-	w.picks.filter((p) => p.startsWith("m:")).map((p) => p.slice(2) as MoodKey)
-
 const words = (w: SwnWords, kinds: Word["kind"][]) =>
 	w.words.filter((x) => kinds.includes(WORD_BY_ID[x.id].kind))
 
@@ -530,69 +531,71 @@ function MoreWords({
 }
 
 /**
- * The mood control's round 4 parts for a variant: the picked moods stay production's chips and tiles where the
- * variant keeps the moods as they are; everything else is round 4's.
+ * The mood control's round 4 parts for a variant. Every round 4 variant draws its own tiles and chips, moods
+ * included, in one look with no color, so no kind of choice stands out by color.
  */
 export function round4Control(
 	view: SwnView,
 	base: MoodControl,
-	setRefused: (r: MoodControl["refused"]) => void,
 	picks: Picks,
 ): MoodControl {
 	const w = wordsOf(view)
-	const control: MoodControl = { ...base }
-	const moodPicks = MOODS_OF(w)
-	control.moods = moodPicks
-	control.toggle = (mood) => {
-		const id = `m:${mood}`
-		if (!w.picks.includes(id) && w.picks.length >= MAX_MOODS)
-			setRefused({ mood, at: Date.now() })
-		else picks.toggle(id)
-	}
-	control.clear = picks.clear
-	const others = w.picks.filter((p) => !p.startsWith("m:"))
-	const chipsFor = (ids: string[]) => (
-		<>
-			{ids.map((id) => (
-				<Chip
-					key={id}
-					view={view}
-					control={control}
-					picks={picks}
-					id={id}
-					count={pickCount(view, id)}
-				/>
-			))}
-		</>
-	)
+	const control: MoodControl = { ...base, moods: [], clear: picks.clear }
 	const groups: MoodGroups = {
-		picked: others.length,
+		picked: w.picks.length,
 		narrowing: w.picks.length > 0,
-		chips: chipsFor(others),
+		chips: (
+			<>
+				{w.picks.map((id) => (
+					<Chip
+						key={id}
+						view={view}
+						control={control}
+						picks={picks}
+						id={id}
+						count={pickCount(view, id)}
+					/>
+				))}
+			</>
+		),
 		head: "Pick up to three",
-		refuse: () =>
-			setRefused({
-				mood: moodPicks[0] ?? "funny",
-				at: Date.now(),
-				text: "Three is the most. Remove one to add this one.",
-			}),
 		short: w.picks.length
 			? `${pickName(view, w.picks[0])}${w.picks.length > 1 ? ` +${w.picks.length - 1}` : ""}`
 			: null,
 	}
 	control.groups = groups
-	// Every pick shows as a round 4 chip in variants that don't keep production's mood tiles.
-	const ownGrid = view.variant === "vocab" || view.variant === "yours"
-	if (ownGrid) {
-		control.moods = []
-		groups.picked = w.picks.length
-		groups.chips = chipsFor(w.picks)
-	}
+	const inside = view.variant === "insideall"
+	/** A word's tile; in "insideall", with the taste it carries and the switch. */
+	const wordTile = (x: SwnWord, dense: boolean, sub?: string | null) => (
+		<WordTile
+			key={x.id}
+			view={view}
+			control={control}
+			picks={picks}
+			word={x}
+			dense={dense}
+			sub={sub}
+			foot={
+				inside && x.groups.length ? (
+					<InsideFoot view={view} word={x} dense={dense} />
+				) : undefined
+			}
+			action={
+				inside ? (
+					<InsideAction view={view} picks={picks} word={x} dense={dense} />
+				) : undefined
+			}
+		/>
+	)
+	const moodTiles = (dense: boolean) =>
+		words(w, ["mood"]).map((x) => wordTile(x, dense))
+	const themeStyleTiles = (dense: boolean) =>
+		words(w, ["theme", "style"]).map((x) => wordTile(x, dense, null))
 
 	if (view.variant === "presets") {
 		groups.sub =
 			". A title fits when it has one pick of each kind: mood, theme, style."
-		groups.before = (dense) => (
+		groups.grid = (dense) => (
 			<>
 				{view.groups.map((g) => {
 					const p = w.presets[g.id]
@@ -607,42 +610,31 @@ export function round4Control(
 							sub={p.words.map((x) => WORD_BY_ID[x].name).join(" + ")}
 							foot={
 								<Foot>
-									{p.count} {control.countScope}, {p.inGroup} fit your taste
+									{dense
+										? `${p.count} · ${p.inGroup} fit your taste`
+										: `${p.count} ${control.countScope}, ${p.inGroup} fit your taste`}
 								</Foot>
 							}
 							on={w.from === g.id}
+							dim={p.count === 0}
 							onClick={() => picks.preset(g.id)}
 						/>
 					)
 				})}
-			</>
-		)
-		// The theme or style a preset picks shows with the moods' tiles, so it can be seen and removed.
-		groups.tiles = (dense) => (
-			<>
+				{moodTiles(dense)}
+				{/* The theme or style a preset picks shows after the moods, so it can be seen and removed. */}
 				{w.picks
-					.filter((p) => !p.startsWith("m:"))
-					.map((id) => {
+					.filter((id) => !id.startsWith("m:"))
+					.flatMap((id) => {
 						const word = wordOf(w, id)
-						return word ? (
-							<WordTile
-								key={id}
-								view={view}
-								control={control}
-								picks={picks}
-								word={word}
-								dense={dense}
-								sub={WORD_BY_ID[id].kind === "theme" ? "Theme" : "Style"}
-							/>
-						) : null
+						return word ? [wordTile(word, dense, null)] : []
 					})}
 			</>
 		)
 	}
 
 	if (view.variant === "refine") {
-		groups.sub = ". A title fits when it is in any of them."
-		groups.before = (dense) => (
+		groups.grid = (dense) => (
 			<>
 				{view.groups.map((g) => (
 					<GroupTile
@@ -655,13 +647,14 @@ export function round4Control(
 						onClick={() => picks.toggle(g.id)}
 					/>
 				))}
+				{moodTiles(dense)}
 			</>
 		)
 		groups.tiles = () => <BringUp view={view} picks={picks} />
 	}
 
 	if (view.variant === "vocab") {
-		groups.sub = ". Each pick narrows the list."
+		groups.sub = ". Each pick narrows the list; your taste groups add up."
 		const all = [
 			...view.groups.map((g) => ({
 				id: g.id,
@@ -677,7 +670,7 @@ export function round4Control(
 					const on = w.picks.includes(x.id)
 					const footText =
 						w.picks.length && !on
-							? `${x.leaves} left with this`
+							? `${x.leaves} with this`
 							: n(x.count, control.countScope)
 					const dim = !on && w.picks.length > 0 && x.leaves === 0
 					return isGroupId(x.id) ? (
@@ -744,59 +737,13 @@ export function round4Control(
 		)
 	}
 
-	if (view.variant === "insideall" || view.variant === "sorts") {
-		const inside = view.variant === "insideall"
-		if (inside) {
-			groups.tileFoot = (mood, dense) => {
-				const word = wordOf(w, `m:${mood}`)
-				return word?.groups.length ? (
-					<InsideFoot view={view} word={word} dense={dense} />
-				) : null
-			}
-			groups.tileAction = (mood, dense) => {
-				const word = wordOf(w, `m:${mood}`)
-				return word ? (
-					<InsideAction view={view} picks={picks} word={word} dense={dense} />
-				) : null
-			}
-			groups.chipMark = (mood) => {
-				const id = `m:${mood}`
-				const word = wordOf(w, id)
-				if (!word || !narrowedWord(view, id)) return null
-				return { mark: <TasteMark />, count: word.inTaste }
-			}
-		}
-		groups.tiles = (dense) => (
+	if (inside || view.variant === "sorts")
+		groups.grid = (dense) => (
 			<>
-				{words(w, ["theme", "style"]).map((x) => (
-					<WordTile
-						key={x.id}
-						view={view}
-						control={control}
-						picks={picks}
-						word={x}
-						dense={dense}
-						sub={WORD_BY_ID[x.id].kind === "theme" ? "Theme" : "Style"}
-						foot={
-							inside && x.groups.length ? (
-								<InsideFoot view={view} word={x} dense={dense} />
-							) : undefined
-						}
-						action={
-							inside ? (
-								<InsideAction
-									view={view}
-									picks={picks}
-									word={x}
-									dense={dense}
-								/>
-							) : undefined
-						}
-					/>
-				))}
+				{moodTiles(dense)}
+				{themeStyleTiles(dense)}
 			</>
 		)
-	}
 	return control
 }
 
@@ -835,9 +782,11 @@ export function badgeMark(view: SwnView) {
 		if (!badge) return null
 		// The smaller posters' own line says why a title misses; a badge only goes where it says something more.
 		if ((size === "md" || size === "sm") && view.misfits[title.key]) return null
+		// With a group picked, every title that fits is in it: saying so on each adds nothing.
+		if (badge === "fits" && w.picks.some(isGroupId)) return null
 		return (
 			<span
-				className={`mt-1 flex items-center gap-1 truncate px-1 text-xs ${badge === "fits" ? "font-semibold text-white" : "text-gray-400"}`}
+				className={`mt-1 flex items-start gap-1 px-1 text-xs leading-tight ${size === "md" || size === "sm" ? "" : "truncate"} ${badge === "fits" ? "font-semibold text-white" : "text-gray-400"}`}
 			>
 				{badge === "fits" && (
 					<CheckIcon className="h-3.5 w-3.5 shrink-0" aria-hidden />
