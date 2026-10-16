@@ -210,6 +210,17 @@ class WorkflowHealthTests(unittest.TestCase):
         self.assertEqual(report["status"], "unknown")
         self.assertNotIn("missing_execution", report["causes"])
 
+    def test_slots_before_the_schedule_was_created_are_not_missing(
+        self,
+    ) -> None:
+        created = {**SCHEDULE, "edited_at": "2026-09-11T07:00:00Z"}
+        report = assess_pipeline(created, [], NOW, START, THRESHOLDS)
+        self.assertEqual(report["missing_due_count"], 0)
+        self.assertEqual(report["causes"], [])
+        before = {**SCHEDULE, "edited_at": "2026-09-11T05:00:00Z"}
+        report = assess_pipeline(before, [], NOW, START, THRESHOLDS)
+        self.assertIn("missing_execution", report["causes"])
+
     def test_incomplete_history_and_invalid_cron_are_unknown_not_missing(
         self,
     ) -> None:

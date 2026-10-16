@@ -126,6 +126,10 @@ def assess_pipeline(
         # Daily local schedules can be 23 hours apart across DST.
         if cadence < 23 * 3600:
             coverage_start = max(observation_start, now - timedelta(hours=48))
+        # Slots before the schedule was created or last edited were never due.
+        edited = timestamp(schedule.get("edited_at"))
+        if edited and edited > coverage_start:
+            coverage_start = edited
         due, next_due = scheduled_occurrences(schedule, coverage_start, now)
     except (ValueError, KeyError):
         due, next_due = [], None

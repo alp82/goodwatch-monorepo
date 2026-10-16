@@ -550,5 +550,133 @@ class HourlyAwaitedListJobTests(unittest.TestCase):
         self.assertIn("excessive_runtime", report["causes"])
 
 
+CRAWL = "f/priority/crawl_all"
+EPISODES = "f/sync/copy/tmdb_episodes"
+STARVATION_NOW = datetime(2026, 10, 16, 12, tzinfo=timezone.utc)
+
+
+def every_five_minutes(path: str) -> dict:
+    return {"path": path, "script_path": path, "schedule": "0 */5 * * * *",
+            "timezone": "UTC", "enabled": True}
+
+
+def execution(identity: str, minutes_ago: int, success: bool = True) -> dict:
+    started = datetime.fromtimestamp(
+        STARVATION_NOW.timestamp() - minutes_ago * 60, timezone.utc
+    )
+    return {
+        "id": identity,
+        "parent_job": None,
+        "success": success,
+        "started_at": started.isoformat(),
+        "duration_ms": 1000,
+        "result": {"inserted": 1} if success else {"error": "failed"},
+    }
+
+
+class StarvationTests(unittest.TestCase):
+    """Old rows that never finish refreshing can't crowd out recent runs."""
+
+    def setUp(self) -> None:
+        self.store = MemoryStore()
+        self.jobs = {}
+        # 300 crawl runs whose only descendant is gone, so they stay incomplete.
+        self.crawls = [f"crawl-{n:04d}" for n in range(300)]
+        for n, identity in enumerate(self.crawls):
+            self.jobs[identity] = {
+                **execution(identity, 2000 - n),
+                "flow_status": {"modules": [{"job": "gone-" + identity}]},
+            }
+            self.store.ledger.setdefault(CRAWL, {})[identity] = {
+                **execution(identity, 2000 - n), "observation_version": 2,
+                "parent_resolved": True, "evidence_incomplete": True,
+                "unresolved_descendants": ["gone-" + identity],
+            }
+        # The episode sync's 3 newest of 20 runs failed; none is in the ledger.
+        self.episodes = [f"ep-{n:04d}" for n in range(20)]
+        for n, identity in enumerate(self.episodes):
+            self.jobs[identity] = execution(identity, 100 - n * 5, n < 17)
+        self.api = Api(
+            jobs=self.jobs,
+            schedules=[every_five_minutes(CRAWL), every_five_minutes(EPISODES)],
+        )
+
+    def call(self, path):
+        if path.startswith("jobs/list_filtered_uuids"):
+            schedule = parse_qs(urlsplit(path).query)["schedule_path"][0]
+            return self.episodes if schedule == EPISODES else self.crawls
+        if path.startswith("jobs_u/get/gone-"):
+            raise FileNotFoundError(path)
+        return self.api(path)
+
+    def poll(self, max_resolutions: int) -> dict:
+        self.api.calls = []
+        return poll(self.call, self.store, STARVATION_NOW, notify=False,
+                    max_resolutions=max_resolutions)
+
+    def resolved(self, prefix: str) -> list[str]:
+        return [
+            call.rsplit("/", 1)[-1] for call in self.api.calls
+            if call.startswith("jobs_u/get/" + prefix)
+        ]
+
+    def test_newest_runs_resolve_before_old_incomplete_rows(self) -> None:
+        result = self.poll(max_resolutions=8)
+
+        self.assertEqual(
+            set(self.resolved("ep-")), {"ep-0017", "ep-0018", "ep-0019"}
+        )
+        # 6 of the 8 go to each schedule's 3 newest runs, 2 to old rows.
+        crawls = self.resolved("crawl-")
+        self.assertLessEqual({"crawl-0299", "crawl-0298", "crawl-0297"}, set(crawls))
+        self.assertEqual(len(crawls), 5)
+        episodes = next(r for r in result["pipelines"] if r["path"] == EPISODES)
+        self.assertIn("consecutive_failures", episodes["causes"])
+
+    def test_old_incomplete_rows_are_refreshed_a_limited_number_per_poll(
+        self,
+    ) -> None:
+        result = self.poll(max_resolutions=800)
+
+        # The 3 newest crawls, then 40 old rows; every episode run is resolved.
+        self.assertEqual(len(self.resolved("crawl-")), 3 + 40)
+        self.assertEqual(len(self.resolved("ep-")), 20)
+        self.assertEqual(result["resolution_candidates"]["stale_refresh"], 297)
+        refreshed = [
+            job for job in self.store.ledger[CRAWL].values()
+            if job.get("refreshed_at")
+        ]
+        self.assertEqual(len(refreshed), 43)
+
+    def test_old_rows_rotate_least_recently_refreshed_first(self) -> None:
+        self.poll(max_resolutions=800)
+        newest = {"crawl-0299", "crawl-0298", "crawl-0297"}
+        first = set(self.resolved("crawl-")) - newest
+        self.poll(max_resolutions=800)
+        second = set(self.resolved("crawl-")) - newest
+
+        self.assertEqual(len(second), 40)
+        self.assertFalse(first & second)
+
+    def test_a_row_still_marked_running_is_refreshed_first(self) -> None:
+        self.store.ledger[CRAWL]["crawl-0001"].update(running=True, success=None)
+
+        self.poll(max_resolutions=1)
+
+        self.assertEqual(self.resolved(""), ["crawl-0001"])
+
+    def test_a_job_windmill_no_longer_has_waits_with_the_old_rows(self) -> None:
+        self.store.ledger[CRAWL]["crawl-0000-deleted"] = {
+            "id": "crawl-0000-deleted", "observation_version": 2, "parent_resolved": False,
+            "lookup_error": "job_unavailable",
+        }
+
+        result = self.poll(max_resolutions=6)
+
+        self.assertNotIn("crawl-0000-deleted", self.resolved(""))
+        self.assertEqual(result["resolution_candidates"]["in_flight"], 0)
+        self.assertEqual(result["resolution_candidates"]["stale_refresh"], 298)
+
+
 if __name__ == "__main__":
     unittest.main()

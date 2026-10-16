@@ -194,7 +194,11 @@ class CheckTests(unittest.TestCase):
             self.run_check(snapshot(timedelta(hours=5)), store)
         self.assertEqual(store.values, {})
 
-    def test_incident_message_names_the_cause_and_the_snapshot(self) -> None:
+    def test_incident_message_is_plain_and_the_snapshot_stays_in_the_ledger(
+        self,
+    ) -> None:
+        # Since the October 2026 alert audit, Discord gets the problem and the
+        # next step; cause codes and the snapshot detail stay in the ledger.
         store = MemoryStore()
         opener = Mock()
         opener.open.return_value = io.BytesIO(b'{"id":"998877"}')
@@ -202,11 +206,18 @@ class CheckTests(unittest.TestCase):
             report = self.run_check(snapshot(timedelta(hours=5)), store, WEBHOOK)
         self.assertTrue(report["notification"]["delivery"]["delivered"])
         content = json.loads(opener.open.call_args.args[0].data)["content"]
-        self.assertIn("incident: f/monitoring/crate_backup", content)
-        self.assertIn("Cause: crate_backup_stale", content)
-        self.assertIn("hourly_20261005_090500", content)
-        self.assertIn("5.0 hours ago (limit 3 hours)", content)
-        self.assertNotIn("No resolved execution", content)
+        self.assertIn(
+            "Action needed: Database backups. A recent successful database "
+            "backup could not be confirmed.",
+            content,
+        )
+        self.assertIn("Check the backup job and repository.", content)
+        self.assertIn("docs/workflow-monitoring.md", content)
+        self.assertNotIn("crate_backup_stale", content)
+        stored = store.values["pipeline:" + BACKUP_PATH]["report"]
+        self.assertIn("crate_backup_stale", stored["causes"])
+        self.assertIn("hourly_20261005_090500", stored["detail"])
+        self.assertIn("5.0 hours ago (limit 3 hours)", stored["detail"])
 
     def test_all_backup_causes_are_deliverable(self) -> None:
         opener = Mock()

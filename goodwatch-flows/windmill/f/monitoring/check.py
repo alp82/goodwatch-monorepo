@@ -78,6 +78,14 @@ def pipeline_thresholds(
     }
 
 
+# Each schedule's newest runs are resolved before any older work.
+NEWEST_RUNS = 3
+# Rows that stay incomplete (more descendants than the inspection limit,
+# descendants Windmill no longer has) once took the whole budget of every
+# poll. They are now refreshed this many per poll, least recently first.
+STALE_REFRESH_LIMIT = 40
+
+
 def needs_refresh(job: dict[str, Any]) -> bool:
     return bool(
         job.get("observation_version") != 2
@@ -160,7 +168,11 @@ def poll(
             queue_failed = True
             infrastructure["windmill_api"] = "degraded"
         plans: dict[str, dict[str, Any]] = {}
-        tasks: list[tuple[int, str, str]] = []
+        in_flight: list[tuple[str, str]] = []
+        newest: list[tuple[str, str]] = []
+        stale: list[tuple[str, str, str]] = []
+        daily: list[tuple[str, str]] = []
+        backfill: list[tuple[str, str]] = []
         for schedule in schedules:
             path = schedule["path"]
             ledger = store.jobs(path)
@@ -201,16 +213,42 @@ def poll(
                 "ids": identifiers,
                 "incomplete": failed,
             }
-            for identity in identifiers | set(ledger):
+            # Windmill job ids sort by creation time.
+            ordered = sorted(identifiers | set(ledger), reverse=True)
+            latest = set(ordered[:NEWEST_RUNS])
+            for identity in ordered:
                 old = ledger.get(identity)
-                if old is None or needs_refresh(old):
-                    urgent = identity in queue_ids or (
-                        old and needs_refresh(old)
-                    )
-                    priority = 0 if urgent else 1 if path in DAILY_PATHS else 2
-                    tasks.append((priority, identity, path))
-        tasks.sort(key=lambda item: item[1], reverse=True)
-        tasks.sort(key=lambda item: item[0])
+                if old is not None and not needs_refresh(old):
+                    continue
+                if identity in queue_ids or (
+                    old
+                    and (old.get("running") or old.get("success") is None)
+                    # A job Windmill no longer lists can't be looked up again.
+                    and (not old.get("lookup_error") or identity in identifiers)
+                ):
+                    in_flight.append((identity, path))
+                elif identity in latest:
+                    newest.append((identity, path))
+                elif old is not None:
+                    stale.append((old.get("refreshed_at") or "", identity, path))
+                elif path in DAILY_PATHS:
+                    daily.append((identity, path))
+                else:
+                    backfill.append((identity, path))
+        stale.sort(key=lambda item: item[1], reverse=True)
+        stale.sort(key=lambda item: item[0])
+        tasks = [
+            task
+            for tier in [
+                sorted(in_flight, reverse=True),
+                sorted(newest, reverse=True),
+                [(identity, path) for _, identity, path in stale]
+                [:STALE_REFRESH_LIMIT],
+                sorted(daily, reverse=True),
+                sorted(backfill, reverse=True),
+            ]
+            for task in tier
+        ]
         resolved = 0
         with ThreadPoolExecutor(max_workers=8) as executor:
             for offset in range(0, min(len(tasks), max_resolutions), 8):
@@ -224,12 +262,13 @@ def poll(
                             observe_execution, bounded_api, identity, 50
                         ),
                     )
-                    for _, identity, path in chunk
+                    for identity, path in chunk
                 ]
                 batches: dict[str, list[dict[str, Any]]] = {}
                 for path, future in futures:
                     try:
                         observed = future.result()
+                        observed["refreshed_at"] = now.isoformat()
                         batches.setdefault(path, []).append(observed)
                         plans[path]["jobs"][observed["id"]] = observed
                         resolved += 1
@@ -383,6 +422,14 @@ def poll(
             "provider_identity_repair": snapshots["country"].get("identity_repair")
             if backlog_result else None,
             "resolved_this_poll": resolved,
+            "resolution_candidates": {
+                "in_flight": len(in_flight),
+                "newest": len(newest),
+                "stale_refresh": len(stale),
+                "stale_refresh_limit": STALE_REFRESH_LIMIT,
+                "daily_backfill": len(daily),
+                "backfill": len(backfill),
+            },
             "daily_paths_present": sorted(DAILY_PATHS & set(plans)),
             "daily_paths_missing": sorted(DAILY_PATHS - set(plans)),
             "notification_status": "disabled"

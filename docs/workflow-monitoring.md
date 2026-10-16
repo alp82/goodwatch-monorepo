@@ -12,6 +12,15 @@ Cron evaluation accepts five, six, and seven fields in the schedule's timezone, 
 
 Collection uses eight readers, at most 800 root resolutions and 50 descendants per root, and a 220-second collection/notification admission budget. API requests have a 10-second timeout. The Windmill job timeout is 300 seconds; a ten-minute Crate lease prevents overlapping checkers. Slow or truncated history remains unknown and is revisited. The ledger does not delete history automatically.
 
+Resolution order per poll, so that old rows can't starve recent runs:
+
+1. Runs in the queue, and ledger rows still marked running or without a result, while Windmill still lists the job.
+2. Each schedule's 3 newest runs (`NEWEST_RUNS`) that are new or incomplete.
+3. At most 40 older incomplete ledger rows (`STALE_REFRESH_LIMIT`), least recently refreshed first. Each saved row carries `refreshed_at`. Before October 17, 2026, about 10,000 rows that never complete took every poll's whole budget. They are flows with more than 50 descendants, descendants Windmill no longer has, or jobs that were deleted. Only 5 of about 2,480 tmdb_episodes runs had been inspected.
+4. New runs of the daily paths, then all other new runs, newest first.
+
+`latest-report` has the size of each tier in `resolution_candidates`. Most frequent pipelines still report `unknown`, because their backfill since the observation start is not finished. A schedule's due slots start at its `edited_at`: slots from before it was created or last edited are never missing.
+
 ## Thresholds and incidents
 
 `RUNTIME_HOURS` in `f/monitoring/check.py` sets explicit per-pipeline runtime limits: two hours for frequent publication/provider jobs, six hours for rating crawlers and daily initialization, twelve hours for full Crate population, and six minutes for homepage warming. Unknown future paths default to six hours. Scheduling grace is half a cadence bounded to five minutes–one hour. Three genuine failures trigger a failure incident; neutral no-work/overlap outcomes do not reset or create that streak. Lack-of-progress requires independent unhealthy evidence and exceeds the larger of twice the runtime limit or three cadences.
