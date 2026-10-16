@@ -71,7 +71,6 @@ function side(
 		id,
 		name: `Name of ${id}`,
 		attributes: [],
-		share: 0.3,
 		count: 20,
 		average: 8,
 		here: here.map(key),
