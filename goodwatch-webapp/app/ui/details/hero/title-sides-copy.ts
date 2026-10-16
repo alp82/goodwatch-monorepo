@@ -22,9 +22,10 @@ const shortName = ({ traits, noun }: ShortName) =>
 
 /**
  * Between two groups, one trait from each: the leading ones, "Between dark and psychedelic", with the noun when both
- * groups share it ("Between dark and psychedelic stories"). When both lead with the same trait, their second traits
- * ("Between tense and gripping crime"), else each keeps its noun ("Between dark crime and dark thrillers"); with
- * nothing short to tell them apart, their full names.
+ * groups share it ("Between dark and psychedelic stories"). When both lead with the same trait, each keeps its noun
+ * when the nouns differ ("Between dark crime and dark thrillers"), else the first two traits that differ, second
+ * traits first ("Between tense and gripping crime", "Between moving and tense war stories"). Without the short forms,
+ * their full names.
  */
 export function betweenLine(
 	a: { name: string | null; short: ShortName | null },
@@ -35,10 +36,18 @@ export function betweenLine(
 		const noun = x.noun === y.noun ? ` ${x.noun}` : ""
 		if (x.traits[0] !== y.traits[0])
 			return `Between ${x.traits[0]} and ${y.traits[0]}${noun}`
-		if (x.traits[1] && y.traits[1] && x.traits[1] !== y.traits[1])
-			return `Between ${x.traits[1]} and ${y.traits[1]}${noun}`
 		if (x.noun !== y.noun)
 			return `Between ${x.traits[0]} ${x.noun} and ${y.traits[0]} ${y.noun}`
+		const pair = (
+			[
+				[1, 1],
+				[0, 1],
+				[1, 0],
+			] as const
+		)
+			.map(([i, j]) => [x.traits[i], y.traits[j]])
+			.find(([p, q]) => p && q && p !== q)
+		if (pair) return `Between ${pair[0]} and ${pair[1]}${noun}`
 	}
 	return a.name && b.name
 		? `Between ${lowerFirst(a.name)} and ${lowerFirst(b.name)}`

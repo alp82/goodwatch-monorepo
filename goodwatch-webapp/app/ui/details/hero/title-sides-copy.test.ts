@@ -88,13 +88,27 @@ describe("betweenLine", () => {
 		)
 	})
 
-	it("falls back to the full names, and to nothing without names", () => {
-		const a = group("Dark crime", ["dark"], "crime")
-		const b = group("Dark, gripping crime", ["dark", "gripping"], "crime")
-		assert.equal(
-			betweenLine(a, b),
-			"Between dark crime and dark, gripping crime",
+	it("takes a trait that differs when only one group has a second trait, in either order", () => {
+		const moving = group("Moving war stories", ["moving"], "war stories")
+		const tense = group(
+			"Moving, tense war stories",
+			["moving", "tense"],
+			"war stories",
 		)
+		assert.equal(
+			betweenLine(moving, tense),
+			"Between moving and tense war stories",
+		)
+		assert.equal(
+			betweenLine(tense, moving),
+			"Between tense and moving war stories",
+		)
+	})
+
+	it("falls back to the full names without the short forms, and to nothing without names", () => {
+		const a = { name: "Dark crime", short: null }
+		const b = { name: "Warm comedies", short: null }
+		assert.equal(betweenLine(a, b), "Between dark crime and warm comedies")
 		assert.equal(betweenLine(group(null), group(null)), null)
 	})
 })
