@@ -15,6 +15,41 @@ export const duplicateProviderMapping: Record<number, number[]> = {
 	9: [10, 119], // Amazon Prime Video -> Amazon Video, Amazon Prime Video
 }
 
+/**
+ * A service's duplicates (Amazon Video and Amazon Prime Video under 10 and 119 for 9) fold into it: it is offered in
+ * every country one of them streams in, at its own position there or else the best of theirs, and the duplicates leave
+ * the list. With a country, the list is ordered by that country, unknown last; without one it keeps its order.
+ */
+export function foldDuplicateProviders<
+	T extends { id: number; order_by_country?: Record<string, number> | null },
+>(providers: T[], country: string): T[] {
+	const byId = new Map(providers.map((provider) => [provider.id, provider]))
+	const folded = new Set(Object.values(duplicateProviderMapping).flat())
+	const kept = providers
+		.filter((provider) => !folded.has(provider.id))
+		.map((provider) => {
+			const duplicates = duplicateProviderMapping[provider.id]
+			if (!duplicates) return provider
+			const order: Record<string, number> = {}
+			for (const id of duplicates)
+				for (const [code, at] of Object.entries(
+					byId.get(id)?.order_by_country ?? {},
+				))
+					order[code] = Math.min(order[code] ?? at, at)
+			return {
+				...provider,
+				order_by_country: { ...order, ...(provider.order_by_country ?? {}) },
+			}
+		})
+	if (!country) return kept
+	const at = (provider: T) =>
+		provider.order_by_country?.[country] ?? Number.POSITIVE_INFINITY
+	return kept
+		.map((provider, index) => ({ provider, index }))
+		.sort((a, b) => at(a.provider) - at(b.provider) || a.index - b.index)
+		.map(({ provider }) => provider)
+}
+
 export const ignoredProviders = [
 	...duplicateProviders,
 	10, // Amazon Video

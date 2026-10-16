@@ -34,12 +34,21 @@ the back button opens it again. The owner picked this layout on October 16, 2026
   (`useSetUserSettings` has a mutation scope), so the last toggle wins.
 - When the country lacks some of the saved services, Where you watch and its tile say so. When it lacks all of them,
   they say On my services shows nothing (`ui/settings/services-notice.ts`).
-- The tile shows a sample title (Spirited Away) only when the title is translated into the chosen language. Otherwise
-  it shows the language name. On October 16, 2026, production returned English for every language.
+- The tile shows a sample title (Spirited Away) only when it is in the chosen language: a translation (answered with a
+  region, such as `de-DE` or `zh-CN`), the original title in its own language, or the English title for English
+  (`ui/settings/sample-title.ts`). Otherwise it shows the language name. Checking this with curl misleads: a bot's user
+  agent gets the English title for every language.
+- A service listed under a duplicate id in a country counts as offered there under its own id. For example, Amazon
+  Prime Video is 119 in France and 9 in the list, and 9 is now offered in France (`foldDuplicateProviders` in
+  `utils/streaming-links.ts`). This matches what On my services already matched. The cached list is named
+  `streaming-providers-folded`, so lists cached before the change aren't served.
 - `/settings/country` and `/settings/streaming` answer 301 to `/settings/where-you-watch`, keeping the query. The user
   menu and the Hub link to `/settings`. Where to watch, the filter bar, the Explorer, and Watch next link to
   `/settings/where-you-watch`.
-- The sheets move with transform and opacity only, and not at all with reduced motion.
+- The sheets move with transform and opacity only, and not at all with reduced motion. Closing a sheet opened from a
+  tile goes back one step in history, so Back then leaves Settings. The focus goes to the sheet's heading, stays in the
+  sheet while Tab moves, and returns to the tile on close. Escape doesn't close the sheet while another dialog is open
+  over it or while a search field has text.
 
 ## Verification
 

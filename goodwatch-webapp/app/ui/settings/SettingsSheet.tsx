@@ -3,7 +3,8 @@
 // or the back button opens it again. Closing it (the button, Escape, a click beside it) goes back to /settings once it
 // has slid away. Motion is transform and opacity only, and none with reduced motion.
 import { XMarkIcon } from "@heroicons/react/24/solid"
-import { useNavigate } from "@remix-run/react"
+import { useLocation, useNavigate } from "@remix-run/react"
+import type React from "react"
 import {
 	type ReactNode,
 	useCallback,
@@ -30,9 +31,18 @@ export function SettingsSheet({
 	const headingId = useId()
 	const heading = useRef<HTMLHeadingElement>(null)
 	const [closing, setClosing] = useState(false)
+	// Back to the tiles the sheet was opened from, or in place of the sheet's entry (a link from elsewhere, a reload):
+	// either way, Back then leaves Settings rather than open the sheet again.
+	const fromTiles = Boolean(
+		(useLocation().state as { openedFromTiles?: boolean } | null)
+			?.openedFromTiles,
+	)
 	const leave = useCallback(
-		() => navigate(SETTINGS_PATH, { preventScrollReset: true }),
-		[navigate],
+		() =>
+			fromTiles
+				? navigate(-1)
+				: navigate(SETTINGS_PATH, { replace: true, preventScrollReset: true }),
+		[navigate, fromTiles],
 	)
 	const close = useCallback(() => {
 		if (closing) return
@@ -48,22 +58,65 @@ export function SettingsSheet({
 	}, [closing, leave])
 
 	useEffect(() => {
+		// What opened the sheet (a tile) gets the focus back when it closes.
+		const opener =
+			document.activeElement instanceof HTMLElement
+				? document.activeElement
+				: null
 		heading.current?.focus({ preventScroll: true })
-		// The page under the sheet stays where it is.
+		// The page under the sheet stays where it is, its scrollbar's room kept so nothing shifts.
 		const root = document.documentElement
-		const before = root.style.overflow
+		const before = {
+			overflow: root.style.overflow,
+			gutter: root.style.scrollbarGutter,
+		}
+		root.style.scrollbarGutter = "stable"
 		root.style.overflow = "hidden"
 		return () => {
-			root.style.overflow = before
+			root.style.overflow = before.overflow
+			root.style.scrollbarGutter = before.gutter
+			// At once, not on a later frame: a mount right after (React's development double run) records the opener again.
+			if (opener?.isConnected) opener.focus({ preventScroll: true })
 		}
 	}, [])
 	useEffect(() => {
 		const onKey = (e: KeyboardEvent) => {
-			if (e.key === "Escape" && !e.defaultPrevented) close()
+			if (e.key !== "Escape" || e.defaultPrevented) return
+			// Escape belongs to a dialog open over the sheet (search, the menu, a how-to), and in a search field with
+			// text it doesn't throw the sheet away.
+			if (document.querySelector('[role="dialog"]:not([data-settings-sheet])'))
+				return
+			const at = e.target
+			if (at instanceof HTMLInputElement && at.value) return
+			close()
 		}
 		window.addEventListener("keydown", onKey)
 		return () => window.removeEventListener("keydown", onKey)
 	}, [close])
+	// Tab stays in the sheet: the page under it is out of reach while it is open.
+	const sheet = useRef<HTMLDivElement>(null)
+	const keepFocus = (e: React.KeyboardEvent) => {
+		if (e.key !== "Tab" || !sheet.current) return
+		const reachable = [
+			...sheet.current.querySelectorAll<HTMLElement>(
+				'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+			),
+		].filter((element) => element.getClientRects().length > 0)
+		const first = reachable[0]
+		const last = reachable[reachable.length - 1]
+		if (!first || !last) return
+		if (
+			e.shiftKey &&
+			(document.activeElement === first ||
+				document.activeElement === heading.current)
+		) {
+			e.preventDefault()
+			last.focus()
+		} else if (!e.shiftKey && document.activeElement === last) {
+			e.preventDefault()
+			first.focus()
+		}
+	}
 
 	return (
 		<>
@@ -79,10 +132,12 @@ export function SettingsSheet({
 				aria-modal="true"
 				aria-labelledby={headingId}
 				data-settings-sheet
+				ref={sheet}
+				onKeyDown={keepFocus}
 				onAnimationEnd={(e) => {
 					if (closing && e.target === e.currentTarget) leave()
 				}}
-				className={`fixed inset-x-0 top-14 bottom-0 z-[1040] flex flex-col rounded-t-2xl bg-gray-900 shadow-2xl ring-1 ring-white/10 motion-reduce:animate-none md:inset-y-0 md:right-0 md:left-auto md:w-full md:rounded-l-2xl md:rounded-tr-none ${wide ? "md:max-w-3xl" : "md:max-w-xl"} ${closing ? "animate-sheet-out-down md:animate-sheet-out-side" : "animate-sheet-in-up md:animate-sheet-in-side"}`}
+				className={`fixed inset-x-0 top-14 bottom-0 z-[1040] flex flex-col rounded-t-2xl bg-gray-900 shadow-2xl ring-1 ring-white/10 motion-reduce:animate-none md:inset-y-0 md:right-0 md:left-auto md:w-full md:rounded-l-2xl md:rounded-tr-none md:motion-reduce:animate-none ${wide ? "md:max-w-3xl" : "md:max-w-xl"} ${closing ? "animate-sheet-out-down md:animate-sheet-out-side" : "animate-sheet-in-up md:animate-sheet-in-side"}`}
 			>
 				<div className="flex items-start gap-3 border-b border-white/10 px-5 py-4 md:px-6">
 					<div className="min-w-0 flex-1">

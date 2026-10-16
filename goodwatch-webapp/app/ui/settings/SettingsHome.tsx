@@ -24,20 +24,19 @@ import { localizedTextFetcher } from "~/ui/media-preference/useTitlePreview"
 import Toggle from "~/ui/toggle/Toggle"
 import { countryFlagUrl } from "~/utils/country-flag"
 import { regionName } from "~/utils/display-names"
-import {
-	localizedTitleQueryKey,
-	presentationLanguage,
-} from "~/utils/media-presentation"
+import { localizedTitleQueryKey } from "~/utils/media-presentation"
 import { tmdbImageUrl } from "~/utils/tmdb-image"
 import { savedServiceIds, useServicesInCountry } from "./YourServices"
 import { useHiddenTitles } from "./hidden-titles"
 import {
 	ACCOUNT_PATH,
 	HIDDEN_PATH,
+	OPENED_FROM_TILES,
 	PROFILE_PATH,
 	TITLE_LANGUAGE_PATH,
 	WHERE_YOU_WATCH_PATH,
 } from "./paths"
+import { titleIsIn } from "./sample-title"
 
 /** The title the Show titles in tile shows in the chosen language, when it has a translation there: Spirited Away. */
 const SAMPLE = { type: "movie", id: 129 } as const
@@ -71,6 +70,8 @@ export function SettingsHome({
 						<Link
 							to={PROFILE_PATH}
 							prefetch="intent"
+							preventScrollReset
+							state={OPENED_FROM_TILES}
 							className="text-xl font-bold text-white hover:underline md:text-2xl"
 						>
 							Choose your handle
@@ -101,6 +102,7 @@ function HeaderLink({ to, children }: { to: string; children: ReactNode }) {
 			to={to}
 			prefetch="intent"
 			preventScrollReset
+			state={OPENED_FROM_TILES}
 			className="rounded-lg border border-gray-600 px-3 py-2 text-sm font-semibold text-gray-200 hover:border-gray-400 hover:text-white"
 		>
 			{children}
@@ -134,6 +136,7 @@ function LinkTile({
 			to={to}
 			prefetch="intent"
 			preventScrollReset
+			state={OPENED_FROM_TILES}
 			className={`group ${tileClass} transition-transform duration-150 hover:-translate-y-0.5 hover:bg-white/[0.06] focus-visible:outline-2 focus-visible:outline-white motion-reduce:transition-none motion-reduce:hover:translate-y-0`}
 		>
 			<TileHeading label={label} hint={hint} />
@@ -234,12 +237,10 @@ function ShowTitlesInTile() {
 			}),
 		placeholderData: (previous) => previous,
 	})
-	// Only a title that is in that language: an untranslated one comes back in English, which would show the wrong thing.
-	const title =
-		sample.data &&
-		sample.data.presentation?.title?.language === presentationLanguage(language)
-			? sample.data
-			: null
+	// Only a title that is in that language (sample-title.ts): an untranslated one comes back in another.
+	const title = titleIsIn(sample.data?.presentation?.title, language)
+		? sample.data
+		: null
 	// "Japanese"; "German" and "Follows your browser" while it follows the browser.
 	const name = englishName(language)
 	const follows = next.language === BROWSER ? "Follows your browser" : null
@@ -302,6 +303,7 @@ function YourDataTile() {
 					to={IMPORTS_PATH}
 					prefetch="intent"
 					preventScrollReset
+					state={OPENED_FROM_TILES}
 					className={row}
 				>
 					<span className="min-w-0 flex-1">
@@ -319,6 +321,7 @@ function YourDataTile() {
 					to={HIDDEN_PATH}
 					prefetch="intent"
 					preventScrollReset
+					state={OPENED_FROM_TILES}
 					className={row}
 				>
 					<span className="min-w-0 flex-1">
@@ -371,10 +374,19 @@ function ConnectedAppsTile({ apps }: { apps: ConnectedApp[] }) {
 function DiscoverAndPrivacyTile() {
 	const settings = useUserSettings()
 	const save = useSetUserSettings()
-	// The switch moves at once; the save follows.
+	// The switch moves at once; the save follows, and a failed one puts it back.
 	const [forYouNow, setForYouNow] = useState<boolean | null>(null)
 	const forYou = forYouNow ?? settings.data?.for_you !== "no"
-	const { consentGiven, setConsent } = useCookieChoice()
+	const saveForYou = (on: boolean) => {
+		setForYouNow(on)
+		save.mutate(
+			{ settings: { for_you: on ? "yes" : "no" } },
+			{ onError: () => setForYouNow(null) },
+		)
+	}
+	const [forYouTried, setForYouTried] = useState<boolean | null>(null)
+	const cookies = useCookieChoice()
+	const { consentGiven, setConsent } = cookies
 	return (
 		<section className={tileClass} aria-label="Discover and privacy">
 			<TileHeading
@@ -388,10 +400,13 @@ function DiscoverAndPrivacyTile() {
 					checked={forYou}
 					disabled={!settings.data}
 					onChange={(on) => {
-						setForYouNow(on)
-						save.mutate({ settings: { for_you: on ? "yes" : "no" } })
+						setForYouTried(on)
+						saveForYou(on)
 					}}
 				/>
+				{save.isError && forYouTried !== null && (
+					<SaveFailed what="For you" onRetry={() => saveForYou(forYouTried)} />
+				)}
 				<SwitchRow
 					label="Cookies"
 					hint={
@@ -413,8 +428,26 @@ function DiscoverAndPrivacyTile() {
 					disabled={consentGiven === ""}
 					onChange={(on) => setConsent(on ? "yes" : "no")}
 				/>
+				{cookies.saveFailed && (
+					<SaveFailed what="your cookie choice" onRetry={cookies.retry} />
+				)}
 			</div>
 		</section>
+	)
+}
+
+function SaveFailed({ what, onRetry }: { what: string; onRetry: () => void }) {
+	return (
+		<p className="flex flex-wrap items-center gap-2 text-sm text-red-300">
+			<span role="alert">Couldn't save {what}.</span>
+			<button
+				type="button"
+				onClick={onRetry}
+				className="h-8 cursor-pointer rounded-full bg-white px-3 font-semibold text-black hover:bg-gray-200"
+			>
+				Retry
+			</button>
+		</p>
 	)
 }
 

@@ -117,10 +117,27 @@ await page.waitForFunction(() => document.querySelector("[data-services-notice]"
 check("a country without any of them says On my services is empty", true)
 await shot(page, "04-where-you-watch-empty-desktop")
 
-// 4. Show titles in.
+// 4. Closing: Escape in a search field with text keeps the sheet; then Escape closes it, the focus goes back to the
+// tile, and Back leaves Settings instead of opening the sheet again.
+await sheet.locator("[aria-label='Search countries']").fill("Fra")
+await sheet.locator("[aria-label='Search countries']").press("Escape")
+await page.waitForTimeout(500)
+check("Escape in a search field with text keeps the sheet", page.url().endsWith("/settings/where-you-watch"))
+await sheet.locator("[aria-label='Search countries']").fill("")
 await page.keyboard.press("Escape")
 await page.waitForURL(/\/settings$/)
 check("Escape closes the sheet back to /settings", true)
+await page.waitForTimeout(300)
+check(
+	"the focus goes back to the tile",
+	await page.evaluate(() => document.activeElement?.getAttribute("href") === "/settings/where-you-watch"),
+)
+await page.goBack()
+await page.waitForTimeout(800)
+check("Back after closing leaves Settings", !new URL(page.url()).pathname.startsWith("/settings"), page.url())
+await go(page, "/settings")
+
+// 5. Show titles in.
 check("the tile warns that no service streams there", (await page.textContent("main")).includes("None of your services stream in Japan"))
 await page.click("main a[href='/settings/language']")
 await page.waitForSelector("[data-show-titles-in] [data-language='ja']")
@@ -133,7 +150,7 @@ await shot(page, "05-language-desktop")
 await go(page, "/settings/language")
 check("the language is kept after a reload", (await page.textContent("[data-titles-current]")).startsWith("Japanese"))
 
-// 5. Discover and privacy: For you and cookies.
+// 6. Discover and privacy: For you and cookies.
 await page.click("[data-settings-sheet] button[aria-label='Close']")
 await page.waitForURL(/\/settings$/)
 await page.locator("input[aria-label='For you in Discover']").click({ force: true })
@@ -145,7 +162,7 @@ check("cookie choice is saved", (await settings(page)).cookie_consent === "yes")
 check("the cookie banner is gone", !(await page.textContent("body")).includes("We use cookies"))
 await shot(page, "06-home-after-desktop", true)
 
-// 6. Public profile: a handle claimed on the sheet shows in the header.
+// 7. Public profile: a handle claimed on the sheet shows in the header.
 const handle = `set${Date.now() % 1_000_000}`
 await go(page, "/settings/profile")
 await page.fill("[data-settings-sheet] input", handle)
@@ -154,14 +171,40 @@ await page.getByRole("button", { name: "Claim handle" }).click()
 await page.waitForSelector(`main >> text=@${handle}`)
 check("a claimed handle shows in the Settings header", true, handle)
 
-// 7. The other sheets, at both widths.
+// 8. The other sheets, at both widths.
 const sheets = ["where-you-watch", "language", "profile", "imports", "hidden", "account", "connected-apps"]
 for (const name of sheets) {
 	await go(page, `/settings/${name}`)
 	await page.waitForSelector("[data-settings-sheet]")
 	await shot(page, `10-${name}-desktop`)
 }
-// 8. Old links.
+// The IMDb how-to opens over the Imports sheet, and its Escape leaves the sheet open.
+await go(page, "/settings/imports?source=imdb")
+await page.getByRole("button", { name: "See how the export works" }).first().click()
+const howTo = page.locator('[role="dialog"]:not([data-settings-sheet])')
+await howTo.waitFor({ state: "attached" })
+const onTop = await page.evaluate(() => {
+	const panel = document.querySelector('[role="dialog"]:not([data-settings-sheet]) h2, [role="dialog"]:not([data-settings-sheet]) [id^="headlessui-dialog-title"]')
+	if (!panel) return false
+	const r = panel.getBoundingClientRect()
+	return document.elementFromPoint(r.left + 5, r.top + 5)?.closest('[role="dialog"]:not([data-settings-sheet])') !== null
+})
+check("the IMDb how-to shows over the Imports sheet", onTop)
+await shot(page, "07-imdb-how-to-desktop")
+await page.keyboard.press("Escape")
+await page.waitForTimeout(600)
+check("Escape closes only the how-to", page.url().includes("/settings/imports") && (await howTo.count()) === 0)
+
+// Prime Video streams in France under another id, and still counts there.
+await go(page, "/settings/where-you-watch")
+await sheet.locator("[aria-label='Search countries']").fill("France")
+await sheet.locator("[data-country-code='FR']").click()
+await idle(page)
+await sheet.getByLabel("Search services").fill("Amazon Prime")
+check("Amazon Prime Video can be picked in France", (await service(sheet, "Amazon Prime Video").count()) === 1)
+await sheet.getByLabel("Search services").fill("")
+
+// 9. Old links.
 for (const [from, to] of [["/settings/country", "/settings/where-you-watch"], ["/settings/streaming", "/settings/where-you-watch"]]) {
 	await page.goto(`${BASE}${from}?from=test`, { waitUntil: "load" })
 	check(`${from} lands on ${to}`, new URL(page.url()).pathname === to && page.url().includes("from=test"), page.url())
@@ -171,7 +214,7 @@ for (const path of ["/settings/profile", "/settings/imports?source=imdb", "/sett
 	check(`${path} still opens`, response.status() === 200 && (await page.locator("[data-settings-sheet]").count()) === 1, String(response.status()))
 }
 
-// 9. Phone, as a member who finished the first steps (a new one sees them over every page).
+// 10. Phone, as a member who finished the first steps (a new one sees them over every page).
 await page.evaluate(() =>
 	fetch("/api/user-settings/set", {
 		method: "POST",
@@ -192,7 +235,7 @@ for (const name of sheets) {
 	await shot(phone, `10-${name}-phone`)
 }
 
-// 10. Restart setup, last: it brings the first steps back over every page.
+// 11. Restart setup, last: it brings the first steps back over every page.
 await go(page, "/settings/account")
 await page.getByRole("button", { name: "Restart setup" }).click()
 await page.waitForSelector("text=Done. The first steps show up again.")

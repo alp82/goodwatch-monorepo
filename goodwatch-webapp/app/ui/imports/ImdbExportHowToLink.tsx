@@ -33,7 +33,8 @@ export function ImdbExportHowToLink({
 			>
 				{children}
 			</button>
-			<Dialog open={open} onClose={close} className="relative z-50">
+			{/* Above a Settings sheet (z-[1040]), which the Imports page opens in. */}
+			<Dialog open={open} onClose={close} className="relative z-[1100]">
 				<DialogBackdrop className="fixed inset-0 bg-black/70" />
 				<div className="fixed inset-0 overflow-y-auto">
 					<div className="flex min-h-full items-center justify-center p-3 sm:p-4">

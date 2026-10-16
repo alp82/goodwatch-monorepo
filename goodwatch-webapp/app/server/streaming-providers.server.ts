@@ -4,7 +4,15 @@ import type {
 } from "~/routes/api.streaming-providers"
 import { cached } from "~/utils/cache"
 import { query } from "~/utils/crate"
-import { ignoredProviders } from "~/utils/streaming-links"
+import {
+	duplicateProviderMapping,
+	foldDuplicateProviders,
+	ignoredProviders,
+} from "~/utils/streaming-links"
+
+// Left out of the list, except the duplicates a service folds in: they tell where it streams.
+const foldedIds = new Set(Object.values(duplicateProviderMapping).flat())
+const leftOut = ignoredProviders.filter((id) => !foldedIds.has(id))
 
 export type StreamingProviderParams = {
 	country: string
@@ -19,10 +27,13 @@ export const getStreamingProviders = async (
 		StreamingProviderParams,
 		StreamingProviderResults & { [key: string]: any }
 	>({
-		name: "streaming-providers",
+		// Named apart from the lists before duplicates folded in, so none of those is served.
+		name: "streaming-providers-folded",
 		target: _getStreamingProviders,
 		// One cache entry for every value that isn't a country code, not one per value a request sends.
-		params: { country: COUNTRY_CODE.test(params.country) ? params.country : "" },
+		params: {
+			country: COUNTRY_CODE.test(params.country) ? params.country : "",
+		},
 		ttlMinutes: 60 * 24,
 		//ttlMinutes: 0,
 	})
@@ -58,12 +69,15 @@ export async function _getStreamingProviders(
 				FROM
 					streaming_service
 				WHERE
-					tmdb_id NOT IN (${ignoredProviders.join(",")})
+					tmdb_id NOT IN (${leftOut.join(",")})
 				ORDER BY
 					${orderByField} ASC
 			`
 			const result = await query<StreamingProvider>(sql)
-			return result
+			return foldDuplicateProviders(
+				result,
+				COUNTRY_CODE.test(params.country) ? params.country : "",
+			)
 		} catch (error) {
 			if (
 				error instanceof Error &&

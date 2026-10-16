@@ -15,7 +15,16 @@ export const useCookieChoice = () => {
 		})
 		setConsentGiven(consent)
 	}
-	return { consentGiven, setConsent }
+	return {
+		consentGiven,
+		setConsent,
+		/** The account didn't take the choice; this device keeps it until a retry. */
+		saveFailed: setUserSettings.isError,
+		retry: () => {
+			if (consentGiven === "yes" || consentGiven === "no")
+				setConsent(consentGiven)
+		},
+	}
 }
 
 export const CookieConsent = () => {
