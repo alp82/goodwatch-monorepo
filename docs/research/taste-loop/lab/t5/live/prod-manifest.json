@@ -1,6 +1,6 @@
 {
-  "commit": "0da351cd7d7bd5a0f8bbf122ec7f961dffd13095",
-  "requested_commit": "0da351cd",
+  "commit": "3cba031ffaa33af80abc18701cf363f011185ff0",
+  "requested_commit": "3cba031f",
   "files": {
     "page/routes/taste._index.tsx": {
       "path": "goodwatch-webapp/app/routes/taste._index.tsx",
@@ -12,7 +12,7 @@
     },
     "page/ui/taste/tabs/SidesOfYou.tsx": {
       "path": "goodwatch-webapp/app/ui/taste/tabs/SidesOfYou.tsx",
-      "sha256": "a8a11e3b991be78a4df1690c4409e1bd44a4150690ec46be0a5917309309d0bb"
+      "sha256": "a65c5a40859d29da0d240f491a3014c40b3cecfb59913839a47d411bc0c1e4d2"
     },
     "page/ui/taste/tabs/parts.tsx": {
       "path": "goodwatch-webapp/app/ui/taste/tabs/parts.tsx",
@@ -36,7 +36,7 @@
     },
     "prod/server/taste-portrait/group-names.server.ts": {
       "path": "goodwatch-webapp/app/server/taste-portrait/group-names.server.ts",
-      "sha256": "d8c6cb6bc1ecab51dc8f83736a169676912ed91245e9854dc6e789461c1ad275"
+      "sha256": "fdda99c1754e0c61353e3aafae2b5dde48c3c21e3652f16d7fff4de3a378d0fe"
     },
     "prod/server/taste-portrait/person.server.ts": {
       "path": "goodwatch-webapp/app/server/taste-portrait/person.server.ts",

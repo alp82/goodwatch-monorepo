@@ -6,7 +6,7 @@ import { KEYS, type RatedTitle } from "./person.server"
 import { adjective, capitalize } from "./words.server"
 
 /** A name's length the engine aims for: names past it are taken only when no shorter one describes the group. */
-export const NAME_LENGTH = 28
+export const NAME_LENGTH = 29
 // A title this far below the catalog on an attribute a name claims (z) is not described by that name.
 const AGAINST_NAME = -1
 // A title at least this far above the catalog on a World attribute (z) is that kind of title.

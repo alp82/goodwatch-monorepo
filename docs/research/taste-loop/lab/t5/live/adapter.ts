@@ -70,7 +70,7 @@ export function template(view: any, catalog: any[], scores: Map<number, number>)
   lines.push("What you rate highly, grouped by what it shares, and close to each, what you've barely tried.")
   lines.push(...view.sides.map((s: any) => s.name))
   for (const side of view.sides) {
-    lines.push('In your taste', side.name)
+    lines.push('Fits your taste', side.name)
     for (const key of side.here) {
       named.push(key)
       const score = scores.get(key)

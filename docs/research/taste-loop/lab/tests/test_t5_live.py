@@ -63,11 +63,11 @@ def test_t5_live_template_fields_order_registry_and_numbers(tmp_path):
     assert out['text'].splitlines() == [
         'You love warm stories, and just as much tense mysteries.',
         "What you rate highly, grouped by what it shares, and close to each, what you've barely tried.",
-        'Warm stories', 'Tense mysteries', 'In your taste', 'Warm stories',
+        'Warm stories', 'Tense mysteries', 'Fits your taste', 'Warm stories',
         'Galaxy: One', '7', '1984', '6', 'Other', '7', 'Beyond', '8',
         "Nothing you've barely tried is close to warm stories yet.", 'Warmth', 'Wonder',
         'Open Feel-good + Other worlds in Watch next', 'More of this', 'Nothing more to suggest here yet.',
-        'In your taste', 'Tense mysteries', 'Mystery', '9',
+        'Fits your taste', 'Tense mysteries', 'Mystery', '9',
         "Nothing you've barely tried is close to tense mysteries yet.", 'Tension',
         'More of this', 'Nothing more to suggest here yet.']
     assert out['named_titles'] == [1, 4, 5, 6, 7]
@@ -280,7 +280,7 @@ def test_t5_live_fixed_copy_matches_the_pinned_page():
     here = Path(sides.__file__).resolve().parent
     page = (here / 'page/ui/taste/tabs/SidesOfYou.tsx').read_text()
     adapter = (here / 'adapter.ts').read_text()
-    fixed = {'In your taste': '>In your taste<', 'More of this': '>More of this<',
+    fixed = {'Fits your taste': '>Fits your taste<', 'More of this': '>More of this<',
              'Nothing more to suggest here yet.': '"Nothing more to suggest here yet."',
              "What you rate highly, grouped by what it shares, and close to each,":
                  'What you rate highly, grouped by what it shares, and close to each,',
