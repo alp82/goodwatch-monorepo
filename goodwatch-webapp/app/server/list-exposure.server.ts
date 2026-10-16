@@ -33,14 +33,21 @@ export interface ListExposureInput {
 
 /**
  * Records the first 30 cards of a member's page. Returns its id immediately; no client request and no awaited write.
- * Guests never schedule a write. Serialization and Crate run on the next event-loop turn, after the loader returns.
+ * Only deployed production servers schedule writes; guests never do. Serialization and Crate run on the next event-loop turn, after the loader returns.
  * A failed write (including a missing table before deployment) is logged and never fails the list request.
  */
 export function recordListExposure(
 	ctx: ViewerContext,
 	input: ListExposureInput,
 ): string | null {
-	if (ctx.viewer.kind !== "member") return null
+	// NODE_ENV alone is also production for a local `npm start`. SOURCE_COMMIT is supplied at runtime by
+	// Coolify, not baked into the image or set by the local build. Reuse it without adding a release switch.
+	if (
+		process.env.NODE_ENV !== "production" ||
+		!/^[a-f0-9]{40}$/.test(process.env.SOURCE_COMMIT ?? "") ||
+		ctx.viewer.kind !== "member"
+	)
+		return null
 	if (pending >= MAX_PENDING) {
 		console.error("List exposure dropped: too many pending writes")
 		return null

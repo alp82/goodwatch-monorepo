@@ -37,8 +37,12 @@ const input = (): ListExposureInput => ({
 	})),
 })
 
+const originalNodeEnv = process.env.NODE_ENV
+const originalCommit = process.env.SOURCE_COMMIT
 let rows: Record<string, unknown>[]
 beforeEach(() => {
+	process.env.NODE_ENV = "production"
+	process.env.SOURCE_COMMIT = "a".repeat(40)
 	rows = []
 	setCrateClientForTest({
 		async execute(sql, params = []) {
@@ -57,6 +61,10 @@ beforeEach(() => {
 afterEach(async () => {
 	await turn()
 	setCrateClientForTest(null)
+	if (originalNodeEnv === undefined) delete process.env.NODE_ENV
+	else process.env.NODE_ENV = originalNodeEnv
+	if (originalCommit === undefined) delete process.env.SOURCE_COMMIT
+	else process.env.SOURCE_COMMIT = originalCommit
 })
 
 test("one deferred row holds the first 30 keys, one-based positions and shown matches", async () => {
@@ -246,3 +254,20 @@ test("Personal order exposure metadata stays aligned to returned cards, includin
 	await turn()
 	assert.equal(rows[1].personal_order_fallback_reason, "missing-payload")
 })
+
+for (const [mode, commit] of [
+	["development", "a".repeat(40)],
+	["test", "a".repeat(40)],
+	["production", undefined],
+	["production", ""],
+	["production", "local"],
+] as const) {
+	test(`no exposure writes from ${mode} with ${commit ? "a marker" : "no deployment marker"}`, async () => {
+		process.env.NODE_ENV = mode
+		if (commit === undefined) delete process.env.SOURCE_COMMIT
+		else process.env.SOURCE_COMMIT = commit
+		assert.equal(recordListExposure(ctx, input()), null)
+		await turn()
+		assert.equal(rows.length, 0)
+	})
+}
