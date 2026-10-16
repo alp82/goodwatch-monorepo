@@ -1,9 +1,10 @@
+import "./remix-runtime.test-support.ts"
 import "../tracking-loader.test-support.ts"
 import assert from "node:assert/strict"
 import { afterEach, test } from "node:test"
 import { ConnectDb } from "./connect-db.test-support.ts"
 const { setImportDbForTest } = await import("./store.server.ts")
-import type { TmdbClient } from "./tmdb-client.server.ts"
+import { type TmdbClient, createTmdbClient } from "./tmdb-client.server.ts"
 import { createTmdbConnect } from "./tmdb-connect.server.ts"
 const { createConnectionStore } = await import("./connect-store.server.ts")
 function fixture(keys = { current: "11".repeat(32), previous: "" }) {
@@ -90,6 +91,47 @@ function fixture(keys = { current: "11".repeat(32), previous: "" }) {
 	}
 }
 afterEach(() => setImportDbForTest())
+
+test("start returns a safe JSON error under the production Remix runtime when TMDB fails", async () => {
+	const f = fixture()
+	f.client.createRequest = async () => {
+		throw new Error("request-secret")
+	}
+	const response = await f.request("start")
+	assert.equal(response.status, 503)
+	assert.equal(
+		response.headers.get("Content-Type"),
+		"application/json; charset=utf-8",
+	)
+	assert.equal(response.headers.get("Cache-Control"), "private, no-store")
+	assert.equal(response.headers.get("Referrer-Policy"), "no-referrer")
+	assert.deepEqual(await response.json(), {
+		error: "TMDB Connect is temporarily unavailable. Please try again.",
+	})
+	assert.equal(f.db.connections.size, 0)
+})
+
+test("TMDB application-token rejection reaches the member as JSON without leaking provider text", async () => {
+	const f = fixture()
+	f.client.createRequest = createTmdbClient({
+		appToken: "application-secret",
+		fetch: async () =>
+			new Response(
+				JSON.stringify({
+					success: false,
+					status_code: 7,
+					status_message: "Invalid API key: application-secret",
+				}),
+				{ status: 401 },
+			),
+	}).createRequest
+	const response = await f.request("start")
+	assert.equal(response.status, 401)
+	assert.deepEqual(await response.json(), {
+		error: "TMDB could not complete this connection. Please try again.",
+	})
+	assert.equal(f.db.connections.size, 0)
+})
 
 test("start and return bind approval to the member and browser, then revoke before a normal preview", async () => {
 	const f = fixture()

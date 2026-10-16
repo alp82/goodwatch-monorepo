@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto"
+import { json } from "@remix-run/node"
 import type { ParsedImport } from "../../domain/imports.ts"
 import {
 	CONNECTION_WINDOW_MS,
@@ -63,7 +64,7 @@ export function createPlexConnect(deps: {
 			headers.set("Cache-Control", "private, no-store")
 			headers.set("Referrer-Policy", "no-referrer")
 			const fail = (message: string, status: number) =>
-				Response.json({ error: message }, { status, headers })
+				json({ error: message }, { status, headers })
 			const redirect = (location: string) => {
 				headers.set("Location", location)
 				return new Response(null, { status: 303, headers })

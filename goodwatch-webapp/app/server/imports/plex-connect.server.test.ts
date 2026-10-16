@@ -1,3 +1,4 @@
+import "./remix-runtime.test-support.ts"
 import "../tracking-loader.test-support.ts"
 import assert from "node:assert/strict"
 import { afterEach, test } from "node:test"

@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto"
+import { json } from "@remix-run/node"
 import type { ParsedImport } from "../../domain/imports.ts"
 import {
 	CONNECTION_WINDOW_MS,
@@ -105,7 +106,7 @@ export function createTmdbConnect(deps: {
 			headers.set("Cache-Control", "private, no-store")
 			headers.set("Referrer-Policy", "no-referrer")
 			const fail = (message: string, status: number) =>
-				Response.json({ error: message }, { status, headers })
+				json({ error: message }, { status, headers })
 			if (!userId) return fail("Sign in to connect your TMDB account.", 401)
 			if (request.method !== "POST") return fail("Method not allowed", 405)
 			const origin = deps.origin()
