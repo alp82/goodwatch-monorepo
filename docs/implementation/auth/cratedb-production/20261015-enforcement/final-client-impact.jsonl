@@ -1,0 +1,4 @@
+{"utc": "2026-10-16T00:29:12.096343+00:00", "container": "gk4owk8-20261016T001447", "since": "2026-10-15T23:37:45Z", "crate_query_counts": [{"outcome": "recovered", "error_class": null, "count": 232}]}
+{"utc": "2026-10-16T00:29:12.163098+00:00", "container": "goodwatch-search-b", "since": "2026-10-15T23:37:45Z", "crate_query_counts": []}
+{"utc": "2026-10-16T00:29:12.221224+00:00", "container": "goodwatch-search-a", "since": "2026-10-15T23:37:45Z", "crate_query_counts": []}
+{"utc": "2026-10-16T00:29:13.102241+00:00", "container": "gk4owk8-20261016T001240", "since": "2026-10-15T23:37:45Z", "crate_query_counts": [{"outcome": "recovered", "error_class": null, "count": 344}, {"outcome": "cancelled", "error_class": "BackendTimeoutError", "count": 1}]}

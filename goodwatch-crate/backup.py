@@ -8,10 +8,13 @@
 
 import datetime
 import fcntl
+import os
+import stat
 import sys
 import time
 
 import requests
+from urllib3.exceptions import NewConnectionError
 
 # --- CONFIGURATION ---
 CRATE_HOST = "http://10.0.0.11:4200"
@@ -50,6 +53,15 @@ EXIT_LOCKED = 75
 # ---------------------
 
 SQL_URL = f"{CRATE_HOST}/_sql"
+SQL_URLS = [SQL_URL, "http://10.0.0.12:4200/_sql", "http://10.0.0.13:4200/_sql"]
+
+# The backup user (#562). Set both, or neither: without them the run sends no
+# credentials, which works only while the cluster does not enforce passwords.
+# The password lives in a file that only its owner can read, so it stays out of
+# the crontab and the process list. One trailing newline is ignored.
+USER_VARIABLE = "CRATE_BACKUP_USER"
+PASSWORD_FILE_VARIABLE = "CRATE_BACKUP_PASSWORD_FILE"
+AUTH = None  # (user, password) once configure_auth() has found them
 
 
 class BackupError(Exception):
@@ -62,21 +74,82 @@ def log(message):
     print(f"{now:%Y-%m-%dT%H:%M:%SZ} {message}", flush=True)
 
 
-def run_sql(stmt, timeout=DROP_TIMEOUT):
-    """Executes a SQL statement via HTTP API. Returns None on any error."""
+def read_auth(environ):
+    """Returns (user, password) from the two variables, or None when neither is set."""
+    user = environ.get(USER_VARIABLE, "")
+    path = environ.get(PASSWORD_FILE_VARIABLE, "")
+    if not user and not path:
+        return None
+    if not user or not path:
+        raise BackupError(f"{USER_VARIABLE} and {PASSWORD_FILE_VARIABLE} must be set together.")
     try:
-        response = requests.post(
-            SQL_URL, json={"stmt": stmt}, timeout=(CONNECT_TIMEOUT, timeout)
-        )
-        response.raise_for_status()
-        return response.json()
-    except requests.HTTPError as e:
-        body = e.response.text if e.response is not None else ""
-        log(f"Error executing SQL: {stmt}\n{e}\n{body}")
-        return None
-    except Exception as e:
-        log(f"Error executing SQL: {stmt}\n{e}")
-        return None
+        mode = os.stat(path).st_mode
+        if mode & (stat.S_IRWXG | stat.S_IRWXO):
+            raise BackupError(f"{PASSWORD_FILE_VARIABLE} {path} is readable by group or others. Run chmod 600.")
+        with open(path, encoding="utf-8") as file:
+            password = file.read()
+    except OSError as e:
+        raise BackupError(f"Could not read {PASSWORD_FILE_VARIABLE} {path}: {e.strerror}")
+    password = password[:-1] if password.endswith("\n") else password
+    if not password:
+        raise BackupError(f"{PASSWORD_FILE_VARIABLE} {path} is empty.")
+    # Bytes, so that requests sends UTF-8 rather than Latin-1.
+    return user.encode("utf-8"), password.encode("utf-8")
+
+
+def configure_auth(environ=None):
+    """Reads the backup user for every following run_sql call."""
+    global AUTH
+    AUTH = read_auth(os.environ if environ is None else environ)
+
+
+def not_dispatched(error):
+    """Only connection establishment failures prove a snapshot statement never ran."""
+    pending, seen = [error], set()
+    while pending:
+        current = pending.pop()
+        if id(current) in seen:
+            continue
+        seen.add(id(current))
+        if isinstance(current, (NewConnectionError, requests.ConnectTimeout)):
+            return True
+        pending.extend(e for e in (
+            getattr(current, "__cause__", None), getattr(current, "__context__", None),
+            getattr(current, "reason", None), *getattr(current, "args", ()),
+        ) if isinstance(e, BaseException))
+    return False
+
+
+def run_sql(stmt, timeout=DROP_TIMEOUT):
+    """Fail over reads and unsent writes; never replay an ambiguous CREATE/DROP."""
+    # Keep a single budget across coordinators, including connect time.
+    deadline = time.monotonic() + CONNECT_TIMEOUT + timeout
+    for url in SQL_URLS:
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            break
+        try:
+            response = requests.post(
+                url, json={"stmt": stmt}, auth=AUTH,
+                timeout=(min(CONNECT_TIMEOUT, remaining), min(timeout, remaining)),
+            )
+            response.raise_for_status()
+            return response.json()
+        except Exception as error:
+            # HTTP 401 HBA refusal occurs before dispatch; SQL privilege errors are
+            # JSON and must propagate. Do not log bodies, headers or credentials.
+            response = getattr(error, "response", None)
+            hba_refusal = (response is not None and response.status_code == 401
+                           and response.headers.get("Content-Type", "").startswith("text/plain"))
+            read = stmt.lstrip().upper().startswith("SELECT ")
+            unavailable = isinstance(error, (requests.ConnectionError, requests.Timeout)) or (
+                response is not None and response.status_code in (502, 503, 504))
+            retry = not_dispatched(error) or hba_refusal or (read and unavailable)
+            log(f"SQL {stmt.split()[0]} failed at {url}: {type(error).__name__}; "
+                f"{'trying next coordinator' if retry else 'not replayed; inspect server outcome'}")
+            if not retry:
+                return None
+    return None
 
 
 def acquire_lock():
@@ -185,6 +258,7 @@ def main(now=None):
         return EXIT_LOCKED
 
     try:
+        configure_auth()
         run_backup(now or datetime.datetime.now())
     except BackupError as e:
         log(f"BACKUP FAILED: {e}")

@@ -1,0 +1,5 @@
+Downloading ansible-core (2.3MiB)
+ Downloaded ansible-core
+Installed 9 packages in 409ms
+
+playbook: goodwatch-hq/ansible/cron.yml

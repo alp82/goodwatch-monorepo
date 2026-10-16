@@ -1,0 +1,2 @@
+Original bug reproduced against real crontab in disposable container
+Fixed helper: dry run, apply, exact readback, unrelated-job preservation, idempotency and file permissions PASS

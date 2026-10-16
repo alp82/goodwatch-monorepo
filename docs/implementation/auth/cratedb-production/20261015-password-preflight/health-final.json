@@ -1,0 +1,662 @@
+[
+  {
+    "endpoint": "10.0.0.11",
+    "utc": "2026-10-15T22:31:46.240508+00:00"
+  },
+  {
+    "query": "nodes",
+    "cols": [
+      "id",
+      "name",
+      "version['number']",
+      "heap['used']",
+      "heap['max']"
+    ],
+    "rows": [
+      [
+        "xlclgwGeSHe18p5J4WvfFA",
+        "crate-01",
+        "5.10.16",
+        9498554088,
+        17179869184
+      ],
+      [
+        "r0IgCe17SPOgudkQIGsRQA",
+        "crate-02",
+        "5.10.16",
+        5267951008,
+        17179869184
+      ],
+      [
+        "ch8EXZwrQVmCls79_T_vUg",
+        "crate-03",
+        "5.10.16",
+        10369389232,
+        17179869184
+      ]
+    ]
+  },
+  {
+    "query": "health",
+    "cols": [
+      "health",
+      "count(*)",
+      "sum(missing_shards)",
+      "sum(underreplicated_shards)"
+    ],
+    "rows": [
+      [
+        "GREEN",
+        96,
+        0,
+        0
+      ]
+    ]
+  },
+  {
+    "query": "shards",
+    "cols": [
+      "state",
+      "routing_state",
+      "count(*)"
+    ],
+    "rows": [
+      [
+        "STARTED",
+        "STARTED",
+        962
+      ]
+    ]
+  },
+  {
+    "query": "checks",
+    "cols": [
+      "node_id",
+      "id",
+      "passed"
+    ],
+    "rows": [
+      [
+        "ch8EXZwrQVmCls79_T_vUg",
+        1,
+        true
+      ],
+      [
+        "ch8EXZwrQVmCls79_T_vUg",
+        2,
+        true
+      ],
+      [
+        "ch8EXZwrQVmCls79_T_vUg",
+        3,
+        true
+      ],
+      [
+        "ch8EXZwrQVmCls79_T_vUg",
+        5,
+        true
+      ],
+      [
+        "ch8EXZwrQVmCls79_T_vUg",
+        6,
+        true
+      ],
+      [
+        "ch8EXZwrQVmCls79_T_vUg",
+        7,
+        true
+      ],
+      [
+        "ch8EXZwrQVmCls79_T_vUg",
+        8,
+        true
+      ],
+      [
+        "r0IgCe17SPOgudkQIGsRQA",
+        1,
+        true
+      ],
+      [
+        "r0IgCe17SPOgudkQIGsRQA",
+        2,
+        true
+      ],
+      [
+        "r0IgCe17SPOgudkQIGsRQA",
+        3,
+        true
+      ],
+      [
+        "r0IgCe17SPOgudkQIGsRQA",
+        5,
+        true
+      ],
+      [
+        "r0IgCe17SPOgudkQIGsRQA",
+        6,
+        true
+      ],
+      [
+        "r0IgCe17SPOgudkQIGsRQA",
+        7,
+        true
+      ],
+      [
+        "r0IgCe17SPOgudkQIGsRQA",
+        8,
+        true
+      ],
+      [
+        "xlclgwGeSHe18p5J4WvfFA",
+        1,
+        true
+      ],
+      [
+        "xlclgwGeSHe18p5J4WvfFA",
+        2,
+        true
+      ],
+      [
+        "xlclgwGeSHe18p5J4WvfFA",
+        3,
+        true
+      ],
+      [
+        "xlclgwGeSHe18p5J4WvfFA",
+        5,
+        true
+      ],
+      [
+        "xlclgwGeSHe18p5J4WvfFA",
+        6,
+        true
+      ],
+      [
+        "xlclgwGeSHe18p5J4WvfFA",
+        7,
+        true
+      ],
+      [
+        "xlclgwGeSHe18p5J4WvfFA",
+        8,
+        true
+      ]
+    ]
+  },
+  {
+    "query": "cluster",
+    "cols": [
+      "master_node",
+      "settings['cluster']['routing']['allocation']['enable']",
+      "settings['cluster']['graceful_stop']"
+    ],
+    "rows": [
+      [
+        "r0IgCe17SPOgudkQIGsRQA",
+        "all",
+        {
+          "timeout": "2h",
+          "force": false,
+          "min_availability": "PRIMARIES"
+        }
+      ]
+    ]
+  },
+  {
+    "query": "users",
+    "cols": [
+      "name",
+      "superuser"
+    ],
+    "rows": [
+      [
+        "admin",
+        false
+      ],
+      [
+        "crate",
+        true
+      ]
+    ]
+  },
+  {
+    "endpoint": "10.0.0.12",
+    "utc": "2026-10-15T22:31:46.335567+00:00"
+  },
+  {
+    "query": "nodes",
+    "cols": [
+      "id",
+      "name",
+      "version['number']",
+      "heap['used']",
+      "heap['max']"
+    ],
+    "rows": [
+      [
+        "xlclgwGeSHe18p5J4WvfFA",
+        "crate-01",
+        "5.10.16",
+        9498554088,
+        17179869184
+      ],
+      [
+        "r0IgCe17SPOgudkQIGsRQA",
+        "crate-02",
+        "5.10.16",
+        5267951008,
+        17179869184
+      ],
+      [
+        "ch8EXZwrQVmCls79_T_vUg",
+        "crate-03",
+        "5.10.16",
+        10369389232,
+        17179869184
+      ]
+    ]
+  },
+  {
+    "query": "health",
+    "cols": [
+      "health",
+      "count(*)",
+      "sum(missing_shards)",
+      "sum(underreplicated_shards)"
+    ],
+    "rows": [
+      [
+        "GREEN",
+        96,
+        0,
+        0
+      ]
+    ]
+  },
+  {
+    "query": "shards",
+    "cols": [
+      "state",
+      "routing_state",
+      "count(*)"
+    ],
+    "rows": [
+      [
+        "STARTED",
+        "STARTED",
+        962
+      ]
+    ]
+  },
+  {
+    "query": "checks",
+    "cols": [
+      "node_id",
+      "id",
+      "passed"
+    ],
+    "rows": [
+      [
+        "ch8EXZwrQVmCls79_T_vUg",
+        1,
+        true
+      ],
+      [
+        "ch8EXZwrQVmCls79_T_vUg",
+        2,
+        true
+      ],
+      [
+        "ch8EXZwrQVmCls79_T_vUg",
+        3,
+        true
+      ],
+      [
+        "ch8EXZwrQVmCls79_T_vUg",
+        5,
+        true
+      ],
+      [
+        "ch8EXZwrQVmCls79_T_vUg",
+        6,
+        true
+      ],
+      [
+        "ch8EXZwrQVmCls79_T_vUg",
+        7,
+        true
+      ],
+      [
+        "ch8EXZwrQVmCls79_T_vUg",
+        8,
+        true
+      ],
+      [
+        "r0IgCe17SPOgudkQIGsRQA",
+        1,
+        true
+      ],
+      [
+        "r0IgCe17SPOgudkQIGsRQA",
+        2,
+        true
+      ],
+      [
+        "r0IgCe17SPOgudkQIGsRQA",
+        3,
+        true
+      ],
+      [
+        "r0IgCe17SPOgudkQIGsRQA",
+        5,
+        true
+      ],
+      [
+        "r0IgCe17SPOgudkQIGsRQA",
+        6,
+        true
+      ],
+      [
+        "r0IgCe17SPOgudkQIGsRQA",
+        7,
+        true
+      ],
+      [
+        "r0IgCe17SPOgudkQIGsRQA",
+        8,
+        true
+      ],
+      [
+        "xlclgwGeSHe18p5J4WvfFA",
+        1,
+        true
+      ],
+      [
+        "xlclgwGeSHe18p5J4WvfFA",
+        2,
+        true
+      ],
+      [
+        "xlclgwGeSHe18p5J4WvfFA",
+        3,
+        true
+      ],
+      [
+        "xlclgwGeSHe18p5J4WvfFA",
+        5,
+        true
+      ],
+      [
+        "xlclgwGeSHe18p5J4WvfFA",
+        6,
+        true
+      ],
+      [
+        "xlclgwGeSHe18p5J4WvfFA",
+        7,
+        true
+      ],
+      [
+        "xlclgwGeSHe18p5J4WvfFA",
+        8,
+        true
+      ]
+    ]
+  },
+  {
+    "query": "cluster",
+    "cols": [
+      "master_node",
+      "settings['cluster']['routing']['allocation']['enable']",
+      "settings['cluster']['graceful_stop']"
+    ],
+    "rows": [
+      [
+        "r0IgCe17SPOgudkQIGsRQA",
+        "all",
+        {
+          "min_availability": "PRIMARIES",
+          "force": false,
+          "timeout": "2h"
+        }
+      ]
+    ]
+  },
+  {
+    "query": "users",
+    "cols": [
+      "name",
+      "superuser"
+    ],
+    "rows": [
+      [
+        "admin",
+        false
+      ],
+      [
+        "crate",
+        true
+      ]
+    ]
+  },
+  {
+    "endpoint": "10.0.0.13",
+    "utc": "2026-10-15T22:31:46.430428+00:00"
+  },
+  {
+    "query": "nodes",
+    "cols": [
+      "id",
+      "name",
+      "version['number']",
+      "heap['used']",
+      "heap['max']"
+    ],
+    "rows": [
+      [
+        "xlclgwGeSHe18p5J4WvfFA",
+        "crate-01",
+        "5.10.16",
+        9498554088,
+        17179869184
+      ],
+      [
+        "r0IgCe17SPOgudkQIGsRQA",
+        "crate-02",
+        "5.10.16",
+        5267951008,
+        17179869184
+      ],
+      [
+        "ch8EXZwrQVmCls79_T_vUg",
+        "crate-03",
+        "5.10.16",
+        10369389232,
+        17179869184
+      ]
+    ]
+  },
+  {
+    "query": "health",
+    "cols": [
+      "health",
+      "count(*)",
+      "sum(missing_shards)",
+      "sum(underreplicated_shards)"
+    ],
+    "rows": [
+      [
+        "GREEN",
+        96,
+        0,
+        0
+      ]
+    ]
+  },
+  {
+    "query": "shards",
+    "cols": [
+      "state",
+      "routing_state",
+      "count(*)"
+    ],
+    "rows": [
+      [
+        "STARTED",
+        "STARTED",
+        962
+      ]
+    ]
+  },
+  {
+    "query": "checks",
+    "cols": [
+      "node_id",
+      "id",
+      "passed"
+    ],
+    "rows": [
+      [
+        "ch8EXZwrQVmCls79_T_vUg",
+        1,
+        true
+      ],
+      [
+        "ch8EXZwrQVmCls79_T_vUg",
+        2,
+        true
+      ],
+      [
+        "ch8EXZwrQVmCls79_T_vUg",
+        3,
+        true
+      ],
+      [
+        "ch8EXZwrQVmCls79_T_vUg",
+        5,
+        true
+      ],
+      [
+        "ch8EXZwrQVmCls79_T_vUg",
+        6,
+        true
+      ],
+      [
+        "ch8EXZwrQVmCls79_T_vUg",
+        7,
+        true
+      ],
+      [
+        "ch8EXZwrQVmCls79_T_vUg",
+        8,
+        true
+      ],
+      [
+        "r0IgCe17SPOgudkQIGsRQA",
+        1,
+        true
+      ],
+      [
+        "r0IgCe17SPOgudkQIGsRQA",
+        2,
+        true
+      ],
+      [
+        "r0IgCe17SPOgudkQIGsRQA",
+        3,
+        true
+      ],
+      [
+        "r0IgCe17SPOgudkQIGsRQA",
+        5,
+        true
+      ],
+      [
+        "r0IgCe17SPOgudkQIGsRQA",
+        6,
+        true
+      ],
+      [
+        "r0IgCe17SPOgudkQIGsRQA",
+        7,
+        true
+      ],
+      [
+        "r0IgCe17SPOgudkQIGsRQA",
+        8,
+        true
+      ],
+      [
+        "xlclgwGeSHe18p5J4WvfFA",
+        1,
+        true
+      ],
+      [
+        "xlclgwGeSHe18p5J4WvfFA",
+        2,
+        true
+      ],
+      [
+        "xlclgwGeSHe18p5J4WvfFA",
+        3,
+        true
+      ],
+      [
+        "xlclgwGeSHe18p5J4WvfFA",
+        5,
+        true
+      ],
+      [
+        "xlclgwGeSHe18p5J4WvfFA",
+        6,
+        true
+      ],
+      [
+        "xlclgwGeSHe18p5J4WvfFA",
+        7,
+        true
+      ],
+      [
+        "xlclgwGeSHe18p5J4WvfFA",
+        8,
+        true
+      ]
+    ]
+  },
+  {
+    "query": "cluster",
+    "cols": [
+      "master_node",
+      "settings['cluster']['routing']['allocation']['enable']",
+      "settings['cluster']['graceful_stop']"
+    ],
+    "rows": [
+      [
+        "r0IgCe17SPOgudkQIGsRQA",
+        "all",
+        {
+          "force": false,
+          "timeout": "2h",
+          "min_availability": "PRIMARIES"
+        }
+      ]
+    ]
+  },
+  {
+    "query": "users",
+    "cols": [
+      "name",
+      "superuser"
+    ],
+    "rows": [
+      [
+        "admin",
+        false
+      ],
+      [
+        "crate",
+        true
+      ]
+    ]
+  }
+]

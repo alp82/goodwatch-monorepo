@@ -1,0 +1,7 @@
+{"utc": "2026-10-16T00:28:35.345893+00:00", "container": "gk4owk8-20261016T001447", "image": "ghcr.io/alp82/goodwatch-webapp:3b91631cc85d1d69e910329f4ed3827cb55121b1", "started": "2026-10-16T00:15:18.254267603Z", "health": "healthy", "restart_count": 0}
+{"utc": "2026-10-16T00:28:35.395075+00:00", "container": "goodwatch-search-b", "image": "ghcr.io/alp82/goodwatch-webapp:3b52c297d2c04b6332cc6379709b03cc425ec4b4", "started": "2026-10-15T22:41:40.521171313Z", "health": "healthy", "restart_count": 0}
+{"utc": "2026-10-16T00:28:35.443206+00:00", "container": "goodwatch-search-a", "image": "ghcr.io/alp82/goodwatch-webapp:3b52c297d2c04b6332cc6379709b03cc425ec4b4", "started": "2026-10-15T22:40:39.925164428Z", "health": "healthy", "restart_count": 0}
+{"utc": "2026-10-16T00:28:36.126772+00:00", "container": "gk4owk8-20261016T001240", "image": "ghcr.io/alp82/goodwatch-webapp:3b91631cc85d1d69e910329f4ed3827cb55121b1", "started": "2026-10-16T00:14:26.618857128Z", "health": "healthy", "restart_count": 0}
+{"monitor": 16, "status": 1, "heartbeat_utc": "2026-10-16 00:28:00.411", "observed_utc": "2026-10-16T00:28:37.373933+00:00"}
+{"monitor": 17, "status": 1, "heartbeat_utc": "2026-10-16 00:27:57.506", "observed_utc": "2026-10-16T00:28:37.374066+00:00"}
+{"monitor": 18, "status": 1, "heartbeat_utc": "2026-10-16 00:27:56.957", "observed_utc": "2026-10-16T00:28:37.374128+00:00"}

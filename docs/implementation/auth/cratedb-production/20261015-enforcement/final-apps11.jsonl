@@ -1,0 +1,16 @@
+{"host": "10.0.0.11:4200", "case": "missing", "ok": true, "actual": "HTTP 401", "container": "gk4owk8-20261016T001240", "source_host": 21}
+{"host": "10.0.0.11:4200", "case": "crate wrong", "ok": true, "actual": "HTTP 401", "container": "gk4owk8-20261016T001240", "source_host": 21}
+{"host": "10.0.0.11:4200", "case": "client wrong", "ok": true, "actual": "HTTP 401", "container": "gk4owk8-20261016T001240", "source_host": 21}
+{"host": "10.0.0.11:4200", "case": "supplied", "ok": true, "actual": "admin", "container": "gk4owk8-20261016T001240", "source_host": 21}
+{"host": "10.0.0.11:4200", "case": "missing", "ok": true, "actual": "HTTP 401", "container": "gk4owk8-20261016T001447", "source_host": 20}
+{"host": "10.0.0.11:4200", "case": "crate wrong", "ok": true, "actual": "HTTP 401", "container": "gk4owk8-20261016T001447", "source_host": 20}
+{"host": "10.0.0.11:4200", "case": "client wrong", "ok": true, "actual": "HTTP 401", "container": "gk4owk8-20261016T001447", "source_host": 20}
+{"host": "10.0.0.11:4200", "case": "supplied", "ok": true, "actual": "admin", "container": "gk4owk8-20261016T001447", "source_host": 20}
+{"host": "10.0.0.11:4200", "case": "missing", "ok": true, "actual": "HTTP 401", "container": "goodwatch-search-b", "source_host": 20}
+{"host": "10.0.0.11:4200", "case": "crate wrong", "ok": true, "actual": "HTTP 401", "container": "goodwatch-search-b", "source_host": 20}
+{"host": "10.0.0.11:4200", "case": "client wrong", "ok": true, "actual": "HTTP 401", "container": "goodwatch-search-b", "source_host": 20}
+{"host": "10.0.0.11:4200", "case": "supplied", "ok": true, "actual": "goodwatch_search", "container": "goodwatch-search-b", "source_host": 20}
+{"host": "10.0.0.11:4200", "case": "missing", "ok": true, "actual": "HTTP 401", "container": "goodwatch-search-a", "source_host": 20}
+{"host": "10.0.0.11:4200", "case": "crate wrong", "ok": true, "actual": "HTTP 401", "container": "goodwatch-search-a", "source_host": 20}
+{"host": "10.0.0.11:4200", "case": "client wrong", "ok": true, "actual": "HTTP 401", "container": "goodwatch-search-a", "source_host": 20}
+{"host": "10.0.0.11:4200", "case": "supplied", "ok": true, "actual": "goodwatch_search", "container": "goodwatch-search-a", "source_host": 20}

@@ -1,0 +1,956 @@
+[
+  {
+    "endpoint": "10.0.0.11",
+    "utc": "2026-10-15T22:17:12.866604+00:00"
+  },
+  {
+    "query": "nodes",
+    "cols": [
+      "id",
+      "name",
+      "version['number']",
+      "heap['used']",
+      "heap['max']"
+    ],
+    "rows": [
+      [
+        "xlclgwGeSHe18p5J4WvfFA",
+        "crate-01",
+        "5.10.16",
+        1411046056,
+        17179869184
+      ],
+      [
+        "r0IgCe17SPOgudkQIGsRQA",
+        "crate-02",
+        "5.10.16",
+        2136984912,
+        17179869184
+      ],
+      [
+        "ch8EXZwrQVmCls79_T_vUg",
+        "crate-03",
+        "5.10.16",
+        4123161576,
+        17179869184
+      ]
+    ]
+  },
+  {
+    "query": "health",
+    "cols": [
+      "health",
+      "count(*)",
+      "sum(missing_shards)",
+      "sum(underreplicated_shards)"
+    ],
+    "rows": [
+      [
+        "GREEN",
+        96,
+        0,
+        0
+      ]
+    ]
+  },
+  {
+    "query": "shards",
+    "cols": [
+      "state",
+      "routing_state",
+      "count(*)"
+    ],
+    "rows": [
+      [
+        "STARTED",
+        "STARTED",
+        962
+      ]
+    ]
+  },
+  {
+    "query": "checks",
+    "cols": [
+      "node_id",
+      "id",
+      "passed"
+    ],
+    "rows": [
+      [
+        "ch8EXZwrQVmCls79_T_vUg",
+        1,
+        true
+      ],
+      [
+        "ch8EXZwrQVmCls79_T_vUg",
+        2,
+        true
+      ],
+      [
+        "ch8EXZwrQVmCls79_T_vUg",
+        3,
+        true
+      ],
+      [
+        "ch8EXZwrQVmCls79_T_vUg",
+        5,
+        true
+      ],
+      [
+        "ch8EXZwrQVmCls79_T_vUg",
+        6,
+        true
+      ],
+      [
+        "ch8EXZwrQVmCls79_T_vUg",
+        7,
+        true
+      ],
+      [
+        "ch8EXZwrQVmCls79_T_vUg",
+        8,
+        true
+      ],
+      [
+        "r0IgCe17SPOgudkQIGsRQA",
+        1,
+        true
+      ],
+      [
+        "r0IgCe17SPOgudkQIGsRQA",
+        2,
+        true
+      ],
+      [
+        "r0IgCe17SPOgudkQIGsRQA",
+        3,
+        true
+      ],
+      [
+        "r0IgCe17SPOgudkQIGsRQA",
+        5,
+        true
+      ],
+      [
+        "r0IgCe17SPOgudkQIGsRQA",
+        6,
+        true
+      ],
+      [
+        "r0IgCe17SPOgudkQIGsRQA",
+        7,
+        true
+      ],
+      [
+        "r0IgCe17SPOgudkQIGsRQA",
+        8,
+        true
+      ],
+      [
+        "xlclgwGeSHe18p5J4WvfFA",
+        1,
+        true
+      ],
+      [
+        "xlclgwGeSHe18p5J4WvfFA",
+        2,
+        true
+      ],
+      [
+        "xlclgwGeSHe18p5J4WvfFA",
+        3,
+        true
+      ],
+      [
+        "xlclgwGeSHe18p5J4WvfFA",
+        5,
+        true
+      ],
+      [
+        "xlclgwGeSHe18p5J4WvfFA",
+        6,
+        true
+      ],
+      [
+        "xlclgwGeSHe18p5J4WvfFA",
+        7,
+        true
+      ],
+      [
+        "xlclgwGeSHe18p5J4WvfFA",
+        8,
+        true
+      ]
+    ]
+  },
+  {
+    "query": "cluster",
+    "cols": [
+      "master_node",
+      "settings['cluster']['routing']['allocation']['enable']",
+      "settings['cluster']['graceful_stop']"
+    ],
+    "rows": [
+      [
+        "r0IgCe17SPOgudkQIGsRQA",
+        "all",
+        {
+          "timeout": "2h",
+          "force": false,
+          "min_availability": "PRIMARIES"
+        }
+      ]
+    ]
+  },
+  {
+    "query": "users",
+    "cols": [
+      "name",
+      "superuser"
+    ],
+    "rows": [
+      [
+        "admin",
+        false
+      ],
+      [
+        "crate",
+        true
+      ]
+    ]
+  },
+  {
+    "query": "operations",
+    "cols": [
+      "node['name']",
+      "count(*)",
+      "min(started)",
+      "max(started)"
+    ],
+    "rows": [
+      [
+        "crate-02",
+        16,
+        1792036869287,
+        1792102632977
+      ],
+      [
+        "crate-03",
+        37,
+        1792096632209,
+        1792102632976
+      ],
+      [
+        "crate-01",
+        3,
+        1792102632974,
+        1792102632974
+      ]
+    ]
+  },
+  {
+    "query": "old_operations",
+    "error": "HTTPError"
+  },
+  {
+    "query": "old_jobs",
+    "error": "HTTPError"
+  },
+  {
+    "query": "schemas",
+    "cols": [
+      "table_schema"
+    ],
+    "rows": [
+      [
+        "blob"
+      ],
+      [
+        "information_schema"
+      ],
+      [
+        "backup_20260925_stale_child_rows"
+      ],
+      [
+        "pg_catalog"
+      ],
+      [
+        "backup_20260925_deleted_titles"
+      ],
+      [
+        "doc"
+      ],
+      [
+        "sys"
+      ]
+    ]
+  },
+  {
+    "query": "auth_tables",
+    "cols": [
+      "table_name"
+    ],
+    "rows": []
+  },
+  {
+    "query": "snapshots",
+    "cols": [
+      "name",
+      "state",
+      "finished"
+    ],
+    "rows": [
+      [
+        "hourly_20261015_220501",
+        "SUCCESS",
+        1792101911505
+      ],
+      [
+        "hourly_20261015_210502",
+        "SUCCESS",
+        1792098311950
+      ],
+      [
+        "pre_auth_547_20261015190551",
+        "SUCCESS",
+        1792091376723
+      ]
+    ]
+  },
+  {
+    "endpoint": "10.0.0.12",
+    "utc": "2026-10-15T22:17:33.601670+00:00"
+  },
+  {
+    "query": "nodes",
+    "cols": [
+      "id",
+      "name",
+      "version['number']",
+      "heap['used']",
+      "heap['max']"
+    ],
+    "rows": [
+      [
+        "xlclgwGeSHe18p5J4WvfFA",
+        "crate-01",
+        "5.10.16",
+        8314870432,
+        17179869184
+      ],
+      [
+        "r0IgCe17SPOgudkQIGsRQA",
+        "crate-02",
+        "5.10.16",
+        9200192848,
+        17179869184
+      ],
+      [
+        "ch8EXZwrQVmCls79_T_vUg",
+        "crate-03",
+        "5.10.16",
+        10691441640,
+        17179869184
+      ]
+    ]
+  },
+  {
+    "query": "health",
+    "cols": [
+      "health",
+      "count(*)",
+      "sum(missing_shards)",
+      "sum(underreplicated_shards)"
+    ],
+    "rows": [
+      [
+        "GREEN",
+        96,
+        0,
+        0
+      ]
+    ]
+  },
+  {
+    "query": "shards",
+    "cols": [
+      "state",
+      "routing_state",
+      "count(*)"
+    ],
+    "rows": [
+      [
+        "STARTED",
+        "STARTED",
+        962
+      ]
+    ]
+  },
+  {
+    "query": "checks",
+    "cols": [
+      "node_id",
+      "id",
+      "passed"
+    ],
+    "rows": [
+      [
+        "ch8EXZwrQVmCls79_T_vUg",
+        1,
+        true
+      ],
+      [
+        "ch8EXZwrQVmCls79_T_vUg",
+        2,
+        true
+      ],
+      [
+        "ch8EXZwrQVmCls79_T_vUg",
+        3,
+        true
+      ],
+      [
+        "ch8EXZwrQVmCls79_T_vUg",
+        5,
+        true
+      ],
+      [
+        "ch8EXZwrQVmCls79_T_vUg",
+        6,
+        true
+      ],
+      [
+        "ch8EXZwrQVmCls79_T_vUg",
+        7,
+        true
+      ],
+      [
+        "ch8EXZwrQVmCls79_T_vUg",
+        8,
+        true
+      ],
+      [
+        "r0IgCe17SPOgudkQIGsRQA",
+        1,
+        true
+      ],
+      [
+        "r0IgCe17SPOgudkQIGsRQA",
+        2,
+        true
+      ],
+      [
+        "r0IgCe17SPOgudkQIGsRQA",
+        3,
+        true
+      ],
+      [
+        "r0IgCe17SPOgudkQIGsRQA",
+        5,
+        true
+      ],
+      [
+        "r0IgCe17SPOgudkQIGsRQA",
+        6,
+        true
+      ],
+      [
+        "r0IgCe17SPOgudkQIGsRQA",
+        7,
+        true
+      ],
+      [
+        "r0IgCe17SPOgudkQIGsRQA",
+        8,
+        true
+      ],
+      [
+        "xlclgwGeSHe18p5J4WvfFA",
+        1,
+        true
+      ],
+      [
+        "xlclgwGeSHe18p5J4WvfFA",
+        2,
+        true
+      ],
+      [
+        "xlclgwGeSHe18p5J4WvfFA",
+        3,
+        true
+      ],
+      [
+        "xlclgwGeSHe18p5J4WvfFA",
+        5,
+        true
+      ],
+      [
+        "xlclgwGeSHe18p5J4WvfFA",
+        6,
+        true
+      ],
+      [
+        "xlclgwGeSHe18p5J4WvfFA",
+        7,
+        true
+      ],
+      [
+        "xlclgwGeSHe18p5J4WvfFA",
+        8,
+        true
+      ]
+    ]
+  },
+  {
+    "query": "cluster",
+    "cols": [
+      "master_node",
+      "settings['cluster']['routing']['allocation']['enable']",
+      "settings['cluster']['graceful_stop']"
+    ],
+    "rows": [
+      [
+        "r0IgCe17SPOgudkQIGsRQA",
+        "all",
+        {
+          "min_availability": "PRIMARIES",
+          "force": false,
+          "timeout": "2h"
+        }
+      ]
+    ]
+  },
+  {
+    "query": "users",
+    "cols": [
+      "name",
+      "superuser"
+    ],
+    "rows": [
+      [
+        "admin",
+        false
+      ],
+      [
+        "crate",
+        true
+      ]
+    ]
+  },
+  {
+    "query": "operations",
+    "cols": [
+      "node['name']",
+      "count(*)",
+      "min(started)",
+      "max(started)"
+    ],
+    "rows": [
+      [
+        "crate-02",
+        16,
+        1792036869287,
+        1792102653709
+      ],
+      [
+        "crate-03",
+        36,
+        1792096632209,
+        1792102653709
+      ],
+      [
+        "crate-01",
+        2,
+        1792102653710,
+        1792102653710
+      ]
+    ]
+  },
+  {
+    "query": "old_operations",
+    "error": "HTTPError"
+  },
+  {
+    "query": "old_jobs",
+    "error": "HTTPError"
+  },
+  {
+    "query": "schemas",
+    "cols": [
+      "table_schema"
+    ],
+    "rows": [
+      [
+        "blob"
+      ],
+      [
+        "information_schema"
+      ],
+      [
+        "backup_20260925_stale_child_rows"
+      ],
+      [
+        "pg_catalog"
+      ],
+      [
+        "backup_20260925_deleted_titles"
+      ],
+      [
+        "doc"
+      ],
+      [
+        "sys"
+      ]
+    ]
+  },
+  {
+    "query": "auth_tables",
+    "cols": [
+      "table_name"
+    ],
+    "rows": []
+  },
+  {
+    "query": "snapshots",
+    "cols": [
+      "name",
+      "state",
+      "finished"
+    ],
+    "rows": [
+      [
+        "hourly_20261015_220501",
+        "SUCCESS",
+        1792101911505
+      ],
+      [
+        "hourly_20261015_210502",
+        "SUCCESS",
+        1792098311950
+      ],
+      [
+        "pre_auth_547_20261015190551",
+        "SUCCESS",
+        1792091376723
+      ]
+    ]
+  },
+  {
+    "endpoint": "10.0.0.13",
+    "utc": "2026-10-15T22:17:53.996490+00:00"
+  },
+  {
+    "query": "nodes",
+    "cols": [
+      "id",
+      "name",
+      "version['number']",
+      "heap['used']",
+      "heap['max']"
+    ],
+    "rows": [
+      [
+        "xlclgwGeSHe18p5J4WvfFA",
+        "crate-01",
+        "5.10.16",
+        3063770656,
+        17179869184
+      ],
+      [
+        "r0IgCe17SPOgudkQIGsRQA",
+        "crate-02",
+        "5.10.16",
+        5650096528,
+        17179869184
+      ],
+      [
+        "ch8EXZwrQVmCls79_T_vUg",
+        "crate-03",
+        "5.10.16",
+        6346386072,
+        17179869184
+      ]
+    ]
+  },
+  {
+    "query": "health",
+    "cols": [
+      "health",
+      "count(*)",
+      "sum(missing_shards)",
+      "sum(underreplicated_shards)"
+    ],
+    "rows": [
+      [
+        "GREEN",
+        96,
+        0,
+        0
+      ]
+    ]
+  },
+  {
+    "query": "shards",
+    "cols": [
+      "state",
+      "routing_state",
+      "count(*)"
+    ],
+    "rows": [
+      [
+        "STARTED",
+        "STARTED",
+        962
+      ]
+    ]
+  },
+  {
+    "query": "checks",
+    "cols": [
+      "node_id",
+      "id",
+      "passed"
+    ],
+    "rows": [
+      [
+        "ch8EXZwrQVmCls79_T_vUg",
+        1,
+        true
+      ],
+      [
+        "ch8EXZwrQVmCls79_T_vUg",
+        2,
+        true
+      ],
+      [
+        "ch8EXZwrQVmCls79_T_vUg",
+        3,
+        true
+      ],
+      [
+        "ch8EXZwrQVmCls79_T_vUg",
+        5,
+        true
+      ],
+      [
+        "ch8EXZwrQVmCls79_T_vUg",
+        6,
+        true
+      ],
+      [
+        "ch8EXZwrQVmCls79_T_vUg",
+        7,
+        true
+      ],
+      [
+        "ch8EXZwrQVmCls79_T_vUg",
+        8,
+        true
+      ],
+      [
+        "r0IgCe17SPOgudkQIGsRQA",
+        1,
+        true
+      ],
+      [
+        "r0IgCe17SPOgudkQIGsRQA",
+        2,
+        true
+      ],
+      [
+        "r0IgCe17SPOgudkQIGsRQA",
+        3,
+        true
+      ],
+      [
+        "r0IgCe17SPOgudkQIGsRQA",
+        5,
+        true
+      ],
+      [
+        "r0IgCe17SPOgudkQIGsRQA",
+        6,
+        true
+      ],
+      [
+        "r0IgCe17SPOgudkQIGsRQA",
+        7,
+        true
+      ],
+      [
+        "r0IgCe17SPOgudkQIGsRQA",
+        8,
+        true
+      ],
+      [
+        "xlclgwGeSHe18p5J4WvfFA",
+        1,
+        true
+      ],
+      [
+        "xlclgwGeSHe18p5J4WvfFA",
+        2,
+        true
+      ],
+      [
+        "xlclgwGeSHe18p5J4WvfFA",
+        3,
+        true
+      ],
+      [
+        "xlclgwGeSHe18p5J4WvfFA",
+        5,
+        true
+      ],
+      [
+        "xlclgwGeSHe18p5J4WvfFA",
+        6,
+        true
+      ],
+      [
+        "xlclgwGeSHe18p5J4WvfFA",
+        7,
+        true
+      ],
+      [
+        "xlclgwGeSHe18p5J4WvfFA",
+        8,
+        true
+      ]
+    ]
+  },
+  {
+    "query": "cluster",
+    "cols": [
+      "master_node",
+      "settings['cluster']['routing']['allocation']['enable']",
+      "settings['cluster']['graceful_stop']"
+    ],
+    "rows": [
+      [
+        "r0IgCe17SPOgudkQIGsRQA",
+        "all",
+        {
+          "force": false,
+          "timeout": "2h",
+          "min_availability": "PRIMARIES"
+        }
+      ]
+    ]
+  },
+  {
+    "query": "users",
+    "cols": [
+      "name",
+      "superuser"
+    ],
+    "rows": [
+      [
+        "admin",
+        false
+      ],
+      [
+        "crate",
+        true
+      ]
+    ]
+  },
+  {
+    "query": "operations",
+    "cols": [
+      "node['name']",
+      "count(*)",
+      "min(started)",
+      "max(started)"
+    ],
+    "rows": [
+      [
+        "crate-02",
+        25,
+        1792036869287,
+        1792102674108
+      ],
+      [
+        "crate-03",
+        62,
+        1792096632209,
+        1792102674105
+      ],
+      [
+        "crate-01",
+        23,
+        1792102674101,
+        1792102674107
+      ]
+    ]
+  },
+  {
+    "query": "old_operations",
+    "error": "HTTPError"
+  },
+  {
+    "query": "old_jobs",
+    "error": "HTTPError"
+  },
+  {
+    "query": "schemas",
+    "cols": [
+      "table_schema"
+    ],
+    "rows": [
+      [
+        "blob"
+      ],
+      [
+        "information_schema"
+      ],
+      [
+        "backup_20260925_stale_child_rows"
+      ],
+      [
+        "pg_catalog"
+      ],
+      [
+        "backup_20260925_deleted_titles"
+      ],
+      [
+        "doc"
+      ],
+      [
+        "sys"
+      ]
+    ]
+  },
+  {
+    "query": "auth_tables",
+    "cols": [
+      "table_name"
+    ],
+    "rows": []
+  },
+  {
+    "query": "snapshots",
+    "cols": [
+      "name",
+      "state",
+      "finished"
+    ],
+    "rows": [
+      [
+        "hourly_20261015_220501",
+        "SUCCESS",
+        1792101911505
+      ],
+      [
+        "hourly_20261015_210502",
+        "SUCCESS",
+        1792098311950
+      ],
+      [
+        "pre_auth_547_20261015190551",
+        "SUCCESS",
+        1792091376723
+      ]
+    ]
+  }
+]

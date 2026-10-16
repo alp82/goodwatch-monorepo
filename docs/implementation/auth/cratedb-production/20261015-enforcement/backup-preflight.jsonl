@@ -1,0 +1,3 @@
+{"source_sha256": "0b65e8241c8b4474e6efaabfc6f15573caf60950ca2989c333d9e21208ff77b1", "coordinators": ["http://10.0.0.11:4200/_sql", "http://10.0.0.12:4200/_sql", "http://10.0.0.13:4200/_sql"], "actual_cron_credential_present": true}
+{"crate01_excluded_identity": [["goodwatch_backup"]], "passed": true}
+{"crate01_excluded_snapshot_read": [["hourly_20261015_230501", "SUCCESS"]], "passed": true}

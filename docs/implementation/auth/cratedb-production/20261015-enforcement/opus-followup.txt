@@ -1,0 +1,35 @@
+I can't approve yet. The four earlier blockers look resolved in the runbook. Two concrete blockers remain, and both are in the executor scripts, not the prose.
+
+## Blocker 1: `drain.py` doesn't check that automatic restart is off
+
+The runbook runs `docker update --restart=no crate-02` before the decommission. `drain.py` neither runs that command nor checks the restart policy. This matters because the normal outcome of `ALTER CLUSTER DECOMMISSION` is that the CrateDB process shuts itself down. If the policy is still `always`, Docker restarts the old container, with HBA off and the old argv, while the decommission is still in progress. The zero-primary gate doesn't catch that, and the poll loop may never see `Running == false`.
+
+**Fix:** Before `drain.py` changes allocation, have it inspect the target remotely and assert `HostConfig.RestartPolicy.Name == 'no'`. Record that check in the receipt. Don't depend on a separate manual step.
+
+## Blocker 2: Running the gate before allocation `all` can block the approved rollback
+
+Running the gate while allocation is `primaries` is a reasonable choice. The rejoined node holds no shards, so a rollback decommission is fast. But during that window the cluster is YELLOW, because crate-02's replicas aren't allocated. Runbook step 1 requires GREEN before any allocation change, and `drain.py` calls `health(observer)` first. If `health()` enforces GREEN, the expressly authorized first-node rollback stops at its own precheck.
+
+**Fix:** Before starting crate-02, add a reviewed rollback precheck. It must require all of the following:
+
+- Zero missing shards.
+- Zero shards of any kind on the target.
+- `force = false`.
+- Three nodes present.
+
+It must explicitly allow underreplication. If you don't add it, decide now that a rollback first restores allocation `all` and waits for GREEN. That costs the advantage you're running the gate early for. Either way, write the rollback precheck down now, not during an incident.
+
+## Checks to run before starting (not blockers)
+
+- **`docker stop --timeout=-1` support:** On each target, confirm that the installed Docker CLI accepts `--timeout` and that the daemon treats `-1` as unlimited. If the CLI rejects the flag, `systemd-run` still returns 0. The loop then waits 15 minutes and reports "LEFT RUNNING" when nothing is running. Have the poll also read the unit's `ActiveState` and `Result`, and report a failed unit at once.
+- **Unit names:** Make the unit name unique for each attempt, for example with a timestamp suffix. A failed transient unit stays loaded, so a rollback that reuses `gw-crate-stop-562-12` fails its `returncode` assertion. The runbook also says `-02` where the script uses `-12`.
+- **`rejoin.py` command check:** The script asserts only the HBA-enabled flag and the `'#'` list element. Compare the full `Cmd` with the staged reviewed render, and check with `any('#' in a for a in Cmd)`. Removing the folded comment re-enables every flag that came after it. Confirm that the newly effective flags are exactly the HBA entries.
+- **`rejoin.py` mounts check:** Compare `Mounts` after sorting by destination. Otherwise, a reordered list after recreation causes a false stop while an HBA-enabled node is already running.
+- **Step 7 negative cases:** The step 7 verifier example has no `CRATE_VERIFY_MODE`. Confirm that the mode you run requires 401 for both the missing-password and wrong-password cases against `10.0.0.12`.
+- **`pg-gate.py`:**
+  - Confirm that `endpoint` is set to `10.0.0.12`.
+  - Add a missing-password case for `goodwatch_readonly`. The current missing case uses `crate`.
+  - Run with `PGPASSWORD` unset and `passfile=/dev/null`.
+- **Stale backup note:** The document still says the 00:05 credential-bearing backup hasn't been observed. Record the latest scheduled run result before the drain. Also make sure the drain doesn't overlap the next `:05` snapshot.
+
+Once blockers 1 and 2 are fixed, I'd approve starting crate-02 under the owner's continuation.

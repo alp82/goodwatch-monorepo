@@ -1,0 +1,11 @@
+{"utc": "2026-10-15T23:53:32.791586+00:00", "host": 11, "gate": {"admin": [["crate"]], "nodes": [["xlclgwGeSHe18p5J4WvfFA", "crate-01", "5.10.16"], ["r0IgCe17SPOgudkQIGsRQA", "crate-02", "5.10.16"], ["ch8EXZwrQVmCls79_T_vUg", "crate-03", "5.10.16"]], "health": [["GREEN", 96, 0, 0]], "shards": [["STARTED", "STARTED", 962]], "checks": [[21, 0]], "cluster": [["all", {"timeout": "2h", "force": false, "min_availability": "PRIMARIES"}]]}}
+{"node": "crate-03", "restart_policy_checked": "no"}
+{"utc": "2026-10-15T23:53:35.415538+00:00", "target": "crate-03", "id": "ch8EXZwrQVmCls79_T_vUg", "phase": "decommission-start"}
+{"utc": "2026-10-15T23:53:36.213496+00:00", "phase": "allocation-primaries", "result": {"cols": [], "rows": [[]], "rowcount": 1, "duration": 51.98102}}
+{"utc": "2026-10-16T00:01:01.412332+00:00", "target": "crate-03", "phase": "decommission-ack", "result": {"cols": [], "rows": [[]], "rowcount": 1, "duration": 444394.1}, "seconds": 445.1987868569995}
+{"utc": "2026-10-16T00:01:05.080764+00:00", "target": "crate-03", "phase": "zero-primary-gate", "primaries": [[0]], "missing": [[0]], "unsettled_target_copies": [[0]]}
+{"node": "crate-03", "phase": "normal-stop-submitted", "unit": "gw-crate-stop-562-13-000105", "unlimited_grace": true, "ssh_independent": true}
+{"utc": "2026-10-16T00:01:13.549612+00:00", "target": "crate-03", "phase": "normal-exit", "seconds": 6.799172322000231, "state": {"Running": false, "ExitCode": 143, "OOMKilled": false, "FinishedAt": "2026-10-16T00:01:10.697446784Z"}}
+{"node": "crate-03", "event": "kill", "signal": "15", "exit_code": null, "time": 1792108866}
+{"node": "crate-03", "event": "stop", "signal": null, "exit_code": null, "time": 1792108872}
+{"node": "crate-03", "event": "die", "signal": null, "exit_code": "143", "time": 1792108872}

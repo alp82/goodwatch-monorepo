@@ -1,0 +1,3 @@
+.env names 3b52c297d2c04b6332cc6379709b03cc425ec4b4
+search-a  commit 3b52c297  Up 33 minutes (healthy), query models ready  memory 1.868GiB / 4GiB  restarts 0
+search-b  commit 3b52c297  Up 32 minutes (healthy), query models ready  memory 1.859GiB / 4GiB  restarts 0

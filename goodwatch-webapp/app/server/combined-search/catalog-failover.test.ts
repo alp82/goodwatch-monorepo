@@ -200,3 +200,32 @@ test("catalog fails over an interrupted JSON response and leaves that coordinato
 		)
 	assert.deepEqual(counts, [1, 5])
 })
+
+test("catalog sends exact credentials after an HBA refusal and keeps secrets out of diagnostics", async (t) => {
+	const fixture = new MockAgent()
+	fixture.disableNetConnect()
+	setGlobalDispatcher(fixture)
+	const password = "fixture:/#?%ä"
+	process.env.CRATE_PASS = password
+	setCrateClientForTest(null)
+	const logs: string[] = []
+	for (const level of ["log", "warn", "error", "trace"] as const)
+		t.mock.method(console, level, (line: unknown) => logs.push(String(line)))
+	t.after(async () => {
+		process.env.CRATE_PASS = "secret-fixture"
+		setGlobalDispatcher(agent)
+		setCrateClientForTest(null)
+		await fixture.close()
+	})
+	const headers = { authorization: `Basic ${Buffer.from(`fixture:${password}`).toString("base64")}` }
+	fixture.get("http://first.invalid:4200")
+		.intercept({ path: "/_sql", method: "POST", headers })
+		.reply(401, "password authentication failed", { headers: { "Content-Type": "text/plain" } })
+	fixture.get("http://second.invalid:4200")
+		.intercept({ path: "/_sql", method: "POST", headers })
+		.reply(200, { cols: ["n"], rows: [[1]], rowcount: 1 })
+	assert.deepEqual((await searchStatement("SELECT 1")).rows, [[1]])
+	fixture.assertNoPendingInterceptors()
+	assert.ok(!logs.join("\n").includes(password))
+	assert.ok(!logs.join("\n").includes(headers.authorization))
+})

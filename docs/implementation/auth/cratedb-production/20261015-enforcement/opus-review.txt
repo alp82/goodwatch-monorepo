@@ -1,0 +1,82 @@
+# Adversarial review for #529: CrateDB password enforcement (#562/#599)
+
+**Verdict: not approved yet.** The code is fine to ship. The runbook has four blockers, and all four are cheap to fix. Once they're fixed, I'd approve the owner-authorized path as written: `force=false`, zero primaries, then `docker stop --timeout=-1`, in the order crate-02, crate-03, crate-01. I didn't re-argue the stale contexts, because the owner already accepted them.
+
+## Blockers
+
+### 1. The rolling-switch examples still use the old node order (runbook)
+
+The approved order starts with crate-02, but the examples in steps 2 through 6 were written for crate-01 first:
+
+- **Step 2** labels `docker inspect crate-01` as the "first node" example.
+- **Step 3** says "first target .11 uses .12".
+- **Step 4** mixes nodes in one block. It runs `inspect crate-01` on .11, then `docker stop crate-02` on .12, then `compose up --force-recreate` on .11.
+- **Step 5** restores allocation through `.12/crate-02` and says "Use .11 for later targets". Both are wrong for the new order.
+- **Step 6** runs the verifier with `CRATE_VERIFY_HOSTS=10.0.0.11`, then ".13 and .12". The hard gate requires 10.0.0.12 only.
+
+The step 4 block is dangerous if someone pastes it. On .11, `up --force-recreate` stops crate-01 with Compose's default 10-second grace and then sends SIGKILL. crate-01 hasn't been drained, and crate-02 would already be down at that point. That risks missing primaries and a SIGKILL, which the owner prohibited.
+
+**Fix:** Add one table with a row per iteration: target IP, node name, revalidated node ID, coordinator IP, and coordinator node:
+
+- crate-02 through crate-01
+- crate-03 through crate-01
+- crate-01 through crate-02
+
+Write each command once with variables. Before any `stop` or `up`, check that `docker inspect` on the target host returns the target name.
+
+### 2. The unlimited-grace stop is tied to an SSH client session (runbook)
+
+`ssh root@10.0.0.12 docker stop --timeout=-1 crate-02` can run for hours. The SSH session has no keepalive, so a network blip drops the `docker` CLI. Some Docker Engine releases tie the stop wait to the API request context. When the client disconnects, those releases go straight to SIGKILL. Newer engines detach the stop from the request. I can't confirm from here which versions these hosts run or exactly which releases are affected.
+
+**Fix:** Keep the approved command, but run it on the target host inside `tmux` or a transient `systemd-run` unit. Record `docker version` for each Crate host beforehand. Then poll `docker inspect` and `docker events` from a separate session.
+
+### 3. The hard gate's PostgreSQL check has no reviewed tool (runbook)
+
+The first-node gate requires PostgreSQL password enforcement on port 5432. The correct password must succeed, and a missing or wrong password must fail. However, the plan has no client or script for this, only "a password prompt/client-library argument". The Crate image doesn't include `psql`, and container-loopback trust doesn't count as a negative test.
+
+If the operator reaches this step without a working probe, the gate can't pass. That forces a rollback after a drain that can last two hours or more.
+
+**Fix:** Before starting, prepare a 5432 probe, test it in the lab, and record it. It must not put the password in argv.
+
+### 4. The document still contains contradictory stale-context stop conditions (runbook)
+
+The following still require the stale contexts to be cleared before enforcement:
+
+- **Preflight:** "zero old operations after owner-approved resolution"
+- **Observed cluster:** "Unresolved stale contexts block starting enforcement"
+- **Owner checklist 1:** "Require empty stale-context results before enforcement"
+- **Current outcome:** "must resolve this failed gate before enforcement resumes"
+
+The supersession sentence at the top resolves this only if the reader connects the two. An operator who follows the preflight literally stops. That fails safe, but the document is the record for this shipping gate. Annotate or remove each of these lines so they match the approval.
+
+## Should fix (not blocking)
+
+1. **Zero-primary race before SIGTERM.** Primaries can move back onto the target before the stop if a decommission with `force=false` times out and clears the node's exclusion. Rebalancing can then return shards to it. Immediately before `docker stop`:
+   - Recheck that the target has zero primaries.
+   - Check that no shard is relocating to or initializing on the target.
+   - Confirm whether the decommission is still active or was aborted.
+   - Check for tables with `number_of_replicas = 0`.
+2. **No reporting threshold for a hung stop.** With unlimited grace and no SIGKILL, a node that hangs during shutdown may stay half-joined indefinitely. Set a point to report to the owner (for example, 15 minutes without exit) and list the client errors to watch. Leave the stop running while you wait.
+3. **Kuma credentials untested against .12.** Only monitor 17 points at .12. Monitors 16 and 18 were last proven with HBA off, which accepts any password. Compare their stored Basic credentials with monitor 17's by hash through the supported API, or have the owner accept a later failure on .11 or .13.
+4. **Blob code paths missing from the gate.** Search's blob GET builds its own Basic header, separate from its SQL. Add one read-only GET of a known blob digest from search-a or search-b against .12.
+5. **No rollback for a node that never joins.** If the HBA node fails to join (for example, transport refusal), decommission is impossible. Add: it holds no shards, so stop it normally and recreate it with `CRATE_HBA_ENABLED=false`. Also confirm that the lab's rolling run used this exact rendered command while the cluster was mixed (some nodes enforcing, some not).
+6. **Backup timing.** Don't start a drain or stop between about :05 and :40. An hourly snapshot can slow relocation or end up PARTIAL, and a drop can become ambiguous.
+7. **Deploys during the rollout.** A push to main auto-deploys pages, which replaces the containers you already verified. Freeze merges to main, or re-run the verifier after any deploy.
+8. **Unconfirmed gates in the document.** The runbook still requires:
+   - The 00:05 UTC credential-bearing backup to be observed.
+   - "One full day of ordinary jobs".
+   - The #563 restore drill to cover this repository.
+
+   Confirm each one is satisfied or explicitly waived.
+
+## Optional
+
+- **Run the client gate earlier.** You could run it right after rejoin, before setting allocation back to `all`. The node then holds no shards, so a failed-gate rollback skips the two-hour drain.
+- **Stale identity text.** Step 6 says "goodwatch_search or goodwatch_webapp". Under Q37, the pages expect `admin`. The verifier already compares against the container's `CRATE_USER`, so only the text is stale.
+- **Check the project label.** Before `up`, check that `com.docker.compose.project=goodwatch-crate` and that the volume is `goodwatch-crate_crate_data`. Do this explicitly, not only through the render diff.
+
+## Code review
+
+- **`docker-compose.yml`:** No blockers. The comments now sit outside the folded command. The rules give `crate` trust only from 127.0.0.1 and require a password for everything else, and a request with no credentials falls through to the password rule. The render diff in step 2 covers any previously ignored `-C` flags.
+- **`backup.py`:** No blockers. It retries only on HBA refusals, unsent requests, and failed reads. It never replays an ambiguous CREATE or DROP. The password file must be mode 0600 and is read as UTF-8 bytes. One nit: when the deadline runs out, `run_sql` returns `None` without logging that.
+- **`verify_crate_endpoints.mjs`:** No blockers. It checks missing, wrong-crate, wrong-client, and correct credentials, and never prints secrets. It's only valid against nodes that enforce passwords, and the runbook already says so.

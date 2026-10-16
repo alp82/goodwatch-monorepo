@@ -27,6 +27,11 @@ services:
     environment:
       - CRATE_HEAP_SIZE=${HEAP_SIZE}      # JVM heap (≈ ½ RAM)
 
+    # Host-based authentication (#562, docs/implementation/auth/cratedb-credentials.md): off until CRATE_HBA_ENABLED=true
+    # in this host's .env. Then `crate` connects without a password only from 127.0.0.1 inside this container
+    # (docker exec), and every other connection needs a user and its password.
+    # No comments inside the command: Compose passes a "#" line on as arguments, and the node ignores every -C
+    # setting after them. Until #562 that silently dropped the rules below.
     command: >
       crate
         -Ccluster.name=${CLUSTER_NAME}
@@ -44,8 +49,8 @@ services:
       
         -Cpath.data=/data
         -Cpath.repo=/snapshots
-    
-        # host-based auth map
+
+        -Cauth.host_based.enabled=${CRATE_HBA_ENABLED:-false}
         -Cauth.host_based.config.0.user=crate
         -Cauth.host_based.config.0.address=127.0.0.1
         -Cauth.host_based.config.0.method=trust

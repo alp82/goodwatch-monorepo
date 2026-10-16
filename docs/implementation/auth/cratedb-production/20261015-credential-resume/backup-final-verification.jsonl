@@ -1,0 +1,2 @@
+{"utc": "2026-10-15T23:19:32.467019+00:00", "actual_cron_env_helper_identity": "goodwatch_backup", "passed": true}
+{"utc": "2026-10-15T23:19:52.213327+00:00", "snapshot": "hourly_20261015_230501", "state": "SUCCESS", "read_with_actual_cron_credentials": true}

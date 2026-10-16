@@ -1,0 +1,5 @@
+---
+# Provisioned on crate-01 under #562. The secret value stays on the server.
+# Retain these during reconciliation so it cannot revert to a credentialless job.
+crate_backup_user: goodwatch_backup
+crate_backup_password_file: /root/.config/goodwatch/crate-backup-password

@@ -1,0 +1,19 @@
+{"role": "goodwatch_webapp", "host": "10.0.0.11", "identity_and_queries_pass": 3, "password_supplied": true, "hba_enforcement_test": false}
+{"role": "goodwatch_webapp", "host": "10.0.0.12", "identity_and_queries_pass": 3, "password_supplied": true, "hba_enforcement_test": false}
+{"role": "goodwatch_webapp", "host": "10.0.0.13", "identity_and_queries_pass": 3, "password_supplied": true, "hba_enforcement_test": false}
+{"role": "goodwatch_search", "host": "10.0.0.11", "identity_and_queries_pass": 6, "password_supplied": true, "hba_enforcement_test": false}
+{"role": "goodwatch_search", "host": "10.0.0.12", "identity_and_queries_pass": 6, "password_supplied": true, "hba_enforcement_test": false}
+{"role": "goodwatch_search", "host": "10.0.0.13", "identity_and_queries_pass": 6, "password_supplied": true, "hba_enforcement_test": false}
+{"role": "goodwatch_windmill", "host": "10.0.0.11", "identity_and_queries_pass": 4, "password_supplied": true, "hba_enforcement_test": false}
+{"role": "goodwatch_windmill", "host": "10.0.0.12", "identity_and_queries_pass": 4, "password_supplied": true, "hba_enforcement_test": false}
+{"role": "goodwatch_windmill", "host": "10.0.0.13", "identity_and_queries_pass": 4, "password_supplied": true, "hba_enforcement_test": false}
+{"role": "goodwatch_readonly", "host": "10.0.0.11", "identity_and_queries_pass": 3, "password_supplied": true, "hba_enforcement_test": false}
+{"role": "goodwatch_readonly", "host": "10.0.0.12", "identity_and_queries_pass": 3, "password_supplied": true, "hba_enforcement_test": false}
+{"role": "goodwatch_readonly", "host": "10.0.0.13", "identity_and_queries_pass": 3, "password_supplied": true, "hba_enforcement_test": false}
+{"role": "goodwatch_backup", "host": "10.0.0.11", "identity_and_queries_pass": 2, "password_supplied": true, "hba_enforcement_test": false}
+{"role": "goodwatch_backup", "host": "10.0.0.12", "identity_and_queries_pass": 2, "password_supplied": true, "hba_enforcement_test": false}
+{"role": "goodwatch_backup", "host": "10.0.0.13", "identity_and_queries_pass": 2, "password_supplied": true, "hba_enforcement_test": false}
+{"role": "goodwatch_monitoring", "host": "10.0.0.11", "identity_and_queries_pass": 2, "password_supplied": true, "hba_enforcement_test": false}
+{"role": "goodwatch_monitoring", "host": "10.0.0.12", "identity_and_queries_pass": 2, "password_supplied": true, "hba_enforcement_test": false}
+{"role": "goodwatch_monitoring", "host": "10.0.0.13", "identity_and_queries_pass": 2, "password_supplied": true, "hba_enforcement_test": false}
+{"utc": "2026-10-15T22:40:17.049469+00:00", "result": "all six roles on all three coordinators passed"}
