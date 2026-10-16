@@ -41,6 +41,14 @@ Unlike the shard and disk reports, a failed read is unhealthy here, not `unknown
 
 To activate it after the deploy, create a schedule with path `f/monitoring/backup_check`, script `f/monitoring/backup_check`, cron `0 40 * * * *`, and args `{"notify":true}`. Minute 40 is after the hourly backup's snapshot, which starts at minute 5. For the recovery steps, see [the Crate backup README](../goodwatch-crate/README.md).
 
+## Failing schedules
+
+`f/monitoring/failing_schedules` is a separate script that runs every 10 minutes. `f/monitoring/check` missed a tmdb_episodes sync failure for 2.5 days because old ledger rows used up its inspection budget. This script reads only the latest runs, so old history can't crowd them out. For every enabled schedule it reads the last 10 completed root runs (`jobs/completed/list` with `schedule_path`, `has_null_parent=true`, `is_skipped=false`). A schedule is failing when its last 3 runs failed, or when its newest run failed and its last success finished 20 hours ago or more (or never). A daily or weekly job therefore alerts on its first failure.
+
+It sends one Discord incident (cause `consecutive_failures`, linking the newest failed run) when a schedule starts failing and one recovery when its newest run succeeds again. The alerted set is saved in the Windmill state resource `f/monitoring/failing_schedules_state`. Manual and scheduled runs share that fixed path. Undelivered messages are retried on the next run. After one failed delivery, the rest of the run's messages wait, and a Discord rate limit pauses delivery for the time Discord asks. A disabled or deleted schedule leaves the set without a message. A schedule whose history can't be read keeps its entry. `notify=false` reports without sending or saving.
+
+Schedule: path `f/monitoring/failing_schedules`, cron `0 */10 * * * *`, timezone `Europe/Berlin`, args `{"notify":true}`. The thresholds are at the top of `f/monitoring/failing_schedules.py`.
+
 ## Configuration and rollout
 
 1. Create the Windmill **secret** variable `f/monitoring/discord_webhook_url` with the chosen channel's Discord webhook URL. Never put it in Git, job arguments, or chat. The adapter accepts the fixed HTTPS Discord webhook host/path, sends Discord's required identifying User-Agent, and disables redirects and mentions. A corrected delivery-client identity also invalidates an old permanent-error gate while preserving the pending incident.

@@ -1,0 +1,15 @@
+summary: Alert when an enabled schedule's recent runs keep failing
+description: Reads each enabled schedule's last completed root runs; alert state
+  lives in f/monitoring/failing_schedules_state.
+lock: '!inline f/monitoring/failing_schedules.script.lock'
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties:
+    notify:
+      type: boolean
+      description: Deliver Discord notifications and save the alert state.
+      default: true
+  required: []
+timeout: 300

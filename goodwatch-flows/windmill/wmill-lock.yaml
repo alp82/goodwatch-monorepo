@@ -87,6 +87,7 @@ locks:
   f/monitoring/backlog_health: b631c7ed78ff1ad18a2c089ac4b1cc181f36a24332317d488943921de6608e69
   f/monitoring/check: 1a8b6dc5fa1536a6dd8124dd31f3d4651fd9b89aef3503a46fc7892b6c27ed89
   f/monitoring/collection: fac8996d0f9199ab4c121e4b9a82c3c0af5fc5c7e82169d9a8b6fcaa33816918
+  f/monitoring/failing_schedules: c574ca8af3bcc750337751a68257f0064be341f8fdc6ff7dbf596dfd4ed8168d
   f/monitoring/health: b9e53e88a3178735a67b1c3ef44891a5fd93950e2673bebd61b0d6326da15f70
   f/monitoring/incidents: 42043ae293cf1de8c1eef1f46d4b84bb2cfed2be570611aecb6638d69df3c89e
   f/monitoring/notification_check: d9ba79bc1a5ba8ca7b32584c01ad74b2522e160e454500eeac10a0bf156674e3
