@@ -176,6 +176,18 @@ describe("nameGroup", () => {
 		assert.equal(name(humor, titles(8, ["Music"])), "Funny, warm stories")
 	})
 
+	it("calls grounded comedies everyday, and other grounded titles realistic", () => {
+		const standout = order("cringe_humor", "contemporary_realism")
+		assert.equal(
+			name(standout, titles(8, ["Comedy"])),
+			"Awkward, everyday comedies",
+		)
+		assert.equal(
+			name(order("bleakness", "contemporary_realism"), titles(8, ["Thriller"])),
+			"Dark, realistic thrillers",
+		)
+	})
+
 	it("never pairs two traits that repeat a word", () => {
 		assert.equal(
 			name(order("bleakness", "dark_humor", "tension"), titles(8, ["Music"])),
