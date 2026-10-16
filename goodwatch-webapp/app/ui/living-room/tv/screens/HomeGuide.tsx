@@ -168,9 +168,25 @@ export function HomeGuide({
 								{entry.side ? (
 									<SideEntry side={entry.side} />
 								) : (
-									<span className="truncate text-[26px] font-bold">
-										{entry.app.name}
-									</span>
+									<>
+										<span className="min-w-0 flex-1 truncate text-[26px] font-bold">
+											{entry.app.name}
+										</span>
+										{/* My shows: the New episodes signal, in its sky blue, as on home's row. */}
+										{entry.app.signal && (
+											<>
+												<span
+													aria-hidden
+													className="flex h-[34px] min-w-[34px] items-center justify-center rounded-full bg-sky-300 px-2 text-[21px] font-bold leading-none text-black"
+												>
+													{entry.app.signal.badge}
+												</span>
+												<span className="sr-only">
+													{entry.app.signal.label}
+												</span>
+											</>
+										)}
+									</>
 								)}
 							</Item>
 						)

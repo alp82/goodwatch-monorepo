@@ -7,6 +7,11 @@
 // (server/living-room/home-sides.server.ts), off until the words gate (#656) passes. Until then a group is shown by
 // its loved posters alone. No share line. The last details come after the owner sees this.
 
+// The machine's module, imported for nothing it holds: it keeps this small module with the TV. A small module that
+// several chunks share and whose imports are all on every page is moved into every page's shell (vite.config.js,
+// rule 3), as tv-title.ts says too.
+import "./tv-machine.ts"
+
 /** What home says of the Taste app while it is on, for a member with a taste. */
 export const TASTE_APP_LINE = "What your taste is made of."
 
