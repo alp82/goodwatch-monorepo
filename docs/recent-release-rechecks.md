@@ -14,11 +14,14 @@ episode date. The research's roughly 7,000-title estimate also included the next
 seven days; this build follows the issue's released-titles scope.
 
 The selector resolves the catalog's TMDB IDs to existing Mongo details documents,
-excluding missing or TMDB-deleted documents. A movie and a show with the same ID
-remain distinct; each title appears once. A successful provider check since
+excluding missing, TMDB-deleted, or currently reserved (`is_selected = true`)
+documents. A movie and a show with the same ID remain distinct; each title appears
+once. A successful provider check since
 12:00 UTC is excluded. A morning fetch, failed attempt, or queue reservation does
-not count as a successful check after TMDB's batch. The plan reports candidate,
-already-checked, unavailable, selected, movie, and show counts.
+not count as a successful check after TMDB's batch. Reserved titles are left to
+the regular queue. The plan reports candidate, already-checked, unavailable
+(missing, deleted, or reserved), selected, movie, and show counts. This runs
+alongside the [awaited-title rechecks](awaited-title-rechecks.md).
 
 The flow passes batches of at most 50 Mongo IDs, sequentially, to the existing
 `f/tmdb_api/tmdb_fetch_details_from_api/fetch`. Its one details request per title
@@ -28,8 +31,11 @@ the usual validated provider evidence and bumps `updated_at`.
 The existing `f/sync/copy/tmdb_streaming` scheduled writer picks up those updates.
 Its production schedule is `0 0 2/6 * * *`, Europe/Berlin: 00:00, 06:00, 12:00,
 18:00 UTC during summer time, one hour later in winter. A normal 13:00 UTC recheck
-therefore publishes at 18:00 or 19:00 UTC. There is no new offer writer or extra
-publication schedule. `CrateConnector.upsert_many` still excludes `created_at`
+therefore publishes at **18:00 UTC in summer or 19:00 UTC in winter**: five or
+six hours after the recheck starts. In winter the 13:00 UTC streaming publication
+starts alongside the recheck and misses its results; count on the 19:00 run.
+There is no new offer writer or extra publication schedule.
+`CrateConnector.upsert_many` still excludes `created_at`
 from conflict updates: existing offers retain their first-seen time and new rows
 get the publication time. The member's Newly available signal keeps its meaning.
 
@@ -42,9 +48,12 @@ would require coordinating reservations and is deliberately outside this change.
 The catalog read has an explicit 20,001-row limit per media type (avoiding Crate's
 implicit SELECT limit) and fails before fetching if the combined candidate count
 exceeds 20,000. Increase that budget only after checking daily request volume.
-The flow fails on a failed batch or any per-title failures returned by the existing
-fetcher. A manual rerun reselects and skips successful checks since noon. The
-existing fetcher's handling of malformed provider payloads remains unchanged:
+Each failed batch gets two retries, 60 seconds apart. After those are exhausted,
+the loop continues with the remaining batches. The final report counts failed
+iterations and per-title failures and raises if either is nonzero, so one broken
+batch does not prevent the remaining titles from being fetched. A manual rerun
+reselects and skips successful checks since noon. The existing fetcher's handling
+of malformed provider payloads remains unchanged:
 it retains previous proof and sets the provider error, so the title is eligible
 on a rerun. Only run one copy of the daily flow at a time.
 
@@ -69,10 +78,24 @@ collection, database index, credential, or migration is needed.
    }
    ```
 
-   This six-field cron includes seconds. Every weekday is selected (`*`);
-   Windmill's weekday numbering is 1 = Sunday.
+   This six-field cron includes seconds and runs every day.
 3. Watch the first daily flow and the following regular streaming publication.
    Confirm the newly available offers and retained `created_at` of existing rows.
+   For the first week, record each UTC day's number of distinct US titles
+   (`media_type`, `media_tmdb_id`) with a new `streaming_availability.created_at`
+   for subscription, free, or ads offers. Compare it with the documented baseline
+   of about **80 titles/day** in
+   [availability-first-seen.server.ts](../goodwatch-webapp/app/server/availability-first-seen.server.ts#L41).
+   Separate the first day's catch-up from the following six days; the historical
+   baseline is a comparison, not an automatic failure threshold.
+   Also count **offer flapping**: rows deleted and subsequently re-created with
+   the same `(media_type, media_tmdb_id, country_code, streaming_service_id,
+   streaming_type)` and a new `created_at`. Keep local read-only snapshots of
+   those keys and timestamps before and after each streaming publication for the
+   week; count keys observed absent and then present again, and separately flag
+   keys whose `created_at` advances without an observed absence. Current rows
+   alone cannot reveal deleted rows, and snapshots give a lower bound if a row
+   disappears and returns between reads. No production history table is required.
 
 Disable only this new schedule to undo the daily recheck. The existing refresh
 cycle and streaming publications continue unchanged.
@@ -95,8 +118,8 @@ selector's source up to (excluding) `def main()`. Submit that assembled source t
 Windmill remote token without printing it. Poll `/jobs_u/get/<job-id>`.
 
 The comparison reports additions to existing offers, including titles receiving
-their first offer, and singles out East of Eden (`show:258165`). It does not
-simulate new scraper results, identity-maintenance holds, or publication failures;
+their first offer. It does not simulate new scraper results,
+identity-maintenance holds, or publication failures;
 the normal writer remains responsible for those. Production is live throughout,
 so counts are a time-stamped observation, not a transactionally fixed snapshot.
 
@@ -106,6 +129,8 @@ The read-only preview started its selection at **21:57:30 UTC**. Job
 `01a146b8-5488-7e6c-5636-3b809dc3a29d` completed successfully. The
 [machine-readable result](research/recent-release-recheck-2026-10-16.json)
 includes source hashes and the IDs for the failed reads.
+This is the original build's measurement, before the reservation filter was added
+and the title-specific spotlight was removed; its source hashes remain unchanged.
 
 | Measurement | Count |
 |---|---:|
@@ -141,7 +166,7 @@ first publication as before; these are not all offers that arrived on that day.
 The selection tests execute the selector's SELECT statements against an in-memory
 SQL catalog and its Mongo queries against mongomock. They cover both date
 boundaries, today, future and unknown dates, both media types, UTC conversion,
-post-batch check deduplication, missing/deleted/duplicate documents, batching,
+post-batch check deduplication, reserved/missing/deleted/duplicate documents, batching,
 empty selection, the budget guard, and unchanged database state.
 An additional regression check executes the existing offer upsert SQL against
 SQLite: rechecking an existing offer keeps its original `created_at`, while a
@@ -149,14 +174,21 @@ new offer receives the current publication time.
 
 The optional `test_recent_release_flow_integration.py` runs the actual flow loop
 and report in Windmill previews with inert selector/fetch scripts. It verifies
-batch arguments, empty runs and failure reporting without database access.
+batch arguments, empty runs, partial title failures, and continued processing
+after an iteration exhausts its retries, without database access.
 
-Validation completed: 97 tests passed (including three actual inert Windmill
+Original-build validation: 97 tests passed (including three actual inert Windmill
 previews); five pre-existing optional database integration tests were skipped.
 The unchanged refetch-cycle, details-queue, TMDB fetch-failure and streaming
 publication suites passed. The exact new selector and checked-in dependency lock
 also passed a production read-only preview in 2.1 seconds
 (`01a146bb-b0d4-64f8-e713-6962057d9ceb`). A live production write run was not made.
+
+Review-fix validation: nine selector/first-seen tests, three report tests, four
+recent-release flow previews and four existing DNA flow previews passed. The
+failure preview exercised both 60-second retries, continued to the next batch,
+and failed in the final report with one exhausted iteration. All previews used
+inert fetches; the full production offer comparison was not repeated.
 
 ```sh
 python -m unittest discover -s goodwatch-flows/tests -p 'test_recent_release_recheck.py'

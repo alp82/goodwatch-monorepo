@@ -65,13 +65,26 @@ class RecentReleaseSelectionTests(unittest.TestCase):
             self.title("movie", tmdb_id, "2026-10-01",
                        watch_providers_check={"checked_at": milliseconds(checked_at)},
                        watch_providers_error=error)
-        # A reservation is not a successful provider check.
-        self.title("movie", 5, "2026-10-01", selected_at=NOW, is_selected=True)
+        # A previous selection is not a successful provider check.
+        self.title("movie", 5, "2026-10-01", selected_at=NOW, is_selected=False)
 
         plan = select_recheck(self.crate, self.db, NOW)
 
         self.assertEqual([t["tmdb_id"] for t in plan["titles"]], [1, 3, 4, 5])
         self.assertEqual(plan["already_checked"], 1)
+
+    def test_titles_reserved_by_the_regular_queue_are_left_alone(self):
+        for kind in ("movie", "show"):
+            self.title(kind, 1, "2026-10-01", is_selected=True)
+            self.title(kind, 2, "2026-10-01", is_selected=False)
+            self.title(kind, 3, "2026-10-01")
+        before = {name: list(self.db[name].find()) for name in self.db.list_collection_names()}
+
+        plan = select_recheck(self.crate, self.db, NOW)
+
+        self.assertEqual([(t["media_type"], t["tmdb_id"]) for t in plan["titles"]],
+                         [("movie", 2), ("movie", 3), ("show", 2), ("show", 3)])
+        self.assertEqual(before, {name: list(self.db[name].find()) for name in self.db.list_collection_names()})
 
     def test_deleted_missing_and_duplicate_titles_do_not_enter_fetch_batches(self):
         movie_id = self.title("movie", 7, "2026-10-01", selected_at=datetime(2026, 9, 25))

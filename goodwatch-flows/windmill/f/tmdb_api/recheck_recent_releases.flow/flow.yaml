@@ -18,7 +18,7 @@ value:
           type: javascript
           expr: results.select.batches
         parallel: false
-        skip_failures: false
+        skip_failures: true
         modules:
           - id: batch
             value:
@@ -28,6 +28,10 @@ value:
                 next_ids:
                   type: javascript
                   expr: flow_input.iter.value
+            retry:
+              constant:
+                attempts: 2
+                seconds: 60
             timeout: 300
     - id: report
       value:
@@ -41,13 +45,7 @@ value:
           batches:
             type: javascript
             expr: results.fetch
-        content: |
-          def main(plan: dict, batches: list):
-              totals = {key: sum((batch or {}).get(key, 0) for batch in batches)
-                        for key in ("count_new_entries", "count_failed_entries", "count_deleted_entries")}
-              if totals["count_failed_entries"]:
-                  raise RuntimeError(f"Recent release recheck has failed titles: {totals}; rerun to retry")
-              return {key: value for key, value in plan.items() if key not in ("titles", "batches")} | totals
+        content: '!inline report.inline_script.py'
   concurrent_limit: 1
   concurrency_time_window_s: 0
 schema:

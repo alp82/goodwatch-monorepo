@@ -110,7 +110,6 @@ def main():
                 "compared": sum(r["media_type"] == kind for r in successful),
                 "titles_gaining_offers": sum(r["media_type"] == kind and r["added_offers"] > 0 for r in successful),
             } for kind in ("movie", "show")},
-            "east_of_eden": next((r for r in results if r["media_type"] == "show" and r["tmdb_id"] == 258165), None),
         }
     finally:
         close_mongodb()

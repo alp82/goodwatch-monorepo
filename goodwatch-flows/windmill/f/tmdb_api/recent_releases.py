@@ -8,13 +8,15 @@ from datetime import datetime, timedelta, timezone
 
 MAX_TITLES = 20000
 BATCH_SIZE = 50
+RELEASE_DAYS = 30
+TMDB_UPDATE_DONE_UTC_HOUR = 12
 
 
 def select_recheck(crate, db, now: datetime) -> dict:
     now = now.replace(tzinfo=timezone.utc) if now.tzinfo is None else now.astimezone(timezone.utc)
     today = now.replace(hour=0, minute=0, second=0, microsecond=0)
-    start, end = today - timedelta(days=29), today + timedelta(days=1)
-    checked_since = int((today + timedelta(hours=12)).timestamp() * 1000)
+    start, end = today - timedelta(days=RELEASE_DAYS - 1), today + timedelta(days=1)
+    checked_since = int((today + timedelta(hours=TMDB_UPDATE_DONE_UTC_HOUR)).timestamp() * 1000)
     already_checked = 0
     candidates = 0
     unavailable = 0
@@ -33,7 +35,7 @@ def select_recheck(crate, db, now: datetime) -> dict:
             raise RuntimeError(f"Recent releases exceed the {MAX_TITLES} title daily budget; no fetches started")
         projection = {"tmdb_id": 1, "watch_providers_check.checked_at": 1, "watch_providers_error": 1}
         seen = set()
-        query = {"tmdb_id": {"$in": ids}, "tmdb_deleted": {"$ne": True}}
+        query = {"tmdb_id": {"$in": ids}, "tmdb_deleted": {"$ne": True}, "is_selected": {"$ne": True}}
         for doc in db[collection].find(query, projection).sort([("tmdb_id", 1), ("_id", 1)]):
             if doc["tmdb_id"] in seen:
                 continue

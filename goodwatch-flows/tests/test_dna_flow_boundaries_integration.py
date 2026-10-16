@@ -4,47 +4,10 @@ Set TEST_WINDMILL_API to the workspace API URL and TEST_WINDMILL_TOKEN.
 Requires PyYAML. Preview jobs perform no crawling, database writes or inference.
 """
 import copy
-import json
-import os
-from pathlib import Path
 import time
 import unittest
-from urllib.request import Request, urlopen
 
-ROOT = Path(__file__).parents[1] / "windmill"
-API = os.environ.get("TEST_WINDMILL_API")
-TOKEN = os.environ.get("TEST_WINDMILL_TOKEN")
-
-
-def api(path, body=None):
-    request = Request(
-        API.rstrip("/") + path,
-        data=json.dumps(body).encode() if body is not None else None,
-        headers={"Authorization": "Bearer " + TOKEN, "Content-Type": "application/json"},
-    )
-    with urlopen(request, timeout=30) as response:
-        data = response.read().decode()
-        try:
-            return json.loads(data)
-        except ValueError:
-            return data
-
-
-def inert_modules(modules):
-    for module in modules:
-        value = module["value"]
-        if value["type"] == "branchall":
-            for branch in value["branches"]:
-                inert_modules(branch["modules"])
-        elif value["type"] in ("script", "flow", "rawscript"):
-            path = value.get("path", module.get("summary", module["id"]))
-            module["value"] = {
-                "type": "rawscript", "language": "python3", "lock": "",
-                "input_transforms": {},
-                "content": "def main():\n    return " + repr({"called": path}) + "\n",
-            }
-        else:
-            raise ValueError("Unsupported module type: " + value["type"])
+from windmill_preview import API, TOKEN, ROOT, api, inert_modules
 
 
 @unittest.skipUnless(API and TOKEN, "Set TEST_WINDMILL_API and TEST_WINDMILL_TOKEN")
