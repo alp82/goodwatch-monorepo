@@ -8,6 +8,7 @@ import { useState } from "react"
 import { type ConnectedApp, connectedAppsPage } from "~/server/auth/connected-apps.server"
 import { ConnectAppBadge } from "~/ui/auth/connect"
 import { ConnectorAddressCard } from "~/ui/connector/ConnectorAddressCard"
+import { SettingsSheet } from "~/ui/settings/SettingsSheet"
 import { Spinner } from "~/ui/wait/Spinner"
 
 export const meta: MetaFunction = () => [{ title: "Connected apps | GoodWatch" }, { name: "robots", content: "noindex, nofollow" }]
@@ -22,14 +23,11 @@ export default function ConnectedApps() {
 	const { apps, now } = useLoaderData<typeof loader>()
 	const [removed, setRemoved] = useState<string | null>(null)
 	return (
-		<div className="px-2 md:px-4 lg:px-8">
-			<section className="flex max-w-2xl flex-col gap-5 text-base">
-				<div>
-					<h2 className="text-base font-bold tracking-tight text-gray-100 sm:text-lg md:text-xl lg:text-2xl">Connected apps</h2>
-					<p className="mt-1 text-gray-400">
-						Assistants that can reach your GoodWatch. Disconnecting stops them right away; nothing you saved is lost.
-					</p>
-				</div>
+		<SettingsSheet
+			title="Connected apps"
+			subtitle="Assistants that can reach your GoodWatch. Disconnecting stops them right away; nothing you saved is lost."
+		>
+			<section className="flex flex-col gap-5 text-base">
 				{removed && (
 					<output className="flex items-center gap-2 rounded-lg border border-emerald-800 bg-emerald-950/50 px-4 py-3 text-sm text-emerald-100">
 						<CheckIcon className="h-4 w-4 shrink-0 text-emerald-400" aria-hidden="true" /> {removed} is disconnected. To use it again, connect it
@@ -56,7 +54,7 @@ export default function ConnectedApps() {
 				)}
 				<ConnectorAddressCard />
 			</section>
-		</div>
+		</SettingsSheet>
 	)
 }
 

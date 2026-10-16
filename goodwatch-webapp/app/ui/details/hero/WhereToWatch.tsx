@@ -401,7 +401,7 @@ export default function WhereToWatch({
 			{!anyOwned && links.length > 0 && (
 				<p className="mt-2 text-right max-md:hidden">
 					<Link
-						to="/settings/streaming"
+						to="/settings/where-you-watch"
 						className="text-xs text-gray-400 underline decoration-white/20 underline-offset-2 hover:text-white"
 					>
 						Set your services

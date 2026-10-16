@@ -199,7 +199,7 @@ function AccountRow() {
 				<Link to={myListsPath} className={link}>
 					Lists
 				</Link>
-				<Link to="/settings/country" className={link}>
+				<Link to="/settings" className={link}>
 					Settings
 				</Link>
 			</nav>

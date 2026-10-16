@@ -95,6 +95,12 @@
 	/* People in search results: the open person's drawer and its faded backdrop. */
 	--animate-fade-in: fade-in 120ms ease-out both;
 	--animate-backdrop-in: backdrop-in 300ms ease-out both;
+	/* Settings' sheets: from the right on a wide screen, from the bottom on a phone. Transform and opacity only. */
+	--animate-sheet-in-side: sheet-in-side 260ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+	--animate-sheet-out-side: sheet-in-side 200ms ease-in reverse both;
+	--animate-sheet-in-up: sheet-in-up 280ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+	--animate-sheet-out-down: sheet-in-up 200ms ease-in reverse both;
+	--animate-fade-out: fade-in 200ms ease-in reverse both;
 
 	@keyframes fade-in {
 		from {
@@ -110,6 +116,27 @@
 		}
 		to {
 			opacity: 0.3;
+		}
+	}
+
+	@keyframes sheet-in-side {
+		from {
+			opacity: 0;
+			transform: translateX(100%);
+		}
+		to {
+			opacity: 1;
+			transform: none;
+		}
+	}
+	@keyframes sheet-in-up {
+		from {
+			opacity: 0;
+			transform: translateY(100%);
+		}
+		to {
+			opacity: 1;
+			transform: none;
 		}
 	}
 

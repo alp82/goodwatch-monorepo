@@ -3,10 +3,14 @@
 //   ?view=text      every launch language in the places media text sits: a header title (truncate), a card title
 //                   (line-clamp-2), a description (line-clamp-3). Hard-coded samples; the last row is Arabic without
 //                   MediaText, to compare.
-//   ?view=settings  the settings page's country and titles editor, outside the members-only settings layout.
+//   ?view=settings  Settings' country and titles language lists, outside the members-only settings layout.
 import { useSearchParams } from "@remix-run/react"
 import { MediaPreferenceProvider } from "~/ui/media-preference/MediaPreference"
-import SettingsPair from "~/ui/media-preference/SettingsPair"
+import {
+	PairStatus,
+	ShowTitlesInList,
+	WatchingFromList,
+} from "~/ui/media-preference/SettingsPair"
 import MediaText, { type MediaTextValue } from "~/ui/media-text/MediaText"
 
 const SAMPLES: { title: MediaTextValue; overview: MediaTextValue }[] = [
@@ -162,7 +166,11 @@ export default function PrototypeMediaLanguageUi() {
 					Country and titles
 				</h2>
 				<MediaPreferenceProvider country="DE">
-					<SettingsPair />
+					<PairStatus />
+					<div className="grid gap-4 md:grid-cols-2">
+						<WatchingFromList />
+						<ShowTitlesInList />
+					</div>
 				</MediaPreferenceProvider>
 			</div>
 		)

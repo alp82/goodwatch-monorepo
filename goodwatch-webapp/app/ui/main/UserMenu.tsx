@@ -97,7 +97,7 @@ export function UserMenu({ user }: { user: User }) {
 					<MenuItem>
 						{({ focus }) => (
 							<Link
-								to="/settings/country"
+								to="/settings"
 								className={`w-full flex gap-2 items-center px-4 py-2 text-base font-medium ${
 									focus ? "bg-gray-700 text-white" : "text-gray-200"
 								}`}

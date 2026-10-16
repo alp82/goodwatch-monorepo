@@ -48,7 +48,7 @@ function ServicesToggle({
 	if (!data.hasServices)
 		return (
 			<Link
-				to="/settings/streaming"
+				to="/settings/where-you-watch"
 				className={`inline-flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap pl-2.5 pr-3 text-sm font-bold text-gray-200 outline-none transition-colors hover:text-white hover:ring-white/20 focus-visible:ring-2 focus-visible:ring-amber-400 ${SHELL}`}
 			>
 				<PlusIcon className="h-4 w-4 shrink-0" aria-hidden />

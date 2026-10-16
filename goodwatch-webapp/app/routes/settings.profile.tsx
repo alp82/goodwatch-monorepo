@@ -1,4 +1,4 @@
-// Profile settings: the person's handle, the address of their public profile, /u/:handle, where their shared lists
+// Settings, Public profile: the person's handle, the address of their public profile, /u/:handle, where their shared lists
 // appear. A handle is chosen once (in onboarding, when sharing, or here) and can't be changed, so every card is
 // honestly signed.
 import {
@@ -6,9 +6,10 @@ import {
 	type LoaderFunctionArgs,
 	type MetaFunction,
 } from "@remix-run/node"
-import { Link, useLoaderData } from "@remix-run/react"
+import { Link, useLoaderData, useRevalidator } from "@remix-run/react"
 import React from "react"
 import { getCachedProfileByUserId } from "~/server/share-lists/view.server"
+import { SettingsSheet } from "~/ui/settings/SettingsSheet"
 import { profilePath } from "~/ui/share-card/links"
 import { HandlePicker } from "~/ui/share-lists/HandlePicker"
 import { getUserIdFromRequest } from "~/utils/auth"
@@ -32,20 +33,15 @@ export const meta: MetaFunction = () => [
 export default function SettingsProfile() {
 	const loaded = useLoaderData<typeof loader>()
 	const [handle, setHandle] = React.useState(loaded.handle)
+	// The Settings header shows the handle too.
+	const { revalidate } = useRevalidator()
 
 	return (
-		<div className="px-2 md:px-4 lg:px-8">
-			<div className="flex max-w-lg flex-col gap-6 text-base text-gray-300">
-				<div>
-					<h2 className="font-bold tracking-tight text-gray-100 text-base sm:text-lg md:text-xl lg:text-2xl">
-						Public profile
-					</h2>
-					<p className="mt-2 text-gray-400">
-						Your handle is the address of your public profile, where the lists
-						you share appear, and it signs every list card.
-					</p>
-				</div>
-
+		<SettingsSheet
+			title="Public profile"
+			subtitle="Your handle is the address of your public profile, where the lists you share appear, and it signs every list card."
+		>
+			<div className="flex flex-col gap-6 text-base text-gray-300">
 				{handle ? (
 					<div className="flex flex-col gap-1">
 						<p className="text-sm font-medium text-gray-300">Handle</p>
@@ -62,11 +58,17 @@ export default function SettingsProfile() {
 						</Link>
 					</div>
 				) : loaded.signedIn ? (
-					<HandlePicker id="profile-handle" onClaimed={setHandle} />
+					<HandlePicker
+						id="profile-handle"
+						onClaimed={(claimed) => {
+							setHandle(claimed)
+							revalidate()
+						}}
+					/>
 				) : (
 					<p className="text-gray-400">Sign in to choose a handle.</p>
 				)}
 			</div>
-		</div>
+		</SettingsSheet>
 	)
 }

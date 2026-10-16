@@ -4,6 +4,11 @@ Decided 2026-10-14 in the UI thread of the multi-language work, under the orches
 
 ## Settings page (`/settings/country`)
 
+> Since October 16, 2026, Settings shows the pair on two sheets: the country as **Watching from** on
+> `/settings/where-you-watch` (beside Your services), and the language as **Show titles in** on `/settings/language`.
+> `/settings/country` redirects to `/settings/where-you-watch`. The save rules below are unchanged. See
+> [settings-redesign/README.md](settings-redesign/README.md).
+
 - `/settings/country` is the only settings page that edits the country. It now edits the pair: **Country** and **Titles** lists side by side (stacked on a phone). The navigation entry is "Country & titles".
 - Same pair rules as the title page's F pair (`ui/media-preference/machine.ts`, `MediaPreference.tsx`): one save call for the whole pair through `/api/user-settings/set`, a client id per page load, `expectedVersion` from the private `GET /api/media-preferences`, a 409 that adopts the saved record and keeps the pick for Retry.
 - **No preview there: a pick saves at once** (owner decision, 2026-10-14, replacing the decisions doc's earlier "same preview/Keep/Undo" line). A settings page has no title to show a pick on, so a pending "Keep this?" step would add a click without anything to look at. The toast offers Undo of the whole pair, through the same call ("Saved to your account: Japan" / "Restored …").

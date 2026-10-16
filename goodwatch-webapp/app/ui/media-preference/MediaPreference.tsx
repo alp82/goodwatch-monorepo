@@ -12,10 +12,13 @@ import {
 } from "react"
 import { useRevalidator } from "@remix-run/react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { queryKeyStreamingProviders } from "~/routes/api.streaming-providers"
+import { queryKeyUserSettings } from "~/routes/api.user-settings.get"
 import { useUndoToast } from "~/ui/title-actions/useUndoToast"
 import { useUser } from "~/utils/auth"
 import { regionName } from "~/utils/display-names"
 import useLocale from "~/utils/locale"
+
 import {
 	type GetMediaPreferencesResponse,
 	negotiateMediaLanguage,
@@ -252,8 +255,11 @@ export function MediaPreferenceProvider({
 						},
 						destination: saved.destination,
 					})
-					// The cookie or account row changed: the root and the page read the saved pair again.
+					// The cookie or account row changed: the root and the page read the saved pair again, and so do the
+					// queries that hold the country (the member's settings, the services offered in it).
 					revalidate()
+					queryClient.invalidateQueries({ queryKey: queryKeyUserSettings })
+					queryClient.invalidateQueries({ queryKey: queryKeyStreamingProviders })
 					const where =
 						saved.destination === "account"
 							? "to your account"

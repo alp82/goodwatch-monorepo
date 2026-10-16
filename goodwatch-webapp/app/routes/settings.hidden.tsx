@@ -1,13 +1,13 @@
-// Hidden titles settings: every title the member marked Not interested, newest first, each with Unhide.
+// Settings, Hidden titles: every title the member marked Not interested, newest first, each with Unhide.
 // The settings layout only shows this to a signed-in member.
 import type { MetaFunction } from "@remix-run/node"
 import { Link } from "@remix-run/react"
-import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useQueryClient } from "@tanstack/react-query"
 import { toast } from "react-toastify"
 import { useNotInterestedMutation } from "~/hooks/useUserDataMutations"
-import type { TitleCard } from "~/server/title-cards.server"
+import { type HiddenTitle, type HiddenTitles, useHiddenTitles } from "~/ui/settings/hidden-titles"
+import { SettingsSheet } from "~/ui/settings/SettingsSheet"
 import { Spinner } from "~/ui/wait/Spinner"
-import { useUser } from "~/utils/auth"
 import { tmdbImageUrl } from "~/utils/tmdb-image"
 
 export { pageHeaders as headers } from "~/utils/headers"
@@ -21,26 +21,10 @@ export const meta: MetaFunction = () => [
 	{ name: "robots", content: "noindex, nofollow" },
 ]
 
-type HiddenTitle = TitleCard & { hiddenAt: string; href: string }
-interface HiddenTitles {
-	titles: HiddenTitle[]
-}
-
-const queryKeyHiddenTitles = (userId?: string) => ["not-interested", userId] as const
-
 export default function SettingsHidden() {
-	const { user } = useUser()
 	const client = useQueryClient()
-	const queryKey = queryKeyHiddenTitles(user?.id)
-	const hidden = useQuery<HiddenTitles>({
-		queryKey,
-		queryFn: async () => {
-			const response = await fetch("/api/not-interested")
-			if (!response.ok) throw new Error(`Hidden titles answered ${response.status}`)
-			return await response.json()
-		},
-		enabled: Boolean(user?.id),
-	})
+	const hidden = useHiddenTitles()
+	const { queryKey } = hidden
 	const { mutate: updateNotInterested, isPending, variables } = useNotInterestedMutation()
 
 	const unhide = (title: HiddenTitle) =>
@@ -57,17 +41,11 @@ export default function SettingsHidden() {
 
 	const titles = hidden.data?.titles ?? []
 	return (
-		<div className="px-2 md:px-4 lg:px-8">
-			<div className="flex max-w-2xl flex-col gap-4 text-base text-gray-300">
-				<div>
-					<h2 className="font-bold tracking-tight text-gray-100 text-base sm:text-lg md:text-xl lg:text-2xl">
-						Hidden titles
-					</h2>
-					<p className="mt-2 text-gray-400">
-						Titles you marked Not interested. They stay out of your recommendations. You can still find them in
-						search.
-					</p>
-				</div>
+		<SettingsSheet
+			title="Hidden titles"
+			subtitle="Titles you marked Not interested. They stay out of your recommendations. You can still find them in search."
+		>
+			<div className="flex flex-col gap-4 text-base text-gray-300">
 				{hidden.isLoading ? (
 					<Spinner size="medium" />
 				) : hidden.isError ? (
@@ -122,6 +100,6 @@ export default function SettingsHidden() {
 					</ul>
 				)}
 			</div>
-		</div>
+		</SettingsSheet>
 	)
 }

@@ -100,7 +100,7 @@ export function FilterBar(props: FilterBarProps) {
 			? undefined
 			: "Relevance joins once you search."
 	const onAddServices =
-		props.onAddServices ?? (() => navigate("/settings/streaming"))
+		props.onAddServices ?? (() => navigate("/settings/where-you-watch"))
 	const onChange = (next: typeof state) => filters.update(() => next)
 	const notSeen = counts?.optionCounts.notSeenYet
 	const notSeenHides = notSeen

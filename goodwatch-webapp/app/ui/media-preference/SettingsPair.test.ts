@@ -1,4 +1,4 @@
-// The settings page's pair, run for real in happy-dom: SettingsPair inside MediaPreferenceProvider, with the provider's
+// Settings' country and titles language, run for real in happy-dom: the status line and both lists inside MediaPreferenceProvider, with the provider's
 // own save effect, the real save adapter and the real undo toast. A pick saves at once, the toast's Undo saves the pair
 // from before through the same call, a save without an answer in 10 s is given up as not confirmed, and a conflict
 // says so. Only the network, the router's revalidation, the signed-in user and the countries list are stand-ins.
@@ -32,6 +32,15 @@ registerHooks({
 				"export const useRevalidator=()=>({state:'idle',revalidate:()=>{globalThis.__revalidations+=1}})"
 		else if (url.endsWith("/app/utils/auth.ts"))
 			source = "export const useUser=()=>({user:null,loading:false})"
+		else if (
+			url.endsWith("/app/routes/api.user-settings.get.tsx") ||
+			url.endsWith("/app/routes/api.streaming-providers.tsx")
+		)
+			// Only the query keys a save refreshes, taken from the route itself: the rest is server code.
+			source = readFileSync(new URL(url), "utf8")
+				.split("\n")
+				.filter((line) => /^export const queryKey\w+ = /.test(line))
+				.join("\n")
 		else if (url.endsWith("/app/routes/api.countries.tsx"))
 			source = `export const useCountries=()=>({data:[{code:"DE",name:"Germany"},{code:"JP",name:"Japan"}],isPending:false,isError:false})`
 		else if (url.includes("/goodwatch-webapp/app/") && url.endsWith(".tsx"))
@@ -100,7 +109,9 @@ const { QueryClient, QueryClientProvider, notifyManager } = await import(
 	"@tanstack/react-query"
 )
 const { MediaPreferenceProvider } = await import("./MediaPreference.tsx")
-const { default: SettingsPair } = await import("./SettingsPair.tsx")
+const { PairStatus, ShowTitlesInList, WatchingFromList } = await import(
+	"./SettingsPair.tsx"
+)
 const { SAVE_TIMEOUT_MS, endpointSaver } = await import("./save-adapter.ts")
 
 // Query updates on a microtask, not on setTimeout, which the timeout test mocks.
@@ -175,11 +186,11 @@ const button = (text: string) =>
 	[...document.querySelectorAll("button")].find(
 		(b) => b.textContent?.trim() === text,
 	)
-const status = () => $("[data-settings-pair] output")?.textContent ?? ""
-const titlesHeading = () =>
-	$("[data-settings-pair] section:nth-of-type(2) h3")?.textContent ?? ""
+const status = () => $("[data-pair-status]")?.textContent ?? ""
+const titlesHeading = () => $("[data-titles-current]")?.textContent ?? ""
 const listsOff = () =>
-	($("[data-settings-pair] fieldset") as HTMLFieldSetElement).disabled
+	($("[data-show-titles-in]") as HTMLFieldSetElement).disabled &&
+	($("[data-watching-from]") as HTMLFieldSetElement).disabled
 // The newest toast: one that has gone may still be animating out.
 const toast = () => [...document.querySelectorAll("[data-toast]")].at(-1)
 const toastText = () => toast()?.textContent ?? ""
@@ -190,12 +201,14 @@ const toastUndo = () =>
 const revalidations = () =>
 	(globalThis as unknown as { __revalidations: number }).__revalidations
 
-/** The settings pair as the settings page mounts it, read and ready. */
+let queryClient: InstanceType<typeof QueryClient>
+
+/** The status line and both lists, as the Settings sheets mount them under one provider, read and ready. */
 async function mountSettings() {
 	const container = document.createElement("div")
 	document.body.append(container)
 	const root = createRoot(container)
-	const queryClient = new QueryClient({
+	queryClient = new QueryClient({
 		defaultOptions: { queries: { retry: false } },
 	})
 	await act(async () => {
@@ -207,7 +220,13 @@ async function mountSettings() {
 					country: "DE",
 					// One saver per page load, as the page's default one.
 					saver: endpointSaver(),
-					children: createElement(SettingsPair),
+					children: createElement(
+						"div",
+						null,
+						createElement(PairStatus),
+						createElement(WatchingFromList),
+						createElement(ShowTitlesInList),
+					),
 				}),
 			),
 		)
@@ -241,7 +260,7 @@ test("a pick saves at once, with the lists off while it saves", async () => {
 	await settle()
 	assert.equal(status(), "")
 	assert.equal(listsOff(), false)
-	assert.match(titlesHeading(), /^TitlesJapanese$/)
+	assert.match(titlesHeading(), /^Japanese$/)
 	assert.match(toastText(), /^Saved on this device: titles in JapaneseUndo$/)
 	assert.equal(revalidations(), 1, "the page reads the saved pair again")
 	await unmount()
@@ -299,7 +318,7 @@ test("a save without an answer in 10 s shows that it couldn't be confirmed, with
 	saves[1].answer(saved(saves[1].body, "v1"))
 	await settle()
 	assert.equal($('[role="alert"]'), null)
-	assert.match(titlesHeading(), /^TitlesJapanese$/)
+	assert.match(titlesHeading(), /^Japanese$/)
 	await unmount()
 })
 
@@ -344,6 +363,25 @@ test("a conflict says it was saved elsewhere, not that the save may have gone th
 	assert.equal(
 		$('[role="alert"]')?.textContent,
 		"Saved elsewhere meanwhile. Retry keeps titles in Japanese.",
+	)
+	await unmount()
+})
+
+test("a saved country reads the member's services again, for the new country", async () => {
+	const saves = fakeFetch()
+	const unmount = await mountSettings()
+	// What the page has read before the pick: the old country's settings and services.
+	queryClient.setQueryData(["user-settings"], { country_default: "DE", streaming_providers_default: "8" })
+	queryClient.setQueryData(["streaming-providers", "DE", "8"], [{ id: 8, name: "Netflix", logo_path: "/n.png" }])
+	await click($('[data-country-code="JP"]'))
+	await settle()
+	saves[0].answer(saved(saves[0].body, "v1"))
+	await settle()
+	assert.equal(queryClient.getQueryState(["user-settings"])?.isInvalidated, true, "the settings are read again")
+	assert.equal(
+		queryClient.getQueryState(["streaming-providers", "DE", "8"])?.isInvalidated,
+		true,
+		"the services lists are read again",
 	)
 	await unmount()
 })

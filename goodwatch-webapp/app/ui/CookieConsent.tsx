@@ -2,9 +2,9 @@ import { Link } from "@remix-run/react"
 import { useCookieConsent } from "~/routes/api.user-settings.get"
 import { useSetUserSettings } from "~/routes/api.user-settings.set"
 
-export const CookieConsent = () => {
+/** The cookie choice and how to make it: on this device, and on the account for a member. The banner and Settings. */
+export const useCookieChoice = () => {
 	const { consentGiven, setConsentGiven } = useCookieConsent()
-
 	const setUserSettings = useSetUserSettings()
 	const setConsent = (consent: "yes" | "no") => {
 		localStorage.setItem("cookie_consent", consent)
@@ -15,6 +15,11 @@ export const CookieConsent = () => {
 		})
 		setConsentGiven(consent)
 	}
+	return { consentGiven, setConsent }
+}
+
+export const CookieConsent = () => {
+	const { consentGiven, setConsent } = useCookieChoice()
 	const handleAcceptCookies = () => {
 		setConsent("yes")
 	}

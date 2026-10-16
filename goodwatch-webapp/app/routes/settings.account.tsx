@@ -4,6 +4,7 @@ import React from "react";
 import { useSetUserSettings } from "~/routes/api.user-settings.set";
 import SubmitButton from "~/ui/button/SubmitButton";
 import { PasswordInput } from "~/ui/form/PasswordInput";
+import { SettingsSheet } from "~/ui/settings/SettingsSheet";
 import { useSupabase } from "~/utils/auth";
 import { PASSWORD_MIN, useAuthClient } from "~/utils/auth-client";
 
@@ -111,32 +112,29 @@ export default function SettingsAccount() {
 	};
 
 	return (
-		<div className="px-2 md:px-4 lg:px-8">
-			<div className="flex flex-col gap-4 text-lg lg:text-2xl text-gray-300">
-				<h2 className="font-bold tracking-tight text-gray-100 text-base sm:text-lg md:text-xl lg:text-2xl">
-					Account
-				</h2>
-
-				<div className="flex gap-2 items-center text-base md:text-lg">
-					<span>You are logged in via:</span>
-					{methods.map((provider) => (
-						<span key={provider} className="h-5 w-5">
-							{provider === "google" && (
-								<span title="Google">{googleLogo}</span>
-							)}
-							{provider === "email" && <EnvelopeIcon title="Email" />}
-						</span>
-					))}
-				</div>
+		<SettingsSheet title="Account and sign-in">
+			<div className="flex flex-col gap-8 text-base text-gray-300">
+				<section className="flex flex-col gap-2">
+					<h3 className="font-semibold text-white">Sign-in</h3>
+					<div className="flex flex-wrap items-center gap-2">
+						<span>You sign in with</span>
+						{methods.map((provider) => (
+							<span key={provider} className="flex items-center gap-1.5 rounded-full bg-white/[0.06] px-2.5 py-1 text-sm ring-1 ring-white/10">
+								<span className="h-4 w-4">
+									{provider === "google" ? googleLogo : <EnvelopeIcon aria-hidden="true" />}
+								</span>
+								{provider === "google" ? "Google" : "Email"}
+							</span>
+						))}
+					</div>
+				</section>
 
 				{userHasEmailIdentity ? (
-					<>
-						<h3 className="mt-8 font-bold tracking-tight text-gray-100 text-base md:text-lg lg:text-xl">
-							Change Password
-						</h3>
+					<section className="flex flex-col gap-2">
+						<h3 className="font-semibold text-white">Change password</h3>
 
 						{status === "success" ? (
-							<p className="py-3 px-5 text-lg border-l-8 border-green-700 text-green-200 bg-green-900">
+							<p className="py-3 px-5 text-base border-l-8 border-green-700 text-green-200 bg-green-900">
 								Password changed. Other devices are signed out.
 							</p>
 						) : null}
@@ -174,43 +172,34 @@ export default function SettingsAccount() {
 								Change Password
 							</SubmitButton>
 						</div>
-					</>
+					</section>
 				) : null}
 
-				<h3 className="mt-8 font-bold tracking-tight text-gray-100 text-base md:text-lg lg:text-xl">
-					Restart Onboarding
-				</h3>
-
-				<button
-					type="button"
-					className="
-								flex items-center gap-2 flex-wrap max-w-80 px-4 py-2
-								border border-slate-700 rounded-md bg-slate-800 hover:bg-slate-900
-								text-xl text-gray-200 hover:text-white
-								group
-							"
-					onClick={handleResetOnboardingFlag}
-				>
-					Select{" "}
-					<span>
-						<span className="font-extrabold text-emerald-300 group-hover:text-emerald-500">
-							Country
-						</span>
-						,
-					</span>
-					<span className="font-extrabold text-sky-300 group-hover:text-skyd-500">
-						Streaming
-					</span>{" "}
-					and{" "}
-					<span className="font-extrabold text-rose-300 group-hover:text-rose-500">
-						Scores
-					</span>
-				</button>
-
-				<p className="max-w-80 py-2 px-5 text-sm border-l-8 border-blue-700 text-blue-200 bg-blue-900">
-					Don't worry, you won't lose any previously saved settings.
-				</p>
+				<section className="flex flex-col gap-2">
+					<h3 className="font-semibold text-white">Restart setup</h3>
+					<p className="text-sm text-gray-400">
+						Go through the first steps again: your country, your services and
+						your scores. Nothing you saved is lost.
+					</p>
+					<div className="flex flex-wrap items-center gap-3">
+						<button
+							type="button"
+							onClick={handleResetOnboardingFlag}
+							disabled={setUserSettings.isPending}
+							className="cursor-pointer rounded-lg border border-gray-600 px-3 py-2 text-sm font-semibold text-gray-200 hover:border-gray-400 hover:text-white disabled:cursor-wait disabled:opacity-60"
+						>
+							Restart setup
+						</button>
+						<output aria-live="polite" className="text-sm text-gray-400">
+							{setUserSettings.isSuccess
+								? "Done. The first steps show up again."
+								: setUserSettings.isError
+									? "That didn't work. Try again in a moment."
+									: ""}
+						</output>
+					</div>
+				</section>
 			</div>
-		</div>
+		</SettingsSheet>
 	);
 }

@@ -185,7 +185,7 @@ function FilterControls({
 					providers={mine}
 					onChange={p.onServices}
 					onAddServices={() => {
-						window.location.href = "/settings/streaming"
+						window.location.href = "/settings/where-you-watch"
 					}}
 					size="sm"
 				/>

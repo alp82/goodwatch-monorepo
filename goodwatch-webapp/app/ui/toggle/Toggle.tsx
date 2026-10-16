@@ -4,6 +4,8 @@ interface ToggleProps {
 	disabled?: boolean
 	size?: "sm" | "md" | "lg"
 	className?: string
+	/** The switch's name, when no visible label is tied to it. */
+	ariaLabel?: string
 }
 
 const sizeClasses = {
@@ -33,6 +35,7 @@ export default function Toggle({
 	disabled = false,
 	size = "md",
 	className = "",
+	ariaLabel,
 }: ToggleProps) {
 	const sizes = sizeClasses[size]
 
@@ -41,6 +44,7 @@ export default function Toggle({
 			<label className={`relative block ${sizes.label} ${disabled ? "cursor-not-allowed opacity-70" : "cursor-pointer"}`}>
 				<input
 					type="checkbox"
+					aria-label={ariaLabel}
 					checked={checked}
 					onChange={(e) => !disabled && onChange(e.target.checked)}
 					disabled={disabled}
