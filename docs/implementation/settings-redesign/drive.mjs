@@ -150,9 +150,14 @@ await shot(page, "05-language-desktop")
 await go(page, "/settings/language")
 check("the language is kept after a reload", (await page.textContent("[data-titles-current]")).startsWith("Japanese"))
 
-// 6. Discover and privacy: For you and cookies.
+// 6. Discover and privacy: For you and cookies. A double click on Close goes back once, to the tiles.
 await page.click("[data-settings-sheet] button[aria-label='Close']")
 await page.waitForURL(/\/settings$/)
+await page.click("main a[href='/settings/language']")
+await page.waitForSelector("[data-settings-sheet]")
+await page.dblclick("[data-settings-sheet] button[aria-label='Close']")
+await page.waitForTimeout(1200)
+check("a double click on Close goes back to the tiles only", new URL(page.url()).pathname === "/settings", page.url())
 await page.locator("input[aria-label='For you in Discover']").click({ force: true })
 await page.waitForTimeout(1500)
 check("For you off is saved", (await settings(page)).for_you === "no")

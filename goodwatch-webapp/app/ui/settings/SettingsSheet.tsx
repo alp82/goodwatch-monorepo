@@ -37,19 +37,35 @@ export function SettingsSheet({
 		(useLocation().state as { openedFromTiles?: boolean } | null)
 			?.openedFromTiles,
 	)
-	const leave = useCallback(
-		() =>
-			fromTiles
-				? navigate(-1)
-				: navigate(SETTINGS_PATH, { replace: true, preventScrollReset: true }),
-		[navigate, fromTiles],
-	)
+	// Once only: going back twice (the animation's end and its timer, a double click) would leave Settings.
+	const left = useRef(false)
+	const leave = useCallback(() => {
+		if (left.current) return
+		left.current = true
+		if (fromTiles) navigate(-1)
+		else navigate(SETTINGS_PATH, { replace: true, preventScrollReset: true })
+	}, [navigate, fromTiles])
 	const close = useCallback(() => {
 		if (closing) return
 		if (window.matchMedia("(prefers-reduced-motion: reduce)").matches)
 			return leave()
 		setClosing(true)
 	}, [closing, leave])
+	// Tab stays in the sheet: the page under it is out of reach while it is open. Focus that gets out anyway (from the
+	// page's body, past a radio group) comes back to the heading; a dialog over the sheet and the toast may have it.
+	const sheet = useRef<HTMLDivElement>(null)
+	// Before the effect below, so this listener is gone when that one hands the focus back to the tile.
+	useEffect(() => {
+		const onFocus = (e: FocusEvent) => {
+			const at = e.target
+			if (!(at instanceof Element) || !sheet.current) return
+			if (sheet.current.contains(at)) return
+			if (at.closest('[role="dialog"], [data-toast]')) return
+			heading.current?.focus({ preventScroll: true })
+		}
+		document.addEventListener("focusin", onFocus)
+		return () => document.removeEventListener("focusin", onFocus)
+	}, [])
 	// The animation's end leaves; a timer stands in should it never end (a hidden tab).
 	useEffect(() => {
 		if (!closing) return
@@ -70,7 +86,8 @@ export function SettingsSheet({
 			overflow: root.style.overflow,
 			gutter: root.style.scrollbarGutter,
 		}
-		root.style.scrollbarGutter = "stable"
+		if (window.innerWidth > root.clientWidth)
+			root.style.scrollbarGutter = "stable"
 		root.style.overflow = "hidden"
 		return () => {
 			root.style.overflow = before.overflow
@@ -87,14 +104,17 @@ export function SettingsSheet({
 			if (document.querySelector('[role="dialog"]:not([data-settings-sheet])'))
 				return
 			const at = e.target
-			if (at instanceof HTMLInputElement && at.value) return
+			if (
+				at instanceof HTMLInputElement &&
+				at.matches("input:not([type]), input[type=text], input[type=search]") &&
+				at.value
+			)
+				return
 			close()
 		}
 		window.addEventListener("keydown", onKey)
 		return () => window.removeEventListener("keydown", onKey)
 	}, [close])
-	// Tab stays in the sheet: the page under it is out of reach while it is open.
-	const sheet = useRef<HTMLDivElement>(null)
 	const keepFocus = (e: React.KeyboardEvent) => {
 		if (e.key !== "Tab" || !sheet.current) return
 		const reachable = [
