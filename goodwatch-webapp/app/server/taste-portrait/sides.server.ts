@@ -218,14 +218,13 @@ function standout(center: Vec, others: Vec[]) {
 }
 
 /**
- * From the two attributes that most set the side apart: "Bleak stories about crime and justice" when one is a World
- * attribute (an adjective from the other, the noun from the World one), else "Hopeful, heartwarming stories", and two
- * kinds of humor as one: "Physically and situationally funny stories".
+ * The names a side can take, best first, from the two attributes that most set it apart: "Bleak stories about crime
+ * and justice" when one is a World attribute (an adjective from the other, the noun from the World one), else
+ * "Hopeful, heartwarming stories", and two kinds of humor as one: "Physically and situationally funny stories". Then
+ * the first attribute with the next ones, and its noun alone.
  */
-function sideName(
-	order: ReturnType<typeof standout>,
-	taken: Set<string>,
-): { name: string; keys: string[] } {
+function sideNames(order: ReturnType<typeof standout>) {
+	const names: { name: string; keys: string[] }[] = []
 	for (let shift = 0; shift < 4; shift++) {
 		const a = order[0]
 		const b = order[1 + shift]
@@ -238,14 +237,36 @@ function sideName(
 			: x.endsWith(" funny") && y.endsWith(" funny")
 				? `${capitalize(x.replace(/ funny$/, ""))} and ${y.replace(/ funny$/, "")} funny stories`
 				: `${capitalize(x)}, ${y} stories`
-		if (!taken.has(name)) {
-			taken.add(name)
-			return { name, keys: [a.key, b.key] }
-		}
+		names.push({ name, keys: [a.key, b.key] })
 	}
-	const fallback = capitalize(noun(order[0].key))
-	taken.add(fallback)
-	return { name: fallback, keys: [order[0].key] }
+	if (order[0])
+		names.push({ name: capitalize(noun(order[0].key)), keys: [order[0].key] })
+	return names
+}
+
+/**
+ * The side's name and the titles it describes: the first name not taken that still describes most of the side (three
+ * in four of its titles), else the one that describes the most. Null when no name describes two.
+ */
+function nameSide(
+	order: ReturnType<typeof standout>,
+	members: RatedTitle[],
+	taken: Set<string>,
+) {
+	let best: { name: string; members: RatedTitle[] } | null = null
+	for (const { name, keys } of sideNames(order)) {
+		if (taken.has(name)) continue
+		const described = describedBy(members, keys)
+		if (described.length >= Math.max(2, Math.ceil(0.75 * members.length))) {
+			best = { name, members: described }
+			break
+		}
+		if (!best || described.length > best.members.length)
+			best = { name, members: described }
+	}
+	if (!best || best.members.length < 2) return null
+	taken.add(best.name)
+	return best
 }
 
 /** The side's titles its name describes: none strongly against an attribute the name claims. */
@@ -651,17 +672,17 @@ export function buildSides(
 
 	const groupCenters = groups.map((g) => g.center)
 	const taken = new Set<string>()
-	// Each side keeps the titles its name describes; a side left with fewer than two goes.
+	// Each side keeps the titles its name describes; a side no name describes two titles of goes.
 	const named = groups.flatMap((g, i) => {
-		const { name, keys } = sideName(
+		const side = nameSide(
 			standout(
 				g.center,
 				groupCenters.filter((_, j) => j !== i),
 			),
+			g.members,
 			taken,
 		)
-		const members = describedBy(g.members, keys)
-		return members.length >= 2 ? [{ name, center: g.center, members }] : []
+		return side ? [{ ...side, center: g.center }] : []
 	})
 	if (named.length < 2) return empty
 	named.sort(
