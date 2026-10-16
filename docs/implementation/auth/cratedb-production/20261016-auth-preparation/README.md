@@ -1,4 +1,50 @@
-# Auth preparation stopped at firewall review — #547
+# Production auth account preparation — #547
+
+## Completed after owner clarification
+
+The owner explicitly accepted **private destination binding plus live password enforcement**
+as #547's network boundary. The earlier firewall stop below is historical and no longer
+blocks this ticket. Source filtering and durable generated-rule comments are tracked separately
+in [#669](https://github.com/alp82/goodwatch-monorepo/issues/669), with no map/project membership
+or wayfinder label (only `needs-triage`). No firewall semantics or comments were changed.
+
+On 2026-10-16, created `goodwatch_auth` through trusted container-loopback administration,
+using the #562 method: server-side `secrets.token_hex(32)`, exclusive creation of a root-owned
+0600 file in the existing root0700 directory, and a bound password argument to CREATE USER.
+No password appeared in command arguments, output, issues or repository files. Secret location:
+
+`crate-01:/root/.config/goodwatch/crate-credentials/goodwatch_auth`
+
+The account is not a superuser and has **zero privilege entries** before and after verification.
+No grants, schema/table changes, application changes or Coolify writes were performed.
+
+[Completion evidence](completion.json) records:
+
+- Correct credentials return `current_user = goodwatch_auth` through each of .11/.12/.13.
+- Missing and incorrect passwords return HTTP 401 through each coordinator (six checks).
+- Admin inventory contains 69 existing `doc` base tables and no auth tables.
+- All 69 tables reject both SELECT and DELETE through every coordinator: **414 denials**.
+  SELECT uses LIMIT 0, DELETE uses WHERE false, so even an unexpected privilege would not
+  expose member rows or delete data. Every result is HTTP404 / code4045,
+  `SchemaUnknownException[Schema 'doc' unknown]`: the zero-grant account cannot see the schema.
+  This is not a missing-schema assumption: the privileged inventory confirms the tables exist.
+- The initial probe expected HTTP401/403 privilege errors and stopped at the first hidden-schema
+  response. A read-only diagnostic identified CrateDB's actual denial shape; the corrected
+  verification reused the existing secret/account without rotation and passed every endpoint/table.
+
+The original done criteria now hold: all nodes on 5.10.16 (independently checked through every
+coordinator in `database.json`), dedicated auth user created, accepted firewall boundary documented.
+The completed #562 enforcement record and rolling-upgrade/rehearsal evidence remain linked by
+`cratedb-production-rollout.md` and #547. The former stop did not require a firewall change.
+
+The #595 checklist step 1.4 reuses this identity, creates the approved auth tables at cutover,
+sets replicas=2 / write.wait_for_active_shards=1 / translog.durability=REQUEST, and grants only
+explicit table-scoped DQL/DML to `goodwatch_auth`. The owner copies the protected password into
+Coolify UI only as `AUTH_CRATEDB_PASSWORD`, with `AUTH_CRATEDB_USERNAME=goodwatch_auth`;
+the agent never writes to Coolify's DB or API. Table grants and the UI handoff remain cutover work,
+not #547 completion requirements. External/provider reachability was not tested.
+
+## Historical inspection and stop (superseded)
 
 Observed 2026-10-16 around 00:34–00:35 UTC, directly over private SSH as root.
 No production mutation was made. The operator stopped under the instruction to report
