@@ -1,39 +1,39 @@
 // PROTOTYPE - throwaway (#659, map #652). The view model of /prototype/sides-watch-next: one member's real Watch next
-// (My movies, or the whole Wishlist), ordered by their personal order, with every title's Side of you. Types only, so
-// browser code can import it.
-import type { MoodKey } from "~/domain/moods"
+// (My movies, or the whole Wishlist), ordered by their personal order, with the group of loved titles each title
+// belongs to (production's Sides of you and side rule, #666). Types only, so browser code can import it.
 import type { WatchNextTierSize } from "~/domain/watch-next"
 import type { WatchNext, WatchNextTitle } from "~/server/watch-next.server"
 import type { TitleKey } from "~/utils/title-key"
+import type { GroupWords } from "./label"
 
 export const VARIANTS = {
 	today: { name: "Today (production)", style: "reference" },
-	marked: { name: "Each pick shows its side", style: "existing" },
-	grouped: { name: "Grouped by side", style: "existing" },
-	picker: { name: "Pick a side for tonight", style: "existing" },
-	lanes: { name: "One from each side", style: "bolder" },
+	moods: { name: "In the mood picker", style: "existing" },
+	filter: { name: "One more filter", style: "existing" },
+	because: { name: "Because you loved", style: "existing" },
 } as const
 export type VariantKey = keyof typeof VARIANTS
 export const isVariant = (v: unknown): v is VariantKey => typeof v === "string" && v in VARIANTS
 
-export interface SwnSide {
+/**
+ * How picked groups narrow. "any": a group is one more choice among the moods (up to three in all), and a title fits
+ * when it is in any of them. "also": a group is a condition of its own, like How long?, and one is picked at most.
+ */
+export type GroupRule = "any" | "also"
+export const RULE: Record<VariantKey, GroupRule | null> = { today: null, moods: "any", filter: "also", because: "any" }
+
+export interface SwnGroup {
 	id: string
-	/** The side's color: the only way to tell sides apart with the names off. */
-	color: string
-	/** Contrasted words ("Bleak psychological stories"): shown only with the names on (words gate, #656). */
-	name: string
-	/** Share of the loved titles. */
-	share: number
-	/** The side's most typical loved titles: its face with the names off. */
+	words: GroupWords
+	/** The loved titles it is worded by, first. */
 	faces: TitleKey[]
-	/** The moods its loved titles have far more often than the rest: what "open Watch next" picks. */
-	moods: MoodKey[]
-	/** Titles on the list in this side, and how many of them fit tonight. */
-	listed: number
-	fitting: number
+	/** A backdrop for its tile, from one of its loved titles. */
+	backdrop: string | null
+	/** Its titles on the list, counted as the moods are (on your services when that is on). */
+	count: number
 }
 
-export type SwnTierKey = WatchNext["tiers"][number]["key"] | "otherSides"
+export type SwnTierKey = WatchNext["tiers"][number]["key"] | "elseFits"
 
 export interface SwnTier {
 	key: SwnTierKey
@@ -51,25 +51,22 @@ export interface SwnMember {
 
 export interface SwnView {
 	variant: VariantKey
+	rule: GroupRule | null
 	/** My movies (with How long?) or the whole Wishlist (Watch next). */
 	list: "movies" | "all"
 	member: SwnMember & { listed: number }
 	members: SwnMember[]
-	/** The words behind the toggle. */
-	names: boolean
 	/** Hero, Then, strip, and mood counts, as production computes them for this order. */
 	data: WatchNext
 	tiers: SwnTier[]
 	/** Every title that fits tonight, in order, the hero first. */
 	fitting: TitleKey[]
 	titles: Record<string, WatchNextTitle>
-	/** Posters of the sides' faces (loved titles). */
-	faces: Record<string, { title: string; poster: string | null }>
-	sides: SwnSide[]
-	/** Each listed title's side; null when it fits no side well. */
-	sideOf: Record<string, string | null>
-	/** The picker's side for tonight. */
-	side: string | null
+	groups: SwnGroup[]
+	/** Each listed title's group; null when it fits none. */
+	groupOf: Record<string, string | null>
+	/** The picked groups. */
+	picked: string[]
 	passed: TitleKey[]
 	personalOrder: { on: boolean; note: string | null }
 	notes: string[]

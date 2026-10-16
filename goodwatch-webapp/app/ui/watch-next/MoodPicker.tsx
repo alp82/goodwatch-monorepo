@@ -28,7 +28,27 @@ export interface MoodControl {
 	clear: () => void
 	/** The mood last refused, with a counter so the same refusal shows again. */
 	refused: { mood: MoodKey; at: number } | null
+	/** PROTOTYPE (#659): groups of loved titles in the mood picker, for /prototype/sides-watch-next. */
+	groups?: MoodGroups
 }
+
+/** PROTOTYPE (#659): what /prototype/sides-watch-next adds to the mood control. */
+export interface MoodGroups {
+	/** Picked groups that count with the moods toward the three. */
+	picked: number
+	/** Something besides the moods narrows the list (a group as its own condition), so the count says "fit". */
+	narrowing: boolean
+	/** The picked groups' chips, after the picked moods. */
+	chips?: React.ReactNode
+	/** More tiles after the moods' in the dropdown and the phone drawer. */
+	tiles?: (dense: boolean) => React.ReactNode
+	/** The phone's Moods button label with groups picked. */
+	short?: string | null
+}
+
+/** Moods and groups picked together (PROTOTYPE #659: groups). */
+export const pickedCount = (control: MoodControl) =>
+	control.moods.length + (control.groups?.picked ?? 0)
 
 export const refusalText = (mood: MoodKey) =>
 	`Three is the most. Remove one to add ${MOOD_BY_KEY[mood].name}.`
@@ -42,7 +62,7 @@ export const SPECTRUM: readonly MoodKey[] = [
 ]
 
 const isFull = (control: MoodControl, mood: MoodKey) =>
-	control.moods.length >= MAX_MOODS && !control.moods.includes(mood)
+	pickedCount(control) >= MAX_MOODS && !control.moods.includes(mood)
 
 // A mood's picture: the backdrop of one of its titles, washed in the mood's color.
 function MoodArt({
@@ -144,6 +164,7 @@ export function PickedMoods({
 					</motion.span>
 				)
 			})}
+			{control.groups?.chips}
 		</>
 	)
 }
@@ -156,7 +177,7 @@ export function MoodButton({
 	control: MoodControl
 	buttonRef: React.RefObject<HTMLButtonElement>
 }) {
-	const picked = control.moods.length > 0
+	const picked = pickedCount(control) > 0
 	return (
 		<button
 			ref={buttonRef}
@@ -169,7 +190,7 @@ export function MoodButton({
 			className={`inline-flex h-9 shrink-0 cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-full text-sm font-semibold text-white ring-1 ring-white/15 transition-colors hover:bg-white/20 ${picked ? "px-2.5" : "pl-1.5 pr-3"} ${control.open ? "bg-white/15" : "bg-white/10"}`}
 		>
 			{picked ? (
-				control.moods.length < MAX_MOODS ? (
+				pickedCount(control) < MAX_MOODS ? (
 					"Add"
 				) : (
 					"Change"
@@ -219,7 +240,7 @@ function PanelHead({
 	control: MoodControl
 	onDone: () => void
 }) {
-	const k = control.moods.length
+	const k = pickedCount(control)
 	const hint = useRefusalHint(control)
 	return (
 		<div className="flex min-h-9 shrink-0 items-center gap-3 border-b border-white/8 px-3 py-2">
@@ -338,6 +359,7 @@ export function MoodGrid({
 					</motion.button>
 				)
 			})}
+			{control.groups?.tiles?.(dense)}
 		</div>
 	)
 }

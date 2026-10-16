@@ -1,10 +1,8 @@
-// PROTOTYPE - throwaway (#659). Pieces the Sides-on-Watch-next variants share: how a side looks (its color and the
-// posters of its loved titles; its words only with the names on), the stepped tiers with a side mark per poster, and
-// the URL-driven choices (the prototype plans on the server, so every choice is a URL change).
+// PROTOTYPE - throwaway (#659). Pieces the variants share: the stepped tiers, with an optional line under the bigger
+// posters, and the URL-driven choices (the prototype plans on the server, so every choice is a URL change).
 import { ChevronDownIcon } from "@heroicons/react/24/solid"
 import { Link, useSearchParams } from "@remix-run/react"
 import { type ReactNode, useState } from "react"
-import { MOOD_BY_KEY, type MoodKey } from "~/domain/moods"
 import { TIER_CAPS, type WatchNextTierSize } from "~/domain/watch-next"
 import type { WatchNextTitle } from "~/server/watch-next.server"
 import { TitlePosterCard } from "~/ui/title-card/TitlePosterCard"
@@ -12,9 +10,7 @@ import { titleHref, useMoviesPage } from "~/ui/watch-next/WatchNextHero"
 import { misfitWords, runtimeLabel, tierHeadingClass } from "~/ui/watch-next/labels"
 import { DISPLAY, posterUrl } from "~/ui/watch-next/style"
 import type { TitleKey } from "~/utils/title-key"
-import type { SwnSide, SwnTier, SwnView } from "./model"
-
-export const pct = (share: number) => `${Math.round(share * 100)}%`
+import type { SwnTier, SwnView } from "./model"
 
 /** Sets or clears URL parameters, keeping the rest. */
 export function useParam() {
@@ -29,66 +25,6 @@ export function useParam() {
 	}
 }
 
-export const sideById = (view: SwnView, id: string | null | undefined) => (id ? (view.sides.find((s) => s.id === id) ?? null) : null)
-
-/** The side's posters, fanned: its face when the words are off. */
-export function SideFaces({ side, view, size = "sm" }: { side: SwnSide; view: SwnView; size?: "xs" | "sm" | "md" }) {
-	const w = size === "xs" ? "w-5" : size === "sm" ? "w-7" : "w-11"
-	return (
-		<span className="inline-flex shrink-0 items-center" aria-hidden>
-			{side.faces.slice(0, 3).map((key, i) => {
-				const face = view.faces[key]
-				return (
-					<img
-						key={key}
-						src={posterUrl(face?.poster ?? null, "w92")}
-						alt=""
-						title={face?.title}
-						className={`${w} aspect-[2/3] rounded-sm object-cover ring-2 ${i ? "-ml-2" : ""}`}
-						style={{ ["--tw-ring-color" as string]: side.color }}
-					/>
-				)
-			})}
-		</span>
-	)
-}
-
-/** A side's chip: its color, its posters, and (with the names on) its name, or its share of what you love. */
-export function SideChip({ side, view, share = true, className = "" }: { side: SwnSide; view: SwnView; share?: boolean; className?: string }) {
-	return (
-		<span className={`inline-flex min-w-0 items-center gap-2 text-xs font-semibold text-gray-200 ${className}`} data-side={side.id}>
-			<span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: side.color }} aria-hidden />
-			<SideFaces side={side} view={view} size="xs" />
-			<span className="truncate">
-				{view.names ? side.name : `Side ${view.sides.indexOf(side) + 1}`}
-				{share && <span className="font-normal text-gray-400"> · {pct(side.share)} of what you love</span>}
-			</span>
-		</span>
-	)
-}
-
-/** "Funny + Feel-good": a side's moods, as Watch next's mood picker names them. */
-export function moodNames(moods: MoodKey[]) {
-	return moods.map((m) => MOOD_BY_KEY[m].name).join(" + ")
-}
-
-export function MoodButton({ side, className = "" }: { side: SwnSide; className?: string }) {
-	const set = useParam()
-	if (!side.moods.length) return null
-	return (
-		<button
-			type="button"
-			onClick={() => set({ moods: side.moods.join(","), side: null })}
-			className={`inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-full border border-white/15 bg-black/30 px-3 text-xs font-semibold text-gray-200 hover:border-amber-400/70 ${className}`}
-		>
-			{side.moods.map((m) => (
-				<span key={m} className="h-2 w-2 rounded-full" style={{ background: MOOD_BY_KEY[m].hue }} aria-hidden />
-			))}
-			Its moods: {moodNames(side.moods)}
-		</button>
-	)
-}
-
 const GRID: Record<WatchNextTierSize, string> = {
 	xl: "grid grid-cols-2 gap-3 md:flex md:flex-wrap md:gap-4",
 	lg: "grid grid-cols-3 gap-2 md:flex md:flex-wrap md:gap-3",
@@ -98,20 +34,6 @@ const GRID: Record<WatchNextTierSize, string> = {
 const ITEM: Record<WatchNextTierSize, string> = { xl: "md:w-56", lg: "md:w-36", md: "md:w-24", sm: "md:w-16" }
 
 export type Mark = (title: WatchNextTitle, size: WatchNextTierSize) => ReactNode
-
-/** A side's color under a poster. */
-export function sideBar(view: SwnView): Mark {
-	return (title, size) => {
-		const side = sideById(view, view.sideOf[title.key])
-		if (!side) return <span className="mt-1 block h-1 rounded-full bg-white/5" aria-hidden />
-		return (
-			<span className="mt-1 flex items-center gap-1.5" title={view.names ? side.name : `Side ${view.sides.indexOf(side) + 1}`}>
-				<span className="h-1 flex-1 rounded-full" style={{ background: side.color }} aria-hidden />
-				{view.names && (size === "xl" || size === "lg") && <span className="truncate text-[11px] text-gray-400">{side.name}</span>}
-			</span>
-		)
-	}
-}
 
 function TierRow({ tier, view, mark, keys }: { tier: SwnTier; view: SwnView; mark?: Mark; keys: TitleKey[] }) {
 	const [all, setAll] = useState(false)

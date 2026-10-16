@@ -1,8 +1,8 @@
-// PROTOTYPE - throwaway (#659, map #652). How Sides of you appear on Watch next: four variants on one member's real
-// list, beside today's page. ?variant=today|marked|grouped|picker|lanes, ?as=owner|m1..m5 (members picked at runtime
-// by rating count; "me" when signed in), ?list=all for the whole Wishlist (default: My movies), ?names=1 for the side
-// names (words gate, #656), plus Watch next's own moods, services, and time, ?side= for the picker, and ?nt= for the
-// titles passed with Not tonight. Read-only: nothing is written.
+// PROTOTYPE - throwaway (#659, map #652). How the groups of titles a member loves (production's Sides of you) appear
+// on Watch next, inside its own controls: three variants on one member's real list, beside today's page.
+// ?variant=today|moods|filter|because, ?as=owner|m1..m5 (members picked at runtime by rating count; "me" when signed
+// in), ?list=all for the whole Wishlist (default: My movies), ?like=g1,g2 for the picked groups, plus Watch next's own
+// moods, services, and time, and ?nt= for the titles passed with Not tonight. Read-only: nothing is written.
 import { type LoaderFunctionArgs, json } from "@remix-run/node"
 import { useLoaderData } from "@remix-run/react"
 import { MOOD_KEYS, type MoodKey } from "~/domain/moods"
@@ -27,18 +27,17 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			.slice(0, 3),
 		onMyServices: p.get("services") !== "all",
 		time: list === "movies" ? timeOf(p.get("time")) : null,
-		side: p.get("side"),
+		groups: (p.get("like") ?? "").split(",").filter(Boolean),
 		passed: (p.get("nt") ?? "")
 			.split(",")
 			.map(Number)
 			.filter((n) => Number.isFinite(n) && n > 0) as TitleKey[],
-		names: p.get("names") === "1",
 	})
 	return json({ view }, { headers: { "Cache-Control": "private, no-store" } })
 }
 
 export const meta = () => [
-	{ title: "Sides of you on Watch next, prototype · GoodWatch" },
+	{ title: "What you love on Watch next, prototype · GoodWatch" },
 	{ name: "robots", content: "noindex, nofollow" },
 ]
 

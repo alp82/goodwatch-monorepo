@@ -34,18 +34,20 @@ import {
 	titleCount,
 } from "./labels"
 
-type Drawer = "moods" | "services" | "sort" | "time"
+// PROTOTYPE (#659): "groups", a fifth drawer for /prototype/sides-watch-next.
+type Drawer = "moods" | "services" | "sort" | "time" | "groups"
 
 const DRAWER_LABEL: Record<Drawer, string> = {
 	moods: "Moods",
 	services: "Where to watch",
 	sort: "Sort",
 	time: "How long?",
+	groups: "From what you love",
 }
 
 /** A fourth button and drawer, from the page that owns it: "How long?" on My movies (#385). */
 export interface ExtraDrawer {
-	key: "time"
+	key: "time" | "groups"
 	title: string
 	/** What the button says: the choice in use. */
 	label: string
@@ -69,8 +71,12 @@ export interface PhoneControlsProps {
 	moods: MoodControl | null
 	setOnMyServices: (on: boolean) => void
 	setSort: (sort: WatchNextSort) => void
-	extra?: ExtraDrawer | false
+	/** PROTOTYPE (#659): more than one extra drawer. */
+	extra?: ExtraDrawer | ExtraDrawer[] | false
 }
+
+const extrasOf = (extra: ExtraDrawer | ExtraDrawer[] | false | undefined) =>
+	!extra ? [] : Array.isArray(extra) ? extra : [extra]
 
 function MoodDots({ moods }: { moods: readonly MoodKey[] }) {
 	const shown = moods.length ? moods : SPECTRUM
@@ -94,9 +100,10 @@ function MoodDots({ moods }: { moods: readonly MoodKey[] }) {
 }
 
 // "Show 23 that fit", "Show 151 on your services", "Show 349 titles"; "Done" when there is nothing to show.
-function showLabel(data: WatchNext | null): string {
+function showLabel(data: WatchNext | null, narrowed = false): string {
 	if (!data) return "Done"
-	const timed = Boolean(data.time)
+	// PROTOTYPE (#659): a picked group narrows like a mood.
+	const timed = Boolean(data.time) || narrowed
 	const filtered = data.moods.length > 0 || data.onMyServices || timed
 	const n = filtered ? data.fitting : data.total
 	if (!n) return "Done"
@@ -113,7 +120,8 @@ function showLabel(data: WatchNext | null): string {
 function ShowButton({
 	data,
 	onClick,
-}: { data: WatchNext | null; onClick: () => void }) {
+	narrowed,
+}: { data: WatchNext | null; onClick: () => void; narrowed?: boolean }) {
 	return (
 		<div className="shrink-0 border-t border-white/10 bg-gray-950/95 px-4 pt-3 pb-4">
 			<motion.button
@@ -123,7 +131,7 @@ function ShowButton({
 				data-drawer-done
 				className="h-12 w-full cursor-pointer rounded-2xl bg-white text-base font-bold text-black outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
 			>
-				{showLabel(data)}
+				{showLabel(data, narrowed)}
 			</motion.button>
 		</div>
 	)
@@ -329,14 +337,17 @@ function Segments({
 	open,
 	onOpen,
 	extra,
+	short,
 }: {
 	data: WatchNext
 	moods: readonly MoodKey[]
-	extra?: ExtraDrawer | false
+	extra?: ExtraDrawer | ExtraDrawer[] | false
 	open: Drawer | null
 	onOpen: (drawer: Drawer) => void
+	/** PROTOTYPE (#659): the Moods button's label with groups picked. */
+	short?: string | null
 }) {
-	const picked = moods.length > 0
+	const picked = moods.length > 0 || Boolean(short)
 	const segment = (drawer: Drawer) => ({
 		type: "button" as const,
 		"aria-haspopup": "dialog" as const,
@@ -354,11 +365,11 @@ function Segments({
 		<>
 			<motion.button
 				{...segment("moods")}
-				aria-label={`Moods: ${picked ? moods.map((m) => MOOD_BY_KEY[m].name).join(", ") : "any"}`}
+				aria-label={`Moods: ${short ?? (picked ? moods.map((m) => MOOD_BY_KEY[m].name).join(", ") : "any")}`}
 				className={`${SEGMENT} flex-[1.25] ${picked ? "bg-white/[0.07] text-white" : "text-gray-300"}`}
 			>
 				<MoodDots moods={moods} />
-				<span className="w-full truncate text-center">{moodsShort(moods)}</span>
+				<span className="w-full truncate text-center">{short ?? moodsShort(moods)}</span>
 			</motion.button>
 			<motion.button
 				{...segment("services")}
@@ -398,8 +409,9 @@ function Segments({
 					</AnimatePresence>
 				</span>
 			</motion.button>
-			{extra && (
+			{extrasOf(extra).map((extra) => (
 				<motion.button
+					key={extra.key}
 					{...segment(extra.key)}
 					aria-label={`${extra.title} ${extra.label}`}
 					className={`${SEGMENT} flex-1 ${extra.on ? "bg-white/[0.07] text-amber-200" : "text-gray-300"}`}
@@ -407,7 +419,7 @@ function Segments({
 					{extra.icon}
 					<span className="w-full truncate text-center">{extra.label}</span>
 				</motion.button>
-			)}
+			))}
 		</>
 	)
 }
@@ -447,6 +459,7 @@ export function PhoneControls({
 				open={open}
 				onOpen={setOpen}
 				extra={extra}
+				short={moods.groups?.short}
 			/>
 		) : (
 			<LoadingSegments />
@@ -455,7 +468,13 @@ export function PhoneControls({
 		index: open === drawer ? 0 : -1,
 		onIndex: (index: number) => setOpen(index < 0 ? null : drawer),
 		label: DRAWER_LABEL[drawer],
-		footer: <ShowButton data={data} onClick={close} />,
+		footer: (
+			<ShowButton
+				data={data}
+				onClick={close}
+				narrowed={Boolean(moods?.groups?.picked || moods?.groups?.narrowing)}
+			/>
+		),
 	})
 
 	return (
@@ -508,10 +527,11 @@ export function PhoneControls({
 							/>
 						</div>
 					</SnapSheet>
-					{extra && (
+					{extrasOf(extra).map((extra) => (
 						<SnapSheet
+							key={extra.key}
 							{...sheet(extra.key)}
-							snaps={SERVICES_SNAPS}
+							snaps={extra.key === "groups" ? undefined : SERVICES_SNAPS}
 							header={
 								<DrawerHead>
 									<h2 className="text-base font-bold text-white">
@@ -524,7 +544,7 @@ export function PhoneControls({
 								{extra.body}
 							</div>
 						</SnapSheet>
-					)}
+					))}
 				</>
 			)}
 		</MotionConfig>

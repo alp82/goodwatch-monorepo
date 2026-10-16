@@ -42,6 +42,10 @@ export const NewOnContext = createContext<NewOnMark | null>(null)
 export const TitleAsideContext = createContext<
 	((title: WatchNextTitle, where: "hero" | "then") => React.ReactNode) | null
 >(null)
+// PROTOTYPE (#659): rewords the line above the hero's title, for /prototype/sides-watch-next.
+export const HeroLabelContext = createContext<((label: string) => string) | null>(
+	null,
+)
 
 export const titleHref = (
 	title: Pick<TitleCard, "media_type" | "tmdb_id" | "title">,
@@ -115,6 +119,7 @@ function Eyebrow({
 	hero: WatchNextTitle
 }) {
 	const movies = useMoviesPage()
+	const relabel = useContext(HeroLabelContext)
 	const fact = data.sort === "match" ? null : sortFact(data.sort, hero)
 	return (
 		<motion.div
@@ -126,14 +131,16 @@ function Eyebrow({
 			data-eyebrow
 		>
 			<span className="text-amber-300" data-herolabel>
-				{movies
-					? movieHeroLabel(
-							data.sort,
-							data.moods,
-							data.heroNote,
-							data.time ?? null,
-						)
-					: heroLabel(data.sort, data.moods, data.heroNote)}
+				{(relabel ?? ((label: string) => label))(
+					movies
+						? movieHeroLabel(
+								data.sort,
+								data.moods,
+								data.heroNote,
+								data.time ?? null,
+							)
+						: heroLabel(data.sort, data.moods, data.heroNote),
+				)}
 			</span>
 			{fact && <span className="text-gray-300">{fact}</span>}
 			{hero.misfit?.why === "time" && (

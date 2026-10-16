@@ -76,9 +76,11 @@ function ServicesToggle({
 function FitCount({
 	data,
 	className = "",
-}: { data: WatchNext; className?: string }) {
+	narrowed = false,
+}: { data: WatchNext; className?: string; narrowed?: boolean }) {
 	const word = useMoviesPage() ? "movie" : "title"
-	const timed = Boolean(data.time)
+	// PROTOTYPE (#659): a picked group narrows like a mood.
+	const timed = Boolean(data.time) || narrowed
 	const filtered = data.moods.length > 0 || data.onMyServices || timed
 	if (!filtered)
 		return (
@@ -116,7 +118,7 @@ function StripBody({
 }: StripProps & { pinned: boolean }) {
 	const anchor = useRef<HTMLDivElement>(null)
 	const moodButton = useRef<HTMLButtonElement>(null)
-	const picked = moods.moods.length > 0
+	const picked = moods.moods.length > 0 || Boolean(moods.groups?.picked)
 	return (
 		<div
 			ref={anchor}
@@ -140,6 +142,7 @@ function StripBody({
 					<MoodButton control={moods} buttonRef={moodButton} />
 					<FitCount
 						data={data}
+						narrowed={Boolean(moods.groups?.picked || moods.groups?.narrowing)}
 						className={`shrink-0 pl-1 pr-1.5 ${pinned ? "hidden lg:inline" : ""}`}
 					/>
 				</div>
