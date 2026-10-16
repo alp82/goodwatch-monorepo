@@ -2,6 +2,7 @@ import { getAuthPosters } from "~/server/auth-posters.server"
 import type { AuthPoster } from "~/ui/auth/PosterSpotlight"
 import { discoveryReturnTo } from "~/utils/account-transfer"
 import type {
+	ActionFunctionArgs,
 	LoaderFunction,
 	LoaderFunctionArgs,
 	MetaFunction,
@@ -30,6 +31,7 @@ import {
 import { Link } from "@remix-run/react";
 import { SIGN_IN_AGAIN_REASON } from "~/ui/auth/SignInAgainBanner";
 import { connectingApp } from "~/server/auth/mcp-flow.server";
+import { backToForm } from "~/server/auth/form-fallback.server";
 import type { ConnectState } from "~/utils/mcp-connect";
 import { ConnectAside, ConnectNote } from "~/ui/auth/connect";
 
@@ -79,6 +81,8 @@ export const loader: LoaderFunction = async ({
 		connecting ? { headers: { "Cache-Control": "private, no-store" } } : undefined,
 	);
 };
+
+export const action = ({ request }: ActionFunctionArgs) => backToForm(request);
 
 export default function SignIn() {
 	const { redirectUri, connecting } = useLoaderData<LoaderData>();

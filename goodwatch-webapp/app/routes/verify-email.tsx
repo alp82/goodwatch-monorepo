@@ -2,7 +2,7 @@
 // comes back to `?state=confirmed`. A link that no longer works (24 hours, only the newest) lands on `?state=expired`,
 // and the sign-in page sends a member who never got one to `?state=resend`.
 import { EnvelopeIcon, LinkSlashIcon, ShieldCheckIcon } from "@heroicons/react/24/outline"
-import type { MetaFunction } from "@remix-run/node"
+import type { ActionFunctionArgs, MetaFunction } from "@remix-run/node"
 import { useLocation, useNavigate, useSearchParams } from "@remix-run/react"
 import { type FormEvent, useState } from "react"
 import type { SentState } from "~/routes/sign-up"
@@ -18,6 +18,7 @@ import {
 	TextLink,
 	useCooldown,
 } from "~/ui/auth/kit"
+import { backToForm } from "~/server/auth/form-fallback.server"
 import { discoveryReturnTo, safeReturnTo } from "~/utils/account-transfer"
 import { type AuthFailure, useAuthClient } from "~/utils/auth-client"
 
@@ -29,6 +30,8 @@ export const meta: MetaFunction = () => [
 ]
 
 const RESEND_SECONDS = 45
+
+export const action = ({ request }: ActionFunctionArgs) => backToForm(request)
 
 export default function VerifyEmail() {
 	const [params] = useSearchParams()

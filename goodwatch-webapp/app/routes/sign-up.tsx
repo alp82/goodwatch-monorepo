@@ -1,10 +1,11 @@
 import { getAuthPosters } from "~/server/auth-posters.server"
 import type { AuthPoster } from "~/ui/auth/PosterSpotlight"
 import { discoveryReturnTo } from "~/utils/account-transfer"
-import type { LoaderFunction, LoaderFunctionArgs, MetaFunction } from "@remix-run/node"
+import type { ActionFunctionArgs, LoaderFunction, LoaderFunctionArgs, MetaFunction } from "@remix-run/node"
 import { json, redirect } from "@remix-run/node"
 import { Link, useLoaderData, useNavigate } from "@remix-run/react"
 import { hasBrowserCookie, isCrawler } from "~/server/crawlers.server"
+import { backToForm } from "~/server/auth/form-fallback.server"
 import { useUser } from "~/utils/auth"
 import { type FormEvent, useEffect, useState } from "react"
 import { type PageMeta, buildMeta } from "~/utils/meta"
@@ -64,6 +65,8 @@ export const loader: LoaderFunction = async ({ request }: LoaderFunctionArgs) =>
 
 /** What the "Check your inbox" page knows from here: the address, and where a confirmed account goes. */
 export type SentState = { email: string; returnTo: string }
+
+export const action = ({ request }: ActionFunctionArgs) => backToForm(request)
 
 export default function SignUpRoute() {
 	const { redirectUri } = useLoaderData<LoaderData>()
