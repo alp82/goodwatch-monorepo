@@ -4,6 +4,7 @@
 // no summary line. "More like this" narrows Discover to the group; the group's moods open Watch next. Wording:
 // side-rows-copy.ts.
 import { Link } from "@remix-run/react"
+import type { ReactNode } from "react"
 import type {
 	DiscoverResults,
 	DiscoverSideRow,
@@ -34,17 +35,21 @@ export function SideRows({
 		<div className="flex flex-col gap-10">
 			{rows.map((row, r) => (
 				<section key={row.id} aria-label={labelOf(row)}>
-					<div className="mb-3 flex items-end justify-between gap-3">
-						<SideHeader side={row} />
-						{row.total > row.cards.length && (
-							<button
-								type="button"
-								onClick={() => onSeeAll(row.id)}
-								className="shrink-0 cursor-pointer text-sm font-bold text-amber-400 hover:text-amber-300"
-							>
-								{COPY.seeAll(row.total)}
-							</button>
-						)}
+					<div className="mb-3">
+						<SideHeader
+							side={row}
+							action={
+								row.total > row.cards.length && (
+									<button
+										type="button"
+										onClick={() => onSeeAll(row.id)}
+										className="shrink-0 cursor-pointer text-sm font-bold text-amber-400 hover:text-amber-300"
+									>
+										{COPY.seeAll(row.total)}
+									</button>
+								)
+							}
+						/>
 					</div>
 					<div className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-2 lg:mx-0 lg:px-0">
 						{row.cards.map((card, i) => {
@@ -81,24 +86,43 @@ export function SideBanner({
 	onAll: () => void
 }) {
 	return (
-		<div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-white/10 bg-gray-900/60 p-3">
-			<SideHeader side={side} />
-			<button
-				type="button"
-				onClick={onAll}
-				className="cursor-pointer text-sm font-bold text-amber-400 hover:text-amber-300"
-			>
-				{COPY.backToAll}
-			</button>
+		<div className="mb-5 rounded-lg border border-white/10 bg-gray-900/60 p-3">
+			<SideHeader
+				side={side}
+				action={
+					<button
+						type="button"
+						onClick={onAll}
+						className="shrink-0 cursor-pointer text-sm font-bold text-amber-400 hover:text-amber-300"
+					>
+						{COPY.backToAll}
+					</button>
+				}
+			/>
 		</div>
 	)
 }
 
-function SideHeader({ side }: { side: DiscoverSide }) {
+// The name gets the width beside the posters; the links take a line of their own under it, full width on phones so
+// a two-line name never shares its width with them. Without Watch next ("More for you"), the action sits beside the name.
+function SideHeader({
+	side,
+	action,
+}: {
+	side: DiscoverSide
+	action: ReactNode
+}) {
+	const posters = side.here.length > 0
+	const watchNext = side.moods.length > 0
 	return (
-		<div className="flex min-w-0 items-center gap-3">
-			{side.here.length > 0 && (
-				<span className="flex shrink-0 -space-x-3" aria-hidden>
+		<div
+			className={`grid items-center gap-x-3 gap-y-1 ${posters ? "grid-cols-[auto_1fr]" : "grid-cols-1"}`}
+		>
+			{posters && (
+				<span
+					className={`flex shrink-0 -space-x-3 ${watchNext ? "md:row-span-2" : ""}`}
+					aria-hidden
+				>
 					{side.here.map((t, i) => (
 						<img
 							key={t.key}
@@ -112,18 +136,23 @@ function SideHeader({ side }: { side: DiscoverSide }) {
 					))}
 				</span>
 			)}
-			<div className="min-w-0">
-				<div className="flex items-start gap-2">
-					<span
-						className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full"
-						style={{ background: hueOf(side) }}
-						aria-hidden
-					/>
-					<h2 className="line-clamp-2 text-lg leading-tight font-bold text-white md:text-xl">
-						{labelOf(side)}
-					</h2>
-				</div>
-				{side.moods.length > 0 && (
+			<div
+				className={`flex min-w-0 items-start gap-2 ${watchNext ? "self-end" : ""}`}
+			>
+				<span
+					className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full"
+					style={{ background: hueOf(side) }}
+					aria-hidden
+				/>
+				<h2 className="line-clamp-2 text-lg leading-tight font-bold text-white md:text-xl">
+					{labelOf(side)}
+				</h2>
+				{!watchNext && <div className="ml-auto self-center">{action}</div>}
+			</div>
+			{watchNext && (
+				<div
+					className={`flex min-w-0 flex-wrap items-baseline justify-between gap-x-3 self-start ${posters ? "col-span-2 md:col-span-1" : ""}`}
+				>
 					<Link
 						to={`/watch-next?moods=${side.moods.join(",")}`}
 						prefetch="intent"
@@ -131,8 +160,9 @@ function SideHeader({ side }: { side: DiscoverSide }) {
 					>
 						{COPY.watchNext}
 					</Link>
-				)}
-			</div>
+					{action}
+				</div>
+			)}
 		</div>
 	)
 }
