@@ -1,6 +1,6 @@
 # Password enforcement execution — October 15–16, 2026 UTC
 
-## In progress: crate-02 passed, crate-03 draining
+## In progress: crate-02/03 passed, crate-01 draining
 
 The owner explicitly approved decommission with force=false, zero primaries then normal
 `docker stop --timeout=-1` (SIGTERM, unlimited grace), in order **crate-02 → crate-03 → crate-01**.
@@ -52,7 +52,23 @@ External automatic page deployments replaced containers repeatedly. Tests discov
 fresh gates recheck credentials. Captured logs have no terminal `crate.query` failure in retained samples, but these
 are minima and do not prove complete-window zero errors; old removed-container logs are not retained by this run.
 
+## Second node: crate-03 and the scheduled backup
+
+- Drain acknowledged **2026-10-16 00:01:01.412 UTC**, after445.2s. Zero primaries/no missing shards and force=false checked before normal SIGTERM.
+- Docker recorded **signal15 / exit143**, no OOM/SIGKILL; finished **00:01:10.697**. Original ID and unchanged image/volume/env/binds rejoined with HBA; admin/users ready **00:01:59**.
+- Same full direct HTTP credential matrix and PostgreSQL positive/negative tests passed against **.13 only**. [Drain](drain-13.jsonl), [rejoin](rejoin-13.jsonl), [HTTP](client-gates13.jsonl), [PostgreSQL](pg-gate13.jsonl).
+- Allocation all restored **00:03:10.711**. Independent gates on all three nodes passed **96 GREEN / 962 STARTED/STARTED / 21 checks** at **00:09 UTC**. [Recovery](recovery13.jsonl). Current page/search credentials rechecked; all Kuma monitors UP.
+- Observer reads straddled the membership transition (node list before departure, gateway-count check after departure). Independent classification confirmed only the expected count check, no missing primaries. That transient observer condition was not a data-health or credential failure. [Classification](transient-checks13.json).
+- **00:05 credential-bearing scheduled backup succeeded**, completing **00:06:33 UTC**. Hourly and daily snapshots created and verified; one expired hourly snapshot deleted. Both independently confirmed SUCCESS via crate-02. [Scheduler log](backup-0005.jsonl), [independent repository read](backup-0005-independent.jsonl).
+- Before crate-01, actual installed backup credentials/helper again passed with .11 excluded and both alternatives enforcing HBA. [Receipt](backup-before11.jsonl).
+- Additional nine worker hosts have no Crate-related root cron or systemd/cron files. [Inventory](expanded-cron-inventory.jsonl). Preserved pre-rotation Windmill admin credential also authenticates against .12, covering existing jobs that retain it; no job cancellation. [Receipt](old-windmill-credential.json).
+
+## Current-main validation
+
+Main `5ed9d256` merged as `b092b54e`. Auth/Crate source hashes are unchanged. Full webapp suite now **2965 passed,
+1 owner-waived Qdrant timing failure, 1 skipped, 1 TODO**. Production build/precompression passed (**821 files**).
+
 ## Remaining
 
-Complete crate-03 and crate-01 with identical gates; observe credential-bearing scheduled backup; verify final
+Complete crate-01 with identical gates and actual offline backup failover; verify final
 clients and cluster; merge current main and rerun relevant tests before the authorized #599 merge. No Coolify writes.
