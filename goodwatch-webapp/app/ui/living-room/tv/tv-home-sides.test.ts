@@ -4,7 +4,7 @@ import assert from "node:assert/strict"
 import { describe, it } from "node:test"
 import {
 	EMPTY_CONTEXT,
-	HOME_SIDE_PICKS,
+	HOME_TASTE_GROUP_PICKS,
 	type TvAction,
 	type TvContext,
 	type TvState,
@@ -93,7 +93,7 @@ describe("home's items with sides", () => {
 		const titles = tvItems(HOME, many).filter((item) =>
 			item.startsWith("title:"),
 		)
-		assert.equal(titles.length, HOME_SIDE_PICKS)
+		assert.equal(titles.length, HOME_TASTE_GROUP_PICKS)
 	})
 
 	it("start on the first app", () => {

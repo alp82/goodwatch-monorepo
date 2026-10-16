@@ -8,7 +8,7 @@
 // - Picks: a side's More of this, the ones on the member's services when enough stream there, one per franchise,
 //   and a title on several sides only on the side where it stands first.
 // - Words: a side is shown by its loved posters. Its name and its moods' names are descriptive words and wait for
-//   the words gate (#656): `HOME_SIDE_WORDS` stays off until it passes.
+//   the words gate (#656): `HOME_TASTE_GROUP_NAMES=on` turns them on, and they stay off until it passes.
 import { MOOD_BY_KEY } from "~/domain/moods"
 import {
 	type OrderTitles,
@@ -16,12 +16,13 @@ import {
 } from "~/server/taste-portrait/sides.server"
 import type { SidesView } from "~/server/taste-portrait/view"
 import type { TvHomeSide } from "~/ui/living-room/tv/tv-home"
-import { HOME_SIDE_PICKS } from "~/ui/living-room/tv/tv-machine"
+import { HOME_TASTE_GROUP_PICKS } from "~/ui/living-room/tv/tv-machine"
 import { portraitListTitle } from "~/ui/living-room/tv/tv-taste"
 import type { TitleKey } from "~/utils/title-key"
 
-/** Side names and mood names on home: off until the words gate (#656) passes. */
-export const HOME_SIDE_WORDS = false
+/** Taste group names and mood names on home: off until the words gate (#656) passes; HOME_TASTE_GROUP_NAMES=on turns them on. */
+export const homeTasteGroupNames = () =>
+	process.env.HOME_TASTE_GROUP_NAMES === "on"
 /** A side's picks are the ones on the member's services when at least this many stream there. */
 const MIN_ON_SERVICES = 4
 /** The loved posters a side is shown by. */
@@ -39,7 +40,7 @@ type View = Pick<
 export function homeSides(
 	view: View,
 	order?: OrderTitles,
-	words = HOME_SIDE_WORDS,
+	words = homeTasteGroupNames(),
 ): TvHomeSide[] {
 	if (
 		view.status !== "ready" ||
@@ -67,7 +68,7 @@ export function homeSides(
 		const onServices = view.hasServices && there.length >= MIN_ON_SERVICES
 		const picks = (onServices ? there : onePerFranchise(kept, view)).slice(
 			0,
-			HOME_SIDE_PICKS,
+			HOME_TASTE_GROUP_PICKS,
 		)
 		const shaped: TvHomeSide = {
 			id: side.id,

@@ -7,8 +7,8 @@
 // follow: its nearest side, when at least 0.3 close to its center and the side's name describes it. The edges are the
 // Taste page's own, read from its cached view.
 //
-// - Switches: TITLE_SIDES=off|preview|on (preview: REC_PREVIEW_USERS). Side and edge names wait on the words gate
-//   (#656) and reach the page only with TITLE_SIDE_NAMES=on.
+// - Switches: TITLE_TASTE_GROUPS=off|preview|on (preview: REC_PREVIEW_USERS). Side and edge names wait on the words gate
+//   (#656) and reach the page only with TITLE_TASTE_GROUP_NAMES=on.
 // - Cost: the grouping is kept in process memory per member for 10 minutes, keyed by everything it reads (ratings,
 //   seen, Want to See, skipped) and the snapshot version. The edges come from the Taste page's view, cached in Redis
 //   for 10 minutes; building it when it isn't cached also warms the Taste page.
@@ -55,13 +55,13 @@ const BARS = { on: 0.6, past: 0.45 }
 const KEEP_MS = 10 * 60_000
 const MAX_KEPT = 500
 /** How long a title page waits for the line, from the loader's start. */
-export const TITLE_SIDES_BUDGET_MS = 500
+export const TITLE_TASTE_GROUPS_BUDGET_MS = 500
 
 /** One side as the line names it. */
 export interface TitleSidesSide {
 	/** "Side 2": its place among the member's sides, largest first. */
 	number: number
-	/** Its name, only while TITLE_SIDE_NAMES is on (the words gate, #656). */
+	/** Its name, only while TITLE_TASTE_GROUP_NAMES is on (the words gate, #656). */
 	name: string | null
 	/** Its name's traits and noun (["dark", "tense"], "crime"), for a shorter line; only with the name. */
 	short: ShortName | null
@@ -83,7 +83,7 @@ export interface TitleSides {
 	/** Just past: in a place (country, language, decade, format, animation), a step, or between two sides. */
 	edge: "place" | "step" | "between" | null
 	/** What sets a place or step apart, after the side's name ("from South Korea", "but darkly funny"), only while
-	 * TITLE_SIDE_NAMES is on. */
+	 * TITLE_TASTE_GROUP_NAMES is on. */
 	edgeTail: string | null
 	side: TitleSidesSide
 	/** Between two sides: the other one. */
@@ -92,14 +92,14 @@ export interface TitleSides {
 
 export function titleSidesEnabled(userId: string | null) {
 	return resolveRecPersonalOrder(
-		process.env.TITLE_SIDES,
+		process.env.TITLE_TASTE_GROUPS,
 		process.env.REC_PREVIEW_USERS,
 		userId,
 	).enabled
 }
 
 // Side and edge names on the title page wait on the words gate (#656).
-const titleSideNames = () => process.env.TITLE_SIDE_NAMES === "on"
+const titleSideNames = () => process.env.TITLE_TASTE_GROUP_NAMES === "on"
 
 const kept = new Map<
 	string,

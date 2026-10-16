@@ -66,7 +66,7 @@ export const SHOWS_PER_GROUP = 3
 /** A service's row pages through this many titles. */
 export const SERVICE_TITLES = 12
 /** A side's picks on home's guide. */
-export const HOME_SIDE_PICKS = 12
+export const HOME_TASTE_GROUP_PICKS = 12
 
 /** The search screen's ideas. Four show, three once what is typed has its own key. */
 export const SEARCH_IDEAS: readonly string[] = [
@@ -1036,7 +1036,7 @@ export type TvHomeSideRef = {
 function guideSideItems(ctx: Pick<TvContext, "homeSides">): string[] {
 	return ctx.homeSides.flatMap((side) => [
 		`home-side:${side.id}`,
-		...side.picks.slice(0, HOME_SIDE_PICKS).map((key) => `title:${key}`),
+		...side.picks.slice(0, HOME_TASTE_GROUP_PICKS).map((key) => `title:${key}`),
 		`watch-next:${side.id}`,
 	])
 }
@@ -1063,7 +1063,7 @@ export function guideSideOf(
 	if (kind === "title")
 		return (
 			ctx.homeSides.find((side) =>
-				side.picks.slice(0, HOME_SIDE_PICKS).includes(arg),
+				side.picks.slice(0, HOME_TASTE_GROUP_PICKS).includes(arg),
 			) ?? null
 		)
 	return null

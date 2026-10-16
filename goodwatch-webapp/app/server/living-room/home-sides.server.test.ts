@@ -174,6 +174,29 @@ describe("home's sides", () => {
 		})
 	})
 
+	it("read the names switch from HOME_TASTE_GROUP_NAMES, off unless it is exactly on", () => {
+		const before = process.env.HOME_TASTE_GROUP_NAMES
+		try {
+			for (const [value, named] of [
+				[undefined, false],
+				["off", false],
+				["true", false],
+				["on", true],
+			] as const) {
+				if (value === undefined) delete process.env.HOME_TASTE_GROUP_NAMES
+				else process.env.HOME_TASTE_GROUP_NAMES = value
+				assert.equal(
+					homeSides(view([dark]))[0].words !== null,
+					named,
+					String(value),
+				)
+			}
+		} finally {
+			if (before === undefined) delete process.env.HOME_TASTE_GROUP_NAMES
+			else process.env.HOME_TASTE_GROUP_NAMES = before
+		}
+	})
+
 	it("show the picks on the member's services when enough stream there, else all with a note", () => {
 		const on = new Set([11, 13, 21, 22, 23].map(key))
 		const streaming = titles.map((t) => ({ ...t, onMyServices: on.has(t.key) }))
