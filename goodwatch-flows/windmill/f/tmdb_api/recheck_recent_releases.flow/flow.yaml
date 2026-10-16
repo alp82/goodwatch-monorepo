@@ -1,0 +1,57 @@
+summary: Recheck offers for recent releases daily
+description: >-
+  Run at 13:00 UTC after TMDB's daily offer update. Select the last 30 UTC release
+  dates, fetch through the existing details script, and let the regular streaming
+  publication write offers. Does not reserve or advance the 30-day details cycle.
+value:
+  modules:
+    - id: select
+      value:
+        type: script
+        path: f/tmdb_api/recent_releases
+        input_transforms: {}
+      timeout: 300
+    - id: fetch
+      value:
+        type: forloopflow
+        iterator:
+          type: javascript
+          expr: results.select.batches
+        parallel: false
+        skip_failures: false
+        modules:
+          - id: batch
+            value:
+              type: script
+              path: f/tmdb_api/tmdb_fetch_details_from_api/fetch
+              input_transforms:
+                next_ids:
+                  type: javascript
+                  expr: flow_input.iter.value
+            timeout: 300
+    - id: report
+      value:
+        type: rawscript
+        language: python3
+        lock: ''
+        input_transforms:
+          plan:
+            type: javascript
+            expr: results.select
+          batches:
+            type: javascript
+            expr: results.fetch
+        content: |
+          def main(plan: dict, batches: list):
+              totals = {key: sum((batch or {}).get(key, 0) for batch in batches)
+                        for key in ("count_new_entries", "count_failed_entries", "count_deleted_entries")}
+              if totals["count_failed_entries"]:
+                  raise RuntimeError(f"Recent release recheck has failed titles: {totals}; rerun to retry")
+              return {key: value for key, value in plan.items() if key not in ("titles", "batches")} | totals
+  concurrent_limit: 1
+  concurrency_time_window_s: 0
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties: {}
+  required: []

@@ -1,0 +1,10 @@
+summary: Select recent releases for a daily offer recheck
+description: Read the last 30 UTC release dates from Crate and resolve Mongo details IDs. Skip successful provider checks since noon UTC. No writes or queue reservations.
+lock: '!inline f/tmdb_api/recent_releases.script.lock'
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties: {}
+  required: []
+timeout: 300
