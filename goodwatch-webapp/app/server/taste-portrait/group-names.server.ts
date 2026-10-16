@@ -191,8 +191,12 @@ const clash = (x: string, y: string) =>
 // A World trait says what the titles are about, so it goes right before the noun: "Dark, psychological stories".
 const aboutness = (key: string) => (familyOf(key) === "world" ? 1 : 0)
 
+/** A name's parts, for a shorter line: its traits in the name's order and its noun (["dark", "tense"], "crime"). */
+export type ShortName = { traits: string[]; noun: string }
+
 interface Candidate {
 	name: string
+	short: ShortName
 	keys: string[]
 	kind: Kind
 }
@@ -214,16 +218,20 @@ function candidates(order: Standout): Candidate[] {
 			if (clash(x, y)) continue
 			names.push({
 				name: `${capitalize(x)}, ${y} ${kind.noun}`,
+				short: { traits: [x, y], noun: kind.noun },
 				keys: [a.key, b.key],
 				kind,
 			})
 		}
-		if (usable[0])
+		if (usable[0]) {
+			const lead = word(usable[0].key, kind)
 			names.push({
-				name: `${capitalize(word(usable[0].key, kind))} ${kind.noun}`,
+				name: `${capitalize(lead)} ${kind.noun}`,
+				short: { traits: [lead], noun: kind.noun },
 				keys: [usable[0].key],
 				kind,
 			})
+		}
 	}
 	return names
 }
@@ -249,6 +257,7 @@ export function nameGroup(
 	const most = Math.max(2, Math.ceil(0.75 * members.length))
 	type Named = {
 		name: string
+		short: ShortName
 		keys: string[]
 		describes: Test
 		members: RatedTitle[]
@@ -264,6 +273,7 @@ export function nameGroup(
 		const describes = describer(candidate)
 		const named = {
 			name: candidate.name,
+			short: candidate.short,
 			keys: candidate.keys,
 			describes,
 			members: members.filter(describes),
@@ -280,6 +290,7 @@ export function nameGroup(
 	taken.add(name.name)
 	return {
 		name: name.name,
+		short: name.short,
 		keys: name.keys,
 		describes: name.describes,
 		members: name.members,

@@ -227,6 +227,19 @@ describe("nameGroup", () => {
 		)
 	})
 
+	it("gives the name's traits and noun for a shorter line", () => {
+		const standout = order("bleakness", "tension", "crime", "intrigue")
+		assert.deepEqual(
+			nameGroup(standout, titles(8, ["Crime", "Drama"]), new Set())?.short,
+			{ traits: ["dark", "tense"], noun: "crime" },
+		)
+		assert.deepEqual(
+			nameGroup(order("pathos", "philosophical"), titles(8, ["War"]), new Set())
+				?.short,
+			{ traits: ["moving"], noun: "war stories" },
+		)
+	})
+
 	it("takes one trait only when no name with two fits", () => {
 		// "Moving, philosophical war stories" is 33 characters.
 		const members = titles(8, ["War"])

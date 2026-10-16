@@ -3,7 +3,7 @@
 // a side are ordered by the person's personal order when it is on for them: sides group, personal order ranks.
 import { MOOD_KEYS, type MoodKey } from "~/domain/moods"
 import type { TitleFacts, TitleKey } from "~/server/title-snapshot/index.server"
-import { nameGroup, type Titled } from "./group-names.server"
+import { type ShortName, type Titled, nameGroup } from "./group-names.server"
 import {
 	K,
 	KEYS,
@@ -291,6 +291,8 @@ type Edge = SideEdge & { strength: number }
 export type SideDraft = {
 	id: string
 	name: string
+	/** The name's traits and noun, for a shorter line. */
+	short: ShortName
 	/** The traits the name claims. */
 	keys: string[]
 	/** Whether the name describes a title: of its kind, and not strongly against a trait it claims. */

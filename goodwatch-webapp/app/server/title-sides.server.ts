@@ -19,6 +19,7 @@ import { createHash } from "node:crypto"
 import type { MoodKey } from "~/domain/moods"
 import { recommendable } from "~/domain/recommendable"
 import { titleDisplays } from "~/server/taste-portrait/display.server"
+import type { ShortName } from "~/server/taste-portrait/group-names.server"
 import {
 	getTastePortrait,
 	portraitInput,
@@ -62,6 +63,8 @@ export interface TitleSidesSide {
 	number: number
 	/** Its name, only while TITLE_SIDE_NAMES is on (the words gate, #656). */
 	name: string | null
+	/** Its name's traits and noun (["dark", "tense"], "crime"), for a shorter line; only with the name. */
+	short: ShortName | null
 	/** The moods Watch next opens the side with. */
 	moods: MoodKey[]
 	/** Its loved titles closest to this title, closest first, one per franchise. */
@@ -170,6 +173,7 @@ async function sideOf(
 	return {
 		number: index + 1,
 		name: titleSideNames() ? side.name : null,
+		short: titleSideNames() ? side.short : null,
 		moods: sideMoods(side.members),
 		near: await nearOf(side, z, n),
 	}

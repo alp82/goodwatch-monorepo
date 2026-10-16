@@ -7,7 +7,10 @@ import {
 } from "~/hooks/useUserDataAccessors"
 import type { TitleSides } from "~/server/title-sides.server"
 import { TmdbImage } from "~/ui/TmdbImage"
-import { TITLE_SIDES_COPY as COPY } from "~/ui/details/hero/title-sides-copy"
+import {
+	TITLE_SIDES_COPY as COPY,
+	titleSidesText,
+} from "~/ui/details/hero/title-sides-copy"
 import { titleToDashed } from "~/utils/helpers"
 
 interface TitleSidesLineProps {
@@ -32,13 +35,7 @@ export default function TitleSidesLine({
 	if (score || watchState || notInterested || skipped) return null
 
 	const { side, other } = sides
-	const between = sides.edge === "between" && other
-	const sentence =
-		sides.at === "on"
-			? COPY.on(side.name)
-			: between
-				? COPY.between(side.name, other.name)
-				: COPY.edge(side.name, sides.edgeTail)
+	const { text: sentence, phone } = titleSidesText(sides)
 	const stack = [...side.near, ...(other?.near ?? [])]
 	const edge = sides.at === "edge"
 	return (
@@ -71,7 +68,14 @@ export default function TitleSidesLine({
 			<div className="min-w-0 flex-1">
 				{sentence && (
 					<p className="font-bold leading-snug text-white md:text-lg">
-						{sentence}
+						{phone ? (
+							<>
+								<span className="max-sm:hidden">{sentence}</span>
+								<span className="sm:hidden">{phone}</span>
+							</>
+						) : (
+							sentence
+						)}
 					</p>
 				)}
 				{/* The title page's badge, as About's essence tags (ui/fingerprint/Badges). */}
