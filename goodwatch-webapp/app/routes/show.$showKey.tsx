@@ -26,6 +26,12 @@ import { titleExtrasEmbedded } from "~/server/title-extras-prefetch"
 import { prefetchTitleExtrasState } from "~/server/title-extras.server"
 import type { ShowQueryResult } from "~/server/types/details-types"
 import { talkedAboutNowEnabled } from "~/server/talked-about-now/flags.server"
+import {
+	TITLE_SIDES_BUDGET_MS,
+	type TitleSides,
+	titleSides,
+	titleSidesWithin,
+} from "~/server/title-sides.server"
 import Details from "~/ui/details/Details"
 import { getUserIdFromRequest } from "~/utils/auth"
 import { detailsPageMeta } from "~/utils/detailsMeta"
@@ -54,6 +60,8 @@ type LoaderData = {
 	countryIsFallback: boolean
 	/** Whether the viewer gets the "Talked about now" section (TALKED_ABOUT_NOW_TITLE). */
 	talkedAboutNow: boolean
+	/** Where the title sits in the signed-in member's Taste (Sides of you, TITLE_SIDES); null for everyone else. */
+	sides: TitleSides | null
 }
 
 export const loader: LoaderFunction = async ({
@@ -63,6 +71,10 @@ export const loader: LoaderFunction = async ({
 	const showId = (params.showKey || "").split("-")[0]
 
 	const userId = await getUserIdFromRequest({ request })
+	// Sides of you for a signed-in member, alongside the reads below; the page waits for it within its budget only.
+	const sidesStart = Date.now()
+	const sidesWork = titleSides(request, userId, "show", Number(showId))
+	sidesWork.catch(() => {})
 	const url = new URL(request.url)
 	const { effectiveContext } = await resolveMediaContext(request, userId)
 	const { country } = effectiveContext
@@ -150,6 +162,7 @@ export const loader: LoaderFunction = async ({
 	)
 	const dehydratedState = mergeDehydratedStates(extrasState)
 
+	const sides = await titleSidesWithin(sidesWork, sidesStart, TITLE_SIDES_BUDGET_MS)
 	const data = {
 		media,
 		episodeGrid,
@@ -158,6 +171,7 @@ export const loader: LoaderFunction = async ({
 		},
 		countryIsFallback,
 		talkedAboutNow: talkedAboutNowEnabled("title", userId),
+		sides,
 		dehydratedState,
 		...(related.relatedMap && { relatedMap: related.relatedMap }),
 	}
@@ -177,6 +191,7 @@ export default function DetailsTV() {
 		params,
 		countryIsFallback,
 		talkedAboutNow,
+		sides,
 	} = useLoaderData<LoaderData>()
 	const { country } = params
 	const episodeGrid = useMemo(
@@ -221,6 +236,6 @@ export default function DetailsTV() {
 	}, [media, country, countryIsFallback])
 
 	return (
-		<Details media={media} country={country} episodeGrid={episodeGrid} talkedAboutNow={talkedAboutNow} />
+		<Details media={media} country={country} episodeGrid={episodeGrid} talkedAboutNow={talkedAboutNow} sides={sides} />
 	)
 }

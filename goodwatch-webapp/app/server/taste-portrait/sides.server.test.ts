@@ -33,9 +33,14 @@ registerHooks({
 				),
 })
 
-const { buildSides, franchiseOf, namedSides, sideOfTitle } = await import(
-	"./sides.server"
-)
+const {
+	buildSides,
+	edgeOfTitle,
+	franchiseOf,
+	namedSides,
+	placeTitle,
+	sideOfTitle,
+} = await import("./sides.server")
 const { KEYS, K, meanOf } = await import("./person.server")
 
 const at = (key: string) => KEYS.indexOf(key)
@@ -468,5 +473,99 @@ describe("sideOfTitle", () => {
 		assert.equal(sideOfTitle(named, title(against)), null)
 		against[at(claimed)] = -0.5
 		assert.equal(sideOfTitle(named, title(against)), crimeSide)
+	})
+})
+
+describe("placeTitle", () => {
+	const { titles, pool } = twoStrands()
+	const someone = person(titles, pool)
+	const named = namedSides(someone)
+	assert.ok(named)
+	const built = buildSides(someone).sides
+	const crimeSide = named.sides.findIndex((side) =>
+		side.members.some((r) => r.facts.moods.includes("crime")),
+	)
+	const comedySide = 1 - crimeSide
+	const claimed = named.sides[crimeSide].keys[0]
+	const sides = async () => built
+	const never = async () => {
+		throw new Error("the edges are read only for a title on no side")
+	}
+	// Like the crime side, but far below the catalog on an attribute its name claims: close, though on no side.
+	const notDescribed = () => {
+		const v = z(CRIME)
+		v[at(claimed)] = -1.5
+		return v
+	}
+
+	it("puts a title on its side without reading the edges", async () => {
+		assert.deepEqual(await placeTitle(named, z(CRIME), facts(), never), {
+			at: "on",
+			side: crimeSide,
+		})
+		// On the side even in a place just past it: on comes first.
+		assert.deepEqual(
+			await placeTitle(named, z(CRIME), facts({ origin: "KR" }), never),
+			{ at: "on", side: crimeSide },
+		)
+	})
+
+	it("puts a title on no side in a place just past its nearest side", async () => {
+		const place = await placeTitle(
+			named,
+			notDescribed(),
+			facts({ origin: "KR" }),
+			sides,
+		)
+		assert.equal(place?.at, "edge")
+		assert.ok(place?.at === "edge")
+		assert.equal(place.side, crimeSide)
+		assert.equal(place.edge.kind, "country")
+		assert.equal(place.edge.tail, "from South Korea")
+		assert.equal(place.other, null)
+	})
+
+	it("leaves a title on no side and in no place just past one with nothing to say", async () => {
+		assert.equal(await placeTitle(named, notDescribed(), facts(), sides), null)
+		// Too far from every side, even from South Korea.
+		const far = new Float64Array(K)
+		far[at("romance")] = 2
+		far[at("historical")] = 2
+		assert.equal(
+			await placeTitle(named, far, facts({ origin: "KR" }), sides),
+			null,
+		)
+	})
+
+	// The edge alone, for a title placeTitle found on no side.
+	it("puts a title about as close to two sides between them when they have a bridge", () => {
+		const mix = meanOf([z(CRIME), z(COMEDY)])
+		const bridge = {
+			...built[crimeSide].edges[0],
+			id: `${built[comedySide].id}-toward-${built[crimeSide].id}`,
+			kind: "bridge" as const,
+			tail: null,
+			toward: built[crimeSide].id,
+		}
+		const bridged = built.map((side, i) =>
+			i === comedySide
+				? {
+						...side,
+						edges: [...side.edges.filter((e) => e.kind !== "bridge"), bridge],
+					}
+				: { ...side, edges: side.edges.filter((e) => e.kind !== "bridge") },
+		)
+		const place = edgeOfTitle(named, bridged, mix, facts())
+		assert.ok(place, "between the two sides")
+		assert.equal(place.edge.kind, "bridge")
+		assert.deepEqual(
+			[place.side, place.other].sort(),
+			[crimeSide, comedySide].sort(),
+		)
+		const unbridged = built.map((side) => ({
+			...side,
+			edges: side.edges.filter((e) => e.kind !== "bridge"),
+		}))
+		assert.equal(edgeOfTitle(named, unbridged, mix, facts()), null)
 	})
 })

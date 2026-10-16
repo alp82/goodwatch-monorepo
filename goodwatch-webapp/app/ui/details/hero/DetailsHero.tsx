@@ -1,10 +1,12 @@
 import type { EpisodeGrid } from "~/server/episode-grid.server"
+import type { TitleSides } from "~/server/title-sides.server"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import EpisodeGridLink from "~/ui/details/hero/EpisodeGridLink"
 import ListActions from "~/ui/details/hero/ListActions"
 import OwnScore from "~/ui/details/hero/OwnScore"
 import RatingChips from "~/ui/details/hero/RatingChips"
 import ScoreRing from "~/ui/details/hero/ScoreRing"
+import TitleSidesLine from "~/ui/details/hero/TitleSidesLine"
 import { HeroBackdropImage, HeroPoster, TrailerButton } from "~/ui/details/hero/Trailer"
 import WhereToWatch from "~/ui/details/hero/WhereToWatch"
 import type { SectionIds } from "~/ui/details/sections"
@@ -21,19 +23,22 @@ export interface DetailsHeroProps {
 	/** The show's episode grid, when it has one: the ratings row draws its miniature from it. */
 	episodeGrid?: EpisodeGrid | null
 	sectionProps: SectionProps<SectionIds>
+	/** Where the title sits in the signed-in member's Taste (Sides of you); null when the page says nothing about it. */
+	sides?: TitleSides | null
 }
 
 // The title page's overview, one card under the page's header (which has the title).
 //
 // The banner is the backdrop, with the trailer button in its corner. On it: the poster, which opens full screen,
 // and the ratings as one group. The GoodWatch score and the person's own score, then one chip per site and, for a
-// show, the miniature of its episode ratings. Under the banner two blocks: the person's actions with the title
+// show, the miniature of its episode ratings. Under the banner, for a member, where the title sits in their Taste
+// (Sides of you, one line), then two blocks: the person's actions with the title
 // (for a tracked show also its status line), and where to watch.
 //
 // Every row runs from its left edge to its right edge: the GoodWatch ring starts the scores and the own score ends
 // them, the site chips start their row and the miniature ends it (a movie's chips share the row instead). On a
 // phone the two scores stand over each other beside the poster, each as wide as the column.
-export default function DetailsHero({ media, country, shownCountry, preview, episodeGrid = null, sectionProps }: DetailsHeroProps) {
+export default function DetailsHero({ media, country, shownCountry, preview, episodeGrid = null, sectionProps, sides = null }: DetailsHeroProps) {
 	const sites = (
 		<div data-hero-sites className="flex min-w-0 items-center justify-between gap-3 empty:hidden">
 			<RatingChips media={media} fill={!episodeGrid} />
@@ -72,6 +77,7 @@ export default function DetailsHero({ media, country, shownCountry, preview, epi
 							<div className="mt-3.5 md:hidden">{sites}</div>
 						</div>
 					</div>
+					{sides && <TitleSidesLine sides={sides} mediaType={media.mediaType} tmdbId={media.details.tmdb_id} />}
 					<div className="grid grid-cols-[minmax(0,1fr)] gap-2.5 p-3 md:p-5 md:pt-4 lg:grid-cols-2">
 						<div className="flex min-w-0 flex-col justify-center rounded-xl bg-white/[0.07] p-3 ring-1 ring-white/10">
 							<ListActions media={media} />

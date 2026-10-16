@@ -2,7 +2,7 @@
 // apart from the others, each with what is close to it (its edges, Close to your taste) and More of this. Lists of unseen titles inside
 // a side are ordered by the person's personal order when it is on for them: sides group, personal order ranks.
 import { MOOD_KEYS, type MoodKey } from "~/domain/moods"
-import type { TitleKey } from "~/server/title-snapshot/index.server"
+import type { TitleFacts, TitleKey } from "~/server/title-snapshot/index.server"
 import { nameGroup, type Titled } from "./group-names.server"
 import {
 	K,
@@ -380,6 +380,101 @@ function placesOf(facts: RatedTitle["facts"]): Place[] {
 	return places
 }
 
+// ---------- a title at an edge ----------
+
+// A title on no side is just past its nearest side only when at least this close to it: half what a side's own titles
+// need (FITS_NO_SIDE).
+const JUST_PAST = FITS_NO_SIDE / 2
+// Between two sides: at least this close to both and about as close to each, as a bridge's titles are.
+const BETWEEN = 0.2
+const BETWEEN_GAP = 0.12
+
+/** The edge a title on no side sits at: the side it is just past (its index), the edge, and for a bridge the other side. */
+export interface TitleEdge {
+	side: number
+	edge: SideEdge
+	other: number | null
+}
+
+/**
+ * Where a title that is on no side sits just past one, by the rules the edges are built with: in a place just past its
+ * nearest side (the title's country, language, decade, format, or animation), a step from it (the step's attribute
+ * strong in the title), or between it and the next closest side when those two have a bridge. Places first, then steps,
+ * then the bridge. Null: it sits at no edge. `sides` are the sides as built, with their edges.
+ */
+export function edgeOfTitle(
+	named: NamedSides,
+	sides: Side[],
+	z: ArrayLike<number>,
+	facts: TitleFacts,
+): TitleEdge | null {
+	const { index, similarity } = nearest(
+		z,
+		named.groups.map((g) => g.center),
+	)
+	const at = named.groups[index].side
+	if (at === null) return null
+	const side = named.sides[at]
+	const edges = sides.find((s) => s.id === side.id)?.edges ?? []
+	if (similarity >= JUST_PAST) {
+		const places = new Set(
+			placesOf(facts).map((p) => `${side.id}-${p.kind}-${p.id}`),
+		)
+		const place = edges.find((e) => places.has(e.id))
+		if (place) return { side: at, edge: place, other: null }
+		const step = edges.find(
+			(e) =>
+				e.kind === "step" &&
+				z[KEYS.indexOf(e.id.slice(`${side.id}-step-`.length))] > STRONG_Z,
+		)
+		if (step) return { side: at, edge: step, other: null }
+	}
+	const next = named.sides
+		.map((s, i) => ({ i, similarity: cosine(z, s.center) }))
+		.filter((s) => s.i !== at)
+		.sort((a, b) => b.similarity - a.similarity || a.i - b.i)[0]
+	if (!next) return null
+	const here = cosine(z, side.center)
+	if (
+		here <= BETWEEN ||
+		next.similarity <= BETWEEN ||
+		Math.abs(here - next.similarity) >= BETWEEN_GAP
+	)
+		return null
+	const other = named.sides[next.i]
+	const bridge = sides
+		.flatMap((s) => s.edges)
+		.find(
+			(e) =>
+				e.kind === "bridge" &&
+				(e.id === `${side.id}-toward-${other.id}` ||
+					e.id === `${other.id}-toward-${side.id}`),
+		)
+	return bridge ? { side: at, edge: bridge, other: next.i } : null
+}
+
+/** Where a title sits among the person's sides: on one (its index), at an edge of one, or nowhere (null). */
+export type TitlePlace =
+	| { at: "on"; side: number }
+	| ({ at: "edge" } & TitleEdge)
+
+/**
+ * On a side first (sideOfTitle), else at an edge (edgeOfTitle). The sides with their edges are asked for only when the
+ * title is on no side: they cost a full build when not kept.
+ */
+export async function placeTitle(
+	named: NamedSides,
+	z: ArrayLike<number>,
+	facts: TitleFacts,
+	sides: () => Promise<Side[] | null>,
+): Promise<TitlePlace | null> {
+	const on = sideOfTitle(named, { z, facts })
+	if (on !== null) return { at: "on", side: on }
+	const built = await sides()
+	const edge = built && edgeOfTitle(named, built, z, facts)
+	return edge ? { at: "edge", ...edge } : null
+}
+
 /** The first suggestions of ranked titles that pass the edge's rank step; null when too few. */
 function edgeSuggestions(person: Person, ranked: PoolTitle[]) {
 	const steps = person.rankSteps(ranked.map((t) => t.key))
@@ -561,7 +656,7 @@ function bridgeEdge(
 	const between = (z: ArrayLike<number>) => {
 		const a = cosine(z, side.center)
 		const b = cosine(z, other.center)
-		return a > 0.2 && b > 0.2 && Math.abs(a - b) < 0.12
+		return a > BETWEEN && b > BETWEEN && Math.abs(a - b) < BETWEEN_GAP
 	}
 	const middle = new Float64Array(K).map(
 		(_, d) => 0.5 * side.center[d] + 0.5 * other.center[d],

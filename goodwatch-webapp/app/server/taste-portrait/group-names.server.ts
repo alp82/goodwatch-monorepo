@@ -13,7 +13,7 @@ const AGAINST_NAME = -1
 const KIND_Z = 0.5
 
 /** What a name's test reads of a title: its attributes and facts. */
-export type Titled = Pick<RatedTitle, "z" | "facts">
+export type Titled = { z: ArrayLike<number>; facts: RatedTitle["facts"] }
 
 /** Attribute keys by how much the group stands out from the person's other groups, most first. */
 export type Standout = { key: string; weight: number }[]
