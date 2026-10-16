@@ -51,6 +51,13 @@ that the roles run.
 - The host must be logged in to the registry. vector1 is.
 - A push to `main` doesn't change the roles. They run `SEARCH_COMMIT` until you deploy another commit.
 
+### The allocator settings
+
+`.env` also sets `MALLOC_ARENA_MAX=2` and `MALLOC_MMAP_THRESHOLD_=131072` for glibc's allocator, so that freed
+memory goes back to the system and a role's RSS stays lower. The page instances don't have them, so `copy-env`
+doesn't write them: add the two lines from `.env.example` by hand. `docker exec goodwatch-search-a env | grep MALLOC`
+shows them.
+
 ## Commands
 
 ```sh
