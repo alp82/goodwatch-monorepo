@@ -57,19 +57,18 @@ export function homeSides(
 		})
 	})
 	const sides = view.sides.map((side, index) => {
-		const franchises = new Set<string>()
-		const all = side.moreOfThis
-			.filter((key) => home.get(key)?.side === index)
-			.filter((key) => {
-				const franchise = franchiseOf(view.titles[key].title)
-				if (franchises.has(franchise)) return false
-				franchises.add(franchise)
-				return true
-			})
-		// Decided on what is left of the side, so a title another side keeps never empties this one.
-		const there = all.filter((key) => view.titles[key].onMyServices === true)
+		const kept = side.moreOfThis.filter((key) => home.get(key)?.side === index)
+		// Decided on what is left of the side, so a title another side keeps never empties this one, and before one
+		// title per franchise, so a sequel that streams is not lost to a first film that doesn't.
+		const there = onePerFranchise(
+			kept.filter((key) => view.titles[key].onMyServices === true),
+			view,
+		)
 		const onServices = view.hasServices && there.length >= MIN_ON_SERVICES
-		const picks = (onServices ? there : all).slice(0, HOME_SIDE_PICKS)
+		const picks = (onServices ? there : onePerFranchise(kept, view)).slice(
+			0,
+			HOME_SIDE_PICKS,
+		)
 		const shaped: TvHomeSide = {
 			id: side.id,
 			loved: side.here
@@ -95,6 +94,17 @@ export function homeSides(
 		return { shaped, picks, index }
 	})
 	return listOrder(sides, view, order).map(({ shaped }) => shaped)
+}
+
+/** The first title of each franchise, in the list's order. */
+function onePerFranchise(keys: TitleKey[], view: View): TitleKey[] {
+	const seen = new Set<string>()
+	return keys.filter((key) => {
+		const franchise = franchiseOf(view.titles[key].title)
+		if (seen.has(franchise)) return false
+		seen.add(franchise)
+		return true
+	})
 }
 
 /**

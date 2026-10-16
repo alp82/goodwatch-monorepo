@@ -1488,6 +1488,7 @@ html[data-tv-transition] .tvr-bracket {
 @media (prefers-reduced-motion: reduce) {
 	.tvc,
 	.tvc *,
+	.tvc *::before,
 	.tvc *::after {
 		animation: none !important;
 		transition: none !important;

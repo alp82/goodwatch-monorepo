@@ -236,6 +236,26 @@ describe("home's sides", () => {
 		assert.equal(y?.fewOnServices, true)
 	})
 
+	it("keep a sequel that streams over a first film that doesn't", () => {
+		const extra = [
+			title(31, "Toy Story", { onMyServices: false }),
+			title(32, "Toy Story 2", { onMyServices: true }),
+			title(33, "Up", { onMyServices: true }),
+			title(34, "Coco", { onMyServices: true }),
+			title(35, "Soul", { onMyServices: true }),
+		]
+		const v = view([side("x", [3], [31, 32, 33, 34, 35])], {
+			hasServices: true,
+			titles: Object.fromEntries([...titles, ...extra].map((t) => [t.key, t])),
+		})
+		const [x] = homeSides(v)
+		assert.deepEqual(
+			x.picks.map((t) => t.title),
+			["Toy Story 2", "Up", "Coco", "Soul"],
+		)
+		assert.equal(x.fewOnServices, false)
+	})
+
 	it("list a side without picks last", () => {
 		const empty = side("empty", [3], [])
 		assert.deepEqual(
