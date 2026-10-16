@@ -267,6 +267,39 @@ Josh Pate), "Il Trono di Spade" (David Spade) and, before aliases too, "Forrest 
 mostly on their first word ("Le", "El", "Der", "Il"), which many titles share. The set types names from their start;
 its CJK names and their prefixes all hit their titles in the top 5, so phase 1 adds no substring scan.
 
+## Memory in production (2026-10-16)
+
+The first nightly swap to a build with aliases (`20261016T041503Z`, 04:26) moved the roles' resident memory from 2187
+to 2311 MB (role a) and from 2131 to 2289 MB (role b), with a peak of 2665 and 2620 MB in the minute of the swap. The
+plan's estimate was about 64 MB. Read from the roles' `Process: rss` lines, read-only:
+
+- **What the table holds** matches the estimate. After the swap's garbage collection the heap is 311 MB, up from
+  278–280 MB after earlier collections (+31 MB), and external memory is 179–180 MB, up from 149–150 MB (+30 MB): about
+  61 MB. The 302 MB heap before the swap still held garbage, which is why the heap seemed to grow by only 9 MB.
+- **The rest of the RSS growth is memory the process freed but kept.** glibc keeps freed malloc memory in its arenas,
+  and a load worker's V8 heap pages stay resident after the worker ends (the next worker reuses them). Every large
+  load raises this high-water mark. On 2026-10-15/16 the hourly title snapshot raised it too, without a swap and
+  without aliases: +110 MB at 23:35, +60 MB at 02:46, +40 MB at 03:37 (role a, from 1972 MB after the start).
+- **No earlier swap is on record.** The roles were recreated at 22:40 on 2026-10-15, which dropped their Docker logs,
+  and the Grafana Cloud token on vector1 can only write. Locally (Node 24.22, the same two builds, the role's worker
+  path), a swap without aliases leaves +60 to +335 MB of RSS, shrinking with every further swap.
+
+Measured locally, the alias table adds about 110 MB of RSS to a load: the table itself plus the memory its load uses.
+`malloc_trim` gives back 115–450 MB after loads and swaps, with or without aliases.
+
+**Change (2026-10-16):** the table now holds the names and their squashed folds as UTF-16 units in one array each, and
+only the character-count buckets a name uses. It went from 29.8 MB heap + 29.2 MB typed arrays to 1.2 MB heap + 36.3 MB
+typed arrays (59 → 38 MB). The worker hands those arrays over without copying them. 16,310 queries give
+byte-identical palette, title-blend and "like X" results, and lookup times are unchanged. The RSS that the aliases add
+to a single load went from about 110 MB to 60–90 MB locally (two runs each). Over a series of swaps the high-water mark
+hides the difference.
+
+Not changed, because it isn't the alias table's code. Each is worth a separate decision:
+
+- `MALLOC_ARENA_MAX=2` and `MALLOC_MMAP_THRESHOLD_=131072` in the role's environment. Locally they leave 200–260 MB
+  less RSS after three swaps.
+- jemalloc through `LD_PRELOAD`. It isn't in the image and wasn't measured.
+
 ## Owner decisions (2026-10-15)
 
 1. Phase 1 languages: only the 12 launch base languages for now.
