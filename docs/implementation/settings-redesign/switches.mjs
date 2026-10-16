@@ -1,5 +1,5 @@
 // The For you and cookie switches on the Discover and privacy tile, on the local dev server
-// (goodwatch-webapp/scripts/auth-wiring/dev.sh): off, on, keyboard focus and disabled, at 1440 and 390 wide, with
+// (goodwatch-webapp/scripts/auth-wiring/dev.sh): off, on, keyboard focus, disabled on and off, the hit area, at 1440 and 390 wide, with
 // role=switch and aria-checked following each press and the choice kept after a reload.
 // Run: PLAYWRIGHT=<folder with node_modules/playwright> BASE=http://localhost:3061 node docs/implementation/settings-redesign/switches.mjs
 const { chromium } = await import(`${process.env.PLAYWRIGHT ?? "."}/node_modules/playwright/index.mjs`)
@@ -118,7 +118,29 @@ for (const [size, viewport] of Object.entries(WIDTHS)) {
 	check(`${size}: For you is disabled until the settings load`, await forYou(stalled).isDisabled())
 	await shot(stalled, `${size}-5-disabled`)
 	await stalled.close()
+
+	// The hit area reaches past the track: a tap 6 px above it still lands on the switch.
+	const box = await cookies(p).boundingBox()
+	const hit = await p.evaluate(
+		([x, y]) => document.elementFromPoint(x, y)?.closest('[role="switch"]')?.getAttribute("aria-checked") !== undefined,
+		[box.x + box.width / 2, box.y - 6],
+	)
+	check(`${size}: a tap just above the track presses the switch`, hit, `${box.width}x${box.height}`)
 	await context.close()
+
+	// The server's render, before scripts run: For you is disabled (the settings aren't read yet) and on, the cookie
+	// switch disabled (no choice read yet) and off, so both disabled states show beside each other.
+	const plain = await browser.newContext({ viewport, deviceScaleFactor: 2, storageState: state, javaScriptEnabled: false })
+	const server = await plain.newPage()
+	await server.goto(`${BASE}/settings`, { waitUntil: "load" })
+	await tile(server).scrollIntoViewIfNeeded()
+	check(
+		`${size}: before scripts run both switches are disabled`,
+		(await forYou(server).isDisabled()) && (await cookies(server).isDisabled()),
+		`for you ${await forYou(server).getAttribute("aria-checked")}, cookies ${await cookies(server).getAttribute("aria-checked")}`,
+	)
+	await shot(server, `${size}-6-disabled-on-and-off`)
+	await plain.close()
 }
 
 await browser.close()
