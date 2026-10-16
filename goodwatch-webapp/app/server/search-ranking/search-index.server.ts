@@ -70,13 +70,15 @@ export interface AliasTable {
 	size: number
 	/** The title row of each alias, ascending. */
 	rows: Int32Array
-	/** The names as stored. */
-	names: string[]
+	/** The names as stored, as UTF-16 units: name i is nameUnits[nameAt[i]] to [nameAt[i + 1]] (aliasName). */
+	nameUnits: Uint16Array
+	nameAt: Int32Array
 	/** Index into languageNames per alias. */
 	languages: Uint8Array
 	languageNames: string[]
-	/** Each name folded (fold in text-rules.server.ts) without its spaces. */
-	squashed: string[]
+	/** Each name folded (fold in text-rules.server.ts) without its spaces, packed as the names (aliasSquashed). */
+	squashedUnits: Uint16Array
+	squashedAt: Int32Array
 	/** Where each word starts in the squashed name: alias i's starts are wordStarts[startAt[i]] to [startAt[i + 1]]. */
 	wordStarts: Uint16Array
 	startAt: Int32Array
@@ -91,10 +93,12 @@ export interface AliasTable {
 	byLength: Int32Array
 	lengthStart: Int32Array
 	/**
-	 * Character counts of each squashed name (aliases.server.ts ALIAS_BUCKETS per alias, capped at 255), and its
-	 * length in code points.
+	 * Character counts of each squashed name (aliases.server.ts aliasCharCounts, capped at 255), only the buckets it
+	 * uses: alias i's are countPairs[countAt[i]] to [countAt[i + 1]], each bucket << 8 | count (aliasSharedChars).
 	 */
-	counts: Uint8Array
+	countAt: Int32Array
+	countPairs: Uint16Array
+	/** The length of each squashed name in code points. */
 	lengths: Uint16Array
 }
 

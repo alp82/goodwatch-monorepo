@@ -5,8 +5,10 @@
 // below a title match of the same kind, and the fuzzy match and "like X" ask them only after the titles. Docs:
 // docs/implementation/media-language-search-aliases-plan.md.
 //
-// About 320,000 names, so the table is flat: typed arrays and a few string arrays, no object per alias. A build without
-// the file (older builds) loads an empty table.
+// About 320,000 names, so the table is flat: typed arrays and the gram strings, no object or string per alias. The names
+// and their squashed folds are UTF-16 units in one array each, and the character counts keep only the buckets a name
+// uses: about 38 MB instead of 59 MB with a string per name and 64 counts per name, and the load worker hands the arrays
+// over without copying them. A build without the file (older builds) loads an empty table.
 import type { AliasTable, SearchIndex } from "./search-index.server.ts"
 import { fold } from "./text-rules.server.ts"
 
@@ -61,6 +63,45 @@ export function aliasCharCounts(
 	return into
 }
 
+/**
+ * Each squashed name's (bucket, count) pairs of aliasCharCounts, as bucket << 8 | count: only the buckets it uses. Two
+ * passes over one name's counts at a time, so the load never holds 64 counts for every name.
+ */
+function packCounts(squashed: string[]) {
+	const counts = new Uint8Array(ALIAS_BUCKETS)
+	const countAt = new Int32Array(squashed.length + 1)
+	for (let i = 0; i < squashed.length; i++) {
+		aliasCharCounts(squashed[i], counts.fill(0))
+		let used = 0
+		for (const c of counts) if (c) used++
+		countAt[i + 1] = countAt[i] + used
+	}
+	const countPairs = new Uint16Array(countAt[squashed.length])
+	for (let i = 0, k = 0; i < squashed.length; i++) {
+		aliasCharCounts(squashed[i], counts.fill(0))
+		for (let b = 0; b < ALIAS_BUCKETS; b++)
+			if (counts[b]) countPairs[k++] = (b << 8) | counts[b]
+	}
+	return { countAt, countPairs }
+}
+
+/**
+ * The characters alias i shares at most with a text of these aliasCharCounts: the sum over buckets of the smaller
+ * count. A bucket alias i doesn't use adds nothing, so its pairs alone give the sum.
+ */
+export function aliasSharedChars(
+	table: AliasTable,
+	i: number,
+	wanted: Uint8Array,
+): number {
+	let shared = 0
+	for (let k = table.countAt[i]; k < table.countAt[i + 1]; k++) {
+		const pair = table.countPairs[k]
+		shared += Math.min(wanted[pair >> 8], pair & 255)
+	}
+	return shared
+}
+
 /** A folded name without its spaces: what the palette, the fuzzy match, and the exact lookup compare. */
 export const squashedFold = (text: string) => fold(text).replace(/ /g, "")
 
@@ -90,12 +131,13 @@ export function aliasTable(d: Json | undefined, titles: number): AliasTable {
 	const squashed: string[] = new Array(size)
 	const startAt = new Int32Array(size + 1)
 	const starts: number[] = []
-	const counts = new Uint8Array(size * ALIAS_BUCKETS)
 	const lengths = new Uint16Array(size)
 	for (let i = 0; i < size; i++) {
 		const row = rows[i]
 		if (row < 0 || row >= titles || (i && row < rows[i - 1]))
 			throw new Error("alias_table rows don't match the title table")
+		if (typeof names[i] !== "string")
+			throw new Error("alias_table names aren't strings")
 		const folded = fold(names[i])
 		let at = 0
 		for (const word of folded.split(" ")) {
@@ -105,25 +147,70 @@ export function aliasTable(d: Json | undefined, titles: number): AliasTable {
 		}
 		startAt[i + 1] = starts.length
 		squashed[i] = folded.replace(/ /g, "")
-		aliasCharCounts(squashed[i], counts, i * ALIAS_BUCKETS)
 		lengths[i] = Math.min(65535, [...squashed[i]].length)
 	}
 	const wordStarts = Uint16Array.from(starts)
+	const packedNames = packTexts(names)
+	const packedSquashed = packTexts(squashed)
 	return {
 		version: size ? Number(d.version) || 1 : 0,
 		size,
 		rows,
-		names,
+		nameUnits: packedNames.units,
+		nameAt: packedNames.at,
 		languages,
 		languageNames,
-		squashed,
+		squashedUnits: packedSquashed.units,
+		squashedAt: packedSquashed.at,
 		wordStarts,
 		startAt,
 		...gramIndex(squashed, wordStarts, startAt),
 		...lengthOrder(lengths),
-		counts,
+		...packCounts(squashed),
 		lengths,
 	}
+}
+
+/** Texts as their UTF-16 units in one array: text i is units[at[i]] to [at[i + 1]]. Lossless for any string. */
+function packTexts(texts: string[]) {
+	const at = new Int32Array(texts.length + 1)
+	for (let i = 0; i < texts.length; i++) at[i + 1] = at[i] + texts[i].length
+	const units = new Uint16Array(at[texts.length])
+	for (let i = 0; i < texts.length; i++) {
+		const text = texts[i]
+		for (let j = 0, k = at[i]; j < text.length; j++, k++)
+			units[k] = text.charCodeAt(j)
+	}
+	return { units, at }
+}
+
+const unitsText = (units: Uint16Array, from: number, to: number) =>
+	String.fromCharCode.apply(
+		null,
+		units.subarray(from, to) as unknown as number[],
+	)
+
+/** Alias i's name as stored. */
+export const aliasName = (table: AliasTable, i: number) =>
+	unitsText(table.nameUnits, table.nameAt[i], table.nameAt[i + 1])
+
+/** Alias i's squashed fold (squashedFold). */
+export const aliasSquashed = (table: AliasTable, i: number) =>
+	unitsText(table.squashedUnits, table.squashedAt[i], table.squashedAt[i + 1])
+
+/** Whether alias i's squashed fold has `text` at `from` (an offset into it), as String.startsWith. */
+function squashedHas(
+	table: AliasTable,
+	i: number,
+	text: string,
+	from: number,
+): boolean {
+	const start = table.squashedAt[i] + from
+	if (start + text.length > table.squashedAt[i + 1]) return false
+	const units = table.squashedUnits
+	for (let j = 0; j < text.length; j++)
+		if (units[start + j] !== text.charCodeAt(j)) return false
+	return true
 }
 
 // The first two characters (UTF-16 units) at a word start of a squashed name: a name matches a typed prefix only from
@@ -234,7 +321,7 @@ export function buildAliasTable(
 }
 
 export const matchedAlias = (table: AliasTable, i: number): MatchedAlias => ({
-	text: table.names[i],
+	text: aliasName(table, i),
 	language: table.languageNames[table.languages[i]],
 })
 
@@ -247,11 +334,10 @@ export function aliasTier(
 	i: number,
 	prefix: string,
 ): 0 | 1 | -1 {
-	const text = table.squashed[i]
 	if (!prefix) return -1
-	if (text.startsWith(prefix)) return 0
+	if (squashedHas(table, i, prefix, 0)) return 0
 	for (let k = table.startAt[i] + 1; k < table.startAt[i + 1]; k++)
-		if (text.startsWith(prefix, table.wordStarts[k])) return 1
+		if (squashedHas(table, i, prefix, table.wordStarts[k])) return 1
 	return -1
 }
 
@@ -263,7 +349,11 @@ export function exactAliases(table: AliasTable, key: string): number[] {
 	if (g < 0) return out
 	for (let k = table.gramStart[g]; k < table.gramStart[g + 1]; k++) {
 		const i = table.gramAliases[k]
-		if (table.squashed[i] === key) out.push(i)
+		if (
+			table.squashedAt[i + 1] - table.squashedAt[i] === key.length &&
+			squashedHas(table, i, key, 0)
+		)
+			out.push(i)
 	}
 	return out
 }

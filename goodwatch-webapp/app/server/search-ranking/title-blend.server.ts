@@ -9,11 +9,12 @@
 // scores its alias match ALIAS_STEP below a title match of the same kind, and the fuzzy match tries the aliases only
 // when no title or original title is close enough.
 import {
-	ALIAS_BUCKETS,
 	ALIAS_STEP,
 	BUCKETS,
 	type MatchedAlias,
 	aliasCharCounts,
+	aliasSharedChars,
+	aliasSquashed,
 	charCounts,
 	exactAliases,
 	matchedAlias,
@@ -187,8 +188,6 @@ function fuzzyAlias(
 	if (!q || !table.size || exactAliases(table, q).length) return null
 	const qLength = [...q].length
 	const wanted = aliasCharCounts(q)
-	const used: number[] = []
-	for (let b = 0; b < ALIAS_BUCKETS; b++) if (wanted[b]) used.push(b)
 	let best: { alias: number; score: number } | null = null
 	// The ratio can't reach STRICT outside this length window.
 	const shortest = Math.ceil((qLength * STRICT) / (2 - STRICT) - 1e-9)
@@ -202,11 +201,9 @@ function fuzzyAlias(
 	for (let k = from; k < to; k++) {
 		const i = table.byLength[k]
 		const n = table.lengths[i]
-		let shared = 0
-		const base = i * ALIAS_BUCKETS
-		for (const b of used) shared += Math.min(wanted[b], table.counts[base + b])
+		const shared = aliasSharedChars(table, i, wanted)
 		if ((2 * shared) / (n + qLength) < STRICT - 1e-9) continue
-		const score = similarity(q, table.squashed[i])
+		const score = similarity(q, aliasSquashed(table, i))
 		if (score >= STRICT && (!best || score > best.score))
 			best = { alias: i, score }
 	}

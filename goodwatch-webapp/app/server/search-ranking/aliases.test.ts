@@ -4,8 +4,14 @@ import { readFileSync } from "node:fs"
 import * as nodeModule from "node:module"
 import { test } from "node:test"
 import {
+	ALIAS_BUCKETS,
+	aliasCharCounts,
+	aliasName,
 	aliasReference,
+	aliasSharedChars,
+	aliasSquashed,
 	aliasTable,
+	aliasTier,
 	buildAliasTable,
 	emptyAliasTable,
 	exactAliases,
@@ -112,7 +118,8 @@ test("the table decodes rows, languages, word starts, and an exact lookup", () =
 		[...table.wordStarts.subarray(table.startAt[0], table.startAt[1])],
 		[0, 8, 13, 16],
 	)
-	assert.equal(table.squashed[0], "chihirosreiseinszauberland")
+	assert.equal(aliasSquashed(table, 0), "chihirosreiseinszauberland")
+	assert.equal(aliasName(table, 0), "Chihiros Reise ins Zauberland")
 	assert.deepEqual(matchedAlias(table, 2), {
 		text: "Mroczny Rycerz",
 		language: "pl",
@@ -121,6 +128,39 @@ test("the table decodes rows, languages, word starts, and an exact lookup", () =
 	assert.deepEqual(exactAliases(table, "levoyagedechihiro"), [1])
 	assert.deepEqual(exactAliases(table, "levoyage"), [])
 	assert.deepEqual(exactAliases(table, "zzz"), [])
+})
+
+test("the packed names stop at their own end and keep every character", () => {
+	// A lone surrogate survives the packing, which UTF-8 wouldn't keep.
+	const names = [...aliasDoc.names, "Lone \ud800 Surrogate"]
+	const table = aliasTable(
+		{
+			...aliasDoc,
+			rows: [...aliasDoc.rows, 6],
+			names,
+			languages: [...aliasDoc.languages, "de"],
+		},
+		titles.length,
+	)
+	names.forEach((name, i) => assert.equal(aliasName(table, i), name))
+	// Alias 1 ("levoyagedechihiro") follows alias 0 in the packed units: a prefix or a key never runs into it.
+	assert.equal(aliasTier(table, 0, "chihirosreiseinszauberland"), 0)
+	assert.equal(aliasTier(table, 0, "chihirosreiseinszauberlandle"), -1)
+	assert.equal(aliasTier(table, 0, "zauberlandle"), -1)
+	assert.equal(aliasTier(table, 0, "zauber"), 1)
+	assert.deepEqual(
+		exactAliases(table, "chihirosreiseinszauberlandlevoyagedechihiro"),
+		[],
+	)
+	// The sparse counts give the same bound as all 64 counts.
+	const wanted = aliasCharCounts("zauberstern")
+	for (let i = 0; i < table.size; i++) {
+		const all = aliasCharCounts(aliasSquashed(table, i))
+		let shared = 0
+		for (let b = 0; b < ALIAS_BUCKETS; b++)
+			shared += Math.min(wanted[b], all[b])
+		assert.equal(aliasSharedChars(table, i, wanted), shared)
+	}
 })
 
 test("a build without the file, or with rows outside the title table, has no aliases or fails", () => {
