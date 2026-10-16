@@ -8,9 +8,9 @@
 // - Picks combine by Discover's rule: any within a kind (taste group, mood, theme, style), every kind picked. Another
 //   pick of the same kind adds titles; a pick of another kind narrows them. With moods only, that is Watch next's own
 //   rule. Up to three picks in all.
-// - The words keep the filters' names and colors, with two exceptions where the three kinds overlap: the theme Growing
-//   up is the mood Coming of age by the same rule, so it is left out, and the themes History and The mind read "Period
-//   pieces" and "Psychological" next to the moods History and Mind-bending.
+// - The words keep the filters' names and colors, as Discover shows them (owner, #680: one name everywhere). The theme
+//   Growing up is left out: it is the mood Coming of age by the same rule, and two names for one rule would sit side by
+//   side.
 import { type TitleKey, parseTitleKey, titleKey } from "~/utils/title-key"
 import { MOODS, MOOD_KEYS, type MoodKey } from "./moods"
 import {
@@ -40,10 +40,6 @@ export interface Word {
 	description: string | null
 }
 
-const THEME_NAMES: Partial<Record<ThemeKey, string>> = {
-	history: "Period pieces",
-	mind: "Psychological",
-}
 /** The same rule as a mood (Growing up is Coming of age). */
 const LEFT_OUT_THEMES: readonly ThemeKey[] = ["growing"]
 
@@ -60,7 +56,7 @@ export const WORDS: readonly Word[] = [
 		id: `t:${t.id}`,
 		kind: "theme" as const,
 		key: t.id,
-		name: THEME_NAMES[t.id] ?? t.name,
+		name: t.name,
 		hue: t.color,
 		description: null,
 	})),

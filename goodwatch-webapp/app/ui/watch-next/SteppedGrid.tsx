@@ -20,7 +20,6 @@ import { TitlePosterCard } from "~/ui/title-card/TitlePosterCard"
 import type { TitleKey } from "~/utils/title-key"
 import { NewOnContext, titleHref, useMoviesPage } from "./WatchNextHero"
 import {
-	CLOSE_TO_TASTE,
 	SORT_WORDS,
 	TIER_LABEL,
 	picksWords,
@@ -196,14 +195,6 @@ function TierRow({
 										data-misfit={title.misfit.why}
 									>
 										{misfitWords(title.misfit)}
-									</span>
-								)}
-								{title.closeToTaste && (
-									<span
-										className="mt-1 block text-xs leading-tight text-gray-400"
-										data-close-to-taste
-									>
-										{CLOSE_TO_TASTE}
 									</span>
 								)}
 							</Link>

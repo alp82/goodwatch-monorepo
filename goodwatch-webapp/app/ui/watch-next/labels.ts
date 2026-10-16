@@ -33,7 +33,10 @@ import {
 
 export { RATE_MORE }
 
-/** "Close to your taste": the title page's words, under a poster of the tier of that name (#680). */
+/**
+ * "Close to your taste": the title page's words (#680). The tier of that name says it in its heading; a close title
+ * shown outside it (the hero, the Then column, when nothing on the list is in the group picked) says it on its own.
+ */
 export const CLOSE_TO_TASTE = TITLE_SIDES_COPY.close
 
 // The sorts Discover has too say what Discover says.
