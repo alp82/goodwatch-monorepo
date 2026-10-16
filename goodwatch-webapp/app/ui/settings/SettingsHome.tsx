@@ -7,7 +7,7 @@ import {
 } from "@heroicons/react/24/solid"
 import { Link } from "@remix-run/react"
 import { useQuery } from "@tanstack/react-query"
-import { type ReactNode, useState } from "react"
+import { type ReactNode, useId, useState } from "react"
 import { useStreamingProviders } from "~/routes/api.streaming-providers"
 import { useUserSettings } from "~/routes/api.user-settings.get"
 import { useSetUserSettings } from "~/routes/api.user-settings.set"
@@ -21,7 +21,7 @@ import { useSettingsPair } from "~/ui/media-preference/SettingsPair"
 import { englishName } from "~/ui/media-preference/languages"
 import { BROWSER } from "~/ui/media-preference/machine"
 import { localizedTextFetcher } from "~/ui/media-preference/useTitlePreview"
-import Toggle from "~/ui/toggle/Toggle"
+import { Switch } from "~/ui/toggle/Switch"
 import { countryFlagUrl } from "~/utils/country-flag"
 import { regionName } from "~/utils/display-names"
 import { localizedTitleQueryKey } from "~/utils/media-presentation"
@@ -464,18 +464,23 @@ function SwitchRow({
 	disabled?: boolean
 	onChange: (on: boolean) => void
 }) {
+	const id = useId()
 	return (
 		<div className="flex items-center gap-4">
 			<div className="min-w-0 flex-1">
-				<p className="font-semibold text-gray-100">{label}</p>
-				<p className="text-sm text-gray-400">{hint}</p>
+				<p id={`${id}-label`} className="font-semibold text-gray-100">
+					{label}
+				</p>
+				<p id={`${id}-hint`} className="text-sm text-gray-400">
+					{hint}
+				</p>
 			</div>
-			<Toggle
-				size="sm"
+			<Switch
 				checked={checked}
 				disabled={disabled}
 				onChange={onChange}
-				ariaLabel={label}
+				labelledBy={`${id}-label`}
+				describedBy={`${id}-hint`}
 			/>
 		</div>
 	)

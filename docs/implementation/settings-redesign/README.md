@@ -14,7 +14,7 @@ the back button opens it again. The owner picked this layout on October 16, 2026
 | Show titles in | `/settings/language` | The language of titles, posters, and descriptions. |
 | Your data | `/settings/imports`, `/settings/hidden` | Imports, and Hidden titles with their count. |
 | Connected apps | `/settings/connected-apps` | Only while Better Auth is on, as before. |
-| Discover and privacy | None | The For you switch (`for_you`) and the cookie choice (`cookie_consent`), on the tile itself. |
+| Discover and privacy | None | The For you switch (`for_you`) and the cookie choice (`cookie_consent`), on the tile itself, as `ui/toggle/Switch.tsx`: Discover's amber switch look, `role=switch`. |
 
 ## Names
 
@@ -54,5 +54,6 @@ the back button opens it again. The owner picked this layout on October 16, 2026
 
 `drive.mjs` signs up a new member on the local Better Auth dev server (`goodwatch-webapp/scripts/auth-wiring/dev.sh`),
 saves every kind of setting, reloads to check that each one was kept, follows the old links, and takes the screenshots
-in `shots/` at 1440 and 390 wide. The local CrateDB needs `country` and `streaming_service` rows, which the dev script
+in `shots/` at 1440 and 390 wide. `switches.mjs` checks the tile's two switches (on, off, focus, disabled, kept after
+a reload) and takes their screenshots in `shots/switches/`. The local CrateDB needs `country` and `streaming_service` rows, which the dev script
 doesn't seed.

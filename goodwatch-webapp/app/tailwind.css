@@ -184,9 +184,3 @@ input[type="search"]::-webkit-search-cancel-button {
 	appearance: none;
 }
 
-/* Neumorphic components */
-@layer components {
-	.bg-radial-toggle {
-		background: radial-gradient(100% 100% at 50% 100%, var(--color-primary-200) 14.06%, var(--color-primary-500) 100%);
-	}
-}
