@@ -65,10 +65,11 @@ export interface WatchNextOptions {
 	/** Null or unavailable (Best match without taste): the default sort. */
 	sort?: WatchNextSort | null
 	moods?: MoodKey[]
-	/** The taste picker's themes, styles, and taste groups (#677): up to three picks in all, moods included. */
+	/** The taste picker's themes, styles, and taste groups (#677): up to three picks in all, moods included. Taste
+	 * groups by their key in the URL (tasteRefsOf). */
 	themes?: ThemeKey[]
 	styles?: StyleKey[]
-	taste?: number[]
+	taste?: string[]
 	/** Ignored for a viewer without services. */
 	onMyServices?: boolean
 	/** Titles passed over with Not tonight during this visit: they go to the end of the view. */
@@ -90,6 +91,8 @@ export interface WatchNextTitle extends TitleCard {
 	fits: boolean
 	/** On My movies: why the movie does not fit tonight. Left out when it fits, and on Watch next. */
 	misfit?: Misfit
+	/** With a taste group picked: the title is close to it, not in it, and fits everything else (#680). */
+	closeToTaste?: true
 }
 
 export interface WatchNextTier {
@@ -109,10 +112,10 @@ export interface WatchNext {
 	sort: WatchNextSort
 	defaultSort: WatchNextSort
 	moods: MoodKey[]
-	/** The taste picker's picks besides the moods (#677). */
+	/** The taste picker's picks besides the moods (#677); taste groups by their key in the URL. */
 	themes: ThemeKey[]
 	styles: StyleKey[]
-	taste: number[]
+	taste: string[]
 	/** The taste picker's choices and counts (#677). */
 	picker: WatchNextPicker
 	onMyServices: boolean
@@ -193,6 +196,8 @@ interface Entry {
 	/** The taste picker's words (null without a title analysis) and taste group (#677). */
 	masks: WordMasks | null
 	group: number | null
+	/** With a taste group picked: close to it, not in it, and fitting everything else: Close to your taste (#680). */
+	closeToTaste: boolean
 	hasBackdrop: boolean
 	releaseDay: number | null
 	score: number | null
@@ -299,7 +304,10 @@ export function bestMatchOf(
 
 function sortValue(
 	sort: WatchNextSort,
-	entry: Omit<Entry, "value" | "fit" | "over" | "masks" | "group">,
+	entry: Omit<
+		Entry,
+		"value" | "fit" | "over" | "masks" | "group" | "closeToTaste"
+	>,
 	today: number,
 ): number | null {
 	switch (sort) {
@@ -357,14 +365,20 @@ export function planWatchNext(
 		moods: options.moods ?? [],
 		themes: options.themes ?? [],
 		styles: options.styles ?? [],
-		taste: (options.taste ?? []).filter(
-			(n) => n <= (groups?.groups.length ?? 0),
-		),
+		taste: (options.taste ?? []).flatMap((ref) => groups?.numberOf(ref) ?? []),
 	})
 	const { moods } = picks
 	const ids = pickIds(picks)
 	const hasServices = ctx.services.length > 0
 	const onMyServices = (options.onMyServices ?? true) && hasServices
+	const kindsPicked = kindsMet(ids, () => true).picked
+	const need = kindsPicked + (onMyServices ? 1 : 0)
+	// Close to your taste: with a taste group picked, a title close to one picked and in none.
+	const closeToPicked = (key: TitleKey, group: number | null) =>
+		picks.taste.length > 0 &&
+		groups !== null &&
+		(group === null || !picks.taste.includes(group)) &&
+		groups.closeTo(key).some((n) => picks.taste.includes(n))
 	const today = Math.floor(Date.now() / DAY_MS)
 
 	const keys = [...ctx.wishlist.keys()].filter(
@@ -394,33 +408,39 @@ export function planWatchNext(
 			onServices,
 			percentile: percentiles[i],
 		}
+		// One for each kind picked the title meets (any mood picked, any theme...), one for On my services. While
+		// availability loads, On my services doesn't narrow.
+		const fit =
+			kindsMet(ids, (id) => hasChoice(base, id)).met +
+			(onMyServices && onServices !== false ? 1 : 0)
+		const over = minutesOver(runtimes.get(key) ?? null, time)
 		return {
 			...base,
 			value: sortValue(sort, base, today),
-			// One for each kind picked the title meets (any mood picked, any theme...), one for On my services. While
-			// availability loads, On my services doesn't narrow.
-			fit:
-				kindsMet(ids, (id) => hasChoice(base, id)).met +
-				(onMyServices && onServices !== false ? 1 : 0),
-			over: minutesOver(runtimes.get(key) ?? null, time),
+			fit,
+			over,
+			// Only the taste group short (a title in no picked group misses that kind), and nothing else.
+			closeToTaste: fit === need - 1 && !over && closeToPicked(key, base.group),
 		}
 	})
 	entries.sort(compareEntries)
 
-	const kindsPicked = kindsMet(ids, () => true).picked
 	// Picks beyond moods: the tiers and captions speak of picks, not moods.
 	const beyondMoods = ids.length > moods.length
-	const need = kindsPicked + (onMyServices ? 1 : 0)
 	const passed = new Set(options.notTonight ?? [])
 	const order = [
 		...entries.filter((e) => !passed.has(e.key)),
 		...entries.filter((e) => passed.has(e.key)),
 	]
-	// Titles that fit come first, then those one condition short, then the rest; each in the sort's order. On My
-	// movies a movie that runs over the chosen time comes after every movie that doesn't, the least over first.
+	// Titles that fit come first, then those one condition short (Close to your taste first), then the rest; each in
+	// the sort's order. On My movies a movie that runs over the chosen time comes after every movie that doesn't, the
+	// least over first.
 	let ranked = [...order].sort(
 		(a, b) =>
-			Math.sign(a.over) - Math.sign(b.over) || b.fit - a.fit || a.over - b.over,
+			Math.sign(a.over) - Math.sign(b.over) ||
+			b.fit - a.fit ||
+			Number(b.closeToTaste) - Number(a.closeToTaste) ||
+			a.over - b.over,
 	)
 	// The snapshot may reload while planFor awaits Valkey; never use mapping from another version.
 	if (
@@ -450,6 +470,7 @@ export function planWatchNext(
 					(a, b) =>
 						Math.sign(a.over) - Math.sign(b.over) ||
 						b.fit - a.fit ||
+						Number(b.closeToTaste) - Number(a.closeToTaste) ||
 						a.over - b.over ||
 						Number(passed.has(a.key)) - Number(passed.has(b.key)),
 				)
@@ -503,6 +524,12 @@ export function planWatchNext(
 		size: WatchNextTierSize
 		keys: TitleKey[]
 	}[]
+	// With a taste group picked, the titles close to it follow what fits, in the same order (#680).
+	const closeToTaste = tier(
+		"closeToTaste",
+		"md",
+		rest.filter((e) => e.closeToTaste),
+	)
 	if (movies) {
 		// My movies: what fits in three steps, then one group for everything that doesn't, each movie saying why.
 		const fits = rest.filter((e) => e.fit === need && !e.over)
@@ -510,10 +537,11 @@ export function planWatchNext(
 			tier("upNext", "xl", fits.slice(0, 4)),
 			tier("soon", "lg", fits.slice(4, 16)),
 			tier("later", "md", fits.slice(16)),
+			closeToTaste,
 			tier(
 				"notTonightsFit",
 				"md",
-				rest.filter((e) => e.fit !== need || e.over),
+				rest.filter((e) => (e.fit !== need || e.over) && !e.closeToTaste),
 			),
 		]
 	} else if (!need) {
@@ -525,12 +553,13 @@ export function planWatchNext(
 		]
 	} else {
 		const fits = rest.filter((e) => e.fit === need)
-		const close = rest.filter((e) => e.fit === need - 1)
+		const close = rest.filter((e) => e.fit === need - 1 && !e.closeToTaste)
 		const neither = rest.filter((e) => e.fit < need - 1)
 		tiers = [
 			tier("upNext", "xl", fits.slice(0, 4)),
 			tier("soon", "lg", fits.slice(4, 16)),
 			tier("later", "md", fits.slice(16)),
+			closeToTaste,
 			tier(
 				kindsPicked && onMyServices
 					? "close"
@@ -772,6 +801,10 @@ function pickerOf(plan: Plan, moodPictures: Set<TitleKey>) {
 	return { counts, groups, pictures }
 }
 
+/** The picked taste groups by their key in the URL. */
+const tasteKeys = (plan: Plan) =>
+	plan.picks.taste.flatMap((n) => plan.groups?.groups[n - 1]?.key ?? [])
+
 const isoDay = (day: number | null) =>
 	day === null ? null : new Date(day * DAY_MS).toISOString().slice(0, 10)
 
@@ -784,8 +817,10 @@ function wishlistTitle(plan: Plan, card: TitleCard): WatchNextTitle {
 		releaseDate: isoDay(entry.releaseDay),
 		moods: MOOD_KEYS.filter((_, bit) => entry.moodMask & (1 << bit)),
 		fits: entry.fit === plan.need && !entry.over,
+		...(entry.closeToTaste ? { closeToTaste: true as const } : {}),
 	}
-	if (!plan.movies) return title
+	// A title close to the picked taste says so in place of why it misses.
+	if (!plan.movies || entry.closeToTaste) return title
 	const misfit = misfitOf({
 		over: entry.over,
 		inMood:
@@ -945,7 +980,7 @@ export async function getWatchNext(
 		tiers,
 		themes: plan.picks.themes,
 		styles: plan.picks.styles,
-		taste: plan.picks.taste,
+		taste: tasteKeys(plan),
 		picker: {
 			picks: plan.pickIds,
 			fitting: picker.counts.fitting,
@@ -1070,7 +1105,7 @@ function watchNextExposure(
 			moods: plan.moods,
 			themes: plan.picks.themes,
 			styles: plan.picks.styles,
-			taste: plan.picks.taste,
+			taste: tasteKeys(plan),
 			minMatch: 0,
 			notTonight: options.notTonight ?? [],
 			time: plan.time,

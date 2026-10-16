@@ -8,8 +8,8 @@ import {
 } from "@heroicons/react/24/solid"
 import { Link } from "@remix-run/react"
 import { useContext, useEffect, useRef, useState } from "react"
-import { useIsNotInterested } from "~/hooks/useUserDataAccessors"
 import { TIER_CAPS, type WatchNextTierSize } from "~/domain/watch-next"
+import { useIsNotInterested } from "~/hooks/useUserDataAccessors"
 import type { CardService, TitleCard } from "~/server/title-cards.server"
 import type {
 	WatchNext,
@@ -20,6 +20,7 @@ import { TitlePosterCard } from "~/ui/title-card/TitlePosterCard"
 import type { TitleKey } from "~/utils/title-key"
 import { NewOnContext, titleHref, useMoviesPage } from "./WatchNextHero"
 import {
+	CLOSE_TO_TASTE,
 	SORT_WORDS,
 	TIER_LABEL,
 	picksWords,
@@ -195,6 +196,14 @@ function TierRow({
 										data-misfit={title.misfit.why}
 									>
 										{misfitWords(title.misfit)}
+									</span>
+								)}
+								{title.closeToTaste && (
+									<span
+										className="mt-1 block truncate text-xs text-gray-400"
+										data-close-to-taste
+									>
+										{CLOSE_TO_TASTE}
 									</span>
 								)}
 							</Link>

@@ -24,6 +24,7 @@ import type {
 	WatchNextTierSize,
 } from "~/domain/watch-next"
 import type { WatchNext, WatchNextTitle } from "~/server/watch-next.server"
+import { TITLE_SIDES_COPY } from "~/ui/details/hero/title-sides-copy"
 import {
 	DISCOVER_SORTS,
 	RATE_MORE,
@@ -31,6 +32,9 @@ import {
 } from "~/ui/filter-bar/labels"
 
 export { RATE_MORE }
+
+/** "Close to your taste": the title page's words, under a poster of the tier of that name (#680). */
+export const CLOSE_TO_TASTE = TITLE_SIDES_COPY.close
 
 // The sorts Discover has too say what Discover says.
 export const SORT_OPTIONS: SortOption<WatchNextSort>[] = [
@@ -287,6 +291,7 @@ export const TIER_LABEL: Record<WatchNextTierKey, string> = {
 	someday: "Someday",
 	otherMoods: "Other moods",
 	otherPicks: "Almost",
+	closeToTaste: TITLE_SIDES_COPY.close,
 	elsewhere: "Elsewhere",
 	close: "Close",
 	notTonight: "Not tonight",
@@ -295,6 +300,7 @@ export const TIER_LABEL: Record<WatchNextTierKey, string> = {
 
 export const TIER_NOTE: Partial<Record<WatchNextTierKey, string>> = {
 	notTonightsFit: "Each says why.",
+	closeToTaste: "Near the taste you picked, but not in it.",
 	otherMoods: "In another mood.",
 	elsewhere: "Not on your services.",
 	close:

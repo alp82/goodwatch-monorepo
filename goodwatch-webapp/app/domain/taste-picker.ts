@@ -2,13 +2,16 @@
 // picker. Pure and shared by the server and the browser.
 //
 // - A choice has an id: "m:funny", "t:crime", "s:slow" for the filters' words, "g1", "g2"... for the member's taste
-//   groups, largest first. In the URL they travel as Discover's parameters (`moods`, `themes`, `styles`) and `taste=1,2`.
+//   groups, largest first. In the URL they travel as Discover's parameters (`moods`, `themes`, `styles`) and
+//   `taste=movie-603`: a taste group by its key, the loved title closest to its center, so a saved link keeps its group
+//   when the groups change size or order (#680). Links from before name a group by its size order (`taste=2`).
 // - Picks combine by Discover's rule: any within a kind (taste group, mood, theme, style), every kind picked. Another
 //   pick of the same kind adds titles; a pick of another kind narrows them. With moods only, that is Watch next's own
 //   rule. Up to three picks in all.
 // - The words keep the filters' names and colors, with two exceptions where the three kinds overlap: the theme Growing
 //   up is the mood Coming of age by the same rule, so it is left out, and the themes History and The mind read "Period
 //   pieces" and "Psychological" next to the moods History and Mind-bending.
+import { type TitleKey, parseTitleKey, titleKey } from "~/utils/title-key"
 import { MOODS, MOOD_KEYS, type MoodKey } from "./moods"
 import {
 	STYLES,
@@ -140,13 +143,29 @@ export function togglePick(
 	return { picks: picksOf([...ids, id]), refused: false }
 }
 
-/** Taste group numbers from `taste=1,2`: 1 to 9, each once. */
-export function tasteNumbersOf(value: string | null | undefined): number[] {
-	const numbers = (value ?? "")
+/** A taste group's key in the URL, from the loved title closest to its center: "movie-603". */
+export function groupKeyOf(key: TitleKey): string {
+	const { mediaType, tmdbId } = parseTitleKey(key)
+	return `${mediaType}-${tmdbId}`
+}
+
+/** The title a group key names; null when it names none. */
+export function titleOfGroupKey(ref: string): TitleKey | null {
+	const match = /^(movie|show)-([1-9]\d{0,9})$/.exec(ref)
+	return match ? titleKey(match[1] as "movie" | "show", Number(match[2])) : null
+}
+
+/** A taste group a link from before #680 names by its size order: 1 to 9; null for a group key. */
+export const legacyGroupNumber = (ref: string): number | null =>
+	/^[1-9]$/.test(ref) ? Number(ref) : null
+
+/** The taste groups `taste=movie-603,2` names: group keys, or a group's size order (1 to 9) from older links. Each once. */
+export function tasteRefsOf(value: string | null | undefined): string[] {
+	const refs = (value ?? "")
 		.split(",")
-		.map((x) => groupNumber(`g${x.trim()}`))
-		.filter((n): n is number => n !== null)
-	return [...new Set(numbers)]
+		.map((x) => x.trim())
+		.filter((x) => legacyGroupNumber(x) !== null || titleOfGroupKey(x) !== null)
+	return [...new Set(refs)]
 }
 
 /**

@@ -104,7 +104,13 @@ test("the taste picker's picks in words: one kind with or, kinds with and (#677)
 		picks: [] as string[],
 		fitting: 0,
 		groups: [
-			{ id: "g1", name: "Dark, psychological thrillers", hues: [], madeOf: [] },
+			{
+				id: "g1",
+				key: "movie-1949",
+				name: "Dark, psychological thrillers",
+				hues: [],
+				madeOf: [],
+			},
 		],
 		choices: [],
 		forYou: [],

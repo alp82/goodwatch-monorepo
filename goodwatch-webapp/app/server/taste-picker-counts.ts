@@ -37,6 +37,8 @@ const MADE_OF = 3
 export interface PickerGroup {
 	/** "g1" for the largest. */
 	id: string
+	/** Its key in the URL ("movie-603"), which stays when the groups change order (groupKeyOf). */
+	key: string
 	/** Its trait name ("Dark, psychological thrillers"). */
 	name: string
 	/** One or two colors: the mood, then the theme or style, that most set it apart. */
@@ -68,7 +70,7 @@ export function masksOf(
  */
 export function describeGroups(
 	loved: WordMasks[][],
-): Omit<PickerGroup, "id" | "name">[] {
+): Omit<PickerGroup, "id" | "key" | "name">[] {
 	const all = loved.flat()
 	const share = (list: WordMasks[], word: Word) =>
 		list.length ? list.filter((m) => hasWord(m, word)).length / list.length : 0

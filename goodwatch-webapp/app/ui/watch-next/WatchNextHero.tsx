@@ -13,6 +13,7 @@ import type { CardService, TitleCard } from "~/server/title-cards.server"
 import type { WatchNext, WatchNextTitle } from "~/server/watch-next.server"
 import { titleToDashed } from "~/utils/helpers"
 import {
+	CLOSE_TO_TASTE,
 	heroLabel,
 	misfitWords,
 	movieHeroLabel,
@@ -139,6 +140,11 @@ function Eyebrow({
 						)}
 			</span>
 			{fact && <span className="text-gray-300">{fact}</span>}
+			{hero.closeToTaste && (
+				<span className="text-gray-300" data-close-to-taste>
+					{CLOSE_TO_TASTE}
+				</span>
+			)}
 			{hero.misfit?.why === "time" && (
 				<span className="text-gray-300" data-misfit="time">
 					{misfitWords(hero.misfit)}
@@ -243,9 +249,18 @@ function ThenColumn({
 									<span className="block truncate text-xs text-gray-400">
 										{watchLine(offersOf(title, mine))}
 									</span>
-									<span className="hidden truncate text-xs text-gray-500 md:block">
-										{runtimeLabel(title, movieWord)}
-									</span>
+									{title.closeToTaste ? (
+										<span
+											className="block truncate text-xs text-gray-400"
+											data-close-to-taste
+										>
+											{CLOSE_TO_TASTE}
+										</span>
+									) : (
+										<span className="hidden truncate text-xs text-gray-500 md:block">
+											{runtimeLabel(title, movieWord)}
+										</span>
+									)}
 								</span>
 							</Link>
 						</motion.li>

@@ -34,14 +34,19 @@ registerHooks({
 })
 
 const {
+	MEMBER_BARS,
 	buildSides,
+	closeSides,
 	edgeOfTitle,
 	franchiseOf,
 	namedSides,
 	placeTitle,
+	sideAnchor,
+	sideEdges,
+	sideOfAnchor,
 	sideOfTitle,
 } = await import("./sides.server")
-const { KEYS, K, meanOf } = await import("./person.server")
+const { KEYS, K, cosine, meanOf } = await import("./person.server")
 
 const at = (key: string) => KEYS.indexOf(key)
 // A repeatable spread, so titles of a strand are alike but not identical.
@@ -646,5 +651,138 @@ describe("placeTitle with a place's own bars", () => {
 		assert.equal(asked, 0)
 		await placeTitle(named, at(0.5), facts({ origin: "KR" }), edges, bars)
 		assert.equal(asked, 1)
+	})
+})
+
+// Watch next's "Close to your taste" (#680): the edges alone, which taste groups a title is close to, and the keys that
+// name a group in links.
+describe("the edges alone and Close to your taste", () => {
+	const { titles, pool } = twoStrands()
+	const someone = person(titles, pool)
+	const named = namedSides(someone)
+	assert.ok(named)
+	const built = buildSides(someone).sides
+	const edges = sideEdges(someone, named)
+	const crimeSide = named.sides.findIndex((side) =>
+		side.members.some((r) => r.facts.moods.includes("crime")),
+	)
+	const comedySide = 1 - crimeSide
+	const center = named.sides[crimeSide].center
+	// Along the crime side's center, with enough of something else to bring the closeness down to about `closeness`.
+	const near = (closeness: number) => {
+		const away = new Float64Array(K)
+		away[KEYS.indexOf("romance")] = 1
+		const t = Math.sqrt(1 / closeness ** 2 - 1)
+		const norm = Math.sqrt([...center].reduce((a, x) => a + x * x, 0))
+		return center.map((x, k) => x / norm + t * away[k])
+	}
+
+	it("builds the same edges as the Taste page's view", () => {
+		assert.deepEqual(
+			edges.map((side) => ({
+				id: side.id,
+				edges: side.edges.map((e) => [e.id, e.suggestions]),
+			})),
+			built.map((side) => ({
+				id: side.id,
+				edges: side.edges.map((e) => [e.id, e.suggestions]),
+			})),
+		)
+	})
+
+	it("is close to the side whose edge it sits at, by the bars members read", () => {
+		// Between the bars, from South Korea (a place just past the crime side): close to it.
+		assert.deepEqual(
+			closeSides(named, edges, near(0.5), facts({ origin: "KR" }), MEMBER_BARS),
+			[crimeSide],
+		)
+		// On the side: not close, it fits.
+		assert.deepEqual(
+			closeSides(
+				named,
+				edges,
+				near(0.8),
+				facts({ genres: ["Crime", "Drama"] }),
+				MEMBER_BARS,
+			),
+			[],
+		)
+		// Below the past bar, or in no place just past the side: nothing.
+		assert.deepEqual(
+			closeSides(
+				named,
+				edges,
+				near(0.35),
+				facts({ origin: "KR" }),
+				MEMBER_BARS,
+			),
+			[],
+		)
+		assert.deepEqual(
+			closeSides(named, edges, near(0.5), facts(), MEMBER_BARS),
+			[],
+		)
+	})
+
+	it("is close to both sides of a bridge it sits on", () => {
+		const bridge = {
+			...built[crimeSide].edges[0],
+			id: `${built[comedySide].id}-toward-${built[crimeSide].id}`,
+			kind: "bridge" as const,
+			tail: null,
+			toward: built[crimeSide].id,
+		}
+		const bridged = edges.map((side, i) => ({
+			...side,
+			edges: [
+				...side.edges.filter((e) => e.kind !== "bridge"),
+				...(i === comedySide ? [bridge] : []),
+			],
+		}))
+		// About as close to both (0.4 or so): below the bar for a place or a step, so only the bridge can place it.
+		const between = meanOf([z(CRIME), z(COMEDY)])
+		const length = Math.sqrt([...between].reduce((a, x) => a + x * x, 0))
+		const mix = between.map((x, k) =>
+			k === KEYS.indexOf("romance") ? x + 1.4 * length : x,
+		)
+		const closeness = named.sides.map((side) => cosine(mix, side.center))
+		assert.ok(closeness.every((c) => c > 0.2 && c < MEMBER_BARS.past))
+		assert.deepEqual(
+			closeSides(named, bridged, mix, facts(), MEMBER_BARS).sort(),
+			[crimeSide, comedySide].sort(),
+		)
+	})
+
+	it("names a side by its loved title closest to its center, and finds it again", () => {
+		const anchor = sideAnchor(named.sides[crimeSide])
+		assert.ok(named.sides[crimeSide].members.some((m) => m.key === anchor))
+		assert.equal(sideOfAnchor(named, anchor, null), crimeSide)
+		// The sides in the other order: the anchor still names the crime side.
+		const swapped = {
+			...named,
+			sides: [...named.sides].reverse(),
+			groups: named.groups.map((g) => ({
+				...g,
+				side: g.side === null ? null : named.sides.length - 1 - g.side,
+			})),
+		}
+		assert.equal(
+			sideOfAnchor(swapped, anchor, null),
+			named.sides.length - 1 - crimeSide,
+		)
+		// A title no side holds: the side it fits, else the closest; nothing without its fingerprint.
+		const outside = 1e12 + 999_999
+		assert.equal(
+			sideOfAnchor(named, outside, {
+				z: z(COMEDY),
+				facts: facts({ moods: ["funny"], genres: ["Comedy"] }),
+			}),
+			comedySide,
+		)
+		assert.equal(
+			sideOfAnchor(named, outside, { z: near(0.35), facts: facts() }),
+			crimeSide,
+		)
+		assert.equal(sideOfAnchor(named, outside, null), null)
 	})
 })

@@ -10,7 +10,8 @@ const {
 	kindsMet,
 	pickIds,
 	picksOf,
-	tasteNumbersOf,
+	tasteRefsOf,
+	titleOfGroupKey,
 	togglePick,
 	trimPicks,
 } = await import("./taste-picker.ts")
@@ -50,14 +51,34 @@ test("picks round-trip as ids, taste groups first, and a fourth is refused", () 
 	assert.deepEqual(picksOf(["x:nope", "g0", "g12"]), NONE)
 })
 
+test("the URL names a taste group by its key, or by its size order in older links (#680)", () => {
+	assert.deepEqual(
+		tasteRefsOf("movie-1949, show-1396,3,0,10,x,movie-0,movie-1949"),
+		["movie-1949", "show-1396", "3"],
+	)
+	assert.equal(titleOfGroupKey("movie-1949"), 1_000_000_001_949)
+	assert.equal(titleOfGroupKey("show-1396"), 2_000_000_001_396)
+	assert.equal(titleOfGroupKey("person-1"), null)
+	const choice = watchNextChoiceOf(
+		new URLSearchParams("taste=movie-1949,show-1396&moods=funny,scary"),
+	)
+	// Three picks at most, taste groups first.
+	assert.deepEqual(
+		[choice.taste, choice.moods],
+		[["movie-1949", "show-1396"], ["funny"]],
+	)
+})
+
 test("the URL holds at most three picks, taste groups first", () => {
 	const choice = watchNextChoiceOf(
 		new URLSearchParams(
 			"moods=funny,scary&themes=crime&styles=slow&taste=1,1,x",
 		),
 	)
-	assert.deepEqual(pickIds(choice), ["g1", "m:funny", "m:scary"])
-	assert.deepEqual(tasteNumbersOf("3, 1,0,10"), [3, 1])
+	assert.deepEqual(
+		[choice.taste, choice.moods, choice.themes, choice.styles],
+		[["1"], ["funny", "scary"], [], []],
+	)
 	assert.deepEqual(
 		trimPicks({ ...NONE, moods: ["funny", "scary", "heavy", "romance"] }).moods,
 		["funny", "scary", "heavy"],

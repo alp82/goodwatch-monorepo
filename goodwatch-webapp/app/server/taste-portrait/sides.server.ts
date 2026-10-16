@@ -402,6 +402,13 @@ export interface Bars {
 
 const ANY_BARS: Bars = { on: FITS_NO_SIDE, past: JUST_PAST }
 
+/**
+ * The bars a member reads where a title is in their taste (#661): on a group only when at least 0.6 close to its
+ * center, and just past it only when at least 0.45 close (0.15 short of on). The title page's line and Watch next's
+ * "Close to your taste" both use them, so the two agree.
+ */
+export const MEMBER_BARS: Bars = { on: 0.6, past: 0.45 }
+
 /** The edge a title on no side sits at: the side it is just past (its index), the edge, and for a bridge the other side. */
 export interface TitleEdge {
 	side: number
@@ -417,7 +424,7 @@ export interface TitleEdge {
  */
 export function edgeOfTitle(
 	named: NamedSides,
-	sides: Side[],
+	sides: readonly SideEdges[],
 	z: ArrayLike<number>,
 	facts: TitleFacts,
 	bars: Bars = ANY_BARS,
@@ -495,7 +502,7 @@ export async function placeTitle(
 	named: NamedSides,
 	z: ArrayLike<number>,
 	facts: TitleFacts,
-	sides: () => Promise<Side[] | null>,
+	sides: () => Promise<readonly SideEdges[] | null>,
 	bars: Bars = ANY_BARS,
 ): Promise<TitlePlace | null> {
 	const on = sideOfTitle(named, { z, facts })
@@ -506,6 +513,24 @@ export async function placeTitle(
 	const built = await sides()
 	const edge = built && edgeOfTitle(named, built, z, facts, bars)
 	return edge ? { at: "edge", ...edge } : null
+}
+
+/**
+ * The sides a title is close to, by placeTitle's rule with the edges at hand: the side it sits at an edge of, and for a
+ * bridge the other side too. Empty when it is on a side (at least `bars.on` close) or at no edge.
+ */
+export function closeSides(
+	named: NamedSides,
+	sides: readonly SideEdges[],
+	z: ArrayLike<number>,
+	facts: TitleFacts,
+	bars: Bars = ANY_BARS,
+): number[] {
+	const on = sideOfTitle(named, { z, facts })
+	if (on !== null && cosine(z, named.sides[on].center) >= bars.on) return []
+	const edge = edgeOfTitle(named, sides, z, facts, bars)
+	if (!edge) return []
+	return edge.other === null ? [edge.side] : [edge.side, edge.other]
 }
 
 /** The first suggestions of ranked titles that pass the edge's rank step; null when too few. */
@@ -789,6 +814,48 @@ export function sideOfTitle(named: NamedSides, title: Titled): number | null {
 	return named.sides[side].describes(title) ? side : null
 }
 
+/** A side's anchor: its loved title closest to its center. Watch next names a taste group by it in links (#680). */
+export function sideAnchor(side: SideDraft): TitleKey {
+	let best = side.members[0]
+	let closest = Number.NEGATIVE_INFINITY
+	for (const m of side.members) {
+		const similarity = cosine(m.z, side.center)
+		if (similarity > closest || (similarity === closest && m.key < best.key)) {
+			closest = similarity
+			best = m
+		}
+	}
+	return best.key
+}
+
+/**
+ * The side an anchor names now: the side holding its title among its loved titles, else the side the title fits
+ * (sideOfTitle), else the side closest to it. So a link keeps its group when the sides change size or order. Null
+ * without the title's fingerprint (`title`).
+ */
+export function sideOfAnchor(
+	named: NamedSides,
+	key: TitleKey,
+	title: Titled | null,
+): number | null {
+	const holding = named.sides.findIndex((side) =>
+		side.members.some((m) => m.key === key),
+	)
+	if (holding >= 0) return holding
+	if (!title) return null
+	const fits = sideOfTitle(named, title)
+	if (fits !== null) return fits
+	let closest = 0
+	named.sides.forEach((side, i) => {
+		if (
+			cosine(title.z, side.center) >
+			cosine(title.z, named.sides[closest].center)
+		)
+			closest = i
+	})
+	return closest
+}
+
 /** "You're here": the side's most typical loved titles, the ones rated 7 or more when there are two. */
 function hereOf(here: RatedTitle[]) {
 	const high = here.filter((r) => r.score >= 7)
@@ -798,6 +865,39 @@ function hereOf(here: RatedTitle[]) {
 /** The side's "You're here" titles. */
 export function sideHere(person: Person, side: SideDraft): TitleKey[] {
 	return hereOf(typical(side.members, side.center, person.mu)).map((r) => r.key)
+}
+
+/** A side's edges, without the rest of its view: what edgeOfTitle reads. */
+export type SideEdges = Pick<Side, "id" | "edges">
+
+/**
+ * Every side's edges, as the Taste page builds them (places, then steps when it has fewer than two, then the way
+ * toward its closest other side), with suggestions in the order found. Costs about a tenth of a second for a large
+ * history; the Taste page's view adds More of this, display fields, and services.
+ */
+export function sideEdges(person: Person, named: NamedSides): SideEdges[] {
+	const drafts = named.sides
+	const centers = drafts.map((d) => d.center)
+	const stepsTaken = new Set<string>()
+	const bridged = new Set<string>()
+	return drafts.map((draft, i) => {
+		const places = placeEdges(person, draft, centers, i)
+		const steps = stepEdges(
+			person,
+			draft,
+			centers,
+			i,
+			2 - places.length,
+			stepsTaken,
+		)
+		const bridge = bridgeEdge(person, drafts, i, bridged)
+		return {
+			id: draft.id,
+			edges: [...places, ...steps, ...(bridge ? [bridge] : [])].map(
+				({ strength: _, ...edge }) => edge,
+			),
+		}
+	})
 }
 
 // ---------- the view ----------
@@ -816,28 +916,15 @@ export function buildSides(
 	}
 	const named = namedSides(person)
 	if (!named) return empty
-	const { loved: n, sides: drafts } = named
+	const { sides: drafts } = named
 	const centers = drafts.map((d) => d.center)
 
-	const stepsTaken = new Set<string>()
-	const bridged = new Set<string>()
+	const allEdges = sideEdges(person, named)
 	const sides = drafts.map((draft, i): Side => {
-		const places = placeEdges(person, draft, centers, i)
-		const steps = stepEdges(
-			person,
-			draft,
-			centers,
-			i,
-			2 - places.length,
-			stepsTaken,
-		)
-		const bridge = bridgeEdge(person, drafts, i, bridged)
-		const edges = [...places, ...steps, ...(bridge ? [bridge] : [])].map(
-			({ strength, ...edge }) => ({
-				...edge,
-				suggestions: order(edge.suggestions),
-			}),
-		)
+		const edges = allEdges[i].edges.map((edge) => ({
+			...edge,
+			suggestions: order(edge.suggestions),
+		}))
 		const here = typical(draft.members, draft.center, person.mu)
 		const attributes = standout(
 			draft.center,

@@ -1,7 +1,7 @@
 // The Watch next page: the docked strip on the hero (phones: the slab's buttons and drawers at the bottom), the hero
 // with its Then column, the stepped grid, suggestions while the Wishlist is short, and the sign-up prompt for guests.
 import { type ReactNode, useCallback, useState } from "react"
-import { picksOf, togglePick } from "~/domain/taste-picker"
+import { groupChoice, picksOf, togglePick } from "~/domain/taste-picker"
 import type { WatchNextSort } from "~/domain/watch-next"
 import { useWishlistMutation } from "~/hooks/useUserDataMutations"
 import { useUserData } from "~/routes/api.user-data"
@@ -9,7 +9,10 @@ import type { TitleCard } from "~/server/title-cards.server"
 import type { WatchNext } from "~/server/watch-next.server"
 import { SignUpPrompt } from "~/ui/sign-up-prompt/SignUpPrompt"
 import { UndoToast } from "~/ui/title-actions/UndoToast"
-import { type HideFeedback, HideFeedbackContext } from "~/ui/title-actions/hide-feedback"
+import {
+	type HideFeedback,
+	HideFeedbackContext,
+} from "~/ui/title-actions/hide-feedback"
 import { DockedStrip } from "./DockedStrip"
 import { FinishPrompt, FinishToast } from "./FinishPrompt"
 import { type MoodControl, refusalText } from "./MoodPicker"
@@ -85,9 +88,11 @@ export function WatchNextPage({
 	const toggle = useCallback(
 		(id: string) => {
 			// From the picks the server kept: a taste group from the URL the viewer doesn't have neither shows nor counts.
-			const result = togglePick(data ? picksOf(data.picker.picks) : choice, id)
+			// The picker shows only once the list is in.
+			if (!data) return
+			const result = togglePick(picksOf(data.picker.picks), id)
 			if (result.refused) {
-				const name = data ? pickName(data.picker, id) : ""
+				const name = pickName(data.picker, id)
 				setRefused({ name, at: Date.now() })
 				// A trailing space when the text repeats, so screen readers announce it again.
 				setAnnouncement((before) =>
@@ -97,9 +102,16 @@ export function WatchNextPage({
 				)
 				return
 			}
-			setChoice(result.picks)
+			// The URL names taste groups by their key, which stays when the groups change order.
+			setChoice({
+				...result.picks,
+				taste: result.picks.taste.flatMap(
+					(n) =>
+						data.picker.groups.find((g) => g.id === groupChoice(n))?.key ?? [],
+				),
+			})
 		},
-		[choice, data, setChoice],
+		[data, setChoice],
 	)
 
 	const want = useCallback(

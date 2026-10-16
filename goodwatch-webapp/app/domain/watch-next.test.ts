@@ -68,9 +68,12 @@ test("the taste picker's themes, styles, and taste groups count toward three pic
 		moods: [],
 		themes: ["crime"],
 		styles: ["slow"],
-		taste: [2],
+		taste: ["2"],
 		onMyServices: true,
 	})
 	const full = choice("moods=funny,scary&themes=crime&styles=slow&taste=1")
-	assert.deepEqual([full.taste, full.moods, full.themes, full.styles], [[1], ["funny", "scary"], [], []])
+	assert.deepEqual(
+		[full.taste, full.moods, full.themes, full.styles],
+		[["1"], ["funny", "scary"], [], []],
+	)
 })

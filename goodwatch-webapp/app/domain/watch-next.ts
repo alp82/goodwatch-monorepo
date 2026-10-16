@@ -6,7 +6,7 @@
 // exist only here.
 import { filterStateFromParams } from "./filter-state"
 import type { MoodKey } from "./moods"
-import { tasteNumbersOf, trimPicks } from "./taste-picker"
+import { tasteRefsOf, trimPicks } from "./taste-picker"
 import type { StyleKey, ThemeKey } from "./themes-styles"
 
 // Every sort reads a stored, populated field. Titles missing the value go last; ties go to the newest added.
@@ -39,16 +39,16 @@ export function watchNextSortOf(
 
 /**
  * What a person chooses on the page, as the URL carries it: `sort=waiting&moods=funny,scary&services=all`. With the
- * taste picker (#677), also `themes=crime&styles=slow&taste=1`: up to three picks in all.
+ * taste picker (#677), also `themes=crime&styles=slow&taste=movie-603`: up to three picks in all.
  */
 export interface WatchNextChoice {
 	/** Null: the viewer's default sort (Best match, or Last added without taste). */
 	sort: WatchNextSort | null
 	moods: MoodKey[]
-	/** The taste picker's themes, styles, and taste groups (by number, 1 for the largest); empty without it. */
+	/** The taste picker's themes, styles, and taste groups (by key, see tasteRefsOf); empty without it. */
 	themes: ThemeKey[]
 	styles: StyleKey[]
-	taste: number[]
+	taste: string[]
 	onMyServices: boolean
 }
 
@@ -58,15 +58,18 @@ const CHOICE_DEFAULTS = { onMyServices: true, notSeenYet: false }
 /** The choice from the URL. Moods and services read as the filter bar reads them (`moods`, `services=mine|all`). */
 export function watchNextChoiceOf(params: URLSearchParams): WatchNextChoice {
 	const filters = filterStateFromParams(params, CHOICE_DEFAULTS)
+	const taste = tasteRefsOf(params.get("taste"))
+	// Three picks at most, taste groups first: the groups stand in by their place in the URL while the rest is trimmed.
 	const picks = trimPicks({
 		moods: filters.moods,
 		themes: filters.themes,
 		styles: filters.styles,
-		taste: tasteNumbersOf(params.get("taste")),
+		taste: taste.map((_, i) => i + 1),
 	})
 	return {
 		sort: watchNextSortOf(params.get("sort")),
 		...picks,
+		taste: taste.slice(0, picks.taste.length),
 		onMyServices: filters.onMyServices,
 	}
 }
@@ -77,6 +80,8 @@ export function watchNextChoiceOf(params: URLSearchParams): WatchNextChoice {
  * - With On my services or moods: upNext (4), soon (12), later (the rest of the titles that fit), then the titles one
  *   condition short (otherMoods with moods only, elsewhere with On my services only, close with both), then notTonight
  *   (fails both).
+ * - With a taste group picked: closeToTaste (titles close to it that fit everything else) right after later, on My
+ *   movies too.
  */
 export type WatchNextTierKey =
 	| "upNext"
@@ -86,6 +91,8 @@ export type WatchNextTierKey =
 	| "otherMoods"
 	// The taste picker (#677): one pick short, when the picks go beyond moods.
 	| "otherPicks"
+	// With a taste group picked (#680): close to it, not in it, and fitting everything else. Right after the fits.
+	| "closeToTaste"
 	| "elsewhere"
 	| "close"
 	| "notTonight"

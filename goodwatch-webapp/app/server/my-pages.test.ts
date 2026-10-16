@@ -904,3 +904,130 @@ test("Watch next ignores a time: the choice belongs to My movies", () => {
 	assert.equal(plan.fitting, 5)
 	assert.deepEqual(Object.keys(tiersOf(plan)), ["upNext"])
 })
+
+// ---------------------------------------------------------------------------------------------------------
+// Watch next and My movies with a taste group picked: Close to your taste (#680)
+// ---------------------------------------------------------------------------------------------------------
+
+/**
+ * Three taste groups: Movies 1 and 2 are in group 1, Movie 4 in group 2. Movie 3 is close to group 1, Movie 4 close
+ * to groups 1 and 3, the show close to none. A group's key in links is "movie-11", "movie-22", "movie-33".
+ */
+function fakeGroups() {
+	const inGroup: Record<number, number> = { [M + 1]: 1, [M + 2]: 1, [M + 4]: 2 }
+	const close: Record<number, number[]> = { [M + 3]: [1], [M + 4]: [1, 3] }
+	const asked: number[] = []
+	const group = (n: number) => ({
+		id: `g${n}`,
+		key: `movie-${11 * n}`,
+		name: `Group ${n}`,
+		hues: [],
+		madeOf: [],
+		carries: [],
+	})
+	return {
+		asked,
+		groups: {
+			groups: [group(1), group(2), group(3)],
+			groupOf: (key: number) => inGroup[key] ?? null,
+			closeTo: (key: number) => {
+				asked.push(key)
+				return close[key] ?? []
+			},
+			numberOf: (ref: string) =>
+				({ "movie-11": 1, "movie-22": 2, "movie-33": 3, "1": 1, "2": 2 })[
+					ref
+				] ?? null,
+			lovedPicture: () => null,
+		},
+	}
+}
+const plan680 = (
+	options: Record<string, unknown>,
+	groups = fakeGroups().groups,
+) =>
+	planWatchNext(
+		wishCtx(),
+		taste as never,
+		{ sort: "top", ...options },
+		OUTSIDE,
+		RUNTIMES,
+		undefined,
+		groups,
+	)
+const named = (keys: number[]) =>
+	keys.map((key) => (key > S ? `S${key - S}` : `M${key - M}`))
+const tiers680 = (plan: { tiers: { key: string; keys: number[] }[] }) =>
+	Object.fromEntries(plan.tiers.map((tier) => [tier.key, named(tier.keys)]))
+
+test("with a taste group picked, the titles close to it follow the fits, in the sort's order", () => {
+	const plan = plan680({ taste: ["movie-11"] })
+	assert.deepEqual(plan.picks.taste, [1])
+	assert.deepEqual(named(plan.head.map((e) => e.key)), ["M1", "M2"])
+	// Movie 4 is in group 2 but close to group 1: close to the taste picked. The show is near nothing: one pick short.
+	assert.deepEqual(tiers680(plan), {
+		closeToTaste: ["M3", "M4"],
+		otherPicks: ["S9"],
+	})
+	assert.equal(plan.fitting, 2)
+	assert.equal(plan.entries.get(M + 3)?.closeToTaste, true)
+	assert.equal(plan.entries.get(M + 1)?.closeToTaste, false)
+})
+
+test("a title close to the taste picked but missing another pick is not close to your taste", () => {
+	// Funny is picked too, and no title here is funny: nothing has every other pick.
+	const plan = plan680({ taste: ["movie-11"], moods: ["funny"] })
+	assert.equal(tiers680(plan).closeToTaste, undefined)
+	assert.deepEqual(
+		[M + 3, M + 4].map((key) => plan.entries.get(key)?.closeToTaste),
+		[false, false],
+	)
+	// Nothing fits both: the titles in the group lead, the ones near it come after the show, as Top rated orders them.
+	assert.deepEqual(named(plan.head.map((e) => e.key)), ["M1", "M2", "S9", "M3"])
+})
+
+test("with two groups picked, a title in either fits and only the rest can be close", () => {
+	const plan = plan680({ taste: ["movie-11", "movie-22"] })
+	assert.deepEqual(named(plan.head.map((e) => e.key)), ["M1", "M2", "M4"])
+	assert.deepEqual(tiers680(plan), { closeToTaste: ["M3"], otherPicks: ["S9"] })
+})
+
+test("when nothing on the list is in the group picked, a title close to it leads", () => {
+	const plan = plan680({ taste: ["movie-33"] })
+	assert.equal(plan.fitting, 0)
+	assert.equal(plan.heroNote, "closestToMoods")
+	// The show tops Top rated, but Movie 4 is close to group 3.
+	assert.deepEqual(named(plan.head.map((e) => e.key)), ["M4", "S9", "M1", "M2"])
+})
+
+test("My movies puts the movies close to the taste picked before what doesn't fit tonight", () => {
+	const plan = plan680({ taste: ["movie-11"], kind: "movie", time: 130 })
+	// Movie 1 (155 minutes) runs over: it doesn't fit tonight. Movie 3 (121) is close to group 1 and fits the time.
+	assert.deepEqual(named(plan.head.map((e) => e.key)), ["M2"])
+	assert.deepEqual(tiers680(plan), {
+		closeToTaste: ["M3", "M4"],
+		notTonightsFit: ["M1"],
+	})
+})
+
+test("a link names a taste group by its key; older links by size order; unknown ones are left out", () => {
+	assert.deepEqual(plan680({ taste: ["2"] }).picks.taste, [2])
+	assert.deepEqual(plan680({ taste: ["movie-99"] }).picks.taste, [])
+	// Two names for one group count once.
+	assert.deepEqual(plan680({ taste: ["movie-11", "1"] }).picks.taste, [1])
+	// Without groups (a guest), a taste pick is dropped.
+	assert.deepEqual(
+		plan680({ taste: ["movie-11"] }, null as never).picks.taste,
+		[],
+	)
+})
+
+test("the edges aren't asked for without a taste group picked", () => {
+	const { asked, groups } = fakeGroups()
+	plan680({ moods: ["funny"] }, groups)
+	plan680({}, groups)
+	assert.deepEqual(asked, [])
+	plan680({ taste: ["movie-11"] }, groups)
+	// Only the titles one pick short are placed.
+	assert.deepEqual(named(asked).sort(), ["M3", "M4", "S9"])
+})
