@@ -272,3 +272,20 @@ def test_t5_live_synthetic_pipeline_scores_and_replays(tmp_path):
     assert done.returncode == 0, done.stdout + done.stderr
     aggregate = json.loads((root / 'aggregate.json').read_text())
     assert aggregate['rule'] == 'astra_share' and 's_minus_noun' in aggregate['readers']['astra']
+
+
+def test_t5_live_fixed_copy_matches_the_pinned_page():
+    """Every fixed line the adapter writes must still be on the pinned page, so a copy change in the pin
+    (for example Q71, "In your taste" to "Fits your taste") fails here until the adapter follows it."""
+    here = Path(sides.__file__).resolve().parent
+    page = (here / 'page/ui/taste/tabs/SidesOfYou.tsx').read_text()
+    adapter = (here / 'adapter.ts').read_text()
+    fixed = {'In your taste': '>In your taste<', 'More of this': '>More of this<',
+             'Nothing more to suggest here yet.': '"Nothing more to suggest here yet."',
+             "What you rate highly, grouped by what it shares, and close to each,":
+                 'What you rate highly, grouped by what it shares, and close to each,',
+             "Nothing you've barely tried is close to": "Nothing you've barely tried is close to",
+             'in Watch next': 'Open {names} in Watch next'}
+    for line, on_page in fixed.items():
+        assert line in adapter, line
+        assert on_page in page, f'pinned page no longer has: {on_page}'
