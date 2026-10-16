@@ -10,6 +10,9 @@
 // Both get the two streaming services the Remote's keys and home's tiles stand for. A guest's are Netflix and
 // Prime Video, read from nowhere, so a guest's HTML stays the same for every guest. A member's are their first two
 // saved services (`loadTvServices`), filled up with Netflix and Prime Video.
+//
+// A member with Sides of you gets them for home's guide (`loadHomeSides`, tv-sides.server.ts), read beside
+// Tonight and My shows. Without them in time, home is the row of tiles.
 import { json } from "@remix-run/node"
 import { presentCatalogLoader } from "~/server/media-payload.server"
 import { talkedAboutNowEnabled } from "~/server/talked-about-now/flags.server"
@@ -30,6 +33,7 @@ import {
 import type { TvHomeData, TvService } from "~/ui/living-room/tv/tv-home"
 import { titleKey } from "~/utils/title-key"
 import { livingRoomAuth } from "./data.server"
+import { loadHomeSides } from "./tv-sides.server"
 import { loadStartTitlesAndPicture } from "./start-titles.server"
 import {
 	guestHome,
@@ -96,6 +100,7 @@ export async function loadTvHome(request: Request) {
 	const services = viewer
 		.then((v) => loadTvServices(v.services))
 		.catch(() => tvServices([]))
+	const sides = loadHomeSides(user.id, () => viewer)
 	const own = (async () => {
 		const [taste, v] = await Promise.all([loadMemberTaste(user.id), viewer])
 		return {
@@ -115,6 +120,7 @@ export async function loadTvHome(request: Request) {
 		member: true,
 		...(await own),
 		...talked,
+		sides: await sides,
 	}
 	return { data, headers }
 }

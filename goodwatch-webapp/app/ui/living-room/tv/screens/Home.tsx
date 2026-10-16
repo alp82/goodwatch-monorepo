@@ -3,129 +3,25 @@
 // service's mark, which opens "On <service>" as its key on the Remote does. Nothing here leaves the TV: OK on a
 // tile opens it on the TV.
 //
+// A member with Sides of you gets home as a guide instead, on the desktop edition (HomeGuide.tsx, #673).
+//
 // The headline is the start page's H1, the same sentence for a guest and a member. Until the pool is there, a
 // guest's home is drawn from the start titles alone, so the server's HTML is the same for every guest.
 import { useRef } from "react"
-import { tmdbImageUrl } from "~/utils/tmdb-image"
 import { ServiceMark, hasDrawnMark, serviceColor } from "../../Remote"
-import {
-	CornerBar,
-	Cross,
-	Img,
-	Item,
-	Shade,
-	backdropSize,
-	useTvView,
-} from "../kit"
+import { CornerBar, Cross, Item, Shade, backdropSize, useTvView } from "../kit"
 import { TV_ROW_ATTR } from "../tv-dom"
-import type { TvAppArt, TvAppTile, TvService, TvServiceTile } from "../tv-home"
+import type {
+	TvAppArt,
+	TvAppTile,
+	TvHomeSide,
+	TvService,
+	TvServiceTile,
+} from "../tv-home"
+import { HomeGuide } from "./HomeGuide"
+import { AppArt, artFiles } from "./app-art"
 
 export const HOME_HEADLINE = "Let's find something good for tonight."
-
-/** Explorer's identity: islands on the sea, joined by dotted bridges. Fills its box. */
-function MapArt({ className = "" }: { className?: string }) {
-	const islands = [
-		[70, 62, 46, 30, 40],
-		[200, 44, 54, 34, 150],
-		[322, 78, 44, 28, 15],
-		[110, 150, 50, 30, 200],
-		[250, 150, 56, 34, 320],
-	]
-	return (
-		<svg
-			viewBox="0 0 400 220"
-			preserveAspectRatio="xMidYMid slice"
-			className={className}
-			aria-hidden="true"
-		>
-			<rect width="400" height="220" fill="#0d2a3a" />
-			<path
-				d="M70 62L200 44L322 78M70 62L110 150L250 150L322 78M200 44L250 150"
-				fill="none"
-				stroke="rgba(255,255,255,.4)"
-				strokeWidth="3"
-				strokeDasharray="1 10"
-				strokeLinecap="round"
-			/>
-			{islands.map(([x, y, rx, ry, hue]) => (
-				<ellipse
-					key={hue}
-					cx={x}
-					cy={y}
-					rx={rx}
-					ry={ry}
-					fill={`hsl(${hue} 62% 52%)`}
-				/>
-			))}
-		</svg>
-	)
-}
-
-/** Taste's identity: the ridges of a fingerprint. Fills its box. */
-function PrintArt({ className = "" }: { className?: string }) {
-	return (
-		<svg
-			viewBox="0 0 400 220"
-			preserveAspectRatio="xMidYMid slice"
-			className={className}
-			aria-hidden="true"
-		>
-			<rect width="400" height="220" fill="#241538" />
-			{[26, 48, 70, 92, 114, 136].map((r, i) => (
-				<path
-					key={r}
-					d={`M${200 - r} 150a${r} ${r * 1.05} 0 0 1 ${r * 2} 0${i % 2 ? `v${20 + i * 4}` : ""}`}
-					fill="none"
-					stroke="#c4b5fd"
-					strokeWidth="10"
-					strokeLinecap="round"
-					opacity={1 - i * 0.11}
-				/>
-			))}
-		</svg>
-	)
-}
-
-/** The image files of an app's picture, at the size it is drawn: the whole picture, or a tile. */
-function artFiles(art: TvAppArt, backdrop: string, poster: string): string[] {
-	if (art.kind === "backdrop")
-		return art.path ? [tmdbImageUrl(art.path, backdrop)] : []
-	if (art.kind === "posters")
-		return art.paths.map((path) => tmdbImageUrl(path, poster))
-	return []
-}
-
-/** An app's picture. Fills its box. */
-function AppArt({
-	art,
-	files,
-	className,
-}: { art: TvAppArt; files: readonly string[]; className: string }) {
-	if (art.kind === "map") return <MapArt className={className} />
-	if (art.kind === "print") return <PrintArt className={className} />
-	if (art.kind === "posters")
-		return (
-			<span className={`flex bg-[#10131c] ${className}`}>
-				{files.map((src) => (
-					<Img key={src} src={src} className="h-full min-w-0 flex-1" />
-				))}
-			</span>
-		)
-	// Without a picture the tile is the dark of the room, or its service's own colour, and its name or mark says
-	// what it is.
-	return files[0] ? (
-		<Img src={files[0]} className={className} />
-	) : (
-		<span
-			className={`block ${className}`}
-			style={{
-				background: art.color
-					? `linear-gradient(160deg, color-mix(in srgb, ${art.color} 58%, #05060a) 0%, color-mix(in srgb, ${art.color} 20%, #05060a) 100%)`
-					: "linear-gradient(160deg,#1c2433,#0b0e15)",
-			}}
-		/>
-	)
-}
 
 /** A tile of home's row: an app, or a streaming service. */
 type Tile = {
@@ -142,12 +38,38 @@ type Tile = {
 export function Home({
 	apps,
 	services = [],
+	sides = [],
 	items,
 }: {
 	apps: readonly TvAppTile[]
 	/** The person's two streaming services, after the apps. */
 	services?: readonly TvServiceTile[]
+	/** A member's Sides of you: with any, the desktop's home is the guide. */
+	sides?: readonly TvHomeSide[]
 	/** The screen's items, from `tvItems`. */
+	items: readonly string[]
+}) {
+	const phone = useTvView().canvas.edition === "phone"
+	if (sides.length && !phone)
+		return (
+			<HomeGuide
+				headline={HOME_HEADLINE}
+				apps={apps}
+				sides={sides}
+				items={items}
+			/>
+		)
+	return <HomeRow apps={apps} services={services} items={items} />
+}
+
+/** Today's home: the row of tiles. */
+function HomeRow({
+	apps,
+	services,
+	items,
+}: {
+	apps: readonly TvAppTile[]
+	services: readonly TvServiceTile[]
 	items: readonly string[]
 }) {
 	const { canvas, focused } = useTvView()

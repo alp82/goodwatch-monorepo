@@ -14,8 +14,11 @@ import { copyMediaPresentation } from "../../../utils/media-presentation.ts"
 import type { TitleCard } from "~/server/title-cards.server"
 import { QUIZ_GOAL } from "../../taste-quiz/quiz-flow.ts"
 import type { StartTitle } from "../living-room-data"
+import { TASTE_APP_LINE } from "./home-sides-copy.ts"
+import type { TvListTitle } from "./TitleList.tsx"
 import {
 	EMPTY_CONTEXT,
+	TITLE_KEY,
 	TONIGHT_PICKS,
 	TV_APPS,
 	type TvApp,
@@ -97,6 +100,29 @@ export type TvHomeData = {
 	scope?: { country: string; services: number[] }
 	/** "Talked about now" below the room (#557), for this viewer. Absent while the feature is off for them. */
 	talked?: true
+	/**
+	 * A member's Sides of you, as home's list shows them (#673): the side holding the best pick in personal order
+	 * first. Absent for a guest; empty for a member without sides, whose home stays the row of tiles.
+	 */
+	sides?: TvHomeSide[]
+}
+
+/**
+ * One side of the member's taste on home: its entry in the list under the apps, and what shows on the right while
+ * it is on. Shaped on the server (server/living-room/tv-sides.server.ts).
+ */
+export type TvHomeSide = {
+	id: string
+	/** The loved titles it is shown by: its most typical, one per franchise, up to four. */
+	loved: { key: string; title: string; poster: string | null }[]
+	/** Unseen titles of the side, in the member's personal order when it is on for them. */
+	picks: TvListTitle[]
+	/** The member has services and too few of the picks stream there, so the picks are from everywhere. */
+	fewOnServices: boolean
+	/** Watch next with the side's moods. */
+	watchNext: string
+	/** The side's name and its moods' names: null until the words gate (#656) lets them reach the home. */
+	words: { name: string; moods: string[] } | null
 }
 
 /** What the TV reads of the pool: its suggestions, best first for the person, and whose services are theirs. */
@@ -209,7 +235,40 @@ export function tvContextOf(
 		nextEpisodes: (data.shows?.next ?? []).map((show) => `show-${show.id}`),
 		toStart: (data.shows?.start ?? []).map((show) => `show-${show.id}`),
 		services: data.services.map((service) => service.id),
+		homeSides: homeSidesContext(data.sides ?? []),
 	}
+}
+
+/** What the machine knows of home's sides: their ids, the keys of their picks, and where Watch next leads. */
+export function homeSidesContext(
+	sides: readonly TvHomeSide[],
+): TvContext["homeSides"] {
+	return sides.map((side) => ({
+		id: side.id,
+		picks: side.picks.map((pick) => pick.key),
+		watchNext: side.watchNext,
+	}))
+}
+
+/** What home's sides know of a title, so a pick's title screen names it at once. Null for any other title. */
+export function knownHomePick(
+	data: Pick<TvHomeData, "sides">,
+	key: string,
+) {
+	for (const side of data.sides ?? []) {
+		const pick = side.picks.find((one) => one.key === key)
+		const [, mediaType, tmdbId] = TITLE_KEY.exec(key) ?? []
+		if (pick && mediaType)
+			return {
+				media_type: mediaType as "movie" | "show",
+				tmdb_id: Number(tmdbId),
+				...copyMediaPresentation(pick),
+				title: pick.title,
+				poster_path: pick.poster,
+				backdrop_path: pick.backdrop,
+			}
+	}
+	return null
 }
 
 /** An app tile's picture: real art for Tonight, Discover and My shows, a drawing for Explorer and Taste. */
@@ -291,7 +350,7 @@ export function homeApps(
 		explorer: { line: "Sail a small map of islands.", art: { kind: "map" } },
 		taste: {
 			line: taste
-				? "The sides of you."
+				? TASTE_APP_LINE
 				: `Rate ${QUIZ_GOAL} titles, get picks made for you.`,
 			art: { kind: "print" },
 		},

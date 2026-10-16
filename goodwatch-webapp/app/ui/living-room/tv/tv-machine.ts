@@ -6,7 +6,8 @@
 // never fetches, never measures and never touches the browser.
 //
 // Home is a row of apps: Tonight, Discover, Explorer, Taste and, for a member, My shows, then a tile for each of
-// the person's two streaming services. Each opens on the TV, and nothing on the TV leaves it but the Expand key (`destinationHref` says where it goes) and "Watch on
+// the person's two streaming services. A member with Sides of you gets home as a guide instead: see "Home's sides"
+// below. Each opens on the TV, and nothing on the TV leaves it but the Expand key (`destinationHref` says where it goes) and "Watch on
 // <service>". Every screen ends with the Expand key, where it has a page, and the top bar: Back, Search, Menu.
 //
 // The screen lives in the URL search params (`/?tv=discover&mood=funny`); `readTvState` and `writeTvParams`
@@ -64,6 +65,8 @@ export const TASTE_SIDES = 5
 export const SHOWS_PER_GROUP = 3
 /** A service's row pages through this many titles. */
 export const SERVICE_TITLES = 12
+/** A side's picks on home's guide. */
+export const HOME_SIDE_PICKS = 12
 
 /** The search screen's ideas. Four show, three once what is typed has its own key. */
 export const SEARCH_IDEAS: readonly string[] = [
@@ -158,6 +161,11 @@ export type TvContext = {
 	exactScores: boolean
 	/** The person's two streaming services, by TMDB provider id: the Remote's keys and home's tiles after the apps. */
 	services: readonly number[]
+	/**
+	 * A member's Sides of you on home, in the list's order: each side's id, the keys of its picks (personal order)
+	 * and the Watch next page it opens. Empty for a guest, a member without sides, and on the phone.
+	 */
+	homeSides: readonly TvHomeSideRef[]
 	// My shows (slice 9).
 	/**
 	 * The title on the title screen is a show the member is midway through, and its Next episode is known: Seen it
@@ -182,6 +190,7 @@ export const EMPTY_CONTEXT: TvContext = {
 	quizProgress: 0,
 	exactScores: false,
 	services: [],
+	homeSides: [],
 	nextEpisode: false,
 }
 
@@ -526,13 +535,13 @@ const typed = (ctx: TvContext) => ctx.draft.trim().length > 0
 /** A screen's own items, before the Expand key and the top bar. */
 function contentItems(screen: TvScreen, ctx: TvContext): string[] {
 	switch (screen.name) {
-		case "home":
-			return [
-				...TV_APPS.filter((app) => app !== "shows" || ctx.member).map(
-					(app) => `app:${app}`,
-				),
-				...ctx.services.map((id) => `service:${id}`),
-			]
+		case "home": {
+			const apps = TV_APPS.filter((app) => app !== "shows" || ctx.member).map(
+				(app) => `app:${app}`,
+			)
+			if (ctx.homeSides.length) return [...apps, ...guideSideItems(ctx)]
+			return [...apps, ...ctx.services.map((id) => `service:${id}`)]
+		}
 		case "tonight": {
 			const { count } = tonightPick(screen, ctx)
 			return [...(count ? ["details"] : []), ...(count > 1 ? ["another"] : [])]
@@ -1004,6 +1013,116 @@ function serviceKey(state: TvState, service: number): TvTransition {
 }
 
 // ---------------------------------------------------------------------------------------------------------
+// Home's sides (#673): for a member with Sides of you, home is a guide. The apps, then one entry per side, stand
+// in a list on the left; Up and Down move along it, and the entry that has the focus shows on the right: an app as
+// home shows it, or a side's loved posters, its picks and Watch next. Right (or OK) steps into the side's picks,
+// Left from the first pick comes back to its entry. The services' tiles are not in the list: the Remote's keys
+// open them.
+//
+// Items: `home-side:<id>` for a side's entry, `title:<key>` for its picks, `watch-next:<id>` for its key. Every
+// side's picks are items, in reading order after its entry, so the wheel's step walks into them; only the picks
+// of the side that is on are drawn, so the direction keys reach no other side's.
+
+/** What the machine knows of one of home's sides. */
+export type TvHomeSideRef = {
+	id: string
+	/** Its picks' keys, in personal order. */
+	picks: readonly string[]
+	/** The Watch next page it opens, with its moods. */
+	watchNext: string
+}
+
+/** Each side's entry, picks and Watch next key, in reading order. */
+function guideSideItems(ctx: Pick<TvContext, "homeSides">): string[] {
+	return ctx.homeSides.flatMap((side) => [
+		`home-side:${side.id}`,
+		...side.picks.slice(0, HOME_SIDE_PICKS).map((key) => `title:${key}`),
+		`watch-next:${side.id}`,
+	])
+}
+
+/** The guide's list: the apps' entries and the sides' entries, top to bottom. */
+function guideEntries(items: readonly string[]): string[] {
+	return items.filter(
+		(item) => item.startsWith("app:") || item.startsWith("home-side:"),
+	)
+}
+
+/**
+ * The side an item of home's guide belongs to: a side's entry, one of its picks or its Watch next key. Null for an
+ * app, the bar, and any item off the guide.
+ */
+export function guideSideOf(
+	item: string,
+	ctx: Pick<TvContext, "homeSides">,
+): TvHomeSideRef | null {
+	const [kind, ...rest] = item.split(":")
+	const arg = rest.join(":")
+	if (kind === "home-side" || kind === "watch-next")
+		return ctx.homeSides.find((side) => side.id === arg) ?? null
+	if (kind === "title")
+		return (
+			ctx.homeSides.find((side) =>
+				side.picks.slice(0, HOME_SIDE_PICKS).includes(arg),
+			) ?? null
+		)
+	return null
+}
+
+/** Where a step into a side lands: its first pick, or its Watch next key when it has none. */
+const intoSide = (side: TvHomeSideRef) =>
+	side.picks.length ? `title:${side.picks[0]}` : `watch-next:${side.id}`
+
+/**
+ * The moves of home's guide that the direction rule does not give by itself: the list is walked in order (it
+ * scrolls, so the rule would see only part of it), Right steps into a side, Left from the first pick and from the
+ * Watch next key comes back to the side's entry, Down from a pick goes to Watch next and Up from it to the first
+ * pick. Returns the item to move to (the item itself to stay), or null for the rule.
+ */
+function guideMove(
+	state: TvState,
+	from: string,
+	dir: TvDir,
+	ctx: TvContext,
+): string | null {
+	if (state.menuOpen || state.screen.name !== "home" || !ctx.homeSides.length)
+		return null
+	const entries = guideEntries(tvItems(state.screen, ctx))
+	const at = entries.indexOf(from)
+	if (at >= 0) {
+		// Up from the first entry is the rule's: the top bar.
+		if (dir === "up") return at > 0 ? entries[at - 1] : null
+		if (dir === "down") return entries[at + 1] ?? from
+		const side = guideSideOf(from, ctx)
+		return dir === "right" && side ? intoSide(side) : from
+	}
+	const side = guideSideOf(from, ctx)
+	if (!side) return null
+	if (from.startsWith("title:")) {
+		if (dir === "left" && from === intoSide(side)) return `home-side:${side.id}`
+		if (dir === "down") return `watch-next:${side.id}`
+		return null
+	}
+	if (dir === "up")
+		return side.picks.length ? intoSide(side) : `home-side:${side.id}`
+	if (dir === "left") return `home-side:${side.id}`
+	return from
+}
+
+/** OK on a side's entry steps into it; OK on its Watch next key opens Watch next with the side's moods. */
+function chooseInGuide(
+	state: TvState,
+	kind: string,
+	arg: string,
+	ctx: TvContext,
+): TvTransition {
+	const side = ctx.homeSides.find((one) => one.id === arg)
+	if (!side) return none(state)
+	if (kind === "home-side") return none(focusOn(state, intoSide(side), ctx))
+	return none(state, [{ type: "expand", href: side.watchNext }])
+}
+
+// ---------------------------------------------------------------------------------------------------------
 // Choosing an item
 
 const APP_SCREEN: Record<TvApp, TvScreen> = {
@@ -1082,6 +1201,11 @@ function choose(state: TvState, item: string, ctx: TvContext): TvTransition {
 			return replace(state, { name: "explorer", island: arg })
 		case "side":
 			return push(state, { name: "taste", side: arg })
+		case "home-side":
+		case "watch-next":
+			return s.name === "home"
+				? chooseInGuide(state, kind, arg, ctx)
+				: none(state)
 		case "start-quiz":
 			return push(state, { name: "quiz" })
 		// A service's tile on home.
@@ -1153,9 +1277,10 @@ export function transition(
 		case "move": {
 			const items = activeItems(state, ctx)
 			const from = focusedItem(state, ctx)
-			// The rating strip names two moves itself, before the rule.
+			// The rating strip and home's guide name some moves themselves, before the rule.
 			const to =
 				stripMove(state, from, action.dir, items) ??
+				guideMove(state, from, action.dir, ctx) ??
 				nextInDirection(
 					action.boxes.filter((box) => items.includes(box.id)),
 					from,
