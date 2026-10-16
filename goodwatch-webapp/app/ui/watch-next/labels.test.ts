@@ -3,7 +3,7 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import "../../server/title-filter/test-alias.ts"
 
-const { heroLabel, movieHeroLabel, runtimeLabel, TIER_LABEL } = await import(
+const { heroLabel, movieHeroLabel, runtimeLabel, tierGridClass, TIER_LABEL } = await import(
 	"./labels.ts"
 )
 
@@ -43,4 +43,15 @@ test("no line of My movies says film or Wishlist", () => {
 	assert.equal(runtimeLabel({ media_type: "movie", runtime: null }), "Film")
 	assert.equal(runtimeLabel({ media_type: "movie", runtime: 132 }, "Movie"), "2h 12m")
 	assert.equal(TIER_LABEL.notTonightsFit, "Not tonight's fit")
+})
+
+test("a closed group is hidden at every width, not re-shown by a desktop display class", () => {
+	for (const size of ["xl", "lg", "md", "sm"] as const) {
+		const closed = tierGridClass(size, false).split(/\s+/)
+		assert.deepEqual(closed.filter((name) => /(^|:)(grid|flex|block)$/.test(name)), [])
+		assert.ok(closed.includes("hidden"))
+		const open = tierGridClass(size, true).split(/\s+/)
+		assert.ok(open.includes("grid") && open.includes("md:flex"))
+		assert.ok(!open.includes("hidden"))
+	}
 })

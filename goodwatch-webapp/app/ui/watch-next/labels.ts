@@ -224,4 +224,15 @@ export const tierHeadingClass: Record<WatchNextTierSize, string> = {
 	sm: "text-lg md:text-xl text-gray-400",
 }
 
+const GRID: Record<WatchNextTierSize, string> = {
+	xl: "grid grid-cols-2 gap-3 md:flex md:flex-wrap md:gap-4",
+	lg: "grid grid-cols-3 gap-2 md:flex md:flex-wrap md:gap-3",
+	md: "grid grid-cols-4 gap-1.5 md:flex md:flex-wrap md:gap-2",
+	sm: "grid grid-cols-6 gap-1 md:flex md:flex-wrap md:gap-1.5",
+}
+
+// A closed group is only `hidden`: any `md:flex` kept beside it would win at desktop width.
+export const tierGridClass = (size: WatchNextTierSize, open: boolean) =>
+	open ? GRID[size] : "hidden"
+
 export const titleCount = (n: number) => `${n} ${n === 1 ? "title" : "titles"}`
