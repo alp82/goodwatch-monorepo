@@ -187,6 +187,10 @@ The filter that keeps only titles with a taste match of at least 70, 80, or 90 p
 One distinct strand of the titles a person rates highly, such as dark, tense crime or gentle comedy, named by the traits that set it apart. A person's taste has two to five. Members see a taste group by its name alone, with no noun for it, and a title in one is In your taste.
 _Avoid_: Side of you, Side, Favorites, Kind
 
+**Your taste mix**:
+The view of a person's taste groups and what is close to each, called Mix among the Taste page's tabs.
+_Avoid_: Sides of you, What your taste is made of
+
 **Close to your taste**:
 What sits right next to a taste group that the person has barely tried: a kind of story next to it, one trait added to it, or the way toward another taste group. Members see it as Close to your taste, or Close to the taste group's name.
 _Avoid_: Edge, Just past, Frontier
