@@ -12,13 +12,16 @@ const AGAINST_NAME = -1
 // A title at least this far above the catalog on a World attribute (z) is that kind of title.
 const KIND_Z = 0.5
 
+/** What a name's test reads of a title: its attributes and facts. */
+export type Titled = Pick<RatedTitle, "z" | "facts">
+
 /** Attribute keys by how much the group stands out from the person's other groups, most first. */
 export type Standout = { key: string; weight: number }[]
 
 interface Kind {
 	noun: string
 	/** Whether the title is this kind: its genre, or a World attribute it carries. */
-	has: (title: RatedTitle) => boolean
+	has: (title: Titled) => boolean
 	/** Attributes the noun already says, so a trait doesn't repeat them ("tense thrillers"). */
 	says: string[]
 	/** Humor traits say what kind of funny before it ("absurd comedies"). */
@@ -27,13 +30,13 @@ interface Kind {
 
 const carries = (key: string) => {
 	const at = KEYS.indexOf(key)
-	return (title: RatedTitle) => title.z[at] >= KIND_Z
+	return (title: Titled) => title.z[at] >= KIND_Z
 }
 const genre =
 	(...names: string[]) =>
-	(title: RatedTitle) =>
+	(title: Titled) =>
 		names.some((name) => title.facts.genres.includes(name))
-type Test = (title: RatedTitle) => boolean
+type Test = (title: Titled) => boolean
 const either =
 	(...tests: Test[]): Test =>
 	(title) =>
@@ -225,12 +228,11 @@ function candidates(order: Standout): Candidate[] {
 	return names
 }
 
-/** The group's titles a name describes: of its kind, and none strongly against a trait the name claims. */
-function describedBy(members: RatedTitle[], candidate: Candidate) {
+/** A name describes a title: of its kind, and not strongly against a trait the name claims. */
+function describer(candidate: Candidate) {
 	const at = candidate.keys.map((key) => KEYS.indexOf(key))
-	return members.filter(
-		(r) => candidate.kind.has(r) && at.every((k) => r.z[k] >= AGAINST_NAME),
-	)
+	return (title: Titled) =>
+		candidate.kind.has(title) && at.every((k) => title.z[k] >= AGAINST_NAME)
 }
 
 /**
@@ -245,7 +247,12 @@ export function nameGroup(
 	taken: Set<string>,
 ) {
 	const most = Math.max(2, Math.ceil(0.75 * members.length))
-	type Named = { name: string; members: RatedTitle[] }
+	type Named = {
+		name: string
+		keys: string[]
+		describes: Test
+		members: RatedTitle[]
+	}
 	// A name that fits beats longer ones, and the first that fits wins: the names with two traits come first.
 	const rank = ({ name }: Candidate) =>
 		name.length <= NAME_LENGTH ? 0 : name.length
@@ -254,9 +261,12 @@ export function nameGroup(
 	for (const candidate of candidates(order)) {
 		if (chosen && candidate.kind !== chosen.kind) break
 		if (taken.has(candidate.name)) continue
+		const describes = describer(candidate)
 		const named = {
 			name: candidate.name,
-			members: describedBy(members, candidate),
+			keys: candidate.keys,
+			describes,
+			members: members.filter(describes),
 		}
 		if (
 			named.members.length >= most &&
@@ -268,5 +278,10 @@ export function nameGroup(
 	const name = chosen ?? best
 	if (!name || name.members.length < 2) return null
 	taken.add(name.name)
-	return { name: name.name, members: name.members }
+	return {
+		name: name.name,
+		keys: name.keys,
+		describes: name.describes,
+		members: name.members,
+	}
 }

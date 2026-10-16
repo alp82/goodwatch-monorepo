@@ -159,16 +159,23 @@ function referencePool(snapshot: TitleSnapshot): PoolTitle[] {
 
 // ---------- the person ----------
 
+/** A title's z against the reference pool; null without a title analysis. */
+export function titleZ(
+	snapshot: TitleSnapshot,
+	key: TitleKey,
+): Float64Array | null {
+	const fp = snapshot.fingerprint(key)
+	return fp ? zScores(fp, snapshot.stats.mean, snapshot.stats.sd) : null
+}
+
 export function readPerson(
 	snapshot: TitleSnapshot,
 	input: PortraitInput,
 ): Person {
-	const { mean, sd } = snapshot.stats
 	const zCache = new Map<TitleKey, Float64Array | null>()
 	const zOf = (key: TitleKey) => {
 		if (zCache.has(key)) return zCache.get(key) ?? null
-		const fp = snapshot.fingerprint(key)
-		const z = fp ? zScores(fp, mean, sd) : null
+		const z = titleZ(snapshot, key)
 		zCache.set(key, z)
 		return z
 	}

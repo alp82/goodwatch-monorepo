@@ -110,7 +110,7 @@ async function memberPortrait(
 	const cached = await readCachedPortrait(userId, tab, hiddenKey)
 	if (cached) return cached
 	const taste = await loadTaste(who.viewer)
-	const input = inputOf("member", ctx, taste)
+	const input = portraitInput("member", ctx, taste)
 	const view = await buildView(
 		snapshot,
 		input,
@@ -193,7 +193,7 @@ async function guestPortrait(
 			.digest("base64url")
 		return keep(`guest:${id}`, GUEST_KEEP_MS, async () => {
 			const taste = await loadTaste(ctx.viewer)
-			return buildView(snapshot, inputOf("guest", ctx, taste), tab)
+			return buildView(snapshot, portraitInput("guest", ctx, taste), tab)
 		})
 	}
 	// The sample taste is fixed; its suggestions also respect the guest's hidden titles.
@@ -203,7 +203,7 @@ async function guestPortrait(
 		async () => {
 			const sample = sampleContext(ctx)
 			const taste = await loadTaste(sample.viewer)
-			return buildView(snapshot, inputOf("sample", sample, taste), tab)
+			return buildView(snapshot, portraitInput("sample", sample, taste), tab)
 		},
 	)
 }
@@ -254,7 +254,8 @@ function sampleContext(guest: ViewerContext): ViewerContext {
 
 // ---------- building a view ----------
 
-function inputOf(
+/** What a portrait reads of a viewer: their ratings and marks, where they watch, and their taste match. */
+export function portraitInput(
 	kind: PortraitInput["kind"],
 	ctx: ViewerContext,
 	taste: Taste,

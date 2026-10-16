@@ -3,7 +3,7 @@
 // a side are ordered by the person's personal order when it is on for them: sides group, personal order ranks.
 import { MOOD_KEYS, type MoodKey } from "~/domain/moods"
 import type { TitleKey } from "~/server/title-snapshot/index.server"
-import { nameGroup } from "./group-names.server"
+import { nameGroup, type Titled } from "./group-names.server"
 import {
 	K,
 	KEYS,
@@ -231,7 +231,7 @@ function typical(members: RatedTitle[], center: Vec, mu: number) {
 }
 
 /** The moods most of the side's titles carry, most common first. */
-function sideMoods(members: RatedTitle[]): MoodKey[] {
+export function sideMoods(members: RatedTitle[]): MoodKey[] {
 	return MOOD_KEYS.map((mood) => ({
 		mood,
 		share:
@@ -288,9 +288,13 @@ function moreOfThis(person: Person, center: Vec, order: OrderTitles) {
 // ---------- edges ----------
 
 type Edge = SideEdge & { strength: number }
-type SideDraft = {
+export type SideDraft = {
 	id: string
 	name: string
+	/** The traits the name claims. */
+	keys: string[]
+	/** Whether the name describes a title: of its kind, and not strongly against a trait it claims. */
+	describes: (title: Titled) => boolean
 	center: Vec
 	members: RatedTitle[]
 }
@@ -590,6 +594,84 @@ function bridgeEdge(
 	}
 }
 
+// ---------- the sides ----------
+
+/** The person's sides before their edges: the grouping and the names, and the side each group of titles became. */
+export interface NamedSides {
+	/** How many titles the person loves. */
+	loved: number
+	/** Largest first, with ids side-1, side-2, and so on. */
+	sides: SideDraft[]
+	/** Every group's center, named or not, and the index in `sides` of the side it became (null when unnamed). */
+	groups: { center: Vec; side: number | null }[]
+}
+
+/** The fewest sides that hold together, each named against the others; null when the person has fewer than two. */
+export function namedSides(person: Person): NamedSides | null {
+	const loved = lovedTitles(person)
+	const n = loved.length
+	if (n < 5) return null
+	const groups = group(loved, person)
+	if (groups.length < 2) return null
+
+	const groupCenters = groups.map((g) => g.center)
+	const taken = new Set<string>()
+	// Each side keeps the titles its name describes; a side no name describes two titles of goes.
+	const named = groups.flatMap((g, i) => {
+		const side = nameGroup(
+			standout(
+				g.center,
+				groupCenters.filter((_, j) => j !== i),
+			),
+			g.members,
+			taken,
+		)
+		return side ? [{ ...side, center: g.center, group: i }] : []
+	})
+	if (named.length < 2) return null
+	named.sort(
+		(a, b) =>
+			b.members.length - a.members.length || a.name.localeCompare(b.name),
+	)
+	const sides: SideDraft[] = named.map(({ group: _, ...g }, i) => ({
+		id: `side-${i + 1}`,
+		...g,
+	}))
+	return {
+		loved: n,
+		sides,
+		groups: groups.map((g, i) => {
+			const side = named.findIndex((s) => s.group === i)
+			return { center: g.center, side: side < 0 ? null : side }
+		}),
+	}
+}
+
+/**
+ * The side a title belongs to, by the rule its loved titles follow: its nearest group's side, when it is at least
+ * FITS_NO_SIDE close to that center and the side's name describes it. Null: it fits no side.
+ */
+export function sideOfTitle(named: NamedSides, title: Titled): number | null {
+	const { index, similarity } = nearest(
+		title.z,
+		named.groups.map((g) => g.center),
+	)
+	const side = named.groups[index].side
+	if (side === null || similarity < FITS_NO_SIDE) return null
+	return named.sides[side].describes(title) ? side : null
+}
+
+/** "You're here": the side's most typical loved titles, the ones rated 7 or more when there are two. */
+function hereOf(here: RatedTitle[]) {
+	const high = here.filter((r) => r.score >= 7)
+	return (high.length >= 2 ? high : here).slice(0, HERE)
+}
+
+/** The side's "You're here" titles. */
+export function sideHere(person: Person, side: SideDraft): TitleKey[] {
+	return hereOf(typical(side.members, side.center, person.mu)).map((r) => r.key)
+}
+
 // ---------- the view ----------
 
 export function buildSides(
@@ -604,35 +686,9 @@ export function buildSides(
 		openFirst: null,
 		hasServices: person.input.services.length > 0,
 	}
-	const loved = lovedTitles(person)
-	const n = loved.length
-	if (n < 5) return empty
-	const groups = group(loved, person)
-	if (groups.length < 2) return empty
-
-	const groupCenters = groups.map((g) => g.center)
-	const taken = new Set<string>()
-	// Each side keeps the titles its name describes; a side no name describes two titles of goes.
-	const named = groups.flatMap((g, i) => {
-		const side = nameGroup(
-			standout(
-				g.center,
-				groupCenters.filter((_, j) => j !== i),
-			),
-			g.members,
-			taken,
-		)
-		return side ? [{ ...side, center: g.center }] : []
-	})
-	if (named.length < 2) return empty
-	named.sort(
-		(a, b) =>
-			b.members.length - a.members.length || a.name.localeCompare(b.name),
-	)
-	const drafts: SideDraft[] = named.map((g, i) => ({
-		id: `side-${i + 1}`,
-		...g,
-	}))
+	const named = namedSides(person)
+	if (!named) return empty
+	const { loved: n, sides: drafts } = named
 	const centers = drafts.map((d) => d.center)
 
 	const stepsTaken = new Set<string>()
@@ -661,14 +717,13 @@ export function buildSides(
 		)
 			.slice(0, 4)
 			.map((a) => ({ key: a.key, label: label(a.key) }))
-		const high = here.filter((r) => r.score >= 7)
 		return {
 			id: draft.id,
 			name: draft.name,
 			attributes,
 			count: draft.members.length,
 			average: round1(average(draft.members.map((r) => r.score))),
-			here: (high.length >= 2 ? high : here).slice(0, HERE).map((r) => r.key),
+			here: hereOf(here).map((r) => r.key),
 			image:
 				here.find((r) => r.facts.hasBackdrop)?.key ??
 				draft.members.find((r) => r.facts.hasBackdrop)?.key ??

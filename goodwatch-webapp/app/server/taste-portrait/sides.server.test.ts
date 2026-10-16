@@ -33,7 +33,9 @@ registerHooks({
 				),
 })
 
-const { buildSides, franchiseOf } = await import("./sides.server")
+const { buildSides, franchiseOf, namedSides, sideOfTitle } = await import(
+	"./sides.server"
+)
 const { KEYS, K, meanOf } = await import("./person.server")
 
 const at = (key: string) => KEYS.indexOf(key)
@@ -428,5 +430,43 @@ describe("buildSides", () => {
 	it("has no sides with too few loved titles", () => {
 		const titles = [rated(CRIME, 9), rated(COMEDY, 9), rated({}, 5)]
 		assert.equal(buildSides(person(titles, [])).status, "empty")
+	})
+})
+
+describe("sideOfTitle", () => {
+	// Facts like the strand's own titles, so a name's kind ("crime dramas", "comedies") describes them.
+	const title = (v: Float64Array, genres = ["Crime", "Drama"]) => ({
+		z: v,
+		facts: facts({ genres }),
+	})
+	const { titles, pool } = twoStrands()
+	const named = namedSides(person(titles, pool))
+	assert.ok(named)
+	const crimeSide = named.sides.findIndex((side) =>
+		side.members.some((r) => r.facts.moods.includes("crime")),
+	)
+
+	it("puts a title near a side's center on that side", () => {
+		assert.equal(sideOfTitle(named, title(z(CRIME))), crimeSide)
+		assert.equal(
+			sideOfTitle(named, title(z(COMEDY), ["Comedy"])),
+			1 - crimeSide,
+		)
+	})
+
+	it("leaves a title less than 0.3 close to its nearest side on no side", () => {
+		const far = new Float64Array(K)
+		far[at("romance")] = 2
+		far[at("historical")] = 2
+		assert.equal(sideOfTitle(named, title(far)), null)
+	})
+
+	it("leaves a title far below the catalog on an attribute the side's name claims on no side", () => {
+		const claimed = named.sides[crimeSide].keys[0]
+		const against = z(CRIME)
+		against[at(claimed)] = -1.5
+		assert.equal(sideOfTitle(named, title(against)), null)
+		against[at(claimed)] = -0.5
+		assert.equal(sideOfTitle(named, title(against)), crimeSide)
 	})
 })
