@@ -136,7 +136,7 @@ export function Guide() {
 							<div className={`mt-2 font-bold tracking-tight ${names && side.edges[0] ? "truncate pb-1 leading-tight" : "line-clamp-2 leading-[1.02]"}`} style={{ fontSize: names && side.edges[0] ? 44 : on.name.length > 28 ? 46 : 58 }}>
 								{on.name}
 							</div>
-							{names && side.edges[0] && <div className="mt-2 line-clamp-1 text-[22px] text-sky-200">Just past it: {side.edges[0].line}</div>}
+							{names && side.edges[0] && <div className="mt-2 line-clamp-1 text-[22px] text-sky-200">Just past it: {side.edges[0].line.startsWith("but ") ? `the same, ${side.edges[0].line}` : side.edges[0].line}</div>}
 							<div className="mt-4">
 								<LovedStrip side={side} n={7} height={64} />
 							</div>
