@@ -104,7 +104,8 @@ export function SideBanner({
 }
 
 // The name gets the width beside the posters; the links take a line of their own under it, full width on phones so
-// a two-line name never shares its width with them. Without Watch next ("More for you"), the action sits beside the name.
+// a two-line name never shares its width with them. "More for you" has neither posters nor Watch next: its action
+// sits beside its name.
 function SideHeader({
 	side,
 	action,
@@ -113,14 +114,15 @@ function SideHeader({
 	action: ReactNode
 }) {
 	const posters = side.here.length > 0
-	const watchNext = side.moods.length > 0
+	// "More for you" keeps its action beside its name; a group's name gets the width, its links a line under it.
+	const linksBelow = side.number !== null
 	return (
 		<div
 			className={`grid items-center gap-x-3 gap-y-1 ${posters ? "grid-cols-[auto_1fr]" : "grid-cols-1"}`}
 		>
 			{posters && (
 				<span
-					className={`flex shrink-0 -space-x-3 ${watchNext ? "md:row-span-2" : ""}`}
+					className={`flex shrink-0 -space-x-3 ${linksBelow ? "md:row-span-2" : ""}`}
 					aria-hidden
 				>
 					{side.here.map((t, i) => (
@@ -137,7 +139,7 @@ function SideHeader({
 				</span>
 			)}
 			<div
-				className={`flex min-w-0 items-start gap-2 ${watchNext ? "self-end" : ""}`}
+				className={`flex min-w-0 items-start gap-2 ${linksBelow ? "self-end" : ""}`}
 			>
 				<span
 					className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full"
@@ -147,19 +149,23 @@ function SideHeader({
 				<h2 className="line-clamp-2 text-lg leading-tight font-bold text-white md:text-xl">
 					{labelOf(side)}
 				</h2>
-				{!watchNext && <div className="ml-auto self-center">{action}</div>}
+				{!linksBelow && <div className="ml-auto self-center">{action}</div>}
 			</div>
-			{watchNext && (
+			{linksBelow && (
 				<div
 					className={`flex min-w-0 flex-wrap items-baseline justify-between gap-x-3 self-start ${posters ? "col-span-2 md:col-span-1" : ""}`}
 				>
-					<Link
-						to={`/watch-next?moods=${side.moods.join(",")}`}
-						prefetch="intent"
-						className="text-sm font-semibold text-amber-200 underline-offset-2 hover:text-amber-100 hover:underline"
-					>
-						{COPY.watchNext}
-					</Link>
+					{side.moods.length > 0 ? (
+						<Link
+							to={`/watch-next?moods=${side.moods.join(",")}`}
+							prefetch="intent"
+							className="text-sm font-semibold text-amber-200 underline-offset-2 hover:text-amber-100 hover:underline"
+						>
+							{COPY.watchNext}
+						</Link>
+					) : (
+						<span />
+					)}
 					{action}
 				</div>
 			)}

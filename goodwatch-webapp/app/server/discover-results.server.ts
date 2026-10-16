@@ -207,9 +207,10 @@ export async function getDiscoverResults(
 		const inSide = (key: TitleKey) =>
 			at.engine.sideOf(at.member, key) === narrowedTo
 		// The titles: the whole list's, in its order. The filter bar's counts: the side's alone, the other sides' titles
-		// out like hidden ones, so no recovery or option promises titles the side doesn't hold.
+		// out like hidden ones, so no recovery or option promises titles the side doesn't hold. No "moved" count: the
+		// side ranked alone moves differently from the whole list's order it shows.
 		list = all.filter(inSide)
-		counts = countsOf(await compute(inSide))
+		counts = { ...countsOf(await compute(inSide)), movedUp: undefined }
 		sides = {
 			layout: "side",
 			side: at.engine.discoverSide(at.member, narrowedTo, list.length),
