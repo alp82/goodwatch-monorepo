@@ -1,0 +1,4 @@
+{"endpoint": "10.0.0.11", "protocol": "postgresql", "case": "missing", "authenticated": false, "expected": false, "sqlstate": null, "passed": true}
+{"endpoint": "10.0.0.11", "protocol": "postgresql", "case": "client-missing", "authenticated": false, "expected": false, "sqlstate": null, "passed": true}
+{"endpoint": "10.0.0.11", "protocol": "postgresql", "case": "wrong", "authenticated": false, "expected": false, "sqlstate": null, "passed": true}
+{"endpoint": "10.0.0.11", "protocol": "postgresql", "case": "correct", "authenticated": true, "expected": true, "sqlstate": null, "passed": true}

@@ -1,6 +1,6 @@
 # Password enforcement execution — October 15–16, 2026 UTC
 
-## In progress: crate-02/03 passed, crate-01 draining
+## Complete: all three nodes enforce passwords
 
 The owner explicitly approved decommission with force=false, zero primaries then normal
 `docker stop --timeout=-1` (SIGTERM, unlimited grace), in order **crate-02 → crate-03 → crate-01**.
@@ -63,12 +63,59 @@ are minima and do not prove complete-window zero errors; old removed-container l
 - Before crate-01, actual installed backup credentials/helper again passed with .11 excluded and both alternatives enforcing HBA. [Receipt](backup-before11.jsonl).
 - Additional nine worker hosts have no Crate-related root cron or systemd/cron files. [Inventory](expanded-cron-inventory.jsonl). Preserved pre-rotation Windmill admin credential also authenticates against .12, covering existing jobs that retain it; no job cancellation. [Receipt](old-windmill-credential.json).
 
-## Current-main validation
+## Intermediate main validation
 
 Main `5ed9d256` merged as `b092b54e`. Auth/Crate source hashes are unchanged. Full webapp suite now **2965 passed,
 1 owner-waived Qdrant timing failure, 1 skipped, 1 TODO**. Production build/precompression passed (**821 files**).
 
-## Remaining
+## Third node and final production gates
 
-Complete crate-01 with identical gates and actual offline backup failover; verify final
-clients and cluster; merge current main and rerun relevant tests before the authorized #599 merge. No Coolify writes.
+- Crate-01 drain began **00:11:16 UTC**, acknowledged **00:19:10.232** (473.3s). Zero primaries, no missing shards, no unsettled target copies and force=false checked immediately before normal stop.
+- Unit `gw-crate-stop-562-11-001913` sent **signal15**; Docker exit **143**, no OOM/SIGKILL, finished **00:19:16.690**. [Drain/stop](drain-11.jsonl).
+- While crate-01 was actually stopped, the **installed backup with actual cron credentials and unmodified coordinator order** encountered ConnectionError on .11 and succeeded as `goodwatch_backup` on enforcing .12. This proves the backup no longer depends on the restarted node. [Offline proof](backup-offline11.txt).
+- Same original node ID and preserved settings rejoined with HBA; admin/users ready **00:20:09.602**. Full direct HTTP and PostgreSQL positive/negative gates passed against **.11 only**. [Rejoin](rejoin-11.jsonl), [HTTP](client-gates11.jsonl), [PG](pg-gate11.jsonl).
+- Allocation all restored **00:21:28.123**. At **00:29:07–18 UTC**, all three endpoints independently passed **96 GREEN / 962 STARTED/STARTED / 21 checks / allocation all / force=false** with trusted local admin access. [Final recovery](recovery11.jsonl).
+- Final runtime verification: HBA=true, original pinned image/volumes/env/bindings/limits, restart=always, restart counts0 and no active owned stop units on all nodes. [Config](final-config.jsonl). The operator observer exited; no extra restart or cleanup remains running.
+- All **19 worker containers × 3 enforcing coordinators = 57** identity/sys/catalog checks passed. All **15 script hosts** passed each coordinator and the installed readonly helper (**60 records**). [Workers](final-worker-probes.jsonl), [scripts](final-readonly-probes.jsonl).
+- Real default and highperf Windmill canaries passed all three enforcing nodes using the actual driver/deployed connector, monitoring/sitemap reads and authenticated BLOB HEAD, with no production writes. [Default](final-canary-python3-result.json), [highperf](final-canary-highperf-result.json).
+- Fresh actual pages/search passed correct/missing/wrong credentials against [crate-01](final-apps11.jsonl), [crate-02](final-apps12.jsonl), [crate-03](final-apps13.jsonl). Both pages retain `admin`. Current page/search containers healthy and Kuma16–18 UP. [Status](final-client-status.jsonl).
+- Ordinary monitoring, ingestion, catalog/vector and personal-order jobs succeeded after all nodes enforced. Episode-sync failures retain the **identical error-message hash** observed before the rollout; no auth markers. [Job metadata](final-windmill-ordinary.json), [classification](final-windmill-failure-classification.jsonl), [baseline](../20261015-credential-resume/windmill-failure-classification.jsonl).
+- Retained page logs show576 recovered attempts and one cancelled BackendTimeoutError; search logs have no matching error events. This is a sampled lower bound, not a zero-error claim. External deployments removed prior containers during the window. [Impact](final-client-impact.jsonl).
+
+## Current client inventory after enforcement
+
+All SQL coordinators below are private **10.0.0.11/.12/.13:4200**, unless stated otherwise. Worker/script hosts are
+**10.0.0.10–21, .30, .31, .32** (15 hosts). The initial six-host inventory and before/after fixes remain in the runbook.
+
+| Client / hosts | Current identity and coordinator | Credential location / result |
+| --- | --- | --- |
+| Pages, abio .21 and vector1 .20 | `admin`, all three | Coolify **Goodwatch Webapp / gk4owk8**, existing runtime `CRATE_USER`, secret `CRATE_PASS`, `CRATE_HOSTS`, `CRATE_PORT`; owner UI only. Both actual containers passed every enforcing endpoint. No UI action required. |
+| Search-a/b, vector1 .20 | `goodwatch_search`, all three | `/root/goodwatch/goodwatch-monorepo/goodwatch-search/.env`: `CRATE_USER`, `CRATE_PASS`; staged and rolled a then b before enforcement. Do not overwrite with page copy-env. Both healthy and authenticated. |
+| Windmill, 19 containers on 15 hosts; default/highperf/native | `goodwatch_windmill`, all three | Workspace `goodwatch`: `u/Alp/CRATE_USER`, secret `u/Alp/CRATE_PASS`, `u/Alp/CRATE_HOSTS`. No Crate resources exist; clients use these variables. All container checks and both real worker-tag canaries passed. |
+| Backup cron, crate-01 .11 | `goodwatch_backup`, all three with failover | Cron `CRATE_BACKUP_USER`, `CRATE_BACKUP_PASSWORD_FILE=/root/.config/goodwatch/crate-backup-password`; actual 00:05 scheduled run and actual .11-offline failover passed. `cleanup_legacy.py` shares helper, remains manual/destructive, was not executed. |
+| Kuma16–18, hq .10 | `goodwatch_monitoring`, each respective node root HTTP | Stored monitor Basic Auth via supported application interface; all stored credentials tested against every enforcing node, latest heartbeats UP. |
+| Scheduled monitoring, sitemap, ingestion/sync | Windmill role and workspace variables | Monitoring and ordinary jobs verified. Nightly language writer retains its first-coordinator design; no maintenance-window run was forced. |
+| Manual readonly scripts, all15 hosts | `goodwatch_readonly`; profile .11 default, endpoint probes all three | `/root/.config/goodwatch/crate-readonly.env`, protected `crate-readonly-password`, `/usr/local/bin/gw-crate-readonly`. Installed helper and actual benchmark verified. Manual writers require explicit scoped maintenance credentials; the readonly role intentionally cannot write. |
+| crash/Admin UI/one-off SQL, Crate hosts | Trusted local `crate` via container loopback; remote requires a named credential | Local admin checked on all three; unauthenticated remote administration now correctly fails. No password argv. No additional Crate cron found across all15 hosts. |
+| Grafana Alloy/node-exporter, all15 hosts | Node/app metrics, no direct Crate SQL/HTTP target found | No Crate credential needed for inspected targets. External Grafana UI datasource settings and dormant operator-local scripts are outside the observed inventory. |
+
+## Residuals and owner actions
+
+The original **46 operation entries / 18 IDs** are gone, but #644's underlying problem recurred: two zero-byte
+crate-02 operations (`distributed merge`, `collect`) for ID `ec6c1d3a-e751-cd36-cdbc-39d304289755`, started
+**00:01:06.877 UTC**, have no matching `sys.jobs` row. [Receipt](final-context-recurrence.json),
+[later sample](final-older-operations-later.jsonl). No further KILL or restart attempted. This is not an auth failure;
+all final cluster/client gates passed. Keep #644 open for root-cause work.
+
+No owner action is required to finish password enforcement. Optional future least-privilege page separation:
+Coolify UI only, Goodwatch Webapp/gk4owk8 on both .20/.21, set `CRATE_USER=goodwatch_webapp` and secret `CRATE_PASS`
+from crate-01 `/root/.config/goodwatch/crate-credentials/goodwatch_webapp` (root0600); preserve host/port settings,
+redeploy and verify both app destinations. This was expressly optional and no Coolify setting was changed.
+Auth identity/table cut-over and MCP remain separate work. This rollout does not create their tables.
+
+## Final validation and merge readiness
+
+Current main **3b91631c** merged as **a29c52cd**. Crate tests **38/38**, isolated HBA rehearsal **431/431**,
+full webapp **2970 passed / 1 owner-waived Qdrant timing failure / 1 skipped / 1 TODO**, production build passed
+and821 files precompressed. Auth/Crate source hashes remained unchanged through the main merges.
+[Validation summary](validation-final.txt). The authorized PR merge follows this completed record.

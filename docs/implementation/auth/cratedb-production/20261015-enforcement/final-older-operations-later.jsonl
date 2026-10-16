@@ -1,0 +1,1 @@
+{"utc": "2026-10-16T00:25:50.209905+00:00", "host": 12, "result": {"cols": ["node['name']", "job_id", "name", "started", "used_bytes"], "rows": [["crate-02", "ec6c1d3a-e751-cd36-cdbc-39d304289755", "distributed merge", 1792108866877, 0], ["crate-02", "ec6c1d3a-e751-cd36-cdbc-39d304289755", "collect", 1792108866877, 0]], "rowcount": 2, "duration": 5.384942}}

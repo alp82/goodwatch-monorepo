@@ -1,0 +1,9 @@
+Validated on auth/crate-credentials a29c52cd, including origin/main 3b91631cc85d1d69e910329f4ed3827cb55121b1.
+Crate tests: 38 passed.
+Disposable HBA rehearsal: 431/431, cleanup verified.
+Full webapp suite: 2970 passed, 1 failed, 1 skipped, 1 TODO (2973 tests, 96 suites).
+Only failure: qdrant-session-listeners.test.ts:137, connection-break timing <2000ms; previously reproduced on main and explicitly waived by owner.
+Production build passed; 821 files precompressed.
+Auth Compose and backup source hashes unchanged by main merges.
+Final production gates: all 3 endpoints 96 GREEN, 962 STARTED/STARTED, 21 checks, allocation all, force=false.
+Final runtime: HBA true on all 3; original image/volume/env/bindings/limits preserved; restart always, restart count zero; zero active owned stop units.

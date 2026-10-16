@@ -6,6 +6,22 @@ Prepared from direct, read-only SSH inspection beginning **2026-10-15 22:14 UTC*
 [#547 execution record](https://github.com/alp82/goodwatch-monorepo/blob/098a6d431376cdcad99d9a5d0a63ff6b52e33816/docs/implementation/auth/cratedb-prereqs.md).
 This supersedes the old document's production inventory/order and its statement that crate-01 still needs upgrading.
 
+## Completed — 2026-10-16 00:29 UTC
+
+Password enforcement is active on **crate-02 → crate-03 → crate-01**, with each approved zero-primary,
+force=false drain followed by unlimited-grace normal SIGTERM. Every direct client credential gate passed;
+missing/wrong passwords are rejected. Final independent checks on all three nodes: **96 GREEN health rows,
+962 STARTED/STARTED shard copies, 21 passing node checks**, allocation all, trusted local administration intact.
+The credentialed 00:05 backup succeeded and actual failover worked while crate-01 was stopped.
+
+See the [completed execution record and current client inventory](cratedb-production/20261015-enforcement/).
+All19 worker containers and15 script hosts were verified. Pages retain their existing `admin` credential,
+verified from both hosts; no Coolify change is required. The optional dedicated webapp secret remains at
+`/root/.config/goodwatch/crate-credentials/goodwatch_webapp` on crate-01. No owner action remains for enforcement.
+The original stale contexts cleared, but two newer orphan entries remain on crate-02 under #644; no additional
+KILL/restart was attempted. The historical sections below preserve decisions and observations at their stated times;
+do not interpret their original staging warnings or pending checks as current blockers or repeat completed work.
+
 ## Approved continuation — 2026-10-15, after Q37 stop
 
 The owner explicitly approved the #547 normal-stop precedent for **this rollout**. No more KILLs.
@@ -138,7 +154,7 @@ The old plan's “only doc and blob” assumption fails. Retain them unchanged; 
 Windmill gets no grant to these retained archives; an operator wishing to access them needs explicit scoped grants.
 No blanket grant on every schema. Auth-table migration must apply DENY to every new `doc.auth_*` before data enters it.
 
-## Owner checklist before the operator resumes
+## Historical owner checklist before continuation (completed or superseded)
 
 1. Resolve the **46 persistent operation entries / 18 job IDs** under #644. Q37 allows individual KILLs only after
    rechecking no matching `sys.jobs` row immediately before each; record ID/result on #562 and stop if they do not clear.
