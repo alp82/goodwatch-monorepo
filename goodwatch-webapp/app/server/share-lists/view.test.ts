@@ -255,6 +255,12 @@ class FakeCrate {
 			}
 			return result()
 		}
+		if (statement.startsWith("DELETE")) {
+			const column = statement.match(/ WHERE (\w+) = \?$/)?.[1]
+			assert.ok(column, statement)
+			for (const [key, row] of rows) if (row[column] === params[0]) rows.delete(key)
+			return result()
+		}
 		throw new Error(`Unhandled statement: ${statement}`)
 	}
 }
@@ -614,6 +620,11 @@ for (const withLists of [true, false])
 		profilesReset()
 		assert.equal(await getProfilePage("filmfan"), null)
 		assert.equal(await getCachedProfileByUserId(user), null)
+		// Account deletion (#553) erases the lists and profile; the handle stays claimed without naming the member.
+		assert.equal([...db.lists.values()].filter((row) => row.user_id === user).length, 0)
+		assert.equal(db.profiles.has(user), false)
+		assert.equal(db.handles.get("filmfan")?.user_id, store.DELETED_HANDLE_OWNER)
+		await assert.rejects(store.claimHandle("someone-else", "filmfan"), /taken/)
 	})
 test("failed owner lookup preserves list reset; failed handle lookup preserves by-user reset", async (t) => {
 	await getListView(id)

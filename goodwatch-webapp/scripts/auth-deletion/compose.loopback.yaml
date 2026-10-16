@@ -1,0 +1,64 @@
+# For a Docker daemon whose open-file limit is below CrateDB's production bootstrap check (65,535), such as a cloud
+# sandbox: the three nodes share node1's network namespace and bind their transport to its loopback, which is CrateDB's
+# development mode. Same cluster name, three nodes, three copies; only the networking differs, and a nearly full
+# sandbox disk does not stop shard allocation. run.sh adds this file
+# when AUTH_DELETION_LOOPBACK=1. CI uses the standard topology.
+x-loopback: &loopback
+  ulimits: !reset {}
+  ports: !reset []
+services:
+  node1:
+    ulimits: !reset {}
+    ports: !override ['127.0.0.1:16248:4200', '127.0.0.1:16249:4201', '127.0.0.1:16250:4202']
+    command: !override
+      - crate
+      - -Ccluster.name=goodwatch-local-auth-548
+      - -Cnetwork.host=127.0.0.1
+      - -Chttp.host=0.0.0.0
+      - -Ccluster.routing.allocation.disk.threshold_enabled=false
+      - -Chttp.port=4200
+      - -Ctransport.port=4300
+      - -Cdiscovery.seed_hosts=127.0.0.1:4300,127.0.0.1:4301,127.0.0.1:4302
+      - -Ccluster.initial_master_nodes=node1,node2,node3
+      - -Cgateway.expected_data_nodes=3
+      - -Cgateway.recover_after_data_nodes=2
+      - -Cgateway.recover_after_time=0s
+      - -Cnode.name=node1
+  node2:
+    <<: *loopback
+    hostname: !reset null
+    network_mode: service:node1
+    depends_on: [node1]
+    command: !override
+      - crate
+      - -Ccluster.name=goodwatch-local-auth-548
+      - -Cnetwork.host=127.0.0.1
+      - -Chttp.host=0.0.0.0
+      - -Ccluster.routing.allocation.disk.threshold_enabled=false
+      - -Chttp.port=4201
+      - -Ctransport.port=4301
+      - -Cdiscovery.seed_hosts=127.0.0.1:4300,127.0.0.1:4301,127.0.0.1:4302
+      - -Ccluster.initial_master_nodes=node1,node2,node3
+      - -Cgateway.expected_data_nodes=3
+      - -Cgateway.recover_after_data_nodes=2
+      - -Cgateway.recover_after_time=0s
+      - -Cnode.name=node2
+  node3:
+    <<: *loopback
+    hostname: !reset null
+    network_mode: service:node1
+    depends_on: [node1]
+    command: !override
+      - crate
+      - -Ccluster.name=goodwatch-local-auth-548
+      - -Cnetwork.host=127.0.0.1
+      - -Chttp.host=0.0.0.0
+      - -Ccluster.routing.allocation.disk.threshold_enabled=false
+      - -Chttp.port=4202
+      - -Ctransport.port=4302
+      - -Cdiscovery.seed_hosts=127.0.0.1:4300,127.0.0.1:4301,127.0.0.1:4302
+      - -Ccluster.initial_master_nodes=node1,node2,node3
+      - -Cgateway.expected_data_nodes=3
+      - -Cgateway.recover_after_data_nodes=2
+      - -Cgateway.recover_after_time=0s
+      - -Cnode.name=node3

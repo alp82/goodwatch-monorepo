@@ -1,7 +1,8 @@
 // Share lists and public profiles in Crate (doc.user_list, doc.user_profile, doc.user_handle).
 // Every write validates its input and checks ownership; reads right after a write refresh the table first,
 // because Crate makes writes visible to reads about once a second.
-// Deletes are soft: rows get deleted_at, and every read filters them out.
+// Deleting a list is soft: its row gets deleted_at, and every read filters it out. Deleting an account (#553) erases
+// the person's lists and profile and keeps only their handle claimed, without their id.
 // A handle is chosen once and never changes. The list card and link preview print it, so nobody signs as someone else.
 // The signature and display_name columns are no longer read or written.
 import { createHash, randomBytes } from "node:crypto"
@@ -284,21 +285,30 @@ export async function claimHandle(userId: string, rawHandle: string): Promise<Pr
 	return (await getProfileByUserId(userId)) as Profile
 }
 
+/** Who a deleted account's handle belongs to: nobody. The row keeps the handle claimed (decision 16 of #170). */
+export const DELETED_HANDLE_OWNER = "deleted-account"
+
 /**
- * Soft-deletes everything share lists store for a person: their lists, profile, and handle. The handle stays claimed,
- * so nobody else can take over their name or links. The account-deletion flow calls it through `deleteMemberData`
- * (server/account-deletion.server.ts), which also deletes the member's watch log, watch states and imports.
+ * Erases everything share lists store for a person whose account is deleted (#553): their lists and profile go, and
+ * their handle stays claimed, so nobody else can take over their name or links, but no longer names them. Every list
+ * link and the profile answer 404. The account-deletion flow calls it through `deleteMemberData`
+ * (server/account-deletion.server.ts). It can run again after a failure.
  */
 export async function deleteAccountData(userId: string): Promise<void> {
+	if (!userId || userId === DELETED_HANDLE_OWNER) throw new Error("A member id is required")
 	const now = new Date()
-	const ids = await select<{ id: string }>("SELECT id FROM doc.user_list WHERE user_id = ? LIMIT 1000", [userId])
+	// A delete by member names no row by its whole key, so it works on the rows of the last refresh.
+	await run("REFRESH TABLE doc.user_list, doc.user_profile, doc.user_handle", [])
+	const ids = await select<{ id: string }>("SELECT id FROM doc.user_list WHERE user_id = ? LIMIT 10000", [userId])
+	// The profile's cached pages are found by handle, which is gone from the profile afterwards.
+	const [profile] = await select<{ handle: string }>("SELECT handle FROM doc.user_profile WHERE user_id = ?", [userId])
 	try {
-		await run("UPDATE doc.user_list SET deleted_at = ?, updated_at = ? WHERE user_id = ? AND deleted_at IS NULL", [now, now, userId])
-		await run("UPDATE doc.user_profile SET deleted_at = ?, updated_at = ? WHERE user_id = ? AND deleted_at IS NULL", [now, now, userId])
-		await run("UPDATE doc.user_handle SET deleted_at = ? WHERE user_id = ? AND deleted_at IS NULL", [now, userId])
+		await run("UPDATE doc.user_handle SET user_id = ?, deleted_at = ? WHERE user_id = ?", [DELETED_HANDLE_OWNER, now, userId])
+		await run("DELETE FROM doc.user_profile WHERE user_id = ?", [userId])
+		await run("DELETE FROM doc.user_list WHERE user_id = ?", [userId])
 		await run("REFRESH TABLE doc.user_list, doc.user_profile, doc.user_handle", [])
 	} finally {
 		await Promise.all(ids.map(({ id }) => resetListView(id)))
-		await resetProfileViews(userId)
+		await resetProfileViews(userId, profile?.handle)
 	}
 }

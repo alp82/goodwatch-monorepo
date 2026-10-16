@@ -45,7 +45,9 @@ test("real Crate requests close on timeout without affecting other statements or
 		assert.ok(error instanceof BackendTimeoutError)
 		assert.ok(error instanceof Error)
 		assert.equal(error.name, "CrateTimeoutError")
-		assert.equal(error.message, "CrateDB did not respond within 200 ms")
+		// Each attempt receives the remaining deadline budget, which may already be below 200 ms.
+		assert.ok(error.timeoutMs > 0 && error.timeoutMs <= 200)
+		assert.equal(error.message, `CrateDB did not respond within ${error.timeoutMs} ms`)
 		return true
 	})
 	assert.deepEqual(await query("SELECT fast"), [{ n: 1 }])
@@ -67,7 +69,7 @@ test("real Crate requests close on timeout without affecting other statements or
 	await withBackendTimeout("Socket close", 700, async () => { await closures[1] })
 	await assert.rejects(query("SELECT stall_overlay", undefined, { timeoutMs: 100 }), (error) => {
 		assert.ok(error instanceof CrateTimeoutError)
-		assert.equal(error.timeoutMs, 100)
+		assert.ok(error.timeoutMs > 0 && error.timeoutMs <= 100)
 		return true
 	})
 	assert.equal(process.env.CRATE_TIMEOUT_MS, "200")

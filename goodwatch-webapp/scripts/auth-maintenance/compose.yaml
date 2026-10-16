@@ -1,0 +1,30 @@
+services:
+  node1:
+    ports: !override ['127.0.0.1:15648:4200']
+  node2:
+    ports: !override ['127.0.0.1:15649:4200']
+  node3:
+    ports: !override ['127.0.0.1:15650:4200']
+  valkey1:
+    ports: !override ['127.0.0.1:15701:6379']
+  valkey2:
+    ports: !override ['127.0.0.1:15702:6379']
+  valkey3:
+    ports: !override ['127.0.0.1:15703:6379']
+  smtp:
+    ports: !override ['127.0.0.1:15625:1025', '127.0.0.1:15680:8025']
+  data-cache:
+    ports: !override ['127.0.0.1:15704:6379']
+  import-source:
+    image: postgres:16.10@sha256:21f6013073bc6b92830a2129570e2f5ec42a6c734b5a985a41e83aa58f54c3c1
+    environment:
+      POSTGRES_USER: importer
+      POSTGRES_PASSWORD: local-fake-only
+      POSTGRES_DB: auth_copy
+    ports: ['127.0.0.1:15652:5432']
+    mem_limit: 256m
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U importer -d auth_copy']
+      interval: 1s
+      timeout: 3s
+      retries: 60

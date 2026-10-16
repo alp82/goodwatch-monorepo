@@ -1,0 +1,16 @@
+# Ports of the dev server's services (dev.sh), apart from the test runners' so both can run at once.
+services:
+  node1:
+    ports: !override ['127.0.0.1:15848:4200']
+  node2:
+    ports: !override ['127.0.0.1:15849:4200']
+  node3:
+    ports: !override ['127.0.0.1:15850:4200']
+  valkey1:
+    ports: !override ['127.0.0.1:15901:6379']
+  valkey2:
+    ports: !override ['127.0.0.1:15902:6379']
+  valkey3:
+    ports: !override ['127.0.0.1:15903:6379']
+  smtp:
+    ports: !override ['127.0.0.1:15925:1025', '127.0.0.1:15980:8025']

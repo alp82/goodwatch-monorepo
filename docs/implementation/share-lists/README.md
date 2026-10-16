@@ -230,12 +230,13 @@ Nothing is removed from the database in the first release. Rows carry `deleted_a
 - **Deleting a list** sets its `deleted_at`. Its page, edit route, and image answer 404, and it disappears from the
   profile and from remix lookups. Remixes of it keep their own content. There is no undo in the product; an operator
   can restore a list by clearing `deleted_at`.
-- **Deleting an account** sets `deleted_at` on the person's lists, profile, and handles, in that order. The profile
-  answers 404 and every list link answers 404. The webapp has no account-deletion flow today; the store exposes one
-  function for it, and the flow calls it when it exists.
-- **A deleted account's handle stays claimed for good** (decision 16). Its profile answers 404, and nobody else can
-  claim the handle, so nobody can take over someone else's name or links. Handles can't be renamed, so there is no
-  hold period.
+- **Deleting an account** (#553, `deleteAccountData`) removes the person's lists and profile. The profile and every
+  list link answer 404. Account deletion is hard: none of the member's rows remain (see
+  [Account deletion](../account-deletion/README.md)).
+- **A deleted account's handle stays claimed for good** (decision 16). Its row stays, with `user_id` set to
+  `deleted-account` and `deleted_at` set, so it no longer names the person. Its profile answers 404, and nobody else
+  can claim the handle, so nobody can take over someone else's name or links. Handles can't be renamed, so there is
+  no hold period.
 
 ## Card images
 

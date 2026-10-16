@@ -1,15 +1,28 @@
+import { getAuthPosters } from "~/server/auth-posters.server"
 import { authFetch } from "~/utils/auth-session"
-import type { LoaderFunction, LoaderFunctionArgs, MetaFunction, ActionFunction } from "@remix-run/node"
+import { resetSupabasePassword } from "~/server/auth/supabase-reset.server"
+import type { LoaderFunctionArgs, MetaFunction, ActionFunction } from "@remix-run/node"
 import { json } from "@remix-run/node"
-import { Form, Link, useActionData, useLoaderData, useNavigate } from "@remix-run/react"
-import { useState, useEffect } from "react"
-import { toast } from "react-toastify"
+import { KeyIcon, LinkSlashIcon, ShieldCheckIcon } from "@heroicons/react/24/outline"
+import { useNavigate, useSearchParams } from "@remix-run/react"
+import { type FormEvent, useState } from "react"
 import { createServerClient } from "@supabase/ssr"
 import { parse, serialize } from "@supabase/ssr"
 import { type PageMeta, buildMeta } from "~/utils/meta"
-import { getAuthPosters } from "~/server/auth-posters.server"
-import { AUTH_INPUT_CLASS, AUTH_SUBMIT_CLASS, AuthScene } from "~/ui/auth/AuthScene"
-import type { AuthPoster } from "~/ui/auth/PosterSpotlight"
+import {
+	AuthSplit,
+	BackToSignIn,
+	EmailField,
+	Heading,
+	Notice,
+	PasswordField,
+	PasswordRule,
+	PrimaryButton,
+	ServiceNotice,
+} from "~/ui/auth/kit"
+import { discoveryReturnTo } from "~/utils/account-transfer"
+import { useSupabase, useUser } from "~/utils/auth"
+import { type AuthFailure, PASSWORD_MIN, useAuthClient } from "~/utils/auth-client"
 
 export { pageHeaders as headers } from "~/utils/headers"
 
@@ -25,30 +38,12 @@ export const meta: MetaFunction = () => {
 	return buildMeta({ pageMeta, items: [] })
 }
 
-export type LoaderData = {
-	error?: string
-	posters: AuthPoster[]
-}
-
-export const loader: LoaderFunction = async ({ request }: LoaderFunctionArgs) => {
-	const url = new URL(request.url)
-	const error = url.searchParams.get("error")
-
-	return json({ error: error || undefined, posters: await getAuthPosters() })
-}
-
+// The Supabase path (BETTER_AUTH_ENABLED off) saves the password here; Better Auth's is `/api/auth/reset-password`.
 export const action: ActionFunction = async ({ request }: LoaderFunctionArgs) => {
+	if (process.env.BETTER_AUTH_ENABLED === "true") throw new Response(null, { status: 404 })
 	const formData = await request.formData()
-	const password = formData.get("password") as string
-	const code = formData.get("code") as string
-
-	if (!password || !code) {
-		return json({ error: "Password and reset code are required" }, { status: 400 })
-	}
-
-	if (password.length < 6) {
-		return json({ error: "Password must be at least 6 characters" }, { status: 400 })
-	}
+	const password = String(formData.get("password") ?? "")
+	const code = String(formData.get("code") ?? "")
 
 	const cookies = parse(request.headers.get("Cookie") ?? "")
 	const headers = new Headers()
@@ -71,145 +66,120 @@ export const action: ActionFunction = async ({ request }: LoaderFunctionArgs) =>
 		},
 	)
 
-	const { error } = await supabase.auth.exchangeCodeForSession(code)
-
-	if (error) {
-		return json({ error: "Invalid or expired reset code" }, { status: 400 })
-	}
-
-	const { error: updateError } = await supabase.auth.updateUser({
-		password,
-	})
-
-	if (updateError) {
-		return json({ error: updateError.message }, { status: 400 })
-	}
-
-	return json(
-		{ success: true },
-		{
-			headers,
-		}
-	)
+	const { status, body } = await resetSupabasePassword(supabase.auth, code, password)
+	// The session cookies go along with a rejected password too: a second try saves under that session.
+	return json(body, { status, headers })
 }
 
+// Better Auth's link arrives with `?token=`, or `?error=INVALID_TOKEN` when it no longer works; Supabase's with `?code=`.
 export default function ResetPassword() {
-	const { posters, error: loaderError } = useLoaderData<LoaderData>()
-	const actionData = useActionData<typeof action>()
-	const navigate = useNavigate()
+	const [params] = useSearchParams()
+	const token = params.get("token") ?? params.get("code")
+	const [state, setState] = useState<"form" | "done" | "expired">(token && !params.has("error") ? "form" : "expired")
+	if (state === "done") return <Saved />
+	if (state === "expired" || !token) return <Expired />
+	return <NewPassword token={token} onDone={() => setState("done")} onExpired={() => setState("expired")} />
+}
+
+function NewPassword({ token, onDone, onExpired }: { token: string; onDone: () => void; onExpired: () => void }) {
+	const auth = useAuthClient()
 	const [password, setPassword] = useState("")
-	const [confirmPassword, setConfirmPassword] = useState("")
-	const [isSubmitting, setIsSubmitting] = useState(false)
-	const [code, setCode] = useState("")
-
-	useEffect(() => {
-		const urlParams = new URLSearchParams(window.location.search)
-		const codeParam = urlParams.get("code")
-		if (codeParam) {
-			setCode(codeParam)
-		} else {
-			navigate("/forgot-password")
-		}
-	}, [navigate])
-
-	const message = actionData?.success ? "Password reset successfully! You can now sign in." : null
-	const error = loaderError || actionData?.error
-
+	const [busy, setBusy] = useState(false)
+	const { betterAuth } = useSupabase()
+	const [failure, setFailure] = useState<AuthFailure | null>(null)
+	const [reason, setReason] = useState<string>()
+	const submit = async (event: FormEvent) => {
+		event.preventDefault()
+		if (busy) return
+		setBusy(true)
+		setFailure(null)
+		setReason(undefined)
+		const result = await auth.resetPassword(token, password)
+		setBusy(false)
+		if (result.ok) return onDone()
+		if (result.failure === "invalid") return onExpired()
+		setFailure(result.failure)
+		setReason(result.message)
+	}
 	return (
-		<AuthScene posters={posters}>
-			<div className="w-full">
-				<div className="text-center mb-8">
-					<h1 className="text-2xl font-bold text-white mb-2">Reset Password</h1>
-					<p className="text-gray-400">
-						Enter your new password below.
-					</p>
-				</div>
-
-				{message && (
-					<div className="mb-6 p-4 bg-green-900/50 border border-green-700 rounded-lg">
-						<p className="text-green-300 text-sm">{message}</p>
-						<Link to="/sign-in" className="text-green-300 hover:text-green-200 underline text-sm mt-2 inline-block">
-							Go to sign in
-						</Link>
-					</div>
-				)}
-
-				{error && (
-					<div className="mb-6 p-4 bg-red-900/50 border border-red-700 rounded-lg">
-						<p className="text-red-300 text-sm">{error}</p>
-					</div>
-				)}
-
-				{!actionData?.success && (
-					<Form
-						method="post"
-						onSubmit={() => setIsSubmitting(true)}
-						className="space-y-6"
-					>
-						<input type="hidden" name="code" value={code} />
-						
-						<div>
-							<label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
-								New Password
-							</label>
-							<input
-								id="password"
-								name="password"
-								type="password"
-								autoComplete="new-password"
-								required
-								value={password}
-								onChange={(e) => setPassword(e.target.value)}
-								className={AUTH_INPUT_CLASS}
-								placeholder="••••••••"
-							/>
-						</div>
-
-						<div>
-							<label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300 mb-2">
-								Confirm New Password
-							</label>
-							<input
-								id="confirmPassword"
-								name="confirmPassword"
-								type="password"
-								autoComplete="new-password"
-								required
-								value={confirmPassword}
-								onChange={(e) => setConfirmPassword(e.target.value)}
-								className={AUTH_INPUT_CLASS}
-								placeholder="••••••••"
-							/>
-							{password !== confirmPassword && confirmPassword && (
-								<p className="mt-2 text-sm text-red-400">Passwords do not match</p>
-							)}
-						</div>
-
-						<button
-							type="submit"
-							disabled={isSubmitting || password !== confirmPassword || password.length < 6}
-							className={AUTH_SUBMIT_CLASS}
-						>
-							{isSubmitting ? (
-								<svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-									<circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-									<path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-								</svg>
-							) : (
-								"Reset Password"
-							)}
-						</button>
-					</Form>
-				)}
-
-				<div className="mt-8 text-center">
-					<p className="text-gray-400">
-						<Link to="/sign-in" className="text-amber-500 hover:text-amber-400 font-medium">
-							Back to sign in
-						</Link>
-					</p>
-				</div>
-			</div>
-		</AuthScene>
+		<AuthSplit>
+			<Heading icon={<KeyIcon className="h-7 w-7 text-amber-400" />} title="Set a new password" sub="Choose the password you'll sign in with from now on." />
+			{failure === "password" && (
+				<Notice tone="error">{reason ?? `Choose a password with at least ${PASSWORD_MIN} characters.`}</Notice>
+			)}
+			<ServiceNotice failure={failure} />
+			<form method="post" onSubmit={submit} className="space-y-5">
+				<PasswordField label="New password" value={password} onChange={setPassword} isNew autoFocus hint={<PasswordRule password={password} />} />
+				<p className="text-sm text-gray-400">
+					Saving signs you out on all other devices.
+					{/* Apps connect through the new sign-in only (#570). */}
+					{betterAuth && " Connected apps like Claude keep working."}
+				</p>
+				<PrimaryButton busy={busy} disabled={password.length < PASSWORD_MIN}>
+					Save password
+				</PrimaryButton>
+			</form>
+		</AuthSplit>
 	)
 }
+
+// Follows the site's member: the reset signs in, and the page changes to "signed in" once the auth provider hears it.
+function Saved() {
+	const navigate = useNavigate()
+	const { user } = useUser()
+	return (
+		<AuthSplit>
+			<Heading
+				icon={<ShieldCheckIcon className="h-7 w-7 text-emerald-400" />}
+				title="Password saved"
+				sub={user ? "You're signed in on this device." : "Sign in with your new password."}
+			/>
+			{user ? (
+				<PrimaryButton type="button" onClick={() => navigate(discoveryReturnTo())}>
+					Continue
+				</PrimaryButton>
+			) : (
+				<PrimaryButton type="button" onClick={() => navigate("/sign-in")}>
+					Sign in
+				</PrimaryButton>
+			)}
+		</AuthSplit>
+	)
+}
+
+function Expired() {
+	const auth = useAuthClient()
+	const [email, setEmail] = useState("")
+	const [busy, setBusy] = useState(false)
+	const [sent, setSent] = useState(false)
+	const [failure, setFailure] = useState<AuthFailure | null>(null)
+	const submit = async (event: FormEvent) => {
+		event.preventDefault()
+		if (busy) return
+		setBusy(true)
+		setFailure(null)
+		const result = await auth.requestPasswordReset(email)
+		setBusy(false)
+		if (!result.ok && result.failure !== "invalid") return setFailure(result.failure)
+		setSent(true)
+	}
+	return (
+		<AuthSplit>
+			<Heading icon={<LinkSlashIcon className="h-7 w-7 text-amber-400" />} title="This link no longer works" sub="Links to set a new password work for one hour and only once." />
+			{sent ? (
+				<Notice tone="ok">If there's an account for {email}, a new link is on its way. It works for one hour.</Notice>
+			) : (
+				<>
+					<ServiceNotice failure={failure} />
+					<form method="post" onSubmit={submit} className="space-y-5">
+						<EmailField value={email} onChange={setEmail} />
+						<PrimaryButton busy={busy}>Send a new link</PrimaryButton>
+					</form>
+				</>
+			)}
+			<BackToSignIn />
+		</AuthSplit>
+	)
+}
+
+export const loader = async () => json({ posters: await getAuthPosters() })

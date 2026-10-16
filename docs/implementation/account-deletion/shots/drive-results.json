@@ -1,0 +1,132 @@
+[
+  {
+    "name": "Settings › Account has the Delete Account section",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "the page lists what goes with the account",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "the delete button waits for a password",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "a wrong password says so",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "a wrong password keeps the member signed in",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "the member has rows to delete",
+    "ok": true,
+    "detail": "8 rows"
+  },
+  {
+    "name": "a wrong password keeps the member's rows",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "Check your inbox names the address",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "the email asks to confirm deleting",
+    "ok": true,
+    "detail": "Confirm deleting your GoodWatch account"
+  },
+  {
+    "name": "the email links to the confirmation page",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "opening the link signed out deletes nothing",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "signing in comes back to the link's confirmation page",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "opening the link signed in still deletes nothing",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "the done page",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "this device is signed out",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "the other device is signed out",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "no member row remains",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "the handle stays reserved without the member's id",
+    "ok": true,
+    "detail": "deleted-account"
+  },
+  {
+    "name": "an account-deleted email follows",
+    "ok": true,
+    "detail": "Your GoodWatch account is deleted"
+  },
+  {
+    "name": "the address signs up again",
+    "ok": true,
+    "detail": "Confirm your email for GoodWatch"
+  },
+  {
+    "name": "the new account is a new member",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "a used link deletes nothing",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "the password deletes at once",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "Back to GoodWatch goes home signed out",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "a Google-only member gets no password field",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "a signed-out visit goes to sign-in and back",
+    "ok": true,
+    "detail": ""
+  }
+]

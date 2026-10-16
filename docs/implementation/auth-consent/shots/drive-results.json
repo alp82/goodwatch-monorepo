@@ -1,0 +1,127 @@
+[
+  {
+    "name": "an app registers itself (DCR)",
+    "ok": true,
+    "detail": "201"
+  },
+  {
+    "name": "an app's request lands on the site's sign-in page",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "sign-in says which app waits",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "sign-in continues to the consent page",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "consent page has no site navigation",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "consent page lists see, change and never",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "a published app shows no warning",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "Allow returns to the app with a code and the issuer (desktop)",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "the code becomes tokens (desktop)",
+    "ok": true,
+    "detail": "200"
+  },
+  {
+    "name": "Allow returns to the app with a code and the issuer (phone)",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "the code becomes tokens (phone)",
+    "ok": true,
+    "detail": "200"
+  },
+  {
+    "name": "the access token reaches MCP (Last used)",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "an app that registered itself gets the unverified warning",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "Deny returns access_denied to the app",
+    "ok": true,
+    "detail": "https://moviebuddy.invalid/oauth/callback?error=access_denied&error_description=User+denied+access&state=dc269fe19986e7f"
+  },
+  {
+    "name": "Claude Code connects from two computers",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "Not you? signs out and asks to sign in for the same app",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "Connected apps lists one row per grant (Claude ×2 browsers, Claude Code ×2 computers)",
+    "ok": true,
+    "detail": "4 rows"
+  },
+  {
+    "name": "Last used shows after an MCP call",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "Claude Code rows say On a computer",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "the connector address and the step-by-step link show",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "the settings menu has Connected apps",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "Disconnect asks first",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "Disconnect removes the row",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "the disconnected grant's token stops working, the others keep working",
+    "ok": true,
+    "detail": "Claude CodeOn a computer: 200,401"
+  },
+  {
+    "name": "a member without apps sees the empty state",
+    "ok": true,
+    "detail": ""
+  }
+]

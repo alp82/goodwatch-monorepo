@@ -1,15 +1,14 @@
+import { getAuthPosters } from "~/server/auth-posters.server"
 import { authFetch } from "~/utils/auth-session"
-import type { LoaderFunction, LoaderFunctionArgs, MetaFunction, ActionFunction } from "@remix-run/node"
+import type { LoaderFunctionArgs, MetaFunction, ActionFunction } from "@remix-run/node"
 import { json } from "@remix-run/node"
-import { Form, Link, useActionData, useLoaderData } from "@remix-run/react"
-import { useState } from "react"
-import { toast } from "react-toastify"
+import { EnvelopeIcon, KeyIcon } from "@heroicons/react/24/outline"
+import { type FormEvent, useState } from "react"
 import { createServerClient } from "@supabase/ssr"
 import { parse, serialize } from "@supabase/ssr"
 import { type PageMeta, buildMeta } from "~/utils/meta"
-import { getAuthPosters } from "~/server/auth-posters.server"
-import { AUTH_INPUT_CLASS, AUTH_SUBMIT_CLASS, AuthScene } from "~/ui/auth/AuthScene"
-import type { AuthPoster } from "~/ui/auth/PosterSpotlight"
+import { AuthSplit, BackToSignIn, EmailField, Heading, PrimaryButton, ServiceNotice } from "~/ui/auth/kit"
+import { type AuthFailure, useAuthClient } from "~/utils/auth-client"
 
 export { pageHeaders as headers } from "~/utils/headers"
 
@@ -25,19 +24,9 @@ export const meta: MetaFunction = () => {
 	return buildMeta({ pageMeta, items: [] })
 }
 
-export type LoaderData = {
-	message?: string
-	posters: AuthPoster[]
-}
-
-export const loader: LoaderFunction = async ({ request }: LoaderFunctionArgs) => {
-	const url = new URL(request.url)
-	const message = url.searchParams.get("message")
-
-	return json({ message: message || undefined, posters: await getAuthPosters() })
-}
-
+// The Supabase path (BETTER_AUTH_ENABLED off) asks for the link here; Better Auth's is `/api/auth/request-password-reset`.
 export const action: ActionFunction = async ({ request }: LoaderFunctionArgs) => {
+	if (process.env.BETTER_AUTH_ENABLED === "true") throw new Response(null, { status: 404 })
 	const formData = await request.formData()
 	const email = formData.get("email") as string
 
@@ -83,83 +72,54 @@ export const action: ActionFunction = async ({ request }: LoaderFunctionArgs) =>
 }
 
 export default function ForgotPassword() {
-	const { posters, message: loaderMessage } = useLoaderData<LoaderData>()
-	const actionData = useActionData<typeof action>()
+	const auth = useAuthClient()
 	const [email, setEmail] = useState("")
-	const [isSubmitting, setIsSubmitting] = useState(false)
+	const [busy, setBusy] = useState(false)
+	const [sent, setSent] = useState(false)
+	const [failure, setFailure] = useState<AuthFailure | null>(null)
 
-	const message = loaderMessage || actionData?.message
-	const error = actionData?.error
+	const submit = async (event: FormEvent) => {
+		event.preventDefault()
+		if (busy) return
+		setBusy(true)
+		setFailure(null)
+		const result = await auth.requestPasswordReset(email)
+		setBusy(false)
+		// The answer is the same whether the address has an account or not.
+		if (!result.ok && result.failure !== "invalid") return setFailure(result.failure)
+		setSent(true)
+		window.scrollTo({ top: 0 })
+	}
 
+	if (sent)
+		return (
+			<AuthSplit>
+				<Heading
+					icon={<EnvelopeIcon className="h-7 w-7 text-amber-400" />}
+					title="Check your inbox"
+					sub={
+						<>
+							If there's an account for <strong className="text-gray-200">{email}</strong>, a link to set a new password is on its way. It works for one hour.
+						</>
+					}
+				/>
+				<div className="rounded-xl border border-gray-800 bg-gray-800/40 p-4 text-sm text-gray-300">
+					Signed up with Google? Then you have no GoodWatch password: use <strong className="text-gray-100">Continue with Google</strong> instead.
+				</div>
+				<BackToSignIn />
+			</AuthSplit>
+		)
 	return (
-		<AuthScene posters={posters}>
-			<div className="w-full">
-				<div className="text-center mb-8">
-					<h1 className="text-2xl font-bold text-white mb-2">Forgot Password?</h1>
-					<p className="text-gray-400">
-						No worries, we'll send you reset instructions.
-					</p>
-				</div>
-
-				{message && (
-					<div className="mb-6 p-4 bg-green-900/50 border border-green-700 rounded-lg">
-						<p className="text-green-300 text-sm">{message}</p>
-					</div>
-				)}
-
-				{error && (
-					<div className="mb-6 p-4 bg-red-900/50 border border-red-700 rounded-lg">
-						<p className="text-red-300 text-sm">{error}</p>
-					</div>
-				)}
-
-				<Form
-					method="post"
-					onSubmit={() => setIsSubmitting(true)}
-					className="space-y-6"
-				>
-					<div>
-						<label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
-							Email address
-						</label>
-						<input
-							id="email"
-							name="email"
-							type="email"
-							autoComplete="email"
-							required
-							value={email}
-							onChange={(e) => setEmail(e.target.value)}
-							className={AUTH_INPUT_CLASS}
-							placeholder="you@example.com"
-						/>
-					</div>
-
-					<button
-						type="submit"
-						disabled={isSubmitting}
-						className={AUTH_SUBMIT_CLASS}
-					>
-						{isSubmitting ? (
-							<svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-								<circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-								<path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-							</svg>
-						) : (
-							"Reset Password"
-						)}
-					</button>
-				</Form>
-
-				<div className="mt-8 text-center">
-					<p className="text-gray-400">
-						Remember your password?{" "}
-						<Link to="/sign-in" className="text-amber-500 hover:text-amber-400 font-medium">
-							Sign in
-						</Link>
-					</p>
-				</div>
-			</div>
-		</AuthScene>
+		<AuthSplit>
+			<Heading icon={<KeyIcon className="h-7 w-7 text-amber-400" />} title="Forgot your password?" sub="Enter your email and we'll send you a link to set a new one." />
+			<ServiceNotice failure={failure} />
+			<form method="post" onSubmit={submit} className="space-y-5">
+				<EmailField value={email} onChange={setEmail} autoFocus />
+				<PrimaryButton busy={busy}>Send link</PrimaryButton>
+			</form>
+			<BackToSignIn />
+		</AuthSplit>
 	)
 }
+
+export const loader = async () => json({ posters: await getAuthPosters() })

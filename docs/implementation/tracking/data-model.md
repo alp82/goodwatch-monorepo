@@ -1299,7 +1299,9 @@ deleted) and wait for the day episodes can be rated.
 
 ## 8. Account deletion and export
 
-**Deletion.** The webapp has no account deletion flow yet. `deleteAccountData` in
+**Deletion.** Built in #553 ([Account deletion](../account-deletion/README.md)): `deleteMemberData` in
+`server/account-deletion.server.ts` empties every member table, including the six below. What follows is the plan it
+was built from. The webapp had no account deletion flow yet. `deleteAccountData` in
 `server/share-lists/store.server.ts:291` soft-deletes lists, profile and handle and says "call it from the
 account-deletion flow"; nothing calls it. When that flow is built, tracking adds a `deleteTrackingData(userId)` next
 to the tracking writer, called from the same place:

@@ -1,0 +1,59 @@
+# Member MCP read tools (#567)
+
+The write extension built on #577 is documented in [Member MCP write tools](mcp-write-tools.md).
+
+The Remix resource route `goodwatch-webapp/app/routes/mcp.ts` serves a stateless MCP SDK **2.3.1** handler at `/mcp`, including stateless legacy clients. It shares the webapp's server readers and tracking state machine; it does not import the spike's fixture store or OAuth server. Schemas use the exact **Zod 4.6.7** `zod4` package alias; existing webapp schemas keep Zod 3.
+
+## Authorization handoff to #566
+
+`app/server/mcp/authorization.server.ts` exports the single SDK `OAuthTokenVerifier` seam, `mcpAuthorization`. It is wired to the durable Better Auth JWKS and grant verifier by #566; see [MCP authorization](mcp-authorization.md). There is no development token, member override header, session-cookie fallback, or environment switch that bypasses authorization in the application route.
+
+The verifier checks Better Auth JWKS and current member, client and grant state. Its returned `AuthInfo` must contain the verified token, OAuth client ID, scopes, expiration in epoch seconds, resource audience as a `URL`, and `extra.userId` mapped from the verified member subject. Missing identity, missing/expired expiration, an audience other than this resource, or missing `mcp:read` cannot reach member data. JWT signature verification, issuer checks, grant revocation/last-use, OAuth metadata and token refresh belong to #566. The local integration probe supplies a verifier only to its private handler instance, never to the Remix route.
+
+Set `MCP_RESOURCE_URL` to the canonical external `/mcp` URL. The gate advertises `/.well-known/oauth-protected-resource/mcp` at that origin; #566 must serve that metadata. Requests must arrive with that origin, and browser `Origin` headers must match it. Requests without an `Origin` header are supported. Every response gets `Cache-Control: private, no-store, no-transform`, and `/mcp` is excluded before the HTML page cache can resolve an identity or allocate an entry.
+
+## Tools and data sources
+
+| Tool | Source | Result |
+| --- | --- | --- |
+| `search_titles` | `combined-search/catalog.server.ts`'s local SQL reader | Indexed name lookup over movies and shows, without TMDB fallback, ranking, paid interpretation, or daily ranked-search charges |
+| `get_title` | `details.server.ts`, `viewer.server.ts`, `userData.server.ts`, `availability.server.ts` | Details, the member's marks, and evaluated availability evidence for saved country/services |
+| `get_my_shows` | `my-shows.server.ts`, `viewer.server.ts`, `taste/index.server.ts` | Continue, Pick up, Waiting for episodes, Want to See, On hold and Dropped in the page's order |
+| `get_show_progress` | `show-tracking.server.ts`, `tracking/storage.ts`, `tracking/machine.ts` | Stored status, current-pass progress, next episode, and paged watch records across passes |
+| `get_tonight` | `tonight.server.ts` | The same pick as the member's Tonight surface |
+| `get_library` | `userData.server.ts`, `title-cards.server.ts` | Only the member's marked titles, including Not interested and ratings, with optional status filtering |
+| `get_taste` | `taste/index.server.ts`, `userData.server.ts` | Actual taste signal/leanings and member rating/Wishlist counts, with an explanation when the model is unavailable or evidence is insufficient |
+
+Results carry compact `structuredContent` and matching text for older clients. Title IDs are `movie:603` or `show:1399`, with canonical title URLs. Pages default to 20 and cannot exceed 20; `offset:N` cursors follow a deterministic order and may shift if the catalog or member's marks change between calls. Name selectors require exactly one ID or name, accept a year, and return candidates on ambiguity. Catalog search and the member's library are explicitly separate tools. Library totals count marked keys; catalog-deleted keys have no display row and are omitted while the cursor still advances.
+
+Watch dates come only from stored watches. Progress retains earlier passes in its watch records, but counts only the current pass. Null dates say **No date recorded**. Summary dates are explicitly the latest *recorded* date; they are never taken from activity timestamps. Availability uses the existing evidence evaluator, including expired/unknown evidence. Read tools never record a My shows/My movies visit or mutate tracking, scores, Wishlist or settings. Existing data caches, taste rebuilds and public availability-index warmups still operate as in the webapp.
+
+## Member policy, limits and metrics
+
+`main` removed the old recommendation rollout helpers. The small MCP policy reads `REC_MCP_READ` plus each tool's `REC_MCP_*` flag both when registering/listing tools and immediately before a call. Each accepts `on`, `off`, or a comma-separated member ID allowlist. Unset means enabled for all members; authorization requires the enabled Better Auth service and an active grant.
+
+Tool flags are `REC_MCP_SEARCH_TITLES`, `REC_MCP_TITLE`, `REC_MCP_MY_SHOWS`, `REC_MCP_SHOW_PROGRESS`, `REC_MCP_TONIGHT`, `REC_MCP_LIBRARY` and `REC_MCP_TASTE`. Hidden tools cannot be forced by name. A policy change after registration is also checked in the callback.
+
+The existing Valkey rate limiter counts all authenticated HTTP requests, across OAuth clients, under `mcp-read` and the verified member ID: **60/minute and 1,000/hour**. Denials return HTTP 429 with `Retry-After`. It inherits the webapp's bounded process-memory fallback when Valkey is unavailable; that fallback is per process, not a cluster-wide guarantee.
+
+Prometheus exposes `goodwatch_mcp_tool_calls_total{tool,outcome}` and `goodwatch_mcp_tool_duration_seconds{tool}` through the existing metrics listener. Labels are bounded tool/outcome names, with no member IDs, tokens or query strings. Tool data errors are reported without leaking database errors.
+
+## Local verification
+
+The dedicated rehearsal services are disposable and bind loopback only. These commands neither load `.env` nor use production credentials. Set `DOCKER_HOST` to your local daemon if needed (on this laptop: `unix:///run/user/1000/docker.sock`). Do not point the fixture script at another database: it hardcodes loopback and refuses any cluster name other than `gw-mcp-567`.
+
+```bash
+docker run -d --name gw-mcp-567-crate -p 127.0.0.1:15767:4200 \
+  -e CRATE_HEAP_SIZE=512m crate:5.10.12 \
+  -Cdiscovery.type=single-node -Ccluster.name=gw-mcp-567 -Cnetwork.host=0.0.0.0
+docker run -d --name gw-mcp-567-valkey -p 127.0.0.1:16767:6379 valkey/valkey:8.1.3
+python goodwatch-webapp/scripts/mcp-read/seed-local.py
+cd goodwatch-webapp
+node --test app/server/mcp/endpoint.test.ts app/server/page-cache.test.ts app/server/metrics/registry.test.ts
+node_modules/.bin/vite-node --config scripts/arena-vite.config.mjs scripts/mcp-read/local.integration.ts
+npm run build
+```
+
+Wait for CrateDB's local HTTP endpoint to answer before seeding. The fixture uses repository table schemas with one shard and no replicas, 29 catalog titles and two members. The probe resets only its local member rate counters, and exercises all seven tools through SDK HTTP requests with real CrateDB/Valkey: pagination, canonical URLs, marks, next episodes, current/earlier passes, recorded/unknown dates, Tonight parity, empty-model Taste, member isolation, name ambiguity/year selection, missing titles, strict schemas and shared member rate limits across clients. The endpoint tests additionally cover the modern `2026-07-28` envelope and headers, scope/audience/expiry/identity rejection, origin rejection, policy rechecking and metric exposition.
+
+The probe closes its clients, taste store and snapshot polling. Stop its dedicated containers after verification. Live OAuth, JWKS, populated taste-model calibration, hosted client linking and production deployment are not part of this slice; OAuth is the explicit #566 handoff. No merge or release is authorized by #567's implementation brief.

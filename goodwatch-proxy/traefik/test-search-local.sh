@@ -117,13 +117,21 @@ install vector1 goodwatch-search-instance.yaml
 check 'palette lookups still alternate between the page instances' "$(who 20 "$palette")" "$pages"
 check 'searches still alternate between the page instances' "$(who 20 "${search[@]}")" "$pages"
 
-echo '== 3. goodwatch-search.yaml installed on abio: the two paths reach the search roles'
+echo '== 3. goodwatch-search.yaml installed on abio: the three paths reach the search roles'
 install abio goodwatch-search.yaml
+# File-watch reloads and health checks can outlast five seconds under local build/test load.
+for _ in {1..80}; do
+  [[ $(get "$palette" -o /dev/null -w '%header{x-instance}') == search-* ]] && break
+  sleep 0.25
+done
 check 'palette lookups alternate between the search roles' "$(who 20 "$palette")" "$roles"
 check 'searches alternate between the search roles' "$(who 20 "${search[@]}")" "$roles"
 check 'a palette lookup without a query string' "$(who 2 /api/command-palette)" 'search-a=1 search-b=1'
 check 'a GET on the search path (the app answers the method)' "$(who 2 /api/combined-search)" 'search-a=1 search-b=1'
-for path in / /api/search-config /health/ready /api/combined-search/more /api/command-palette/ /api/command-palettes /api/combined-searches '/movie/603-the-matrix?x=/api/combined-search'; do
+check 'MCP calls alternate between search roles' "$(who 20 /mcp -X POST -H 'Authorization: Bearer local-mcp-fixture' -H 'Content-Type: application/json' -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}')" "$roles"
+check 'MCP with a query string reaches search roles' "$(who 2 '/mcp?transport=legacy')" 'search-a=1 search-b=1'
+check 'MCP bearer authorization is preserved' "$(get /mcp -H 'Authorization: Bearer local-mcp-fixture' | field authorization)" 'Bearer local-mcp-fixture'
+for path in / /api/search-config /health/ready /api/combined-search/more /api/command-palette/ /api/command-palettes /api/combined-searches /mcp/ /mcp/more /.well-known/oauth-protected-resource/mcp '/movie/603-the-matrix?x=/api/combined-search'; do
   result=$(for _ in 1 2 3 4; do get "$path" -o /dev/null -w '%header{x-instance}\n'; done | sort -u | tr '\n' ' ')
   # The readiness path answers without the stub's name: it only has to stay away from the search roles.
   [[ $path == /health/ready ]] && result=$(get "$path")
@@ -133,7 +141,8 @@ auth='sb-abcdefghijklmnopqrst-auth-token'
 check 'a member search reaches the search roles' "$(who 20 "${search[@]}" -H "Cookie: $auth=x")" "$roles"
 check 'a member search gets no sticky cookie' "$(get "${search[@]}" -H "Cookie: $auth=x" -o /dev/null -w '%header{set-cookie}')" ''
 check 'a member page still gets the sticky cookie' "$(get / -H "Cookie: $auth=x" -o /dev/null -w '%header{set-cookie}' | grep -c '^gw_instance=')" '1'
-check 'plain HTTP redirects to HTTPS' "$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' --resolve goodwatch.app:38421:$abio "http://goodwatch.app:38421$palette")" "302 https://goodwatch.app$palette"
+# The repository balance file uses a permanent redirect; the older installed copy uses a temporary one.
+check 'plain HTTP redirects to HTTPS' "$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' --resolve goodwatch.app:38421:$abio "http://goodwatch.app:38421$palette" | sed -E 's/^30[12] /redirect /')" "redirect https://goodwatch.app$palette"
 check 'the role header from a visitor moves no other path' "$(who 4 / -H 'X-Gw-Role: search' | grep -c 'search-')" '0'
 check 'another client of vector1 proxy gets the redirect, not a search role' "$(curl -s -o /dev/null -w '%{http_code}' --interface $other -H 'Host: goodwatch.app' -H 'X-Gw-Role: search' "http://$vector1:38420$palette")" '302'
 

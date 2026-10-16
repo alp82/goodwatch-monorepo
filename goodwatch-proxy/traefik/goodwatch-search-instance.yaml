@@ -1,5 +1,6 @@
 # Balances the search requests from abio's proxy across the search roles on vector1. Installed on vector1's proxy on
 # October 9, 2026.
+# The #569 /mcp extension is not installed: upgrade the role image and configure #566 authorization first.
 #
 # Where it goes: the proxy on vector1 (Traefik v3.6), as a dynamic configuration. In Coolify: Servers > vector1 >
 # Proxy > Dynamic Configurations > + Add, file name goodwatch-search-instance.yaml. Traefik loads it without a
@@ -10,7 +11,7 @@
 #
 # How it works:
 # - The router matches requests for goodwatch.app that come from abio's private address on the plain HTTP entry
-#   point, for the two search paths, with the header X-Gw-Role: search. Only the router of goodwatch-search.yaml on
+#   point, for the three paths including /mcp, with the header X-Gw-Role: search. Only goodwatch-search.yaml on
 #   abio sets that header, so this file does nothing while that one isn't installed. Its priority is 1100, above
 #   goodwatch-instance.yaml (1000), which keeps sending everything else from abio to the page instance.
 # - Each server is one search role, addressed by its network alias on the coolify network. The roles are the two
@@ -36,7 +37,7 @@ http:
     gw-search-from-abio:
       entryPoints:
         - http
-      rule: Host(`goodwatch.app`) && ClientIP(`ABIO_PRIVATE_ADDRESS`) && Header(`X-Gw-Role`, `search`) && (Path(`/api/combined-search`) || Path(`/api/command-palette`))
+      rule: Host(`goodwatch.app`) && ClientIP(`ABIO_PRIVATE_ADDRESS`) && Header(`X-Gw-Role`, `search`) && (Path(`/api/combined-search`) || Path(`/api/command-palette`) || Path(`/mcp`))
       priority: 1100
       middlewares:
         - gw-search-retry

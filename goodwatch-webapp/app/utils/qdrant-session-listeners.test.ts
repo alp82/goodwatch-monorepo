@@ -34,9 +34,10 @@ server.on("stream", (stream) => {
 	stream.resume()
 	stream.on("end", () => {
 		if (mode === "break the connection") {
-			// A frame that claims 16 MB, which is more than a client accepts: the client's session fails.
+			// SETTINGS must use stream 0. A complete invalid frame fails the session immediately;
+			// an oversized frame header alone can wait for its missing payload until the call times out.
 			for (const socket of sockets)
-				socket.write(Buffer.from([0xff, 0xff, 0xff, 0, 0, 0, 0, 0, 1]))
+				socket.write(Buffer.from([0, 0, 0, 4, 0, 0, 0, 0, 1]))
 			return
 		}
 		if (mode === "not found") {
