@@ -6,8 +6,8 @@
 // The sides are the Taste page's (taste-portrait/sides.server.ts), and a title belongs to a side by the same rule as
 // a loved title: its nearest side, when at least 0.3 close to its center and the side's name describes it.
 //
-// Words gate (#656): a side shows as "Side N" with the loved titles that stand for it and its share of what the
-// member loves. Its name reaches Discover only with DISCOVER_SIDE_NAMES=on, which stays off until the gate passes.
+// Words gate (#656): a side shows as "Side N" with the loved titles that stand for it, and no summary line. Its name
+// reaches Discover only with DISCOVER_SIDE_NAMES=on, which stays off until the gate passes.
 //
 // Per member, the sides and each title's side are kept in process memory for 10 minutes, keyed by everything the
 // grouping reads (ratings, seen, Want to See, skipped) and the snapshot version.
@@ -48,8 +48,6 @@ export interface DiscoverSide {
 	number: number | null
 	/** The side's name, only while the side names switch is on (the words gate, #656). */
 	name: string | null
-	/** Its share of what the member loves; null for the titles that fit no side. */
-	share: number | null
 	/** Its titles in this list. */
 	total: number
 	/** The moods Watch next opens the side with. */
@@ -132,7 +130,6 @@ async function build(
 			id: side.id,
 			number: i + 1,
 			name: names ? side.name : null,
-			share: Math.round((side.members.length / named.loved) * 1000) / 1000,
 			moods: sideMoods(side.members),
 			here: shown,
 		}
@@ -181,7 +178,6 @@ export function discoverSide(
 			id: NO_SIDE,
 			number: null,
 			name: null,
-			share: null,
 			total,
 			moods: [],
 			here: [],

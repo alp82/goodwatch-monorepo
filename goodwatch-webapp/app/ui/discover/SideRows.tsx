@@ -1,35 +1,35 @@
 // Sides of you on Discover (#671): under Best match, a row per side and a row of the titles that fit no side ("More
 // for you"), in the order the server gives (each row where its first title sits in the list). Inside a row, titles
-// keep the list's order. A side shows as "Side N" with the loved titles that stand for it and its share of what the
-// member loves; its name only when the server sends one (the words gate, #656). "See all" narrows Discover to the
-// side; the side's moods open Watch next.
-import { Link } from "@remix-run/react";
+// keep the list's order. A side shows as "Side N" with the loved titles that stand for it; its name only when the
+// server sends one, and no summary line, until the words test passes (#656). "See all" narrows Discover to the side;
+// the side's moods open Watch next.
+import { Link } from "@remix-run/react"
 import type {
 	DiscoverSideRow,
 	DiscoverResults,
-} from "~/server/discover-results.server";
-import type { DiscoverSide } from "~/server/discover-sides.server";
-import { TitlePosterCard } from "~/ui/title-card/TitlePosterCard";
-import { gridPosterPriority, tmdbImageUrl } from "~/utils/tmdb-image";
-import { SIDE_ROWS_COPY as COPY } from "./side-rows-copy";
+} from "~/server/discover-results.server"
+import type { DiscoverSide } from "~/server/discover-sides.server"
+import { TitlePosterCard } from "~/ui/title-card/TitlePosterCard"
+import { gridPosterPriority, tmdbImageUrl } from "~/utils/tmdb-image"
+import { SIDE_ROWS_COPY as COPY } from "./side-rows-copy"
 
 // Telling sides apart starts with their posters and number; the hue only helps.
-const HUES = ["#f59e0b", "#38bdf8", "#e879f9", "#4ade80", "#fb7185"];
-const NO_SIDE_HUE = "#9ca3af";
+const HUES = ["#f59e0b", "#38bdf8", "#e879f9", "#4ade80", "#fb7185"]
+const NO_SIDE_HUE = "#9ca3af"
 // Cards a wide screen shows in a row without scrolling: the first two rows' load first.
-const IN_VIEW = 6;
+const IN_VIEW = 6
 
 const hueOf = (side: DiscoverSide) =>
-	side.number === null ? NO_SIDE_HUE : HUES[(side.number - 1) % HUES.length];
+	side.number === null ? NO_SIDE_HUE : HUES[(side.number - 1) % HUES.length]
 const labelOf = (side: DiscoverSide) =>
-	side.name ?? (side.number === null ? COPY.noSide : COPY.side(side.number));
+	side.name ?? (side.number === null ? COPY.noSide : COPY.side(side.number))
 
 export function SideRows({
 	rows,
 	onSeeAll,
 }: {
-	rows: DiscoverSideRow[];
-	onSeeAll: (id: string) => void;
+	rows: DiscoverSideRow[]
+	onSeeAll: (id: string) => void
 }) {
 	return (
 		<div className="flex flex-col gap-10">
@@ -52,7 +52,7 @@ export function SideRows({
 							const priority =
 								r < 2 && i < IN_VIEW
 									? gridPosterPriority(r * IN_VIEW + i)
-									: "lazy";
+									: "lazy"
 							return (
 								<div
 									key={card.key}
@@ -64,13 +64,13 @@ export function SideRows({
 										skipOffscreen={priority === "lazy"}
 									/>
 								</div>
-							);
+							)
 						})}
 					</div>
 				</section>
 			))}
 		</div>
-	);
+	)
 }
 
 /** Above the grid while Discover is narrowed to one side: the side, back to all sides, and Watch next. */
@@ -78,8 +78,8 @@ export function SideBanner({
 	side,
 	onAll,
 }: {
-	side: DiscoverSide;
-	onAll: () => void;
+	side: DiscoverSide
+	onAll: () => void
 }) {
 	return (
 		<div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-white/10 bg-gray-900/60 p-3">
@@ -92,7 +92,7 @@ export function SideBanner({
 				{COPY.allSides}
 			</button>
 		</div>
-	);
+	)
 }
 
 function SideHeader({ side }: { side: DiscoverSide }) {
@@ -124,11 +124,6 @@ function SideHeader({ side }: { side: DiscoverSide }) {
 						{labelOf(side)}
 					</h2>
 				</div>
-				<p className="text-sm text-gray-400">
-					{side.share === null
-						? COPY.noSideLine(side.total)
-						: COPY.sideLine(side.share, side.total)}
-				</p>
 				{side.moods.length > 0 && (
 					<Link
 						to={`/watch-next?moods=${side.moods.join(",")}`}
@@ -140,9 +135,9 @@ function SideHeader({ side }: { side: DiscoverSide }) {
 				)}
 			</div>
 		</div>
-	);
+	)
 }
 
 /** The rows of the first page, or null when Discover shows its grid. */
 export const sideRowsOf = (first: DiscoverResults | null) =>
-	first?.sides?.layout === "rows" ? first.sides.rows : null;
+	first?.sides?.layout === "rows" ? first.sides.rows : null
