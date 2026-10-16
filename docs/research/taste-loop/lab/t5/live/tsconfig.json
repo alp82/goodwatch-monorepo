@@ -1,0 +1,1 @@
+{"compilerOptions":{"baseUrl":".","paths":{"~/server/taste/index.server":["./stubs/taste.ts"],"~/server/availability-index.server":["./stubs/availability.ts"],"~/*":["./prod/*"]}}}

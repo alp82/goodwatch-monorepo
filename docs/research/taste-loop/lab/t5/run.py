@@ -12,9 +12,8 @@ import sys
 import time
 
 from . import broker
-from .cases import digest, freeze, split, control_payload
+from .cases import digest, freeze, split, control_payload, controls_for
 from .score import power, score, markdown, VOID_STATUSES, VOID_CAP
-from .sides import describe, check_source
 from .storage import private_root, read, write
 from .synthetic import pack
 
@@ -22,18 +21,40 @@ HERE = Path(__file__).resolve().parent
 LAB = HERE.parent
 
 
-def source_manifest():
-    files = sorted(p for p in HERE.rglob('*') if p.is_file() and p.suffix in ('.py', '.ts', '.json', '.txt')
-                   and 'statements' not in p.relative_to(HERE).parts)
+def source_manifest(sides='6082cadc'):
+    sides_adapter(sides)  # Validate selection before constructing its closure.
+    old_adapter = {'adapter.ts', 'parity_check.ts', 'prod-manifest.json', 'tsconfig.json', 'sides.py'}
+    files = []
+    for p in sorted(HERE.rglob('*')):
+        relative = p.relative_to(HERE)
+        if not p.is_file() or p.suffix not in ('.py', '.ts', '.tsx', '.json', '.txt'):
+            continue
+        if relative.parts[0] == 'statements':
+            continue
+        if sides == '6082cadc' and relative.parts[0] == 'live':
+            continue
+        if sides == 'live' and (relative.parts[0] in ('prod', 'stubs') or str(relative) in old_adapter):
+            continue
+        files.append(p)
     files += [LAB / 'stats.py', LAB / 'pack.py']
     return {str(p.relative_to(LAB)): hashlib.sha256(p.read_bytes()).hexdigest() for p in files}
 
 
-def source_digest():
-    return digest(source_manifest())
+def source_digest(sides='6082cadc'):
+    return digest(source_manifest(sides))
 
 
-def load_pack():
+def sides_adapter(sides):
+    if sides == 'live':
+        from .live import sides as adapter
+        return adapter
+    if sides != '6082cadc':
+        raise ValueError('unknown Sides version')
+    from . import sides as adapter
+    return adapter
+
+
+def load_pack(sides='6082cadc'):
     """Read only the loop's named immutable A pack. No newest loader, pull, or gate."""
     from pack import Pack, NAT, sha256
     manifest = read(LAB.parent / 'MANIFEST.json')
@@ -46,7 +67,7 @@ def load_pack():
     t = p.titles
     # Validate the exact attribute order used by the pinned production adapter.
     import re
-    text = (HERE / 'prod/server/utils/fingerprint.ts').read_text().split('VALID_FINGERPRINT_KEYS:')[1].split('] as const')[0]
+    text = (sides_adapter(sides).HERE / 'prod/server/utils/fingerprint.ts').read_text().split('VALID_FINGERPRINT_KEYS:')[1].split('] as const')[0]
     keys = re.findall(r'"([a-z_]+)"', text)
     if keys != t['fingerprint_keys']:
         raise ValueError('fingerprint key order differs from pinned production')
@@ -64,6 +85,9 @@ def load_pack():
                        'movie_series_id': info.get('movie_series_id'), 'aliases': [],
                        'in_pool': bool(t['in_pool'][i]),
                        'fingerprint': t['fingerprint'][i].tolist() if t['has_fingerprint'][i] else None})
+        if sides == 'live':
+            # Live group names choose "animation" from the Animation genre or the anime flag (snapshot FLAG_ANIME).
+            titles[-1]['anime'] = bool(info.get('is_anime'))
     population = []
     for m, token in enumerate(p.members['hash']):
         if p.members['tier'][m] != 0 or p.members['is_owner'][m]:
@@ -77,19 +101,22 @@ def load_pack():
     return {'titles': titles, 'population': population}
 
 
-def build(root, synthetic):
-    check_source()
-    source = pack() if synthetic else load_pack()
+def build(root, synthetic, sides='6082cadc'):
+    adapter = sides_adapter(sides)
+    pin = adapter.check_source()
+    source = pack() if synthetic else load_pack(sides)
     descriptions = {}
     for member in source['population']:
         if member.get('tier', 'A') == 'A' and not member.get('owner', False) and len(member['ratings']) >= 40:
             history = split(member['ratings'])['early']
-            descriptions[member['token']] = describe(history, source['titles'])
-    frozen = freeze(source['population'], source['titles'], descriptions)
-    frozen.update(power=power(frozen['coverage']['primary_members']), source_digest=source_digest(), synthetic=synthetic,
+            descriptions[member['token']] = adapter.describe(history, source['titles'])
+    frozen = freeze(source['population'], source['titles'], descriptions, sides=sides)
+    frozen.update(power=power(frozen['coverage']['primary_members']), source_digest=source_digest(sides), synthetic=synthetic,
                   input_digest=digest(source), descriptions_digest=digest(descriptions),
                   prompt_digest=hashlib.sha256(broker.PROMPT.encode()).hexdigest())
-    write(root / 'source-manifest.json', source_manifest())
+    if sides == 'live':
+        frozen.update(sides=sides, sides_commit=pin['commit'])
+    write(root / 'source-manifest.json', source_manifest(sides))
     write(root / 'input.json', source)
     write(root / 'descriptions.json', descriptions)
     write(root / 'frozen.json', frozen)
@@ -111,7 +138,7 @@ def checked(root, synthetic):
     frozen = read(root / 'frozen.json')
     if frozen['source_digest'] != digest(read(root / 'source-manifest.json')):
         raise ValueError('changed source manifest')
-    if frozen['synthetic'] != synthetic or frozen['source_digest'] != source_digest():
+    if frozen['synthetic'] != synthetic or frozen['source_digest'] != source_digest(frozen.get('sides', '6082cadc')):
         raise ValueError('changed source or synthetic flag')
     if frozen['cases_digest'] != digest(frozen['cases']):
         raise ValueError('changed frozen cases')
@@ -121,18 +148,20 @@ def checked(root, synthetic):
 
 
 PREREG = Path(__file__).resolve().parents[2] / 'items' / '015-t5-whose-taste' / 'PREREG.md'
+PREREG_LIVE = Path(__file__).resolve().parents[2] / 'items' / '016-t5-live-sides' / 'PREREG.md'
 
 
 def registered(frozen):
     """Live readers run only against the frozen cases named in a committed, unmodified PREREG.md."""
     import subprocess
-    text = PREREG.read_text() if PREREG.exists() else ''
+    prereg = PREREG_LIVE if frozen.get('sides') == 'live' else PREREG
+    text = prereg.read_text() if prereg.exists() else ''
     for name in ('source_digest', 'cases_digest'):
         if f'`{name}`: `{frozen[name]}`' not in text:
             raise ValueError(f'PREREG.md does not register this {name}')
-    folder = str(PREREG.parent)
-    tracked = subprocess.run(['git', '-C', folder, 'ls-files', '--error-unmatch', PREREG.name], capture_output=True)
-    dirty = subprocess.run(['git', '-C', folder, 'status', '--porcelain', '--', PREREG.name, str(Path(__file__).parent)],
+    folder = str(prereg.parent)
+    tracked = subprocess.run(['git', '-C', folder, 'ls-files', '--error-unmatch', prereg.name], capture_output=True)
+    dirty = subprocess.run(['git', '-C', folder, 'status', '--porcelain', '--', prereg.name, str(Path(__file__).parent)],
                            capture_output=True, text=True)
     if tracked.returncode or dirty.stdout.strip():
         raise ValueError('PREREG.md and lab/t5 must be committed and unchanged before live reader calls')
@@ -150,7 +179,7 @@ def read_suite(root, reader, synthetic):
               'temperature': 'unavailable', 'seed': 'unavailable', 'synthetic': synthetic,
               'source_digest': frozen['source_digest'], 'cases_digest': frozen['cases_digest']}
     jobs = [(c, control, root / f'{reader}-{control}-{c["id"]}')
-            for c in frozen['cases'] for control in ('s', 'numbers', 'none')]
+            for c in frozen['cases'] for control in controls_for(frozen['cases'])]
     existing, voided = {}, set()
     # Validate every completed record before making any further call. Even a
     # terminal transport/tool-use record is immutable and must never be retried.
@@ -214,7 +243,7 @@ def stored_record(folder, payload, reader, synthetic=None):
 def collect(root, frozen):
     records = {}
     for reader in ('haiku', 'astra'):
-        for control in ('s', 'numbers', 'none'):
+        for control in controls_for(frozen['cases']):
             for c in frozen['cases']:
                 record = stored_record(root / f'{reader}-{control}-{c["id"]}', control_payload(c, control), reader,
                                        frozen['synthetic'])
@@ -222,9 +251,14 @@ def collect(root, frozen):
     return records
 
 
+def rule_for(frozen):
+    """Item 015 registered both readers; the owner set Astra's share for the live Sides (#674)."""
+    return 'astra_share' if frozen.get('sides') == 'live' else 'both_readers'
+
+
 def score_suite(root, synthetic):
     frozen = checked(root, synthetic)
-    aggregate = score(frozen['cases'], collect(root, frozen))
+    aggregate = score(frozen['cases'], collect(root, frozen), rule=rule_for(frozen))
     aggregate.update(coverage=frozen['coverage'], baselines=frozen['baselines'], power=frozen['power'],
                      ready=frozen['ready'], source_digest=frozen['source_digest'], cases_digest=frozen['cases_digest'])
     aggregate['pass'] &= frozen['ready']
@@ -239,14 +273,15 @@ def verify(root, synthetic):
     """Fresh-process entry: reconstruct descriptions/cases and reparse immutable raw bytes."""
     frozen = checked(root, synthetic)
     source = read(root / 'input.json')
-    descriptions = {m['token']: describe(split(m['ratings'])['early'], source['titles']) for m in source['population']
+    version = frozen.get('sides', '6082cadc')
+    descriptions = {m['token']: sides_adapter(version).describe(split(m['ratings'])['early'], source['titles']) for m in source['population']
                     if m['token'] in read(root / 'descriptions.json')}
     if digest(descriptions) != frozen['descriptions_digest']:
         raise ValueError('description rebuild differs')
-    rebuilt = freeze(source['population'], source['titles'], descriptions)
+    rebuilt = freeze(source['population'], source['titles'], descriptions, sides=version)
     if rebuilt['cases_digest'] != frozen['cases_digest'] or rebuilt['baselines'] != frozen['baselines']:
         raise ValueError('case rebuild differs')
-    aggregate = score(frozen['cases'], collect(root, frozen))
+    aggregate = score(frozen['cases'], collect(root, frozen), rule=rule_for(frozen))
     stored = read(root / 'aggregate.json')
     for key, value in aggregate.items():
         expected = value and frozen['ready'] if key == 'pass' else value
@@ -262,19 +297,24 @@ def verify(root, synthetic):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--synthetic', action='store_true')
+    parser.add_argument('--sides', choices=['6082cadc', 'live'], default='6082cadc')
     parser.add_argument('--output', required=True)
     parser.add_argument('stage', choices=['build', 'read', 'score', 'verify', 'all'])
     parser.add_argument('--reader', choices=['haiku', 'astra'])
     args = parser.parse_args()
+    if args.stage != 'build' and Path(args.output).expanduser().joinpath('frozen.json').exists():
+        version = read(Path(args.output).expanduser() / 'frozen.json').get('sides', '6082cadc')
+        if version != args.sides:
+            parser.error('--sides differs from the frozen run')
     root = private_root(args.output, args.synthetic)
     if args.stage == 'all':
         if not args.synthetic:
             parser.error('all is synthetic-only; reader jobs must run separately')
-        build(root, True)
+        build(root, True, args.sides)
         read_suite(root, 'haiku', True)
         read_suite(root, 'astra', True)
         score_suite(root, True)
-        cmd = [sys.executable, '-m', 't5.run', '--synthetic', '--output', str(root), 'verify']
+        cmd = [sys.executable, '-m', 't5.run', '--synthetic', '--sides', args.sides, '--output', str(root), 'verify']
         done = subprocess.run(cmd, cwd=LAB, capture_output=True, text=True, check=True)
         print(done.stdout.strip())
     elif args.stage == 'read':
@@ -283,8 +323,9 @@ def main():
         print(json.dumps(read_suite(root, args.reader, args.synthetic)))
     else:
         fn = {'build': build, 'score': score_suite, 'verify': verify}[args.stage]
-        result = fn(root, args.synthetic)
-        print(json.dumps({'ready': result['ready'], 'coverage': result['coverage'], 'power': result['power']} if args.stage == 'build' else result))
+        result = fn(root, args.synthetic, args.sides) if args.stage == 'build' else fn(root, args.synthetic)
+        print(json.dumps({'ready': result['ready'], 'coverage': result['coverage'], 'baselines': result['baselines'],
+                          'initial_baselines': result['initial_baselines'], 'power': result['power']} if args.stage == 'build' else result))
 
 
 if __name__ == '__main__':

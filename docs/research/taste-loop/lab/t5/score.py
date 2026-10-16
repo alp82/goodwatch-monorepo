@@ -10,7 +10,7 @@ from collections import Counter
 
 from scipy.stats import binom
 from stats import mean_interval, paired
-from .cases import LABELS, SEED, order
+from .cases import LABELS, SEED, controls_for, order
 
 DRAWS = 10000
 
@@ -51,7 +51,7 @@ def _analysis(cases, records):
     summaries = {}
     for reader in ('haiku', 'astra'):
         columns, summaries[reader] = {}, {}
-        for control in ('s', 'numbers', 'none', 'permuted'):
+        for control in controls_for(cases) + ('permuted',):
             per_member = {m: [] for m in members}
             failures = Counter()
             correct = 0
@@ -69,6 +69,11 @@ def _analysis(cases, records):
         difference = paired(columns['s'], columns['numbers'], DRAWS, SEED, lower_is_better=False)
         difference['tied'] = difference['n'] - difference.get('improved', 0) - difference.get('worse', 0)
         summaries[reader]['s_minus_numbers'] = difference
+        if 'noun' in columns:
+            # What the full description adds beyond its genre nouns (item 016, descriptive).
+            noun = paired(columns['s'], columns['noun'], DRAWS, SEED, lower_is_better=False)
+            noun['tied'] = noun['n'] - noun.get('improved', 0) - noun.get('worse', 0)
+            summaries[reader]['s_minus_noun'] = noun
         summaries[reader]['pass'] = bool(_screen(summaries[reader]['s']) and difference.get('lo') is not None and
                                          difference['lo'] > 0 and not _screen(summaries[reader]['none']) and
                                          not _screen(summaries[reader]['permuted']))
@@ -79,14 +84,30 @@ VOID_STATUSES = ('tool_use', 'transport')
 VOID_CAP = .10
 
 
-def score(cases, records):
+def _clear(summary):
+    """Clearly above chance: the 95% interval for share correct lies above 1/3."""
+    lower = summary['share'].get('lo')
+    return lower is not None and lower > 1 / 3
+
+
+def astra_share_rule(primary):
+    """Owner's rule for #674 (October 16, 2026): Astra's share correct clearly above chance; Haiku descriptive.
+    Validity guard: if any Astra control (numbers only, no description, permuted key) is clearly above chance, a
+    shortcut exists and the run is invalid rather than a pass."""
+    astra = primary['readers']['astra']
+    shortcut = [c for c in ('numbers', 'none', 'permuted') if _clear(astra[c])]
+    return {'rule': 'astra_share', 'astra_clear': _clear(astra['s']), 'shortcut_controls': shortcut,
+            'pass': bool(primary['members'] and _clear(astra['s']) and not shortcut)}
+
+
+def score(cases, records, rule='both_readers'):
     """Void a triple across paired columns; >10% void triples per reader is incomplete.
 
     Malformed/abstaining completed answers stay incorrect. Missing records and
     integrity failures are never treated as permitted voids. No new reader calls.
     """
     expected = {(reader, control, c['id']) for reader in ('haiku', 'astra')
-                for control in ('s', 'numbers', 'none') for c in cases}
+                for control in controls_for(cases) for c in cases}
     if set(records) != expected:
         raise ValueError('incomplete suite or extra responses')
     voids, excluded = {}, set()
@@ -94,7 +115,7 @@ def score(cases, records):
         bad = set()
         statuses = Counter()
         for c in cases:
-            for control in ('s', 'numbers', 'none'):
+            for control in controls_for(cases):
                 status = records[(reader, control, c['id'])]['result']['status']
                 if status not in ('ok', 'malformed', *VOID_STATUSES):
                     raise ValueError('unknown response status')
@@ -127,7 +148,10 @@ def score(cases, records):
             'sensitivity_unedited': _analysis(unedited, records),
             'strata': {name: {label: _analysis(subset, records) for label, subset in groups.items()}
                        for name, groups in strata.items()},
-            'pass': bool(primary['members'] and not invalid and all(v['pass'] for v in primary['readers'].values())),
+            **({'rule': 'both_readers',
+                'pass': bool(primary['members'] and not invalid and all(v['pass'] for v in primary['readers'].values()))}
+               if rule == 'both_readers' else
+               {**astra_share_rule(primary), 'pass': bool(not invalid and astra_share_rule(primary)['pass'])}),
             'seed': SEED, 'draws': DRAWS,
             'binomial_note': 'pooled-triple diagnostic assumes independent trials; decision uses equal-member bootstrap',
             'scope': 'unreplicated model screen; no product authorization'}
@@ -142,11 +166,14 @@ def markdown(aggregate):
              '|---|---|---:|---|---:|---:|']
     for reader in ('haiku', 'astra'):
         data = aggregate['readers'][reader]
-        for control in ('s', 'numbers', 'none', 'permuted'):
+        for control in [c for c in ('s', 'noun', 'numbers', 'none', 'permuted') if c in data]:
             row = data[control]
             share, excess = row['share'], row['excess']
             lines.append(f"| {reader} | {control} | {number(share['value'])} | "
                          f"{number(share['lo'])} to {number(share['hi'])} | {number(excess['diff'])} | {number(excess.get('sde'))} |")
+        if 's_minus_noun' in data:
+            n = data['s_minus_noun']
+            lines += ['', f"{reader} S minus nouns only: {number(n['diff'])}, 95% interval {number(n['lo'])} to {number(n['hi'])}."]
         d = data['s_minus_numbers']
         lines += ['', f"{reader} S minus numbers: {number(d['diff'])}, 95% interval "
                   f"{number(d['lo'])} to {number(d['hi'])}; SDE {number(d.get('sde'))}.", '']
@@ -167,6 +194,10 @@ def markdown(aggregate):
     for reader in ('haiku', 'astra'):
         void = aggregate['voids'][reader]
         lines.append(f"{reader}: {void['cases']} void triples ({number(void['share'])}); incomplete: {void['incomplete']}.")
+    if aggregate.get('rule') == 'astra_share':
+        lines += ["Rule: GPT-6 Astra's share correct must have a 95% interval above 1/3; Haiku is descriptive. "
+                  f"Astra clearly above chance: {aggregate['astra_clear']}. "
+                  f"Astra controls clearly above chance (shortcut): {', '.join(aggregate['shortcut_controls']) or 'none'}."]
     lines += [f"Screen passes: {aggregate['pass']}. Invalid/incomplete: {aggregate['invalid']}.",
               aggregate['binomial_note'] + '.', 'A null is absence of evidence at the reported SDE.',
               aggregate['scope'] + '.', '']

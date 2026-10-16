@@ -3,6 +3,7 @@
 Keys, times, source tokens and answers remain in private structures. A payload contains
 only the frozen description and the three displayed lists.
 """
+import re
 import hashlib
 import itertools
 import math
@@ -81,7 +82,7 @@ def _display(rows, facts):
              'type': facts[r['title_key']]['media_type'], 'rating': r['score']} for r in rows]
 
 
-def build(population, titles, descriptions, rematch=False):
+def build(population, titles, descriptions, rematch=False, *, sides='6082cadc'):
     """At most four distinct pairs; reuse distractors, never owner or tier B."""
     facts = {t['key']: t for t in titles}
     splits = {m['token']: split(m['ratings']) for m in population if m.get('tier', 'A') == 'A'
@@ -94,7 +95,10 @@ def build(population, titles, descriptions, rematch=False):
         if desc['empty']:
             excluded['empty_s'] += 1
             continue
-        blocked = forbidden(desc['named_titles'], titles)
+        remove = forbidden
+        if sides == 'live':
+            from .live.removal import forbidden as remove
+        blocked = remove(desc['named_titles'], titles)
         lists = {k: remaining(v['later'], blocked, facts) for k, v in splits.items()}
         removal.append(len(s['later']) - len(lists[anchor]))
         if len(lists[anchor]) < 15:
@@ -102,7 +106,7 @@ def build(population, titles, descriptions, rematch=False):
             continue
         mu = statistics.mean(r['score'] for r in s['early'])
         means = {k: statistics.mean(r['score'] for r in v['early']) for k, v in splits.items()}
-        eligible = [k for k in splits if k != anchor and len(lists[k]) >= 15 and abs(means[k] - mu) <= .5]
+        eligible = [k for k in splits if k != anchor and len(lists[k]) >= 15 and abs(means[k] - mu) <= (1.0 if sides == 'live' else .5)]
         pairs = []
         for pair in itertools.combinations(sorted(eligible), 2):
             pair_id = '|'.join(pair)
@@ -118,7 +122,9 @@ def build(population, titles, descriptions, rematch=False):
             ranked = sorted(samples, key=lambda k: (display_means[k], order('rank_tie', anchor, pair_id, k)))
             pairs.append((cost, order('match', anchor, pair_id), pair, samples, ranked.index(anchor)))
         pairs.sort()
-        if rematch and pairs:
+        # Live Sides (item 016): balance the anchor's displayed-mean rank across its triples from the first match, so
+        # the middle-mean and highest-mean shortcuts sit at chance by construction without a range caliper.
+        if (rematch or sides == 'live') and pairs:
             # An anchor must support every rank; never fall back to whichever rank
             # happens to be available. Four triples differ in rank counts by at most one.
             bins = {rank: [p for p in pairs if p[4] == rank] for rank in range(3)}
@@ -128,7 +134,8 @@ def build(population, titles, descriptions, rematch=False):
             else:
                 offset = int(order('rank_offset', anchor), 16) % 3
                 selected = []
-                for i in range(4):
+                # Live: exactly one triple per rank, so each rank holds a third of a member's triples.
+                for i in range(3 if sides == 'live' else 4):
                     bucket = bins[(offset + i) % 3]
                     if bucket:
                         selected.append(bucket.pop(0))
@@ -144,6 +151,7 @@ def build(population, titles, descriptions, rematch=False):
             key = digest(payload)
             cases.append({'id': key, 'member': anchor, 'answer': LABELS[sources.index(anchor)], 'payload': payload,
                           'numbers_only': desc['numbers_only'], 'printed_mean': desc['printed_mean'],
+                          **({'nouns_only': nouns_only(desc.get('view') or {}, live_nouns())} if sides == 'live' else {}),
                           'sources': sources, 'selected_keys': {k: [r['title_key'] for r in samples[k]] for k in sources},
                           'early_size': len(s['early']), 'show_share': shows_for(samples[anchor], facts),
                           'named_show_share': named_shows(desc['named_titles'], facts),
@@ -158,9 +166,34 @@ def build(population, titles, descriptions, rematch=False):
                    'mean_early_match_gap': statistics.mean(gaps) if gaps else None, 'title_removal_losses': sum(removal)}
 
 
+def live_nouns():
+    """Group-name nouns from the pinned production group-names.server.ts, so a re-pin keeps them in step."""
+    from pathlib import Path
+    text = (Path(__file__).parent / 'live/prod/server/taste-portrait/group-names.server.ts').read_text()
+    return sorted(set(re.findall(r'noun: "([^"]+)"', text)))
+
+
 def control_payload(case, kind):
-    descriptions = {'s': case['payload']['description'], 'numbers': case['numbers_only'], 'none': ''}
+    descriptions = {'s': case['payload']['description'], 'numbers': case['numbers_only'], 'none': '',
+                    'noun': case.get('nouns_only')}
+    if descriptions[kind] is None:
+        raise ValueError(f'no {kind} control for this case')
     return {'description': descriptions[kind], 'lists': case['payload']['lists']}
+
+
+def controls_for(cases):
+    """Reader inputs per triple. Live Sides (item 016) add the noun-only control the owner asked for."""
+    return ('s', 'numbers', 'none') + (('noun',) if cases and all('nouns_only' in c for c in cases) else ())
+
+
+def nouns_only(view, nouns):
+    """Each group's noun alone ("comedies"), one line per group in page order: what the genre word says without
+    the traits, examples or anything else."""
+    lines = []
+    for side in view.get('sides') or []:
+        name = side['name'].lower()
+        lines.append(next((n for n in sorted(nouns, key=len, reverse=True) if name.endswith(n)), name.split()[-1]))
+    return '\n'.join(lines)
 
 
 def named_shows(keys, facts):
@@ -173,7 +206,7 @@ def shows_for(rows, facts):
     return statistics.mean(facts[r['title_key']]['media_type'] == 'show' for r in rows)
 
 
-def baselines(cases):
+def baselines(cases, sides='6082cadc'):
     """Deterministic ties by case digest; all figures first averaged within member."""
     from collections import defaultdict
     outcomes = defaultdict(lambda: defaultdict(list))
@@ -181,7 +214,11 @@ def baselines(cases):
         means = {k: statistics.mean(r['rating'] for r in rows) for k, rows in c['payload']['lists'].items()}
         median = sorted(means.values())[1]
         choices = {'middle_mean': {k: abs(v - median) for k, v in means.items()},
-                   'closest_printed_mean': {k: abs(v - c['printed_mean']) for k, v in means.items()}}
+                   # Item 016 (Fable pre-registration check): the list furthest from the median. Balanced ranks do not
+                   # neutralize it by construction; it stops live runs only, so item 015 stays as registered.
+                   'outlier_mean': {k: -abs(v - median) for k, v in means.items()}}
+        if c['printed_mean'] is not None:
+            choices['closest_printed_mean'] = {k: abs(v - c['printed_mean']) for k, v in means.items()}
         if c.get('named_show_share') is not None:
             # Added before any reader call on October 16, 2026: the list whose show share is closest to the named
             # titles' show share. Matching movies against shows is not the words of a Side.
@@ -194,15 +231,16 @@ def baselines(cases):
             outcomes[name][c['member']].append(int(choice == c['answer']))
     result = {name: statistics.mean(statistics.mean(v) for v in members.values()) for name, members in outcomes.items()}
     # With single-type lists (LIST_MEDIA) the media-type baseline ties on every list: reported, never a stop.
-    stops = ('middle_mean', 'closest_printed_mean') + (() if LIST_MEDIA else ('media_type',))
+    stops = (('middle_mean', 'closest_printed_mean') + (() if LIST_MEDIA else ('media_type',))
+             + (('outlier_mean',) if sides == 'live' else ()))
     return {'accuracy': result, 'stop': not cases or any(result.get(name, 0) > .4 for name in stops)}
 
 
-def freeze(population, titles, descriptions):
-    cases, coverage = build(population, titles, descriptions)
-    first = baselines(cases)
+def freeze(population, titles, descriptions, *, sides='6082cadc'):
+    cases, coverage = build(population, titles, descriptions, sides=sides)
+    first = baselines(cases, sides)
     if first['stop']:
-        cases, coverage = build(population, titles, descriptions, rematch=True)
-    final = baselines(cases)
+        cases, coverage = build(population, titles, descriptions, rematch=True, sides=sides)
+    final = baselines(cases, sides)
     return {'cases': cases, 'coverage': coverage, 'initial_baselines': first, 'baselines': final,
             'ready': not final['stop'], 'cases_digest': digest(cases)}

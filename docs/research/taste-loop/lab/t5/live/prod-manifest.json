@@ -1,0 +1,94 @@
+{
+  "commit": "344e7ba3972ced4b466f6833ab61502fcde25c44",
+  "requested_commit": "344e7ba3972ced4b466f6833ab61502fcde25c44",
+  "files": {
+    "page/routes/taste._index.tsx": {
+      "path": "goodwatch-webapp/app/routes/taste._index.tsx",
+      "sha256": "d0bbe3455a77ec0a2adfa54571339637e4f24e94625395ec0386bc3a6fe42247"
+    },
+    "page/server/taste-portrait/index.server.ts": {
+      "path": "goodwatch-webapp/app/server/taste-portrait/index.server.ts",
+      "sha256": "fe16704364611256e531f76f9b2e9374ce2e61ef8da41ec3057ad89e8b86c5d7"
+    },
+    "page/ui/taste/tabs/SidesOfYou.tsx": {
+      "path": "goodwatch-webapp/app/ui/taste/tabs/SidesOfYou.tsx",
+      "sha256": "a8a11e3b991be78a4df1690c4409e1bd44a4150690ec46be0a5917309309d0bb"
+    },
+    "page/ui/taste/tabs/parts.tsx": {
+      "path": "goodwatch-webapp/app/ui/taste/tabs/parts.tsx",
+      "sha256": "d5c93d1cde14916b80f5837c4edb60656fb442e3efe8123ceebca82a8e1b5533"
+    },
+    "page/ui/taste/taste-groups-name.ts": {
+      "path": "goodwatch-webapp/app/ui/taste/taste-groups-name.ts",
+      "sha256": "4b19bb17cd36e28186fd90f3f6c23e34ee446d161bf43f26cd02f2850ca94ca4"
+    },
+    "prod/domain/moods.ts": {
+      "path": "goodwatch-webapp/app/domain/moods.ts",
+      "sha256": "5cc12bf5c8fa90f007982865673cc8ee13283620cf587eea3e201cbd3de659a6"
+    },
+    "prod/domain/taste-match.ts": {
+      "path": "goodwatch-webapp/app/domain/taste-match.ts",
+      "sha256": "1ed1080a4a0248d801cb4ad76d3d24d1cc77202061b56596673e3717fdc63967"
+    },
+    "prod/server/taste-portrait/families.server.ts": {
+      "path": "goodwatch-webapp/app/server/taste-portrait/families.server.ts",
+      "sha256": "d2d94612dd82d90c50523e49812be8ef1ac7650f0ed61bd83da1453b31d0eea2"
+    },
+    "prod/server/taste-portrait/group-names.server.ts": {
+      "path": "goodwatch-webapp/app/server/taste-portrait/group-names.server.ts",
+      "sha256": "79fb294da922f01bb0ad0849ed92d32443bd96d0a7ebf4f9d48eeae2e318d910"
+    },
+    "prod/server/taste-portrait/person.server.ts": {
+      "path": "goodwatch-webapp/app/server/taste-portrait/person.server.ts",
+      "sha256": "8a670a85f2a4188c16e55c14ccdee356bea26eb857cf0ae17772760da5bc6855"
+    },
+    "prod/server/taste-portrait/sides.server.ts": {
+      "path": "goodwatch-webapp/app/server/taste-portrait/sides.server.ts",
+      "sha256": "c569eb3a1947ac1b8dafefa12591d7fb1f622eddb754c9c36e05ea69cf2c6501"
+    },
+    "prod/server/taste-portrait/view.ts": {
+      "path": "goodwatch-webapp/app/server/taste-portrait/view.ts",
+      "sha256": "b0a4cb9ed2eca6ccec1c2dfd30bb79262b874494fd03eb5739c87ccca99bd1e3"
+    },
+    "prod/server/taste-portrait/words.server.ts": {
+      "path": "goodwatch-webapp/app/server/taste-portrait/words.server.ts",
+      "sha256": "e10ac580960d1ad8cd103daea373cc85738e8b9ec1a0112640e4f2b9b6273854"
+    },
+    "prod/server/taste/formula.server.ts": {
+      "path": "goodwatch-webapp/app/server/taste/formula.server.ts",
+      "sha256": "f9799dd2c7c443aea6ad9fb17531297ab37d6f2fa302abdc030b202d1a7c6c32"
+    },
+    "prod/server/taste/pool.server.ts": {
+      "path": "goodwatch-webapp/app/server/taste/pool.server.ts",
+      "sha256": "bcab12d9ebcb6174fbcd4f1189965f8b730ebc0c9d9f724a2d36cb717ec111c6"
+    },
+    "prod/server/taste/taste.server.ts": {
+      "path": "goodwatch-webapp/app/server/taste/taste.server.ts",
+      "sha256": "62b2b2fa2bffb53f4b034c0598e71000cf214dc2e2b4aca3924b5ec38f8e44b9"
+    },
+    "prod/server/utils/fingerprint.ts": {
+      "path": "goodwatch-webapp/app/server/utils/fingerprint.ts",
+      "sha256": "bc42b46bbfc565f3b507202fcfa59cc587a71c36a6b339161e6d3dc86695bcb7"
+    },
+    "prod/ui/fingerprint/fingerprintMeta.ts": {
+      "path": "goodwatch-webapp/app/ui/fingerprint/fingerprintMeta.ts",
+      "sha256": "811beb6f3f7680e173de9d3185ee44dbe8f076e219b0e57716f1c3bf8226fdcd"
+    },
+    "prod/utils/title-key.ts": {
+      "path": "goodwatch-webapp/app/utils/title-key.ts",
+      "sha256": "771c33506f1236aacd2bd3af777ec9bea05ebd4bce1a422dff55063aa0a71ed2"
+    }
+  },
+  "stubbed_imports": {
+    "server/taste/index.server": "stubs/taste.ts",
+    "server/availability-index.server": "stubs/availability.ts"
+  },
+  "erased_type_imports": [
+    "./view",
+    "~/domain/moods",
+    "~/server/taste/index.server",
+    "~/server/title-snapshot/index.server",
+    "~/types/user-data",
+    "~/utils/media-presentation"
+  ]
+}
