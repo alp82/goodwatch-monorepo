@@ -45,13 +45,14 @@ const both =
 
 /**
  * The nouns a name can end in, most specific first: by the share of the catalog's reference pool each describes, from
- * westerns (2 percent) to dramas (48 percent), as of October 2026. "Stories" describes every title and comes last.
+ * documentaries (1 percent) to dramas (48 percent), as of October 2026. "Stories" describes every title and comes last.
  */
 const KINDS: Kind[] = [
+	{ noun: "documentaries", has: genre("Documentary"), says: ["educational"] },
 	{ noun: "westerns", has: genre("Western"), says: [] },
 	{ noun: "sports stories", has: carries("sports"), says: ["sports"] },
 	{
-		noun: "family films",
+		noun: "family movies",
 		has: both(genre("Family"), (title) => title.facts.mediaType === "movie"),
 		says: [],
 	},
@@ -61,7 +62,12 @@ const KINDS: Kind[] = [
 		has: either(genre("Animation"), (title) => title.facts.anime),
 		says: [],
 	},
-	{ noun: "biopics", has: carries("biographical"), says: ["biographical"] },
+	{
+		noun: "biopics",
+		// A documentary about a real life isn't a biopic.
+		has: both(carries("biographical"), (title) => !genre("Documentary")(title)),
+		says: ["biographical"],
+	},
 	{
 		noun: "sci-fi",
 		has: either(genre("Science Fiction"), carries("futuristic")),
@@ -227,9 +233,10 @@ function describedBy(members: RatedTitle[], candidate: Candidate) {
 }
 
 /**
- * The group's name and the titles it describes: the first name not taken that describes three in four of the group's
- * titles and fits NAME_LENGTH, else the shortest that describes three in four, else the one that describes the most.
- * Null when no name describes two.
+ * The group's name and the titles it describes. The most specific noun with a name not taken that describes three in
+ * four of the group's titles decides; of its names, the first with two traits that fits NAME_LENGTH, else the first
+ * with one trait that fits, else the shortest. With no such name, the one that describes the most. Null when no name
+ * describes two.
  */
 export function nameGroup(
 	order: Standout,
@@ -238,27 +245,27 @@ export function nameGroup(
 ) {
 	const most = Math.max(2, Math.ceil(0.75 * members.length))
 	type Named = { name: string; members: RatedTitle[] }
-	let shortest: Named | null = null
+	// A name that fits beats longer ones, and the first that fits wins: the names with two traits come first.
+	const rank = ({ name }: Candidate) =>
+		name.length <= NAME_LENGTH ? 0 : name.length
+	let chosen: (Named & { kind: Kind; rank: number }) | null = null
 	let best: Named | null = null
-	let chosen: Named | null = null
 	for (const candidate of candidates(order)) {
+		if (chosen && candidate.kind !== chosen.kind) break
 		if (taken.has(candidate.name)) continue
 		const named = {
 			name: candidate.name,
 			members: describedBy(members, candidate),
 		}
-		if (named.members.length >= most) {
-			if (named.name.length <= NAME_LENGTH) {
-				chosen = named
-				break
-			}
-			if (!shortest || named.name.length < shortest.name.length)
-				shortest = named
-		}
+		if (
+			named.members.length >= most &&
+			(!chosen || rank(candidate) < chosen.rank)
+		)
+			chosen = { ...named, kind: candidate.kind, rank: rank(candidate) }
 		if (!best || named.members.length > best.members.length) best = named
 	}
-	chosen ??= shortest ?? best
-	if (!chosen || chosen.members.length < 2) return null
-	taken.add(chosen.name)
-	return chosen
+	const name = chosen ?? best
+	if (!name || name.members.length < 2) return null
+	taken.add(name.name)
+	return { name: name.name, members: name.members }
 }

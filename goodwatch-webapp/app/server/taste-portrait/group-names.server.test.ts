@@ -125,11 +125,11 @@ describe("nameGroup", () => {
 		assert.equal(name(standout, tense), "Dark, psychological stories")
 	})
 
-	it("calls family titles family films only when they are films", () => {
+	it("calls family titles family movies only when they are films", () => {
 		const standout = order("wholesome", "wonder")
 		assert.equal(
 			name(standout, titles(8, ["Family"])),
-			"Warm, wondrous family films",
+			"Warm, wondrous family movies",
 		)
 		const shows = Array.from({ length: 8 }, () =>
 			title(["Family"], {}, { mediaType: "show" }),
@@ -173,22 +173,19 @@ describe("nameGroup", () => {
 			"Slapstick, absurd comedies",
 		)
 		// Without comedies, two kinds of funny would read "Funny, funny".
-		assert.equal(name(humor, titles(8, ["Documentary"])), "Funny, warm stories")
+		assert.equal(name(humor, titles(8, ["Music"])), "Funny, warm stories")
 	})
 
 	it("never pairs two traits that repeat a word", () => {
 		assert.equal(
-			name(
-				order("bleakness", "dark_humor", "tension"),
-				titles(8, ["Documentary"]),
-			),
+			name(order("bleakness", "dark_humor", "tension"), titles(8, ["Music"])),
 			"Dark, tense stories",
 		)
 	})
 
 	it("puts a World trait right before the noun", () => {
 		assert.equal(
-			name(order("psychological", "bleakness"), titles(8, ["Documentary"])),
+			name(order("psychological", "bleakness"), titles(8, ["Music"])),
 			"Dark, psychological stories",
 		)
 	})
@@ -201,20 +198,40 @@ describe("nameGroup", () => {
 		assert.ok((short ?? "").length <= NAME_LENGTH)
 	})
 
-	it("takes the shortest long name when no shorter one describes the group", () => {
-		// Six in eight sports stories; the one short name is another group's.
-		const members = [
-			...titles(6, ["Documentary"], { sports: 1 }),
-			...titles(2, ["Documentary"]),
-		]
+	it("keeps the most specific noun even when its names run long, and takes the shortest", () => {
+		// "Socially critical stories" fits; "Socially critical, class-conscious sports stories" is longer still.
+		const members = titles(8, ["Music"], { sports: 1 })
 		assert.equal(
-			name(
-				order("social_commentary", "class_and_capitalism"),
-				members,
-				new Set(["Socially critical stories"]),
-			),
+			name(order("social_commentary", "class_and_capitalism"), members),
 			"Socially critical sports stories",
 		)
+	})
+
+	it("takes one trait only when no name with two fits", () => {
+		// "Moving, philosophical war stories" is 33 characters.
+		const members = titles(8, ["War"])
+		assert.equal(
+			name(order("pathos", "philosophical"), members),
+			"Moving war stories",
+		)
+	})
+
+	it("calls a documentary a documentary, never a biopic", () => {
+		const standout = order("bleakness", "tension")
+		assert.equal(
+			name(standout, titles(8, ["Music"], { biographical: 1 })),
+			"Dark, tense biopics",
+		)
+		assert.equal(
+			name(standout, titles(8, ["Documentary"], { biographical: 1 })),
+			"Dark, tense documentaries",
+		)
+		// Five in eight documentaries, so neither noun holds.
+		const mixed = [
+			...titles(5, ["Documentary"], { biographical: 1 }),
+			...titles(3, ["Music"], { biographical: 1 }),
+		]
+		assert.equal(name(standout, mixed), "Dark, tense stories")
 	})
 
 	it("never uses a World word that reads as crime-focused", () => {
