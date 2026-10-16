@@ -234,3 +234,22 @@ Reading: **the registered screen does not pass**, because it needs both readers 
 includes zero. Both readers point the same way, and Astra clears every rule. Unreplicated, small (12 members,
 movie-only lists), with three triples carrying a residual title link (verdict unchanged without them). The words
 gate on map #652 stays closed. Version tested: the production Sides code pinned at `6082cadc`, which predates "Better Sides of you" (#666, live October 16) and the "taste groups" copy rename; `sides.server.ts` changed by about 940 lines since. The verdict is about those earlier descriptions. No T5 result exists yet for the live ones; replication on the live Sides is #674.
+
+**Live Sides (item 016, #674, October 16, 2026): the registered screen passes.** Same design on the live Sides of you
+at `3cba031f` (final short names), with the owner's rule set before the run: GPT-6 Astra's share correct must be
+clearly above chance (Q62) and clearly above its numbers-only share (Q67); Haiku is descriptive. 12 members, 36
+triples, balanced list ranks.
+
+| Measure | Haiku 5.5 (descriptive) | GPT-6 Astra (decides) |
+|---|---|---|
+| Share correct (chance 33.3%) | 47.2% (30.6% to 66.7%) | 80.6% (69.4% to 91.7%) |
+| S minus numbers-only control | +5.6 (−22.2 to +30.6) | +36.1 (+19.4 to +52.8) |
+| S minus nouns-only control | +2.8 (−16.7 to +19.4) | +33.3 (+11.1 to +55.6) |
+| Numbers-only, no-description, permuted controls | intervals include chance | intervals include chance |
+
+Reading: **the words gate on map #652 opens.** The live Sides of you panel (group names, labels, and example titles
+together) carries something personal that one strong reader can use beyond the ratings and beyond the genre nouns.
+No control separates the generated wording from the example titles. Haiku is descriptive (interval includes
+chance). The one-reader rule was set before this run and after item 015. Unreplicated and small (one pack, one pin,
+movie-only lists); an offline model screen, not a member study and no product authorization by itself. Fable's
+result review: stands with these caveats.

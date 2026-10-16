@@ -87,7 +87,18 @@ Read this first. Rewritten at the end of every session.
   - [x] Fable reviews: plan, harness, pre-call amendment ("go"), result (verdict correct, no integrity problem)
   - [x] Three statement-list errors fixed in the lab (`lab/t5/statements/`); production never had them
   - [x] Incident: a first job ran the fake reader (never scored); fixed with tests, re-registered
-  - [ ] Replicate on tier C (#674; after 300+ new ratings from 15 members and six weeks), with the gate rule decided first
+  - [x] Re-run on the live Sides: item 016 (#674), not tier C; the owner chose the October 13 pack and the rule first
+
+- [x] **016 Whose Taste is this, live Sides (T5, ticket #674)** (`items/016-t5-live-sides/`), October 16, 2026:
+  **the registered screen passes on both of the owner's bars.** Astra 80.6% (69.4–91.7) against 33.3% chance, and
+  +36.1 (19.4–52.8) over numbers only; no Astra control clears chance. Haiku 47.2% (30.6–66.7), descriptive. 12
+  members, 36 triples (three per member, balanced list ranks), movie-only lists, pinned at `3cba031f` (final short
+  names and "Fits your taste"). The words gate on map #652 opens, for the whole panel including example titles.
+  Readers are offline stand-ins; the product never calls an LLM.
+  - [x] Port to the live Sides, Fable pre-registration check (go, three conditions met), owner rules Q62 and Q67
+  - [x] Hold for Q70: the `0da351cd` run was abandoned unscored and unread (`HOLD.md`), re-registered at `3cba031f`
+  - [x] Fable result review (`REVIEW-fable-result.md`): stands with caveats
+  - [ ] Before the next live registration: `invalid` on a tripped guard, rule tied to the PREREG, ledger timestamps
 
 ## Next action
 
