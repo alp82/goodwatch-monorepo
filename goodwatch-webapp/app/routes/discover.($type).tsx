@@ -32,7 +32,11 @@ import { getViewerContext } from "~/server/viewer.server"
 import { ErrorPage, errorPageProps } from "~/ui/ErrorPage"
 import { reportBoundaryError } from "~/telemetry/telemetry"
 import { DiscoverPage } from "~/ui/discover/DiscoverPage"
-import { type InitialBrowse, browseKey } from "~/ui/discover/useDiscoverBrowse"
+import {
+	type InitialBrowse,
+	browseKey,
+	withSides,
+} from "~/ui/discover/useDiscoverBrowse"
 import { getUserIdFromRequest } from "~/utils/auth"
 import { personPath } from "~/utils/helpers"
 import { type PageItem, type PageMeta, buildMeta } from "~/utils/meta"
@@ -155,15 +159,36 @@ async function browseLoader(
 	const count = Math.min(Math.max(1, requested), MAX_INITIAL_PAGES)
 	// Search mode: the browser runs the search (its reading streams in), so the first view has no results yet.
 	const searching = searchText(params.get("q")) !== null
+	const side = params.get("side")
+	const sides = { rows: true, side }
 	let snapshotNotLoaded = false
 	let pages: BrowseResults[] | null = null
 	try {
-		if (!searching)
-			pages = await Promise.all(
-				Array.from({ length: count }, (_, i) =>
-					getBrowseResults(ctx, { state, sort, forYou, page: i + 1 }),
-				),
-			)
+		if (!searching) {
+			// A row per side is the whole first view: no later pages to load (or record as shown).
+			const first = await getBrowseResults(ctx, {
+				state,
+				sort,
+				forYou,
+				sides,
+				page: 1,
+			})
+			const rest =
+				first.sides?.layout === "rows"
+					? []
+					: await Promise.all(
+							Array.from({ length: count - 1 }, (_, i) =>
+								getBrowseResults(ctx, {
+									state,
+									sort,
+									forYou,
+									sides,
+									page: i + 2,
+								}),
+							),
+						)
+			pages = [first, ...rest]
+		}
 	} catch (error) {
 		// Right after a restart: the browser asks /api/discover/results once the snapshot has loaded.
 		if (!(error instanceof SnapshotNotLoaded)) throw error
@@ -174,7 +199,7 @@ async function browseLoader(
 			initial: pages
 				? {
 						key: browseKey(
-							filterQuery(state, sort, defaults),
+							withSides(filterQuery(state, sort, defaults), side),
 							forYou,
 							undefined,
 							ctx.language ?? "en",

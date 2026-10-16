@@ -40,6 +40,13 @@ export const browseKey = (
 	`${query}${query ? "&" : ""}foryou=${forYou ? 1 : 0}${ranked ? `&ranked=${ranked.join(",")}` : ""}${language ? `&displayLanguage=${encodeURIComponent(language)}` : ""}`
 
 /**
+ * Discover's query with Sides of you: a row per side under Best match (`sides=rows`), and the side the list is
+ * narrowed to (`side`). The server applies them only for a member with sides.
+ */
+export const withSides = (query: string, side: string | null) =>
+	`${query}${query ? "&" : ""}sides=rows${side ? `&side=${encodeURIComponent(side)}` : ""}`
+
+/**
  * A guest's progress and chosen country and services, read after hydration (the server can't see them); null for a
  * member, undefined until read.
  */
@@ -135,12 +142,21 @@ export function useDiscoverBrowse({
 		string[],
 		number
 	>({
-		queryKey: ["discover-browse", signature, key, ...(provisional ? ["provisional"] : [])],
+		queryKey: [
+			"discover-browse",
+			signature,
+			key,
+			...(provisional ? ["provisional"] : []),
+		],
 		gcTime: provisional ? 0 : undefined,
-		queryFn: ({ pageParam, signal }) => fetchPage(key, pageParam, guest ?? null, signal),
+		queryFn: ({ pageParam, signal }) =>
+			fetchPage(key, pageParam, guest ?? null, signal),
 		initialPageParam: 1,
+		// A row per side is the whole first view: "See all" narrows the list to a side, which pages again.
 		getNextPageParam: (last) =>
-			last.page * last.pageSize < last.total ? last.page + 1 : undefined,
+			last.sides?.layout !== "rows" && last.page * last.pageSize < last.total
+				? last.page + 1
+				: undefined,
 		initialData:
 			initialFits && initial
 				? {
@@ -150,7 +166,10 @@ export function useDiscoverBrowse({
 				: undefined,
 		placeholderData: (previous, previousQuery) =>
 			typeof previousQuery?.queryKey[2] === "string" &&
-			new URLSearchParams(previousQuery.queryKey[2]).get("displayLanguage") === locale.language ? previous : undefined,
+			new URLSearchParams(previousQuery.queryKey[2]).get("displayLanguage") ===
+				locale.language
+				? previous
+				: undefined,
 		// Guests wait until their progress is read, so the first request already carries it. A search waits for its list.
 		enabled: guest !== undefined && ranked !== null,
 	})

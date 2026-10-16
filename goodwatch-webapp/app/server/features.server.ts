@@ -48,3 +48,8 @@ export function getFeatureMode(feature: Feature): FeatureMode {
 export function isEnabled(feature: Feature): boolean {
 	return getFeatureMode(feature) === "on"
 }
+
+// Side names on Discover wait on the words gate (#656): "Side N" until DISCOVER_SIDE_NAMES=on.
+export function discoverSideNames() {
+	return process.env.DISCOVER_SIDE_NAMES === "on"
+}

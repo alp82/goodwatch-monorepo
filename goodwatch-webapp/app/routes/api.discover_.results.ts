@@ -29,7 +29,9 @@ import type { TitleKey } from "~/utils/title-key"
 // Parameters are the filter bar's URL state (services, unseen, type, moods, genres, score, match, released, similar,
 // people, sort, foryou, and the legacy Discover filters). In search mode, `ranked` carries the search's ranked list in its plain
 // order (title keys, comma-separated, at most SEARCH_RESULTS; empty when the search found nothing), and the results are
-// that list filtered in memory, with Relevance as the default sort.
+// that list filtered in memory, with Relevance as the default sort. Sides of you, for a member under Best match:
+// `sides=rows` asks for a row per side on the first page, `side=<id>` narrows the list to one side (see
+// discover-sides.server.ts).
 
 export type DiscoverResultsResponse = DiscoverResults
 
@@ -78,6 +80,10 @@ async function respond(request: Request, guest?: GuestProgress) {
 			sort: sortFromParams(params, ranked !== undefined),
 			ranked,
 			forYou: forYouFromParams(params, ctx),
+			sides: {
+				rows: params.get("sides") === "rows",
+				side: params.get("side"),
+			},
 			page: Math.min(
 				DISCOVER_MAX_PAGE,
 				Math.max(1, Number.parseInt(params.get("page") ?? "1", 10) || 1),
@@ -133,7 +139,10 @@ export function useDiscoverResults({
 	params.set("page", String(page))
 	if (forYou !== undefined) params.set("foryou", forYou ? "1" : "0")
 	const { locale } = useLocale()
-	const url = mediaLanguageUrl(`/api/discover/results?${params}`, locale.language)
+	const url = mediaLanguageUrl(
+		`/api/discover/results?${params}`,
+		locale.language,
+	)
 	return useQuery<DiscoverResultsResponse>({
 		queryKey: ["discover-results", url, guest ? "guest" : "member"],
 		queryFn: async () => {
@@ -153,7 +162,12 @@ export function useDiscoverResults({
 		},
 		placeholderData: (previous, previousQuery) =>
 			typeof previousQuery?.queryKey[1] === "string" &&
-			new URL(previousQuery.queryKey[1], "https://goodwatch.invalid").searchParams.get("displayLanguage") === locale.language ? previous : undefined,
+			new URL(
+				previousQuery.queryKey[1],
+				"https://goodwatch.invalid",
+			).searchParams.get("displayLanguage") === locale.language
+				? previous
+				: undefined,
 		enabled,
 	})
 }

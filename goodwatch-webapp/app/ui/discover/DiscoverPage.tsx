@@ -10,6 +10,9 @@
 // Best match (the sort by taste match) and the Taste match filter need taste; the bar hears from the results whether
 // the viewer has it. Under Best match For you shows on and flipping it leads to another sort (see the filter bar's
 // useForYouUnderBestMatch).
+//
+// Sides of you: under Best match, a member with sides sees a row per side instead of the grid (SideRows). A row's "See
+// all" narrows the grid to that side (`side` in the URL) until "All sides" or another sort.
 import { ArrowPathIcon } from "@heroicons/react/20/solid"
 import { useLocation, useNavigation, useSearchParams } from "@remix-run/react"
 import { MotionConfig } from "framer-motion"
@@ -44,6 +47,7 @@ import { DiscoverGrid } from "./DiscoverGrid"
 import { DiscoverHeading } from "./DiscoverHeading"
 import { ForYouNeedsTaste, ForYouSignUp } from "./ForYouStates"
 import { HiddenTitles } from "./HiddenTitles"
+import { SideBanner, SideRows, sideRowsOf } from "./SideRows"
 import { TasteExplanation } from "./TasteExplanation"
 import {
 	type InitialBrowse,
@@ -51,6 +55,7 @@ import {
 	useDiscoverBrowse,
 	useForYou,
 	useGuestBody,
+	withSides,
 	writeForYou,
 } from "./useDiscoverBrowse"
 import { useDiscoverSearch } from "./useDiscoverSearch"
@@ -98,6 +103,7 @@ export function DiscoverPage({
 	const q = searchText(params.get("q"))
 	const searching = q !== null
 	const allTitles = params.get("allTitles") === "1"
+	const side = params.get("side")
 
 	const guest = useGuestBody(member)
 	const guestServices = Boolean(guest?.services)
@@ -131,8 +137,9 @@ export function DiscoverPage({
 		enabled: guest !== undefined,
 	})
 
+	const browseQuery = withSides(filters.query, side)
 	const browse = useDiscoverBrowse({
-		query: filters.query,
+		query: browseQuery,
 		forYou: forYou.on,
 		member,
 		guest,
@@ -191,7 +198,7 @@ export function DiscoverPage({
 			on,
 			from: browse.key,
 			key: browseKey(
-				filters.query,
+				browseQuery,
 				on,
 				searching ? (search.current?.ranked ?? undefined) : undefined,
 			),
@@ -273,6 +280,35 @@ export function DiscoverPage({
 	const taste = tasteStateOf(first)
 	// Best match is the sort in use: For you shows on, with nothing to move.
 	const bestMatch = sortShown(filters.sort, searching, taste) === "match"
+
+	// Sides of you: the rows, or the side the grid is narrowed to. Leaving Best match leaves the side too.
+	const rows = stale ? null : sideRowsOf(first)
+	const narrowed =
+		!stale && first?.sides?.layout === "side" ? first.sides.side : null
+	const goToSide = (id: string | null) => {
+		setParams(
+			(previous) => {
+				const out = new URLSearchParams(previous)
+				if (id) out.set("side", id)
+				else out.delete("side")
+				out.delete("page")
+				return out
+			},
+			{ preventScrollReset: true },
+		)
+		window.scrollTo({ top: 0 })
+	}
+	useEffect(() => {
+		if (side === null || bestMatch || !first || stale) return
+		setParams(
+			(previous) => {
+				const out = new URLSearchParams(previous)
+				out.delete("side")
+				return out
+			},
+			{ replace: true, preventScrollReset: true },
+		)
+	}, [side, bestMatch, first, stale, setParams])
 	const applied = Boolean(first?.forYou.applied) && forYou.on
 	const movedUp = applied && !stale ? (first?.movedUp ?? 0) : 0
 	const leanings = first?.explanation?.leanings ?? []
@@ -419,32 +455,39 @@ export function DiscoverPage({
 						<div className="flex justify-center py-16">
 							<Spinner size="large" />
 						</div>
+					) : rows ? (
+						<SideRows rows={rows} onSeeAll={goToSide} />
 					) : (
-						<DiscoverGrid
-							cards={first.total === 0 && !stale ? [] : cards}
-							marks={marks}
-							flipping={Boolean(flip)}
-						>
-							{/* A partial list without a title is not a search that found nothing: the status line above says what
-							    it still waits for, and the people it names show above the grid. */}
-							{!browse.hasNextPage &&
-								!browse.isPlaceholderData &&
-								!stale &&
-								!(search.partial && first.total === 0) && (
-								<HiddenTitles
-									counts={first}
-									state={filters.state}
-									onDrop={filters.drop}
-									onClear={filters.clearSecondary}
-									canClear={
-										secondaryFilterCount(
-											stateAsApplied(filters.state, first.ladder),
-										) > 0
-									}
-									searching={searching}
-								/>
+						<>
+							{narrowed && (
+								<SideBanner side={narrowed} onAll={() => goToSide(null)} />
 							)}
-						</DiscoverGrid>
+							<DiscoverGrid
+								cards={first.total === 0 && !stale ? [] : cards}
+								marks={marks}
+								flipping={Boolean(flip)}
+							>
+								{/* A partial list without a title is not a search that found nothing: the status line above says what
+							    it still waits for, and the people it names show above the grid. */}
+								{!browse.hasNextPage &&
+									!browse.isPlaceholderData &&
+									!stale &&
+									!(search.partial && first.total === 0) && (
+										<HiddenTitles
+											counts={first}
+											state={filters.state}
+											onDrop={filters.drop}
+											onClear={filters.clearSecondary}
+											canClear={
+												secondaryFilterCount(
+													stateAsApplied(filters.state, first.ladder),
+												) > 0
+											}
+											searching={searching}
+										/>
+									)}
+							</DiscoverGrid>
+						</>
 					)}
 					<div ref={moreRef} className="flex h-24 items-center justify-center">
 						{browse.isFetchingNextPage && <Spinner size="large" />}
