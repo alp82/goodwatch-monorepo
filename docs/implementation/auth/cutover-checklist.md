@@ -18,7 +18,7 @@ Only unfinished gates are listed here. Each production action still needs the ow
 - [ ] **Owner + Agent — Storage/grants (1.4).** Create the 15 approved auth tables including `doc.auth_capacity`, settings and table-scoped grants/DENYs, plus `user_mcp_action`. The prepared `goodwatch_auth` identity exists with zero grants; reuse its existing protected secret.
 - [ ] **Owner — Secrets and recovery (1.5).** Put the permanent root, versioned key ring, Better Auth/Google/SMTP secrets and runtime configuration on both destinations through Coolify's UI. Back them up in the password manager before import (Q31); the importer uses the same root/key ring.
 - [ ] **Owner — External setup and real acceptance (1.6, 2.7, 3.3).** Add Google's production callback, verify Purelymail, supply approved test accounts, and complete real password/Google/mail/member-data and MCP-client acceptance. #551's data rehearsal passed; real password/Google redirect sign-ins remain unproven.
-- [ ] **Owner decides; Agent validates — Freeze, retention and rollback (2.2, 2.6).** Approve the recommendations below; rehearse the exact database fence and reversal on an isolated source copy and verify the hosted project's permissions before scheduling cut-over. A signup toggle or a stable user count alone is insufficient.
+- [ ] **Owner — Freeze and retention (2.2, 2.6).** Decided (Q47, Q48): no database trigger. The freeze is the `AUTH_MAINTENANCE` notice plus turning off "Allow new users to sign up" in the Supabase dashboard. Before the window, check that the notice is on the main branch and that the owner knows where to set it (Coolify, webapp environment).
 - [ ] **Owner + Agent — Maintenance observability.** Use the in-process worker; no additional cron is recommended. At launch initialize auth on every serving process and verify successful passes/alerts. See the maintenance recommendation below; there is no missing repository scheduler.
 - [ ] **Owner — Cut-over go, backups, deployment and follow-up.** Choose the window; take final backups/frozen export; run the guarded import/audit; paste proxy files; set the privacy date and flags; complete smoke/rollback gates; create the dated 30-day shutdown follow-up. Agent performs the reviewed CLI/checks only with that go.
 
@@ -89,10 +89,10 @@ Needs the owner's go. Write down the start time and the operator. All steps are 
   - Roll back: not applicable. These are the rollback material.
 
 - [ ] **2.2 Freeze Supabase writes.**
-  - Ticket: [#551](https://github.com/alp82/goodwatch-monorepo/issues/551).
-  - Do: Owner approves the database-fence recommendation below; Agent executes only in the chosen window. Announce a short auth-maintenance interval, disable signups/manual linking and Google entry, stop auth/member writers, install the rehearsed write fence, then take the final repeatable-read, read-only export. Keep the fence through 2.6. Anonymous browsing can continue; do not promise that existing sessions or refresh/sign-in will continue.
-  - Verify: rejected direct Auth API signup, password/email update and Google link/callback attempts from approved test accounts; all managed auth-table DML/TRUNCATE probes reject, SELECT works. Compare privately keyed full-row digests plus users/identities counts before/after the final export. A stable count does not detect changed hashes, verification or identities.
-  - Roll back: remove only the named cut-over fence triggers/function and restore the saved provider/signup settings, using the rehearsed reversal; verify writes with a test account before returning to Supabase.
+  - Ticket: [#551](https://github.com/alp82/goodwatch-monorepo/issues/551), [#552](https://github.com/alp82/goodwatch-monorepo/issues/552) (owner decision Q47). Notice shipped with `AUTH_MAINTENANCE` (see `docs/implementation/auth-pages/README.md`).
+  - Do: Owner only, in this order. (1) In Coolify, open the webapp application, **Environment Variables**, set `AUTH_MAINTENANCE=on` for both page hosts, save and redeploy. (2) When both hosts are healthy, open `/sign-in` and confirm the notice "We're moving sign-in to a new home" shows. (3) In the Supabase dashboard, open the **Authentication** settings for sign-in providers and turn off **Allow new users to sign up**. (4) Note the user count in **Authentication**, **Users**. Then take the final export. No database trigger (Q47). The webapp is the only Supabase Auth client, and the import reads only users and identities, which session refreshes don't touch. Members who are signed in keep browsing; session refresh and sign-out keep working.
+  - Verify: `/sign-in`, `/sign-up`, `/forgot-password`, `/reset-password`, `/verify-email` and **Settings**, **Account and sign-in** show the notice and no form. `curl -s https://goodwatch.app/api/auth-maintenance` prints `{"maintenance":true}`. After a few minutes the Supabase user count is stable, and the count still matches after the export.
+  - Roll back: turn **Allow new users to sign up** back on, set `AUTH_MAINTENANCE` to `off` (or remove it) in Coolify and redeploy. Nothing else was changed.
 
 - [ ] **2.3 Run the real import.**
   - Ticket: [#551](https://github.com/alp82/goodwatch-monorepo/issues/551).
@@ -108,15 +108,15 @@ Needs the owner's go. Write down the start time and the operator. All steps are 
 
 - [ ] **2.5 Set the privacy date and turn the flags on.**
   - Ticket: [#552 comment](https://github.com/alp82/goodwatch-monorepo/issues/552#issuecomment-6183777144).
-  - Do: set "Last updated" in `goodwatch-webapp/app/routes/privacy.tsx` to today and deploy. Set `BETTER_AUTH_ENABLED=true` with all the 1.5 secrets present, and `REC_CONNECTOR=on`. Flags are read at start, so restart or redeploy. Leave the `REC_MCP_*` flags unset (unset means on for everyone). The "please sign in again" banner shows for browsers that still hold the old cookie; the account-pages drive script checks this with a fake `sb-` cookie.
-  - Verify: `/api/auth/*` answers. A browser with an old `sb-` cookie sees the banner once. `/privacy` shows the new date and sections. `/connect` answers 200.
-  - Roll back: set `BETTER_AUTH_ENABLED=false` and redeploy. See "Rollback after members have signed in" below.
+  - Do: set "Last updated" in `goodwatch-webapp/app/routes/privacy.tsx` to today and deploy. Set `BETTER_AUTH_ENABLED=true` with all the 1.5 secrets present, and `REC_CONNECTOR=on`. In the same Coolify save, turn the maintenance notice off: set `AUTH_MAINTENANCE=off` (or remove it). Flags are read at start, so restart or redeploy. Leave the `REC_MCP_*` flags unset (unset means on for everyone). The "please sign in again" banner shows for browsers that still hold the old cookie; the account-pages drive script checks this with a fake `sb-` cookie.
+  - Verify: `/api/auth/*` answers. `curl -s https://goodwatch.app/api/auth-maintenance` prints `{"maintenance":false}`, and `/sign-in` shows its form. A browser with an old `sb-` cookie sees the banner once. `/privacy` shows the new date and sections. `/connect` answers 200.
+  - Roll back: set `BETTER_AUTH_ENABLED=false` and redeploy. The notice can come back with `AUTH_MAINTENANCE=on`, which also guards the first minutes after a flag flip. See "Rollback after members have signed in" below.
 
-- [ ] **2.6 Make Supabase read-only.**
-  - Ticket: [#552](https://github.com/alp82/goodwatch-monorepo/issues/552), [#536](https://github.com/alp82/goodwatch-monorepo/issues/536).
-  - Do: retain the approved/rehearsed database write fence on all existing managed Auth tables for 30 days, keep legacy entry points disabled and allow only the protected read/export path. See the recommendation below, including managed-schema limitations and the Free-plan inactivity caveat. Create the dated follow-up in 4.2 now.
-  - Verify: Auth writes, including existing-token password/email changes and refresh/session mutations, are refused; protected SQL reads/export work. Monitor daily fence inventory and rollback-data digest; never log those digests or member rows publicly.
-  - Roll back: remove only the reviewed named fence and restore saved Auth settings before switching the flag off. First accept the post-cut-over divergence described below; never merge users by email.
+- [ ] **2.6 Keep Supabase sign-ups off.**
+  - Ticket: [#552](https://github.com/alp82/goodwatch-monorepo/issues/552), [#536](https://github.com/alp82/goodwatch-monorepo/issues/536) (owner decision Q48).
+  - Do: leave **Allow new users to sign up** off in the Supabase dashboard for 30 days. No trigger and no fence (Q48). After the cut-over nothing calls Supabase Auth, so nothing writes to it. Keep legacy entry points disabled. Create the dated follow-up in 4.2 now.
+  - Verify: the webapp makes no request to Supabase Auth with `BETTER_AUTH_ENABLED=true` (the Supabase code path stays behind the flag and is not loaded). The Supabase user count stays at the exported number.
+  - Roll back: set `BETTER_AUTH_ENABLED=false` and redeploy, then turn **Allow new users to sign up** back on if members should create accounts there again. First accept the post-cut-over divergence described below; never merge users by email.
 
 - [ ] **2.7 Smoke test as real members.**
   - Ticket: [#552](https://github.com/alp82/goodwatch-monorepo/issues/552).
@@ -184,81 +184,23 @@ This is a proposal. #552 asks for "a written rollback path", and no source spell
 - The `gw.session_token` cookie outlives the flag. `app/utils/auth-cookie.ts` treats that cookie as a signed-in member whether or not Better Auth is on. With the flag back off, every request that still carries it skips the shared page cache, gets `no-store` and asks Supabase for a session, until the cookie expires (sessions last 90 days) or is removed. As part of the rollback, expire `gw.session_token` and `__Secure-gw.session_token` (a `Set-Cookie` with `Max-Age=0`), or accept that uncached load.
 - A CrateDB-level rollback is a snapshot restore (1.2, 2.1). It needs a new concrete owner decision and loses writes after the snapshot. (runbook "Rollback and abort")
 
-## Owner recommendations researched on 2026-10-16
+## Freeze and retention: owner decisions
 
-These are recommendations awaiting the owner's decision, **not executed changes**.
-The issue/repository evidence does not expose the current Supabase billing tier;
-no billing access was used and no paid entitlement is assumed. The proposal uses
-ordinary PostgreSQL triggers and standard Auth settings, not Team/Enterprise
-hooks. Confirm the hosted project's actual SQL privileges before scheduling it.
-Supabase documents Before User Created/Custom Access Token hooks for Free/Pro,
-but Password Verification Attempt for Team/Enterprise; none is a universal
-password-change/identity/session write barrier. [Supabase Auth Hooks](https://supabase.com/docs/guides/auth/auth-hooks).
+The owner decided on 2026-10-16 (Q47, Q48 in [#552](https://github.com/alp82/goodwatch-monorepo/issues/552)). These replace the database-trigger recommendation that an earlier version of this file made. Nothing here is executed until the owner's go.
 
-### 2.2 — Short database-enforced freeze, with anonymous browsing available
+### 2.2 (Q47): a maintenance notice and no new sign-ups
 
-**Recommendation:** choose a short auth-maintenance window and fence writes at
-Postgres, with signup/manual-linking/provider toggles as additional protection.
-Use a uniquely named, reversible statement trigger that raises a constant error
-on INSERT/UPDATE/DELETE/TRUNCATE on **every existing base/partitioned table in
-`auth`**, installed atomically with a bounded lock timeout after taking the
-rollback inventory. A statement trigger also refuses zero-row probes. This
-covers `auth.users`, `auth.identities`, sessions, refresh tokens and in-flight
-Google callbacks; simply hiding buttons does not. Do not log SQL rows or errors
-containing member information. Avoid changing Supabase-owned grants/roles.
+- Our site stops creating accounts and changing passwords. `AUTH_MAINTENANCE=on` shows the notice on `/sign-in`, `/sign-up`, `/forgot-password`, `/reset-password`, `/verify-email` and the password change in Settings. The password actions and `/api/auth/*` refuse with a 503, and the browser's sign-in client refuses before it calls Supabase.
+- The owner turns off **Allow new users to sign up** in the Supabase dashboard. That setting still lets existing users sign in, which is why the notice is also needed.
+- No database trigger. The webapp is the only Supabase Auth client, and the import reads only users and identities. Session refreshes and sign-outs write only to sessions and refresh tokens, so signed-in members keep browsing during the window.
+- Check the stable user count after the dashboard change, and again after the export. A stable count doesn't prove that no password or verification changed; the notice is what stops those.
 
-This is our engineering recommendation, not a documented Supabase "read-only"
-feature. Supabase documents triggers on `auth.users` and warns that a failing
-trigger blocks signup and managed schema objects can change. Rehearse the exact
-inventory, fence and DROP reversal with an isolated source copy before owner
-approval, then confirm the hosted SQL role can create those triggers. If a
-managed table denies that operation, **stop and obtain a Supabase-supported
-freeze**, rather than silently using a partial fence. An approved production
-window must include this validation, not discover it after export.
-[User management and trigger guidance](https://supabase.com/docs/guides/auth/managing-user-data),
-[Supabase troubleshooting: user writes and triggers](https://supabase.com/docs/guides/troubleshooting/dashboard-errors-when-managing-users-N1ls4A).
+### 2.6 (Q48): read-only for 30 days
 
-Once the DDL transaction commits, take the consistent read-only export, restore
-it locally and mark that copy with its actual freeze time. Leave the fence up
-until cut-over succeeds or rollback restores Supabase. Existing sessions may
-need a refresh that writes; new sign-ins update Auth storage. Therefore allow
-anonymous browsing but show a clear maintenance response for auth/member writes
-and budget a short sign-in interruption. This avoids a complex selective-field
-freeze that could miss verification, account-linking or password updates. The
-6m43.1s database rehearsal is a lower bound, not the maintenance-window promise.
+- Leave sign-ups off. After the cut-over nothing calls Supabase Auth. No trigger, no fence.
+- Keep Supabase available for the 30 days. If the project is on the Free plan, Supabase may pause it after a low-activity week, so the owner watches availability and decides whether paid continuity is needed. No plan change is made here. [Supabase project pausing](https://supabase.com/docs/guides/platform/free-project-pausing).
+- Set the dated shutdown follow-up at cut-over plus 30 days. A final encrypted export precedes shutdown. Returning to Supabase first turns sign-ups back on and explicitly accepts that post-import account and password changes are absent there. Do not run a reverse email-based merge.
 
-Why the alternatives are insufficient: Supabase's signup toggle explicitly
-allows existing users to sign in, and manual linking is a separate setting.
-Network restrictions affect Postgres/pooler, **not Auth's HTTPS API**. Do not
-substitute either for the write barrier.
-[Auth general configuration](https://supabase.com/docs/guides/auth/general-configuration),
-[Network restrictions, limitations](https://supabase.com/docs/guides/platform/network-restrictions#limitations).
-
-### 2.6 — Keep the same write fence for the 30-day rollback window
-
-**Recommendation:** retain the rehearsed fence, disable legacy providers/signup/
-manual-linking, and keep Supabase available only to protected SQL reads/exports
-for 30 days. Do not call this continuing Supabase sign-in service: refreshing
-sessions and authentication writes will fail. Keep the exact pre-freeze settings,
-trigger inventory and reversal commands with the encrypted backup. Check daily
-that no Auth table was added without the fence, no trigger was removed, and the
-rollback data stayed unchanged. A Supabase schema upgrade may conflict with the
-fence; coordinate with Supabase rather than dropping it unnoticed. This is a
-reversible operational guard, not a security boundary against the project owner
-or provider administrator. Ordinary table RLS cannot replace it for Auth's own
-privileged database role. [Supabase Auth architecture](https://supabase.com/docs/guides/auth/architecture),
-[Managed Auth-schema caution](https://supabase.com/docs/guides/auth/managing-user-data).
-
-Do not pause the project as a substitute: paused projects do not provide the
-required online read path. If the project is on Free, Supabase may automatically
-pause it after a low-activity week; the owner must monitor availability/activity
-and decide whether paid continuity is needed for the 30-day online requirement.
-Paid projects are not subject to inactivity pausing. No plan change is made here.
-[Supabase project pausing](https://supabase.com/docs/guides/platform/free-project-pausing).
-Set the dated shutdown follow-up at cut-over +30 days; a final encrypted export
-precedes shutdown. Returning to Supabase first removes only our named triggers
-and restores settings, then explicitly accepts post-import account/password
-changes being absent there. Do not run a reverse email-based merge.
 
 ### Maintenance jobs — No separate recurring run-once schedule at launch
 
