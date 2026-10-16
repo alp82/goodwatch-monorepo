@@ -200,6 +200,43 @@ describe("home's sides", () => {
 		assert.equal(y?.fewOnServices, true)
 	})
 
+	it("are listed by their best pick, not their first, without personal order", () => {
+		// The engine's order inside a side is not by match: x's best pick (95) stands second.
+		const v = view([side("y", [3], [13]), side("x", [1], [11, 21])], {
+			titles: Object.fromEntries(
+				titles.map((t) => [
+					t.key,
+					{ ...t, match: t.key === key(21) ? 95 : t.key === key(13) ? 80 : 70 },
+				]),
+			),
+		})
+		assert.deepEqual(
+			homeSides(v).map((s) => s.id),
+			["x", "y"],
+		)
+	})
+
+	it("decide on services after the titles another side keeps are gone, so no side is emptied", () => {
+		const on = new Set([11, 12, 13, 21].map(key))
+		const streaming = titles.map((t) => ({ ...t, onMyServices: on.has(t.key) }))
+		const v = view(
+			[
+				side("x", [1], [11, 12, 13, 21]),
+				side("y", [3], [11, 12, 13, 21, 22, 23]),
+			],
+			{
+				hasServices: true,
+				titles: Object.fromEntries(streaming.map((t) => [t.key, t])),
+			},
+		)
+		const y = homeSides(v).find((s) => s.id === "y")
+		assert.deepEqual(
+			y?.picks.map((t) => t.key),
+			["movie-22"],
+		)
+		assert.equal(y?.fewOnServices, true)
+	})
+
 	it("list a side without picks last", () => {
 		const empty = side("empty", [3], [])
 		assert.deepEqual(

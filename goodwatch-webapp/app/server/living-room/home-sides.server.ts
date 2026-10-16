@@ -4,7 +4,7 @@
 //
 // - Order: sides group, personal order ranks. Inside a side the picks keep the engine's order, which is the
 //   member's personal order when it is on for them. The sides are listed by where each side's best pick stands in
-//   personal order, so the first is tonight's side; without personal order, by that pick's match.
+//   personal order, so the first is tonight's side; without personal order, by its pick of the highest match.
 // - Picks: a side's More of this, the ones on the member's services when enough stream there, one per franchise,
 //   and a title on several sides only on the side where it stands first.
 // - Words: a side is shown by its loved posters. Its name and its moods' names are descriptive words and wait for
@@ -48,26 +48,17 @@ export function homeSides(
 	)
 		return []
 	const known = (key: TitleKey) => view.titles[key] != null
-	const lists = view.sides.map((side) => {
-		const all = side.moreOfThis.filter(known)
-		const there = all.filter((key) => view.titles[key].onMyServices === true)
-		const onServices = view.hasServices && there.length >= MIN_ON_SERVICES
-		return {
-			keys: onServices ? there : all,
-			fewOnServices: view.hasServices && !onServices,
-		}
-	})
 	// A title on several sides stays where it stands first; on a tie, on the engine's earlier side.
 	const home = new Map<TitleKey, { side: number; at: number }>()
-	lists.forEach(({ keys }, side) => {
-		keys.forEach((key, at) => {
+	view.sides.forEach((side, index) => {
+		side.moreOfThis.filter(known).forEach((key, at) => {
 			const best = home.get(key)
-			if (!best || at < best.at) home.set(key, { side, at })
+			if (!best || at < best.at) home.set(key, { side: index, at })
 		})
 	})
 	const sides = view.sides.map((side, index) => {
 		const franchises = new Set<string>()
-		const picks = lists[index].keys
+		const all = side.moreOfThis
 			.filter((key) => home.get(key)?.side === index)
 			.filter((key) => {
 				const franchise = franchiseOf(view.titles[key].title)
@@ -75,7 +66,10 @@ export function homeSides(
 				franchises.add(franchise)
 				return true
 			})
-			.slice(0, HOME_SIDE_PICKS)
+		// Decided on what is left of the side, so a title another side keeps never empties this one.
+		const there = all.filter((key) => view.titles[key].onMyServices === true)
+		const onServices = view.hasServices && there.length >= MIN_ON_SERVICES
+		const picks = (onServices ? there : all).slice(0, HOME_SIDE_PICKS)
 		const shaped: TvHomeSide = {
 			id: side.id,
 			loved: side.here
@@ -87,7 +81,7 @@ export function homeSides(
 					poster: title.poster,
 				})),
 			picks: picks.map((key) => portraitListTitle(view.titles[key])),
-			fewOnServices: lists[index].fewOnServices,
+			fewOnServices: view.hasServices && !onServices,
 			watchNext: side.moods.length
 				? `/watch-next?moods=${side.moods.join(",")}`
 				: "/watch-next",
@@ -98,32 +92,32 @@ export function homeSides(
 					}
 				: null,
 		}
-		return { shaped, first: picks[0] ?? null, index }
+		return { shaped, picks, index }
 	})
 	return listOrder(sides, view, order).map(({ shaped }) => shaped)
 }
 
 /**
- * The sides by where each one's best pick stands in personal order (without it, by that pick's match, then the
- * engine's order). Sides without picks come last.
+ * The sides by where each one's best pick stands in personal order: the earliest of its picks when all the sides'
+ * picks are ordered together. Without personal order, by its pick of the highest match, then the engine's order.
+ * Sides without picks come last.
  */
-function listOrder<T extends { first: TitleKey | null; index: number }>(
+function listOrder<T extends { picks: TitleKey[]; index: number }>(
 	sides: T[],
 	view: View,
 	order?: OrderTitles,
 ): T[] {
-	const firsts = sides.flatMap((side) =>
-		side.first == null ? [] : [side.first],
-	)
+	const all = sides.flatMap((side) => side.picks)
 	const ranked = order
-		? order(firsts)
-		: [...firsts].sort(
+		? order(all)
+		: [...all].sort(
 				(a, b) => (view.titles[b].match ?? 0) - (view.titles[a].match ?? 0),
 			)
 	const rank = new Map(ranked.map((key, at) => [key, at]))
-	const at = (side: T) =>
-		side.first == null
-			? Number.POSITIVE_INFINITY
-			: (rank.get(side.first) ?? firsts.length)
-	return [...sides].sort((a, b) => at(a) - at(b) || a.index - b.index)
+	const best = (side: T) =>
+		Math.min(
+			Number.POSITIVE_INFINITY,
+			...side.picks.map((key) => rank.get(key) ?? all.length),
+		)
+	return [...sides].sort((a, b) => best(a) - best(b) || a.index - b.index)
 }
