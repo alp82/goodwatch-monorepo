@@ -24,7 +24,9 @@ from f.sync.models.crate_models import (
     StreamingEvidence,
 )
 from f.sync.models.crate_schemas import SCHEMAS
-from f.sync.availability_history import acknowledge_history, publish_history
+from f.sync.availability_history import (
+    HistoryTitle, HistoryPublication, OfferKey, acknowledge_history, availability_key, publish_history,
+)
 from f.sync.availability_evidence import build_evidence, quarantine_evidence
 from f.tmdb_api.provider_evidence import snapshot_id, utc_ms, validated_results
 from f.tmdb_web.provider_identity import provider_name_from_url
@@ -163,12 +165,6 @@ def publication_lease(db: Any, media_type: str, tmdb_id: int, wait_seconds: floa
         collection.delete_one({"_id": identity, "token": token})
 
 
-def availability_key(row: dict) -> tuple:
-    return tuple(row[field] for field in (
-        "media_tmdb_id", "media_type", "country_code", "streaming_service_id", "streaming_type"
-    ))
-
-
 def scoped_provider_id(
     name: str, country: str, stream_type: str, catalog: dict[str, list[dict]],
     api_results: dict,
@@ -243,7 +239,7 @@ def reconcile_availability(
             rows[availability_key(row)] = row
 
     def entry(country: str, stream_type: str, service_id: int) -> dict:
-        key = (tmdb_id, media_type, country, service_id, stream_type)
+        key = OfferKey(tmdb_id, media_type, country, service_id, stream_type)
         if key not in rows:
             rows[key] = StreamingAvailability(
                 media_tmdb_id=tmdb_id, media_type="movie" if media_type == "movie" else "show", country_code=country,
@@ -388,7 +384,7 @@ def publication_snapshot(
 
 def scheduled_candidates(
     mongo_db: Any, mongo_details: Any, mongo_providers: Any,
-    query_selector: dict, cutoff: Optional[datetime], is_movie: bool,
+    query_selector: dict, cutoff: Optional[datetime], is_movie: bool, pending_ids: set | None = None,
 ) -> list[int]:
     """All tmdb_ids a scheduled run publishes, sorted, each source read once.
 
@@ -411,8 +407,7 @@ def scheduled_candidates(
         # Interrupted targeted publishes may be older than the normal watermark.
         # Anchored _id prefixes use Mongo's built-in index; successful titles
         # leave no marker behind.
-        candidates.update(int(row['_id'].split(':', 1)[1]) for row in
-                          mongo_db.streaming_history_pending.find({'_id': {'$regex': f'^{"movie" if is_movie else "show"}:'}}))
+        candidates.update(int(identity.split(':', 1)[1]) for identity in pending_ids or ())
         quarantine_query = {"media": "movie" if is_movie else "tv", "status": {"$in": ["unresolved", "resolved_alias"]}}
         candidates.update(row.get("tmdb_id") for row in mongo_db.provider_identity_unresolved.find(quarantine_query, only_ids))
     # ObjectId selectors refer to provider documents in this entrypoint.
@@ -578,11 +573,16 @@ def publish_title(
         evidence, changed, removed, media = publication_writes(
             tmdb_id, media_type, MediaClass, existing, details, providers, rows, verified, api_results,
             service_ids, [record["country_code"] for record in prior_evidence])
-        history_pending = []
+        history_result = HistoryPublication()
         if media is not None:
-            history_pending = publish_history(connector, media_type,
-                [(tmdb_id, details, rows, verified, existing, removed)], check_owned,
+            history_result = publish_history(connector, media_type,
+                [HistoryTitle(tmdb_id=tmdb_id, details=details, rows=rows, verified=verified,
+                              existing=existing, removed=removed)], check_owned,
                 mongo_db.streaming_history_pending)
+        if history_result.errors:
+            publication["status"] = "partial_success"
+            publication.setdefault("history_errors", {}).update(history_result.errors)
+            return
         if evidence:
             check_owned()
             connector.upsert_many(table="streaming_evidence", records=evidence,
@@ -604,18 +604,18 @@ def publish_title(
             check_owned()
             connector.run(
                 "DELETE FROM streaming_availability WHERE media_tmdb_id = ? AND media_type = ? "
-                "AND country_code = ? AND streaming_service_id = ? AND streaming_type = ?", key)
+                "AND country_code = ? AND streaming_service_id = ? AND streaming_type = ?", list(key))
         check_owned()
         result = upsert_in_batches(connector, "movie" if media_type == "movie" else "show", [media])
         check_owned()
         add_counts(entity_counts, "movies" if media_type == "movie" else "shows", result)
-        acknowledge_history(mongo_db.streaming_history_pending, history_pending, check_owned)
+        acknowledge_history(mongo_db.streaming_history_pending, history_result.pending, check_owned)
 
 
 def publish_batch(
     mongo_db: Any, connector: CrateConnector, tmdb_ids: list[int], media_type: str, MediaClass: Any,
     mongo_details: Any, mongo_providers: Any, service_ids: dict,
-    refresh_budget: RefreshBudget, entity_counts: dict, publication: dict,
+    refresh_budget: RefreshBudget, entity_counts: dict, publication: dict, pending_ids: set | None = None,
 ) -> list[int]:
     """Publish many titles with one read per source and one bulk write per table.
 
@@ -671,9 +671,18 @@ def publish_batch(
             removed += title_removed
             if title_media is not None:
                 media.append(title_media)
-                history_titles.append((tmdb_id, details, rows, verified, existing, title_removed))
-        history_pending = publish_history(connector, media_type, history_titles, check_owned,
-                                          mongo_db.streaming_history_pending)
+                history_titles.append(HistoryTitle(tmdb_id=tmdb_id, details=details, rows=rows, verified=verified,
+                                                  existing=existing, removed=title_removed))
+        history_result = publish_history(connector, media_type, history_titles, check_owned,
+                                         mongo_db.streaming_history_pending, known_pending=pending_ids)
+        if history_result.errors:
+            publication["status"] = "partial_success"
+            publication.setdefault("history_errors", {}).update(history_result.errors)
+            failed = history_result.errors
+            evidence = [row for row in evidence if row.media_tmdb_id not in failed]
+            changed = [row for row in changed if row.media_tmdb_id not in failed]
+            removed = [key for key in removed if key.media_tmdb_id not in failed]
+            media = [row for row in media if row.tmdb_id not in failed]
         if evidence:
             check_owned()
             connector.upsert_many(table="streaming_evidence", records=evidence,
@@ -695,7 +704,7 @@ def publish_batch(
             check_owned()
             result = upsert_in_batches(connector, "movie" if media_type == "movie" else "show", media)
             add_counts(entity_counts, "movies" if media_type == "movie" else "shows", result)
-        acknowledge_history(mongo_db.streaming_history_pending, history_pending, check_owned)
+        acknowledge_history(mongo_db.streaming_history_pending, history_result.pending, check_owned)
     return left
 
 
@@ -747,8 +756,10 @@ def copy_media(
     refresh_budget = RefreshBudget(None if targeted else SCHEDULED_MAPPING_REFRESHES)
     # Either source can change independently. Merge them so API-only updates
     # reach the same reconciler without a second writer.
+    pending_ids = None if query_selector else {row['_id'] for row in
+        mongo_db.streaming_history_pending.find({'_id': {'$regex': f'^{media_type}:'}})}
     candidate_ids = targeted_ids if targeted else scheduled_candidates(
-        mongo_db, mongo_details, mongo_providers, query_selector, cutoff, is_movie)
+        mongo_db, mongo_details, mongo_providers, query_selector, cutoff, is_movie, pending_ids)
     print(f"Publishing {len(candidate_ids)} {media_type} titles changed since {cutoff}", flush=True)
     for start in range(0, len(candidate_ids), BATCH_SIZE):
         tmdb_ids = candidate_ids[start:start + BATCH_SIZE]
@@ -773,7 +784,7 @@ def copy_media(
         for batch in batches:
             one_by_one = batch if targeted else publish_batch(
                 mongo_db, connector, batch, media_type, MediaClass, mongo_details, mongo_providers,
-                service_ids, refresh_budget, entity_counts, publication)
+                service_ids, refresh_budget, entity_counts, publication, pending_ids)
             # Spend the refreshes before the next batch decides which titles to leave.
             for tmdb_id in one_by_one:
                 publish_title(mongo_db, connector, tmdb_id, media_type, MediaClass, mongo_details, mongo_providers,

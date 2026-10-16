@@ -51,6 +51,20 @@ class TmdbFetchFailureTests(unittest.TestCase):
         logs = " ".join(str(call) for call in printed.call_args_list)
         return result, update, save, propagate, logs
 
+    def test_awaited_bypass_reaches_request_and_saved_proof_only_for_reserved_entries(self):
+        from bson import ObjectId
+        entries = [TmdbMovieDetails(id=ObjectId(), tmdb_id=i) for i in (1, 2)]
+        def fetch_data(entry, bypass_cache=False):
+            return {"id": entry.tmdb_id, "title": "T", "watch/providers": {"results": {}}}, entry
+        with patch.object(fetch, "fetch_movie_data", side_effect=fetch_data) as request, \
+             patch.object(TmdbMovieDetails, "update"), patch.object(TmdbMovieDetails, "save"), \
+             patch.object(fetch, "propagate_tmdb_deleted"), patch("builtins.print"):
+            asyncio.run(fetch.tmdb_fetch_details_from_api(entries, bypass_cache_ids=[str(entries[0].id)]))
+        self.assertEqual(request.call_args_list[0].kwargs, {"bypass_cache": True})
+        self.assertEqual(request.call_args_list[1].kwargs, {})
+        self.assertTrue(entries[0].watch_providers_check["cache_bypassed"])
+        self.assertFalse(entries[1].watch_providers_check["cache_bypassed"])
+
     def test_one_failing_title_keeps_the_others(self):
         entries = [TmdbMovieDetails(tmdb_id=i) for i in (1, 2, 3)]
         result, update, save, _, logs = self.run_batch(

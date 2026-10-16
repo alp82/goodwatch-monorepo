@@ -57,6 +57,7 @@ def next_ids(db, now: datetime) -> dict:
     return {
         "movie_ids": awaited.movie_ids + ids.movie_ids,
         "tv_ids": awaited.tv_ids + ids.tv_ids,
+        "bypass_cache_ids": awaited.movie_ids + awaited.tv_ids,
     }
 
 

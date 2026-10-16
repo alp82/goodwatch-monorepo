@@ -3,6 +3,9 @@ import hashlib
 import json
 from datetime import datetime, timezone
 
+DAY = 86_400_000
+HISTORY_OFFER_TYPES = ("flatrate", "free", "ads")
+
 OFFER_TYPES = ("flatrate", "free", "ads", "rent", "buy")
 
 
@@ -10,6 +13,22 @@ def utc_ms(value):
     if not isinstance(value, datetime):
         return None
     return int(value.replace(tzinfo=timezone.utc).timestamp() * 1000) if value.tzinfo is None else int(value.timestamp() * 1000)
+
+
+def utc_day(value):
+    if isinstance(value, (int, float)):
+        return int(value) // DAY * DAY
+    if isinstance(value, str):
+        try:
+            value = datetime.fromisoformat(value.replace('Z', '+00:00'))
+        except ValueError:
+            return None
+    millis = utc_ms(value)
+    return None if millis is None else millis // DAY * DAY
+
+
+def compact_proof(proof):
+    return {key: proof[key] for key in ("checked_at", "cache_bypassed", "offers")}
 
 
 def snapshot_id(value):
@@ -41,9 +60,11 @@ def capture_provider_check(details, tmdb_id, now, *, previous=None, bypass_cache
         return None
     checked_at = utc_ms(now)
     proof = {"checked_at": checked_at, "payload_hash": snapshot_id(payload), "countries": sorted(results),
-             "cache_bypassed": bypass_cache, "offers": sorted(
+             "cache_bypassed": bypass_cache}
+    if bypass_cache:
+        proof["offers"] = sorted(
                  f"{country}:{offer['provider_id']}:{kind}" for country, data in results.items()
-                 for kind in OFFER_TYPES for offer in data.get(kind, []))}
+                 for kind in HISTORY_OFFER_TYPES for offer in data.get(kind, []))
     previous = previous or {}
     # Keep uncached evidence across ordinary cached queue reads. Two bounded
     # snapshots suffice: yesterday's read and (only when current is cached) the
@@ -55,13 +76,13 @@ def capture_provider_check(details, tmdb_id, now, *, previous=None, bypass_cache
                   and isinstance(candidate.get("checked_at"), int)
                   and candidate["checked_at"] < checked_at]
     earlier_days = [candidate for candidate in candidates
-                    if candidate["checked_at"] // 86400000 < checked_at // 86400000]
+                    if utc_day(candidate["checked_at"]) < utc_day(checked_at)]
     if earlier_days:
         prior = max(earlier_days, key=lambda candidate: candidate["checked_at"])
-        proof["previous_day"] = {key: prior[key] for key in ("checked_at", "cache_bypassed", "offers")}
+        proof["previous_day"] = compact_proof(prior)
     if not bypass_cache and candidates:
         latest = max(candidates, key=lambda candidate: candidate["checked_at"])
-        proof["last_uncached"] = {key: latest[key] for key in ("checked_at", "cache_bypassed", "offers")}
+        proof["last_uncached"] = compact_proof(latest)
     return proof
 
 

@@ -22,7 +22,7 @@ class FakeCrate:
     """Crate tables as row lists; understands the scoped SELECT DISTINCT / DELETE the module issues."""
 
     def __init__(self):
-        self.tables = {table: [] for table in (*TITLE_KEYED_TABLES, "season", "movie", "show", "user_score")}
+        self.tables = {table: [] for table in (*TITLE_KEYED_TABLES, "season", "movie", "show", "user_score", "availability_history")}
         self.cur = SimpleNamespace(rowcount=0)
         self.statements = []
 
@@ -74,6 +74,14 @@ class FakeCrate:
     def run(self, sql, params=None):
         self.statements.append((sql, params))
         if sql.startswith("REFRESH"):
+            return
+        if sql.startswith("UPDATE availability_history"):
+            from f.sync.availability_history import utc_day
+            from datetime import datetime
+            for row in self.tables['availability_history']:
+                if row['media_type'] == params[0] and row['media_tmdb_id'] in params[1] and row.get('dropped_on') is None:
+                    row['dropped_on'] = max(utc_day(datetime.utcnow()), utc_day(row['observed_at']))
+                    row['dropped_precision'] = 'unknown'
             return
         _, table, where = self._parse(sql)
         doomed = self._matching(table, where, params)

@@ -29,7 +29,7 @@ for name, source in SOURCES.items():
     module = types.ModuleType(name)
     sys.modules[name] = module
     exec(compile(source, name, 'exec'), module.__dict__)
-from history_under_test import publish_history, KEY
+from history_under_test import publish_history, KEY, HistoryTitle
 from f.tmdb_api.provider_evidence import capture_provider_check
 
 def main():
@@ -45,7 +45,7 @@ def main():
     proof = capture_provider_check({'id': 42, 'watch/providers': payload},
         42, datetime(2026, 10, 15), bypass_cache=True, previous=before)
     row = dict(zip(KEY, [42, 'show', 'US', 8, 'flatrate']))
-    publish_history(db, 'show', [(42, {'watch_providers': payload, 'watch_providers_check': proof},
+    publish_history(db, 'show', [HistoryTitle(42, {'watch_providers': payload, 'watch_providers_check': proof},
         {tuple(row[k] for k in KEY): row}, {}, [], [])], lambda: None)
     assert len(db.rows) == 1 and db.rows[0]['appeared_precision'] == 'exact'
     return {'ok': True, 'production_data_writes': 0}

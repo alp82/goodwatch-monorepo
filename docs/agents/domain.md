@@ -12,3 +12,10 @@ decisions are established.
 
 Use the domain glossary's vocabulary.
 Surface conflicts with existing ADRs explicitly.
+
+## Availability glossary
+
+- **Stay**: One uninterrupted period when a title/media type is offered in a
+  country by a service under an offer type (`flatrate`, `free`, or `ads`). A return
+  starts a new stay. Appearance and drop days each have their own exact/unknown
+  precision; an open stay has no drop day or drop precision.

@@ -122,3 +122,18 @@ for local backfills, the content-quality gate, tests, deletion/opt-out handling
 and post-merge schedules. Re-screen existing rows with
 `scripts/social_quality.py` (read-only preview by default, `--apply` unpublishes
 failures). Title reads must require a current passing quality verdict.
+
+## Availability history
+
+The streaming publisher records a stay for each title/country/service offer of
+`flatrate`, `free`, or `ads`; exact days require consecutive fresh title reads or
+a matching original premiere within seven days. See the
+[rollout and test report](../docs/implementation/availability-history/README.md)
+and [owner-applied DDL](../docs/implementation/availability-history/ddl.sql).
+
+`scripts/backfill_availability_history.py` defaults to a SELECT-only count/size
+preview. `--apply` fills the baseline in six groups and verifies counts;
+`--reconcile` previews drift and `--reconcile --apply` repairs it with unknown
+precision. Pause both `f/sync/copy/tmdb_streaming` and `f/priority/crawl_all`
+and wait for active jobs before applying. Finish the baseline before pushing to
+main, because that push deploys the writer. See the report for the full sequence.

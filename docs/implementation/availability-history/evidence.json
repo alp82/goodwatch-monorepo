@@ -141,5 +141,87 @@
     "production_writes": 0,
     "rebased_onto": "cf418d9faf56c4ba2c7cf780ab33bc2bb33f6fe3",
     "includes_recent_release_fresh_and_cached_reads": true
+  },
+  "review_fixes": {
+    "reviewed_commit": "efc4d8b4bcfd4a6fb33837ac3d747439a44c12fc",
+    "tests_run": 1529,
+    "passed": 1486,
+    "skipped": 42,
+    "failures": 1,
+    "failure": "test_deleted_titles.DeleteFromCrateTests.test_user_tables_are_untouched_and_all_derived_tables_are_covered",
+    "failure_reproduced_on_origin_main": true,
+    "failure_missing_tables": [
+      "social_title_link",
+      "social_link_report",
+      "social_relevance"
+    ],
+    "production_writes": 0,
+    "windmill_jobs_submitted": 0,
+    "benchmark_real_local_crate_and_mongo": {
+      "before": {
+        "unchanged_fresh_read": {
+          "seconds": [
+            0.6580666020017816,
+            0.6827916879992699,
+            0.6274415780062554,
+            0.6552933569910238,
+            0.6810703119990649,
+            0.6391323029965861,
+            0.6597309679928003,
+            0.6752432540088193,
+            0.6231654369912576
+          ],
+          "median_seconds": 0.6580666020017816
+        },
+        "one_percent_change": {
+          "seconds": [
+            0.6442033219937002,
+            0.6710329039924545,
+            0.9026652909960831,
+            0.9585825399990426,
+            0.6764977429993451,
+            0.7593270030047279,
+            0.7829121520044282,
+            0.8121659989992622,
+            0.7046241119969636
+          ],
+          "median_seconds": 0.7593270030047279
+        }
+      },
+      "after": {
+        "unchanged_fresh_read": {
+          "seconds": [
+            0.6869809990021167,
+            0.6520215439959429,
+            0.6542492500011576,
+            0.6974427959939931,
+            0.6684084789885674,
+            0.6877555370010668,
+            0.6441564520064276,
+            0.6851820620067883,
+            0.6716110030101845
+          ],
+          "median_seconds": 0.6716110030101845
+        },
+        "one_percent_change": {
+          "seconds": [
+            0.6967757780075772,
+            0.6915913190023275,
+            0.7683565729967086,
+            1.0209388950024731,
+            1.0187302900012583,
+            1.0212419949966716,
+            1.0522010779968696,
+            0.7726983939937782,
+            0.8128543180064298
+          ],
+          "median_seconds": 0.8128543180064298
+        }
+      },
+      "paired_median_overhead_percent": {
+        "unchanged_fresh_read": 4.272536748375155,
+        "one_percent_change": 8.160848325211067
+      }
+    }
   }
 }

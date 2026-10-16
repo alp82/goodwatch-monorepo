@@ -178,7 +178,7 @@ class HistoryTests(unittest.TestCase):
         self.assertEqual(len(self.crate.history), 1)
         self.assertEqual(len(self.crate.rows), 1)
 
-    def test_history_failure_prevents_offer_change_and_watermark_advance(self):
+    def test_history_write_failure_keeps_marker_and_advances_watermark(self):
         self.observe(datetime.utcnow().strftime('%Y-%m-%dT12:00:00'))
         upsert = self.crate.upsert_many
         def fail_history(table, *args, **kwargs):
@@ -186,10 +186,11 @@ class HistoryTests(unittest.TestCase):
                 raise TimeoutError('history write failed')
             return upsert(table, *args, **kwargs)
         with patch.object(self.crate, 'upsert_many', side_effect=fail_history):
-            with self.assertRaises(TimeoutError):
-                self.publish(scheduled=True)
+            result = self.publish(scheduled=True)
         self.assertEqual(self.crate.rows, [])
-        self.assertEqual(self.db.sync_watermarks.count_documents({}), 0)
+        self.assertEqual(result['publication']['status'], 'partial_success')
+        self.assertIn('history write failed', self.db.streaming_history_pending.find_one({})['error'])
+        self.assertEqual(self.db.sync_watermarks.count_documents({}), 1)
 
     def test_paid_offers_do_not_create_history(self):
         self.observe('2026-10-15T12:00:00')
@@ -209,7 +210,7 @@ class HistoryTests(unittest.TestCase):
         self.assertEqual(len(self.crate.history), 1)
         self.assertEqual(next(iter(self.crate.history.values()))['appeared_precision'], 'unknown')
 
-    def test_scrape_change_uses_its_read_day_when_api_snapshot_is_older(self):
+    def test_unknown_arrival_prefers_api_day_over_newer_scrape_day(self):
         from test_provider_identity import clickout_url
         self.observe('2026-10-12T12:00:00', ())
         self.db.tmdb_tv_providers.insert_one({'tmdb_id': 42, 'country_code': 'US',
@@ -218,7 +219,7 @@ class HistoryTests(unittest.TestCase):
                 'stream_type': 'flatrate', 'quality': 'HD'}]})
         self.publish()
         stay = next(iter(self.crate.history.values()))
-        self.assertEqual(stay['appeared_on'], day('2026-10-15'))
+        self.assertEqual(stay['appeared_on'], day('2026-10-12'))
         self.assertEqual(stay['appeared_precision'], 'unknown')
 
 

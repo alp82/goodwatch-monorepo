@@ -1,4 +1,4 @@
-"""Only the daily recheck opts into a fresh TMDB URL for every request."""
+"""Fresh rechecks use the shared bypass; ordinary queue reads stay cached."""
 import sys
 import unittest
 from pathlib import Path
@@ -55,7 +55,7 @@ class RecheckCacheTests(unittest.TestCase):
                 self.assertEqual(set(query), {"api_key", "append_to_response"})
             for title in (self.movie, self.show):
                 title.reload()
-                self.assertNotIn("cache_bypassed", title.watch_providers_check)
+                self.assertFalse(title.watch_providers_check.get("cache_bypassed"))
 
 
 if __name__ == "__main__":

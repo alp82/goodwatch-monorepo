@@ -21,7 +21,7 @@ ROOT = Path(__file__).parents[1] / "windmill" / "f"
 sys.path.insert(0, str(ROOT.parent))
 from f.tmdb_web.provider_identity import provider_name_from_url
 from f.sync.copy.deleted_titles import flagged_among
-from f.sync.availability_history import acknowledge_history, publish_history
+from f.sync.availability_history import HistoryTitle, HistoryPublication, OfferKey, availability_key, acknowledge_history, publish_history
 from f.sync.availability_evidence import build_evidence, quarantine_evidence
 from f.sync.models.crate_models import StreamingEvidence
 from f.tmdb_api.provider_evidence import snapshot_id, utc_ms, validated_results
@@ -102,6 +102,7 @@ def load_copy(db: Any) -> Callable[..., dict]:
                      get_db=lambda: db, provider_name_from_url=provider_name_from_url,
                      flagged_among=flagged_among,
                      publish_history=publish_history, acknowledge_history=acknowledge_history,
+                     HistoryTitle=HistoryTitle, HistoryPublication=HistoryPublication, OfferKey=OfferKey, availability_key=availability_key,
                      snapshot_id=snapshot_id, utc_ms=utc_ms, validated_results=validated_results)
     model_tree = ast.parse((ROOT / "sync" / "models" / "crate_models.py").read_text())
     model = next(node for node in model_tree.body if isinstance(node, ast.ClassDef) and node.name == "StreamingAvailability")
@@ -827,6 +828,8 @@ class StreamingPublicationTests(unittest.TestCase):
             "streaming_links": [{"provider_name": "Amazon", "stream_type": "flatrate", "stream_url": "https://new"}]})
         crate = Crate()
         def fail(**kwargs):
+            if kwargs["table"] == "availability_history":
+                return {}
             raise RuntimeError("child write failed")
         crate.upsert_many = fail
         with self.assertRaisesRegex(RuntimeError, "child write failed"):
@@ -900,6 +903,8 @@ class StreamingPublicationTests(unittest.TestCase):
             "streaming_links": [{"provider_name": "Amazon", "stream_type": "flatrate", "stream_url": "https://new"}]})
         crate = Crate([availability()])
         def fail(**kwargs):
+            if kwargs["table"] == "availability_history":
+                return {}
             raise RuntimeError("child write failed")
         crate.upsert_many = fail
         with self.assertRaisesRegex(RuntimeError, "child write failed"):

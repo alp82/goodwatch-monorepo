@@ -35,6 +35,14 @@ class AwaitedTitlesInTheDetailsQueueTests(unittest.TestCase):
             + [("show", show.tmdb_id) for show in TmdbTvDetails.objects(id__in=ids["tv_ids"])]
         )
 
+    def test_only_member_awaited_entries_carry_cache_bypass(self):
+        awaited = TmdbMovieDetails(tmdb_id=603, popularity=50, selected_at=YESTERDAY).save()
+        regular = TmdbTvDetails(tmdb_id=603, popularity=50).save()
+        store_list(self.db, [("movie", 603)], NOW)
+        ids = details_next.next_ids(self.db, NOW)
+        self.assertEqual(ids["bypass_cache_ids"], [str(awaited.id)])
+        self.assertIn(str(regular.id), ids["tv_ids"])
+
     def test_an_awaited_title_is_fetched_again_a_day_after_its_last_fetch(self):
         TmdbMovieDetails(tmdb_id=603, popularity=50, selected_at=YESTERDAY).save()
         TmdbMovieDetails(tmdb_id=604, popularity=50, selected_at=YESTERDAY).save()

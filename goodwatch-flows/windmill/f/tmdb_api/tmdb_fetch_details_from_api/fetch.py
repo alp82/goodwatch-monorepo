@@ -314,6 +314,7 @@ def clean_empty_strings(data):
 
 async def tmdb_fetch_details_from_api(
     next_entries: list[Union[TmdbMovieDetails, TmdbTvDetails]], bypass_cache: bool = False,
+    bypass_cache_ids: list[str] | None = None,
 ):
     print("Fetch detailed data from TMDB API")
 
@@ -326,9 +327,13 @@ async def tmdb_fetch_details_from_api(
             f"next entry is: {next_entry.original_title} (popularity: {next_entry.popularity}) - {next_entry.status}"
         )
 
+    # The awaited-list job feeds reserved document IDs through the regular queue.
+    # Keep ordinary crawl reads cached even when the batch contains awaited titles.
+    uncached_ids = set(bypass_cache_ids or [])
+    freshness = {id(entry): bypass_cache or str(entry.id) in uncached_ids for entry in next_entries}
     list_of_details = await asyncio.gather(
         *[
-            isolate_failure(next_entry, fetch_api_data(next_entry, bypass_cache=bypass_cache))
+            isolate_failure(next_entry, fetch_api_data(next_entry, bypass_cache=freshness[id(next_entry)]))
             for next_entry in next_entries
         ]
     )
@@ -348,7 +353,7 @@ async def tmdb_fetch_details_from_api(
     ]
     converted_details = await asyncio.gather(
         *[
-            isolate_failure(next_entry, convert_and_save_details(next_entry, details, bypass_cache=bypass_cache))
+            isolate_failure(next_entry, convert_and_save_details(next_entry, details, bypass_cache=freshness[id(next_entry)]))
             for details, next_entry in list_of_details
         ]
     )
@@ -409,6 +414,7 @@ def main(next_ids: dict, bypass_cache: bool = False):
         movie_model=TmdbMovieDetails,
         tv_model=TmdbTvDetails,
     )
-    result = asyncio.run(tmdb_fetch_details_from_api(next_entries, bypass_cache=bypass_cache))
+    result = asyncio.run(tmdb_fetch_details_from_api(
+        next_entries, bypass_cache=bypass_cache, bypass_cache_ids=next_ids.get("bypass_cache_ids")))
     close_mongodb()
     return result

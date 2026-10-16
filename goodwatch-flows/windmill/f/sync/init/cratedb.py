@@ -13,6 +13,7 @@ def column_specs(spec: dict) -> dict[str, str]:
 
 def create_table_sql(table_name: str, spec: dict) -> str:
     col_defs = [f"{name} {dtype}" for name, dtype in column_specs(spec).items()]
+    col_defs += [f"CHECK ({expression})" for expression in spec.get("checks", [])]
     pk_def = f"PRIMARY KEY ({', '.join(spec['primary_key'])})"
     routing = f"BY ({spec['clustered_by']}) " if spec.get("clustered_by") else ""
     replicas = f" WITH (number_of_replicas = '{spec['replicas']}')" if spec.get("replicas") else ""

@@ -673,15 +673,18 @@ SCHEMAS = {
             "observed_at": "TIMESTAMP WITH TIME ZONE",
             "appeared_on": "TIMESTAMP WITH TIME ZONE NOT NULL",
             "appeared_after": "TIMESTAMP WITH TIME ZONE",
-            "appeared_source": "TEXT NOT NULL CHECK (appeared_source IN ('title','premiere','backfill','list'))",
+            "appeared_source": "TEXT NOT NULL CHECK (appeared_source IN ('title','premiere','backfill'))",
             "appeared_precision": "TEXT NOT NULL CHECK (appeared_precision IN ('exact','unknown'))",
             "last_seen_on": "TIMESTAMP WITH TIME ZONE",
             "dropped_on": "TIMESTAMP WITH TIME ZONE",
+            # Precision is authoritative: appeared_after can be yesterday even
+            # when today's cached read leaves appeared_precision unknown.
             "dropped_precision": "TEXT CHECK (dropped_precision IN ('exact','unknown'))",
         },
         # A day alone cannot distinguish two stays that start on the same day.
         "primary_key": ["media_tmdb_id", "media_type", "country_code", "streaming_service_id", "streaming_type", "observed_at"],
         "clustered_by": "media_tmdb_id",
+        "checks": ["(dropped_on IS NULL) = (dropped_precision IS NULL)"],
         "shards": 12,
     },
     "streaming_availability": {

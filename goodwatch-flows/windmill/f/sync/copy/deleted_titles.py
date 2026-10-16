@@ -247,6 +247,15 @@ def delete_title_rows(connector: Any, media_type: str, plan: dict[str, list[int]
             continue
         deleted = 0
         for batch in batches(ids):
+            if name == "streaming_availability":
+                connector.run("REFRESH TABLE availability_history")
+                # Retain the stay after a title deletion, but never leave it open.
+                # Both flagged-title deletion and the orphan sweep use this path.
+                connector.run("UPDATE availability_history SET dropped_on = "
+                              "greatest(date_trunc('day', CURRENT_TIMESTAMP), date_trunc('day', observed_at)), "
+                              "dropped_precision = 'unknown', updated_at = CURRENT_TIMESTAMP "
+                              "WHERE media_type = ? AND media_tmdb_id = ANY(?) AND dropped_on IS NULL",
+                              (media_type, batch))
             connector.run(f"DELETE FROM {name} WHERE {table.scope(media_type)}", table.params(media_type, batch))
             deleted += max(connector.cur.rowcount or 0, 0)
         connector.run(f"REFRESH TABLE {name}")

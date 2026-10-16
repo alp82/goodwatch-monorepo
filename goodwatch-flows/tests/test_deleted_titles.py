@@ -39,6 +39,20 @@ class FakeConnector:
 
 
 class DeleteFromCrateTests(unittest.TestCase):
+    def test_closes_open_stays_before_deleting_offers(self):
+        connector = FakeConnector()
+        deleted_titles.delete_title_rows(connector, "show", {"streaming_availability": [42]})
+        updates = [(i, sql, args) for i, (sql, args) in enumerate(connector.calls)
+                   if sql.startswith("UPDATE availability_history")]
+        self.assertEqual(len(updates), 1)
+        index, sql, args = updates[0]
+        delete_index = next(i for i, (sql, _) in enumerate(connector.calls)
+                            if sql.startswith("DELETE FROM streaming_availability"))
+        self.assertLess(index, delete_index)
+        self.assertIn("dropped_on IS NULL", sql)
+        self.assertIn("'unknown'", sql)
+        self.assertEqual(args, ("show", [42]))
+
     def test_movie_deletes_every_title_keyed_table_scoped_by_media_type(self):
         connector = FakeConnector()
         result = delete_titles_from_crate(connector, "movie", [7, "3", 7], spike=CALM)
@@ -68,7 +82,8 @@ class DeleteFromCrateTests(unittest.TestCase):
         delete_titles_from_crate(connector, "show", [5], spike=CALM)
         self.assertFalse([sql for sql, _ in connector.calls if "user_" in sql])
         derived = {name for name, spec in SCHEMAS.items() if "media_tmdb_id" in spec["columns"]}
-        self.assertEqual(derived, set(TITLE_KEYED_TABLES))
+        # History is retained and closed, never deleted with the title.
+        self.assertEqual(derived - {"availability_history"}, set(TITLE_KEYED_TABLES))
 
     def test_empty_list_issues_no_sql(self):
         connector = FakeConnector()
