@@ -2,9 +2,8 @@
 // (#672, 2026-10-16): members read "taste", never "side". The group's name is its traits, and a badge says how the
 // title fits: "Fits your taste" in a group, "Close to your taste" near one or between two. Between two groups the line
 // is always short, one trait from each ("Between dark and psychedelic"), and a line too long for a phone falls back
-// to the name's leading trait and noun there ("Dark stories, from France"). Group names are descriptive, so they wait
-// on the words gate (#656) and arrive from the server only when it's on; without them the line is the posters and the
-// badge. Mood names stay off the Watch next link until then.
+// to the name's leading trait and noun there ("Dark stories, from France"). The server sends the group names with the
+// line; a line without a name is the posters and the badge.
 import type { ShortName } from "~/server/taste-portrait/group-names.server"
 import type { TitleSides } from "~/server/title-sides.server"
 

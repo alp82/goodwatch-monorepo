@@ -21,7 +21,7 @@ import { prefetchTitleExtrasState } from "~/server/title-extras.server"
 import type { MovieQueryResult } from "~/server/types/details-types"
 import { talkedAboutNowEnabled } from "~/server/talked-about-now/flags.server"
 import {
-	TITLE_TASTE_GROUPS_BUDGET_MS,
+	TITLE_BUDGET_MS,
 	type TitleSides,
 	titleSides,
 	titleSidesWithin,
@@ -49,7 +49,7 @@ export type LoaderData = {
 	countryIsFallback: boolean
 	/** Whether the viewer gets the "Talked about now" section (TALKED_ABOUT_NOW_TITLE). */
 	talkedAboutNow: boolean
-	/** Where the title sits in the signed-in member's taste (taste groups, TITLE_TASTE_GROUPS); null for everyone else. */
+	/** Where the title sits in the signed-in member's taste (taste groups); null for everyone else. */
 	sides: TitleSides | null
 }
 
@@ -123,7 +123,7 @@ export const loader: LoaderFunction = async ({
 	)
 	const dehydratedState = mergeDehydratedStates(extrasState)
 
-	const sides = await titleSidesWithin(sidesWork, sidesStart, TITLE_TASTE_GROUPS_BUDGET_MS)
+	const sides = await titleSidesWithin(sidesWork, sidesStart, TITLE_BUDGET_MS)
 	const data = {
 		media,
 		params: {

@@ -1,6 +1,6 @@
 // Sides of you on the TV's home (#673), shaped from a made-up sides view: the sides are listed by their best pick
 // in personal order, the picks keep the side's order, a title shows on one side only, one per franchise, the ones
-// on the member's services when enough stream there, and no words leave the server while the gate is closed.
+// on the member's services when enough stream there, and each carries its name and its moods' names.
 import assert from "node:assert/strict"
 import * as nodeModule from "node:module"
 import { describe, it } from "node:test"
@@ -151,7 +151,7 @@ describe("home's sides", () => {
 		)
 	})
 
-	it("are shown by their loved posters, open Watch next with their moods, and carry no words", () => {
+	it("are shown by their loved posters, open Watch next with their moods, and carry their names", () => {
 		const [funny, grim] = homeSides(view([dark, light]))
 		assert.deepEqual(
 			grim.loved.map((t) => [t.key, t.title, t.poster]),
@@ -162,39 +162,7 @@ describe("home's sides", () => {
 		)
 		assert.equal(grim.watchNext, "/watch-next?moods=heavy")
 		assert.equal(funny.watchNext, "/watch-next")
-		assert.equal(grim.words, null)
-		assert.equal(JSON.stringify([funny, grim]).includes("Name of"), false)
-	})
-
-	it("carry the name and the moods' names once the words gate opens", () => {
-		const shaped = homeSides(view([dark]), undefined, true)
-		assert.deepEqual(shaped[0].words, {
-			name: "Name of dark",
-			moods: ["Heavy"],
-		})
-	})
-
-	it("read the names switch from HOME_TASTE_GROUP_NAMES, off unless it is exactly on", () => {
-		const before = process.env.HOME_TASTE_GROUP_NAMES
-		try {
-			for (const [value, named] of [
-				[undefined, false],
-				["off", false],
-				["true", false],
-				["on", true],
-			] as const) {
-				if (value === undefined) delete process.env.HOME_TASTE_GROUP_NAMES
-				else process.env.HOME_TASTE_GROUP_NAMES = value
-				assert.equal(
-					homeSides(view([dark]))[0].words !== null,
-					named,
-					String(value),
-				)
-			}
-		} finally {
-			if (before === undefined) delete process.env.HOME_TASTE_GROUP_NAMES
-			else process.env.HOME_TASTE_GROUP_NAMES = before
-		}
+		assert.deepEqual(grim.words, { name: "Name of dark", moods: ["Heavy"] })
 	})
 
 	it("show the picks on the member's services when enough stream there, else all with a note", () => {

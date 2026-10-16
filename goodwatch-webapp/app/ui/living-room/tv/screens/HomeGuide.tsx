@@ -4,8 +4,7 @@
 // picks in personal order and Watch next. The first side is tonight's: the one holding the best pick.
 //
 // A side is shown by its loved posters alone. Every word a member sees or hears here comes from
-// home-sides-copy.ts; a side's name and moods show only when the server sends them (`words`, behind the words
-// gate). Motion is transform and opacity only: the list slides, the right side fades.
+// home-sides-copy.ts; a side's name and moods show only when the server sends them (`words`). Motion is transform and opacity only: the list slides, the right side fades.
 import { useRef } from "react"
 import { tmdbImageUrl } from "~/utils/tmdb-image"
 import {
@@ -276,7 +275,7 @@ function ownerOf(item: string, sides: readonly TvHomeSide[]): string | null {
 	return null
 }
 
-/** A side's entry in the list: its loved posters, and its name once the words gate lets it through. */
+/** A side's entry in the list: its loved posters, and its name when the server sends `words`. */
 function SideEntry({ side }: { side: TvHomeSide }) {
 	const name = side.words?.name
 	return (
@@ -305,7 +304,7 @@ function SideEntry({ side }: { side: TvHomeSide }) {
 	)
 }
 
-/** Over a side's picks: its name once the words gate lets it through, and the loved posters it is shown by, without a caption. */
+/** Over a side's picks: its name when the server sends `words`, and the loved posters it is shown by, without a caption. */
 function SideHeader({ side }: { side: TvHomeSide }) {
 	const name = side.words?.name
 	return (

@@ -7,8 +7,7 @@
 //   personal order, so the first is tonight's side; without personal order, by its pick of the highest match.
 // - Picks: a side's More of this, the ones on the member's services when enough stream there, one per franchise,
 //   and a title on several sides only on the side where it stands first.
-// - Words: a side is shown by its loved posters. Its name and its moods' names are descriptive words and wait for
-//   the words gate (#656): `HOME_TASTE_GROUP_NAMES=on` turns them on, and they stay off until it passes.
+// - Words: a side is shown by its loved posters and its name, with its moods' names.
 import { MOOD_BY_KEY } from "~/domain/moods"
 import {
 	type OrderTitles,
@@ -20,9 +19,6 @@ import { HOME_TASTE_GROUP_PICKS } from "~/ui/living-room/tv/tv-machine"
 import { portraitListTitle } from "~/ui/living-room/tv/tv-taste"
 import type { TitleKey } from "~/utils/title-key"
 
-/** Taste group names and mood names on home: off until the words gate (#656) passes; HOME_TASTE_GROUP_NAMES=on turns them on. */
-export const homeTasteGroupNames = () =>
-	process.env.HOME_TASTE_GROUP_NAMES === "on"
 /** A side's picks are the ones on the member's services when at least this many stream there. */
 const MIN_ON_SERVICES = 4
 /** The loved posters a side is shown by. */
@@ -37,11 +33,7 @@ type View = Pick<
  * The member's sides as home's guide lists them. `order` is the member's personal order, when it is on for them.
  * Empty when the portrait has no sides of theirs.
  */
-export function homeSides(
-	view: View,
-	order?: OrderTitles,
-	words = homeTasteGroupNames(),
-): TvHomeSide[] {
+export function homeSides(view: View, order?: OrderTitles): TvHomeSide[] {
 	if (
 		view.status !== "ready" ||
 		view.subject.kind !== "member" ||
@@ -85,12 +77,10 @@ export function homeSides(
 			watchNext: side.moods.length
 				? `/watch-next?moods=${side.moods.join(",")}`
 				: "/watch-next",
-			words: words
-				? {
-						name: side.name,
-						moods: side.moods.map((mood) => MOOD_BY_KEY[mood].name),
-					}
-				: null,
+			words: {
+				name: side.name,
+				moods: side.moods.map((mood) => MOOD_BY_KEY[mood].name),
+			},
 		}
 		return { shaped, picks, index }
 	})

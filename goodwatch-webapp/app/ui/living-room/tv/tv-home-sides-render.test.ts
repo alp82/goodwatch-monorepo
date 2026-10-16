@@ -87,7 +87,7 @@ test("a side without picks says so and keeps its Watch next key", () => {
 	assert.deepEqual(focused(html), ["watch-next:c"])
 })
 
-test("with the words gate closed, a side is its loved posters: no name, no moods, no share", () => {
+test("without `words`, a side is its loved posters: no name, no moods, no share", () => {
 	const { html } = rendered.onSide
 	assert.ok(html.includes("/loved-b-1.jpg"))
 	assert.ok(html.includes(SIDES_HEADING))
@@ -104,7 +104,7 @@ test("with the words gate closed, a side is its loved posters: no name, no moods
 	)
 })
 
-test("with the words gate open, the side's name and its moods show", () => {
+test("with `words`, the side's name and its moods show", () => {
 	const { html } = rendered.named
 	assert.ok(html.includes("Dark, tense crime"))
 	assert.ok(html.includes("Watch next: Heavy"))

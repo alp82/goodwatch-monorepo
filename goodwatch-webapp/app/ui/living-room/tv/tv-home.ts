@@ -121,7 +121,7 @@ export type TvHomeSide = {
 	fewOnServices: boolean
 	/** Watch next with the side's moods. */
 	watchNext: string
-	/** The side's name and its moods' names: null until the words gate (#656) lets them reach the home. */
+	/** The side's name and its moods' names: null when a side has none. */
 	words: { name: string; moods: string[] } | null
 }
 
