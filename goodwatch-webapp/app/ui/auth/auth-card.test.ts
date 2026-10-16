@@ -71,3 +71,9 @@ test("on sign-in and sign-up the wordmark heads the card and the heading is for 
 		assert.match(source, /<Heading\s+srOnly\b/, page)
 	}
 })
+
+test("the button that deletes the account keeps the card's shape in red", () => {
+	const html = renderToStaticMarkup(h(kit.PrimaryButton, { danger: true, children: "Delete" }))
+	assert.match(html, /rounded-xl[^"]*bg-red-700/)
+	assert.ok(!html.includes(AUTH_SUBMIT_CLASS))
+})
