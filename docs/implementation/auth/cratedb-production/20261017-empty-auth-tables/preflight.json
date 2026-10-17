@@ -1,0 +1,378 @@
+{
+  "admin": {
+    "SELECT current_user": {
+      "cols": [
+        "CURRENT_USER"
+      ],
+      "rows": [
+        [
+          "crate"
+        ]
+      ],
+      "rowcount": 1,
+      "duration": 1.140772
+    },
+    "SELECT name,superuser FROM sys.users ORDER BY name": {
+      "cols": [
+        "name",
+        "superuser"
+      ],
+      "rows": [
+        [
+          "admin",
+          false
+        ],
+        [
+          "crate",
+          true
+        ],
+        [
+          "goodwatch_auth",
+          false
+        ],
+        [
+          "goodwatch_backup",
+          false
+        ],
+        [
+          "goodwatch_monitoring",
+          false
+        ],
+        [
+          "goodwatch_readonly",
+          false
+        ],
+        [
+          "goodwatch_search",
+          false
+        ],
+        [
+          "goodwatch_webapp",
+          false
+        ],
+        [
+          "goodwatch_windmill",
+          false
+        ]
+      ],
+      "rowcount": 9,
+      "duration": 1.310956
+    },
+    "SELECT grantee,class,ident,type,state FROM sys.privileges ORDER BY grantee,class,ident,type": {
+      "cols": [
+        "grantee",
+        "class",
+        "ident",
+        "type",
+        "state"
+      ],
+      "rows": [
+        [
+          "admin",
+          "CLUSTER",
+          null,
+          "AL",
+          "GRANT"
+        ],
+        [
+          "admin",
+          "CLUSTER",
+          null,
+          "DDL",
+          "GRANT"
+        ],
+        [
+          "admin",
+          "CLUSTER",
+          null,
+          "DML",
+          "GRANT"
+        ],
+        [
+          "admin",
+          "CLUSTER",
+          null,
+          "DQL",
+          "GRANT"
+        ],
+        [
+          "goodwatch_backup",
+          "CLUSTER",
+          null,
+          "DDL",
+          "GRANT"
+        ],
+        [
+          "goodwatch_backup",
+          "SCHEMA",
+          "backup_20260925_deleted_titles",
+          "DDL",
+          "DENY"
+        ],
+        [
+          "goodwatch_backup",
+          "SCHEMA",
+          "backup_20260925_stale_child_rows",
+          "DDL",
+          "DENY"
+        ],
+        [
+          "goodwatch_backup",
+          "SCHEMA",
+          "blob",
+          "DDL",
+          "DENY"
+        ],
+        [
+          "goodwatch_backup",
+          "SCHEMA",
+          "doc",
+          "DDL",
+          "DENY"
+        ],
+        [
+          "goodwatch_backup",
+          "SCHEMA",
+          "sys",
+          "DQL",
+          "GRANT"
+        ],
+        [
+          "goodwatch_readonly",
+          "SCHEMA",
+          "doc",
+          "DQL",
+          "GRANT"
+        ],
+        [
+          "goodwatch_search",
+          "SCHEMA",
+          "doc",
+          "DQL",
+          "GRANT"
+        ],
+        [
+          "goodwatch_search",
+          "TABLE",
+          "doc.search_control",
+          "DML",
+          "GRANT"
+        ],
+        [
+          "goodwatch_search",
+          "TABLE",
+          "doc.search_history",
+          "DML",
+          "GRANT"
+        ],
+        [
+          "goodwatch_search",
+          "TABLE",
+          "doc.search_interpretations",
+          "DML",
+          "GRANT"
+        ],
+        [
+          "goodwatch_search",
+          "TABLE",
+          "doc.search_spending",
+          "DML",
+          "GRANT"
+        ],
+        [
+          "goodwatch_webapp",
+          "SCHEMA",
+          "doc",
+          "DML",
+          "GRANT"
+        ],
+        [
+          "goodwatch_webapp",
+          "SCHEMA",
+          "doc",
+          "DQL",
+          "GRANT"
+        ],
+        [
+          "goodwatch_windmill",
+          "SCHEMA",
+          "blob",
+          "DDL",
+          "GRANT"
+        ],
+        [
+          "goodwatch_windmill",
+          "SCHEMA",
+          "blob",
+          "DML",
+          "GRANT"
+        ],
+        [
+          "goodwatch_windmill",
+          "SCHEMA",
+          "blob",
+          "DQL",
+          "GRANT"
+        ],
+        [
+          "goodwatch_windmill",
+          "SCHEMA",
+          "doc",
+          "DDL",
+          "GRANT"
+        ],
+        [
+          "goodwatch_windmill",
+          "SCHEMA",
+          "doc",
+          "DML",
+          "GRANT"
+        ],
+        [
+          "goodwatch_windmill",
+          "SCHEMA",
+          "doc",
+          "DQL",
+          "GRANT"
+        ],
+        [
+          "goodwatch_windmill",
+          "SCHEMA",
+          "sys",
+          "DQL",
+          "GRANT"
+        ]
+      ],
+      "rowcount": 25,
+      "duration": 1.49143
+    },
+    "SELECT table_schema,table_name FROM information_schema.tables WHERE table_type='BASE TABLE' AND (table_name LIKE 'auth_%' OR table_name='user_mcp_action') ORDER BY table_schema,table_name": {
+      "cols": [
+        "table_schema",
+        "table_name"
+      ],
+      "rows": [],
+      "rowcount": 0,
+      "duration": 3.352675
+    },
+    "SELECT id,name,version['number'] FROM sys.nodes ORDER BY name": {
+      "cols": [
+        "id",
+        "name",
+        "version['number']"
+      ],
+      "rows": [
+        [
+          "xlclgwGeSHe18p5J4WvfFA",
+          "crate-01",
+          "5.10.16"
+        ],
+        [
+          "r0IgCe17SPOgudkQIGsRQA",
+          "crate-02",
+          "5.10.16"
+        ],
+        [
+          "ch8EXZwrQVmCls79_T_vUg",
+          "crate-03",
+          "5.10.16"
+        ]
+      ],
+      "rowcount": 3,
+      "duration": 2.973678
+    },
+    "SELECT health,count(*),sum(missing_shards),sum(underreplicated_shards) FROM sys.health GROUP BY health": {
+      "cols": [
+        "health",
+        "count(*)",
+        "sum(missing_shards)",
+        "sum(underreplicated_shards)"
+      ],
+      "rows": [
+        [
+          "GREEN",
+          97,
+          0,
+          0
+        ]
+      ],
+      "rowcount": 1,
+      "duration": 4.487745
+    },
+    "SELECT state,routing_state,count(*) FROM sys.shards GROUP BY state,routing_state": {
+      "cols": [
+        "state",
+        "routing_state",
+        "count(*)"
+      ],
+      "rows": [
+        [
+          "STARTED",
+          "STARTED",
+          986
+        ]
+      ],
+      "rowcount": 1,
+      "duration": 90.80198
+    },
+    "SELECT column_name FROM information_schema.columns WHERE table_schema='sys' AND table_name='users' ORDER BY ordinal_position": {
+      "cols": [
+        "column_name"
+      ],
+      "rows": [
+        [
+          "granted_roles"
+        ],
+        [
+          "granted_roles['grantor']"
+        ],
+        [
+          "granted_roles['role']"
+        ],
+        [
+          "jwt"
+        ],
+        [
+          "jwt['aud']"
+        ],
+        [
+          "jwt['iss']"
+        ],
+        [
+          "jwt['username']"
+        ],
+        [
+          "name"
+        ],
+        [
+          "password"
+        ],
+        [
+          "session_settings"
+        ],
+        [
+          "superuser"
+        ]
+      ],
+      "rowcount": 11,
+      "duration": 6.606984
+    }
+  },
+  "identity": {
+    "10.0.0.11": [
+      [
+        "goodwatch_auth"
+      ]
+    ],
+    "10.0.0.12": [
+      [
+        "goodwatch_auth"
+      ]
+    ],
+    "10.0.0.13": [
+      [
+        "goodwatch_auth"
+      ]
+    ]
+  }
+}

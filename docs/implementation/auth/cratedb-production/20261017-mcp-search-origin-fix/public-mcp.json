@@ -1,0 +1,6 @@
+{
+  "at": "2026-10-17T02:01:39.077073+00:00",
+  "url": "https://goodwatch.app/mcp",
+  "status": 401,
+  "www_authenticate": "Bearer error=\"invalid_token\", error_description=\"Missing Authorization header\", scope=\"mcp:read\", resource_metadata=\"https://goodwatch.app/.well-known/oauth-protected-resource/mcp\""
+}

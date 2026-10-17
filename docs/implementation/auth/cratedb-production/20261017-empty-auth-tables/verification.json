@@ -1,0 +1,5934 @@
+{
+  "observed_at": "2026-10-17T00:23:55.788064+00:00",
+  "admin": {
+    "SELECT table_name,number_of_shards,number_of_replicas,settings['write']['wait_for_active_shards'],settings['translog']['durability'] FROM information_schema.tables WHERE table_schema='doc' AND table_name IN ('auth_user','auth_account','auth_session','auth_verification','auth_jwks','auth_oauth_client','auth_oauth_resource','auth_oauth_client_resource','auth_oauth_consent','auth_oauth_access_token','auth_oauth_refresh_token','auth_oauth_client_assertion','auth_rate_limit','auth_capacity','auth_user_email','user_mcp_action') ORDER BY table_name": {
+      "cols": [
+        "table_name",
+        "number_of_shards",
+        "number_of_replicas",
+        "settings['write']['wait_for_active_shards']",
+        "settings['translog']['durability']"
+      ],
+      "rows": [
+        [
+          "auth_account",
+          1,
+          "2",
+          "1",
+          "REQUEST"
+        ],
+        [
+          "auth_capacity",
+          1,
+          "2",
+          "1",
+          "REQUEST"
+        ],
+        [
+          "auth_jwks",
+          1,
+          "2",
+          "1",
+          "REQUEST"
+        ],
+        [
+          "auth_oauth_access_token",
+          1,
+          "2",
+          "1",
+          "REQUEST"
+        ],
+        [
+          "auth_oauth_client",
+          1,
+          "2",
+          "1",
+          "REQUEST"
+        ],
+        [
+          "auth_oauth_client_assertion",
+          1,
+          "2",
+          "1",
+          "REQUEST"
+        ],
+        [
+          "auth_oauth_client_resource",
+          1,
+          "2",
+          "1",
+          "REQUEST"
+        ],
+        [
+          "auth_oauth_consent",
+          1,
+          "2",
+          "1",
+          "REQUEST"
+        ],
+        [
+          "auth_oauth_refresh_token",
+          1,
+          "2",
+          "1",
+          "REQUEST"
+        ],
+        [
+          "auth_oauth_resource",
+          1,
+          "2",
+          "1",
+          "REQUEST"
+        ],
+        [
+          "auth_rate_limit",
+          1,
+          "2",
+          "1",
+          "REQUEST"
+        ],
+        [
+          "auth_session",
+          1,
+          "2",
+          "1",
+          "REQUEST"
+        ],
+        [
+          "auth_user",
+          1,
+          "2",
+          "1",
+          "REQUEST"
+        ],
+        [
+          "auth_user_email",
+          1,
+          "2",
+          "1",
+          "REQUEST"
+        ],
+        [
+          "auth_verification",
+          1,
+          "2",
+          "1",
+          "REQUEST"
+        ],
+        [
+          "user_mcp_action",
+          3,
+          "2",
+          "1",
+          "REQUEST"
+        ]
+      ],
+      "rowcount": 16,
+      "duration": 4.875168
+    },
+    "SELECT table_name,id,primary,state,routing_state,node['name'],num_docs FROM sys.shards WHERE schema_name='doc' AND table_name IN ('auth_user','auth_account','auth_session','auth_verification','auth_jwks','auth_oauth_client','auth_oauth_resource','auth_oauth_client_resource','auth_oauth_consent','auth_oauth_access_token','auth_oauth_refresh_token','auth_oauth_client_assertion','auth_rate_limit','auth_capacity','auth_user_email','user_mcp_action') ORDER BY table_name,id,primary DESC,node['name']": {
+      "cols": [
+        "table_name",
+        "id",
+        "primary",
+        "state",
+        "routing_state",
+        "node['name']",
+        "num_docs"
+      ],
+      "rows": [
+        [
+          "auth_account",
+          0,
+          true,
+          "STARTED",
+          "STARTED",
+          "crate-01",
+          0
+        ],
+        [
+          "auth_account",
+          0,
+          false,
+          "STARTED",
+          "STARTED",
+          "crate-02",
+          0
+        ],
+        [
+          "auth_account",
+          0,
+          false,
+          "STARTED",
+          "STARTED",
+          "crate-03",
+          0
+        ],
+        [
+          "auth_capacity",
+          0,
+          true,
+          "STARTED",
+          "STARTED",
+          "crate-01",
+          0
+        ],
+        [
+          "auth_capacity",
+          0,
+          false,
+          "STARTED",
+          "STARTED",
+          "crate-02",
+          0
+        ],
+        [
+          "auth_capacity",
+          0,
+          false,
+          "STARTED",
+          "STARTED",
+          "crate-03",
+          0
+        ],
+        [
+          "auth_jwks",
+          0,
+          true,
+          "STARTED",
+          "STARTED",
+          "crate-01",
+          0
+        ],
+        [
+          "auth_jwks",
+          0,
+          false,
+          "STARTED",
+          "STARTED",
+          "crate-02",
+          0
+        ],
+        [
+          "auth_jwks",
+          0,
+          false,
+          "STARTED",
+          "STARTED",
+          "crate-03",
+          0
+        ],
+        [
+          "auth_oauth_access_token",
+          0,
+          true,
+          "STARTED",
+          "STARTED",
+          "crate-01",
+          0
+        ],
+        [
+          "auth_oauth_access_token",
+          0,
+          false,
+          "STARTED",
+          "STARTED",
+          "crate-02",
+          0
+        ],
+        [
+          "auth_oauth_access_token",
+          0,
+          false,
+          "STARTED",
+          "STARTED",
+          "crate-03",
+          0
+        ],
+        [
+          "auth_oauth_client",
+          0,
+          true,
+          "STARTED",
+          "STARTED",
+          "crate-01",
+          0
+        ],
+        [
+          "auth_oauth_client",
+          0,
+          false,
+          "STARTED",
+          "STARTED",
+          "crate-02",
+          0
+        ],
+        [
+          "auth_oauth_client",
+          0,
+          false,
+          "STARTED",
+          "STARTED",
+          "crate-03",
+          0
+        ],
+        [
+          "auth_oauth_client_assertion",
+          0,
+          true,
+          "STARTED",
+          "STARTED",
+          "crate-01",
+          0
+        ],
+        [
+          "auth_oauth_client_assertion",
+          0,
+          false,
+          "STARTED",
+          "STARTED",
+          "crate-02",
+          0
+        ],
+        [
+          "auth_oauth_client_assertion",
+          0,
+          false,
+          "STARTED",
+          "STARTED",
+          "crate-03",
+          0
+        ],
+        [
+          "auth_oauth_client_resource",
+          0,
+          true,
+          "STARTED",
+          "STARTED",
+          "crate-01",
+          0
+        ],
+        [
+          "auth_oauth_client_resource",
+          0,
+          false,
+          "STARTED",
+          "STARTED",
+          "crate-02",
+          0
+        ],
+        [
+          "auth_oauth_client_resource",
+          0,
+          false,
+          "STARTED",
+          "STARTED",
+          "crate-03",
+          0
+        ],
+        [
+          "auth_oauth_consent",
+          0,
+          true,
+          "STARTED",
+          "STARTED",
+          "crate-01",
+          0
+        ],
+        [
+          "auth_oauth_consent",
+          0,
+          false,
+          "STARTED",
+          "STARTED",
+          "crate-02",
+          0
+        ],
+        [
+          "auth_oauth_consent",
+          0,
+          false,
+          "STARTED",
+          "STARTED",
+          "crate-03",
+          0
+        ],
+        [
+          "auth_oauth_refresh_token",
+          0,
+          true,
+          "STARTED",
+          "STARTED",
+          "crate-01",
+          0
+        ],
+        [
+          "auth_oauth_refresh_token",
+          0,
+          false,
+          "STARTED",
+          "STARTED",
+          "crate-02",
+          0
+        ],
+        [
+          "auth_oauth_refresh_token",
+          0,
+          false,
+          "STARTED",
+          "STARTED",
+          "crate-03",
+          0
+        ],
+        [
+          "auth_oauth_resource",
+          0,
+          true,
+          "STARTED",
+          "STARTED",
+          "crate-01",
+          0
+        ],
+        [
+          "auth_oauth_resource",
+          0,
+          false,
+          "STARTED",
+          "STARTED",
+          "crate-02",
+          0
+        ],
+        [
+          "auth_oauth_resource",
+          0,
+          false,
+          "STARTED",
+          "STARTED",
+          "crate-03",
+          0
+        ],
+        [
+          "auth_rate_limit",
+          0,
+          true,
+          "STARTED",
+          "STARTED",
+          "crate-01",
+          0
+        ],
+        [
+          "auth_rate_limit",
+          0,
+          false,
+          "STARTED",
+          "STARTED",
+          "crate-02",
+          0
+        ],
+        [
+          "auth_rate_limit",
+          0,
+          false,
+          "STARTED",
+          "STARTED",
+          "crate-03",
+          0
+        ],
+        [
+          "auth_session",
+          0,
+          true,
+          "STARTED",
+          "STARTED",
+          "crate-01",
+          0
+        ],
+        [
+          "auth_session",
+          0,
+          false,
+          "STARTED",
+          "STARTED",
+          "crate-02",
+          0
+        ],
+        [
+          "auth_session",
+          0,
+          false,
+          "STARTED",
+          "STARTED",
+          "crate-03",
+          0
+        ],
+        [
+          "auth_user",
+          0,
+          true,
+          "STARTED",
+          "STARTED",
+          "crate-01",
+          0
+        ],
+        [
+          "auth_user",
+          0,
+          false,
+          "STARTED",
+          "STARTED",
+          "crate-02",
+          0
+        ],
+        [
+          "auth_user",
+          0,
+          false,
+          "STARTED",
+          "STARTED",
+          "crate-03",
+          0
+        ],
+        [
+          "auth_user_email",
+          0,
+          true,
+          "STARTED",
+          "STARTED",
+          "crate-01",
+          0
+        ],
+        [
+          "auth_user_email",
+          0,
+          false,
+          "STARTED",
+          "STARTED",
+          "crate-02",
+          0
+        ],
+        [
+          "auth_user_email",
+          0,
+          false,
+          "STARTED",
+          "STARTED",
+          "crate-03",
+          0
+        ],
+        [
+          "auth_verification",
+          0,
+          true,
+          "STARTED",
+          "STARTED",
+          "crate-01",
+          0
+        ],
+        [
+          "auth_verification",
+          0,
+          false,
+          "STARTED",
+          "STARTED",
+          "crate-02",
+          0
+        ],
+        [
+          "auth_verification",
+          0,
+          false,
+          "STARTED",
+          "STARTED",
+          "crate-03",
+          0
+        ],
+        [
+          "user_mcp_action",
+          0,
+          true,
+          "STARTED",
+          "STARTED",
+          "crate-01",
+          0
+        ],
+        [
+          "user_mcp_action",
+          0,
+          false,
+          "STARTED",
+          "STARTED",
+          "crate-02",
+          0
+        ],
+        [
+          "user_mcp_action",
+          0,
+          false,
+          "STARTED",
+          "STARTED",
+          "crate-03",
+          0
+        ],
+        [
+          "user_mcp_action",
+          1,
+          true,
+          "STARTED",
+          "STARTED",
+          "crate-03",
+          0
+        ],
+        [
+          "user_mcp_action",
+          1,
+          false,
+          "STARTED",
+          "STARTED",
+          "crate-01",
+          0
+        ],
+        [
+          "user_mcp_action",
+          1,
+          false,
+          "STARTED",
+          "STARTED",
+          "crate-02",
+          0
+        ],
+        [
+          "user_mcp_action",
+          2,
+          true,
+          "STARTED",
+          "STARTED",
+          "crate-02",
+          0
+        ],
+        [
+          "user_mcp_action",
+          2,
+          false,
+          "STARTED",
+          "STARTED",
+          "crate-01",
+          0
+        ],
+        [
+          "user_mcp_action",
+          2,
+          false,
+          "STARTED",
+          "STARTED",
+          "crate-03",
+          0
+        ]
+      ],
+      "rowcount": 54,
+      "duration": 28.820723
+    },
+    "SELECT grantee,class,ident,type,state FROM sys.privileges ORDER BY grantee,class,ident,type": {
+      "cols": [
+        "grantee",
+        "class",
+        "ident",
+        "type",
+        "state"
+      ],
+      "rows": [
+        [
+          "admin",
+          "CLUSTER",
+          null,
+          "AL",
+          "GRANT"
+        ],
+        [
+          "admin",
+          "CLUSTER",
+          null,
+          "DDL",
+          "GRANT"
+        ],
+        [
+          "admin",
+          "CLUSTER",
+          null,
+          "DML",
+          "GRANT"
+        ],
+        [
+          "admin",
+          "CLUSTER",
+          null,
+          "DQL",
+          "GRANT"
+        ],
+        [
+          "goodwatch_auth",
+          "TABLE",
+          "doc.auth_account",
+          "DML",
+          "GRANT"
+        ],
+        [
+          "goodwatch_auth",
+          "TABLE",
+          "doc.auth_account",
+          "DQL",
+          "GRANT"
+        ],
+        [
+          "goodwatch_auth",
+          "TABLE",
+          "doc.auth_capacity",
+          "DML",
+          "GRANT"
+        ],
+        [
+          "goodwatch_auth",
+          "TABLE",
+          "doc.auth_capacity",
+          "DQL",
+          "GRANT"
+        ],
+        [
+          "goodwatch_auth",
+          "TABLE",
+          "doc.auth_jwks",
+          "DML",
+          "GRANT"
+        ],
+        [
+          "goodwatch_auth",
+          "TABLE",
+          "doc.auth_jwks",
+          "DQL",
+          "GRANT"
+        ],
+        [
+          "goodwatch_auth",
+          "TABLE",
+          "doc.auth_oauth_access_token",
+          "DML",
+          "GRANT"
+        ],
+        [
+          "goodwatch_auth",
+          "TABLE",
+          "doc.auth_oauth_access_token",
+          "DQL",
+          "GRANT"
+        ],
+        [
+          "goodwatch_auth",
+          "TABLE",
+          "doc.auth_oauth_client",
+          "DML",
+          "GRANT"
+        ],
+        [
+          "goodwatch_auth",
+          "TABLE",
+          "doc.auth_oauth_client",
+          "DQL",
+          "GRANT"
+        ],
+        [
+          "goodwatch_auth",
+          "TABLE",
+          "doc.auth_oauth_client_assertion",
+          "DML",
+          "GRANT"
+        ],
+        [
+          "goodwatch_auth",
+          "TABLE",
+          "doc.auth_oauth_client_assertion",
+          "DQL",
+          "GRANT"
+        ],
+        [
+          "goodwatch_auth",
+          "TABLE",
+          "doc.auth_oauth_client_resource",
+          "DML",
+          "GRANT"
+        ],
+        [
+          "goodwatch_auth",
+          "TABLE",
+          "doc.auth_oauth_client_resource",
+          "DQL",
+          "GRANT"
+        ],
+        [
+          "goodwatch_auth",
+          "TABLE",
+          "doc.auth_oauth_consent",
+          "DML",
+          "GRANT"
+        ],
+        [
+          "goodwatch_auth",
+          "TABLE",
+          "doc.auth_oauth_consent",
+          "DQL",
+          "GRANT"
+        ],
+        [
+          "goodwatch_auth",
+          "TABLE",
+          "doc.auth_oauth_refresh_token",
+          "DML",
+          "GRANT"
+        ],
+        [
+          "goodwatch_auth",
+          "TABLE",
+          "doc.auth_oauth_refresh_token",
+          "DQL",
+          "GRANT"
+        ],
+        [
+          "goodwatch_auth",
+          "TABLE",
+          "doc.auth_oauth_resource",
+          "DML",
+          "GRANT"
+        ],
+        [
+          "goodwatch_auth",
+          "TABLE",
+          "doc.auth_oauth_resource",
+          "DQL",
+          "GRANT"
+        ],
+        [
+          "goodwatch_auth",
+          "TABLE",
+          "doc.auth_rate_limit",
+          "DML",
+          "GRANT"
+        ],
+        [
+          "goodwatch_auth",
+          "TABLE",
+          "doc.auth_rate_limit",
+          "DQL",
+          "GRANT"
+        ],
+        [
+          "goodwatch_auth",
+          "TABLE",
+          "doc.auth_session",
+          "DML",
+          "GRANT"
+        ],
+        [
+          "goodwatch_auth",
+          "TABLE",
+          "doc.auth_session",
+          "DQL",
+          "GRANT"
+        ],
+        [
+          "goodwatch_auth",
+          "TABLE",
+          "doc.auth_user",
+          "DML",
+          "GRANT"
+        ],
+        [
+          "goodwatch_auth",
+          "TABLE",
+          "doc.auth_user",
+          "DQL",
+          "GRANT"
+        ],
+        [
+          "goodwatch_auth",
+          "TABLE",
+          "doc.auth_user_email",
+          "DML",
+          "GRANT"
+        ],
+        [
+          "goodwatch_auth",
+          "TABLE",
+          "doc.auth_user_email",
+          "DQL",
+          "GRANT"
+        ],
+        [
+          "goodwatch_auth",
+          "TABLE",
+          "doc.auth_verification",
+          "DML",
+          "GRANT"
+        ],
+        [
+          "goodwatch_auth",
+          "TABLE",
+          "doc.auth_verification",
+          "DQL",
+          "GRANT"
+        ],
+        [
+          "goodwatch_auth",
+          "TABLE",
+          "sys.cluster",
+          "DQL",
+          "GRANT"
+        ],
+        [
+          "goodwatch_auth",
+          "TABLE",
+          "sys.nodes",
+          "DQL",
+          "GRANT"
+        ],
+        [
+          "goodwatch_backup",
+          "CLUSTER",
+          null,
+          "DDL",
+          "GRANT"
+        ],
+        [
+          "goodwatch_backup",
+          "SCHEMA",
+          "backup_20260925_deleted_titles",
+          "DDL",
+          "DENY"
+        ],
+        [
+          "goodwatch_backup",
+          "SCHEMA",
+          "backup_20260925_stale_child_rows",
+          "DDL",
+          "DENY"
+        ],
+        [
+          "goodwatch_backup",
+          "SCHEMA",
+          "blob",
+          "DDL",
+          "DENY"
+        ],
+        [
+          "goodwatch_backup",
+          "SCHEMA",
+          "doc",
+          "DDL",
+          "DENY"
+        ],
+        [
+          "goodwatch_backup",
+          "SCHEMA",
+          "sys",
+          "DQL",
+          "GRANT"
+        ],
+        [
+          "goodwatch_readonly",
+          "SCHEMA",
+          "doc",
+          "DQL",
+          "GRANT"
+        ],
+        [
+          "goodwatch_readonly",
+          "TABLE",
+          "doc.auth_account",
+          "DQL",
+          "DENY"
+        ],
+        [
+          "goodwatch_readonly",
+          "TABLE",
+          "doc.auth_capacity",
+          "DQL",
+          "DENY"
+        ],
+        [
+          "goodwatch_readonly",
+          "TABLE",
+          "doc.auth_jwks",
+          "DQL",
+          "DENY"
+        ],
+        [
+          "goodwatch_readonly",
+          "TABLE",
+          "doc.auth_oauth_access_token",
+          "DQL",
+          "DENY"
+        ],
+        [
+          "goodwatch_readonly",
+          "TABLE",
+          "doc.auth_oauth_client",
+          "DQL",
+          "DENY"
+        ],
+        [
+          "goodwatch_readonly",
+          "TABLE",
+          "doc.auth_oauth_client_assertion",
+          "DQL",
+          "DENY"
+        ],
+        [
+          "goodwatch_readonly",
+          "TABLE",
+          "doc.auth_oauth_client_resource",
+          "DQL",
+          "DENY"
+        ],
+        [
+          "goodwatch_readonly",
+          "TABLE",
+          "doc.auth_oauth_consent",
+          "DQL",
+          "DENY"
+        ],
+        [
+          "goodwatch_readonly",
+          "TABLE",
+          "doc.auth_oauth_refresh_token",
+          "DQL",
+          "DENY"
+        ],
+        [
+          "goodwatch_readonly",
+          "TABLE",
+          "doc.auth_oauth_resource",
+          "DQL",
+          "DENY"
+        ],
+        [
+          "goodwatch_readonly",
+          "TABLE",
+          "doc.auth_rate_limit",
+          "DQL",
+          "DENY"
+        ],
+        [
+          "goodwatch_readonly",
+          "TABLE",
+          "doc.auth_session",
+          "DQL",
+          "DENY"
+        ],
+        [
+          "goodwatch_readonly",
+          "TABLE",
+          "doc.auth_user",
+          "DQL",
+          "DENY"
+        ],
+        [
+          "goodwatch_readonly",
+          "TABLE",
+          "doc.auth_user_email",
+          "DQL",
+          "DENY"
+        ],
+        [
+          "goodwatch_readonly",
+          "TABLE",
+          "doc.auth_verification",
+          "DQL",
+          "DENY"
+        ],
+        [
+          "goodwatch_search",
+          "SCHEMA",
+          "doc",
+          "DQL",
+          "GRANT"
+        ],
+        [
+          "goodwatch_search",
+          "TABLE",
+          "doc.auth_account",
+          "DQL",
+          "DENY"
+        ],
+        [
+          "goodwatch_search",
+          "TABLE",
+          "doc.auth_capacity",
+          "DQL",
+          "DENY"
+        ],
+        [
+          "goodwatch_search",
+          "TABLE",
+          "doc.auth_jwks",
+          "DQL",
+          "DENY"
+        ],
+        [
+          "goodwatch_search",
+          "TABLE",
+          "doc.auth_oauth_access_token",
+          "DQL",
+          "DENY"
+        ],
+        [
+          "goodwatch_search",
+          "TABLE",
+          "doc.auth_oauth_client",
+          "DQL",
+          "DENY"
+        ],
+        [
+          "goodwatch_search",
+          "TABLE",
+          "doc.auth_oauth_client_assertion",
+          "DQL",
+          "DENY"
+        ],
+        [
+          "goodwatch_search",
+          "TABLE",
+          "doc.auth_oauth_client_resource",
+          "DQL",
+          "DENY"
+        ],
+        [
+          "goodwatch_search",
+          "TABLE",
+          "doc.auth_oauth_consent",
+          "DQL",
+          "DENY"
+        ],
+        [
+          "goodwatch_search",
+          "TABLE",
+          "doc.auth_oauth_refresh_token",
+          "DQL",
+          "DENY"
+        ],
+        [
+          "goodwatch_search",
+          "TABLE",
+          "doc.auth_oauth_resource",
+          "DQL",
+          "DENY"
+        ],
+        [
+          "goodwatch_search",
+          "TABLE",
+          "doc.auth_rate_limit",
+          "DQL",
+          "DENY"
+        ],
+        [
+          "goodwatch_search",
+          "TABLE",
+          "doc.auth_session",
+          "DQL",
+          "DENY"
+        ],
+        [
+          "goodwatch_search",
+          "TABLE",
+          "doc.auth_user",
+          "DQL",
+          "DENY"
+        ],
+        [
+          "goodwatch_search",
+          "TABLE",
+          "doc.auth_user_email",
+          "DQL",
+          "DENY"
+        ],
+        [
+          "goodwatch_search",
+          "TABLE",
+          "doc.auth_verification",
+          "DQL",
+          "DENY"
+        ],
+        [
+          "goodwatch_search",
+          "TABLE",
+          "doc.search_control",
+          "DML",
+          "GRANT"
+        ],
+        [
+          "goodwatch_search",
+          "TABLE",
+          "doc.search_history",
+          "DML",
+          "GRANT"
+        ],
+        [
+          "goodwatch_search",
+          "TABLE",
+          "doc.search_interpretations",
+          "DML",
+          "GRANT"
+        ],
+        [
+          "goodwatch_search",
+          "TABLE",
+          "doc.search_spending",
+          "DML",
+          "GRANT"
+        ],
+        [
+          "goodwatch_webapp",
+          "SCHEMA",
+          "doc",
+          "DML",
+          "GRANT"
+        ],
+        [
+          "goodwatch_webapp",
+          "SCHEMA",
+          "doc",
+          "DQL",
+          "GRANT"
+        ],
+        [
+          "goodwatch_webapp",
+          "TABLE",
+          "doc.auth_account",
+          "DML",
+          "DENY"
+        ],
+        [
+          "goodwatch_webapp",
+          "TABLE",
+          "doc.auth_account",
+          "DQL",
+          "DENY"
+        ],
+        [
+          "goodwatch_webapp",
+          "TABLE",
+          "doc.auth_capacity",
+          "DML",
+          "DENY"
+        ],
+        [
+          "goodwatch_webapp",
+          "TABLE",
+          "doc.auth_capacity",
+          "DQL",
+          "DENY"
+        ],
+        [
+          "goodwatch_webapp",
+          "TABLE",
+          "doc.auth_jwks",
+          "DML",
+          "DENY"
+        ],
+        [
+          "goodwatch_webapp",
+          "TABLE",
+          "doc.auth_jwks",
+          "DQL",
+          "DENY"
+        ],
+        [
+          "goodwatch_webapp",
+          "TABLE",
+          "doc.auth_oauth_access_token",
+          "DML",
+          "DENY"
+        ],
+        [
+          "goodwatch_webapp",
+          "TABLE",
+          "doc.auth_oauth_access_token",
+          "DQL",
+          "DENY"
+        ],
+        [
+          "goodwatch_webapp",
+          "TABLE",
+          "doc.auth_oauth_client",
+          "DML",
+          "DENY"
+        ],
+        [
+          "goodwatch_webapp",
+          "TABLE",
+          "doc.auth_oauth_client",
+          "DQL",
+          "DENY"
+        ],
+        [
+          "goodwatch_webapp",
+          "TABLE",
+          "doc.auth_oauth_client_assertion",
+          "DML",
+          "DENY"
+        ],
+        [
+          "goodwatch_webapp",
+          "TABLE",
+          "doc.auth_oauth_client_assertion",
+          "DQL",
+          "DENY"
+        ],
+        [
+          "goodwatch_webapp",
+          "TABLE",
+          "doc.auth_oauth_client_resource",
+          "DML",
+          "DENY"
+        ],
+        [
+          "goodwatch_webapp",
+          "TABLE",
+          "doc.auth_oauth_client_resource",
+          "DQL",
+          "DENY"
+        ],
+        [
+          "goodwatch_webapp",
+          "TABLE",
+          "doc.auth_oauth_consent",
+          "DML",
+          "DENY"
+        ],
+        [
+          "goodwatch_webapp",
+          "TABLE",
+          "doc.auth_oauth_consent",
+          "DQL",
+          "DENY"
+        ],
+        [
+          "goodwatch_webapp",
+          "TABLE",
+          "doc.auth_oauth_refresh_token",
+          "DML",
+          "DENY"
+        ],
+        [
+          "goodwatch_webapp",
+          "TABLE",
+          "doc.auth_oauth_refresh_token",
+          "DQL",
+          "DENY"
+        ],
+        [
+          "goodwatch_webapp",
+          "TABLE",
+          "doc.auth_oauth_resource",
+          "DML",
+          "DENY"
+        ],
+        [
+          "goodwatch_webapp",
+          "TABLE",
+          "doc.auth_oauth_resource",
+          "DQL",
+          "DENY"
+        ],
+        [
+          "goodwatch_webapp",
+          "TABLE",
+          "doc.auth_rate_limit",
+          "DML",
+          "DENY"
+        ],
+        [
+          "goodwatch_webapp",
+          "TABLE",
+          "doc.auth_rate_limit",
+          "DQL",
+          "DENY"
+        ],
+        [
+          "goodwatch_webapp",
+          "TABLE",
+          "doc.auth_session",
+          "DML",
+          "DENY"
+        ],
+        [
+          "goodwatch_webapp",
+          "TABLE",
+          "doc.auth_session",
+          "DQL",
+          "DENY"
+        ],
+        [
+          "goodwatch_webapp",
+          "TABLE",
+          "doc.auth_user",
+          "DML",
+          "DENY"
+        ],
+        [
+          "goodwatch_webapp",
+          "TABLE",
+          "doc.auth_user",
+          "DQL",
+          "DENY"
+        ],
+        [
+          "goodwatch_webapp",
+          "TABLE",
+          "doc.auth_user_email",
+          "DML",
+          "DENY"
+        ],
+        [
+          "goodwatch_webapp",
+          "TABLE",
+          "doc.auth_user_email",
+          "DQL",
+          "DENY"
+        ],
+        [
+          "goodwatch_webapp",
+          "TABLE",
+          "doc.auth_verification",
+          "DML",
+          "DENY"
+        ],
+        [
+          "goodwatch_webapp",
+          "TABLE",
+          "doc.auth_verification",
+          "DQL",
+          "DENY"
+        ],
+        [
+          "goodwatch_windmill",
+          "SCHEMA",
+          "blob",
+          "DDL",
+          "GRANT"
+        ],
+        [
+          "goodwatch_windmill",
+          "SCHEMA",
+          "blob",
+          "DML",
+          "GRANT"
+        ],
+        [
+          "goodwatch_windmill",
+          "SCHEMA",
+          "blob",
+          "DQL",
+          "GRANT"
+        ],
+        [
+          "goodwatch_windmill",
+          "SCHEMA",
+          "doc",
+          "DDL",
+          "GRANT"
+        ],
+        [
+          "goodwatch_windmill",
+          "SCHEMA",
+          "doc",
+          "DML",
+          "GRANT"
+        ],
+        [
+          "goodwatch_windmill",
+          "SCHEMA",
+          "doc",
+          "DQL",
+          "GRANT"
+        ],
+        [
+          "goodwatch_windmill",
+          "SCHEMA",
+          "sys",
+          "DQL",
+          "GRANT"
+        ],
+        [
+          "goodwatch_windmill",
+          "TABLE",
+          "doc.auth_account",
+          "DDL",
+          "DENY"
+        ],
+        [
+          "goodwatch_windmill",
+          "TABLE",
+          "doc.auth_account",
+          "DML",
+          "DENY"
+        ],
+        [
+          "goodwatch_windmill",
+          "TABLE",
+          "doc.auth_account",
+          "DQL",
+          "DENY"
+        ],
+        [
+          "goodwatch_windmill",
+          "TABLE",
+          "doc.auth_capacity",
+          "DDL",
+          "DENY"
+        ],
+        [
+          "goodwatch_windmill",
+          "TABLE",
+          "doc.auth_capacity",
+          "DML",
+          "DENY"
+        ],
+        [
+          "goodwatch_windmill",
+          "TABLE",
+          "doc.auth_capacity",
+          "DQL",
+          "DENY"
+        ],
+        [
+          "goodwatch_windmill",
+          "TABLE",
+          "doc.auth_jwks",
+          "DDL",
+          "DENY"
+        ],
+        [
+          "goodwatch_windmill",
+          "TABLE",
+          "doc.auth_jwks",
+          "DML",
+          "DENY"
+        ],
+        [
+          "goodwatch_windmill",
+          "TABLE",
+          "doc.auth_jwks",
+          "DQL",
+          "DENY"
+        ],
+        [
+          "goodwatch_windmill",
+          "TABLE",
+          "doc.auth_oauth_access_token",
+          "DDL",
+          "DENY"
+        ],
+        [
+          "goodwatch_windmill",
+          "TABLE",
+          "doc.auth_oauth_access_token",
+          "DML",
+          "DENY"
+        ],
+        [
+          "goodwatch_windmill",
+          "TABLE",
+          "doc.auth_oauth_access_token",
+          "DQL",
+          "DENY"
+        ],
+        [
+          "goodwatch_windmill",
+          "TABLE",
+          "doc.auth_oauth_client",
+          "DDL",
+          "DENY"
+        ],
+        [
+          "goodwatch_windmill",
+          "TABLE",
+          "doc.auth_oauth_client",
+          "DML",
+          "DENY"
+        ],
+        [
+          "goodwatch_windmill",
+          "TABLE",
+          "doc.auth_oauth_client",
+          "DQL",
+          "DENY"
+        ],
+        [
+          "goodwatch_windmill",
+          "TABLE",
+          "doc.auth_oauth_client_assertion",
+          "DDL",
+          "DENY"
+        ],
+        [
+          "goodwatch_windmill",
+          "TABLE",
+          "doc.auth_oauth_client_assertion",
+          "DML",
+          "DENY"
+        ],
+        [
+          "goodwatch_windmill",
+          "TABLE",
+          "doc.auth_oauth_client_assertion",
+          "DQL",
+          "DENY"
+        ],
+        [
+          "goodwatch_windmill",
+          "TABLE",
+          "doc.auth_oauth_client_resource",
+          "DDL",
+          "DENY"
+        ],
+        [
+          "goodwatch_windmill",
+          "TABLE",
+          "doc.auth_oauth_client_resource",
+          "DML",
+          "DENY"
+        ],
+        [
+          "goodwatch_windmill",
+          "TABLE",
+          "doc.auth_oauth_client_resource",
+          "DQL",
+          "DENY"
+        ],
+        [
+          "goodwatch_windmill",
+          "TABLE",
+          "doc.auth_oauth_consent",
+          "DDL",
+          "DENY"
+        ],
+        [
+          "goodwatch_windmill",
+          "TABLE",
+          "doc.auth_oauth_consent",
+          "DML",
+          "DENY"
+        ],
+        [
+          "goodwatch_windmill",
+          "TABLE",
+          "doc.auth_oauth_consent",
+          "DQL",
+          "DENY"
+        ],
+        [
+          "goodwatch_windmill",
+          "TABLE",
+          "doc.auth_oauth_refresh_token",
+          "DDL",
+          "DENY"
+        ],
+        [
+          "goodwatch_windmill",
+          "TABLE",
+          "doc.auth_oauth_refresh_token",
+          "DML",
+          "DENY"
+        ],
+        [
+          "goodwatch_windmill",
+          "TABLE",
+          "doc.auth_oauth_refresh_token",
+          "DQL",
+          "DENY"
+        ],
+        [
+          "goodwatch_windmill",
+          "TABLE",
+          "doc.auth_oauth_resource",
+          "DDL",
+          "DENY"
+        ],
+        [
+          "goodwatch_windmill",
+          "TABLE",
+          "doc.auth_oauth_resource",
+          "DML",
+          "DENY"
+        ],
+        [
+          "goodwatch_windmill",
+          "TABLE",
+          "doc.auth_oauth_resource",
+          "DQL",
+          "DENY"
+        ],
+        [
+          "goodwatch_windmill",
+          "TABLE",
+          "doc.auth_rate_limit",
+          "DDL",
+          "DENY"
+        ],
+        [
+          "goodwatch_windmill",
+          "TABLE",
+          "doc.auth_rate_limit",
+          "DML",
+          "DENY"
+        ],
+        [
+          "goodwatch_windmill",
+          "TABLE",
+          "doc.auth_rate_limit",
+          "DQL",
+          "DENY"
+        ],
+        [
+          "goodwatch_windmill",
+          "TABLE",
+          "doc.auth_session",
+          "DDL",
+          "DENY"
+        ],
+        [
+          "goodwatch_windmill",
+          "TABLE",
+          "doc.auth_session",
+          "DML",
+          "DENY"
+        ],
+        [
+          "goodwatch_windmill",
+          "TABLE",
+          "doc.auth_session",
+          "DQL",
+          "DENY"
+        ],
+        [
+          "goodwatch_windmill",
+          "TABLE",
+          "doc.auth_user",
+          "DDL",
+          "DENY"
+        ],
+        [
+          "goodwatch_windmill",
+          "TABLE",
+          "doc.auth_user",
+          "DML",
+          "DENY"
+        ],
+        [
+          "goodwatch_windmill",
+          "TABLE",
+          "doc.auth_user",
+          "DQL",
+          "DENY"
+        ],
+        [
+          "goodwatch_windmill",
+          "TABLE",
+          "doc.auth_user_email",
+          "DDL",
+          "DENY"
+        ],
+        [
+          "goodwatch_windmill",
+          "TABLE",
+          "doc.auth_user_email",
+          "DML",
+          "DENY"
+        ],
+        [
+          "goodwatch_windmill",
+          "TABLE",
+          "doc.auth_user_email",
+          "DQL",
+          "DENY"
+        ],
+        [
+          "goodwatch_windmill",
+          "TABLE",
+          "doc.auth_verification",
+          "DDL",
+          "DENY"
+        ],
+        [
+          "goodwatch_windmill",
+          "TABLE",
+          "doc.auth_verification",
+          "DML",
+          "DENY"
+        ],
+        [
+          "goodwatch_windmill",
+          "TABLE",
+          "doc.auth_verification",
+          "DQL",
+          "DENY"
+        ]
+      ],
+      "rowcount": 162,
+      "duration": 2.495848
+    },
+    "SELECT granted_roles FROM sys.users WHERE name='goodwatch_auth'": {
+      "cols": [
+        "granted_roles"
+      ],
+      "rows": [
+        [
+          []
+        ]
+      ],
+      "rowcount": 1,
+      "duration": 1.62456
+    },
+    "SELECT count(*) FROM doc.auth_user": {
+      "cols": [
+        "count(*)"
+      ],
+      "rows": [
+        [
+          0
+        ]
+      ],
+      "rowcount": 1,
+      "duration": 1.787552
+    },
+    "SELECT count(*) FROM doc.auth_account": {
+      "cols": [
+        "count(*)"
+      ],
+      "rows": [
+        [
+          0
+        ]
+      ],
+      "rowcount": 1,
+      "duration": 1.656625
+    },
+    "SELECT count(*) FROM doc.auth_session": {
+      "cols": [
+        "count(*)"
+      ],
+      "rows": [
+        [
+          0
+        ]
+      ],
+      "rowcount": 1,
+      "duration": 1.182723
+    },
+    "SELECT count(*) FROM doc.auth_verification": {
+      "cols": [
+        "count(*)"
+      ],
+      "rows": [
+        [
+          0
+        ]
+      ],
+      "rowcount": 1,
+      "duration": 4.14203
+    },
+    "SELECT count(*) FROM doc.auth_jwks": {
+      "cols": [
+        "count(*)"
+      ],
+      "rows": [
+        [
+          0
+        ]
+      ],
+      "rowcount": 1,
+      "duration": 1.335943
+    },
+    "SELECT count(*) FROM doc.auth_oauth_client": {
+      "cols": [
+        "count(*)"
+      ],
+      "rows": [
+        [
+          0
+        ]
+      ],
+      "rowcount": 1,
+      "duration": 3.772573
+    },
+    "SELECT count(*) FROM doc.auth_oauth_resource": {
+      "cols": [
+        "count(*)"
+      ],
+      "rows": [
+        [
+          0
+        ]
+      ],
+      "rowcount": 1,
+      "duration": 3.936615
+    },
+    "SELECT count(*) FROM doc.auth_oauth_client_resource": {
+      "cols": [
+        "count(*)"
+      ],
+      "rows": [
+        [
+          0
+        ]
+      ],
+      "rowcount": 1,
+      "duration": 4.259589
+    },
+    "SELECT count(*) FROM doc.auth_oauth_consent": {
+      "cols": [
+        "count(*)"
+      ],
+      "rows": [
+        [
+          0
+        ]
+      ],
+      "rowcount": 1,
+      "duration": 4.064752
+    },
+    "SELECT count(*) FROM doc.auth_oauth_access_token": {
+      "cols": [
+        "count(*)"
+      ],
+      "rows": [
+        [
+          0
+        ]
+      ],
+      "rowcount": 1,
+      "duration": 1.02958
+    },
+    "SELECT count(*) FROM doc.auth_oauth_refresh_token": {
+      "cols": [
+        "count(*)"
+      ],
+      "rows": [
+        [
+          0
+        ]
+      ],
+      "rowcount": 1,
+      "duration": 3.549169
+    },
+    "SELECT count(*) FROM doc.auth_oauth_client_assertion": {
+      "cols": [
+        "count(*)"
+      ],
+      "rows": [
+        [
+          0
+        ]
+      ],
+      "rowcount": 1,
+      "duration": 5.248937
+    },
+    "SELECT count(*) FROM doc.auth_rate_limit": {
+      "cols": [
+        "count(*)"
+      ],
+      "rows": [
+        [
+          0
+        ]
+      ],
+      "rowcount": 1,
+      "duration": 1.769128
+    },
+    "SELECT count(*) FROM doc.auth_capacity": {
+      "cols": [
+        "count(*)"
+      ],
+      "rows": [
+        [
+          0
+        ]
+      ],
+      "rowcount": 1,
+      "duration": 17.046469
+    },
+    "SELECT count(*) FROM doc.auth_user_email": {
+      "cols": [
+        "count(*)"
+      ],
+      "rows": [
+        [
+          0
+        ]
+      ],
+      "rowcount": 1,
+      "duration": 4.943274
+    },
+    "SELECT count(*) FROM doc.user_mcp_action": {
+      "cols": [
+        "count(*)"
+      ],
+      "rows": [
+        [
+          0
+        ]
+      ],
+      "rowcount": 1,
+      "duration": 3.728492
+    },
+    "SELECT health,count(*),sum(missing_shards),sum(underreplicated_shards) FROM sys.health GROUP BY health": {
+      "cols": [
+        "health",
+        "count(*)",
+        "sum(missing_shards)",
+        "sum(underreplicated_shards)"
+      ],
+      "rows": [
+        [
+          "GREEN",
+          113,
+          0,
+          0
+        ]
+      ],
+      "rowcount": 1,
+      "duration": 4.106454
+    }
+  },
+  "identities": [
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_auth",
+      "current_user": "goodwatch_auth"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_webapp",
+      "current_user": "goodwatch_webapp"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_search",
+      "current_user": "goodwatch_search"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_windmill",
+      "current_user": "goodwatch_windmill"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_readonly",
+      "current_user": "goodwatch_readonly"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_backup",
+      "current_user": "goodwatch_backup"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_monitoring",
+      "current_user": "goodwatch_monitoring"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_auth",
+      "current_user": "goodwatch_auth"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_webapp",
+      "current_user": "goodwatch_webapp"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_search",
+      "current_user": "goodwatch_search"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_windmill",
+      "current_user": "goodwatch_windmill"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_readonly",
+      "current_user": "goodwatch_readonly"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_backup",
+      "current_user": "goodwatch_backup"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_monitoring",
+      "current_user": "goodwatch_monitoring"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_auth",
+      "current_user": "goodwatch_auth"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_webapp",
+      "current_user": "goodwatch_webapp"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_search",
+      "current_user": "goodwatch_search"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_windmill",
+      "current_user": "goodwatch_windmill"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_readonly",
+      "current_user": "goodwatch_readonly"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_backup",
+      "current_user": "goodwatch_backup"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_monitoring",
+      "current_user": "goodwatch_monitoring"
+    }
+  ],
+  "allowed_reads": [
+    {
+      "coordinator": "10.0.0.11",
+      "stmt": "SELECT count(*) FROM doc.auth_user",
+      "rows": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "stmt": "SELECT count(*) FROM doc.auth_account",
+      "rows": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "stmt": "SELECT count(*) FROM doc.auth_session",
+      "rows": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "stmt": "SELECT count(*) FROM doc.auth_verification",
+      "rows": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "stmt": "SELECT count(*) FROM doc.auth_jwks",
+      "rows": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "stmt": "SELECT count(*) FROM doc.auth_oauth_client",
+      "rows": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "stmt": "SELECT count(*) FROM doc.auth_oauth_resource",
+      "rows": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "stmt": "SELECT count(*) FROM doc.auth_oauth_client_resource",
+      "rows": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "stmt": "SELECT count(*) FROM doc.auth_oauth_consent",
+      "rows": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "stmt": "SELECT count(*) FROM doc.auth_oauth_access_token",
+      "rows": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "stmt": "SELECT count(*) FROM doc.auth_oauth_refresh_token",
+      "rows": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "stmt": "SELECT count(*) FROM doc.auth_oauth_client_assertion",
+      "rows": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "stmt": "SELECT count(*) FROM doc.auth_rate_limit",
+      "rows": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "stmt": "SELECT count(*) FROM doc.auth_capacity",
+      "rows": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "stmt": "SELECT count(*) FROM doc.auth_user_email",
+      "rows": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "stmt": "SELECT id FROM sys.cluster",
+      "rowcount": 1
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "stmt": "SELECT name FROM sys.nodes",
+      "rowcount": 3
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "stmt": "SELECT count(*) FROM doc.auth_user",
+      "rows": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "stmt": "SELECT count(*) FROM doc.auth_account",
+      "rows": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "stmt": "SELECT count(*) FROM doc.auth_session",
+      "rows": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "stmt": "SELECT count(*) FROM doc.auth_verification",
+      "rows": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "stmt": "SELECT count(*) FROM doc.auth_jwks",
+      "rows": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "stmt": "SELECT count(*) FROM doc.auth_oauth_client",
+      "rows": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "stmt": "SELECT count(*) FROM doc.auth_oauth_resource",
+      "rows": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "stmt": "SELECT count(*) FROM doc.auth_oauth_client_resource",
+      "rows": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "stmt": "SELECT count(*) FROM doc.auth_oauth_consent",
+      "rows": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "stmt": "SELECT count(*) FROM doc.auth_oauth_access_token",
+      "rows": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "stmt": "SELECT count(*) FROM doc.auth_oauth_refresh_token",
+      "rows": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "stmt": "SELECT count(*) FROM doc.auth_oauth_client_assertion",
+      "rows": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "stmt": "SELECT count(*) FROM doc.auth_rate_limit",
+      "rows": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "stmt": "SELECT count(*) FROM doc.auth_capacity",
+      "rows": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "stmt": "SELECT count(*) FROM doc.auth_user_email",
+      "rows": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "stmt": "SELECT id FROM sys.cluster",
+      "rowcount": 1
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "stmt": "SELECT name FROM sys.nodes",
+      "rowcount": 3
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "stmt": "SELECT count(*) FROM doc.auth_user",
+      "rows": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "stmt": "SELECT count(*) FROM doc.auth_account",
+      "rows": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "stmt": "SELECT count(*) FROM doc.auth_session",
+      "rows": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "stmt": "SELECT count(*) FROM doc.auth_verification",
+      "rows": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "stmt": "SELECT count(*) FROM doc.auth_jwks",
+      "rows": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "stmt": "SELECT count(*) FROM doc.auth_oauth_client",
+      "rows": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "stmt": "SELECT count(*) FROM doc.auth_oauth_resource",
+      "rows": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "stmt": "SELECT count(*) FROM doc.auth_oauth_client_resource",
+      "rows": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "stmt": "SELECT count(*) FROM doc.auth_oauth_consent",
+      "rows": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "stmt": "SELECT count(*) FROM doc.auth_oauth_access_token",
+      "rows": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "stmt": "SELECT count(*) FROM doc.auth_oauth_refresh_token",
+      "rows": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "stmt": "SELECT count(*) FROM doc.auth_oauth_client_assertion",
+      "rows": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "stmt": "SELECT count(*) FROM doc.auth_rate_limit",
+      "rows": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "stmt": "SELECT count(*) FROM doc.auth_capacity",
+      "rows": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "stmt": "SELECT count(*) FROM doc.auth_user_email",
+      "rows": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "stmt": "SELECT id FROM sys.cluster",
+      "rowcount": 1
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "stmt": "SELECT name FROM sys.nodes",
+      "rowcount": 3
+    }
+  ],
+  "negative_checks": [
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_auth",
+      "stmt": "SELECT * FROM doc.movie LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_auth",
+      "stmt": "SELECT * FROM doc.tv LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_auth",
+      "stmt": "SELECT * FROM doc.user_mcp_action LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_auth",
+      "stmt": "CREATE TABLE doc.auth_user (id TEXT PRIMARY KEY)",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_auth",
+      "stmt": "GRANT DQL ON TABLE doc.auth_user TO goodwatch_auth",
+      "status": 401,
+      "code": 4011,
+      "message": "MissingPrivilegeException[Missing 'AL' privilege for user 'goodwatch_auth']"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_webapp",
+      "stmt": "SELECT * FROM doc.auth_user LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_user' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_search",
+      "stmt": "SELECT * FROM doc.auth_user LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_user' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_windmill",
+      "stmt": "SELECT * FROM doc.auth_user LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_user' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_readonly",
+      "stmt": "SELECT * FROM doc.auth_user LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_user' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_backup",
+      "stmt": "SELECT * FROM doc.auth_user LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_monitoring",
+      "stmt": "SELECT * FROM doc.auth_user LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_webapp",
+      "stmt": "DELETE FROM doc.auth_user WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_user' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_windmill",
+      "stmt": "DELETE FROM doc.auth_user WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_user' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_windmill",
+      "stmt": "ALTER TABLE doc.auth_user SET (\"write.wait_for_active_shards\"=1)",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_user' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_webapp",
+      "stmt": "SELECT * FROM doc.auth_account LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_account' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_search",
+      "stmt": "SELECT * FROM doc.auth_account LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_account' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_windmill",
+      "stmt": "SELECT * FROM doc.auth_account LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_account' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_readonly",
+      "stmt": "SELECT * FROM doc.auth_account LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_account' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_backup",
+      "stmt": "SELECT * FROM doc.auth_account LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_monitoring",
+      "stmt": "SELECT * FROM doc.auth_account LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_webapp",
+      "stmt": "DELETE FROM doc.auth_account WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_account' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_windmill",
+      "stmt": "DELETE FROM doc.auth_account WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_account' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_windmill",
+      "stmt": "ALTER TABLE doc.auth_account SET (\"write.wait_for_active_shards\"=1)",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_account' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_webapp",
+      "stmt": "SELECT * FROM doc.auth_session LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_session' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_search",
+      "stmt": "SELECT * FROM doc.auth_session LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_session' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_windmill",
+      "stmt": "SELECT * FROM doc.auth_session LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_session' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_readonly",
+      "stmt": "SELECT * FROM doc.auth_session LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_session' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_backup",
+      "stmt": "SELECT * FROM doc.auth_session LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_monitoring",
+      "stmt": "SELECT * FROM doc.auth_session LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_webapp",
+      "stmt": "DELETE FROM doc.auth_session WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_session' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_windmill",
+      "stmt": "DELETE FROM doc.auth_session WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_session' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_windmill",
+      "stmt": "ALTER TABLE doc.auth_session SET (\"write.wait_for_active_shards\"=1)",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_session' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_webapp",
+      "stmt": "SELECT * FROM doc.auth_verification LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_verification' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_search",
+      "stmt": "SELECT * FROM doc.auth_verification LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_verification' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_windmill",
+      "stmt": "SELECT * FROM doc.auth_verification LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_verification' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_readonly",
+      "stmt": "SELECT * FROM doc.auth_verification LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_verification' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_backup",
+      "stmt": "SELECT * FROM doc.auth_verification LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_monitoring",
+      "stmt": "SELECT * FROM doc.auth_verification LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_webapp",
+      "stmt": "DELETE FROM doc.auth_verification WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_verification' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_windmill",
+      "stmt": "DELETE FROM doc.auth_verification WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_verification' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_windmill",
+      "stmt": "ALTER TABLE doc.auth_verification SET (\"write.wait_for_active_shards\"=1)",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_verification' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_webapp",
+      "stmt": "SELECT * FROM doc.auth_jwks LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_jwks' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_search",
+      "stmt": "SELECT * FROM doc.auth_jwks LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_jwks' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_windmill",
+      "stmt": "SELECT * FROM doc.auth_jwks LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_jwks' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_readonly",
+      "stmt": "SELECT * FROM doc.auth_jwks LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_jwks' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_backup",
+      "stmt": "SELECT * FROM doc.auth_jwks LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_monitoring",
+      "stmt": "SELECT * FROM doc.auth_jwks LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_webapp",
+      "stmt": "DELETE FROM doc.auth_jwks WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_jwks' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_windmill",
+      "stmt": "DELETE FROM doc.auth_jwks WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_jwks' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_windmill",
+      "stmt": "ALTER TABLE doc.auth_jwks SET (\"write.wait_for_active_shards\"=1)",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_jwks' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_webapp",
+      "stmt": "SELECT * FROM doc.auth_oauth_client LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_client' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_search",
+      "stmt": "SELECT * FROM doc.auth_oauth_client LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_client' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_windmill",
+      "stmt": "SELECT * FROM doc.auth_oauth_client LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_client' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_readonly",
+      "stmt": "SELECT * FROM doc.auth_oauth_client LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_client' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_backup",
+      "stmt": "SELECT * FROM doc.auth_oauth_client LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_monitoring",
+      "stmt": "SELECT * FROM doc.auth_oauth_client LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_webapp",
+      "stmt": "DELETE FROM doc.auth_oauth_client WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_client' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_windmill",
+      "stmt": "DELETE FROM doc.auth_oauth_client WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_client' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_windmill",
+      "stmt": "ALTER TABLE doc.auth_oauth_client SET (\"write.wait_for_active_shards\"=1)",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_client' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_webapp",
+      "stmt": "SELECT * FROM doc.auth_oauth_resource LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_resource' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_search",
+      "stmt": "SELECT * FROM doc.auth_oauth_resource LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_resource' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_windmill",
+      "stmt": "SELECT * FROM doc.auth_oauth_resource LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_resource' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_readonly",
+      "stmt": "SELECT * FROM doc.auth_oauth_resource LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_resource' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_backup",
+      "stmt": "SELECT * FROM doc.auth_oauth_resource LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_monitoring",
+      "stmt": "SELECT * FROM doc.auth_oauth_resource LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_webapp",
+      "stmt": "DELETE FROM doc.auth_oauth_resource WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_resource' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_windmill",
+      "stmt": "DELETE FROM doc.auth_oauth_resource WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_resource' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_windmill",
+      "stmt": "ALTER TABLE doc.auth_oauth_resource SET (\"write.wait_for_active_shards\"=1)",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_resource' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_webapp",
+      "stmt": "SELECT * FROM doc.auth_oauth_client_resource LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_client_resource' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_search",
+      "stmt": "SELECT * FROM doc.auth_oauth_client_resource LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_client_resource' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_windmill",
+      "stmt": "SELECT * FROM doc.auth_oauth_client_resource LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_client_resource' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_readonly",
+      "stmt": "SELECT * FROM doc.auth_oauth_client_resource LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_client_resource' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_backup",
+      "stmt": "SELECT * FROM doc.auth_oauth_client_resource LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_monitoring",
+      "stmt": "SELECT * FROM doc.auth_oauth_client_resource LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_webapp",
+      "stmt": "DELETE FROM doc.auth_oauth_client_resource WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_client_resource' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_windmill",
+      "stmt": "DELETE FROM doc.auth_oauth_client_resource WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_client_resource' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_windmill",
+      "stmt": "ALTER TABLE doc.auth_oauth_client_resource SET (\"write.wait_for_active_shards\"=1)",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_client_resource' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_webapp",
+      "stmt": "SELECT * FROM doc.auth_oauth_consent LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_consent' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_search",
+      "stmt": "SELECT * FROM doc.auth_oauth_consent LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_consent' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_windmill",
+      "stmt": "SELECT * FROM doc.auth_oauth_consent LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_consent' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_readonly",
+      "stmt": "SELECT * FROM doc.auth_oauth_consent LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_consent' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_backup",
+      "stmt": "SELECT * FROM doc.auth_oauth_consent LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_monitoring",
+      "stmt": "SELECT * FROM doc.auth_oauth_consent LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_webapp",
+      "stmt": "DELETE FROM doc.auth_oauth_consent WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_consent' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_windmill",
+      "stmt": "DELETE FROM doc.auth_oauth_consent WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_consent' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_windmill",
+      "stmt": "ALTER TABLE doc.auth_oauth_consent SET (\"write.wait_for_active_shards\"=1)",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_consent' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_webapp",
+      "stmt": "SELECT * FROM doc.auth_oauth_access_token LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_access_token' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_search",
+      "stmt": "SELECT * FROM doc.auth_oauth_access_token LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_access_token' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_windmill",
+      "stmt": "SELECT * FROM doc.auth_oauth_access_token LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_access_token' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_readonly",
+      "stmt": "SELECT * FROM doc.auth_oauth_access_token LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_access_token' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_backup",
+      "stmt": "SELECT * FROM doc.auth_oauth_access_token LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_monitoring",
+      "stmt": "SELECT * FROM doc.auth_oauth_access_token LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_webapp",
+      "stmt": "DELETE FROM doc.auth_oauth_access_token WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_access_token' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_windmill",
+      "stmt": "DELETE FROM doc.auth_oauth_access_token WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_access_token' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_windmill",
+      "stmt": "ALTER TABLE doc.auth_oauth_access_token SET (\"write.wait_for_active_shards\"=1)",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_access_token' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_webapp",
+      "stmt": "SELECT * FROM doc.auth_oauth_refresh_token LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_refresh_token' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_search",
+      "stmt": "SELECT * FROM doc.auth_oauth_refresh_token LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_refresh_token' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_windmill",
+      "stmt": "SELECT * FROM doc.auth_oauth_refresh_token LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_refresh_token' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_readonly",
+      "stmt": "SELECT * FROM doc.auth_oauth_refresh_token LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_refresh_token' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_backup",
+      "stmt": "SELECT * FROM doc.auth_oauth_refresh_token LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_monitoring",
+      "stmt": "SELECT * FROM doc.auth_oauth_refresh_token LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_webapp",
+      "stmt": "DELETE FROM doc.auth_oauth_refresh_token WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_refresh_token' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_windmill",
+      "stmt": "DELETE FROM doc.auth_oauth_refresh_token WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_refresh_token' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_windmill",
+      "stmt": "ALTER TABLE doc.auth_oauth_refresh_token SET (\"write.wait_for_active_shards\"=1)",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_refresh_token' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_webapp",
+      "stmt": "SELECT * FROM doc.auth_oauth_client_assertion LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_client_assertion' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_search",
+      "stmt": "SELECT * FROM doc.auth_oauth_client_assertion LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_client_assertion' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_windmill",
+      "stmt": "SELECT * FROM doc.auth_oauth_client_assertion LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_client_assertion' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_readonly",
+      "stmt": "SELECT * FROM doc.auth_oauth_client_assertion LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_client_assertion' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_backup",
+      "stmt": "SELECT * FROM doc.auth_oauth_client_assertion LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_monitoring",
+      "stmt": "SELECT * FROM doc.auth_oauth_client_assertion LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_webapp",
+      "stmt": "DELETE FROM doc.auth_oauth_client_assertion WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_client_assertion' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_windmill",
+      "stmt": "DELETE FROM doc.auth_oauth_client_assertion WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_client_assertion' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_windmill",
+      "stmt": "ALTER TABLE doc.auth_oauth_client_assertion SET (\"write.wait_for_active_shards\"=1)",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_client_assertion' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_webapp",
+      "stmt": "SELECT * FROM doc.auth_rate_limit LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_rate_limit' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_search",
+      "stmt": "SELECT * FROM doc.auth_rate_limit LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_rate_limit' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_windmill",
+      "stmt": "SELECT * FROM doc.auth_rate_limit LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_rate_limit' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_readonly",
+      "stmt": "SELECT * FROM doc.auth_rate_limit LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_rate_limit' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_backup",
+      "stmt": "SELECT * FROM doc.auth_rate_limit LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_monitoring",
+      "stmt": "SELECT * FROM doc.auth_rate_limit LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_webapp",
+      "stmt": "DELETE FROM doc.auth_rate_limit WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_rate_limit' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_windmill",
+      "stmt": "DELETE FROM doc.auth_rate_limit WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_rate_limit' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_windmill",
+      "stmt": "ALTER TABLE doc.auth_rate_limit SET (\"write.wait_for_active_shards\"=1)",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_rate_limit' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_webapp",
+      "stmt": "SELECT * FROM doc.auth_capacity LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_capacity' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_search",
+      "stmt": "SELECT * FROM doc.auth_capacity LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_capacity' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_windmill",
+      "stmt": "SELECT * FROM doc.auth_capacity LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_capacity' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_readonly",
+      "stmt": "SELECT * FROM doc.auth_capacity LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_capacity' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_backup",
+      "stmt": "SELECT * FROM doc.auth_capacity LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_monitoring",
+      "stmt": "SELECT * FROM doc.auth_capacity LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_webapp",
+      "stmt": "DELETE FROM doc.auth_capacity WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_capacity' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_windmill",
+      "stmt": "DELETE FROM doc.auth_capacity WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_capacity' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_windmill",
+      "stmt": "ALTER TABLE doc.auth_capacity SET (\"write.wait_for_active_shards\"=1)",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_capacity' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_webapp",
+      "stmt": "SELECT * FROM doc.auth_user_email LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_user_email' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_search",
+      "stmt": "SELECT * FROM doc.auth_user_email LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_user_email' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_windmill",
+      "stmt": "SELECT * FROM doc.auth_user_email LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_user_email' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_readonly",
+      "stmt": "SELECT * FROM doc.auth_user_email LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_user_email' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_backup",
+      "stmt": "SELECT * FROM doc.auth_user_email LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_monitoring",
+      "stmt": "SELECT * FROM doc.auth_user_email LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_webapp",
+      "stmt": "DELETE FROM doc.auth_user_email WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_user_email' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_windmill",
+      "stmt": "DELETE FROM doc.auth_user_email WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_user_email' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_windmill",
+      "stmt": "ALTER TABLE doc.auth_user_email SET (\"write.wait_for_active_shards\"=1)",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_user_email' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.11",
+      "role": "goodwatch_auth",
+      "check": "wrong password",
+      "status": 401
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_auth",
+      "stmt": "SELECT * FROM doc.movie LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_auth",
+      "stmt": "SELECT * FROM doc.tv LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_auth",
+      "stmt": "SELECT * FROM doc.user_mcp_action LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_auth",
+      "stmt": "CREATE TABLE doc.auth_user (id TEXT PRIMARY KEY)",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_auth",
+      "stmt": "GRANT DQL ON TABLE doc.auth_user TO goodwatch_auth",
+      "status": 401,
+      "code": 4011,
+      "message": "MissingPrivilegeException[Missing 'AL' privilege for user 'goodwatch_auth']"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_webapp",
+      "stmt": "SELECT * FROM doc.auth_user LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_user' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_search",
+      "stmt": "SELECT * FROM doc.auth_user LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_user' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_windmill",
+      "stmt": "SELECT * FROM doc.auth_user LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_user' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_readonly",
+      "stmt": "SELECT * FROM doc.auth_user LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_user' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_backup",
+      "stmt": "SELECT * FROM doc.auth_user LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_monitoring",
+      "stmt": "SELECT * FROM doc.auth_user LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_webapp",
+      "stmt": "DELETE FROM doc.auth_user WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_user' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_windmill",
+      "stmt": "DELETE FROM doc.auth_user WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_user' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_windmill",
+      "stmt": "ALTER TABLE doc.auth_user SET (\"write.wait_for_active_shards\"=1)",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_user' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_webapp",
+      "stmt": "SELECT * FROM doc.auth_account LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_account' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_search",
+      "stmt": "SELECT * FROM doc.auth_account LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_account' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_windmill",
+      "stmt": "SELECT * FROM doc.auth_account LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_account' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_readonly",
+      "stmt": "SELECT * FROM doc.auth_account LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_account' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_backup",
+      "stmt": "SELECT * FROM doc.auth_account LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_monitoring",
+      "stmt": "SELECT * FROM doc.auth_account LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_webapp",
+      "stmt": "DELETE FROM doc.auth_account WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_account' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_windmill",
+      "stmt": "DELETE FROM doc.auth_account WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_account' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_windmill",
+      "stmt": "ALTER TABLE doc.auth_account SET (\"write.wait_for_active_shards\"=1)",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_account' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_webapp",
+      "stmt": "SELECT * FROM doc.auth_session LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_session' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_search",
+      "stmt": "SELECT * FROM doc.auth_session LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_session' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_windmill",
+      "stmt": "SELECT * FROM doc.auth_session LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_session' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_readonly",
+      "stmt": "SELECT * FROM doc.auth_session LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_session' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_backup",
+      "stmt": "SELECT * FROM doc.auth_session LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_monitoring",
+      "stmt": "SELECT * FROM doc.auth_session LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_webapp",
+      "stmt": "DELETE FROM doc.auth_session WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_session' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_windmill",
+      "stmt": "DELETE FROM doc.auth_session WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_session' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_windmill",
+      "stmt": "ALTER TABLE doc.auth_session SET (\"write.wait_for_active_shards\"=1)",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_session' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_webapp",
+      "stmt": "SELECT * FROM doc.auth_verification LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_verification' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_search",
+      "stmt": "SELECT * FROM doc.auth_verification LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_verification' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_windmill",
+      "stmt": "SELECT * FROM doc.auth_verification LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_verification' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_readonly",
+      "stmt": "SELECT * FROM doc.auth_verification LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_verification' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_backup",
+      "stmt": "SELECT * FROM doc.auth_verification LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_monitoring",
+      "stmt": "SELECT * FROM doc.auth_verification LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_webapp",
+      "stmt": "DELETE FROM doc.auth_verification WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_verification' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_windmill",
+      "stmt": "DELETE FROM doc.auth_verification WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_verification' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_windmill",
+      "stmt": "ALTER TABLE doc.auth_verification SET (\"write.wait_for_active_shards\"=1)",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_verification' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_webapp",
+      "stmt": "SELECT * FROM doc.auth_jwks LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_jwks' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_search",
+      "stmt": "SELECT * FROM doc.auth_jwks LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_jwks' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_windmill",
+      "stmt": "SELECT * FROM doc.auth_jwks LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_jwks' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_readonly",
+      "stmt": "SELECT * FROM doc.auth_jwks LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_jwks' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_backup",
+      "stmt": "SELECT * FROM doc.auth_jwks LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_monitoring",
+      "stmt": "SELECT * FROM doc.auth_jwks LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_webapp",
+      "stmt": "DELETE FROM doc.auth_jwks WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_jwks' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_windmill",
+      "stmt": "DELETE FROM doc.auth_jwks WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_jwks' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_windmill",
+      "stmt": "ALTER TABLE doc.auth_jwks SET (\"write.wait_for_active_shards\"=1)",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_jwks' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_webapp",
+      "stmt": "SELECT * FROM doc.auth_oauth_client LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_client' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_search",
+      "stmt": "SELECT * FROM doc.auth_oauth_client LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_client' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_windmill",
+      "stmt": "SELECT * FROM doc.auth_oauth_client LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_client' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_readonly",
+      "stmt": "SELECT * FROM doc.auth_oauth_client LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_client' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_backup",
+      "stmt": "SELECT * FROM doc.auth_oauth_client LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_monitoring",
+      "stmt": "SELECT * FROM doc.auth_oauth_client LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_webapp",
+      "stmt": "DELETE FROM doc.auth_oauth_client WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_client' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_windmill",
+      "stmt": "DELETE FROM doc.auth_oauth_client WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_client' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_windmill",
+      "stmt": "ALTER TABLE doc.auth_oauth_client SET (\"write.wait_for_active_shards\"=1)",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_client' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_webapp",
+      "stmt": "SELECT * FROM doc.auth_oauth_resource LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_resource' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_search",
+      "stmt": "SELECT * FROM doc.auth_oauth_resource LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_resource' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_windmill",
+      "stmt": "SELECT * FROM doc.auth_oauth_resource LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_resource' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_readonly",
+      "stmt": "SELECT * FROM doc.auth_oauth_resource LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_resource' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_backup",
+      "stmt": "SELECT * FROM doc.auth_oauth_resource LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_monitoring",
+      "stmt": "SELECT * FROM doc.auth_oauth_resource LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_webapp",
+      "stmt": "DELETE FROM doc.auth_oauth_resource WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_resource' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_windmill",
+      "stmt": "DELETE FROM doc.auth_oauth_resource WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_resource' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_windmill",
+      "stmt": "ALTER TABLE doc.auth_oauth_resource SET (\"write.wait_for_active_shards\"=1)",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_resource' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_webapp",
+      "stmt": "SELECT * FROM doc.auth_oauth_client_resource LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_client_resource' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_search",
+      "stmt": "SELECT * FROM doc.auth_oauth_client_resource LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_client_resource' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_windmill",
+      "stmt": "SELECT * FROM doc.auth_oauth_client_resource LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_client_resource' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_readonly",
+      "stmt": "SELECT * FROM doc.auth_oauth_client_resource LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_client_resource' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_backup",
+      "stmt": "SELECT * FROM doc.auth_oauth_client_resource LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_monitoring",
+      "stmt": "SELECT * FROM doc.auth_oauth_client_resource LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_webapp",
+      "stmt": "DELETE FROM doc.auth_oauth_client_resource WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_client_resource' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_windmill",
+      "stmt": "DELETE FROM doc.auth_oauth_client_resource WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_client_resource' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_windmill",
+      "stmt": "ALTER TABLE doc.auth_oauth_client_resource SET (\"write.wait_for_active_shards\"=1)",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_client_resource' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_webapp",
+      "stmt": "SELECT * FROM doc.auth_oauth_consent LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_consent' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_search",
+      "stmt": "SELECT * FROM doc.auth_oauth_consent LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_consent' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_windmill",
+      "stmt": "SELECT * FROM doc.auth_oauth_consent LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_consent' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_readonly",
+      "stmt": "SELECT * FROM doc.auth_oauth_consent LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_consent' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_backup",
+      "stmt": "SELECT * FROM doc.auth_oauth_consent LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_monitoring",
+      "stmt": "SELECT * FROM doc.auth_oauth_consent LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_webapp",
+      "stmt": "DELETE FROM doc.auth_oauth_consent WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_consent' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_windmill",
+      "stmt": "DELETE FROM doc.auth_oauth_consent WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_consent' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_windmill",
+      "stmt": "ALTER TABLE doc.auth_oauth_consent SET (\"write.wait_for_active_shards\"=1)",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_consent' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_webapp",
+      "stmt": "SELECT * FROM doc.auth_oauth_access_token LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_access_token' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_search",
+      "stmt": "SELECT * FROM doc.auth_oauth_access_token LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_access_token' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_windmill",
+      "stmt": "SELECT * FROM doc.auth_oauth_access_token LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_access_token' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_readonly",
+      "stmt": "SELECT * FROM doc.auth_oauth_access_token LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_access_token' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_backup",
+      "stmt": "SELECT * FROM doc.auth_oauth_access_token LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_monitoring",
+      "stmt": "SELECT * FROM doc.auth_oauth_access_token LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_webapp",
+      "stmt": "DELETE FROM doc.auth_oauth_access_token WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_access_token' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_windmill",
+      "stmt": "DELETE FROM doc.auth_oauth_access_token WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_access_token' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_windmill",
+      "stmt": "ALTER TABLE doc.auth_oauth_access_token SET (\"write.wait_for_active_shards\"=1)",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_access_token' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_webapp",
+      "stmt": "SELECT * FROM doc.auth_oauth_refresh_token LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_refresh_token' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_search",
+      "stmt": "SELECT * FROM doc.auth_oauth_refresh_token LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_refresh_token' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_windmill",
+      "stmt": "SELECT * FROM doc.auth_oauth_refresh_token LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_refresh_token' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_readonly",
+      "stmt": "SELECT * FROM doc.auth_oauth_refresh_token LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_refresh_token' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_backup",
+      "stmt": "SELECT * FROM doc.auth_oauth_refresh_token LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_monitoring",
+      "stmt": "SELECT * FROM doc.auth_oauth_refresh_token LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_webapp",
+      "stmt": "DELETE FROM doc.auth_oauth_refresh_token WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_refresh_token' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_windmill",
+      "stmt": "DELETE FROM doc.auth_oauth_refresh_token WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_refresh_token' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_windmill",
+      "stmt": "ALTER TABLE doc.auth_oauth_refresh_token SET (\"write.wait_for_active_shards\"=1)",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_refresh_token' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_webapp",
+      "stmt": "SELECT * FROM doc.auth_oauth_client_assertion LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_client_assertion' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_search",
+      "stmt": "SELECT * FROM doc.auth_oauth_client_assertion LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_client_assertion' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_windmill",
+      "stmt": "SELECT * FROM doc.auth_oauth_client_assertion LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_client_assertion' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_readonly",
+      "stmt": "SELECT * FROM doc.auth_oauth_client_assertion LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_client_assertion' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_backup",
+      "stmt": "SELECT * FROM doc.auth_oauth_client_assertion LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_monitoring",
+      "stmt": "SELECT * FROM doc.auth_oauth_client_assertion LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_webapp",
+      "stmt": "DELETE FROM doc.auth_oauth_client_assertion WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_client_assertion' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_windmill",
+      "stmt": "DELETE FROM doc.auth_oauth_client_assertion WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_client_assertion' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_windmill",
+      "stmt": "ALTER TABLE doc.auth_oauth_client_assertion SET (\"write.wait_for_active_shards\"=1)",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_client_assertion' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_webapp",
+      "stmt": "SELECT * FROM doc.auth_rate_limit LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_rate_limit' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_search",
+      "stmt": "SELECT * FROM doc.auth_rate_limit LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_rate_limit' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_windmill",
+      "stmt": "SELECT * FROM doc.auth_rate_limit LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_rate_limit' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_readonly",
+      "stmt": "SELECT * FROM doc.auth_rate_limit LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_rate_limit' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_backup",
+      "stmt": "SELECT * FROM doc.auth_rate_limit LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_monitoring",
+      "stmt": "SELECT * FROM doc.auth_rate_limit LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_webapp",
+      "stmt": "DELETE FROM doc.auth_rate_limit WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_rate_limit' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_windmill",
+      "stmt": "DELETE FROM doc.auth_rate_limit WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_rate_limit' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_windmill",
+      "stmt": "ALTER TABLE doc.auth_rate_limit SET (\"write.wait_for_active_shards\"=1)",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_rate_limit' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_webapp",
+      "stmt": "SELECT * FROM doc.auth_capacity LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_capacity' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_search",
+      "stmt": "SELECT * FROM doc.auth_capacity LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_capacity' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_windmill",
+      "stmt": "SELECT * FROM doc.auth_capacity LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_capacity' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_readonly",
+      "stmt": "SELECT * FROM doc.auth_capacity LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_capacity' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_backup",
+      "stmt": "SELECT * FROM doc.auth_capacity LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_monitoring",
+      "stmt": "SELECT * FROM doc.auth_capacity LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_webapp",
+      "stmt": "DELETE FROM doc.auth_capacity WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_capacity' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_windmill",
+      "stmt": "DELETE FROM doc.auth_capacity WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_capacity' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_windmill",
+      "stmt": "ALTER TABLE doc.auth_capacity SET (\"write.wait_for_active_shards\"=1)",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_capacity' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_webapp",
+      "stmt": "SELECT * FROM doc.auth_user_email LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_user_email' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_search",
+      "stmt": "SELECT * FROM doc.auth_user_email LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_user_email' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_windmill",
+      "stmt": "SELECT * FROM doc.auth_user_email LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_user_email' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_readonly",
+      "stmt": "SELECT * FROM doc.auth_user_email LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_user_email' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_backup",
+      "stmt": "SELECT * FROM doc.auth_user_email LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_monitoring",
+      "stmt": "SELECT * FROM doc.auth_user_email LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_webapp",
+      "stmt": "DELETE FROM doc.auth_user_email WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_user_email' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_windmill",
+      "stmt": "DELETE FROM doc.auth_user_email WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_user_email' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_windmill",
+      "stmt": "ALTER TABLE doc.auth_user_email SET (\"write.wait_for_active_shards\"=1)",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_user_email' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.12",
+      "role": "goodwatch_auth",
+      "check": "wrong password",
+      "status": 401
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_auth",
+      "stmt": "SELECT * FROM doc.movie LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_auth",
+      "stmt": "SELECT * FROM doc.tv LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_auth",
+      "stmt": "SELECT * FROM doc.user_mcp_action LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_auth",
+      "stmt": "CREATE TABLE doc.auth_user (id TEXT PRIMARY KEY)",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_auth",
+      "stmt": "GRANT DQL ON TABLE doc.auth_user TO goodwatch_auth",
+      "status": 401,
+      "code": 4011,
+      "message": "MissingPrivilegeException[Missing 'AL' privilege for user 'goodwatch_auth']"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_webapp",
+      "stmt": "SELECT * FROM doc.auth_user LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_user' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_search",
+      "stmt": "SELECT * FROM doc.auth_user LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_user' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_windmill",
+      "stmt": "SELECT * FROM doc.auth_user LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_user' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_readonly",
+      "stmt": "SELECT * FROM doc.auth_user LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_user' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_backup",
+      "stmt": "SELECT * FROM doc.auth_user LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_monitoring",
+      "stmt": "SELECT * FROM doc.auth_user LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_webapp",
+      "stmt": "DELETE FROM doc.auth_user WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_user' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_windmill",
+      "stmt": "DELETE FROM doc.auth_user WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_user' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_windmill",
+      "stmt": "ALTER TABLE doc.auth_user SET (\"write.wait_for_active_shards\"=1)",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_user' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_webapp",
+      "stmt": "SELECT * FROM doc.auth_account LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_account' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_search",
+      "stmt": "SELECT * FROM doc.auth_account LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_account' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_windmill",
+      "stmt": "SELECT * FROM doc.auth_account LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_account' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_readonly",
+      "stmt": "SELECT * FROM doc.auth_account LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_account' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_backup",
+      "stmt": "SELECT * FROM doc.auth_account LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_monitoring",
+      "stmt": "SELECT * FROM doc.auth_account LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_webapp",
+      "stmt": "DELETE FROM doc.auth_account WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_account' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_windmill",
+      "stmt": "DELETE FROM doc.auth_account WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_account' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_windmill",
+      "stmt": "ALTER TABLE doc.auth_account SET (\"write.wait_for_active_shards\"=1)",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_account' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_webapp",
+      "stmt": "SELECT * FROM doc.auth_session LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_session' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_search",
+      "stmt": "SELECT * FROM doc.auth_session LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_session' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_windmill",
+      "stmt": "SELECT * FROM doc.auth_session LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_session' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_readonly",
+      "stmt": "SELECT * FROM doc.auth_session LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_session' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_backup",
+      "stmt": "SELECT * FROM doc.auth_session LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_monitoring",
+      "stmt": "SELECT * FROM doc.auth_session LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_webapp",
+      "stmt": "DELETE FROM doc.auth_session WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_session' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_windmill",
+      "stmt": "DELETE FROM doc.auth_session WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_session' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_windmill",
+      "stmt": "ALTER TABLE doc.auth_session SET (\"write.wait_for_active_shards\"=1)",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_session' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_webapp",
+      "stmt": "SELECT * FROM doc.auth_verification LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_verification' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_search",
+      "stmt": "SELECT * FROM doc.auth_verification LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_verification' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_windmill",
+      "stmt": "SELECT * FROM doc.auth_verification LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_verification' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_readonly",
+      "stmt": "SELECT * FROM doc.auth_verification LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_verification' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_backup",
+      "stmt": "SELECT * FROM doc.auth_verification LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_monitoring",
+      "stmt": "SELECT * FROM doc.auth_verification LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_webapp",
+      "stmt": "DELETE FROM doc.auth_verification WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_verification' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_windmill",
+      "stmt": "DELETE FROM doc.auth_verification WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_verification' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_windmill",
+      "stmt": "ALTER TABLE doc.auth_verification SET (\"write.wait_for_active_shards\"=1)",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_verification' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_webapp",
+      "stmt": "SELECT * FROM doc.auth_jwks LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_jwks' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_search",
+      "stmt": "SELECT * FROM doc.auth_jwks LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_jwks' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_windmill",
+      "stmt": "SELECT * FROM doc.auth_jwks LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_jwks' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_readonly",
+      "stmt": "SELECT * FROM doc.auth_jwks LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_jwks' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_backup",
+      "stmt": "SELECT * FROM doc.auth_jwks LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_monitoring",
+      "stmt": "SELECT * FROM doc.auth_jwks LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_webapp",
+      "stmt": "DELETE FROM doc.auth_jwks WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_jwks' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_windmill",
+      "stmt": "DELETE FROM doc.auth_jwks WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_jwks' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_windmill",
+      "stmt": "ALTER TABLE doc.auth_jwks SET (\"write.wait_for_active_shards\"=1)",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_jwks' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_webapp",
+      "stmt": "SELECT * FROM doc.auth_oauth_client LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_client' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_search",
+      "stmt": "SELECT * FROM doc.auth_oauth_client LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_client' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_windmill",
+      "stmt": "SELECT * FROM doc.auth_oauth_client LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_client' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_readonly",
+      "stmt": "SELECT * FROM doc.auth_oauth_client LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_client' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_backup",
+      "stmt": "SELECT * FROM doc.auth_oauth_client LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_monitoring",
+      "stmt": "SELECT * FROM doc.auth_oauth_client LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_webapp",
+      "stmt": "DELETE FROM doc.auth_oauth_client WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_client' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_windmill",
+      "stmt": "DELETE FROM doc.auth_oauth_client WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_client' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_windmill",
+      "stmt": "ALTER TABLE doc.auth_oauth_client SET (\"write.wait_for_active_shards\"=1)",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_client' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_webapp",
+      "stmt": "SELECT * FROM doc.auth_oauth_resource LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_resource' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_search",
+      "stmt": "SELECT * FROM doc.auth_oauth_resource LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_resource' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_windmill",
+      "stmt": "SELECT * FROM doc.auth_oauth_resource LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_resource' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_readonly",
+      "stmt": "SELECT * FROM doc.auth_oauth_resource LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_resource' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_backup",
+      "stmt": "SELECT * FROM doc.auth_oauth_resource LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_monitoring",
+      "stmt": "SELECT * FROM doc.auth_oauth_resource LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_webapp",
+      "stmt": "DELETE FROM doc.auth_oauth_resource WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_resource' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_windmill",
+      "stmt": "DELETE FROM doc.auth_oauth_resource WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_resource' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_windmill",
+      "stmt": "ALTER TABLE doc.auth_oauth_resource SET (\"write.wait_for_active_shards\"=1)",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_resource' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_webapp",
+      "stmt": "SELECT * FROM doc.auth_oauth_client_resource LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_client_resource' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_search",
+      "stmt": "SELECT * FROM doc.auth_oauth_client_resource LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_client_resource' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_windmill",
+      "stmt": "SELECT * FROM doc.auth_oauth_client_resource LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_client_resource' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_readonly",
+      "stmt": "SELECT * FROM doc.auth_oauth_client_resource LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_client_resource' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_backup",
+      "stmt": "SELECT * FROM doc.auth_oauth_client_resource LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_monitoring",
+      "stmt": "SELECT * FROM doc.auth_oauth_client_resource LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_webapp",
+      "stmt": "DELETE FROM doc.auth_oauth_client_resource WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_client_resource' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_windmill",
+      "stmt": "DELETE FROM doc.auth_oauth_client_resource WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_client_resource' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_windmill",
+      "stmt": "ALTER TABLE doc.auth_oauth_client_resource SET (\"write.wait_for_active_shards\"=1)",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_client_resource' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_webapp",
+      "stmt": "SELECT * FROM doc.auth_oauth_consent LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_consent' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_search",
+      "stmt": "SELECT * FROM doc.auth_oauth_consent LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_consent' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_windmill",
+      "stmt": "SELECT * FROM doc.auth_oauth_consent LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_consent' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_readonly",
+      "stmt": "SELECT * FROM doc.auth_oauth_consent LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_consent' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_backup",
+      "stmt": "SELECT * FROM doc.auth_oauth_consent LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_monitoring",
+      "stmt": "SELECT * FROM doc.auth_oauth_consent LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_webapp",
+      "stmt": "DELETE FROM doc.auth_oauth_consent WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_consent' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_windmill",
+      "stmt": "DELETE FROM doc.auth_oauth_consent WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_consent' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_windmill",
+      "stmt": "ALTER TABLE doc.auth_oauth_consent SET (\"write.wait_for_active_shards\"=1)",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_consent' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_webapp",
+      "stmt": "SELECT * FROM doc.auth_oauth_access_token LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_access_token' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_search",
+      "stmt": "SELECT * FROM doc.auth_oauth_access_token LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_access_token' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_windmill",
+      "stmt": "SELECT * FROM doc.auth_oauth_access_token LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_access_token' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_readonly",
+      "stmt": "SELECT * FROM doc.auth_oauth_access_token LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_access_token' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_backup",
+      "stmt": "SELECT * FROM doc.auth_oauth_access_token LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_monitoring",
+      "stmt": "SELECT * FROM doc.auth_oauth_access_token LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_webapp",
+      "stmt": "DELETE FROM doc.auth_oauth_access_token WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_access_token' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_windmill",
+      "stmt": "DELETE FROM doc.auth_oauth_access_token WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_access_token' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_windmill",
+      "stmt": "ALTER TABLE doc.auth_oauth_access_token SET (\"write.wait_for_active_shards\"=1)",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_access_token' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_webapp",
+      "stmt": "SELECT * FROM doc.auth_oauth_refresh_token LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_refresh_token' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_search",
+      "stmt": "SELECT * FROM doc.auth_oauth_refresh_token LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_refresh_token' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_windmill",
+      "stmt": "SELECT * FROM doc.auth_oauth_refresh_token LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_refresh_token' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_readonly",
+      "stmt": "SELECT * FROM doc.auth_oauth_refresh_token LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_refresh_token' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_backup",
+      "stmt": "SELECT * FROM doc.auth_oauth_refresh_token LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_monitoring",
+      "stmt": "SELECT * FROM doc.auth_oauth_refresh_token LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_webapp",
+      "stmt": "DELETE FROM doc.auth_oauth_refresh_token WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_refresh_token' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_windmill",
+      "stmt": "DELETE FROM doc.auth_oauth_refresh_token WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_refresh_token' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_windmill",
+      "stmt": "ALTER TABLE doc.auth_oauth_refresh_token SET (\"write.wait_for_active_shards\"=1)",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_refresh_token' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_webapp",
+      "stmt": "SELECT * FROM doc.auth_oauth_client_assertion LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_client_assertion' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_search",
+      "stmt": "SELECT * FROM doc.auth_oauth_client_assertion LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_client_assertion' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_windmill",
+      "stmt": "SELECT * FROM doc.auth_oauth_client_assertion LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_client_assertion' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_readonly",
+      "stmt": "SELECT * FROM doc.auth_oauth_client_assertion LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_client_assertion' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_backup",
+      "stmt": "SELECT * FROM doc.auth_oauth_client_assertion LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_monitoring",
+      "stmt": "SELECT * FROM doc.auth_oauth_client_assertion LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_webapp",
+      "stmt": "DELETE FROM doc.auth_oauth_client_assertion WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_client_assertion' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_windmill",
+      "stmt": "DELETE FROM doc.auth_oauth_client_assertion WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_client_assertion' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_windmill",
+      "stmt": "ALTER TABLE doc.auth_oauth_client_assertion SET (\"write.wait_for_active_shards\"=1)",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_oauth_client_assertion' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_webapp",
+      "stmt": "SELECT * FROM doc.auth_rate_limit LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_rate_limit' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_search",
+      "stmt": "SELECT * FROM doc.auth_rate_limit LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_rate_limit' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_windmill",
+      "stmt": "SELECT * FROM doc.auth_rate_limit LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_rate_limit' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_readonly",
+      "stmt": "SELECT * FROM doc.auth_rate_limit LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_rate_limit' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_backup",
+      "stmt": "SELECT * FROM doc.auth_rate_limit LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_monitoring",
+      "stmt": "SELECT * FROM doc.auth_rate_limit LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_webapp",
+      "stmt": "DELETE FROM doc.auth_rate_limit WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_rate_limit' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_windmill",
+      "stmt": "DELETE FROM doc.auth_rate_limit WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_rate_limit' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_windmill",
+      "stmt": "ALTER TABLE doc.auth_rate_limit SET (\"write.wait_for_active_shards\"=1)",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_rate_limit' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_webapp",
+      "stmt": "SELECT * FROM doc.auth_capacity LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_capacity' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_search",
+      "stmt": "SELECT * FROM doc.auth_capacity LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_capacity' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_windmill",
+      "stmt": "SELECT * FROM doc.auth_capacity LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_capacity' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_readonly",
+      "stmt": "SELECT * FROM doc.auth_capacity LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_capacity' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_backup",
+      "stmt": "SELECT * FROM doc.auth_capacity LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_monitoring",
+      "stmt": "SELECT * FROM doc.auth_capacity LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_webapp",
+      "stmt": "DELETE FROM doc.auth_capacity WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_capacity' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_windmill",
+      "stmt": "DELETE FROM doc.auth_capacity WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_capacity' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_windmill",
+      "stmt": "ALTER TABLE doc.auth_capacity SET (\"write.wait_for_active_shards\"=1)",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_capacity' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_webapp",
+      "stmt": "SELECT * FROM doc.auth_user_email LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_user_email' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_search",
+      "stmt": "SELECT * FROM doc.auth_user_email LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_user_email' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_windmill",
+      "stmt": "SELECT * FROM doc.auth_user_email LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_user_email' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_readonly",
+      "stmt": "SELECT * FROM doc.auth_user_email LIMIT 0",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_user_email' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_backup",
+      "stmt": "SELECT * FROM doc.auth_user_email LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_monitoring",
+      "stmt": "SELECT * FROM doc.auth_user_email LIMIT 0",
+      "status": 404,
+      "code": 4045,
+      "message": "SchemaUnknownException[Schema 'doc' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_webapp",
+      "stmt": "DELETE FROM doc.auth_user_email WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_user_email' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_windmill",
+      "stmt": "DELETE FROM doc.auth_user_email WHERE false",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_user_email' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_windmill",
+      "stmt": "ALTER TABLE doc.auth_user_email SET (\"write.wait_for_active_shards\"=1)",
+      "status": 404,
+      "code": 4041,
+      "message": "RelationUnknown[Relation 'doc.auth_user_email' unknown]"
+    },
+    {
+      "coordinator": "10.0.0.13",
+      "role": "goodwatch_auth",
+      "check": "wrong password",
+      "status": 401
+    }
+  ],
+  "summary": {
+    "tables": 16,
+    "auth_tables": 15,
+    "started_target_copies": 54,
+    "auth_grants": 32,
+    "table_deny_entries": 105,
+    "identities": 21,
+    "allowed_reads": 51,
+    "negative_checks": 423
+  }
+}
