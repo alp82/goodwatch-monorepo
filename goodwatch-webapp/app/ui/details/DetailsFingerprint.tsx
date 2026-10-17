@@ -5,7 +5,9 @@
 // Every view stays in the HTML. The interface avoids the word "pillar".
 
 import { assetUrl } from "~/utils/asset-url"
-import { Link } from "@remix-run/react"
+import { Link, useSearchParams } from "@remix-run/react"
+import { FP_VARIANTS, FP_VARIANT_NAMES } from "~/ui/details/prototype-fingerprint-display/variants"
+import { PrototypeSwitcher } from "~/ui/prototype/PrototypeSwitcher"
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/20/solid"
 import type React from "react"
 import { useEffect, useRef, useState } from "react"
@@ -18,9 +20,9 @@ import MediaText from "~/ui/media-text/MediaText"
 import { useReplayedTap } from "~/utils/useReplayedTap"
 
 
-type Pillar = keyof typeof PILLAR_CONFIG
-const PILLARS = Object.keys(PILLAR_CONFIG) as Pillar[]
-const HEX: Record<string, string> = {
+export type Pillar = keyof typeof PILLAR_CONFIG
+export const PILLARS = Object.keys(PILLAR_CONFIG) as Pillar[]
+export const HEX: Record<string, string> = {
 	Energy: "#f59e0b",
 	Heart: "#f43f5e",
 	Humor: "#14b8a6",
@@ -28,11 +30,11 @@ const HEX: Record<string, string> = {
 	Craft: "#8b5cf6",
 	Style: "#0ea5e9",
 }
-const TIER_WORD = ["None", "Low", "Medium", "High", "Very high"]
+export const TIER_WORD = ["None", "Low", "Medium", "High", "Very high"]
 
 // --- Shared pieces ---
 
-function Head({ t, children }: { t: F.TitleInput; children?: React.ReactNode }) {
+export function Head({ t, children }: { t: F.TitleInput; children?: React.ReactNode }) {
 	return (
 		<div className="flex flex-wrap items-end justify-between gap-4">
 			<div>
@@ -47,7 +49,7 @@ function Head({ t, children }: { t: F.TitleInput; children?: React.ReactNode }) 
 	)
 }
 
-function PillarName({ p, className = "" }: { p: Pillar; className?: string }) {
+export function PillarName({ p, className = "" }: { p: Pillar; className?: string }) {
 	return (
 		<h3 className={`flex items-center gap-2 font-semibold ${className}`}>
 			<span aria-hidden="true">{PILLAR_CONFIG[p].emoji}</span>
@@ -56,7 +58,7 @@ function PillarName({ p, className = "" }: { p: Pillar; className?: string }) {
 	)
 }
 
-function Meter({ tier, p, vertical = false }: { tier: number; p: Pillar; vertical?: boolean }) {
+export function Meter({ tier, p, vertical = false }: { tier: number; p: Pillar; vertical?: boolean }) {
 	return (
 		<span
 			role="img"
@@ -74,7 +76,7 @@ function Meter({ tier, p, vertical = false }: { tier: number; p: Pillar; vertica
 	)
 }
 
-function DriverBars({ t, p, compact = false }: { t: F.TitleInput; p: Pillar; compact?: boolean }) {
+export function DriverBars({ t, p, compact = false }: { t: F.TitleInput; p: Pillar; compact?: boolean }) {
 	return (
 		<ul className={`space-y-1.5 ${compact ? "" : "mt-1"}`}>
 			{F.pillarBrief(t, p).drivers.map((d) => (
@@ -91,7 +93,7 @@ function DriverBars({ t, p, compact = false }: { t: F.TitleInput; p: Pillar; com
 }
 
 
-function Verdict({ t, p, size = "base" }: { t: F.TitleInput; p: Pillar; size?: "base" | "lg" | "2xl" }) {
+export function Verdict({ t, p, size = "base" }: { t: F.TitleInput; p: Pillar; size?: "base" | "lg" | "2xl" }) {
 	const b = F.pillarBrief(t, p)
 	const cls = { base: "text-base", lg: "text-lg", "2xl": "text-2xl tracking-tight" }[size]
 	return (
@@ -103,7 +105,7 @@ function Verdict({ t, p, size = "base" }: { t: F.TitleInput; p: Pillar; size?: "
 }
 
 // Who it's for and Skip it if as chips; mood pages as links.
-function Audience({ t, layout = "row" }: { t: F.TitleInput; layout?: "row" | "stack" }) {
+export function Audience({ t, layout = "row" }: { t: F.TitleInput; layout?: "row" | "stack" }) {
 	const who = t.fingerprint.socialSuitability.map((x) => x.name)
 	const ctx = t.fingerprint.viewingContext.map((x) => x.name)
 	const skip = F.skipIf(t)
@@ -161,7 +163,7 @@ function Audience({ t, layout = "row" }: { t: F.TitleInput; layout?: "row" | "st
 
 type AttributeScore = { key: string; score: number }
 
-function Bars({ attributes, color, showMeaning = false }: { attributes: AttributeScore[]; color: string; showMeaning?: boolean }) {
+export function Bars({ attributes, color, showMeaning = false }: { attributes: AttributeScore[]; color: string; showMeaning?: boolean }) {
 	return (
 		<ul className="space-y-3">
 			{attributes.map((d) => {
@@ -185,7 +187,7 @@ function Bars({ attributes, color, showMeaning = false }: { attributes: Attribut
 // shows, plus the mood pages whose rules use this pillar's attributes.
 const FILTER_WORD: Record<number, string> = { 1: "low", 2: "medium", 3: "high" }
 
-function MoreLinks({ t, p }: { t: F.TitleInput; p: Pillar }) {
+export function MoreLinks({ t, p }: { t: F.TitleInput; p: Pillar }) {
 	const tier = t.fingerprint.pillars[p]
 	const moods = F.moodsForKeys(t, [...F.PILLAR_KEYS[p], ...F.RELATED_KEYS[p]])
 	const kind = t.mediaType === "movie" ? "movies" : "shows"
@@ -221,7 +223,7 @@ interface ViewProps {
 	backRef: React.RefObject<HTMLButtonElement>
 }
 
-function Overview({ t, onSelect }: { t: F.TitleInput; onSelect: (p: Pillar) => void }) {
+export function Overview({ t, onSelect }: { t: F.TitleInput; onSelect: (p: Pillar) => void }) {
 	const tiers = t.fingerprint.pillars
 	const rows = useRef<HTMLDivElement>(null)
 	useReplayedTap("pillar", (el) => Boolean(rows.current?.contains(el)))
@@ -278,7 +280,7 @@ function BackButton({ onBack, backRef }: { onBack: () => void; backRef: ViewProp
 	)
 }
 
-function BigPillar({ t, p }: { t: F.TitleInput; p: Pillar }) {
+export function BigPillar({ t, p }: { t: F.TitleInput; p: Pillar }) {
 	const tier = t.fingerprint.pillars[p]
 	const b = F.pillarBrief(t, p)
 	return (
@@ -303,7 +305,7 @@ function BigPillar({ t, p }: { t: F.TitleInput; p: Pillar }) {
 	)
 }
 
-function AttributeGrid({ t, p, meaning = true }: { t: F.TitleInput; p: Pillar; meaning?: boolean }) {
+export function AttributeGrid({ t, p, meaning = true }: { t: F.TitleInput; p: Pillar; meaning?: boolean }) {
 	const { own, related } = F.pillarAttributes(t, p)
 	return (
 		<div className="space-y-8">
@@ -327,12 +329,12 @@ function AttributeGrid({ t, p, meaning = true }: { t: F.TitleInput; p: Pillar; m
 	)
 }
 
-const tint = (p: Pillar, pct = 9) => ({
+export const tint = (p: Pillar, pct = 9) => ({
 	background: `linear-gradient(135deg, color-mix(in srgb, ${HEX[p]} ${pct}%, transparent), transparent 60%)`,
 })
 
 // Back button and pillar tabs on top; verdict and prose left, all attributes right.
-function PillarDetail({ t, p, onBack, onSelect, backRef }: ViewProps) {
+export function PillarDetail({ t, p, onBack, onSelect, backRef }: ViewProps) {
 	return (
 		<div className="flex min-h-full flex-col rounded-2xl border border-white/10 p-5 sm:p-8" style={tint(p)}>
 			<div className="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-center">
@@ -365,7 +367,7 @@ function PillarDetail({ t, p, onBack, onSelect, backRef }: ViewProps) {
 	)
 }
 
-function Switcher({ t }: { t: F.TitleInput }) {
+export function Switcher({ t }: { t: F.TitleInput }) {
 	const [open, setOpen] = useState<Pillar | null>(null)
 	const [last, setLast] = useState<Pillar | null>(null)
 	const backRef = useRef<HTMLButtonElement>(null)
@@ -419,6 +421,9 @@ export default function DetailsFingerprint({
 	media: MovieResult | ShowResult
 	sectionProps: { id: string; className: string; ref: (el: HTMLDivElement) => void }
 }) {
+	const [params] = useSearchParams()
+	// PROTOTYPE - throwaway: ?variant= swaps the fingerprint display.
+	const variant = params.get("variant")
 	if (!media.fingerprint) return null
 	const t: F.TitleInput = {
 		title: media.details.title,
@@ -428,8 +433,19 @@ export default function DetailsFingerprint({
 		genres: media.details.genres,
 		fingerprint: media.fingerprint,
 	}
+	const Variant = variant ? FP_VARIANTS[variant] : undefined
+	if (Variant)
+		return (
+			<section className="relative mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+				<div {...sectionProps}>
+					<Variant t={t} media={media} />
+				</div>
+				<PrototypeSwitcher variants={FP_VARIANT_NAMES} />
+			</section>
+		)
 	return (
 		<section className="relative mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+			{variant && <PrototypeSwitcher variants={FP_VARIANT_NAMES} />}
 			<div {...sectionProps}>
 				<Head t={t} />
 				<Switcher t={t} />
