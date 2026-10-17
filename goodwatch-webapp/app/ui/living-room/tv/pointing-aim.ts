@@ -1,7 +1,8 @@
 // Where the Remote should be for the spot it points at: the geometry of pointing (pointing.ts), pure, so the
 // tests run it as it is. Three Remotes aim in three ways:
-// - in the hand on the desktop it turns about the wrist toward the cursor wherever that is in the scene: a swing
-//   of up to 42 degrees under the TV, a nod of 13 beside it, where a swing would carry it over the picture;
+// - in the hand on the desktop it turns about the wrist toward the cursor while that is over the picture or within
+//   `AIM_PAD` of its edges (elsewhere it rests): a swing of up to 42 degrees under the TV, a nod of 13 beside it,
+//   where a swing would carry it over the picture;
 // - the phone's Remote under the TV (portrait) stays in its place: it turns a few degrees about the grip, leans
 //   back and slides a little, and only for a spot on the picture;
 // - the phone's Remote beside the TV (landscape) turns about the grip toward the picture on its left, as far as
@@ -58,6 +59,9 @@ const clamp = (n: number, lo: number, hi: number) =>
 	Math.max(lo, Math.min(hi, n))
 const degrees = (radians: number) => (radians * 180) / Math.PI
 const radians = (deg: number) => (deg * Math.PI) / 180
+
+/** How far outside the picture's edges the cursor still has the desktop Remote aim at it. */
+export const AIM_PAD = 40
 
 export const inside = (spot: { x: number; y: number }, r: Rect, pad = 0) =>
 	spot.x >= r.left - pad &&
@@ -139,15 +143,16 @@ export function aimFor(scene: AimScene, spot: Spot, still: boolean): Aim {
 			? FLAT
 			: rigAim(scene, scene.rig, spot)
 	const box = handBox(scene)
-	// Over the Remote itself it settles at rest, so its keys are where they were and can be hit. A finger on the
-	// picture counts as on the picture, also where the Remote's top reaches over it.
+	// Over the Remote itself it settles at rest, so its keys are where they were and can be hit; away from the
+	// picture it rests too. A finger on the picture counts as on the picture, also where the Remote's top reaches
+	// over it.
 	if (
 		still ||
 		!scene.live ||
 		!scene.hand ||
 		!box ||
 		!spot.here ||
-		(!spot.tap && inside(spot, box, 12))
+		(!spot.tap && (inside(spot, box, 12) || !inside(spot, scene.tv, AIM_PAD)))
 	)
 		return REST
 	const { hand } = scene

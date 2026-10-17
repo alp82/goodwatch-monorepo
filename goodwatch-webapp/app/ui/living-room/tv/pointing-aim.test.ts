@@ -5,6 +5,7 @@
 import assert from "node:assert/strict"
 import { describe, it } from "node:test"
 import {
+	AIM_PAD,
 	AROUND,
 	type AimScene,
 	DRAG,
@@ -60,14 +61,19 @@ const phone = (
 	rig: L.rig,
 })
 
-/** The four corners of the scene, a little inside it: top left, top right, bottom left, bottom right. */
-const corners = (w: number, h: number) =>
-	[
-		[30, 30],
-		[w - 30, 30],
-		[30, h - 30],
-		[w - 30, h - 30],
+/** The farthest spots the Remote still aims at, just inside the margin round the picture's corners: top left, top
+ * right, bottom left, bottom right. */
+const corners = ({ tv }: AimScene) => {
+	const pad = AIM_PAD - 1
+	const [l, t] = [tv.left - pad, tv.top - pad]
+	const [r, b] = [tv.left + tv.width + pad, tv.top + tv.height + pad]
+	return [
+		[l, t],
+		[r, t],
+		[l, b],
+		[r, b],
 	].map(([x, y]) => at(x, y))
+}
 
 describe("the Remote in the hand, under the TV", () => {
 	// 1920 x 1080 without the site's header and the scrollbar's gutter.
@@ -78,24 +84,22 @@ describe("the Remote in the hand, under the TV", () => {
 	})
 
 	it("swings far toward each corner, and no further than 42 degrees", () => {
-		const [tl, tr, bl, br] = corners(1905, 1016).map((c) =>
-			aimFor(scene, c, false),
-		)
+		const [tl, tr, bl, br] = corners(scene).map((c) => aimFor(scene, c, false))
 		assert.ok(tl.rz < -30 && bl.rz < -30, `left: ${tl.rz}, ${bl.rz}`)
 		assert.ok(tr.rz > 30 && br.rz > 30, `right: ${tr.rz}, ${br.rz}`)
 		for (const a of [tl, tr, bl, br]) assert.ok(Math.abs(a.rz) <= SWING.below)
 	})
 
 	it("leans back further for the top corners than for the bottom ones", () => {
-		const [tl, tr, bl, br] = corners(1905, 1016).map((c) =>
-			aimFor(scene, c, false),
-		)
+		const [tl, tr, bl, br] = corners(scene).map((c) => aimFor(scene, c, false))
 		assert.ok(tl.rx > bl.rx + 1 && tr.rx > br.rx + 1)
 	})
 
 	it("rolls and moves toward the cursor's side, and lifts as it turns", () => {
-		const left = aimFor(scene, at(200, 300), false)
-		const right = aimFor(scene, at(1700, 300), false)
+		const { tv } = scene
+		const y = tv.top + tv.height * 0.3
+		const left = aimFor(scene, at(tv.left + tv.width * 0.05, y), false)
+		const right = aimFor(scene, at(tv.left + tv.width * 0.95, y), false)
 		assert.ok(left.ry < 0 && left.tx < 0 && right.ry > 0 && right.tx > 0)
 		// The streaming key on the far side would dip: the hand lifts the Remote.
 		assert.ok(left.ty < 0 && right.ty < 0)
@@ -113,8 +117,21 @@ describe("the Remote in the hand, under the TV", () => {
 		assert.notEqual(aimFor(scene, { ...over, tap: true }, false), REST)
 	})
 
+	it("aims only at the picture and a margin round its edges, and rests anywhere else", () => {
+		const { tv } = scene
+		const mid = tv.top + tv.height / 2
+		for (const x of [tv.left - AIM_PAD + 1, tv.left + tv.width + AIM_PAD - 1])
+			assert.notEqual(aimFor(scene, at(x, mid), false), REST)
+		for (const x of [tv.left - AIM_PAD - 1, tv.left + tv.width + AIM_PAD + 1])
+			assert.equal(aimFor(scene, at(x, mid), false), REST)
+		assert.equal(
+			aimFor(scene, at(tv.left + 10, tv.top - AIM_PAD - 1), false),
+			REST,
+		)
+	})
+
 	it("is at rest once the cursor left, while the TV is off, and with reduced motion", () => {
-		const spot = at(200, 200)
+		const spot = at(scene.tv.left + 100, scene.tv.top + 100)
 		assert.equal(aimFor(scene, { ...spot, here: false }, false), REST)
 		assert.equal(aimFor(desktop(1905, 1016, false), spot, false), REST)
 		assert.equal(aimFor(scene, spot, true), REST)
@@ -137,18 +154,16 @@ describe("the Remote in the hand, beside the TV", () => {
 		assert.equal(scene.hand?.place, "beside")
 	})
 
-	it("nods: left for the left corners, right for the right ones, 13 degrees at most", () => {
-		const [tl, tr, bl, br] = corners(1425, 736).map((c) =>
-			aimFor(scene, c, false),
-		)
+	it("nods toward the picture on its left, further for its far corners, 13 degrees at most", () => {
+		const [tl, tr, bl, br] = corners(scene).map((c) => aimFor(scene, c, false))
 		assert.ok(tl.rz < -8 && bl.rz < -8, `left: ${tl.rz}, ${bl.rz}`)
-		assert.ok(tr.rz > 1 && br.rz > 8, `right: ${tr.rz}, ${br.rz}`)
+		assert.ok(tl.rz < tr.rz && bl.rz <= br.rz, `right: ${tr.rz}, ${br.rz}`)
 		for (const a of [tl, tr, bl, br])
 			assert.ok(Math.abs(a.rz) <= SWING.beside + 1e-9)
 	})
 
 	it("rolls more instead of turning: up to 26 degrees", () => {
-		const [tl] = corners(1425, 736).map((c) => aimFor(scene, c, false))
+		const [tl] = corners(scene).map((c) => aimFor(scene, c, false))
 		assert.ok(tl.ry < -16 && tl.ry >= -26)
 	})
 })

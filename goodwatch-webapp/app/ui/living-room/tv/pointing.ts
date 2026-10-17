@@ -1,5 +1,5 @@
 // Pointing the Remote at the TV. Two things follow the mouse:
-// - the Remote in the hand aims at the cursor wherever it is in the window (pointing-aim.ts says how);
+// - the Remote in the hand aims at the cursor while it is over the TV or close to its edges (pointing-aim.ts says how);
 // - while the cursor is over the TV's picture, the TV draws its own pointer there, the ring, in place of the
 //   system cursor (TvPointer.tsx, living-room.css).
 // Both ease toward the cursor with a short lag, as a hand does. Over the Remote itself the Remote settles at rest,
@@ -380,7 +380,7 @@ export function startPointing(
 	}
 
 	const root = els.root.current
-	// On the window, not on the room: the Remote also follows the cursor over the site's header and dock.
+	// On the window, not on the room: the cursor leaving the room (for the site's header or dock) rests the Remote.
 	window.addEventListener("pointermove", onMove)
 	window.addEventListener("pointerdown", onDown)
 	window.addEventListener("pointermove", onTouchMove)
