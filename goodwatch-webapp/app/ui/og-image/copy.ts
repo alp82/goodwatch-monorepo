@@ -136,6 +136,11 @@ export const STATIC_PAGE_COPY: Record<string, PageCopy> = {
 		title: "GoodWatch in Claude and ChatGPT",
 		subtitle: "Ask what to watch. Log it by chatting.",
 	},
+	"/support": {
+		tag: "Support",
+		title: "How can we help?",
+		subtitle: "Write to us, fix an AI app, or get back into your account.",
+	},
 	"/disclaimer": {
 		tag: "Disclaimer",
 		title: "Disclaimer",

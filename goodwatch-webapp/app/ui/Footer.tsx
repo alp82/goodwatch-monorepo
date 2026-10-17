@@ -279,6 +279,15 @@ export default function Footer() {
 									Disclaimer
 								</Link>
 							</div>
+							<div className="mt-2">
+								<Link
+									className="text-sm leading-6 underline underline-offset-4 text-gray-400 hover:text-gray-100"
+									to="/support"
+									prefetch="intent"
+								>
+									Support
+								</Link>
+							</div>
 							<div className="mt-6">
 								<a
 									href="https://dev.to/t/goodwatch"
