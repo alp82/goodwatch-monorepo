@@ -1,0 +1,1212 @@
+{
+  "implementation_commit": "c12d9dae7499c41c2b642cdd176f68f425405b16",
+  "deployment_workflow": "https://github.com/alp82/goodwatch-monorepo/actions/runs/39030116363",
+  "deployment_conclusion": "success",
+  "tests": {
+    "run": 184,
+    "passed": 164,
+    "skipped": 20,
+    "skip_reason": "Opt-in Mongo replica-set and Crate integration connections are not configured"
+  },
+  "previews": [
+    {
+      "id": "01a149ac-5a12-8d82-fe3b-b214fd8df0e5",
+      "started_at": "2026-10-17T11:43:14.468344Z",
+      "duration_ms": 1805,
+      "success": true,
+      "result": {
+        "worker": "d18e365e6886",
+        "responses": [
+          {
+            "bytes": 189437,
+            "status": 200,
+            "country": "US",
+            "challenge": false,
+            "offers_window": true
+          },
+          {
+            "bytes": 184554,
+            "status": 200,
+            "country": "DE",
+            "challenge": false,
+            "offers_window": true
+          },
+          {
+            "bytes": 195991,
+            "status": 200,
+            "country": "GB",
+            "challenge": false,
+            "offers_window": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "01a149ad-8d01-89cf-7803-482d7f1d3f89",
+      "started_at": "2026-10-17T11:44:33.044980Z",
+      "duration_ms": 1104,
+      "success": true,
+      "result": {
+        "worker": "80703cb82d19",
+        "responses": [
+          {
+            "bytes": 189428,
+            "status": 200,
+            "country": "US",
+            "challenge": false,
+            "offers_window": true
+          },
+          {
+            "bytes": 184007,
+            "status": 200,
+            "country": "DE",
+            "challenge": false,
+            "offers_window": true
+          },
+          {
+            "bytes": 195734,
+            "status": 200,
+            "country": "GB",
+            "challenge": false,
+            "offers_window": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "01a149ae-63ef-d89d-ce1e-1c8e8cc56cb0",
+      "started_at": "2026-10-17T11:45:28.060276Z",
+      "duration_ms": 1318,
+      "success": true,
+      "result": {
+        "worker": "d90a911198c0",
+        "responses": [
+          {
+            "bytes": 188479,
+            "status": 200,
+            "country": "US",
+            "challenge": false,
+            "offers_window": true
+          },
+          {
+            "bytes": 184554,
+            "status": 200,
+            "country": "DE",
+            "challenge": false,
+            "offers_window": true
+          },
+          {
+            "bytes": 195770,
+            "status": 200,
+            "country": "GB",
+            "challenge": false,
+            "offers_window": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "01a149af-13cb-49c6-64c2-02e5fe0ec50f",
+      "started_at": "2026-10-17T11:46:13.117Z",
+      "duration_ms": 3056,
+      "success": true,
+      "result": {
+        "worker": "41a0443101de",
+        "responses": [
+          {
+            "links": 10,
+            "status": 200,
+            "country": "US",
+            "block_reason": null
+          },
+          {
+            "links": 8,
+            "status": 200,
+            "country": "DE",
+            "block_reason": null
+          },
+          {
+            "links": 14,
+            "status": 200,
+            "country": "GB",
+            "block_reason": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "01a149b1-22ae-2efb-e9e3-2c55328457c6",
+      "started_at": "2026-10-17T11:48:27.953889Z",
+      "duration_ms": 2339,
+      "success": true,
+      "result": {
+        "worker": "89e481c8e3ab",
+        "responses": [
+          {
+            "links": 10,
+            "status": 200,
+            "country": "US",
+            "block_reason": null
+          },
+          {
+            "links": 8,
+            "status": 200,
+            "country": "DE",
+            "block_reason": null
+          },
+          {
+            "links": 14,
+            "status": 200,
+            "country": "GB",
+            "block_reason": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "01a149d2-3a2a-3a80-f98c-3935a3df5785",
+      "started_at": "2026-10-17T12:24:36.677523Z",
+      "duration_ms": 2399,
+      "success": true,
+      "result": {
+        "worker": "41a0443101de",
+        "responses": [
+          {
+            "links": 10,
+            "status": 200,
+            "country": "US",
+            "block_reason": null
+          },
+          {
+            "links": 8,
+            "status": 200,
+            "country": "DE",
+            "block_reason": null
+          },
+          {
+            "links": 14,
+            "status": 200,
+            "country": "GB",
+            "block_reason": null
+          }
+        ]
+      }
+    }
+  ],
+  "original_checked_in_lock_preview_job": "01a149b1-22ae-2efb-e9e3-2c55328457c6",
+  "dependency_lock_reconciliation": "Windmill regenerated fetch and next locks at 11:49:33 UTC, after the first workflow finished. Git adopts the observed Python 3.12 runtime that completed the full observation.",
+  "flow_and_selection_matches": [
+    {
+      "path": "f/monitoring/backlog_collection",
+      "source_matches_main": true,
+      "lock_matches_local": true
+    },
+    {
+      "path": "f/monitoring/check",
+      "source_matches_main": true,
+      "lock_matches_local": true
+    },
+    {
+      "path": "f/monitoring/collection",
+      "source_matches_main": true,
+      "lock_matches_local": true
+    },
+    {
+      "path": "f/monitoring/health",
+      "source_matches_main": true,
+      "lock_matches_local": true
+    },
+    {
+      "path": "f/monitoring/incidents",
+      "source_matches_main": true,
+      "lock_matches_local": true
+    },
+    {
+      "path": "f/monitoring/notifications",
+      "source_matches_main": true,
+      "lock_matches_local": true
+    },
+    {
+      "path": "f/tmdb_web/country_state",
+      "source_matches_main": true,
+      "lock_matches_local": true
+    },
+    {
+      "path": "f/tmdb_web/models",
+      "source_matches_main": true,
+      "lock_matches_local": true
+    },
+    {
+      "path": "f/tmdb_web/tmdb_crawl_providers/fetch",
+      "source_matches_main": true,
+      "lock_matches_local": true
+    },
+    {
+      "path": "f/tmdb_web/tmdb_crawl_providers/next",
+      "source_matches_main": true,
+      "lock_matches_local": true
+    },
+    {
+      "path": "f/tmdb_web/tmdb_crawl_providers/iterate",
+      "source_matches_main": true,
+      "lock_matches_local": true
+    },
+    {
+      "path": "f/tmdb_web/tmdb_crawl_providers",
+      "value_matches_after_server_default_normalization": true,
+      "schema_matches_main": true,
+      "normalization": "Windmill omits the constant retry stanza when attempts and seconds are both zero"
+    },
+    {
+      "path": "f/tmdb_web/crawl_all_by_id",
+      "value_matches_after_server_default_normalization": true,
+      "schema_matches_main": true,
+      "normalization": "Windmill omits the constant retry stanza when attempts and seconds are both zero"
+    }
+  ],
+  "deployed_script_hashes": [
+    {
+      "path": "f/monitoring/backlog_collection",
+      "match": true,
+      "local_sha256": "c8b2e3124e459baa0ef57a1a2fbcd0a4f1c98af520b87a8576a6ee313c404991",
+      "deployed_sha256": "c8b2e3124e459baa0ef57a1a2fbcd0a4f1c98af520b87a8576a6ee313c404991"
+    },
+    {
+      "path": "f/monitoring/check",
+      "match": true,
+      "local_sha256": "fcc118e0cb34df2446409da88b3362ddf050594bf940599a865832d63377c8cf",
+      "deployed_sha256": "fcc118e0cb34df2446409da88b3362ddf050594bf940599a865832d63377c8cf"
+    },
+    {
+      "path": "f/monitoring/collection",
+      "match": true,
+      "local_sha256": "958ebdc81a4a175d1e1c3a8e530404a065d9d48cb8729c3b2df16c192f34b614",
+      "deployed_sha256": "958ebdc81a4a175d1e1c3a8e530404a065d9d48cb8729c3b2df16c192f34b614"
+    },
+    {
+      "path": "f/monitoring/health",
+      "match": true,
+      "local_sha256": "4f0ba89e20f5009df345cddaa3d2f560727ef7b1b96f39ddf0e1e71149f08914",
+      "deployed_sha256": "4f0ba89e20f5009df345cddaa3d2f560727ef7b1b96f39ddf0e1e71149f08914"
+    },
+    {
+      "path": "f/monitoring/incidents",
+      "match": true,
+      "local_sha256": "06bc8a1e316e4068381af5f7d80e8d0582366040491992ce851f932b516863b9",
+      "deployed_sha256": "06bc8a1e316e4068381af5f7d80e8d0582366040491992ce851f932b516863b9"
+    },
+    {
+      "path": "f/monitoring/notifications",
+      "match": true,
+      "local_sha256": "68cac77969ae5cd02e753eb34c10a6bfaa1caf92f76af62c08a4fd2d80f9e1fb",
+      "deployed_sha256": "68cac77969ae5cd02e753eb34c10a6bfaa1caf92f76af62c08a4fd2d80f9e1fb"
+    },
+    {
+      "path": "f/tmdb_web/country_state",
+      "match": true,
+      "local_sha256": "bc73fe0deec5ac57b559e8a1b19535d4a36cdf45e000300c50abd27bea501c4f",
+      "deployed_sha256": "bc73fe0deec5ac57b559e8a1b19535d4a36cdf45e000300c50abd27bea501c4f"
+    },
+    {
+      "path": "f/tmdb_web/models",
+      "match": true,
+      "local_sha256": "33efee3c38e671e6a0b2e2d64ca9cec5ba59d08352b279f3044d5cc631dd1af8",
+      "deployed_sha256": "33efee3c38e671e6a0b2e2d64ca9cec5ba59d08352b279f3044d5cc631dd1af8"
+    },
+    {
+      "path": "f/tmdb_web/tmdb_crawl_providers/fetch",
+      "match": true,
+      "local_sha256": "fb31180dfa607800ea7f2aae6307bf0ce2d2d001f798f5e256f2d83fccb6b9a7",
+      "deployed_sha256": "fb31180dfa607800ea7f2aae6307bf0ce2d2d001f798f5e256f2d83fccb6b9a7"
+    }
+  ],
+  "closed_gate_monitor": {
+    "job_id": "01a149b1-da6f-88e6-6ea8-d4a7790ea570",
+    "notification_status": "configured",
+    "reports": [
+      {
+        "path": "f/tmdb_web/tmdb_crawl_providers",
+        "status": "unhealthy",
+        "causes": [
+          "lack_of_progress",
+          "upstream_blocked"
+        ],
+        "progress_cause": "upstream_blocked",
+        "upstream": {
+          "block_reason": "legacy_backoff",
+          "blocked_since": null,
+          "blocked_until": "2026-10-17T13:44:55.206000+00:00",
+          "last_success_at": null,
+          "probe_expires_at": null,
+          "consecutive_blocks": 0
+        },
+        "retry_in_seconds": 6784.477366,
+        "notification": {
+          "delivery": "not_attempted",
+          "transition": "unchanged"
+        }
+      },
+      {
+        "path": "f/monitoring/tmdb_watch_upstream",
+        "status": "unhealthy",
+        "causes": [
+          "upstream_blocked"
+        ],
+        "progress_cause": null,
+        "upstream": {
+          "block_reason": "legacy_backoff",
+          "blocked_since": null,
+          "blocked_until": "2026-10-17T13:44:55.206000+00:00",
+          "last_success_at": null,
+          "probe_expires_at": null,
+          "consecutive_blocks": 0
+        },
+        "retry_in_seconds": 6784.477366,
+        "notification": {
+          "delivery": "not_attempted",
+          "transition": "unchanged"
+        }
+      }
+    ]
+  },
+  "restart_probe": {
+    "id": "01a149b4-dcc1-e600-93a6-3371796a7094",
+    "success": true,
+    "started_at": "2026-10-17T11:52:32.205705Z",
+    "duration_ms": 1678,
+    "result": {
+      "probe": {
+        "id": "6ab70219b27017610fbe95f1",
+        "type": "movie",
+        "outcome": "fetched",
+        "tmdb_id": 1450257,
+        "http_status": 200,
+        "block_reason": null,
+        "country_code": "TZ",
+        "upstream_retry_at": null
+      },
+      "previous_legacy_deadline": "2026-10-17 13:44:55.206000"
+    }
+  },
+  "observation": {
+    "counting_method": "Completed provider-fetch jobs started within the observation window. HTTP 200 for country-selector errors is proven by the parser control flow. Excludes fresh/deferred jobs without a request.",
+    "start": "2026-10-17T11:52:42.134619+00:00",
+    "end": "2026-10-17T12:22:42.134619+00:00",
+    "minutes": 30.0,
+    "fetch_jobs": 2420,
+    "http_requests": 2420,
+    "verified_fetches": 2141,
+    "requests_per_minute": 80.66666666666667,
+    "verified_fetches_per_minute": 71.36666666666666,
+    "outcomes": {
+      "fetched": 2141,
+      "failed": 279
+    },
+    "http_statuses": {
+      "200": 2415,
+      "404": 5
+    },
+    "challenges": 0,
+    "challenge_share": 0.0,
+    "validation_failures": {
+      "Watch-page country does not match requested country": 274,
+      "TMDB watch HTTP 404": 5
+    },
+    "next_runs": 90,
+    "nonempty_next_runs": 90,
+    "ids_returned": 900,
+    "state_samples": 7,
+    "gate_closed_samples": 0,
+    "upstream_notification_attempts": 0,
+    "monitor_runs": [
+      {
+        "id": "01a149b4-6feb-d2d4-bad8-653f827b9715",
+        "status": "completed",
+        "observed_at": "2026-10-17T11:55:01.129778+00:00",
+        "notification_status": "configured",
+        "infrastructure": {
+          "cratedb": "ok",
+          "backlogs": "degraded",
+          "windmill_api": "ok",
+          "crate_cluster": "ok"
+        },
+        "pipelines": [
+          {
+            "path": "f/tmdb_web/tmdb_crawl_providers",
+            "status": "unknown",
+            "causes": [],
+            "progress_cause": null,
+            "upstream": null,
+            "notification": {
+              "delivery": "not_attempted",
+              "transition": "unchanged"
+            },
+            "last_useful_at": "2026-10-17T11:55:12.050549+00:00",
+            "history_incomplete": true,
+            "uninspected_count": 28292,
+            "unresolved_count": 206
+          },
+          {
+            "path": "f/monitoring/tmdb_watch_upstream",
+            "status": "healthy",
+            "causes": [],
+            "progress_cause": null,
+            "upstream": {
+              "block_reason": null,
+              "blocked_since": null,
+              "blocked_until": null,
+              "last_success_at": "2026-10-17T11:57:11.804000+00:00",
+              "probe_expires_at": null,
+              "consecutive_blocks": 0
+            },
+            "notification": {
+              "delivery": "not_attempted",
+              "transition": "unchanged"
+            },
+            "last_useful_at": null,
+            "history_incomplete": null,
+            "uninspected_count": null,
+            "unresolved_count": null
+          }
+        ]
+      },
+      {
+        "id": "01a149ba-3ced-ef9b-466e-a99b400e4012",
+        "status": "completed",
+        "observed_at": "2026-10-17T12:00:01.470635+00:00",
+        "notification_status": "configured",
+        "infrastructure": {
+          "cratedb": "ok",
+          "backlogs": "degraded",
+          "windmill_api": "ok",
+          "crate_cluster": "ok"
+        },
+        "pipelines": [
+          {
+            "path": "f/tmdb_web/tmdb_crawl_providers",
+            "status": "unknown",
+            "causes": [],
+            "progress_cause": null,
+            "upstream": null,
+            "notification": {
+              "delivery": "not_attempted",
+              "transition": "unchanged"
+            },
+            "last_useful_at": "2026-10-17T12:00:12.252305+00:00",
+            "history_incomplete": true,
+            "uninspected_count": 28105,
+            "unresolved_count": 209
+          },
+          {
+            "path": "f/monitoring/tmdb_watch_upstream",
+            "status": "healthy",
+            "causes": [],
+            "progress_cause": null,
+            "upstream": {
+              "block_reason": null,
+              "blocked_since": null,
+              "blocked_until": null,
+              "last_success_at": "2026-10-17T12:01:49.791000+00:00",
+              "probe_expires_at": null,
+              "consecutive_blocks": 0
+            },
+            "notification": {
+              "delivery": "not_attempted",
+              "transition": "unchanged"
+            },
+            "last_useful_at": null,
+            "history_incomplete": null,
+            "uninspected_count": null,
+            "unresolved_count": null
+          }
+        ]
+      },
+      {
+        "id": "01a149be-77e2-71ea-915d-b82321c1d62d",
+        "status": "completed",
+        "observed_at": "2026-10-17T12:05:01.320768+00:00",
+        "notification_status": "configured",
+        "infrastructure": {
+          "cratedb": "ok",
+          "backlogs": "degraded",
+          "windmill_api": "ok",
+          "crate_cluster": "degraded"
+        },
+        "pipelines": [
+          {
+            "path": "f/tmdb_web/tmdb_crawl_providers",
+            "status": "unknown",
+            "causes": [],
+            "progress_cause": null,
+            "upstream": null,
+            "notification": {
+              "delivery": "not_attempted",
+              "transition": "unchanged"
+            },
+            "last_useful_at": "2026-10-17T12:05:11.285398+00:00",
+            "history_incomplete": true,
+            "uninspected_count": 27974,
+            "unresolved_count": 209
+          },
+          {
+            "path": "f/monitoring/tmdb_watch_upstream",
+            "status": "healthy",
+            "causes": [],
+            "progress_cause": null,
+            "upstream": {
+              "block_reason": null,
+              "blocked_since": null,
+              "blocked_until": null,
+              "last_success_at": "2026-10-17T12:07:13.257000+00:00",
+              "probe_expires_at": null,
+              "consecutive_blocks": 0
+            },
+            "notification": {
+              "delivery": "not_attempted",
+              "transition": "unchanged"
+            },
+            "last_useful_at": null,
+            "history_incomplete": null,
+            "uninspected_count": null,
+            "unresolved_count": null
+          }
+        ]
+      },
+      {
+        "id": "01a149c3-e007-01d0-ea90-c6b70e05d79b",
+        "status": "completed",
+        "observed_at": "2026-10-17T12:10:01.008129+00:00",
+        "notification_status": "configured",
+        "infrastructure": {
+          "cratedb": "ok",
+          "backlogs": "degraded",
+          "windmill_api": "ok",
+          "crate_cluster": "ok"
+        },
+        "pipelines": [
+          {
+            "path": "f/tmdb_web/tmdb_crawl_providers",
+            "status": "unknown",
+            "causes": [],
+            "progress_cause": null,
+            "upstream": null,
+            "notification": {
+              "delivery": "not_attempted",
+              "transition": "unchanged"
+            },
+            "last_useful_at": "2026-10-17T12:10:10.695393+00:00",
+            "history_incomplete": true,
+            "uninspected_count": 27786,
+            "unresolved_count": 209
+          },
+          {
+            "path": "f/monitoring/tmdb_watch_upstream",
+            "status": "healthy",
+            "causes": [],
+            "progress_cause": null,
+            "upstream": {
+              "block_reason": null,
+              "blocked_since": null,
+              "blocked_until": null,
+              "last_success_at": "2026-10-17T12:11:51.599000+00:00",
+              "probe_expires_at": null,
+              "consecutive_blocks": 0
+            },
+            "notification": {
+              "delivery": "not_attempted",
+              "transition": "unchanged"
+            },
+            "last_useful_at": null,
+            "history_incomplete": null,
+            "uninspected_count": null,
+            "unresolved_count": null
+          }
+        ]
+      },
+      {
+        "id": "01a149c8-13b6-1bef-d43a-108c6e14ff50",
+        "status": "completed",
+        "observed_at": "2026-10-17T12:15:01.231950+00:00",
+        "notification_status": "configured",
+        "infrastructure": {
+          "cratedb": "ok",
+          "backlogs": "degraded",
+          "windmill_api": "ok",
+          "crate_cluster": "degraded"
+        },
+        "pipelines": [
+          {
+            "path": "f/tmdb_web/tmdb_crawl_providers",
+            "status": "unknown",
+            "causes": [],
+            "progress_cause": null,
+            "upstream": null,
+            "notification": {
+              "delivery": "not_attempted",
+              "transition": "unchanged"
+            },
+            "last_useful_at": "2026-10-17T12:15:11.252953+00:00",
+            "history_incomplete": true,
+            "uninspected_count": 27610,
+            "unresolved_count": 209
+          },
+          {
+            "path": "f/monitoring/tmdb_watch_upstream",
+            "status": "healthy",
+            "causes": [],
+            "progress_cause": null,
+            "upstream": {
+              "block_reason": null,
+              "blocked_since": null,
+              "blocked_until": null,
+              "last_success_at": "2026-10-17T12:17:10.885000+00:00",
+              "probe_expires_at": null,
+              "consecutive_blocks": 0
+            },
+            "notification": {
+              "delivery": "not_attempted",
+              "transition": "unchanged"
+            },
+            "last_useful_at": null,
+            "history_incomplete": null,
+            "uninspected_count": null,
+            "unresolved_count": null
+          }
+        ]
+      },
+      {
+        "id": "01a149cc-f821-40a4-8c8d-a866fb5d519b",
+        "status": "completed",
+        "observed_at": "2026-10-17T12:20:01.263936+00:00",
+        "notification_status": "configured",
+        "infrastructure": {
+          "cratedb": "ok",
+          "backlogs": "degraded",
+          "windmill_api": "ok",
+          "crate_cluster": "ok"
+        },
+        "pipelines": [
+          {
+            "path": "f/tmdb_web/tmdb_crawl_providers",
+            "status": "unknown",
+            "causes": [],
+            "progress_cause": null,
+            "upstream": null,
+            "notification": {
+              "delivery": "not_attempted",
+              "transition": "unchanged"
+            },
+            "last_useful_at": "2026-10-17T12:20:11.743393+00:00",
+            "history_incomplete": true,
+            "uninspected_count": 27424,
+            "unresolved_count": 209
+          },
+          {
+            "path": "f/monitoring/tmdb_watch_upstream",
+            "status": "healthy",
+            "causes": [],
+            "progress_cause": null,
+            "upstream": {
+              "block_reason": null,
+              "blocked_since": null,
+              "blocked_until": null,
+              "last_success_at": "2026-10-17T12:21:30.909000+00:00",
+              "probe_expires_at": null,
+              "consecutive_blocks": 0
+            },
+            "notification": {
+              "delivery": "not_attempted",
+              "transition": "unchanged"
+            },
+            "last_useful_at": null,
+            "history_incomplete": null,
+            "uninspected_count": null,
+            "unresolved_count": null
+          }
+        ]
+      }
+    ],
+    "first_state": {
+      "job_id": "01a149b5-1844-1f59-c85e-5d7625bf1e89",
+      "success": true,
+      "result": {
+        "gate": {
+          "_id": "tmdb_watch",
+          "reopened_at": "2026-10-17 11:52:33.579000",
+          "last_success_at": "2026-10-17 11:52:48.937000",
+          "consecutive_blocks": "0"
+        },
+        "latest": {
+          "tv": {
+            "_id": "6ab857b4b27017610fcc9cd3",
+            "tmdb_id": "294674",
+            "updated_at": "2026-10-17 11:52:48.261000"
+          },
+          "movie": {
+            "_id": "67edc1cc1f87b65f336d65a8",
+            "tmdb_id": "166316",
+            "updated_at": "2026-10-17 11:52:48.929000"
+          }
+        },
+        "monitor": [
+          {
+            "path": "f/tmdb_web/tmdb_crawl_providers",
+            "causes": [
+              "lack_of_progress",
+              "upstream_blocked"
+            ],
+            "status": "unhealthy",
+            "upstream": {
+              "block_reason": "legacy_backoff",
+              "blocked_since": null,
+              "blocked_until": "2026-10-17T13:44:55.206000+00:00",
+              "last_success_at": null,
+              "probe_expires_at": null,
+              "consecutive_blocks": 0
+            },
+            "probe_due": false,
+            "notification": {
+              "delivery": "not_attempted",
+              "transition": "unchanged"
+            },
+            "last_useful_at": "2026-10-04T15:35:08.932155+00:00",
+            "progress_cause": "upstream_blocked",
+            "blocked_seconds": null,
+            "retry_in_seconds": 6784.477366,
+            "unresolved_count": 197,
+            "uninspected_count": 28478,
+            "history_incomplete": true
+          },
+          {
+            "path": "f/monitoring/tmdb_watch_upstream",
+            "causes": [
+              "upstream_blocked"
+            ],
+            "status": "unhealthy",
+            "upstream": {
+              "block_reason": "legacy_backoff",
+              "blocked_since": null,
+              "blocked_until": "2026-10-17T13:44:55.206000+00:00",
+              "last_success_at": null,
+              "probe_expires_at": null,
+              "consecutive_blocks": 0
+            },
+            "probe_due": false,
+            "notification": {
+              "delivery": "not_attempted",
+              "transition": "unchanged"
+            },
+            "last_useful_at": null,
+            "progress_cause": null,
+            "blocked_seconds": null,
+            "retry_in_seconds": 6784.477366,
+            "unresolved_count": null,
+            "uninspected_count": null,
+            "history_incomplete": null
+          }
+        ],
+        "incidents": {
+          "f/tmdb_web/tmdb_crawl_providers": {
+            "active": true,
+            "causes": [
+              "lack_of_progress",
+              "missing_descendants"
+            ],
+            "opened_at": "2026-10-15T17:50:00.878277+00:00",
+            "recovered_at": null,
+            "last_delivery": {
+              "delivered": true,
+              "error_code": null,
+              "message_id": "1560349614098489374",
+              "permanent_failure": false,
+              "retry_after_seconds": 0
+            },
+            "last_notified_at": "2026-10-15T17:50:00.878277+00:00",
+            "pending_notification": null,
+            "last_delivery_attempt_at": "2026-10-15T17:50:00.878277+00:00"
+          },
+          "f/monitoring/tmdb_watch_upstream": {
+            "active": false,
+            "causes": null,
+            "opened_at": null,
+            "recovered_at": null,
+            "last_delivery": null,
+            "last_notified_at": null,
+            "pending_notification": null,
+            "last_delivery_attempt_at": null
+          }
+        },
+        "observed_at": "2026-10-17T11:52:49.338536+00:00",
+        "computed_upstream": {
+          "path": "f/monitoring/tmdb_watch_upstream",
+          "causes": [],
+          "status": "healthy",
+          "upstream": {
+            "_id": "tmdb_watch",
+            "reopened_at": "2026-10-17T11:52:33.579000+00:00",
+            "last_success_at": "2026-10-17T11:52:48.937000+00:00",
+            "consecutive_blocks": 0
+          },
+          "probe_due": false,
+          "blocked_seconds": null,
+          "source_pipeline": "f/tmdb_web/tmdb_crawl_providers",
+          "retry_in_seconds": null
+        },
+        "monitor_observed_at": "2026-10-17T11:50:01.376032+00:00"
+      }
+    },
+    "last_state": {
+      "job_id": "01a149d0-89e5-8abc-fb7a-d20747f9b3a3",
+      "success": true,
+      "result": {
+        "gate": {
+          "_id": "tmdb_watch",
+          "reopened_at": "2026-10-17 11:52:33.579000",
+          "last_success_at": "2026-10-17 12:22:47.359000",
+          "consecutive_blocks": "0"
+        },
+        "latest": {
+          "tv": {
+            "_id": "6ab857b4b27017610fcc9e42",
+            "tmdb_id": "295158",
+            "updated_at": "2026-10-17 12:22:47.350000"
+          },
+          "movie": {
+            "_id": "6ab70219b27017610fbe9702",
+            "tmdb_id": "1451344",
+            "updated_at": "2026-10-17 12:22:45.643000"
+          }
+        },
+        "monitor": [
+          {
+            "path": "f/tmdb_web/tmdb_crawl_providers",
+            "causes": [],
+            "status": "unknown",
+            "upstream": null,
+            "probe_due": null,
+            "notification": {
+              "delivery": "not_attempted",
+              "transition": "unchanged"
+            },
+            "last_useful_at": "2026-10-17T12:15:11.252953+00:00",
+            "progress_cause": null,
+            "blocked_seconds": null,
+            "retry_in_seconds": null,
+            "unresolved_count": 209,
+            "uninspected_count": 27610,
+            "history_incomplete": true
+          },
+          {
+            "path": "f/monitoring/tmdb_watch_upstream",
+            "causes": [],
+            "status": "healthy",
+            "upstream": {
+              "block_reason": null,
+              "blocked_since": null,
+              "blocked_until": null,
+              "last_success_at": "2026-10-17T12:17:10.885000+00:00",
+              "probe_expires_at": null,
+              "consecutive_blocks": 0
+            },
+            "probe_due": false,
+            "notification": {
+              "delivery": "not_attempted",
+              "transition": "unchanged"
+            },
+            "last_useful_at": null,
+            "progress_cause": null,
+            "blocked_seconds": null,
+            "retry_in_seconds": null,
+            "unresolved_count": null,
+            "uninspected_count": null,
+            "history_incomplete": null
+          }
+        ],
+        "incidents": {
+          "f/tmdb_web/tmdb_crawl_providers": {
+            "active": true,
+            "causes": [
+              "lack_of_progress",
+              "missing_descendants"
+            ],
+            "opened_at": "2026-10-15T17:50:00.878277+00:00",
+            "recovered_at": null,
+            "last_delivery": {
+              "delivered": true,
+              "error_code": null,
+              "message_id": "1560349614098489374",
+              "permanent_failure": false,
+              "retry_after_seconds": 0
+            },
+            "last_notified_at": "2026-10-15T17:50:00.878277+00:00",
+            "pending_notification": null,
+            "last_delivery_attempt_at": "2026-10-15T17:50:00.878277+00:00"
+          },
+          "f/monitoring/tmdb_watch_upstream": {
+            "active": false,
+            "causes": null,
+            "opened_at": null,
+            "recovered_at": null,
+            "last_delivery": null,
+            "last_notified_at": null,
+            "pending_notification": null,
+            "last_delivery_attempt_at": null
+          }
+        },
+        "observed_at": "2026-10-17T12:22:47.234513+00:00",
+        "computed_upstream": {
+          "path": "f/monitoring/tmdb_watch_upstream",
+          "causes": [],
+          "status": "healthy",
+          "upstream": {
+            "_id": "tmdb_watch",
+            "reopened_at": "2026-10-17T11:52:33.579000+00:00",
+            "last_success_at": "2026-10-17T12:22:47.359000+00:00",
+            "consecutive_blocks": 0
+          },
+          "probe_due": false,
+          "blocked_seconds": null,
+          "source_pipeline": "f/tmdb_web/tmdb_crawl_providers",
+          "retry_in_seconds": null
+        },
+        "monitor_observed_at": "2026-10-17T12:15:01.231950+00:00"
+      }
+    },
+    "per_minute": [
+      {
+        "minute": 1,
+        "requests": 71,
+        "fetched": 59,
+        "validation_failures": 12,
+        "challenges": 0
+      },
+      {
+        "minute": 2,
+        "requests": 97,
+        "fetched": 86,
+        "validation_failures": 11,
+        "challenges": 0
+      },
+      {
+        "minute": 3,
+        "requests": 74,
+        "fetched": 60,
+        "validation_failures": 14,
+        "challenges": 0
+      },
+      {
+        "minute": 4,
+        "requests": 100,
+        "fetched": 88,
+        "validation_failures": 12,
+        "challenges": 0
+      },
+      {
+        "minute": 5,
+        "requests": 103,
+        "fetched": 90,
+        "validation_failures": 13,
+        "challenges": 0
+      },
+      {
+        "minute": 6,
+        "requests": 47,
+        "fetched": 35,
+        "validation_failures": 12,
+        "challenges": 0
+      },
+      {
+        "minute": 7,
+        "requests": 71,
+        "fetched": 59,
+        "validation_failures": 12,
+        "challenges": 0
+      },
+      {
+        "minute": 8,
+        "requests": 35,
+        "fetched": 22,
+        "validation_failures": 13,
+        "challenges": 0
+      },
+      {
+        "minute": 9,
+        "requests": 57,
+        "fetched": 45,
+        "validation_failures": 12,
+        "challenges": 0
+      },
+      {
+        "minute": 10,
+        "requests": 59,
+        "fetched": 47,
+        "validation_failures": 12,
+        "challenges": 0
+      },
+      {
+        "minute": 11,
+        "requests": 118,
+        "fetched": 105,
+        "validation_failures": 13,
+        "challenges": 0
+      },
+      {
+        "minute": 12,
+        "requests": 76,
+        "fetched": 64,
+        "validation_failures": 12,
+        "challenges": 0
+      },
+      {
+        "minute": 13,
+        "requests": 122,
+        "fetched": 111,
+        "validation_failures": 11,
+        "challenges": 0
+      },
+      {
+        "minute": 14,
+        "requests": 105,
+        "fetched": 91,
+        "validation_failures": 14,
+        "challenges": 0
+      },
+      {
+        "minute": 15,
+        "requests": 53,
+        "fetched": 47,
+        "validation_failures": 6,
+        "challenges": 0
+      },
+      {
+        "minute": 16,
+        "requests": 50,
+        "fetched": 44,
+        "validation_failures": 6,
+        "challenges": 0
+      },
+      {
+        "minute": 17,
+        "requests": 63,
+        "fetched": 57,
+        "validation_failures": 6,
+        "challenges": 0
+      },
+      {
+        "minute": 18,
+        "requests": 41,
+        "fetched": 35,
+        "validation_failures": 6,
+        "challenges": 0
+      },
+      {
+        "minute": 19,
+        "requests": 47,
+        "fetched": 41,
+        "validation_failures": 6,
+        "challenges": 0
+      },
+      {
+        "minute": 20,
+        "requests": 120,
+        "fetched": 113,
+        "validation_failures": 7,
+        "challenges": 0
+      },
+      {
+        "minute": 21,
+        "requests": 106,
+        "fetched": 102,
+        "validation_failures": 4,
+        "challenges": 0
+      },
+      {
+        "minute": 22,
+        "requests": 96,
+        "fetched": 88,
+        "validation_failures": 8,
+        "challenges": 0
+      },
+      {
+        "minute": 23,
+        "requests": 125,
+        "fetched": 120,
+        "validation_failures": 5,
+        "challenges": 0
+      },
+      {
+        "minute": 24,
+        "requests": 79,
+        "fetched": 71,
+        "validation_failures": 8,
+        "challenges": 0
+      },
+      {
+        "minute": 25,
+        "requests": 64,
+        "fetched": 57,
+        "validation_failures": 7,
+        "challenges": 0
+      },
+      {
+        "minute": 26,
+        "requests": 101,
+        "fetched": 94,
+        "validation_failures": 7,
+        "challenges": 0
+      },
+      {
+        "minute": 27,
+        "requests": 100,
+        "fetched": 94,
+        "validation_failures": 6,
+        "challenges": 0
+      },
+      {
+        "minute": 28,
+        "requests": 94,
+        "fetched": 89,
+        "validation_failures": 5,
+        "challenges": 0
+      },
+      {
+        "minute": 29,
+        "requests": 63,
+        "fetched": 55,
+        "validation_failures": 8,
+        "challenges": 0
+      },
+      {
+        "minute": 30,
+        "requests": 83,
+        "fetched": 72,
+        "validation_failures": 11,
+        "challenges": 0
+      }
+    ]
+  },
+  "failed_country_counts": {
+    "NE": 274,
+    "TH": 1,
+    "SG": 1,
+    "MY": 1,
+    "ID": 1,
+    "HK": 1
+  },
+  "successful_worker_sample": {
+    "06b3c66b44d9": 2,
+    "d18e365e6886": 6,
+    "c5ff51d9d556": 5,
+    "80703cb82d19": 4,
+    "2f4bb8b4f321": 3,
+    "6ff53ddc8c5b": 2,
+    "41a0443101de": 3,
+    "f2f4cd808ea9": 5,
+    "45c078dda957": 5,
+    "89e481c8e3ab": 3,
+    "a783bd7cee0b": 2,
+    "5a13c6df3030": 4,
+    "d90a911198c0": 4,
+    "cf90f010ac28": 2
+  }
+}

@@ -160,3 +160,55 @@ Also run the streaming-country/publication and workflow collection, health,
 incident, notification, checker, and backlog suites. The gate regressions use
 `mongomock`, including twelve concurrent probe contenders; opt-in real database
 suites require isolated test connections.
+
+
+### October 17 restart verification
+
+Implementation commit `c12d9dae` deployed through the successful
+[Push Windmill workspace run](https://github.com/alp82/goodwatch-monorepo/actions/runs/39030116363).
+All nine changed script sources matched main by SHA-256 after deployment and
+again after observation. The initial five previews on five workers returned fifteen HTTP
+200 responses with no challenges. Two previews exercised the country/offer
+parser; one also exercised the original checked-in lock (`requests==2.32.5`,
+Python 3.11). Windmill regenerated the live `fetch` and `next` locks at 11:49:33 UTC,
+after the first workflow finished, to Python 3.12 and `requests==2.34.2`. The
+follow-up lock reconciliation commits those observed live dependencies without
+changing the runtime that completed the thirty-minute observation. A final
+preview with that observed lock also passed country/offer validation. A sample
+of fifty later verified fetches spanned fourteen workers.
+The regression run passed 164 tests; twenty opt-in Mongo/Crate integration tests
+were skipped because isolated connections were not configured.
+
+The 11:50 UTC scheduled monitor reported `lack_of_progress` with
+`progress_cause: upstream_blocked`, reason `legacy_backoff`, the deadline and
+remaining delay, and no missing-descendant cause. Notification delivery was
+configured and not attempted. After the worker verification, a compare-and-set
+expired only the legacy gate (previously until 13:44:55 UTC). The normal fenced
+probe fetched a Tanzania movie watch page with HTTP 200 and reopened the gate at
+11:52:33.579 UTC. The counter was not deleted or reset manually.
+
+Read-only observation ran **11:52:42–12:22:42 UTC**, thirty minutes:
+
+- 2,420 page attempts, **80.67/minute**.
+- 2,141 verified saves, **71.37/minute**.
+- **Zero challenges (0%)**, zero new block outcomes, and no closed-gate samples.
+- 90/90 scheduled selections returned IDs (900 country-document IDs).
+- Movie and show `updated_at` advanced from October 4 into the observation window.
+- Subsequent scheduled upstream reports were healthy, with no upstream Discord
+  delivery attempt and no pending alert or recovery. The new alert did not fire falsely.
+
+There were 274 country-selector rejections for Niger (`NE`) and
+5 HTTP 404s. Neither is a challenge. The country-selector rejections are known
+HTTP 200 responses from the parser path before country validation. Existing source data is preserved
+when TMDB serves the wrong country. This country coverage needs follow-up.
+The general pipeline report remains unknown while its historical execution
+backfill is incomplete, and the country backlog aggregates still have incomplete
+query coverage. The old October 15 diagnostic incident remains in that historical
+ledger without any new delivery; upstream recovery does not claim that history
+has been resolved.
+
+[Machine-readable verification](implementation/tmdb-streaming-restart-20261017/verification.json)
+retains the per-minute counts, safe state samples, monitor results, preview job
+IDs, source hashes, and counting method. Requests are counted by completed
+fetch jobs started within the fixed window, including rejected HTTP 200 country
+pages; fresh/deferred jobs without a request are excluded.
