@@ -167,11 +167,16 @@ export function legacyTitles(
 				(["movie", "show"] as const).map(async (type) => {
 					const ids = universe?.flatMap((key) => {
 						const parsed = parseTitleKey(key)
-						return parsed.mediaType === type ? [parsed.tmdbId] : []
+						return parsed.mediaType === type &&
+							Number.isSafeInteger(parsed.tmdbId) &&
+							parsed.tmdbId > 0
+							? [parsed.tmdbId]
+							: []
 					})
 					if (ids && !ids.length) return []
+					// Parsed positive integer IDs are safe SQL literals; filter values stay bound.
 					const eligible = ids
-						? "m.tmdb_id = ANY(?)"
+						? `m.tmdb_id IN (${ids.join(",")})`
 						: `m.goodwatch_overall_score_voting_count >= ${MIN_VOTES} AND m.poster_path IS NOT NULL`
 					const runtime =
 						type === "movie" ? "m.runtime" : "m.episode_runtime[1]"
@@ -185,7 +190,6 @@ export function legacyTitles(
 					 AND ${[...conditions, ...runtimeConditions].join(" AND ")}
 					 LIMIT ${LEGACY_LIMIT}`,
 						[
-							...(ids ? [ids] : []),
 							...params,
 							...(minRuntime === null ? [] : [minRuntime]),
 							...(maxRuntime === null ? [] : [maxRuntime]),
