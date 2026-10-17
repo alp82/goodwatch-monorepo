@@ -44,7 +44,7 @@ export default function TitleSidesLine({
 			className="flex flex-wrap items-center gap-3 border-t border-white/10 px-3 py-2.5 md:px-5"
 		>
 			<div
-				className={`flex shrink-0 $className_PLACEHOLDER"-space-x-3 p-0.5" rounded-lg border-2 ${edge ? "border-dashed border-sky-400/60" : "border-amber-500/60"}`}
+				className={`flex shrink-0 -space-x-3 p-0.5 rounded-lg border-2 ${edge ? "border-dashed border-sky-400/60" : "border-amber-500/60"}`}
 			>
 				{stack.map((t) => (
 					<Link
@@ -52,7 +52,7 @@ export default function TitleSidesLine({
 						to={`/${t.mediaType}/${t.tmdbId}-${titleToDashed(t.title)}`}
 						prefetch="intent"
 						title={t.title}
-						className={`relative block $className_PLACEHOLDER"w-6 md:w-7" shrink-0 overflow-hidden rounded-md bg-gray-900 ring-2 ring-stone-950`}
+						className={`relative block w-6 md:w-7 shrink-0 overflow-hidden rounded-md bg-gray-900 ring-2 ring-stone-950`}
 					>
 						<TmdbImage
 							kind="poster"
@@ -91,7 +91,7 @@ export default function TitleSidesLine({
 						? `/watch-next?moods=${side.moods.join(",")}`
 						: "/watch-next"
 				}
-				className={`inline-flex shrink-0 items-center gap-1.5 rounded-lg $className_PLACEHOLDER"px-2.5 py-1.5 text-xs" bg-white/10 font-semibold text-white ring-1 ring-white/15 transition hover:bg-white/15 max-sm:w-full max-sm:justify-center`}
+				className={`inline-flex shrink-0 items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs bg-white/10 font-semibold text-white ring-1 ring-white/15 transition hover:bg-white/15 max-sm:w-full max-sm:justify-center`}
 			>
 				{COPY.watchNext}
 				<span aria-hidden>→</span>
