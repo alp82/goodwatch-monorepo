@@ -95,12 +95,13 @@ export function trailForm(core: MapCore, words: TraitWords): MapForm {
 		return mx.chip(ctx, { token, label: kit.word(key), v: val(ctx.c, key), on, color: mx.colorOf(ctx, token) })
 	}
 	const chips = (ctx: MapCtx, tokens: string[]) => {
-		const own = chipTokens((key) => val(ctx.c, key), words)
+		const per = kit.fsTall() ? 5 : 3
+		const own = chipTokens((key) => val(ctx.c, key), words, per)
 		// A chip keeps its place when it is turned on. One that the walk brought along from another title goes first.
 		const keys = own.map((token) => kit.tok(token)?.key)
 		const here = own.map((token) => tokens.filter((t) => kit.tok(t)?.key === kit.tok(token)?.key)[0] ?? token)
 		const brought = tokens.filter((t) => keys.indexOf(kit.tok(t)?.key) < 0)
-		return brought.concat(here).slice(0, Math.max(6, tokens.length))
+		return brought.concat(here).slice(0, Math.max(per * 2, tokens.length))
 	}
 	const rootOf = (section: Element) => (section.matches("[data-r-root]") ? section : section.querySelector("[data-r-root]"))
 	/** A chip is pointed at or held: the posters it is about are lit, with its trait as a badge. */
