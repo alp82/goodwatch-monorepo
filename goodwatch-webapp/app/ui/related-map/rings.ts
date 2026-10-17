@@ -150,18 +150,53 @@ export function ringsKit(core: MapCore, words: TraitWords) {
 	const phoneW = () => Math.max(44, Math.min(56, Math.floor((box.w - 4) / 5.43)))
 	const posterW = () => {
 		// Full screen: posters sized by the space the map has, between a floor and a ceiling. Same for every variant.
-		if (fsOn()) return Math.round(Math.max(roomy() ? 96 : 56, Math.min(180, box.h / 4.4, box.w / 6.5)))
+		if (fsOn()) return fsW()
 		if (!roomy()) return phoneW()
 		if (V === "B") return 96
 		if (V === "C") return Math.round(Math.max(96, box.h / 4.6))
 		return 60
 	}
+	/** How many places a lattice of posters `w` wide has on the map (the same rules as `cells`, without the cap). */
+	const placesAt = (w: number) => {
+		const h = w * 1.5
+		const p = w * 1.107
+		const q = h * 1.0715
+		const cols = Math.ceil(box.w / 2 / p) + 1
+		const rows = Math.ceil(box.h / 2 / q) + 1
+		let n = 0
+		for (let i = -cols; i <= cols; i++)
+			for (let j = -rows; j <= rows; j++) {
+				const u = 2 * j + (i % 2 ? 1 : 0)
+				const x = i * p
+				const y = (u / 2) * q
+				if (!i && !u) continue
+				if (Math.abs(x) + w / 2 > box.w / 2 - 1 || Math.abs(y) + h / 2 > box.h / 2 - 1) continue
+				if (Math.abs(x) + w / 2 > box.w / 2 - 78 && Math.abs(y) + h / 2 > box.h / 2 - 44) continue
+				n++
+			}
+		return n
+	}
+	const fsMemo: Record<string, number> = {}
+	/**
+	 * Full screen: posters sized by the space, between a floor and a ceiling, and never so small that the smallest
+	 * zoom would have room for more than MAX_PLACES (a 4K screen grows its posters instead of leaving space empty).
+	 */
+	const fsW = () => {
+		const id = geoOf()
+		if (fsMemo[id]) return fsMemo[id]
+		const zs = [1, 0.75, 0.56]
+		let w = Math.max(roomy() ? 96 : 56, Math.min(180, box.h / 4.4, box.w / 6.5))
+		while (w < 360 && placesAt(w * zs[zs.length - 1]) > MAX_PLACES) w += 4
+		fsMemo[id] = Math.round(w)
+		return fsMemo[id]
+	}
 	const COUNTS = [24, 48, 90, 150]
+	const MAX_PLACES = 150
 	const zmemo: Record<string, number[]> = {}
 	/** How small the posters get: on a phone they stay wide enough for a finger. */
 	const zooms = (): number[] => {
 		if (!roomy()) return [1, 0.8, 0.66]
-		if (fsOn()) return [1, 0.75, 0.56]
+		if (fsOn()) return [1, 0.75, 0.56] // keep in step with fsW
 		if (V === "B") return [1, 0.75, 0.56, 0.42]
 		if (V === "C") return [1, 0.72, 0.52, 0.38]
 		if (V === "D") {
@@ -218,6 +253,16 @@ export function ringsKit(core: MapCore, words: TraitWords) {
 				out.push({ x, y, d, a, i, u, id: `${i},${u}`, b: Math.max(1, Math.ceil((d - 0.8 * w) / (1.107 * w))) })
 			}
 		out.sort((m, n) => m.b - n.b || m.a - n.a)
+		// PROTOTYPE - throwaway (related-posters-zoom): at most MAX_PLACES posters, the nearest ones. A big screen at
+		// the smallest zoom had room for 470, and the wall lagged.
+		// The last ring that fits only in part keeps its places nearest the middle, all the way round.
+		if (out.length > MAX_PLACES) {
+			const b = out[MAX_PLACES].b
+			const whole = out.filter((c) => c.b < b)
+			const part = out.filter((c) => c.b === b).sort((m, n) => m.d - n.d).slice(0, MAX_PLACES - whole.length).sort((m, n) => m.a - n.a)
+			out.length = 0
+			out.push(...whole, ...part)
+		}
 		const ix: Record<string, number> = {}
 		out.forEach((cell, n) => {
 			ix[cell.id] = n
