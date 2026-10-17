@@ -57,6 +57,22 @@ import {
 import { TrackedEpisodes, useEpisodeTracking } from "~/ui/tracking/gate"
 import { deviceClock } from "~/ui/tracking/store"
 import { AuthContext } from "~/utils/auth"
+import { PrototypeSwitcher } from "~/ui/prototype/PrototypeSwitcher"
+import type { EpisodeGrid as EpisodeGridData } from "~/server/episode-grid.server"
+import VariantB from "~/ui/prototype-episodes-section/VariantB"
+import VariantC from "~/ui/prototype-episodes-section/VariantC"
+import VariantD from "~/ui/prototype-episodes-section/VariantD"
+import VariantE from "~/ui/prototype-episodes-section/VariantE"
+
+// PROTOTYPE - throwaway: episodes section variants, switched by ?variant=.
+const VARIANTS = {
+	A: "Today's section",
+	B: "Season tabs + episode cards",
+	C: "Up next + carousels",
+	D: "Ratings map as navigator",
+	E: "Dense table with bulk actions",
+}
+const VARIANT_VIEWS = { B: VariantB, C: VariantC, D: VariantD, E: VariantE }
 
 const FIXTURES: Record<string, unknown> = {
 	supernatural,
@@ -365,16 +381,27 @@ function Harness({
 						</div>
 					</MediaPreferenceProvider>
 					<div className="mt-12 flex flex-col gap-12">
-						<Episodes
-							media={media}
-							grid={grid.seasons.length ? <EpisodeGrid grid={grid} /> : null}
-						/>
+						{(() => {
+							const v = params.get("variant") ?? "A"
+							const View = VARIANT_VIEWS[v as keyof typeof VARIANT_VIEWS]
+							const gridNode = grid.seasons.length ? <EpisodeGrid grid={grid} /> : null
+							return View ? (
+								<View
+									media={media}
+									grid={grid.seasons.length ? (grid as EpisodeGridData) : null}
+									gridNode={gridNode}
+								/>
+							) : (
+								<Episodes media={media} grid={gridNode} />
+							)
+						})()}
 						<div className="h-40 rounded-xl border border-dashed border-white/10 p-4 text-sm text-gray-500">
 							The rest of the show page.
 						</div>
 					</div>
 				</BelowFoldProvider>
 			</div>
+			<PrototypeSwitcher variants={VARIANTS} />
 		</AuthContext.Provider>
 	)
 }
