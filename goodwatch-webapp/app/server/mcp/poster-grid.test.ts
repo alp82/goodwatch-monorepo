@@ -1,3 +1,4 @@
+import "../title-filter/test-alias.ts"
 import assert from "node:assert/strict"
 import { createHash } from "node:crypto"
 import { readFile } from "node:fs/promises"
@@ -11,7 +12,7 @@ import {
 import { posterView, safePageUrl, safePosterUrl } from "./poster-grid/cards.ts"
 import { POSTER_GRID_SOURCE_HASH } from "./poster-grid/html.generated.ts"
 import { enrichTitleResults } from "./title-results.server.ts"
-import { createToolServer } from "./tools.server.ts"
+const { createToolServer } = await import("./tools.server.ts")
 
 const origin = "https://goodwatch.app"
 const resource = `${origin}/mcp`
@@ -111,7 +112,13 @@ test("Search, My library and Watch next point at the versioned poster grid; othe
 	const withUi = tools
 		.filter((tool: { _meta?: unknown }) => tool._meta)
 		.map((tool: { name: string }) => tool.name)
-	assert.deepEqual(withUi, ["search_titles", "get_similar_titles", "get_tonight", "get_library"])
+	assert.deepEqual(withUi, [
+		"search_titles",
+		"discover_titles",
+		"get_similar_titles",
+		"get_tonight",
+		"get_library",
+	])
 	for (const tool of tools.filter((t: { _meta?: unknown }) => t._meta))
 		assert.deepEqual(tool._meta, {
 			ui: { resourceUri: POSTER_GRID_URI },

@@ -12,7 +12,9 @@ export interface SearchView {
 	for_you: boolean
 	exclude_seen: boolean
 	for_you_applied: boolean
-	availability: "everywhere"
+	availability: "everywhere" | "mine" | "providers"
+	filters?: import("./discover-filters.ts").DiscoverFilterArgs
+	filter_key?: string
 }
 
 /** The same Not seen yet and bounded For you rules as Discover, over the complete result batch. */

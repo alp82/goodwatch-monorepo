@@ -1,4 +1,5 @@
 import { type LibraryStatus, sortsFor } from "../../domain/my-library.ts"
+import { discoverParams, hasDiscoverFilters } from "./discover-filters.ts"
 import type { ReadArgs, ReadToolName } from "./tools.server.ts"
 
 export const linkInstructions =
@@ -27,21 +28,41 @@ export function withPageLink(
 	let path: string | undefined
 	let note: string | undefined
 	switch (name) {
+		case "get_discover_filters":
+		case "discover_titles":
 		case "search_titles": {
 			const query = (
 				typeof data.query === "string" ? data.query : (args.query ?? "")
 			).trim()
-			const params = new URLSearchParams()
+			const filters = {
+				...args,
+				...((data.filters as object) ?? {}),
+				for_you: (data.for_you ?? args.for_you) as boolean | undefined,
+				exclude_seen: (data.exclude_seen ?? args.exclude_seen) as
+					| boolean
+					| undefined,
+			}
+			const filtered = name !== "search_titles" || hasDiscoverFilters(filters)
+			const params = filtered
+				? discoverParams(filters, name === "search_titles")
+				: new URLSearchParams()
 			if (query) params.set("q", query)
-			params.set("services", "all")
+			if (!params.has("services")) params.set("services", "all")
 			params.set(
 				"unseen",
 				(data.exclude_seen ?? args.exclude_seen ?? false) ? "1" : "0",
 			)
-			params.set("foryou", (data.for_you ?? args.for_you ?? true) ? "1" : "0")
+			if (!params.has("foryou"))
+				params.set("foryou", (data.for_you ?? args.for_you ?? true) ? "1" : "0")
+			if (name !== "search_titles") {
+				params.delete("q")
+				params.set("layout", "grid")
+			}
 			path = `/discover?${params}`
 			note =
-				"Discover searches this query using the website's ranking and filters; its results can differ from this tool's catalog lookup."
+				name !== "search_titles"
+					? undefined
+					: "Discover searches this query using the website's ranking and filters; its results can differ from this tool's catalog lookup."
 			break
 		}
 		case "get_title": {

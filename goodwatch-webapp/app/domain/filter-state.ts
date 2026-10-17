@@ -94,6 +94,8 @@ export const LEGACY_PARAMS = [
 	"minYear",
 	"maxYear",
 	"maxScore",
+	"minRuntime",
+	"maxRuntime",
 ] as const
 export type LegacyParam = (typeof LEGACY_PARAMS)[number]
 export type LegacyFilters = Partial<Record<LegacyParam, string>>
@@ -115,7 +117,7 @@ export interface FilterState {
 	styles: StyleKey[]
 	/** A title fits if it has at least one. */
 	genres: string[]
-	minScore: MinScore
+	minScore: number
 	/** The least taste match; a title without a match fits only 0. It doesn't narrow for a person without taste. */
 	minMatch: MinMatch
 	released: Released
@@ -205,7 +207,11 @@ export function filterStateFromParams(
 	state.themes = parseKeys(THEME_KEYS, params.get("themes"), MAX_THEMES)
 	state.styles = parseKeys(STYLE_KEYS, params.get("styles"), MAX_STYLES)
 	state.genres = [...new Set(list(params.get("genres")))]
-	state.minScore = oneOf(MIN_SCORES, params.get("score")) ?? 0
+	const score = params.get("score")
+	state.minScore =
+		score !== null && /^\d{1,3}$/.test(score) && Number(score) <= 100
+			? Number(score)
+			: 0
 	state.minMatch = oneOf(MIN_MATCHES, params.get("match")) ?? 0
 	state.released = oneOf(RELEASED, params.get("released")) ?? "any"
 	const similar = ids(params.get("similar"))

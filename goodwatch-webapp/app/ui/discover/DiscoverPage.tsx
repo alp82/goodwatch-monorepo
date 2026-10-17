@@ -139,7 +139,7 @@ export function DiscoverPage({
 		enabled: guest !== undefined,
 	})
 
-	const browseQuery = withSides(filters.query, side)
+	const browseQuery = withSides(filters.query, side, params.get("layout") !== "grid")
 	const browse = useDiscoverBrowse({
 		query: browseQuery,
 		forYou: forYou.on,

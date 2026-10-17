@@ -153,22 +153,39 @@ export function legacyTitles(
 		conditions.push("m.release_year <= ?")
 		params.push(maxYear)
 	}
-	if (!conditions.length) return null
-	return cachedKeys("legacy", { conditions, params }, async () => {
-		const found = await Promise.all(
-			(["movie", "show"] as const).map(async (type) => {
-				const rows = await query<{ tmdb_id: number }>(
-					`SELECT m.tmdb_id FROM ${type} m
+	const minRuntime = number(legacy.minRuntime)
+	const maxRuntime = number(legacy.maxRuntime)
+	if (!conditions.length && minRuntime === null && maxRuntime === null)
+		return null
+	return cachedKeys(
+		"legacy",
+		{ conditions, params, minRuntime, maxRuntime },
+		async () => {
+			const found = await Promise.all(
+				(["movie", "show"] as const).map(async (type) => {
+					const runtime =
+						type === "movie" ? "m.runtime" : "m.episode_runtime[1]"
+					const runtimeConditions = [
+						...(minRuntime === null ? [] : [`${runtime} >= ?`]),
+						...(maxRuntime === null ? [] : [`${runtime} <= ?`]),
+					]
+					const rows = await query<{ tmdb_id: number }>(
+						`SELECT m.tmdb_id FROM ${type} m
 					 WHERE m.goodwatch_overall_score_voting_count >= ${MIN_VOTES} AND m.poster_path IS NOT NULL
-					 AND ${conditions.join(" AND ")}
+					 AND ${[...conditions, ...runtimeConditions].join(" AND ")}
 					 LIMIT ${LEGACY_LIMIT}`,
-					params,
-				)
-				return rows.map((row) => titleKey(type, Number(row.tmdb_id)))
-			}),
-		)
-		return found.flat()
-	})
+						[
+							...params,
+							...(minRuntime === null ? [] : [minRuntime]),
+							...(maxRuntime === null ? [] : [maxRuntime]),
+						],
+					)
+					return rows.map((row) => titleKey(type, Number(row.tmdb_id)))
+				}),
+			)
+			return found.flat()
+		},
+	)
 }
 
 /**

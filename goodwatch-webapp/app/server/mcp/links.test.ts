@@ -1,6 +1,7 @@
+import "../title-filter/test-alias.ts"
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { withPageLink } from "./links.ts"
+const { withPageLink } = await import("./links.ts")
 
 const origin = "https://goodwatch.app"
 test("page links use existing website filters and encode search text", () => {
@@ -112,4 +113,19 @@ test("Richer title and More like this lists link to the real title page and rela
 	)
 	assert.equal(related.page_url, `${source.url}#related`)
 	assert.match(String(related.page_note), /broader/)
+})
+
+test("Discover options link to the real filter view", () => {
+	const result = withPageLink(
+		origin,
+		"get_discover_filters",
+		{},
+		{ genres: ["Drama"], providers: [{ id: 8, name: "Netflix" }] },
+	)
+	const url = new URL(String(result.page_url))
+	assert.equal(url.pathname, "/discover")
+	assert.equal(url.searchParams.get("services"), "all")
+	assert.equal(url.searchParams.get("unseen"), "0")
+	assert.equal(url.searchParams.get("layout"), "grid")
+	assert.equal(result.page_note, undefined)
 })

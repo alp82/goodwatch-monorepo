@@ -73,6 +73,10 @@ Watch dates come only from stored watches. Progress retains earlier passes in it
 - **Font:** Gabarito loads from `/fonts/mcp/gabarito-latin.woff2`, a copy of `app/fonts/gabarito-latin.woff2` at a stable public path. Font files get `Access-Control-Allow-Origin: *`.
 - **Checks:** `app/server/mcp/poster-grid.test.ts` covers tool metadata, the resource and its CSP, `poster_url`, unchanged no-UI output, URL validation and the view model. [`mcp-poster-grid/`](mcp-poster-grid/README.md) renders the real resource in a minimal host under its CSP, with screenshots at desktop and phone widths.
 
+## Search filters and discovery (Q53, 2026-10-17)
+
+`search_titles` now accepts the shared Discover filters. `discover_titles` browses without a query, with the same filters, For you defaults, ordering choices and poster grid. `get_discover_filters` lists exact genres and providers for the saved country. See [the tool contract, shared implementation and verification](mcp-discover-tools.md). This supersedes the earlier seven-read-tool count and the statement that search availability is always everywhere: everywhere remains the default and can now be narrowed explicitly.
+
 ## Member policy, limits and metrics
 
 `main` removed the old recommendation rollout helpers. The small MCP policy reads `REC_MCP_READ` plus each tool's `REC_MCP_*` flag both when registering/listing tools and immediately before a call. Each accepts `on`, `off`, or a comma-separated member ID allowlist. Unset means enabled for all members; authorization requires the enabled Better Auth service and an active grant.

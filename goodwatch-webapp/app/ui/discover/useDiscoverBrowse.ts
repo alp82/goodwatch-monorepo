@@ -39,12 +39,7 @@ export const browseKey = (
 ) =>
 	`${query}${query ? "&" : ""}foryou=${forYou ? 1 : 0}${ranked ? `&ranked=${ranked.join(",")}` : ""}${language ? `&displayLanguage=${encodeURIComponent(language)}` : ""}`
 
-/**
- * Discover's query with Sides of you: a row per side while For you is on (`sides=rows`), and the side the list is
- * narrowed to (`side`). The server applies them only for a member with sides.
- */
-export const withSides = (query: string, side: string | null) =>
-	`${query}${query ? "&" : ""}sides=rows${side ? `&side=${encodeURIComponent(side)}` : ""}`
+export { withSides } from "~/domain/discover-layout"
 
 /**
  * A guest's progress and chosen country and services, read after hydration (the server can't see them); null for a

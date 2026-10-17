@@ -10,6 +10,11 @@ import { counter } from "../metrics/registry.server.ts"
 import { runsSearch } from "../role.server.ts"
 import { searchAdmission } from "../search-runtime/admission.server.ts"
 import { type CatalogTitle, summary } from "./data.server.ts"
+import {
+	discoverViewKey,
+	filterArgs,
+	hasDiscoverFilters,
+} from "./discover-filters.ts"
 import { readToolEnabled } from "./policy.server.ts"
 import { prepareSearchView } from "./search-view.server.ts"
 import type { SearchView } from "./search-view.ts"
@@ -191,6 +196,14 @@ export function createRankedSearch(
 			let snapshot = input
 			if (snapshot.view) {
 				if (
+					(hasDiscoverFilters(args) &&
+						discoverViewKey({
+							...snapshot.view.filters,
+							for_you: snapshot.view.for_you,
+							exclude_seen: snapshot.view.exclude_seen,
+							...filterArgs(args),
+						}) !==
+							(snapshot.view.filter_key ?? discoverViewKey(snapshot.view))) ||
 					(args.for_you !== undefined &&
 						args.for_you !== snapshot.view.for_you) ||
 					(args.exclude_seen !== undefined &&
@@ -200,9 +213,10 @@ export function createRankedSearch(
 			} else {
 				// One stable, member-bound view per filter combination. Changing filters reuses the
 				// 60s raw query cache without another paid search; cursor pages never re-rank.
-				const id = digest(
-					`${snapshot.id}:${args.for_you ?? true}:${args.exclude_seen ?? false}`,
-				).slice(0, 32)
+				const id = digest(`${snapshot.id}:${discoverViewKey(args)}`).slice(
+					0,
+					32,
+				)
 				const viewKey = `${prefix}:view:${id}`
 				let value = await redis.get(viewKey)
 				if (!value) {

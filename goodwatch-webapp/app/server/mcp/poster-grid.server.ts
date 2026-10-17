@@ -12,6 +12,7 @@ export const MCP_APP_MIME_TYPE = "text/html;profile=mcp-app"
 export const POSTER_GRID_TOOLS: ReadonlySet<ReadToolName> = new Set([
 	"search_titles",
 	"get_similar_titles",
+	"discover_titles",
 	"get_library",
 	"get_tonight",
 ])
@@ -46,7 +47,7 @@ export function registerPosterGrid(server: McpServer, origin: string) {
 		{
 			title: "GoodWatch posters",
 			description:
-				"Poster grid for search results, More like this, My library and Watch next. Shown by clients that support MCP Apps.",
+				"Poster grid for discovery, search results, More like this, My library and Watch next. Shown by clients that support MCP Apps.",
 			mimeType: MCP_APP_MIME_TYPE,
 			_meta: { ui },
 		},

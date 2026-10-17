@@ -1,9 +1,12 @@
+import "../title-filter/test-alias.ts"
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import type { OAuthTokenVerifier } from "@modelcontextprotocol/server"
 import { createMcpHandler } from "@modelcontextprotocol/server"
 import { renderMetrics } from "../metrics/registry.server.ts"
-import { createReadToolServer, createToolServer } from "./tools.server.ts"
+const { createReadToolServer, createToolServer } = await import(
+	"./tools.server.ts"
+)
 
 const { createReadMcpHandler } = await import("./endpoint.server.ts")
 
@@ -256,6 +259,8 @@ test("A member sees separate catalog and personal read tools, with valid schemas
 		tools.map((t: { name: string }) => t.name),
 		[
 			"search_titles",
+			"discover_titles",
+			"get_discover_filters",
 			"get_title",
 			"get_similar_titles",
 			"get_my_shows",
@@ -336,7 +341,7 @@ test(
 				limiter: unlimited,
 			})
 			const tools = (await result(await handle(rpc("tools/list")))).result.tools
-			assert.equal(tools.length, 15)
+			assert.equal(tools.length, 17)
 			assert.equal(
 				tools.find((tool: { name: string }) => tool.name === "search_titles")
 					.inputSchema.properties.ranked.default,
@@ -397,7 +402,7 @@ test("Write scopes expose seven writes with conservative destructive hints and n
 		limiter: unlimited,
 	})
 	const listed = (await result(await handle(rpc("tools/list")))).result.tools
-	assert.equal(listed.length, 15)
+	assert.equal(listed.length, 17)
 	const writes = listed.filter(
 		(tool: { annotations: { readOnlyHint: boolean } }) =>
 			!tool.annotations.readOnlyHint,

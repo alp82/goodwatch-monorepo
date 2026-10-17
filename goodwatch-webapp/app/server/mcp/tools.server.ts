@@ -14,6 +14,11 @@ import {
 import { readToolEnabled } from "./policy.server.ts"
 import type { RankedSearch } from "./ranked.server.ts"
 import type { enrichTitleResults } from "./title-results.server.ts"
+import {
+	discoverFilters,
+	validDiscoverRanges,
+	type DiscoverFilterArgs,
+} from "./discover-filters.ts"
 import { paging, selected, titleDetails, similarTitles } from "./schemas.ts"
 import { registerWriteTools } from "./write-tools.server.ts"
 
@@ -21,18 +26,20 @@ const calls = counter(
 	"goodwatch_mcp_tool_calls_total",
 	"MCP tool calls by outcome.",
 	["tool", "outcome"],
-	50,
+	64,
 )
 const durations = histogram(
 	"goodwatch_mcp_tool_duration_seconds",
 	"MCP tool duration.",
 	["tool"],
 	durationBuckets,
-	15,
+	20,
 )
 type EnrichTitleResults = typeof enrichTitleResults
 export type ReadToolName =
 	| "search_titles"
+	| "discover_titles"
+	| "get_discover_filters"
 	| "get_title"
 	| "get_similar_titles"
 	| "get_my_shows"
@@ -40,7 +47,7 @@ export type ReadToolName =
 	| "get_tonight"
 	| "get_library"
 	| "get_taste"
-export interface ReadArgs {
+export interface ReadArgs extends DiscoverFilterArgs {
 	cursor?: string
 	limit?: number
 	query?: string
@@ -68,9 +75,10 @@ const definitions: {
 		name: "search_titles",
 		title: "Search titles by name",
 		description:
-			"Search movie and show names across the GoodWatch catalog, separate from your library. Name lookup by default; for descriptive queries, explicitly set ranked=true for an optional smarter match, ordered For you by default. Searches everywhere, including already seen titles, regardless of saved services/filters. Set exclude_seen=true for unseen results in one call; never loop over get_title to filter seen titles. Returns up to 40 results by default; request a smaller limit only when asked. Different works can share a name and year: use runtime_minutes to distinguish them. Smarter matches allow 20 uncached attempts per member per UTC day, one in flight, normalized queries cached for 60 seconds and paging is free.",
+			"Search movie and show names across the GoodWatch catalog, separate from your library. Name lookup by default; for descriptive queries, explicitly set ranked=true for an optional smarter match, ordered For you by default. Defaults to everywhere and includes seen titles. Use the shared Discover filters to narrow by type, genres, years, runtime, score, services, moods and more; get_discover_filters lists genres/provider IDs. Repeat filters with offset cursors; ranked cursors inherit their view. Use discover_titles for recommendations without a query. Set exclude_seen=true for unseen results in one call; never loop over get_title to filter seen titles. Returns up to 40 results by default; request a smaller limit only when asked. Different works can share a name and year: use runtime_minutes to distinguish them. Smarter matches allow 20 uncached attempts per member per UTC day, one in flight, normalized queries cached for 60 seconds and paging is free.",
 		schema: z
 			.object({
+				...discoverFilters,
 				query: z.string().trim().max(120).default(""),
 				ranked: z
 					.boolean()
@@ -99,10 +107,40 @@ const definitions: {
 			})
 			.strict()
 			.refine(
+				validDiscoverRanges,
+				"Use ascending year/runtime bounds and choose either saved services or explicit providers",
+			)
+			.refine(
 				(value) =>
 					!value.cursor || value.ranked === value.cursor.startsWith("ranked:"),
 				"Smarter matches use ranked: result cursors; name lookup uses offset: cursors",
 			),
+	},
+	{
+		name: "discover_titles",
+		title: "Discover movies and shows",
+		description:
+			"Discover without a query using the same catalog, filters and ordering as GoodWatch Discover/Explore. For you by default; everywhere and seen titles included. Choose popularity, newest, score or match ordering. Use on_my_services=true for saved services, or providers for specific services, in your saved country. get_discover_filters lists valid genres and providers. Filters apply before pagination. Repeat filters when paging with offset cursors. Returns up to 40 titles and a matching Discover grid page_url.",
+		schema: z
+			.object({
+				...discoverFilters,
+				...paging,
+				limit: z.number().int().min(1).max(40).default(40),
+				for_you: z.boolean().optional(),
+				exclude_seen: z.boolean().optional(),
+			})
+			.strict()
+			.refine(
+				validDiscoverRanges,
+				"Use ascending year/runtime bounds and choose either saved services or explicit providers",
+			),
+	},
+	{
+		name: "get_discover_filters",
+		title: "Get Discover filter options",
+		description:
+			"List exact genre names, provider IDs/names available in your saved country (plus saved providers), and saved services for search_titles/discover_titles. Other filter choices are enumerated in those tools schemas. Reads existing settings without changing them.",
+		schema: z.object({}).strict(),
 	},
 	{
 		name: "get_title",

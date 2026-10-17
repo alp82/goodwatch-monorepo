@@ -1,3 +1,4 @@
+import "../title-filter/test-alias.ts"
 // The /mcp route loads the MCP SDK and the tools on its first request, so a server starts without them.
 import assert from "node:assert/strict"
 import * as nodeModule from "node:module"
@@ -20,7 +21,10 @@ registerHooks({
 		return result
 	},
 })
-const mcpModules = () => resolved.filter((url) => /@modelcontextprotocol|\/server\/mcp\/endpoint\.server\.ts/.test(url))
+const mcpModules = () =>
+	resolved.filter((url) =>
+		/@modelcontextprotocol|\/server\/mcp\/endpoint\.server\.ts/.test(url),
+	)
 
 test("importing the route loads nothing of MCP; the first request does and is answered", async () => {
 	const route = await import("../../routes/mcp.ts")

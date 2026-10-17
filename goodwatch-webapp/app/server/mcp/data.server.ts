@@ -20,6 +20,7 @@ import { getTitleSnapshot } from "../title-snapshot/index.server"
 import { getTonightsPick } from "../tonight.server"
 import { getUserData } from "../userData.server"
 import { getMemberViewerContext } from "../viewer.server"
+import { hasDiscoverFilters } from "./discover-filters.ts"
 import { titleLink } from "./links.ts"
 import type { ReadArgs, ReadToolName } from "./tools.server.ts"
 import { watchAvailability } from "./watch-links.server.ts"
@@ -321,6 +322,34 @@ export async function readMemberTool(
 	name: ReadToolName,
 	args: ReadArgs,
 ): Promise<Record<string, unknown>> {
+	if (name === "discover_titles" || name === "get_discover_filters")
+		return (await import("./discover.server.ts")).readDiscover(
+			userId,
+			origin,
+			name,
+			args,
+		)
+	if (name === "search_titles" && hasDiscoverFilters(args)) {
+		// Apply filters over the complete name batch, before selecting a page.
+		const found = await lookup(args.query ?? "", 0, 100001)
+		if (found.length > 100000)
+			return {
+				status: "query_too_broad",
+				message:
+					"Narrow the name query, or use discover_titles for catalog browsing.",
+			}
+		const result = await (
+			await import("./search-view.server.ts")
+		).prepareSearchView(found, userId, args, false)
+		const slice = page(result.titles, { ...args, limit: args.limit ?? 40 })
+		return {
+			...slice,
+			...result.view,
+			items: slice.items.map((title) => summary(title, origin)),
+			returned: slice.items.length,
+			ranked: false,
+		}
+	}
 	if (name === "search_titles") {
 		const offset = offsetOf(args)
 		const limit = args.limit ?? 40

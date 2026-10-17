@@ -21,6 +21,8 @@ const { registerHooks } = nodeModule as unknown as {
 
 registerHooks({
 	resolve(specifier, context, nextResolve) {
+		if (context.parentURL?.includes("/node_modules/"))
+			return nextResolve(specifier, context)
 		const aliased = specifier === SNAPSHOT_INDEX ? SNAPSHOT_FORMAT : specifier
 		const from = aliased.startsWith("~/")
 			? new URL(aliased.slice(2), app)

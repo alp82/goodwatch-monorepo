@@ -160,7 +160,7 @@ async function browseLoader(
 	// Search mode: the browser runs the search (its reading streams in), so the first view has no results yet.
 	const searching = searchText(params.get("q")) !== null
 	const side = params.get("side")
-	const sides = { rows: true, side }
+	const sides = { rows: params.get("layout") !== "grid", side }
 	let snapshotNotLoaded = false
 	let pages: BrowseResults[] | null = null
 	try {
@@ -199,7 +199,7 @@ async function browseLoader(
 			initial: pages
 				? {
 						key: browseKey(
-							withSides(filterQuery(state, sort, defaults), side),
+							withSides(filterQuery(state, sort, defaults), side, sides.rows),
 							forYou,
 							undefined,
 							ctx.language ?? "en",
