@@ -87,7 +87,12 @@ span.rm-p{height:calc(var(--pw)*1.5);aspect-ratio:auto}
 }
 .rm.rg .rm-top{height:var(--th,30px)}
 .pl-stage[class] .rm.rg .rm-p{animation:none;transition:scale var(--sc,200ms) cubic-bezier(.3,.3,.2,1)}
-.rg .rm-w{will-change:translate}
+.rg .rm-w{will-change:translate,scale}
+.rg .rm-g{transform-origin:50% 50%}
+.rg .rm-map{cursor:grab}
+.rg[data-r-drag] .rm-map{cursor:grabbing}
+.rg[data-r-drag] .rm-w>.rm-p{pointer-events:none}
+.rg .rm-w>.rm-p[data-r-aim]{--ow:3px;--ol:#fbbf24}
 .rg .rm-w>.rm-p{will-change:transform,translate,scale,opacity;backface-visibility:hidden}
 @keyframes rg-in{from{opacity:0}}
 @keyframes rg-out{from{opacity:var(--o,1)}to{opacity:0}}
@@ -359,6 +364,8 @@ small controls grow too.
 .rm-fs:hover{border-color:#fbbf24}
 .pl.pl-map:is(:fullscreen,.pl-fs){height:100dvh!important;width:100vw;max-width:none;border:0;border-radius:0;padding:1rem 1.5rem 1.25rem;background:#0b0f19}
 .pl.pl-map.pl-fs{position:fixed;inset:0;z-index:1000}
+/* In full screen one finger drags the map every way: there is no page to scroll. */
+.pl.pl-map:is(:fullscreen,.pl-fs) .rm-map{touch-action:none}
 .pl.pl-map:is(:fullscreen,.pl-fs) .pl-body{flex:1;min-height:0}
 .pl.pl-map:is(:fullscreen,.pl-fs) .pl-stage.pl-map{flex:1;height:auto;min-height:0}
 @media (min-width:1024px){

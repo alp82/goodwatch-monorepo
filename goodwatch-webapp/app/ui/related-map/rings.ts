@@ -121,6 +121,8 @@ type Moved = HTMLElement & {
 	__xu?: number
 	__end?: number
 	__pk?: { nm: string; yr: string; df: string; im?: string } | null
+	/** Where a drag left the map, for the step that follows it. */
+	__d?: { x: number; y: number }
 }
 
 export function ringsKit(core: MapCore, words: TraitWords) {
@@ -740,8 +742,9 @@ export function ringsKit(core: MapCore, words: TraitWords) {
 		const calm = still()
 		const t0 = win.performance.now()
 		const live = t0 < busy
-		// Where the map is in its pan right now, and every poster within it.
-		const map = offset(world, live) ?? { x: 0, y: 0 }
+		// Where the map is in its pan right now, or where a drag left it, and every poster within it.
+		const map = offset(world, live) ?? world.__d ?? { x: 0, y: 0 }
+		world.__d = undefined
 		const have: Record<string, Moved> = {}
 		const ghosts: Moved[] = []
 		for (let i = 0; i < world.children.length; i++) {
@@ -910,6 +913,322 @@ export function ringsKit(core: MapCore, words: TraitWords) {
 				ui.af = { [root.getAttribute("data-r-f") ?? ""]: at }
 			}
 		}
+	}
+
+	// --- Pinch and pan ---------------------------------------------------------------------------------------------
+	// Two fingers that pinch, or a pinch on a trackpad (a wheel with ctrl, or Safari's gesture events), zoom the map:
+	// the picture follows the fingers, and when they lift it settles on the nearest zoom step, as − and + do. A finger
+	// or the mouse that drags the map moves the camera with it. The poster nearest the middle is marked, and letting go
+	// steps onto it: the pan goes on from where the hand left the map. Let go with the middle still nearest, and the
+	// map springs back. On the page one finger drags sideways only, so that a swipe up or down still scrolls the page;
+	// in full screen it drags every way (related-map.css).
+	interface Gesture {
+		root: HTMLElement
+		world: Moved
+		/** The fingers that are down, by pointer. */
+		pts: Map<number, { x: number; y: number }>
+		/** Where the fingers were, and how far apart, when the current set of them began. */
+		from: { x: number; y: number; d: number }
+		/** The map's offset and scale at that moment. */
+		base: { x: number; y: number; r: number }
+		d: { x: number; y: number }
+		r: number
+		/** The hand has moved beyond a tap. */
+		on: boolean
+		/** Over: the fingers still down do nothing more. */
+		done: boolean
+		t0: number
+		touch: boolean
+		aim: Element | null
+	}
+	let g: Gesture | null = null
+	let wheel: (Gesture & { timer: number }) | null = null
+	/** Until when the click that ends a drag is not a tap, and whether a click is this code's own. */
+	let block = -1
+	let own = false
+	const zoomAt = (root: Element) => Math.max(0, Math.min(zooms().length - 1, Number(root.getAttribute("data-r-z")) || 0))
+	const ringsOf = (root: Element) => root.querySelector("[data-r-bg] .rm-g") as HTMLElement | null
+	const gestureOf = (root: HTMLElement, world: Moved, touch: boolean, t0: number): Gesture => ({
+		root,
+		world,
+		pts: new Map(),
+		from: { x: 0, y: 0, d: 0 },
+		base: { x: 0, y: 0, r: 1 },
+		d: { x: 0, y: 0 },
+		r: 1,
+		on: false,
+		done: false,
+		t0,
+		touch,
+		aim: null,
+	})
+	/** How far the map may be pinched: a little beyond the nearest and the furthest zoom step, then no further. */
+	const pinchRange = (root: Element) => {
+		const zs = zooms()
+		const z = zs[zoomAt(root)]
+		return { lo: (zs[zs.length - 1] / z) * 0.85, hi: (zs[0] / z) * 1.15 }
+	}
+	const spread = (pts: Gesture["pts"]) => {
+		const all = Array.from(pts.values())
+		return all.length < 2 ? 0 : Math.hypot(all[0].x - all[1].x, all[0].y - all[1].y)
+	}
+	const midOf = (pts: Gesture["pts"]) => {
+		let x = 0
+		let y = 0
+		for (const p of pts.values()) {
+			x += p.x
+			y += p.y
+		}
+		return { x: x / (pts.size || 1), y: y / (pts.size || 1) }
+	}
+	/** A finger comes or goes: the gesture goes on from where the map is now. */
+	const rebase = (state: Gesture) => {
+		state.from = { ...midOf(state.pts), d: spread(state.pts) }
+		state.base = { x: state.d.x, y: state.d.y, r: state.r }
+	}
+	const show = (state: Gesture) => {
+		const { world, d, r } = state
+		world.style.translate = `${round(d.x, 10)}px ${round(d.y, 10)}px`
+		world.style.scale = String(round(r, 1000))
+		const rings = ringsOf(state.root)
+		if (rings) {
+			rings.style.translate = world.style.translate
+			rings.style.scale = world.style.scale
+		}
+	}
+	/** The poster nearest the middle while the map is dragged: where letting go steps. None while the middle is nearest. */
+	const aimAt = (state: Gesture) => {
+		let best: Element | null = null
+		let near = Math.hypot(state.d.x, state.d.y)
+		for (let i = 0; i < state.world.children.length; i++) {
+			const node = state.world.children[i] as Moved
+			if (!node.hasAttribute("data-pl-step") || node.hasAttribute("data-r-x")) continue
+			const at = read(node, false)
+			const dist = Math.hypot(at.x * state.r + state.d.x, at.y * state.r + state.d.y)
+			if (dist < near) {
+				near = dist
+				best = node
+			}
+		}
+		if (best === state.aim) return
+		state.aim?.removeAttribute("data-r-aim")
+		best?.setAttribute("data-r-aim", "")
+		state.aim = best
+	}
+	const unshow = (state: Gesture) => {
+		const rings = ringsOf(state.root)
+		for (const el of [state.world, rings]) {
+			if (!el) continue
+			el.style.removeProperty("translate")
+			el.style.removeProperty("scale")
+		}
+	}
+	/** The map goes back from where the hand left it: to its place, and to its size. */
+	const springBack = (state: Gesture, d: { x: number; y: number }, r: number, ms: number) => {
+		if (still()) return
+		const { world } = state
+		if (Math.abs(d.x) + Math.abs(d.y) > 0.6) play(world, [frame(d.x, d.y), frame(0, 0)], ms, EASE)
+		if (Math.abs(r - 1) > 0.001 && world.animate) {
+			world.animate([{ scale: String(r) }, { scale: "1" }], { duration: ms, easing: EASE })
+			ringsOf(state.root)?.animate?.([{ scale: String(r) }, { scale: "1" }], { duration: ms, easing: EASE })
+		}
+	}
+	/** The hand lets go. A pinch settles on a zoom step, a drag steps onto the poster it aimed at, or springs back. */
+	const settle = (state: Gesture, cancel: boolean, at: number) => {
+		const { root, world } = state
+		block = at + 500
+		root.removeAttribute("data-r-drag")
+		const aim = state.aim
+		aim?.removeAttribute("data-r-aim")
+		state.aim = null
+		const { d, r } = state
+		unshow(state)
+		const zs = zooms()
+		const z = zoomAt(root)
+		// Each step of the zoom is about a sixth more or less spread between the fingers.
+		const steps = cancel ? 0 : Math.round(Math.log(r) / 0.16)
+		const next = Math.max(0, Math.min(zs.length - 1, z - steps))
+		if (next !== z) {
+			springBack(state, d, r, 200 * ZOOM)
+			const arg = next < z ? "-1" : "1"
+			own = true
+			for (let i = 0; i < Math.abs(next - z); i++) {
+				const control = root.querySelector(`[data-r-ctl] [data-pl-act="z"][data-arg="${arg}"]`) as HTMLButtonElement | null
+				if (!control || control.disabled) break
+				control.click()
+			}
+			own = false
+			// The new rings are drawn for the new zoom: they grow or shrink into place from what the fingers showed.
+			const rings = ringsOf(root)
+			const from = (r * zs[z]) / zs[zoomAt(root)]
+			if (rings?.animate && !still()) rings.animate([{ scale: String(from) }, { scale: "1" }], { duration: 200 * ZOOM, easing: EASE })
+			return
+		}
+		if (aim && !cancel && aim.isConnected) {
+			// The step's pan begins where the hand left the map (`into`).
+			world.__d = { x: d.x, y: d.y }
+			springBack(state, { x: 0, y: 0 }, r, 60 * STEP)
+			own = true
+			;(aim as HTMLElement).click()
+			own = false
+			if (!world.__d) return
+			world.__d = undefined
+		}
+		springBack(state, d, r, 75 * STEP)
+	}
+	if (win) {
+		win.addEventListener(
+			"pointerdown",
+			(event: PointerEvent) => {
+				if (event.button > 0) return
+				const target = event.target as Element | null
+				const map = target?.closest?.("[data-r-map]")
+				if (!map || target?.closest("[data-r-ctl] > *")) return
+				const root = map.closest("[data-r-root]") as HTMLElement | null
+				const world = map.querySelector("[data-r-w]") as Moved | null
+				if (!root || !world) return
+				if (g && g.world !== world) return
+				if (!g) g = gestureOf(root, world, event.pointerType === "touch", event.timeStamp)
+				if (g.done || g.pts.size >= 2) return
+				g.pts.set(event.pointerId, { x: event.clientX, y: event.clientY })
+				rebase(g)
+			},
+			true,
+		)
+		win.addEventListener(
+			"pointermove",
+			(event: PointerEvent) => {
+				const state = g
+				if (!state || state.done || !state.pts.has(event.pointerId)) return
+				state.pts.set(event.pointerId, { x: event.clientX, y: event.clientY })
+				const m = midOf(state.pts)
+				let dx = m.x - state.from.x
+				let dy = m.y - state.from.y
+				const two = state.pts.size >= 2
+				if (!state.on) {
+					if (Math.hypot(dx, dy) < 8 && (!two || Math.abs(spread(state.pts) - state.from.d) < 8)) return
+					if (!two && state.touch) {
+						// A finger that rested on a poster compares it; one that swipes up or down on the page scrolls it.
+						if (event.timeStamp - state.t0 > 280 || (!full() && Math.abs(dy) > Math.abs(dx))) {
+							state.done = true
+							return
+						}
+					}
+					state.on = true
+					// A map that is still in its pan is caught where it is.
+					const now = offset(state.world, true)
+					if (now) {
+						stop(state.world)
+						state.d = now
+						rebase(state)
+						dx = 0
+						dy = 0
+					}
+					state.root.setAttribute("data-r-drag", "")
+					if (!state.touch) state.root.querySelector("[data-r-map]")?.setPointerCapture?.(event.pointerId)
+				}
+				const range = pinchRange(state.root)
+				const r = two && state.from.d ? Math.max(range.lo, Math.min(range.hi, (state.base.r * spread(state.pts)) / state.from.d)) : state.r
+				state.r = r
+				state.d = {
+					x: Math.max(-box.w * 0.6, Math.min(box.w * 0.6, state.base.x + dx)),
+					y: Math.max(-box.h * 0.6, Math.min(box.h * 0.6, state.base.y + dy)),
+				}
+				show(state)
+				aimAt(state)
+			},
+			true,
+		)
+		const up = (event: PointerEvent) => {
+			const state = g
+			if (!state || !state.pts.has(event.pointerId)) return
+			state.pts.delete(event.pointerId)
+			if (state.on && !state.done) {
+				state.done = true
+				if (state.root.isConnected) settle(state, event.type === "pointercancel", event.timeStamp)
+			} else if (!state.done) rebase(state)
+			if (!state.pts.size) g = null
+		}
+		win.addEventListener("pointerup", up, true)
+		win.addEventListener("pointercancel", up, true)
+		// The click that ends a drag is not a tap on what is under the hand. This listener comes before the engine's.
+		win.addEventListener(
+			"click",
+			(event: MouseEvent) => {
+				if (own || event.timeStamp > block) return
+				if (!(event.target as Element | null)?.closest?.("[data-related-map]")) return
+				block = -1
+				event.preventDefault()
+				event.stopImmediatePropagation()
+			},
+			true,
+		)
+		// A pinch on a trackpad: a wheel with ctrl (Chrome, Firefox, Edge) or Safari's gesture events. The map takes
+		// them only where they happen on it, and the listeners go on a map once the pointer is over it.
+		const pinchStart = (map: Element, at: number) => {
+			const root = map.closest("[data-r-root]") as HTMLElement | null
+			const world = map.querySelector("[data-r-w]") as Moved | null
+			if (!root || !world) return null
+			if (wheel && wheel.world === world) return wheel
+			wheel = { ...gestureOf(root, world, false, at), timer: 0, on: true }
+			return wheel
+		}
+		const pinchTo = (state: Gesture, r: number) => {
+			const range = pinchRange(state.root)
+			state.r = Math.max(range.lo, Math.min(range.hi, r))
+			show(state)
+		}
+		const pinchEnd = (at: number) => {
+			const state = wheel
+			wheel = null
+			if (state?.root.isConnected) settle(state, false, at)
+		}
+		const bound = new WeakSet<Element>()
+		const bind = (map: Element) => {
+			bound.add(map)
+			map.addEventListener(
+				"wheel",
+				(event: Event) => {
+					const e = event as WheelEvent
+					if (!e.ctrlKey) return
+					e.preventDefault()
+					const state = pinchStart(map, e.timeStamp)
+					if (!state) return
+					// A trackpad sends small steps, a mouse wheel with ctrl big ones: a notch is about one zoom step.
+					const delta = Math.max(-20, Math.min(20, e.deltaY * (e.deltaMode ? 16 : 1)))
+					pinchTo(state, state.r * Math.exp(-delta * 0.01))
+					win.clearTimeout(state.timer)
+					state.timer = win.setTimeout(() => pinchEnd(win.performance.now()), 160)
+				},
+				{ passive: false },
+			)
+			// Safari. On an iPhone or an iPad the fingers are pointers already: there the page only must not zoom.
+			let start = 1
+			map.addEventListener("gesturestart", (event: Event) => {
+				event.preventDefault()
+				if (g?.touch) return
+				const state = pinchStart(map, event.timeStamp)
+				start = state?.r ?? 1
+			})
+			map.addEventListener("gesturechange", (event: Event) => {
+				event.preventDefault()
+				if (g?.touch || !wheel) return
+				pinchTo(wheel, start * ((event as Event & { scale?: number }).scale ?? 1))
+			})
+			map.addEventListener("gestureend", (event: Event) => {
+				event.preventDefault()
+				if (g?.touch || !wheel) return
+				pinchEnd(event.timeStamp)
+			})
+		}
+		win.addEventListener(
+			"pointerover",
+			(event: PointerEvent) => {
+				const map = (event.target as Element | null)?.closest?.("[data-related-map] [data-r-map]")
+				if (map && !bound.has(map)) bind(map)
+			},
+			{ capture: true, passive: true },
+		)
 	}
 
 	/** The form: the rings, the zoom, the movement, and the card's frame are the kit's. The rest is the spec's. */
