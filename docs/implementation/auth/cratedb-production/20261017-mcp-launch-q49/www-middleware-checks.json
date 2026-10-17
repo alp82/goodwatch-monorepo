@@ -1,0 +1,10 @@
+[
+  {
+    "scheme": "http",
+    "result": "301 https://goodwatch.app/connect?source=mcp"
+  },
+  {
+    "scheme": "https",
+    "result": "301 https://goodwatch.app/connect?source=mcp"
+  }
+]

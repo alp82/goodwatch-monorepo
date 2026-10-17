@@ -1,5 +1,9 @@
 # MCP launch preparation: step 3.1 stopped at readiness
 
+Follow-up: owner decision Q49 authorized the environment repair and sequential
+role recreation. See the [Q49 receipt and prepared proxy paste files](../20261017-mcp-launch-q49/README.md).
+This earlier read-only receipt remains the record of the initial stop.
+
 Checked on 2026-10-17 at approximately 01:30–01:36 UTC for
 [#572](https://github.com/alp82/goodwatch-monorepo/issues/572), recorded on
 [#595](https://github.com/alp82/goodwatch-monorepo/pull/595).
