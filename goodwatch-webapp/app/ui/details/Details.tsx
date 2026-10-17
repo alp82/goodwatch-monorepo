@@ -63,7 +63,7 @@ function DetailsPage({
 	const preference = useMediaPreference()
 	const [protoParams] = useSearchParams()
 	const protoKey = protoParams.get("variant") ?? "live"
-	const protoVariant = (protoKey in SEEN_SCORE_VARIANTS ? protoKey : "live") as SeenScoreVariant | "live"
+	const protoVariant = (protoKey in SEEN_SCORE_VARIANTS || ["A", "C", "D"].includes(protoKey) ? protoKey : "live") as SeenScoreVariant | "live"
 	const preview = useTitlePreview({
 		media: loadedMedia,
 		loadedCountry,

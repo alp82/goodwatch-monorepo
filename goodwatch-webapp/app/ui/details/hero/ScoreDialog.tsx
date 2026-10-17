@@ -23,12 +23,18 @@ export default function ScoreDialog({
 	onClose,
 	heading,
 	footer,
+	top,
+	hideClear,
 }: {
 	title: string
 	/** PROTOTYPE (seen-score): replaces the title as the dialog's heading. */
 	heading?: React.ReactNode
 	/** PROTOTYPE (seen-score): shown under the score control. */
 	footer?: React.ReactNode
+	/** PROTOTYPE (seen-score): shown over the score control. */
+	top?: React.ReactNode
+	/** PROTOTYPE (seen-score): no "Clear score" (Seen takes its place). */
+	hideClear?: boolean
 	open: boolean
 	value: Score | null
 	busy: boolean
@@ -39,10 +45,10 @@ export default function ScoreDialog({
 	onClose: () => void
 }) {
 	if (!open) return null
-	return <Panel title={title} value={value} busy={busy} opener={opener} onRate={onRate} onClear={onClear} onClose={onClose} heading={heading} footer={footer} />
+	return <Panel title={title} value={value} busy={busy} opener={opener} onRate={onRate} onClear={onClear} onClose={onClose} heading={heading} footer={footer} top={top} hideClear={hideClear} />
 }
 
-function Panel({ title, value, busy, opener, onRate, onClear, onClose, heading, footer }: Omit<Parameters<typeof ScoreDialog>[0], "open">) {
+function Panel({ title, value, busy, opener, onRate, onClear, onClose, heading, footer, top, hideClear }: Omit<Parameters<typeof ScoreDialog>[0], "open">) {
 	const panel = useRef<HTMLDivElement>(null)
 	const shade = useRef<HTMLDivElement>(null)
 	const closeRef = useRef(onClose)
@@ -101,7 +107,7 @@ function Panel({ title, value, busy, opener, onRate, onClear, onClose, heading, 
 			>
 				<div className="mx-auto mb-3 h-1 w-10 rounded-full bg-white/20 md:hidden" aria-hidden="true" />
 				<div className="mb-3 flex items-center justify-between gap-3">
-					<h2 className="min-w-0 truncate text-base font-bold">{heading ?? title}</h2>
+					<h2 className={`min-w-0 text-base font-bold ${heading ? "flex-1" : "truncate"}`}>{heading ?? title}</h2>
 					<button
 						type="button"
 						data-score-dialog-close
@@ -114,7 +120,8 @@ function Panel({ title, value, busy, opener, onRate, onClear, onClose, heading, 
 						</svg>
 					</button>
 				</div>
-				<ScoreControl value={value} busy={busy} onRate={onRate} onClear={onClear} />
+				{top}
+				<ScoreControl value={value} busy={busy} onRate={onRate} onClear={hideClear ? undefined : onClear} />
 				{footer}
 			</div>
 		</div>,

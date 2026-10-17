@@ -81,7 +81,7 @@ export function SeenButton({ size = "sm", className = "", label = "long" }: { si
 			kind="seen"
 			label={label}
 			size={size}
-			active={p.state.seen}
+			active={p.seen}
 			onClick={p.pressSeen}
 			className={`${glow ? "ring-2 ring-green-300 ring-offset-2 ring-offset-stone-950" : ""} ${className}`}
 		/>
@@ -90,7 +90,7 @@ export function SeenButton({ size = "sm", className = "", label = "long" }: { si
 
 export function WantButton({ className = "" }: { className?: string }) {
 	const p = useProto()
-	return <ActionButton kind="want" label="long" size="sm" rewatch={p.state.seen} active={p.state.want} onClick={p.toggleWant} className={className} />
+	return <ActionButton kind="want" label="long" size="sm" rewatch={p.state.watch === "seen"} active={p.state.want} onClick={p.toggleWant} className={className} />
 }
 
 export function HideButton({ className = "" }: { className?: string }) {
@@ -137,10 +137,10 @@ export function ProtoScoreDialog({
 						<button
 							type="button"
 							onClick={p.pressSeen}
-							className={`inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg px-3 text-xs font-semibold ${p.state.seen ? "bg-green-500 text-black" : "bg-white/10 text-gray-100 hover:bg-white/20"}`}
+							className={`inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg px-3 text-xs font-semibold ${p.seen ? "bg-green-500 text-black" : "bg-white/10 text-gray-100 hover:bg-white/20"}`}
 						>
 							<EyeIcon className="h-4 w-4" />
-							{p.state.seen ? "Seen" : "Seen it, no score yet"}
+							{p.seen ? "Seen" : "Seen it, no score yet"}
 						</button>
 						<span className="text-xs text-gray-400">A score marks it as Seen.</span>
 					</div>
@@ -163,15 +163,15 @@ export function ProtoScoreDialog({
 }
 
 /** Shows the store's "blocked" message and the auto-Seen note as the live toasts. */
-export function useProtoToasts() {
+export function useProtoToasts(autoSeenToast = true) {
 	const p = useProto()
 	const last = useRef(0)
 	useEffect(() => {
 		if (!p.event || p.event.at === last.current) return
 		last.current = p.event.at
 		if (p.event.kind === "blocked") toast.info(p.event.message)
-		if (p.event.kind === "auto-seen") toast.success(`Marked ${p.media.details.title} as Seen`)
-	}, [p.event, p.media.details.title])
+		if (p.event.kind === "auto-seen" && autoSeenToast) toast.success(`Marked ${p.media.details.title} as Seen`)
+	}, [p.event, p.media.details.title, autoSeenToast])
 }
 
 /** Opens the score dialog when Seen goes on. */
@@ -207,7 +207,8 @@ export function StateStrip() {
 	return (
 		<div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 rounded-lg border border-dashed border-fuchsia-500/60 bg-fuchsia-500/[0.06] px-3 py-1.5 font-mono text-[11px] text-fuchsia-200">
 			<span className="font-sans font-semibold">Prototype state (not saved)</span>
-			<span>seen={String(s.seen)}</span>
+			<span>watch={s.watch}</span>
+			{p.media.mediaType === "show" && <span>episodes={s.episodes}/{p.total}</span>}
 			<span>score={s.score ?? "none"}</span>
 			<span>want={String(s.want)}</span>
 			<span>hidden={String(s.hidden)}</span>

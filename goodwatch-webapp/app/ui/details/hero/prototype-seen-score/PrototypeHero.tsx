@@ -19,16 +19,17 @@ import { getVibeColorValue, scoreLabels } from "~/utils/ratings"
 import type { SectionProps } from "~/utils/scroll"
 import { EyeIcon, HideButton, ProtoScoreDialog, ScoreRect, SeenButton, StateStrip, WantButton, useOpenAfterSeen, useProtoToasts } from "./pieces"
 import { ProtoProvider, useFlash, useProto } from "./store"
+import { VerdictTile } from "./verdict"
 
 export const SEEN_SCORE_VARIANTS = {
 	live: "Live page (no change)",
-	A: "Seen + score side by side in your block",
-	B: "One control: Seen it? Rate it",
-	C: "Both up top, score opens inline",
-	D: "Live layout, linked flow only",
+	B: "Round 1: one control",
+	steps: "Seen it? first, then the score",
+	switch: "Score first, Seen switch on top",
+	// Round 1's other variants, out of the switcher: A, C, D (still reachable by URL).
 } as const
 
-export type SeenScoreVariant = Exclude<keyof typeof SEEN_SCORE_VARIANTS, "live">
+export type SeenScoreVariant = Exclude<keyof typeof SEEN_SCORE_VARIANTS, "live"> | "A" | "C" | "D"
 
 type Media = MovieResult | ShowResult
 
@@ -53,7 +54,7 @@ export default function PrototypeHero(props: Props) {
 
 // A copy of DetailsHero with two slots: what follows the GoodWatch ring in the ratings, and the actions block.
 function Frame({ variant, media, country, shownCountry, preview, episodeGrid = null, sectionProps, sides = null }: Props) {
-	useProtoToasts()
+	useProtoToasts(variant !== "steps" && variant !== "switch")
 	const sites = (
 		<div data-hero-sites className="flex min-w-0 items-center justify-between gap-3 empty:hidden">
 			<RatingChips media={media} fill={!episodeGrid} />
@@ -110,6 +111,19 @@ function Frame({ variant, media, country, shownCountry, preview, episodeGrid = n
 
 /** Want to See and Not interested, the two buttons every variant keeps in the block. */
 function OtherActions() {
+	const p = useProto()
+	const { watch, episodes } = p.state
+	// A show in progress: no Want to See (as live), the next episode instead (stub).
+	if (p.media.mediaType === "show" && (watch === "watching" || watch === "on_hold" || watch === "dropped"))
+		return (
+			<div className="flex min-w-0 items-center gap-2">
+				<span className="inline-flex h-9 min-w-0 flex-1 items-center gap-2 rounded-lg bg-white/10 px-3 text-xs font-semibold text-gray-100">
+					<span className="text-gray-400">Next</span>
+					<span className="truncate">Episode {Math.min(episodes + 1, p.total)} of {p.total}</span>
+					<span className="ml-auto text-gray-400">Episode list ›</span>
+				</span>
+			</div>
+		)
 	return (
 		<div className="flex min-w-0 gap-2">
 			<WantButton className="flex-1" />
@@ -129,7 +143,7 @@ function ActionsA() {
 			<p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-gray-400">Your {p.media.mediaType}</p>
 			<div className="grid grid-cols-2 gap-2">
 				<SeenButton size="md" className="!h-12 !rounded-xl" />
-				<ScoreRect ref={rect} score={p.state.score} mediaType={p.media.mediaType} onClick={dialog.openPlain} prompt={p.state.seen && p.state.score == null} />
+				<ScoreRect ref={rect} score={p.state.score} mediaType={p.media.mediaType} onClick={dialog.openPlain} prompt={p.seen && p.state.score == null} />
 			</div>
 			<OtherActions />
 			<ProtoScoreDialog open={dialog.open} afterSeen={dialog.afterSeen} onClose={dialog.close} opener={rect} />
@@ -143,7 +157,7 @@ function RatingsB() {
 	const p = useProto()
 	const [open, setOpen] = useState(false)
 	const ref = useRef<HTMLButtonElement>(null)
-	const { seen, score } = p.state
+	const { score } = p.state; const seen = p.seen
 	const glow = useFlash(p.event?.kind === "auto-seen" ? p.event.at : undefined)
 	const color = score ? getVibeColorValue(score) : ""
 	return (
@@ -195,7 +209,7 @@ function RatingsC() {
 				score={p.state.score}
 				mediaType={p.media.mediaType}
 				onClick={() => window.dispatchEvent(new Event("proto:inline-score"))}
-				prompt={p.state.seen && p.state.score == null}
+				prompt={p.seen && p.state.score == null}
 				className="flex-1 md:min-w-[10.75rem]"
 			/>
 		</div>
@@ -216,15 +230,15 @@ function UnderRatingsC() {
 			last.current = p.event.at
 			if (p.state.score == null) setOpen(true)
 		}
-		if (!p.state.seen && p.event === null) setOpen(false)
-	}, [p.event, p.state.score, p.state.seen])
+		if (!p.seen && p.event === null) setOpen(false)
+	}, [p.event, p.state.score, p.seen])
 	if (!open) return null
 	return (
 		<div className="mt-4 rounded-xl bg-stone-900/90 p-3 ring-1 ring-white/10 md:ml-38 md:max-w-2xl">
 			<div className="mb-2 flex items-center justify-between gap-3">
 				<p className="flex items-center gap-2 text-sm font-bold text-white">
-					{p.state.seen && <EyeIcon className="h-4 w-4 text-green-400" />}
-					{p.state.seen && p.state.score == null ? "Seen. How was it?" : "Your score"}
+					{p.seen && <EyeIcon className="h-4 w-4 text-green-400" />}
+					{p.seen && p.state.score == null ? "Seen. How was it?" : "Your score"}
 				</p>
 				<button type="button" onClick={() => setOpen(false)} className="cursor-pointer text-xs text-gray-400 underline decoration-white/20 underline-offset-2 hover:text-white">
 					{p.state.score == null ? "Skip for now" : "Done"}
@@ -283,4 +297,6 @@ const VARIANTS: Record<
 	B: { ratings: RatingsB, actions: OtherActions },
 	C: { ratings: RatingsC, underRatings: UnderRatingsC, actions: OtherActions, wideRatings: true },
 	D: { ratings: RatingsD, actions: ActionsD },
+	steps: { ratings: () => <VerdictTile dialog="steps" />, actions: OtherActions },
+	switch: { ratings: () => <VerdictTile dialog="switch" />, actions: OtherActions },
 }
