@@ -896,3 +896,24 @@ not for a connection. That reading comes from one report's request list and isn'
 Not measured: the same pages with applied throttling and every file on the site's own host. Whether the static
 hostname costs a visitor on a slow connection anything at all is therefore open. The simulated values from before
 the switch (LCP 3.4 to 5.1 s) aren't comparable with the applied ones.
+
+## Compact fingerprint section
+
+The compact fingerprint section and the fingerprint questions in the FAQ (#684, deployed October 17, 2026) made the
+title pages heavier on purpose. Run `20261017T121419Z-lighthouse-budget` on the deployed commit `48ba2525`, three runs
+per page, medians:
+
+| Line | Movie | Show |
+| --- | --- | --- |
+| HTML, compressed | 54.5 KB | 59.4 KB |
+| Script bytes | 277.8 KB | 285.2 KB |
+| Total bytes | 479.4 KB | 538.1 KB |
+
+A local build of the commit before (`7e32ac43`) and after shows where the scripts grew: the movie page's static
+scripts went from 278.5 to 286.6 KB gzipped, almost all of it in the details chunk (70.7 to 77.4 KB). The change
+also added one script, a shared heroicon; the FAQ now draws that icon itself, so the count is back where it was.
+
+The limits for these three lines were reset to the measured value plus the usual margins (5% on scripts, 10% on HTML
+and total bytes). The other lines stay as they are. Two of them already failed before this change and still do:
+scripts (movie 24, show 26, limit 20) and host requests (movie 38, show 41, limits 37 and 36). The local build counts
+21 static scripts on the movie page before this change, so those failures come from earlier commits.
