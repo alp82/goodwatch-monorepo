@@ -24,7 +24,7 @@ export function useWords() {
 	const { watch, episodes } = p.state
 	const show = p.media.mediaType === "show"
 	const word = watch === "seen" && show && p.running ? "Caught up" : watch === "seen" && show ? "Seen all" : LOOK[watch].word
-	const progress = show && (watch === "watching" || watch === "on_hold") && p.total ? `${episodes}/${p.total}` : null
+	const progress = show && (watch === "watching" || watch === "on_hold" || watch === "dropped") && p.total && episodes > 0 ? `${episodes}/${p.total}` : null
 	const ask = watch === "watching" || watch === "on_hold" ? "How is it so far?" : "How was it?"
 	return { word, progress, ask, show }
 }
@@ -124,10 +124,8 @@ export function VerdictDialog({ kind, open, onClose, opener }: { kind: "steps" |
 		if (!open) setAutoNote(false)
 	}, [open])
 	const onRate = (score: Score) => {
-		const fromNothing = p.state.watch === "not_started"
 		p.rate(score)
-		if (show && fromNothing) setAutoNote(true)
-		else onClose()
+		onClose()
 	}
 	return (
 		<ScoreDialog
@@ -137,7 +135,7 @@ export function VerdictDialog({ kind, open, onClose, opener }: { kind: "steps" |
 			busy={false}
 			opener={opener}
 			heading={kind === "switch" ? <SwitchHeading /> : undefined}
-			top={kind === "steps" ? <Steps /> : <SwitchAsk />}
+			top={kind === "steps" ? <Steps /> : undefined}
 			footer={<Notes autoNote={autoNote} onDone={onClose} />}
 			onRate={onRate}
 			onClear={p.clearScore}
@@ -345,11 +343,11 @@ export function SwitchAsk() {
 	const { ask, show } = useWords()
 	return (
 		<p className="mb-2 text-sm font-semibold text-gray-400">
-			{p.seen ? (
+			{p.seen || show ? (
 				ask
 			) : (
 				<>
-					{ask} <span className="font-normal text-gray-500">A score marks it as {show ? "Seen all" : "Seen"}.</span>
+					{ask} <span className="font-normal text-gray-500">A score marks it as Seen.</span>
 				</>
 			)}
 		</p>

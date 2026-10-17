@@ -57,8 +57,17 @@ function useProtoStore(media: ProtoMedia) {
 	}, [])
 
 	/** Episodes that go with a state: all for Seen, none for Not started, a few to start Watching. */
-	const episodesFor = (watch: Watch, now: number) =>
-		watch === "seen" ? total : watch === "not_started" ? 0 : watch === "watching" && now === 0 ? Math.min(3, total) : now
+	// The episode count is the episode list's (stubbed here). A status never invents progress: Seen all ticks every
+	// episode, and leaving Seen all goes back to the count from before it. Other moves keep the count.
+	const beforeSeenAll = useRef(0)
+	const episodesFor = (watch: Watch, from: Watch, now: number) => {
+		if (watch === "seen") {
+			if (from !== "seen") beforeSeenAll.current = now
+			return total
+		}
+		if (watch === "not_started") return 0
+		return from === "seen" ? beforeSeenAll.current : now
+	}
 
 	const setWatch = useCallback(
 		(watch: Watch) => {
@@ -67,7 +76,7 @@ function useProtoStore(media: ProtoMedia) {
 			set((s) => ({
 				...s,
 				watch,
-				episodes: episodesFor(watch, s.episodes),
+				episodes: episodesFor(watch, s.watch, s.episodes),
 				// The score stays whatever the state: only Clear score removes it.
 				hidden: watch === "not_started" ? s.hidden : false,
 			}))
@@ -77,29 +86,30 @@ function useProtoStore(media: ProtoMedia) {
 		[state, set],
 	)
 
-	/** Round 1's Seen button. */
+	/** Taking back Seen on a scored movie asks first: the score goes with it. */
+	const [confirming, setConfirming] = useState(false)
+
+	/** The Seen toggle. */
 	const pressSeen = useCallback(() => {
 		if (state.watch === "not_started") return setWatch("seen")
-		if (state.score != null && mediaType === "movie") {
-			setEvent({ kind: "blocked", at: Date.now(), message: "It counts as Seen because you scored it. Clear your score to change that." })
-			return
-		}
+		if (state.score != null && mediaType === "movie") return setConfirming(true)
 		setWatch("not_started")
 	}, [state.watch, state.score, mediaType, setWatch])
 
+	const confirmUnsee = useCallback(() => {
+		set((s) => ({ ...s, watch: "not_started", episodes: 0, score: null }))
+		setEvent(null)
+		setConfirming(false)
+	}, [set])
+
+	// A score marks a movie as Seen. A show's status stays: a score says nothing about how far you got.
 	const rate = useCallback(
 		(score: Score) => {
-			const from = state.watch
-			set((s) => ({
-				...s,
-				score,
-				watch: s.watch === "not_started" ? "seen" : s.watch,
-				episodes: s.watch === "not_started" ? total : s.episodes,
-				hidden: false,
-			}))
-			setEvent(from === "not_started" ? { kind: "auto-seen", at: Date.now(), from } : null)
+			const auto = mediaType === "movie" && state.watch === "not_started"
+			set((s) => ({ ...s, score, watch: auto ? "seen" : s.watch, hidden: false }))
+			setEvent(auto ? { kind: "auto-seen", at: Date.now(), from: "not_started" } : null)
 		},
-		[state.watch, set, total],
+		[state.watch, set, mediaType],
 	)
 
 	return {
@@ -112,6 +122,9 @@ function useProtoStore(media: ProtoMedia) {
 		clearEvent: () => setEvent(null),
 		setWatch,
 		pressSeen,
+		confirming,
+		confirmUnsee,
+		cancelUnsee: () => setConfirming(false),
 		rate,
 		clearScore: () => set((s) => ({ ...s, score: null })),
 		undo: (to: ProtoState) => {

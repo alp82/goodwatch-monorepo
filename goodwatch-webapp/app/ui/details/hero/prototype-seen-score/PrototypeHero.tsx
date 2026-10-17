@@ -20,6 +20,7 @@ import type { SectionProps } from "~/utils/scroll"
 import { EyeIcon, HideButton, ProtoScoreDialog, ScoreRect, SeenButton, StateStrip, WantButton, useOpenAfterSeen, useProtoToasts } from "./pieces"
 import { ProtoProvider, useFlash, useProto } from "./store"
 import { VerdictTile } from "./verdict"
+import { ConfirmUnsee } from "./confirm"
 import { ChipDialog, FooterDialog, MovieSplit, SegmentedDialog, ShowBlockActions, ShowBlockRatings, ShowSplit, ShowStacked, StripDialog, movieTile } from "./round3"
 
 export const MOVIE_VARIANTS = {
@@ -111,6 +112,7 @@ function Frame({ variant, media, country, shownCountry, preview, episodeGrid = n
 						</div>
 						<WhereToWatch media={media} country={country} shownCountry={shownCountry} preview={preview} className="rounded-xl bg-white/[0.035] p-3 ring-1 ring-white/[0.07]" />
 					</div>
+					<ConfirmUnsee />
 					<div className="px-3 pb-3 md:px-5 md:pb-4">
 						<StateStrip />
 					</div>

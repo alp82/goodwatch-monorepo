@@ -8,6 +8,7 @@ import ScoreDialog from "~/ui/details/hero/ScoreDialog"
 import { ActionButton } from "~/ui/title-actions/ActionButton"
 import { ScoreControl } from "~/ui/title-actions/ScoreControl"
 import { getVibeColorValue, scoreLabels } from "~/utils/ratings"
+import { SeenToggle } from "./confirm"
 import { EyeIcon, ScoreRect } from "./pieces"
 import { type Watch, useFlash, useProto } from "./store"
 import { type DialogProps, EyeSlash, LOOK, Notes, StatusPill, SwitchAsk, VerdictDialog, VerdictTile, WatchIcon, useWords } from "./verdict"
@@ -213,14 +214,11 @@ export function MovieSplit() {
 				busy={false}
 				opener={ref}
 				heading={
-					afterSeen ? (
-						<span className="flex items-center gap-2">
-							<EyeIcon className="h-4 w-4 text-green-400" />
-							<span className="truncate">Seen. How was it?</span>
-						</span>
-					) : undefined
+					<span className="flex min-w-0 items-center gap-3">
+						<span className="min-w-0 flex-1 truncate">{p.media.details.title}</span>
+						<SeenToggle />
+					</span>
 				}
-				top={afterSeen ? undefined : <Ask />}
 				footer={
 					<>
 						{afterSeen && (
