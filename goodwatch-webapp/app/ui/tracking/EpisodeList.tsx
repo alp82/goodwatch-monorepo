@@ -511,34 +511,6 @@ function List({
 // The open season's parts
 // ---------------------------------------------------------------------------------------------------------
 
-/** What a season's ratings lose when IMDb numbers it differently. */
-export function NumberingNote({
-	season,
-	model,
-}: { season: Season; model: Model }) {
-	const note = model.note(season.number)
-	if (!note) return null
-	return (
-		<p
-			data-numbering-note
-			className="flex items-start gap-1.5 border-t border-white/[0.06] px-3 py-1.5 text-[11px] leading-4 text-amber-200/90"
-		>
-			<span aria-hidden="true" className="font-bold">
-				!
-			</span>
-			<span>
-				IMDb numbers this season differently.{" "}
-				{note.byTitle
-					? `${plural(note.byTitle, "rating")} matched by title`
-					: "No rating could be matched by title"}
-				{note.missing
-					? `; ${plural(note.missing, "episode")} left without a rating rather than given a neighbour's.`
-					: "."}
-			</span>
-		</p>
-	)
-}
-
 // ---------------------------------------------------------------------------------------------------------
 // The rows
 // ---------------------------------------------------------------------------------------------------------

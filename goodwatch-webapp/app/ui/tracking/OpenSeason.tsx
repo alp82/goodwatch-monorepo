@@ -11,7 +11,6 @@ import { RatingChipRow } from "~/ui/details/hero/RatingChips"
 import {
 	type Model,
 	type Nav,
-	NumberingNote,
 	Rows,
 	ScoreTile,
 	useIsDesktop,
@@ -166,7 +165,6 @@ export default function OpenSeason({
 					</div>
 				)}
 			</div>
-			<NumberingNote season={season} model={model} />
 			<Rows
 				key={season.number}
 				season={season}
