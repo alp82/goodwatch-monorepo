@@ -1,10 +1,29 @@
 import { canonicalTitleId } from "../../utils/title-identity.ts"
 import { titleKey } from "../../utils/title-key.ts"
+import { tmdbImageUrl } from "../../utils/tmdb-image.ts"
+
+/** The poster grid shows cards about 110 px wide; it asks for w342 itself on high-density screens. */
+export const POSTER_SIZE = "w185"
+
+interface Sources {
+	loadTaste: (viewer: { kind: "member"; userId: string }) => Promise<{
+		signal: string
+		liked: number
+		match(keys: number[]): (number | null)[]
+	}>
+	getDisplayFields: (
+		keys: number[],
+	) => Promise<
+		Map<number, { runtime: number | null; poster_path?: string | null }>
+	>
+}
 
 /** Presentation only: never store derived member scores in catalog caches or durable write receipts. */
 export async function enrichTitleResults(
 	userId: string,
 	data: Record<string, unknown>,
+	/** `posters` adds poster_url for the poster grid; `sources` replaces the readers in tests. */
+	options: { posters?: boolean; sources?: Sources } = {},
 ): Promise<Record<string, unknown>> {
 	const ids = new Map<string, number>()
 	const visit = (value: unknown) => {
@@ -19,10 +38,15 @@ export async function enrichTitleResults(
 	}
 	visit(data)
 	if (!ids.size) return data
-	const [{ loadTaste }, { getDisplayFields }] = await Promise.all([
-		import("../taste/index.server"),
-		import("../title-cards.server"),
-	])
+	const { loadTaste, getDisplayFields }: Sources =
+		options.sources ??
+		(await Promise.all([
+			import("../taste/index.server"),
+			import("../title-cards.server"),
+		]).then(([taste, cards]) => ({
+			loadTaste: taste.loadTaste,
+			getDisplayFields: cards.getDisplayFields,
+		})))
 	const keys = [...new Set(ids.values())]
 	// Derived presentation must not hide an already committed write when a metadata read fails.
 	const [taste, batches] = await Promise.all([
@@ -33,7 +57,10 @@ export async function enrichTitleResults(
 			),
 		),
 	])
-	const displays = new Map<number, { runtime: number | null }>()
+	const displays = new Map<
+		number,
+		{ runtime: number | null; poster_path?: string | null }
+	>()
 	for (const batch of batches)
 		if (batch.status === "fulfilled")
 			for (const [key, value] of batch.value) displays.set(key, value)
@@ -49,12 +76,16 @@ export async function enrichTitleResults(
 		const key = typeof row.id === "string" ? ids.get(row.id) : undefined
 		if (key === undefined) return next
 		const match = byKey.get(key) ?? null
+		const poster = displays.get(key)?.poster_path
 		return {
 			...next,
 			runtime_minutes:
 				displays.get(key)?.runtime ?? row.runtime_minutes ?? null,
 			match,
 			match_label: match === null ? null : `${match}% taste match`,
+			...(options.posters
+				? { poster_url: poster ? tmdbImageUrl(poster, POSTER_SIZE) : null }
+				: {}),
 		}
 	}
 	return {

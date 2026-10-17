@@ -11,6 +11,7 @@
 		"typecheck": "tsc",
 		"test": "node --test 'app/**/*.test.ts'",
 		"check:share-cards": "vite-node scripts/check-share-cards.tsx",
+		"build:mcp-poster-grid": "node scripts/build-mcp-poster-grid.mjs",
 		"postinstall": "patch-package",
 		"test:auth": "bash scripts/auth-cratedb/run.sh",
 		"test:auth:integration": "node --test --test-concurrency=1 app/server/auth/adapter.integration.ts app/server/auth/failover.integration.ts",

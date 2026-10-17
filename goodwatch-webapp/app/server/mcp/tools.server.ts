@@ -6,8 +6,14 @@ import {
 	histogram,
 } from "../metrics/registry.server.ts"
 import { linkInstructions, withPageLink } from "./links.ts"
+import {
+	POSTER_GRID_TOOLS,
+	posterGridToolMeta,
+	registerPosterGrid,
+} from "./poster-grid.server.ts"
 import { readToolEnabled } from "./policy.server.ts"
 import type { RankedSearch } from "./ranked.server.ts"
+import type { enrichTitleResults } from "./title-results.server.ts"
 import { paging, selected } from "./schemas.ts"
 import { registerWriteTools } from "./write-tools.server.ts"
 
@@ -24,6 +30,7 @@ const durations = histogram(
 	durationBuckets,
 	14,
 )
+type EnrichTitleResults = typeof enrichTitleResults
 export type ReadToolName =
 	| "search_titles"
 	| "get_title"
@@ -170,6 +177,8 @@ export function createToolServer(
 	origin: string,
 	writes = false,
 	rankedSearch?: RankedSearch,
+	/** Tests only: replaces the taste and display enrichment. */
+	enrich?: EnrichTitleResults,
 ) {
 	const server = new McpServer(
 		{ name: "goodwatch", version: "1.0.0" },
@@ -177,6 +186,7 @@ export function createToolServer(
 	)
 	for (const tool of definitions) {
 		if (!readToolEnabled(userId, tool.name)) continue
+		const posters = POSTER_GRID_TOOLS.has(tool.name)
 		server.registerTool(
 			tool.name,
 			{
@@ -189,6 +199,7 @@ export function createToolServer(
 					idempotentHint: true,
 					openWorldHint: false,
 				},
+				...(posters ? { _meta: posterGridToolMeta } : {}),
 			},
 			async (args: ReadArgs, context) => {
 				const start = performance.now()
@@ -227,8 +238,9 @@ export function createToolServer(
 							outcome = "error"
 					}
 					data = await (
-						await import("./title-results.server.ts")
-					).enrichTitleResults(userId, data)
+						enrich ??
+						(await import("./title-results.server.ts")).enrichTitleResults
+					)(userId, data, { posters })
 				} catch {
 					outcome = "error"
 					data = {
@@ -248,6 +260,7 @@ export function createToolServer(
 			},
 		)
 	}
+	registerPosterGrid(server, origin)
 	if (writes)
 		registerWriteTools(server, userId, origin, (name, outcome, elapsed) => {
 			calls.inc([name, outcome])

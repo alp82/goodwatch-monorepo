@@ -1,0 +1,272 @@
+{
+ "library": {
+  "items": [
+   {
+    "id": "movie:6007",
+    "name": "Elling",
+    "year": 2001,
+    "url": "https://goodwatch.app/movie/6007-elling",
+    "link": "[Elling (2001)](https://goodwatch.app/movie/6007-elling)",
+    "match": 95,
+    "match_label": "95% taste match",
+    "poster_url": "https://image.tmdb.org/t/p/w185/i4o9u93vR7setcwVeL87jGwc8CS.jpg"
+   },
+   {
+    "id": "movie:334",
+    "name": "Magnolia",
+    "year": 1999,
+    "url": "https://goodwatch.app/movie/334-magnolia",
+    "link": "[Magnolia (1999)](https://goodwatch.app/movie/334-magnolia)",
+    "match": 93,
+    "match_label": "93% taste match",
+    "poster_url": "https://image.tmdb.org/t/p/w185/tpfC325Jk6S38VTe5dDWjWtoyxr.jpg"
+   },
+   {
+    "id": "movie:2928",
+    "name": "Michael",
+    "year": 1996,
+    "url": "https://goodwatch.app/movie/2928-michael",
+    "link": "[Michael (1996)](https://goodwatch.app/movie/2928-michael)",
+    "match": 91,
+    "match_label": "91% taste match",
+    "poster_url": "https://image.tmdb.org/t/p/w185/3XdsHncNxOSMOITeQBC8ML9ADky.jpg"
+   },
+   {
+    "id": "movie:141",
+    "name": "Donnie Darko",
+    "year": 2001,
+    "url": "https://goodwatch.app/movie/141-donnie-darko",
+    "link": "[Donnie Darko (2001)](https://goodwatch.app/movie/141-donnie-darko)",
+    "match": 91,
+    "match_label": "91% taste match",
+    "poster_url": "https://image.tmdb.org/t/p/w185/j2AtZFsflxiluaNtajMTI0Avm8C.jpg"
+   },
+   {
+    "id": "movie:167",
+    "name": "K-PAX",
+    "year": 2001,
+    "url": "https://goodwatch.app/movie/167-k-pax",
+    "link": "[K-PAX (2001)](https://goodwatch.app/movie/167-k-pax)",
+    "match": 91,
+    "match_label": "91% taste match",
+    "poster_url": "https://image.tmdb.org/t/p/w185/tafXZX0I6rso7EyoEzfygfTqxq6.jpg"
+   },
+   {
+    "id": "show:84958",
+    "name": "Loki",
+    "year": 2021,
+    "url": "https://goodwatch.app/show/84958-loki",
+    "link": "[Loki (2021)](https://goodwatch.app/show/84958-loki)",
+    "match": 91,
+    "match_label": "91% taste match",
+    "poster_url": "https://image.tmdb.org/t/p/w185/kEl2t3OhXc3Zb9FBh1AuYzRTgZp.jpg"
+   },
+   {
+    "id": "show:95396",
+    "name": "Severance",
+    "year": 2022,
+    "url": "https://goodwatch.app/show/95396-severance",
+    "link": "[Severance (2022)](https://goodwatch.app/show/95396-severance)",
+    "match": 89,
+    "match_label": "89% taste match",
+    "poster_url": "https://image.tmdb.org/t/p/w185/pPHpeI2X1qEd1CS1SeyrdhZ4qnT.jpg"
+   },
+   {
+    "id": "show:31911",
+    "name": "Fullmetal Alchemist: Brotherhood",
+    "year": 2009,
+    "url": "https://goodwatch.app/show/31911-fullmetal-alchemist-brotherhood",
+    "link": "[Fullmetal Alchemist: Brotherhood (2009)](https://goodwatch.app/show/31911-fullmetal-alchemist-brotherhood)",
+    "match": 88,
+    "match_label": "88% taste match",
+    "poster_url": "https://image.tmdb.org/t/p/w185/5ZFUEOULaVml7pQuXxhpR2SmVUw.jpg"
+   },
+   {
+    "id": "movie:696506",
+    "name": "Mickey 17",
+    "year": 2025,
+    "url": "https://goodwatch.app/movie/696506-mickey-17",
+    "link": "[Mickey 17 (2025)](https://goodwatch.app/movie/696506-mickey-17)",
+    "match": 88,
+    "match_label": "88% taste match",
+    "poster_url": "https://image.tmdb.org/t/p/w185/edKpE9B5qN3e559OuMCLZdW1iBZ.jpg"
+   },
+   {
+    "id": "show:61746",
+    "name": "Inside No. 9",
+    "year": 2014,
+    "url": "https://goodwatch.app/show/61746-inside-no-9",
+    "link": "[Inside No. 9 (2014)](https://goodwatch.app/show/61746-inside-no-9)",
+    "match": 87,
+    "match_label": "87% taste match",
+    "poster_url": null
+   },
+   {
+    "id": "show:1398",
+    "name": "The Sopranos",
+    "year": 1999,
+    "url": "https://goodwatch.app/show/1398-the-sopranos",
+    "link": "[The Sopranos (1999)](https://goodwatch.app/show/1398-the-sopranos)",
+    "match": 87,
+    "match_label": "87% taste match",
+    "poster_url": "https://image.tmdb.org/t/p/w185/rTc7ZXdroqjkKivFPvCPX0Ru7uw.jpg"
+   },
+   {
+    "id": "show:102621",
+    "name": "KAOS",
+    "year": 2024,
+    "url": "https://goodwatch.app/show/102621-kaos",
+    "link": "[KAOS (2024)](https://goodwatch.app/show/102621-kaos)",
+    "match": 86,
+    "match_label": "86% taste match",
+    "poster_url": "https://image.tmdb.org/t/p/w185/dDBTUSl3tRsOeKC1jZugBSFHy9I.jpg"
+   },
+   {
+    "id": "show:42509",
+    "name": "Steins;Gate",
+    "year": 2011,
+    "url": "https://goodwatch.app/show/42509-steinsgate",
+    "link": "[Steins;Gate (2011)](https://goodwatch.app/show/42509-steinsgate)",
+    "match": null,
+    "match_label": null,
+    "poster_url": "https://image.tmdb.org/t/p/w185/96R4bV7dB8ramaWceNKsxvJgCUd.jpg"
+   },
+   {
+    "id": "show:64432",
+    "name": "The Magicians",
+    "year": 2015,
+    "url": "https://goodwatch.app/show/64432-the-magicians",
+    "link": "[The Magicians (2015)](https://goodwatch.app/show/64432-the-magicians)",
+    "match": 85,
+    "match_label": "85% taste match",
+    "poster_url": "https://image.tmdb.org/t/p/w185/A66dZN98BPEYeFQAhNdNCIXa57d.jpg"
+   }
+  ],
+  "total": 353,
+  "next_cursor": "offset:14",
+  "sort": "match",
+  "taste": {
+   "signal": "some",
+   "liked": 900
+  },
+  "page_url": "https://goodwatch.app/my-library"
+ },
+ "search": {
+  "items": [
+   {
+    "id": "movie:141",
+    "name": "Donnie Darko",
+    "year": 2001,
+    "url": "https://goodwatch.app/movie/141-donnie-darko",
+    "link": "[Donnie Darko (2001)](https://goodwatch.app/movie/141-donnie-darko)",
+    "match": 91,
+    "match_label": "91% taste match",
+    "poster_url": "https://image.tmdb.org/t/p/w185/j2AtZFsflxiluaNtajMTI0Avm8C.jpg"
+   },
+   {
+    "id": "show:95396",
+    "name": "Severance",
+    "year": 2022,
+    "url": "https://goodwatch.app/show/95396-severance",
+    "link": "[Severance (2022)](https://goodwatch.app/show/95396-severance)",
+    "match": 89,
+    "match_label": "89% taste match",
+    "poster_url": "https://image.tmdb.org/t/p/w185/pPHpeI2X1qEd1CS1SeyrdhZ4qnT.jpg"
+   },
+   {
+    "id": "movie:6007",
+    "name": "Elling",
+    "year": 2001,
+    "url": "https://goodwatch.app/movie/6007-elling",
+    "link": "[Elling (2001)](https://goodwatch.app/movie/6007-elling)",
+    "match": 95,
+    "match_label": "95% taste match",
+    "poster_url": "https://image.tmdb.org/t/p/w185/i4o9u93vR7setcwVeL87jGwc8CS.jpg"
+   },
+   {
+    "id": "show:84958",
+    "name": "Loki",
+    "year": 2021,
+    "url": "https://goodwatch.app/show/84958-loki",
+    "link": "[Loki (2021)](https://goodwatch.app/show/84958-loki)",
+    "match": 91,
+    "match_label": "91% taste match",
+    "poster_url": "https://image.tmdb.org/t/p/w185/kEl2t3OhXc3Zb9FBh1AuYzRTgZp.jpg"
+   },
+   {
+    "id": "show:61746",
+    "name": "Inside No. 9",
+    "year": 2014,
+    "url": "https://goodwatch.app/show/61746-inside-no-9",
+    "link": "[Inside No. 9 (2014)](https://goodwatch.app/show/61746-inside-no-9)",
+    "match": null,
+    "match_label": null,
+    "poster_url": null
+   },
+   {
+    "id": "movie:167",
+    "name": "K-PAX",
+    "year": 2001,
+    "url": "https://goodwatch.app/movie/167-k-pax",
+    "link": "[K-PAX (2001)](https://goodwatch.app/movie/167-k-pax)",
+    "match": 91,
+    "match_label": "91% taste match",
+    "poster_url": "https://image.tmdb.org/t/p/w185/tafXZX0I6rso7EyoEzfygfTqxq6.jpg"
+   },
+   {
+    "id": "movie:2928",
+    "name": "Michael",
+    "year": 1996,
+    "url": "https://goodwatch.app/movie/2928-michael",
+    "link": "[Michael (1996)](https://goodwatch.app/movie/2928-michael)",
+    "match": 91,
+    "match_label": "91% taste match",
+    "poster_url": "https://image.tmdb.org/t/p/w185/3XdsHncNxOSMOITeQBC8ML9ADky.jpg"
+   }
+  ],
+  "next_cursor": null,
+  "ranked": false,
+  "availability": "everywhere",
+  "exclude_seen": false,
+  "for_you": true,
+  "for_you_applied": false,
+  "returned": 7,
+  "taste": {
+   "signal": "some",
+   "liked": 900
+  },
+  "page_url": "https://goodwatch.app/discover?q=dark&services=all&unseen=0&foryou=1"
+ },
+ "tonight": {
+  "pick": {
+   "title": {
+    "id": "show:70523",
+    "name": "Dark",
+    "year": 2017,
+    "url": "https://goodwatch.app/show/70523-dark",
+    "link": "[Dark (2017)](https://goodwatch.app/show/70523-dark)",
+    "match": 74,
+    "match_label": "74% taste match",
+    "poster_url": "https://image.tmdb.org/t/p/w185/wSXJHO9WHLb0aCwvQrtco7vOmWA.jpg"
+   },
+   "reason": "nextEpisode",
+   "episode": {
+    "code": "S3 E7",
+    "name": "Between the Time"
+   },
+   "match": 74
+  },
+  "country": "DE",
+  "taste": {
+   "signal": "some",
+   "liked": 900
+  },
+  "page_url": "https://goodwatch.app/my-shows"
+ },
+ "error": {
+  "status": "quota_exceeded",
+  "ranked": false,
+  "message": "Your 20 uncached smarter matches for this UTC day are used. Cached queries and existing pages remain free.",
+  "page_url": "https://goodwatch.app/discover?q=dark&services=all&unseen=0&foryou=1"
+ }
+}
