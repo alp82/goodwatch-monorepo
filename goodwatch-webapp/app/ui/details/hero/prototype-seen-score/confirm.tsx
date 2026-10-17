@@ -63,6 +63,12 @@ export function ConfirmUnsee() {
 	return <ConfirmPanel after={p.pending} />
 }
 
+let byPointer = false
+if (typeof window !== "undefined") {
+	window.addEventListener("pointerdown", () => (byPointer = true), true)
+	window.addEventListener("keydown", () => (byPointer = false), true)
+}
+
 function useWording() {
 	const p = useProto()
 	const { score, episodes } = p.state
@@ -124,7 +130,11 @@ function ConfirmPanel({ after }: { after: ProtoState }) {
 		window.addEventListener("keydown", onKey, true)
 		return () => {
 			window.removeEventListener("keydown", onKey, true)
-			from?.focus({ preventScroll: true })
+			// After a tap the focus goes back without a ring; after a key it shows.
+			from?.focus({
+				preventScroll: true,
+				focusVisible: !byPointer,
+			} as FocusOptions)
 		}
 	}, [p.cancelPending])
 
@@ -174,17 +184,37 @@ function ConfirmPanel({ after }: { after: ProtoState }) {
 								</span>
 							) : null}
 						</span>
-						<span className="grid grid-cols-[2.5rem_minmax(0,1fr)] items-center gap-x-2 gap-y-2">
-							<span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-gray-500">
-								Now
+						<span className="flex flex-col">
+							{/* Now: smaller and faded, it's what goes away. After: full size. */}
+							<span className="flex items-center gap-2">
+								<span className="w-10 shrink-0 text-[10px] font-semibold uppercase tracking-[0.08em] text-gray-500">
+									Now
+								</span>
+								<span className="min-w-0 flex-1 origin-left scale-[.86] opacity-45 saturate-[.35]">
+									<SplitPicture />
+								</span>
 							</span>
-							<SplitPicture />
-							<span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-gray-500">
-								After
+							<span className="flex h-4 items-center" aria-hidden="true">
+								<svg
+									viewBox="0 0 16 16"
+									fill="none"
+									stroke="currentColor"
+									strokeWidth="2"
+									className="ml-3 h-3.5 w-3.5 text-gray-500"
+								>
+									<path d="M8 3v10m-4-4 4 4 4-4" />
+								</svg>
 							</span>
-							<ProtoPreview state={after}>
-								<SplitPicture />
-							</ProtoPreview>
+							<span className="flex items-center gap-2">
+								<span className="w-10 shrink-0 text-[10px] font-bold uppercase tracking-[0.08em] text-white">
+									After
+								</span>
+								<span className="min-w-0 flex-1">
+									<ProtoPreview state={after}>
+										<SplitPicture />
+									</ProtoPreview>
+								</span>
+							</span>
 						</span>
 					</span>
 				</div>

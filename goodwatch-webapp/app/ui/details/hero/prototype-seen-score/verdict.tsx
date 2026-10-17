@@ -9,7 +9,7 @@ import type { Score } from "~/server/scores.server"
 import ScoreDialog from "~/ui/details/hero/ScoreDialog"
 import { getVibeColorValue, scoreLabels } from "~/utils/ratings"
 import { EyeIcon } from "./pieces"
-import { type Watch, useFlash, useProto } from "./store"
+import { type Watch, positionOf, useFlash, useProto } from "./store"
 
 export const LOOK: Record<
 	Watch,
@@ -52,6 +52,16 @@ export const LOOK: Record<
 	},
 }
 
+/** "S2 E5 · 12/62", or "12/62 eps" without season data. */
+export function progressWords(
+	media: Parameters<typeof positionOf>[0],
+	episodes: number,
+	total: number,
+) {
+	const at = positionOf(media, episodes)
+	return at ? `${at} · ${episodes}/${total}` : `${episodes}/${total} eps`
+}
+
 export function useWords() {
 	const p = useProto()
 	const { watch, episodes } = p.state
@@ -67,7 +77,7 @@ export function useWords() {
 		(watch === "watching" || watch === "on_hold" || watch === "dropped") &&
 		p.total &&
 		episodes > 0
-			? `${episodes}/${p.total}`
+			? progressWords(p.media, episodes, p.total)
 			: null
 	const ask =
 		watch === "watching" || watch === "on_hold"

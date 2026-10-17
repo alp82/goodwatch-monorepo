@@ -10,6 +10,7 @@ import { ScoreControl } from "~/ui/title-actions/ScoreControl"
 import { getVibeColorValue, scoreLabels } from "~/utils/ratings"
 import { SeenToggle } from "./confirm"
 import { EyeIcon, ScoreRect } from "./pieces"
+import { ShowScoreDialog } from "./progress"
 import { type Watch, useFlash, useProto } from "./store"
 import {
 	type DialogProps,
@@ -21,6 +22,7 @@ import {
 	VerdictDialog,
 	VerdictTile,
 	WatchIcon,
+	progressWords,
 	useWords,
 } from "./verdict"
 
@@ -300,7 +302,7 @@ function SeenHalf({
 			type="button"
 			aria-pressed={p.seen}
 			onClick={onClick}
-			className={`flex h-full w-[4.5rem] shrink-0 cursor-pointer flex-col items-center justify-center gap-0.5 text-[11px] font-semibold transition-colors ${
+			className={`flex h-full w-[4.5rem] shrink-0 cursor-pointer flex-col items-center justify-center gap-0.5 text-[11px] font-semibold transition-colors outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/80 ${
 				p.seen ? "bg-green-500 text-black" : "text-gray-200 hover:bg-white/10"
 			} ${glow ? "ring-2 ring-inset ring-green-200" : ""}`}
 		>
@@ -321,7 +323,7 @@ export function SplitPicture() {
 		>
 			<Joined
 				className="w-full! min-w-0! shrink!"
-				left={p.media.mediaType === "show" ? <StatusHalf /> : <SeenHalf />}
+				left={p.media.mediaType === "show" ? <StatusHalf full /> : <SeenHalf />}
 				right={<ScoreHalf onClick={() => {}} />}
 			/>
 		</div>
@@ -376,7 +378,7 @@ const ScoreHalf = ({
 			type="button"
 			aria-haspopup="dialog"
 			onClick={onClick}
-			className="flex min-w-0 flex-1 cursor-pointer items-center gap-2.5 rounded-r-xl pl-2 pr-3 text-left hover:bg-white/[0.06]"
+			className="flex min-w-0 flex-1 cursor-pointer items-center gap-2.5 rounded-r-xl pl-2 pr-3 text-left hover:bg-white/[0.06] focus-visible:rounded-r-xl outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/80"
 		>
 			{score ? (
 				<span
@@ -523,10 +525,16 @@ function StatusChevron() {
 function StatusHalf({
 	onClick,
 	expanded = false,
-}: { onClick?: () => void; expanded?: boolean }) {
+	full = false,
+}: { onClick?: () => void; expanded?: boolean; full?: boolean }) {
 	const p = useProto()
 	const { watch } = p.state
-	const { progress } = useWords()
+	// The preview always says how many episodes: that's what a status change can lose.
+	const words = useWords()
+	const progress =
+		full && p.total
+			? progressWords(p.media, p.state.episodes, p.total)
+			: words.progress
 	const label = useStateLabel()
 	const look = LOOK[watch]
 	return (
@@ -535,7 +543,7 @@ function StatusHalf({
 			aria-haspopup="menu"
 			aria-expanded={expanded}
 			onClick={onClick}
-			className={`flex h-full min-w-[6.5rem] shrink-0 cursor-pointer items-center gap-2 px-2.5 text-left ${watch === "not_started" ? "text-gray-200 hover:bg-white/10" : look.pill}`}
+			className={`flex h-full min-w-[6.5rem] shrink-0 cursor-pointer items-center gap-2 px-2.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/80 ${watch === "not_started" ? "text-gray-200 hover:bg-white/10" : look.pill}`}
 		>
 			{watch === "not_started" ? (
 				<EyeSlash className="h-4 w-4 shrink-0 text-gray-400" />
@@ -548,7 +556,7 @@ function StatusHalf({
 				</span>
 				{progress ? (
 					<span className="block text-[11px] tabular-nums opacity-80">
-						{progress} eps
+						{progress}
 					</span>
 				) : (
 					watch === "not_started" && (
@@ -579,8 +587,7 @@ export function ShowSplit() {
 					className="left-0 top-[calc(100%+6px)]"
 				/>
 			)}
-			<VerdictDialog
-				kind="switch"
+			<ShowScoreDialog
 				open={dialog.open}
 				onClose={() => dialog.setOpen(false)}
 				opener={ref}

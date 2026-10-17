@@ -38,6 +38,25 @@ export type ProtoEvent =
 
 export type ProtoMedia = ScoredMedia & {
 	details: { number_of_episodes?: number; in_production?: boolean }
+	seasons?: { season_number: number; episode_count?: number | null }[] | null
+}
+
+/** Regular seasons with their episode counts, in order. */
+export function seasonsOf(media: ProtoMedia) {
+	return (media.seasons ?? [])
+		.filter((s) => s.season_number > 0 && (s.episode_count ?? 0) > 0)
+		.sort((a, b) => a.season_number - b.season_number)
+		.map((s) => ({ season: s.season_number, count: s.episode_count ?? 0 }))
+}
+
+/** Where a count of watched episodes ends: "S2 E5". Null for none. */
+export function positionOf(media: ProtoMedia, episodes: number) {
+	let left = episodes
+	for (const s of seasonsOf(media)) {
+		if (left <= s.count) return left > 0 ? `S${s.season} E${left}` : null
+		left -= s.count
+	}
+	return null
 }
 
 function useProtoStore(media: ProtoMedia) {
@@ -165,6 +184,11 @@ function useProtoStore(media: ProtoMedia) {
 		cancelPending: () => setPending(null),
 		rate,
 		clearScore: () => set((s) => ({ ...s, score: null })),
+		/** Status and episode count in one go: the answer to "How far are you?". */
+		setProgress: (watch: Watch, episodes: number) => {
+			set((s) => ({ ...s, watch, episodes, hidden: false }))
+			setEvent(null)
+		},
 		undo: (to: ProtoState) => {
 			set(() => to)
 			setEvent(null)
