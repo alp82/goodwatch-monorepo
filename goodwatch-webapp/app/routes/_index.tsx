@@ -11,6 +11,10 @@ import { type ShouldRevalidateFunction, useLoaderData, useLocation, useSearchPar
 // PROTOTYPE (landing): `/?variant=current|channel|band|welcome|tour`. Throwaway, on branch prototype/landing-experience.
 import landingCss from "~/ui/prototype-landing/landing.css?url"
 import { PrototypeSwitcher } from "~/ui/prototype/PrototypeSwitcher"
+import { useScroll } from "~/ui/prototype-landing/v-scroll"
+import { useTaps } from "~/ui/prototype-landing/v-taps"
+import { useLens } from "~/ui/prototype-landing/v-lens"
+import { useAlerts } from "~/ui/prototype-landing/v-alerts"
 import { type Landing, type VariantProps, useBand, useChannel, useCurrent, useTour, useWelcome } from "~/ui/prototype-landing/variants"
 import type { tvHomeLoader } from "~/server/living-room/tv-loader.server"
 import livingRoomCss from "~/ui/living-room/living-room.css?url"
@@ -19,7 +23,21 @@ import { isTvOnlyChange } from "~/ui/living-room/tv/tv-machine"
 import { assetUrl } from "~/utils/asset-url"
 import useLocale from "~/utils/locale"
 
-export { tvHomeLoader as loader } from "~/server/living-room/tv-loader.server"
+import { type LoaderFunctionArgs, json } from "@remix-run/node"
+import { tvHomeLoader as homeLoader } from "~/server/living-room/tv-loader.server"
+import { loadLandingCards } from "~/server/prototype-landing.server"
+
+// PROTOTYPE (landing): the home loader plus the start titles as cards, for the landing variants.
+export async function loader(args: LoaderFunctionArgs) {
+	const res = (await homeLoader(args as never)) as Response
+	if (!res.headers.get("content-type")?.includes("json")) return res
+	const data = await res.json()
+	const landing = await loadLandingCards(args.request, data.startTitles ?? []).catch((e) => {
+		console.error("landing cards", e)
+		return []
+	})
+	return json({ ...data, landing }, { headers: res.headers })
+}
 export { pageHeaders as headers } from "~/utils/headers"
 import { buildMeta, ogImageUrl } from "~/utils/meta"
 
@@ -93,13 +111,13 @@ export const meta: MetaFunction = () => [
 	},
 ]
 
+// Round 1 (channel, band, welcome, tour) was rejected: a feature tour. Round 2 shows the value instead.
 const VARIANTS = {
-	live: "Today's page, no boot",
-	current: "Today's page + boot",
-	channel: "A · Intro channel on the TV",
-	band: "B · Intro band above the room",
-	welcome: "C · Welcome tiles on the TV",
-	tour: "D · Guided tour with pings",
+	live: "Today's page",
+	scroll: "E · Endless scroll, then one pick",
+	taps: "F · Three taps to your taste",
+	lens: "G · One title, every answer",
+	alerts: "H · It watches out for you",
 }
 const USE: Record<string, (p: VariantProps) => Landing> = {
 	live: () => ({}),
@@ -108,6 +126,10 @@ const USE: Record<string, (p: VariantProps) => Landing> = {
 	band: useBand,
 	welcome: useWelcome,
 	tour: useTour,
+	scroll: useScroll,
+	taps: useTaps,
+	lens: useLens,
+	alerts: useAlerts,
 }
 
 function Host({ use, data }: { use: (p: VariantProps) => Landing; data: ReturnType<typeof useLoaderData<typeof tvHomeLoader>> }) {

@@ -1,0 +1,232 @@
+/* PROTOTYPE - throwaway. Landing variant H, "It watches out for you". Transform and opacity only. */
+
+.lpa {
+	position: absolute;
+	inset: 0;
+	z-index: 26;
+	pointer-events: none;
+	font-family: "Gabarito", ui-sans-serif, system-ui, sans-serif;
+	color: #fff;
+}
+.lpa > * {
+	pointer-events: auto;
+}
+
+/* The pitch: plain text in the server HTML, at full opacity from the first paint. */
+.lpa-pitch {
+	position: absolute;
+	left: 2.4%;
+	bottom: 26px;
+	max-width: 640px;
+	padding: 16px 20px 18px;
+	border-radius: 18px;
+	background: rgba(7, 8, 11, 0.82);
+	box-shadow: 0 18px 50px rgba(0, 0, 0, 0.5);
+}
+.lpa-pitch h2 {
+	margin: 0;
+	font-size: 30px;
+	font-weight: 700;
+	line-height: 1.05;
+	letter-spacing: -0.01em;
+}
+.lpa-pitch p {
+	margin: 6px 0 0;
+	font-size: 16px;
+	line-height: 1.3;
+	color: rgba(255, 255, 255, 0.75);
+}
+.lpa-actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 10px;
+	margin-top: 14px;
+}
+.lpa-cta {
+	display: inline-flex;
+	align-items: center;
+	border-radius: 999px;
+	padding: 10px 20px;
+	background: #fbbf24;
+	color: #111;
+	font-weight: 700;
+	font-size: 16px;
+	text-decoration: none;
+	box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.6);
+	transition: transform 0.15s ease-out;
+}
+.lpa-cta:hover {
+	transform: scale(1.04);
+}
+.lpa-ghost {
+	border-radius: 999px;
+	padding: 10px 16px;
+	background: rgba(255, 255, 255, 0.12);
+	color: #fff;
+	font-weight: 600;
+	font-size: 15px;
+}
+
+/* The stack: messages a member would get, sliding in one by one. */
+.lpa-stack {
+	position: absolute;
+	top: 22px;
+	right: 14px;
+	width: 300px;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+.lpa-kicker {
+	align-self: flex-end;
+	margin-bottom: 2px;
+	padding: 3px 10px;
+	border-radius: 999px;
+	background: rgba(7, 8, 11, 0.7);
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: rgba(255, 255, 255, 0.7);
+	opacity: 0;
+	animation: lpa-fade 0.4s ease-out 2.4s both;
+}
+.lpa-card {
+	display: flex;
+	align-items: center;
+	gap: 11px;
+	padding: 9px 11px;
+	border-radius: 16px;
+	background: rgba(17, 20, 28, 0.94);
+	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.07);
+	opacity: 0;
+	transform: translateX(40px) scale(0.96);
+	animation: lpa-in 0.55s cubic-bezier(0.16, 1, 0.3, 1) var(--lpa-at) both;
+}
+.lpa-pic {
+	position: relative;
+	flex: none;
+	width: 40px;
+	height: 56px;
+	border-radius: 7px;
+	overflow: hidden;
+	background: #10131c;
+}
+.lpa-pic img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+.lpa-logo {
+	position: absolute;
+	right: 2px;
+	bottom: 2px;
+	width: 20px !important;
+	height: 20px !important;
+	border-radius: 5px;
+	box-shadow: 0 0 0 2px rgba(17, 20, 28, 0.94);
+}
+.lpa-ring {
+	flex: none;
+	width: 40px;
+	display: flex;
+	justify-content: center;
+}
+.lpa-words {
+	min-width: 0;
+	flex: 1;
+}
+.lpa-app {
+	display: flex;
+	justify-content: space-between;
+	font-size: 11px;
+	font-weight: 600;
+	color: rgba(255, 255, 255, 0.5);
+}
+.lpa-app b {
+	color: #fbbf24;
+	font-weight: 700;
+}
+.lpa-head {
+	margin-top: 1px;
+	font-size: 14px;
+	font-weight: 700;
+	line-height: 1.2;
+}
+.lpa-line {
+	font-size: 13px;
+	line-height: 1.2;
+	color: rgba(255, 255, 255, 0.72);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+@keyframes lpa-in {
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
+@keyframes lpa-fade {
+	to {
+		opacity: 1;
+	}
+}
+
+/* Phones: the pitch and a short stack over the Remote, under the TV. */
+@media (max-width: 767px) {
+	.lpa-stack {
+		top: auto;
+		bottom: 184px;
+		left: 12px;
+		right: 12px;
+		width: auto;
+		gap: 6px;
+	}
+	.lpa-kicker {
+		align-self: flex-start;
+	}
+	.lpa-card:nth-of-type(n + 3) {
+		display: none;
+	}
+	.lpa-card {
+		transform: translateY(18px) scale(0.97);
+		padding: 7px 10px;
+	}
+	.lpa-pic {
+		width: 32px;
+		height: 46px;
+	}
+	.lpa-pitch {
+		left: 12px;
+		right: 12px;
+		bottom: 66px;
+		max-width: none;
+		padding: 12px 14px 12px;
+		height: 110px;
+		background: rgba(7, 8, 11, 0.94);
+	}
+	.lpa-pitch h2 {
+		font-size: 22px;
+	}
+	.lpa-pitch p {
+		display: none;
+	}
+	.lpa-actions {
+		margin-top: 10px;
+	}
+	.lpa-cta {
+		padding: 9px 16px;
+		font-size: 15px;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.lpa-card,
+	.lpa-kicker {
+		animation: none;
+		opacity: 1;
+		transform: none;
+	}
+}

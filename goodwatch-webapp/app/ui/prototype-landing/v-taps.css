@@ -1,0 +1,290 @@
+/* PROTOTYPE - throwaway. Landing variant F, "Three taps to your taste" (v-taps.tsx). Over the TV's picture, in
+   screen pixels: sizes follow the screen with container units. Transform and opacity only. */
+.lpt {
+	position: absolute;
+	inset: 0;
+	z-index: 25;
+	container-type: size;
+	color: #fff;
+	background: #05060a;
+	font-family: "Gabarito", ui-sans-serif, system-ui, sans-serif;
+}
+.lpt-ask {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	flex-direction: column;
+	padding: 5.5cqh 5cqw 4.5cqh;
+}
+.lpt-top {
+	display: flex;
+	align-items: flex-end;
+	justify-content: space-between;
+	gap: 3cqw;
+}
+.lpt-kicker {
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.16em;
+	color: rgba(255, 255, 255, 0.72);
+	font-size: max(9px, 1.7cqw);
+}
+.lpt-h {
+	margin-top: 0.6cqh;
+	font-weight: 700;
+	line-height: 1.02;
+	letter-spacing: -0.02em;
+	font-size: max(20px, 5.4cqw);
+}
+.lpt-line {
+	margin-top: 0.8cqh;
+	color: rgba(255, 255, 255, 0.8);
+	font-size: max(11px, 2.1cqw);
+	line-height: 1.2;
+}
+.lpt-count {
+	flex: none;
+	display: flex;
+	gap: 0.8cqw;
+	padding-bottom: 0.6cqh;
+}
+.lpt-count i {
+	display: block;
+	width: max(9px, 1.5cqw);
+	height: max(9px, 1.5cqw);
+	border-radius: 50%;
+	border: 2px solid rgba(255, 255, 255, 0.5);
+	transition: transform 0.2s ease-out;
+}
+.lpt-count i.lpt-lit {
+	background: #fbbf24;
+	border-color: #fbbf24;
+	transform: scale(1.15);
+}
+.lpt-grid {
+	margin-top: 3cqh;
+	flex: 1;
+	min-height: 0;
+	display: grid;
+	grid-template-columns: repeat(6, 1fr);
+	grid-template-rows: repeat(2, 1fr);
+	gap: 1.2cqw;
+}
+.lpt-poster {
+	position: relative;
+	min-height: 0;
+	overflow: hidden;
+	border-radius: 0.9cqw;
+	background: #10131c;
+	transition: transform 0.18s ease-out, opacity 0.2s ease-out;
+}
+.lpt-poster img {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+.lpt-poster::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	border-radius: inherit;
+	box-shadow: inset 0 0 0 max(2px, 0.35cqw) #fbbf24;
+	opacity: 0;
+	transition: opacity 0.18s ease-out;
+}
+.lpt-poster:hover,
+.lpt-poster:focus-visible {
+	transform: scale(1.05);
+	outline: none;
+}
+.lpt-poster.lpt-on {
+	transform: scale(0.94);
+}
+.lpt-poster.lpt-on::after {
+	opacity: 1;
+}
+.lpt-grid.lpt-full .lpt-poster:not(.lpt-on) {
+	opacity: 0.35;
+}
+.lpt-check {
+	position: absolute;
+	right: 0.6cqw;
+	top: 0.6cqw;
+	z-index: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: max(16px, 2.6cqw);
+	height: max(16px, 2.6cqw);
+	border-radius: 50%;
+	background: #fbbf24;
+	color: #111;
+	font-weight: 800;
+	font-size: max(10px, 1.6cqw);
+	transform: scale(0);
+	transition: transform 0.2s cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+.lpt-on .lpt-check {
+	transform: scale(1);
+}
+.lpt-skip {
+	flex: none;
+	border-radius: 999px;
+	padding: 0.9cqh 2cqw;
+	background: rgba(255, 255, 255, 0.16);
+	font-weight: 700;
+	font-size: max(11px, 1.7cqw);
+}
+
+/* Thinking: the words the three picks share, one after another. */
+.lpt-think {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 2cqh;
+	animation: lpt-in 0.3s ease-out both;
+}
+.lpt-think-posters {
+	display: flex;
+	gap: 1.4cqw;
+}
+.lpt-think-posters img {
+	width: 11cqw;
+	aspect-ratio: 2 / 3;
+	object-fit: cover;
+	border-radius: 0.9cqw;
+	animation: lpt-bob 1.2s ease-in-out infinite;
+}
+.lpt-think-posters img:nth-child(2) { animation-delay: 0.15s; }
+.lpt-think-posters img:nth-child(3) { animation-delay: 0.3s; }
+.lpt-think-line {
+	font-weight: 700;
+	font-size: max(14px, 3cqw);
+}
+.lpt-think-words {
+	display: flex;
+	gap: 1cqw;
+	color: #fbbf24;
+	font-weight: 700;
+	font-size: max(12px, 2.2cqw);
+}
+.lpt-think-words span {
+	animation: lpt-in 0.35s ease-out both;
+}
+
+/* The pick: Tonight's design, the picture behind, the words at the bottom left. */
+.lpt-pick {
+	position: absolute;
+	inset: 0;
+	animation: lpt-in 0.45s ease-out both;
+}
+.lpt-pick-art {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	animation: lpt-zoom 9s ease-out both;
+}
+.lpt-pick-shade {
+	position: absolute;
+	inset: 0;
+	background:
+		linear-gradient(90deg, rgba(5, 6, 10, 0.92) 0, rgba(5, 6, 10, 0.6) 48%, rgba(5, 6, 10, 0.05) 100%),
+		linear-gradient(0deg, rgba(5, 6, 10, 0.85) 0, rgba(5, 6, 10, 0) 55%);
+}
+.lpt-pick-words {
+	position: absolute;
+	left: 5cqw;
+	right: 30cqw;
+	bottom: 6cqh;
+}
+.lpt-pick-title {
+	margin-top: 0.4cqh;
+	font-weight: 700;
+	line-height: 1;
+	letter-spacing: -0.02em;
+	font-size: max(22px, 6cqw);
+}
+.lpt-facts {
+	margin-top: 1.6cqh;
+	display: flex;
+	align-items: center;
+	gap: 1.4cqw;
+	flex-wrap: wrap;
+}
+.lpt-facts .lpt-logo {
+	width: max(22px, 3.6cqw);
+	height: max(22px, 3.6cqw);
+	border-radius: 0.8cqw;
+	object-fit: cover;
+}
+.lpt-why {
+	margin-top: 1.4cqh;
+	color: rgba(255, 255, 255, 0.82);
+	font-size: max(11px, 2cqw);
+	line-height: 1.25;
+}
+.lpt-why b {
+	color: #fff;
+}
+.lpt-acts {
+	margin-top: 2.4cqh;
+	display: flex;
+	align-items: center;
+	gap: 1.4cqw;
+	flex-wrap: wrap;
+}
+.lpt-cta {
+	display: inline-block;
+	border-radius: 999px;
+	padding: 1.3cqh 2.6cqw;
+	background: #fff;
+	color: #000;
+	font-weight: 700;
+	font-size: max(12px, 2.1cqw);
+	box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
+	transition: transform 0.15s ease-out;
+}
+.lpt-cta:hover { transform: scale(1.05); }
+.lpt-ghost {
+	border-radius: 999px;
+	padding: 1.3cqh 2.2cqw;
+	background: rgba(255, 255, 255, 0.16);
+	font-weight: 700;
+	font-size: max(12px, 2.1cqw);
+}
+.lpt-small {
+	margin-top: 1.2cqh;
+	color: rgba(255, 255, 255, 0.6);
+	font-size: max(10px, 1.6cqw);
+}
+
+/* A phone's TV: the words take the whole width, and the line under the title goes. */
+@container (max-width: 520px) {
+	.lpt-ask { padding: 4cqh 4cqw 3cqh; }
+	.lpt-line { display: none; }
+	.lpt-grid { margin-top: 2cqh; gap: 1.6cqw; }
+	.lpt-pick-words { right: 4cqw; bottom: 4cqh; }
+	.lpt-why { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+	.lpt-small { display: none; }
+	.lpt-acts { margin-top: 1.6cqh; }
+}
+
+@keyframes lpt-in {
+	from { opacity: 0; transform: translateY(8px); }
+}
+@keyframes lpt-bob {
+	50% { transform: translateY(-6px); }
+}
+@keyframes lpt-zoom {
+	from { transform: scale(1.06); }
+}
+@media (prefers-reduced-motion: reduce) {
+	.lpt *, .lpt *::after { animation: none !important; transition: none !important; }
+}

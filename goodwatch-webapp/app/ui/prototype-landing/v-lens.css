@@ -1,0 +1,304 @@
+/* PROTOTYPE - throwaway. Landing variant G "lens": one title on the TV, the answers pinned beside it.
+   Reveals move by transform only; the text is opaque from the first paint (just outside the picture until then). */
+
+.lpl {
+	position: absolute;
+	inset: 0;
+	z-index: 25;
+	container-type: size;
+	overflow: hidden;
+	color: #fff;
+	background: #05060a;
+	font-family: "Gabarito", ui-sans-serif, system-ui, sans-serif;
+}
+.lpl-pic {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	animation: lpl-drift 14s ease-out 2s both;
+}
+.lpl-shade {
+	position: absolute;
+	inset: 0;
+	background:
+		linear-gradient(90deg, rgba(5, 6, 10, 0.92) 0, rgba(5, 6, 10, 0.55) 38%, rgba(5, 6, 10, 0.1) 60%, rgba(5, 6, 10, 0.75) 100%),
+		linear-gradient(0deg, rgba(5, 6, 10, 0.9) 0, rgba(5, 6, 10, 0) 45%);
+}
+
+/* The title and the headline, bottom left. */
+.lpl-left {
+	position: absolute;
+	left: 5cqw;
+	top: 7cqh;
+	width: 46cqw;
+}
+.lpl-kicker {
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.16em;
+	color: rgba(255, 255, 255, 0.72);
+	font-size: max(10px, 1.7cqw);
+}
+.lpl-h {
+	margin-top: 0.6cqw;
+	font-weight: 700;
+	line-height: 1;
+	letter-spacing: -0.02em;
+	font-size: max(22px, 5.4cqw);
+}
+.lpl-title {
+	position: absolute;
+	left: 5cqw;
+	bottom: 20cqh;
+	width: 44cqw;
+}
+.lpl-name {
+	font-weight: 700;
+	line-height: 1.02;
+	font-size: max(16px, 3.4cqw);
+}
+.lpl-meta {
+	margin-top: 0.4cqw;
+	color: rgba(255, 255, 255, 0.75);
+	font-size: max(11px, 1.6cqw);
+}
+
+/* The answers, pinned down the right side of the picture. */
+.lpl-pins {
+	position: absolute;
+	right: 3.5cqw;
+	top: 6cqh;
+	bottom: 20cqh;
+	width: 38cqw;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	gap: 1.4cqh;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+.lpl-pin {
+	display: flex;
+	align-items: center;
+	gap: 1.4cqw;
+	padding: 1.2cqw 1.6cqw;
+	border-radius: 1.4cqw;
+	background: rgba(8, 10, 16, 0.82);
+	box-shadow: 0 1.2cqw 3cqw rgba(0, 0, 0, 0.45);
+	transform: translateX(130%);
+	animation: lpl-pin 0.7s cubic-bezier(0.16, 1, 0.3, 1) var(--lpl-at) both;
+}
+.lpl-q {
+	display: block;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.12em;
+	color: rgba(255, 255, 255, 0.6);
+	font-size: max(9px, 1.15cqw);
+}
+.lpl-a {
+	display: block;
+	margin-top: 0.15cqw;
+	font-weight: 700;
+	line-height: 1.1;
+	font-size: max(13px, 2.1cqw);
+}
+.lpl-sub {
+	display: block;
+	margin-top: 0.2cqw;
+	color: rgba(255, 255, 255, 0.66);
+	font-size: max(10px, 1.25cqw);
+	line-height: 1.2;
+}
+.lpl-marks {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.6cqw;
+	vertical-align: middle;
+	margin-left: 0.6cqw;
+}
+.lpl-marks img {
+	height: max(10px, 1.5cqw);
+	width: auto;
+}
+.lpl-ring {
+	flex: none;
+	zoom: var(--lpl-zoom, 1);
+}
+.lpl-logo {
+	flex: none;
+	width: max(28px, 5cqw);
+	height: max(28px, 5cqw);
+	border-radius: 0.9cqw;
+	object-fit: cover;
+}
+.lpl-logos {
+	flex: none;
+	display: flex;
+	gap: 0.5cqw;
+}
+.lpl-one {
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.lpl-pin > span:last-child {
+	min-width: 0;
+}
+.lpl-feel {
+	flex: none;
+	width: max(28px, 5cqw);
+	height: max(28px, 5cqw);
+	border-radius: 999px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: rgba(255, 255, 255, 0.1);
+	font-size: max(14px, 2.4cqw);
+}
+.lpl-posters {
+	flex: none;
+	display: flex;
+	gap: 0.5cqw;
+}
+.lpl-posters img {
+	width: max(20px, 3.6cqw);
+	aspect-ratio: 2 / 3;
+	border-radius: 0.5cqw;
+	object-fit: cover;
+	background: #10131c;
+}
+
+/* The close: everything rests on one line and two keys, rising from the bottom edge. */
+.lpl-close {
+	position: absolute;
+	left: 5cqw;
+	right: 3.5cqw;
+	bottom: 4.5cqh;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 2cqw;
+	transform: translateY(160%);
+	animation: lpl-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) var(--lpl-at) both;
+}
+.lpl-line {
+	font-weight: 700;
+	line-height: 1.15;
+	font-size: max(13px, 2.2cqw);
+}
+.lpl-line span {
+	display: block;
+	font-weight: 400;
+	color: rgba(255, 255, 255, 0.75);
+	font-size: max(11px, 1.6cqw);
+}
+.lpl-keys {
+	flex: none;
+	display: flex;
+	gap: 1.2cqw;
+}
+.lpl-key {
+	border-radius: 999px;
+	padding: 1.1cqw 2.4cqw;
+	font-weight: 700;
+	font-size: max(12px, 1.8cqw);
+	background: rgba(255, 255, 255, 0.16);
+	color: #fff;
+	white-space: nowrap;
+	transition: transform 0.15s ease-out;
+}
+.lpl-key:hover,
+.lpl-key:focus-visible {
+	transform: scale(1.05);
+}
+.lpl-key.lpl-go {
+	background: #fff;
+	color: #000;
+}
+
+/* A phone's TV is small: the headline goes, the answers sit two by two under the title, the close moves out of the
+   picture onto the room (`.lpl-sheet`). */
+@container (max-width: 560px) {
+	.lpl-left { display: none; }
+	.lpl-title { top: 15cqh; bottom: auto; left: 4cqw; width: 70cqw; }
+	.lpl-name { font-size: 20px; }
+	.lpl-meta { font-size: 11px; }
+	.lpl-shade {
+		background: linear-gradient(180deg, rgba(5, 6, 10, 0.7) 0, rgba(5, 6, 10, 0.35) 30%, rgba(5, 6, 10, 0.92) 62%);
+	}
+	.lpl-pins {
+		left: 3cqw;
+		right: 3cqw;
+		top: auto;
+		bottom: 3cqh;
+		width: auto;
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 6px;
+	}
+	.lpl-pin { padding: 6px 8px; gap: 6px; border-radius: 9px; min-width: 0; }
+	.lpl-pin > span { min-width: 0; }
+	.lpl-q { font-size: 8px; letter-spacing: 0.08em; }
+	.lpl-a { font-size: 12px; }
+	.lpl-sub, .lpl-marks { display: none; }
+	.lpl-ring { --lpl-zoom: 0.62; }
+	.lpl-logo, .lpl-logos {
+	flex: none;
+	display: flex;
+	gap: 0.5cqw;
+}
+.lpl-one {
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.lpl-pin > span:last-child {
+	min-width: 0;
+}
+.lpl-feel { width: 26px; height: 26px; font-size: 13px; }
+	.lpl-posters img { width: 16px; }
+	.lpl-close { display: none; }
+}
+
+/* The close on a phone: a card over the room, under the TV. Hidden on wider windows, where it is in the picture. */
+.lpl-sheet {
+	position: absolute;
+	left: 12px;
+	right: 12px;
+	bottom: 70px;
+	z-index: 45;
+	display: none;
+	padding: 14px;
+	border-radius: 18px;
+	background: rgba(8, 10, 16, 0.94);
+	box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
+	color: #fff;
+	font-family: "Gabarito", ui-sans-serif, system-ui, sans-serif;
+	transform: translateY(140%);
+	animation: lpl-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) var(--lpl-at) both;
+}
+.lpl-sheet h2 { font-size: 22px; font-weight: 700; line-height: 1.05; }
+.lpl-sheet p { margin-top: 6px; font-size: 14px; line-height: 1.25; color: rgba(255, 255, 255, 0.78); }
+.lpl-sheet .lpl-keys { margin-top: 12px; gap: 8px; }
+.lpl-sheet .lpl-key { flex: 1; padding: 11px 14px; font-size: 15px; text-align: center; }
+@media (max-width: 767px) {
+	.lpl-sheet { display: block; }
+}
+
+@keyframes lpl-pin {
+	to { transform: none; }
+}
+@keyframes lpl-up {
+	to { transform: none; }
+}
+@keyframes lpl-drift {
+	from { transform: scale(1.06); }
+	to { transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+	.lpl-pic, .lpl-pin, .lpl-close, .lpl-sheet { animation: none; transform: none; }
+}
