@@ -1,9 +1,11 @@
 // Answers for the detail page's questions section. They cover facts that the
 // rest of the page doesn't state in words (where to stream legally, reception,
-// age rating, length, source, box office, languages, tropes) and leave how a
-// title feels to the fingerprint.
+// age rating, length, source, box office, languages, tropes), and the closed
+// questions about how a title feels, answered from its fingerprint
+// (fingerprintQuestions.ts).
 
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
+import { type FingerprintQuestionId, fingerprintAnswers } from "~/ui/details/fingerprintQuestions"
 import { list } from "~/ui/fingerprint/fingerprintText"
 import { languageName, regionName } from "~/utils/display-names"
 import { seededRandomFromString } from "~/utils/random"
@@ -107,7 +109,19 @@ export interface TitleQuestion {
 	a: string
 }
 
-export type QuestionId = "stream" | "worth" | "rated" | "length" | "source" | "agree" | "boxoffice" | "tropes" | "language" | "countries" | "aired"
+export type QuestionId =
+	| "stream"
+	| "worth"
+	| "rated"
+	| "length"
+	| "source"
+	| "agree"
+	| "boxoffice"
+	| "tropes"
+	| "language"
+	| "countries"
+	| "aired"
+	| FingerprintQuestionId
 
 // Critics vs audiences on the same 0-100 scale.
 export function agreement(media: MovieResult | ShowResult) {
@@ -209,6 +223,8 @@ export function titleQuestions(media: MovieResult | ShowResult, country: string)
 		["worth", `Is ${T} worth watching?`, receptionAnswer(media)],
 		["rated", `What is ${T} rated?`, ageAnswer(media, country)],
 		["length", media.mediaType === "movie" ? `How long is ${T}?` : `How many seasons does ${T} have?`, lengthAnswer(media)],
+		// How it feels, after the first facts people look for.
+		...fingerprintAnswers(media).map((x): [QuestionId, string, string] => [x.id, x.q, x.a]),
 		["source", `Is ${T} based on a true story?`, sourceAnswer(media)],
 		["agree", `Do critics and audiences agree on ${T}?`, agreeAnswer(media)],
 		["boxoffice", `Was ${T} a box office hit?`, boxOfficeAnswer(media)],

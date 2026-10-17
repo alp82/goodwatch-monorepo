@@ -331,3 +331,15 @@ html[data-tv-transition="out"] .tv-back {
 	word-break: keep-all;
 	overflow-wrap: anywhere;
 }
+
+/* The traits behind a fingerprint answer in the questions section (ui/details/DetailsQuestions.tsx) as they open. */
+@keyframes faq-why-in {
+	from {
+		opacity: 0;
+		transform: translateY(-4px);
+	}
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
