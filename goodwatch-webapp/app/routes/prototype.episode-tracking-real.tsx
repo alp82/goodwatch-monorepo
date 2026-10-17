@@ -63,6 +63,10 @@ import VariantB from "~/ui/prototype-episodes-section/VariantB"
 import VariantC from "~/ui/prototype-episodes-section/VariantC"
 import VariantD from "~/ui/prototype-episodes-section/VariantD"
 import VariantE from "~/ui/prototype-episodes-section/VariantE"
+import VariantF from "~/ui/prototype-episodes-section/VariantF"
+import VariantG from "~/ui/prototype-episodes-section/VariantG"
+import VariantH from "~/ui/prototype-episodes-section/VariantH"
+import VariantI from "~/ui/prototype-episodes-section/VariantI"
 
 // PROTOTYPE - throwaway: episodes section variants, switched by ?variant=.
 const VARIANTS = {
@@ -71,8 +75,12 @@ const VARIANTS = {
 	C: "Up next + carousels",
 	D: "Ratings map as navigator",
 	E: "Dense table with bulk actions",
+	F: "Round 2 · One grid, season panel beside",
+	G: "Round 2 · Season opens inside the grid",
+	H: "Round 2 · Grid, season list and episode detail",
+	I: "Round 2 · Consistency chart (bolder)",
 }
-const VARIANT_VIEWS = { B: VariantB, C: VariantC, D: VariantD, E: VariantE }
+const VARIANT_VIEWS = { B: VariantB, C: VariantC, D: VariantD, E: VariantE, F: VariantF, G: VariantG, H: VariantH, I: VariantI }
 
 const FIXTURES: Record<string, unknown> = {
 	supernatural,

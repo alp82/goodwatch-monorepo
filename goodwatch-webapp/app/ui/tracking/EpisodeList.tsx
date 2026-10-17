@@ -118,7 +118,7 @@ const PANEL = `min-w-0 overflow-hidden rounded-xl border border-white/[0.06] ${S
 const norm = (name: string | null) =>
 	(name ?? "").toLowerCase().replace(/[^a-z0-9]/g, "")
 
-function useIsDesktop() {
+export function useIsDesktop() {
 	const [is, setIs] = useState(
 		() =>
 			typeof window !== "undefined" &&
@@ -134,7 +134,7 @@ function useIsDesktop() {
 	return is
 }
 
-interface Model {
+export interface Model {
 	view: ShowView
 	actions: TrackingActions
 	today: string
@@ -165,7 +165,7 @@ interface Target {
 	page?: boolean
 }
 
-interface Nav {
+export interface Nav {
 	seasons: Season[]
 	many: boolean
 	/** The open season's number; null at the matrix alone. */
@@ -275,24 +275,14 @@ function useNav(model: Model): Nav {
 	}
 }
 
-// ---------------------------------------------------------------------------------------------------------
-// The section
-// ---------------------------------------------------------------------------------------------------------
 
-function List({
-	tracking,
-	view,
-	actions,
-	children,
-}: {
-	tracking: ShowTracking
-	view: ShowView
-	actions: TrackingActions
-	children: ReactNode
-}) {
+// PROTOTYPE export (episodes section round 2): the list's model, for the variants to reuse.
+export function useModel(
+	tracking: ShowTracking,
+	view: ShowView,
+	actions: TrackingActions,
+): Model {
 	const { page, seasons, today } = tracking
-	const { layOutAll } = useBelowFold()
-	const section = useRef<HTMLElement>(null)
 	const model = useMemo<Model>(() => {
 		const aired = (episode: PageEpisode) =>
 			episode.airDate !== null && episode.airDate <= today
@@ -320,6 +310,39 @@ function List({
 			},
 		}
 	}, [view, actions, today, seasons, page])
+	return model
+}
+
+/** PROTOTYPE export: the model and the navigation state of today's list. */
+export function useEpisodeKit(
+	tracking: ShowTracking,
+	view: ShowView,
+	actions: TrackingActions,
+) {
+	const model = useModel(tracking, view, actions)
+	const nav = useNav(model)
+	return { model, nav }
+}
+
+// ---------------------------------------------------------------------------------------------------------
+// The section
+// ---------------------------------------------------------------------------------------------------------
+
+function List({
+	tracking,
+	view,
+	actions,
+	children,
+}: {
+	tracking: ShowTracking
+	view: ShowView
+	actions: TrackingActions
+	children: ReactNode
+}) {
+	const { page, seasons, today } = tracking
+	const { layOutAll } = useBelowFold()
+	const section = useRef<HTMLElement>(null)
+	const model = useModel(tracking, view, actions)
 	const nav = useNav(model)
 
 	// The hero asks for the list: at the Next episode, or at its start.
@@ -424,7 +447,7 @@ function List({
  * The Seen press that stands, in one line: when it was made and what it covered, and the way to take it back.
  * Take back asks first, under the line, in the status menu's words; the toast that follows offers Undo.
  */
-function PressLine({
+export function PressLine({
 	view,
 	actions,
 }: {
@@ -657,7 +680,7 @@ function Finder({
 	)
 }
 
-function Tools({
+export function Tools({
 	nav,
 	model,
 }: {
@@ -893,7 +916,7 @@ function SeasonRow({
 	)
 }
 
-function Legend({ model }: { model: Model }) {
+export function Legend({ model }: { model: Model }) {
 	const box = "inline-block h-2.5 w-2 rounded-[2px] bg-white/40"
 	return (
 		<div className="mt-1.5 flex min-h-4 flex-wrap items-center gap-x-3 gap-y-1 text-[10px] leading-4 text-gray-500">
@@ -1003,7 +1026,7 @@ const CHIP = `inline-flex h-10 items-center gap-1.5 rounded-lg px-2.5 text-xs fo
 const CHIP_OFF = "bg-white/10 text-gray-100 hover:bg-white/20"
 
 /** The open season's own line: its title and score, the count, and the whole-season mark. */
-function SeasonHead({
+export function SeasonHead({
 	nav,
 	model,
 	only = false,
@@ -1116,7 +1139,7 @@ function SeasonHead({
 }
 
 /** What a season's ratings lose when IMDb numbers it differently. */
-function NumberingNote({ season, model }: { season: Season; model: Model }) {
+export function NumberingNote({ season, model }: { season: Season; model: Model }) {
 	const note = model.note(season.number)
 	if (!note) return null
 	return (
@@ -1140,7 +1163,7 @@ function NumberingNote({ season, model }: { season: Season; model: Model }) {
 	)
 }
 
-function SeasonPanel({
+export function SeasonPanel({
 	nav,
 	model,
 	beside,
@@ -1174,7 +1197,7 @@ function SeasonPanel({
 // ---------------------------------------------------------------------------------------------------------
 
 /** An episode's rating as a small tile in the grid's colours, or a dash where IMDb numbers the season differently. */
-function RatingChip({
+export function RatingChip({
 	episode,
 	missing,
 }: {
@@ -1494,7 +1517,7 @@ function RowDetail({
  * One episode on one line: tick, number, name, the rating, the air date. A press on the line opens the still and
  * the rest in place.
  */
-function Row({
+export function Row({
 	episode,
 	model,
 	open,
@@ -1620,7 +1643,7 @@ const FOLD = `flex h-10 w-full cursor-pointer items-center gap-2 border-t border
  * line above and one below, each of which opens `limit` more. The rows are part of the page and scroll with it;
  * nothing here scrolls by itself, so a row that opens only pushes down what is under it.
  */
-function Rows({
+export function Rows({
 	season,
 	nav,
 	model,
