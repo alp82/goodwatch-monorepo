@@ -260,7 +260,9 @@ export function relatedMapEngine(
 	}
 
 	// --- Markup ---------------------------------------------------------------------------------------------------
-	const src = (path: string) => `${M.image}/w154/${path}`
+	// PROTOTYPE - throwaway (related-posters-zoom): the larger posters of variants B to D need a larger image.
+	const imgSize = win && (new URLSearchParams(win.location.search).get("variant") ?? "A") !== "A" ? "w342" : "w154"
+	const src = (path: string) => `${M.image}/${imgSize}/${path}`
 	const hrefOf = (title: MapTitle) =>
 		`/${title.k.charAt(0) === "m" ? "movie" : "show"}/${title.k.slice(1)}-${(title.canonicalTitle ?? title.t)
 			.toLowerCase()

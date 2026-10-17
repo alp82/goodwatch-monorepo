@@ -301,3 +301,11 @@ white-space:nowrap;box-shadow:0 2px 12px rgba(251,191,36,.28)}
 .fn-row .ix-c[aria-pressed="true"] .ix-z::after{animation:none;translate:0 0;opacity:.5}
 .ix-c>.fn-pz,.ix-c>.fn-pk{transition:none}
 }
+
+/* PROTOTYPE - throwaway (related-posters-zoom): the full screen button and the full screen view. */
+.rm-fs{position:absolute;right:6px;top:6px;display:grid;place-items:center;width:34px;height:32px;border-radius:.5rem;background:rgba(13,17,28,.92);border:1px solid rgba(255,255,255,.3);color:#fff}
+.rm-fs:hover{border-color:#fbbf24}
+.pl.pl-map:fullscreen,.pl.pl-map.pl-fs{height:100dvh!important;width:100vw;max-width:none;border:0;border-radius:0;padding:1rem 1.5rem 1.25rem;background:#0b0f19}
+.pl.pl-map.pl-fs{position:fixed;inset:0;z-index:1000}
+.pl.pl-map:fullscreen .pl-body,.pl.pl-map.pl-fs .pl-body{flex:1;min-height:0}
+.pl.pl-map:fullscreen .pl-stage.pl-map,.pl.pl-map.pl-fs .pl-stage.pl-map{flex:1;height:auto;min-height:0}

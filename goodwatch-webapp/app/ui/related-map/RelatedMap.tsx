@@ -10,7 +10,8 @@
 // A page opened by a navigation inside the app asks for both files when the section mounts, once per document.
 //
 // A walk is forgotten when the page is left.
-import { useMatches, useNavigate } from "@remix-run/react"
+import { useMatches, useNavigate, useSearchParams } from "@remix-run/react"
+import { PrototypeSwitcher } from "~/ui/prototype/PrototypeSwitcher"
 import { useEffect, useRef, useState } from "react"
 import type { RelatedMapData } from "~/server/related-map.server"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
@@ -171,9 +172,24 @@ export default function RelatedMap({
 			if (w.__gwRelatedMap) w.__gwRelatedMap.nav = null
 		}
 	}, [shown, script, navigate, localizedKey])
+	// PROTOTYPE - throwaway (related-posters-zoom): the engine reads `?variant=` once per page, so a new variant reloads.
+	const [params] = useSearchParams()
+	const variant = params.get("variant") ?? "A"
+	const firstVariant = useRef(variant)
+	useEffect(() => {
+		if (variant !== firstVariant.current) window.location.reload()
+	}, [variant])
 	if (!map) return null
 	return (
 		<>
+			<PrototypeSwitcher
+				variants={{
+					A: "Today: 60 px, 3 steps",
+					B: "Bigger: 96 px, 4 steps",
+					C: "Fit to height, 4 steps",
+					D: "Steps by count: 24, 48, 90, 150",
+				}}
+			/>
 			<section
 				// The height is the styled section's own: 602 px on a phone, 576 px on a wide screen. Until the style is
 				// there the content is hidden, and the style's first rule shows it.
