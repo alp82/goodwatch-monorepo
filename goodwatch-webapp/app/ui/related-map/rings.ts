@@ -120,7 +120,7 @@ type Moved = HTMLElement & {
 	__xv?: string
 	__xu?: number
 	__end?: number
-	__pk?: { nm: string; yr: string; df: string } | null
+	__pk?: { nm: string; yr: string; df: string; im?: string } | null
 }
 
 export function ringsKit(core: MapCore, words: TraitWords) {
@@ -389,18 +389,22 @@ export function ringsKit(core: MapCore, words: TraitWords) {
 		const nm = card?.querySelector("[data-r-nm]")
 		const yr = card?.querySelector("[data-r-yr]")
 		const df = card?.querySelector("[data-r-df]")
+		const im = card?.querySelector("[data-r-im]") as HTMLImageElement | null | undefined
 		if (!card || !nm || !yr || !df) return
 		if (!t) {
 			if (card.__pk) {
 				nm.textContent = card.__pk.nm
 				yr.innerHTML = card.__pk.yr
 				df.innerHTML = card.__pk.df
+				if (im && card.__pk.im) im.src = card.__pk.im
 			}
 			card.__pk = null
 			card.removeAttribute("data-r-pk")
 			return
 		}
-		if (!card.__pk) card.__pk = { nm: nm.textContent ?? "", yr: yr.innerHTML, df: df.innerHTML }
+		if (!card.__pk) card.__pk = { nm: nm.textContent ?? "", yr: yr.innerHTML, df: df.innerHTML, im: im?.src }
+		// Full screen shows the poster too. Only a visible one is swapped, so the page view loads no extra images.
+		if (im && t.p && im.offsetWidth) im.src = core.src(t.p)
 		nm.textContent = t.t
 		yr.innerHTML = when(t)
 		df.innerHTML = diff(ctx, t)

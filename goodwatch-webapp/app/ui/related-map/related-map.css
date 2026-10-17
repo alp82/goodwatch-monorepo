@@ -348,22 +348,51 @@ foot. The foot grows upward into free space, so nothing above it moves when a po
 /* PROTOTYPE - throwaway (related-posters-zoom): every poster is a layer of its own, rastered once, so that a pan, a
 zoom, or a fade only moves pixels on the GPU. Without it each poster's scale and move are painted again every frame. */
 .rg .rm-w>.rm-p{will-change:transform,translate,scale,opacity;backface-visibility:hidden}
-/* PROTOTYPE - throwaway (related-posters-zoom): a poster's ring is a border on a pseudo element, not an outline.
-Chrome paints an outlined element again on every frame of its scale animation, and decodes its image again with it. */
-.rg .rm-w>.rm-p{outline:0;--ol:rgba(255,255,255,.14);--ow:2px;--os:solid}
-.rg .rm-w>.rm-p::before{content:"";position:absolute;inset:calc(var(--ow)*-1);z-index:1;border:var(--ow) var(--os) var(--ol);border-radius:calc(.375rem + var(--ow));pointer-events:none}
+/* PROTOTYPE - throwaway (related-posters-zoom): a poster's ring is a spread box-shadow, not an outline, and posters
+carry no drop shadow. Chrome repaints an outlined element on every frame of its scale animation, and on a 4K wall each
+poster's shadow and ring pseudo element added GPU fill on every frame of a pan. Dashed rings (a few posters at most)
+stay a pseudo element's border. */
+.rg .rm-w>.rm-p{outline:0;--ol:rgba(255,255,255,.14);--ow:2px;box-shadow:0 0 0 var(--ow) var(--ol)}
 .rg .rm-w>.rm-p:hover{--ol:#fbbf24}
 .rg .rm-w>.rm-p:focus-visible{outline:0;--ol:#fff}
-.rg .rm-w>.rm-p[data-pl-came]{--os:dashed;--ol:rgba(255,255,255,.6)}
+.rg .rm-w>.rm-p[data-pl-came],.rg .rm-w>.rm-p[style*="--dm"],.rg .rm-w>.rm-p.pl-ph{box-shadow:none}
+.rg .rm-w>.rm-p[data-pl-came]::before,.rg .rm-w>.rm-p[style*="--dm"]::before,.rg .rm-w>.rm-p.pl-ph::before{content:"";position:absolute;inset:calc(var(--ow)*-1);z-index:1;border:var(--ow) dashed var(--ol);border-radius:calc(.375rem + var(--ow));pointer-events:none}
+.rg .rm-w>.rm-p[data-pl-came]{--ol:rgba(255,255,255,.6)}
 .rg .rm-w>.rm-p[data-pl-came]:hover{--ol:#fbbf24}
-.rg .rm-w>.rm-p[style*="--dm"]{--os:dashed}
-.rg .rm-w>.rm-p.pl-ph{--ow:1px;--os:dashed;--ol:rgba(255,255,255,.13)}
+.rg .rm-w>.rm-p.pl-ph{--ow:1px;--ol:rgba(255,255,255,.13)}
 .rg .rm-w>.rg-c,.rg .rm-w>.rg-c:hover{--ow:3px;--ol:#fff}
-.rg .rm-w>.rm-p[data-fn-lit]{--ol:#4ade80}
-.rg .rm-w>.rm-p[data-fn-ld="dn"]{--ol:#f87171}
+.rg .rm-w>.rm-p[data-fn-lit]{--ol:#4ade80;box-shadow:0 0 0 2px var(--ol),0 0 0 6px rgba(34,197,94,.4)}
+.rg .rm-w>.rm-p[data-fn-ld="dn"]{--ol:#f87171;box-shadow:0 0 0 2px var(--ol),0 0 0 6px rgba(239,68,68,.4)}
 /* PROTOTYPE - throwaway (related-posters-zoom): the chips' comparison bar and mark move with translate and scale, not
 left and width, so that pointing at posters lays nothing out. */
 .ix-c>.fn-pz{left:0;width:100%;transform-origin:0 0;translate:calc(var(--pa,var(--v))*10%) 0;scale:calc((var(--pb,var(--v)) - var(--pa,var(--v)))/10) 1;
 transition:translate .28s cubic-bezier(.3,.3,.2,1),scale .28s cubic-bezier(.3,.3,.2,1),opacity .28s ease-in}
 .ix-c>.fn-pk{left:0;width:100%;margin-left:-1px;translate:calc(var(--pm,var(--v))*10%) 0;transition:translate .28s cubic-bezier(.3,.3,.2,1),opacity .28s ease-in}
 .ix-c[data-fn-pk] .fn-pz{transition-timing-function:cubic-bezier(.3,.3,.2,1),cubic-bezier(.3,.3,.2,1),ease-out}
+/* PROTOTYPE - throwaway (related-posters-zoom): the full screen side panel takes more room on a big screen: it grows
+with the viewport, shows the poster of the title it is about next to its name, and sets everything larger. */
+.fn-im{display:none}
+@media (min-width:1024px){
+.pl.pl-map:is(:fullscreen,.pl-fs){--pane:clamp(300px,27vw,960px);--fz:clamp(1rem,.62vw + .3rem,2.1rem)}
+.pl.pl-map:is(:fullscreen,.pl-fs) .rm.rg.rg-big{grid-template-columns:minmax(0,1fr) calc(var(--pane)*.42) minmax(0,1fr);grid-template-columns:minmax(0,1fr) calc(var(--pane)*.44) calc(var(--pane)*.56 - 18px);column-gap:18px}
+.pl.pl-map:is(:fullscreen,.pl-fs) .rm.rg.rg-big .rm-map{margin-right:14px}
+.pl.pl-map:is(:fullscreen,.pl-fs) .rg-big .fn-tb{grid-column:2/4;height:auto;min-height:32px}
+.pl.pl-map:is(:fullscreen,.pl-fs) .rg-big .fn-tip{font-size:calc(var(--fz)*.8)}
+.pl.pl-map:is(:fullscreen,.pl-fs) .rg-big .fn-im{display:block;grid-column:2;grid-row:2/4;align-self:start;width:100%;aspect-ratio:2/3;object-fit:cover;margin-top:22px;border-radius:.625rem;background:#1b2130;box-shadow:0 0 0 2px rgba(255,255,255,.14)}
+.pl.pl-map:is(:fullscreen,.pl-fs) .rg-big .rg-info[data-r-pk] .fn-im{box-shadow:0 0 0 2px #fbbf24}
+.pl.pl-map:is(:fullscreen,.pl-fs) .rg-big .fn-kk{grid-column:3;grid-row:2/4;align-self:start;font-size:calc(var(--fz)*.62);line-height:1.2}
+.pl.pl-map:is(:fullscreen,.pl-fs) .rg-big .fn-nm{grid-column:3;grid-row:2/4;align-self:start;height:auto;margin-top:calc(22px + var(--fz)*1.3);gap:6px}
+.pl.pl-map:is(:fullscreen,.pl-fs) .rg-big .fn-nm b{-webkit-line-clamp:4;font-size:calc(var(--fz)*1.9);line-height:1.12}
+.pl.pl-map:is(:fullscreen,.pl-fs) .rg-big .fn-nm small{font-size:calc(var(--fz)*.9)}
+.pl.pl-map:is(:fullscreen,.pl-fs) .rm.rg.rg-big .rm-top{grid-column:2/4;margin-top:28px;gap:10px}
+.pl.pl-map:is(:fullscreen,.pl-fs) .rm.rg.rg-big .rm-top::before{font-size:calc(var(--fz)*.62);line-height:1.2}
+.pl.pl-map:is(:fullscreen,.pl-fs) .rg-big .ix-6{grid-auto-rows:calc(var(--fz)*2.6);gap:calc(var(--fz)*.35)}
+.pl.pl-map:is(:fullscreen,.pl-fs) .rg-big .ix-c{font-size:calc(var(--fz)*.95);padding:0 .75em;border-radius:10px}
+.pl.pl-map:is(:fullscreen,.pl-fs) .rg-big .ix-c>i{font-size:1.1em}
+.pl.pl-map:is(:fullscreen,.pl-fs) .rg-big :is(.fn-vs,.fn-df,.fn-go,.fn-nt){grid-column:2/4}
+.pl.pl-map:is(:fullscreen,.pl-fs) .rg-big .fn-vs{font-size:calc(var(--fz)*.62);line-height:1.2;margin-bottom:8px}
+.pl.pl-map:is(:fullscreen,.pl-fs) .rg-big .fn-df{max-height:none;gap:6px}
+.pl.pl-map:is(:fullscreen,.pl-fs) .rg-big .fn-d{height:auto;padding:.3em .7em .3em .55em;font-size:calc(var(--fz)*.85)}
+.pl.pl-map:is(:fullscreen,.pl-fs) .rg-big :is(.fn-open,.fn-mv){height:calc(var(--fz)*2.7);font-size:var(--fz)}
+.pl.pl-map:is(:fullscreen,.pl-fs) .rg-big .fn-nt{font-size:calc(var(--fz)*.8);line-height:1.4}
+}
