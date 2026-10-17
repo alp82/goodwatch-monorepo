@@ -87,7 +87,7 @@ The October 15 audit compared the screenshot, actual webhook messages, the monit
 - Crate alerts described a real stalled replication/storage risk, but the six-hour reminders provided no new decision or instruction. At audit time shard checks were healthy and the highest disk use was 33%. The earlier messages do not by themselves establish a user-visible outage.
 - Every unchanged incident could repeat four times per day. Three such incidents account for up to twelve daily notifications without a new failure.
 
-The collector now ignores the placeholder only for explicitly skipped modules or successful empty loops; real missing children remain visible. Alerts use plain-language impact and a next step, with one link. Detailed counts and technical cause codes remain in the ledger. Recovery is one line. A resolved diagnostic-only legacy incident does not produce a spurious recovery message.
+The collector ignores the all-zero placeholder in both `job` and `flow_jobs`, regardless of `skipped` or module shape; real missing children remain visible. Alerts use plain-language impact and a next step, with one link. Detailed counts and technical cause codes remain in the ledger. Recovery is one line. A resolved diagnostic-only legacy incident does not produce a spurious recovery message.
 
 Example:
 
@@ -100,3 +100,63 @@ Validation covers the observed empty-loop shape, real missing children, unchange
 Rollout on October 15: deployed `collection`, `health`, `incidents`, and `notifications` individually, preserving live backup cause support, the `listed` outcome counter, and the deployed dependency locks. The live checker source and its additional runtime thresholds were preserved. All four module sources matched their local counterparts after deployment. The production check [01a14091-dec0-84f4-d837-2cd66bd5118b](https://windmill.goodwatch.app/run/01a14091-dec0-84f4-d837-2cd66bd5118b?workspace=goodwatch) completed successfully in 143 seconds with `notify=false`; both recurring crawler incidents were inactive with no pending notification afterward. Historical diagnostic uncertainty remains visible. The final targeted suite ran 97 tests: 92 passed and five opt-in database integration tests were skipped.
 
 The initial direct rollout was overwritten by the normal main-branch GitHub Actions deployment at 17:46 UTC, causing the old provider alert to return at 17:52 UTC. Monitoring changes must be committed to main and deployed through `push-windmill-workspace.yml`; direct script updates are not a durable rollout. The fix was reapplied on current main, preserving its newer monitoring changes. Validation on that base ran 101 tests: 96 passed and five opt-in database integration tests were skipped.
+
+
+## TMDB watch upstream gate
+
+The provider crawler uses Python `requests` with the honest User-Agent
+`GoodWatchBot/1.0 (+https://goodwatch.app; hello@goodwatch.app)`. The October 17
+worker previews returned 200 where the browser-claiming HTTP/1.1 request received
+a challenge. Worker selection, the batches of five per media type, and the flow's
+parallelism of three remain unchanged.
+
+`tmdb_streaming_upstream`, `_id: tmdb_watch`, holds the gate for every scheduled
+and targeted provider fetch. Response reasons are `challenge` (recognized page
+title or challenge header), `rate_limited` (429), `forbidden` (other 403), and
+`server_error` (5xx). All close the gate. Consecutive blocks use 30, 60, 120, 240,
+480, 960, then 1,440 minutes, capped there; a longer `Retry-After` is authoritative.
+The counter and `blocked_since` belong to the upstream, not a country document.
+A block releases the country's claim without changing its `updated_at`, previous
+links, `failed_at`, failure counter, or `next_fetch_at`.
+
+Expiry permits exactly one health probe, acquired atomically with a one-minute
+lease (the HTTP timeout is 15 seconds). A crashed probe can be replaced when its
+lease expires. The gate remains closed until a 200 passes country and offer
+validation. Any failed probe, including a malformed 200 or a transport error,
+advances upstream backoff and releases the country. Generation and probe tokens
+prevent stale responses from reopening or extending a newer block. Only a
+validated fetch resets consecutive blocks and clears the gate.
+
+The five-minute monitor reads the gate with the country backlog snapshot. The
+provider pipeline's `lack_of_progress` includes `progress_cause: upstream_blocked`,
+the reason, `blocked_since`, `blocked_until`, `retry_in_seconds`, and `probe_due`.
+An expired deadline with no successful probe still counts as blocked. Historic
+uncertainty remains explicit. A separate report,
+`f/monitoring/tmdb_watch_upstream`, makes upstream recovery independent of an
+incomplete execution-history backfill.
+
+After two continuous hours blocked, that report sends one Discord incident
+through `record_incident` and `deliver_notification`, using the existing
+`f/monitoring/discord_webhook_url` secret and durable global delivery gate. It
+sends no reminders or escalations for an unchanged block. A verified reopening
+sends one recovery, only if the incident was delivered. An unreadable gate is
+unknown and cannot prove recovery. A short block sends neither alert nor
+recovery. Legacy state without `blocked_since` reports `legacy_backoff`; it does
+not invent a two-hour onset.
+
+For a restart after a client correction, first verify that the deployed parser
+accepts worker responses. If the pre-existing legacy gate has no generation or
+counter, expire that exact legacy document with a compare-and-set and allow the
+normal single-probe path to reopen it. Do not delete upstream state or reset a
+new gate's block count manually.
+
+Regression command (from `goodwatch-flows`, scratch virtualenv supported):
+
+```sh
+python -m unittest discover -s tests -p 'test_tmdb_upstream*.py'
+```
+
+Also run the streaming-country/publication and workflow collection, health,
+incident, notification, checker, and backlog suites. The gate regressions use
+`mongomock`, including twelve concurrent probe contenders; opt-in real database
+suites require isolated test connections.

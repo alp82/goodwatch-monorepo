@@ -39,6 +39,8 @@ class TmdbStreamingCrawlResult(BaseModel):
     streaming_links: Optional[list[StreamingLink]]
     rate_limit_reached: bool
     retry_at: Optional[datetime] = None
+    block_reason: Optional[str] = None
+    http_status: Optional[int] = None
 
 
 # Database Models

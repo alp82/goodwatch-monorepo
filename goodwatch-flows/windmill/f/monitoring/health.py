@@ -285,6 +285,41 @@ def assess_pipeline(
     }
 
 
+UPSTREAM_PIPELINE = "f/monitoring/tmdb_watch_upstream"
+PROVIDER_PIPELINE = "f/tmdb_web/tmdb_crawl_providers"
+
+
+def assess_upstream(snapshot: dict[str, Any], now: datetime) -> dict[str, Any]:
+    """Expiry is probe eligibility. Only a verified response proves recovery."""
+    gate = snapshot.get("upstream")
+    known = isinstance(gate, dict)
+    gate = gate or {}
+    blocked = bool(gate.get("blocked_until"))
+    since = timestamp(gate.get("blocked_since"))
+    until = timestamp(gate.get("blocked_until"))
+    probe = timestamp(gate.get("probe_expires_at"))
+    retry = max(value for value in (until, probe) if value) if until else None
+    seconds = max(0, (now - since).total_seconds()) if since else None
+    return {
+        "path": UPSTREAM_PIPELINE, "source_pipeline": PROVIDER_PIPELINE,
+        "status": "unhealthy" if blocked else "healthy" if known else "unknown",
+        "causes": ["upstream_blocked"] if blocked else [],
+        "upstream": gate, "blocked_seconds": seconds,
+        "retry_in_seconds": max(0, (retry - now).total_seconds()) if retry else None,
+        "probe_due": bool(blocked and retry and retry <= now),
+    }
+
+
+def apply_upstream_cause(report: dict[str, Any], upstream: dict[str, Any]) -> None:
+    if report["path"] != PROVIDER_PIPELINE or "upstream_blocked" not in upstream["causes"]:
+        return
+    report["status"] = "unhealthy"
+    report["causes"] = sorted(set(report["causes"]) | {"lack_of_progress", "upstream_blocked"})
+    report["progress_cause"] = "upstream_blocked"
+    for key in ("upstream", "blocked_seconds", "retry_in_seconds", "probe_due"):
+        report[key] = upstream[key]
+
+
 def incident_transition(
     previous_state: dict[str, Any] | None,
     report: dict[str, Any],

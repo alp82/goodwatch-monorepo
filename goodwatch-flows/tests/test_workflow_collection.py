@@ -9,6 +9,22 @@ from f.monitoring.collection import observe_execution
 
 
 class WorkflowCollectionTests(unittest.TestCase):
+    def test_nil_id_is_never_a_descendant_regardless_of_status_shape(self):
+        from f.monitoring.collection import descendant_ids
+        nil = "00000000-0000-0000-0000-000000000000"
+        for module in [{"job": nil}, {"job": nil, "skipped": False},
+                       {"job": nil, "type": "Success"},
+                       {"flow_jobs": [nil, "real"]}]:
+            self.assertEqual(descendant_ids({"modules": [module]}),
+                             ["real"] if "flow_jobs" in module else [])
+        result = observe_execution(lambda _: {
+            "id": "root", "parent_job": None, "success": True, "result": [],
+            "flow_status": {"modules": [{"job": nil, "type": "Success", "skipped": False}]},
+        }, "root")
+        self.assertEqual(result["missing_descendants"], [])
+        self.assertEqual(result["unresolved_descendants"], [])
+        self.assertEqual(result["outcome"], "no_work")
+
     def test_overlap_skip_placeholder_is_not_a_missing_execution(self):
         def api(path):
             if path.endswith("get/root"):
@@ -29,10 +45,10 @@ class WorkflowCollectionTests(unittest.TestCase):
         self.assertEqual(observed["missing_descendants"], [])
         self.assertEqual(observed["unresolved_descendants"], [])
 
-    def test_overlap_does_not_hide_real_missing_children_or_unskipped_zero_ids(self):
+    def test_overlap_does_not_hide_real_missing_children(self):
         for missing_id, skipped in [
             ("4b56e224-336c-4a09-b88e-4898337453fd", True),
-            ("00000000-0000-0000-0000-000000000000", False),
+            ("aaf7e224-336c-4a09-b88e-4898337453fd", False),
         ]:
             with self.subTest(missing_id=missing_id, skipped=skipped):
                 def api(path):

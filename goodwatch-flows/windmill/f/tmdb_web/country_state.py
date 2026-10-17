@@ -17,7 +17,7 @@ FRESHNESS = timedelta(days=7)
 LEASE_DURATION = timedelta(minutes=5)
 MAPPING_REFRESH_BACKOFF = timedelta(minutes=30)
 FAILURE_BACKOFF_MINUTES = (30, 120, 360, 1440, 4320, int(FRESHNESS.total_seconds() // 60))
-RATE_LIMIT_STEPS = 3  # at most six hours
+UPSTREAM_PROBE_LEASE = timedelta(minutes=1)
 
 
 def eligibility(now: datetime | None = None) -> dict:
@@ -125,7 +125,80 @@ def upstream_deadline(
     now = now or datetime.utcnow()
     state = db.tmdb_streaming_upstream.find_one({"_id": "tmdb_watch"}) or {}
     deadline = state.get("blocked_until")
-    return deadline if deadline and deadline > now else None
+    if not deadline:
+        return None
+    # Expiry permits a probe, never all workers. An active probe holds the gate.
+    deadline = max(deadline, state.get("probe_expires_at") or deadline)
+    return deadline if deadline > now else None
+
+
+def acquire_upstream(db: Database, now: datetime | None = None) -> dict | None:
+    """Fence every request; after a block exactly one worker may probe."""
+    now = now or datetime.utcnow()
+    states = db.tmdb_streaming_upstream
+    states.update_one({"_id": "tmdb_watch"}, {"$setOnInsert": {
+        "generation": 0, "consecutive_blocks": 0,
+    }}, upsert=True)
+    state = states.find_one({"_id": "tmdb_watch"})
+    if not state.get("blocked_until"):
+        return {"generation": state.get("generation"), "probe_token": None}
+    if state["blocked_until"] > now:
+        return None
+    token = uuid4().hex
+    claimed = states.find_one_and_update({
+        "_id": "tmdb_watch", "generation": state.get("generation"),
+        "blocked_until": state["blocked_until"],
+        "$or": [{"probe_expires_at": None}, {"probe_expires_at": {"$lte": now}}],
+    }, {"$set": {"probe_token": token, "probe_expires_at": now + UPSTREAM_PROBE_LEASE}},
+        return_document=ReturnDocument.AFTER)
+    return {"generation": state.get("generation"), "probe_token": token} if claimed else None
+
+
+def upstream_fence(permit: dict) -> dict:
+    return {"_id": "tmdb_watch", "generation": permit["generation"],
+            "probe_token": permit["probe_token"]}
+
+
+def block_upstream(db: Database, permit: dict, reason: str, *,
+                   retry_at: datetime | None = None, now: datetime | None = None) -> dict:
+    now = now or datetime.utcnow()
+    states = db.tmdb_streaming_upstream
+    state = states.find_one({"_id": "tmdb_watch"})
+    failures = (state.get("consecutive_blocks") or 0) + 1
+    delay = timedelta(minutes=min(1440, 30 * 2 ** min(failures - 1, 6)))
+    deadline = max(now + delay, retry_at or now)
+    # A newer block or replacement probe invalidates old in-flight responses.
+    states.update_one(upstream_fence(permit), {
+        "$inc": {"generation": 1},
+        "$set": {"consecutive_blocks": failures, "blocked_until": deadline,
+                 "blocked_since": state.get("blocked_since") or now,
+                 "last_block_at": now, "block_reason": reason},
+        "$unset": {"probe_token": "", "probe_expires_at": ""},
+    })
+    return states.find_one({"_id": "tmdb_watch"})
+
+
+def reopen_upstream(db: Database, permit: dict, now: datetime | None = None) -> bool:
+    now = now or datetime.utcnow()
+    fields = {"consecutive_blocks": 0, "last_success_at": now}
+    if permit["probe_token"]:
+        fields["reopened_at"] = now
+    result = db.tmdb_streaming_upstream.update_one(upstream_fence(permit), {
+        "$set": fields,
+        "$unset": {"blocked_until": "", "blocked_since": "", "block_reason": "",
+                   "probe_token": "", "probe_expires_at": ""},
+    })
+    return result.matched_count == 1
+
+
+def release_claim(collection: Collection, document: dict, now: datetime | None = None) -> bool:
+    """An upstream block says nothing about this country's retry/failure state."""
+    now = now or datetime.utcnow()
+    result = collection.update_one(fence(document, now), {
+        "$set": {"is_selected": False},
+        "$unset": {"lease_token": "", "lease_expires_at": ""},
+    })
+    return result.modified_count == 1
 
 
 def save_failure(
@@ -139,12 +212,13 @@ def save_failure(
     now: datetime | None = None,
 ) -> bool:
     now = now or datetime.utcnow()
+    if rate_limited:
+        permit = acquire_upstream(db, now)
+        if permit is not None:
+            block_upstream(db, permit, "rate_limited", retry_at=retry_at, now=now)
+        return release_claim(collection, document, now)
     failures = (document.get("consecutive_failures") or 0) + 1
-    # Transient errors clear within the first steps. A country that keeps failing,
-    # such as a title deleted on TMDB, is retried no more often than it is refreshed.
-    # A rate limit says nothing about the country and blocks every country, so it
-    # stays within the short steps.
-    steps = FAILURE_BACKOFF_MINUTES[:RATE_LIMIT_STEPS] if rate_limited else FAILURE_BACKOFF_MINUTES
+    steps = FAILURE_BACKOFF_MINUTES
     minutes = steps[min(failures, len(steps)) - 1]
     deadline = now + timedelta(minutes=minutes * uniform(1, 1.1))
     if retry_at is not None:
@@ -162,13 +236,6 @@ def save_failure(
             "$unset": {"lease_token": "", "lease_expires_at": ""},
         },
     )
-    if rate_limited:
-        # Even a worker whose lease expired observed a real upstream limit.
-        db.tmdb_streaming_upstream.update_one(
-            {"_id": "tmdb_watch"},
-            {"$max": {"blocked_until": deadline}},
-            upsert=True,
-        )
     return result.modified_count == 1
 
 

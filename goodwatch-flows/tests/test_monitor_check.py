@@ -233,7 +233,7 @@ class MonitorCheckTests(unittest.TestCase):
             backlog_collector=collect,
             clock=lambda: 0,
         )
-        self.assertEqual(len(second["pipelines"]), 3)
+        self.assertEqual(len(second["pipelines"]), 4)
         self.assertEqual(
             second["backlog_status_counts"], {"unhealthy": 1, "healthy": 1}
         )

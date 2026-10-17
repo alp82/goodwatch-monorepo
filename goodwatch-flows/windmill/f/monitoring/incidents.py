@@ -21,6 +21,10 @@ def actionable_causes(report: dict[str, Any]) -> list[str]:
         "crate_checkpoint_stalled", "crate_disk_near_watermark", "crate_disk_watermark",
         "crate_backup_stale", "crate_backup_missing", "crate_backup_unreadable",
     }
+    if (report.get("path") == "f/monitoring/tmdb_watch_upstream"
+            and "upstream_blocked" in causes
+            and (report.get("blocked_seconds") or 0) >= 2 * 3600):
+        actionable.add("upstream_blocked")
     if {"missing_execution", "lack_of_progress"} <= causes:
         actionable.add("missing_execution")
     return sorted(actionable)

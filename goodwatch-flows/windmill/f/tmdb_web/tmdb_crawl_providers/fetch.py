@@ -18,6 +18,7 @@ from f.tmdb_web.models import (
 )
 
 HTTP_TIMEOUT_SECONDS = 15
+USER_AGENT = "GoodWatchBot/1.0 (+https://goodwatch.app; hello@goodwatch.app)"
 StreamHeaderToType: dict[str, StreamType] = {
     "Stream": "flatrate",
     "Free": "free",
@@ -80,21 +81,28 @@ def crawl_tmdb_watch_page(next_entry: dict) -> TmdbStreamingCrawlResult:
         url,
         headers={
             "Accept-Language": "en-US",
-            "User-Agent": "Mozilla/5.0",
+            "User-Agent": USER_AGENT,
         },
         timeout=HTTP_TIMEOUT_SECONDS,
     )
     soup = BeautifulSoup(response.text, "html.parser")
     title = soup.find("title")
-    limited = response.status_code in (403, 429) or (
-        title is not None and "Request Error (403)" in title.get_text()
+    page_title = title.get_text(" ", strip=True).lower() if title else ""
+    challenge = any(text in page_title for text in (
+        "just a moment", "please wait", "checking your browser", "attention required",
+        "verify you are human", "security verification",
+    )) or response.headers.get("cf-mitigated") == "challenge"
+    reason = (
+        "rate_limited" if response.status_code == 429 else
+        "challenge" if challenge else
+        "forbidden" if response.status_code == 403 or "request error (403)" in page_title else
+        "server_error" if 500 <= response.status_code < 600 else None
     )
-    if limited:
+    if reason:
         return TmdbStreamingCrawlResult(
-            url=url,
-            country_code=country_code,
-            streaming_links=None,
-            rate_limit_reached=True,
+            url=url, country_code=country_code, streaming_links=None,
+            rate_limit_reached=reason == "rate_limited",
+            block_reason=reason, http_status=response.status_code,
             retry_at=retry_deadline(response.headers.get("Retry-After")),
         )
     if response.status_code != 200:
@@ -174,6 +182,7 @@ def crawl_tmdb_watch_page(next_entry: dict) -> TmdbStreamingCrawlResult:
         country_code=country_code,
         streaming_links=streaming_links,
         rate_limit_reached=False,
+        http_status=response.status_code,
     )
 
 
@@ -231,50 +240,36 @@ def main(next_id: dict, refresh_for_mapping: bool = False) -> dict:
                 "mapping_refresh_after": current.get("mapping_refresh_after"),
                 "upstream_retry_at": country_state.upstream_deadline(db),
             }
+        permit = country_state.acquire_upstream(db)
+        if permit is None:
+            country_state.release_claim(collection, claimed)
+            return {**outcome, "outcome": "upstream_blocked",
+                    "upstream_retry_at": country_state.upstream_deadline(db)}
         try:
             result = crawl_tmdb_watch_page(claimed)
         except Exception as error:
-            response = error.response if isinstance(error, requests.HTTPError) else None
-            retry_at = (
-                retry_deadline(response.headers.get("Retry-After"))
-                if response is not None
-                else None
-            )
-            saved = country_state.save_failure(
-                db, collection, claimed, error, retry_at=retry_at
-            )
-            return {
-                **outcome,
-                "outcome": "failed" if saved else "deferred",
-                "retry_saved": saved,
-                "error": str(error),
-            }
-        if result.rate_limit_reached:
-            saved = country_state.save_failure(
-                db,
-                collection,
-                claimed,
-                "TMDB upstream rate limit",
-                rate_limited=True,
-                retry_at=result.retry_at,
-            )
-            return {
-                **outcome,
-                "outcome": "failed" if saved else "deferred",
-                "retry_saved": saved,
-                "rate_limit_reached": True,
-            }
+            if permit["probe_token"]:
+                state = country_state.block_upstream(db, permit, "probe_failed")
+                country_state.release_claim(collection, claimed)
+                return {**outcome, "outcome": "upstream_blocked",
+                        "block_reason": "probe_failed", "upstream_retry_at": state["blocked_until"]}
+            saved = country_state.save_failure(db, collection, claimed, error)
+            return {**outcome, "outcome": "failed" if saved else "deferred",
+                    "retry_saved": saved, "error": str(error)}
+        if result.block_reason:
+            state = country_state.block_upstream(
+                db, permit, result.block_reason, retry_at=result.retry_at)
+            country_state.release_claim(collection, claimed)
+            return {**outcome, "outcome": "upstream_blocked",
+                    "block_reason": result.block_reason, "http_status": result.http_status,
+                    "upstream_retry_at": state.get("blocked_until")}
         if result.streaming_links is None:
             raise ValueError("Successful crawl must supply verified streaming links")
         saved = country_state.save_success(
-            collection,
-            claimed,
-            [link.model_dump() for link in result.streaming_links],
-        )
-        return {
-            **outcome,
-            "outcome": "fetched" if saved else "deferred",
-            "providers": result.model_dump() if saved else None,
-        }
+            collection, claimed, [link.model_dump() for link in result.streaming_links])
+        country_state.reopen_upstream(db, permit)
+        return {**outcome, "outcome": "fetched" if saved else "deferred",
+                "http_status": result.http_status,
+                "providers": result.model_dump() if saved else None}
     finally:
         close_mongodb()

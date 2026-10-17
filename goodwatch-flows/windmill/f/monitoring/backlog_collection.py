@@ -20,13 +20,20 @@ def iso(value: Any) -> str | None:
 def collect_countries(db: Any, now: datetime, *, budget_seconds: float = 60) -> dict:
     deadline = monotonic() + budget_seconds
     upstream = db.tmdb_streaming_upstream.find_one(
-        {"_id": "tmdb_watch"}, {"blocked_until": 1}) or {}
+        {"_id": "tmdb_watch"}, {"blocked_until": 1, "blocked_since": 1,
+            "probe_expires_at": 1, "block_reason": 1, "consecutive_blocks": 1,
+            "last_success_at": 1}) or {}
     blocked = iso(upstream.get("blocked_until"))
+    gate = {key: iso(upstream.get(key)) for key in (
+        "blocked_until", "blocked_since", "probe_expires_at", "last_success_at")}
+    gate.update(block_reason=upstream.get("block_reason") or ("legacy_backoff" if blocked else None),
+                consecutive_blocks=upstream.get("consecutive_blocks", 0))
     result = {"complete": True, "overdue_country_count": 0,
               "overdue_title_count": 0, "oldest_due_at": None,
               "last_success_at": None, "upstream_blocked_until": blocked,
+              "upstream": gate,
               "excluded": {}, "count_relation": "exact", "collection_errors": []}
-    if blocked and datetime.fromisoformat(blocked) > now:
+    if blocked:
         return result
     cutoff = now - timedelta(seconds=COUNTRY_GRACE_SECONDS)
     legacy_cutoff = cutoff - FRESHNESS

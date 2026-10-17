@@ -33,6 +33,7 @@ CAUSES = {
     "missing_descendants",
     "consecutive_failures",
     "lack_of_progress",
+    "upstream_blocked",
     "material_child_failures",
     "material_outcome_failures",
     "controlled_failure",
@@ -73,6 +74,7 @@ def failure(
 # Fixed copy only: raw job errors, arguments and provider responses never enter Discord.
 NAMES = {
     "f/tmdb_web/tmdb_crawl_providers": "Streaming availability",
+    "f/monitoring/tmdb_watch_upstream": "Streaming availability upstream",
     "f/priority/crawl_all": "Catalog updates",
     "f/monitoring/country_backlog": "Streaming availability",
     "f/monitoring/publication_backlog": "Search catalog updates",
@@ -87,9 +89,14 @@ def format_notification(notice: dict[str, Any]) -> str:
     name = NAMES.get(path, path.rsplit("/", 1)[-1].replace("_", " ").capitalize())
     prefix = "[controlled monitor check] " if path == "f/monitoring/notification_check" else ""
     if notice["kind"] == "recovery":
+        if path == "f/monitoring/tmdb_watch_upstream":
+            return "Resolved: Streaming availability upstream. A verified watch-page fetch reopened the crawl gate."
         return f"{prefix}Resolved: {name}. Checks are back to normal."
     causes = set(notice["causes"])
-    if "crate_checkpoint_stalled" in causes:
+    if "upstream_blocked" in causes:
+        problem = "TMDB has blocked availability refreshes for at least 2 hours."
+        action = "Inspect the upstream reason and next health probe in the monitor; the crawler will reopen after a verified fetch."
+    elif "crate_checkpoint_stalled" in causes:
         problem = "A replica has stopped catching up for at least 1 hour; retained writes can grow disk use."
         action = "Inspect the lagging replica before disk use grows further."
     elif causes & {"crate_checkpoint_lag", "crate_translog_oversized"}:

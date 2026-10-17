@@ -166,7 +166,9 @@ class CountryStateTests(unittest.TestCase):
             saved["streaming_links"], [{"stream_url": "https://old.example"}]
         )
         self.assertEqual(saved["updated_at"], last_success)
-        self.assertEqual(saved["next_fetch_at"], retry_at)
+        self.assertNotIn("next_fetch_at", saved)
+        self.assertNotIn("failed_at", saved)
+        self.assertEqual(self.db.tmdb_streaming_upstream.find_one()["blocked_until"], retry_at)
         other = self.country(country_code="DE")
         self.assertIsNone(
             country_state.claim(
@@ -180,16 +182,16 @@ class CountryStateTests(unittest.TestCase):
             country_state.claim(self.db, self.collection, other, now=retry_at)
         )
 
-    def test_rate_limit_on_a_long_failing_country_blocks_upstream_for_hours_not_days(
+    def test_rate_limit_on_long_failing_country_preserves_country_retry_state(
         self,
     ) -> None:
         identity = self.country(consecutive_failures=9, next_fetch_at=self.now)
         document = country_state.claim(self.db, self.collection, identity, now=self.now)
         country_state.save_failure(self.db, self.collection, document, "429",
                                    rate_limited=True, now=self.now)
-        # A rate limit says nothing about the country, so it is retried with the rest.
         saved = self.collection.find_one({"_id": identity})
-        self.assertLessEqual(saved["next_fetch_at"], self.now + timedelta(minutes=396))
+        self.assertEqual(saved["next_fetch_at"], self.now)
+        self.assertEqual(saved["consecutive_failures"], 9)
         blocked = self.db.tmdb_streaming_upstream.find_one({"_id": "tmdb_watch"})["blocked_until"]
         self.assertLessEqual(blocked, self.now + timedelta(minutes=396))
 
@@ -497,13 +499,14 @@ class CountryStateTests(unittest.TestCase):
                 status_code=429, text="", headers={"Retry-After": "36000"}
             )
             result = fetch.main({"id": str(ids[0]), "type": "movie"})
-            self.assertTrue(result["retry_saved"])
-            self.assertEqual(result["outcome"], "failed")
+            self.assertEqual(result["outcome"], "upstream_blocked")
             saved = self.collection.find_one({"_id": ids[0]})
             self.assertEqual(saved["updated_at"], old["updated_at"])
             self.assertEqual(saved["streaming_links"], old["streaming_links"])
+            self.assertEqual(saved["next_fetch_at"], old["next_fetch_at"])
             self.assertGreater(
-                saved["next_fetch_at"], datetime.utcnow() + timedelta(hours=9)
+                self.db.tmdb_streaming_upstream.find_one()["blocked_until"],
+                datetime.utcnow() + timedelta(hours=9),
             )
             other = self.country(
                 tmdb_id=43,

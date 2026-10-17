@@ -76,11 +76,7 @@ def descendant_ids(status: Any) -> list[str]:
         if isinstance(value, dict):
             for key, item in value.items():
                 if key == "job" and isinstance(item, str):
-                    # A successful empty loop also has no job, even with skipped=false.
-                    no_job = value.get("skipped") is True or (
-                        value.get("type") == "Success" and value.get("flow_jobs") == []
-                    )
-                    if no_job and item == "00000000-0000-0000-0000-000000000000":
+                    if item == "00000000-0000-0000-0000-000000000000":
                         continue
                     found.append(item)
                 elif key == "flow_jobs" and isinstance(item, list):
@@ -92,7 +88,8 @@ def descendant_ids(status: Any) -> list[str]:
                 walk(item)
 
     walk(status)
-    return list(dict.fromkeys(found))
+    return [item for item in dict.fromkeys(found)
+            if item != "00000000-0000-0000-0000-000000000000"]
 
 
 SOURCE_FETCH_PATH = "f/tmdb_web/tmdb_crawl_providers/fetch"

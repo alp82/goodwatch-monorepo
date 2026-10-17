@@ -13,7 +13,8 @@ from urllib.parse import urlencode
 from f.monitoring.collection import observe_execution
 from f.monitoring.backlog_health import assess_backlogs
 from f.monitoring.cluster_health import assess_cluster
-from f.monitoring.health import assess_pipeline, schedule_cadence, timestamp
+from f.monitoring.health import (assess_pipeline, assess_upstream, apply_upstream_cause,
+                                 schedule_cadence, timestamp)
 from f.monitoring.incidents import record_incident
 
 OBSERVATION_START = datetime(2026, 9, 9, 21, 1, 10, tzinfo=timezone.utc)
@@ -339,6 +340,7 @@ def poll(
                 "",
                 cluster_result["progress"],
             )
+        upstream_report = assess_upstream(snapshots["country"], backlog_now) if backlog_result else None
         reports = []
         for path, plan in plans.items():
             ledger = plan["jobs"]
@@ -371,6 +373,8 @@ def poll(
                     0, len(report["coverage"]) - 20
                 )
                 report["coverage"] = report["coverage"][-20:]
+            if upstream_report:
+                apply_upstream_cause(report, upstream_report)
             delivery = record_incident(
                 store,
                 report,
@@ -380,6 +384,11 @@ def poll(
             report["notification"] = delivery
             reports.append(report)
         workflow_counts = dict(Counter(r["status"] for r in reports))
+        if upstream_report:
+            upstream_report["notification"] = record_incident(
+                store, upstream_report, backlog_now,
+                webhook_url if notify and clock() < deadline else None)
+            reports.append(upstream_report)
         if backlog_result:
             for report in backlog_result["reports"]:
                 report["observed_at"] = backlog_now.isoformat()
