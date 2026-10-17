@@ -3,6 +3,11 @@
 Build for [#571](https://github.com/alp82/goodwatch-monorepo/issues/571) (map [#529](https://github.com/alp82/goodwatch-monorepo/issues/529)).
 Built on October 14, 2026 on `auth/connector-help-pages`, branched from `origin/main` at `ad7e6d19`.
 
+> **Update, October 17, 2026:** `/connect` is gone (no redirect). The setup per app lives on `/use-with-ai`, the
+> troubleshooting on `/support`, and the can see / can change / can never lists on the consent screen and in the
+> privacy policy. `REC_CONNECTOR` now only switches the privacy policy text. The rest of this note is the record of
+> the original build.
+
 ## What it adds
 
 - **`/connect`**: how to add GoodWatch to Claude (claude.ai and the Claude apps, with the Team/Enterprise path),

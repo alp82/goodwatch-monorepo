@@ -14,7 +14,7 @@ Rechecked against Anthropic's [submission instructions](https://claude.com/docs/
 | Categories | Propose **Entertainment** and **Lifestyle**, if those exact choices exist; use the nearest available entertainment/personal-use category. The public instructions specify 1–5 categories but do not publish the live picker taxonomy. |
 | Website | `https://goodwatch.app` |
 | Server URL | `https://goodwatch.app/mcp` — one universal URL, directly operated by GoodWatch. |
-| Documentation | `https://goodwatch.app/connect` |
+| Documentation | `https://goodwatch.app/use-with-ai` |
 | Privacy | `https://goodwatch.app/privacy` |
 | Support / security contact | `hello@goodwatch.app` / `mailto:hello@goodwatch.app` |
 | Publisher | GoodWatch; owned and maintained through the owner's personal paid Claude account. The owner supplies the truthful legal/publisher name and primary review contact. |
@@ -118,10 +118,10 @@ The first five read prompts are suitable carousel candidates; the latter example
 | Asset | Checked state on 2026-10-17 | Action |
 | --- | --- | --- |
 | `https://goodwatch.app/privacy` | HTTP 200, “Privacy \| GoodWatch”; October 17 account/connected-app policy is present. | Owner confirms legal identity, applicable third-party policies, retention and poster/data rights remain accurate. Reachability does not constitute legal approval. |
-| `https://goodwatch.app/connect` | HTTP 200; real setup instructions, permissions, disconnect help and `hello@goodwatch.app`. | Use as docs URL and support-help fallback. Another thread is updating client instructions; recheck after release. |
-| `mailto:hello@goodwatch.app` | Existing support address on `/connect`; the same Purelymail mailbox received the verification message. | Use the email contact; verify incoming product/security requests continue to be monitored. |
+| `https://goodwatch.app/use-with-ai` | Replaces `/connect` (removed October 17, 2026, no redirect): setup steps per app, a disconnect link and a link to `/support`. Permissions are on the consent screen and in `/privacy#connected-apps`. | Use as docs URL. Recheck after release. |
+| `mailto:hello@goodwatch.app` | Existing support address on `/support`; the same Purelymail mailbox received the verification message. | Use the email contact; verify incoming product/security requests continue to be monitored. |
 | `/terms`, `/terms-of-service` | Both HTTP 404. | Missing: owner supplies or approves a public GoodWatch Terms page, proposed `https://goodwatch.app/terms`. GoodWatch Terms is not a listed mandatory field in the current Claude portal; Anthropic's own Directory Terms are a required acknowledgment. |
-| `/support`, `/help`, `/docs` | All HTTP 404. | Do not enter these as working URLs. `/connect` and the support mailbox cover the present portal fields. A dedicated support page is an optional owner follow-up. |
+| `/support`, `/help`, `/docs` | All HTTP 404. | `/support` now exists (October 17, 2026) and carries the AI app fixes; `/help` and `/docs` remain 404. `/use-with-ai`, `/support` and the support mailbox cover the portal fields. |
 | `goodwatch-webapp/public/apple-touch-icon.png` | Existing 180×180 PNG; `https://goodwatch.app/apple-touch-icon.png` returned 200. | Existing brand-image fallback; use the 512px MCP icon above for this listing. |
 | `goodwatch-webapp/public/favicon-32x32.png`, `favicon-16x16.png`, `favicon.ico` | Existing favicon assets. | Small browser icons; use the larger MCP icon above. |
 | `goodwatch-webapp/public/mcp-icons/goodwatch-512.png`, `goodwatch-128.png`, `goodwatch-48.png` in the same directory | Added on main by compatibility commit `b0b81294`; all three live `/mcp-icons/` URLs returned 200 `image/png` with exact 512×512 / 128×128 / 48×48 dimensions. | Upload the 512px file; retain 128px/48px alternatives. Do not use `tmdb-logo.svg` as the GoodWatch icon. |

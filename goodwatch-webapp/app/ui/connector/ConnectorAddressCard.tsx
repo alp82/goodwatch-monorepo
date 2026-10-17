@@ -1,10 +1,10 @@
 import { ArrowRightIcon } from "@heroicons/react/24/outline"
 import { Link } from "@remix-run/react"
 import { CopyField } from "~/ui/connector/CopyField"
-import { CONNECTOR_HELP_PATH, CONNECTOR_URL } from "~/ui/connector/connector"
+import { CONNECTOR_URL, USE_WITH_AI_PATH } from "~/ui/connector/connector"
 
-// The connector address to copy, and the way to the step-by-step help. On the help page itself, and for the
-// Connected apps tab (#570) under the list of apps.
+// The connector address to copy, and the way to the step-by-step setup on /use-with-ai. Under the list of apps in
+// the Connected apps tab (#570).
 export function ConnectorAddressCard({
 	title = "Connect a new app",
 	helpLink = true,
@@ -24,7 +24,7 @@ export function ConnectorAddressCard({
 			</div>
 			{helpLink && (
 				<Link
-					to={CONNECTOR_HELP_PATH}
+					to={USE_WITH_AI_PATH}
 					prefetch="intent"
 					className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-amber-500 hover:text-amber-400"
 				>

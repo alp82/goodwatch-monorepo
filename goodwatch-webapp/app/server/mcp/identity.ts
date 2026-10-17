@@ -5,7 +5,7 @@ export const mcpServerInfo = {
 	description:
 		"Find movies and TV shows, track watches, and get suggestions based on your taste.",
 	version: "1.0.0",
-	websiteUrl: "https://goodwatch.app/connect",
+	websiteUrl: "https://goodwatch.app/use-with-ai",
 	icons: [
 		{
 			src: "https://goodwatch.app/mcp-icons/goodwatch-48.png",

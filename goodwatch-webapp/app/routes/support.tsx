@@ -1,5 +1,5 @@
-// Support: how to reach us, how to disconnect an app, the common fixes for AI apps, help with signing in, and the
-// privacy policy. Styled like the Settings tiles.
+// Support: how to reach us, how to disconnect an app, the fixes for AI apps (moved here from the old /connect page),
+// help with signing in, and the privacy policy. Styled like the Settings tiles.
 import {
 	ArrowRightIcon,
 	ChatBubbleLeftRightIcon,
@@ -13,9 +13,10 @@ import { Link } from "@remix-run/react"
 import type { ComponentType, ReactNode, SVGProps } from "react"
 import {
 	CONNECTED_APPS_PATH,
-	CONNECTOR_HELP_PATH,
+	RANKED_SEARCHES_PER_DAY,
 	USE_WITH_AI_PATH,
 } from "~/ui/connector/connector"
+import { DESCRIPTION_SEARCH_EXAMPLE } from "~/ui/connector/example-prompts"
 import { Ui } from "~/ui/connector/help-parts"
 import { ACCOUNT_PATH } from "~/ui/settings/paths"
 import { type PageMeta, buildMeta } from "~/utils/meta"
@@ -23,6 +24,10 @@ import { type PageMeta, buildMeta } from "~/utils/meta"
 export { pageHeaders as headers } from "~/utils/headers"
 
 const SUPPORT_EMAIL = "hello@goodwatch.app"
+// The MCP endpoint's limits per member (endpoint.server.ts).
+const REQUESTS_PER_MINUTE = 60
+const REQUESTS_PER_HOUR = "1,000"
+const AI_FIXES_ID = "ai-app-fixes"
 
 export const meta: MetaFunction = () => {
 	const pageMeta: PageMeta = {
@@ -71,7 +76,7 @@ export default function Support() {
 					icon={ChatBubbleLeftRightIcon}
 					label="AI apps"
 					hint="GoodWatch in Claude, ChatGPT and other assistants"
-					more={{ to: `${CONNECTOR_HELP_PATH}#problems`, text: "More fixes" }}
+					more={{ to: `#${AI_FIXES_ID}`, text: "More fixes" }}
 				>
 					<Fix q="It says GoodWatch isn't connected.">
 						Connect again from the app, for example in Claude under{" "}
@@ -89,7 +94,7 @@ export default function Support() {
 					<p className="text-sm text-gray-400">
 						Not connected yet?{" "}
 						<Link to={USE_WITH_AI_PATH} prefetch="intent" className={linkClass}>
-							See how GoodWatch works in your AI app
+							Set it up in a few steps
 						</Link>
 						.
 					</p>
@@ -127,6 +132,8 @@ export default function Support() {
 						</li>
 					</ol>
 				</Tile>
+
+				<AiAppFixes />
 
 				<Tile
 					icon={KeyIcon}
@@ -185,6 +192,62 @@ export default function Support() {
 				</Tile>
 			</div>
 		</div>
+	)
+}
+
+// The rest of the fixes for AI apps, under the first row of tiles.
+function AiAppFixes() {
+	return (
+		<section
+			id={AI_FIXES_ID}
+			aria-labelledby={`${AI_FIXES_ID}-heading`}
+			className="scroll-mt-24 rounded-2xl bg-white/[0.04] p-5 ring-1 ring-white/10 md:col-span-2 md:p-6"
+		>
+			<h2
+				id={`${AI_FIXES_ID}-heading`}
+				className="mb-4 flex items-center gap-2 text-lg font-semibold text-white"
+			>
+				<ChatBubbleLeftRightIcon
+					className="h-5 w-5 text-amber-400"
+					aria-hidden="true"
+				/>
+				More fixes for AI apps
+			</h2>
+			<div className="grid gap-x-8 gap-y-5 md:grid-cols-2">
+				<Fix q="I can't find where to add a custom connector.">
+					Your plan or workspace may not allow it. As of October 2026, Claude
+					Free has room for one custom connector, and on Team or Enterprise an
+					owner adds it. ChatGPT allows it on Business, Enterprise and Edu
+					(read-only on Pro), and only on chatgpt.com in a browser. Plans
+					change, so check the app's own help too.
+				</Fix>
+				<Fix q="The sign-in page opens, but the app never finishes connecting.">
+					Update the app and try again. For desktop and terminal apps, the
+					browser has to run on the same computer, and it may ask whether to
+					open the app: allow it. Never send a code or key from the sign-in to
+					anyone.
+				</Fix>
+				<Fix q="New features still don't show up after a new chat.">
+					Refresh the app's list of GoodWatch tools. In ChatGPT, open the
+					GoodWatch plugin and press <Ui>Refresh</Ui>. In Claude, disconnect
+					GoodWatch and connect it again. In Cursor or VS Code, turn GoodWatch
+					off and on in the MCP settings.
+				</Fix>
+				<Fix q="Searching by description stopped working.">
+					Your assistant can search by description (“
+					{DESCRIPTION_SEARCH_EXAMPLE}”) {RANKED_SEARCHES_PER_DAY} times a day.
+					Finding a title by its name has no daily limit.
+				</Fix>
+				<Fix q="It says “too many requests”.">
+					A connected app can ask GoodWatch {REQUESTS_PER_MINUTE} times a minute
+					and {REQUESTS_PER_HOUR} times an hour. Wait a minute and ask again.
+				</Fix>
+				<Fix q="GoodWatch calls the app unverified.">
+					Some apps don't say who made them, so GoodWatch can't check. Allow the
+					app only if you started the connection yourself, in an app you trust.
+				</Fix>
+			</div>
+		</section>
 	)
 }
 

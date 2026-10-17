@@ -9,8 +9,8 @@ import {
 	APP_CAN_NEVER,
 	APP_CAN_SEE,
 	CONNECTED_APPS_PATH,
-	CONNECTOR_HELP_PATH,
 	RANKED_SEARCHES_PER_DAY,
+	USE_WITH_AI_PATH,
 } from "~/ui/connector/connector"
 
 export function AccountAndAppsPolicy() {
@@ -92,7 +92,7 @@ export function AccountAndAppsPolicy() {
 					You can connect AI assistants such as Claude (made by Anthropic) and
 					ChatGPT (made by OpenAI) to your GoodWatch account.{" "}
 					<Link
-						to={CONNECTOR_HELP_PATH}
+						to={USE_WITH_AI_PATH}
 						className="font-semibold text-amber-500 hover:text-amber-400"
 					>
 						Here's how

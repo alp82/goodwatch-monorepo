@@ -4,7 +4,7 @@ const base = "http://localhost:3471"
 const browser = await chromium.launch({ executablePath: "/usr/bin/chromium" })
 const sizes = { desktop: { width: 1440, height: 900 }, phone: { width: 390, height: 844 } }
 const pages = [
-	{ name: "connect", path: "/connect" },
+	{ name: "use-with-ai", path: "/use-with-ai" },
 	{ name: "privacy", path: "/privacy" },
 ]
 for (const [size, viewport] of Object.entries(sizes)) {

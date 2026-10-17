@@ -8,8 +8,7 @@
 export type FeatureMode = "off" | "on"
 
 const FEATURE_VARIABLES = {
-	// The connector launch (map #529): the help page at /connect and the privacy policy for connected apps and
-	// self-hosted sign-in. Turned on together with the cut-over and /mcp (#552, #572).
+	// The connector launch (map #529): the privacy policy for connected apps and self-hosted sign-in. Turned on together with the cut-over and /mcp (#552, #572).
 	connector: { name: "REC_CONNECTOR", modes: ["off", "on"] },
 } as const satisfies Record<
 	string,

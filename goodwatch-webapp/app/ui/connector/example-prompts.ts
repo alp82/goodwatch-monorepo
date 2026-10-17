@@ -1,19 +1,8 @@
 // What members type to their AI app, written the way people really type: lowercase, casual and short ("s2e4", not
 // "season 2, episode 4"; "score dune 2 with 9", not "Rate Dune: Part Two 9 out of 10"). The owner's rule from
-// October 17, 2026. The connector help page (/connect) and /use-with-ai show these; example-prompts.test.ts keeps
-// them in that voice.
+// October 17, 2026. /use-with-ai and /support show these; example-prompts.test.ts keeps them in that voice.
 
-// Things to ask, on /connect.
-export const CONNECT_EXAMPLES = [
-	"what should i watch next",
-	"what on my wishlist would i love most",
-	"something like arrival but lighter",
-	"anything good on netflix tonight",
-	"just watched severance s2e4",
-	"score dune 2 with 9",
-] as const
-
-// The search-by-description example in /connect's note on limits.
+// The search-by-description example in /support's note on the daily limit.
 export const DESCRIPTION_SEARCH_EXAMPLE = "slow sci-fi like arrival"
 
 // The questions the chat demo on /use-with-ai switches between.
@@ -58,7 +47,6 @@ export const USE_WITH_AI_ASKS = [
 ] as const
 
 export const ALL_EXAMPLE_PROMPTS: readonly string[] = [
-	...CONNECT_EXAMPLES,
 	DESCRIPTION_SEARCH_EXAMPLE,
 	...Object.values(CHAT_DEMO_QUESTIONS),
 	...USE_WITH_AI_ASKS.map(({ ask }) => ask),

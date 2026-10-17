@@ -1,36 +1,35 @@
-// /use-with-ai: GoodWatch inside Claude, ChatGPT and other AI apps, shown rather than explained. A chat demo with the
-// connector's poster cards, things to ask, and drawn setup steps per app. The exact menus, plans, commands and fixes
-// stay on /connect, which this page links to.
+// /use-with-ai: GoodWatch in Claude, ChatGPT and other AI apps. The page is four numbered steps (pick your app, add
+// GoodWatch, sign in and allow, ask), with a chat demo beside them on wide screens and inside "Ask" on phones.
+// #<app> opens one app's steps (/use-with-ai#cursor). Fixes for when something goes wrong are on /support.
 import {
-	ArrowRightIcon,
 	BookmarkIcon,
 	CheckBadgeIcon,
+	LifebuoyIcon,
+	LinkSlashIcon,
 	SparklesIcon,
 	StarIcon,
 	TvIcon,
 	UserGroupIcon,
+	UserIcon,
 } from "@heroicons/react/24/outline"
 import type { MetaFunction } from "@remix-run/node"
 import { Link } from "@remix-run/react"
-import { type ComponentType, type SVGProps, useState } from "react"
-import { CopyField } from "~/ui/connector/CopyField"
-import {
-	CONNECTOR_HELP_PATH,
-	CONNECTOR_URL,
-	USE_WITH_AI_PATH,
-} from "~/ui/connector/connector"
+import type { ComponentType, ReactNode, SVGProps } from "react"
+import { APP_GUIDES, useSelectedGuide } from "~/ui/connector/app-guides"
+import { CONNECTED_APPS_PATH, USE_WITH_AI_PATH } from "~/ui/connector/connector"
 import { USE_WITH_AI_ASKS } from "~/ui/connector/example-prompts"
+import { Ui } from "~/ui/connector/help-parts"
+import { AppPicker, AppSetup } from "~/ui/use-with-ai/AppSetup"
 import { ChatDemo } from "~/ui/use-with-ai/ChatDemo"
-import { AppBadges, SETUP_APPS } from "~/ui/use-with-ai/SetupSteps"
 import { type PageMeta, buildMeta } from "~/utils/meta"
 
 export { pageHeaders as headers } from "~/utils/headers"
 
 export const meta: MetaFunction = () => {
 	const pageMeta: PageMeta = {
-		title: "Use GoodWatch with your AI | GoodWatch",
+		title: "Use GoodWatch in Claude, ChatGPT and other AI apps | GoodWatch",
 		description:
-			"Ask Claude, ChatGPT or your coding app what to watch, and get answers that fit your taste, with posters, scores and where to stream. See how to turn it on.",
+			"Add GoodWatch to Claude, ChatGPT, Cursor, VS Code and other AI apps in a few steps. Then ask what to watch, log episodes and rate titles by chatting.",
 		url: `https://goodwatch.app${USE_WITH_AI_PATH}`,
 		image: "https://goodwatch.app/images/heroes/hero-movies.png",
 		alt: "GoodWatch in an AI chat",
@@ -51,207 +50,171 @@ const ASK_ICONS: Record<
 	person: UserGroupIcon,
 }
 
-const h2 = "text-2xl font-bold tracking-tight text-white sm:text-3xl"
 const linkClass = "font-semibold text-amber-500 hover:text-amber-400"
 
 export default function UseWithAi() {
-	const [appKey, setAppKey] = useState(SETUP_APPS[0].key)
-	const app = SETUP_APPS.find(({ key }) => key === appKey) ?? SETUP_APPS[0]
+	const { guide, select } = useSelectedGuide()
+
 	return (
-		<div className="mx-auto flex w-full max-w-6xl flex-col gap-16 px-4 py-8 text-gray-300 sm:px-8 md:py-14">
-			<header className="grid items-center gap-10 lg:grid-cols-[1fr_1.15fr]">
-				<div className="flex flex-col gap-5">
-					<p className="text-sm font-semibold tracking-wider text-amber-500 uppercase">
-						GoodWatch in your AI app
-					</p>
-					<h1 className="text-4xl font-black tracking-tight text-white sm:text-5xl">
-						Ask your AI what to watch. It knows your taste.
+		<div className="mx-auto grid w-full max-w-6xl grid-cols-1 gap-12 px-4 py-8 text-gray-300 sm:px-8 md:py-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,29rem)] lg:gap-14">
+			<div className="flex flex-col gap-10">
+				<header className="flex flex-col gap-3">
+					<h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
+						Use GoodWatch in your AI app
 					</h1>
 					<p className="text-lg leading-relaxed text-gray-300">
-						Connect GoodWatch to Claude, ChatGPT or your coding app. Then ask
-						for tonight's pick, sort your Wishlist or log an episode, in your
-						own words. Answers come with posters, scores and where to stream.
+						Ask what to watch, log episodes and rate titles by chatting. Every
+						answer fits your taste.
 					</p>
-					<div className="flex flex-wrap gap-3">
-						<a
-							href="#turn-on"
-							className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-amber-700 px-5 py-3 font-semibold text-white transition hover:bg-amber-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900"
-						>
-							Turn it on
-							<ArrowRightIcon className="h-5 w-5" aria-hidden="true" />
-						</a>
-						<Link
-							to={CONNECTOR_HELP_PATH}
-							prefetch="intent"
-							className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border border-gray-600 px-5 py-3 font-semibold text-gray-200 hover:border-gray-400 hover:text-white"
-						>
-							All apps and details
-						</Link>
-					</div>
-					<div className="flex flex-wrap items-center gap-3 text-sm text-gray-400">
-						<span className="flex -space-x-2">
-							{SETUP_APPS.map((item) => (
-								<AppBadges
-									key={item.key}
-									app={{ ...item, badges: item.badges.slice(0, 1) }}
-								/>
-							))}
-						</span>
-						Works with Claude, ChatGPT, Cursor, VS Code and more
-					</div>
-				</div>
-				<ChatDemo />
-			</header>
+				</header>
 
-			<section aria-labelledby="ask" className="flex flex-col gap-5">
-				<div>
-					<h2 id="ask" className={h2}>
-						Ask in your own words
-					</h2>
-					<p className="mt-1 text-gray-400">
-						Type it the way you'd text a friend. Your ratings, shows and
-						services come along, so every answer fits you.
-					</p>
-				</div>
-				<ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-					{USE_WITH_AI_ASKS.map(({ key, ask, does }) => {
-						const Icon = ASK_ICONS[key]
-						return (
-							<li
-								key={key}
-								className="flex flex-col gap-3 rounded-2xl bg-white/[0.04] p-4 ring-1 ring-white/10"
-							>
-								<p className="self-end rounded-2xl rounded-br-md bg-gray-700/70 px-3 py-2 text-gray-100">
-									{ask}
-								</p>
-								<p className="flex items-center gap-2 text-sm text-gray-400">
-									<Icon
-										className="h-5 w-5 shrink-0 text-amber-400"
-										aria-hidden="true"
-									/>
-									{does}
-								</p>
-							</li>
-						)
-					})}
-				</ul>
-			</section>
+				<ol id="turn-on" className="scroll-mt-24">
+					<PageStep n={1} title="Pick your app">
+						<AppPicker selected={guide.key} onSelect={select} />
+					</PageStep>
 
-			<section
-				id="turn-on"
-				aria-labelledby="turn-on-heading"
-				className="flex scroll-mt-24 flex-col gap-5"
-			>
-				<div>
-					<h2 id="turn-on-heading" className={h2}>
-						Turn it on in four steps
-					</h2>
-					<p className="mt-1 text-gray-400">
-						Pick your app. The pictures are drawings of each step, not the real
-						apps.
-					</p>
-				</div>
-				<div
-					role="tablist"
-					aria-label="Pick your app"
-					className="grid grid-cols-2 gap-2 lg:grid-cols-4"
-				>
-					{SETUP_APPS.map((item) => {
-						const on = item.key === app.key
-						return (
-							<button
-								key={item.key}
-								type="button"
-								role="tab"
-								id={`setup-tab-${item.key}`}
-								aria-selected={on}
-								aria-controls="setup-steps"
-								onClick={() => setAppKey(item.key)}
-								className={`flex cursor-pointer items-center gap-3 rounded-2xl p-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${on ? "bg-amber-950/40 ring-2 ring-amber-500" : "bg-white/[0.04] ring-1 ring-white/10 hover:bg-white/[0.07]"}`}
-							>
-								<AppBadges app={item} />
-								<span className="min-w-0">
-									<span className="block font-semibold leading-tight text-white">
-										{item.name}
-									</span>
-									<span className="block truncate text-xs text-gray-400 sm:text-sm">
-										{item.sub}
-									</span>
-								</span>
-							</button>
-						)
-					})}
-				</div>
-				{/* Phones swipe through the steps; wider screens show them side by side. */}
-				<ol
-					id="setup-steps"
-					role="tabpanel"
-					aria-labelledby={`setup-tab-${app.key}`}
-					className="relative -mx-4 flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto px-4 pb-2 md:mx-0 md:grid md:grid-cols-2 md:overflow-visible md:px-0 xl:grid-cols-4"
-				>
-					{app.steps.map((step, index) => (
-						<li
-							key={step.title}
-							className="flex w-[85%] shrink-0 snap-start flex-col gap-3 md:w-auto"
-						>
-							{step.screen}
-							<div className="flex gap-3">
-								<span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gray-800 text-sm font-bold text-amber-400 ring-1 ring-gray-700">
-									<span className="sr-only">Step </span>
-									{index + 1}
-								</span>
-								<div>
-									<p className="font-semibold text-white">{step.title}</p>
-									<p className="text-sm leading-relaxed text-gray-400 [&_b]:font-semibold [&_b]:text-gray-200">
-										{step.text}
-									</p>
-								</div>
-							</div>
-						</li>
-					))}
+					<PageStep
+						n={2}
+						anchors={APP_GUIDES.map(({ key }) => key)}
+						title={
+							guide.key === "other"
+								? "Add GoodWatch"
+								: `Add GoodWatch to ${guide.name}`
+						}
+					>
+						<AppSetup guide={guide} />
+					</PageStep>
+
+					<PageStep n={3} title="Sign in and allow">
+						<p className="leading-relaxed">
+							GoodWatch opens in your browser. Sign in and press <Ui>Allow</Ui>.
+						</p>
+						{guide.after && <p className="leading-relaxed">{guide.after}</p>}
+					</PageStep>
+
+					<PageStep n={4} title="Ask" last>
+						{/* On phones the demo uses the step number column too, so its cards have room. */}
+						<ChatDemo className="-ml-14 sm:ml-0 lg:hidden" />
+						<Asks />
+					</PageStep>
 				</ol>
-				<p className="text-sm text-gray-400">
-					Stuck, or using another app?{" "}
-					<Link to={app.guide} prefetch="intent" className={linkClass}>
-						Full {app.name} guide
-					</Link>
-				</p>
-			</section>
 
-			<Details />
+				<FinePrint />
+			</div>
+
+			<aside
+				aria-label="What it looks like"
+				className="hidden lg:sticky lg:top-24 lg:block lg:self-start"
+			>
+				<ChatDemo />
+			</aside>
 		</div>
 	)
 }
 
-function Details() {
+function PageStep({
+	n,
+	title,
+	last = false,
+	anchors = [],
+	children,
+}: {
+	n: number
+	title: string
+	last?: boolean
+	// Ids for links into this step (#cursor). The browser and Remix scroll to them, so a link from another page lands
+	// on the app's steps.
+	anchors?: string[]
+	children: ReactNode
+}) {
 	return (
-		<section
-			aria-labelledby="details"
-			className="flex flex-col gap-4 rounded-2xl bg-gradient-to-br from-amber-950/60 via-gray-900 to-gray-900 p-5 ring-1 ring-amber-500/30 sm:p-8 md:flex-row md:items-center md:justify-between"
-		>
-			<div className="flex max-w-xl flex-col gap-2">
-				<h2 id="details" className="text-xl font-bold text-white">
-					Need the details?
+		<li className="relative grid grid-cols-[2.5rem_minmax(0,1fr)] gap-x-4 sm:grid-cols-[3rem_minmax(0,1fr)] sm:gap-x-6">
+			{anchors.length > 0 && (
+				<div aria-hidden="true" className="absolute inset-x-0 top-0">
+					{anchors.map((id) => (
+						<span key={id} id={id} className="block scroll-mt-24" />
+					))}
+				</div>
+			)}
+			<div className="flex flex-col items-center">
+				<span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-700 text-lg font-black text-white sm:h-12 sm:w-12 sm:text-xl">
+					<span className="sr-only">Step </span>
+					{n}
+				</span>
+				{!last && (
+					<span aria-hidden="true" className="mt-2 w-px flex-1 bg-white/15" />
+				)}
+			</div>
+			<div className={`flex min-w-0 flex-col gap-4 ${last ? "" : "pb-12"}`}>
+				<h2 className="pt-1.5 text-xl font-bold tracking-tight text-white sm:pt-2.5 sm:text-2xl">
+					{title}
 				</h2>
-				<p className="text-gray-300">
-					Every app, the exact menus, plans that allow it, terminal commands and
-					fixes are on the{" "}
-					<Link
-						to={CONNECTOR_HELP_PATH}
-						prefetch="intent"
-						className={linkClass}
+				{children}
+			</div>
+		</li>
+	)
+}
+
+function Asks() {
+	return (
+		<ul className="grid gap-3 sm:grid-cols-2">
+			{USE_WITH_AI_ASKS.map(({ key, ask, does }) => {
+				const Icon = ASK_ICONS[key]
+				return (
+					<li
+						key={key}
+						className="flex flex-col gap-2.5 rounded-2xl bg-white/[0.04] p-4 ring-1 ring-white/10"
 					>
-						Connect page
+						<p className="self-end rounded-2xl rounded-br-md bg-gray-700/70 px-3 py-2 text-gray-100">
+							{ask}
+						</p>
+						<p className="flex items-center gap-2 text-sm text-gray-400">
+							<Icon
+								className="h-5 w-5 shrink-0 text-amber-400"
+								aria-hidden="true"
+							/>
+							{does}
+						</p>
+					</li>
+				)
+			})}
+		</ul>
+	)
+}
+
+// Account, disconnecting and help in one quiet row.
+function FinePrint() {
+	const item = "flex items-center gap-2"
+	const icon = "h-4 w-4 shrink-0 text-gray-500"
+	return (
+		<ul className="flex flex-col gap-2 border-t border-white/10 pt-6 text-sm text-gray-400 sm:flex-row sm:flex-wrap sm:gap-x-6">
+			<li className={item}>
+				<UserIcon className={icon} aria-hidden="true" />
+				<span>
+					Needs a free{" "}
+					<Link to="/sign-up" className={linkClass}>
+						GoodWatch account
 					</Link>
-					. You need a free GoodWatch account.
-				</p>
-			</div>
-			<div className="flex flex-col gap-2 md:w-96">
-				<p className="text-sm font-semibold text-gray-300">
-					Your GoodWatch address
-				</p>
-				<CopyField text={CONNECTOR_URL} label="Copy the connector address" />
-			</div>
-		</section>
+				</span>
+			</li>
+			<li className={item}>
+				<LinkSlashIcon className={icon} aria-hidden="true" />
+				<span>
+					Disconnect in{" "}
+					<Link to={CONNECTED_APPS_PATH} className={linkClass}>
+						Connected apps
+					</Link>
+				</span>
+			</li>
+			<li className={item}>
+				<LifebuoyIcon className={icon} aria-hidden="true" />
+				<span>
+					Stuck?{" "}
+					<Link to="/support" prefetch="intent" className={linkClass}>
+						Support
+					</Link>
+				</span>
+			</li>
+		</ul>
 	)
 }
