@@ -38,6 +38,8 @@ import { Key, Summary, specialsWatched, useHold } from "./VariantG"
 import { ChartLegend, type Stats, statsOf } from "./VariantI"
 import { type View, ViewSwitch } from "./VariantJ"
 import type { VariantProps } from "./types"
+import type { EpisodeGrid as EpisodeGridData } from "~/server/episode-grid.server"
+import SeasonInfo from "./SeasonInfo"
 
 const LABEL_W = 44
 const SCORE_W = 36
@@ -52,14 +54,14 @@ const SURFACE_BG = "#0b0f17"
 const EASE = "cubic-bezier(.2,.8,.2,1)"
 const DURATION = 450
 
-export default function VariantM({ media, gridNode }: VariantProps) {
+export default function VariantM({ media, grid, gridNode }: VariantProps) {
 	const tracking = useShowTracking(media.details.tmdb_id)
 	const actions = useTrackingActions(tracking.store, media.details.title)
 	if (!tracking.ready || !tracking.view) return <>{gridNode}</>
-	return <Inner tracking={tracking} view={tracking.view} actions={actions} />
+	return <Inner tracking={tracking} view={tracking.view} actions={actions} grid={grid} />
 }
 
-function Inner({ tracking, view, actions }: { tracking: ShowTracking; view: ShowView; actions: TrackingActions }) {
+function Inner({ tracking, view, actions, grid }: { tracking: ShowTracking; view: ShowView; actions: TrackingActions; grid: EpisodeGridData | null }) {
 	const { model, nav } = useEpisodeKit(tracking, view, actions)
 	const desktop = useIsDesktop()
 	const [mode, setMode] = useState<View>("grid")
@@ -79,7 +81,7 @@ function Inner({ tracking, view, actions }: { tracking: ShowTracking; view: Show
 	const panel = (season: Season) =>
 		nav.open === season.number ? (
 			<div className="my-2" style={{ maxWidth: gridWidth }} data-inline-panel={season.number}>
-				<SeasonPanel nav={nav} model={model} beside={false} />
+				<SeasonPanel nav={nav} model={model} beside={false} info={<SeasonInfo season={season} grid={grid} today={model.today} />} />
 			</div>
 		) : null
 

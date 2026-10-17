@@ -71,6 +71,9 @@ import VariantJ from "~/ui/prototype-episodes-section/VariantJ"
 import VariantK from "~/ui/prototype-episodes-section/VariantK"
 import VariantL from "~/ui/prototype-episodes-section/VariantL"
 import VariantM from "~/ui/prototype-episodes-section/VariantM"
+import VariantN from "~/ui/prototype-episodes-section/VariantN"
+import VariantO from "~/ui/prototype-episodes-section/VariantO"
+import VariantP from "~/ui/prototype-episodes-section/VariantP"
 
 // PROTOTYPE - throwaway: episodes section variants, switched by ?variant=.
 const VARIANTS = {
@@ -86,9 +89,12 @@ const VARIANTS = {
 	J: "Round 3 · Wrapped rows",
 	K: "Round 3 · Strips, open season readable",
 	L: "Round 3 · Season columns with scores",
-	M: "Round 3 · Grid morphs into consistency",
+	M: "Round 3 · Grid morphs into consistency (+ season info)",
+	N: "Round 4 · M, quiet",
+	O: "Round 4 · Tap a tile, get the episode",
+	P: "Round 4 · One season at a time",
 }
-const VARIANT_VIEWS = { B: VariantB, C: VariantC, D: VariantD, E: VariantE, F: VariantF, G: VariantG, H: VariantH, I: VariantI, J: VariantJ, K: VariantK, L: VariantL, M: VariantM }
+const VARIANT_VIEWS = { B: VariantB, C: VariantC, D: VariantD, E: VariantE, F: VariantF, G: VariantG, H: VariantH, I: VariantI, J: VariantJ, K: VariantK, L: VariantL, M: VariantM, N: VariantN, O: VariantO, P: VariantP }
 
 const FIXTURES: Record<string, unknown> = {
 	supernatural,
@@ -202,13 +208,12 @@ function Harness({
 	const guest = params.get("guest") === "1"
 	const differs = params.get("imdb") === "differs"
 	const noList = params.get("list") === "none"
-	const grid = useMemo(
-		() =>
-			presentation
-				? presentationGrid(show.id, presentation)
-				: imdbGrid(show, differs),
-		[show, differs, presentation],
-	)
+	const grid = useMemo(() => {
+		const built = presentation
+			? presentationGrid(show.id, presentation)
+			: imdbGrid(show, differs)
+		return withStandInSeasonScores(built)
+	}, [show, differs, presentation])
 	const [ready, setReady] = useState(false)
 	const [, refresh] = useState(0)
 
@@ -448,4 +453,27 @@ function overlaps(server: FakeServer): number {
 			count += 1
 	}
 	return count
+}
+
+/**
+ * PROTOTYPE (episodes section round 4): the fixtures only carry IMDb's season scores. Made-up but steady scores
+ * for the other sites, so the season breakdown has something to show. Not real data.
+ */
+function withStandInSeasonScores(grid: EpisodeGridData): EpisodeGridData {
+	const seasons = grid.seasons.map((season) => {
+		const imdb = season.scores.imdb?.score
+		if (imdb == null || season.scores.tmdb) return season
+		const wobble = ((season.number * 37) % 11) / 10 - 0.5
+		return {
+			...season,
+			scores: {
+				...season.scores,
+				tmdb: { score: Math.round((imdb - 0.4 + wobble / 2) * 10) / 10 },
+				tomatometer: { score: Math.min(100, Math.round((imdb - 6) * 30 + 40 + wobble * 20)), count: 8 + season.number },
+				popcornmeter: { score: Math.min(100, Math.round((imdb - 6) * 25 + 45 - wobble * 15)), count: 400 + season.number * 37 },
+				metacriticUser: { score: Math.round((imdb - 1 + wobble) * 10) / 10, count: 20 + season.number * 3 },
+			},
+		}
+	})
+	return { ...grid, seasons, providers: ["imdb", "tmdb", "tomatometer", "popcornmeter", "metacriticUser"] } as EpisodeGridData
 }

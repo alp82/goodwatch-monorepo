@@ -1167,10 +1167,13 @@ export function SeasonPanel({
 	nav,
 	model,
 	beside,
+	info,
 }: {
 	nav: Nav
 	model: Model
 	beside: boolean
+	/** PROTOTYPE (episodes round 4): the season's facts, under its head. */
+	info?: ReactNode
 }) {
 	const season = nav.season
 	return (
@@ -1179,6 +1182,7 @@ export function SeasonPanel({
 			className={`${PANEL} ${beside ? "" : "my-1"}`}
 		>
 			<SeasonHead nav={nav} model={model} steppers={!beside} />
+			{info}
 			<NumberingNote season={season} model={model} />
 			<Rows
 				key={season.number}
