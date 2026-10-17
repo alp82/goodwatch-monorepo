@@ -6,6 +6,7 @@ import {
 	localCrateTransport,
 	migrateAuthTables,
 } from "./crate-adapter.server.ts"
+import { loadMcpConsent, decideMcpConsent } from "./mcp-flow.server.ts"
 import { AuthMailQueue } from "./mail.server.ts"
 import { ValkeyAuthStorage } from "./secondary-storage.server.ts"
 import {
@@ -94,6 +95,7 @@ async function post(path: string, body: unknown, cookie = "") {
 async function grant(
 	scope = "mcp:read mcp:write offline_access",
 	existing?: { email: string; cookie: string },
+	access?: "read" | "write" | "default",
 ) {
 	let cookie = existing?.cookie ?? ""
 	const email = existing?.email ?? `mcp-${crypto.randomUUID()}@example.test`
@@ -145,13 +147,40 @@ async function grant(
 	)
 	assert.equal(authorization.status, 200)
 	const consentUrl = new URL((await authorization.json()).url, origin)
-	const allowed = await post(
-		"/oauth2/consent",
-		{ accept: true, oauth_query: consentUrl.search.slice(1) },
-		cookie,
-	)
-	assert.equal(allowed.status, 200)
-	const callback = new URL((await allowed.json()).url)
+	let callback: URL
+	if (access) {
+		const view = await loadMcpConsent(
+			new Request(consentUrl, { headers: { cookie } }),
+			memberAuth,
+		)
+		assert.ok(!(view instanceof Response))
+		assert.equal(view.canChange, scope.split(" ").includes("mcp:write"))
+		const consent = (choice: string) =>
+			decideMcpConsent(
+				new Request(consentUrl, {
+					method: "POST",
+					headers: { cookie, origin },
+					body: new URLSearchParams({
+						decision: "allow",
+						...(choice === "default" ? {} : { access: choice }),
+					}),
+				}),
+				memberAuth,
+			)
+		assert.equal((await consent("invalid")).status, 400)
+		if (!view.canChange) assert.equal((await consent("write")).status, 400)
+		const allowed = await consent(access)
+		assert.equal(allowed.status, 302, await allowed.clone().text())
+		callback = new URL(allowed.headers.get("Location")!)
+	} else {
+		const allowed = await post(
+			"/oauth2/consent",
+			{ accept: true, oauth_query: consentUrl.search.slice(1) },
+			cookie,
+		)
+		assert.equal(allowed.status, 200)
+		callback = new URL((await allowed.json()).url)
+	}
 	assert.equal(callback.searchParams.get("iss"), `${origin}/api/auth`)
 	const code = callback.searchParams.get("code")
 	assert.ok(code)
@@ -178,6 +207,52 @@ async function grant(
 		consentQuery: consentUrl.search.slice(1),
 	}
 }
+
+test("consent choices bind issued and refreshed scopes, and cannot elevate a read-only request", async () => {
+	const { mcpAuthorization } = await import("../mcp/authorization.server.ts")
+	const { setAuthForTest } = await import("./runtime.server.ts")
+	process.env.BETTER_AUTH_ENABLED = "true"
+	process.env.MCP_RESOURCE_URL = resource
+	setAuthForTest(memberAuth)
+	try {
+		for (const [requested, access, writes] of [
+			["mcp:read mcp:write offline_access", "read", false],
+			["mcp:read mcp:write offline_access", "default", false],
+			["mcp:read mcp:write offline_access", "write", true],
+			["mcp:read offline_access", "read", false],
+		] as const) {
+			const issued = await grant(requested, undefined, access)
+			const verify = (token: string) =>
+				mcpAuthorization.verifyAccessToken(token)
+			const info = await verify(issued.token.access_token)
+			assert.equal(info.scopes.includes("mcp:write"), writes)
+			assert.ok(info.scopes.includes("mcp:read"))
+			const rotated = await memberAuth.handler(
+				new Request(`${origin}/api/auth/oauth2/token`, {
+					method: "POST",
+					headers: { "content-type": "application/x-www-form-urlencoded" },
+					body: new URLSearchParams({
+						grant_type: "refresh_token",
+						client_id: issued.client.client_id,
+						refresh_token: issued.token.refresh_token,
+						resource,
+					}),
+				}),
+			)
+			assert.equal(rotated.status, 200, await rotated.clone().text())
+			assert.equal(
+				(await verify((await rotated.json()).access_token)).scopes.includes(
+					"mcp:write",
+				),
+				writes,
+			)
+		}
+	} finally {
+		setAuthForTest(null)
+		Reflect.deleteProperty(process.env, "BETTER_AUTH_ENABLED")
+		Reflect.deleteProperty(process.env, "MCP_RESOURCE_URL")
+	}
+})
 
 test("signed OAuth email sign-in keeps its tokenless consent redirect and a valid session", async () => {
 	const issued = await grant()

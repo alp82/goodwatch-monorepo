@@ -87,6 +87,14 @@ export async function decideMcpConsent(request: Request, auth: AuthService): Pro
 	const form = await request.formData()
 	const decision = String(form.get("decision"))
 	if (!["allow", "deny"].includes(decision)) return new Response("Choose Allow or Deny", { status: 400 })
+	const requested = (check.params.get("scope") ?? "").split(" ").filter(Boolean)
+	const access = form.get("access") ?? "read"
+	if (decision === "allow" && !["read", "write"].includes(String(access)))
+		return new Response("Choose read-only or read and change", { status: 400 })
+	if (decision === "allow" && access === "write" && !requested.includes("mcp:write"))
+		return new Response("This app did not request write access", { status: 400 })
+	// Only narrow the signed request, using the provider's supported partial-consent parameter.
+	const scope = requested.filter((scope) => scope !== "mcp:write" || access === "write").join(" ")
 	const headers = new Headers(request.headers)
 	headers.set("Content-Type", "application/json")
 	headers.set("Accept", "application/json")
@@ -95,7 +103,7 @@ export async function decideMcpConsent(request: Request, auth: AuthService): Pro
 		new Request(`${check.context.baseURL}/oauth2/consent`, {
 			method: "POST",
 			headers,
-			body: JSON.stringify({ accept: decision === "allow", oauth_query: check.query }),
+			body: JSON.stringify({ accept: decision === "allow", oauth_query: check.query, scope }),
 		}),
 	)
 	if (!result.ok || result.status === 302) return result

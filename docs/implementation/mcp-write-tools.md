@@ -1,6 +1,6 @@
 # Member MCP write tools (#568)
 
-This extension builds on the read endpoint in [#577](https://github.com/alp82/goodwatch-monorepo/pull/577). The application still uses the single deny-all authorization seam awaiting #566. No test verifier is installed in the Remix route.
+This extension builds on the read endpoint in [#577](https://github.com/alp82/goodwatch-monorepo/pull/577). The production endpoint uses the durable Better Auth grant verifier described in [MCP authorization](mcp-authorization.md). No test verifier is installed in the Remix route.
 
 ## Surface and approval
 

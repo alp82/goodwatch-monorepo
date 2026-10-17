@@ -1,5 +1,6 @@
 import type { McpServer } from "@modelcontextprotocol/server"
 import * as z from "zod4"
+import { linkInstructions } from "./links.ts"
 import { writeToolEnabled } from "./policy.server.ts"
 import { selected } from "./schemas.ts"
 import type { ReadArgs } from "./tools.server.ts"
@@ -133,7 +134,7 @@ export function registerWriteTools(
 			tool.name,
 			{
 				title: tool.title,
-				description: `${tool.description} Replayed results describe the original action, not current state; read again for current state.`,
+				description: `${tool.description} ${linkInstructions} Replayed results describe the original action, not current state; read again for current state.`,
 				inputSchema: tool.schema,
 				annotations: {
 					readOnlyHint: false,

@@ -107,6 +107,13 @@ try {
 	assert.equal(first.structuredContent.items.length, 20)
 	assert.equal(first.structuredContent.items[0].id, "movie:2024")
 	assert.equal(first.structuredContent.charged_nano, 84)
+	assert.equal(new URL(first.structuredContent.page_url).searchParams.get("q"), "QUIET   Movies")
+	assert.match(first.structuredContent.items[0].url, /movie\/2024-/)
+	const snapshotKeys = await redis.keys("mcp-ranked:*:page:*")
+	for (const key of snapshotKeys) {
+		const value = await redis.get(key)
+		assert.ok(!value?.includes("QUIET   Movies"), "Queries must stay encrypted in cached snapshots")
+	}
 	const cached = await call({ query: "quiet movies", ranked: true, limit: 3 })
 	assert.equal(cached.structuredContent.cached, true)
 	assert.equal(cached.structuredContent.quota.used, 1)
@@ -115,6 +122,7 @@ try {
 		ranked: true,
 		cursor: first.structuredContent.next_cursor,
 	})
+	assert.equal(page.structuredContent.page_url, first.structuredContent.page_url)
 	assert.equal(page.structuredContent.items.length, 5)
 	assert.equal(page.structuredContent.items[0].id, "movie:2004")
 	assert.equal(page.structuredContent.charged_nano, 0)

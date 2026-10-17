@@ -5,6 +5,7 @@ import {
 	durationBuckets,
 	histogram,
 } from "../metrics/registry.server.ts"
+import { linkInstructions, withPageLink } from "./links.ts"
 import { readToolEnabled } from "./policy.server.ts"
 import type { RankedSearch } from "./ranked.server.ts"
 import { paging, selected } from "./schemas.ts"
@@ -49,13 +50,18 @@ const definitions: {
 }[] = [
 	{
 		name: "search_titles",
-		title: "Search all catalog titles",
+		title: "Search titles by name",
 		description:
-			"Search all catalog titles, separate from your library. Cheap name lookup by default; ranked=true explicitly opts into ranked search: 20 uncached searches per member per UTC day, one in flight, normalized queries cached for 60 seconds and paging is free.",
+			"Search movie and show names across the GoodWatch catalog, separate from your library. Name lookup by default; for descriptive queries, explicitly set ranked=true for an optional smarter match: 20 uncached smarter matches per member per UTC day, one in flight, normalized queries cached for 60 seconds and paging is free.",
 		schema: z
 			.object({
 				query: z.string().trim().max(120).default(""),
-				ranked: z.boolean().default(false),
+				ranked: z
+					.boolean()
+					.default(false)
+					.describe(
+						"Use an optional smarter match for descriptive queries instead of name lookup. Costs one of 20 daily attempts unless cached; paging is free.",
+					),
 				...paging,
 				cursor: z
 					.string()
@@ -66,7 +72,7 @@ const definitions: {
 			.refine(
 				(value) =>
 					!value.cursor || value.ranked === value.cursor.startsWith("ranked:"),
-				"Ranked searches use ranked result cursors; name lookup uses offset cursors",
+				"Smarter matches use ranked: result cursors; name lookup uses offset: cursors",
 			),
 	},
 	{
@@ -136,14 +142,17 @@ export function createToolServer(
 	writes = false,
 	rankedSearch?: RankedSearch,
 ) {
-	const server = new McpServer({ name: "goodwatch", version: "1.0.0" })
+	const server = new McpServer(
+		{ name: "goodwatch", version: "1.0.0" },
+		{ instructions: linkInstructions },
+	)
 	for (const tool of definitions) {
 		if (!readToolEnabled(userId, tool.name)) continue
 		server.registerTool(
 			tool.name,
 			{
 				title: tool.title,
-				description: tool.description,
+				description: `${tool.description} ${linkInstructions}`,
 				inputSchema: tool.schema,
 				annotations: {
 					readOnlyHint: true,
@@ -198,6 +207,7 @@ export function createToolServer(
 					calls.inc([tool.name, outcome])
 					durations.observe([tool.name], (performance.now() - start) / 1000)
 				}
+				data = withPageLink(origin, tool.name, args, data)
 				return {
 					content: [{ type: "text", text: JSON.stringify(data) }],
 					structuredContent: data,

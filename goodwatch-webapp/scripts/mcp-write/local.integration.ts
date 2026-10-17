@@ -84,6 +84,9 @@ async function call(
 ) {
 	const result = await rpc(name, args, member)
 	assert.ok(!result.isError, JSON.stringify(result))
+	if (result.structuredContent.title)
+		assert.match(result.structuredContent.title.url, /^http:\/\/localhost:3336\/(movie|show)\//)
+	assert.deepEqual(JSON.parse(result.content[0].text), result.structuredContent)
 	return result.structuredContent
 }
 try {

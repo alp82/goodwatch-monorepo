@@ -12,6 +12,14 @@ test("MCP refuses anonymous callers and never caches the challenge", async () =>
 	const response = await handle(new Request("http://localhost:3336/mcp"))
 	assert.equal(response.status, 401)
 	assert.match(response.headers.get("WWW-Authenticate") ?? "", /Bearer/)
+	assert.doesNotMatch(
+		response.headers.get("WWW-Authenticate") ?? "",
+		/(?:^|[, ])scope=/,
+	)
+	assert.match(
+		response.headers.get("WWW-Authenticate") ?? "",
+		/resource_metadata=/,
+	)
 	assert.equal(
 		response.headers.get("Cache-Control"),
 		"private, no-store, no-transform",
@@ -260,6 +268,11 @@ test("A member sees separate catalog and personal read tools, with valid schemas
 		assert.equal(tool.annotations.readOnlyHint, true)
 		assert.equal(tool.annotations.destructiveHint, false)
 		assert.equal(tool.inputSchema.type, "object")
+		assert.match(
+			tool.description,
+			/Link every movie or show title to its returned url/,
+		)
+		assert.match(tool.description, /page_url/)
 	}
 })
 
@@ -369,6 +382,9 @@ test("Ranked catalog search is an explicit opt-in and documents its member quota
 	const search = tools.find(
 		(tool: { name: string }) => tool.name === "search_titles",
 	)
+	assert.equal(search.title, "Search titles by name")
+	assert.doesNotMatch(search.description, /ranked search/i)
+	assert.match(search.description, /smarter match/)
 	assert.equal(search.inputSchema.properties.ranked.type, "boolean")
 	assert.equal(search.inputSchema.properties.ranked.default, false)
 	assert.match(search.description, /20.*UTC day/)
@@ -489,4 +505,36 @@ test("The write-scope preflight bounds the body and rejects malformed JSON", asy
 	const response = await handle(malformed)
 	assert.equal(response.status, 400)
 	assert.match(response.headers.get("Cache-Control") ?? "", /no-transform/)
+})
+
+test("MCP initialization tells clients to link titles and end with the page link", async () => {
+	const handle = createReadMcpHandler({
+		resource,
+		authorization: verifier,
+		limiter: unlimited,
+	})
+	const response = await handle(
+		new Request(resource, {
+			method: "POST",
+			headers: {
+				Authorization: "Bearer local",
+				"Content-Type": "application/json",
+				Accept: "application/json, text/event-stream",
+			},
+			body: JSON.stringify({
+				jsonrpc: "2.0",
+				id: 1,
+				method: "initialize",
+				params: {
+					protocolVersion: "2025-03-26",
+					capabilities: {},
+					clientInfo: { name: "local", version: "1" },
+				},
+			}),
+		}),
+	)
+	assert.equal(response.status, 200)
+	const initialized = (await result(response)).result
+	assert.match(initialized.instructions, /Link every movie or show title/)
+	assert.match(initialized.instructions, /See it on GoodWatch:/)
 })

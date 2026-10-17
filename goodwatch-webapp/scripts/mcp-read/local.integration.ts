@@ -66,10 +66,21 @@ async function call(
 ) {
 	const result = await rpc(member, "tools/call", { name, arguments: args })
 	assert.ok(!result.isError, JSON.stringify(result))
+	assert.deepEqual(JSON.parse(result.content[0].text), result.structuredContent)
+	const checkTitles = (value: unknown) => {
+		if (!value || typeof value !== "object") return
+		const object = value as Record<string, unknown>
+		if (typeof object.id === "string" && /^(movie|show):/.test(object.id))
+			assert.match(String(object.url), /^http:\/\/localhost:3336\/(movie|show)\//)
+		for (const child of Object.values(object)) checkTitles(child)
+	}
+	checkTitles(result.structuredContent)
 	return result.structuredContent
 }
 try {
 	const first = await call("search_titles", { query: "Local Movie" })
+	assert.equal(first.page_url, "http://localhost:3336/discover?q=Local+Movie")
+	assert.match(first.page_note, /differ/)
 	assert.equal(first.items.length, 20)
 	assert.equal(first.next_cursor, "offset:20")
 	const second = await call("search_titles", {
@@ -101,6 +112,7 @@ try {
 		"PASS: real title details, member marks, unknown dates and availability",
 	)
 	const shows = await call("get_my_shows")
+	assert.equal(shows.page_url, "http://localhost:3336/my-shows")
 	assert.deepEqual(
 		shows.items.map((t: { id: string; group: string }) => [t.id, t.group]),
 		[
@@ -137,11 +149,13 @@ try {
 		"PASS: My shows, current pass, next episode, unknown dates and peer isolation",
 	)
 	const tonight = await call("get_tonight")
+	assert.equal(tonight.page_url, "http://localhost:3336/?tv=tonight")
 	assert.equal(tonight.pick.title.id, "show:1399")
 	assert.equal(tonight.pick.episode.code, "S1 E3")
 	assert.equal(tonight.pick.reason, "nextEpisode")
 	console.log("PASS: Tonight agrees with My shows and show progress")
 	const taste = await call("get_taste")
+	assert.equal(taste.page_url, "http://localhost:3336/taste")
 	assert.equal(taste.rated_titles, 1)
 	assert.equal(taste.wishlist_titles, 25)
 	assert.equal(taste.signal, "none")
@@ -152,12 +166,15 @@ try {
 		"PASS: real Taste counts, honest unavailable model and member isolation",
 	)
 	const library = await call("get_library")
+	assert.equal(library.page_url, "http://localhost:3336/my-library")
 	assert.equal(library.items.length, 20)
 	assert.equal(library.total, 27)
 	const library2 = await call("get_library", { cursor: library.next_cursor })
 	assert.equal(library2.items.length, 7)
 	assert.equal(library2.next_cursor, null)
 	const rated = await call("get_library", { filter: "rated" })
+	assert.equal(rated.page_url, "http://localhost:3336/my-library?status=seen")
+	assert.match(rated.page_note, /unrated/)
 	assert.equal(rated.items.length, 1)
 	assert.equal(rated.items[0].score, 8)
 	const peer = await call("get_library", {}, "mcp-member-B")

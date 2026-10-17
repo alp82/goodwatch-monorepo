@@ -1,5 +1,7 @@
 # Opt-in MCP ranked search (#569)
 
+The permission-list title is **Search titles by name**. The default is name lookup; the optional mode is described to clients as a **smarter match for descriptive queries**. The internal `ranked` argument, result fields, quotas, order and admission behavior remain unchanged (owner decision Q50, 2026-10-17).
+
 This extension builds on [#584](https://github.com/alp82/goodwatch-monorepo/pull/584). `search_titles` remains cheap catalog name lookup by default. Only `ranked: true` enters the ranked path. Write-tool name resolution still calls the existing catalog resolver directly and cannot use the ranked budget, even when the member has exhausted that budget.
 
 ## Execution and admission
@@ -17,7 +19,7 @@ The ranked module loads lazily on an explicit ranked call. A page-role process r
 - At most one uncached attempt per member is in flight. Its 30-second lease is renewed every five seconds with owner checks; a lost lease/renewal error aborts the search. Native work held by `searchAdmission.hold` can outlive a response. An async-context observer keeps this member's lease renewed until that work settles, without mixing another search's holds or delaying the response for it.
 - A ranked cursor addresses the member's fixed result snapshot, retained for **15 minutes**. Paging never invokes the engine or increments quota, even after the 60-second query cache expires or the member reaches 20. A cursor from another member, an expired snapshot or a mismatching supplied query is refused. It never causes an automatic rerun. Name lookup keeps its original offset cursor format.
 - Busy process admission, an existing member flight, invalid input, disabled flags, wrong role and pre-start cancellation do not charge a new attempt. Once admitted, failures, provider/budget fallbacks and cancellation may have spent resources and still count. There are no speculative refunds or automatic retries.
-- Shared Valkey and a valid, stable `SEARCH_STORAGE_KEY` are required. There is no process-memory fallback that could multiply member quotas across roles. Member/query key components are HMAC digests; snapshot values contain public catalog titles, generic native messages and cost, with no raw query or personal marks. Native encrypted search history remains unchanged.
+- Shared Valkey and a valid, stable `SEARCH_STORAGE_KEY` are required. There is no process-memory fallback that could multiply member quotas across roles. Member/query key components are HMAC digests; snapshot values contain public catalog titles, generic native messages, cost and an AES-256-GCM encrypted query for the page link (authenticated to the member namespace and snapshot ID), with no raw query or personal marks. Native encrypted search history remains unchanged.
 
 Valkey is the quota/cache/lease authority. Data loss, eviction or storage-key rotation can reset this temporary state; configure persistence/eviction accordingly. The existing durable Crate budget remains an independent spending guard. Leases are bounded coordination, not a guarantee across arbitrary process pauses or a store losing acknowledged writes.
 

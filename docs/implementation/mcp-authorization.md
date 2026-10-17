@@ -38,8 +38,10 @@ The plugin composition reuses the [#533 spike](https://github.com/alp82/goodwatc
 - `cimd()` selects `mcp-2026-07-28` and the bundled hardened Node metadata fetcher:
   public-address checks, DNS pinning and redirect refusal remain enabled.
 - Supported scopes are `mcp:read`, `mcp:write`, `offline_access`, plus the provider's
-  `openid`, `profile` and `email` identity scopes. Allow accepts every requested
-  permission; there is no subset choice. Only read tools are in this branch.
+  `openid`, `profile` and `email` identity scopes. A request for write access offers
+  Read-only (the default) or Read and change my GoodWatch. The consent action
+  narrows the signed request using the provider's `scope` parameter; it never
+  adds unrequested scopes. Both issued and refreshed tokens retain that choice.
 - Access tokens last **300 seconds**. Refresh tokens last **90 days**; the
   provider's **30-second** rotation retry window is explicitly configured. The local
   rehearsal alone shortens access tokens to 60 seconds.
