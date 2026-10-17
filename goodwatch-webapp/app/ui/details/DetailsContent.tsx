@@ -25,6 +25,7 @@ import {
 } from "~/ui/details/section-heights"
 import type { SectionIds } from "~/ui/details/sections"
 import { titleQuestions } from "~/ui/details/titleQuestions"
+import { useFingerprintFaqCount } from "~/ui/details/prototype-fingerprint-display/faq-questions" // PROTOTYPE
 import Ratings from "~/ui/ratings/Ratings"
 import RelatedMap, { useRelatedMap } from "~/ui/related-map/RelatedMap"
 import Streaming from "~/ui/streaming/Streaming"
@@ -52,6 +53,7 @@ export default function DetailsContent({
 		() => titleQuestions(media, country),
 		[media, country],
 	)
+	const fingerprintFaqs = useFingerprintFaqCount(media) // PROTOTYPE
 	// Every section here starts below the first screen, so each one skips its layout until it is near the viewport.
 	const { skipping } = useBelowFold()
 	const section = (
@@ -133,7 +135,7 @@ export default function DetailsContent({
 					backdropPath={details.backdrop_path}
 				/>
 			</div>
-			<div {...section(questionsHeight(questions.length), sectionProps.faq)}>
+			<div {...section(questionsHeight(questions.length + fingerprintFaqs) /* PROTOTYPE */, sectionProps.faq)}>
 				<DetailsQuestions
 					media={media}
 					country={country}

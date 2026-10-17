@@ -24,6 +24,7 @@ import { countryFlagUrl } from "~/utils/country-flag"
 import { languageName } from "~/utils/display-names"
 import MediaText from "~/ui/media-text/MediaText"
 import { presentedText } from "~/ui/media-text/media-text"
+import { FaqWithFingerprint, useFingerprintFaq } from "~/ui/details/prototype-fingerprint-display/faq-questions" // PROTOTYPE
 
 type Media = MovieResult | ShowResult
 
@@ -38,7 +39,11 @@ export default function DetailsQuestions({
 	questions?: TitleQuestion[]
 }) {
 	const faqs = questions ?? titleQuestions(media, country)
+	const withFingerprint = useFingerprintFaq() // PROTOTYPE
 	if (!faqs.length) return null
+	// PROTOTYPE - throwaway: round-2 fingerprint variants move their questions into this section.
+	if (withFingerprint && media.fingerprint)
+		return <FaqWithFingerprint media={media} faqs={faqs} card={(f, wide) => <QuestionCard media={media} country={country} faq={f} wide={wide} />} />
 	const jsonLd = {
 		"@context": "https://schema.org",
 		"@type": "FAQPage",
