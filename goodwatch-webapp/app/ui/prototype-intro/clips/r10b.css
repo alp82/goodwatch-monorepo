@@ -1,0 +1,23 @@
+/* PROTOTYPE - throwaway. Round 10 "r10b". Transform and opacity only. */
+
+/* The search clears to black for the hand-over. */
+.lpc-r10b-clear {
+	position: absolute;
+	inset: 0;
+	animation: lpc-r10b-clear calc(var(--dur, 450ms) * var(--k)) ease-in calc(var(--d) * var(--k)) both;
+}
+@keyframes lpc-r10b-clear { to { opacity: 0; } }
+
+/* The top match's poster settles into the hero frame. */
+.lpc-r10b-settle {
+	position: absolute;
+	inset: 0;
+	transform-origin: 50% 46%;
+	animation: lpc-r10b-settle calc(var(--dur, 650ms) * var(--k)) cubic-bezier(0.16, 1, 0.3, 1) calc(var(--d) * var(--k)) both;
+}
+@keyframes lpc-r10b-settle { from { opacity: 0; transform: scale(0.86); } }
+
+@media (prefers-reduced-motion: reduce) {
+	.lpc-r10b-clear { animation: none; opacity: 0; }
+	.lpc-r10b-settle { animation: none; }
+}
