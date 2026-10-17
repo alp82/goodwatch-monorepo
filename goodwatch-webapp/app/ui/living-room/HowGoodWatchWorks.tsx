@@ -291,7 +291,7 @@ export function HowGoodWatchWorks() {
 						<div className="hgw-pic">{f.visual()}</div>
 						<div className="hgw-body">
 							<span className="hgw-n">{String(i + 1).padStart(2, "0")}</span>
-							<h3>{f.title}</h3>
+							<h2>{f.title}</h2>
 							<p>{f.text}</p>
 							<div className="hgw-actions">
 								<Link to={f.link.to} className="hgw-link">
