@@ -145,15 +145,19 @@ export function ringsKit(core: MapCore, words: TraitWords) {
 	/** The most posters a map holds at any zoom. A big screen has room for hundreds, and so many make a pan stutter. */
 	const MAX_PLACES = 150
 	/** A full screen has one zoom step fewer than the page: its smallest step is small enough. */
-	const FULL_ZOOMS = [1, 0.75, 0.56]
+	const FULL_ZOOMS = [1.3, 1, 0.75, 0.56]
 	/** The section is in full screen: the browser's own, or the cover of the page where there is none (an iPhone). */
 	const full = () => {
 		const doc = win?.document
 		return Boolean(doc?.fullscreenElement?.hasAttribute?.("data-related-map") || doc?.querySelector?.("[data-related-map].pl-fs"))
 	}
 	const posterW = () => (full() ? fullW() : roomy() ? 96 : Math.max(44, Math.min(56, Math.floor((box.w - 4) / 5.43))))
-	/** How small the posters get: on a phone they stay wide enough for a finger. */
-	const zooms = () => (full() ? FULL_ZOOMS : roomy() ? [1, 0.75, 0.56, 0.42] : [1, 0.8, 0.66])
+	/**
+	 * How large and how small the posters get: on a phone they stay wide enough for a finger. The first step is closer
+	 * than the map opens at (ZOOM_START): fewer, bigger posters.
+	 */
+	const zooms = () => (full() ? FULL_ZOOMS : roomy() ? [1.3, 1, 0.75, 0.56, 0.42] : [1.25, 1, 0.8, 0.66])
+	const ZOOM_START = 1
 	const fullMemo: Record<string, number> = {}
 	/**
 	 * A full screen's posters: sized by the space the map has, between a floor and a ceiling, and grown further when
@@ -370,7 +374,7 @@ export function ringsKit(core: MapCore, words: TraitWords) {
 				return k ? `<b>${k.op === ">" ? "with" : "without"} ${esc(low(k.key))}</b>` : ""
 			})
 			.join(" and ")
-	const zoomOf = (ctx: MapCtx) => Math.max(0, Math.min(zooms().length - 1, Number(ctx.st.mem.z) || 0))
+	const zoomOf = (ctx: MapCtx) => Math.max(0, Math.min(zooms().length - 1, ctx.st.mem.z === undefined ? ZOOM_START : Number(ctx.st.mem.z) || 0))
 	const zoomCtl = (ctx: MapCtx, shown: number) => {
 		const z = zoomOf(ctx)
 		return `<div class="rm-z" role="group" aria-label="How far out the map reaches"><button type="button" data-pl-act="z" data-arg="1" aria-label="Further out: more titles"${
@@ -996,13 +1000,19 @@ export function ringsKit(core: MapCore, words: TraitWords) {
 			rings.style.scale = world.style.scale
 		}
 	}
-	/** The poster nearest the middle while the map is dragged: where letting go steps. None while the middle is nearest. */
+	/** The six places next to the middle: a drag steps one place, however far the hand goes. */
+	const NEXT = new Set(["0,2", "0,-2", "1,1", "1,-1", "-1,1", "-1,-1"])
+	/**
+	 * The poster next to the middle that the drag brought nearest to it: where letting go steps. None while the middle
+	 * is nearest.
+	 */
 	const aimAt = (state: Gesture) => {
 		let best: Element | null = null
 		let near = Math.hypot(state.d.x, state.d.y)
 		for (let i = 0; i < state.world.children.length; i++) {
 			const node = state.world.children[i] as Moved
 			if (!node.hasAttribute("data-pl-step") || node.hasAttribute("data-r-x")) continue
+			if (!NEXT.has(node.getAttribute("data-r-q") ?? "")) continue
 			const at = read(node, false)
 			const dist = Math.hypot(at.x * state.r + state.d.x, at.y * state.r + state.d.y)
 			if (dist < near) {
@@ -1130,10 +1140,12 @@ export function ringsKit(core: MapCore, words: TraitWords) {
 				const range = pinchRange(state.root)
 				const r = two && state.from.d ? Math.max(range.lo, Math.min(range.hi, (state.base.r * spread(state.pts)) / state.from.d)) : state.r
 				state.r = r
-				state.d = {
-					x: Math.max(-box.w * 0.6, Math.min(box.w * 0.6, state.base.x + dx)),
-					y: Math.max(-box.h * 0.6, Math.min(box.h * 0.6, state.base.y + dy)),
-				}
+				// A drag reaches one place: beyond that the map follows the hand less and less.
+				const reach = Math.max(posterW() * zooms()[zoomAt(state.root)] * 1.7, Math.hypot(state.base.x, state.base.y))
+				const raw = { x: state.base.x + dx, y: state.base.y + dy }
+				const far = Math.hypot(raw.x, raw.y)
+				const give = far > reach ? (reach + (far - reach) * 0.2) / far : 1
+				state.d = { x: raw.x * give, y: raw.y * give }
 				show(state)
 				aimAt(state)
 			},
