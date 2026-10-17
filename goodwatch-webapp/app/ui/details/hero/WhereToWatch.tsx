@@ -149,7 +149,10 @@ export default function WhereToWatch({
 	shownCountry = country,
 	preview = null,
 	className = "",
+	wide = false,
 }: {
+	/** PROTOTYPE: a full-width row, four services across. */
+	wide?: boolean
 	media: Media
 	/** The country `media`'s offers are for. */
 	country: string
@@ -180,7 +183,7 @@ export default function WhereToWatch({
 	const others = countries.filter((c) => c.code !== country)
 	const top = topCountries(media, type, country)
 	const anyOwned = links.some((l) => l.owned)
-	const shown = all ? links : links.slice(0, SHOWN)
+	const shown = all ? links : links.slice(0, wide ? 8 : SHOWN)
 	const offer = OFFER_LABEL[type]
 	const verb = OFFER_VERB[type]
 	const here = country ? regionName(country) : "your country"
@@ -302,10 +305,10 @@ export default function WhereToWatch({
 					onAll={openList}
 				/>
 			) : (
-				<div data-services className="mt-2.5 grid grid-cols-2 gap-2 pt-0.5">
+				<div data-services className={`mt-2.5 grid gap-2 pt-0.5 ${wide ? "grid-cols-2 @[36rem]:grid-cols-3 @[52rem]:grid-cols-4 @[52rem]:gap-3" : "grid-cols-2"}`}>
 					{shown.map((l, i) => {
 						// The last card of an odd number takes the whole row, and has room to say what it is.
-						const whole = i === shown.length - 1 && shown.length % 2 === 1
+						const whole = !wide && i === shown.length - 1 && shown.length % 2 === 1
 						return (
 							<a
 								key={l.id}

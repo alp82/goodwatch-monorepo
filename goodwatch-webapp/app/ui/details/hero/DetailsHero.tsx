@@ -9,6 +9,9 @@ import SeenScore from "~/ui/details/hero/SeenScore"
 import TitleSidesLine from "~/ui/details/hero/TitleSidesLine"
 import { HeroBackdropImage, HeroPoster, TrailerButton } from "~/ui/details/hero/Trailer"
 import WhereToWatch from "~/ui/details/hero/WhereToWatch"
+import { useSearchParams } from "@remix-run/react"
+import { OVERVIEW_VARIANTS, OverviewVariant } from "~/ui/details/hero/DetailsHero.prototype-variants"
+import { PrototypeSwitcher } from "~/ui/prototype/PrototypeSwitcher"
 import type { SectionIds } from "~/ui/details/sections"
 import type { SectionProps } from "~/utils/scroll"
 
@@ -40,6 +43,7 @@ export interface DetailsHeroProps {
 // them, the site chips start their row and the miniature ends it (a movie's chips share the row instead). On a
 // phone the two scores stand over each other beside the poster, each as wide as the column.
 export default function DetailsHero({ media, country, shownCountry, preview, episodeGrid = null, sectionProps, sides = null }: DetailsHeroProps) {
+	const variant = useSearchParams()[0].get("variant") ?? "A"
 	const sites = (
 		<div data-hero-sites className="flex min-w-0 items-center justify-between gap-3 empty:hidden">
 			<RatingChips media={media} fill={!episodeGrid} />
@@ -50,6 +54,12 @@ export default function DetailsHero({ media, country, shownCountry, preview, epi
 		<div className="relative mx-auto mb-10 mt-4 max-w-7xl px-4 sm:px-6 lg:px-8">
 			<div {...sectionProps.overview}>
 				{/* z-30 keeps the country popover above the sections below. */}
+				<PrototypeSwitcher variants={OVERVIEW_VARIANTS} />
+				{variant !== "A" ? (
+					<section data-title-overview className="relative isolate z-30 min-w-0 rounded-2xl border border-white/10 bg-stone-950">
+						<OverviewVariant variant={variant} media={media} country={country} shownCountry={shownCountry} preview={preview} episodeGrid={episodeGrid} sides={sides} />
+					</section>
+				) : (
 				<section data-title-overview className="relative isolate z-30 min-w-0 rounded-2xl border border-white/10 bg-stone-950">
 					<div className="relative">
 						<div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden rounded-t-2xl" aria-hidden="true">
@@ -86,6 +96,7 @@ export default function DetailsHero({ media, country, shownCountry, preview, epi
 						<WhereToWatch media={media} country={country} shownCountry={shownCountry} preview={preview} className="rounded-xl bg-white/[0.035] p-3 ring-1 ring-white/[0.07]" />
 					</div>
 				</section>
+				)}
 			</div>
 		</div>
 	)
