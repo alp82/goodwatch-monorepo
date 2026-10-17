@@ -1,0 +1,1481 @@
+{
+  "issue": 682,
+  "production_data_writes": 0,
+  "provider_ids": {
+    "8": "Netflix",
+    "1796": "Netflix Standard with Ads",
+    "9": "Amazon Prime Video",
+    "119": "Amazon Prime Video",
+    "2100": "Amazon Prime Video with Ads",
+    "337": "Disney Plus",
+    "1899": "HBO Max",
+    "350": "Apple TV",
+    "15": "Hulu",
+    "386": "Peacock Premium",
+    "387": "Peacock Premium Plus",
+    "531": "Paramount Plus",
+    "2303": "Paramount Plus Premium",
+    "283": "Crunchyroll",
+    "11": "MUBI"
+  },
+  "global_census": {
+    "countries": [
+      "AD",
+      "AE",
+      "AG",
+      "AL",
+      "AO",
+      "AR",
+      "AT",
+      "AU",
+      "AZ",
+      "BA",
+      "BB",
+      "BE",
+      "BF",
+      "BG",
+      "BH",
+      "BM",
+      "BO",
+      "BR",
+      "BS",
+      "BY",
+      "BZ",
+      "CA",
+      "CD",
+      "CH",
+      "CI",
+      "CL",
+      "CM",
+      "CO",
+      "CR",
+      "CU",
+      "CV",
+      "CY",
+      "CZ",
+      "DE",
+      "DK",
+      "DO",
+      "DZ",
+      "EC",
+      "EE",
+      "EG",
+      "ES",
+      "FI",
+      "FJ",
+      "FR",
+      "GB",
+      "GF",
+      "GH",
+      "GI",
+      "GP",
+      "GQ",
+      "GR",
+      "GT",
+      "GY",
+      "HK",
+      "HN",
+      "HR",
+      "HU",
+      "ID",
+      "IE",
+      "IL",
+      "IN",
+      "IQ",
+      "IS",
+      "IT",
+      "JM",
+      "JO",
+      "JP",
+      "KE",
+      "KR",
+      "KW",
+      "LB",
+      "LC",
+      "LI",
+      "LT",
+      "LU",
+      "LV",
+      "LY",
+      "MA",
+      "MC",
+      "MD",
+      "ME",
+      "MG",
+      "MK",
+      "ML",
+      "MT",
+      "MU",
+      "MW",
+      "MX",
+      "MY",
+      "MZ",
+      "NE",
+      "NG",
+      "NI",
+      "NL",
+      "NO",
+      "NZ",
+      "OM",
+      "PA",
+      "PE",
+      "PF",
+      "PG",
+      "PH",
+      "PK",
+      "PL",
+      "PS",
+      "PT",
+      "PY",
+      "QA",
+      "RO",
+      "RS",
+      "RU",
+      "SA",
+      "SC",
+      "SE",
+      "SG",
+      "SI",
+      "SK",
+      "SM",
+      "SN",
+      "SV",
+      "TC",
+      "TD",
+      "TH",
+      "TN",
+      "TR",
+      "TT",
+      "TW",
+      "TZ",
+      "UA",
+      "UG",
+      "US",
+      "UY",
+      "VA",
+      "VE",
+      "XK",
+      "YE",
+      "ZA",
+      "ZM",
+      "ZW"
+    ],
+    "primary_discover_requests": 144399,
+    "entries": 2820026,
+    "requests": {
+      "requests": 4243,
+      "retries": 0,
+      "refused": 0,
+      "discover": 4242,
+      "title": 0,
+      "catalog": 1
+    },
+    "mode": "page_one_census",
+    "seconds": 426.076,
+    "started_at_epoch": 1792196779.851568,
+    "production_data_writes": 0,
+    "lists": 4170,
+    "nonempty_lists": 1661,
+    "by_country": {
+      "AD": {
+        "lists": 30,
+        "nonempty": 12,
+        "primary_requests": 782,
+        "entries": 15175
+      },
+      "AE": {
+        "lists": 30,
+        "nonempty": 10,
+        "primary_requests": 612,
+        "entries": 11741
+      },
+      "AG": {
+        "lists": 30,
+        "nonempty": 12,
+        "primary_requests": 1053,
+        "entries": 20589
+      },
+      "AL": {
+        "lists": 30,
+        "nonempty": 12,
+        "primary_requests": 735,
+        "entries": 14222
+      },
+      "AO": {
+        "lists": 30,
+        "nonempty": 6,
+        "primary_requests": 523,
+        "entries": 9904
+      },
+      "AR": {
+        "lists": 30,
+        "nonempty": 16,
+        "primary_requests": 1376,
+        "entries": 27122
+      },
+      "AT": {
+        "lists": 30,
+        "nonempty": 18,
+        "primary_requests": 1879,
+        "entries": 37167
+      },
+      "AU": {
+        "lists": 30,
+        "nonempty": 22,
+        "primary_requests": 2943,
+        "entries": 58381
+      },
+      "AZ": {
+        "lists": 30,
+        "nonempty": 8,
+        "primary_requests": 576,
+        "entries": 10983
+      },
+      "BA": {
+        "lists": 30,
+        "nonempty": 12,
+        "primary_requests": 747,
+        "entries": 14453
+      },
+      "BB": {
+        "lists": 30,
+        "nonempty": 10,
+        "primary_requests": 1046,
+        "entries": 20464
+      },
+      "BE": {
+        "lists": 30,
+        "nonempty": 14,
+        "primary_requests": 1263,
+        "entries": 24816
+      },
+      "BF": {
+        "lists": 30,
+        "nonempty": 6,
+        "primary_requests": 336,
+        "entries": 6166
+      },
+      "BG": {
+        "lists": 30,
+        "nonempty": 14,
+        "primary_requests": 994,
+        "entries": 19367
+      },
+      "BH": {
+        "lists": 30,
+        "nonempty": 10,
+        "primary_requests": 596,
+        "entries": 11417
+      },
+      "BM": {
+        "lists": 30,
+        "nonempty": 10,
+        "primary_requests": 966,
+        "entries": 18801
+      },
+      "BO": {
+        "lists": 30,
+        "nonempty": 16,
+        "primary_requests": 1310,
+        "entries": 25789
+      },
+      "BR": {
+        "lists": 30,
+        "nonempty": 22,
+        "primary_requests": 1972,
+        "entries": 39069
+      },
+      "BS": {
+        "lists": 30,
+        "nonempty": 12,
+        "primary_requests": 1077,
+        "entries": 21080
+      },
+      "BY": {
+        "lists": 30,
+        "nonempty": 9,
+        "primary_requests": 477,
+        "entries": 9024
+      },
+      "BZ": {
+        "lists": 30,
+        "nonempty": 14,
+        "primary_requests": 1404,
+        "entries": 27644
+      },
+      "CA": {
+        "lists": 30,
+        "nonempty": 20,
+        "primary_requests": 2958,
+        "entries": 58597
+      },
+      "CD": {
+        "lists": 30,
+        "nonempty": 6,
+        "primary_requests": 336,
+        "entries": 6168
+      },
+      "CH": {
+        "lists": 30,
+        "nonempty": 16,
+        "primary_requests": 1376,
+        "entries": 27066
+      },
+      "CI": {
+        "lists": 30,
+        "nonempty": 8,
+        "primary_requests": 698,
+        "entries": 13459
+      },
+      "CL": {
+        "lists": 30,
+        "nonempty": 16,
+        "primary_requests": 1376,
+        "entries": 27092
+      },
+      "CM": {
+        "lists": 30,
+        "nonempty": 6,
+        "primary_requests": 862,
+        "entries": 16706
+      },
+      "CO": {
+        "lists": 30,
+        "nonempty": 16,
+        "primary_requests": 1373,
+        "entries": 27020
+      },
+      "CR": {
+        "lists": 30,
+        "nonempty": 16,
+        "primary_requests": 1346,
+        "entries": 26472
+      },
+      "CU": {
+        "lists": 30,
+        "nonempty": 6,
+        "primary_requests": 518,
+        "entries": 9837
+      },
+      "CV": {
+        "lists": 30,
+        "nonempty": 10,
+        "primary_requests": 649,
+        "entries": 12476
+      },
+      "CY": {
+        "lists": 30,
+        "nonempty": 12,
+        "primary_requests": 734,
+        "entries": 14166
+      },
+      "CZ": {
+        "lists": 30,
+        "nonempty": 14,
+        "primary_requests": 960,
+        "entries": 18719
+      },
+      "DE": {
+        "lists": 30,
+        "nonempty": 20,
+        "primary_requests": 2343,
+        "entries": 46467
+      },
+      "DK": {
+        "lists": 30,
+        "nonempty": 14,
+        "primary_requests": 1190,
+        "entries": 23331
+      },
+      "DO": {
+        "lists": 30,
+        "nonempty": 16,
+        "primary_requests": 1307,
+        "entries": 25681
+      },
+      "DZ": {
+        "lists": 30,
+        "nonempty": 8,
+        "primary_requests": 593,
+        "entries": 11333
+      },
+      "EC": {
+        "lists": 30,
+        "nonempty": 16,
+        "primary_requests": 1368,
+        "entries": 26927
+      },
+      "EE": {
+        "lists": 30,
+        "nonempty": 14,
+        "primary_requests": 794,
+        "entries": 15380
+      },
+      "EG": {
+        "lists": 30,
+        "nonempty": 12,
+        "primary_requests": 585,
+        "entries": 11241
+      },
+      "ES": {
+        "lists": 30,
+        "nonempty": 18,
+        "primary_requests": 2386,
+        "entries": 47320
+      },
+      "FI": {
+        "lists": 30,
+        "nonempty": 14,
+        "primary_requests": 1165,
+        "entries": 22859
+      },
+      "FJ": {
+        "lists": 30,
+        "nonempty": 12,
+        "primary_requests": 957,
+        "entries": 18636
+      },
+      "FR": {
+        "lists": 30,
+        "nonempty": 22,
+        "primary_requests": 2512,
+        "entries": 49878
+      },
+      "GB": {
+        "lists": 30,
+        "nonempty": 22,
+        "primary_requests": 4567,
+        "entries": 90613
+      },
+      "GF": {
+        "lists": 30,
+        "nonempty": 8,
+        "primary_requests": 876,
+        "entries": 16986
+      },
+      "GH": {
+        "lists": 30,
+        "nonempty": 10,
+        "primary_requests": 941,
+        "entries": 18307
+      },
+      "GI": {
+        "lists": 30,
+        "nonempty": 8,
+        "primary_requests": 916,
+        "entries": 17789
+      },
+      "GP": {
+        "lists": 30,
+        "nonempty": 0,
+        "primary_requests": 30,
+        "entries": 0
+      },
+      "GQ": {
+        "lists": 30,
+        "nonempty": 8,
+        "primary_requests": 671,
+        "entries": 12902
+      },
+      "GR": {
+        "lists": 30,
+        "nonempty": 14,
+        "primary_requests": 887,
+        "entries": 17278
+      },
+      "GT": {
+        "lists": 30,
+        "nonempty": 16,
+        "primary_requests": 1332,
+        "entries": 26215
+      },
+      "GY": {
+        "lists": 30,
+        "nonempty": 8,
+        "primary_requests": 622,
+        "entries": 11916
+      },
+      "HK": {
+        "lists": 30,
+        "nonempty": 14,
+        "primary_requests": 881,
+        "entries": 17143
+      },
+      "HN": {
+        "lists": 30,
+        "nonempty": 16,
+        "primary_requests": 1325,
+        "entries": 26055
+      },
+      "HR": {
+        "lists": 30,
+        "nonempty": 12,
+        "primary_requests": 887,
+        "entries": 17242
+      },
+      "HU": {
+        "lists": 30,
+        "nonempty": 14,
+        "primary_requests": 947,
+        "entries": 18474
+      },
+      "ID": {
+        "lists": 30,
+        "nonempty": 12,
+        "primary_requests": 813,
+        "entries": 15760
+      },
+      "IE": {
+        "lists": 30,
+        "nonempty": 18,
+        "primary_requests": 2020,
+        "entries": 39809
+      },
+      "IL": {
+        "lists": 30,
+        "nonempty": 12,
+        "primary_requests": 605,
+        "entries": 11618
+      },
+      "IN": {
+        "lists": 30,
+        "nonempty": 12,
+        "primary_requests": 1171,
+        "entries": 22944
+      },
+      "IQ": {
+        "lists": 30,
+        "nonempty": 8,
+        "primary_requests": 545,
+        "entries": 10361
+      },
+      "IS": {
+        "lists": 30,
+        "nonempty": 12,
+        "primary_requests": 931,
+        "entries": 18137
+      },
+      "IT": {
+        "lists": 30,
+        "nonempty": 20,
+        "primary_requests": 1855,
+        "entries": 36668
+      },
+      "JM": {
+        "lists": 30,
+        "nonempty": 12,
+        "primary_requests": 1184,
+        "entries": 23229
+      },
+      "JO": {
+        "lists": 30,
+        "nonempty": 10,
+        "primary_requests": 592,
+        "entries": 11342
+      },
+      "JP": {
+        "lists": 30,
+        "nonempty": 16,
+        "primary_requests": 2853,
+        "entries": 56669
+      },
+      "KE": {
+        "lists": 30,
+        "nonempty": 8,
+        "primary_requests": 927,
+        "entries": 18020
+      },
+      "KR": {
+        "lists": 30,
+        "nonempty": 14,
+        "primary_requests": 1270,
+        "entries": 24939
+      },
+      "KW": {
+        "lists": 30,
+        "nonempty": 8,
+        "primary_requests": 576,
+        "entries": 10995
+      },
+      "LB": {
+        "lists": 30,
+        "nonempty": 10,
+        "primary_requests": 574,
+        "entries": 10995
+      },
+      "LC": {
+        "lists": 30,
+        "nonempty": 12,
+        "primary_requests": 1227,
+        "entries": 24064
+      },
+      "LI": {
+        "lists": 30,
+        "nonempty": 12,
+        "primary_requests": 1023,
+        "entries": 19964
+      },
+      "LT": {
+        "lists": 30,
+        "nonempty": 14,
+        "primary_requests": 779,
+        "entries": 15112
+      },
+      "LU": {
+        "lists": 30,
+        "nonempty": 14,
+        "primary_requests": 1162,
+        "entries": 22772
+      },
+      "LV": {
+        "lists": 30,
+        "nonempty": 14,
+        "primary_requests": 750,
+        "entries": 14525
+      },
+      "LY": {
+        "lists": 30,
+        "nonempty": 8,
+        "primary_requests": 562,
+        "entries": 10750
+      },
+      "MA": {
+        "lists": 30,
+        "nonempty": 8,
+        "primary_requests": 581,
+        "entries": 11067
+      },
+      "MC": {
+        "lists": 30,
+        "nonempty": 10,
+        "primary_requests": 855,
+        "entries": 16624
+      },
+      "MD": {
+        "lists": 30,
+        "nonempty": 12,
+        "primary_requests": 768,
+        "entries": 14857
+      },
+      "ME": {
+        "lists": 30,
+        "nonempty": 10,
+        "primary_requests": 635,
+        "entries": 12216
+      },
+      "MG": {
+        "lists": 30,
+        "nonempty": 6,
+        "primary_requests": 675,
+        "entries": 12964
+      },
+      "MK": {
+        "lists": 30,
+        "nonempty": 12,
+        "primary_requests": 729,
+        "entries": 14101
+      },
+      "ML": {
+        "lists": 30,
+        "nonempty": 6,
+        "primary_requests": 675,
+        "entries": 12972
+      },
+      "MT": {
+        "lists": 30,
+        "nonempty": 14,
+        "primary_requests": 721,
+        "entries": 13955
+      },
+      "MU": {
+        "lists": 30,
+        "nonempty": 8,
+        "primary_requests": 478,
+        "entries": 9022
+      },
+      "MW": {
+        "lists": 30,
+        "nonempty": 4,
+        "primary_requests": 474,
+        "entries": 8913
+      },
+      "MX": {
+        "lists": 30,
+        "nonempty": 22,
+        "primary_requests": 2091,
+        "entries": 41492
+      },
+      "MY": {
+        "lists": 30,
+        "nonempty": 12,
+        "primary_requests": 760,
+        "entries": 14716
+      },
+      "MZ": {
+        "lists": 30,
+        "nonempty": 10,
+        "primary_requests": 665,
+        "entries": 12790
+      },
+      "NE": {
+        "lists": 30,
+        "nonempty": 8,
+        "primary_requests": 707,
+        "entries": 13644
+      },
+      "NG": {
+        "lists": 30,
+        "nonempty": 8,
+        "primary_requests": 950,
+        "entries": 18468
+      },
+      "NI": {
+        "lists": 30,
+        "nonempty": 16,
+        "primary_requests": 1332,
+        "entries": 26213
+      },
+      "NL": {
+        "lists": 30,
+        "nonempty": 14,
+        "primary_requests": 1147,
+        "entries": 22522
+      },
+      "NO": {
+        "lists": 30,
+        "nonempty": 14,
+        "primary_requests": 1151,
+        "entries": 22573
+      },
+      "NZ": {
+        "lists": 30,
+        "nonempty": 14,
+        "primary_requests": 1558,
+        "entries": 30649
+      },
+      "OM": {
+        "lists": 30,
+        "nonempty": 10,
+        "primary_requests": 575,
+        "entries": 10984
+      },
+      "PA": {
+        "lists": 30,
+        "nonempty": 16,
+        "primary_requests": 1325,
+        "entries": 26051
+      },
+      "PE": {
+        "lists": 30,
+        "nonempty": 16,
+        "primary_requests": 1376,
+        "entries": 27079
+      },
+      "PF": {
+        "lists": 30,
+        "nonempty": 8,
+        "primary_requests": 833,
+        "entries": 16142
+      },
+      "PG": {
+        "lists": 30,
+        "nonempty": 8,
+        "primary_requests": 513,
+        "entries": 9747
+      },
+      "PH": {
+        "lists": 30,
+        "nonempty": 14,
+        "primary_requests": 852,
+        "entries": 16576
+      },
+      "PK": {
+        "lists": 30,
+        "nonempty": 8,
+        "primary_requests": 634,
+        "entries": 12144
+      },
+      "PL": {
+        "lists": 30,
+        "nonempty": 14,
+        "primary_requests": 1021,
+        "entries": 19988
+      },
+      "PS": {
+        "lists": 30,
+        "nonempty": 8,
+        "primary_requests": 576,
+        "entries": 10996
+      },
+      "PT": {
+        "lists": 30,
+        "nonempty": 14,
+        "primary_requests": 1033,
+        "entries": 20203
+      },
+      "PY": {
+        "lists": 30,
+        "nonempty": 16,
+        "primary_requests": 1370,
+        "entries": 26962
+      },
+      "QA": {
+        "lists": 30,
+        "nonempty": 10,
+        "primary_requests": 575,
+        "entries": 10998
+      },
+      "RO": {
+        "lists": 30,
+        "nonempty": 12,
+        "primary_requests": 964,
+        "entries": 18816
+      },
+      "RS": {
+        "lists": 30,
+        "nonempty": 12,
+        "primary_requests": 724,
+        "entries": 14032
+      },
+      "RU": {
+        "lists": 30,
+        "nonempty": 6,
+        "primary_requests": 83,
+        "entries": 1120
+      },
+      "SA": {
+        "lists": 30,
+        "nonempty": 8,
+        "primary_requests": 539,
+        "entries": 10259
+      },
+      "SC": {
+        "lists": 30,
+        "nonempty": 8,
+        "primary_requests": 723,
+        "entries": 13933
+      },
+      "SE": {
+        "lists": 30,
+        "nonempty": 14,
+        "primary_requests": 1240,
+        "entries": 24362
+      },
+      "SG": {
+        "lists": 30,
+        "nonempty": 14,
+        "primary_requests": 982,
+        "entries": 19175
+      },
+      "SI": {
+        "lists": 30,
+        "nonempty": 14,
+        "primary_requests": 833,
+        "entries": 16188
+      },
+      "SK": {
+        "lists": 30,
+        "nonempty": 14,
+        "primary_requests": 999,
+        "entries": 19538
+      },
+      "SM": {
+        "lists": 30,
+        "nonempty": 10,
+        "primary_requests": 1095,
+        "entries": 21371
+      },
+      "SN": {
+        "lists": 30,
+        "nonempty": 8,
+        "primary_requests": 712,
+        "entries": 13701
+      },
+      "SV": {
+        "lists": 30,
+        "nonempty": 16,
+        "primary_requests": 1304,
+        "entries": 25646
+      },
+      "TC": {
+        "lists": 30,
+        "nonempty": 10,
+        "primary_requests": 1115,
+        "entries": 21835
+      },
+      "TD": {
+        "lists": 30,
+        "nonempty": 8,
+        "primary_requests": 602,
+        "entries": 11500
+      },
+      "TH": {
+        "lists": 30,
+        "nonempty": 12,
+        "primary_requests": 837,
+        "entries": 16249
+      },
+      "TN": {
+        "lists": 30,
+        "nonempty": 8,
+        "primary_requests": 595,
+        "entries": 11373
+      },
+      "TR": {
+        "lists": 30,
+        "nonempty": 12,
+        "primary_requests": 853,
+        "entries": 16568
+      },
+      "TT": {
+        "lists": 30,
+        "nonempty": 14,
+        "primary_requests": 1219,
+        "entries": 23935
+      },
+      "TW": {
+        "lists": 30,
+        "nonempty": 14,
+        "primary_requests": 874,
+        "entries": 17004
+      },
+      "TZ": {
+        "lists": 30,
+        "nonempty": 8,
+        "primary_requests": 644,
+        "entries": 12346
+      },
+      "UA": {
+        "lists": 30,
+        "nonempty": 10,
+        "primary_requests": 501,
+        "entries": 9503
+      },
+      "UG": {
+        "lists": 30,
+        "nonempty": 10,
+        "primary_requests": 906,
+        "entries": 17592
+      },
+      "US": {
+        "lists": 30,
+        "nonempty": 28,
+        "primary_requests": 4977,
+        "entries": 98906
+      },
+      "UY": {
+        "lists": 30,
+        "nonempty": 14,
+        "primary_requests": 1313,
+        "entries": 25813
+      },
+      "VA": {
+        "lists": 30,
+        "nonempty": 4,
+        "primary_requests": 485,
+        "entries": 9141
+      },
+      "VE": {
+        "lists": 30,
+        "nonempty": 16,
+        "primary_requests": 1363,
+        "entries": 26828
+      },
+      "XK": {
+        "lists": 30,
+        "nonempty": 2,
+        "primary_requests": 83,
+        "entries": 1081
+      },
+      "YE": {
+        "lists": 30,
+        "nonempty": 8,
+        "primary_requests": 563,
+        "entries": 10735
+      },
+      "ZA": {
+        "lists": 30,
+        "nonempty": 10,
+        "primary_requests": 1053,
+        "entries": 20558
+      },
+      "ZM": {
+        "lists": 30,
+        "nonempty": 8,
+        "primary_requests": 633,
+        "entries": 12113
+      },
+      "ZW": {
+        "lists": 30,
+        "nonempty": 6,
+        "primary_requests": 596,
+        "entries": 11379
+      }
+    },
+    "raw_report_sha256": "bc67208db11cf2a44b09eeeb2043dcf35a1ab5d4c5fcfad1fd9ac28c7140934d"
+  },
+  "daily_comparison": {
+    "lists_completed": 36,
+    "lists_failed": 0,
+    "lists_skipped": 84,
+    "dry_run": true,
+    "lists": [
+      {
+        "key": "BR:movie:8",
+        "titles": 4968,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "BR:movie:337",
+        "titles": 2028,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "BR:movie:1899",
+        "titles": 1826,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "BR:show:8",
+        "titles": 3439,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "BR:show:337",
+        "titles": 1131,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "BR:show:1899",
+        "titles": 1761,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "DE:movie:8",
+        "titles": 5691,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "DE:movie:11",
+        "titles": 471,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "DE:movie:119",
+        "titles": 0,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "DE:movie:337",
+        "titles": 2880,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "DE:movie:350",
+        "titles": 121,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "DE:show:8",
+        "titles": 3278,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "DE:show:11",
+        "titles": 4,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "DE:show:119",
+        "titles": 0,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "DE:show:337",
+        "titles": 1174,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "DE:show:350",
+        "titles": 223,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "NG:movie:8",
+        "titles": 4474,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "NG:show:8",
+        "titles": 3407,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "US:movie:8",
+        "titles": 4741,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "US:movie:9",
+        "titles": 26150,
+        "changes_checked": 28,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 6
+      },
+      {
+        "key": "US:movie:11",
+        "titles": 543,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "US:movie:15",
+        "titles": 1295,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "US:movie:283",
+        "titles": 275,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "US:movie:337",
+        "titles": 1710,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "US:movie:350",
+        "titles": 130,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "US:movie:1899",
+        "titles": 2076,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "US:movie:2303",
+        "titles": 1143,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "US:show:8",
+        "titles": 3583,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "US:show:9",
+        "titles": 5473,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "US:show:11",
+        "titles": 7,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "US:show:15",
+        "titles": 1966,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "US:show:283",
+        "titles": 1804,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "US:show:337",
+        "titles": 1279,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "US:show:350",
+        "titles": 226,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "US:show:1899",
+        "titles": 1849,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "US:show:2303",
+        "titles": 735,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      }
+    ],
+    "seconds": 348.34,
+    "requests": {
+      "requests": 4649,
+      "retries": 0,
+      "refused": 0,
+      "discover": 4621,
+      "title": 28,
+      "catalog": 0
+    },
+    "history": {
+      "planned_rows": 3,
+      "published_titles": 0
+    },
+    "countries": [
+      "BR",
+      "DE",
+      "NG",
+      "US"
+    ],
+    "started_at_epoch": 1792197918.7399662,
+    "production_data_writes": 0,
+    "comparison": {
+      "source": "/home/alp/.local/share/goodwatch-availability-measure/data/daily-snap-2026-10-16.json.gz",
+      "at": "2026-10-16T22:02:55+00:00",
+      "sha256": "090a9acf362fc967fe2cd121eeb9219df2d08dcc7e7584386fc10017079259c2",
+      "note": "Cost comparison only: prior fresh IDs used date partitions that may omit undated titles; prior kinds are projected from history. Prior absence is untrusted and cannot establish exact days."
+    }
+  },
+  "repeated_network_sample": {
+    "countries": [
+      "BR",
+      "DE",
+      "NG",
+      "US"
+    ],
+    "lists_completed": 36,
+    "lists_failed": 0,
+    "seconds": 360.156,
+    "requests": {
+      "requests": 4649,
+      "retries": 0,
+      "refused": 0,
+      "discover": 4621,
+      "title": 28,
+      "catalog": 0
+    },
+    "production_data_writes": 0
+  },
+  "smaller_network_sample": {
+    "countries": [
+      "BR",
+      "DE",
+      "NG"
+    ],
+    "lists_completed": 18,
+    "lists_failed": 0,
+    "seconds": 147.639,
+    "requests": {
+      "requests": 1854,
+      "retries": 0,
+      "refused": 0,
+      "discover": 1854,
+      "title": 0,
+      "catalog": 0
+    },
+    "production_data_writes": 0
+  },
+  "incomplete_baseline_probe": {
+    "completed": false,
+    "reason": "Stopped the larger baseline probe after the completed daily-comparison samples and global census supplied the requested daily cost measurement.",
+    "requests_at_least": {
+      "requests": 15000,
+      "retries": 0,
+      "refused": 0,
+      "discover": 980,
+      "title": 14020,
+      "catalog": 0
+    },
+    "elapsed_seconds": 1139,
+    "production_data_writes": 0
+  },
+  "crate_existing_titles_for_baseline_estimate": [
+    {
+      "media_type": "movie",
+      "unique_titles": 108332
+    },
+    {
+      "media_type": "show",
+      "unique_titles": 30041
+    }
+  ],
+  "extrapolation": {
+    "method": "Measured all-country primary pages; add actual fallback pages and fresh title checks. Runtime uses observed request throughput, excluding unmeasured production write cost.",
+    "observed_requests_per_second": [
+      13.3462,
+      12.9083,
+      12.5577
+    ],
+    "regular_primary_requests": 144400,
+    "regular_allowing_5000_title_checks": 149400,
+    "regular_with_15_percent_fallback_reserve_and_5000_checks": 171060,
+    "initial_baseline_primary_plus_crate_unique_title_estimate": 282773,
+    "caveats": [
+      "Panel interval is only about three hours, not 24 hours.",
+      "Earlier reader date partitions may omit undated titles; its absence evidence is not trusted for exact days.",
+      "Crate baseline title count is a planning proxy, not measured TMDB distinct titles.",
+      "Production apply and complete global baseline runtime were not tested."
+    ]
+  },
+  "verification": {
+    "new_tests_with_local_crate": {
+      "total": 34,
+      "passed": 30,
+      "opt_in_previews_skipped": 4
+    },
+    "inert_windmill_previews": {
+      "remote": 4,
+      "local_fixture": 1,
+      "passed": 5
+    },
+    "history_regression": {
+      "total": 40,
+      "passed": 39,
+      "skipped": 1
+    },
+    "full_suite_with_local_crate": {
+      "total": 1567,
+      "passed": 1520,
+      "skipped": 46,
+      "pre_existing_failures": 1,
+      "failure": "test_deleted_titles.DeleteFromCrateTests.test_user_tables_are_untouched_and_all_derived_tables_are_covered (social_title_link, social_link_report, social_relevance)"
+    }
+  }
+}

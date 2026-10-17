@@ -1,0 +1,13 @@
+{
+  "path": "f/tmdb_api/read_daily_provider_lists",
+  "schedule": "0 0 14 * * *",
+  "timezone": "UTC",
+  "script_path": "f/tmdb_api/read_daily_provider_lists",
+  "is_flow": true,
+  "enabled": false,
+  "args": {
+    "dry_run": false,
+    "requests_per_second": 15,
+    "max_requests": 350000
+  }
+}

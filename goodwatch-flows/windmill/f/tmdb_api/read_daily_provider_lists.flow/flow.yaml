@@ -1,0 +1,67 @@
+summary: Read the big brands' provider lists daily
+description: >-
+  Proposed schedule 14:00 UTC daily. Fresh discover reads with completeness gates,
+  fresh per-title confirmation, and shared availability-history precision rules.
+  Defaults to a SELECT-only dry run. Never writes streaming_availability.
+value:
+  modules:
+    - id: lists
+      value:
+        type: script
+        path: f/tmdb_api/daily_provider_lists
+        input_transforms:
+          countries:
+            type: javascript
+            expr: flow_input.countries
+          provider_ids:
+            type: javascript
+            expr: flow_input.provider_ids
+          dry_run:
+            type: javascript
+            expr: flow_input.dry_run
+          requests_per_second:
+            type: javascript
+            expr: flow_input.requests_per_second
+          max_requests:
+            type: javascript
+            expr: flow_input.max_requests
+      timeout: 28800
+    - id: report
+      value:
+        type: rawscript
+        language: python3
+        lock: ''
+        input_transforms:
+          report:
+            type: javascript
+            expr: results.lists
+        content: '!inline report.inline_script.py'
+  concurrent_limit: 1
+  concurrency_time_window_s: 0
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties:
+    countries:
+      type: array
+      items:
+        type: string
+      description: Omit for every current and previously monitored country.
+    provider_ids:
+      type: array
+      items:
+        type: integer
+      description: Omit for the research's 15 provider identities. Can widen later.
+    dry_run:
+      type: boolean
+      default: true
+    requests_per_second:
+      type: number
+      default: 15
+      exclusiveMinimum: 0
+      maximum: 20
+    max_requests:
+      type: integer
+      default: 350000
+      minimum: 1
+  required: []

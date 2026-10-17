@@ -1,0 +1,8 @@
+summary: Daily list checkpoint and history adapters
+description: Internal module. Preview paths use SELECT only; publishers reuse the existing title leases and history writer.
+kind: script
+lock: '!inline f/tmdb_api/daily_list_storage.script.lock'
+schema:
+  type: object
+  properties: {}
+  required: []

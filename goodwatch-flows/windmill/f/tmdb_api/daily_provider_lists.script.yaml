@@ -1,0 +1,32 @@
+summary: Read daily provider lists into availability history
+description: Fresh, completeness-gated discover with per-title checks. Dry run by default; never writes streaming_availability.
+kind: script
+lock: '!inline f/tmdb_api/daily_provider_lists.script.lock'
+timeout: 28800
+concurrent_limit: 1
+concurrency_time_window_s: 0
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties:
+    countries:
+      type: array
+      items:
+        type: string
+    provider_ids:
+      type: array
+      items:
+        type: integer
+    dry_run:
+      type: boolean
+      default: true
+    requests_per_second:
+      type: number
+      default: 15
+      exclusiveMinimum: 0
+      maximum: 20
+    max_requests:
+      type: integer
+      default: 350000
+      minimum: 1
+  required: []

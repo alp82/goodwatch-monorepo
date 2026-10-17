@@ -38,6 +38,20 @@ class HistoryTitle:
     verified: dict
     existing: list
     removed: list
+    list_read: 'ListRead | None' = None
+
+
+@dataclass
+class ListRead:
+    """Evidence confined to one complete discover list and verified title change."""
+    country_code: str
+    service_id: int
+    checked_at: int
+    previous_at: int | None = None
+    previous_offers: tuple = ()
+    previous_present: bool = False
+    previous_complete: bool = False
+    previous_cache_bypassed: bool = False
 
 
 @dataclass
@@ -108,6 +122,7 @@ class Observation:
     fresh_current: bool
     verified: dict
     copy_at: int
+    list_read: ListRead | None = None
 
     @classmethod
     def from_title(cls, title, copy_at):
@@ -127,10 +142,25 @@ class Observation:
         offers = {f"{country}:{offer['provider_id']}:{kind}"
                   for country, data in (results or {}).items()
                   for kind in OFFER_TYPES for offer in data.get(kind, [])}
-        return cls(api_at, results, offers, prior_at, set(prior.get('offers') or []),
-                   fresh_prior, bool(valid and proof.get('cache_bypassed') is True), title.verified, copy_at)
+        fresh_current = bool(valid and proof.get('cache_bypassed') is True)
+        scoped = title.list_read
+        if scoped is not None and fresh_current and utc_day(scoped.checked_at) == utc_day(api_at):
+            prior_at = scoped.previous_at
+            fresh_prior = (scoped.previous_complete and scoped.previous_cache_bypassed
+                           and isinstance(prior_at, int) and prior_at < api_at)
+            prior_offers = {f'{scoped.country_code}:{scoped.service_id}:{kind}' for kind in scoped.previous_offers}
+        else:
+            scoped = None
+            prior_offers = set(prior.get('offers') or [])
+        return cls(api_at, results, offers, prior_at, prior_offers,
+                   fresh_prior, fresh_current, title.verified, copy_at, scoped)
 
     def api_supports(self, key, row=None):
+        if self.list_read is not None:
+            if (key.country_code, key.streaming_service_id) != (self.list_read.country_code, self.list_read.service_id):
+                return False
+            if row is None:
+                return True  # Complete list omission AND the fresh title check, including absent countries.
         if row is not None:
             return key.proof_identity in self.api_offers
         return key.country_code in (self.results or {})
@@ -148,6 +178,12 @@ class Observation:
             at = self.copy_at
         consecutive = (self.fresh_current and self.fresh_prior and self.api_supports(key, row)
                        and utc_day(self.prior_at) == utc_day(at) - DAY)
+        if self.list_read is not None:
+            # A union list proves service membership, not changes between eligible
+            # offer types while the title remains on that service.
+            prefix = f'{key.country_code}:{key.streaming_service_id}:'
+            consecutive = consecutive and (not self.list_read.previous_present if row is not None
+                else not any(offer.startswith(prefix) for offer in self.api_offers))
         return at, consecutive
 
 
@@ -177,12 +213,14 @@ def prepare_markers(pending_store, identities, pending, check_owned):
 
 def title_writes(transition, previous, media_type, pending, copy_at):
     title, added, removed = transition.title, transition.added, transition.removed
-    latest, opened = {}, {}
+    latest, opened, closed = {}, {}, {}
     for row in previous:
         key = availability_key(row)
         latest[key] = max(latest.get(key, 0), row['observed_at'])
         if row['dropped_on'] is None:
             opened[key] = row
+        elif key not in closed or row['observed_at'] > closed[key]['observed_at']:
+            closed[key] = row
     if f'{media_type}:{title.tmdb_id}' in pending:
         desired = {availability_key(row): row for row in title.rows.values()}
         added.update({key: row for key, row in desired.items() if key.streaming_type in OFFER_TYPES and key not in opened})
@@ -190,16 +228,27 @@ def title_writes(transition, previous, media_type, pending, copy_at):
     observation = Observation.from_title(title, copy_at)
     writes = []
     for key, row in added.items():
-        if key in opened:
-            continue  # History committed before a failed offer write.
         at, consecutive = observation.read(key, row)
+        exact = consecutive and key.proof_identity not in observation.prior_offers
+        if key in opened:
+            old = opened[key]
+            if (title.list_read and exact and old['appeared_precision'] == 'unknown'
+                    and old['appeared_on'] == utc_day(at)):
+                writes.append(Stay(**(old | {'appeared_precision': 'exact', 'appeared_source': 'title',
+                                            'appeared_after': utc_day(observation.prior_at)})))
+            continue  # History committed before a failed offer write.
+        prior_stay = closed.get(key)
+        if (prior_stay and prior_stay['dropped_precision'] == 'exact'
+                and utc_day(at) < prior_stay['dropped_on']):
+            continue  # A stale title publisher cannot undo a later confirmed absence.
         collision = latest.get(key, -1) >= at
         if collision:
             at = latest[key] + 1
         today = utc_day(at)
-        exact = consecutive and not collision and key.proof_identity not in observation.prior_offers
+        exact = exact and not collision
         premiere = None
-        if key not in latest and observation.source_time(key, row) is not None:
+        if (key not in latest and observation.source_time(key, row) is not None
+                and not (title.list_read and title.list_read.previous_at is None)):
             premiere = premiere_day(title.details, media_type, key.streaming_service_id, today, key.country_code)
         appeared_after = (utc_day(observation.prior_at) if observation.fresh_prior
                           and key.proof_identity not in observation.prior_offers else None)
@@ -209,10 +258,14 @@ def title_writes(transition, previous, media_type, pending, copy_at):
                            appeared_after=None if premiere is not None else appeared_after,
                            appeared_precision='exact' if exact or premiere is not None else 'unknown'))
     for key in removed:
+        at, consecutive = observation.read(key)
         old = opened.get(key)
+        if not old and title.list_read:
+            candidate = closed.get(key)
+            if candidate and candidate['dropped_on'] == utc_day(at) and candidate['dropped_precision'] == 'unknown':
+                old = candidate
         if not old:
             continue
-        at, consecutive = observation.read(key)
         today = utc_day(at)
         dropped_on = max(today, utc_day(old['observed_at']))
         exact = (consecutive and dropped_on == today and key.proof_identity in observation.prior_offers
@@ -259,6 +312,17 @@ def write_transitions(connector, writes_by_title, check_owned, result, store, me
             record_error(result, store, media_type, tmdb_id, error)
 
 
+def read_history(connector, media_type, titles):
+    """List readers need only their scope; publishers reconcile the whole title."""
+    sql = 'SELECT * FROM availability_history WHERE media_tmdb_id = ANY(?) AND media_type = ?'
+    params = ([title.tmdb_id for title in titles], media_type)
+    scopes = {(title.list_read.country_code, title.list_read.service_id) for title in titles if title.list_read}
+    if len(scopes) == 1 and all(title.list_read for title in titles):
+        sql += ' AND country_code = ? AND streaming_service_id = ?'
+        params += next(iter(scopes))
+    return connector.select(sql, params)
+
+
 def publish_history(connector, media_type, titles, check_owned, pending_store=None, known_pending=None):
     """Prepare markers, plan stays, then bulk write before offers. Failed titles stay pending.
 
@@ -284,9 +348,7 @@ def publish_history(connector, media_type, titles, check_owned, pending_store=No
     prepare_markers(pending_store, identities, pending, check_owned)
     check_owned()
     connector.run('REFRESH TABLE availability_history')
-    previous = connector.select(
-        'SELECT * FROM availability_history WHERE media_tmdb_id = ANY(?) AND media_type = ?',
-        ([transition.title.tmdb_id for transition in transitions], media_type))
+    previous = read_history(connector, media_type, [transition.title for transition in transitions])
     previous_by_title = {}
     for row in previous:
         previous_by_title.setdefault(row['media_tmdb_id'], []).append(row)

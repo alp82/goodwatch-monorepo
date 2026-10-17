@@ -138,3 +138,8 @@ precision. Pause `f/sync/copy/tmdb_streaming`, `f/priority/crawl_all`,
 `f/sync/copy/tmdb_details`, and `f/sync/copy/orphaned_titles`, and wait for active
 jobs before applying. Finish the baseline before pushing to
 main, because that push deploys the writer. See the report for the full sequence.
+
+The [daily provider-list job](../docs/implementation/daily-provider-lists/README.md)
+adds scoped daily evidence to that same history writer. It defaults to a read-only
+preview, monitors the research's big brands in every country, and never writes
+current offers. Its new schedule is an owner-applied proposal after review.

@@ -154,6 +154,12 @@ in `deleted_titles.delete_title_rows` before their offer DELETE. Both the detail
 copy and orphan sweep use this shared path; TMDB 404 flags are consumed there.
 Absent-country removal semantics remain unchanged for #682.
 
+The [daily list job](../daily-provider-lists/README.md) supplies scoped complete-list
+evidence and fresh per-title confirmations to this same writer. It can establish
+an absent-country drop within the monitored country/provider; ordinary title
+publication still treats a missing country as unknown. The list job does not
+write current offers or change this table's schema.
+
 ## Verification and measurements
 
 Tests run at the repo's existing fake Mongo/Crate publication seam. Optional SQL

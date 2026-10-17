@@ -1,5 +1,5 @@
 summary: Availability history helpers
-description: Internal shared module for the streaming publisher
+description: Shared stay and precision rules for the streaming publisher and daily list reader
 kind: script
 lock: '!inline f/sync/availability_history.script.lock'
 schema:
