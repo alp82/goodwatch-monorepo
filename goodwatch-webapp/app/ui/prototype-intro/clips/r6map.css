@@ -1,0 +1,179 @@
+/* PROTOTYPE - throwaway. Round 6 "r6map" clips (Explorer, Streaming). Builds on round 5's r5map.css (its timing class
+   `.lpc-r5map-a`, keyframes, sea, headline and logo styles); transform and opacity animations only; every time is
+   scaled by --k. The bottom 9cqh belong to the chapter bar. */
+
+.lpc-r6map-at { position: absolute; width: 0; height: 0; }
+.lpc-r6map-at > * { position: absolute; left: 0; top: 0; }
+.lpc-r6map-mid > * { transform: translate(-50%, -50%); }
+
+/* ---------- The pointer (the Explorer tutorial's): a hand per click, and a ripple. */
+.lpc-r6map-hand {
+	transform-origin: 0 0;
+	filter: drop-shadow(0 0.6cqw 1.6cqw rgba(0, 0, 0, 0.6));
+}
+.lpc-r6map-cursor { display: block; width: 3.4cqw; height: 4.25cqw; }
+.lpc-r6map-ripple {
+	width: 9cqw;
+	height: 9cqw;
+	margin: -4.5cqw 0 0 -4.5cqw;
+	border-radius: 50%;
+	border: 0.35cqw solid #fff;
+	box-shadow: 0 0 2cqw rgba(255, 255, 255, 0.6), inset 0 0 2cqw rgba(255, 255, 255, 0.35);
+}
+@keyframes lpc-r6map-glide-in {
+	0% { opacity: 0; transform: translate(var(--fx), var(--fy)); }
+	30% { opacity: 1; }
+	100% { opacity: 1; transform: none; }
+}
+@keyframes lpc-r6map-glide {
+	0% { opacity: 0; transform: translate(var(--fx), var(--fy)); }
+	1% { opacity: 1; transform: translate(var(--fx), var(--fy)); }
+	100% { opacity: 1; transform: none; }
+}
+@keyframes lpc-r6map-press { 0% { transform: none; } 40% { transform: scale(0.78); } 100% { transform: none; } }
+@keyframes lpc-r6map-hide { to { opacity: 0; } }
+@keyframes lpc-r6map-ripple {
+	0% { opacity: 0; transform: scale(0.2); }
+	1% { opacity: 1; transform: scale(0.2); }
+	100% { opacity: 0; transform: scale(2.1); }
+}
+
+/* ---------- Islands */
+.lpc-r6map-island { position: relative; }
+.lpc-r6map-island-svg { position: absolute; inset: -14% -14%; width: 128%; height: 140%; overflow: visible; }
+.lpc-r6map-island-text {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+	line-height: 1.05;
+	pointer-events: none;
+}
+.lpc-r6map-island-name { font-weight: 800; text-shadow: 0 0.15em 0.6em rgba(0, 0, 0, 0.9), 0 0 0.2em rgba(0, 0, 0, 0.8); }
+.lpc-r6map-island-sub { margin-top: 0.2em; font-size: 0.48em; font-weight: 700; color: rgba(255, 255, 255, 0.88); text-shadow: 0 0.1em 0.5em rgba(0, 0, 0, 0.9); }
+@keyframes lpc-r6map-pick { to { transform: scale(1.22); } }
+@keyframes lpc-r6map-to { to { transform: translate(var(--tx), var(--ty)) scale(var(--ts, 1)); } }
+
+/* The groupings' names over their regions of the map. */
+.lpc-r6map-region {
+	font-size: max(9px, 1.35cqw);
+	font-weight: 800;
+	letter-spacing: 0.22em;
+	text-transform: uppercase;
+	color: rgba(255, 255, 255, 0.55);
+	white-space: nowrap;
+	transform: translateX(-50%);
+}
+
+/* The tally: what's picked, and how many titles are left. */
+.lpc-r6map-tally {
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 5cqh;
+	z-index: 8;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	text-align: center;
+}
+.lpc-r6map-tally-n {
+	font-size: 8.4cqw;
+	font-weight: 800;
+	line-height: 0.95;
+	letter-spacing: -0.03em;
+	color: #fbbf24;
+	text-shadow: 0 0.5cqw 3cqw rgba(0, 0, 0, 0.8);
+}
+.lpc-r6map-tally-n small { margin-left: 0.25em; font-size: 0.32em; font-weight: 800; color: #fff; letter-spacing: 0; }
+.lpc-r6map-chips { display: flex; gap: 0.8cqw; margin-bottom: 1cqh; }
+.lpc-r6map-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.6cqw;
+	padding: 0.6cqh 1.3cqw;
+	border-radius: 999px;
+	background: rgba(16, 19, 28, 0.92);
+	box-shadow: 0 0 0 0.16cqw var(--c, #fff);
+	font-size: max(10px, 1.7cqw);
+	font-weight: 800;
+}
+.lpc-r6map-chip i { width: 1cqw; height: 1cqw; border-radius: 50%; background: var(--c, #fff); }
+.lpc-r6map-chip span { font-size: 0.7em; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255, 255, 255, 0.55); }
+.lpc-r6map-swap { position: absolute; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; }
+
+/* ---------- Streaming: the count on a solid panel, readable over the colourful wall. */
+.lpc-r6map-countbox {
+	padding: 2.2cqh 4.5cqw 2.6cqh;
+	border-radius: 2.4cqw;
+	background: #07090f;
+	box-shadow: 0 2cqw 8cqw rgba(0, 0, 0, 0.85), 0 0 0 0.18cqw rgba(251, 191, 36, 0.35);
+	text-align: center;
+	white-space: nowrap;
+}
+.lpc-r6map-count {
+	font-size: 17cqw;
+	font-weight: 800;
+	line-height: 0.88;
+	letter-spacing: -0.04em;
+	color: #fbbf24;
+}
+.lpc-r6map-count-line { margin-top: 1.2cqh; font-size: 3.6cqw; font-weight: 800; line-height: 1.1; }
+.lpc-r6map-count-line em { font-style: normal; color: #fbbf24; }
+
+/* The country carousel: rows stacked; the one in the middle is lit, its neighbours peek in, dimmed. */
+.lpc-r6map-carousel { position: absolute; overflow: hidden; }
+.lpc-r6map-row {
+	position: absolute;
+	left: 0;
+	right: 0;
+	display: flex;
+	align-items: center;
+	gap: 1.6cqw;
+	padding: 1.6cqh 2.2cqw;
+	border-radius: 1.4cqw;
+	background: rgba(255, 255, 255, 0.07);
+	box-shadow: 0 0 0 0.12cqw rgba(255, 255, 255, 0.08);
+}
+.lpc-r6map-row.lpc-r6map-you { background: rgba(251, 191, 36, 0.16); box-shadow: inset 0 0 0 0.2cqw #fbbf24; }
+.lpc-r6map-row-name { min-width: 25cqw; font-size: 3.2cqw; font-weight: 800; white-space: nowrap; }
+.lpc-r6map-row-logos { display: flex; gap: 1cqw; }
+.lpc-r6map-flag { font-size: 1.15em; margin-right: 0.35em; }
+/* Sideways cards for the horizontal carousel. */
+.lpc-r6map-card {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 2cqh;
+	border-radius: 2cqw;
+	background: rgba(255, 255, 255, 0.07);
+	box-shadow: 0 0 0 0.12cqw rgba(255, 255, 255, 0.08);
+}
+.lpc-r6map-card.lpc-r6map-you { background: rgba(251, 191, 36, 0.16); box-shadow: inset 0 0 0 0.22cqw #fbbf24; }
+.lpc-r6map-card .lpc-r6map-row-name { min-width: 0; text-align: center; }
+@keyframes lpc-r6map-step { to { transform: translate(var(--tx, 0), var(--ty, 0)); } }
+@keyframes lpc-r6map-light { to { opacity: 1; } }
+
+/* Phone TV: bigger type, fewer secondary lines. */
+@container (max-width: 520px) {
+	.lpc-r6map-region { font-size: 2.3cqw; }
+	.lpc-r6map-tally-n { font-size: 11cqw; }
+	.lpc-r6map-chip { font-size: 2.6cqw; }
+	.lpc-r6map-chip span { display: none; }
+	.lpc-r6map-count { font-size: 20cqw; }
+	.lpc-r6map-count-line { font-size: 4.6cqw; }
+	.lpc-r6map-row-name { font-size: 4.2cqw; min-width: 30cqw; }
+	.lpc-r6map-cursor { width: 5cqw; height: 6.25cqw; }
+	.lpc-r6map-phone-hide { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.lpc-r6map-hand, .lpc-r6map-ripple { display: none; }
+}

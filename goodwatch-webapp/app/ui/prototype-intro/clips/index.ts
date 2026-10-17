@@ -11,17 +11,37 @@ import { CLIPS as r5feel } from "./r5feel"
 import { CLIPS as r5filter } from "./r5filter"
 import { CLIPS as r5map } from "./r5map"
 import { CLIPS as r5track } from "./r5track"
+import { CLIPS as r6open } from "./r6open"
+import { CLIPS as r6score } from "./r6score"
+import { CLIPS as r6feel } from "./r6feel"
+import { CLIPS as r6filter } from "./r6filter"
+import { CLIPS as r6map } from "./r6map"
+import { CLIPS as r6track } from "./r6track"
 
-// Round 4 clips the owner passed on (2026-10-17): "too complex, too nitty-gritty or not engaging enough".
-const PASSED = new Set([
-	"opener-apps", "opener-remote", "score-wall", "score-split", "streaming-ways",
-	"fingerprint-dials", "fingerprint-pair", "fingerprint-match",
-	"recommendations-because", "recommendations-resort", "recommendations-sides", "recommendations-tonight",
-	"search-type", "search-person", "search-three", "filters-services", "filters-moods",
-	"explorer-flyover", "explorer-placed", "tracking-alerts", "closer-wordmark", "closer-wall", "closer-free",
+// Round 6 (2026-10-17): the lab shows only the bases the owner picked and the new round 6 clips. Everything else
+// is behind "Show older clips".
+const BASES = new Set([
+	"opener-clock", "score-orbit", "recommendations-wall", "fingerprint-reel", "search-top",
+	"filters-narrow", "filters-tally", "explorer-combine", "streaming-passport", "tracking-feed",
+	"tracking-import", "closer-slots", "closer-ping",
 ])
+/** Round 6 groups: everything in them stays visible. */
+const ROUND6 = /^r6/
+/** The owner moved "Bring your ratings" into a chapter of its own. */
+const MOVED: Record<string, Clip["section"]> = { "tracking-import": "imports" }
 
-export const ALL_CLIPS: Clip[] = [...problem, ...scorestream, ...feel, ...searchfilter, ...explorertrack, ...r5open, ...r5score, ...r5feel, ...r5filter, ...r5map, ...r5track].map((c) =>
-	PASSED.has(c.id) ? { ...c, archived: true } : c,
+const groups: [string, Clip[]][] = [
+	["problem", problem], ["scorestream", scorestream], ["feel", feel], ["searchfilter", searchfilter],
+	["explorertrack", explorertrack], ["r5open", r5open], ["r5score", r5score], ["r5feel", r5feel],
+	["r5filter", r5filter], ["r5map", r5map], ["r5track", r5track],
+	["r6open", r6open], ["r6score", r6score], ["r6feel", r6feel], ["r6filter", r6filter], ["r6map", r6map], ["r6track", r6track],
+]
+
+export const ALL_CLIPS: Clip[] = groups.flatMap(([group, clips]) =>
+	clips.map((c) => ({
+		...c,
+		section: MOVED[c.id] ?? c.section,
+		archived: !(ROUND6.test(group) || BASES.has(c.id)),
+	})),
 )
 export const clipById = (id: string) => ALL_CLIPS.find((c) => c.id === id)

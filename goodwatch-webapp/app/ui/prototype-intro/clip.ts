@@ -29,6 +29,7 @@ export const SECTIONS = [
 	{ id: "explorer", name: "Explorer", chapter: "Explorer" },
 	{ id: "streaming", name: "Where it streams", chapter: "Streaming" },
 	{ id: "tracking", name: "Keeps track for you", chapter: "Tracking" },
+	{ id: "imports", name: "Bring your ratings", chapter: "Your ratings" },
 	{ id: "closer", name: "Your turn", chapter: "Your turn" },
 ] as const
 export type SectionId = (typeof SECTIONS)[number]["id"]

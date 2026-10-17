@@ -1,0 +1,156 @@
+/* PROTOTYPE - throwaway. Round 6 "One score" and "Picked for you" clips. Built on round 5's r5score classes
+   (moves, RingEnd places); this adds the brand cards and the faster wall. Every delay and duration goes through
+   --d / --dur and is scaled by --k. Transform and opacity only. The bottom 9cqh stays free for the chapter bar. */
+
+/* ---------- Brand cards: big logos on the brand's own color. */
+.lpc-r6score-place { position: absolute; width: 0; height: 0; }
+.lpc-r6score-card {
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 16cqw;
+	height: 32cqh;
+	transform: translate(-50%, -50%);
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 1.6cqh;
+	border-radius: 1.6cqw;
+	box-shadow: 0 1.2cqw 3.6cqw rgba(0, 0, 0, 0.55), inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+	font-family: "Gabarito", ui-sans-serif, system-ui, sans-serif;
+}
+.lpc-r6score-logo { height: 9cqh; display: flex; align-items: center; justify-content: center; }
+.lpc-r6score-logo img { height: 100%; width: auto; display: block; }
+.lpc-r6score-logo-wide { height: 7.5cqh; }
+.lpc-r6score-logo-wide img { border-radius: 0.5cqw; box-shadow: 0 0 0 0.25cqw rgba(0, 0, 0, 0.85); }
+/* Round icons sit on a white disc so they read on any brand color. */
+.lpc-r6score-disc {
+	width: 9.5cqh;
+	height: 9.5cqh;
+	border-radius: 50%;
+	background: #fff;
+	padding: 1.3cqh;
+	box-shadow: 0 0.4cqw 1.2cqw rgba(0, 0, 0, 0.25);
+}
+.lpc-r6score-n { font-weight: 800; font-size: 5.6cqw; line-height: 0.95; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.lpc-r6score-n small { font-size: 0.42em; opacity: 0.7; margin-left: 0.05em; }
+.lpc-r6score-who { font-size: max(9px, 1.3cqw); font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.8; }
+
+/* ---------- Moves of this group. */
+/* Fly from the row into the ring: travel, shrink, fade at the end. */
+.lpc-r6score-intoring { animation: lpc-r6score-intoring calc(var(--dur, 700ms) * var(--k)) cubic-bezier(0.55, 0, 0.45, 1) calc(var(--d, 0ms) * var(--k)) both; }
+@keyframes lpc-r6score-intoring {
+	0% { transform: translate(0, 0) scale(1); opacity: 1; }
+	80% { opacity: 1; }
+	100% { transform: translate(var(--tx), var(--ty)) scale(0.18); opacity: 0; }
+}
+/* The fan: each card swings in from below, already turned. */
+.lpc-r6score-fanin { animation: lpc-r6score-fanin calc(var(--dur, 800ms) * var(--k)) cubic-bezier(0.25, 0.8, 0.25, 1) calc(var(--d, 0ms) * var(--k)) both; }
+@keyframes lpc-r6score-fanin { from { opacity: 0; transform: translateY(26cqh) scale(0.9); } }
+/* The fold: a card straightens and sinks into the ring. */
+.lpc-r6score-fold { animation: lpc-r6score-fold calc(var(--dur, 1100ms) * var(--k)) cubic-bezier(0.65, 0, 0.35, 1) calc(var(--d, 0ms) * var(--k)) both; }
+@keyframes lpc-r6score-fold {
+	0% { transform: translate(0, 0) rotate(0deg) scale(1); opacity: 1; }
+	75% { opacity: 1; }
+	100% { transform: translate(var(--tx), var(--ty)) rotate(var(--r)) scale(0.2); opacity: 0; }
+}
+/* A flash in the ring as a card lands in it. */
+.lpc-r6score-flash {
+	position: absolute;
+	left: 50cqw;
+	top: 52cqh;
+	width: 30cqh;
+	height: 30cqh;
+	margin: -15cqh 0 0 -15cqh;
+	border-radius: 50%;
+	background: radial-gradient(closest-side, rgba(255, 236, 190, 0.55), rgba(255, 236, 190, 0));
+	opacity: 0;
+	animation: lpc-r6score-flash calc(var(--dur, 500ms) * var(--k)) ease-out calc(var(--d, 0ms) * var(--k)) both;
+}
+@keyframes lpc-r6score-flash {
+	0% { opacity: 0; transform: scale(0.6); }
+	30% { opacity: 1; }
+	100% { opacity: 0; transform: scale(1.3); }
+}
+
+/* ---------- The faster wall: the light, the click, the pointer. */
+.lpc-r6score-light {
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 10cqw;
+	height: 10cqw;
+	margin: -5cqw 0 0 -5cqw;
+	border-radius: 50%;
+	background: radial-gradient(closest-side, rgba(255, 236, 190, 0.55), rgba(255, 236, 190, 0));
+}
+.lpc-r6score-light-zig { animation: lpc-r6score-zig calc(var(--dur) * var(--k)) cubic-bezier(0.5, 0, 0.3, 1) calc(var(--d) * var(--k)) both; }
+.lpc-r6score-light-arc { animation: lpc-r6score-arc calc(var(--dur) * var(--k)) cubic-bezier(0.5, 0, 0.3, 1) calc(var(--d) * var(--k)) both; }
+@keyframes lpc-r6score-zig {
+	0% { opacity: 0; transform: translate(12cqw, 72cqh) scale(4); }
+	12% { opacity: 1; }
+	48% { transform: translate(34cqw, 24cqh) scale(4); }
+	100% { opacity: 1; transform: translate(var(--lx), var(--ly)) scale(2.6); }
+}
+@keyframes lpc-r6score-arc {
+	0% { opacity: 0; transform: translate(88cqw, 70cqh) scale(4); }
+	12% { opacity: 1; }
+	50% { transform: translate(64cqw, 22cqh) scale(4); }
+	100% { opacity: 1; transform: translate(var(--lx), var(--ly)) scale(2.6); }
+}
+/* The chosen cell: color, an amber ring, a quick punch. */
+.lpc-r6score-chosen { box-shadow: 0 0 0 0.35cqw #fbbf24, 0 0 3cqw rgba(251, 191, 36, 0.6); }
+.lpc-r6score-punch { animation: lpc-r6score-punch calc(var(--dur, 420ms) * var(--k)) cubic-bezier(0.34, 1.56, 0.64, 1) calc(var(--d, 0ms) * var(--k)) both; }
+@keyframes lpc-r6score-punch {
+	0% { opacity: 0; transform: scale(1); }
+	20% { opacity: 1; transform: scale(0.88); }
+	100% { opacity: 1; transform: scale(1.12); }
+}
+.lpc-r6score-ripple {
+	position: absolute;
+	width: 18cqw;
+	height: 18cqw;
+	margin: -9cqw 0 0 -9cqw;
+	border-radius: 50%;
+	border: 0.4cqw solid #fbbf24;
+	opacity: 0;
+	animation: lpc-r6score-ripple calc(var(--dur, 700ms) * var(--k)) ease-out calc(var(--d, 0ms) * var(--k)) both;
+	pointer-events: none;
+}
+@keyframes lpc-r6score-ripple {
+	0% { opacity: 0; transform: scale(0.25); }
+	1% { opacity: 1; transform: scale(0.25); }
+	100% { opacity: 0; transform: scale(1.6); }
+}
+.lpc-r6score-pointer {
+	position: absolute;
+	left: 0;
+	top: 0;
+	z-index: 6;
+	animation: lpc-r6score-pointer calc(var(--dur) * var(--k)) cubic-bezier(0.5, 0, 0.3, 1) calc(var(--d) * var(--k)) both;
+}
+.lpc-r6score-pointer svg { display: block; width: 3.6cqw; height: auto; filter: drop-shadow(0 0.6cqw 1.6cqw rgba(0, 0, 0, 0.55)); }
+@keyframes lpc-r6score-pointer {
+	0% { opacity: 0; transform: translate(92cqw, 76cqh); }
+	12% { opacity: 1; }
+	50% { transform: translate(64cqw, 26cqh); }
+	100% { opacity: 1; transform: translate(var(--lx), var(--ly)); }
+}
+.lpc-r6score-press { transform-origin: 0 0; animation: lpc-r6score-press calc(var(--dur, 360ms) * var(--k)) ease-in-out calc(var(--d, 0ms) * var(--k)) both; }
+@keyframes lpc-r6score-press {
+	0%, 100% { transform: scale(1); }
+	45% { transform: scale(0.74); }
+}
+
+@container (max-width: 520px) {
+	.lpc-r6score-card { width: 17cqw; height: 26cqh; gap: 1cqh; }
+	.lpc-r6score-n { font-size: 6.4cqw; }
+	.lpc-r6score-who { display: none; }
+	.lpc-r6score-logo { height: 7cqh; }
+	.lpc-r6score-disc { width: 7.5cqh; height: 7.5cqh; padding: 1cqh; }
+	.lpc-r6score-pointer svg { width: 5cqw; }
+}
+@media (prefers-reduced-motion: reduce) {
+	.lpc-r6score * { animation-duration: 1ms !important; animation-delay: 0ms !important; }
+}

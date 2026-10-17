@@ -1,0 +1,345 @@
+/* PROTOTYPE - throwaway. Round 6 openers (r6open): a native-looking chat, the evening passing quietly, the endless
+   wall, "Deciding is hard." Every duration and delay is scaled by --k. Transform and opacity only.
+   The chat window is sized in --u (1.45cqh, 1.4cqh on the phone's TV) so its rows have known heights: the
+   thread's climbs (scenes.tsx) lift it by exact amounts. */
+.lpc-r6open {
+	--u: 1.45cqh;
+	position: absolute;
+	inset: 0;
+	overflow: hidden;
+	background: #05060a;
+	color: #fff;
+	font-family: "Gabarito", ui-sans-serif, system-ui, sans-serif;
+}
+.lpc-r6open-in { animation: lpc-r6open-in calc(850ms * var(--k)) cubic-bezier(0.16, 1, 0.3, 1) both; }
+@keyframes lpc-r6open-in { from { opacity: 0; transform: translateY(0.35em); } }
+.lpc-r6open-fadein { animation: lpc-r6open-fade calc(600ms * var(--k)) ease-out both; }
+@keyframes lpc-r6open-fade { from { opacity: 0; } }
+.lpc-r6open-word { display: inline-block; }
+.lpc-r6open-amber { color: #fbbf24; }
+
+/* ---------- The closing line */
+.lpc-r6open-center {
+	position: absolute;
+	inset: 0 0 9cqh;
+	z-index: 6;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+	gap: 2.4cqh;
+	padding: 0 6cqw;
+	pointer-events: none;
+}
+.lpc-r6open-big {
+	font-weight: 800;
+	line-height: 1;
+	letter-spacing: -0.025em;
+	font-size: 10.5cqw;
+	text-shadow: 0 0.4cqw 3cqw rgba(0, 0, 0, 0.6);
+}
+.lpc-r6open-sub {
+	font-weight: 600;
+	font-size: 2.7cqw;
+	color: rgba(255, 255, 255, 0.8);
+	line-height: 1.25;
+}
+
+/* ---------- The chat window: a messaging app's screen, centered on the TV */
+.lpc-r6open-window {
+	position: absolute;
+	left: 50%;
+	top: 2cqh;
+	bottom: 10cqh;
+	z-index: 3;
+	width: 64cqw;
+	transform: translateX(-50%);
+}
+.lpc-r6open-window-in {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	border-radius: calc(3 * var(--u));
+	background: #0b0b0e;
+	box-shadow: 0 1.5cqw 5cqw rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+.lpc-r6open-rise { animation: lpc-r6open-rise calc(700ms * var(--k)) cubic-bezier(0.16, 1, 0.3, 1) both; }
+@keyframes lpc-r6open-rise { from { opacity: 0; transform: translateY(4cqh) scale(0.97); } }
+
+.lpc-r6open-head {
+	position: relative;
+	z-index: 2;
+	flex: none;
+	height: calc(11 * var(--u));
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-end;
+	padding: 0 calc(2.4 * var(--u)) calc(1.4 * var(--u));
+	background: rgba(22, 22, 26, 0.96);
+	border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+	/* The rows that have scrolled up fade out under the header. */
+	box-shadow: 0 calc(2 * var(--u)) calc(3 * var(--u)) rgba(11, 11, 14, 0.95);
+}
+.lpc-r6open-head-tall { height: calc(13 * var(--u)); }
+.lpc-r6open-who { display: flex; flex-direction: column; align-items: center; gap: calc(0.5 * var(--u)); }
+.lpc-r6open-avatar {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: calc(5.4 * var(--u));
+	height: calc(5.4 * var(--u));
+	border-radius: 50%;
+	background: linear-gradient(160deg, #8e8e98, #5b5b64);
+	font-weight: 700;
+	font-size: calc(2.6 * var(--u));
+}
+.lpc-r6open-name { font-size: calc(2.1 * var(--u)); font-weight: 600; color: rgba(255, 255, 255, 0.9); }
+
+.lpc-r6open-view { position: relative; flex: 1; overflow: hidden; }
+.lpc-r6open-climb { animation: lpc-r6open-climb calc(450ms * var(--k)) cubic-bezier(0.3, 0, 0.2, 1) both; }
+@keyframes lpc-r6open-climb { from { transform: none; } to { transform: translateY(var(--to)); } }
+.lpc-r6open-thread {
+	display: flex;
+	flex-direction: column;
+	gap: calc(1.4 * var(--u));
+	padding: calc(1.6 * var(--u)) calc(2.2 * var(--u));
+}
+
+/* Rows have fixed heights: 4.5 for a separator, 6.6 for a bubble, 21 for a link preview, plus 3 for a time. */
+.lpc-r6open-sep {
+	height: calc(4.5 * var(--u));
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: calc(1.8 * var(--u));
+	font-weight: 600;
+	color: rgba(255, 255, 255, 0.45);
+}
+.lpc-r6open-read {
+	height: calc(3.5 * var(--u));
+	align-self: flex-end;
+	font-size: calc(1.7 * var(--u));
+	color: rgba(255, 255, 255, 0.45);
+}
+.lpc-r6open-row { position: relative; display: flex; flex-direction: column; }
+.lpc-r6open-row-them { align-items: flex-start; }
+.lpc-r6open-row-me { align-items: flex-end; }
+.lpc-r6open-bubble {
+	position: relative;
+	height: calc(5.6 * var(--u));
+	margin-bottom: calc(1 * var(--u));
+	display: flex;
+	align-items: center;
+	max-width: 78%;
+	padding: 0 calc(2.1 * var(--u));
+	border-radius: calc(2.8 * var(--u));
+	font-size: calc(2.7 * var(--u));
+	line-height: 1.15;
+	white-space: nowrap;
+}
+.lpc-r6open-them { background: #26262b; color: #f2f2f5; transform-origin: 0 100%; }
+.lpc-r6open-me { background: #2b74e8; color: #fff; transform-origin: 100% 100%; }
+/* The tails: a small static curl at the bubble's bottom corner. */
+.lpc-r6open-them::before,
+.lpc-r6open-me::before {
+	content: "";
+	position: absolute;
+	bottom: 0;
+	width: calc(2.2 * var(--u));
+	height: calc(2.2 * var(--u));
+	background: inherit;
+}
+.lpc-r6open-them::before { left: calc(-0.7 * var(--u)); clip-path: polygon(0 100%, 60% 0, 100% 100%); }
+.lpc-r6open-me::before { right: calc(-0.7 * var(--u)); clip-path: polygon(100% 100%, 40% 0, 0 100%); }
+.lpc-r6open-attached { margin-top: calc(-0.2 * var(--u)); }
+.lpc-r6open-time {
+	height: calc(3 * var(--u));
+	margin-top: calc(-0.6 * var(--u));
+	font-size: calc(1.6 * var(--u));
+	color: rgba(255, 255, 255, 0.55);
+	font-variant-numeric: tabular-nums;
+}
+.lpc-r6open-pop { animation: lpc-r6open-pop calc(500ms * var(--k)) cubic-bezier(0.16, 1, 0.3, 1) both; }
+@keyframes lpc-r6open-pop { from { opacity: 0; transform: translateY(calc(1.5 * var(--u))) scale(0.92); } }
+
+/* A link preview: the title's picture, its name and what it is. 14.4 tall, then its bubble (6.6). */
+.lpc-r6open-card {
+	width: calc(36 * var(--u));
+	height: calc(14.4 * var(--u));
+	display: flex;
+	overflow: hidden;
+	border-radius: calc(2.2 * var(--u));
+	background: #1c1c21;
+	transform-origin: 100% 100%;
+}
+.lpc-r6open-card img { width: calc(22 * var(--u)); height: 100%; object-fit: cover; flex: none; }
+.lpc-r6open-card-text {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	gap: calc(0.6 * var(--u));
+	min-width: 0;
+	padding: 0 calc(1.6 * var(--u));
+}
+.lpc-r6open-card-text b { font-size: calc(2.2 * var(--u)); line-height: 1.1; font-weight: 700; }
+.lpc-r6open-card-text span { font-size: calc(1.6 * var(--u)); color: rgba(255, 255, 255, 0.55); }
+.lpc-r6open-card + .lpc-r6open-bubble { margin-top: calc(0.6 * var(--u)); }
+
+/* The typing dots: they show for a moment where the answer is about to appear. */
+.lpc-r6open-typing {
+	position: absolute;
+	left: 0;
+	top: 0;
+	height: calc(5.6 * var(--u));
+	display: flex;
+	align-items: center;
+	gap: calc(0.6 * var(--u));
+	padding: 0 calc(1.8 * var(--u));
+	border-radius: calc(2.8 * var(--u));
+	background: #26262b;
+	animation: lpc-r6open-typing calc(650ms * var(--k)) linear both;
+}
+@keyframes lpc-r6open-typing {
+	0% { opacity: 0; transform: scale(0.85); }
+	15%, 85% { opacity: 1; transform: none; }
+	100% { opacity: 0; transform: scale(0.9); }
+}
+.lpc-r6open-typing i {
+	width: calc(1.1 * var(--u));
+	height: calc(1.1 * var(--u));
+	border-radius: 50%;
+	background: rgba(255, 255, 255, 0.55);
+	animation: lpc-r6open-dot calc(900ms * var(--k)) ease-in-out infinite;
+}
+.lpc-r6open-typing i:nth-child(2) { animation-delay: calc(150ms * var(--k)); }
+.lpc-r6open-typing i:nth-child(3) { animation-delay: calc(300ms * var(--k)); }
+@keyframes lpc-r6open-dot { 0%, 60%, 100% { transform: none; opacity: 0.5; } 30% { transform: translateY(calc(-0.6 * var(--u))); opacity: 1; } }
+
+.lpc-r6open-compose {
+	position: relative;
+	z-index: 2;
+	flex: none;
+	height: calc(8 * var(--u));
+	display: flex;
+	align-items: center;
+	padding: 0 calc(2.2 * var(--u));
+	background: rgba(22, 22, 26, 0.96);
+	border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+.lpc-r6open-compose span {
+	flex: 1;
+	height: calc(4.6 * var(--u));
+	display: flex;
+	align-items: center;
+	padding: 0 calc(1.8 * var(--u));
+	border-radius: 999px;
+	border: 1px solid rgba(255, 255, 255, 0.14);
+	font-size: calc(2 * var(--u));
+	color: rgba(255, 255, 255, 0.35);
+}
+
+/* B: the status bar's small clock and signal, and the room's light dropping. */
+.lpc-r6open-status {
+	position: absolute;
+	left: calc(2.6 * var(--u));
+	right: calc(2.6 * var(--u));
+	top: calc(1.2 * var(--u));
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	font-size: calc(1.9 * var(--u));
+	font-weight: 700;
+	color: rgba(255, 255, 255, 0.85);
+}
+.lpc-r6open-bars { display: flex; align-items: flex-end; gap: calc(0.3 * var(--u)); }
+.lpc-r6open-bars i { width: calc(0.5 * var(--u)); background: rgba(255, 255, 255, 0.8); border-radius: 1px; }
+.lpc-r6open-bars i:nth-child(1) { height: calc(0.8 * var(--u)); }
+.lpc-r6open-bars i:nth-child(2) { height: calc(1.2 * var(--u)); }
+.lpc-r6open-bars i:nth-child(3) { height: calc(1.6 * var(--u)); }
+.lpc-r6open-bars b { width: calc(3 * var(--u)); height: calc(1.4 * var(--u)); margin-left: calc(0.6 * var(--u)); border: 1px solid rgba(255, 255, 255, 0.7); border-radius: 2px; }
+.lpc-r6open-dusk {
+	position: absolute;
+	inset: 0;
+	z-index: 3;
+	border-radius: calc(3 * var(--u));
+	background: #000;
+	pointer-events: none;
+	opacity: 0;
+	animation: lpc-r6open-dusk calc(5600ms * var(--k)) linear calc(300ms * var(--k)) both;
+}
+@keyframes lpc-r6open-dusk { to { opacity: 0.32; } }
+
+/* ---------- Small times that flip (B) */
+.lpc-r6open-ticker { position: relative; display: inline-grid; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.lpc-r6open-ticker > span { grid-area: 1 / 1; }
+.lpc-r6open-ticker-size { visibility: hidden; }
+.lpc-r6open-flip,
+.lpc-r6open-flip-first,
+.lpc-r6open-flip-last { animation-duration: calc(var(--s) * var(--k)); animation-fill-mode: both; animation-timing-function: linear; }
+.lpc-r6open-flip-first { animation-name: lpc-r6open-flip-out; }
+.lpc-r6open-flip { animation-name: lpc-r6open-flip; }
+.lpc-r6open-flip-last { animation-name: lpc-r6open-flip-in; animation-duration: calc(400ms * var(--k)); animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1); }
+@keyframes lpc-r6open-flip-out { 0%, 92% { opacity: 1; transform: none; } 100% { opacity: 0; transform: translateY(-0.4em); } }
+@keyframes lpc-r6open-flip { 0% { opacity: 0; transform: translateY(0.4em); } 8%, 92% { opacity: 1; transform: none; } 100% { opacity: 0; transform: translateY(-0.4em); } }
+@keyframes lpc-r6open-flip-in { from { opacity: 0; transform: translateY(0.4em); } }
+
+/* ---------- The moves from the chat to the wall */
+/* A: the chat steps back as the wall rises behind it. */
+.lpc-r6open-step-back { animation: lpc-r6open-stepback calc(1100ms * var(--k)) cubic-bezier(0.65, 0, 0.35, 1) both; }
+@keyframes lpc-r6open-stepback { to { opacity: 0; transform: translateX(-50%) translateY(-3cqh) scale(0.92); } }
+/* B: the chat shrinks into the wall, one screen among endless others. */
+.lpc-r6open-shrink { animation: lpc-r6open-shrink calc(1600ms * var(--k)) cubic-bezier(0.7, 0, 0.3, 1) both; }
+@keyframes lpc-r6open-shrink {
+	60% { opacity: 1; }
+	to { opacity: 0; transform: translateX(-50%) scale(0.16); }
+}
+.lpc-r6open-wall-out { animation: lpc-r6open-wallout calc(1700ms * var(--k)) cubic-bezier(0.7, 0, 0.3, 1) both; }
+@keyframes lpc-r6open-wallout { from { opacity: 0; transform: scale(2.6); } 30% { opacity: 1; } }
+/* C: the thumb keeps scrolling: the chat goes up and out, the wall comes up in the same motion. */
+.lpc-r6open-scroll-off { animation: lpc-r6open-scrolloff calc(1500ms * var(--k)) cubic-bezier(0.65, 0, 0.35, 1) both; }
+@keyframes lpc-r6open-scrolloff { to { transform: translateX(-50%) translateY(-100cqh); } }
+.lpc-r6open-scroll-on { animation: lpc-r6open-scrollon calc(1500ms * var(--k)) cubic-bezier(0.65, 0, 0.35, 1) both; }
+@keyframes lpc-r6open-scrollon { from { transform: translateY(135cqh); } }
+
+/* ---------- The wall */
+.lpc-r6open-wall { position: absolute; inset: -16cqh -12cqw; z-index: 1; }
+.lpc-r6open-tilt {
+	display: flex;
+	flex-direction: column;
+	gap: 1.6cqw;
+	transform: rotate(-6deg);
+	animation: lpc-r6open-sink calc(12s * var(--k)) cubic-bezier(0.3, 0, 0.7, 1) both;
+}
+@keyframes lpc-r6open-sink { from { transform: rotate(-6deg) scale(1.02); } to { transform: rotate(-6deg) scale(1.12); } }
+.lpc-r6open-strip { display: flex; gap: 1.6cqw; width: max-content; animation: lpc-r6open-drift calc(40s * var(--k)) linear both; }
+.lpc-r6open-strip.lpc-r6open-rev { animation-direction: reverse; }
+@keyframes lpc-r6open-drift { to { transform: translateX(-50%); } }
+.lpc-r6open-strip img { width: 12.5cqw; aspect-ratio: 2 / 3; border-radius: 0.8cqw; object-fit: cover; background: #10131c; }
+.lpc-r6open-wall-up { animation: lpc-r6open-wallup calc(1700ms * var(--k)) cubic-bezier(0.16, 1, 0.3, 1) both; }
+@keyframes lpc-r6open-wallup { from { opacity: 0; transform: scale(1.22); } }
+.lpc-r6open-veil {
+	position: absolute;
+	inset: 0;
+	z-index: 2;
+	background:
+		radial-gradient(70% 70% at 50% 50%, rgba(5, 6, 10, 0.55) 0, rgba(5, 6, 10, 0.9) 100%),
+		linear-gradient(180deg, rgba(5, 6, 10, 0.25), rgba(5, 6, 10, 0.8));
+}
+
+/* ---------- The phone's TV: a full-width chat, a little larger; the window's own header is shorter. */
+@container (max-width: 520px) {
+	.lpc-r6open { --u: 1.4cqh; }
+	.lpc-r6open-window { width: 94cqw; top: 2cqh; bottom: 10cqh; }
+	.lpc-r6open-big { font-size: 14cqw; }
+	.lpc-r6open-sub { font-size: 4.8cqw; }
+	.lpc-r6open-strip img { width: 22cqw; }
+	.lpc-r6open-compose { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.lpc-r6open *, .lpc-r6open { animation-duration: 1ms !important; animation-delay: 0ms !important; }
+	.lpc-r6open-typing { display: none; }
+}

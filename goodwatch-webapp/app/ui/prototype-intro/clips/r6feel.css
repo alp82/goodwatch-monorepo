@@ -1,0 +1,256 @@
+/* PROTOTYPE - throwaway. Round 6 "r6feel" clips: chapter 4 (one feeling at a time over a fitting backdrop) and
+   chapter 5 (the phrase types huge, then the top match takes the screen). Builds on r5feel.css's vocabulary
+   (lpc-r5f-rise, -pop, -deal, -slam, -kicker, -line, -chip). Every delay is `--d` (ms at k = 1) times `--k`;
+   transform and opacity only. */
+.lpc-r6feel {
+	--amber: #fbbf24;
+	/* r5feel.css's motion classes read these from their root. */
+	--ease: cubic-bezier(0.16, 1, 0.3, 1);
+	--deal: cubic-bezier(0.25, 0.8, 0.25, 1);
+	position: absolute;
+	inset: 0;
+	overflow: hidden;
+	background: #05060a;
+	color: #fff;
+	font-family: "Gabarito", ui-sans-serif, system-ui, sans-serif;
+}
+.lpc-r6feel img { display: block; max-width: none; }
+.lpc-r6feel em { font-style: normal; color: var(--amber); }
+
+/* ---- Backdrops: each fades in over the one before and keeps drifting. */
+.lpc-r6feel-bd {
+	position: absolute;
+	inset: 0;
+	overflow: hidden;
+	animation: lpc-r6feel-fade calc(var(--len, 700ms) * var(--k)) ease-out calc(var(--d) * var(--k)) both;
+}
+.lpc-r6feel-bd-zoom { animation-name: lpc-r6feel-zoomin; animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1); }
+.lpc-r6feel-kb {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	animation: lpc-r6feel-kb calc(4200ms * var(--k)) cubic-bezier(0.25, 0.1, 0.25, 1) calc(var(--d) * var(--k)) both;
+}
+@keyframes lpc-r6feel-fade { from { opacity: 0; } }
+@keyframes lpc-r6feel-zoomin { from { opacity: 0; transform: scale(1.35); } }
+@keyframes lpc-r6feel-kb { from { transform: scale(1.12) translate(1.2%, 0.8%); } to { transform: scale(1.02); } }
+
+/* ---- The hand-over poster moving away (the wrapper animates; the poster keeps its place inside it). */
+.lpc-r6feel-hero {
+	position: absolute;
+	inset: 0;
+	z-index: 6;
+	transform-origin: 50% 46%;
+	animation: lpc-r6feel-hero calc(var(--len, 900ms) * var(--k)) cubic-bezier(0.65, 0, 0.35, 1) calc(var(--d) * var(--k)) both;
+}
+@keyframes lpc-r6feel-hero { to { transform: translate(var(--hx), var(--hy)) scale(var(--hs)); } }
+.lpc-r6feel-static {
+	position: static !important;
+	transform: none !important;
+	height: 100% !important;
+	width: auto;
+}
+
+/* ---- Words */
+.lpc-r6feel-word {
+	font-weight: 800;
+	line-height: 0.95;
+	letter-spacing: -0.04em;
+	font-size: max(28px, 11cqw);
+	white-space: nowrap;
+	text-shadow: 0 0.5cqw 3cqw rgba(0, 0, 0, 0.55);
+}
+.lpc-r6feel-emoji { font-size: 0.62em; vertical-align: 0.12em; }
+.lpc-r6feel-bar {
+	display: block;
+	width: 44cqw;
+	height: 1.1cqw;
+	margin-top: 2.2cqh;
+	border-radius: 999px;
+	overflow: hidden;
+	background: rgba(255, 255, 255, 0.16);
+}
+.lpc-r6feel-bar b { display: block; height: 100%; border-radius: 999px; }
+.lpc-r6feel-like {
+	margin-top: 1.8cqh;
+	font-size: max(11px, 2.1cqw);
+	font-weight: 600;
+	color: rgba(255, 255, 255, 0.72);
+}
+.lpc-r6feel-like b { color: #fff; font-weight: 800; }
+.lpc-r6feel-chip { font-size: max(11px, 2.4cqw); }
+
+/* A: one at a time, in place. */
+.lpc-r6feel-kicker { position: absolute; z-index: 7; left: 17cqw; top: 9.5cqh; }
+.lpc-r6feel-stage { position: absolute; z-index: 5; left: 7cqw; right: 4cqw; top: 33cqh; height: 34cqh; }
+.lpc-r6feel-in {
+	position: absolute;
+	inset: 0;
+	animation: lpc-r6feel-in calc(620ms * var(--k)) cubic-bezier(0.2, 0.9, 0.3, 1.08) calc(var(--d) * var(--k)) both;
+}
+.lpc-r6feel-out { animation: lpc-r6feel-out calc(420ms * var(--k)) cubic-bezier(0.55, 0, 0.75, 0.3) calc(var(--d) * var(--k)) both; }
+@keyframes lpc-r6feel-in { from { opacity: 0; transform: translateX(6cqw) scale(1.25); } }
+@keyframes lpc-r6feel-out { to { opacity: 0; transform: translateX(-8cqw) scale(0.94); } }
+.lpc-r6feel-final { position: absolute; z-index: 5; left: 7cqw; right: 6cqw; top: 40cqh; }
+
+/* B: the carousel. Each panel slides in from the right over the one before; the one before drifts left. */
+.lpc-r6feel-panel {
+	position: absolute;
+	inset: 0;
+	overflow: hidden;
+	box-shadow: -3cqw 0 6cqw rgba(0, 0, 0, 0.55);
+	animation: lpc-r6feel-panel calc(900ms * var(--k)) cubic-bezier(0.65, 0, 0.35, 1) calc(var(--d) * var(--k)) both;
+}
+.lpc-r6feel-panel-out { position: absolute; inset: 0; animation: lpc-r6feel-panel-out calc(900ms * var(--k)) cubic-bezier(0.65, 0, 0.35, 1) calc(var(--d) * var(--k)) both; }
+@keyframes lpc-r6feel-panel { from { transform: translateX(102%); } }
+@keyframes lpc-r6feel-panel-out { to { transform: translateX(-28%); opacity: 0.5; } }
+.lpc-r6feel-panel-text { position: absolute; left: 7cqw; right: 4cqw; top: 22cqh; }
+.lpc-r6feel-panel-text .lpc-r6feel-in { position: relative; inset: auto; margin-top: 2.6cqh; }
+.lpc-r6feel-panel-hero { position: absolute; left: 7cqw; right: 6cqw; top: 14cqh; display: flex; align-items: center; gap: 4cqw; }
+.lpc-r6feel-panel-poster { height: 52cqh; aspect-ratio: 2 / 3; flex: none; }
+.lpc-r6feel-panel-poster img { border-radius: 1.2cqw; box-shadow: 0 2cqw 6cqw rgba(0, 0, 0, 0.6); }
+.lpc-r6feel-handover {
+	position: absolute;
+	inset: 0;
+	z-index: 20;
+	transform-origin: 50% 46%;
+	animation: lpc-r6feel-handover calc(700ms * var(--k)) cubic-bezier(0.55, 0, 0.75, 0.3) calc(var(--d) * var(--k)) both;
+}
+@keyframes lpc-r6feel-handover { to { opacity: 0; transform: scale(0.8); } }
+
+/* C: zoom through. */
+.lpc-r6feel-through {
+	position: absolute;
+	inset: 0;
+	z-index: 8;
+	transform-origin: 50% 46%;
+	animation: lpc-r6feel-through calc(950ms * var(--k)) cubic-bezier(0.7, 0, 0.84, 0) calc(var(--d) * var(--k)) both;
+}
+@keyframes lpc-r6feel-through { to { transform: scale(4.5); opacity: 0; } }
+.lpc-r6feel-kicker-c { position: absolute; z-index: 7; left: 0; right: 0; top: 14cqh; text-align: center; }
+.lpc-r6feel-zstage { position: absolute; z-index: 5; left: 0; right: 0; top: 30cqh; height: 34cqh; }
+.lpc-r6feel-zin {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	justify-content: center;
+	animation: lpc-r6feel-zin calc(700ms * var(--k)) cubic-bezier(0.16, 1, 0.3, 1) calc(var(--d) * var(--k)) both;
+}
+.lpc-r6feel-zout { animation: lpc-r6feel-zout calc(480ms * var(--k)) cubic-bezier(0.7, 0, 0.84, 0) calc(var(--d) * var(--k)) both; }
+@keyframes lpc-r6feel-zin { from { opacity: 0; transform: scale(0.35); } }
+@keyframes lpc-r6feel-zout { 55% { opacity: 0; } to { opacity: 0; transform: scale(2.6); } }
+.lpc-r6feel-zfinal { position: absolute; z-index: 6; left: 6cqw; right: 6cqw; top: 9cqh; }
+.lpc-r6feel-zposter { height: 42cqh; aspect-ratio: 2 / 3; margin: 0 auto; }
+.lpc-r6feel-zposter img { border-radius: 1.2cqw; box-shadow: 0 2cqw 6cqw rgba(0, 0, 0, 0.6); }
+
+/* ---- Chapter 5: the phrase types huge, then gets out of the way. */
+.lpc-r6feel-search { background: radial-gradient(90% 70% at 50% 0%, #11151f 0, #05060a 70%); }
+.lpc-r6feel-huge {
+	position: absolute;
+	z-index: 5;
+	left: 5cqw;
+	right: 5cqw;
+	top: 30cqh;
+	transform-origin: 50% 0;
+}
+.lpc-r6feel-wordbox { display: inline-block; white-space: nowrap; }
+.lpc-r6feel-quote {
+	text-align: center;
+	font-weight: 800;
+	font-size: max(22px, 8cqw);
+	line-height: 1.04;
+	letter-spacing: -0.03em;
+}
+.lpc-r6feel-quote .lpc-sf-typed { display: inline; color: #fff; }
+.lpc-r6feel-quote .lpc-sf-ch { display: inline-block; }
+.lpc-r6feel-mark { color: var(--amber); display: inline-block; }
+.lpc-r6feel-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 1.1cqw; margin-top: 3.2cqh; min-height: 4cqw; }
+.lpc-r6feel-chips .lpc-sf-chip { font-size: max(11px, 2.6cqw); padding: 0.6cqw 1.8cqw; }
+/* A: the huge phrase leaves upward as the search field (with the same phrase and the reading) takes its place. */
+.lpc-r6feel-leave { animation: lpc-r6feel-leave calc(420ms * var(--k)) cubic-bezier(0.55, 0, 0.75, 0.3) calc(var(--d) * var(--k)) both; }
+@keyframes lpc-r6feel-leave { to { opacity: 0; transform: translateY(-10cqh) scale(0.7); } }
+.lpc-r6feel-top { position: absolute; z-index: 6; left: 6cqw; right: 6cqw; top: 6cqh; }
+.lpc-r6feel-top .lpc-sf-field { width: 64cqw; height: 7cqw; font-size: max(12px, 2.8cqw); }
+.lpc-r6feel-top .lpc-sf-readas { margin-top: 1.6cqh; }
+.lpc-r6feel-arrive { animation: lpc-r6feel-arrive calc(700ms * var(--k)) cubic-bezier(0.16, 1, 0.3, 1) calc(var(--d) * var(--k)) both; }
+@keyframes lpc-r6feel-arrive { from { opacity: 0; transform: translateY(8cqh) scale(1.35); } }
+/* B: the phrase itself shrinks into the field, and the field's outline grows around it. */
+.lpc-r6feel-morph { animation: lpc-r6feel-morph calc(900ms * var(--k)) cubic-bezier(0.65, 0, 0.35, 1) calc(var(--d) * var(--k)) both; }
+@keyframes lpc-r6feel-morph { to { transform: translateY(-25.5cqh) scale(0.42); } }
+.lpc-r6feel-ring-out {
+	position: absolute;
+	z-index: 4;
+	left: 50%;
+	top: 2.6cqh;
+	width: 48cqw;
+	height: 11cqw;
+	margin-left: -24cqw;
+	border-radius: 2.6cqw;
+	background: rgba(255, 255, 255, 0.06);
+	box-shadow: inset 0 0 0 0.2cqw rgba(251, 191, 36, 0.6);
+	animation: lpc-r6feel-outline calc(700ms * var(--k)) cubic-bezier(0.16, 1, 0.3, 1) calc(var(--d) * var(--k)) both;
+}
+@keyframes lpc-r6feel-outline { from { opacity: 0; transform: scale(1.3, 2.2); } }
+/* The top match: full-bleed backdrop, big title, ring; the rest beside it. */
+.lpc-r6feel-match {
+	position: absolute;
+	z-index: 6;
+	left: 6cqw;
+	right: 6cqw;
+	bottom: 13cqh;
+	display: flex;
+	align-items: flex-end;
+	gap: 3cqw;
+}
+.lpc-r6feel-match-title { font-weight: 800; font-size: max(24px, 8.4cqw); line-height: 0.95; letter-spacing: -0.035em; margin-top: 0.8cqh; }
+.lpc-r6feel-rest { margin-left: auto; display: flex; gap: 1.2cqw; }
+.lpc-r6feel-rest .lpc-r5f-result { width: 9.4cqw; }
+.lpc-r6feel-ring { width: 7.4cqw; }
+/* C: the six results deal in as a row, then the first grows to take the screen and the others step aside. */
+.lpc-r6feel-row { position: absolute; z-index: 5; left: 6cqw; right: 6cqw; top: 46cqh; display: flex; justify-content: center; gap: 1.6cqw; }
+.lpc-r6feel-row .lpc-r5f-result { width: 12.4cqw; }
+.lpc-r6feel-aside { animation: lpc-r6feel-aside calc(700ms * var(--k)) cubic-bezier(0.55, 0, 0.75, 0.3) calc(var(--d) * var(--k)) both; }
+@keyframes lpc-r6feel-aside { to { opacity: 0; transform: translateY(14cqh) scale(0.8); } }
+.lpc-r6feel-grow {
+	position: absolute;
+	inset: 0;
+	z-index: 4;
+	transform-origin: var(--ox) 60%;
+	animation: lpc-r6feel-grow calc(950ms * var(--k)) cubic-bezier(0.65, 0, 0.35, 1) calc(var(--d) * var(--k)) both;
+}
+@keyframes lpc-r6feel-grow { from { opacity: 0; transform: scale(0.14); } 25% { opacity: 1; } }
+
+/* ---- Phone TV: everything bigger relative to the screen, secondary lines go. */
+@container (max-width: 520px) {
+	.lpc-r6feel-word { font-size: max(26px, 12.5cqw); }
+	.lpc-r6feel-stage, .lpc-r6feel-final { left: 6cqw; }
+	.lpc-r6feel-kicker { left: 19cqw; }
+	.lpc-r6feel-bar { width: 60cqw; height: 1.6cqw; }
+	.lpc-r6feel-like { font-size: 3.4cqw; }
+	.lpc-r6feel-chip { font-size: 10px; }
+	.lpc-r6feel-panel-poster { height: 40cqh; }
+	.lpc-r6feel-quote { font-size: max(16px, 8.6cqw); }
+	.lpc-r6feel-chips .lpc-sf-chip { font-size: 3.2cqw; }
+	.lpc-r6feel-top .lpc-sf-field { width: 88cqw; height: 11cqw; font-size: 4.2cqw; }
+	.lpc-r6feel-ring-out { width: 92cqw; margin-left: -46cqw; height: 12cqw; }
+	.lpc-r6feel-match-title { font-size: 10cqw; }
+	.lpc-r6feel-rest > :nth-child(n + 3) { display: none; }
+	.lpc-r6feel-rest .lpc-r5f-result { width: 14cqw; }
+	.lpc-r6feel-row .lpc-r5f-result { width: 14cqw; }
+	.lpc-r6feel-row > :nth-child(n + 5) { display: none; }
+	.lpc-r6feel-ring { width: 10cqw; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.lpc-r6feel *, .lpc-r6feel { animation-duration: 1ms !important; animation-delay: 0ms !important; }
+	.lpc-r6feel-out, .lpc-r6feel-zout, .lpc-r6feel-panel-out { animation: none !important; }
+	.lpc-r6feel-stage > :not(:last-child), .lpc-r6feel-zstage > :not(:last-child) { display: none; }
+}
+/* B and C: the phrase shrinks toward the top from its own top edge. */
+.lpc-r6feel-morph { transform-origin: 50% 30cqh; }
+.lpc-r6feel-chipsaway { animation: lpc-r6feel-chipsaway calc(300ms * var(--k)) ease-in calc(var(--d) * var(--k)) both; }
+@keyframes lpc-r6feel-chipsaway { to { opacity: 0; transform: scale(0.9); } }
+.lpc-r6feel-smallchips { position: absolute; z-index: 6; left: 6cqw; right: 6cqw; top: 2.6cqh; margin-top: 12.4cqw; justify-content: center; }
+.lpc-r6feel-smallchips-bare { margin-top: 9.4cqw; }

@@ -1,0 +1,306 @@
+/* PROTOTYPE - throwaway. Round 6, chapter 6 (filters): "From everything to tonight." with big posters and clear
+   filters. Transform and opacity only; every time goes through --k. */
+
+.lp6f {
+	position: absolute;
+	inset: 0;
+	overflow: hidden;
+	background: radial-gradient(85% 90% at 70% 45%, #141a28 0%, #05060a 72%);
+	color: #fff;
+	font-family: "Gabarito", ui-sans-serif, system-ui, sans-serif;
+}
+.lp6f-amber { color: #fbbf24; }
+.lp6f-kicker {
+	font-size: max(10px, 1.5cqw);
+	font-weight: 800;
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	color: #fbbf24;
+}
+.lp6f-h {
+	margin: 0.6cqh 0 0;
+	font-size: 4.6cqw;
+	font-weight: 800;
+	line-height: 1.02;
+	letter-spacing: -0.02em;
+}
+.lp6f-word { display: inline-block; }
+
+/* ---------- Timing primitives */
+.lp6f-show { animation: lp6f-show calc(1ms * var(--k)) steps(1, end) calc(var(--a) * var(--k)) both; }
+@keyframes lp6f-show { from { opacity: 0; } to { opacity: 1; } }
+.lp6f-exit-hide { animation: lp6f-hide calc(1ms * var(--k)) steps(1, end) calc(var(--x) * var(--k)) both; }
+@keyframes lp6f-hide { from { opacity: 1; } to { opacity: 0; } }
+.lp6f-exit-fall { animation: lp6f-fall calc(560ms * var(--k)) cubic-bezier(0.55, 0, 0.75, 0.3) calc(var(--x) * var(--k)) both; }
+@keyframes lp6f-fall { to { opacity: 0; transform: translateY(26%) rotate(5deg) scale(0.88); } }
+.lp6f-exit-lift { animation: lp6f-lift calc(360ms * var(--k)) ease-in calc(var(--x) * var(--k)) both; }
+@keyframes lp6f-lift { to { opacity: 0; transform: translateY(-40%); } }
+
+.lp6f-m { animation-fill-mode: both; animation-delay: calc(var(--d) * var(--k)); }
+.lp6f-m-rise { animation-name: lp6f-rise; animation-duration: calc(760ms * var(--k)); animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1); }
+@keyframes lp6f-rise { from { opacity: 0; transform: translateY(45%); } }
+.lp6f-m-deal { animation-name: lp6f-deal; animation-duration: calc(750ms * var(--k)); animation-timing-function: cubic-bezier(0.25, 0.8, 0.25, 1); }
+@keyframes lp6f-deal { from { opacity: 0; transform: translate(-14%, -14%) scale(1.12); } }
+.lp6f-m-pop { animation-name: lp6f-pop; animation-duration: calc(520ms * var(--k)); animation-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1); }
+@keyframes lp6f-pop { from { opacity: 0; transform: scale(0.6); } }
+.lp6f-m-slide { animation-name: lp6f-slide; animation-duration: calc(650ms * var(--k)); animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1); }
+@keyframes lp6f-slide {
+	from { transform: translate(calc(var(--dx) * var(--cell-x)), calc(var(--dy) * var(--cell-y))); }
+}
+.lp6f-layer { position: absolute; left: 0; top: 0; }
+
+/* ---------- The big number */
+.lp6f-number { position: relative; }
+.lp6f-number-n {
+	position: relative;
+	font-size: 12.5cqw;
+	font-weight: 800;
+	line-height: 1;
+	letter-spacing: -0.04em;
+	font-variant-numeric: tabular-nums;
+}
+.lp6f-number-caption {
+	position: relative;
+	margin-top: 0.6cqh;
+	font-size: 2.3cqw;
+	font-weight: 700;
+	color: rgba(255, 255, 255, 0.82);
+	white-space: nowrap;
+}
+.lp6f-number-hold { visibility: hidden; display: inline-block; }
+
+/* ---------- The filter toggles */
+.lp6f-toggles { display: flex; flex-wrap: wrap; gap: 1cqw; }
+.lp6f-toggle {
+	--on-d: calc(var(--on) * var(--k));
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.8cqw;
+	padding: 0.75cqw 1cqw 0.75cqw 1.1cqw;
+	border-radius: 999px;
+	font-size: 1.75cqw;
+	font-weight: 800;
+	white-space: nowrap;
+	isolation: isolate;
+	opacity: 0.55;
+	animation:
+		lp6f-brighten calc(1ms * var(--k)) steps(1, end) var(--on-d) both,
+		lp6f-punch calc(520ms * var(--k)) cubic-bezier(0.34, 1.56, 0.64, 1) var(--on-d) both;
+}
+@keyframes lp6f-brighten { to { opacity: 1; } }
+@keyframes lp6f-punch { 0% { transform: scale(1); } 40% { transform: scale(1.12); } 100% { transform: scale(1); } }
+/* The outline while off, and the amber fill that switches on. */
+.lp6f-toggle::before,
+.lp6f-toggle::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	border-radius: inherit;
+}
+.lp6f-toggle::before { border: 0.2cqw solid rgba(255, 255, 255, 0.45); background: rgba(255, 255, 255, 0.05); }
+.lp6f-toggle::after {
+	background: rgba(251, 191, 36, 0.2);
+	box-shadow: 0 0 0 0.22cqw #fbbf24, 0 0 2.4cqw rgba(251, 191, 36, 0.35);
+	opacity: 0;
+	animation: lp6f-on calc(260ms * var(--k)) ease-out var(--on-d) both;
+}
+@keyframes lp6f-on { to { opacity: 1; } }
+.lp6f-toggle-mark { display: inline-flex; flex: none; align-items: center; }
+.lp6f-toggle-label, .lp6f-switch { flex: none; }
+.lp6f-toggle-tag {
+	padding: 0.1cqw 0.6cqw;
+	border-radius: 999px;
+	background: rgba(255, 255, 255, 0.14);
+	font-size: 0.95cqw;
+	font-weight: 700;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: rgba(255, 255, 255, 0.7);
+}
+.lp6f-switch {
+	position: relative;
+	width: 3.4cqw;
+	height: 1.9cqw;
+	border-radius: 999px;
+	background: rgba(255, 255, 255, 0.22);
+}
+.lp6f-switch::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	border-radius: inherit;
+	background: #fbbf24;
+	opacity: 0;
+	animation: lp6f-on calc(260ms * var(--k)) ease-out var(--on-d) both;
+}
+.lp6f-switch-knob {
+	position: absolute;
+	z-index: 1;
+	left: 0.25cqw;
+	top: 0.25cqw;
+	width: 1.4cqw;
+	height: 1.4cqw;
+	border-radius: 50%;
+	background: #fff;
+	box-shadow: 0 0.2cqw 0.5cqw rgba(0, 0, 0, 0.4);
+	animation: lp6f-knob calc(320ms * var(--k)) cubic-bezier(0.34, 1.56, 0.64, 1) var(--on-d) both;
+}
+@keyframes lp6f-knob { to { transform: translateX(1.5cqw); } }
+.lp6f-logos { display: inline-flex; flex: none; gap: 0.35cqw; }
+.lp6f-logos img { display: block; flex: none; width: 2.4cqw; height: 2.4cqw; max-width: none; border-radius: 0.5cqw; object-fit: cover; }
+.lp6f-dot { width: 1.6cqw; height: 1.6cqw; border-radius: 50%; }
+.lp6f-icon { width: 2.1cqw; height: 2.1cqw; color: #fbbf24; }
+
+/* ---------- The posters */
+.lp6f-posters {
+	position: absolute;
+	--pw: 12cqw;
+	--gap: 1.2cqw;
+	--cell-x: calc(var(--pw) + var(--gap));
+	--cell-y: calc(var(--pw) * 1.5 + var(--gap));
+	width: calc(var(--cols) * var(--cell-x) - var(--gap));
+	height: calc(var(--rows) * var(--cell-y) - var(--gap));
+}
+.lp6f-cell {
+	position: absolute;
+	left: calc(var(--c) * var(--cell-x));
+	top: calc(var(--r) * var(--cell-y));
+	width: var(--pw);
+	aspect-ratio: 2 / 3;
+}
+.lp6f-poster {
+	display: block;
+	width: 100%;
+	height: 100%;
+	aspect-ratio: 2 / 3;
+	border-radius: 0.9cqw;
+	object-fit: cover;
+	background: #10131c;
+	box-shadow: 0 1.2cqw 2.8cqw rgba(0, 0, 0, 0.55);
+}
+.lp6f-poster-none { display: flex; align-items: center; justify-content: center; padding: 1cqw; font-size: 1.4cqw; text-align: center; }
+.lp6f-stamp {
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	padding: 0.4cqw 1.2cqw;
+	border: 0.3cqw solid #fbbf24;
+	border-radius: 0.6cqw;
+	background: rgba(5, 6, 10, 0.75);
+	color: #fbbf24;
+	font-size: 2.2cqw;
+	font-weight: 900;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	transform: translate(-50%, -50%) rotate(-12deg);
+	animation: lp6f-stamp calc(380ms * var(--k)) cubic-bezier(0.34, 1.56, 0.64, 1) calc(var(--d) * var(--k)) both;
+}
+@keyframes lp6f-stamp { from { opacity: 0; transform: translate(-50%, -50%) rotate(-12deg) scale(2.2); } }
+
+.lp6f-note {
+	position: absolute;
+	right: 3cqw;
+	top: 3.2cqh;
+	padding: 0.35cqw 1cqw;
+	border-radius: 999px;
+	background: rgba(255, 255, 255, 0.09);
+	font-size: max(9px, 1.05cqw);
+	font-weight: 700;
+	color: rgba(255, 255, 255, 0.6);
+}
+
+/* ---------- A: number left, four big posters right, the filter bar along the bottom */
+.lp6f-a-left { position: absolute; left: 5cqw; top: 12cqh; width: 46cqw; }
+.lp6f-a .lp6f-h { font-size: 5.2cqw; }
+.lp6f-a .lp6f-number { margin-top: 6cqh; }
+.lp6f-a .lp6f-number-n { font-size: 14cqw; }
+.lp6f-a .lp6f-number-caption { font-size: 2.6cqw; }
+.lp6f-a-posters { right: 6cqw; top: 6cqh; --pw: 13.2cqw; --gap: 1.3cqw; }
+.lp6f-a-bar { position: absolute; left: 5cqw; right: 4cqw; bottom: 12cqh; flex-wrap: nowrap; gap: 0.9cqw; }
+.lp6f-a-bar .lp6f-toggle { font-size: 1.62cqw; gap: 0.6cqw; padding: 0.8cqw 0.9cqw 0.8cqw 1cqw; }
+.lp6f-a-bar .lp6f-switch { width: 2.9cqw; height: 1.65cqw; }
+.lp6f-a-bar .lp6f-switch-knob { width: 1.15cqw; height: 1.15cqw; animation-name: lp6f-knob-a; }
+@keyframes lp6f-knob-a { to { transform: translateX(1.25cqw); } }
+
+/* ---------- B: number over a full-width poster row */
+.lp6f-b-top { position: absolute; left: 4.5cqw; right: 4cqw; top: 7cqh; }
+.lp6f-b .lp6f-h { font-size: 3.6cqw; }
+.lp6f-b .lp6f-toggles { margin-top: 2.2cqh; }
+.lp6f-b-number { position: absolute; left: 4.5cqw; top: 33cqh; display: flex; align-items: baseline; gap: 2cqw; }
+.lp6f-b-number .lp6f-number-n { font-size: 9.5cqw; }
+.lp6f-b-number .lp6f-number-caption { margin: 0; font-size: 2.6cqw; }
+.lp6f-b-posters { left: 4.5cqw; top: 52cqh; --pw: 13.6cqw; --gap: 1.3cqw; }
+.lp6f-callout-w { position: absolute; left: 0; right: 0; top: 61cqh; z-index: 5; display: flex; justify-content: center; pointer-events: none; }
+.lp6f-callout {
+	display: inline-flex;
+	align-items: center;
+	gap: 1.4cqw;
+	padding: 1.4cqw 3cqw;
+	border-radius: 999px;
+	background: #fbbf24;
+	color: #111;
+	font-size: 4.4cqw;
+	font-weight: 900;
+	letter-spacing: -0.01em;
+	box-shadow: 0 1.5cqw 5cqw rgba(0, 0, 0, 0.6);
+}
+.lp6f-callout::before { content: "+"; font-weight: 900; }
+.lp6f-callout .lp6f-icon { width: 3.6cqw; height: 3.6cqw; color: #111; }
+.lp6f-callout .lp6f-dot { width: 2.6cqw; height: 2.6cqw; }
+.lp6f-callout .lp6f-logos img { width: 4cqw; height: 4cqw; }
+
+/* ---------- C: filter first */
+.lp6f-c-left { position: absolute; left: 4.5cqw; top: 8cqh; width: 40cqw; }
+.lp6f-c .lp6f-h { font-size: 4cqw; }
+.lp6f-panel { display: flex; flex-direction: column; gap: 1.6cqh; margin-top: 4cqh; }
+.lp6f-c .lp6f-row { display: flex; width: 100%; font-size: 2.2cqw; padding: 1.1cqw 1.3cqw 1.1cqw 1.6cqw; }
+.lp6f-c .lp6f-row .lp6f-toggle-label { flex: 1; }
+.lp6f-c .lp6f-row .lp6f-switch { width: 4.2cqw; height: 2.3cqw; }
+.lp6f-c .lp6f-row .lp6f-switch-knob { width: 1.8cqw; height: 1.8cqw; }
+.lp6f-c .lp6f-row .lp6f-switch-knob { animation-name: lp6f-knob-c; }
+@keyframes lp6f-knob-c { to { transform: translateX(1.9cqw); } }
+.lp6f-c-right { position: absolute; left: 49cqw; right: 3cqw; top: 9cqh; }
+.lp6f-c .lp6f-number-n { font-size: 10cqw; }
+.lp6f-c-posters { position: relative; margin-top: 3.5cqh; --pw: 14.6cqw; --gap: 1.4cqw; }
+
+/* ---------- The phone's TV: bigger type, fewer posters */
+@container (max-width: 520px) {
+	.lp6f-h { font-size: 6.4cqw; }
+	.lp6f-kicker, .lp6f-note { display: none; }
+	.lp6f-number-n { font-size: 15cqw; }
+	.lp6f-number-caption { font-size: 4cqw; }
+	.lp6f-toggle { font-size: 3.4cqw; padding: 1.2cqw 1.6cqw; }
+	.lp6f-switch, .lp6f-toggle-tag { display: none; }
+	.lp6f-logos img { width: 4cqw; height: 4cqw; }
+	.lp6f-icon { width: 3.6cqw; height: 3.6cqw; }
+
+	.lp6f-a-left { left: 4cqw; top: 6cqh; width: 50cqw; }
+	.lp6f-a .lp6f-h { font-size: 6.4cqw; }
+	.lp6f-a .lp6f-number-n { font-size: 16cqw; }
+	.lp6f-a .lp6f-number-caption { font-size: 4cqw; }
+	.lp6f-a-posters { right: 4cqw; top: 5cqh; --pw: 17cqw; }
+	.lp6f-a-bar { left: 4cqw; right: 3cqw; bottom: 13cqh; flex-wrap: wrap; gap: 1.4cqw; }
+	.lp6f-a-bar .lp6f-toggle { font-size: 3.2cqw; }
+
+	.lp6f-b .lp6f-h { font-size: 5.6cqw; }
+	.lp6f-b .lp6f-toggles { gap: 1.2cqw; }
+	.lp6f-b-number { top: 38cqh; }
+	.lp6f-b-number .lp6f-number-n { font-size: 13cqw; }
+	.lp6f-b-number .lp6f-number-caption { font-size: 3.8cqw; }
+	.lp6f-b-posters { --pw: 14.2cqw; top: 55cqh; }
+	.lp6f-callout { font-size: 6cqw; }
+
+	.lp6f-c-left { width: 44cqw; top: 6cqh; }
+	.lp6f-c .lp6f-h { font-size: 5.6cqw; }
+	.lp6f-c .lp6f-row { font-size: 3.4cqw; padding: 1.4cqw 1.8cqw; }
+	.lp6f-panel { gap: 1.2cqh; margin-top: 2cqh; }
+	.lp6f-c-right { left: 52cqw; top: 6cqh; }
+	.lp6f-c .lp6f-number-n { font-size: 13cqw; }
+	.lp6f-c-posters { --pw: 13.6cqw; --cols: 3; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.lp6f *, .lp6f *::before, .lp6f *::after { animation-duration: 1ms !important; animation-delay: 0ms !important; }
+}
