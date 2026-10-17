@@ -2,14 +2,14 @@
 import { useSearchParams } from "@remix-run/react"
 import { useEffect } from "react"
 
-export function PrototypeSwitcher({ variants, position = "bottom-6 left-1/2 -translate-x-1/2" }: { variants: Record<string, string>; position?: string }) {
+export function PrototypeSwitcher({ variants, position = "bottom-6 left-1/2 -translate-x-1/2", param = "variant", fallback }: { variants: Record<string, string>; position?: string; param?: string; fallback?: string }) {
 	const [params, setParams] = useSearchParams()
 	const keys = Object.keys(variants)
-	const current = params.get("variant") ?? keys[0]
+	const current = params.get(param) ?? fallback ?? keys[0]
 	const go = (step: number) => {
 		const next = keys[(keys.indexOf(current) + step + keys.length) % keys.length]
 		const p = new URLSearchParams(params)
-		p.set("variant", next)
+		p.set(param, next)
 		setParams(p, { replace: true, preventScrollReset: true })
 	}
 	useEffect(() => {

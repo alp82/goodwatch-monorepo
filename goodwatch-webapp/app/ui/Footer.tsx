@@ -3,13 +3,21 @@ import {
 	ArrowRightIcon,
 	ArrowTopRightOnSquareIcon,
 } from "@heroicons/react/20/solid"
-import { Link } from "@remix-run/react"
+import { Link, useSearchParams } from "@remix-run/react"
+import { PrototypeSwitcher } from "~/ui/prototype/PrototypeSwitcher"
+import {
+	FOOTER_VARIANTS,
+	VariantA,
+	VariantB,
+	VariantC,
+	VariantD,
+	VariantE,
+} from "~/ui/prototype-footer/variants"
 import avatars from "~/img/avatars/avatars.svg"
 import discordColor from "~/img/discord-mark-blue.svg"
 import justwatchLogo from "~/img/justwatch-logo.svg"
 import redditColor from "~/img/reddit-color.svg"
 import texture from "~/img/texture-diagmonds-light.png"
-import shieldazeBanner from "~/img/secured-by-shieldaze-120.webp"
 import tmdbLogo from "~/img/tmdb-logo.svg"
 
 const DISCORD_GOODWATCH_URL = "https://discord.gg/TVAcrfQzcA"
@@ -115,7 +123,24 @@ const navigation = {
 	],
 }
 
+// PROTOTYPE - throwaway: ?footer=A..E swaps the footer on any page; "Now" is today's footer.
+const PROTO = { Now: "Today's footer", ...FOOTER_VARIANTS }
+const VARIANT_VIEWS: Record<string, () => JSX.Element> = { A: VariantA, B: VariantB, C: VariantC, D: VariantD, E: VariantE }
+
 export default function Footer() {
+	const [params] = useSearchParams()
+	const key = params.get("footer") ?? "A"
+	const View = VARIANT_VIEWS[key]
+	if (process.env.NODE_ENV === "production") return <CurrentFooter />
+	return (
+		<>
+			{View ? <View /> : <CurrentFooter />}
+			<PrototypeSwitcher variants={PROTO} param="footer" fallback="A" position="bottom-28 lg:bottom-6 left-1/2 -translate-x-1/2" />
+		</>
+	)
+}
+
+function CurrentFooter() {
 	return (
 		<footer className="mt-48">
 			<section className="pb-16 px-4 sm:px-6 lg:px-8">
@@ -338,37 +363,7 @@ export default function Footer() {
 						</a>
 					</div>
 
-					{/* Required by the IMDb non-commercial dataset license. */}
-					<p className="mt-3 text-center text-xs leading-5 text-gray-500">
-						Information courtesy of IMDb (
-						<a
-							href="https://www.imdb.com"
-							target="_blank"
-							rel="noreferrer"
-							className="hover:text-gray-300"
-						>
-							https://www.imdb.com
-						</a>
-						). Used with permission.
-					</p>
-
-					<div className="mt-4 mb-16 flex justify-center">
-						<a
-							href="https://shieldaze.com"
-							target="_blank"
-							className="flex items-center gap-2 text-xs text-gray-500 hover:text-gray-300 transition-colors"
-							rel="noreferrer"
-						>
-							<img
-								alt="Shieldaze"
-								loading="lazy"
-								width={144}
-								height={40}
-								className="h-10 w-auto"
-								src={assetUrl(shieldazeBanner)}
-							/>
-						</a>
-					</div>
+					<div className="mb-16" />
 				</div>
 			</div>
 		</footer>
