@@ -1,9 +1,13 @@
 import { type LibraryStatus, sortsFor } from "../../domain/my-library.ts"
-import { discoverParams, hasDiscoverFilters } from "./discover-filters.ts"
+import {
+	discoverParams,
+	hasDiscoverFilters,
+	isDiscoverySearch,
+} from "./discover-filters.ts"
 import type { ReadArgs, ReadToolName } from "./tools.server.ts"
 
 export const linkInstructions =
-	"Use each title’s GoodWatch match (50–99 percent) and match_label for taste fit; never replace them with your own judgment, an invented score, or an estimated ranking. Null means no GoodWatch taste match is available (insufficient liked titles or missing title fingerprint); say so. For the best-fitting library titles use sort=match; for longest movies use kind=movie and sort=runtime, which sorts the whole filtered library before paging. runtime_minutes is movie duration or usual episode duration for shows. When availability includes offers, always write each provider using its ready-made stream_link field VERBATIM as a Markdown link. Never replace it with a plain or bold provider name; link_kind=where_to_watch is the site’s TMDB fallback, not a direct playback link. Always write every movie or show title using its ready-made link field VERBATIM as a Markdown link, including the full Title (Year) label. Never replace it with bold or plain text, including choices and write receipts. Different IDs can be distinct works with the same title and year: mention their runtime_minutes when needed to distinguish them. End every list-like answer with 'See it on GoodWatch:' followed by a Markdown link to page_url. Use page_note for broader views; never invent URLs, years or promise identical results."
+	"Use each title’s GoodWatch match (50–99 percent) and match_label for taste fit; never replace them with your own judgment, an invented score, or an estimated ranking. Null means no GoodWatch taste match is available (insufficient liked titles or missing title fingerprint); say so. For the best-fitting library titles use sort=match; for longest movies use kind=movie and sort=runtime, which sorts the whole filtered library before paging. runtime_minutes is movie duration or usual episode duration for shows. When availability includes offers, always write each provider using its ready-made stream_link field VERBATIM as a Markdown link. Never replace it with a plain or bold provider name; link_kind=where_to_watch is the site’s TMDB fallback, not a direct playback link. Always write every movie or show title using its ready-made link field VERBATIM as a Markdown link, including the full Title (Year) label. Never replace it with bold, italic or plain text, including choices and write receipts. Poster cards do not replace the text: always repeat results as a bulleted list of links, one title per bullet, its ready-made link first, then a short note. Every title mentioned elsewhere in the prose must also use its ready-made link. Always write every person name using their ready-made link field VERBATIM as a Markdown link, including cast, directors, creators, search results and filmography subjects; never replace it with bold, italic or plain text. Different IDs can be distinct works with the same title and year: mention their runtime_minutes when needed to distinguish them. End every list-like answer with 'See it on GoodWatch:' followed by a Markdown link to page_url. Use page_note for broader views; never invent URLs, years or promise identical results."
 
 /** Escape display text, not markup; never invent a missing catalog year. */
 export function titleLink(
@@ -42,9 +46,11 @@ export function withPageLink(
 					| boolean
 					| undefined,
 			}
-			const filtered = name !== "search_titles" || hasDiscoverFilters(filters)
+			const searching =
+				name === "search_titles" && !isDiscoverySearch({ ...args, query })
+			const filtered = !searching || hasDiscoverFilters(filters)
 			const params = filtered
-				? discoverParams(filters, name === "search_titles")
+				? discoverParams(filters, searching)
 				: new URLSearchParams()
 			if (query) params.set("q", query)
 			if (!params.has("services")) params.set("services", "all")
@@ -54,15 +60,14 @@ export function withPageLink(
 			)
 			if (!params.has("foryou"))
 				params.set("foryou", (data.for_you ?? args.for_you ?? true) ? "1" : "0")
-			if (name !== "search_titles") {
+			if (!searching) {
 				params.delete("q")
 				params.set("layout", "grid")
 			}
 			path = `/discover?${params}`
-			note =
-				name !== "search_titles"
-					? undefined
-					: "Discover searches this query using the website's ranking and filters; its results can differ from this tool's catalog lookup."
+			note = !searching
+				? undefined
+				: "Discover searches this query using the website's ranking and filters; its results can differ from this tool's catalog lookup."
 			break
 		}
 		case "get_title": {

@@ -20,7 +20,7 @@ import { getTitleSnapshot } from "../title-snapshot/index.server"
 import { getTonightsPick } from "../tonight.server"
 import { getUserData } from "../userData.server"
 import { getMemberViewerContext } from "../viewer.server"
-import { hasDiscoverFilters } from "./discover-filters.ts"
+import { hasDiscoverFilters, isDiscoverySearch } from "./discover-filters.ts"
 import { titleLink } from "./links.ts"
 import type { ReadArgs, ReadToolName } from "./tools.server.ts"
 import { watchAvailability } from "./watch-links.server.ts"
@@ -327,6 +327,13 @@ export async function readMemberTool(
 			userId,
 			origin,
 			name,
+			args,
+		)
+	if (name === "search_titles" && isDiscoverySearch(args))
+		return (await import("./discover.server.ts")).readDiscover(
+			userId,
+			origin,
+			"discover_titles",
 			args,
 		)
 	if (name === "search_titles" && hasDiscoverFilters(args)) {

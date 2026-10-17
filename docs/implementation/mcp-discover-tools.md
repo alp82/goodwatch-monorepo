@@ -9,7 +9,7 @@ Both title tools accept the same optional filters:
 | Parameters | Meaning |
 | --- | --- |
 | `type` | `all`, `movie`, `show` |
-| `genres` | Any of the selected exact genre names from `get_discover_filters` |
+| `genres` | One exact genre name or an array of names from `get_discover_filters`; matches any selected genre |
 | `min_year`, `max_year` | Inclusive release years, 1800–2100 |
 | `min_runtime`, `max_runtime` | Inclusive minutes: movie runtime or the site's usual show episode length (`episode_runtime[1]`); missing runtime fails a range |
 | `minimum_score` | Inclusive GoodWatch score, integer 0–100 |
@@ -24,7 +24,7 @@ Both title tools accept the same optional filters:
 | `for_you`, `exclude_seen` | Existing switches: For you on by default, seen titles included by default |
 | `limit`, `cursor` | Up to 40 titles per page; repeat filters for `offset:N` pages |
 
-For you uses the site's popular browse order with its taste adjustment, or bounded relevance adjustment in ranked search. Explicit popularity/newest/score orders default to the plain sort; `for_you=true` can retain the site's adjustment. `match` uses the site's Best match order and reports the fallback `sort_used` without taste. Cheap name lookup retains its name order unless `order` is supplied; it does not apply a taste adjustment. Empty-query browsing should use `discover_titles`.
+For you uses the site's popular browse order with its taste adjustment, or bounded relevance adjustment in ranked search. Explicit popularity/newest/score orders default to the plain sort; `for_you=true` can retain the site's adjustment. `match` uses the site's Best match order and reports the fallback `sort_used` without taste. Cheap name lookup retains its name order unless `order` is supplied; it does not apply a taste adjustment. Use `discover_titles` for browsing without a query. For compatibility, `search_titles` with a missing, empty or whitespace-only query runs that same discovery path, including its full filter/order model and grid page URL. This also applies when `ranked=true`: no smarter-match attempt is charged, and offset paging remains valid. A `ranked:` cursor still inherits its original search query and view.
 
 Discovery items carry canonical `url`, Markdown `link`, current `match`/`match_label`, `runtime_minutes`, `poster_url` and `goodwatch_score` (0–100). The tool shares the existing poster-grid resource. No per-title availability requests are added. `availability` reports `everywhere`, `mine` or `providers`; `country` and `approximate_availability` describe service scope and the site's column fallback while its country index loads.
 
@@ -57,3 +57,16 @@ npm run build
 The new runner creates its own pinned CrateDB 5.10.12/Valkey 8.1.3 containers on loopback ports 15867/16867, refuses existing containers and other clusters, and removes only the containers it created. It does not load `.env`. The 72-title snapshot and rating sidecar go through the real Redis publisher format/loader. The public SDK handler checks 29 filter/sort combinations against the real Discover engine and website URL parser, plus populated taste via the existing isolated `mcp-personal` fixture, defaults, 40+32 pagination, provider options, numeric score ranges, movie/show runtimes, poster links, inherited ranked cursors, rejection of changed cursor filters and free filter changes. Unit tests cover schema bounds for every parameter, conflicting selections, all orderings and cache-key coverage.
 
 The existing read, write, ranked, native provider and personal-result MCP suites were also run in isolated copies targeting those disposable ports; the native provider fixture used port 15869. The OAuth/MCP suite uses its separate disposable three-node Crate/Valkey rehearsal.
+
+
+## Owner retest fix (2026-10-17)
+
+On build `4e88c842`, both vector1 search-role logs recorded repeated `/mcp` catalog queries at 13:01–13:04 UTC with no name predicate: a movie/show union ordered by title, runtime and ID. Each query exhausted three CrateDB attempts and the 8-second request budget (`CrateTimeoutError`, then cancellation `TimeoutError`, code 23). Filtered blank searches fetched up to 100,001 catalog names before applying the filters; the filters did not reach the bounded Discover engine in time. This was a dispatch bug, not an unavailable genre/provider or a need to raise database timeouts.
+
+Blank search now delegates directly to `readDiscover`, before any name lookup or ranked admission. The page-link adapter makes the same distinction, so it supplies the ordinary Discover grid URL and no name-search broader-view note. A single genre string normalizes to the same shared filter model as an array. Named searches and inherited ranked cursors retain their existing paths.
+
+The SDK regression compares complete search/discovery payloads for both owner examples, omitted/empty/whitespace queries, `ranked=true`, defaults and offset pages. The isolated fixture verifies exact shared-engine parity rather than attempting to recreate production catalog size or database overload. Existing named-search and ranked-cursor tests cover the other dispatch paths.
+
+All tools and server initialization now require a bulleted text list beneath poster cards: one title per bullet, its ready-made Markdown link first, then a short note. Every title reference elsewhere in prose must also use its link. Cast, directors and creators already carried person links; people search and filmography subjects now reuse that helper and return `link` alongside `person_id`, `name`, `url` and department. The same instructions require person links verbatim. Endpoint tests check the instructions and every read-tool description; unit and real SDK tests check linked person payloads. Claude.ai's final rendering remains an owner retest, since these are model instructions rather than server-rendered prose.
+
+Verification for this fix: 103 focused tests passed; the full app suite passed 3,300 tests (zero failures, one existing skip, one existing tracking TODO). The discovery SDK runner passed all 29 filter/order cases plus blank-query/offset regression cases and a zero-ranked-work assertion. Read, write, fresh-process receipts, ranked/native search, personal results, real-Qdrant details/similarity, scoped people/list/settings/range and feature-replay integrations passed. The details probe's stale poster resource expectation was updated to v2; feature probes were run with fixture Redis cleared between seed sets. All 44 OAuth/MCP tests, auth typechecking and production build/precompression passed. Whole-app typechecking reports the known 178 diagnostics, with none in changed MCP files.

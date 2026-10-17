@@ -282,6 +282,16 @@ test("A member sees separate catalog and personal read tools, with valid schemas
 		assert.equal(tool.inputSchema.type, "object")
 		assert.match(tool.description, /ready-made link field VERBATIM/)
 		assert.match(tool.description, /page_url/)
+		assert.match(tool.description, /Poster cards do not replace the text/)
+		assert.match(
+			tool.description,
+			/bulleted list of links, one title per bullet/,
+		)
+		assert.match(tool.description, /ready-made link first, then a short note/)
+		assert.match(
+			tool.description,
+			/every person name.*ready-made link field VERBATIM/,
+		)
 	}
 })
 
@@ -553,6 +563,15 @@ test("MCP initialization tells clients to link titles and end with the page link
 	const initialized = (await result(response)).result
 	assert.match(initialized.instructions, /ready-made link field VERBATIM/)
 	assert.match(initialized.instructions, /See it on GoodWatch:/)
+	assert.match(initialized.instructions, /Poster cards do not replace the text/)
+	assert.match(
+		initialized.instructions,
+		/bulleted list of links, one title per bullet/,
+	)
+	assert.match(
+		initialized.instructions,
+		/every person name.*ready-made link field VERBATIM/,
+	)
 	assert.match(initialized.instructions, /stream_link field VERBATIM/)
 })
 

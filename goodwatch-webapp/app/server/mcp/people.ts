@@ -5,6 +5,8 @@ import {
 	titleKey,
 } from "../../utils/title-key.ts"
 
+import { personLink } from "./title-details.ts"
+
 interface Credit {
 	key: string
 	media_type: "movie" | "show"
@@ -64,4 +66,21 @@ export function filmographyView<T extends Credit>(
 			a.key.localeCompare(b.key, "en")
 		)
 	})
+}
+
+export interface Person {
+	tmdb_id: number
+	name: string
+	known_for_department: string | null
+}
+export const personSummary = (person: Person, origin: string) => {
+	const { id, ...linked } = personLink(
+		{ id: person.tmdb_id, name: person.name },
+		origin,
+	)
+	return {
+		...linked,
+		person_id: id,
+		known_for_department: person.known_for_department,
+	}
 }

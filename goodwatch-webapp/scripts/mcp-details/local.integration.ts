@@ -86,9 +86,11 @@ try {
 		(t: { name: string }) => t.name === "get_similar_titles",
 	)
 	assert.equal(similar.annotations.readOnlyHint, true)
-	assert.equal(similar._meta.ui.resourceUri, "ui://goodwatch/posters-v1.html")
+	assert.equal(similar._meta.ui.resourceUri, "ui://goodwatch/posters-v2.html")
 	const detail = await call("get_title", { title_id: "movie:2000" })
 	assert.equal(detail.title.cast.length, 5)
+	for (const person of [...detail.title.cast, ...detail.title.directors])
+		assert.equal(person.link, `[${person.name}](${person.url})`)
 	assert.equal(detail.title.cast[0].name, "Local Person 1")
 	assert.equal(
 		detail.title.directors[0].url,
@@ -141,6 +143,8 @@ try {
 		episode_limit: 2,
 	})
 	assert.equal(show.title.creators[0].name, "Local Person 1")
+	for (const person of show.title.creators)
+		assert.equal(person.link, `[${person.name}](${person.url})`)
 	assert.equal(show.title.seasons.length, 2)
 	assert.equal(show.title.seasons[0].scores.imdb.score, 8.4)
 	assert.equal(show.title.seasons[0].scores.tomatometer.score, 94)

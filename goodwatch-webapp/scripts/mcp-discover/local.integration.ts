@@ -279,6 +279,55 @@ try {
 	const second = await call("discover_titles", { cursor: first.next_cursor })
 	assert.equal(second.items.length, 32)
 	assert.equal(new Set([...ids(first), ...ids(second)]).size, 72)
+	// Regression: blank name searches must use the bounded Discover engine, not
+	// fetch/sort the whole SQL catalog (production exhausted its 8s query budget).
+	for (const args of [
+		{
+			exclude_seen: true,
+			genres: "Comedy",
+			limit: 20,
+			on_my_services: true,
+			order: "newest",
+			type: "show",
+		},
+		{
+			limit: 20,
+			max_runtime: 99,
+			max_year: 2010,
+			min_year: 2000,
+			minimum_score: 80,
+			type: "movie",
+		},
+		{},
+	]) {
+		const expected = await call("discover_titles", args)
+		for (const extra of [
+			{},
+			{ query: "  " },
+			{ ranked: true },
+			{ query: "", ranked: true },
+		]) {
+			const actual = await call("search_titles", { ...args, ...extra })
+			assert.deepEqual(
+				actual,
+				expected,
+				`query-less search must equal discovery: ${JSON.stringify({ ...args, ...extra })}`,
+			)
+			if (actual.next_cursor) {
+				const next = await call("search_titles", {
+					...args,
+					...extra,
+					cursor: actual.next_cursor,
+				})
+				const expectedNext = await call("discover_titles", {
+					...args,
+					cursor: expected.next_cursor,
+				})
+				assert.deepEqual(next, expectedNext)
+			}
+		}
+	}
+	assert.equal(runs, 0, "Query-less ranked requests must never run paid ranking")
 	const ctx = await getMemberViewerContext("mcp-member-A", "US")
 	const taste = await loadTaste(ctx.viewer)
 	// Every new filter/ordering is checked through the public SDK against the site's real shared engine.

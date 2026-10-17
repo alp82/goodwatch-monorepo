@@ -6,20 +6,8 @@ import { getPersonCredits } from "../person.server"
 import { loadTaste } from "../taste/index.server"
 import { getMemberViewerContext } from "../viewer.server"
 import { page, summary } from "./data.server"
-import { filmographyView } from "./people"
+import { filmographyView, personSummary, type Person } from "./people"
 import type { ReadArgs } from "./tools.server"
-
-interface Person {
-	tmdb_id: number
-	name: string
-	known_for_department: string | null
-}
-const personSummary = (person: Person, origin: string) => ({
-	person_id: person.tmdb_id,
-	name: person.name,
-	known_for_department: person.known_for_department,
-	url: new URL(personPath(person.tmdb_id, person.name), origin).href,
-})
 
 export async function readPeople(
 	userId: string,

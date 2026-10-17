@@ -154,3 +154,45 @@ test("cache keys cover every filter and contain no query or paging selectors", (
 		{ type: "movie" },
 	)
 })
+
+test("blank search dispatches discovery while ranked cursors inherit their query", async () => {
+	const { isDiscoverySearch } = await import("./discover-filters.ts")
+	const { readToolDefinitions } = await import("./tools.server.ts")
+	const search = readToolDefinitions.find(
+		(tool) => tool.name === "search_titles",
+	)!.schema
+	for (const args of [
+		{},
+		{ query: "" },
+		{ query: " \t " },
+		{ ranked: true },
+		{ ranked: true, cursor: "offset:40" },
+	]) {
+		const parsed = search.parse(args)
+		assert.equal(isDiscoverySearch(parsed), true)
+	}
+	for (const args of [
+		{ query: "Arrival" },
+		{ ranked: true, cursor: `ranked:${"a".repeat(32)}:40` },
+	]) {
+		assert.equal(isDiscoverySearch(search.parse(args)), false)
+	}
+	assert.equal(
+		search.safeParse({ query: "Arrival", ranked: true, cursor: "offset:40" })
+			.success,
+		false,
+	)
+	assert.equal(
+		search.safeParse({ cursor: `ranked:${"a".repeat(32)}:40` }).success,
+		false,
+	)
+})
+
+test("single genre names normalize to the same filter model as arrays", () => {
+	assert.deepEqual(
+		schema.parse({ genres: " Comedy " }),
+		schema.parse({ genres: ["Comedy"] }),
+	)
+	for (const genres of ["", "  ", 3])
+		assert.equal(schema.safeParse({ genres }).success, false)
+})

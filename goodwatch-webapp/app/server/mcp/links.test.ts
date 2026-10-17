@@ -27,7 +27,7 @@ test("page links use existing website filters and encode search text", () => {
 	assert.equal(new URL(String(link.page_url)).searchParams.get("q"), query)
 	assert.equal(
 		withPageLink(origin, "search_titles", {}, data).page_url,
-		`${origin}/discover?services=all&unseen=0&foryou=1`,
+		`${origin}/discover?services=all&unseen=0&sort=popular&foryou=1&layout=grid`,
 	)
 	assert.deepEqual(withPageLink(origin, "get_title", {}, data), data)
 })
@@ -128,4 +128,17 @@ test("Discover options link to the real filter view", () => {
 	assert.equal(url.searchParams.get("unseen"), "0")
 	assert.equal(url.searchParams.get("layout"), "grid")
 	assert.equal(result.page_note, undefined)
+})
+
+test("blank searches link the identical discovery view without a name-lookup note", () => {
+	for (const args of [
+		{},
+		{ query: "  ", order: "newest" as const },
+		{ genres: ["Comedy"], exclude_seen: true },
+	]) {
+		assert.deepEqual(
+			withPageLink(origin, "search_titles", args, {}),
+			withPageLink(origin, "discover_titles", args, {}),
+		)
+	}
 })

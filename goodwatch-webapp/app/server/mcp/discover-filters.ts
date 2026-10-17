@@ -11,15 +11,30 @@ import {
 import { MOOD_KEYS } from "../../domain/moods.ts"
 import { STYLE_KEYS, THEME_KEYS } from "../../domain/themes-styles.ts"
 
+/** Ranked cursors inherit their query; every other blank query is catalog discovery. */
+export function isDiscoverySearch(args: {
+	query?: string
+	cursor?: string
+}): boolean {
+	return !args.query?.trim() && !args.cursor?.startsWith("ranked:")
+}
+
 /** Names map onto the site's filter state; the engine and URL codec own their semantics. */
 export const discoverFilters = {
 	type: z.enum(["all", "movie", "show"]).optional(),
 	genres: z
-		.array(z.string().trim().min(1).max(80))
-		.max(20)
+		.union([
+			z.array(z.string().trim().min(1).max(80)).max(20),
+			z
+				.string()
+				.trim()
+				.min(1)
+				.max(80)
+				.transform((genre) => [genre]),
+		])
 		.optional()
 		.describe(
-			"Exact genre names from get_discover_filters; matches any selected genre.",
+			"Exact genre names from get_discover_filters; a single name or an array, matching any selected genre.",
 		),
 	min_year: z.number().int().min(1800).max(2100).optional(),
 	max_year: z.number().int().min(1800).max(2100).optional(),

@@ -4,7 +4,7 @@ import { test } from "node:test"
 const { readToolDefinitions } = await import("./tools.server.ts")
 const { writeToolDefinitions } = await import("./write-tools.server.ts")
 import { editListKeys } from "./lists.ts"
-import { filmographyView } from "./people.ts"
+import { filmographyView, personSummary } from "./people.ts"
 import { titleKey } from "../../utils/title-key.ts"
 import { isWriteCall } from "./write-names.ts"
 
@@ -247,5 +247,21 @@ test("filmography canonicalizes aliases before taste order, seen filtering and p
 			titleKey("movie", 872517),
 		]).length,
 		0,
+	)
+})
+
+test("people summaries reuse cast links and preserve person selectors", () => {
+	assert.deepEqual(
+		personSummary(
+			{ tmdb_id: 1, name: "A [B]", known_for_department: "Directing" },
+			"https://goodwatch.app",
+		),
+		{
+			person_id: 1,
+			name: "A [B]",
+			known_for_department: "Directing",
+			url: "https://goodwatch.app/person/1-a-b",
+			link: "[A \\[B\\]](https://goodwatch.app/person/1-a-b)",
+		},
 	)
 })
