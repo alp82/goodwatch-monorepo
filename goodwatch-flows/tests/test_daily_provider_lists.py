@@ -27,8 +27,15 @@ class TMDB:
         self.ids = list(ids)
         self.calls = []
         self.results = {'US': {'flatrate': [{'provider_id': 8}]}}
+        self.stats = dict(requests=0)
+        self.max_requests, self.baseline_limit = 350000, None
 
     def get(self, path, **params):
+        if self.stats['requests'] >= self.max_requests:
+            raise job.RequestBudgetExceeded('Request budget exhausted', endpoint=path)
+        if self.baseline_limit is not None and self.stats['requests'] >= self.baseline_limit:
+            raise job.BaselineBudgetExceeded('Baseline budget exhausted', endpoint=path)
+        self.stats['requests'] += 1
         self.calls.append((path, params))
         if path == '/watch/providers/regions':
             return {'results': [{'iso_3166_1': 'US'}]}
@@ -90,6 +97,18 @@ class Storage:
 
     def countries(self):
         return [identity.split(':')[0] for identity in self.snapshots]
+
+    def inventory(self):
+        return deepcopy(self.snapshots)
+
+    @contextmanager
+    def country_checkpoints(self):
+        before = deepcopy(self.snapshots)
+        try:
+            yield
+        except BaseException:
+            self.snapshots = before
+            raise
 
     def close(self):
         pass

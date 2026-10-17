@@ -17,6 +17,7 @@ import tempfile
 import zlib
 from email.utils import parsedate_to_datetime
 from uuid import uuid4
+from contextlib import nullcontext
 
 from f.sync.availability_history import HistoryTitle, ListRead, OfferKey
 from f.tmdb_api.daily_list_storage import LeaseBusy, LeaseLost
@@ -52,17 +53,24 @@ class RequestBudgetExceeded(TMDBReadError):
     pass
 
 
+class BaselineBudgetExceeded(RequestBudgetExceeded):
+    pass
+
+
 class TMDBClient:
     """One paced budget shared by all six HTTP workers, including retries."""
     def __init__(self, requests_per_second=15, max_requests=350000):
         import wmill
         if not 0 < requests_per_second <= 20:
             raise ValueError('requests_per_second must be greater than zero and at most 20')
+        if type(max_requests) is not int or not 1 <= max_requests <= 350000:
+            raise ValueError('max_requests must be an integer between 1 and 350000')
         self.key = wmill.get_variable('u/Alp/TMDB_API_KEY')
         self.interval, self.max_requests = 1 / requests_per_second, max_requests
         self.lock, self.local = threading.Lock(), threading.local()
         self.next_request = 0
         self.access_denied = None
+        self.baseline_limit = None
         self.stats = dict(requests=0, retries=0, refused=0, discover=0, title=0, catalog=0, deleted_responses=0)
 
     def get(self, path, **params):
@@ -73,6 +81,8 @@ class TMDBClient:
             with self.lock:
                 if self.stats['requests'] >= self.max_requests:
                     raise RequestBudgetExceeded('Daily list request budget exhausted', endpoint=path)
+                if self.baseline_limit is not None and self.stats['requests'] >= self.baseline_limit:
+                    raise BaselineBudgetExceeded('New baseline request budget exhausted', endpoint=path)
                 while self.next_request > time.monotonic():
                     time.sleep(max(0, min(1, self.next_request - time.monotonic())))
                 if self.access_denied is not None:
@@ -360,18 +370,19 @@ def list_failure(country, media_type, service_id, error):
     return failure
 
 
-def run_daily_lists(client, store, *, countries, service_ids, media_types=('movie', 'show'), now=None):
+def run_daily_lists(client, store, *, countries, service_ids, media_types=('movie', 'show'), now=None,
+                    scopes=None, title_reads=None, report=None):
     clock = (lambda: now) if now else (lambda: datetime.now(timezone.utc))
-    report = dict(lists_completed=0, lists_failed=0, lists_skipped=0, dry_run=store.dry_run, lists=[])
-    consecutive_failures = 0
-    with TitleChecks(client, clock) as title_reads:
-        for country, media_type, service_id in product(countries, media_types, service_ids):
+    if report is None:
+        report = dict(lists_completed=0, lists_failed=0, lists_skipped=0, dry_run=store.dry_run, lists=[])
+    with (nullcontext(title_reads) if title_reads is not None else TitleChecks(client, clock)) as title_reads:
+        for country, media_type, service_id in (product(countries, media_types, service_ids) if scopes is None else scopes):
             try:
                 summary = read_daily_list(client, store, title_reads, country, media_type, service_id, clock)
                 if summary is None:
                     report['lists_skipped'] += 1
                     continue
-                consecutive_failures = 0
+                client.consecutive_list_failures = 0
                 report['lists_completed'] += 1
                 report['lists'].append(summary)
                 print(json.dumps(summary), flush=True)
@@ -385,38 +396,18 @@ def run_daily_lists(client, store, *, countries, service_ids, media_types=('movi
                 failure = list_failure(country, media_type, service_id, error)
                 report['lists'].append(failure)
                 print(json.dumps(failure), flush=True)
-                consecutive_failures = consecutive_failures + 1 if isinstance(error, TMDBReadError) else 0
-                if consecutive_failures >= 20:
+                client.consecutive_list_failures = (getattr(client, 'consecutive_list_failures', 0) + 1
+                                                    if isinstance(error, TMDBReadError) else 0)
+                if client.consecutive_list_failures >= 20:
                     raise TMDBReadError('Stopping after 20 consecutive TMDB list failures') from error
     return report
 
 
 def main(countries: list[str] | None = None, service_ids: list[int] | None = None,
-         dry_run: bool = True, requests_per_second: float = 15, max_requests: int = 350000):
-    dry_run = dry_run is not False
-    started = time.monotonic()
-    client = TMDBClient(requests_per_second, max_requests)
-    store = create_list_storage(dry_run=dry_run)
-    try:
-        with store.run_lease() as owned:
-            owned()
-            if countries is None:
-                regions = client.get('/watch/providers/regions')['results']
-                countries = sorted({region['iso_3166_1'] for region in regions} | set(store.countries()))
-            services = list(SERVICE_NAMES) if service_ids is None else service_ids
-            if any(type(service_id) is not int or service_id <= 0 for service_id in services):
-                raise ValueError('Service IDs must be positive integers')
-            if any(len(country) != 2 or not country.isascii() or not country.isupper() or not country.isalpha() for country in countries):
-                raise ValueError('Countries must be uppercase two-letter codes')
-            report = run_daily_lists(client, store, countries=sorted(set(countries)),
-                                     service_ids=sorted(set(services)))
-            report['seconds'] = round(time.monotonic() - started, 3)
-            report['requests'] = getattr(client, 'stats', {})
-            report['history'] = getattr(store, 'stats', {})
-            report['countries'] = countries
-            return report
-    except LeaseBusy:
-        return dict(lists_completed=0, lists_failed=0, lists_skipped=0, lists=[],
-                    dry_run=dry_run, run_skipped=True)
-    finally:
-        store.close()
+         dry_run: bool = True, requests_per_second: float = 15, max_requests: int = 350000,
+         baseline_max_requests: int = 120000, baseline_max_memberships: int = 570000):
+    from f.tmdb_api.daily_list_ramp import run_daily_job
+    return run_daily_job(countries=countries, service_ids=service_ids, dry_run=dry_run,
+                         requests_per_second=requests_per_second, max_requests=max_requests,
+                         baseline_max_requests=baseline_max_requests,
+                         baseline_max_memberships=baseline_max_memberships)

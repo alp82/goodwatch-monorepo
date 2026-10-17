@@ -84,12 +84,81 @@ def main():
 '''
 
 
+def ramp_preview_source():
+    root = Path(__file__).parents[1] / 'windmill/f/tmdb_api'
+    ramp = (root / 'daily_list_ramp.py').read_text().replace(
+        'from f.tmdb_api import daily_provider_lists as job', 'import daily_job as job')
+    return preview_source() + '\nRAMP_SOURCE = ' + repr(ramp) + '''
+original_main = main
+ramp = types.ModuleType('f.tmdb_api.daily_list_ramp')
+sys.modules[ramp.__name__] = ramp
+exec(compile(RAMP_SOURCE, ramp.__name__, 'exec'), ramp.__dict__)
+job = sys.modules['daily_job']
+
+def main():
+    assert original_main()['ok']
+    class API:
+        def __init__(self, *args):
+            self.stats = dict(requests=0)
+            self.max_requests, self.baseline_limit = 350000, None
+        def get(self, path, **params):
+            if self.baseline_limit is not None and self.stats['requests'] >= self.baseline_limit:
+                raise job.BaselineBudgetExceeded('Fixture baseline budget')
+            self.stats['requests'] += 1
+            return dict(page=1, total_pages=0, total_results=0, results=[])
+    class Storage:
+        dry_run = False
+        def __init__(self): self.state = {}
+        @contextmanager
+        def run_lease(self): yield lambda: None
+        @contextmanager
+        def lease(self, *args): yield lambda: None
+        @contextmanager
+        def country_checkpoints(self): yield
+        def inventory(self): return deepcopy(self.state)
+        def load(self, identity): return deepcopy(self.state.get(identity))
+        def pending(self, identity): return set()
+        def open_ids(self, *args): return set()
+        def stage(self, *args): pass
+        def flush(self): pass
+        def close(self): pass
+        def save(self, identity, value): self.state[identity] = deepcopy(value)
+    store = Storage()
+    job.TMDBClient, job.create_list_storage = API, lambda **kwargs: store
+    entry = types.ModuleType('windmill_entry_copy')
+    exec(compile(SOURCES['daily_job'], entry.__name__, 'exec'), entry.__dict__)
+    def escaped(*args, **kwargs):
+        raise AssertionError('Entry must use the canonical in-memory adapters')
+    entry.TMDBClient = entry.create_list_storage = escaped
+    result = entry.main(countries=['AR', 'DE'], service_ids=[8], dry_run=False,
+                      baseline_max_requests=2, baseline_max_memberships=100)
+    assert result['countries_started'] == ['AR']
+    assert result['countries_remaining'] == ['DE']
+    assert result['requests_rereads'] == 0 and result['requests_new_baselines'] == 2
+    assert set(store.state) == {'AR:movie:8', 'AR:show:8'}
+    return dict(ok=True, production_data_writes=0)
+'''
+
+
 class LocalPreviewTests(unittest.TestCase):
     def test_preview_fixture_executes_the_checkout_entrypoint_and_writer(self):
         module = types.ModuleType('inert_preview')
         with patch.dict(sys.modules):
             exec(compile(preview_source(), 'inert_preview', 'exec'), module.__dict__)
             self.assertEqual(module.main(), {'ok': True, 'production_data_writes': 0, 'stays': 2})
+
+    def test_ramp_preview_runs_public_entrypoint_without_production_adapters(self):
+        module = types.ModuleType('inert_ramp_preview')
+        with patch.dict(sys.modules):
+            exec(compile(ramp_preview_source(), 'inert_ramp_preview', 'exec'), module.__dict__)
+            self.assertEqual(module.main(), dict(ok=True, production_data_writes=0))
+
+    def test_report_marks_budget_truncated_rereads_failed(self):
+        module = types.ModuleType('ramp_report')
+        source = (Path(__file__).parents[1] / 'windmill/f/tmdb_api/read_daily_provider_lists.flow/report.inline_script.py').read_text()
+        exec(compile(source, 'ramp_report', 'exec'), module.__dict__)
+        with self.assertRaisesRegex(RuntimeError, 'rereads'):
+            module.main(dict(lists_failed=0, rereads_complete=False))
 
 
 @unittest.skipUnless(os.environ.get('TEST_WINDMILL_PREVIEW') == '1', 'Opt in to inert Windmill previews')
@@ -120,17 +189,24 @@ class WindmillPreviewTests(unittest.TestCase):
             path='f/tmdb_api/daily_provider_lists_inert_preview', args={}))
         self.assertEqual(self.completed(job), {'ok': True, 'production_data_writes': 0, 'stays': 2})
 
+    def test_automatic_ramp_with_in_memory_adapters(self):
+        job = self.api('/jobs/run/preview', dict(content=ramp_preview_source(), language='python3',
+            path='f/tmdb_api/daily_list_ramp_inert_preview', args={}))
+        self.assertEqual(self.completed(job), dict(ok=True, production_data_writes=0))
+
     def preview_flow(self, failed, skipped=False):
         from windmill_preview import load_flow
         flow = load_flow('f/tmdb_api/read_daily_provider_lists')
         module = flow['value']['modules'][0]
         module['value'] = dict(type='rawscript', language='python3', lock='',
             input_transforms=module['value']['input_transforms'],
-            content='def main(countries=None, service_ids=None, dry_run=True, requests_per_second=15, max_requests=350000):\n'
+            content='def main(countries=None, service_ids=None, dry_run=True, requests_per_second=15, max_requests=350000, baseline_max_requests=120000, baseline_max_memberships=570000):\n'
+                    '    assert baseline_max_requests == 123 and baseline_max_memberships == 456\n'
                     '    assert dry_run is True and countries == ["US"] and service_ids == [8]\n'
                     f'    return dict(lists_completed={0 if skipped else 1}, lists_failed={failed}, run_skipped={skipped}, lists=[])\n')
         job = self.api('/jobs/run/preview_flow', dict(value=flow['value'], schema=flow['schema'],
-            args=dict(countries=['US'], service_ids=[8], dry_run=True, requests_per_second=15, max_requests=350000),
+            args=dict(countries=['US'], service_ids=[8], dry_run=True, requests_per_second=15, max_requests=350000,
+                      baseline_max_requests=123, baseline_max_memberships=456),
             path='f/tmdb_api/daily_provider_lists_flow_inert_preview'))
         return self.completed(job, success=not (failed or skipped))
 
@@ -149,8 +225,9 @@ class WindmillPreviewTests(unittest.TestCase):
         module = flow['value']['modules'][0]
         module['value'] = dict(type='rawscript', language='python3', lock='',
             input_transforms=module['value']['input_transforms'],
-            content='def main(countries=None, service_ids=None, dry_run=True, requests_per_second=15, max_requests=350000):\n'
+            content='def main(countries=None, service_ids=None, dry_run=True, requests_per_second=15, max_requests=350000, baseline_max_requests=120000, baseline_max_memberships=570000):\n'
                     '    assert countries is None and service_ids is None\n'
+                    '    assert baseline_max_requests == 120000 and baseline_max_memberships == 570000\n'
                     '    assert dry_run is True and requests_per_second == 15 and max_requests == 350000\n'
                     '    return dict(lists_completed=0, lists_failed=0, lists=[])\n')
         job = self.api('/jobs/run/preview_flow', dict(value=flow['value'], schema=flow['schema'],

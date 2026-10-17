@@ -53,7 +53,10 @@ def census(client):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--countries', nargs='+', default=['BR', 'DE', 'NG'])
+    parser.add_argument('--countries', nargs='+')
+    parser.add_argument('--ramp', action='store_true', help='Preview one scheduled automatic ramp run')
+    parser.add_argument('--baseline-max-requests', type=int, default=120000)
+    parser.add_argument('--baseline-max-memberships', type=int, default=570000)
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--census', action='store_true')
     parser.add_argument('--previous-panel', type=Path,
@@ -136,10 +139,19 @@ def main():
                 store = storage(dry_run=True)
                 try:
                     client = job.TMDBClient()
-                    report = job.run_daily_lists(client, store, countries=args.countries,
-                                                  service_ids=list(job.SERVICE_NAMES))
-                    report.update(requests=client.stats, history=store.stats, countries=args.countries)
-                    report['mode'] = 'research_panel_comparison' if panel else 'initial_baseline'
+                    countries = args.countries or ['BR', 'DE', 'NG']
+                    if args.ramp:
+                        from f.tmdb_api.daily_list_ramp import run_ramp
+                        countries = args.countries or sorted({row['iso_3166_1'] for row in
+                            client.get('/watch/providers/regions')['results']} | set(store.countries()))
+                        report = run_ramp(client, store, countries=countries, service_ids=list(job.SERVICE_NAMES),
+                            baseline_max_requests=args.baseline_max_requests,
+                            baseline_max_memberships=args.baseline_max_memberships)
+                    else:
+                        report = job.run_daily_lists(client, store, countries=countries,
+                                                      service_ids=list(job.SERVICE_NAMES))
+                    report.update(requests=client.stats, history=store.stats, countries=countries)
+                    report['mode'] = 'automatic_ramp' if args.ramp else 'research_panel_comparison' if panel else 'initial_baseline'
                     report['title_candidates'] = sum(row.get('changes_checked', 0) for row in report['lists'])
                 finally:
                     store.close()

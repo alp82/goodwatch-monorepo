@@ -1,0 +1,227 @@
+# extra_requirements:
+# crate==2.2.1
+# mongoengine==0.29.3
+# pymongo==4.18.1
+# requests==2.34.2
+# wmill==1.815.0
+# pydantic==2.13.5
+"""Reread checkpointed lists, then prepare and publish whole new countries."""
+from contextlib import contextmanager
+from dataclasses import dataclass
+from itertools import product
+import json
+import math
+import time
+
+from f.tmdb_api import daily_provider_lists as job
+
+# The six balanced groups proposed from the October 17 census, flattened in order.
+COUNTRY_ORDER = tuple((
+    'AR BS CD CO CV GH ID IQ LC MA MC MK MZ NG PY RU SA SC SK SN SV TC US '
+    'AO BM CR FI GB IE IL JO KW LT MG MT MU PE SE SG SI TR TW TZ UY ZA '
+    'AE AG BO BZ CY DE DO EC EG GI GR IN JP ME NO PF PG PH RO RS UA YE ZW '
+    'AD AT BA BH BR BY CA CH CU CZ EE FJ GY JM KE KR MD NI PK PL PS QA SM '
+    'AL BE BG CI CM DK DZ ES FR HR IS IT LU LV MW OM PA PT TD TH VA VE ZM '
+    'AU AZ BB BF CL GF GP GQ GT HK HN HU LB LI LY ML MX MY NE NL NZ TN TT UG XK '
+).split())
+
+
+@dataclass
+class PreparedList:
+    country: str
+    media_type: str
+    service_id: int
+    at: int
+    ids: list
+    candidates: list
+    diagnostics: dict
+
+    @property
+    def key(self):
+        return f'{self.country}:{self.media_type}:{self.service_id}'
+
+
+def country_order(countries):
+    wanted = set(countries)
+    return [country for country in COUNTRY_ORDER if country in wanted] + sorted(wanted - set(COUNTRY_ORDER))
+
+
+@contextmanager
+def list_context(country, media_type, service_id):
+    try:
+        yield
+    except Exception as error:
+        error.list_scope = (country, media_type, service_id)
+        raise
+
+
+def prepare_country(client, store, country, missing, clock):
+    prepared = []
+    for media_type, service_id in missing:
+        with list_context(country, media_type, service_id):
+            diagnostics = {}
+            at = job.utc_ms(clock())
+            ids = job.read_list(client, country, media_type, service_id, diagnostics)
+            key = f'{country}:{media_type}:{service_id}'
+            candidates = sorted(set(ids) | store.open_ids(country, media_type, service_id) | store.pending(key))
+            prepared.append(PreparedList(country, media_type, service_id, at, ids, candidates, diagnostics))
+    return prepared
+
+
+def confirm_country(title_reads, prepared, clock):
+    # All network work finishes before any history or checkpoint publication.
+    for item in prepared:
+        with list_context(item.country, item.media_type, item.service_id):
+            media = 'tv' if item.media_type == 'show' else 'movie'
+            listed = set(item.ids)
+            for offset in range(0, len(item.candidates), 200):
+                reads = title_reads.read(media, item.candidates[offset:offset + 200], item.country,
+                                         item.service_id, listed, item.at)
+                if any(job.utc_day(proof['checked_at']) != job.utc_day(item.at) for _, _, proof in reads):
+                    raise job.IncompleteList('Country read crossed UTC midnight')
+    if any(job.utc_day(job.utc_ms(clock())) != job.utc_day(item.at) for item in prepared):
+        raise job.IncompleteList('Country read crossed UTC midnight')
+
+
+def publish_country(store, title_reads, prepared, clock):
+    summaries = []
+    with store.country_checkpoints():
+        for item in prepared:
+            with store.lease(item.key) as owned:
+                with list_context(item.country, item.media_type, item.service_id):
+                    store.stage(item.key, item.candidates)
+                    members, retry_ids = job.publish_list_changes(store, title_reads, item.country, item.media_type,
+                        item.service_id, set(item.ids), None, item.at, item.candidates, owned)
+                    if job.utc_day(job.utc_ms(clock())) != job.utc_day(item.at):
+                        raise job.IncompleteList('Country read crossed UTC midnight')
+                    store.flush()
+                    owned()
+                    if not store.dry_run:
+                        store.save(item.key, dict(checked_at=item.at, ids=item.ids,
+                            members={key: kinds for key, kinds in members.items() if kinds}, retry_ids=retry_ids,
+                            version=1, complete=True, cache_bypassed=True))
+                    summaries.append(dict(key=item.key, titles=len(item.ids), changes_checked=len(item.candidates),
+                                          baseline=True, retry_titles=len(retry_ids), **item.diagnostics))
+    return summaries
+
+
+def run_ramp(client, store, *, countries, service_ids, baseline_max_requests=120000,
+             baseline_max_memberships=570000):
+    clock = lambda: job.datetime.now(job.timezone.utc)
+    inventory = store.inventory()
+    scopes = []
+    for key in sorted(inventory):
+        country, media, service = key.split(':')
+        scopes.append((country, media, int(service)))
+    required = list(product(('movie', 'show'), service_ids))
+    countries = country_order(set(countries) | {scope[0] for scope in scopes})
+    started, used = [], 0
+    reread_start = client.stats['requests']
+    estimated_rereads = sum(max(1, math.ceil(len(value.get('ids', [])) / 20))
+                            + len(value.get('retry_ids', [])) for value in inventory.values())
+    report = dict(lists_completed=0, lists_failed=0, lists_skipped=0, dry_run=store.dry_run, lists=[],
+                  rereads_estimated_requests=estimated_rereads, rereads_complete=True,
+                  rereads_budget_exceeded=estimated_rereads > client.max_requests - reread_start)
+    with job.TitleChecks(client, clock) as title_reads:
+        try:
+            job.run_daily_lists(client, store, countries=[], service_ids=[], scopes=scopes,
+                                title_reads=title_reads, report=report)
+        except job.RequestBudgetExceeded:
+            report.update(rereads_complete=False, rereads_budget_exceeded=True)
+        report.update(countries_started=started, requests_rereads=client.stats['requests'] - reread_start,
+                      requests_new_baselines=0, baseline_deferred_reason=None)
+        baseline_start = client.stats['requests']
+        client.baseline_limit = baseline_start + baseline_max_requests
+        try:
+            for country in countries:
+                if report['rereads_budget_exceeded']:
+                    report['baseline_deferred_reason'] = 'rereads_exceed_hard_budget'
+                    break
+                missing = [(media, service) for media, service in required if f'{country}:{media}:{service}' not in inventory]
+                if not missing:
+                    continue
+                if used >= baseline_max_memberships or baseline_max_requests == 0:
+                    report['baseline_deferred_reason'] = 'memberships' if used >= baseline_max_memberships else 'requests'
+                    break
+                try:
+                    prepared = prepare_country(client, store, country, missing, clock)
+                    memberships = sum(len(item.candidates) for item in prepared)
+                    if used + memberships > baseline_max_memberships:
+                        report['baseline_deferred_reason'] = 'memberships'
+                        break
+                    confirm_country(title_reads, prepared, clock)
+                    summaries = publish_country(store, title_reads, prepared, clock)
+                except job.RequestBudgetExceeded:
+                    report['baseline_deferred_reason'] = 'requests'
+                    break
+                except (job.TMDBAccessDenied, job.LeaseLost):
+                    raise
+                except Exception as error:
+                    scope = getattr(error, 'list_scope', (country, *missing[0]))
+                    failure = job.list_failure(*scope, error)
+                    report['lists_failed'] += 1
+                    report['lists'].append(failure)
+                    print(json.dumps(failure), flush=True)
+                    client.consecutive_list_failures = (getattr(client, 'consecutive_list_failures', 0) + 1
+                                                        if isinstance(error, job.TMDBReadError) else 0)
+                    if client.consecutive_list_failures >= 20:
+                        raise job.TMDBReadError('Stopping after 20 consecutive TMDB list failures') from error
+                    continue
+                client.consecutive_list_failures = 0
+                report['lists_completed'] += len(summaries)
+                report['lists'].extend(summaries)
+                for item in prepared:
+                    inventory[item.key] = {}
+                used += memberships
+                started.append(country)
+                print(json.dumps(dict(country_started=country, memberships=memberships)), flush=True)
+            report['requests_new_baselines'] = client.stats['requests'] - baseline_start
+        finally:
+            client.baseline_limit = None
+    report['countries_remaining'] = [country for country in countries if any(
+        f'{country}:{media}:{service}' not in inventory for media, service in required)]
+    report['baseline_memberships'] = used
+    report['baseline_budget'] = dict(max_requests=baseline_max_requests, max_memberships=baseline_max_memberships)
+    report['ramp_complete'] = not report['countries_remaining']
+    return report
+
+
+def run_daily_job(*, countries, service_ids, dry_run, requests_per_second, max_requests,
+                  baseline_max_requests, baseline_max_memberships):
+    # Windmill loads the entry script separately from its f.* import. Construct
+    # clients here from the same module whose exception classes run_ramp catches.
+    for name, value in (('baseline_max_requests', baseline_max_requests),
+                        ('baseline_max_memberships', baseline_max_memberships)):
+        if type(value) is not int or value < 0:
+            raise ValueError(f'{name} must be a nonnegative integer')
+    dry_run = dry_run is not False
+    started = time.monotonic()
+    client = job.TMDBClient(requests_per_second, max_requests)
+    store = job.create_list_storage(dry_run=dry_run)
+    try:
+        with store.run_lease() as owned:
+            owned()
+            if countries is None:
+                regions = client.get('/watch/providers/regions')['results']
+                countries = sorted({region['iso_3166_1'] for region in regions} | set(store.countries()))
+            services = list(job.SERVICE_NAMES) if service_ids is None else service_ids
+            if any(type(service_id) is not int or service_id <= 0 for service_id in services):
+                raise ValueError('Service IDs must be positive integers')
+            if any(len(country) != 2 or not country.isascii() or not country.isupper() or not country.isalpha() for country in countries):
+                raise ValueError('Countries must be uppercase two-letter codes')
+            report = run_ramp(client, store, countries=sorted(set(countries)), service_ids=sorted(set(services)),
+                              baseline_max_requests=baseline_max_requests,
+                              baseline_max_memberships=baseline_max_memberships)
+            report['seconds'] = round(time.monotonic() - started, 3)
+            report['requests'] = getattr(client, 'stats', {})
+            report['history'] = getattr(store, 'stats', {})
+            report['countries'] = countries
+            return report
+    except job.LeaseBusy:
+        return dict(lists_completed=0, lists_failed=0, lists_skipped=0, lists=[],
+                    dry_run=dry_run, run_skipped=True)
+    finally:
+        store.close()
+
+def main():
+    pass

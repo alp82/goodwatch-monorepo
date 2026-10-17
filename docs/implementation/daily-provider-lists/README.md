@@ -333,16 +333,69 @@ planned within 14:00–21:00 UTC or assumed to fit the current eight-hour timeou
 even if it fits the 350,000-request budget. These are model estimates from the
 completed sample and read-only component probes, not a measured global apply.
 
-The proposed fallback is a six-day baseline, balanced by open memberships and
-discover pages rather than country count. Each stage adds roughly 0.55 million
-memberships and 24,000 primary discover requests. Each day's one run must include
-all countries already started, preserving their consecutive daily observations.
-A balanced grouping of the current census gives about 116k, 142k, 169k, 195k,
-214k, and 238k requests on days 1–6, including a 15% discover reserve and 5,000
-daily title checks. Estimated reads are 2.9–5.2 hours/day before apply overhead;
-preview each stage and shrink it if necessary to retain headroom before 21:00.
-This costs about 1.07 million requests over six days because distinct-title
-checks repeat between runs. It is a proposal; no stage or schedule was created.
+The baseline now ramps automatically in the one daily scheduled run. Each run
+first visits **every stored list checkpoint**, including retained countries or
+services no longer returned by TMDB. Only after these rereads finish does it
+consider new countries, using the six balanced census groups below, flattened in
+this order. Previously unseen country codes follow alphabetically.
+
+| Group | Country order |
+| --- | --- |
+| 1 | AR BS CD CO CV GH ID IQ LC MA MC MK MZ NG PY RU SA SC SK SN SV TC US |
+| 2 | AO BM CR FI GB IE IL JO KW LT MG MT MU PE SE SG SI TR TW TZ UY ZA |
+| 3 | AE AG BO BZ CY DE DO EC EG GI GR IN JP ME NO PF PG PH RO RS UA YE ZW |
+| 4 | AD AT BA BH BR BY CA CH CU CZ EE FJ GY JM KE KR MD NI PK PL PS QA SM |
+| 5 | AL BE BG CI CM DK DZ ES FR HR IS IT LU LV MW OM PA PT TD TH VA VE ZM |
+| 6 | AU AZ BB BF CL GF GP GQ GT HK HN HU LB LI LY ML MX MY NE NL NZ TN TT UG XK |
+
+The job/flow arguments `baseline_max_requests=120000` and
+`baseline_max_memberships=570000` bound **new baseline work per scheduled run**.
+The latter counts the union of listed, eligible open, and pending title IDs in
+each list, including repeated titles on different lists. These defaults give
+headroom over the proposed groups' roughly 550k open memberships and day-1's
+116k-request reserve; groups are an admission order, not fixed daily quotas.
+Memberships are measured from complete live lists, not stale census estimates.
+Set either budget to zero to pause expansion while keeping daily rereads.
+A country's missing configured lists are prepared together; if they do not fit,
+none starts and the run stops adding countries. It does not skip ahead to smaller
+countries. Discovery for this deferred country still counts toward the new-request
+budget, but no history or checkpoint writes occur for it.
+
+All country discovery and per-title confirmation finishes **before any of that
+country's history is published**. Exhausting either the new-request budget or the
+remaining hard budget while checking a country abandons its admission. Successful
+publication commits all new country checkpoints and removes their pending markers
+in one Mongo replica-set transaction. A failed checkpoint transaction leaves none
+of those checkpoints. History remains outside that Mongo transaction: an
+infrastructure failure can leave partial unknown history publication, with durable
+pending IDs for idempotent reconciliation on retry. This retains the shared writer
+and introduces no second precision decision. A failed country is reported and the
+next country can proceed; authentication failures and the existing 20-consecutive
+TMDB-failure stop remain fatal.
+
+The **350,000-request hard ceiling** includes rereads, new baselines, catalog GETs,
+retries, and discarded country preflights. The eight-hour Windmill timeout stays
+unchanged. Rereads take priority; a checkpoint-size/retry estimate over
+the hard budget suppresses new countries, and actual exhaustion stops rereads and
+marks them incomplete. The flow fails that incomplete-reread report. Rereads that
+consume the remaining hard budget leave no room for country admission. No new
+country can consume requests reserved implicitly by performing rereads first.
+
+The report includes `countries_started`, ordered `countries_remaining`,
+`requests_rereads`, `requests_new_baselines`, `baseline_memberships`, both baseline
+budgets, `baseline_deferred_reason`, `rereads_estimated_requests`,
+`rereads_complete`, `rereads_budget_exceeded`, and `ramp_complete`. The single
+regions GET is catalog overhead outside the two phase counters. Dry runs report
+hypothetical starts without persisting them. Once no countries remain, every run
+performs the complete daily reread and has zero new-baseline requests.
+
+The original grouping models about 116k, 142k, 169k, 195k, 214k, and 238k total
+requests on successive days, including a 15% discover reserve and 5,000 daily
+title checks. Estimated reads are 2.9–5.2 hours/day before apply overhead.
+Automatic admission can move the boundaries as live counts and overlap change.
+The model costs about 1.07 million requests over six days because distinct-title
+checks repeat between runs. These remain projections, not production apply
+measurements. No baseline or schedule has been created by this checkout.
 
 Skipping all baseline per-title checks is not equivalent: first observations
 remain unknown, but their verified offer types supply tomorrow's exact-drop
@@ -364,6 +417,8 @@ and invokes the public coordinator with `ListStorage(dry_run=True)` (no operatio
 ```sh
 python goodwatch-flows/tools/measure_daily_provider_lists.py \
   --countries BR DE NG --output /tmp/daily-list-baseline.json
+python goodwatch-flows/tools/measure_daily_provider_lists.py \
+  --ramp --output /tmp/daily-list-day1-preview.json
 python goodwatch-flows/tools/measure_daily_provider_lists.py \
   --census --output /tmp/daily-list-census.json
 python goodwatch-flows/tools/measure_daily_provider_lists.py \
@@ -387,30 +442,32 @@ dependencies for the local lock files.
 
 1. Review the change, then deploy through the normal main/GitHub Actions pipeline.
    This checkout was not pushed. Confirm the shared history helper, the new
-   `daily_provider_lists` and `daily_list_storage` scripts, and
+   `daily_provider_lists`, `daily_list_ramp`, and `daily_list_storage` scripts, and
    `read_daily_provider_lists` flow all match the reviewed sources before running.
-   Both locks were regenerated with `wmill script generate-metadata --lock-only`;
+   All three locks were regenerated with `wmill script generate-metadata --lock-only`;
    ensure the deployed script locks include `crate`, `orjson`, and `verlib2`.
    The shared writer changes affect ordinary publication immediately on deploy;
    deploying the helper is not inert.
 2. No Crate DDL, enum change, or backfill is required. The existing
    `availability_history` table and writer must already be deployed, as they are
    on this production system. No new credentials are required.
-3. Run the flow manually with `dry_run: true`, first for a few countries, then
-   without a country restriction, starting at 14:00 UTC. Investigate incomplete
-   lists or service errors. This validates the eight-hour timeout on CE, which
-   has not yet run a job of that length. Live dry runs create only the operational
-   lease collection/index, not the other collections or any data publications.
+3. Preview day 1 with the automatic ramp and the default budgets, using the
+   guarded local read-only measurement above (no operational Mongo writes).
+   Investigate incomplete lists or service errors before applying. Opt-in inert
+   Windmill previews validate the checkout and flow wiring without data writes.
 4. **Back up `availability_history` before the first apply** into an owner-created
    table, e.g. `availability_history_before_682`, using its existing schema and
    `INSERT ... SELECT`. List observations share `appeared_source = 'title'` with
    ordinary publication, so there is no reliable list-only undo filter. Then run
    the baseline at 14:00 UTC, allowing its larger cost and duration. The apply
    creates the checkpoint/pending collections; the TTL lease index is automatic.
-   Larger expansions can baseline country groups
-   over several days. Preserve checkpoints; deleting them discards daily evidence.
+   Each new country commits all its configured list checkpoints atomically on the
+   existing Mongo replica set. Preserve checkpoints; deleting them discards daily
+   evidence. The following scheduled runs continue expansion automatically.
 5. Create the disabled schedule from [proposed-schedule.json](proposed-schedule.json),
-   then enable it after checking the baseline and pending markers. Proposed time:
+   then enable it after checking day 1 and pending markers. Do not run the other
+   groups manually: the daily job rereads started countries before admitting more.
+   Never start a manual run near its enabled schedule. Proposed time:
    **14:00 UTC every day**, cron **`0 0 14 * * *`**. The weekday field is `*`;
    Windmill numbering is **1 = Sunday, 7 = Saturday** if explicitly enumerating
    days. Its currently deployed recent-release recheck is at 13:00 UTC. TMDB's
@@ -498,9 +555,60 @@ TEST_WINDMILL_PREVIEW=1 BASE_INTERNAL_URL=... WM_WORKSPACE=goodwatch WM_TOKEN=..
 ```
 
 - `goodwatch-flows/windmill/f/tmdb_api/daily_provider_lists.py` and its script metadata/lock: reader, completeness gates, HTTP budget, entrypoint.
+- `goodwatch-flows/windmill/f/tmdb_api/daily_list_ramp.py` and metadata/lock: automatic country admission and separate phase budgets/reporting.
 - `goodwatch-flows/windmill/f/tmdb_api/daily_list_storage.py` and metadata/lock: checkpoint, intent, lease, and shared history adapters.
 - `goodwatch-flows/windmill/f/tmdb_api/read_daily_provider_lists.flow/`: flow and failure-report step.
 - `goodwatch-flows/windmill/f/sync/availability_history.py`: scoped list evidence, same-day refinements, and scoped history reads in the existing writer.
+- `goodwatch-flows/tests/test_daily_list_ramp.py`: public-entrypoint ramp behavior and opt-in localhost Mongo transaction failure/retry.
 - `goodwatch-flows/tests/test_daily_provider_lists*.py`: entrypoint/writer behavior, real local SQL, inert previews.
 - `goodwatch-flows/tools/measure_daily_provider_lists.py`: production SELECT-only dry run and request census.
 - This directory: design, reproducible measurements, evidence, and a disabled schedule proposal.
+
+Automatic-ramp checks additionally use a disposable local Mongo replica set:
+
+```sh
+TEST_MONGO_URL='mongodb://127.0.0.1:16884/?replicaSet=gw682' \
+PYTHONPATH=goodwatch-flows/windmill:goodwatch-flows/tests \
+python -m unittest test_daily_list_ramp
+```
+
+The Mongo test rejects non-localhost URLs and drops only its UUID-named test
+database. It injects a late checkpoint error, verifies transaction rollback and
+pending-intent retention, and retries the same country successfully.
+
+Ramp verification (October 17): the focused daily-list suite ran 72 tests, with
+66 passing and six opt-in Windmill cases skipped locally. All nine local/remote
+inert preview cases passed separately. The full suite ran 1,617 tests: 1,573
+passed, 43 skipped, and the same pre-existing deletion-inventory test failed
+(`social_title_link`, `social_link_report`, `social_relevance`). Disposable local
+Crate and a Mongo 8 replica set were used; no production data was written.
+
+The public Windmill script delegates connection setup and execution to the ramp
+module. Windmill loads an entry script separately from its `f.*` import, so client
+construction must use the same imported module as the coordinator's exception
+handlers. A failing-then-passing public-entrypoint regression test covers this
+separate-module budget stop. The inert Windmill preview also executes a separate
+entry copy and forbids that copy from constructing production adapters. The local
+production preview calls the unchanged `run_ramp` coordinator directly, without
+an operational lease; moving entry setup does not change its measured work.
+
+The automatic day-1 production read-only preview completed on October 17,
+05:17:37–08:07:12 UTC: **112,187 TMDB GETs in 10,175.108 seconds (2 h 49 m 35 s)**,
+with **690 complete lists / 23 whole countries**, zero failed/skipped lists,
+zero retries or rate-limit refusals, and 116 countries remaining. Rereads cost
+zero requests because production has no list checkpoints yet; new baselines
+cost 112,186 GETs, plus one regions GET. The split was 25,117 discover and
+87,069 per-title requests. Discovery includes the next country's deferred
+preflight. The first group's **560,408** candidate memberships fit the 570,000
+budget; Angola did not fit the remaining membership allowance, so none of its
+lists started. This matches the proposed first group without manual staging.
+
+The history planner produced 10,821 unknown-arrival and 102,838 unknown-drop row
+plans, **zero exact row plans**, and zero production data writes. Sixteen deleted
+title responses followed the unknown-closure path without failing their lists.
+`US:show:9` completed with 5,474 distinct IDs after the equivalent-query recovery
+(one second sort and one query retry). These are read-only plans, including
+repeated reconciliation work, not a count of applied or necessarily distinct
+changes. Apply time is unmeasured. The existing backup-before-apply gate remains.
+See [ramp-day1-preview.json](ramp-day1-preview.json) for counters and scope; the
+full local report is `/tmp/rollout682/ramp-day1-preview.json`.
