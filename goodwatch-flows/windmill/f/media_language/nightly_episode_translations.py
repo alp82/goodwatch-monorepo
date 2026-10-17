@@ -16,10 +16,17 @@ STATE_COLLECTION = 'tmdb_episode_catalog_state'
 STATE_ID = 'episode_translations_nightly_v1'
 TABLES = ('season_translation', 'episode_translation')
 PAGE = Bounds(titles=1, seasons=20, episodes=40, requests=100, requests_per_second=5)
+CRATE_CALL_RESERVE = 37  # Connect + read timeout; leave the checkpoint reserve intact.
+CRATE_RECOVERY_SECONDS = 300
+MAX_RECOVERED_CRATE_STALLS = 6
 
 
 class SafetyStop(BaseException):
     """Bypass the ingestion helper's endpoint-error catch; never acknowledge a failed page."""
+
+
+class ReplayPage(BaseException):
+    """Crate recovered; replay the validated page without acknowledging its cursor."""
 
 
 class Guard:
@@ -29,7 +36,7 @@ class Guard:
         self.clock, self.sleep = clock, sleep
         self.deadline = clock() + seconds
         self.last_request = float('-inf')
-        self.requests = self.failures = self.crate_timeouts = 0
+        self.requests = self.failures = self.recovered_crate_stalls = 0
 
     def check(self, reserve=0):
         if self.clock() + reserve >= self.deadline:
@@ -52,10 +59,12 @@ class Guard:
 
 
 class Crate:
-    """Bounded HTTP adapter: no implicit client retries and a two-table write allowlist."""
+    """Bounded HTTP adapter with explicit stall recovery and a two-table write allowlist."""
     def __init__(self, session, url, auth, guard):
         self.session, self.url, self.auth, self.guard = session, url, auth, guard
         self.known_keys = {}
+        self.batch_size = 500
+        self.uncertain_write = False
         self.rows_added = {table: 0 for table in TABLES}
 
     def prepare_show(self, show_id):
@@ -68,6 +77,41 @@ class Crate:
                 self.known_keys[table, show_id] = {
                     tuple(row[k] for k in ('show_id', 'tmdb_id', 'language_code', 'country_code')) for row in rows}
 
+    def request(self, body):
+        self.guard.check(CRATE_CALL_RESERVE)
+        response = self.session.post(self.url, auth=self.auth, json=body, timeout=(2, 35))
+        response.raise_for_status()
+        result = response.json()
+        if result.get('error') or any(x.get('error') or x.get('error_message') or x.get('rowcount', 0) < 0
+                                      for x in result.get('results', [])):
+            raise SafetyStop('crate_statement_error')
+        return result
+
+    def recover(self):
+        """Probe only, with waits and HTTP time included in both monotonic budgets."""
+        import requests
+        deadline = self.guard.clock() + CRATE_RECOVERY_SECONDS
+        for delay in (30, 60, 120, 120):
+            remaining = deadline - self.guard.clock()
+            if remaining < CRATE_CALL_RESERVE:
+                raise SafetyStop('crate_recovery_window_exhausted')
+            wait = min(delay, remaining - CRATE_CALL_RESERVE)
+            self.guard.check(wait + CRATE_CALL_RESERVE)
+            self.guard.sleep(wait)
+            try:
+                self.request({'stmt': 'SELECT 1', 'args': []})
+            except requests.exceptions.Timeout:
+                continue
+            except Exception:
+                raise SafetyStop('crate_error') from None
+            self.guard.recovered_crate_stalls += 1
+            print(json.dumps({'crate_recovered_stalls': self.guard.recovered_crate_stalls,
+                              'bulk_batch_size': self.batch_size}), flush=True)
+            if self.guard.recovered_crate_stalls >= MAX_RECOVERED_CRATE_STALLS:
+                raise SafetyStop('crate_recovered_stall_limit')
+            return
+        raise SafetyStop('crate_recovery_window_exhausted')
+
     def sql(self, statement, args=None, bulk=None):
         import requests
         writing = bulk is not None
@@ -78,28 +122,20 @@ class Crate:
         elif not statement.startswith('SELECT '):
             raise ValueError('Only SELECT is allowed outside translation publication')
         body = {'stmt': statement, 'bulk_args' if writing else 'args': bulk if writing else args or []}
-        for attempt in range(2):
-            self.guard.check(37)
+        while True:
             try:
-                response = self.session.post(self.url, auth=self.auth, json=body, timeout=(2, 35))
-                response.raise_for_status()
-                result = response.json()
+                result = self.request(body)
             except requests.exceptions.Timeout:
-                self.guard.crate_timeouts += 1
-                if self.guard.crate_timeouts >= 2:
-                    raise SafetyStop('two_consecutive_crate_timeouts') from None
+                self.uncertain_write |= writing
+                self.batch_size = max(25, self.batch_size // 2)
+                self.recover()
                 if writing:
-                    # The write may have committed. Probe health, never retry the write
-                    # or advance its cursor; replaying next night is idempotent.
-                    self.sql('SELECT 1')
-                    raise SafetyStop('crate_write_outcome_uncertain') from None
+                    # Any part may have committed. The page owns the retry, using
+                    # its exact cached payload and preserve-existing SQL.
+                    raise ReplayPage() from None
                 continue
             except Exception:
                 raise SafetyStop('crate_error') from None
-            self.guard.crate_timeouts = 0
-            if result.get('error') or any(x.get('error') or x.get('error_message') or x.get('rowcount', 0) < 0
-                                          for x in result.get('results', [])):
-                raise SafetyStop('crate_statement_error')
             if writing and len(result.get('results', [])) != len(bulk):
                 raise SafetyStop('crate_incomplete_bulk')
             return result
@@ -110,8 +146,9 @@ class Crate:
 
     def run_many(self, statement, values):
         table = statement.split()[2]
-        for start in range(0, len(values), 500):
-            batch = values[start:start + 500]
+        start = 0
+        while start < len(values):
+            batch = values[start:start + self.batch_size]
             self.sql(statement, bulk=batch)
             for row in batch:
                 key = tuple(row[:4])
@@ -119,6 +156,7 @@ class Crate:
                 if key not in known:
                     self.rows_added[table] += 1
                     known.add(key)
+            start += len(batch)
 
 
 class Store:
@@ -227,6 +265,16 @@ def reconstruct(item, get):
     return None
 
 
+def replay_publication(publish, crate):
+    while True:
+        try:
+            result = publish()
+        except ReplayPage:
+            continue
+        crate.uncertain_write = False
+        return result
+
+
 def page(item, get, crate):
     if 'targets' in item:
         targets = item['targets'][item['offset']:item['offset'] + 40]
@@ -234,8 +282,10 @@ def page(item, get, crate):
         for target in targets:
             pending[target['table']].extend(translation_rows(
                 item['tmdb_id'], target['id'], get(target['path'] + '/translations')))
-        for table, rows in pending.items():
-            publish_rows(crate, table, rows, preserve_existing=True)
+        def publish():
+            for table, rows in pending.items():
+                publish_rows(crate, table, rows, preserve_existing=True)
+        replay_publication(publish, crate)
         item['offset'] += len(targets)
         return item['offset'] == len(item['targets'])
     responses = {}
@@ -247,8 +297,9 @@ def page(item, get, crate):
     preview = ingest_titles([item['tmdb_id']], fetch, bounds=PAGE, resume=cursor, sleep=lambda _: None)
     if preview['failures']:
         raise SafetyStop('page_validation_failed')
-    result = ingest_titles([item['tmdb_id']], responses.__getitem__, crate, dry_run=False,
-                           bounds=PAGE, resume=cursor, sleep=lambda _: None, preserve_existing=True)
+    result = replay_publication(
+        lambda: ingest_titles([item['tmdb_id']], responses.__getitem__, crate, dry_run=False,
+                              bounds=PAGE, resume=cursor, sleep=lambda _: None, preserve_existing=True), crate)
     if result['failures'] or result != preview | {'dry_run': False}:
         raise SafetyStop('cached_publication_mismatch')
     if result['truncated']:
@@ -262,7 +313,7 @@ def page(item, get, crate):
 def run(state, store, crate, fetch, guard, discover_changed, discover_new):
     summary = {'started_at': datetime.utcnow().isoformat(), 'requests': 0, 'failed_requests': 0,
                'rows_added': {table: 0 for table in TABLES}, 'shows_completed': 0,
-               'pages_completed': 0, 'stop_reason': None, 'preserve_existing': True}
+               'pages_completed': 0, 'recovered_crate_stalls': 0, 'stop_reason': None, 'preserve_existing': True}
     # Count new keys against each show's pre-publication snapshot. Only acknowledged
     # bulk writes count. An uncertain timed-out write can make these a lower bound.
     get = lambda path: guard.get(fetch, path)
@@ -303,7 +354,8 @@ def run(state, store, crate, fetch, guard, discover_changed, discover_new):
                 if 'targets' not in item and item['tmdb_id'] not in state['completed']:
                     state['completed'].append(item['tmdb_id'])
             state['active_run'] = summary | {'requests': guard.requests, 'failed_requests': guard.failures,
-                                            'rows_added': crate.rows_added.copy()}
+                                            'rows_added': crate.rows_added.copy(),
+                                            'recovered_crate_stalls': guard.recovered_crate_stalls}
             store.save(state)
             print(json.dumps({'show_id': item['tmdb_id'], 'complete': done, 'requests': guard.requests,
                               'cursor': item.get('resume'), 'pages': summary['pages_completed']}), flush=True)
@@ -314,9 +366,10 @@ def run(state, store, crate, fetch, guard, discover_changed, discover_new):
     finally:
         summary.update(requests=guard.requests, failed_requests=guard.failures,
                        rows_added=crate.rows_added.copy(),
-                       counts_may_exclude_uncertain_write=summary['stop_reason'] in
-                       ('crate_write_outcome_uncertain', 'two_consecutive_crate_timeouts', 'crate_statement_error',
-                        'crate_incomplete_bulk'), finished_at=datetime.utcnow().isoformat())
+                       recovered_crate_stalls=guard.recovered_crate_stalls,
+                       counts_may_exclude_uncertain_write=getattr(crate, 'uncertain_write', False) or
+                       summary['stop_reason'] in ('crate_statement_error', 'crate_incomplete_bulk'),
+                       finished_at=datetime.utcnow().isoformat())
         state['active_run'] = summary.copy()
         print(json.dumps(summary), flush=True)
         store.finish(state, summary)

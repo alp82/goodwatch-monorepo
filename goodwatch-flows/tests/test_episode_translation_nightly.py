@@ -175,12 +175,83 @@ class NightlyTests(unittest.TestCase):
 
     def test_timeout_during_publication_keeps_the_page_cursor(self):
         self.state['backlog'] = [{'tmdb_id': 2, 'resume': None}]
-        self.crate.run_many = Mock(side_effect=nightly.SafetyStop('two_consecutive_crate_timeouts'))
+        self.crate.uncertain_write = True
+        self.crate.run_many = Mock(side_effect=nightly.SafetyStop('crate_recovery_window_exhausted'))
         result = self.execute(catalog(2).__getitem__)
-        self.assertEqual(result['stop_reason'], 'two_consecutive_crate_timeouts')
+        self.assertEqual(result['stop_reason'], 'crate_recovery_window_exhausted')
         stored = self.db[nightly.STATE_COLLECTION].find_one({'_id': nightly.STATE_ID})
         self.assertEqual(stored['backlog'], [{'tmdb_id': 2, 'resume': None}])
         self.assertTrue(result['counts_may_exclude_uncertain_write'])
+
+    def test_recovered_committed_write_replays_cached_page_idempotently(self):
+        self.state['backlog'] = [{'tmdb_id': 2, 'resume': None}]
+        self.crate.db.execute("INSERT INTO episode_translation VALUES (2,201,'de','DE','Keep', '')")
+        sql_db = self.crate.db
+        session = Mock()
+        real_crate = nightly.Crate(session, 'http://unused/_sql', ('unused', 'unused'), self.guard)
+        real_crate.known_keys = {('season_translation', 2): set(),
+                                 ('episode_translation', 2): {(2, 201, 'de', 'DE')}}
+        real_crate.prepare_show = Mock()
+        real_crate.db = sql_db
+        writes, probes, durable_cursors = [], [], []
+        def post(*args, **kwargs):
+            body = kwargs['json']
+            response = Mock()
+            if body['stmt'] == 'SELECT 1':
+                probes.append(self.clock.now)
+                durable_cursors.append(self.db[nightly.STATE_COLLECTION].find_one(
+                    {'_id': nightly.STATE_ID})['backlog'])
+                if len(probes) == 1:
+                    raise requests.Timeout()
+                response.json.return_value = {'cols': ['one'], 'rows': [[1]]}
+            else:
+                writes.append(body)
+                sql_db.executemany(body['stmt'], body['bulk_args'])
+                if len(writes) == 2:
+                    # The whole episode batch committed, but its acknowledgement was lost.
+                    raise requests.Timeout()
+                response.json.return_value = {'results': [{'rowcount': 1} for _ in body['bulk_args']]}
+            return response
+        session.post.side_effect = post
+        fixtures = catalog(2, 40)
+        fetch = Mock(side_effect=fixtures.__getitem__)
+        self.crate = real_crate
+        result = self.execute(fetch)
+        self.assertEqual(result['stop_reason'], 'caught_up')
+        self.assertEqual(result['pages_completed'], 1)
+        self.assertEqual(result['recovered_crate_stalls'], 1)
+        self.assertEqual(result['rows_added'], {'season_translation': 1, 'episode_translation': 39})
+        self.assertFalse(result['counts_may_exclude_uncertain_write'])
+        self.assertEqual(fetch.call_count, 43)  # One fetch per endpoint, no TMDB replay.
+        self.assertEqual(len(writes), 4)  # Both tables in the cached page replayed.
+        self.assertEqual(real_crate.batch_size, 250)
+        self.assertEqual(durable_cursors, [[{'tmdb_id': 2, 'resume': None}]] * 2)
+        self.assertEqual(sql_db.execute('SELECT COUNT(*) FROM episode_translation').fetchone()[0], 40)
+        self.assertEqual(sql_db.execute('SELECT name, overview FROM episode_translation WHERE tmdb_id=201').fetchone(),
+                         ('Keep', 'Added'))
+        stored = self.db[nightly.STATE_COLLECTION].find_one({'_id': nightly.STATE_ID})
+        self.assertEqual(stored['backlog'], [])
+        self.assertEqual(stored['last_run']['recovered_crate_stalls'], 1)
+        self.assertLessEqual(stored['lease_until'], datetime.utcnow())
+
+    def test_changed_page_replay_preserves_offset_and_cached_targets(self):
+        item = {'tmdb_id': 2, 'targets': [
+            {'id': 201, 'table': 'episode_translation', 'path': 'tv/2/season/1/episode/1'}], 'offset': 0}
+        fetch = Mock(return_value=payload(201))
+        publish = self.crate.run_many
+        attempts = []
+        def uncertain(sql, values):
+            attempts.append(copy.deepcopy(values))
+            self.assertEqual(item['offset'], 0)
+            publish(sql, values)
+            if len(attempts) == 1:
+                raise nightly.ReplayPage()
+        self.crate.run_many = uncertain
+        self.assertTrue(nightly.page(item, fetch, self.crate))
+        self.assertEqual(item['offset'], 1)
+        fetch.assert_called_once_with('tv/2/season/1/episode/1/translations')
+        self.assertEqual(attempts[0], attempts[1])
+        self.assertEqual(self.crate.rows_added['episode_translation'], 1)
 
     def test_changed_page_offset_and_watermark_survive_budget_stop(self):
         targets = [{'id': 200 + e, 'table': 'episode_translation',
@@ -236,26 +307,88 @@ class CrateSafetyTests(unittest.TestCase):
         self.guard = nightly.Guard(600, self.clock, self.clock.sleep)
         self.crate = nightly.Crate(self.session, 'http://unused/_sql', ('unused', 'unused'), self.guard)
 
-    def test_two_consecutive_read_timeouts_stop(self):
-        self.session.post.side_effect = requests.Timeout()
-        with self.assertRaisesRegex(nightly.SafetyStop, 'two_consecutive_crate_timeouts'):
-            self.crate.select('SELECT 1')
+    def okay(self, result=None):
+        response = Mock()
+        response.json.return_value = result or {'cols': ['one'], 'rows': [[1]]}
+        return response
+
+    def test_read_recovers_after_write_sized_stall_and_replays_query(self):
+        self.session.post.side_effect = [requests.Timeout(), requests.Timeout(), self.okay(), self.okay()]
+        self.assertEqual(self.crate.select('SELECT 2'), [{'one': 1}])
+        self.assertEqual([c.kwargs['json']['stmt'] for c in self.session.post.call_args_list],
+                         ['SELECT 2', 'SELECT 1', 'SELECT 1', 'SELECT 2'])
+        self.assertEqual(self.clock.now, 90)
+        self.assertEqual(self.guard.recovered_crate_stalls, 1)
+
+    def test_never_recovering_probe_stops_after_five_minute_window(self):
+        def timeout(*args, **kwargs):
+            self.clock.sleep(sum(kwargs['timeout']))
+            raise requests.Timeout()
+        self.session.post.side_effect = timeout
+        with self.assertRaisesRegex(nightly.SafetyStop, '^crate_recovery_window_exhausted$'):
+            self.crate.select('SELECT 2')
+        # The initial request plus at most 300 seconds of recovery, including probes.
+        self.assertEqual(self.clock.now, 337)
+        self.assertEqual(self.guard.recovered_crate_stalls, 0)
+        self.assertEqual([c.kwargs['json']['stmt'] for c in self.session.post.call_args_list],
+                         ['SELECT 2', 'SELECT 1', 'SELECT 1', 'SELECT 1'])
+
+    def test_six_recovered_stalls_stop_even_with_successes_between(self):
+        self.session.post.side_effect = [item for _ in range(6)
+                                        for item in [requests.Timeout(), self.okay(), self.okay()]]
+        for _ in range(5):
+            self.crate.select('SELECT 2')
+        with self.assertRaisesRegex(nightly.SafetyStop, '^crate_recovered_stall_limit$'):
+            self.crate.select('SELECT 2')
+        self.assertEqual(self.guard.recovered_crate_stalls, 6)
+        self.assertEqual(self.clock.now, 180)
+
+    def test_backoff_and_probe_time_count_against_global_budget(self):
+        self.guard.deadline = 150
+        def timeout(*args, **kwargs):
+            self.clock.sleep(sum(kwargs['timeout']))
+            raise requests.Timeout()
+        self.session.post.side_effect = timeout
+        with self.assertRaisesRegex(nightly.SafetyStop, '^budget$'):
+            self.crate.select('SELECT 2')
+        self.assertEqual(self.clock.now, 104)
+        self.assertLess(self.clock.now, self.guard.deadline)
         self.assertEqual(self.session.post.call_count, 2)
 
-    def test_success_resets_consecutive_timeout_counter(self):
-        okay = Mock()
-        okay.json.return_value = {'cols': ['one'], 'rows': [[1]]}
-        self.session.post.side_effect = [requests.Timeout(), okay, requests.Timeout(), okay]
-        self.assertEqual(self.crate.select('SELECT 1'), [{'one': 1}])
-        self.assertEqual(self.guard.crate_timeouts, 0)
-        self.assertEqual(self.crate.select('SELECT 1'), [{'one': 1}])
+    def test_fast_probe_timeouts_still_have_bounded_attempts(self):
+        self.session.post.side_effect = requests.Timeout()
+        with self.assertRaisesRegex(nightly.SafetyStop, '^crate_recovery_window_exhausted$'):
+            self.crate.select('SELECT 2')
+        self.assertEqual(self.session.post.call_count, 5)
+        self.assertEqual(self.clock.now, 263)
 
-    def test_uncertain_write_is_never_retried_and_second_timeout_stops(self):
+    def test_replayed_bulk_uses_smaller_batches_without_double_counting(self):
+        sql = "INSERT INTO episode_translation (name) VALUES (?) ON CONFLICT DO UPDATE SET name = CASE WHEN name = '' THEN excluded.name ELSE name END"
+        self.crate.known_keys['episode_translation', 2] = set()
+        values = [(2, i, 'de', 'DE', 'text') for i in range(600)]
+        sizes = []
+        def post(*args, **kwargs):
+            body = kwargs['json']
+            if body['stmt'] == 'SELECT 1':
+                return self.okay()
+            sizes.append(len(body['bulk_args']))
+            if len(sizes) == 2:
+                raise requests.Timeout()
+            return self.okay({'results': [{'rowcount': 1} for _ in body['bulk_args']]})
+        self.session.post.side_effect = post
+        nightly.replay_publication(lambda: self.crate.run_many(sql, values), self.crate)
+        self.assertEqual(sizes, [500, 100, 250, 250, 100])
+        self.assertEqual(self.crate.rows_added['episode_translation'], 600)
+        self.assertFalse(self.crate.uncertain_write)
+
+    def test_recovery_budget_stop_keeps_uncertain_write_flag(self):
+        self.guard.deadline = 60
         self.session.post.side_effect = requests.Timeout()
         sql = "INSERT INTO episode_translation (name) VALUES (?) ON CONFLICT DO UPDATE SET name = CASE WHEN name = '' THEN excluded.name ELSE name END"
-        with self.assertRaisesRegex(nightly.SafetyStop, 'two_consecutive_crate_timeouts'):
+        with self.assertRaisesRegex(nightly.SafetyStop, '^budget$'):
             self.crate.sql(sql, bulk=[['text']])
-        self.assertEqual([c.kwargs['json']['stmt'] for c in self.session.post.call_args_list], [sql, 'SELECT 1'])
+        self.assertTrue(self.crate.uncertain_write)
+        self.assertEqual(self.session.post.call_count, 1)
 
     def test_write_allowlist(self):
         for sql in ['DELETE FROM episode_translation', 'INSERT INTO episode (name) VALUES (?)',

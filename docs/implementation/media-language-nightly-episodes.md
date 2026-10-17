@@ -55,32 +55,54 @@ and any write without the preserve-existing CASE expression. Non-empty names and
 overviews remain unchanged; missing fields can be filled.
 
 The cursor advances only after every write in the page succeeds. A failure or
-timeout replays the current page on the next run. Stop conditions are:
+timeout leaves the current page unacknowledged. After a Crate timeout, the runner
+probes `SELECT 1` with waits of 30, 60, and 120 seconds, with one final wait clipped
+to the remaining recovery window. Probe HTTP time is included in the **300-second
+recovery window**. The initial failed call is outside that window. At most four
+probes are attempted, each retaining the 2-second connect/35-second read timeout.
+Every wait and call also consumes the run's wall-clock budget; a recovery that
+cannot fit another probe stops with `budget` and preserves checkpoint time.
+
+When Crate answers, reads retry their original query. Publication replays the
+**whole validated page from cached responses**, without refetching TMDB. This is
+safe even when a timed-out batch committed: preserve-existing upserts neither
+create duplicate keys nor replace populated text. Each timeout halves the bulk
+batch limit from 500, down to a floor of 25, for the rest of that run. The cursor
+advances only when the replay is fully acknowledged. Stop conditions are:
 
 - The wall-clock deadline, reserving time for HTTP calls and final checkpoints.
 - More than 5% failed TMDB requests. An isolated failure below that ratio also
   stops the current run with `endpoint_failed`, preserving the retry cursor.
-- Two consecutive Crate timeouts. Successful Crate responses reset the counter.
-  A timed-out write is never retried in the same run: one read-only health probe
-  distinguishes a second timeout, then the runner stops with the page unacknowledged.
+- `crate_recovery_window_exhausted` when no health probe recovers within the
+  bounded window. This replaces `two_consecutive_crate_timeouts`.
+- `crate_recovered_stall_limit` on the **sixth recovered stall** in a run, including
+  read stalls. Successful queries do not reset this run-wide counter; the sixth
+  recovery stops before replaying the unacknowledged operation. A fresh night
+  starts a fresh counter.
 - Malformed/identity-mismatched payloads, failed bulk results, lost state lease,
   or discovery limits that could otherwise silently truncate work.
 
 Summaries report actual TMDB requests, failed requests, new translation keys
-acknowledged by Crate, completed shows/pages, and the stop reason. New-key counts
-compare writes with the show's initial key snapshot, deduplicating repeated
+acknowledged by Crate, completed shows/pages, recovered Crate stalls, and the stop
+reason. `recovered_crate_stalls` is saved in active and final run summaries.
+New-key counts compare writes with the show's initial key snapshot, deduplicating repeated
 pages. An uncertain write or partial bulk failure explicitly flags counts as a
-lower bound. Crate search visibility can lag; supervised proof reconciles counts
-with later reads and checks every pre-existing non-empty field of touched shows.
+lower bound, including a budget stop during write recovery. A fully acknowledged
+replay clears that uncertainty and counts each new key once. Crate search
+visibility can lag; supervised proof reconciles counts with later reads and checks every pre-existing non-empty field of touched shows.
 
 ## Verification and operating capacity
 
 `tests/test_episode_translation_nightly.py` covers order, popularity exclusions,
-wall-clock stops, failure ratios, consecutive timeout/reset behavior, uncertain
+wall-clock stops, failure ratios, bounded timeout recovery, cached idempotent
+page replay (both changed targets and backlog), adaptive batch sizes, recovery
+window exhaustion, six-stall limits, recovery budget accounting, uncertain
 writes, SQL restrictions, page validation, durable cursors, seed import, lease
 exclusion, canonical additions, numbering gaps, and actual preserve-existing SQL
 execution against a small in-memory database. The existing media-language tests
-continue covering the underlying ingestion helper.
+continue covering the underlying ingestion helper. Publisher-job detection is
+intentionally omitted: an API check can race with a new publisher, and transient
+Crate stalls need the same bounded recovery regardless of their source.
 
 The saved backfill estimate has 198,028 requests left in the capped cohort and
 429,344 in the initial 800-show cohort. At five requests/second a three-hour night
@@ -130,3 +152,19 @@ Machine-readable proof is in
 Full test logs, before/after field snapshots, deployment checks, the enabled
 schedule, and its queued job are retained under
 `/home/alper/projects/goodwatch-media-language-evidence/episode-translation-nightly/`.
+
+## Stall recovery verification, 2026-10-17
+
+The original two-timeout behavior is reproduced by the new committed-but-timed-out
+write test: untouched code stops with `two_consecutive_crate_timeouts` rather than
+replaying the page. The recovery implementation passes all 27 nightly tests,
+including a simulated lost acknowledgement after a real SQLite upsert, successful
+page replay without duplicate keys or overwritten text, durable cursor/lease
+checks, exhausted recovery windows, the sixth-stall cap, and global budget usage.
+
+The full flows suite ran 1,539 tests, with 75 skipped and only the known deletion
+coverage failure. That failure reproduced in an untouched `origin/main` archive;
+the backup-notification tests now pass there. With that one baseline assertion
+excluded, the full suite passes: 1,538 tests, with 75 skipped. Logs and supervised-run
+evidence are retained under
+`/home/alper/projects/goodwatch-media-language-evidence/episode-translation-recovery/`.
