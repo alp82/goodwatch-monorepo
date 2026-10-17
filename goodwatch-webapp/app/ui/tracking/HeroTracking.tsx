@@ -55,12 +55,15 @@ export default function HeroTracking({
 	return (
 		<div data-tracking-hero={view.derived.state} className={HERO_ACTIONS}>
 			{view.derived.state !== "not_started" ? (
-				<StatusLine
-					media={media}
-					tracking={tracking}
-					view={view}
-					actions={actions}
-				/>
+				<div className="flex min-w-0 items-center gap-2">
+					{view.derived.state === "seen" && <WantButton media={media} rewatch />}
+					<StatusLine
+						media={media}
+						tracking={tracking}
+						view={view}
+						actions={actions}
+					/>
+				</div>
 			) : (
 				<div className="flex min-w-0 items-center gap-2">
 					<WantButton media={media} />
@@ -417,36 +420,63 @@ function StatusLine({
 								? ` ${episodeLabel(upcoming)} airs ${upcoming.airDate === tracking.today ? "today" : upcoming.airDate}.`
 								: ""
 						}`
-	return (
-		<div data-tracking-box className={STATUS_LINE}>
-			<p
-				data-progress
-				title={extras.join(" · ")}
-				aria-label={extras.join(", ")}
-				className="flex shrink-0 items-center gap-2 text-xs font-semibold tabular-nums text-white"
+	const progress = (
+		<p
+			data-progress
+			title={extras.join(" · ")}
+			aria-label={extras.join(", ")}
+			className="flex shrink-0 items-center gap-2 text-xs font-semibold tabular-nums text-white"
+		>
+			{derived.pass > 1 && (
+				<span className="font-normal text-gray-400 max-sm:hidden">
+					Pass {derived.pass}
+				</span>
+			)}
+			<span>
+				{derived.watched}/{derived.aired}
+			</span>
+			<span
+				className={`block h-1.5 w-10 overflow-hidden rounded-full bg-white/10 sm:w-20 ${narrow}`}
+				aria-hidden="true"
 			>
-				{derived.pass > 1 && (
-					<span className="font-normal text-gray-400 max-sm:hidden">
-						Pass {derived.pass}
-					</span>
-				)}
-				<span>
-					{derived.watched}/{derived.aired}
-				</span>
 				<span
-					className={`block h-1.5 w-10 overflow-hidden rounded-full bg-white/10 sm:w-20 xl:w-28 ${narrow}`}
-					aria-hidden="true"
+					className="block h-full rounded-full bg-green-500 transition-[width]"
+					style={{
+						width: `${derived.aired ? (derived.watched / derived.aired) * 100 : 0}%`,
+					}}
+				/>
+			</span>
+		</p>
+	)
+	// Without a Next episode the whole line leads to the episode list.
+	if (!next)
+		return (
+			<a
+				href={`#${EPISODE_GRID_ANCHOR}`}
+				data-tracking-box
+				data-go-episodes
+				aria-label={`${noNext} Go to episodes`}
+				title={noNext}
+				onClick={(event) => {
+					event.preventDefault()
+					tracking.store.openEpisode(null)
+				}}
+				className={`group flex h-9 min-w-0 flex-1 items-center gap-2.5 rounded-lg bg-white/10 px-3 ring-1 ring-white/15 transition-colors hover:bg-white/20 ${FOCUS}`}
+			>
+				{progress}
+				<span
+					data-no-next
+					className="ml-auto min-w-0 truncate text-right text-xs text-gray-300 group-hover:text-white max-sm:sr-only"
 				>
-					<span
-						className="block h-full rounded-full bg-green-500 transition-[width]"
-						style={{
-							width: `${derived.aired ? (derived.watched / derived.aired) * 100 : 0}%`,
-						}}
-					/>
+					{noNext}
 				</span>
-			</p>
-			{next ? (
-				// Navigation, not an action: the chip leads to the episode's row, where it is marked.
+				<ArrowDownIcon className="h-3.5 w-3.5 shrink-0 text-gray-300 transition group-hover:translate-y-0.5 group-hover:text-white max-sm:ml-auto" />
+			</a>
+		)
+	return (
+		<div data-tracking-box className={`${STATUS_LINE} flex-1`}>
+			{progress}
+			{/* Navigation, not an action: the chip leads to the episode's row, where it is marked. */}
 				<a
 					href={`#${EPISODE_GRID_ANCHOR}`}
 					data-next-episode
@@ -460,12 +490,12 @@ function StatusLine({
 				>
 					<span className={`shrink-0 text-xs text-gray-400 ${narrow}`}>
 						{derived.newEpisodes ? "New" : "Next"}
-						<span className="max-xl:hidden">
+						<span className={derived.newEpisodes ? "hidden" : "max-sm:hidden"}>
 							{derived.newEpisodes ? " since you saw it" : " episode"}
 						</span>
 					</span>
 					{next.name && (
-						<span className="min-w-0 truncate text-xs font-medium text-gray-200 max-xl:hidden">
+						<span className="min-w-0 truncate text-xs font-medium text-gray-200 max-xl:hidden xl:max-w-24">
 							{next.name}
 						</span>
 					)}
@@ -474,30 +504,6 @@ function StatusLine({
 						<ArrowDownIcon className="h-3.5 w-3.5" />
 					</span>
 				</a>
-			) : (
-				<>
-					<p
-						data-no-next
-						className="ml-auto min-w-0 truncate text-right text-xs text-gray-300 max-sm:sr-only"
-					>
-						{noNext}
-					</p>
-					<a
-						href={`#${EPISODE_GRID_ANCHOR}`}
-						data-go-episodes
-						aria-label="Go to episodes"
-						title={noNext}
-						onClick={(event) => {
-							event.preventDefault()
-							tracking.store.openEpisode(null)
-						}}
-						className={`max-sm:ml-auto ${GO} ${FOCUS}`}
-					>
-						Episodes
-						<ArrowDownIcon className="h-3.5 w-3.5" />
-					</a>
-				</>
-			)}
 		</div>
 	)
 }
@@ -584,16 +590,27 @@ function Prompts({
 // ---------------------------------------------------------------------------------------------------------
 
 /**
- * Want to See, beside "Already watching?" on a show that isn't started. Seen and Not interested are in the status
- * menu; a started show has every action there.
+ * Want to See, beside "Already watching?" on a show that isn't started, and Rewatch beside the progress of a Seen
+ * show. Everything else is in the status menus.
  */
-function WantButton({ media }: { media: TrackedMedia }) {
+function WantButton({
+	media,
+	rewatch = false,
+}: { media: TrackedMedia; rewatch?: boolean }) {
 	const a = useTitleActions(media)
 	return (
 		<ActionButton
 			kind="want"
-			label="long"
+			label={rewatch ? "short" : "long"}
 			size="sm"
+			rewatch={rewatch}
+			title={
+				rewatch
+					? a.want
+						? "On your Wishlist to watch again. Press to take it off."
+						: "Puts it on your Wishlist to watch again some day. Your episodes stay ticked; Watch again, in the status menu, starts a new pass now."
+					: undefined
+			}
 			className="!w-auto shrink-0 px-3"
 			active={a.want}
 			disabled={a.wantPending}

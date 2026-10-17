@@ -19,7 +19,7 @@ const REWATCH = { short: "Rewatch", long: "Want to rewatch" }
 
 /**
  * Want to See, Seen, or Not interested as a toggle button.
- * `label`: "auto" shows the short word on phones and the long one from sm up; "long" always the long one; "none" the
+ * `label`: "auto" shows the short word on phones and the long one from sm up; "long" always the long one; "short" always the short one; "none" the
  * icon alone, with the long label as its name and tooltip; "wide" the icon alone on phones and the long label from
  * sm up. `size`: "md" is 44px high, "sm" 36px.
  */
@@ -38,7 +38,7 @@ export function ActionButton({
 	/** Want to See only: the title is Seen, so the button reads "Want to rewatch". */
 	rewatch?: boolean
 	active: boolean
-	label?: "auto" | "long" | "none" | "wide"
+	label?: "auto" | "long" | "short" | "none" | "wide"
 	size?: "md" | "sm"
 	/** Seen with the movie watch log: "3×" from two watches on. */
 	count?: string | null
@@ -84,6 +84,7 @@ export function ActionButton({
 				</>
 			)}
 			{label === "long" && <span className="truncate">{long}</span>}
+			{label === "short" && <span className="truncate">{short}</span>}
 			{label === "wide" && <span className="truncate max-sm:sr-only">{long}</span>}
 			{label !== "none" && count && <span className="shrink-0 tabular-nums opacity-80">{count}</span>}
 			{/* Drawn here: the icon library's arrow would join the scripts of every page. */}
