@@ -1,0 +1,113 @@
+{
+	"queries": {
+		"full_reader": {
+			"sql": "Candidate page followed by grouped open stays for all movie and show candidates",
+			"rows": [],
+			"elapsed_ms": 127.08,
+			"service_rows": 737,
+			"candidate_titles": 108
+		},
+		"live_bounds": {
+			"sql": "SELECT min(observed_at), max(observed_at), min(created_at), max(created_at) FROM availability_history WHERE country_code = 'US' AND appeared_source <> 'backfill'",
+			"rows": [
+				{
+					"max(created_at)": 1792195931347,
+					"min(created_at)": 1792195227579,
+					"max(observed_at)": 1792195123937,
+					"min(observed_at)": 1792173645984
+				}
+			],
+			"params": [],
+			"elapsed_ms": 25.96
+		},
+		"reader_stays": {
+			"sql": "SELECT media_tmdb_id, streaming_service_id, min(CASE WHEN appeared_source <> 'backfill' THEN (CASE WHEN appeared_precision = 'exact' THEN appeared_on ELSE date_trunc('day', observed_at) END) ELSE 0 END) FROM availability_history WHERE country_code = ? AND streaming_type IN (?, ?, ?) AND dropped_on IS NULL AND media_type = ? AND media_tmdb_id IN (?) GROUP BY media_tmdb_id, streaming_service_id LIMIT 1000000",
+			"rows": [
+				{
+					"media_tmdb_id": 438631,
+					"streaming_service_id": 1825,
+					"min(CASE WHEN (NOT (appeared_source = 'backfill')) THEN CASE WHEN (appeared_precision = 'exact') THEN appeared_on ELSE date_trunc('day', observed_at) END ELSE 0::bigint END)": 0
+				},
+				{
+					"media_tmdb_id": 438631,
+					"streaming_service_id": 2528,
+					"min(CASE WHEN (NOT (appeared_source = 'backfill')) THEN CASE WHEN (appeared_precision = 'exact') THEN appeared_on ELSE date_trunc('day', observed_at) END ELSE 0::bigint END)": 0
+				},
+				{
+					"media_tmdb_id": 438631,
+					"streaming_service_id": 507,
+					"min(CASE WHEN (NOT (appeared_source = 'backfill')) THEN CASE WHEN (appeared_precision = 'exact') THEN appeared_on ELSE date_trunc('day', observed_at) END ELSE 0::bigint END)": 0
+				},
+				{
+					"media_tmdb_id": 438631,
+					"streaming_service_id": 363,
+					"min(CASE WHEN (NOT (appeared_source = 'backfill')) THEN CASE WHEN (appeared_precision = 'exact') THEN appeared_on ELSE date_trunc('day', observed_at) END ELSE 0::bigint END)": 0
+				},
+				{
+					"media_tmdb_id": 438631,
+					"streaming_service_id": 1899,
+					"min(CASE WHEN (NOT (appeared_source = 'backfill')) THEN CASE WHEN (appeared_precision = 'exact') THEN appeared_on ELSE date_trunc('day', observed_at) END ELSE 0::bigint END)": 0
+				},
+				{
+					"media_tmdb_id": 438631,
+					"streaming_service_id": 506,
+					"min(CASE WHEN (NOT (appeared_source = 'backfill')) THEN CASE WHEN (appeared_precision = 'exact') THEN appeared_on ELSE date_trunc('day', observed_at) END ELSE 0::bigint END)": 0
+				}
+			],
+			"params": ["US", "flatrate", "free", "ads", "movie", 438631],
+			"elapsed_ms": 11.39
+		},
+		"all_live_days": {
+			"sql": "SELECT date_trunc('day', CASE WHEN appeared_precision = 'exact' THEN appeared_on ELSE date_trunc('day', observed_at) END) AS day, count(*) AS live_stays, count(DISTINCT media_type || ':' || cast(media_tmdb_id AS TEXT)) AS titles FROM availability_history WHERE country_code = 'US' AND streaming_type IN ('flatrate','free','ads') AND appeared_source <> 'backfill' AND dropped_on IS NULL GROUP BY 1 ORDER BY 1 LIMIT 1000",
+			"rows": [
+				{
+					"day": 1792108800000,
+					"titles": 108,
+					"live_stays": 164
+				}
+			],
+			"params": [],
+			"elapsed_ms": 44.31
+		},
+		"daily_arrivals": {
+			"sql": "SELECT date_trunc('day', arrived) AS day, count(*) AS live_stays, count(DISTINCT media_type || ':' || cast(media_tmdb_id AS TEXT)) AS titles FROM (SELECT media_type, media_tmdb_id, CASE WHEN appeared_precision = 'exact' THEN appeared_on ELSE date_trunc('day', observed_at) END AS arrived FROM availability_history WHERE country_code = 'US' AND streaming_type IN ('flatrate','free','ads') AND appeared_source <> 'backfill' AND dropped_on IS NULL AND (CASE WHEN appeared_precision = 'exact' THEN appeared_on ELSE date_trunc('day', observed_at) END) >= '2026-10-17T00:00:00Z') AS live GROUP BY 1 ORDER BY 1 LIMIT 1000",
+			"rows": [],
+			"params": [],
+			"elapsed_ms": 43.68
+		},
+		"history_sources": {
+			"sql": "SELECT appeared_source, count(*) FROM availability_history WHERE country_code = 'US' GROUP BY appeared_source LIMIT 100",
+			"rows": [
+				{
+					"count(*)": 732963,
+					"appeared_source": "backfill"
+				},
+				{
+					"count(*)": 164,
+					"appeared_source": "title"
+				}
+			],
+			"params": [],
+			"elapsed_ms": 40.93
+		},
+		"reader_candidates": {
+			"sql": "SELECT DISTINCT media_type, media_tmdb_id FROM availability_history WHERE country_code = ? AND streaming_type IN (?, ?, ?) AND dropped_on IS NULL AND appeared_source <> 'backfill' AND (CASE WHEN appeared_precision = 'exact' THEN appeared_on ELSE date_trunc('day', observed_at) END) > ? ORDER BY media_type, media_tmdb_id LIMIT 1000 OFFSET ?",
+			"params": ["US", "flatrate", "free", "ads", 1791676800000, 0],
+			"elapsed_ms": 45.55,
+			"rowcount": 108
+		}
+	},
+	"measured_at": "2026-10-17T00:23:07.954331+00:00",
+	"production_data_writes": 0,
+	"preview_job": "01a1473d-ad5e-86c3-200d-ff11664bcb08",
+	"scope": "US flatrate/free/ads open stays; country-wide counts, before member saved-service filtering",
+	"requested_since": "2026-10-17T00:13:00Z",
+	"daily_counts_since_requested_start": [
+		{
+			"day": "2026-10-17",
+			"live_stays": 0,
+			"titles": 0
+		}
+	],
+	"explanation": "All 164 live US stays currently date to October 16 under Q59. None has observed_at or created_at at or after the requested 00:13 UTC start. The daily_arrivals query includes all of October 17 (UTC day granularity)."
+}

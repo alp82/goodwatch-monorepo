@@ -1,12 +1,5 @@
-// When a service first carried a title, for "newly available on your services" (#456). A row of
-// `streaming_availability` keeps the time it first appeared (`created_at`), and the availability index reads those
-// times with each load of a country, so that no request asks Crate for them.
-//
-// Only the offers that first appeared lately are read. Measured on production on October 12, 2026
-// (scripts/measure-newly-available.mjs): carrying a time for every offer would take the answer the index loads for
-// the United States from 6.1 MB to 16.6 MB and triple the time parsing it holds the event loop (54 to 155 ms
-// against 154 to 506 ms), while the titles with an offer of the last seven days are 545, read in three statements
-// of about 100 ms together. Everything older has been there for longer than anyone is told about.
+// Live availability stays supply Newly available dates (#637, owner decision Q59).
+// The country index keeps these dates; member requests still use its saved-service rules.
 import { type FirstSeen, firstSeenOf } from "~/domain/newly-available"
 import { type TitleKey, titleKey } from "~/utils/title-key"
 
@@ -37,16 +30,16 @@ export const KEPT_DAYS = 90
 export const keptSince = (now = Date.now()) =>
 	Math.max(launchTime(), now - KEPT_DAYS * DAY_MS)
 
-// In an ordinary week about 80 titles a day get a new offer in the United States, some 7,000 in the days kept. Far
-// more than this is a catch-up, offers that look new and are not: then no time is kept, and nothing is announced.
-const MAX_TITLES = 20_000
 const BATCH = 1_000
 
+// Exact stays carry a proved day; unknown stays count from the UTC day we opened them.
+const ARRIVED =
+	"CASE WHEN appeared_precision = 'exact' THEN appeared_on ELSE date_trunc('day', observed_at) END"
+
 /**
- * The time each service first carried each title of a country, for the services that started after `since`, by
- * title and base service. Two kinds of statement: the titles with an offer that first appeared since, then every
- * subscription offer of those titles, since a service that started lately is only new for a title when no
- * duplicate of it and no other kind of offer on it was there before.
+ * Read recent live arrivals, then all open stays of those titles. Backfilled stays cannot announce an arrival,
+ * but must suppress a later offer on the same service (including duplicate ids and other offer types).
+ * Closed stays do not date the current offer: a return opens a new stay.
  */
 export async function readFirstSeen(
 	{
@@ -57,22 +50,22 @@ export async function readFirstSeen(
 	run: Run,
 ): Promise<Map<TitleKey, FirstSeen>> {
 	const marks = (count: number) => Array.from({ length: count }, () => "?")
-	const where = `country_code = ? AND streaming_type IN (${marks(types.length).join(", ")})`
-	const recent = ((
-		await run(
-			`SELECT DISTINCT media_type, media_tmdb_id
-			 FROM streaming_availability
-			 WHERE ${where} AND created_at > ?
-			 LIMIT ${MAX_TITLES + 1}`,
-			[country, ...types, since],
-		)
-	).rows ?? []) as [string, number][]
-	if (recent.length > MAX_TITLES) {
-		console.warn(
-			`Availability index: more than ${MAX_TITLES} titles of ${country} have an offer that first appeared since ` +
-				`${new Date(since).toISOString()}. That is a catch-up, so nothing is newly available.`,
-		)
-		return new Map()
+	const where = `country_code = ? AND streaming_type IN (${marks(types.length).join(", ")}) AND dropped_on IS NULL`
+	const recent: [string, number][] = []
+	// Explicit pages avoid both Crate's default result limit and a country-wide title ceiling.
+	for (let offset = 0; ; offset += BATCH) {
+		const page = ((
+			await run(
+				`SELECT DISTINCT media_type, media_tmdb_id
+				 FROM availability_history
+				 WHERE ${where} AND appeared_source <> 'backfill' AND (${ARRIVED}) > ?
+				 ORDER BY media_type, media_tmdb_id
+				 LIMIT ${BATCH} OFFSET ?`,
+				[country, ...types, since, offset],
+			)
+		).rows ?? []) as [string, number][]
+		recent.push(...page)
+		if (page.length < BATCH) break
 	}
 	const rows: [TitleKey, number, number][] = []
 	for (const type of ["movie", "show"] as const) {
@@ -82,8 +75,8 @@ export async function readFirstSeen(
 		for (let i = 0; i < ids.length; i += BATCH) {
 			const batch = ids.slice(i, i + BATCH)
 			const result = await run(
-				`SELECT media_tmdb_id, streaming_service_id, min(created_at)
-				 FROM streaming_availability
+				`SELECT media_tmdb_id, streaming_service_id, min(CASE WHEN appeared_source <> 'backfill' THEN (${ARRIVED}) ELSE 0 END)
+				 FROM availability_history
 				 WHERE ${where} AND media_type = ? AND media_tmdb_id IN (${marks(batch.length).join(", ")})
 				 GROUP BY media_tmdb_id, streaming_service_id
 				 LIMIT 1000000`,

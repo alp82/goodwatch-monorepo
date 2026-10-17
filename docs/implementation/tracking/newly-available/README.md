@@ -105,8 +105,10 @@ Decided in #456:
 
 Built as defaults, **not confirmed by the owner yet**:
 
-1. **When a title landed** is the earliest `created_at` among its current qualifying rows of
-   `streaming_availability` on the member's services.
+1. **When a title landed** now comes from live open stays in `availability_history` (#637, owner decision Q59).
+   Use `appeared_on` for exact precision, otherwise the UTC day of `observed_at`. Backfilled stays never announce
+   a landing. They still establish that the service already carried the title, including its duplicate ids and
+   other qualifying offer types. The earliest day among the member's current services dates the landing.
 2. **It is news** when that time is after the member's last visit of the page the title lives on, after the launch,
    and after the member added the title to Want to See. A member who never opened the page is told everything
    since the launch.
@@ -190,9 +192,9 @@ Known noise, and what happens to it:
 | Noise | What happens |
 | --- | --- |
 | The catch-up of late September 2026 | Before the launch: never news |
-| Another catch-up later | More than 20,000 titles of a country with an offer newer than the days kept: the index keeps no time for that country, logs a warning, and nothing is announced there until the days have passed or the launch is moved |
+| Another catch-up later | Backfilled stays never announce arrivals; live stays count regardless of country volume. Candidate reads page in batches of 1,000 without a title ceiling (#637) |
 | Duplicate service ids | One service, by its earliest row |
-| An offer that leaves and returns | The row is written again with a new `created_at`: the title lands again. Accepted |
+| An offer that leaves and returns | A new open stay dates the return; closed stays do not date the current offer |
 | A member saves another service | Its old offers have old times, so nothing lands. An offer of that service newer than their last visit is told to them, although they could not have seen it before |
 
 ## The stored fact
@@ -416,3 +418,47 @@ for that member.
   machine, on the commit this starts from either: it waits for the network to fall idle, and stops at different
   steps from run to run. Found on the way: the answer of the visit's POST was never read, which keeps its request
   open in the browser. Both visits now let go of it.
+
+
+## History reader verification (#637, Q59)
+
+The reader uses live open stays in `availability_history`, with exact `appeared_on`
+or the UTC day of `observed_at` for unknown precision. It reads recent candidate
+keys in explicit pages, then all open stays of those titles. A backfilled stay
+contributes no arrival date but blocks a newer offer on the same base service.
+A different saved service that already carried the title still blocks news through
+the existing country index. Closed stays do not date a return. No member-facing
+count, tile, home, visit, or recently-landed rule changed.
+
+Verification on 2026-10-17:
+
+- `node --test app/server/newly-available.test.ts app/domain/newly-available.test.ts`:
+  **62 passed**, including backfill, exact/unknown day, further service, duplicate
+  ids/offer types, returns, and 20,001 recent titles. Tests use `setCrateClientForTest`.
+- Biome checked the three changed TypeScript files successfully; `git diff --check` passed.
+- `tsc --pretty false`: **397 existing diagnostics before and after**, with no new
+  or removed diagnostics (compared by file, code, and message, ignoring line shifts).
+  The baseline was measured with untouched files from this checkout's HEAD,
+  `7206ec22`, using the existing main checkout's installed dependencies through a local
+  `node_modules` symlink. It differs from the approximately 186 mentioned in the brief.
+- A read-only production Windmill preview at **00:23:07 UTC** executed both reader
+  statement shapes and the full US candidate/open-stay query sequence. The latter
+  returned **108 candidate titles / 737 service rows in 127.08 ms**. These are country
+  index inputs, before member service filtering, not member notification counts.
+- Daily US counts since **2026-10-17 00:13 UTC**: **October 17: 0 stays / 0 titles**.
+  The October 17 day-window aggregate took **43.68 ms**. A separate exact-start
+  `observed_at >= '2026-10-17T00:13:00Z'` check also returned zero (17.35 ms).
+  All currently recorded live stays date to **October 16: 164 stays / 108 titles**;
+  that aggregate took **44.31 ms**. They were written before 00:13 UTC, using earlier
+  observation times, so their dates must not be changed to the reader deployment day.
+
+Exact SQL, bound parameters, timings, counts and the preview job id are saved in
+[history-reader-evidence.json](history-reader-evidence.json). Timings are individual
+production samples, not a latency guarantee. Only SELECT statements were sent to
+Crate; no production data, schema, flows or schedules were changed.
+
+Production needs the normal webapp deployment after review. The history table and
+writer are already live; this reader needs no migration, backfill, environment
+change, or schedule change. Existing country indexes refresh normally, and a new
+webapp process loads the history reader on its first country load. Nothing was
+pushed or deployed by this build.

@@ -25,10 +25,11 @@ export const baseService = (id: number) => baseServiceOf.get(id) ?? id
 export type FirstSeen = ReadonlyMap<number, number>
 
 /**
- * The time each service first carried each title, from the earliest `created_at` of the title's rows per service
+ * The time each service first carried each title, from the earliest arrival day of its open stays per service
  * id: `[title, service id, time]`. A service's duplicates and its kinds of offer are one service, and its earliest
  * row is when it started. Only services that started after `since` are kept: every other one has carried the
- * title for longer than anyone is told about. The rows must hold every current row of the titles they name.
+ * title for longer than anyone is told about. The rows must hold every current stay of the titles they name;
+ * backfilled stays use a time before `since`.
  */
 export function firstSeenOf(
 	rows: Iterable<readonly [TitleKey, number, number]>,
