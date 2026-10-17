@@ -252,7 +252,7 @@ export const readToolDefinitions: {
 		name: "search_people",
 		title: "Search people",
 		description:
-			"Search cast and crew by name. Repeat each person’s ready-made link VERBATIM in the text. Use the returned person_id with get_person for their acting, directing and writing filmography.",
+			"Search cast and crew matching the name query, most popular first (TMDB popularity). Repeat each person’s ready-made link VERBATIM in the text. Use the returned person_id with get_person for their acting, directing and writing filmography.",
 		schema: z
 			.object({ query: z.string().trim().min(2).max(120), ...paging })
 			.strict(),

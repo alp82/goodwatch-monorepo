@@ -67,7 +67,7 @@ export async function readPeople(
 		const offset = Number(args.cursor?.slice(7) ?? 0)
 		const limit = args.limit ?? 20
 		const rows = await searchQuery<Person>(
-			`SELECT tmdb_id, name, known_for_department, profile_path FROM person WHERE MATCH(name, ?) USING best_fields WITH (operator = 'and') ORDER BY _score DESC, popularity DESC NULLS LAST, tmdb_id LIMIT ? OFFSET ?`,
+			`SELECT tmdb_id, name, known_for_department, profile_path FROM person WHERE MATCH(name, ?) USING best_fields WITH (operator = 'and') ORDER BY popularity DESC NULLS LAST, tmdb_id LIMIT ? OFFSET ?`,
 			[args.query, limit + 1, offset],
 		)
 		const shown = rows.slice(0, limit)

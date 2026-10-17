@@ -6,7 +6,7 @@ Owner decision Q53 (2026-10-17). This extends the [read tools](mcp-read-tools.md
 
 | Tool | Parameters and behavior |
 | --- | --- |
-| `search_people` | `query`, `limit`, `cursor`: indexed catalog name search, person IDs, departments and real `/person/<id>-<name>` links. Namesakes remain distinct. |
+| `search_people` | `query`, `limit`, `cursor`: indexed catalog name search requiring all query terms, ordered by TMDB popularity descending (missing popularity last, stable person-ID ties), person IDs, departments and real `/person/<id>-<name>` links. Namesakes remain distinct. |
 | `get_person` | `person_id`, `role=all\|acting\|directing\|writing`, `sort=for_you\|newest\|score`, `exclude_seen`, `limit`, `cursor`. Includes every credit, including missing posters/scores. Taste order uses the site's full-precision percentile; without taste it falls back to credit weight/popularity. Sort/filter precede paging. Availability defaults to everywhere; seen titles remain included unless explicitly excluded by the site's Not seen yet rule. |
 | `get_my_lists` | `limit`, `cursor`: the member's public and unlisted share lists, newest updated first, with site share links and `/lists/mine` as `page_url`. Uses the same 200-list read limit as the site. |
 | `get_list` | `list_id`: one owned share list's five titles, in rank order, with share/page URL. Missing and foreign lists return the same `list_not_found` response. |

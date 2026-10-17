@@ -10,8 +10,15 @@ for member in ['mcp-taste-features-A', 'mcp-features-B', 'mcp-features-no-handle
     insert('user_setting', user_id=member, key='streaming_providers_default', value='8,9')
 for member, handle in [('mcp-taste-features-A', 'local_features_a'), ('mcp-features-B', 'local_features_b')]:
     insert('user_profile', user_id=member, handle=handle, created_at=now, updated_at=now)
-for person_id, name in [(910001, 'Local Feature Person'), (910002, 'Local Feature Person')]:
-    insert('person', tmdb_id=person_id, name=name, known_for_department='Directing', popularity=5)
+# The longer matching name has weaker text relevance but must lead on popularity.
+for person_id, name, popularity in [
+    (910001, 'Local Feature Person', 5),
+    (910002, 'Local Feature Person With A Longer Name', 50),
+    (910003, 'Local Feature Person', None),
+    (910004, 'Local Feature Person', 5),
+    (910005, 'Completely Unrelated Name', 1000000),
+]:
+    insert('person', tmdb_id=person_id, name=name, known_for_department='Directing', popularity=popularity)
 for i, id in enumerate([2000,2001,2002,2003,2024]):
     insert('person_appeared_in', media_tmdb_id=id, media_type='movie', person_tmdb_id=910001, credit_id=f'feature-acting-{id}', character='Local character', order_default=i)
 for id, department, job in [(2001,'Directing','Director'), (2002,'Writing','Writer'), (2024,'Directing','Director')]:

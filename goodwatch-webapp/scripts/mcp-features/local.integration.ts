@@ -150,22 +150,46 @@ try {
 			query: "Local Feature Person",
 			limit: 1,
 		})
-		assert.equal(people.items[0].person_id, 910001)
+		assert.equal(people.items[0].person_id, 910002)
 		assert.equal(
 			people.items[0].link,
 			`[${people.items[0].name}](${people.items[0].url})`,
 		)
-		assert.match(people.items[0].url, /\/person\/910001-local-feature-person$/)
+		assert.match(
+			people.items[0].url,
+			/\/person\/910002-local-feature-person-with-a-longer-name$/,
+		)
 		const more = await call("search_people", {
 			query: "Local Feature Person",
 			cursor: people.next_cursor,
 			limit: 1,
 		})
-		assert.equal(more.items[0].person_id, 910002)
-		assert.equal(more.next_cursor, null)
+		assert.equal(more.items[0].person_id, 910001)
+		assert.equal(more.next_cursor, "offset:2")
+		const remaining = await call("search_people", {
+			query: "Local Feature Person",
+			cursor: more.next_cursor,
+		})
+		assert.deepEqual(
+			remaining.items.map((person: { person_id: number }) => person.person_id),
+			[910004, 910003],
+		)
+		assert.equal(remaining.next_cursor, null)
+		const allPeople = await call("search_people", {
+			query: "Local Feature Person",
+		})
+		assert.deepEqual(
+			allPeople.items.map((person: { person_id: number }) => person.person_id),
+			[910002, 910001, 910004, 910003],
+		)
+		assert.equal(
+			(await call("search_people", { query: "Nothing Matches This Query" }))
+				.items.length,
+			0,
+		)
 		const person = await call("get_person", { person_id: 910001, limit: 1 })
 		assert.equal(person.total, 6)
-		assert.deepEqual(person.person, people.items[0])
+		assert.deepEqual(person.person, more.items[0])
 		assert.equal(person.items[0].id, "show:1399")
 		assert.equal(person.sort, "for_you")
 		assert.equal(person.for_you_applied, true)
