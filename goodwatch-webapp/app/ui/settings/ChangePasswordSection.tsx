@@ -76,7 +76,7 @@ export function ChangePasswordSection() {
 						{betterAuth && (
 							<PasswordInput
 								id="password-current"
-								label="Current Password"
+								label="Current password"
 								placeholder=""
 								value={currentPassword}
 								onChange={setCurrentPassword}
@@ -85,7 +85,7 @@ export function ChangePasswordSection() {
 
 						<PasswordInput
 							id="password-new"
-							label="New Password"
+							label="New password"
 							placeholder={`at least ${PASSWORD_MIN} characters`}
 							value={password}
 							error={errors.length > 0 ? errors[0] : undefined}

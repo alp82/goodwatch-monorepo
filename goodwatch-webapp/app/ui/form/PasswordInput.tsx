@@ -27,9 +27,9 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
 						placeholder={placeholder}
 						onChange={(e) => onChange(e.target.value)}
 						className={`
-            mt-1 block w-full rounded-md px-3 py-2 pr-10
-            text-gray-700
-            border ${error ? "border-red-300" : "border-gray-300"}
+            mt-1 block w-full rounded-md bg-white/[0.06] px-3 py-2 pr-10
+            text-white placeholder-white/30
+            border ${error ? "border-red-400" : "border-white/20"}
             shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm
           `}
 					/>
@@ -39,9 +39,9 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
 						className="absolute inset-y-0 right-0 flex items-center pr-3"
 					>
 						{showPassword ? (
-							<EyeSlashIcon className="h-4 w-4 text-gray-600" />
+							<EyeSlashIcon className="h-4 w-4 text-gray-400" />
 						) : (
-							<EyeIcon className="h-4 w-4 text-gray-600" />
+							<EyeIcon className="h-4 w-4 text-gray-400" />
 						)}
 					</button>
 				</div>
