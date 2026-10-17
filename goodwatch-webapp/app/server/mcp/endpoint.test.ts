@@ -268,6 +268,11 @@ test("A member sees separate catalog and personal read tools, with valid schemas
 			"get_tonight",
 			"get_library",
 			"get_taste",
+			"search_people",
+			"get_person",
+			"get_my_lists",
+			"get_list",
+			"get_settings",
 		],
 	)
 	for (const tool of tools) {
@@ -341,7 +346,7 @@ test(
 				limiter: unlimited,
 			})
 			const tools = (await result(await handle(rpc("tools/list")))).result.tools
-			assert.equal(tools.length, 17)
+			assert.equal(tools.length, 25)
 			assert.equal(
 				tools.find((tool: { name: string }) => tool.name === "search_titles")
 					.inputSchema.properties.ranked.default,
@@ -395,14 +400,14 @@ test("Ranked catalog search is an explicit opt-in and documents its member quota
 	assert.match(search.description, /paging.*free/i)
 })
 
-test("Write scopes expose seven writes with conservative destructive hints and no approval-token schema", async () => {
+test("Write scopes expose all writes with conservative destructive hints and no approval-token schema", async () => {
 	const handle = createReadMcpHandler({
 		resource,
 		authorization: writer,
 		limiter: unlimited,
 	})
 	const listed = (await result(await handle(rpc("tools/list")))).result.tools
-	assert.equal(listed.length, 17)
+	assert.equal(listed.length, 25)
 	const writes = listed.filter(
 		(tool: { annotations: { readOnlyHint: boolean } }) =>
 			!tool.annotations.readOnlyHint,
@@ -417,11 +422,17 @@ test("Write scopes expose seven writes with conservative destructive hints and n
 			"set_show_status",
 			"undo_watch",
 			"set_my_services",
+			"set_settings",
+			"create_list",
+			"update_list_titles",
 		],
 	)
 	for (const tool of writes) {
 		assert.equal(tool.annotations.readOnlyHint, false)
-		assert.equal(tool.annotations.destructiveHint, tool.name !== "log_watch")
+		assert.equal(
+			tool.annotations.destructiveHint,
+			!["log_watch", "create_list"].includes(tool.name),
+		)
 		assert.equal(tool.annotations.idempotentHint, true)
 		assert.equal(tool.inputSchema.required.includes("action_id"), true)
 		assert.equal(

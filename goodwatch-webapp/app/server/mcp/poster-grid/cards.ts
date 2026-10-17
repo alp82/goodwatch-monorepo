@@ -120,13 +120,18 @@ export function posterView(structured: unknown, origin: string): PosterView {
 	const data = record(structured) ?? {}
 	const pageUrl = safePageUrl(data.page_url, origin)
 	const isPick = "pick" in data
-	const heading = isPick
-		? "Watch next"
-		: "ranked" in data
-			? "Search results"
-			: "sort" in data
-				? "My library"
-				: "GoodWatch"
+	const heading =
+		"person" in data
+			? "Filmography"
+			: "list_id" in data
+				? "Share list"
+				: isPick
+					? "Watch next"
+					: "ranked" in data
+						? "Search results"
+						: "sort" in data
+							? "My library"
+							: "GoodWatch"
 	const status = text(data.status)
 	if (status && !OK_STATUSES.has(status))
 		return {

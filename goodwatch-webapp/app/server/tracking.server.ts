@@ -738,6 +738,7 @@ const NEEDS_ID = [
 	"watch",
 	"pressSeen",
 	"markSeason",
+	"markRange",
 	"markEpisodes",
 	"watchUpTo",
 ]

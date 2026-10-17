@@ -13,6 +13,8 @@ export const POSTER_GRID_TOOLS: ReadonlySet<ReadToolName> = new Set([
 	"search_titles",
 	"get_similar_titles",
 	"discover_titles",
+	"get_person",
+	"get_list",
 	"get_library",
 	"get_tonight",
 ])

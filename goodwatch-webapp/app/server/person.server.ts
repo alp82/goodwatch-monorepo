@@ -218,7 +218,7 @@ async function titles(type: MediaType, ids: number[]): Promise<TitleRow[]> {
 	)
 }
 
-async function credits(id: number): Promise<PersonCredit[]> {
+export async function getPersonCredits(id: number): Promise<PersonCredit[]> {
 	const [acting, crew] = await Promise.all([
 		query<CreditRow>(
 			"SELECT media_tmdb_id, media_type, character, order_default FROM person_appeared_in WHERE person_tmdb_id = ? LIMIT 2000",
@@ -545,7 +545,7 @@ async function loadPersonProfile(id: number): Promise<PersonProfile | null> {
 			"SELECT tmdb_id, name, profile_path, known_for_department FROM person WHERE tmdb_id = ?",
 			[id],
 		),
-		credits(id),
+		getPersonCredits(id),
 		fingerprintBaseline(),
 	])
 	if (!person) return null

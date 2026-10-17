@@ -1,0 +1,101 @@
+import { personPath } from "../../utils/helpers"
+import { canonicalTitleId } from "../../utils/title-identity"
+import { titleKey } from "../../utils/title-key"
+import { searchQuery } from "../combined-search/catalog.server"
+import { getPersonCredits } from "../person.server"
+import { loadTaste } from "../taste/index.server"
+import { getMemberViewerContext } from "../viewer.server"
+import { page, summary } from "./data.server"
+import { filmographyView } from "./people"
+import type { ReadArgs } from "./tools.server"
+
+interface Person {
+	tmdb_id: number
+	name: string
+	known_for_department: string | null
+}
+const personSummary = (person: Person, origin: string) => ({
+	person_id: person.tmdb_id,
+	name: person.name,
+	known_for_department: person.known_for_department,
+	url: new URL(personPath(person.tmdb_id, person.name), origin).href,
+})
+
+export async function readPeople(
+	userId: string,
+	origin: string,
+	args: ReadArgs,
+) {
+	if (args.person_id === undefined) {
+		const offset = Number(args.cursor?.slice(7) ?? 0)
+		const limit = args.limit ?? 20
+		const rows = await searchQuery<Person>(
+			`SELECT tmdb_id, name, known_for_department FROM person WHERE MATCH(name, ?) USING best_fields WITH (operator = 'and') ORDER BY _score DESC, popularity DESC NULLS LAST, tmdb_id LIMIT ? OFFSET ?`,
+			[args.query, limit + 1, offset],
+		)
+		return {
+			items: rows
+				.slice(0, limit)
+				.map((person) => personSummary(person, origin)),
+			next_cursor: rows.length > limit ? `offset:${offset + limit}` : null,
+			// There is no separate people-search page; link the broader existing search view.
+			page_url: new URL(
+				`/discover?${new URLSearchParams({ q: args.query ?? "" })}`,
+				origin,
+			).href,
+			page_note:
+				"GoodWatch has no separate people-search page. Discover searches titles for this text; open a person's url for their filmography.",
+		}
+	}
+	const [person] = await searchQuery<Person>(
+		"SELECT tmdb_id, name, known_for_department FROM person WHERE tmdb_id = ?",
+		[args.person_id],
+	)
+	if (!person)
+		return { status: "person_not_found", message: "No matching catalog person" }
+	const [credits, taste, ctx] = await Promise.all([
+		getPersonCredits(args.person_id),
+		loadTaste({ kind: "member", userId }).catch(() => null),
+		args.exclude_seen ? getMemberViewerContext(userId, "US") : null,
+	])
+	const percentiles = taste?.percentile(
+		credits.map((c) =>
+			titleKey(c.media_type, canonicalTitleId(c.media_type, c.tmdb_id)),
+		),
+	)
+	const matches =
+		taste?.signal === "some"
+			? new Map(
+					credits.map((credit, i) => [
+						`${credit.media_type}:${canonicalTitleId(credit.media_type, credit.tmdb_id)}`,
+						percentiles?.[i] ?? null,
+					]),
+				)
+			: new Map<string, number | null>()
+	const items = filmographyView(
+		credits,
+		args,
+		ctx ? [...ctx.seen, ...ctx.skipped] : [],
+		matches,
+	)
+	const selected = page(items, args)
+	return {
+		...selected,
+		person: personSummary(person, origin),
+		items: selected.items.map((credit) => ({
+			...summary(credit, origin),
+			roles: credit.roles,
+			characters: credit.characters,
+			jobs: credit.jobs,
+			goodwatch_score: credit.score,
+		})),
+		sort: args.sort ?? "for_you",
+		for_you_applied:
+			(args.sort ?? "for_you") === "for_you" && taste?.signal === "some",
+		exclude_seen: args.exclude_seen ?? false,
+		availability: "everywhere",
+		page_url: new URL(personPath(person.tmdb_id, person.name), origin).href,
+		page_note:
+			"The person page groups their credits; this tool's sorting and Not seen yet filter can differ.",
+	}
+}

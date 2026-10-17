@@ -254,6 +254,7 @@ const eventSchema = z.discriminatedUnion("type", [
 	}),
 	z.object({ type: z.literal("unwatch"), season: whole, number: whole }),
 	z.object({ type: z.literal("markSeason"), season: whole, today }),
+	z.object({ type: z.literal("markRange"), season: whole, from: whole, to: whole, today }),
 	z.object({
 		type: z.literal("markEpisodes"),
 		episodeIds: z.array(z.number().int().positive()).min(1).max(20000),
@@ -343,7 +344,7 @@ const eventSchema = z.discriminatedUnion("type", [
 ])
 
 /** The actions that make watches: the browser names them, so that a request sent twice records once. */
-const NAMED = ["watch", "pressSeen", "markSeason", "markEpisodes", "watchUpTo"]
+const NAMED = ["watch", "pressSeen", "markSeason", "markRange", "markEpisodes", "watchUpTo"]
 
 const actionSchema = z
 	.object({

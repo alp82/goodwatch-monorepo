@@ -6,6 +6,9 @@ export const writeToolNames = new Set([
 	"set_show_status",
 	"undo_watch",
 	"set_my_services",
+	"set_settings",
+	"create_list",
+	"update_list_titles",
 ] as const)
 export type WriteToolName =
 	| "log_watch"
@@ -15,6 +18,9 @@ export type WriteToolName =
 	| "set_show_status"
 	| "undo_watch"
 	| "set_my_services"
+	| "set_settings"
+	| "create_list"
+	| "update_list_titles"
 export function isWriteTool(name: unknown): name is WriteToolName {
 	return typeof name === "string" && writeToolNames.has(name as WriteToolName)
 }

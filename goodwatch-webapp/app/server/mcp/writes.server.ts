@@ -6,7 +6,11 @@ import {
 	applyShowTrackingAction,
 } from "../show-tracking.server"
 import { markTasteChanged } from "../taste/index.server"
-import { getMovieTracking, getShowTracking } from "../tracking.server"
+import {
+	getEpisodeList,
+	getMovieTracking,
+	getShowTracking,
+} from "../tracking.server"
 import { getUserData, resetUserDataCache } from "../userData.server"
 import { applyWatchLogAction } from "../watch-log.server"
 import { updateWishList } from "../wishList.server"
@@ -22,6 +26,7 @@ import {
 	savedServices,
 	writeServices,
 } from "./services.server"
+import type { ReadArgs } from "./tools.server"
 import type { WriteToolName } from "./write-names.ts"
 import type { WriteArgs } from "./write-tools.server.ts"
 
@@ -85,6 +90,15 @@ export async function writeMemberTool(
 		const { title_name: _name, year: _year, ...byId } = args
 		args = byId
 	}
+	const normalizeSelector = (selector: ReadArgs) => {
+		if (!selector.title_id) return selector
+		const { title_name: _name, year: _year, ...byId } = selector
+		return byId
+	}
+	if (args.titles)
+		args = { ...args, titles: args.titles.map(normalizeSelector) }
+	if (args.add_titles)
+		args = { ...args, add_titles: args.add_titles.map(normalizeSelector) }
 	const hash = actionHash(name, args)
 	const prior = await readAction(userId, args.action_id, hash)
 	if (prior) {
@@ -93,6 +107,22 @@ export async function writeMemberTool(
 			return (await readAction(userId, args.action_id, legacyHash)) ?? prior
 		return prior
 	}
+	if (name === "set_settings")
+		return (await import("./settings.server")).changeSettings(
+			userId,
+			origin,
+			args,
+			hash,
+		)
+	if (name === "create_list" || name === "update_list_titles")
+		return (await import("./lists.server")).changeList(
+			userId,
+			origin,
+			name,
+			args,
+			hash,
+		)
+
 	if (name === "set_my_services") {
 		const prepared = await prepareServices(args)
 		if ("result" in prepared) return prepared.result
@@ -293,12 +323,22 @@ export async function writeMemberTool(
 				if (applied.status !== "applied")
 					return { outcome: "refused", message: applied.refused }
 			} else if (name === "log_watch") {
+				if (args.date && args.date > new Date().toISOString().slice(0, 10))
+					return {
+						outcome: "refused",
+						message: "A recorded watch date cannot be in the future",
+					}
 				const when = args.date
 					? { precision: "day" as const, day: args.date }
 					: { precision: "unknown" as const }
 				let applied: { status: string; refused: string | null }
 				if (title.media_type === "movie") {
-					if (args.season !== undefined || args.episode !== undefined)
+					if (
+						args.season !== undefined ||
+						args.episode !== undefined ||
+						args.episode_end !== undefined ||
+						args.whole_season
+					)
 						return {
 							outcome: "refused",
 							message: "A movie watch has no season or episode number",
@@ -310,16 +350,73 @@ export async function writeMemberTool(
 					})
 				} else {
 					const { season, episode } = args
-					if (season === undefined || episode === undefined)
-						return {
-							outcome: "refused",
-							message: "An episode watch needs a season and episode number",
+					if (args.whole_season || args.episode_end !== undefined) {
+						const episodes = (await getEpisodeList(title.tmdb_id)).filter(
+							(row) =>
+								row.season_number === season &&
+								row.season_number > 0 &&
+								(args.whole_season ||
+									(row.episode_number >= episode! &&
+										row.episode_number <= args.episode_end!)),
+						)
+						if (
+							!episodes.some(
+								(row) =>
+									row.air_date !== null &&
+									new Date(row.air_date).getTime() <= Date.now(),
+							)
+						)
+							return {
+								outcome: "refused",
+								message: "No aired regular episodes in this season or range",
+							}
+						const result = await applyShowTrackingAction(userId, {
+							id: title.tmdb_id,
+							actionId,
+							event: args.whole_season
+								? { type: "markSeason", season: season! }
+								: {
+										type: "markRange",
+										season: season!,
+										from: episode!,
+										to: args.episode_end!,
+									},
+						})
+						if (
+							result.status !== "applied" &&
+							result.refused !==
+								"Every aired episode of it is watched in this pass."
+						)
+							return { outcome: "refused", message: result.refused }
+						if (
+							args.date &&
+							result.status === "applied" &&
+							result.rows.length
+						) {
+							const dated = await applyShowTrackingAction(userId, {
+								id: title.tmdb_id,
+								event: {
+									type: "setGroupDate",
+									group: actionId,
+									day: args.date,
+								},
+							})
+							if (dated.status !== "applied")
+								throw new Error("Could not set range watch date")
 						}
-					applied = await applyShowTrackingAction(userId, {
-						id: title.tmdb_id,
-						actionId,
-						event: { type: "watch", season, number: episode, when },
-					})
+						applied = { status: "applied", refused: null }
+					} else {
+						if (season === undefined || episode === undefined)
+							return {
+								outcome: "refused",
+								message: "An episode watch needs a season and episode number",
+							}
+						applied = await applyShowTrackingAction(userId, {
+							id: title.tmdb_id,
+							actionId,
+							event: { type: "watch", season, number: episode, when },
+						})
+					}
 				}
 				if (applied.status !== "applied")
 					return { outcome: "refused", message: applied.refused }
@@ -349,7 +446,7 @@ export async function writeMemberTool(
 						(watch) =>
 							!before.watches.some((old) => old.id === watch.id) &&
 							(name === "log_watch"
-								? watch.id === actionId
+								? watch.id === actionId || watch.group_id === actionId
 								: name === "set_show_status"
 									? watch.group_id === actionId
 									: (name === "rate_title" || name === "undo_watch") &&

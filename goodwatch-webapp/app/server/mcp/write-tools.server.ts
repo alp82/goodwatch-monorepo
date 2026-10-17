@@ -2,11 +2,24 @@ import type { McpServer } from "@modelcontextprotocol/server"
 import * as z from "zod4"
 import { linkInstructions, titleLink } from "./links.ts"
 import { writeToolEnabled } from "./policy.server.ts"
+import {
+	MEDIA_LANGUAGES,
+	type LanguageSetting,
+} from "../../utils/media-language.ts"
 import { writeSelected } from "./schemas.ts"
 import type { ReadArgs } from "./tools.server.ts"
 import type { WriteToolName } from "./write-names.ts"
 export interface WriteArgs extends ReadArgs {
 	action_id: string
+	language?: LanguageSetting
+	list_id?: string
+	list_name?: string
+	visibility?: "public" | "unlisted"
+	titles?: ReadArgs[]
+	add_titles?: ReadArgs[]
+	remove_title_ids?: string[]
+	episode_end?: number
+	whole_season?: boolean
 	country?: string
 	services?: (string | number)[]
 	season?: number
@@ -27,7 +40,7 @@ const action = {
 			"Stable ID for this exact action. Reuse it for retries; use a different ID for a new action.",
 		),
 }
-const definitions: {
+export const writeToolDefinitions: {
 	name: WriteToolName
 	title: string
 	description: string
@@ -38,14 +51,35 @@ const definitions: {
 		name: "log_watch",
 		title: "Log a watch",
 		description:
-			"Log one movie or episode watch. Dates remain unknown unless explicitly supplied. Results say exactly which watches and marks changed.",
+			"Log one movie or episode watch, an inclusive episode range (season, episode, episode_end), or a whole season (season, whole_season=true). Ranges use the catalog season/episode numbers from get_show_progress, mark only aired regular episodes missing in the current pass, never duplicate existing watches, and produce one receipt. Dates remain unknown unless explicitly supplied. Results report every added watch.",
 		destructive: false,
-		schema: writeSelected.safeExtend({
-			...action,
-			season: z.number().int().min(0).optional(),
-			episode: z.number().int().min(1).optional(),
-			date: z.iso.date().optional(),
-		}),
+		schema: writeSelected
+			.safeExtend({
+				...action,
+				season: z.number().int().min(0).optional(),
+				episode: z.number().int().min(1).max(100000).optional(),
+				episode_end: z.number().int().min(1).max(100000).optional(),
+				whole_season: z.boolean().optional(),
+				date: z.iso.date().optional(),
+			})
+			.refine(
+				(value) =>
+					value.episode_end === undefined ||
+					(value.season !== undefined &&
+						value.season > 0 &&
+						value.episode !== undefined &&
+						value.episode_end >= value.episode),
+				"A range needs a regular season and ascending episode numbers",
+			)
+			.refine(
+				(value) =>
+					!value.whole_season ||
+					(value.season !== undefined &&
+						value.season > 0 &&
+						value.episode === undefined &&
+						value.episode_end === undefined),
+				"A whole season needs a regular season and no episode numbers",
+			),
 	},
 	{
 		name: "rate_title",
@@ -124,6 +158,66 @@ const definitions: {
 			})
 			.strict(),
 	},
+	{
+		name: "set_settings",
+		title: "Change Watching from or Show titles in",
+		description:
+			"Change your saved country (Watching from) and/or title language (Show titles in). Omitted fields and streaming services are preserved. Country and language are independent. Language browser follows your browser on the site. Reports previous and new preferences; concurrent changes return conflict.",
+		destructive: true,
+		schema: z
+			.object({
+				...action,
+				country: z
+					.string()
+					.trim()
+					.regex(/^[A-Za-z]{2}$/)
+					.transform((value) => value.toUpperCase())
+					.optional(),
+				language: z.enum(["browser", ...MEDIA_LANGUAGES]).optional(),
+			})
+			.strict()
+			.refine(
+				(value) => value.country !== undefined || value.language !== undefined,
+				"Supply country and/or language",
+			),
+	},
+	{
+		name: "create_list",
+		title: "Create a share list",
+		description:
+			"Create a share list of exactly five distinct titles in rank order. Requires an existing site handle; if missing, returns handle_required and the Lists page. Uses the site's default card and Ember theme. Public by default; unlisted is accessible to anyone with the share link. Returns the site's real share link. Does not change ratings or Wishlist.",
+		destructive: false,
+		schema: z
+			.object({
+				...action,
+				list_name: z.string().trim().min(1).max(80),
+				titles: z.array(writeSelected).length(5),
+				visibility: z.enum(["public", "unlisted"]).default("public"),
+			})
+			.strict(),
+	},
+	{
+		name: "update_list_titles",
+		title: "Add and remove share-list titles",
+		description:
+			"Atomically add and remove titles from one of your share lists. A share list always contains exactly five distinct titles: provide additions and removals together, with equal counts. Remaining titles keep their rank; added titles go at the end in supplied order. Returns previous/new rankings and the site's share link. A concurrent edit returns conflict; read again before choosing a new action. No ratings or Wishlist changes.",
+		destructive: true,
+		schema: z
+			.object({
+				...action,
+				list_id: z.string().regex(/^[0-9A-Za-z]{10}$/),
+				add_titles: z.array(writeSelected).min(1).max(5),
+				remove_title_ids: z
+					.array(z.string().regex(/^(movie|show):[1-9]\d{0,9}$/))
+					.min(1)
+					.max(5),
+			})
+			.strict()
+			.refine(
+				(value) => value.add_titles.length === value.remove_title_ids.length,
+				"Add and remove equal numbers of titles to keep exactly five",
+			),
+	},
 ]
 export function registerWriteTools(
 	server: McpServer,
@@ -131,7 +225,7 @@ export function registerWriteTools(
 	origin: string,
 	observe: (name: WriteToolName, outcome: string, seconds: number) => void,
 ) {
-	for (const tool of definitions) {
+	for (const tool of writeToolDefinitions) {
 		if (!writeToolEnabled(userId, tool.name)) continue
 		server.registerTool(
 			tool.name,
@@ -193,7 +287,10 @@ export function registerWriteTools(
 					}
 				data = await (
 					await import("./title-results.server.ts")
-				).enrichTitleResults(userId, data)
+				).enrichTitleResults(userId, data, {
+					posters:
+						tool.name === "create_list" || tool.name === "update_list_titles",
+				})
 				const ok = ["applied", "unchanged"].includes(String(data.outcome))
 				observe(
 					tool.name,

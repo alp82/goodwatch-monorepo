@@ -118,6 +118,8 @@ test("Search, My library and Watch next point at the versioned poster grid; othe
 		"get_similar_titles",
 		"get_tonight",
 		"get_library",
+		"get_person",
+		"get_list",
 	])
 	for (const tool of tools.filter((t: { _meta?: unknown }) => t._meta))
 		assert.deepEqual(tool._meta, {

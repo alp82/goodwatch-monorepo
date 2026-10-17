@@ -50,7 +50,7 @@ export const summary = (title: CatalogTitle, origin: string) => {
 }
 
 const offsetOf = (args: ReadArgs) => Number(args.cursor?.slice(7) ?? 0)
-const page = <T>(items: T[], args: ReadArgs) => {
+export const page = <T>(items: T[], args: ReadArgs) => {
 	const offset = offsetOf(args)
 	const limit = args.limit ?? 20
 	return {
@@ -350,6 +350,13 @@ export async function readMemberTool(
 			ranked: false,
 		}
 	}
+	if (name === "search_people" || name === "get_person")
+		return (await import("./people.server")).readPeople(userId, origin, args)
+	if (name === "get_my_lists" || name === "get_list")
+		return (await import("./lists.server")).readLists(userId, origin, args)
+	if (name === "get_settings")
+		return (await import("./settings.server")).readSettings(userId, origin)
+
 	if (name === "search_titles") {
 		const offset = offsetOf(args)
 		const limit = args.limit ?? 40

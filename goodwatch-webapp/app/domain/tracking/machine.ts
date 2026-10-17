@@ -194,6 +194,7 @@ export type TrackingEvent =
 	| { type: "watch"; season: number; number: number; when?: WatchedWhen }
 	| { type: "unwatch"; season: number; number: number }
 	| { type: "markSeason"; season: number; today?: string }
+	| { type: "markRange"; season: number; from: number; to: number; today?: string }
 	| {
 			type: "markEpisodes"
 			episodeIds: number[]
@@ -1283,6 +1284,14 @@ export function step(
 			))
 	)
 		return nothing("Those episodes are not in this show.")
+	if (event.type === "markRange" && (
+		!Number.isSafeInteger(event.season) || event.season < 1 ||
+		!Number.isSafeInteger(event.from) || event.from < 1 ||
+		!Number.isSafeInteger(event.to) || event.to < event.from ||
+		!world.show.episodes.some(e => e.season === event.season && e.number === event.from) ||
+		!world.show.episodes.some(e => e.season === event.season && e.number === event.to)
+	)) return nothing("Choose a valid range of regular episodes in this show.")
+
 	const done = (after: TrackingRecord, rows: Row[]): Step => {
 		// Want to rewatch lasts while the show stays Seen: Watch again, taking Seen back, On hold, Drop and a
 		// removed watch that leaves the show another state all take it off the Wishlist.
@@ -1380,6 +1389,7 @@ export function step(
 		case "answerSeenQuestion":
 			return done({ ...world.record, seenQuestion: "answered" }, [])
 		case "markSeason":
+		case "markRange":
 		case "markEpisodes":
 		case "watchUpTo": {
 			if (!actionId) return nothing("A group action needs an id.")
@@ -1390,6 +1400,8 @@ export function step(
 					!have.has(e.id) &&
 					(event.type === "markEpisodes"
 						? event.episodeIds.includes(e.id)
+						: event.type === "markRange"
+							? e.season === event.season && e.number >= event.from && e.number <= event.to
 						: event.type === "markSeason"
 							? e.season === event.season
 							: e.season < event.season ||
@@ -1737,6 +1749,7 @@ export function serverShow(
 	const device =
 		(event.type === "pressSeen" ||
 			event.type === "markSeason" ||
+			event.type === "markRange" ||
 			event.type === "markEpisodes" ||
 			event.type === "watchUpTo" ||
 			event.type === "hold" ||

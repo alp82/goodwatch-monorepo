@@ -1,5 +1,7 @@
 # Member MCP write tools (#568)
 
+The Q53 additions (people, share lists, episode ranges and Settings) are documented in [MCP people, lists, progress and settings](mcp-people-lists-progress-settings.md).
+
 This extension builds on the read endpoint in [#577](https://github.com/alp82/goodwatch-monorepo/pull/577). The production endpoint uses the durable Better Auth grant verifier described in [MCP authorization](mcp-authorization.md). No test verifier is installed in the Remix route.
 
 ## Surface and approval

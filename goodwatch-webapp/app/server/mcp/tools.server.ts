@@ -33,7 +33,7 @@ const durations = histogram(
 	"MCP tool duration.",
 	["tool"],
 	durationBuckets,
-	20,
+	32,
 )
 type EnrichTitleResults = typeof enrichTitleResults
 export type ReadToolName =
@@ -47,6 +47,11 @@ export type ReadToolName =
 	| "get_tonight"
 	| "get_library"
 	| "get_taste"
+	| "search_people"
+	| "get_person"
+	| "get_my_lists"
+	| "get_list"
+	| "get_settings"
 export interface ReadArgs extends DiscoverFilterArgs {
 	cursor?: string
 	limit?: number
@@ -55,8 +60,20 @@ export interface ReadArgs extends DiscoverFilterArgs {
 	for_you?: boolean
 	exclude_seen?: boolean
 	filter?: string
-	sort?: "added" | "waiting" | "last" | "score" | "title" | "match" | "runtime"
+	sort?:
+		| "added"
+		| "waiting"
+		| "last"
+		| "score"
+		| "title"
+		| "match"
+		| "runtime"
+		| "for_you"
+		| "newest"
 	kind?: "all" | "movie" | "show"
+	person_id?: number
+	role?: "all" | "acting" | "directing" | "writing"
+	list_id?: string
 	title_id?: string
 	title_name?: string
 	year?: number
@@ -65,7 +82,7 @@ export interface ReadArgs extends DiscoverFilterArgs {
 	episode_cursor?: string
 	episode_limit?: number
 }
-const definitions: {
+export const readToolDefinitions: {
 	name: ReadToolName
 	title: string
 	description: string
@@ -220,6 +237,53 @@ const definitions: {
 			"Your real taste signal and strongest attributes; explains when there is not enough evidence.",
 		schema: z.object({}).strict(),
 	},
+	{
+		name: "search_people",
+		title: "Search people",
+		description:
+			"Search cast and crew by name. Use the returned person_id with get_person for their acting, directing and writing filmography.",
+		schema: z
+			.object({ query: z.string().trim().min(2).max(120), ...paging })
+			.strict(),
+	},
+	{
+		name: "get_person",
+		title: "Get a person's filmography",
+		description:
+			"A person's catalog credits with your GoodWatch taste match. Includes every title, even without a poster or score. Defaults to For you, everywhere, including seen titles. Newest and score sort the whole filmography before paging; exclude_seen uses the site's Not seen yet rule. Links open the person's real GoodWatch page; its grouping can differ.",
+		schema: z
+			.object({
+				person_id: z.number().int().positive().max(2_000_000_000),
+				role: z.enum(["all", "acting", "directing", "writing"]).default("all"),
+				sort: z.enum(["for_you", "newest", "score"]).default("for_you"),
+				exclude_seen: z.boolean().default(false),
+				...paging,
+			})
+			.strict(),
+	},
+	{
+		name: "get_my_lists",
+		title: "Get my share lists",
+		description:
+			"Your share lists from Lists, including unlisted lists, newest updated first. Each list has exactly five ranked titles and the share link produced by the site.",
+		schema: z.object(paging).strict(),
+	},
+	{
+		name: "get_list",
+		title: "Get a share list",
+		description:
+			"Read one of your share lists and its five titles in rank order, with taste match and the site's share link. Other members' lists are not exposed by this tool.",
+		schema: z
+			.object({ list_id: z.string().regex(/^[0-9A-Za-z]{10}$/) })
+			.strict(),
+	},
+	{
+		name: "get_settings",
+		title: "Get my settings",
+		description:
+			"Read Watching from (country), Show titles in (language), and saved streaming service IDs. Browser language is a saved setting, not a language inferred from your country. No browser locale is supplied by MCP.",
+		schema: z.object({}).strict(),
+	},
 ]
 
 export function createToolServer(
@@ -234,7 +298,7 @@ export function createToolServer(
 		{ name: "goodwatch", version: "1.0.0" },
 		{ instructions: linkInstructions },
 	)
-	for (const tool of definitions) {
+	for (const tool of readToolDefinitions) {
 		if (!readToolEnabled(userId, tool.name)) continue
 		const posters = POSTER_GRID_TOOLS.has(tool.name)
 		server.registerTool(

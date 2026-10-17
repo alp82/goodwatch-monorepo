@@ -1,0 +1,19 @@
+{
+  "applied_at": "2026-10-17T12:28:35.196965+00:00",
+  "admin_host": "crate-01",
+  "identity": "crate",
+  "sql_file": "docs/implementation/mcp-features-grants.sql",
+  "added": [
+    [
+      "goodwatch_search",
+      "crate",
+      "GRANT",
+      "DML",
+      "TABLE",
+      "doc.user_list"
+    ]
+  ],
+  "removed": [],
+  "all_other_privileges_unchanged": true,
+  "prior_privileges_sha256": "158704ecfc99c13c53b9b8eb362797f975911e02f9dc9c6baa1d9a05ab50a1c7"
+}

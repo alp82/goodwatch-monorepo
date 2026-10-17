@@ -146,16 +146,31 @@ export async function createList(userId: string, input: ShareListInput): Promise
 	return (await getList(id)) as ShareList
 }
 
-export async function updateList(userId: string, id: string, input: ShareListInput): Promise<ShareList> {
+export async function updateList(userId: string, id: string, input: ShareListInput, options: { expectedContentHash?: string; expectedUpdatedAt?: string } = {}): Promise<ShareList> {
 	await requireHandle(userId)
 	const current = await ownedList(userId, id)
+	if (options.expectedContentHash !== undefined && current.contentHash !== options.expectedContentHash)
+		throw new ShareListError(409, "The list changed. Read it again before editing.")
 	const valid = await validateList({ ...input, visibility: input.visibility ?? current.visibility })
+	// MCP edits keep the five-title invariant without overwriting an intervening site or MCP edit.
+	// The full primary-key read is real-time; CAS must use only the primary key and version predicates.
+	let version: { seq: number; term: number } | undefined
+	if (options.expectedContentHash !== undefined) {
+		const [row] = await select<{ user_id: string; content_hash: string; updated_at: number; deleted_at: number | null; seq: number; term: number }>(
+			"SELECT user_id, content_hash, updated_at, deleted_at, _seq_no AS seq, _primary_term AS term FROM doc.user_list WHERE id = ?", [id])
+		if (!row || row.user_id !== userId || row.deleted_at != null || row.content_hash !== options.expectedContentHash ||
+			(options.expectedUpdatedAt !== undefined && new Date(row.updated_at).toISOString() !== options.expectedUpdatedAt))
+			throw new ShareListError(409, "The list changed. Read it again before editing.")
+		version = row
+	}
 	try {
-		await run(
+		const result = await run(
 			`UPDATE doc.user_list SET title = ?, prompt_id = ?, design = ?, theme = ?, items = ?, visibility = ?,
-			 content_hash = ?, updated_at = ? WHERE id = ? AND user_id = ? AND deleted_at IS NULL`,
-			[valid.title, valid.promptId, valid.design, valid.theme, valid.items, valid.visibility, contentHash(valid), new Date(), id, userId],
+			 content_hash = ?, updated_at = ? WHERE id = ? AND ${version ? "_seq_no = ? AND _primary_term = ?" : "user_id = ? AND deleted_at IS NULL"}`,
+			[valid.title, valid.promptId, valid.design, valid.theme, valid.items, valid.visibility, contentHash(valid), new Date(), id, ...(version ? [version.seq, version.term] : [userId])],
 		)
+		if (result.rowcount !== 1 && options.expectedContentHash !== undefined)
+			throw new ShareListError(409, "The list changed. Read it again before editing.")
 		await refreshLists()
 	} finally {
 		await resetListView(id)

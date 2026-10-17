@@ -1691,3 +1691,22 @@ test("every row of the table was walked, except the catalog's, which no code tak
 	const missed = TABLE.filter((row) => !used.has(row.id)).map((row) => row.id)
 	assert.deepEqual(missed, ["27"])
 })
+
+test("inclusive ranges use native group watches, skip watched and unaired episodes, and retain other seasons", () => {
+	const world: World = { show: findShow("weekly"), record: newRecord() }
+	const first = step(world, { type: "watch", season: 2, number: 1, when: { precision: "unknown" } }, "single-first")
+	const range = step(first.world, { type: "markRange", season: 2, from: 1, to: 4 }, "range-id")
+	assert.equal(range.refused, null)
+	const made = range.world.record.watches.filter(w => w.group === "range-id")
+	assert.equal(made.length, 1)
+	assert.equal(made[0].episodeId, episodeId("weekly", 2, 2))
+	assert.equal(made[0].origin, "season")
+	assert.equal(range.world.record.watches.length, 2)
+	const retry = step(range.world, { type: "markRange", season: 2, from: 1, to: 4 }, "range-id", { resend: true })
+	assert.deepEqual(retry.world.record.watches, range.world.record.watches)
+	for (const event of [
+		{ type: "markRange" as const, season: 0, from: 1, to: 2 },
+		{ type: "markRange" as const, season: 2, from: 4, to: 1 },
+		{ type: "markRange" as const, season: 2, from: 1, to: 99 },
+	]) assert.ok(step(world, event, "bad-range").refused)
+})

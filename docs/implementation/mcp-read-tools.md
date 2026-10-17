@@ -1,5 +1,7 @@
 # Member MCP read tools (#567)
 
+The Q53 additions (people, share lists, episode ranges and Settings) are documented in [MCP people, lists, progress and settings](mcp-people-lists-progress-settings.md).
+
 The write extension built on #577 is documented in [Member MCP write tools](mcp-write-tools.md).
 
 Q53 adds [More like this and richer title details](mcp-similar-title-details.md), including the `get_similar_titles` poster-grid tool and `get_title` include groups/episode paging.
