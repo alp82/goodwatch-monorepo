@@ -144,8 +144,8 @@ export function ringsKit(core: MapCore, words: TraitWords) {
 	const roomy = () => box.w >= 600
 	/** The most posters a map holds at any zoom. A big screen has room for hundreds, and so many make a pan stutter. */
 	const MAX_PLACES = 150
-	/** A full screen has one zoom step fewer than the page: its smallest step is small enough. */
-	const FULL_ZOOMS = [1.3, 1, 0.75, 0.56]
+	/** A full screen's smallest step: one fewer than the page, it is small enough. */
+	const FULL_SMALLEST = 0.56
 	/** The section is in full screen: the browser's own, or the cover of the page where there is none (an iPhone). */
 	const full = () => {
 		const doc = win?.document
@@ -153,11 +153,35 @@ export function ringsKit(core: MapCore, words: TraitWords) {
 	}
 	const posterW = () => (full() ? fullW() : roomy() ? 96 : Math.max(44, Math.min(56, Math.floor((box.w - 4) / 5.43))))
 	/**
-	 * How large and how small the posters get: on a phone they stay wide enough for a finger. The first step is closer
-	 * than the map opens at (ZOOM_START): fewer, bigger posters.
+	 * How large and how small the posters get. The map opens at ZOOM_START; the steps further out are fixed, and on a
+	 * phone the posters stay wide enough for a finger. The two steps closer are measured for the map's space: the
+	 * closest is the largest size that keeps at least four posters around the middle, the next one keeps more.
 	 */
-	const zooms = () => (full() ? FULL_ZOOMS : roomy() ? [1.3, 1, 0.75, 0.56, 0.42] : [1.25, 1, 0.8, 0.66])
-	const ZOOM_START = 1
+	const ZOOM_START = 2
+	const zoomMemo: Record<string, number[]> = {}
+	const zooms = () => {
+		const kind = full() ? 2 : roomy() ? 1 : 0
+		const id = `${geoOf()}|${kind}`
+		if (zoomMemo[id]) return zoomMemo[id]
+		const out = kind === 2 ? [0.75, 0.56] : kind === 1 ? [0.75, 0.56, 0.42] : [0.8, 0.66]
+		const w = posterW()
+		const count = (scale: number) => lattice(w * scale).length
+		let closest = 1.3
+		for (let scale = 2.4; scale > 1.3; scale -= 0.05)
+			if (count(scale) >= 4) {
+				closest = scale
+				break
+			}
+		const fewest = count(closest)
+		let closer = Math.sqrt(closest)
+		for (let scale = closest - 0.1; scale > 1.1; scale -= 0.05)
+			if (count(scale) > Math.max(fewest, 5)) {
+				closer = scale
+				break
+			}
+		zoomMemo[id] = [round(closest, 100), round(closer, 100), 1, ...out]
+		return zoomMemo[id]
+	}
 	const fullMemo: Record<string, number> = {}
 	/**
 	 * A full screen's posters: sized by the space the map has, between a floor and a ceiling, and grown further when
@@ -167,7 +191,7 @@ export function ringsKit(core: MapCore, words: TraitWords) {
 		const id = geoOf()
 		if (fullMemo[id]) return fullMemo[id]
 		let w = Math.max(roomy() ? 96 : 56, Math.min(180, box.h / 4.4, box.w / 6.5))
-		while (w < 360 && lattice(w * FULL_ZOOMS[FULL_ZOOMS.length - 1]).length > MAX_PLACES) w += 4
+		while (w < 360 && lattice(w * FULL_SMALLEST).length > MAX_PLACES) w += 4
 		fullMemo[id] = Math.round(w)
 		return fullMemo[id]
 	}
@@ -966,11 +990,14 @@ export function ringsKit(core: MapCore, words: TraitWords) {
 		touch,
 		aim: null,
 	})
-	/** How far the map may be pinched: a little beyond the nearest and the furthest zoom step, then no further. */
+	/** How far the map may be pinched: to the next zoom step either way, and a little beyond. */
 	const pinchRange = (root: Element) => {
 		const zs = zooms()
-		const z = zs[zoomAt(root)]
-		return { lo: (zs[zs.length - 1] / z) * 0.85, hi: (zs[0] / z) * 1.15 }
+		const z = zoomAt(root)
+		return {
+			lo: (z < zs.length - 1 ? zs[z + 1] / zs[z] : 0.92) * 0.95,
+			hi: (z > 0 ? zs[z - 1] / zs[z] : 1.08) * 1.05,
+		}
 	}
 	const spread = (pts: Gesture["pts"]) => {
 		const all = Array.from(pts.values())
@@ -1055,8 +1082,8 @@ export function ringsKit(core: MapCore, words: TraitWords) {
 		unshow(state)
 		const zs = zooms()
 		const z = zoomAt(root)
-		// Each step of the zoom is about a sixth more or less spread between the fingers.
-		const steps = cancel ? 0 : Math.round(Math.log(r) / 0.16)
+		// One movement is one step of the zoom, at most: a little more or less spread between the fingers is enough.
+		const steps = cancel || Math.abs(Math.log(r)) < 0.07 ? 0 : Math.sign(r - 1)
 		const next = Math.max(0, Math.min(zs.length - 1, z - steps))
 		if (next !== z) {
 			springBack(state, d, r, 200 * ZOOM)
