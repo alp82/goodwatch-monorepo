@@ -32,7 +32,7 @@ export interface DetailsHeroProps {
 // The banner is the backdrop, with the trailer button in its corner. On it, everything about the title and the
 // person: on the left the poster (it opens full screen), the GoodWatch score, one chip per site and, for a show, the
 // button down to its episode ratings. On the right, bottom aligned, the person's Seen and score (one control) over
-// their list actions (for a tracked show also its status line). Under the banner, where to watch across the card,
+// their list actions (for a tracked show also its status line). Under the banner, behind a line, where to watch across the card,
 // then for a member a quiet line on where the title sits in their Taste (taste groups). On a phone the two sides
 // stand over each other.
 export default function DetailsHero({ media, country, shownCountry, preview, episodeGrid = null, sectionProps, sides = null }: DetailsHeroProps) {
@@ -71,7 +71,14 @@ export default function DetailsHero({ media, country, shownCountry, preview, epi
 							</div>
 						</div>
 					</div>
-					<WhereToWatch media={media} country={country} shownCountry={shownCountry} preview={preview} className="p-3 md:p-5" />
+					{/* A line between the banner and where to watch, so its offer tabs don't read as part of the controls above. */}
+					<WhereToWatch
+						media={media}
+						country={country}
+						shownCountry={shownCountry}
+						preview={preview}
+						className="mx-3 border-t border-white/10 pb-3 pt-4 md:mx-6 md:pb-5 md:pt-5"
+					/>
 					{sides && <TitleSidesLine sides={sides} mediaType={media.mediaType} tmdbId={media.details.tmdb_id} />}
 				</section>
 			</div>

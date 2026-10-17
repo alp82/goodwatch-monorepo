@@ -3,8 +3,8 @@
 // faded and the Next episode ringed; a press on a season row opens it into one-line rows with tick, name, air date
 // and rating; a press on a row opens it for the still, the date and "Watched up to here". On a wide screen the open
 // season sits beside the matrix. A show with one season shows only its rows. For a member who never tracked the
-// show the matrix is the ratings overview. The ratings grid in IMDb's numbering stands above the season and
-// episode picker, under the heading. An unwatched episode's still and description stay covered until asked for.
+// show the matrix is the ratings overview. Under the heading the ratings grid in IMDb's numbering comes first, then
+// the finder, Next, and the season and episode picker. An unwatched episode's still and description stay covered until asked for.
 //
 // Loaded when the member comes near the section or asks for it; a show without an episode list keeps today's grid.
 import {
@@ -364,16 +364,25 @@ function List({
 					"@keyframes gwt-flash{0%,40%{background-color:rgb(255 255 255/.22)}100%{background-color:transparent}}.gwt-flash{animation:gwt-flash 1.5s ease-out}@media (prefers-reduced-motion:reduce){.gwt-flash{animation:none;outline:2px solid white;outline-offset:-2px}}"
 				}
 			</style>
-			<Tools nav={nav} model={model} />
+			<h2
+				id="episode-list-title"
+				tabIndex={-1}
+				className="text-2xl font-bold focus:outline-none"
+			>
+				Episodes
+			</h2>
 			{children && (
 				// The grid brings its own heading; this section's stands for both.
 				<div
 					data-imdb-grid
-					className="mt-3 [&>section>div:first-child]:justify-end [&_#episode-grid-title]:sr-only"
+					className="-mt-7 [&>section>div:first-child]:justify-end [&_#episode-grid-title]:sr-only"
 				>
 					{children}
 				</div>
 			)}
+			<div className="mt-4">
+				<Tools nav={nav} model={model} />
+			</div>
 			{page?.presentation?.note && (
 				<p className="mt-2 text-sm text-gray-400">{page.presentation.note}</p>
 			)}
@@ -666,14 +675,7 @@ function Tools({
 					.flatMap((season) => season.episodes)
 					.find((episode) => episode.id === model.nextId)
 	return (
-		<div className="flex flex-wrap items-center gap-x-2 gap-y-2">
-			<h2
-				id="episode-list-title"
-				tabIndex={-1}
-				className="mr-auto text-2xl font-bold focus:outline-none lg:mr-1"
-			>
-				Episodes
-			</h2>
+		<div className="flex flex-wrap items-center gap-x-2 gap-y-2 empty:hidden">
 			{!small && !desktop && (
 				<button
 					type="button"
