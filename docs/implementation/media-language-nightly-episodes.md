@@ -176,7 +176,7 @@ pushed to main. [Workspace sync](https://github.com/alp82/goodwatch-monorepo/act
 passed; the deployed nightly runner, entry point and ingestion helper exactly
 matched the committed files. No schedule time or arguments were changed.
 
-**Production proof is blocked by an unavailable TMDB target, not by Crate.**
+**The initial production proof was blocked by an unavailable TMDB target.**
 The scheduled 2026-10-17 run had already stopped at 00:39 UTC with
 `endpoint_failed`, leaving 277 changed-work shows (4,063 targets) ahead of the
 saved backlog cursor at show 57775, season 2, episode 1127. The supervised job
@@ -230,3 +230,40 @@ skip metadata durability/deduplication, and undiluted failure-ratio accounting.
 The full flows suite ran 1,545 tests (75 skipped), with only the previously
 reproduced deletion-coverage assertion failing. Excluding that baseline assertion,
 all 1,544 tests pass (75 skipped). The backup-notification tests pass.
+
+### Successful supervised production proof
+
+Implementation commit `cd3fc58a2f6a5cb5bcb75b66741cbb7000bccade` was fast-forward
+pushed to main. [Windmill workspace sync](https://github.com/alp82/goodwatch-monorepo/actions/runs/38988627181)
+passed, and all three deployed translation script contents matched the committed
+files before submitting job `01a1475c-b251-5477-21b2-caf6eb7b63cb` with
+`nightly: true`, `dry_run: false`, `max_seconds: 600`.
+
+The job ran for **561.677 seconds (9 minutes 22 seconds)**, from approximately
+00:57 to 01:06 UTC, and stopped cleanly with `budget`. It made 2,578 TMDB requests,
+with **zero failed requests**, **97 skipped translation 404s** across four shows,
+and **zero recovered Crate stalls**. It completed 186 pages and 155 changed-work
+shows, adding **118 season and 1,148 episode translation rows** (1,266 total).
+Both original 337744 endpoints were recorded and bypassed successfully.
+
+The durable changed-work cursor advanced from show **337744, offset 0**, to show
+**338321, offset 0**; pending changed targets fell from **4,063 to 1,485**, and
+pending changed shows from 277 to 122. The lower-priority backlog cursor remains
+show 57775, season 2, episode 1127 until the canonical-change queue drains.
+
+Database reads reconciled exactly: season rows across the snapshotted shows rose
+from 312 to 430, and episode rows from 7,120 to 8,268. Every pre-existing row
+remained, and all **10,613 pre-existing non-empty fields** were identical.
+All 97 unique skipped endpoints, IDs, statuses and UTC timestamps were present
+in Mongo. The durable run summary matched the Windmill result. The **lease was
+released at 01:06:20.852 UTC**, and the schedule definition (including time and
+arguments) remained identical. No data was deleted and no safety stop besides
+the explicitly authorized translation 404 policy was relaxed.
+
+The requested supervised proof is now complete. No production Crate stall
+occurred during this run; the recovery/backoff behavior remains covered by the
+deterministic tests. Machine-readable proof is in
+[`media-language-nightly-episodes-404-production.json`](media-language-nightly-episodes-404-production.json).
+Full before/after snapshots, skipped records, checkpoints, test logs and deployment
+evidence are retained under
+`/home/alper/projects/goodwatch-media-language-evidence/episode-translation-404/`.
