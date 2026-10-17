@@ -45,7 +45,7 @@ import React from "react"
 import { ToastContainer } from "react-toastify"
 import { useDehydratedState } from "use-dehydrated-state"
 
-import Footer from "~/ui/Footer"
+import Footer from "~/ui/footer/Footer"
 import { ErrorPage, errorPageProps } from "~/ui/ErrorPage"
 import {
 	HubDialog,

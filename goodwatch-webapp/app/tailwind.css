@@ -186,3 +186,55 @@ input[type="search"]::-webkit-search-cancel-button {
 	appearance: none;
 }
 
+
+/* The footer's motions (app/ui/footer). Transform and opacity only. */
+@keyframes footer-sheen {
+	0%,
+	60% {
+		transform: translateX(0) skewX(-20deg);
+	}
+	100% {
+		transform: translateX(480%) skewX(-20deg);
+	}
+}
+@keyframes footer-float {
+	0%,
+	100% {
+		transform: translateY(0);
+	}
+	50% {
+		transform: translateY(-6px);
+	}
+}
+@keyframes footer-rise-in {
+	from {
+		opacity: 0;
+		transform: translateY(6px);
+	}
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
+@keyframes footer-fade-in {
+	from {
+		opacity: 0;
+		transform: translateX(6px);
+	}
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
+@utility footer-sheen {
+	animation: footer-sheen 4.5s ease-in-out infinite;
+}
+@utility footer-float {
+	animation: footer-float 6s ease-in-out infinite;
+}
+@utility footer-caption {
+	animation: footer-rise-in 0.18s ease-out both;
+}
+@utility footer-fade-in {
+	animation: footer-fade-in 0.3s ease-out both;
+}

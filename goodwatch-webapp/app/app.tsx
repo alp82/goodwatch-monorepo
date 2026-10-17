@@ -3,7 +3,7 @@ import { SignInAgainBanner } from "~/ui/auth/SignInAgainBanner"
 import { Outlet, useLocation, useMatches } from "@remix-run/react"
 import { Suspense, lazy } from "react"
 
-import Footer from "~/ui/Footer"
+import Footer from "~/ui/footer/Footer"
 import {
 	HubDialog,
 	MobileDock,
