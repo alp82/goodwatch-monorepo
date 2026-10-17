@@ -8,6 +8,8 @@ export const CONNECTOR_NAME = "GoodWatch"
 export const CLAUDE_CODE_NAME = "goodwatch"
 
 export const CONNECTOR_HELP_PATH = "/connect"
+// The friendly, visual page: what GoodWatch looks like in a chat and drawn setup steps. Links to the help page.
+export const USE_WITH_AI_PATH = "/use-with-ai"
 // Built in #570 (Settings, Connected apps). Linked from the help page and the privacy policy.
 export const CONNECTED_APPS_PATH = "/settings/connected-apps"
 export const PRIVACY_CONNECTED_APPS_PATH = "/privacy#connected-apps"

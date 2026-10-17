@@ -14,6 +14,7 @@ import type { ComponentType, ReactNode, SVGProps } from "react"
 import {
 	CONNECTED_APPS_PATH,
 	CONNECTOR_HELP_PATH,
+	USE_WITH_AI_PATH,
 } from "~/ui/connector/connector"
 import { Ui } from "~/ui/connector/help-parts"
 import { ACCOUNT_PATH } from "~/ui/settings/paths"
@@ -87,12 +88,8 @@ export default function Support() {
 					</Fix>
 					<p className="text-sm text-gray-400">
 						Not connected yet?{" "}
-						<Link
-							to={CONNECTOR_HELP_PATH}
-							prefetch="intent"
-							className={linkClass}
-						>
-							Add GoodWatch to your AI app
+						<Link to={USE_WITH_AI_PATH} prefetch="intent" className={linkClass}>
+							See how GoodWatch works in your AI app
 						</Link>
 						.
 					</p>

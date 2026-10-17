@@ -3,11 +3,12 @@
 import { CheckIcon, ExclamationTriangleIcon } from "@heroicons/react/24/outline"
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node"
 import { json } from "@remix-run/node"
-import { useLoaderData, useRevalidator } from "@remix-run/react"
+import { Link, useLoaderData, useRevalidator } from "@remix-run/react"
 import { useState } from "react"
 import { type ConnectedApp, connectedAppsPage } from "~/server/auth/connected-apps.server"
 import { ConnectAppBadge } from "~/ui/auth/connect"
 import { ConnectorAddressCard } from "~/ui/connector/ConnectorAddressCard"
+import { USE_WITH_AI_PATH } from "~/ui/connector/connector"
 import { SettingsSheet } from "~/ui/settings/SettingsSheet"
 import { Spinner } from "~/ui/wait/Spinner"
 
@@ -44,6 +45,9 @@ export default function ConnectedApps() {
 						<p className="mx-auto mt-1 max-w-md text-sm text-gray-400">
 							Add GoodWatch to Claude or ChatGPT to log watches, rate titles and pick tonight's movie by chatting.
 						</p>
+						<Link to={USE_WITH_AI_PATH} prefetch="intent" className="mt-3 inline-block text-sm font-semibold text-amber-500 hover:text-amber-400">
+							See what it looks like
+						</Link>
 					</div>
 				) : (
 					<ul className="divide-y divide-gray-800 overflow-hidden rounded-xl border border-gray-700 bg-gray-800/40">

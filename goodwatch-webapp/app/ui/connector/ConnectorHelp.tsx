@@ -25,21 +25,17 @@ import {
 	CONNECTOR_URL,
 	PRIVACY_CONNECTED_APPS_PATH,
 	RANKED_SEARCHES_PER_DAY,
+	USE_WITH_AI_PATH,
 } from "~/ui/connector/connector"
+import {
+	CONNECT_EXAMPLES,
+	DESCRIPTION_SEARCH_EXAMPLE,
+} from "~/ui/connector/example-prompts"
 import { Code, Question, SectionHeading, Ui } from "~/ui/connector/help-parts"
 
 // The MCP endpoint's limits per member (endpoint.server.ts).
 const REQUESTS_PER_MINUTE = 60
 const REQUESTS_PER_HOUR = "1,000"
-
-const EXAMPLES = [
-	"What should I watch next?",
-	"Sort my Wishlist by best match for me.",
-	"Movies like Arrival, but a bit lighter.",
-	"What's good on Netflix for me tonight?",
-	"I just watched episode 4 of Severance season 2.",
-	"Rate Dune: Part Two 9 out of 10.",
-]
 
 const linkClass = "font-semibold text-amber-500 hover:text-amber-400"
 
@@ -58,7 +54,11 @@ export function ConnectorHelp() {
 					Then ask what to watch next, sort your Wishlist by how well it fits
 					you, or log what you just watched, in your own words. It works with
 					your GoodWatch account: your ratings, your shows, your streaming
-					services.
+					services.{" "}
+					<Link to={USE_WITH_AI_PATH} prefetch="intent" className={linkClass}>
+						See what it looks like in a chat
+					</Link>
+					.
 				</p>
 				<div className="rounded-2xl bg-gradient-to-br from-amber-950/60 via-gray-900 to-gray-900 p-4 ring-1 ring-amber-500/30 sm:p-6">
 					<p className="font-semibold text-white">Your GoodWatch address</p>
@@ -123,7 +123,7 @@ export function ConnectorHelp() {
 			<section aria-labelledby="try" className="flex flex-col gap-4">
 				<SectionHeading id="try">Things to ask</SectionHeading>
 				<ul className="grid gap-2 sm:grid-cols-2">
-					{EXAMPLES.map((example) => (
+					{CONNECT_EXAMPLES.map((example) => (
 						<li
 							key={example}
 							className="rounded-xl bg-gray-800/50 px-4 py-3 text-gray-200 ring-1 ring-gray-700/70"
@@ -136,8 +136,9 @@ export function ConnectorHelp() {
 					In Claude and some other apps, answers come with poster cards; others
 					show text only. If you don't say when you watched something, GoodWatch
 					saves the watch without a date. Your assistant finds titles by name as
-					often as you like; searching by description ("a slow sci-fi like
-					Arrival") is limited to {RANKED_SEARCHES_PER_DAY} searches a day.
+					often as you like; searching by description (“
+					{DESCRIPTION_SEARCH_EXAMPLE}”) is limited to {RANKED_SEARCHES_PER_DAY}{" "}
+					searches a day.
 				</p>
 			</section>
 

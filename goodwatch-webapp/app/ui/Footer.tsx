@@ -288,6 +288,15 @@ export default function Footer() {
 									Support
 								</Link>
 							</div>
+							<div className="mt-2">
+								<Link
+									className="text-sm leading-6 underline underline-offset-4 text-gray-400 hover:text-gray-100"
+									to="/use-with-ai"
+									prefetch="intent"
+								>
+									Use with AI
+								</Link>
+							</div>
 							<div className="mt-6">
 								<a
 									href="https://dev.to/t/goodwatch"
