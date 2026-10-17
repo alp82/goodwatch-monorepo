@@ -1,6 +1,6 @@
 # Production cut-over checklist: Supabase Auth to Better Auth, and the MCP launch
 
-Ticket: [#552](https://github.com/alp82/goodwatch-monorepo/issues/552), with the MCP launch [#572](https://github.com/alp82/goodwatch-monorepo/issues/572). Map: [#529](https://github.com/alp82/goodwatch-monorepo/issues/529). State of the sources: 2026-10-16; refreshed against main, the latest #547/#551/#552/#562/#563 comments and read-only private SSH checks. Better Auth remains off on production. This update authorizes no production operation.
+Ticket: [#552](https://github.com/alp82/goodwatch-monorepo/issues/552), with the MCP launch [#572](https://github.com/alp82/goodwatch-monorepo/issues/572). Map: [#529](https://github.com/alp82/goodwatch-monorepo/issues/529). Status: 2026-10-17. **Phase 2 is live and owner-accepted.** Freeze began 00:41 UTC; the guarded import/audit passed; Better Auth was enabled with the correct `true` value at 01:14; real Google acceptance passed after the credential correction around 01:21. See the [dated acceptance record](cutover-acceptance-20261017.md). This document records completed work and does not authorize another production change.
 
 Rules that come from the owner and bind every step:
 
@@ -11,25 +11,25 @@ Rules that come from the owner and bind every step:
 
 Who: **Owner** decides, holds secrets and changes deployment settings; **Agent** prepares repository work and, only in an explicitly approved window, executes the reviewed private-network steps.
 
-## Blocking prerequisites
+## Remaining follow-up
 
-Only unfinished gates are listed here. Each production action still needs the owner's chosen window.
+Phase 2 is accepted. These ongoing or separately scoped items remain:
 
-- [ ] **Owner — Secrets and recovery (1.5).** Put the permanent root, versioned key ring, Better Auth/Google/SMTP secrets and runtime configuration on both destinations through Coolify's UI. Back them up in the password manager before import (Q31); the importer uses the same root/key ring.
-- [ ] **Owner — External setup and real acceptance (1.6, 2.7, 3.3).** Add Google's production callback, verify Purelymail, supply approved test accounts, and complete real password/Google/mail/member-data and MCP-client acceptance. #551's data rehearsal passed; real password/Google redirect sign-ins remain unproven.
-- [ ] **Owner — Freeze and retention (2.2, 2.6).** Decided (Q47, Q48): no database trigger. The freeze is the `AUTH_MAINTENANCE` notice plus turning off "Allow new users to sign up" in the Supabase dashboard. Before the window, check that the notice is on the main branch and that the owner knows where to set it (Coolify, webapp environment).
-- [ ] **Owner + Agent — Maintenance observability.** Use the in-process worker; no additional cron is recommended. At launch initialize auth on every serving process and verify successful passes/alerts. See the maintenance recommendation below; there is no missing repository scheduler.
-- [ ] **Owner — Cut-over go, backups, deployment and follow-up.** Choose the window; take final backups/frozen export; run the guarded import/audit; paste proxy files; set the privacy date and flags; complete smoke/rollback gates; create the dated 30-day shutdown follow-up. Agent performs the reviewed CLI/checks only with that go.
+- [ ] **Owner + Agent — Retention, monitoring and legacy-cookie removal (4.1–4.3).** Keep Supabase sign-ups off; watch the first days; execute [#683](https://github.com/alp82/goodwatch-monorepo/issues/683) on **2026-11-16**, then remove the old cookie and Supabase fallback. #552 stays open until its remaining done criteria hold.
+- [ ] **Owner + Agent — Maintenance observability.** The import audit passed. Per-process in-process worker completion/alert evidence still needs recording; no additional cron is recommended.
+- [ ] **Owner — MCP launch and real client acceptance (Phase 3).** Auth sign-in acceptance does not establish Claude/ChatGPT/MCP-client acceptance. Phase 3 remains separately tracked in #572.
 
 Completed prerequisites (not blockers):
 
-- **Step 1.4 completed (2026-10-17):** 15 empty auth tables plus `user_mcp_action`; replicas=2, wait_for_active_shards=1, REQUEST durability, all 54 copies STARTED. Reused prepared `goodwatch_auth`; exact 32 table-scoped grants and 105 other-client DENYs, 423 negative checks passed. [SQL and live verification receipt](cratedb-production/20261017-empty-auth-tables/README.md). Owner-only secret handoff remains in 1.5.
+- **Owner runtime/recovery handoff and external acceptance:** both destinations carried the 1.5 secrets with matching hashes; the owner confirmed password-manager custody of BETTER_AUTH_SECRET, the permanent encryption root/key ring and the separate backup passphrase before import. Real Google and mail acceptance subsequently passed (2.7); no secret value is recorded.
+
+- **Step 1.4 completed (2026-10-17):** 15 empty auth tables plus `user_mcp_action`; replicas=2, wait_for_active_shards=1, REQUEST durability, all 54 copies STARTED. Reused prepared `goodwatch_auth`; exact 32 table-scoped grants and 105 other-client DENYs, 423 negative checks passed. [SQL and live verification receipt](cratedb-production/20261017-empty-auth-tables/README.md). Owner subsequently completed runtime secret handoff; permanent-key and backup-passphrase recovery custody was confirmed before import.
 
 - **#547 closed:** all three nodes run 5.10.16; `goodwatch_auth` was prepared as a non-superuser with zero grants; step 1.4 has now added the approved table grants. Prepared secret is crate-01 `/root/.config/goodwatch/crate-credentials/goodwatch_auth`, root0600 under root0700. [Completion evidence](https://github.com/alp82/goodwatch-monorepo/blob/main/docs/implementation/auth/cratedb-production/20261016-auth-preparation/README.md), PR #670 / `ec05a2f7`.
 - **#562 closed:** HBA enforced on every coordinator; client migration and backup failover proved. [Rollout evidence](https://github.com/alp82/goodwatch-monorepo/blob/main/docs/implementation/auth/cratedb-production-rollout.md), PR #599 / `5e3ac3a5`.
 - **#563 closed:** isolated three-node snapshot + BLOB restore proved; 14m38.8s SQL restore, 22m54.4s through final copy recovery. [Report](https://github.com/alp82/goodwatch-monorepo/blob/main/docs/implementation/auth/cratedb-restore-rehearsal-20261015.md).
-- **#551 data rehearsal passed:** 718 users / 721 accounts / 718 claims; exact rerun created zero; hashes, Google subjects, original UUIDs and 300,082 member rows audited. Export/dry/apply/rerun wall time 6m43.1s, not a full cut-over estimate. Real sign-in acceptance remains above.
-- **#591 landed** as `49c2db79`; Better Auth remains off. The prior current-main/tracking-writer integration gate is superseded by the landed stack.
+- **#551 data rehearsal passed:** 718 users / 721 accounts / 718 claims; exact rerun created zero; hashes, Google subjects, original UUIDs and 300,082 member rows audited. Export/dry/apply/rerun wall time 6m43.1s, not a full cut-over estimate. The production import and owner real-sign-in acceptance now passed; see 2.3/2.7 and the dated acceptance record.
+- **#591 landed** as `49c2db79` with Better Auth initially off; it is now enabled and owner-accepted (2.5/2.7). The prior current-main/tracking-writer integration gate is superseded by the landed stack.
 - **Repo cookie and production-route gaps closed:** the follow-up PR linked in 1.8 adds proxy support and the guarded `production` importer. No proxy file is installed on merge, and nothing runs the importer automatically.
 - PR #589 failover is already deployed; #588 is closed. The 16 privacy decisions in #571 are settled. Firewall hardening #669 is separate: the owner accepted private binding plus HBA for #547.
 
@@ -66,9 +66,9 @@ Do these in this order, on days before the cut-over.
   - Verify: do a real Google sign-in and a real mail on the production origin in step 2.7. Local tests used fixtures only.
   - Roll back: remove the redirect entry. Nothing else depends on it while the flag is off.
 
-- [x] **1.7 Rehearse the data migration on a copy — passed, sign-in acceptance remains.**
+- [x] **1.7 Rehearse the data migration on a copy — passed; production acceptance subsequently passed.**
   - Who: Agent. Latest #551 comment records dry 87.373s, apply 196.581s, exact rerun 114.084s; 718 users / 721 accounts and unchanged member ownership/counts. Both importer and integration adapters independently audited every mapping/hash. Copies and secrets were deleted.
-  - Remaining Owner + Agent gate: real password, Google redirect, linked/unconfirmed and mail acceptance in 2.7; copy mapping and fake-data sign-ins do not prove those journeys. Keep #551 open until acceptance is satisfied.
+  - Production follow-through: the guarded 724-user import passed and the owner accepted the full 2.7 matrix, including real password/Google/mail/member-data journeys. #551 is closed; the rehearsal figures above remain historical copy evidence.
 
 - [x] **1.8 Complete cookie matching and the production importer route — repository work done.**
   - Who: Agent. Follow-up PR: [#675](https://github.com/alp82/goodwatch-monorepo/pull/675) (merge: `1c7034cdc1ffe13a0e598252bce1d91967f1bde7`). Traefik's member rule now accepts Supabase base/chunked cookies, `gw.session_token` and `__Secure-gw.session_token`. Both proxy scripts and cache/deploy docs are updated. Webapp `auth-cookie.ts`, cache identity/page-cache and metrics already shared the dual matcher; regressions now cover both Better Auth forms and lookalikes.
@@ -77,52 +77,59 @@ Do these in this order, on days before the cut-over.
   - Nothing live changes on merge: Coolify installs proxy content only when the owner pastes it in 2.4. The importer is not scheduled or called by runtime. Roll back repository changes by reverting the follow-up PR; do not touch production.
 
 - [x] **1.9 Land the stack with Better Auth off — done.**
-  - Who: Owner + Agent. #591 merged as **`49c2db79`**; current main includes the auth stack and tracking repairs. Production remains on Supabase with Better Auth off. Do not re-merge individual auth PRs or the old integration branch. #597 remains a separate account-deletion follow-up.
-  - This is not real Better Auth sign-in/MCP acceptance; 2.7 and 3.3 remain mandatory. Keep `/mcp` routing installation at 3.1; repository search configs already include it and are owner-pasted only.
+  - Who: Owner + Agent. #591 merged as **`49c2db79`**; current main includes the auth stack and tracking repairs. The stack originally landed with Better Auth off; production now uses Better Auth after the accepted Phase 2 cut-over. Do not re-merge individual auth PRs or the old integration branch. #597 remains a separate account-deletion follow-up.
+  - The stack merge alone did not prove real sign-ins: 2.7 has now passed; 3.3 MCP-client acceptance remains mandatory. Keep `/mcp` routing installation at 3.1; repository search configs already include it and are owner-pasted only.
 
 ## Phase 2: cut-over day
 
-Needs the owner's go. Write down the start time and the operator. All steps are Owner and Agent unless noted.
+Completed on the owner's go on **2026-10-17 UTC**: owner operated deployment/provider settings and real acceptance; Codex executed the guarded backup/import/audit. Freeze began **00:41 UTC**. All seven steps below are ticked as completed/owner-accepted; 2.6 records activation of the retention policy, whose 30-day period remains ongoing. [Receipts, timeline and verification limits](cutover-acceptance-20261017.md).
 
-- [ ] **2.1 Final backups and a named snapshot.**
+- [x] **2.1 Final backups and a named snapshot.**
+  - Completed receipt: snapshot `goodwatch-db-backup-v2.pre_auth_552_20261017t003025z` SUCCESS, serialized with the backup lock and independently checked. Encrypted Supabase backup and frozen export `cutover_552_20261017T004626Z` created; restored auth.users/auth.identities exactly matched all frozen rows. Protected balance YAML/current application .env rollback copies retained. Full managed Supabase platform/schema/extension restoration was not tested.
   - Ticket: [#552](https://github.com/alp82/goodwatch-monorepo/issues/552), [#551](https://github.com/alp82/goodwatch-monorepo/issues/551).
   - Do: create a named CrateDB snapshot (`pre_auth_552_<timestamp>`, serialized with `/var/lock/backup_crate.lock` on crate-01). Take the approved encrypted Supabase backup. Save the current Traefik `goodwatch-balance.yaml` and the current `.env` for rollback.
   - Verify: snapshot state is `SUCCESS`. The Supabase backup restores. The saved files are readable.
   - Roll back: not applicable. These are the rollback material.
 
-- [ ] **2.2 Freeze Supabase writes.**
+- [x] **2.2 Freeze Supabase writes.**
+  - Completed receipt: authoritative freeze **00:41 UTC**, restored/owner-verified at 00:42:50 after deployments had removed the variable. Both serving containers were healthy with maintenance on and Better Auth off. Source counts at 00:43:11.528 and 00:46:20.979 were 724 users / 727 identities, 189.451 seconds apart, matching the owner's dashboard 724. Sign-ups remained off; no trigger/fence.
   - Ticket: [#551](https://github.com/alp82/goodwatch-monorepo/issues/551), [#552](https://github.com/alp82/goodwatch-monorepo/issues/552) (owner decision Q47). Notice shipped with `AUTH_MAINTENANCE` (see `docs/implementation/auth-pages/README.md`).
   - Do: Owner only, in this order. (1) In Coolify, open the webapp application, **Environment Variables**, set `AUTH_MAINTENANCE=on` for both page hosts, save and redeploy. (2) When both hosts are healthy, open `/sign-in` and confirm the notice "We're moving sign-in to a new home" shows. (3) In the Supabase dashboard, open the **Authentication** settings for sign-in providers and turn off **Allow new users to sign up**. (4) Note the user count in **Authentication**, **Users**. Then take the final export. No database trigger (Q47). The webapp is the only Supabase Auth client, and the import reads only users and identities, which session refreshes don't touch. Members who are signed in keep browsing; session refresh and sign-out keep working.
   - Verify: `/sign-in`, `/sign-up`, `/forgot-password`, `/reset-password`, `/verify-email` and **Settings**, **Account and sign-in** show the notice and no form. `curl -s https://goodwatch.app/api/auth-maintenance` prints `{"maintenance":true}`. After a few minutes the Supabase user count is stable, and the count still matches after the export.
   - Roll back: turn **Allow new users to sign up** back on, set `AUTH_MAINTENANCE` to `off` (or remove it) in Coolify and redeploy. Nothing else was changed.
 
-- [ ] **2.3 Run the real import.**
+- [x] **2.3 Run the real import.**
+  - Completed receipt: [production import evidence on #551](https://github.com/alp82/goodwatch-monorepo/issues/551#issuecomment-6227654238). Dry/apply/exact-rerun/audit all exited 0; zero issues. Final baseline: 724 users, 385 credential + 342 Google accounts (727 total), 724 email claims. Rerun created zero users/accounts; audit 13 jobs / 1,451 rows, zero unsafe/skipped/unadmitted/inconsistent. Public maintenance=true rechecked immediately before apply at 00:49:16.691. No manual row repair.
   - Ticket: [#551](https://github.com/alp82/goodwatch-monorepo/issues/551).
   - Do: follow the guarded production route and exact commands below. Use the final frozen local source, the existing dedicated target credentials and the same backed-up root/key ring as runtime. All auth/member writers and maintenance stay stopped. The profile requires dry run, then apply, then exact rerun; it never creates tables or starts services.
   - Verify: counts match the source (users, credential and Google accounts, email claims). The rerun creates zero rows. `npm run auth:maintenance -- audit` exits 0. Keep the report without identifiers on #551.
   - Roll back: on any discrepancy, stop and leave production unchanged. Restore the target from the 2.1 snapshot. Do not overwrite rows by hand. An orphan email claim after an unknown outcome is recovered through the adapter, not deleted by hand.
 
-- [ ] **2.4 Install the cookie-aware Traefik rule.**
+- [x] **2.4 Install the cookie-aware Traefik rule.**
+  - Owner-accepted receipt: proxy verified **00:36 UTC**; `gw_instance` was member-only and the www 301 remained intact. Repository www routers are preserved in `5250bfae7f536c0dfbd1fe6bda17be5c11bb3b00`. The separate `./bench.sh smoke` command was not run by this thread and no execution receipt was supplied; owner real-member acceptance is recorded in 2.7.
   - Ticket: [#552](https://github.com/alp82/goodwatch-monorepo/issues/552).
   - Do: follow "Owner steps" in `docs/webapp-deploys.md`: Coolify, Servers, abio, Proxy, Dynamic Configurations. Paste the file from 1.8.
   - Verify: `grep HeadersRegexp` on abio shows both cookie names. `curl -sI` without a cookie prints no `gw_instance`. With each auth cookie it prints one. Run `./bench.sh smoke` in `goodwatch-benchmark`.
   - Roll back: put the saved content back and save. If the site answers 404 or 503 and the old content is missing, delete the file so Coolify's own routers serve the site from abio alone.
 
-- [ ] **2.5 Set the privacy date and turn the flags on.**
+- [x] **2.5 Set the privacy date and turn the flags on.**
+  - Owner-accepted receipt: flags deployed **01:09 UTC**; BETTER_AUTH_ENABLED was initially saved as `on`, then corrected to the required `true` at **01:14 UTC**. Privacy date is October 17, 2026 (`ef80218b`). Production is live and the old-session banner passed owner acceptance. Google initially failed `invalid_client` with an incorrect 37-character client secret; the owner replaced it around **01:21 UTC**, then real Google sign-in passed without a duplicate user (count still 724 at that check). No secret value is recorded.
   - Ticket: [#552 comment](https://github.com/alp82/goodwatch-monorepo/issues/552#issuecomment-6183777144).
   - Do: set "Last updated" in `goodwatch-webapp/app/routes/privacy.tsx` to today and deploy. Set `BETTER_AUTH_ENABLED=true` with all the 1.5 secrets present, and `REC_CONNECTOR=on`. In the same Coolify save, turn the maintenance notice off: set `AUTH_MAINTENANCE=off` (or remove it). Flags are read at start, so restart or redeploy. Leave the `REC_MCP_*` flags unset (unset means on for everyone). The "please sign in again" banner shows for browsers that still hold the old cookie; the account-pages drive script checks this with a fake `sb-` cookie.
   - Verify: `/api/auth/*` answers. `curl -s https://goodwatch.app/api/auth-maintenance` prints `{"maintenance":false}`, and `/sign-in` shows its form. A browser with an old `sb-` cookie sees the banner once. `/privacy` shows the new date and sections. `/connect` answers 200.
   - Roll back: set `BETTER_AUTH_ENABLED=false` and redeploy. The notice can come back with `AUTH_MAINTENANCE=on`, which also guards the first minutes after a flag flip. See "Rollback after members have signed in" below.
 
-- [ ] **2.6 Keep Supabase sign-ups off.**
+- [x] **2.6 Keep Supabase sign-ups off.**
+  - Retention activated: owner keeps Supabase sign-ups OFF, without a trigger/fence, through the 30-day rollback period. [#683](https://github.com/alp82/goodwatch-monorepo/issues/683) schedules final encrypted backup, shutdown and cleanup for **2026-11-16**. The period and shutdown are future work, not completed today.
   - Ticket: [#552](https://github.com/alp82/goodwatch-monorepo/issues/552), [#536](https://github.com/alp82/goodwatch-monorepo/issues/536) (owner decision Q48).
   - Do: leave **Allow new users to sign up** off in the Supabase dashboard for 30 days. No trigger and no fence (Q48). After the cut-over nothing calls Supabase Auth, so nothing writes to it. Keep legacy entry points disabled. Create the dated follow-up in 4.2 now.
   - Verify: the webapp makes no request to Supabase Auth with `BETTER_AUTH_ENABLED=true` (the Supabase code path stays behind the flag and is not loaded). The Supabase user count stays at the exported number.
   - Roll back: set `BETTER_AUTH_ENABLED=false` and redeploy, then turn **Allow new users to sign up** back on if members should create accounts there again. First accept the post-cut-over divergence described below; never merge users by email.
 
-- [ ] **2.7 Smoke test as real members.**
+- [x] **2.7 Smoke test as real members.**
+  - Owner-accepted receipt: owner explicitly confirmed the full 2.7 matrix passed: existing data visible, old-session banner, password sign-in, real Google sign-in without duplication, sign-up and mail from hello@goodwatch.app, forgot/reset password, change password and sign out. This is owner-performed real acceptance, distinct from the earlier mapping/fake-provider checks. #551's real-sign-in gate is satisfied; Phase 3 client acceptance is separate.
   - Ticket: [#552](https://github.com/alp82/goodwatch-monorepo/issues/552).
-  - Do: with test accounts, run: a password sign-in of an imported member; Google sign-in (the real redirect, never tried before); sign-up with the confirmation mail; forgot and reset password; sign out; change password in Settings; a member whose email was never confirmed is refused. A member's existing Wishlist and ratings show under the same UUID.
+  - Do: with test accounts, run: a password sign-in of an imported member; Google sign-in (the real redirect, now owner-accepted); sign-up with the confirmation mail; forgot and reset password; sign out; change password in Settings; a member whose email was never confirmed is refused. A member's existing Wishlist and ratings show under the same UUID.
   - Verify: each case passes. The mail arrives from `hello@goodwatch.app`. Sessions last 90 days and are renewed at most once a day (`gw.session_token`, cookie cache off).
   - Roll back: if sign-in fails for imported members, set the flag off at once and go to the rollback section.
 
@@ -165,6 +172,7 @@ Do this after Phase 2 is stable. Owner's go again.
 
 - [ ] **4.2 Dated follow-up: shut Supabase down 30 days after the cut-over.**
   - Who: Owner. Ticket: [#552](https://github.com/alp82/goodwatch-monorepo/issues/552), [#536](https://github.com/alp82/goodwatch-monorepo/issues/536).
+  - Scheduled: [#683 — shut Supabase down on 2026-11-16](https://github.com/alp82/goodwatch-monorepo/issues/683), created on cut-over day. Keep sign-ups off meanwhile; this checkbox remains open for actual shutdown.
   - Do: create the dated ticket or reminder on cut-over day: cut-over date plus 30 days. On that day, take a last Supabase backup, then shut Supabase Auth down.
   - Verify: no production path reads Supabase Auth. Members still sign in.
   - Roll back: after shutdown, only the backup remains. Keep it under the data-retention policy.
@@ -228,7 +236,7 @@ Use the [merged #551 production runbook](https://github.com/alp82/goodwatch-mono
 for source-copy creation, the `frozen-production-552` marker, SELECT-only role,
 private environment-file variables, storage grants, counts and failure recovery.
 Do not run these until the owner selects the window and steps 1.4–1.6 and 2.1–2.2
-are complete. Nothing in this task executed them against production.
+are complete. These commands were executed for the accepted 2026-10-17 cut-over (2.3); retain them as the runbook, not an instruction to rerun after members have signed in.
 
 In a separate terminal, after independently verifying the remote cluster:
 
