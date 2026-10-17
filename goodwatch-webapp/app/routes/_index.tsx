@@ -15,6 +15,7 @@ import { useScroll } from "~/ui/prototype-landing/v-scroll"
 import { useTaps } from "~/ui/prototype-landing/v-taps"
 import { useLens } from "~/ui/prototype-landing/v-lens"
 import { useAlerts } from "~/ui/prototype-landing/v-alerts"
+import { useFilm } from "~/ui/prototype-landing/v-film"
 import { type Landing, type VariantProps, useBand, useChannel, useCurrent, useTour, useWelcome } from "~/ui/prototype-landing/variants"
 import type { tvHomeLoader } from "~/server/living-room/tv-loader.server"
 import livingRoomCss from "~/ui/living-room/living-room.css?url"
@@ -113,6 +114,7 @@ export const meta: MetaFunction = () => [
 
 // Round 1 (channel, band, welcome, tour) was rejected: a feature tour. Round 2 shows the value instead.
 const VARIANTS = {
+	film: "I · Explainer film, then three taps",
 	live: "Today's page",
 	scroll: "E · Endless scroll, then one pick",
 	taps: "F · Three taps to your taste",
@@ -130,6 +132,7 @@ const USE: Record<string, (p: VariantProps) => Landing> = {
 	taps: useTaps,
 	lens: useLens,
 	alerts: useAlerts,
+	film: useFilm,
 }
 
 function Host({ use, data }: { use: (p: VariantProps) => Landing; data: ReturnType<typeof useLoaderData<typeof tvHomeLoader>> }) {

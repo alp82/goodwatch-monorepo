@@ -1,0 +1,29 @@
+/* PROTOTYPE - throwaway. Variant I's frame: the TV screen holds the taps, the film over them, and the boot. */
+.lpf {
+	position: absolute;
+	inset: 0;
+	z-index: 25;
+	container-type: size;
+	background: #05060a;
+	color: #fff;
+	font-family: "Gabarito", ui-sans-serif, system-ui, sans-serif;
+}
+.lpf-skip {
+	position: absolute;
+	right: 3cqw;
+	top: 4cqh;
+	z-index: 28;
+	border-radius: 999px;
+	padding: 0.7cqw 1.8cqw;
+	background: rgba(255, 255, 255, 0.16);
+	font-weight: 700;
+	font-size: max(12px, 1.6cqw);
+	color: #fff;
+}
+/* The room's TV pointer belongs to the TV's own items; over the film and the taps the system cursor points. */
+.tvr:has(.lpf) .tvp {
+	display: none;
+}
+.tvr:has(.lpf) [data-tvr-part="tv"] {
+	cursor: auto;
+}

@@ -1,0 +1,471 @@
+/* PROTOTYPE - throwaway. The explainer film (film-scenes.tsx). Every delay is `--s` (the film's start after the
+   first paint) plus the element's own `--at`. Transform and opacity only. */
+.lpfs {
+	position: absolute;
+	inset: 0;
+	z-index: 26;
+	overflow: hidden;
+	container-type: size;
+	background: #05060a;
+	color: #fff;
+	font-family: "Gabarito", ui-sans-serif, system-ui, sans-serif;
+	pointer-events: none;
+	animation: lpfs-out 0.7s ease-in calc(var(--s) + var(--end)) both;
+}
+.lpfs * {
+	box-sizing: border-box;
+}
+
+/* A scene shows from --on to --off. */
+.lpfs-scene {
+	position: absolute;
+	inset: 0;
+	opacity: 0;
+	visibility: hidden;
+	/* One animation: shown only while it runs, so nothing else competes for the scene's opacity. */
+	animation: lpfs-window calc(var(--off) - var(--on)) steps(1) calc(var(--s) + var(--on)) none;
+}
+.lpfs-scroll {
+	opacity: 1;
+	visibility: visible;
+	animation: lpfs-off 1ms steps(1) calc(var(--s) + var(--off)) forwards;
+}
+
+/* ---------- Type */
+.lpfs-big {
+	margin: 0;
+	font-weight: 800;
+	line-height: 0.95;
+	letter-spacing: -0.035em;
+	font-size: 11cqw;
+}
+.lpfs-center {
+	position: absolute;
+	left: 6cqw;
+	right: 6cqw;
+	top: 50%;
+	transform: translateY(-50%);
+	text-align: center;
+}
+.lpfs-top {
+	position: absolute;
+	left: 6cqw;
+	top: 9cqh;
+}
+.lpfs-amber {
+	color: #fbbf24;
+}
+.lpfs-mid {
+	font-weight: 800;
+	font-size: 5.4cqw;
+	line-height: 1;
+	letter-spacing: -0.02em;
+}
+.lpfs-small {
+	font-size: max(12px, 2.2cqw);
+	color: rgba(255, 255, 255, 0.82);
+	line-height: 1.2;
+}
+.lpfs-kicker {
+	margin: 0 0 1.5cqh;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.18em;
+	font-size: max(11px, 2cqw);
+	color: rgba(255, 255, 255, 0.8);
+	animation: lpfs-rise 0.5s cubic-bezier(0.16, 1, 0.3, 1) calc(var(--s) + var(--at)) both;
+}
+/* A word punches up from below. */
+.lpfs-word {
+	display: inline-block;
+	animation: lpfs-punch 0.55s cubic-bezier(0.16, 1, 0.3, 1) calc(var(--s) + var(--at)) both;
+}
+@keyframes lpfs-punch {
+	from {
+		opacity: 0;
+		transform: translateY(45%) scale(0.85);
+	}
+}
+@keyframes lpfs-rise {
+	from {
+		opacity: 0;
+		transform: translateY(40%);
+	}
+}
+
+/* ---------- 1. Endless scrolling */
+.lpfs-wall {
+	position: absolute;
+	left: -10cqw;
+	right: -10cqw;
+	top: -12cqh;
+	bottom: -12cqh;
+	display: flex;
+	flex-direction: column;
+	gap: 1.6cqw;
+	transform: rotate(-7deg);
+	animation: lpfs-sink 3.25s cubic-bezier(0.5, 0, 0.75, 0) var(--s) both;
+}
+.lpfs-strip {
+	display: flex;
+	gap: 1.4cqw;
+	width: max-content;
+	animation: lpfs-drift linear infinite both;
+}
+.lpfs-back {
+	animation-direction: reverse;
+}
+.lpfs-strip img {
+	width: 13cqw;
+	min-width: 48px;
+	aspect-ratio: 2 / 3;
+	border-radius: 0.8cqw;
+	object-fit: cover;
+	background: #1c2433;
+}
+.lpfs-dim {
+	position: absolute;
+	inset: 0;
+	background: radial-gradient(70% 70% at 50% 50%, rgba(5, 6, 10, 0.82) 0, rgba(5, 6, 10, 0.55) 70%, rgba(5, 6, 10, 0.35) 100%);
+}
+.lpfs-counter {
+	position: absolute;
+	left: 50%;
+	bottom: 9cqh;
+	transform: translateX(-50%);
+	white-space: nowrap;
+	padding: max(6px, 1cqw) max(12px, 2.4cqw);
+	border-radius: 999px;
+	background: rgba(0, 0, 0, 0.8);
+	font-weight: 700;
+	font-size: max(12px, 2.3cqw);
+	animation: lpfs-rise 0.45s cubic-bezier(0.16, 1, 0.3, 1) calc(var(--s) + var(--at)) both;
+}
+.lpfs-count {
+	display: inline-block;
+	height: 1.2em;
+	overflow: hidden;
+	vertical-align: bottom;
+	color: #fbbf24;
+	font-variant-numeric: tabular-nums;
+}
+.lpfs-count-col {
+	display: flex;
+	flex-direction: column;
+	line-height: 1.2em;
+	animation: lpfs-count 2.2s steps(6, end) calc(var(--s) + var(--at)) both;
+}
+@keyframes lpfs-drift {
+	to {
+		transform: translateX(-50%);
+	}
+}
+@keyframes lpfs-count {
+	to {
+		transform: translateY(-7.2em);
+	}
+}
+/* The wall drifts closer as the minutes pass, faster at the end. */
+@keyframes lpfs-sink {
+	from {
+		transform: rotate(-7deg) scale(1);
+	}
+	to {
+		transform: rotate(-7deg) scale(1.25);
+	}
+}
+
+/* ---------- 2. One score */
+.lpfs-logos {
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 52%;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	gap: 8cqw;
+	transform: translateY(-50%);
+}
+.lpfs-src {
+	height: 22cqh;
+	width: auto;
+	object-fit: contain;
+	animation:
+		lpfs-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) calc(var(--s) + var(--at)) both,
+		lpfs-merge 0.4s cubic-bezier(0.5, 0, 0.75, 0) calc(var(--s) + 4600ms) forwards;
+}
+.lpfs-src-1 {
+	height: 17cqh;
+	--mx: 24cqw;
+}
+.lpfs-src-2 {
+	--mx: 0cqw;
+}
+.lpfs-src-3 {
+	--mx: -24cqw;
+}
+@keyframes lpfs-pop {
+	from {
+		opacity: 0;
+		transform: scale(0.3) rotate(-8deg);
+	}
+}
+@keyframes lpfs-merge {
+	to {
+		opacity: 0;
+		transform: translateX(var(--mx)) scale(0.2);
+	}
+}
+.lpfs-ringrow {
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 54%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 3.5cqw;
+	transform: translateY(-50%);
+	animation: lpfs-ringin 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) calc(var(--s) + var(--at)) both;
+}
+@keyframes lpfs-ringin {
+	from {
+		opacity: 0;
+		transform: translateY(-50%) scale(0.4);
+	}
+}
+.lpfs-poster {
+	width: 17cqw;
+	aspect-ratio: 2 / 3;
+	border-radius: 1cqw;
+	object-fit: cover;
+	box-shadow: 0 2cqw 5cqw rgba(0, 0, 0, 0.6);
+}
+.lpfs-ring {
+	flex: none;
+	transform: scale(1.35);
+	margin: 0 3cqw;
+}
+.lpfs-ringtext {
+	max-width: 34cqw;
+}
+.lpfs-ringtext .lpfs-small {
+	margin-top: 1cqh;
+}
+
+/* ---------- 3. How it feels */
+.lpfs-art {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	animation: lpfs-kenburns 3.4s ease-out calc(var(--s) + var(--at)) both;
+}
+@keyframes lpfs-kenburns {
+	from {
+		transform: scale(1.12);
+	}
+	to {
+		transform: scale(1);
+	}
+}
+.lpfs-shade {
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(90deg, rgba(5, 6, 10, 0.92) 0, rgba(5, 6, 10, 0.6) 55%, rgba(5, 6, 10, 0.2) 100%);
+}
+.lpfs-shade-even {
+	background: rgba(5, 6, 10, 0.55);
+}
+.lpfs-feel-text {
+	position: absolute;
+	left: 6cqw;
+	right: 6cqw;
+	top: 50%;
+	transform: translateY(-50%);
+}
+.lpfs-slam {
+	font-size: 10cqw;
+	text-transform: capitalize;
+	animation: lpfs-slam 0.5s cubic-bezier(0.16, 1, 0.3, 1) calc(var(--s) + var(--at)) both;
+}
+@keyframes lpfs-slam {
+	from {
+		opacity: 0;
+		transform: translateX(-12%) scale(1.25);
+	}
+}
+.lpfs-caption {
+	margin-top: 2cqh;
+	animation: lpfs-rise 0.5s ease-out calc(var(--s) + var(--at)) both;
+}
+
+/* ---------- 4. Every service */
+.lpfs-grid {
+	position: absolute;
+	left: 6cqw;
+	right: 6cqw;
+	top: 38cqh;
+	display: flex;
+	flex-wrap: nowrap;
+	justify-content: center;
+	gap: 2cqw;
+}
+.lpfs-tile {
+	width: 14cqw;
+	height: 14cqw;
+	max-height: 22cqh;
+	max-width: 22cqh;
+	border-radius: 2.6cqw;
+	object-fit: cover;
+	background: #10131c;
+	box-shadow: 0 1cqw 3cqw rgba(0, 0, 0, 0.5);
+	animation: lpfs-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) calc(var(--s) + var(--at)) both;
+}
+.lpfs-unlit {
+	animation:
+		lpfs-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) calc(var(--s) + var(--at)) both,
+		lpfs-unlit 0.4s ease-out calc(var(--s) + var(--lit)) forwards;
+}
+.lpfs-lit {
+	position: relative;
+	z-index: 1;
+	animation:
+		lpfs-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) calc(var(--s) + var(--at)) both,
+		lpfs-lit 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) calc(var(--s) + var(--lit)) forwards;
+}
+@keyframes lpfs-unlit {
+	to {
+		opacity: 0.22;
+		transform: scale(0.88);
+	}
+}
+@keyframes lpfs-lit {
+	to {
+		transform: scale(1.28);
+	}
+}
+.lpfs-lit {
+	outline: 0.45cqw solid #fbbf24;
+	outline-offset: 0.5cqw;
+}
+.lpfs-onit {
+	position: absolute;
+	left: 6cqw;
+	right: 6cqw;
+	bottom: 9cqh;
+	text-align: center;
+	font-size: max(13px, 2.8cqw);
+	color: #fff;
+	animation: lpfs-rise 0.5s cubic-bezier(0.16, 1, 0.3, 1) calc(var(--s) + var(--at)) both;
+}
+.lpfs-onit b {
+	color: #fbbf24;
+}
+
+/* ---------- 5. Made for your taste */
+.lpfs-map {
+	position: absolute;
+	inset: 0;
+	opacity: 0.55;
+	animation: lpfs-mapin 2.9s cubic-bezier(0.16, 1, 0.3, 1) calc(var(--s) + var(--at)) both;
+}
+@keyframes lpfs-mapin {
+	from {
+		transform: scale(1.6);
+	}
+	to {
+		transform: scale(1);
+	}
+}
+
+/* ---------- The wipe: an amber panel, slanted, sweeps across and covers the cut at its middle. */
+.lpfs-wipe {
+	position: absolute;
+	top: -10%;
+	bottom: -10%;
+	left: -20%;
+	width: 140%;
+	z-index: 5;
+	background: #fbbf24;
+	transform: translateX(-110%) skewX(-14deg);
+	animation: lpfs-wipe 0.55s cubic-bezier(0.65, 0, 0.35, 1) calc(var(--s) + var(--at)) both;
+}
+@keyframes lpfs-wipe {
+	0% {
+		transform: translateX(-110%) skewX(-14deg);
+	}
+	45%,
+	55% {
+		transform: translateX(0) skewX(-14deg);
+	}
+	100% {
+		transform: translateX(110%) skewX(-14deg);
+	}
+}
+
+@keyframes lpfs-window {
+	0%,
+	100% {
+		opacity: 1;
+		visibility: visible;
+	}
+}
+@keyframes lpfs-off {
+	to {
+		opacity: 0;
+		visibility: hidden;
+	}
+}
+@keyframes lpfs-out {
+	to {
+		opacity: 0;
+		visibility: hidden;
+	}
+}
+
+/* ---------- A phone's TV: fewer lines, larger type relative to the screen. */
+@container (max-width: 500px) {
+	.lpfs-big {
+		font-size: 13cqw;
+	}
+	.lpfs-slam {
+		font-size: 12cqw;
+	}
+	.lpfs-ringtext .lpfs-small,
+	.lpfs-caption,
+	.lpfs-counter {
+		display: none;
+	}
+	.lpfs-ring {
+		transform: scale(0.55);
+		margin: -34px;
+	}
+	.lpfs-src {
+		height: 15cqh;
+	}
+	.lpfs-mid {
+		font-size: 7cqw;
+	}
+	.lpfs-onit {
+		bottom: 5cqh;
+	}
+	.lpfs-grid {
+		top: 36cqh;
+	}
+	.lpfs-tile {
+		width: 18cqw;
+		height: 18cqw;
+	}
+	.lpfs-grid .lpfs-tile:nth-child(n + 5) {
+		display: none;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.lpfs {
+		display: none;
+	}
+}
