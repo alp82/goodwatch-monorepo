@@ -440,12 +440,12 @@ export default function DetailsFingerprint({
 				<div {...sectionProps}>
 					<Variant t={t} media={media} />
 				</div>
-				<PrototypeSwitcher variants={FP_VARIANT_NAMES} />
+				<PrototypeSwitcher variants={FP_VARIANT_NAMES} position="bottom-24 md:bottom-6 left-1/2 -translate-x-1/2" />
 			</section>
 		)
 	return (
 		<section className="relative mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-			{variant && <PrototypeSwitcher variants={FP_VARIANT_NAMES} />}
+			{variant && <PrototypeSwitcher variants={FP_VARIANT_NAMES} position="bottom-24 md:bottom-6 left-1/2 -translate-x-1/2" />}
 			<div {...sectionProps}>
 				<Head t={t} />
 				<Switcher t={t} />
