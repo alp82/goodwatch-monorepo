@@ -1,5 +1,7 @@
 // The start page is the living room with its TV (docs/implementation/tv-screen-revamp): the room, the TV and the
-// Remote, and the section below the room with the start titles and the hubs (BelowRoom.tsx).
+// Remote, and the section below the room with the start titles and the hubs (BelowRoom.tsx). The TV opens with its
+// boot screen, and plays a guest the intro film, with "How GoodWatch works" below the room
+// (docs/implementation/home-intro.md, living-room/intro/HomeIntro.tsx).
 //
 // The TV's screen lives in the search params (`?tv=discover&mood=funny`); changing only those never reruns the
 // loader. Asking again for the address the page is on does: that is the page itself after the member changed
@@ -9,6 +11,10 @@
 import type { LinksFunction, MetaFunction } from "@remix-run/node"
 import { type ShouldRevalidateFunction, useLoaderData } from "@remix-run/react"
 import type { tvHomeLoader } from "~/server/living-room/tv-loader.server"
+import howGoodWatchWorksCss from "~/ui/living-room/how-goodwatch-works.css?url"
+import { useHomeIntro } from "~/ui/living-room/intro/HomeIntro"
+import bootCss from "~/ui/living-room/intro/boot.css?url"
+import { BOOT_SEEN_SCRIPT } from "~/ui/living-room/intro/progress"
 import livingRoomCss from "~/ui/living-room/living-room.css?url"
 import { TvLivingRoom } from "~/ui/living-room/tv/TvLivingRoom"
 import { isTvOnlyChange } from "~/ui/living-room/tv/tv-machine"
@@ -33,6 +39,8 @@ export const shouldRevalidate: ShouldRevalidateFunction = ({
 
 export const links: LinksFunction = () => [
 	{ rel: "stylesheet", href: assetUrl(livingRoomCss) },
+	{ rel: "stylesheet", href: assetUrl(bootCss) },
+	{ rel: "stylesheet", href: assetUrl(howGoodWatchWorksCss) },
 	{ rel: "preconnect", href: "https://image.tmdb.org" },
 ]
 
@@ -91,6 +99,20 @@ export const meta: MetaFunction = () => [
 export default function Index() {
 	const data = useLoaderData<typeof tvHomeLoader>()
 	const { locale } = useLocale()
-	// The TV keeps previously visited titles in local state as well as the query cache.
-	return <TvLivingRoom key={locale.language} data={data} />
+	const intro = useHomeIntro({ member: data.member })
+	return (
+		<>
+			{/* Before the room paints: a tab that has seen the intro hides the boot screen (intro/progress.ts). */}
+			{/* biome-ignore lint/security/noDangerouslySetInnerHtml: a fixed script of our own */}
+			<script dangerouslySetInnerHTML={{ __html: BOOT_SEEN_SCRIPT }} />
+			{/* The TV keeps previously visited titles in local state as well as the query cache. */}
+			<TvLivingRoom
+				key={locale.language}
+				data={data}
+				screenOverlay={intro.screen}
+				belowIntro={intro.below}
+				homeHeadingAs={intro.homeHeadingAs}
+			/>
+		</>
+	)
 }
