@@ -1441,7 +1441,8 @@
     "observed_requests_per_second": [
       13.3462,
       12.9083,
-      12.5577
+      12.5577,
+      14.1657
     ],
     "regular_primary_requests": 144400,
     "regular_allowing_5000_title_checks": 149400,
@@ -1452,13 +1453,20 @@
       "Earlier reader date partitions may omit undated titles; its absence evidence is not trusted for exact days.",
       "Crate baseline title count is a planning proxy, not measured TMDB distinct titles.",
       "Production apply and complete global baseline runtime were not tested."
-    ]
+    ],
+    "regular_runtime_hours_at_observed_throughput": [
+      2.9,
+      3.3
+    ],
+    "initial_baseline_with_15_percent_discover_reserve": 304433
   },
   "verification": {
     "new_tests_with_local_crate": {
-      "total": 34,
-      "passed": 30,
-      "opt_in_previews_skipped": 4
+      "total": 45,
+      "passed": 41,
+      "opt_in_previews_skipped": 4,
+      "python_version": "3.12.11",
+      "runtime_dependencies": "Fresh venv installed from regenerated script lock; mongomock and PyYAML added solely for tests."
     },
     "inert_windmill_previews": {
       "remote": 4,
@@ -1471,11 +1479,796 @@
       "skipped": 1
     },
     "full_suite_with_local_crate": {
-      "total": 1567,
-      "passed": 1520,
+      "total": 1578,
+      "passed": 1531,
       "skipped": 46,
       "pre_existing_failures": 1,
       "failure": "test_deleted_titles.DeleteFromCrateTests.test_user_tables_are_untouched_and_all_derived_tables_are_covered (social_title_link, social_link_report, social_relevance)"
+    },
+    "review_tdd": "Both S1 directions failed before the shared-writer fix. Busy-title retry, baseline closure, changed paging, overlapping bins, run/list lease collision, auth/outage abort, and queued-auth checks were reproduced red before their respective fixes; exhaustion replay was then verified."
+  },
+  "review_eligible_baseline_recount": {
+    "production_data_writes": 0,
+    "reads": [
+      {
+        "observed_at": 1792200477.8255596,
+        "production_data_writes": 0,
+        "queries": [
+          {
+            "label": "eligible",
+            "sql": "SELECT media_type, COUNT(DISTINCT media_tmdb_id) AS unique_titles FROM streaming_availability WHERE streaming_service_id = ANY(?) AND streaming_type IN ('flatrate','free','ads') GROUP BY media_type",
+            "params": [
+              [
+                8,
+                1796,
+                9,
+                119,
+                2100,
+                337,
+                1899,
+                350,
+                15,
+                386,
+                387,
+                531,
+                2303,
+                283,
+                11
+              ]
+            ],
+            "rows": [
+              {
+                "media_type": "movie",
+                "unique_titles": 108332
+              },
+              {
+                "media_type": "show",
+                "unique_titles": 30041
+              }
+            ],
+            "seconds": 0.869
+          },
+          {
+            "label": "apple_types",
+            "sql": "SELECT media_type, streaming_type, COUNT(DISTINCT media_tmdb_id) AS unique_titles FROM streaming_availability WHERE streaming_service_id = 350 GROUP BY media_type, streaming_type",
+            "params": [],
+            "rows": [
+              {
+                "media_type": "movie",
+                "streaming_type": "flatrate",
+                "unique_titles": 160
+              },
+              {
+                "media_type": "movie",
+                "streaming_type": "buy",
+                "unique_titles": 67859
+              },
+              {
+                "media_type": "movie",
+                "streaming_type": "rent",
+                "unique_titles": 66266
+              },
+              {
+                "media_type": "show",
+                "streaming_type": "flatrate",
+                "unique_titles": 235
+              },
+              {
+                "media_type": "show",
+                "streaming_type": "free",
+                "unique_titles": 28
+              },
+              {
+                "media_type": "show",
+                "streaming_type": "buy",
+                "unique_titles": 7215
+              }
+            ],
+            "seconds": 0.616
+          }
+        ]
+      },
+      {
+        "observed_at": 1792200502.3586156,
+        "production_data_writes": 0,
+        "queries": [
+          {
+            "label": "eligible_by_type",
+            "sql": "SELECT media_type, streaming_type, COUNT(DISTINCT media_tmdb_id) AS unique_titles, COUNT(*) AS offers FROM streaming_availability WHERE streaming_service_id = ANY(?) AND streaming_type IN ('flatrate','free','ads') GROUP BY media_type, streaming_type",
+            "params": [
+              [
+                8,
+                1796,
+                9,
+                119,
+                2100,
+                337,
+                1899,
+                350,
+                15,
+                386,
+                387,
+                531,
+                2303,
+                283,
+                11
+              ]
+            ],
+            "rows": [
+              {
+                "media_type": "movie",
+                "streaming_type": "flatrate",
+                "unique_titles": 108243,
+                "offers": 2243232
+              },
+              {
+                "media_type": "movie",
+                "streaming_type": "ads",
+                "unique_titles": 1834,
+                "offers": 2914
+              },
+              {
+                "media_type": "movie",
+                "streaming_type": "free",
+                "unique_titles": 152,
+                "offers": 191
+              },
+              {
+                "media_type": "show",
+                "streaming_type": "flatrate",
+                "unique_titles": 28703,
+                "offers": 1083037
+              },
+              {
+                "media_type": "show",
+                "streaming_type": "ads",
+                "unique_titles": 485,
+                "offers": 15497
+              },
+              {
+                "media_type": "show",
+                "streaming_type": "free",
+                "unique_titles": 4446,
+                "offers": 15787
+              }
+            ],
+            "seconds": 1.231
+          },
+          {
+            "label": "eligible_grouped_ids",
+            "sql": "SELECT media_type, COUNT(*) AS unique_titles FROM (SELECT media_type, media_tmdb_id FROM streaming_availability WHERE streaming_service_id = ANY(?) AND streaming_type IN ('flatrate','free','ads') GROUP BY media_type, media_tmdb_id) AS titles GROUP BY media_type",
+            "params": [
+              [
+                8,
+                1796,
+                9,
+                119,
+                2100,
+                337,
+                1899,
+                350,
+                15,
+                386,
+                387,
+                531,
+                2303,
+                283,
+                11
+              ]
+            ],
+            "rows": [
+              {
+                "media_type": "movie",
+                "unique_titles": 108332
+              },
+              {
+                "media_type": "show",
+                "unique_titles": 30041
+              }
+            ],
+            "seconds": 1.154
+          }
+        ]
+      },
+      {
+        "observed_at": 1792200560.482472,
+        "production_data_writes": 0,
+        "queries": [
+          {
+            "label": "eligible_by_service",
+            "sql": "SELECT streaming_service_id, media_type, COUNT(DISTINCT media_tmdb_id) AS unique_titles FROM streaming_availability WHERE streaming_service_id = ANY(?) AND streaming_type IN ('flatrate','free','ads') GROUP BY streaming_service_id, media_type",
+            "params": [
+              [
+                8,
+                1796,
+                9,
+                119,
+                2100,
+                337,
+                1899,
+                350,
+                15,
+                386,
+                387,
+                531,
+                2303,
+                283,
+                11
+              ]
+            ],
+            "rows": [
+              {
+                "streaming_service_id": 8,
+                "media_type": "show",
+                "unique_titles": 6820
+              },
+              {
+                "streaming_service_id": 350,
+                "media_type": "show",
+                "unique_titles": 235
+              },
+              {
+                "streaming_service_id": 350,
+                "media_type": "movie",
+                "unique_titles": 160
+              },
+              {
+                "streaming_service_id": 2100,
+                "media_type": "movie",
+                "unique_titles": 71145
+              },
+              {
+                "streaming_service_id": 1796,
+                "media_type": "movie",
+                "unique_titles": 15045
+              },
+              {
+                "streaming_service_id": 386,
+                "media_type": "show",
+                "unique_titles": 1350
+              },
+              {
+                "streaming_service_id": 386,
+                "media_type": "movie",
+                "unique_titles": 3231
+              },
+              {
+                "streaming_service_id": 1796,
+                "media_type": "show",
+                "unique_titles": 5883
+              },
+              {
+                "streaming_service_id": 2100,
+                "media_type": "show",
+                "unique_titles": 11942
+              },
+              {
+                "streaming_service_id": 8,
+                "media_type": "movie",
+                "unique_titles": 21274
+              },
+              {
+                "streaming_service_id": 9,
+                "media_type": "show",
+                "unique_titles": 12148
+              },
+              {
+                "streaming_service_id": 283,
+                "media_type": "movie",
+                "unique_titles": 417
+              },
+              {
+                "streaming_service_id": 1899,
+                "media_type": "show",
+                "unique_titles": 4365
+              },
+              {
+                "streaming_service_id": 11,
+                "media_type": "show",
+                "unique_titles": 13
+              },
+              {
+                "streaming_service_id": 2303,
+                "media_type": "movie",
+                "unique_titles": 2788
+              },
+              {
+                "streaming_service_id": 2303,
+                "media_type": "show",
+                "unique_titles": 1191
+              },
+              {
+                "streaming_service_id": 531,
+                "media_type": "movie",
+                "unique_titles": 2763
+              },
+              {
+                "streaming_service_id": 387,
+                "media_type": "show",
+                "unique_titles": 1325
+              },
+              {
+                "streaming_service_id": 119,
+                "media_type": "movie",
+                "unique_titles": 66487
+              },
+              {
+                "streaming_service_id": 119,
+                "media_type": "show",
+                "unique_titles": 10196
+              },
+              {
+                "streaming_service_id": 11,
+                "media_type": "movie",
+                "unique_titles": 4284
+              },
+              {
+                "streaming_service_id": 1899,
+                "media_type": "movie",
+                "unique_titles": 9342
+              },
+              {
+                "streaming_service_id": 337,
+                "media_type": "movie",
+                "unique_titles": 6323
+              },
+              {
+                "streaming_service_id": 283,
+                "media_type": "show",
+                "unique_titles": 2131
+              },
+              {
+                "streaming_service_id": 15,
+                "media_type": "movie",
+                "unique_titles": 8347
+              },
+              {
+                "streaming_service_id": 387,
+                "media_type": "movie",
+                "unique_titles": 3086
+              },
+              {
+                "streaming_service_id": 15,
+                "media_type": "show",
+                "unique_titles": 5329
+              },
+              {
+                "streaming_service_id": 337,
+                "media_type": "show",
+                "unique_titles": 3346
+              },
+              {
+                "streaming_service_id": 9,
+                "media_type": "movie",
+                "unique_titles": 57965
+              },
+              {
+                "streaming_service_id": 531,
+                "media_type": "show",
+                "unique_titles": 993
+              }
+            ],
+            "seconds": 0.748
+          },
+          {
+            "label": "baseline_with_open_history",
+            "sql": "SELECT media_type, COUNT(DISTINCT media_tmdb_id) AS unique_titles FROM (SELECT media_type, media_tmdb_id FROM streaming_availability WHERE streaming_service_id = ANY(?) AND streaming_type IN ('flatrate','free','ads') UNION ALL SELECT media_type, media_tmdb_id FROM availability_history WHERE streaming_service_id = ANY(?) AND streaming_type IN ('flatrate','free','ads') AND dropped_on IS NULL) AS candidates GROUP BY media_type",
+            "params": [
+              [
+                8,
+                1796,
+                9,
+                119,
+                2100,
+                337,
+                1899,
+                350,
+                15,
+                386,
+                387,
+                531,
+                2303,
+                283,
+                11
+              ],
+              [
+                8,
+                1796,
+                9,
+                119,
+                2100,
+                337,
+                1899,
+                350,
+                15,
+                386,
+                387,
+                531,
+                2303,
+                283,
+                11
+              ]
+            ],
+            "rows": [
+              {
+                "media_type": "movie",
+                "unique_titles": 108332
+              },
+              {
+                "media_type": "show",
+                "unique_titles": 30041
+              }
+            ],
+            "seconds": 5.783
+          }
+        ]
+      }
+    ],
+    "conclusion": "Eligible-only count and union with eligible open history both remain 138373. Apple store rent/buy rows are excluded by type; subtracting them from eligible titles is unsupported.",
+    "initial_baseline_requests": 282773,
+    "initial_baseline_requests_with_15_percent_discover_reserve": 304433
+  },
+  "review_read_only_comparison": {
+    "lists_completed": 36,
+    "lists_failed": 0,
+    "lists_skipped": 84,
+    "dry_run": true,
+    "lists": [
+      {
+        "key": "BR:movie:8",
+        "titles": 4968,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "BR:movie:337",
+        "titles": 2028,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "BR:movie:1899",
+        "titles": 1826,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "BR:show:8",
+        "titles": 3439,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "BR:show:337",
+        "titles": 1131,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "BR:show:1899",
+        "titles": 1761,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "DE:movie:8",
+        "titles": 5691,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "DE:movie:119",
+        "titles": 0,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "DE:movie:337",
+        "titles": 2880,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "DE:movie:350",
+        "titles": 121,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "DE:movie:11",
+        "titles": 471,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "DE:show:8",
+        "titles": 3278,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "DE:show:119",
+        "titles": 0,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "DE:show:337",
+        "titles": 1174,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "DE:show:350",
+        "titles": 223,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "DE:show:11",
+        "titles": 4,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "NG:movie:8",
+        "titles": 4474,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "NG:show:8",
+        "titles": 3407,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "US:movie:8",
+        "titles": 4741,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "US:movie:9",
+        "titles": 26150,
+        "changes_checked": 28,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 6
+      },
+      {
+        "key": "US:movie:337",
+        "titles": 1710,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "US:movie:1899",
+        "titles": 2076,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "US:movie:350",
+        "titles": 130,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "US:movie:15",
+        "titles": 1295,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "US:movie:2303",
+        "titles": 1143,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "US:movie:283",
+        "titles": 275,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "US:movie:11",
+        "titles": 543,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "US:show:8",
+        "titles": 3583,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "US:show:9",
+        "titles": 5473,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "US:show:337",
+        "titles": 1279,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "US:show:1899",
+        "titles": 1849,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "US:show:350",
+        "titles": 226,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "US:show:15",
+        "titles": 1966,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "US:show:2303",
+        "titles": 735,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "US:show:283",
+        "titles": 1804,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      },
+      {
+        "key": "US:show:11",
+        "titles": 7,
+        "changes_checked": 0,
+        "baseline": false,
+        "retry_titles": 0,
+        "sort_fallbacks": 0,
+        "partitions": 0
+      }
+    ],
+    "requests": {
+      "requests": 4649,
+      "retries": 0,
+      "refused": 0,
+      "discover": 4621,
+      "title": 28,
+      "catalog": 0
+    },
+    "history": {
+      "planned_rows": 3,
+      "published_titles": 0,
+      "planned_exact_arrivals": 0,
+      "planned_unknown_arrivals": 3,
+      "planned_exact_drops": 0,
+      "planned_unknown_drops": 0
+    },
+    "countries": [
+      "BR",
+      "DE",
+      "NG",
+      "US"
+    ],
+    "seconds": 328.188,
+    "started_at_epoch": 1792200523.5351865,
+    "production_data_writes": 0,
+    "comparison": {
+      "source": "/home/alp/.local/share/goodwatch-availability-measure/data/daily-snap-2026-10-16.json.gz",
+      "at": "2026-10-16T22:02:55+00:00",
+      "sha256": "090a9acf362fc967fe2cd121eeb9219df2d08dcc7e7584386fc10017079259c2",
+      "note": "Cost comparison only: prior fresh IDs used date partitions that may omit undated titles; prior kinds are projected from history. Prior absence is untrusted and cannot establish exact days."
     }
   }
 }

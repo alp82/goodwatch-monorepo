@@ -1,32 +1,35 @@
-summary: Read daily provider lists into availability history
-description: Fresh, completeness-gated discover with per-title checks. Dry run by default; never writes streaming_availability.
-kind: script
+summary: Read daily service lists into availability history
+description: >-
+  Fresh, completeness-gated discover with per-title checks. Dry run by default;
+  only operational Mongo leases in dry runs; never writes
+  streaming_availability.
 lock: '!inline f/tmdb_api/daily_provider_lists.script.lock'
-timeout: 28800
-concurrent_limit: 1
 concurrency_time_window_s: 0
+concurrent_limit: 1
+kind: script
 schema:
-  $schema: https://json-schema.org/draft/2020-12/schema
+  $schema: 'https://json-schema.org/draft/2020-12/schema'
   type: object
   properties:
     countries:
       type: array
       items:
         type: string
-    provider_ids:
-      type: array
-      items:
-        type: integer
     dry_run:
       type: boolean
       default: true
+    max_requests:
+      type: integer
+      default: 350000
+      minimum: 1
     requests_per_second:
       type: number
       default: 15
       exclusiveMinimum: 0
       maximum: 20
-    max_requests:
-      type: integer
-      default: 350000
-      minimum: 1
+    service_ids:
+      type: array
+      items:
+        type: integer
   required: []
+timeout: 28800

@@ -15,6 +15,7 @@ def preview_source():
     sources = {name: (root / path).read_text() for name, path in {
         'f.tmdb_api.provider_evidence': 'tmdb_api/provider_evidence.py',
         'f.sync.availability_history': 'sync/availability_history.py',
+        'f.tmdb_api.daily_list_storage': 'tmdb_api/daily_list_storage.py',
         'daily_job': 'tmdb_api/daily_provider_lists.py',
     }.items()}
     return '''# extra_requirements:
@@ -42,12 +43,13 @@ def main():
                             results=[dict(id=i) for i in self.ids])
             return dict(id=int(path.split('/')[2]), results=deepcopy(self.results))
     class Storage:
-        def __init__(self): self.state, self.history = {}, {}
+        def __init__(self): self.state, self.history, self.dry_run = {}, {}, False
         @contextmanager
         def lease(self, *args): yield lambda: None
         def load(self, identity): return deepcopy(self.state.get(identity))
         def pending(self, identity): return set()
-        def stage(self, identity, ids, dry): pass
+        def open_ids(self, country, media, service): return set()
+        def stage(self, identity, ids): pass
         def details(self, media, ids): return {}
         def save(self, identity, value): self.state[identity] = deepcopy(value)
         def run(self, sql): assert sql == 'REFRESH TABLE availability_history'
@@ -57,25 +59,26 @@ def main():
             for record in records:
                 row = record.model_dump()
                 self.history[tuple(row[k] for k in PRIMARY_KEY)] = row
-        def publish(self, media, title, owned, dry):
-            if not dry:
+        def publish(self, media, title, owned):
+            if not self.dry_run:
                 result = publish_history(self, media, [title], owned)
                 assert not result.errors
-        def flush(self, dry): pass
+        def flush(self): pass
     api, store = API(), Storage()
     for day, present in [(13, False), (14, True), (15, False), (16, True)]:
         api.ids = [42] if present else []
         api.results = {'US': {'flatrate': [{'provider_id': 8}]}} if present else {}
-        report = run_daily_lists(api, store, countries=['US'], provider_ids=[8], media_types=['show'],
-                                 dry_run=False, now=datetime(2026, 10, day, 20))
+        report = run_daily_lists(api, store, countries=['US'], service_ids=[8], media_types=['show'],
+                                 now=datetime(2026, 10, day, 20))
         assert report['lists_failed'] == 0
     rows = list(store.history.values())
     assert len(rows) == 2
     assert rows[0]['appeared_precision'] == rows[0]['dropped_precision'] == 'exact'
     assert rows[1]['appeared_precision'] == 'exact'
     before = deepcopy(store.state), deepcopy(store.history)
-    run_daily_lists(api, store, countries=['US'], provider_ids=[8], media_types=['show'],
-                    dry_run=True, now=datetime(2026, 10, 17, 20))
+    store.dry_run = True
+    run_daily_lists(api, store, countries=['US'], service_ids=[8], media_types=['show'],
+                    now=datetime(2026, 10, 17, 20))
     assert before == (store.state, store.history)
     return {'ok': True, 'production_data_writes': 0, 'stays': 2}
 '''
@@ -123,11 +126,11 @@ class WindmillPreviewTests(unittest.TestCase):
         module = flow['value']['modules'][0]
         module['value'] = dict(type='rawscript', language='python3', lock='',
             input_transforms=module['value']['input_transforms'],
-            content='def main(countries=None, provider_ids=None, dry_run=True, requests_per_second=15, max_requests=350000):\n'
-                    '    assert dry_run is True and countries == ["US"] and provider_ids == [8]\n'
+            content='def main(countries=None, service_ids=None, dry_run=True, requests_per_second=15, max_requests=350000):\n'
+                    '    assert dry_run is True and countries == ["US"] and service_ids == [8]\n'
                     f'    return dict(lists_completed=1, lists_failed={failed}, lists=[])\n')
         job = self.api('/jobs/run/preview_flow', dict(value=flow['value'], schema=flow['schema'],
-            args=dict(countries=['US'], provider_ids=[8], dry_run=True, requests_per_second=15, max_requests=350000),
+            args=dict(countries=['US'], service_ids=[8], dry_run=True, requests_per_second=15, max_requests=350000),
             path='f/tmdb_api/daily_provider_lists_flow_inert_preview'))
         return self.completed(job, success=not failed)
 
@@ -143,8 +146,8 @@ class WindmillPreviewTests(unittest.TestCase):
         module = flow['value']['modules'][0]
         module['value'] = dict(type='rawscript', language='python3', lock='',
             input_transforms=module['value']['input_transforms'],
-            content='def main(countries=None, provider_ids=None, dry_run=True, requests_per_second=15, max_requests=350000):\n'
-                    '    assert countries is None and provider_ids is None\n'
+            content='def main(countries=None, service_ids=None, dry_run=True, requests_per_second=15, max_requests=350000):\n'
+                    '    assert countries is None and service_ids is None\n'
                     '    assert dry_run is True and requests_per_second == 15 and max_requests == 350000\n'
                     '    return dict(lists_completed=0, lists_failed=0, lists=[])\n')
         job = self.api('/jobs/run/preview_flow', dict(value=flow['value'], schema=flow['schema'],

@@ -1,10 +1,27 @@
+# extra_requirements:
+# crate==2.2.1
+# mongoengine==0.29.3
+# pymongo==4.18.1
+# requests==2.34.2
+# wmill==1.815.0
+# pydantic==2.13.5
 """Checkpoints and serialized history publication for daily discover reads."""
 from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 from uuid import uuid4
+import time
+import threading
 
 from f.sync.availability_history import publish_history, read_history, select_transitions, title_writes
 from f.tmdb_api.provider_evidence import utc_ms
+
+
+class LeaseBusy(RuntimeError):
+    pass
+
+
+class LeaseLost(RuntimeError):
+    pass
 
 
 class ListStorage:
@@ -18,8 +35,10 @@ class ListStorage:
         if connector is None:
             from f.db.cratedb import CrateConnector
             connector = CrateConnector()
-        self.db, self.connector, self.dry_run = db, connector, dry_run
+        self.db, self.connector, self.dry_run = db, connector, dry_run is not False
         self.buffer = []
+        self.run_owned = lambda: None
+        self.lease_index_ready = False
         self.stats = dict(planned_rows=0, published_titles=0, planned_exact_arrivals=0,
                           planned_unknown_arrivals=0, planned_exact_drops=0, planned_unknown_drops=0)
 
@@ -27,6 +46,13 @@ class ListStorage:
         return {row['_id'].split(':')[0]
                 for collection in (self.db.tmdb_daily_provider_lists, self.db.tmdb_daily_provider_list_pending)
                 for row in collection.find({}, {'_id': 1})}
+
+    def open_ids(self, country, media_type, service_id):
+        rows = self.connector.select('SELECT DISTINCT media_tmdb_id FROM availability_history '
+            'WHERE media_type = ? AND country_code = ? AND streaming_service_id = ? '
+            "AND streaming_type IN ('flatrate', 'free', 'ads') AND dropped_on IS NULL",
+            (media_type, country, service_id))
+        return {row['media_tmdb_id'] for row in rows}
 
     def load(self, identity):
         return self.db.tmdb_daily_provider_lists.find_one({'_id': identity})
@@ -40,57 +66,95 @@ class ListStorage:
         projection = {field: 1 for field in ('tmdb_id', 'networks', 'first_air_date', 'production_companies', 'release_dates')}
         return {row['tmdb_id']: row for row in collection.find({'tmdb_id': {'$in': ids}}, projection)}
 
-    def stage(self, identity, ids, dry_run):
-        if not dry_run and ids:
-            if self.dry_run:
-                raise RuntimeError('Read-only storage cannot stage intents')
+    def stage(self, identity, ids):
+        if not self.dry_run and ids:
             self.db.tmdb_daily_provider_list_pending.update_one({'_id': identity},
                 {'$addToSet': {'ids': {'$each': sorted(ids)}}}, upsert=True)
 
     @contextmanager
-    def lease(self, identity, dry_run):
-        self.buffer = []
-        if self.dry_run and not dry_run:
-            raise RuntimeError('Read-only storage cannot acquire write leases')
-        if dry_run:
-            yield lambda: None
-            return
+    def mongo_lease(self, identity, *, heartbeat=False):
         from pymongo.errors import DuplicateKeyError
         leases = self.db.tmdb_daily_provider_list_leases
+        if not self.lease_index_ready:
+            leases.create_index('expires_at', expireAfterSeconds=0)
+            self.lease_index_ready = True
         token = uuid4().hex
         now = datetime.now(timezone.utc)
         try:
             leases.update_one({'_id': identity, 'expires_at': {'$lte': now}},
                 {'$set': {'token': token, 'expires_at': now + timedelta(minutes=15)}}, upsert=True)
         except DuplicateKeyError:
-            raise RuntimeError('Daily list is already running') from None
+            raise LeaseBusy('Daily list lease is already held') from None
+        lost = []
+        stopped = threading.Event()
 
         def check_owned():
+            if lost:
+                raise LeaseLost('Daily run lease renewal failed') from lost[0]
             now = datetime.now(timezone.utc)
             updated = leases.update_one({'_id': identity, 'token': token,
                 'expires_at': {'$gt': now + timedelta(minutes=3)}},
                 {'$set': {'expires_at': now + timedelta(minutes=15)}})
             if updated.matched_count != 1:
-                raise RuntimeError('Daily list lease expired or was lost')
+                raise LeaseLost('Daily list lease expired or was lost')
+
+        def renew():
+            while not stopped.wait(60):
+                try:
+                    check_owned()
+                except Exception as error:
+                    lost.append(error)
+                    return
+        worker = threading.Thread(target=renew, daemon=True) if heartbeat else None
         try:
+            if worker:
+                worker.start()
             yield check_owned
             check_owned()
         finally:
-            self.buffer = []
+            stopped.set()
+            if worker:
+                worker.join(timeout=5)
             leases.delete_one({'_id': identity, 'token': token})
 
-    def publish(self, media_type, title, check_owned, dry_run):
+    @contextmanager
+    def run_lease(self):
+        # Also serialize live previews: CE does not enforce concurrent_limit.
+        # This operational lease is the only Mongo write in a live dry run.
+        with self.mongo_lease('run', heartbeat=True) as owned:
+            self.run_owned = owned
+            try:
+                yield owned
+            finally:
+                self.run_owned = lambda: None
+
+    @contextmanager
+    def lease(self, identity):
+        self.buffer = []
+        if self.dry_run:
+            yield self.run_owned
+            return
+        try:
+            with self.mongo_lease(identity) as list_owned:
+                def check_owned():
+                    self.run_owned()
+                    list_owned()
+                yield check_owned
+        finally:
+            self.buffer = []
+
+    def publish(self, media_type, title, check_owned):
         self.buffer.append((media_type, title, check_owned))
         if len(self.buffer) >= 200:
-            self.flush(dry_run)
+            self.flush()
 
-    def flush(self, dry_run):
+    def flush(self):
         if not self.buffer:
             return
         media_type = self.buffer[0][0]
         titles = [item[1] for item in self.buffer]
         list_owned = self.buffer[0][2]
-        if dry_run:
+        if self.dry_run:
             # Do not REFRESH: even the preview's SQL is exclusively SELECT.
             previous = read_history(self.connector, media_type, titles)
             by_title = {}
@@ -106,20 +170,28 @@ class ListStorage:
                     else:
                         self.stats[f'planned_{row.dropped_precision}_drops'] += 1
         else:
-            if self.dry_run:
-                raise RuntimeError('Read-only storage cannot publish')
             from f.sync.copy.tmdb_streaming import publication_leases
-            with publication_leases(self.db, media_type, [title.tmdb_id for title in titles]) as (owned, title_owned):
-                if set(owned) != {title.tmdb_id for title in titles}:
-                    raise RuntimeError('A changed title is busy; checkpoint retained for retry')
-                def check_owned():
-                    list_owned()
-                    title_owned()
-                result = publish_history(self.connector, media_type, titles, check_owned)
-                if result.errors:
-                    raise RuntimeError('History publication failed; checkpoint retained for retry')
-                check_owned()
-            self.stats['published_titles'] += len(titles)
+            remaining = {title.tmdb_id: title for title in titles}
+            for attempt in range(5):
+                list_owned()
+                with publication_leases(self.db, media_type, list(remaining)) as (owned, title_owned):
+                    def check_owned():
+                        list_owned()
+                        title_owned()
+                    if owned:
+                        result = publish_history(self.connector, media_type,
+                                                 [remaining[tmdb_id] for tmdb_id in owned], check_owned)
+                        if result.errors:
+                            raise RuntimeError('History publication failed; checkpoint retained for retry')
+                        check_owned()
+                        self.stats['published_titles'] += len(owned)
+                        for tmdb_id in owned:
+                            del remaining[tmdb_id]
+                if not remaining:
+                    break
+                if attempt == 4:
+                    raise RuntimeError('Changed titles remain busy; checkpoint retained for retry')
+                time.sleep(min(30, 5 * 2 ** attempt))
         self.buffer = []
 
     def save(self, identity, snapshot):

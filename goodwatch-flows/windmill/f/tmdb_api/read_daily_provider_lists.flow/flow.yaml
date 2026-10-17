@@ -1,8 +1,8 @@
-summary: Read the big brands' provider lists daily
+summary: Read the big brands' service lists daily
 description: >-
   Proposed schedule 14:00 UTC daily. Fresh discover reads with completeness gates,
   fresh per-title confirmation, and shared availability-history precision rules.
-  Defaults to a SELECT-only dry run. Never writes streaming_availability.
+  Dry runs take only an operational Mongo run lease; history reads use SELECT. Never writes streaming_availability.
 value:
   modules:
     - id: lists
@@ -13,9 +13,9 @@ value:
           countries:
             type: javascript
             expr: flow_input.countries
-          provider_ids:
+          service_ids:
             type: javascript
-            expr: flow_input.provider_ids
+            expr: flow_input.service_ids
           dry_run:
             type: javascript
             expr: flow_input.dry_run
@@ -47,11 +47,11 @@ schema:
       items:
         type: string
       description: Omit for every current and previously monitored country.
-    provider_ids:
+    service_ids:
       type: array
       items:
         type: integer
-      description: Omit for the research's 15 provider identities. Can widen later.
+      description: Omit for the research's 15 service IDs. Can widen later.
     dry_run:
       type: boolean
       default: true

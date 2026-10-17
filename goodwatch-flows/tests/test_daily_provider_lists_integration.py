@@ -24,8 +24,8 @@ class DailyListSQLTests(unittest.TestCase):
             for day, ids in [(13, [41]), (14, [41, 42]), (15, []), (16, [42])]:
                 api.ids = ids
                 api.results = {'US': {'flatrate': [{'provider_id': 8}]}} if ids else {}
-                report = run_daily_lists(api, store, countries=['US'], provider_ids=[8], media_types=['show'],
-                                         dry_run=False, now=datetime(2026, 10, day, 20))
+                report = run_daily_lists(api, store, countries=['US'], service_ids=[8], media_types=['show'],
+                                          now=datetime(2026, 10, day, 20))
                 self.assertEqual(report['lists_failed'], 0, report)
             rows = list(crate.history.values())
             self.assertEqual(len(rows), 3)

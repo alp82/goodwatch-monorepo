@@ -1,7 +1,7 @@
 """Read-only production dry run of #682; credentials remain outside the report.
 
 Uses the local Windmill CLI's goodwatch remote for variable GETs and the checkout
-entrypoint with dry_run=True. Never deploys or changes production state.
+public coordinator with read-only storage (no live run lease). Never deploys or changes production state.
 """
 import argparse
 import contextlib
@@ -24,9 +24,9 @@ def census(client):
     """Size all lists using page-one metadata; no full lists or title checks."""
     regions = sorted(row['iso_3166_1'] for row in client.get('/watch/providers/regions')['results'])
     def one_list(item):
-        country, media, provider = item
+        country, media, service_id = item
         def cost(lo=None, hi=None):
-            params = dict(watch_region=country, with_watch_providers=provider,
+            params = dict(watch_region=country, with_watch_providers=service_id,
                           with_watch_monetization_types='flatrate|free|ads', include_adult='false',
                           sort_by='name.asc' if media == 'show' else 'title.asc', page=1)
             if lo is not None:
@@ -43,8 +43,8 @@ def census(client):
             left, right = cost(lo, cut - 1), cost(cut, hi)
             return 1 + left[0] + right[0], left[1] + right[1]
         requests, total = cost()
-        return {'key': f'{country}:{media}:{provider}', 'primary_requests': requests, 'titles': total}
-    items = [(country, media, provider) for country in regions for media in ('movie', 'show') for provider in job.BIG_BRANDS]
+        return {'key': f'{country}:{media}:{service_id}', 'primary_requests': requests, 'titles': total}
+    items = [(country, media, service_id) for country in regions for media in ('movie', 'show') for service_id in job.SERVICE_NAMES]
     with ThreadPoolExecutor(max_workers=6) as pool:
         lists = list(pool.map(one_list, items))
     return {'countries': regions, 'lists': lists, 'primary_discover_requests': sum(row['primary_requests'] for row in lists),
@@ -87,7 +87,7 @@ def main():
             print(json.dumps(self.stats), file=sys.stderr, flush=True)
         return result
     started = time.time()
-    original_storage = job.ListStorage
+    original_storage = job.create_list_storage
     storage = original_storage
     panel = None
     if args.previous_panel:
@@ -100,14 +100,14 @@ def main():
                 if identity not in previous:
                     # Only sample the earlier panel; do not baseline other lists.
                     return {'checked_at': int(time.time() * 1000)}
-                country, media, provider = identity.split(':')
+                country, media, service_id = identity.split(':')
                 row = previous[identity]
                 # Carry existing kinds only for planning. The request measurement
                 # depends on the fresh panel's IDs, not on this projection.
                 history = store.connector.select('SELECT media_tmdb_id, streaming_type FROM availability_history '
                     'WHERE country_code = ? AND media_type = ? AND streaming_service_id = ? '
                     'AND observed_at <= ? AND (dropped_on IS NULL OR dropped_on >= ?)',
-                    (country, media, int(provider), at, at // 86400000 * 86400000))
+                    (country, media, int(service_id), at, at // 86400000 * 86400000))
                 members = {}
                 ids = set(row['ids'])
                 for stay in history:
@@ -121,8 +121,25 @@ def main():
             return store
     with patch('wmill.get_variable', side_effect=variable), patch.object(CrateConnector, 'run', read_only), \
          patch.object(CrateConnector, 'upsert_many', refuse_write), patch.object(CrateConnector, 'run_many', refuse_write), \
-         patch.object(job.TMDBClient, 'get', get), patch.object(job, 'ListStorage', storage), contextlib.redirect_stdout(sys.stderr):
-        report = census(job.TMDBClient(requests_per_second=10)) if args.census else job.main(countries=args.countries, dry_run=True)
+         patch.object(job.TMDBClient, 'get', get), contextlib.redirect_stdout(sys.stderr):
+        if args.census:
+            report = census(job.TMDBClient(requests_per_second=10))
+        else:
+            # Live main takes an operational Mongo lease. This measurement must
+            # stay SELECT-only, so use the same public coordinator without main.
+            from pymongo.synchronous.collection import Collection
+            with contextlib.ExitStack() as guards:
+                for method in ('insert_one', 'insert_many', 'update_one', 'update_many',
+                               'replace_one', 'delete_one', 'delete_many', 'create_index'):
+                    guards.enter_context(patch.object(Collection, method, refuse_write))
+                store = storage(dry_run=True)
+                try:
+                    client = job.TMDBClient()
+                    report = job.run_daily_lists(client, store, countries=args.countries,
+                                                  service_ids=list(job.SERVICE_NAMES))
+                    report.update(requests=client.stats, history=store.stats, countries=args.countries)
+                finally:
+                    store.close()
     report['seconds'] = round(time.time() - started, 3)
     report['started_at_epoch'] = started
     report['production_data_writes'] = 0

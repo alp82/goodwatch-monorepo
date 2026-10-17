@@ -1,5 +1,13 @@
-"""Read daily provider lists; publish only availability history and list checkpoints."""
+# extra_requirements:
+# crate==2.2.1
+# mongoengine==0.29.3
+# pymongo==4.18.1
+# requests==2.34.2
+# wmill==1.815.0
+# pydantic==2.13.5
+"""Read daily service lists; publish only availability history and list checkpoints."""
 from datetime import datetime, timezone
+from itertools import product
 from concurrent.futures import ThreadPoolExecutor
 import threading
 import time
@@ -11,10 +19,11 @@ from email.utils import parsedate_to_datetime
 from uuid import uuid4
 
 from f.sync.availability_history import HistoryTitle, ListRead, OfferKey
+from f.tmdb_api.daily_list_storage import LeaseBusy, LeaseLost
 from f.tmdb_api.provider_evidence import HISTORY_OFFER_TYPES, capture_provider_check, utc_day, utc_ms, validated_results
 
-# The research's 15 provider identities (brands and their direct tiers).
-BIG_BRANDS = {
+# TMDB service IDs and names, including each brand's direct tiers.
+SERVICE_NAMES = {
     8: 'Netflix', 1796: 'Netflix Standard with Ads',
     9: 'Amazon Prime Video', 119: 'Amazon Prime Video', 2100: 'Amazon Prime Video with Ads',
     337: 'Disney Plus', 1899: 'HBO Max', 350: 'Apple TV', 15: 'Hulu',
@@ -24,6 +33,10 @@ BIG_BRANDS = {
 
 
 class TMDBReadError(RuntimeError):
+    pass
+
+
+class TMDBAccessDenied(TMDBReadError):
     pass
 
 
@@ -41,6 +54,7 @@ class TMDBClient:
         self.interval, self.max_requests = 1 / requests_per_second, max_requests
         self.lock, self.local = threading.Lock(), threading.local()
         self.next_request = 0
+        self.access_denied = None
         self.stats = dict(requests=0, retries=0, refused=0, discover=0, title=0, catalog=0)
 
     def get(self, path, **params):
@@ -53,6 +67,8 @@ class TMDBClient:
                     raise RequestBudgetExceeded('Daily list request budget exhausted')
                 while self.next_request > time.monotonic():
                     time.sleep(max(0, min(1, self.next_request - time.monotonic())))
+                if self.access_denied is not None:
+                    raise self.access_denied
                 self.next_request = time.monotonic() + self.interval
                 self.stats['requests'] += 1
                 self.stats['discover' if path.startswith('/discover/') else 'title' if path.endswith('/watch/providers') else 'catalog'] += 1
@@ -67,6 +83,9 @@ class TMDBClient:
                 except ValueError:
                     raise TMDBReadError('Invalid TMDB JSON') from None
             status = response.status_code if response is not None else None
+            if status in (401, 403):
+                self.access_denied = TMDBAccessDenied(f'TMDB HTTP {status}')
+                raise self.access_denied
             if status is not None and status != 429 and status < 500:
                 raise TMDBReadError(f'TMDB HTTP {status}')
             if attempt == 5:
@@ -87,7 +106,7 @@ class TMDBClient:
                 self.next_request = max(self.next_request, time.monotonic() + delay)
 
 
-def ListStorage(dry_run=True):
+def create_list_storage(dry_run=True):
     # Keep DB setup out of imports and inert previews.
     from f.tmdb_api.daily_list_storage import ListStorage as Storage
     return Storage(dry_run=dry_run)
@@ -102,14 +121,19 @@ def title_checks(client, api_media, ids, clock):
     def read(tmdb_id):
         payload = client.get(f'/{api_media}/{tmdb_id}/watch/providers')
         if type(payload.get('id')) is not int or payload['id'] != tmdb_id or validated_results(payload) is None:
-            raise TMDBReadError('Invalid provider response or mismatched title identity')
+            raise TMDBReadError('Invalid service response or mismatched title identity')
         return tmdb_id, payload, capture_provider_check(
             {'id': payload['id'], 'watch/providers': payload}, tmdb_id, clock(), bypass_cache=True)
     with ThreadPoolExecutor(max_workers=6) as workers:
         return list(workers.map(read, ids))
 
 
-class ProviderChecks:
+def eligible_kinds(payload, country, service_id):
+    return [kind for kind in HISTORY_OFFER_TYPES
+            if any(offer['provider_id'] == service_id for offer in payload['results'].get(country, {}).get(kind, []))]
+
+
+class TitleChecks:
     """Deduplicate all-country title checks in a disposable, bounded-memory cache."""
     def __init__(self, client, clock):
         self.client, self.clock = client, clock
@@ -124,14 +148,13 @@ class ProviderChecks:
         self.db.close()
         self.directory.cleanup()
 
-    def read(self, media, ids, country, provider, listed, list_at):
+    def read(self, media, ids, country, service_id, listed, list_at):
         found, missing = {}, []
         for tmdb_id in ids:
             row = self.db.execute('SELECT payload FROM checks WHERE media = ? AND id = ?', (media, tmdb_id)).fetchone()
             if row:
                 _, payload, proof = json.loads(zlib.decompress(row[0]))
-                matches = any(p['provider_id'] == provider for kind in HISTORY_OFFER_TYPES
-                              for p in payload['results'].get(country, {}).get(kind, []))
+                matches = bool(eligible_kinds(payload, country, service_id))
                 # Reuse today's one all-country check, but recheck a conflict
                 # discovered after it. Retain the actual HTTP observation time.
                 if (utc_day(proof['checked_at']) == utc_day(list_at)
@@ -151,11 +174,11 @@ class IncompleteList(ValueError):
     pass
 
 
-def read_list(client, country, media_type, provider, diagnostics=None):
+def read_list(client, country, media_type, service_id, diagnostics=None):
     """Accept a stable total and that many distinct IDs, using both sorts if needed."""
     api_media = 'tv' if media_type == 'show' else 'movie'
     sorts = ('name.asc', 'first_air_date.desc') if media_type == 'show' else ('title.asc', 'primary_release_date.desc')
-    params = dict(watch_region=country, with_watch_providers=provider,
+    params = dict(watch_region=country, with_watch_providers=service_id,
                   with_watch_monetization_types='flatrate|free|ads', include_adult='false')
     diagnostics = {} if diagnostics is None else diagnostics
     diagnostics.update(sort_fallbacks=0, partitions=0)
@@ -172,7 +195,7 @@ def read_list(client, country, media_type, provider, diagnostics=None):
             first = client.get('/discover/' + api_media, **params, **extra, sort_by=sort, page=1)
             total, pages = first['total_results'], first['total_pages']
             if expected is not None and total != expected:
-                raise IncompleteList('Total changed between sorts')
+                ids.clear()  # A changed total needs an independently complete second read.
             expected = total
             if pages > 500:
                 diagnostics['partitions'] += 1
@@ -181,15 +204,20 @@ def read_list(client, country, media_type, provider, diagnostics=None):
                     raise IncompleteList('An indivisible vote-count bin exceeds 500 pages')
                 cut = ((lo or 0) + hi + 1) // 2 if hi is not None else max(100, (lo or 0) * 2)
                 left, right = set(read_range(lo, cut - 1)), set(read_range(cut, hi))
-                if left & right or (total < 20001 and len(left | right) != total):
+                # TMDB caps reported total_results at 20,001 (research §1).
+                # Read the lower bin first: growing vote counts can repeat a
+                # title in the upper bin, so union the independently complete bins.
+                if total < 20001 and len(left | right) != total:
                     raise IncompleteList('Partition totals changed during read')
                 return sorted(left | right)
             rest = get_many(client, [('/discover/' + api_media, dict(params, **extra, sort_by=sort, page=page))
                                      for page in range(2, pages + 1)])
-            for page, result in enumerate([first, *rest], 1):
-                if result['total_results'] != expected or result['total_pages'] != pages or result['page'] != page:
-                    raise IncompleteList('Paging metadata changed during read')
-                ids.update(row['id'] for row in result['results'])
+            results = [first, *rest]
+            if any(result['total_results'] != expected or result['total_pages'] != pages or result['page'] != page
+                   for page, result in enumerate(results, 1)):
+                ids.clear()  # Do not mix a torn page traversal into the fallback.
+                continue
+            ids.update(row['id'] for result in results for row in result['results'])
             if len(ids) == expected:
                 return sorted(ids)
         raise IncompleteList(f'Expected {expected} distinct titles, read {len(ids)}')
@@ -197,108 +225,129 @@ def read_list(client, country, media_type, provider, diagnostics=None):
     return read_range()
 
 
-def run_daily_lists(client, store, *, countries, provider_ids, media_types=('movie', 'show'),
-                    dry_run=True, now=None):
-    dry_run = dry_run is not False
+def list_candidates(store, identity, previous, listed, country, media_type, service_id):
+    if previous is None:
+        candidates = listed | store.open_ids(country, media_type, service_id)
+    else:
+        candidates = (listed ^ set(previous['ids'])) | set(previous.get('retry_ids', []))
+    candidates |= store.pending(identity)
+    store.stage(identity, candidates)
+    return sorted(candidates)
+
+
+def publish_list_changes(store, title_reads, country, media_type, service_id, listed, previous, at, candidates, owned):
+    prior = previous or {}
+    members, retry_ids = dict(prior.get('members', {})), []
+    api_media = 'tv' if media_type == 'show' else 'movie'
+    for offset in range(0, len(candidates), 200):
+        owned()
+        batch = candidates[offset:offset + 200]
+        metadata = store.details(media_type, batch)
+        for tmdb_id, payload, proof in title_reads.read(api_media, batch, country, service_id, listed, at):
+            if utc_day(proof['checked_at']) != utc_day(at):
+                raise IncompleteList('List read crossed UTC midnight')
+            details = metadata.get(tmdb_id, {}) | {'watch_providers': payload, 'watch_providers_check': proof}
+            kinds = eligible_kinds(payload, country, service_id)
+            keys = [OfferKey(tmdb_id, media_type, country, service_id, kind) for kind in kinds]
+            rows = {key: key._asdict() for key in keys}
+            members[str(tmdb_id)] = kinds
+            if bool(kinds) != (tmdb_id in listed):
+                retry_ids.append(tmdb_id)
+            prior_kinds = prior.get('members', {}).get(str(tmdb_id), [])
+            # Include absent kinds on the baseline and recovery path too. The
+            # shared writer alone decides whether a stay exists and its precision.
+            removed = [OfferKey(tmdb_id, media_type, country, service_id, kind)
+                       for kind in HISTORY_OFFER_TYPES if kind not in kinds]
+            title = HistoryTitle(tmdb_id, details, rows, {}, [], removed,
+                ListRead(country, service_id, at, prior.get('checked_at'), tuple(prior_kinds), bool(prior_kinds),
+                         prior.get('complete') is True, prior.get('cache_bypassed') is True))
+            store.publish(media_type, title, owned)
+    return members, retry_ids
+
+
+def read_daily_list(client, store, title_reads, country, media_type, service_id, clock):
+    identity = f'{country}:{media_type}:{service_id}'
+    with store.lease(identity) as owned:
+        at = utc_ms(clock())
+        previous = store.load(identity)
+        if previous and utc_day(previous['checked_at']) >= utc_day(at):
+            return None
+        diagnostics = {}
+        ids = read_list(client, country, media_type, service_id, diagnostics)
+        listed = set(ids)
+        candidates = list_candidates(store, identity, previous, listed, country, media_type, service_id)
+        members, retry_ids = publish_list_changes(store, title_reads, country, media_type, service_id,
+                                                  listed, previous, at, candidates, owned)
+        if utc_day(utc_ms(clock())) != utc_day(at):
+            raise IncompleteList('List read crossed UTC midnight')
+        store.flush()
+        owned()
+        if not store.dry_run:
+            store.save(identity, {'checked_at': at, 'ids': ids,
+                'members': {key: kinds for key, kinds in members.items() if kinds}, 'retry_ids': retry_ids,
+                'version': 1, 'complete': True, 'cache_bypassed': True})
+        return dict(key=identity, titles=len(ids), changes_checked=len(candidates), baseline=previous is None,
+                    retry_titles=len(retry_ids), **diagnostics)
+
+
+def run_daily_lists(client, store, *, countries, service_ids, media_types=('movie', 'show'), now=None):
     clock = (lambda: now) if now else (lambda: datetime.now(timezone.utc))
-    report = {'lists_completed': 0, 'lists_failed': 0, 'lists_skipped': 0, 'dry_run': dry_run, 'lists': []}
-    with ProviderChecks(client, clock) as provider_reads:
-        for country in countries:
-            for media_type in media_types:
-                api_media = 'tv' if media_type == 'show' else 'movie'
-                for provider in provider_ids:
-                    identity = f'{country}:{media_type}:{provider}'
-                    try:
-                        with store.lease(identity, dry_run) as check_owned:
-                            at = utc_ms(clock())
-                            previous = store.load(identity)
-                            if previous and utc_day(previous['checked_at']) >= utc_day(at):
-                                report['lists_skipped'] += 1
-                                continue
-                            diagnostics = {}
-                            ids = read_list(client, country, media_type, provider, diagnostics)
-                            members = dict((previous or {}).get('members', {}))
-                            old_ids = set((previous or {}).get('ids', []))
-                            pending = store.pending(identity)
-                            candidates = (((set(ids) ^ old_ids) | set(previous.get('retry_ids', []))) if previous else set(ids)) | pending
-                            store.stage(identity, candidates, dry_run)
-                            retry_ids = []
-                            candidates = sorted(candidates)
-                            for offset in range(0, len(candidates), 200):
-                                batch = candidates[offset:offset + 200]
-                                metadata = store.details(media_type, batch)
-                                checks = provider_reads.read(api_media, batch, country, provider, set(ids), at)
-                                for tmdb_id, payload, proof in checks:
-                                    if utc_day(proof['checked_at']) != utc_day(at):
-                                        raise IncompleteList('List read crossed UTC midnight')
-                                    details = metadata.get(tmdb_id, {}) | {'watch_providers': payload, 'watch_providers_check': proof}
-                                    rows = {}
-                                    kinds = []
-                                    for kind in HISTORY_OFFER_TYPES:
-                                        if any(p['provider_id'] == provider for p in payload['results'].get(country, {}).get(kind, [])):
-                                            key = OfferKey(tmdb_id, media_type, country, provider, kind)
-                                            rows[key] = key._asdict()
-                                            kinds.append(kind)
-                                    members[str(tmdb_id)] = kinds
-                                    if bool(kinds) != (tmdb_id in ids):
-                                        retry_ids.append(tmdb_id)
-                                    prior_kinds = (previous or {}).get('members', {}).get(str(tmdb_id), [])
-                                    # Pending intents also find stays committed before an
-                                    # interrupted checkpoint, even if the source changed again.
-                                    removed = [OfferKey(tmdb_id, media_type, country, provider, kind)
-                                               for kind in HISTORY_OFFER_TYPES if kind not in kinds
-                                               and (previous is not None or tmdb_id in pending)]
-                                    title = HistoryTitle(tmdb_id, details, rows, {}, [], removed,
-                                        ListRead(country, provider, at, (previous or {}).get('checked_at'),
-                                                 tuple(prior_kinds), bool(prior_kinds),
-                                                 (previous or {}).get('complete') is True,
-                                                 (previous or {}).get('cache_bypassed') is True))
-                                    store.publish(media_type, title, check_owned, dry_run)
-                            if utc_day(utc_ms(clock())) != utc_day(at):
-                                raise IncompleteList('List read crossed UTC midnight')
-                            store.flush(dry_run)
-                            check_owned()
-                            if not dry_run:
-                                store.save(identity, {'checked_at': at, 'ids': ids,
-                                    'members': {key: kinds for key, kinds in members.items() if kinds}, 'retry_ids': retry_ids,
-                                    'version': 1, 'complete': True, 'cache_bypassed': True})
-                            report['lists_completed'] += 1
-                            report['lists'].append({'key': identity, 'titles': len(ids), 'changes_checked': len(candidates),
-                                                    'baseline': previous is None, 'retry_titles': len(retry_ids), **diagnostics})
-                            print(json.dumps(report['lists'][-1]), flush=True)
-                    except RequestBudgetExceeded:
-                        raise
-                    except Exception as error:
-                        report['lists_failed'] += 1
-                        failure = {'key': identity, 'error': type(error).__name__}
-                        if isinstance(error, (IncompleteList, TMDBReadError)):
-                            failure['reason'] = str(error)
-                        report['lists'].append(failure)
-                        print(json.dumps(failure), flush=True)
+    report = dict(lists_completed=0, lists_failed=0, lists_skipped=0, dry_run=store.dry_run, lists=[])
+    consecutive_failures = 0
+    with TitleChecks(client, clock) as title_reads:
+        for country, media_type, service_id in product(countries, media_types, service_ids):
+            try:
+                summary = read_daily_list(client, store, title_reads, country, media_type, service_id, clock)
+                if summary is None:
+                    report['lists_skipped'] += 1
+                    continue
+                consecutive_failures = 0
+                report['lists_completed'] += 1
+                report['lists'].append(summary)
+                print(json.dumps(summary), flush=True)
+            except LeaseBusy:
+                report['lists_skipped'] += 1
+            except (RequestBudgetExceeded, TMDBAccessDenied, LeaseLost):
+                raise
+            except Exception as error:
+                report['lists_failed'] += 1
+                failure = dict(key=f'{country}:{media_type}:{service_id}', error=type(error).__name__)
+                if isinstance(error, (IncompleteList, TMDBReadError)):
+                    failure['reason'] = str(error)
+                report['lists'].append(failure)
+                print(json.dumps(failure), flush=True)
+                consecutive_failures = consecutive_failures + 1 if isinstance(error, TMDBReadError) else 0
+                if consecutive_failures >= 20:
+                    raise TMDBReadError('Stopping after 20 consecutive TMDB list failures') from error
     return report
 
 
-def main(countries: list[str] | None = None, provider_ids: list[int] | None = None,
+def main(countries: list[str] | None = None, service_ids: list[int] | None = None,
          dry_run: bool = True, requests_per_second: float = 15, max_requests: int = 350000):
     dry_run = dry_run is not False
     started = time.monotonic()
     client = TMDBClient(requests_per_second, max_requests)
-    store = ListStorage(dry_run=dry_run)
+    store = create_list_storage(dry_run=dry_run)
     try:
-        if countries is None:
-            regions = client.get('/watch/providers/regions')['results']
-            countries = sorted({region['iso_3166_1'] for region in regions} | set(store.countries()))
-        providers = list(BIG_BRANDS) if provider_ids is None else provider_ids
-        if any(type(provider) is not int or provider <= 0 for provider in providers):
-            raise ValueError('Provider IDs must be positive integers')
-        if any(len(country) != 2 or not country.isascii() or not country.isupper() or not country.isalpha() for country in countries):
-            raise ValueError('Countries must be uppercase two-letter codes')
-        report = run_daily_lists(client, store, countries=sorted(set(countries)),
-                                 provider_ids=sorted(set(providers)), dry_run=dry_run)
-        report['seconds'] = round(time.monotonic() - started, 3)
-        report['requests'] = getattr(client, 'stats', {})
-        report['history'] = getattr(store, 'stats', {})
-        report['countries'] = countries
-        return report
+        with store.run_lease() as owned:
+            owned()
+            if countries is None:
+                regions = client.get('/watch/providers/regions')['results']
+                countries = sorted({region['iso_3166_1'] for region in regions} | set(store.countries()))
+            services = list(SERVICE_NAMES) if service_ids is None else service_ids
+            if any(type(service_id) is not int or service_id <= 0 for service_id in services):
+                raise ValueError('Service IDs must be positive integers')
+            if any(len(country) != 2 or not country.isascii() or not country.isupper() or not country.isalpha() for country in countries):
+                raise ValueError('Countries must be uppercase two-letter codes')
+            report = run_daily_lists(client, store, countries=sorted(set(countries)),
+                                     service_ids=sorted(set(services)))
+            report['seconds'] = round(time.monotonic() - started, 3)
+            report['requests'] = getattr(client, 'stats', {})
+            report['history'] = getattr(store, 'stats', {})
+            report['countries'] = countries
+            return report
+    except LeaseBusy:
+        return dict(lists_completed=0, lists_failed=0, lists_skipped=0, lists=[],
+                    dry_run=dry_run, run_skipped=True)
     finally:
         store.close()

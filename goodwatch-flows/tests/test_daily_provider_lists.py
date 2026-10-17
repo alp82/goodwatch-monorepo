@@ -8,9 +8,18 @@ import unittest
 from unittest.mock import Mock, patch
 
 sys.path.insert(0, str(Path(__file__).parents[1] / 'windmill'))
-from test_availability_history import HistoryCrate, day
+from test_availability_history import HistoryCrate as BaseHistoryCrate, day
 from f.sync.availability_history import publish_history
 from f.tmdb_api import daily_provider_lists as job
+
+
+class HistoryCrate(BaseHistoryCrate):
+    def select(self, sql, params=None):
+        if sql.startswith('SELECT DISTINCT media_tmdb_id FROM availability_history'):
+            return [{'media_tmdb_id': row['media_tmdb_id']} for row in self.history.values()
+                    if (row['media_type'], row['country_code'], row['streaming_service_id']) == tuple(params)
+                    and row['streaming_type'] in ('flatrate', 'free', 'ads') and row['dropped_on'] is None]
+        return super().select(sql, params)
 
 
 class TMDB:
@@ -31,6 +40,7 @@ class TMDB:
 
 class Storage:
     def __init__(self):
+        self.dry_run = True
         self.snapshots = {}
         self.intents = {}
         self.metadata = {}
@@ -38,14 +48,23 @@ class Storage:
         self.commits = 0
 
     @contextmanager
-    def lease(self, identity, dry_run):
+    def run_lease(self):
         yield lambda: None
+
+    @contextmanager
+    def lease(self, identity):
+        yield lambda: None
+
+    def open_ids(self, country, media_type, service):
+        return {row['media_tmdb_id'] for row in self.crate.history.values()
+                if (row['country_code'], row['media_type'], row['streaming_service_id']) == (country, media_type, service)
+                and row['dropped_on'] is None}
 
     def load(self, identity):
         return deepcopy(self.snapshots.get(identity))
 
-    def publish(self, media_type, title, check_owned, dry_run):
-        if dry_run:
+    def publish(self, media_type, title, check_owned):
+        if self.dry_run:
             return
         result = publish_history(self.crate, media_type, [title], check_owned)
         if result.errors:
@@ -62,11 +81,11 @@ class Storage:
     def details(self, media_type, ids):
         return {tmdb_id: self.metadata.get(tmdb_id, {}) for tmdb_id in ids}
 
-    def stage(self, identity, ids, dry_run):
-        if not dry_run:
+    def stage(self, identity, ids):
+        if not self.dry_run:
             self.intents[identity] = sorted(set(ids) | self.pending(identity))
 
-    def flush(self, dry_run):
+    def flush(self):
         pass
 
     def countries(self):
@@ -81,7 +100,10 @@ class DailyListTests(unittest.TestCase):
         self.api, self.store = TMDB(), Storage()
 
     def run_day(self, date, **kwargs):
-        return job.run_daily_lists(self.api, self.store, countries=['US'], provider_ids=[8],
+        dry_run = kwargs.pop('dry_run', True)
+        if isinstance(self.store, Storage):
+            self.store.dry_run = dry_run is not False
+        return job.run_daily_lists(self.api, self.store, countries=['US'], service_ids=[8],
                                    media_types=['show'], now=datetime.fromisoformat(date), **kwargs)
 
     def test_first_read_records_unknown_baseline_and_dry_run_is_inert(self):
@@ -162,6 +184,22 @@ class DailyListTests(unittest.TestCase):
                 self.assertEqual(self.store.crate.history, history)
         self.api.get = original
 
+    def test_paging_metadata_change_tries_a_clean_second_sort(self):
+        original = self.api.get
+        def changing(path, **params):
+            if not path.startswith('/discover/'):
+                return original(path, **params)
+            if params['sort_by'] == 'name.asc':
+                return {'page': params['page'], 'total_pages': 2,
+                        'total_results': 2 if params['page'] == 1 else 3,
+                        'results': [{'id': 42}]}
+            return {'page': 1, 'total_pages': 1, 'total_results': 1, 'results': [{'id': 43}]}
+        self.api.get = changing
+        result = self.run_day('2026-10-14T20:00:00', dry_run=False)
+        self.assertEqual(result['lists_completed'], 1)
+        self.assertEqual(next(iter(self.store.snapshots.values()))['ids'], [43])
+        self.assertEqual(result['lists'][0]['sort_fallbacks'], 1)
+
     def test_large_lists_are_partitioned_without_losing_titles_with_no_release_date(self):
         original = self.api.get
         def partitioned(path, **params):
@@ -175,6 +213,20 @@ class DailyListTests(unittest.TestCase):
         report = self.run_day('2026-10-14T20:00:00', dry_run=False)
         self.assertEqual(report['lists_completed'], 1)
         self.assertEqual(next(iter(self.store.snapshots.values()))['ids'], [42, 43])
+
+    def test_vote_count_growth_can_overlap_partitions_without_losing_completeness(self):
+        original = self.api.get
+        def growing(path, **params):
+            if not path.startswith('/discover/'):
+                return original(path, **params)
+            if 'vote_count.lte' not in params and 'vote_count.gte' not in params:
+                return {'page': 1, 'total_pages': 501, 'total_results': 3, 'results': []}
+            ids = [41, 42] if 'vote_count.lte' in params else [42, 43]
+            return {'page': 1, 'total_pages': 1, 'total_results': 2, 'results': [{'id': i} for i in ids]}
+        self.api.get = growing
+        result = self.run_day('2026-10-14T20:00:00', dry_run=False)
+        self.assertEqual(result['lists_completed'], 1)
+        self.assertEqual(next(iter(self.store.snapshots.values()))['ids'], [41, 42, 43])
 
     def test_same_day_rerun_is_inert_but_gap_cannot_claim_exact_day(self):
         self.api.ids = []
@@ -252,20 +304,91 @@ class DailyListTests(unittest.TestCase):
         self.assertEqual(len(rows), 1)
         self.assertEqual(rows[0]['dropped_precision'], 'exact')
 
+    def test_pending_country_omission_cannot_reopen_an_exact_list_drop(self):
+        import mongomock
+        from f.sync.availability_history import HistoryTitle, OfferKey
+        from f.tmdb_api.provider_evidence import capture_provider_check
+        self.run_day('2026-10-13T20:00:00', dry_run=False)
+        self.api.ids, self.api.results = [], {}
+        self.run_day('2026-10-14T20:00:00', dry_run=False)
+        key = OfferKey(42, 'show', 'US', 8, 'flatrate')
+        # Reconciliation retains the old offer when TMDB omits the country.
+        # Even a newer copy time or HTTP response cannot substantiate a return.
+        for checked_at in (datetime(2026, 10, 13, 12), datetime(2026, 10, 15, 12)):
+            payload = {'results': {}}
+            proof = capture_provider_check({'id': 42, 'watch/providers': payload}, 42,
+                                           checked_at, bypass_cache=True)
+            title = HistoryTitle(42, {'watch_providers': payload, 'watch_providers_check': proof},
+                                 {key: key._asdict()}, {}, [key._asdict()], [])
+            pending = mongomock.MongoClient().db.streaming_history_pending
+            pending.insert_one({'_id': 'show:42'})
+            publish_history(self.store.crate, 'show', [title], lambda: None, pending)
+            rows = list(self.store.crate.history.values())
+            self.assertEqual(len(rows), 1)
+            self.assertEqual(rows[0]['dropped_precision'], 'exact')
+
+    def test_pending_stale_absence_cannot_close_a_newer_list_arrival(self):
+        import mongomock
+        from f.sync.availability_history import HistoryTitle
+        from f.tmdb_api.provider_evidence import capture_provider_check
+        self.api.ids = []
+        self.run_day('2026-10-13T20:00:00', dry_run=False)
+        self.api.ids = [42]
+        self.run_day('2026-10-14T20:00:00', dry_run=False)
+        payload = {'results': {'US': {}}}
+        proof = capture_provider_check({'id': 42, 'watch/providers': payload}, 42,
+                                       datetime(2026, 10, 13, 12), bypass_cache=True)
+        title = HistoryTitle(42, {'watch_providers': payload, 'watch_providers_check': proof}, {}, {}, [], [])
+        pending = mongomock.MongoClient().db.streaming_history_pending
+        pending.insert_one({'_id': 'show:42'})
+        publish_history(self.store.crate, 'show', [title], lambda: None, pending)
+        rows = list(self.store.crate.history.values())
+        self.assertEqual(len(rows), 1)
+        self.assertIsNone(rows[0]['dropped_on'])
+        self.assertEqual(rows[0]['appeared_precision'], 'exact')
+
     def test_default_entrypoint_covers_regions_and_stored_countries_even_if_tmdb_drops_them(self):
-        with patch.object(job, 'TMDBClient', return_value=self.api), patch.object(job, 'ListStorage', return_value=self.store):
-            report = job.main(provider_ids=[8])
+        with patch.object(job, 'TMDBClient', return_value=self.api), patch.object(job, 'create_list_storage', return_value=self.store):
+            report = job.main(service_ids=[8])
         self.assertEqual(report['lists_completed'], 2)
         self.assertTrue(report['dry_run'])
         self.assertEqual(self.store.snapshots, {})
-        self.assertEqual(len(job.BIG_BRANDS), 15)
+        self.assertEqual(len(job.SERVICE_NAMES), 15)
 
     def test_null_dry_run_input_from_a_flow_cannot_enable_writes(self):
-        with patch.object(job, 'TMDBClient', return_value=self.api), patch.object(job, 'ListStorage', return_value=self.store):
-            report = job.main(provider_ids=[8], dry_run=None)
+        with patch.object(job, 'TMDBClient', return_value=self.api), patch.object(job, 'create_list_storage', return_value=self.store):
+            report = job.main(service_ids=[8], dry_run=None)
         self.assertIs(report['dry_run'], True)
         self.assertEqual(self.store.snapshots, {})
         self.assertEqual(self.store.crate.history, {})
+
+    def test_held_run_lease_skips_before_any_tmdb_request(self):
+        import mongomock
+        from datetime import timedelta
+        from f.tmdb_api.daily_list_storage import ListStorage
+        db = mongomock.MongoClient().db
+        db.tmdb_daily_provider_list_leases.insert_one({'_id': 'run', 'token': 'other',
+                                                       'expires_at': datetime.now() + timedelta(minutes=15)})
+        store = ListStorage(db=db, connector=HistoryCrate(), dry_run=True)
+        with patch.object(job, 'TMDBClient', return_value=self.api), patch.object(job, 'create_list_storage', return_value=store):
+            result = job.main(service_ids=[8])
+        self.assertTrue(result['run_skipped'])
+        self.assertEqual(db.tmdb_daily_provider_list_leases.index_information()['expires_at_1']['expireAfterSeconds'], 0)
+        self.assertEqual(self.api.calls, [])
+        self.assertEqual(db.tmdb_daily_provider_list_leases.find_one({'_id': 'run'})['token'], 'other')
+
+    def test_held_list_lease_is_skipped_not_failed(self):
+        import mongomock
+        from datetime import timedelta
+        from f.tmdb_api.daily_list_storage import ListStorage
+        db = mongomock.MongoClient().db
+        db.tmdb_daily_provider_list_leases.insert_one({'_id': 'US:show:8', 'token': 'other',
+                                                       'expires_at': datetime.now() + timedelta(minutes=15)})
+        self.store = ListStorage(db=db, connector=HistoryCrate(), dry_run=False)
+        result = self.run_day('2026-10-14T20:00:00', dry_run=False)
+        self.assertEqual(result['lists_skipped'], 1)
+        self.assertEqual(result['lists_failed'], 0)
+        self.assertEqual(self.api.calls, [])
 
     def test_a_country_removed_from_regions_is_still_read_when_it_has_pending_history(self):
         import mongomock
@@ -273,8 +396,8 @@ class DailyListTests(unittest.TestCase):
         db = mongomock.MongoClient().db
         db.tmdb_daily_provider_list_pending.insert_one({'_id': 'DE:show:8', 'ids': [42]})
         store = ListStorage(db=db, connector=HistoryCrate(), dry_run=True)
-        with patch.object(job, 'TMDBClient', return_value=self.api), patch.object(job, 'ListStorage', return_value=store):
-            report = job.main(provider_ids=[8])
+        with patch.object(job, 'TMDBClient', return_value=self.api), patch.object(job, 'create_list_storage', return_value=store):
+            report = job.main(service_ids=[8])
         self.assertEqual(report['countries'], ['DE', 'US'])
 
     def test_storage_adapter_preview_reads_history_without_writes_or_leases(self):
@@ -290,15 +413,13 @@ class DailyListTests(unittest.TestCase):
         self.assertEqual(self.store.connector.writes, [])
         self.assertEqual(db.list_collection_names(), [])
 
-    def test_read_only_adapter_refuses_apply_before_creating_any_lease(self):
+    def test_read_only_adapter_refuses_checkpoint_writes(self):
         import mongomock
         from f.tmdb_api.daily_list_storage import ListStorage
         db = mongomock.MongoClient().db
-        self.store = ListStorage(db=db, connector=HistoryCrate(), dry_run=True)
-        with patch.object(db.tmdb_daily_provider_list_leases, 'update_one') as write:
-            report = self.run_day('2026-10-14T20:00:00', dry_run=False)
-        write.assert_not_called()
-        self.assertEqual(report['lists_failed'], 1)
+        store = ListStorage(db=db, connector=HistoryCrate(), dry_run=True)
+        with self.assertRaisesRegex(RuntimeError, 'Read-only storage'):
+            store.save('US:show:8', {})
         self.assertEqual(db.list_collection_names(), [])
 
     def test_storage_adapter_serializes_history_and_checkpoints_without_offer_writes(self):
@@ -317,6 +438,48 @@ class DailyListTests(unittest.TestCase):
         self.assertEqual(stay['dropped_precision'], 'exact')
         self.assertTrue(all('availability_history' in write for write in self.store.connector.writes))
 
+    def test_busy_titles_are_retried_after_free_titles_are_published(self):
+        import mongomock
+        from datetime import timedelta
+        from f.tmdb_api.daily_list_storage import ListStorage
+        db = mongomock.MongoClient().db
+        self.api.ids = [42, 43]
+        self.store = ListStorage(db=db, connector=HistoryCrate(), dry_run=False)
+        db.streaming_publication_leases.insert_one({'_id': 'show:42', 'token': 'other',
+                                                     'expires_at': datetime.now() + timedelta(minutes=15)})
+        def release(seconds):
+            self.assertGreaterEqual(seconds, 5)
+            self.assertEqual({r['media_tmdb_id'] for r in self.store.connector.history.values()}, {43})
+            db.streaming_publication_leases.delete_one({'_id': 'show:42'})
+        with patch('time.sleep', side_effect=release) as sleep:
+            result = self.run_day('2026-10-14T20:00:00', dry_run=False)
+        self.assertEqual(result['lists_completed'], 1)
+        self.assertEqual(sleep.call_count, 1)
+        self.assertEqual({r['media_tmdb_id'] for r in self.store.connector.history.values()}, {42, 43})
+        self.assertEqual(db.tmdb_daily_provider_list_pending.count_documents({}), 0)
+
+    def test_exhausted_title_retries_retain_intents_and_replay_only_once(self):
+        import mongomock
+        from datetime import timedelta
+        from f.tmdb_api.daily_list_storage import ListStorage
+        db = mongomock.MongoClient().db
+        self.api.ids = [42, 43]
+        self.store = ListStorage(db=db, connector=HistoryCrate(), dry_run=False)
+        db.streaming_publication_leases.insert_one({'_id': 'show:42', 'token': 'other',
+                                                     'expires_at': datetime.now() + timedelta(minutes=15)})
+        with patch('time.sleep') as sleep:
+            failed = self.run_day('2026-10-14T20:00:00', dry_run=False)
+        self.assertEqual(failed['lists_failed'], 1)
+        self.assertEqual([call.args[0] for call in sleep.call_args_list], [5, 10, 20, 30])
+        self.assertEqual(db.tmdb_daily_provider_lists.count_documents({}), 0)
+        self.assertEqual(set(db.tmdb_daily_provider_list_pending.find_one({})['ids']), {42, 43})
+        self.assertEqual(len(self.store.connector.history), 1)
+        db.streaming_publication_leases.delete_one({'_id': 'show:42'})
+        result = self.run_day('2026-10-14T21:00:00', dry_run=False)
+        self.assertEqual(result['lists_completed'], 1)
+        self.assertEqual(len(self.store.connector.history), 2)
+        self.assertEqual(db.tmdb_daily_provider_list_pending.count_documents({}), 0)
+
     def test_mismatched_or_malformed_title_payload_does_not_confirm_a_change(self):
         self.run_day('2026-10-14T20:00:00', dry_run=False)
         self.api.ids = []
@@ -332,8 +495,9 @@ class DailyListTests(unittest.TestCase):
 
     def test_one_title_check_covers_multiple_provider_lists(self):
         self.api.results['US']['flatrate'].append({'provider_id': 11})
-        result = job.run_daily_lists(self.api, self.store, countries=['US'], provider_ids=[8, 11],
-            media_types=['show'], dry_run=False, now=datetime(2026, 10, 14, 20))
+        self.store.dry_run = False
+        result = job.run_daily_lists(self.api, self.store, countries=['US'], service_ids=[8, 11],
+            media_types=['show'],  now=datetime(2026, 10, 14, 20))
         self.assertEqual(result['lists_completed'], 2)
         self.assertEqual(sum(path.endswith('/watch/providers') for path, _ in self.api.calls), 1)
         self.assertEqual(len(self.store.crate.history), 2)
@@ -367,19 +531,22 @@ class DailyListTests(unittest.TestCase):
         self.assertEqual(stay['dropped_precision'], 'unknown')
         self.assertEqual(self.store.intents, {})
 
-    def test_baseline_absence_cannot_close_stale_history_without_a_title_check(self):
+    def test_baseline_closes_stuck_stays_unknown_only_after_a_title_check(self):
         # A dropped-country offer can remain open from before list monitoring.
         self.run_day('2026-10-10T20:00:00', dry_run=False)
         self.store.snapshots.clear()
-        self.api.ids = []
+        self.api.ids, self.api.results = [], {}
+        self.api.calls.clear()
         self.run_day('2026-10-13T20:00:00', dry_run=False)
-        self.assertIsNone(next(iter(self.store.crate.history.values()))['dropped_on'])
-        self.api.ids = [42]
+        stay = next(iter(self.store.crate.history.values()))
+        self.assertEqual(stay['dropped_on'], day('2026-10-13'))
+        self.assertEqual(stay['dropped_precision'], 'unknown')
+        self.assertEqual(sum(path.endswith('/watch/providers') for path, _ in self.api.calls), 1)
+        self.api.ids, self.api.results = [42], {'US': {'flatrate': [{'provider_id': 8}]}}
         self.run_day('2026-10-14T20:00:00', dry_run=False)
         stays = list(self.store.crate.history.values())
-        self.assertEqual(len(stays), 1)
-        self.assertIsNone(stays[0]['dropped_on'])
-        self.assertEqual(stays[0]['appeared_precision'], 'unknown')
+        self.assertEqual(len(stays), 2)
+        self.assertEqual(stays[1]['appeared_precision'], 'exact')
 
     def test_flow_defaults_to_preview_and_has_one_concurrent_run(self):
         from windmill_preview import load_flow
@@ -400,6 +567,51 @@ class DailyListTests(unittest.TestCase):
         report = {'lists_failed': 0, 'lists_completed': 1}
         self.assertEqual(namespace['main'](report), report)
 
+    def test_authentication_failure_stops_the_public_job_after_one_request(self):
+        for status in (401, 403):
+            with self.subTest(status=status):
+                session = Mock()
+                session.get.return_value = Mock(status_code=status)
+                with patch('wmill.get_variable', return_value='fixture-key'), \
+                     patch('requests.Session', return_value=session), \
+                     patch.object(job, 'create_list_storage', return_value=self.store):
+                    with self.assertRaisesRegex(job.TMDBReadError, f'TMDB HTTP {status}'):
+                        job.main(countries=['US'], service_ids=list(range(1, 26)))
+                self.assertEqual(session.get.call_count, 1)
+
+    def test_authentication_failure_stops_queued_title_checks(self):
+        clock = [0.0]
+        def sleep(seconds):
+            clock[0] += seconds
+        session = Mock()
+        def response(url, **kwargs):
+            if '/discover/' in url:
+                return Mock(status_code=200, json=lambda: dict(page=1, total_pages=1, total_results=200,
+                            results=[{'id': i} for i in range(1, 201)]))
+            return Mock(status_code=401)
+        session.get.side_effect = response
+        with patch('wmill.get_variable', return_value='fixture-key'), \
+             patch('requests.Session', return_value=session), \
+             patch.object(job, 'create_list_storage', return_value=self.store), \
+             patch.object(job.time, 'monotonic', side_effect=lambda: clock[0]), \
+             patch.object(job.time, 'sleep', side_effect=sleep):
+            with self.assertRaisesRegex(job.TMDBReadError, 'TMDB HTTP 401'):
+                job.main(countries=['US'], service_ids=[8])
+        # One discover request plus at most the six already in-flight checks.
+        self.assertLessEqual(session.get.call_count, 7)
+        self.assertEqual(self.store.snapshots, {})
+
+    def test_twenty_consecutive_tmdb_list_failures_stop_the_run(self):
+        def failed(path, **params):
+            self.api.calls.append((path, params))
+            raise job.TMDBReadError('TMDB retry budget exhausted')
+        self.api.get = failed
+        with self.assertRaisesRegex(job.TMDBReadError, '20 consecutive'):
+            job.run_daily_lists(self.api, self.store, countries=['US'], service_ids=list(range(1, 26)),
+                                media_types=['show'],  now=datetime(2026, 10, 14, 20))
+        self.assertEqual(len(self.api.calls), 20)
+        self.assertEqual(self.store.snapshots, {})
+
     def test_http_client_bypasses_cache_and_honors_429_for_the_whole_job(self):
         clock = [0.0]
         def sleep(seconds):
@@ -411,9 +623,9 @@ class DailyListTests(unittest.TestCase):
         session = Mock()
         session.get.side_effect = responses
         with patch('wmill.get_variable', return_value='test-key'), patch('requests.Session', return_value=session), \
-             patch.object(job, 'ListStorage', return_value=self.store), \
+             patch.object(job, 'create_list_storage', return_value=self.store), \
              patch.object(job.time, 'monotonic', side_effect=lambda: clock[0]), patch.object(job.time, 'sleep', side_effect=sleep):
-            report = job.main(provider_ids=[8])
+            report = job.main(service_ids=[8])
         self.assertGreaterEqual(clock[0], 120)
         self.assertEqual(report['requests']['requests'], 4)
         self.assertEqual(report['requests']['refused'], 1)

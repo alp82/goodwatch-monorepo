@@ -1,4 +1,4 @@
-# Daily provider lists (#682)
+# Daily service lists (#682)
 
 Implements [#682](https://github.com/alp82/goodwatch-monorepo/issues/682), including
 the [absent-country departure](https://github.com/alp82/goodwatch-monorepo/issues/682#issuecomment-6226608969).
@@ -10,12 +10,24 @@ The existing [history contract](../availability-history/README.md) remains autho
 
 `f/tmdb_api/read_daily_provider_lists` calls `f/tmdb_api/daily_provider_lists` and
 fails its report step if any list failed. Both default to `dry_run: true`; only
-an explicit Boolean `false` enables publication. A null flow argument is inert.
-The flow and script each permit one concurrent run. Per-list Mongo leases also
-serialize independent callers; history writes use the streaming publisher's
-existing title leases.
+an explicit Boolean `false` enables publication. A null flow argument cannot enable data publication.
+Windmill CE v1.803 ignores `concurrent_limit`; the main entrypoint instead takes
+one Mongo run lease before any TMDB request. It renews every minute with a
+15-minute expiry and checks ownership before batches and publication. Overlapping
+runs return `run_skipped: true` without TMDB requests. The declared Windmill
+concurrency limit also works on editions that support it.
 
-The research's 15 provider identities are explicit, rather than fuzzy name matches:
+A **live dry run takes this operational run lease and ensures its TTL index**.
+It performs no history, offer, checkpoint, pending-marker, or title writes.
+Use the measurement tool below for strictly read-only production checks; it
+runs the public coordinator with read-only storage, bypasses live main, and
+refuses Mongo mutations and non-SELECT Crate statements. Run only one such
+measurement at a time and avoid overlapping the scheduled job.
+
+Per-list leases serialize apply callers; a held list is skipped rather than
+failed. History publication uses the streaming publisher's existing title leases.
+
+The research's 15 service identities are explicit, rather than fuzzy name matches:
 
 | Brand/tier | TMDB IDs |
 | --- | --- |
@@ -32,9 +44,9 @@ The research's 15 provider identities are explicit, rather than fuzzy name match
 
 Movies and shows are separate lists. Every country returned by TMDB's provider
 regions endpoint is included, plus countries with existing checkpoints or pending
-publication intents. Provider catalogs do not decide whether an existing list is
+publication intents. Service catalogs do not decide whether an existing list is
 still read. Empty lists are read and baselined too. Explicit `countries` and
-`provider_ids` inputs allow staged rollout and later expansion.
+`service_ids` inputs allow staged rollout and later expansion.
 
 ## How list reads feed stays
 
@@ -44,18 +56,21 @@ disagreed. It also records version 1, completeness, and cache-bypass provenance.
 Only a successful complete read advances it. An already completed UTC day's
 list is skipped on rerun. Gaps are retained: they cannot establish exact days.
 
-The first read verifies its listed titles and opens missing stays with unknown
-precision. It never substitutes a premiere on that first read and never infers
-departures just by comparing the baseline to older history. Existing stays remain
-intact. An empty first read is a valid absence baseline for later arrivals.
+The first read verifies listed titles and opens missing stays with unknown
+precision, without substituting a premiere. It also selects eligible open history
+stays for that country/service and verifies those missing from the list. A fresh
+per-title absence closes a stuck stay with **unknown** precision; a positive
+check keeps it open and queues another check. Failed checks leave the checkpoint
+unchanged. No first-read transition is exact. An empty first read establishes an
+absence baseline for later arrivals.
 
 After the baseline, the job compares today's discover IDs with the last complete
 checkpoint. It also includes unresolved disagreements and interrupted publications.
 Every changed title is checked with a fresh `/movie/{id}/watch/providers` or
 `/tv/{id}/watch/providers` GET. The response must have the requested title ID and
-a structurally valid provider payload. Only `flatrate`, `free`, and `ads` offers
-of the requested provider in the requested country count; rent/buy and another
-provider's offer never do.
+a structurally valid service payload. Only `flatrate`, `free`, and `ads` offers
+of the requested service in the requested country count; rent/buy and another
+service's offer never do.
 
 The job supplies `HistoryTitle` and a scoped `ListRead` to the existing history
 writer. The writer, including its `Observation`, UTC-day comparison, collision
@@ -68,9 +83,13 @@ that chooses precision and days. The job never supplies an `exact` flag.
   yesterday's list to establish presence. A title still offered is retained,
   with a retry on the next read even if discover continues to omit it.
 - An absent country in that validated title response can establish absence
-  **only for the country/provider list being reconciled**. Ordinary title
+  **only for the country/service list being reconciled**. Ordinary title
   publication still treats an absent country as unknown. Thus a service losing
   its only offer in a country can now close its stay after daily confirmation.
+- A pending ordinary publication cannot overwrite a history observation newer
+  than its API observation. Reopening an exact drop requires a supporting
+  positive API offer from a strictly later UTC day; omitted-country retained
+  offers and copy-time fallbacks cannot substantiate a return.
 - A confirmed drop followed by a return opens another stay. Timestamp collisions
   and missing observation days retain the writer's unknown-precision fallback.
 - A title publisher may open/close an unknown stay earlier today. The same writer
@@ -80,7 +99,7 @@ that chooses precision and days. The job never supplies an `exact` flag.
 Existing Mongo title metadata is read in batches so later arrivals can use the
 writer's existing original-premiere rule. Missing metadata falls back to the
 ordinary observation rule. Confirmed arrivals retain `appeared_source = 'title'`:
-the confirming read is a provider request. The deployed schema allows that source;
+the confirming read uses TMDB's per-title service endpoint. The deployed schema allows that source;
 there is no new `list` enum value or schema migration.
 
 A union discover list proves eligible service membership, not an invisible switch
@@ -101,8 +120,11 @@ main's cache-bypass mechanism. Six HTTP workers share one limiter, defaulting to
 15 requests/second, with a hard configurable ceiling of 20. Retries consume the
 same budget. A 429 delays all workers and honors `Retry-After` seconds or an HTTP
 date; transient network/5xx failures back off, with six attempts total. A 404 or
-malformed provider response is a failure, never evidence for a drop. Authentication
-failures are not retried. URLs/credentials are not returned in reports.
+malformed service response is a failure, never evidence for a drop. Authentication
+failures (401/403) stop the run immediately. Twenty consecutive lists failing
+with `TMDBReadError` also stop the run. A successful list resets the failure
+counter; a non-TMDB list error breaks that sequence. URLs/credentials are not
+returned in reports.
 
 The default request budget is 350,000 per run, including retries; exhausting it
 fails the run. Completed checkpoints survive for the next attempt. TMDB describes
@@ -114,17 +136,23 @@ share this in-process limiter.
 Each list first uses `title.asc` for movies or `name.asc` for shows. Page numbers,
 totals, and page counts must remain consistent. Unique IDs must match
 `total_results`. Otherwise it reads the second sort (`primary_release_date.desc`
-or `first_air_date.desc`) and checks the union against the same total. A short,
-oversized, or moving result is rejected; it causes no checkpoint or history writes.
+or `first_air_date.desc`). Stable short reads can union their IDs against the
+same total. Changed paging metadata discards that traversal's IDs and tries a
+clean second sort; a changed second-sort total also requires an independently
+complete second read. A second incomplete traversal is rejected before staging
+or history publication.
 
 Lists beyond TMDB's 500-page limit split into disjoint integer `vote_count`
 ranges. This retains undated titles that date splits can exclude. Each leaf gets
-the same completeness/fallback checks, and overlapping IDs or changed uncapped
-parent totals reject the read. An indivisible oversized bin fails safely. This
+the same completeness/fallback checks. The lower range is read first: increasing
+vote counts can repeat a title in the upper range, so the ranges are unioned.
+Changed uncapped parent cardinality rejects the read. TMDB caps reported
+`total_results` at **20,001**, so larger partitioned lists cannot compare their
+union with that capped parent total. An indivisible oversized bin fails safely. This
 does not turn a changing upstream API into a transactional snapshot; per-title
 confirmation remains necessary even after cardinality matches.
 
-One fresh per-title response covers every country/provider. A compressed,
+One fresh per-title response covers every country/service. A compressed,
 temporary SQLite cache shares it within the run, with bounded Python memory and
 the original read timestamp. It expires across UTC days and rechecks a conflict
 discovered after the cached response. The cache is local to the job and is removed
@@ -132,20 +160,24 @@ when it exits.
 
 ## Failure recovery and storage
 
-The apply path uses three new Mongo collections, all using only their built-in
-`_id` indexes:
+The job uses three new Mongo collections. All have built-in `_id` indexes;
+`tmdb_daily_provider_list_leases.expires_at` additionally has a TTL index with
+`expireAfterSeconds: 0`, ensured on lease acquisition. Expired leases are reclaimable
+immediately through the acquisition predicate, independently of TTL cleanup:
 
 | Collection | Contents |
 | --- | --- |
-| `tmdb_daily_provider_lists` | Last completed snapshot per `country:media_type:provider` |
+| `tmdb_daily_provider_lists` | Last completed snapshot per `country:media_type:service` |
 | `tmdb_daily_provider_list_pending` | Candidate title IDs staged before any history writes |
-| `tmdb_daily_provider_list_leases` | Renewable, token-owned 15-minute list leases |
+| `tmdb_daily_provider_list_leases` | Renewable, token-owned 15-minute run and list leases |
 
 History writes are batched in groups of 200 under the existing
 `streaming_publication_leases`. The shared writer reads history only for that
-country/provider in list mode. The normal publisher's title-wide query stays
-unchanged. Busy title leases, provider failures, incomplete reads, and history
-failures leave the checkpoint unchanged.
+country/service in list mode. The normal publisher's title-wide query stays
+unchanged. Free titles publish first, then busy titles retry after 5, 10, 20,
+and 30 seconds. Only exhausted retries fail that list. Pending IDs preserve the
+already published batches for idempotent replay. TMDB failures, incomplete reads,
+and history failures leave the checkpoint unchanged.
 
 There is no cross-database transaction. Before publication, durable pending IDs
 are staged. After all history writes succeed, the snapshot is saved, then its
@@ -185,29 +217,47 @@ are **not** evidence of 28 daily arrivals. The previous snapshot was read at
 two UTC dates. They do not measure a full day's churn. The final preview planned
 three rows in memory and published zero.
 
+The review-fix rerun of that same four-country panel completed **36 lists**
+(84 outside-panel lists skipped by the measurement adapter), checked 28 changed
+IDs, and used **4,649 GETs in 328.188 s**: 4,621 discover + 28 per-title requests.
+It had **zero failed lists, retries, refusals, or production writes** and planned
+three unknown-arrival rows in memory. That run achieved **14.17 requests/s**.
+Its requests and rows match the earlier comparison; the panel's absence evidence
+remains untrusted. The full result is `review_read_only_comparison` in the evidence.
+
 The census sizes the real daily primary pass at **144,399 discover requests +
 one regions GET = 144,400/day**. Add second-sort pages for incomplete primary
-reads and fresh changed-title checks, shared across countries/providers. Measured
-throughput was **12.6–13.3 requests/s** at the configured 15/s cap. That gives:
+reads and fresh changed-title checks, shared across countries/services. Measured
+throughput was **12.6–14.2 requests/s** at the configured 15/s cap. That gives:
 
 | Planning case | Requests/day or first read | Read/preview runtime at observed throughput |
 | --- | ---: | ---: |
-| Primary pass | 144,400 | 3.0–3.2 h |
-| Ordinary daily allowance: primary + 5,000 title checks | **149,400** | **3.1–3.3 h** |
-| Also reserve 15% extra discover requests for fallbacks | 171,060 | 3.6–3.8 h |
-| First global baseline, using the Crate distinct-title proxy below | About 282,773 | About 5.9–6.3 h, before production write overhead |
+| Primary pass | 144,400 | 2.8–3.2 h |
+| Ordinary daily allowance: primary + 5,000 title checks | **149,400** | **2.9–3.3 h** |
+| Also reserve 15% extra discover requests for fallbacks | 171,060 | 3.4–3.8 h |
+| First global baseline, using the Crate distinct-title proxy below | About 282,773 | About 5.5–6.3 h, before production write overhead |
 
 Use **about 150,000 requests/day and 3.2 hours** for the ordinary daily plan;
 the formula, request budget, and failed-list report remain authoritative during
 actual changes or country drops. No daily change-rate claim comes from this short
 sample. New metadata GETs are not needed: original metadata is read from Mongo.
 
-The first baseline additionally confirms listed titles. A SELECT found **108,332
-movie + 30,041 show IDs** on these providers in existing Crate offers. Treat their
-138,373 total as a planning proxy for distinct title checks, not an API count:
+The first baseline confirms listed titles and eligible open stays. A new
+production **SELECT-only recount**, filtering the 15 service IDs and
+`streaming_type IN ('flatrate','free','ads')`, found **108,332 movie + 30,041 show
+IDs**, or **138,373**. Grouping by IDs independently confirms this count; adding
+eligible open history stays leaves the union unchanged. Apple TV (350) contributes
+only **160 eligible movie IDs and 235 eligible show IDs** (235 flatrate and
+28 free show IDs, with overlap). Its 67,859 movie buy / 66,266 movie rent /
+7,215 show buy counts are excluded, not subtracted from eligible titles
+on other services. Thus the eligible-only recount does **not** support reducing
+the proxy by 75,800. Full queries, parameters, type/service breakdowns, and union
+results are saved in [evidence.json](evidence.json).
+
+Treat 138,373 as a planning proxy for distinct title checks, not an API count:
 Crate includes ended offers and can lack new titles, and conflicting cached
 responses may need another check. With a 15% fallback reserve, that proxy becomes
-about 304,433 requests and 6.3–6.7 hours of reads; production lease/write overhead
+about 304,433 requests and 6.0–6.7 hours of reads; production lease/write overhead
 is unmeasured. The default 350,000-request budget and eight-hour timeout are
 deliberate bounds; stage country groups if the baseline exceeds them.
 
@@ -219,7 +269,7 @@ incomplete in the evidence rather than reported as a completed benchmark.
 
 Reproduce with the existing local Windmill CLI `goodwatch` remote; the tool reads
 credentials using variable GETs, intercepts Crate calls to permit only SELECT,
-and always invokes `dry_run=True`:
+and invokes the public coordinator with `ListStorage(dry_run=True)` (no operational leases):
 
 ```sh
 python goodwatch-flows/tools/measure_daily_provider_lists.py \
@@ -242,20 +292,32 @@ and are not a full day's arrival/departure rate or a production-write validation
 ## Owner rollout and schedule
 
 Nothing in this build creates production tables, collections, scripts, flows,
-schedules, or data. Inert preview jobs are the only Windmill submissions.
+schedules, or data. Windmill submissions only validate inert previews or resolve
+dependencies for the local lock files.
 
 1. Review the change, then deploy through the normal main/GitHub Actions pipeline.
    This checkout was not pushed. Confirm the shared history helper, the new
    `daily_provider_lists` and `daily_list_storage` scripts, and
    `read_daily_provider_lists` flow all match the reviewed sources before running.
+   Both locks were regenerated with `wmill script generate-metadata --lock-only`;
+   ensure the deployed script locks include `crate`, `orjson`, and `verlib2`.
+   The shared writer changes affect ordinary publication immediately on deploy;
+   deploying the helper is not inert.
 2. No Crate DDL, enum change, or backfill is required. The existing
    `availability_history` table and writer must already be deployed, as they are
    on this production system. No new credentials are required.
 3. Run the flow manually with `dry_run: true`, first for a few countries, then
-   without a country restriction. Investigate incomplete lists or provider errors.
-4. Run the first apply deliberately as a baseline, allowing its larger request
-   cost and duration. It automatically creates the three Mongo collections above;
-   no manual indexes are needed. Larger expansions can baseline country groups
+   without a country restriction, starting at 14:00 UTC. Investigate incomplete
+   lists or service errors. This validates the eight-hour timeout on CE, which
+   has not yet run a job of that length. Live dry runs create only the operational
+   lease collection/index, not the other collections or any data publications.
+4. **Back up `availability_history` before the first apply** into an owner-created
+   table, e.g. `availability_history_before_682`, using its existing schema and
+   `INSERT ... SELECT`. List observations share `appeared_source = 'title'` with
+   ordinary publication, so there is no reliable list-only undo filter. Then run
+   the baseline at 14:00 UTC, allowing its larger cost and duration. The apply
+   creates the checkpoint/pending collections; the TTL lease index is automatic.
+   Larger expansions can baseline country groups
    over several days. Preserve checkpoints; deleting them discards daily evidence.
 5. Create the disabled schedule from [proposed-schedule.json](proposed-schedule.json),
    then enable it after checking the baseline and pending markers. Proposed time:
@@ -268,17 +330,31 @@ schedules, or data. Inert preview jobs are the only Windmill submissions.
    pending IDs, request/refusal counts, and duration. The report fails the flow
    when any list is rejected, while independent completed lists retain progress.
 
-To stop, disable only the new schedule and wait for its active job. Preserve
-history and checkpoints. A pause introduces an unknown gap, not an exact day.
-No Coolify setting changes are required.
+To stop, disable the new schedule and wait for its active job. Preserve history
+and checkpoints. A pause introduces an unknown gap, not an exact day. For rollback,
+revert the code; restore the history backup if the baseline published incorrect
+stays. No Coolify setting changes are required.
+
+For a deliberately **retired** list, first exclude it from the configured scope
+(`service_ids`, an explicit `countries` filter, or future pair enumeration).
+Deleting a checkpoint while its pair remains in scope creates a new baseline.
+Pause the schedule and wait for the active job, verify and finish its pending
+history reconciliation, then archive its
+checkpoint and pending document. Delete those two documents by exact list `_id`
+only after confirming retirement with the owner; do not delete history. Once the
+country has no checkpoints or pending IDs and TMDB no longer lists it, country
+selection stops including it. An empty or dropped-country list is not automatically
+retired: keep reading it to detect returns. Catalog-listed countries remain in
+scope. Leases self-clean through TTL; active checkpoints and recovery intents
+have no TTL because expiring either would erase daily evidence or lose recovery.
 
 ## Widening to every list later
 
-Provider IDs are configuration, not embedded in the completeness or history logic.
+Service IDs are configuration, not embedded in the completeness or history logic.
 Every added list gets its own unknown baseline and later daily evidence. Snapshot
-identity, recovery, type checks, and history publication work for other providers.
-For option 1, enumerate the union of regional provider pairs and existing
-checkpoint/pending pairs rather than probing all 925 providers in every country.
+identity, recovery, type checks, and history publication work for other services.
+For option 1, enumerate the union of regional service pairs and existing
+checkpoint/pending pairs rather than probing all 925 services in every country.
 Keep reading previously known pairs after they disappear from catalogs. Size and
 increase the request budget/runtime before enabling that larger scope; oversized
 indivisible bins remain explicit failures rather than truncated lists.
@@ -287,17 +363,21 @@ indivisible bins remain explicit failures rather than truncated lists.
 
 Tests were written red before implementation at the agreed seams. Final checks:
 
-- New tests with disposable local Crate 5.10.16: **30 passed**, four opt-in
+- New tests with disposable local Crate 5.10.16: **41 passed**, four opt-in
   Windmill previews skipped in that run; those **four remote previews passed**
   separately, alongside their local fixture check.
 - Existing history regressions with local Crate: **39 passed, one opt-in preview
   skipped**. The new inert preview also exercises the shared history writer.
-- Full flow suite with local Crate: **1,567 tests, 1,520 passed, 46 skipped,
+- Full flow suite with local Crate: **1,578 tests, 1,531 passed, 46 skipped,
   one pre-existing failure**. It is
   `test_deleted_titles.DeleteFromCrateTests.test_user_tables_are_untouched_and_all_derived_tables_are_covered`:
   the deletion inventory omits `social_title_link`, `social_link_report`, and
   `social_relevance`. The test, deletion helper, and schema are unchanged from
   HEAD; the preceding history build already documented the same failure.
+- Both regenerated locks include `orjson`/`verlib2` and are identical. Installing
+  the daily-job lock into a fresh Python 3.12 environment passed imports; its
+  dependencies also passed the 41 local daily-job tests (with test-only mongomock
+  and PyYAML added).
 - `git diff --check` passed. No production data publication, table/collection
   creation, script/flow deployment, schedule mutation, push, merge, or PR occurred.
 
@@ -305,7 +385,9 @@ The two agreed test seams are the daily job entrypoint with simulated TMDB/stora
 adapters and the existing history writer. Tests cover baseline/empty baseline,
 consecutive-day arrivals and returns, whole-country drops, false-change retries,
 sort fallback, short/changed responses, large-list partitions, gaps and freshness,
-same-day refinements, original metadata, null dry-run inputs, and interrupted
+same-day refinements, stale pending publications in both directions, busy-title
+retries, run/list leases, authentication and outage stops, original metadata,
+null dry-run inputs, and interrupted
 publication whose source changes before retry. The SQL test runs the entrypoint
 against the deployed schema on disposable localhost Crate, with no offer table
 present. Opt-in inert Windmill previews execute checkout code and the real flow's

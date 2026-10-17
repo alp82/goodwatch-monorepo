@@ -221,11 +221,16 @@ def title_writes(transition, previous, media_type, pending, copy_at):
             opened[key] = row
         elif key not in closed or row['observed_at'] > closed[key]['observed_at']:
             closed[key] = row
+    observation = Observation.from_title(title, copy_at)
     if f'{media_type}:{title.tmdb_id}' in pending:
         desired = {availability_key(row): row for row in title.rows.values()}
         added.update({key: row for key, row in desired.items() if key.streaming_type in OFFER_TYPES and key not in opened})
         removed = sorted(set(removed) | (opened.keys() - desired.keys()))
-    observation = Observation.from_title(title, copy_at)
+        # A pending offer snapshot cannot undo a later history observation.
+        stale = {key for key, at in latest.items()
+                 if observation.api_at is None or at > observation.api_at}
+        added = {key: row for key, row in added.items() if key not in stale}
+        removed = [key for key in removed if key not in stale]
     writes = []
     for key, row in added.items():
         at, consecutive = observation.read(key, row)
@@ -239,7 +244,8 @@ def title_writes(transition, previous, media_type, pending, copy_at):
             continue  # History committed before a failed offer write.
         prior_stay = closed.get(key)
         if (prior_stay and prior_stay['dropped_precision'] == 'exact'
-                and utc_day(at) < prior_stay['dropped_on']):
+                and (not observation.api_supports(key, row) or observation.api_at is None
+                     or utc_day(observation.api_at) <= prior_stay['dropped_on'])):
             continue  # A stale title publisher cannot undo a later confirmed absence.
         collision = latest.get(key, -1) >= at
         if collision:
