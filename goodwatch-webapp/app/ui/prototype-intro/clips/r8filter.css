@@ -1,0 +1,293 @@
+/* PROTOTYPE - throwaway. Round 8, chapter 6 (filters): round 7's panel, opened by the catalog, with continuous posters. Transform and
+   opacity only; every time goes through --k. */
+
+.lp8f {
+	position: absolute;
+	inset: 0;
+	overflow: hidden;
+	background: radial-gradient(85% 90% at 70% 45%, #141a28 0%, #05060a 72%);
+	color: #fff;
+	font-family: "Gabarito", ui-sans-serif, system-ui, sans-serif;
+}
+.lp8f-amber { color: #fbbf24; }
+.lp8f-h {
+	position: absolute;
+	left: 4.5cqw;
+	top: 6cqh;
+	margin: 0;
+	font-size: 4.2cqw;
+	font-weight: 800;
+	line-height: 1.02;
+	letter-spacing: -0.02em;
+	white-space: nowrap;
+}
+.lp8f-word { display: inline-block; }
+.lp8f-hold { visibility: hidden; display: inline-block; }
+
+/* ---------- Timing primitives */
+.lp8f-m { animation-fill-mode: both; animation-delay: calc(var(--d) * var(--k)); }
+.lp8f-m-rise { animation-name: lp8f-rise; animation-duration: calc(760ms * var(--k)); animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1); }
+@keyframes lp8f-rise { from { opacity: 0; transform: translateY(45%); } }
+.lp8f-m-deal { animation-name: lp8f-deal; animation-duration: calc(750ms * var(--k)); animation-timing-function: cubic-bezier(0.25, 0.8, 0.25, 1); }
+@keyframes lp8f-deal { from { opacity: 0; transform: translate(-14%, -14%) scale(1.12); } }
+.lp8f-m-roll { animation-name: lp8f-roll; animation-duration: calc(560ms * var(--k)); animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1); }
+@keyframes lp8f-roll { from { opacity: 0; transform: translateY(55%); } }
+/* Shown from --a on. A plain linear 1 ms reveal: a `steps(1, end)` one could finish without showing its element in
+   real playback (Chrome), which left the posters and numbers missing. */
+.lp8f-timed { opacity: 0; animation: lp8f-show calc(1ms * var(--k)) linear calc(var(--a) * var(--k)) forwards; }
+@keyframes lp8f-show { from { opacity: 0; } to { opacity: 1; } }
+.lp8f-lift { animation: lp8f-lift calc(300ms * var(--k)) ease-in calc(var(--x) * var(--k)) both; }
+@keyframes lp8f-lift { to { opacity: 0; transform: translateY(-55%); } }
+.lp8f-leave { animation: lp8f-fall calc(560ms * var(--k)) cubic-bezier(0.55, 0, 0.75, 0.3) calc(var(--x) * var(--k)) both; }
+@keyframes lp8f-fall { to { opacity: 0; transform: translateY(24%) rotate(5deg) scale(0.88); } }
+
+/* ---------- Layout */
+.lp8f-left { position: absolute; left: 4.5cqw; top: 17.5cqh; width: 41cqw; }
+.lp8f-right { position: absolute; left: 50cqw; right: 3.5cqw; top: 17.5cqh; }
+
+/* ---------- The panel of switches */
+.lp8f-panel { display: flex; flex-direction: column; gap: 1.05cqh; }
+.lp8f-row {
+	--on-d: calc(var(--on) * var(--k));
+	position: relative;
+	display: flex;
+	align-items: center;
+	gap: 1cqw;
+	padding: 0.8cqw 1.3cqw 0.8cqw 1.4cqw;
+	border-radius: 999px;
+	font-size: 2.15cqw;
+	font-weight: 800;
+	white-space: nowrap;
+	isolation: isolate;
+	color: rgba(255, 255, 255, 0.78);
+	animation:
+		lp8f-bright calc(1ms * var(--k)) steps(1, end) var(--on-d) both,
+		lp8f-punch calc(520ms * var(--k)) cubic-bezier(0.34, 1.56, 0.64, 1) var(--on-d) both;
+}
+@keyframes lp8f-bright { to { color: #fff; } }
+@keyframes lp8f-punch { 0% { transform: scale(1); } 40% { transform: scale(1.06); } 100% { transform: scale(1); } }
+/* Off: a quiet outline. On: the filter's own colour as a ring, a wash and a glow. */
+.lp8f-row::before,
+.lp8f-row::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	border-radius: inherit;
+}
+.lp8f-row::before { z-index: -3; border: 0.18cqw solid rgba(255, 255, 255, 0.22); background: rgba(255, 255, 255, 0.045); }
+.lp8f-row::after,
+.lp8f-relight {
+	background: color-mix(in srgb, var(--c) 20%, transparent);
+	box-shadow: 0 0 0 0.2cqw var(--c), 0 0 2.6cqw color-mix(in srgb, var(--c) 45%, transparent);
+	opacity: 0;
+	animation: lp8f-on calc(260ms * var(--k)) ease-out var(--on-d) both;
+}
+.lp8f-row::after { z-index: -2; }
+.lp8f-relight {
+	--on-d: calc(var(--on) * var(--k));
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	border-radius: inherit;
+}
+@keyframes lp8f-on { to { opacity: 1; } }
+.lp8f-mark { display: inline-flex; flex: none; align-items: center; justify-content: center; min-width: 2.4cqw; color: var(--c); }
+.lp8f-label { flex: 1; min-width: 0; }
+.lp8f-logos { display: inline-flex; flex: none; gap: 0.35cqw; }
+.lp8f-logos img { display: block; flex: none; width: 2.4cqw; height: 2.4cqw; max-width: none; border-radius: 0.5cqw; object-fit: cover; }
+.lp8f-dot { display: block; width: 1.6cqw; height: 1.6cqw; border-radius: 50%; }
+.lp8f-icon { width: 2.3cqw; height: 2.3cqw; }
+
+/* The score: a dot in the vibe colour of its threshold, and the threshold itself. */
+.lp8f-score-mark { position: relative; width: 2.4cqw; height: 2.4cqw; }
+.lp8f-score-mark::before {
+	content: "";
+	position: absolute;
+	left: 0.4cqw;
+	top: 0.4cqw;
+	width: 1.6cqw;
+	height: 1.6cqw;
+	border-radius: 50%;
+	background: rgba(255, 255, 255, 0.3);
+}
+.lp8f-score-dot {
+	position: absolute;
+	left: 0.4cqw;
+	top: 0.4cqw;
+	width: 1.6cqw;
+	height: 1.6cqw;
+	border-radius: 50%;
+	background: var(--c);
+	opacity: 0;
+	animation: lp8f-on calc(200ms * var(--k)) ease-out calc(var(--on) * var(--k)) both;
+}
+.lp8f-value { position: relative; flex: none; font-size: 2.4cqw; font-weight: 900; font-variant-numeric: tabular-nums; }
+.lp8f-value .lp8f-timed { position: absolute; right: 0; top: 0; }
+.lp8f-value-n { display: inline-block; color: var(--c); filter: brightness(1.35); }
+
+/* The switch: a track that fills with the colour, its knob slides over. */
+.lp8f-switch {
+	position: relative;
+	flex: none;
+	width: 4.2cqw;
+	height: 2.3cqw;
+	border-radius: 999px;
+	background: rgba(255, 255, 255, 0.18);
+}
+.lp8f-switch::after,
+.lp8f-switch-relight {
+	content: "";
+	position: absolute;
+	inset: 0;
+	border-radius: inherit;
+	background: var(--c);
+	opacity: 0;
+	animation: lp8f-on calc(260ms * var(--k)) ease-out var(--on-d) both;
+}
+.lp8f-switch-relight { --on-d: calc(var(--on) * var(--k)); z-index: 0; }
+.lp8f-knob {
+	position: absolute;
+	z-index: 1;
+	left: 0.25cqw;
+	top: 0.25cqw;
+	width: 1.8cqw;
+	height: 1.8cqw;
+	border-radius: 50%;
+	background: #fff;
+	box-shadow: 0 0.2cqw 0.5cqw rgba(0, 0, 0, 0.4);
+	animation: lp8f-knob calc(320ms * var(--k)) cubic-bezier(0.34, 1.56, 0.64, 1) var(--on-d) both;
+}
+@keyframes lp8f-knob { to { transform: translateX(1.9cqw); } }
+
+.lp8f-foot {
+	margin-top: 2.2cqh;
+	font-size: max(9px, 1.15cqw);
+	font-weight: 600;
+	color: rgba(255, 255, 255, 0.45);
+}
+
+/* ---------- The number */
+.lp8f-number { position: relative; }
+.lp8f-number-n {
+	position: relative;
+	font-size: 10cqw;
+	font-weight: 800;
+	line-height: 1;
+	letter-spacing: -0.04em;
+	font-variant-numeric: tabular-nums;
+}
+.lp8f-number-caption {
+	position: relative;
+	margin-top: 0.8cqh;
+	font-size: 2.4cqw;
+	font-weight: 700;
+	color: rgba(255, 255, 255, 0.82);
+	white-space: nowrap;
+}
+.lp8f-number .lp8f-timed { position: absolute; left: 0; top: 0; }
+/* Seven digits and more: a step smaller, so 1,497,602 fits the column; the line keeps the same height. */
+.lp8f-long { display: inline-block; font-size: 0.8em; transform-origin: 0 100%; }
+
+/* ---------- The posters: three big slots */
+.lp8f-posters {
+	--pw: 13.6cqw;
+	--gap: 1.6cqw;
+	position: relative;
+	margin-top: 3cqh;
+	width: calc(3 * var(--pw) + 2 * var(--gap));
+	height: calc(var(--pw) * 1.5);
+}
+.lp8f-slot {
+	position: absolute;
+	left: calc(var(--k-slot) * (var(--pw) + var(--gap)));
+	top: 0;
+	width: var(--pw);
+	aspect-ratio: 2 / 3;
+}
+.lp8f-poster-w { position: relative; width: 100%; aspect-ratio: 2 / 3; }
+.lp8f-poster {
+	display: block;
+	width: 100%;
+	height: 100%;
+	border-radius: 0.9cqw;
+	object-fit: cover;
+	background: #10131c;
+	box-shadow: 0 1.2cqw 2.8cqw rgba(0, 0, 0, 0.55);
+}
+.lp8f-poster-none { display: flex; align-items: center; justify-content: center; padding: 1cqw; font-size: 1.4cqw; text-align: center; }
+.lp8f-score {
+	position: absolute;
+	left: 0.7cqw;
+	bottom: 0.7cqw;
+	min-width: 3.4cqw;
+	padding: 0.2cqw 0.7cqw;
+	border-radius: 999px;
+	font-size: 1.6cqw;
+	font-weight: 900;
+	text-align: center;
+	color: #fff;
+	box-shadow: 0 0.3cqw 1cqw rgba(0, 0, 0, 0.5);
+}
+/* Not seen yet takes it away: a Seen stamp in the switch's blue. */
+.lp8f-stamp {
+	position: absolute;
+	left: 50%;
+	top: 45%;
+	padding: 0.4cqw 1.2cqw;
+	border: 0.3cqw solid #60a5fa;
+	border-radius: 0.6cqw;
+	background: rgba(5, 6, 10, 0.78);
+	color: #93c5fd;
+	font-size: 2.1cqw;
+	font-weight: 900;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	transform: translate(-50%, -50%) rotate(-12deg);
+	animation: lp8f-stamp calc(380ms * var(--k)) cubic-bezier(0.34, 1.56, 0.64, 1) calc(var(--d) * var(--k)) both;
+}
+@keyframes lp8f-stamp { from { opacity: 0; transform: translate(-50%, -50%) rotate(-12deg) scale(2.2); } }
+/* The score takes it away: its score grows over the poster, struck through, then it drops. */
+.lp8f-cut {
+	position: absolute;
+	left: 50%;
+	top: 45%;
+	padding: 0.3cqw 1.3cqw;
+	border-radius: 999px;
+	background: rgba(5, 6, 10, 0.85);
+	box-shadow: 0 0 0 0.25cqw #ef4444;
+	color: #fca5a5;
+	font-size: 3cqw;
+	font-weight: 900;
+	text-decoration: line-through;
+	text-decoration-thickness: 0.3cqw;
+	transform: translate(-50%, -50%);
+	animation: lp8f-cut calc(380ms * var(--k)) cubic-bezier(0.34, 1.56, 0.64, 1) calc(var(--d) * var(--k)) both;
+}
+@keyframes lp8f-cut { from { opacity: 0; transform: translate(-50%, -50%) scale(0.4); } }
+
+/* ---------- The phone's TV */
+@container (max-width: 520px) {
+	.lp8f-h { left: 4cqw; top: 5cqh; font-size: 6.4cqw; }
+	.lp8f-left { left: 4cqw; top: 18cqh; width: 54cqw; }
+	.lp8f-right { left: 61cqw; right: 3cqw; top: 17cqh; }
+	/* Seven switches: tighter rows, so the panel and its footnote end above the chapter bar. */
+	.lp8f-left { top: 16.5cqh; }
+	.lp8f-panel { gap: 0.9cqh; }
+	.lp8f-row { font-size: 3.1cqw; gap: 1.2cqw; padding: 1.05cqw 1.6cqw; }
+	.lp8f-logos img { width: 4cqw; height: 4cqw; }
+	.lp8f-icon { width: 3.8cqw; height: 3.8cqw; }
+	.lp8f-dot, .lp8f-score-mark::before, .lp8f-score-dot { width: 2.8cqw; height: 2.8cqw; }
+	.lp8f-score-mark { width: 3.6cqw; height: 3.6cqw; }
+	.lp8f-value { font-size: 3.6cqw; }
+	.lp8f-switch { display: none; }
+	.lp8f-foot { font-size: max(8px, 2.3cqw); margin-top: 1.1cqh; }
+	.lp8f-number-n { font-size: 11cqw; }
+	.lp8f-number-caption { font-size: 3.2cqw; white-space: normal; height: 2.5em; line-height: 1.2; }
+	.lp8f-posters { --pw: 11cqw; --gap: 1.2cqw; margin-top: 3cqh; }
+	.lp8f-score { font-size: 2.6cqw; min-width: 5cqw; }
+	.lp8f-stamp, .lp8f-cut { font-size: 3.2cqw; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.lp8f *, .lp8f *::before, .lp8f *::after { animation-duration: 1ms !important; animation-delay: 0ms !important; }
+}

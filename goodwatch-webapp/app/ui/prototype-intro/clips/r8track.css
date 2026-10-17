@@ -1,0 +1,105 @@
+/* PROTOTYPE - throwaway. Round 8 "r8track" clips: chapter 9 (the feed, a sharper acceleration; it reuses r7track's
+   styles) and chapter 10 (bring your ratings: spent sources, things that shrink into the G, two layouts).
+   Transform and opacity only; every time is scaled by the stage's --k. The bottom 9cqh is the chapter bar's. */
+
+/* ---------- Chapter 10 */
+.lpc-r8track-head { position: absolute; left: 5cqw; right: 5cqw; top: 8cqh; z-index: 4; }
+.lpc-r8track-head .lpc-r7track-h { margin-top: 1cqh; white-space: nowrap; }
+.lpc-r8track-line { margin-top: 1.8cqh; }
+
+/* A source: its tile (a grey copy under the colour copy) and its name. */
+.lpc-r8track-src {
+	position: absolute;
+	z-index: 2;
+	width: 7.4cqw;
+	margin-left: -3.7cqw;
+	margin-top: -6.6cqh;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.9cqh;
+}
+.lpc-r8track-tile {
+	display: flex;
+	width: 7.4cqw;
+	height: 7.4cqw;
+	border-radius: 1.5cqw;
+	overflow: hidden;
+	box-sizing: border-box;
+}
+.lpc-r8track-tile img { width: 100%; height: 100%; object-fit: contain; }
+.lpc-r8track-tile-colour { position: relative; z-index: 1; box-shadow: 0 1cqw 2.6cqw rgba(0, 0, 0, 0.5); }
+/* The spent look: grey and dimmer. A static filter; only the colour copy's opacity animates over it. */
+.lpc-r8track-tile-grey { position: absolute; left: 0; top: 0; background: #2a2d35; }
+.lpc-r8track-tile-grey img { filter: grayscale(1) brightness(0.85) contrast(0.9); opacity: 0.7; }
+.lpc-r8track-name { font-weight: 700; font-size: max(9px, 1.15cqw); color: rgba(255, 255, 255, 0.7); white-space: nowrap; }
+@keyframes lpc-r8track-spent { to { transform: scale(0.8); opacity: 0.72; } }
+
+/* A thing on its way into the G: it leaves its source big, then shrinks as it travels in. */
+.lpc-r8track-thing {
+	position: absolute;
+	z-index: 3;
+	width: 5.4cqw;
+	margin-left: -2.7cqw;
+	margin-top: -4cqw;
+	display: flex;
+	justify-content: center;
+}
+@keyframes lpc-r8track-fly {
+	0% { opacity: 0; transform: translate(0, 0) scale(1.05); }
+	12% { opacity: 1; transform: translate(calc(var(--tx) * 0.04), calc(var(--ty) * 0.04)) scale(1.25); }
+	85% { opacity: 1; }
+	100% { opacity: 0; transform: translate(var(--tx), var(--ty)) scale(0.18); }
+}
+.lpc-r8track-thing-poster { width: 100%; border-radius: 0.4cqw; box-shadow: 0 0.8cqw 2cqw rgba(0, 0, 0, 0.55); }
+.lpc-r8track-thing-score {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0.7cqh 0.9cqw;
+	border-radius: 999px;
+	background: #fbbf24;
+	color: #111;
+	font-weight: 900;
+	font-size: max(10px, 1.6cqw);
+	white-space: nowrap;
+	box-shadow: 0 0.8cqw 2cqw rgba(0, 0, 0, 0.5);
+}
+.lpc-r8track-thing-bookmark {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 4.2cqw;
+	height: 4.2cqw;
+	border-radius: 1cqw;
+	background: #1b2130;
+	color: #fbbf24;
+	box-shadow: 0 0.8cqw 2cqw rgba(0, 0, 0, 0.5), inset 0 0 0 0.15cqw rgba(251, 191, 36, 0.55);
+}
+.lpc-r8track-thing-bookmark svg { width: 55%; height: 55%; }
+
+/* The G gulps once per source pair while the things arrive. */
+@keyframes lpc-r8track-gulps {
+	0%, 25%, 50%, 75%, 100% { transform: scale(1); }
+	10%, 35%, 60%, 85% { transform: scale(1.12); }
+}
+/* B: the G steps aside; the wrapper fills the stage so the G keeps its own coordinates. */
+.lpc-r8track-gmove { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
+
+.lpc-r8track-picks-label { position: absolute; z-index: 4; }
+.lpc-r8track-pick { position: absolute; z-index: 2; width: 8cqw; margin-left: -4cqw; margin-top: -10.7cqh; }
+.lpc-r8track-pick .lpc-r7track-poster { width: 100%; box-shadow: 0 1cqw 2.6cqw rgba(0, 0, 0, 0.55); }
+.lpc-r8track-fanpick { width: 9.4cqw; margin-left: -4.7cqw; margin-top: -12.5cqh; }
+.lpc-r8track-fanpick > div { transform-origin: 50% 110%; }
+
+/* ---------- The phone TV */
+@container (max-width: 520px) {
+	.lpc-r8track-head .lpc-r7track-h { white-space: normal; }
+	.lpc-r8track-name { display: none; }
+	.lpc-r8track-thing { width: 7cqw; margin-left: -3.5cqw; }
+	.lpc-r8track-thing-score { font-size: 2.6cqw; }
+	.lpc-r8track-thing-bookmark { width: 6cqw; height: 6cqw; }
+}
+@media (prefers-reduced-motion: reduce) {
+	.lpc-r8track-thing { display: none; }
+}

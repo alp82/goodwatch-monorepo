@@ -1,0 +1,17 @@
+/* PROTOTYPE - throwaway. Round 8 "r8map" clips: the Explorer's camera entry and exit. Builds on r5map/r6map/r7map css;
+   transform and opacity only; every time scaled by --k (through .lpc-r5map-a). */
+
+/* Entry: the map comes up from below and a little far, as the camera descends onto it. */
+@keyframes lpc-r8map-descend {
+	from { opacity: 0; transform: translateY(9cqh) scale(0.84); }
+	35% { opacity: 1; }
+}
+/* Each island sweeps in from outside, near the camera, and settles in its place. */
+@keyframes lpc-r8map-sweep {
+	from { opacity: 0; transform: translate(var(--fx, 0), var(--fy, 0)) scale(1.9); }
+	40% { opacity: 1; }
+}
+/* Exit: the camera flies on into the merge and the titles; everything grows past and fades, the sea stays. */
+@keyframes lpc-r8map-fly-out {
+	to { opacity: 0; transform: scale(2.3); }
+}
