@@ -109,11 +109,24 @@ Read from the page instance's container on vector1 on October 9, 2026, names onl
 - **No volume, no bind mount, and no extra host.** The query models are in the image, at the `SEARCH_MODEL_DIR` that the image sets.
 - **Labels:** Coolify's own and the proxy's. The app reads none.
 - **Variables that Coolify adds:** `SOURCE_COMMIT`, `HOST` (all interfaces), `PORT`, and five `COOLIFY_*` names. The compose file sets the first three.
-- **The application's 32 variables.** A role gets 26 of them (the list in `.env.example`): the Crate, Qdrant, and cache settings, the two Supabase settings for the session check, `TYPESAFE_API_KEY`, `SEARCH_STORAGE_KEY`, `SEARCH_TRUSTED_IP_HEADER` and `TMDB_API_KEY`. The nine `REC_*` flags were among them until they were removed on October 14, 2026 (`docs/implementation/tv-screen-revamp/rec-flags/`); a role's `.env` that still has them is harmless.
+- **Shared runtime settings.** `.env.example` lists the Crate, Qdrant and cache settings, legacy Supabase session settings, Better Auth and MCP settings, `REC_CONNECTOR`, `TYPESAFE_API_KEY`, `SEARCH_STORAGE_KEY`, `SEARCH_TRUSTED_IP_HEADER` and `TMDB_API_KEY`. The old nine `REC_*` flags were removed on October 14, 2026 (`docs/implementation/tv-screen-revamp/rec-flags/`); a role's `.env` that still has them is harmless.
 - **Left out:** `NODE_ENV` and `SEARCH_MODEL_DIR` (the image sets the same values), `STATIC_ASSETS` and `STATIC_ASSETS_HOST` (they shape pages, which a role doesn't serve to visitors), `HOMEPAGE_WARMUP_SECRET` (a page route), and `SUPABASE_DB_PASS` (no code reads it).
 - **New for a role:** `WEBAPP_ROLE` and `SEARCH_MAX_IN_FLIGHT`, set in the compose file. `SEARCH_ENCODER_THREADS` stays unset: the role's default is 2.
 
 The roles are on the same Docker network as the page instance, so they reach Crate, Qdrant, and the cache through the firewall rules that exist for that network (inferred from the rules' comments, not tried with a role).
+
+### Keep Better Auth settings in sync
+
+The search roles serve `/mcp`, including ranked search, and verify Better Auth tokens through the same auth runtime as the pages. They need all 14 Better Auth/MCP entries in `.env.example`: the enable flag, secret and URL, dedicated auth database credentials/origins, permanent encryption root and key ring, trusted IP header, Google credentials, mail credentials and canonical `MCP_RESOURCE_URL`. Google and mail configuration are required by shared runtime initialization even when the request is an MCP call. Copy `REC_CONNECTOR` too; retain the intended `REC_MCP_*` policy (unset means enabled).
+
+**Auth secret or configuration changes in Coolify must also be copied to the search `.env`.** Coolify manages the page application, while the two search roles use a separate Compose `.env` on vector1. A Coolify save, page redeploy or container restart does not synchronize it.
+
+After an owner-authorized change:
+
+1. Back up `goodwatch-search/.env` to a root-owned mode-600 file in a mode-700 directory. Copy the changed entries privately from the running page container on vector1 into the search `.env`, also mode 600. Never print values, place them in command arguments, or commit this file. Verify equality by hash. Reuse the production secrets and retained encryption key ring; do not generate replacements.
+2. Preserve all unrelated entries, especially the role-specific catalog `CRATE_USER`/`CRATE_PASS`, allocator settings and image selection. `AUTH_CRATEDB_*` is the dedicated auth identity, separate from the catalog identity. `deploy.sh copy-env` reads the names in `.env.example` for a fresh file and refuses to overwrite an existing file; it is not a merge or secret-rotation command. Update the local `.env.example` from the reviewed repository version before using `copy-env`.
+3. Validate with `docker compose config -q`, then recreate one role at a time using the existing reviewed image: `docker compose up -d --no-deps --no-build --pull never search-a`, wait for healthy readiness and the query-model-ready log, and only then do the same for `search-b`. Confirm the other role remains healthy and serves readiness throughout. Stop if either check fails. Check that the configured image tag still resolves locally to the approved image ID before using `--pull never`.
+4. Verify the running roles' auth settings match the page instance by hash. Through the canonical HTTPS origin, anonymous `POST /mcp` must answer 401 with `resource_metadata="https://goodwatch.app/.well-known/oauth-protected-resource/mcp"`. General `/health/ready` alone does not verify auth configuration. Install the `/mcp` proxy extension only after both roles pass; the owner pastes vector1's file first and abio's second.
 
 ### Memory on vector1
 
@@ -169,7 +182,7 @@ Each step says who does it. Agents change nothing in Coolify or in a proxy, and 
 
   `copy-env` writes `.env` with mode 600 from the page instance's container: the image name, the commit that it runs, and the variables that `.env.example` names. It prints names, never values, and doesn't overwrite a file.
 - **Verify:**
-  - The output lists 26 copied variables and none as left out.
+  - The output lists the expected names from `.env.example`; no required Better Auth/MCP entry is left out when Better Auth is enabled.
   - `docker compose config -q` prints nothing.
   - `docker manifest inspect "$(sed -n 's/^SEARCH_IMAGE=//p' .env):$(sed -n 's/^SEARCH_COMMIT=//p' .env)" > /dev/null` succeeds: the image can be pulled.
   - `./deploy.sh status` prints `no container` for both roles.
