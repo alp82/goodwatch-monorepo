@@ -106,6 +106,125 @@ class DailyListTests(unittest.TestCase):
         return job.run_daily_lists(self.api, self.store, countries=['US'], service_ids=[8],
                                    media_types=['show'], now=datetime.fromisoformat(date), **kwargs)
 
+    def test_confirmed_deleted_title_closes_all_its_stays_unknown_without_failing_the_list(self):
+        import mongomock
+        from f.tmdb_api.daily_list_storage import ListStorage
+        from f.sync.availability_history import HistoryTitle, OfferKey
+        from f.tmdb_api.provider_evidence import capture_provider_check
+        self.api.ids = [42, 43]
+        self.run_day('2026-10-13T20:00:00', dry_run=False)
+        payload = {'results': {'DE': {'free': [{'provider_id': 11}]},
+                               'US': {'flatrate': [{'provider_id': 8}]}}}
+        proof = capture_provider_check({'id': 42, 'watch/providers': payload}, 42,
+                                       datetime(2026, 10, 13, 20), bypass_cache=True)
+        details = {'watch_providers': payload, 'watch_providers_check': proof}
+        for media, country, service, kind in [('show', 'DE', 11, 'free'), ('movie', 'US', 8, 'flatrate')]:
+            key = OfferKey(42, media, country, service, kind)
+            publish_history(self.store.crate, media, [HistoryTitle(42, details, {key: key._asdict()}, {}, [], [])], lambda: None)
+        crate = self.store.crate
+        before = deepcopy(crate.history)
+        crate.writes.clear()
+        for dry_run in (True, False):
+            db = mongomock.MongoClient().db
+            self.store = ListStorage(db=db, connector=crate, dry_run=dry_run)
+            session = Mock()
+            def response(url, **kwargs):
+                if '/discover/' in url:
+                    return Mock(status_code=200, json=lambda: dict(page=1, total_pages=1, total_results=2,
+                                results=[{'id': 42}, {'id': 43}]))
+                if '/42/' in url:
+                    return Mock(status_code=404, json=lambda: {'status_code': 34, 'status_message': 'Not found'})
+                return Mock(status_code=200, json=lambda: {'id': 43, 'results': {'US': {'flatrate': [{'provider_id': 8}]}}})
+            session.get.side_effect = response
+            with patch('wmill.get_variable', return_value='fixture-key'), patch('requests.Session', return_value=session):
+                api = job.TMDBClient()
+                api.interval = 0
+                result = job.run_daily_lists(api, self.store, countries=['US'], service_ids=[8],
+                                            media_types=['show'], now=datetime(2026, 10, 14, 20))
+            self.assertEqual(result['lists_failed'], 0)
+            self.assertEqual(result['lists_completed'], 1)
+            if dry_run:
+                self.assertEqual(crate.history, before)
+                self.assertEqual(crate.writes, [])
+                self.assertEqual(self.store.stats['planned_unknown_drops'], 2)
+                self.assertEqual(self.store.stats['planned_exact_drops'], 0)
+                self.assertEqual(db.list_collection_names(), [])
+                continue
+            rows = list(self.store.connector.history.values())
+            deleted = [r for r in rows if r['media_type'] == 'show' and r['media_tmdb_id'] == 42]
+            self.assertEqual(len(deleted), 2)
+            self.assertEqual({(r['dropped_on'], r['dropped_precision']) for r in deleted}, {(day('2026-10-14'), 'unknown')})
+            self.assertTrue(all(r['dropped_on'] is None for r in rows if r not in deleted))
+            self.assertEqual(sum('/42/' in call.args[0] for call in session.get.call_args_list), 1)
+            self.assertEqual(api.stats['retries'], 0)
+
+    def test_discover_404_reports_its_context_and_other_lists_continue(self):
+        session = Mock()
+        def response(url, **kwargs):
+            if kwargs['params']['with_watch_providers'] == 8:
+                return Mock(status_code=404, json=lambda: {'status_code': 34})
+            return Mock(status_code=200, json=lambda: dict(page=1, total_pages=0, total_results=0, results=[]))
+        session.get.side_effect = response
+        with patch('wmill.get_variable', return_value='fixture-key'), patch('requests.Session', return_value=session):
+            api = job.TMDBClient()
+            api.interval = 0
+            result = job.run_daily_lists(api, self.store, countries=['BR'], service_ids=[8, 11],
+                                        media_types=['show'], now=datetime(2026, 10, 14, 20))
+        self.assertEqual((result['lists_failed'], result['lists_completed']), (1, 1))
+        failure = result['lists'][0]
+        self.assertEqual(failure['key'], 'BR:show:8')
+        self.assertEqual(failure['media_type'], 'show')
+        self.assertIsNone(failure['tmdb_id'])
+        self.assertEqual(failure['endpoint'], '/discover/tv')
+        self.assertEqual(failure['http_status'], 404)
+        self.assertEqual(api.stats['deleted_responses'], 0)
+        self.assertEqual(api.stats['retries'], 0)
+
+    def test_deleted_check_is_shared_across_lists_only_on_the_same_utc_day(self):
+        for crosses_midnight in (False, True):
+            with self.subTest(crosses_midnight=crosses_midnight):
+                api, store = TMDB(), Storage()
+                get = api.get
+                def deleted(path, **params):
+                    if path.endswith('/watch/providers'):
+                        api.calls.append((path, params))
+                        raise job.TMDBDeletedTitle('Deleted title', endpoint=path, http_status=404)
+                    return get(path, **params)
+                first, second = datetime(2026, 10, 13, 23), datetime(2026, 10, 14, 1)
+                times = [first] * 3 + [second if crosses_midnight else first] * 3
+                with patch.object(api, 'get', side_effect=deleted), patch.object(job, 'datetime') as clock:
+                    clock.now.side_effect = times
+                    result = job.run_daily_lists(api, store, countries=['US', 'DE'],
+                                                service_ids=[8], media_types=['show'])
+                self.assertEqual((result['lists_failed'], result['lists_completed']), (0, 2), result)
+                self.assertEqual(sum(path.endswith('/watch/providers') for path, _ in api.calls),
+                                 2 if crosses_midnight else 1)
+
+    def test_unconfirmed_title_404_is_a_contextual_list_failure_and_other_lists_continue(self):
+        self.run_day('2026-10-13T20:00:00', dry_run=False)
+        before = deepcopy(self.store.crate.history)
+        self.store.dry_run = True
+        session = Mock()
+        def response(url, **kwargs):
+            if '/discover/' in url:
+                ids = [42] if kwargs['params']['with_watch_providers'] == 8 else []
+                return Mock(status_code=200, json=lambda: dict(page=1, total_pages=1 if ids else 0,
+                            total_results=len(ids), results=[{'id': i} for i in ids]))
+            return Mock(status_code=404, json=lambda: {'status_code': 99})
+        session.get.side_effect = response
+        with patch('wmill.get_variable', return_value='fixture-key'), patch('requests.Session', return_value=session):
+            api = job.TMDBClient()
+            api.interval = 0
+            result = job.run_daily_lists(api, self.store, countries=['BR'], service_ids=[8, 11],
+                                        media_types=['show'], now=datetime(2026, 10, 14, 20))
+        self.assertEqual((result['lists_failed'], result['lists_completed']), (1, 1))
+        self.assertEqual({k: result['lists'][0][k] for k in ('key', 'media_type', 'tmdb_id', 'endpoint', 'http_status')},
+                         dict(key='BR:show:8', media_type='show', tmdb_id=42,
+                              endpoint='/tv/42/watch/providers', http_status=404))
+        self.assertEqual(self.store.crate.history, before)
+        self.assertEqual(api.stats['deleted_responses'], 0)
+        self.assertEqual(api.stats['retries'], 0)
+
     def test_first_read_records_unknown_baseline_and_dry_run_is_inert(self):
         report = self.run_day('2026-10-14T20:00:00', dry_run=True)
         self.assertEqual(report['lists_completed'], 1)

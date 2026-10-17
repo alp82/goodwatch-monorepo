@@ -197,11 +197,23 @@ checkpoint commit merely causes redundant checking on a later run.
 A pending title publication with an older UTC observation cannot reopen a stay
 already closed with a later exact drop; this guard is in the shared writer too.
 
-Dry run acquires no leases, stages no intents, refreshes no tables, and saves no
+The local read-only measurement acquires no leases, stages no intents, refreshes no tables, and saves no
 checkpoints. It reads Mongo metadata/checkpoints and uses SELECT-only history
 queries, then calls the same stay planner in memory. Its adapter refuses write
 mode before acquiring a lease. Temporary measurement and inert preview files are
-local only.
+local only. Live Windmill previews take the operational run lease described above.
+
+A per-title `/movie/{id}/watch/providers` or `/tv/{id}/watch/providers` response
+with HTTP 404 and TMDB status code 34 uses the fetcher's shared
+`is_tmdb_deleted_response` predicate. It sends a title-wide removal intent to the
+existing history writer, which reads all that media title's stays and applies its
+normal unknown-precision removal rules. This does not change current offers or
+Mongo title documents. The deletion check is shared across lists for that run;
+if discover still lists the deleted title, its checkpoint retains a retry ID.
+Discover 404s and unconfirmed per-title 404s remain list failures. Every list
+failure reports its list key, media type, TMDB ID, endpoint, and HTTP status;
+non-title requests have a null TMDB ID, and non-HTTP storage errors have a null
+endpoint/status. Other lists continue unless the existing systemic stop applies.
 
 ## Production measurements
 
@@ -231,6 +243,25 @@ It had **zero failed lists, retries, refusals, or production writes** and planne
 three unknown-arrival rows in memory. That run achieved **14.17 requests/s**.
 Its requests and rows match the earlier comparison; the panel's absence evidence
 remains untrusted. The full result is `review_read_only_comparison` in the evidence.
+
+The first deployed four-country preview on October 17 was canceled after
+1,809.590 seconds when two lists reported 404s. A read-only replay completed both
+discover lists and identified `/movie/1162367/watch/providers` for
+`BR:movie:2100`, and `/tv/287001/watch/providers` for `BR:show:119`. Targeted reads
+confirmed HTTP 404 / TMDB status 34 for both. The replay used 6,694 GETs (294
+discover, 6,400 title) with zero retries or refusals; neither the original nor
+fixed HTTP client retries a 404. The original logs omitted endpoint/title IDs,
+so these are reproduced failures rather than a recovered original HTTP trace.
+
+The 328-second panel comparison is not the first-read workload. Production had
+no checkpoints, so the deployed run had to baseline every list and check all
+listed titles plus eligible open history. Those two Brazilian lists alone had
+5,399 and 1,496 candidates at replay time, compared with 28 changed-title checks
+in the entire earlier sample. The first four-country run includes all 120 lists,
+whereas that sample completed 36 and deliberately skipped 84 outside its panel.
+A full initial dry run therefore needs baseline cost/time allowances, just like
+the first apply; it does not establish the later daily runtime. The canceled
+run's rotated logs do not preserve complete aggregate retry statistics.
 
 The census sizes the real daily primary pass at **144,399 discover requests +
 one regions GET = 144,400/day**. Add second-sort pages for incomplete primary

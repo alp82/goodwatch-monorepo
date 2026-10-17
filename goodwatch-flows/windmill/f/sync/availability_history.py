@@ -39,6 +39,7 @@ class HistoryTitle:
     existing: list
     removed: list
     list_read: 'ListRead | None' = None
+    deleted_at: int | None = None
 
 
 @dataclass
@@ -198,7 +199,7 @@ def select_transitions(titles, pending, media_type):
                 added[key] = row
         removed_keys = (OfferKey(*key) for key in title.removed)
         removed = [key for key in removed_keys if key.streaming_type in OFFER_TYPES]
-        if added or removed or f'{media_type}:{title.tmdb_id}' in pending:
+        if added or removed or title.deleted_at is not None or f'{media_type}:{title.tmdb_id}' in pending:
             transitions.append(Transition(title, added, removed))
     return transitions
 
@@ -221,8 +222,12 @@ def title_writes(transition, previous, media_type, pending, copy_at):
             opened[key] = row
         elif key not in closed or row['observed_at'] > closed[key]['observed_at']:
             closed[key] = row
-    observation = Observation.from_title(title, copy_at)
-    if f'{media_type}:{title.tmdb_id}' in pending:
+    # A confirmed deletion is a title-wide removal intent. Reuse the normal
+    # removal planner with no positive/prior API proof, so its days stay unknown.
+    if title.deleted_at is not None:
+        added, removed = {}, sorted(opened)
+    observation = Observation.from_title(title, title.deleted_at if title.deleted_at is not None else copy_at)
+    if title.deleted_at is None and f'{media_type}:{title.tmdb_id}' in pending:
         desired = {availability_key(row): row for row in title.rows.values()}
         # Only inferred repairs are stale-filtered. The live publisher's own
         # transitions can legitimately use scrape/copy times newer than its API.

@@ -84,7 +84,8 @@ def main():
         result = original_get(self, path, **params)
         if self.stats['requests'] // 1000 > last[0]:
             last[0] = self.stats['requests'] // 1000
-            print(json.dumps(self.stats), file=sys.stderr, flush=True)
+            print(json.dumps(self.stats | {'elapsed_seconds': round(time.time() - started, 3)}),
+                  file=sys.stderr, flush=True)
         return result
     started = time.time()
     original_storage = job.create_list_storage
@@ -138,6 +139,8 @@ def main():
                     report = job.run_daily_lists(client, store, countries=args.countries,
                                                   service_ids=list(job.SERVICE_NAMES))
                     report.update(requests=client.stats, history=store.stats, countries=args.countries)
+                    report['mode'] = 'research_panel_comparison' if panel else 'initial_baseline'
+                    report['title_candidates'] = sum(row.get('changes_checked', 0) for row in report['lists'])
                 finally:
                     store.close()
     report['seconds'] = round(time.time() - started, 3)
