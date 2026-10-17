@@ -5,6 +5,10 @@ import { sections } from "~/ui/details/sections"
 import DetailsHeader from "~/ui/details/DetailsHeader"
 import DetailsFingerprint from "~/ui/details/DetailsFingerprint"
 import DetailsHero from "~/ui/details/hero/DetailsHero"
+// PROTOTYPE - throwaway (seen-score): ?variant= swaps the hero for a variant.
+import PrototypeHero, { SEEN_SCORE_VARIANTS, type SeenScoreVariant } from "~/ui/details/hero/prototype-seen-score/PrototypeHero"
+import { PrototypeSwitcher } from "~/ui/prototype/PrototypeSwitcher"
+import { useSearchParams } from "@remix-run/react"
 import { useScrollSections } from "~/utils/scroll"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import type { EpisodeGrid } from "~/server/episode-grid.server"
@@ -57,6 +61,9 @@ function DetailsPage({
 	// is in (or when it fails), the page keeps the loaded title and offers, and where-to-watch says so; a picked
 	// language swaps the title, poster, description and tagline when its text is in.
 	const preference = useMediaPreference()
+	const [protoParams] = useSearchParams()
+	const protoKey = protoParams.get("variant") ?? "live"
+	const protoVariant = (protoKey in SEEN_SCORE_VARIANTS ? protoKey : "live") as SeenScoreVariant | "live"
 	const preview = useTitlePreview({
 		media: loadedMedia,
 		loadedCountry,
@@ -116,7 +123,20 @@ function DetailsPage({
 				navigateToSection={navigateToSection}
 			/>
 
-			<DetailsHero
+			{protoVariant !== "live" && (
+				<PrototypeHero
+					variant={protoVariant}
+					media={media}
+					country={country}
+					shownCountry={preference.shown.country}
+					preview={preview.offers}
+					episodeGrid={hasEpisodeGrid(episodeGrid) ? episodeGrid : null}
+					sectionProps={sectionProps}
+					sides={sides}
+				/>
+			)}
+			<PrototypeSwitcher variants={SEEN_SCORE_VARIANTS} position="bottom-6 left-1/2 -translate-x-1/2 max-md:scale-90" />
+			{protoVariant === "live" && <DetailsHero
 				media={media}
 				country={country}
 				shownCountry={preference.shown.country}
@@ -124,7 +144,7 @@ function DetailsPage({
 				episodeGrid={hasEpisodeGrid(episodeGrid) ? episodeGrid : null}
 				sectionProps={sectionProps}
 				sides={sides}
-			/>
+			/>}
 
 			<div className="isolate">
 				<DetailsFingerprint
