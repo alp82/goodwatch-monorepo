@@ -106,7 +106,7 @@ test("without a contrast, an area's verdict follows its phrase, and world themes
 		"Some sharp wit.",
 	])
 	assert.deepEqual(areaLines(toyStory, "World").map(segmentText), [
-		"A rich world.",
+		"An immersive world.",
 		"Built around family.",
 	])
 	// The verdict is plain text; only the phrase selects the area.

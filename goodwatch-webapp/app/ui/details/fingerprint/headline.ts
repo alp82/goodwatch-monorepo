@@ -45,7 +45,7 @@ const FEEL: Partial<Record<TraitKey, { adj: string; strong: string }>> = {
 const leadArea = (k: TraitKey): Area =>
 	k === "bleakness" || k === "hopefulness" ? "Heart" : areaOfTrait(k)
 
-/** An area as a short phrase, by tier (0 to 4): the first of an area's lines. */
+/** An area as a short phrase, by tier (0 to 4): the first of an area's lines. Each phrase says its level word. */
 const AREA_PHRASE: Record<Area, readonly string[]> = {
 	Energy: [
 		"Calm",
@@ -56,17 +56,23 @@ const AREA_PHRASE: Record<Area, readonly string[]> = {
 	],
 	Heart: [
 		"Emotionally cool",
-		"Emotionally reserved",
+		"Emotionally light",
 		"Some heart",
 		"Big heart",
 		"Deeply emotional",
 	],
-	Humor: ["No humor", "A touch of humor", "Light humor", "Funny", "Very funny"],
+	Humor: [
+		"Serious throughout",
+		"A touch of humor",
+		"Light humor",
+		"Funny",
+		"Very funny",
+	],
 	World: [
-		"A thin world",
+		"A world in the background",
 		"A simple world",
 		"A solid world",
-		"A rich world",
+		"An immersive world",
 		"A fully immersive world",
 	],
 	Craft: [
