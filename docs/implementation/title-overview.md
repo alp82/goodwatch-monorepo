@@ -144,7 +144,7 @@ So a tap from that time is remembered and done when its control is mounted:
 | --- | --- | --- |
 | Offer type tabs | `offer:flatrate`, `offer:rent`, `offer:buy` | `ui/details/hero/WhereToWatch.tsx` |
 | Want to See, Seen (the title page's row) | `want:off`, `want:on`, `seen:off`, `seen:on` | `ui/title-actions/TitleActionSet.tsx` |
-| A fingerprint row with its "See all traits" button | `pillar:<area>` | `ui/details/DetailsFingerprint.tsx` |
+| A fingerprint band segment, scale, or colored headline word | `area:<area>` | `ui/details/DetailsFingerprint.tsx` |
 | Episode cells, season labels, the grid's key | `float:<id>` | `ui/details/episode-grid/shared.tsx` |
 | The arrows of a carousel row, such as the cast | `row:previous`, `row:next` | `ui/ListSwiper.tsx` |
 
