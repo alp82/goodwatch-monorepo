@@ -10,11 +10,40 @@ import type { MovieResult, ShowResult } from "~/server/types/details-types"
 // `fill`: the chips share the row's whole width, for a row that has nothing else to end it.
 export default function RatingChips({ media, fill = false }: { media: MovieResult | ShowResult; fill?: boolean }) {
 	const d = media.details
-	const imdb = d.imdb_user_score_original ? d.imdb_user_score_original.toFixed(1) : null
-	const mc = d.metacritic_meta_score_original ? String(Math.floor(d.metacritic_meta_score_original)) : null
-	const mcUser = d.metacritic_user_score_original ? d.metacritic_user_score_original.toFixed(1) : null
-	const rt = d.rotten_tomatoes_tomato_score_original ? `${Math.floor(d.rotten_tomatoes_tomato_score_original)}%` : null
-	const rtUser = d.rotten_tomatoes_audience_score_original ? `${Math.floor(d.rotten_tomatoes_audience_score_original)}%` : null
+	return (
+		<RatingChipRow
+			fill={fill}
+			imdb={d.imdb_user_score_original ? d.imdb_user_score_original.toFixed(1) : null}
+			mc={d.metacritic_meta_score_original ? String(Math.floor(d.metacritic_meta_score_original)) : null}
+			mcUser={d.metacritic_user_score_original ? d.metacritic_user_score_original.toFixed(1) : null}
+			rt={d.rotten_tomatoes_tomato_score_original ? `${Math.floor(d.rotten_tomatoes_tomato_score_original)}%` : null}
+			rtUser={d.rotten_tomatoes_audience_score_original ? `${Math.floor(d.rotten_tomatoes_audience_score_original)}%` : null}
+			urls={{ imdb: d.imdb_url, mc: d.metacritic_url, rt: d.rotten_tomatoes_url }}
+		/>
+	)
+}
+
+/** The chips from values. `small` is the size a popup uses (PROTOTYPE: episodes section season scores). */
+export function RatingChipRow({
+	imdb,
+	mc,
+	mcUser,
+	rt,
+	rtUser,
+	urls = {},
+	fill = false,
+	small = false,
+}: {
+	imdb: string | null
+	mc: string | null
+	mcUser: string | null
+	rt: string | null
+	rtUser: string | null
+	urls?: { imdb?: string; mc?: string; rt?: string }
+	fill?: boolean
+	small?: boolean
+}) {
+	const d = { imdb_url: urls.imdb, metacritic_url: urls.mc, rotten_tomatoes_url: urls.rt }
 
 	const pair = (critics: string | null, audience: string | null) => (
 		<>
@@ -30,11 +59,11 @@ export default function RatingChips({ media, fill = false }: { media: MovieResul
 			target="_blank"
 			rel="noreferrer"
 			title={title}
-			className={`inline-flex h-7 shrink-0 items-center gap-1 whitespace-nowrap rounded-md px-1.5 text-[13px] font-semibold tabular-nums ${fill ? "flex-1 justify-center" : ""} ${brand} ${
+			className={`inline-flex ${small ? "h-6 text-[12px]" : "h-7 text-[13px]"} shrink-0 items-center gap-1 whitespace-nowrap rounded-md px-1.5 font-semibold tabular-nums ${fill ? "flex-1 justify-center" : ""} ${brand} ${
 				href ? "hover:brightness-110" : "pointer-events-none"
 			}`}
 		>
-			<img src={assetUrl(logo)} alt={alt} className={alt === "IMDb" ? "h-3" : "h-3.5"} />
+			<img src={assetUrl(logo)} alt={alt} className={alt === "IMDb" ? (small ? "h-2.5" : "h-3") : small ? "h-3" : "h-3.5"} />
 			{value}
 		</a>
 	)

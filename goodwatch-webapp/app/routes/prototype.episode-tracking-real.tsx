@@ -471,9 +471,10 @@ function withStandInSeasonScores(grid: EpisodeGridData): EpisodeGridData {
 				tmdb: { score: Math.round((imdb - 0.4 + wobble / 2) * 10) / 10 },
 				tomatometer: { score: Math.min(100, Math.round((imdb - 6) * 30 + 40 + wobble * 20)), count: 8 + season.number },
 				popcornmeter: { score: Math.min(100, Math.round((imdb - 6) * 25 + 45 - wobble * 15)), count: 400 + season.number * 37 },
+				metascore: { score: Math.min(100, Math.round((imdb - 6) * 22 + 50 + wobble * 10)), count: 6 + season.number },
 				metacriticUser: { score: Math.round((imdb - 1 + wobble) * 10) / 10, count: 20 + season.number * 3 },
 			},
 		}
 	})
-	return { ...grid, seasons, providers: ["imdb", "tmdb", "tomatometer", "popcornmeter", "metacriticUser"] } as EpisodeGridData
+	return { ...grid, seasons, providers: ["imdb", "tmdb", "tomatometer", "popcornmeter", "metascore", "metacriticUser"] } as EpisodeGridData
 }

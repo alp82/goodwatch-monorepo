@@ -1249,28 +1249,32 @@ function DateChoice({
 	const day = watch ? dayOfWatch(watch) : null
 	return (
 		<>
-			<label className={`${CHIP} ${day ? on : CHIP_OFF}`}>
-				On
+			<label className={`${WHEN} min-w-0 gap-2 !px-1.5 lg:!px-3 ${day ? on : WHEN_OFF}`}>
+				<span className="hidden shrink-0 lg:inline">On</span>
 				<input
 					type="date"
 					data-watch-day
 					max={today}
 					value={day ?? ""}
 					onChange={(event) => event.target.value && onDay(event.target.value)}
-					className="w-[8.25rem] rounded bg-black/30 px-1 py-0.5 text-base text-white [color-scheme:dark] lg:w-[7.25rem] lg:text-xs"
+					className="min-w-0 flex-1 rounded bg-black/30 px-1 py-1 text-base text-white [color-scheme:dark] lg:w-32 lg:flex-none lg:text-xs"
 				/>
 			</label>
 			<button
 				type="button"
 				data-watch-unknown
 				onClick={onUnknown}
-				className={`${CHIP} ${watch && watch.watched_at === null ? on : CHIP_OFF}`}
+				className={`${WHEN} ${watch && watch.watched_at === null ? on : WHEN_OFF}`}
 			>
-				Don't know when
+				Don't know
 			</button>
 		</>
 	)
 }
+
+/** PROTOTYPE (episodes round 5): the roomier buttons of the watch's date. */
+const WHEN = `inline-flex h-11 items-center justify-center rounded-lg px-3 text-xs font-semibold cursor-pointer lg:h-9 ${FOCUS}`
+const WHEN_OFF = "bg-white/10 text-gray-100 hover:bg-white/20"
 
 // The icons only tracking draws (Heroicons 24 solid, MIT), written out here: imported from the icon package, or kept
 // in a small module of their own, they would be added to a chunk that every page loads.
@@ -1413,67 +1417,76 @@ function RowDetail({
 				</div>
 			</div>
 			{aired ? (
-				<div className="mt-2.5 flex flex-wrap items-center gap-1.5 text-xs text-gray-400">
-					<span data-watched-when>
+				// PROTOTYPE (episodes round 5): the owner found the one wrapping row of chips cramped. A label line,
+				// then when (Now, a day, or unknown) as one even row, then the bigger actions on a row of their own.
+				<div className="mt-3.5 flex flex-col gap-2.5 text-xs text-gray-400">
+					<p data-watched-when>
 						{current
-							? `Watched ${formatWatched(current, today)}${special ? ", not counted" : ""}:`
-							: "Watched it:"}
-					</span>
-					{!current && (
+							? `Watched ${formatWatched(current, today)}${special ? ", not counted" : ""}`
+							: "When did you watch it?"}
+					</p>
+					<div className="grid grid-cols-[auto_minmax(0,1fr)_auto] gap-1.5 lg:flex lg:gap-2">
 						<button
 							type="button"
 							data-watch-now
+							disabled={!!current}
 							onClick={() => actions.watch(episode)}
-							className={`${CHIP} ${CHIP_OFF}`}
+							className={`${WHEN} ${current ? "pointer-events-none opacity-40" : WHEN_OFF}`}
 						>
 							Now
 						</button>
-					)}
-					<DateChoice
-						watch={current}
-						today={today}
-						onDay={(day) =>
-							current
-								? actions.setWatchDate(current.watch_id, {
-										precision: "day",
-										day,
-									})
-								: actions.watch(episode, { precision: "day", day })
-						}
-						onUnknown={() =>
-							current
-								? actions.setWatchDate(current.watch_id, {
-										precision: "unknown",
-									})
-								: actions.watch(episode, { precision: "unknown" })
-						}
-					/>
-					{upTo > 1 && (
-						<button
-							type="button"
-							data-up-to-here
-							onClick={() => {
-								actions.watchUpTo(episode)
-								close()
-							}}
-							className={`${CHIP} bg-white/10 text-green-300 ring-1 ring-green-400/40 hover:bg-white/20`}
-						>
-							<CheckIcon className="h-3.5 w-3.5" />
-							Watched up to here ({upTo})
-						</button>
-					)}
-					{current && (
-						<button
-							type="button"
-							data-remove-watch
-							onClick={() => {
-								actions.unwatch(episode)
-								close()
-							}}
-							className={`${CHIP} text-pink-300 hover:bg-white/10`}
-						>
-							Remove watch
-						</button>
+						<DateChoice
+							watch={current}
+							today={today}
+							onDay={(day) =>
+								current
+									? actions.setWatchDate(current.watch_id, {
+											precision: "day",
+											day,
+										})
+									: actions.watch(episode, { precision: "day", day })
+							}
+							onUnknown={() =>
+								current
+									? actions.setWatchDate(current.watch_id, {
+											precision: "unknown",
+										})
+									: actions.watch(episode, { precision: "unknown" })
+							}
+						/>
+					</div>
+					{(upTo > 1 || current) && (
+						<div className="flex flex-wrap items-center justify-between gap-2">
+							{upTo > 1 ? (
+								<button
+									type="button"
+									data-up-to-here
+									onClick={() => {
+										actions.watchUpTo(episode)
+										close()
+									}}
+									className={`${WHEN} gap-1.5 bg-white/10 text-green-300 ring-1 ring-green-400/40 hover:bg-white/20`}
+								>
+									<CheckIcon className="h-3.5 w-3.5" />
+									Watched up to here ({upTo})
+								</button>
+							) : (
+								<span />
+							)}
+							{current && (
+								<button
+									type="button"
+									data-remove-watch
+									onClick={() => {
+										actions.unwatch(episode)
+										close()
+									}}
+									className={`${WHEN} text-pink-300 hover:bg-white/10`}
+								>
+									Remove watch
+								</button>
+							)}
+						</div>
 					)}
 				</div>
 			) : (
