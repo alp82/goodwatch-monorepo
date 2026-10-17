@@ -5,7 +5,8 @@ import { type PageMeta, buildMeta } from "~/utils/meta"
 
 export { pageHeaders as headers } from "~/utils/headers"
 
-// How to add GoodWatch to Claude, Claude Code and ChatGPT, behind REC_CONNECTOR (not found while it's off).
+// How to add GoodWatch to Claude, ChatGPT, Cursor, VS Code and other AI apps, behind REC_CONNECTOR (not found while
+// it's off).
 
 export function loader() {
 	if (!isEnabled("connector")) throw new Response("Not found", { status: 404 })
@@ -14,12 +15,12 @@ export function loader() {
 
 export const meta: MetaFunction = () => {
 	const pageMeta: PageMeta = {
-		title: "Use GoodWatch in Claude and ChatGPT | GoodWatch",
+		title: "Use GoodWatch in Claude, ChatGPT and other AI apps | GoodWatch",
 		description:
-			"Add GoodWatch to Claude, Claude Code or ChatGPT. Ask what to watch tonight, log what you watched and rate titles by chatting.",
+			"Add GoodWatch to Claude, ChatGPT, Cursor, VS Code and other AI apps. Ask what to watch next, log what you watched and rate titles by chatting.",
 		url: "https://goodwatch.app/connect",
 		image: "https://goodwatch.app/images/heroes/hero-movies.png",
-		alt: "Use GoodWatch in Claude and ChatGPT",
+		alt: "Use GoodWatch in your AI assistant",
 	}
 
 	return buildMeta({ pageMeta, items: [] })
