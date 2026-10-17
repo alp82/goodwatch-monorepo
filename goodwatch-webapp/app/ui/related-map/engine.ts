@@ -1009,14 +1009,30 @@ export function relatedMapEngine(
 		;(q(list, "summary") as HTMLElement | null)?.focus()
 	})
 
+	/** Another presentation language: everything known so far is in the old one. */
+	const speak = (language: string) => {
+		if (language === G.language) return false
+		G.language = language
+		G.t = {}; G.packs = {}; G.soft = {}; G.wait = {}; G.fl = {}; G.ex = {}; G.late = {}; G.dom = {}; G.again = {}; G.none = {}; G.asked = 0
+		return true
+	}
+	/**
+	 * The section's inner markup, drawn in the browser: for a page whose server ran out of time before the page title's
+	 * pack was there. The pack stays in memory, so the map needs no second request for it.
+	 */
+	const render = (input: Parameters<typeof section>[0] & { language: string }) => {
+		speak(input.language)
+		return section(input)
+	}
 	const boot = () => {
 		for (const s of sections()) {
 			const language = s.getAttribute("data-media-language") ?? ""
-			if (language !== G.language) {
-				G.language = language
-				G.t = {}; G.packs = {}; G.soft = {}; G.wait = {}; G.fl = {}; G.ex = {}; G.late = {}; G.dom = {}; G.again = {}; G.none = {}; G.asked = 0
+			if (speak(language)) {
 				s.__pl = undefined; s.__awake = false; s.__seen = false
 			}
+			// A section whose page title's pack came too late for the server has no picture yet: the app draws it with
+			// `render` once the pack is there, and boots again.
+			if (!q(s, "[data-pl-stage]")) continue
 			stateOf(s)
 			// The form hears the stage's size after the first layout and before the first paint, so the server's
 			// picture (drawn for a phone) is never seen at another width. A navigation inside the app puts a new stage
@@ -1044,7 +1060,7 @@ export function relatedMapEngine(
 			} else wake(s)
 		}
 	}
-	win.__gwRelatedMap = Object.assign(G, { boot })
+	win.__gwRelatedMap = Object.assign(G, { boot, render })
 	boot()
 	// A tap that came before this script was remembered by the document's inline script (RelatedMap.tsx): the last
 	// poster or control that was tapped is tapped now, if it is still there.

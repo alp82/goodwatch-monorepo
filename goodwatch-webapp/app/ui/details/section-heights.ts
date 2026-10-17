@@ -38,10 +38,6 @@ export function crewHeight(media: Media): ReservedHeight {
 	return { phone: 64 + lines * 52 + gaps, desktop: 64 + lines * 24 + gaps }
 }
 
-// The tab row, the panel's description, and two carousel rows. Without a fingerprint the section is empty.
-export const relatedHeight = (media: Media): ReservedHeight =>
-	media.fingerprint ? { phone: 660, desktop: 764 } : same(0)
-
 // The related titles as a map (ui/related-map). Its height is fixed by its style: the same for every title.
 export const relatedMapHeight = (): ReservedHeight => ({
 	phone: 602,

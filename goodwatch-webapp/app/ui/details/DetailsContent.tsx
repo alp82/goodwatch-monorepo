@@ -5,7 +5,6 @@ import About from "~/ui/details/About"
 import Actors from "~/ui/details/Actors"
 import Crew from "~/ui/details/Crew"
 import DetailsQuestions from "~/ui/details/DetailsQuestions"
-import DetailsRelated from "~/ui/details/DetailsRelated"
 import Media from "~/ui/details/Media"
 import SequelsPrequelsFranchise from "~/ui/details/SequelsPrequelsFranchise"
 import { belowFoldProps, useBelowFold } from "~/ui/details/below-fold"
@@ -19,7 +18,6 @@ import {
 	episodeGridHeight,
 	mediaHeight,
 	questionsHeight,
-	relatedHeight,
 	relatedMapHeight,
 	sequelsHeight,
 } from "~/ui/details/section-heights"
@@ -62,8 +60,7 @@ export default function DetailsContent({
 		...belowFoldProps(skipping, reserved, props?.className),
 	})
 
-	// The related titles as a map. Without one (the setting is off, or the title's pack was not there in time) the
-	// related titles carousel serves.
+	// The related titles as a map. A title without a fingerprint has none, and the section is empty.
 	const relatedMap = Boolean(useRelatedMap())
 
 	// A member with episode tracking gets the episode list in the grid's place, once they come near it.
@@ -114,15 +111,11 @@ export default function DetailsContent({
 			</div>
 			<div
 				{...section(
-					relatedMap ? relatedMapHeight() : relatedHeight(media),
+					relatedMap ? relatedMapHeight() : { phone: 0, desktop: 0 },
 					sectionProps.related,
 				)}
 			>
-				{relatedMap ? (
-					<RelatedMap media={media} />
-				) : (
-					<DetailsRelated media={media} />
-				)}
+				<RelatedMap media={media} />
 			</div>
 			<div {...section(sequelsHeight(media))}>
 				<SequelsPrequelsFranchise media={media} />

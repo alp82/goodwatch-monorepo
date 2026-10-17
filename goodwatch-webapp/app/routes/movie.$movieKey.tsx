@@ -120,6 +120,7 @@ export const loader: LoaderFunction = async ({
 		relatedSection,
 		media.details.title,
 		request,
+		canonicalContent ? undefined : language,
 	)
 	const dehydratedState = mergeDehydratedStates(extrasState)
 

@@ -8,12 +8,15 @@
 // 3. Until the style is there, the section holds its height and hides its content, so nothing is seen unstyled and
 //    nothing moves.
 // A page opened by a navigation inside the app asks for both files when the section mounts, once per document.
+// When the server ran out of time before the page title's pack was there, the section holds its height with only its
+// heading, asks for the pack from the browser, and the engine draws the picture.
 //
 // A walk is forgotten when the page is left.
 import { useMatches, useNavigate } from "@remix-run/react"
 import { useEffect, useRef, useState } from "react"
 import type { RelatedMapData } from "~/server/related-map.server"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
+import type { RawPack } from "~/ui/related-map/engine"
 import cssPath from "~/ui/related-map/related-map.css?url"
 import { assetBase, assetUrl } from "~/utils/asset-url"
 import { useHydrated } from "~/utils/hydrated"
@@ -22,7 +25,17 @@ import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 const loadClient = reloadOnStaleChunk(() => import("~/ui/related-map/client"))
 
 interface MapWindow {
-	__gwRelatedMap?: { boot: () => void; nav: ((href: string) => void) | null }
+	__gwRelatedMap?: {
+		boot: () => void
+		nav: ((href: string) => void) | null
+		render: (input: {
+			root: string
+			title: string
+			pack: RawPack
+			links: { href: string; text: string }[]
+			language: string
+		}) => string
+	}
 }
 
 const STYLE = "link[data-related-map-css]"
@@ -41,6 +54,9 @@ const earlyScript = (css: string, crossOrigin: boolean) =>
 		/</g,
 		"\\u003c",
 	)
+
+const escapeHtml = (text: string) =>
+	text.replace(/[&<>"]/g, (ch) => `&#${ch.charCodeAt(0)};`)
 
 /** The style in the document's head, where it stays for every page that is opened from here. Asked for once. */
 function keepStyle(href: string, path: string) {
@@ -145,11 +161,20 @@ export default function RelatedMap({
 	const hydrated = useHydrated()
 	const [inDocument] = useState(!hydrated)
 	// One markup per title, for as long as the section shows that title: a later answer of the loader for the same
-	// title (a revalidation) doesn't draw over a walk.
-	const held = useRef<{ key: string; html: string }>()
+	// title (a revalidation) doesn't draw over a walk. `drawn`: the markup is the engine's picture, not the heading
+	// that holds the place of a late one.
+	const held = useRef<{ key: string; html: string; drawn: boolean; language?: string }>()
 	const localizedKey = `${rootKey}:${map?.language ?? "canonical"}`
-	if (map && held.current?.key !== localizedKey)
-		held.current = { key: localizedKey, html: map.html ?? documentMarkup(rootKey, map.language) }
+	if (map && held.current?.key !== localizedKey) {
+		const html = map.late ? "" : (map.html ?? documentMarkup(rootKey, map.language))
+		held.current = html
+			? { key: localizedKey, html, drawn: true }
+			: { key: localizedKey, html: `<h2 class="pl-h">Titles like ${escapeHtml(media.details.title)}</h2>`, drawn: false }
+	}
+	const drawn = Boolean(held.current?.drawn)
+	const [, redraw] = useState(0)
+	const [missing, setMissing] = useState<string | null>(null)
+	const title = media.details.title
 	const engineTag = useRef<HTMLScriptElement>(null)
 	const css = assetUrl(cssPath)
 	const script = map?.script ?? null
@@ -157,9 +182,51 @@ export default function RelatedMap({
 	useEffect(() => {
 		if (shown) keepStyle(css, cssPath)
 	}, [shown, css])
+	// A late section: the pack is asked for from the browser, again and again further apart when a request fails, and the
+	// engine draws the picture from it.
+	useEffect(() => {
+		if (!shown || drawn) return
+		const w = window as MapWindow
+		const language = map?.language ?? "en"
+		const key = localizedKey
+		let gone = false
+		let tries = 0
+		let timer: ReturnType<typeof setTimeout> | undefined
+		let stop = () => {}
+		const attempt = () => {
+			fetch(`/api/related-map?key=${rootKey}&displayLanguage=${encodeURIComponent(language)}`)
+				.then((response) => {
+					if (response.status === 404) return null
+					if (!response.ok) throw new Error(String(response.status))
+					return response.json() as Promise<RawPack>
+				})
+				.then((pack) => {
+					if (gone) return
+					if (!pack) return setMissing(key)
+					stop = whenEngine(script, engineTag.current, () => {
+						if (gone || !w.__gwRelatedMap || held.current?.key !== key) return
+						const spoken = pack.language ?? language
+						const html = w.__gwRelatedMap.render({ root: rootKey, title, pack, links: [], language: spoken })
+						held.current = { key, html, drawn: true, language: spoken }
+						redraw((n) => n + 1)
+					})
+				})
+				.catch(() => {
+					if (gone) return
+					tries++
+					timer = setTimeout(attempt, tries <= 4 ? 1200 * tries : 15000)
+				})
+		}
+		attempt()
+		return () => {
+			gone = true
+			clearTimeout(timer)
+			stop()
+		}
+	}, [shown, drawn, localizedKey, rootKey, map?.language, script, title])
 	// The engine hears about every title this section shows, once the picture is in the document.
 	useEffect(() => {
-		if (!shown) return
+		if (!shown || !drawn) return
 		const w = window as MapWindow
 		const stop = whenEngine(script, engineTag.current, () => {
 			if (!w.__gwRelatedMap) return
@@ -170,8 +237,9 @@ export default function RelatedMap({
 			stop()
 			if (w.__gwRelatedMap) w.__gwRelatedMap.nav = null
 		}
-	}, [shown, script, navigate, localizedKey])
-	if (!map) return null
+	}, [shown, drawn, script, navigate, localizedKey])
+	// A title without related titles after all: the section goes.
+	if (!map || missing === localizedKey) return null
 	return (
 		<>
 			<section
@@ -179,7 +247,7 @@ export default function RelatedMap({
 				// there the content is hidden, and the style's first rule shows it.
 				className="pl pl-map h-[602px] overflow-hidden lg:h-[576px] [&>*]:invisible"
 				data-related-map=""
-				data-media-language={map.language ?? "en"}
+				data-media-language={held.current?.language ?? map.language ?? "en"}
 				data-pl-root={rootKey}
 				data-pl-title={media.details.title}
 				data-title-language={media.details.presentation?.title.language}

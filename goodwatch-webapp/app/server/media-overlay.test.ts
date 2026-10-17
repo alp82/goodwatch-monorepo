@@ -21,9 +21,6 @@ const { overlayEpisodeText, createEpisodeTextReader, overlayAlignedGrid } =
 const { matchEpisodeRatings } = await import(
 	"../domain/tracking/episode-ratings.ts"
 )
-const { getQueryKeyRelatedPanel, relatedPanelUrl } = await import(
-	"../utils/related-panel.ts"
-)
 const { movieCollectionQueryKey } = await import("../utils/title-extras.ts")
 const row: CanonicalMediaRow = {
 	media_type: "movie",
@@ -308,15 +305,6 @@ test("public API addresses and SSR query keys separate display languages", () =>
 	assert.notEqual(
 		mediaLanguageUrl("/api/media-title?type=movie&id=42", "fr"),
 		mediaLanguageUrl("/api/media-title?type=movie&id=42", "en"),
-	)
-	const params = { tmdbId: 42, sourceMediaType: "movie" as const }
-	assert.notDeepEqual(
-		getQueryKeyRelatedPanel({ ...params, language: "fr" }),
-		getQueryKeyRelatedPanel({ ...params, language: "de" }),
-	)
-	assert.match(
-		relatedPanelUrl({ ...params, language: "zh-Hant" }),
-		/displayLanguage=zh-Hant/,
 	)
 	assert.notDeepEqual(
 		movieCollectionQueryKey("1", "42", "fr"),

@@ -5,8 +5,8 @@ import { overlayTitles } from "./media-overlay.server.ts"
 // - A pack is one title's neighborhood (see related-map-pack.ts). The browser holds one per title it shows and draws
 //   every step from memory (ui/related-map/engine.ts).
 // - The section's first picture needs only the title's nearest titles: two requests to Qdrant, the same for every
-//   visitor. A title page waits for them for as long as it waits for its other parts, and a page without them shows
-//   the related titles carousel instead and is not kept by any cache.
+//   visitor. A title page waits for them for as long as it waits for its other parts. A page without them asks for
+//   the pack from the browser and draws the map there, and is not kept by any cache.
 // - The pack the browser asks for adds the filtered list of each of the title's chips, so that the first use of a
 //   chip is drawn from memory: up to six more requests. Crawlers never ask for it.
 // - A page is more of one filter's order: one request.
@@ -335,18 +335,26 @@ export interface RelatedMapData {
 	 * Only in the data of a navigation inside the app. A document holds the markup itself.
 	 */
 	html?: string
+	/**
+	 * The lookup ran out of the page's budget: the section has no picture yet, and the browser asks for the page
+	 * title's pack and draws it (ui/related-map/RelatedMap.tsx).
+	 */
+	late?: true
 }
 
 /**
- * The section of a title page from its pack, or undefined when the page shows the related titles carousel.
- * `document`: the answer is rendered into a document now, and not sent to a browser as loader data.
+ * The section of a title page from its pack, or undefined when the title has no fingerprint and so no related titles.
+ * `document`: the answer is rendered into a document now, and not sent to a browser as loader data. `language`: the
+ * page's presentation language, for a late lookup.
  */
 export function relatedMapData(
 	lookup: RelatedMapLookup,
 	title: string,
 	document: boolean,
+	language?: string,
 ): RelatedMapData | undefined {
-	if (typeof lookup === "string") return undefined
+	if (lookup === "none") return undefined
+	if (lookup === "late") return { script: relatedMapScript(), language, late: true }
 	const html = relatedMap(null).section({
 		root: lookup.c[0],
 		title,
@@ -361,16 +369,16 @@ export function relatedMapData(
 
 /**
  * What the loader answers with for the related titles: the map's section, and whether the page has everything a
- * complete document holds (see incomplete-page.ts). Without a pack the related titles carousel stands in for the map
- * and asks for its panel from the browser.
+ * complete document holds (see incomplete-page.ts). Without a pack in time the map asks for it from the browser.
  */
 export function relatedSectionData(
 	lookup: RelatedMapLookup,
 	title: string,
 	request: Request,
+	language?: string,
 ) {
 	return {
-		relatedMap: relatedMapData(lookup, title, isDocumentRequest(request)),
+		relatedMap: relatedMapData(lookup, title, isDocumentRequest(request), language),
 		complete: lookup !== "late",
 	}
 }

@@ -1,13 +1,7 @@
 import { localizeTitlePayload } from "./media-payload.server.ts"
 import type { StreamingProvider } from "~/routes/api.streaming-providers"
-import { counter } from "~/server/metrics/registry.server"
 import { getStreamingProviders } from "~/server/streaming-providers.server"
-import { MISSING_SCORE } from "~/server/title-snapshot/format.server"
-import { getTitleSnapshot } from "~/server/title-snapshot/index.server"
-import {
-	type CoreScores,
-	VALID_FINGERPRINT_KEYS,
-} from "~/server/utils/fingerprint"
+import type { CoreScores } from "~/server/utils/fingerprint"
 import {
 	type QdrantMediaPayload,
 	buildBaseFilterConditions,
@@ -17,19 +11,8 @@ import {
 } from "~/server/utils/recommend"
 import { cached } from "~/utils/cache"
 import { titlePath } from "~/utils/helpers"
-import {
-	MEDIA_COLLECTION,
-	makePointId,
-	recommend,
-	scroll,
-} from "~/utils/qdrant"
+import { MEDIA_COLLECTION, makePointId, recommend } from "~/utils/qdrant"
 import type { AllRatings } from "~/utils/ratings"
-import {
-	type RelatedPanel,
-	type RelatedPanelParams,
-	toRelatedPanel,
-} from "~/utils/related-panel"
-import { relatedSourceFromSnapshot } from "./related-source"
 
 const STREAMING_PROVIDERS_WHITELIST: number[] = [
 	2, // Apple TV
@@ -114,77 +97,6 @@ export const getRelatedShows = async (params: RelatedShowParams) => {
 		ttlMinutes: 60 * 24,
 		//ttlMinutes: 0,
 	})) as unknown as RelatedShow[]
-}
-
-const relatedLookups = counter(
-	"goodwatch_related_lookups_total",
-	"Related panel source lookup outcomes",
-	["result"],
-)
-
-/** One shared cache entry per panel, containing only cards in display order. */
-export const getRelatedPanel = async ({
-	tmdbId,
-	sourceMediaType,
-	fingerprintKey,
-}: RelatedPanelParams): Promise<RelatedPanel> => {
-	const pointId = makePointId(sourceMediaType, tmdbId)
-	const snapshot = getTitleSnapshot()
-	let sourceScore: number | null
-	if (snapshot) {
-		const source = relatedSourceFromSnapshot(
-			snapshot.fingerprint(pointId),
-			fingerprintKey,
-			VALID_FINGERPRINT_KEYS,
-			MISSING_SCORE,
-		)
-		if (!source.known) {
-			relatedLookups.inc(["no_fingerprint"])
-			return { movies: [], shows: [] }
-		}
-		sourceScore = source.score
-	} else {
-		const [point] = await scroll<
-			Pick<QdrantMediaPayload, "fingerprint_scores_v1">
-		>({
-			collectionName: MEDIA_COLLECTION,
-			filter: { must: [{ has_id: [pointId] }] },
-			limit: 1,
-			withPayload: { include: ["fingerprint_scores_v1"] },
-			withVector: false,
-		})
-		if (!point) {
-			relatedLookups.inc(["no_point"])
-			return { movies: [], shows: [] }
-		}
-		sourceScore = fingerprintKey
-			? (point.payload.fingerprint_scores_v1?.[fingerprintKey] ?? null)
-			: null
-	}
-
-	const params = {
-		tmdb_id: tmdbId,
-		fingerprint_key: fingerprintKey,
-		source_media_type: sourceMediaType,
-	}
-	relatedLookups.inc(["lookup"])
-	return cached({
-		name: `${MEDIA_COLLECTION}:related-cards-${tmdbId}-${fingerprintKey || "all"}-${sourceMediaType}`,
-		metricName: "related-cards",
-		params,
-		ttlMinutes: 60 * 24,
-		target: async (lookupParams) => {
-			const lookup = {
-				...lookupParams,
-				source_fingerprint_score: sourceScore ?? undefined,
-			}
-			const [movies, shows] = await Promise.all([
-				getRelatedTitles({ ...lookup, target_media_type: "movie" }),
-				getRelatedTitles({ ...lookup, target_media_type: "show" }),
-			])
-			return { ...toRelatedPanel({ movies, shows }) }
-		},
-	})
 }
 
 const extractRatingsFromPayload = (payload: QdrantMediaPayload): AllRatings => {
@@ -305,7 +217,7 @@ async function getRelatedTitles({
 	const filterConditions = { must, must_not }
 
 	// Build payload fields using shared utility. Only the lookup by streaming service reads streaming_availability
-	// (getRelatedByCategory). Title pages and /api/related don't, and decoding it for 100 results cost a title page
+	// (getRelatedByCategory). Lookups without a streaming filter don't, and decoding it for 100 results cost a title page
 	// that missed the cache about 60 ms of main-thread time (docs/benchmarks/viral-spike-render-profile.md).
 	const payloadFields = buildPayloadFields({
 		includeRatings: Boolean(streaming_combinations?.length),
