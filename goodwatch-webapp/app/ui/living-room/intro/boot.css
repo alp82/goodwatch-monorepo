@@ -1,0 +1,175 @@
+/* The boot screen (boot.tsx), painted before any script: it covers the TV's picture and fades out by itself. */
+.boot {
+	position: absolute;
+	inset: 0;
+	z-index: 30;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
+	container-type: size;
+	background: #000;
+	pointer-events: none;
+	animation: boot-out 0.45s ease-in 2.4s both;
+}
+@keyframes boot-out {
+	to {
+		opacity: 0;
+		visibility: hidden;
+	}
+}
+.boot-glow {
+	position: absolute;
+	inset: 0;
+	background: radial-gradient(
+		35% 45% at 50% 50%,
+		rgba(251, 191, 36, 0.12) 0,
+		rgba(251, 191, 36, 0) 70%
+	);
+	animation: boot-fade 1.4s ease-out 0.3s both;
+}
+@keyframes boot-fade {
+	from {
+		opacity: 0;
+	}
+}
+/* The TV's standby light: an amber dot that breathes while the arc sweeps, then goes out. */
+.boot-standby {
+	position: absolute;
+	left: 50%;
+	bottom: 9cqh;
+	width: max(6px, 0.7cqw);
+	height: max(6px, 0.7cqw);
+	margin-left: calc(max(6px, 0.7cqw) / -2);
+	border-radius: 50%;
+	background: #fbbf24;
+	box-shadow: 0 0 1.4cqw 0.4cqw rgba(251, 191, 36, 0.55);
+	animation: boot-breathe 1.3s ease-in-out both, boot-dot-out 0.45s ease-in
+		1.35s forwards;
+}
+@keyframes boot-breathe {
+	0% {
+		opacity: 0;
+		transform: scale(0.6);
+	}
+	35% {
+		opacity: 1;
+		transform: scale(1);
+	}
+	65% {
+		opacity: 0.55;
+		transform: scale(0.85);
+	}
+	100% {
+		opacity: 1;
+		transform: scale(1.1);
+	}
+}
+@keyframes boot-dot-out {
+	to {
+		opacity: 0;
+		transform: scale(0.4);
+	}
+}
+.boot-push {
+	position: relative;
+	animation: boot-push 2.8s linear both;
+}
+@keyframes boot-push {
+	from {
+		transform: scale(1);
+	}
+	to {
+		transform: scale(1.05);
+	}
+}
+.boot-lockup {
+	display: flex;
+	align-items: flex-end;
+	font-size: 102px;
+	font-weight: 700;
+	line-height: 1;
+	white-space: nowrap;
+}
+.boot-emblem {
+	position: relative;
+	z-index: 2;
+	display: flex;
+}
+.boot-arc {
+	position: absolute;
+	left: 50%;
+	top: calc(50% - 0.08em);
+	width: 1.25em;
+	height: 1.25em;
+	margin: -0.625em 0 0 -0.625em;
+	animation: boot-sweep 1.3s cubic-bezier(0.45, 0, 0.25, 1) 0.15s both;
+}
+@keyframes boot-sweep {
+	0% {
+		opacity: 0;
+		transform: rotate(-120deg);
+	}
+	20% {
+		opacity: 1;
+	}
+	80% {
+		opacity: 1;
+	}
+	100% {
+		opacity: 0;
+		transform: rotate(300deg);
+	}
+}
+.boot-g {
+	animation: boot-turn 1s cubic-bezier(0.22, 1, 0.36, 1) 0.2s both;
+}
+@keyframes boot-turn {
+	from {
+		opacity: 0;
+		transform: rotate(-35deg) scale(0.82);
+	}
+}
+/* "oodWatch" waits behind the G and slides out of it: a clipping window right of the emblem. */
+.boot-window {
+	display: flex;
+	overflow: hidden;
+	margin-left: 0.0556em;
+	margin-bottom: -0.02em;
+	padding: 0.1em 0.05em 0.02em 0;
+}
+.boot-text {
+	display: flex;
+	animation: boot-slide 1s cubic-bezier(0.22, 1, 0.36, 1) 1.1s both;
+}
+@keyframes boot-slide {
+	from {
+		transform: translateX(-45%);
+		opacity: 0;
+	}
+	55% {
+		opacity: 1;
+	}
+}
+@container (max-width: 520px) {
+	.boot-lockup {
+		font-size: 60px;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.boot,
+	.boot * {
+		animation: none !important;
+	}
+	.boot {
+		animation: boot-out 0.2s linear 0.6s both !important;
+	}
+	.boot-standby,
+	.boot-arc {
+		display: none;
+	}
+}
+/* Back in the same tab (progress kept, progress.ts): the start page's inline script marks the page before it paints. */
+html[data-gw-intro="seen"] .boot {
+	display: none;
+}

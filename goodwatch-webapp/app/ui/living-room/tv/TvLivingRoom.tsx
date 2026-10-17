@@ -1,12 +1,13 @@
 // The start page's scene with the new TV: the room (TvRoom.tsx), the TV's state (use-tv.ts), what is on the TV
 // (TvScreen.tsx), the data behind it and the effects the machine names. The route hands it the loader's data.
 import { useLocation, useRevalidator } from "@remix-run/react"
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useTonightsPick } from "~/ui/navigation/useTonightsPick"
 import { useContinueWithGoogle, whenAuthFails } from "~/utils/auth-client"
 import { onFirstInteraction } from "~/utils/first-interaction"
 import { useLeaveThroughTv, useReturnIntoTv } from "../tv-transition"
 import { TvRoom } from "./TvRoom"
+import { HomeHeading, type HomeHeadingTag } from "./screens/Home"
 import {
 	DiscoverCode,
 	DiscoverData,
@@ -91,7 +92,20 @@ function Edition({
 	return null
 }
 
-export function TvLivingRoom({ data }: { data: TvHomeData }) {
+export function TvLivingRoom({
+	data,
+	screenOverlay,
+	belowIntro,
+	homeHeadingAs = "h1",
+}: {
+	data: TvHomeData
+	/** Over the TV's picture: the intro's boot screen and film. */
+	screenOverlay?: ReactNode
+	/** At the top of the section below the room: "How GoodWatch works" for a guest. */
+	belowIntro?: ReactNode
+	/** The TV home headline's tag: "p" when the page has its own H1 below the room. */
+	homeHeadingAs?: HomeHeadingTag
+}) {
 	// Back after leaving through the TV shrinks the page into the same TV screen.
 	useReturnIntoTv()
 	const location = useLocation()
@@ -422,8 +436,10 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 				startTitles={data.startTitles}
 				talked={data.talked}
 				services={data.services}
+				screenOverlay={screenOverlay}
+				belowIntro={belowIntro}
 				renderScreen={(canvas) => (
-					<>
+					<HomeHeading.Provider value={homeHeadingAs}>
 						<Edition canvas={canvas} report={setEdition} />
 						<TvScreen
 							tv={tv}
@@ -440,7 +456,7 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 							search={search}
 							shows={shows}
 						/>
-					</>
+					</HomeHeading.Provider>
 				)}
 			/>
 			{/* A screen's data, once for both editions. It draws nothing. */}
