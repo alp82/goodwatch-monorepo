@@ -1,0 +1,135 @@
+{
+  "job_id": "01a14756-a743-6639-0d34-659dbc138270",
+  "duration_ms": 1156,
+  "result": {
+    "requests": 1,
+    "rows_added": {
+      "season_translation": 0,
+      "episode_translation": 0
+    },
+    "started_at": "2026-10-17T00:50:24.386692",
+    "finished_at": "2026-10-17T00:50:24.652173",
+    "stop_reason": "failed_requests_over_5_percent",
+    "failed_requests": 1,
+    "pages_completed": 0,
+    "shows_completed": 0,
+    "preserve_existing": true,
+    "recovered_crate_stalls": 0,
+    "counts_may_exclude_uncertain_write": false
+  },
+  "tables": {
+    "season_translation": {
+      "rows_before": 312,
+      "rows_after": 312,
+      "rows_added": 0,
+      "nonempty_fields_preserved": 379
+    },
+    "episode_translation": {
+      "rows_before": 7120,
+      "rows_after": 7120,
+      "rows_added": 0,
+      "nonempty_fields_preserved": 10234
+    }
+  },
+  "changed_targets_before": 4063,
+  "changed_targets_after": 4063,
+  "changed_head_before": [
+    {
+      "tmdb_id": 337744,
+      "targets": [
+        {
+          "table": "season_translation",
+          "id": 548926,
+          "path": "tv/337744/season/1"
+        },
+        {
+          "table": "episode_translation",
+          "id": 7947316,
+          "path": "tv/337744/season/1/episode/3"
+        }
+      ],
+      "offset": 0
+    }
+  ],
+  "changed_head_after": [
+    {
+      "tmdb_id": 337744,
+      "targets": [
+        {
+          "table": "season_translation",
+          "id": 548926,
+          "path": "tv/337744/season/1"
+        },
+        {
+          "table": "episode_translation",
+          "id": 7947316,
+          "path": "tv/337744/season/1/episode/3"
+        }
+      ],
+      "offset": 0
+    }
+  ],
+  "backlog_head_before": [
+    {
+      "tmdb_id": 57775,
+      "resume": {
+        "tmdb_id": 57775,
+        "season_number": 2,
+        "episode_number": 1127
+      },
+      "old_episodes": 100,
+      "old_seasons": 3
+    }
+  ],
+  "backlog_head_after": [
+    {
+      "tmdb_id": 57775,
+      "resume": {
+        "tmdb_id": 57775,
+        "season_number": 2,
+        "episode_number": 1127
+      },
+      "old_episodes": 100,
+      "old_seasons": 3
+    }
+  ],
+  "lease_released": true,
+  "schedule_unchanged": true,
+  "implementation_commit": "7761d053d20f91804d2576c987fdc31aec232d04",
+  "workspace_sync": {
+    "conclusion": "success",
+    "headSha": "7761d053d20f91804d2576c987fdc31aec232d04",
+    "status": "completed",
+    "url": "https://github.com/alp82/goodwatch-monorepo/actions/runs/38988134482"
+  },
+  "deployment": {
+    "f/media_language/nightly_episode_translations": {
+      "hash": "85d967569e6be832",
+      "content_matches": true
+    },
+    "f/media_language/ingest_episode_translations": {
+      "hash": "85b89fad9fc5ab0f",
+      "content_matches": true
+    },
+    "f/media_language/episode_translations": {
+      "hash": "744ca29797748e13",
+      "content_matches": true
+    }
+  },
+  "endpoint_blocker": {
+    "path": "tv/337744/season/1/translations",
+    "http_status": 404,
+    "tmdb_status_code": 34,
+    "tmdb_status_message": "The resource you requested could not be found."
+  },
+  "tests": {
+    "nightly": 27,
+    "flows_total": 1539,
+    "flows_skipped": 75,
+    "flows_baseline_failures": 1,
+    "flows_excluding_baseline": 1538,
+    "baseline_reproduced": true
+  },
+  "requested_ten_minute_proof_complete": false,
+  "evidence_directory": "/home/alper/projects/goodwatch-media-language-evidence/episode-translation-recovery"
+}

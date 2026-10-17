@@ -168,3 +168,34 @@ the backup-notification tests now pass there. With that one baseline assertion
 excluded, the full suite passes: 1,538 tests, with 75 skipped. Logs and supervised-run
 evidence are retained under
 `/home/alper/projects/goodwatch-media-language-evidence/episode-translation-recovery/`.
+
+Implementation commit `7761d053d20f91804d2576c987fdc31aec232d04` was fast-forward
+pushed to main. [Workspace sync](https://github.com/alp82/goodwatch-monorepo/actions/runs/38988134482)
+passed; the deployed nightly runner, entry point and ingestion helper exactly
+matched the committed files. No schedule time or arguments were changed.
+
+**Production proof is blocked by an unavailable TMDB target, not by Crate.**
+The scheduled 2026-10-17 run had already stopped at 00:39 UTC with
+`endpoint_failed`, leaving 277 changed-work shows (4,063 targets) ahead of the
+saved backlog cursor at show 57775, season 2, episode 1127. The supervised job
+`01a14756-a743-6639-0d34-659dbc138270`, submitted at 00:50 UTC with
+`nightly: true`, `dry_run: false`, `max_seconds: 600`, encountered that same queue
+head: `tv/337744/season/1/translations`. A separate read-only request confirmed
+HTTP 404, TMDB status 34 (resource not found).
+
+The retained failure-ratio guard stopped this job with
+`failed_requests_over_5_percent`: one request, one failure, **zero rows added,
+zero pages completed and no cursor advance**. Windmill job duration was 1.156
+seconds. The state summary matched the job result and the lease was released.
+All 312 season and 7,120 episode translation rows in the before snapshots remained;
+all 10,613 pre-existing non-empty fields were identical. The schedule definition,
+including its arguments, was identical before and after.
+
+The requested ten-minute production throughput/cursor proof therefore remains
+outstanding. Resolving or separately authorizing handling of the unavailable TMDB
+queue head is necessary before rerunning it. This change deliberately retains the
+existing endpoint safety stops and pending work; it does not skip or discard the
+404 target. Crate recovery is verified by deterministic tests, including real SQL
+execution, but was not exercised against an actual production stall in this job.
+Machine-readable results are in
+[`media-language-nightly-episodes-recovery-production.json`](media-language-nightly-episodes-recovery-production.json).
