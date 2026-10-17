@@ -9,6 +9,17 @@ import SeenScore from "~/ui/details/hero/SeenScore"
 import TitleSidesLine from "~/ui/details/hero/TitleSidesLine"
 import { HeroBackdropImage, HeroPoster, TrailerButton } from "~/ui/details/hero/Trailer"
 import WhereToWatch from "~/ui/details/hero/WhereToWatch"
+import { useSearchParams } from "@remix-run/react"
+import { PrototypeSwitcher } from "~/ui/prototype/PrototypeSwitcher"
+
+// PROTOTYPE - throwaway: where-to-watch grouping variants, ?variant=.
+const WW_VARIANTS = {
+	A: "Live",
+	B: "Controls beside the heading",
+	C: "Divider line above",
+	D: "Own panel",
+	E: "Heading, then controls",
+}
 import type { SectionIds } from "~/ui/details/sections"
 import type { SectionProps } from "~/utils/scroll"
 
@@ -36,10 +47,21 @@ export interface DetailsHeroProps {
 // then for a member a quiet line on where the title sits in their Taste (taste groups). On a phone the two sides
 // stand over each other.
 export default function DetailsHero({ media, country, shownCountry, preview, episodeGrid = null, sectionProps, sides = null }: DetailsHeroProps) {
+	const v = useSearchParams()[0].get("variant") ?? "A"
+	const wwHeader = v === "B" ? "left" : v === "E" ? "stacked" : "right"
+	const wwClass =
+		v === "C"
+			? "mx-3 border-t border-white/10 px-0 pb-3 pt-4 md:mx-6 md:pb-5 md:pt-5"
+			: v === "D"
+				? "m-3 rounded-xl bg-white/[0.04] p-3 ring-1 ring-white/10 md:mx-5 md:mb-5 md:mt-1 md:p-4"
+				: v === "B" || v === "E"
+					? "p-3 pt-4 md:p-6 md:pt-5"
+					: "p-3 md:p-5"
 	return (
 		<div className="relative mx-auto mb-10 mt-4 max-w-7xl px-4 sm:px-6 lg:px-8">
 			<div {...sectionProps.overview}>
 				{/* z-30 keeps the country popover above the sections below. */}
+				<PrototypeSwitcher variants={WW_VARIANTS} />
 				<section data-title-overview className="relative isolate z-30 min-w-0 rounded-2xl border border-white/10 bg-stone-950">
 					<div className="relative">
 						<div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden rounded-t-2xl" aria-hidden="true">
@@ -71,7 +93,7 @@ export default function DetailsHero({ media, country, shownCountry, preview, epi
 							</div>
 						</div>
 					</div>
-					<WhereToWatch media={media} country={country} shownCountry={shownCountry} preview={preview} className="p-3 md:p-5" />
+					<WhereToWatch media={media} country={country} shownCountry={shownCountry} preview={preview} header={wwHeader} className={wwClass} />
 					{sides && <TitleSidesLine sides={sides} mediaType={media.mediaType} tmdbId={media.details.tmdb_id} />}
 				</section>
 			</div>

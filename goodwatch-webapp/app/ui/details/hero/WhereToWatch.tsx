@@ -152,7 +152,10 @@ export default function WhereToWatch({
 	shownCountry = country,
 	preview = null,
 	className = "",
+	header = "right",
 }: {
+	/** PROTOTYPE: where the offer tabs and country sit. */
+	header?: "right" | "left" | "stacked"
 	media: Media
 	/** The country `media`'s offers are for. */
 	country: string
@@ -214,14 +217,14 @@ export default function WhereToWatch({
 			style={{ scrollMarginTop: UNDER_HEADERS }}
 		>
 			{arrival.rules}
-			<div className="flex min-w-0 items-center justify-end gap-1.5">
+			<div className={`flex min-w-0 gap-1.5 ${header === "stacked" ? "flex-wrap items-center" : header === "left" ? "items-center justify-start gap-3" : "items-center justify-end"}`}>
 				<h2
 					aria-label="Where to watch"
-					className="mr-auto min-w-0 truncate text-sm font-semibold text-white @max-[18rem]:sr-only"
+					className={`min-w-0 truncate font-semibold text-white @max-[18rem]:sr-only ${header === "stacked" ? "w-full text-base" : header === "left" ? "text-base" : "mr-auto text-sm"}`}
 				>
 					{/* A narrow box has no room for the three words beside the tabs and the country, the narrowest for any. */}
-					<span className="@[30rem]:hidden">Watch</span>
-					<span className="hidden @[30rem]:inline">Where to watch</span>
+					<span className={header === "right" ? "@[30rem]:hidden" : "hidden"}>Watch</span>
+					<span className={header === "right" ? "hidden @[30rem]:inline" : ""}>Where to watch</span>
 				</h2>
 				<div
 					role="tablist"
