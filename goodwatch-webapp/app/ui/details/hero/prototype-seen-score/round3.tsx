@@ -195,7 +195,7 @@ export function MovieSplit() {
 					<button
 						type="button"
 						aria-pressed={p.seen}
-						onClick={() => p.setWatch(p.seen ? "not_started" : "seen")}
+						onClick={p.pressSeen}
 						className={`flex h-full w-[4.5rem] shrink-0 cursor-pointer flex-col items-center justify-center gap-0.5 text-[11px] font-semibold transition-colors ${
 							p.seen ? "bg-green-500 text-black" : "text-gray-200 hover:bg-white/10"
 						} ${glow ? "ring-2 ring-inset ring-green-200" : ""}`}
@@ -212,7 +212,6 @@ export function MovieSplit() {
 				value={score}
 				busy={false}
 				opener={ref}
-				hideClear
 				heading={
 					afterSeen ? (
 						<span className="flex items-center gap-2">

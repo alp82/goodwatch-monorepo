@@ -68,12 +68,10 @@ function useProtoStore(media: ProtoMedia) {
 				...s,
 				watch,
 				episodes: episodesFor(watch, s.episodes),
-				// Not seen and a score don't go together: going back takes the score away.
-				score: watch === "not_started" ? null : s.score,
+				// The score stays whatever the state: only Clear score removes it.
 				hidden: watch === "not_started" ? s.hidden : false,
 			}))
-			if (watch === "not_started" && before.score != null) setEvent({ kind: "cleared", at: Date.now(), undo: before })
-			else if (watch === "seen" && before.score == null) setEvent({ kind: "seen-on", at: Date.now() })
+			if (watch === "seen" && before.score == null) setEvent({ kind: "seen-on", at: Date.now() })
 			else setEvent(null)
 		},
 		[state, set],

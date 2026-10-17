@@ -136,7 +136,6 @@ export function VerdictDialog({ kind, open, onClose, opener }: { kind: "steps" |
 			value={p.state.score}
 			busy={false}
 			opener={opener}
-			hideClear
 			heading={kind === "switch" ? <SwitchHeading /> : undefined}
 			top={kind === "steps" ? <Steps /> : <SwitchAsk />}
 			footer={<Notes autoNote={autoNote} onDone={onClose} />}
