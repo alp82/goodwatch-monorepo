@@ -299,7 +299,8 @@ export default function MapGrid({
 						<div
 							className="grid items-start"
 							style={{
-								gridTemplateColumns: `${LABEL_W}px minmax(0, 1fr) ${seasonScores ? `${SCORE_W}px` : ""}`,
+								// The tiles' column is only as wide as the longest season at full size, so the season score sits right after it.
+								gridTemplateColumns: `${LABEL_W}px minmax(0, ${most * (maxCell + GAP)}px) ${seasonScores ? `${SCORE_W}px` : ""}`,
 								gap: GAP,
 							}}
 						>
