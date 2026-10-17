@@ -1078,10 +1078,10 @@ test("a title added after it landed, a guest and a member without a service have
 		movies: [],
 		shows: [],
 	})
-	assert.deepEqual(
-		await getRecentlyLanded({ ...ctx, services: [] }, day(5)),
-		{ movies: [], shows: [] },
-	)
+	assert.deepEqual(await getRecentlyLanded({ ...ctx, services: [] }, day(5)), {
+		movies: [],
+		shows: [],
+	})
 	assert.deepEqual(
 		await getRecentlyLanded(
 			{ ...ctx, viewer: { kind: "guest", id: null } as never },
@@ -1144,7 +1144,12 @@ test("the Want to See list marks the titles that are new on a service, and no ot
 	// Without the marks the items are what they were.
 	const plain = await getLibraryPage(user, choice)
 	assert.ok(plain.items.every((item) => !("newOn" in item)))
-	const seen = await getLibraryPage(user, { ...choice, status: "seen" }, 0, marks)
+	const seen = await getLibraryPage(
+		user,
+		{ ...choice, status: "seen" },
+		0,
+		marks,
+	)
 	assert.ok(seen.items.every((item) => !("newOn" in item)))
 })
 
@@ -1213,7 +1218,12 @@ function doorsMember() {
 		offer("show", SEVERANCE, NETFLIX, day(-900)),
 	]
 }
-const lands = (type: "movie" | "show", id: number, service: number, at: number) => {
+const lands = (
+	type: "movie" | "show",
+	id: number,
+	service: number,
+	at: number,
+) => {
 	crate.offers = [
 		...crate.offers.filter((o) => !(o.type === type && o.id === id)),
 		offer(type, id, service, at),
