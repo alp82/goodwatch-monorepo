@@ -19,6 +19,7 @@ import { APP_GUIDES, useSelectedGuide } from "~/ui/connector/app-guides"
 import { CONNECTED_APPS_PATH, USE_WITH_AI_PATH } from "~/ui/connector/connector"
 import { USE_WITH_AI_ASKS } from "~/ui/connector/example-prompts"
 import { Ui } from "~/ui/connector/help-parts"
+import { AI_CHAT_COPY } from "~/ui/og-image/copy"
 import { AppPicker, AppSetup } from "~/ui/use-with-ai/AppSetup"
 import { ChatDemo } from "~/ui/use-with-ai/ChatDemo"
 import { type PageMeta, buildMeta } from "~/utils/meta"
@@ -32,7 +33,8 @@ export const meta: MetaFunction = () => {
 			"Add GoodWatch to Claude, ChatGPT, Cursor, VS Code and other AI apps in a few steps. Then ask what to watch, log episodes and rate titles by chatting.",
 		url: `https://goodwatch.app${USE_WITH_AI_PATH}`,
 		image: "https://goodwatch.app/images/heroes/hero-movies.png",
-		alt: "GoodWatch in an AI chat",
+		// Describes the chat card (ChatCard.tsx).
+		alt: `A chat asking “${AI_CHAT_COPY.prompt}”, answered with GoodWatch poster cards and their scores`,
 	}
 
 	return buildMeta({ pageMeta, items: [] })

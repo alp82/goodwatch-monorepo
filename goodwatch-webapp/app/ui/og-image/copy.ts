@@ -8,6 +8,9 @@
 // - Score words such as "Masterpiece": scoreLabels in app/utils/ratings.ts.
 // - Titles, names, years, and runtimes: the database.
 
+// Relative with the extension, because copy.test.ts runs this file in plain Node.
+import { USE_WITH_AI_ASKS } from "../connector/example-prompts.ts"
+
 export const BRAND_NAME = "GoodWatch"
 
 // Subtexts longer than this are left off the card, because they can't be read at a glance.
@@ -131,6 +134,7 @@ export const STATIC_PAGE_COPY: Record<string, PageCopy> = {
 		title: "Privacy policy",
 		subtitle: "Why your taste is safe with us.",
 	},
+	// Drawn as the chat card (AI_CHAT_COPY). Listed here so the path has a card of its own.
 	"/use-with-ai": {
 		tag: "Use with AI",
 		title: "Ask your AI what to watch",
@@ -173,4 +177,19 @@ export const DISCOVERY_COPY = {
 		],
 		bridge: { label: "Mind-Bending + Funny" },
 	},
+} as const
+
+// /use-with-ai: the pitch, and the chat on the dark panel. The prompt is the page's own example, in the casual voice
+// example-prompts.ts keeps; the posters are top-scored titles on the service it names (STREAMING_PROVIDER_ID).
+export const AI_CHAT_COPY = {
+	tag: "Use with AI",
+	lines: ["Ask your AI", "what to watch"],
+	subtitle: "In Claude, ChatGPT and more.",
+	prompt:
+		USE_WITH_AI_ASKS.find(({ key }) => key === "tonight")?.ask ??
+		"anything good on netflix tonight",
+	// TMDB watch provider id of the service the prompt names: Netflix.
+	providerId: "8",
+	toolLine: "Used GoodWatch",
+	reply: "Top picks on Netflix for your taste.",
 } as const

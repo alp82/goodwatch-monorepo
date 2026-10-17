@@ -2,8 +2,10 @@
 // - Movies and shows: amber panel with the title and score, poster on the right.
 // - People and collections: picture on the left, amber panel on the right.
 // - Discover and Explorer: amber panel with the pitch, top-scored posters on a dark panel.
+// - Use with AI: amber panel with the pitch, a chat answered with scored posters on a dark panel.
 // - Every other page: backdrop across the top, amber band with the headline below.
 // Image fields hold data URIs, so satori never fetches anything itself.
+import { ChatCard } from "~/ui/og-image/ChatCard"
 import {
 	DiscoveryCard,
 	type DiscoveryFeature,
@@ -68,7 +70,14 @@ export interface OgDiscoveryContent {
 	groups: { label: string; posters: OgPoster[] }[]
 }
 
+// /use-with-ai: the posters that answer the chat.
+export interface OgChatContent {
+	kind: "chat"
+	posters: OgPoster[]
+}
+
 export type OgContent =
+	| OgChatContent
 	| OgDiscoveryContent
 	| OgTitleContent
 	| OgPersonContent
@@ -238,6 +247,7 @@ function BandCard({ content }: { content: OgPageContent }) {
 
 export function OgCard({ content }: { content: OgContent }) {
 	if (content.kind === "discovery") return <DiscoveryCard content={content} />
+	if (content.kind === "chat") return <ChatCard posters={content.posters} />
 	if (content.kind === "title") return <TitleCard content={content} />
 	if (content.kind === "page") return <BandCard content={content} />
 	return <SplitCard content={content} />

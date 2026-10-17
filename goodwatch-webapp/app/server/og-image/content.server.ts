@@ -19,6 +19,7 @@ import {
 import { mainHierarchy, mainNavigation } from "~/ui/explore/main-nav"
 import type { OgContent } from "~/ui/og-image/OgCard"
 import {
+	AI_CHAT_COPY,
 	DEPARTMENT_LABELS,
 	DISCOVERY_COPY,
 	HOME_COPY,
@@ -154,16 +155,22 @@ const rotateByPath = <T>(items: T[], path: string) => {
 async function loadDetails(type: "movie" | "show", id: number) {
 	try {
 		return type === "movie"
-			? await getDetailsForMovie({
-					movieId: String(id),
-					country: "US",
-					language: "en",
-				}, { canonical: true })
-			: await getDetailsForShow({
-					showId: String(id),
-					country: "US",
-					language: "en",
-				}, { canonical: true })
+			? await getDetailsForMovie(
+					{
+						movieId: String(id),
+						country: "US",
+						language: "en",
+					},
+					{ canonical: true },
+				)
+			: await getDetailsForShow(
+					{
+						showId: String(id),
+						country: "US",
+						language: "en",
+					},
+					{ canonical: true },
+				)
 	} catch (error) {
 		if (error instanceof Response && error.status === 404) return null
 		throw error
@@ -367,8 +374,19 @@ async function explorerCardContent(): Promise<OgContent> {
 	}
 }
 
+// Top-scored movies and shows on the service the chat asks about.
+async function chatCardContent(): Promise<OgContent> {
+	const posters = await scoredPosters({
+		type: "all",
+		country: "US",
+		withStreamingProviders: AI_CHAT_COPY.providerId,
+	})
+	return { kind: "chat", posters: posters.slice(0, 3).map(toPoster) }
+}
+
 async function staticPageContent(path: string): Promise<OgContent> {
 	if (path === "/discover") return discoverCardContent()
+	if (path === "/use-with-ai") return chatCardContent()
 	if (path === "/explorer") return explorerCardContent()
 	const page = STATIC_PAGE_COPY[path] ?? HOME_COPY
 	const backdrops = await discoverBackdrops({ type: "movie", minScore: "80" })

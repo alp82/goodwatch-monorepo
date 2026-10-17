@@ -28,6 +28,16 @@ async function inlineImages(content: OgContent): Promise<OgContent> {
 					})),
 				),
 			}
+		case "chat":
+			return {
+				...content,
+				posters: await Promise.all(
+					content.posters.map(async (poster) => ({
+						...poster,
+						src: await toDataUri(poster.src),
+					})),
+				),
+			}
 		case "title":
 			return { ...content, poster: await toDataUri(content.poster) }
 		case "person":
