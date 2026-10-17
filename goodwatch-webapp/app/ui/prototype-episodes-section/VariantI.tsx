@@ -50,7 +50,7 @@ export default function VariantI({ media, gridNode }: VariantProps) {
 	return <Inner tracking={tracking} view={tracking.view} actions={actions} />
 }
 
-interface Stats {
+export interface Stats {
 	season: Season
 	rated: PageEpisode[]
 	avg: number | null
@@ -59,7 +59,7 @@ interface Stats {
 	max: PageEpisode | null
 }
 
-const statsOf = (season: Season): Stats => {
+export const statsOf = (season: Season): Stats => {
 	const rated = season.episodes.filter((e) => e.rating !== null)
 	if (!rated.length)
 		return { season, rated, avg: null, sd: 0, min: null, max: null }
@@ -224,7 +224,7 @@ const SCORE_W = 40
 const PHONE_LABEL_W = 38
 const PHONE_SCORE_W = 36
 
-function Chart({
+export function Chart({
 	stats,
 	showAvg,
 	model,
@@ -542,7 +542,7 @@ function StripRow({
 	)
 }
 
-function ChartLegend({ model, chart }: { model: Model; chart: boolean }) {
+export function ChartLegend({ model, chart }: { model: Model; chart: boolean }) {
 	const swatch = "inline-block h-2.5 w-2.5 rounded-full"
 	return (
 		<div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px] text-gray-500">

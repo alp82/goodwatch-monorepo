@@ -40,7 +40,7 @@ export default function VariantG({ media, gridNode }: VariantProps) {
 }
 
 /** Keeps a pressed grid row where it was on the screen when a season above it closes. */
-function useHold(open: number | null) {
+export function useHold(open: number | null) {
 	const held = useRef<{ season: number; top: number } | null>(null)
 	useLayoutEffect(() => {
 		const hold = held.current
@@ -174,14 +174,14 @@ function Inner({
 	)
 }
 
-function specialsWatched(model: Model, specials: Season) {
+export function specialsWatched(model: Model, specials: Season) {
 	const watched = specials.episodes.filter((e) => model.view.watched.has(e.id))
 		.length
 	return watched ? ` · ${watched} watched` : ""
 }
 
 /** The show in one line: its average, the best and worst episode (pressing one opens it), how even it is. */
-function Summary({
+export function Summary({
 	seasons,
 	onPick,
 }: {
@@ -249,7 +249,7 @@ function Summary({
 	)
 }
 
-function Key({ model, lens }: { model: Model; lens: Lens }) {
+export function Key({ model, lens }: { model: Model; lens: Lens }) {
 	return (
 		<p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] leading-4 text-gray-500">
 			<span>

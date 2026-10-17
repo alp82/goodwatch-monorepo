@@ -43,12 +43,21 @@ export interface MapGridProps {
 	maxCell?: number
 	/** Show the season score column at the row's end (rows) or under the label (columns). */
 	seasonScores?: boolean
+	/**
+	 * Rows only: a season too long for readable tiles wraps onto more lines instead of shrinking, at a round number
+	 * of tiles per line (12, 10, 8, 6 or 5), so every tile keeps its score.
+	 */
+	wrap?: boolean
+	/** Rows only: seasons drawn as a thin colour strip (fit to the width, no scores), for example the closed ones. */
+	compactRow?: (season: Season) => boolean
 }
 
 const LABEL_W = 44
 const SCORE_W = 36
 const GAP = 3
 const MIN_READABLE = 21
+/** Narrowest tile a wrapped season uses: room for the score at the small size. */
+const MIN_WRAP = 28
 
 export const seasonAverage = (season: Season): number | null => {
 	const rated = season.episodes.filter((e) => e.rating !== null)
@@ -83,6 +92,8 @@ export default function MapGrid({
 	afterRow,
 	maxCell = 40,
 	seasonScores = true,
+	wrap = false,
+	compactRow,
 }: MapGridProps) {
 	const { ref, width } = useWidth()
 	const most = Math.max(1, ...seasons.map((s) => s.episodes.length))
@@ -101,8 +112,9 @@ export default function MapGrid({
 				? "rows"
 				: "columns"
 			: orientation
-	const cell = shape === "rows" ? rowsCell : columnsCell
-	const readable = cell >= MIN_READABLE
+	const cellAll = shape === "rows" ? rowsCell : columnsCell
+	const readableAll = cellAll >= MIN_READABLE
+	const cell = cellAll
 	const averages = new Map(seasons.map((s) => [s.number, seasonAverage(s)]))
 
 	// Keyboard: arrows move along the grid in reading order of the orientation, Enter presses.
@@ -140,7 +152,7 @@ export default function MapGrid({
 		onEpisode?.(to, { shift: event.shiftKey })
 	}
 
-	const tile = (episode: PageEpisode) => {
+	const tile = (episode: PageEpisode, readable = readableAll, cell = cellAll, thin = false) => {
 		const watched = model.tracked && model.view.watched.has(episode.id)
 		const aired = model.aired(episode)
 		const isNext = model.nextId === episode.id
@@ -173,7 +185,7 @@ export default function MapGrid({
 				className={`relative flex min-w-0 cursor-pointer items-center justify-center rounded-[3px] font-semibold tabular-nums text-white transition-[opacity,transform] duration-150 hover:brightness-125 ${FOCUS} ${!readable ? "text-[0px]" : cell >= 28 ? "text-[11.5px]" : "text-[10px] tracking-tight"} ${aired ? "" : "border border-dashed border-white/25"} ${isNext ? "z-[1] ring-2 ring-white" : ""} ${selected ? "z-[2] scale-110 ring-2 ring-sky-400" : ""} ${inRange ? "z-[1] outline outline-2 outline-sky-300" : ""}`}
 				style={{
 					background: aired ? colour : undefined,
-					height: shape === "rows" ? (readable ? 30 : Math.max(16, cell)) : readable ? 26 : 20,
+					height: thin ? 14 : shape === "rows" ? (readable ? 30 : Math.max(16, cell)) : readable ? 26 : 20,
 					opacity: faded ? 0.18 : 1,
 				}}
 			>
@@ -271,24 +283,50 @@ export default function MapGrid({
 			className="flex w-full flex-col"
 			style={{ gap: GAP }}
 		>
-			{seasons.map((season) => (
-				<div key={season.number} data-map-row={season.number}>
-					<div
-						className="grid items-center"
-						style={{
-							gridTemplateColumns: `${LABEL_W}px repeat(${most}, minmax(0, ${maxCell}px)) ${seasonScores ? `${SCORE_W}px` : ""}`,
-							gap: GAP,
-						}}
-					>
-						{seasonLabel(season)}
-						{Array.from({ length: most }, (_, i) =>
-							season.episodes[i] ? tile(season.episodes[i]) : <span key={`gap-${i}`} />,
-						)}
-						{seasonScores && <span className="flex justify-end">{seasonScore(season)}</span>}
+			{seasons.map((season) => {
+				const thin = compactRow?.(season) ?? false
+				const avail = width - LABEL_W - scoreCol - GAP
+				const fit = Math.floor((avail + GAP) / (MIN_WRAP + GAP))
+				const perLine = [12, 10, 8, 6, 5].find((n) => n <= fit) ?? Math.max(1, fit)
+				const wrapped = wrap && !thin && !readableAll && most > perLine
+				const columns = wrapped ? perLine : most
+				const rowCell = wrapped
+					? Math.min(maxCell, (avail - GAP * (perLine - 1)) / perLine)
+					: cellAll
+				const rowReadable = !thin && rowCell >= MIN_READABLE
+				return (
+					<div key={season.number} data-map-row={season.number}>
+						<div
+							className="grid items-start"
+							style={{
+								gridTemplateColumns: `${LABEL_W}px minmax(0, 1fr) ${seasonScores ? `${SCORE_W}px` : ""}`,
+								gap: GAP,
+							}}
+						>
+							<div style={{ height: thin ? 22 : rowReadable ? 30 : Math.max(16, rowCell) }}>
+								{seasonLabel(season)}
+							</div>
+							<div
+								className="grid items-center"
+								style={{
+									gridTemplateColumns: `repeat(${columns}, minmax(0, ${maxCell}px))`,
+									gap: GAP,
+									paddingTop: thin ? 4 : 0,
+								}}
+							>
+								{(wrapped ? season.episodes : Array.from({ length: most }, (_, i) => season.episodes[i])).map(
+									(episode, i) =>
+										episode ? tile(episode, rowReadable, rowCell, thin) : <span key={`gap-${i}`} />,
+								)}
+							</div>
+							{seasonScores && (
+								<span className="flex h-[30px] items-center justify-end">{seasonScore(season)}</span>
+							)}
+						</div>
+						{afterRow?.(season)}
 					</div>
-					{afterRow?.(season)}
-				</div>
-			))}
+				)
+			})}
 		</div>
 	)
 }

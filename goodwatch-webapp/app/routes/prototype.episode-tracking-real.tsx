@@ -67,6 +67,10 @@ import VariantF from "~/ui/prototype-episodes-section/VariantF"
 import VariantG from "~/ui/prototype-episodes-section/VariantG"
 import VariantH from "~/ui/prototype-episodes-section/VariantH"
 import VariantI from "~/ui/prototype-episodes-section/VariantI"
+import VariantJ from "~/ui/prototype-episodes-section/VariantJ"
+import VariantK from "~/ui/prototype-episodes-section/VariantK"
+import VariantL from "~/ui/prototype-episodes-section/VariantL"
+import VariantM from "~/ui/prototype-episodes-section/VariantM"
 
 // PROTOTYPE - throwaway: episodes section variants, switched by ?variant=.
 const VARIANTS = {
@@ -79,8 +83,12 @@ const VARIANTS = {
 	G: "Round 2 · Season opens inside the grid",
 	H: "Round 2 · Grid, season list and episode detail",
 	I: "Round 2 · Consistency chart (bolder)",
+	J: "Round 3 · Wrapped rows",
+	K: "Round 3 · Strips, open season readable",
+	L: "Round 3 · Season columns with scores",
+	M: "Round 3 · Grid morphs into consistency",
 }
-const VARIANT_VIEWS = { B: VariantB, C: VariantC, D: VariantD, E: VariantE, F: VariantF, G: VariantG, H: VariantH, I: VariantI }
+const VARIANT_VIEWS = { B: VariantB, C: VariantC, D: VariantD, E: VariantE, F: VariantF, G: VariantG, H: VariantH, I: VariantI, J: VariantJ, K: VariantK, L: VariantL, M: VariantM }
 
 const FIXTURES: Record<string, unknown> = {
 	supernatural,
