@@ -1,0 +1,356 @@
+/* PROTOTYPE - throwaway. The "searchfilter" intro clips. Every delay is `--d` (ms at k = 1) times `--k`; transform
+   and opacity only. Easing: the sign-up wall's deal for things arriving, a soft ease-out for text. */
+
+.lpc-sf {
+	--amber: #fbbf24;
+	--ease: cubic-bezier(0.16, 1, 0.3, 1);
+	--deal: cubic-bezier(0.25, 0.8, 0.25, 1);
+	position: absolute;
+	inset: 0;
+	display: flex;
+	flex-direction: column;
+	padding: 6cqh 6cqw 5cqh;
+	color: #fff;
+	font-family: "Gabarito", ui-sans-serif, system-ui, sans-serif;
+	background: radial-gradient(90% 70% at 50% 0%, #11151f 0, #05060a 70%);
+}
+.lpc-sf-missing { align-items: center; justify-content: center; color: rgba(255, 255, 255, 0.5); font-size: 3cqw; }
+.lpc-sf em { font-style: normal; color: var(--amber); }
+
+/* ---- The motions. Each holds its start state until its delay, and its end state after. */
+.lpc-sf-rise { animation: lpc-sf-rise calc(850ms * var(--k)) var(--ease) calc(var(--d, 0ms) * var(--k)) both; }
+.lpc-sf-pop { animation: lpc-sf-pop calc(600ms * var(--k)) cubic-bezier(0.34, 1.4, 0.64, 1) calc(var(--d, 0ms) * var(--k)) both; }
+.lpc-sf-deal { animation: lpc-sf-deal calc(750ms * var(--k)) var(--deal) calc(var(--d, 0ms) * var(--k)) both; }
+@keyframes lpc-sf-rise { from { opacity: 0; transform: translateY(0.45em); } }
+@keyframes lpc-sf-pop { from { opacity: 0; transform: scale(0.6); } }
+@keyframes lpc-sf-deal { from { opacity: 0; transform: translate(-14%, -14%) scale(1.12); } }
+
+/* Swaps: the outer box arrives, the inner one leaves. */
+.lpc-sf-swap-in, .lpc-sf-swap-out { display: block; }
+.lpc-sf-in-rise { animation: lpc-sf-rise calc(700ms * var(--k)) var(--ease) calc(var(--d) * var(--k)) both; }
+.lpc-sf-in-fade { animation: lpc-sf-fadein calc(500ms * var(--k)) ease-out calc(var(--d) * var(--k)) both; }
+.lpc-sf-in-deal { animation: lpc-sf-fadein calc(1ms * var(--k)) linear calc(var(--d) * var(--k)) both; }
+.lpc-sf-out-rise { animation: lpc-sf-leave-up calc(450ms * var(--k)) ease-in calc(var(--d) * var(--k)) both; }
+.lpc-sf-out-fade { animation: lpc-sf-fadeout calc(450ms * var(--k)) ease-in calc(var(--d) * var(--k)) both; }
+.lpc-sf-out-deal { animation: lpc-sf-deal-out calc(450ms * var(--k)) ease-in calc(var(--d) * var(--k)) both; }
+@keyframes lpc-sf-fadein { from { opacity: 0; } }
+@keyframes lpc-sf-fadeout { to { opacity: 0; } }
+@keyframes lpc-sf-leave-up { to { opacity: 0; transform: translateY(-0.5em); } }
+@keyframes lpc-sf-deal-out { to { opacity: 0; transform: translate(6%, 6%) scale(0.94); } }
+
+/* ---- Type */
+.lpc-sf-h {
+	margin: 0;
+	font-size: 6.4cqw;
+	font-weight: 800;
+	line-height: 1.02;
+	letter-spacing: -0.02em;
+}
+
+/* ---- The search field, as the header draws it. */
+.lpc-sf-field {
+	display: flex;
+	align-items: center;
+	gap: 1.4cqw;
+	width: 66cqw;
+	height: 8.6cqw;
+	max-height: 14cqh;
+	margin-top: 4cqh;
+	padding: 0 2.4cqw;
+	border-radius: 999px;
+	background: linear-gradient(180deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.04));
+	box-shadow: inset 0 0 0 0.2cqw rgba(251, 191, 36, 0.55), 0 1.2cqw 3cqw -1.5cqw rgba(0, 0, 0, 0.9);
+	font-size: 3.7cqw;
+	white-space: nowrap;
+	overflow: hidden;
+}
+.lpc-sf-field-short { width: 44cqw; }
+.lpc-sf-glass { width: 3.2cqw; height: 3.2cqw; flex: none; color: var(--amber); }
+.lpc-sf-typed { display: inline-flex; color: #f3f4f6; }
+.lpc-sf-ch {
+	position: relative;
+	display: inline-block;
+	animation: lpc-sf-fadein calc(40ms * var(--k)) linear calc(var(--d) * var(--k)) both;
+}
+/* The caret rides on the newest letter, and stays blinking on the last. */
+.lpc-sf-ch::after {
+	content: "";
+	position: absolute;
+	right: -0.08em;
+	top: 0.12em;
+	bottom: 0.08em;
+	width: 0.07em;
+	background: var(--amber);
+	opacity: 0;
+	/* No fill: the caret shows only while its letter is the newest. */
+	animation: lpc-sf-caret calc(var(--pc) * var(--k)) linear calc(var(--d) * var(--k)) none;
+}
+.lpc-sf-ch-last::after {
+	animation: lpc-sf-blink calc(1000ms * var(--k)) steps(1, end) calc(var(--d) * var(--k)) infinite none;
+}
+@keyframes lpc-sf-caret { 0%, 100% { opacity: 1; } }
+@keyframes lpc-sf-blink { 0% { opacity: 1; } 50% { opacity: 0; } }
+
+/* ---- Chips: the search's reading, as its Read as chips draw them. */
+.lpc-sf-chips, .lpc-sf-readas { display: flex; flex-wrap: wrap; align-items: center; gap: 1cqw; margin-top: 2.6cqh; }
+.lpc-sf-chip {
+	display: inline-block;
+	padding: 0.5cqw 1.6cqw;
+	border-radius: 999px;
+	font-size: 2.2cqw;
+	font-weight: 700;
+	line-height: 1.2;
+}
+.lpc-sf-chip-attr { background: rgba(56, 189, 248, 0.15); color: #e0f2fe; box-shadow: inset 0 0 0 0.15cqw rgba(56, 189, 248, 0.3); }
+.lpc-sf-chip-avoid {
+	background: rgba(255, 255, 255, 0.05);
+	color: #9ca3af;
+	text-decoration: line-through;
+	text-decoration-color: rgba(251, 113, 133, 0.8);
+	text-decoration-thickness: 0.18cqw;
+	box-shadow: inset 0 0 0 0.15cqw rgba(255, 255, 255, 0.1);
+}
+.lpc-sf-readas-label { font-size: 2.2cqw; color: rgba(255, 255, 255, 0.6); font-weight: 600; margin-right: 0.4cqw; }
+
+/* ---- Posters */
+.lpc-sf-row { display: flex; gap: 1.6cqw; margin-top: 5cqh; }
+.lpc-sf-row .lpc-sf-poster { width: 13.6cqw; }
+.lpc-sf-type, .lpc-sf-feeling { justify-content: center; }
+.lpc-sf-poster {
+	position: relative;
+	margin: 0;
+	aspect-ratio: 2 / 3;
+	border-radius: 0.9cqw;
+	overflow: hidden;
+	background: #10131c;
+	box-shadow: 0 1cqw 2.4cqw rgba(0, 0, 0, 0.55);
+}
+.lpc-sf-poster img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.lpc-sf-noposter { display: flex; height: 100%; align-items: center; justify-content: center; padding: 1cqw; font-size: 1.6cqw; text-align: center; }
+.lpc-sf-badge {
+	position: absolute;
+	right: 0.7cqw;
+	bottom: 0.7cqw;
+	min-width: 3.6cqw;
+	padding: 0.25cqw 0.6cqw;
+	border-radius: 999px;
+	background: rgba(5, 6, 10, 0.86);
+	box-shadow: inset 0 0 0 0.18cqw #22c55e;
+	font-size: 1.9cqw;
+	font-weight: 800;
+	text-align: center;
+}
+
+/* ---- Search 2: the feeling */
+.lpc-sf-quote {
+	margin-top: 2cqh;
+	font-size: 6.6cqw;
+	font-weight: 800;
+	letter-spacing: -0.02em;
+	line-height: 1.05;
+}
+.lpc-sf-quote .lpc-sf-typed { display: inline; color: #fff; }
+.lpc-sf-quote .lpc-sf-ch { display: inline-block; }
+.lpc-sf-mark { color: var(--amber); display: inline-block; }
+.lpc-sf-row-low .lpc-sf-poster { width: 15cqw; }
+
+/* ---- Search 3: the person */
+.lpc-sf-person-body { display: flex; gap: 3cqw; margin-top: 4cqh; align-items: flex-end; }
+.lpc-sf-person { justify-content: center; }
+.lpc-sf-who {
+	display: flex;
+	flex-direction: column;
+	gap: 1.2cqh;
+	width: 16cqw;
+}
+.lpc-sf-who img { width: 16cqw; aspect-ratio: 2 / 3; object-fit: cover; border-radius: 1cqw; box-shadow: 0 0 0 0.3cqw var(--amber); }
+.lpc-sf-who-name { font-size: 2.8cqw; font-weight: 800; line-height: 1.05; }
+.lpc-sf-who-job { font-size: 1.9cqw; color: rgba(255, 255, 255, 0.6); }
+.lpc-sf-credits { display: flex; gap: 2cqw; margin: 0; padding: 0; list-style: none; flex: 1; }
+.lpc-sf-credit { display: flex; flex-direction: column; align-items: center; gap: 1cqh; width: 13cqw; position: relative; }
+.lpc-sf-credit .lpc-sf-poster { width: 13cqw; }
+.lpc-sf-credit-ring { width: 6.4cqw; height: 6.4cqw; margin-top: -4.5cqw; z-index: 1; border-radius: 50%; background: rgba(5, 6, 10, 0.9); }
+.lpc-sf-credit-name { font-size: 1.8cqw; font-weight: 700; text-align: center; line-height: 1.1; }
+
+/* ---- Search 4: three questions */
+.lpc-sf-three-rows { display: flex; flex-direction: column; gap: 2.6cqh; margin-top: 3cqh; flex: 1; justify-content: center; }
+.lpc-sf-three-row { display: flex; align-items: center; gap: 2.4cqw; }
+.lpc-sf-field-row { margin-top: 0; width: 40cqw; height: 6cqw; font-size: 2.5cqw; }
+.lpc-sf-field-row .lpc-sf-glass { width: 2.4cqw; height: 2.4cqw; }
+.lpc-sf-three-posters { display: flex; gap: 1.2cqw; }
+.lpc-sf-three-posters .lpc-sf-poster { width: 8.6cqw; max-height: 22cqh; }
+.lpc-sf-three-posters .lpc-sf-badge { font-size: 1.5cqw; min-width: 3cqw; }
+
+/* ---- Filters 1: narrow */
+.lpc-sf-narrow-body { display: flex; gap: 4cqw; flex: 1; margin-top: 3cqh; align-items: center; }
+.lpc-sf-narrow-left { width: 38cqw; }
+.lpc-sf-count { position: relative; height: 10cqw; font-size: 9cqw; font-weight: 800; letter-spacing: -0.03em; line-height: 1; font-variant-numeric: tabular-nums; }
+.lpc-sf-count > * { position: absolute; left: 0; top: 0; }
+.lpc-sf-count > :last-child { color: var(--amber); }
+.lpc-sf-count-label { font-size: 2.6cqw; color: rgba(255, 255, 255, 0.6); font-weight: 600; }
+.lpc-sf-filterchips { display: flex; flex-wrap: wrap; gap: 1cqw; margin-top: 3cqh; }
+.lpc-sf-fchip {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.8cqw;
+	padding: 0.7cqw 1.8cqw;
+	border-radius: 999px;
+	background: rgba(255, 255, 255, 0.07);
+	box-shadow: inset 0 0 0 0.15cqw rgba(255, 255, 255, 0.14);
+	font-size: 2.3cqw;
+	font-weight: 700;
+}
+.lpc-sf-fchip i { width: 1cqw; height: 1cqw; border-radius: 50%; background: #f472b6; }
+.lpc-sf-fchip-1 i { background: #ef4444; }
+.lpc-sf-fchip-2 i { background: #22c55e; }
+.lpc-sf-grid { position: relative; flex: 1; align-self: stretch; }
+.lpc-sf-grid-set { position: absolute; inset: 0; }
+.lpc-sf-grid-set > .lpc-sf-swap-out { position: absolute; inset: 0; }
+.lpc-sf-grid-set, .lpc-sf-grid-set > .lpc-sf-swap-out {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 1.2cqw;
+	align-content: center;
+}
+.lpc-sf-grid .lpc-sf-poster { width: 100%; max-height: 32cqh; }
+
+/* ---- Filters 2: the big number */
+.lpc-sf-bigcount { align-items: center; justify-content: center; text-align: center; }
+.lpc-sf-bigcount-label, .lpc-sf-bigcount-n { position: relative; width: 100%; }
+.lpc-sf-bigcount-label { height: 4.6cqw; font-size: 3.4cqw; font-weight: 700; color: var(--amber); }
+.lpc-sf-bigcount-n { height: 19cqw; font-size: 18cqw; font-weight: 800; letter-spacing: -0.04em; line-height: 1; font-variant-numeric: tabular-nums; }
+.lpc-sf-bigcount-label > *, .lpc-sf-bigcount-n > * { position: absolute; left: 0; right: 0; top: 0; }
+.lpc-sf-bigcount-n > :last-child { color: var(--amber); }
+.lpc-sf-bigcount-end { margin: 1.6cqh 0 0; font-size: 4.4cqw; font-weight: 700; color: rgba(255, 255, 255, 0.85); }
+
+/* ---- Filters 3: on my services */
+.lpc-sf-services-top { display: flex; flex-direction: column; align-items: flex-start; gap: 2cqh; }
+.lpc-sf-services .lpc-sf-h { font-size: 6cqw; }
+.lpc-sf-switch { display: flex; align-items: center; gap: 1.2cqw; font-size: 2.8cqw; font-weight: 700; white-space: nowrap; }
+.lpc-sf-toggle { position: relative; width: 6cqw; height: 3.4cqw; border-radius: 999px; background: rgba(255, 255, 255, 0.16); overflow: hidden; }
+.lpc-sf-toggle::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background: var(--amber);
+	opacity: 0;
+	animation: lpc-sf-fadein-to calc(300ms * var(--k)) ease-out calc(2400ms * var(--k)) forwards;
+}
+@keyframes lpc-sf-fadein-to { to { opacity: 1; } }
+.lpc-sf-knob {
+	position: absolute;
+	left: 0.4cqw;
+	top: 0.4cqw;
+	width: 2.6cqw;
+	height: 2.6cqw;
+	border-radius: 50%;
+	background: #fff;
+	animation: lpc-sf-knob calc(300ms * var(--k)) var(--ease) calc(var(--d) * var(--k)) both;
+}
+@keyframes lpc-sf-knob { from { transform: none; } to { transform: translateX(var(--travel, 2.6cqw)); } }
+.lpc-sf-logo { width: 3.6cqw; height: 3.6cqw; border-radius: 0.8cqw; }
+.lpc-sf-wall { position: relative; flex: 1; margin-top: 3cqh; }
+.lpc-sf-wall-set, .lpc-sf-wall-set > .lpc-sf-swap-out {
+	position: absolute;
+	inset: 0;
+	display: grid;
+	grid-template-columns: repeat(7, 1fr);
+	gap: 1.2cqw;
+	align-content: start;
+}
+.lpc-sf-wall .lpc-sf-poster { width: 100%; }
+.lpc-sf-services-count {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	height: 16cqh;
+	padding: 0 6cqw;
+	display: flex;
+	align-items: center;
+	background: linear-gradient(180deg, rgba(5, 6, 10, 0), rgba(5, 6, 10, 0.95) 45%);
+	font-size: 3.6cqw;
+	font-weight: 800;
+}
+.lpc-sf-services-count > * { position: absolute; left: 6cqw; bottom: 4cqh; }
+.lpc-sf-services-count b { color: var(--amber); }
+
+/* ---- Filters 4: the mood wall */
+.lpc-sf-moods { justify-content: center; }
+.lpc-sf-moodwall { display: flex; flex-wrap: wrap; gap: 1.6cqw; margin: 4.5cqh 0; align-content: flex-start; }
+.lpc-sf-mood { display: inline-block; }
+.lpc-sf-mood-in {
+	display: inline-block;
+	padding: 1.2cqw 2.4cqw;
+	border-radius: 1.6cqw;
+	background: color-mix(in srgb, var(--hue) 70%, #05060a);
+	box-shadow: inset 0 0 0 0.2cqw color-mix(in srgb, var(--hue) 80%, #fff);
+	font-size: 3.2cqw;
+	font-weight: 800;
+}
+.lpc-sf-mood-other .lpc-sf-mood-in { animation: lpc-sf-dim calc(500ms * var(--k)) ease-out calc(var(--p) * var(--k)) both; }
+.lpc-sf-mood-picked .lpc-sf-mood-in { animation: lpc-sf-picked calc(650ms * var(--k)) cubic-bezier(0.34, 1.5, 0.64, 1) calc(var(--p) * var(--k)) both; }
+.lpc-sf-mood-picked .lpc-sf-mood-in::after {
+	content: "";
+	position: absolute;
+	inset: -0.5cqw;
+	border-radius: 1.8cqw;
+	box-shadow: 0 0 0 0.4cqw var(--amber);
+	opacity: 0;
+	animation: lpc-sf-fadein-to calc(300ms * var(--k)) ease-out calc(var(--p) * var(--k)) forwards;
+}
+.lpc-sf-mood-picked .lpc-sf-mood-in { position: relative; }
+@keyframes lpc-sf-dim { to { opacity: 0.28; transform: scale(0.94); } }
+@keyframes lpc-sf-picked { 0% { transform: scale(1); } 45% { transform: scale(1.22); } 100% { transform: scale(1.12); } }
+.lpc-sf-moods-line { margin: 0; font-size: 3.6cqw; font-weight: 700; }
+.lpc-sf-moods-line b { color: var(--amber); }
+
+/* ---- The phone's TV: wider than tall only a little. Fewer things, larger. */
+@container (max-aspect-ratio: 3 / 2) {
+	.lpc-sf { padding: 5cqh 5cqw 4cqh; }
+	.lpc-sf-h { font-size: 8cqw; }
+	.lpc-sf-field { width: 88cqw; height: 11cqw; font-size: 4.4cqw; }
+	.lpc-sf-glass { width: 4.4cqw; height: 4.4cqw; }
+	.lpc-sf-chip, .lpc-sf-readas-label { font-size: 3.2cqw; }
+	.lpc-sf-row .lpc-sf-poster, .lpc-sf-row-low .lpc-sf-poster { width: 20cqw; }
+	.lpc-sf-row .lpc-sf-poster:nth-child(n + 5) { display: none; }
+	.lpc-sf-badge { font-size: 2.8cqw; min-width: 5cqw; }
+	.lpc-sf-quote { font-size: 8.4cqw; }
+	.lpc-sf-who { display: none; }
+	.lpc-sf-credit { width: 20cqw; }
+	.lpc-sf-credit .lpc-sf-poster { width: 20cqw; }
+	.lpc-sf-credit-ring { width: 9cqw; height: 9cqw; margin-top: -6cqw; }
+	.lpc-sf-credit-name { font-size: 2.8cqw; }
+	.lpc-sf-three-row { gap: 2cqw; }
+	.lpc-sf-field-row { width: 50cqw; height: 8cqw; font-size: 3.2cqw; }
+	.lpc-sf-three-posters .lpc-sf-poster { width: 10cqw; }
+	.lpc-sf-three-posters .lpc-sf-poster:nth-child(n + 4) { display: none; }
+	.lpc-sf-narrow-left { width: 46cqw; }
+	.lpc-sf-count { font-size: 11cqw; height: 12cqw; }
+	.lpc-sf-count-label { font-size: 3.6cqw; }
+	.lpc-sf-fchip { font-size: 3.2cqw; }
+	.lpc-sf-grid-set, .lpc-sf-grid-set > .lpc-sf-swap-out { grid-template-columns: repeat(2, 1fr); }
+	.lpc-sf-grid .lpc-sf-poster:nth-child(n + 5) { display: none; }
+	.lpc-sf-bigcount-label { font-size: 5cqw; height: 6.6cqw; }
+	.lpc-sf-bigcount-end { font-size: 6cqw; }
+	.lpc-sf-services-top { flex-direction: column; align-items: flex-start; gap: 1.6cqh; }
+	.lpc-sf-services .lpc-sf-h { font-size: 7.4cqw; }
+	.lpc-sf-switch { font-size: 3.6cqw; }
+	.lpc-sf-toggle { width: 8cqw; height: 4.6cqw; }
+	.lpc-sf-knob { width: 3.8cqw; height: 3.8cqw; }
+	.lpc-sf-knob { --travel: 3.4cqw; }
+	.lpc-sf-logo { width: 5cqw; height: 5cqw; }
+	.lpc-sf-wall-set, .lpc-sf-wall-set > .lpc-sf-swap-out { grid-template-columns: repeat(4, 1fr); }
+	.lpc-sf-wall .lpc-sf-poster:nth-child(n + 9) { display: none; }
+	.lpc-sf-services-count { font-size: 5cqw; }
+	.lpc-sf-mood-in { font-size: 4.2cqw; padding: 1.6cqw 3cqw; }
+	.lpc-sf-moods-line { font-size: 4.6cqw; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.lpc-sf *, .lpc-sf *::after, .lpc-sf *::before {
+		animation-delay: 0s !important;
+		animation-duration: 1ms !important;
+		animation-iteration-count: 1 !important;
+	}
+}

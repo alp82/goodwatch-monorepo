@@ -1,0 +1,360 @@
+/* PROTOTYPE - throwaway. The "explorertrack" intro clips (explorer, tracking). Transform and opacity only; every
+   delay and duration is scaled by the stage's --k. */
+
+/* ---------- Timing: one or two animations from inline custom properties (kit.tsx `at`, `at2`). */
+.lpc-et-a {
+	animation: var(--an) calc(var(--du) * var(--k, 1)) var(--ez) calc(var(--d) * var(--k, 1)) both;
+}
+.lpc-et-a2 {
+	animation:
+		var(--an) calc(var(--du) * var(--k, 1)) var(--ez) calc(var(--d) * var(--k, 1)) both,
+		var(--an2) calc(var(--du2) * var(--k, 1)) var(--ez2) calc(var(--d2) * var(--k, 1)) forwards;
+}
+
+@keyframes lpc-et-rise { from { opacity: 0; transform: translateY(40%); } }
+@keyframes lpc-et-fade { from { opacity: 0; } }
+@keyframes lpc-et-word { from { opacity: 0; transform: translateY(105%); } }
+@keyframes lpc-et-pop { from { opacity: 0; transform: scale(0.55); } }
+@keyframes lpc-et-deal { from { opacity: 0; transform: translate(-14%, -14%) scale(1.12); } }
+@keyframes lpc-et-from { from { opacity: 0; transform: translate(var(--fx, 0), var(--fy, 0)) scale(var(--fs, 1)); } }
+@keyframes lpc-et-dim { to { opacity: 0.28; } }
+@keyframes lpc-et-lift { to { transform: scale(1.12); } }
+@keyframes lpc-et-out { to { opacity: 0; } }
+@keyframes lpc-et-away { to { opacity: 0; transform: translate(var(--tx, 0), var(--ty, 0)) scale(0.25); } }
+@keyframes lpc-et-press { 0%, 100% { transform: scale(1); } 40% { transform: scale(0.9); } }
+@keyframes lpc-et-slam { from { opacity: 0; transform: scale(1.9) rotate(-8deg); } }
+@keyframes lpc-et-back { to { transform: translateY(-6%) scale(0.95); opacity: 0.6; } }
+
+/* ---------- Type */
+.lpc-et-head {
+	position: absolute;
+	left: 6cqw;
+	top: 7cqh;
+	z-index: 4;
+	max-width: 52cqw;
+}
+.lpc-et-kicker,
+.lpc-et-example {
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.16em;
+	color: #fbbf24;
+	font-size: max(9px, 1.6cqw);
+}
+.lpc-et-example {
+	position: absolute;
+	right: 4cqw;
+	bottom: 4cqh;
+	z-index: 6;
+	padding: 0.5cqw 1.3cqw;
+	border-radius: 999px;
+	background: rgba(255, 255, 255, 0.1);
+	color: rgba(255, 255, 255, 0.75);
+	letter-spacing: 0.12em;
+	font-size: max(8px, 1.25cqw);
+}
+.lpc-et-h {
+	margin: 0.6cqw 0 0;
+	font-weight: 800;
+	line-height: 1.02;
+	letter-spacing: -0.025em;
+}
+.lpc-et-h-big { font-size: max(20px, 6.6cqw); }
+.lpc-et-h-mid { font-size: max(16px, 5cqw); }
+.lpc-et-word {
+	display: inline-block;
+	overflow: hidden;
+	vertical-align: top;
+	padding-bottom: 0.08em;
+}
+.lpc-et-word-in { display: inline-block; }
+.lpc-et-accent { color: #fbbf24; }
+.lpc-et-line {
+	color: rgba(255, 255, 255, 0.8);
+	font-size: max(11px, 2.1cqw);
+	line-height: 1.25;
+}
+.lpc-et-line b { color: #fff; }
+
+/* ---------- Islands, posters */
+.lpc-et-sea {
+	position: absolute;
+	inset: 0;
+	background:
+		radial-gradient(70% 80% at 62% 58%, #12324a 0%, #0b1d2c 55%, #05060a 100%);
+}
+.lpc-et-island {
+	position: absolute;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 50%;
+	background: var(--c);
+	box-shadow: inset 0 -0.6cqw 0 rgba(0, 0, 0, 0.18), 0 0 0 0.35cqw rgba(0, 0, 0, 0.35);
+	color: #10131c;
+	font-weight: 800;
+	letter-spacing: -0.01em;
+	transform: translate(-50%, -50%);
+}
+.lpc-et-island-name { position: relative; z-index: 2; white-space: nowrap; }
+/* A box that places an island (or anything) by its centre, so the island's own transform stays free to animate. */
+.lpc-et-at {
+	position: absolute;
+	width: 0;
+	height: 0;
+}
+.lpc-et-at > .lpc-et-island { left: 0; top: 0; }
+.lpc-et-ring {
+	position: absolute;
+	inset: -0.9cqw;
+	border-radius: 50%;
+	border: 0.45cqw solid #fbbf24;
+	box-shadow: 0 0 2.4cqw rgba(251, 191, 36, 0.55);
+}
+.lpc-et-poster {
+	display: block;
+	aspect-ratio: 2 / 3;
+	object-fit: cover;
+	border-radius: 0.8cqw;
+	box-shadow: 0 1cqw 3cqw rgba(0, 0, 0, 0.55);
+	background: #10131c;
+}
+.lpc-et-pill {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.7cqw;
+	border-radius: 999px;
+	padding: 0.7cqw 1.8cqw;
+	background: #fbbf24;
+	color: #111;
+	font-weight: 800;
+	font-size: max(10px, 1.9cqw);
+	white-space: nowrap;
+}
+.lpc-et-scrim {
+	position: absolute;
+	inset: 0;
+	z-index: 3;
+	background: linear-gradient(105deg, rgba(5, 6, 10, 0.92) 0%, rgba(5, 6, 10, 0.55) 38%, rgba(5, 6, 10, 0) 62%);
+	pointer-events: none;
+}
+
+/* ---------- Explorer: the map */
+.lpc-et-cam {
+	position: absolute;
+	inset: 0;
+	transform-origin: 66% 58%;
+}
+@keyframes lpc-et-cam-in { from { transform: scale(1.45); opacity: 0; } }
+@keyframes lpc-et-cam-drift { from { transform: scale(1); } to { transform: translate(-5cqw, 0) scale(1.1); } }
+.lpc-et-apart {
+	position: absolute;
+	left: 6cqw;
+	top: 38cqh;
+	z-index: 4;
+	max-width: 40cqw;
+}
+.lpc-et-apart .lpc-et-swatch {
+	display: inline-block;
+	width: 1.4cqw;
+	height: 1.4cqw;
+	border-radius: 50%;
+	background: var(--c);
+	margin-right: 0.8cqw;
+	vertical-align: middle;
+}
+.lpc-et-apart-name { font-weight: 800; font-size: max(14px, 3.4cqw); }
+
+/* ---------- Explorer: the bridge */
+.lpc-et-dot {
+	position: absolute;
+	width: 1.1cqw;
+	height: 1.1cqw;
+	margin: -0.55cqw 0 0 -0.55cqw;
+	border-radius: 50%;
+	background: rgba(255, 255, 255, 0.85);
+}
+.lpc-et-row {
+	position: absolute;
+	left: 0;
+	right: 0;
+	display: flex;
+	justify-content: center;
+	gap: 1.4cqw;
+}
+
+/* ---------- Explorer: the fly-over */
+.lpc-et-strip {
+	position: absolute;
+	left: 0;
+	top: 0;
+	bottom: 0;
+	width: 300cqw;
+}
+@keyframes lpc-et-fly { from { transform: translateX(14cqw); } to { transform: translateX(-150cqw); } }
+@keyframes lpc-et-fly-far { from { transform: translateX(0); } to { transform: translateX(-40cqw); } }
+.lpc-et-stars {
+	position: absolute;
+	inset: 0;
+	width: 200cqw;
+	background-image: radial-gradient(rgba(255, 255, 255, 0.18) 1px, transparent 1.5px);
+	background-size: 4cqw 4cqw;
+}
+.lpc-et-fan {
+	position: absolute;
+	left: 50%;
+	bottom: 3.4cqw;
+	display: flex;
+	transform: translateX(-50%);
+}
+.lpc-et-fan .lpc-et-poster { width: 7.6cqw; flex: none; }
+.lpc-et-fan .lpc-et-poster:nth-child(1) { transform: rotate(-9deg) translate(1.6cqw, 0.6cqw); }
+.lpc-et-fan .lpc-et-poster:nth-child(2) { transform: translateY(-0.8cqw); z-index: 1; }
+.lpc-et-fan .lpc-et-poster:nth-child(3) { transform: rotate(9deg) translate(-1.6cqw, 0.6cqw); }
+
+/* ---------- Tracking: notifications */
+.lpc-et-note {
+	display: flex;
+	align-items: center;
+	gap: 1.4cqw;
+	width: 44cqw;
+	padding: 1.1cqw 1.4cqw;
+	border-radius: 1.6cqw;
+	background: rgba(22, 25, 34, 0.94);
+	box-shadow: 0 1.2cqw 3cqw rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+.lpc-et-note .lpc-et-poster { width: 5.4cqw; border-radius: 0.6cqw; flex: none; }
+.lpc-et-note-body { min-width: 0; flex: 1; }
+.lpc-et-note-from {
+	display: flex;
+	justify-content: space-between;
+	color: #fbbf24;
+	font-weight: 700;
+	font-size: max(8px, 1.2cqw);
+}
+.lpc-et-note-from span:last-child { color: rgba(255, 255, 255, 0.45); font-weight: 500; }
+.lpc-et-note-title {
+	margin-top: 0.2cqw;
+	font-weight: 800;
+	font-size: max(11px, 1.95cqw);
+	line-height: 1.15;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.lpc-et-note-sub {
+	color: rgba(255, 255, 255, 0.7);
+	font-size: max(9px, 1.45cqw);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.lpc-et-logo {
+	flex: none;
+	width: 4cqw;
+	height: 4cqw;
+	border-radius: 0.9cqw;
+	object-fit: cover;
+	background: #10131c;
+}
+
+/* ---------- Tracking: the import */
+.lpc-et-src {
+	position: absolute;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 9cqw;
+	height: 9cqw;
+	margin: -4.5cqw 0 0 -4.5cqw;
+	border-radius: 2cqw;
+	background: #1a1e2a;
+	box-shadow: 0 0.8cqw 2.4cqw rgba(0, 0, 0, 0.45), inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+	font-weight: 800;
+	font-size: max(10px, 2.4cqw);
+	color: #fff;
+}
+.lpc-et-src img { width: 70%; height: 55%; object-fit: contain; }
+.lpc-et-g {
+	position: absolute;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 18cqw;
+	height: 18cqw;
+	margin: -9cqw 0 0 -9cqw;
+	border-radius: 50%;
+	background: radial-gradient(circle, #1d2433 0%, #0b0e15 70%);
+	box-shadow: 0 0 0 0.4cqw rgba(251, 191, 36, 0.35), 0 0 6cqw rgba(251, 191, 36, 0.25);
+}
+@keyframes lpc-et-gulp { 0%, 100% { transform: scale(1); } 45% { transform: scale(1.14); } }
+
+/* ---------- Tracking: Want to See → lands */
+.lpc-et-want {
+	position: absolute;
+	display: grid;
+}
+.lpc-et-want > * { grid-area: 1 / 1; justify-self: start; }
+.lpc-et-want .lpc-et-pill.lpc-et-off { background: rgba(255, 255, 255, 0.14); color: #fff; }
+.lpc-et-badge {
+	position: absolute;
+	right: -2cqw;
+	top: -2cqw;
+	display: flex;
+	align-items: center;
+	gap: 0.6cqw;
+	padding: 0.6cqw 1.2cqw 0.6cqw 0.6cqw;
+	border-radius: 1.4cqw;
+	background: #fbbf24;
+	color: #111;
+	font-weight: 800;
+	font-size: max(9px, 1.6cqw);
+	box-shadow: 0 1cqw 3cqw rgba(0, 0, 0, 0.5);
+	white-space: nowrap;
+}
+.lpc-et-badge img { width: 4.2cqw; height: 4.2cqw; border-radius: 0.8cqw; object-fit: cover; }
+
+/* ---------- Tracking: My shows */
+.lpc-et-show {
+	display: flex;
+	align-items: center;
+	gap: 1.6cqw;
+	padding: 1cqw 1.4cqw 1cqw 1cqw;
+	border-radius: 1.6cqw;
+	background: rgba(22, 25, 34, 0.9);
+	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+.lpc-et-show .lpc-et-poster { width: 5.6cqw; border-radius: 0.6cqw; }
+.lpc-et-new {
+	margin-left: auto;
+	padding: 0.4cqw 1.1cqw;
+	border-radius: 999px;
+	background: #fbbf24;
+	color: #111;
+	font-weight: 800;
+	font-size: max(9px, 1.4cqw);
+	white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.lpc-et-a,
+	.lpc-et-a2 { animation: none !important; }
+	.lpc-et-gone-rm { display: none; }
+}
+
+/* Posters in a row never shrink. */
+.lpc-et-row > * { flex: none; }
+
+.lpc-et-narrow { max-width: 40cqw; }
+.lpc-et-narrow .lpc-et-h-big { font-size: max(18px, 5.6cqw); }
+.lpc-et-show .lpc-et-poster { width: 4.6cqw; }
+.lpc-et-show { padding-top: 0.8cqw; padding-bottom: 0.8cqw; }
+
+/* Caption rows wrap within the stage instead of running off it. */
+.lpc-et-row.lpc-et-line > span { flex: 0 1 auto; max-width: 88cqw; text-align: center; }
+/* Small stages (the phone's TV): fewer alerts, a shorter badge. */
+@container (max-width: 520px) {
+	.lpc-et-note:nth-child(4) { display: none; }
+	.lpc-et-badge-text { display: none; }
+	.lpc-et-badge { padding-right: 0.6cqw; }
+}

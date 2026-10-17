@@ -1,0 +1,77 @@
+/* PROTOTYPE - throwaway. The "feel" intro clips: fingerprint (title analysis) and recommendations.
+   Every delay is `--d` (a time) scaled by the stage's `--k`; transform and opacity only. */
+.lpc-fe {
+	position: absolute;
+	inset: 0;
+	overflow: hidden;
+	background: #05060a;
+	color: #fff;
+	font-family: "Gabarito", ui-sans-serif, system-ui, sans-serif;
+}
+.lpc-fe img { display: block; max-width: none; }
+
+/* Motion vocabulary */
+.lpc-fe-rise { animation: lpc-fe-rise calc(850ms * var(--k)) cubic-bezier(0.16, 1, 0.3, 1) calc(var(--d, 0ms) * var(--k)) both; }
+.lpc-fe-fade { animation: lpc-fe-fade calc(900ms * var(--k)) ease-out calc(var(--d, 0ms) * var(--k)) both; }
+/* The sign-up wall's deal: lands from an offset, slightly large. */
+.lpc-fe-deal { animation: lpc-fe-deal calc(950ms * var(--k)) cubic-bezier(0.25, 0.8, 0.25, 1) calc(var(--d, 0ms) * var(--k)) both; }
+.lpc-fe-pop { animation: lpc-fe-pop calc(700ms * var(--k)) cubic-bezier(0.34, 1.45, 0.64, 1) calc(var(--d, 0ms) * var(--k)) both; }
+.lpc-fe-fill { transform-origin: 0 50%; animation: lpc-fe-fill calc(900ms * var(--k)) cubic-bezier(0.65, 0, 0.35, 1) calc(var(--d, 0ms) * var(--k)) both; }
+.lpc-fe-kb { animation: lpc-fe-kb calc(var(--len, 7000ms) * var(--k)) cubic-bezier(0.25, 0.1, 0.25, 1) both; }
+.lpc-fe-move { animation: lpc-fe-move calc(1100ms * var(--k)) cubic-bezier(0.65, 0, 0.35, 1) calc(var(--d, 0ms) * var(--k)) both; }
+.lpc-fe-fly { animation: lpc-fe-fly calc(1300ms * var(--k)) cubic-bezier(0.55, 0, 0.3, 1) calc(var(--d, 0ms) * var(--k)) both; }
+@keyframes lpc-fe-rise { from { opacity: 0; transform: translateY(2.2cqw); } }
+@keyframes lpc-fe-fade { from { opacity: 0; } }
+@keyframes lpc-fe-deal { from { opacity: 0; transform: translate(var(--dx, -14%), var(--dy, -14%)) scale(1.12) rotate(var(--r0, 0deg)); } to { transform: rotate(var(--r, 0deg)); } }
+@keyframes lpc-fe-pop { from { opacity: 0; transform: scale(0.55); } }
+@keyframes lpc-fe-fill { from { transform: scaleX(0); } }
+@keyframes lpc-fe-kb { from { transform: scale(1.1) translateX(1.5%); } to { transform: scale(1); } }
+@keyframes lpc-fe-move { from { transform: translateX(var(--off, 0)); } }
+@keyframes lpc-fe-fly {
+	0% { opacity: 0; transform: translate(0, 0) scale(1); }
+	15% { opacity: 1; }
+	80% { opacity: 1; }
+	100% { opacity: 0; transform: translate(var(--tx), var(--ty)) scale(0.7); }
+}
+
+/* Type */
+.lpc-fe-kicker { font-weight: 700; text-transform: uppercase; letter-spacing: 0.18em; color: #fbbf24; font-size: max(10px, 1.7cqw); }
+.lpc-fe-head { font-weight: 800; line-height: 1; letter-spacing: -0.025em; font-size: max(20px, 6cqw); }
+.lpc-fe-head em { font-style: normal; color: #fbbf24; }
+.lpc-fe-sub { color: rgba(255, 255, 255, 0.78); font-size: max(11px, 2cqw); line-height: 1.25; }
+.lpc-fe-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.7cqw;
+	border-radius: 999px;
+	padding: 0.6cqw 1.5cqw;
+	background: rgba(255, 255, 255, 0.1);
+	box-shadow: inset 0 0 0 0.15cqw rgba(255, 255, 255, 0.14);
+	font-weight: 700;
+	font-size: max(10px, 2cqw);
+	white-space: nowrap;
+}
+.lpc-fe-chip.lpc-fe-amber { background: rgba(251, 191, 36, 0.18); box-shadow: inset 0 0 0 0.15cqw #fbbf24; color: #fde68a; }
+.lpc-fe-poster { border-radius: 0.9cqw; overflow: hidden; background: #10131c; box-shadow: 0 1.2cqw 3cqw rgba(0, 0, 0, 0.55); aspect-ratio: 2 / 3; }
+.lpc-fe-poster img { width: 100%; height: 100%; object-fit: cover; }
+.lpc-fe-shade-l { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(5, 6, 10, 0.95) 0, rgba(5, 6, 10, 0.75) 42%, rgba(5, 6, 10, 0.1) 100%); }
+.lpc-fe-shade-b { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(5, 6, 10, 0.15) 0, rgba(5, 6, 10, 0.2) 45%, rgba(5, 6, 10, 0.95) 100%); }
+.lpc-fe-match { white-space: nowrap; display: inline-flex; align-items: center; border-radius: 999px; padding: 0.4cqw 1.2cqw; background: #fbbf24; color: #111; font-weight: 800; font-size: max(10px, 1.7cqw); }
+
+/* Pillar meter (the details page's four steps) */
+.lpc-fe-meter { display: flex; gap: 0.5cqw; }
+.lpc-fe-meter i { display: block; width: 3.2cqw; height: 1.5cqw; border-radius: 0.4cqw; background: rgba(255, 255, 255, 0.12); overflow: hidden; }
+.lpc-fe-meter i b { display: block; width: 100%; height: 100%; background: var(--c); }
+
+/* Phone TV: secondary lines go. */
+@container (max-width: 520px) {
+	.lpc-fe-sub, .lpc-fe-phone-hide { display: none !important; }
+	.lpc-fe-head { font-size: max(18px, 7cqw); }
+	.lpc-fe-chip { font-size: 10px !important; padding: 3px 7px !important; }
+	.lpc-fe-match { font-size: 9px; padding: 2px 6px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.lpc-fe * { animation: none !important; }
+	.lpc-fe-fly { display: none; }
+}

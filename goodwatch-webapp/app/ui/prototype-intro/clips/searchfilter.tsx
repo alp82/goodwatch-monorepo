@@ -1,0 +1,88 @@
+// PROTOTYPE - throwaway. Intro clips of group "searchfilter": search (four) and filters and moods (four).
+import type { Clip } from "../clip"
+import "./searchfilter.css"
+import {
+	FILTERS_COUNT_MS,
+	FILTERS_MOODS_MS,
+	FILTERS_NARROW_MS,
+	FILTERS_SERVICES_MS,
+	FiltersCount,
+	FiltersMoods,
+	FiltersNarrow,
+	FiltersServices,
+	SEARCH_FEELING_MS,
+	SEARCH_PERSON_MS,
+	SEARCH_THREE_MS,
+	SEARCH_TYPE_MS,
+	SearchFeeling,
+	SearchPerson,
+	SearchThree,
+	SearchType,
+} from "./searchfilter/clips"
+
+export const CLIPS: Clip[] = [
+	{
+		id: "search-type",
+		section: "search",
+		name: "A phrase types itself",
+		ms: SEARCH_TYPE_MS,
+		note: "\"cozy mystery in a small town\" types into the real search field; its reading shows as chips; results deal in with scores.",
+		C: SearchType,
+	},
+	{
+		id: "search-feeling",
+		section: "search",
+		name: "Search by a feeling",
+		ms: SEARCH_FEELING_MS,
+		note: "\"something like a warm hug\" typed huge; Read as: what it wants and what it leaves out (struck through); the best scored results.",
+		C: SearchFeeling,
+	},
+	{
+		id: "search-person",
+		section: "search",
+		name: "A person, their best first",
+		ms: SEARCH_PERSON_MS,
+		note: "Denis Villeneuve: the person, then his own titles by score, each with the score ring.",
+		C: SearchPerson,
+	},
+	{
+		id: "search-three",
+		section: "search",
+		name: "Three questions, three answers",
+		ms: SEARCH_THREE_MS,
+		note: "mind-bending sci-fi, heist with a twist, cozy mystery: three rows typed one after another, each with its results.",
+		C: SearchThree,
+	},
+	{
+		id: "filters-narrow",
+		section: "filters",
+		name: "From everything to tonight",
+		ms: FILTERS_NARROW_MS,
+		note: "The real count falls as Feel-good, On Netflix and Score 70+ switch on; the poster grid deals in anew at each step.",
+		C: FiltersNarrow,
+	},
+	{
+		id: "filters-count",
+		section: "filters",
+		name: "One big number",
+		ms: FILTERS_COUNT_MS,
+		note: "Type only: a huge count falls step by step under the filter that caused it, ending on \"worth watching tonight\".",
+		C: FiltersCount,
+	},
+	{
+		id: "filters-services",
+		section: "filters",
+		name: "Only what you can watch",
+		ms: FILTERS_SERVICES_MS,
+		note: "A wall of everything; On my services switches on (Netflix, Prime Video) and the wall flips to what's on them, with the real counts.",
+		C: FiltersServices,
+	},
+	{
+		id: "filters-moods",
+		section: "filters",
+		name: "A wall of moods",
+		ms: FILTERS_MOODS_MS,
+		note: "The eleven moods deal in in their colours; Feel-good is picked, the rest dim; how many titles it holds.",
+		C: FiltersMoods,
+	},
+]

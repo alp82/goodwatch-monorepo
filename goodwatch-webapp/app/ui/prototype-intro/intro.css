@@ -1,0 +1,63 @@
+/* PROTOTYPE - throwaway. The intro stage and the hand-overs between clips. Transform and opacity only. */
+.lpi-stage {
+	position: absolute;
+	inset: 0;
+	overflow: hidden;
+	container-type: size;
+	background: #05060a;
+	color: #fff;
+	font-family: "Gabarito", ui-sans-serif, system-ui, sans-serif;
+}
+.lpi-slot {
+	position: absolute;
+	inset: 0;
+	overflow: hidden;
+	background: #05060a;
+}
+.lpi-out { z-index: 1; pointer-events: none; }
+.lpi-in, .lpi-on { z-index: 2; }
+.lpi-tr-cut.lpi-out { display: none; }
+
+/* Crossfade */
+.lpi-tr-fade.lpi-in { animation: lpi-fade-in calc(var(--o) * var(--k)) ease-in-out both; }
+@keyframes lpi-fade-in { from { opacity: 0; } }
+
+/* Slide: the new clip pushes the old one out to the left. */
+.lpi-tr-slide.lpi-in { animation: lpi-slide-in calc(var(--o) * var(--k)) cubic-bezier(0.65, 0, 0.35, 1) both; }
+.lpi-tr-slide.lpi-out { animation: lpi-slide-out calc(var(--o) * var(--k)) cubic-bezier(0.65, 0, 0.35, 1) both; }
+@keyframes lpi-slide-in { from { transform: translateX(100%); } }
+@keyframes lpi-slide-out { to { transform: translateX(-35%); opacity: 0.4; } }
+
+/* Zoom through: the old clip grows past the viewer, the new one settles in from slightly small. */
+.lpi-tr-zoom.lpi-in { animation: lpi-zoom-in calc(var(--o) * var(--k)) cubic-bezier(0.16, 1, 0.3, 1) both; }
+.lpi-tr-zoom.lpi-out { animation: lpi-zoom-out calc(var(--o) * var(--k)) cubic-bezier(0.7, 0, 0.84, 0) both; }
+@keyframes lpi-zoom-in { from { opacity: 0; transform: scale(0.92); } }
+@keyframes lpi-zoom-out { to { opacity: 0; transform: scale(1.25); } }
+
+/* Amber wipe: a slanted amber panel crosses; the new clip is there once it has passed the middle. */
+.lpi-tr-wipe.lpi-in { animation: lpi-wipe-in calc(var(--o) * var(--k)) steps(1, end) both; }
+@keyframes lpi-wipe-in { 0% { opacity: 0; } 50% { opacity: 1; } }
+.lpi-wipe {
+	position: absolute;
+	z-index: 5;
+	top: -20%;
+	bottom: -20%;
+	left: 0;
+	width: 160%;
+	background: linear-gradient(90deg, rgba(251, 191, 36, 0) 0, #fbbf24 18%, #fbbf24 82%, rgba(251, 191, 36, 0) 100%);
+	transform: translateX(-110%) skewX(-14deg);
+	animation: lpi-wipe calc(var(--o) * var(--k)) cubic-bezier(0.65, 0, 0.35, 1) both;
+	pointer-events: none;
+}
+@keyframes lpi-wipe { to { transform: translateX(70%) skewX(-14deg); } }
+
+/* Deal: the sign-up wall's flip. The new clip lands from up-left, slightly large, as a poster deals in. */
+.lpi-tr-deal.lpi-in { animation: lpi-deal calc(var(--o) * var(--k)) cubic-bezier(0.25, 0.8, 0.25, 1) both; }
+.lpi-tr-deal.lpi-out { animation: lpi-deal-out calc(var(--o) * var(--k)) ease-in both; }
+@keyframes lpi-deal { from { opacity: 0; transform: translate(-14%, -14%) scale(1.12); } }
+@keyframes lpi-deal-out { to { opacity: 0; transform: translate(10%, 10%) scale(0.94); } }
+
+@media (prefers-reduced-motion: reduce) {
+	.lpi-slot, .lpi-wipe { animation: none !important; }
+	.lpi-out, .lpi-wipe { display: none; }
+}

@@ -1,0 +1,469 @@
+/* PROTOTYPE - throwaway. Intro clips "problem": the openers (the problem) and the sign-offs.
+   Every duration and delay is scaled by --k. Transform and opacity only. */
+.lpc-pr {
+	position: absolute;
+	inset: 0;
+	overflow: hidden;
+	background: #05060a;
+	color: #fff;
+	font-family: "Gabarito", ui-sans-serif, system-ui, sans-serif;
+}
+/* A piece that lands: rises a little and fades in, on the sign-up wall's curve. */
+.lpc-pr-in {
+	animation: lpc-pr-in calc(800ms * var(--k)) cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes lpc-pr-in {
+	from { opacity: 0; transform: translateY(0.35em); }
+}
+/* A poster or a card deals in, as on the sign-up wall: from up-left, slightly large. */
+.lpc-pr-deal {
+	animation: lpc-pr-deal calc(750ms * var(--k)) cubic-bezier(0.25, 0.8, 0.25, 1) both;
+}
+@keyframes lpc-pr-deal {
+	from { opacity: 0; transform: translate(-14%, -14%) scale(1.12); }
+}
+.lpc-pr-big {
+	font-weight: 800;
+	line-height: 0.98;
+	letter-spacing: -0.025em;
+	font-size: 10cqw;
+}
+.lpc-pr-amber { color: #fbbf24; }
+.lpc-pr-sub {
+	font-weight: 600;
+	font-size: 3cqw;
+	color: rgba(255, 255, 255, 0.78);
+	line-height: 1.2;
+}
+.lpc-pr-kicker {
+	font-weight: 700;
+	font-size: 2.1cqw;
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	color: #fbbf24;
+}
+.lpc-pr-word { display: inline-block; }
+@container (max-width: 520px) {
+	.lpc-pr-big { font-size: 12cqw; }
+	.lpc-pr-sub { font-size: 4.6cqw; }
+	.lpc-pr-kicker { font-size: 3.6cqw; }
+	.lpc-pr-wide { display: none !important; }
+}
+
+/* ---------- opener-scroll: the endless wall, slow and calm, the evening passing. */
+.lpc-pr-wall {
+	position: absolute;
+	left: -12cqw;
+	right: -12cqw;
+	top: -16cqh;
+	bottom: -16cqh;
+	display: flex;
+	flex-direction: column;
+	gap: 1.6cqw;
+	transform: rotate(-6deg);
+	animation: lpc-pr-sink calc(6500ms * var(--k)) cubic-bezier(0.3, 0, 0.7, 1) both;
+}
+@keyframes lpc-pr-sink {
+	from { transform: rotate(-6deg) scale(1.02); }
+	to { transform: rotate(-6deg) scale(1.14); }
+}
+.lpc-pr-strip {
+	display: flex;
+	gap: 1.6cqw;
+	width: max-content;
+	animation: lpc-pr-drift calc(46s * var(--k)) linear both;
+}
+.lpc-pr-strip.lpc-pr-rev { animation-direction: reverse; }
+@keyframes lpc-pr-drift {
+	from { transform: translateX(0); }
+	to { transform: translateX(-50%); }
+}
+.lpc-pr-strip img {
+	width: 13cqw;
+	aspect-ratio: 2 / 3;
+	border-radius: 0.8cqw;
+	object-fit: cover;
+	background: #10131c;
+}
+.lpc-pr-veil {
+	position: absolute;
+	inset: 0;
+	background:
+		radial-gradient(70% 70% at 50% 50%, rgba(5, 6, 10, 0.45) 0, rgba(5, 6, 10, 0.88) 100%),
+		linear-gradient(180deg, rgba(5, 6, 10, 0.2), rgba(5, 6, 10, 0.75));
+}
+.lpc-pr-center {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+	gap: 2.4cqh;
+	padding: 0 6cqw;
+}
+.lpc-pr-pill {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.6em;
+	border-radius: 999px;
+	padding: 0.5em 1.1em;
+	background: rgba(10, 14, 26, 0.85);
+	font-weight: 700;
+	font-size: 3.2cqw;
+}
+@container (max-width: 520px) { .lpc-pr-pill { font-size: 4.2cqw; } }
+/* A clock: a column of times that rolls up one line at a time, easing at each step. */
+.lpc-pr-clock {
+	display: inline-block;
+	height: 1.15em;
+	line-height: 1.15em;
+	overflow: hidden;
+	vertical-align: bottom;
+	color: #fbbf24;
+	font-variant-numeric: tabular-nums;
+}
+.lpc-pr-clock > span {
+	display: flex;
+	flex-direction: column;
+	animation: lpc-pr-roll5 calc(var(--d) * var(--k)) linear calc(var(--at) * var(--k)) both;
+}
+.lpc-pr-clock > span > span { height: 1.15em; }
+@keyframes lpc-pr-roll5 {
+	0%, 14% { transform: translateY(0); }
+	22%, 34% { transform: translateY(-1.15em); animation-timing-function: ease-in-out; }
+	42%, 54% { transform: translateY(-2.3em); }
+	62%, 74% { transform: translateY(-3.45em); }
+	82%, 100% { transform: translateY(-4.6em); }
+}
+
+/* ---------- opener-chat: "What should we watch?" */
+.lpc-pr-chat {
+	position: absolute;
+	left: 50%;
+	top: 0;
+	bottom: 0;
+	width: min(62cqw, 92%);
+	transform: translateX(-50%);
+}
+.lpc-pr-thread {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 8cqh;
+	display: flex;
+	flex-direction: column;
+	gap: 1.4cqh;
+	animation: lpc-pr-climb calc(4200ms * var(--k)) cubic-bezier(0.45, 0, 0.3, 1) calc(1500ms * var(--k)) both;
+}
+@keyframes lpc-pr-climb {
+	to { transform: translateY(-14cqh); }
+}
+.lpc-pr-bubble {
+	max-width: 74%;
+	display: flex;
+	align-items: center;
+	gap: 1.2cqw;
+	padding: 1.2cqh 1.8cqw;
+	border-radius: 2.2cqw;
+	font-weight: 600;
+	font-size: 2.7cqw;
+	line-height: 1.2;
+	animation: lpc-pr-pop calc(600ms * var(--k)) cubic-bezier(0.16, 1, 0.3, 1) calc(var(--at) * var(--k)) both;
+}
+@container (max-width: 520px) { .lpc-pr-bubble { font-size: 4.4cqw; } }
+.lpc-pr-bubble img { width: 3.6cqw; aspect-ratio: 2 / 3; border-radius: 0.4cqw; object-fit: cover; }
+.lpc-pr-me { align-self: flex-end; background: #fbbf24; color: #111; border-bottom-right-radius: 0.4cqw; transform-origin: 100% 100%; }
+.lpc-pr-you { align-self: flex-start; background: #1d2230; border-bottom-left-radius: 0.4cqw; transform-origin: 0 100%; }
+@keyframes lpc-pr-pop {
+	from { opacity: 0; transform: translateY(1.5cqh) scale(0.9); }
+}
+.lpc-pr-chatveil {
+	position: absolute;
+	inset: 0;
+	background: rgba(5, 6, 10, 0.82);
+	animation: lpc-pr-fade calc(700ms * var(--k)) ease-out calc(4300ms * var(--k)) both;
+}
+@keyframes lpc-pr-fade { from { opacity: 0; } }
+.lpc-pr-overlay { animation-delay: calc(4400ms * var(--k)); }
+
+/* ---------- opener-apps: every app its own wall. */
+.lpc-pr-apps {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	justify-content: center;
+	gap: 1.6cqw;
+	padding: 0 3cqw;
+}
+.lpc-pr-app {
+	position: relative;
+	flex: 1;
+	max-width: 17cqw;
+	overflow: hidden;
+	animation: lpc-pr-deal calc(750ms * var(--k)) cubic-bezier(0.25, 0.8, 0.25, 1) calc(var(--at) * var(--k)) both;
+}
+.lpc-pr-applogo {
+	position: absolute;
+	z-index: 2;
+	top: 4cqh;
+	left: 50%;
+	width: 9cqw;
+	height: 9cqw;
+	margin-left: -4.5cqw;
+	border-radius: 2cqw;
+	object-fit: cover;
+	box-shadow: 0 1cqw 3cqw rgba(0, 0, 0, 0.6);
+}
+.lpc-pr-col {
+	display: flex;
+	flex-direction: column;
+	gap: 1.2cqw;
+	padding-top: 2cqh;
+	animation: lpc-pr-up calc(30s * var(--k)) linear both;
+}
+.lpc-pr-col.lpc-pr-rev { animation-direction: reverse; }
+@keyframes lpc-pr-up { to { transform: translateY(-50%); } }
+.lpc-pr-col img { width: 100%; aspect-ratio: 2 / 3; border-radius: 0.8cqw; object-fit: cover; background: #10131c; }
+.lpc-pr-appveil {
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(180deg, rgba(5, 6, 10, 0.1) 0, rgba(5, 6, 10, 0.55) 40%, rgba(5, 6, 10, 0.92) 78%);
+	animation: lpc-pr-fade calc(900ms * var(--k)) ease-out calc(2600ms * var(--k)) both;
+}
+.lpc-pr-bottom {
+	position: absolute;
+	left: 6cqw;
+	right: 6cqw;
+	bottom: 8cqh;
+	display: flex;
+	flex-direction: column;
+	gap: 1.6cqh;
+}
+
+/* ---------- opener-remote: clicking through tiles until late. */
+.lpc-pr-tv {
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 30cqh;
+}
+.lpc-pr-tiles {
+	display: flex;
+	gap: 2cqw;
+	padding-left: 6cqw;
+	animation: lpc-pr-click calc(5200ms * var(--k)) linear calc(600ms * var(--k)) both;
+}
+.lpc-pr-tiles img {
+	flex: none;
+	width: 22cqw;
+	aspect-ratio: 16 / 10;
+	border-radius: 1.2cqw;
+	object-fit: cover;
+	background: #10131c;
+	opacity: 0.7;
+}
+/* Each click: the row moves one tile (18cqw), quickly, then rests. */
+@keyframes lpc-pr-click {
+	0%, 9% { transform: translateX(0); }
+	13%, 20% { transform: translateX(-24cqw); }
+	24%, 30% { transform: translateX(-48cqw); }
+	33%, 39% { transform: translateX(-72cqw); }
+	42%, 47% { transform: translateX(-96cqw); }
+	50%, 55% { transform: translateX(-120cqw); }
+	58%, 62% { transform: translateX(-144cqw); }
+	65%, 69% { transform: translateX(-168cqw); }
+	72%, 76% { transform: translateX(-192cqw); }
+	79%, 100% { transform: translateX(-216cqw); }
+}
+.lpc-pr-focus {
+	position: absolute;
+	top: -0.7cqw;
+	left: 5.3cqw;
+	width: 23.4cqw;
+	aspect-ratio: 16 / 10;
+	border: 0.5cqw solid #fff;
+	border-radius: 1.4cqw;
+	box-shadow: 0 0 3cqw rgba(255, 255, 255, 0.35);
+	animation: lpc-pr-press calc(5200ms * var(--k)) linear calc(600ms * var(--k)) both;
+}
+@keyframes lpc-pr-press {
+	0%, 9%, 13%, 20%, 24%, 30%, 33%, 39%, 42%, 47%, 50%, 55%, 58%, 62%, 65%, 69%, 72%, 76%, 79%, 100% { transform: scale(1); }
+	11%, 22%, 31.5%, 40.5%, 48.5%, 56.5%, 63.5%, 70.5%, 77.5% { transform: scale(0.94); }
+}
+.lpc-pr-tiletitle {
+	position: absolute;
+	left: 6cqw;
+	top: calc(42cqh + 12.6cqw);
+	font-weight: 700;
+	font-size: 2.4cqw;
+	color: rgba(255, 255, 255, 0.55);
+}
+.lpc-pr-topclock {
+	position: absolute;
+	right: 6cqw;
+	top: 6cqh;
+	font-weight: 800;
+	font-size: 5cqw;
+	animation: lpc-pr-in calc(800ms * var(--k)) cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.lpc-pr-tophead {
+	position: absolute;
+	left: 6cqw;
+	top: 21cqh;
+	right: 30cqw;
+}
+
+/* ---------- closers */
+.lpc-pr-mark {
+	animation: lpc-pr-markin calc(900ms * var(--k)) cubic-bezier(0.16, 1, 0.3, 1) calc(var(--at) * var(--k)) both;
+}
+@keyframes lpc-pr-markin {
+	from { opacity: 0; transform: scale(0.82); }
+}
+.lpc-pr-glow {
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	width: 90cqw;
+	height: 90cqw;
+	margin: -45cqw 0 0 -45cqw;
+	border-radius: 50%;
+	background: radial-gradient(circle, rgba(251, 191, 36, 0.22) 0, rgba(251, 191, 36, 0) 60%);
+	animation: lpc-pr-bloom calc(2400ms * var(--k)) cubic-bezier(0.16, 1, 0.3, 1) calc(300ms * var(--k)) both;
+}
+@keyframes lpc-pr-bloom {
+	from { opacity: 0; transform: scale(0.4); }
+}
+
+/* closer-wall: posters deal in grey; a light settles on one, which turns to color. */
+.lpc-pr-grid {
+	position: absolute;
+	left: -3cqw;
+	right: -3cqw;
+	top: -6cqh;
+	display: grid;
+	grid-template-columns: repeat(9, 1fr);
+	gap: 1cqw;
+}
+.lpc-pr-cell {
+	position: relative;
+	aspect-ratio: 2 / 3;
+	border-radius: 0.7cqw;
+	overflow: hidden;
+	background: #10131c;
+	animation: lpc-pr-deal calc(750ms * var(--k)) cubic-bezier(0.25, 0.8, 0.25, 1) calc(var(--at) * var(--k)) both;
+}
+.lpc-pr-cell img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.lpc-pr-grey { filter: grayscale(1) brightness(0.45); }
+.lpc-pr-color {
+	opacity: 0;
+	animation: lpc-pr-fade-in calc(700ms * var(--k)) ease-out calc(var(--lit) * var(--k)) both;
+}
+@keyframes lpc-pr-fade-in { to { opacity: 1; } }
+.lpc-pr-chosen {
+	z-index: 2;
+	animation:
+		lpc-pr-deal calc(750ms * var(--k)) cubic-bezier(0.25, 0.8, 0.25, 1) calc(var(--at) * var(--k)) both,
+		lpc-pr-lift calc(900ms * var(--k)) cubic-bezier(0.16, 1, 0.3, 1) calc(var(--lit) * var(--k)) forwards;
+}
+@keyframes lpc-pr-lift {
+	from { transform: none; }
+	to { transform: scale(1.18); }
+}
+.lpc-pr-ring {
+	position: absolute;
+	inset: 0;
+	border: 0.4cqw solid #fbbf24;
+	border-radius: 0.7cqw;
+	opacity: 0;
+	animation: lpc-pr-fade-in calc(500ms * var(--k)) ease-out calc((var(--lit) + 300ms) * var(--k)) both;
+}
+/* The light: a soft disc that glides in and settles on the chosen poster. */
+.lpc-pr-light {
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 40cqw;
+	height: 40cqw;
+	margin: -20cqw 0 0 -20cqw;
+	border-radius: 50%;
+	background: radial-gradient(circle, rgba(255, 236, 190, 0.28) 0, rgba(255, 236, 190, 0) 62%);
+	pointer-events: none;
+	animation: lpc-pr-seek calc(2000ms * var(--k)) cubic-bezier(0.45, 0, 0.2, 1) calc(1500ms * var(--k)) both;
+}
+@keyframes lpc-pr-seek {
+	0% { opacity: 0; transform: translate(10cqw, 70cqh); }
+	20% { opacity: 1; }
+	55% { transform: translate(78cqw, 30cqh); }
+	100% { opacity: 1; transform: translate(var(--lx), var(--ly)); }
+}
+.lpc-pr-wallveil {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	height: 52cqh;
+	background: linear-gradient(180deg, rgba(5, 6, 10, 0) 0, rgba(5, 6, 10, 0.92) 55%);
+}
+
+/* closer-turn: three empty slots deal in under "Your turn." */
+.lpc-pr-slots { display: flex; gap: 2cqw; }
+.lpc-pr-slot {
+	width: 11cqw;
+	aspect-ratio: 2 / 3;
+	border: 0.35cqw dashed rgba(251, 191, 36, 0.75);
+	border-radius: 1cqw;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-weight: 800;
+	font-size: 4cqw;
+	color: #fbbf24;
+	animation: lpc-pr-deal calc(750ms * var(--k)) cubic-bezier(0.25, 0.8, 0.25, 1) calc(var(--at) * var(--k)) both;
+}
+.lpc-pr-slot.lpc-pr-filled { border-style: solid; overflow: hidden; padding: 0; }
+.lpc-pr-slot.lpc-pr-filled img { width: 100%; height: 100%; object-fit: cover; }
+.lpc-pr-tap {
+	position: absolute;
+	width: 7cqw;
+	height: 7cqw;
+	margin: -3.5cqw 0 0 -3.5cqw;
+	border-radius: 50%;
+	border: 0.4cqw solid #fff;
+	opacity: 0;
+	animation: lpc-pr-ripple calc(1400ms * var(--k)) ease-out calc(var(--at) * var(--k)) infinite both;
+}
+@keyframes lpc-pr-ripple {
+	0% { opacity: 0; transform: scale(0.3); }
+	15% { opacity: 1; }
+	70%, 100% { opacity: 0; transform: scale(1.8); }
+}
+
+/* closer-free: the wordmark, then "Free." */
+.lpc-pr-cta {
+	display: inline-flex;
+	align-items: center;
+	border-radius: 999px;
+	padding: 0.55em 1.4em;
+	background: #fbbf24;
+	color: #111;
+	font-weight: 800;
+	font-size: 2.8cqw;
+}
+@container (max-width: 520px) { .lpc-pr-cta { font-size: 4.6cqw; } }
+
+@media (prefers-reduced-motion: reduce) {
+	.lpc-pr *, .lpc-pr *::before { animation-duration: 1ms !important; animation-delay: 0ms !important; animation-iteration-count: 1 !important; }
+	.lpc-pr-strip, .lpc-pr-col, .lpc-pr-tap { animation: none !important; }
+}
+
+/* The remote on the phone's TV: tiles higher, the headline on one line under them. */
+@container (max-width: 520px) {
+	.lpc-pr-tv { top: 16cqh; }
+	.lpc-pr-tophead { display: none; }
+	.lpc-pr-topclock { top: 3cqh; font-size: 7cqw; }
+	.lpc-pr-remote .lpc-pr-bottom { bottom: 6cqh; }
+	.lpc-pr-remote .lpc-pr-big { font-size: 9cqw; }
+}

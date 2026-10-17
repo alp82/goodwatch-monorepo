@@ -5,10 +5,11 @@ import { Link } from "@remix-run/react"
 import { type CSSProperties, type ReactNode, useEffect, useState } from "react"
 import type { TvHomeData } from "~/ui/living-room/tv/tv-home"
 import type { LandingCard } from "~/server/prototype-landing.server"
+import type { IntroData } from "~/ui/prototype-intro/clip"
 import { Art, BOOT_MS, Boot, CAPABILITIES, Ping, Say, useAfter, useOpenOnTv } from "./shared"
 
 export type Landing = { screen?: ReactNode; room?: ReactNode; above?: ReactNode }
-export type VariantProps = { data: TvHomeData & { landing: LandingCard[] }; tvOpen: boolean }
+export type VariantProps = { data: TvHomeData & { landing: LandingCard[]; intro?: IntroData | null }; tvOpen: boolean }
 
 /**
  * Whether the intro is still wanted. A guest sees it on every load in the prototype (no persistence); a member skips

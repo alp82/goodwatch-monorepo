@@ -27,6 +27,7 @@ import useLocale from "~/utils/locale"
 import { type LoaderFunctionArgs, json } from "@remix-run/node"
 import { tvHomeLoader as homeLoader } from "~/server/living-room/tv-loader.server"
 import { loadLandingCards } from "~/server/prototype-landing.server"
+import { loadIntroData } from "~/server/prototype-intro/index.server"
 
 // PROTOTYPE (landing): the home loader plus the start titles as cards, for the landing variants.
 export async function loader(args: LoaderFunctionArgs) {
@@ -37,7 +38,11 @@ export async function loader(args: LoaderFunctionArgs) {
 		console.error("landing cards", e)
 		return []
 	})
-	return json({ ...data, landing }, { headers: res.headers })
+	// The intro lab's "Play on the TV": the clips' data too.
+	const intro = new URL(args.request.url).searchParams.get("clips")
+		? await loadIntroData(args.request, { ...data, landing })
+		: null
+	return json({ ...data, landing, intro }, { headers: res.headers })
 }
 export { pageHeaders as headers } from "~/utils/headers"
 import { buildMeta, ogImageUrl } from "~/utils/meta"
