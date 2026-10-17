@@ -60,6 +60,11 @@ insert('user_score', user_id=member, media_type='movie', tmdb_id=2000, score=8, 
 insert('user_setting', user_id=member, key='country_default', value='DE')
 insert('user_setting', user_id=member, key='streaming_providers_default', value='')
 insert('user_wishlist', user_id='mcp-member-B', media_type='movie', tmdb_id=2001, created_at=now, updated_at=now)
+# Distinct same-name/year works plus a real canonical alias and an unrelated TV namespace.
+for id, runtime in [(329865, 116), (472349, 22)]:
+    insert('movie', tmdb_id=id, title='Arrival', original_title='Arrival', release_year=2016, runtime=runtime, adult=False)
+for kind, id, title in [('movie', 3635601, 'Local Canonical retired'), ('movie', 872517, 'Local Canonical'), ('show', 3635601, 'Local Canonical show')]:
+    insert(kind, tmdb_id=id, title=title, original_title=title, release_year=2020, adult=False)
 for table in [*module.SCHEMAS, 'user_mcp_action']:
     sql(f'REFRESH TABLE {table}')
-print('Seeded dedicated local MCP cluster with 29 catalog titles and two isolated members')
+print('Seeded dedicated local MCP cluster with 34 catalog titles and two isolated members')

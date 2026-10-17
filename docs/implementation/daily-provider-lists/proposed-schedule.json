@@ -8,6 +8,8 @@
   "args": {
     "dry_run": false,
     "requests_per_second": 15,
-    "max_requests": 350000
+    "max_requests": 350000,
+    "baseline_max_requests": 120000,
+    "baseline_max_memberships": 570000
   }
 }

@@ -1,0 +1,11 @@
+summary: Admit complete countries after daily checkpoint rereads
+description: >-
+  Internal coordinator with request and membership budgets; no standalone
+  action.
+lock: '!inline f/tmdb_api/daily_list_ramp.script.lock'
+kind: script
+schema:
+  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  type: object
+  properties: {}
+  required: []

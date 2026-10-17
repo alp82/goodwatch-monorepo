@@ -5,6 +5,7 @@ import {
 	durationBuckets,
 	histogram,
 } from "../metrics/registry.server.ts"
+import { linkInstructions, withPageLink } from "./links.ts"
 import { readToolEnabled } from "./policy.server.ts"
 import type { RankedSearch } from "./ranked.server.ts"
 import { paging, selected } from "./schemas.ts"
@@ -36,7 +37,11 @@ export interface ReadArgs {
 	limit?: number
 	query?: string
 	ranked?: boolean
+	for_you?: boolean
+	exclude_seen?: boolean
 	filter?: string
+	sort?: "added" | "waiting" | "last" | "score" | "title" | "match" | "runtime"
+	kind?: "all" | "movie" | "show"
 	title_id?: string
 	title_name?: string
 	year?: number
@@ -49,14 +54,32 @@ const definitions: {
 }[] = [
 	{
 		name: "search_titles",
-		title: "Search all catalog titles",
+		title: "Search titles by name",
 		description:
-			"Search all catalog titles, separate from your library. Cheap name lookup by default; ranked=true explicitly opts into ranked search: 20 uncached searches per member per UTC day, one in flight, normalized queries cached for 60 seconds and paging is free.",
+			"Search movie and show names across the GoodWatch catalog, separate from your library. Name lookup by default; for descriptive queries, explicitly set ranked=true for an optional smarter match, ordered For you by default. Searches everywhere, including already seen titles, regardless of saved services/filters. Set exclude_seen=true for unseen results in one call; never loop over get_title to filter seen titles. Returns up to 40 results by default; request a smaller limit only when asked. Different works can share a name and year: use runtime_minutes to distinguish them. Smarter matches allow 20 uncached attempts per member per UTC day, one in flight, normalized queries cached for 60 seconds and paging is free.",
 		schema: z
 			.object({
 				query: z.string().trim().max(120).default(""),
-				ranked: z.boolean().default(false),
+				ranked: z
+					.boolean()
+					.default(false)
+					.describe(
+						"Use an optional smarter match for descriptive queries instead of name lookup. Costs one of 20 daily attempts unless cached; paging is free.",
+					),
 				...paging,
+				limit: z.number().int().min(1).max(40).default(40),
+				for_you: z
+					.boolean()
+					.optional()
+					.describe(
+						"Smarter matches: use the site's For you ordering (default true). Keep unchanged when paging; a cursor inherits its original filters.",
+					),
+				exclude_seen: z
+					.boolean()
+					.optional()
+					.describe(
+						"Default false: include seen titles. True uses the site's Not seen yet rule: exclude rated, watched, in-progress, on-hold, dropped and quiz-skipped titles. Apply natively before paging.",
+					),
 				cursor: z
 					.string()
 					.regex(/^(offset:[0-9]{1,8}|ranked:[a-f0-9]{32}:[0-9]{1,8})$/)
@@ -66,7 +89,7 @@ const definitions: {
 			.refine(
 				(value) =>
 					!value.cursor || value.ranked === value.cursor.startsWith("ranked:"),
-				"Ranked searches use ranked result cursors; name lookup uses offset cursors",
+				"Smarter matches use ranked: result cursors; name lookup uses offset: cursors",
 			),
 	},
 	{
@@ -92,16 +115,16 @@ const definitions: {
 	},
 	{
 		name: "get_tonight",
-		title: "Get tonight's pick",
+		title: "Watch next",
 		description:
-			"Your next episode or Wishlist choice, using your saved country and services.",
+			"Choose one thing to watch next, using your saved country and services: a next episode from a show you are watching, otherwise a Wishlist movie or show to start (or a suggestion if the Wishlist is empty). For the full Wishlist / Want to See list (including sorting by date added), use get_library with filter=want_to_see.",
 		schema: z.object({}).strict(),
 	},
 	{
 		name: "get_library",
 		title: "Get my library",
 		description:
-			"Only your marked titles, including scores, Want to See, watch progress and Not interested. Separate from search_titles.",
+			"Your marked titles, including scores, Wishlist / Want to See, watch progress and Not interested. Use filter=want_to_see for your Wishlist; get_tonight chooses one thing to watch next. Includes added_at (Wishlist date, null when absent), runtime_minutes (movie duration or usual show episode length), and GoodWatch match. Defaults to match (Best match by your taste) when taste is available, otherwise the usual date sort. Use sort=runtime for the longest titles first across your entire filtered library, without per-title lookups. Explicit sorts are preserved. Sorts match My library: added (last added), last (last watched), score (highest first), title (ignores leading articles); waiting puts the oldest Wishlist additions first. Separate from search_titles.",
 		schema: z
 			.object({
 				filter: z
@@ -118,6 +141,18 @@ const definitions: {
 					])
 					.default("all"),
 				...paging,
+				sort: z
+					.enum([
+						"added",
+						"waiting",
+						"last",
+						"score",
+						"title",
+						"match",
+						"runtime",
+					])
+					.optional(),
+				kind: z.enum(["all", "movie", "show"]).default("all"),
 			})
 			.strict(),
 	},
@@ -136,14 +171,17 @@ export function createToolServer(
 	writes = false,
 	rankedSearch?: RankedSearch,
 ) {
-	const server = new McpServer({ name: "goodwatch", version: "1.0.0" })
+	const server = new McpServer(
+		{ name: "goodwatch", version: "1.0.0" },
+		{ instructions: linkInstructions },
+	)
 	for (const tool of definitions) {
 		if (!readToolEnabled(userId, tool.name)) continue
 		server.registerTool(
 			tool.name,
 			{
 				title: tool.title,
-				description: tool.description,
+				description: `${tool.description} ${linkInstructions}`,
 				inputSchema: tool.schema,
 				annotations: {
 					readOnlyHint: true,
@@ -188,6 +226,9 @@ export function createToolServer(
 						)
 							outcome = "error"
 					}
+					data = await (
+						await import("./title-results.server.ts")
+					).enrichTitleResults(userId, data)
 				} catch {
 					outcome = "error"
 					data = {
@@ -198,6 +239,7 @@ export function createToolServer(
 					calls.inc([tool.name, outcome])
 					durations.observe([tool.name], (performance.now() - start) / 1000)
 				}
+				data = withPageLink(origin, tool.name, args, data)
 				return {
 					content: [{ type: "text", text: JSON.stringify(data) }],
 					structuredContent: data,

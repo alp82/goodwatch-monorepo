@@ -1,4 +1,9 @@
-import { createHmac, randomBytes } from "node:crypto"
+import {
+	createCipheriv,
+	createDecipheriv,
+	createHmac,
+	randomBytes,
+} from "node:crypto"
 import type { Cluster } from "ioredis"
 import { getRedisCluster } from "../../utils/cache"
 import { counter } from "../metrics/registry.server.ts"
@@ -6,6 +11,8 @@ import { runsSearch } from "../role.server.ts"
 import { searchAdmission } from "../search-runtime/admission.server.ts"
 import { type CatalogTitle, summary } from "./data.server.ts"
 import { readToolEnabled } from "./policy.server.ts"
+import { prepareSearchView } from "./search-view.server.ts"
+import type { SearchView } from "./search-view.ts"
 import type { ReadArgs } from "./tools.server.ts"
 
 export interface RankedBatch {
@@ -24,6 +31,8 @@ type Redis = Pick<Cluster, "eval" | "get">
 interface Snapshot extends RankedBatch {
 	id: string
 	queryHash: string
+	queryCiphertext?: string
+	view?: SearchView
 }
 const usage = counter(
 	"goodwatch_mcp_ranked_requests_total",
@@ -81,23 +90,24 @@ const failure = (status: string, v?: Verdict) => ({
 		(
 			{
 				member_busy:
-					"You already have a ranked search in flight. Try again after it finishes.",
+					"You already have a smarter match in flight. Try again after it finishes.",
 				quota_exceeded:
-					"Your 20 uncached ranked searches for this UTC day are used. Cached queries and existing pages remain free.",
+					"Your 20 uncached smarter matches for this UTC day are used. Cached queries and existing pages remain free.",
 				search_busy:
 					"Search is busy right now. Try again in a moment; no member query was charged.",
-				wrong_role: "Ranked search must reach a search-role process.",
+				wrong_role:
+					"Smarter matching is temporarily unavailable on this server.",
 				search_cancelled:
-					"Search was cancelled before a new ranked search started.",
+					"Search was cancelled before a new smarter match started.",
 				cursor_expired:
-					"This result page has expired. Start a new ranked search explicitly; paging never reruns a search.",
+					"This result page has expired. Start a new smarter match explicitly; paging never reruns a search.",
 				invalid_cursor: "This cursor does not match the search or member.",
-				ranked_disabled: "Ranked search is disabled for this member.",
+				ranked_disabled: "Smarter matching is disabled for this member.",
 				ranked_unavailable:
-					"Ranked search coordination is unavailable. No unmetered search is allowed.",
+					"Smarter matching is temporarily unavailable. No unmetered search is allowed.",
 			} as Record<string, string>
 		)[status] ??
-		"Ranked search did not complete. Its admitted attempt still counts; do not automatically retry.",
+		"Smarter matching did not complete. Its admitted attempt still counts; do not automatically retry.",
 	...(v ? { quota: quotaData(v) } : {}),
 })
 
@@ -143,18 +153,86 @@ export function createRankedSearch(
 			`${prefix}:query:${queryHash}`,
 		]
 		const owner = randomBytes(16).toString("hex")
+		// Preserve query links across cursor-only pages without storing the raw query in Valkey.
+		const key = Buffer.from(storageKey, "hex")
+		const sealQuery = (value: string, id = owner) => {
+			const iv = randomBytes(12)
+			const cipher = createCipheriv("aes-256-gcm", key, iv)
+			cipher.setAAD(Buffer.from(`${prefix}:${id}:page-query`))
+			const encrypted = Buffer.concat([
+				cipher.update(value, "utf8"),
+				cipher.final(),
+			])
+			return Buffer.concat([iv, cipher.getAuthTag(), encrypted]).toString(
+				"base64url",
+			)
+		}
+		const queryOf = (snapshot: Snapshot) => {
+			if (!snapshot.queryCiphertext) return args.query?.trim() ?? ""
+			const bytes = Buffer.from(snapshot.queryCiphertext, "base64url")
+			const cipher = createDecipheriv("aes-256-gcm", key, bytes.subarray(0, 12))
+			cipher.setAAD(Buffer.from(`${prefix}:${snapshot.id}:page-query`))
+			cipher.setAuthTag(bytes.subarray(12, 28))
+			return Buffer.concat([
+				cipher.update(bytes.subarray(28)),
+				cipher.final(),
+			]).toString("utf8")
+		}
 		const time = () => (options.clock ? Math.floor(options.clock() / 1000) : -1)
 		const evalVerdict = async (script: string) =>
 			(await redis.eval(script, keys.length, ...keys, owner, time())) as Verdict
-		const page = (
-			snapshot: Snapshot,
+		const page = async (
+			input: Snapshot,
 			offset: number,
 			v: Verdict,
 			cached: boolean,
 			chargedNano = 0,
 		) => {
-			const limit = args.limit ?? 20
+			let snapshot = input
+			if (snapshot.view) {
+				if (
+					(args.for_you !== undefined &&
+						args.for_you !== snapshot.view.for_you) ||
+					(args.exclude_seen !== undefined &&
+						args.exclude_seen !== snapshot.view.exclude_seen)
+				)
+					return failure("invalid_cursor", v)
+			} else {
+				// One stable, member-bound view per filter combination. Changing filters reuses the
+				// 60s raw query cache without another paid search; cursor pages never re-rank.
+				const id = digest(
+					`${snapshot.id}:${args.for_you ?? true}:${args.exclude_seen ?? false}`,
+				).slice(0, 32)
+				const viewKey = `${prefix}:view:${id}`
+				let value = await redis.get(viewKey)
+				if (!value) {
+					const prepared = await prepareSearchView(
+						snapshot.titles,
+						userId,
+						args,
+					)
+					const view: Snapshot = {
+						...snapshot,
+						...prepared,
+						id,
+						queryCiphertext: sealQuery(queryOf(snapshot), id),
+					}
+					value = (await redis.eval(
+						"local v = redis.call('GET', KEYS[1]); if v then return v end redis.call('SET', KEYS[1], ARGV[1], 'PX', 900000) redis.call('SET', KEYS[2], ARGV[1], 'PX', 900000) return ARGV[1]",
+						2,
+						viewKey,
+						`${prefix}:page:${id}`,
+						JSON.stringify(view),
+					)) as string
+				}
+				snapshot = JSON.parse(value)
+			}
+			const limit = args.limit ?? 40
 			return {
+				query: queryOf(snapshot),
+				...snapshot.view,
+				total: snapshot.titles.length,
+				returned: Math.min(limit, Math.max(0, snapshot.titles.length - offset)),
 				items: snapshot.titles
 					.slice(offset, offset + limit)
 					.map((title) => summary(title, origin)),
@@ -195,17 +273,22 @@ export function createRankedSearch(
 					return finish("invalid_cursor", failure("invalid_cursor"))
 				return finish(
 					"page",
-					page(snapshot, Number(match[2]), await evalVerdict(quota), true),
+					await page(
+						snapshot,
+						Number(match[2]),
+						await evalVerdict(quota),
+						true,
+					),
 				)
 			}
 			if (query.length < 2)
 				return finish("invalid_query", {
 					status: "invalid_query",
-					message: "Ranked search requires at least two characters.",
+					message: "Smarter matching requires at least two characters.",
 				})
 			const v = await evalVerdict(claim)
 			if (v[0] === "cached")
-				return finish("cached", page(JSON.parse(v[1]), 0, v, true))
+				return finish("cached", await page(JSON.parse(v[1]), 0, v, true))
 			if (v[0] !== "claimed") return finish(v[0], failure(v[0], v))
 			claimed = true
 			release = searchAdmission.enter()
@@ -241,7 +324,12 @@ export function createRankedSearch(
 				return finish("failed", failure("search_failed", admitted))
 			}
 			cost.inc([], batch.chargedNano)
-			const snapshot: Snapshot = { ...batch, id: owner, queryHash }
+			const snapshot: Snapshot = {
+				...batch,
+				id: owner,
+				queryHash,
+				queryCiphertext: sealQuery(args.query?.trim() ?? ""),
+			}
 			const saved = await redis.eval(
 				"if redis.call('GET', KEYS[1]) ~= ARGV[1] then return 0 end redis.call('SET', KEYS[2], ARGV[2], 'PX', 60000) redis.call('SET', KEYS[3], ARGV[2], 'PX', 900000) return 1",
 				3,
@@ -255,7 +343,7 @@ export function createRankedSearch(
 				return finish("unavailable", failure("ranked_unavailable", admitted))
 			return finish(
 				"uncached",
-				page(snapshot, 0, admitted, false, batch.chargedNano),
+				await page(snapshot, 0, admitted, false, batch.chargedNano),
 			)
 		} catch {
 			return finish("unavailable", failure("ranked_unavailable"))

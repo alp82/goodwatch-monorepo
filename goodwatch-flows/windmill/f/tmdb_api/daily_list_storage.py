@@ -39,6 +39,7 @@ class ListStorage:
         self.buffer = []
         self.run_owned = lambda: None
         self.lease_index_ready = False
+        self.country_snapshots = None
         self.stats = dict(planned_rows=0, published_titles=0, planned_exact_arrivals=0,
                           planned_unknown_arrivals=0, planned_exact_drops=0, planned_unknown_drops=0)
 
@@ -56,6 +57,34 @@ class ListStorage:
 
     def load(self, identity):
         return self.db.tmdb_daily_provider_lists.find_one({'_id': identity})
+
+    def inventory(self):
+        return {row['_id']: row for row in self.db.tmdb_daily_provider_lists.find(
+            {}, {'ids': 1, 'retry_ids': 1, 'checked_at': 1})}
+
+    @contextmanager
+    def country_checkpoints(self):
+        if self.dry_run:
+            yield
+            return
+        self.country_snapshots = {}
+        try:
+            yield
+            snapshots = self.country_snapshots
+            # Publish all list checkpoints for a new country atomically. History
+            # writes precede this transaction; pending IDs preserve partial work.
+            with self.db.client.start_session() as session:
+                def commit(owned_session):
+                    self.run_owned()
+                    for identity, snapshot in snapshots.items():
+                        self.db.tmdb_daily_provider_lists.replace_one(
+                            {'_id': identity}, dict(snapshot, _id=identity), upsert=True, session=owned_session)
+                    self.db.tmdb_daily_provider_list_pending.delete_many(
+                        {'_id': {'$in': list(snapshots)}}, session=owned_session)
+                    self.run_owned()
+                session.with_transaction(commit)
+        finally:
+            self.country_snapshots = None
 
     def pending(self, identity):
         intent = self.db.tmdb_daily_provider_list_pending.find_one({'_id': identity})
@@ -197,6 +226,9 @@ class ListStorage:
     def save(self, identity, snapshot):
         if self.dry_run:
             raise RuntimeError('Read-only storage cannot save checkpoints')
+        if self.country_snapshots is not None:
+            self.country_snapshots[identity] = snapshot
+            return
         self.db.tmdb_daily_provider_lists.replace_one({'_id': identity}, dict(snapshot, _id=identity), upsert=True)
         self.db.tmdb_daily_provider_list_pending.delete_one({'_id': identity})
 

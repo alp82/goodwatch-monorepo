@@ -3,8 +3,8 @@ import Redis from "ioredis"
 import { createReadMcpHandler } from "../../app/server/mcp/endpoint.server"
 process.env.CRATE_HOSTS = "127.0.0.1"
 process.env.CRATE_PORT = "15767"
-process.env.CRATE_USER = "crate"
-process.env.CRATE_PASS = ""
+process.env.CRATE_USER = process.env.MCP_TEST_CRATE_USER ?? "crate"
+process.env.CRATE_PASS = process.env.MCP_TEST_CRATE_PASS ?? ""
 process.env.REDIS_HOST = ""
 process.env.TASTE_REDIS_URL = "redis://127.0.0.1:16767"
 process.env.TITLE_CARDS_REDIS_URL = ""
@@ -82,8 +82,17 @@ async function call(
 	args: Record<string, unknown> = {},
 	member = "mcp-writer-A",
 ) {
-	const result = await rpc(name, args, member)
+	// Models often include both selectors. The ID must win even over unrelated display metadata.
+	const supplied = args.title_id && ["log_watch", "rate_title", "set_want_to_see", "set_not_interested", "set_show_status", "undo_watch"].includes(name) && !process.argv.includes("--replay-only")
+		? { ...args, title_name: "Ignored display name", year: 1800 } : args
+	const result = await rpc(name, supplied, member)
 	assert.ok(!result.isError, JSON.stringify(result))
+	if (result.structuredContent.title) {
+		assert.equal(result.structuredContent.title.link,
+			`[${result.structuredContent.title.name} (${result.structuredContent.title.year ?? "Year unknown"})](${result.structuredContent.title.url})`)
+		assert.match(result.structuredContent.title.url, /^http:\/\/localhost:3336\/(movie|show)\//)
+	}
+	assert.deepEqual(JSON.parse(result.content[0].text), result.structuredContent)
 	return result.structuredContent
 }
 try {
@@ -116,6 +125,13 @@ try {
 			"PASS: receipt survives a fresh MCP process and never reapplies the original watch",
 		)
 	} else {
+		const legacy = await rpc("set_want_to_see", { title_id: "movie:3000", year: 2019,
+			want_to_see: true, action_id: "legacy-id-and-year" })
+		assert.equal(legacy.isError, false)
+		assert.equal(legacy.structuredContent.replayed, true)
+		assert.equal(legacy.structuredContent.title.link, "[Harbor (2019)](http://localhost:3336/movie/3000-harbor)")
+		assert.equal((await call("get_title", { title_id: "movie:3000" })).member.want_to_see, false)
+		console.log("PASS: legacy ID/year receipts replay without mutation and receive ready-made links")
 		const args = { title_id: "movie:3000", action_id: "watch-local-movie" }
 		const logged = await call("log_watch", args)
 		assert.equal(logged.outcome, "applied")
@@ -124,6 +140,7 @@ try {
 		assert.equal(logged.after.watches[0].date, null)
 		assert.equal(logged.after.watches[0].date_note, "No date recorded")
 		assertReplay(await call("log_watch", args), logged)
+		assertReplay((await rpc("log_watch", args)).structuredContent, logged)
 		const peer = await call(
 			"get_title",
 			{ title_id: "movie:3000" },

@@ -12,6 +12,14 @@ test("MCP refuses anonymous callers and never caches the challenge", async () =>
 	const response = await handle(new Request("http://localhost:3336/mcp"))
 	assert.equal(response.status, 401)
 	assert.match(response.headers.get("WWW-Authenticate") ?? "", /Bearer/)
+	assert.doesNotMatch(
+		response.headers.get("WWW-Authenticate") ?? "",
+		/(?:^|[, ])scope=/,
+	)
+	assert.match(
+		response.headers.get("WWW-Authenticate") ?? "",
+		/resource_metadata=/,
+	)
 	assert.equal(
 		response.headers.get("Cache-Control"),
 		"private, no-store, no-transform",
@@ -258,8 +266,11 @@ test("A member sees separate catalog and personal read tools, with valid schemas
 	)
 	for (const tool of tools) {
 		assert.equal(tool.annotations.readOnlyHint, true)
+		assert.equal(tool.annotations.idempotentHint, true)
 		assert.equal(tool.annotations.destructiveHint, false)
 		assert.equal(tool.inputSchema.type, "object")
+		assert.match(tool.description, /ready-made link field VERBATIM/)
+		assert.match(tool.description, /page_url/)
 	}
 })
 
@@ -369,6 +380,9 @@ test("Ranked catalog search is an explicit opt-in and documents its member quota
 	const search = tools.find(
 		(tool: { name: string }) => tool.name === "search_titles",
 	)
+	assert.equal(search.title, "Search titles by name")
+	assert.doesNotMatch(search.description, /ranked search/i)
+	assert.match(search.description, /smarter match/)
 	assert.equal(search.inputSchema.properties.ranked.type, "boolean")
 	assert.equal(search.inputSchema.properties.ranked.default, false)
 	assert.match(search.description, /20.*UTC day/)
@@ -400,6 +414,7 @@ test("Write scopes expose seven writes with conservative destructive hints and n
 		],
 	)
 	for (const tool of writes) {
+		assert.equal(tool.annotations.readOnlyHint, false)
 		assert.equal(tool.annotations.destructiveHint, tool.name !== "log_watch")
 		assert.equal(tool.annotations.idempotentHint, true)
 		assert.equal(tool.inputSchema.required.includes("action_id"), true)
@@ -489,4 +504,90 @@ test("The write-scope preflight bounds the body and rejects malformed JSON", asy
 	const response = await handle(malformed)
 	assert.equal(response.status, 400)
 	assert.match(response.headers.get("Cache-Control") ?? "", /no-transform/)
+})
+
+test("MCP initialization tells clients to link titles and end with the page link", async () => {
+	const handle = createReadMcpHandler({
+		resource,
+		authorization: verifier,
+		limiter: unlimited,
+	})
+	const response = await handle(
+		new Request(resource, {
+			method: "POST",
+			headers: {
+				Authorization: "Bearer local",
+				"Content-Type": "application/json",
+				Accept: "application/json, text/event-stream",
+			},
+			body: JSON.stringify({
+				jsonrpc: "2.0",
+				id: 1,
+				method: "initialize",
+				params: {
+					protocolVersion: "2025-03-26",
+					capabilities: {},
+					clientInfo: { name: "local", version: "1" },
+				},
+			}),
+		}),
+	)
+	assert.equal(response.status, 200)
+	const initialized = (await result(response)).result
+	assert.match(initialized.instructions, /ready-made link field VERBATIM/)
+	assert.match(initialized.instructions, /See it on GoodWatch:/)
+})
+
+test("Search, library and Watch next expose the requested client contract", async () => {
+	const handle = createReadMcpHandler({
+		resource,
+		authorization: verifier,
+		limiter: unlimited,
+	})
+	const tools = (await result(await handle(rpc("tools/list")))).result.tools
+	const search = tools.find(
+		(tool: { name: string }) => tool.name === "search_titles",
+	)
+	assert.equal(search.inputSchema.properties.limit.default, 40)
+	assert.equal(search.inputSchema.properties.limit.maximum, 40)
+	assert.equal(search.inputSchema.properties.for_you.type, "boolean")
+	assert.equal(search.inputSchema.properties.exclude_seen.type, "boolean")
+	assert.match(search.description, /never loop over get_title/)
+	const library = tools.find(
+		(tool: { name: string }) => tool.name === "get_library",
+	)
+	assert.deepEqual(library.inputSchema.properties.sort.enum, [
+		"added",
+		"waiting",
+		"last",
+		"score",
+		"title",
+		"match",
+		"runtime",
+	])
+	assert.match(library.description, /added_at/)
+	const next = tools.find(
+		(tool: { name: string }) => tool.name === "get_tonight",
+	)
+	assert.equal(next.title, "Watch next")
+	assert.match(next.description, /next episode/)
+	assert.match(next.description, /get_library/)
+})
+
+test("Server instructions require GoodWatch taste and native full-library runtime sorting", async () => {
+	const handle = createReadMcpHandler({
+		resource,
+		authorization: verifier,
+		limiter: unlimited,
+	})
+	const tools = (await result(await handle(rpc("tools/list")))).result.tools
+	for (const tool of tools) {
+		assert.match(tool.description, /GoodWatch match/)
+		assert.match(tool.description, /never replace them with your own judgment/)
+	}
+	const library = tools.find(
+		(tool: { name: string }) => tool.name === "get_library",
+	)
+	assert.match(library.description, /Defaults to match/)
+	assert.match(library.description, /entire filtered library/)
 })

@@ -101,12 +101,33 @@ async function call(
 	return message.result
 }
 try {
-	const first = await call({ query: "  QUIET   Movies  ", ranked: true })
+	const first = await call({
+		query: "  QUIET   Movies  ",
+		ranked: true,
+		limit: 20,
+	})
 	assert.equal(first.isError, false, JSON.stringify(first))
 	assert.equal(first.structuredContent.quota.used, 1)
 	assert.equal(first.structuredContent.items.length, 20)
 	assert.equal(first.structuredContent.items[0].id, "movie:2024")
 	assert.equal(first.structuredContent.charged_nano, 84)
+	assert.equal(
+		new URL(first.structuredContent.page_url).searchParams.get("q"),
+		"QUIET   Movies",
+	)
+	assert.match(first.structuredContent.items[0].url, /movie\/2024-/)
+	assert.equal(
+		first.structuredContent.items[0].link,
+		`[Local Movie 24 (2020)](${first.structuredContent.items[0].url})`,
+	)
+	const snapshotKeys = await redis.keys("mcp-ranked:*:page:*")
+	for (const key of snapshotKeys) {
+		const value = await redis.get(key)
+		assert.ok(
+			!value?.includes("QUIET   Movies"),
+			"Queries must stay encrypted in cached snapshots",
+		)
+	}
 	const cached = await call({ query: "quiet movies", ranked: true, limit: 3 })
 	assert.equal(cached.structuredContent.cached, true)
 	assert.equal(cached.structuredContent.quota.used, 1)
@@ -115,6 +136,10 @@ try {
 		ranked: true,
 		cursor: first.structuredContent.next_cursor,
 	})
+	assert.equal(
+		page.structuredContent.page_url,
+		first.structuredContent.page_url,
+	)
 	assert.equal(page.structuredContent.items.length, 5)
 	assert.equal(page.structuredContent.items[0].id, "movie:2004")
 	assert.equal(page.structuredContent.charged_nano, 0)
@@ -122,6 +147,104 @@ try {
 	console.log(
 		"PASS: explicit ranked search reserves one member query; normalized cache hits and paging are free",
 	)
+	const full = await call({ query: "quiet movies", ranked: true })
+	assert.equal(full.structuredContent.items.length, 25)
+	assert.equal(full.structuredContent.total, 25)
+	assert.equal(full.structuredContent.for_you, true)
+	assert.equal(full.structuredContent.exclude_seen, false)
+	assert.equal(full.structuredContent.availability, "everywhere")
+	assert.equal(full.structuredContent.quota.used, 1)
+	assert.equal(calls, 1)
+	const visible = await call(
+		{ query: "filter fixture", ranked: true, limit: 20 },
+		"mcp-member-A",
+	)
+	assert.equal(visible.structuredContent.total, 25)
+	const unseen = await call(
+		{
+			query: "filter fixture",
+			ranked: true,
+			exclude_seen: true,
+			for_you: false,
+			limit: 20,
+		},
+		"mcp-member-A",
+	)
+	assert.equal(unseen.structuredContent.cached, true)
+	assert.equal(
+		unseen.structuredContent.quota.used,
+		visible.structuredContent.quota.used,
+	)
+	assert.equal(unseen.structuredContent.total, 24)
+	const unseenPage = await call(
+		{ ranked: true, cursor: unseen.structuredContent.next_cursor },
+		"mcp-member-A",
+	)
+	assert.equal(unseenPage.structuredContent.items.length, 4)
+	assert.equal(unseenPage.structuredContent.exclude_seen, true)
+	assert.equal(unseenPage.structuredContent.for_you, false)
+	assert.equal(
+		unseenPage.structuredContent.page_url,
+		unseen.structuredContent.page_url,
+	)
+	assert.ok(
+		!unseenPage.structuredContent.items.some(
+			(item: { id: string }) => item.id === "movie:2000",
+		),
+	)
+	assert.equal(
+		(
+			await call(
+				{
+					ranked: true,
+					cursor: unseen.structuredContent.next_cursor,
+					exclude_seen: false,
+				},
+				"mcp-member-A",
+			)
+		).structuredContent.status,
+		"invalid_cursor",
+	)
+	assert.equal(
+		(
+			await call(
+				{ query: "filter fixture", ranked: true, limit: 20 },
+				"mcp-member-A",
+			)
+		).structuredContent.next_cursor,
+		visible.structuredContent.next_cursor,
+	)
+	console.log(
+		"PASS: full first page and For you defaults; native seen filtering, free filter changes and stable inherited cursor views",
+	)
+	const wide = createRankedSearch({
+		redis: () => redis,
+		run: async () => ({
+			titles: Array.from({ length: 50 }, (_, i) => ({
+				media_type: "movie" as const,
+				tmdb_id: 4000 + i,
+				title: `Wide fixture ${i}`,
+				release_year: 2020,
+			})),
+			ranked: true,
+			messages: [],
+			chargedNano: 0,
+		}),
+	})
+	const wideFirst = await call(
+		{ query: "wide fixture", ranked: true },
+		`${member}-wide`,
+		wide,
+	)
+	assert.equal(wideFirst.structuredContent.items.length, 40)
+	assert.equal(wideFirst.structuredContent.total, 50)
+	const widePage = await call(
+		{ ranked: true, cursor: wideFirst.structuredContent.next_cursor },
+		`${member}-wide`,
+		wide,
+	)
+	assert.equal(widePage.structuredContent.items.length, 10)
+	assert.equal(widePage.structuredContent.next_cursor, null)
 	const { searchAdmission } = await import(
 		"../../app/server/search-runtime/admission.server"
 	)
@@ -444,7 +567,10 @@ try {
 	)
 	if (process.argv.includes("--ttl")) {
 		const ttlMember = `${member}-ttl`
-		const ttlFirst = await call({ query: "TTL query", ranked: true }, ttlMember)
+		const ttlFirst = await call(
+			{ query: "TTL query", ranked: true, limit: 20 },
+			ttlMember,
+		)
 		const longWork = deferred()
 		const longRunner = createRankedSearch({
 			redis: () => redis,

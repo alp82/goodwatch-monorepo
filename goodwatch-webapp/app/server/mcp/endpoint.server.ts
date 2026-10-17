@@ -4,7 +4,7 @@ import {
 	bearerAuthChallengeResponse,
 	createMcpHandler,
 	readRequestBody,
-	requireBearerAuth,
+	verifyBearerToken,
 } from "@modelcontextprotocol/server"
 import type { RateVerdict, RateWindow } from "../rate-limit.server.ts"
 import { isAddressedTo } from "../site-origin.server.ts"
@@ -31,14 +31,14 @@ export function createReadMcpHandler(
 	} = {},
 ) {
 	const resource = options.resource ?? process.env.MCP_RESOURCE_URL
-	const gate = requireBearerAuth({
+	const authOptions = {
 		verifier: options.authorization ?? mcpAuthorization,
 		requiredScopes: ["mcp:read"],
 		expectedResource: resource ? new URL(resource) : undefined,
 		resourceMetadataUrl: resource
 			? new URL("/.well-known/oauth-protected-resource/mcp", resource).href
 			: undefined,
-	})
+	}
 	return async (request: Request): Promise<Response> => {
 		// The SDK's challenge and answers call Response.json(), which remix-serve's polyfill lacks.
 		fillWebFetchGaps()
@@ -55,8 +55,21 @@ export function createReadMcpHandler(
 			)
 				return new Response("Origin rejected", { status: 403 })
 		}
-		const auth = await gate(request)
-		if (auth instanceof Response) return auth
+		let auth
+		try {
+			const [header] = (request.headers.get("Authorization") ?? "").split(",")
+			auth = await verifyBearerToken(header || undefined, authOptions)
+		} catch (error) {
+			// No initial scope hint: clients discover both supported scopes from resource metadata.
+			// Enforcement stays read-only at the gate; write calls have their own scope check below.
+			return bearerAuthChallengeResponse(error, {
+				...authOptions,
+				requiredScopes:
+					error instanceof OAuthError && error.code === "invalid_token"
+						? []
+						: authOptions.requiredScopes,
+			})
+		}
 		if (!resource)
 			return new Response("MCP resource is not configured", { status: 503 })
 		const userId = auth.extra?.userId

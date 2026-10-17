@@ -27,8 +27,15 @@ class TMDB:
         self.ids = list(ids)
         self.calls = []
         self.results = {'US': {'flatrate': [{'provider_id': 8}]}}
+        self.stats = dict(requests=0)
+        self.max_requests, self.baseline_limit = 350000, None
 
     def get(self, path, **params):
+        if self.stats['requests'] >= self.max_requests:
+            raise job.RequestBudgetExceeded('Request budget exhausted', endpoint=path)
+        if self.baseline_limit is not None and self.stats['requests'] >= self.baseline_limit:
+            raise job.BaselineBudgetExceeded('Baseline budget exhausted', endpoint=path)
+        self.stats['requests'] += 1
         self.calls.append((path, params))
         if path == '/watch/providers/regions':
             return {'results': [{'iso_3166_1': 'US'}]}
@@ -91,6 +98,18 @@ class Storage:
     def countries(self):
         return [identity.split(':')[0] for identity in self.snapshots]
 
+    def inventory(self):
+        return deepcopy(self.snapshots)
+
+    @contextmanager
+    def country_checkpoints(self):
+        before = deepcopy(self.snapshots)
+        try:
+            yield
+        except BaseException:
+            self.snapshots = before
+            raise
+
     def close(self):
         pass
 
@@ -106,6 +125,143 @@ class DailyListTests(unittest.TestCase):
         return job.run_daily_lists(self.api, self.store, countries=['US'], service_ids=[8],
                                    media_types=['show'], now=datetime.fromisoformat(date), **kwargs)
 
+    def deleted_title_api(self):
+        original = self.api.get
+        def deleted(path, **params):
+            if path.endswith('/42/watch/providers'):
+                self.api.calls.append((path, params))
+                raise job.TMDBDeletedTitle('TMDB deleted title (HTTP 404, status 34)',
+                                           endpoint=path, http_status=404)
+            return original(path, **params)
+        self.api.get = deleted
+        return original
+
+    def test_listed_title_404_preserves_history_and_prior_members_and_retries(self):
+        self.run_day('2026-10-13T20:00:00', dry_run=False)
+        self.store.snapshots['US:show:8']['retry_ids'] = [42]
+        before = deepcopy(self.store.crate.history)
+        self.store.crate.writes.clear()
+        self.deleted_title_api()
+        report = self.run_day('2026-10-14T20:00:00', dry_run=False)
+        self.assertEqual((report['lists_completed'], report['lists_failed']), (1, 0))
+        self.assertEqual(self.store.crate.history, before)
+        self.assertEqual(self.store.crate.writes, [])
+        self.assertEqual(self.store.snapshots['US:show:8']['members'], {'42': ['flatrate']})
+        self.assertEqual(self.store.snapshots['US:show:8']['retry_ids'], [42])
+
+    def test_unlisted_title_404_closes_only_this_country_and_service_unknown(self):
+        self.store.dry_run = False
+        self.api.results = {'US': {'flatrate': [{'provider_id': 8}, {'provider_id': 9}]},
+                            'DE': {'flatrate': [{'provider_id': 8}]}}
+        job.run_daily_lists(self.api, self.store, countries=['US', 'DE'], service_ids=[8, 9],
+                            media_types=['show', 'movie'], now=datetime(2026, 10, 13, 20))
+        before = deepcopy(self.store.crate.history)
+        self.api.ids = []
+        self.deleted_title_api()
+        report = self.run_day('2026-10-14T20:00:00', dry_run=False)
+        self.assertEqual((report['lists_completed'], report['lists_failed']), (1, 0))
+        for key, row in self.store.crate.history.items():
+            if (row['country_code'], row['media_type'], row['streaming_service_id']) == ('US', 'show', 8):
+                self.assertEqual((row['dropped_on'], row['dropped_precision']), (day('2026-10-14'), 'unknown'))
+            else:
+                self.assertEqual(row, before[key])
+        self.assertEqual(self.store.snapshots['US:show:8']['retry_ids'], [])
+
+    def test_day_after_listed_404_is_unknown_and_other_country_stays_open(self):
+        # Reviewer's test_deleted_baseline.py: US is already checkpointed when
+        # the DE baseline gets a 404 for title 42, which both lists still include.
+        self.store.dry_run = False
+        self.api.results = {country: {'flatrate': [{'provider_id': 8}]} for country in ('US', 'DE')}
+        def run(date, countries):
+            return job.run_daily_lists(self.api, self.store, countries=countries, service_ids=[8],
+                media_types=['show'], now=datetime.fromisoformat(date))
+        run('2026-10-13T20:00:00', ['US'])
+        run('2026-10-14T20:00:00', ['US'])
+        before = deepcopy(self.store.crate.history)
+        original = self.deleted_title_api()
+        report = run('2026-10-15T20:00:00', ['DE', 'US'])
+        self.assertEqual(report['lists_failed'], 0)
+        self.assertEqual(self.store.crate.history, before)
+        self.assertEqual(self.store.snapshots['DE:show:8']['ids'], [42])
+        self.assertEqual(self.store.snapshots['DE:show:8']['retry_ids'], [42])
+        self.api.get = original
+        for date in ('2026-10-16T20:00:00', '2026-10-17T20:00:00'):
+            run(date, ['DE', 'US'])
+        us = [row for row in self.store.crate.history.values() if row['country_code'] == 'US']
+        de = [row for row in self.store.crate.history.values() if row['country_code'] == 'DE']
+        self.assertEqual(us, list(before.values()))
+        self.assertEqual(len(de), 1)
+        self.assertEqual(de[0]['appeared_on'], day('2026-10-16'))
+        self.assertEqual(de[0]['appeared_precision'], 'unknown')
+        self.assertIsNone(de[0]['dropped_on'])
+
+    def test_discover_404_reports_its_context_and_other_lists_continue(self):
+        session = Mock()
+        def response(url, **kwargs):
+            if kwargs['params']['with_watch_providers'] == 8:
+                return Mock(status_code=404, json=lambda: {'status_code': 34})
+            return Mock(status_code=200, json=lambda: dict(page=1, total_pages=0, total_results=0, results=[]))
+        session.get.side_effect = response
+        with patch('wmill.get_variable', return_value='fixture-key'), patch('requests.Session', return_value=session):
+            api = job.TMDBClient()
+            api.interval = 0
+            result = job.run_daily_lists(api, self.store, countries=['BR'], service_ids=[8, 11],
+                                        media_types=['show'], now=datetime(2026, 10, 14, 20))
+        self.assertEqual((result['lists_failed'], result['lists_completed']), (1, 1))
+        failure = result['lists'][0]
+        self.assertEqual(failure['key'], 'BR:show:8')
+        self.assertEqual(failure['media_type'], 'show')
+        self.assertIsNone(failure['tmdb_id'])
+        self.assertEqual(failure['endpoint'], '/discover/tv')
+        self.assertEqual(failure['http_status'], 404)
+        self.assertEqual(api.stats['deleted_responses'], 0)
+        self.assertEqual(api.stats['retries'], 0)
+
+    def test_deleted_check_is_shared_across_lists_only_on_the_same_utc_day(self):
+        for crosses_midnight in (False, True):
+            with self.subTest(crosses_midnight=crosses_midnight):
+                api, store = TMDB(), Storage()
+                get = api.get
+                def deleted(path, **params):
+                    if path.endswith('/watch/providers'):
+                        api.calls.append((path, params))
+                        raise job.TMDBDeletedTitle('Deleted title', endpoint=path, http_status=404)
+                    return get(path, **params)
+                first, second = datetime(2026, 10, 13, 23), datetime(2026, 10, 14, 1)
+                times = [first] * 3 + [second if crosses_midnight else first] * 3
+                with patch.object(api, 'get', side_effect=deleted), patch.object(job, 'datetime') as clock:
+                    clock.now.side_effect = times
+                    result = job.run_daily_lists(api, store, countries=['US', 'DE'],
+                                                service_ids=[8], media_types=['show'])
+                self.assertEqual((result['lists_failed'], result['lists_completed']), (0, 2), result)
+                self.assertEqual(sum(path.endswith('/watch/providers') for path, _ in api.calls),
+                                 2 if crosses_midnight else 1)
+
+    def test_unconfirmed_title_404_is_a_contextual_list_failure_and_other_lists_continue(self):
+        self.run_day('2026-10-13T20:00:00', dry_run=False)
+        before = deepcopy(self.store.crate.history)
+        self.store.dry_run = True
+        session = Mock()
+        def response(url, **kwargs):
+            if '/discover/' in url:
+                ids = [42] if kwargs['params']['with_watch_providers'] == 8 else []
+                return Mock(status_code=200, json=lambda: dict(page=1, total_pages=1 if ids else 0,
+                            total_results=len(ids), results=[{'id': i} for i in ids]))
+            return Mock(status_code=404, json=lambda: {'status_code': 99})
+        session.get.side_effect = response
+        with patch('wmill.get_variable', return_value='fixture-key'), patch('requests.Session', return_value=session):
+            api = job.TMDBClient()
+            api.interval = 0
+            result = job.run_daily_lists(api, self.store, countries=['BR'], service_ids=[8, 11],
+                                        media_types=['show'], now=datetime(2026, 10, 14, 20))
+        self.assertEqual((result['lists_failed'], result['lists_completed']), (1, 1))
+        self.assertEqual({k: result['lists'][0][k] for k in ('key', 'media_type', 'tmdb_id', 'endpoint', 'http_status')},
+                         dict(key='BR:show:8', media_type='show', tmdb_id=42,
+                              endpoint='/tv/42/watch/providers', http_status=404))
+        self.assertEqual(self.store.crate.history, before)
+        self.assertEqual(api.stats['deleted_responses'], 0)
+        self.assertEqual(api.stats['retries'], 0)
+
     def test_first_read_records_unknown_baseline_and_dry_run_is_inert(self):
         report = self.run_day('2026-10-14T20:00:00', dry_run=True)
         self.assertEqual(report['lists_completed'], 1)
@@ -113,7 +269,7 @@ class DailyListTests(unittest.TestCase):
         self.assertEqual(self.store.crate.history, {})
         self.run_day('2026-10-14T20:00:00', dry_run=False)
         stay = next(iter(self.store.crate.history.values()))
-        self.assertEqual(stay['appeared_source'], 'title')
+        self.assertEqual(stay['appeared_source'], 'backfill')
         self.assertEqual(stay['appeared_precision'], 'unknown')
         self.assertEqual(stay['appeared_on'], day('2026-10-14'))
         self.assertEqual(self.store.crate.writes, ['REFRESH TABLE availability_history', 'availability_history'])
@@ -132,6 +288,7 @@ class DailyListTests(unittest.TestCase):
         stays = list(self.store.crate.history.values())
         self.assertEqual(len(stays), 2)
         self.assertEqual(stays[0]['appeared_precision'], 'exact')
+        self.assertEqual(stays[0]['appeared_source'], 'title')
         self.assertEqual(stays[0]['appeared_after'], day('2026-10-13'))
         self.assertEqual(stays[0]['dropped_on'], day('2026-10-15'))
         self.assertEqual(stays[0]['dropped_precision'], 'exact')
@@ -213,6 +370,42 @@ class DailyListTests(unittest.TestCase):
         self.assertEqual(self.store.snapshots, {})
         self.assertEqual(self.store.crate.history, {})
         self.assertEqual(self.store.intents, {})
+
+    def test_mixed_page_snapshots_can_recover_a_complete_baseline_on_a_fresh_query(self):
+        original = self.api.get
+        def snapshots(path, **params):
+            if not path.startswith('/discover/'):
+                return original(path, **params)
+            page = params['page']
+            if params.get('vote_count.gte') == 0:
+                total, ids = 5, ([41, 42, 43] if page == 1 else [44, 45])
+            else:
+                # Cached pages straddle one catalog insertion. Both sorts are
+                # torn; only the fresh query supplies the fifth title.
+                total, ids = (5, [41, 42, 43]) if page == 1 else (6, [43, 44])
+            return dict(page=page, total_pages=2, total_results=total,
+                        results=[{'id': tmdb_id} for tmdb_id in ids])
+        self.api.get = snapshots
+        result = self.run_day('2026-10-14T20:00:00', dry_run=False)
+        self.assertEqual((result['lists_completed'], result['lists_failed']), (1, 0), result)
+        self.assertEqual(next(iter(self.store.snapshots.values()))['ids'], [41, 42, 43, 44, 45])
+        self.assertEqual(len(self.store.crate.history), 5)
+        self.assertEqual({row['appeared_precision'] for row in self.store.crate.history.values()}, {'unknown'})
+
+    def test_equivalent_query_retry_rejects_a_different_total_from_the_first_read(self):
+        original = self.api.get
+        def snapshots(path, **params):
+            if not path.startswith('/discover/'):
+                return original(path, **params)
+            retry = params.get('vote_count.gte') == 0
+            return dict(page=params['page'], total_pages=1, total_results=3 if retry else 4,
+                        results=[{'id': i} for i in (41, 42, 43)])
+        self.api.get = snapshots
+        report = self.run_day('2026-10-14T20:00:00', dry_run=False)
+        self.assertEqual(report['lists_failed'], 1)
+        self.assertIn('Retry total 3 differs from first read 4', report['lists'][0]['reason'])
+        self.assertEqual(self.store.snapshots, {})
+        self.assertEqual(self.store.crate.history, {})
 
     def test_large_lists_are_partitioned_without_losing_titles_with_no_release_date(self):
         original = self.api.get

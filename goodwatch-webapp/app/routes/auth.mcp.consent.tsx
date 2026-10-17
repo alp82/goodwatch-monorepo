@@ -1,5 +1,5 @@
 // The consent page an app such as Claude opens when a member connects it (#534: variant B, #570): a page of its own,
-// without the site's navigation. Allow grants everything the app asked for; there is no partial choice.
+// without the site's navigation. The member can narrow a write request to read-only.
 import {
 	BookmarkIcon,
 	ChartBarIcon,
@@ -80,7 +80,18 @@ export default function Consent() {
 						<SignedInAs email={view.email} restartUrl={view.restartUrl} />
 						<List title={`${app.name} can see`} items={CAN_SEE} />
 						{view.canChange ? (
-							<List title={`${app.name} can change`} items={CAN_CHANGE} />
+							<fieldset className="space-y-3 rounded-xl border border-gray-700 p-4">
+								<legend className="px-1 font-semibold text-white">Choose access</legend>
+								<label className="flex items-center gap-3">
+									<input form="mcp-consent" type="radio" name="access" value="read" />
+									Read-only
+								</label>
+								<label className="flex items-center gap-3">
+									<input form="mcp-consent" type="radio" name="access" value="write" defaultChecked />
+									Read and change my GoodWatch
+								</label>
+								<List title="With read and change access" items={CAN_CHANGE} />
+							</fieldset>
 						) : (
 							<p className="rounded-xl border border-gray-800 bg-gray-900/60 p-4 text-sm text-gray-400">
 								{app.name} asked to see only. It can't change anything.
@@ -90,7 +101,7 @@ export default function Consent() {
 					</>
 				)}
 				{/* A plain post: the answer is a redirect to the app, which the browser follows. */}
-				<Form method="post" action={pathname + search} reloadDocument className={leaving ? "hidden" : "flex flex-col-reverse gap-3 sm:flex-row"}>
+				<Form id="mcp-consent" method="post" action={pathname + search} reloadDocument className={leaving ? "hidden" : "flex flex-col-reverse gap-3 sm:flex-row"}>
 					<button
 						type="submit"
 						name="decision"

@@ -166,7 +166,7 @@ try {
 	assert.equal(found.quota.used, 1)
 	assert.equal(found.charged_nano, 8400)
 	assert.equal(paidCalls, 2)
-	assert.equal(found.items.length, 20)
+	assert.equal(found.items.length, 25)
 	assert.match(found.items[0].id, /^movie:20[0-9]{2}$/)
 	assert.match(found.items[0].url, /\/movie\/20[0-9]{2}/)
 	assert.equal(found.ranked, false)

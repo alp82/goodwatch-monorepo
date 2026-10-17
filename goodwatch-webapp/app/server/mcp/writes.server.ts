@@ -79,9 +79,20 @@ export async function writeMemberTool(
 	name: WriteToolName,
 	args: WriteArgs,
 ): Promise<Record<string, unknown>> {
+	const legacyHash = actionHash(name, args)
+	// Canonicalize ignored selectors before hashing, so an ID-only retry replays the same action.
+	if (args.title_id) {
+		const { title_name: _name, year: _year, ...byId } = args
+		args = byId
+	}
 	const hash = actionHash(name, args)
 	const prior = await readAction(userId, args.action_id, hash)
-	if (prior) return prior
+	if (prior) {
+		// Existing exact retries may predate selector normalization. Never re-execute them.
+		if (prior.outcome === "action_id_conflict" && legacyHash !== hash)
+			return (await readAction(userId, args.action_id, legacyHash)) ?? prior
+		return prior
+	}
 	if (name === "set_my_services") {
 		const prepared = await prepareServices(args)
 		if ("result" in prepared) return prepared.result

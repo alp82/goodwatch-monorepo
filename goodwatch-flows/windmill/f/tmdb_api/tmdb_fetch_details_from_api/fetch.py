@@ -11,7 +11,7 @@ import wmill
 from f.data_source.common import get_documents_for_ids
 from f.db.mongodb import init_mongodb, close_mongodb
 from f.tmdb_api.deleted_propagation import propagate_tmdb_deleted
-from f.tmdb_api.provider_evidence import capture_provider_check, snapshot_id
+from f.tmdb_api.provider_evidence import capture_provider_check, snapshot_id, is_tmdb_deleted_response
 from f.tmdb_api.models import TmdbMovieDetails, TmdbTvDetails
 
 
@@ -20,7 +20,6 @@ BUFFER_SELECTED_AT_MINUTES = 10
 TMDB_API_KEY = wmill.get_variable("u/Alp/TMDB_API_KEY")
 
 
-TMDB_STATUS_RESOURCE_NOT_FOUND = 34
 REQUEST_TIMEOUT_SECONDS = 30
 # The job fails when more than this share of the batch failed, so outages stay visible.
 MAX_FAILED_BATCH_RATIO = 0.5
@@ -79,17 +78,6 @@ async def isolate_failure(next_entry, coroutine):
         except Exception as release_error:
             print(f"could not release {next_entry.tmdb_id}: {redact_secrets(release_error)}")
         return failed_entry
-
-
-def is_tmdb_deleted_response(response) -> bool:
-    # Only a 404 carrying TMDB's own "resource not found" code means the title is gone.
-    if response is None or response.status_code != 404:
-        return False
-    try:
-        body = response.json()
-    except ValueError:
-        return False
-    return isinstance(body, dict) and body.get("status_code") == TMDB_STATUS_RESOURCE_NOT_FOUND
 
 
 async def fetch_api_data(

@@ -1,0 +1,294 @@
+"""Automatic ramp through the daily job's public entrypoint."""
+from contextlib import contextmanager
+from copy import deepcopy
+from datetime import datetime, timezone
+import os
+from pathlib import Path
+import types
+from uuid import uuid4
+import unittest
+from unittest.mock import Mock, patch
+
+from test_daily_provider_lists import Storage
+from f.tmdb_api import daily_provider_lists as job
+
+
+class RampStorage(Storage):
+    def inventory(self):
+        return {key: deepcopy(value) for key, value in self.snapshots.items()}
+
+    @contextmanager
+    def country_checkpoints(self):
+        before = deepcopy(self.snapshots)
+        try:
+            yield
+        except BaseException:
+            self.snapshots = before
+            raise
+
+
+class FixedDateTime(datetime):
+    @classmethod
+    def now(cls, tz=None):
+        return datetime(2026, 10, 17, 14, tzinfo=timezone.utc)
+
+
+class DailyRampTests(unittest.TestCase):
+    def setUp(self):
+        self.store = RampStorage()
+        self.store.dry_run = False
+        self.calls = []
+        self.ids = {country: [42] for country in ('AR', 'DE', 'US')}
+        self.session = Mock()
+        self.session.get.side_effect = self.respond
+
+    def respond(self, url, **kwargs):
+        params = kwargs['params']
+        self.calls.append((url, params))
+        if '/discover/' in url:
+            ids = self.ids[params['watch_region']]
+            body = dict(page=1, total_pages=1 if ids else 0, total_results=len(ids),
+                        results=[{'id': i} for i in ids])
+        else:
+            body = dict(id=int(url.split('/')[-3]), results={country: {'flatrate': [{'provider_id': 8}]}
+                        for country in self.ids})
+        return Mock(status_code=200, json=lambda: body)
+
+    def checkpoint(self, country, media):
+        self.store.snapshots[f'{country}:{media}:8'] = dict(
+            checked_at=int(datetime(2026, 10, 16, 14, tzinfo=timezone.utc).timestamp() * 1000),
+            ids=[42], members={'42': ['flatrate']}, retry_ids=[], complete=True, cache_bypassed=True)
+
+    def run_job(self, **kwargs):
+        options = dict(countries=list(self.ids), service_ids=[8], dry_run=self.store.dry_run,
+                       baseline_max_requests=100, baseline_max_memberships=2)
+        options.update(kwargs)
+        client_type = job.TMDBClient
+        def client(*args, **options):
+            value = client_type(*args, **options)
+            value.interval = 0
+            return value
+        with patch('wmill.get_variable', return_value='fixture-key'), \
+             patch('requests.Session', return_value=self.session), \
+             patch.object(job, 'TMDBClient', side_effect=client), \
+             patch.object(job, 'create_list_storage', return_value=self.store), \
+             patch.object(job, 'datetime', FixedDateTime):
+            return job.main(**options)
+
+    def test_rereads_checkpoints_first_then_admits_only_whole_countries_in_order(self):
+        self.checkpoint('US', 'movie')
+        self.checkpoint('US', 'show')
+        report = self.run_job(baseline_max_memberships=3)
+        discover_countries = [params['watch_region'] for url, params in self.calls if '/discover/' in url]
+        self.assertEqual(discover_countries[:2], ['US', 'US'])
+        self.assertEqual(report['countries_started'], ['AR'])
+        self.assertEqual(report['countries_remaining'], ['DE'])
+        self.assertEqual(report['requests_rereads'], 2)
+        self.assertEqual(report['requests_new_baselines'], 6)  # Includes DE's deferred discovery reads.
+        self.assertEqual(set(self.store.snapshots), {'US:movie:8', 'US:show:8', 'AR:movie:8', 'AR:show:8'})
+        self.assertEqual({row['appeared_precision'] for row in self.store.crate.history.values()}, {'unknown'})
+        self.assertEqual({row['appeared_source'] for row in self.store.crate.history.values()}, {'backfill'})
+
+    def test_report_warns_when_the_next_country_cannot_fit_after_progress(self):
+        self.ids = {'AR': [42], 'DE': [42]}
+        report = self.run_job(baseline_max_memberships=3)
+        self.assertEqual(report['baseline_deferred_country'], 'DE')
+        self.assertEqual(report['baseline_deferred_reason'], 'memberships')
+        namespace = {}
+        exec((Path(job.__file__).parent / 'read_daily_provider_lists.flow/report.inline_script.py').read_text(), namespace)
+        with self.assertWarnsRegex(RuntimeWarning, 'DE.*memberships'):
+            self.assertIs(namespace['main'](report), report)
+
+    def test_report_fails_when_the_first_country_cannot_fit_the_daily_budget(self):
+        self.ids = {'AR': [42, 43]}
+        for limits in ({'baseline_max_memberships': 3}, {'baseline_max_requests': 3}):
+            with self.subTest(limits=limits):
+                report = self.run_job(**limits)
+                self.assertEqual(report['baseline_deferred_country'], 'AR')
+                self.assertEqual(report['baseline_deferred_reason'], 'country_exceeds_budget')
+                namespace = {}
+                exec((Path(job.__file__).parent / 'read_daily_provider_lists.flow/report.inline_script.py').read_text(), namespace)
+                with self.assertRaisesRegex(RuntimeError, 'AR.*budget'):
+                    namespace['main'](report)
+                self.assertEqual(self.store.snapshots, {})
+
+    def test_oldest_checkpoints_are_reread_first_after_budget_starvation(self):
+        for country in ('AR', 'US'):
+            for media in ('movie', 'show'):
+                self.checkpoint(country, media)
+        self.store.snapshots['US:show:8']['checked_at'] -= 86400000
+        self.run_job(max_requests=1)
+        discover = [(params['watch_region'], '/discover/tv' in url)
+                    for url, params in self.calls if '/discover/' in url]
+        self.assertEqual(discover, [('US', True)])
+
+    def test_request_budget_during_country_confirmation_starts_none_of_its_lists(self):
+        self.ids = {'AR': [42]}
+        report = self.run_job(baseline_max_requests=3)
+        self.assertEqual(report['countries_started'], [])
+        self.assertEqual(report['countries_remaining'], ['AR'])
+        self.assertEqual(report['requests_new_baselines'], 3)
+        self.assertEqual(report['baseline_deferred_reason'], 'country_exceeds_budget')
+        self.assertEqual(self.store.snapshots, {})
+        self.assertEqual(self.store.crate.history, {})
+
+    def test_rereads_that_exhaust_the_hard_budget_report_no_new_countries(self):
+        self.checkpoint('US', 'movie')
+        self.checkpoint('US', 'show')
+        report = self.run_job(max_requests=1)
+        self.assertTrue(report['rereads_budget_exceeded'])
+        self.assertFalse(report['rereads_complete'])
+        self.assertEqual(report['countries_started'], [])
+        self.assertEqual(report['requests_rereads'], 1)
+        self.assertEqual(report['requests_new_baselines'], 0)
+        self.assertEqual(report['baseline_deferred_reason'], 'rereads_exceed_hard_budget')
+        self.assertFalse(any(key.startswith('AR:') or key.startswith('DE:') for key in self.store.snapshots))
+
+    def test_failed_country_publishes_no_checkpoints_and_does_not_stall_the_next_country(self):
+        self.ids = {'AR': [42], 'DE': [42]}
+        respond = self.respond
+        def fail_show(url, **kwargs):
+            if '/discover/tv' in url and kwargs['params']['watch_region'] == 'AR':
+                return Mock(status_code=404)
+            return respond(url, **kwargs)
+        self.session.get.side_effect = fail_show
+        report = self.run_job()
+        self.assertEqual(report['countries_started'], ['DE'])
+        self.assertEqual(report['countries_remaining'], ['AR'])
+        self.assertEqual(set(self.store.snapshots), {'DE:movie:8', 'DE:show:8'})
+        self.assertEqual(report['lists_failed'], 2)
+        failures = [item for item in report['lists'] if 'error' in item]
+        self.assertEqual({item['key'] for item in failures}, {'AR:movie:8', 'AR:show:8'})
+        failure = next(item for item in failures if item['key'] == 'AR:show:8')
+        self.assertEqual(failure['key'], 'AR:show:8')
+        self.assertEqual(failure['endpoint'], '/discover/tv')
+        self.assertEqual(failure['media_type'], 'show')
+
+    def test_zero_membership_budget_rereads_but_does_not_probe_new_countries(self):
+        self.checkpoint('US', 'movie')
+        self.checkpoint('US', 'show')
+        report = self.run_job(baseline_max_memberships=0)
+        self.assertEqual(report['requests_rereads'], 2)
+        self.assertEqual(report['requests_new_baselines'], 0)
+        self.assertEqual(report['countries_remaining'], ['AR', 'DE'])
+        self.assertEqual(report['baseline_deferred_reason'], 'memberships')
+
+    def test_next_day_rereads_new_checkpoints_before_starting_the_next_country(self):
+        self.ids = {'AR': [42], 'DE': [42]}
+        first = self.run_job()
+        self.assertEqual(first['countries_started'], ['AR'])
+        for snapshot in self.store.snapshots.values():
+            snapshot['checked_at'] -= 86400000
+        self.calls.clear()
+        second = self.run_job()
+        discover = [params['watch_region'] for url, params in self.calls if '/discover/' in url]
+        self.assertEqual(discover, ['AR', 'AR', 'DE', 'DE'])
+        self.assertEqual(second['countries_started'], ['DE'])
+        self.assertEqual(second['countries_remaining'], [])
+        self.assertTrue(second['ramp_complete'])
+        self.assertEqual(second['requests_rereads'], 2)
+        self.assertEqual(second['requests_new_baselines'], 4)
+        self.calls.clear()
+        for snapshot in self.store.snapshots.values():
+            snapshot['checked_at'] -= 86400000
+        third = self.run_job(baseline_max_requests=0)
+        self.assertEqual(third['requests_rereads'], 4)
+        self.assertEqual(third['requests_new_baselines'], 0)
+        self.assertEqual(third['countries_started'], [])
+        self.assertTrue(third['ramp_complete'])
+
+    def test_retained_country_checkpoints_are_reread_even_if_tmdb_drops_the_country(self):
+        self.checkpoint('US', 'movie')
+        self.checkpoint('US', 'show')
+        report = self.run_job(countries=['AR'], baseline_max_requests=0)
+        self.assertEqual(report['requests_rereads'], 2)
+        self.assertEqual(report['countries_remaining'], ['AR'])
+        self.assertEqual(report['countries_started'], [])
+
+    def test_windmill_entry_module_reports_a_normal_country_budget_stop(self):
+        # Windmill executes the entry script separately from its f.* import.
+        entry = types.ModuleType('windmill_entry')
+        source = Path(job.__file__).read_text()
+        exec(compile(source, 'windmill_entry', 'exec'), entry.__dict__)
+        self.ids = {'AR': [42]}
+        with patch('wmill.get_variable', return_value='fixture-key'), \
+             patch('requests.Session', return_value=self.session), \
+             patch.object(entry, 'create_list_storage', return_value=self.store), \
+             patch.object(job, 'create_list_storage', return_value=self.store):
+            report = entry.main(countries=['AR'], service_ids=[8], dry_run=False,
+                                baseline_max_requests=3, baseline_max_memberships=2,
+                                requests_per_second=20)
+        self.assertEqual(report['lists_failed'], 0)
+        self.assertEqual(report['baseline_deferred_reason'], 'country_exceeds_budget')
+        self.assertEqual(report['countries_started'], [])
+        self.assertEqual(self.store.snapshots, {})
+
+    def test_invalid_budgets_are_rejected_before_network_or_storage_access(self):
+        for options in ({'max_requests': 350001}, {'max_requests': 0},
+                        {'baseline_max_requests': -1}, {'baseline_max_memberships': -1},
+                        {'baseline_max_memberships': True}):
+            with self.subTest(options=options), self.assertRaises(ValueError):
+                self.run_job(**options)
+        self.assertEqual(self.calls, [])
+
+    def test_real_storage_dry_run_plans_the_ramp_without_data_publication(self):
+        import mongomock
+        from f.tmdb_api.daily_list_storage import ListStorage
+        from test_daily_provider_lists import HistoryCrate
+        db, crate = mongomock.MongoClient().db, HistoryCrate()
+        self.store = ListStorage(db=db, connector=crate, dry_run=True)
+        report = self.run_job()
+        self.assertEqual(report['countries_started'], ['AR'])
+        self.assertEqual(db.list_collection_names(), ['tmdb_daily_provider_list_leases'])
+        self.assertEqual(db.tmdb_daily_provider_list_leases.count_documents({}), 0)
+        self.assertEqual(crate.history, {})
+        self.assertEqual(crate.writes, [])
+        self.assertEqual(self.store.stats['planned_exact_arrivals'], 0)
+        self.assertEqual(self.store.stats['planned_exact_drops'], 0)
+
+
+@unittest.skipUnless(os.environ.get('TEST_MONGO_URL'), 'Opt in to a disposable localhost replica set')
+class DailyRampMongoTests(unittest.TestCase):
+    run_job = DailyRampTests.run_job
+    respond = DailyRampTests.respond
+    def setUp(self):
+        DailyRampTests.setUp(self)
+        from pymongo import MongoClient
+        from urllib.parse import urlsplit
+        url = os.environ['TEST_MONGO_URL']
+        if urlsplit(url).hostname not in ('localhost', '127.0.0.1'):
+            raise ValueError('Mongo test must use localhost')
+        self.mongo = MongoClient(url)
+        self.db = self.mongo['gw682_test_' + uuid4().hex]
+        self.addCleanup(self.mongo.close)
+        self.addCleanup(lambda: self.mongo.drop_database(self.db.name))
+
+    def test_country_checkpoint_transaction_aborts_all_lists_on_a_late_storage_failure(self):
+        from pymongo.synchronous.collection import Collection
+        from f.tmdb_api.daily_list_storage import ListStorage
+        from test_daily_provider_lists import HistoryCrate
+        self.ids = {'AR': [42]}
+        crate = HistoryCrate()
+        self.store = ListStorage(db=self.db, connector=crate, dry_run=False)
+        replace = Collection.replace_one
+        def fail_second(collection, selector, *args, **kwargs):
+            if collection.name == 'tmdb_daily_provider_lists' and selector['_id'] == 'AR:show:8':
+                raise RuntimeError('Injected late checkpoint failure')
+            return replace(collection, selector, *args, **kwargs)
+        with patch.object(Collection, 'replace_one', new=fail_second):
+            failed = self.run_job()
+        self.assertEqual(failed['lists_failed'], 2)
+        self.assertEqual(failed['countries_started'], [])
+        self.assertEqual(self.db.tmdb_daily_provider_lists.count_documents({}), 0)
+        self.assertEqual(self.db.tmdb_daily_provider_list_pending.count_documents({}), 2)
+        # A retry reuses durable intents and commits the whole country.
+        recovered = self.run_job()
+        self.assertEqual(recovered['lists_failed'], 0)
+        self.assertEqual(recovered['countries_started'], ['AR'])
+        self.assertEqual(self.db.tmdb_daily_provider_lists.count_documents({}), 2)
+        self.assertEqual(self.db.tmdb_daily_provider_list_pending.count_documents({}), 0)
+        self.assertTrue(all(row['appeared_precision'] == 'unknown' for row in crate.history.values()))
+
+
+if __name__ == '__main__':
+    unittest.main()

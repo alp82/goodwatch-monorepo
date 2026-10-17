@@ -1,45 +1,54 @@
 summary: Read the big brands' service lists daily
 description: >-
-  Proposed schedule 14:00 UTC daily. Fresh discover reads with completeness gates,
-  fresh per-title confirmation, and shared availability-history precision rules.
-  Dry runs take only an operational Mongo run lease; history reads use SELECT. Never writes streaming_availability.
+  Proposed schedule 14:00 UTC daily. Fresh discover reads with completeness
+  gates, fresh per-title confirmation, and shared availability-history precision
+  rules. Dry runs take only an operational Mongo run lease; history reads use
+  SELECT. Never writes streaming_availability.
 value:
   modules:
     - id: lists
       value:
-        type: script
         path: f/tmdb_api/daily_provider_lists
+        type: script
         input_transforms:
-          countries:
-            type: javascript
-            expr: flow_input.countries
-          service_ids:
-            type: javascript
-            expr: flow_input.service_ids
           dry_run:
-            type: javascript
             expr: flow_input.dry_run
-          requests_per_second:
             type: javascript
-            expr: flow_input.requests_per_second
+          countries:
+            expr: flow_input.countries
+            type: javascript
+          service_ids:
+            expr: flow_input.service_ids
+            type: javascript
           max_requests:
-            type: javascript
             expr: flow_input.max_requests
-      timeout: 28800
+            type: javascript
+          requests_per_second:
+            expr: flow_input.requests_per_second
+            type: javascript
+          baseline_max_requests:
+            expr: flow_input.baseline_max_requests
+            type: javascript
+          baseline_max_memberships:
+            expr: flow_input.baseline_max_memberships
+            type: javascript
+      timeout:
+        type: static
+        value: 28800
     - id: report
       value:
+        lock: '!inline report.inline_script.lock'
         type: rawscript
+        content: '!inline report.inline_script.py'
         language: python3
-        lock: ''
         input_transforms:
           report:
-            type: javascript
             expr: results.lists
-        content: '!inline report.inline_script.py'
+            type: javascript
   concurrent_limit: 1
   concurrency_time_window_s: 0
 schema:
-  $schema: https://json-schema.org/draft/2020-12/schema
+  $schema: 'https://json-schema.org/draft/2020-12/schema'
   type: object
   properties:
     countries:
@@ -60,8 +69,19 @@ schema:
       default: 15
       exclusiveMinimum: 0
       maximum: 20
+    baseline_max_requests:
+      type: integer
+      default: 120000
+      minimum: 0
+      description: Maximum HTTP requests for new countries after checkpoint rereads.
+    baseline_max_memberships:
+      type: integer
+      default: 570000
+      minimum: 0
+      description: Maximum new title/list checks; admit complete countries only.
     max_requests:
       type: integer
       default: 350000
       minimum: 1
+      maximum: 350000
   required: []

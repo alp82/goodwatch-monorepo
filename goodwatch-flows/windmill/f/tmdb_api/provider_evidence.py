@@ -9,6 +9,17 @@ HISTORY_OFFER_TYPES = ("flatrate", "free", "ads")
 OFFER_TYPES = ("flatrate", "free", "ads", "rent", "buy")
 
 
+def is_tmdb_deleted_response(response) -> bool:
+    """Only TMDB's own 404 / status code 34 confirms a deleted title."""
+    if response is None or response.status_code != 404:
+        return False
+    try:
+        body = response.json()
+    except ValueError:
+        return False
+    return isinstance(body, dict) and body.get('status_code') == 34
+
+
 def utc_ms(value):
     if not isinstance(value, datetime):
         return None

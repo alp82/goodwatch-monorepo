@@ -21,3 +21,22 @@ export const selected = z
 		(value) => Boolean(value.title_id) !== Boolean(value.title_name),
 		"Exactly one title_id or title_name is required",
 	)
+
+export const writeSelected = z
+	.object({
+		...selector,
+		title_id: selector.title_id.describe(
+			"Use this ID when available; it takes precedence over title_name and year.",
+		),
+		title_name: selector.title_name.describe(
+			"Required only without title_id. Ignored when an ID is supplied.",
+		),
+		year: selector.year.describe(
+			"Optional name disambiguation, used only without title_id.",
+		),
+	})
+	.strict()
+	.refine(
+		(value) => Boolean(value.title_id || value.title_name),
+		"Provide title_id, or title_name with an optional year. When title_id is present it takes precedence.",
+	)

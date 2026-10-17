@@ -27,6 +27,9 @@ for n in [1,2]:
 pending_args = {'title_id': 'movie:3000', 'action_id': 'pending-local-movie'}
 pending_hash = hashlib.sha256(json.dumps({'name': 'log_watch', 'args': pending_args}, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
 insert('user_mcp_action', user_id='mcp-writer-A', action_id='pending-local-movie', request_hash=pending_hash, owner_id='seeded-pending-owner', result=json.dumps({'outcome': 'indeterminate', 'action_id': 'pending-local-movie', 'replayed': False, 'title': {'id': 'movie:3000'}, 'message': 'An earlier attempt may have applied. Inspect this title before retrying.'}), created_at=now, updated_at=now)
+legacy_args = {'title_id': 'movie:3000', 'year': 2019, 'want_to_see': True, 'action_id': 'legacy-id-and-year'}
+legacy_hash = hashlib.sha256(json.dumps({'name': 'set_want_to_see', 'args': legacy_args}, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
+insert('user_mcp_action', user_id='mcp-writer-A', action_id='legacy-id-and-year', request_hash=legacy_hash, owner_id='legacy-owner', result=json.dumps({'outcome': 'applied', 'action_id': 'legacy-id-and-year', 'replayed': False, 'title': {'id': 'movie:3000', 'name': 'Harbor', 'year': 2019, 'url': 'http://localhost:3336/movie/3000-harbor'}, 'after': {'want_to_see': True}}), created_at=now, updated_at=now)
 for table in ['user_mcp_action', 'user_watch_state', 'user_watch_log', 'user_score', 'user_wishlist', 'user_not_interested', 'user_setting']:
     sql(f'REFRESH TABLE {table}')
 print('Reset local write-probe members only')

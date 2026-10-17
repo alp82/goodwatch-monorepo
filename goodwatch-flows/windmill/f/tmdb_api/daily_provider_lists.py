@@ -17,10 +17,11 @@ import tempfile
 import zlib
 from email.utils import parsedate_to_datetime
 from uuid import uuid4
+from contextlib import nullcontext
 
 from f.sync.availability_history import HistoryTitle, ListRead, OfferKey
 from f.tmdb_api.daily_list_storage import LeaseBusy, LeaseLost
-from f.tmdb_api.provider_evidence import HISTORY_OFFER_TYPES, capture_provider_check, utc_day, utc_ms, validated_results
+from f.tmdb_api.provider_evidence import HISTORY_OFFER_TYPES, capture_provider_check, utc_day, utc_ms, validated_results, is_tmdb_deleted_response
 
 # TMDB service IDs and names, including each brand's direct tiers.
 SERVICE_NAMES = {
@@ -33,6 +34,14 @@ SERVICE_NAMES = {
 
 
 class TMDBReadError(RuntimeError):
+    def __init__(self, message, *, endpoint=None, http_status=None):
+        super().__init__(message)
+        self.endpoint, self.http_status = endpoint, http_status
+        parts = (endpoint or '').strip('/').split('/')
+        self.tmdb_id = int(parts[1]) if len(parts) > 1 and parts[1].isdigit() else None
+
+
+class TMDBDeletedTitle(TMDBReadError):
     pass
 
 
@@ -44,18 +53,25 @@ class RequestBudgetExceeded(TMDBReadError):
     pass
 
 
+class BaselineBudgetExceeded(RequestBudgetExceeded):
+    pass
+
+
 class TMDBClient:
     """One paced budget shared by all six HTTP workers, including retries."""
     def __init__(self, requests_per_second=15, max_requests=350000):
         import wmill
         if not 0 < requests_per_second <= 20:
             raise ValueError('requests_per_second must be greater than zero and at most 20')
+        if type(max_requests) is not int or not 1 <= max_requests <= 350000:
+            raise ValueError('max_requests must be an integer between 1 and 350000')
         self.key = wmill.get_variable('u/Alp/TMDB_API_KEY')
         self.interval, self.max_requests = 1 / requests_per_second, max_requests
         self.lock, self.local = threading.Lock(), threading.local()
         self.next_request = 0
         self.access_denied = None
-        self.stats = dict(requests=0, retries=0, refused=0, discover=0, title=0, catalog=0)
+        self.baseline_limit = None
+        self.stats = dict(requests=0, retries=0, refused=0, discover=0, title=0, catalog=0, deleted_responses=0)
 
     def get(self, path, **params):
         import requests
@@ -64,7 +80,9 @@ class TMDBClient:
         for attempt in range(6):
             with self.lock:
                 if self.stats['requests'] >= self.max_requests:
-                    raise RequestBudgetExceeded('Daily list request budget exhausted')
+                    raise RequestBudgetExceeded('Daily list request budget exhausted', endpoint=path)
+                if self.baseline_limit is not None and self.stats['requests'] >= self.baseline_limit:
+                    raise BaselineBudgetExceeded('New baseline request budget exhausted', endpoint=path)
                 while self.next_request > time.monotonic():
                     time.sleep(max(0, min(1, self.next_request - time.monotonic())))
                 if self.access_denied is not None:
@@ -81,15 +99,18 @@ class TMDBClient:
                 try:
                     return response.json()
                 except ValueError:
-                    raise TMDBReadError('Invalid TMDB JSON') from None
+                    raise TMDBReadError('Invalid TMDB JSON', endpoint=path, http_status=200) from None
             status = response.status_code if response is not None else None
+            if path.endswith('/watch/providers') and is_tmdb_deleted_response(response):
+                self.stats['deleted_responses'] += 1
+                raise TMDBDeletedTitle('TMDB deleted title (HTTP 404, status 34)', endpoint=path, http_status=404)
             if status in (401, 403):
-                self.access_denied = TMDBAccessDenied(f'TMDB HTTP {status}')
+                self.access_denied = TMDBAccessDenied(f'TMDB HTTP {status}', endpoint=path, http_status=status)
                 raise self.access_denied
             if status is not None and status != 429 and status < 500:
-                raise TMDBReadError(f'TMDB HTTP {status}')
+                raise TMDBReadError(f'TMDB HTTP {status}', endpoint=path, http_status=status)
             if attempt == 5:
-                raise TMDBReadError('TMDB retry budget exhausted')
+                raise TMDBReadError('TMDB retry budget exhausted', endpoint=path, http_status=status)
             delay = 2 ** attempt
             with self.lock:
                 self.stats['retries'] += 1
@@ -119,11 +140,20 @@ def get_many(client, calls):
 
 def title_checks(client, api_media, ids, clock):
     def read(tmdb_id):
-        payload = client.get(f'/{api_media}/{tmdb_id}/watch/providers')
-        if type(payload.get('id')) is not int or payload['id'] != tmdb_id or validated_results(payload) is None:
-            raise TMDBReadError('Invalid service response or mismatched title identity')
-        return tmdb_id, payload, capture_provider_check(
-            {'id': payload['id'], 'watch/providers': payload}, tmdb_id, clock(), bypass_cache=True)
+        endpoint = f'/{api_media}/{tmdb_id}/watch/providers'
+        try:
+            payload = client.get(endpoint)
+            if (not isinstance(payload, dict) or type(payload.get('id')) is not int
+                    or payload['id'] != tmdb_id or validated_results(payload) is None):
+                raise TMDBReadError('Invalid service response or mismatched title identity', endpoint=endpoint)
+            return tmdb_id, payload, capture_provider_check(
+                {'id': payload['id'], 'watch/providers': payload}, tmdb_id, clock(), bypass_cache=True)
+        except TMDBDeletedTitle:
+            return tmdb_id, None, {'checked_at': utc_ms(clock()), 'deleted': True}
+        except Exception as error:
+            if getattr(error, 'endpoint', None) is None:
+                error.endpoint, error.tmdb_id = endpoint, tmdb_id
+            raise
     with ThreadPoolExecutor(max_workers=6) as workers:
         return list(workers.map(read, ids))
 
@@ -154,6 +184,12 @@ class TitleChecks:
             row = self.db.execute('SELECT payload FROM checks WHERE media = ? AND id = ?', (media, tmdb_id)).fetchone()
             if row:
                 _, payload, proof = json.loads(zlib.decompress(row[0]))
+                if proof.get('deleted'):
+                    if utc_day(proof['checked_at']) == utc_day(list_at):
+                        found[tmdb_id] = (tmdb_id, payload, proof)
+                    else:
+                        missing.append(tmdb_id)
+                    continue
                 matches = bool(eligible_kinds(payload, country, service_id))
                 # Reuse today's one all-country check, but recheck a conflict
                 # discovered after it. Retain the actual HTTP observation time.
@@ -181,8 +217,10 @@ def read_list(client, country, media_type, service_id, diagnostics=None):
     params = dict(watch_region=country, with_watch_providers=service_id,
                   with_watch_monetization_types='flatrate|free|ads', include_adult='false')
     diagnostics = {} if diagnostics is None else diagnostics
-    diagnostics.update(sort_fallbacks=0, partitions=0)
-    def read_range(lo=None, hi=None):
+    diagnostics.update(sort_fallbacks=0, partitions=0, query_retries=0)
+    first_total = None
+    def read_range(lo=None, hi=None, expected_total=None):
+        nonlocal first_total
         extra = {}
         if lo is not None:
             extra['vote_count.gte'] = lo
@@ -194,6 +232,10 @@ def read_list(client, country, media_type, service_id, diagnostics=None):
                 diagnostics['sort_fallbacks'] += 1
             first = client.get('/discover/' + api_media, **params, **extra, sort_by=sort, page=1)
             total, pages = first['total_results'], first['total_pages']
+            if first_total is None:
+                first_total = total
+            if expected_total is not None and total != expected_total:
+                raise IncompleteList(f'Retry total {total} differs from first read {expected_total}')
             if expected is not None and total != expected:
                 ids.clear()  # A changed total needs an independently complete second read.
             expected = total
@@ -225,7 +267,15 @@ def read_list(client, country, media_type, service_id, diagnostics=None):
                 return sorted(ids)
         raise IncompleteList(f'Expected {expected} distinct titles, read {last_count}')
 
-    return read_range()
+    try:
+        return read_range()
+    except IncompleteList:
+        # cb bypasses the CDN, but TMDB can retain mixed origin page snapshots.
+        # A nonnegative vote floor keeps the same catalog on another query key.
+        # Discard both failed traversals; require full counts/stable metadata
+        # again, with no further query retry if this traversal is also torn.
+        diagnostics['query_retries'] = 1
+        return read_range(0, expected_total=first_total if first_total < 20001 else None)
 
 
 def list_candidates(store, identity, previous, listed, country, media_type, service_id):
@@ -248,9 +298,25 @@ def publish_list_changes(store, title_reads, country, media_type, service_id, li
         metadata = store.details(media_type, batch)
         for tmdb_id, payload, proof in title_reads.read(api_media, batch, country, service_id, listed, at):
             if utc_day(proof['checked_at']) != utc_day(at):
-                raise IncompleteList('List read crossed UTC midnight')
-            details = metadata.get(tmdb_id, {}) | {'watch_providers': payload, 'watch_providers_check': proof}
-            kinds = eligible_kinds(payload, country, service_id)
+                error = IncompleteList('List read crossed UTC midnight')
+                error.tmdb_id, error.endpoint = tmdb_id, f'/{api_media}/{tmdb_id}/watch/providers'
+                raise error
+            if proof.get('deleted'):
+                listed_conflict = tmdb_id in listed
+                print(json.dumps(dict(event='tmdb_missing_conflict' if listed_conflict else 'tmdb_missing',
+                    key=f'{country}:{media_type}:{service_id}', media_type=media_type, tmdb_id=tmdb_id,
+                    endpoint=f'/{api_media}/{tmdb_id}/watch/providers', http_status=404, tmdb_status_code=34)), flush=True)
+                if listed_conflict:
+                    retry_ids.append(tmdb_id)
+                    continue  # Discover still lists it: preserve members and publish nothing.
+                # Only the omitted list's keys are removal intents. A 404 cannot
+                # establish an exact day or signal a title-wide deletion here.
+                details = {'updated_at': datetime.fromtimestamp(proof['checked_at'] / 1000, timezone.utc),
+                           'watch_providers_check': proof}
+                kinds = []
+            else:
+                details = metadata.get(tmdb_id, {}) | {'watch_providers': payload, 'watch_providers_check': proof}
+                kinds = eligible_kinds(payload, country, service_id)
             keys = [OfferKey(tmdb_id, media_type, country, service_id, kind) for kind in kinds]
             rows = {key: key._asdict() for key in keys}
             members[str(tmdb_id)] = kinds
@@ -262,7 +328,8 @@ def publish_list_changes(store, title_reads, country, media_type, service_id, li
             removed = [OfferKey(tmdb_id, media_type, country, service_id, kind)
                        for kind in HISTORY_OFFER_TYPES if kind not in kinds]
             title = HistoryTitle(tmdb_id, details, rows, {}, [], removed,
-                ListRead(country, service_id, at, prior.get('checked_at'), tuple(prior_kinds), bool(prior_kinds),
+                ListRead(country, service_id, at, prior.get('checked_at'), tuple(prior_kinds),
+                         bool(prior_kinds) or tmdb_id in prior.get('ids', []),
                          prior.get('complete') is True, prior.get('cache_bypassed') is True))
             store.publish(media_type, title, owned)
     return members, retry_ids
@@ -276,7 +343,12 @@ def read_daily_list(client, store, title_reads, country, media_type, service_id,
         if previous and utc_day(previous['checked_at']) >= utc_day(at):
             return None
         diagnostics = {}
-        ids = read_list(client, country, media_type, service_id, diagnostics)
+        try:
+            ids = read_list(client, country, media_type, service_id, diagnostics)
+        except Exception as error:
+            if getattr(error, 'endpoint', None) is None:
+                error.endpoint = '/discover/' + ('tv' if media_type == 'show' else 'movie')
+            raise
         listed = set(ids)
         candidates = list_candidates(store, identity, previous, listed, country, media_type, service_id)
         members, retry_ids = publish_list_changes(store, title_reads, country, media_type, service_id,
@@ -293,64 +365,56 @@ def read_daily_list(client, store, title_reads, country, media_type, service_id,
                     retry_titles=len(retry_ids), **diagnostics)
 
 
-def run_daily_lists(client, store, *, countries, service_ids, media_types=('movie', 'show'), now=None):
+def list_failure(country, media_type, service_id, error):
+    endpoint = getattr(error, 'endpoint', None)
+    if endpoint is None and isinstance(error, IncompleteList):
+        endpoint = '/discover/' + ('tv' if media_type == 'show' else 'movie')
+    failure = dict(key=f'{country}:{media_type}:{service_id}', media_type=media_type,
+                   tmdb_id=getattr(error, 'tmdb_id', None), endpoint=endpoint,
+                   http_status=getattr(error, 'http_status', None), error=type(error).__name__)
+    if isinstance(error, (IncompleteList, TMDBReadError)):
+        failure['reason'] = str(error)
+    return failure
+
+
+def run_daily_lists(client, store, *, countries, service_ids, media_types=('movie', 'show'), now=None,
+                    scopes=None, title_reads=None, report=None):
     clock = (lambda: now) if now else (lambda: datetime.now(timezone.utc))
-    report = dict(lists_completed=0, lists_failed=0, lists_skipped=0, dry_run=store.dry_run, lists=[])
-    consecutive_failures = 0
-    with TitleChecks(client, clock) as title_reads:
-        for country, media_type, service_id in product(countries, media_types, service_ids):
+    if report is None:
+        report = dict(lists_completed=0, lists_failed=0, lists_skipped=0, dry_run=store.dry_run, lists=[])
+    with (nullcontext(title_reads) if title_reads is not None else TitleChecks(client, clock)) as title_reads:
+        for country, media_type, service_id in (product(countries, media_types, service_ids) if scopes is None else scopes):
             try:
                 summary = read_daily_list(client, store, title_reads, country, media_type, service_id, clock)
                 if summary is None:
                     report['lists_skipped'] += 1
                     continue
-                consecutive_failures = 0
+                client.consecutive_list_failures = 0
                 report['lists_completed'] += 1
                 report['lists'].append(summary)
                 print(json.dumps(summary), flush=True)
             except LeaseBusy:
                 report['lists_skipped'] += 1
-            except (RequestBudgetExceeded, TMDBAccessDenied, LeaseLost):
+            except (RequestBudgetExceeded, TMDBAccessDenied, LeaseLost) as error:
+                print(json.dumps(list_failure(country, media_type, service_id, error)), flush=True)
                 raise
             except Exception as error:
                 report['lists_failed'] += 1
-                failure = dict(key=f'{country}:{media_type}:{service_id}', error=type(error).__name__)
-                if isinstance(error, (IncompleteList, TMDBReadError)):
-                    failure['reason'] = str(error)
+                failure = list_failure(country, media_type, service_id, error)
                 report['lists'].append(failure)
                 print(json.dumps(failure), flush=True)
-                consecutive_failures = consecutive_failures + 1 if isinstance(error, TMDBReadError) else 0
-                if consecutive_failures >= 20:
+                client.consecutive_list_failures = (getattr(client, 'consecutive_list_failures', 0) + 1
+                                                    if isinstance(error, TMDBReadError) else 0)
+                if client.consecutive_list_failures >= 20:
                     raise TMDBReadError('Stopping after 20 consecutive TMDB list failures') from error
     return report
 
 
 def main(countries: list[str] | None = None, service_ids: list[int] | None = None,
-         dry_run: bool = True, requests_per_second: float = 15, max_requests: int = 350000):
-    dry_run = dry_run is not False
-    started = time.monotonic()
-    client = TMDBClient(requests_per_second, max_requests)
-    store = create_list_storage(dry_run=dry_run)
-    try:
-        with store.run_lease() as owned:
-            owned()
-            if countries is None:
-                regions = client.get('/watch/providers/regions')['results']
-                countries = sorted({region['iso_3166_1'] for region in regions} | set(store.countries()))
-            services = list(SERVICE_NAMES) if service_ids is None else service_ids
-            if any(type(service_id) is not int or service_id <= 0 for service_id in services):
-                raise ValueError('Service IDs must be positive integers')
-            if any(len(country) != 2 or not country.isascii() or not country.isupper() or not country.isalpha() for country in countries):
-                raise ValueError('Countries must be uppercase two-letter codes')
-            report = run_daily_lists(client, store, countries=sorted(set(countries)),
-                                     service_ids=sorted(set(services)))
-            report['seconds'] = round(time.monotonic() - started, 3)
-            report['requests'] = getattr(client, 'stats', {})
-            report['history'] = getattr(store, 'stats', {})
-            report['countries'] = countries
-            return report
-    except LeaseBusy:
-        return dict(lists_completed=0, lists_failed=0, lists_skipped=0, lists=[],
-                    dry_run=dry_run, run_skipped=True)
-    finally:
-        store.close()
+         dry_run: bool = True, requests_per_second: float = 15, max_requests: int = 350000,
+         baseline_max_requests: int = 120000, baseline_max_memberships: int = 570000):
+    from f.tmdb_api.daily_list_ramp import run_daily_job
+    return run_daily_job(countries=countries, service_ids=service_ids, dry_run=dry_run,
+                         requests_per_second=requests_per_second, max_requests=max_requests,
+                         baseline_max_requests=baseline_max_requests,
+                         baseline_max_memberships=baseline_max_memberships)

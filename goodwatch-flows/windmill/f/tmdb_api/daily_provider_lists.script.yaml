@@ -11,6 +11,16 @@ schema:
   $schema: 'https://json-schema.org/draft/2020-12/schema'
   type: object
   properties:
+    baseline_max_memberships:
+      type: integer
+      description: Maximum new title/list checks; admit complete countries only.
+      default: 570000
+      minimum: 0
+    baseline_max_requests:
+      type: integer
+      description: Maximum HTTP requests for new countries after checkpoint rereads.
+      default: 120000
+      minimum: 0
     countries:
       type: array
       items:
@@ -21,6 +31,7 @@ schema:
     max_requests:
       type: integer
       default: 350000
+      maximum: 350000
       minimum: 1
     requests_per_second:
       type: number
