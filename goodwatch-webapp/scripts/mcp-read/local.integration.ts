@@ -86,6 +86,21 @@ async function call(
 	return result.structuredContent
 }
 try {
+	const runtimeProbe = await call("get_library", {
+		filter: "want_to_see",
+		sort: "added",
+		limit: 1,
+	})
+	assert.equal(
+		runtimeProbe.items[0].runtime_minutes,
+		100,
+		"Library must expose the stored movie runtime",
+	)
+	assert.equal(
+		runtimeProbe.items[0].match,
+		null,
+		"Missing taste must be explicit, never an AI estimate",
+	)
 	const first = await call("search_titles", { query: "Local Movie", limit: 20 })
 	assert.equal(
 		first.page_url,

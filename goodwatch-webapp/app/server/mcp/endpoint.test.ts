@@ -562,6 +562,8 @@ test("Search, library and Watch next expose the requested client contract", asyn
 		"last",
 		"score",
 		"title",
+		"match",
+		"runtime",
 	])
 	assert.match(library.description, /added_at/)
 	const next = tools.find(
@@ -570,4 +572,22 @@ test("Search, library and Watch next expose the requested client contract", asyn
 	assert.equal(next.title, "Watch next")
 	assert.match(next.description, /next episode/)
 	assert.match(next.description, /get_library/)
+})
+
+test("Server instructions require GoodWatch taste and native full-library runtime sorting", async () => {
+	const handle = createReadMcpHandler({
+		resource,
+		authorization: verifier,
+		limiter: unlimited,
+	})
+	const tools = (await result(await handle(rpc("tools/list")))).result.tools
+	for (const tool of tools) {
+		assert.match(tool.description, /GoodWatch match/)
+		assert.match(tool.description, /never replace them with your own judgment/)
+	}
+	const library = tools.find(
+		(tool: { name: string }) => tool.name === "get_library",
+	)
+	assert.match(library.description, /Defaults to match/)
+	assert.match(library.description, /entire filtered library/)
 })

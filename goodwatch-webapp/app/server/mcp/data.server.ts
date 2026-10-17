@@ -6,7 +6,6 @@ import {
 	type UserData,
 	parseMediaKey,
 } from "../../types/user-data"
-import { evaluateAvailability } from "../../utils/availability-evidence"
 import { titlePath } from "../../utils/helpers"
 import { canonicalTitleId, retiredMovieIds } from "../../utils/title-identity"
 import { titleKey } from "../../utils/title-key"
@@ -23,6 +22,7 @@ import { getUserData } from "../userData.server"
 import { getMemberViewerContext } from "../viewer.server"
 import { titleLink } from "./links.ts"
 import type { ReadArgs, ReadToolName } from "./tools.server.ts"
+import { watchAvailability } from "./watch-links.server.ts"
 
 export interface CatalogTitle {
 	media_type: "movie" | "show"
@@ -83,7 +83,12 @@ function marks(user: UserData, key: MediaKey) {
 	}
 }
 
-async function library(user: UserData, origin: string, args: ReadArgs) {
+async function library(
+	userId: string,
+	user: UserData,
+	origin: string,
+	args: ReadArgs,
+) {
 	const keys = [
 		...new Set([
 			...Object.keys(user.scores),
@@ -119,12 +124,33 @@ async function library(user: UserData, origin: string, args: ReadArgs) {
 			(key) =>
 				!args.kind || args.kind === "all" || key.startsWith(`${args.kind}-`),
 		)
+	const taste = await loadTaste({ kind: "member", userId }).catch(() => null)
+	const dateSort = ["want_to_see", "all", undefined].includes(args.filter)
+		? "added"
+		: "last"
+	const requestedSort =
+		args.sort ?? (taste?.signal === "some" ? "match" : dateSort)
 	const sort =
-		args.sort ??
-		(["want_to_see", "all", undefined].includes(args.filter) ? "added" : "last")
+		requestedSort === "match" && taste?.signal !== "some"
+			? dateSort
+			: requestedSort
+	const percentiles =
+		sort === "match" && taste
+			? new Map(
+					taste
+						.percentile(
+							filtered.map((key) => {
+								const { mediaType, tmdbId } = parseMediaKey(key)
+								return titleKey(mediaType, canonicalTitleId(mediaType, tmdbId))
+							}),
+						)
+						.map((value, i) => [filtered[i], value]),
+				)
+			: new Map<MediaKey, number | null>()
+	const runtimes = new Map<MediaKey, number | null>()
 	// Title order needs names for the full list, not just the current page. Batch the existing reader.
 	const names = new Map<MediaKey, string>()
-	if (sort === "title") {
+	if (sort === "title" || sort === "runtime") {
 		for (let i = 0; i < filtered.length; i += 60) {
 			const batch = filtered.slice(i, i + 60)
 			const displays = await getDisplayFields(
@@ -135,6 +161,10 @@ async function library(user: UserData, origin: string, args: ReadArgs) {
 			)
 			for (const key of batch) {
 				const { mediaType, tmdbId } = parseMediaKey(key)
+				runtimes.set(
+					key,
+					displays.get(titleKey(mediaType, tmdbId))?.runtime ?? null,
+				)
 				names.set(
 					key,
 					sortKey(displays.get(titleKey(mediaType, tmdbId))?.title ?? ""),
@@ -156,18 +186,27 @@ async function library(user: UserData, origin: string, args: ReadArgs) {
 		return (new Date(y).getTime() - new Date(x).getTime()) * (oldest ? -1 : 1)
 	}
 	filtered.sort((a, b) => {
+		const metricOrder = (values: Map<MediaKey, number | null>) => {
+			const x = values.get(a) ?? null
+			const y = values.get(b) ?? null
+			return x == null || y == null ? (x === y ? 0 : x == null ? 1 : -1) : y - x
+		}
 		const order =
-			sort === "title"
-				? (names.get(a) ?? "").localeCompare(names.get(b) ?? "", "en")
-				: sort === "score"
-					? (user.scores[b]?.score ?? -1) - (user.scores[a]?.score ?? -1) ||
-						dateOrder(a, b, false)
-					: dateOrder(
-							a,
-							b,
-							sort === "added" || sort === "waiting",
-							sort === "waiting",
-						)
+			sort === "match"
+				? metricOrder(percentiles) || dateOrder(a, b, dateSort === "added")
+				: sort === "runtime"
+					? metricOrder(runtimes)
+					: sort === "title"
+						? (names.get(a) ?? "").localeCompare(names.get(b) ?? "", "en")
+						: sort === "score"
+							? (user.scores[b]?.score ?? -1) - (user.scores[a]?.score ?? -1) ||
+								dateOrder(a, b, false)
+							: dateOrder(
+									a,
+									b,
+									sort === "added" || sort === "waiting",
+									sort === "waiting",
+								)
 		return order || a.localeCompare(b, "en")
 	})
 	const slice = page(filtered, args)
@@ -180,6 +219,12 @@ async function library(user: UserData, origin: string, args: ReadArgs) {
 	return {
 		...slice,
 		sort,
+		...(requestedSort !== sort
+			? {
+					sort_note:
+						"GoodWatch taste match is unavailable; using the usual date sort.",
+				}
+			: {}),
 		items: slice.items.flatMap((key) => {
 			const { mediaType, tmdbId } = parseMediaKey(key)
 			const title = displays.get(titleKey(mediaType, tmdbId))
@@ -313,7 +358,7 @@ export async function readMemberTool(
 		}
 	}
 	if (name === "get_library")
-		return library(await getUserData({ user_id: userId }), origin, args)
+		return library(userId, await getUserData({ user_id: userId }), origin, args)
 	if (name === "get_taste") {
 		const [taste, user] = await Promise.all([
 			loadTaste({ kind: "member", userId }),
@@ -338,7 +383,10 @@ export async function readMemberTool(
 		return {
 			pick: pick
 				? {
-						title: summary(pick.title, origin),
+						title: {
+							...summary(pick.title, origin),
+							availability: await watchAvailability(pick.title, ctx),
+						},
 						reason: pick.reason,
 						episode: pick.episode ?? null,
 						match: pick.title.match,
@@ -521,13 +569,7 @@ export async function readMemberTool(
 					...summary(title, origin),
 					synopsis: details.details.synopsis ?? null,
 					genres: details.details.genres,
-					availability: {
-						country: ctx.country,
-						...evaluateAvailability(evidence, {
-							...scope,
-							serviceIds: ctx.services,
-						}),
-					},
+					availability: await watchAvailability(title, ctx, evidence),
 				},
 				member: marks(user, `${title.media_type}-${title.tmdb_id}`),
 			}

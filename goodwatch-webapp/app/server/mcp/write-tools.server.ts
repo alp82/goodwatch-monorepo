@@ -191,6 +191,9 @@ export function registerWriteTools(
 							),
 						},
 					}
+				data = await (
+					await import("./title-results.server.ts")
+				).enrichTitleResults(userId, data)
 				const ok = ["applied", "unchanged"].includes(String(data.outcome))
 				observe(
 					tool.name,

@@ -40,7 +40,7 @@ export interface ReadArgs {
 	for_you?: boolean
 	exclude_seen?: boolean
 	filter?: string
-	sort?: "added" | "waiting" | "last" | "score" | "title"
+	sort?: "added" | "waiting" | "last" | "score" | "title" | "match" | "runtime"
 	kind?: "all" | "movie" | "show"
 	title_id?: string
 	title_name?: string
@@ -124,7 +124,7 @@ const definitions: {
 		name: "get_library",
 		title: "Get my library",
 		description:
-			"Your marked titles, including scores, Wishlist / Want to See, watch progress and Not interested. Use filter=want_to_see for your Wishlist; get_tonight chooses one thing to watch next. Includes added_at (Wishlist date, null when absent). Sorts match My library: added (last added), last (last watched), score (highest first), title (ignores leading articles); waiting puts the oldest Wishlist additions first. Separate from search_titles.",
+			"Your marked titles, including scores, Wishlist / Want to See, watch progress and Not interested. Use filter=want_to_see for your Wishlist; get_tonight chooses one thing to watch next. Includes added_at (Wishlist date, null when absent), runtime_minutes (movie duration or usual show episode length), and GoodWatch match. Defaults to match (Best match by your taste) when taste is available, otherwise the usual date sort. Use sort=runtime for the longest titles first across your entire filtered library, without per-title lookups. Explicit sorts are preserved. Sorts match My library: added (last added), last (last watched), score (highest first), title (ignores leading articles); waiting puts the oldest Wishlist additions first. Separate from search_titles.",
 		schema: z
 			.object({
 				filter: z
@@ -141,7 +141,17 @@ const definitions: {
 					])
 					.default("all"),
 				...paging,
-				sort: z.enum(["added", "waiting", "last", "score", "title"]).optional(),
+				sort: z
+					.enum([
+						"added",
+						"waiting",
+						"last",
+						"score",
+						"title",
+						"match",
+						"runtime",
+					])
+					.optional(),
 				kind: z.enum(["all", "movie", "show"]).default("all"),
 			})
 			.strict(),
@@ -216,6 +226,9 @@ export function createToolServer(
 						)
 							outcome = "error"
 					}
+					data = await (
+						await import("./title-results.server.ts")
+					).enrichTitleResults(userId, data)
 				} catch {
 					outcome = "error"
 					data = {
