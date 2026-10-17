@@ -57,7 +57,7 @@ export function trailForm(core: MapCore, words: TraitWords): MapForm {
 		if (n >= 4) stops += `<li class="fn-tm">${steps(ctx, 1, `+${n - 3}`, `${n - 1} titles in between. Open the list.`)}</li>`
 		for (let i = Math.max(1, n - 2); i < n; i++) stops += `<li class="fn-ti">${to(ctx, i, thumb(at(ctx, i)))}</li>`
 		stops += `<li class="fn-tc"><span class="fn-cap" aria-current="step" title="${esc(ctx.c.t)}">${thumb(ctx.c)}<span class="pl-sr">You are here: ${esc(ctx.c.t)}</span></span></li>`
-		return `<div class="fn-tb">${back(ctx)}<ol class="fn-tr" aria-label="Where you walked">${stops}</ol>${n ? "" : '<p class="fn-tip">Tap a poster to move</p>'}</div>`
+		return `<div class="fn-tb">${back(ctx)}<ol class="fn-tr" aria-label="Where you walked">${stops}</ol>${n ? "" : '<p class="fn-tip"><span class="rg-h">Point to compare, tap to move</span><span class="rg-t">Hold to compare, tap to move</span></p>'}</div>`
 	}
 
 	// --- The card ---------------------------------------------------------------------------------------------------
@@ -164,7 +164,7 @@ export function trailForm(core: MapCore, words: TraitWords): MapForm {
 		note: (_ctx, tokens, list, places, more) =>
 			tokens.length
 				? `Around it: titles ${kit.withOrWithout(tokens)}. A colored line marks the posters that came in for it.${list.length < places && !more ? ` These ${list.length} are all there are.` : ""}`
-				: "A chip fills to its level. Tap a full one for titles without that trait, a low one for titles with it.",
+				: '<span class="fn-hint">A chip fills to its level. Tap a full one for titles without that trait, a low one for titles with it.</span>',
 		act: (ctx, act, arg) => {
 			if (act !== "tk") return false
 			mx.choose(ctx, arg, MAX_ON)

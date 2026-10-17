@@ -144,8 +144,13 @@ export function ringsKit(core: MapCore, words: TraitWords) {
 	// `?variant=`. A: today. B: bigger posters, one more step out. C: posters sized to the map's height. D: steps by
 	// how many titles they show. The phone layout is the same in every variant.
 	const V = win ? (new URLSearchParams(win.location.search).get("variant") ?? "A") : "A"
+	function fsOn() {
+		return Boolean(win?.document.fullscreenElement?.matches?.("[data-related-map]") || win?.document.querySelector(".pl.pl-fs"))
+	}
 	const phoneW = () => Math.max(44, Math.min(56, Math.floor((box.w - 4) / 5.43)))
 	const posterW = () => {
+		// Full screen: posters sized by the space the map has, between a floor and a ceiling. Same for every variant.
+		if (fsOn()) return Math.round(Math.max(roomy() ? 96 : 56, Math.min(180, box.h / 4.4, box.w / 6.5)))
 		if (!roomy()) return phoneW()
 		if (V === "B") return 96
 		if (V === "C") return Math.round(Math.max(96, box.h / 4.6))
@@ -156,6 +161,7 @@ export function ringsKit(core: MapCore, words: TraitWords) {
 	/** How small the posters get: on a phone they stay wide enough for a finger. */
 	const zooms = (): number[] => {
 		if (!roomy()) return [1, 0.8, 0.66]
+		if (fsOn()) return [1, 0.75, 0.56, 0.42]
 		if (V === "B") return [1, 0.75, 0.56, 0.42]
 		if (V === "C") return [1, 0.72, 0.52, 0.38]
 		if (V === "D") {
@@ -370,7 +376,6 @@ export function ringsKit(core: MapCore, words: TraitWords) {
 		}>−</button><span>${shown}</span><button type="button" data-pl-act="z" data-arg="-1" aria-label="Closer: larger posters"${z <= 0 ? " disabled" : ""}>+</button></div>${fsCtl()}`
 	}
 	// PROTOTYPE - throwaway (related-posters-zoom). The full screen view of the map.
-	const fsOn = () => Boolean(win?.document.fullscreenElement?.matches?.("[data-related-map]") || win?.document.querySelector(".pl.pl-fs"))
 	const fsCtl = () => {
 		const on = fsOn()
 		return `<button type="button" class="rm-fs" data-pl-act="fs" data-arg="" aria-label="${on ? "Exit full screen" : "Full screen"}" title="${on ? "Exit full screen (Esc)" : "Full screen"}"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${

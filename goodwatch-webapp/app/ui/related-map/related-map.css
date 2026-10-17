@@ -309,3 +309,39 @@ white-space:nowrap;box-shadow:0 2px 12px rgba(251,191,36,.28)}
 .pl.pl-map.pl-fs{position:fixed;inset:0;z-index:1000}
 .pl.pl-map:fullscreen .pl-body,.pl.pl-map.pl-fs .pl-body{flex:1;min-height:0}
 .pl.pl-map:fullscreen .pl-stage.pl-map,.pl.pl-map.pl-fs .pl-stage.pl-map{flex:1;height:auto;min-height:0}
+/* PROTOTYPE - throwaway (related-posters-zoom): the wide side panel as one flat column. The card's parts and the
+traits are placed straight in the section's grid: who you look at on top, the traits under it, and what to do at the
+foot. The foot grows upward into free space, so nothing above it moves when a poster is pointed at. */
+@media (min-width:1024px){
+.pl .rm.rg.rg-big{grid-template-columns:minmax(0,1fr) 280px;grid-template-rows:32px auto auto auto minmax(0,1fr) auto auto auto auto;column-gap:28px;row-gap:0}
+.pl .rm.rg.rg-big .rm-map{grid-column:1;grid-row:1/-1}
+.pl .rm.rg.rg-big .rm-info.rg-info,.pl .rg-big .fn-card{display:contents}
+.pl .rg-big .fn-tb{grid-column:2;grid-row:1;height:32px;padding:0;gap:8px;border:0}
+.pl .rg-big .fn-tb:has(.fn-tip) .fn-tr,.pl .rg-big .fn-tb .fn-bk:disabled{display:none}
+.pl .rg-big .fn-tip{font-size:.75rem;color:#6b7280}
+.pl .rg-big .fn-kk,.pl .rg-big .fn-vs{margin:0;font-size:.625rem;line-height:.875rem;letter-spacing:.1em}
+.pl .rg-big .fn-kk{grid-column:2;grid-row:2;margin-top:22px;justify-self:start;color:#6b7280}
+.pl .rg-big .fn-vs{grid-column:2;grid-row:6;margin-bottom:6px;justify-self:start;color:#6b7280}
+.pl .rg-big .rg-info:not([data-r-pk]) .fn-card[data-fn-root] .fn-vs{display:none}
+.pl .rg-big .fn-vs b{color:#9ca3af}
+.pl .rg-big .fn-v1{display:inline}
+.pl .rg-big .fn-v2{display:none}
+.pl .rg-big .fn-nm{grid-column:2;grid-row:3;display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:4px;height:94px;margin-top:6px}
+.pl .rg-big .fn-nm b{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;white-space:normal;font-size:1.75rem;line-height:2rem;letter-spacing:-.025em}
+.pl .rg-big .fn-nm small{font-size:.875rem;color:#9ca3af}
+.pl .rm.rg.rg-big .rm-top{grid-column:2;grid-row:4;display:flex;flex-direction:column;align-items:stretch;gap:8px;height:auto;margin:0}
+.pl .rm.rg.rg-big .rm-top::before{content:"Traits · tap to filter";font-size:.625rem;line-height:.875rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#6b7280}
+.pl .rg-big .ix-6{grid-auto-rows:28px;gap:5px}
+.pl .rg-big .ix-c{border-radius:8px;border-color:rgba(255,255,255,.12);background:rgba(255,255,255,.03)}
+.pl .rg-big .fn-df{grid-column:2;grid-row:7;height:auto;margin:0 0 10px;gap:4px;align-content:flex-end}
+.pl .rg-big .fn-d{height:22px;font-size:.75rem}
+.pl .rg-big .rg-info:not([data-r-pk]) .fn-card[data-fn-root] .fn-df{display:none}
+.pl .rg-big .fn-go{grid-column:2;grid-row:8;justify-items:stretch;margin:0}
+.pl .rg-big .fn-open{height:40px;justify-content:center}
+.pl .rg-big .fn-this,.pl .rg-big .fn-hint{display:none}
+.pl .rg-big .fn-mv{max-width:none;height:40px;display:flex;align-items:center;justify-content:center;border-radius:.625rem;border:1px dashed rgba(251,191,36,.6);font-size:.8125rem;color:#fbbf24}
+.pl .rg-big .rg-info:not([data-r-pk]) .fn-mv{display:none}
+.pl .rg-big .fn-nt{grid-column:2;grid-row:9;height:auto;margin:10px 0 0;-webkit-line-clamp:3}
+.pl .rg-big .fn-nt:not(:has(:not(.fn-hint))):not(:has(b)){display:none}
+.pl .rg-big .rg-info[data-r-pk] .fn-kk{color:#fbbf24}
+}
