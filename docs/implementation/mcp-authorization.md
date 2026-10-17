@@ -50,7 +50,7 @@ The plugin composition reuses the [#533 spike](https://github.com/alp82/goodwatc
   provider's **30-second** rotation retry window is explicitly configured. The local
   rehearsal alone shortens access tokens to 60 seconds.
 
-Resource routes forward the provider's metadata, including its RFC 9207 support:
+Resource routes retain the provider's CIMD, DCR and RFC 9207 metadata, with DPoP claims removed because the MCP verifier accepts bearer tokens only. Proof requests are refused explicitly before issuance. The issuer-path OIDC alias forwards to the provider's issuer-relative discovery route. See [compatibility and Registry preparation](mcp-compatibility-registry.md).
 
 - `/.well-known/oauth-protected-resource` and its `/mcp` alias (RFC 9728).
 - `/.well-known/oauth-authorization-server/api/auth` (RFC 8414).

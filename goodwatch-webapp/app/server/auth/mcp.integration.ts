@@ -6,8 +6,8 @@ import {
 	localCrateTransport,
 	migrateAuthTables,
 } from "./crate-adapter.server.ts"
-import { loadMcpConsent, decideMcpConsent } from "./mcp-flow.server.ts"
 import { AuthMailQueue } from "./mail.server.ts"
+import { decideMcpConsent, loadMcpConsent } from "./mcp-flow.server.ts"
 import { ValkeyAuthStorage } from "./secondary-storage.server.ts"
 import {
 	authTestCrateOrigins,
@@ -56,6 +56,34 @@ test("MCP clients discover the canonical resource and issuer with CIMD, DCR and 
 	assert.equal(body.authorization_response_iss_parameter_supported, true)
 	assert.equal(body.registration_endpoint, `${origin}/api/auth/oauth2/register`)
 	assert.ok(body.scopes_supported.includes("offline_access"))
+	for (const path of [
+		"/.well-known/oauth-authorization-server/api/auth",
+		"/api/auth/.well-known/oauth-authorization-server",
+		"/.well-known/openid-configuration/api/auth",
+		"/api/auth/.well-known/openid-configuration",
+		"/.well-known/oauth-protected-resource",
+		"/.well-known/oauth-protected-resource/mcp",
+	]) {
+		const response = await auth.handler(new Request(`${origin}${path}`))
+		assert.equal(response.status, 200, path)
+		const metadata = await response.json()
+		assert.equal(metadata.dpop_signing_alg_values_supported, undefined, path)
+		assert.equal(metadata.dpop_bound_access_tokens_required, undefined, path)
+		if (metadata.resource) {
+			assert.equal(metadata.resource_name, "GoodWatch")
+			assert.equal(
+				metadata.logo_uri,
+				"https://goodwatch.app/mcp-icons/goodwatch-512.png",
+			)
+		} else {
+			assert.equal(metadata.client_id_metadata_document_supported, true, path)
+			assert.equal(
+				metadata.registration_endpoint,
+				`${origin}/api/auth/oauth2/register`,
+				path,
+			)
+		}
+	}
 })
 
 const deliveries: string[] = []
@@ -96,6 +124,8 @@ async function grant(
 	scope = "mcp:read mcp:write offline_access",
 	existing?: { email: string; cookie: string },
 	access?: "read" | "write" | "default",
+	tokenHeaders: Record<string, string> = {},
+	tokenStatus = 200,
 ) {
 	let cookie = existing?.cookie ?? ""
 	const email = existing?.email ?? `mcp-${crypto.randomUUID()}@example.test`
@@ -171,7 +201,9 @@ async function grant(
 		if (!view.canChange) assert.equal((await consent("write")).status, 400)
 		const allowed = await consent(access)
 		assert.equal(allowed.status, 302, await allowed.clone().text())
-		callback = new URL(allowed.headers.get("Location")!)
+		const location = allowed.headers.get("Location")
+		assert.ok(location)
+		callback = new URL(location)
 	} else {
 		const allowed = await post(
 			"/oauth2/consent",
@@ -187,7 +219,10 @@ async function grant(
 	const token = await memberAuth.handler(
 		new Request(`${origin}/api/auth/oauth2/token`, {
 			method: "POST",
-			headers: { "content-type": "application/x-www-form-urlencoded" },
+			headers: {
+				"content-type": "application/x-www-form-urlencoded",
+				...tokenHeaders,
+			},
 			body: new URLSearchParams({
 				grant_type: "authorization_code",
 				client_id: client.client_id,
@@ -198,7 +233,7 @@ async function grant(
 			}),
 		}),
 	)
-	assert.equal(token.status, 200)
+	assert.equal(token.status, tokenStatus, await token.clone().text())
 	return {
 		email,
 		client,
@@ -1254,4 +1289,103 @@ test("an app that asks for openid, profile and email learns neither the email no
 	const infoText = await info.text()
 	assert.ok(!infoText.includes(member.email), `userinfo returned ${infoText}`)
 	assert.ok(!infoText.includes("Local member"), `userinfo returned ${infoText}`)
+})
+
+test("proof-capable clients are refused explicitly before DPoP token issuance", async () => {
+	const { generateKeyPair, exportJWK, SignJWT } = await import("jose")
+	const { privateKey, publicKey } = await generateKeyPair("ES256")
+	const proof = await new SignJWT({
+		htm: "POST",
+		htu: `${origin}/api/auth/oauth2/token`,
+	})
+		.setProtectedHeader({
+			alg: "ES256",
+			typ: "dpop+jwt",
+			jwk: await exportJWK(publicKey),
+		})
+		.setIssuedAt()
+		.setJti(crypto.randomUUID())
+		.sign(privateKey)
+	const issued = await grant(
+		"mcp:read offline_access",
+		undefined,
+		"read",
+		{ DPoP: proof },
+		400,
+	)
+	assert.equal(issued.token.error, "invalid_request")
+	assert.match(issued.token.error_description, /DPoP is not supported/)
+	assert.equal(issued.token.access_token, undefined)
+	const registration = await post("/oauth2/register", {
+		client_name: "DPoP-only test app",
+		redirect_uris: ["http://127.0.0.1:6280/callback"],
+		token_endpoint_auth_method: "none",
+		dpop_bound_access_tokens: true,
+	})
+	assert.equal(registration.status, 400)
+	const authorize = await memberAuth.handler(
+		new Request(
+			`${origin}/api/auth/oauth2/authorize?dpop_jkt=${"a".repeat(43)}`,
+		),
+	)
+	assert.equal(authorize.status, 400)
+})
+
+test("a read grant upgrades only after explicit write consent and refresh preserves the upgrade", async () => {
+	const issued = await grant(
+		"mcp:read mcp:write offline_access",
+		undefined,
+		"read",
+	)
+	const consentUrl = await authorizeAgain(
+		issued,
+		"mcp:read mcp:write offline_access",
+	)
+	assert.equal(consentUrl.pathname, "/auth/mcp/consent")
+	const decision = await decideMcpConsent(
+		new Request(consentUrl, {
+			method: "POST",
+			headers: { cookie: issued.cookie, origin },
+			body: new URLSearchParams({ decision: "allow", access: "write" }),
+		}),
+		memberAuth,
+	)
+	assert.equal(decision.status, 302)
+	const location = decision.headers.get("Location")
+	assert.ok(location)
+	const callback = new URL(location)
+	const code = callback.searchParams.get("code")
+	assert.ok(code)
+	const token = await memberAuth.handler(
+		new Request(`${origin}/api/auth/oauth2/token`, {
+			method: "POST",
+			headers: { "content-type": "application/x-www-form-urlencoded" },
+			body: new URLSearchParams({
+				grant_type: "authorization_code",
+				client_id: issued.client.client_id,
+				redirect_uri: issued.client.redirect_uris[0],
+				code,
+				code_verifier: "b".repeat(64),
+				resource,
+			}),
+		}),
+	)
+	assert.equal(token.status, 200, await token.clone().text())
+	const pair = await token.json()
+	assert.equal(pair.token_type, "Bearer")
+	assert.ok(pair.scope.split(" ").includes("mcp:write"))
+	const refreshed = await memberAuth.handler(
+		new Request(`${origin}/api/auth/oauth2/token`, {
+			method: "POST",
+			headers: { "content-type": "application/x-www-form-urlencoded" },
+			body: new URLSearchParams({
+				grant_type: "refresh_token",
+				client_id: issued.client.client_id,
+				refresh_token: pair.refresh_token,
+				resource,
+			}),
+		}),
+	)
+	assert.equal(refreshed.status, 200, await refreshed.clone().text())
+	assert.ok((await refreshed.json()).scope.split(" ").includes("mcp:write"))
 })

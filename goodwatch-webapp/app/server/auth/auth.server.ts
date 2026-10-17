@@ -19,7 +19,6 @@ import {
 	crateAuthAdapter,
 	localAuthEncryptionSecret,
 } from "./crate-adapter.server.ts"
-import type { AuthMailQueue } from "./mail.server.ts"
 import {
 	type AuthEmail,
 	confirmEmail,
@@ -28,6 +27,8 @@ import {
 	passwordChangedEmail,
 	resetPasswordEmail,
 } from "./emails.server.ts"
+import type { AuthMailQueue } from "./mail.server.ts"
+import { bearerMcpMetadata } from "./mcp-metadata.server.ts"
 import {
 	type AuthEncryptionKeys,
 	authCredentialVersion,
@@ -346,6 +347,11 @@ export function createGoodwatchAuth(options: {
 		hooks: {
 			before: createAuthMiddleware(async (ctx) => {
 				if (options.mcp && ctx.path === "/oauth2/register") {
+					if (ctx.body?.dpop_bound_access_tokens === true)
+						throw new APIError("BAD_REQUEST", {
+							error: "invalid_client_metadata",
+							error_description: "DPoP-bound clients are not supported.",
+						})
 					const ip = createHash("sha256")
 						.update(
 							getIP(
@@ -699,8 +705,32 @@ export function createGoodwatchAuth(options: {
 	return {
 		...core,
 		handler: async (request: Request) => {
-			const response = await core.handler(request)
-			const path = new URL(request.url).pathname
+			const url = new URL(request.url)
+			const path = url.pathname
+			if (options.mcp) {
+				// Do not silently turn a proof-bound request into a bearer grant.
+				if (request.headers.has("DPoP") || url.searchParams.has("dpop_jkt"))
+					return jsonResponse(
+						{
+							error: "invalid_request",
+							error_description:
+								"DPoP is not supported. Restart authorization using bearer tokens.",
+						},
+						{ status: 400 },
+					)
+			}
+			// OIDC discovery with an issuer path uses the provider's issuer-relative alias.
+			const coreRequest =
+				path === "/.well-known/openid-configuration/api/auth"
+					? new Request(
+							new URL("/api/auth/.well-known/openid-configuration", url),
+							request,
+						)
+					: request
+			const upstream = await core.handler(coreRequest)
+			const response = options.mcp
+				? await bearerMcpMetadata(request, upstream)
+				: upstream
 			// A confirmation link opened in a browser that no longer works lands on the page that says so and offers a
 			// new one. API callers keep the 401.
 			if (

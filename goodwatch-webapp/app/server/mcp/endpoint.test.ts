@@ -160,7 +160,10 @@ test("Read-only tokens cannot force a write and receive an HTTP scope challenge"
 		response.headers.get("WWW-Authenticate") ?? "",
 		/insufficient_scope/,
 	)
-	assert.match(response.headers.get("WWW-Authenticate") ?? "", /mcp:write/)
+	assert.match(
+		response.headers.get("WWW-Authenticate") ?? "",
+		/scope="mcp:read mcp:write"/,
+	)
 	assert.match(response.headers.get("Cache-Control") ?? "", /no-transform/)
 })
 
@@ -561,6 +564,8 @@ test("MCP initialization tells clients to link titles and end with the page link
 	)
 	assert.equal(response.status, 200)
 	const initialized = (await result(response)).result
+	const { mcpServerInfo } = await import("./identity.ts")
+	assert.deepEqual(initialized.serverInfo, mcpServerInfo)
 	assert.match(initialized.instructions, /ready-made link field VERBATIM/)
 	assert.match(initialized.instructions, /See it on GoodWatch:/)
 	assert.match(initialized.instructions, /Poster cards do not replace the text/)
@@ -628,4 +633,22 @@ test("Server instructions require GoodWatch taste and native full-library runtim
 	)
 	assert.match(library.description, /Defaults to match/)
 	assert.match(library.description, /entire filtered library/)
+})
+
+test("foreign browser preflights cannot reach MCP or obtain CORS permission", async () => {
+	const handle = createReadMcpHandler({ resource })
+	const response = await handle(
+		new Request(resource, {
+			method: "OPTIONS",
+			headers: {
+				Origin: "https://claude.ai",
+				"Access-Control-Request-Method": "POST",
+				"Access-Control-Request-Headers":
+					"authorization,content-type,mcp-protocol-version",
+			},
+		}),
+	)
+	assert.equal(response.status, 403)
+	assert.equal(response.headers.get("Access-Control-Allow-Origin"), null)
+	assert.equal(response.headers.get("Access-Control-Allow-Credentials"), null)
 })

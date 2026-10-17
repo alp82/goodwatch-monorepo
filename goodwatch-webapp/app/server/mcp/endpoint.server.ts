@@ -61,7 +61,7 @@ export function createReadMcpHandler(
 			)
 				return new Response("Origin rejected", { status: 403 })
 		}
-		let auth
+		let auth: Awaited<ReturnType<typeof verifyBearerToken>>
 		try {
 			const [header] = (request.headers.get("Authorization") ?? "").split(",")
 			auth = await verifyBearerToken(header || undefined, authOptions)
@@ -114,7 +114,7 @@ export function createReadMcpHandler(
 					"This operation requires mcp:write",
 				),
 				{
-					requiredScopes: ["mcp:write"],
+					requiredScopes: ["mcp:read", "mcp:write"],
 					resourceMetadataUrl: auth.resourceMetadataUrl,
 				},
 			)

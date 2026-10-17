@@ -5,22 +5,23 @@ import {
 	durationBuckets,
 	histogram,
 } from "../metrics/registry.server.ts"
+import {
+	type DiscoverFilterArgs,
+	discoverFilters,
+	isDiscoverySearch,
+	validDiscoverRanges,
+} from "./discover-filters.ts"
+import { mcpServerInfo } from "./identity.ts"
 import { linkInstructions, withPageLink } from "./links.ts"
+import { readToolEnabled } from "./policy.server.ts"
 import {
 	POSTER_GRID_TOOLS,
 	posterGridToolMeta,
 	registerPosterGrid,
 } from "./poster-grid.server.ts"
-import { readToolEnabled } from "./policy.server.ts"
 import type { RankedSearch } from "./ranked.server.ts"
+import { paging, selected, similarTitles, titleDetails } from "./schemas.ts"
 import type { enrichTitleResults } from "./title-results.server.ts"
-import {
-	discoverFilters,
-	validDiscoverRanges,
-	isDiscoverySearch,
-	type DiscoverFilterArgs,
-} from "./discover-filters.ts"
-import { paging, selected, titleDetails, similarTitles } from "./schemas.ts"
 import { registerWriteTools } from "./write-tools.server.ts"
 
 const calls = counter(
@@ -309,10 +310,9 @@ export function createToolServer(
 	/** Tests only: replaces the taste and display enrichment. */
 	enrich?: EnrichTitleResults,
 ) {
-	const server = new McpServer(
-		{ name: "goodwatch", version: "1.0.0" },
-		{ instructions: linkInstructions },
-	)
+	const server = new McpServer(mcpServerInfo, {
+		instructions: linkInstructions,
+	})
 	for (const tool of readToolDefinitions) {
 		if (!readToolEnabled(userId, tool.name)) continue
 		const posters = POSTER_GRID_TOOLS.has(tool.name)
