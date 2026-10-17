@@ -39,7 +39,9 @@ export async function loader(args: LoaderFunctionArgs) {
 		return []
 	})
 	// The intro lab's "Play on the TV": the clips' data too.
-	const intro = new URL(args.request.url).searchParams.get("clips")
+	// The home TV plays the intro for guests by default (variant "film"); "live" is today's page.
+	const sp = new URL(args.request.url).searchParams
+	const intro = sp.get("clips") || (sp.get("variant") ?? "film") === "film"
 		? await loadIntroData(args.request, { ...data, landing })
 		: null
 	return json({ ...data, landing, intro }, { headers: res.headers })
@@ -156,7 +158,7 @@ export default function Index() {
 	const data = useLoaderData<typeof tvHomeLoader>()
 	const { locale } = useLocale()
 	const [params] = useSearchParams()
-	const variant = params.get("variant") ?? "live"
+	const variant = params.get("variant") ?? "film"
 	// The TV keeps previously visited titles in local state as well as the query cache.
 	return (
 		<>

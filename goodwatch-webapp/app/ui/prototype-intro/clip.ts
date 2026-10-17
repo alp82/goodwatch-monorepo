@@ -20,16 +20,16 @@ import type { TvService } from "~/ui/living-room/tv/tv-home"
 
 // The film's chapters, in the owner's order (round 5). `chapter` is the label on the chapter bar.
 export const SECTIONS = [
-	// Round 11 order (owner, 2026-10-17). "boot" (the TV turning on) and "closer" (the quiz) are not chapters.
+	// Round 12 order (owner, 2026-10-17). "boot" (the TV turning on) and "closer" (the quiz) are not chapters.
 	{ id: "boot", name: "TV turns on", chapter: "Intro" },
 	{ id: "opener", name: "The problem", chapter: "The problem" },
 	{ id: "score", name: "One score", chapter: "One score" },
 	{ id: "streaming", name: "Where it streams", chapter: "Streaming" },
-	{ id: "search", name: "Search by feeling", chapter: "Search" },
 	{ id: "recommendations", name: "Picked for you", chapter: "For you" },
 	{ id: "fingerprint", name: "How it feels (attributes)", chapter: "How it feels" },
-	{ id: "explorer", name: "Explorer", chapter: "Explorer" },
+	{ id: "search", name: "Search by feeling", chapter: "Search" },
 	{ id: "filters", name: "Filters", chapter: "Filters" },
+	{ id: "explorer", name: "Explorer", chapter: "Explorer" },
 	{ id: "tracking", name: "Keeps track for you", chapter: "Tracking" },
 	{ id: "imports", name: "Bring your ratings", chapter: "Your ratings" },
 	{ id: "closer", name: "Your turn", chapter: "Your turn" },

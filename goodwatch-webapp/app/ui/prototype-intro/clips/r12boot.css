@@ -1,0 +1,150 @@
+/* PROTOTYPE - throwaway. Round 12 turn-on variants (r12boot/boots.tsx). Transform and opacity only, timed by --k. */
+.lpc-r12b {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
+	background: #000;
+}
+/* The hold every variant ends on: a slow push-in over the whole clip, for the deal into the chat. */
+.lpc-r12b-push { position: relative; animation: lpc-r12b-push calc(var(--push, 2800ms) * var(--k)) linear both; }
+@keyframes lpc-r12b-push { from { transform: scale(1); } to { transform: scale(1.05); } }
+
+/* ---- (a) Standby light */
+.lpc-r12b-sb-dot {
+	position: absolute;
+	left: 50%;
+	bottom: 9cqh;
+	width: max(6px, 0.7cqw);
+	height: max(6px, 0.7cqw);
+	margin-left: calc(max(6px, 0.7cqw) / -2);
+	border-radius: 50%;
+	background: #fbbf24;
+	box-shadow: 0 0 1.4cqw 0.4cqw rgba(251, 191, 36, 0.55);
+	animation: lpc-r12b-breathe calc(1100ms * var(--k)) ease-in-out both, lpc-r12b-out calc(500ms * var(--k)) ease-in calc(1150ms * var(--k)) forwards;
+}
+@keyframes lpc-r12b-breathe {
+	0% { opacity: 0; transform: scale(0.6); }
+	35% { opacity: 1; transform: scale(1); }
+	65% { opacity: 0.55; transform: scale(0.85); }
+	100% { opacity: 1; transform: scale(1.1); }
+}
+@keyframes lpc-r12b-out { to { opacity: 0; transform: scale(0.4); } }
+.lpc-r12b-sb-glow {
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	width: 160cqw;
+	height: 160cqw;
+	margin: -80cqw 0 0 -80cqw;
+	background: radial-gradient(circle, rgba(251, 191, 36, 0.17) 0, rgba(251, 191, 36, 0.06) 22%, rgba(251, 191, 36, 0) 42%);
+	transform-origin: 50% calc(50% + 41cqh);
+	animation: lpc-r12b-rise calc(1500ms * var(--k)) cubic-bezier(0.22, 1, 0.36, 1) calc(900ms * var(--k)) both;
+}
+@keyframes lpc-r12b-rise { from { opacity: 0; transform: scale(0.02); } to { opacity: 1; transform: scale(1); } }
+.lpc-r12b-sb-mark { animation: lpc-r12b-resolve calc(1000ms * var(--k)) cubic-bezier(0.22, 1, 0.36, 1) calc(1250ms * var(--k)) both; }
+@keyframes lpc-r12b-resolve { from { opacity: 0; transform: translateY(2.5cqh) scale(0.96); } }
+
+/* ---- (b) Iris: a lid with a soft round hole opens from the middle */
+.lpc-r12b-ir-warm {
+	position: absolute;
+	inset: 0;
+	background: radial-gradient(60% 70% at 50% 55%, #2a1d07 0, #120d05 45%, #05060a 100%);
+}
+.lpc-r12b-ir-mark { animation: lpc-r12b-resolve calc(1100ms * var(--k)) cubic-bezier(0.22, 1, 0.36, 1) calc(500ms * var(--k)) both; }
+.lpc-r12b-ir-lid {
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	width: 120cqw;
+	height: 120cqw;
+	margin: -60cqw 0 0 -60cqw;
+	border-radius: 50%;
+	/* The hole: clear in the middle, a long soft edge, then black that the shadow carries far past the stage. */
+	/* A small clear middle with a long soft edge; the shadow carries the black past the stage at every scale. */
+	background: radial-gradient(circle closest-side, rgba(0, 0, 0, 0) 0, rgba(0, 0, 0, 0) 8%, #000 42%);
+	box-shadow: 0 0 0 200cqw #000;
+	animation: lpc-r12b-iris calc(1800ms * var(--k)) cubic-bezier(0.65, 0, 0.35, 1) calc(100ms * var(--k)) both;
+}
+@keyframes lpc-r12b-iris { from { transform: scale(0.35); } to { transform: scale(4); } }
+
+/* ---- (c) The G alone */
+.lpc-r12b-g-glow {
+	position: absolute;
+	inset: 0;
+	background: radial-gradient(35% 45% at 50% 50%, rgba(251, 191, 36, 0.12) 0, rgba(251, 191, 36, 0) 70%);
+	animation: lpc-r12b-fade calc(1400ms * var(--k)) ease-out calc(300ms * var(--k)) both;
+}
+@keyframes lpc-r12b-fade { from { opacity: 0; } }
+.lpc-r12b-g-lockup {
+	display: flex;
+	align-items: flex-end;
+	font-size: 102px;
+	font-weight: 700;
+	line-height: 1;
+	white-space: nowrap;
+}
+.lpc-r12b-g-emblem { position: relative; display: flex; z-index: 2; }
+.lpc-r12b-g-arc {
+	position: absolute;
+	left: 50%;
+	top: calc(50% - 0.08em);
+	width: 1.25em;
+	height: 1.25em;
+	margin: -0.625em 0 0 -0.625em;
+	animation: lpc-r12b-sweep calc(1300ms * var(--k)) cubic-bezier(0.45, 0, 0.25, 1) calc(150ms * var(--k)) both;
+}
+@keyframes lpc-r12b-sweep {
+	0% { opacity: 0; transform: rotate(-120deg); }
+	20% { opacity: 1; }
+	80% { opacity: 1; }
+	100% { opacity: 0; transform: rotate(300deg); }
+}
+.lpc-r12b-g-mark { animation: lpc-r12b-turn calc(1000ms * var(--k)) cubic-bezier(0.22, 1, 0.36, 1) calc(200ms * var(--k)) both; }
+@keyframes lpc-r12b-turn { from { opacity: 0; transform: rotate(-35deg) scale(0.82); } }
+/* "oodWatch" waits behind the G and slides out of it: a clipping window right of the emblem. */
+.lpc-r12b-g-window { display: flex; overflow: hidden; margin-left: 0.0556em; padding: 0.1em 0.05em 0.02em 0; margin-bottom: -0.02em; }
+.lpc-r12b-g-text { display: flex; animation: lpc-r12b-slide calc(1000ms * var(--k)) cubic-bezier(0.22, 1, 0.36, 1) calc(1100ms * var(--k)) both; }
+@keyframes lpc-r12b-slide {
+	from { transform: translateX(-45%); opacity: 0; }
+	55% { opacity: 1; }
+}
+
+/* ---- (d) Letters settle */
+.lpc-r12b-lt-horizon {
+	position: absolute;
+	left: -20%;
+	right: -20%;
+	top: 50%;
+	height: 60cqh;
+	background: radial-gradient(50% 35% at 50% 55%, rgba(251, 191, 36, 0.13) 0, rgba(251, 191, 36, 0.04) 50%, rgba(251, 191, 36, 0) 80%);
+	transform-origin: 50% 55%;
+	animation: lpc-r12b-horizon calc(1800ms * var(--k)) cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes lpc-r12b-horizon { from { opacity: 0; transform: scaleX(0.4); } }
+.lpc-r12b-lt-lockup {
+	display: flex;
+	align-items: flex-end;
+	font-size: 102px;
+	font-weight: 700;
+	line-height: 1;
+	white-space: nowrap;
+}
+.lpc-r12b-lt-g { animation: lpc-r12b-up calc(900ms * var(--k)) cubic-bezier(0.22, 1, 0.36, 1) calc(250ms * var(--k)) both; }
+.lpc-r12b-lt-text { display: flex; margin-left: 0.0556em; }
+.lpc-r12b-lt-ch {
+	display: block;
+	animation: lpc-r12b-settle calc(950ms * var(--k)) cubic-bezier(0.22, 1, 0.36, 1) calc((350ms + var(--i) * 85ms) * var(--k)) both;
+}
+@keyframes lpc-r12b-up { from { opacity: 0; transform: translateY(0.18em); } }
+@keyframes lpc-r12b-settle { from { opacity: 0; transform: translate(var(--dx), 0.22em); } }
+
+@container (max-width: 520px) {
+	.lpc-r12b-push { scale: 0.6; }
+}
+@media (prefers-reduced-motion: reduce) {
+	.lpc-r12b *, .lpc-r12b-push { animation: none !important; }
+	.lpc-r12b-sb-dot, .lpc-r12b-g-arc, .lpc-r12b-ir-lid { display: none; }
+}

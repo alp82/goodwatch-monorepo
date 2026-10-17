@@ -1,0 +1,26 @@
+/* PROTOTYPE - throwaway. Round 12: the subtle turn-on, timed by the stage's --k. */
+.lpc-r12-boot {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: #000;
+}
+.lpc-r12-glow {
+	position: absolute;
+	inset: 0;
+	background: radial-gradient(42% 52% at 50% 50%, rgba(251, 191, 36, 0.16) 0, rgba(251, 191, 36, 0.05) 45%, rgba(251, 191, 36, 0) 75%);
+	animation: lp-glow calc(2200ms * var(--k)) cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.lpc-r12-push { animation: lpc-r12-push calc(2700ms * var(--k)) linear both; }
+@keyframes lpc-r12-push { from { transform: scale(1); } to { transform: scale(1.05); } }
+.lpc-r12-mark { animation: lpc-r12-in calc(1000ms * var(--k)) cubic-bezier(0.22, 1, 0.36, 1) calc(250ms * var(--k)) both; }
+@keyframes lpc-r12-in { from { opacity: 0; transform: translateY(1.2cqh) scale(0.97); } }
+/* The TV's G pop and letter reveal, softer and a little later. */
+.lpc-r12-boot .lr-boot .lr-boot-g { animation-duration: calc(900ms * var(--k)); animation-delay: calc(350ms * var(--k)); }
+.lpc-r12-boot .lr-boot .lr-boot-letters { animation-duration: calc(800ms * var(--k)); animation-delay: calc(800ms * var(--k)); }
+@container (max-width: 520px) { .lpc-r12-mark { scale: 0.6; } }
+@media (prefers-reduced-motion: reduce) {
+	.lpc-r12-glow, .lpc-r12-push, .lpc-r12-mark { animation: none; }
+}

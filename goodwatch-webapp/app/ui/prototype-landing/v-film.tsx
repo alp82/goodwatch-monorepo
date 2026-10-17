@@ -4,6 +4,7 @@
 import { useSearchParams } from "@remix-run/react"
 import { useEffect, useMemo, useState } from "react"
 import { clipById } from "~/ui/prototype-intro/clips"
+import { HOME_CUT } from "~/ui/prototype-intro/cut"
 import { Sequence, Stage, TRANSITIONS, type TransitionId } from "~/ui/prototype-intro/Sequence"
 import { FILM_MS, FilmScenes } from "./film-scenes"
 import { FilmTaps } from "./film-taps"
@@ -27,7 +28,10 @@ export function useFilm({ data, tvOpen }: VariantProps): Landing {
 	const [params] = useSearchParams()
 	// The TV boots by itself (the CSS boot below, painted before any script), so the lab's boot clip is left out
 	// and the first clip deals in after it, as the boot clip hands over in the lab.
-	const listed = useMemo(() => (params.get("clips") ?? "").split(",").flatMap((id) => clipById(id) ?? []), [params])
+	const listed = useMemo(
+		() => (params.get("clips")?.split(",") ?? HOME_CUT).flatMap((id) => clipById(id) ?? []),
+		[params],
+	)
 	const clips = useMemo(() => listed.filter((c) => c.section !== "boot"), [listed])
 	const firstEnter = listed[0]?.section === "boot" ? (clips[0]?.enter ?? "deal") : undefined
 	const k = { "0.7×": 1.43, "0.8×": 1.25, "0.9×": 1.11, "1×": 1, "1.15×": 0.87 }[params.get("speed") ?? ""] ?? 1

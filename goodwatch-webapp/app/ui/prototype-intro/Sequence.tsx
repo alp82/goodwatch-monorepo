@@ -128,6 +128,20 @@ export function Sequence({
 					onJump={(i) => jump(i + bootCount(clips))}
 				/>
 			)}
+			{/* Next chapter while the film plays; on "Your turn" it becomes Replay (back to the first chapter). */}
+			{chapters && clips.length > 1 && (
+				at < filmCount(clips) ? (
+					<button type="button" className="lpi-skip" onClick={() => jump(at + 1)} aria-label="Next chapter">
+						Next
+						<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5l8 7-8 7V5zm10 0h2.5v14H16z" fill="currentColor" /></svg>
+					</button>
+				) : (
+					<button type="button" className="lpi-skip lpi-replay" onClick={() => jump(bootCount(clips))} aria-label="Replay the intro">
+						<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5a7 7 0 1 1-6.6 4.7l1.9.6A5 5 0 1 0 12 7v3L7.5 6 12 2v3z" fill="currentColor" /></svg>
+						Replay
+					</button>
+				)
+			)}
 		</>
 	)
 }

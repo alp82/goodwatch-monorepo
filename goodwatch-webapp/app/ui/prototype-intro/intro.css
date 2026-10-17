@@ -135,3 +135,31 @@
 @container (max-width: 520px) {
 	.lpi-chapter-now { display: none; }
 }
+
+/* ---------- Next chapter / Replay: at the right end of the chapter bar. The bar leaves room for it. */
+.lpi-chapters { right: 13cqw; }
+.lpi-skip {
+	position: absolute;
+	right: 3cqw;
+	bottom: 2.2cqh;
+	z-index: 21;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5cqw;
+	padding: max(4px, 0.6cqh) max(10px, 1.1cqw);
+	border-radius: 999px;
+	background: rgba(255, 255, 255, 0.14);
+	color: #fff;
+	font-family: "Gabarito", ui-sans-serif, system-ui, sans-serif;
+	font-weight: 700;
+	font-size: max(11px, 1.3cqw);
+	transition: background 0.15s, transform 0.15s;
+}
+.lpi-skip:hover { background: rgba(255, 255, 255, 0.24); }
+.lpi-skip:active { transform: scale(0.96); }
+.lpi-skip svg { width: max(12px, 1.4cqw); height: max(12px, 1.4cqw); }
+.lpi-replay { background: #fbbf24; color: #111; animation: lpi-fade-in 0.4s ease-out both; }
+.lpi-replay:hover { background: #fcd34d; }
+@container (max-width: 520px) {
+	.lpi-chapters { right: 22cqw; }
+}
