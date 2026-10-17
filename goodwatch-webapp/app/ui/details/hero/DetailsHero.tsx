@@ -29,23 +29,13 @@ export interface DetailsHeroProps {
 
 // The title page's overview, one card under the page's header (which has the title).
 //
-// The banner is the backdrop, with the trailer button in its corner. On it: the poster, which opens full screen,
-// and the ratings as one group. The GoodWatch score and the person's Seen and score (one control), then one chip per
-// site and, for a
-// show, the miniature of its episode ratings. Under the banner, for a member, where the title sits in their Taste
-// (taste groups, one line), then two blocks: the person's actions with the title
-// (for a tracked show also its status line), and where to watch.
-//
-// Every row runs from its left edge to its right edge: the GoodWatch ring starts the scores and the own score ends
-// them, the site chips start their row and the miniature ends it (a movie's chips share the row instead). On a
-// phone the two scores stand over each other beside the poster, each as wide as the column.
+// The banner is the backdrop, with the trailer button in its corner. On it, everything about the title and the
+// person: on the left the poster (it opens full screen), the GoodWatch score, one chip per site and, for a show, the
+// button down to its episode ratings. On the right, bottom aligned, the person's Seen and score (one control) over
+// their list actions (for a tracked show also its status line). Under the banner, where to watch across the card,
+// then for a member a quiet line on where the title sits in their Taste (taste groups). On a phone the two sides
+// stand over each other.
 export default function DetailsHero({ media, country, shownCountry, preview, episodeGrid = null, sectionProps, sides = null }: DetailsHeroProps) {
-	const sites = (
-		<div data-hero-sites className="flex min-w-0 items-center justify-between gap-3 empty:hidden">
-			<RatingChips media={media} fill={!episodeGrid} />
-			{episodeGrid && <EpisodeGridLink grid={episodeGrid} />}
-		</div>
-	)
 	return (
 		<div className="relative mx-auto mb-10 mt-4 max-w-7xl px-4 sm:px-6 lg:px-8">
 			<div {...sectionProps.overview}>
@@ -59,32 +49,30 @@ export default function DetailsHero({ media, country, shownCountry, preview, epi
 							<div className="absolute inset-0 bg-gradient-to-r from-stone-950/85 via-stone-950/20 to-transparent" />
 						</div>
 						<TrailerButton media={media} className="absolute right-3 top-3 md:right-5 md:top-4" />
-						<div className="px-4 pb-4 pt-14 md:px-6 md:pb-5 md:pt-10">
-							<div className="flex items-end gap-3 md:gap-6">
+						<div className="flex flex-col gap-4 px-4 pb-4 pt-14 md:flex-row md:items-end md:justify-between md:px-6 md:pb-5 md:pt-28">
+							<div className="flex min-w-0 items-end gap-3 md:gap-6">
 								<HeroPoster media={media} className="w-[4.5rem] md:w-32" />
-								<div data-hero-ratings className="min-w-0 flex-1 md:max-w-md lg:max-w-xl">
-									<div data-hero-scores className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between md:gap-3">
-										<div className="md:hidden">
-											<ScoreRing media={media} size={48} />
-										</div>
-										<div className="hidden md:block">
-											<ScoreRing media={media} size={56} />
-										</div>
-										<SeenScore media={media} className={`max-md:w-full md:shrink-0 ${media.mediaType === "show" ? "md:w-[18rem] lg:w-[22rem]" : "md:w-[16rem] lg:w-[20rem]"}`} />
+								<div data-hero-ratings className="flex min-w-0 flex-col gap-2.5">
+									<div className="md:hidden">
+										<ScoreRing media={media} size={48} />
 									</div>
-									<div className="mt-3 max-md:hidden">{sites}</div>
+									<div className="hidden md:block">
+										<ScoreRing media={media} size={56} />
+									</div>
+									<div data-hero-sites className="flex min-w-0 flex-wrap items-center gap-3 empty:hidden">
+										<RatingChips media={media} fill={false} />
+										{episodeGrid && <EpisodeGridLink grid={episodeGrid} />}
+									</div>
 								</div>
 							</div>
-							<div className="mt-3.5 md:hidden">{sites}</div>
+							<div className={`flex flex-col gap-2 max-md:w-full md:shrink-0 ${media.mediaType === "show" ? "md:w-[22rem]" : "md:w-[20rem]"}`}>
+								<SeenScore media={media} className="w-full" />
+								<ListActions media={media} />
+							</div>
 						</div>
 					</div>
+					<WhereToWatch media={media} country={country} shownCountry={shownCountry} preview={preview} className="p-3 md:p-5" />
 					{sides && <TitleSidesLine sides={sides} mediaType={media.mediaType} tmdbId={media.details.tmdb_id} />}
-					<div className="grid grid-cols-[minmax(0,1fr)] gap-2.5 p-3 md:p-5 md:pt-4 lg:grid-cols-2">
-						<div className="flex min-w-0 flex-col justify-center rounded-xl bg-white/[0.07] p-3 ring-1 ring-white/10">
-							<ListActions media={media} />
-						</div>
-						<WhereToWatch media={media} country={country} shownCountry={shownCountry} preview={preview} className="rounded-xl bg-white/[0.035] p-3 ring-1 ring-white/[0.07]" />
-					</div>
 				</section>
 			</div>
 		</div>

@@ -121,6 +121,8 @@ export function useStreamingLinks(
 
 /** How many services show before "All N services" opens the rest in place: two rows of two. */
 const SHOWN = 4
+/** On a wide block (three or four cards to a row) twice as many show. */
+const SHOWN_WIDE = 8
 
 const FlagStack = ({ codes }: { codes: string[] }) => (
 	<span className="flex shrink-0 -space-x-1.5">
@@ -137,8 +139,9 @@ const FlagStack = ({ codes }: { codes: string[] }) => (
 
 // The hero's where-to-watch block. A title row carries the settings on its right: the offer type, with how many
 // services the country has for each, and the country. Under it the services as cards, logo beside name, two to a
-// row and yours first with a green ring. Four show; "All N services" opens the rest in place. A card that would
-// stand alone in its row takes the whole row. One line under them tells how many other countries have the title.
+// row on a narrow block and three or four on a wide one, yours first with a green ring. Four show narrow, eight
+// wide; "All N services" opens the rest in place. On a narrow block a card that would stand alone in its row takes
+// the whole row. One line under them tells how many other countries have the title.
 // A country without the title for the offer type names the three countries with most services instead.
 //
 // The country is the header pair's (variant F): the country button and every other country here open the pair's
@@ -180,7 +183,7 @@ export default function WhereToWatch({
 	const others = countries.filter((c) => c.code !== country)
 	const top = topCountries(media, type, country)
 	const anyOwned = links.some((l) => l.owned)
-	const shown = all ? links : links.slice(0, SHOWN)
+	const shown = all ? links : links.slice(0, SHOWN_WIDE)
 	const offer = OFFER_LABEL[type]
 	const verb = OFFER_VERB[type]
 	const here = country ? regionName(country) : "your country"
@@ -302,10 +305,13 @@ export default function WhereToWatch({
 					onAll={openList}
 				/>
 			) : (
-				<div data-services className="mt-2.5 grid grid-cols-2 gap-2 pt-0.5">
+				<div data-services className="mt-2.5 grid grid-cols-2 gap-2 pt-0.5 @[36rem]:grid-cols-3 @[52rem]:grid-cols-4 @[52rem]:gap-3">
 					{shown.map((l, i) => {
 						// The last card of an odd number takes the whole row, and has room to say what it is.
-						const whole = i === shown.length - 1 && shown.length % 2 === 1
+						// On a narrow block, cards past the first four wait for "All N services".
+						const narrowCount = Math.min(shown.length, all ? shown.length : SHOWN)
+						const whole = i === narrowCount - 1 && narrowCount % 2 === 1
+						const wideOnly = i >= narrowCount
 						return (
 							<a
 								key={l.id}
@@ -318,7 +324,7 @@ export default function WhereToWatch({
 										? `${l.name}: one of your services`
 										: `${OFFER_LABEL[l.type] ?? "Watch"} on ${l.name}`
 								}
-								className={`relative flex h-12 min-w-0 items-center gap-2.5 rounded-xl bg-white/[0.06] pr-2.5 hover:bg-white/[0.12] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${whole ? "col-span-2" : ""} ${
+								className={`relative flex h-12 min-w-0 items-center gap-2.5 rounded-xl bg-white/[0.06] pr-2.5 hover:bg-white/[0.12] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${whole ? "col-span-2 @[36rem]:col-span-1" : ""} ${wideOnly ? "@max-[36rem]:hidden" : ""} ${
 									l.owned ? "ring-2 ring-green-500" : "ring-1 ring-white/10"
 								}`}
 							>
@@ -335,7 +341,7 @@ export default function WhereToWatch({
 								</span>
 								{whole && (
 									<span
-										className={`ml-auto shrink-0 text-xs ${l.owned ? "font-semibold text-green-300" : "text-gray-400"}`}
+										className={`ml-auto shrink-0 text-xs @[36rem]:hidden ${l.owned ? "font-semibold text-green-300" : "text-gray-400"}`}
 									>
 										{l.owned
 											? "On your services"
@@ -361,7 +367,7 @@ export default function WhereToWatch({
 					data-all-services
 					aria-expanded={all}
 					onClick={() => setAll(!all)}
-					className="mt-2 h-8 w-full cursor-pointer rounded-lg text-xs font-semibold text-gray-300 hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+					className={`${links.length <= SHOWN_WIDE ? "@[36rem]:hidden " : ""}mt-2 h-8 w-full cursor-pointer rounded-lg text-xs font-semibold text-gray-300 hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white`}
 				>
 					{all ? "Show fewer" : `All ${links.length} services`}
 				</button>

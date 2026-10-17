@@ -19,7 +19,7 @@ interface TitleSidesLineProps {
 	tmdbId: number
 }
 
-// Taste groups in the overview card (#672): one row between the banner and the actions. A small stack of the loved
+// Taste groups in the overview card (#672): a quiet row at the card's foot, under where to watch. A small stack of the loved
 // titles closest to this one, the group's name, a badge for how the title fits the member's taste, and Watch next
 // with the group's moods. The server decides it (title-sides.server.ts) and renders it with the page, so the card doesn't move.
 // Rating, watching, or dismissing the title on the page takes the line away: it is no longer a recommendation.
@@ -41,10 +41,10 @@ export default function TitleSidesLine({
 	return (
 		<section
 			aria-label={COPY.label}
-			className="mx-3 mt-3 flex flex-wrap items-center gap-3 rounded-xl bg-white/[0.05] p-3 ring-1 ring-white/10 md:mx-5 md:mt-4"
+			className="flex flex-wrap items-center gap-3 border-t border-white/10 px-3 py-2.5 md:px-5"
 		>
 			<div
-				className={`flex shrink-0 -space-x-4 rounded-lg border-2 p-1 ${edge ? "border-dashed border-sky-400/60" : "border-amber-500/60"}`}
+				className={`flex shrink-0 $className_PLACEHOLDER"-space-x-3 p-0.5" rounded-lg border-2 ${edge ? "border-dashed border-sky-400/60" : "border-amber-500/60"}`}
 			>
 				{stack.map((t) => (
 					<Link
@@ -52,7 +52,7 @@ export default function TitleSidesLine({
 						to={`/${t.mediaType}/${t.tmdbId}-${titleToDashed(t.title)}`}
 						prefetch="intent"
 						title={t.title}
-						className="relative block w-9 shrink-0 overflow-hidden rounded-md bg-gray-900 ring-2 ring-stone-950 md:w-10"
+						className={`relative block $className_PLACEHOLDER"w-6 md:w-7" shrink-0 overflow-hidden rounded-md bg-gray-900 ring-2 ring-stone-950`}
 					>
 						<TmdbImage
 							kind="poster"
@@ -65,9 +65,9 @@ export default function TitleSidesLine({
 					</Link>
 				))}
 			</div>
-			<div className="min-w-0 flex-1">
+			<div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
 				{sentence && (
-					<p className="font-bold leading-snug text-white md:text-lg">
+					<p className="text-sm font-semibold leading-snug text-gray-200">
 						{phone ? (
 							<>
 								<span className="max-sm:hidden">{sentence}</span>
@@ -80,7 +80,7 @@ export default function TitleSidesLine({
 				)}
 				{/* The title page's badge, as About's essence tags (ui/fingerprint/Badges). */}
 				<span
-					className={`inline-block rounded-md border border-gray-600 bg-gray-800 px-2 py-1 text-xs font-medium text-gray-300 ${sentence ? "mt-1.5" : ""}`}
+					className="inline-block rounded-md border border-gray-600 bg-gray-800 px-2 py-0.5 text-xs font-medium text-gray-300"
 				>
 					{edge ? COPY.close : COPY.fits}
 				</span>
@@ -91,7 +91,7 @@ export default function TitleSidesLine({
 						? `/watch-next?moods=${side.moods.join(",")}`
 						: "/watch-next"
 				}
-				className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-white/10 px-3 py-2 text-sm font-semibold text-white ring-1 ring-white/15 transition hover:bg-white/15 max-sm:w-full max-sm:justify-center"
+				className={`inline-flex shrink-0 items-center gap-1.5 rounded-lg $className_PLACEHOLDER"px-2.5 py-1.5 text-xs" bg-white/10 font-semibold text-white ring-1 ring-white/15 transition hover:bg-white/15 max-sm:w-full max-sm:justify-center`}
 			>
 				{COPY.watchNext}
 				<span aria-hidden>→</span>
