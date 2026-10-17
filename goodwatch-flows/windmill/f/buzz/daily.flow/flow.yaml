@@ -2,7 +2,7 @@ summary: Build the daily buzz score
 description: Collect balanced catalog/trending candidates, Wikidata identity and
   Wikipedia user pageviews; backfill 60 days, rank by volume-gated 28-day lift,
   and publish a single Crate snapshot. Writes only the five new buzz tables.
-  Enable the daily schedule after merge.
+  Hourly 08:00–23:00 UTC attempts skip unpublished or completed days.
 value:
   modules:
     - id: collect_and_score
@@ -10,10 +10,6 @@ value:
         type: script
         input_transforms: {}
         path: f/buzz/daily
-      retry:
-        constant:
-          attempts: 2
-          seconds: 1800
   concurrent_limit: 1
   concurrency_time_window_s: 0
 schema:

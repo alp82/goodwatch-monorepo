@@ -2,7 +2,7 @@ locks:
   f/apps/stats.app:
     __app_hash: 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
   f/buzz/collect: ebf2896710506b45d398384b14feb475bb68021fd3d77b6ee959df18b765c50a
-  f/buzz/daily: a8db85b2155c5117dc2eedffa3318462e1aa1531f9d9b1a13e6bfc5f9c1214a8
+  f/buzz/daily: b17dac777e14e64dd26d51171e07934dfaf4bbe347fa19990eb6dde7c705582d
   f/buzz/daily.flow:
     __flow_hash: 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
   f/buzz/score: 808666f15468b53436dfe87c1c4dcae83e702947764a689324e6088ae0a708e5

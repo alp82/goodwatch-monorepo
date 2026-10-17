@@ -5,9 +5,10 @@ Implements [#555](https://github.com/alp82/goodwatch-monorepo/issues/555), part 
 The [table design](https://github.com/alp82/goodwatch-monorepo/issues/555#issuecomment-6172741942)
 was posted before implementation. This ticket adds no member-facing behavior.
 
-`f/buzz/daily` is the Python entry point; `f/buzz/daily.flow` wraps it with two
-30-minute retries. The scripts and flow carry a concurrency limit of one (where
-supported by the Windmill edition). Snapshot publication also uses Crate's
+`f/buzz/daily` is the Python entry point; `f/buzz/daily.flow` wraps it.
+The enabled `f/buzz/daily` schedule runs hourly at 08:00–23:00 UTC
+(`0 0 8-23 * * *`, parser v2, `no_flow_overlap: true`). The scripts and flow
+carry a concurrency limit of one (where supported by the Windmill edition). Snapshot publication also uses Crate's
 optimistic version check, so a stale writer cannot regress the current date.
 
 ## Collection and score
@@ -47,11 +48,25 @@ descending views, then title key. The movie/show balance affects the candidate
 pool, not rank weights. The 14-day curve ends on the scored day. The initial
 60-day capture supports 32 scored days, with a complete baseline for each.
 
-If fewer than 80% of mapped titles have the latest 29 observations, fail the
-run and preserve `current`. This protects against Wikipedia publication lag or
-an outage; retry after the source completes that UTC day. Successfully collected
-observations are retained for the retry. HTTP failures fail visibly instead of
-publishing a partially collected replacement.
+Before any TMDB, mapping or bulk pageview work, an existing dated snapshot ends
+an attempt successfully (`already_published`), repairing `current` if a prior run
+stopped between publication writes. Otherwise probe only the requested UTC day
+for Breaking Bad and, only if absent there, The Godfather. One actual observation
+(including zero) allows collection; two missing observations return successfully
+with `waiting_for_publication`. Both use the normal polite HTTP adapter.
+
+If fewer than 80% of mapped titles have the latest 29 observations, preserve
+`current` and return `waiting_for_coverage`; successfully collected observations
+are retained for the next attempt. Missing publication or coverage raises a real
+failure at the final attempt (23:00 UTC or later). HTTP and other operational
+errors still fail visibly. Once collection succeeds, later hourly attempts do
+no signal requests or collection. Date snapshots remain immutable and `current`
+still advances monotonically under optimistic concurrency checks.
+
+The webapp reads `current` without a wall-clock freshness cutoff in
+`app/server/talked-about-now/start-row.server.ts`, and caches it for ten minutes.
+It therefore continues serving the previous snapshot while publication is late;
+no webapp change or cache write is needed.
 
 Reasons are dated context hints, not claimed causes of the attention lift.
 Release/first-air dates, later season premiere dates and official YouTube trailers
@@ -134,10 +149,20 @@ backfill/retry, source delay, article remapping and snapshot concurrency.
 ## After merge
 
 The main-branch Actions sync deploys the scripts and flow to Windmill. Do not push
-this branch to main directly. Verify the deployed flow once, then enable a daily
-schedule on `f/buzz/daily` as a **flow** at **08:00 UTC** (`0 0 8 * * *`, UTC).
-Its delayed retries cover a late Wikimedia export; inspect failures rather than
-turning missing observations into zeroes. No schedule is enabled by this branch.
+this branch to main directly. Schedule sync is intentionally opt-in: after merge,
+apply the versioned buzz schedule with the pinned CLI from
+`goodwatch-flows/windmill` (restricted to this feature):
+
+```sh
+npx --yes windmill-cli@1.803.0 sync push --yes --keep-deleted \
+  --skip-variables --skip-secrets --skip-resources --skip-resource-types \
+  --include-schedules --includes 'f/buzz/**' --workspace goodwatch
+```
+
+Read back `f/buzz/daily` and its next queued job to confirm the enabled UTC hourly
+schedule, flow target, overlap protection and final 23:00 attempt. Trigger the
+flow once to verify a cheap wait or a publication, then repeat after publication
+to verify `already_published`. Keep the 80% guard; missing days are never zeroes.
 
 Reuse these existing Windmill variables; no new vendor credentials are needed:
 `u/Alp/CRATE_HOSTS`, `u/Alp/CRATE_USER`, `u/Alp/CRATE_PASS`,
