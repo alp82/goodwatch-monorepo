@@ -297,6 +297,8 @@ export default defineConfig(({ mode, isSsrBuild }) => ({
 
 	server: {
 		port: 3003,
+		// PROTOTYPE - throwaway: reach the dev server over Tailscale.
+		allowedHosts: ["alppc", "alppc.tail3b99f1.ts.net"],
 	},
 
 	plugins: [
