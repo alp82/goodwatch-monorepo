@@ -16,6 +16,9 @@ import { EyeSlash } from "./verdict"
 export function SeenToggle() {
 	const p = useProto()
 	const on = p.seen
+	// Track 128px with 4px padding: 120px inside. Knob 84px, so it travels exactly 36px (translate-x-9).
+	const face =
+		"absolute inset-0 flex items-center justify-center gap-1 rounded-full transition-opacity duration-200"
 	return (
 		<button
 			type="button"
@@ -23,34 +26,27 @@ export function SeenToggle() {
 			aria-checked={on}
 			aria-label="Seen"
 			onClick={p.pressSeen}
-			className={`relative inline-flex h-9 w-[7.25rem] shrink-0 cursor-pointer items-center rounded-full p-1 text-xs font-bold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${
+			className={`relative inline-flex h-9 w-32 shrink-0 cursor-pointer items-center rounded-full p-1 text-xs font-bold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${
 				on
 					? "bg-green-500/[0.16] ring-1 ring-green-400/50"
 					: "bg-white/[0.06] ring-1 ring-white/15 hover:bg-white/10"
 			}`}
 		>
 			<span
-				className={`absolute left-3.5 text-green-300 transition-opacity duration-200 ${on ? "opacity-100" : "opacity-0"}`}
+				className={`relative h-7 w-[5.25rem] rounded-full shadow-[0_2px_8px_rgba(0,0,0,.45)] transition-transform duration-200 ease-[cubic-bezier(.2,.8,.2,1)] ${on ? "translate-x-9" : "translate-x-0"}`}
 			>
-				Seen
-			</span>
-			<span
-				className={`absolute right-3 text-gray-400 transition-opacity duration-200 ${on ? "opacity-0" : "opacity-100"}`}
-			>
-				Not seen
-			</span>
-			<span
-				className={`relative flex h-7 w-7 items-center justify-center rounded-full shadow-[0_2px_8px_rgba(0,0,0,.45)] transition-transform duration-200 ease-[cubic-bezier(.2,.8,.2,1)] ${
-					on
-						? "translate-x-[4.25rem] bg-green-500 text-black"
-						: "translate-x-0 bg-stone-600 text-gray-200"
-				}`}
-			>
-				{on ? (
-					<EyeIcon className="h-4 w-4" />
-				) : (
-					<EyeSlash className="h-4 w-4" />
-				)}
+				<span
+					className={`${face} bg-stone-600 text-gray-100 ${on ? "opacity-0" : "opacity-100"}`}
+				>
+					<EyeSlash className="h-3.5 w-3.5" />
+					Not seen
+				</span>
+				<span
+					className={`${face} bg-green-500 text-black ${on ? "opacity-100" : "opacity-0"}`}
+				>
+					<EyeIcon className="h-3.5 w-3.5" />
+					Seen
+				</span>
 			</span>
 		</button>
 	)

@@ -529,10 +529,10 @@ function StatusHalf({
 }: { onClick?: () => void; expanded?: boolean; full?: boolean }) {
 	const p = useProto()
 	const { watch } = p.state
-	// The preview always says how many episodes: that's what a status change can lose.
+	// Any started status says how many episodes, as the preview does. Not started asks for a status instead.
 	const words = useWords()
 	const progress =
-		full && p.total
+		(full || watch !== "not_started") && p.total
 			? progressWords(p.media, p.state.episodes, p.total)
 			: words.progress
 	const label = useStateLabel()
