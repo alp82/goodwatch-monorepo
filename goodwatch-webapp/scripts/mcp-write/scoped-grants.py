@@ -1,12 +1,15 @@
 """Rehearse the production MCP grants only on the disposable loopback cluster."""
 import base64
+import os
 import json
 from pathlib import Path
 from urllib.error import HTTPError
 from urllib.request import Request, build_opener, ProxyHandler
 
 http = build_opener(ProxyHandler({}))
-url = 'http://127.0.0.1:15767/_sql'
+port = os.environ.get('MCP_LOCAL_CRATE_PORT', '15767')
+assert port in ('15767', '15967'), 'Dedicated local MCP port required'
+url = f'http://127.0.0.1:{port}/_sql'
 
 def sql(stmt, scoped=False):
     headers = {'Content-Type': 'application/json'}

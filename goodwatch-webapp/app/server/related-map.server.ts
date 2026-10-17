@@ -125,6 +125,10 @@ const nearestOf = (type: MediaType, id: number) =>
 		ttlMinutes: 60 * 24,
 	})
 
+/** The title page's first neighborhood, shared with MCP; no personal data enters this cache. */
+export const relatedMapNeighbors = async (type: MediaType, id: number) =>
+	asPack(await nearestOf(type, id))
+
 async function buildPack(params: {
 	type: MediaType
 	id: number

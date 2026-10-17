@@ -40,3 +40,39 @@ export const writeSelected = z
 		(value) => Boolean(value.title_id || value.title_name),
 		"Provide title_id, or title_name with an optional year. When title_id is present it takes precedence.",
 	)
+
+/** Compact details by default; episode paging never pages watch history. */
+export const titleDetails = selected
+	.safeExtend({
+		include: z
+			.array(z.enum(["cast", "scores", "analysis", "seasons", "episodes"]))
+			.max(5)
+			.default(["cast", "scores", "analysis"]),
+		season_number: z
+			.number()
+			.int()
+			.min(-1)
+			.max(10000)
+			.optional()
+			.describe(
+				"Displayed season: 0 for Specials; -1 for Additional episodes in a reviewed presentation.",
+			),
+		episode_cursor: paging.cursor,
+		episode_limit: z.number().int().min(1).max(50).default(20),
+	})
+	.refine(
+		(value) =>
+			value.include.includes("episodes") ||
+			(value.season_number === undefined &&
+				value.episode_cursor === undefined &&
+				value.episode_limit === 20),
+		"Episode filters and paging require include=episodes",
+	)
+
+export const similarTitles = selected.safeExtend({
+	...paging,
+	limit: z.number().int().min(1).max(40).default(40),
+	for_you: z.boolean().default(true),
+	exclude_seen: z.boolean().default(false),
+	kind: z.enum(["all", "movie", "show"]).default("all"),
+})

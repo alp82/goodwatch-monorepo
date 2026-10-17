@@ -111,7 +111,7 @@ test("Search, My library and Watch next point at the versioned poster grid; othe
 	const withUi = tools
 		.filter((tool: { _meta?: unknown }) => tool._meta)
 		.map((tool: { name: string }) => tool.name)
-	assert.deepEqual(withUi, ["search_titles", "get_tonight", "get_library"])
+	assert.deepEqual(withUi, ["search_titles", "get_similar_titles", "get_tonight", "get_library"])
 	for (const tool of tools.filter((t: { _meta?: unknown }) => t._meta))
 		assert.deepEqual(tool._meta, {
 			ui: { resourceUri: POSTER_GRID_URI },

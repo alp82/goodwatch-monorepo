@@ -44,6 +44,20 @@ export function withPageLink(
 				"Discover searches this query using the website's ranking and filters; its results can differ from this tool's catalog lookup."
 			break
 		}
+		case "get_title": {
+			const title = data.title as { url?: string } | undefined
+			if (!title?.url) return data
+			path = title.url
+			break
+		}
+		case "get_similar_titles": {
+			const source = data.source as { url?: string } | undefined
+			if (!source?.url) return data
+			path = `${source.url}#related`
+			note =
+				"The title page shows GoodWatch’s related neighborhood. This tool applies its own For you, type and seen filters to the first 80 neighbors; the page can show a broader set in a different order."
+			break
+		}
 		case "get_library": {
 			const filter = args.filter ?? "all"
 			if (filter === "not_interested") path = "/settings/hidden"

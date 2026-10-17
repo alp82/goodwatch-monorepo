@@ -257,6 +257,7 @@ test("A member sees separate catalog and personal read tools, with valid schemas
 		[
 			"search_titles",
 			"get_title",
+			"get_similar_titles",
 			"get_my_shows",
 			"get_show_progress",
 			"get_tonight",
@@ -335,7 +336,7 @@ test(
 				limiter: unlimited,
 			})
 			const tools = (await result(await handle(rpc("tools/list")))).result.tools
-			assert.equal(tools.length, 14)
+			assert.equal(tools.length, 15)
 			assert.equal(
 				tools.find((tool: { name: string }) => tool.name === "search_titles")
 					.inputSchema.properties.ranked.default,
@@ -396,7 +397,7 @@ test("Write scopes expose seven writes with conservative destructive hints and n
 		limiter: unlimited,
 	})
 	const listed = (await result(await handle(rpc("tools/list")))).result.tools
-	assert.equal(listed.length, 14)
+	assert.equal(listed.length, 15)
 	const writes = listed.filter(
 		(tool: { annotations: { readOnlyHint: boolean } }) =>
 			!tool.annotations.readOnlyHint,

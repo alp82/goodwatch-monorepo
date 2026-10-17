@@ -357,6 +357,13 @@ export async function readMemberTool(
 			returned: Math.min(found.length, limit),
 		}
 	}
+	if (name === "get_similar_titles")
+		return (await import("./similar-titles.server.ts")).similarTitles(
+			userId,
+			origin,
+			args,
+		)
+
 	if (name === "get_library")
 		return library(userId, await getUserData({ user_id: userId }), origin, args)
 	if (name === "get_taste") {
@@ -569,6 +576,9 @@ export async function readMemberTool(
 					...summary(title, origin),
 					synopsis: details.details.synopsis ?? null,
 					genres: details.details.genres,
+					...(await (
+						await import("./title-details.server.ts")
+					).richerTitleDetails(details, origin, args)),
 					availability: await watchAvailability(title, ctx, evidence),
 				},
 				member: marks(user, `${title.media_type}-${title.tmdb_id}`),

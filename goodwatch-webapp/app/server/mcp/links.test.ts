@@ -94,3 +94,22 @@ test("Library links preserve supported UI sorts", () => {
 		`${origin}/my-library?sort=title`,
 	)
 })
+
+test("Richer title and More like this lists link to the real title page and related section", () => {
+	const source = { url: "https://goodwatch.app/movie/603-the-matrix" }
+	const detail = withPageLink(
+		"https://goodwatch.app",
+		"get_title",
+		{ include: ["episodes"] },
+		{ title: source },
+	)
+	assert.equal(detail.page_url, source.url)
+	const related = withPageLink(
+		"https://goodwatch.app",
+		"get_similar_titles",
+		{ exclude_seen: true },
+		{ source, items: [] },
+	)
+	assert.equal(related.page_url, `${source.url}#related`)
+	assert.match(String(related.page_note), /broader/)
+})

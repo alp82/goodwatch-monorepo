@@ -14,7 +14,7 @@ import {
 import { readToolEnabled } from "./policy.server.ts"
 import type { RankedSearch } from "./ranked.server.ts"
 import type { enrichTitleResults } from "./title-results.server.ts"
-import { paging, selected } from "./schemas.ts"
+import { paging, selected, titleDetails, similarTitles } from "./schemas.ts"
 import { registerWriteTools } from "./write-tools.server.ts"
 
 const calls = counter(
@@ -28,12 +28,13 @@ const durations = histogram(
 	"MCP tool duration.",
 	["tool"],
 	durationBuckets,
-	14,
+	15,
 )
 type EnrichTitleResults = typeof enrichTitleResults
 export type ReadToolName =
 	| "search_titles"
 	| "get_title"
+	| "get_similar_titles"
 	| "get_my_shows"
 	| "get_show_progress"
 	| "get_tonight"
@@ -52,6 +53,10 @@ export interface ReadArgs {
 	title_id?: string
 	title_name?: string
 	year?: number
+	include?: ("cast" | "scores" | "analysis" | "seasons" | "episodes")[]
+	season_number?: number
+	episode_cursor?: string
+	episode_limit?: number
 }
 const definitions: {
 	name: ReadToolName
@@ -103,8 +108,15 @@ const definitions: {
 		name: "get_title",
 		title: "Get a title",
 		description:
-			"Catalog details, availability evidence and your marks for one title. Unknown watch dates stay unknown.",
-		schema: selected,
+			"Catalog details, trailer, availability evidence and your marks. Default include=[cast,scores,analysis] adds five top-billed people, directors/creators with person links, provider scores on labelled scales, and title analysis (moods, themes, tags, featured tropes). Pass include=[] for the smallest answer, or add seasons/episodes for the website’s season/episode ratings. Episodes use the website’s displayed numbering, which can differ from tracking; page with episode_cursor/episode_limit and optionally season_number. Unknown scores and watch dates stay unknown.",
+		schema: titleDetails,
+	},
+	{
+		name: "get_similar_titles",
+		title: "More like this",
+		description:
+			"Find more like a movie or show from GoodWatch’s own title-page fingerprint neighbors (up to 80 candidates), with each result’s GoodWatch taste match and posters. Ordered For you by default; for_you=false keeps similarity order. Similarity describes the source title, never your taste match. Searches everywhere and includes seen titles by default; exclude_seen=true applies Not seen yet before paging. Not interested and Dropped are always hidden. kind filters all/movie/show. Keep title and filters unchanged when paging. No paid descriptive search is used.",
+		schema: similarTitles,
 	},
 	{
 		name: "get_my_shows",
@@ -240,7 +252,7 @@ export function createToolServer(
 					data = await (
 						enrich ??
 						(await import("./title-results.server.ts")).enrichTitleResults
-					)(userId, data, { posters })
+					)(userId, data, { posters: posters || tool.name === "get_title" })
 				} catch {
 					outcome = "error"
 					data = {
