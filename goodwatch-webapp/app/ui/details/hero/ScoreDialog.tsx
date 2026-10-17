@@ -25,6 +25,7 @@ export default function ScoreDialog({
 	footer,
 	top,
 	hideClear,
+	control,
 }: {
 	title: string
 	/** PROTOTYPE (seen-score): replaces the title as the dialog's heading. */
@@ -35,6 +36,8 @@ export default function ScoreDialog({
 	top?: React.ReactNode
 	/** PROTOTYPE (seen-score): no "Clear score" (Seen takes its place). */
 	hideClear?: boolean
+	/** PROTOTYPE (seen-score): replaces the score control. */
+	control?: React.ReactNode
 	open: boolean
 	value: Score | null
 	busy: boolean
@@ -45,10 +48,10 @@ export default function ScoreDialog({
 	onClose: () => void
 }) {
 	if (!open) return null
-	return <Panel title={title} value={value} busy={busy} opener={opener} onRate={onRate} onClear={onClear} onClose={onClose} heading={heading} footer={footer} top={top} hideClear={hideClear} />
+	return <Panel title={title} value={value} busy={busy} opener={opener} onRate={onRate} onClear={onClear} onClose={onClose} heading={heading} footer={footer} top={top} hideClear={hideClear} control={control} />
 }
 
-function Panel({ title, value, busy, opener, onRate, onClear, onClose, heading, footer, top, hideClear }: Omit<Parameters<typeof ScoreDialog>[0], "open">) {
+function Panel({ title, value, busy, opener, onRate, onClear, onClose, heading, footer, top, hideClear, control }: Omit<Parameters<typeof ScoreDialog>[0], "open">) {
 	const panel = useRef<HTMLDivElement>(null)
 	const shade = useRef<HTMLDivElement>(null)
 	const closeRef = useRef(onClose)
@@ -121,7 +124,7 @@ function Panel({ title, value, busy, opener, onRate, onClear, onClose, heading, 
 					</button>
 				</div>
 				{top}
-				<ScoreControl value={value} busy={busy} onRate={onRate} onClear={hideClear ? undefined : onClear} />
+				{control ?? <ScoreControl value={value} busy={busy} onRate={onRate} onClear={hideClear ? undefined : onClear} />}
 				{footer}
 			</div>
 		</div>,

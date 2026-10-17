@@ -6,7 +6,7 @@ import DetailsHeader from "~/ui/details/DetailsHeader"
 import DetailsFingerprint from "~/ui/details/DetailsFingerprint"
 import DetailsHero from "~/ui/details/hero/DetailsHero"
 // PROTOTYPE - throwaway (seen-score): ?variant= swaps the hero for a variant.
-import PrototypeHero, { SEEN_SCORE_VARIANTS, type SeenScoreVariant } from "~/ui/details/hero/prototype-seen-score/PrototypeHero"
+import PrototypeHero, { ALL_VARIANTS, MOVIE_VARIANTS, SHOW_VARIANTS, type SeenScoreVariant } from "~/ui/details/hero/prototype-seen-score/PrototypeHero"
 import { PrototypeSwitcher } from "~/ui/prototype/PrototypeSwitcher"
 import { useSearchParams } from "@remix-run/react"
 import { useScrollSections } from "~/utils/scroll"
@@ -63,7 +63,7 @@ function DetailsPage({
 	const preference = useMediaPreference()
 	const [protoParams] = useSearchParams()
 	const protoKey = protoParams.get("variant") ?? "live"
-	const protoVariant = (protoKey in SEEN_SCORE_VARIANTS || ["A", "C", "D"].includes(protoKey) ? protoKey : "live") as SeenScoreVariant | "live"
+	const protoVariant = ((ALL_VARIANTS as readonly string[]).includes(protoKey) ? protoKey : "live") as SeenScoreVariant | "live"
 	const preview = useTitlePreview({
 		media: loadedMedia,
 		loadedCountry,
@@ -135,7 +135,7 @@ function DetailsPage({
 					sides={sides}
 				/>
 			)}
-			<PrototypeSwitcher variants={SEEN_SCORE_VARIANTS} position="bottom-[calc(var(--nav-dock-height,0px)+0.75rem)] left-1/2 -translate-x-1/2 max-md:scale-90 lg:bottom-6" />
+			<PrototypeSwitcher variants={media.mediaType === "show" ? SHOW_VARIANTS : MOVIE_VARIANTS} position="bottom-[calc(var(--nav-dock-height,0px)+0.75rem)] left-1/2 -translate-x-1/2 max-md:scale-90 lg:bottom-6" />
 			{protoVariant === "live" && <DetailsHero
 				media={media}
 				country={country}

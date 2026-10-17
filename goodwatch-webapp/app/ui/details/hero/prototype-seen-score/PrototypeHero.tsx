@@ -20,16 +20,27 @@ import type { SectionProps } from "~/utils/scroll"
 import { EyeIcon, HideButton, ProtoScoreDialog, ScoreRect, SeenButton, StateStrip, WantButton, useOpenAfterSeen, useProtoToasts } from "./pieces"
 import { ProtoProvider, useFlash, useProto } from "./store"
 import { VerdictTile } from "./verdict"
+import { ChipDialog, FooterDialog, MovieSplit, SegmentedDialog, ShowBlockActions, ShowBlockRatings, ShowSplit, ShowStacked, StripDialog, movieTile } from "./round3"
 
-export const SEEN_SCORE_VARIANTS = {
+export const MOVIE_VARIANTS = {
 	live: "Live page (no change)",
-	B: "Round 1: one control",
-	steps: "Seen it? first, then the score",
-	switch: "Score first, Seen switch on top",
-	// Round 1's other variants, out of the switcher: A, C, D (still reachable by URL).
+	chip: "Seen button beside the title",
+	segmented: "Not seen | Seen beside the title",
+	strip: "Seen as the score's first cell",
+	footer: "Seen button under the score",
+	split: "Seen | score, one control",
 } as const
 
-export type SeenScoreVariant = Exclude<keyof typeof SEEN_SCORE_VARIANTS, "live"> | "A" | "C" | "D"
+export const SHOW_VARIANTS = {
+	live: "Live page (no change)",
+	split: "Status ▾ | score, one control",
+	stacked: "Status pill on top of the score",
+	block: "Status in your-show block, linked flow",
+} as const
+
+/** Every key that renders a variant: this round's, and the earlier rounds' by URL. */
+export const ALL_VARIANTS = ["A", "B", "C", "D", "steps", "switch", "chip", "segmented", "strip", "footer", "split", "stacked", "block"] as const
+export type SeenScoreVariant = (typeof ALL_VARIANTS)[number]
 
 type Media = MovieResult | ShowResult
 
@@ -54,14 +65,14 @@ export default function PrototypeHero(props: Props) {
 
 // A copy of DetailsHero with two slots: what follows the GoodWatch ring in the ratings, and the actions block.
 function Frame({ variant, media, country, shownCountry, preview, episodeGrid = null, sectionProps, sides = null }: Props) {
-	useProtoToasts(variant !== "steps" && variant !== "switch")
+	useProtoToasts(["A", "B", "C", "D"].includes(variant))
 	const sites = (
 		<div data-hero-sites className="flex min-w-0 items-center justify-between gap-3 empty:hidden">
 			<RatingChips media={media} fill={!episodeGrid} />
 			{episodeGrid && <EpisodeGridLink grid={episodeGrid} />}
 		</div>
 	)
-	const v = VARIANTS[variant]
+	const v = variant === "split" && media.mediaType === "show" ? SHOW_SPLIT : VARIANTS[variant]
 	return (
 		<div className="relative mx-auto mb-10 mt-4 max-w-7xl px-4 sm:px-6 lg:px-8">
 			<div {...sectionProps.overview}>
@@ -299,4 +310,30 @@ const VARIANTS: Record<
 	D: { ratings: RatingsD, actions: ActionsD },
 	steps: { ratings: () => <VerdictTile dialog="steps" />, actions: OtherActions },
 	switch: { ratings: () => <VerdictTile dialog="switch" />, actions: OtherActions },
+	chip: { ratings: movieTile(ChipDialog), actions: OtherActions },
+	segmented: { ratings: movieTile(SegmentedDialog), actions: OtherActions },
+	strip: { ratings: movieTile(StripDialog), actions: OtherActions },
+	footer: { ratings: movieTile(FooterDialog), actions: OtherActions },
+	split: { ratings: MovieSplit, actions: OtherActions },
+	stacked: { ratings: ShowStacked, actions: OtherActions },
+	block: { ratings: ShowBlockRatings, actions: BlockActions },
+}
+
+const SHOW_SPLIT: (typeof VARIANTS)[SeenScoreVariant] = { ratings: ShowSplit, actions: OtherActions, wideRatings: true }
+
+function BlockActions() {
+	const p = useProto()
+	const { watch } = p.state
+	return (
+		<div className="flex flex-col gap-2.5">
+			{watch !== "not_started" && <ShowBlockActions />}
+			{(watch === "not_started" || watch === "seen") && (
+				<div className="flex min-w-0 gap-2">
+					<WantButton className="flex-1" />
+					{watch === "not_started" && <ShowBlockActions />}
+					<HideButton className="max-sm:w-9 max-sm:flex-none sm:flex-1" />
+				</div>
+			)}
+		</div>
+	)
 }

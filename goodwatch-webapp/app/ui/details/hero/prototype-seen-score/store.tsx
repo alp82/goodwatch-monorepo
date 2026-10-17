@@ -73,7 +73,7 @@ function useProtoStore(media: ProtoMedia) {
 				hidden: watch === "not_started" ? s.hidden : false,
 			}))
 			if (watch === "not_started" && before.score != null) setEvent({ kind: "cleared", at: Date.now(), undo: before })
-			else if (before.watch === "not_started" && watch === "seen") setEvent({ kind: "seen-on", at: Date.now() })
+			else if (watch === "seen" && before.score == null) setEvent({ kind: "seen-on", at: Date.now() })
 			else setEvent(null)
 		},
 		[state, set],

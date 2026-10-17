@@ -11,7 +11,7 @@ import { getVibeColorValue, scoreLabels } from "~/utils/ratings"
 import { EyeIcon } from "./pieces"
 import { type Watch, useFlash, useProto } from "./store"
 
-const LOOK: Record<Watch, { word: string; text: string; border: string; bg: string; pill: string }> = {
+export const LOOK: Record<Watch, { word: string; text: string; border: string; bg: string; pill: string }> = {
 	not_started: { word: "Seen it?", text: "text-amber-200/80", border: "border-amber-400/70", bg: "bg-amber-300/[0.06]", pill: "bg-white/10 text-gray-100" },
 	watching: { word: "Watching", text: "text-sky-300", border: "border-sky-400/70", bg: "bg-sky-400/[0.07]", pill: "bg-sky-500 text-black" },
 	on_hold: { word: "On hold", text: "text-violet-300", border: "border-violet-400/70", bg: "bg-violet-400/[0.07]", pill: "bg-violet-500 text-white" },
@@ -19,7 +19,7 @@ const LOOK: Record<Watch, { word: string; text: string; border: string; bg: stri
 	seen: { word: "Seen", text: "text-green-300", border: "border-green-400/70", bg: "bg-green-400/[0.07]", pill: "bg-green-500 text-black" },
 }
 
-function useWords() {
+export function useWords() {
 	const p = useProto()
 	const { watch, episodes } = p.state
 	const show = p.media.mediaType === "show"
@@ -44,7 +44,7 @@ export function WatchIcon({ watch, className = "" }: { watch: Watch; className?:
 	)
 }
 
-function EyeSlash({ className = "" }: { className?: string }) {
+export function EyeSlash({ className = "" }: { className?: string }) {
 	return (
 		<svg viewBox="0 0 20 20" fill="currentColor" className={className} aria-hidden="true">
 			<path fillRule="evenodd" clipRule="evenodd" d={SLASH} />
@@ -53,7 +53,9 @@ function EyeSlash({ className = "" }: { className?: string }) {
 }
 
 /** The one control in the ratings. It names the watch state on top and the score (or the ask) under it. */
-export function VerdictTile({ dialog }: { dialog: "steps" | "switch" }) {
+export type DialogProps = { open: boolean; onClose: () => void; opener: React.RefObject<HTMLElement | null> }
+
+export function VerdictTile({ dialog, className = "" }: { dialog: "steps" | "switch" | React.ComponentType<DialogProps>; className?: string }) {
 	const p = useProto()
 	const { watch, score } = p.state
 	const { word, progress } = useWords()
@@ -73,7 +75,7 @@ export function VerdictTile({ dialog }: { dialog: "steps" | "switch" }) {
 				onClick={() => setOpen(true)}
 				className={`flex h-12 min-w-0 cursor-pointer items-center gap-2.5 rounded-xl text-left transition max-md:w-full md:min-w-[12.5rem] md:shrink-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${
 					score ? "pl-1.5 pr-3 hover:brightness-110" : `border-2 border-dashed ${look.border} ${look.bg} pl-2.5 pr-3.5 hover:brightness-125`
-				} ${glow ? "ring-2 ring-green-300 ring-offset-2 ring-offset-stone-950" : ""}`}
+				} ${glow ? "ring-2 ring-green-300 ring-offset-2 ring-offset-stone-950" : ""} ${className}`}
 				style={score ? { background: `${color}26`, boxShadow: `inset 0 0 0 1.5px ${color}` } : undefined}
 			>
 				{score ? (
@@ -100,12 +102,19 @@ export function VerdictTile({ dialog }: { dialog: "steps" | "switch" }) {
 					</svg>
 				)}
 			</button>
-			<VerdictDialog kind={dialog} open={open} onClose={() => setOpen(false)} opener={ref} />
+			{typeof dialog === "string" ? (
+				<VerdictDialog kind={dialog} open={open} onClose={() => setOpen(false)} opener={ref} />
+			) : (
+				(() => {
+					const D = dialog
+					return <D open={open} onClose={() => setOpen(false)} opener={ref} />
+				})()
+			)}
 		</>
 	)
 }
 
-function VerdictDialog({ kind, open, onClose, opener }: { kind: "steps" | "switch"; open: boolean; onClose: () => void; opener: React.RefObject<HTMLElement | null> }) {
+export function VerdictDialog({ kind, open, onClose, opener }: { kind: "steps" | "switch"; open: boolean; onClose: () => void; opener: React.RefObject<HTMLElement | null> }) {
 	const p = useProto()
 	const { show } = useWords()
 	const title = p.media.details.title
@@ -139,7 +148,7 @@ function VerdictDialog({ kind, open, onClose, opener }: { kind: "steps" | "switc
 }
 
 /** The cleared-score Undo and the "marked as Seen all" note, under the score control. */
-function Notes({ autoNote, onDone }: { autoNote: boolean; onDone: () => void }) {
+export function Notes({ autoNote, onDone }: { autoNote: boolean; onDone: () => void }) {
 	const p = useProto()
 	const ev = p.event
 	return (
@@ -279,7 +288,7 @@ function SeenSwitch() {
 	)
 }
 
-function StatusPill() {
+export function StatusPill() {
 	const p = useProto()
 	const { watch } = p.state
 	const { word, progress } = useWords()
@@ -332,7 +341,7 @@ function StatusPill() {
 	)
 }
 
-function SwitchAsk() {
+export function SwitchAsk() {
 	const p = useProto()
 	const { ask, show } = useWords()
 	return (
