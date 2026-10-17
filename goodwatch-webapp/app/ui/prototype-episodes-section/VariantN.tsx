@@ -247,7 +247,7 @@ function Morph({
 
 	const transition = reduced
 		? "none"
-		: `transform ${DURATION}ms ${EASE}, border-radius ${DURATION}ms ${EASE}, box-shadow ${DURATION}ms ${EASE}, opacity ${DURATION * 0.6}ms ${EASE}`
+		: `transform ${DURATION}ms ${EASE}, opacity ${DURATION * 0.6}ms ${EASE}`
 
 	return (
 		<div ref={ref} role="grid" aria-label="Episodes by season" onKeyDown={onKeyDown} className="w-full" data-morph={chart ? "chart" : "grid"}>
@@ -540,9 +540,8 @@ function SeasonRow({
 								height: TILE_H,
 								transform,
 								transformOrigin: "0 0",
-								borderRadius: chart ? "50%" : 3,
-								background: aired ? colour : undefined,
-								boxShadow: ring,
+								// No background, radius or shadow change here: a tile and a dot are two layers that cross-fade, so
+								// the morph only animates transform and opacity and never waits for a repaint to look right.
 								opacity: chart && !rated ? 0 : 1,
 								pointerEvents: chart && !rated ? "none" : undefined,
 								zIndex: sel ? 3 : isNext ? 2 : 1,
@@ -550,8 +549,18 @@ function SeasonRow({
 								transitionDelay: `${stagger}ms`,
 							}}
 						>
+							<span
+								aria-hidden
+								className="absolute inset-0 rounded-[3px]"
+								style={{ background: aired ? colour : undefined, boxShadow: chart ? undefined : ring, ...fade(!chart) }}
+							/>
+							<span
+								aria-hidden
+								className="absolute inset-0 rounded-[50%]"
+								style={{ background: aired ? colour : undefined, boxShadow: chart ? ring : undefined, ...fade(chart) }}
+							/>
 							{/* The score, gone in the chart: the dot's place on the axis says it. */}
-							<span style={fade(!chart && readable && rated)} aria-hidden>
+							<span className="relative" style={fade(!chart && readable && rated)} aria-hidden>
 								{rated ? formatScore(e.rating ?? 0) : null}
 							</span>
 							{/* An unwatched dot is a ring: a hole of the page colour, its border kept at 2 screen pixels. */}

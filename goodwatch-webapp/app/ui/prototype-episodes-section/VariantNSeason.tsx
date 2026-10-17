@@ -102,10 +102,33 @@ export default function QuietSeason({ nav, model, grid }: { nav: Nav; model: Mod
 					<ChevronDownIcon className="h-4 w-4 rotate-180" />
 				</button>}
 			</div>
-			{!desktop && !special && (count.watched > 0 || left > 0) && (
-				// On a phone the season's actions get a line of their own, still part of the pressable head.
-				<div onClick={nav.close} className="-mt-1.5 flex cursor-pointer justify-start gap-1.5 bg-white/[0.04] px-2 pb-2 hover:bg-white/[0.07]">
-					{seasonActions}
+			{!desktop && !special && (
+				// On a phone: both season actions on a line of their own, half the width each, always in place (a
+				// button that has nothing to do is dimmed, not gone, so nothing moves).
+				<div onClick={nav.close} className="-mt-1 grid cursor-pointer grid-cols-2 gap-2 bg-white/[0.04] px-2.5 pb-2.5 hover:bg-white/[0.07]">
+					<button
+						type="button"
+						disabled={left === 0}
+						onClick={(event) => {
+							stop(event)
+							model.actions.markSeason(season.number)
+						}}
+						className={`inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-white/10 text-xs font-semibold text-green-300 hover:bg-white/20 disabled:pointer-events-none disabled:opacity-35 ${FOCUS}`}
+					>
+						<CheckIcon className="h-3.5 w-3.5" />
+						Mark season
+					</button>
+					<button
+						type="button"
+						disabled={count.watched === 0}
+						onClick={(event) => {
+							stop(event)
+							model.actions.unmarkSeason(season.number)
+						}}
+						className={`inline-flex h-10 items-center justify-center rounded-lg bg-white/[0.06] text-xs font-semibold text-pink-300 hover:bg-white/15 disabled:pointer-events-none disabled:opacity-35 ${FOCUS}`}
+					>
+						Unmark season
+					</button>
 				</div>
 			)}
 			<NumberingNote season={season} model={model} />

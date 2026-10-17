@@ -28,7 +28,7 @@ export default function EpisodeGridLink({ grid, className = "" }: { grid: Episod
 			onClick={onClick}
 			aria-label="Episode ratings: every episode in one grid"
 			title="Episode ratings: every episode in one grid"
-			className={`group inline-flex h-8 shrink-0 items-center gap-2 rounded-lg bg-[#141923] pl-1.5 pr-2.5 ring-1 ring-white/20 transition hover:ring-white/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${className}`}
+			className={`group hidden h-8 shrink-0 items-center gap-2 rounded-lg bg-[#141923] sm:inline-flex pl-1.5 pr-2.5 ring-1 ring-white/20 transition hover:ring-white/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${className}`}
 		>
 						<span className="flex h-6 w-9 items-center justify-center rounded-md bg-black/30">
 				<span aria-hidden="true" className="grid grid-cols-4 gap-px">
