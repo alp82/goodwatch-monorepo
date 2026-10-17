@@ -55,11 +55,11 @@ import {
 } from "./passes.server"
 
 import {
-	loadPersonalOrder,
-	personalOrderExposure,
-	orderPersonalOrder,
-	logPersonalOrder,
 	type PersonalOrderExposure,
+	loadPersonalOrder,
+	logPersonalOrder,
+	orderPersonalOrder,
+	personalOrderExposure,
 } from "../personal-order/reader.server.ts"
 
 export interface FilterResult {
@@ -150,6 +150,9 @@ export async function filterTitles(input: FilterInput): Promise<FilterResult> {
 	const snapshot = getTitleSnapshot()
 	if (!snapshot) throw new SnapshotNotLoaded()
 	const { state, viewer } = input
+	// Materialize once: ranked/Wishlist universes may be single-use iterables.
+	const universeKeys =
+		input.universe === "catalog" ? "catalog" : [...input.universe]
 
 	const [similarTo, people, legacy, services] = await Promise.all([
 		Promise.all(
@@ -164,7 +167,12 @@ export async function filterTitles(input: FilterInput): Promise<FilterResult> {
 				keys: await personTitles(person),
 			})),
 		),
-		state.legacy ? legacyTitles(state.legacy) : null,
+		state.legacy
+			? legacyTitles(
+					state.legacy,
+					universeKeys === "catalog" ? undefined : universeKeys,
+				)
+			: null,
 		servicesFilterBase(state, viewer),
 	])
 
@@ -172,12 +180,12 @@ export async function filterTitles(input: FilterInput): Promise<FilterResult> {
 	const sortUsed = sortToUse(
 		input.sort,
 		taste !== null,
-		input.universe !== "catalog",
+		universeKeys !== "catalog",
 	)
 	// Best match reorders the Top rated order, so titles with the same match go by GoodWatch score.
 	let { rows, keys } = universeInOrder(
 		snapshot,
-		input.universe,
+		universeKeys,
 		sortUsed === "match" ? "top" : sortUsed,
 	)
 	// Remove pure hides before computing recoveries and counts: no filter can bring them back.
@@ -264,7 +272,7 @@ export async function filterTitles(input: FilterInput): Promise<FilterResult> {
 			: passing
 	let ordered = Array.from(inOrder, (i) => keys[i])
 	let personalOrder: PersonalOrderExposure | undefined
-	if (input.universe === "catalog" && sortUsed === "match") {
+	if (universeKeys === "catalog" && sortUsed === "match") {
 		const member = viewer.viewer.kind === "member" ? viewer.viewer.userId : null
 		const read = member
 			? await loadPersonalOrder(member, snapshot)

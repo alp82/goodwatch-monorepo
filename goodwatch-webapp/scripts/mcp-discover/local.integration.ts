@@ -390,6 +390,25 @@ try {
 		)
 	}
 	memberId = "mcp-member-A"
+	// The catalog's little-known 22-minute Arrival has neither votes nor a poster/snapshot row.
+	// It remains findable by name under exact year/runtime filters, independently of browse eligibility.
+	const short = await call("search_titles", {
+		query: "Arrival",
+		type: "movie",
+		min_year: 2016,
+		max_year: 2016,
+		min_runtime: 20,
+		max_runtime: 30,
+	})
+	assert.deepEqual(ids(short), ["movie:472349"])
+	assert.equal(short.items[0].runtime_minutes, 22)
+	const feature = await call("search_titles", {
+		query: "Arrival",
+		type: "movie",
+		min_runtime: 100,
+		max_runtime: 120,
+	})
+	assert.deepEqual(ids(feature), ["movie:329865"])
 	const onMine = await call("discover_titles", { on_my_services: true })
 	assert.ok(
 		onMine.items.every(

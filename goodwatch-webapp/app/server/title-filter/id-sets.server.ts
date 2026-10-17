@@ -12,7 +12,7 @@ import type { LegacyFilters } from "~/domain/filter-state"
 import { fingerprintFilterConditions } from "~/server/discover.server"
 import { query } from "~/utils/crate"
 import { MEDIA_COLLECTION, recommend } from "~/utils/qdrant"
-import { type TitleKey, titleKey } from "~/utils/title-key"
+import { type TitleKey, parseTitleKey, titleKey } from "~/utils/title-key"
 import { MIN_VOTES } from "./order.server"
 
 const KEEP_SECONDS = 30 * 60
@@ -126,10 +126,12 @@ export function personTitles(personId: number): Promise<Set<TitleKey>> {
 
 /**
  * Titles that pass the legacy Discover filters, through the conditions today's Discover SQL builds for them, over
- * Discover's eligible titles (as that SQL has it). Null when none of them applies.
+ * Discover's eligible titles, or a supplied search/Wishlist universe without the browse eligibility floor.
+ * Null when none of them applies.
  */
 export function legacyTitles(
 	legacy: LegacyFilters,
+	universe?: readonly TitleKey[],
 ): Promise<Set<TitleKey>> | null {
 	const fingerprint = fingerprintFilterConditions(legacy)
 	const conditions = [...fingerprint.conditions]
@@ -159,10 +161,18 @@ export function legacyTitles(
 		return null
 	return cachedKeys(
 		"legacy",
-		{ conditions, params, minRuntime, maxRuntime },
+		{ conditions, params, minRuntime, maxRuntime, universe },
 		async () => {
 			const found = await Promise.all(
 				(["movie", "show"] as const).map(async (type) => {
+					const ids = universe?.flatMap((key) => {
+						const parsed = parseTitleKey(key)
+						return parsed.mediaType === type ? [parsed.tmdbId] : []
+					})
+					if (ids && !ids.length) return []
+					const eligible = ids
+						? "m.tmdb_id = ANY(?)"
+						: `m.goodwatch_overall_score_voting_count >= ${MIN_VOTES} AND m.poster_path IS NOT NULL`
 					const runtime =
 						type === "movie" ? "m.runtime" : "m.episode_runtime[1]"
 					const runtimeConditions = [
@@ -171,10 +181,11 @@ export function legacyTitles(
 					]
 					const rows = await query<{ tmdb_id: number }>(
 						`SELECT m.tmdb_id FROM ${type} m
-					 WHERE m.goodwatch_overall_score_voting_count >= ${MIN_VOTES} AND m.poster_path IS NOT NULL
+					 WHERE ${eligible}
 					 AND ${[...conditions, ...runtimeConditions].join(" AND ")}
 					 LIMIT ${LEGACY_LIMIT}`,
 						[
+							...(ids ? [ids] : []),
 							...params,
 							...(minRuntime === null ? [] : [minRuntime]),
 							...(maxRuntime === null ? [] : [maxRuntime]),
