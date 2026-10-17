@@ -1,5 +1,21 @@
 // PROTOTYPE - throwaway. Shared links, icons, and bits for the footer redesign variants (?footer=A..E).
 import { ArrowUpRightIcon } from "@heroicons/react/16/solid"
+import {
+	CpuChipIcon,
+	FilmIcon,
+	FingerPrintIcon,
+	GlobeAltIcon,
+	InformationCircleIcon,
+	LifebuoyIcon,
+	LightBulbIcon,
+	MagnifyingGlassIcon,
+	NewspaperIcon,
+	PlayIcon,
+	ScaleIcon,
+	SignalIcon,
+	SparklesIcon,
+	TvIcon,
+} from "@heroicons/react/24/solid"
 import { Link } from "@remix-run/react"
 import type { ReactNode } from "react"
 import avatars from "~/img/avatars/avatars.svg"
@@ -143,5 +159,65 @@ export function Section({ title, children }: { title: string; children: ReactNod
 			<h3 className="mb-3 text-xs font-bold tracking-wider text-gray-500 uppercase">{title}</h3>
 			{children}
 		</div>
+	)
+}
+
+/* ---------------------------------------------------------------- round 2 (F, G, H) */
+export const X_URL = "https://x.com/alperortac"
+
+export function XMark({ className = "h-4 w-4" }: { className?: string }) {
+	return (
+		<svg viewBox="0 0 24 24" aria-hidden="true" className={`fill-current ${className}`}>
+			<path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+		</svg>
+	)
+}
+
+export type RichLink = FooterLink & { blurb: string; icon: (p: { className?: string }) => JSX.Element }
+
+const hero = (I: typeof FilmIcon) => (p: { className?: string }) => <I className={p.className} aria-hidden />
+
+export const RICH: { title: string; icon: (p: { className?: string }) => JSX.Element; links: RichLink[] }[] = [
+	{
+		title: "Explore",
+		icon: hero(SparklesIcon),
+		links: [
+			{ name: "Movies", href: "/movies", blurb: "Every film, every score", icon: hero(FilmIcon) },
+			{ name: "Shows", href: "/shows", blurb: "Series, seasons, episodes", icon: hero(TvIcon) },
+			{ name: "Discover", href: "/discover", blurb: "Filter by score, service, mood", icon: hero(MagnifyingGlassIcon) },
+			{ name: "Watch next", href: "/watch-next", blurb: "Picks for tonight", icon: hero(PlayIcon) },
+			{ name: "Taste", href: "/taste", blurb: "Your taste fingerprint", icon: hero(FingerPrintIcon) },
+		],
+	},
+	{
+		title: "GoodWatch",
+		icon: hero(InformationCircleIcon),
+		links: [
+			{ name: "About", href: "/about", blurb: "Why it exists", icon: hero(InformationCircleIcon) },
+			{ name: "How it works", href: "/how-it-works", blurb: "Where the scores come from", icon: hero(LightBulbIcon) },
+			{ name: "Use with AI", href: "/use-with-ai", blurb: "GoodWatch in your AI chat", icon: hero(CpuChipIcon) },
+			{ name: "Support", href: "/support", blurb: "Something broken? Write us", icon: hero(LifebuoyIcon) },
+			{ name: "Disclaimer", href: "/disclaimer", blurb: "The legal bits", icon: hero(ScaleIcon) },
+		],
+	},
+	{
+		title: "Elsewhere",
+		icon: hero(GlobeAltIcon),
+		links: [
+			{ name: "Discord", href: DISCORD_URL, external: true, blurb: "Chat with members", icon: (p) => <DiscordMark className={p.className} /> },
+			{ name: "Reddit", href: REDDIT_URL, external: true, blurb: "r/goodwatchapp", icon: (p) => <RedditGlyph className={p.className} /> },
+			{ name: "GitHub", href: GITHUB_URL, external: true, blurb: "Read the source", icon: (p) => <GitHubMark className={p.className} /> },
+			{ name: "Blog", href: BLOG_URL, external: true, blurb: "Build notes on dev.to", icon: hero(NewspaperIcon) },
+			{ name: "Status", href: STATUS_URL, external: true, blurb: "Is everything up?", icon: hero(SignalIcon) },
+		],
+	},
+]
+
+/** Reddit's alien as a single-color glyph, so it can take the link's color like the other icons. */
+function RedditGlyph({ className = "" }: { className?: string }) {
+	return (
+		<svg viewBox="0 0 24 24" aria-hidden="true" className={`fill-current ${className}`}>
+			<path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.01 4.744c.688 0 1.25.561 1.25 1.249a1.25 1.25 0 0 1-2.498.056l-2.597-.547-.8 3.747c1.824.07 3.48.632 4.674 1.488.308-.309.73-.491 1.207-.491.968 0 1.754.786 1.754 1.754 0 .716-.435 1.333-1.01 1.614a3.111 3.111 0 0 1 .042.52c0 2.694-3.13 4.87-7.004 4.87-3.874 0-7.004-2.176-7.004-4.87 0-.183.015-.366.043-.534A1.748 1.748 0 0 1 4.028 12c0-.968.786-1.754 1.754-1.754.463 0 .898.196 1.207.49 1.207-.883 2.878-1.43 4.744-1.487l.885-4.182a.342.342 0 0 1 .14-.197.35.35 0 0 1 .238-.042l2.906.617a1.214 1.214 0 0 1 1.108-.701zM9.25 12C8.561 12 8 12.562 8 13.25c0 .687.561 1.248 1.25 1.248.687 0 1.248-.561 1.248-1.249 0-.688-.561-1.249-1.249-1.249zm5.5 0c-.687 0-1.248.561-1.248 1.25 0 .687.561 1.248 1.249 1.248.688 0 1.249-.561 1.249-1.249 0-.687-.562-1.249-1.25-1.249zm-5.466 3.99a.327.327 0 0 0-.231.094.33.33 0 0 0 0 .463c.842.842 2.484.913 2.961.913.477 0 2.105-.056 2.961-.913a.361.361 0 0 0 .029-.463.33.33 0 0 0-.464 0c-.547.533-1.684.73-2.512.73-.828 0-1.979-.196-2.512-.73a.326.326 0 0 0-.232-.095z" />
+		</svg>
 	)
 }

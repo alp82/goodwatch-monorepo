@@ -13,6 +13,7 @@ import {
 	VariantD,
 	VariantE,
 } from "~/ui/prototype-footer/variants"
+import { FOOTER_VARIANTS_2, VariantF, VariantG, VariantH } from "~/ui/prototype-footer/variants2"
 import avatars from "~/img/avatars/avatars.svg"
 import discordColor from "~/img/discord-mark-blue.svg"
 import justwatchLogo from "~/img/justwatch-logo.svg"
@@ -123,19 +124,28 @@ const navigation = {
 	],
 }
 
-// PROTOTYPE - throwaway: ?footer=A..E swaps the footer on any page; "Now" is today's footer.
-const PROTO = { Now: "Today's footer", ...FOOTER_VARIANTS }
-const VARIANT_VIEWS: Record<string, () => JSX.Element> = { A: VariantA, B: VariantB, C: VariantC, D: VariantD, E: VariantE }
+// PROTOTYPE - throwaway: ?footer= swaps the footer on any page. Round 2 (F-H) cycles with B; Now and A-E still load by URL.
+const PROTO = { B: FOOTER_VARIANTS.B, ...FOOTER_VARIANTS_2 }
+const VARIANT_VIEWS: Record<string, () => JSX.Element> = {
+	A: VariantA,
+	B: VariantB,
+	C: VariantC,
+	D: VariantD,
+	E: VariantE,
+	F: VariantF,
+	G: VariantG,
+	H: VariantH,
+}
 
 export default function Footer() {
 	const [params] = useSearchParams()
-	const key = params.get("footer") ?? "A"
+	const key = params.get("footer") ?? "F"
 	const View = VARIANT_VIEWS[key]
 	if (process.env.NODE_ENV === "production") return <CurrentFooter />
 	return (
 		<>
 			{View ? <View /> : <CurrentFooter />}
-			<PrototypeSwitcher variants={PROTO} param="footer" fallback="A" position="bottom-28 lg:bottom-6 left-1/2 -translate-x-1/2" />
+			<PrototypeSwitcher variants={PROTO} param="footer" fallback="F" position="bottom-28 lg:bottom-6 left-1/2 -translate-x-1/2" />
 		</>
 	)
 }
