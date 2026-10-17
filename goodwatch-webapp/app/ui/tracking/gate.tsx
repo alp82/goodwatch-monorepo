@@ -12,6 +12,7 @@ import {
 	useState,
 } from "react"
 import { useWatchState } from "~/hooks/useUserDataAccessors"
+import type { EpisodeGrid } from "~/server/episode-grid.server"
 import type { WatchStateEntry } from "~/types/user-data"
 import { useUser } from "~/utils/auth"
 import { onFirstInteraction } from "~/utils/first-interaction"
@@ -99,10 +100,13 @@ export function TrackedTitleActions({
  */
 export function TrackedEpisodes({
 	media,
+	grid = null,
 	wrapper,
 	children,
 }: {
 	media: TrackedMedia
+	/** The ratings grid's data, which the list reads every site's season scores from; null for a show without one. */
+	grid?: EpisodeGrid | null
 	/** The section's wrapper on the title page: its class, reserved height, and the page navigation's id and ref. */
 	wrapper: {
 		id?: string
@@ -144,7 +148,9 @@ export function TrackedEpisodes({
 		>
 			{wanted ? (
 				<Suspense fallback={children}>
-					<EpisodeList media={media}>{children}</EpisodeList>
+					<EpisodeList media={media} grid={grid}>
+						{children}
+					</EpisodeList>
 				</Suspense>
 			) : (
 				children

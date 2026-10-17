@@ -72,6 +72,7 @@ export default function DetailsContent({
 			{tracking ? (
 				<TrackedEpisodes
 					media={media}
+					grid={grid}
 					wrapper={section(
 						grid ? episodeGridHeight(grid) : { phone: 0, desktop: 0 },
 						sectionProps.episodes,

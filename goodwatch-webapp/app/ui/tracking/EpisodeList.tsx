@@ -1,10 +1,10 @@
-// The episode list of a show page (#369, variant D of round 4; #384), for a member with tracking. It starts small
-// and opens by choice: a matrix with a row per season and a cell per episode in its rating's colour, watched cells
-// faded and the Next episode ringed; a press on a season row opens it into one-line rows with tick, name, air date
-// and rating; a press on a row opens it for the still, the date and "Watched up to here". On a wide screen the open
-// season sits beside the matrix. A show with one season shows only its rows. For a member who never tracked the
-// show the matrix is the ratings overview. Under the heading the ratings grid in IMDb's numbering comes first, then
-// the finder, Next, and the season and episode picker. An unwatched episode's still and description stay covered until asked for.
+// The episode list of a show page (#369, #384; redesigned in #699), for a member with tracking. One ratings grid is
+// both the overview and the way in: a row per season, a tile per episode in its IMDb rating's colour with the score
+// inside, watched episodes marked and the Next episode ringed (RatingsGrid.tsx). A Consistency view draws the same
+// episodes as dots on one score axis. Pressing a season, or one of its tiles, opens the season under its row
+// (OpenSeason.tsx): its head, then one-line rows with tick, name and rating; a press on a row opens it for the
+// still, the description and the watch's date. An unwatched episode's still and description stay covered until
+// asked for. The specials are one line under the grid.
 //
 // Loaded when the member comes near the section or asks for it; a show without an episode list keeps today's grid.
 import {
@@ -23,13 +23,14 @@ import {
 	useState,
 } from "react"
 import {
-	episodeLabel,
-	displaySeason,
 	displayNumber,
+	displaySeason,
+	episodeLabel,
 } from "~/domain/tracking/machine"
 import { seenPressLine } from "~/domain/tracking/seen-press"
 import type { PageEpisode, ShowView } from "~/domain/tracking/show-page"
 import type { LogRow } from "~/domain/tracking/storage"
+import type { EpisodeGrid } from "~/server/episode-grid.server"
 import { useBelowFold } from "~/ui/details/below-fold"
 import {
 	EPISODE_GRID_ANCHOR,
@@ -38,7 +39,11 @@ import {
 	vibeTileColor,
 } from "~/ui/details/episode-grid/scale"
 import { HEADER_HEIGHT } from "~/ui/details/header-height"
+import MediaText from "~/ui/media-text/MediaText"
+import { episodeText } from "~/ui/media-text/media-text"
 import { tmdbImageUrl } from "~/utils/tmdb-image"
+import OpenSeason from "./OpenSeason"
+import RatingsGrid from "./RatingsGrid"
 import {
 	ConfirmPanel,
 	POPOVER,
@@ -47,8 +52,6 @@ import {
 	useDismiss,
 } from "./TrackingToast"
 import { type TrackingActions, useTrackingActions } from "./actions"
-import MediaText from "~/ui/media-text/MediaText"
-import { episodeText } from "~/ui/media-text/media-text"
 import type { TrackedMedia } from "./gate"
 import {
 	FOCUS,
@@ -67,19 +70,25 @@ import {
 
 export default function EpisodeList({
 	media,
+	grid,
 	children,
 }: {
 	media: TrackedMedia
-	/** Today's episode grid, in IMDb's numbering; nothing for a show without one. */
+	/** The ratings grid's data in IMDb's numbering, for every site's season score; null for a show without one. */
+	grid: EpisodeGrid | null
+	/** Today's episode grid, shown until the list is ready; nothing for a show without one. */
 	children: ReactNode
 }) {
 	const tracking = useShowTracking(media.details.tmdb_id)
 	const actions = useTrackingActions(tracking.store, media.details.title)
 	if (!tracking.ready || !tracking.view) return <>{children}</>
 	return (
-		<List tracking={tracking} view={tracking.view} actions={actions}>
-			{children}
-		</List>
+		<List
+			tracking={tracking}
+			view={tracking.view}
+			actions={actions}
+			grid={grid}
+		/>
 	)
 }
 
@@ -118,7 +127,7 @@ const PANEL = `min-w-0 overflow-hidden rounded-xl border border-white/[0.06] ${S
 const norm = (name: string | null) =>
 	(name ?? "").toLowerCase().replace(/[^a-z0-9]/g, "")
 
-function useIsDesktop() {
+export function useIsDesktop() {
 	const [is, setIs] = useState(
 		() =>
 			typeof window !== "undefined" &&
@@ -134,7 +143,7 @@ function useIsDesktop() {
 	return is
 }
 
-interface Model {
+export interface Model {
 	view: ShowView
 	actions: TrackingActions
 	today: string
@@ -165,7 +174,7 @@ interface Target {
 	page?: boolean
 }
 
-interface Nav {
+export interface Nav {
 	seasons: Season[]
 	many: boolean
 	/** The open season's number; null at the matrix alone. */
@@ -279,20 +288,13 @@ function useNav(model: Model): Nav {
 // The section
 // ---------------------------------------------------------------------------------------------------------
 
-function List({
-	tracking,
-	view,
-	actions,
-	children,
-}: {
-	tracking: ShowTracking
-	view: ShowView
-	actions: TrackingActions
-	children: ReactNode
-}) {
+/** What every part of the list reads of the show and the member. */
+function useModel(
+	tracking: ShowTracking,
+	view: ShowView,
+	actions: TrackingActions,
+): Model {
 	const { page, seasons, today } = tracking
-	const { layOutAll } = useBelowFold()
-	const section = useRef<HTMLElement>(null)
 	const model = useMemo<Model>(() => {
 		const aired = (episode: PageEpisode) =>
 			episode.airDate !== null && episode.airDate <= today
@@ -320,7 +322,52 @@ function List({
 			},
 		}
 	}, [view, actions, today, seasons, page])
+	return model
+}
+
+type View = "grid" | "consistency"
+
+const SWITCH = `inline-flex h-10 items-center rounded-lg px-3 text-xs font-semibold cursor-pointer lg:h-8 ${FOCUS}`
+
+function List({
+	tracking,
+	view,
+	actions,
+	grid,
+}: {
+	tracking: ShowTracking
+	view: ShowView
+	actions: TrackingActions
+	grid: EpisodeGrid | null
+}) {
+	const { seasons } = tracking
+	const { layOutAll } = useBelowFold()
+	const section = useRef<HTMLElement>(null)
+	const model = useModel(tracking, view, actions)
 	const nav = useNav(model)
+	const desktop = useIsDesktop()
+	const [shown, setShown] = useState<View>("grid")
+	const regular = model.seasons.filter((season) => season.number !== 0)
+	const specials = model.seasons.find((season) => season.number === 0)
+	const next =
+		model.nextId === null
+			? null
+			: (model.seasons
+					.flatMap((season) => season.episodes)
+					.find((episode) => episode.id === model.nextId) ?? null)
+	// The open season is as wide as the grid's rows at their widest, so its ratings line up under the tiles.
+	const most = Math.max(1, ...regular.map((season) => season.episodes.length))
+	const openWidth = Math.max(672, 44 + most * 40 + 36 + (most + 1) * 3)
+	const open = (season: Season) =>
+		nav.open === season.number ? (
+			<div
+				className="my-2"
+				style={{ maxWidth: openWidth }}
+				data-open-season={season.number}
+			>
+				<OpenSeason nav={nav} model={model} grid={grid} />
+			</div>
+		) : null
 
 	// The hero asks for the list: at the Next episode, or at its start.
 	const asked = tracking.open
@@ -351,9 +398,9 @@ function List({
 	return (
 		<section
 			ref={section}
-			// The link in the hero's ratings row leads here: to the grid when the show has one, else to the list.
-			id={children ? undefined : EPISODE_GRID_ANCHOR}
-			data-episode-list={nav.many ? "matrix" : "rows"}
+			// The links to the episodes (the hero's, the page navigation's) lead here.
+			id={EPISODE_GRID_ANCHOR}
+			data-episode-list={nav.many ? "grid" : "rows"}
 			// The list keeps a pressed season row in place itself; the browser doing the same would move it twice.
 			className="[overflow-anchor:none]"
 			aria-labelledby="episode-list-title"
@@ -364,759 +411,111 @@ function List({
 					"@keyframes gwt-flash{0%,40%{background-color:rgb(255 255 255/.22)}100%{background-color:transparent}}.gwt-flash{animation:gwt-flash 1.5s ease-out}@media (prefers-reduced-motion:reduce){.gwt-flash{animation:none;outline:2px solid white;outline-offset:-2px}}"
 				}
 			</style>
-			<h2
-				id="episode-list-title"
-				tabIndex={-1}
-				className="text-2xl font-bold focus:outline-none"
-			>
-				Episodes
-			</h2>
-			{children && (
-				// The grid brings its own heading; this section's stands for both.
-				<div
-					data-imdb-grid
-					className="-mt-7 [&>section>div:first-child]:justify-end [&_#episode-grid-title]:sr-only"
+			<div className="flex flex-wrap items-center gap-2">
+				<h2
+					id="episode-list-title"
+					tabIndex={-1}
+					className="mr-auto text-xl font-bold focus:outline-none lg:text-2xl"
 				>
-					{children}
-				</div>
+					Episodes
+				</h2>
+				{next && (
+					<button
+						type="button"
+						data-jump-next
+						onClick={() => nav.jumpNext()}
+						title={next.name ?? undefined}
+						className={`inline-flex h-10 cursor-pointer items-center gap-1 rounded-lg bg-green-500/15 px-2.5 text-xs font-semibold text-green-300 hover:bg-green-500/25 lg:h-8 ${FOCUS}`}
+					>
+						Next <span className="tabular-nums">{episodeLabel(next)}</span>
+					</button>
+				)}
+				{nav.many && (
+					<div
+						role="radiogroup"
+						aria-label="Show the episodes as"
+						data-view-toggle
+						className="flex items-center gap-1"
+					>
+						{(
+							[
+								["grid", "Grid"],
+								["consistency", "Consistency"],
+							] as const
+						).map(([key, word]) => (
+							<button
+								key={key}
+								type="button"
+								// biome-ignore lint/a11y/useSemanticElements: a two-way switch drawn as buttons, as the site's other switches
+								role="radio"
+								aria-checked={shown === key}
+								onClick={() => setShown(key)}
+								className={`${SWITCH} ${shown === key ? "bg-white text-gray-900" : "bg-white/10 text-gray-100 hover:bg-white/20"}`}
+							>
+								{word}
+							</button>
+						))}
+					</div>
+				)}
+			</div>
+			{tracking.page?.presentation?.note && (
+				<p className="mt-2 text-sm text-gray-400">
+					{tracking.page.presentation.note}
+				</p>
 			)}
 			<div className="mt-4">
-				<Tools nav={nav} model={model} />
-			</div>
-			{page?.presentation?.note && (
-				<p className="mt-2 text-sm text-gray-400">{page.presentation.note}</p>
-			)}
-			<>
-					<PressLine view={view} actions={actions} />
-					<div className="mt-3">
-						{page?.episodes.length && (
-							<p className="mb-2 text-xs text-gray-400">
-								{
-									page.episodes.filter((e) => e.season > 0 && e.rating !== null)
-										.length
-								}
-								/{page.episodes.filter((e) => e.season > 0).length} episodes
-								rated on IMDb
-							</p>
-						)}
-						{nav.many ? (
-							<Matrix nav={nav} model={model} />
-						) : (
-							<div className={`max-w-3xl ${PANEL}`}>
-								<SeasonHead nav={nav} model={model} only />
-								<Rows
-									key={nav.season.number}
-									season={nav.season}
-									nav={nav}
-									model={model}
-									limit={12}
-								/>
-							</div>
-						)}
+				{regular.length > 0 && (
+					<RatingsGrid
+						model={model}
+						seasons={regular}
+						chart={shown === "consistency"}
+						selectedSeason={nav.open}
+						selectedEpisode={nav.selected}
+						onSeason={(season) => nav.toggle(season)}
+						onEpisode={(episode) => nav.goEpisode(episode, {}, true)}
+						afterRow={open}
+						seasonScores={desktop}
+					/>
+				)}
+				{specials && (
+					<div
+						data-season-row={0}
+						className="mt-1.5"
+						style={{ maxWidth: openWidth }}
+					>
+						<button
+							type="button"
+							data-season-press={0}
+							aria-expanded={nav.open === 0}
+							onClick={() => nav.toggle(specials)}
+							className={`flex h-10 w-full cursor-pointer items-center gap-2 rounded-md px-1.5 text-left text-xs lg:h-8 ${nav.open === 0 ? "bg-white/15 text-white" : "text-gray-500 hover:bg-white/[0.06] hover:text-white"} ${FOCUS}`}
+						>
+							<span className="font-semibold">Specials</span>
+							<span className="tabular-nums text-gray-600">
+								{specials.episodes.length}
+							</span>
+							<ChevronDownIcon
+								className={`ml-auto h-3.5 w-3.5 ${nav.open === 0 ? "rotate-180" : ""}`}
+							/>
+						</button>
+						{open(specials)}
 					</div>
-				</>
+				)}
+			</div>
 			<TrackingToastHost tracking={tracking} actions={actions} />
 		</section>
 	)
 }
 
-/**
- * The Seen press that stands, in one line: when it was made and what it covered, and the way to take it back.
- * Take back asks first, under the line, in the status menu's words; the toast that follows offers Undo.
- */
-function PressLine({
-	view,
-	actions,
-}: {
-	view: ShowView
-	actions: TrackingActions
-}) {
-	const [asking, setAsking] = useState(false)
-	const root = useRef<HTMLDivElement>(null)
-	const link = useRef<HTMLButtonElement>(null)
-	useDismiss(asking, root, (byKey) => {
-		setAsking(false)
-		if (byKey) link.current?.focus()
-	})
-	const { press } = view
-	if (!press) return null
-	// What taking it back does is the machine's to say: the menu's entry, which is there while the press stands.
-	const entry = view.menu.find((each) => each.id === "takeBack")
-	return (
-		<div ref={root} data-seen-press className="relative mt-2">
-			<p className="flex flex-wrap items-baseline gap-x-2 text-xs leading-5 text-gray-400">
-				<span>{seenPressLine(press, LOCALE_DATES)}</span>
-				{entry && (
-					<button
-						ref={link}
-						type="button"
-						data-take-back
-						aria-haspopup="dialog"
-						aria-expanded={asking}
-						onClick={() => setAsking(!asking)}
-						className={`-my-2 cursor-pointer py-2 font-semibold text-gray-300 underline decoration-white/30 underline-offset-4 hover:text-white ${FOCUS}`}
-					>
-						Take back
-					</button>
-				)}
-			</p>
-			{asking && entry && (
-				// Over the matrix, so that nothing below moves when it opens.
-				<div
-					role="alertdialog"
-					aria-label={entry.label}
-					className={`absolute left-0 top-full z-30 mt-1 w-80 max-w-full ${POPOVER}`}
-				>
-					<ConfirmPanel
-						name="takeBack"
-						title="Take back Seen?"
-						text={entry.note}
-						action="Take back"
-						look={TAKE_BACK_LOOK}
-						onCancel={() => {
-							setAsking(false)
-							link.current?.focus()
-						}}
-						onConfirm={() => {
-							setAsking(false)
-							actions.undoSeen()
-						}}
-					/>
-				</div>
-			)}
-		</div>
-	)
-}
-
 // ---------------------------------------------------------------------------------------------------------
-// The heading line: the finder and the jump to the Next episode
+// The open season's parts
 // ---------------------------------------------------------------------------------------------------------
-
-type Found = { episode: PageEpisode } | { season: Season }
-
-/** "9x14", "s9e14", "9.14", "s9", "14" (in the open season) or part of a name. */
-export function findEpisodes(
-	seasons: Season[],
-	picked: number,
-	query: string,
-): Found[] {
-	const q = query.trim().toLowerCase()
-	if (!q) return []
-	const out: Found[] = []
-	const has = (episode: PageEpisode) =>
-		out.some((found) => "episode" in found && found.episode === episode)
-	const add = (season: Season | undefined, number: number) => {
-		const episode = season?.episodes.find(
-			(each) => displayNumber(each) === number,
-		)
-		if (episode && !has(episode)) out.push({ episode })
-	}
-	const regular = (number: number) =>
-		seasons.find((season) => season.number === number && number > 0)
-	const code = q.match(/^s?\s*(\d{1,4})\s*(?:[xe.:\-\s]|\s*e)\s*(\d{1,4})$/)
-	if (code) add(regular(Number(code[1])), Number(code[2]))
-	const whole = q.match(/^s(?:eason)?\s*(\d{1,4})$/)
-	const season = whole && regular(Number(whole[1]))
-	if (season) out.push({ season })
-	if (/^\d{1,4}$/.test(q)) {
-		add(
-			seasons.find((each) => each.number === picked),
-			Number(q),
-		)
-		const other = regular(Number(q))
-		if (other) out.push({ season: other })
-	}
-	const key = norm(q)
-	if (key.length >= 2 && !code) {
-		const hits = seasons.flatMap((each) =>
-			each.episodes.filter((episode) => norm(episode.name).includes(key)),
-		)
-		hits.sort(
-			(a, b) =>
-				Number(norm(b.name).startsWith(key)) -
-				Number(norm(a.name).startsWith(key)),
-		)
-		for (const episode of hits)
-			if (out.length < 7 && !has(episode)) out.push({ episode })
-	}
-	return out.slice(0, 7)
-}
-
-function Finder({
-	nav,
-	model,
-	className,
-	autoFocus,
-}: {
-	nav: Nav
-	model: Model
-	className: string
-	autoFocus?: boolean
-}) {
-	const [query, setQuery] = useState("")
-	const [at, setAt] = useState(0)
-	const [open, setOpen] = useState(false)
-	const input = useRef<HTMLInputElement>(null)
-	useEffect(() => {
-		if (autoFocus) input.current?.focus()
-	}, [autoFocus])
-	const found = useMemo(
-		() => findEpisodes(nav.seasons, nav.season.number, query),
-		[nav.seasons, nav.season.number, query],
-	)
-	const pick = (choice: Found | undefined) => {
-		if (!choice) return
-		if ("episode" in choice) nav.goEpisode(choice.episode, { focus: true })
-		else nav.goSeason(choice.season, true)
-		setQuery("")
-		setOpen(false)
-	}
-	return (
-		<div className={`relative ${className}`}>
-			<MagnifyingGlassIcon className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
-			<input
-				ref={input}
-				type="search"
-				role="combobox"
-				aria-expanded={open && found.length > 0}
-				aria-controls="episode-finder-results"
-				aria-label="Find an episode"
-				autoComplete="off"
-				placeholder="Find: 9x14, s9e14 or a name"
-				value={query}
-				onChange={(event) => {
-					setQuery(event.target.value)
-					setAt(0)
-					setOpen(true)
-				}}
-				onFocus={() => setOpen(true)}
-				onBlur={() => setOpen(false)}
-				onKeyDown={(event) => {
-					if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-						event.preventDefault()
-						const by = event.key === "ArrowDown" ? 1 : -1
-						setAt((i) =>
-							found.length ? (i + by + found.length) % found.length : 0,
-						)
-					}
-					if (event.key === "Enter") pick(found[at])
-					if (event.key === "Escape") {
-						setQuery("")
-						event.currentTarget.blur()
-					}
-				}}
-				// 16 px on a phone, so that the browser does not zoom the page when the field takes focus.
-				className="h-10 w-full rounded-lg bg-white/[0.07] pl-8 pr-2 text-base text-white placeholder:text-gray-500 focus:bg-white/10 focus:outline-2 focus:outline-white/60 lg:h-8 lg:text-sm"
-			/>
-			{open && query.trim() && (
-				<div
-					id="episode-finder-results"
-					className="absolute inset-x-0 top-full z-30 mt-1 overflow-hidden rounded-lg border border-white/10 bg-gray-800 shadow-2xl lg:min-w-80"
-				>
-					{found.length === 0 && (
-						<p className="px-3 py-2 text-xs text-gray-400">
-							No episode found. Try 9x14, s9e14 or part of a name.
-						</p>
-					)}
-					{found.map((choice, i) => (
-						<button
-							key={
-								"episode" in choice
-									? choice.episode.id
-									: `s${choice.season.number}`
-							}
-							type="button"
-							data-found
-							onMouseDown={(event) => event.preventDefault()}
-							onClick={() => pick(choice)}
-							className={`flex h-11 w-full cursor-pointer items-center gap-2 px-3 text-left text-sm lg:h-8 ${i === at ? "bg-white/15" : "hover:bg-white/10"}`}
-						>
-							{"episode" in choice ? (
-								<>
-									<span className="w-16 shrink-0 text-xs font-bold tabular-nums text-gray-300">
-										{episodeLabel(choice.episode)}
-									</span>
-									<MediaText
-										value={episodeText(choice.episode, "name")}
-										className="min-w-0 flex-1 truncate text-white"
-									/>
-									{model.view.watched.has(choice.episode.id) && (
-										<CheckIcon className="h-3.5 w-3.5 shrink-0 text-green-400" />
-									)}
-								</>
-							) : (
-								<span className="font-semibold text-white">
-									{seasonTitle(choice.season.number)}
-								</span>
-							)}
-						</button>
-					))}
-				</div>
-			)}
-		</div>
-	)
-}
-
-function Tools({
-	nav,
-	model,
-}: {
-	nav: Nav
-	model: Model
-}) {
-	const desktop = useIsDesktop()
-	const [finding, setFinding] = useState(false)
-	// A short single season is in view as a whole: nothing to find and nothing to jump to.
-	const small = !nav.many && nav.season.episodes.length <= 12
-	const next =
-		model.nextId === null
-			? null
-			: nav.seasons
-					.flatMap((season) => season.episodes)
-					.find((episode) => episode.id === model.nextId)
-	return (
-		<div className="flex flex-wrap items-center gap-x-2 gap-y-2 empty:hidden">
-			{!small && !desktop && (
-				<button
-					type="button"
-					data-finder-open
-					aria-expanded={finding}
-					aria-label="Find an episode"
-					onClick={() => setFinding(!finding)}
-					className={`flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-lg ${finding ? "bg-white/20 text-white" : "bg-white/[0.07] text-gray-300"} ${FOCUS}`}
-				>
-					<MagnifyingGlassIcon className="h-4 w-4" />
-				</button>
-			)}
-			{!small && (desktop || finding) && (
-				<Finder
-					nav={nav}
-					model={model}
-					autoFocus={!desktop}
-					className={desktop ? "w-72" : "order-last w-full"}
-				/>
-			)}
-			{!small && next && (
-				<button
-					type="button"
-					data-jump-next
-					onClick={() => nav.jumpNext()}
-					className={`inline-flex h-10 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg bg-green-500/15 px-2.5 text-xs font-bold text-green-300 ring-1 ring-green-400/40 hover:bg-green-500/25 lg:h-8 ${FOCUS}`}
-				>
-					Next · {episodeLabel(next)}
-				</button>
-			)}
-		</div>
-	)
-}
-
-// ---------------------------------------------------------------------------------------------------------
-// The matrix
-// ---------------------------------------------------------------------------------------------------------
-
-/** A closed season row is one thin line of cells; the open one on a phone is enlarged to twelve big cells a line. */
-type Shape = "thin" | "big"
-
-/**
- * One cell per episode of a season, in TMDB's order. An aired episode is in its rating's colour whether it is
- * watched or not, and grey without a matched rating; a watched one is faded; one that has not aired is a dashed
- * outline; the Next episode has a white ring.
- */
-function Cells({
-	season,
-	model,
-	nav,
-	shape,
-	columns,
-	press,
-}: {
-	season: Season
-	model: Model
-	nav: Nav
-	shape: Shape
-	columns: number
-	press: boolean
-}) {
-	const big = shape === "big"
-	return (
-		<span
-			data-cells={season.number}
-			className={`grid ${big ? "gap-y-0.5" : ""}`}
-			style={{
-				gridTemplateColumns: `repeat(${columns}, minmax(0, ${big ? 26 : 22}px))`,
-			}}
-		>
-			{season.episodes.map((episode) => {
-				const watched = model.tracked && model.view.watched.has(episode.id)
-				const aired = model.aired(episode)
-				const isNext = model.nextId === episode.id
-				const colour =
-					episode.rating === null
-						? "rgb(255 255 255 / 0.24)"
-						: vibeTileColor(imdbVibe(episode.rating))
-				const background = !aired
-					? undefined
-					: watched
-						? `color-mix(in oklab, ${colour} 42%, #141923)`
-						: colour
-				const label = `${episodeLabel(episode)} · ${episode.name ?? "Untitled"}${episode.rating === null ? "" : ` · ${formatScore(episode.rating)}`}${watched ? " · watched" : aired ? "" : " · not aired"}`
-				const body = (
-					<span
-						key="body"
-						className={`relative mr-px flex items-center justify-center rounded-[2px] ${big ? "h-[18px]" : "h-3.5"} ${aired ? "" : "border border-dashed border-white/20"} ${isNext ? "z-[1] ring-2 ring-white" : ""}`}
-						style={{ background }}
-					>
-						{watched && big && (
-							<CheckIcon className="h-2.5 w-2.5 text-white/60" />
-						)}
-					</span>
-				)
-				const data = {
-					"data-cell": episode.id,
-					"data-watched": watched || undefined,
-					"data-next": isNext || undefined,
-					"data-rated":
-						episode.rating === null ? undefined : formatScore(episode.rating),
-				}
-				return press ? (
-					<button
-						key={episode.id}
-						type="button"
-						{...data}
-						tabIndex={-1}
-						aria-label={label}
-						title={label}
-						onClick={() => nav.goEpisode(episode, {}, true)}
-						className="pointer-events-auto relative block min-w-0 cursor-pointer hover:brightness-125 focus-visible:outline-2 focus-visible:outline-white"
-					>
-						{body}
-					</button>
-				) : (
-					<span key={episode.id} {...data} className="relative block min-w-0">
-						{body}
-					</span>
-				)
-			})}
-		</span>
-	)
-}
-
-/**
- * A season as one row of the matrix. The whole row is the press target that opens the season: 40 pixels high on a
- * phone and wherever the pointer is a finger, 22 with a mouse. The cells lie on top of it and are shortcuts to
- * their episode where they are wide enough to hit.
- */
-function SeasonRow({
-	season,
-	model,
-	nav,
-	shape,
-	columns,
-	press,
-}: {
-	season: Season
-	model: Model
-	nav: Nav
-	shape: Shape
-	columns: number
-	press: boolean
-}) {
-	const count = model.count(season)
-	const special = season.number === 0
-	const on = nav.open === season.number
-	const score = model.seasonScore(season.number)
-	return (
-		<div
-			data-season-row={season.number}
-			className={`pointer-events-none relative flex min-w-0 items-center gap-1.5 px-1.5 ${shape === "big" ? "min-h-11 py-1" : "h-10 lg:h-[22px] lg:pointer-coarse:h-10"}`}
-		>
-			<button
-				type="button"
-				data-season-press={season.number}
-				aria-expanded={on}
-				aria-label={`${seasonTitle(season.number)}, ${special || model.tracked ? `${count.watched} of ${count.aired} watched` : plural(count.aired, "episode")}${score === null ? "" : `, season score ${formatScore(score)}`}`}
-				onClick={() => nav.toggle(season)}
-				// The press target is the whole row; what is drawn is two pixels shorter, so that rows read as rows.
-				className={`pointer-events-auto absolute inset-0 cursor-pointer bg-clip-content py-px ${on ? "bg-white/15" : "bg-white/[0.04] hover:bg-white/[0.09]"} rounded-md ${FOCUS}`}
-			/>
-			<span
-				className={`relative w-7 shrink-0 text-xs font-bold tabular-nums ${count.done ? "text-green-300" : on ? "text-white" : "text-gray-300"}`}
-			>
-				{seasonShort(season.number)}
-			</span>
-			<span className="relative min-w-0 flex-1">
-				{special ? (
-					<span className="block truncate text-[11px] text-gray-500">
-						{plural(season.episodes.length, "special")}, not counted
-					</span>
-				) : (
-					<Cells
-						season={season}
-						model={model}
-						nav={nav}
-						shape={shape}
-						columns={columns}
-						press={press}
-					/>
-				)}
-			</span>
-			<span className="relative flex shrink-0 items-center gap-1.5">
-				<span
-					data-count
-					className={`min-w-8 text-right text-[11px] tabular-nums ${count.done ? "text-green-300" : "text-gray-400"}`}
-				>
-					{count.done ? (
-						<CheckIcon
-							className="inline h-3.5 w-3.5"
-							aria-label="All watched"
-						/>
-					) : model.tracked || (special && count.watched) ? (
-						`${count.watched}/${count.aired}`
-					) : (
-						count.aired
-					)}
-				</span>
-				{special ? (
-					<span className="w-7" />
-				) : (
-					<ScoreTile
-						score={score}
-						title={
-							score === null ? undefined : `Season score ${formatScore(score)}`
-						}
-						className="h-4 w-7 text-[10px]"
-					/>
-				)}
-				{!special && score === null && <span className="w-7" />}
-			</span>
-		</div>
-	)
-}
-
-function Legend({ model }: { model: Model }) {
-	const box = "inline-block h-2.5 w-2 rounded-[2px] bg-white/40"
-	return (
-		<div className="mt-1.5 flex min-h-4 flex-wrap items-center gap-x-3 gap-y-1 text-[10px] leading-4 text-gray-500">
-			<span>colour: IMDb rating</span>
-			{model.tracked && (
-				<span className="inline-flex items-center gap-1">
-					<span className={`${box} opacity-40`} /> watched
-				</span>
-			)}
-			{model.nextId !== null && (
-				<span className="inline-flex items-center gap-1.5">
-					<span className={`${box} ml-0.5 ring-2 ring-white`} /> next
-				</span>
-			)}
-		</div>
-	)
-}
-
-function Matrix({ nav, model }: { nav: Nav; model: Model }) {
-	const desktop = useIsDesktop()
-	const most = Math.max(
-		1,
-		...nav.seasons
-			.filter((season) => season.number !== 0)
-			.map((season) => season.episodes.length),
-	)
-	const openSeason = nav.open === null ? null : nav.season
-	const next =
-		model.nextId === null
-			? null
-			: nav.seasons
-					.flatMap((season) => season.episodes)
-					.find((episode) => episode.id === model.nextId)
-	const rows = (
-		<div data-matrix className="flex flex-col lg:gap-0.5">
-			{nav.seasons.map((season) => {
-				const big = !desktop && openSeason === season
-				return (
-					<div key={season.number}>
-						<SeasonRow
-							season={season}
-							model={model}
-							nav={nav}
-							shape={big ? "big" : "thin"}
-							columns={big ? Math.min(12, most) : most}
-							// A cell is a shortcut where it is wide enough to hit: with a mouse, and in the enlarged row.
-							press={desktop || big}
-						/>
-						{!desktop && openSeason === season && (
-							<SeasonPanel nav={nav} model={model} beside={false} />
-						)}
-					</div>
-				)
-			})}
-		</div>
-	)
-	if (!desktop)
-		return (
-			<div>
-				{rows}
-				<Legend model={model} />
-			</div>
-		)
-	return (
-		<div className="grid grid-cols-[30rem_minmax(0,1fr)] items-start gap-3">
-			<div>
-				{rows}
-				<Legend model={model} />
-			</div>
-			{openSeason ? (
-				<SeasonPanel nav={nav} model={model} beside />
-			) : (
-				<div
-					data-beside-empty
-					className={`${PANEL} flex min-h-24 flex-col items-start justify-center gap-2 p-4 text-sm text-gray-400`}
-				>
-					<p>
-						Press a season to see its episodes here, or a cell to go straight to
-						that episode.
-					</p>
-					{next && (
-						<button
-							type="button"
-							onClick={() => nav.jumpNext()}
-							className={`cursor-pointer text-left text-sm font-semibold text-green-300 underline decoration-green-400/40 underline-offset-4 hover:text-green-200 ${FOCUS}`}
-						>
-							Next: {episodeLabel(next)}
-							{next.name && (
-								<>
-									{" · "}
-									<MediaText value={episodeText(next, "name")} />
-								</>
-							)}
-						</button>
-					)}
-				</div>
-			)}
-		</div>
-	)
-}
-
-// ---------------------------------------------------------------------------------------------------------
-// The open season
-// ---------------------------------------------------------------------------------------------------------
-
-const CHIP = `inline-flex h-10 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold cursor-pointer lg:h-8 ${FOCUS}`
-const CHIP_OFF = "bg-white/10 text-gray-100 hover:bg-white/20"
-
-/** The open season's own line: its title and score, the count, and the whole-season mark. */
-function SeasonHead({
-	nav,
-	model,
-	only = false,
-	steppers = false,
-}: {
-	nav: Nav
-	model: Model
-	/** The show's only season: no title, nothing to close. */
-	only?: boolean
-	/** A phone: arrows to the seasons beside it, to correct a press on the wrong row. */
-	steppers?: boolean
-}) {
-	const season = nav.season
-	const count = model.count(season)
-	const special = season.number === 0
-	const stepper = `flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-md text-gray-300 hover:bg-white/10 disabled:cursor-default disabled:opacity-25 ${FOCUS}`
-	const left = count.aired - count.watched
-	return (
-		<div className="flex min-h-11 flex-wrap items-center gap-1 py-1 pl-3 pr-1 lg:flex-nowrap">
-			{steppers && (
-				<button
-					type="button"
-					data-step="-1"
-					aria-label="Previous season"
-					disabled={nav.index === 0}
-					onClick={() => nav.goSeason(nav.seasons[nav.index - 1], false, true)}
-					className={`${stepper} -ml-2`}
-				>
-					<ChevronRightIcon className="h-4 w-4 rotate-180" />
-				</button>
-			)}
-			<h3 className="flex min-w-0 items-center gap-2 text-sm font-bold text-white">
-				<span className="truncate">
-					{only
-						? plural(season.episodes.length, "episode")
-						: steppers
-							? seasonShort(season.number)
-							: seasonTitle(season.number)}
-				</span>
-				{!steppers && (
-					<ScoreTile
-						score={model.seasonScore(season.number)}
-						title="Season score"
-					/>
-				)}
-			</h3>
-			{steppers && (
-				<button
-					type="button"
-					data-step="1"
-					aria-label="Next season"
-					disabled={nav.index === nav.seasons.length - 1}
-					onClick={() => nav.goSeason(nav.seasons[nav.index + 1], false, true)}
-					className={stepper}
-				>
-					<ChevronRightIcon className="h-4 w-4" />
-				</button>
-			)}
-			<span className="flex-1" />
-			<span
-				data-season-count
-				className={`shrink-0 text-xs tabular-nums ${count.done ? "font-semibold text-green-300" : "text-gray-400"}`}
-			>
-				{special
-					? `${count.watched} watched · not counted`
-					: model.tracked
-						? `${count.watched}/${count.aired}`
-						: plural(count.aired, "episode")}
-				{count.total > count.aired && !special
-					? ` · ${count.total - count.aired} to air`
-					: ""}
-			</span>
-			{!special && left > 0 && (
-				<button
-					type="button"
-					data-mark-season
-					onClick={() => model.actions.markSeason(season.number)}
-					className={`${CHIP} ml-1.5 shrink-0 bg-white/10 text-green-300 hover:bg-white/20`}
-				>
-					<CheckIcon className="h-3.5 w-3.5" />
-					Mark season
-				</button>
-			)}
-			{!special && count.watched > 0 && (
-				// Beside Mark season where the head has the room; under it on a narrow screen, whose head is full.
-				<div className="order-last flex basis-full justify-end lg:order-none lg:basis-auto">
-					<button
-						type="button"
-						data-unmark-season
-						onClick={() => model.actions.unmarkSeason(season.number)}
-						className={`${CHIP} ml-1.5 shrink-0 text-pink-300 hover:bg-white/10`}
-					>
-						Unmark season
-					</button>
-				</div>
-			)}
-			{!only && (
-				<button
-					type="button"
-					data-close-season
-					aria-label={`Close ${seasonTitle(season.number)}`}
-					onClick={nav.close}
-					className={`flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-md text-gray-400 hover:bg-white/10 hover:text-white ${FOCUS}`}
-				>
-					<ChevronDownIcon className="h-4 w-4 rotate-180" />
-				</button>
-			)}
-		</div>
-	)
-}
 
 /** What a season's ratings lose when IMDb numbers it differently. */
-function NumberingNote({ season, model }: { season: Season; model: Model }) {
+export function NumberingNote({
+	season,
+	model,
+}: { season: Season; model: Model }) {
 	const note = model.note(season.number)
 	if (!note) return null
 	return (
@@ -1137,35 +536,6 @@ function NumberingNote({ season, model }: { season: Season; model: Model }) {
 					: "."}
 			</span>
 		</p>
-	)
-}
-
-function SeasonPanel({
-	nav,
-	model,
-	beside,
-}: {
-	nav: Nav
-	model: Model
-	beside: boolean
-}) {
-	const season = nav.season
-	return (
-		<div
-			data-season-panel={season.number}
-			className={`${PANEL} ${beside ? "" : "my-1"}`}
-		>
-			<SeasonHead nav={nav} model={model} steppers={!beside} />
-			<NumberingNote season={season} model={model} />
-			<Rows
-				key={season.number}
-				season={season}
-				nav={nav}
-				model={model}
-				// Beside the matrix there is room for a few more rows than under a phone's season row.
-				limit={beside ? 10 : 8}
-			/>
-		</div>
 	)
 }
 
@@ -1222,28 +592,34 @@ function DateChoice({
 	const day = watch ? dayOfWatch(watch) : null
 	return (
 		<>
-			<label className={`${CHIP} ${day ? on : CHIP_OFF}`}>
-				On
+			<label
+				className={`${WHEN} min-w-0 gap-2 !px-1.5 lg:!px-3 ${day ? on : WHEN_OFF}`}
+			>
+				<span className="hidden shrink-0 lg:inline">On</span>
 				<input
 					type="date"
 					data-watch-day
 					max={today}
 					value={day ?? ""}
 					onChange={(event) => event.target.value && onDay(event.target.value)}
-					className="w-[8.25rem] rounded bg-black/30 px-1 py-0.5 text-base text-white [color-scheme:dark] lg:w-[7.25rem] lg:text-xs"
+					className="min-w-0 flex-1 rounded bg-black/30 px-1 py-1 text-base text-white [color-scheme:dark] lg:w-32 lg:flex-none lg:text-xs"
 				/>
 			</label>
 			<button
 				type="button"
 				data-watch-unknown
 				onClick={onUnknown}
-				className={`${CHIP} ${watch && watch.watched_at === null ? on : CHIP_OFF}`}
+				className={`${WHEN} ${watch && watch.watched_at === null ? on : WHEN_OFF}`}
 			>
-				Don't know when
+				Don't know
 			</button>
 		</>
 	)
 }
+
+/** The buttons of a watch's date. */
+const WHEN = `inline-flex h-11 items-center justify-center rounded-lg px-3 text-xs font-semibold cursor-pointer lg:h-9 ${FOCUS}`
+const WHEN_OFF = "bg-white/10 text-gray-100 hover:bg-white/20"
 
 // The icons only tracking draws (Heroicons 24 solid, MIT), written out here: imported from the icon package, or kept
 // in a small module of their own, they would be added to a chunk that every page loads.
@@ -1386,67 +762,75 @@ function RowDetail({
 				</div>
 			</div>
 			{aired ? (
-				<div className="mt-2.5 flex flex-wrap items-center gap-1.5 text-xs text-gray-400">
-					<span data-watched-when>
+				// A label line, then when (Now, a day, or unknown) as one even row, then the bigger actions on a row of their own.
+				<div className="mt-3.5 flex flex-col gap-2.5 text-xs text-gray-400">
+					<p data-watched-when>
 						{current
-							? `Watched ${formatWatched(current, today)}${special ? ", not counted" : ""}:`
-							: "Watched it:"}
-					</span>
-					{!current && (
+							? `Watched ${formatWatched(current, today)}${special ? ", not counted" : ""}`
+							: "When did you watch it?"}
+					</p>
+					<div className="grid grid-cols-[auto_minmax(0,1fr)_auto] gap-1.5 lg:flex lg:gap-2">
 						<button
 							type="button"
 							data-watch-now
+							disabled={!!current}
 							onClick={() => actions.watch(episode)}
-							className={`${CHIP} ${CHIP_OFF}`}
+							className={`${WHEN} ${current ? "pointer-events-none opacity-40" : WHEN_OFF}`}
 						>
 							Now
 						</button>
-					)}
-					<DateChoice
-						watch={current}
-						today={today}
-						onDay={(day) =>
-							current
-								? actions.setWatchDate(current.watch_id, {
-										precision: "day",
-										day,
-									})
-								: actions.watch(episode, { precision: "day", day })
-						}
-						onUnknown={() =>
-							current
-								? actions.setWatchDate(current.watch_id, {
-										precision: "unknown",
-									})
-								: actions.watch(episode, { precision: "unknown" })
-						}
-					/>
-					{upTo > 1 && (
-						<button
-							type="button"
-							data-up-to-here
-							onClick={() => {
-								actions.watchUpTo(episode)
-								close()
-							}}
-							className={`${CHIP} bg-white/10 text-green-300 ring-1 ring-green-400/40 hover:bg-white/20`}
-						>
-							<CheckIcon className="h-3.5 w-3.5" />
-							Watched up to here ({upTo})
-						</button>
-					)}
-					{current && (
-						<button
-							type="button"
-							data-remove-watch
-							onClick={() => {
-								actions.unwatch(episode)
-								close()
-							}}
-							className={`${CHIP} text-pink-300 hover:bg-white/10`}
-						>
-							Remove watch
-						</button>
+						<DateChoice
+							watch={current}
+							today={today}
+							onDay={(day) =>
+								current
+									? actions.setWatchDate(current.watch_id, {
+											precision: "day",
+											day,
+										})
+									: actions.watch(episode, { precision: "day", day })
+							}
+							onUnknown={() =>
+								current
+									? actions.setWatchDate(current.watch_id, {
+											precision: "unknown",
+										})
+									: actions.watch(episode, { precision: "unknown" })
+							}
+						/>
+					</div>
+					{(upTo > 1 || current) && (
+						<div className="flex flex-wrap items-center justify-between gap-2">
+							{upTo > 1 ? (
+								<button
+									type="button"
+									data-up-to-here
+									onClick={() => {
+										actions.watchUpTo(episode)
+										close()
+									}}
+									className={`${WHEN} gap-1.5 bg-white/10 text-green-300 ring-1 ring-green-400/40 hover:bg-white/20`}
+								>
+									<CheckIcon className="h-3.5 w-3.5" />
+									Watched up to here ({upTo})
+								</button>
+							) : (
+								<span />
+							)}
+							{current && (
+								<button
+									type="button"
+									data-remove-watch
+									onClick={() => {
+										actions.unwatch(episode)
+										close()
+									}}
+									className={`${WHEN} text-pink-300 hover:bg-white/10`}
+								>
+									Remove watch
+								</button>
+							)}
+						</div>
 					)}
 				</div>
 			) : (
@@ -1596,16 +980,13 @@ function Row({
 					{!special && aired && (
 						<RatingChip episode={episode} missing={missing} />
 					)}
-					<span className="hidden w-28 shrink-0 whitespace-nowrap text-right text-xs tabular-nums text-gray-500 sm:block">
+					<span className="hidden w-28 shrink-0 whitespace-nowrap text-right text-xs tabular-nums text-gray-500 lg:block">
 						{episode.airDate
 							? aired
 								? formatDay(episode.airDate)
 								: `Airs ${formatDay(episode.airDate)}`
 							: "No air date"}
 					</span>
-					<ChevronDownIcon
-						className={`h-3.5 w-3.5 shrink-0 text-gray-600 transition-transform ${open ? "rotate-180" : ""}`}
-					/>
 				</button>
 			</div>
 			{open && <RowDetail episode={episode} model={model} close={onToggle} />}
@@ -1613,6 +994,8 @@ function Row({
 	)
 }
 
+/** A small text button, as the watch log's Remove. */
+const CHIP = `inline-flex h-10 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold cursor-pointer lg:h-8 ${FOCUS}`
 const FOLD = `flex h-10 w-full cursor-pointer items-center gap-2 border-t border-white/[0.06] px-3 text-left text-xs text-gray-400 hover:bg-white/[0.05] hover:text-white lg:h-7 ${FOCUS}`
 
 /**
@@ -1620,7 +1003,7 @@ const FOLD = `flex h-10 w-full cursor-pointer items-center gap-2 border-t border
  * line above and one below, each of which opens `limit` more. The rows are part of the page and scroll with it;
  * nothing here scrolls by itself, so a row that opens only pushes down what is under it.
  */
-function Rows({
+export function Rows({
 	season,
 	nav,
 	model,
@@ -1694,17 +1077,8 @@ function Rows({
 				: displaySeason(episodes[a]) < 0
 					? `${episodeLabel(episodes[a])}–${episodeLabel(episodes[b])}`
 					: `E${displayNumber(episodes[a])}–E${displayNumber(episodes[b])}`
-	const watchedIn = (a: number, b: number) =>
-		episodes.slice(a, b).filter((episode) => model.view.watched.has(episode.id))
-			.length
 	return (
 		<div ref={root} data-rows={season.number}>
-			{special && (
-				<p className="border-t border-white/[0.06] px-3 py-1.5 text-[11px] text-gray-400">
-					Specials can be marked. They never count toward your progress or
-					toward the show being Seen.
-				</p>
-			)}
 			{from > 0 && (
 				<button
 					type="button"
@@ -1714,10 +1088,7 @@ function Rows({
 				>
 					<ChevronDownIcon className="h-3.5 w-3.5 rotate-180" />
 					<span className="tabular-nums">
-						{plural(from, "earlier episode")}
-						{span(0, from - 1) && ` · ${span(0, from - 1)}`}
-						{model.tracked &&
-							` · ${watchedIn(0, from) === from ? "all watched" : `${watchedIn(0, from)} watched`}`}
+						{span(0, from - 1) || plural(from, "earlier special")}
 					</span>
 				</button>
 			)}
@@ -1747,9 +1118,7 @@ function Rows({
 				>
 					<ChevronDownIcon className="h-3.5 w-3.5" />
 					<span className="tabular-nums">
-						{episodes.length - to} more
-						{span(to, episodes.length - 1) &&
-							` · ${span(to, episodes.length - 1)}`}
+						{span(to, episodes.length - 1) || `${episodes.length - to} more`}
 					</span>
 				</button>
 			)}

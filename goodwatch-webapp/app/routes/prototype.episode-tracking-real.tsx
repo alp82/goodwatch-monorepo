@@ -57,6 +57,7 @@ import {
 import { TrackedEpisodes, useEpisodeTracking } from "~/ui/tracking/gate"
 import { deviceClock } from "~/ui/tracking/store"
 import { AuthContext } from "~/utils/auth"
+import type { EpisodeGrid as EpisodeGridData } from "~/server/episode-grid.server"
 
 const FIXTURES: Record<string, unknown> = {
 	supernatural,
@@ -367,6 +368,7 @@ function Harness({
 					<div className="mt-12 flex flex-col gap-12">
 						<Episodes
 							media={media}
+							data={grid.seasons.length ? grid : null}
 							grid={grid.seasons.length ? <EpisodeGrid grid={grid} /> : null}
 						/>
 						<div className="h-40 rounded-xl border border-dashed border-white/10 p-4 text-sm text-gray-500">
@@ -382,12 +384,13 @@ function Harness({
 /** The episodes section as ui/details/DetailsContent.tsx renders it. */
 function Episodes({
 	media,
+	data,
 	grid,
-}: { media: ShowResult; grid: React.ReactNode }) {
+}: { media: ShowResult; data: EpisodeGridData | null; grid: React.ReactNode }) {
 	const tracking = useEpisodeTracking(media)
 	if (!tracking) return grid ? <div>{grid}</div> : null
 	return (
-		<TrackedEpisodes media={media} wrapper={{}}>
+		<TrackedEpisodes media={media} grid={data} wrapper={{}}>
 			{grid}
 		</TrackedEpisodes>
 	)
