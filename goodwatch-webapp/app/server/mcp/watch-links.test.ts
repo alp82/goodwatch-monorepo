@@ -140,3 +140,19 @@ test("provider markdown escapes labels and destinations, including unnamed-provi
 		"[Service 8](https://www.themoviedb.org/tv/1399/watch?locale=DE)",
 	)
 })
+test("offers carry the provider's TMDB logo for the poster cards when it is known", () => {
+	const withLogo = linkedAvailability(
+		availability,
+		title,
+		"DE",
+		names,
+		[],
+		new Map([[8, "/pbpMk2JmcoNnQwx5JGpXngfoWtp.jpg"]]),
+	)
+	assert.equal(
+		withLogo.offers[0].logo_url,
+		"https://image.tmdb.org/t/p/w92/pbpMk2JmcoNnQwx5JGpXngfoWtp.jpg",
+	)
+	const without = linkedAvailability(availability, title, "DE", names, [])
+	assert.equal("logo_url" in without.offers[0], false)
+})

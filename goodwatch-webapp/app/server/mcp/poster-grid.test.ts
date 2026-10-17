@@ -50,6 +50,9 @@ const sources = {
 				{
 					runtime: i === 0 ? 136 : 57,
 					poster_path: i === 0 ? "/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg" : null,
+					backdrop_path: i === 0 ? "/ncEsesgOJDNrTUED89hYbA117wo.jpg" : null,
+					tagline: i === 0 ? "Welcome to the Real World." : null,
+					goodwatch_overall_score_normalized_percent: i === 0 ? 85.6 : null,
 				},
 			]),
 		)
@@ -160,7 +163,7 @@ test("The poster grid resource is listed and read as an MCP App with a tight CSP
 		/innerHTML|outerHTML|insertAdjacentHTML|document\.write/,
 	)
 	assert.ok(
-		Buffer.byteLength(html) < 20_000,
+		Buffer.byteLength(html) < 30_000,
 		`${Buffer.byteLength(html)} bytes`,
 	)
 })
@@ -183,9 +186,17 @@ test("Poster tools add a nullable poster_url; the answer is the same with and wi
 	assert.deepEqual(JSON.parse(plain.content[0].text), plain.structuredContent)
 	const [matrix, thrones] = plain.structuredContent.items
 	assert.equal(matrix.poster_url, poster)
+	assert.equal(
+		matrix.backdrop_url,
+		"https://image.tmdb.org/t/p/w780/ncEsesgOJDNrTUED89hYbA117wo.jpg",
+	)
 	assert.equal(matrix.match, 91)
 	assert.equal(matrix.link, items[0].link)
 	assert.equal(thrones.poster_url, null)
+	assert.equal(thrones.backdrop_url, null)
+	assert.equal(matrix.goodwatch_score, 86)
+	assert.equal(thrones.goodwatch_score, null)
+	assert.equal("tagline" in matrix, false)
 	assert.ok(plain.structuredContent.page_url.startsWith(`${origin}/discover?`))
 	// Apart from poster_url, the result is what enrichment returned before posters existed.
 	const before = await enrichTitleResults(
@@ -196,7 +207,12 @@ test("Poster tools add a nullable poster_url; the answer is the same with and wi
 	const withoutPosters = {
 		...plain.structuredContent,
 		items: plain.structuredContent.items.map(
-			({ poster_url: _, ...rest }: Record<string, unknown>) => rest,
+			({
+				poster_url: _,
+				backdrop_url: _backdrop,
+				goodwatch_score: _score,
+				...rest
+			}: Record<string, unknown>) => rest,
 		),
 	}
 	const { page_url: _page, page_note: _note, ...rest } = withoutPosters
@@ -210,6 +226,16 @@ test("Tools without the grid don't get poster_url", async () => {
 		{ sources },
 	)
 	assert.equal("poster_url" in (data.title as object), false)
+	assert.equal("backdrop_url" in (data.title as object), false)
+	const pick = await enrichTitleResults(
+		"member-A",
+		{ pick: { title: items[0] } },
+		{ posters: true, taglines: true, sources },
+	)
+	assert.equal(
+		(pick.pick as { title: { tagline: string } }).title.tagline,
+		"Welcome to the Real World.",
+	)
 })
 
 test("The grid keeps GoodWatch links and TMDB posters only", () => {
@@ -238,52 +264,95 @@ test("The grid keeps GoodWatch links and TMDB posters only", () => {
 		assert.equal(safePosterUrl(bad), null, bad)
 })
 
-test("The grid view covers search, library, Watch next, errors and empty answers", () => {
+test("The card view covers search, library, Watch next, errors and empty answers", () => {
+	const backdrop =
+		"https://image.tmdb.org/t/p/w780/ncEsesgOJDNrTUED89hYbA117wo.jpg"
 	const search = posterView(
 		{
 			items: [
 				{
 					...items[0],
 					poster_url: poster,
+					backdrop_url: backdrop,
+					goodwatch_score: 86,
 					match: 91,
 					match_label: "91% taste match",
 				},
-				{ ...items[1], poster_url: "https://evil.example/p.jpg", match: null },
+				{
+					...items[1],
+					poster_url: "https://evil.example/p.jpg",
+					backdrop_url: "https://image.tmdb.org/t/p/original/x.jpg",
+					match: null,
+				},
 				{ name: "Bad link", year: 2000, url: "javascript:alert(1)" },
 			],
 			ranked: false,
 			page_url: `${origin}/discover?q=dark`,
 		},
 		origin,
+		{ query: "matrix" },
 	)
-	assert.equal(search.heading, "Search results")
-	assert.equal(search.pick, false)
+	assert.equal(search.layout, "grid")
+	assert.equal(search.eyebrow, "Top result for “matrix”")
 	assert.equal(search.pageUrl, `${origin}/discover?q=dark`)
 	assert.deepEqual(
 		search.cards.map((card) => [
 			card.name,
+			card.kind,
 			card.poster,
 			card.poster2x,
-			card.matchLabel,
+			card.backdrop,
+			card.backdrop2x,
+			card.match,
+			card.score,
 		]),
 		[
 			[
 				"The Matrix",
+				"Movie",
 				poster,
 				poster.replace("/w185/", "/w342/"),
-				"91% taste match",
+				backdrop,
+				backdrop.replace("/w780/", "/w1280/"),
+				91,
+				86,
 			],
-			["Game of Thrones", null, null, null],
+			["Game of Thrones", "Show", null, null, null, null, null, null],
 		],
 	)
 	assert.equal(
-		posterView({ items: [], sort: "match" }, origin).heading,
-		"My library",
+		posterView({ items: [items[0]], sort: "match" }, origin, {
+			filter: "want_to_see",
+		}).eyebrow,
+		"Best match on your Wishlist",
+	)
+	assert.equal(
+		posterView({ items: [items[0]], sort: "runtime" }, origin).eyebrow,
+		"Longest in My library",
 	)
 	const next = posterView(
 		{
 			pick: {
-				title: { ...items[1], poster_url: null },
+				title: {
+					...items[1],
+					poster_url: null,
+					tagline: "Winter is coming.",
+					availability: {
+						offers: [
+							{
+								name: "Netflix",
+								url: "javascript:alert(1)",
+								link_kind: "provider",
+							},
+							{
+								name: "Max",
+								url: "https://play.max.com/show/1",
+								link_kind: "provider",
+								logo_url: "https://image.tmdb.org/t/p/w92/max.jpg",
+							},
+						],
+					},
+				},
 				reason: "nextEpisode",
 				episode: { code: "S2 E3", name: "What Is Dead May Never Die" },
 				match: 88,
@@ -292,10 +361,40 @@ test("The grid view covers search, library, Watch next, errors and empty answers
 		},
 		origin,
 	)
-	assert.equal(next.heading, "Watch next")
-	assert.equal(next.pick, true)
-	assert.equal(next.cards[0].episode, "S2 E3 · What Is Dead May Never Die")
+	assert.equal(next.layout, "pick")
+	assert.equal(next.eyebrow, "Next episode · S2 E3")
+	assert.equal(next.eyebrowDetail, "What Is Dead May Never Die")
 	assert.equal(next.cards[0].match, 88)
+	assert.equal(next.cards[0].tagline, "Winter is coming.")
+	assert.deepEqual(next.watch, {
+		label: "Watch on Max",
+		url: "https://play.max.com/show/1",
+		logo: "https://image.tmdb.org/t/p/w92/max.jpg",
+	})
+	const fallback = posterView(
+		{
+			pick: {
+				title: {
+					...items[0],
+					availability: {
+						offers: [
+							{
+								name: "Netflix",
+								url: "https://www.themoviedb.org/movie/603/watch?locale=DE",
+								link_kind: "where_to_watch",
+								logo_url: "https://evil.example/logo.png",
+							},
+						],
+					},
+				},
+				reason: "suggestion",
+			},
+		},
+		origin,
+	)
+	assert.equal(fallback.eyebrow, "A pick for you")
+	assert.equal(fallback.watch?.label, "Where to watch")
+	assert.equal(fallback.watch?.logo, null)
 	assert.equal(
 		posterView({ pick: null }, origin).message,
 		"There is nothing to pick right now.",
@@ -305,14 +404,20 @@ test("The grid view covers search, library, Watch next, errors and empty answers
 			.message,
 		"Used up.",
 	)
-	assert.equal(posterView(null, origin).message, "No titles to show.")
-	assert.equal(posterView({ items: [] }, origin).cards.length, 0)
+	assert.equal(posterView(null, origin).layout, "message")
+	assert.equal(posterView({ items: [] }, origin).message, "No titles to show.")
 })
 
 test("The generated widget matches its sources (run node scripts/build-mcp-poster-grid.mjs)", async () => {
 	const hash = createHash("sha256")
-	for (const name of ["cards.ts", "widget.ts", "widget.css", "template.html"])
-		hash.update(await readFile(new URL(`poster-grid/${name}`, import.meta.url)))
+	for (const name of [
+		"poster-grid/cards.ts",
+		"poster-grid/widget.ts",
+		"poster-grid/widget.css",
+		"poster-grid/template.html",
+		"../../ui/brand/GoodWatchWordmark.tsx",
+	])
+		hash.update(await readFile(new URL(name, import.meta.url)))
 	assert.equal(POSTER_GRID_SOURCE_HASH, hash.digest("hex").slice(0, 16))
 	assert.match(
 		posterGridHtml("https://staging.example/mcp"),
@@ -347,4 +452,112 @@ test("A client on the older stateless protocol reads the same resource", async (
 	} finally {
 		await handler.close()
 	}
+})
+
+test("The MCP rpc log names methods and UI support, never arguments or identities", async () => {
+	const { describeRpc } = await import("./rpc-log.ts")
+	const tools = new Set(["search_titles"])
+	assert.equal(
+		describeRpc(
+			{
+				jsonrpc: "2.0",
+				id: 1,
+				method: "initialize",
+				params: {
+					protocolVersion: "2025-06-18",
+					capabilities: {
+						extensions: {
+							"io.modelcontextprotocol/ui": { mimeTypes: [MCP_APP_MIME_TYPE] },
+						},
+					},
+					clientInfo: { name: "claude-ai\nforged line", version: "0.1.0" },
+				},
+			},
+			tools,
+			null,
+		),
+		"MCP rpc: method=initialize protocol=2025-06-18 client=claude-ai?forged line/0.1.0 ui=text/html;profile=mcp-app",
+	)
+	const call = describeRpc(
+		{
+			method: "tools/call",
+			params: { name: "search_titles", arguments: { query: "secret query" } },
+		},
+		tools,
+		"2025-06-18",
+	)
+	assert.equal(
+		call,
+		"MCP rpc: method=tools/call tool=search_titles protocol=2025-06-18",
+	)
+	assert.equal(
+		describeRpc(
+			{ method: "tools/call", params: { name: "member-A" } },
+			tools,
+			null,
+		),
+		"MCP rpc: method=tools/call tool=other protocol=-",
+	)
+	assert.equal(
+		describeRpc(
+			{ method: "resources/read", params: { uri: POSTER_GRID_URI } },
+			tools,
+			null,
+		),
+		`MCP rpc: method=resources/read uri=${POSTER_GRID_URI} protocol=-`,
+	)
+	assert.equal(
+		describeRpc(
+			{
+				method: "tools/list",
+				params: {
+					_meta: {
+						"io.modelcontextprotocol/protocolVersion": "2026-07-28",
+						"io.modelcontextprotocol/clientCapabilities": {},
+					},
+				},
+			},
+			tools,
+			"2026-07-28",
+		),
+		"MCP rpc: method=tools/list protocol=2026-07-28 ui=none",
+	)
+	assert.equal(describeRpc({ id: 1, result: {} }, tools, null), null)
+})
+
+test("The other card tools get their own eyebrow, and a people search shows no title cards", () => {
+	const row = { ...items[0], poster_url: poster }
+	assert.equal(
+		posterView({ source: { name: "Dark" }, items: [row] }, origin).eyebrow,
+		"More like Dark",
+	)
+	assert.equal(
+		posterView({ person: { name: "Denis Villeneuve" }, items: [row] }, origin)
+			.eyebrow,
+		"From Denis Villeneuve’s titles",
+	)
+	assert.equal(
+		posterView({ list_id: "l1", name: "Comfort", items: [row] }, origin)
+			.eyebrow,
+		"On your list “Comfort”",
+	)
+	assert.equal(
+		posterView({ sort_used: "popular", items: [row] }, origin).eyebrow,
+		"Top pick in Discover",
+	)
+	const people = posterView(
+		{
+			items: [
+				{
+					person_id: 137427,
+					name: "Denis Villeneuve",
+					url: `${origin}/person/137427-denis-villeneuve`,
+				},
+			],
+		},
+		origin,
+	)
+	assert.equal(people.layout, "message")
+	assert.equal(people.eyebrow, "People")
+	assert.match(people.message ?? "", /Ask for one of these people/)
 })

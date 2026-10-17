@@ -11,8 +11,14 @@ import { isAddressedTo } from "../site-origin.server.ts"
 import { fillWebFetchGaps } from "../web-fetch-gaps.server.ts"
 import { mcpAuthorization } from "./authorization.server.ts"
 import type { RankedSearch } from "./ranked.server.ts"
-import { createToolServer } from "./tools.server.ts"
-import { isWriteCall } from "./write-names.ts"
+import { describeRpc } from "./rpc-log.ts"
+import { createToolServer, readToolNames } from "./tools.server.ts"
+import { isWriteCall, writeToolNames } from "./write-names.ts"
+
+const knownTools: ReadonlySet<string> = new Set([
+	...readToolNames,
+	...writeToolNames,
+])
 
 interface Limiter {
 	take(
@@ -92,6 +98,11 @@ export function createReadMcpHandler(
 					{ status: 400 },
 				)
 			}
+		}
+		const protocolHeader = request.headers.get("MCP-Protocol-Version")
+		for (const message of Array.isArray(body) ? body : [body]) {
+			const line = describeRpc(message, knownTools, protocolHeader)
+			if (line) console.log(line)
 		}
 		if (
 			!auth.scopes.includes("mcp:write") &&

@@ -1,6 +1,7 @@
-/* GoodWatch's colors (app/tailwind.css) and brand font, dark by default. The host's light theme gets light surfaces
-   with the same amber accent. Motion is transform-only. No color-scheme: a frame whose color-scheme differs from the
-   host page's gets an opaque backdrop, which shows square corners behind the rounded panel. */
+/* GoodWatch's look (app/tailwind.css, app/ui/watch-next/WatchNextHero.tsx): Gabarito, gray-900 gradients over the
+   backdrop, amber eyebrows, the white Watch button. The page stays transparent and declares both color schemes, as
+   Claude's theming guide asks, so the conversation shows through; text outside the dark media blocks uses the
+   host's style variables when it sends them. Motion is transform and opacity only. */
 @font-face {
 	font-family: "Gabarito";
 	font-style: normal;
@@ -11,24 +12,25 @@
 		U+02DC, U+2000-206F, U+20AC, U+2122;
 }
 :root {
-	--surface: #0f0f0f;
-	--card: #262626;
-	--edge: #1f1f1f;
-	--text: #f5f5f4;
-	--muted: #a8a29e;
-	--accent: #fbbf24;
-	--hover: rgba(180, 83, 9, 0.6);
-	--brand: linear-gradient(187deg, #fff 15%, #fff066, #ffa31a);
+	color-scheme: light dark;
+	--gray-900: #101828;
+	--gray-800: #1e2939;
+	--gray-400: #99a1af;
+	--gray-200: #e5e7eb;
+	--amber-300: #fcd34d;
+	--amber-400: #fbbf24;
+	--amber-500: #f59e0b;
+	--amber-700: #b45309;
+	--fg: var(--color-text-primary, #faf9f5);
+	--fg-2: var(--color-text-secondary, #b7b5a9);
+	--line: var(--color-border-primary, rgba(255, 255, 255, 0.15));
+	--accent: var(--amber-500);
 }
 :root[data-theme="light"] {
-	--surface: #fafaf9;
-	--card: #e7e5e4;
-	--edge: #e7e5e4;
-	--text: #0c0a09;
-	--muted: #57534e;
-	--accent: #b45309;
-	--hover: rgba(217, 119, 6, 0.55);
-	--brand: linear-gradient(187deg, #f59e0b 10%, #d97706, #b45309);
+	--fg: var(--color-text-primary, #141413);
+	--fg-2: var(--color-text-secondary, #5e5d59);
+	--line: var(--color-border-primary, rgba(0, 0, 0, 0.12));
+	--accent: var(--amber-700);
 }
 * {
 	box-sizing: border-box;
@@ -39,83 +41,87 @@ body {
 	background: transparent;
 }
 body {
-	font: 14px / 1.35 "Gabarito", ui-sans-serif, system-ui, -apple-system,
+	font: 14px / 1.4 "Gabarito", ui-sans-serif, system-ui, -apple-system,
 		"Segoe UI", Roboto, sans-serif;
-	color: var(--text);
+	color: var(--fg);
 	-webkit-font-smoothing: antialiased;
 }
-.gw {
-	background: var(--surface);
-	border: 1px solid var(--edge);
-	border-radius: 14px;
-	padding: 14px;
+#gw {
+	container-type: inline-size;
 }
-.head {
-	display: flex;
-	align-items: baseline;
-	gap: 8px;
-	margin: 0 0 12px;
-}
-.brand {
-	font-weight: 800;
-	font-size: 16px;
-	letter-spacing: -0.01em;
-	background: var(--brand);
-	-webkit-background-clip: text;
-	background-clip: text;
-	-webkit-text-fill-color: transparent;
-	color: var(--accent);
-}
-.heading {
-	margin: 0;
-	font-size: 14px;
-	font-weight: 600;
-	color: var(--muted);
-}
-.status {
-	margin: 4px 0 8px;
-	color: var(--muted);
-}
-.grid {
-	list-style: none;
-	margin: 0;
-	padding: 0;
-	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(98px, 1fr));
-	gap: 12px 10px;
-}
-.grid.single {
-	grid-template-columns: 1fr;
-}
-.item[hidden] {
-	display: none;
-}
-.card {
-	display: flex;
-	flex-direction: column;
-	gap: 6px;
+a {
 	color: inherit;
 	text-decoration: none;
-	border-radius: 10px;
-	outline: none;
 }
+a:focus-visible,
+button:focus-visible {
+	outline: 2px solid var(--amber-400);
+	outline-offset: 2px;
+}
+.status {
+	margin: 0;
+	padding: 12px 0;
+	color: var(--fg-2);
+}
+.display {
+	font-weight: 900;
+	letter-spacing: -0.03em;
+	line-height: 0.92;
+	margin: 0;
+}
+.eyebrow {
+	margin: 0;
+	font-weight: 600;
+	font-size: 14px;
+	color: var(--amber-300);
+}
+.meta {
+	margin: 0;
+	font-size: 14px;
+	color: var(--gray-400);
+}
+
+/* The site header's logo: G emblem, "ood" white, "Watch" yellow; it links to the GoodWatch page. */
+.mark {
+	position: absolute;
+	top: 14px;
+	right: 14px;
+	z-index: 3;
+	display: inline-flex;
+	align-items: flex-end;
+	gap: 0.06em;
+	padding: 0.3em 0.45em 0.2em 0.4em;
+	border-radius: 0.3em;
+	background: rgba(10, 10, 10, 0.55);
+	font-weight: 700;
+	font-size: 17px;
+	line-height: 1;
+	white-space: nowrap;
+}
+.mark svg {
+	height: 0.78em;
+	width: auto;
+	margin-bottom: 0.16em;
+	fill: #fff;
+}
+.mark .ood {
+	color: #fff;
+}
+.mark .w {
+	color: var(--amber-400);
+}
+.mark:hover {
+	background: rgba(10, 10, 10, 0.8);
+}
+
+/* Posters: the site card's frame, a labeled placeholder without a file. */
 .poster {
 	position: relative;
 	display: block;
 	aspect-ratio: 2 / 3;
-	border-radius: 8px;
 	overflow: hidden;
-	background: var(--card);
-	box-shadow: 0 0 0 2px var(--edge);
-	transition: transform 160ms ease-out, box-shadow 160ms ease-out;
-}
-.card:hover .poster,
-.card:focus-visible .poster {
-	transform: translateY(-2px);
-	box-shadow: 0 0 0 2px var(--hover);
-}
-.card:focus-visible .poster {
-	box-shadow: 0 0 0 3px var(--accent);
+	border-radius: 6px;
+	background: var(--gray-800);
 }
 .poster img {
 	display: block;
@@ -132,136 +138,365 @@ body {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	padding: 10px;
+	padding: 8px;
 	text-align: center;
 	font-weight: 700;
 	font-size: 13px;
-	color: var(--muted);
-	background: linear-gradient(160deg, var(--card), var(--surface));
+	color: var(--gray-400);
+	background: linear-gradient(160deg, var(--gray-800), var(--gray-900));
 	overflow-wrap: anywhere;
 }
-.pill {
+.bd {
 	position: absolute;
-	top: 6px;
-	right: 6px;
-	min-width: 40px;
-	padding: 2px 7px;
-	border-radius: 999px;
+	inset: 0;
+	z-index: -2;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	object-position: center 20%;
+}
+
+/* Buttons: the hero's white Watch button and its glass neighbor; 44 px tall for touch. */
+.btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	height: 44px;
+	padding: 0 16px;
+	border-radius: 8px;
+	font-weight: 700;
+	font-size: 15px;
+	white-space: nowrap;
+}
+.btn.white {
+	background: #fff;
+	color: #000;
+	box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+}
+.btn.white:has(.logo) {
+	padding-left: 6px;
+}
+.btn.white:hover {
+	background: var(--gray-200);
+}
+.btn .logo {
+	width: 32px;
+	height: 32px;
+	border-radius: 6px;
+}
+.btn .play {
 	font-size: 12px;
-	font-weight: 900;
-	text-align: center;
-	font-variant-numeric: tabular-nums;
-	color: #060606;
-	background: linear-gradient(#fbbf24, #d97706);
-	box-shadow: 0 0 0 2px rgba(10, 10, 10, 0.85);
 }
-.pill.top {
-	background: linear-gradient(#fcd34d, #f59e0b);
-	box-shadow: 0 0 0 2px rgba(10, 10, 10, 0.85), 0 0 12px
-		rgba(251, 191, 36, 0.55);
+.btn.glass {
+	background: rgba(255, 255, 255, 0.12);
+	color: #fff;
 }
-.pill.low {
-	color: rgba(254, 243, 199, 0.85);
-	background: #404040;
+.btn.glass:hover {
+	background: rgba(255, 255, 255, 0.2);
 }
-.body {
+
+/* Watch next: the pick over its backdrop, a large poster beside the title. */
+.pick {
+	position: relative;
+	isolation: isolate;
+	overflow: hidden;
+	background: var(--gray-900);
+	color: #fff;
+}
+.pick::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	background: linear-gradient(
+		90deg,
+		var(--gray-900) 0%,
+		rgba(16, 24, 40, 0.82) 42%,
+		rgba(16, 24, 40, 0.15) 100%
+	);
+}
+.pick .in {
+	display: flex;
+	align-items: center;
+	gap: 20px;
+	min-height: 300px;
+	padding: 52px 22px 22px;
+}
+.pick .pf {
+	flex: 0 0 150px;
+}
+.pick .pf .poster {
+	border: 4px solid var(--gray-800);
+	border-radius: 8px;
+	box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+}
+.pick .tx {
+	min-width: 0;
+}
+.pick .title {
+	display: block;
+	margin-top: 4px;
+}
+.pick h2 {
+	font-size: 56px;
+	overflow-wrap: anywhere;
+}
+.pick .tag {
+	margin: 8px 0 0;
+	color: var(--gray-200);
+	font-size: 16px;
+}
+.pick .meta {
+	margin-top: 4px;
+}
+.pick .acts {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-top: 16px;
+}
+@container (max-width: 520px) {
+	.pick::before {
+		background: linear-gradient(
+			0deg,
+			var(--gray-900) 30%,
+			rgba(16, 24, 40, 0.75) 62%,
+			rgba(16, 24, 40, 0.05) 100%
+		);
+	}
+	.pick .bd {
+		height: 260px;
+	}
+	.pick .in {
+		display: grid;
+		grid-template-columns: 92px 1fr;
+		align-items: end;
+		gap: 0 12px;
+		min-height: 0;
+		padding: 140px 16px 16px;
+	}
+	.pick .pf .poster {
+		border-width: 3px;
+	}
+	.pick .tx {
+		display: contents;
+	}
+	.pick .eyebrow,
+	.pick .title {
+		grid-column: 2;
+	}
+	.pick .pf {
+		grid-row: 1 / span 2;
+		align-self: end;
+	}
+	.pick .eyebrow .detail {
+		display: none;
+	}
+	.pick h2 {
+		font-size: 40px;
+	}
+	.pick .tag,
+	.pick .meta,
+	.pick .acts {
+		grid-column: 1 / -1;
+	}
+	.pick .tag {
+		margin-top: 12px;
+		font-size: 15px;
+	}
+	.pick .acts .btn {
+		flex: 1 1 100%;
+	}
+}
+
+/* Search and My library: the first title on its backdrop, the rest as large posters in a row. */
+.feat {
+	position: relative;
+	isolation: isolate;
+	overflow: hidden;
+	background: var(--gray-900);
+	color: #fff;
+}
+.feat::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	background: linear-gradient(
+			90deg,
+			var(--gray-900) 0%,
+			rgba(16, 24, 40, 0.7) 45%,
+			rgba(16, 24, 40, 0.05) 100%
+		), linear-gradient(0deg, rgba(16, 24, 40, 0.8), transparent 50%);
+}
+.featlink {
+	display: flex;
+	align-items: flex-end;
+	gap: 16px;
+	min-height: 230px;
+	padding: 52px 18px 18px;
+}
+.featlink .pf {
+	flex: 0 0 104px;
+	border: 3px solid var(--gray-800);
+}
+.featlink .tx {
 	display: flex;
 	flex-direction: column;
 	gap: 2px;
 	min-width: 0;
 }
-.name {
-	font-weight: 700;
-	font-size: 13px;
-	line-height: 1.25;
-	display: -webkit-box;
-	-webkit-line-clamp: 2;
-	-webkit-box-orient: vertical;
-	overflow: hidden;
+.featlink .name {
+	font-size: 44px;
+	overflow-wrap: anywhere;
 }
-.year {
-	font-weight: 400;
-	color: var(--muted);
+.featlink .meta {
+	margin-top: 4px;
 }
-.meta {
-	font-size: 13px;
-	color: var(--muted);
+.featlink .meta b {
+	color: var(--amber-300);
 }
-.meta.match {
-	color: var(--accent);
-	font-weight: 700;
+.railwrap {
+	position: relative;
 }
-.eyebrow {
-	font-size: 12px;
-	font-weight: 700;
-	text-transform: uppercase;
-	letter-spacing: 0.06em;
-	color: var(--accent);
-}
-.pick .card {
-	flex-direction: row;
-	align-items: center;
-	gap: 14px;
-}
-.pick .poster {
-	flex: 0 0 104px;
-}
-.pick .name {
-	font-size: 17px;
-}
-.sr {
-	position: absolute;
-	width: 1px;
-	height: 1px;
-	overflow: hidden;
-	clip: rect(0 0 0 0);
-	white-space: nowrap;
-}
-.foot {
+.rail {
+	list-style: none;
+	margin: 0;
+	padding: 12px 0 4px;
 	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	justify-content: space-between;
 	gap: 10px;
-	margin-top: 14px;
+	overflow-x: auto;
+	scroll-snap-type: x mandatory;
+	scrollbar-width: none;
+	overscroll-behavior-x: contain;
 }
-.more {
-	font: inherit;
+.rail::-webkit-scrollbar {
+	display: none;
+}
+.rail li {
+	flex: 0 0 132px;
+	scroll-snap-align: start;
+}
+.rail .item {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+.rail .item .poster {
+	margin-bottom: 4px;
+	transition: transform 160ms ease-out;
+}
+.rail .item:hover .poster {
+	transform: translateY(-2px);
+}
+.rail .n {
 	font-weight: 700;
-	color: var(--text);
-	background: var(--card);
+	font-size: 14px;
+	line-height: 1.2;
+	color: var(--fg);
+}
+.rail .y {
+	font-weight: 400;
+	color: var(--fg-2);
+}
+.rail .m {
+	font-weight: 700;
+	font-size: 13px;
+	color: var(--accent);
+}
+.rail .allbox {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	aspect-ratio: 2 / 3;
+	padding: 12px;
+	border-radius: 6px;
+	border: 1px solid var(--line);
+	text-align: center;
+	font-weight: 700;
+	font-size: 15px;
+	color: var(--fg);
+}
+.rail .all:hover .allbox {
+	border-color: var(--accent);
+}
+.nav {
+	position: absolute;
+	top: calc(12px + 66px);
+	z-index: 2;
+	width: 40px;
+	height: 40px;
 	border: 0;
 	border-radius: 999px;
-	padding: 7px 14px;
+	background: rgba(10, 10, 10, 0.7);
+	color: #fff;
+	font: 700 24px / 1 "Gabarito", sans-serif;
 	cursor: pointer;
+	transform: translateY(-50%);
 }
-.more:hover {
-	box-shadow: 0 0 0 2px var(--hover);
+.nav.prev {
+	left: 6px;
 }
-.more:focus-visible,
-.page:focus-visible {
-	outline: 2px solid var(--accent);
-	outline-offset: 2px;
+.nav.next {
+	right: 6px;
 }
-.page {
-	margin-left: auto;
-	font-weight: 700;
+@media (hover: none) {
+	.nav {
+		display: none;
+	}
+}
+@container (max-width: 520px) {
+	.featlink {
+		padding: 120px 14px 14px;
+		min-height: 0;
+	}
+	.feat::before {
+		background: linear-gradient(
+			0deg,
+			var(--gray-900) 30%,
+			rgba(16, 24, 40, 0.6) 60%,
+			transparent 100%
+		);
+	}
+	.featlink .pf {
+		flex-basis: 76px;
+	}
+	.featlink .name {
+		font-size: 32px;
+	}
+	.rail li {
+		flex-basis: 118px;
+	}
+	.nav {
+		top: calc(12px + 59px);
+	}
+}
+
+/* An error or an empty answer. */
+.msg {
+	position: relative;
+	padding: 52px 0 8px;
+}
+.msg .mark {
+	right: 0;
+	top: 8px;
+}
+.msg .eyebrow {
 	color: var(--accent);
-	text-decoration: none;
-	border-radius: 4px;
 }
-.page:hover {
-	text-decoration: underline;
+.msg .text {
+	margin: 4px 0 0;
+	color: var(--fg);
 }
 [hidden] {
 	display: none !important;
 }
 @media (prefers-reduced-motion: reduce) {
-	.poster {
+	.rail .item .poster {
 		transition: none;
 	}
-	.card:hover .poster,
-	.card:focus-visible .poster {
+	.rail .item:hover .poster {
 		transform: none;
 	}
 }

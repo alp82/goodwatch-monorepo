@@ -286,6 +286,10 @@ export const readToolDefinitions: {
 	},
 ]
 
+export const readToolNames: ReadonlySet<string> = new Set(
+	readToolDefinitions.map((tool) => tool.name),
+)
+
 export function createToolServer(
 	userId: string,
 	origin: string,
@@ -354,7 +358,10 @@ export function createToolServer(
 					data = await (
 						enrich ??
 						(await import("./title-results.server.ts")).enrichTitleResults
-					)(userId, data, { posters: posters || tool.name === "get_title" })
+					)(userId, data, {
+						posters: posters || tool.name === "get_title",
+						taglines: tool.name === "get_tonight",
+					})
 				} catch {
 					outcome = "error"
 					data = {

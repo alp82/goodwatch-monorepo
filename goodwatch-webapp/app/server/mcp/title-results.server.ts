@@ -4,6 +4,8 @@ import { tmdbImageUrl } from "../../utils/tmdb-image.ts"
 
 /** The poster grid shows cards about 110 px wide; it asks for w342 itself on high-density screens. */
 export const POSTER_SIZE = "w185"
+/** Wide cards fill about 680 px; w780 covers them at a pixel ratio of 1, and the widget may ask for w1280. */
+export const BACKDROP_SIZE = "w780"
 
 interface Sources {
 	loadTaste: (viewer: { kind: "member"; userId: string }) => Promise<{
@@ -11,10 +13,17 @@ interface Sources {
 		liked: number
 		match(keys: number[]): (number | null)[]
 	}>
-	getDisplayFields: (
-		keys: number[],
-	) => Promise<
-		Map<number, { runtime: number | null; poster_path?: string | null }>
+	getDisplayFields: (keys: number[]) => Promise<
+		Map<
+			number,
+			{
+				runtime: number | null
+				poster_path?: string | null
+				backdrop_path?: string | null
+				tagline?: string | null
+				goodwatch_overall_score_normalized_percent?: number | null
+			}
+		>
 	>
 }
 
@@ -22,8 +31,11 @@ interface Sources {
 export async function enrichTitleResults(
 	userId: string,
 	data: Record<string, unknown>,
-	/** `posters` adds poster_url for the poster grid; `sources` replaces the readers in tests. */
-	options: { posters?: boolean; sources?: Sources } = {},
+	/**
+	 * `posters` adds what the poster cards show: poster_url, backdrop_url and goodwatch_score. `taglines` adds the
+	 * tagline (Watch next's single card). `sources` replaces the readers in tests.
+	 */
+	options: { posters?: boolean; taglines?: boolean; sources?: Sources } = {},
 ): Promise<Record<string, unknown>> {
 	const ids = new Map<string, number>()
 	const visit = (value: unknown) => {
@@ -59,7 +71,13 @@ export async function enrichTitleResults(
 	])
 	const displays = new Map<
 		number,
-		{ runtime: number | null; poster_path?: string | null }
+		{
+			runtime: number | null
+			poster_path?: string | null
+			backdrop_path?: string | null
+			tagline?: string | null
+			goodwatch_overall_score_normalized_percent?: number | null
+		}
 	>()
 	for (const batch of batches)
 		if (batch.status === "fulfilled")
@@ -76,7 +94,10 @@ export async function enrichTitleResults(
 		const key = typeof row.id === "string" ? ids.get(row.id) : undefined
 		if (key === undefined) return next
 		const match = byKey.get(key) ?? null
-		const poster = displays.get(key)?.poster_path
+		const display = displays.get(key)
+		const poster = display?.poster_path
+		const backdrop = display?.backdrop_path
+		const score = display?.goodwatch_overall_score_normalized_percent
 		return {
 			...next,
 			runtime_minutes:
@@ -84,8 +105,21 @@ export async function enrichTitleResults(
 			match,
 			match_label: match === null ? null : `${match}% taste match`,
 			...(options.posters
-				? { poster_url: poster ? tmdbImageUrl(poster, POSTER_SIZE) : null }
+				? {
+						poster_url: poster ? tmdbImageUrl(poster, POSTER_SIZE) : null,
+						backdrop_url: backdrop
+							? tmdbImageUrl(backdrop, BACKDROP_SIZE)
+							: null,
+						// A tool's own score (Discover reads the catalog snapshot) wins over the display field.
+						goodwatch_score:
+							typeof row.goodwatch_score === "number"
+								? row.goodwatch_score
+								: typeof score === "number"
+									? Math.round(score)
+									: null,
+					}
 				: {}),
+			...(options.taglines ? { tagline: display?.tagline || null } : {}),
 		}
 	}
 	return {

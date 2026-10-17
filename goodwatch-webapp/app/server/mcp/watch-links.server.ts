@@ -57,5 +57,6 @@ export async function watchAvailability(
 		ctx.country,
 		new Map(services.map((service) => [service.id, service.name])),
 		rows,
+		new Map(services.map((service) => [service.id, service.logo_path])),
 	)
 }

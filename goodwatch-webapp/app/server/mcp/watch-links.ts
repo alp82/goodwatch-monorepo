@@ -3,6 +3,7 @@ import {
 	duplicateProviderMapping,
 	getStreamingUrl,
 } from "../../utils/streaming-links.ts"
+import { tmdbImageUrl } from "../../utils/tmdb-image.ts"
 
 const httpUrl = (url: string | null | undefined) => {
 	if (!url) return null
@@ -31,6 +32,8 @@ export function linkedAvailability(
 		offer_type: string
 		stream_url: string | null
 	}[],
+	/** TMDB logo paths by service ID, for the poster cards' Watch button. */
+	logos: ReadonlyMap<number, string | null | undefined> = new Map(),
 ) {
 	const seen = new Set<string>()
 	const offers = availability.offers.flatMap((offer) => {
@@ -52,6 +55,7 @@ export function linkedAvailability(
 				.find(Boolean) ??
 			null
 		const name = family.map((id) => names.get(id)).find(Boolean)
+		const logo = family.map((id) => logos.get(id)).find(Boolean)
 		const url = getStreamingUrl(
 			{ stream_url: direct },
 			title,
@@ -68,6 +72,7 @@ export function linkedAvailability(
 				...offer,
 				stream_url: direct,
 				...(name ? { name } : {}),
+				...(logo ? { logo_url: tmdbImageUrl(logo, "w92") } : {}),
 				url,
 				stream_link,
 				link_kind: direct ? "provider" : "where_to_watch",

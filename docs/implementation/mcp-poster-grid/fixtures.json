@@ -9,7 +9,9 @@
     "link": "[Elling (2001)](https://goodwatch.app/movie/6007-elling)",
     "match": 95,
     "match_label": "95% taste match",
-    "poster_url": "https://image.tmdb.org/t/p/w185/i4o9u93vR7setcwVeL87jGwc8CS.jpg"
+    "poster_url": "https://image.tmdb.org/t/p/w185/i4o9u93vR7setcwVeL87jGwc8CS.jpg",
+    "backdrop_url": "https://image.tmdb.org/t/p/w780/mGTTk3v32wEk8TDkxsfMnlqSb8H.jpg",
+    "goodwatch_score": 75
    },
    {
     "id": "movie:334",
@@ -19,7 +21,9 @@
     "link": "[Magnolia (1999)](https://goodwatch.app/movie/334-magnolia)",
     "match": 93,
     "match_label": "93% taste match",
-    "poster_url": "https://image.tmdb.org/t/p/w185/tpfC325Jk6S38VTe5dDWjWtoyxr.jpg"
+    "poster_url": "https://image.tmdb.org/t/p/w185/tpfC325Jk6S38VTe5dDWjWtoyxr.jpg",
+    "backdrop_url": "https://image.tmdb.org/t/p/w780/mFfyE5DPFDqoes4HIcElHc2a15y.jpg",
+    "goodwatch_score": 81
    },
    {
     "id": "movie:2928",
@@ -29,7 +33,9 @@
     "link": "[Michael (1996)](https://goodwatch.app/movie/2928-michael)",
     "match": 91,
     "match_label": "91% taste match",
-    "poster_url": "https://image.tmdb.org/t/p/w185/3XdsHncNxOSMOITeQBC8ML9ADky.jpg"
+    "poster_url": "https://image.tmdb.org/t/p/w185/3XdsHncNxOSMOITeQBC8ML9ADky.jpg",
+    "backdrop_url": "https://image.tmdb.org/t/p/w780/f50cssF1I4Mxr6s1Z6HO4wPOrmY.jpg",
+    "goodwatch_score": 47
    },
    {
     "id": "movie:141",
@@ -39,7 +45,9 @@
     "link": "[Donnie Darko (2001)](https://goodwatch.app/movie/141-donnie-darko)",
     "match": 91,
     "match_label": "91% taste match",
-    "poster_url": "https://image.tmdb.org/t/p/w185/j2AtZFsflxiluaNtajMTI0Avm8C.jpg"
+    "poster_url": "https://image.tmdb.org/t/p/w185/j2AtZFsflxiluaNtajMTI0Avm8C.jpg",
+    "backdrop_url": "https://image.tmdb.org/t/p/w780/msCHK5Kh1YbdZ0zPJ2nzPUhhSN9.jpg",
+    "goodwatch_score": 80
    },
    {
     "id": "movie:167",
@@ -49,7 +57,9 @@
     "link": "[K-PAX (2001)](https://goodwatch.app/movie/167-k-pax)",
     "match": 91,
     "match_label": "91% taste match",
-    "poster_url": "https://image.tmdb.org/t/p/w185/tafXZX0I6rso7EyoEzfygfTqxq6.jpg"
+    "poster_url": "https://image.tmdb.org/t/p/w185/tafXZX0I6rso7EyoEzfygfTqxq6.jpg",
+    "backdrop_url": "https://image.tmdb.org/t/p/w780/v8xav2JYqqn3O14s0PR4UgWBz95.jpg",
+    "goodwatch_score": 59
    },
    {
     "id": "show:84958",
@@ -59,7 +69,9 @@
     "link": "[Loki (2021)](https://goodwatch.app/show/84958-loki)",
     "match": 91,
     "match_label": "91% taste match",
-    "poster_url": "https://image.tmdb.org/t/p/w185/kEl2t3OhXc3Zb9FBh1AuYzRTgZp.jpg"
+    "poster_url": "https://image.tmdb.org/t/p/w185/kEl2t3OhXc3Zb9FBh1AuYzRTgZp.jpg",
+    "backdrop_url": "https://image.tmdb.org/t/p/w780/q3jHCb4dMfYF6ojikKuHd6LscxC.jpg",
+    "goodwatch_score": 80
    },
    {
     "id": "show:95396",
@@ -69,7 +81,9 @@
     "link": "[Severance (2022)](https://goodwatch.app/show/95396-severance)",
     "match": 89,
     "match_label": "89% taste match",
-    "poster_url": "https://image.tmdb.org/t/p/w185/pPHpeI2X1qEd1CS1SeyrdhZ4qnT.jpg"
+    "poster_url": "https://image.tmdb.org/t/p/w185/pPHpeI2X1qEd1CS1SeyrdhZ4qnT.jpg",
+    "backdrop_url": "https://image.tmdb.org/t/p/w780/ixgFmf1X59PUZam2qbAfskx2gQr.jpg",
+    "goodwatch_score": 87
    },
    {
     "id": "show:31911",
@@ -79,7 +93,9 @@
     "link": "[Fullmetal Alchemist: Brotherhood (2009)](https://goodwatch.app/show/31911-fullmetal-alchemist-brotherhood)",
     "match": 88,
     "match_label": "88% taste match",
-    "poster_url": "https://image.tmdb.org/t/p/w185/5ZFUEOULaVml7pQuXxhpR2SmVUw.jpg"
+    "poster_url": "https://image.tmdb.org/t/p/w185/5ZFUEOULaVml7pQuXxhpR2SmVUw.jpg",
+    "backdrop_url": "https://image.tmdb.org/t/p/w780/2UG177tWHy7xRmMKWJHB7nAUmKd.jpg",
+    "goodwatch_score": 95
    },
    {
     "id": "movie:696506",
@@ -89,7 +105,9 @@
     "link": "[Mickey 17 (2025)](https://goodwatch.app/movie/696506-mickey-17)",
     "match": 88,
     "match_label": "88% taste match",
-    "poster_url": "https://image.tmdb.org/t/p/w185/edKpE9B5qN3e559OuMCLZdW1iBZ.jpg"
+    "poster_url": "https://image.tmdb.org/t/p/w185/edKpE9B5qN3e559OuMCLZdW1iBZ.jpg",
+    "backdrop_url": "https://image.tmdb.org/t/p/w780/9PRKAdrDvAdCfg3EcApLTfzGsEt.jpg",
+    "goodwatch_score": 70
    },
    {
     "id": "show:61746",
@@ -99,7 +117,9 @@
     "link": "[Inside No. 9 (2014)](https://goodwatch.app/show/61746-inside-no-9)",
     "match": 87,
     "match_label": "87% taste match",
-    "poster_url": null
+    "poster_url": null,
+    "backdrop_url": "https://image.tmdb.org/t/p/w780/99W2xN8v9eAukGWzZN4zUsslQBo.jpg",
+    "goodwatch_score": 93
    },
    {
     "id": "show:1398",
@@ -109,7 +129,9 @@
     "link": "[The Sopranos (1999)](https://goodwatch.app/show/1398-the-sopranos)",
     "match": 87,
     "match_label": "87% taste match",
-    "poster_url": "https://image.tmdb.org/t/p/w185/rTc7ZXdroqjkKivFPvCPX0Ru7uw.jpg"
+    "poster_url": "https://image.tmdb.org/t/p/w185/rTc7ZXdroqjkKivFPvCPX0Ru7uw.jpg",
+    "backdrop_url": "https://image.tmdb.org/t/p/w780/lNpkvX2s8LGB0mjGODMT4o6Up7j.jpg",
+    "goodwatch_score": 92
    },
    {
     "id": "show:102621",
@@ -119,7 +141,9 @@
     "link": "[KAOS (2024)](https://goodwatch.app/show/102621-kaos)",
     "match": 86,
     "match_label": "86% taste match",
-    "poster_url": "https://image.tmdb.org/t/p/w185/dDBTUSl3tRsOeKC1jZugBSFHy9I.jpg"
+    "poster_url": "https://image.tmdb.org/t/p/w185/dDBTUSl3tRsOeKC1jZugBSFHy9I.jpg",
+    "backdrop_url": "https://image.tmdb.org/t/p/w780/oyKYPA1UXwwgrjmnM30sh33IRG5.jpg",
+    "goodwatch_score": 74
    },
    {
     "id": "show:42509",
@@ -129,7 +153,9 @@
     "link": "[Steins;Gate (2011)](https://goodwatch.app/show/42509-steinsgate)",
     "match": null,
     "match_label": null,
-    "poster_url": "https://image.tmdb.org/t/p/w185/96R4bV7dB8ramaWceNKsxvJgCUd.jpg"
+    "poster_url": "https://image.tmdb.org/t/p/w185/96R4bV7dB8ramaWceNKsxvJgCUd.jpg",
+    "backdrop_url": "https://image.tmdb.org/t/p/w780/gDvxT2z6TNxervG97WfpePRZ3aR.jpg",
+    "goodwatch_score": 95
    },
    {
     "id": "show:64432",
@@ -139,7 +165,9 @@
     "link": "[The Magicians (2015)](https://goodwatch.app/show/64432-the-magicians)",
     "match": 85,
     "match_label": "85% taste match",
-    "poster_url": "https://image.tmdb.org/t/p/w185/A66dZN98BPEYeFQAhNdNCIXa57d.jpg"
+    "poster_url": "https://image.tmdb.org/t/p/w185/A66dZN98BPEYeFQAhNdNCIXa57d.jpg",
+    "backdrop_url": "https://image.tmdb.org/t/p/w780/qb9vehNFxTpPrazhD7JJ6QtEtCv.jpg",
+    "goodwatch_score": 76
    }
   ],
   "total": 353,
@@ -161,7 +189,9 @@
     "link": "[Donnie Darko (2001)](https://goodwatch.app/movie/141-donnie-darko)",
     "match": 91,
     "match_label": "91% taste match",
-    "poster_url": "https://image.tmdb.org/t/p/w185/j2AtZFsflxiluaNtajMTI0Avm8C.jpg"
+    "poster_url": "https://image.tmdb.org/t/p/w185/j2AtZFsflxiluaNtajMTI0Avm8C.jpg",
+    "backdrop_url": "https://image.tmdb.org/t/p/w780/msCHK5Kh1YbdZ0zPJ2nzPUhhSN9.jpg",
+    "goodwatch_score": 80
    },
    {
     "id": "show:95396",
@@ -171,7 +201,9 @@
     "link": "[Severance (2022)](https://goodwatch.app/show/95396-severance)",
     "match": 89,
     "match_label": "89% taste match",
-    "poster_url": "https://image.tmdb.org/t/p/w185/pPHpeI2X1qEd1CS1SeyrdhZ4qnT.jpg"
+    "poster_url": "https://image.tmdb.org/t/p/w185/pPHpeI2X1qEd1CS1SeyrdhZ4qnT.jpg",
+    "backdrop_url": "https://image.tmdb.org/t/p/w780/ixgFmf1X59PUZam2qbAfskx2gQr.jpg",
+    "goodwatch_score": 87
    },
    {
     "id": "movie:6007",
@@ -181,7 +213,9 @@
     "link": "[Elling (2001)](https://goodwatch.app/movie/6007-elling)",
     "match": 95,
     "match_label": "95% taste match",
-    "poster_url": "https://image.tmdb.org/t/p/w185/i4o9u93vR7setcwVeL87jGwc8CS.jpg"
+    "poster_url": "https://image.tmdb.org/t/p/w185/i4o9u93vR7setcwVeL87jGwc8CS.jpg",
+    "backdrop_url": "https://image.tmdb.org/t/p/w780/mGTTk3v32wEk8TDkxsfMnlqSb8H.jpg",
+    "goodwatch_score": 75
    },
    {
     "id": "show:84958",
@@ -191,7 +225,9 @@
     "link": "[Loki (2021)](https://goodwatch.app/show/84958-loki)",
     "match": 91,
     "match_label": "91% taste match",
-    "poster_url": "https://image.tmdb.org/t/p/w185/kEl2t3OhXc3Zb9FBh1AuYzRTgZp.jpg"
+    "poster_url": "https://image.tmdb.org/t/p/w185/kEl2t3OhXc3Zb9FBh1AuYzRTgZp.jpg",
+    "backdrop_url": "https://image.tmdb.org/t/p/w780/q3jHCb4dMfYF6ojikKuHd6LscxC.jpg",
+    "goodwatch_score": 80
    },
    {
     "id": "show:61746",
@@ -199,9 +235,11 @@
     "year": 2014,
     "url": "https://goodwatch.app/show/61746-inside-no-9",
     "link": "[Inside No. 9 (2014)](https://goodwatch.app/show/61746-inside-no-9)",
-    "match": null,
-    "match_label": null,
-    "poster_url": null
+    "match": 87,
+    "match_label": "87% taste match",
+    "poster_url": null,
+    "backdrop_url": "https://image.tmdb.org/t/p/w780/99W2xN8v9eAukGWzZN4zUsslQBo.jpg",
+    "goodwatch_score": 93
    },
    {
     "id": "movie:167",
@@ -211,7 +249,9 @@
     "link": "[K-PAX (2001)](https://goodwatch.app/movie/167-k-pax)",
     "match": 91,
     "match_label": "91% taste match",
-    "poster_url": "https://image.tmdb.org/t/p/w185/tafXZX0I6rso7EyoEzfygfTqxq6.jpg"
+    "poster_url": "https://image.tmdb.org/t/p/w185/tafXZX0I6rso7EyoEzfygfTqxq6.jpg",
+    "backdrop_url": "https://image.tmdb.org/t/p/w780/v8xav2JYqqn3O14s0PR4UgWBz95.jpg",
+    "goodwatch_score": 59
    },
    {
     "id": "movie:2928",
@@ -221,7 +261,9 @@
     "link": "[Michael (1996)](https://goodwatch.app/movie/2928-michael)",
     "match": 91,
     "match_label": "91% taste match",
-    "poster_url": "https://image.tmdb.org/t/p/w185/3XdsHncNxOSMOITeQBC8ML9ADky.jpg"
+    "poster_url": "https://image.tmdb.org/t/p/w185/3XdsHncNxOSMOITeQBC8ML9ADky.jpg",
+    "backdrop_url": "https://image.tmdb.org/t/p/w780/f50cssF1I4Mxr6s1Z6HO4wPOrmY.jpg",
+    "goodwatch_score": 47
    }
   ],
   "next_cursor": null,
@@ -247,7 +289,25 @@
     "link": "[Dark (2017)](https://goodwatch.app/show/70523-dark)",
     "match": 74,
     "match_label": "74% taste match",
-    "poster_url": "https://image.tmdb.org/t/p/w185/wSXJHO9WHLb0aCwvQrtco7vOmWA.jpg"
+    "poster_url": "https://image.tmdb.org/t/p/w185/wSXJHO9WHLb0aCwvQrtco7vOmWA.jpg",
+    "backdrop_url": "https://image.tmdb.org/t/p/w780/3jDXL4Xvj3AzDOF6UH1xeyHW8MH.jpg",
+    "goodwatch_score": 86,
+    "tagline": "Everything is connected.",
+    "availability": {
+     "state": "watchable",
+     "reason": "verified_offer",
+     "country": "DE",
+     "offers": [
+      {
+       "service_id": 8,
+       "offer_type": "flatrate",
+       "name": "Netflix",
+       "url": "https://www.netflix.com/title/80100172",
+       "link_kind": "provider",
+       "logo_url": "https://image.tmdb.org/t/p/w92/pbpMk2JmcoNnQwx5JGpXngfoWtp.jpg"
+      }
+     ]
+    }
    },
    "reason": "nextEpisode",
    "episode": {

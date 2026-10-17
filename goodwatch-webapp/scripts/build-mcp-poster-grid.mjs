@@ -8,12 +8,32 @@ import { gzipSync } from "node:zlib"
 import { build, transform } from "esbuild"
 
 const dir = new URL("../app/server/mcp/poster-grid/", import.meta.url)
-export const SOURCES = ["cards.ts", "widget.ts", "widget.css", "template.html"]
+// The logo's G comes from the site's wordmark component, so it is a source too.
+export const SOURCES = [
+	"cards.ts",
+	"widget.ts",
+	"widget.css",
+	"template.html",
+	"../../../ui/brand/GoodWatchWordmark.tsx",
+]
 
 export async function sourceHash() {
 	const hash = createHash("sha256")
 	for (const name of SOURCES) hash.update(await readFile(new URL(name, dir)))
 	return hash.digest("hex").slice(0, 16)
+}
+
+async function logoPaths() {
+	const wordmark = await readFile(
+		new URL("../../../ui/brand/GoodWatchWordmark.tsx", dir),
+		"utf8",
+	)
+	const path = (name) => {
+		const match = new RegExp(`const ${name} =\\s*"([^"]+)"`).exec(wordmark)
+		if (!match) throw new Error(`${name} not found in GoodWatchWordmark.tsx`)
+		return match[1]
+	}
+	return { ring: path("G_RING"), play: path("G_PLAY") }
 }
 
 export async function buildPosterGrid() {
@@ -34,7 +54,10 @@ export async function buildPosterGrid() {
 		},
 	)
 	const template = await readFile(new URL("template.html", dir), "utf8")
+	const { ring, play } = await logoPaths()
 	const js = script.outputFiles[0].text
+		.replace("__G_RING__", () => ring)
+		.replace("__G_PLAY__", () => play)
 		.trim()
 		.replaceAll("</script", "<\\/script")
 	return template
