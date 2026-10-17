@@ -52,17 +52,24 @@ export function linkedAvailability(
 				.find(Boolean) ??
 			null
 		const name = family.map((id) => names.get(id)).find(Boolean)
+		const url = getStreamingUrl(
+			{ stream_url: direct },
+			title,
+			country,
+			title.media_type,
+		)
+		const label = (name ?? `Service ${offer.service_id}`).replace(
+			/[\\[\]]/g,
+			"\\$&",
+		)
+		const stream_link = `[${label}](${url.replace(/\(/g, "%28").replace(/\)/g, "%29")})`
 		return [
 			{
 				...offer,
 				stream_url: direct,
 				...(name ? { name } : {}),
-				url: getStreamingUrl(
-					{ stream_url: direct },
-					title,
-					country,
-					title.media_type,
-				),
+				url,
+				stream_link,
 				link_kind: direct ? "provider" : "where_to_watch",
 			},
 		]

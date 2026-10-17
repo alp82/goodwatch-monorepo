@@ -161,6 +161,10 @@ try {
 		),
 	)
 	assert.equal(title.title.availability.offers[0].name, "Netflix")
+	assert.equal(
+		title.title.availability.offers[0].stream_link,
+		"[Netflix](https://www.netflix.com/title/DE-show-1399)",
+	)
 	const pick = await call("get_tonight")
 	assert.equal(pick.pick.title.id, "show:1399")
 	assert.equal(pick.pick.title.runtime_minutes, 40)
@@ -168,6 +172,10 @@ try {
 	assert.equal(
 		pick.pick.title.availability.offers[0].url,
 		title.title.availability.offers[0].url,
+	)
+	assert.equal(
+		pick.pick.title.availability.offers[0].stream_link,
+		title.title.availability.offers[0].stream_link,
 	)
 	const foreign = await call(
 		"get_title",
@@ -178,6 +186,10 @@ try {
 	assert.equal(
 		foreign.title.availability.offers[0].url,
 		"https://www.netflix.com/title/US-show-1399",
+	)
+	assert.equal(
+		foreign.title.availability.offers[0].stream_link,
+		"[Netflix](https://www.netflix.com/title/US-show-1399)",
 	)
 	console.log(
 		"PASS: Watch next and title availability link only owned services, in Watching from country, using the site deep link",

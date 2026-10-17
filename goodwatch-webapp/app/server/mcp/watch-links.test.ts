@@ -35,6 +35,10 @@ test("verified own-service offers use the same direct URL and provider name as t
 	assert.equal(direct.offers[0].name, "Netflix")
 	assert.equal(direct.offers[0].url, "https://www.netflix.com/title/123")
 	assert.equal(direct.offers[0].link_kind, "provider")
+	assert.equal(
+		direct.offers[0].stream_link,
+		"[Netflix](https://www.netflix.com/title/123)",
+	)
 	const evidence = linkedAvailability(
 		{
 			...availability,
@@ -110,4 +114,29 @@ test("provider aliases resolve to the site's brand and duplicate evidence stays 
 	assert.equal(result.offers.length, 1)
 	assert.equal(result.offers[0].name, "Amazon Prime Video")
 	assert.equal(result.offers[0].url, "https://www.primevideo.com/detail/123")
+})
+
+test("provider markdown escapes labels and destinations, including unnamed-provider fallback", () => {
+	const result = linkedAvailability(
+		availability,
+		title,
+		"DE",
+		new Map([[8, "Stream [Plus]\\"]]),
+		[
+			{
+				service_id: 8,
+				offer_type: "flatrate",
+				stream_url: "https://example.com/watch/(123)",
+			},
+		],
+	)
+	assert.equal(
+		result.offers[0].stream_link,
+		"[Stream \\[Plus\\]\\\\](https://example.com/watch/%28123%29)",
+	)
+	const fallback = linkedAvailability(availability, title, "DE", new Map(), [])
+	assert.equal(
+		fallback.offers[0].stream_link,
+		"[Service 8](https://www.themoviedb.org/tv/1399/watch?locale=DE)",
+	)
 })

@@ -536,6 +536,7 @@ test("MCP initialization tells clients to link titles and end with the page link
 	const initialized = (await result(response)).result
 	assert.match(initialized.instructions, /ready-made link field VERBATIM/)
 	assert.match(initialized.instructions, /See it on GoodWatch:/)
+	assert.match(initialized.instructions, /stream_link field VERBATIM/)
 })
 
 test("Search, library and Watch next expose the requested client contract", async () => {
@@ -584,6 +585,7 @@ test("Server instructions require GoodWatch taste and native full-library runtim
 	for (const tool of tools) {
 		assert.match(tool.description, /GoodWatch match/)
 		assert.match(tool.description, /never replace them with your own judgment/)
+		assert.match(tool.description, /stream_link field VERBATIM/)
 	}
 	const library = tools.find(
 		(tool: { name: string }) => tool.name === "get_library",
