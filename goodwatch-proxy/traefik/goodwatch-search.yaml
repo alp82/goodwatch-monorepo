@@ -54,6 +54,13 @@ http:
       headers:
         customRequestHeaders:
           X-Gw-Role: search
+    # The www redirect used by the www routers in goodwatch-balance.yaml. Defined only here: Traefik disables a
+    # middleware that two files define.
+    gw-webapp-www-to-apex:
+      redirectRegex:
+        regex: ^https?://www[.]goodwatch[.]app/?(.*)
+        replacement: https://goodwatch.app/${1}
+        permanent: true
 
   services:
     gw-search:
