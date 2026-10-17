@@ -1,0 +1,30 @@
+{
+  "at": "2026-10-17T02:02:28.408444+00:00",
+  "env_file": "/root/goodwatch/goodwatch-monorepo/goodwatch-search/.env",
+  "env_mode": "0o600",
+  "only_file_delta": "SEARCH_COMMIT",
+  "services": [
+    {
+      "service": "search-a",
+      "container_id": "1c66e0be3b589a5f0c14e963cb79e068eab79824650048e3f0e9178693c5911d",
+      "runtime_image": "ghcr.io/alp82/goodwatch-webapp:f8e37568ffb3f870be0016915beccb5334554d73",
+      "compose_image": "ghcr.io/alp82/goodwatch-webapp:f8e37568ffb3f870be0016915beccb5334554d73",
+      "image_id": "sha256:a4fd429605950bf33b5c04561c9fc12ed87dd5125760471af0937e774023a3b1",
+      "health": "healthy",
+      "restart_count": 0,
+      "all_configured_environment_hashes_match_runtime": true,
+      "source_and_search_commit_match_image_tag": true
+    },
+    {
+      "service": "search-b",
+      "container_id": "cbf1b9d73013e315df372c20ef98325061dfff50a168149042a0f9f71090de34",
+      "runtime_image": "ghcr.io/alp82/goodwatch-webapp:f8e37568ffb3f870be0016915beccb5334554d73",
+      "compose_image": "ghcr.io/alp82/goodwatch-webapp:f8e37568ffb3f870be0016915beccb5334554d73",
+      "image_id": "sha256:a4fd429605950bf33b5c04561c9fc12ed87dd5125760471af0937e774023a3b1",
+      "health": "healthy",
+      "restart_count": 0,
+      "all_configured_environment_hashes_match_runtime": true,
+      "source_and_search_commit_match_image_tag": true
+    }
+  ]
+}

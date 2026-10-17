@@ -1,5 +1,10 @@
 # MCP launch preparation after owner decision Q49
 
+**Current status: the origin blocker is resolved and the search upgrade passed.**
+See the [final go receipt](../20261017-mcp-search-origin-fix/README.md).
+The no-go finding below is historical; the tested paste files in this directory
+are unchanged and remain the final owner paste inputs.
+
 Decision: **A — serve `/mcp`, including ranked search, on the search roles.**
 Owner authorization covered the protected search environment handoff, sequential
 role recreation, production read-only checks, proxy rollback copies and local
@@ -7,7 +12,7 @@ testing. Coolify settings and live proxy files were not changed. No production
 OAuth client or token was created, and no authenticated tool or paid ranked
 search was called.
 
-## Verdict: environment ready; MCP launch still no-go
+## Historical verdict: environment ready; MCP launch still no-go
 
 The environment blocker from the [initial receipt](../20261017-mcp-launch-readiness/README.md)
 is repaired. Both roles match the working page container for all 14 required
