@@ -1,0 +1,12 @@
+/* PROTOTYPE - throwaway. Round 9 rhythm pass, group r9c (lpc-r9c-*). */
+.lpc-r9c-push {
+	position: absolute;
+	inset: 0;
+}
+@keyframes lpc-r9c-push {
+	from { transform: scale(1); }
+	to { transform: scale(var(--push, 1.03)); }
+}
+@media (prefers-reduced-motion: reduce) {
+	.lpc-r9c-push { animation: none !important; }
+}

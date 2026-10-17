@@ -115,11 +115,18 @@ export function Sequence({
 			{prev !== null && slot(prev, "out")}
 			{slot(at, prev !== null ? "in" : "on")}
 			{prev !== null && trOf(at) === "wipe" && <div key={`w-${run}-${lap}-${at}`} className="lpi-wipe" style={{ "--o": `${overlap}ms` } as CSSProperties} />}
-			{chapters && clips.length > 1 && (
-				<ChapterBar clips={clips} at={at} k={k} run={`${run}-${lap}-${jumps}`} onJump={jump} />
+			{/* The film's chapters, without "Your turn": the quiz is where the film ends, not a chapter of it. */}
+			{chapters && filmCount(clips) > 1 && at < filmCount(clips) && (
+				<ChapterBar clips={clips.slice(0, filmCount(clips))} at={at} k={k} run={`${run}-${lap}-${jumps}`} onJump={jump} />
 			)}
 		</>
 	)
+}
+
+/** How many clips are film: everything before the closer (the quiz). */
+const filmCount = (clips: Clip[]) => {
+	const i = clips.findIndex((c) => c.section === "closer")
+	return i < 0 ? clips.length : i
 }
 
 const chapterOf = (clip: Clip) => SECTIONS.find((s) => s.id === clip.section)?.chapter ?? clip.section
@@ -152,5 +159,9 @@ function ChapterBar({ clips, at, k, run, onJump }: { clips: Clip[]; at: number; 
 }
 
 /** The clips' total length at speed `k`, with the overlaps taken out. */
-export const sequenceMs = (clips: Clip[], k: number, transition: TransitionId) =>
-	Math.max(0, clips.reduce((s, c) => s + c.ms, 0) - TRANSITIONS[transition].overlap * Math.max(0, clips.length - 1)) * k
+export const sequenceMs = (clips: Clip[], k: number, transition: TransitionId) => {
+	// The film's length: up to the closer (the quiz waits for the visitor), each hand-over overlapping its clip.
+	const film = clips.slice(0, filmCount(clips))
+	const overlaps = film.slice(1).reduce((s, c) => s + TRANSITIONS[c.enter ?? transition].overlap, 0)
+	return Math.max(0, film.reduce((s, c) => s + c.ms, 0) - overlaps) * k
+}

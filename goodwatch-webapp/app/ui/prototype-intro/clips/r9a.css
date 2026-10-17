@@ -1,0 +1,32 @@
+/* PROTOTYPE - throwaway. Round 9 "r9a": the rhythm pass for chapters 2-5. Only what the retiming needs; the clips
+   otherwise reuse r5score/r6score/r7open/r6feel/r7feel classes. Transform and opacity only. */
+
+/* The hand-over push: the hero poster keeps creeping toward the viewer from the moment the dive arrives, so the
+   hand-over to chapter 4 never stands still. Chapter 4 starts from the same scale (lpc-r9a-pushed). */
+.lpc-r9a-push {
+	position: absolute;
+	inset: 0;
+	transform-origin: 50% 46%;
+	animation: lpc-r9a-push calc(var(--dur) * var(--k)) linear calc(var(--d) * var(--k)) both;
+}
+@keyframes lpc-r9a-push { from { transform: scale(1); } to { transform: scale(var(--p, 1.04)); } }
+.lpc-r9a-pushed { position: absolute; inset: 0; transform-origin: 50% 46%; transform: scale(var(--p, 1.04)); }
+
+/* Chapter 4's fly-through, leaving with a little speed already (the push-in it continues was moving). */
+.lpc-r9a-through { animation-timing-function: cubic-bezier(0.5, 0.02, 0.85, 0.2) !important; }
+
+/* A slow push-in for a reading hold: the scene keeps moving while it reads. */
+.lpc-r9a-hold {
+	position: absolute;
+	inset: 0;
+	transform-origin: 50% 40%;
+	animation: lpc-r9a-hold calc(var(--dur) * var(--k)) cubic-bezier(0.3, 0, 0.7, 1) calc(var(--d) * var(--k)) both;
+}
+@keyframes lpc-r9a-hold { to { transform: scale(var(--hs, 1.03)); } }
+
+/* A backdrop drift that lasts exactly as long as it's on screen (`--kbl`), instead of round 6's fixed 4.2 s. */
+.lpc-r9a-kb { animation-duration: calc(var(--kbl, 4200ms) * var(--k)) !important; }
+
+@media (prefers-reduced-motion: reduce) {
+	.lpc-r9a-push, .lpc-r9a-hold { animation: none; }
+}

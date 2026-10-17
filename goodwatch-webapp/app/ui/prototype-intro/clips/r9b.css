@@ -1,0 +1,7 @@
+/* PROTOTYPE - throwaway. Round 9 "r9b" clips (filters, Explorer): retimed for rhythm. Transform and opacity only. */
+
+/* A slow push-in while something is being read, so a hold never looks frozen. */
+@keyframes lpc-r9b-drift {
+	from { transform: scale(1); }
+	to { transform: scale(1.035); }
+}
