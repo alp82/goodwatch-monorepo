@@ -11,12 +11,33 @@ from f.buzz.score import FORMULA_VERSION, rank_day
 from f.buzz.store import BuzzStore
 
 
+# Stable, high-traffic articles make missing-day probes independent of catalog mappings.
+PUBLICATION_PROBES = ('https://en.wikipedia.org/wiki/Breaking_Bad',
+                      'https://en.wikipedia.org/wiki/The_Godfather')
+FINAL_ATTEMPT_HOUR_UTC = 23
+
+
+def wait_or_fail(stats, now, status, message):
+    if now.hour >= FINAL_ATTEMPT_HOUR_UTC:
+        raise RuntimeError(message)
+    return dict(stats, status=status, message=message)
+
+
 def run(store, signals, *, now=None):
-    now = now or dt.datetime.now(dt.timezone.utc)
+    now = (now or dt.datetime.now(dt.timezone.utc)).astimezone(dt.timezone.utc)
     end = now.date() - dt.timedelta(days=1)
     start = end - dt.timedelta(days=59)
     stats = {'score_day': end.isoformat(), 'window_start': start.isoformat()}
     store.initialize()
+    published = store.published_days()
+    if end.isoformat() in published:
+        # Also repair a crash between the immutable date write and advancing current.
+        store.publish(end.isoformat(), None, now)
+        return dict(stats, status='already_published')
+    if not any(end.isoformat() in signals.pageviews(article, end, end)
+               for article in PUBLICATION_PROBES):
+        return wait_or_fail(stats, now, 'waiting_for_publication',
+                            f'Wikimedia has not published {end.isoformat()}; current snapshot preserved')
     trending = store.read_trending(now)
     if trending is None:
         trending = signals.trending()
@@ -61,7 +82,8 @@ def run(store, signals, *, now=None):
     stats['scorable_latest'] = len(latest_rows)
     # A source outage must not publish an empty/reduced replacement over a healthy snapshot.
     if len(latest_rows) < 0.8 * len(matched):
-        raise RuntimeError(f"Only {len(latest_rows)}/{len(matched)} titles have the latest 29 days; retry after Wikimedia completes publication")
+        return wait_or_fail(stats, now, 'waiting_for_coverage',
+                            f"Only {len(latest_rows)}/{len(matched)} titles have the latest 29 days; retry after Wikimedia completes publication")
     published = store.published_days()
     all_days = [(start + dt.timedelta(days=i), rank_day(matched, series, start + dt.timedelta(days=i)))
                 for i in range(28, 60) if (start + dt.timedelta(days=i)).isoformat() not in published]
@@ -90,6 +112,7 @@ def run(store, signals, *, now=None):
     # Repair a crash between a date snapshot and moving current, using the same payload.
     store.publish(end.isoformat(), None, now)
     store.cleanup(now)
+    stats['status'] = 'published'
     stats['top20'] = [dict(rank=r['rank'], title_key=r['title_key'], title=r['card']['title'],
                            score=round(r['score'], 3), views=r['views']) for r in latest_rows if r['rank'] and r['rank'] <= 20]
     return stats

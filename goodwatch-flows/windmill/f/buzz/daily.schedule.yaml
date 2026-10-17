@@ -1,0 +1,9 @@
+summary: Daily buzz with hourly Wikimedia catch-up, 08:00–23:00 UTC
+schedule: 0 0 8-23 * * *
+timezone: UTC
+script_path: f/buzz/daily
+is_flow: true
+args: {}
+enabled: true
+no_flow_overlap: true
+cron_version: v2

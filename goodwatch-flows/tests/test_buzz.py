@@ -60,19 +60,87 @@ class DailyTests(unittest.TestCase):
         self.assertEqual(len(store.snapshots), 32)
         self.assertEqual(store.current['top20'][0]['score'], 20)
         self.assertEqual(store.current['top20'][0]['rank'], 1)
-        self.assertEqual(signals.ranges, [('2026-08-15', '2026-10-13')])
+        self.assertEqual(signals.ranges[-1], ('2026-08-15', '2026-10-13'))
+        requests_after_publish = len(signals.ranges)
         run(store, signals, now=dt.datetime(2026, 10, 14, 11, tzinfo=dt.timezone.utc))
-        self.assertEqual(len(signals.ranges), 1)  # Fully observed series reused on retry.
+        self.assertEqual(len(signals.ranges), requests_after_publish)  # No source requests after publication.
 
     def test_delayed_latest_observations_preserve_the_published_day(self):
         from f.buzz.daily import run
         store = MemoryStore()
         run(store, FakeSignals(), now=dt.datetime(2026, 10, 14, 10, tzinfo=dt.timezone.utc))
         class DelayedSignals(FakeSignals):
-            def pageviews(self, article, start, end): return {}
-        with self.assertRaisesRegex(RuntimeError, 'latest 29 days'):
-            run(store, DelayedSignals(), now=dt.datetime(2026, 10, 15, 10, tzinfo=dt.timezone.utc))
+            def pageviews(self, article, start, end):
+                self.ranges.append((start.isoformat(), end.isoformat()))
+                return {}
+            def trending(self): raise AssertionError('Trending called before publication')
+            def mappings(self, titles): raise AssertionError('Mappings called before publication')
+        signals = DelayedSignals()
+        result = run(store, signals, now=dt.datetime(2026, 10, 15, 10, tzinfo=dt.timezone.utc))
+        self.assertEqual(result['status'], 'waiting_for_publication')
+        self.assertEqual(signals.ranges, [('2026-10-14', '2026-10-14')] * 2)
         self.assertEqual(store.current['day'], '2026-10-13')
+        self.assertNotIn('2026-10-15', store.trending)
+        # No candidate collection, mapping, metadata or bulk pageviews on a delayed day.
+        self.assertEqual(len(store.snapshots), 32)
+        with self.assertRaisesRegex(RuntimeError, 'Wikimedia.*2026-10-14'):
+            run(store, signals, now=dt.datetime(2026, 10, 15, 23, tzinfo=dt.timezone.utc))
+        result = run(store, FakeSignals(), now=dt.datetime(2026, 10, 15, 22, tzinfo=dt.timezone.utc))
+        self.assertEqual(store.current['day'], '2026-10-14')
+        self.assertIn('top20', result)
+
+    def test_completed_day_repairs_current_without_any_signal_requests(self):
+        from f.buzz.daily import run
+        store = MemoryStore()
+        now = dt.datetime(2026, 10, 14, 10, tzinfo=dt.timezone.utc)
+        run(store, FakeSignals(), now=now)
+        payload = store.current
+        store.current = None  # Crash after date write, before advancing current.
+        result = run(store, object(), now=now.replace(hour=23))
+        self.assertEqual(result['status'], 'already_published')
+        self.assertIs(store.current, payload)
+        self.assertEqual(len(store.snapshots), 32)
+
+    def test_partial_publication_waits_until_final_attempt(self):
+        from f.buzz.daily import run
+        class PartialSignals(FakeSignals):
+            def pageviews(self, article, start, end):
+                # Probe day is present, but full article history is not ready.
+                return {end.isoformat(): 2000}
+        store = MemoryStore()
+        now = dt.datetime(2026, 10, 14, 22, tzinfo=dt.timezone.utc)
+        self.assertEqual(run(store, PartialSignals(), now=now)['status'], 'waiting_for_coverage')
+        self.assertIsNone(store.current)
+        with self.assertRaisesRegex(RuntimeError, 'latest 29 days'):
+            run(store, PartialSignals(), now=now.replace(hour=23))
+
+    def test_second_probe_can_confirm_publication_and_stops_at_two(self):
+        from f.buzz.daily import run, PUBLICATION_PROBES
+        class SecondProbeSignals(FakeSignals):
+            def pageviews(self, article, start, end):
+                if article == PUBLICATION_PROBES[0]:
+                    self.ranges.append((start.isoformat(), end.isoformat()))
+                    return {}
+                return super().pageviews(article, start, end)
+        signals = SecondProbeSignals()
+        result = run(MemoryStore(), signals, now=dt.datetime(2026, 10, 14, 8, tzinfo=dt.timezone.utc))
+        self.assertEqual(result['status'], 'published')
+        self.assertEqual(len(signals.ranges), 3)  # Two probes, one full article history.
+
+    def test_final_attempt_uses_utc_and_transport_errors_still_fail(self):
+        from f.buzz.daily import run
+        class DelayedSignals(FakeSignals):
+            def pageviews(self, *args): return {}
+        # 00:30 on the 15th in Berlin is still the 14th, before the final UTC attempt.
+        now = dt.datetime(2026, 10, 15, 0, 30, tzinfo=dt.timezone(dt.timedelta(hours=2)))
+        result = run(MemoryStore(), DelayedSignals(), now=now)
+        self.assertEqual((result['score_day'], result['status']), ('2026-10-13', 'waiting_for_publication'))
+        with self.assertRaisesRegex(RuntimeError, 'Wikimedia'):
+            run(MemoryStore(), DelayedSignals(), now=now + dt.timedelta(hours=1))
+        class BrokenSignals(FakeSignals):
+            def pageviews(self, *args): raise RuntimeError('Signal HTTP 500 after four attempts')
+        with self.assertRaisesRegex(RuntimeError, 'Signal HTTP 500'):
+            run(MemoryStore(), BrokenSignals(), now=now)
 
 
 class Response:
