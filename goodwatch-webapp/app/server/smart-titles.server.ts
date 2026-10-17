@@ -53,7 +53,7 @@ export const getSmartTitlesForGuest = async (
 	}
 	
 	return await cached<GetSmartTitlesForGuestParams, SmartTitle[]>({
-		name: "smart-titles-guest",
+		name: "smart-titles-guest-recognition",
 		target: _getSmartTitlesForGuest,
 		params,
 		ttlMinutes: 60 * 24,
@@ -87,7 +87,8 @@ async function _getSmartTitlesForGuest({
 			synopsis,
 			essence_tags,
 			popularity,
-			goodwatch_overall_score_normalized_percent
+			goodwatch_overall_score_normalized_percent,
+			goodwatch_overall_score_voting_count
 		FROM movie
 		WHERE 
 			poster_path IS NOT NULL
@@ -111,7 +112,8 @@ async function _getSmartTitlesForGuest({
 			synopsis,
 			essence_tags,
 			popularity,
-			goodwatch_overall_score_normalized_percent
+			goodwatch_overall_score_normalized_percent,
+			goodwatch_overall_score_voting_count
 		FROM show
 		WHERE 
 			poster_path IS NOT NULL
@@ -132,15 +134,14 @@ async function _getSmartTitlesForGuest({
 	])
 	
 	// Combine and shuffle results
-	const combined = [...movies, ...shows]
-	return shuffleArray(combined).slice(0, count)
+	return recognitionOrder(movies, shows).slice(0, count)
 }
 
 export const getSmartTitlesForUser = async (
 	params: GetSmartTitlesForUserParams,
 ) => {
 	const titles = await cached<GetSmartTitlesForUserParams, SmartTitle[]>({
-		name: "smart-titles-user",
+		name: "smart-titles-user-recognition",
 		target: _getSmartTitlesForUser,
 		params,
 		ttlMinutes: 1,
@@ -179,7 +180,8 @@ async function _getSmartTitlesForUser({
 			m.synopsis,
 			m.essence_tags,
 			m.popularity,
-			m.goodwatch_overall_score_normalized_percent
+			m.goodwatch_overall_score_normalized_percent,
+			m.goodwatch_overall_score_voting_count
 		FROM movie m
 		WHERE 
 			m.poster_path IS NOT NULL
@@ -220,7 +222,8 @@ async function _getSmartTitlesForUser({
 			s.synopsis,
 			s.essence_tags,
 			s.popularity,
-			s.goodwatch_overall_score_normalized_percent
+			s.goodwatch_overall_score_normalized_percent,
+			s.goodwatch_overall_score_voting_count
 		FROM show s
 		WHERE 
 			s.poster_path IS NOT NULL
@@ -260,6 +263,26 @@ async function _getSmartTitlesForUser({
 	])
 
 	// Combine and shuffle results
-	const combined = [...movies, ...shows]
-	return shuffleArray(combined).slice(0, count)
+	return recognitionOrder(movies, shows).slice(0, count)
+}
+
+/** How likely someone has seen a title: many votes and still talked about. Votes alone favor titles with heavy IMDb
+ * voting that few people outside one country know (Aspirants: 320k votes, TMDB popularity 5). */
+const recognition = (t: SmartTitle) =>
+	Math.log(Math.max(Number(t.goodwatch_overall_score_voting_count) || 1, 1)) +
+	0.5 * Math.log(Math.max(t.popularity || 1, 1))
+
+/** Best-known first, alternating movies and shows; shuffled only within windows of 10, so every visit varies but the first titles stay famous. */
+function recognitionOrder(movies: SmartTitle[], shows: SmartTitle[]): SmartTitle[] {
+	const byRecognition = (list: SmartTitle[]) => [...list].sort((a, b) => recognition(b) - recognition(a))
+	const m = byRecognition(movies)
+	const s = byRecognition(shows)
+	const mixed: SmartTitle[] = []
+	for (let i = 0; i < Math.max(m.length, s.length); i++) {
+		if (m[i]) mixed.push(m[i])
+		if (s[i]) mixed.push(s[i])
+	}
+	const out: SmartTitle[] = []
+	for (let i = 0; i < mixed.length; i += 10) out.push(...shuffleArray(mixed.slice(i, i + 10)))
+	return out
 }

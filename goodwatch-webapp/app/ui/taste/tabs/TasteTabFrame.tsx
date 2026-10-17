@@ -2,6 +2,7 @@ import { Link } from "@remix-run/react"
 import type { ReactNode } from "react"
 import type { PortraitTab, PortraitViewOf } from "~/server/taste-portrait/view"
 import { QUIZ_PATH } from "~/ui/taste-quiz/TasteQuizPage"
+import { TasteStart } from "../TasteStart"
 import { TasteBanner } from "./TasteBanner"
 import { useTasteView } from "./useTasteView"
 
@@ -45,6 +46,14 @@ export function TasteTabFrame<T extends PortraitTab>({
 				action={<RetryButton onClick={retry} />}
 			/>
 		)
+
+	// A member without a taste yet starts it here, one title at a time.
+	if (
+		tab === "sides" &&
+		view.status === "empty" &&
+		view.subject.kind === "member"
+	)
+		return <TasteStart />
 
 	return (
 		<div className="pb-32 text-white">
