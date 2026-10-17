@@ -6,10 +6,10 @@
 // page the TV opened, and it stays after the person has come back, so the browser's Forward finds it again.
 
 /**
- * The TV button lives on the page the TV opened and one step further. After that the TV is no longer where the
+ * The TV button lives only on the page the TV opened. After one navigation the TV is no longer where the
  * person is coming from. The browser's Back is not touched by this.
  */
-export const WAY_BACK_LIVES = 2
+export const WAY_BACK_LIVES = 1
 
 export const TRIP_KEY = "living-room:left-through-tv"
 /** Marks the TV button on a page reached through the TV: the brackets fold into it. */

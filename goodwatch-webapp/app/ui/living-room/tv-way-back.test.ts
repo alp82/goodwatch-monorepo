@@ -44,9 +44,9 @@ describe("pagesFromTv", () => {
 })
 
 describe("wayBackShows", () => {
-	it("shows on the page the TV opened and one step further, and nowhere else", () => {
-		assert.equal(WAY_BACK_LIVES, 2)
-		assert.deepEqual([0, 1, 2, 3, 4].map(wayBackShows), [false, true, true, false, false])
+	it("shows only on the page the TV opened and disappears after one navigation", () => {
+		assert.equal(WAY_BACK_LIVES, 1)
+		assert.deepEqual([0, 1, 2, 3, 4].map(wayBackShows), [false, true, false, false, false])
 	})
 })
 

@@ -1,5 +1,5 @@
 // The way back to the TV, as far as every page has to carry it. A person who left the living room through its TV
-// (tv-transition.ts) gets a TV button on the page it opened and one step further: on the desktop in a tab under
+// (tv-transition.ts) gets a TV button only on the page it opened: on the desktop in a tab under
 // the header, on a phone in the dock in place of its left part. All a first view loads of that is this file: a
 // look into sessionStorage after hydration. The button itself (TvWayBack.tsx) is fetched when a person leaves
 // through the TV, or on the reload of a page they reached that way.
