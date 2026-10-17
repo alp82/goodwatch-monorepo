@@ -274,6 +274,8 @@ export interface ShowTracking {
 	store: ShowStore
 	/** The show has an episode list and the member's rows are read: tracking is offered. */
 	ready: boolean
+	/** The show's tracking could not be read. */
+	failed: boolean
 	page: ShowTrackingPage | null
 	view: ShowView | null
 	/** Regular seasons in order, the specials last. */
@@ -363,6 +365,7 @@ export function useShowTracking(showId: number): ShowTracking {
 	return {
 		store,
 		ready,
+		failed: query.isError,
 		page,
 		view,
 		seasons,

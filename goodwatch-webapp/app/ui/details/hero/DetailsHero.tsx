@@ -3,9 +3,9 @@ import type { TitleSides } from "~/server/title-sides.server"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import EpisodeGridLink from "~/ui/details/hero/EpisodeGridLink"
 import ListActions from "~/ui/details/hero/ListActions"
-import OwnScore from "~/ui/details/hero/OwnScore"
 import RatingChips from "~/ui/details/hero/RatingChips"
 import ScoreRing from "~/ui/details/hero/ScoreRing"
+import SeenScore from "~/ui/details/hero/SeenScore"
 import TitleSidesLine from "~/ui/details/hero/TitleSidesLine"
 import { HeroBackdropImage, HeroPoster, TrailerButton } from "~/ui/details/hero/Trailer"
 import WhereToWatch from "~/ui/details/hero/WhereToWatch"
@@ -30,7 +30,8 @@ export interface DetailsHeroProps {
 // The title page's overview, one card under the page's header (which has the title).
 //
 // The banner is the backdrop, with the trailer button in its corner. On it: the poster, which opens full screen,
-// and the ratings as one group. The GoodWatch score and the person's own score, then one chip per site and, for a
+// and the ratings as one group. The GoodWatch score and the person's Seen and score (one control), then one chip per
+// site and, for a
 // show, the miniature of its episode ratings. Under the banner, for a member, where the title sits in their Taste
 // (taste groups, one line), then two blocks: the person's actions with the title
 // (for a tracked show also its status line), and where to watch.
@@ -69,7 +70,7 @@ export default function DetailsHero({ media, country, shownCountry, preview, epi
 										<div className="hidden md:block">
 											<ScoreRing media={media} size={56} />
 										</div>
-										<OwnScore media={media} className="max-md:w-full md:min-w-[10.75rem] md:shrink-0" />
+										<SeenScore media={media} className={`max-md:w-full md:shrink-0 ${media.mediaType === "show" ? "md:w-[18rem]" : "md:w-[16rem]"}`} />
 									</div>
 									<div className="mt-3 max-md:hidden">{sites}</div>
 								</div>

@@ -109,7 +109,7 @@ One run through a show's episodes. Watch again on a Seen show begins a new pass,
 _Avoid_: Rewatch session
 
 **Seen**:
-A movie the person has watched or rated; rating a movie records a watch, so the two are one rule. For a show, the show status reached by watching its last aired regular episode or by pressing Seen; pressing Seen again takes that press back. A show stays Seen when later episodes air, and then says how many are new. Rating a show never changes its show status; a rated show still counts as Seen wherever titles are filtered or marked as seen, such as Not seen yet.
+A movie the person has watched or rated; rating a movie records a watch, so the two are one rule. Marking a movie not seen removes its score and every watch the member logged, so it asks first; it is offered in the score picker, beside the title. For a show, the show status reached by watching its last aired regular episode or by pressing Seen; pressing Seen again takes that press back. A show stays Seen when later episodes air, and then says how many are new. Rating a show never changes its show status; a rated show still counts as Seen wherever titles are filtered or marked as seen, such as Not seen yet.
 _Avoid_: Finished, Completed, Watched
 
 **Show status**:

@@ -51,24 +51,12 @@ export const HERO_ACTIONS = "flex min-w-0 flex-col gap-2.5"
 /** The status line of that block, at the height it has once its content is there. */
 export const STATUS_LINE = "flex min-h-9 min-w-0 items-center gap-2.5"
 
-/** The status line as the first paint has it: the state from the member data, and room for the rest. */
-function StatusLineFirstPaint({
-	state,
-	running,
-}: {
-	state: Status
-	running: boolean
-}) {
-	const look = STATUS_LOOK[state]
-	return (
-		<div data-tracking-box className={STATUS_LINE}>
-			<span
-				className={`inline-flex h-9 w-fit items-center rounded-lg px-2.5 text-xs font-semibold ${look.pill}`}
-			>
-				{state === "seen" && running ? "Caught up" : look.word}
-			</span>
-		</div>
-	)
+/**
+ * The status line as the first paint has it: its height, kept for the progress and the Next episode that the
+ * tracking code draws there. The status itself is in the hero's ratings, the left half of the Seen and score control.
+ */
+function StatusLineFirstPaint() {
+	return <div data-tracking-box className={STATUS_LINE} />
 }
 
 /**
@@ -88,12 +76,7 @@ export function TrackedTitleActions({
 	const hydrated = useHydrated()
 	const first = (
 		<div className={HERO_ACTIONS}>
-			{entry && (
-				<StatusLineFirstPaint
-					state={entry.state}
-					running={media.details.in_production === true}
-				/>
-			)}
+			{entry && <StatusLineFirstPaint />}
 			{children}
 		</div>
 	)

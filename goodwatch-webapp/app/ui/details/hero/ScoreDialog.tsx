@@ -1,10 +1,12 @@
 // The full score picker of the title page: Bad / Mediocre / Good / Excellent over the 1-10 strip, with Clear score
-// inside. OwnScore.tsx loads this module when a visitor reaches for the score rectangle.
+// inside. SeenScore.tsx loads this module when a visitor reaches for the score half of the Seen and score control.
+// Beside the title it can hold a control of its own (a movie's Seen switch), and a step can take the picker's place
+// (a show's "How far are you?" after a first score).
 //
 // A sheet from the bottom edge on a phone, a dialog in the middle of the screen from md up. It is fixed to the
 // screen and rendered into the body, so it is inside the screen wherever the page is scrolled and whatever its
 // opener sits in.
-import { type RefObject, useEffect, useLayoutEffect, useRef } from "react"
+import { type ReactNode, type RefObject, useEffect, useLayoutEffect, useRef } from "react"
 import { createPortal } from "react-dom"
 import type { Score } from "~/server/scores.server"
 import { ScoreControl } from "~/ui/title-actions/ScoreControl"
@@ -20,8 +22,17 @@ export default function ScoreDialog({
 	onRate,
 	onClear,
 	onClose,
+	aside,
+	step,
+	footer,
 }: {
 	title: string
+	/** Beside the title: a movie's Seen switch. */
+	aside?: ReactNode
+	/** In place of the score picker: the next question after a score. */
+	step?: ReactNode
+	/** Under the score picker. */
+	footer?: ReactNode
 	open: boolean
 	value: Score | null
 	busy: boolean
@@ -32,10 +43,10 @@ export default function ScoreDialog({
 	onClose: () => void
 }) {
 	if (!open) return null
-	return <Panel title={title} value={value} busy={busy} opener={opener} onRate={onRate} onClear={onClear} onClose={onClose} />
+	return <Panel title={title} value={value} busy={busy} opener={opener} onRate={onRate} onClear={onClear} onClose={onClose} aside={aside} step={step} footer={footer} />
 }
 
-function Panel({ title, value, busy, opener, onRate, onClear, onClose }: Omit<Parameters<typeof ScoreDialog>[0], "open">) {
+function Panel({ title, value, busy, opener, onRate, onClear, onClose, aside, step, footer }: Omit<Parameters<typeof ScoreDialog>[0], "open">) {
 	const panel = useRef<HTMLDivElement>(null)
 	const shade = useRef<HTMLDivElement>(null)
 	const closeRef = useRef(onClose)
@@ -94,7 +105,8 @@ function Panel({ title, value, busy, opener, onRate, onClear, onClose }: Omit<Pa
 			>
 				<div className="mx-auto mb-3 h-1 w-10 rounded-full bg-white/20 md:hidden" aria-hidden="true" />
 				<div className="mb-3 flex items-center justify-between gap-3">
-					<h2 className="min-w-0 truncate text-base font-bold">{title}</h2>
+					<h2 className="min-w-0 flex-1 truncate text-base font-bold">{title}</h2>
+					{aside}
 					<button
 						type="button"
 						data-score-dialog-close
@@ -107,7 +119,12 @@ function Panel({ title, value, busy, opener, onRate, onClear, onClose }: Omit<Pa
 						</svg>
 					</button>
 				</div>
-				<ScoreControl value={value} busy={busy} onRate={onRate} onClear={onClear} />
+				{step ?? (
+					<>
+						<ScoreControl value={value} busy={busy} onRate={onRate} onClear={onClear} />
+						{footer}
+					</>
+				)}
 			</div>
 		</div>,
 		document.body,

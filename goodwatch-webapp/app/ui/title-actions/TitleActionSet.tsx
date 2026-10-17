@@ -10,9 +10,9 @@ import { SEEN_INSTRUCTIONS, SEEN_SO_NOT_HIDEABLE, useTitleActions } from "./useT
  * The whole title action set at full size: the score control, then Want to See, Seen, and Not interested. The
  * phone sheet of a poster card shows it.
  *
- * `layout="row"` is the title page's: the three buttons alone in one row that they fill, 36px high. The score has
- * its own place there, in the hero's ratings. On a phone Not interested is its icon alone, and it is left out
- * for a title that can't be hidden (one the person has seen or scored).
+ * `layout="row"` is the title page's: Want to See and Not interested alone in one row that they fill, 36px high.
+ * Seen and the score are one control there, in the hero's ratings (SeenScore). On a phone Not interested is its
+ * icon alone, and it is left out for a title that can't be hidden (one the person has seen or scored).
  */
 export function TitleActionSet({
 	media,
@@ -33,7 +33,6 @@ export function TitleActionSet({
 	const row = useRef<HTMLDivElement>(null)
 	const own = (el: Element) => Boolean(row.current?.contains(el))
 	useReplayedTap("want", own)
-	useReplayedTap("seen", own)
 	const hideTitle = a.hidden
 		? "Hidden from your recommendations. Press to bring it back."
 		: a.canHide
@@ -47,22 +46,6 @@ export function TitleActionSet({
 		return (
 			<div ref={row} data-title-actions className="flex min-w-0 gap-2">
 				<ActionButton kind="want" label="long" size="sm" className="flex-1" rewatch={a.seen} active={a.want} disabled={a.wantPending} data-replay-tap={`want:${a.want ? "on" : "off"}`} onClick={a.toggleWant} />
-				<UserAction instructions={SEEN_INSTRUCTIONS}>
-					<ActionButton
-						kind="seen"
-						label="long"
-						size="sm"
-						data-replay-tap={`seen:${a.seen ? "on" : "off"}`}
-						className="flex-1"
-						active={a.seen}
-						disabled={a.seenPending}
-						{...a.seenLog}
-						onClick={(event) => {
-							a.toggleSeen(event)
-							if (a.seenLog?.opensLog) onOpenLog?.()
-						}}
-					/>
-				</UserAction>
 				{(a.canHide || a.hidden) && (
 					<ActionButton kind="hide" label="wide" size="sm" className="max-sm:w-9 max-sm:flex-none sm:flex-1" active={a.hidden} disabled={a.hidePending} title={hideTitle} onClick={pressHide} />
 				)}

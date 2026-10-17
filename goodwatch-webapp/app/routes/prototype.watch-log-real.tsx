@@ -16,7 +16,7 @@ import { BelowFoldProvider } from "~/ui/details/below-fold"
 import DetailsHero from "~/ui/details/hero/DetailsHero"
 import { MediaPreferenceProvider } from "~/ui/media-preference/MediaPreference"
 import ListActions from "~/ui/details/hero/ListActions"
-import OwnScore from "~/ui/details/hero/OwnScore"
+import SeenScore from "~/ui/details/hero/SeenScore"
 import { type HeroProviders, heroParts, withMemberSettings } from "~/ui/prototype-episode-tracking/hero-fixture"
 import { HARNESS_MEMBER, NEXT, SAMPLES, type Sample, createHarnessServer } from "~/ui/prototype-watch-log/harness-server"
 import { TitleActionsFrame } from "~/ui/title-actions/TitleActionsFrame"
@@ -114,7 +114,7 @@ export default function WatchLogHarness() {
 										<p className="mb-3 text-xs text-gray-400">{sample.starts}</p>
 										{/* The hero's two parts for a movie: the score rectangle of its ratings, and the action row. */}
 										<div className="mb-3 flex">
-											<OwnScore media={media(sample)} />
+											<SeenScore media={media(sample) as unknown as MovieResult} />
 										</div>
 										<ListActions media={media(sample) as unknown as MovieResult} />
 									</div>

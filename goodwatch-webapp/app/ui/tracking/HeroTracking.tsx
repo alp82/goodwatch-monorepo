@@ -1,13 +1,12 @@
 import { PauseIcon } from "@heroicons/react/20/solid"
 // The hero's "your show" block on a show page for a member who tracks episodes (#369, #384): one line with the
-// status pill and its menu, the progress, and the Next episode as a chip that leads to its row in the episode
-// list; the prompt to rate and the question after a first score, when they are due; and the actions in one row.
-// The score itself is in the hero's ratings (ui/details/hero/OwnScore.tsx), and the prompt opens its picker.
+// progress and the Next episode as a chip that leads to its row in the episode list; the prompt to rate and the
+// question after a first score, when they are due; and the actions in one row. The status, with its menu, and the
+// score are one control in the hero's ratings (ui/details/hero/SeenScore.tsx), and the prompt opens its picker.
 // Loaded after the page is up; until its data is there, and for a show without an episode list, it shows what the
 // first paint showed.
 import {
 	CheckIcon,
-	ChevronDownIcon,
 	ClockIcon,
 	EyeIcon,
 	NoSymbolIcon,
@@ -18,7 +17,8 @@ import { episodeLabel } from "~/domain/tracking/machine"
 import type { ShowView } from "~/domain/tracking/show-page"
 import type { MenuEntry, MenuEntryId } from "~/domain/tracking/status-menu"
 import { EPISODE_GRID_ANCHOR } from "~/ui/details/episode-grid/scale"
-import { SCORE_SAVED_EVENT, openScorePicker } from "~/ui/details/hero/OwnScore"
+import { SCORE_SAVED_EVENT, openScorePicker } from "~/ui/details/hero/SeenScore"
+import { HALF_FOCUS } from "~/ui/details/hero/seen-score-faces"
 import { ActionButton } from "~/ui/title-actions/ActionButton"
 import { useTitleActions } from "~/ui/title-actions/useTitleActions"
 import { useUndoToast, warmUndoToast } from "~/ui/title-actions/useUndoToast"
@@ -30,12 +30,7 @@ import {
 	useDismiss,
 } from "./TrackingToast"
 import { type TrackingActions, useTrackingActions } from "./actions"
-import {
-	HERO_ACTIONS,
-	STATUS_LINE,
-	STATUS_LOOK,
-	type TrackedMedia,
-} from "./gate"
+import { HERO_ACTIONS, STATUS_LINE, type TrackedMedia } from "./gate"
 import { FOCUS, type ShowTracking, plural, useShowTracking } from "./store"
 
 export default function HeroTracking({
@@ -127,15 +122,22 @@ const MENU_LOOK: Record<
 	drop: { Icon: NoSymbolIcon, tint: "text-pink-300/80" },
 }
 
-function StatusPill({
+/**
+ * The status and its menu. It is drawn as the status half of the Seen and score control in the hero's ratings
+ * (HeroStatus.tsx), whose face it is given.
+ */
+export function StatusPill({
 	view,
 	actions,
 	onRewatch,
+	face,
 }: {
 	view: ShowView
 	actions: TrackingActions
 	/** Want to rewatch, on or off: the Wishlist's own writer, as the Want to See button uses it. */
 	onRewatch: () => void
+	/** The status half's face: the button shows it. */
+	face: ReactNode
 }) {
 	const [open, setOpen] = useState(false)
 	/** The entry the menu asks about before it goes on. */
@@ -160,11 +162,10 @@ function StatusPill({
 	})
 	const { derived, menu, press } = view
 	if (derived.state === "not_started") return null
-	const pill = `inline-flex h-9 shrink-0 items-center whitespace-nowrap gap-1.5 rounded-lg px-2.5 text-xs font-semibold ${STATUS_LOOK[derived.state].pill}`
 	if (!menu.length)
 		return (
-			<span data-status-pill className={pill}>
-				{derived.label}
+			<span data-status-pill className="flex h-full rounded-l-xl">
+				{face}
 			</span>
 		)
 	const run = (entry: MenuEntry, confirmed = false) => {
@@ -198,18 +199,18 @@ function StatusPill({
 		items[(at + by + items.length) % items.length]?.focus()
 	}
 	return (
-		<div ref={root} className="relative">
+		<div ref={root} className="relative flex h-full">
 			<button
 				ref={pillButton}
 				type="button"
 				data-status-pill
 				aria-haspopup="menu"
 				aria-expanded={open}
+				aria-label={`Status: ${derived.label}. Change it`}
 				onClick={() => (open ? close() : setOpen(true))}
-				className={`${pill} cursor-pointer ${FOCUS}`}
+				className={`flex h-full cursor-pointer rounded-l-xl hover:brightness-110 ${HALF_FOCUS}`}
 			>
-				{derived.label}
-				<ChevronDownIcon className="h-3.5 w-3.5" />
+				{face}
 			</button>
 			{open && (
 				<div
@@ -217,7 +218,7 @@ function StatusPill({
 					role={confirming ? "alertdialog" : "menu"}
 					aria-label={confirming ? confirming.label : "Change the status"}
 					onKeyDown={confirming ? undefined : onMenuKey}
-					className={`absolute left-0 top-full z-40 mt-1 w-80 max-w-[calc(100vw-4rem)] ${POPOVER}`}
+					className={`absolute left-0 top-full z-40 mt-1.5 w-80 max-w-[calc(100vw-2.5rem)] ${POPOVER}`}
 				>
 					{confirming?.id === "takeBack" ? (
 						// The words are the menu entry's own: what the press marked, and where the show goes.
@@ -342,7 +343,6 @@ function StatusLine({
 	view: ShowView
 	actions: TrackingActions
 }) {
-	const { toggleWant } = useTitleActions(media)
 	const { derived } = view
 	const next =
 		derived.next &&
@@ -379,7 +379,6 @@ function StatusLine({
 						}`
 	return (
 		<div data-tracking-box className={STATUS_LINE}>
-			<StatusPill view={view} actions={actions} onRewatch={toggleWant} />
 			<p
 				data-progress
 				title={extras.join(" · ")}

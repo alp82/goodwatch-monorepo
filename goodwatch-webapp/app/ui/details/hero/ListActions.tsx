@@ -3,8 +3,8 @@ import { TitleActionSet } from "~/ui/title-actions/TitleActionSet"
 import { TrackedTitleActions, useEpisodeTracking } from "~/ui/tracking/gate"
 import { useUndoToast, warmUndoToast } from "~/ui/title-actions/useUndoToast"
 
-// The title actions on the title page, the hero's "your show" or "your movie" block: Want to See, Seen, and Not
-// interested in one row. The score has its own place in the hero's ratings (OwnScore). Not interested answers with a
+// The title actions on the title page, the hero's "your show" or "your movie" block: Want to See and Not interested
+// in one row. Seen and the score are one control in the hero's ratings (SeenScore). Not interested answers with a
 // toast that can take it back; the button stays pressed while the title is hidden. The toast is fetched when the
 // pointer, the keyboard focus, or a finger reaches the actions, so it is there by the press.
 export default function ListActions({ media }: { media: MovieResult | ShowResult }) {
