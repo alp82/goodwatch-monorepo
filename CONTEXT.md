@@ -34,6 +34,10 @@ The screen inside the living room where GoodWatch runs. It shows one TV screen a
 **TV screen**:
 One view on the TV, such as home, Tonight, Discover's moods, a streaming service's titles, search, or a title. It replaces the earlier notion of channels.
 
+**Intro**:
+The short film the TV plays a guest on the start page after its boot screen: one scene per chapter (Let's watch, One score, Streaming, For you, How it feels, Search, Filters, Explorer, Tracking, Your ratings), with a chapter bar, ending in the quiz ("Tap three you loved"), which gives a real pick. It never starts over in the same tab: coming back resumes where the visitor was, or shows the TV's home after they left it. "What is GoodWatch?" in the TV's menu plays it again, for anyone. "How GoodWatch works" below the room is the same chapters as page content.
+_Avoid_: Onboarding, tour, explainer video
+
 **Remote**:
 The living room's main control. Everything on the remote is also reachable on the TV itself.
 
