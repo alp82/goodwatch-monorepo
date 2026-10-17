@@ -1,4 +1,5 @@
 import type { ConnectState, ConsentApp, ConsentView } from "../../utils/mcp-connect.ts"
+import { isAddressedTo } from "../site-origin.server.ts"
 import type { createGoodwatchAuth } from "./auth.server.ts"
 import { betterAuthEnabled, loadAuthRuntime } from "./boot.server.ts"
 
@@ -43,7 +44,7 @@ async function checked(request: Request, auth: AuthService) {
 	if (!(await verifyQuery(query, context.secret)))
 		return new Response("Invalid or expired connection request", { status: 400 })
 	const canonicalOrigin = new URL(context.baseURL).origin
-	if (new URL(request.url).origin !== canonicalOrigin) return new Response("Origin rejected", { status: 403 })
+	if (!isAddressedTo(request, canonicalOrigin)) return new Response("Origin rejected", { status: 403 })
 	if (request.method === "POST" && request.headers.get("Origin") !== canonicalOrigin)
 		return new Response("Origin rejected", { status: 403 })
 	const session = await auth.api.getSession({ headers: request.headers })

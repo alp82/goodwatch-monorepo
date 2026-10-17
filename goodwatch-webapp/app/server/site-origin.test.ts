@@ -1,7 +1,7 @@
 // Which requests count as the site's own (site-origin.server.ts), with and without a configured origin.
 import assert from "node:assert/strict"
 import { afterEach, describe, test } from "node:test"
-import { hasSiteOrigin, isSiteRequest, siteOrigin } from "./site-origin.server.ts"
+import { hasSiteOrigin, isAddressedTo, isSiteRequest, siteOrigin } from "./site-origin.server.ts"
 
 const env = { APP_ORIGIN: process.env.APP_ORIGIN, NODE_ENV: process.env.NODE_ENV }
 afterEach(() => {
@@ -85,5 +85,37 @@ describe("hasSiteOrigin stays strict", () => {
 		assert.equal(hasSiteOrigin(post({ "Sec-Fetch-Site": "same-origin" })), false)
 		assert.equal(hasSiteOrigin(post({ Referer: `${SITE}/` })), false)
 		assert.equal(hasSiteOrigin(post({ Origin: "https://evil.example" })), false)
+	})
+})
+
+describe("whether a request was addressed to a configured origin", () => {
+	// remix-serve behind Traefik: TLS ends at the proxy, so request.url is http:// with the client's Host.
+	const behindProxy = (url: string, proto?: string) =>
+		new Request(url, { headers: proto ? { "X-Forwarded-Proto": proto } : {} })
+	test("the http-rebuilt URL with the canonical Host and X-Forwarded-Proto https matches", () => {
+		assert.equal(isAddressedTo(behindProxy("http://goodwatch.app/mcp", "https"), SITE), true)
+	})
+	test("an explicit default port matches", () => {
+		assert.equal(isAddressedTo(behindProxy("http://goodwatch.app:443/mcp", "https"), SITE), true)
+	})
+	test("a wrong Host is rejected", () => {
+		assert.equal(isAddressedTo(behindProxy("http://evil.example/mcp", "https"), SITE), false)
+		assert.equal(isAddressedTo(behindProxy("http://goodwatch.app.evil.example/mcp", "https"), SITE), false)
+		assert.equal(isAddressedTo(behindProxy("http://10.0.0.5:3000/mcp", "https"), SITE), false)
+	})
+	test("plain http that reached the proxy is rejected for an https origin", () => {
+		assert.equal(isAddressedTo(behindProxy("http://goodwatch.app/mcp", "http"), SITE), false)
+		assert.equal(isAddressedTo(behindProxy("http://goodwatch.app/mcp"), SITE), false)
+	})
+	test("the first of several forwarded schemes counts, and an unknown one falls back to request.url", () => {
+		assert.equal(isAddressedTo(behindProxy("http://goodwatch.app/mcp", "https, http"), SITE), true)
+		assert.equal(isAddressedTo(behindProxy("http://goodwatch.app/mcp", "javascript"), SITE), false)
+	})
+	test("a local server without a proxy matches its own origin", () => {
+		assert.equal(isAddressedTo(behindProxy("http://localhost:3336/mcp"), "http://localhost:3336"), true)
+		assert.equal(isAddressedTo(behindProxy("http://localhost:3337/mcp"), "http://localhost:3336"), false)
+	})
+	test("an invalid configured origin matches nothing", () => {
+		assert.equal(isAddressedTo(behindProxy("http://goodwatch.app/mcp", "https"), "not a url"), false)
 	})
 })

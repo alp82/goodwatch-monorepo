@@ -160,6 +160,48 @@ test("MCP rejects cross-origin requests before authorization", async () => {
 	assert.equal((await handle(request)).status, 403)
 })
 
+// Production: remix-serve behind Traefik rebuilds request.url as http:// and Traefik sets X-Forwarded-Proto.
+const production = "https://goodwatch.app/mcp"
+const proxied = (host: string, headers: Record<string, string> = {}) =>
+	new Request(`http://${host}/mcp`, {
+		method: "POST",
+		headers: {
+			"X-Forwarded-Proto": "https",
+			"Content-Type": "application/json",
+			Accept: "application/json, text/event-stream",
+			...headers,
+		},
+		body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list" }),
+	})
+
+test("MCP behind the proxy answers a client without Origin with the bearer challenge", async () => {
+	const handle = createReadMcpHandler({ resource: production })
+	const response = await handle(proxied("goodwatch.app"))
+	assert.equal(response.status, 401)
+	assert.match(
+		response.headers.get("WWW-Authenticate") ?? "",
+		/resource_metadata="https:\/\/goodwatch\.app\/\.well-known\/oauth-protected-resource\/mcp"/,
+	)
+})
+
+test("MCP behind the proxy accepts its own Origin and rejects a foreign one or a wrong Host", async () => {
+	const handle = createReadMcpHandler({ resource: production })
+	const own = await handle(
+		proxied("goodwatch.app", { Origin: "https://goodwatch.app" }),
+	)
+	assert.equal(own.status, 401)
+	const foreign = await handle(
+		proxied("goodwatch.app", { Origin: "https://evil.example" }),
+	)
+	assert.equal(foreign.status, 403)
+	const wrongHost = await handle(proxied("evil.example"))
+	assert.equal(wrongHost.status, 403)
+	const plainHttp = await handle(
+		proxied("goodwatch.app", { "X-Forwarded-Proto": "http" }),
+	)
+	assert.equal(plainHttp.status, 403)
+})
+
 test("A registered tool rechecks its member flag at call time and records bounded metrics", async () => {
 	const server = createReadToolServer("member-A", new URL(resource).origin)
 	const handler = createMcpHandler(() => server, { legacy: "stateless" })

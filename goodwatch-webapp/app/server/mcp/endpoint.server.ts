@@ -7,6 +7,7 @@ import {
 	requireBearerAuth,
 } from "@modelcontextprotocol/server"
 import type { RateVerdict, RateWindow } from "../rate-limit.server.ts"
+import { isAddressedTo } from "../site-origin.server.ts"
 import { fillWebFetchGaps } from "../web-fetch-gaps.server.ts"
 import { mcpAuthorization } from "./authorization.server.ts"
 import type { RankedSearch } from "./ranked.server.ts"
@@ -49,7 +50,7 @@ export function createReadMcpHandler(
 		if (resource) {
 			const origin = request.headers.get("Origin")
 			if (
-				new URL(request.url).origin !== new URL(resource).origin ||
+				!isAddressedTo(request, resource) ||
 				(origin && origin !== new URL(resource).origin)
 			)
 				return new Response("Origin rejected", { status: 403 })

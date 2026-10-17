@@ -50,3 +50,33 @@ function refererOrigin(referer: string | null): string | null {
 		return null
 	}
 }
+
+/**
+ * Whether the request was addressed to `expected` (an origin from configuration, never from the request): the same
+ * host, and the same scheme as the proxy saw it. Coolify's Traefik terminates TLS and passes the Host through, so
+ * remix-serve rebuilds request.url as http://; the scheme the client used comes from X-Forwarded-Proto, which Traefik
+ * sets itself and replaces when a client sends one. Without that header the scheme of request.url counts, so a local
+ * server on its configured origin still matches. Express proxy trust stays off: it would also change req.ip.
+ */
+export function isAddressedTo(request: Request, expected: string): boolean {
+	let want: URL
+	let got: URL
+	try {
+		want = new URL(expected)
+		got = new URL(request.url)
+	} catch {
+		return false
+	}
+	const forwarded = request.headers
+		.get("X-Forwarded-Proto")
+		?.split(",")[0]
+		.trim()
+		.toLowerCase()
+	const protocol =
+		forwarded === "http" || forwarded === "https"
+			? `${forwarded}:`
+			: got.protocol
+	if (protocol !== want.protocol) return false
+	// Rebuild with the scheme so a default port compares equal (goodwatch.app:443 under https is goodwatch.app).
+	return new URL(`${protocol}//${got.host}`).origin === want.origin
+}
