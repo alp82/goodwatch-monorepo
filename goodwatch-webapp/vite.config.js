@@ -296,6 +296,7 @@ export default defineConfig(({ mode, isSsrBuild }) => ({
 	},
 
 	server: {
+		allowedHosts: ["alppc", "alppc.tail3b99f1.ts.net"],
 		port: 3003,
 	},
 

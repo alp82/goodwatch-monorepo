@@ -1,3 +1,4 @@
+import { ArrowDownIcon } from "@heroicons/react/20/solid"
 import type React from "react"
 import type { EpisodeGrid } from "~/server/episode-grid.server"
 import { useBelowFold } from "~/ui/details/below-fold"
@@ -27,10 +28,9 @@ export default function EpisodeGridLink({ grid, className = "" }: { grid: Episod
 			onClick={onClick}
 			aria-label="Episode ratings: every episode in one grid"
 			title="Episode ratings: every episode in one grid"
-			className={`group inline-flex shrink-0 items-center gap-2 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${className}`}
+			className={`group inline-flex h-8 shrink-0 items-center gap-2 rounded-lg bg-[#141923] pl-1.5 pr-2.5 ring-1 ring-white/20 transition hover:ring-white/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${className}`}
 		>
-			<span className="text-xs font-semibold text-gray-300 group-hover:text-white max-sm:hidden">Episodes</span>
-			<span className="flex h-7 w-10 items-center justify-center rounded-lg bg-[#141923] ring-1 ring-white/20 transition group-hover:ring-white/60">
+						<span className="flex h-6 w-9 items-center justify-center rounded-md bg-black/30">
 				<span aria-hidden="true" className="grid grid-cols-4 gap-px">
 					{miniatureScores(grid).map((score, index) => (
 						<span
@@ -42,6 +42,8 @@ export default function EpisodeGridLink({ grid, className = "" }: { grid: Episod
 					))}
 				</span>
 			</span>
+			<span className="text-xs font-semibold text-gray-200 group-hover:text-white">Episodes</span>
+			<ArrowDownIcon aria-hidden="true" className="h-3.5 w-3.5 text-gray-400 transition group-hover:translate-y-0.5 group-hover:text-white" />
 		</a>
 	)
 }
