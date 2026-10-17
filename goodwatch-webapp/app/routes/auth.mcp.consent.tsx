@@ -83,11 +83,11 @@ export default function Consent() {
 							<fieldset className="space-y-3 rounded-xl border border-gray-700 p-4">
 								<legend className="px-1 font-semibold text-white">Choose access</legend>
 								<label className="flex items-center gap-3">
-									<input form="mcp-consent" type="radio" name="access" value="read" defaultChecked />
+									<input form="mcp-consent" type="radio" name="access" value="read" />
 									Read-only
 								</label>
 								<label className="flex items-center gap-3">
-									<input form="mcp-consent" type="radio" name="access" value="write" />
+									<input form="mcp-consent" type="radio" name="access" value="write" defaultChecked />
 									Read and change my GoodWatch
 								</label>
 								<List title="With read and change access" items={CAN_CHANGE} />

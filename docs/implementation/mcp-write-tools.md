@@ -16,7 +16,7 @@ Write-scoped members see seven additional tools. Requests require both `mcp:read
 | `undo_watch` | `applyWatchLogAction`, `applyShowTrackingAction` | Displayed as **Remove a watch**; removes an explicit owned watch or the most recently recorded individual watch (current pass by default for shows) |
 | `set_my_services` | `setUserSettings` | Replaces saved country and services; accepts known service names or numeric TMDB provider IDs; ambiguous/unknown services and unknown countries make no preference change |
 
-Title writes use the shared cheap catalog resolver: exactly one ID/name, optional year, candidates without mutation on ambiguity. There is no ranked-search charge. Every write requires a caller-supplied `action_id` reused with the same parameters for retries.
+Title writes use the shared cheap catalog resolver: `title_id` takes precedence and ignores accompanying `title_name`/`year`; without an ID, provide a name and optionally a year. Candidates return without mutation on ambiguity. Ignored selector fields are excluded from new receipt hashes; exact historical ID/year requests still replay their old receipts. There is no ranked-search charge. Every write requires a caller-supplied `action_id` reused with the same parameters for retries.
 
 The [#535 resolution](https://github.com/alp82/goodwatch-monorepo/issues/535#issuecomment-6176944841) showed that Claude replayed confirmation IDs without asking the owner. These tools have no server confirmation-token protocol. All setters and Remove a watch have `destructiveHint: true`; logging a single watch has `false`. Hints are static per tool, so a host may also ask for harmless setter additions. The server does not claim that a human approved a call; host approval behavior must be verified in client integration.
 
@@ -33,6 +33,8 @@ A completed retry returns the original receipt with `replayed: true`, even after
 A running, interrupted or uncertain action returns `indeterminate` and never automatically executes again. Native writers have multiple statements and Crate has no transactions: a failure may leave a partial change. Inspect the identified title/preferences before making a fresh, intentional action; a new ID must not be used automatically to bypass uncertainty. There is no automatic pending-action recovery or receipt expiry. From #597 on, the member-deletion helper deletes receipts, with a refresh before deleting the member's rows. Before/after values are observations through the native readers; concurrent edits from other web/MCP operations may intervene.
 
 ## Rollout and verification
+
+Search roles use `goodwatch_search`, not the page instance's database identity. After table creation, apply [mcp-write-tools-grants.sql](mcp-write-tools-grants.sql) as an administrator. Its existing schema DQL is sufficient for readers and refreshes; add DML only on `user_mcp_action`, `user_wishlist`, `user_score`, `user_not_interested`, `user_watch_log`, `user_watch_state` and `user_setting`. Do not grant schema DML/DDL or alter auth-table DENYs. The [2026-10-17 evidence](mcp-write-grants-2026-10-17.json) records the production grant and unchanged auth privileges.
 
 Create `user_mcp_action` from [mcp-write-tools-schema.sql](mcp-write-tools-schema.sql) before enabling writes (cut-over checklist step 1.4, with that step's replica and translog settings). The application does not run DDL. Account deletion removes a member's receipts from #597 on, which lands after the table exists. The #566 authorization seam, protected-resource metadata and live OAuth remain a separate handoff. Existing Valkey request limits and Prometheus counters/histograms now cover all 14 tools; metric labels contain no member IDs or parameters. Scope preflight uses the SDK's bounded body reader.
 
@@ -51,3 +53,15 @@ npm run build
 The full write probe uses real CrateDB and Valkey caching/scripts, with a larger private test rate budget for its many checks. It covers all seven writes and retries, every title write's ambiguity, known/unknown dates, implicit score watches, native transitions and Seen retry without a toggle, old removal retries after newer watches, country/service resolution, member/taste/settings cache invalidation, pending receipts, same-ID contention, separate concurrent watch attribution, conflicts, member isolation and strict input rejection. The replay-only command runs in a fresh MCP process without reseeding and proves that a historical receipt survives process restart and cannot reapply a removed/replaced watch. The read regression retains the real 60-request member limit test.
 
 Live OAuth/JWKS, host approval prompts, forced mid-write crashes, three-node failover and a populated Taste model are not exercised here. The seeded pending receipt and real local contention/restart tests establish the narrower behaviors described above. No production service, merge or release is part of this build slice.
+
+## Scoped identity rehearsal
+
+The same SQL grant is exercised on the guarded local `gw-mcp-567` cluster, including denied catalog/Favorite mutations and DDL. All seven writes run through the actual endpoint with this restricted Crate identity; every title write includes redundant selectors, and ID-only retries, legacy receipts and links are checked.
+
+```bash
+python goodwatch-webapp/scripts/mcp-write/seed-local.py
+python goodwatch-webapp/scripts/mcp-write/scoped-grants.py
+cd goodwatch-webapp
+MCP_TEST_CRATE_USER=goodwatch_search MCP_TEST_CRATE_PASS=local-mcp-test-only node_modules/.bin/vite-node --config scripts/arena-vite.config.mjs scripts/mcp-write/local.integration.ts
+MCP_TEST_CRATE_USER=goodwatch_search MCP_TEST_CRATE_PASS=local-mcp-test-only node_modules/.bin/vite-node --config scripts/arena-vite.config.mjs scripts/mcp-write/local.integration.ts --replay-only
+```

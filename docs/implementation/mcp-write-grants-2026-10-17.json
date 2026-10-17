@@ -1,0 +1,69 @@
+{
+  "applied_at": "2026-10-17T08:13:26.379888+00:00",
+  "admin_host": "crate-01",
+  "identity": "crate",
+  "sql_file": "docs/implementation/mcp-write-tools-grants.sql",
+  "added": [
+    [
+      "goodwatch_search",
+      "crate",
+      "GRANT",
+      "DML",
+      "TABLE",
+      "doc.user_mcp_action"
+    ],
+    [
+      "goodwatch_search",
+      "crate",
+      "GRANT",
+      "DML",
+      "TABLE",
+      "doc.user_not_interested"
+    ],
+    [
+      "goodwatch_search",
+      "crate",
+      "GRANT",
+      "DML",
+      "TABLE",
+      "doc.user_score"
+    ],
+    [
+      "goodwatch_search",
+      "crate",
+      "GRANT",
+      "DML",
+      "TABLE",
+      "doc.user_setting"
+    ],
+    [
+      "goodwatch_search",
+      "crate",
+      "GRANT",
+      "DML",
+      "TABLE",
+      "doc.user_watch_log"
+    ],
+    [
+      "goodwatch_search",
+      "crate",
+      "GRANT",
+      "DML",
+      "TABLE",
+      "doc.user_watch_state"
+    ],
+    [
+      "goodwatch_search",
+      "crate",
+      "GRANT",
+      "DML",
+      "TABLE",
+      "doc.user_wishlist"
+    ]
+  ],
+  "removed": [],
+  "auth_privilege_count": 135,
+  "auth_privileges_unchanged": true,
+  "auth_privileges_sha256": "9d3ce5f83e14f97a93c2309812c5b10a934c593f5dad051ea8b2a029a769c4d9",
+  "blocking_deny": false
+}

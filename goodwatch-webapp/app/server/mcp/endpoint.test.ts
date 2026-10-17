@@ -266,12 +266,10 @@ test("A member sees separate catalog and personal read tools, with valid schemas
 	)
 	for (const tool of tools) {
 		assert.equal(tool.annotations.readOnlyHint, true)
+		assert.equal(tool.annotations.idempotentHint, true)
 		assert.equal(tool.annotations.destructiveHint, false)
 		assert.equal(tool.inputSchema.type, "object")
-		assert.match(
-			tool.description,
-			/Link every movie or show title to its returned url/,
-		)
+		assert.match(tool.description, /ready-made link field VERBATIM/)
 		assert.match(tool.description, /page_url/)
 	}
 })
@@ -416,6 +414,7 @@ test("Write scopes expose seven writes with conservative destructive hints and n
 		],
 	)
 	for (const tool of writes) {
+		assert.equal(tool.annotations.readOnlyHint, false)
 		assert.equal(tool.annotations.destructiveHint, tool.name !== "log_watch")
 		assert.equal(tool.annotations.idempotentHint, true)
 		assert.equal(tool.inputSchema.required.includes("action_id"), true)
@@ -535,6 +534,6 @@ test("MCP initialization tells clients to link titles and end with the page link
 	)
 	assert.equal(response.status, 200)
 	const initialized = (await result(response)).result
-	assert.match(initialized.instructions, /Link every movie or show title/)
+	assert.match(initialized.instructions, /ready-made link field VERBATIM/)
 	assert.match(initialized.instructions, /See it on GoodWatch:/)
 })

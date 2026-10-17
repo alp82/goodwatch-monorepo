@@ -16,6 +16,7 @@ CREATE USER goodwatch_search WITH (password = ?);
 GRANT DQL ON SCHEMA doc TO goodwatch_search;
 GRANT DML ON TABLE doc.search_interpretations, doc.search_spending, doc.search_control TO goodwatch_search;
 DENY DQL ON TABLE doc.auth_user TO goodwatch_search;
+-- After MCP member tables exist, also apply docs/implementation/mcp-write-tools-grants.sql.
 
 -- Windmill jobs: ingestion, schema creation, index uploads, monitoring of sys tables.
 CREATE USER goodwatch_windmill WITH (password = ?);

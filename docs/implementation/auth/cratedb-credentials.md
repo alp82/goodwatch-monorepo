@@ -116,7 +116,7 @@ quoting, Coolify and Compose `$` handling.
 | User | Client(s) | Grants |
 | --- | --- | --- |
 | `goodwatch_webapp` | Page instances | `DQL, DML ON SCHEMA doc`; `DENY DQL, DML` on each `doc.auth_*` |
-| `goodwatch_search` | Search roles | `DQL ON SCHEMA doc`; `DML ON TABLE doc.search_interpretations, doc.search_spending, doc.search_control`; `DENY DQL` on each `doc.auth_*` |
+| `goodwatch_search` | Search roles | `DQL ON SCHEMA doc`; `DML ON TABLE doc.search_interpretations, doc.search_spending, doc.search_control, doc.search_history` plus the seven explicit member tables in [MCP grants](../mcp-write-tools-grants.sql); `DENY DQL` on each `doc.auth_*` |
 | `goodwatch_windmill` | All Windmill jobs, monitoring, writing operator scripts | `DQL, DML, DDL ON SCHEMA doc` and `ON SCHEMA blob`; `DQL ON SCHEMA sys`; `DENY DQL, DML, DDL` on each `doc.auth_*` |
 | `goodwatch_auth` | Auth adapter, auth maintenance | `DQL, DML` on each approved `doc.auth_*` table only |
 | `goodwatch_readonly` | Sitemap, measurement and evidence scripts | `DQL ON SCHEMA doc`; `DENY DQL` on each `doc.auth_*` |

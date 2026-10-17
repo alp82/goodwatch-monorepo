@@ -30,3 +30,15 @@ test("page links use existing website filters and encode search text", () => {
 	)
 	assert.deepEqual(withPageLink(origin, "get_title", {}, data), data)
 })
+
+test("title links include a year and escape Markdown label punctuation", async () => {
+	const { titleLink } = await import("./links.ts")
+	assert.equal(
+		titleLink("The Matrix", 1999, "https://goodwatch.app/movie/603-the-matrix"),
+		"[The Matrix (1999)](https://goodwatch.app/movie/603-the-matrix)",
+	)
+	assert.equal(
+		titleLink("A [title]", null, "https://goodwatch.app/movie/1-a-title"),
+		"[A \\[title\\] (Year unknown)](https://goodwatch.app/movie/1-a-title)",
+	)
+})

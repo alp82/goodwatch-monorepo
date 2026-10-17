@@ -39,7 +39,7 @@ The plugin composition reuses the [#533 spike](https://github.com/alp82/goodwatc
   public-address checks, DNS pinning and redirect refusal remain enabled.
 - Supported scopes are `mcp:read`, `mcp:write`, `offline_access`, plus the provider's
   `openid`, `profile` and `email` identity scopes. A request for write access offers
-  Read-only (the default) or Read and change my GoodWatch. The consent action
+  Read-only or Read and change my GoodWatch (the default selection). The consent action
   narrows the signed request using the provider's `scope` parameter; it never
   adds unrequested scopes. Both issued and refreshed tokens retain that choice.
 - The consent action never grants `openid`, `profile` or `email`, so an app gets no

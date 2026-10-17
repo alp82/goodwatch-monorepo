@@ -1,8 +1,8 @@
 import type { McpServer } from "@modelcontextprotocol/server"
 import * as z from "zod4"
-import { linkInstructions } from "./links.ts"
+import { linkInstructions, titleLink } from "./links.ts"
 import { writeToolEnabled } from "./policy.server.ts"
-import { selected } from "./schemas.ts"
+import { writeSelected } from "./schemas.ts"
 import type { ReadArgs } from "./tools.server.ts"
 import type { WriteToolName } from "./write-names.ts"
 export interface WriteArgs extends ReadArgs {
@@ -40,7 +40,7 @@ const definitions: {
 		description:
 			"Log one movie or episode watch. Dates remain unknown unless explicitly supplied. Results say exactly which watches and marks changed.",
 		destructive: false,
-		schema: selected.safeExtend({
+		schema: writeSelected.safeExtend({
 			...action,
 			season: z.number().int().min(0).optional(),
 			episode: z.number().int().min(1).optional(),
@@ -53,7 +53,7 @@ const definitions: {
 		description:
 			"Set a score from 1 to 10, or clear it with null. Clearing a score is destructive. A movie rating can own one undated watch; show ratings never log episodes or change show status. The result reports the previous score and exact watch changes.",
 		destructive: true,
-		schema: selected.safeExtend({
+		schema: writeSelected.safeExtend({
 			...action,
 			score: z.number().int().min(1).max(10).nullable(),
 		}),
@@ -64,7 +64,7 @@ const definitions: {
 		description:
 			"Add or remove a title from your Wishlist. Removal is destructive. Adding a Seen title means Want to rewatch and preserves watches. Reports previous membership and added-at time.",
 		destructive: true,
-		schema: selected.safeExtend({ ...action, want_to_see: z.boolean() }),
+		schema: writeSelected.safeExtend({ ...action, want_to_see: z.boolean() }),
 	},
 	{
 		name: "set_not_interested",
@@ -72,7 +72,10 @@ const definitions: {
 		description:
 			"Set or clear Not interested for an unseen, unrated title. Setting it removes an existing Wishlist entry and is destructive. Reports both marks before and after.",
 		destructive: true,
-		schema: selected.safeExtend({ ...action, not_interested: z.boolean() }),
+		schema: writeSelected.safeExtend({
+			...action,
+			not_interested: z.boolean(),
+		}),
 	},
 	{
 		name: "set_show_status",
@@ -80,7 +83,7 @@ const definitions: {
 		description:
 			"Apply a native show-status transition. Dropped and bulk Seen are destructive. Seen logs aired episodes with no dates. Watching from Seen starts a new pass while retaining earlier watches. Not started never erases watches. Reports previous/new status, pass and watch changes.",
 		destructive: true,
-		schema: selected.safeExtend({
+		schema: writeSelected.safeExtend({
 			...action,
 			status: z.enum(["Not started", "Watching", "On hold", "Dropped", "Seen"]),
 		}),
@@ -91,7 +94,7 @@ const definitions: {
 		description:
 			"Remove one watch record. Choose a watch_id, or omit it for the most recently logged individual watch of this title. Destructive: results identify the exact removed watch, date, pass and resulting marks; retrying the same action never removes a different watch.",
 		destructive: true,
-		schema: selected.safeExtend({
+		schema: writeSelected.safeExtend({
 			...action,
 			watch_id: z.string().min(1).max(100).optional(),
 		}),
@@ -134,7 +137,7 @@ export function registerWriteTools(
 			tool.name,
 			{
 				title: tool.title,
-				description: `${tool.description} ${linkInstructions} Replayed results describe the original action, not current state; read again for current state.`,
+				description: `${tool.description} For title actions, title_id takes precedence; title_name and year are ignored when an ID is supplied. Otherwise provide title_name and optionally year. ${linkInstructions} Replayed results describe the original action, not current state; read again for current state.`,
 				inputSchema: tool.schema,
 				annotations: {
 					readOnlyHint: false,
@@ -165,6 +168,29 @@ export function registerWriteTools(
 							"Could not determine this action’s outcome. Read the title or settings, and retry only with the same action ID.",
 					}
 				}
+				// Historical receipts keep their stored state; enrich only their presentation for older results.
+				const title = data.title
+				if (
+					title &&
+					typeof title === "object" &&
+					"name" in title &&
+					"url" in title &&
+					typeof title.name === "string" &&
+					typeof title.url === "string"
+				)
+					data = {
+						...data,
+						title: {
+							...title,
+							link: titleLink(
+								title.name,
+								"year" in title && typeof title.year === "number"
+									? title.year
+									: null,
+								title.url,
+							),
+						},
+					}
 				const ok = ["applied", "unchanged"].includes(String(data.outcome))
 				observe(
 					tool.name,

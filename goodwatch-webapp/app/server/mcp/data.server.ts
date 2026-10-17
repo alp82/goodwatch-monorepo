@@ -20,6 +20,7 @@ import { getTitleSnapshot } from "../title-snapshot/index.server"
 import { getTonightsPick } from "../tonight.server"
 import { getUserData } from "../userData.server"
 import { getMemberViewerContext } from "../viewer.server"
+import { titleLink } from "./links.ts"
 import type { ReadArgs, ReadToolName } from "./tools.server.ts"
 
 export interface CatalogTitle {
@@ -28,13 +29,20 @@ export interface CatalogTitle {
 	title: string
 	release_year: number | null
 }
-export const summary = (title: CatalogTitle, origin: string) => ({
-	id: `${title.media_type}:${title.tmdb_id}`,
-	name: title.title,
-	year: title.release_year,
-	url: new URL(titlePath(title.media_type, title.tmdb_id, title.title), origin)
-		.href,
-})
+export const summary = (title: CatalogTitle, origin: string) => {
+	const url = new URL(
+		titlePath(title.media_type, title.tmdb_id, title.title),
+		origin,
+	).href
+	return {
+		id: `${title.media_type}:${title.tmdb_id}`,
+		name: title.title,
+		year: title.release_year,
+		url,
+		link: titleLink(title.title, title.release_year, url),
+	}
+}
+
 const offsetOf = (args: ReadArgs) => Number(args.cursor?.slice(7) ?? 0)
 const page = <T>(items: T[], args: ReadArgs) => {
 	const offset = offsetOf(args)
@@ -273,7 +281,29 @@ export async function readMemberTool(
 					: { status: "not_started", want_to_see: true }),
 			})),
 		)
-		return page(rows, args)
+		const result = page(rows, args)
+		const displays = await getDisplayFields(
+			result.items.map((row) => titleKey("show", Number(row.id.split(":")[1]))),
+		)
+		return {
+			...result,
+			items: result.items.map((row) => {
+				const id = Number(row.id.split(":")[1])
+				return {
+					...row,
+					...summary(
+						{
+							media_type: "show",
+							tmdb_id: id,
+							title: row.name,
+							release_year:
+								displays.get(titleKey("show", id))?.release_year ?? null,
+						},
+						origin,
+					),
+				}
+			}),
+		}
 	}
 	if (name === "get_show_progress") {
 		const resolved = await resolve(args, origin)

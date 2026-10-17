@@ -70,8 +70,10 @@ async function call(
 	const checkTitles = (value: unknown) => {
 		if (!value || typeof value !== "object") return
 		const object = value as Record<string, unknown>
-		if (typeof object.id === "string" && /^(movie|show):/.test(object.id))
+		if (typeof object.id === "string" && /^(movie|show):/.test(object.id)) {
 			assert.match(String(object.url), /^http:\/\/localhost:3336\/(movie|show)\//)
+			assert.equal(object.link, `[${object.name} (${object.year ?? "Year unknown"})](${object.url})`)
+		}
 		for (const child of Object.values(object)) checkTitles(child)
 	}
 	checkTitles(result.structuredContent)
@@ -113,6 +115,8 @@ try {
 	)
 	const shows = await call("get_my_shows")
 	assert.equal(shows.page_url, "http://localhost:3336/my-shows")
+	assert.equal(shows.items[0].year, 2020)
+	assert.match(shows.items[0].link, /Local Orbit \(2020\)/)
 	assert.deepEqual(
 		shows.items.map((t: { id: string; group: string }) => [t.id, t.group]),
 		[

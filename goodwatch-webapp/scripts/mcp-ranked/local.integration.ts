@@ -109,6 +109,7 @@ try {
 	assert.equal(first.structuredContent.charged_nano, 84)
 	assert.equal(new URL(first.structuredContent.page_url).searchParams.get("q"), "QUIET   Movies")
 	assert.match(first.structuredContent.items[0].url, /movie\/2024-/)
+	assert.equal(first.structuredContent.items[0].link, `[Local Movie 24 (2020)](${first.structuredContent.items[0].url})`)
 	const snapshotKeys = await redis.keys("mcp-ranked:*:page:*")
 	for (const key of snapshotKeys) {
 		const value = await redis.get(key)
