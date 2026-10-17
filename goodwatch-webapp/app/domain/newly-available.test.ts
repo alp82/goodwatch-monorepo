@@ -65,9 +65,9 @@ test("the index keeps the time a service first carried a title, only for what ap
 	const seen = firstSeenOf(
 		[
 			// An offer from before: no time is kept, the title has been there.
-			[heat, NETFLIX, day(-40)],
-			[dune, NETFLIX, day(2)],
-			[dune, MAX, day(5)],
+			[heat, NETFLIX, day(-40), null, day(-40)],
+			[dune, NETFLIX, day(2), null, day(2)],
+			[dune, MAX, day(5), null, day(5)],
 		],
 		LAUNCH,
 	)
@@ -85,11 +85,11 @@ test("a service's earliest row counts, across its duplicate ids and its kinds of
 	const seen = firstSeenOf(
 		[
 			// Amazon Video carried Dune before; Amazon Prime Video listing it now is not a new service.
-			[dune, AMAZON_VIDEO, day(-300)],
-			[dune, PRIME, day(3)],
+			[dune, AMAZON_VIDEO, day(-300), null, day(-300)],
+			[dune, PRIME, day(3), null, day(3)],
 			// Two rows of one service (with ads, then without): the first one is when it appeared.
-			[heat, APPLE_PLUS, day(4)],
-			[heat, APPLE, day(1)],
+			[heat, APPLE_PLUS, day(4), null, day(4)],
+			[heat, APPLE, day(1), null, day(1)],
 		],
 		LAUNCH,
 	)

@@ -17,9 +17,9 @@ type Run = (
 ) => Promise<{ rows?: unknown[][] }>
 
 /**
- * The launch of "newly available": an offer that appeared before it is never news. It is after the catch-up of
- * late September 2026, which wrote 4.5 million offers with a new `created_at` between September 21 and October 1.
- * `NEWLY_AVAILABLE_SINCE` (an ISO time) moves it, for a launch on another day.
+ * The launch day of "newly available" is the earliest eligible landing day for live stays.
+ * Stays with an earlier landing day never count as news; backfilled stays never count regardless of day.
+ * `NEWLY_AVAILABLE_SINCE` (an ISO time) overrides the default launch; its UTC day is inclusive.
  */
 const LAUNCH = Date.parse("2026-10-12T00:00:00Z")
 
@@ -37,7 +37,7 @@ export const keptSince = (now = Date.now()) =>
 
 const BATCH = 1_000
 
-// Exact stays carry a proved day; unknown stays count from the UTC day we opened them.
+// Exact stays carry a proved landing day; unknown stays use the UTC day of their opening observation.
 const LANDED_DAY =
 	"CASE WHEN appeared_precision = 'exact' THEN appeared_on ELSE date_trunc('day', observed_at) END"
 

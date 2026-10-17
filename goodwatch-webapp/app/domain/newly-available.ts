@@ -38,8 +38,8 @@ export type ServiceStay = readonly [
 	title: TitleKey,
 	service: number,
 	at: number,
-	droppedOn?: number | null,
-	learnedAt?: number,
+	droppedOn: number | null,
+	learnedAt: number,
 ]
 
 interface Stay {
@@ -60,7 +60,7 @@ export function firstSeenOf(
 	since: number,
 ): Map<TitleKey, Map<number, ServiceLanding>> {
 	const stays = new Map<TitleKey, Map<number, Stay[]>>()
-	for (const [key, serviceId, at, droppedOn = null, learnedAt = at] of rows) {
+	for (const [key, serviceId, at, droppedOn, learnedAt] of rows) {
 		const service = baseService(serviceId)
 		let services = stays.get(key)
 		if (!services) {
@@ -137,10 +137,12 @@ export function landingOn(
 	mine: ReadonlySet<number>,
 ): Landing | null {
 	let landing: Landing | null = null
+	let learnedAt = Number.POSITIVE_INFINITY
 	for (const service of carried) {
 		if (!mine.has(service)) continue
 		const time = fresh?.get(service)
 		if (time === undefined) return null
+		learnedAt = Math.min(learnedAt, time.learnedAt)
 		if (
 			!landing ||
 			time.at < landing.at ||
@@ -148,6 +150,7 @@ export function landingOn(
 		)
 			landing = { at: time.at, learnedAt: time.learnedAt, service }
 	}
+	if (landing) landing.learnedAt = learnedAt
 	if (
 		landing &&
 		fresh

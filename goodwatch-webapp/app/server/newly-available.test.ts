@@ -736,6 +736,32 @@ test("a further service on the same landing day does not restart news after a vi
 	assert.equal(signalOf(await told()), null)
 })
 
+test("a backdated exact premiere learned later keeps the earliest learned time across saved services", async () => {
+	member()
+	crate.db.seed("user_wishlist", [wish("movie", DUNE)])
+	await recordMyMoviesVisit(user, day(5))
+	crate.offers = [
+		offer("movie", DUNE, NETFLIX, day(1), {
+			source: "premiere",
+			precision: "exact",
+			observedAt: day(7),
+			createdAt: day(7),
+		}),
+		offer("movie", DUNE, PRIME, day(3), { createdAt: day(4) }),
+		// A carried service the member did not save cannot move the learned time.
+		offer("movie", DUNE, MAX, day(2), { createdAt: day(2) }),
+	]
+	assert.equal(signalOf(await told()), null)
+	assert.deepEqual(
+		landingsOnServices("US", [NETFLIX, PRIME], [titleKey("movie", DUNE)]),
+		[{ at: day(1), learnedAt: day(4), service: NETFLIX }],
+	)
+	assert.deepEqual(
+		landingsOnServices("US", [NETFLIX], [titleKey("movie", DUNE)]),
+		[{ at: day(1), learnedAt: day(7), service: NETFLIX }],
+	)
+})
+
 test("a backdated exact landing uses its learned time for news and its day for sorting and the 14 days", async () => {
 	member()
 	crate.db.seed("user_wishlist", [
