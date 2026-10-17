@@ -33,20 +33,27 @@ import Barcode2 from "./variants/Barcode2"
 import BandSliders from "./variants/BandSliders"
 import Trio from "./variants/Trio"
 import Stripes from "./variants/Stripes"
+import Trio2 from "./variants/Trio2"
+import TrioStage from "./variants/TrioStage"
+import TrioCompact from "./variants/TrioCompact"
+import TrioScrub from "./variants/TrioScrub"
+import TrioTabs from "./variants/TrioTabs"
+import TrioRail from "./variants/TrioRail"
+import TrioHero from "./variants/TrioHero"
+import TrioSplit from "./variants/TrioSplit"
+import TrioCinema from "./variants/TrioCinema"
 
 export const FP_VARIANT_NAMES: Record<string, string> = {
-	slidepop: "SlidePop - Sliders, traits in a floating card",
-	slideflip: "SlideFlip - Sliders, rows flip in place",
-	slideside: "SlideSide - Sliders with a fixed traits panel",
-	versus2: "Versus2 - Versus with a compact is/isn't row",
-	bandversus: "BandVersus - Barcode band over versus lines",
-	barcode2: "Barcode2 - Barcode, improved",
-	bandsliders: "BandSliders - Barcode band over sliders",
+	trio2: "Trio2 - Trio refined: swap below, area headline",
+	triostage: "TrioStage - Band on top, full-width stage swaps",
+	triocompact: "TrioCompact - Tighter trio",
+	trioscrub: "TrioScrub - Scrub the band to change the headline",
+	triotabs: "TrioTabs - Band segments as tabs",
+	triorail: "TrioRail - Vertical band rail",
+	triohero: "TrioHero - Taller hero band, headline under it",
+	triosplit: "TrioSplit - Mirrored: sliders left, words right",
+	triocinema: "TrioCinema - Film strip band (bolder)",
 	trio: "Trio - Band, versus and sliders together",
-	stripes: "Stripes - Every slider track is a barcode",
-	allsliders: "AllSliders - Every reading as a two-ended slider",
-	versus: "Versus - It is / it isn't (distinct)",
-	barcode: "Barcode - Color band signature (distinct, bolder)",
 	current: "Current (shipped)",
 }
 
@@ -81,7 +88,16 @@ export const FP_VARIANTS: Record<string, ComponentType<VariantProps>> = {
 	bandsliders: BandSliders,
 	trio: Trio,
 	stripes: Stripes,
+	trio2: Trio2,
+	triostage: TrioStage,
+	triocompact: TrioCompact,
+	trioscrub: TrioScrub,
+	triotabs: TrioTabs,
+	triorail: TrioRail,
+	triohero: TrioHero,
+	triosplit: TrioSplit,
+	triocinema: TrioCinema,
 }
 
 /** Round 2 and later variants move the closed questions into the FAQ section further down the page. */
-export const FP_FAQ_VARIANTS: string[] = ["slidestrip", "slidegrid", "allsliders", "compact", "relative", "versus", "mixer", "barcode", "recipe", "slidepop", "slideflip", "slideside", "versus2", "bandversus", "barcode2", "bandsliders", "trio", "stripes"]
+export const FP_FAQ_VARIANTS: string[] = ["slidestrip", "slidegrid", "allsliders", "compact", "relative", "versus", "mixer", "barcode", "recipe", "slidepop", "slideflip", "slideside", "versus2", "bandversus", "barcode2", "bandsliders", "trio", "stripes", "trio2", "triostage", "triocompact", "trioscrub", "triotabs", "triorail", "triohero", "triosplit", "triocinema"]
