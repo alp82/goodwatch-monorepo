@@ -4,6 +4,7 @@ import { tmdbImageUrl } from "../../utils/tmdb-image.ts"
 
 /** The poster grid shows cards about 110 px wide; it asks for w342 itself on high-density screens. */
 export const POSTER_SIZE = "w185"
+/** The site floors the GoodWatch score (goodwatchScoreDisplay); the cards show the same number. */
 /** Wide cards fill about 680 px; w780 covers them at a pixel ratio of 1, and the widget may ask for w1280. */
 export const BACKDROP_SIZE = "w780"
 
@@ -115,7 +116,7 @@ export async function enrichTitleResults(
 							typeof row.goodwatch_score === "number"
 								? row.goodwatch_score
 								: typeof score === "number"
-									? Math.round(score)
+									? Math.floor(score)
 									: null,
 					}
 				: {}),

@@ -291,7 +291,7 @@
     "match_label": "74% taste match",
     "poster_url": "https://image.tmdb.org/t/p/w185/wSXJHO9WHLb0aCwvQrtco7vOmWA.jpg",
     "backdrop_url": "https://image.tmdb.org/t/p/w780/3jDXL4Xvj3AzDOF6UH1xeyHW8MH.jpg",
-    "goodwatch_score": 86,
+    "goodwatch_score": 85,
     "tagline": "Everything is connected.",
     "availability": {
      "state": "watchable",
@@ -328,5 +328,440 @@
   "ranked": false,
   "message": "Your 20 uncached smarter matches for this UTC day are used. Cached queries and existing pages remain free.",
   "page_url": "https://goodwatch.app/discover?q=dark&services=all&unseen=0&foryou=1"
+ },
+ "people": {
+  "items": [
+   {
+    "name": "Denis Villeneuve",
+    "url": "https://goodwatch.app/person/137427-denis-villeneuve",
+    "link": "[Denis Villeneuve](https://goodwatch.app/person/137427-denis-villeneuve)",
+    "person_id": 137427,
+    "known_for_department": "Directing",
+    "profile_url": "https://image.tmdb.org/t/p/w185/xzQYqb4nR8xT7Zdw5itbEL9K3fd.jpg",
+    "known_for": [
+     {
+      "name": "Arrival",
+      "year": 2016,
+      "url": "https://goodwatch.app/movie/329865-arrival",
+      "link": "[Arrival (2016)](https://goodwatch.app/movie/329865-arrival)"
+     },
+     {
+      "name": "Blade Runner 2049",
+      "year": 2017,
+      "url": "https://goodwatch.app/movie/335984-blade-runner-2049",
+      "link": "[Blade Runner 2049 (2017)](https://goodwatch.app/movie/335984-blade-runner-2049)"
+     }
+    ],
+    "backdrop_url": "https://image.tmdb.org/t/p/w780/8MUZz7oPXQftFTslZpRP3CVMOoq.jpg"
+   },
+   {
+    "name": "Denis Leary",
+    "url": "https://goodwatch.app/person/5724-denis-leary",
+    "link": "[Denis Leary](https://goodwatch.app/person/5724-denis-leary)",
+    "person_id": 5724,
+    "known_for_department": "Acting",
+    "profile_url": "https://image.tmdb.org/t/p/w185/tAOziVWQBnrW9eR442M6g9SQkmA.jpg",
+    "known_for": [
+     {
+      "name": "Ice Age",
+      "year": 2002,
+      "url": "https://goodwatch.app/movie/425-ice-age",
+      "link": "[Ice Age (2002)](https://goodwatch.app/movie/425-ice-age)"
+     },
+     {
+      "name": "The Amazing Spider-Man",
+      "year": 2012,
+      "url": "https://goodwatch.app/movie/1930-the-amazing-spider-man",
+      "link": "[The Amazing Spider-Man (2012)](https://goodwatch.app/movie/1930-the-amazing-spider-man)"
+     }
+    ],
+    "backdrop_url": "https://image.tmdb.org/t/p/w780/8pwIhymsxfAVjrAE7syDjQULn37.jpg"
+   },
+   {
+    "name": "Claire Denis",
+    "url": "https://goodwatch.app/person/9888-claire-denis",
+    "link": "[Claire Denis](https://goodwatch.app/person/9888-claire-denis)",
+    "person_id": 9888,
+    "known_for_department": "Directing",
+    "profile_url": "https://image.tmdb.org/t/p/w185/zKR7pmegNQDjWqeWv7JNvHqJ2l5.jpg",
+    "known_for": [
+     {
+      "name": "Paris, Texas",
+      "year": 1984,
+      "url": "https://goodwatch.app/movie/655-paris-texas",
+      "link": "[Paris, Texas (1984)](https://goodwatch.app/movie/655-paris-texas)"
+     },
+     {
+      "name": "Wings of Desire",
+      "year": 1987,
+      "url": "https://goodwatch.app/movie/144-wings-of-desire",
+      "link": "[Wings of Desire (1987)](https://goodwatch.app/movie/144-wings-of-desire)"
+     }
+    ],
+    "backdrop_url": "https://image.tmdb.org/t/p/w780/fWrq3u16gaBJ6nYNWcR3XaOhQPq.jpg"
+   },
+   {
+    "name": "Denis Ménochet",
+    "url": "https://goodwatch.app/person/81125-denis-menochet",
+    "link": "[Denis Ménochet](https://goodwatch.app/person/81125-denis-menochet)",
+    "person_id": 81125,
+    "known_for_department": "Acting",
+    "profile_url": "https://image.tmdb.org/t/p/w185/qpCPmm12kbzMKniYF6iKmKLZCjY.jpg",
+    "known_for": [
+     {
+      "name": "Inglourious Basterds",
+      "year": 2009,
+      "url": "https://goodwatch.app/movie/16869-inglourious-basterds",
+      "link": "[Inglourious Basterds (2009)](https://goodwatch.app/movie/16869-inglourious-basterds)"
+     },
+     {
+      "name": "Assassin's Creed",
+      "year": 2016,
+      "url": "https://goodwatch.app/movie/121856-assassin-s-creed",
+      "link": "[Assassin's Creed (2016)](https://goodwatch.app/movie/121856-assassin-s-creed)"
+     }
+    ],
+    "backdrop_url": "https://image.tmdb.org/t/p/w780/hwNtEmmugU5Yd7hpfprNWI0DGIn.jpg"
+   },
+   {
+    "name": "Denis O'Hare",
+    "url": "https://goodwatch.app/person/81681-denis-o-hare",
+    "link": "[Denis O'Hare](https://goodwatch.app/person/81681-denis-o-hare)",
+    "person_id": 81681,
+    "known_for_department": "Acting",
+    "profile_url": "https://image.tmdb.org/t/p/w185/zMim5sdMnyd2GFfPd9Jh59Vcog3.jpg",
+    "known_for": [
+     {
+      "name": "Dallas Buyers Club",
+      "year": 2013,
+      "url": "https://goodwatch.app/movie/152532-dallas-buyers-club",
+      "link": "[Dallas Buyers Club (2013)](https://goodwatch.app/movie/152532-dallas-buyers-club)"
+     },
+     {
+      "name": "The Proposal",
+      "year": 2009,
+      "url": "https://goodwatch.app/movie/18240-the-proposal",
+      "link": "[The Proposal (2009)](https://goodwatch.app/movie/18240-the-proposal)"
+     }
+    ],
+    "backdrop_url": "https://image.tmdb.org/t/p/w780/sbVKj98cq0FztCukzu47bu0H8o7.jpg"
+   },
+   {
+    "name": "Denis Lavant",
+    "url": "https://goodwatch.app/person/27978-denis-lavant",
+    "link": "[Denis Lavant](https://goodwatch.app/person/27978-denis-lavant)",
+    "person_id": 27978,
+    "known_for_department": "Acting",
+    "profile_url": null,
+    "known_for": [
+     {
+      "name": "Holy Motors",
+      "year": 2012,
+      "url": "https://goodwatch.app/movie/103328-holy-motors",
+      "link": "[Holy Motors (2012)](https://goodwatch.app/movie/103328-holy-motors)"
+     },
+     {
+      "name": "Beau Travail",
+      "year": 2000,
+      "url": "https://goodwatch.app/movie/14626-beau-travail",
+      "link": "[Beau Travail (2000)](https://goodwatch.app/movie/14626-beau-travail)"
+     }
+    ],
+    "backdrop_url": "https://image.tmdb.org/t/p/w780/dCuwNZp2DLOWr8qV0GDBHINhVZM.jpg"
+   },
+   {
+    "name": "Denis Arndt",
+    "url": "https://goodwatch.app/person/10480-denis-arndt",
+    "link": "[Denis Arndt](https://goodwatch.app/person/10480-denis-arndt)",
+    "person_id": 10480,
+    "known_for_department": "Acting",
+    "profile_url": "https://image.tmdb.org/t/p/w185/sNE3BkuIyueLgekEVxpyQgbbWTN.jpg",
+    "known_for": [
+     {
+      "name": "Basic Instinct",
+      "year": 1992,
+      "url": "https://goodwatch.app/movie/402-basic-instinct",
+      "link": "[Basic Instinct (1992)](https://goodwatch.app/movie/402-basic-instinct)"
+     },
+     {
+      "name": "Bandidas",
+      "year": 2006,
+      "url": "https://goodwatch.app/movie/1969-bandidas",
+      "link": "[Bandidas (2006)](https://goodwatch.app/movie/1969-bandidas)"
+     }
+    ],
+    "backdrop_url": "https://image.tmdb.org/t/p/w780/7FRraud59N3s10bbf9bfYjvwx3v.jpg"
+   }
+  ],
+  "next_cursor": null,
+  "page_url": "https://goodwatch.app/discover?q=denis",
+  "page_note": "GoodWatch has no separate people-search page. Discover searches titles for this text; open a person's url for their filmography."
+ },
+ "person": {
+  "items": [
+   {
+    "id": "movie:438631",
+    "name": "Dune",
+    "year": 2021,
+    "url": "https://goodwatch.app/movie/438631-dune",
+    "link": "[Dune (2021)](https://goodwatch.app/movie/438631-dune)",
+    "roles": [
+     "Production",
+     "Directing",
+     "Writing"
+    ],
+    "jobs": [
+     "Producer",
+     "Director",
+     "Screenplay"
+    ],
+    "match": null,
+    "match_label": null,
+    "poster_url": "https://image.tmdb.org/t/p/w185/v1tRXZ4JtD2Iv6fjkPvT4GiwslV.jpg",
+    "backdrop_url": "https://image.tmdb.org/t/p/w780/qVgZu5BTx6pu4owCvVOm4zjTfOi.jpg",
+    "goodwatch_score": 79
+   },
+   {
+    "id": "movie:146233",
+    "name": "Prisoners",
+    "year": 2013,
+    "url": "https://goodwatch.app/movie/146233-prisoners",
+    "link": "[Prisoners (2013)](https://goodwatch.app/movie/146233-prisoners)",
+    "roles": [
+     "Directing"
+    ],
+    "jobs": [
+     "Director"
+    ],
+    "match": null,
+    "match_label": null,
+    "poster_url": "https://image.tmdb.org/t/p/w185/uhviyknTT5cEQXbn6vWIqfM4vGm.jpg",
+    "backdrop_url": "https://image.tmdb.org/t/p/w780/3RFmTz5h2UuFWEV4oH00XICBR9y.jpg",
+    "goodwatch_score": 79
+   },
+   {
+    "id": "movie:329865",
+    "name": "Arrival",
+    "year": 2016,
+    "url": "https://goodwatch.app/movie/329865-arrival",
+    "link": "[Arrival (2016)](https://goodwatch.app/movie/329865-arrival)",
+    "roles": [
+     "Directing"
+    ],
+    "jobs": [
+     "Director"
+    ],
+    "match": null,
+    "match_label": null,
+    "poster_url": "https://image.tmdb.org/t/p/w185/pEzNVQfdzYDzVK0XqxERIw2x2se.jpg",
+    "backdrop_url": "https://image.tmdb.org/t/p/w780/8MUZz7oPXQftFTslZpRP3CVMOoq.jpg",
+    "goodwatch_score": 83
+   },
+   {
+    "id": "movie:693134",
+    "name": "Dune: Part Two",
+    "year": 2024,
+    "url": "https://goodwatch.app/movie/693134-dune-part-two",
+    "link": "[Dune: Part Two (2024)](https://goodwatch.app/movie/693134-dune-part-two)",
+    "roles": [
+     "Writing",
+     "Directing",
+     "Production"
+    ],
+    "jobs": [
+     "Screenplay",
+     "Director",
+     "Producer"
+    ],
+    "match": null,
+    "match_label": null,
+    "poster_url": "https://image.tmdb.org/t/p/w185/6izwz7rsy95ARzTR3poZ8H6c5pp.jpg",
+    "backdrop_url": "https://image.tmdb.org/t/p/w780/eZ239CUp1d6OryZEBPnO2n87gMG.jpg",
+    "goodwatch_score": 85
+   },
+   {
+    "id": "movie:335984",
+    "name": "Blade Runner 2049",
+    "year": 2017,
+    "url": "https://goodwatch.app/movie/335984-blade-runner-2049",
+    "link": "[Blade Runner 2049 (2017)](https://goodwatch.app/movie/335984-blade-runner-2049)",
+    "roles": [
+     "Directing"
+    ],
+    "jobs": [
+     "Director"
+    ],
+    "match": null,
+    "match_label": null,
+    "poster_url": "https://image.tmdb.org/t/p/w185/gajva2L0rPYkEWjzgFlBXCAVBE5.jpg",
+    "backdrop_url": "https://image.tmdb.org/t/p/w780/gNdLJU9TxrpGx4dkZidjys3fyy0.jpg",
+    "goodwatch_score": 83
+   },
+   {
+    "id": "movie:273481",
+    "name": "Sicario",
+    "year": 2015,
+    "url": "https://goodwatch.app/movie/273481-sicario",
+    "link": "[Sicario (2015)](https://goodwatch.app/movie/273481-sicario)",
+    "roles": [
+     "Directing"
+    ],
+    "jobs": [
+     "Director"
+    ],
+    "match": null,
+    "match_label": null,
+    "poster_url": "https://image.tmdb.org/t/p/w185/lz8vNyXeidqqOdJW9ZjnDAMb5Vr.jpg",
+    "backdrop_url": "https://image.tmdb.org/t/p/w780/fKPgObonYgPgCdu88yjV7Hpn7Dp.jpg",
+    "goodwatch_score": 82
+   },
+   {
+    "id": "movie:46738",
+    "name": "Incendies",
+    "year": 2010,
+    "url": "https://goodwatch.app/movie/46738-incendies",
+    "link": "[Incendies (2010)](https://goodwatch.app/movie/46738-incendies)",
+    "roles": [
+     "Directing",
+     "Writing"
+    ],
+    "jobs": [
+     "Director",
+     "Screenplay"
+    ],
+    "match": null,
+    "match_label": null,
+    "poster_url": "https://image.tmdb.org/t/p/w185/yH6DAQVgbyj72S66gN4WWVoTjuf.jpg",
+    "backdrop_url": "https://image.tmdb.org/t/p/w780/f3ATwil5vmUeTsogBaMEKbBYBth.jpg",
+    "goodwatch_score": 85
+   },
+   {
+    "id": "movie:181886",
+    "name": "Enemy",
+    "year": 2014,
+    "url": "https://goodwatch.app/movie/181886-enemy",
+    "link": "[Enemy (2014)](https://goodwatch.app/movie/181886-enemy)",
+    "roles": [
+     "Directing"
+    ],
+    "jobs": [
+     "Director"
+    ],
+    "match": null,
+    "match_label": null,
+    "poster_url": "https://image.tmdb.org/t/p/w185/vf40tyDRKZsBmaLsYeopzfFLzLx.jpg",
+    "backdrop_url": "https://image.tmdb.org/t/p/w780/deYWtXTc56YdXyIuuMuA8dvBY16.jpg",
+    "goodwatch_score": 67
+   },
+   {
+    "id": "movie:22302",
+    "name": "Polytechnique",
+    "year": 2009,
+    "url": "https://goodwatch.app/movie/22302-polytechnique",
+    "link": "[Polytechnique (2009)](https://goodwatch.app/movie/22302-polytechnique)",
+    "roles": [
+     "Directing",
+     "Writing"
+    ],
+    "jobs": [
+     "Director",
+     "Writer"
+    ],
+    "match": null,
+    "match_label": null,
+    "poster_url": "https://image.tmdb.org/t/p/w185/bmIhSm9GN1BR0srtjLCEGsAxQqF.jpg",
+    "backdrop_url": "https://image.tmdb.org/t/p/w780/rD6VVei45TLnkCdDucJDDUmb3e3.jpg",
+    "goodwatch_score": 73
+   },
+   {
+    "id": "movie:35650",
+    "name": "Maelström",
+    "year": 2000,
+    "url": "https://goodwatch.app/movie/35650-maelstrom",
+    "link": "[Maelström (2000)](https://goodwatch.app/movie/35650-maelstrom)",
+    "roles": [
+     "Directing",
+     "Writing"
+    ],
+    "jobs": [
+     "Director",
+     "Screenplay"
+    ],
+    "match": null,
+    "match_label": null,
+    "poster_url": "https://image.tmdb.org/t/p/w185/knhWhSDOEPcWed5ljKcJVnXbH7.jpg",
+    "backdrop_url": "https://image.tmdb.org/t/p/w780/rxaga3bJXuwgHidnTcdwVHifLpH.jpg",
+    "goodwatch_score": 67
+   },
+   {
+    "id": "movie:99343",
+    "name": "Next Floor",
+    "year": 2008,
+    "url": "https://goodwatch.app/movie/99343-next-floor",
+    "link": "[Next Floor (2008)](https://goodwatch.app/movie/99343-next-floor)",
+    "roles": [
+     "Directing"
+    ],
+    "jobs": [
+     "Director"
+    ],
+    "match": null,
+    "match_label": null,
+    "poster_url": "https://image.tmdb.org/t/p/w185/1HBizk472Kb0SY8NM8XTbig2xpm.jpg",
+    "backdrop_url": "https://image.tmdb.org/t/p/w780/ebdXwGc3y5lcbnUs9lJMlkycmsu.jpg",
+    "goodwatch_score": 72
+   },
+   {
+    "id": "movie:59482",
+    "name": "August 32nd on Earth",
+    "year": 1999,
+    "url": "https://goodwatch.app/movie/59482-august-32nd-on-earth",
+    "link": "[August 32nd on Earth (1999)](https://goodwatch.app/movie/59482-august-32nd-on-earth)",
+    "roles": [
+     "Writing",
+     "Directing"
+    ],
+    "jobs": [
+     "Screenplay",
+     "Director"
+    ],
+    "match": null,
+    "match_label": null,
+    "poster_url": "https://image.tmdb.org/t/p/w185/iE0XpMkBOGgqYZ2UsS6bqtjvfLG.jpg",
+    "backdrop_url": "https://image.tmdb.org/t/p/w780/2bN6fETbG97PtqI5c5XnAxFQeLA.jpg",
+    "goodwatch_score": 62
+   }
+  ],
+  "total": 23,
+  "next_cursor": null,
+  "person": {
+   "name": "Denis Villeneuve",
+   "url": "https://goodwatch.app/person/137427-denis-villeneuve",
+   "link": "[Denis Villeneuve](https://goodwatch.app/person/137427-denis-villeneuve)",
+   "person_id": 137427,
+   "known_for_department": "Directing",
+   "profile_url": "https://image.tmdb.org/t/p/w185/xzQYqb4nR8xT7Zdw5itbEL9K3fd.jpg",
+   "known_for": [
+    {
+     "name": "Arrival",
+     "year": 2016,
+     "url": "https://goodwatch.app/movie/329865-arrival",
+     "link": "[Arrival (2016)](https://goodwatch.app/movie/329865-arrival)"
+    },
+    {
+     "name": "Blade Runner 2049",
+     "year": 2017,
+     "url": "https://goodwatch.app/movie/335984-blade-runner-2049",
+     "link": "[Blade Runner 2049 (2017)](https://goodwatch.app/movie/335984-blade-runner-2049)"
+    }
+   ],
+   "backdrop_url": "https://image.tmdb.org/t/p/w780/8MUZz7oPXQftFTslZpRP3CVMOoq.jpg"
+  },
+  "sort": "for_you",
+  "for_you_applied": false,
+  "exclude_seen": false,
+  "availability": "everywhere",
+  "page_url": "https://goodwatch.app/person/137427-denis-villeneuve",
+  "page_note": "The person page groups their credits; this tool's sorting and Not seen yet filter can differ."
  }
 }

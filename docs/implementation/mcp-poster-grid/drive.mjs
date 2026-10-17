@@ -134,7 +134,8 @@ try {
 		assert.equal(await view.locator(".pick .eyebrow").innerText(), "Next episode · S3 E7 · Between the Time")
 		assert.equal(await view.locator(".pick h2").innerText(), "Dark")
 		assert.equal(await view.locator(".pick .tag").innerText(), "Everything is connected.")
-		assert.match(await view.locator(".pick .meta").innerText(), /2017 · Show · 74% taste match · GoodWatch score 86/)
+		assert.equal(await view.locator(".pick .meta").innerText(), "2017 · Show · 74% taste match")
+		assert.equal(await view.locator(".pick .pf .score").innerText(), "85", "the GoodWatch score tab on the poster")
 		assert.match(await view.locator(".btn.white").innerText(), /Watch on Netflix/)
 		const images = await frame.evaluate(() => [...document.images].map((img) => [img.className, img.naturalWidth > 0]))
 		assert.deepEqual(images, [["bd", true], ["", true], ["logo", true]])
@@ -172,7 +173,14 @@ try {
 		const { context, page, view, frame, problems } = await mount(browser, { viewport: desktop, theme: "dark", result: fixtures.library, args: libraryArgs })
 		assert.equal(await view.locator(".featlink .eyebrow").innerText(), "Best match on your Wishlist")
 		assert.equal(await view.locator(".featlink .name").innerText(), "Elling")
-		assert.match(await view.locator(".featlink .meta").innerText(), /^95% taste match · 2001 · Movie.* · GoodWatch score 75$/)
+		assert.match(await view.locator(".featlink .meta").innerText(), /^2001 · Movie( · \d+ h \d+ min)? · 95% taste match$/)
+		assert.equal(await view.locator(".featlink .score").innerText(), "75")
+		const tabs = await frame.evaluate(() =>
+			[...document.querySelectorAll(".rail .item:not(.all)")].map((item) => item.querySelector(".score")?.textContent ?? null),
+		)
+		const expected = fixtures.library.items.slice(1).map((item) => (item.goodwatch_score == null ? null : String(item.goodwatch_score)))
+		assert.deepEqual(tabs, expected, "every row poster with a score has its tab")
+		assert.equal(await frame.evaluate(() => /% match/.test(document.querySelector(".rail").textContent)), false, "no match text in the row")
 		assert.equal(await view.locator(".rail li").count(), 14, "13 posters and the See it on GoodWatch tile")
 		assert.equal(await view.locator(".rail li").nth(8).locator(".missing").innerText(), "Inside No. 9")
 		assert.equal(await view.locator(".nav.prev").isVisible(), false)
@@ -225,6 +233,53 @@ try {
 		console.log(`  ${theme} phone: swipe moved the row to ${await frame.evaluate(() => document.querySelector(".rail").scrollLeft)} px`)
 		assert.equal(await page.evaluate(() => window.scrollX), 0, "the swipe moved the row, not the page")
 		await shot(page, `phone-${theme}-library-swiped`)
+		assert.deepEqual(problems, [])
+		await context.close()
+	}
+	// People search, desktop dark: the top person on their known-for backdrop, then the other people.
+	{
+		const { context, page, view, frame, problems } = await mount(browser, { viewport: desktop, theme: "dark", result: fixtures.people, args: { query: "denis" } })
+		assert.equal(await view.locator(".featlink .eyebrow").innerText(), "Top result for “denis”")
+		assert.equal(await view.locator(".featlink .name").innerText(), "Denis Villeneuve")
+		assert.equal(await view.locator(".featlink .meta").innerText(), "Directing · Known for Arrival (2016), Blade Runner 2049 (2017)")
+		assert.equal(await view.locator(".rail li").count(), 7, "six people and the See it on GoodWatch tile")
+		assert.equal(await view.locator(".rail .item").nth(0).locator(".d").innerText(), "Acting")
+		assert.equal(await view.locator(".rail li").nth(4).locator(".missing").innerText(), "Denis Lavant")
+		const faces = await frame.evaluate(() => [...document.images].filter((img) => img.loading === "eager" && img.closest(".face")).map((img) => img.naturalWidth > 0))
+		assert.ok(faces.length >= 5 && faces.every(Boolean), `profile photos load: ${faces}`)
+		await shot(page, "desktop-dark-people")
+		await view.locator(".featlink").click()
+		await view.locator(".rail .item").first().click()
+		assert.deepEqual(await opened(page, 2), [
+			"https://goodwatch.app/person/137427-denis-villeneuve",
+			"https://goodwatch.app/person/5724-denis-leary",
+		])
+		assert.deepEqual(problems, [])
+		await context.close()
+	}
+	// People search and a filmography on a phone.
+	for (const [name, result, theme] of [["people", fixtures.people, "light"], ["person", fixtures.person, "dark"]]) {
+		const { context, page, view, frame, problems } = await mount(browser, { viewport: phone, theme, result, args: { query: "denis" }, mobile: true, width: 358 })
+		assert.equal(await frame.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true)
+		const rail = await frame.evaluate(() => document.querySelector(".rail").scrollWidth > document.querySelector(".rail").clientWidth)
+		assert.equal(rail, true, "the row scrolls sideways")
+		if (name === "person") {
+			assert.equal(await view.locator(".featlink .eyebrow").innerText(), "Filmography")
+			assert.equal(await view.locator(".featlink .name").innerText(), "Denis Villeneuve")
+			assert.equal(await view.locator(".rail .item").first().locator(".score").innerText(), "79")
+		}
+		await shot(page, `phone-${theme}-${name}`)
+		assert.deepEqual(problems, [])
+		await context.close()
+	}
+	// A filmography, desktop light: the person heads the card, the films fill the row with their score tabs.
+	{
+		const { context, page, view, problems } = await mount(browser, { viewport: desktop, theme: "light", result: fixtures.person })
+		assert.equal(await view.locator(".featlink .face").count(), 1)
+		assert.equal(await view.locator(".rail .item:not(.all)").count(), 12)
+		await shot(page, "desktop-light-person")
+		await view.locator(".rail .item").nth(2).click()
+		assert.deepEqual(await opened(page, 1), ["https://goodwatch.app/movie/329865-arrival"])
 		assert.deepEqual(problems, [])
 		await context.close()
 	}

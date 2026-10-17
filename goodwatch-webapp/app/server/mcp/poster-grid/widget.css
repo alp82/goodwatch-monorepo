@@ -146,6 +146,50 @@ button:focus-visible {
 	background: linear-gradient(160deg, var(--gray-800), var(--gray-900));
 	overflow-wrap: anywhere;
 }
+/* The site cards' GoodWatch score tab (app/ui/ratings/RatingOverlay.tsx): G over the number, rounded top, in the
+   score's vibe color, inset from the top right corner. */
+.score {
+	position: absolute;
+	top: 6px;
+	right: 6px;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 2px;
+	min-width: 32px;
+	padding: 6px 6px 3px;
+	border-radius: 999px 999px 0 0;
+	color: #fff;
+	font-weight: 700;
+	font-size: 15px;
+	line-height: 1;
+	font-variant-numeric: tabular-nums;
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+.score svg {
+	width: 15px;
+	height: 15px;
+	fill: #fff;
+}
+.pick .pf .score {
+	font-size: 17px;
+	min-width: 36px;
+}
+.pick .pf .score svg {
+	width: 17px;
+	height: 17px;
+}
+.featlink .score {
+	top: 4px;
+	right: 4px;
+	min-width: 26px;
+	padding: 4px 4px 2px;
+	font-size: 12px;
+}
+.featlink .score svg {
+	width: 12px;
+	height: 12px;
+}
 .bd {
 	position: absolute;
 	inset: 0;
@@ -354,9 +398,6 @@ button:focus-visible {
 .featlink .meta {
 	margin-top: 4px;
 }
-.featlink .meta b {
-	color: var(--amber-300);
-}
 .railwrap {
 	position: relative;
 }
@@ -400,10 +441,9 @@ button:focus-visible {
 	font-weight: 400;
 	color: var(--fg-2);
 }
-.rail .m {
-	font-weight: 700;
+.rail .d {
 	font-size: 13px;
-	color: var(--accent);
+	color: var(--fg-2);
 }
 .rail .allbox {
 	display: flex;

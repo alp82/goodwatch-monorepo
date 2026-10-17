@@ -3,6 +3,7 @@
 // it over postMessage with JSON-RPC 2.0. Spec: https://github.com/modelcontextprotocol/ext-apps (2026-01-26).
 // Only textContent and validated URLs reach the DOM: tool results are untrusted.
 import {
+	type PersonCard,
 	type PosterCard,
 	type PosterView,
 	type WatchOffer,
@@ -172,25 +173,87 @@ function image(src: string, src2x: string | null, eager: boolean) {
 	return img
 }
 
-/** The poster in its frame; a title without one, or whose file fails, shows its name instead. */
-function poster(card: PosterCard, className: string, eager: boolean) {
-	const frame = element("span", `poster ${className}`)
-	const missing = element("span", "missing", card.name)
-	if (card.poster) {
-		const img = image(card.poster, card.poster2x, eager)
-		img.addEventListener("error", () => {
-			img.remove()
-			frame.classList.add("none")
-		})
-		frame.append(img)
-	} else frame.classList.add("none")
-	frame.append(missing)
-	return frame
+const SVG = "http://www.w3.org/2000/svg"
+/** The G emblem from the site's logo, white. */
+function gEmblem() {
+	const svg = document.createElementNS(SVG, "svg")
+	svg.setAttribute("viewBox", "0 0 179.84172 189.15848")
+	svg.setAttribute("aria-hidden", "true")
+	const group = document.createElementNS(SVG, "g")
+	group.setAttribute("transform", "translate(-9.3413446,-4.720956)")
+	for (const [d, transform] of G_PATHS) {
+		const path = document.createElementNS(SVG, "path")
+		path.setAttribute("d", d)
+		if (transform) path.setAttribute("transform", transform)
+		group.append(path)
+	}
+	svg.append(group)
+	return svg
 }
 
-function backdrop(card: PosterCard) {
-	if (!card.backdrop) return null
-	const img = image(card.backdrop, card.backdrop2x, true)
+// The site's bg-vibe-* steps (app/tailwind.css) for a GoodWatch score, as RatingOverlay colors its tab.
+const VIBES = [
+	"#7f1d1d",
+	"#991b1b",
+	"#b91c1c",
+	"#c2410c",
+	"#d97706",
+	"#ca8a04",
+	"#a3a323",
+	"#65a32d",
+	"#16934a",
+	"#15803d",
+	"#166534",
+]
+/** The GoodWatch score tab of the site's title cards: the G over the number, in the score's color. */
+function scoreTile(score: number) {
+	const tile = element("span", "score")
+	tile.style.backgroundColor = VIBES[Math.min(10, Math.floor(score / 10))]
+	tile.title = `GoodWatch score ${score}`
+	tile.append(gEmblem(), element("span", "", String(score)))
+	return tile
+}
+
+/** A 2:3 image in the site card's frame; without a file, or when it fails, the name shows instead. */
+function frame(
+	src: string | null,
+	src2x: string | null,
+	label: string,
+	className: string,
+	eager: boolean,
+) {
+	const box = element("span", `poster ${className}`)
+	if (src) {
+		const img = image(src, src2x, eager)
+		img.addEventListener("error", () => {
+			img.remove()
+			box.classList.add("none")
+		})
+		box.append(img)
+	} else box.classList.add("none")
+	box.append(element("span", "missing", label))
+	return box
+}
+function poster(card: PosterCard, className: string, eager: boolean) {
+	const box = frame(card.poster, card.poster2x, card.name, className, eager)
+	if (card.score !== null) box.append(scoreTile(card.score))
+	return box
+}
+const portrait = (person: PersonCard, className: string, eager: boolean) =>
+	frame(
+		person.profile,
+		person.profile2x,
+		person.name,
+		`${className} face`,
+		eager,
+	)
+
+function backdrop(source: {
+	backdrop: string | null
+	backdrop2x: string | null
+}) {
+	if (!source.backdrop) return null
+	const img = image(source.backdrop, source.backdrop2x, true)
 	img.className = "bd"
 	img.addEventListener("error", () => img.remove())
 	return img
@@ -201,31 +264,30 @@ function logo(pageUrl: string | null) {
 	const mark = pageUrl ? link(pageUrl, "mark") : element("span", "mark")
 	mark.setAttribute("aria-label", pageUrl ? "See it on GoodWatch" : "GoodWatch")
 	if (pageUrl) mark.title = "See it on GoodWatch"
-	const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg")
-	svg.setAttribute("viewBox", "0 0 179.84172 189.15848")
-	svg.setAttribute("aria-hidden", "true")
-	const group = document.createElementNS("http://www.w3.org/2000/svg", "g")
-	group.setAttribute("transform", "translate(-9.3413446,-4.720956)")
-	for (const [d, transform] of G_PATHS) {
-		const path = document.createElementNS("http://www.w3.org/2000/svg", "path")
-		path.setAttribute("d", d)
-		if (transform) path.setAttribute("transform", transform)
-		group.append(path)
-	}
-	svg.append(group)
-	mark.append(svg, element("span", "ood", "ood"), element("span", "w", "Watch"))
+	mark.append(
+		gEmblem(),
+		element("span", "ood", "ood"),
+		element("span", "w", "Watch"),
+	)
 	return mark
 }
 
-const facts = (card: PosterCard, withMatch: boolean) =>
+/** The facts line: the GoodWatch score is on the poster, the taste match closes the line. */
+const facts = (card: PosterCard) =>
 	[
 		card.year,
 		card.kind,
 		card.runtime && card.kind === "Movie"
 			? `${Math.floor(card.runtime / 60)} h ${card.runtime % 60} min`
 			: null,
-		withMatch && card.match !== null ? `${card.match}% taste match` : null,
-		card.score !== null ? `GoodWatch score ${card.score}` : null,
+		card.match !== null ? `${card.match}% taste match` : null,
+	]
+		.filter(Boolean)
+		.join(" · ")
+const personFacts = (person: PersonCard) =>
+	[
+		person.department,
+		person.knownFor.length ? `Known for ${person.knownFor.join(", ")}` : null,
 	]
 		.filter(Boolean)
 		.join(" · ")
@@ -261,7 +323,7 @@ function pickCard(view: PosterView) {
 	title.append(element("h2", "display", card.name))
 	body.append(eyebrow, title)
 	if (card.tagline) body.append(element("p", "tag", card.tagline))
-	body.append(element("p", "meta", facts(card, true)))
+	body.append(element("p", "meta", facts(card)))
 	const actions = element("div", "acts")
 	if (view.watch) actions.append(watchButton(view.watch))
 	const open = link(card.url, view.watch ? "btn glass" : "btn white")
@@ -273,70 +335,128 @@ function pickCard(view: PosterView) {
 	return article
 }
 
-function gridCards(view: PosterView) {
-	const [first, ...rest] = view.cards
-	const article = element("article", "grid")
+/** The banner: a backdrop, the poster or profile photo, an eyebrow, the name and a facts line. */
+function banner(
+	view: PosterView,
+	opts: {
+		url: string
+		art: { backdrop: string | null; backdrop2x: string | null }
+		image: HTMLElement
+		name: string
+		facts: string
+	},
+) {
 	const feat = element("div", "feat")
-	const bd = backdrop(first)
+	const bd = backdrop(opts.art)
 	if (bd) feat.append(bd)
-	const featLink = link(first.url, "featlink")
-	featLink.append(poster(first, "pf", true))
+	const featLink = link(opts.url, "featlink")
+	opts.image.classList.add("pf")
+	featLink.append(opts.image)
 	const body = element("span", "tx")
 	body.append(
 		element("span", "eyebrow", view.eyebrow),
-		element("span", "display name", first.name),
+		element("span", "display name", opts.name),
 	)
-	const meta = element("span", "meta")
-	if (first.match !== null)
-		meta.append(element("b", "", `${first.match}% taste match`))
-	const more = facts(first, false)
-	if (more) meta.append(`${first.match !== null ? " · " : ""}${more}`)
-	body.append(meta)
+	if (opts.facts) body.append(element("span", "meta", opts.facts))
 	featLink.append(body)
 	feat.append(featLink, logo(view.pageUrl))
-	article.append(feat)
+	return feat
+}
 
-	if (rest.length || view.pageUrl) {
-		const wrap = element("div", "railwrap")
-		const rail = element("ul", "rail")
-		rest.forEach((card, i) => {
-			const item = element("li")
-			const anchor = link(card.url, "item")
-			anchor.append(poster(card, "", i < 6))
-			const name = element("span", "n", card.name)
-			if (card.year !== null)
-				name.append(element("span", "y", ` (${card.year})`))
-			anchor.append(name)
-			if (card.match !== null)
-				anchor.append(element("span", "m", `${card.match}% match`))
-			item.append(anchor)
-			rail.append(item)
-		})
-		if (view.pageUrl) {
-			const item = element("li")
-			const all = link(view.pageUrl, "item all")
-			all.append(element("span", "allbox", "See it on GoodWatch →"))
-			item.append(all)
-			rail.append(item)
-		}
-		const back = element("button", "nav prev", "‹")
-		const next = element("button", "nav next", "›")
-		back.type = next.type = "button"
-		back.setAttribute("aria-label", "Scroll back")
-		next.setAttribute("aria-label", "Scroll forward")
-		const step = (sign: number) =>
-			rail.scrollBy({ left: sign * rail.clientWidth * 0.8, behavior: "smooth" })
-		back.addEventListener("click", () => step(-1))
-		next.addEventListener("click", () => step(1))
-		const edges = () => {
-			back.hidden = rail.scrollLeft < 4
-			next.hidden = rail.scrollLeft + rail.clientWidth > rail.scrollWidth - 4
-		}
-		rail.addEventListener("scroll", edges, { passive: true })
-		requestAnimationFrame(edges)
-		wrap.append(rail, back, next)
-		article.append(wrap)
+/** The row: cards that scroll sideways, then See it on GoodWatch; arrows on pointer devices. */
+function row(items: HTMLElement[], pageUrl: string | null) {
+	const wrap = element("div", "railwrap")
+	const rail = element("ul", "rail")
+	for (const item of items) {
+		const li = element("li")
+		li.append(item)
+		rail.append(li)
 	}
+	if (pageUrl) {
+		const li = element("li")
+		const all = link(pageUrl, "item all")
+		all.append(element("span", "allbox", "See it on GoodWatch →"))
+		li.append(all)
+		rail.append(li)
+	}
+	const back = element("button", "nav prev", "‹")
+	const next = element("button", "nav next", "›")
+	back.type = next.type = "button"
+	back.setAttribute("aria-label", "Scroll back")
+	next.setAttribute("aria-label", "Scroll forward")
+	const step = (sign: number) =>
+		rail.scrollBy({ left: sign * rail.clientWidth * 0.8, behavior: "smooth" })
+	back.addEventListener("click", () => step(-1))
+	next.addEventListener("click", () => step(1))
+	const edges = () => {
+		back.hidden = rail.scrollLeft < 4
+		next.hidden = rail.scrollLeft + rail.clientWidth > rail.scrollWidth - 4
+	}
+	rail.addEventListener("scroll", edges, { passive: true })
+	requestAnimationFrame(edges)
+	wrap.append(rail, back, next)
+	return wrap
+}
+
+function titleItem(card: PosterCard, i: number) {
+	const anchor = link(card.url, "item")
+	anchor.append(poster(card, "", i < 6))
+	const name = element("span", "n", card.name)
+	if (card.year !== null) name.append(element("span", "y", ` (${card.year})`))
+	anchor.append(name)
+	return anchor
+}
+function personItem(person: PersonCard, i: number) {
+	const anchor = link(person.url, "item")
+	anchor.append(portrait(person, "", i < 6), element("span", "n", person.name))
+	if (person.department) anchor.append(element("span", "d", person.department))
+	return anchor
+}
+
+function gridCards(view: PosterView) {
+	const article = element("article", "grid")
+	const person = view.person
+	const [first, ...rest] = view.cards
+	if (person)
+		article.append(
+			banner(view, {
+				url: person.url,
+				art: person,
+				image: portrait(person, "", true),
+				name: person.name,
+				facts: personFacts(person),
+			}),
+		)
+	else
+		article.append(
+			banner(view, {
+				url: first.url,
+				art: first,
+				image: poster(first, "", true),
+				name: first.name,
+				facts: facts(first),
+			}),
+		)
+	const titles = person ? view.cards : rest
+	if (titles.length || view.pageUrl)
+		article.append(row(titles.map(titleItem), view.pageUrl))
+	return article
+}
+
+function peopleCards(view: PosterView) {
+	const article = element("article", "grid people")
+	const [first, ...rest] = view.people
+	article.append(
+		banner(view, {
+			url: first.url,
+			art: first,
+			image: portrait(first, "", true),
+			name: first.name,
+			facts: personFacts(first),
+		}),
+	)
+	if (rest.length || view.pageUrl)
+		article.append(row(rest.map(personItem), view.pageUrl))
 	return article
 }
 
@@ -357,6 +477,8 @@ function showMessage(text: string) {
 			eyebrow: "GoodWatch",
 			eyebrowDetail: null,
 			cards: [],
+			person: null,
+			people: [],
 			watch: null,
 			pageUrl: null,
 			message: text,
@@ -371,7 +493,9 @@ function render(view: PosterView) {
 			? pickCard(view)
 			: view.layout === "grid"
 				? gridCards(view)
-				: messageCard(view),
+				: view.layout === "people"
+					? peopleCards(view)
+					: messageCard(view),
 	)
 	root.dataset.state = "ready"
 	root.dataset.layout = view.layout

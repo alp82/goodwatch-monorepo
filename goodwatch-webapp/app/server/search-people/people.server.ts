@@ -201,7 +201,7 @@ export async function readPeople(
 const knownForCache = cache<KnownForTitle[]>()
 
 /** Known-for titles from the catalog: the leading roles and key jobs with the most votes. */
-async function knownForOf(
+export async function knownForOf(
 	ids: number[],
 ): Promise<Map<number, KnownForTitle[]>> {
 	const result = new Map<number, KnownForTitle[]>()

@@ -121,6 +121,7 @@ test("Search, My library and Watch next point at the versioned poster grid; othe
 		"get_similar_titles",
 		"get_tonight",
 		"get_library",
+		"search_people",
 		"get_person",
 		"get_list",
 	])
@@ -194,7 +195,7 @@ test("Poster tools add a nullable poster_url; the answer is the same with and wi
 	assert.equal(matrix.link, items[0].link)
 	assert.equal(thrones.poster_url, null)
 	assert.equal(thrones.backdrop_url, null)
-	assert.equal(matrix.goodwatch_score, 86)
+	assert.equal(matrix.goodwatch_score, 85, "floored, as the site shows it")
 	assert.equal(thrones.goodwatch_score, null)
 	assert.equal("tagline" in matrix, false)
 	assert.ok(plain.structuredContent.page_url.startsWith(`${origin}/discover?`))
@@ -525,16 +526,11 @@ test("The MCP rpc log names methods and UI support, never arguments or identitie
 	assert.equal(describeRpc({ id: 1, result: {} }, tools, null), null)
 })
 
-test("The other card tools get their own eyebrow, and a people search shows no title cards", () => {
+test("The other card tools get their own eyebrow, and people get person cards", () => {
 	const row = { ...items[0], poster_url: poster }
 	assert.equal(
 		posterView({ source: { name: "Dark" }, items: [row] }, origin).eyebrow,
 		"More like Dark",
-	)
-	assert.equal(
-		posterView({ person: { name: "Denis Villeneuve" }, items: [row] }, origin)
-			.eyebrow,
-		"From Denis Villeneuve’s titles",
 	)
 	assert.equal(
 		posterView({ list_id: "l1", name: "Comfort", items: [row] }, origin)
@@ -545,19 +541,70 @@ test("The other card tools get their own eyebrow, and a people search shows no t
 		posterView({ sort_used: "popular", items: [row] }, origin).eyebrow,
 		"Top pick in Discover",
 	)
+	const villeneuve = {
+		person_id: 137427,
+		name: "Denis Villeneuve",
+		url: `${origin}/person/137427-denis-villeneuve`,
+		link: `[Denis Villeneuve](${origin}/person/137427-denis-villeneuve)`,
+		known_for_department: "Directing",
+		profile_url:
+			"https://image.tmdb.org/t/p/w185/zdDx9Xs93UIrJFWYApYR28J8M6b.jpg",
+		backdrop_url:
+			"https://image.tmdb.org/t/p/w780/jYEW5xZkZk2WTrdbMGAPFuBqbDc.jpg",
+		known_for: [
+			{ name: "Dune", year: 2021, url: `${origin}/movie/438631-dune` },
+			{ name: "Arrival", year: 2016, url: `${origin}/movie/329865-arrival` },
+			{ name: "Third", year: 2010, url: `${origin}/movie/1-third` },
+		],
+	}
+	const filmography = posterView(
+		{ person: villeneuve, items: [row], sort: "for_you" },
+		origin,
+	)
+	assert.equal(filmography.layout, "grid")
+	assert.equal(filmography.eyebrow, "Filmography")
+	assert.deepEqual(filmography.person, {
+		name: "Denis Villeneuve",
+		url: villeneuve.url,
+		department: "Directing",
+		profile: villeneuve.profile_url,
+		profile2x: villeneuve.profile_url.replace("/w185/", "/h632/"),
+		backdrop: villeneuve.backdrop_url,
+		backdrop2x: villeneuve.backdrop_url.replace("/w780/", "/w1280/"),
+		knownFor: ["Dune (2021)", "Arrival (2016)"],
+	})
+	assert.equal(filmography.cards.length, 1)
 	const people = posterView(
 		{
 			items: [
+				villeneuve,
 				{
-					person_id: 137427,
-					name: "Denis Villeneuve",
-					url: `${origin}/person/137427-denis-villeneuve`,
+					...villeneuve,
+					person_id: 2,
+					name: "Bad link",
+					url: "https://evil.example/person/2",
+				},
+				{
+					...villeneuve,
+					person_id: 3,
+					name: "No photo",
+					url: `${origin}/person/3-no-photo`,
+					profile_url: "https://evil.example/p.jpg",
 				},
 			],
+			page_url: `${origin}/discover?q=villeneuve`,
 		},
 		origin,
+		{ query: "villeneuve" },
 	)
-	assert.equal(people.layout, "message")
-	assert.equal(people.eyebrow, "People")
-	assert.match(people.message ?? "", /Ask for one of these people/)
+	assert.equal(people.layout, "people")
+	assert.equal(people.eyebrow, "Top result for “villeneuve”")
+	assert.deepEqual(
+		people.people.map((person) => [person.name, person.profile]),
+		[
+			["Denis Villeneuve", villeneuve.profile_url],
+			["No photo", null],
+		],
+	)
+	assert.equal(people.cards.length, 0)
 })

@@ -1,6 +1,6 @@
 # MCP poster cards: browser check and screenshots
 
-`drive.mjs` renders the real `ui://goodwatch/posters-v2.html` resource (from `goodwatch-webapp/app/server/mcp/poster-grid.server.ts`) in a minimal MCP Apps host. The host loads the HTML in an iframe sandboxed to scripts and popups, adds the CSP that the resource declares, and speaks the host side of the protocol: `ui/initialize` with a theme and Claude-style style variables, tool input and result notifications, `size-changed` and `ui/open-link`. `fixtures.json` holds tool results shaped like production answers, with posters and backdrops from TMDB.
+`drive.mjs` renders the real `ui://goodwatch/posters-v3.html` resource (from `goodwatch-webapp/app/server/mcp/poster-grid.server.ts`) in a minimal MCP Apps host. The host loads the HTML in an iframe sandboxed to scripts and popups, adds the CSP that the resource declares, and speaks the host side of the protocol: `ui/initialize` with a theme and Claude-style style variables, tool input and result notifications, `size-changed` and `ui/open-link`. `fixtures.json` holds tool results shaped like production answers, with posters and backdrops from TMDB.
 
 The script checks:
 
@@ -9,6 +9,9 @@ The script checks:
 - On a 390 px phone, Watch next drops the episode name and nothing overflows, in both themes.
 - My library shows the best match on its backdrop, then 13 posters and the **See it on GoodWatch** tile in a row. The arrows scroll the row; the banner, a row poster and the logo open their pages.
 - On a phone the row scrolls sideways inside the card with the next poster peeking in, a touch swipe moves the row and not the page, the arrows stay hidden, and the page never scrolls sideways.
+- Every poster with a score shows the GoodWatch score tab, the row has no match text, and the facts lines end with the taste match.
+- A people search shows the top person on a known-for backdrop with photo, department and known-for titles, then the other people; a person without a photo gets the labeled placeholder; person cards open person pages.
+- A filmography puts the person in the banner and the films, with score tabs, in the row, on desktop and phone.
 - A title without a poster, a poster that fails to load, and a title without a backdrop keep a clean card; an error answer shows its message.
 - No script errors and no CSP violations occur.
 
@@ -26,18 +29,20 @@ PLAYWRIGHT_MODULE=/path/to/scratch/node_modules/playwright-core/index.mjs node d
 
 Set `CHROMIUM=/usr/bin/chromium` to use a system browser instead. Screenshots go to `shots/`.
 
-## Recorded result, 2026-10-17 (version 2)
+## Recorded result, 2026-10-17 (version 3)
 
-- `drive.mjs`: Passed. Widget 20,184 bytes, 8,548 bytes gzipped (the spike with the ext-apps runtime was 446,723 bytes). The phone swipe moved the row to 504 px (dark) and 742 px (light).
-- Official reference host: Passed. The maintainers' [basic-host](https://github.com/modelcontextprotocol/ext-apps/tree/82221c0c8ce7661efa6771c9d461511b1650495f/examples/basic-host), set up as in the spike's README on `research/mcp-images`, rendered both cards from a local fixture server that registers the real resource, under its sandbox CSP and light theme, and opened title links through `ui/open-link` (`shots/reference-host-*.png`).
+- `drive.mjs`: Passed. Widget 22,795 bytes, 9,377 bytes gzipped (the spike with the ext-apps runtime was 446,723 bytes). Fixtures use real data: the owner's Wishlist, Watch next, a people search for "denis" and Denis Villeneuve's directing credits from the public site.
+- Version 2 also passed the maintainers' [basic-host](https://github.com/modelcontextprotocol/ext-apps/tree/82221c0c8ce7661efa6771c9d461511b1650495f/examples/basic-host) (`shots/reference-host-*.png` are from that run); version 3 changed rendering only, not the bridge.
 - Headless Chromium ignores `Input.synthesizeScrollGesture`, so the swipe uses raw `Input.dispatchTouchEvent` events.
 
 | Screenshot | What it shows |
 | --- | --- |
-| `desktop-dark-watch-next.png`, `desktop-light-watch-next.png` | Watch next at 680 px |
+| `desktop-dark-watch-next.png`, `desktop-light-watch-next.png` | Watch next at 680 px, the score tab on the poster |
 | `phone-dark-watch-next.png`, `phone-light-watch-next.png` | Watch next at 358 px, without the episode name |
 | `desktop-dark-library.png`, `desktop-dark-library-scrolled.png` | My library by best match, before and after the arrow |
 | `phone-dark-library.png`, `phone-light-library.png` | My library at 358 px, the third poster peeking in |
 | `phone-dark-library-swiped.png`, `phone-light-library-swiped.png` | The row after a touch swipe |
+| `desktop-dark-people.png`, `phone-light-people.png` | A people search for "denis" |
+| `desktop-light-person.png`, `phone-dark-person.png` | Denis Villeneuve's filmography |
 | `desktop-light-search.png` | Search results, light host |
 | `desktop-dark-error.png` | An error answer |

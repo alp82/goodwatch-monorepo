@@ -72,7 +72,9 @@ export interface Person {
 	tmdb_id: number
 	name: string
 	known_for_department: string | null
+	profile_path?: string | null
 }
+
 export const personSummary = (person: Person, origin: string) => {
 	const { id, ...linked } = personLink(
 		{ id: person.tmdb_id, name: person.name },

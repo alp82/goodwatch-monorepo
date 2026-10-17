@@ -29,14 +29,35 @@ export interface PosterCard {
 	tagline: string | null
 }
 
+export interface PersonCard {
+	name: string
+	url: string
+	/** "Acting", "Directing" and so on. */
+	department: string | null
+	profile: string | null
+	/** The h632 file for screens with a pixel ratio of 2 and above. */
+	profile2x: string | null
+	/** The backdrop of the person's top known-for title. */
+	backdrop: string | null
+	backdrop2x: string | null
+	/** Up to two, as "Dune (2021)". */
+	knownFor: string[]
+}
+
 export interface PosterView {
-	/** "pick" is Watch next's single card; "grid" is a banner for the first title and a row of posters. */
-	layout: "pick" | "grid" | "message"
+	/**
+	 * "pick" is Watch next's single card; "grid" is a banner (the first title, or the person of a filmography) and a
+	 * row of posters; "people" is a banner for the first person and a row of the others.
+	 */
+	layout: "pick" | "grid" | "people" | "message"
 	/** The line above the first title, such as "Next episode · S3 E7" or "Best match on your Wishlist". */
 	eyebrow: string
 	/** The episode name after the eyebrow; narrow cards leave it out. */
 	eyebrowDetail: string | null
 	cards: PosterCard[]
+	/** A filmography's person, shown in the banner. */
+	person: PersonCard | null
+	people: PersonCard[]
 	watch: WatchOffer | null
 	pageUrl: string | null
 	message: string | null
@@ -44,7 +65,7 @@ export interface PosterView {
 
 export const TMDB_IMAGE_ORIGIN = "https://image.tmdb.org"
 const IMAGE_PATH =
-	/^\/t\/p\/(w45|w92|w154|w185|w300|w342|w500|w780|w1280)\/[A-Za-z0-9_-]{1,80}\.(?:jpg|jpeg|png|webp|svg)$/
+	/^\/t\/p\/(w45|w92|w154|w185|w300|w342|w500|w780|w1280|h632)\/[A-Za-z0-9_-]{1,80}\.(?:jpg|jpeg|png|webp|svg)$/
 // The statuses a successful tool answer can carry; any other status string is an error answer.
 const OK_STATUSES = new Set([
 	"not_started",
@@ -165,6 +186,35 @@ function card(value: unknown, origin: string): PosterCard | null {
 	}
 }
 
+function personCard(value: unknown, origin: string): PersonCard | null {
+	const row = record(value)
+	if (!row || int(row.person_id, 1, 2_000_000_000) === null) return null
+	const name = text(row.name)
+	const url = safePageUrl(row.url, origin)
+	if (!name || !url) return null
+	const profile = safeImageUrl(row.profile_url, ["w45", "w185", "h632"])
+	const backdrop = safeImageUrl(row.backdrop_url, ["w300", "w780", "w1280"])
+	const knownFor = (Array.isArray(row.known_for) ? row.known_for : [])
+		.slice(0, 2)
+		.flatMap((item) => {
+			const title = record(item)
+			const label = text(title?.name, 80)
+			if (!label) return []
+			const year = int(title?.year, 1800, 2200)
+			return [year === null ? label : `${label} (${year})`]
+		})
+	return {
+		name,
+		url,
+		department: text(row.known_for_department, 40),
+		profile,
+		profile2x: resized(profile, "w185", "h632"),
+		backdrop,
+		backdrop2x: resized(backdrop, "w780", "w1280"),
+		knownFor,
+	}
+}
+
 function watchOffer(title: Record<string, unknown> | null): WatchOffer | null {
 	const offers = record(title?.availability)?.offers
 	if (!Array.isArray(offers)) return null
@@ -201,6 +251,8 @@ export function posterView(
 	const base = {
 		eyebrowDetail: null,
 		cards: [] as PosterCard[],
+		person: null,
+		people: [] as PersonCard[],
 		watch: null,
 		pageUrl,
 	}
@@ -238,40 +290,56 @@ export function posterView(
 		}
 	}
 	const items = Array.isArray(data.items) ? data.items : []
+	const query = text(args.query, 60)
+	// search_people: people, not titles.
+	if (items.some((item) => record(item)?.person_id !== undefined)) {
+		const people = items
+			.slice(0, MAX_CARDS)
+			.map((item) => personCard(item, origin))
+			.filter((item): item is PersonCard => item !== null)
+		return {
+			...base,
+			layout: people.length ? "people" : "message",
+			eyebrow: query ? `Top result for “${query}”` : "People",
+			people,
+			message: people.length ? null : "No people to show.",
+		}
+	}
 	const cards = items
 		.slice(0, MAX_CARDS)
 		.map((item) => card(item, origin))
 		.filter((item): item is PosterCard => item !== null)
-	const query = text(args.query, 60)
+	// get_person: the person heads the card, the filmography fills the row.
+	const person = personCard(data.person, origin)
+	if (person)
+		return {
+			...base,
+			layout: "grid",
+			eyebrow: "Filmography",
+			cards,
+			person,
+			message: null,
+		}
 	const source = text(record(data.source)?.name, 80)
-	const person = text(record(data.person)?.name, 80)
 	const list = text(data.name, 80)
 	const eyebrow = source
 		? `More like ${source}`
-		: person
-			? `From ${person}’s titles`
-			: "list_id" in data
-				? list
-					? `On your list “${list}”`
-					: "On your list"
-				: "sort" in data
-					? `${SORTS[String(data.sort)] ?? "First"} ${args.filter === "want_to_see" ? "on your Wishlist" : "in My library"}`
-					: "sort_used" in data
-						? "Top pick in Discover"
-						: query
-							? `Top result for “${query}”`
-							: "Top result"
-	const people =
-		!cards.length && items.some((item) => record(item)?.person_id !== undefined)
+		: "list_id" in data
+			? list
+				? `On your list “${list}”`
+				: "On your list"
+			: "sort" in data
+				? `${SORTS[String(data.sort)] ?? "First"} ${args.filter === "want_to_see" ? "on your Wishlist" : "in My library"}`
+				: "sort_used" in data
+					? "Top pick in Discover"
+					: query
+						? `Top result for “${query}”`
+						: "Top result"
 	return {
 		...base,
 		layout: cards.length ? "grid" : "message",
-		eyebrow: cards.length ? eyebrow : people ? "People" : eyebrow,
+		eyebrow,
 		cards,
-		message: cards.length
-			? null
-			: people
-				? "Ask for one of these people to see their titles here."
-				: "No titles to show.",
+		message: cards.length ? null : "No titles to show.",
 	}
 }
