@@ -6,7 +6,8 @@
 //   for the score; the picker then offers to change the watch's date. On a Seen movie it opens the watch log, as
 //   before: pressing Seen never removes a watch.
 // - The score half opens the score picker (ScoreDialog). For a movie, the picker's title carries a Seen switch: on
-//   records a watch, off asks first (NotSeenConfirm), because the score and the logged watches go with it.
+//   records a watch, off asks first (NotSeenConfirm), because the score and the logged watches go with it. Clear
+//   score asks the same when the score's watch is the movie's only one, since the movie stops being Seen with it.
 // - A score marks a movie Seen (rating records a watch). A show's score never changes its status: after a first
 //   score on a show that isn't started, the picker asks "How far are you?" (ui/tracking/HeroStatus.tsx).
 //
@@ -83,7 +84,8 @@ export default function SeenScore({
 	const [afterSeen, setAfterSeen] = useState(false)
 	/** A first score on a show that isn't started: the picker asks how far next. */
 	const [howFar, setHowFar] = useState(false)
-	const [confirming, setConfirming] = useState(false)
+	/** Asking before the movie stops being Seen: from the switch, or from Clear score when the score's watch is the only one. */
+	const [confirming, setConfirming] = useState<"switch" | "clear" | null>(null)
 	const opened = useOpenedOnce(open)
 	const scoreButton = useRef<HTMLButtonElement>(null)
 	const seenButton = useRef<HTMLButtonElement>(null)
@@ -129,7 +131,13 @@ export default function SeenScore({
 		if (!a.seen) a.toggleSeen()
 		else if (score === null && seenToggle.watches <= 1)
 			seenToggle.toggle("remove")
-		else setConfirming(true)
+		else setConfirming("switch")
+	}
+	// Clearing the score takes its watch: a movie with no other watch stops being Seen, so that asks first.
+	const clearScore = () => {
+		if (movie && user && score !== null && seenToggle.watches <= 1)
+			setConfirming("clear")
+		else rate(null)
 	}
 
 	const seenHalf = (
@@ -288,7 +296,7 @@ export default function SeenScore({
 							if (sent && tracked && !entry && score === null) setHowFar(true)
 							else close()
 						}}
-						onClear={() => rate(null)}
+						onClear={clearScore}
 						onClose={close}
 					/>
 				</Suspense>
@@ -300,9 +308,11 @@ export default function SeenScore({
 						score={score}
 						poster={media.details.poster_path || null}
 						year={media.details.release_year || null}
-						onDone={() => setConfirming(false)}
+						onDone={() => setConfirming(null)}
 						anchor={() =>
-							document.querySelector("[data-score-dialog] [data-seen-switch]")
+							document.querySelector(
+								`[data-score-dialog] ${confirming === "clear" ? "[data-clear-score]" : "[data-seen-switch]"}`,
+							)
 						}
 					/>
 				</Suspense>

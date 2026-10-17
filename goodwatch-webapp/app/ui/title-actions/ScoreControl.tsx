@@ -6,7 +6,8 @@ import { getScoreLabelText, getVibeColorValue, scoreLabels } from "~/utils/ratin
 const SCORES = Array.from({ length: 10 }, (_, i) => (i + 1) as Score)
 
 // The roomy look of the level buttons (taller, a color bar, larger names, the score range). The taste quiz switches to
-// it by screen width; everywhere else the control sits in boxes of any width, so its own width decides.
+// it by screen width; everywhere else the control sits in boxes of any width, so its own width decides. The title
+// page's score dialog grows with the screen past that: taller buttons and a taller 1-10 strip.
 const ROOMY = {
 	screen: {
 		gap: "sm:gap-1.5",
@@ -14,6 +15,15 @@ const ROOMY = {
 		bar: "sm:block",
 		name: "sm:text-lg",
 		range: "md:inline",
+		strip: "",
+	},
+	dialog: {
+		gap: "md:gap-1.5",
+		level: "md:h-16 md:justify-start md:px-3 lg:h-20 lg:px-4",
+		bar: "md:block lg:h-9",
+		name: "md:text-lg lg:text-xl",
+		range: "",
+		strip: "md:h-8 md:rounded-lg md:text-sm lg:h-10 lg:text-base",
 	},
 	box: {
 		gap: "@2xl:gap-1.5",
@@ -21,6 +31,7 @@ const ROOMY = {
 		bar: "@2xl:block",
 		name: "@2xl:text-lg",
 		range: "@4xl:inline",
+		strip: "",
 	},
 } as const
 
@@ -32,7 +43,7 @@ export interface ScoreControlProps {
 	onClear?: () => void
 	/** "compact" for popups: shorter level buttons, names only. */
 	size?: "full" | "compact"
-	/** What switches "full" to its roomy look: the screen's width (the taste quiz) or the control's own. */
+	/** What switches "full" to its roomy look: the screen's width (the taste quiz, the score dialog) or the control's own. */
 	fit?: keyof typeof ROOMY
 	/** While a score is being saved. */
 	busy?: boolean
@@ -58,7 +69,7 @@ export function ScoreControl({
 		<div className={fit === "box" ? "@container" : undefined}>
 			{onClear && (
 				<div className="mb-2 flex min-h-5 items-baseline justify-between gap-3">
-					<p className={`font-semibold ${full ? "text-sm" : "text-xs"} text-gray-400`}>
+					<p className={`font-semibold ${full ? "text-sm" : "text-xs"} ${fit === "dialog" ? "lg:text-base" : ""} text-gray-400`}>
 						{value ? (
 							<>
 								Your score:{" "}
@@ -71,9 +82,10 @@ export function ScoreControl({
 					{value && (
 						<button
 							type="button"
+							data-clear-score
 							onClick={onClear}
 							disabled={busy}
-							className="shrink-0 cursor-pointer text-xs text-gray-400 underline decoration-white/20 underline-offset-2 hover:text-white"
+							className={`shrink-0 cursor-pointer text-xs ${fit === "dialog" ? "lg:text-sm" : ""} text-gray-400 underline decoration-white/20 underline-offset-2 hover:text-white`}
 						>
 							Clear score
 						</button>
@@ -136,7 +148,7 @@ export function ScoreControl({
 							aria-label={`${score}, ${scoreLabels[score]}`}
 							aria-pressed={onClear ? picked : undefined}
 							title={`${score} · ${scoreLabels[score]}`}
-							className={`flex h-5 cursor-pointer items-center justify-center rounded-md text-xs font-black tabular-nums transition hover:scale-110 hover:text-gray-950 focus-visible:scale-110 focus-visible:outline-2 focus-visible:outline-amber-400 ${
+							className={`flex h-5 cursor-pointer items-center justify-center rounded-md text-xs font-black ${full ? roomy.strip : ""} tabular-nums transition hover:scale-110 hover:text-gray-950 focus-visible:scale-110 focus-visible:outline-2 focus-visible:outline-amber-400 ${
 								picked
 									? "scale-110 text-gray-950 ring-2 ring-white"
 									: on

@@ -105,11 +105,11 @@ function Panel({ title, value, busy, opener, onRate, onClear, onClose, aside, st
 				aria-label={`Your score for ${title}`}
 				tabIndex={-1}
 				style={at ? { position: "absolute", top: at.top, left: at.left } : undefined}
-				className="relative w-full rounded-t-3xl border-t border-white/15 bg-stone-900 px-4 pb-[max(1.75rem,env(safe-area-inset-bottom))] pt-3 text-white shadow-[0_-12px_48px_rgba(0,0,0,.6)] outline-none md:w-[30rem] md:rounded-2xl md:border md:p-5 md:shadow-2xl"
+				className="relative w-full rounded-t-3xl border-t border-white/15 bg-stone-900 px-4 pb-[max(1.75rem,env(safe-area-inset-bottom))] pt-3 text-white shadow-[0_-12px_48px_rgba(0,0,0,.6)] outline-none md:w-[40rem] md:rounded-2xl md:border md:p-6 md:shadow-2xl lg:w-[48rem]"
 			>
 				<div className="mx-auto mb-3 h-1 w-10 rounded-full bg-white/20 md:hidden" aria-hidden="true" />
-				<div className="mb-3 flex items-center justify-between gap-3">
-					<h2 className="min-w-0 flex-1 truncate text-base font-bold">{title}</h2>
+				<div className="mb-3 flex items-center justify-between gap-3 lg:mb-4">
+					<h2 className="min-w-0 flex-1 truncate text-base font-bold md:text-lg lg:text-xl">{title}</h2>
 					{aside}
 					<button
 						type="button"
@@ -125,7 +125,7 @@ function Panel({ title, value, busy, opener, onRate, onClear, onClose, aside, st
 				</div>
 				{step ?? (
 					<>
-						<ScoreControl value={value} busy={busy} onRate={onRate} onClear={onClear} />
+						<ScoreControl value={value} busy={busy} onRate={onRate} onClear={onClear} fit="dialog" />
 						{footer}
 					</>
 				)}
