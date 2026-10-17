@@ -21,6 +21,10 @@ import {
 import { SidesOfYou } from "~/ui/taste/tabs/SidesOfYou"
 import { TasteTabFrame } from "~/ui/taste/tabs/TasteTabFrame"
 import { type PageMeta, buildMeta } from "~/utils/meta"
+import { getLocaleFromRequest } from "~/server/cache-identity.server"
+import { getSmartTitlesForGuest } from "~/server/smart-titles.server"
+import type { ScoringMedia } from "~/ui/scoring/types"
+import { FreshTastePrototype, freshVariant } from "~/ui/prototype-fresh-taste/FreshTaste"
 
 export { pageHeaders as headers } from "~/utils/headers"
 
@@ -49,6 +53,12 @@ export const meta: MetaFunction<typeof loader> = () => {
 }
 
 async function canonicalLoader({ request }: LoaderFunctionArgs) {
+	// PROTOTYPE: ?variant= shows a fresh member's page, with the best-known titles to rate.
+	if (freshVariant(new URL(request.url).searchParams)) {
+		const { locale } = getLocaleFromRequest(request)
+		const shelf = await getSmartTitlesForGuest({ count: 120, locale, ratingsCount: 0 })
+		return { prototypeShelf: shelf as unknown as ScoringMedia[] } as unknown as TasteTabData<"sides">
+	}
 	const { userId } = await tastePageViewer(request)
 	return loadTasteTab(request, "sides", userId)
 }
@@ -56,6 +66,7 @@ async function canonicalLoader({ request }: LoaderFunctionArgs) {
 export default function TasteRoute() {
 	const data = useLoaderData<typeof loader>() as TasteTabData<"sides">
 	const [params, setParams] = useSearchParams()
+	const prototype = freshVariant(params)
 	// The side on show takes the address's place, without a history entry: Back leaves the page in one step.
 	const onAddress = useCallback(
 		(id: string | null) =>
@@ -66,6 +77,13 @@ export default function TasteRoute() {
 		[setParams],
 	)
 
+	if (prototype)
+		return (
+			<FreshTastePrototype
+				variant={prototype}
+				shelf={(data as unknown as { prototypeShelf?: ScoringMedia[] }).prototypeShelf ?? []}
+			/>
+		)
 	return (
 		<TasteTabFrame tab="sides" memberView={data.view}>
 			{(view) => (
