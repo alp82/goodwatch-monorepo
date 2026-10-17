@@ -11,17 +11,42 @@ import EpisodeGridLink from "~/ui/details/hero/EpisodeGridLink"
 import RatingChips from "~/ui/details/hero/RatingChips"
 import ScoreRing from "~/ui/details/hero/ScoreRing"
 import TitleSidesLine from "~/ui/details/hero/TitleSidesLine"
-import { HeroBackdropImage, HeroPoster, TrailerButton } from "~/ui/details/hero/Trailer"
+import {
+	HeroBackdropImage,
+	HeroPoster,
+	TrailerButton,
+} from "~/ui/details/hero/Trailer"
 import WhereToWatch from "~/ui/details/hero/WhereToWatch"
 import type { SectionIds } from "~/ui/details/sections"
 import { ScoreControl } from "~/ui/title-actions/ScoreControl"
 import { getVibeColorValue, scoreLabels } from "~/utils/ratings"
 import type { SectionProps } from "~/utils/scroll"
-import { EyeIcon, HideButton, ProtoScoreDialog, ScoreRect, SeenButton, StateStrip, WantButton, useOpenAfterSeen, useProtoToasts } from "./pieces"
+import { ConfirmUnsee } from "./confirm"
+import {
+	EyeIcon,
+	HideButton,
+	ProtoScoreDialog,
+	ScoreRect,
+	SeenButton,
+	StateStrip,
+	WantButton,
+	useOpenAfterSeen,
+	useProtoToasts,
+} from "./pieces"
+import {
+	ChipDialog,
+	FooterDialog,
+	MovieSplit,
+	SegmentedDialog,
+	ShowBlockActions,
+	ShowBlockRatings,
+	ShowSplit,
+	ShowStacked,
+	StripDialog,
+	movieTile,
+} from "./round3"
 import { ProtoProvider, useFlash, useProto } from "./store"
 import { VerdictTile } from "./verdict"
-import { ConfirmUnsee } from "./confirm"
-import { ChipDialog, FooterDialog, MovieSplit, SegmentedDialog, ShowBlockActions, ShowBlockRatings, ShowSplit, ShowStacked, StripDialog, movieTile } from "./round3"
 
 export const MOVIE_VARIANTS = {
 	live: "Live page (no change)",
@@ -40,7 +65,21 @@ export const SHOW_VARIANTS = {
 } as const
 
 /** Every key that renders a variant: this round's, and the earlier rounds' by URL. */
-export const ALL_VARIANTS = ["A", "B", "C", "D", "steps", "switch", "chip", "segmented", "strip", "footer", "split", "stacked", "block"] as const
+export const ALL_VARIANTS = [
+	"A",
+	"B",
+	"C",
+	"D",
+	"steps",
+	"switch",
+	"chip",
+	"segmented",
+	"strip",
+	"footer",
+	"split",
+	"stacked",
+	"block",
+] as const
 export type SeenScoreVariant = (typeof ALL_VARIANTS)[number]
 
 type Media = MovieResult | ShowResult
@@ -65,31 +104,64 @@ export default function PrototypeHero(props: Props) {
 }
 
 // A copy of DetailsHero with two slots: what follows the GoodWatch ring in the ratings, and the actions block.
-function Frame({ variant, media, country, shownCountry, preview, episodeGrid = null, sectionProps, sides = null }: Props) {
+function Frame({
+	variant,
+	media,
+	country,
+	shownCountry,
+	preview,
+	episodeGrid = null,
+	sectionProps,
+	sides = null,
+}: Props) {
 	useProtoToasts(["A", "B", "C", "D"].includes(variant))
 	const sites = (
-		<div data-hero-sites className="flex min-w-0 items-center justify-between gap-3 empty:hidden">
+		<div
+			data-hero-sites
+			className="flex min-w-0 items-center justify-between gap-3 empty:hidden"
+		>
 			<RatingChips media={media} fill={!episodeGrid} />
 			{episodeGrid && <EpisodeGridLink grid={episodeGrid} />}
 		</div>
 	)
-	const v = variant === "split" && media.mediaType === "show" ? SHOW_SPLIT : VARIANTS[variant]
+	const v =
+		variant === "split" && media.mediaType === "show"
+			? SHOW_SPLIT
+			: VARIANTS[variant]
 	return (
 		<div className="relative mx-auto mb-10 mt-4 max-w-7xl px-4 sm:px-6 lg:px-8">
 			<div {...sectionProps.overview}>
-				<section data-title-overview className="relative isolate z-30 min-w-0 rounded-2xl border border-white/10 bg-stone-950">
+				<section
+					data-title-overview
+					className="relative isolate z-30 min-w-0 rounded-2xl border border-white/10 bg-stone-950"
+				>
 					<div className="relative">
-						<div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden rounded-t-2xl" aria-hidden="true">
-							<HeroBackdropImage media={media} className="h-full w-full object-cover object-[center_22%]" />
+						<div
+							className="pointer-events-none absolute inset-0 -z-10 overflow-hidden rounded-t-2xl"
+							aria-hidden="true"
+						>
+							<HeroBackdropImage
+								media={media}
+								className="h-full w-full object-cover object-[center_22%]"
+							/>
 							<div className="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-950/60 to-stone-950/10" />
 							<div className="absolute inset-0 bg-gradient-to-r from-stone-950/85 via-stone-950/20 to-transparent" />
 						</div>
-						<TrailerButton media={media} className="absolute right-3 top-3 md:right-5 md:top-4" />
+						<TrailerButton
+							media={media}
+							className="absolute right-3 top-3 md:right-5 md:top-4"
+						/>
 						<div className="px-4 pb-4 pt-14 md:px-6 md:pb-5 md:pt-10">
 							<div className="flex items-end gap-3 md:gap-6">
 								<HeroPoster media={media} className="w-[4.5rem] md:w-32" />
-								<div data-hero-ratings className={`min-w-0 flex-1 ${v.wideRatings ? "md:max-w-2xl" : "md:max-w-md"}`}>
-									<div data-hero-scores className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between md:gap-3">
+								<div
+									data-hero-ratings
+									className={`min-w-0 flex-1 ${v.wideRatings ? "md:max-w-2xl" : "md:max-w-md"}`}
+								>
+									<div
+										data-hero-scores
+										className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between md:gap-3"
+									>
 										<div className="md:hidden">
 											<ScoreRing media={media} size={48} />
 										</div>
@@ -105,12 +177,24 @@ function Frame({ variant, media, country, shownCountry, preview, episodeGrid = n
 							{v.underRatings && <v.underRatings />}
 						</div>
 					</div>
-					{sides && <TitleSidesLine sides={sides} mediaType={media.mediaType} tmdbId={media.details.tmdb_id} />}
+					{sides && (
+						<TitleSidesLine
+							sides={sides}
+							mediaType={media.mediaType}
+							tmdbId={media.details.tmdb_id}
+						/>
+					)}
 					<div className="grid grid-cols-[minmax(0,1fr)] gap-2.5 p-3 md:p-5 md:pt-4 lg:grid-cols-2">
 						<div className="flex min-w-0 flex-col justify-center rounded-xl bg-white/[0.07] p-3 ring-1 ring-white/10">
 							<v.actions />
 						</div>
-						<WhereToWatch media={media} country={country} shownCountry={shownCountry} preview={preview} className="rounded-xl bg-white/[0.035] p-3 ring-1 ring-white/[0.07]" />
+						<WhereToWatch
+							media={media}
+							country={country}
+							shownCountry={shownCountry}
+							preview={preview}
+							className="rounded-xl bg-white/[0.035] p-3 ring-1 ring-white/[0.07]"
+						/>
 					</div>
 					<ConfirmUnsee />
 					<div className="px-3 pb-3 md:px-5 md:pb-4">
@@ -127,12 +211,17 @@ function OtherActions() {
 	const p = useProto()
 	const { watch, episodes } = p.state
 	// A show in progress: no Want to See (as live), the next episode instead (stub).
-	if (p.media.mediaType === "show" && (watch === "watching" || watch === "on_hold" || watch === "dropped"))
+	if (
+		p.media.mediaType === "show" &&
+		(watch === "watching" || watch === "on_hold" || watch === "dropped")
+	)
 		return (
 			<div className="flex min-w-0 items-center gap-2">
 				<span className="inline-flex h-9 min-w-0 flex-1 items-center gap-2 rounded-lg bg-white/10 px-3 text-xs font-semibold text-gray-100">
 					<span className="text-gray-400">Next</span>
-					<span className="truncate">Episode {Math.min(episodes + 1, p.total)} of {p.total}</span>
+					<span className="truncate">
+						Episode {Math.min(episodes + 1, p.total)} of {p.total}
+					</span>
 					<span className="ml-auto text-gray-400">Episode list ›</span>
 				</span>
 			</div>
@@ -153,13 +242,26 @@ function ActionsA() {
 	const rect = useRef<HTMLButtonElement>(null)
 	return (
 		<div className="flex flex-col gap-2">
-			<p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-gray-400">Your {p.media.mediaType}</p>
+			<p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-gray-400">
+				Your {p.media.mediaType}
+			</p>
 			<div className="grid grid-cols-2 gap-2">
 				<SeenButton size="md" className="!h-12 !rounded-xl" />
-				<ScoreRect ref={rect} score={p.state.score} mediaType={p.media.mediaType} onClick={dialog.openPlain} prompt={p.seen && p.state.score == null} />
+				<ScoreRect
+					ref={rect}
+					score={p.state.score}
+					mediaType={p.media.mediaType}
+					onClick={dialog.openPlain}
+					prompt={p.seen && p.state.score == null}
+				/>
 			</div>
 			<OtherActions />
-			<ProtoScoreDialog open={dialog.open} afterSeen={dialog.afterSeen} onClose={dialog.close} opener={rect} />
+			<ProtoScoreDialog
+				open={dialog.open}
+				afterSeen={dialog.afterSeen}
+				onClose={dialog.close}
+				opener={rect}
+			/>
 		</div>
 	)
 }
@@ -170,7 +272,8 @@ function RatingsB() {
 	const p = useProto()
 	const [open, setOpen] = useState(false)
 	const ref = useRef<HTMLButtonElement>(null)
-	const { score } = p.state; const seen = p.seen
+	const { score } = p.state
+	const seen = p.seen
 	const glow = useFlash(p.event?.kind === "auto-seen" ? p.event.at : undefined)
 	const color = score ? getVibeColorValue(score) : ""
 	return (
@@ -186,27 +289,49 @@ function RatingsB() {
 							? "border-2 border-dashed border-green-400/70 bg-green-400/[0.07] pl-2.5 pr-3.5 hover:bg-green-400/[0.12]"
 							: "border-2 border-dashed border-amber-400/70 bg-amber-300/[0.06] pl-2.5 pr-3.5 hover:border-amber-300 hover:bg-amber-300/[0.12]"
 				} ${glow ? "ring-2 ring-green-300" : ""}`}
-				style={score ? { background: `${color}26`, boxShadow: `inset 0 0 0 1.5px ${color}` } : undefined}
+				style={
+					score
+						? {
+								background: `${color}26`,
+								boxShadow: `inset 0 0 0 1.5px ${color}`,
+							}
+						: undefined
+				}
 			>
 				{score ? (
 					<span
 						className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-lg font-black tabular-nums"
-						style={{ background: color, color: score <= 3 ? "#fff" : "#0a0a0a" }}
+						style={{
+							background: color,
+							color: score <= 3 ? "#fff" : "#0a0a0a",
+						}}
 					>
 						{score}
 					</span>
 				) : (
-					<EyeIcon className={`h-5 w-5 shrink-0 ${seen ? "text-green-400" : "text-amber-300"}`} />
+					<EyeIcon
+						className={`h-5 w-5 shrink-0 ${seen ? "text-green-400" : "text-amber-300"}`}
+					/>
 				)}
 				<span className="min-w-0 flex-1 leading-tight">
-					<span className={`flex items-center gap-1 whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.08em] ${score ? "text-gray-400" : seen ? "text-green-300/90" : "text-amber-200/80"}`}>
-						{seen && (score ? <EyeIcon className="h-3 w-3 text-green-400" /> : null)}
+					<span
+						className={`flex items-center gap-1 whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.08em] ${score ? "text-gray-400" : seen ? "text-green-300/90" : "text-amber-200/80"}`}
+					>
+						{seen &&
+							(score ? <EyeIcon className="h-3 w-3 text-green-400" /> : null)}
 						{seen ? "Seen" : "Seen it?"}
 					</span>
-					<span className="block truncate text-sm font-bold text-white">{score ? scoreLabels[score] : "Rate it"}</span>
+					<span className="block truncate text-sm font-bold text-white">
+						{score ? scoreLabels[score] : "Rate it"}
+					</span>
 				</span>
 			</button>
-			<ProtoScoreDialog open={open} onClose={() => setOpen(false)} opener={ref} seenToggle />
+			<ProtoScoreDialog
+				open={open}
+				onClose={() => setOpen(false)}
+				opener={ref}
+				seenToggle
+			/>
 		</>
 	)
 }
@@ -217,7 +342,11 @@ function RatingsC() {
 	const p = useProto()
 	return (
 		<div className="flex gap-2 max-md:w-full md:shrink-0">
-			<SeenButton size="md" label="auto" className="!h-12 !w-auto flex-1 !rounded-xl md:!w-36 md:flex-none" />
+			<SeenButton
+				size="md"
+				label="auto"
+				className="!h-12 !w-auto flex-1 !rounded-xl md:!w-36 md:flex-none"
+			/>
 			<ScoreRect
 				score={p.state.score}
 				mediaType={p.media.mediaType}
@@ -253,7 +382,11 @@ function UnderRatingsC() {
 					{p.seen && <EyeIcon className="h-4 w-4 text-green-400" />}
 					{p.seen && p.state.score == null ? "Seen. How was it?" : "Your score"}
 				</p>
-				<button type="button" onClick={() => setOpen(false)} className="cursor-pointer text-xs text-gray-400 underline decoration-white/20 underline-offset-2 hover:text-white">
+				<button
+					type="button"
+					onClick={() => setOpen(false)}
+					className="cursor-pointer text-xs text-gray-400 underline decoration-white/20 underline-offset-2 hover:text-white"
+				>
 					{p.state.score == null ? "Skip for now" : "Done"}
 				</button>
 			</div>
@@ -297,21 +430,42 @@ function ActionsD() {
 			<SeenButton className="flex-1" />
 			<HideButton className="max-sm:w-9 max-sm:flex-none sm:flex-1" />
 			<span ref={ref} />
-			<ProtoScoreDialog open={dialog.open} afterSeen={dialog.afterSeen} onClose={dialog.close} opener={ref} />
+			<ProtoScoreDialog
+				open={dialog.open}
+				afterSeen={dialog.afterSeen}
+				onClose={dialog.close}
+				opener={ref}
+			/>
 		</div>
 	)
 }
 
 const VARIANTS: Record<
 	SeenScoreVariant,
-	{ ratings?: () => React.ReactNode; underRatings?: () => React.ReactNode; actions: () => React.ReactNode; wideRatings?: boolean }
+	{
+		ratings?: () => React.ReactNode
+		underRatings?: () => React.ReactNode
+		actions: () => React.ReactNode
+		wideRatings?: boolean
+	}
 > = {
 	A: { actions: ActionsA },
 	B: { ratings: RatingsB, actions: OtherActions },
-	C: { ratings: RatingsC, underRatings: UnderRatingsC, actions: OtherActions, wideRatings: true },
+	C: {
+		ratings: RatingsC,
+		underRatings: UnderRatingsC,
+		actions: OtherActions,
+		wideRatings: true,
+	},
 	D: { ratings: RatingsD, actions: ActionsD },
-	steps: { ratings: () => <VerdictTile dialog="steps" />, actions: OtherActions },
-	switch: { ratings: () => <VerdictTile dialog="switch" />, actions: OtherActions },
+	steps: {
+		ratings: () => <VerdictTile dialog="steps" />,
+		actions: OtherActions,
+	},
+	switch: {
+		ratings: () => <VerdictTile dialog="switch" />,
+		actions: OtherActions,
+	},
 	chip: { ratings: movieTile(ChipDialog), actions: OtherActions },
 	segmented: { ratings: movieTile(SegmentedDialog), actions: OtherActions },
 	strip: { ratings: movieTile(StripDialog), actions: OtherActions },
@@ -321,7 +475,11 @@ const VARIANTS: Record<
 	block: { ratings: ShowBlockRatings, actions: BlockActions },
 }
 
-const SHOW_SPLIT: (typeof VARIANTS)[SeenScoreVariant] = { ratings: ShowSplit, actions: OtherActions, wideRatings: true }
+const SHOW_SPLIT: (typeof VARIANTS)[SeenScoreVariant] = {
+	ratings: ShowSplit,
+	actions: OtherActions,
+	wideRatings: true,
+}
 
 function BlockActions() {
 	const p = useProto()

@@ -1,7 +1,19 @@
 // PROTOTYPE - throwaway (seen-score). In-memory watch state / score / Want / Not interested for one title page,
 // seeded once from the member's real data. Nothing here writes to the account.
-import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react"
-import { useIsNotInterested, useIsOnWishlist, useUserScore, useWatchState } from "~/hooks/useUserDataAccessors"
+import {
+	createContext,
+	useCallback,
+	useContext,
+	useEffect,
+	useRef,
+	useState,
+} from "react"
+import {
+	useIsNotInterested,
+	useIsOnWishlist,
+	useUserScore,
+	useWatchState,
+} from "~/hooks/useUserDataAccessors"
 import type { Score } from "~/server/scores.server"
 import type { ScoredMedia } from "~/ui/user/actions/ScoreAction"
 
@@ -24,7 +36,9 @@ export type ProtoEvent =
 	| { kind: "blocked"; at: number; message: string }
 	| null
 
-export type ProtoMedia = ScoredMedia & { details: { number_of_episodes?: number; in_production?: boolean } }
+export type ProtoMedia = ScoredMedia & {
+	details: { number_of_episodes?: number; in_production?: boolean }
+}
 
 function useProtoStore(media: ProtoMedia) {
 	const { mediaType } = media
@@ -35,7 +49,9 @@ function useProtoStore(media: ProtoMedia) {
 	const realWant = useIsOnWishlist(mediaType, tmdbId)
 	const realHidden = useIsNotInterested(mediaType, tmdbId)
 	const real: ProtoState = {
-		watch: realWatch?.state ?? (mediaType === "movie" && realScore != null ? "seen" : "not_started"),
+		watch:
+			realWatch?.state ??
+			(mediaType === "movie" && realScore != null ? "seen" : "not_started"),
 		episodes: realWatch?.episodesWatched ?? 0,
 		score: realScore,
 		want: realWant,
@@ -69,9 +85,16 @@ function useProtoStore(media: ProtoMedia) {
 		return from === "seen" ? beforeSeenAll.current : now
 	}
 
+	/** A change that loses something waits here for the member's yes: a movie's score, or a show's episodes. */
+	const [pending, setPending] = useState<ProtoState | null>(null)
+
 	const setWatch = useCallback(
 		(watch: Watch) => {
 			if (watch === state.watch) return
+			// Not started resets the episode ticks: ask first when there are any. The score stays (a show can be
+			// scored without tracking it).
+			if (watch === "not_started" && mediaType === "show" && state.episodes > 0)
+				return setPending({ ...state, watch, episodes: 0 })
 			const before = state
 			set((s) => ({
 				...s,
@@ -80,34 +103,49 @@ function useProtoStore(media: ProtoMedia) {
 				// The score stays whatever the state: only Clear score removes it.
 				hidden: watch === "not_started" ? s.hidden : false,
 			}))
-			if (watch === "seen" && before.score == null) setEvent({ kind: "seen-on", at: Date.now() })
+			if (watch === "seen" && before.score == null)
+				setEvent({ kind: "seen-on", at: Date.now() })
 			else setEvent(null)
 		},
-		[state, set],
+		[state, set, mediaType],
 	)
-
-	/** Taking back Seen on a scored movie asks first: the score goes with it. */
-	const [confirming, setConfirming] = useState(false)
 
 	/** The Seen toggle. */
 	const pressSeen = useCallback(() => {
 		if (state.watch === "not_started") return setWatch("seen")
-		if (state.score != null && mediaType === "movie") return setConfirming(true)
+		// A scored movie counts as Seen: Not seen takes the score with it, so ask first.
+		if (state.score != null && mediaType === "movie")
+			return setPending({
+				...state,
+				watch: "not_started",
+				episodes: 0,
+				score: null,
+			})
 		setWatch("not_started")
-	}, [state.watch, state.score, mediaType, setWatch])
+	}, [state, mediaType, setWatch])
 
-	const confirmUnsee = useCallback(() => {
-		set((s) => ({ ...s, watch: "not_started", episodes: 0, score: null }))
+	const confirmPending = useCallback(() => {
+		if (!pending) return
+		set(() => pending)
 		setEvent(null)
-		setConfirming(false)
-	}, [set])
+		setPending(null)
+	}, [pending, set])
 
 	// A score marks a movie as Seen. A show's status stays: a score says nothing about how far you got.
 	const rate = useCallback(
 		(score: Score) => {
 			const auto = mediaType === "movie" && state.watch === "not_started"
-			set((s) => ({ ...s, score, watch: auto ? "seen" : s.watch, hidden: false }))
-			setEvent(auto ? { kind: "auto-seen", at: Date.now(), from: "not_started" } : null)
+			set((s) => ({
+				...s,
+				score,
+				watch: auto ? "seen" : s.watch,
+				hidden: false,
+			}))
+			setEvent(
+				auto
+					? { kind: "auto-seen", at: Date.now(), from: "not_started" }
+					: null,
+			)
 		},
 		[state.watch, set, mediaType],
 	)
@@ -122,9 +160,9 @@ function useProtoStore(media: ProtoMedia) {
 		clearEvent: () => setEvent(null),
 		setWatch,
 		pressSeen,
-		confirming,
-		confirmUnsee,
-		cancelUnsee: () => setConfirming(false),
+		pending,
+		confirmPending,
+		cancelPending: () => setPending(null),
 		rate,
 		clearScore: () => set((s) => ({ ...s, score: null })),
 		undo: (to: ProtoState) => {
@@ -139,7 +177,8 @@ function useProtoStore(media: ProtoMedia) {
 			setEvent(null)
 		},
 		/** Rated or started titles can't be hidden, as on the live page. */
-		canHide: state.hidden || (state.watch === "not_started" && state.score == null),
+		canHide:
+			state.hidden || (state.watch === "not_started" && state.score == null),
 		media,
 	}
 }
@@ -148,7 +187,30 @@ export type ProtoStore = ReturnType<typeof useProtoStore>
 
 const Ctx = createContext<ProtoStore | null>(null)
 
-export function ProtoProvider({ media, children }: { media: ProtoMedia; children: React.ReactNode }) {
+/** The same store, showing another state: for previews of a change. */
+export function ProtoPreview({
+	state,
+	children,
+}: { state: ProtoState; children: React.ReactNode }) {
+	const store = useProto()
+	return (
+		<Ctx.Provider
+			value={{
+				...store,
+				state,
+				seen: state.watch !== "not_started",
+				event: null,
+			}}
+		>
+			{children}
+		</Ctx.Provider>
+	)
+}
+
+export function ProtoProvider({
+	media,
+	children,
+}: { media: ProtoMedia; children: React.ReactNode }) {
 	const store = useProtoStore(media)
 	return <Ctx.Provider value={store}>{children}</Ctx.Provider>
 }

@@ -11,7 +11,18 @@ import { getVibeColorValue, scoreLabels } from "~/utils/ratings"
 import { SeenToggle } from "./confirm"
 import { EyeIcon, ScoreRect } from "./pieces"
 import { type Watch, useFlash, useProto } from "./store"
-import { type DialogProps, EyeSlash, LOOK, Notes, StatusPill, SwitchAsk, VerdictDialog, VerdictTile, WatchIcon, useWords } from "./verdict"
+import {
+	type DialogProps,
+	EyeSlash,
+	LOOK,
+	Notes,
+	StatusPill,
+	SwitchAsk,
+	VerdictDialog,
+	VerdictTile,
+	WatchIcon,
+	useWords,
+} from "./verdict"
 
 // ---------------------------------------------------------------------------------------------------------
 // Movies: one dialog, five Seen toggles
@@ -31,7 +42,12 @@ function Ask() {
 	const p = useProto()
 	return (
 		<p className="mb-2 text-sm font-semibold text-gray-400">
-			How was it? {!p.seen && <span className="font-normal text-gray-500">A score marks it as Seen.</span>}
+			How was it?{" "}
+			{!p.seen && (
+				<span className="font-normal text-gray-500">
+					A score marks it as Seen.
+				</span>
+			)}
 		</p>
 	)
 }
@@ -50,7 +66,14 @@ export function ChipDialog({ open, onClose, opener }: DialogProps) {
 			heading={
 				<span className="flex min-w-0 items-center gap-3">
 					<span className="min-w-0 truncate">{p.media.details.title}</span>
-					<ActionButton kind="seen" label="long" size="sm" active={p.seen} onClick={toggle} className="!w-auto shrink-0 !px-3" />
+					<ActionButton
+						kind="seen"
+						label="long"
+						size="sm"
+						active={p.seen}
+						onClick={toggle}
+						className="!w-auto shrink-0 !px-3"
+					/>
 				</span>
 			}
 			top={<Ask />}
@@ -76,7 +99,10 @@ export function SegmentedDialog({ open, onClose, opener }: DialogProps) {
 			heading={
 				<span className="flex min-w-0 items-center gap-3">
 					<span className="min-w-0 truncate">{p.media.details.title}</span>
-					<span role="radiogroup" className="inline-flex shrink-0 rounded-lg bg-white/[0.06] p-0.5 text-xs font-semibold ring-1 ring-white/10">
+					<span
+						role="radiogroup"
+						className="inline-flex shrink-0 rounded-lg bg-white/[0.06] p-0.5 text-xs font-semibold ring-1 ring-white/10"
+					>
 						{([false, true] as const).map((seen) => {
 							const on = p.seen === seen
 							return (
@@ -88,7 +114,11 @@ export function SegmentedDialog({ open, onClose, opener }: DialogProps) {
 									onClick={() => p.setWatch(seen ? "seen" : "not_started")}
 									className={`inline-flex h-7 cursor-pointer items-center gap-1.5 rounded-md px-2.5 ${on ? (seen ? "bg-green-500 text-black" : "bg-white/15 text-white") : "text-gray-400 hover:text-white"}`}
 								>
-									{seen ? <EyeIcon className="h-3.5 w-3.5" /> : <EyeSlash className="h-3.5 w-3.5" />}
+									{seen ? (
+										<EyeIcon className="h-3.5 w-3.5" />
+									) : (
+										<EyeSlash className="h-3.5 w-3.5" />
+									)}
 									{seen ? "Seen" : "Not seen"}
 								</button>
 							)
@@ -123,9 +153,15 @@ export function StripDialog({ open, onClose, opener }: DialogProps) {
 						type="button"
 						aria-pressed={p.seen}
 						onClick={toggle}
-						title={p.seen ? "Seen. Press to take it back (clears the score)." : "Mark as Seen without a score"}
+						title={
+							p.seen
+								? "Seen. Press to take it back (clears the score)."
+								: "Mark as Seen without a score"
+						}
 						className={`flex w-16 shrink-0 cursor-pointer flex-col items-center justify-center gap-1 rounded-lg text-xs font-semibold transition-colors ${
-							p.seen ? "bg-green-500 text-black" : "bg-white/10 text-gray-200 hover:bg-white/20"
+							p.seen
+								? "bg-green-500 text-black"
+								: "bg-white/10 text-gray-200 hover:bg-white/20"
 						}`}
 					>
 						<EyeIcon className={`h-5 w-5 ${p.seen ? "" : "text-green-300"}`} />
@@ -156,13 +192,25 @@ export function FooterDialog({ open, onClose, opener }: DialogProps) {
 			busy={false}
 			opener={opener}
 			hideClear
-			top={<p className="mb-2 text-sm font-semibold text-gray-400">How was it?</p>}
+			top={
+				<p className="mb-2 text-sm font-semibold text-gray-400">How was it?</p>
+			}
 			footer={
 				<>
 					<div className="mt-4 flex items-center gap-3 border-t border-white/10 pt-4">
-						<ActionButton kind="seen" label="long" active={p.seen} onClick={toggle} className="flex-1" />
+						<ActionButton
+							kind="seen"
+							label="long"
+							active={p.seen}
+							onClick={toggle}
+							className="flex-1"
+						/>
 					</div>
-					<p className="mt-2 text-center text-xs text-gray-500">{p.seen ? "Taking Seen back clears the score." : "A score marks it as Seen."}</p>
+					<p className="mt-2 text-center text-xs text-gray-500">
+						{p.seen
+							? "Taking Seen back clears the score."
+							: "A score marks it as Seen."}
+					</p>
 					<Notes autoNote={false} onDone={onClose} />
 				</>
 			}
@@ -192,20 +240,13 @@ export function MovieSplit() {
 	return (
 		<>
 			<Joined
-				left={
-					<button
-						type="button"
-						aria-pressed={p.seen}
-						onClick={p.pressSeen}
-						className={`flex h-full w-[4.5rem] shrink-0 cursor-pointer flex-col items-center justify-center gap-0.5 text-[11px] font-semibold transition-colors ${
-							p.seen ? "bg-green-500 text-black" : "text-gray-200 hover:bg-white/10"
-						} ${glow ? "ring-2 ring-inset ring-green-200" : ""}`}
-					>
-						<EyeIcon className={`h-4 w-4 ${p.seen ? "" : "text-green-300"}`} />
-						{p.seen ? "Seen" : "Seen?"}
-					</button>
+				left={<SeenHalf onClick={p.pressSeen} glow={glow} />}
+				right={
+					<ScoreHalf
+						onClick={() => (setAfterSeen(false), setOpen(true))}
+						ref={ref}
+					/>
 				}
-				right={<ScoreHalf onClick={() => (setAfterSeen(false), setOpen(true))} ref={ref} />}
 			/>
 			<ScoreDialog
 				title={p.media.details.title}
@@ -215,7 +256,9 @@ export function MovieSplit() {
 				opener={ref}
 				heading={
 					<span className="flex min-w-0 items-center gap-3">
-						<span className="min-w-0 flex-1 truncate">{p.media.details.title}</span>
+						<span className="min-w-0 flex-1 truncate">
+							{p.media.details.title}
+						</span>
 						<SeenToggle />
 					</span>
 				}
@@ -223,7 +266,11 @@ export function MovieSplit() {
 					<>
 						{afterSeen && (
 							<div className="mt-4 flex justify-end">
-								<button type="button" onClick={() => setOpen(false)} className="cursor-pointer text-sm text-gray-400 underline decoration-white/20 underline-offset-2 hover:text-white">
+								<button
+									type="button"
+									onClick={() => setOpen(false)}
+									className="cursor-pointer text-sm text-gray-400 underline decoration-white/20 underline-offset-2 hover:text-white"
+								>
 									Skip for now
 								</button>
 							</div>
@@ -242,19 +289,69 @@ export function MovieSplit() {
 	)
 }
 
+/** The Seen half of the movie's split control. */
+function SeenHalf({
+	onClick,
+	glow = false,
+}: { onClick?: () => void; glow?: boolean }) {
+	const p = useProto()
+	return (
+		<button
+			type="button"
+			aria-pressed={p.seen}
+			onClick={onClick}
+			className={`flex h-full w-[4.5rem] shrink-0 cursor-pointer flex-col items-center justify-center gap-0.5 text-[11px] font-semibold transition-colors ${
+				p.seen ? "bg-green-500 text-black" : "text-gray-200 hover:bg-white/10"
+			} ${glow ? "ring-2 ring-inset ring-green-200" : ""}`}
+		>
+			<EyeIcon className={`h-4 w-4 ${p.seen ? "" : "text-green-300"}`} />
+			{p.seen ? "Seen" : "Seen?"}
+		</button>
+	)
+}
+
+/** The split control as a still picture of the store's state (wrap it in ProtoPreview for another state). */
+export function SplitPicture() {
+	const p = useProto()
+	return (
+		<div
+			{...{ inert: "" }}
+			aria-hidden="true"
+			className="pointer-events-none flex"
+		>
+			<Joined
+				className="w-full! min-w-0! shrink!"
+				left={p.media.mediaType === "show" ? <StatusHalf /> : <SeenHalf />}
+				right={<ScoreHalf onClick={() => {}} />}
+			/>
+		</div>
+	)
+}
+
 // ---------------------------------------------------------------------------------------------------------
 // Shared bits for the split controls
 // ---------------------------------------------------------------------------------------------------------
 
 /** One rounded control, 48px high, in two halves with a line between. */
-function Joined({ left, right, className = "" }: { left: React.ReactNode; right: React.ReactNode; className?: string }) {
+function Joined({
+	left,
+	right,
+	className = "",
+}: { left: React.ReactNode; right: React.ReactNode; className?: string }) {
 	const p = useProto()
 	const score = p.state.score
 	const color = score ? getVibeColorValue(score) : ""
 	return (
 		<div
 			className={`relative flex h-12 min-w-0 items-stretch overflow-visible rounded-xl max-md:w-full md:min-w-[16rem] md:shrink-0 ${score ? "" : "ring-1 ring-white/15 bg-white/[0.05]"} ${className}`}
-			style={score ? { background: `${color}1f`, boxShadow: `inset 0 0 0 1.5px ${color}` } : undefined}
+			style={
+				score
+					? {
+							background: `${color}1f`,
+							boxShadow: `inset 0 0 0 1.5px ${color}`,
+						}
+					: undefined
+			}
 		>
 			<div className="flex shrink-0 overflow-hidden rounded-l-xl">{left}</div>
 			<span className="w-px shrink-0 bg-white/15" aria-hidden="true" />
@@ -264,20 +361,37 @@ function Joined({ left, right, className = "" }: { left: React.ReactNode; right:
 }
 
 /** The score half of a joined control: the number on its color, or the ask. */
-const ScoreHalf = ({ onClick, ref }: { onClick: () => void; ref?: React.Ref<HTMLButtonElement> }) => {
+const ScoreHalf = ({
+	onClick,
+	ref,
+}: { onClick: () => void; ref?: React.Ref<HTMLButtonElement> }) => {
 	const p = useProto()
 	const { ask } = useWords()
 	const score = p.state.score
 	const color = score ? getVibeColorValue(score) : ""
 	const soFar = p.state.watch === "watching" || p.state.watch === "on_hold"
 	return (
-		<button ref={ref} type="button" aria-haspopup="dialog" onClick={onClick} className="flex min-w-0 flex-1 cursor-pointer items-center gap-2.5 rounded-r-xl pl-2 pr-3 text-left hover:bg-white/[0.06]">
+		<button
+			ref={ref}
+			type="button"
+			aria-haspopup="dialog"
+			onClick={onClick}
+			className="flex min-w-0 flex-1 cursor-pointer items-center gap-2.5 rounded-r-xl pl-2 pr-3 text-left hover:bg-white/[0.06]"
+		>
 			{score ? (
-				<span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-lg font-black tabular-nums" style={{ background: color, color: score <= 3 ? "#fff" : "#0a0a0a" }}>
+				<span
+					className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-lg font-black tabular-nums"
+					style={{ background: color, color: score <= 3 ? "#fff" : "#0a0a0a" }}
+				>
 					{score}
 				</span>
 			) : (
-				<svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5 shrink-0 text-amber-300" aria-hidden="true">
+				<svg
+					viewBox="0 0 20 20"
+					fill="currentColor"
+					className="h-5 w-5 shrink-0 text-amber-300"
+					aria-hidden="true"
+				>
 					<path
 						fillRule="evenodd"
 						clipRule="evenodd"
@@ -286,8 +400,12 @@ const ScoreHalf = ({ onClick, ref }: { onClick: () => void; ref?: React.Ref<HTML
 				</svg>
 			)}
 			<span className="min-w-0 flex-1 leading-tight">
-				<span className="block whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.08em] text-gray-400">{score ? "Your score" : p.seen ? ask : "Your score"}</span>
-				<span className="block truncate text-sm font-bold text-white">{score ? scoreLabels[score] : soFar ? "Rate it so far" : "Rate it"}</span>
+				<span className="block whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.08em] text-gray-400">
+					{score ? "Your score" : p.seen ? ask : "Your score"}
+				</span>
+				<span className="block truncate text-sm font-bold text-white">
+					{score ? scoreLabels[score] : soFar ? "Rate it so far" : "Rate it"}
+				</span>
 			</span>
 		</button>
 	)
@@ -297,15 +415,31 @@ const ScoreHalf = ({ onClick, ref }: { onClick: () => void; ref?: React.Ref<HTML
 // Shows: status and score apart, side by side
 // ---------------------------------------------------------------------------------------------------------
 
-const SHOW_STATES: Watch[] = ["not_started", "watching", "on_hold", "dropped", "seen"]
+const SHOW_STATES: Watch[] = [
+	"not_started",
+	"watching",
+	"on_hold",
+	"dropped",
+	"seen",
+]
 
 function useStateLabel() {
 	const p = useProto()
-	return (w: Watch) => (w === "not_started" ? "Not started" : w === "seen" ? (p.running ? "Caught up" : "Seen all") : LOOK[w].word)
+	return (w: Watch) =>
+		w === "not_started"
+			? "Not started"
+			: w === "seen"
+				? p.running
+					? "Caught up"
+					: "Seen all"
+				: LOOK[w].word
 }
 
 /** The status menu: every state, the current one marked. Seen all asks for the score (through the store event). */
-function StatusMenu({ onClose, className = "" }: { onClose: () => void; className?: string }) {
+function StatusMenu({
+	onClose,
+	className = "",
+}: { onClose: () => void; className?: string }) {
 	const p = useProto()
 	const label = useStateLabel()
 	const box = useRef<HTMLSpanElement>(null)
@@ -320,7 +454,11 @@ function StatusMenu({ onClose, className = "" }: { onClose: () => void; classNam
 		}
 	}, [onClose])
 	return (
-		<span ref={box} role="menu" className={`absolute z-40 flex w-52 flex-col rounded-xl bg-stone-800 p-1 text-sm font-semibold shadow-2xl ring-1 ring-white/15 ${className}`}>
+		<span
+			ref={box}
+			role="menu"
+			className={`absolute z-40 flex w-52 flex-col rounded-xl bg-stone-800 p-1 text-sm font-semibold shadow-2xl ring-1 ring-white/15 ${className}`}
+		>
 			{SHOW_STATES.map((w) => (
 				<button
 					key={w}
@@ -333,9 +471,19 @@ function StatusMenu({ onClose, className = "" }: { onClose: () => void; classNam
 					}}
 					className={`flex h-9 cursor-pointer items-center gap-2 rounded-lg px-2.5 text-left hover:bg-white/10 ${p.state.watch === w ? "text-white" : "text-gray-300"}`}
 				>
-					{w === "not_started" ? <EyeSlash className="h-4 w-4 text-gray-400" /> : <WatchIcon watch={w} className={`h-4 w-4 ${LOOK[w].text}`} />}
+					{w === "not_started" ? (
+						<EyeSlash className="h-4 w-4 text-gray-400" />
+					) : (
+						<WatchIcon watch={w} className={`h-4 w-4 ${LOOK[w].text}`} />
+					)}
 					{label(w)}
-					{p.state.watch === w ? <span className="ml-auto text-xs text-gray-400">now</span> : w === "seen" && <span className="ml-auto text-xs text-gray-500">then score</span>}
+					{p.state.watch === w ? (
+						<span className="ml-auto text-xs text-gray-400">now</span>
+					) : (
+						w === "seen" && (
+							<span className="ml-auto text-xs text-gray-500">then score</span>
+						)
+					)}
 				</button>
 			))}
 		</span>
@@ -358,46 +506,85 @@ function useScoreAfterSeenAll() {
 
 function StatusChevron() {
 	return (
-		<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5 shrink-0 opacity-70" aria-hidden="true">
+		<svg
+			viewBox="0 0 16 16"
+			fill="none"
+			stroke="currentColor"
+			strokeWidth="2"
+			className="h-3.5 w-3.5 shrink-0 opacity-70"
+			aria-hidden="true"
+		>
 			<path d="m4 6 4 4 4-4" />
 		</svg>
 	)
 }
 
-/** split (show): [status ▾ | score] as one control in the ratings. */
-export function ShowSplit() {
+/** The status half of the show's split control. */
+function StatusHalf({
+	onClick,
+	expanded = false,
+}: { onClick?: () => void; expanded?: boolean }) {
 	const p = useProto()
 	const { watch } = p.state
 	const { progress } = useWords()
 	const label = useStateLabel()
+	const look = LOOK[watch]
+	return (
+		<button
+			type="button"
+			aria-haspopup="menu"
+			aria-expanded={expanded}
+			onClick={onClick}
+			className={`flex h-full min-w-[6.5rem] shrink-0 cursor-pointer items-center gap-2 px-2.5 text-left ${watch === "not_started" ? "text-gray-200 hover:bg-white/10" : look.pill}`}
+		>
+			{watch === "not_started" ? (
+				<EyeSlash className="h-4 w-4 shrink-0 text-gray-400" />
+			) : (
+				<WatchIcon watch={watch} className="h-4 w-4 shrink-0" />
+			)}
+			<span className="min-w-0 leading-tight">
+				<span className="block whitespace-nowrap text-xs font-bold">
+					{label(watch)}
+				</span>
+				{progress ? (
+					<span className="block text-[11px] tabular-nums opacity-80">
+						{progress} eps
+					</span>
+				) : (
+					watch === "not_started" && (
+						<span className="block text-[11px] text-gray-400">Set status</span>
+					)
+				)}
+			</span>
+			<StatusChevron />
+		</button>
+	)
+}
+
+/** split (show): [status ▾ | score] as one control in the ratings. */
+export function ShowSplit() {
 	const [menu, setMenu] = useState(false)
 	const dialog = useScoreAfterSeenAll()
 	const ref = useRef<HTMLButtonElement>(null)
-	const look = LOOK[watch]
 	return (
 		<div className="relative max-md:w-full md:shrink-0">
 			<Joined
 				className="md:min-w-[18rem]"
-				left={
-					<button
-						type="button"
-						aria-haspopup="menu"
-						aria-expanded={menu}
-						onClick={() => setMenu((m) => !m)}
-						className={`flex h-full min-w-[6.5rem] shrink-0 cursor-pointer items-center gap-2 px-2.5 text-left ${watch === "not_started" ? "text-gray-200 hover:bg-white/10" : look.pill}`}
-					>
-						{watch === "not_started" ? <EyeSlash className="h-4 w-4 shrink-0 text-gray-400" /> : <WatchIcon watch={watch} className="h-4 w-4 shrink-0" />}
-						<span className="min-w-0 leading-tight">
-							<span className="block whitespace-nowrap text-xs font-bold">{label(watch)}</span>
-							{progress ? <span className="block text-[11px] tabular-nums opacity-80">{progress} eps</span> : watch === "not_started" && <span className="block text-[11px] text-gray-400">Set status</span>}
-						</span>
-						<StatusChevron />
-					</button>
-				}
+				left={<StatusHalf expanded={menu} onClick={() => setMenu((m) => !m)} />}
 				right={<ScoreHalf ref={ref} onClick={() => dialog.setOpen(true)} />}
 			/>
-			{menu && <StatusMenu onClose={() => setMenu(false)} className="left-0 top-[calc(100%+6px)]" />}
-			<VerdictDialog kind="switch" open={dialog.open} onClose={() => dialog.setOpen(false)} opener={ref} />
+			{menu && (
+				<StatusMenu
+					onClose={() => setMenu(false)}
+					className="left-0 top-[calc(100%+6px)]"
+				/>
+			)}
+			<VerdictDialog
+				kind="switch"
+				open={dialog.open}
+				onClose={() => dialog.setOpen(false)}
+				opener={ref}
+			/>
 		</div>
 	)
 }
@@ -420,16 +607,35 @@ export function ShowStacked() {
 				onClick={() => setMenu((m) => !m)}
 				className={`inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold ${watch === "not_started" ? "bg-white/10 text-gray-100 hover:bg-white/20" : LOOK[watch].pill}`}
 			>
-				{watch === "not_started" ? <EyeSlash className="h-3.5 w-3.5" /> : <WatchIcon watch={watch} className="h-3.5 w-3.5" />}
+				{watch === "not_started" ? (
+					<EyeSlash className="h-3.5 w-3.5" />
+				) : (
+					<WatchIcon watch={watch} className="h-3.5 w-3.5" />
+				)}
 				{label(watch)}
-				{progress && <span className="tabular-nums opacity-80">· {progress}</span>}
+				{progress && (
+					<span className="tabular-nums opacity-80">· {progress}</span>
+				)}
 				<span className="ml-auto">
 					<StatusChevron />
 				</span>
 			</button>
-			{menu && <StatusMenu onClose={() => setMenu(false)} className="left-0 top-9" />}
-			<ScoreRect ref={ref} score={p.state.score} mediaType="show" onClick={() => dialog.setOpen(true)} prompt={watch === "seen" && p.state.score == null} />
-			<VerdictDialog kind="switch" open={dialog.open} onClose={() => dialog.setOpen(false)} opener={ref} />
+			{menu && (
+				<StatusMenu onClose={() => setMenu(false)} className="left-0 top-9" />
+			)}
+			<ScoreRect
+				ref={ref}
+				score={p.state.score}
+				mediaType="show"
+				onClick={() => dialog.setOpen(true)}
+				prompt={watch === "seen" && p.state.score == null}
+			/>
+			<VerdictDialog
+				kind="switch"
+				open={dialog.open}
+				onClose={() => dialog.setOpen(false)}
+				opener={ref}
+			/>
 		</div>
 	)
 }
@@ -441,8 +647,19 @@ export function ShowBlockRatings() {
 	const ref = useRef<HTMLButtonElement>(null)
 	return (
 		<>
-			<ScoreRect ref={ref} score={p.state.score} mediaType="show" onClick={() => dialog.setOpen(true)} className="max-md:w-full md:min-w-[10.75rem] md:shrink-0" />
-			<VerdictDialog kind="switch" open={dialog.open} onClose={() => dialog.setOpen(false)} opener={ref} />
+			<ScoreRect
+				ref={ref}
+				score={p.state.score}
+				mediaType="show"
+				onClick={() => dialog.setOpen(true)}
+				className="max-md:w-full md:min-w-[10.75rem] md:shrink-0"
+			/>
+			<VerdictDialog
+				kind="switch"
+				open={dialog.open}
+				onClose={() => dialog.setOpen(false)}
+				opener={ref}
+			/>
 		</>
 	)
 }
@@ -465,16 +682,29 @@ export function ShowBlockActions() {
 					{label(watch)}
 					<StatusChevron />
 				</button>
-				{progress && <span className="text-xs tabular-nums text-gray-300">{progress} episodes</span>}
-				{(watch === "watching" || watch === "on_hold") && (
-					<span className="ml-auto truncate rounded-lg bg-white/10 px-2.5 py-1.5 text-xs font-semibold text-gray-100">Next: episode {Math.min(episodes + 1, p.total)}</span>
+				{progress && (
+					<span className="text-xs tabular-nums text-gray-300">
+						{progress} episodes
+					</span>
 				)}
-				{menu && <StatusMenu onClose={() => setMenu(false)} className="left-0 top-10" />}
+				{(watch === "watching" || watch === "on_hold") && (
+					<span className="ml-auto truncate rounded-lg bg-white/10 px-2.5 py-1.5 text-xs font-semibold text-gray-100">
+						Next: episode {Math.min(episodes + 1, p.total)}
+					</span>
+				)}
+				{menu && (
+					<StatusMenu
+						onClose={() => setMenu(false)}
+						className="left-0 top-10"
+					/>
+				)}
 			</div>
 		</div>
 	)
 }
 
 /** The movie tile with one of the dialogs. */
-export const movieTile = (D: React.ComponentType<DialogProps>) => () => <VerdictTile dialog={D} />
+export const movieTile = (D: React.ComponentType<DialogProps>) => () => (
+	<VerdictTile dialog={D} />
+)
 export { SwitchAsk }
