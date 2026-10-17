@@ -1,0 +1,357 @@
+/* PROTOTYPE - throwaway. Round 7 opener (r7open): round 6's receipts chat without the app chrome, the endless wall,
+   "Deciding is hard." Every duration and delay is scaled by --k. Transform and opacity only.
+   The chat is sized in --u (1.83cqh) so its rows have known heights and the view is 47u tall: the thread's climbs
+   (r7open/opener.tsx) lift it by exact amounts. */
+.lpc-r7open {
+	--u: 1.83cqh;
+	position: absolute;
+	inset: 0;
+	overflow: hidden;
+	background: #05060a;
+	color: #fff;
+	font-family: "Gabarito", ui-sans-serif, system-ui, sans-serif;
+}
+.lpc-r7open-in { animation: lpc-r7open-in calc(850ms * var(--k)) cubic-bezier(0.16, 1, 0.3, 1) both; }
+@keyframes lpc-r7open-in { from { opacity: 0; transform: translateY(0.35em); } }
+.lpc-r7open-fadein { animation: lpc-r7open-fade calc(600ms * var(--k)) ease-out both; }
+@keyframes lpc-r7open-fade { from { opacity: 0; } }
+.lpc-r7open-word { display: inline-block; }
+.lpc-r7open-amber { color: #fbbf24; }
+
+/* ---------- The closing line */
+.lpc-r7open-center {
+	position: absolute;
+	inset: 0 0 9cqh;
+	z-index: 6;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+	gap: 2.4cqh;
+	padding: 0 6cqw;
+	pointer-events: none;
+}
+.lpc-r7open-big {
+	font-weight: 800;
+	line-height: 1;
+	letter-spacing: -0.025em;
+	font-size: 10.5cqw;
+	text-shadow: 0 0.4cqw 3cqw rgba(0, 0, 0, 0.6);
+}
+.lpc-r7open-sub {
+	font-weight: 600;
+	font-size: 2.7cqw;
+	color: rgba(255, 255, 255, 0.8);
+	line-height: 1.25;
+}
+
+/* ---------- The chat window: a messaging app's screen, centered on the TV */
+/* No app window: the bubbles float on the TV in a centred column, 86cqh (47u) tall above the chapter bar. */
+.lpc-r7open-window {
+	position: absolute;
+	left: 50%;
+	top: 3cqh;
+	bottom: 11cqh;
+	z-index: 3;
+	width: 58cqw;
+	transform: translateX(-50%);
+}
+.lpc-r7open-window-in {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+}
+/* Rows that climb out of view fade out at the top edge instead of being cut. */
+.lpc-r7open-view::after {
+	content: "";
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 0;
+	height: calc(7 * var(--u));
+	background: linear-gradient(180deg, #05060a 15%, rgba(5, 6, 10, 0));
+	pointer-events: none;
+}
+.lpc-r7open-rise { animation: lpc-r7open-rise calc(700ms * var(--k)) cubic-bezier(0.16, 1, 0.3, 1) both; }
+@keyframes lpc-r7open-rise { from { opacity: 0; transform: translateY(4cqh) scale(0.97); } }
+
+.lpc-r7open-head {
+	position: relative;
+	z-index: 2;
+	flex: none;
+	height: calc(11 * var(--u));
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-end;
+	padding: 0 calc(2.4 * var(--u)) calc(1.4 * var(--u));
+	background: rgba(22, 22, 26, 0.96);
+	border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+	/* The rows that have scrolled up fade out under the header. */
+	box-shadow: 0 calc(2 * var(--u)) calc(3 * var(--u)) rgba(11, 11, 14, 0.95);
+}
+.lpc-r7open-head-tall { height: calc(13 * var(--u)); }
+.lpc-r7open-who { display: flex; flex-direction: column; align-items: center; gap: calc(0.5 * var(--u)); }
+.lpc-r7open-avatar {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: calc(5.4 * var(--u));
+	height: calc(5.4 * var(--u));
+	border-radius: 50%;
+	background: linear-gradient(160deg, #8e8e98, #5b5b64);
+	font-weight: 700;
+	font-size: calc(2.6 * var(--u));
+}
+.lpc-r7open-name { font-size: calc(2.1 * var(--u)); font-weight: 600; color: rgba(255, 255, 255, 0.9); }
+
+.lpc-r7open-view { position: relative; flex: 1; overflow: hidden; }
+.lpc-r7open-climb { animation: lpc-r7open-climb calc(450ms * var(--k)) cubic-bezier(0.3, 0, 0.2, 1) both; }
+@keyframes lpc-r7open-climb { from { transform: none; } to { transform: translateY(var(--to)); } }
+.lpc-r7open-thread {
+	display: flex;
+	flex-direction: column;
+	gap: calc(1.4 * var(--u));
+	padding: calc(1.6 * var(--u)) calc(2.2 * var(--u));
+}
+
+/* Rows have fixed heights: 4.5 for a separator, 6.6 for a bubble, 21 for a link preview, plus 3 for a time. */
+.lpc-r7open-sep {
+	height: calc(4.5 * var(--u));
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: calc(1.8 * var(--u));
+	font-weight: 600;
+	color: rgba(255, 255, 255, 0.45);
+}
+.lpc-r7open-read {
+	height: calc(3.5 * var(--u));
+	align-self: flex-end;
+	font-size: calc(1.7 * var(--u));
+	color: rgba(255, 255, 255, 0.45);
+}
+.lpc-r7open-row { position: relative; display: flex; flex-direction: column; }
+.lpc-r7open-row-them { align-items: flex-start; }
+.lpc-r7open-row-me { align-items: flex-end; }
+.lpc-r7open-bubble {
+	position: relative;
+	height: calc(5.6 * var(--u));
+	margin-bottom: calc(1 * var(--u));
+	display: flex;
+	align-items: center;
+	max-width: 78%;
+	padding: 0 calc(2.1 * var(--u));
+	border-radius: calc(2.8 * var(--u));
+	font-size: calc(2.7 * var(--u));
+	line-height: 1.15;
+	white-space: nowrap;
+}
+.lpc-r7open-them { background: #26262b; color: #f2f2f5; transform-origin: 0 100%; }
+.lpc-r7open-me { background: #2b74e8; color: #fff; transform-origin: 100% 100%; }
+/* The tails: a small static curl at the bubble's bottom corner. */
+.lpc-r7open-them::before,
+.lpc-r7open-me::before {
+	content: "";
+	position: absolute;
+	bottom: 0;
+	width: calc(2.2 * var(--u));
+	height: calc(2.2 * var(--u));
+	background: inherit;
+}
+.lpc-r7open-them::before { left: calc(-0.7 * var(--u)); clip-path: polygon(0 100%, 60% 0, 100% 100%); }
+.lpc-r7open-me::before { right: calc(-0.7 * var(--u)); clip-path: polygon(100% 100%, 40% 0, 0 100%); }
+.lpc-r7open-attached { margin-top: calc(-0.2 * var(--u)); }
+.lpc-r7open-time {
+	height: calc(3 * var(--u));
+	margin-top: calc(-0.6 * var(--u));
+	font-size: calc(1.6 * var(--u));
+	color: rgba(255, 255, 255, 0.55);
+	font-variant-numeric: tabular-nums;
+}
+.lpc-r7open-pop { animation: lpc-r7open-pop calc(500ms * var(--k)) cubic-bezier(0.16, 1, 0.3, 1) both; }
+@keyframes lpc-r7open-pop { from { opacity: 0; transform: translateY(calc(1.5 * var(--u))) scale(0.92); } }
+
+/* A link preview: the title's picture, its name and what it is. 14.4 tall, then its bubble (6.6). */
+.lpc-r7open-card {
+	width: calc(44 * var(--u));
+	height: calc(14.4 * var(--u));
+	display: flex;
+	overflow: hidden;
+	border-radius: calc(2.2 * var(--u));
+	background: #1c1c21;
+	transform-origin: 100% 100%;
+}
+.lpc-r7open-card img { width: calc(20 * var(--u)); height: 100%; object-fit: cover; flex: none; }
+.lpc-r7open-card-text {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	gap: calc(0.6 * var(--u));
+	min-width: 0;
+	padding: 0 calc(1.6 * var(--u));
+}
+.lpc-r7open-card-text b { font-size: calc(2.3 * var(--u)); line-height: 1.12; font-weight: 700; }
+.lpc-r7open-card-text span { font-size: calc(1.7 * var(--u)); color: rgba(255, 255, 255, 0.55); white-space: nowrap; }
+.lpc-r7open-card + .lpc-r7open-bubble { margin-top: calc(0.6 * var(--u)); }
+
+/* The typing dots: they show for a moment where the answer is about to appear. */
+.lpc-r7open-typing {
+	position: absolute;
+	left: 0;
+	top: 0;
+	height: calc(5.6 * var(--u));
+	display: flex;
+	align-items: center;
+	gap: calc(0.6 * var(--u));
+	padding: 0 calc(1.8 * var(--u));
+	border-radius: calc(2.8 * var(--u));
+	background: #26262b;
+	animation: lpc-r7open-typing calc(650ms * var(--k)) linear both;
+}
+@keyframes lpc-r7open-typing {
+	0% { opacity: 0; transform: scale(0.85); }
+	15%, 85% { opacity: 1; transform: none; }
+	100% { opacity: 0; transform: scale(0.9); }
+}
+.lpc-r7open-typing i {
+	width: calc(1.1 * var(--u));
+	height: calc(1.1 * var(--u));
+	border-radius: 50%;
+	background: rgba(255, 255, 255, 0.55);
+	animation: lpc-r7open-dot calc(900ms * var(--k)) ease-in-out infinite;
+}
+.lpc-r7open-typing i:nth-child(2) { animation-delay: calc(150ms * var(--k)); }
+.lpc-r7open-typing i:nth-child(3) { animation-delay: calc(300ms * var(--k)); }
+@keyframes lpc-r7open-dot { 0%, 60%, 100% { transform: none; opacity: 0.5; } 30% { transform: translateY(calc(-0.6 * var(--u))); opacity: 1; } }
+
+.lpc-r7open-compose {
+	position: relative;
+	z-index: 2;
+	flex: none;
+	height: calc(8 * var(--u));
+	display: flex;
+	align-items: center;
+	padding: 0 calc(2.2 * var(--u));
+	background: rgba(22, 22, 26, 0.96);
+	border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+.lpc-r7open-compose span {
+	flex: 1;
+	height: calc(4.6 * var(--u));
+	display: flex;
+	align-items: center;
+	padding: 0 calc(1.8 * var(--u));
+	border-radius: 999px;
+	border: 1px solid rgba(255, 255, 255, 0.14);
+	font-size: calc(2 * var(--u));
+	color: rgba(255, 255, 255, 0.35);
+}
+
+/* B: the status bar's small clock and signal, and the room's light dropping. */
+.lpc-r7open-status {
+	position: absolute;
+	left: calc(2.6 * var(--u));
+	right: calc(2.6 * var(--u));
+	top: calc(1.2 * var(--u));
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	font-size: calc(1.9 * var(--u));
+	font-weight: 700;
+	color: rgba(255, 255, 255, 0.85);
+}
+.lpc-r7open-bars { display: flex; align-items: flex-end; gap: calc(0.3 * var(--u)); }
+.lpc-r7open-bars i { width: calc(0.5 * var(--u)); background: rgba(255, 255, 255, 0.8); border-radius: 1px; }
+.lpc-r7open-bars i:nth-child(1) { height: calc(0.8 * var(--u)); }
+.lpc-r7open-bars i:nth-child(2) { height: calc(1.2 * var(--u)); }
+.lpc-r7open-bars i:nth-child(3) { height: calc(1.6 * var(--u)); }
+.lpc-r7open-bars b { width: calc(3 * var(--u)); height: calc(1.4 * var(--u)); margin-left: calc(0.6 * var(--u)); border: 1px solid rgba(255, 255, 255, 0.7); border-radius: 2px; }
+.lpc-r7open-dusk {
+	position: absolute;
+	inset: 0;
+	z-index: 3;
+	border-radius: calc(3 * var(--u));
+	background: #000;
+	pointer-events: none;
+	opacity: 0;
+	animation: lpc-r7open-dusk calc(5600ms * var(--k)) linear calc(300ms * var(--k)) both;
+}
+@keyframes lpc-r7open-dusk { to { opacity: 0.32; } }
+
+/* ---------- Small times that flip (B) */
+.lpc-r7open-ticker { position: relative; display: inline-grid; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.lpc-r7open-ticker > span { grid-area: 1 / 1; }
+.lpc-r7open-ticker-size { visibility: hidden; }
+.lpc-r7open-flip,
+.lpc-r7open-flip-first,
+.lpc-r7open-flip-last { animation-duration: calc(var(--s) * var(--k)); animation-fill-mode: both; animation-timing-function: linear; }
+.lpc-r7open-flip-first { animation-name: lpc-r7open-flip-out; }
+.lpc-r7open-flip { animation-name: lpc-r7open-flip; }
+.lpc-r7open-flip-last { animation-name: lpc-r7open-flip-in; animation-duration: calc(400ms * var(--k)); animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1); }
+@keyframes lpc-r7open-flip-out { 0%, 92% { opacity: 1; transform: none; } 100% { opacity: 0; transform: translateY(-0.4em); } }
+@keyframes lpc-r7open-flip { 0% { opacity: 0; transform: translateY(0.4em); } 8%, 92% { opacity: 1; transform: none; } 100% { opacity: 0; transform: translateY(-0.4em); } }
+@keyframes lpc-r7open-flip-in { from { opacity: 0; transform: translateY(0.4em); } }
+
+/* ---------- The moves from the chat to the wall */
+/* A: the chat steps back as the wall rises behind it. */
+.lpc-r7open-step-back { animation: lpc-r7open-stepback calc(1100ms * var(--k)) cubic-bezier(0.65, 0, 0.35, 1) both; }
+@keyframes lpc-r7open-stepback { to { opacity: 0; transform: translateX(-50%) translateY(-3cqh) scale(0.92); } }
+/* B: the chat shrinks into the wall, one screen among endless others. */
+.lpc-r7open-shrink { animation: lpc-r7open-shrink calc(1600ms * var(--k)) cubic-bezier(0.7, 0, 0.3, 1) both; }
+@keyframes lpc-r7open-shrink {
+	60% { opacity: 1; }
+	to { opacity: 0; transform: translateX(-50%) scale(0.16); }
+}
+.lpc-r7open-wall-out { animation: lpc-r7open-wallout calc(1700ms * var(--k)) cubic-bezier(0.7, 0, 0.3, 1) both; }
+@keyframes lpc-r7open-wallout { from { opacity: 0; transform: scale(2.6); } 30% { opacity: 1; } }
+/* C: the thumb keeps scrolling: the chat goes up and out, the wall comes up in the same motion. */
+.lpc-r7open-scroll-off { animation: lpc-r7open-scrolloff calc(1500ms * var(--k)) cubic-bezier(0.65, 0, 0.35, 1) both; }
+@keyframes lpc-r7open-scrolloff { to { transform: translateX(-50%) translateY(-100cqh); } }
+.lpc-r7open-scroll-on { animation: lpc-r7open-scrollon calc(1500ms * var(--k)) cubic-bezier(0.65, 0, 0.35, 1) both; }
+@keyframes lpc-r7open-scrollon { from { transform: translateY(135cqh); } }
+
+/* ---------- The wall */
+.lpc-r7open-wall { position: absolute; inset: -16cqh -12cqw; z-index: 1; }
+.lpc-r7open-tilt {
+	display: flex;
+	flex-direction: column;
+	gap: 1.6cqw;
+	transform: rotate(-6deg);
+	animation: lpc-r7open-sink calc(12s * var(--k)) cubic-bezier(0.3, 0, 0.7, 1) both;
+}
+@keyframes lpc-r7open-sink { from { transform: rotate(-6deg) scale(1.02); } to { transform: rotate(-6deg) scale(1.12); } }
+.lpc-r7open-strip { display: flex; gap: 1.6cqw; width: max-content; animation: lpc-r7open-drift calc(40s * var(--k)) linear both; }
+.lpc-r7open-strip.lpc-r7open-rev { animation-direction: reverse; }
+@keyframes lpc-r7open-drift { to { transform: translateX(-50%); } }
+.lpc-r7open-strip img { width: 12.5cqw; aspect-ratio: 2 / 3; border-radius: 0.8cqw; object-fit: cover; background: #10131c; }
+.lpc-r7open-wall-up { animation: lpc-r7open-wallup calc(1700ms * var(--k)) cubic-bezier(0.16, 1, 0.3, 1) both; }
+@keyframes lpc-r7open-wallup { from { opacity: 0; transform: scale(1.22); } }
+.lpc-r7open-veil {
+	position: absolute;
+	inset: 0;
+	z-index: 2;
+	background:
+		radial-gradient(70% 70% at 50% 50%, rgba(5, 6, 10, 0.55) 0, rgba(5, 6, 10, 0.9) 100%),
+		linear-gradient(180deg, rgba(5, 6, 10, 0.25), rgba(5, 6, 10, 0.8));
+}
+
+/* ---------- The phone's TV: a full-width chat, a little larger; the window's own header is shorter. */
+@container (max-width: 520px) {
+	.lpc-r7open-window { width: 94cqw; }
+	.lpc-r7open-big { font-size: 10.6cqw; white-space: nowrap; }
+	.lpc-r7open-center { padding: 0 3cqw; }
+	.lpc-r7open-sub { font-size: 4.8cqw; }
+	.lpc-r7open-strip img { width: 22cqw; }
+	.lpc-r7open-compose { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.lpc-r7open *, .lpc-r7open { animation-duration: 1ms !important; animation-delay: 0ms !important; }
+	.lpc-r7open-typing { display: none; }
+}
+
+/* ---------- Chapter 2 (score hand): the ring's landing flashes sit where the ring waits, below the hand. */
+.lpc-r7open-flash { top: 74cqh; width: 21cqh; height: 21cqh; margin: -10.5cqh 0 0 -10.5cqh; }

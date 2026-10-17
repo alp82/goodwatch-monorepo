@@ -21,8 +21,13 @@ import * as r6feel from "~/server/prototype-intro/r6feel.server"
 import * as r6filter from "~/server/prototype-intro/r6filter.server"
 import * as r6map from "~/server/prototype-intro/r6map.server"
 import * as r6track from "~/server/prototype-intro/r6track.server"
+import * as r7open from "~/server/prototype-intro/r7open.server"
+import * as r7feel from "~/server/prototype-intro/r7feel.server"
+import * as r7filter from "~/server/prototype-intro/r7filter.server"
+import * as r7map from "~/server/prototype-intro/r7map.server"
+import * as r7track from "~/server/prototype-intro/r7track.server"
 
-const GROUPS = { problem, scorestream, feel, searchfilter, explorertrack, r5open, r5score, r5feel, r5filter, r5map, r5track, r6open, r6score, r6feel, r6filter, r6map, r6track }
+const GROUPS = { problem, scorestream, feel, searchfilter, explorertrack, r5open, r5score, r5feel, r5filter, r5map, r5track, r6open, r6score, r6feel, r6filter, r6map, r6track, r7open, r7feel, r7filter, r7map, r7track }
 
 export async function loadIntroData(
 	request: Request,

@@ -1,0 +1,76 @@
+/* PROTOTYPE - throwaway. Round 7 "r7feel": chapter 4 reuses r6feel's classes; these are chapter 5's (one line, native). */
+
+/* The huge phrase: one line, sized by the clip (--size) to fit. */
+.lpc-r7feel-huge {
+	position: absolute;
+	z-index: 5;
+	left: 4cqw;
+	right: 4cqw;
+	top: 32cqh;
+	text-align: center;
+}
+.lpc-r7feel-line {
+	white-space: nowrap;
+	font-weight: 800;
+	font-size: var(--size, 7cqw);
+	line-height: 1.05;
+	letter-spacing: -0.03em;
+}
+.lpc-r7feel-typed { display: inline-flex; white-space: pre; color: #fff; }
+
+/* The Read-as chips: one row, never wrapping. */
+.lpc-r7feel-chips {
+	display: flex;
+	flex-wrap: nowrap;
+	align-items: center;
+	justify-content: center;
+	gap: 1cqw;
+	margin-top: 3.4cqh;
+	white-space: nowrap;
+}
+.lpc-r7feel-chips .lpc-sf-chip { font-size: max(10px, 2.3cqw); padding: 0.55cqw 1.7cqw; }
+.lpc-r7feel-readas { font-size: max(10px, 2cqw); font-weight: 600; color: rgba(255, 255, 255, 0.6); margin-right: 0.4cqw; }
+
+/* The settled field at the top, with its chips under it, left-aligned like the site. */
+.lpc-r7feel-top { position: absolute; z-index: 6; left: 6cqw; right: 6cqw; top: 6cqh; }
+.lpc-r7feel-top .lpc-r7feel-chips { justify-content: flex-start; margin-top: 1.8cqh; }
+
+/* The header's search pill (navigation/Search.tsx) at TV size: white glass, a thin light rim, the amber glass. */
+.lpc-r7feel-field {
+	display: flex;
+	align-items: center;
+	gap: 1.4cqw;
+	width: 58cqw;
+	height: 6.4cqw;
+	padding: 0 2.2cqw 0 2.4cqw;
+	border-radius: 999px;
+	background: linear-gradient(180deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.04));
+	box-shadow: inset 0 0 0 0.12cqw rgba(251, 191, 36, 0.5), 0 1.2cqw 3cqw -1.6cqw rgba(0, 0, 0, 0.9);
+	white-space: nowrap;
+	overflow: hidden;
+}
+.lpc-r7feel-glass { flex: none; width: 2.6cqw; height: 2.6cqw; color: #fbbf24; }
+.lpc-r7feel-q { overflow: hidden; text-overflow: ellipsis; font-size: max(12px, 2.5cqw); font-weight: 500; color: #f3f4f6; }
+.lpc-r7feel-caret {
+	flex: none;
+	width: 0.18cqw;
+	height: 3cqw;
+	margin-left: -1cqw;
+	background: #fbbf24;
+	animation: lpc-sf-blink calc(1000ms * var(--k)) steps(1, end) infinite;
+}
+
+@container (max-width: 520px) {
+	.lpc-r7feel-huge { top: 30cqh; }
+	.lpc-r7feel-chips .lpc-sf-chip { font-size: 3.1cqw; padding: 0.6cqw 1.8cqw; }
+	.lpc-r7feel-chips > :nth-child(n + 5) { display: none; }
+	.lpc-r7feel-readas { display: none; }
+	.lpc-r7feel-field { width: 88cqw; height: 10.5cqw; }
+	.lpc-r7feel-glass { width: 4cqw; height: 4cqw; }
+	.lpc-r7feel-q { font-size: 4cqw; }
+	.lpc-r7feel-caret { height: 5cqw; width: 0.35cqw; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.lpc-r7feel-caret { animation: none; }
+}

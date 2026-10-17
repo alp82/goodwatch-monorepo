@@ -17,16 +17,22 @@ import { CLIPS as r6feel } from "./r6feel"
 import { CLIPS as r6filter } from "./r6filter"
 import { CLIPS as r6map } from "./r6map"
 import { CLIPS as r6track } from "./r6track"
+import { CLIPS as r7open } from "./r7open"
+import { CLIPS as r7feel } from "./r7feel"
+import { CLIPS as r7filter } from "./r7filter"
+import { CLIPS as r7map } from "./r7map"
+import { CLIPS as r7track } from "./r7track"
 
 // Round 6 (2026-10-17): the lab shows only the bases the owner picked and the new round 6 clips. Everything else
 // is behind "Show older clips".
 const BASES = new Set([
-	"opener-clock", "score-orbit", "recommendations-wall", "fingerprint-reel", "search-top",
-	"filters-narrow", "filters-tally", "explorer-combine", "streaming-passport", "tracking-feed",
-	"tracking-import", "closer-slots", "closer-ping",
+	// Round 7 (2026-10-17): the owner's pick per chapter, refined by the r7 groups.
+	"opener-receipts", "score-cards-fan", "recommendations-wall-dive",
+	"fingerprint-fit", "fingerprint-carousel", "fingerprint-zoom", "search-takeover",
+	"filters-r6-panel", "explorer-click2", "streaming-rows", "tracking-flow", "imports-into", "closer-slots",
 ])
-/** Round 6 groups: everything in them stays visible. */
-const ROUND6 = /^r6/
+/** The current round's groups: everything in them stays visible. */
+const ROUND6 = /^r7/
 /** The owner moved "Bring your ratings" into a chapter of its own. */
 const MOVED: Record<string, Clip["section"]> = { "tracking-import": "imports" }
 
@@ -35,6 +41,7 @@ const groups: [string, Clip[]][] = [
 	["explorertrack", explorertrack], ["r5open", r5open], ["r5score", r5score], ["r5feel", r5feel],
 	["r5filter", r5filter], ["r5map", r5map], ["r5track", r5track],
 	["r6open", r6open], ["r6score", r6score], ["r6feel", r6feel], ["r6filter", r6filter], ["r6map", r6map], ["r6track", r6track],
+	["r7open", r7open], ["r7feel", r7feel], ["r7filter", r7filter], ["r7map", r7map], ["r7track", r7track],
 ]
 
 export const ALL_CLIPS: Clip[] = groups.flatMap(([group, clips]) =>

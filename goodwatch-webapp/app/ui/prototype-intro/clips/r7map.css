@@ -1,0 +1,46 @@
+/* PROTOTYPE - throwaway. Round 7 "r7map" clips (Explorer, Streaming). Builds on r5map.css and r6map.css; transform and
+   opacity animations only; every time scaled by --k. The bottom 9cqh belong to the chapter bar. */
+
+/* ---------- Explorer: fewer, bigger islands; the names in padded boxes. */
+.lpc-r7map-isl-text { font-size: calc(var(--t) * var(--lpc-r7map-isl, 1)); box-sizing: border-box; }
+.lpc-r7map-isl-text .lpc-r6map-island-name { line-height: 1.08; }
+.lpc-r7map-region { font-size: max(9px, 1.5cqw); }
+
+/* ---------- Streaming: one camera move, rings of logos, the count over a vignette. */
+.lpc-r7map-camera { transform-origin: 50% 50%; will-change: transform; }
+.lpc-r7map-ring { inset: 0; }
+@keyframes lpc-r7map-pull { from { transform: scale(2.3); } to { transform: scale(0.8); } }
+@keyframes lpc-r7map-ring-in { from { opacity: 0; transform: scale(0.965); } }
+@keyframes lpc-r7map-dim { to { opacity: 0.42; } }
+.lpc-r7map-vignette {
+	position: absolute;
+	inset: 0;
+	z-index: 5;
+	pointer-events: none;
+	background: radial-gradient(42% 46% at 50% 44%, rgba(5, 6, 10, 0.92) 0%, rgba(5, 6, 10, 0.78) 45%, rgba(5, 6, 10, 0) 100%);
+}
+.lpc-r7map-countwrap { text-align: center; white-space: nowrap; }
+.lpc-r7map-count {
+	font-size: 19cqw;
+	text-shadow: 0 0.4cqw 2.4cqw rgba(0, 0, 0, 0.9), 0 0 6cqw rgba(0, 0, 0, 0.7);
+}
+.lpc-r7map-count-line {
+	font-size: 3.9cqw;
+	text-shadow: 0 0.2cqw 1.4cqw rgba(0, 0, 0, 0.95), 0 0 3cqw rgba(0, 0, 0, 0.8);
+}
+@keyframes lpc-r7map-count-in { from { opacity: 0; transform: translateY(3cqh) scale(0.94); } }
+
+@container (max-width: 520px) {
+	.lpc-r7map-explorer { --lpc-r7map-isl: 1.45; }
+	.lpc-r7map-region { font-size: 2.5cqw; }
+	.lpc-r7map-count { font-size: 22cqw; }
+	.lpc-r7map-count-line { font-size: 5cqw; }
+}
+
+/* Phone TV: the map sits lower, under the two-line headline; names scale up less so neighbours don't touch. */
+.lpc-r7map-merged-text { font-size: var(--t); box-sizing: border-box; }
+@container (max-width: 520px) {
+	.lpc-r7map-explorer { --lpc-r7map-isl: 1.22; }
+	.lpc-r7map-shift { transform: translateY(6cqh); }
+	.lpc-r7map-merged-text { font-size: calc(var(--t) * 1.15); padding: 0 8% !important; }
+}

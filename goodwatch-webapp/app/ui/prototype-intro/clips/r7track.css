@@ -1,0 +1,482 @@
+/* PROTOTYPE - throwaway. Round 7 "r7track" clips (copied from round 6's r6track): chapter 9 (keeps track), 10 (your ratings), 11 (your turn).
+   Transform and opacity only; every delay and duration is scaled by the stage's --k. The bottom 9cqh is the
+   chapter bar's. */
+
+/* ---------- Timing (kit.tsx `at`) */
+.lpc-r7track-a {
+	animation: var(--an) calc(var(--du) * var(--k, 1)) var(--ez) calc(var(--d) * var(--k, 1)) both;
+}
+.lpc-r7track-a2 {
+	animation:
+		var(--an) calc(var(--du) * var(--k, 1)) var(--ez) calc(var(--d) * var(--k, 1)) both,
+		var(--an2) calc(var(--du2) * var(--k, 1)) var(--ez2) calc(var(--d2) * var(--k, 1)) forwards;
+}
+.lpc-r7track-a3 {
+	animation:
+		var(--an) calc(var(--du) * var(--k, 1)) var(--ez) calc(var(--d) * var(--k, 1)) both,
+		var(--an2) calc(var(--du2) * var(--k, 1)) var(--ez2) calc(var(--d2) * var(--k, 1)) forwards,
+		var(--an3) calc(var(--du3) * var(--k, 1)) var(--ez3) calc(var(--d3) * var(--k, 1)) forwards;
+}
+@keyframes lpc-r7track-rise { from { opacity: 0; transform: translateY(40%); } }
+@keyframes lpc-r7track-fade { from { opacity: 0; } }
+@keyframes lpc-r7track-word { from { opacity: 0; transform: translateY(105%); } }
+@keyframes lpc-r7track-pop { from { opacity: 0; transform: scale(0.55); } }
+@keyframes lpc-r7track-deal { from { opacity: 0; transform: translate(-14%, -14%) scale(1.12); } }
+@keyframes lpc-r7track-from { from { opacity: 0; transform: translate(var(--fx, 0), var(--fy, 0)) scale(var(--fs, 1)); } }
+@keyframes lpc-r7track-to { to { opacity: var(--to, 0); transform: translate(var(--tx, 0), var(--ty, 0)) scale(var(--ts, 1)); } }
+@keyframes lpc-r7track-out { to { opacity: 0; } }
+@keyframes lpc-r7track-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes lpc-r7track-press { 0%, 100% { transform: scale(1); } 40% { transform: scale(0.88); } }
+@keyframes lpc-r7track-gulp { 40% { transform: scale(1.16); } 0%, 100% { transform: scale(1); } }
+/* A title on its way into the G: out of its row, along, and shrinking into the middle. */
+@keyframes lpc-r7track-travel {
+	0% { opacity: 0; transform: translate(0, 0) scale(0.6); }
+	15% { opacity: 1; }
+	85% { opacity: 1; }
+	100% { opacity: 0; transform: translate(var(--tx), var(--ty)) scale(0.25); }
+}
+
+/* ---------- Type */
+.lpc-r7track-kicker {
+	font-weight: 800;
+	text-transform: uppercase;
+	letter-spacing: 0.18em;
+	color: #fbbf24;
+	font-size: max(9px, 1.6cqw);
+}
+.lpc-r7track-h {
+	margin: 0;
+	font-weight: 800;
+	line-height: 1;
+	letter-spacing: -0.03em;
+	font-size: max(22px, 7cqw);
+}
+.lpc-r7track-h-mid { font-size: max(18px, 5.2cqw); }
+.lpc-r7track-h-huge { font-size: max(34px, 15cqw); letter-spacing: -0.045em; line-height: 0.92; }
+.lpc-r7track-word { display: inline-block; overflow: hidden; vertical-align: top; padding-bottom: 0.1em; margin-bottom: -0.1em; }
+.lpc-r7track-word-in { display: inline-block; }
+.lpc-r7track-accent { color: #fbbf24; }
+.lpc-r7track-line { color: rgba(255, 255, 255, 0.82); font-size: max(11px, 2.1cqw); line-height: 1.25; margin: 0; }
+.lpc-r7track-line b { color: #fff; }
+.lpc-r7track-example {
+	position: absolute;
+	right: 3cqw;
+	top: 4cqh;
+	z-index: 12;
+	padding: 0.5cqw 1.3cqw;
+	border-radius: 999px;
+	background: rgba(22, 26, 38, 0.96);
+	color: rgba(255, 255, 255, 0.72);
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.12em;
+	font-size: max(8px, 1.1cqw);
+}
+.lpc-r7track-glow {
+	position: absolute;
+	inset: -20%;
+	background: radial-gradient(45% 40% at 50% 45%, rgba(251, 191, 36, 0.14), rgba(5, 6, 10, 0) 70%);
+	pointer-events: none;
+}
+.lpc-r7track-poster {
+	display: block;
+	aspect-ratio: 2 / 3;
+	object-fit: cover;
+	border-radius: 0.8cqw;
+	box-shadow: 0 1.2cqw 3.4cqw rgba(0, 0, 0, 0.55);
+}
+.lpc-r7track-pill {
+	display: inline-flex;
+	align-items: center;
+	padding: 0.55cqw 1.4cqw;
+	border-radius: 999px;
+	background: #fbbf24;
+	color: #111;
+	font-weight: 800;
+	font-size: max(9px, 1.35cqw);
+	white-space: nowrap;
+}
+.lpc-r7track-pill-off { background: rgba(251, 191, 36, 0.16); color: #fcd34d; }
+.lpc-r7track-gone { opacity: 0; }
+.lpc-r7track-stack { display: grid; }
+.lpc-r7track-stack > * { grid-area: 1 / 1; justify-self: start; }
+.lpc-r7track-icon { width: 1.5em; height: 1.5em; flex: none; }
+
+/* ---------- Chapter 9: one feed, each moment big first.
+   Geometry: --cw the card's width, --fx the feed's left edge, the card 13.5cqh tall and landing with its top at
+   64cqh (feed.tsx LAND); --bx/--by where a moment shows big (its centre), --bs how big. */
+.lpc-r7track-flow { position: absolute; inset: 0; --ch: 13.5cqh; --land: 64cqh; }
+.lpc-r7track-flow-side { --cw: 40cqw; --fx: 55cqw; --bx: 29cqw; --by: 62cqh; --bs: 1.32; }
+.lpc-r7track-flow-center { --cw: 42cqw; --fx: 29cqw; --bx: 50cqw; --by: 41cqh; --bs: 1.55; }
+.lpc-r7track-flow-head { position: absolute; left: 5cqw; top: 9cqh; width: 46cqw; z-index: 3; }
+.lpc-r7track-flow-head .lpc-r7track-h { margin-top: 1cqh; }
+.lpc-r7track-flow-line { margin-top: 2.4cqh; }
+.lpc-r7track-flow-center .lpc-r7track-flow-head { left: 0; right: 0; width: auto; top: 6cqh; text-align: center; }
+.lpc-r7track-flow-center .lpc-r7track-flow-line { margin-top: 1.4cqh; }
+.lpc-r7track-feedview {
+	position: absolute;
+	left: var(--fx);
+	width: var(--cw);
+	top: 0;
+	bottom: 9cqh;
+	overflow: hidden;
+	/* The feed thins out toward the top as it scrolls away; a static mask. */
+	-webkit-mask-image: linear-gradient(180deg, transparent 0, #000 22%, #000 100%);
+	mask-image: linear-gradient(180deg, transparent 0, #000 22%, #000 100%);
+}
+.lpc-r7track-flow-center .lpc-r7track-feedview {
+	-webkit-mask-image: linear-gradient(180deg, transparent 0, transparent 26%, #000 48%, #000 100%);
+	mask-image: linear-gradient(180deg, transparent 0, transparent 26%, #000 48%, #000 100%);
+}
+.lpc-r7track-column {
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 0;
+	will-change: transform;
+	animation: lpc-r7track-scroll calc(var(--dur) * var(--k, 1)) linear both;
+}
+/* Round 7: the stepped scroll (feed.tsx writes the keyframes): faster as the moments come faster. */
+.lpc-r7track-column-steps { animation: lpc-r7track-feedscroll calc(12600ms * var(--k, 1)) linear both; }
+/* Round 7: the headline as two deliberate lines, no orphan. */
+.lpc-r7track-h-feed { font-size: max(22px, 6.2cqw); line-height: 1.02; }
+.lpc-r7track-h-feed > span { display: block; }
+@keyframes lpc-r7track-scroll { from { transform: translateY(var(--y0)); } to { transform: translateY(var(--y1)); } }
+.lpc-r7track-place { position: absolute; left: 0; right: 0; }
+/* A moment big: it sits on its landing spot and starts out moved to where it shows big, scaled up. */
+.lpc-r7track-big {
+	position: absolute;
+	z-index: 6;
+	left: var(--fx);
+	top: var(--land);
+	width: var(--cw);
+	--dx: calc(var(--bx) - var(--fx) - var(--cw) / 2);
+	--dy: calc(var(--by) - var(--land) - var(--ch) / 2);
+	transform-origin: 50% 50%;
+	pointer-events: none;
+}
+@keyframes lpc-r7track-bigshrink {
+	0% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(calc(var(--bs) * 0.9)); animation-timing-function: cubic-bezier(.16, 1, .3, 1); }
+	22% { opacity: 1; transform: translate(var(--dx), var(--dy)) scale(var(--bs)); animation-timing-function: linear; }
+	58% { opacity: 1; transform: translate(var(--dx), var(--dy)) scale(var(--bs)); animation-timing-function: cubic-bezier(.65, 0, .35, 1); }
+	100% { opacity: 1; transform: none; }
+}
+/* The bleed: the moment's picture fills the screen with its line, then gives way as the card shrinks off. */
+.lpc-r7track-bleed { position: absolute; inset: 0; z-index: 5; pointer-events: none; background: #05060a; }
+.lpc-r7track-bleed-art { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.lpc-r7track-bleed-shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(5, 6, 10, 0.88) 0%, rgba(5, 6, 10, 0.45) 45%, rgba(5, 6, 10, 0.9) 100%); }
+.lpc-r7track-bleed-words { position: absolute; left: 0; right: 0; top: 7cqh; text-align: center; }
+.lpc-r7track-bleed-tag {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.6cqw;
+	color: var(--tone);
+	font-weight: 800;
+	text-transform: uppercase;
+	letter-spacing: 0.14em;
+	font-size: max(10px, 1.6cqw);
+}
+.lpc-r7track-bleed-big { margin-top: 1cqh; font-weight: 800; letter-spacing: -0.03em; line-height: 1; font-size: max(20px, 5.4cqw); }
+
+/* The cards: one look per kind, each with its tone on the left edge. */
+.lpc-r7track-card {
+	position: relative;
+	display: flex;
+	align-items: center;
+	gap: 1.2cqw;
+	height: var(--ch);
+	padding: 0 1.4cqw 0 1cqw;
+	overflow: hidden;
+	border-radius: 1.2cqw;
+	background: #121621;
+	border-left: 0.5cqw solid var(--tone);
+	box-shadow: 0 1cqw 3cqw rgba(0, 0, 0, 0.45);
+}
+.lpc-r7track-card-body { position: relative; min-width: 0; flex: 1; }
+.lpc-r7track-card-tag {
+	display: flex;
+	align-items: center;
+	gap: 0.5cqw;
+	color: var(--tone);
+	font-weight: 800;
+	text-transform: uppercase;
+	letter-spacing: 0.1em;
+	font-size: max(8px, 1.15cqw);
+}
+.lpc-r7track-card-title {
+	margin-top: 0.3cqh;
+	font-weight: 800;
+	font-size: max(11px, 2.15cqw);
+	line-height: 1.1;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.lpc-r7track-card-line { margin-top: 0.3cqh; color: rgba(255, 255, 255, 0.72); font-size: max(9px, 1.4cqw); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lpc-r7track-card-poster { height: calc(var(--ch) - 2cqh); width: auto; border-radius: 0.5cqw; box-shadow: none; }
+/* It landed: a notification, the service's mark leading, a green wash. */
+.lpc-r7track-card-landed { background: linear-gradient(90deg, rgba(34, 197, 94, 0.22), #121621 60%); }
+.lpc-r7track-card-logo { height: calc(var(--ch) - 3.4cqh); aspect-ratio: 1; border-radius: 0.8cqw; object-fit: cover; }
+/* Next episode and pick up: the show's picture across the card, with how far along you are. */
+.lpc-r7track-card-wide { padding-left: 2cqw; }
+.lpc-r7track-card-art { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.lpc-r7track-card-wide-shade { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(10, 12, 18, 0.95) 0%, rgba(10, 12, 18, 0.75) 55%, rgba(10, 12, 18, 0.3) 100%); }
+.lpc-r7track-card-progress { position: absolute; left: 0; right: 0; bottom: 0; height: 0.5cqh; background: rgba(255, 255, 255, 0.2); }
+.lpc-r7track-card-progress i { display: block; height: 100%; background: var(--tone); transform-origin: 0 50%; }
+/* Waiting for episodes: quieter, a dashed edge and a dimmed poster. */
+.lpc-r7track-card-waiting { background: #0f1119; border: max(1px, 0.18cqw) dashed rgba(167, 139, 250, 0.6); border-left: 0.5cqw solid var(--tone); }
+.lpc-r7track-card-waiting .lpc-r7track-card-poster { opacity: 0.55; }
+/* Start: a play button at the end. */
+.lpc-r7track-card-play {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 4.6cqw;
+	height: 4.6cqw;
+	border-radius: 50%;
+	background: var(--tone);
+	color: #06281d;
+	font-size: max(10px, 1.6cqw);
+}
+.lpc-r7track-card-wish { background: linear-gradient(90deg, rgba(251, 191, 36, 0.14), #121621 55%); }
+
+/* ---------- Chapter 10: your ratings */
+.lpc-r7track-imports-head { position: absolute; left: 5cqw; top: 9cqh; right: 5cqw; }
+.lpc-r7track-imports-head .lpc-r7track-h { margin-top: 1cqh; }
+.lpc-r7track-imports-head-right { left: 38cqw; }
+.lpc-r7track-imports-line { position: absolute; left: 0; right: 0; top: 83cqh; text-align: center; }
+.lpc-r7track-srcwrap {
+	position: absolute;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.8cqh;
+	margin-left: -4.5cqw;
+	margin-top: -4.5cqw;
+}
+.lpc-r7track-src {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 9cqw;
+	height: 9cqw;
+	border-radius: 1.8cqw;
+	background: #161a26;
+	box-shadow: 0 1cqw 3cqw rgba(0, 0, 0, 0.5), inset 0 0 0 max(1px, 0.12cqw) rgba(255, 255, 255, 0.1);
+	overflow: hidden;
+}
+.lpc-r7track-src img { width: 72%; height: 72%; object-fit: contain; }
+.lpc-r7track-src-tile { font-weight: 900; font-size: max(12px, 2.8cqw); letter-spacing: -0.02em; }
+.lpc-r7track-src-name { font-weight: 700; color: rgba(255, 255, 255, 0.75); font-size: max(8px, 1.15cqw); white-space: nowrap; }
+.lpc-r7track-src-small { width: 4.4cqw; height: 4.4cqw; border-radius: 1cqw; }
+.lpc-r7track-src-small .lpc-r7track-src-tile { font-size: max(9px, 1.4cqw); }
+/* A box of no size on the G's centre: its scale animations grow the G around that point. */
+.lpc-r7track-g {
+	position: absolute;
+	z-index: 3;
+	width: 0;
+	height: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	filter: drop-shadow(0 0 3cqw rgba(251, 191, 36, 0.45));
+}
+.lpc-r7track-g > * { flex: none; }
+.lpc-r7track-out-poster { position: absolute; width: 8.5cqw; margin-left: -4.25cqw; margin-top: -11.3cqh; }
+.lpc-r7track-out-poster .lpc-r7track-poster { width: 100%; }
+.lpc-r7track-srcrow {
+	position: absolute;
+	left: 5cqw;
+	display: flex;
+	align-items: center;
+	gap: 1.2cqw;
+	margin-top: -2.2cqw;
+	font-weight: 800;
+	font-size: max(10px, 1.5cqw);
+}
+.lpc-r7track-dot { position: absolute; z-index: 2; width: 2.6cqw; margin-left: -1.3cqw; margin-top: -2cqw; }
+.lpc-r7track-dot .lpc-r7track-poster { width: 100%; border-radius: 0.3cqw; }
+.lpc-r7track-picks { position: absolute; left: 66cqw; right: 4cqw; top: 40cqh; }
+.lpc-r7track-picks-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1cqw; margin-top: 1.6cqh; }
+.lpc-r7track-picks-row .lpc-r7track-poster { width: 100%; }
+
+/* ---------- Chapter 10, round 7: sources left (they stay), titles stream into the G, picks right. */
+.lpc-r7track-imp-head { position: absolute; left: 5cqw; right: 5cqw; top: 8cqh; z-index: 4; }
+.lpc-r7track-imp-head .lpc-r7track-h { margin-top: 1cqh; white-space: nowrap; }
+.lpc-r7track-imp-line { margin-top: 1.8cqh; }
+.lpc-r7track-imp-src {
+	position: absolute;
+	z-index: 2;
+	width: 7.8cqw;
+	margin-left: -3.9cqw;
+	margin-top: -6.9cqh;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.9cqh;
+}
+.lpc-r7track-imp-tile {
+	display: flex;
+	width: 7.8cqw;
+	height: 7.8cqw;
+	border-radius: 1.5cqw;
+	overflow: hidden;
+	box-shadow: 0 1cqw 2.6cqw rgba(0, 0, 0, 0.5);
+	box-sizing: border-box;
+}
+.lpc-r7track-imp-tile img { width: 100%; height: 100%; object-fit: contain; }
+.lpc-r7track-imp-name { font-weight: 700; font-size: max(9px, 1.15cqw); color: rgba(255, 255, 255, 0.7); white-space: nowrap; }
+.lpc-r7track-imp-dot { position: absolute; z-index: 1; width: 3.6cqw; margin-left: -1.8cqw; margin-top: -2.7cqw; }
+.lpc-r7track-imp-dot .lpc-r7track-poster { width: 100%; border-radius: 0.3cqw; }
+.lpc-r7track-imp-pick { position: absolute; z-index: 2; width: 8cqw; margin-left: -4cqw; margin-top: -10.7cqh; }
+.lpc-r7track-imp-pick .lpc-r7track-poster { width: 100%; }
+.lpc-r7track-imp-picks-label { position: absolute; left: 67.5cqw; top: 31cqh; }
+
+/* ---------- Chapter 11, round 7: a soft tap ripple on a random poster, inviting a tap. */
+.lpc-r7track-tap { position: absolute; z-index: 20; width: 0; height: 0; pointer-events: none; }
+.lpc-r7track-tap i { position: absolute; border-radius: 50%; opacity: 0; }
+/* The touch: a soft white dot that presses in and lifts. */
+.lpc-r7track-tap-dot {
+	left: -2.4cqw;
+	top: -2.4cqw;
+	width: 4.8cqw;
+	height: 4.8cqw;
+	background: rgba(255, 255, 255, 0.85);
+	box-shadow: 0 0 0 0.5cqw rgba(255, 255, 255, 0.25), 0 0.6cqw 2cqw rgba(0, 0, 0, 0.45);
+	animation: lpc-r7track-tapdot calc(1050ms * var(--k, 1)) cubic-bezier(.16, 1, .3, 1) both;
+}
+/* Two rings spread from it, the second a beat later. */
+.lpc-r7track-tap-ring {
+	left: -5cqw;
+	top: -5cqw;
+	width: 10cqw;
+	height: 10cqw;
+	border: 0.45cqw solid #fff;
+	box-shadow: 0 0 1.6cqw rgba(251, 191, 36, 0.7), inset 0 0 1.2cqw rgba(251, 191, 36, 0.4);
+	animation: lpc-r7track-tapring calc(1000ms * var(--k, 1)) cubic-bezier(.16, 1, .3, 1) calc(120ms * var(--k, 1)) both;
+}
+.lpc-r7track-tap-ring2 { animation-delay: calc(330ms * var(--k, 1)); border-width: 0.3cqw; }
+@keyframes lpc-r7track-tapring { 0% { opacity: 0; transform: scale(0.3); } 15% { opacity: 1; } 100% { opacity: 0; transform: scale(1.55); } }
+@keyframes lpc-r7track-tapdot { 0% { opacity: 0; transform: scale(1.3); } 22% { opacity: 1; transform: scale(0.85); } 55% { opacity: 0.9; transform: scale(1); } 100% { opacity: 0; transform: scale(1); } }
+
+/* ---------- Chapter 11: the quiz, the slots, the pointer */
+.lpc-r7track-quiz { position: absolute; left: 0; right: 0; top: 0; bottom: 8.5cqh; }
+.lpc-r7track-quiz .lpft-poster img {
+	animation: lpc-r7track-deal calc(750ms * var(--k, 1)) cubic-bezier(.25, .8, .25, 1) calc((var(--qd, 0ms) + var(--i, 0) * 70ms) * var(--k, 1)) both;
+}
+.lpc-r7track-turn {
+	position: absolute;
+	inset: 0;
+	z-index: 7;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	pointer-events: none;
+	text-align: center;
+}
+.lpc-r7track-slots { display: flex; gap: 1.6cqw; margin-top: 4cqh; }
+.lpc-r7track-slot-box { transform-origin: 50% 50%; }
+.lpc-r7track-slot {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 9cqw;
+	aspect-ratio: 2 / 3;
+	border-radius: 1cqw;
+	border: max(2px, 0.3cqw) dashed rgba(251, 191, 36, 0.85);
+	color: #fbbf24;
+	font-weight: 800;
+	font-size: max(14px, 3.4cqw);
+}
+.lpc-r7track-roam {
+	position: absolute;
+	left: 0;
+	top: 0;
+	z-index: 9;
+	pointer-events: none;
+	opacity: 0;
+	transition:
+		transform calc(700ms * var(--k, 1)) cubic-bezier(.45, 0, .3, 1),
+		opacity calc(350ms * var(--k, 1)) ease-out;
+	filter: drop-shadow(0 0.6cqw 1.6cqw rgba(0, 0, 0, 0.55));
+}
+.lpc-r7track-roam-on { opacity: 1; }
+.lpc-r7track-roam > div { transform-origin: 0 0; }
+.lpc-r7track-roam-press { animation: lpc-r7track-press calc(320ms * var(--k, 1)) ease-in-out both; }
+.lpc-r7track-cursor { display: block; width: 3.6cqw; }
+.lpc-r7track-finger { display: block; width: 7cqw; transform: translate(-50%, -50%); }
+.lpc-r7track-tapring {
+	position: absolute;
+	z-index: 8;
+	width: 12cqw;
+	height: 12cqw;
+	margin: -6cqw 0 0 -6cqw;
+	border-radius: 50%;
+	border: max(3px, 0.4cqw) solid #fff;
+	box-shadow: 0 0 2cqw rgba(255, 255, 255, 0.6);
+	pointer-events: none;
+	opacity: 0;
+	animation: lpc-r7track-tap calc(800ms * var(--k, 1)) ease-out both;
+}
+@keyframes lpc-r7track-tap {
+	0% { opacity: 1; transform: scale(0.2); }
+	100% { opacity: 0; transform: scale(1.6); }
+}
+
+/* ---------- The phone TV: one centred feed, bigger type, secondary lines go */
+@container (max-width: 520px) {
+	.lpc-r7track-line,
+	.lpc-r7track-card-line,
+	.lpc-r7track-src-name { display: none; }
+	.lpc-r7track-h-mid { font-size: 7.4cqw; }
+	.lpc-r7track-h-feed { font-size: 7.6cqw; }
+	.lpc-r7track-flow-side,
+	.lpc-r7track-flow-center { --cw: 74cqw; --fx: 13cqw; --bx: 50cqw; --by: 50cqh; --bs: 1.15; --ch: 14cqh; }
+	.lpc-r7track-flow-side .lpc-r7track-flow-head { left: 0; right: 0; width: auto; top: 6cqh; text-align: center; }
+	.lpc-r7track-flow-side .lpc-r7track-feedview {
+		-webkit-mask-image: linear-gradient(180deg, transparent 0, transparent 26%, #000 48%, #000 100%);
+		mask-image: linear-gradient(180deg, transparent 0, transparent 26%, #000 48%, #000 100%);
+	}
+	.lpc-r7track-card-title { font-size: 3.6cqw; }
+	/* The card is short here: the kind shows by its colour edge and the line under the title goes. */
+	.lpc-r7track-card-tag { display: none; }
+	.lpc-r7track-flow .lpc-r7track-flow-head { top: 13cqh !important; }
+	.lpc-r7track-pill { font-size: 2.4cqw; }
+	.lpc-r7track-bleed-big { font-size: 7cqw; }
+	.lpc-r7track-bleed-tag { font-size: 2.6cqw; }
+	.lpc-r7track-card-play { width: 8cqw; height: 8cqw; }
+	.lpc-r7track-src { width: 9cqw; height: 9cqw; }
+	.lpc-r7track-src-tile { font-size: 3.6cqw; }
+	.lpc-r7track-srcrow span:last-child { display: none; }
+	.lpc-r7track-imports-head-right { left: 30cqw; }
+	.lpc-r7track-cursor { width: 6cqw; }
+	.lpc-r7track-imp-head .lpc-r7track-h { white-space: normal; }
+	.lpc-r7track-imp-name { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+	.lpc-r7track-a,
+	.lpc-r7track-a2,
+	.lpc-r7track-a3,
+	.lpc-r7track-column,
+	.lpc-r7track-quiz .lpft-poster img {
+		animation-duration: 1ms !important;
+		animation-delay: 0ms !important;
+	}
+	.lpc-r7track-roam,
+	.lpc-r7track-tapring,
+	.lpc-r7track-tap { display: none; }
+}
+
+/* Round 7: in the feed, the example label sits in the free corner under the headline, clear of the feed. */
+.lpc-r7track-flow .lpc-r7track-example { right: auto; left: 5cqw; top: auto; bottom: 12cqh; }
+@container (max-width: 520px) {
+	.lpc-r7track-flow .lpc-r7track-example { left: 50%; transform: translateX(-50%); bottom: auto; top: 4cqh; }
+}
+@container (max-width: 520px) {
+	/* The headline sits over the feed's upper half on the phone: the feed fades out well below it. */
+	.lpc-r7track-flow-side .lpc-r7track-feedview {
+		-webkit-mask-image: linear-gradient(180deg, transparent 0, transparent 41%, #000 53%, #000 100%);
+		mask-image: linear-gradient(180deg, transparent 0, transparent 41%, #000 53%, #000 100%);
+	}
+}
