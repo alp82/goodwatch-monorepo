@@ -1,0 +1,37 @@
+/* PROTOTYPE - throwaway. Round 11: the TV turning on, as the film's first clip. */
+.lpc-r11-boot {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: #000;
+}
+/* The CRT line opens the picture (landing.css's lp-crt), timed by the stage's --k. */
+.lpc-r11-boot .lpc-r11-flash {
+	animation: lp-crt calc(600ms * var(--k)) cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+/* The wordmark: the TV's boot pop and reveal (living-room.css), then a slow push-in while it holds. */
+.lpc-r11-mark {
+	position: relative;
+	animation: lpc-r11-push calc(2000ms * var(--k)) linear calc(600ms * var(--k)) both;
+}
+.lpc-r11-boot .lr-boot .lr-boot-g {
+	animation-duration: calc(700ms * var(--k));
+	animation-delay: calc(350ms * var(--k));
+}
+.lpc-r11-boot .lr-boot .lr-boot-letters {
+	animation-duration: calc(600ms * var(--k));
+	animation-delay: calc(750ms * var(--k));
+}
+@keyframes lpc-r11-push {
+	from { transform: scale(1); }
+	to { transform: scale(1.06); }
+}
+@container (max-width: 520px) {
+	.lpc-r11-mark { transform-origin: center; scale: 0.6; }
+}
+@media (prefers-reduced-motion: reduce) {
+	.lpc-r11-boot .lpc-r11-flash { animation: none; opacity: 0; }
+	.lpc-r11-mark { animation: none; }
+}

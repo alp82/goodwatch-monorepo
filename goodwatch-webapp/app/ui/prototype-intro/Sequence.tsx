@@ -37,6 +37,7 @@ export function Sequence({
 	onEnd,
 	onAt,
 	chapters = false,
+	firstEnter,
 }: {
 	clips: Clip[]
 	data: IntroData
@@ -49,6 +50,8 @@ export function Sequence({
 	onAt?: (index: number) => void
 	/** Show the chapter bar: one segment per clip, labelled by its section, click to jump. */
 	chapters?: boolean
+	/** How the first clip comes in (it has no clip before it): e.g. "deal" after the TV's own boot screen. */
+	firstEnter?: TransitionId
 }) {
 	// Kept in a ref: a new `onEnd` each render must not restart the clip's timer.
 	const endRef = useRef(onEnd)
@@ -102,8 +105,8 @@ export function Sequence({
 		return (
 			<div
 				key={`${run}-${lap}-${jumps}-${i}-${clip.id}`}
-				className={`lpi-slot lpi-${role} lpi-tr-${trOf(role === "out" ? at : i)}`}
-				style={{ "--o": `${overlap}ms` } as CSSProperties}
+				className={`lpi-slot lpi-${role} lpi-tr-${prev === null && firstEnter && i === 0 ? firstEnter : trOf(role === "out" ? at : i)}`}
+				style={{ "--o": `${prev === null && firstEnter && i === 0 ? TRANSITIONS[firstEnter].overlap : overlap}ms` } as CSSProperties}
 				data-clip={clip.id}
 			>
 				<C data={data} />
@@ -113,11 +116,17 @@ export function Sequence({
 	return (
 		<>
 			{prev !== null && slot(prev, "out")}
-			{slot(at, prev !== null ? "in" : "on")}
+			{slot(at, prev !== null || (firstEnter && at === 0 && lap === 0 && jumps === 0) ? "in" : "on")}
 			{prev !== null && trOf(at) === "wipe" && <div key={`w-${run}-${lap}-${at}`} className="lpi-wipe" style={{ "--o": `${overlap}ms` } as CSSProperties} />}
 			{/* The film's chapters, without "Your turn": the quiz is where the film ends, not a chapter of it. */}
-			{chapters && filmCount(clips) > 1 && at < filmCount(clips) && (
-				<ChapterBar clips={clips.slice(0, filmCount(clips))} at={at} k={k} run={`${run}-${lap}-${jumps}`} onJump={jump} />
+			{chapters && filmCount(clips) - bootCount(clips) > 1 && at >= bootCount(clips) && at < filmCount(clips) && (
+				<ChapterBar
+					clips={clips.slice(bootCount(clips), filmCount(clips))}
+					at={at - bootCount(clips)}
+					k={k}
+					run={`${run}-${lap}-${jumps}`}
+					onJump={(i) => jump(i + bootCount(clips))}
+				/>
 			)}
 		</>
 	)
@@ -126,6 +135,12 @@ export function Sequence({
 /** How many clips are film: everything before the closer (the quiz). */
 const filmCount = (clips: Clip[]) => {
 	const i = clips.findIndex((c) => c.section === "closer")
+	return i < 0 ? clips.length : i
+}
+
+/** How many clips at the start are the TV turning on: not chapters either. */
+const bootCount = (clips: Clip[]) => {
+	const i = clips.findIndex((c) => c.section !== "boot")
 	return i < 0 ? clips.length : i
 }
 

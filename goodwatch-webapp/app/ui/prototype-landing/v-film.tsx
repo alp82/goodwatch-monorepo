@@ -25,7 +25,11 @@ export function useFilm({ data, tvOpen }: VariantProps): Landing {
 	}, [])
 	// The intro lab's "Play on the TV": `clips`, `speed` and `tr` name a sequence of lab clips to play instead.
 	const [params] = useSearchParams()
-	const clips = useMemo(() => (params.get("clips") ?? "").split(",").flatMap((id) => clipById(id) ?? []), [params])
+	// The TV boots by itself (the CSS boot below, painted before any script), so the lab's boot clip is left out
+	// and the first clip deals in after it, as the boot clip hands over in the lab.
+	const listed = useMemo(() => (params.get("clips") ?? "").split(",").flatMap((id) => clipById(id) ?? []), [params])
+	const clips = useMemo(() => listed.filter((c) => c.section !== "boot"), [listed])
+	const firstEnter = listed[0]?.section === "boot" ? (clips[0]?.enter ?? "deal") : undefined
 	const k = { "0.7×": 1.43, "0.8×": 1.25, "0.9×": 1.11, "1×": 1, "1.15×": 0.87 }[params.get("speed") ?? ""] ?? 1
 	const tr = ((params.get("tr") ?? "") in TRANSITIONS ? params.get("tr") : "fade") as TransitionId
 	const lab = clips.length > 0 && data.intro
@@ -43,7 +47,7 @@ export function useFilm({ data, tvOpen }: VariantProps): Landing {
 						{lab ? (
 							<SequenceAfterBoot>
 								<Stage k={k}>
-									<Sequence clips={clips} data={data.intro!} k={k} transition={tr} chapters onEnd={() => setSkipped(true)} />
+									<Sequence clips={clips} data={data.intro!} k={k} transition={tr} chapters firstEnter={firstEnter} onEnd={() => setSkipped(true)} />
 								</Stage>
 							</SequenceAfterBoot>
 						) : (

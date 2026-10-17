@@ -19,7 +19,7 @@ const EVERY = 1150
 const quizCards = (data: IntroData) => data.pool.slice(1).filter((c) => c.poster_path).slice(0, 12)
 
 /** Round 5's closer-slots, with ripples instead of a pointer. */
-export function CloserRipples({ data }: ClipProps) {
+export function CloserRipples({ data, every = EVERY }: ClipProps & { every?: number }) {
 	const root = useRef<HTMLDivElement>(null)
 	const mine = useBoxes(root, ".lpc-r5track-slot-box")
 	const theirs = useBoxes(root, ".lpft-slot")
@@ -53,7 +53,7 @@ export function CloserRipples({ data }: ClipProps) {
 				n += 1
 				setRipple({ n, x: ((b.left - r.left + b.width / 2) / r.width) * 100, y: ((b.top - r.top + b.height / 2) / r.height) * 100 })
 			}
-			timer = setTimeout(next, EVERY * k)
+			timer = setTimeout(next, every * k)
 		}
 		timer = setTimeout(next, FIRST_RIPPLE * k)
 		// Any touch, click or key ends the invitation: the visitor has found the quiz.

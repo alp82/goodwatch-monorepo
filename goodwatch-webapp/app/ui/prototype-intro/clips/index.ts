@@ -31,16 +31,18 @@ import { CLIPS as r9c } from "./r9c"
 import { CLIPS as r10a } from "./r10a"
 import { CLIPS as r10b } from "./r10b"
 import { CLIPS as r10c } from "./r10c"
+import { CLIPS as r11 } from "./r11"
+import { CLIPS as r11feel } from "./r11feel"
 
 // Round 6 (2026-10-17): the lab shows only the bases the owner picked and the new round 6 clips. Everything else
 // is behind "Show older clips".
 const BASES = new Set([
-	// Round 10 (2026-10-17): the round 9 cut, in the owner's new order; the r10 groups change some of it.
-	"opener-bubbles-r9", "score-hand-r9", "streaming-netflix-r9", "search-native-r9", "fingerprint-own-zoom-r9",
-	"recommendations-wall-dive-r9", "explorer-fly-r9", "filters-r9", "tracking-feed-r9", "imports-r9", "closer-ripples-r7",
+	// Round 11 (2026-10-17): the round 10 cut; for you now comes before how it feels.
+	"score-hand-r9", "streaming-netflix-r10", "search-native-r9", "search-native-r10", "recommendations-wall-dive-r10",
+	"fingerprint-own-zoom-r10", "explorer-fly-r9", "filters-r9", "tracking-feed-r10", "imports-r10",
 ])
 /** The current round's groups: everything in them stays visible. */
-const ROUND6 = /^r10/
+const ROUND6 = /^r11/
 /** The owner moved "Bring your ratings" into a chapter of its own. */
 const MOVED: Record<string, Clip["section"]> = { "tracking-import": "imports" }
 
@@ -49,7 +51,7 @@ const groups: [string, Clip[]][] = [
 	["explorertrack", explorertrack], ["r5open", r5open], ["r5score", r5score], ["r5feel", r5feel],
 	["r5filter", r5filter], ["r5map", r5map], ["r5track", r5track],
 	["r6open", r6open], ["r6score", r6score], ["r6feel", r6feel], ["r6filter", r6filter], ["r6map", r6map], ["r6track", r6track],
-	["r7open", r7open], ["r7feel", r7feel], ["r7filter", r7filter], ["r7map", r7map], ["r7track", r7track], ["r8filter", r8filter], ["r8map", r8map], ["r8track", r8track], ["r9a", r9a], ["r9b", r9b], ["r9c", r9c], ["r10a", r10a], ["r10b", r10b], ["r10c", r10c],
+	["r7open", r7open], ["r7feel", r7feel], ["r7filter", r7filter], ["r7map", r7map], ["r7track", r7track], ["r8filter", r8filter], ["r8map", r8map], ["r8track", r8track], ["r9a", r9a], ["r9b", r9b], ["r9c", r9c], ["r10a", r10a], ["r10b", r10b], ["r10c", r10c], ["r11", r11], ["r11feel", r11feel],
 ]
 
 export const ALL_CLIPS: Clip[] = groups.flatMap(([group, clips]) =>
