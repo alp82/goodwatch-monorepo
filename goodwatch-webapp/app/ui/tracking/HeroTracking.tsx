@@ -328,6 +328,30 @@ const GO =
 	"inline-flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg bg-white/10 px-3 text-xs font-semibold text-white ring-1 ring-white/15 hover:bg-white/20 group-hover:bg-white/20"
 
 /** A show nobody has started yet: no status and no progress, only the way down to its seasons and episodes. */
+/** The look of a progress line that is itself the link to the episode list. */
+const LINE_LINK = `group flex h-9 min-w-0 flex-1 items-center gap-2.5 rounded-lg bg-white/10 px-3 ring-1 ring-white/15 transition-colors hover:bg-white/20 ${FOCUS}`
+
+/** Watched of aired as a count and a bar that takes the room left. */
+function WideProgress({ watched, aired }: { watched: number; aired: number }) {
+	return (
+		<>
+			<span className="shrink-0 text-xs font-semibold tabular-nums text-white">
+				{watched}/{aired}
+			</span>
+			<span
+				className="block h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-white/15"
+				aria-hidden="true"
+			>
+				<span
+					className="block h-full rounded-full bg-green-500 transition-[width]"
+					style={{ width: `${aired ? (watched / aired) * 100 : 0}%` }}
+				/>
+			</span>
+			<ArrowDownIcon className="h-3.5 w-3.5 shrink-0 text-gray-300 transition group-hover:translate-y-0.5 group-hover:text-white" />
+		</>
+	)
+}
+
 function StartLine({
 	tracking,
 	view,
@@ -350,27 +374,22 @@ function StartLine({
 	const seasons = new Set(
 		aired.map((episode) => episode.displaySeason ?? episode.season),
 	).size
+	// An empty progress bar: the way to the episode list, where the episodes already seen are marked.
+	const words = `Already watching? ${plural(seasons, "season")} · ${plural(view.derived.aired, "episode")}. Mark what you've seen in the episode list.`
 	return (
 		<a
 			href={`#${EPISODE_GRID_ANCHOR}`}
 			data-tracking-box
 			data-start-episodes
-			aria-label={`${plural(seasons, "season")}, ${plural(view.derived.aired, "episode")}. Go to the episode list to mark what you've watched`}
+			aria-label={words}
+			title={words}
 			onClick={(event) => {
 				event.preventDefault()
 				tracking.store.openEpisode(first.id)
 			}}
-			className={`group flex h-9 min-w-0 flex-1 items-center gap-2 rounded-lg bg-white/10 px-3 ring-1 ring-white/15 transition-colors hover:bg-white/20 ${FOCUS}`}
+			className={LINE_LINK}
 		>
-			<span className="min-w-0 flex-1 truncate text-xs text-gray-300">
-				<span className="font-semibold text-white underline decoration-white/30 underline-offset-2 group-hover:decoration-white">
-					Already watching?
-				</span>{" "}
-				<span className="max-sm:hidden">
-					{plural(seasons, "season")} · {plural(view.derived.aired, "episode")}
-				</span>
-			</span>
-			<ArrowDownIcon className="h-3.5 w-3.5 shrink-0 text-gray-300 transition group-hover:translate-y-0.5 group-hover:text-white" />
+			<WideProgress watched={0} aired={view.derived.aired} />
 		</a>
 	)
 }
@@ -455,22 +474,15 @@ function StatusLine({
 				href={`#${EPISODE_GRID_ANCHOR}`}
 				data-tracking-box
 				data-go-episodes
-				aria-label={`${noNext} Go to episodes`}
-				title={noNext}
+				aria-label={`${extras.join(", ")}. ${noNext} Go to episodes`}
+				title={`${extras.join(" · ")}. ${noNext}`}
 				onClick={(event) => {
 					event.preventDefault()
 					tracking.store.openEpisode(null)
 				}}
-				className={`group flex h-9 min-w-0 flex-1 items-center gap-2.5 rounded-lg bg-white/10 px-3 ring-1 ring-white/15 transition-colors hover:bg-white/20 ${FOCUS}`}
+				className={LINE_LINK}
 			>
-				{progress}
-				<span
-					data-no-next
-					className="ml-auto min-w-0 truncate text-right text-xs text-gray-300 group-hover:text-white max-sm:sr-only"
-				>
-					{noNext}
-				</span>
-				<ArrowDownIcon className="h-3.5 w-3.5 shrink-0 text-gray-300 transition group-hover:translate-y-0.5 group-hover:text-white max-sm:ml-auto" />
+				<WideProgress watched={derived.watched} aired={derived.aired} />
 			</a>
 		)
 	return (
@@ -494,11 +506,6 @@ function StatusLine({
 							{derived.newEpisodes ? " since you saw it" : " episode"}
 						</span>
 					</span>
-					{next.name && (
-						<span className="min-w-0 truncate text-xs font-medium text-gray-200 max-xl:hidden xl:max-w-24">
-							{next.name}
-						</span>
-					)}
 					<span data-go-episodes className={GO}>
 						{episodeLabel(next)}
 						<ArrowDownIcon className="h-3.5 w-3.5" />
