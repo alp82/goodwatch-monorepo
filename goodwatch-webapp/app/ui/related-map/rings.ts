@@ -161,7 +161,7 @@ export function ringsKit(core: MapCore, words: TraitWords) {
 	/** How small the posters get: on a phone they stay wide enough for a finger. */
 	const zooms = (): number[] => {
 		if (!roomy()) return [1, 0.8, 0.66]
-		if (fsOn()) return [1, 0.75, 0.56, 0.42]
+		if (fsOn()) return [1, 0.75, 0.56]
 		if (V === "B") return [1, 0.75, 0.56, 0.42]
 		if (V === "C") return [1, 0.72, 0.52, 0.38]
 		if (V === "D") {

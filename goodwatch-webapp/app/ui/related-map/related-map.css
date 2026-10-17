@@ -345,3 +345,25 @@ foot. The foot grows upward into free space, so nothing above it moves when a po
 .pl .rg-big .fn-nt:not(:has(:not(.fn-hint))):not(:has(b)){display:none}
 .pl .rg-big .rg-info[data-r-pk] .fn-kk{color:#fbbf24}
 }
+/* PROTOTYPE - throwaway (related-posters-zoom): every poster is a layer of its own, rastered once, so that a pan, a
+zoom, or a fade only moves pixels on the GPU. Without it each poster's scale and move are painted again every frame. */
+.rg .rm-w>.rm-p{will-change:transform,translate,scale,opacity;backface-visibility:hidden}
+/* PROTOTYPE - throwaway (related-posters-zoom): a poster's ring is a border on a pseudo element, not an outline.
+Chrome paints an outlined element again on every frame of its scale animation, and decodes its image again with it. */
+.rg .rm-w>.rm-p{outline:0;--ol:rgba(255,255,255,.14);--ow:2px;--os:solid}
+.rg .rm-w>.rm-p::before{content:"";position:absolute;inset:calc(var(--ow)*-1);z-index:1;border:var(--ow) var(--os) var(--ol);border-radius:calc(.375rem + var(--ow));pointer-events:none}
+.rg .rm-w>.rm-p:hover{--ol:#fbbf24}
+.rg .rm-w>.rm-p:focus-visible{outline:0;--ol:#fff}
+.rg .rm-w>.rm-p[data-pl-came]{--os:dashed;--ol:rgba(255,255,255,.6)}
+.rg .rm-w>.rm-p[data-pl-came]:hover{--ol:#fbbf24}
+.rg .rm-w>.rm-p[style*="--dm"]{--os:dashed}
+.rg .rm-w>.rm-p.pl-ph{--ow:1px;--os:dashed;--ol:rgba(255,255,255,.13)}
+.rg .rm-w>.rg-c,.rg .rm-w>.rg-c:hover{--ow:3px;--ol:#fff}
+.rg .rm-w>.rm-p[data-fn-lit]{--ol:#4ade80}
+.rg .rm-w>.rm-p[data-fn-ld="dn"]{--ol:#f87171}
+/* PROTOTYPE - throwaway (related-posters-zoom): the chips' comparison bar and mark move with translate and scale, not
+left and width, so that pointing at posters lays nothing out. */
+.ix-c>.fn-pz{left:0;width:100%;transform-origin:0 0;translate:calc(var(--pa,var(--v))*10%) 0;scale:calc((var(--pb,var(--v)) - var(--pa,var(--v)))/10) 1;
+transition:translate .28s cubic-bezier(.3,.3,.2,1),scale .28s cubic-bezier(.3,.3,.2,1),opacity .28s ease-in}
+.ix-c>.fn-pk{left:0;width:100%;margin-left:-1px;translate:calc(var(--pm,var(--v))*10%) 0;transition:translate .28s cubic-bezier(.3,.3,.2,1),opacity .28s ease-in}
+.ix-c[data-fn-pk] .fn-pz{transition-timing-function:cubic-bezier(.3,.3,.2,1),cubic-bezier(.3,.3,.2,1),ease-out}
