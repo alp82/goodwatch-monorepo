@@ -413,7 +413,7 @@ test("Ranked catalog search is an explicit opt-in and documents its member quota
 	assert.match(search.description, /paging.*free/i)
 })
 
-test("Write scopes expose all writes with conservative destructive hints and no approval-token schema", async () => {
+test("Write scopes expose all writes with destructive hints on every write and no approval-token schema", async () => {
 	const handle = createReadMcpHandler({
 		resource,
 		authorization: writer,
@@ -442,10 +442,7 @@ test("Write scopes expose all writes with conservative destructive hints and no 
 	)
 	for (const tool of writes) {
 		assert.equal(tool.annotations.readOnlyHint, false)
-		assert.equal(
-			tool.annotations.destructiveHint,
-			!["log_watch", "create_list"].includes(tool.name),
-		)
+		assert.equal(tool.annotations.destructiveHint, true)
 		assert.equal(tool.annotations.idempotentHint, true)
 		assert.equal(tool.inputSchema.required.includes("action_id"), true)
 		assert.equal(

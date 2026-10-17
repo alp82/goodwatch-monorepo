@@ -52,7 +52,7 @@ export const writeToolDefinitions: {
 		title: "Log a watch",
 		description:
 			"Log one movie or episode watch, an inclusive episode range (season, episode, episode_end), or a whole season (season, whole_season=true). Ranges use the catalog season/episode numbers from get_show_progress, mark only aired regular episodes missing in the current pass, never duplicate existing watches, and produce one receipt. Dates remain unknown unless explicitly supplied. Results report every added watch.",
-		destructive: false,
+		destructive: true,
 		schema: writeSelected
 			.safeExtend({
 				...action,
@@ -186,7 +186,7 @@ export const writeToolDefinitions: {
 		title: "Create a share list",
 		description:
 			"Create a share list of exactly five distinct titles in rank order. Requires an existing site handle; if missing, returns handle_required and the Lists page. Uses the site's default card and Ember theme. Public by default; unlisted is accessible to anyone with the share link. Returns the site's real share link. Does not change ratings or Wishlist.",
-		destructive: false,
+		destructive: true,
 		schema: z
 			.object({
 				...action,
