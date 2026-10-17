@@ -1,0 +1,36 @@
+/* PROTOTYPE - throwaway. Round 14, builder A: feelings without the summary, the lighter streaming wall, the tracking
+   card whose Want to See button fits. Transform and opacity only, timed by --k. */
+
+/* How it feels: the last feeling stays and pushes in slowly under the crossfade. */
+.lpc-r14a-hold { animation: lpc-r14a-hold calc(var(--hl, 1500ms) * var(--k)) cubic-bezier(.33, 0, .4, 1) calc(var(--d) * var(--k)) both; }
+@keyframes lpc-r14a-hold { from { transform: scale(1); } to { transform: scale(1.06); } }
+
+/* Streaming: the wall's camera, one layer, from a smaller start scale than round 10's 2.3. */
+.lpc-r14a-camera { transform-origin: 50% 50%; will-change: transform; }
+@keyframes lpc-r14a-pull { from { transform: scale(1.75); } to { transform: scale(0.88); } }
+/* Wall tiles: plain logos, no shadow (one shadow per tile was most of the redraw while the camera moved). */
+.lpc-r14a-tile { display: block; object-fit: cover; background: #10131c; }
+
+/* The count over the wall: one short shadow. The vignette and the dimmed wall carry the contrast; round 10's two
+   wide blurred shadows on 19cqw type were most of the redraw work while the count came in. */
+.lpc-r14a-stream .lpc-r7map-count,
+.lpc-r14a-stream .lpc-r7map-count-line { text-shadow: 0 0.3cqw 1.2cqw rgba(0, 0, 0, 0.85); }
+
+/* Tracking: the Want to See button at the card's end, the title keeping the room it needs. */
+.lpc-r14a-wish-btn { flex: none; justify-items: end; }
+.lpc-r14a-wish-btn > * { justify-self: end; }
+/* With the button beside it, a long title takes two lines instead of an ellipsis. */
+.lpc-r7track-card-wish .lpc-r7track-card-title {
+	white-space: normal;
+	display: -webkit-box;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
+	line-height: 1.05;
+}
+@container (max-width: 520px) {
+	.lpc-r14a-wish-btn .lpc-r7track-pill { font-size: 2.6cqw; padding: 0.8cqw 2cqw; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.lpc-r14a-hold { animation: none; }
+}

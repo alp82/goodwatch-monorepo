@@ -22,7 +22,7 @@ import type { TvService } from "~/ui/living-room/tv/tv-home"
 export const SECTIONS = [
 	// Round 12 order (owner, 2026-10-17). "boot" (the TV turning on) and "closer" (the quiz) are not chapters.
 	{ id: "boot", name: "TV turns on", chapter: "Intro" },
-	{ id: "opener", name: "The problem", chapter: "The problem" },
+	{ id: "opener", name: "Let's watch", chapter: "Let's watch" },
 	{ id: "score", name: "One score", chapter: "One score" },
 	{ id: "streaming", name: "Where it streams", chapter: "Streaming" },
 	{ id: "recommendations", name: "Picked for you", chapter: "For you" },

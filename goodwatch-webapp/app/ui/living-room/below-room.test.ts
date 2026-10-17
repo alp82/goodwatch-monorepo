@@ -120,11 +120,11 @@ test("each poster is an image in the HTML that loads lazily and holds its place"
 	assert.equal(images.length, 15)
 	assert.equal(
 		images[0],
-		'<img src="https://image.tmdb.org/t/p/w92/poster0.jpg" srcSet="https://image.tmdb.org/t/p/w92/poster0.jpg 92w, https://image.tmdb.org/t/p/w154/poster0.jpg 154w" sizes="46px" width="46" height="69" alt="Title 1 poster" loading="lazy" decoding="async"/>',
+		'<img src="https://image.tmdb.org/t/p/w154/poster0.jpg" srcSet="https://image.tmdb.org/t/p/w154/poster0.jpg 154w, https://image.tmdb.org/t/p/w342/poster0.jpg 342w" sizes="(min-width: 1100px) 140px, (min-width: 900px) 15vw, (min-width: 640px) 22vw, 30vw" width="154" height="231" alt="Title 1 poster" loading="lazy" decoding="async"/>',
 	)
 	for (const tag of images) {
 		assert.match(tag, / loading="lazy"/)
-		assert.match(tag, / width="46" height="69"/)
+		assert.match(tag, / width="154" height="231"/)
 		assert.match(tag, / alt="[^"]+ poster"/)
 	}
 	assert.doesNotMatch(rendered.empty, /<img/)

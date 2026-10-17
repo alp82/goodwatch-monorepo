@@ -18,6 +18,8 @@ const START = BOOT_MS - 350
 
 export function useFilm({ data, tvOpen }: VariantProps): Landing {
 	const [left, setLeft] = useState(false)
+	const [chapter, setChapter] = useState<{ at: number; n: number } | null>(null)
+	const booted = useAfter(BOOT_MS + 300)
 	const [skipped, setSkipped] = useState(false)
 	// The lab's quiz clip asks to leave with an event: it lives inside the sequence, out of reach of this state.
 	useEffect(() => {
@@ -26,7 +28,22 @@ export function useFilm({ data, tvOpen }: VariantProps): Landing {
 		return () => removeEventListener("lp-film-leave", leave)
 	}, [])
 	// The intro lab's "Play on the TV": `clips`, `speed` and `tr` name a sequence of lab clips to play instead.
-	const [params] = useSearchParams()
+	const [params, setParams] = useSearchParams()
+	// "What is GoodWatch?" in the TV's menu (its About screen, `tv=about`) replays the intro, for anyone.
+	const [replays, setReplays] = useState(0)
+	const about = params.get("tv") === "about"
+	useEffect(() => {
+		if (!about) return
+		setLeft(false)
+		setSkipped(false)
+		setChapter(null)
+		setReplays((n) => n + 1)
+		const next = new URLSearchParams(params)
+		next.delete("tv")
+		setParams(next, { replace: true, preventScrollReset: true })
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [about])
+	const watching = !data.member || replays > 0
 	// The TV boots by itself (the CSS boot below, painted before any script), so the lab's boot clip is left out
 	// and the first clip deals in after it, as the boot clip hands over in the lab.
 	const listed = useMemo(
@@ -45,7 +62,7 @@ export function useFilm({ data, tvOpen }: VariantProps): Landing {
 	// The clip data arrives during the boot, outside the page's HTML.
 	const [intro, setIntro] = useState<VariantProps["data"]["intro"]>(data.intro ?? null)
 	useEffect(() => {
-		if (intro || !clips.length || data.member) return
+		if (intro || !clips.length || !watching) return
 		let gone = false
 		fetch("/prototype/intro-data")
 			.then((r) => (r.ok ? r.json() : null))
@@ -54,13 +71,12 @@ export function useFilm({ data, tvOpen }: VariantProps): Landing {
 		return () => {
 			gone = true
 		}
-	}, [intro, clips.length, data.member])
+	}, [intro, clips.length, watching])
 	const lab = clips.length > 0 && intro
 	// The lab's sequence ends itself (its chapters can be jumped); the old film ends by the clock.
 	const timeUp = useAfter(START + FILM_MS)
 	const over = lab ? false : timeUp
 	// "Watch in the intro" in the section below the room: play the film from that chapter.
-	const [chapter, setChapter] = useState<{ at: number; n: number } | null>(null)
 	useEffect(() => {
 		const go = (e: Event) => {
 			const at = clips.findIndex((c) => c.section === (e as CustomEvent<string>).detail)
@@ -76,11 +92,16 @@ export function useFilm({ data, tvOpen }: VariantProps): Landing {
 	const startTitles = data.startTitles
 	const below = useMemo(() => <HowItWorks titles={startTitles} />, [startTitles])
 	const page = data.member ? {} : { below, homeHeadingAs: "p" as const }
-	if (data.member || tvOpen || left) return { screen: <Boot />, ...page }
+	// The boot plays once, when the page (the TV) first shows. Leaving the intro, a TV screen or a control never
+	// plays it again: the TV's own boot (power off and on) is the only other one.
+	const boot = booted ? null : <Boot />
+	if (!watching || (tvOpen && !about) || left) return { screen: boot, ...page }
 	const playing = !skipped && !over
+	const key = `${replays}-${chapter?.n ?? 0}`
 	return {
 		...page,
 		screen: (
+			<>
 			<div className="lpf">
 				<FilmTaps data={data} onLeave={() => setLeft(true)} />
 				{playing && (
@@ -89,14 +110,14 @@ export function useFilm({ data, tvOpen }: VariantProps): Landing {
 							<SequenceAfterBoot>
 								<Stage k={k}>
 									<Sequence
-										key={chapter?.n ?? 0}
+										key={key}
 										clips={clips}
 										data={intro!}
 										k={k}
 										transition={tr}
 										chapters
-										firstEnter={chapter ? "fade" : firstEnter}
-										startAt={chapter?.at ?? startAt}
+										firstEnter={chapter || replays ? "fade" : firstEnter}
+										startAt={chapter?.at ?? (replays ? 0 : startAt)}
 										onEnd={() => setSkipped(true)}
 									/>
 								</Stage>
@@ -107,8 +128,9 @@ export function useFilm({ data, tvOpen }: VariantProps): Landing {
 						)}
 					</>
 				)}
-				<Boot />
 			</div>
+			{boot}
+			</>
 		),
 	}
 }

@@ -25,8 +25,10 @@ export const startTitleLine = (
 ) =>
 	`${title.media_type === "movie" ? "Movie" : "TV show"}${title.release_year ? ` · ${title.release_year}` : ""}`
 
-/** The poster's width on screen: a phone at two device pixels per pixel still takes the smallest TMDB file. */
-export const START_POSTER = { width: 46, height: 69 }
+/** The poster's box: the cards of the poster grid are 105 to 140 px wide, so w154 at 1x and w342 at 2x. */
+export const START_POSTER = { width: 154, height: 231 }
+/** How wide a poster is drawn: three a row on a phone, four from 640 px, six from 900 px, eight from 1100 px. */
+const START_POSTER_SIZES = "(min-width: 1100px) 140px, (min-width: 900px) 15vw, (min-width: 640px) 22vw, 30vw"
 const poster = (path: string, size: string) =>
 	`https://image.tmdb.org/t/p/${size}${path}`
 
@@ -134,9 +136,9 @@ export function BelowRoom({
 							<li key={`${title.media_type}-${title.tmdb_id}`}>
 								{title.poster_path && (
 									<img
-										src={poster(title.poster_path, "w92")}
-										srcSet={`${poster(title.poster_path, "w92")} 92w, ${poster(title.poster_path, "w154")} 154w`}
-										sizes={`${START_POSTER.width}px`}
+										src={poster(title.poster_path, "w154")}
+										srcSet={`${poster(title.poster_path, "w154")} 154w, ${poster(title.poster_path, "w342")} 342w`}
+										sizes={START_POSTER_SIZES}
 										width={START_POSTER.width}
 										height={START_POSTER.height}
 										alt={`${title.title} poster`}
@@ -156,7 +158,7 @@ export function BelowRoom({
 					{titles.length > 0 && <h2>Browse GoodWatch</h2>}
 					<ul className="lrb-cards">
 						{MAIN_HUBS.map((hub) => (
-							<li key={hub.href}>
+							<li key={hub.href} className={`lrb-hub-${hub.href.slice(1)}`}>
 								<Link to={hub.href} discover="none">
 									<b>{hub.label}</b>
 									<span>{hub.line}</span>
@@ -166,11 +168,11 @@ export function BelowRoom({
 					</ul>
 					<div className="lrb-by">
 						{CATEGORY_HUBS.map((group) => (
-							<div key={group.label}>
+							<div key={group.label} className="lrb-group">
 								<h3>{group.label}</h3>
 								<ul>
 									{group.links.map((link) => (
-										<li key={link.href}>
+										<li key={link.href} className={`lrb-by-${link.href.split("/").at(-1)}`}>
 											<Link to={link.href} discover="none">
 												{link.label}
 											</Link>

@@ -35,6 +35,7 @@ import { CLIPS as r11 } from "./r11"
 import { CLIPS as r11feel } from "./r11feel"
 import { CLIPS as r12 } from "./r12"
 import { CLIPS as r13 } from "./r13"
+import { CLIPS as r14 } from "./r14"
 import { CLIPS as r12boot } from "./r12boot"
 
 // Round 6 (2026-10-17): the lab shows only the bases the owner picked and the new round 6 clips. Everything else
@@ -55,7 +56,7 @@ const groups: [string, Clip[]][] = [
 	["explorertrack", explorertrack], ["r5open", r5open], ["r5score", r5score], ["r5feel", r5feel],
 	["r5filter", r5filter], ["r5map", r5map], ["r5track", r5track],
 	["r6open", r6open], ["r6score", r6score], ["r6feel", r6feel], ["r6filter", r6filter], ["r6map", r6map], ["r6track", r6track],
-	["r7open", r7open], ["r7feel", r7feel], ["r7filter", r7filter], ["r7map", r7map], ["r7track", r7track], ["r8filter", r8filter], ["r8map", r8map], ["r8track", r8track], ["r9a", r9a], ["r9b", r9b], ["r9c", r9c], ["r10a", r10a], ["r10b", r10b], ["r10c", r10c], ["r11", r11], ["r11feel", r11feel], ["r12", r12], ["r13", r13], ["r12boot", r12boot],
+	["r7open", r7open], ["r7feel", r7feel], ["r7filter", r7filter], ["r7map", r7map], ["r7track", r7track], ["r8filter", r8filter], ["r8map", r8map], ["r8track", r8track], ["r9a", r9a], ["r9b", r9b], ["r9c", r9c], ["r10a", r10a], ["r10b", r10b], ["r10c", r10c], ["r11", r11], ["r11feel", r11feel], ["r12", r12], ["r13", r13], ["r14", r14], ["r12boot", r12boot],
 ]
 
 export const ALL_CLIPS: Clip[] = groups.flatMap(([group, clips]) =>
