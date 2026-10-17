@@ -1109,5 +1109,7 @@ export function ringsKit(core: MapCore, words: TraitWords) {
 			},
 		}
 	}
-	return { words, word, emo, low, tok, passes, around, gaps, withOrWithout, make, when }
+	// PROTOTYPE - throwaway (related-posters-zoom): a full screen map tall enough for more chips beside it.
+	const fsTall = () => fsOn() && box.h >= 1400
+	return { words, word, emo, low, tok, passes, around, gaps, withOrWithout, make, when, fsTall }
 }

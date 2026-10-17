@@ -111,6 +111,8 @@ export function filterName(text: string): string | null {
 export function chipTokens(
 	level: (key: string) => number,
 	words: TraitWords,
+	// PROTOTYPE - throwaway (related-posters-zoom): a tall full screen panel shows more chips per side.
+	per = 3,
 ): string[] {
 	const order = Object.keys(words)
 	const out: string[] = []
@@ -131,7 +133,7 @@ export function chipTokens(
 			.sort(
 				(a, b) => level(b) - level(a) || order.indexOf(a) - order.indexOf(b),
 			),
-		3,
+		per,
 	)
 	const appeal = (key: string) =>
 		10 - level(key) + 2 * (1 - order.indexOf(key) / order.length)
@@ -141,7 +143,7 @@ export function chipTokens(
 		order
 			.filter((key) => level(key) <= WITHOUT_TO && out.indexOf(key) < 0)
 			.sort((a, b) => appeal(b) - appeal(a)),
-		3,
+		per,
 	)
 	return out.map((key) =>
 		level(key) >= WITH_FROM
