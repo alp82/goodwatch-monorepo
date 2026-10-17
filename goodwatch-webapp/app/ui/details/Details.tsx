@@ -135,7 +135,7 @@ function DetailsPage({
 					sides={sides}
 				/>
 			)}
-			<PrototypeSwitcher variants={SEEN_SCORE_VARIANTS} position="bottom-6 left-1/2 -translate-x-1/2 max-md:scale-90" />
+			<PrototypeSwitcher variants={SEEN_SCORE_VARIANTS} position="bottom-[calc(var(--nav-dock-height,0px)+0.75rem)] left-1/2 -translate-x-1/2 max-md:scale-90 lg:bottom-6" />
 			{protoVariant === "live" && <DetailsHero
 				media={media}
 				country={country}
