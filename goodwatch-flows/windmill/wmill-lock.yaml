@@ -163,7 +163,7 @@ locks:
   f/sync/populate/tmdb_providers: 039f3463a10813ef6dbf751a4a8549c1067d8be0fd72ef3271914822dfdfe6da
   f/sync/populate/tmdb_timezones: 63f8dfd29755f53db33e1b82dcdfb5f1f3010816767ff8686155fcb4876ff524
   f/tmdb_api/daily_list_storage: 8f6a59d82ca0cb985c7f120ebfa1bab4b2f2be5742835f9371414f390a88ff13
-  f/tmdb_api/daily_provider_lists: 04e324eda391bbd648f21fefd5b23dadaace16a3aa86887a23d45000f7a07a23
+  f/tmdb_api/daily_provider_lists: a27e367338c199c03a998ece5818f587dd4b75914e84d9506ef0b240d594dcb1
   f/tmdb_api/models: 01a655c201b23d772ecd0c4fda948516d0cc145b4c64fd90660deb1fced268d5
   f/tmdb_api/tmdb_fetch_details_from_api.flow:
     __flow_hash: 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a

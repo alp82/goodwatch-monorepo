@@ -207,7 +207,7 @@ def read_list(client, country, media_type, service_id, diagnostics=None):
     params = dict(watch_region=country, with_watch_providers=service_id,
                   with_watch_monetization_types='flatrate|free|ads', include_adult='false')
     diagnostics = {} if diagnostics is None else diagnostics
-    diagnostics.update(sort_fallbacks=0, partitions=0)
+    diagnostics.update(sort_fallbacks=0, partitions=0, query_retries=0)
     def read_range(lo=None, hi=None):
         extra = {}
         if lo is not None:
@@ -251,7 +251,15 @@ def read_list(client, country, media_type, service_id, diagnostics=None):
                 return sorted(ids)
         raise IncompleteList(f'Expected {expected} distinct titles, read {last_count}')
 
-    return read_range()
+    try:
+        return read_range()
+    except IncompleteList:
+        # cb bypasses the CDN, but TMDB can retain mixed origin page snapshots.
+        # A nonnegative vote floor keeps the same catalog on another query key.
+        # Discard both failed traversals; require full counts/stable metadata
+        # again, with no further query retry if this traversal is also torn.
+        diagnostics['query_retries'] = 1
+        return read_range(0)
 
 
 def list_candidates(store, identity, previous, listed, country, media_type, service_id):

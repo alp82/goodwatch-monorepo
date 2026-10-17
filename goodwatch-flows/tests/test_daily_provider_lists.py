@@ -333,6 +333,27 @@ class DailyListTests(unittest.TestCase):
         self.assertEqual(self.store.crate.history, {})
         self.assertEqual(self.store.intents, {})
 
+    def test_mixed_page_snapshots_can_recover_a_complete_baseline_on_a_fresh_query(self):
+        original = self.api.get
+        def snapshots(path, **params):
+            if not path.startswith('/discover/'):
+                return original(path, **params)
+            page = params['page']
+            if params.get('vote_count.gte') == 0:
+                total, ids = 5, ([41, 42, 43] if page == 1 else [44, 45])
+            else:
+                # Cached pages straddle one catalog insertion. Both sorts are
+                # torn; only the fresh query supplies the fifth title.
+                total, ids = (4, [41, 42, 43]) if page == 1 else (5, [43, 44])
+            return dict(page=page, total_pages=2, total_results=total,
+                        results=[{'id': tmdb_id} for tmdb_id in ids])
+        self.api.get = snapshots
+        result = self.run_day('2026-10-14T20:00:00', dry_run=False)
+        self.assertEqual((result['lists_completed'], result['lists_failed']), (1, 0), result)
+        self.assertEqual(next(iter(self.store.snapshots.values()))['ids'], [41, 42, 43, 44, 45])
+        self.assertEqual(len(self.store.crate.history), 5)
+        self.assertEqual({row['appeared_precision'] for row in self.store.crate.history.values()}, {'unknown'})
+
     def test_large_lists_are_partitioned_without_losing_titles_with_no_release_date(self):
         original = self.api.get
         def partitioned(path, **params):

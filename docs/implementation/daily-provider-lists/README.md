@@ -244,6 +244,24 @@ three unknown-arrival rows in memory. That run achieved **14.17 requests/s**.
 Its requests and rows match the earlier comparison; the panel's absence evidence
 remains untrusted. The full result is `review_read_only_comparison` in the evidence.
 
+The later full four-country baseline read used **93,059 GETs in 7,223.599 s**
+(10,516 discover and 82,543 per-title), processing 240,832 title/list candidates.
+It completed 119 lists and rejected `US:show:9` as torn. Two subsequent repeats
+returned identical sets within each sort, but different sets between sorts:
+5,459 title-sorted IDs versus 5,423 air-date-sorted IDs. Every page matched one of
+two snapshots, of 5,473 and 5,474 titles, differing only by `130842` (The Newsreader).
+Mixed snapshots produced 15 and 51 duplicate rows respectively. Requests with
+unique `cb` values were CloudFront misses but retained these origin snapshots.
+This is not a stable filtered-count shortfall, so a 1% tolerance would be unsafe.
+
+Adding `vote_count.gte=0` returned all 5,474 IDs in both independent sorts, with
+stable paging metadata. After both ordinary sorts fail, the reader now discards
+them and retries once with this nonnegative vote floor, retaining the same
+catalog and all existing count/metadata checks. `query_retries` reports this
+fallback. If both retry sorts are also torn, the list still fails; no shortfall is accepted. The
+adult-inclusive control returned one additional softcore title, which does not
+explain the paging gap.
+
 The first deployed four-country preview on October 17 was canceled after
 1,809.590 seconds when two lists reported 404s. A read-only replay completed both
 discover lists and identified `/movie/1162367/watch/providers` for
@@ -273,7 +291,7 @@ throughput was **12.6–14.2 requests/s** at the configured 15/s cap. That gives
 | Primary pass | 144,400 | 2.8–3.2 h |
 | Ordinary daily allowance: primary + 5,000 title checks | **149,400** | **2.9–3.3 h** |
 | Also reserve 15% extra discover requests for fallbacks | 171,060 | 3.4–3.8 h |
-| First global baseline, using the Crate distinct-title proxy below | About 282,773 | About 5.5–6.3 h, before production write overhead |
+| First global baseline, refreshed distinct-title proxy | About 282,584 before reserves | About 9.1 h locally; about 8 h projected on Windmill, before writes |
 
 Use **about 150,000 requests/day and 3.2 hours** for the ordinary daily plan;
 the formula, request budget, and failed-list report remain authoritative during
@@ -295,9 +313,43 @@ results are saved in [evidence.json](evidence.json).
 Treat 138,373 as a planning proxy for distinct title checks, not an API count:
 Crate includes ended offers and can lack new titles, and conflicting cached
 responses may need another check. With a 15% fallback reserve, that proxy becomes
-about 304,433 requests and 6.0–6.7 hours of reads; production lease/write overhead
-is unmeasured. The default 350,000-request budget and eight-hour timeout are
-deliberate bounds; stage country groups if the baseline exceeds them.
+about 304,433 requests. **The former 6.0–6.7-hour baseline estimate omitted how
+per-list history work scales; do not use it to plan an apply.** A new count found
+138,184 distinct eligible open titles but 3,287,968 distinct title/list
+memberships. Combining per-list counts with the census and the four-country
+overlap predicts about 3.36 million candidates and 17,920 history batches.
+The four-country timing trace fits 0.0674 s/title request, 0.0668 s/discover
+request, and 0.706 s/history batch, including the associated metadata/planning
+work. This predicts about 9.1 hours for 282,584 GETs, or about **9–11 hours of
+reads for 294,000–336,000 GETs** allowing extra title checks and discover retries.
+Read-only Windmill component probes found faster database round trips than the
+local runner. Adjusting the model for those measured differences gives roughly
+**8–9 hours of Windmill reads before writes**. Apply additionally acquires one
+title lease per candidate: 3.3 million serial acquisitions cost about 0.9–1.9
+hours at an assumed 1–2 ms each, before other lease operations, Crate refreshes,
+and history writes. An indexed read measured 1.3 ms on the worker; production
+writes were not benchmarked. The global first apply should therefore not be
+planned within 14:00–21:00 UTC or assumed to fit the current eight-hour timeout,
+even if it fits the 350,000-request budget. These are model estimates from the
+completed sample and read-only component probes, not a measured global apply.
+
+The proposed fallback is a six-day baseline, balanced by open memberships and
+discover pages rather than country count. Each stage adds roughly 0.55 million
+memberships and 24,000 primary discover requests. Each day's one run must include
+all countries already started, preserving their consecutive daily observations.
+A balanced grouping of the current census gives about 116k, 142k, 169k, 195k,
+214k, and 238k requests on days 1–6, including a 15% discover reserve and 5,000
+daily title checks. Estimated reads are 2.9–5.2 hours/day before apply overhead;
+preview each stage and shrink it if necessary to retain headroom before 21:00.
+This costs about 1.07 million requests over six days because distinct-title
+checks repeat between runs. It is a proposal; no stage or schedule was created.
+
+Skipping all baseline per-title checks is not equivalent: first observations
+remain unknown, but their verified offer types supply tomorrow's exact-drop
+proof, and old open stays still require a per-title check before closure.
+A snapshot-only baseline could cost about 144k–166k discover requests and 3 hours,
+but would defer history reconciliation and lose exact first departures until
+offer types were verified. The six-day plan retains the existing writer rules.
 
 A separate full three-country baseline probe was stopped after at least 15,000
 GETs in 1,139 seconds once the completed daily samples supplied the requested
