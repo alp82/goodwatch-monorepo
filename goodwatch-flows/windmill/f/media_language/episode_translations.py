@@ -1,10 +1,21 @@
 """Additive TMDB text ingestion. Canonical season/episode membership is never written here."""
 from dataclasses import dataclass
+from datetime import datetime, timezone
 import time
 
 LAUNCH_LOCALES = ('en', 'de', 'fr', 'es', 'it', 'pt-BR', 'pt-PT', 'ja', 'ko', 'zh-Hans', 'zh-Hant', 'pl', 'ru', 'ar')
 BASES = {'en', 'de', 'fr', 'es', 'it', 'pt', 'ja', 'ko', 'zh', 'pl', 'ru', 'ar'}
 KEY = ('show_id', 'tmdb_id', 'language_code', 'country_code')
+
+
+class TranslationGone(Exception):
+    """An adapter explicitly identified a missing translation endpoint (HTTP 404)."""
+    def __init__(self):
+        super().__init__('translation_endpoint_gone')
+        self.time = datetime.now(timezone.utc).isoformat()
+
+    def record(self, show_id, stable_id, endpoint):
+        return {'tmdb_id': show_id, 'id': stable_id, 'endpoint': endpoint, 'status': 404, 'time': self.time}
 
 
 def accepted_locale(language, country):
@@ -95,12 +106,14 @@ def resume_cursors(resume, ids):
 
 
 def ingest_titles(tmdb_ids, get, connector=None, *, dry_run=True, bounds=Bounds(), sleep=time.sleep,
-                  resume=None, preserve_existing=False):
+                  resume=None, preserve_existing=False, on_gone=None):
     """Explicit IDs in caller priority order. Bounded, serial and additive; no DELETE.
 
     A title cut short by a bound gets a cursor in `continuation` naming the first
     season (and episode) it did not fetch; titles never reached are listed in
     `unstarted`. Pass the cursors back as `resume` to continue where it stopped.
+    Nightly callers can explicitly classify TranslationGone and supply on_gone to
+    record it. Ordinary HTTP errors keep the existing failure behavior.
     """
     bounds.validate()
     ids = list(dict.fromkeys(tmdb_ids))
@@ -132,6 +145,10 @@ def ingest_titles(tmdb_ids, get, connector=None, *, dry_run=True, bounds=Bounds(
             result['rows'] += len(rows)
         except StopIteration:
             raise
+        except TranslationGone as error:
+            if on_gone is None:
+                raise
+            on_gone(error.record(show_id, stable_id, path + '/translations'))
         except Exception as error:
             # Paths and exception classes only: never print API keys or HTTP bodies.
             result['failures'].append({'path': path, 'error': type(error).__name__})

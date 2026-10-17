@@ -71,8 +71,10 @@ batch limit from 500, down to a floor of 25, for the rest of that run. The curso
 advances only when the replay is fully acknowledged. Stop conditions are:
 
 - The wall-clock deadline, reserving time for HTTP calls and final checkpoints.
-- More than 5% failed TMDB requests. An isolated failure below that ratio also
+- More than 5% failed TMDB requests, excluding translation-endpoint 404s from
+  both numerator and denominator. An isolated failure below that ratio also
   stops the current run with `endpoint_failed`, preserving the retry cursor.
+  HTTP 5xx, 429, timeouts, and catalog-endpoint 404s retain these stops.
 - `crate_recovery_window_exhausted` when no health probe recovers within the
   bounded window. This replaces `two_consecutive_crate_timeouts`.
 - `crate_recovered_stall_limit` on the **sixth recovered stall** in a run, including
@@ -191,11 +193,40 @@ All 312 season and 7,120 episode translation rows in the before snapshots remain
 all 10,613 pre-existing non-empty fields were identical. The schedule definition,
 including its arguments, was identical before and after.
 
-The requested ten-minute production throughput/cursor proof therefore remains
-outstanding. Resolving or separately authorizing handling of the unavailable TMDB
-queue head is necessary before rerunning it. This change deliberately retains the
-existing endpoint safety stops and pending work; it does not skip or discard the
-404 target. Crate recovery is verified by deterministic tests, including real SQL
-execution, but was not exercised against an actual production stall in this job.
+At this checkpoint the requested ten-minute production throughput/cursor proof
+remained outstanding. The owner subsequently authorized translation-endpoint 404
+handling, described below. Crate recovery was verified by deterministic tests,
+including real SQL execution, but was not exercised against an actual production
+stall in this initial job.
 Machine-readable results are in
 [`media-language-nightly-episodes-recovery-production.json`](media-language-nightly-episodes-recovery-production.json).
+
+## Deleted translation targets, 2026-10-17
+
+The owner authorized treating HTTP 404 from a **translations endpoint** as gone.
+The nightly runner records the endpoint in the existing Mongo state document's
+`skipped` array before acknowledging the page. Each entry contains `id` (the
+stable season/episode TMDB ID), `tmdb_id` (the show ID), `endpoint`, `status: 404`,
+and `time` (UTC ISO timestamp). Repeated encounters update the entry for that
+endpoint rather than duplicating it. This retains the IDs and endpoint needed
+for a later retry; skipped endpoints are not automatically requeued every night.
+
+A translation 404 publishes no rows and never removes existing translations. It
+consumes a TMDB request and wall-clock budget but is excluded from the failure
+ratio's numerator and denominator. The page proceeds to subsequent targets and
+advances its cursor after all remaining writes succeed. The run summary's
+`skipped_translations` counts actual skipped requests during that run. Missing
+responses are cached with the page, so Crate replay neither refetches them nor
+counts a skip again. If a later endpoint stops the page, final checkpointing
+still saves the skip metadata and leaves the page cursor available for replay.
+
+This policy is confined to nightly translation calls. Show/season catalog 404s,
+HTTP 5xx, HTTP 429, timeouts, and ordinary manual ingestion retain their prior
+failure behavior. Other flows, schedules, schemas and infrastructure are unchanged.
+The 33 nightly tests include the exact deleted show 337744 regression (season ID
+548926 and episode ID 7947316), resumed backlog cursor advancement, cached replay,
+skip metadata durability/deduplication, and undiluted failure-ratio accounting.
+
+The full flows suite ran 1,545 tests (75 skipped), with only the previously
+reproduced deletion-coverage assertion failing. Excluding that baseline assertion,
+all 1,544 tests pass (75 skipped). The backup-notification tests pass.

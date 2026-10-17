@@ -9,7 +9,9 @@ import time
 import uuid
 from datetime import datetime, timedelta, timezone
 
-from f.media_language.episode_translations import Bounds, ingest_titles, publish_rows, translation_rows
+from f.media_language.episode_translations import (
+    Bounds, TranslationGone, ingest_titles, publish_rows, translation_rows,
+)
 from f.media_language.episode_translation_seed import SEED, BASELINE
 
 STATE_COLLECTION = 'tmdb_episode_catalog_state'
@@ -36,13 +38,14 @@ class Guard:
         self.clock, self.sleep = clock, sleep
         self.deadline = clock() + seconds
         self.last_request = float('-inf')
-        self.requests = self.failures = self.recovered_crate_stalls = 0
+        self.requests = self.failures = self.gone_requests = self.recovered_crate_stalls = 0
 
     def check(self, reserve=0):
         if self.clock() + reserve >= self.deadline:
             raise SafetyStop('budget')
 
     def get(self, fetch, path):
+        import requests
         self.check(31)
         self.sleep(max(0, self.last_request + 0.205 - self.clock()))
         self.check(31)
@@ -50,9 +53,13 @@ class Guard:
         self.requests += 1
         try:
             return fetch(path)
-        except Exception:
+        except Exception as error:
+            if (isinstance(error, requests.HTTPError) and error.response is not None
+                    and error.response.status_code == 404 and path.endswith('/translations')):
+                self.gone_requests += 1
+                raise TranslationGone() from None
             self.failures += 1
-            if self.failures / self.requests > 0.05:
+            if self.failures / (self.requests - self.gone_requests) > 0.05:
                 raise SafetyStop('failed_requests_over_5_percent') from None
             # Retry this page next night even when the global failure ratio is low.
             raise SafetyStop('endpoint_failed') from None
@@ -275,13 +282,16 @@ def replay_publication(publish, crate):
         return result
 
 
-def page(item, get, crate):
+def page(item, get, crate, record_skipped=lambda _: None):
     if 'targets' in item:
         targets = item['targets'][item['offset']:item['offset'] + 40]
         pending = {table: [] for table in TABLES}
         for target in targets:
-            pending[target['table']].extend(translation_rows(
-                item['tmdb_id'], target['id'], get(target['path'] + '/translations')))
+            endpoint = target['path'] + '/translations'
+            try:
+                pending[target['table']].extend(translation_rows(item['tmdb_id'], target['id'], get(endpoint)))
+            except TranslationGone as error:
+                record_skipped(error.record(item['tmdb_id'], target['id'], endpoint))
         def publish():
             for table, rows in pending.items():
                 publish_rows(crate, table, rows, preserve_existing=True)
@@ -290,16 +300,27 @@ def page(item, get, crate):
         return item['offset'] == len(item['targets'])
     responses = {}
     def fetch(path):
-        response = get(path)
+        try:
+            response = get(path)
+        except TranslationGone as error:
+            responses[path] = error
+            raise
         responses[path] = response
         return response
+    def cached(path):
+        response = responses[path]
+        if isinstance(response, TranslationGone):
+            raise response
+        return response
     cursor = [item['resume']] if item.get('resume') else None
-    preview = ingest_titles([item['tmdb_id']], fetch, bounds=PAGE, resume=cursor, sleep=lambda _: None)
+    preview = ingest_titles([item['tmdb_id']], fetch, bounds=PAGE, resume=cursor,
+                            sleep=lambda _: None, on_gone=record_skipped)
     if preview['failures']:
         raise SafetyStop('page_validation_failed')
     result = replay_publication(
-        lambda: ingest_titles([item['tmdb_id']], responses.__getitem__, crate, dry_run=False,
-                              bounds=PAGE, resume=cursor, sleep=lambda _: None, preserve_existing=True), crate)
+        lambda: ingest_titles([item['tmdb_id']], cached, crate, dry_run=False,
+                              bounds=PAGE, resume=cursor, sleep=lambda _: None, preserve_existing=True,
+                              on_gone=lambda _: None), crate)
     if result['failures'] or result != preview | {'dry_run': False}:
         raise SafetyStop('cached_publication_mismatch')
     if result['truncated']:
@@ -313,10 +334,22 @@ def page(item, get, crate):
 def run(state, store, crate, fetch, guard, discover_changed, discover_new):
     summary = {'started_at': datetime.utcnow().isoformat(), 'requests': 0, 'failed_requests': 0,
                'rows_added': {table: 0 for table in TABLES}, 'shows_completed': 0,
-               'pages_completed': 0, 'recovered_crate_stalls': 0, 'stop_reason': None, 'preserve_existing': True}
+               'pages_completed': 0, 'recovered_crate_stalls': 0, 'skipped_translations': 0,
+               'stop_reason': None, 'preserve_existing': True}
     # Count new keys against each show's pre-publication snapshot. Only acknowledged
     # bulk writes count. An uncertain timed-out write can make these a lower bound.
     get = lambda path: guard.get(fetch, path)
+    def record_skipped(record):
+        # Keep retry metadata even if a later endpoint stops this page. The normal
+        # page checkpoint/final summary persists it before acknowledging a cursor.
+        skipped = state.setdefault('skipped', [])
+        for index, previous in enumerate(skipped):
+            if previous['endpoint'] == record['endpoint']:
+                skipped[index] = record
+                break
+        else:
+            skipped.append(record)
+        summary['skipped_translations'] += 1
     try:
         state['active_run'] = summary.copy()
         store.save(state)
@@ -346,7 +379,7 @@ def run(state, store, crate, fetch, guard, discover_changed, discover_new):
                 item.pop('reconstruct')
                 store.save(state)
             # Before fetching/publishing: the durable cursor still names this page.
-            done = page(item, get, crate)
+            done = page(item, get, crate, record_skipped)
             summary['pages_completed'] += 1
             if done:
                 queue.pop(0)

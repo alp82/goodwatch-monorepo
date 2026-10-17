@@ -21,6 +21,12 @@ def payload(identifier, name='New', overview='Added'):
         {'iso_639_1': 'de', 'iso_3166_1': 'DE', 'data': {'name': name, 'overview': overview}}]}
 
 
+def http_error(status):
+    response = requests.Response()
+    response.status_code = status
+    return requests.HTTPError(response=response)
+
+
 def catalog(show, episodes=1):
     path = f'tv/{show}/season/1'
     return {f'tv/{show}': {'id': show, 'seasons': [{'id': show * 10, 'season_number': 1}]},
@@ -268,6 +274,94 @@ class NightlyTests(unittest.TestCase):
         self.assertIn('changed_until', stored)
         self.assertEqual(stored['active_run']['rows_added']['episode_translation'], 40)
 
+    def test_deleted_337744_translations_are_recorded_and_queue_continues(self):
+        self.state['changed'] = [{'tmdb_id': 337744, 'offset': 0, 'targets': [
+            {'id': 548926, 'table': 'season_translation', 'path': 'tv/337744/season/1'},
+            {'id': 7947316, 'table': 'episode_translation', 'path': 'tv/337744/season/1/episode/3'}]}]
+        self.state['backlog'] = [{'tmdb_id': 2, 'resume': None}]
+        self.crate.db.execute("INSERT INTO season_translation VALUES (337744,548926,'de','DE','Keep','Old')")
+        fixtures = catalog(2)
+        def fetch(path):
+            if path.startswith('tv/337744/'):
+                raise http_error(404)
+            return fixtures[path]
+        result = self.execute(fetch)
+        self.assertEqual(result['stop_reason'], 'caught_up')
+        self.assertEqual((result['requests'], result['failed_requests'], result['skipped_translations']), (6, 0, 2))
+        self.assertEqual(result['pages_completed'], 2)
+        self.assertEqual(result['rows_added'], {'season_translation': 1, 'episode_translation': 1})
+        stored = self.db[nightly.STATE_COLLECTION].find_one({'_id': nightly.STATE_ID})
+        self.assertEqual(stored['changed'], [])
+        self.assertEqual(stored['backlog'], [])
+        self.assertEqual([r['id'] for r in stored['skipped']], [548926, 7947316])
+        self.assertEqual([r['endpoint'] for r in stored['skipped']], [
+            'tv/337744/season/1/translations', 'tv/337744/season/1/episode/3/translations'])
+        for record in stored['skipped']:
+            self.assertEqual(record['tmdb_id'], 337744)
+            self.assertEqual(record['status'], 404)
+            self.assertIsNotNone(datetime.fromisoformat(record['time']).tzinfo)
+        self.assertEqual(self.crate.db.execute('SELECT name, overview FROM season_translation WHERE show_id=337744').fetchone(),
+                         ('Keep', 'Old'))
+        self.assertLessEqual(stored['lease_until'], datetime.utcnow())
+
+    def test_backlog_404_advances_cursor_and_cached_replay_does_not_repeat_skip(self):
+        self.state['backlog'] = [{'tmdb_id': 2, 'resume': None}]
+        fixtures = catalog(2, 45)
+        gone = {'tv/2/season/1/translations', 'tv/2/season/1/episode/1/translations'}
+        paths = []
+        def fetch(path):
+            paths.append(path)
+            if path in gone: raise http_error(404)
+            if path.endswith('/episode/42/translations'): self.clock.now = 590
+            return fixtures[path]
+        publish = self.crate.run_many
+        attempts = []
+        def uncertain(sql, values):
+            attempts.append(values)
+            publish(sql, values)
+            if len(attempts) == 1: raise nightly.ReplayPage()
+        self.crate.run_many = uncertain
+        result = self.execute(fetch)
+        self.assertEqual(result['stop_reason'], 'budget')
+        self.assertEqual(result['failed_requests'], 0)
+        self.assertEqual(result['skipped_translations'], 2)
+        self.assertEqual(result['pages_completed'], 1)
+        self.assertEqual(result['rows_added']['episode_translation'], 39)
+        for path in gone: self.assertEqual(paths.count(path), 1)
+        stored = self.db[nightly.STATE_COLLECTION].find_one({'_id': nightly.STATE_ID})
+        self.assertEqual(stored['backlog'][0]['resume'],
+                         {'tmdb_id': 2, 'season_number': 1, 'episode_number': 41})
+        self.assertEqual(len(stored['skipped']), 2)
+        self.assertEqual(stored['last_run']['skipped_translations'], 2)
+
+    def test_skipped_record_survives_failed_page_and_deduplicates_endpoint(self):
+        self.state['backlog'] = [{'tmdb_id': 2, 'resume': None}]
+        endpoint = 'tv/2/season/1/translations'
+        self.state['skipped'] = [{'id': 20, 'tmdb_id': 2, 'endpoint': endpoint,
+                                  'status': 404, 'time': '2026-10-16T00:00:00+00:00'}]
+        fixtures = catalog(2)
+        def fetch(path):
+            if path == endpoint: raise http_error(404)
+            if path.endswith('/episode/1/translations'): raise http_error(503)
+            return fixtures[path]
+        result = self.execute(fetch)
+        self.assertEqual(result['stop_reason'], 'failed_requests_over_5_percent')
+        self.assertEqual(result['failed_requests'], 1)
+        stored = self.db[nightly.STATE_COLLECTION].find_one({'_id': nightly.STATE_ID})
+        self.assertEqual(len(stored['skipped']), 1)
+        self.assertNotEqual(stored['skipped'][0]['time'], '2026-10-16T00:00:00+00:00')
+        self.assertIsNone(stored['backlog'][0]['resume'])
+        self.assertEqual(sum(result['rows_added'].values()), 0)
+
+    def test_regular_ingestion_still_counts_translation_404_as_failure(self):
+        fixtures = catalog(2)
+        def fetch(path):
+            if path.endswith('/episode/1/translations'): raise http_error(404)
+            return fixtures[path]
+        result = ingest_titles([2], fetch, sleep=lambda _: None)
+        self.assertEqual(len(result['failures']), 1)
+        self.assertEqual(result['failures'][0]['error'], 'HTTPError')
+
     def test_reconstruction_handles_non_contiguous_episode_numbers(self):
         fixtures = catalog(2, 4)
         for episode, number in zip(fixtures['tv/2/season/1']['episodes'], [1, 3, 9, 12]):
@@ -298,6 +392,36 @@ class NightlyTests(unittest.TestCase):
         self.assertEqual([x['tmdb_id'] for x in jobs], [2, 3])
         self.assertEqual([x['table'] for x in jobs[0]['targets']], ['season_translation', 'episode_translation'])
         self.assertIn('created_at >= ?', crate.select.call_args.args[0])
+
+
+class Translation404GuardTests(unittest.TestCase):
+    def setUp(self):
+        self.clock = Clock()
+        self.guard = nightly.Guard(600, self.clock, self.clock.sleep)
+
+    def test_only_translation_404_is_exempt(self):
+        cases = [(http_error(404), 'tv/337744'), (http_error(404), 'tv/337744/season/1'),
+                 (http_error(429), 'tv/337744/season/1/translations'),
+                 (http_error(500), 'tv/337744/season/1/translations'),
+                 (http_error(503), 'tv/337744/season/1/translations'),
+                 (requests.Timeout(), 'tv/337744/season/1/translations')]
+        for error, path in cases:
+            with self.subTest(error=type(error).__name__, path=path):
+                guard = nightly.Guard(600, self.clock, self.clock.sleep)
+                with self.assertRaisesRegex(nightly.SafetyStop, '^failed_requests_over_5_percent$'):
+                    guard.get(Mock(side_effect=error), path)
+                self.assertEqual(guard.failures, 1)
+                self.assertEqual(guard.gone_requests, 0)
+
+    def test_404s_do_not_dilute_failure_ratio(self):
+        for _ in range(19):
+            with self.assertRaises(nightly.TranslationGone):
+                self.guard.get(Mock(side_effect=http_error(404)), 'tv/337744/season/1/translations')
+        with self.assertRaisesRegex(nightly.SafetyStop, '^failed_requests_over_5_percent$'):
+            self.guard.get(Mock(side_effect=http_error(503)), 'tv/2/season/1/translations')
+        self.assertEqual(self.guard.requests, 20)
+        self.assertEqual(self.guard.failures, 1)
+        self.assertEqual(self.guard.gone_requests, 19)
 
 
 class CrateSafetyTests(unittest.TestCase):
