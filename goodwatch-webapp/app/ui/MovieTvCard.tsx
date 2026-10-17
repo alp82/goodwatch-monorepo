@@ -1,22 +1,25 @@
-import { canonicalMediaTitle } from "~/utils/media-presentation"
-import MediaText from "~/ui/media-text/MediaText"
-import { presentedText } from "~/ui/media-text/media-text"
 import { Link } from "@remix-run/react"
 import type React from "react"
 import type { RatingBadge } from "~/domain/age-content"
-import { useUserScore, useIsOnWishlist } from "~/hooks/useUserDataAccessors"
+import { useIsOnWishlist, useUserScore } from "~/hooks/useUserDataAccessors"
 import type { MovieDetails, TVDetails } from "~/server/details.server"
 import type { DiscoverResult } from "~/server/discover.server"
 import type { OnboardingResult } from "~/server/onboarding-media.server"
 import type { TitleCard } from "~/server/title-cards.server"
 import { Poster, type PosterProps } from "~/ui/Poster"
+import MediaText from "~/ui/media-text/MediaText"
+import { presentedText } from "~/ui/media-text/media-text"
 import RatingOverlay from "~/ui/ratings/RatingOverlay"
 import StreamingOverlay from "~/ui/streaming/StreamingOverlay"
+import {
+	type ActionsPlacement,
+	TitleActionsFrame,
+} from "~/ui/title-actions/TitleActionsFrame"
 import { RatingMark } from "~/ui/title-card/RatingMark"
-import { type CardTaste, TasteMatchPill } from "~/ui/title-card/TasteMatchPill"
-import { type ActionsPlacement, TitleActionsFrame } from "~/ui/title-actions/TitleActionsFrame"
+import type { CardTaste } from "~/ui/title-card/TasteMatchPill"
 import UserDataOverlay from "~/ui/user/UserDataOverlay"
 import { titleToDashed } from "~/utils/helpers"
+import { canonicalMediaTitle } from "~/utils/media-presentation"
 import { extractRatings } from "~/utils/ratings"
 
 interface MovieTvCardProps {
@@ -28,7 +31,7 @@ interface MovieTvCardProps {
 		| TitleCard
 	mediaType: "movie" | "show"
 	prefetch?: boolean
-	/** The viewer's taste match for the title; the pill shows while taste match is on for the viewer. */
+	/** The viewer's taste match for the title. Posters no longer show it. */
 	taste?: CardTaste
 	/** The title's age rating for the viewer, shown while an age limit is on. */
 	rating?: RatingBadge | null
@@ -52,13 +55,13 @@ interface MovieTvCardProps {
 
 // The card rests at 95% and grows to full size under the pointer. With title actions the frame around the link
 // carries that, so the actions scale with the card.
-const SCALE = "transition-transform duration-100 transform scale-95 hover:scale-100"
+const SCALE =
+	"transition-transform duration-100 transform scale-95 hover:scale-100"
 
 export function MovieTvCard({
 	details,
 	mediaType,
 	prefetch = false,
-	taste,
 	rating,
 	posterSizes,
 	posterPriority,
@@ -92,11 +95,7 @@ export function MovieTvCard({
 				}
 			>
 				<UserDataOverlay score={userScore} onWishList={onWishList} />
-				<RatingOverlay ratings={ratings}>
-					{typeof taste?.match === "number" && (
-						<TasteMatchPill {...taste} />
-					)}
-				</RatingOverlay>
+				<RatingOverlay ratings={ratings} />
 				{details.streaming_links && (
 					<StreamingOverlay links={details.streaming_links} newOn={newOn} />
 				)}

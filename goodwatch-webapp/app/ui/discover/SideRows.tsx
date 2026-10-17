@@ -1,10 +1,11 @@
 // Sides of you on Discover (#671): while For you is on, a row per group of the member's taste and a row of the titles
-// that fit none ("More for you"), in the order the server gives (each row where its first title sits in the list).
+// that fit none ("More for you"). Groups keep the order the server gives; "More for you" always comes last.
 // Inside a row, titles keep the list's order. A group shows its trait name and the loved titles that stand for it, with
 // no summary line. "More like this" narrows Discover to the group; the group's moods open Watch next. Wording:
 // side-rows-copy.ts.
+import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/solid"
 import { Link } from "@remix-run/react"
-import type { ReactNode } from "react"
+import { type ReactNode, useCallback, useEffect, useRef, useState } from "react"
 import type {
 	DiscoverResults,
 	DiscoverSideRow,
@@ -31,10 +32,20 @@ export function SideRows({
 	rows: DiscoverSideRow[]
 	onSeeAll: (id: string) => void
 }) {
+	// "More for you" always comes last, after the groups.
+	const ordered = [
+		...rows.filter((row) => row.number !== null),
+		...rows.filter((row) => row.number === null),
+	]
 	return (
-		<div className="flex flex-col gap-10">
-			{rows.map((row, r) => (
-				<section key={row.id} aria-label={labelOf(row)}>
+		<div className="flex flex-col gap-6">
+			{ordered.map((row, r) => (
+				<section
+					key={row.id}
+					aria-label={labelOf(row)}
+					className="-mx-4 border-y border-white/10 bg-white/[0.03] px-4 pt-4 pb-3 lg:mx-0 lg:rounded-xl lg:border lg:px-5"
+					style={{ borderTopColor: hueOf(row), borderTopWidth: 3 }}
+				>
 					<div className="mb-3">
 						<SideHeader
 							side={row}
@@ -51,7 +62,7 @@ export function SideRows({
 							}
 						/>
 					</div>
-					<div className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-2 lg:mx-0 lg:px-0">
+					<PosterRail label={labelOf(row)}>
 						{row.cards.map((card, i) => {
 							const priority =
 								r < 2 && i < IN_VIEW
@@ -70,9 +81,76 @@ export function SideRows({
 								</div>
 							)
 						})}
-					</div>
+					</PosterRail>
 				</section>
 			))}
+		</div>
+	)
+}
+
+// A row that scrolls sideways without a visible scrollbar. Touch screens swipe; pointer screens get round arrow
+// buttons at the edges, shown only when there is more to see that way, and each click moves about one view's width.
+function PosterRail({
+	label,
+	children,
+}: {
+	label: string
+	children: ReactNode
+}) {
+	const ref = useRef<HTMLDivElement>(null)
+	const [canBack, setCanBack] = useState(false)
+	const [canForward, setCanForward] = useState(false)
+	const update = useCallback(() => {
+		const el = ref.current
+		if (!el) return
+		setCanBack(el.scrollLeft > 4)
+		setCanForward(el.scrollLeft + el.clientWidth < el.scrollWidth - 4)
+	}, [])
+	useEffect(() => {
+		update()
+		const el = ref.current
+		if (!el) return
+		const observer = new ResizeObserver(update)
+		observer.observe(el)
+		return () => observer.disconnect()
+	}, [update])
+	const step = (direction: 1 | -1) => {
+		const el = ref.current
+		if (el)
+			el.scrollBy({
+				left: direction * el.clientWidth * 0.85,
+				behavior: "smooth",
+			})
+	}
+	const arrow =
+		"absolute top-1/2 z-20 hidden h-11 w-11 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-gray-950/85 text-white shadow-lg ring-1 ring-white/20 transition-opacity hover:bg-gray-800 focus-visible:opacity-100 md:flex"
+	return (
+		<div className="group/rail relative">
+			<div
+				ref={ref}
+				onScroll={update}
+				className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 [scrollbar-width:none] lg:mx-0 lg:px-0 [&::-webkit-scrollbar]:hidden"
+			>
+				{children}
+			</div>
+			<button
+				type="button"
+				aria-label={`Scroll ${label} back`}
+				onClick={() => step(-1)}
+				tabIndex={canBack ? 0 : -1}
+				className={`${arrow} -left-3 ${canBack ? "opacity-0 group-hover/rail:opacity-100" : "pointer-events-none opacity-0"}`}
+			>
+				<ChevronLeftIcon className="h-6 w-6" />
+			</button>
+			<button
+				type="button"
+				aria-label={`Scroll ${label} forward`}
+				onClick={() => step(1)}
+				tabIndex={canForward ? 0 : -1}
+				className={`${arrow} -right-3 ${canForward ? "opacity-0 group-hover/rail:opacity-100" : "pointer-events-none opacity-0"}`}
+			>
+				<ChevronRightIcon className="h-6 w-6" />
+			</button>
 		</div>
 	)
 }
