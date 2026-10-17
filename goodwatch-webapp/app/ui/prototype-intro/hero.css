@@ -1,0 +1,12 @@
+/* The hand-over frame (hero.tsx): 62cqh tall, 2:3, centred at 50cqw / 46cqh. Don't change it: two chapters meet here. */
+.lpi-hero {
+	position: absolute;
+	left: 50%;
+	top: 46%;
+	height: 62cqh;
+	aspect-ratio: 2 / 3;
+	transform: translate(-50%, -50%);
+	border-radius: 1.2cqw;
+	object-fit: cover;
+	box-shadow: 0 2cqw 6cqw rgba(0, 0, 0, 0.6);
+}

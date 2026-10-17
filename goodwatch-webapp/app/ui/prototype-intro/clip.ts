@@ -18,17 +18,18 @@ import type { LandingCard } from "~/server/prototype-landing.server"
 import type { StartTitle } from "~/ui/living-room/living-room-data"
 import type { TvService } from "~/ui/living-room/tv/tv-home"
 
+// The film's chapters, in the owner's order (round 5). `chapter` is the label on the chapter bar.
 export const SECTIONS = [
-	{ id: "opener", name: "The problem" },
-	{ id: "score", name: "One score" },
-	{ id: "fingerprint", name: "How it feels (fingerprint)" },
-	{ id: "recommendations", name: "Picks for you" },
-	{ id: "search", name: "Search" },
-	{ id: "filters", name: "Filters and moods" },
-	{ id: "explorer", name: "Explorer" },
-	{ id: "streaming", name: "Where it streams" },
-	{ id: "tracking", name: "Keeps track for you" },
-	{ id: "closer", name: "Sign-off" },
+	{ id: "opener", name: "The problem", chapter: "The problem" },
+	{ id: "score", name: "One score", chapter: "One score" },
+	{ id: "recommendations", name: "Picked for you", chapter: "For you" },
+	{ id: "fingerprint", name: "How it feels (attributes)", chapter: "How it feels" },
+	{ id: "search", name: "Search by feeling", chapter: "Search" },
+	{ id: "filters", name: "Filters", chapter: "Filters" },
+	{ id: "explorer", name: "Explorer", chapter: "Explorer" },
+	{ id: "streaming", name: "Where it streams", chapter: "Streaming" },
+	{ id: "tracking", name: "Keeps track for you", chapter: "Tracking" },
+	{ id: "closer", name: "Your turn", chapter: "Your turn" },
 ] as const
 export type SectionId = (typeof SECTIONS)[number]["id"]
 
@@ -39,6 +40,12 @@ export type IntroData = {
 	landing: LandingCard[]
 	/** A guest's two services. */
 	services: TvService[]
+	/**
+	 * Round 5: the titles every clip should use. The best-known good movies and shows (most votes, 70+, no talk
+	 * shows), movies and shows alternating, as cards with score, services (Germany locally), backdrop and mood words.
+	 * `pool[0]` is the hero: the title the pick (chapter 3) lands on and the attributes (chapter 4) start from.
+	 */
+	pool: LandingCard[]
 	/** What each clip group's own loader added (server/prototype-intro/<group>.server.ts), by group. */
 	extra: Record<string, unknown>
 }
@@ -55,5 +62,12 @@ export type Clip = {
 	ms: number
 	/** One line on what it tries, for the lab. */
 	note?: string
+	/**
+	 * How it takes over from the clip before it, instead of the lab's chosen hand-over: "cut" for a clip whose first
+	 * frame continues the previous clip's last frame (a planned hand-over between chapters).
+	 */
+	enter?: "cut" | "fade" | "slide" | "zoom" | "wipe" | "deal"
+	/** Round 4 clips the owner passed on: hidden in the lab unless "Show older clips" is on. */
+	archived?: boolean
 	C: ComponentType<ClipProps>
 }

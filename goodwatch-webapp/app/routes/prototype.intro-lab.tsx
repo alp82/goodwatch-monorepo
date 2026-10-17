@@ -38,12 +38,23 @@ export default function IntroLab() {
 		else p.set(key, value)
 		setParams(p, { replace: true, preventScrollReset: true })
 	}
+	const [older, setOlder] = useState(false)
 	const bySection = useMemo(
-		() => Object.fromEntries(SECTIONS.map((s) => [s.id, ALL_CLIPS.filter((c) => c.section === s.id)])),
-		[],
+		() =>
+			Object.fromEntries(
+				SECTIONS.map((s) => [
+					s.id,
+					// Newest first: round 5 clips are registered after round 4's.
+					ALL_CLIPS.filter((c) => c.section === s.id && (older || !c.archived)).reverse(),
+				]),
+			),
+		[older],
 	)
 	// The sequence: the URL's, else the first clip of every section.
 	const seqIds = params.get("seq")?.split(",").filter(Boolean) ?? SECTIONS.flatMap((s) => bySection[s.id][0]?.id ?? [])
+	// The sequence plays in chapter order, whatever order the URL lists it in.
+	const order = (id: string) => SECTIONS.findIndex((s) => s.id === clipById(id)?.section)
+	seqIds.sort((a, b) => order(a) - order(b))
 	const seq = seqIds.flatMap((id) => clipById(id) ?? [])
 	const chosen = (section: string) => seq.find((c) => c.section === section)?.id ?? null
 	const choose = (section: string, id: string | null) => {
@@ -78,7 +89,7 @@ export default function IntroLab() {
 					<div className="relative aspect-video w-full overflow-hidden rounded-md bg-black shadow-[0_0_0_10px_#111,0_0_60px_rgba(251,191,36,.12)]">
 						<Stage k={speed.k}>
 							{playing ? (
-								<Sequence clips={playing.clips} data={data} k={speed.k} transition={tr} loop={loop} run={run} onEnd={onEnd} onAt={setAt} />
+								<Sequence clips={playing.clips} data={data} k={speed.k} transition={tr} loop={loop} run={run} onEnd={onEnd} onAt={setAt} chapters />
 							) : (
 								<div className="absolute inset-0 flex items-center justify-center text-[3cqw] text-white/50">Press Play</div>
 							)}
@@ -124,7 +135,10 @@ export default function IntroLab() {
 				{/* The sections and their clips. */}
 				<div className="flex flex-1 flex-col gap-3">
 					<div className="text-xs text-white/50">
-						{ALL_CLIPS.length} clips. Click a clip to play it and put it in the sequence.
+						{ALL_CLIPS.filter((c) => older || !c.archived).length} clips. Click a clip to play it and put it in the sequence.{" "}
+						<label className="ml-2 inline-flex items-center gap-1">
+							<input type="checkbox" checked={older} onChange={(e) => setOlder(e.target.checked)} /> Show older clips
+						</label>
 					</div>
 					{SECTIONS.map((s, n) => (
 						<section key={s.id} className="rounded-xl bg-white/[0.04] p-3 ring-1 ring-white/10">

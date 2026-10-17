@@ -1,0 +1,268 @@
+/* PROTOTYPE - throwaway. Round 5 "One score" and "Picked for you" clips. Every delay and duration is
+   calc(<ms> * var(--k)) through --d and --dur. Transform and opacity only (the ring's arc fill is the one SVG
+   stroke, from the round 4 Ring). The bottom 9cqh stays free for the chapter bar. */
+.lpc-r5score {
+	position: absolute;
+	inset: 0;
+	overflow: hidden;
+	background: #05060a;
+	color: #fff;
+	font-family: "Gabarito", ui-sans-serif, system-ui, sans-serif;
+	--ease: cubic-bezier(0.16, 1, 0.3, 1);
+	--deal: cubic-bezier(0.25, 0.8, 0.25, 1);
+	--inout: cubic-bezier(0.65, 0, 0.35, 1);
+}
+.lpc-r5score img { display: block; }
+.lpc-r5score-amber { color: #fbbf24; }
+.lpc-r5score-layer { position: absolute; inset: 0; }
+.lpc-r5score-kick {
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.18em;
+	color: rgba(255, 255, 255, 0.7);
+	font-size: max(10px, 1.6cqw);
+}
+.lpc-r5score-head { font-weight: 800; line-height: 1; letter-spacing: -0.02em; font-size: 6.4cqw; white-space: nowrap; }
+.lpc-r5score-big { font-weight: 800; line-height: 1; letter-spacing: -0.02em; font-size: 8cqw; }
+.lpc-r5score-sub { color: rgba(255, 255, 255, 0.8); font-size: max(11px, 2cqw); line-height: 1.3; }
+.lpc-r5score-verdict { font-weight: 800; line-height: 1; font-size: 5.6cqw; letter-spacing: -0.01em; }
+
+/* ---------- The hand-over frame's places (RingEnd). */
+.lpc-r5score-at-kick { position: absolute; left: 0; right: 0; top: 2.6cqh; text-align: center; }
+.lpc-r5score-at-head { position: absolute; left: 0; right: 0; top: 6.4cqh; text-align: center; }
+.lpc-r5score-at-ring { position: absolute; left: 50%; top: 52cqh; width: 30cqh; transform: translate(-50%, -50%); }
+.lpc-r5score-at-ring .lpc-ss-ring { width: 100%; }
+.lpc-r5score-at-verdict { position: absolute; left: 0; right: 0; top: 70cqh; text-align: center; }
+
+/* ---------- Moves. One per element; nest wrappers for more. */
+.lpc-r5score-rise { animation: lpc-r5score-rise calc(var(--dur, 850ms) * var(--k)) var(--ease) calc(var(--d, 0ms) * var(--k)) both; }
+.lpc-r5score-fade { animation: lpc-r5score-fade calc(var(--dur, 800ms) * var(--k)) ease-out calc(var(--d, 0ms) * var(--k)) both; }
+.lpc-r5score-fadeout { animation: lpc-r5score-fadeout calc(var(--dur, 700ms) * var(--k)) ease-in calc(var(--d, 0ms) * var(--k)) both; }
+.lpc-r5score-pop { animation: lpc-r5score-pop calc(var(--dur, 800ms) * var(--k)) cubic-bezier(0.34, 1.4, 0.64, 1) calc(var(--d, 0ms) * var(--k)) both; }
+.lpc-r5score-deal { animation: lpc-r5score-deal calc(var(--dur, 750ms) * var(--k)) var(--deal) calc(var(--d, 0ms) * var(--k)) both; }
+.lpc-r5score-shrinkout { animation: lpc-r5score-shrinkout calc(var(--dur, 700ms) * var(--k)) var(--inout) calc(var(--d, 0ms) * var(--k)) both; }
+/* Moves from an offset (--fx, --fy, --fs) to its place. */
+.lpc-r5score-from { animation: lpc-r5score-from calc(var(--dur, 1000ms) * var(--k)) var(--inout) calc(var(--d, 0ms) * var(--k)) both; }
+/* Moves from its place to an offset (--tx, --ty, --ts), fading with --to. */
+.lpc-r5score-to { animation: lpc-r5score-to calc(var(--dur, 900ms) * var(--k)) var(--inout) calc(var(--d, 0ms) * var(--k)) both; }
+@keyframes lpc-r5score-rise { from { opacity: 0; transform: translateY(0.45em); } }
+@keyframes lpc-r5score-fade { from { opacity: 0; } }
+@keyframes lpc-r5score-fadeout { to { opacity: 0; } }
+@keyframes lpc-r5score-pop { from { opacity: 0; transform: scale(0.55); } }
+@keyframes lpc-r5score-deal { from { opacity: 0; transform: translate(-14%, -14%) scale(1.12); } }
+@keyframes lpc-r5score-shrinkout { to { opacity: 0; transform: scale(0.82); } }
+@keyframes lpc-r5score-from { from { transform: translate(var(--fx, 0), var(--fy, 0)) scale(var(--fs, 1)); opacity: var(--fo, 1); } }
+@keyframes lpc-r5score-to { to { transform: translate(var(--tx, 0), var(--ty, 0)) scale(var(--ts, 1)); opacity: var(--to, 1); } }
+
+/* ---------- Source chips. */
+.lpc-r5score-chip {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.6cqh;
+	width: 13cqw;
+	padding: 1.6cqh 0.6cqw 1.4cqh;
+	border-radius: 1.6cqw;
+	background: rgba(22, 26, 38, 0.92);
+	box-shadow: 0 1cqw 3cqw rgba(0, 0, 0, 0.45), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+	transform: translate(-50%, -50%);
+	position: absolute;
+	left: 0;
+	top: 0;
+}
+.lpc-r5score-chip img { height: 4.6cqh; width: auto; }
+.lpc-r5score-chip img.lpc-r5score-chip-wide { height: 4cqh; }
+.lpc-r5score-chip-n { font-weight: 800; font-size: 3.6cqw; line-height: 1; font-variant-numeric: tabular-nums; }
+.lpc-r5score-chip-n small { font-size: 0.48em; color: rgba(255, 255, 255, 0.6); }
+.lpc-r5score-chip-l {
+	font-size: max(9px, 1.15cqw);
+	font-weight: 700;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: rgba(255, 255, 255, 0.6);
+}
+
+/* ---------- The orbit: centred on the ring, squashed into an ellipse, chips kept upright. */
+.lpc-r5score-orbit { position: absolute; left: 50cqw; top: 52cqh; width: 0; height: 0; }
+.lpc-r5score-squash { transform: scaleY(0.36); }
+.lpc-r5score-spin, .lpc-r5score-counter { width: 0; height: 0; }
+.lpc-r5score-spin { animation: lpc-r5score-spin calc(var(--dur) * var(--k)) linear calc(var(--d) * var(--k)) both; }
+.lpc-r5score-counter { animation: lpc-r5score-counter calc(var(--dur) * var(--k)) linear calc(var(--d) * var(--k)) both; }
+@keyframes lpc-r5score-spin { to { transform: rotate(var(--turn)); } }
+@keyframes lpc-r5score-counter { to { transform: rotate(calc(var(--turn) * -1)); } }
+.lpc-r5score-arm { position: absolute; left: 0; top: 0; width: 0; height: 0; }
+.lpc-r5score-arm > div { width: 0; height: 0; }
+.lpc-r5score-unsquash { transform: scaleY(2.7778); width: 0; height: 0; }
+.lpc-r5score-unsquash > div { width: 0; height: 0; }
+
+/* ---------- score-pulse: a dot travels from each chip into the ring. */
+.lpc-r5score-dot {
+	position: absolute;
+	left: 50cqw;
+	top: 52cqh;
+	width: 2.6cqw;
+	height: 2.6cqw;
+	margin: -1.3cqw 0 0 -1.3cqw;
+	border-radius: 50%;
+	background: #fbbf24;
+	box-shadow: 0 0 2cqw 0.6cqw rgba(251, 191, 36, 0.7);
+	animation: lpc-r5score-dot calc(800ms * var(--k)) cubic-bezier(0.55, 0, 0.45, 1) calc(var(--d) * var(--k)) both;
+}
+@keyframes lpc-r5score-dot {
+	0% { opacity: 0; transform: translate(var(--fx), var(--fy)) scale(0.6); }
+	15% { opacity: 1; }
+	85% { opacity: 1; }
+	100% { opacity: 0; transform: translate(0, 0) scale(0.3); }
+}
+
+/* ---------- score-beats: one number at a time, huge. */
+.lpc-r5score-beat {
+	position: absolute;
+	inset: 0 0 9cqh;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 2cqh;
+	animation: lpc-r5score-beat calc(var(--dur) * var(--k)) var(--ease) calc(var(--d) * var(--k)) both;
+	opacity: 0;
+}
+.lpc-r5score-beat img { height: 10cqh; width: auto; }
+.lpc-r5score-beat-n { font-weight: 800; font-size: 20cqw; line-height: 0.9; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+.lpc-r5score-beat-n small { font-size: 0.4em; color: rgba(255, 255, 255, 0.55); }
+@keyframes lpc-r5score-beat {
+	0% { opacity: 0; transform: scale(1.25); }
+	18% { opacity: 1; transform: scale(1); }
+	78% { opacity: 1; transform: scale(0.97); }
+	100% { opacity: 0; transform: scale(0.85); }
+}
+
+/* ---------- score-flip: the poster turns over into the ring. */
+.lpc-r5score-3d { position: absolute; inset: 0; perspective: 140cqw; }
+.lpc-r5score-flipper {
+	position: absolute;
+	inset: 0;
+	transform-style: preserve-3d;
+	transform-origin: 50cqw 52cqh;
+}
+.lpc-r5score-face { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.lpc-r5score-face-back { transform: rotateY(180deg); }
+.lpc-r5score-turn { animation: lpc-r5score-turn calc(var(--dur, 1100ms) * var(--k)) var(--inout) calc(var(--d) * var(--k)) both; }
+@keyframes lpc-r5score-turn { from { transform: rotateY(0deg); } to { transform: rotateY(180deg); } }
+.lpc-r5score-unturn { animation: lpc-r5score-unturn calc(var(--dur, 1100ms) * var(--k)) var(--inout) calc(var(--d) * var(--k)) both; }
+@keyframes lpc-r5score-unturn { from { transform: rotateY(180deg); } to { transform: rotateY(0deg); } }
+.lpc-r5score-orbit-poster {
+	position: absolute;
+	left: 50%;
+	top: 52cqh;
+	height: 36cqh;
+	aspect-ratio: 2 / 3;
+	transform: translate(-50%, -50%);
+	border-radius: 1cqw;
+	object-fit: cover;
+	box-shadow: 0 2cqw 5cqw rgba(0, 0, 0, 0.6);
+}
+
+/* ---------- Chapter 3: cards in the hero's place, the deck, the reel, the wall. */
+.lpc-r5score-card {
+	position: absolute;
+	left: 50%;
+	top: 46%;
+	height: 62cqh;
+	aspect-ratio: 2 / 3;
+	transform: translate(-50%, -50%);
+	border-radius: 1.2cqw;
+	object-fit: cover;
+	box-shadow: 0 1.4cqw 4cqw rgba(0, 0, 0, 0.55);
+	background: #10131c;
+}
+.lpc-r5score-back {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background:
+		radial-gradient(60% 50% at 50% 45%, rgba(251, 191, 36, 0.28), rgba(251, 191, 36, 0) 70%),
+		linear-gradient(160deg, #1d2333, #0b0e15);
+	box-shadow: 0 1.4cqw 4cqw rgba(0, 0, 0, 0.55), inset 0 0 0 0.25cqw rgba(251, 191, 36, 0.55);
+}
+.lpc-r5score-back svg { width: 40%; height: auto; }
+.lpc-r5score-shuffle {
+	animation: lpc-r5score-shuffle calc(var(--dur) * var(--k)) var(--inout) calc(var(--d) * var(--k)) both;
+}
+@keyframes lpc-r5score-shuffle {
+	0% { transform: translate(0, 0) rotate(var(--r0)); }
+	25% { transform: translate(var(--sx), calc(var(--sy) * -1)) rotate(var(--r1)); }
+	50% { transform: translate(0, 0) rotate(var(--r0)); }
+	75% { transform: translate(calc(var(--sx) * -1), var(--sy)) rotate(var(--r2)); }
+	100% { transform: translate(0, 0) rotate(0deg); }
+}
+.lpc-r5score-side {
+	position: absolute;
+	top: 30cqh;
+	width: 30cqw;
+	display: flex;
+	flex-direction: column;
+	gap: 1.2cqh;
+}
+.lpc-r5score-side-l { left: 5cqw; text-align: right; align-items: flex-end; }
+.lpc-r5score-side-r { right: 5cqw; }
+.lpc-r5score-match { font-weight: 800; font-size: 6cqw; line-height: 1; color: #fbbf24; font-variant-numeric: tabular-nums; }
+.lpc-r5score-loved { display: flex; gap: 1cqw; }
+.lpc-r5score-loved img { height: 20cqh; aspect-ratio: 2 / 3; border-radius: 0.8cqw; object-fit: cover; }
+.lpc-r5score-reel {
+	position: absolute;
+	left: 0;
+	top: 46cqh;
+	height: 40cqh;
+	display: flex;
+	gap: 2cqh;
+	margin-top: -20cqh;
+	animation: lpc-r5score-reel calc(var(--dur) * var(--k)) cubic-bezier(0.08, 0.6, 0.12, 1) calc(var(--d) * var(--k)) both;
+}
+.lpc-r5score-reel img { height: 40cqh; aspect-ratio: 2 / 3; border-radius: 0.9cqw; object-fit: cover; flex: none; }
+@keyframes lpc-r5score-reel { from { transform: translateX(var(--from)); } to { transform: translateX(0); } }
+.lpc-r5score-wall-cell { position: absolute; border-radius: 0.7cqw; object-fit: cover; }
+.lpc-r5score-grey { filter: grayscale(1) brightness(0.55); }
+.lpc-r5score-light {
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 10cqw;
+	height: 10cqw;
+	margin: -5cqw 0 0 -5cqw;
+	border-radius: 50%;
+	background: radial-gradient(closest-side, rgba(255, 236, 190, 0.5), rgba(255, 236, 190, 0));
+	animation: lpc-r5score-light calc(var(--dur) * var(--k)) var(--inout) calc(var(--d) * var(--k)) both;
+}
+@keyframes lpc-r5score-light {
+	0% { opacity: 0; transform: translate(10cqw, 70cqh) scale(4); }
+	15% { opacity: 1; }
+	45% { transform: translate(78cqw, 20cqh) scale(4); }
+	100% { opacity: 1; transform: translate(var(--lx), var(--ly)) scale(3); }
+}
+
+@container (max-width: 520px) {
+	.lpc-r5score-head { font-size: 9cqw; }
+	.lpc-r5score-chip { width: 15cqw; padding: 1cqh 0.4cqw; }
+	.lpc-r5score-chip-l { display: none; }
+	.lpc-r5score-chip-n { font-size: 4.4cqw; }
+	.lpc-r5score-side .lpc-r5score-sub, .lpc-r5score-loved { display: none; }
+	.lpc-r5score-match { font-size: 7.5cqw; }
+	.lpc-r5score-verdict { font-size: 7.5cqw; }
+}
+@media (prefers-reduced-motion: reduce) {
+	.lpc-r5score * { animation-duration: 1ms !important; animation-delay: 0ms !important; }
+}
+.lpc-r5score-at-top { position: absolute; left: 0; right: 0; top: 3cqh; text-align: center; font-size: 4.6cqw; }
+@keyframes lpc-r5score-flick {
+	0% { opacity: 0; }
+	1% { opacity: 1; }
+	62% { opacity: 0; }
+	100% { opacity: 0; }
+}
+@container (max-width: 520px) {
+	.lpc-r5score-at-top { font-size: 6cqw; }
+}
+@container (max-width: 520px) {
+	.lpc-r5score-at-kick { display: none; }
+}

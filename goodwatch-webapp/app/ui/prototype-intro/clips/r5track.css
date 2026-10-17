@@ -1,0 +1,412 @@
+/* PROTOTYPE - throwaway. Round 5 "r5track" clips: chapter 9 (keeps track for you) and chapter 10 (your turn).
+   Transform and opacity only; every delay and duration is scaled by the stage's --k. The bottom 9cqh is the
+   chapter bar's. */
+
+/* ---------- Timing (kit.tsx `at`): one, two or three animations from inline custom properties. */
+.lpc-r5track-a {
+	animation: var(--an) calc(var(--du) * var(--k, 1)) var(--ez) calc(var(--d) * var(--k, 1)) both;
+}
+.lpc-r5track-a2 {
+	animation:
+		var(--an) calc(var(--du) * var(--k, 1)) var(--ez) calc(var(--d) * var(--k, 1)) both,
+		var(--an2) calc(var(--du2) * var(--k, 1)) var(--ez2) calc(var(--d2) * var(--k, 1)) forwards;
+}
+.lpc-r5track-a3 {
+	animation:
+		var(--an) calc(var(--du) * var(--k, 1)) var(--ez) calc(var(--d) * var(--k, 1)) both,
+		var(--an2) calc(var(--du2) * var(--k, 1)) var(--ez2) calc(var(--d2) * var(--k, 1)) forwards,
+		var(--an3) calc(var(--du3) * var(--k, 1)) var(--ez3) calc(var(--d3) * var(--k, 1)) forwards;
+}
+
+@keyframes lpc-r5track-rise { from { opacity: 0; transform: translateY(40%); } }
+@keyframes lpc-r5track-fade { from { opacity: 0; } }
+@keyframes lpc-r5track-word { from { opacity: 0; transform: translateY(105%); } }
+@keyframes lpc-r5track-pop { from { opacity: 0; transform: scale(0.55); } }
+@keyframes lpc-r5track-deal { from { opacity: 0; transform: translate(-14%, -14%) scale(1.12); } }
+@keyframes lpc-r5track-from { from { opacity: 0; transform: translate(var(--fx, 0), var(--fy, 0)) scale(var(--fs, 1)) rotate(var(--fr, 0deg)); } }
+@keyframes lpc-r5track-to { to { opacity: var(--to, 0); transform: translate(var(--tx, 0), var(--ty, 0)) scale(var(--ts, 1)) rotate(var(--tr, 0deg)); } }
+@keyframes lpc-r5track-out { to { opacity: 0; } }
+@keyframes lpc-r5track-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes lpc-r5track-slam { from { opacity: 0; transform: scale(1.9) rotate(-8deg); } }
+@keyframes lpc-r5track-press { 0%, 100% { transform: scale(1); } 40% { transform: scale(0.88); } }
+@keyframes lpc-r5track-gulp { 40% { transform: scale(1.18); } 100% { transform: scale(1); } }
+@keyframes lpc-r5track-glow { from { opacity: 0; transform: scale(0.6); } 60% { opacity: 1; } to { opacity: 0.85; transform: scale(1); } }
+/* D of chapter 10: a poster waits in the cloud, then settles into its cell on the deal curve. */
+@keyframes lpc-r5track-gather {
+	0% { opacity: 0; transform: translate(var(--fx), var(--fy)) rotate(var(--fr)) scale(var(--fs)); animation-timing-function: ease-out; }
+	14% { opacity: 1; transform: translate(var(--fx), var(--fy)) rotate(var(--fr)) scale(var(--fs)); animation-timing-function: linear; }
+	62% { opacity: 1; transform: translate(calc(var(--fx) * 0.94), calc(var(--fy) * 0.94)) rotate(calc(var(--fr) * 0.9)) scale(var(--fs)); animation-timing-function: cubic-bezier(.25, .8, .25, 1); }
+	100% { opacity: 1; transform: none; }
+}
+@keyframes lpc-r5track-tick { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+/* ---------- Type */
+.lpc-r5track-kicker {
+	font-weight: 800;
+	text-transform: uppercase;
+	letter-spacing: 0.18em;
+	color: #fbbf24;
+	font-size: max(9px, 1.6cqw);
+}
+.lpc-r5track-h {
+	margin: 0;
+	font-weight: 800;
+	line-height: 1;
+	letter-spacing: -0.03em;
+	font-size: max(22px, 7cqw);
+}
+.lpc-r5track-h-mid { font-size: max(18px, 5.4cqw); }
+.lpc-r5track-h-huge { font-size: max(34px, 15cqw); letter-spacing: -0.045em; line-height: 0.92; }
+.lpc-r5track-word {
+	display: inline-block;
+	overflow: hidden;
+	vertical-align: top;
+	padding-bottom: 0.1em;
+	margin-bottom: -0.1em;
+}
+.lpc-r5track-word-in { display: inline-block; }
+.lpc-r5track-accent { color: #fbbf24; }
+.lpc-r5track-line {
+	color: rgba(255, 255, 255, 0.82);
+	font-size: max(11px, 2.2cqw);
+	line-height: 1.25;
+}
+.lpc-r5track-line b { color: #fff; }
+.lpc-r5track-example {
+	position: absolute;
+	right: 3cqw;
+	top: 4cqh;
+	z-index: 8;
+	padding: 0.5cqw 1.3cqw;
+	border-radius: 999px;
+	background: rgba(255, 255, 255, 0.1);
+	color: rgba(255, 255, 255, 0.72);
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.12em;
+	font-size: max(8px, 1.15cqw);
+}
+
+/* ---------- Backgrounds */
+.lpc-r5track-glow {
+	position: absolute;
+	inset: -20%;
+	background: radial-gradient(45% 40% at 50% 45%, rgba(251, 191, 36, 0.16), rgba(5, 6, 10, 0) 70%);
+	pointer-events: none;
+}
+.lpc-r5track-art {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+.lpc-r5track-shade {
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(90deg, rgba(5, 6, 10, 0.94) 0%, rgba(5, 6, 10, 0.72) 50%, rgba(5, 6, 10, 0.35) 100%);
+}
+
+/* ---------- Posters, pills, badges */
+.lpc-r5track-poster {
+	display: block;
+	aspect-ratio: 2 / 3;
+	object-fit: cover;
+	border-radius: 1cqw;
+	box-shadow: 0 1.4cqw 4cqw rgba(0, 0, 0, 0.55);
+}
+.lpc-r5track-pill {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.6cqw;
+	padding: 1cqw 2.2cqw;
+	border-radius: 999px;
+	background: #fbbf24;
+	color: #111;
+	font-weight: 800;
+	font-size: max(11px, 2cqw);
+	white-space: nowrap;
+}
+.lpc-r5track-pill-off { background: rgba(255, 255, 255, 0.14); color: #fff; }
+.lpc-r5track-stack { display: grid; }
+.lpc-r5track-stack > * { grid-area: 1 / 1; justify-self: start; }
+.lpc-r5track-badge {
+	position: absolute;
+	left: 50%;
+	bottom: -2.4cqw;
+	display: flex;
+	align-items: center;
+	gap: 0.8cqw;
+	padding: 0.6cqw 1.4cqw 0.6cqw 0.6cqw;
+	border-radius: 1.4cqw;
+	background: #0b0e15;
+	border: max(2px, 0.25cqw) solid #fbbf24;
+	box-shadow: 0 1cqw 3cqw rgba(0, 0, 0, 0.6);
+	white-space: nowrap;
+	font-weight: 800;
+	font-size: max(10px, 1.8cqw);
+	translate: -50% 0;
+}
+.lpc-r5track-badge img { width: 4cqw; height: 4cqw; border-radius: 0.8cqw; object-fit: cover; }
+.lpc-r5track-logo { width: 5cqw; height: 5cqw; border-radius: 1cqw; object-fit: cover; }
+
+/* ---------- My shows rows */
+.lpc-r5track-rows { display: flex; flex-direction: column; gap: 1.1cqh; }
+.lpc-r5track-row {
+	display: flex;
+	align-items: center;
+	gap: 1.6cqw;
+	padding: 0.9cqw 1.4cqw 0.9cqw 0.9cqw;
+	border-radius: 1.4cqw;
+	background: rgba(255, 255, 255, 0.07);
+	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.07);
+}
+.lpc-r5track-row .lpc-r5track-poster { width: 5cqw; border-radius: 0.6cqw; flex: none; box-shadow: none; }
+.lpc-r5track-row-body { min-width: 0; flex: 1; }
+.lpc-r5track-row-title { font-weight: 800; font-size: max(11px, 2.1cqw); line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lpc-r5track-row-sub { color: rgba(255, 255, 255, 0.62); font-size: max(9px, 1.5cqw); margin-top: 0.3cqh; }
+.lpc-r5track-chip {
+	flex: none;
+	padding: 0.5cqw 1.3cqw;
+	border-radius: 999px;
+	background: rgba(255, 255, 255, 0.12);
+	font-weight: 800;
+	font-size: max(9px, 1.5cqw);
+	white-space: nowrap;
+}
+.lpc-r5track-chip-hot { background: #fbbf24; color: #111; }
+
+/* ---------- Import sources and the G */
+.lpc-r5track-src {
+	position: absolute;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 8.4cqw;
+	height: 8.4cqw;
+	margin: -4.2cqw 0 0 -4.2cqw;
+	border-radius: 2cqw;
+	background: #161a24;
+	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1), 0 1cqw 3cqw rgba(0, 0, 0, 0.5);
+	font-weight: 800;
+	font-size: max(12px, 2.4cqw);
+	color: #fff;
+}
+.lpc-r5track-src img { width: 68%; height: 52%; object-fit: contain; }
+.lpc-r5track-g {
+	position: absolute;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 15cqw;
+	height: 15cqw;
+	margin: -7.5cqw 0 0 -7.5cqw;
+	border-radius: 50%;
+	background: radial-gradient(circle, rgba(251, 191, 36, 0.28), rgba(251, 191, 36, 0) 70%);
+}
+
+/* ---------- B: the feed */
+.lpc-r5track-feed-view {
+	position: absolute;
+	right: 5cqw;
+	top: 6cqh;
+	width: 42cqw;
+	height: 82cqh;
+	overflow: hidden;
+	-webkit-mask-image: linear-gradient(180deg, transparent 0, #000 6%, #000 90%, transparent 100%);
+	mask-image: linear-gradient(180deg, transparent 0, #000 6%, #000 90%, transparent 100%);
+}
+.lpc-r5track-feed {
+	--ph: 76cqh;
+	animation: lpc-r5track-feed calc(14000ms * var(--k, 1)) linear both;
+}
+.lpc-r5track-panel {
+	height: var(--ph);
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	gap: 1.6cqh;
+}
+@keyframes lpc-r5track-feed {
+	0%, 31% { transform: translateY(0); animation-timing-function: cubic-bezier(.65, 0, .35, 1); }
+	37%, 64% { transform: translateY(calc(var(--ph) * -1)); animation-timing-function: cubic-bezier(.65, 0, .35, 1); }
+	70%, 100% { transform: translateY(calc(var(--ph) * -2)); }
+}
+.lpc-r5track-note {
+	display: flex;
+	align-items: center;
+	gap: 1.4cqw;
+	padding: 1.2cqw;
+	border-radius: 1.6cqw;
+	background: rgba(22, 26, 36, 0.96);
+	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08), 0 1.4cqw 4cqw rgba(0, 0, 0, 0.5);
+}
+.lpc-r5track-note .lpc-r5track-poster { width: 6cqw; border-radius: 0.7cqw; box-shadow: none; flex: none; }
+.lpc-r5track-note-from { display: flex; justify-content: space-between; font-size: max(8px, 1.3cqw); font-weight: 800; color: #fbbf24; }
+.lpc-r5track-note-from span:last-child { color: rgba(255, 255, 255, 0.45); font-weight: 600; }
+.lpc-r5track-tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.2cqw; }
+.lpc-r5track-tile {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	aspect-ratio: 1;
+	border-radius: 1.6cqw;
+	background: #161a24;
+	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+	font-weight: 800;
+	font-size: max(11px, 2.2cqw);
+}
+.lpc-r5track-tile img { width: 66%; height: 50%; object-fit: contain; }
+.lpc-r5track-says { position: absolute; left: 6cqw; top: 30cqh; width: 44cqw; }
+.lpc-r5track-says > * { position: absolute; left: 0; top: 0; width: 100%; }
+
+/* ---------- C: big status words */
+.lpc-r5track-beat { position: absolute; inset: 0; }
+.lpc-r5track-beat .lpc-r5track-shade { background: linear-gradient(90deg, rgba(5, 6, 10, 0.92) 0%, rgba(5, 6, 10, 0.55) 60%, rgba(5, 6, 10, 0.25) 100%); }
+.lpc-r5track-beat-words { position: absolute; left: 6cqw; top: 22cqh; right: 6cqw; }
+
+/* ---------- D: a week */
+.lpc-r5track-week {
+	position: absolute;
+	left: 4cqw;
+	right: 4cqw;
+	top: 30cqh;
+	height: 54cqh;
+	display: grid;
+	grid-template-columns: repeat(7, 1fr);
+	gap: 0.8cqw;
+}
+.lpc-r5track-day {
+	position: relative;
+	border-radius: 1.2cqw;
+	background: rgba(255, 255, 255, 0.04);
+	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+	padding: 1cqw 0.8cqw;
+}
+.lpc-r5track-day-name { font-weight: 800; font-size: max(9px, 1.5cqw); color: rgba(255, 255, 255, 0.55); text-transform: uppercase; letter-spacing: 0.1em; }
+.lpc-r5track-day-card { margin-top: 1.2cqh; }
+.lpc-r5track-day-card .lpc-r5track-poster { width: 100%; border-radius: 0.7cqw; }
+.lpc-r5track-day-what { margin-top: 0.8cqh; font-weight: 800; font-size: max(8px, 1.35cqw); line-height: 1.15; }
+.lpc-r5track-day-what small { display: block; font-weight: 500; color: rgba(255, 255, 255, 0.62); margin-top: 0.2cqh; }
+.lpc-r5track-day-hot { box-shadow: inset 0 0 0 max(2px, 0.25cqw) #fbbf24; background: rgba(251, 191, 36, 0.08); }
+
+/* ---------- Chapter 10: the quiz inside the clip, above the chapter bar */
+.lpc-r5track-quiz {
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 0;
+	bottom: 8.5cqh;
+}
+/* The quiz's own posters wait for the clip's entrance: each lands with the deal, one after another. */
+.lpc-r5track-quiz-stagger .lpft-poster img {
+	animation: lpc-r5track-deal calc(750ms * var(--k, 1)) cubic-bezier(.25, .8, .25, 1) calc((var(--qd, 0ms) + var(--i, 0) * 70ms) * var(--k, 1)) both;
+}
+/* D: the posters arrive by flight; the quiz's own images appear the moment each lands. */
+.lpc-r5track-quiz-land .lpft-poster img {
+	animation: lpc-r5track-in calc(1ms * var(--k, 1)) linear calc((var(--qd, 0ms) + var(--i, 0) * 70ms) * var(--k, 1)) both;
+}
+.lpc-r5track-quiz-land .lpft-poster { background: transparent; }
+.lpc-r5track-fly {
+	position: absolute;
+	z-index: 6;
+	margin: 0;
+	pointer-events: none;
+	aspect-ratio: 2 / 3;
+	object-fit: cover;
+	border-radius: 0.8cqw;
+	box-shadow: 0 1cqw 3cqw rgba(0, 0, 0, 0.55);
+}
+.lpc-r5track-turn {
+	position: absolute;
+	inset: 0;
+	z-index: 7;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	pointer-events: none;
+	text-align: center;
+}
+.lpc-r5track-slots { display: flex; gap: 1.6cqw; margin-top: 4cqh; }
+.lpc-r5track-slot-box { transform-origin: 50% 50%; }
+.lpc-r5track-slot {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 9cqw;
+	aspect-ratio: 2 / 3;
+	border-radius: 1cqw;
+	border: max(2px, 0.3cqw) dashed rgba(251, 191, 36, 0.85);
+	color: #fbbf24;
+	font-weight: 800;
+	font-size: max(14px, 3.4cqw);
+}
+.lpc-r5track-ripple {
+	position: absolute;
+	z-index: 7;
+	width: 12cqw;
+	height: 12cqw;
+	margin: -6cqw 0 0 -6cqw;
+	border-radius: 50%;
+	border: max(3px, 0.4cqw) solid #fff;
+	box-shadow: 0 0 2cqw rgba(255, 255, 255, 0.6);
+	pointer-events: none;
+	opacity: 0;
+	animation: lpc-r5track-ripple calc(2600ms * var(--k, 1)) ease-out calc(var(--d) * var(--k, 1)) 3 both;
+}
+.lpc-r5track-hand {
+	position: absolute;
+	z-index: 8;
+	width: 5cqw;
+	pointer-events: none;
+	transform-origin: 0 0;
+	filter: drop-shadow(0 0.6cqw 1.6cqw rgba(0, 0, 0, 0.55));
+	opacity: 0;
+	animation: lpc-r5track-hand calc(2600ms * var(--k, 1)) cubic-bezier(.45, 0, .3, 1) calc(var(--d) * var(--k, 1)) 3 both;
+}
+@keyframes lpc-r5track-hand {
+	0% { transform: translate(12cqw, 14cqh); opacity: 0; }
+	12% { transform: translate(12cqw, 14cqh); opacity: 1; }
+	48% { transform: translate(0, 0); }
+	55% { transform: translate(0, 0) scale(0.8); }
+	63% { transform: translate(0, 0) scale(1); opacity: 1; }
+	88%, 100% { transform: translate(0, 0); opacity: 0; }
+}
+@keyframes lpc-r5track-ripple {
+	0%, 54.9% { opacity: 0; transform: scale(0.2); }
+	55% { opacity: 1; transform: scale(0.2); }
+	85%, 100% { opacity: 0; transform: scale(1.6); }
+}
+
+/* ---------- The phone TV: secondary lines go, type grows */
+@container (max-width: 520px) {
+	.lpc-r5track-line,
+	.lpc-r5track-row-sub,
+	.lpc-r5track-hide-phone { display: none; }
+	.lpc-r5track-h { font-size: 9cqw; }
+	.lpc-r5track-h-mid { font-size: 7.4cqw; }
+	.lpc-r5track-row-title { font-size: 3.4cqw; }
+	.lpc-r5track-chip { font-size: 2.6cqw; }
+	.lpc-r5track-row .lpc-r5track-poster { width: 6cqw; }
+	.lpc-r5track-day-what small { display: none; }
+	.lpc-r5track-day-what { font-size: 2.2cqw; }
+	/* The headline takes two lines here: the rows start lower, and three of them fit above the chapter bar. */
+	.lpc-r5track-stage-rows { top: 36cqh !important; width: 88cqw !important; }
+	.lpc-r5track-stage-rows > :nth-child(4) { display: none; }
+	.lpc-r5track-src { width: 12cqw; height: 12cqw; margin: -6cqw 0 0 -6cqw; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.lpc-r5track-a,
+	.lpc-r5track-a2,
+	.lpc-r5track-a3,
+	.lpc-r5track-feed,
+	.lpc-r5track-quiz-stagger .lpft-poster img,
+	.lpc-r5track-quiz-land .lpft-poster img {
+		animation-duration: 1ms !important;
+		animation-delay: 0ms !important;
+	}
+	.lpc-r5track-ripple,
+	.lpc-r5track-hand { display: none; }
+}

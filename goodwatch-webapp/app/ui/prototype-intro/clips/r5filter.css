@@ -1,0 +1,327 @@
+/* PROTOTYPE - throwaway. Round 5 filter clips. Transform and opacity only; every time is scaled by --k. */
+.lpc-r5filter {
+	position: absolute;
+	inset: 0;
+	overflow: hidden;
+	background: radial-gradient(80% 90% at 70% 40%, #121826 0%, #05060a 70%);
+	color: #fff;
+	font-family: "Gabarito", ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Timed wrappers (kit.tsx Window): `e` enters at --d, `x` leaves at --x. One animation per element. */
+.lpc-r5filter-e {
+	animation-duration: calc(750ms * var(--k));
+	animation-delay: calc(var(--d, 0ms) * var(--k));
+	animation-fill-mode: both;
+	animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+.lpc-r5filter-e-none { animation: none; }
+.lpc-r5filter-e-rise { animation-name: lpc-r5filter-rise; }
+.lpc-r5filter-e-fade { animation-name: lpc-r5filter-fadein; }
+.lpc-r5filter-e-pop {
+	animation-name: lpc-r5filter-pop;
+	animation-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
+	animation-duration: calc(600ms * var(--k));
+}
+/* The sign-up wall's deal: from up-left, a little large. */
+.lpc-r5filter-e-deal {
+	animation-name: lpc-r5filter-deal;
+	animation-timing-function: cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+.lpc-r5filter-e-stamp {
+	animation-name: lpc-r5filter-stamp;
+	animation-duration: calc(450ms * var(--k));
+	animation-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes lpc-r5filter-rise { from { opacity: 0; transform: translateY(45%); } }
+@keyframes lpc-r5filter-fadein { from { opacity: 0; } }
+@keyframes lpc-r5filter-pop { from { opacity: 0; transform: scale(0.6); } }
+@keyframes lpc-r5filter-deal { from { opacity: 0; transform: translate(-14%, -14%) scale(1.12); } }
+@keyframes lpc-r5filter-stamp { from { opacity: 0; transform: scale(1.8) rotate(-14deg); } to { transform: rotate(-12deg); } }
+
+.lpc-r5filter-x {
+	animation-duration: calc(550ms * var(--k));
+	animation-delay: calc(var(--x) * var(--k));
+	animation-fill-mode: forwards;
+	animation-timing-function: cubic-bezier(0.55, 0, 0.75, 0.2);
+}
+.lpc-r5filter-x-lift { animation-name: lpc-r5filter-lift; }
+.lpc-r5filter-x-fade { animation-name: lpc-r5filter-fadeout; }
+.lpc-r5filter-x-shrink { animation-name: lpc-r5filter-shrink; }
+.lpc-r5filter-x-fall { animation-name: lpc-r5filter-fall; animation-duration: calc(700ms * var(--k)); }
+@keyframes lpc-r5filter-lift { to { opacity: 0; transform: translateY(-45%); } }
+@keyframes lpc-r5filter-fadeout { to { opacity: 0; } }
+@keyframes lpc-r5filter-shrink { to { opacity: 0; transform: scale(0.7); } }
+@keyframes lpc-r5filter-fall { to { opacity: 0; transform: translateY(40%) rotate(-8deg) scale(0.85); } }
+
+.lpc-r5filter-amber { color: #fbbf24; }
+
+/* Headline and kicker. */
+.lpc-r5filter-kicker {
+	font-size: max(10px, 1.5cqw);
+	font-weight: 700;
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	color: #fbbf24;
+}
+.lpc-r5filter-h {
+	margin: 0.6cqh 0 0;
+	font-size: 5.4cqw;
+	font-weight: 800;
+	line-height: 1.02;
+	letter-spacing: -0.02em;
+}
+.lpc-r5filter-word { display: inline-block; white-space: pre; }
+
+/* The count. */
+.lpc-r5filter-count {
+	position: relative;
+	height: 1.05em;
+	font-size: 13cqw;
+	font-weight: 800;
+	line-height: 1;
+	letter-spacing: -0.03em;
+	font-variant-numeric: tabular-nums;
+}
+.lpc-r5filter-count-n { position: absolute; left: 0; top: 0; white-space: nowrap; }
+.lpc-r5filter-caption {
+	position: relative;
+	height: 1.3em;
+	font-size: max(11px, 2.1cqw);
+	font-weight: 600;
+	color: rgba(255, 255, 255, 0.78);
+}
+.lpc-r5filter-caption > * { position: absolute; left: 0; top: 0; white-space: nowrap; }
+
+/* Chips. */
+.lpc-r5filter-chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.9cqw;
+}
+.lpc-r5filter-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.7cqw;
+	padding: 0.7cqw 1.4cqw;
+	border-radius: 999px;
+	background: rgba(255, 255, 255, 0.1);
+	box-shadow: inset 0 0 0 0.18cqw rgba(251, 191, 36, 0.9);
+	font-size: max(10px, 1.7cqw);
+	font-weight: 700;
+	white-space: nowrap;
+}
+.lpc-r5filter-icon { width: 1.15em; height: 1.15em; color: #fbbf24; }
+.lpc-r5filter-dot { width: 0.8em; height: 0.8em; border-radius: 50%; }
+.lpc-r5filter-logos { display: inline-flex; gap: 0.4cqw; }
+.lpc-r5filter-logos img { width: 1.6em; height: 1.6em; border-radius: 0.35em; object-fit: cover; }
+
+/* The poster grid. */
+.lpc-r5filter-grid-w { position: absolute; inset: 0; }
+.lpc-r5filter-grid {
+	display: grid;
+	grid-template-columns: repeat(var(--cols), 1fr);
+	gap: 0.9cqw;
+}
+.lpc-r5filter-tile { position: relative; aspect-ratio: 2 / 3; }
+.lpc-r5filter-tile > * { position: absolute; inset: 0; }
+.lpc-r5filter-poster {
+	display: block;
+	width: 100%;
+	height: 100%;
+	border-radius: 0.6cqw;
+	object-fit: cover;
+	background: #10131c;
+	box-shadow: 0 0.6cqw 1.6cqw rgba(0, 0, 0, 0.45);
+}
+.lpc-r5filter-poster-none {
+	display: flex;
+	align-items: flex-end;
+	padding: 0.5cqw;
+	font-size: 1cqw;
+	font-weight: 700;
+}
+.lpc-r5filter-stamp {
+	position: absolute;
+	left: 50%;
+	top: 42%;
+	margin-left: -3.2cqw;
+	width: 6.4cqw;
+	padding: 0.35cqw 0;
+	border-radius: 0.5cqw;
+	background: #fbbf24;
+	color: #111;
+	text-align: center;
+	font-size: max(9px, 1.25cqw);
+	font-weight: 800;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	transform: rotate(-12deg);
+	box-shadow: 0 0.4cqw 1.2cqw rgba(0, 0, 0, 0.5);
+}
+
+/* ---------- Layout A: count and chips on the left, the grid on the right (tally, unseen). */
+.lpc-r5filter-left {
+	position: absolute;
+	left: 5cqw;
+	top: 7cqh;
+	width: 41cqw;
+}
+.lpc-r5filter-left .lpc-r5filter-countbox { margin-top: 6cqh; }
+.lpc-r5filter-left .lpc-r5filter-chips { margin-top: 3.5cqh; }
+.lpc-r5filter-right {
+	position: absolute;
+	left: 49cqw;
+	right: 4cqw;
+	top: 9cqh;
+	height: 76cqh;
+}
+
+/* ---------- Layout B: the number and the grid trade places (trade). */
+.lpc-r5filter-center {
+	position: absolute;
+	inset: 0 0 10cqh;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+}
+.lpc-r5filter-center .lpc-r5filter-count { font-size: 20cqw; }
+.lpc-r5filter-center .lpc-r5filter-count-n { left: 50%; transform: translateX(-50%); }
+.lpc-r5filter-tradegrid {
+	position: absolute;
+	left: 5cqw;
+	right: 5cqw;
+	top: 22cqh;
+}
+.lpc-r5filter-corner {
+	position: absolute;
+	left: 5cqw;
+	top: 6cqh;
+	right: 5cqw;
+	display: flex;
+	align-items: flex-end;
+	justify-content: space-between;
+	gap: 2cqw;
+}
+.lpc-r5filter-corner .lpc-r5filter-count { font-size: 6.5cqw; }
+.lpc-r5filter-bigstep {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 2cqh;
+}
+.lpc-r5filter-bigstep .lpc-r5filter-chip { font-size: 2.4cqw; padding: 1cqw 2.2cqw; }
+.lpc-r5filter-bignum {
+	font-size: 19cqw;
+	font-weight: 800;
+	line-height: 0.95;
+	letter-spacing: -0.03em;
+	font-variant-numeric: tabular-nums;
+}
+.lpc-r5filter-stack { position: absolute; inset: 0; }
+
+/* ---------- Exploration: three evenings side by side. */
+.lpc-r5filter-lanes {
+	position: absolute;
+	left: 4cqw;
+	right: 4cqw;
+	top: 25cqh;
+	bottom: 11cqh;
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 2.5cqw;
+}
+.lpc-r5filter-lane {
+	position: relative;
+	padding: 2cqw;
+	border-radius: 1.6cqw;
+	background: rgba(255, 255, 255, 0.05);
+	box-shadow: inset 0 0 0 0.12cqw rgba(255, 255, 255, 0.08);
+	overflow: hidden;
+}
+.lpc-r5filter-lane h3 { margin: 0; font-size: 2.6cqw; font-weight: 800; }
+.lpc-r5filter-lane .lpc-r5filter-count { font-size: 6cqw; margin-top: 1cqh; }
+.lpc-r5filter-lane .lpc-r5filter-chips { margin-top: 1.5cqh; gap: 0.6cqw; }
+.lpc-r5filter-lane .lpc-r5filter-chip { font-size: max(9px, 1.25cqw); padding: 0.5cqw 1cqw; }
+.lpc-r5filter-lane-posters {
+	position: absolute;
+	left: 2cqw;
+	right: 2cqw;
+	bottom: 2cqw;
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 0.8cqw;
+}
+
+/* ---------- Phone TV: bigger type, fewer tiles, secondary lines out. */
+@container (max-width: 520px) {
+	.lpc-r5filter-h { font-size: 7.5cqw; }
+	.lpc-r5filter-kicker, .lpc-r5filter-hide-phone { display: none; }
+	.lpc-r5filter-left { width: 46cqw; top: 6cqh; }
+	.lpc-r5filter-left .lpc-r5filter-countbox { margin-top: 3cqh; }
+	.lpc-r5filter-count { font-size: 14cqw; }
+	.lpc-r5filter-caption { font-size: 3.6cqw; }
+	.lpc-r5filter-chip { font-size: 3.2cqw; padding: 1cqw 2cqw; }
+	.lpc-r5filter-right { left: 52cqw; top: 6cqh; }
+	.lpc-r5filter-grid .lpc-r5filter-tile:nth-child(n + 7) { display: none; }
+	.lpc-r5filter-stamp { font-size: 2.6cqw; width: 12cqw; margin-left: -6cqw; }
+	.lpc-r5filter-lane h3 { font-size: 4cqw; }
+	.lpc-r5filter-lane .lpc-r5filter-chip { font-size: 2.6cqw; }
+	.lpc-r5filter-lane-posters { display: none; }
+	.lpc-r5filter-corner .lpc-r5filter-count { font-size: 10cqw; }
+	.lpc-r5filter-bigstep .lpc-r5filter-chip { font-size: 4cqw; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.lpc-r5filter-e, .lpc-r5filter-x { animation: none !important; }
+	.lpc-r5filter-past { display: none; }
+}
+
+/* Fixes for the wrappers: a right-aligned count, a lane whose content fills it, a phone grid of three columns. */
+.lpc-r5filter-count-right { width: 40cqw; margin-left: auto; }
+.lpc-r5filter-count-right .lpc-r5filter-count-n { left: auto; right: 0; }
+.lpc-r5filter-lane { padding: 0; }
+.lpc-r5filter-lane > .lpc-r5filter-e { position: absolute; inset: 0; padding: 2cqw; }
+@container (max-width: 520px) {
+	.lpc-r5filter-right .lpc-r5filter-grid { grid-template-columns: repeat(3, 1fr); }
+	.lpc-r5filter-tradegrid .lpc-r5filter-grid { grid-template-columns: repeat(4, 1fr); }
+	.lpc-r5filter-tradegrid .lpc-r5filter-grid .lpc-r5filter-tile:nth-child(n + 9) { display: none; }
+	.lpc-r5filter-count-right { width: 46cqw; }
+}
+/* The count is an odometer window: numbers roll through it, never two at once in view. */
+.lpc-r5filter-count { overflow: hidden; }
+.lpc-r5filter-caption { overflow: hidden; }
+.lpc-r5filter-corner .lpc-r5filter-count { overflow: visible; flex: none; white-space: nowrap; }
+.lpc-r5filter-corner .lpc-r5filter-chips { flex: 1; }
+.lpc-r5filter-chips-row { flex-wrap: nowrap; }
+.lpc-r5filter-chips-row .lpc-r5filter-chip { font-size: max(9px, 1.45cqw); padding: 0.6cqw 1.2cqw; }
+@container (max-width: 520px) {
+	.lpc-r5filter-chips-row { flex-wrap: wrap; top: 26cqh !important; }
+	.lpc-r5filter-chips-row .lpc-r5filter-chip { font-size: 2.6cqw; }
+}
+@container (max-width: 520px) {
+	/* The caption names each filter; the chip stack would run off the screen. */
+	.lpc-r5filter-left .lpc-r5filter-chips { display: none; }
+	.lpc-r5filter-tradegrid .lpc-r5filter-grid { grid-template-columns: repeat(6, 1fr); }
+	.lpc-r5filter-tradegrid .lpc-r5filter-grid .lpc-r5filter-tile:nth-child(n + 7) { display: none; }
+	.lpc-r5filter-unseen .lpc-r5filter-tradegrid { top: 46cqh !important; }
+}
+
+/* "Not seen yet" uses an example member's history: say so on every filter clip. */
+.lpc-r5filter::after {
+	content: "Not seen yet: example member";
+	position: absolute;
+	right: 3cqw;
+	top: 3cqh;
+	z-index: 9;
+	padding: 0.4cqh 1cqw;
+	border-radius: 999px;
+	background: rgba(255, 255, 255, 0.1);
+	font-size: max(9px, 1.05cqw);
+	font-weight: 700;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: rgba(255, 255, 255, 0.6);
+}

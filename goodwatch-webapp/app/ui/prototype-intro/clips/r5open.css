@@ -1,0 +1,416 @@
+/* PROTOTYPE - throwaway. Round 5 openers (r5open): the chat turns into endless scrolling while the evening passes.
+   Every duration and delay is scaled by --k. Transform and opacity only. */
+.lpc-r5open {
+	position: absolute;
+	inset: 0;
+	overflow: hidden;
+	background: #05060a;
+	color: #fff;
+	font-family: "Gabarito", ui-sans-serif, system-ui, sans-serif;
+}
+.lpc-r5open-in { animation: lpc-r5open-in calc(850ms * var(--k)) cubic-bezier(0.16, 1, 0.3, 1) both; }
+@keyframes lpc-r5open-in { from { opacity: 0; transform: translateY(0.35em); } }
+.lpc-r5open-fade { animation: lpc-r5open-fade calc(1200ms * var(--k)) ease-out both; }
+@keyframes lpc-r5open-fade { from { opacity: 0; } }
+.lpc-r5open-deal { animation: lpc-r5open-deal calc(750ms * var(--k)) cubic-bezier(0.25, 0.8, 0.25, 1) both; }
+@keyframes lpc-r5open-deal { from { opacity: 0; transform: translate(-14%, -14%) scale(1.12); } }
+.lpc-r5open-word { display: inline-block; }
+.lpc-r5open-amber { color: #fbbf24; }
+.lpc-r5open-big {
+	font-weight: 800;
+	line-height: 1;
+	letter-spacing: -0.025em;
+	font-size: 9.5cqw;
+	text-shadow: 0 0.4cqw 3cqw rgba(0, 0, 0, 0.6);
+}
+.lpc-r5open-sub {
+	font-weight: 600;
+	font-size: 2.9cqw;
+	color: rgba(255, 255, 255, 0.82);
+	line-height: 1.25;
+}
+.lpc-r5open-center {
+	position: absolute;
+	inset: 0 0 9cqh;
+	z-index: 6;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+	gap: 2.6cqh;
+	padding: 0 6cqw;
+}
+
+/* ---------- The chat */
+.lpc-r5open-chatbox {
+	position: absolute;
+	left: 50%;
+	top: 0;
+	bottom: 9cqh;
+	z-index: 3;
+	width: min(54cqw, 92%);
+	transform: translateX(-50%);
+}
+.lpc-r5open-thread {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 6cqh;
+	display: flex;
+	flex-direction: column;
+	gap: 1.2cqh;
+}
+.lpc-r5open-bubble {
+	max-width: 78%;
+	display: flex;
+	align-items: center;
+	gap: 1.1cqw;
+	padding: 1.1cqh 1.7cqw;
+	border-radius: 2.2cqw;
+	font-weight: 600;
+	font-size: 2.4cqw;
+	line-height: 1.2;
+	animation: lpc-r5open-pop calc(650ms * var(--k)) cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.lpc-r5open-bubble img { width: 3.4cqw; aspect-ratio: 2 / 3; border-radius: 0.4cqw; object-fit: cover; }
+.lpc-r5open-me { align-self: flex-end; background: #fbbf24; color: #111; border-bottom-right-radius: 0.4cqw; transform-origin: 100% 100%; }
+.lpc-r5open-you { align-self: flex-start; background: #1d2230; border-bottom-left-radius: 0.4cqw; transform-origin: 0 100%; }
+@keyframes lpc-r5open-pop { from { opacity: 0; transform: translateY(1.5cqh) scale(0.9); } }
+/* The chat steps back as the wall comes up. */
+.lpc-r5open-chat-out { animation: lpc-r5open-chatout calc(1100ms * var(--k)) cubic-bezier(0.65, 0, 0.35, 1) both; }
+@keyframes lpc-r5open-chatout { to { opacity: 0; transform: translateX(-50%) translateY(-4cqh) scale(0.94); } }
+/* The thumb keeps scrolling: the chat goes up and out, the wall comes up in the same motion. */
+.lpc-r5open-scroll-off { animation: lpc-r5open-scrolloff calc(1500ms * var(--k)) cubic-bezier(0.65, 0, 0.35, 1) both; }
+@keyframes lpc-r5open-scrolloff { to { transform: translateX(-50%) translateY(-100cqh); } }
+.lpc-r5open-scroll-on { animation: lpc-r5open-scrollon calc(1500ms * var(--k)) cubic-bezier(0.65, 0, 0.35, 1) both; }
+@keyframes lpc-r5open-scrollon { from { transform: translateY(100cqh); } }
+
+/* ---------- The wall */
+.lpc-r5open-wall {
+	position: absolute;
+	inset: -16cqh -12cqw;
+	z-index: 1;
+}
+.lpc-r5open-tilt {
+	display: flex;
+	flex-direction: column;
+	gap: 1.6cqw;
+	transform: rotate(-6deg);
+	animation: lpc-r5open-sink calc(12s * var(--k)) cubic-bezier(0.3, 0, 0.7, 1) both;
+}
+@keyframes lpc-r5open-sink {
+	from { transform: rotate(-6deg) scale(1.02); }
+	to { transform: rotate(-6deg) scale(1.12); }
+}
+.lpc-r5open-strip {
+	display: flex;
+	gap: 1.6cqw;
+	width: max-content;
+	animation: lpc-r5open-drift calc(40s * var(--k)) linear both;
+}
+.lpc-r5open-strip.lpc-r5open-rev { animation-direction: reverse; }
+@keyframes lpc-r5open-drift { to { transform: translateX(-50%); } }
+.lpc-r5open-strip img {
+	width: 12.5cqw;
+	aspect-ratio: 2 / 3;
+	border-radius: 0.8cqw;
+	object-fit: cover;
+	background: #10131c;
+}
+.lpc-r5open-wall-up { animation: lpc-r5open-wallup calc(1700ms * var(--k)) cubic-bezier(0.16, 1, 0.3, 1) both; }
+@keyframes lpc-r5open-wallup { from { opacity: 0; transform: scale(1.22); } }
+.lpc-r5open-veil {
+	position: absolute;
+	inset: 0;
+	z-index: 2;
+	background:
+		radial-gradient(70% 70% at 50% 50%, rgba(5, 6, 10, 0.5) 0, rgba(5, 6, 10, 0.9) 100%),
+		linear-gradient(180deg, rgba(5, 6, 10, 0.25), rgba(5, 6, 10, 0.8));
+}
+
+/* ---------- Time: an analog clock and a ticker */
+.lpc-r5open-clockbox {
+	position: absolute;
+	left: 4cqw;
+	top: 6cqh;
+	z-index: 7;
+	width: 14cqw;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 1.2cqh;
+}
+.lpc-r5open-analog { display: block; width: 100%; overflow: visible; filter: drop-shadow(0 0.6cqw 2cqw rgba(0, 0, 0, 0.6)); }
+.lpc-r5open-face { fill: rgba(10, 12, 20, 0.85); stroke: rgba(255, 255, 255, 0.85); stroke-width: 2.5; }
+.lpc-r5open-tick { stroke: rgba(255, 255, 255, 0.45); stroke-width: 1.6; stroke-linecap: round; }
+.lpc-r5open-tick-big { stroke: #fff; stroke-width: 3; }
+.lpc-r5open-hand {
+	stroke-linecap: round;
+	transform-box: view-box;
+	transform-origin: 0 0;
+	animation-duration: calc(var(--d) * var(--k));
+	animation-delay: calc(var(--at) * var(--k));
+	animation-fill-mode: both;
+}
+.lpc-r5open-hour { stroke: #fff; stroke-width: 5; animation-name: lpc-r5open-hour; animation-timing-function: linear; }
+.lpc-r5open-min { stroke: #fbbf24; stroke-width: 3; animation-name: lpc-r5open-min; animation-timing-function: linear; }
+@keyframes lpc-r5open-hour { from { transform: rotate(var(--h0)); } to { transform: rotate(var(--h1)); } }
+@keyframes lpc-r5open-min { from { transform: rotate(var(--m0)); } to { transform: rotate(var(--m1)); } }
+.lpc-r5open-pin { fill: #fbbf24; }
+.lpc-r5open-ticker {
+	position: relative;
+	display: inline-grid;
+	white-space: nowrap;
+	font-variant-numeric: tabular-nums;
+}
+/* The widest time holds the box; the times flip in on top of each other. */
+.lpc-r5open-ticker > span { grid-area: 1 / 1; }
+.lpc-r5open-ticker-size { visibility: hidden; }
+.lpc-r5open-flip,
+.lpc-r5open-flip-first,
+.lpc-r5open-flip-last {
+	animation-duration: calc(var(--s) * var(--k));
+	animation-fill-mode: both;
+	animation-timing-function: linear;
+}
+/* The first is there from the start and leaves after one step; the middle ones come and go; the last stays. */
+.lpc-r5open-flip-first { animation-name: lpc-r5open-flip-out; }
+.lpc-r5open-flip { animation-name: lpc-r5open-flip; }
+.lpc-r5open-flip-last { animation-name: lpc-r5open-flip-in; animation-duration: calc(450ms * var(--k)); animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1); }
+@keyframes lpc-r5open-flip-out {
+	0%, 92% { opacity: 1; transform: none; }
+	100% { opacity: 0; transform: translateY(-0.4em); }
+}
+@keyframes lpc-r5open-flip {
+	0% { opacity: 0; transform: translateY(0.4em); }
+	8%, 92% { opacity: 1; transform: none; }
+	100% { opacity: 0; transform: translateY(-0.4em); }
+}
+@keyframes lpc-r5open-flip-in { from { opacity: 0; transform: translateY(0.4em); } }
+.lpc-r5open-clocklabel { font-weight: 800; font-size: 2.6cqw; color: #fbbf24; }
+
+/* ---------- 2. Night falls */
+.lpc-r5open-sky { background: linear-gradient(180deg, #3b2a6b 0%, #9a3412 52%, #f59e0b 100%); }
+.lpc-r5open-night {
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(180deg, #04050b 0%, #0b1230 55%, #141c3d 100%);
+	animation: lpc-r5open-fade calc(8000ms * var(--k)) linear both;
+}
+.lpc-r5open-stars {
+	position: absolute;
+	inset: 0 0 50%;
+	background:
+		radial-gradient(1.5px 1.5px at 12% 18%, #fff 50%, transparent 51%),
+		radial-gradient(1.5px 1.5px at 27% 9%, #fff 50%, transparent 51%),
+		radial-gradient(1px 1px at 41% 24%, #fff 50%, transparent 51%),
+		radial-gradient(1.5px 1.5px at 58% 12%, #fff 50%, transparent 51%),
+		radial-gradient(1px 1px at 66% 30%, #fff 50%, transparent 51%),
+		radial-gradient(1.5px 1.5px at 88% 21%, #fff 50%, transparent 51%),
+		radial-gradient(1px 1px at 93% 7%, #fff 50%, transparent 51%),
+		radial-gradient(1px 1px at 5% 34%, #fff 50%, transparent 51%),
+		radial-gradient(1.5px 1.5px at 35% 38%, #fff 50%, transparent 51%);
+	animation: lpc-r5open-fade calc(3000ms * var(--k)) ease-out both;
+}
+.lpc-r5open-sun {
+	position: absolute;
+	left: 10cqw;
+	top: 30cqh;
+	width: 14cqw;
+	aspect-ratio: 1;
+	border-radius: 50%;
+	background: radial-gradient(circle at 40% 40%, #fef3c7, #fbbf24 55%, #ea580c);
+	animation: lpc-r5open-set calc(5200ms * var(--k)) cubic-bezier(0.45, 0, 0.55, 1) both;
+}
+@keyframes lpc-r5open-set { to { transform: translateY(60cqh); opacity: 0; } }
+.lpc-r5open-moon {
+	position: absolute;
+	right: 9cqw;
+	top: 5cqh;
+	width: 8cqw;
+	aspect-ratio: 1;
+	border-radius: 50%;
+	background: radial-gradient(circle at 35% 35%, #ffffff, #e2e8f0 60%, #94a3b8);
+	box-shadow: 0 0 4cqw rgba(226, 232, 240, 0.35);
+	animation: lpc-r5open-rise calc(3200ms * var(--k)) cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes lpc-r5open-rise { from { transform: translateY(30cqh); opacity: 0; } }
+.lpc-r5open-skytime {
+	position: absolute;
+	left: 4cqw;
+	top: 5cqh;
+	z-index: 7;
+	padding: 0.45em 1em;
+	border-radius: 999px;
+	background: rgba(5, 6, 10, 0.6);
+	font-weight: 800;
+	font-size: 3cqw;
+	color: #fbbf24;
+}
+.lpc-r5open-wall-low { inset: 30cqh -12cqw -20cqh; }
+.lpc-r5open-veil-low {
+	position: absolute;
+	inset: 28cqh 0 0;
+	z-index: 2;
+	background: linear-gradient(180deg, rgba(5, 6, 10, 0) 0, rgba(5, 6, 10, 0.75) 25%, rgba(5, 6, 10, 0.92) 100%);
+}
+.lpc-r5open-center-low { padding-top: 26cqh; }
+.lpc-r5open-center-down { padding-top: 14cqh; }
+
+/* ---------- 3. The phone */
+.lpc-r5open-phone {
+	position: absolute;
+	left: 50%;
+	top: 46%;
+	z-index: 4;
+	height: 84cqh;
+	aspect-ratio: 9 / 18;
+	transform: translate(-50%, -50%);
+	border-radius: 4cqh;
+	overflow: hidden;
+	background: #0b0d14;
+	box-shadow: 0 0 0 0.7cqh #2a3040, 0 3cqh 9cqh rgba(0, 0, 0, 0.7);
+}
+.lpc-r5open-phone-dive { animation: lpc-r5open-dive calc(1200ms * var(--k)) cubic-bezier(0.7, 0, 0.84, 0) both; }
+@keyframes lpc-r5open-dive { to { transform: translate(-50%, -50%) scale(4.2); opacity: 0; } }
+.lpc-r5open-phone-bar {
+	position: absolute;
+	inset: 0 0 auto;
+	z-index: 2;
+	height: 5.5cqh;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 0 2.2cqh;
+	font-weight: 700;
+	font-size: 2.2cqh;
+	background: #0b0d14;
+}
+.lpc-r5open-battery { display: inline-flex; align-items: center; gap: 0.6cqh; }
+.lpc-r5open-pct { font-size: 1.9cqh; }
+.lpc-r5open-cell {
+	position: relative;
+	width: 3.6cqh;
+	height: 1.7cqh;
+	padding: 0.25cqh;
+	border-radius: 0.5cqh;
+	border: 0.22cqh solid rgba(255, 255, 255, 0.8);
+}
+.lpc-r5open-cell-fill {
+	position: relative;
+	display: block;
+	height: 100%;
+	border-radius: 0.2cqh;
+	background: #22c55e;
+	transform-origin: 0 50%;
+	animation: lpc-r5open-drain calc(6000ms * var(--k)) linear both;
+}
+@keyframes lpc-r5open-drain { from { transform: scaleX(0.92); } to { transform: scaleX(0.1); } }
+.lpc-r5open-cell-low {
+	position: absolute;
+	inset: 0;
+	border-radius: inherit;
+	background: #ef4444;
+	animation: lpc-r5open-fade calc(500ms * var(--k)) ease-out both;
+}
+.lpc-r5open-phone-screen { position: absolute; inset: 5.5cqh 0 0; overflow: hidden; }
+.lpc-r5open-phone-chat { position: absolute; left: 50%; top: 0; bottom: 0; width: 92%; transform: translateX(-50%); }
+.lpc-r5open-phone .lpc-r5open-thread { bottom: 3cqh; gap: 1cqh; }
+.lpc-r5open-phone .lpc-r5open-bubble { font-size: 2.7cqh; padding: 1cqh 1.5cqh; border-radius: 1.8cqh; max-width: 88%; gap: 0.8cqh; }
+.lpc-r5open-phone .lpc-r5open-bubble img { width: 3.2cqh; }
+.lpc-r5open-big.lpc-r5open-big-s { font-size: 8cqw; }
+.lpc-r5open-feed { position: absolute; inset: 0; }
+.lpc-r5open-feed-run {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 0.8cqh;
+	padding: 1cqh;
+	animation: lpc-r5open-flick calc(2600ms * var(--k)) cubic-bezier(0.5, 0, 0.3, 1) both;
+}
+@keyframes lpc-r5open-flick { to { transform: translateY(-58%); } }
+.lpc-r5open-feed-run img { width: 100%; aspect-ratio: 2 / 3; border-radius: 0.6cqh; object-fit: cover; background: #10131c; }
+
+/* ---------- 4. Stopwatch and the pile of no's */
+.lpc-r5open-watch {
+	position: absolute;
+	left: 4cqw;
+	top: 5cqh;
+	z-index: 7;
+	display: flex;
+	flex-direction: column;
+	gap: 0.6cqh;
+}
+.lpc-r5open-watch-label { font-weight: 700; font-size: 1.7cqw; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(255, 255, 255, 0.7); }
+.lpc-r5open-watch-time { font-weight: 800; font-size: 7cqw; color: #fbbf24; }
+.lpc-r5open-chat-right { left: 62%; width: min(46cqw, 92%); }
+.lpc-r5open-pile { position: absolute; left: 8cqw; top: 36cqh; z-index: 3; width: 16cqw; height: 34cqh; transform: translateX(-50%); }
+.lpc-r5open-pile { transform: none; }
+.lpc-r5open-pile.lpc-r5open-chat-out { animation-name: lpc-r5open-pileout; }
+@keyframes lpc-r5open-pileout { to { opacity: 0; transform: scale(0.9); } }
+.lpc-r5open-toss {
+	position: absolute;
+	inset: 0;
+	animation: lpc-r5open-toss calc(800ms * var(--k)) cubic-bezier(0.25, 0.8, 0.25, 1) both;
+	transform: rotate(var(--r));
+}
+@keyframes lpc-r5open-toss { from { opacity: 0; transform: translate(34cqw, -18cqh) rotate(28deg) scale(0.7); } }
+.lpc-r5open-toss img { width: 100%; height: 100%; object-fit: cover; border-radius: 0.9cqw; box-shadow: 0 1cqw 3cqw rgba(0, 0, 0, 0.6); }
+.lpc-r5open-toss i,
+.lpc-r5open-no i {
+	position: absolute;
+	right: -0.8cqw;
+	top: -0.8cqw;
+	width: 3.4cqw;
+	height: 3.4cqw;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 50%;
+	background: #ef4444;
+	color: #fff;
+	font-style: normal;
+	font-weight: 800;
+	font-size: 2cqw;
+	box-shadow: 0 0.4cqw 1cqw rgba(0, 0, 0, 0.5);
+}
+.lpc-r5open-nos {
+	position: absolute;
+	inset: -2cqh -2cqw;
+	z-index: 1;
+	display: grid;
+	grid-template-columns: repeat(10, 1fr);
+	gap: 1.2cqw;
+	padding: 2cqh 2cqw;
+}
+.lpc-r5open-no { position: relative; display: block; }
+.lpc-r5open-no img { width: 100%; aspect-ratio: 2 / 3; object-fit: cover; border-radius: 0.6cqw; filter: grayscale(0.7) brightness(0.8); }
+.lpc-r5open-no i { width: 2.4cqw; height: 2.4cqw; font-size: 1.4cqw; right: -0.5cqw; top: -0.5cqw; }
+
+/* ---------- The phone's TV */
+@container (max-width: 520px) {
+	.lpc-r5open-big { font-size: 11.5cqw; }
+	.lpc-r5open-sub { font-size: 4.6cqw; }
+	.lpc-r5open-bubble { font-size: 4.2cqw; padding: 1.2cqh 3cqw; border-radius: 3.6cqw; }
+	.lpc-r5open-bubble img { width: 5.6cqw; }
+	/* Older bubbles scroll away under the top edge, as in a real chat. */
+	.lpc-r5open-chatbox { width: 92%; top: 31cqh; overflow: hidden; }
+	.lpc-r5open-phone .lpc-r5open-bubble { font-size: 3.8cqh; padding: 1.2cqh 2cqh; }
+	.lpc-r5open-phone .lpc-r5open-bubble img { width: 4.4cqh; }
+	.lpc-r5open-phone-bar { font-size: 3cqh; }
+	.lpc-r5open-watch-time { font-size: 11cqw; }
+	.lpc-r5open-big.lpc-r5open-big-s { font-size: 9.5cqw; }
+	.lpc-r5open-clockbox { left: auto; right: 4cqw; top: 3cqh; width: 17cqw; gap: 0.6cqh; }
+	.lpc-r5open-clocklabel { font-size: 4cqw; }
+	.lpc-r5open-strip img { width: 22cqw; }
+	.lpc-r5open-skytime { font-size: 5cqw; }
+	.lpc-r5open-watch-label { display: none; }
+	.lpc-r5open-chat-right { left: 50%; width: 92%; }
+	.lpc-r5open-pile { display: none; }
+	.lpc-r5open-nos { grid-template-columns: repeat(6, 1fr); }
+	.lpc-r5open-no i { width: 4cqw; height: 4cqw; font-size: 2.4cqw; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.lpc-r5open *, .lpc-r5open { animation-duration: 1ms !important; animation-delay: 0ms !important; }
+}

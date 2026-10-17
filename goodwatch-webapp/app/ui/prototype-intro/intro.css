@@ -61,3 +61,77 @@
 	.lpi-slot, .lpi-wipe { animation: none !important; }
 	.lpi-out, .lpi-wipe { display: none; }
 }
+
+/* ---------- The chapter bar: YouTube-style segments along the bottom of the stage. */
+.lpi-chapters {
+	position: absolute;
+	left: 3cqw;
+	right: 3cqw;
+	bottom: 2.2cqh;
+	z-index: 20;
+	font-family: "Gabarito", ui-sans-serif, system-ui, sans-serif;
+}
+.lpi-chapter-now {
+	margin-bottom: 0.8cqh;
+	font-size: max(10px, 1.35cqw);
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	color: rgba(255, 255, 255, 0.85);
+	text-shadow: 0 1px 6px rgba(0, 0, 0, 0.8);
+	animation: lpi-fade-in 0.4s ease-out both;
+}
+.lpi-chapters ol {
+	display: flex;
+	gap: max(2px, 0.35cqw);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+.lpi-chapters li { flex-basis: 0; min-width: 0; }
+.lpi-chapters button {
+	position: relative;
+	display: block;
+	width: 100%;
+	padding: 1.2cqh 0;
+	cursor: pointer;
+}
+.lpi-chapter-track {
+	display: block;
+	height: max(3px, 0.45cqw);
+	border-radius: 9px;
+	overflow: hidden;
+	background: rgba(255, 255, 255, 0.28);
+	transform-origin: 50% 50%;
+	transition: transform 0.15s ease-out;
+}
+.lpi-chapters button:hover .lpi-chapter-track { transform: scaleY(1.8); }
+.lpi-chapter-fill {
+	display: block;
+	height: 100%;
+	background: #fbbf24;
+	transform-origin: 0 50%;
+	transform: scaleX(0);
+}
+.lpi-chapter-fill.lpi-done { transform: scaleX(1); background: rgba(255, 255, 255, 0.9); }
+.lpi-chapter-fill.lpi-now { animation: lpi-chapter var(--d) linear both; }
+@keyframes lpi-chapter { to { transform: scaleX(1); } }
+.lpi-chapter-tip {
+	position: absolute;
+	left: 50%;
+	bottom: 100%;
+	transform: translate(-50%, 4px);
+	white-space: nowrap;
+	padding: 3px 8px;
+	border-radius: 6px;
+	background: rgba(10, 14, 26, 0.92);
+	font-size: max(10px, 1.2cqw);
+	font-weight: 700;
+	color: #fff;
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity 0.15s, transform 0.15s;
+}
+.lpi-chapters button:hover .lpi-chapter-tip { opacity: 1; transform: translate(-50%, 0); }
+@container (max-width: 520px) {
+	.lpi-chapter-now { display: none; }
+}

@@ -1,7 +1,7 @@
 // PROTOTYPE - throwaway. Plays a list of intro clips one after another on a stage, with a hand-over between them.
 // The lab and the start page's film variant both use it.
-import { type CSSProperties, useEffect, useState } from "react"
-import type { Clip, IntroData } from "./clip"
+import { type CSSProperties, useEffect, useRef, useState } from "react"
+import { type Clip, type IntroData, SECTIONS } from "./clip"
 import "./intro.css"
 
 export const TRANSITIONS = {
@@ -36,6 +36,7 @@ export function Sequence({
 	run = 0,
 	onEnd,
 	onAt,
+	chapters = false,
 }: {
 	clips: Clip[]
 	data: IntroData
@@ -46,11 +47,25 @@ export function Sequence({
 	onEnd?: () => void
 	/** Which clip is on, as it changes. */
 	onAt?: (index: number) => void
+	/** Show the chapter bar: one segment per clip, labelled by its section, click to jump. */
+	chapters?: boolean
 }) {
+	// Kept in a ref: a new `onEnd` each render must not restart the clip's timer.
+	const endRef = useRef(onEnd)
+	endRef.current = onEnd
 	const [at, setAt] = useState(0)
 	const [prev, setPrev] = useState<number | null>(null)
 	const [lap, setLap] = useState(0)
-	const overlap = TRANSITIONS[transition].overlap
+	const trOf = (i: number): TransitionId => clips[i]?.enter ?? transition
+	const overlapOf = (i: number) => TRANSITIONS[trOf(i)].overlap
+	const overlap = overlapOf(at)
+	// A jump from the chapter bar: start that clip at once, with no hand-over.
+	const [jumps, setJumps] = useState(0)
+	const jump = (i: number) => {
+		setPrev(null)
+		setAt(i)
+		setJumps((n) => n + 1)
+	}
 	useEffect(() => {
 		setAt(0)
 		setPrev(null)
@@ -62,18 +77,18 @@ export function Sequence({
 		const last = at === clips.length - 1
 		const timers: ReturnType<typeof setTimeout>[] = []
 		if (last && !loop) {
-			timers.push(setTimeout(() => onEnd?.(), clip.ms * k))
+			timers.push(setTimeout(() => endRef.current?.(), clip.ms * k))
 		} else {
 			timers.push(
 				setTimeout(() => {
 					setPrev(at)
 					if (last) setLap((n) => n + 1)
 					setAt(last ? 0 : at + 1)
-				}, Math.max(0, clip.ms - overlap) * k),
+				}, Math.max(0, clip.ms - overlapOf(last ? 0 : at + 1)) * k),
 			)
 		}
 		return () => timers.forEach(clearTimeout)
-	}, [at, clips, k, overlap, loop, onEnd, run])
+	}, [at, clips, k, loop, run, jumps, transition])
 	useEffect(() => {
 		if (prev === null) return
 		const t = setTimeout(() => setPrev(null), overlap * k + 50)
@@ -86,8 +101,8 @@ export function Sequence({
 		const C = clip.C
 		return (
 			<div
-				key={`${run}-${lap}-${i}-${clip.id}`}
-				className={`lpi-slot lpi-${role} lpi-tr-${transition}`}
+				key={`${run}-${lap}-${jumps}-${i}-${clip.id}`}
+				className={`lpi-slot lpi-${role} lpi-tr-${trOf(role === "out" ? at : i)}`}
 				style={{ "--o": `${overlap}ms` } as CSSProperties}
 				data-clip={clip.id}
 			>
@@ -99,8 +114,40 @@ export function Sequence({
 		<>
 			{prev !== null && slot(prev, "out")}
 			{slot(at, prev !== null ? "in" : "on")}
-			{prev !== null && transition === "wipe" && <div key={`w-${run}-${lap}-${at}`} className="lpi-wipe" style={{ "--o": `${overlap}ms` } as CSSProperties} />}
+			{prev !== null && trOf(at) === "wipe" && <div key={`w-${run}-${lap}-${at}`} className="lpi-wipe" style={{ "--o": `${overlap}ms` } as CSSProperties} />}
+			{chapters && clips.length > 1 && (
+				<ChapterBar clips={clips} at={at} k={k} run={`${run}-${lap}-${jumps}`} onJump={jump} />
+			)}
 		</>
+	)
+}
+
+const chapterOf = (clip: Clip) => SECTIONS.find((s) => s.id === clip.section)?.chapter ?? clip.section
+
+/** YouTube-style chapters: a segment per clip, as long as the clip; the one playing fills; a click jumps there. */
+function ChapterBar({ clips, at, k, run, onJump }: { clips: Clip[]; at: number; k: number; run: string; onJump: (i: number) => void }) {
+	return (
+		<nav className="lpi-chapters" aria-label="Chapters">
+			<div className="lpi-chapter-now" key={`${run}-${at}`}>
+				{chapterOf(clips[at])}
+			</div>
+			<ol>
+				{clips.map((c, i) => (
+					<li key={c.id} style={{ flexGrow: c.ms }}>
+						<button type="button" onClick={() => onJump(i)} aria-label={`Chapter ${i + 1}: ${chapterOf(c)}`} aria-current={i === at || undefined}>
+							<span className="lpi-chapter-track">
+								<span
+									key={i === at ? `${run}-${at}` : undefined}
+									className={`lpi-chapter-fill ${i < at ? "lpi-done" : i === at ? "lpi-now" : ""}`}
+									style={i === at ? ({ "--d": `${c.ms * k}ms` } as CSSProperties) : undefined}
+								/>
+							</span>
+							<span className="lpi-chapter-tip">{chapterOf(c)}</span>
+						</button>
+					</li>
+				))}
+			</ol>
+		</nav>
 	)
 }
 

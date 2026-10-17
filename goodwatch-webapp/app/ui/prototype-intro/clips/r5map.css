@@ -1,0 +1,235 @@
+/* PROTOTYPE - throwaway. Round 5 "r5map" clips (Explorer, Streaming). Transform and opacity animations only; every
+   time is scaled by the stage's --k. The bottom 9cqh belong to the chapter bar. */
+
+.lpc-r5map-root {
+	position: absolute;
+	inset: 0;
+	overflow: hidden;
+	background: #05060a;
+	color: #fff;
+	font-family: "Gabarito", ui-sans-serif, system-ui, sans-serif;
+}
+.lpc-r5map-a {
+	animation:
+		var(--an) calc(var(--du) * var(--k, 1)) var(--ez) calc(var(--d) * var(--k, 1)) both,
+		var(--an2) calc(var(--du2) * var(--k, 1)) var(--ez2) calc(var(--d2) * var(--k, 1)) forwards,
+		var(--an3) calc(var(--du3) * var(--k, 1)) var(--ez3) calc(var(--d3) * var(--k, 1)) forwards;
+}
+.lpc-r5map-abs { position: absolute; }
+.lpc-r5map-at { position: absolute; width: 0; height: 0; }
+.lpc-r5map-at > * { position: absolute; left: 0; top: 0; transform: translate(-50%, -50%); }
+.lpc-r5map-center { position: absolute; left: 0; top: 0; translate: -50% -50%; }
+
+@keyframes lpc-r5map-none { from { } to { } }
+@keyframes lpc-r5map-rise { from { opacity: 0; transform: translateY(2.2cqh); } }
+@keyframes lpc-r5map-word-in { from { opacity: 0; transform: translateY(75%); } }
+@keyframes lpc-r5map-out { to { opacity: 0; transform: translateY(-2cqh); } }
+@keyframes lpc-r5map-fade-in { from { opacity: 0; } }
+@keyframes lpc-r5map-fade-out { to { opacity: 0; } }
+@keyframes lpc-r5map-dim { to { opacity: 0.18; } }
+@keyframes lpc-r5map-pop { from { opacity: 0; transform: scale(0.55); } }
+@keyframes lpc-r5map-deal { from { opacity: 0; transform: translate(-14%, -14%) scale(1.12); } }
+@keyframes lpc-r5map-deal-up { from { opacity: 0; transform: translateY(18%) scale(1.1); } }
+@keyframes lpc-r5map-drift { from { transform: translate(-4%, -2%) scale(1.06); } to { transform: translate(4%, 2%) scale(1.06); } }
+@keyframes lpc-r5map-cam-in { from { transform: scale(1.7); opacity: 0; } 30% { opacity: 1; } }
+@keyframes lpc-r5map-cam-out { from { transform: scale(var(--from, 3.2)); } }
+@keyframes lpc-r5map-move { to { transform: translate(var(--tx, 0), var(--ty, 0)) scale(var(--ts, 1)); } }
+@keyframes lpc-r5map-move2 { to { transform: translate(var(--tx2, 0), var(--ty2, 0)) scale(var(--ts2, 1)); } }
+@keyframes lpc-r5map-lift { to { transform: translateY(-1.2cqh) scale(1.08); } }
+@keyframes lpc-r5map-shrink-out { to { opacity: 0; transform: scale(0.6); } }
+@keyframes lpc-r5map-zoom-away { to { opacity: 0; transform: scale(0.7); } }
+@keyframes lpc-r5map-spin { to { transform: rotate(360deg); } }
+
+/* Headline */
+.lpc-r5map-head {
+	position: absolute;
+	left: 6cqw;
+	top: 6.5cqh;
+	right: 6cqw;
+	z-index: 6;
+}
+.lpc-r5map-kicker {
+	font-size: max(10px, 1.45cqw);
+	font-weight: 800;
+	letter-spacing: 0.2em;
+	text-transform: uppercase;
+	color: #fbbf24;
+}
+.lpc-r5map-h {
+	margin: 0.6cqh 0 0;
+	font-size: 6.6cqw;
+	font-weight: 800;
+	line-height: 1.02;
+	letter-spacing: -0.02em;
+	text-shadow: 0 0.4cqw 2.5cqw rgba(0, 0, 0, 0.6);
+}
+.lpc-r5map-word { display: inline-block; overflow: hidden; padding-bottom: 0.08em; vertical-align: top; }
+.lpc-r5map-word > span { display: inline-block; }
+.lpc-r5map-accent { color: #fbbf24; }
+.lpc-r5map-sub {
+	margin-top: 1.4cqh;
+	font-size: max(12px, 2.1cqw);
+	font-weight: 500;
+	color: rgba(255, 255, 255, 0.82);
+	text-shadow: 0 1px 1.5cqw rgba(0, 0, 0, 0.7);
+}
+.lpc-r5map-sub b { color: #fff; font-weight: 800; }
+.lpc-r5map-example {
+	display: inline-block;
+	padding: 0.4cqh 1cqw;
+	border-radius: 999px;
+	background: rgba(255, 255, 255, 0.1);
+	font-size: max(9px, 1.15cqw);
+	font-weight: 700;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: rgba(255, 255, 255, 0.7);
+}
+
+/* The night sea */
+.lpc-r5map-sea {
+	position: absolute;
+	inset: 0;
+	overflow: hidden;
+	background:
+		radial-gradient(60% 70% at 55% 45%, #101a33 0%, #080c18 55%, #04050a 100%);
+}
+.lpc-r5map-clouds {
+	position: absolute;
+	inset: -10%;
+	background:
+		radial-gradient(14% 22% at 18% 30%, rgba(90, 120, 190, 0.16), transparent 70%),
+		radial-gradient(18% 26% at 72% 22%, rgba(90, 120, 190, 0.12), transparent 70%),
+		radial-gradient(16% 24% at 40% 74%, rgba(90, 120, 190, 0.14), transparent 70%),
+		radial-gradient(20% 30% at 86% 70%, rgba(90, 120, 190, 0.1), transparent 70%),
+		radial-gradient(10% 16% at 58% 52%, rgba(120, 150, 220, 0.1), transparent 70%);
+}
+
+/* Islands */
+.lpc-r5map-blob { position: relative; }
+.lpc-r5map-blob-svg { position: absolute; inset: -14% -14%; width: 128%; height: 140%; overflow: visible; }
+.lpc-r5map-blob-text {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+	line-height: 1.05;
+	pointer-events: none;
+}
+.lpc-r5map-blob-name { font-weight: 800; text-shadow: 0 0.15em 0.6em rgba(0, 0, 0, 0.9), 0 0 0.2em rgba(0, 0, 0, 0.8); }
+.lpc-r5map-blob-sub { margin-top: 0.2em; font-size: 0.48em; font-weight: 700; color: rgba(255, 255, 255, 0.85); text-shadow: 0 0.1em 0.5em rgba(0, 0, 0, 0.9); }
+.lpc-r5map-combine {
+	position: absolute;
+	border: 0.25cqw dashed rgba(255, 255, 255, 0.45);
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-weight: 700;
+	font-size: 1.6cqw;
+	color: rgba(255, 255, 255, 0.75);
+}
+.lpc-r5map-poster {
+	display: block;
+	aspect-ratio: 2 / 3;
+	object-fit: cover;
+	border-radius: 0.8cqw;
+	box-shadow: 0 1.2cqw 3cqw rgba(0, 0, 0, 0.6), 0 0 0 0.12cqw rgba(255, 255, 255, 0.12);
+}
+.lpc-r5map-row { position: absolute; left: 0; right: 0; display: flex; justify-content: center; gap: 1.4cqw; }
+.lpc-r5map-cap {
+	margin-top: 0.8cqh;
+	max-width: 100%;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	text-align: center;
+	font-size: max(9px, 1.15cqw);
+	font-weight: 700;
+	color: rgba(255, 255, 255, 0.8);
+}
+.lpc-r5map-dot { position: absolute; width: 0.9cqw; height: 0.9cqw; margin: -0.45cqw 0 0 -0.45cqw; border-radius: 50%; background: rgba(255, 255, 255, 0.85); }
+
+/* Services */
+.lpc-r5map-logo {
+	display: block;
+	object-fit: cover;
+	background: #10131c;
+	box-shadow: 0 0.6cqw 2cqw rgba(0, 0, 0, 0.55);
+}
+.lpc-r5map-wall {
+	position: absolute;
+	display: grid;
+	gap: 0.7cqw;
+}
+.lpc-r5map-marquee { display: flex; gap: 0.9cqw; width: max-content; }
+.lpc-r5map-count {
+	font-size: 11cqw;
+	font-weight: 800;
+	line-height: 0.9;
+	letter-spacing: -0.03em;
+	color: #fbbf24;
+	text-shadow: 0 0.6cqw 4cqw rgba(0, 0, 0, 0.8);
+}
+.lpc-r5map-panel {
+	position: absolute;
+	border-radius: 1.6cqw;
+	background: rgba(16, 19, 28, 0.92);
+	box-shadow: 0 1.6cqw 5cqw rgba(0, 0, 0, 0.6), 0 0 0 0.12cqw rgba(255, 255, 255, 0.08);
+}
+.lpc-r5map-country {
+	display: flex;
+	align-items: center;
+	gap: 1.2cqw;
+	padding: 1.4cqh 1.8cqw;
+	border-radius: 1.2cqw;
+}
+.lpc-r5map-country-name { min-width: 22cqw; font-weight: 800; font-size: 2.6cqw; }
+.lpc-r5map-country.lpc-r5map-home { background: rgba(251, 191, 36, 0.14); box-shadow: inset 0 0 0 0.18cqw #fbbf24; }
+.lpc-r5map-pin {
+	display: inline-block;
+	margin-left: 0.8cqw;
+	padding: 0.3cqh 0.8cqw;
+	border-radius: 999px;
+	background: #fbbf24;
+	color: #111;
+	font-size: 1.1cqw;
+	font-weight: 800;
+	vertical-align: middle;
+}
+.lpc-r5map-note {
+	position: absolute;
+	display: flex;
+	align-items: center;
+	gap: 1.6cqw;
+	padding: 1.6cqw 2cqw;
+	border-radius: 2cqw;
+	background: rgba(22, 26, 38, 0.96);
+	box-shadow: 0 2cqw 6cqw rgba(0, 0, 0, 0.65), 0 0 0 0.14cqw rgba(255, 255, 255, 0.1);
+}
+.lpc-r5map-note-app { font-size: 1.5cqw; font-weight: 800; color: #fbbf24; letter-spacing: 0.04em; }
+.lpc-r5map-note-title { font-size: 3.3cqw; font-weight: 800; line-height: 1.1; }
+.lpc-r5map-note-line { font-size: 2cqw; color: rgba(255, 255, 255, 0.75); }
+.lpc-r5map-glow-ring { position: absolute; inset: -0.5cqw; border-radius: inherit; box-shadow: 0 0 0 0.3cqw #fbbf24, 0 0 3cqw rgba(251, 191, 36, 0.5); }
+
+/* Phone TV: bigger type, fewer secondary lines. */
+@container (max-width: 520px) {
+	.lpc-r5map-h { font-size: 8.6cqw; }
+	.lpc-r5map-sub { font-size: 3.4cqw; }
+	.lpc-r5map-kicker { font-size: 2.6cqw; }
+	.lpc-r5map-cap, .lpc-r5map-phone-hide { display: none; }
+	.lpc-r5map-country-name { font-size: 3.4cqw; min-width: 26cqw; }
+	.lpc-r5map-note-title { font-size: 4cqw; }
+	.lpc-r5map-note-line { font-size: 2.8cqw; }
+	.lpc-r5map-note-app { font-size: 2.2cqw; }
+	.lpc-r5map-pin { font-size: 2cqw; }
+	.lpc-r5map-example { font-size: 2.2cqw; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.lpc-r5map-a { animation: none !important; }
+	.lpc-r5map-early { display: none !important; }
+}
