@@ -75,8 +75,8 @@ test("the index keeps the time a service first carried a title, only for what ap
 	assert.deepEqual(
 		[...(seen.get(dune) ?? [])],
 		[
-			[NETFLIX, day(2)],
-			[MAX, day(5)],
+			[NETFLIX, { at: day(2), learnedAt: day(2), previousServices: [] }],
+			[MAX, { at: day(5), learnedAt: day(5), previousServices: [] }],
 		],
 	)
 })
@@ -94,44 +94,56 @@ test("a service's earliest row counts, across its duplicate ids and its kinds of
 		LAUNCH,
 	)
 	assert.equal(seen.has(dune), false)
-	assert.deepEqual([...(seen.get(heat) ?? [])], [[APPLE, day(1)]])
+	assert.deepEqual(
+		[...(seen.get(heat) ?? [])],
+		[[APPLE, { at: day(1), learnedAt: day(1), previousServices: [] }]],
+	)
 })
 
 // ---------------------------------------------------------------------------------------------------------
 // When a title landed on a member's services
 
 test("a title lands when none of the member's services carried it and one does now", () => {
-	const fresh = new Map([[NETFLIX, day(2)]])
+	const fresh = new Map([
+		[NETFLIX, { at: day(2), learnedAt: day(2), previousServices: [] }],
+	])
 	assert.deepEqual(landingOn([NETFLIX], fresh, mine(NETFLIX, PRIME)), {
 		at: day(2),
+		learnedAt: day(2),
 		service: NETFLIX,
 	})
 })
 
 test("a title that was already watchable on one of the member's services has not landed", () => {
 	// Prime has had it; Netflix adding it is a further service, not news.
-	const fresh = new Map([[NETFLIX, day(2)]])
+	const fresh = new Map([
+		[NETFLIX, { at: day(2), learnedAt: day(2), previousServices: [] }],
+	])
 	assert.equal(landingOn([PRIME, NETFLIX], fresh, mine(NETFLIX, PRIME)), null)
 	// A member with Netflix alone could not watch it before.
 	assert.deepEqual(landingOn([PRIME, NETFLIX], fresh, mine(NETFLIX)), {
 		at: day(2),
+		learnedAt: day(2),
 		service: NETFLIX,
 	})
 })
 
 test("the landing is the earliest of the member's services that carry it now", () => {
 	const fresh = new Map([
-		[MAX, day(6)],
-		[NETFLIX, day(2)],
+		[MAX, { at: day(6), learnedAt: day(6), previousServices: [] }],
+		[NETFLIX, { at: day(2), learnedAt: day(2), previousServices: [] }],
 	])
 	assert.deepEqual(landingOn([MAX, NETFLIX], fresh, mine(NETFLIX, MAX)), {
 		at: day(2),
+		learnedAt: day(2),
 		service: NETFLIX,
 	})
 })
 
 test("a title on none of the member's services, or with no offer known, has not landed", () => {
-	const fresh = new Map([[NETFLIX, day(2)]])
+	const fresh = new Map([
+		[NETFLIX, { at: day(2), learnedAt: day(2), previousServices: [] }],
+	])
 	assert.equal(landingOn([NETFLIX], fresh, mine(PRIME)), null)
 	assert.equal(landingOn([], undefined, mine(NETFLIX)), null)
 	// A member without a saved service has no service to land on.
@@ -140,10 +152,12 @@ test("a title on none of the member's services, or with no offer known, has not 
 
 test("a saved service stands for its duplicates", () => {
 	// The member saved Amazon Prime Video; the context expands it to 9, 10 and 119, which are one service here.
-	const fresh = new Map([[PRIME, day(3)]])
+	const fresh = new Map([
+		[PRIME, { at: day(3), learnedAt: day(3), previousServices: [] }],
+	])
 	assert.deepEqual(
 		landingOn([PRIME], fresh, mine(PRIME, AMAZON_VIDEO, PRIME_OTHER)),
-		{ at: day(3), service: PRIME },
+		{ at: day(3), learnedAt: day(3), service: PRIME },
 	)
 })
 
@@ -200,7 +214,7 @@ const landed = (
 ) => ({
 	key,
 	addedAt,
-	landing: { at, service: NETFLIX },
+	landing: { at, learnedAt: at, service: NETFLIX },
 })
 const never = { movie: null, show: null }
 
@@ -235,13 +249,16 @@ test("nothing from before the launch is news, also for a member who never opened
 		[
 			// The catch-up of late September 2026: offers that look new and are not.
 			landed(dune, day(-14)),
-			// At the launch itself is not after it.
+			// The launch day itself counts.
 			landed(heat, LAUNCH),
 			landed(severance, day(1)),
 		],
 		{ launch: LAUNCH, visits: never },
 	)
-	assert.deepEqual(news.movies, [])
+	assert.deepEqual(
+		news.movies.map(({ key }) => key),
+		[heat],
+	)
 	assert.deepEqual(
 		news.shows.map(({ key }) => key),
 		[severance],
@@ -504,12 +521,12 @@ test("recently landed titles come the latest first", () => {
 test("a title lands once: a second service that comes later does not start the 14 days again", () => {
 	// On Netflix since day 2, on Amazon Prime Video since day 12. Both are the member's.
 	const fresh = new Map([
-		[NETFLIX, day(2)],
-		[PRIME, day(12)],
+		[NETFLIX, { at: day(2), learnedAt: day(2), previousServices: [] }],
+		[PRIME, { at: day(12), learnedAt: day(12), previousServices: [] }],
 	])
 	const landing = landingOn([NETFLIX, PRIME], fresh, mine(NETFLIX, PRIME))
 	// The service it landed on is the one that is named.
-	assert.deepEqual(landing, { at: day(2), service: NETFLIX })
+	assert.deepEqual(landing, { at: day(2), learnedAt: day(2), service: NETFLIX })
 	const candidates = [{ key: dune, addedAt: day(-30), landing }]
 	const on = (now: number) =>
 		recentlyLandedOf(candidates, { launch: LAUNCH, now }).movies
@@ -544,7 +561,7 @@ test("the row lists what landed in the 14 days, opened page or not, and an older
 })
 
 // ---------------------------------------------------------------------------------------------------------
-// The row that replaces the line on arrival
+// The row that replaces the line shown when the page opened
 
 const netflix = { id: NETFLIX, name: "Netflix", logo_path: "/netflix.png" }
 const title = (

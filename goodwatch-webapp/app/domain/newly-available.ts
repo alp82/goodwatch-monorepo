@@ -21,34 +21,94 @@ export const baseService = (id: number) => baseServiceOf.get(id) ?? id
 // ---------------------------------------------------------------------------------------------------------
 // The times the availability index keeps
 
-/** When each service first carried a title, by base service, for the services that started after the times kept. */
-export type FirstSeen = ReadonlyMap<number, number>
+/** Backfilled stays establish prior watchability but never announce a landing. */
+export const BACKFILLED = 0
+
+/** A base service's continuous landing, with the day separate from when GoodWatch learned of it. */
+export interface ServiceLanding {
+	at: number
+	learnedAt: number
+	/** Other base services whose stays ended no earlier than the day before this landing. */
+	previousServices: readonly number[]
+}
+
+export type FirstSeen = ReadonlyMap<number, ServiceLanding>
+
+export type ServiceStay = readonly [
+	title: TitleKey,
+	service: number,
+	at: number,
+	droppedOn?: number | null,
+	learnedAt?: number,
+]
+
+interface Stay {
+	at: number
+	learnedAt: number
+	droppedOn: number | null
+}
 
 /**
- * The time each service first carried each title, from the earliest arrival day of its open stays per service
- * id: `[title, service id, time]`. A service's duplicates and its kinds of offer are one service, and its earliest
- * row is when it started. Only services that started after `since` are kept: every other one has carried the
- * title for longer than anyone is told about. The rows must hold every current stay of the titles they name;
- * backfilled stays use a time before `since`.
+ * Open stays and stays closed since the retained window minus one day establish each service's landing.
+ * Duplicate ids and offer types share a base service. Consecutive stays join when the older stay closed on
+ * or after the next stay's landing day minus one day; BACKFILLED marks prior watchability without news.
+ * Only continuous landings on or after `since` remain. The earliest live `created_at` dates when GoodWatch
+ * learned of the stay; the landing day dates display, sorting and the 14-day window.
  */
 export function firstSeenOf(
-	rows: Iterable<readonly [TitleKey, number, number]>,
+	rows: Iterable<ServiceStay>,
 	since: number,
-): Map<TitleKey, Map<number, number>> {
-	const earliest = new Map<TitleKey, Map<number, number>>()
-	for (const [key, serviceId, at] of rows) {
+): Map<TitleKey, Map<number, ServiceLanding>> {
+	const stays = new Map<TitleKey, Map<number, Stay[]>>()
+	for (const [key, serviceId, at, droppedOn = null, learnedAt = at] of rows) {
 		const service = baseService(serviceId)
-		let services = earliest.get(key)
+		let services = stays.get(key)
 		if (!services) {
 			services = new Map()
-			earliest.set(key, services)
+			stays.set(key, services)
 		}
-		const known = services.get(service)
-		if (known === undefined || at < known) services.set(service, at)
+		const history = services.get(service) ?? []
+		history.push({ at, learnedAt, droppedOn })
+		services.set(service, history)
+	}
+	const earliest = new Map<TitleKey, Map<number, ServiceLanding>>()
+	for (const [key, services] of stays) {
+		const times = new Map<number, ServiceLanding>()
+		for (const [service, history] of services) {
+			const open = history.filter((stay) => stay.droppedOn === null)
+			if (!open.length) continue
+			let at = Math.min(...open.map((stay) => stay.at))
+			let learnedAt = Math.min(...open.map((stay) => stay.learnedAt))
+			// Descending starts join consecutive stays back to the oldest connected stay.
+			for (const closed of [...history].sort((a, b) => b.at - a.at)) {
+				if (
+					closed.droppedOn !== null &&
+					closed.at <= at &&
+					closed.droppedOn >= at - DAY_MS
+				) {
+					at = closed.at
+					learnedAt = Math.min(learnedAt, closed.learnedAt)
+				}
+			}
+			const previousServices = [...services]
+				.filter(
+					([previousService, previous]) =>
+						previousService !== service &&
+						previous.some(
+							(stay) =>
+								stay.droppedOn !== null &&
+								stay.at <= at &&
+								stay.droppedOn >= at - DAY_MS,
+						),
+				)
+				.map(([id]) => id)
+			times.set(service, { at, learnedAt, previousServices })
+		}
+		earliest.set(key, times)
 	}
 	for (const [key, services] of earliest) {
-		for (const [service, at] of services)
-			if (!(at > since)) services.delete(service)
+		for (const [service, landing] of services)
+			if (!(landing.at >= since)) services.delete(service)
 		if (!services.size) earliest.delete(key)
 	}
 	return earliest
@@ -60,6 +120,8 @@ export function firstSeenOf(
 export interface Landing {
 	/** When the first of the member's services started to carry the title. */
 	at: number
+	/** When GoodWatch first learned of the live stay, for visits and Want to See comparisons. */
+	learnedAt: number
 	/** That service. */
 	service: number
 }
@@ -77,9 +139,22 @@ export function landingOn(
 	let landing: Landing | null = null
 	for (const service of carried) {
 		if (!mine.has(service)) continue
-		const at = fresh?.get(service)
-		if (at === undefined) return null
-		if (!landing || at < landing.at) landing = { at, service }
+		const time = fresh?.get(service)
+		if (time === undefined) return null
+		if (
+			!landing ||
+			time.at < landing.at ||
+			(time.at === landing.at && time.learnedAt < landing.learnedAt)
+		)
+			landing = { at: time.at, learnedAt: time.learnedAt, service }
+	}
+	if (
+		landing &&
+		fresh
+			?.get(landing.service)
+			?.previousServices.some((service) => mine.has(service))
+	) {
+		return null
 	}
 	return landing
 }
@@ -125,9 +200,9 @@ export interface Landed {
 }
 
 /**
- * The landings that are news, movies and shows apart, the latest first. A landing counts when it came after the
- * launch, after the member's last visit of the title's page (My movies for a movie, My shows for a show; null for
- * a member who never opened it), and after the member added the title to Want to See.
+ * The landings that are news, movies and shows apart, the latest landing day first. The landing day must be
+ * on or after the UTC launch day. GoodWatch must have learned of the live stay after the member's last visit
+ * and after the member added the title to Want to See. A member without a visit counts from the launch day.
  */
 export function newlyAvailableOf(
 	candidates: readonly Candidate[],
@@ -141,11 +216,19 @@ export function newlyAvailableOf(
 		if (!landing) continue
 		const { mediaType, tmdbId } = parseTitleKey(key)
 		const after = Math.max(
-			rule.launch,
 			rule.visits[mediaType] ?? Number.NEGATIVE_INFINITY,
 			addedAt ?? Number.NEGATIVE_INFINITY,
 		)
-		if (landing.at > after) news[mediaType].push({ key, tmdbId, ...landing })
+		if (
+			landing.at >= Math.floor(rule.launch / DAY_MS) * DAY_MS &&
+			landing.learnedAt > after
+		)
+			news[mediaType].push({
+				key,
+				tmdbId,
+				at: landing.at,
+				service: landing.service,
+			})
 	}
 	const latestFirst = (a: Landed, b: Landed) => b.at - a.at || a.key - b.key
 	return {

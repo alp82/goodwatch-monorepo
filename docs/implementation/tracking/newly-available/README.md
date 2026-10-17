@@ -12,8 +12,7 @@ no push. Everything is behind `REC_TRACKING`. Vocabulary: [`CONTEXT.md`](../../.
 Recently landed, My movies visit, New episodes signal). Reads: [data-model.md](../data-model.md), section 10. Paths
 without a prefix are under `goodwatch-webapp/app/`.
 
-In the code a title that becomes newly available has **landed** on a service. "Arrival" is already the member's
-arrival on My shows, and the line the page says then.
+In the code a title that becomes newly available has **landed** on a service. Opening My shows is a separate event.
 
 ## What a member sees
 
@@ -43,7 +42,7 @@ One title is named with its service, several are counted:
 the hub then shows what is left.
 
 **For 14 days (#489).** A title that landed stays visible for 14 days from the day it landed, whether the member
-has opened the page since or not. This replaces the line the pages said once on arrival ("Dune: Part Two is now on
+has opened the page since or not. This replaces the line the pages said once when the page opened ("Dune: Part Two is now on
 Netflix"), which is gone.
 
 - **One row on My movies and on My shows** names the latest title with its service and its day ("Dune: Part Two is
@@ -103,18 +102,23 @@ Decided in #456:
 - **Who.** A member without a saved country or without a saved service is told nothing. The country guessed from
   the request does not count as theirs.
 
+Decided by the owner in [Q59](https://github.com/alp82/goodwatch-monorepo/issues/637#issuecomment-6227246315):
+
+- **When a title landed** comes from live stays in `availability_history` (#637). Its day is `appeared_on`
+  for exact precision, otherwise the UTC day of `observed_at`. Backfilled stays never announce a landing.
+  Open and recently closed stays establish continuity across offer types, duplicate ids, and saved services.
+  A stay ending on or after the next landing day minus one day continues watchability. A same-day or next-day
+  flicker does not restart it. GoodWatch's learned time is the live stay's earliest `created_at`; visits and
+  Want to See additions compare against that time. Display, sorting, launch, and the 14 days use the landing day.
+
 Built as defaults, **not confirmed by the owner yet**:
 
-1. **When a title landed** now comes from live open stays in `availability_history` (#637, owner decision Q59).
-   Use `appeared_on` for exact precision, otherwise the UTC day of `observed_at`. Backfilled stays never announce
-   a landing. They still establish that the service already carried the title, including its duplicate ids and
-   other qualifying offer types. The earliest day among the member's current services dates the landing.
-2. **It is news** when that time is after the member's last visit of the page the title lives on, after the launch,
-   and after the member added the title to Want to See. A member who never opened the page is told everything
+2. **It is news** when GoodWatch learned of the live stay after the member's last visit of the page the title
+   lives on and after the member added the title to Want to See, and its landing day is on or after the launch day. A member who never opened the page is told everything
    since the launch.
 3. **The launch** is 2026-10-12 00:00 UTC, a constant in `server/availability-first-seen.server.ts`. It is after the
    catch-up of late September 2026, so none of those offers is news. `NEWLY_AVAILABLE_SINCE` (an ISO time) moves it
-   to the day of the deploy, if nothing from before that day should be said either.
+   to the day of the deploy, if nothing from before that day should be said either. Its UTC day is inclusive.
 4. **Movies belong to My movies and shows to My shows.** Movies clear with a My movies visit, stored in a row of its
    own. Shows clear with a My shows visit and share its stored time (#442).
 5. **Duplicate service ids are one service.** 9, 10 and 119 are Amazon Prime Video; 2 and 350 are Apple TV. The
@@ -131,7 +135,7 @@ Decided while building, also for the owner to confirm:
    the same way.
 9. **A landing older than 90 days is not news.** The index keeps the times of the last 90 days (see below). A member
    who was away for longer is not told about what landed before that.
-10. **The page named the titles when several landed**, in one line said once on arrival. That line is gone since
+10. **The page named the titles when several landed**, in one line said once when the page opened. That line is gone since
     #489: the row of the 14 days says what came, and for longer. The tile, the door's pill and the number still
     count.
 11. **A phone's tile leads with the service** ("Now on Netflix: Dune: Part Two"). A tile's line is cut after about
@@ -192,9 +196,9 @@ Known noise, and what happens to it:
 | Noise | What happens |
 | --- | --- |
 | The catch-up of late September 2026 | Before the launch: never news |
-| Another catch-up later | Backfilled stays never announce arrivals; live stays count regardless of country volume. Candidate reads page in batches of 1,000 without a title ceiling (#637) |
+| Another catch-up later | Backfilled stays never announce landings; live stays count regardless of country volume. One candidate statement uses the same explicit one-million-row result allowance as the history batches (#637) |
 | Duplicate service ids | One service, by its earliest row |
-| An offer that leaves and returns | A new open stay dates the return; closed stays do not date the current offer |
+| An offer that leaves and returns | Consecutive stays continue the old landing; a gap of more than one UTC day starts a new landing |
 | A member saves another service | Its old offers have old times, so nothing lands. An offer of that service newer than their last visit is told to them, although they could not have seen it before |
 
 ## The stored fact
@@ -224,7 +228,7 @@ each request from the time it landed, which the index holds, and the time of the
 No request was added to a page. What landed rides along with Tonight's pick, which the navigation asks for on every
 page already, and with the loaders of the pages that list it.
 
-## Measured first, and the path chosen
+## Historical measurements before availability history
 
 Measured on production with `goodwatch-webapp/scripts/measure-newly-available.mjs` (read-only, counts only) on
 2026-10-12. A round trip from the measuring machine is about 70 ms on its own.
@@ -251,16 +255,20 @@ this. Why:
   United States, for times of which all but the last days are never used. Only an offer that appeared after the
   launch can be news.
 
-What it costs: three statements more on each load of a country (every 6 hours, for countries in use), and a landing
-is known up to 6 hours after its row was written, the same delay On my services has.
+The country reloads every six hours. The history reader adds one candidate statement and one statement per
+1,000 candidate movies or shows; it adds no query per member or page view. Its query count varies with the country.
+A landing becomes visible with the index load that first holds its offer.
 
-**How the times are read** (`readFirstSeen`): the titles of the country with a subscription offer that first
-appeared since, and then every subscription offer of those titles, grouped by service with its earliest time. The
-second read is needed because a recent row alone does not say that the service is new for the title: an older row
-of a duplicate id, or of another kind of offer on the same service, means it was there before. The index keeps, by
-title and base service, the time of each service that started since. Since is the launch, and from 90 days after
-it the last 90 days. A country whose read fails keeps the times of the load before, and the index is whole
-without them.
+**How the times are read** (`readFirstSeen`): one statement identifies live open stays in the country and retained
+landing-day window. It uses an explicit one-million-row result allowance, matching the batch query, so Crate's
+default limit cannot silently stop the read and there is no OFFSET page that shifts when a stay closes. Each
+candidate batch reads all open stays and stays closed since the retained window minus one day. It groups by
+service id and drop day, retaining the earliest landing day (BACKFILLED = 0 for backfill) and `min(created_at)`.
+The domain joins consecutive stays across duplicate ids and offer types. It retains other services that closed
+on or after a landing day minus one day, so a member with both services is not told about a continuous switch.
+The day dates display, sorting, the inclusive launch-day boundary and the 14 days; the learned time dates visits
+and Want to See additions. The retained window begins at the launch day and later the last 90 UTC days. If the
+history read fails, the existing index remains usable without announcing new landings.
 
 | Read | When | What |
 | --- | --- | --- |
@@ -422,13 +430,9 @@ for that member.
 
 ## History reader verification (#637, Q59)
 
-The reader uses live open stays in `availability_history`, with exact `appeared_on`
-or the UTC day of `observed_at` for unknown precision. It reads recent candidate
-keys in explicit pages, then all open stays of those titles. A backfilled stay
-contributes no arrival date but blocks a newer offer on the same base service.
-A different saved service that already carried the title still blocks news through
-the existing country index. Closed stays do not date a return. No member-facing
-count, tile, home, visit, or recently-landed rule changed.
+The current reader uses open and recently closed stays to preserve continuity, with live landing days and learned
+times kept separately. The initial implementation's measurements below are historical; the review fixes and
+new verification follow them. The signal, tile, home, visits and Recently landed presentation are unchanged.
 
 Verification on 2026-10-17:
 
@@ -452,7 +456,7 @@ Verification on 2026-10-17:
   that aggregate took **44.31 ms**. They were written before 00:13 UTC, using earlier
   observation times, so their dates must not be changed to the reader deployment day.
 
-Exact SQL, bound parameters, timings, counts and the preview job id are saved in
+The initial SQL, bound parameters, timings, counts and preview job id are saved in
 [history-reader-evidence.json](history-reader-evidence.json). Timings are individual
 production samples, not a latency guarantee. Only SELECT statements were sent to
 Crate; no production data, schema, flows or schedules were changed.
@@ -462,3 +466,38 @@ writer are already live; this reader needs no migration, backfill, environment
 change, or schedule change. Existing country indexes refresh normally, and a new
 webapp process loads the history reader on its first country load. Nothing was
 pushed or deployed by this build.
+
+
+## Review fixes and rollout (#637)
+
+Regression tests first reproduced the false 2383 flatrate-to-ads news, saved-service switch news, same-day visit
+loss, OFFSET skip, excluded launch day, same-day further-service news, and a continuous live stay losing its
+original landing. The fixes read recent closed stays, keep continuous base-service history, suppress continuous
+switches only for members who saved the prior service, and separate the live learned time from the landing day.
+Tests also cover 119-to-9, next-day flickers, a real return after a two-day gap, backdated exact days, earliest
+`created_at` across offer types, sorting, and the 14-day window. Candidate reads use one statement, avoiding the
+OFFSET race; the result allowance is one million rows, matching the existing batched history read.
+
+- `node --test app/server/newly-available.test.ts app/domain/newly-available.test.ts`: **73 passed**.
+- Biome checks cover all changed JavaScript, TypeScript and JSON files. Unrelated test formatting is kept in a
+  separate formatting-only commit. `git diff --check` passes.
+- Typecheck retains **397 baseline diagnostics**, with none added (compared by file, diagnostic code and message).
+- A fresh SELECT-only production preview at **2026-10-17 00:38:50 UTC** read **108 US candidate titles / 761 history
+  rows in 175.78 ms**. Running those returned rows through the actual reader locally retained **96 titles / 148
+  service landings**. These are country inputs, before filtering by a member's saved services.
+- No live US stay was recorded since **2026-10-17 00:13 UTC** at measurement time, so the daily count remains zero.
+  [Review evidence](history-reader-review-evidence.json) includes exact executed SQL, bound parameters, counts,
+  timings and job id. It supplements the initial evidence; neither single-run timing proves steady-state cost.
+- `scripts/measure-newly-available.mjs` now measures the actual history reader with SELECT statements only, rather
+  than maintaining a second `created_at` reader and its old 20,000-row limit. Node's syntax check, `--help`, and
+  an end-to-end CLI smoke against a local SELECT-only HTTP double passed. Production SQL ran through Windmill
+  instead of this local credential-dependent CLI.
+
+On deploy, news and Recently landed entries from October 12–16 disappear **where their stays were backfilled**.
+Live stays dated October 16 still qualify. During the first refetch cycle, a previously unobserved change from up
+to 30 days earlier can receive the refetch observation day as its unknown-precision landing day. Both follow Q59;
+the reader does not invent an earlier day or reclassify backfilled stays as live.
+
+There is no migration, backfill, configuration change or schedule change for this reader. The ordinary reviewed
+webapp deployment starts new country indexes; all further reads follow the normal six-hour reload. No production
+data, schema, flow or schedule was written, and nothing was pushed or deployed during these fixes.

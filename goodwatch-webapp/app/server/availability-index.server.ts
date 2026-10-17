@@ -280,7 +280,7 @@ async function loadCountry(country: string) {
 	await loadFirstSeen(country)
 }
 
-// When each offer first appeared, for Newly available.
+// Landing days, learned times and stay continuity for Newly available.
 async function loadFirstSeen(country: string) {
 	try {
 		firstSeen.set(
@@ -293,7 +293,7 @@ async function loadFirstSeen(country: string) {
 	} catch (error) {
 		// The index is whole without the times: nothing new is announced until a load reads them.
 		console.error(
-			`Availability index: reading when ${country}'s offers first appeared failed`,
+			`Availability index: reading ${country}'s landing history failed`,
 			error,
 		)
 	}

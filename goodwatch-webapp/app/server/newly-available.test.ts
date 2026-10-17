@@ -128,6 +128,7 @@ interface Offer {
 	at: number
 	source?: "backfill" | "title" | "premiere"
 	precision?: "exact" | "unknown"
+	createdAt?: number
 	observedAt?: number
 	droppedOn?: number
 }
@@ -155,6 +156,7 @@ class Crate {
 	/** The statements about offers, in the order they came. */
 	offerStatements: { sql: string; params: unknown[] }[] = []
 	failFirstSeen = false
+	afterCandidateRead?: () => void
 
 	async execute(raw: string, params: unknown[] = []) {
 		const sql = raw.trim().replace(/\s+/g, " ")
@@ -213,7 +215,10 @@ class Crate {
 			(o) =>
 				o.country === country &&
 				TYPES.includes(o.kind) &&
-				(table !== "availability_history" || o.droppedOn === undefined),
+				(o.droppedOn === undefined ||
+					(table === "availability_history" &&
+						sql.includes("OR dropped_on >=") &&
+						o.droppedOn >= Number(rest[0]))),
 		)
 		const titles = (offers: Offer[]) => [
 			...new Map(offers.map((o) => [`${o.type}-${o.id}`, o])).values(),
@@ -234,44 +239,49 @@ class Crate {
 				]),
 			)
 		if (this.failFirstSeen) throw new Error("Crate is away")
-		const arrived = (o: Offer) =>
+		const landedDay = (o: Offer) =>
 			o.precision === "unknown"
 				? Math.floor((o.observedAt ?? o.at) / DAY) * DAY
 				: o.at
-		if (table === "availability_history") {
-			assert.match(sql, /dropped_on IS NULL/)
-			assert.match(sql, /appeared_source <> 'backfill'/)
-			assert.match(
-				sql,
-				/CASE WHEN appeared_precision = 'exact' THEN appeared_on ELSE date_trunc\('day', observed_at\) END/,
-			)
-		}
+
 		// The titles with a live stay that opened since.
 		if (sql.startsWith("SELECT DISTINCT media_type, media_tmdb_id")) {
-			const [since, offset] = rest as [number, number]
-			return answer(
+			const [since] = rest as [number]
+			const result = answer(
 				titles(
 					inCountry.filter(
-						(o) => o.source !== "backfill" && arrived(o) > since,
+						(o) => o.source !== "backfill" && landedDay(o) >= since,
 					),
 				)
 					.sort((a, b) => a.type.localeCompare(b.type) || a.id - b.id)
-					.slice(offset, offset + 1000)
+					.slice(0, Number(sql.match(/LIMIT (\d+)/)?.[1] ?? 10000))
 					.map((o) => [o.type, o.id]),
 			)
+			this.afterCandidateRead?.()
+			return result
 		}
 		// Every service of those titles with the time it first carried them.
 		if (
 			sql.startsWith("SELECT media_tmdb_id, streaming_service_id, min(CASE")
 		) {
-			const [type, ...ids] = rest as [string, ...number[]]
-			const earliest = new Map<string, [number, number, number]>()
+			const [, type, ...ids] = rest as [number, string, ...number[]]
+			const earliest = new Map<
+				string,
+				[number, number, number, number | null, number]
+			>()
 			for (const o of inCountry) {
 				if (o.type !== type || !ids.includes(o.id)) continue
-				const key = `${o.id}-${o.service}`
+				const key = `${o.id}-${o.service}-${o.droppedOn ?? "open"}`
 				const known = earliest.get(key)
-				const at = o.source === "backfill" ? 0 : arrived(o)
-				if (!known || at < known[2]) earliest.set(key, [o.id, o.service, at])
+				const at = o.source === "backfill" ? 0 : landedDay(o)
+				const learnedAt = o.createdAt ?? landedDay(o)
+				earliest.set(key, [
+					o.id,
+					o.service,
+					Math.min(at, known?.[2] ?? at),
+					o.droppedOn ?? null,
+					Math.min(learnedAt, known?.[4] ?? learnedAt),
+				])
 			}
 			return answer([...earliest.values()])
 		}
@@ -430,7 +440,7 @@ test("the first-seen read asks for the titles with a recent offer, then for ever
 	)
 	// One statement a kind of title, with the ids of that kind.
 	assert.deepEqual(
-		crate.offerStatements.slice(1).map((s) => s.params.slice(4)),
+		crate.offerStatements.slice(1).map((s) => s.params.slice(5)),
 		[
 			["movie", HEAT, DUNE],
 			["show", SEVERANCE],
@@ -439,9 +449,18 @@ test("the first-seen read asks for the titles with a recent offer, then for ever
 	assert.deepEqual(
 		[...seen].map(([key, services]) => [key, [...services]]),
 		[
-			[titleKey("movie", HEAT), [[NETFLIX, day(2)]]],
-			[titleKey("movie", DUNE), [[NETFLIX, day(3)]]],
-			[titleKey("show", SEVERANCE), [[NETFLIX, day(4)]]],
+			[
+				titleKey("movie", HEAT),
+				[[NETFLIX, { at: day(2), learnedAt: day(2), previousServices: [] }]],
+			],
+			[
+				titleKey("movie", DUNE),
+				[[NETFLIX, { at: day(3), learnedAt: day(3), previousServices: [] }]],
+			],
+			[
+				titleKey("show", SEVERANCE),
+				[[NETFLIX, { at: day(4), learnedAt: day(4), previousServices: [] }]],
+			],
 		],
 	)
 })
@@ -456,7 +475,7 @@ test("without a recent offer the first-seen read is one statement", async () => 
 	assert.equal(crate.offerStatements.length, 1)
 })
 
-test("backfilled stays never announce arrivals, including duplicate ids and offer types", async () => {
+test("backfilled stays never announce landings, including duplicate ids and offer types", async () => {
 	crate.offers = [
 		offer("movie", HEAT, NETFLIX, day(3), { source: "backfill" }),
 		offer("movie", DUNE, PRIME, day(3)),
@@ -478,7 +497,7 @@ test("backfilled stays never announce arrivals, including duplicate ids and offe
 	)
 })
 
-test("exact arrivals use appeared_on and unknown live arrivals use the observed UTC day", async () => {
+test("exact landings use appeared_on and unknown live landings use the observed UTC day", async () => {
 	crate.offers = [
 		offer("movie", DUNE, NETFLIX, day(2), {
 			precision: "exact",
@@ -500,8 +519,92 @@ test("exact arrivals use appeared_on and unknown live arrivals use the observed 
 			[NETFLIX],
 			[DUNE, HEAT, TAR].map((id) => titleKey("movie", id)),
 		),
-		[{ at: day(2), service: NETFLIX }, { at: day(4), service: NETFLIX }, null],
+		[
+			{ at: day(2), learnedAt: day(2), service: NETFLIX },
+			{ at: day(4), learnedAt: day(4), service: NETFLIX },
+			null,
+		],
 	)
+})
+
+test("a same-day flatrate-to-ads switch on service 2383 continues the backfilled stay", async () => {
+	crate.offers = [
+		offer("movie", DUNE, 2383, day(-100), {
+			source: "backfill",
+			droppedOn: day(3),
+		}),
+		offer("movie", DUNE, 2383, day(3), { kind: "ads" }),
+	]
+	await availabilityLoaded("US", 2000)
+	assert.deepEqual(
+		landingsOnServices("US", [2383], [titleKey("movie", DUNE)]),
+		[null],
+	)
+})
+
+test("a same-day 119-to-9 switch continues the backfilled Prime stay", async () => {
+	crate.offers = [
+		offer("movie", DUNE, 119, day(-100), {
+			source: "backfill",
+			droppedOn: day(3),
+		}),
+		offer("movie", DUNE, PRIME, day(3)),
+	]
+	await availabilityLoaded("US", 2000)
+	assert.deepEqual(
+		landingsOnServices("US", [PRIME], [titleKey("movie", DUNE)]),
+		[null],
+	)
+})
+
+test("a next-day return after a flicker continues the old live stay", async () => {
+	crate.offers = [
+		offer("movie", DUNE, NETFLIX, day(-5), { droppedOn: day(2) }),
+		offer("movie", DUNE, NETFLIX, day(3), { precision: "exact" }),
+	]
+	await availabilityLoaded("US", 2000)
+	assert.deepEqual(
+		landingsOnServices("US", [NETFLIX], [titleKey("movie", DUNE)]),
+		[null],
+	)
+})
+
+test("a switch between saved services is not news, but a member with only the new service sees it", async () => {
+	crate.offers = [
+		offer("movie", DUNE, 119, day(-100), {
+			source: "backfill",
+			droppedOn: day(3),
+		}),
+		offer("movie", DUNE, MAX, day(3)),
+	]
+	await availabilityLoaded("US", 2000)
+	assert.deepEqual(
+		landingsOnServices("US", [PRIME, MAX], [titleKey("movie", DUNE)]),
+		[null],
+	)
+	assert.deepEqual(landingsOnServices("US", [MAX], [titleKey("movie", DUNE)]), [
+		{ at: day(3), learnedAt: day(3), service: MAX },
+	])
+})
+
+test("a continuous live stay keeps its original landing day and learned time", async () => {
+	member()
+	crate.db.seed("user_wishlist", [wish("movie", DUNE)])
+	await recordMyMoviesVisit(user, day(2))
+	crate.offers = [
+		offer("movie", DUNE, NETFLIX, day(3), {
+			droppedOn: day(5),
+			createdAt: day(3) + 3600000,
+		}),
+		offer("movie", DUNE, NETFLIX, day(5), { createdAt: day(5) + 3600000 }),
+	]
+	assert.deepEqual((await told()).movies.ids, [DUNE])
+	assert.equal(
+		(await getRecentlyLanded(await loaded(), day(6))).movies[0]?.at,
+		day(3),
+	)
+	await recordMyMoviesVisit(user, day(4))
+	assert.equal(signalOf(await getNewlyAvailable(await loaded())), null)
 })
 
 test("a closed stay does not date a return's open stay", async () => {
@@ -515,11 +618,11 @@ test("a closed stay does not date a return's open stay", async () => {
 	await availabilityLoaded("US", 2000)
 	assert.deepEqual(
 		landingsOnServices("US", [NETFLIX], [titleKey("movie", DUNE)]),
-		[{ at: day(3), service: NETFLIX }],
+		[{ at: day(3), learnedAt: day(3), service: NETFLIX }],
 	)
 })
 
-test("a country with more than 20,000 recent titles still returns all arrivals", async () => {
+test("a country with more than 20,000 recent titles still returns all landings", async () => {
 	crate.offers = Array.from({ length: 20001 }, (_, id) =>
 		offer("movie", id + 1, NETFLIX, day(3)),
 	)
@@ -527,16 +630,21 @@ test("a country with more than 20,000 recent titles still returns all arrivals",
 	const keys = crate.offers.map((o) => titleKey(o.type, o.id))
 	assert.deepEqual(
 		landingsOnServices("US", [NETFLIX], keys),
-		keys.map(() => ({ at: day(3), service: NETFLIX })),
+		keys.map(() => ({ at: day(3), learnedAt: day(3), service: NETFLIX })),
 	)
-	const pages = crate.offerStatements.filter((s) =>
-		s.sql.startsWith("SELECT DISTINCT"),
+})
+
+test("a stay closing during candidate reads cannot shift a later landing out of the result", async () => {
+	crate.offers = Array.from({ length: 1001 }, (_, id) =>
+		offer("movie", id + 1, NETFLIX, day(3)),
 	)
-	assert.equal(pages.length, 21)
-	assert.equal(pages.at(-1)?.params.at(-1), 20000)
-	assert.equal(
-		crate.offerStatements.some((s) => s.sql.includes("LIMIT 20001")),
-		false,
+	crate.afterCandidateRead = () => {
+		crate.offers[0].droppedOn = day(4)
+	}
+	await availabilityLoaded("US", 2000)
+	assert.deepEqual(
+		landingsOnServices("US", [NETFLIX], [titleKey("movie", 1001)]),
+		[{ at: day(3), learnedAt: day(3), service: NETFLIX }],
 	)
 })
 
@@ -559,7 +667,7 @@ test("the index says when a title landed on some services", async () => {
 	])
 	assert.equal(await availabilityLoaded("US", 2000), true)
 	assert.deepEqual(landingsOnServices("US", [NETFLIX, PRIME, 10, 119], keys), [
-		{ at: day(3), service: NETFLIX },
+		{ at: day(3), learnedAt: day(3), service: NETFLIX },
 		null,
 		null,
 		null,
@@ -567,6 +675,7 @@ test("the index says when a title landed on some services", async () => {
 	// With Netflix alone, Heat was not watchable before.
 	assert.deepEqual(landingsOnServices("US", [NETFLIX], keys)[1], {
 		at: day(2),
+		learnedAt: day(2),
 		service: NETFLIX,
 	})
 })
@@ -590,6 +699,106 @@ test("when the first-seen read fails, the index loads and nothing has landed", a
 
 // ---------------------------------------------------------------------------------------------------------
 // What a member is told
+
+test("a 10:00 visit and same-day wishlist addition still see a stay observed at 13:00", async () => {
+	member()
+	const hour = 3_600_000
+	crate.db.seed("user_wishlist", [wish("movie", DUNE, day(5) + 11 * hour)])
+	await recordMyMoviesVisit(user, day(5) + 10 * hour)
+	crate.offers = [
+		offer("movie", DUNE, NETFLIX, day(5), {
+			precision: "unknown",
+			observedAt: day(5) + 13 * hour,
+			createdAt: day(5) + 14 * hour,
+		}),
+	]
+	assert.deepEqual((await told()).movies.ids, [DUNE])
+	const ctx = await loaded()
+	const recent = await getRecentlyLanded(ctx, day(5) + 15 * hour)
+	assert.equal(recent.movies[0]?.at, day(5))
+	assert.equal(recent.movies[0]?.days, 0)
+	await recordMyMoviesVisit(user, day(5) + 14 * hour)
+	assert.equal(signalOf(await getNewlyAvailable(ctx)), null)
+	assert.deepEqual(listed((await getRecentlyLanded(ctx, day(6))).movies), [
+		DUNE,
+	])
+})
+
+test("a further service on the same landing day does not restart news after a visit", async () => {
+	member()
+	const hour = 3_600_000
+	crate.db.seed("user_wishlist", [wish("movie", DUNE)])
+	await recordMyMoviesVisit(user, day(5) + 10 * hour)
+	crate.offers = [
+		offer("movie", DUNE, NETFLIX, day(5), { createdAt: day(5) + 13 * hour }),
+		offer("movie", DUNE, PRIME, day(5), { createdAt: day(5) + 9 * hour }),
+	]
+	assert.equal(signalOf(await told()), null)
+})
+
+test("a backdated exact landing uses its learned time for news and its day for sorting and the 14 days", async () => {
+	member()
+	crate.db.seed("user_wishlist", [
+		wish("movie", DUNE, day(3)),
+		wish("movie", HEAT, day(-10)),
+	])
+	await recordMyMoviesVisit(user, day(4))
+	crate.offers = [
+		offer("movie", DUNE, NETFLIX, day(1), {
+			precision: "exact",
+			observedAt: day(7),
+			createdAt: day(7),
+		}),
+		offer("movie", HEAT, NETFLIX, day(3), { createdAt: day(6) }),
+	]
+	assert.deepEqual((await told()).movies.ids, [HEAT, DUNE])
+	const ctx = await loaded()
+	await recordMyMoviesVisit(user, day(8))
+	assert.deepEqual(listed((await getRecentlyLanded(ctx, day(14))).movies), [
+		HEAT,
+		DUNE,
+	])
+	assert.deepEqual(listed((await getRecentlyLanded(ctx, day(15))).movies), [
+		HEAT,
+	])
+})
+
+test("the earliest created_at across a service's live offers clears news after a visit", async () => {
+	member()
+	crate.db.seed("user_wishlist", [wish("movie", DUNE)])
+	await recordMyMoviesVisit(user, day(5) + 10 * 3600000)
+	crate.offers = [
+		offer("movie", DUNE, NETFLIX, day(5), {
+			kind: "ads",
+			createdAt: day(5) + 13 * 3600000,
+		}),
+		offer("movie", DUNE, NETFLIX, day(5), { createdAt: day(5) + 9 * 3600000 }),
+	]
+	assert.equal(signalOf(await told()), null)
+})
+
+test("a landing on the launch day counts even when the configured launch has a time", async () => {
+	const previous = process.env.NEWLY_AVAILABLE_SINCE
+	process.env.NEWLY_AVAILABLE_SINCE = new Date(
+		LAUNCH + 12 * 3_600_000,
+	).toISOString()
+	try {
+		member()
+		crate.db.seed("user_wishlist", [wish("movie", DUNE)])
+		crate.offers = [
+			offer("movie", DUNE, NETFLIX, LAUNCH, {
+				createdAt: LAUNCH + 13 * 3_600_000,
+			}),
+		]
+		assert.deepEqual((await told()).movies.ids, [DUNE])
+		assert.deepEqual(
+			listed((await getRecentlyLanded(await loaded(), LAUNCH + DAY)).movies),
+			[DUNE],
+		)
+	} finally {
+		process.env.NEWLY_AVAILABLE_SINCE = previous
+	}
+})
 
 test("a member is told the Want to See titles and the shows they watch that landed on their services", async () => {
 	member()
@@ -869,10 +1078,10 @@ test("a title added after it landed, a guest and a member without a service have
 		movies: [],
 		shows: [],
 	})
-	assert.deepEqual(await getRecentlyLanded({ ...ctx, services: [] }, day(5)), {
-		movies: [],
-		shows: [],
-	})
+	assert.deepEqual(
+		await getRecentlyLanded({ ...ctx, services: [] }, day(5)),
+		{ movies: [], shows: [] },
+	)
 	assert.deepEqual(
 		await getRecentlyLanded(
 			{ ...ctx, viewer: { kind: "guest", id: null } as never },
@@ -935,12 +1144,7 @@ test("the Want to See list marks the titles that are new on a service, and no ot
 	// Without the marks the items are what they were.
 	const plain = await getLibraryPage(user, choice)
 	assert.ok(plain.items.every((item) => !("newOn" in item)))
-	const seen = await getLibraryPage(
-		user,
-		{ ...choice, status: "seen" },
-		0,
-		marks,
-	)
+	const seen = await getLibraryPage(user, { ...choice, status: "seen" }, 0, marks)
 	assert.ok(seen.items.every((item) => !("newOn" in item)))
 })
 
@@ -1009,12 +1213,7 @@ function doorsMember() {
 		offer("show", SEVERANCE, NETFLIX, day(-900)),
 	]
 }
-const lands = (
-	type: "movie" | "show",
-	id: number,
-	service: number,
-	at: number,
-) => {
+const lands = (type: "movie" | "show", id: number, service: number, at: number) => {
 	crate.offers = [
 		...crate.offers.filter((o) => !(o.type === type && o.id === id)),
 		offer(type, id, service, at),
