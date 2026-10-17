@@ -10,6 +10,7 @@ import {
 } from "@headlessui/react"
 import { ArrowRightIcon, MagnifyingGlassIcon } from "@heroicons/react/24/solid"
 import { Link, useLocation } from "@remix-run/react"
+import { FormingDot } from "~/ui/prototype-forming-hint/Forming"
 import type React from "react"
 import type { SignalWords } from "~/domain/new-episodes-signal"
 import { landedWords, showsWords } from "~/domain/newly-available-words"
@@ -109,6 +110,8 @@ function Tile({
 				aria-hidden
 			/>
 			<NewEpisodesMark words={fresh} className="absolute top-3 right-3 z-10" />
+			{/* PROTOTYPE (#662): the "dot" variant. */}
+			{destination.key === "taste" && <FormingDot />}
 			<b className="brand-header relative z-10 text-[19px] leading-tight text-gray-100">
 				{destination.label}
 			</b>

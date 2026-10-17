@@ -13,6 +13,7 @@ import type {
 	SidesView,
 } from "~/server/taste-portrait/view"
 import { getFingerprintMeta } from "~/ui/fingerprint/fingerprintMeta"
+import { FormingNote } from "~/ui/prototype-forming-hint/Forming"
 import { TASTE_GROUPS_NAME } from "../taste-groups-name"
 import {
 	RatedPoster,
@@ -74,6 +75,8 @@ export function SidesOfYou({
 					openId={side.id}
 					onOpen={open}
 				/>
+				{/* PROTOTYPE (#662): the "may be forming" note. */}
+				<FormingNote />
 			</section>
 
 			<AnimatePresence mode="wait" initial={false}>

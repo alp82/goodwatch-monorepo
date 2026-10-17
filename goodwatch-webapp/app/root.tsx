@@ -1,4 +1,5 @@
 import { isCrawler } from "~/server/crawlers.server"
+import { ProtoBar } from "~/ui/prototype-forming-hint/ProtoBar"
 import { authMaintenanceOn } from "~/server/auth/cutover-notice.server"
 import { TelemetryBoot } from "~/telemetry/TelemetryBoot"
 import { EARLY_TELEMETRY_SCRIPT } from "~/telemetry/early"
@@ -368,6 +369,8 @@ function Root() {
 								<App />
 								{/* <CookieConsent /> */}
 								<ToastContainer />
+								{/* PROTOTYPE (#662) */}
+								<ProtoBar />
 								<TelemetryBoot />
 								{shouldUseScrollRestoration && <ScrollRestoration />}
 								<Scripts />

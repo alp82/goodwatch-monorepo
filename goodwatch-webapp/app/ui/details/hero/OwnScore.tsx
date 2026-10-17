@@ -4,6 +4,10 @@
 import { Suspense, lazy, useEffect, useRef, useState } from "react"
 import { useUserScore } from "~/hooks/useUserDataAccessors"
 import { type ScoredMedia, useScoreAction } from "~/ui/user/actions/ScoreAction"
+import type { Forming } from "~/server/prototype-forming-hint/index.server"
+import { FormingLine } from "~/ui/prototype-forming-hint/Forming"
+import { fetchHint, fire, useProto } from "~/ui/prototype-forming-hint/state"
+import { titleKey } from "~/utils/title-key"
 import { useOpenedOnce } from "~/utils/first-use"
 import { getVibeColorValue, scoreLabels } from "~/utils/ratings"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
@@ -25,7 +29,12 @@ export function openScorePicker() {
 }
 
 export default function OwnScore({ media, className = "" }: { media: ScoredMedia; className?: string }) {
-	const score = useUserScore(media.mediaType, media.details.tmdb_id)?.score ?? null
+	// PROTOTYPE (#662): with ?variant= in this tab, scores stay in the page and the "may be forming" hint is asked for.
+	const proto = useProto()
+	const [protoScore, setProtoScore] = useState<number | null>(null)
+	const [forming, setForming] = useState<{ at: number; f: Forming } | null>(null)
+	const realScore = useUserScore(media.mediaType, media.details.tmdb_id)?.score ?? null
+	const score = (proto ? protoScore : realScore) as typeof realScore
 	const { rate, isPending } = useScoreAction(media)
 	const [open, setOpen] = useState(false)
 	const opened = useOpenedOnce(open)
@@ -108,15 +117,27 @@ export default function OwnScore({ media, className = "" }: { media: ScoredMedia
 						busy={isPending}
 						opener={button}
 						onRate={(value) => {
+							if (proto) {
+								setProtoScore(value)
+								setOpen(false)
+								fetchHint(proto, titleKey(media.mediaType, media.details.tmdb_id), value).then((hint) => {
+									const f = hint?.after ?? null
+									// A later rating that forms nothing takes back what an earlier one started.
+									if (proto.variant !== "none") fire(f)
+									if (proto.variant === "line" && f) setForming({ at: Date.now(), f })
+								})
+								return
+							}
 							// A guest at the rating limit gets the sign-up prompt instead; either way this dialog is done.
 							rate(value)
 							setOpen(false)
 						}}
-						onClear={() => rate(null)}
+						onClear={() => (proto ? setProtoScore(null) : rate(null))}
 						onClose={() => setOpen(false)}
 					/>
 				</Suspense>
 			)}
+			{forming && <FormingLine key={forming.at} forming={forming.f} />}
 		</>
 	)
 }

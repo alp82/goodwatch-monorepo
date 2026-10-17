@@ -78,6 +78,8 @@ export default function DetailsHero({ media, country, shownCountry, preview, epi
 						</div>
 					</div>
 					{sides && <TitleSidesLine sides={sides} mediaType={media.mediaType} tmdbId={media.details.tmdb_id} />}
+					{/* PROTOTYPE (#662): the "line" variant's slot. */}
+					<div data-proto-forming="line" className="empty:hidden" />
 					<div className="grid grid-cols-[minmax(0,1fr)] gap-2.5 p-3 md:p-5 md:pt-4 lg:grid-cols-2">
 						<div className="flex min-w-0 flex-col justify-center rounded-xl bg-white/[0.07] p-3 ring-1 ring-white/10">
 							<ListActions media={media} />
