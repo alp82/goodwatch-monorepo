@@ -42,6 +42,10 @@ The plugin composition reuses the [#533 spike](https://github.com/alp82/goodwatc
   Read-only (the default) or Read and change my GoodWatch. The consent action
   narrows the signed request using the provider's `scope` parameter; it never
   adds unrequested scopes. Both issued and refreshed tokens retain that choice.
+- The consent action never grants `openid`, `profile` or `email`, so an app gets no
+  ID token and `/oauth2/userinfo` returns no email or name. The consent page promises
+  that an app can't see the member's email address. A request without `mcp:read`
+  is refused, because every MCP call needs it.
 - Access tokens last **300 seconds**. Refresh tokens last **90 days**; the
   provider's **30-second** rotation retry window is explicitly configured. The local
   rehearsal alone shortens access tokens to 60 seconds.

@@ -7,6 +7,9 @@ export type { ConnectState, ConsentApp, ConsentView }
 
 type AuthService = ReturnType<typeof createGoodwatchAuth>
 
+/** The scopes a member can grant on the consent page. */
+const GRANTABLE_SCOPES = new Set(["mcp:read", "mcp:write", "offline_access"])
+
 // The consent page of an app connecting through MCP (#570): what it shows, and the member's answer. The provider sends
 // the member here with a signed query; nothing in it is trusted before the signature is checked. The sign-in step is
 // the site's own sign-in page (the provider's loginPage), which sends the same signed query along.
@@ -93,8 +96,15 @@ export async function decideMcpConsent(request: Request, auth: AuthService): Pro
 		return new Response("Choose read-only or read and change", { status: 400 })
 	if (decision === "allow" && access === "write" && !requested.includes("mcp:write"))
 		return new Response("This app did not request write access", { status: 400 })
-	// Only narrow the signed request, using the provider's supported partial-consent parameter.
-	const scope = requested.filter((scope) => scope !== "mcp:write" || access === "write").join(" ")
+	// Only narrow the signed request, using the provider's supported partial-consent parameter. Identity scopes
+	// (openid, profile, email) are never granted: the page promises the app can't see the member's email address.
+	const granted = requested.filter(
+		(scope) => GRANTABLE_SCOPES.has(scope) && (scope !== "mcp:write" || access === "write"),
+	)
+	// Every MCP call needs mcp:read, so a grant without it would only issue a token that can't be used.
+	if (decision === "allow" && !granted.includes("mcp:read"))
+		return new Response("This app did not ask to see your GoodWatch", { status: 400 })
+	const scope = granted.join(" ")
 	const headers = new Headers(request.headers)
 	headers.set("Content-Type", "application/json")
 	headers.set("Accept", "application/json")
