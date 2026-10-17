@@ -1,5 +1,4 @@
 import React from "react"
-import { sections } from "~/ui/details/sections"
 import { HEADER_HEIGHT } from "~/ui/details/header-height"
 import {
 	type ActiveSections,
@@ -10,11 +9,14 @@ import {
 export type DetailsSideNavProps = {
 	activeSections: ActiveSections
 	navigateToSection: (section: Section) => void
+	/** The sections to list, in page order. */
+	sections: Section[]
 }
 
 export default function DetailsSideNav({
 	activeSections: active,
 	navigateToSection,
+	sections,
 }: DetailsSideNavProps) {
 	const activeSections = useActiveSections(active)
 	return (
@@ -30,7 +32,7 @@ export default function DetailsSideNav({
 					aria-label="Details sections"
 					className="flex flex-col p-2 bg-black/20 text-lg space-y-1"
 				>
-					{Object.values(sections).map((section) => (
+					{sections.map((section) => (
 						<button
 							key={section.id}
 							type="button"

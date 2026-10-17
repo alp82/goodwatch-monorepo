@@ -1,7 +1,8 @@
 import React from "react"
 import DetailsContent from "~/ui/details/DetailsContent"
 import DetailsSideNav from "~/ui/details/DetailsSideNav"
-import { sections } from "~/ui/details/sections"
+import { navSections, sections } from "~/ui/details/sections"
+import { useEpisodeTracking } from "~/ui/tracking/gate"
 import DetailsHeader from "~/ui/details/DetailsHeader"
 import DetailsFingerprint from "~/ui/details/DetailsFingerprint"
 import DetailsHero from "~/ui/details/hero/DetailsHero"
@@ -80,6 +81,9 @@ function DetailsPage({
 	})
 	// A section's place is exact only when every section above it is laid out.
 	const { layOutAll } = useBelowFold()
+	// Episodes is listed for a show with an episode grid, or with the episode list a member gets.
+	const tracking = useEpisodeTracking(media)
+	const listed = navSections(tracking || hasEpisodeGrid(episodeGrid))
 	const navigateToSection = (section: Section) => {
 		layOutAll()
 		scrollToSection(section)
@@ -108,12 +112,14 @@ function DetailsPage({
 				country={country}
 				activeSections={activeSections}
 				navigateToSection={navigateToSection}
+				sections={listed}
 				textPreview={preview.text}
 			/>
 
 			<DetailsSideNav
 				activeSections={activeSections}
 				navigateToSection={navigateToSection}
+				sections={listed}
 			/>
 
 			<DetailsHero

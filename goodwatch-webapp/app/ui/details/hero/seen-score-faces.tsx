@@ -220,7 +220,13 @@ export function StatusFace({
 export function ScoreFace({
 	score,
 	ask,
-}: { score: Score | null; ask: string }) {
+	due = false,
+}: {
+	score: Score | null
+	ask: string
+	/** A tracked show's score is due: an amber dot on the star, and the ask in amber. */
+	due?: boolean
+}) {
 	const color = score ? getVibeColorValue(score) : ""
 	return (
 		<span className="flex h-full min-w-0 flex-1 items-center gap-2 pl-2 pr-2 text-left sm:gap-2.5 sm:pr-3 lg:group-data-[big]/split:gap-3 lg:group-data-[big]/split:pl-2.5">
@@ -232,13 +238,23 @@ export function ScoreFace({
 					{score}
 				</span>
 			) : (
-				<StarIcon className="h-5 w-5 shrink-0 text-amber-300 lg:group-data-[big]/split:h-6 lg:group-data-[big]/split:w-6" />
+				<span className="relative shrink-0">
+					<StarIcon className="h-5 w-5 text-amber-300 lg:group-data-[big]/split:h-6 lg:group-data-[big]/split:w-6" />
+					{due && (
+						<span
+							data-rate-due
+							className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-amber-400 ring-2 ring-stone-950"
+						/>
+					)}
+				</span>
 			)}
 			<span className="min-w-0 flex-1 leading-tight">
 				<span className="block truncate text-[11px] font-semibold uppercase tracking-[0.08em] text-gray-400">
 					Your score
 				</span>
-				<span className="block truncate text-sm font-bold text-white lg:group-data-[big]/split:text-base">
+				<span
+					className={`block truncate text-sm font-bold lg:group-data-[big]/split:text-base ${due ? "text-amber-200" : "text-white"}`}
+				>
 					{score ? scoreLabels[score] : ask}
 				</span>
 			</span>

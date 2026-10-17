@@ -77,13 +77,14 @@ export default function DetailsContent({
 					media={media}
 					wrapper={section(
 						grid ? episodeGridHeight(grid) : { phone: 0, desktop: 0 },
+						sectionProps.episodes,
 					)}
 				>
 					{grid && <EpisodeGrid grid={grid} />}
 				</TrackedEpisodes>
 			) : (
 				grid && (
-					<div {...section(episodeGridHeight(grid))}>
+					<div {...section(episodeGridHeight(grid), sectionProps.episodes)}>
 						<EpisodeGrid grid={grid} />
 					</div>
 				)

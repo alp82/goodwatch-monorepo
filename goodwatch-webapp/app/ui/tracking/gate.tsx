@@ -103,12 +103,17 @@ export function TrackedEpisodes({
 	children,
 }: {
 	media: TrackedMedia
-	/** The section's wrapper on the title page: its class and reserved height. */
-	wrapper: { className?: string; style?: CSSProperties }
+	/** The section's wrapper on the title page: its class, reserved height, and the page navigation's id and ref. */
+	wrapper: {
+		id?: string
+		className?: string
+		style?: CSSProperties
+		ref?: (element: HTMLDivElement) => void
+	}
 	/** Today's episode grid, or nothing for a show without one. */
 	children: ReactNode
 }) {
-	const section = useRef<HTMLDivElement>(null)
+	const section = useRef<HTMLDivElement | null>(null)
 	const [wanted, setWanted] = useState(false)
 	useEffect(() => {
 		const want = () => setWanted(true)
@@ -130,8 +135,11 @@ export function TrackedEpisodes({
 	return (
 		// With neither a grid nor a list the section is empty, and must not leave the page's gap between sections.
 		<div
-			ref={section}
 			{...wrapper}
+			ref={(element) => {
+				section.current = element
+				if (element) wrapper.ref?.(element)
+			}}
 			className={`${wrapper.className ?? ""} empty:-mb-12`}
 		>
 			{wanted ? (

@@ -1,14 +1,15 @@
 import { PauseIcon } from "@heroicons/react/20/solid"
-// The hero's "your show" block on a show page for a member who tracks episodes (#369, #384): one line with the
-// progress and the Next episode as a chip that leads to its row in the episode list; the prompt to rate and the
-// question after a first score, when they are due; and the actions in one row. The status, with its menu, and the
-// score are one control in the hero's ratings (ui/details/hero/SeenScore.tsx), and the prompt opens its picker.
+// The hero's "your show" block on a show page for a member who tracks episodes (#369, #384). Started: one line with
+// the progress and the Next episode as a chip that leads to its row in the episode list, and the question after a
+// first score when it is due; every other action is in the status menu. Not started: Want to See beside "Already
+// watching?", which leads to the episode list. The status, with its menu, and the score are one control in the
+// hero's ratings (ui/details/hero/SeenScore.tsx). When a score is due, the score half says so (RATE_DUE_EVENT).
 // Loaded after the page is up; until its data is there, and for a show without an episode list, it shows what the
 // first paint showed.
 import {
 	CheckIcon,
 	ClockIcon,
-	EyeIcon,
+	EyeSlashIcon,
 	NoSymbolIcon,
 	PlayIcon,
 } from "@heroicons/react/24/solid"
@@ -17,11 +18,10 @@ import { episodeLabel } from "~/domain/tracking/machine"
 import type { ShowView } from "~/domain/tracking/show-page"
 import type { MenuEntry, MenuEntryId } from "~/domain/tracking/status-menu"
 import { EPISODE_GRID_ANCHOR } from "~/ui/details/episode-grid/scale"
-import { SCORE_SAVED_EVENT, openScorePicker } from "~/ui/details/hero/SeenScore"
+import { RATE_DUE_EVENT, SCORE_SAVED_EVENT } from "~/ui/details/hero/SeenScore"
 import { HALF_FOCUS } from "~/ui/details/hero/seen-score-faces"
 import { ActionButton } from "~/ui/title-actions/ActionButton"
 import { useTitleActions } from "~/ui/title-actions/useTitleActions"
-import { useUndoToast, warmUndoToast } from "~/ui/title-actions/useUndoToast"
 import {
 	ConfirmPanel,
 	POPOVER,
@@ -62,15 +62,12 @@ export default function HeroTracking({
 					actions={actions}
 				/>
 			) : (
-				<StartLine tracking={tracking} view={view} />
+				<div className="flex min-w-0 items-center gap-2">
+					<WantButton media={media} />
+					<StartLine tracking={tracking} view={view} />
+				</div>
 			)}
-			<Prompts
-				media={media}
-				tracking={tracking}
-				view={view}
-				actions={actions}
-			/>
-			<Buttons media={media} view={view} actions={actions} />
+			<Prompts tracking={tracking} view={view} actions={actions} />
 			<TrackingToastHost tracking={tracking} actions={actions} />
 		</div>
 	)
@@ -112,8 +109,12 @@ const BookmarkIcon = icon([
 ])
 
 /** How each entry of the menu looks. What it says and whether it is offered is the machine's (status-menu.ts). */
+type EntryId = MenuEntryId | "notStarted"
+/** A menu entry, with the page's own "Not started" beside the machine's (status-menu.ts). */
+type Entry = Omit<MenuEntry, "id"> & { id: EntryId }
+
 const MENU_LOOK: Record<
-	MenuEntryId,
+	EntryId,
 	{ Icon: (props: { className?: string }) => React.ReactNode; tint: string }
 > = {
 	markNew: { Icon: CheckIcon, tint: "text-green-300" },
@@ -126,6 +127,27 @@ const MENU_LOOK: Record<
 	takeBack: { Icon: ArrowUturnLeftIcon, tint: "text-gray-400" },
 	setDate: { Icon: ClockIcon, tint: "text-gray-300" },
 	drop: { Icon: NoSymbolIcon, tint: "text-pink-300/80" },
+	notStarted: { Icon: EyeSlashIcon, tint: "text-gray-400" },
+}
+
+/**
+ * Not started, as a menu entry: it removes every watch of this pass. Offered while the pass has a watch, before Drop.
+ */
+function withNotStarted(menu: MenuEntry[], view: ShowView): Entry[] {
+	if (!view.derived.watched) return menu
+	const entry: Entry = {
+		id: "notStarted",
+		label: "Not started",
+		note: `Unticks all ${plural(view.derived.watched, "episode")} you've watched${view.derived.pass > 1 ? " in this pass" : ""}.`,
+		quiet: true,
+		confirm: true,
+		event: null,
+		row: null,
+	}
+	const drop = menu.findIndex((each) => each.id === "drop")
+	return drop < 0
+		? [...menu, entry]
+		: [...menu.slice(0, drop), entry, ...menu.slice(drop)]
 }
 
 /**
@@ -147,7 +169,7 @@ export function StatusPill({
 }) {
 	const [open, setOpen] = useState(false)
 	/** The entry the menu asks about before it goes on. */
-	const [confirming, setConfirming] = useState<MenuEntry | null>(null)
+	const [confirming, setConfirming] = useState<Entry | null>(null)
 	const root = useRef<HTMLDivElement>(null)
 	const pillButton = useRef<HTMLButtonElement>(null)
 	const close = () => {
@@ -166,7 +188,8 @@ export function StatusPill({
 		close()
 		if (byKey) pillButton.current?.focus()
 	})
-	const { derived, menu, press } = view
+	const { derived, press } = view
+	const menu = withNotStarted(view.menu, view)
 	if (derived.state === "not_started") return null
 	if (!menu.length)
 		return (
@@ -174,7 +197,7 @@ export function StatusPill({
 				{face}
 			</span>
 		)
-	const run = (entry: MenuEntry, confirmed = false) => {
+	const run = (entry: Entry, confirmed = false) => {
 		if (entry.confirm && !confirmed) return setConfirming(entry)
 		close()
 		switch (entry.id) {
@@ -183,6 +206,8 @@ export function StatusPill({
 				return actions.pressSeen()
 			case "takeBack":
 				return actions.undoSeen()
+			case "notStarted":
+				return actions.notStarted()
 			case "setDate":
 				return press && actions.askGroupDate(press.group, press.count)
 			case "wantToSee":
@@ -233,6 +258,16 @@ export function StatusPill({
 							title="Take back Seen?"
 							text={confirming.note}
 							action="Take back"
+							look={TAKE_BACK_LOOK}
+							onCancel={close}
+							onConfirm={() => run(confirming, true)}
+						/>
+					) : confirming?.id === "notStarted" ? (
+						<ConfirmPanel
+							name="notStarted"
+							title="Mark as not started?"
+							text={`${confirming.note} The toast that follows can undo it.`}
+							action="Not started"
 							look={TAKE_BACK_LOOK}
 							onCancel={close}
 							onConfirm={() => run(confirming, true)}
@@ -322,18 +357,17 @@ function StartLine({
 				event.preventDefault()
 				tracking.store.openEpisode(first.id)
 			}}
-			className={`group rounded-lg ${STATUS_LINE} ${FOCUS}`}
+			className={`group flex h-9 min-w-0 flex-1 items-center gap-2 rounded-lg bg-white/10 px-3 ring-1 ring-white/15 transition-colors hover:bg-white/20 ${FOCUS}`}
 		>
-			<span className="min-w-0 flex-1 truncate text-sm text-gray-300">
-				<span className="font-semibold text-white">Already watching?</span>{" "}
+			<span className="min-w-0 flex-1 truncate text-xs text-gray-300">
+				<span className="font-semibold text-white underline decoration-white/30 underline-offset-2 group-hover:decoration-white">
+					Already watching?
+				</span>{" "}
 				<span className="max-sm:hidden">
 					{plural(seasons, "season")} · {plural(view.derived.aired, "episode")}
 				</span>
 			</span>
-			<span data-go-episodes className={GO}>
-				Episodes
-				<ArrowDownIcon className="h-3.5 w-3.5" />
-			</span>
+			<ArrowDownIcon className="h-3.5 w-3.5 shrink-0 text-gray-300 transition group-hover:translate-y-0.5 group-hover:text-white" />
 		</a>
 	)
 }
@@ -472,15 +506,11 @@ function StatusLine({
 // The prompt to rate, and "Have you seen all of it?"
 // ---------------------------------------------------------------------------------------------------------
 
-const LINK = `shrink-0 cursor-pointer text-xs underline underline-offset-2 hover:text-white ${FOCUS}`
-
 function Prompts({
-	media,
 	tracking,
 	view,
 	actions,
 }: {
-	media: TrackedMedia
 	tracking: ShowTracking
 	view: ShowView
 	actions: TrackingActions
@@ -491,49 +521,20 @@ function Prompts({
 		window.addEventListener(SCORE_SAVED_EVENT, saved)
 		return () => window.removeEventListener(SCORE_SAVED_EVENT, saved)
 	}, [tracking.store])
-	const prompt = view.ratePrompt
+	// A score that is due shows in the score half itself, not as a banner here.
+	const due = view.ratePrompt
+	useEffect(() => {
+		window.dispatchEvent(new CustomEvent(RATE_DUE_EVENT, { detail: due }))
+	}, [due])
+	useEffect(
+		() => () =>
+			void window.dispatchEvent(
+				new CustomEvent(RATE_DUE_EVENT, { detail: null }),
+			),
+		[],
+	)
 	return (
 		<>
-			{prompt && (
-				// The picker is the score rectangle's, in the hero's ratings: the prompt opens it.
-				<div
-					data-rate-prompt={prompt}
-					className="flex items-center gap-2 rounded-xl bg-amber-300/[0.09] py-1.5 pl-3 pr-2 ring-1 ring-amber-300/50"
-				>
-					<p className="min-w-0 flex-1 text-sm font-semibold text-white">
-						{prompt === "all" ? (
-							<>
-								You've watched all of {media.details.title}.{" "}
-								<span className="text-amber-200">How was it?</span>
-							</>
-						) : (
-							<>
-								{view.derived.watched > 3 ? "A few" : "Three"} episodes in.{" "}
-								<span className="text-amber-200">
-									How is {media.details.title} so far?
-								</span>
-							</>
-						)}
-					</p>
-					<button
-						type="button"
-						data-rate-open
-						aria-haspopup="dialog"
-						onClick={openScorePicker}
-						className={`h-8 shrink-0 cursor-pointer rounded-lg bg-amber-400 px-3 text-xs font-bold text-black hover:bg-amber-300 ${FOCUS}`}
-					>
-						Rate
-					</button>
-					<button
-						type="button"
-						data-rate-not-now
-						onClick={actions.dismissRatePrompt}
-						className={`${LINK} text-gray-300 decoration-white/30`}
-					>
-						Not now
-					</button>
-				</div>
-			)}
 			{view.derived.seenQuestion && (
 				<div
 					data-seen-question
@@ -579,123 +580,24 @@ function Prompts({
 }
 
 // ---------------------------------------------------------------------------------------------------------
-// Want to See, Seen, and Not interested or Drop
+// Want to See
 // ---------------------------------------------------------------------------------------------------------
 
-const BUTTON = `inline-flex h-9 min-w-0 flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg px-2 text-xs font-semibold transition-colors ${FOCUS}`
-const OFF = "bg-white/10 text-gray-100 hover:bg-white/20"
-
 /**
- * The actions of the state, in one row that they fill. A Seen show says so in its status pill, so it has no Seen
- * button: taking Seen back is in the pill's menu, and the row has Want to rewatch, and the press that marks
- * episodes that are new.
+ * Want to See, beside "Already watching?" on a show that isn't started. Seen and Not interested are in the status
+ * menu; a started show has every action there.
  */
-function Buttons({
-	media,
-	view,
-	actions,
-}: {
-	media: TrackedMedia
-	view: ShowView
-	actions: TrackingActions
-}) {
+function WantButton({ media }: { media: TrackedMedia }) {
 	const a = useTitleActions(media)
-	const toast = useUndoToast()
-	const { state } = view.derived
-	const { seen } = view
-	const isSeen = state === "seen"
 	return (
-		<div
-			data-title-actions
-			className="flex min-w-0 gap-2"
-			onPointerEnter={warmUndoToast}
-			onPointerDown={warmUndoToast}
-			onFocus={warmUndoToast}
-		>
-			{(state === "not_started" || isSeen) && (
-				<ActionButton
-					kind="want"
-					label="long"
-					size="sm"
-					className="flex-1"
-					rewatch={isSeen}
-					active={a.want}
-					disabled={a.wantPending}
-					title={
-						isSeen
-							? a.want
-								? "On your Wishlist to watch again. Press to take it off."
-								: "Puts it on your Wishlist to watch again some day. Your episodes stay ticked; Watch again, in the status menu, starts a new pass now."
-							: undefined
-					}
-					onClick={a.toggleWant}
-				/>
-			)}
-			{(!isSeen || seen.mode === "markNew") && (
-				<button
-					type="button"
-					data-seen-button={seen.mode}
-					onClick={actions.pressSeen}
-					className={`${BUTTON} ${OFF}`}
-				>
-					<EyeIcon className="h-4 w-4 shrink-0 text-green-300" />
-					<span className="truncate">
-						{seen.mode === "markNew"
-							? `Mark ${seen.newEpisodes} new`
-							: "Mark as Seen"}
-					</span>
-				</button>
-			)}
-			{state === "watching" || state === "on_hold" ? (
-				<button
-					type="button"
-					data-drop
-					title="Give it up. It is hidden from your recommendations."
-					onClick={actions.drop}
-					className={`${BUTTON} ${OFF}`}
-				>
-					<NoSymbolIcon className="h-4 w-4 shrink-0 text-pink-300" />
-					<span className="truncate">Drop</span>
-				</button>
-			) : state === "dropped" ? (
-				<button
-					type="button"
-					data-drop="on"
-					aria-pressed
-					title="Dropped. Press to resume it."
-					onClick={actions.resume}
-					className={`${BUTTON} bg-pink-500 text-black`}
-				>
-					<NoSymbolIcon className="h-4 w-4 shrink-0" />
-					<span className="truncate">Dropped</span>
-				</button>
-			) : (
-				state === "not_started" &&
-				(a.canHide || a.hidden) && (
-					<ActionButton
-						kind="hide"
-						label="wide"
-						size="sm"
-						className="max-sm:w-9 max-sm:flex-none sm:flex-1"
-						active={a.hidden}
-						disabled={a.hidePending}
-						title={
-							a.hidden
-								? "Hidden from your recommendations. Press to bring it back."
-								: "Hide it from your recommendations"
-						}
-						onClick={() => {
-							if (a.hidden) a.unhide()
-							else
-								toast.say(
-									`${media.details.title} is hidden from your recommendations`,
-									a.hide(),
-								)
-						}}
-					/>
-				)
-			)}
-			{toast.node}
-		</div>
+		<ActionButton
+			kind="want"
+			label="long"
+			size="sm"
+			className="!w-auto shrink-0 px-3"
+			active={a.want}
+			disabled={a.wantPending}
+			onClick={a.toggleWant}
+		/>
 	)
 }

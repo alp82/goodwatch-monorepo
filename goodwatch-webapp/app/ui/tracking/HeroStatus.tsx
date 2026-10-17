@@ -3,9 +3,10 @@
 // is up; until then the control shows the status the member data has.
 //
 // - Started: the status, how far, and the status menu (HeroTracking's StatusPill).
-// - Not started: a menu with Watching, which asks for the last episode seen, and Seen.
+// - Not started: a menu with Watching, which asks for the last episode seen, Seen, and Not interested.
 // - After a first score on a Not started show: "How far are you?" with the same two answers, and Only the score.
 // A score never changes a show's status by itself.
+import { NoSymbolIcon } from "@heroicons/react/24/solid"
 import { type ReactNode, useLayoutEffect, useRef, useState } from "react"
 import { episodeLabel } from "~/domain/tracking/machine"
 import type { PageEpisode } from "~/domain/tracking/show-page"
@@ -17,6 +18,7 @@ import {
 	StatusFace,
 } from "~/ui/details/hero/seen-score-faces"
 import { useTitleActions } from "~/ui/title-actions/useTitleActions"
+import { useUndoToast, warmUndoToast } from "~/ui/title-actions/useUndoToast"
 import { getVibeColorValue, scoreLabels } from "~/utils/ratings"
 import { StatusPill } from "./HeroTracking"
 import { POPOVER, useDismiss } from "./TrackingToast"
@@ -64,7 +66,7 @@ export default function HeroStatus({
 	if (!tracking.ready || !view) return <>{first}</>
 	const { derived } = view
 	if (derived.state === "not_started")
-		return <StartMenu tracking={tracking} actions={actions} />
+		return <StartMenu media={media} tracking={tracking} actions={actions} />
 	return (
 		<StatusPill
 			view={view}
@@ -82,11 +84,14 @@ export default function HeroStatus({
 	)
 }
 
-/** Not started: a menu with the two ways in, Watching (up to an episode) and Seen. */
+/** Not started: a menu with the two ways in, Watching (up to an episode) and Seen, then Not interested. */
 function StartMenu({
+	media,
 	tracking,
 	actions,
-}: { tracking: ShowTracking; actions: TrackingActions }) {
+}: { media: TrackedMedia; tracking: ShowTracking; actions: TrackingActions }) {
+	const a = useTitleActions(media)
+	const toast = useUndoToast()
 	const [open, setOpen] = useState(false)
 	const root = useRef<HTMLDivElement>(null)
 	const button = useRef<HTMLButtonElement>(null)
@@ -95,7 +100,12 @@ function StartMenu({
 		if (byKey) button.current?.focus()
 	})
 	return (
-		<div ref={root} className="relative flex h-full">
+		<div
+			ref={root}
+			className="relative flex h-full"
+			onPointerEnter={warmUndoToast}
+			onFocus={warmUndoToast}
+		>
 			<button
 				ref={button}
 				type="button"
@@ -117,8 +127,39 @@ function StartMenu({
 						actions={actions}
 						onDone={() => setOpen(false)}
 					/>
+					{(a.canHide || a.hidden) && (
+						<button
+							type="button"
+							data-how-far-answer="not_interested"
+							aria-pressed={a.hidden}
+							disabled={a.hidePending}
+							onClick={() => {
+								setOpen(false)
+								if (a.hidden) a.unhide()
+								else
+									toast.say(
+										`${media.details.title} is hidden from your recommendations`,
+										a.hide(),
+									)
+							}}
+							className={`${ROW} mt-2 ${a.hidden ? "bg-pink-500/[0.12] ring-pink-400/50" : "bg-transparent ring-white/10 hover:bg-white/[0.06]"}`}
+						>
+							<NoSymbolIcon className="h-5 w-5 shrink-0 text-pink-300" />
+							<span className="min-w-0 flex-1 leading-tight">
+								<span className="block text-sm font-bold text-gray-200">
+									Not interested
+								</span>
+								<span className="block text-xs text-gray-400">
+									{a.hidden
+										? "Hidden from your recommendations. Press to bring it back."
+										: "Hide it from your recommendations"}
+								</span>
+							</span>
+						</button>
+					)}
 				</div>
 			)}
+			{toast.node}
 		</div>
 	)
 }

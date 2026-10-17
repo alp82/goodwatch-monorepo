@@ -3,8 +3,8 @@
 // faded and the Next episode ringed; a press on a season row opens it into one-line rows with tick, name, air date
 // and rating; a press on a row opens it for the still, the date and "Watched up to here". On a wide screen the open
 // season sits beside the matrix. A show with one season shows only its rows. For a member who never tracked the
-// show the matrix is the ratings overview. The toggle at the right of the heading line swaps the matrix for the
-// grid in IMDb's numbering, in place. An unwatched episode's still and description stay covered until asked for.
+// show the matrix is the ratings overview. The ratings grid in IMDb's numbering stands above the season and
+// episode picker, under the heading. An unwatched episode's still and description stay covered until asked for.
 //
 // Loaded when the member comes near the section or asks for it; a show without an episode list keeps today's grid.
 import {
@@ -114,21 +114,6 @@ const SITE_BAR_HEIGHT = 64
 const UNDER_HEADERS = `calc(${HEADER_HEIGHT} + ${SITE_BAR_HEIGHT + 16}px)`
 const ROW_SCROLL_MARGIN = { scrollMarginTop: UNDER_HEADERS }
 
-/** The view of the episodes section the member chose last in this browser: the list, or the grid. */
-const VIEW_KEY = "gw:episodes-view"
-function recall(): boolean {
-	try {
-		return window.localStorage.getItem(VIEW_KEY) === "grid"
-	} catch {
-		return false
-	}
-}
-function remember(grid: boolean) {
-	try {
-		if (grid) window.localStorage.setItem(VIEW_KEY, "grid")
-		else window.localStorage.removeItem(VIEW_KEY)
-	} catch {}
-}
 const PANEL = `min-w-0 overflow-hidden rounded-xl border border-white/[0.06] ${SURFACE}`
 const norm = (name: string | null) =>
 	(name ?? "").toLowerCase().replace(/[^a-z0-9]/g, "")
@@ -308,12 +293,6 @@ function List({
 	const { page, seasons, today } = tracking
 	const { layOutAll } = useBelowFold()
 	const section = useRef<HTMLElement>(null)
-	// Which of the two views the section shows: the matrix, or the grid in IMDb's numbering. Remembered per browser.
-	const [gridOpen, setGridOpen] = useState(() => Boolean(children) && recall())
-	const chooseGrid = (on: boolean) => {
-		setGridOpen(on)
-		remember(on)
-	}
 	const model = useMemo<Model>(() => {
 		const aired = (episode: PageEpisode) =>
 			episode.airDate !== null && episode.airDate <= today
@@ -368,18 +347,13 @@ function List({
 			}
 		})
 	}, [asked?.at])
-	// The finder, Next and the hero's link lead to a row of the list, so they bring the list back.
-	useEffect(() => {
-		if (nav.target) setGridOpen(false)
-	}, [nav.target?.at])
 
 	return (
 		<section
 			ref={section}
-			// The link in the hero's ratings row leads here. The grid carries the same anchor while it is shown.
-			id={gridOpen ? undefined : EPISODE_GRID_ANCHOR}
+			// The link in the hero's ratings row leads here: to the grid when the show has one, else to the list.
+			id={children ? undefined : EPISODE_GRID_ANCHOR}
 			data-episode-list={nav.many ? "matrix" : "rows"}
-			data-view={gridOpen ? "grid" : "list"}
 			// The list keeps a pressed season row in place itself; the browser doing the same would move it twice.
 			className="[overflow-anchor:none]"
 			aria-labelledby="episode-list-title"
@@ -390,24 +364,20 @@ function List({
 					"@keyframes gwt-flash{0%,40%{background-color:rgb(255 255 255/.22)}100%{background-color:transparent}}.gwt-flash{animation:gwt-flash 1.5s ease-out}@media (prefers-reduced-motion:reduce){.gwt-flash{animation:none;outline:2px solid white;outline-offset:-2px}}"
 				}
 			</style>
-			<Tools
-				nav={nav}
-				model={model}
-				grid={children ? { on: gridOpen, choose: chooseGrid } : null}
-			/>
-			{page?.presentation?.note && !gridOpen && (
-				<p className="mt-2 text-sm text-gray-400">{page.presentation.note}</p>
-			)}
-			{gridOpen ? (
+			<Tools nav={nav} model={model} />
+			{children && (
 				// The grid brings its own heading; this section's stands for both.
 				<div
 					data-imdb-grid
-					className="mt-1 [&>section>div:first-child]:justify-end [&_#episode-grid-title]:sr-only"
+					className="mt-3 [&>section>div:first-child]:justify-end [&_#episode-grid-title]:sr-only"
 				>
 					{children}
 				</div>
-			) : (
-				<>
+			)}
+			{page?.presentation?.note && (
+				<p className="mt-2 text-sm text-gray-400">{page.presentation.note}</p>
+			)}
+			<>
 					<PressLine view={view} actions={actions} />
 					<div className="mt-3">
 						{page?.episodes.length && (
@@ -436,7 +406,6 @@ function List({
 						)}
 					</div>
 				</>
-			)}
 			<TrackingToastHost tracking={tracking} actions={actions} />
 		</section>
 	)
@@ -679,73 +648,12 @@ function Finder({
 	)
 }
 
-/** Twelve cells in the grid's colours: what the toggle leads to, in small. */
-const MINIATURE = [8.2, 8.6, 7.9, 9.1, 7.4, 8.3, 8.8, 6.6, 8.0, 9.3, 8.5, 7.7]
-
-// A picture that is a toggle button looks as a streaming service does in the Discover filters (`OptionLogo` in
-// ui/filter-bar/FilterGroups.tsx): in full colour inside a green ring while on, grey and dim until the pointer is
-// over it while off, with the filters' amber focus ring. The class names are written out here and not shared: a
-// module of them would be added to a chunk that every page loads.
-const TILE_TOGGLE =
-	"group cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
-const TILE_ON = "ring-2 ring-emerald-400 ring-offset-2 ring-offset-gray-900"
-const TILE_OFF =
-	"opacity-45 grayscale group-hover:opacity-90 group-hover:grayscale-0"
-
-/** The switch between the list and the ratings grid in IMDb's numbering. It stays in the heading line. */
-function ViewToggle({
-	on,
-	choose,
-}: {
-	on: boolean
-	choose: (on: boolean) => void
-}) {
-	return (
-		<button
-			type="button"
-			data-view-toggle
-			aria-pressed={on}
-			aria-label="All episode ratings as one grid"
-			title={
-				on ? "Back to the episode list" : "All episode ratings as one grid"
-			}
-			onClick={() => choose(!on)}
-			className={`inline-flex h-10 shrink-0 items-center gap-2.5 rounded-xl px-1 lg:ml-auto lg:h-8 lg:pr-2 ${TILE_TOGGLE}`}
-		>
-			{/* The miniature is the picture: in colour inside a green ring while the grid is shown, grey and dim otherwise. */}
-			<span
-				data-toggle-tile={on ? "on" : "off"}
-				className={`flex h-7 w-10 items-center justify-center rounded-lg transition ${SURFACE} ${on ? TILE_ON : `ring-1 ring-white/20 ${TILE_OFF}`}`}
-			>
-				<span aria-hidden="true" className="grid grid-cols-4 gap-px">
-					{MINIATURE.map((score, index) => (
-						<span
-							// biome-ignore lint/suspicious/noArrayIndexKey: a fixed drawing
-							key={index}
-							className="h-[5px] w-[7px] rounded-[1px]"
-							style={{ background: vibeTileColor(imdbVibe(score)) }}
-						/>
-					))}
-				</span>
-			</span>
-			<span
-				className={`hidden text-xs font-semibold transition-colors lg:inline ${on ? "text-white" : "text-gray-400 group-hover:text-gray-200"}`}
-			>
-				Grid
-			</span>
-		</button>
-	)
-}
-
 function Tools({
 	nav,
 	model,
-	grid,
 }: {
 	nav: Nav
 	model: Model
-	/** The switch to the ratings grid; null for a show without one. */
-	grid: { on: boolean; choose: (on: boolean) => void } | null
 }) {
 	const desktop = useIsDesktop()
 	const [finding, setFinding] = useState(false)
@@ -796,7 +704,6 @@ function Tools({
 					Next · {episodeLabel(next)}
 				</button>
 			)}
-			{grid && <ViewToggle {...grid} />}
 		</div>
 	)
 }

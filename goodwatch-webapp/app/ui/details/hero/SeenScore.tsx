@@ -58,6 +58,11 @@ const HowFar = lazy(
 const OPEN_SCORE_EVENT = "gw:open-score"
 /** Sent on `window` when the server has answered a score, so that what depends on it can be read again. */
 export const SCORE_SAVED_EVENT = "gw:score-saved"
+/**
+ * Sent by a tracked show's hero (ui/tracking/HeroTracking.tsx) when a score is due or no longer due: its detail is
+ * "partway" after a few episodes, "all" once every episode is watched, or null. The score half then says so.
+ */
+export const RATE_DUE_EVENT = "gw:rate-due"
 
 export function openScorePicker() {
 	preloadScoreDialog()
@@ -96,6 +101,14 @@ export default function SeenScore({
 		setAfterSeen(false)
 		setHowFar(false)
 	}
+
+	const [due, setDue] = useState<"partway" | "all" | null>(null)
+	useEffect(() => {
+		const onDue = (event: Event) =>
+			setDue((event as CustomEvent<"partway" | "all" | null>).detail)
+		window.addEventListener(RATE_DUE_EVENT, onDue)
+		return () => window.removeEventListener(RATE_DUE_EVENT, onDue)
+	}, [])
 
 	useEffect(() => {
 		const onOpen = () => setOpen(true)
@@ -200,11 +213,13 @@ export default function SeenScore({
 	)
 
 	const ask =
-		!show || !entry
-			? "Rate it"
-			: entry.state === "watching" || entry.state === "on_hold"
-				? "Rate it so far"
-				: "Rate it"
+		due === "all"
+			? "How was it?"
+			: !show || !entry
+				? "Rate it"
+				: entry.state === "watching" || entry.state === "on_hold"
+					? "Rate it so far"
+					: "Rate it"
 	return (
 		<div ref={root} className={className}>
 			<SplitFrame
@@ -229,7 +244,7 @@ export default function SeenScore({
 						onFocus={preloadScoreDialog}
 						className={`flex min-w-0 flex-1 cursor-pointer rounded-r-xl hover:bg-white/[0.06] ${HALF_FOCUS}`}
 					>
-						<ScoreFace score={score} ask={ask} />
+						<ScoreFace score={score} ask={ask} due={Boolean(due) && !score} />
 					</button>
 				}
 			/>

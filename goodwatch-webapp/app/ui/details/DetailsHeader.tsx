@@ -25,6 +25,8 @@ interface DetailsHeaderProps {
 	country: string
 	activeSections: ActiveSections
 	navigateToSection: (section: Section) => void
+	/** The sections the navigation lists. */
+	sections: Section[]
 	/** A picked titles language whose text is still on its way (or did not come): the title stays as it was. */
 	textPreview?: "loading" | "failed" | null
 }
@@ -34,6 +36,7 @@ const DetailsHeader: React.FC<DetailsHeaderProps> = ({
 	country,
 	activeSections,
 	navigateToSection,
+	sections,
 	textPreview = null,
 }) => {
 	const headerRef = useRef<HTMLDivElement>(null)
@@ -162,6 +165,7 @@ const DetailsHeader: React.FC<DetailsHeaderProps> = ({
 			<DetailsInlineNav
 				activeSections={activeSections}
 				navigateToSection={navigateToSection}
+				sections={sections}
 			/>
 		</div>
 	)

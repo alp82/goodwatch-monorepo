@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from "react"
-import { sections } from "~/ui/details/sections"
 import {
 	type ActiveSections,
 	type Section,
@@ -9,11 +8,14 @@ import {
 export type DetailsInlineNavProps = {
 	activeSections: ActiveSections
 	navigateToSection: (section: Section) => void
+	/** The sections to list, in page order. */
+	sections: Section[]
 }
 
 export default function DetailsInlineNav({
 	activeSections: active,
 	navigateToSection,
+	sections,
 }: DetailsInlineNavProps) {
 	const activeSections = useActiveSections(active)
 	const [dropdownOpen, setDropdownOpen] = useState(false)
@@ -34,7 +36,7 @@ export default function DetailsInlineNav({
 		return () => document.removeEventListener("mousedown", handleClick)
 	}, [dropdownOpen])
 
-	const sectionList = Object.values(sections)
+	const sectionList = sections
 	const activeSection =
 		sectionList.find((s) => activeSections.includes(s.id)) || sectionList[0]
 	const lastSection = sectionList[sectionList.length - 1]

@@ -276,6 +276,47 @@ export function useTrackingActions(store: ShowStore, title: string) {
 				)
 			},
 
+			/**
+			 * Not started again: removes every watch of the current pass, season by season (specials stay). On hold
+			 * or Dropped with nothing left is resumed, so the show reads Not started. Undo puts the watches back as
+			 * they were stored, with the state the show had and its Seen press.
+			 */
+			notStarted() {
+				const before = store.snapshot.copy
+				if (!before) return
+				const pass = before.state?.pass ?? 1
+				const seasons = [
+					...new Set(
+						before.log
+							.filter((row) => row.pass === pass && (row.season_number ?? 0) > 0)
+							.map((row) => row.season_number as number),
+					),
+				]
+				for (const season of seasons) store.act({ type: "unmarkSeason", season })
+				const now = stateOf(store)
+				if (now === "on_hold" || now === "dropped") store.act({ type: "resume" })
+				const kept = new Set(
+					(store.snapshot.copy?.log ?? []).map((row) => row.watch_id),
+				)
+				const removed = before.log.filter((row) => !kept.has(row.watch_id))
+				const restore = seasonRestore(before.state, removed)
+				store.say(
+					`${title} is Not started again${removed.length ? `: ${watches(removed.length)} removed` : ""}`,
+					restore
+						? [
+								{
+									label: "Undo",
+									run: () => {
+										store.dismissToast()
+										if (store.act(restore).ok)
+											store.say(`${title} is back, as it was before.`)
+									},
+								},
+							]
+						: [],
+				)
+			},
+
 			watchUpTo(episode: PageEpisode) {
 				group(
 					{
