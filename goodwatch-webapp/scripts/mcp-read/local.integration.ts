@@ -71,8 +71,14 @@ async function call(
 		if (!value || typeof value !== "object") return
 		const object = value as Record<string, unknown>
 		if (typeof object.id === "string" && /^(movie|show):/.test(object.id)) {
-			assert.match(String(object.url), /^http:\/\/localhost:3336\/(movie|show)\//)
-			assert.equal(object.link, `[${object.name} (${object.year ?? "Year unknown"})](${object.url})`)
+			assert.match(
+				String(object.url),
+				/^http:\/\/localhost:3336\/(movie|show)\//,
+			)
+			assert.equal(
+				object.link,
+				`[${object.name} (${object.year ?? "Year unknown"})](${object.url})`,
+			)
 		}
 		for (const child of Object.values(object)) checkTitles(child)
 	}
@@ -80,8 +86,11 @@ async function call(
 	return result.structuredContent
 }
 try {
-	const first = await call("search_titles", { query: "Local Movie" })
-	assert.equal(first.page_url, "http://localhost:3336/discover?q=Local+Movie")
+	const first = await call("search_titles", { query: "Local Movie", limit: 20 })
+	assert.equal(
+		first.page_url,
+		"http://localhost:3336/discover?q=Local+Movie&services=all&unseen=0&foryou=1",
+	)
 	assert.match(first.page_note, /differ/)
 	assert.equal(first.items.length, 20)
 	assert.equal(first.next_cursor, "offset:20")
@@ -100,6 +109,61 @@ try {
 	assert.equal(
 		first.items[0].url,
 		"http://localhost:3336/movie/2000-local-movie-00",
+	)
+	const full = await call("search_titles", { query: "Local Movie" })
+	assert.equal(full.items.length, 25)
+	assert.equal(full.next_cursor, null)
+	assert.equal(full.availability, "everywhere")
+	assert.equal(full.exclude_seen, false)
+	assert.ok(full.items.some((item: { id: string }) => item.id === "movie:2000"))
+	const unseen = await call("search_titles", {
+		query: "Local Movie",
+		exclude_seen: true,
+		limit: 20,
+	})
+	assert.equal(unseen.items.length, 20)
+	assert.equal(unseen.items[0].id, "movie:2001")
+	assert.equal(new URL(unseen.page_url).searchParams.get("unseen"), "1")
+	const unseenPage = await call("search_titles", {
+		query: "Local Movie",
+		exclude_seen: true,
+		cursor: unseen.next_cursor,
+	})
+	assert.equal(unseenPage.items.length, 4)
+	const unseenShows = await call("search_titles", {
+		query: "Local",
+		exclude_seen: true,
+	})
+	assert.ok(
+		!unseenShows.items.some((item: { id: string }) =>
+			["show:1399", "show:1400"].includes(item.id),
+		),
+	)
+	const arrival = await call("search_titles", { query: "arrival" })
+	assert.deepEqual(
+		arrival.items.map((item: { id: string; runtime_minutes: number }) => [
+			item.id,
+			item.runtime_minutes,
+		]),
+		[
+			["movie:329865", 116],
+			["movie:472349", 22],
+		],
+	)
+	const canonical = await call("search_titles", {
+		query: "Local Canonical",
+		limit: 1,
+	})
+	assert.equal(canonical.items[0].id, "movie:872517")
+	const canonicalPage = await call("search_titles", {
+		query: "Local Canonical",
+		limit: 1,
+		cursor: canonical.next_cursor,
+	})
+	assert.equal(canonicalPage.items[0].id, "show:3635601")
+	assert.equal(canonicalPage.next_cursor, null)
+	console.log(
+		"PASS: full search default, seen filtering before paging, distinct Arrival works and canonical alias deduplication",
 	)
 	const title = await call("get_title", { title_id: "show:1399" })
 	assert.equal(title.title.name, "Local Orbit")
@@ -153,7 +217,7 @@ try {
 		"PASS: My shows, current pass, next episode, unknown dates and peer isolation",
 	)
 	const tonight = await call("get_tonight")
-	assert.equal(tonight.page_url, "http://localhost:3336/?tv=tonight")
+	assert.equal(tonight.page_url, "http://localhost:3336/my-shows")
 	assert.equal(tonight.pick.title.id, "show:1399")
 	assert.equal(tonight.pick.episode.code, "S1 E3")
 	assert.equal(tonight.pick.reason, "nextEpisode")
@@ -176,6 +240,69 @@ try {
 	const library2 = await call("get_library", { cursor: library.next_cursor })
 	assert.equal(library2.items.length, 7)
 	assert.equal(library2.next_cursor, null)
+	const wishlist = await call("get_library", {
+		filter: "want_to_see",
+		limit: 2,
+	})
+	assert.equal(wishlist.sort, "added")
+	assert.deepEqual(
+		wishlist.items.map((item: { id: string }) => item.id),
+		["movie:2000", "movie:2001"],
+	)
+	assert.equal(
+		wishlist.items[0].added_at,
+		new Date(1791982800000).toISOString(),
+	)
+	const oldest = await call("get_library", {
+		filter: "want_to_see",
+		sort: "waiting",
+		limit: 2,
+	})
+	assert.deepEqual(
+		oldest.items.map((item: { id: string }) => item.id),
+		["movie:2024", "movie:2023"],
+	)
+	assert.ok(oldest.items[0].added_at < oldest.items[1].added_at)
+	assert.match(oldest.page_note, /default website order/)
+	const byTitle = await call("get_library", {
+		filter: "want_to_see",
+		sort: "title",
+	})
+	assert.equal(byTitle.page_url, "http://localhost:3336/my-library?sort=title")
+	const { libraryOrder } = await import("../../app/domain/my-library")
+	const { getUserData } = await import("../../app/server/userData.server")
+	const user = await getUserData({ user_id: "mcp-member-A" })
+	for (const status of [
+		"want",
+		"seen",
+		"watching",
+		"on_hold",
+		"dropped",
+		"unrated",
+	] as const) {
+		const { sortsFor } = await import("../../app/domain/my-library")
+		for (const sort of sortsFor(status)) {
+			const filter = status === "want" ? "want_to_see" : status
+			const found = await call("get_library", { filter, sort, limit: 20 })
+			const native = libraryOrder(
+				user,
+				{ status, sort, kind: "all", q: "" },
+				(key) =>
+					key.startsWith("movie-")
+						? `Local Movie ${String(Number(key.slice(6)) - 2000).padStart(2, "0")}`
+						: key === "show-1399"
+							? "Local Orbit"
+							: "Local Hold",
+			)
+			assert.deepEqual(
+				found.items.map((item: { id: string }) => item.id),
+				native.keys.slice(0, 20).map((key) => key.replace("-", ":")),
+			)
+		}
+	}
+	console.log(
+		"PASS: library added dates, oldest-first wishlist, and all native My library sorts agree",
+	)
 	const rated = await call("get_library", { filter: "rated" })
 	assert.equal(rated.page_url, "http://localhost:3336/my-library?status=seen")
 	assert.match(rated.page_note, /unrated/)

@@ -1,3 +1,4 @@
+import { libraryKeys, sortKey } from "../../domain/my-library"
 import { derive, showAiredBy, utcDay } from "../../domain/tracking/machine"
 import { recordFromRows } from "../../domain/tracking/storage"
 import {
@@ -7,7 +8,7 @@ import {
 } from "../../types/user-data"
 import { evaluateAvailability } from "../../utils/availability-evidence"
 import { titlePath } from "../../utils/helpers"
-import { canonicalTitleId } from "../../utils/title-identity"
+import { canonicalTitleId, retiredMovieIds } from "../../utils/title-identity"
 import { titleKey } from "../../utils/title-key"
 import { getAvailabilityEvidence } from "../availability.server"
 import { searchQuery } from "../combined-search/catalog.server"
@@ -28,6 +29,7 @@ export interface CatalogTitle {
 	tmdb_id: number
 	title: string
 	release_year: number | null
+	runtime_minutes?: number | null
 }
 export const summary = (title: CatalogTitle, origin: string) => {
 	const url = new URL(
@@ -35,11 +37,14 @@ export const summary = (title: CatalogTitle, origin: string) => {
 		origin,
 	).href
 	return {
-		id: `${title.media_type}:${title.tmdb_id}`,
+		id: `${title.media_type}:${canonicalTitleId(title.media_type, title.tmdb_id)}`,
 		name: title.title,
 		year: title.release_year,
 		url,
 		link: titleLink(title.title, title.release_year, url),
+		...(title.runtime_minutes == null
+			? {}
+			: { runtime_minutes: title.runtime_minutes }),
 	}
 }
 
@@ -63,6 +68,7 @@ function marks(user: UserData, key: MediaKey) {
 	return {
 		score: user.scores[key]?.score ?? null,
 		want_to_see: key in user.wishlist,
+		added_at: iso(user.wishlist[key]?.createdAt),
 		not_interested: key in user.notInterested,
 		status: state?.state ?? (key.startsWith("show-") ? "not_started" : null),
 		pass: state?.pass ?? null,
@@ -86,13 +92,15 @@ async function library(user: UserData, origin: string, args: ReadArgs) {
 			...Object.keys(user.notInterested),
 		]),
 	] as MediaKey[]
+	const seenKeys =
+		args.filter === "seen" ? new Set(libraryKeys(user, "seen")) : null
 	const filtered = keys
 		.filter((key) => {
 			switch (args.filter) {
 				case "want_to_see":
 					return key in user.wishlist
 				case "seen":
-					return user.watchState[key]?.state === "seen" || key in user.scores
+					return seenKeys?.has(key) ?? false
 				case "not_interested":
 					return key in user.notInterested
 				case "rated":
@@ -107,7 +115,61 @@ async function library(user: UserData, origin: string, args: ReadArgs) {
 					return true
 			}
 		})
-		.sort()
+		.filter(
+			(key) =>
+				!args.kind || args.kind === "all" || key.startsWith(`${args.kind}-`),
+		)
+	const sort =
+		args.sort ??
+		(["want_to_see", "all", undefined].includes(args.filter) ? "added" : "last")
+	// Title order needs names for the full list, not just the current page. Batch the existing reader.
+	const names = new Map<MediaKey, string>()
+	if (sort === "title") {
+		for (let i = 0; i < filtered.length; i += 60) {
+			const batch = filtered.slice(i, i + 60)
+			const displays = await getDisplayFields(
+				batch.map((key) => {
+					const { mediaType, tmdbId } = parseMediaKey(key)
+					return titleKey(mediaType, tmdbId)
+				}),
+			)
+			for (const key of batch) {
+				const { mediaType, tmdbId } = parseMediaKey(key)
+				names.set(
+					key,
+					sortKey(displays.get(titleKey(mediaType, tmdbId))?.title ?? ""),
+				)
+			}
+		}
+	}
+	const dateOrder = (
+		a: MediaKey,
+		b: MediaKey,
+		added: boolean,
+		oldest = false,
+	) => {
+		const date = (key: MediaKey) =>
+			added ? user.wishlist[key]?.createdAt : user.watchState[key]?.watchedAt
+		const x = date(a)
+		const y = date(b)
+		if (x == null || y == null) return x === y ? 0 : x == null ? 1 : -1
+		return (new Date(y).getTime() - new Date(x).getTime()) * (oldest ? -1 : 1)
+	}
+	filtered.sort((a, b) => {
+		const order =
+			sort === "title"
+				? (names.get(a) ?? "").localeCompare(names.get(b) ?? "", "en")
+				: sort === "score"
+					? (user.scores[b]?.score ?? -1) - (user.scores[a]?.score ?? -1) ||
+						dateOrder(a, b, false)
+					: dateOrder(
+							a,
+							b,
+							sort === "added" || sort === "waiting",
+							sort === "waiting",
+						)
+		return order || a.localeCompare(b, "en")
+	})
 	const slice = page(filtered, args)
 	const displays = await getDisplayFields(
 		slice.items.map((key) => {
@@ -117,6 +179,7 @@ async function library(user: UserData, origin: string, args: ReadArgs) {
 	)
 	return {
 		...slice,
+		sort,
 		items: slice.items.flatMap((key) => {
 			const { mediaType, tmdbId } = parseMediaKey(key)
 			const title = displays.get(titleKey(mediaType, tmdbId))
@@ -130,6 +193,7 @@ async function lookup(
 	offset: number,
 	limit: number,
 	year?: number,
+	excluded: { movie: number[]; show: number[] } = { movie: [], show: [] },
 ): Promise<CatalogTitle[]> {
 	const text = query.trim()
 	const where = [
@@ -142,12 +206,26 @@ async function lookup(
 		...(year ? ["release_year = ?"] : []),
 	].join(" AND ")
 	const params = [...(text ? [text] : []), ...(year ? [year] : [])]
+	const canonicalId = `CASE tmdb_id ${Object.entries(retiredMovieIds)
+		.map(([alias, id]) => `WHEN ${alias} THEN ${id}`)
+		.join(" ")} ELSE tmdb_id END`
+	// Resolve aliases in SQL before LIMIT/OFFSET, fetching the canonical row's display fields.
+	const movieWhere = `tmdb_id IN (SELECT ${canonicalId} FROM movie WHERE ${where}) AND (adult IS NULL OR adult = false)`
+	const omit = (kind: "movie" | "show") =>
+		excluded[kind].length ? " AND NOT (tmdb_id = ANY(?))" : ""
 	return searchQuery<CatalogTitle>(
 		`SELECT * FROM (
-		SELECT 'movie' AS media_type, tmdb_id, title, release_year FROM movie WHERE ${where}
-		UNION ALL SELECT 'show' AS media_type, tmdb_id, title, release_year FROM show WHERE ${where}
-	) AS titles ORDER BY title, media_type, tmdb_id LIMIT ? OFFSET ?`,
-		[...params, ...params, limit, offset],
+		SELECT 'movie' AS media_type, tmdb_id, title, release_year, runtime AS runtime_minutes FROM movie WHERE ${movieWhere}${omit("movie")}
+		UNION ALL SELECT 'show' AS media_type, tmdb_id, title, release_year, NULL::integer AS runtime_minutes FROM show WHERE ${where}${omit("show")}
+	) AS titles ORDER BY title, media_type, runtime_minutes DESC NULLS LAST, tmdb_id LIMIT ? OFFSET ?`,
+		[
+			...params,
+			...(excluded.movie.length ? [excluded.movie] : []),
+			...params,
+			...(excluded.show.length ? [excluded.show] : []),
+			limit,
+			offset,
+		],
 	)
 }
 
@@ -200,12 +278,38 @@ export async function readMemberTool(
 ): Promise<Record<string, unknown>> {
 	if (name === "search_titles") {
 		const offset = offsetOf(args)
-		const limit = args.limit ?? 20
-		const found = await lookup(args.query ?? "", offset, limit + 1)
+		const limit = args.limit ?? 40
+		const excluded: { movie: number[]; show: number[] } = {
+			movie: [],
+			show: [],
+		}
+		if (args.exclude_seen) {
+			const user = await getUserData({ user_id: userId })
+			for (const key of new Set([
+				...Object.keys(user.scores),
+				...Object.keys(user.watchState),
+				...Object.keys(user.skipped),
+			])) {
+				const { mediaType, tmdbId } = parseMediaKey(key as MediaKey)
+				excluded[mediaType].push(canonicalTitleId(mediaType, tmdbId))
+			}
+		}
+		const found = await lookup(
+			args.query ?? "",
+			offset,
+			limit + 1,
+			undefined,
+			excluded,
+		)
 		return {
 			items: found.slice(0, limit).map((title) => summary(title, origin)),
 			next_cursor: found.length > limit ? `offset:${offset + limit}` : null,
 			ranked: false,
+			availability: "everywhere",
+			exclude_seen: args.exclude_seen ?? false,
+			for_you: args.for_you ?? true,
+			for_you_applied: false,
+			returned: Math.min(found.length, limit),
 		}
 	}
 	if (name === "get_library")

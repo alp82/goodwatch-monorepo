@@ -11,6 +11,8 @@ import { runsSearch } from "../role.server.ts"
 import { searchAdmission } from "../search-runtime/admission.server.ts"
 import { type CatalogTitle, summary } from "./data.server.ts"
 import { readToolEnabled } from "./policy.server.ts"
+import { prepareSearchView } from "./search-view.server.ts"
+import type { SearchView } from "./search-view.ts"
 import type { ReadArgs } from "./tools.server.ts"
 
 export interface RankedBatch {
@@ -30,6 +32,7 @@ interface Snapshot extends RankedBatch {
 	id: string
 	queryHash: string
 	queryCiphertext?: string
+	view?: SearchView
 }
 const usage = counter(
 	"goodwatch_mcp_ranked_requests_total",
@@ -152,10 +155,10 @@ export function createRankedSearch(
 		const owner = randomBytes(16).toString("hex")
 		// Preserve query links across cursor-only pages without storing the raw query in Valkey.
 		const key = Buffer.from(storageKey, "hex")
-		const sealQuery = (value: string) => {
+		const sealQuery = (value: string, id = owner) => {
 			const iv = randomBytes(12)
 			const cipher = createCipheriv("aes-256-gcm", key, iv)
-			cipher.setAAD(Buffer.from(`${prefix}:${owner}:page-query`))
+			cipher.setAAD(Buffer.from(`${prefix}:${id}:page-query`))
 			const encrypted = Buffer.concat([
 				cipher.update(value, "utf8"),
 				cipher.final(),
@@ -178,16 +181,58 @@ export function createRankedSearch(
 		const time = () => (options.clock ? Math.floor(options.clock() / 1000) : -1)
 		const evalVerdict = async (script: string) =>
 			(await redis.eval(script, keys.length, ...keys, owner, time())) as Verdict
-		const page = (
-			snapshot: Snapshot,
+		const page = async (
+			input: Snapshot,
 			offset: number,
 			v: Verdict,
 			cached: boolean,
 			chargedNano = 0,
 		) => {
-			const limit = args.limit ?? 20
+			let snapshot = input
+			if (snapshot.view) {
+				if (
+					(args.for_you !== undefined &&
+						args.for_you !== snapshot.view.for_you) ||
+					(args.exclude_seen !== undefined &&
+						args.exclude_seen !== snapshot.view.exclude_seen)
+				)
+					return failure("invalid_cursor", v)
+			} else {
+				// One stable, member-bound view per filter combination. Changing filters reuses the
+				// 60s raw query cache without another paid search; cursor pages never re-rank.
+				const id = digest(
+					`${snapshot.id}:${args.for_you ?? true}:${args.exclude_seen ?? false}`,
+				).slice(0, 32)
+				const viewKey = `${prefix}:view:${id}`
+				let value = await redis.get(viewKey)
+				if (!value) {
+					const prepared = await prepareSearchView(
+						snapshot.titles,
+						userId,
+						args,
+					)
+					const view: Snapshot = {
+						...snapshot,
+						...prepared,
+						id,
+						queryCiphertext: sealQuery(queryOf(snapshot), id),
+					}
+					value = (await redis.eval(
+						"local v = redis.call('GET', KEYS[1]); if v then return v end redis.call('SET', KEYS[1], ARGV[1], 'PX', 900000) redis.call('SET', KEYS[2], ARGV[1], 'PX', 900000) return ARGV[1]",
+						2,
+						viewKey,
+						`${prefix}:page:${id}`,
+						JSON.stringify(view),
+					)) as string
+				}
+				snapshot = JSON.parse(value)
+			}
+			const limit = args.limit ?? 40
 			return {
 				query: queryOf(snapshot),
+				...snapshot.view,
+				total: snapshot.titles.length,
+				returned: Math.min(limit, Math.max(0, snapshot.titles.length - offset)),
 				items: snapshot.titles
 					.slice(offset, offset + limit)
 					.map((title) => summary(title, origin)),
@@ -228,7 +273,12 @@ export function createRankedSearch(
 					return finish("invalid_cursor", failure("invalid_cursor"))
 				return finish(
 					"page",
-					page(snapshot, Number(match[2]), await evalVerdict(quota), true),
+					await page(
+						snapshot,
+						Number(match[2]),
+						await evalVerdict(quota),
+						true,
+					),
 				)
 			}
 			if (query.length < 2)
@@ -238,7 +288,7 @@ export function createRankedSearch(
 				})
 			const v = await evalVerdict(claim)
 			if (v[0] === "cached")
-				return finish("cached", page(JSON.parse(v[1]), 0, v, true))
+				return finish("cached", await page(JSON.parse(v[1]), 0, v, true))
 			if (v[0] !== "claimed") return finish(v[0], failure(v[0], v))
 			claimed = true
 			release = searchAdmission.enter()
@@ -293,7 +343,7 @@ export function createRankedSearch(
 				return finish("unavailable", failure("ranked_unavailable", admitted))
 			return finish(
 				"uncached",
-				page(snapshot, 0, admitted, false, batch.chargedNano),
+				await page(snapshot, 0, admitted, false, batch.chargedNano),
 			)
 		} catch {
 			return finish("unavailable", failure("ranked_unavailable"))

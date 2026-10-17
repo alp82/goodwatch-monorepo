@@ -537,3 +537,37 @@ test("MCP initialization tells clients to link titles and end with the page link
 	assert.match(initialized.instructions, /ready-made link field VERBATIM/)
 	assert.match(initialized.instructions, /See it on GoodWatch:/)
 })
+
+test("Search, library and Watch next expose the requested client contract", async () => {
+	const handle = createReadMcpHandler({
+		resource,
+		authorization: verifier,
+		limiter: unlimited,
+	})
+	const tools = (await result(await handle(rpc("tools/list")))).result.tools
+	const search = tools.find(
+		(tool: { name: string }) => tool.name === "search_titles",
+	)
+	assert.equal(search.inputSchema.properties.limit.default, 40)
+	assert.equal(search.inputSchema.properties.limit.maximum, 40)
+	assert.equal(search.inputSchema.properties.for_you.type, "boolean")
+	assert.equal(search.inputSchema.properties.exclude_seen.type, "boolean")
+	assert.match(search.description, /never loop over get_title/)
+	const library = tools.find(
+		(tool: { name: string }) => tool.name === "get_library",
+	)
+	assert.deepEqual(library.inputSchema.properties.sort.enum, [
+		"added",
+		"waiting",
+		"last",
+		"score",
+		"title",
+	])
+	assert.match(library.description, /added_at/)
+	const next = tools.find(
+		(tool: { name: string }) => tool.name === "get_tonight",
+	)
+	assert.equal(next.title, "Watch next")
+	assert.match(next.description, /next episode/)
+	assert.match(next.description, /get_library/)
+})

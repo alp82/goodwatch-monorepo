@@ -1,7 +1,8 @@
+import { type LibraryStatus, sortsFor } from "../../domain/my-library.ts"
 import type { ReadArgs, ReadToolName } from "./tools.server.ts"
 
 export const linkInstructions =
-	"Always write every movie or show title using its ready-made link field VERBATIM as a Markdown link, including the full Title (Year) label. Never replace it with bold or plain text, including choices and write receipts. End every list-like answer with 'See it on GoodWatch:' followed by a Markdown link to page_url. Use page_note for broader views; never invent URLs, years or promise identical results."
+	"Always write every movie or show title using its ready-made link field VERBATIM as a Markdown link, including the full Title (Year) label. Never replace it with bold or plain text, including choices and write receipts. Different IDs can be distinct works with the same title and year: mention their runtime_minutes when needed to distinguish them. End every list-like answer with 'See it on GoodWatch:' followed by a Markdown link to page_url. Use page_note for broader views; never invent URLs, years or promise identical results."
 
 /** Escape display text, not markup; never invent a missing catalog year. */
 export function titleLink(
@@ -30,9 +31,15 @@ export function withPageLink(
 			const query = (
 				typeof data.query === "string" ? data.query : (args.query ?? "")
 			).trim()
-			path = query
-				? `/discover?${new URLSearchParams({ q: query })}`
-				: "/discover"
+			const params = new URLSearchParams()
+			if (query) params.set("q", query)
+			params.set("services", "all")
+			params.set(
+				"unseen",
+				(data.exclude_seen ?? args.exclude_seen ?? false) ? "1" : "0",
+			)
+			params.set("foryou", (data.for_you ?? args.for_you ?? true) ? "1" : "0")
+			path = `/discover?${params}`
 			note =
 				"Discover searches this query using the website's ranking and filters; its results can differ from this tool's catalog lookup."
 			break
@@ -52,6 +59,25 @@ export function withPageLink(
 						? "My library's Seen view also includes unrated titles and follows the website's show-status rules; there is no rated-only page."
 						: "My library opens Want to see; switch status there to browse the rest of your marked titles."
 			}
+			const sort = data.sort ?? args.sort
+			const status = filter === "want_to_see" ? "want" : filter
+			if (
+				sort &&
+				["want", "seen", "watching", "on_hold", "dropped", "unrated"].includes(
+					status,
+				)
+			) {
+				const url = new URL(path, origin)
+				const sorts = sortsFor(status as LibraryStatus)
+				if (sorts.some((candidate) => candidate === sort)) {
+					if (sort !== sorts[0]) url.searchParams.set("sort", String(sort))
+				} else
+					note =
+						"This sort is available in the tool; My library opens this status in its default website order."
+				if (args.kind && args.kind !== "all")
+					url.searchParams.set("type", args.kind)
+				path = url.pathname + url.search
+			}
 			break
 		}
 		case "get_my_shows":
@@ -60,9 +86,13 @@ export function withPageLink(
 		case "get_taste":
 			path = "/taste"
 			break
-		case "get_tonight":
-			path = "/?tv=tonight"
+		case "get_tonight": {
+			const pick = data.pick as { title?: { id?: string } } | null | undefined
+			path = pick?.title?.id?.startsWith("show:") ? "/my-shows" : "/my-movies"
+			note =
+				"Watch next is a single pick, which can be an episode of a show already being watched. This page opens the matching movies or shows list."
 			break
+		}
 		default:
 			return data
 	}
