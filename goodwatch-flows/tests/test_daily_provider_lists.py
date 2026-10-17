@@ -200,6 +200,20 @@ class DailyListTests(unittest.TestCase):
         self.assertEqual(next(iter(self.store.snapshots.values()))['ids'], [43])
         self.assertEqual(result['lists'][0]['sort_fallbacks'], 1)
 
+    def test_two_torn_sorts_report_the_last_distinct_count_read(self):
+        def torn(path, **params):
+            count = 2 if params['sort_by'] == 'name.asc' else 3
+            return dict(page=params['page'], total_pages=2,
+                        total_results=5 if params['page'] == 1 else 6,
+                        results=[{'id': 40 + i} for i in range(count)])
+        self.api.get = torn
+        result = self.run_day('2026-10-14T20:00:00', dry_run=False)
+        self.assertEqual(result['lists_failed'], 1)
+        self.assertIn('read 3', result['lists'][0]['reason'])
+        self.assertEqual(self.store.snapshots, {})
+        self.assertEqual(self.store.crate.history, {})
+        self.assertEqual(self.store.intents, {})
+
     def test_large_lists_are_partitioned_without_losing_titles_with_no_release_date(self):
         original = self.api.get
         def partitioned(path, **params):
@@ -303,6 +317,87 @@ class DailyListTests(unittest.TestCase):
         rows = list(self.store.crate.history.values())
         self.assertEqual(len(rows), 1)
         self.assertEqual(rows[0]['dropped_precision'], 'exact')
+
+    def test_pending_repair_preserves_the_live_publishers_genuine_removal(self):
+        import mongomock
+        from f.sync.availability_history import HistoryTitle, OfferKey
+        from f.tmdb_api.provider_evidence import capture_provider_check
+        key = OfferKey(42, 'show', 'US', 8, 'flatrate')
+        # The stay's scrape observation is newer than the publisher's API check.
+        initial = HistoryTitle(42, {}, {key: key._asdict()},
+                               {'US': {'updated_at': datetime(2026, 10, 14, 14)}}, [], [])
+        publish_history(self.store.crate, 'show', [initial], lambda: None)
+        payload = {'results': {'US': {'flatrate': [{'provider_id': 337}]}}}
+        proof = capture_provider_check({'id': 42, 'watch/providers': payload}, 42,
+                                       datetime(2026, 10, 14, 10), bypass_cache=True)
+        title = HistoryTitle(42, {'watch_providers': payload, 'watch_providers_check': proof},
+                             {}, {}, [key._asdict()], [key])
+        pending = mongomock.MongoClient().db.streaming_history_pending
+        pending.insert_one({'_id': 'show:42'})
+        result = publish_history(self.store.crate, 'show', [title], lambda: None, pending)
+        self.assertEqual(result.errors, {})
+        rows = list(self.store.crate.history.values())
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]['dropped_on'], day('2026-10-14'))
+        self.assertEqual(rows[0]['dropped_precision'], 'unknown')
+
+    def test_pending_retained_offer_cannot_reopen_an_unknown_baseline_drop(self):
+        import mongomock
+        from f.sync.availability_history import HistoryTitle, OfferKey
+        from f.tmdb_api.provider_evidence import capture_provider_check
+        self.run_day('2026-10-10T20:00:00', dry_run=False)
+        self.store.snapshots.clear()
+        self.api.ids, self.api.results = [], {}
+        self.run_day('2026-10-13T20:00:00', dry_run=False)
+        before = deepcopy(self.store.crate.history)
+        self.assertEqual(next(iter(before.values()))['dropped_precision'], 'unknown')
+        key = OfferKey(42, 'show', 'US', 8, 'flatrate')
+        payload = {'results': {}}  # Reconciliation retained the omitted country's offer.
+        proof = capture_provider_check({'id': 42, 'watch/providers': payload}, 42,
+                                       datetime(2026, 10, 14, 12), bypass_cache=True)
+        title = HistoryTitle(42, {'watch_providers': payload, 'watch_providers_check': proof},
+                             {key: key._asdict()}, {}, [key._asdict()], [])
+        pending = mongomock.MongoClient().db.streaming_history_pending
+        pending.insert_one({'_id': 'show:42'})
+        publish_history(self.store.crate, 'show', [title], lambda: None, pending)
+        self.assertEqual(self.store.crate.history, before)
+        self.api.calls.clear()
+        self.run_day('2026-10-15T20:00:00', dry_run=False)
+        self.assertEqual(sum(path.endswith('/watch/providers') for path, _ in self.api.calls), 0)
+        self.assertEqual(self.store.crate.history, before)
+
+    def test_pending_returns_need_positive_support_and_preserve_the_exact_drop_day_guard(self):
+        import mongomock
+        from f.sync.availability_history import HistoryTitle, OfferKey
+        from f.tmdb_api.provider_evidence import capture_provider_check
+        cases = [('unknown', 'api', 14, 2), ('unknown', 'scrape', 14, 2),
+                 ('exact', 'api', 11, 1), ('exact', 'api', 12, 2), ('exact', 'scrape', 12, 1)]
+        for precision, source, checked_day, expected_stays in cases:
+            with self.subTest(precision=precision, source=source, checked_day=checked_day):
+                self.api, self.store = TMDB(), Storage()
+                self.run_day('2026-10-10T20:00:00', dry_run=False)
+                if precision == 'unknown':
+                    self.store.snapshots.clear()
+                self.api.ids, self.api.results = [], {}
+                drop_day = 13 if precision == 'unknown' else 11
+                self.run_day(f'2026-10-{drop_day}T20:00:00', dry_run=False)
+                checked_at = datetime(2026, 10, checked_day, 21)
+                key = OfferKey(42, 'show', 'US', 8, 'flatrate')
+                payload = {'results': {'US': {'flatrate': [{'provider_id': 8}]}} if source == 'api' else {}}
+                proof = capture_provider_check({'id': 42, 'watch/providers': payload}, 42,
+                                               checked_at, bypass_cache=True)
+                verified = {'US': {'updated_at': checked_at}} if source == 'scrape' else {}
+                title = HistoryTitle(42, {'watch_providers': payload, 'watch_providers_check': proof},
+                                     {key: key._asdict()}, verified, [key._asdict()], [])
+                pending = mongomock.MongoClient().db.streaming_history_pending
+                pending.insert_one({'_id': 'show:42'})
+                result = publish_history(self.store.crate, 'show', [title], lambda: None, pending)
+                self.assertEqual(result.errors, {})
+                rows = list(self.store.crate.history.values())
+                self.assertEqual(len(rows), expected_stays)
+                self.assertEqual(rows[0]['dropped_precision'], precision)
+                if expected_stays == 2:
+                    self.assertIsNone(rows[1]['dropped_on'])
 
     def test_pending_country_omission_cannot_reopen_an_exact_list_drop(self):
         import mongomock
@@ -566,6 +661,14 @@ class DailyListTests(unittest.TestCase):
             namespace['main']({'lists_failed': 1, 'lists': [{'key': 'US:show:8', 'error': 'IncompleteList'}]})
         report = {'lists_failed': 0, 'lists_completed': 1}
         self.assertEqual(namespace['main'](report), report)
+
+    def test_flow_report_rejects_a_run_skipped_for_a_held_lease(self):
+        from windmill_preview import load_flow
+        flow = load_flow('f/tmdb_api/read_daily_provider_lists')
+        namespace = {}
+        exec(flow['value']['modules'][-1]['value']['content'], namespace)
+        with self.assertRaisesRegex(RuntimeError, 'run skipped'):
+            namespace['main'](dict(run_skipped=True, lists_failed=0, lists_completed=0, lists=[]))
 
     def test_authentication_failure_stops_the_public_job_after_one_request(self):
         for status in (401, 403):

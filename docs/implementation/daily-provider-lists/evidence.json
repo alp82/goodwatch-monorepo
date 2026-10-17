@@ -1462,16 +1462,16 @@
   },
   "verification": {
     "new_tests_with_local_crate": {
-      "total": 45,
-      "passed": 41,
-      "opt_in_previews_skipped": 4,
+      "total": 51,
+      "passed": 46,
+      "opt_in_previews_skipped": 5,
       "python_version": "3.12.11",
       "runtime_dependencies": "Fresh venv installed from regenerated script lock; mongomock and PyYAML added solely for tests."
     },
     "inert_windmill_previews": {
-      "remote": 4,
+      "remote": 5,
       "local_fixture": 1,
-      "passed": 5
+      "passed": 6
     },
     "history_regression": {
       "total": 40,
@@ -1479,13 +1479,23 @@
       "skipped": 1
     },
     "full_suite_with_local_crate": {
-      "total": 1578,
-      "passed": 1531,
-      "skipped": 46,
+      "total": 1584,
+      "passed": 1536,
+      "skipped": 47,
       "pre_existing_failures": 1,
       "failure": "test_deleted_titles.DeleteFromCrateTests.test_user_tables_are_untouched_and_all_derived_tables_are_covered (social_title_link, social_link_report, social_relevance)"
     },
-    "review_tdd": "Both S1 directions failed before the shared-writer fix. Busy-title retry, baseline closure, changed paging, overlapping bins, run/list lease collision, auth/outage abort, and queued-auth checks were reproduced red before their respective fixes; exhaustion replay was then verified."
+    "review_tdd": "Both S1 directions failed before the shared-writer fix. Busy-title retry, baseline closure, changed paging, overlapping bins, run/list lease collision, auth/outage abort, and queued-auth checks were reproduced red before their respective fixes; exhaustion replay was then verified.",
+    "rereview_tdd": {
+      "failing_before_fix": [
+        "test_pending_repair_preserves_the_live_publishers_genuine_removal",
+        "test_pending_retained_offer_cannot_reopen_an_unknown_baseline_drop",
+        "test_flow_report_rejects_a_run_skipped_for_a_held_lease",
+        "test_two_torn_sorts_report_the_last_distinct_count_read"
+      ],
+      "additional_coverage": "Positive API and verified-scrape pending returns after unknown drops; exact drops still require a positive API offer on a later UTC day. A skipped flow also fails in an inert Windmill preview.",
+      "production_data_writes": 0
+    }
   },
   "review_eligible_baseline_recount": {
     "production_data_writes": 0,

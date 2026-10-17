@@ -224,13 +224,16 @@ def title_writes(transition, previous, media_type, pending, copy_at):
     observation = Observation.from_title(title, copy_at)
     if f'{media_type}:{title.tmdb_id}' in pending:
         desired = {availability_key(row): row for row in title.rows.values()}
-        added.update({key: row for key, row in desired.items() if key.streaming_type in OFFER_TYPES and key not in opened})
-        removed = sorted(set(removed) | (opened.keys() - desired.keys()))
-        # A pending offer snapshot cannot undo a later history observation.
+        # Only inferred repairs are stale-filtered. The live publisher's own
+        # transitions can legitimately use scrape/copy times newer than its API.
         stale = {key for key, at in latest.items()
                  if observation.api_at is None or at > observation.api_at}
-        added = {key: row for key, row in added.items() if key not in stale}
-        removed = [key for key in removed if key not in stale]
+        # A retained offer cannot prove a return after any closed stay.
+        added.update({key: row for key, row in desired.items()
+                      if key.streaming_type in OFFER_TYPES and key not in opened and key not in stale
+                      and (key not in closed or observation.api_supports(key, row)
+                           or observation.verified.get(key.country_code))})
+        removed = sorted(set(removed) | ((opened.keys() - desired.keys()) - stale))
     writes = []
     for key, row in added.items():
         at, consecutive = observation.read(key, row)

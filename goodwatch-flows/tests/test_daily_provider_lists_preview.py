@@ -120,7 +120,7 @@ class WindmillPreviewTests(unittest.TestCase):
             path='f/tmdb_api/daily_provider_lists_inert_preview', args={}))
         self.assertEqual(self.completed(job), {'ok': True, 'production_data_writes': 0, 'stays': 2})
 
-    def preview_flow(self, failed):
+    def preview_flow(self, failed, skipped=False):
         from windmill_preview import load_flow
         flow = load_flow('f/tmdb_api/read_daily_provider_lists')
         module = flow['value']['modules'][0]
@@ -128,17 +128,20 @@ class WindmillPreviewTests(unittest.TestCase):
             input_transforms=module['value']['input_transforms'],
             content='def main(countries=None, service_ids=None, dry_run=True, requests_per_second=15, max_requests=350000):\n'
                     '    assert dry_run is True and countries == ["US"] and service_ids == [8]\n'
-                    f'    return dict(lists_completed=1, lists_failed={failed}, lists=[])\n')
+                    f'    return dict(lists_completed={0 if skipped else 1}, lists_failed={failed}, run_skipped={skipped}, lists=[])\n')
         job = self.api('/jobs/run/preview_flow', dict(value=flow['value'], schema=flow['schema'],
             args=dict(countries=['US'], service_ids=[8], dry_run=True, requests_per_second=15, max_requests=350000),
             path='f/tmdb_api/daily_provider_lists_flow_inert_preview'))
-        return self.completed(job, success=not failed)
+        return self.completed(job, success=not (failed or skipped))
 
     def test_flow_passes_arguments_and_returns_success(self):
         self.assertEqual(self.preview_flow(0)['lists_completed'], 1)
 
     def test_flow_marks_an_incomplete_list_run_failed(self):
         self.assertIn('1 daily lists failed', str(self.preview_flow(1)))
+
+    def test_flow_marks_a_skipped_run_failed(self):
+        self.assertIn('run skipped', str(self.preview_flow(0, skipped=True)))
 
     def test_flow_omitted_inputs_keep_read_only_defaults(self):
         from windmill_preview import load_flow

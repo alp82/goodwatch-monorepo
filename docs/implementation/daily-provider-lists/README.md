@@ -9,12 +9,13 @@ The existing [history contract](../availability-history/README.md) remains autho
 ## Scope and entrypoints
 
 `f/tmdb_api/read_daily_provider_lists` calls `f/tmdb_api/daily_provider_lists` and
-fails its report step if any list failed. Both default to `dry_run: true`; only
+fails its report step if any list failed or the whole run was skipped for a held lease. Both default to `dry_run: true`; only
 an explicit Boolean `false` enables publication. A null flow argument cannot enable data publication.
 Windmill CE v1.803 ignores `concurrent_limit`; the main entrypoint instead takes
 one Mongo run lease before any TMDB request. It renews every minute with a
 15-minute expiry and checks ownership before batches and publication. Overlapping
-runs return `run_skipped: true` without TMDB requests. The declared Windmill
+runs return `run_skipped: true` without TMDB requests; the report step fails
+so a missed scheduled read cannot appear successful. The declared Windmill
 concurrency limit also works on editions that support it.
 
 A **live dry run takes this operational run lease and ensures its TTL index**.
@@ -86,10 +87,13 @@ that chooses precision and days. The job never supplies an `exact` flag.
   **only for the country/service list being reconciled**. Ordinary title
   publication still treats an absent country as unknown. Thus a service losing
   its only offer in a country can now close its stay after daily confirmation.
-- A pending ordinary publication cannot overwrite a history observation newer
-  than its API observation. Reopening an exact drop requires a supporting
-  positive API offer from a strictly later UTC day; omitted-country retained
-  offers and copy-time fallbacks cannot substantiate a return.
+- Changes inferred by pending repair skip history observations newer than the
+  API observation. This filter leaves the live publisher's own additions and
+  removals intact, including removals of stays opened from later scrape times.
+- A repair-inferred return after any closed stay requires a supporting positive
+  API offer or a scrape that verified that country. Retained rows for an omitted
+  country cannot reopen unknown baseline/gap drops. An exact drop additionally
+  requires a supporting API offer from a strictly later UTC day, as before.
 - A confirmed drop followed by a return opens another stay. Timestamp collisions
   and missing observation days retain the writer's unknown-precision fallback.
 - A title publisher may open/close an unknown stay earlier today. The same writer
@@ -140,7 +144,8 @@ or `first_air_date.desc`). Stable short reads can union their IDs against the
 same total. Changed paging metadata discards that traversal's IDs and tries a
 clean second sort; a changed second-sort total also requires an independently
 complete second read. A second incomplete traversal is rejected before staging
-or history publication.
+or history publication. If both sorts are torn, the error reports the last
+observed distinct-title count, without treating that read as complete.
 
 Lists beyond TMDB's 500-page limit split into disjoint integer `vote_count`
 ranges. This retains undated titles that date splits can exclude. Each leaf gets
@@ -361,14 +366,18 @@ indivisible bins remain explicit failures rather than truncated lists.
 
 ## Verification and files
 
-Tests were written red before implementation at the agreed seams. Final checks:
+Tests were written red before implementation at the agreed seams. The two
+re-review scratch cases (genuine pending removal and retained offer after an
+unknown baseline drop) both failed before the writer correction. Further checks
+cover positive API/scrape returns and the unchanged exact-drop day guard. Both
+report nits also failed before their fixes. Final checks:
 
-- New tests with disposable local Crate 5.10.16: **41 passed**, four opt-in
-  Windmill previews skipped in that run; those **four remote previews passed**
+- New tests with disposable local Crate 5.10.16: **46 passed**, five opt-in
+  Windmill previews skipped in that run; those **five remote previews passed**
   separately, alongside their local fixture check.
 - Existing history regressions with local Crate: **39 passed, one opt-in preview
   skipped**. The new inert preview also exercises the shared history writer.
-- Full flow suite with local Crate: **1,578 tests, 1,531 passed, 46 skipped,
+- Full flow suite with local Crate: **1,584 tests, 1,536 passed, 47 skipped,
   one pre-existing failure**. It is
   `test_deleted_titles.DeleteFromCrateTests.test_user_tables_are_untouched_and_all_derived_tables_are_covered`:
   the deletion inventory omits `social_title_link`, `social_link_report`, and

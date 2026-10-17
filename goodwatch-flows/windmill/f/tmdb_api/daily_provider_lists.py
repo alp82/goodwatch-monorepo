@@ -188,7 +188,7 @@ def read_list(client, country, media_type, service_id, diagnostics=None):
             extra['vote_count.gte'] = lo
         if hi is not None:
             extra['vote_count.lte'] = hi
-        ids, expected = set(), None
+        ids, expected, last_count = set(), None, 0
         for index, sort in enumerate(sorts):
             if index:
                 diagnostics['sort_fallbacks'] += 1
@@ -213,14 +213,17 @@ def read_list(client, country, media_type, service_id, diagnostics=None):
             rest = get_many(client, [('/discover/' + api_media, dict(params, **extra, sort_by=sort, page=page))
                                      for page in range(2, pages + 1)])
             results = [first, *rest]
+            read_ids = {row['id'] for result in results for row in result['results']}
+            last_count = len(read_ids)
             if any(result['total_results'] != expected or result['total_pages'] != pages or result['page'] != page
                    for page, result in enumerate(results, 1)):
                 ids.clear()  # Do not mix a torn page traversal into the fallback.
                 continue
-            ids.update(row['id'] for result in results for row in result['results'])
+            ids.update(read_ids)
+            last_count = len(ids)
             if len(ids) == expected:
                 return sorted(ids)
-        raise IncompleteList(f'Expected {expected} distinct titles, read {len(ids)}')
+        raise IncompleteList(f'Expected {expected} distinct titles, read {last_count}')
 
     return read_range()
 
