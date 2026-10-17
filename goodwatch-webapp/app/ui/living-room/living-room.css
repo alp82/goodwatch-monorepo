@@ -367,123 +367,187 @@ main:has(.lr-page) + footer {
 	box-shadow: inset 0 0 0 1px rgba(252, 211, 77, 0.6);
 }
 
-/* The titles: a numbered programme that reads down each column. Number, poster, title, and under it the kind and
-   the year. */
+/* The titles: a numbered poster grid, eight across on a wide window. Number, poster, title, and under it the kind
+   and the year. A title without a poster keeps its place on a dark tile. */
 .lrb-titles {
-	margin-top: 1.5rem;
-	columns: 1;
-	column-gap: 3rem;
+	margin-top: 1.75rem;
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 1.5rem 0.9rem;
 	counter-reset: lrb;
 }
 .lrb-titles li {
 	position: relative;
 	display: grid;
-	grid-template-columns: 2.5rem 46px minmax(0, 1fr);
-	column-gap: 0.9rem;
-	align-content: center;
-	min-height: 93px;
-	padding: 0.75rem 0;
-	border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-	break-inside: avoid;
+	grid-template-columns: minmax(0, 1fr);
+	align-content: start;
 	counter-increment: lrb;
 }
+.lrb-titles li::after {
+	content: "";
+	grid-area: 1 / 1;
+	aspect-ratio: 2 / 3;
+	border-radius: 12px;
+	background: linear-gradient(160deg, #1f2937, #0b0f17);
+	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
 .lrb-titles li::before {
-	content: counter(lrb, decimal-leading-zero);
-	grid-area: 1 / 1 / 3 / 2;
-	align-self: center;
+	content: counter(lrb);
+	position: relative;
+	z-index: 2;
+	grid-area: 1 / 1;
+	align-self: start;
+	justify-self: start;
+	margin: 0.45rem;
+	min-width: 1.9rem;
+	padding: 0.15rem 0.45rem;
+	border-radius: 999px;
+	background: rgba(3, 7, 18, 0.82);
+	box-shadow: inset 0 0 0 1px rgba(252, 211, 77, 0.45);
 	font-family: var(--lrb-font);
-	font-size: 26px;
+	font-size: 13px;
 	font-weight: 800;
+	text-align: center;
 	font-variant-numeric: tabular-nums;
-	color: rgba(255, 255, 255, 0.16);
+	color: #fcd34d;
 }
 .lrb-titles img {
-	grid-area: 1 / 2 / 3 / 3;
-	align-self: center;
-	width: 46px;
-	height: 69px;
-	border-radius: 6px;
+	position: relative;
+	z-index: 1;
+	grid-area: 1 / 1;
+	width: 100%;
+	height: auto;
+	aspect-ratio: 2 / 3;
+	border-radius: 12px;
 	object-fit: cover;
-	background: rgba(255, 255, 255, 0.06);
-	box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1);
+	box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.1);
+	transition: box-shadow 0.15s ease-out;
 }
 .lrb-titles a {
-	grid-area: 1 / 3 / 2 / 4;
-	align-self: end;
+	grid-area: 2 / 1;
+	margin-top: 0.65rem;
 	font-family: var(--lrb-font);
-	font-size: 21px;
+	font-size: 15px;
 	font-weight: 700;
-	line-height: 1.2;
+	line-height: 1.25;
 	color: #fff;
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
 }
-/* The whole row is the link's target. */
+/* The whole card is the link's target. */
 .lrb-titles a::after {
 	content: "";
 	position: absolute;
 	inset: 0;
+	z-index: 3;
 }
 .lrb-titles li:hover a,
 .lrb-titles a:focus-visible {
 	color: #fcd34d;
 }
+.lrb-titles li:hover img {
+	box-shadow: 0 12px 28px rgba(0, 0, 0, 0.55), 0 0 0 2px #fcd34d;
+}
 .lrb-titles span {
-	grid-area: 2 / 3 / 3 / 4;
-	align-self: start;
-	margin-top: 0.15rem;
+	grid-area: 3 / 1;
+	margin-top: 0.2rem;
 	font-size: 12.5px;
-	color: #737373;
+	color: #a3a3a3;
 }
 
+/* The ways to browse: each hub a card with its own coloured tile and mark, then the category shortcuts. */
 .lrb-hubs {
-	margin-top: 3.25rem;
+	margin-top: 3.5rem;
 }
 .lrb-cards {
 	display: grid;
-	grid-template-columns: repeat(2, minmax(0, 1fr));
+	grid-template-columns: minmax(0, 1fr);
 	gap: 0.6rem;
 }
 .lrb-hubs h2 + .lrb-cards {
-	margin-top: 1.1rem;
+	margin-top: 1.25rem;
 }
 .lrb-cards a {
-	display: block;
+	display: grid;
+	grid-template-columns: 48px minmax(0, 1fr);
+	grid-template-rows: auto auto;
+	column-gap: 0.85rem;
+	align-items: center;
 	height: 100%;
-	padding: 0.85rem 1rem 0.95rem;
-	border-radius: 16px;
-	background: rgba(255, 255, 255, 0.04);
-	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+	min-height: 76px;
+	padding: 0.85rem 1rem;
+	border-radius: 18px;
+	background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.025));
+	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+	transition: background 0.15s, box-shadow 0.15s;
+}
+.lrb-cards a::before {
+	content: "";
+	grid-area: 1 / 1 / 3 / 2;
+	width: 48px;
+	height: 48px;
+	border-radius: 14px;
+	box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+}
+.lrb-hub-discover a::before {
+	background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>') center / 26px no-repeat, linear-gradient(135deg,#f97316,#ec4899 55%,#8b5cf6);
+}
+.lrb-hub-movies a::before {
+	background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 4v16M17 4v16M3 9h4M3 15h4M17 9h4M17 15h4"/></svg>') center / 26px no-repeat, linear-gradient(135deg,#f59e0b,#b45309);
+}
+.lrb-hub-shows a::before {
+	background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M8 21h8M9 2l3 4 3-4"/></svg>') center / 26px no-repeat, linear-gradient(135deg,#3b82f6,#1e3a8a);
+}
+.lrb-hub-explorer a::before {
+	background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v14M15 6v14"/></svg>') center / 26px no-repeat, linear-gradient(135deg,#14b8a6,#0f4c5c);
+}
+.lrb-hub-taste a::before {
+	background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>') center / 26px no-repeat, linear-gradient(135deg,#ec4899,#9d174d);
+}
+.lrb-hub-how-it-works a::before {
+	background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4a8 8 0 0 0-8 8M12 8a4 4 0 0 0-4 4v3M16 12a4 4 0 0 0-4-4M12 12v6M16 12v4M20 12a8 8 0 0 0-8-8"/></svg>') center / 26px no-repeat, linear-gradient(135deg,#8b5cf6,#4c1d95);
 }
 .lrb-cards a:hover {
-	background: rgba(252, 211, 77, 0.08);
-	box-shadow: inset 0 0 0 1px rgba(252, 211, 77, 0.5);
+	background: linear-gradient(180deg, rgba(252, 211, 77, 0.12), rgba(252, 211, 77, 0.04));
+	box-shadow: inset 0 0 0 1px rgba(252, 211, 77, 0.6);
 }
 .lrb-cards b {
-	display: block;
+	align-self: end;
 	font-family: var(--lrb-font);
-	font-size: 17px;
+	font-size: 18px;
 	font-weight: 700;
 	color: #fff;
 }
 .lrb-cards span {
-	display: block;
+	align-self: start;
 	margin-top: 0.15rem;
 	font-size: 13px;
 	line-height: 1.35;
+	color: #c4c4c4;
 }
 .lrb-by {
-	margin-top: 1.75rem;
+	margin-top: 1.25rem;
 	display: grid;
-	gap: 1.5rem 3rem;
+	gap: 0.75rem;
+}
+.lrb-group {
+	padding: 1rem 1.1rem 1.15rem;
+	border-radius: 18px;
+	background: rgba(255, 255, 255, 0.03);
+	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
 .lrb-by h3 {
-	font-size: 12px;
-	font-weight: 700;
-	letter-spacing: 0.18em;
+	font-family: var(--lrb-font);
+	font-size: 13px;
+	font-weight: 800;
+	letter-spacing: 0.16em;
 	text-transform: uppercase;
-	color: #737373;
+	color: #fcd34d;
 }
 .lrb-by ul {
-	margin-top: 0.6rem;
+	margin-top: 0.75rem;
 	display: flex;
 	flex-wrap: wrap;
 	gap: 0.5rem;
@@ -491,17 +555,45 @@ main:has(.lr-page) + footer {
 .lrb-by a {
 	display: inline-flex;
 	align-items: center;
-	height: 40px;
-	padding: 0 0.95rem;
+	gap: 0.55rem;
+	height: 44px;
+	padding: 0 1.05rem 0 0.45rem;
 	border-radius: 999px;
+	background: rgba(255, 255, 255, 0.05);
 	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
-	color: #f5f5f5;
+	color: #fff;
 	font-size: 14px;
 	font-weight: 600;
+	transition: background 0.15s, box-shadow 0.15s;
+}
+.lrb-by a::before {
+	content: "";
+	flex: none;
+	width: 30px;
+	height: 30px;
+	border-radius: 999px;
+}
+.lrb-by-moods a::before {
+	background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.5s1.3 1.5 3.5 1.5 3.5-1.5 3.5-1.5M9 9.5h.01M15 9.5h.01"/></svg>') center / 13px no-repeat, #fb923c;
+}
+.lrb-by-moods a:hover {
+	box-shadow: inset 0 0 0 1px #fb923c;
+}
+.lrb-by-genres a::before {
+	background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16M4 12h16M4 19h10"/></svg>') center / 13px no-repeat, #60a5fa;
+}
+.lrb-by-genres a:hover {
+	box-shadow: inset 0 0 0 1px #60a5fa;
+}
+.lrb-by-streaming a::before {
+	background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M10 8.5l5 3.5-5 3.5z" fill="white"/></svg>') center / 13px no-repeat, #34d399;
+}
+.lrb-by-streaming a:hover {
+	box-shadow: inset 0 0 0 1px #34d399;
 }
 .lrb-by a:hover {
+	background: rgba(255, 255, 255, 0.1);
 	color: #fcd34d;
-	box-shadow: inset 0 0 0 1px rgba(252, 211, 77, 0.6);
 }
 .lrb-end {
 	margin-top: 3rem;
@@ -514,7 +606,7 @@ main:has(.lr-page) + footer {
 		padding: 3.25rem 2rem 3rem;
 	}
 	.lrb-titles {
-		columns: 2;
+		grid-template-columns: repeat(4, minmax(0, 1fr));
 	}
 	.lrb-cards {
 		grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -523,12 +615,15 @@ main:has(.lr-page) + footer {
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
 }
+@media (min-width: 900px) {
+	.lrb-titles {
+		grid-template-columns: repeat(6, minmax(0, 1fr));
+	}
+}
 @media (min-width: 1100px) {
 	.lrb-titles {
-		columns: 3;
-	}
-	.lrb-cards {
-		grid-template-columns: repeat(6, minmax(0, 1fr));
+		grid-template-columns: repeat(8, minmax(0, 1fr));
+		gap: 1.75rem 1rem;
 	}
 }
 
