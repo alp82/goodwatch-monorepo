@@ -7,7 +7,7 @@
 //
 // The headline is the start page's H1, the same sentence for a guest and a member. Until the pool is there, a
 // guest's home is drawn from the start titles alone, so the server's HTML is the same for every guest.
-import { useRef } from "react"
+import { createContext, useContext, useRef } from "react"
 import { ServiceMark, hasDrawnMark, serviceColor } from "../../Remote"
 import { CornerBar, Cross, Item, Shade, backdropSize, useTvView } from "../kit"
 import { TV_ROW_ATTR } from "../tv-dom"
@@ -22,6 +22,13 @@ import { HomeGuide } from "./HomeGuide"
 import { AppArt, artFiles } from "./app-art"
 
 export const HOME_HEADLINE = "Let's find something good for tonight."
+
+/**
+ * PROTOTYPE (landing): the headline's tag. It is the start page's H1, unless the page has an H1 of its own (the intro
+ * film's "How GoodWatch works" section), when it is a plain paragraph with the same look.
+ */
+export type HomeHeadingTag = "h1" | "p"
+export const HomeHeading = createContext<HomeHeadingTag>("h1")
 
 /** A tile of home's row: an app, or a streaming service. */
 type Tile = {
@@ -74,6 +81,7 @@ function HomeRow({
 }) {
 	const { canvas, focused } = useTvView()
 	const P = canvas.edition === "phone"
+	const Heading = useContext(HomeHeading)
 	const tiles: Tile[] = [
 		...apps.map((a) => ({ ...a, id: `app:${a.app}` })),
 		...services.map(({ service, line, picture }) => ({
@@ -112,9 +120,9 @@ function HomeRow({
 			<div
 				className={`absolute ${P ? "inset-x-5 top-[82px]" : "left-14 top-[136px] w-[780px]"}`}
 			>
-				<h1 className={`text-white/75 ${P ? "text-[20px]" : "text-[28px]"}`}>
+				<Heading className={`text-white/75 ${P ? "text-[20px]" : "text-[28px]"}`}>
 					{HOME_HEADLINE}
-				</h1>
+				</Heading>
 				<div key={shown.id} className="tvc-fade">
 					<div
 						className="font-bold leading-[0.95] tracking-tight"

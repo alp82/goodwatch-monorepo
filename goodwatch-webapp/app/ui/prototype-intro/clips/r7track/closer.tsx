@@ -2,6 +2,7 @@
 // instead of the pointer, lets do random tap ripples". "Your turn!" and three empty slots; the slots fly into the
 // real quiz's own 1-2-3 as it opens. Then a soft tap ripple shows on a random poster about every second, inviting
 // a tap; it never selects anything, and it stops for good the moment the visitor touches or presses anything.
+import { savedTaps } from "~/ui/prototype-landing/film-taps"
 import { type CSSProperties, useEffect, useRef, useState } from "react"
 import { FilmTaps } from "~/ui/prototype-landing/film-taps"
 import type { ClipProps, IntroData } from "../../clip"
@@ -55,16 +56,35 @@ export function CloserRipples({ data, every = EVERY }: ClipProps & { every?: num
 			}
 			timer = setTimeout(next, every * k)
 		}
-		timer = setTimeout(next, FIRST_RIPPLE * k)
-		// Any touch, click or key ends the invitation: the visitor has found the quiz.
+		// Back from sign-up with taps made: the visitor knows the quiz, no invitation.
+		if (savedTaps()) stopped = true
+		else timer = setTimeout(next, FIRST_RIPPLE * k)
+		// Any touch, click or key ends the invitation: the visitor has found the quiz. So does pointing the Remote (or
+		// the mouse) at a poster: the TV's pointer moving over the tiles.
+		const over = (e: PointerEvent) => {
+			if ((e.target as Element | null)?.closest?.(".lpft-poster")) stop()
+		}
 		el.addEventListener("pointerdown", stop, { capture: true })
+		el.addEventListener("pointermove", over)
 		addEventListener("keydown", stop)
 		return () => {
 			stop()
 			el.removeEventListener("pointerdown", stop, { capture: true })
+			el.removeEventListener("pointermove", over)
 			removeEventListener("keydown", stop)
 		}
 	}, [])
+
+	// Back from sign-up: the quiz as the visitor left it, without "Your turn!" and the slots flying in again.
+	const [back] = useState(() => typeof window !== "undefined" && Boolean(savedTaps()))
+	if (back)
+		return (
+			<div ref={root} className="absolute inset-0">
+				<div className="lpc-r5track-quiz">
+					<FilmTaps data={quizData} onLeave={() => window.dispatchEvent(new Event("lp-film-leave"))} />
+				</div>
+			</div>
+		)
 
 	return (
 		<div ref={root} className="absolute inset-0">

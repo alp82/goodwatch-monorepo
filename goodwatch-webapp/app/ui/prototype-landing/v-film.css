@@ -20,10 +20,9 @@
 	font-size: max(12px, 1.6cqw);
 	color: #fff;
 }
-/* The room's TV pointer belongs to the TV's own items; over the film and the taps the system cursor points. */
-.tvr:has(.lpf) .tvp {
-	display: none;
-}
+/* The film lives inside the TV's picture: its own layer, so nothing in it (z-indexes up to 28) rises above the
+   Remote and the hand, which the room draws over the picture. The TV's pointer ring shows over the film as on
+   every other screen. */
 .tvr:has(.lpf) [data-tvr-part="tv"] {
-	cursor: auto;
+	isolation: isolate;
 }

@@ -2,26 +2,26 @@
 // drive the TV from outside it (the TV's screen lives in the address, so a link changes it).
 import { useLocation, useNavigate } from "@remix-run/react"
 import { type ReactNode, useCallback, useEffect, useRef, useState } from "react"
-import { GoodWatchWordmark } from "~/ui/brand/GoodWatchWordmark"
+import { BootGStandby } from "~/ui/prototype-intro/clips/r13/boot"
 import type { TvAppArt } from "~/ui/living-room/tv/tv-home"
 import { MapArt, PrintArt } from "~/ui/living-room/tv/screens/app-art"
 import { tmdbImageUrl } from "~/utils/tmdb-image"
 import type { TvHomeData } from "~/ui/living-room/tv/tv-home"
 
-/** The boot, over the TV's picture. CSS only: it plays from the first paint, before any script. */
+/**
+ * The boot, over the TV's picture. CSS only: it plays from the first paint, before any script. The owner's boot
+ * (round 13): the G turns in with the amber arc and the standby light, then the wordmark (prototype-intro r13).
+ */
 export function Boot() {
 	return (
 		<div className="lp-boot" aria-hidden="true">
-			<div className="lp-boot-flash" />
-			<div className="lp-boot-mark">
-				<GoodWatchWordmark gHeight={56} className="lr-boot" gClassName="lr-boot-g" textClassName="lr-boot-letters" />
-			</div>
+			<BootGStandby k={1} />
 		</div>
 	)
 }
 
 /** How long the boot takes, to the end of its fade. */
-export const BOOT_MS = 2450
+export const BOOT_MS = 2850
 
 export type Capability = {
 	id: string

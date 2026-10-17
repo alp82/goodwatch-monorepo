@@ -88,11 +88,49 @@ function useRingSize() {
 	return size
 }
 
+/**
+ * The visitor's taps and pick, kept for the tab's session: going to sign up and coming back (browser Back) shows the
+ * quiz where they left it, not the intro from the start. Nothing leaves the browser.
+ */
+const TAPS_KEY = "gw-intro-taps"
+type SavedTaps = { keys: string[]; pick: Pick | null }
+export function savedTaps(): SavedTaps | null {
+	try {
+		const raw = sessionStorage.getItem(TAPS_KEY)
+		return raw ? (JSON.parse(raw) as SavedTaps) : null
+	} catch {
+		return null
+	}
+}
+const saveTaps = (value: SavedTaps | null) => {
+	try {
+		if (value && value.keys.length) sessionStorage.setItem(TAPS_KEY, JSON.stringify(value))
+		else sessionStorage.removeItem(TAPS_KEY)
+	} catch {}
+}
+
 export function FilmTaps({ data, onLeave }: { data: VariantProps["data"]; onLeave: () => void }) {
 	const pool = data.landing.filter((c) => c.poster_path).slice(0, 12)
 	const [picked, setPicked] = useState<LandingCard[]>([])
 	const [pick, setPick] = useState<Pick | null>(null)
 	const asked = useRef(false)
+	// Back from sign-up: the same taps, and the same pick without asking again.
+	const restored = useRef(false)
+	useEffect(() => {
+		const saved = savedTaps()
+		restored.current = true
+		if (!saved) return
+		const cards = saved.keys.flatMap((key) => pool.find((c) => String(c.key) === key) ?? [])
+		if (!cards.length) return
+		if (saved.pick && cards.length >= NEED) asked.current = true
+		setPicked(cards)
+		if (saved.pick) setPick(saved.pick)
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [])
+	// Saved on the visitor's own changes only (a tap, the pick arriving, "Try three others"), never by an effect:
+	// an effect that runs on mount (twice in development) would erase what the restore brings back.
+	const pickedRef = useRef(picked)
+	pickedRef.current = picked
 	const ring = useRingSize()
 	const full = picked.length >= NEED
 
@@ -101,18 +139,24 @@ export function FilmTaps({ data, onLeave }: { data: VariantProps["data"]; onLeav
 		asked.current = true
 		const started = Date.now()
 		findPick(picked, pool).then((found) => {
-			setTimeout(() => setPick(found), Math.max(0, READ_MS - (Date.now() - started)))
+			setTimeout(() => {
+				setPick(found)
+				saveTaps({ keys: pickedRef.current.map((c) => String(c.key)), pick: found })
+			}, Math.max(0, READ_MS - (Date.now() - started)))
 		})
 	}, [full, picked, pool])
 
 	const toggle = (card: LandingCard) => {
 		if (full) return
-		setPicked((now) => (now.includes(card) ? now.filter((c) => c !== card) : [...now, card]))
+		const next = picked.includes(card) ? picked.filter((c) => c !== card) : [...picked, card]
+		setPicked(next)
+		saveTaps({ keys: next.map((c) => String(c.key)), pick: null })
 	}
 	const again = () => {
 		asked.current = false
 		setPick(null)
 		setPicked([])
+		saveTaps(null)
 	}
 
 	const words = tasteWords(picked)

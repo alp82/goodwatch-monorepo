@@ -10,7 +10,6 @@ import type { LinksFunction, MetaFunction } from "@remix-run/node"
 import { type ShouldRevalidateFunction, useLoaderData, useLocation, useSearchParams } from "@remix-run/react"
 // PROTOTYPE (landing): `/?variant=current|channel|band|welcome|tour`. Throwaway, on branch prototype/landing-experience.
 import landingCss from "~/ui/prototype-landing/landing.css?url"
-import { PrototypeSwitcher } from "~/ui/prototype/PrototypeSwitcher"
 import { useScroll } from "~/ui/prototype-landing/v-scroll"
 import { useTaps } from "~/ui/prototype-landing/v-taps"
 import { useLens } from "~/ui/prototype-landing/v-lens"
@@ -27,7 +26,6 @@ import useLocale from "~/utils/locale"
 import { type LoaderFunctionArgs, json } from "@remix-run/node"
 import { tvHomeLoader as homeLoader } from "~/server/living-room/tv-loader.server"
 import { loadLandingCards } from "~/server/prototype-landing.server"
-import { loadIntroData } from "~/server/prototype-intro/index.server"
 
 // PROTOTYPE (landing): the home loader plus the start titles as cards, for the landing variants.
 export async function loader(args: LoaderFunctionArgs) {
@@ -39,11 +37,8 @@ export async function loader(args: LoaderFunctionArgs) {
 		return []
 	})
 	// The intro lab's "Play on the TV": the clips' data too.
-	// The home TV plays the intro for guests by default (variant "film"); "live" is today's page.
-	const sp = new URL(args.request.url).searchParams
-	const intro = sp.get("clips") || (sp.get("variant") ?? "film") === "film"
-		? await loadIntroData(args.request, { ...data, landing })
-		: null
+	// The intro's clip data is not in the HTML: the TV fetches it during the boot (/prototype/intro-data).
+	const intro = null
 	return json({ ...data, landing, intro }, { headers: res.headers })
 }
 export { pageHeaders as headers } from "~/utils/headers"
@@ -120,14 +115,6 @@ export const meta: MetaFunction = () => [
 ]
 
 // Round 1 (channel, band, welcome, tour) was rejected: a feature tour. Round 2 shows the value instead.
-const VARIANTS = {
-	film: "I · Explainer film, then three taps",
-	live: "Today's page",
-	scroll: "E · Endless scroll, then one pick",
-	taps: "F · Three taps to your taste",
-	lens: "G · One title, every answer",
-	alerts: "H · It watches out for you",
-}
 const USE: Record<string, (p: VariantProps) => Landing> = {
 	live: () => ({}),
 	current: useCurrent,
@@ -149,7 +136,13 @@ function Host({ use, data }: { use: (p: VariantProps) => Landing; data: ReturnTy
 	return (
 		<>
 			{landing.above}
-			<TvLivingRoom data={data} screenOverlay={landing.screen} roomOverlay={landing.room} />
+			<TvLivingRoom
+				data={data}
+				screenOverlay={landing.screen}
+				roomOverlay={landing.room}
+				belowIntro={landing.below}
+				homeHeadingAs={landing.homeHeadingAs}
+			/>
 		</>
 	)
 }
@@ -163,7 +156,6 @@ export default function Index() {
 	return (
 		<>
 			<Host key={`${locale.language}-${variant}`} use={USE[variant] ?? USE.live} data={data} />
-			<PrototypeSwitcher variants={VARIANTS} position="bottom-24 left-1/2 -translate-x-1/2 lg:bottom-6" />
 		</>
 	)
 }

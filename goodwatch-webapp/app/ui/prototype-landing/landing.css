@@ -11,7 +11,7 @@
 	justify-content: center;
 	background: #000;
 	pointer-events: none;
-	animation: lp-out 0.45s ease-in 2s both;
+	animation: lp-out 0.45s ease-in 2.4s both;
 	container-type: size;
 }
 @container (min-width: 700px) { .lp-boot-mark { --lp-mark: 1.5; } }

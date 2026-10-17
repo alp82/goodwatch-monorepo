@@ -8,7 +8,15 @@ import type { LandingCard } from "~/server/prototype-landing.server"
 import type { IntroData } from "~/ui/prototype-intro/clip"
 import { Art, BOOT_MS, Boot, CAPABILITIES, Ping, Say, useAfter, useOpenOnTv } from "./shared"
 
-export type Landing = { screen?: ReactNode; room?: ReactNode; above?: ReactNode }
+export type Landing = {
+	screen?: ReactNode
+	room?: ReactNode
+	above?: ReactNode
+	/** At the top of the section below the room. */
+	below?: ReactNode
+	/** The TV home headline's tag: "p" when the page brings its own H1. */
+	homeHeadingAs?: "h1" | "p"
+}
 export type VariantProps = { data: TvHomeData & { landing: LandingCard[]; intro?: IntroData | null }; tvOpen: boolean }
 
 /**

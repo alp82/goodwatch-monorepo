@@ -7,7 +7,8 @@ import { clipById } from "~/ui/prototype-intro/clips"
 import { HOME_CUT } from "~/ui/prototype-intro/cut"
 import { Sequence, Stage, TRANSITIONS, type TransitionId } from "~/ui/prototype-intro/Sequence"
 import { FILM_MS, FilmScenes } from "./film-scenes"
-import { FilmTaps } from "./film-taps"
+import { FilmTaps, savedTaps } from "./film-taps"
+import { FILM_CHAPTER_EVENT, HowItWorks } from "./HowItWorks"
 import { BOOT_MS, Boot, useAfter } from "./shared"
 import type { Landing, VariantProps } from "./variants"
 import "./v-film.css"
@@ -33,16 +34,52 @@ export function useFilm({ data, tvOpen }: VariantProps): Landing {
 		[params],
 	)
 	const clips = useMemo(() => listed.filter((c) => c.section !== "boot"), [listed])
-	const firstEnter = listed[0]?.section === "boot" ? (clips[0]?.enter ?? "deal") : undefined
+	// Back from sign-up with taps already made: straight to the quiz, where the visitor left it.
+	// Read before any child effect runs; the film mounts after the boot, past hydration, so it can't mismatch.
+	const [resume] = useState(() => typeof window !== "undefined" && Boolean(savedTaps()))
+	const quizAt = clips.findIndex((c) => c.section === "closer")
+	const startAt = resume && quizAt >= 0 ? quizAt : 0
+	const firstEnter = startAt > 0 ? "fade" : listed[0]?.section === "boot" ? (clips[0]?.enter ?? "deal") : undefined
 	const k = { "0.7×": 1.43, "0.8×": 1.25, "0.9×": 1.11, "1×": 1, "1.15×": 0.87 }[params.get("speed") ?? ""] ?? 1
 	const tr = ((params.get("tr") ?? "") in TRANSITIONS ? params.get("tr") : "fade") as TransitionId
-	const lab = clips.length > 0 && data.intro
+	// The clip data arrives during the boot, outside the page's HTML.
+	const [intro, setIntro] = useState<VariantProps["data"]["intro"]>(data.intro ?? null)
+	useEffect(() => {
+		if (intro || !clips.length || data.member) return
+		let gone = false
+		fetch("/prototype/intro-data")
+			.then((r) => (r.ok ? r.json() : null))
+			.then((d) => !gone && d && setIntro(d))
+			.catch(() => {})
+		return () => {
+			gone = true
+		}
+	}, [intro, clips.length, data.member])
+	const lab = clips.length > 0 && intro
 	// The lab's sequence ends itself (its chapters can be jumped); the old film ends by the clock.
 	const timeUp = useAfter(START + FILM_MS)
 	const over = lab ? false : timeUp
-	if (data.member || tvOpen || left) return { screen: <Boot /> }
+	// "Watch in the intro" in the section below the room: play the film from that chapter.
+	const [chapter, setChapter] = useState<{ at: number; n: number } | null>(null)
+	useEffect(() => {
+		const go = (e: Event) => {
+			const at = clips.findIndex((c) => c.section === (e as CustomEvent<string>).detail)
+			if (at < 0) return
+			setLeft(false)
+			setSkipped(false)
+			setChapter((now) => ({ at, n: (now?.n ?? 0) + 1 }))
+		}
+		addEventListener(FILM_CHAPTER_EVENT, go)
+		return () => removeEventListener(FILM_CHAPTER_EVENT, go)
+	}, [clips])
+	// What Google reads, and a guest's way into each chapter: the film's chapters as page content below the room.
+	const startTitles = data.startTitles
+	const below = useMemo(() => <HowItWorks titles={startTitles} />, [startTitles])
+	const page = data.member ? {} : { below, homeHeadingAs: "p" as const }
+	if (data.member || tvOpen || left) return { screen: <Boot />, ...page }
 	const playing = !skipped && !over
 	return {
+		...page,
 		screen: (
 			<div className="lpf">
 				<FilmTaps data={data} onLeave={() => setLeft(true)} />
@@ -51,15 +88,23 @@ export function useFilm({ data, tvOpen }: VariantProps): Landing {
 						{lab ? (
 							<SequenceAfterBoot>
 								<Stage k={k}>
-									<Sequence clips={clips} data={data.intro!} k={k} transition={tr} chapters firstEnter={firstEnter} onEnd={() => setSkipped(true)} />
+									<Sequence
+										key={chapter?.n ?? 0}
+										clips={clips}
+										data={intro!}
+										k={k}
+										transition={tr}
+										chapters
+										firstEnter={chapter ? "fade" : firstEnter}
+										startAt={chapter?.at ?? startAt}
+										onEnd={() => setSkipped(true)}
+									/>
 								</Stage>
 							</SequenceAfterBoot>
-						) : (
+						) : clips.length ? null : (
+							// Round 3's film, only without a cut. With one, the TV waits for the clip data during the boot.
 							<FilmScenes data={data} start={START} />
 						)}
-						<button type="button" className="lpf-skip" onClick={() => setSkipped(true)}>
-							Skip
-						</button>
 					</>
 				)}
 				<Boot />

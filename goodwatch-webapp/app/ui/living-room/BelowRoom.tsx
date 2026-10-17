@@ -8,7 +8,7 @@ import { mediaFieldLanguage } from "~/utils/media-presentation"
 // most, and this is where it finds the rest of the site. Styles are in living-room.css (`.lrb`), with short class
 // names because the HTML has a byte budget.
 import { Link } from "@remix-run/react"
-import type { MouseEvent } from "react"
+import type { MouseEvent, ReactNode } from "react"
 import { StartRowSlot } from "~/ui/talked-about-now/start-row/StartRowSlot"
 import { titleToDashed } from "~/utils/helpers"
 import MediaText from "~/ui/media-text/MediaText"
@@ -81,6 +81,8 @@ export type BelowRoomProps = {
 	talked?: boolean
 	onDown?: (e: MouseEvent) => void
 	onBack?: (e: MouseEvent) => void
+	/** PROTOTYPE (landing): content at the top of the section, before the titles. */
+	intro?: ReactNode
 }
 
 export function BelowRoom({
@@ -88,6 +90,7 @@ export function BelowRoom({
 	talked = false,
 	onDown,
 	onBack,
+	intro,
 }: BelowRoomProps) {
 	const back = (
 		<a href={`#${ROOM_ID}`} onClick={onBack} className="lrb-back">
@@ -114,6 +117,7 @@ export function BelowRoom({
 				<i aria-hidden />
 			</a>
 			<div className="lrb-in">
+				{intro}
 				{talked && <StartRowSlot />}
 				<header className="lrb-head">
 					<div>

@@ -7,6 +7,7 @@ import { useContinueWithGoogle, whenAuthFails } from "~/utils/auth-client"
 import { onFirstInteraction } from "~/utils/first-interaction"
 import { useLeaveThroughTv, useReturnIntoTv } from "../tv-transition"
 import { TvRoom } from "./TvRoom"
+import { HomeHeading, type HomeHeadingTag } from "./screens/Home"
 import {
 	DiscoverCode,
 	DiscoverData,
@@ -95,11 +96,16 @@ export function TvLivingRoom({
 	data,
 	screenOverlay,
 	roomOverlay,
+	belowIntro,
+	homeHeadingAs = "h1",
 }: {
 	data: TvHomeData
 	/** PROTOTYPE (landing): see TvRoom. */
 	screenOverlay?: ReactNode
 	roomOverlay?: ReactNode
+	belowIntro?: ReactNode
+	/** PROTOTYPE (landing): the TV home headline's tag; "p" when the page has its own H1. */
+	homeHeadingAs?: HomeHeadingTag
 }) {
 	// Back after leaving through the TV shrinks the page into the same TV screen.
 	useReturnIntoTv()
@@ -433,8 +439,9 @@ export function TvLivingRoom({
 				services={data.services}
 				screenOverlay={screenOverlay}
 				roomOverlay={roomOverlay}
+				belowIntro={belowIntro}
 				renderScreen={(canvas) => (
-					<>
+					<HomeHeading.Provider value={homeHeadingAs}>
 						<Edition canvas={canvas} report={setEdition} />
 						<TvScreen
 							tv={tv}
@@ -451,7 +458,7 @@ export function TvLivingRoom({
 							search={search}
 							shows={shows}
 						/>
-					</>
+					</HomeHeading.Provider>
 				)}
 			/>
 			{/* A screen's data, once for both editions. It draws nothing. */}

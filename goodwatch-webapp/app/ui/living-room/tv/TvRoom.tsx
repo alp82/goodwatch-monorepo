@@ -91,6 +91,8 @@ export type TvRoomProps = {
 	screenOverlay?: ReactNode
 	/** PROTOTYPE (landing): drawn over the room, after its parts. */
 	roomOverlay?: ReactNode
+	/** PROTOTYPE (landing): content at the top of the section below the room. */
+	belowIntro?: ReactNode
 }
 
 /** The canvases the screen is drawn on before the window is measured: one per edition, at their full size. */
@@ -116,6 +118,7 @@ export function TvRoom({
 	want,
 	screenOverlay,
 	roomOverlay,
+	belowIntro,
 }: TvRoomProps) {
 	// The room is the first screen of the page; use-below-room.ts owns how the page moves between it and the
 	// section below. Its contract: a block with the room's id that takes no input while it is away.
@@ -427,6 +430,7 @@ export function TvRoom({
 				{roomOverlay}
 			</div>
 			<StillBelowRoom
+				intro={belowIntro}
 				titles={startTitles}
 				talked={talked}
 				onDown={travel.onDown}

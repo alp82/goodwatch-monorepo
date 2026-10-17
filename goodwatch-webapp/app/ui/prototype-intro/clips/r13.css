@@ -1,0 +1,11 @@
+/* PROTOTYPE - throwaway. Round 13 boot: the standby light breathes while the arc sweeps (150-1450 ms), then fades
+   as "oodWatch" slides out. */
+.lpc-r13-boot { container-type: size; }
+.lpc-r13-boot .lpc-r13-dot {
+	animation:
+		lpc-r12b-breathe calc(1300ms * var(--k)) ease-in-out both,
+		lpc-r12b-out calc(450ms * var(--k)) ease-in calc(1350ms * var(--k)) forwards;
+}
+@container (max-width: 520px) {
+	.lpc-r13-boot .lpc-r12b-g-lockup { font-size: 60px; }
+}
