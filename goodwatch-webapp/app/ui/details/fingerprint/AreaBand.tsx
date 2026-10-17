@@ -1,5 +1,5 @@
-import type * as F from "~/ui/fingerprint/fingerprintText"
 import { PILLAR_CONFIG } from "~/ui/fingerprint/Pillars"
+import type * as F from "~/ui/fingerprint/fingerprintText"
 import { AREAS, AREA_COLOR, areaLevelWord } from "./areas"
 import { areaStripes, segmentGrow, stripeColor } from "./band"
 import { type AreaSelection, highlightHandlers } from "./selection"
@@ -10,7 +10,7 @@ import { type AreaSelection, highlightHandlers } from "./selection"
  */
 export default function AreaBand({
 	t,
-	selection: x,
+	selection,
 }: {
 	t: F.TitleInput
 	selection: AreaSelection
@@ -21,8 +21,8 @@ export default function AreaBand({
 		// biome-ignore lint/a11y/useSemanticElements: a row of toggle buttons, not a form; a <fieldset> would need a legend and its own layout resets.
 		<div className="flex gap-[3px]" role="group" aria-label="Fingerprint areas">
 			{AREAS.map((area, i) => {
-				const on = x.selected === area
-				const hot = x.hovered === area
+				const on = selection.selected === area
+				const hot = selection.hovered === area
 				const corners = `${i === 0 ? "rounded-l-full" : "rounded-l-[3px]"} ${
 					i === AREAS.length - 1 ? "rounded-r-full" : "rounded-r-[3px]"
 				}`
@@ -36,8 +36,8 @@ export default function AreaBand({
 						aria-label={`${area}: ${areaLevelWord(area, tiers[area]).toLowerCase()}. ${
 							on ? "Showing details, press again for all areas" : "Show details"
 						}`}
-						{...highlightHandlers(x, area)}
-						onClick={() => x.toggle(area)}
+						{...highlightHandlers(selection, area)}
+						onClick={() => selection.toggle(area)}
 						className="group flex min-w-[2.5rem] cursor-pointer flex-col pt-1 text-left focus-visible:outline-none"
 						style={{ flex: `${segmentGrow(tiers[area])} 1 0%` }}
 					>

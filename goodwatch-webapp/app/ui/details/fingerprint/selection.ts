@@ -9,8 +9,16 @@ export function useAreaSelection() {
 	const [selected, setSelected] = useState<Area | null>(null)
 	const [hovered, setHovered] = useState<Area | null>(null)
 	useEffect(() => {
+		// Escape goes back to all areas only while an area is selected, and leaves alone an Escape another control
+		// already handled or one meant for a dialog.
 		if (!selected) return
-		const onKey = (e: KeyboardEvent) => e.key === "Escape" && setSelected(null)
+		const onKey = (e: KeyboardEvent) => {
+			if (e.key !== "Escape" || e.defaultPrevented) return
+			const target = e.target instanceof Element ? e.target : null
+			if (target?.closest('dialog, [role="dialog"], [role="alertdialog"]'))
+				return
+			setSelected(null)
+		}
 		document.addEventListener("keydown", onKey)
 		return () => document.removeEventListener("keydown", onKey)
 	}, [selected])
@@ -31,14 +39,14 @@ export type AreaSelection = ReturnType<typeof useAreaSelection>
 export const areaTapMark = (area: Area) => `area:${area}`
 
 /** Handlers that highlight an area while a control that selects it is hovered or focused. */
-export const highlightHandlers = (x: AreaSelection, area: Area) => ({
+export const highlightHandlers = (selection: AreaSelection, area: Area) => ({
 	onPointerEnter: (e: React.PointerEvent) =>
-		e.pointerType === "mouse" && x.setHovered(area),
+		e.pointerType === "mouse" && selection.setHovered(area),
 	onPointerLeave: (e: React.PointerEvent) =>
-		e.pointerType === "mouse" && x.setHovered(null),
+		e.pointerType === "mouse" && selection.setHovered(null),
 	// Keyboard focus highlights like hover; a tap's focus doesn't, or the highlight would stick after the tap.
 	onFocus: (e: React.FocusEvent) =>
-		e.currentTarget.matches(":focus-visible") && x.setHovered(area),
-	onBlur: () => x.setHovered(null),
+		e.currentTarget.matches(":focus-visible") && selection.setHovered(area),
+	onBlur: () => selection.setHovered(null),
 	"data-replay-tap": areaTapMark(area),
 })

@@ -75,7 +75,7 @@ test("the six fingerprint questions follow the first facts, for every title with
 	const ids = titleQuestions(withFingerprint(matrix), "US").map((faq) => faq.id)
 	assert.deepEqual(
 		ids.slice(ids.indexOf("length"), ids.indexOf("length") + 7),
-		["length", "laugh", "drive", "half", "date", "scare", "after"],
+		["length", "laugh", "drive", "halfWatch", "date", "scare", "feelGood"],
 	)
 	const questions = titleQuestions(withFingerprint(matrix), "US")
 	assert.equal(
@@ -83,14 +83,14 @@ test("the six fingerprint questions follow the first facts, for every title with
 		"Will The Matrix make me laugh?",
 	)
 	assert.equal(
-		questions.find((faq) => faq.id === "after")?.q,
+		questions.find((faq) => faq.id === "feelGood")?.q,
 		"Will I feel good after watching The Matrix?",
 	)
 })
 
 test("a title without a fingerprint gets no fingerprint questions", () => {
 	const ids = titleQuestions(show({}), "US").map((faq) => faq.id)
-	for (const id of ["laugh", "drive", "half", "date", "scare", "after"])
+	for (const id of ["laugh", "drive", "halfWatch", "date", "scare", "feelGood"])
 		assert.ok(!ids.includes(id as never))
 })
 
@@ -99,20 +99,24 @@ test("the fingerprint answers read the traits behind them", () => {
 		laugh: "A little. The humor is mostly sharp wit.",
 		drive:
 			"Mostly plot-driven. Intrigue and spectacle carry it more than its characters do.",
-		half: "No, it needs your attention. The plot is layered, and it's easy to lose the thread.",
+		halfWatch:
+			"No, it needs your attention. The plot is layered, and it's easy to lose the thread.",
 		date: "Yes. Our viewing guide lists it for date night. Romance plays a supporting part.",
 		scare: "Barely. The scares are mild. It's tense rather than scary.",
-		after: "Mixed feelings. It balances dark and hopeful moments.",
+		feelGood: "Mixed feelings. It balances dark and hopeful moments.",
 	})
 	assert.deepEqual(answers(toyStory), {
 		laugh: "A little. The humor is mostly slapstick and situational comedy.",
 		drive: answers(toyStory).drive,
-		half: "Yes. It's easy to follow.",
+		halfWatch: "Yes. It's easy to follow.",
 		date: "It's better for a family night. Our viewing guide lists it for kids and families, and it also works for couples.",
 		scare: "No.",
-		after: "Yes. It's an uplifting movie that leaves you hopeful.",
+		feelGood: "Yes. It's an uplifting movie that leaves you hopeful.",
 	})
-	assert.match(answers(breakingBad).after, /^Probably not\. Its tone is bleak/)
+	assert.match(
+		answers(breakingBad).feelGood,
+		/^Probably not\. Its tone is bleak/,
+	)
 })
 
 test("each fingerprint answer has a visual and the traits behind it", () => {
@@ -123,7 +127,7 @@ test("each fingerprint answer has a visual and the traits behind it", () => {
 		kind: "meter",
 		tier: 2,
 		area: "Humor",
-		word: "Light humor",
+		word: "Light",
 	})
 	assert.equal(byId.drive.visual.kind, "slider")
 	assert.deepEqual(
@@ -138,4 +142,33 @@ test("each fingerprint answer has a visual and the traits behind it", () => {
 	})
 	for (const x of Object.values(byId))
 		for (const ev of x.evidence) assert.ok(ev.traits.length > 0)
+})
+
+test("the area details header, the area's slider, and the FAQ humor meter use the same level word for every tier", async () => {
+	const { AREAS, areaLevelWord } = await import("./fingerprint/areas.ts")
+	const { readScale, scalesOf } = await import("./fingerprint/scales.ts")
+	for (const area of AREAS)
+		for (const tier of [0, 1, 2, 3, 4]) {
+			const t = {
+				...matrix,
+				fingerprint: {
+					...matrix.fingerprint,
+					pillars: { ...matrix.fingerprint.pillars, [area]: tier },
+				},
+			}
+			const slider = scalesOf(area).find((sc) => sc.name === area)
+			assert.ok(slider, `${area} has a slider`)
+			const header = areaLevelWord(area, tier)
+			assert.equal(readScale(slider, t).word, header, `${area} tier ${tier}`)
+			if (area !== "Humor") continue
+			const laugh = fingerprintAnswers(withFingerprint(t)).find(
+				(answer) => answer.id === "laugh",
+			)
+			assert.deepEqual(laugh?.visual, {
+				kind: "meter",
+				tier,
+				area: "Humor",
+				word: header,
+			})
+		}
 })

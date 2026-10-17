@@ -2,7 +2,8 @@
 // setting, world, style, and craft, grouped as Feel, Story, and Look.
 
 import type * as F from "~/ui/fingerprint/fingerprintText"
-import type { Area, TraitKey } from "./areas"
+import { type Area, type Scores, type TraitKey, areaLevelWords } from "./areas"
+import { clamp01, meanOfTopTwo } from "./trait-scores"
 
 export interface Scale {
 	name: string
@@ -18,15 +19,10 @@ export interface Scale {
 	position: (t: F.TitleInput) => number
 }
 
-const clamp = (v: number) => Math.min(1, Math.max(0, v))
-const meanOfTopTwo = (xs: number[]) => {
-	const sorted = [...xs].sort((x, y) => y - x)
-	return (sorted[0] + (sorted[1] ?? 0)) / 2
-}
 const scores = (t: F.TitleInput) => t.fingerprint.scores
 
 // Opposites as a difference of up to 8 either side of the middle.
-const balance = (high: number, low: number) => clamp((high - low) / 16 + 0.5)
+const balance = (high: number, low: number) => clamp01((high - low) / 16 + 0.5)
 
 const PACE: Scale = {
 	name: "Pace",
@@ -70,6 +66,19 @@ const SETTING: Scale = {
 	},
 }
 
+/** The traits that make a title demanding to follow, for the Attention scale and the half-watch answer. */
+export const ATTENTION_TRAITS: readonly TraitKey[] = [
+	"complexity",
+	"philosophical",
+	"non_linear_narrative",
+	"ambiguity",
+	"meta_narrative",
+]
+
+/** How demanding a title is: the mean of its two most demanding traits, 0 to 10. */
+export const attentionDemand = (s: Scores) =>
+	meanOfTopTwo(ATTENTION_TRAITS.map((k) => s[k]))
+
 const ATTENTION: Scale = {
 	name: "Attention",
 	area: "Craft",
@@ -83,21 +92,8 @@ const ATTENTION: Scale = {
 		"Very demanding",
 	],
 	fromMiddle: false,
-	// The two most demanding traits; 2 or less reads as an easy watch, 10 as very demanding.
-	position: (t) => {
-		const s = scores(t)
-		return clamp(
-			(meanOfTopTwo([
-				s.complexity,
-				s.philosophical,
-				s.non_linear_narrative,
-				s.ambiguity,
-				s.meta_narrative,
-			]) -
-				2) /
-				8,
-		)
-	},
+	// 2 or less reads as an easy watch, 10 as very demanding.
+	position: (t) => clamp01((attentionDemand(scores(t)) - 2) / 8),
 }
 
 const INTENSITY_KEYS: TraitKey[] = ["violence", "grotesque", "scare"]
@@ -111,68 +107,27 @@ const INTENSITY: Scale = {
 	fromMiddle: false,
 	// The strongest of violence, gore, and scares; 1 or less reads as gentle, 10 as brutal.
 	position: (t) =>
-		clamp((Math.max(...INTENSITY_KEYS.map((k) => scores(t)[k])) - 1) / 9),
+		clamp01((Math.max(...INTENSITY_KEYS.map((k) => scores(t)[k])) - 1) / 9),
 }
 
-// An area as a scale. The position follows the area's tier (0 to 4 to the five fifths), so the word always
-// matches the tier shown elsewhere on the page.
-const areaScale = (
-	area: Area,
-	left: string,
-	right: string,
-	words: Scale["words"],
-): Scale => ({
+// An area as a scale, with the area's level words. The position follows the area's tier (0 to 4 to the five
+// fifths), so the word always matches the tier shown elsewhere on the page.
+const areaScale = (area: Area, left: string, right: string): Scale => ({
 	name: area,
 	area,
 	left,
 	right,
-	words,
+	words: areaLevelWords(area),
 	fromMiddle: false,
 	position: (t) => (t.fingerprint.pillars[area] + 0.5) / 5,
 })
 
-const ENERGY = areaScale("Energy", "Calm", "Relentless", [
-	"Calm",
-	"Low-key",
-	"Steady",
-	"High energy",
-	"Relentless",
-])
-const HEART = areaScale("Heart", "Cool", "Deeply emotional", [
-	"Cool",
-	"Light",
-	"Some heart",
-	"Big heart",
-	"Deeply emotional",
-])
-const HUMOR = areaScale("Humor", "Serious", "Very funny", [
-	"Serious",
-	"A touch",
-	"Light",
-	"Funny",
-	"Very funny",
-])
-const WORLD = areaScale("World", "Background", "Immersive", [
-	"Background",
-	"Simple",
-	"Solid",
-	"Immersive",
-	"Fully immersive",
-])
-const CRAFT = areaScale("Craft", "Plain", "Masterful", [
-	"Rough",
-	"Plain",
-	"Solid",
-	"Strong",
-	"Masterful",
-])
-const STYLE = areaScale("Style", "Plain", "Stunning", [
-	"Plain",
-	"Modest",
-	"Clean",
-	"Striking",
-	"Stunning",
-])
+const ENERGY = areaScale("Energy", "Calm", "Relentless")
+const HEART = areaScale("Heart", "Cool", "Deeply emotional")
+const HUMOR = areaScale("Humor", "Serious", "Very funny")
+const WORLD = areaScale("World", "Background", "Immersive")
+const CRAFT = areaScale("Craft", "Plain", "Masterful")
+const STYLE = areaScale("Style", "Plain", "Stunning")
 
 export interface ScaleGroup {
 	name: "Feel" | "Story" | "Look"

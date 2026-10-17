@@ -77,7 +77,7 @@ function ScaleTrack({
 export default function ScaleSlider({
 	sc,
 	t,
-	selection: x,
+	selection,
 	layout = "stacked",
 }: {
 	sc: Scale
@@ -86,7 +86,7 @@ export default function ScaleSlider({
 	layout?: "stacked" | "row"
 }) {
 	const { position, word } = readScale(sc, t)
-	const highlighted = x.highlighted === sc.area
+	const highlighted = selection.highlighted === sc.area
 	const name = (
 		<span className={highlighted ? "text-white" : "text-gray-400"}>
 			{sc.name}
@@ -111,9 +111,9 @@ export default function ScaleSlider({
 	return (
 		<button
 			type="button"
-			{...highlightHandlers(x, sc.area)}
-			onClick={() => x.toggle(sc.area)}
-			aria-pressed={x.selected === sc.area}
+			{...highlightHandlers(selection, sc.area)}
+			onClick={() => selection.toggle(sc.area)}
+			aria-pressed={selection.selected === sc.area}
 			className={`-mx-2 block w-[calc(100%+1rem)] cursor-pointer rounded-lg px-2 text-left hover:bg-white/[.035] focus-visible:outline-2 focus-visible:outline-amber-300 ${
 				layout === "row"
 					? "grid grid-cols-[4.75rem_minmax(0,1fr)_6.75rem] items-center gap-x-3 py-[5px] text-[13px]"

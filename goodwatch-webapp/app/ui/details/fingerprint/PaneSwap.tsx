@@ -2,7 +2,8 @@ import { type ReactNode, useEffect, useLayoutEffect, useRef } from "react"
 
 // Before paint in the browser, while focus is still on the control in the pane that is hiding: the browser drops
 // focus from an inert pane on its next rendering step. On the server there is no focus.
-const useBeforePaint = typeof window === "undefined" ? useEffect : useLayoutEffect
+const useBeforePaint =
+	typeof window === "undefined" ? useEffect : useLayoutEffect
 
 export interface Pane {
 	id: string

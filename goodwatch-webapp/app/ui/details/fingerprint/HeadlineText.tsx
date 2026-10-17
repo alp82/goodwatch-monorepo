@@ -5,7 +5,7 @@ import { type AreaSelection, highlightHandlers } from "./selection"
 /** Headline segments as one bold paragraph. Words that name an area are buttons in its color that select it. */
 export default function HeadlineText({
 	segments,
-	selection: x,
+	selection,
 	className = "",
 }: {
 	segments: Segment[]
@@ -32,13 +32,14 @@ export default function HeadlineText({
 					<button
 						key={key}
 						type="button"
-						{...highlightHandlers(x, area)}
-						onClick={() => x.toggle(area)}
+						{...highlightHandlers(selection, area)}
+						onClick={() => selection.toggle(area)}
 						aria-label={`${seg.text}: show ${area.toLowerCase()} details`}
 						className="inline cursor-pointer rounded-sm text-left decoration-2 underline-offset-[.18em] focus-visible:outline-2 focus-visible:outline-amber-300"
 						style={{
 							color,
-							textDecorationLine: x.hovered === area ? "underline" : "none",
+							textDecorationLine:
+								selection.hovered === area ? "underline" : "none",
 							textDecorationColor: `color-mix(in srgb, ${color} 55%, transparent)`,
 						}}
 					>

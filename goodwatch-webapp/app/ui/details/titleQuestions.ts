@@ -5,7 +5,7 @@
 // (fingerprintQuestions.ts).
 
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
-import { type FingerprintQuestionId, fingerprintAnswers } from "~/ui/details/fingerprintQuestions"
+import { type FingerprintAnswer, type FingerprintQuestionId, fingerprintAnswers } from "~/ui/details/fingerprintQuestions"
 import { list } from "~/ui/fingerprint/fingerprintText"
 import { languageName, regionName } from "~/utils/display-names"
 import { seededRandomFromString } from "~/utils/random"
@@ -107,6 +107,8 @@ export interface TitleQuestion {
 	id: QuestionId
 	q: string
 	a: string
+	/** For a question answered from the fingerprint: the answer's visual and the traits behind it. */
+	fingerprint?: FingerprintAnswer
 }
 
 export type QuestionId =
@@ -218,13 +220,18 @@ function airedAnswer(media: MovieResult | ShowResult) {
 
 export function titleQuestions(media: MovieResult | ShowResult, country: string): TitleQuestion[] {
 	const T = media.details.title
-	const rows: [QuestionId, string, string | null][] = [
+	const facts = (rows: [QuestionId, string, string | null][]): TitleQuestion[] =>
+		rows.filter((r): r is [QuestionId, string, string] => !!r[2]).map(([id, q, a]) => ({ id, q, a }))
+	return [
+		...facts([
 		["stream", `Where can I stream ${T} legally?`, streamingAnswer(media, country)],
 		["worth", `Is ${T} worth watching?`, receptionAnswer(media)],
 		["rated", `What is ${T} rated?`, ageAnswer(media, country)],
 		["length", media.mediaType === "movie" ? `How long is ${T}?` : `How many seasons does ${T} have?`, lengthAnswer(media)],
+		]),
 		// How it feels, after the first facts people look for.
-		...fingerprintAnswers(media).map((x): [QuestionId, string, string] => [x.id, x.q, x.a]),
+		...fingerprintAnswers(media).map((answer) => ({ id: answer.id, q: answer.q, a: answer.a, fingerprint: answer })),
+		...facts([
 		["source", `Is ${T} based on a true story?`, sourceAnswer(media)],
 		["agree", `Do critics and audiences agree on ${T}?`, agreeAnswer(media)],
 		["boxoffice", `Was ${T} a box office hit?`, boxOfficeAnswer(media)],
@@ -232,6 +239,6 @@ export function titleQuestions(media: MovieResult | ShowResult, country: string)
 		["language", `What language is ${T} in?`, languageAnswer(media)],
 		["countries", `In how many countries can I watch ${T}?`, countriesAnswer(media)],
 		["tropes", `What tropes does ${T} use?`, tropesAnswer(media)],
+		]),
 	]
-	return rows.filter((r): r is [QuestionId, string, string] => !!r[2]).map(([id, q, a]) => ({ id, q, a }))
 }

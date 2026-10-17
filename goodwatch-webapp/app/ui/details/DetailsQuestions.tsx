@@ -28,7 +28,7 @@ import ScoreRing from "~/ui/details/hero/ScoreRing"
 import { useStreamingLinks } from "~/ui/details/hero/WhereToWatch"
 import { TmdbImage } from "~/ui/TmdbImage"
 import { AREA_COLOR } from "~/ui/details/fingerprint/areas"
-import { type FingerprintAnswer, type FingerprintVisual, fingerprintAnswers } from "~/ui/details/fingerprintQuestions"
+import type { FingerprintVisual } from "~/ui/details/fingerprintQuestions"
 import { getFingerprintMeta } from "~/ui/fingerprint/fingerprintMeta"
 import { type QuestionId, type TitleQuestion, ageInfo, agreement, FEATURED_TROPES, featuredTropes, money, titleQuestions, tropeCount } from "~/ui/details/titleQuestions"
 import { countryFlagUrl } from "~/utils/country-flag"
@@ -50,7 +50,6 @@ export default function DetailsQuestions({
 }) {
 	const faqs = questions ?? titleQuestions(media, country)
 	if (!faqs.length) return null
-	const fingerprint = new Map(fingerprintAnswers(media).map((x) => [x.id, x]))
 	const jsonLd = {
 		"@context": "https://schema.org",
 		"@type": "FAQPage",
@@ -67,7 +66,7 @@ export default function DetailsQuestions({
 					// An odd card out at the end spans both columns so the grid has no hole.
 					const narrow = faqs.filter((x) => !WIDE.includes(x.id))
 					const lastOdd = narrow.length % 2 === 1 && f.id === narrow[narrow.length - 1].id
-					return <QuestionCard key={f.id} media={media} country={country} faq={f} fingerprint={fingerprint.get(f.id as FingerprintAnswer["id"])} wide={lastOdd} />
+					return <QuestionCard key={f.id} media={media} country={country} faq={f} wide={lastOdd} />
 				})}
 			</div>
 			<script
@@ -93,10 +92,10 @@ const FAQ_ICON: Record<QuestionId, React.ComponentType<{ className?: string }>> 
 	tropes: SparklesIcon,
 	laugh: FaceSmileIcon,
 	drive: ArrowsRightLeftIcon,
-	half: EyeIcon,
+	halfWatch: EyeIcon,
 	date: HeartIcon,
 	scare: MoonIcon,
-	after: SunIcon,
+	feelGood: SunIcon,
 }
 
 const WIDE: QuestionId[] = ["stream", "tropes"]
@@ -105,16 +104,14 @@ function QuestionCard({
 	media,
 	country,
 	faq,
-	fingerprint,
 	wide = false,
 }: {
 	media: Media
 	country: string
 	faq: TitleQuestion
-	/** The visual and the traits behind a fingerprint question's answer. */
-	fingerprint?: FingerprintAnswer
 	wide?: boolean
 }) {
+	const { fingerprint } = faq
 	const Icon = FAQ_ICON[faq.id]
 	const [why, setWhy] = useState(false)
 	const whyId = `faq-why-${faq.id}`
@@ -177,35 +174,33 @@ function TraitScores({ traits, color }: { traits: { key: string; score: number }
 	)
 }
 
-const TIER_WORD = ["none", "low", "medium", "high", "very high"]
-
-function FingerprintAnswerVisual({ visual: v }: { visual: FingerprintVisual }) {
-	if (v.kind === "meter")
+function FingerprintAnswerVisual({ visual }: { visual: FingerprintVisual }) {
+	if (visual.kind === "meter")
 		return (
 			<div className="mt-4 flex items-center gap-3">
-				<span role="img" aria-label={`${v.area}: ${TIER_WORD[v.tier]}, ${v.tier} of 4`} className="inline-flex gap-0.5">
+				<span role="img" aria-label={`${visual.area}: ${visual.word.toLowerCase()}, ${visual.tier} of 4`} className="inline-flex gap-0.5">
 					{[0, 1, 2, 3].map((i) => (
 						<span
 							key={i}
 							className="h-2 w-5 rounded-sm"
-							style={{ background: i < v.tier ? AREA_COLOR[v.area] : "rgba(255,255,255,.1)", opacity: i < v.tier ? 0.55 + i * 0.15 : 1 }}
+							style={{ background: i < visual.tier ? AREA_COLOR[visual.area] : "rgba(255,255,255,.1)", opacity: i < visual.tier ? 0.55 + i * 0.15 : 1 }}
 						/>
 					))}
 				</span>
-				<span className="text-sm text-gray-300">{v.word}</span>
+				<span className="text-sm text-gray-300">{visual.word}</span>
 			</div>
 		)
-	if (v.kind === "chips") {
-		// The flags the answer rests on first, then a few others; the full list is in the fingerprint section.
-		const shown = [...v.items.filter((w) => v.highlighted.includes(w)), ...v.items.filter((w) => !v.highlighted.includes(w))].slice(0, 5)
-		const more = v.items.length - shown.length
-		return v.items.length ? (
+	if (visual.kind === "chips") {
+		// The flags the answer rests on first, then a few others; the rest are counted, not shown.
+		const shown = [...visual.items.filter((w) => visual.highlighted.includes(w)), ...visual.items.filter((w) => !visual.highlighted.includes(w))].slice(0, 5)
+		const more = visual.items.length - shown.length
+		return visual.items.length ? (
 			<div className="mt-4 flex flex-wrap items-center gap-1.5">
 				{more > 0 && <span className="order-last px-1 text-sm text-gray-400">and {more} more</span>}
 				{shown.map((w) => (
 					<span
 						key={w}
-						className={`rounded-full px-2.5 py-1 text-sm ${v.highlighted.includes(w) ? "bg-emerald-400/20 font-semibold text-emerald-100" : "bg-white/8 text-gray-300"}`}
+						className={`rounded-full px-2.5 py-1 text-sm ${visual.highlighted.includes(w) ? "bg-emerald-400/20 font-semibold text-emerald-100" : "bg-white/8 text-gray-300"}`}
 					>
 						{w}
 					</span>
@@ -215,20 +210,20 @@ function FingerprintAnswerVisual({ visual: v }: { visual: FingerprintVisual }) {
 	}
 	return (
 		<div className="mt-4 grid grid-cols-[auto_1fr_auto] items-center gap-3 text-sm">
-			<span className="text-gray-400">{v.left}</span>
+			<span className="text-gray-400">{visual.left}</span>
 			<span
 				role="img"
-				aria-label={`${v.label}: ${Math.round(v.position * 100)}% of the way from ${v.left.toLowerCase()} to ${v.right.toLowerCase()}`}
+				aria-label={`${visual.label}: ${Math.round(visual.position * 100)}% of the way from ${visual.left.toLowerCase()} to ${visual.right.toLowerCase()}`}
 				className="relative h-3 rounded-full bg-white/8"
 			>
 				<span className="absolute inset-y-0 left-1/2 w-px bg-white/15" aria-hidden="true" />
 				<span
 					className="absolute top-1/2 h-3.5 w-9 -translate-x-1/2 -translate-y-1/2 rounded-full ring-2 ring-black/40"
-					style={{ left: `calc(18px + ${v.position} * (100% - 36px))`, background: AREA_COLOR[v.area] }}
+					style={{ left: `calc(18px + ${visual.position} * (100% - 36px))`, background: AREA_COLOR[visual.area] }}
 					aria-hidden="true"
 				/>
 			</span>
-			<span className="text-gray-400">{v.right}</span>
+			<span className="text-gray-400">{visual.right}</span>
 		</div>
 	)
 }

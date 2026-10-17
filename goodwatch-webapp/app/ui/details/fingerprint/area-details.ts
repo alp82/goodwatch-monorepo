@@ -2,7 +2,8 @@
 // "Good for" line under the headline.
 
 import * as F from "~/ui/fingerprint/fingerprintText"
-import type { Area, TraitKey } from "./areas"
+import { type Area, type TraitKey, areaFilterTier } from "./areas"
+import { LOW_INFO_GUIDE } from "./viewing-guide"
 
 export interface AreaTrait {
 	key: TraitKey
@@ -23,7 +24,6 @@ export function areaTraits(t: F.TitleInput, area: Area): AreaTrait[] {
 	]
 }
 
-const FILTER_WORD: Record<number, string> = { 1: "low", 2: "medium", 3: "high" }
 const withoutEmoji = (label: string) =>
 	label.replace(/\s*\p{Extended_Pictographic}.*$/u, "")
 
@@ -43,9 +43,9 @@ export function areaLinks(t: F.TitleInput, area: Area): AreaLink[] {
 	const kind = t.mediaType === "movie" ? "movies" : "shows"
 	const links: AreaLink[] = []
 	if (tier >= 1) {
-		const minTier = Math.min(3, tier)
+		const { minTier, word } = areaFilterTier(tier)
 		links.push({
-			label: `More ${kind} with ${FILTER_WORD[minTier]} ${area.toLowerCase()}`,
+			label: `More ${kind} with ${word} ${area.toLowerCase()}`,
 			url: `/discover/${kind}?fingerprintPillars=${area}&fingerprintPillarMinTier=${minTier}`,
 			primary: true,
 		})
@@ -63,25 +63,16 @@ export function areaLinks(t: F.TitleInput, area: Area): AreaLink[] {
 	return links
 }
 
-// Generic audiences say little, so specific occasions come first.
-const LOW_INFO = [
-	"Adults",
-	"Public Viewing Safe",
-	"Solo Watch",
-	"Intergenerational",
-	"Partner Watch",
-]
-
 /** Up to three audiences and occasions from the viewing guide, lower case, specific ones first. */
 export function goodFor(t: F.TitleInput): string[] {
 	const all = [
 		...t.fingerprint.socialSuitability,
 		...t.fingerprint.viewingContext,
-	].map((x) => x.name)
+	].map((entry) => entry.name)
 	return [
-		...all.filter((x) => !LOW_INFO.includes(x)),
-		...all.filter((x) => LOW_INFO.includes(x)),
+		...all.filter((name) => !LOW_INFO_GUIDE.includes(name)),
+		...all.filter((name) => LOW_INFO_GUIDE.includes(name)),
 	]
 		.slice(0, 3)
-		.map((x) => x.toLowerCase())
+		.map((name) => name.toLowerCase())
 }

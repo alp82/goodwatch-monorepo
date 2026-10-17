@@ -1,10 +1,10 @@
 import { XMarkIcon } from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
+import { PILLAR_CONFIG } from "~/ui/fingerprint/Pillars"
 import { getFingerprintMeta } from "~/ui/fingerprint/fingerprintMeta"
 import * as F from "~/ui/fingerprint/fingerprintText"
-import { PILLAR_CONFIG } from "~/ui/fingerprint/Pillars"
 import { areaLinks, areaTraits, goodFor } from "./area-details"
-import { type Area, AREA_COLOR, areaLevelWord } from "./areas"
+import { AREA_COLOR, type Area, areaLevelWord } from "./areas"
 
 /**
  * One area in the details region: its name and tier with the way back to all areas, its verdict, its strongest

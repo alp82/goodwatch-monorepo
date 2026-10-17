@@ -4,21 +4,31 @@
 // structured data; the questions section draws the visuals.
 
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
-import type { Area, Scores, TraitKey } from "~/ui/details/fingerprint/areas"
+import {
+	type Area,
+	HUMOR_TRAITS,
+	type Scores,
+	type TraitKey,
+	areaLevelWord,
+} from "~/ui/details/fingerprint/areas"
+import {
+	ATTENTION_TRAITS,
+	attentionDemand,
+} from "~/ui/details/fingerprint/scales"
+import { byScore, clamp01 } from "~/ui/details/fingerprint/trait-scores"
+import { GUIDE } from "~/ui/details/fingerprint/viewing-guide"
 import { getFingerprintMeta } from "~/ui/fingerprint/fingerprintMeta"
 import { list } from "~/ui/fingerprint/fingerprintText"
 
 type Media = MovieResult | ShowResult
 
-export const FINGERPRINT_QUESTION_IDS = [
-	"laugh",
-	"drive",
-	"half",
-	"date",
-	"scare",
-	"after",
-] as const
-export type FingerprintQuestionId = (typeof FINGERPRINT_QUESTION_IDS)[number]
+export type FingerprintQuestionId =
+	| "laugh"
+	| "drive"
+	| "halfWatch"
+	| "date"
+	| "scare"
+	| "feelGood"
 
 export type FingerprintVisual =
 	/** A dot between two ends, at 0 (left) to 1 (right). */
@@ -50,19 +60,13 @@ export interface FingerprintAnswer {
 	evidence: TraitEvidence[]
 }
 
-const clamp = (v: number) => Math.min(1, Math.max(0, v))
-const meanOfTopTwo = (xs: number[]) => {
-	const sorted = [...xs].sort((x, y) => y - x)
-	return (sorted[0] + (sorted[1] ?? 0)) / 2
-}
-const byScore = (s: Scores, keys: TraitKey[]) =>
-	[...keys].sort((a, b) => s[b] - s[a])
 const label = (k: TraitKey) => getFingerprintMeta(k).label.toLowerCase()
 const capitalize = (text: string) =>
 	text.charAt(0).toUpperCase() + text.slice(1)
-const scored = (s: Scores, keys: TraitKey[]) =>
+const scored = (s: Scores, keys: readonly TraitKey[]) =>
 	keys.map((key) => ({ key, score: s[key] }))
 
+// What each humor trait is called in a sentence.
 const HUMOR_KIND: Partial<Record<TraitKey, string>> = {
 	situational_comedy: "situational comedy",
 	wit_wordplay: "sharp wit",
@@ -72,14 +76,6 @@ const HUMOR_KIND: Partial<Record<TraitKey, string>> = {
 	satire_parody: "satire",
 	dark_humor: "dark humor",
 }
-const HUMOR_KEYS = Object.keys(HUMOR_KIND) as TraitKey[]
-const HUMOR_LEVEL = [
-	"No humor",
-	"A touch of humor",
-	"Light humor",
-	"Funny",
-	"Very funny",
-]
 const LAUGH_VERDICT = [
 	"No. It plays it straight.",
 	"Not really. Humor is rare.",
@@ -94,12 +90,6 @@ const CHARACTER_KEYS: TraitKey[] = [
 	"dialogue_centrality",
 ]
 const PLOT_KEYS: TraitKey[] = ["intrigue", "spectacle", "mystery"]
-const DEMAND_KEYS: TraitKey[] = [
-	"complexity",
-	"non_linear_narrative",
-	"philosophical",
-	"ambiguity",
-]
 
 /** The six answers for a title with a fingerprint, in FAQ order; none without one. */
 export function fingerprintAnswers(media: Media): FingerprintAnswer[] {
@@ -108,12 +98,12 @@ export function fingerprintAnswers(media: Media): FingerprintAnswer[] {
 	const T = media.details.title
 	const noun = media.mediaType === "movie" ? "movie" : "series"
 	const s = fp.scores
-	const who = fp.socialSuitability.map((x) => x.name)
-	const context = fp.viewingContext.map((x) => x.name)
+	const who = fp.socialSuitability.map((entry) => entry.name)
+	const context = fp.viewingContext.map((entry) => entry.name)
 
 	// Laugh: the humor tier, with the two strongest kinds of humor.
 	const humor = fp.pillars.Humor
-	const humorKeys = byScore(s, HUMOR_KEYS)
+	const humorKeys = byScore(s, HUMOR_TRAITS)
 	const kinds = humorKeys
 		.filter((k) => s[k] >= 5)
 		.slice(0, 2)
@@ -126,7 +116,7 @@ export function fingerprintAnswers(media: Media): FingerprintAnswer[] {
 			kind: "meter",
 			tier: humor,
 			area: "Humor",
-			word: HUMOR_LEVEL[humor],
+			word: areaLevelWord("Humor", humor),
 		},
 		evidence: [{ area: "Humor", traits: scored(s, humorKeys.slice(0, 4)) }],
 	}
@@ -148,7 +138,7 @@ export function fingerprintAnswers(media: Media): FingerprintAnswer[] {
 					: "Both, in balance. It gives its characters as much weight as its plot.",
 		visual: {
 			kind: "slider",
-			position: clamp((plot - character) / 8 + 0.5),
+			position: clamp01((plot - character) / 8 + 0.5),
 			left: "Characters",
 			right: "Plot",
 			area: "Craft",
@@ -160,14 +150,15 @@ export function fingerprintAnswers(media: Media): FingerprintAnswer[] {
 		],
 	}
 
-	// Half-watch: how demanding the two most demanding traits are, softened by the viewing guide.
-	const demandKeys = byScore(s, DEMAND_KEYS)
-	const demand = meanOfTopTwo(demandKeys.map((k) => s[k]))
+	// Half-watch: how demanding the two most demanding traits are (as the Attention scale reads it), softened by the
+	// viewing guide.
+	const demandKeys = byScore(s, ATTENTION_TRAITS)
+	const demand = attentionDemand(s)
 	const dropIn = context.some(
-		(c) => c === "Background Watch" || c === "Drop-in Friendly",
+		(c) => c === GUIDE.backgroundWatch || c === GUIDE.dropIn,
 	)
-	const half: FingerprintAnswer = {
-		id: "half",
+	const halfWatch: FingerprintAnswer = {
+		id: "halfWatch",
 		q: `Can I half-watch ${T}?`,
 		a:
 			demand >= 8
@@ -179,7 +170,7 @@ export function fingerprintAnswers(media: Media): FingerprintAnswer[] {
 					: "Yes. It's easy to follow.",
 		visual: {
 			kind: "slider",
-			position: clamp((demand - 2) / 8),
+			position: clamp01((demand - 2) / 8),
 			left: "Easy watch",
 			right: "Demanding",
 			area: "Craft",
@@ -196,24 +187,24 @@ export function fingerprintAnswers(media: Media): FingerprintAnswer[] {
 			: romance >= 3
 				? "Romance plays a supporting part."
 				: "There's little romance in it."
-	const family = who.includes("Family Movie Night") || who.includes("Kids")
+	const family = who.includes(GUIDE.familyNight) || who.includes(GUIDE.kids)
 	const date: FingerprintAnswer = {
 		id: "date",
 		q: `Is ${T} good for date night?`,
-		a: who.includes("Date Night")
+		a: who.includes(GUIDE.dateNight)
 			? `${romance >= 3 ? "Yes" : "Probably"}. Our viewing guide lists it for date night. ${love}`
 			: family
-				? `It's better for a family night. Our viewing guide lists it for ${who.includes("Kids") ? "kids and families" : "families"}${who.includes("Partner Watch") ? ", and it also works for couples" : ""}.`
-				: who.includes("Partner Watch")
+				? `It's better for a family night. Our viewing guide lists it for ${who.includes(GUIDE.kids) ? "kids and families" : "families"}${who.includes(GUIDE.partnerWatch) ? ", and it also works for couples" : ""}.`
+				: who.includes(GUIDE.partnerWatch)
 					? `It works for a couple. Our viewing guide lists it for watching with a partner, not for date night. ${love}`
 					: `Not really. Our viewing guide doesn't list it for date night${romance >= 6 ? ", despite its romance" : ""}.`,
 		visual: {
 			kind: "chips",
 			items: who,
 			highlighted:
-				who.includes("Date Night") || !family
-					? ["Date Night", "Partner Watch"]
-					: ["Family Movie Night", "Kids", "Partner Watch"],
+				who.includes(GUIDE.dateNight) || !family
+					? [GUIDE.dateNight, GUIDE.partnerWatch]
+					: [GUIDE.familyNight, GUIDE.kids, GUIDE.partnerWatch],
 		},
 		evidence: [{ area: "Heart", traits: scored(s, ["romance", "eroticism"]) }],
 	}
@@ -240,7 +231,7 @@ export function fingerprintAnswers(media: Media): FingerprintAnswer[] {
 		}${scareNote}`,
 		visual: {
 			kind: "slider",
-			position: clamp(scareLevel / 10),
+			position: clamp01(scareLevel / 10),
 			left: "Not scary",
 			right: "Terrifying",
 			area: "Energy",
@@ -259,8 +250,8 @@ export function fingerprintAnswers(media: Media): FingerprintAnswer[] {
 
 	// Feel good: hopeful against bleak.
 	const mood = s.hopefulness - s.bleakness
-	const after: FingerprintAnswer = {
-		id: "after",
+	const feelGood: FingerprintAnswer = {
+		id: "feelGood",
 		q: `Will I feel good after watching ${T}?`,
 		a:
 			mood >= 3
@@ -270,7 +261,7 @@ export function fingerprintAnswers(media: Media): FingerprintAnswer[] {
 					: "Mixed feelings. It balances dark and hopeful moments.",
 		visual: {
 			kind: "slider",
-			position: clamp(mood / 16 + 0.5),
+			position: clamp01(mood / 16 + 0.5),
 			left: "Bleak",
 			right: "Hopeful",
 			area: "Heart",
@@ -287,14 +278,5 @@ export function fingerprintAnswers(media: Media): FingerprintAnswer[] {
 		],
 	}
 
-	return [laugh, drive, half, date, scare, after]
+	return [laugh, drive, halfWatch, date, scare, feelGood]
 }
-
-/** One answer with its visual and traits, for the card that shows it. */
-export const fingerprintAnswer = (media: Media, id: FingerprintQuestionId) =>
-	fingerprintAnswers(media).find((x) => x.id === id)
-
-export const isFingerprintQuestion = (
-	id: string,
-): id is FingerprintQuestionId =>
-	(FINGERPRINT_QUESTION_IDS as readonly string[]).includes(id)

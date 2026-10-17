@@ -196,7 +196,14 @@ What sits right next to a taste group that the person has barely tried: a kind o
 _Avoid_: Edge, Just past, Frontier
 
 **Fingerprint family**:
-One of five groups of fingerprint attributes (Feel, Humor, World, Story, and Craft), used to show a person's taste against everyone's. Feel is a fingerprint family, not a Mood.
+One of five groups of fingerprint attributes (Feel, Humor, World, Story, and Craft), used to show a person's taste against everyone's. Feel is a fingerprint family, not a Mood. The Feel and Story slider groups on the title page are not fingerprint families.
+
+**Area**:
+One of the six parts of a title's fingerprint shown on the title page: Energy, Heart, Humor, World, Craft, and Style. Each has a level from 0 to 4 with one word per level, the same word wherever the page names it. The code calls areas pillars (`pillars`, `fingerprintPillars`).
+_Avoid_: Pillar
+
+**Slider group**:
+One of the three groups of sliders on the title page's fingerprint: Feel (pace, energy, intensity, tone, heart, humor), Story (attention, setting, world), and Look (style, craft). Each slider belongs to one area. A slider group is not a fingerprint family, even where the names match.
 
 **You vs everyone**:
 The comparison of a person's ratings with the GoodWatch score of the same titles. "Everyone" means the GoodWatch score, not other members.

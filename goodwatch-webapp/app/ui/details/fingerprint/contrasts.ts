@@ -2,7 +2,8 @@
 // its traits clear its thresholds, and pairs that pull furthest apart (or, for "but" and "with", are both strongest)
 // come first.
 
-import type { Scores, TraitKey } from "./areas"
+import { HUMOR_TRAITS, type Scores, type TraitKey } from "./areas"
+import { strongestOf } from "./trait-scores"
 
 export interface Contrast {
 	/** The strong side, capitalized: "Tense". */
@@ -17,18 +18,8 @@ export interface Contrast {
 	strength: (s: Scores) => number
 }
 
-const HUMOR: TraitKey[] = [
-	"situational_comedy",
-	"wit_wordplay",
-	"physical_comedy",
-	"absurdist_humor",
-	"satire_parody",
-	"dark_humor",
-]
-const maxOf = (s: Scores, keys: TraitKey[]) =>
+const maxOf = (s: Scores, keys: readonly TraitKey[]) =>
 	Math.max(...keys.map((k) => s[k]))
-const strongestOf = (s: Scores, keys: TraitKey[]) =>
-	[...keys].sort((a, b) => s[b] - s[a])[0]
 
 /** "A, not B": A at `min` or more and B at `max` or less. */
 const not = (
@@ -52,13 +43,13 @@ const not = (
 const both = (
 	lead: string,
 	other: string,
-	a: TraitKey | TraitKey[],
-	b: TraitKey | TraitKey[],
+	a: TraitKey | readonly TraitKey[],
+	b: TraitKey | readonly TraitKey[],
 	min: number,
 	conj: Contrast["conj"] = "but",
 ): Contrast => {
-	const as = Array.isArray(a) ? a : [a]
-	const bs = Array.isArray(b) ? b : [b]
+	const as: readonly TraitKey[] = typeof a === "string" ? [a] : a
+	const bs: readonly TraitKey[] = typeof b === "string" ? [b] : b
 	return {
 		lead,
 		conj,
@@ -109,7 +100,7 @@ const CONTRASTS: Contrast[] = [
 	both("Fast", "layered", "fast_pace", "complexity", 7),
 	both("Slow", "gripping", "slow_burn", ["tension", "intrigue"], 7),
 	both("Bleak", "darkly funny", "bleakness", "dark_humor", 7),
-	both("Funny", "bittersweet", HUMOR, "melancholy", 7),
+	both("Funny", "bittersweet", HUMOR_TRAITS, "melancholy", 7),
 	both("Quirky", "heartfelt", "eccentricity", "pathos", 7),
 	both("Violent", "thoughtful", "violence", "philosophical", 8),
 	both("Nostalgic", "fresh", "nostalgia", "novelty", 8),
@@ -122,7 +113,7 @@ const CONTRASTS: Contrast[] = [
 		9,
 		"with",
 	),
-	both("Funny", "heart", HUMOR, ["pathos", "wholesome"], 7, "with"),
+	both("Funny", "heart", HUMOR_TRAITS, ["pathos", "wholesome"], 7, "with"),
 ]
 
 export interface PickedContrast {
