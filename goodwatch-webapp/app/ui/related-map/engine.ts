@@ -260,7 +260,10 @@ export function relatedMapEngine(
 	}
 
 	// --- Markup ---------------------------------------------------------------------------------------------------
-	const src = (path: string) => `${M.image}/w154/${path}`
+	// A wide screen's posters are 96 px and more (up to 360 px in full screen): they need the larger image. The server
+	// draws for a phone.
+	const size = win?.matchMedia?.("(min-width: 1024px)").matches ? "w342" : "w154"
+	const src = (path: string) => `${M.image}/${size}/${path}`
 	const hrefOf = (title: MapTitle) =>
 		`/${title.k.charAt(0) === "m" ? "movie" : "show"}/${title.k.slice(1)}-${(title.canonicalTitle ?? title.t)
 			.toLowerCase()

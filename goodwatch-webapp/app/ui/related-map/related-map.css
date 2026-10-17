@@ -5,7 +5,12 @@ Never part of the app's one stylesheet.
 
 In order: the section's frame and a poster, the map with its rings and zoom, how a poster moves and fades (the script
 sets the durations with every redraw), the level chips, what chips and posters show of each other, the trail, the
-card, and the wide layout from 1,024 px.
+card, the wide layout from 1,024 px, the wide side panel, and the full screen view.
+
+A poster's ring is a spread box-shadow (`--ow` wide, `--ol` colored), never an outline: Chrome paints an outlined
+element again on every frame of its scale animation, and decodes its image again with it. Posters carry no drop shadow,
+and each is a layer of its own: on a big full screen wall a shadow per poster costs the GPU on every frame of a pan.
+A dashed ring (the way back, a dimmed title, an empty place) is a pseudo element's border.
 
 The heights add up to a section of 602 px on a phone and 576 px on a wide screen (section-heights.ts): the padding,
 the heading, the stage, and the gaps between them. The line of plain links stays in the document for crawlers and
@@ -25,14 +30,17 @@ background:rgba(255,255,255,.05);padding:1rem;overflow:hidden;contain:layout sty
 .pl-h{font-size:1.25rem;line-height:1.75rem;font-weight:800;letter-spacing:-.025em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pl-body{display:flex;flex-direction:column;gap:.5rem;min-width:0}
 .pl-stage{position:relative;height:360px;container-type:inline-size;contain:layout paint style;--u:1cqw;--ux:1cqw;touch-action:pan-y;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
-.pl-p{position:relative;display:block;padding:0;border-radius:.375rem;background:#1b2130;outline:2px solid rgba(255,255,255,.14);box-shadow:0 4px 14px rgba(0,0,0,.55)}
+.pl-p{position:relative;display:block;padding:0;border-radius:.375rem;background:#1b2130;--ow:2px;--ol:rgba(255,255,255,.14);box-shadow:0 0 0 var(--ow) var(--ol)}
 .pl-p img{display:block;width:100%;height:auto;aspect-ratio:2/3;object-fit:cover;border-radius:.375rem}
-.pl-p:hover,.pl-p:focus-visible{outline-color:#fbbf24}
+.pl-p:hover{--ol:#fbbf24}
+.pl .pl-p:focus-visible{outline:0;--ol:#fff}
 .pl-p:active{filter:brightness(1.3)}
-.pl-ph{display:block;aspect-ratio:2/3;border-radius:.375rem;background:rgba(255,255,255,.045);outline:1px dashed rgba(255,255,255,.13)}
-.pl-p[data-pl-came]{outline:2px dashed rgba(255,255,255,.6)}
+.pl-ph{display:block;aspect-ratio:2/3;border-radius:.375rem;background:rgba(255,255,255,.045);--ow:1px;--ol:rgba(255,255,255,.13)}
+.pl-p[data-pl-came]{--ol:rgba(255,255,255,.6);box-shadow:none}
 .pl-p[data-pl-came] img{opacity:.5}
-.pl-p[data-pl-came]:hover{outline-color:#fbbf24}
+.pl-p[data-pl-came]:hover{--ol:#fbbf24}
+.pl-ph::before,.pl-p[data-pl-came]::before,.rg .rm-p[style*="--dm"]::before{content:"";position:absolute;inset:calc(var(--ow)*-1);z-index:1;border:var(--ow) dashed var(--ol);
+border-radius:calc(.375rem + var(--ow));pointer-events:none}
 .pl-cm{position:absolute;left:50%;top:50%;translate:-50% -50%;border-radius:9999px;background:rgba(0,0,0,.82);padding:0 .375rem;color:#fff;font-size:.6875rem;font-weight:700;
 line-height:1.125rem;border:1px solid rgba(255,255,255,.55);white-space:nowrap;pointer-events:none}
 .pl-more{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
@@ -80,6 +88,7 @@ span.rm-p{height:calc(var(--pw)*1.5);aspect-ratio:auto}
 .rm.rg .rm-top{height:var(--th,30px)}
 .pl-stage[class] .rm.rg .rm-p{animation:none;transition:scale var(--sc,200ms) cubic-bezier(.3,.3,.2,1)}
 .rg .rm-w{will-change:translate}
+.rg .rm-w>.rm-p{will-change:transform,translate,scale,opacity;backface-visibility:hidden}
 @keyframes rg-in{from{opacity:0}}
 @keyframes rg-out{from{opacity:var(--o,1)}to{opacity:0}}
 .pl-stage[class] .rm.rg .rm-p.rg-new{animation:rg-in var(--fi,190ms) linear var(--fd,0ms) backwards}
@@ -90,9 +99,9 @@ span.rm-p{height:calc(var(--pw)*1.5);aspect-ratio:auto}
 .rg .rm-p[data-pl-came]{z-index:1}
 .rg .rm-p[data-r-x]{pointer-events:none}
 .rg .rm-p[style*="--dm"] img{opacity:.38;filter:saturate(.3)}
-.rg .rm-p[style*="--dm"]{outline-style:dashed}
-.rg .rg-c{z-index:3;outline:3px solid #fff;box-shadow:0 6px 18px rgba(0,0,0,.6);cursor:default}
-.rg .rg-c:hover,.rg .rg-c:focus-visible{outline-color:#fff}
+.rg .rm-p[style*="--dm"]{box-shadow:none}
+.rg .rg-c{z-index:3;--ow:3px;--ol:#fff;cursor:default}
+.rg .rg-c:hover,.rg .rg-c:focus-visible{--ol:#fff}
 .rg .rg-c:active{filter:none}
 .rm-info.rg-info{gap:0}
 .rg-tall .rm-info.rg-info{height:42px}
@@ -161,11 +170,11 @@ animation:fn-sw 1.6s cubic-bezier(.45,.05,.55,.95) calc(var(--fw,0ms) + var(--fa
 .fn-row .ix-c[data-fl]{--fw:1250ms}
 .fn-row .ix-c[data-d="dn"][aria-pressed="true"] .ix-z::after{animation-direction:reverse}
 @keyframes fn-sw{0%{translate:-101% 0}72%,100%{translate:101% 0}}
-.ix-c>.fn-pz{left:calc(var(--pa,var(--v))*10%);width:calc((var(--pb,var(--v)) - var(--pa,var(--v)))*10%);opacity:0;
-transition:left .28s cubic-bezier(.3,.3,.2,1),width .28s cubic-bezier(.3,.3,.2,1),opacity .28s ease-in}
+.ix-c>.fn-pz{left:0;width:100%;transform-origin:0 0;translate:calc(var(--pa,var(--v))*10%) 0;scale:calc((var(--pb,var(--v)) - var(--pa,var(--v)))/10) 1;opacity:0;
+transition:translate .28s cubic-bezier(.3,.3,.2,1),scale .28s cubic-bezier(.3,.3,.2,1),opacity .28s ease-in}
 .ix-c[data-fn-pd="up"] .fn-pz{background:#22c55e}
 .ix-c[data-fn-pd="dn"] .fn-pz{background:repeating-linear-gradient(135deg,#ef4444 0 3px,rgba(239,68,68,.4) 3px 6px)}
-.ix-c>.fn-pk{left:calc(var(--pm,var(--v))*10%);width:0;margin-left:-1px;border-left:2px solid #fde68a;opacity:0;transition:left .28s cubic-bezier(.3,.3,.2,1),opacity .28s ease-in}
+.ix-c>.fn-pk{left:0;width:100%;margin-left:-1px;translate:calc(var(--pm,var(--v))*10%) 0;border-left:2px solid #fde68a;opacity:0;transition:translate .28s cubic-bezier(.3,.3,.2,1),opacity .28s ease-in}
 .fn-pk::after{content:"";position:absolute;left:-4px;top:-1px;border:3px solid transparent;border-top:4px solid #fde68a}
 .ix-c[data-fn-pk] .fn-pz{opacity:.78;transition-timing-function:cubic-bezier(.3,.3,.2,1),cubic-bezier(.3,.3,.2,1),ease-out}
 .ix-c[data-fn-pk] .fn-pk{opacity:1}
@@ -175,8 +184,8 @@ transition:left .28s cubic-bezier(.3,.3,.2,1),width .28s cubic-bezier(.3,.3,.2,1
 .fn-pt{display:none;color:#fde68a}
 .ix-c[data-fn-pk] .ix-r,.ix-c[data-fn-pk] .ix-p{display:none}
 .ix-c[data-fn-pk] .fn-pt{display:inline}
-.rg .rm-p[data-fn-lit]{outline-color:#4ade80;box-shadow:0 0 0 4px rgba(34,197,94,.4),0 4px 14px rgba(0,0,0,.55)}
-.rg .rm-p[data-fn-ld="dn"]{outline-color:#f87171;box-shadow:0 0 0 4px rgba(239,68,68,.4),0 4px 14px rgba(0,0,0,.55)}
+.rg .rm-p[data-fn-lit]{--ol:#4ade80;box-shadow:0 0 0 2px var(--ol),0 0 0 6px rgba(34,197,94,.4)}
+.rg .rm-p[data-fn-ld="dn"]{--ol:#f87171;box-shadow:0 0 0 2px var(--ol),0 0 0 6px rgba(239,68,68,.4)}
 .rg .rm-p[data-fn-lit]::after{content:attr(data-fn-lit);position:absolute;left:-4px;top:-4px;min-width:19px;height:19px;border-radius:10px;background:#0d111c;border:1.5px solid #4ade80;font-size:.6875rem;line-height:16px;
 text-align:center;scale:calc(1/var(--s,1));pointer-events:none}
 .rg .rm-p[data-fn-ld="dn"]::after{border-color:#f87171}
@@ -300,4 +309,86 @@ white-space:nowrap;box-shadow:0 2px 12px rgba(251,191,36,.28)}
 @media (prefers-reduced-motion:reduce){
 .fn-row .ix-c[aria-pressed="true"] .ix-z::after{animation:none;translate:0 0;opacity:.5}
 .ix-c>.fn-pz,.ix-c>.fn-pk{transition:none}
+}
+/*
+The wide side panel, from 1,024 px: one flat column. The card's parts and the chips are placed straight in the
+section's grid: who you look at on top, the chips under it, and what to do at the foot. The foot grows upward into
+free space, so nothing above it moves when a poster is pointed at.
+*/
+.fn-im{display:none}
+@media (min-width:1024px){
+.pl .rm.rg.rg-big{grid-template-columns:minmax(0,1fr) 280px;grid-template-rows:32px auto auto auto minmax(0,1fr) auto auto auto auto;column-gap:28px;row-gap:0}
+.pl .rm.rg.rg-big .rm-map{grid-column:1;grid-row:1/-1}
+.pl .rm.rg.rg-big .rm-info.rg-info,.pl .rg-big .fn-card{display:contents}
+.pl .rg-big .fn-tb{grid-column:2;grid-row:1;height:32px;padding:0;gap:8px;border:0}
+.pl .rg-big .fn-tb:has(.fn-tip) .fn-tr,.pl .rg-big .fn-tb .fn-bk:disabled{display:none}
+.pl .rg-big .fn-tip{font-size:.75rem;color:#6b7280}
+.pl .rg-big .fn-kk,.pl .rg-big .fn-vs{margin:0;font-size:.625rem;line-height:.875rem;letter-spacing:.1em}
+.pl .rg-big .fn-kk{grid-column:2;grid-row:2;margin-top:22px;justify-self:start;color:#6b7280}
+.pl .rg-big .fn-vs{grid-column:2;grid-row:6;margin-bottom:6px;justify-self:start;color:#6b7280}
+.pl .rg-big .rg-info:not([data-r-pk]) .fn-card[data-fn-root] .fn-vs{display:none}
+.pl .rg-big .fn-vs b{color:#9ca3af}
+.pl .rg-big .fn-v1{display:inline}
+.pl .rg-big .fn-v2{display:none}
+.pl .rg-big .fn-nm{grid-column:2;grid-row:3;display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:4px;height:94px;margin-top:6px}
+.pl .rg-big .fn-nm b{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;white-space:normal;font-size:1.75rem;line-height:2rem;letter-spacing:-.025em}
+.pl .rg-big .fn-nm small{font-size:.875rem;color:#9ca3af}
+.pl .rm.rg.rg-big .rm-top{grid-column:2;grid-row:4;display:flex;flex-direction:column;align-items:stretch;gap:8px;height:auto;margin:0}
+.pl .rm.rg.rg-big .rm-top::before{content:"Traits · tap to filter";font-size:.625rem;line-height:.875rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#6b7280}
+.pl .rg-big .ix-6{grid-auto-rows:28px;gap:5px}
+.pl .rg-big .ix-c{border-radius:8px;border-color:rgba(255,255,255,.12);background:rgba(255,255,255,.03)}
+.pl .rg-big .fn-df{grid-column:2;grid-row:7;height:auto;margin:0 0 10px;gap:4px;align-content:flex-end}
+.pl .rg-big .fn-d{height:22px;font-size:.75rem}
+.pl .rg-big .rg-info:not([data-r-pk]) .fn-card[data-fn-root] .fn-df{display:none}
+.pl .rg-big .fn-go{grid-column:2;grid-row:8;justify-items:stretch;margin:0}
+.pl .rg-big .fn-open{height:40px;justify-content:center}
+.pl .rg-big .fn-this,.pl .rg-big .fn-hint{display:none}
+.pl .rg-big .fn-mv{max-width:none;height:40px;display:flex;align-items:center;justify-content:center;border-radius:.625rem;border:1px dashed rgba(251,191,36,.6);font-size:.8125rem;color:#fbbf24}
+.pl .rg-big .rg-info:not([data-r-pk]) .fn-mv{display:none}
+.pl .rg-big .fn-nt{grid-column:2;grid-row:9;height:auto;margin:10px 0 0;-webkit-line-clamp:3}
+.pl .rg-big .rg-info[data-r-pk] .fn-kk{color:#fbbf24}
+}
+/*
+The full screen view: the browser's full screen of the section, or the section covering the page where a browser has
+none (`.pl-fs`, an iPhone). The script sizes the posters by the space. From 1,024 px the side panel grows with the
+screen (`--pane`, `--fz`), shows the poster of the title it is about, and sets everything larger. On a big screen the
+small controls grow too.
+*/
+.rm-fs{position:absolute;right:6px;top:6px;display:grid;place-items:center;width:34px;height:32px;border-radius:.5rem;background:rgba(13,17,28,.92);border:1px solid rgba(255,255,255,.3);color:#fff}
+.rm-fs:hover{border-color:#fbbf24}
+.pl.pl-map:is(:fullscreen,.pl-fs){height:100dvh!important;width:100vw;max-width:none;border:0;border-radius:0;padding:1rem 1.5rem 1.25rem;background:#0b0f19}
+.pl.pl-map.pl-fs{position:fixed;inset:0;z-index:1000}
+.pl.pl-map:is(:fullscreen,.pl-fs) .pl-body{flex:1;min-height:0}
+.pl.pl-map:is(:fullscreen,.pl-fs) .pl-stage.pl-map{flex:1;height:auto;min-height:0}
+@media (min-width:1024px){
+.pl.pl-map:is(:fullscreen,.pl-fs){--pane:clamp(300px,27vw,960px);--fz:clamp(1rem,.62vw + .3rem,2.1rem)}
+.pl.pl-map:is(:fullscreen,.pl-fs) .rm.rg.rg-big{grid-template-columns:minmax(0,1fr) calc(var(--pane)*.44) calc(var(--pane)*.56 - 18px);grid-template-rows:auto auto auto auto 0 auto auto auto minmax(0,1fr);column-gap:18px}
+.pl.pl-map:is(:fullscreen,.pl-fs) .rm.rg.rg-big .rm-map{margin-right:14px}
+.pl.pl-map:is(:fullscreen,.pl-fs) .rg-big .fn-tb{grid-column:2/4;height:auto;min-height:32px}
+.pl.pl-map:is(:fullscreen,.pl-fs) .rg-big .fn-tip{font-size:calc(var(--fz)*.8)}
+.pl.pl-map:is(:fullscreen,.pl-fs) .rg-big .fn-im{display:block;grid-column:2;grid-row:2/4;align-self:start;width:100%;aspect-ratio:2/3;object-fit:cover;margin-top:22px;border-radius:.625rem;background:#1b2130;box-shadow:0 0 0 2px rgba(255,255,255,.14)}
+.pl.pl-map:is(:fullscreen,.pl-fs) .rg-big .rg-info[data-r-pk] .fn-im{box-shadow:0 0 0 2px #fbbf24}
+.pl.pl-map:is(:fullscreen,.pl-fs) .rg-big .fn-kk{grid-column:3;grid-row:2/4;align-self:start;font-size:calc(var(--fz)*.62);line-height:1.2}
+.pl.pl-map:is(:fullscreen,.pl-fs) .rg-big .fn-nm{grid-column:3;grid-row:2/4;align-self:start;height:auto;margin-top:calc(22px + var(--fz)*1.3);gap:6px}
+.pl.pl-map:is(:fullscreen,.pl-fs) .rg-big .fn-nm b{-webkit-line-clamp:4;font-size:calc(var(--fz)*1.9);line-height:1.12}
+.pl.pl-map:is(:fullscreen,.pl-fs) .rg-big .fn-nm small{font-size:calc(var(--fz)*.9)}
+.pl.pl-map:is(:fullscreen,.pl-fs) .rm.rg.rg-big .rm-top{grid-column:2/4;margin-top:28px;gap:10px}
+.pl.pl-map:is(:fullscreen,.pl-fs) .rm.rg.rg-big .rm-top::before{font-size:calc(var(--fz)*.62);line-height:1.2}
+.pl.pl-map:is(:fullscreen,.pl-fs) .rg-big .ix-6{grid-auto-rows:calc(var(--fz)*2.6);gap:calc(var(--fz)*.35)}
+.pl.pl-map:is(:fullscreen,.pl-fs) .rg-big .ix-c{font-size:calc(var(--fz)*.95);line-height:1.3;padding:0 .75em;border-radius:10px}
+.pl.pl-map:is(:fullscreen,.pl-fs) .rg-big .ix-c>b{line-height:1.3;padding:.1em 0}
+.pl.pl-map:is(:fullscreen,.pl-fs) .rg-big .ix-c>i{font-size:1.1em}
+.pl.pl-map:is(:fullscreen,.pl-fs) .rg-big :is(.fn-vs,.fn-df,.fn-go,.fn-nt){grid-column:2/4}
+.pl.pl-map:is(:fullscreen,.pl-fs) .rg-big .fn-vs{font-size:calc(var(--fz)*.62);line-height:1.2;margin:calc(var(--fz)*1.6) 0 8px}
+.pl.pl-map:is(:fullscreen,.pl-fs) .rg-big .fn-df{max-height:none;gap:6px;margin-bottom:calc(var(--fz)*.7)}
+.pl.pl-map:is(:fullscreen,.pl-fs) .rg-big .fn-d{height:auto;padding:.3em .7em .3em .55em;font-size:calc(var(--fz)*.85)}
+.pl.pl-map:is(:fullscreen,.pl-fs) .rg-big :is(.fn-open,.fn-mv){height:calc(var(--fz)*2.7);font-size:var(--fz)}
+.pl.pl-map:is(:fullscreen,.pl-fs) .rg-big .fn-open svg{width:1em;height:1em}
+.pl.pl-map:is(:fullscreen,.pl-fs) .rg-big .fn-nt{font-size:calc(var(--fz)*.8);line-height:1.4}
+}
+@media (min-width:2400px){
+.pl.pl-map:is(:fullscreen,.pl-fs) :is(.fn-tb,.rm-z,.rm-fs,.rm-key){zoom:1.4}
+}
+@media (min-width:3200px){
+.pl.pl-map:is(:fullscreen,.pl-fs) :is(.fn-tb,.rm-z,.rm-fs,.rm-key){zoom:1.75}
 }

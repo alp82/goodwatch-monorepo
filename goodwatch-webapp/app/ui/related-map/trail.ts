@@ -57,7 +57,7 @@ export function trailForm(core: MapCore, words: TraitWords): MapForm {
 		if (n >= 4) stops += `<li class="fn-tm">${steps(ctx, 1, `+${n - 3}`, `${n - 1} titles in between. Open the list.`)}</li>`
 		for (let i = Math.max(1, n - 2); i < n; i++) stops += `<li class="fn-ti">${to(ctx, i, thumb(at(ctx, i)))}</li>`
 		stops += `<li class="fn-tc"><span class="fn-cap" aria-current="step" title="${esc(ctx.c.t)}">${thumb(ctx.c)}<span class="pl-sr">You are here: ${esc(ctx.c.t)}</span></span></li>`
-		return `<div class="fn-tb">${back(ctx)}<ol class="fn-tr" aria-label="Where you walked">${stops}</ol>${n ? "" : '<p class="fn-tip">Tap a poster to move</p>'}</div>`
+		return `<div class="fn-tb">${back(ctx)}<ol class="fn-tr" aria-label="Where you walked">${stops}</ol>${n ? "" : '<p class="fn-tip"><span class="rg-h">Point to compare, tap to move</span><span class="rg-t">Hold to compare, tap to move</span></p>'}</div>`
 	}
 
 	// --- The card ---------------------------------------------------------------------------------------------------
@@ -84,7 +84,7 @@ export function trailForm(core: MapCore, words: TraitWords): MapForm {
 		const go = own
 			? '<span class="fn-this">This page</span>'
 			: `<a class="fn-open" data-pl-nav="" data-pl-open="" href="${esc(core.href(c))}"><span>Open<span class="fn-ow"> page</span><span class="pl-sr"> of ${esc(c.t)}</span></span>${RIGHT}</a>`
-		return `${posterTrail(ctx)}<div class="fn-card"${own ? ' data-fn-root=""' : ""}><p class="fn-kk"><b class="fn-k0">You are here</b><b class="fn-k1">Preview</b></p><p class="fn-vs"><span class="fn-v1">vs</span><span class="fn-v2">compared with</span> <b${mediaTextHtml(ctx.root.language ?? "en")}>${esc(ctx.root.t)}</b></p><p class="fn-nm"><b${mediaTextHtml(c.language ?? "en")} data-pl-here="" data-r-nm="">${esc(
+		return `${posterTrail(ctx)}<div class="fn-card"${own ? ' data-fn-root=""' : ""}><img class="fn-im" data-r-im="" alt="" loading="lazy" decoding="async" src="${esc(core.src(c.p))}"><p class="fn-kk"><b class="fn-k0">You are here</b><b class="fn-k1">Preview</b></p><p class="fn-vs"><span class="fn-v1">vs</span><span class="fn-v2">compared with</span> <b${mediaTextHtml(ctx.root.language ?? "en")}>${esc(ctx.root.t)}</b></p><p class="fn-nm"><b${mediaTextHtml(c.language ?? "en")} data-pl-here="" data-r-nm="">${esc(
 			c.t,
 		)}</b><small data-r-yr="">${kit.when(c)}</small></p><p class="fn-df" data-pl-why="" data-r-df="">${diff(ctx, c)}</p><div class="fn-go">${go}<span class="fn-mv">Tap it to move here</span></div><p class="fn-nt" data-r-nt="">${note}</p></div>`
 	}
@@ -95,12 +95,13 @@ export function trailForm(core: MapCore, words: TraitWords): MapForm {
 		return mx.chip(ctx, { token, label: kit.word(key), v: val(ctx.c, key), on, color: mx.colorOf(ctx, token) })
 	}
 	const chips = (ctx: MapCtx, tokens: string[]) => {
-		const own = chipTokens((key) => val(ctx.c, key), words)
+		const per = kit.fullTall() ? 5 : 3
+		const own = chipTokens((key) => val(ctx.c, key), words, per)
 		// A chip keeps its place when it is turned on. One that the walk brought along from another title goes first.
 		const keys = own.map((token) => kit.tok(token)?.key)
 		const here = own.map((token) => tokens.filter((t) => kit.tok(t)?.key === kit.tok(token)?.key)[0] ?? token)
 		const brought = tokens.filter((t) => keys.indexOf(kit.tok(t)?.key) < 0)
-		return brought.concat(here).slice(0, Math.max(6, tokens.length))
+		return brought.concat(here).slice(0, Math.max(per * 2, tokens.length))
 	}
 	const rootOf = (section: Element) => (section.matches("[data-r-root]") ? section : section.querySelector("[data-r-root]"))
 	/** A chip is pointed at or held: the posters it is about are lit, with its trait as a badge. */
@@ -164,7 +165,7 @@ export function trailForm(core: MapCore, words: TraitWords): MapForm {
 		note: (_ctx, tokens, list, places, more) =>
 			tokens.length
 				? `Around it: titles ${kit.withOrWithout(tokens)}. A colored line marks the posters that came in for it.${list.length < places && !more ? ` These ${list.length} are all there are.` : ""}`
-				: "A chip fills to its level. Tap a full one for titles without that trait, a low one for titles with it.",
+				: '<span class="fn-hint">A chip fills to its level. Tap a full one for titles without that trait, a low one for titles with it.</span>',
 		act: (ctx, act, arg) => {
 			if (act !== "tk") return false
 			mx.choose(ctx, arg, MAX_ON)

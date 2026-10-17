@@ -120,7 +120,7 @@ type Moved = HTMLElement & {
 	__xv?: string
 	__xu?: number
 	__end?: number
-	__pk?: { nm: string; yr: string; df: string } | null
+	__pk?: { nm: string; yr: string; df: string; im?: string } | null
 }
 
 export function ringsKit(core: MapCore, words: TraitWords) {
@@ -140,27 +140,42 @@ export function ringsKit(core: MapCore, words: TraitWords) {
 	// The server draws for a phone. The browser measures the map before the first paint and draws again if needed.
 	const box = { w: 346, h: 368 }
 	const roomy = () => box.w >= 600
-	const posterW = () => (roomy() ? 60 : Math.max(44, Math.min(56, Math.floor((box.w - 4) / 5.43))))
+	/** The most posters a map holds at any zoom. A big screen has room for hundreds, and so many make a pan stutter. */
+	const MAX_PLACES = 150
+	/** A full screen has one zoom step fewer than the page: its smallest step is small enough. */
+	const FULL_ZOOMS = [1, 0.75, 0.56]
+	/** The section is in full screen: the browser's own, or the cover of the page where there is none (an iPhone). */
+	const full = () => {
+		const doc = win?.document
+		return Boolean(doc?.fullscreenElement?.hasAttribute?.("data-related-map") || doc?.querySelector?.("[data-related-map].pl-fs"))
+	}
+	const posterW = () => (full() ? fullW() : roomy() ? 96 : Math.max(44, Math.min(56, Math.floor((box.w - 4) / 5.43))))
 	/** How small the posters get: on a phone they stay wide enough for a finger. */
-	const zooms = () => (roomy() ? [1, 0.72, 0.54] : [1, 0.8, 0.66])
+	const zooms = () => (full() ? FULL_ZOOMS : roomy() ? [1, 0.75, 0.56, 0.42] : [1, 0.8, 0.66])
+	const fullMemo: Record<string, number> = {}
+	/**
+	 * A full screen's posters: sized by the space the map has, between a floor and a ceiling, and grown further when
+	 * the smallest zoom would have room for more than MAX_PLACES, so that a big screen is filled, not left empty.
+	 */
+	const fullW = () => {
+		const id = geoOf()
+		if (fullMemo[id]) return fullMemo[id]
+		let w = Math.max(roomy() ? 96 : 56, Math.min(180, box.h / 4.4, box.w / 6.5))
+		while (w < 360 && lattice(w * FULL_ZOOMS[FULL_ZOOMS.length - 1]).length > MAX_PLACES) w += 4
+		fullMemo[id] = Math.round(w)
+		return fullMemo[id]
+	}
 	const geoOf = () => `${box.w}|${box.h}`
 	/** How much wider than tall the rings are: a wide stage gets wide rings, so that every ring is whole. */
 	const stretch = () => Math.max(1, Math.min(2.4, (box.w / box.h) * 0.95))
 	const memo: Record<string, Cell[] & { ix?: Record<string, number> }> = {}
-	/**
-	 * The places of a lattice of posters that are fully inside the map, nearest first: ring by ring, and around each
-	 * ring clockwise from the top. The lattice is the same after a shift by any of its places, which is what lets a
-	 * step be a pan.
-	 */
-	const cells = (scale: number): Cell[] & { ix?: Record<string, number> } => {
-		const id = `${geoOf()}|${scale}`
-		if (memo[id]) return memo[id]
+	/** Every place of a lattice of posters `w` wide that is fully inside the map, in no order. */
+	const lattice = (w: number): Cell[] => {
 		const wide = stretch()
-		const w = posterW() * scale
 		const h = w * 1.5
 		const p = w * 1.107
 		const q = h * 1.0715
-		const out: Cell[] & { ix?: Record<string, number> } = []
+		const out: Cell[] = []
 		const cols = Math.ceil(box.w / 2 / p) + 1
 		const rows = Math.ceil(box.h / 2 / q) + 1
 		for (let i = -cols; i <= cols; i++)
@@ -177,7 +192,28 @@ export function ringsKit(core: MapCore, words: TraitWords) {
 				if (a < 0) a += Math.PI * 2
 				out.push({ x, y, d, a, i, u, id: `${i},${u}`, b: Math.max(1, Math.ceil((d - 0.8 * w) / (1.107 * w))) })
 			}
+		return out
+	}
+	/**
+	 * The places of the map, nearest first: ring by ring, and around each ring clockwise from the top. At most
+	 * MAX_PLACES: a ring that fits only in part keeps its places nearest the middle, all the way round. The lattice is
+	 * the same after a shift by any of its places, which is what lets a step be a pan.
+	 */
+	const cells = (scale: number): Cell[] & { ix?: Record<string, number> } => {
+		const id = `${geoOf()}|${scale}`
+		if (memo[id]) return memo[id]
+		let out: Cell[] & { ix?: Record<string, number> } = lattice(posterW() * scale)
 		out.sort((m, n) => m.b - n.b || m.a - n.a)
+		if (out.length > MAX_PLACES) {
+			const b = out[MAX_PLACES].b
+			const whole = out.filter((c) => c.b < b)
+			const part = out
+				.filter((c) => c.b === b)
+				.sort((m, n) => m.d - n.d)
+				.slice(0, MAX_PLACES - whole.length)
+				.sort((m, n) => m.a - n.a)
+			out = whole.concat(part)
+		}
 		const ix: Record<string, number> = {}
 		out.forEach((cell, n) => {
 			ix[cell.id] = n
@@ -304,18 +340,22 @@ export function ringsKit(core: MapCore, words: TraitWords) {
 		const nm = card?.querySelector("[data-r-nm]")
 		const yr = card?.querySelector("[data-r-yr]")
 		const df = card?.querySelector("[data-r-df]")
+		const im = card?.querySelector("[data-r-im]") as HTMLImageElement | null | undefined
 		if (!card || !nm || !yr || !df) return
 		if (!t) {
 			if (card.__pk) {
 				nm.textContent = card.__pk.nm
 				yr.innerHTML = card.__pk.yr
 				df.innerHTML = card.__pk.df
+				if (im && card.__pk.im) im.src = card.__pk.im
 			}
 			card.__pk = null
 			card.removeAttribute("data-r-pk")
 			return
 		}
-		if (!card.__pk) card.__pk = { nm: nm.textContent ?? "", yr: yr.innerHTML, df: df.innerHTML }
+		if (!card.__pk) card.__pk = { nm: nm.textContent ?? "", yr: yr.innerHTML, df: df.innerHTML, im: im?.src }
+		// A full screen shows the poster too. Only a shown one is swapped, so that the page loads no extra images.
+		if (im && t.p && im.offsetWidth) im.src = core.src(t.p)
 		nm.textContent = t.t
 		yr.innerHTML = when(t)
 		df.innerHTML = diff(ctx, t)
@@ -333,7 +373,38 @@ export function ringsKit(core: MapCore, words: TraitWords) {
 		const z = zoomOf(ctx)
 		return `<div class="rm-z" role="group" aria-label="How far out the map reaches"><button type="button" data-pl-act="z" data-arg="1" aria-label="Further out: more titles"${
 			z >= zooms().length - 1 ? " disabled" : ""
-		}>−</button><span>${shown}</span><button type="button" data-pl-act="z" data-arg="-1" aria-label="Closer: larger posters"${z <= 0 ? " disabled" : ""}>+</button></div>`
+		}>−</button><span>${shown}</span><button type="button" data-pl-act="z" data-arg="-1" aria-label="Closer: larger posters"${z <= 0 ? " disabled" : ""}>+</button></div>${fullCtl()}`
+	}
+	/** The way into the full screen view of the map, and out of it. */
+	const fullCtl = () => {
+		const on = full()
+		return `<button type="button" class="rm-fs" data-pl-act="fs" data-arg="" aria-label="${on ? "Exit full screen" : "Full screen"}" title="${on ? "Exit full screen (Esc)" : "Full screen"}"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${
+			on ? '<path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/>' : '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>'
+		}</svg></button>`
+	}
+	const toggleFull = (section: Element) => {
+		const doc = win.document
+		const el = (section.closest("[data-related-map]") ?? section) as HTMLElement
+		if (doc.fullscreenElement) return void doc.exitFullscreen()
+		if (el.classList.contains("pl-fs")) {
+			el.classList.remove("pl-fs")
+			doc.documentElement.style.overflow = ""
+			return
+		}
+		if (el.requestFullscreen) el.requestFullscreen().catch(() => cover(el))
+		else cover(el)
+	}
+	// A browser without element full screen (an iPhone): the section covers the page instead.
+	const cover = (el: HTMLElement) => {
+		el.classList.add("pl-fs")
+		win.document.documentElement.style.overflow = "hidden"
+		const off = (e: KeyboardEvent) => {
+			if (e.key !== "Escape") return
+			el.classList.remove("pl-fs")
+			win.document.documentElement.style.overflow = ""
+			win.removeEventListener("keydown", off)
+		}
+		win.addEventListener("keydown", off)
 	}
 
 	// --- A picture: who sits where ---------------------------------------------------------------------------------
@@ -813,6 +884,9 @@ export function ringsKit(core: MapCore, words: TraitWords) {
 				},
 				T.end + 60,
 			)
+		// A poster stays the element it was, with its image: one the server drew for a phone gets the browser's size.
+		const small = core.src("").includes("/w154/") ? null : world.querySelectorAll<HTMLImageElement>('img[src*="/w154/"]')
+		if (small) for (let i = 0; i < small.length; i++) small[i].src = core.src(small[i].src.split("/w154/")[1] ?? "")
 		return true
 	}
 	/** The map's size, measured. True when the picture in the stage was drawn for another size. */
@@ -949,6 +1023,10 @@ export function ringsKit(core: MapCore, words: TraitWords) {
 			peek: look,
 			stage: picture,
 			act: (ctx, name, arg, _el, section) => {
+				if (name === "fs") {
+					toggleFull(section)
+					return false
+				}
 				if (name === "z") {
 					const z = zoomOf(ctx)
 					const next = Math.max(0, Math.min(zooms().length - 1, z + Number(arg)))
@@ -985,5 +1063,7 @@ export function ringsKit(core: MapCore, words: TraitWords) {
 			},
 		}
 	}
-	return { words, word, emo, low, tok, passes, around, gaps, withOrWithout, make, when }
+	/** A full screen map tall enough for more chips beside it. */
+	const fullTall = () => full() && box.h >= 1400
+	return { words, word, emo, low, tok, passes, around, gaps, withOrWithout, make, when, fullTall }
 }
