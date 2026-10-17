@@ -84,7 +84,7 @@ export function trailForm(core: MapCore, words: TraitWords): MapForm {
 		const go = own
 			? '<span class="fn-this">This page</span>'
 			: `<a class="fn-open" data-pl-nav="" data-pl-open="" href="${esc(core.href(c))}"><span>Open<span class="fn-ow"> page</span><span class="pl-sr"> of ${esc(c.t)}</span></span>${RIGHT}</a>`
-		return `${posterTrail(ctx)}<div class="fn-card"${own ? ' data-fn-root=""' : ""}><p class="fn-kk"><b class="fn-k0">You are here</b><b class="fn-k1">Preview</b></p><p class="fn-vs"><span class="fn-v1">vs</span><span class="fn-v2">compared with</span> <b${mediaTextHtml(ctx.root.language ?? "en")}>${esc(ctx.root.t)}</b></p><p class="fn-nm"><b${mediaTextHtml(c.language ?? "en")} data-pl-here="" data-r-nm="">${esc(
+		return `${posterTrail(ctx)}<div class="fn-card"${own ? ' data-fn-root=""' : ""}><img class="fn-im" data-r-im="" alt="" loading="lazy" decoding="async" src="${esc(core.src(c.p))}"><p class="fn-kk"><b class="fn-k0">You are here</b><b class="fn-k1">Preview</b></p><p class="fn-vs"><span class="fn-v1">vs</span><span class="fn-v2">compared with</span> <b${mediaTextHtml(ctx.root.language ?? "en")}>${esc(ctx.root.t)}</b></p><p class="fn-nm"><b${mediaTextHtml(c.language ?? "en")} data-pl-here="" data-r-nm="">${esc(
 			c.t,
 		)}</b><small data-r-yr="">${kit.when(c)}</small></p><p class="fn-df" data-pl-why="" data-r-df="">${diff(ctx, c)}</p><div class="fn-go">${go}<span class="fn-mv">Tap it to move here</span></div><p class="fn-nt" data-r-nt="">${note}</p></div>`
 	}
