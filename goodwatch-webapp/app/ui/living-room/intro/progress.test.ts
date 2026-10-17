@@ -2,9 +2,10 @@
 import assert from "node:assert/strict"
 import { describe, it } from "node:test"
 import {
-	BOOT_SEEN_SCRIPT,
 	PROGRESS_KEY,
+	TAPS_KEY,
 	introStart,
+	introStartScript,
 	parseProgress,
 } from "./progress.ts"
 
@@ -97,12 +98,56 @@ describe("parseProgress", () => {
 })
 
 describe("the start page's inline script", () => {
-	it("marks the page when the tab has progress, and nothing else", () => {
-		assert.match(
-			BOOT_SEEN_SCRIPT,
-			new RegExp(`sessionStorage\\.getItem\\("${PROGRESS_KEY}"\\)`),
-		)
-		assert.match(BOOT_SEEN_SCRIPT, /data-gw-intro","seen"/)
-		assert.ok(BOOT_SEEN_SCRIPT.length < 200)
+	/** Runs the script in a fake browser: this tab's sessionStorage and how the page was loaded. */
+	const run = (kept: Record<string, string>, navigation: string) => {
+		const store = new Map(Object.entries(kept))
+		const attrs: Record<string, string> = {}
+		const sessionStorage = {
+			getItem: (k: string) => store.get(k) ?? null,
+			removeItem: (k: string) => store.delete(k),
+		}
+		const performance = { getEntriesByType: () => [{ type: navigation }] }
+		const document = {
+			documentElement: {
+				setAttribute: (k: string, v: string) => {
+					attrs[k] = v
+				},
+			},
+		}
+		new Function(
+			"sessionStorage",
+			"performance",
+			"document",
+			introStartScript(10),
+		)(sessionStorage, performance, document)
+		return {
+			store: Object.fromEntries(store),
+			seen: attrs["data-gw-intro"] === "seen",
+		}
+	}
+	const mid = {
+		[PROGRESS_KEY]: JSON.stringify({ scene: 4 }),
+		[TAPS_KEY]: "[1]",
+	}
+
+	it("forgets an unfinished film on a reload, so it starts over with the boot screen", () => {
+		assert.deepEqual(run(mid, "reload"), { store: {}, seen: false })
+	})
+	it("keeps a finished film on a reload: left, or at the quiz", () => {
+		for (const kept of [{ left: true }, { scene: 10 }]) {
+			const raw = { [PROGRESS_KEY]: JSON.stringify(kept) }
+			assert.deepEqual(run(raw, "reload"), { store: raw, seen: true })
+		}
+	})
+	it("keeps the film where it was when the visitor comes back, and hides the boot screen", () => {
+		for (const navigation of ["back_forward", "navigate"])
+			assert.deepEqual(run(mid, navigation), { store: mid, seen: true })
+	})
+	it("shows the boot screen in a new tab", () => {
+		assert.deepEqual(run({}, "navigate"), { store: {}, seen: false })
+		assert.deepEqual(run({}, "reload"), { store: {}, seen: false })
+	})
+	it("stays small", () => {
+		assert.ok(introStartScript(10).length < 400)
 	})
 })

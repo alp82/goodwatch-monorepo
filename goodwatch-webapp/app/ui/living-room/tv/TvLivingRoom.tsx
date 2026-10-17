@@ -1,13 +1,19 @@
 // The start page's scene with the new TV: the room (TvRoom.tsx), the TV's state (use-tv.ts), what is on the TV
 // (TvScreen.tsx), the data behind it and the effects the machine names. The route hands it the loader's data.
 import { useLocation, useRevalidator } from "@remix-run/react"
-import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react"
+import {
+	type ReactNode,
+	useCallback,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react"
 import { useTonightsPick } from "~/ui/navigation/useTonightsPick"
 import { useContinueWithGoogle, whenAuthFails } from "~/utils/auth-client"
 import { onFirstInteraction } from "~/utils/first-interaction"
 import { useLeaveThroughTv, useReturnIntoTv } from "../tv-transition"
 import { TvRoom } from "./TvRoom"
-import { HomeHeading, type HomeHeadingTag } from "./screens/Home"
 import {
 	DiscoverCode,
 	DiscoverData,
@@ -16,8 +22,8 @@ import {
 	ExplorerData,
 	QuizCode,
 	RateCode,
-	ServiceData,
 	SearchData,
+	ServiceData,
 	ShowsCode,
 	ShowsData,
 	TasteCode,
@@ -27,13 +33,14 @@ import {
 	TonightCode,
 	type TvDiscoverScreens,
 	TvScreen,
-	type TvServiceScreens,
 	type TvSearchScreens,
+	type TvServiceScreens,
 	type TvShowsScreens,
 	loadFirstScreens,
 } from "./TvScreen"
 import { useReport } from "./kit"
 import type { TvCanvas } from "./room-tv"
+import { HomeHeading, type HomeHeadingTag } from "./screens/Home"
 import {
 	type TvHomeData,
 	homeApps,
@@ -44,15 +51,15 @@ import {
 	tvContextOf,
 	tvTitleKey,
 } from "./tv-home"
-import { type TvEffect, readTvState } from "./tv-machine"
+import { type TvEffect, type TvPower, readTvState } from "./tv-machine"
 import type { TvKnownTitle, TvTitleScreens } from "./tv-title"
 import { useTv } from "./use-tv"
 import type { TvDiscoverReport } from "./use-tv-discover"
 import type { TvEpisodeReport } from "./use-tv-episode"
 import type { TvExplorerReport } from "./use-tv-explorer"
 import { useTvPoolState } from "./use-tv-pool"
-import type { TvServiceReport } from "./use-tv-service"
 import type { TvSearchReport } from "./use-tv-search"
+import type { TvServiceReport } from "./use-tv-service"
 import type { TvShowsReport } from "./use-tv-shows"
 import type { TvTasteReport } from "./use-tv-taste"
 import type { TvTitleReport } from "./use-tv-title"
@@ -95,12 +102,15 @@ function Edition({
 export function TvLivingRoom({
 	data,
 	screenOverlay,
+	onPower,
 	belowIntro,
 	homeHeadingAs = "h1",
 }: {
 	data: TvHomeData
 	/** Over the TV's picture: the intro's boot screen and film. */
 	screenOverlay?: ReactNode
+	/** Told the TV's power as it changes: the intro stops when the set goes off and boots again when it comes on. */
+	onPower?: (power: TvPower) => void
 	/** At the top of the section below the room: "How GoodWatch works" for a guest. */
 	belowIntro?: ReactNode
 	/** The TV home headline's tag: "p" when the page has its own H1 below the room. */
@@ -355,8 +365,9 @@ export function TvLivingRoom({
 					return
 				// Continue with Google, back to the same TV screen.
 				case "sign-in":
-					whenAuthFails(google(`${here.current.pathname}${here.current.search}`), () =>
-						say("Sign in isn't working right now"),
+					whenAuthFails(
+						google(`${here.current.pathname}${here.current.search}`),
+						() => say("Sign in isn't working right now"),
 					)
 					return
 				default:
@@ -366,6 +377,8 @@ export function TvLivingRoom({
 		[google, say, leave, titleEffect, tasteEffect, episodeEffect],
 	)
 	const tv = useTv(ctx, onEffect)
+	const tvPower = tv.room.power
+	useEffect(() => onPower?.(tvPower), [onPower, tvPower])
 	// Typing puts the TV's focus on the key that searches for what is typed (the machine's `typed`).
 	const { dispatch } = tv
 	const onDraft = useCallback(

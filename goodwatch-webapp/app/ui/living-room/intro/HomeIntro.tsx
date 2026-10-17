@@ -3,7 +3,8 @@
 // follows their progress in this tab (progress.ts), so coming back never starts the film over.
 //
 // - The boot screen is in the server's HTML and plays from the first paint. It plays once per tab: Just look around,
-//   the TV's screens and the Remote never bring it back (only the TV's own power key boots the TV again).
+//   the TV's screens and the Remote never bring it back. A reload before the film is done starts it over (progress.ts).
+// - The TV's power key: off stops the film; on plays the boot screen again, then a guest's film from its first scene.
 // - "What is GoodWatch?" in the TV's menu (its About screen) plays the film again from its first scene, for anyone.
 // - Opening another TV screen, or Just look around in the quiz, steps the film aside for the TV.
 import { useSearchParams } from "@remix-run/react"
@@ -19,6 +20,7 @@ import {
 } from "react"
 import { HowGoodWatchWorks } from "../HowGoodWatchWorks"
 import type { HomeHeadingTag } from "../tv/screens/Home"
+import type { TvPower } from "../tv/tv-machine"
 import { BOOT_MS, Boot } from "./boot"
 import { FILM_CHAPTER_EVENT, FILM_LEAVE_EVENT } from "./events"
 import {
@@ -26,6 +28,7 @@ import {
 	hasTaps,
 	introStart,
 	readProgress,
+	unhideBoot,
 	writeProgress,
 } from "./progress"
 import { CHAPTERS, type ChapterId, type Enter } from "./scene"
@@ -34,7 +37,9 @@ const FilmScreen = lazy(() => import("./FilmScreen"))
 
 /** The film's first scene deals in this long into the boot screen, as the boot screen fades. */
 const FILM_AFTER_BOOT = BOOT_MS - 350
-const QUIZ_SCENE = CHAPTERS.findIndex((chapter) => chapter.id === "closer")
+export const QUIZ_SCENE = CHAPTERS.findIndex(
+	(chapter) => chapter.id === "closer",
+)
 
 const noop = () => () => {}
 /** False while the server renders and while the page hydrates; true after, and at once on a client navigation. */
@@ -49,6 +54,8 @@ const useHydrated = () =>
 type Showing =
 	| { kind: "film"; scene: number; enter: Enter; wait: number; run: number }
 	| { kind: "home" }
+	/** The TV is off: nothing of the intro shows or plays. */
+	| { kind: "off" }
 
 export type HomeIntro = {
 	/** Over the TV's picture. */
@@ -57,6 +64,8 @@ export type HomeIntro = {
 	below?: ReactNode
 	/** The TV home headline's tag. */
 	homeHeadingAs: HomeHeadingTag
+	/** The TV's power, as it changes (TvLivingRoom.tsx reports it). */
+	onPower: (power: TvPower) => void
 }
 
 export function useHomeIntro({ member }: { member: boolean }): HomeIntro {
@@ -65,6 +74,8 @@ export function useHomeIntro({ member }: { member: boolean }): HomeIntro {
 	const tvScreen = params.get("tv")
 	const [showing, setShowing] = useState<Showing | null>(null)
 	const [boot, setBoot] = useState(true)
+	/** Counts the boots: each power-on mounts a new boot screen, so its animation plays from the start. */
+	const [boots, setBoots] = useState(0)
 	const runs = useRef(0)
 
 	// Once the browser is in charge, the tab's progress decides. Until then the server's boot screen shows (hidden
@@ -104,7 +115,7 @@ export function useHomeIntro({ member }: { member: boolean }): HomeIntro {
 		if (!hydrated || !boot) return
 		const timer = setTimeout(() => setBoot(false), BOOT_MS)
 		return () => clearTimeout(timer)
-	}, [hydrated, boot])
+	}, [hydrated, boot, boots])
 
 	const leave = useCallback(() => {
 		writeProgress({ left: true })
@@ -121,6 +132,40 @@ export function useHomeIntro({ member }: { member: boolean }): HomeIntro {
 			run: runs.current,
 		})
 	}, [])
+
+	// The power key. Off: the film stops and the boot screen goes. On (from off): the boot screen plays again, then a
+	// guest's film from its first scene; a member gets the TV's home.
+	const power = useRef<TvPower>("on")
+	const onPower = useCallback(
+		(next: TvPower) => {
+			const was = power.current
+			power.current = next
+			if (next === was) return
+			if (next === "off") {
+				setBoot(false)
+				setShowing({ kind: "off" })
+				return
+			}
+			if (was !== "off") return
+			unhideBoot()
+			setBoot(true)
+			setBoots((n) => n + 1)
+			runs.current += 1
+			if (member) {
+				setShowing({ kind: "home" })
+				return
+			}
+			writeProgress({ scene: 0 })
+			setShowing({
+				kind: "film",
+				scene: 0,
+				enter: "deal",
+				wait: FILM_AFTER_BOOT,
+				run: runs.current,
+			})
+		},
+		[member],
+	)
 
 	// "What is GoodWatch?" in the TV's menu: the film from its first scene, and the TV's own About screen goes.
 	useEffect(() => {
@@ -168,10 +213,11 @@ export function useHomeIntro({ member }: { member: boolean }): HomeIntro {
 		screen: (
 			<>
 				{film}
-				{(!hydrated || boot) && <Boot />}
+				{(!hydrated || boot) && <Boot key={boots} />}
 			</>
 		),
 		below: member ? undefined : <HowGoodWatchWorks />,
 		homeHeadingAs: member ? "h1" : "p",
+		onPower,
 	}
 }

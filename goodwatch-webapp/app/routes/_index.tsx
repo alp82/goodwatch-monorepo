@@ -12,9 +12,9 @@ import type { LinksFunction, MetaFunction } from "@remix-run/node"
 import { type ShouldRevalidateFunction, useLoaderData } from "@remix-run/react"
 import type { tvHomeLoader } from "~/server/living-room/tv-loader.server"
 import howGoodWatchWorksCss from "~/ui/living-room/how-goodwatch-works.css?url"
-import { useHomeIntro } from "~/ui/living-room/intro/HomeIntro"
+import { QUIZ_SCENE, useHomeIntro } from "~/ui/living-room/intro/HomeIntro"
 import bootCss from "~/ui/living-room/intro/boot.css?url"
-import { BOOT_SEEN_SCRIPT } from "~/ui/living-room/intro/progress"
+import { introStartScript } from "~/ui/living-room/intro/progress"
 import livingRoomCss from "~/ui/living-room/living-room.css?url"
 import { TvLivingRoom } from "~/ui/living-room/tv/TvLivingRoom"
 import { isTvOnlyChange } from "~/ui/living-room/tv/tv-machine"
@@ -96,20 +96,24 @@ export const meta: MetaFunction = () => [
 	},
 ]
 
+const START_SCRIPT = introStartScript(QUIZ_SCENE)
+
 export default function Index() {
 	const data = useLoaderData<typeof tvHomeLoader>()
 	const { locale } = useLocale()
 	const intro = useHomeIntro({ member: data.member })
 	return (
 		<>
-			{/* Before the room paints: a tab that has seen the intro hides the boot screen (intro/progress.ts). */}
+			{/* Before the room paints: a reload restarts an unfinished intro; any other kept progress hides the boot
+			    screen (intro/progress.ts). */}
 			{/* biome-ignore lint/security/noDangerouslySetInnerHtml: a fixed script of our own */}
-			<script dangerouslySetInnerHTML={{ __html: BOOT_SEEN_SCRIPT }} />
+			<script dangerouslySetInnerHTML={{ __html: START_SCRIPT }} />
 			{/* The TV keeps previously visited titles in local state as well as the query cache. */}
 			<TvLivingRoom
 				key={locale.language}
 				data={data}
 				screenOverlay={intro.screen}
+				onPower={intro.onPower}
 				belowIntro={intro.below}
 				homeHeadingAs={intro.homeHeadingAs}
 			/>

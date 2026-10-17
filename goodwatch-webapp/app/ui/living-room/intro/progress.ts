@@ -1,6 +1,7 @@
 // How far a visitor got with the intro, kept for the browser tab (sessionStorage), so coming back to the start page
-// in the same tab never starts the film over: not after a title page and Back, not after sign-up and Back, not after
-// a reload. A new tab starts fresh. Nothing here leaves the browser.
+// in the same tab never starts the film over: not after a title page and Back, not after sign-up and Back. A reload
+// before the film is done (the visitor neither left it nor reached the quiz) starts it over, boot screen and all
+// (`introStartScript`). A new tab starts fresh. Nothing here leaves the browser.
 //
 // The rules (`introStart`):
 // - Nothing kept (a new tab): a guest gets the boot screen, then the film from its first scene; a member the boot
@@ -9,6 +10,8 @@
 // - The film was playing: it goes on from that scene, no boot.
 // - The visitor has tapped titles in the quiz: the quiz, as they left it, no boot.
 // - "What is GoodWatch?" in the TV's menu (`replay`): the film from its first scene, no boot, for anyone.
+// - The TV's power key (HomeIntro.tsx): off stops the film; on plays the boot screen, then a guest's film from its
+//   first scene.
 
 /** The sessionStorage key; also read by the start page's inline script, which hides the boot before it paints. */
 export const PROGRESS_KEY = "gw-intro"
@@ -102,7 +105,17 @@ export function hasTaps(): boolean {
 }
 
 /**
- * The inline script the start page runs before the room paints: with progress kept in this tab, the boot screen is
- * hidden at once (boot.css), so a reload doesn't flash it. Runs before React; keep it tiny and self-contained.
+ * The inline script the start page runs before the room paints. A reload of a film that isn't done forgets the
+ * tab's progress, so the film starts over with its boot screen. Any other progress kept in this tab hides the boot
+ * screen at once (boot.css), so coming back doesn't flash it. Runs before React; keep it tiny and self-contained.
+ * `quizScene` is the quiz's place in the film: reaching it counts as done.
  */
-export const BOOT_SEEN_SCRIPT = `try{if(sessionStorage.getItem(${JSON.stringify(PROGRESS_KEY)}))document.documentElement.setAttribute("data-gw-intro","seen")}catch(e){}`
+export const introStartScript = (quizScene: number) =>
+	`try{var s=sessionStorage,v=s.getItem(${JSON.stringify(PROGRESS_KEY)}),n=performance.getEntriesByType("navigation")[0],p=v&&JSON.parse(v);if(p&&n&&n.type==="reload"&&!p.left&&!(p.scene>=${quizScene})){s.removeItem(${JSON.stringify(PROGRESS_KEY)});s.removeItem(${JSON.stringify(TAPS_KEY)});v=null}if(v)document.documentElement.setAttribute("data-gw-intro","seen")}catch(e){}`
+
+/** The TV's power key turned the set on: the boot screen may show again, whatever the inline script said. */
+export function unhideBoot() {
+	try {
+		document.documentElement.removeAttribute("data-gw-intro")
+	} catch {}
+}

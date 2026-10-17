@@ -14,13 +14,18 @@ over fourteen rounds of review.
 | Back in the same tab, film playing | The film from the scene they were at, no boot screen |
 | Back in the same tab, after Just look around (or a member) | The TV's home, no boot screen |
 | Back from sign-up after tapping titles in the quiz | The quiz as they left it, with their pick |
+| A reload before the film is done (not left, quiz not reached) | Boot screen, then the film from "Let's watch" |
+| A reload after Just look around, or at the quiz | As if back in the same tab |
+| The TV's power key: off | The film stops; nothing of the intro shows |
+| The TV's power key: on | Boot screen, then a guest's film from "Let's watch" (a member's TV home) |
 | Anyone, "What is GoodWatch?" in the TV's menu | The film from its first scene |
 | A link to a TV screen (`?tv=…`), or the Remote opening one | The TV, the film steps aside |
 
 The rules are `introStart` in `app/ui/living-room/intro/progress.ts` (tested in `progress.test.ts`). Progress is kept
 in `sessionStorage` (`gw-intro`, and the quiz's `gw-intro-taps`), so a new tab starts fresh and nothing leaves the
-browser. An inline script on the start page (`BOOT_SEEN_SCRIPT`) hides the boot screen before it paints when the tab
-has progress, so a reload doesn't flash it.
+browser. An inline script on the start page (`introStartScript`) runs before the room paints: on a reload of an
+unfinished film it forgets the tab's progress, so the film starts over; any other kept progress hides the boot screen,
+so coming back doesn't flash it. The power key reaches the intro through `TvLivingRoom`'s `onPower`.
 
 ## Files
 
