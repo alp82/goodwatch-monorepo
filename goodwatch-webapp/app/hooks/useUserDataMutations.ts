@@ -297,8 +297,11 @@ export const useWatchedMutation = () => {
 			}
 		},
 		// The map can't say which episodes a show's press ticked, or which state taking it back returns to.
-		onSettled: () => {
+		onSettled: (_, __, { mediaType, tmdbId }) => {
 			void queryClient.invalidateQueries({ queryKey: userDataQueryKey })
+			// A movie's watches changed: its log is read again when it next opens (`watchLogKey` of useWatchLog.ts).
+			if (user && mediaType === "movie")
+				void queryClient.invalidateQueries({ queryKey: ["watch-log", user.id, tmdbId] })
 		},
 	})
 }

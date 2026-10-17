@@ -67,13 +67,16 @@ export function ActionButton({
 			aria-label={label === "none" || opensLog ? name : undefined}
 			aria-haspopup={opensLog ? "dialog" : undefined}
 			title={label === "none" ? name : undefined}
-			className={`inline-flex ${size === "md" ? "h-11" : "h-9"} w-full min-w-0 items-center justify-center ${label === "none" && count ? "gap-1" : "gap-2"} rounded-lg ${padding} font-semibold cursor-pointer transition-colors ${FOCUS} disabled:cursor-not-allowed disabled:opacity-40 ${
+			className={`relative inline-flex ${size === "md" ? "h-11" : "h-9"} w-full min-w-0 items-center justify-center gap-2 rounded-lg ${padding} font-semibold cursor-pointer transition-colors ${FOCUS} disabled:cursor-not-allowed disabled:opacity-40 ${
 				active ? a.active : "bg-white/10 text-gray-100 hover:bg-white/20"
 			} ${className}`}
 			{...rest}
 		>
 			<a.Icon className={`h-4 w-4 shrink-0 ${active ? "" : a.tint}`} />
-			{label === "none" && count && <span className="text-xs tabular-nums">{count}</span>}
+			{/* Icon alone: the count sits in the corner, so a narrow button never cuts it off. */}
+			{label === "none" && count && (
+				<span className="absolute bottom-0.5 right-0.5 rounded bg-black/30 px-0.5 text-[9px] font-bold leading-tight tabular-nums">{count}</span>
+			)}
 			{label === "auto" && (
 				<>
 					<span className="truncate sm:hidden">{short}</span>

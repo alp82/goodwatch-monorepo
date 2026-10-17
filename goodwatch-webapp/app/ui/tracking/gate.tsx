@@ -83,7 +83,11 @@ export function TrackedTitleActions({
 	if (!hydrated) return first
 	return (
 		<Suspense fallback={first}>
-			<HeroTracking media={media} first={first} />
+			<HeroTracking
+				media={media}
+				first={first}
+				bare={<div className={HERO_ACTIONS}>{children}</div>}
+			/>
 		</Suspense>
 	)
 }

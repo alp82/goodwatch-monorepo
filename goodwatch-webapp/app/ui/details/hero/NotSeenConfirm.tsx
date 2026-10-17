@@ -58,7 +58,8 @@ export default function NotSeenConfirm({
 		onDone()
 		// The logged watches go first: while the score is there the movie stays Seen through it, and clearing the
 		// score then takes the score's own watch.
-		if (watches) {
+		// Unless the log says there are none: a log that could not be read may still hold watches.
+		if (watches !== 0) {
 			const saved = await act(tmdbId, { type: "removeAll" }, (before) =>
 				withoutWatch(before, null, {
 					movieId: tmdbId,
@@ -124,6 +125,20 @@ export default function NotSeenConfirm({
 			<div
 				ref={panel}
 				role="alertdialog"
+				onKeyDown={(event) => {
+					// Tab stays in the question: it goes round its two buttons.
+					if (event.key !== "Tab") return
+					const stops = [
+						...(panel.current?.querySelectorAll<HTMLButtonElement>(
+							"button:not([disabled])",
+						) ?? []),
+					]
+					const at = stops.indexOf(document.activeElement as HTMLButtonElement)
+					event.preventDefault()
+					stops[
+						(at + (event.shiftKey ? -1 : 1) + stops.length) % stops.length
+					]?.focus()
+				}}
 				aria-modal="true"
 				aria-labelledby="not-seen-title"
 				aria-describedby="not-seen-text"

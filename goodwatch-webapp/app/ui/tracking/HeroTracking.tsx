@@ -36,16 +36,22 @@ import { FOCUS, type ShowTracking, plural, useShowTracking } from "./store"
 export default function HeroTracking({
 	media,
 	first,
+	bare,
 }: {
 	media: TrackedMedia
 	/** What the first paint showed: today's action set, under the status box for a show with a state. */
 	first: ReactNode
+	/** Today's action set alone. */
+	bare: ReactNode
 }) {
 	const tracking = useShowTracking(media.details.tmdb_id)
 	const actions = useTrackingActions(tracking.store, media.details.title)
 	const { view, page } = tracking
 	// A show without an episode list is tracked as today: Seen for the whole show, and the status.
-	if (!tracking.ready || !view || !page) return <>{first}</>
+	// Once read, a show without an episode list (or one whose tracking failed) keeps today's actions without the room
+	// the first paint kept for the status line.
+	if (!tracking.ready || !view || !page)
+		return <>{page || tracking.failed ? bare : first}</>
 	return (
 		<div data-tracking-hero={view.derived.state} className={HERO_ACTIONS}>
 			{view.derived.state !== "not_started" ? (

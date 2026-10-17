@@ -3,7 +3,8 @@
 // without an episode list, is [Seen | score] too.
 //
 // - Seen on a movie that isn't Seen records a watch for now (the watch log's toast offers another date), then asks
-//   for the score. On a Seen movie it opens the watch log, as before: pressing Seen never removes a watch.
+//   for the score; the picker then offers to change the watch's date. On a Seen movie it opens the watch log, as
+//   before: pressing Seen never removes a watch.
 // - The score half opens the score picker (ScoreDialog). For a movie, the picker's title carries a Seen switch: on
 //   records a watch, off asks first (NotSeenConfirm), because the score and the logged watches go with it.
 // - A score marks a movie Seen (rating records a watch). A show's score never changes its status: after a first
@@ -11,6 +12,7 @@
 //
 // The picker, the question, the confirmation, and the tracked status with its menu load on first use.
 import { Suspense, lazy, useEffect, useRef, useState } from "react"
+import { useSeenToggle } from "~/hooks/useSeenToggle"
 import { useUserScore, useWatchState } from "~/hooks/useUserDataAccessors"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import UserAction from "~/ui/auth/UserAction"
@@ -84,6 +86,7 @@ export default function SeenScore({
 	const [confirming, setConfirming] = useState(false)
 	const opened = useOpenedOnce(open)
 	const scoreButton = useRef<HTMLButtonElement>(null)
+	const seenButton = useRef<HTMLButtonElement>(null)
 	const root = useRef<HTMLDivElement>(null)
 
 	const close = () => {
@@ -119,9 +122,20 @@ export default function SeenScore({
 		}
 	}
 
+	// The score dialog's switch. Off takes a single watch from a movie without a score at once; with a score or more
+	// watches to lose, it asks first.
+	const seenToggle = useSeenToggle(mediaType, tmdbId)
+	const pressSwitch = () => {
+		if (!a.seen) a.toggleSeen()
+		else if (score === null && seenToggle.watches <= 1)
+			seenToggle.toggle("remove")
+		else setConfirming(true)
+	}
+
 	const seenHalf = (
 		<UserAction instructions={SEEN_INSTRUCTIONS}>
 			<button
+				ref={seenButton}
 				type="button"
 				aria-pressed={a.seen}
 				aria-label={
@@ -223,9 +237,7 @@ export default function SeenScore({
 								<SeenSwitch
 									on={a.seen}
 									disabled={a.seenPending}
-									onPress={() =>
-										a.seen ? setConfirming(true) : a.toggleSeen()
-									}
+									onPress={pressSwitch}
 								/>
 							) : undefined
 						}
@@ -238,7 +250,26 @@ export default function SeenScore({
 						}
 						footer={
 							afterSeen ? (
-								<div className="mt-4 flex justify-end">
+								<div className="mt-4 flex items-center justify-between gap-3 text-sm">
+									{movie ? (
+										<span className="min-w-0 text-gray-400">
+											Watched just now.{" "}
+											<button
+												type="button"
+												data-change-date
+												onClick={() => {
+													// The watch log opens beside the Seen half, where its date is changed.
+													close()
+													a.toggleSeen({ currentTarget: seenButton.current })
+												}}
+												className="cursor-pointer font-semibold text-white underline decoration-white/30 underline-offset-2 hover:decoration-white"
+											>
+												Change date
+											</button>
+										</span>
+									) : (
+										<span />
+									)}
 									<button
 										type="button"
 										data-skip-score

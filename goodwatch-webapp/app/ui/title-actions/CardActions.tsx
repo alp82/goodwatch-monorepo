@@ -1,5 +1,6 @@
-// The title actions of a poster card, loaded on demand by TitleActionsFrame: the hover row, the score popover, the
-// phone sheet, and the "Hidden" tile.
+// The title actions of a poster card, loaded on demand by TitleActionsFrame: the hover row (Want to See, then Seen
+// and the score side by side, then Not interested), the score popover, the phone sheet, and the "Hidden" tile.
+// Marking a title Seen from the row opens the score popover.
 import { type RefObject, useContext, useEffect, useLayoutEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import UserAction from "~/ui/auth/UserAction"
@@ -88,13 +89,6 @@ export default function CardActions({
 						open === "score" ? "opacity-100" : "opacity-0 group-hover:opacity-100 focus-within:opacity-100"
 					}`}
 				>
-					<ScoreButton
-						ref={scoreButton}
-						score={a.score}
-						aria-haspopup="dialog"
-						aria-expanded={open === "score"}
-						onClick={() => setOpen(open === "score" ? null : "score")}
-					/>
 					<ActionButton
 						kind="want"
 						label="none"
@@ -112,9 +106,21 @@ export default function CardActions({
 							active={a.seen}
 							disabled={a.seenPending}
 							{...a.seenLog}
-							onClick={a.toggleSeen}
+							onClick={(event) => {
+								// Marking it Seen asks for the score next, as on the title page.
+								const was = a.seen
+								a.toggleSeen(event)
+								if (!was && a.score === null) setOpen("score")
+							}}
 						/>
 					</UserAction>
+					<ScoreButton
+						ref={scoreButton}
+						score={a.score}
+						aria-haspopup="dialog"
+						aria-expanded={open === "score"}
+						onClick={() => setOpen(open === "score" ? null : "score")}
+					/>
 					<ActionButton
 						kind="hide"
 						label="none"
