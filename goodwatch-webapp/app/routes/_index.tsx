@@ -7,7 +7,11 @@
 // pool the TV draws its picks from is the TV's own request, at the first interaction
 // (ui/living-room/tv/use-tv-pool.ts).
 import type { LinksFunction, MetaFunction } from "@remix-run/node"
-import { type ShouldRevalidateFunction, useLoaderData } from "@remix-run/react"
+import { type ShouldRevalidateFunction, useLoaderData, useLocation, useSearchParams } from "@remix-run/react"
+// PROTOTYPE (landing): `/?variant=current|channel|band|welcome|tour`. Throwaway, on branch prototype/landing-experience.
+import landingCss from "~/ui/prototype-landing/landing.css?url"
+import { PrototypeSwitcher } from "~/ui/prototype/PrototypeSwitcher"
+import { type Landing, type VariantProps, useBand, useChannel, useCurrent, useTour, useWelcome } from "~/ui/prototype-landing/variants"
 import type { tvHomeLoader } from "~/server/living-room/tv-loader.server"
 import livingRoomCss from "~/ui/living-room/living-room.css?url"
 import { TvLivingRoom } from "~/ui/living-room/tv/TvLivingRoom"
@@ -33,6 +37,7 @@ export const shouldRevalidate: ShouldRevalidateFunction = ({
 
 export const links: LinksFunction = () => [
 	{ rel: "stylesheet", href: assetUrl(livingRoomCss) },
+	{ rel: "stylesheet", href: landingCss },
 	{ rel: "preconnect", href: "https://image.tmdb.org" },
 ]
 
@@ -88,9 +93,45 @@ export const meta: MetaFunction = () => [
 	},
 ]
 
+const VARIANTS = {
+	live: "Today's page, no boot",
+	current: "Today's page + boot",
+	channel: "A · Intro channel on the TV",
+	band: "B · Intro band above the room",
+	welcome: "C · Welcome tiles on the TV",
+	tour: "D · Guided tour with pings",
+}
+const USE: Record<string, (p: VariantProps) => Landing> = {
+	live: () => ({}),
+	current: useCurrent,
+	channel: useChannel,
+	band: useBand,
+	welcome: useWelcome,
+	tour: useTour,
+}
+
+function Host({ use, data }: { use: (p: VariantProps) => Landing; data: ReturnType<typeof useLoaderData<typeof tvHomeLoader>> }) {
+	const { search } = useLocation()
+	const tvOpen = new URLSearchParams(search).has("tv")
+	const landing = use({ data: data as never, tvOpen })
+	return (
+		<>
+			{landing.above}
+			<TvLivingRoom data={data} screenOverlay={landing.screen} roomOverlay={landing.room} />
+		</>
+	)
+}
+
 export default function Index() {
 	const data = useLoaderData<typeof tvHomeLoader>()
 	const { locale } = useLocale()
+	const [params] = useSearchParams()
+	const variant = params.get("variant") ?? "live"
 	// The TV keeps previously visited titles in local state as well as the query cache.
-	return <TvLivingRoom key={locale.language} data={data} />
+	return (
+		<>
+			<Host key={`${locale.language}-${variant}`} use={USE[variant] ?? USE.live} data={data} />
+			<PrototypeSwitcher variants={VARIANTS} position="bottom-24 left-1/2 -translate-x-1/2 lg:bottom-6" />
+		</>
+	)
 }

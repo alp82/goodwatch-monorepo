@@ -1,0 +1,262 @@
+/* PROTOTYPE - throwaway. Landing experience variants on the start page (`/?variant=`).
+   Everything animates with transform and opacity only (60 fps rule). */
+
+/* ---------- The boot: a CRT line opens, the wordmark pops, the black fades. CSS only, painted before hydration. */
+.lp-boot {
+	position: absolute;
+	inset: 0;
+	z-index: 30;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: #000;
+	pointer-events: none;
+	animation: lp-out 0.45s ease-in 2s both;
+	container-type: size;
+}
+@container (min-width: 700px) { .lp-boot-mark { --lp-mark: 1.5; } }
+@container (max-width: 420px) { .lp-boot-mark { --lp-mark: 0.75; } }
+.lp-boot-flash {
+	position: absolute;
+	inset: 0;
+	background: radial-gradient(60% 60% at 50% 50%, #fff 0, #cfe3ff 55%, rgba(120, 160, 255, 0) 100%);
+	transform: scale(0, 0.004);
+	animation: lp-crt 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.lp-boot-mark {
+	position: relative;
+	transform: scale(var(--lp-mark, 1));
+}
+@keyframes lp-crt {
+	0% { transform: scale(0, 0.004); opacity: 1; }
+	35% { transform: scale(1, 0.004); opacity: 1; }
+	70% { transform: scale(1, 1); opacity: 0.85; }
+	100% { transform: scale(1, 1); opacity: 0; }
+}
+@keyframes lp-out {
+	to { opacity: 0; visibility: hidden; }
+}
+@keyframes lp-in {
+	from { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+	.lp-boot { animation-duration: 0.2s; animation-delay: 0.3s; }
+	.lp-boot-flash { animation: none; opacity: 0; }
+}
+
+/* ---------- The ping: the Explorer tutorial's pointer and ripple, aimed at any element on the page. */
+.lp-ping {
+	position: fixed;
+	left: 0;
+	top: 0;
+	z-index: 60;
+	pointer-events: none;
+	animation: lp-in 0.3s ease-out both;
+}
+.lp-ping > * {
+	position: absolute;
+	left: 0;
+	top: 0;
+}
+.lp-ping .lp-ripple {
+	width: 130px;
+	height: 130px;
+	margin: -65px 0 0 -65px;
+	border-radius: 50%;
+	border: 4px solid #fff;
+	box-shadow: 0 0 24px rgba(255, 255, 255, 0.6), inset 0 0 24px rgba(255, 255, 255, 0.35);
+	opacity: 0;
+	animation: lp-ripple 2.6s ease-out infinite both;
+}
+.lp-ping .lp-hand {
+	z-index: 1;
+	transform-origin: 0 0;
+	filter: drop-shadow(0 6px 18px rgba(0, 0, 0, 0.55));
+	animation: lp-hand 2.6s cubic-bezier(0.45, 0, 0.3, 1) infinite both;
+}
+.lp-ping .lp-cursor { display: block; width: 46px; height: 58px; }
+.lp-ping .lp-finger { display: block; width: 84px; height: 84px; }
+.lp-ping.lp-small .lp-ripple { width: 80px; height: 80px; margin: -40px 0 0 -40px; }
+@keyframes lp-hand {
+	0% { transform: translate(var(--fx), var(--fy)) scale(1); opacity: 0; }
+	12% { transform: translate(var(--fx), var(--fy)) scale(1); opacity: 1; }
+	48% { transform: translate(var(--tx), var(--ty)) scale(1); }
+	55% { transform: translate(var(--tx), var(--ty)) scale(0.78); }
+	63% { transform: translate(var(--tx), var(--ty)) scale(1); opacity: 1; }
+	88%, 100% { transform: translate(var(--tx), var(--ty)) scale(1); opacity: 0; }
+}
+@keyframes lp-ripple {
+	0%, 54.9% { opacity: 0; transform: translate(var(--tx), var(--ty)) scale(0.2); }
+	55% { opacity: 1; transform: translate(var(--tx), var(--ty)) scale(0.2); }
+	85%, 100% { opacity: 0; transform: translate(var(--tx), var(--ty)) scale(2.4); }
+}
+/* The caption under a ping: the Explorer tutorial's line at the bottom. */
+.lp-say {
+	position: fixed;
+	left: 50%;
+	bottom: 88px;
+	z-index: 61;
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	max-width: min(680px, calc(100vw - 32px));
+	transform: translateX(-50%);
+	padding: 10px 10px 10px 20px;
+	border-radius: 999px;
+	background: rgba(10, 14, 26, 0.88);
+	box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+	color: #fff;
+	font-weight: 600;
+	animation: lp-in 0.3s ease-out both;
+}
+.lp-say p { flex: 1; min-width: 0; margin: 0; line-height: 1.25; }
+.lp-say small { display: block; font-weight: 400; color: rgba(255, 255, 255, 0.72); }
+.lp-say button {
+	flex: none;
+	border-radius: 999px;
+	padding: 8px 16px;
+	background: rgba(255, 255, 255, 0.14);
+	font-weight: 700;
+}
+.lp-say button.lp-primary { background: #fbbf24; color: #111; }
+@media (max-width: 1023px) {
+	.lp-say { bottom: 150px; width: calc(100vw - 32px); border-radius: 22px; font-size: 14px; }
+}
+@media (prefers-reduced-motion: reduce) {
+	.lp-ping .lp-hand, .lp-ping .lp-ripple { animation: none; opacity: 0; }
+}
+
+/* ---------- A: the intro channel. Slides on the TV, timed by CSS so they play before any script runs. */
+.lp-ch {
+	position: absolute;
+	inset: 0;
+	z-index: 25;
+	container-type: size;
+	background: #05060a;
+	color: #fff;
+	animation: lp-out 0.6s ease-in var(--lp-end) both;
+}
+.lp-ch-slide {
+	position: absolute;
+	inset: 0;
+	opacity: 0;
+	animation: lp-slide var(--lp-each) linear var(--lp-at) both;
+}
+.lp-ch-slide:last-of-type { animation-name: lp-slide-last; }
+.lp-ch-art { position: absolute; inset: 0; }
+.lp-ch-art > * { width: 100%; height: 100%; object-fit: cover; }
+.lp-ch-shade {
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(90deg, rgba(5, 6, 10, 0.96) 0, rgba(5, 6, 10, 0.75) 45%, rgba(5, 6, 10, 0.15) 100%);
+}
+.lp-ch-text {
+	position: absolute;
+	left: 6cqw;
+	right: 30cqw;
+	top: 50%;
+	transform: translateY(-50%);
+}
+.lp-ch-kicker { font-weight: 700; text-transform: uppercase; letter-spacing: 0.16em; color: rgba(255, 255, 255, 0.75); font-size: max(11px, 2.2cqw); }
+.lp-ch-big { margin-top: 0.4cqw; font-weight: 700; line-height: 1.02; letter-spacing: -0.02em; font-size: max(24px, 6.2cqw); }
+.lp-ch-line { margin-top: 1.2cqw; color: rgba(255, 255, 255, 0.82); font-size: max(13px, 2.6cqw); line-height: 1.25; }
+.lp-ch-bars {
+	position: absolute;
+	left: 6cqw;
+	right: 6cqw;
+	bottom: 5cqh;
+	display: flex;
+	gap: 0.8cqw;
+}
+.lp-ch-bars i {
+	flex: 1;
+	height: max(3px, 0.5cqw);
+	border-radius: 9px;
+	background: rgba(255, 255, 255, 0.25);
+	overflow: hidden;
+}
+.lp-ch-bars i b {
+	display: block;
+	height: 100%;
+	background: #fff;
+	transform-origin: 0 50%;
+	transform: scaleX(0);
+	animation: lp-bar var(--lp-each) linear var(--lp-at) both;
+}
+.lp-ch-skip {
+	position: absolute;
+	right: 4cqw;
+	top: 5cqh;
+	z-index: 2;
+	border-radius: 999px;
+	padding: 0.8cqw 2cqw;
+	background: rgba(255, 255, 255, 0.16);
+	font-weight: 700;
+	font-size: max(12px, 2cqw);
+	color: #fff;
+	pointer-events: auto;
+}
+@keyframes lp-slide {
+	0% { opacity: 0; transform: scale(1.04); }
+	8% { opacity: 1; }
+	92% { opacity: 1; }
+	100% { opacity: 0; transform: scale(1); }
+}
+@keyframes lp-slide-last {
+	0% { opacity: 0; transform: scale(1.04); }
+	8%, 100% { opacity: 1; transform: scale(1); }
+}
+@keyframes lp-bar {
+	to { transform: scaleX(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+	.lp-ch-slide { animation-timing-function: steps(1, end); }
+}
+
+/* ---------- B: the band above the room. Plain page content, so the room gives up its height. */
+.lp-band {
+	--lp-band-h: 212px;
+	position: relative;
+	z-index: 41;
+	height: var(--lp-band-h);
+	overflow: hidden;
+	background: #07080b;
+	color: #fff;
+	font-family: "Gabarito", ui-sans-serif, system-ui, sans-serif;
+}
+html:has(.lp-band) .living-room.lr-page {
+	height: calc(100svh - 4rem - var(--lr-nav) - 212px);
+}
+@media (max-width: 767px) {
+	.lp-band { --lp-band-h: 178px; }
+	html:has(.lp-band) .living-room.lr-page { height: calc(100svh - 4rem - var(--lr-nav) - 178px); }
+	.lp-band-line { display: none; }
+	.lp-band-tile { height: 72px !important; }
+}
+
+/* ---------- C: the welcome screen on the TV, in place of home until the visitor picks something. */
+.lp-wel {
+	position: absolute;
+	inset: 0;
+	z-index: 25;
+	container-type: size;
+	color: #fff;
+	background: #05060a;
+	animation: lp-in 0.5s ease-out 2.1s both;
+}
+.lp-wel-tile {
+	position: relative;
+	overflow: hidden;
+	border-radius: 1.4cqw;
+	background: #10131c;
+	text-align: left;
+	outline: 0.35cqw solid transparent;
+	outline-offset: 0.3cqw;
+	transition: transform 0.18s ease-out;
+}
+.lp-wel-tile:hover, .lp-wel-tile:focus-visible { outline-color: #fff; transform: scale(1.03); }
+.lp-wel-tile .lp-wel-art { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.lp-wel-tile .lp-wel-fade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(5, 6, 10, 0) 25%, rgba(5, 6, 10, 0.92) 100%); }
+.lp-wel-tile .lp-wel-words { position: absolute; left: 1.6cqw; right: 1.6cqw; bottom: 1.4cqw; }
+.lp-wel-name { font-weight: 700; font-size: max(13px, 2.6cqw); line-height: 1.05; }
+.lp-wel-line { margin-top: 0.3cqw; color: rgba(255, 255, 255, 0.78); font-size: max(10px, 1.55cqw); line-height: 1.2; }

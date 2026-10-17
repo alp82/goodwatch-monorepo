@@ -87,6 +87,10 @@ export type TvRoomProps = {
 	services: readonly RemoteService[]
 	/** Forces the Remote's place or the phone Remote's form, whatever the window would choose: for checks. */
 	want?: { place?: RemotePlace; form?: PhoneRemoteForm }
+	/** PROTOTYPE (landing): drawn over the TV's picture, in screen pixels. */
+	screenOverlay?: ReactNode
+	/** PROTOTYPE (landing): drawn over the room, after its parts. */
+	roomOverlay?: ReactNode
 }
 
 /** The canvases the screen is drawn on before the window is measured: one per edition, at their full size. */
@@ -110,6 +114,8 @@ export function TvRoom({
 	talked,
 	services,
 	want,
+	screenOverlay,
+	roomOverlay,
 }: TvRoomProps) {
 	// The room is the first screen of the page; use-below-room.ts owns how the page moves between it and the
 	// section below. Its contract: a block with the room's id that takes no input while it is away.
@@ -323,6 +329,7 @@ export function TvRoom({
 							{on && renderScreen?.(one)}
 						</div>
 					))}
+					{screenOverlay}
 					{/* The frame the picture stands in while the Expand key has the focus. */}
 					{tv.framed &&
 						L &&
@@ -417,6 +424,7 @@ export function TvRoom({
 				{L && (
 					<TvPointer key="pointer" pointer={pointerEl} small={Boolean(held)} />
 				)}
+				{roomOverlay}
 			</div>
 			<StillBelowRoom
 				titles={startTitles}

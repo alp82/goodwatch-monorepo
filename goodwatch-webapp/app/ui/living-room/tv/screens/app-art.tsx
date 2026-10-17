@@ -5,7 +5,7 @@ import { Img } from "../kit"
 import type { TvAppArt } from "../tv-home"
 
 /** Explorer's identity: islands on the sea, joined by dotted bridges. Fills its box. */
-function MapArt({ className = "" }: { className?: string }) {
+export function MapArt({ className = "" }: { className?: string }) {
 	const islands = [
 		[70, 62, 46, 30, 40],
 		[200, 44, 54, 34, 150],
@@ -44,7 +44,7 @@ function MapArt({ className = "" }: { className?: string }) {
 }
 
 /** Taste's identity: the ridges of a fingerprint. Fills its box. */
-function PrintArt({ className = "" }: { className?: string }) {
+export function PrintArt({ className = "" }: { className?: string }) {
 	return (
 		<svg
 			viewBox="0 0 400 220"

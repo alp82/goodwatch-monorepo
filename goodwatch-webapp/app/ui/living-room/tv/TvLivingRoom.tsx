@@ -1,7 +1,7 @@
 // The start page's scene with the new TV: the room (TvRoom.tsx), the TV's state (use-tv.ts), what is on the TV
 // (TvScreen.tsx), the data behind it and the effects the machine names. The route hands it the loader's data.
 import { useLocation, useRevalidator } from "@remix-run/react"
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useTonightsPick } from "~/ui/navigation/useTonightsPick"
 import { useContinueWithGoogle, whenAuthFails } from "~/utils/auth-client"
 import { onFirstInteraction } from "~/utils/first-interaction"
@@ -91,7 +91,16 @@ function Edition({
 	return null
 }
 
-export function TvLivingRoom({ data }: { data: TvHomeData }) {
+export function TvLivingRoom({
+	data,
+	screenOverlay,
+	roomOverlay,
+}: {
+	data: TvHomeData
+	/** PROTOTYPE (landing): see TvRoom. */
+	screenOverlay?: ReactNode
+	roomOverlay?: ReactNode
+}) {
 	// Back after leaving through the TV shrinks the page into the same TV screen.
 	useReturnIntoTv()
 	const location = useLocation()
@@ -422,6 +431,8 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 				startTitles={data.startTitles}
 				talked={data.talked}
 				services={data.services}
+				screenOverlay={screenOverlay}
+				roomOverlay={roomOverlay}
 				renderScreen={(canvas) => (
 					<>
 						<Edition canvas={canvas} report={setEdition} />
