@@ -1,0 +1,604 @@
+/* The /how-it-works pictures (pictures.tsx): still compositions of the start page intro's parts, sized in cqw of the
+   picture's box (a size container, like the intro's stage). Transform and opacity only. */
+.hiw-pic-host .film-stage {
+	background: transparent;
+	overflow: visible;
+}
+.hiw-pic {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-family: "Gabarito", ui-sans-serif, system-ui, sans-serif;
+	color: #fff;
+}
+.hiw-pic-rise {
+	animation: hiw-pic-rise 700ms cubic-bezier(0.16, 1, 0.3, 1)
+		calc(var(--i, 0) * 90ms + 80ms) both;
+}
+@keyframes hiw-pic-rise {
+	from {
+		opacity: 0;
+		transform: translateY(3cqw) scale(0.96);
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.hiw-pic-rise {
+		animation: none;
+	}
+}
+.hiw-pic-row {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 3.5cqw;
+	width: 100%;
+	height: 100%;
+}
+.hiw-pic-stack {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 2.6cqw;
+	width: 100%;
+	height: 100%;
+}
+.hiw-pic-col {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 1.2cqw;
+}
+.hiw-pic-eq {
+	font-size: 6cqw;
+	font-weight: 800;
+	color: rgba(255, 255, 255, 0.35);
+}
+.hiw-pic-small {
+	font-size: max(11px, 1.7cqw);
+	font-weight: 800;
+	letter-spacing: 0.16em;
+	text-transform: uppercase;
+	color: #fbbf24;
+	text-align: center;
+}
+.hiw-pic-big {
+	font-size: 11cqw;
+	font-weight: 800;
+	line-height: 0.9;
+	letter-spacing: -0.03em;
+	color: #fbbf24;
+	font-variant-numeric: tabular-nums;
+}
+.hiw-pic-label {
+	font-size: max(13px, 2.4cqw);
+	font-weight: 800;
+}
+.hiw-pic-dim {
+	color: rgba(255, 255, 255, 0.6);
+}
+.hiw-pic-posters {
+	display: flex;
+	gap: 1.4cqw;
+}
+.hiw-pic-p-xs {
+	width: 7.5cqw;
+}
+.hiw-pic-p-sm {
+	width: 11cqw;
+}
+.hiw-pic-p-md {
+	width: 12.5cqw;
+}
+.hiw-pic-p-lg {
+	width: 21cqw;
+}
+.hiw-pic-chosen {
+	box-shadow: 0 0 0 0.45cqw #fbbf24, 0 2cqw 5cqw rgba(0, 0, 0, 0.6);
+}
+
+/* Score: the brand cards fanned out, then the ring. */
+.hiw-pic-fan {
+	position: relative;
+	width: 52cqw;
+	height: 100%;
+	/* The brand cards are 32cqh tall on the intro's 16:9 stage; keep them that size on any box. */
+	--card-scale: 1;
+}
+.hiw-pic-fan-card {
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	transform: translate(var(--x), var(--y)) rotate(var(--r));
+}
+.hiw-pic-fan-card .hiw-pic-rise {
+	position: relative;
+}
+.hiw-pic-fan-card .intro-brand-card {
+	width: 15cqw;
+	height: 21cqw;
+}
+.hiw-pic-ring-col {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 1.2cqw;
+}
+.hiw-pic-ring {
+	width: 19cqw;
+}
+.hiw-pic-verdict {
+	font-size: 4.2cqw;
+	font-weight: 800;
+}
+
+/* Streaming: the count, then the wall of logos. */
+.hiw-pic-count {
+	display: flex;
+	flex-direction: column;
+	gap: 1cqw;
+	min-width: 26cqw;
+}
+.hiw-pic-logos {
+	display: grid;
+	grid-template-columns: repeat(7, 6.2cqw);
+	gap: 1.2cqw;
+}
+.hiw-pic-faint {
+	opacity: 0.55;
+}
+.hiw-pic-faint.hiw-pic-rise {
+	animation-name: hiw-pic-rise-faint;
+}
+@keyframes hiw-pic-rise-faint {
+	from {
+		opacity: 0;
+		transform: translateY(3cqw) scale(0.96);
+	}
+	to {
+		opacity: 0.55;
+	}
+}
+
+/* How it feels: the backdrop, the poster and the words. */
+.hiw-pic-bleed {
+	position: absolute;
+	inset: 0;
+	overflow: hidden;
+	border-radius: 1.6cqw;
+}
+.hiw-pic-backdrop {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	animation: hiw-pic-drift 14s cubic-bezier(0.33, 0, 0.4, 1) both;
+}
+@keyframes hiw-pic-drift {
+	from {
+		transform: scale(1.08);
+	}
+}
+.hiw-pic-shade {
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(
+		90deg,
+		rgba(5, 6, 10, 0.88) 0,
+		rgba(5, 6, 10, 0.55) 60%,
+		rgba(5, 6, 10, 0.35) 100%
+	);
+}
+.hiw-pic-on-top {
+	position: relative;
+	justify-content: flex-start;
+	padding-left: 9cqw;
+	gap: 5cqw;
+}
+.hiw-pic-words {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 0.6cqw;
+}
+.hiw-pic-words .hiw-pic-small {
+	text-align: left;
+	margin-bottom: 0.6cqw;
+}
+.hiw-pic-word {
+	font-size: 6cqw;
+	font-weight: 800;
+	line-height: 1.05;
+	letter-spacing: -0.02em;
+}
+.hiw-pic-emoji {
+	font-size: 0.8em;
+}
+
+/* Search: the field, the reading, the top results. */
+.hiw-pic-field {
+	display: flex;
+	align-items: center;
+	gap: 1.6cqw;
+	width: 66cqw;
+	padding: 1.7cqw 2.6cqw;
+	border-radius: 999px;
+	background: rgba(255, 255, 255, 0.06);
+	box-shadow: inset 0 0 0 0.2cqw rgba(251, 191, 36, 0.7);
+	font-size: max(13px, 2.8cqw);
+	font-weight: 700;
+}
+.hiw-pic-field svg {
+	width: 3cqw;
+	height: 3cqw;
+	color: #fbbf24;
+	flex: none;
+}
+.hiw-pic-chips {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 1cqw;
+	max-width: 76cqw;
+}
+.hiw-pic-chips .intro-search-chip {
+	font-size: max(11px, 2cqw);
+}
+.hiw-pic-scored {
+	position: relative;
+}
+.hiw-pic-badge {
+	position: absolute;
+	left: 0.8cqw;
+	bottom: 0.8cqw;
+	min-width: 3.6cqw;
+	padding: 0.3cqw 0.6cqw;
+	border-radius: 999px;
+	font-size: max(10px, 1.6cqw);
+	font-weight: 800;
+	color: #04120a;
+	text-align: center;
+}
+
+/* Filters: the switches, the count, the titles left. */
+.hiw-pic-switches {
+	display: flex;
+	flex-direction: column;
+	gap: 1.2cqw;
+}
+.hiw-pic-switch {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 3cqw;
+	min-width: 36cqw;
+	padding: 1.2cqw 1.8cqw;
+	border-radius: 1.4cqw;
+	background: color-mix(in srgb, var(--c) 14%, rgba(5, 6, 10, 0.7));
+	box-shadow: inset 0 0 0 0.18cqw color-mix(in srgb, var(--c) 70%, transparent);
+	font-size: max(12px, 2.2cqw);
+	font-weight: 800;
+}
+.hiw-pic-switch i {
+	position: relative;
+	width: 4.4cqw;
+	height: 2.4cqw;
+	border-radius: 999px;
+	background: var(--c);
+	flex: none;
+}
+.hiw-pic-switch i::after {
+	content: "";
+	position: absolute;
+	right: 0.3cqw;
+	top: 0.3cqw;
+	width: 1.8cqw;
+	height: 1.8cqw;
+	border-radius: 999px;
+	background: #fff;
+}
+
+/* Explorer: islands on the night sea. */
+.hiw-pic-sea {
+	gap: 2cqw;
+}
+.hiw-pic-sea .intro-isle-island-text {
+	color: #fff;
+}
+
+/* Tracking: the feed. */
+.hiw-pic-feed {
+	display: flex;
+	flex-direction: column;
+	gap: 1.4cqw;
+	width: 58cqw;
+}
+.hiw-pic-moment {
+	display: flex;
+	align-items: center;
+	gap: 2cqw;
+	padding: 1.2cqw;
+	border-radius: 1.6cqw;
+	background: rgba(255, 255, 255, 0.05);
+	box-shadow: inset 0.5cqw 0 0 var(--c), inset 0 0 0 1px
+		rgba(255, 255, 255, 0.08);
+}
+.hiw-pic-moment b {
+	display: block;
+	color: var(--c);
+	font-size: max(13px, 2.5cqw);
+	font-weight: 800;
+}
+.hiw-pic-moment span {
+	display: block;
+	font-size: max(11px, 1.8cqw);
+	color: rgba(255, 255, 255, 0.75);
+}
+.hiw-pic-note {
+	font-size: max(10px, 1.4cqw);
+	color: rgba(255, 255, 255, 0.45);
+}
+
+/* Ratings: the import marks, the G, the picks. */
+.hiw-pic-marks {
+	display: grid;
+	grid-template-columns: repeat(3, auto);
+	gap: 1.4cqw;
+}
+.hiw-pic-mark > * {
+	width: 6.4cqw !important;
+	height: 6.4cqw !important;
+}
+.hiw-pic-g svg {
+	width: 9cqw;
+	height: auto;
+}
+.hiw-pic-grid3 {
+	display: grid;
+	grid-template-columns: repeat(3, 7.5cqw);
+	gap: 1cqw;
+}
+
+/* Phones: the picture's box is taller than wide (4:5), so the rows stack and everything is drawn bigger. */
+@container (max-width: 560px) {
+	.hiw-pic-row {
+		flex-wrap: wrap;
+		align-content: center;
+		gap: 4cqw;
+	}
+	.hiw-pic-arrow {
+		display: inline-block;
+		transform: rotate(90deg);
+	}
+	.hiw-pic-eq {
+		font-size: 9cqw;
+	}
+	.hiw-pic-small {
+		font-size: 3.4cqw;
+	}
+	.hiw-pic-big {
+		font-size: 20cqw;
+	}
+	.hiw-pic-label {
+		font-size: 4.6cqw;
+	}
+	.hiw-pic-p-xs {
+		width: 13cqw;
+	}
+	.hiw-pic-p-sm {
+		width: 20cqw;
+	}
+	.hiw-pic-p-md {
+		width: 17cqw;
+	}
+	.hiw-pic-p-lg {
+		width: 34cqw;
+	}
+
+	.hiw-pic-score {
+		flex-direction: column;
+		flex-wrap: nowrap;
+	}
+	.hiw-pic-fan {
+		width: 100cqw;
+		height: 46cqw;
+		flex: none;
+	}
+	.hiw-pic-fan-card {
+		transform: translate(calc(var(--x) * 1.65), calc(var(--y) * 1.6))
+			rotate(var(--r));
+	}
+	.hiw-pic-fan-card .intro-brand-card {
+		width: 24cqw;
+		height: 34cqw;
+		border-radius: 2.6cqw;
+	}
+	.hiw-pic-fan-card .intro-brand-n {
+		font-size: 8cqw;
+	}
+	.hiw-pic-score .hiw-pic-eq {
+		display: none;
+	}
+	.hiw-pic-ring {
+		width: 36cqw;
+	}
+	.hiw-pic-verdict {
+		font-size: 8cqw;
+	}
+
+	.hiw-pic-streaming {
+		flex-direction: column;
+		flex-wrap: nowrap;
+	}
+	.hiw-pic-count {
+		align-items: center;
+	}
+	.hiw-pic-logos {
+		grid-template-columns: repeat(7, 11cqw);
+		gap: 2cqw;
+	}
+	.hiw-pic-logos .intro-atlas-logo {
+		width: 11cqw !important;
+		height: 11cqw !important;
+		border-radius: 2.4cqw !important;
+	}
+
+	.hiw-pic-foryou .hiw-pic-match {
+		width: 100%;
+		flex-direction: row;
+		justify-content: center;
+		align-items: baseline;
+		gap: 3cqw;
+	}
+	.hiw-pic-foryou .hiw-pic-eq .hiw-pic-arrow {
+		transform: none;
+	}
+
+	.hiw-pic-on-top {
+		padding-left: 6cqw;
+		gap: 5cqw;
+		flex-wrap: nowrap;
+	}
+	.hiw-pic-on-top .hiw-pic-p-lg {
+		width: 30cqw;
+	}
+	.hiw-pic-word {
+		font-size: 8.4cqw;
+	}
+	.hiw-pic-shade {
+		background: linear-gradient(
+			90deg,
+			rgba(5, 6, 10, 0.85) 0,
+			rgba(5, 6, 10, 0.6) 100%
+		);
+	}
+
+	.hiw-pic-field {
+		width: 92cqw;
+		padding: 3cqw 4cqw;
+		font-size: 4.4cqw;
+		gap: 2.4cqw;
+	}
+	.hiw-pic-field svg {
+		width: 5cqw;
+		height: 5cqw;
+	}
+	.hiw-pic-chips {
+		max-width: 96cqw;
+		gap: 1.8cqw;
+	}
+	.hiw-pic-chips .intro-search-chip {
+		font-size: 3.6cqw;
+		padding: 1cqw 2.8cqw;
+	}
+	.hiw-pic-badge {
+		font-size: 3cqw;
+		min-width: 6cqw;
+	}
+	.hiw-pic-stack {
+		gap: 5cqw;
+	}
+
+	.hiw-pic-filters {
+		flex-direction: column;
+		flex-wrap: nowrap;
+		gap: 5cqw;
+	}
+	.hiw-pic-filters .hiw-pic-col {
+		flex-direction: row;
+		flex-wrap: wrap;
+		justify-content: center;
+		align-items: baseline;
+		gap: 2cqw 3cqw;
+	}
+	.hiw-pic-filters .hiw-pic-posters {
+		width: 100%;
+		justify-content: center;
+	}
+	.hiw-pic-switches {
+		gap: 2cqw;
+	}
+	.hiw-pic-switch {
+		min-width: 80cqw;
+		padding: 2.2cqw 3cqw;
+		border-radius: 2.6cqw;
+		font-size: 4cqw;
+	}
+	.hiw-pic-switch i {
+		width: 8cqw;
+		height: 4.4cqw;
+	}
+	.hiw-pic-switch i::after {
+		width: 3.4cqw;
+		height: 3.4cqw;
+		right: 0.5cqw;
+		top: 0.5cqw;
+	}
+
+	.hiw-pic-sea .intro-isle-island {
+		width: 38cqw !important;
+		height: 26.6cqw !important;
+	}
+	.hiw-pic-sea .intro-isle-island-text {
+		font-size: 5cqw !important;
+	}
+	.hiw-pic-sea .hiw-pic-combined .intro-isle-island {
+		width: 60cqw !important;
+		height: 42cqw !important;
+	}
+	.hiw-pic-sea .hiw-pic-combined .intro-isle-island-text {
+		font-size: 7cqw !important;
+	}
+	.hiw-pic-sea .hiw-pic-eq2 {
+		width: 100%;
+		text-align: center;
+		line-height: 0.6;
+	}
+
+	.hiw-pic-feed {
+		width: 94cqw;
+		gap: 3cqw;
+	}
+	.hiw-pic-moment {
+		gap: 3.4cqw;
+		padding: 2.4cqw;
+		border-radius: 3cqw;
+		box-shadow: inset 1cqw 0 0 var(--c), inset 0 0 0 1px
+			rgba(255, 255, 255, 0.08);
+	}
+	.hiw-pic-moment b {
+		font-size: 4.8cqw;
+	}
+	.hiw-pic-moment span {
+		font-size: 3.6cqw;
+	}
+	.hiw-pic-note {
+		font-size: 3cqw;
+	}
+
+	.hiw-pic-ratings {
+		flex-direction: column;
+		flex-wrap: nowrap;
+	}
+	.hiw-pic-marks {
+		grid-template-columns: repeat(6, auto);
+		gap: 2.4cqw;
+	}
+	.hiw-pic-mark > * {
+		width: 11cqw !important;
+		height: 11cqw !important;
+	}
+	.hiw-pic-g svg {
+		width: 16cqw;
+	}
+	.hiw-pic-grid3 {
+		grid-template-columns: repeat(6, 13cqw);
+		gap: 1.6cqw;
+	}
+	.hiw-pic-ratings .hiw-pic-eq:last-of-type {
+		display: none;
+	}
+}

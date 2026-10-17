@@ -1,4 +1,17 @@
+// /about: one narrow column that reads like a short note. The tagline, why GoodWatch exists and who makes it; what it
+// does (four tiles into /how-it-works); four numbers; where to find us; where the data comes from. Facts checked on
+// 2026-10-18: since 2023 is the repo's first commit, "free" is the sign-up page's word, the numbers are the start page
+// intro's snapshot (server/living-room/intro/content.json, captured 2026-10-17).
+import {
+	FingerPrintIcon,
+	SparklesIcon,
+	StarIcon,
+	TvIcon,
+} from "@heroicons/react/24/outline"
 import type { MetaFunction } from "@remix-run/node"
+import { Link } from "@remix-run/react"
+import { CreatorChip, Credits, FindUs } from "~/ui/about/AboutParts"
+import { Kicker, MoreLink } from "~/ui/info-page"
 import { type PageMeta, buildMeta } from "~/utils/meta"
 
 export { pageHeaders as headers } from "~/utils/headers"
@@ -7,7 +20,7 @@ export const meta: MetaFunction = () => {
 	const pageMeta: PageMeta = {
 		title: "About | GoodWatch",
 		description:
-			"FAQ for GoodWatch. All movie and tv show ratings and streaming providers on the same page",
+			"Why GoodWatch exists, who makes it and where its data comes from. Every score, every streaming service and picks for your taste, in one place.",
 		url: "https://goodwatch.app/about",
 		image: "https://goodwatch.app/images/heroes/hero-movies.png",
 		alt: "About GoodWatch",
@@ -16,74 +29,117 @@ export const meta: MetaFunction = () => {
 	return buildMeta({ pageMeta, items: [] })
 }
 
+const FEATURES = [
+	{
+		icon: StarIcon,
+		title: "One score",
+		line: "Critics and audiences from four sites, in one number",
+		to: "/how-it-works#score",
+	},
+	{
+		icon: TvIcon,
+		title: "Where it streams",
+		line: "325 services in 139 countries",
+		to: "/how-it-works#streaming",
+	},
+	{
+		icon: SparklesIcon,
+		title: "Picks for your taste",
+		line: "From the titles you loved",
+		to: "/how-it-works#for-you",
+	},
+	{
+		icon: FingerPrintIcon,
+		title: "How it feels",
+		line: "Every title read on 74 traits",
+		to: "/how-it-works#title-analysis",
+	},
+]
+
+const NUMBERS = [
+	{ n: "1.5M", label: "movies and shows" },
+	{ n: "325", label: "streaming services" },
+	{ n: "139", label: "countries" },
+	{ n: "Free", label: "to use" },
+]
+
 export default function About() {
 	return (
-		<div className="flex flex-col items-center mt-0 py-2 md:py-4 lg:py-8">
-			<h1 className="mb-8 text-3xl font-semibold">About GoodWatch / FAQ</h1>
+		<div className="mx-auto flex w-full max-w-2xl flex-col gap-14 px-4 pt-10 pb-24 text-gray-300 sm:px-8 md:pt-20">
+			<header className="flex flex-col gap-6">
+				<Kicker>About GoodWatch</Kicker>
+				<h1 className="text-4xl font-bold tracking-tight text-white sm:text-6xl">
+					Every score, every service,{" "}
+					<span className="text-amber-400">one place.</span>
+				</h1>
+				<div className="flex flex-col gap-3 text-lg leading-relaxed text-gray-300 sm:text-xl">
+					<p>
+						I used to jump between IMDb, Metacritic, Rotten Tomatoes and
+						JustWatch to decide what to watch next.
+					</p>
+					<p>
+						So I built one place for all of it. Now it also learns your taste
+						and picks for you.
+					</p>
+				</div>
+				<div className="flex flex-wrap items-center gap-3">
+					<CreatorChip />
+					<span className="text-sm text-gray-500">Since 2023</span>
+				</div>
+			</header>
 
-			<h2 className="mt-12 mb-4 text-2xl font-bold">Why?</h2>
-			<section className="prose prose-invert lg:prose-xl mx-auto">
-				<p>
-					I wanted a website that would help me discover new movies and TV
-					shows. I used to visit IMDb, Metacritic, Rotten Tomatoes and JustWatch
-					to determine what I want to watch next. I didn't like the overhead of
-					jumping between those pages and looked for pages that aggregate all
-					this information.
-				</p>
+			<section aria-labelledby="about-what" className="flex flex-col gap-5">
+				<h2
+					id="about-what"
+					className="text-xl font-bold tracking-tight text-white sm:text-2xl"
+				>
+					What it does
+				</h2>
+				<ul className="grid gap-3 sm:grid-cols-2">
+					{FEATURES.map(({ icon: Icon, title, line, to }) => (
+						<li key={title}>
+							<Link
+								to={to}
+								prefetch="intent"
+								className="flex h-full items-start gap-3 rounded-2xl bg-white/[0.04] p-4 ring-1 ring-white/10 transition hover:bg-white/[0.08]"
+							>
+								<Icon
+									className="mt-0.5 h-6 w-6 shrink-0 text-amber-400"
+									aria-hidden="true"
+								/>
+								<span className="flex flex-col">
+									<span className="font-semibold text-white">{title}</span>
+									<span className="text-sm text-gray-400">{line}</span>
+								</span>
+							</Link>
+						</li>
+					))}
+				</ul>
+				<MoreLink to="/how-it-works">See how it works</MoreLink>
 			</section>
 
-			<h2 className="mt-12 mb-4 text-2xl font-bold">What's unique?</h2>
-			<section className="prose prose-invert lg:prose-xl mx-auto">
-				<p>GoodWatch is the only site (that I know of) that combines:</p>
-				<ol>
-					<li>
-						streaming information from most services (e.g. Netflix, Prime, etc.)
-					</li>
-					<li>
-						scores from popular rating pages (e.g. IMDb, Metacritic, Rotten
-						Tomatoes)
-					</li>
-				</ol>
+			<dl className="grid grid-cols-2 gap-y-6 border-y border-white/10 py-8 sm:grid-cols-4">
+				{NUMBERS.map(({ n, label }) => (
+					<div key={label} className="flex flex-col gap-1">
+						<dt className="order-2 text-sm text-gray-400">{label}</dt>
+						<dd className="text-3xl font-black tracking-tight text-white">
+							{n}
+						</dd>
+					</div>
+				))}
+			</dl>
+
+			<section aria-labelledby="about-find" className="flex flex-col gap-4">
+				<h2
+					id="about-find"
+					className="text-xl font-bold tracking-tight text-white sm:text-2xl"
+				>
+					Find us
+				</h2>
+				<FindUs />
 			</section>
 
-			<h2 className="mt-12 mb-4 text-2xl font-bold">
-				What about website "xyz"?
-			</h2>
-			<section className="prose prose-invert lg:prose-xl mx-auto">
-				<p>
-					There are plenty of other websites and apps that offer similar
-					features. None of them had exactly what I needed. That's why I built
-					GoodWatch.
-				</p>
-				<p>
-					The closest offering to what I was looking for can be found on &nbsp;
-					<a
-						className="underline cursor-pointer"
-						href="https://www.justwatch.com/"
-						target="_blank"
-						rel="noreferrer"
-					>
-						JustWatch
-					</a>
-					. However, it lacks the aggregated scores from different sources.
-				</p>
-			</section>
-
-			<h2 className="mt-12 mb-4 text-2xl font-bold">
-				What do you plan for the future?
-			</h2>
-			<section className="prose prose-invert lg:prose-xl mx-auto">
-				<p>
-					A truly personalized recommendation system that understands your taste
-					in movies and TV shows.
-				</p>
-				<p>
-					Each title has certain categories like mood, plot, narrative, visual
-					style or place. The combined data is called the Genome or DNA. This
-					will be the foundation for exploration and recommendation features
-					that are unique across all media.
-				</p>
-			</section>
+			<Credits className="border-t border-white/10 pt-6" />
 		</div>
 	)
 }

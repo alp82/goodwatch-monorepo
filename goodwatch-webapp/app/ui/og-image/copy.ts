@@ -90,8 +90,8 @@ export const STATIC_PAGE_COPY: Record<string, PageCopy> = {
 	},
 	"/how-it-works": {
 		tag: "How it works",
-		title: "Ratings and Fingerprints",
-		subtitle: "How GoodWatch scores and understands every title.",
+		title: "How GoodWatch works",
+		subtitle: "One score, every service, picks for your taste.",
 	},
 	"/about": {
 		tag: "About",

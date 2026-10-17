@@ -47,7 +47,7 @@ export function DiscordMark({ className }: IconProps) {
 	)
 }
 
-function RedditMark({ className }: IconProps) {
+export function RedditMark({ className }: IconProps) {
 	return (
 		<svg
 			aria-hidden="true"
@@ -59,7 +59,7 @@ function RedditMark({ className }: IconProps) {
 	)
 }
 
-function GitHubMark({ className }: IconProps) {
+export function GitHubMark({ className }: IconProps) {
 	return (
 		<svg
 			aria-hidden="true"

@@ -55,8 +55,8 @@ const FEATURES: Feature[] = [
 	{
 		section: "score",
 		title: "One score you can trust",
-		text: "IMDb, Rotten Tomatoes and Metacritic, critics and audiences alike, in one GoodWatch score for every movie and show.",
-		link: { to: "/how-it-works", label: "How the score works" },
+		text: "IMDb, Rotten Tomatoes, Metacritic and TMDB, critics and audiences alike, in one GoodWatch score for every movie and show.",
+		link: { to: "/how-it-works#score", label: "How the score works" },
 		visual: () => (
 			<div className="hgw-v-score">
 				<div className="hgw-v-sources">
@@ -125,7 +125,7 @@ const FEATURES: Feature[] = [
 		section: "fingerprint",
 		title: "How it feels",
 		text: "Every title is read for how it feels: spectacular, tense, heartwarming, funny. Pick by the evening you want, not by genre.",
-		link: { to: "/how-it-works", label: "About title analysis" },
+		link: { to: "/how-it-works#title-analysis", label: "About title analysis" },
 		visual: () => (
 			<div className="hgw-v-feel">
 				<Img

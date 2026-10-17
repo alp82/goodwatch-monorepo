@@ -1,198 +1,88 @@
-import { assetUrl } from "~/utils/asset-url"
-import { CubeIcon } from "@heroicons/react/24/solid"
+// /how-it-works: one feature per row, centred: a kicker, a short headline and one line, then a big picture made from
+// the start page intro's parts (ui/how-it-works), then a link to the real page. The text is in the server's HTML; the
+// pictures load on demand as they scroll into view. Each row has an anchor (/how-it-works#score); the start page's
+// "How GoodWatch works" links to #score and #title-analysis.
 import type { MetaFunction } from "@remix-run/node"
-import { Link } from "@remix-run/react"
-import React from "react"
-import disneyLogo from "~/img/disneyplus-logo.webp"
-import fingerprintIcon from "~/img/fingerprint.webp"
-import huluLogo from "~/img/hulu-logo-120.webp"
-import imdbLogo from "~/img/imdb-logo-250.webp?no-inline"
-import metacriticLogo from "~/img/metacritic-logo-96.webp"
-import netflixLogo from "~/img/netflix-logo.svg"
-import primeLogo from "~/img/primevideo-logo.svg"
-import rottenLogo from "~/img/rotten-logo-96.webp"
-import { useInfoModal } from "~/ui/modal/infoModal"
+import {
+	FeaturePicture,
+	IntroDataProvider,
+} from "~/ui/how-it-works/FeaturePicture"
+import { type Feature, HOW_IT_WORKS_FEATURES } from "~/ui/how-it-works/features"
+import { ActionLink, Kicker, MoreLink } from "~/ui/info-page"
+import { ChatDemo } from "~/ui/use-with-ai/ChatDemo"
 import { type PageMeta, buildMeta } from "~/utils/meta"
 
 export { pageHeaders as headers } from "~/utils/headers"
 
 export const meta: MetaFunction = () => {
 	const pageMeta: PageMeta = {
-		title: "How It Works | GoodWatch",
+		title: "How GoodWatch works | GoodWatch",
 		description:
-			"Learn how GoodWatch helps you find the best movies and TV shows to watch",
+			"One score from IMDb, Rotten Tomatoes, Metacritic and TMDB, 325 streaming services, picks for your taste, and how every movie and show feels.",
 		url: "https://goodwatch.app/how-it-works",
 		image: "https://goodwatch.app/images/heroes/hero-movies.png",
-		alt: "How GoodWatch Works",
+		alt: "How GoodWatch works",
 	}
 
 	return buildMeta({ pageMeta, items: [] })
 }
 
-export default function About() {
-	const { ref, isOpen, position, toggleModal } = useInfoModal()
-
+export default function HowItWorks() {
 	return (
-		<div className="max-w-7x mx-auto px-8 lmt-0 py-2 md:py-4 lg:py-8">
-			<div className="mx-auto max-w-7xl px-6 pb-32 lg:px-8">
-				<div className="text-lg lg:text-2xl text-gray-300">
-					<h1 className="my-12 font-bold tracking-tight text-center text-gray-100 text-2xl sm:text-3xl md:text-4xl lg:text-5xl">
-						How it works
+		<IntroDataProvider>
+			<div className="mx-auto flex w-full max-w-5xl flex-col items-center px-4 pt-10 pb-24 text-center text-gray-300 sm:px-8 md:pt-20">
+				<header className="flex max-w-2xl flex-col items-center gap-4">
+					<h1 className="text-4xl font-bold tracking-tight text-white sm:text-6xl">
+						How GoodWatch works
 					</h1>
+					<p className="text-lg leading-relaxed text-gray-300 sm:text-xl">
+						Every score, every service, one place. Here's what that looks like.
+					</p>
+				</header>
 
-					<hr className="border-gray-700" />
+				<ol className="mt-20 flex w-full flex-col gap-24 sm:mt-28 sm:gap-32">
+					{HOW_IT_WORKS_FEATURES.map((f) => (
+						<FeatureRow key={f.id} f={f} />
+					))}
+				</ol>
 
-					<div className="mt-16 sm:mt-24 flex flex-col gap-16 sm:gap-24 leading-relaxed text-2xl sm:text-3xl lg:text-4xl">
-						<div className="flex items-center justify-center flex-wrap gap-8">
-							<p className="max-w-lg text-center">
-								Only on GoodWatch: The{" "}
-								<span className="accent">Fingerprint</span> classifies movies
-								and shows based on{" "}
-								<button
-									type="button"
-									ref={ref}
-									onClick={toggleModal}
-									className="text-blue-500 underline hover:text-blue-700 focus:outline-hidden"
-								>
-									18 categories
-								</button>
-								, for example <strong>Mood</strong>, <strong>Plot</strong>,{" "}
-								<strong>Dialogs</strong> or <strong>Cinematic Style</strong>
-							</p>
-							<div className="w-[10em] flex items-center justify-center flex-wrap gap-10">
-								<img
-									className="h-28 sm:h-40 inline-block"
-									src={assetUrl(fingerprintIcon)}
-									alt="DNA Logo"
-									title="DNA Logo"
-								/>
-							</div>
-						</div>
-
-						{isOpen && (
-							<div
-								style={{ top: `${position.top}px`, left: `${position.left}px` }}
-								className="absolute p-4 bg-gray-950 text-lg text-white rounded-lg shadow-lg max-w-sm"
-							>
-								<h3 className="text-lg font-bold mb-2">
-									All 18 DNA categories
-								</h3>
-								<p className="text-sm">
-									Movies and shows are classified into:
-									<ul className="list-disc pl-6 mt-2">
-										<li>Sub-Genres</li>
-										<li>Mood</li>
-										<li>Themes</li>
-										<li>Plot</li>
-										<li>Cultural Impact</li>
-										<li>Character Types</li>
-										<li>Dialog</li>
-										<li>Narrative</li>
-										<li>Humor</li>
-										<li>Pacing</li>
-										<li>Time</li>
-										<li>Place</li>
-										<li>Cinematic Style</li>
-										<li>Score and Sound</li>
-										<li>Costume and Set</li>
-										<li>Key Props</li>
-										<li>Target Audience</li>
-										<li>Flag</li>
-									</ul>
-								</p>
-								<button
-									type="button"
-									onClick={toggleModal}
-									className="mt-2 text-sm text-indigo-300 underline hover:text-indigo-200"
-								>
-									Close
-								</button>
-							</div>
-						)}
-
-						<hr className="border-gray-700" />
-
-						<div className="flex items-center justify-center flex-wrap gap-16 md:gap-36">
-							<div className="flex flex-col gap-10">
-								<div className="w-[10em] flex items-center justify-center gap-10">
-									<img
-										className="h-5 sm:h-10 mt-8inline-block"
-										src={assetUrl(netflixLogo)}
-										alt="Netflix"
-										title="Netflix"
-									/>
-									<img
-										className="h-6 sm:h-12 inline-block"
-										src={assetUrl(primeLogo)}
-										alt="Amazon Prime"
-										title="Amazon Prime"
-									/>
-								</div>
-								<div className="w-[10em] flex items-center justify-center gap-10">
-									<img
-										className="h-5 sm:h-10 mt-8 ml-8 inline-block"
-										src={assetUrl(huluLogo)}
-										alt="Hulu"
-										title="Hulu"
-									/>
-									<img
-										className="h-12 sm:h-20-mt-6 -ml-2 inline-block"
-										src={assetUrl(disneyLogo)}
-										alt="Disney+"
-										title="Disney+"
-									/>
-								</div>
-							</div>
-							<p className="max-w-sm text-center">
-								See <span className="accent">where to watch</span> your next
-								favorite movie or TV show.
-							</p>
-						</div>
-
-						<hr className="border-gray-700" />
-
-						<div className="flex items-center justify-center flex-wrap gap-16">
-							<p className="max-w-sm text-center">
-								See <span className="accent">all scores</span> from different
-								sources.
-							</p>
-							<div className="w-[10em] flex items-center justify-center flex-wrap gap-10">
-								<img
-									className="h-12 inline-block"
-									src={assetUrl(imdbLogo)}
-									alt="IMDb"
-									title="IMDb"
-								/>
-								<img
-									className="h-12 inline-block"
-									src={assetUrl(metacriticLogo)}
-									alt="Metacritic"
-									title="Metacritic"
-								/>
-								<img
-									className="h-12 inline-block"
-									src={assetUrl(rottenLogo)}
-									alt="Rotten Tomatoes"
-									title="Rotten Tomatoes"
-								/>
-							</div>
-						</div>
-
-						<hr className="border-gray-700" />
-
-						<div className="flex items-center justify-center flex-wrap gap-16 md:gap-36">
-							<Link
-								className="rounded-md bg-indigo-600 px-8 py-4 flex items-center justify-center gap-2 lg:gap-4 text-xl lg:text-2xl text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-								to="/discover"
-								prefetch="render"
-							>
-								<CubeIcon className="h-5 lg:h-7 w-auto" />
-								<span className="hidden xs:inline">Try it: </span>Discover
-							</Link>
-						</div>
+				<section className="mt-28 flex flex-col items-center gap-5 sm:mt-36">
+					<h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
+						Your turn
+					</h2>
+					<p className="max-w-md text-lg text-gray-300">
+						Rate a few titles you loved. Your picks are ready in a minute.
+					</p>
+					<div className="flex flex-wrap justify-center gap-3">
+						<ActionLink to="/taste" primary>
+							Find your taste
+						</ActionLink>
+						<ActionLink to="/discover">Open Discover</ActionLink>
 					</div>
-				</div>
+				</section>
 			</div>
-		</div>
+		</IntroDataProvider>
+	)
+}
+
+function FeatureRow({ f }: { f: Feature }) {
+	return (
+		<li id={f.id} className="flex scroll-mt-24 flex-col items-center gap-3">
+			<Kicker>{f.kicker}</Kicker>
+			<h2 className="text-3xl font-bold tracking-tight text-white sm:text-5xl">
+				{f.title}
+			</h2>
+			<p className="max-w-xl text-lg leading-relaxed text-gray-300">{f.line}</p>
+			<div className="mt-6 w-full sm:mt-10">
+				{f.picture === "chat" ? (
+					<ChatDemo className="mx-auto max-w-xl text-left" />
+				) : (
+					<FeaturePicture id={f.picture} phone={f.phone} />
+				)}
+			</div>
+			<MoreLink to={f.link.to} className="mt-4">
+				{f.link.label}
+			</MoreLink>
+		</li>
 	)
 }
