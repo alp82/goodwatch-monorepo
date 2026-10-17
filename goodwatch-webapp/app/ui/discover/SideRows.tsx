@@ -89,7 +89,8 @@ export function SideRows({
 }
 
 // A row that scrolls sideways without a visible scrollbar. Touch screens swipe; pointer screens get round arrow
-// buttons at the edges, shown only when there is more to see that way, and each click moves about one view's width.
+// buttons at the edges while hovering a row that overflows. Each click moves about one view's width; at either end
+// the row wraps around to the other end.
 function PosterRail({
 	label,
 	children,
@@ -98,13 +99,10 @@ function PosterRail({
 	children: ReactNode
 }) {
 	const ref = useRef<HTMLDivElement>(null)
-	const [canBack, setCanBack] = useState(false)
-	const [canForward, setCanForward] = useState(false)
+	const [overflows, setOverflows] = useState(false)
 	const update = useCallback(() => {
 		const el = ref.current
-		if (!el) return
-		setCanBack(el.scrollLeft > 4)
-		setCanForward(el.scrollLeft + el.clientWidth < el.scrollWidth - 4)
+		if (el) setOverflows(el.scrollWidth > el.clientWidth + 4)
 	}, [])
 	useEffect(() => {
 		update()
@@ -116,19 +114,24 @@ function PosterRail({
 	}, [update])
 	const step = (direction: 1 | -1) => {
 		const el = ref.current
-		if (el)
+		if (!el) return
+		const end = el.scrollWidth - el.clientWidth
+		const atStart = el.scrollLeft <= 4
+		const atEnd = el.scrollLeft >= end - 4
+		if (direction === 1 && atEnd) el.scrollTo({ left: 0, behavior: "smooth" })
+		else if (direction === -1 && atStart)
+			el.scrollTo({ left: end, behavior: "smooth" })
+		else
 			el.scrollBy({
 				left: direction * el.clientWidth * 0.85,
 				behavior: "smooth",
 			})
 	}
-	const arrow =
-		"absolute top-1/2 z-20 hidden h-11 w-11 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-gray-950/85 text-white shadow-lg ring-1 ring-white/20 transition-opacity hover:bg-gray-800 focus-visible:opacity-100 md:flex"
+	const arrow = `absolute top-1/2 z-20 hidden h-12 w-12 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-white text-gray-950 shadow-[0_4px_16px_rgba(0,0,0,0.6)] ring-2 ring-gray-950/40 transition-[opacity,transform] hover:scale-110 focus-visible:opacity-100 md:flex ${overflows ? "opacity-0 group-hover/rail:opacity-100" : "pointer-events-none opacity-0"}`
 	return (
 		<div className="group/rail relative">
 			<div
 				ref={ref}
-				onScroll={update}
 				className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 [scrollbar-width:none] lg:mx-0 lg:px-0 [&::-webkit-scrollbar]:hidden"
 			>
 				{children}
@@ -137,19 +140,19 @@ function PosterRail({
 				type="button"
 				aria-label={`Scroll ${label} back`}
 				onClick={() => step(-1)}
-				tabIndex={canBack ? 0 : -1}
-				className={`${arrow} -left-3 ${canBack ? "opacity-0 group-hover/rail:opacity-100" : "pointer-events-none opacity-0"}`}
+				tabIndex={overflows ? 0 : -1}
+				className={`${arrow} -left-4`}
 			>
-				<ChevronLeftIcon className="h-6 w-6" />
+				<ChevronLeftIcon className="h-7 w-7 stroke-current stroke-1" />
 			</button>
 			<button
 				type="button"
 				aria-label={`Scroll ${label} forward`}
 				onClick={() => step(1)}
-				tabIndex={canForward ? 0 : -1}
-				className={`${arrow} -right-3 ${canForward ? "opacity-0 group-hover/rail:opacity-100" : "pointer-events-none opacity-0"}`}
+				tabIndex={overflows ? 0 : -1}
+				className={`${arrow} -right-4`}
 			>
-				<ChevronRightIcon className="h-6 w-6" />
+				<ChevronRightIcon className="h-7 w-7 stroke-current stroke-1" />
 			</button>
 		</div>
 	)

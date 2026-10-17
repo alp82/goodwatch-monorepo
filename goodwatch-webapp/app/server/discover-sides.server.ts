@@ -33,7 +33,7 @@ import type { TitleKey } from "~/utils/title-key"
 /** The id of the titles that fit no side, in `side=` and in a row's id. */
 export const NO_SIDE = "none"
 /** The titles a row shows; "See all" opens the rest. */
-export const ROW_TITLES = 12
+export const ROW_TITLES = 24
 /** The loved titles that stand for a side in its header. */
 const HERE = 4
 const KEEP_MS = 10 * 60_000
