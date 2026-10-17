@@ -145,7 +145,10 @@ class Observation:
                   for kind in OFFER_TYPES for offer in data.get(kind, [])}
         fresh_current = bool(valid and proof.get('cache_bypassed') is True)
         scoped = title.list_read
-        if scoped is not None and fresh_current and utc_day(scoped.checked_at) == utc_day(api_at):
+        # A list's unlisted 404 is scoped negative evidence only. Keep its check
+        # time for unknown removals, without granting fresh/current API proof.
+        if (scoped is not None and (fresh_current or proof.get('deleted') is True)
+                and utc_day(scoped.checked_at) == utc_day(api_at)):
             prior_at = scoped.previous_at
             fresh_prior = (scoped.previous_complete and scoped.previous_cache_bypassed
                            and isinstance(prior_at, int) and prior_at < api_at)
@@ -268,7 +271,8 @@ def title_writes(transition, previous, media_type, pending, copy_at):
                           and key.proof_identity not in observation.prior_offers else None)
         writes.append(Stay(**key._asdict(), observed_at=at,
                            appeared_on=premiere if premiere is not None else today, last_seen_on=today,
-                           appeared_source='premiere' if premiere is not None else 'title',
+                           appeared_source=('backfill' if title.list_read and title.list_read.previous_at is None
+                                            else 'premiere' if premiere is not None else 'title'),
                            appeared_after=None if premiere is not None else appeared_after,
                            appeared_precision='exact' if exact or premiere is not None else 'unknown'))
     for key in removed:

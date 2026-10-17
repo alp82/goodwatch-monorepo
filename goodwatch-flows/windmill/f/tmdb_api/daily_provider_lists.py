@@ -218,7 +218,9 @@ def read_list(client, country, media_type, service_id, diagnostics=None):
                   with_watch_monetization_types='flatrate|free|ads', include_adult='false')
     diagnostics = {} if diagnostics is None else diagnostics
     diagnostics.update(sort_fallbacks=0, partitions=0, query_retries=0)
-    def read_range(lo=None, hi=None):
+    first_total = None
+    def read_range(lo=None, hi=None, expected_total=None):
+        nonlocal first_total
         extra = {}
         if lo is not None:
             extra['vote_count.gte'] = lo
@@ -230,6 +232,10 @@ def read_list(client, country, media_type, service_id, diagnostics=None):
                 diagnostics['sort_fallbacks'] += 1
             first = client.get('/discover/' + api_media, **params, **extra, sort_by=sort, page=1)
             total, pages = first['total_results'], first['total_pages']
+            if first_total is None:
+                first_total = total
+            if expected_total is not None and total != expected_total:
+                raise IncompleteList(f'Retry total {total} differs from first read {expected_total}')
             if expected is not None and total != expected:
                 ids.clear()  # A changed total needs an independently complete second read.
             expected = total
@@ -269,7 +275,7 @@ def read_list(client, country, media_type, service_id, diagnostics=None):
         # Discard both failed traversals; require full counts/stable metadata
         # again, with no further query retry if this traversal is also torn.
         diagnostics['query_retries'] = 1
-        return read_range(0)
+        return read_range(0, expected_total=first_total if first_total < 20001 else None)
 
 
 def list_candidates(store, identity, previous, listed, country, media_type, service_id):
@@ -296,21 +302,21 @@ def publish_list_changes(store, title_reads, country, media_type, service_id, li
                 error.tmdb_id, error.endpoint = tmdb_id, f'/{api_media}/{tmdb_id}/watch/providers'
                 raise error
             if proof.get('deleted'):
-                # Isolate the title-wide read from the normal scoped batch.
-                # The shared writer alone plans the unknown closures.
-                store.flush()
-                store.publish(media_type, HistoryTitle(tmdb_id, {}, {}, {}, [], [],
-                              deleted_at=proof['checked_at']), owned)
-                store.flush()
-                members[str(tmdb_id)] = []
-                if tmdb_id in listed:
-                    retry_ids.append(tmdb_id)
-                print(json.dumps(dict(event='tmdb_deleted', key=f'{country}:{media_type}:{service_id}',
-                    media_type=media_type, tmdb_id=tmdb_id,
+                listed_conflict = tmdb_id in listed
+                print(json.dumps(dict(event='tmdb_missing_conflict' if listed_conflict else 'tmdb_missing',
+                    key=f'{country}:{media_type}:{service_id}', media_type=media_type, tmdb_id=tmdb_id,
                     endpoint=f'/{api_media}/{tmdb_id}/watch/providers', http_status=404, tmdb_status_code=34)), flush=True)
-                continue
-            details = metadata.get(tmdb_id, {}) | {'watch_providers': payload, 'watch_providers_check': proof}
-            kinds = eligible_kinds(payload, country, service_id)
+                if listed_conflict:
+                    retry_ids.append(tmdb_id)
+                    continue  # Discover still lists it: preserve members and publish nothing.
+                # Only the omitted list's keys are removal intents. A 404 cannot
+                # establish an exact day or signal a title-wide deletion here.
+                details = {'updated_at': datetime.fromtimestamp(proof['checked_at'] / 1000, timezone.utc),
+                           'watch_providers_check': proof}
+                kinds = []
+            else:
+                details = metadata.get(tmdb_id, {}) | {'watch_providers': payload, 'watch_providers_check': proof}
+                kinds = eligible_kinds(payload, country, service_id)
             keys = [OfferKey(tmdb_id, media_type, country, service_id, kind) for kind in kinds]
             rows = {key: key._asdict() for key in keys}
             members[str(tmdb_id)] = kinds
@@ -322,7 +328,8 @@ def publish_list_changes(store, title_reads, country, media_type, service_id, li
             removed = [OfferKey(tmdb_id, media_type, country, service_id, kind)
                        for kind in HISTORY_OFFER_TYPES if kind not in kinds]
             title = HistoryTitle(tmdb_id, details, rows, {}, [], removed,
-                ListRead(country, service_id, at, prior.get('checked_at'), tuple(prior_kinds), bool(prior_kinds),
+                ListRead(country, service_id, at, prior.get('checked_at'), tuple(prior_kinds),
+                         bool(prior_kinds) or tmdb_id in prior.get('ids', []),
                          prior.get('complete') is True, prior.get('cache_bypassed') is True))
             store.publish(media_type, title, owned)
     return members, retry_ids

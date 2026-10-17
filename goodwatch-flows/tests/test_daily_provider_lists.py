@@ -125,57 +125,75 @@ class DailyListTests(unittest.TestCase):
         return job.run_daily_lists(self.api, self.store, countries=['US'], service_ids=[8],
                                    media_types=['show'], now=datetime.fromisoformat(date), **kwargs)
 
-    def test_confirmed_deleted_title_closes_all_its_stays_unknown_without_failing_the_list(self):
-        import mongomock
-        from f.tmdb_api.daily_list_storage import ListStorage
-        from f.sync.availability_history import HistoryTitle, OfferKey
-        from f.tmdb_api.provider_evidence import capture_provider_check
-        self.api.ids = [42, 43]
+    def deleted_title_api(self):
+        original = self.api.get
+        def deleted(path, **params):
+            if path.endswith('/42/watch/providers'):
+                self.api.calls.append((path, params))
+                raise job.TMDBDeletedTitle('TMDB deleted title (HTTP 404, status 34)',
+                                           endpoint=path, http_status=404)
+            return original(path, **params)
+        self.api.get = deleted
+        return original
+
+    def test_listed_title_404_preserves_history_and_prior_members_and_retries(self):
         self.run_day('2026-10-13T20:00:00', dry_run=False)
-        payload = {'results': {'DE': {'free': [{'provider_id': 11}]},
-                               'US': {'flatrate': [{'provider_id': 8}]}}}
-        proof = capture_provider_check({'id': 42, 'watch/providers': payload}, 42,
-                                       datetime(2026, 10, 13, 20), bypass_cache=True)
-        details = {'watch_providers': payload, 'watch_providers_check': proof}
-        for media, country, service, kind in [('show', 'DE', 11, 'free'), ('movie', 'US', 8, 'flatrate')]:
-            key = OfferKey(42, media, country, service, kind)
-            publish_history(self.store.crate, media, [HistoryTitle(42, details, {key: key._asdict()}, {}, [], [])], lambda: None)
-        crate = self.store.crate
-        before = deepcopy(crate.history)
-        crate.writes.clear()
-        for dry_run in (True, False):
-            db = mongomock.MongoClient().db
-            self.store = ListStorage(db=db, connector=crate, dry_run=dry_run)
-            session = Mock()
-            def response(url, **kwargs):
-                if '/discover/' in url:
-                    return Mock(status_code=200, json=lambda: dict(page=1, total_pages=1, total_results=2,
-                                results=[{'id': 42}, {'id': 43}]))
-                if '/42/' in url:
-                    return Mock(status_code=404, json=lambda: {'status_code': 34, 'status_message': 'Not found'})
-                return Mock(status_code=200, json=lambda: {'id': 43, 'results': {'US': {'flatrate': [{'provider_id': 8}]}}})
-            session.get.side_effect = response
-            with patch('wmill.get_variable', return_value='fixture-key'), patch('requests.Session', return_value=session):
-                api = job.TMDBClient()
-                api.interval = 0
-                result = job.run_daily_lists(api, self.store, countries=['US'], service_ids=[8],
-                                            media_types=['show'], now=datetime(2026, 10, 14, 20))
-            self.assertEqual(result['lists_failed'], 0)
-            self.assertEqual(result['lists_completed'], 1)
-            if dry_run:
-                self.assertEqual(crate.history, before)
-                self.assertEqual(crate.writes, [])
-                self.assertEqual(self.store.stats['planned_unknown_drops'], 2)
-                self.assertEqual(self.store.stats['planned_exact_drops'], 0)
-                self.assertEqual(db.list_collection_names(), [])
-                continue
-            rows = list(self.store.connector.history.values())
-            deleted = [r for r in rows if r['media_type'] == 'show' and r['media_tmdb_id'] == 42]
-            self.assertEqual(len(deleted), 2)
-            self.assertEqual({(r['dropped_on'], r['dropped_precision']) for r in deleted}, {(day('2026-10-14'), 'unknown')})
-            self.assertTrue(all(r['dropped_on'] is None for r in rows if r not in deleted))
-            self.assertEqual(sum('/42/' in call.args[0] for call in session.get.call_args_list), 1)
-            self.assertEqual(api.stats['retries'], 0)
+        self.store.snapshots['US:show:8']['retry_ids'] = [42]
+        before = deepcopy(self.store.crate.history)
+        self.store.crate.writes.clear()
+        self.deleted_title_api()
+        report = self.run_day('2026-10-14T20:00:00', dry_run=False)
+        self.assertEqual((report['lists_completed'], report['lists_failed']), (1, 0))
+        self.assertEqual(self.store.crate.history, before)
+        self.assertEqual(self.store.crate.writes, [])
+        self.assertEqual(self.store.snapshots['US:show:8']['members'], {'42': ['flatrate']})
+        self.assertEqual(self.store.snapshots['US:show:8']['retry_ids'], [42])
+
+    def test_unlisted_title_404_closes_only_this_country_and_service_unknown(self):
+        self.store.dry_run = False
+        self.api.results = {'US': {'flatrate': [{'provider_id': 8}, {'provider_id': 9}]},
+                            'DE': {'flatrate': [{'provider_id': 8}]}}
+        job.run_daily_lists(self.api, self.store, countries=['US', 'DE'], service_ids=[8, 9],
+                            media_types=['show', 'movie'], now=datetime(2026, 10, 13, 20))
+        before = deepcopy(self.store.crate.history)
+        self.api.ids = []
+        self.deleted_title_api()
+        report = self.run_day('2026-10-14T20:00:00', dry_run=False)
+        self.assertEqual((report['lists_completed'], report['lists_failed']), (1, 0))
+        for key, row in self.store.crate.history.items():
+            if (row['country_code'], row['media_type'], row['streaming_service_id']) == ('US', 'show', 8):
+                self.assertEqual((row['dropped_on'], row['dropped_precision']), (day('2026-10-14'), 'unknown'))
+            else:
+                self.assertEqual(row, before[key])
+        self.assertEqual(self.store.snapshots['US:show:8']['retry_ids'], [])
+
+    def test_day_after_listed_404_is_unknown_and_other_country_stays_open(self):
+        # Reviewer's test_deleted_baseline.py: US is already checkpointed when
+        # the DE baseline gets a 404 for title 42, which both lists still include.
+        self.store.dry_run = False
+        self.api.results = {country: {'flatrate': [{'provider_id': 8}]} for country in ('US', 'DE')}
+        def run(date, countries):
+            return job.run_daily_lists(self.api, self.store, countries=countries, service_ids=[8],
+                media_types=['show'], now=datetime.fromisoformat(date))
+        run('2026-10-13T20:00:00', ['US'])
+        run('2026-10-14T20:00:00', ['US'])
+        before = deepcopy(self.store.crate.history)
+        original = self.deleted_title_api()
+        report = run('2026-10-15T20:00:00', ['DE', 'US'])
+        self.assertEqual(report['lists_failed'], 0)
+        self.assertEqual(self.store.crate.history, before)
+        self.assertEqual(self.store.snapshots['DE:show:8']['ids'], [42])
+        self.assertEqual(self.store.snapshots['DE:show:8']['retry_ids'], [42])
+        self.api.get = original
+        for date in ('2026-10-16T20:00:00', '2026-10-17T20:00:00'):
+            run(date, ['DE', 'US'])
+        us = [row for row in self.store.crate.history.values() if row['country_code'] == 'US']
+        de = [row for row in self.store.crate.history.values() if row['country_code'] == 'DE']
+        self.assertEqual(us, list(before.values()))
+        self.assertEqual(len(de), 1)
+        self.assertEqual(de[0]['appeared_on'], day('2026-10-16'))
+        self.assertEqual(de[0]['appeared_precision'], 'unknown')
+        self.assertIsNone(de[0]['dropped_on'])
 
     def test_discover_404_reports_its_context_and_other_lists_continue(self):
         session = Mock()
@@ -251,7 +269,7 @@ class DailyListTests(unittest.TestCase):
         self.assertEqual(self.store.crate.history, {})
         self.run_day('2026-10-14T20:00:00', dry_run=False)
         stay = next(iter(self.store.crate.history.values()))
-        self.assertEqual(stay['appeared_source'], 'title')
+        self.assertEqual(stay['appeared_source'], 'backfill')
         self.assertEqual(stay['appeared_precision'], 'unknown')
         self.assertEqual(stay['appeared_on'], day('2026-10-14'))
         self.assertEqual(self.store.crate.writes, ['REFRESH TABLE availability_history', 'availability_history'])
@@ -270,6 +288,7 @@ class DailyListTests(unittest.TestCase):
         stays = list(self.store.crate.history.values())
         self.assertEqual(len(stays), 2)
         self.assertEqual(stays[0]['appeared_precision'], 'exact')
+        self.assertEqual(stays[0]['appeared_source'], 'title')
         self.assertEqual(stays[0]['appeared_after'], day('2026-10-13'))
         self.assertEqual(stays[0]['dropped_on'], day('2026-10-15'))
         self.assertEqual(stays[0]['dropped_precision'], 'exact')
@@ -363,7 +382,7 @@ class DailyListTests(unittest.TestCase):
             else:
                 # Cached pages straddle one catalog insertion. Both sorts are
                 # torn; only the fresh query supplies the fifth title.
-                total, ids = (4, [41, 42, 43]) if page == 1 else (5, [43, 44])
+                total, ids = (5, [41, 42, 43]) if page == 1 else (6, [43, 44])
             return dict(page=page, total_pages=2, total_results=total,
                         results=[{'id': tmdb_id} for tmdb_id in ids])
         self.api.get = snapshots
@@ -372,6 +391,21 @@ class DailyListTests(unittest.TestCase):
         self.assertEqual(next(iter(self.store.snapshots.values()))['ids'], [41, 42, 43, 44, 45])
         self.assertEqual(len(self.store.crate.history), 5)
         self.assertEqual({row['appeared_precision'] for row in self.store.crate.history.values()}, {'unknown'})
+
+    def test_equivalent_query_retry_rejects_a_different_total_from_the_first_read(self):
+        original = self.api.get
+        def snapshots(path, **params):
+            if not path.startswith('/discover/'):
+                return original(path, **params)
+            retry = params.get('vote_count.gte') == 0
+            return dict(page=params['page'], total_pages=1, total_results=3 if retry else 4,
+                        results=[{'id': i} for i in (41, 42, 43)])
+        self.api.get = snapshots
+        report = self.run_day('2026-10-14T20:00:00', dry_run=False)
+        self.assertEqual(report['lists_failed'], 1)
+        self.assertIn('Retry total 3 differs from first read 4', report['lists'][0]['reason'])
+        self.assertEqual(self.store.snapshots, {})
+        self.assertEqual(self.store.crate.history, {})
 
     def test_large_lists_are_partitioned_without_losing_titles_with_no_release_date(self):
         original = self.api.get

@@ -87,6 +87,40 @@ class DailyRampTests(unittest.TestCase):
         self.assertEqual(report['requests_new_baselines'], 6)  # Includes DE's deferred discovery reads.
         self.assertEqual(set(self.store.snapshots), {'US:movie:8', 'US:show:8', 'AR:movie:8', 'AR:show:8'})
         self.assertEqual({row['appeared_precision'] for row in self.store.crate.history.values()}, {'unknown'})
+        self.assertEqual({row['appeared_source'] for row in self.store.crate.history.values()}, {'backfill'})
+
+    def test_report_warns_when_the_next_country_cannot_fit_after_progress(self):
+        self.ids = {'AR': [42], 'DE': [42]}
+        report = self.run_job(baseline_max_memberships=3)
+        self.assertEqual(report['baseline_deferred_country'], 'DE')
+        self.assertEqual(report['baseline_deferred_reason'], 'memberships')
+        namespace = {}
+        exec((Path(job.__file__).parent / 'read_daily_provider_lists.flow/report.inline_script.py').read_text(), namespace)
+        with self.assertWarnsRegex(RuntimeWarning, 'DE.*memberships'):
+            self.assertIs(namespace['main'](report), report)
+
+    def test_report_fails_when_the_first_country_cannot_fit_the_daily_budget(self):
+        self.ids = {'AR': [42, 43]}
+        for limits in ({'baseline_max_memberships': 3}, {'baseline_max_requests': 3}):
+            with self.subTest(limits=limits):
+                report = self.run_job(**limits)
+                self.assertEqual(report['baseline_deferred_country'], 'AR')
+                self.assertEqual(report['baseline_deferred_reason'], 'country_exceeds_budget')
+                namespace = {}
+                exec((Path(job.__file__).parent / 'read_daily_provider_lists.flow/report.inline_script.py').read_text(), namespace)
+                with self.assertRaisesRegex(RuntimeError, 'AR.*budget'):
+                    namespace['main'](report)
+                self.assertEqual(self.store.snapshots, {})
+
+    def test_oldest_checkpoints_are_reread_first_after_budget_starvation(self):
+        for country in ('AR', 'US'):
+            for media in ('movie', 'show'):
+                self.checkpoint(country, media)
+        self.store.snapshots['US:show:8']['checked_at'] -= 86400000
+        self.run_job(max_requests=1)
+        discover = [(params['watch_region'], '/discover/tv' in url)
+                    for url, params in self.calls if '/discover/' in url]
+        self.assertEqual(discover, [('US', True)])
 
     def test_request_budget_during_country_confirmation_starts_none_of_its_lists(self):
         self.ids = {'AR': [42]}
@@ -94,7 +128,7 @@ class DailyRampTests(unittest.TestCase):
         self.assertEqual(report['countries_started'], [])
         self.assertEqual(report['countries_remaining'], ['AR'])
         self.assertEqual(report['requests_new_baselines'], 3)
-        self.assertEqual(report['baseline_deferred_reason'], 'requests')
+        self.assertEqual(report['baseline_deferred_reason'], 'country_exceeds_budget')
         self.assertEqual(self.store.snapshots, {})
         self.assertEqual(self.store.crate.history, {})
 
@@ -122,8 +156,10 @@ class DailyRampTests(unittest.TestCase):
         self.assertEqual(report['countries_started'], ['DE'])
         self.assertEqual(report['countries_remaining'], ['AR'])
         self.assertEqual(set(self.store.snapshots), {'DE:movie:8', 'DE:show:8'})
-        self.assertEqual(report['lists_failed'], 1)
-        failure = next(item for item in report['lists'] if 'error' in item)
+        self.assertEqual(report['lists_failed'], 2)
+        failures = [item for item in report['lists'] if 'error' in item]
+        self.assertEqual({item['key'] for item in failures}, {'AR:movie:8', 'AR:show:8'})
+        failure = next(item for item in failures if item['key'] == 'AR:show:8')
         self.assertEqual(failure['key'], 'AR:show:8')
         self.assertEqual(failure['endpoint'], '/discover/tv')
         self.assertEqual(failure['media_type'], 'show')
@@ -183,7 +219,7 @@ class DailyRampTests(unittest.TestCase):
                                 baseline_max_requests=3, baseline_max_memberships=2,
                                 requests_per_second=20)
         self.assertEqual(report['lists_failed'], 0)
-        self.assertEqual(report['baseline_deferred_reason'], 'requests')
+        self.assertEqual(report['baseline_deferred_reason'], 'country_exceeds_budget')
         self.assertEqual(report['countries_started'], [])
         self.assertEqual(self.store.snapshots, {})
 
@@ -241,7 +277,7 @@ class DailyRampMongoTests(unittest.TestCase):
             return replace(collection, selector, *args, **kwargs)
         with patch.object(Collection, 'replace_one', new=fail_second):
             failed = self.run_job()
-        self.assertEqual(failed['lists_failed'], 1)
+        self.assertEqual(failed['lists_failed'], 2)
         self.assertEqual(failed['countries_started'], [])
         self.assertEqual(self.db.tmdb_daily_provider_lists.count_documents({}), 0)
         self.assertEqual(self.db.tmdb_daily_provider_list_pending.count_documents({}), 2)

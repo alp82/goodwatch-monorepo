@@ -21,9 +21,10 @@ from f.tmdb_api.tmdb_fetch_details_from_api.fetch import (
     SYSTEMIC_HTTP_STATUS_CODES,
     TMDB_API_KEY,
     describe_error,
-    is_tmdb_deleted_response,
     redact_secrets,
 )
+
+from f.tmdb_api.provider_evidence import is_tmdb_deleted_response
 
 # A season with thousands of episodes is several MB of JSON.
 REQUEST_TIMEOUT_SECONDS = 60

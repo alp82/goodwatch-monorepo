@@ -1,0 +1,67 @@
+{
+  "lists_completed": 30,
+  "lists_failed": 0,
+  "lists_skipped": 0,
+  "dry_run": true,
+  "rereads_estimated_requests": 0,
+  "rereads_complete": true,
+  "rereads_budget_exceeded": false,
+  "countries_started": [
+    "RU"
+  ],
+  "requests_rereads": 0,
+  "requests_new_baselines": 1508,
+  "baseline_deferred_reason": null,
+  "baseline_deferred_country": null,
+  "baseline_deferred_budget": null,
+  "countries_remaining": [],
+  "baseline_memberships": 1425,
+  "baseline_budget": {
+    "max_requests": 120000,
+    "max_memberships": 570000
+  },
+  "ramp_complete": true,
+  "requests": {
+    "requests": 1508,
+    "retries": 0,
+    "refused": 0,
+    "discover": 83,
+    "title": 1425,
+    "catalog": 0,
+    "deleted_responses": 1
+  },
+  "history": {
+    "planned_rows": 312,
+    "published_titles": 0,
+    "planned_exact_arrivals": 0,
+    "planned_unknown_arrivals": 5,
+    "planned_exact_drops": 0,
+    "planned_unknown_drops": 307
+  },
+  "countries": [
+    "RU"
+  ],
+  "mode": "automatic_ramp",
+  "title_candidates": 1425,
+  "seconds": 114.317,
+  "started_at_epoch": 1792225433.7633772,
+  "production_data_writes": 0,
+  "missing_title_events": [
+    {
+      "event": "tmdb_missing",
+      "key": "RU:show:283",
+      "media_type": "show",
+      "tmdb_id": 335013,
+      "endpoint": "/tv/335013/watch/providers",
+      "http_status": 404,
+      "tmdb_status_code": 34
+    }
+  ],
+  "measured_sources_sha256": {
+    "goodwatch-flows/windmill/f/tmdb_api/daily_provider_lists.py": "307d19bd79b4ed3e5577bc34533ce3ff47dc387350aa199d53e4f13f907a0f95",
+    "goodwatch-flows/windmill/f/tmdb_api/daily_list_ramp.py": "246609b6cc587b6af1c42097a53101382791d551a3061a239d03fc141ba03c7c",
+    "goodwatch-flows/windmill/f/tmdb_api/daily_list_storage.py": "612613d56eee6bd8839702db81bc4b28531f2d92e302b5a31d67a8ce9230de5e",
+    "goodwatch-flows/windmill/f/sync/availability_history.py": "5551d83274bd78737f2f9789e4b79a1fdf84cf97fe552d4557e79570871a02d0"
+  },
+  "note": "Read-only production preview of the automatic ramp for RU only. All Mongo writes and non-SELECT Crate operations refused by the measurement tool. No operational lease or checkpoints persisted. History counts are row plans, not necessarily distinct stays. Baseline arrival source is backfill in the shared writer; exact arrivals and drops were zero. The one unlisted 404 was scoped to RU:show:283."
+}

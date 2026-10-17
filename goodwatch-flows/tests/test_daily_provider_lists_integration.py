@@ -6,6 +6,7 @@ from unittest.mock import patch
 from uuid import uuid4
 
 import mongomock
+from test_availability_history import day
 from test_availability_history_integration import LocalCrate
 from test_daily_provider_lists import TMDB
 from f.sync.init.cratedb import create_table_sql
@@ -16,7 +17,7 @@ from f.tmdb_api.daily_provider_lists import run_daily_lists, TMDBDeletedTitle
 
 @unittest.skipUnless(os.environ.get('TEST_CRATE_URL'), 'Set TEST_CRATE_URL to disposable localhost Crate')
 class DailyListSQLTests(unittest.TestCase):
-    def test_deleted_title_closes_all_countries_with_unknown_precision(self):
+    def test_unlisted_title_404_closes_only_its_list_scope_with_unknown_precision(self):
         crate = LocalCrate(os.environ['TEST_CRATE_URL'], 'deleted682_' + uuid4().hex[:10] + '_')
         crate.run(create_table_sql('availability_history', SCHEMAS['availability_history'] | {'shards': 1, 'replicas': '0'}))
         try:
@@ -40,7 +41,10 @@ class DailyListSQLTests(unittest.TestCase):
             rows = list(crate.history.values())
             shows = [row for row in rows if row['media_type'] == 'show']
             self.assertEqual({row['country_code'] for row in shows}, {'US', 'DE'})
-            self.assertTrue(all(row['dropped_on'] is not None and row['dropped_precision'] == 'unknown' for row in shows))
+            self.assertIsNone(next(row for row in shows if row['country_code'] == 'DE')['dropped_on'])
+            us = next(row for row in shows if row['country_code'] == 'US')
+            self.assertEqual((us['dropped_on'], us['dropped_precision']),
+                             (day('2026-10-14'), 'unknown'))
             self.assertIsNone(next(row for row in rows if row['media_type'] == 'movie')['dropped_on'])
         finally:
             crate.run('DROP TABLE availability_history')
@@ -65,7 +69,8 @@ class DailyListSQLTests(unittest.TestCase):
             self.assertEqual(first['dropped_precision'], 'exact')
             returns = [row for row in rows if row['media_tmdb_id'] == 42]
             self.assertEqual({row['appeared_precision'] for row in returns}, {'exact'})
-            self.assertEqual({row['appeared_source'] for row in rows}, {'title'})
+            self.assertEqual(first['appeared_source'], 'backfill')
+            self.assertEqual({row['appeared_source'] for row in returns}, {'title'})
             # Only the history table exists: any attempt to write offers fails.
         finally:
             crate.run('DROP TABLE availability_history')

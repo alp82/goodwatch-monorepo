@@ -60,7 +60,7 @@ class ListStorage:
 
     def inventory(self):
         return {row['_id']: row for row in self.db.tmdb_daily_provider_lists.find(
-            {}, {'ids': 1, 'retry_ids': 1})}
+            {}, {'ids': 1, 'retry_ids': 1, 'checked_at': 1})}
 
     @contextmanager
     def country_checkpoints(self):

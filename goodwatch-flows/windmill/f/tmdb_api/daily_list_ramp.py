@@ -110,7 +110,7 @@ def run_ramp(client, store, *, countries, service_ids, baseline_max_requests=120
     clock = lambda: job.datetime.now(job.timezone.utc)
     inventory = store.inventory()
     scopes = []
-    for key in sorted(inventory):
+    for key in sorted(inventory, key=lambda key: (inventory[key].get('checked_at', 0), key)):
         country, media, service = key.split(':')
         scopes.append((country, media, int(service)))
     required = list(product(('movie', 'show'), service_ids))
@@ -129,7 +129,8 @@ def run_ramp(client, store, *, countries, service_ids, baseline_max_requests=120
         except job.RequestBudgetExceeded:
             report.update(rereads_complete=False, rereads_budget_exceeded=True)
         report.update(countries_started=started, requests_rereads=client.stats['requests'] - reread_start,
-                      requests_new_baselines=0, baseline_deferred_reason=None)
+                      requests_new_baselines=0, baseline_deferred_reason=None,
+                      baseline_deferred_country=None, baseline_deferred_budget=None)
         baseline_start = client.stats['requests']
         client.baseline_limit = baseline_start + baseline_max_requests
         try:
@@ -141,27 +142,37 @@ def run_ramp(client, store, *, countries, service_ids, baseline_max_requests=120
                 if not missing:
                     continue
                 if used >= baseline_max_memberships or baseline_max_requests == 0:
-                    report['baseline_deferred_reason'] = 'memberships' if used >= baseline_max_memberships else 'requests'
+                    budget = 'memberships' if used >= baseline_max_memberships else 'requests'
+                    report.update(baseline_deferred_reason=budget, baseline_deferred_country=country,
+                                  baseline_deferred_budget=budget)
                     break
                 try:
                     prepared = prepare_country(client, store, country, missing, clock)
                     memberships = sum(len(item.candidates) for item in prepared)
                     if used + memberships > baseline_max_memberships:
-                        report['baseline_deferred_reason'] = 'memberships'
+                        report.update(baseline_deferred_country=country, baseline_deferred_budget='memberships',
+                                      baseline_deferred_reason='memberships' if started else 'country_exceeds_budget')
                         break
                     confirm_country(title_reads, prepared, clock)
                     summaries = publish_country(store, title_reads, prepared, clock)
                 except job.RequestBudgetExceeded:
-                    report['baseline_deferred_reason'] = 'requests'
+                    report.update(baseline_deferred_country=country, baseline_deferred_budget='requests',
+                                  baseline_deferred_reason='requests' if started else 'country_exceeds_budget')
                     break
                 except (job.TMDBAccessDenied, job.LeaseLost):
                     raise
                 except Exception as error:
                     scope = getattr(error, 'list_scope', (country, *missing[0]))
                     failure = job.list_failure(*scope, error)
-                    report['lists_failed'] += 1
-                    report['lists'].append(failure)
-                    print(json.dumps(failure), flush=True)
+                    report['lists_failed'] += len(missing)
+                    for media, service in missing:
+                        key = f'{country}:{media}:{service}'
+                        item = failure if key == failure['key'] else dict(
+                            key=key, media_type=media, tmdb_id=None, endpoint=None, http_status=None,
+                            error='CountryBaselineAborted', failed_list_key=failure['key'],
+                            reason='Country checkpoint withheld after another list failed')
+                        report['lists'].append(item)
+                        print(json.dumps(item), flush=True)
                     client.consecutive_list_failures = (getattr(client, 'consecutive_list_failures', 0) + 1
                                                         if isinstance(error, job.TMDBReadError) else 0)
                     if client.consecutive_list_failures >= 20:

@@ -58,7 +58,9 @@ Only a successful complete read advances it. An already completed UTC day's
 list is skipped on rerun. Gaps are retained: they cannot establish exact days.
 
 The first read verifies listed titles and opens missing stays with unknown
-precision, without substituting a premiere. It also selects eligible open history
+precision and `appeared_source='backfill'`, without substituting a premiere. These
+are old catalog, so the existing Newly available query excludes them. Later
+confirmed arrivals keep the writer's `title` or `premiere` source. It also selects eligible open history
 stays for that country/service and verifies those missing from the list. A fresh
 per-title absence closes a stuck stay with **unknown** precision; a positive
 check keeps it open and queues another check. Failed checks leave the checkpoint
@@ -205,11 +207,15 @@ local only. Live Windmill previews take the operational run lease described abov
 
 A per-title `/movie/{id}/watch/providers` or `/tv/{id}/watch/providers` response
 with HTTP 404 and TMDB status code 34 uses the fetcher's shared
-`is_tmdb_deleted_response` predicate. It sends a title-wide removal intent to the
-existing history writer, which reads all that media title's stays and applies its
-normal unknown-precision removal rules. This does not change current offers or
-Mongo title documents. The deletion check is shared across lists for that run;
-if discover still lists the deleted title, its checkpoint retains a retry ID.
+`is_tmdb_deleted_response` predicate. If discover still lists the title, this is
+conflicting evidence: keep the prior members entry, retain a retry ID, and publish
+nothing. Yesterday's listed IDs also count as prior presence even if its title
+check failed; the next successful check cannot invent an exact arrival.
+If the complete list omits it, publish normal scoped removal intents only for
+that list's media type, country, and service. The shared history writer uses the
+404 check time with unknown precision; it never grants fresh positive API proof.
+Other stays remain untouched. Title-wide cleanup belongs to the details fetcher's
+`tmdb_deleted` flag. The 404 check is shared across lists within the UTC day.
 Discover 404s and unconfirmed per-title 404s remain list failures. Every list
 failure reports its list key, media type, TMDB ID, endpoint, and HTTP status;
 non-title requests have a null TMDB ID, and non-HTTP storage errors have a null
@@ -257,7 +263,11 @@ This is not a stable filtered-count shortfall, so a 1% tolerance would be unsafe
 Adding `vote_count.gte=0` returned all 5,474 IDs in both independent sorts, with
 stable paging metadata. After both ordinary sorts fail, the reader now discards
 them and retries once with this nonnegative vote floor, retaining the same
-catalog and all existing count/metadata checks. `query_retries` reports this
+catalog and all existing count/metadata checks. As an additional safety gate,
+the equivalent retry's total must equal the first traversal's page-one total
+when that total is below TMDB's 20,001 cap. If they differ, fail this read and
+retain the checkpoint; a subsequent day's stable read can recover it.
+`query_retries` reports this
 fallback. If both retry sorts are also torn, the list still fails; no shortfall is accepted. The
 adult-inclusive control returned one additional softcore title, which does not
 explain the paging gap.
@@ -334,7 +344,8 @@ even if it fits the 350,000-request budget. These are model estimates from the
 completed sample and read-only component probes, not a measured global apply.
 
 The baseline now ramps automatically in the one daily scheduled run. Each run
-first visits **every stored list checkpoint**, including retained countries or
+first visits **every stored list checkpoint**, oldest `checked_at` first (key
+order breaks ties), including retained countries or
 services no longer returned by TMDB. Only after these rereads finish does it
 consider new countries, using the six balanced census groups below, flattened in
 this order. Previously unseen country codes follow alphabetically.
@@ -359,7 +370,11 @@ Set either budget to zero to pause expansion while keeping daily rereads.
 A country's missing configured lists are prepared together; if they do not fit,
 none starts and the run stops adding countries. It does not skip ahead to smaller
 countries. Discovery for this deferred country still counts toward the new-request
-budget, but no history or checkpoint writes occur for it.
+budget, but no history or checkpoint writes occur for it. The report names that
+country and the limiting budget, and the report step emits a warning. If the
+first pending country cannot fit a nonzero budget, the reason is
+`country_exceeds_budget` and the report step fails, exposing a ramp that would
+otherwise stall each day. Explicit zero budgets pause expansion with a warning.
 
 All country discovery and per-title confirmation finishes **before any of that
 country's history is published**. Exhausting either the new-request budget or the
@@ -370,7 +385,9 @@ of those checkpoints. History remains outside that Mongo transaction: an
 infrastructure failure can leave partial unknown history publication, with durable
 pending IDs for idempotent reconciliation on retry. This retains the shared writer
 and introduces no second precision decision. A failed country is reported and the
-next country can proceed; authentication failures and the existing 20-consecutive
+next country can proceed. `lists_failed` counts every missing list whose country
+checkpoint was withheld; unaffected sibling lists have `CountryBaselineAborted`
+entries naming the offending list. Authentication failures and the existing 20-consecutive
 TMDB-failure stop remain fatal.
 
 The **350,000-request hard ceiling** includes rereads, new baselines, catalog GETs,
@@ -383,7 +400,8 @@ country can consume requests reserved implicitly by performing rereads first.
 
 The report includes `countries_started`, ordered `countries_remaining`,
 `requests_rereads`, `requests_new_baselines`, `baseline_memberships`, both baseline
-budgets, `baseline_deferred_reason`, `rereads_estimated_requests`,
+budgets, `baseline_deferred_reason`, `baseline_deferred_country`,
+`baseline_deferred_budget`, `rereads_estimated_requests`,
 `rereads_complete`, `rereads_budget_exceeded`, and `ramp_complete`. The single
 regions GET is catalog overhead outside the two phase counters. Dry runs report
 hypothetical starts without persisting them. Once no countries remain, every run
@@ -612,3 +630,28 @@ repeated reconciliation work, not a count of applied or necessarily distinct
 changes. Apply time is unmeasured. The existing backup-before-apply gate remains.
 See [ramp-day1-preview.json](ramp-day1-preview.json) for counters and scope; the
 full local report is `/tmp/rollout682/ramp-day1-preview.json`.
+
+### October 17 ramp review corrections
+
+The earlier 23-country preview predates the scoped 404 and baseline-source
+corrections above. Its measured request/time costs remain historical evidence;
+its history row plans are superseded. No apply has run. The stricter retry-total
+gate may reject that preview's mixed 5,473/5,474 snapshot until the read is stable.
+
+The reviewer's `test_deleted_baseline.py` scenario is now an assertion-based
+regression: one listed 404 during DE's baseline leaves the US stay untouched, and
+DE's next successful check opens an unknown stay. Listed conflicts retain prior
+members; unlisted 404s close only the current scope. Local SQL tests exercise the
+same writer against disposable Crate, and a replica-set test checks atomic country
+checkpoints. Dependency versions are preserved while refreshing script/flow hashes.
+
+The short [post-review RU preview](ramp-review-preview.json) read all **30 lists**
+with **zero failures or skips** in **114.317 seconds**. It used **1,508 GETs**:
+83 discover requests and 1,425 per-title requests (zero rereads, retries, rate-limit
+responses, or refused requests). No checkpoints exist yet, so this was a simulated
+first-country baseline. It planned five unknown/backfill arrivals and 307 unknown
+drops, with zero exact plans and zero production writes. One unlisted 404/status 34
+for `/tv/335013/watch/providers` exercised scoped removal on `RU:show:283` without
+failing that list. All Mongo writes and non-SELECT Crate operations were refused
+by the measurement adapters. The 350k hard request stop and eight-hour timeout
+remain unchanged.
