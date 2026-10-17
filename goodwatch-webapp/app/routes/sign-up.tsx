@@ -88,6 +88,9 @@ function SignedInMovesOn({ redirectUri }: { redirectUri: string }) {
 	return <MaintenanceCard />
 }
 
+/** Where a new account starts without a page to return to: the Taste page, which starts their taste. */
+const NEW_MEMBER_START = "/taste"
+
 function SignUpRoute() {
 	const { redirectUri } = useLoaderData<LoaderData>()
 	const { user } = useUser()
@@ -112,7 +115,7 @@ function SignUpRoute() {
 		if (busy) return
 		setBusy(true)
 		setFailure(null)
-		const returnTo = discoveryReturnTo(redirectUri)
+		const returnTo = discoveryReturnTo(redirectUri || NEW_MEMBER_START)
 		const result = await auth.signUp({ email, password, returnTo })
 		setBusy(false)
 		if (!result.ok) {
@@ -126,7 +129,7 @@ function SignUpRoute() {
 	const google = async () => {
 		setGoogleBusy(true)
 		setFailure(null)
-		const result = await auth.google(redirectUri)
+		const result = await auth.google(redirectUri || NEW_MEMBER_START)
 		if (!result.ok) {
 			setFailure(result.failure)
 			setGoogleBusy(false)
