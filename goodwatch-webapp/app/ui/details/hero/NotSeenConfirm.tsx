@@ -8,6 +8,7 @@ import type { Score } from "~/server/scores.server"
 import { TmdbImage } from "~/ui/TmdbImage"
 import { type ScoredMedia, useScoreAction } from "~/ui/user/actions/ScoreAction"
 import { useWatchLog, useWatchLogAction } from "~/ui/watch-log/useWatchLog"
+import { useAnchoredPanel } from "./anchor"
 import { ScoreFace, SeenFace, SplitFrame } from "./seen-score-faces"
 import { notSeenWords } from "./seen-score-words"
 
@@ -35,7 +36,10 @@ export default function NotSeenConfirm({
 	poster,
 	year,
 	onDone,
+	anchor,
 }: {
+	/** What asked: from md up the question opens beside it. */
+	anchor?: () => Element | null
 	media: ScoredMedia
 	score: Score | null
 	poster: string | null
@@ -51,6 +55,7 @@ export default function NotSeenConfirm({
 	const panel = useRef<HTMLDivElement>(null)
 	const shade = useRef<HTMLDivElement>(null)
 	const keep = useRef<HTMLButtonElement>(null)
+	const at = useAnchoredPanel(panel, () => anchor?.() ?? null)
 	const done = useRef(onDone)
 	done.current = onDone
 
@@ -120,7 +125,7 @@ export default function NotSeenConfirm({
 			<div
 				ref={shade}
 				onClick={onDone}
-				className="absolute inset-0 bg-black/70"
+				className="absolute inset-0 bg-black/70 md:bg-black/40"
 			/>
 			<div
 				ref={panel}
@@ -143,6 +148,9 @@ export default function NotSeenConfirm({
 				aria-labelledby="not-seen-title"
 				aria-describedby="not-seen-text"
 				data-not-seen-confirm
+				style={
+					at ? { position: "absolute", top: at.top, left: at.left } : undefined
+				}
 				className="relative w-full rounded-t-3xl border-t border-white/15 bg-stone-900 px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-3 text-white shadow-[0_-12px_48px_rgba(0,0,0,.6)] md:w-[29rem] md:rounded-2xl md:border md:p-5 md:shadow-2xl"
 			>
 				<div

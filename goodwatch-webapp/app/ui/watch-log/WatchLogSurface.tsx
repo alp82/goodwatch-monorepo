@@ -6,6 +6,8 @@ import { XMarkIcon } from "@heroicons/react/20/solid"
 import { useQueryClient } from "@tanstack/react-query"
 import {
 	type ReactNode,
+	Suspense,
+	lazy,
 	useCallback,
 	useEffect,
 	useLayoutEffect,
@@ -14,11 +16,13 @@ import {
 } from "react"
 import { createPortal } from "react-dom"
 import { newWatch, withWatch, withoutWatch } from "~/domain/watch-log"
+import { useUserScore } from "~/hooks/useUserDataAccessors"
 import { getQueryKeyUserData } from "~/routes/api.user-data"
+import type { UserData } from "~/types/user-data"
 import Drawer from "~/ui/modal/Drawer"
 import { UndoToast } from "~/ui/title-actions/UndoToast"
-import type { UserData } from "~/types/user-data"
 import { useUser } from "~/utils/auth"
+import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 import { WatchLog } from "./WatchLog"
 import type { SeenPress } from "./WatchLogHost"
 import { newWatchId, useWatchLogAction } from "./useWatchLog"
@@ -36,6 +40,35 @@ interface Toast {
 	action?: string
 	undo: () => void
 	onAction?: () => void
+}
+
+const NotSeenConfirm = lazy(
+	reloadOnStaleChunk(() => import("~/ui/details/hero/NotSeenConfirm")),
+)
+
+function NotSeenFromLog({
+	movie,
+	anchor,
+	onDone,
+}: {
+	movie: SeenPress["movie"]
+	anchor: HTMLElement | null
+	onDone: () => void
+}) {
+	const score = useUserScore("movie", movie.tmdbId)?.score ?? null
+	return (
+		<NotSeenConfirm
+			media={{
+				mediaType: "movie",
+				details: { tmdb_id: movie.tmdbId, title: movie.title },
+			}}
+			score={score}
+			poster={null}
+			year={null}
+			onDone={onDone}
+			anchor={() => (anchor?.isConnected ? anchor : null)}
+		/>
+	)
 }
 
 export default function WatchLogSurface({ press }: { press: SeenPress }) {
@@ -68,7 +101,8 @@ export default function WatchLogSurface({ press }: { press: SeenPress }) {
 			const saved = await act(
 				tmdbId,
 				{ type: "watch", watchId: id },
-				(log) => withWatch(log, newWatch(id, { precision: "moment" }, new Date())),
+				(log) =>
+					withWatch(log, newWatch(id, { precision: "moment" }, new Date())),
 				{ watched: true },
 			)
 			if (!saved) return
@@ -120,6 +154,12 @@ export default function WatchLogSurface({ press }: { press: SeenPress }) {
 		)
 	}, [press, watchNow])
 
+	/** "Mark as not seen" from the log asks here, beside the Seen button, after the log has closed. */
+	const [notSeen, setNotSeen] = useState<Pick<
+		OpenLog,
+		"movie" | "anchor"
+	> | null>(null)
+
 	const opened = useRef(open)
 	opened.current = open
 	const close = useCallback((refocus: boolean) => {
@@ -154,10 +194,23 @@ export default function WatchLogSurface({ press }: { press: SeenPress }) {
 							movie={open.movie}
 							editing={open.editing}
 							say={say}
+							onNotSeen={() => {
+								setNotSeen({ movie: open.movie, anchor: open.anchor })
+								setOpen(null)
+							}}
 						/>
 					</>
 				)}
 			</Flyout>
+			{notSeen && (
+				<Suspense fallback={null}>
+					<NotSeenFromLog
+						movie={notSeen.movie}
+						anchor={notSeen.anchor}
+						onDone={() => setNotSeen(null)}
+					/>
+				</Suspense>
+			)}
 			{createPortal(
 				<UndoToast
 					toast={toast}

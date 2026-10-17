@@ -62,7 +62,7 @@ export default function DetailsHero({ media, country, shownCountry, preview, epi
 						<div className="px-4 pb-4 pt-14 md:px-6 md:pb-5 md:pt-10">
 							<div className="flex items-end gap-3 md:gap-6">
 								<HeroPoster media={media} className="w-[4.5rem] md:w-32" />
-								<div data-hero-ratings className="min-w-0 flex-1 md:max-w-md">
+								<div data-hero-ratings className="min-w-0 flex-1 md:max-w-md lg:max-w-xl">
 									<div data-hero-scores className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between md:gap-3">
 										<div className="md:hidden">
 											<ScoreRing media={media} size={48} />
@@ -70,7 +70,7 @@ export default function DetailsHero({ media, country, shownCountry, preview, epi
 										<div className="hidden md:block">
 											<ScoreRing media={media} size={56} />
 										</div>
-										<SeenScore media={media} className={`max-md:w-full md:shrink-0 ${media.mediaType === "show" ? "md:w-[18rem]" : "md:w-[16rem]"}`} />
+										<SeenScore media={media} className={`max-md:w-full md:shrink-0 ${media.mediaType === "show" ? "md:w-[18rem] lg:w-[22rem]" : "md:w-[16rem] lg:w-[20rem]"}`} />
 									</div>
 									<div className="mt-3 max-md:hidden">{sites}</div>
 								</div>

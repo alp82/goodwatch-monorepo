@@ -15,17 +15,21 @@ export function SplitFrame({
 	left,
 	right,
 	className = "",
+	big = false,
 }: {
 	score: Score | null
 	left: ReactNode
 	right: ReactNode
 	className?: string
+	/** The hero's control: taller, with larger faces, from lg up. A preview stays compact. */
+	big?: boolean
 }) {
 	const color = score ? getVibeColorValue(score) : ""
 	return (
 		<div
 			data-seen-score
-			className={`relative flex h-12 min-w-0 items-stretch rounded-xl ${score ? "" : "bg-white/[0.05] ring-1 ring-white/15"} ${className}`}
+			data-big={big || undefined}
+			className={`group/split relative flex h-12 min-w-0 ${big ? "lg:h-14" : ""} items-stretch rounded-xl ${score ? "" : "bg-white/[0.05] ring-1 ring-white/15"} ${className}`}
 			style={
 				score
 					? {
@@ -122,9 +126,11 @@ export function SeenFace({
 }: { seen: boolean; count?: string | null }) {
 	return (
 		<span
-			className={`flex h-full w-[4.5rem] flex-col rounded-l-xl items-center justify-center gap-0.5 text-[11px] font-semibold ${seen ? "bg-green-500 text-black" : "text-gray-200"}`}
+			className={`flex h-full w-[4.5rem] flex-col rounded-l-xl items-center justify-center gap-0.5 text-[11px] font-semibold lg:group-data-[big]/split:w-20 lg:group-data-[big]/split:text-xs ${seen ? "bg-green-500 text-black" : "text-gray-200"}`}
 		>
-			<EyeIcon className={`h-4 w-4 ${seen ? "" : "text-green-300"}`} />
+			<EyeIcon
+				className={`h-4 w-4 lg:group-data-[big]/split:h-5 lg:group-data-[big]/split:w-5 ${seen ? "" : "text-green-300"}`}
+			/>
 			<span>
 				{seen ? "Seen" : "Seen?"}
 				{count && (
@@ -157,13 +163,18 @@ const STATUS_PATH: Partial<Record<StatusTone, string>> = {
 
 function StatusIcon({ tone }: { tone: StatusTone }) {
 	if (tone === "none")
-		return <EyeSlashIcon className="h-4 w-4 shrink-0 text-gray-400" />
-	if (tone === "seen") return <EyeIcon className="h-4 w-4 shrink-0" />
+		return (
+			<EyeSlashIcon className="h-4 w-4 shrink-0 text-gray-400 lg:group-data-[big]/split:h-5 lg:group-data-[big]/split:w-5" />
+		)
+	if (tone === "seen")
+		return (
+			<EyeIcon className="h-4 w-4 shrink-0 lg:group-data-[big]/split:h-5 lg:group-data-[big]/split:w-5" />
+		)
 	return (
 		<svg
 			viewBox="0 0 20 20"
 			fill="currentColor"
-			className="h-4 w-4 shrink-0"
+			className="h-4 w-4 shrink-0 lg:group-data-[big]/split:h-5 lg:group-data-[big]/split:w-5"
 			aria-hidden="true"
 		>
 			<path fillRule="evenodd" clipRule="evenodd" d={STATUS_PATH[tone]} />
@@ -185,16 +196,16 @@ export function StatusFace({
 }) {
 	return (
 		<span
-			className={`flex h-full items-center gap-1.5 rounded-l-xl px-2 sm:min-w-[6.75rem] sm:gap-2 sm:px-2.5 text-left ${STATUS_TONE[tone]}`}
+			className={`flex h-full items-center gap-1.5 rounded-l-xl px-2 sm:min-w-[6.75rem] sm:gap-2 sm:px-2.5 lg:group-data-[big]/split:min-w-[8rem] lg:group-data-[big]/split:px-3 text-left ${STATUS_TONE[tone]}`}
 		>
 			<StatusIcon tone={tone} />
 			<span className="min-w-0 flex-1 leading-tight">
-				<span className="block whitespace-nowrap text-xs font-bold">
+				<span className="block whitespace-nowrap text-xs font-bold lg:group-data-[big]/split:text-sm">
 					{label}
 				</span>
 				{detail && (
 					<span
-						className={`block whitespace-nowrap text-[11px] tabular-nums ${tone === "none" ? "text-gray-400" : "opacity-80"}`}
+						className={`block whitespace-nowrap text-[11px] tabular-nums lg:group-data-[big]/split:text-xs ${tone === "none" ? "text-gray-400" : "opacity-80"}`}
 					>
 						{detail}
 					</span>
@@ -212,22 +223,22 @@ export function ScoreFace({
 }: { score: Score | null; ask: string }) {
 	const color = score ? getVibeColorValue(score) : ""
 	return (
-		<span className="flex h-full min-w-0 flex-1 items-center gap-2 pl-2 pr-2 text-left sm:gap-2.5 sm:pr-3">
+		<span className="flex h-full min-w-0 flex-1 items-center gap-2 pl-2 pr-2 text-left sm:gap-2.5 sm:pr-3 lg:group-data-[big]/split:gap-3 lg:group-data-[big]/split:pl-2.5">
 			{score ? (
 				<span
-					className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-lg font-black tabular-nums"
+					className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-lg font-black tabular-nums lg:group-data-[big]/split:h-11 lg:group-data-[big]/split:w-11 lg:group-data-[big]/split:text-xl"
 					style={{ background: color, color: score <= 3 ? "#fff" : "#0a0a0a" }}
 				>
 					{score}
 				</span>
 			) : (
-				<StarIcon className="h-5 w-5 shrink-0 text-amber-300" />
+				<StarIcon className="h-5 w-5 shrink-0 text-amber-300 lg:group-data-[big]/split:h-6 lg:group-data-[big]/split:w-6" />
 			)}
 			<span className="min-w-0 flex-1 leading-tight">
 				<span className="block truncate text-[11px] font-semibold uppercase tracking-[0.08em] text-gray-400">
 					Your score
 				</span>
-				<span className="block truncate text-sm font-bold text-white">
+				<span className="block truncate text-sm font-bold text-white lg:group-data-[big]/split:text-base">
 					{score ? scoreLabels[score] : ask}
 				</span>
 			</span>

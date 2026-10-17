@@ -200,6 +200,7 @@ export default function SeenScore({
 	return (
 		<div ref={root} className={className}>
 			<SplitFrame
+				big
 				score={score}
 				left={left}
 				right={
@@ -300,6 +301,9 @@ export default function SeenScore({
 						poster={media.details.poster_path || null}
 						year={media.details.release_year || null}
 						onDone={() => setConfirming(false)}
+						anchor={() =>
+							document.querySelector("[data-score-dialog] [data-seen-switch]")
+						}
 					/>
 				</Suspense>
 			)}

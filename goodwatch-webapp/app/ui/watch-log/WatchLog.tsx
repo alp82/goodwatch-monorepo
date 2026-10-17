@@ -3,7 +3,9 @@
 // "Watched it again" adds one, and "Remove all N watches" at the foot asks once, in place.
 //
 // A movie that is Seen through its score alone has no watch the member logged: the log says so and offers
-// "I watched it". Clearing the score is done at the score control.
+// "I watched it". A scored movie's foot offers "Mark as not seen", which asks first: the score goes with the watches
+// (NotSeenConfirm, the same question as the score picker's Seen switch), which the surface shows once the log has
+// closed.
 import {
 	ArrowDownTrayIcon,
 	PlusIcon,
@@ -60,7 +62,10 @@ export function WatchLog({
 	movie,
 	editing,
 	say,
+	onNotSeen,
 }: {
+	/** "Mark as not seen" on a scored movie: the surface closes the log and asks (NotSeenConfirm). */
+	onNotSeen: () => void
 	movie: { tmdbId: number; title: string }
 	/** A watch to open in the date editor, for "Change date" after a press. */
 	editing: string | null
@@ -241,7 +246,9 @@ export function WatchLog({
 			{adding ? (
 				<div className="mt-2 rounded-lg bg-black/30 p-2">
 					<p className="mb-2 text-xs text-gray-400">
-						{mine.length ? "When did you watch it again?" : "When did you watch it?"}
+						{mine.length
+							? "When did you watch it again?"
+							: "When did you watch it?"}
 					</p>
 					<DateChoice
 						options={
@@ -303,6 +310,17 @@ export function WatchLog({
 						Remove all {mine.length} watches
 					</button>
 				))}
+			{/* With a score it stays Seen however many watches go: this is the way out. */}
+			{scored && (
+				<button
+					type="button"
+					onClick={onNotSeen}
+					className="mt-3 block cursor-pointer text-xs text-gray-400 underline decoration-white/20 underline-offset-2 hover:text-white"
+					data-log-not-seen
+				>
+					Mark as not seen
+				</button>
+			)}
 		</div>
 	)
 }

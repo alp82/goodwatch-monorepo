@@ -3,12 +3,13 @@
 // Beside the title it can hold a control of its own (a movie's Seen switch), and a step can take the picker's place
 // (a show's "How far are you?" after a first score).
 //
-// A sheet from the bottom edge on a phone, a dialog in the middle of the screen from md up. It is fixed to the
+// A sheet from the bottom edge on a phone; from md up a dialog beside what opened it (anchor.ts). It is fixed to the
 // screen and rendered into the body, so it is inside the screen wherever the page is scrolled and whatever its
 // opener sits in.
 import { type ReactNode, type RefObject, useEffect, useLayoutEffect, useRef } from "react"
 import { createPortal } from "react-dom"
 import type { Score } from "~/server/scores.server"
+import { useAnchoredPanel } from "~/ui/details/hero/anchor"
 import { ScoreControl } from "~/ui/title-actions/ScoreControl"
 
 const FOCUSABLE = "button:not([disabled]), [href], [tabindex]:not([tabindex='-1'])"
@@ -49,6 +50,8 @@ export default function ScoreDialog({
 function Panel({ title, value, busy, opener, onRate, onClear, onClose, aside, step, footer }: Omit<Parameters<typeof ScoreDialog>[0], "open">) {
 	const panel = useRef<HTMLDivElement>(null)
 	const shade = useRef<HTMLDivElement>(null)
+	// From md up it opens beside the control that opened it: the whole Seen and score control, when it is that.
+	const at = useAnchoredPanel(panel, () => opener.current?.closest("[data-seen-score]") ?? opener.current)
 	const closeRef = useRef(onClose)
 	closeRef.current = onClose
 
@@ -93,7 +96,7 @@ function Panel({ title, value, busy, opener, onRate, onClear, onClose, aside, st
 	return createPortal(
 		<div data-score-dialog className="fixed inset-0 z-[1100] flex items-end justify-center md:items-center md:p-4">
 			{/* biome-ignore lint/a11y/useKeyWithClickEvents: Escape closes it, and the Close button is the keyboard's way. */}
-			<div ref={shade} onClick={onClose} className="absolute inset-0 bg-black/70" />
+			<div ref={shade} onClick={onClose} className="absolute inset-0 bg-black/70 md:bg-black/40" />
 			<div
 				ref={panel}
 				// biome-ignore lint/a11y/useSemanticElements: a <dialog> can't be a sheet that comes up from the bottom edge.
@@ -101,6 +104,7 @@ function Panel({ title, value, busy, opener, onRate, onClear, onClose, aside, st
 				aria-modal="true"
 				aria-label={`Your score for ${title}`}
 				tabIndex={-1}
+				style={at ? { position: "absolute", top: at.top, left: at.left } : undefined}
 				className="relative w-full rounded-t-3xl border-t border-white/15 bg-stone-900 px-4 pb-[max(1.75rem,env(safe-area-inset-bottom))] pt-3 text-white shadow-[0_-12px_48px_rgba(0,0,0,.6)] outline-none md:w-[30rem] md:rounded-2xl md:border md:p-5 md:shadow-2xl"
 			>
 				<div className="mx-auto mb-3 h-1 w-10 rounded-full bg-white/20 md:hidden" aria-hidden="true" />
