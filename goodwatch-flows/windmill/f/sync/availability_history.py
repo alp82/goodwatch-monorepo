@@ -232,7 +232,7 @@ def title_writes(transition, previous, media_type, pending, copy_at):
         added.update({key: row for key, row in desired.items()
                       if key.streaming_type in OFFER_TYPES and key not in opened and key not in stale
                       and (key not in closed or observation.api_supports(key, row)
-                           or observation.verified.get(key.country_code))})
+                           or any(row.get(field) is not None for field in ('stream_url', 'price_dollar', 'quality')))})
         removed = sorted(set(removed) | ((opened.keys() - desired.keys()) - stale))
     writes = []
     for key, row in added.items():

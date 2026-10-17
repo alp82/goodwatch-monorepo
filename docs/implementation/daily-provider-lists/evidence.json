@@ -1462,8 +1462,8 @@
   },
   "verification": {
     "new_tests_with_local_crate": {
-      "total": 51,
-      "passed": 46,
+      "total": 52,
+      "passed": 47,
       "opt_in_previews_skipped": 5,
       "python_version": "3.12.11",
       "runtime_dependencies": "Fresh venv installed from regenerated script lock; mongomock and PyYAML added solely for tests."
@@ -1479,8 +1479,8 @@
       "skipped": 1
     },
     "full_suite_with_local_crate": {
-      "total": 1584,
-      "passed": 1536,
+      "total": 1585,
+      "passed": 1537,
       "skipped": 47,
       "pre_existing_failures": 1,
       "failure": "test_deleted_titles.DeleteFromCrateTests.test_user_tables_are_untouched_and_all_derived_tables_are_covered (social_title_link, social_link_report, social_relevance)"
@@ -1494,6 +1494,13 @@
         "test_two_torn_sorts_report_the_last_distinct_count_read"
       ],
       "additional_coverage": "Positive API and verified-scrape pending returns after unknown drops; exact drops still require a positive API offer on a later UTC day. A skipped flow also fails in an inert Windmill preview.",
+      "production_data_writes": 0
+    },
+    "scrape_presence_tdd": {
+      "failing_before_fix": "test_empty_verified_scrape_cannot_reopen_a_list_closed_stay",
+      "case": "Reviewer test_s1_bb_scrape.py SCRAPE=1, including a retained tmdb_link and cleared scrape fields.",
+      "rule": "Use the reconciler scrape_present rule: any non-null stream_url, price_dollar, or quality on the reconciled offer row. Country coverage alone does not prove an offer.",
+      "positive_coverage": "URL, quality, and zero-price scrape offers; exact-drop day guard unchanged.",
       "production_data_writes": 0
     }
   },

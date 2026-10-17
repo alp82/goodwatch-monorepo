@@ -91,9 +91,11 @@ that chooses precision and days. The job never supplies an `exact` flag.
   API observation. This filter leaves the live publisher's own additions and
   removals intact, including removals of stays opened from later scrape times.
 - A repair-inferred return after any closed stay requires a supporting positive
-  API offer or a scrape that verified that country. Retained rows for an omitted
-  country cannot reopen unknown baseline/gap drops. An exact drop additionally
-  requires a supporting API offer from a strictly later UTC day, as before.
+  API offer or scrape presence on the reconciled offer row: a non-null
+  `stream_url`, `price_dollar`, or `quality`, matching `reconcile_availability`.
+  Country scrape coverage alone is insufficient. An empty verified scrape plus
+  a retained API link cannot reopen unknown baseline/gap drops. An exact drop
+  additionally requires a supporting API offer from a strictly later UTC day, as before.
 - A confirmed drop followed by a return opens another stay. Timestamp collisions
   and missing observation days retain the writer's unknown-precision fallback.
 - A title publisher may open/close an unknown stay earlier today. The same writer
@@ -370,14 +372,16 @@ Tests were written red before implementation at the agreed seams. The two
 re-review scratch cases (genuine pending removal and retained offer after an
 unknown baseline drop) both failed before the writer correction. Further checks
 cover positive API/scrape returns and the unchanged exact-drop day guard. Both
-report nits also failed before their fixes. Final checks:
+report nits also failed before their fixes. The final empty-scrape scratch case
+(`SCRAPE=1`) failed before requiring offer-level scrape presence; positive checks
+cover URL, quality, and zero-price offers while keeping the exact-drop day guard. Final checks:
 
-- New tests with disposable local Crate 5.10.16: **46 passed**, five opt-in
+- New tests with disposable local Crate 5.10.16: **47 passed**, five opt-in
   Windmill previews skipped in that run; those **five remote previews passed**
   separately, alongside their local fixture check.
 - Existing history regressions with local Crate: **39 passed, one opt-in preview
   skipped**. The new inert preview also exercises the shared history writer.
-- Full flow suite with local Crate: **1,584 tests, 1,536 passed, 47 skipped,
+- Full flow suite with local Crate: **1,585 tests, 1,537 passed, 47 skipped,
   one pre-existing failure**. It is
   `test_deleted_titles.DeleteFromCrateTests.test_user_tables_are_untouched_and_all_derived_tables_are_covered`:
   the deletion inventory omits `social_title_link`, `social_link_report`, and

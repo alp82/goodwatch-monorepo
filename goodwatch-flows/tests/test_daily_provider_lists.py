@@ -366,11 +366,42 @@ class DailyListTests(unittest.TestCase):
         self.assertEqual(sum(path.endswith('/watch/providers') for path, _ in self.api.calls), 0)
         self.assertEqual(self.store.crate.history, before)
 
+    def test_empty_verified_scrape_cannot_reopen_a_list_closed_stay(self):
+        import mongomock
+        from f.sync.availability_history import HistoryTitle, OfferKey
+        from f.tmdb_api.provider_evidence import capture_provider_check
+        self.run_day('2026-10-10T20:00:00', dry_run=False)
+        self.store.snapshots.clear()
+        self.api.ids, self.api.results = [], {}
+        self.run_day('2026-10-13T20:00:00', dry_run=False)
+        before = deepcopy(self.store.crate.history)
+        self.assertEqual(next(iter(before.values()))['dropped_precision'], 'unknown')
+        key = OfferKey(42, 'show', 'US', 8, 'flatrate')
+        payload = {'results': {}}  # The API omitted US; its old link survives reconciliation.
+        proof = capture_provider_check({'id': 42, 'watch/providers': payload}, 42,
+                                       datetime(2026, 10, 14, 12), bypass_cache=True)
+        retained = key._asdict() | {'tmdb_link': 'https://www.themoviedb.org/tv/42/watch',
+                                   'stream_url': None, 'price_dollar': None, 'quality': None}
+        verified = {'US': {'country_code': 'US', 'updated_at': datetime(2026, 10, 14, 13),
+                           'streaming_links': []}}
+        title = HistoryTitle(42, {'watch_providers': payload, 'watch_providers_check': proof},
+                             {key: retained}, verified, [retained], [])
+        pending = mongomock.MongoClient().db.streaming_history_pending
+        pending.insert_one({'_id': 'show:42'})
+        result = publish_history(self.store.crate, 'show', [title], lambda: None, pending)
+        self.assertEqual(result.errors, {})
+        self.assertEqual(self.store.crate.history, before)
+        self.api.calls.clear()
+        self.run_day('2026-10-15T20:00:00', dry_run=False)
+        self.assertEqual(sum(path.endswith('/watch/providers') for path, _ in self.api.calls), 0)
+        self.assertEqual(self.store.crate.history, before)
+
     def test_pending_returns_need_positive_support_and_preserve_the_exact_drop_day_guard(self):
         import mongomock
         from f.sync.availability_history import HistoryTitle, OfferKey
         from f.tmdb_api.provider_evidence import capture_provider_check
         cases = [('unknown', 'api', 14, 2), ('unknown', 'scrape', 14, 2),
+                 ('unknown', 'scrape_free', 14, 2), ('unknown', 'scrape_quality', 14, 2),
                  ('exact', 'api', 11, 1), ('exact', 'api', 12, 2), ('exact', 'scrape', 12, 1)]
         for precision, source, checked_day, expected_stays in cases:
             with self.subTest(precision=precision, source=source, checked_day=checked_day):
@@ -386,9 +417,12 @@ class DailyListTests(unittest.TestCase):
                 payload = {'results': {'US': {'flatrate': [{'provider_id': 8}]}} if source == 'api' else {}}
                 proof = capture_provider_check({'id': 42, 'watch/providers': payload}, 42,
                                                checked_at, bypass_cache=True)
-                verified = {'US': {'updated_at': checked_at}} if source == 'scrape' else {}
+                scrape = {'scrape': {'stream_url': 'https://stream.example/title/42'},
+                          'scrape_free': {'price_dollar': 0}, 'scrape_quality': {'quality': 'HD'}}.get(source, {})
+                verified = {'US': {'updated_at': checked_at, 'streaming_links': [scrape]}} if scrape else {}
+                offered = key._asdict() | scrape
                 title = HistoryTitle(42, {'watch_providers': payload, 'watch_providers_check': proof},
-                                     {key: key._asdict()}, verified, [key._asdict()], [])
+                                     {key: offered}, verified, [offered], [])
                 pending = mongomock.MongoClient().db.streaming_history_pending
                 pending.insert_one({'_id': 'show:42'})
                 result = publish_history(self.store.crate, 'show', [title], lambda: None, pending)
