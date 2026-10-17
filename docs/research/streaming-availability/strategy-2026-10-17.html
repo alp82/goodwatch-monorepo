@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Streaming Availability Strategy</title>
+<style>
+:root{
+  --c-bg:#ffffff; --c-fg:#1b1d21; --c-muted:#5d6470; --c-border:#dfe2e7; --c-card:#f6f7f9;
+  --c-accent:#2f6fde; --c-good:#1f8a4c; --c-warn:#b86e00; --c-bad:#c23b3b; --c-chip:#eef2fb;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --c-bg:#14161a; --c-fg:#e7e9ee; --c-muted:#9aa2ae; --c-border:#2c3038; --c-card:#1c1f25;
+    --c-accent:#79a6ff; --c-good:#5cc98b; --c-warn:#e3a24a; --c-bad:#f07a7a; --c-chip:#222a3a;
+  }
+}
+:root[data-theme="dark"]{
+  --c-bg:#14161a; --c-fg:#e7e9ee; --c-muted:#9aa2ae; --c-border:#2c3038; --c-card:#1c1f25;
+  --c-accent:#79a6ff; --c-good:#5cc98b; --c-warn:#e3a24a; --c-bad:#f07a7a; --c-chip:#222a3a;
+}
+:root{
+  --bg:var(--background,var(--c-bg)); --fg:var(--foreground,var(--c-fg));
+  --muted:var(--muted-foreground,var(--c-muted)); --line:var(--border,var(--c-border));
+  --panel:var(--card,var(--c-card)); --acc:var(--primary,var(--c-accent));
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-sans,system-ui,-apple-system,"Segoe UI",sans-serif);font-size:15px;line-height:1.55;padding:24px 16px 64px}
+gx-questions,gx-wide,gx-question{display:block}
+gx-questions{max-width:720px;margin:0 auto}
+gx-wide{width:min(1100px,calc(100vw - 32px));position:relative;left:50%;transform:translateX(-50%);margin:12px 0}
+h1{font-size:26px;line-height:1.25;margin:0 0 6px}
+h2{font-size:20px;margin:40px 0 10px;padding-top:12px;border-top:1px solid var(--line)}
+h3{font-size:16px;margin:22px 0 6px}
+p,li{margin:6px 0}
+ul,ol{padding-left:22px;margin:6px 0}
+.sub{color:var(--muted);font-size:14px}
+.lead{font-size:16px}
+code,.mono{font-family:var(--font-mono,ui-monospace,SFMono-Regular,Menlo,monospace);font-size:13px}
+code{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:0 4px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius,10px);padding:14px 16px;margin:12px 0}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:14px 0}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius,10px);padding:10px 12px}
+.stat b{display:block;font-size:22px;line-height:1.2;font-variant-numeric:tabular-nums}
+.stat span{color:var(--muted);font-size:13px}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius,10px);margin:10px 0}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;vertical-align:top;padding:8px 10px;border-bottom:1px solid var(--line)}
+th{background:var(--panel);font-weight:600;white-space:nowrap}
+tr:last-child td{border-bottom:0}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+tr.rec td{background:color-mix(in srgb,var(--acc) 9%,transparent)}
+.tag{display:inline-block;font-size:12px;font-weight:600;padding:1px 7px;border-radius:999px;border:1px solid var(--line);white-space:nowrap}
+.ok{color:var(--c-good)} .warn{color:var(--c-warn)} .bad{color:var(--c-bad)}
+.tag.ok{border-color:var(--c-good)} .tag.warn{border-color:var(--c-warn)} .tag.bad{border-color:var(--c-bad)}
+.rank{font-weight:700;color:var(--acc)}
+.email{white-space:pre-wrap;font-family:var(--font-mono,ui-monospace,monospace);font-size:13px;line-height:1.5;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius,10px);padding:14px 16px;margin:10px 0}
+.flow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:10px 0}
+.flow .step{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:13px}
+.flow .arrow{color:var(--muted)}
+.bar{height:10px;border-radius:5px;background:var(--line);overflow:hidden;display:flex;min-width:120px}
+.bar i{display:block;height:100%}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:13px;color:var(--muted);margin:6px 0}
+.legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px;background:var(--sw)}
+nav.toc{columns:2;column-gap:24px;font-size:14px}
+nav.toc a{color:var(--acc);text-decoration:none}
+nav.toc a:hover{text-decoration:underline}
+a{color:var(--acc)}
+.note{color:var(--muted);font-size:13px}
+@media (max-width:600px){nav.toc{columns:1} h1{font-size:22px} .stat b{font-size:19px}}
+</style>
+</head>
+<body>
+<gx-questions submit="Send decisions">
+
+<h1>Streaming availability: the whole strategy</h1>
+<p class="sub">Planning only, 2026-10-17. Nothing in code, schedules or data was changed, and nothing was signed up for. Numbers come from read-only queries on production Crate, PostHog page views, the 30-minute restart observation in <code>docs/workflow-monitoring.md</code>, and two single page requests from this machine. Estimates are marked <span class="tag warn">estimate</span>.</p>
+
+<nav class="toc card">
+  <a href="#plan">1. The plan in short</a><br>
+  <a href="#today">2. Where we stand</a><br>
+  <a href="#sources">3. Sources, ranked, with terms</a><br>
+  <a href="#email">4. The JustWatch email</a><br>
+  <a href="#refresh">5. Refresh planning and tiers</a><br>
+  <a href="#pace">6. Throughput and politeness</a><br>
+  <a href="#recovery">7. Blocks and recovery</a><br>
+  <a href="#proxy">8. Proxy platform</a><br>
+  <a href="#quality">9. Data quality</a><br>
+  <a href="#phases">10. Phased rollout</a><br>
+  <a href="#cost">11. Cost</a><br>
+  <a href="#decisions">12. Decisions Q44–Q55</a>
+</nav>
+
+<h2 id="plan">1. The plan in short</h2>
+<ul class="lead">
+  <li><b>Two jobs, two sources.</b> The free TMDB API keeps the <em>provider lists</em> of every title fresh every day. TMDB watch pages are fetched only for the <em>links</em>, and only where something changed or a tier says it's due.</li>
+  <li><b>Fetch less, not faster.</b> The API diff tells us which (title, country) pairs changed. Pairs with no offers, countries the page can't show (Niger), and deleted titles are never fetched.</li>
+  <li><b>Tiers.</b> Opened titles and everything that changed: daily. Top ~950 titles: daily. The next ~3,800: every 3 days. The rest: a rolling sweep, oldest first.</li>
+  <li><b>One global pace.</b> A shared token bucket in Valkey paces all 12 random workers together. A controlled ramp finds the safe rate: test up to 4 req/s and run at 3 req/s (about 2.2× today).</li>
+  <li><b>Recovery stays honest.</b> The existing gate backs off and probes on its own. During a block, the last verified links stay up and new offers fall back to TMDB's "where to watch" link. No proxy is needed to keep links on the site.</li>
+  <li><b>Ask before routing around.</b> Email JustWatch for free non-commercial access. Optionally tell TMDB who we are before ramping. Keep the paid proxy (DataImpulse first, Geonode backup) designed but unbought.</li>
+  <li><b>Cost:</b> $0/day as recommended. Worst case with every optional item turned on: about $0.37/day.</li>
+</ul>
+
+<h2 id="today">2. Where we stand</h2>
+<div class="stats">
+  <div class="stat"><b>80.7/min</b><span>Page fetches since the 11:52 UTC restart (1.34 req/s, 116k/day)</span></div>
+  <div class="stat"><b>71.4/min</b><span>Verified saves (103k/day)</span></div>
+  <div class="stat"><b>0</b><span>Challenges in 2,420 fetches</span></div>
+  <div class="stat"><b>8.27 M</b><span>(title, country) pairs with offers in Crate, 361k titles, 139 countries</span></div>
+  <div class="stat"><b>9.3 M</b><span>Country documents in Mongo (per the brief)</span></div>
+  <div class="stat"><b>4.40 M</b><span>Pairs with no link at all</span></div>
+</div>
+<ul>
+  <li><b>At today's pace a full pass takes 80 days.</b> Every pair at the 7-day freshness in <code>country_state.FRESHNESS</code> would need 1.18 M fetches a day, or 13.7 req/s, which is ten times today's rate. Tiers and change detection are the way out, not raw speed.</li>
+  <li><b>Today's pace is set by orchestration, not by TMDB.</b> <code>next.py</code> picks 5 movies and 5 shows per run, <code>crawl_all_by_id</code> starts one job per document at parallelism 3, and each job opens and closes Mongo. The restart probe job took 1.7 s end to end for one page.</li>
+  <li><b>11% of fetches are wasted on Niger.</b> 274 of the 2,420 attempts were Niger country mismatches (section 9).</li>
+  <li><b>"Titles people open" is small.</b> PostHog shows 16–250 distinct title pages opened a day from Oct 3 to Oct 17, with two spikes of about 1,400 and 2,000. Poster impressions (<code>crawl_priority</code>) touch about 3,300 titles a day.</li>
+</ul>
+<h3>Pairs by TMDB popularity (movies + shows, cumulative)</h3>
+<div class="tablewrap"><table>
+<tr><th>Popularity</th><th class="n">Titles</th><th class="n">Pairs</th><th class="n">Share of pairs</th></tr>
+<tr><td>≥ 50</td><td class="n">945</td><td class="n">62k</td><td class="n">0.8%</td></tr>
+<tr><td>≥ 20</td><td class="n">4,736</td><td class="n">306k</td><td class="n">3.7%</td></tr>
+<tr><td>≥ 10</td><td class="n">13,271</td><td class="n">790k</td><td class="n">9.6%</td></tr>
+<tr><td>≥ 5</td><td class="n">31,846</td><td class="n">1.59 M</td><td class="n">19%</td></tr>
+<tr><td>≥ 2</td><td class="n">94,989</td><td class="n">3.26 M</td><td class="n">39%</td></tr>
+<tr><td>≥ 1</td><td class="n">242,545</td><td class="n">6.21 M</td><td class="n">75%</td></tr>
+<tr><td>All</td><td class="n">361,394</td><td class="n">8.27 M</td><td class="n">100%</td></tr>
+</table></div>
+<p class="note">Source: Crate <code>streaming_availability</code> distinct (type, title, country), joined to <code>movie</code>/<code>show</code> popularity, 2026-10-17. An average title has offers in 23 countries.</p>
+
+<h2 id="sources">3. Sources, ranked, with their terms</h2>
+<p>For a free, non-commercial, open-source site. JustWatch scraping and its unofficial API are excluded, as decided.</p>
+<gx-wide><div class="tablewrap"><table>
+<tr><th>#</th><th>Source</th><th>Gives us</th><th>Terms for GoodWatch</th><th>Role</th></tr>
+<tr class="rec"><td class="rank">1</td><td><b>TMDB API</b> <code>/{movie|tv}/{id}/watch/providers</code></td><td>Provider lists per type for every country in one call (2–5 KB gzip). No links, prices or quality. Same daily JustWatch export as the page, 8–32 h behind.</td><td><span class="tag ok">Fits</span> Free API licence allows non-commercial use. JustWatch attribution and the TMDB logo/notice are required; cache at most 6 months. Upper limit "around 40 req/s"; respect 429.</td><td>Provider lists for all titles, daily. The change detector.</td></tr>
+<tr class="rec"><td class="rank">2</td><td><b>TMDB watch pages</b> <code>/{type}/{id}/watch?locale=XX</code></td><td>The links (<code>click.justwatch.com</code> clickouts, stored as they are), price, quality. One country per request, about 42 KB gzip.</td><td><span class="tag warn">Grey</span> The website terms limit automated access to personal non-commercial use and forbid getting around security features. An honest User-Agent at a polite pace is the defensible position; routing around a block isn't.</td><td>Links, on change and by tier.</td></tr>
+<tr><td class="rank">3</td><td><b>JustWatch partner access</b> (ask, section 4)</td><td>API or daily dump: offers by TMDB id, with price, monetization, direct links. Widget for title pages.</td><td><span class="tag ok">Licensed</span> if granted. Branded JustWatch attribution required. No public price; free for us is unknown.</td><td>Best long-term source if they say yes. Replaces page crawling.</td></tr>
+<tr><td class="rank">4</td><td><b>JustWatch widget</b></td><td>A client-side block of offers per title, by TMDB id. We can't store its data.</td><td><span class="tag ok">Licensed</span> Revocable licence, JustWatch logo required. Needs a token from the partner form. Loads third-party script on our page (privacy, speed).</td><td>Click-to-load fallback on titles with no links.</td></tr>
+<tr><td class="rank">5</td><td><b>Watchmode free</b></td><td>2,500 credits/month (about 80 titles/day), up to 3 countries, title <code>web_url</code>. One call per title.</td><td><span class="tag ok">Fits</span> The free plan is <em>non-commercial only</em>, which we are. Attribution link, refresh or delete within 30 days.</td><td>Optional fallback for opened titles in 3 countries.</td></tr>
+<tr><td class="rank">6</td><td><b>Movie of the Night free</b></td><td>1,000 requests/month (about 33 titles/day), 65 countries per call, <code>link</code> and <code>videoLink</code>.</td><td><span class="tag ok">Fits</span> Free plan allows any use, attribution required ("Streaming Availability API by Movie of the Night" + link), no redistribution. Hard quota.</td><td>Optional fallback for opened titles.</td></tr>
+<tr><td class="rank">7</td><td>Trakt <code>watchnow</code></td><td>Links per country, prices.</td><td><span class="tag warn">Unclear</span> Marked "Limited Access", not on the public plan.</td><td>Could ask Trakt; don't build on it.</td></tr>
+<tr><td class="rank">–</td><td>uNoGS, TVmaze, Simkl, KinoCheck, paid APIs</td><td>Netflix only, or no availability at all. Paid APIs start at $299–$349/month.</td><td>–</td><td>No.</td></tr>
+</table></div></gx-wide>
+<p><b>TMDB <code>/changes</code> is not a provider detector.</b> TMDB staff confirmed in 2024 that JustWatch data isn't tracked in change history. We still use <code>/changes</code> for what it covers: new titles (create their country documents) and deleted or merged titles (stop fetching). The provider diff comes from polling <code>watch/providers</code>.</p>
+
+<h2 id="email">4. The JustWatch email</h2>
+<p><b>To:</b> <code>data-partner@justwatch.com</code>, cc <code>partner-support@justwatch.com</code>. The owner sends it from their own address. It asks in order of preference, so a "no" to the first still leaves room for a "yes" to the next.</p>
+<div class="email">Subject: Free data access for GoodWatch, a non-commercial open-source film guide
+
+Hello JustWatch team,
+
+I run GoodWatch (https://goodwatch.app), a free film and TV guide. It is
+non-commercial and open source (https://github.com/alp82/goodwatch-monorepo),
+and it will stay that way.
+
+Today we show where-to-watch information from TMDB's watch provider data,
+which TMDB credits to JustWatch. Our offer links are already JustWatch
+clickouts (click.justwatch.com), so every click we send is tracked by you.
+
+We would like to work with you directly instead of through TMDB's pages.
+In order of preference, could we have:
+
+1. A free, non-commercial partner token for your API, or the daily data
+   file: offers per title and country, looked up by TMDB id, with
+   monetization type, price, quality and the clickout link. We cover about
+   360,000 titles in 139 countries and would refresh once a day at
+   whatever pace you set.
+2. If that isn't possible: a widget token, so title pages can show your
+   offers directly.
+3. If neither: your guidance on what volume and method you'd accept.
+
+What we offer in return:
+- "Powered by JustWatch" with your logo and a link to the JustWatch title
+  page beside every offer list, in whatever form your guidelines ask for.
+- Your clickout links kept as they are, with your tracking intact.
+- No resale or redistribution of the data. Our repository publishes code,
+  not your data.
+- A monthly report of the clicks we send you, if useful.
+- A clear credit in our About page and README.
+
+Happy to answer any questions or have a short call.
+
+Best regards,
+Alper Ortac
+GoodWatch – https://goodwatch.app</div>
+<p class="note">Facts to check before sending: that the GitHub link is the one to show, and that the click figures can be shared. The partner docs say partners must show branded links to the JustWatch site; the offer above already meets that.</p>
+
+<h3>Optional: a short note to TMDB (Q55)</h3>
+<p>The page terms belong to TMDB, so telling them who we are before raising the pace lowers the risk more than anything else we can do. Suggested points for <code>contact@themoviedb.org</code>: GoodWatch is free, non-commercial and open source; we read watch pages with the User-Agent <code>GoodWatchBot/1.0 (+https://goodwatch.app; hello@goodwatch.app)</code>; we plan about 3 requests a second spread over the day, and back off on any 429 or challenge; is that acceptable, or is there a better way to get the clickout links for non-commercial use? We already use the API under its terms with JustWatch attribution.</p>
+
+<h2 id="refresh">5. Refresh planning</h2>
+<h3>How a pair gets fetched</h3>
+<div class="flow">
+  <span class="step">Daily: TMDB API watch/providers for all 361k titles</span><span class="arrow">→</span>
+  <span class="step">Per country: hash of sorted (type, provider id)</span><span class="arrow">→</span>
+  <span class="step">Compare with the hash at the last verified page fetch</span><span class="arrow">→</span>
+  <span class="step">Changed, new, or due by tier → page queue</span>
+</div>
+<ul>
+  <li><b>Detector cost.</b> 361k calls a day is 4.2 req/s, about 10% of TMDB's stated API ceiling, and 1–2 GB a day. It is a separate upstream (<code>api.themoviedb.org</code>) with its own gate, so a page block never stops the lists.</li>
+  <li><b>Daily is the useful maximum.</b> TMDB builds provider data from one daily JustWatch export, 8–32 h behind, so polling more often finds nothing new.</li>
+</ul>
+<h3>Pairs that never need a page fetch</h3>
+<ul>
+  <li><b>Countries with no offers.</b> Documents are created only where the API lists a country, but they're never removed when a country drops out. Mongo holds 9.3 M documents and Crate 8.27 M pairs, so up to about 1 M documents may be such leftovers <span class="tag warn">estimate</span>. When the API drops a country, write an empty offer list and stop. Don't fetch the page to confirm.</li>
+  <li><b>Countries the page can't show.</b> Niger today (section 9). Keep the API list, store no links, and check once a month with one canary page.</li>
+  <li><b>Unchanged pairs between tier dates.</b> If the API hash is the same as at the last page fetch, the links are very likely still valid. Only prices and quality can drift, which the tier dates cover.</li>
+  <li><b>Deleted titles.</b> Already excluded by <code>tmdb_deleted</code>. Section 9 adds the 404 path.</li>
+</ul>
+<h3>Tiers, in queue order</h3>
+<div class="tablewrap"><table>
+<tr><th>Tier</th><th>What</th><th>Cadence</th><th class="n">Pairs/day</th></tr>
+<tr><td>T0 Opened</td><td>Titles whose page was opened in the last 24 h, all their countries. Capped at 20k pairs/day so a spike can't starve the rest; overflow falls into T2–T4 order.</td><td>Daily</td><td class="n">~6k (250 titles × 23)</td></tr>
+<tr><td>T1 Changed</td><td>Pairs whose API hash changed, or that are new. Ordered by popularity.</td><td>Daily</td><td class="n">25k–100k <span class="tag warn">estimate</span></td></tr>
+<tr><td>T2 Top</td><td>Popularity ≥ 50: 945 titles</td><td>Daily</td><td class="n">62k</td></tr>
+<tr><td>T3 Popular</td><td>Popularity 20–50: 3,791 titles</td><td>Every 3 days</td><td class="n">81k</td></tr>
+<tr><td>T4 Sweep</td><td>Everything else, oldest verification first. Pairs with no link at all go first within equal age.</td><td>As capacity allows</td><td class="n">The remainder</td></tr>
+</table></div>
+<p class="note">The T1 range comes from JustWatch's own feed listing 600 US titles with new offers on 2026-10-16 (0.3% of US pairs). Doubling that for removals and other changes gives about 0.6% of all pairs, or 50k a day. Phase 1 replaces the estimate with a measured count before anything depends on it. "Opened" today needs a small webapp change: the title page raises demand the way poster impressions already do, with a larger weight.</p>
+
+<h3>Capacity per tier option, against measured throughput</h3>
+<gx-wide><div class="tablewrap"><table>
+<tr><th>Option</th><th class="n">Rate</th><th class="n">Fetches/day</th><th>T0 + T1</th><th>Popular</th><th>Sweep of the other ~7.9 M pairs</th><th>vs today</th></tr>
+<tr><td><b>A. Today's pace</b></td><td class="n">1.34 req/s</td><td class="n">116k</td><td>56k daily</td><td>≥ 20 weekly (44k)</td><td>16k/day → about a 500-day cycle; links mostly change-driven</td><td>1.0×, proven</td></tr>
+<tr class="rec"><td><b>B. Recommended</b></td><td class="n">3 req/s</td><td class="n">259k</td><td>56k daily</td><td>≥ 50 daily (62k), 20–50 every 3 days (81k)</td><td>60k/day → about a 130-day cycle. The no-link backlog in titles with popularity ≥ 5 clears within a month.</td><td>2.2×, ramp proves 4 req/s first</td></tr>
+<tr><td><b>C. Brute force popular</b></td><td class="n">6 req/s</td><td class="n">518k</td><td>56k daily</td><td>≥ 20 daily (306k)</td><td>156k/day → 50-day cycle</td><td>4.5×, above the tested ceiling</td></tr>
+<tr><td>(Every pair weekly, for scale)</td><td class="n">13.7 req/s</td><td class="n">1.18 M</td><td colspan="3">What today's 7-day freshness setting would need</td><td>10×</td></tr>
+</table></div></gx-wide>
+<p>Bandwidth on our side: 259k pages × 42 KB ≈ 11 GB/day inbound, which Hetzner doesn't bill. The 4.40 M-pair no-link backlog is a one-off: the ramp days (section 6) run above 3 req/s and drain it in popularity order.</p>
+
+<h2 id="pace">6. Throughput and politeness</h2>
+<h3>One global pace, random workers unchanged</h3>
+<ul>
+  <li><b>Token bucket in Valkey.</b> A GCRA limiter keyed per upstream (<code>tmdb:web</code>, <code>tmdb:api</code>). Every fetch takes a token right before its request, whichever of the 12 workers Windmill picked. The bucket holds the rate; the workers don't need to know about each other.</li>
+  <li><b>Pace per worker follows from it.</b> At 3 req/s, each worker averages 0.25 req/s. Per egress IP it's 3 req/s divided by the number of worker hosts, about 0.75 req/s across four hosts.</li>
+  <li><b>Bigger jobs, kept-alive connections.</b> Each job claims up to 20 due pairs in tier order and works through them on one HTTP/2 connection, instead of one job and one Mongo connection per pair. That is where the speed-up comes from; TMDB sees fewer TLS handshakes, not more requests.</li>
+  <li><b>Concurrency.</b> With requests under a second, 3 req/s needs only 2–3 requests in flight. Cap in-flight requests at 6 globally (a Valkey counter with lease expiry).</li>
+</ul>
+<h3>Adaptive rate (AIMD)</h3>
+<ul>
+  <li>Add 0.1 req/s after every clean 10 minutes, up to the operating rate.</li>
+  <li>Halve the rate on a 429, on more than 1% 5xx in a minute, or when p50 latency doubles against the 24-hour baseline.</li>
+  <li>After the gate reopens, restart at 25% of the operating rate and climb again.</li>
+</ul>
+<h3>Controlled ramp</h3>
+<div class="tablewrap"><table>
+<tr><th>Step</th><th class="n">Total rate</th><th class="n">Fetches/day</th><th>Hold</th></tr>
+<tr><td>Baseline (now)</td><td class="n">1.34 req/s</td><td class="n">116k</td><td>Measured</td></tr>
+<tr><td>1</td><td class="n">2 req/s</td><td class="n">173k</td><td>24 h</td></tr>
+<tr><td>2</td><td class="n">3 req/s</td><td class="n">259k</td><td>24 h</td></tr>
+<tr><td>3 (ceiling to test)</td><td class="n">4 req/s</td><td class="n">346k</td><td>24 h</td></tr>
+</table></div>
+<ul>
+  <li><b>A step passes</b> with zero challenges, zero 429s, 5xx below 0.5%, and p95 latency under 1.5× the baseline.</li>
+  <li><b>A step fails</b> at the first challenge or 429. The gate closes on its own, and we run at 75% of the highest clean step and wait 7 days before trying higher.</li>
+  <li><b>Operate at 3 req/s</b> if 4 req/s passes, keeping a 25% margin. Don't test above 4 req/s without TMDB's agreement.</li>
+  <li>24-hour holds catch daily traffic patterns on TMDB's side that a 30-minute test would miss.</li>
+</ul>
+
+<h2 id="recovery">7. Blocks and recovery</h2>
+<h3>What already works (commits c12d9dae, dffc5e98)</h3>
+<ul>
+  <li>One gate per upstream (<code>tmdb_streaming_upstream/tmdb_watch</code>) shared by all workers. It classifies responses as challenge, 429, other 403, or 5xx.</li>
+  <li>Backoff runs 30, 60, 120 … up to 1,440 minutes, and a longer <code>Retry-After</code> wins. A fenced single probe reopens the gate only after a fully validated 200.</li>
+  <li>A block releases the pair without touching its links, failure counter or schedule. A Discord alert goes out after 2 hours blocked, with one recovery message.</li>
+</ul>
+<h3>What to add</h3>
+<ul>
+  <li><b>Soft and hard limits.</b> A single 429 with <code>Retry-After</code> under a minute halves the rate (AIMD) instead of closing the gate for 30 minutes. Challenges, repeated 429s and 403s still close it.</li>
+  <li><b>Slow start after reopening</b> (section 6).</li>
+  <li><b>Graceful degradation.</b> While the gate is closed, the API detector keeps running, so provider lists stay daily. Pages keep their last verified links. New offers show TMDB's "where to watch" link, which the site already uses as a fallback. Users keep a working link either way.</li>
+  <li><b>Freshness alert.</b> Warn when T0 or T2 falls behind its cadence by 24 h, not only on gate state.</li>
+</ul>
+<h3>Fallback ladder, with the terms stated plainly</h3>
+<div class="tablewrap"><table>
+<tr><th>Step</th><th>What</th><th>Cost</th><th>Terms</th></tr>
+<tr class="rec"><td>1</td><td><b>Wait and probe</b> (exists): back off everywhere, keep old links, show the TMDB fallback link</td><td>$0</td><td><span class="tag ok">Clean</span> This is what "respect the limit" means.</td></tr>
+<tr><td>2</td><td><b>HTTP/2 client, honest User-Agent.</b> httpx with <code>http2=True</code> as the normal client from now on, not as a switch after a block.</td><td>$0</td><td><span class="tag ok">Clean</span> The same honest identity on a normal browser protocol. Switching protocols <em>to escape</em> a block would not be.</td></tr>
+<tr><td>3</td><td><b>IPv6 per worker host.</b> Every Hetzner server has a free /64, and TMDB serves IPv6. One fixed address per host, used all the time as a second path.</td><td>$0, Docker IPv6 setup on the hosts</td><td><span class="tag ok">Clean</span> as a constant path that spreads load. <span class="tag bad">Circumvention</span> if it is turned on only after a block, or rotated through the /64.</td></tr>
+<tr><td>4</td><td>Browser impersonation (curl_cffi copying Chrome's TLS fingerprint)</td><td>$0</td><td><span class="tag bad">Not recommended</span> It pretends to be a browser, which contradicts the honest User-Agent.</td></tr>
+<tr><td>5</td><td><b>Paid residential proxy</b>, for T0 opened titles and the probe only, while the gate is closed</td><td>≤ $0.30/day while blocked</td><td><span class="tag bad">Circumvention</span> Routing around a block TMDB placed on us is what the terms forbid. Worst case, TMDB revokes our API key, and the API is the source of every provider list.</td></tr>
+</table></div>
+<p><b>The trade-off in one line:</b> steps 1–3 cost nothing and keep us within an honest reading of TMDB's terms. Step 5 buys a few thousand fresh links a day during a block, and risks the free API that everything else rests on. With old links kept and TMDB's fallback link shown, a block costs freshness, not links, which is why this plan recommends not buying the proxy yet.</p>
+
+<h2 id="proxy">8. Proxy platform, if the owner wants it ready</h2>
+<p><b>Confirmed: DataImpulse first, Geonode as backup.</b> Nothing found since the earlier research changes the ranking. Two refinements:</p>
+<ul>
+  <li><b>Where it sits.</b> Only in the T0 lane and the gate probe, and only while the direct gate is closed. The 0.3 GB/day cap buys about 6,000–7,000 pages, which matches T0's ~6k pairs a day. The general crawl never uses it.</li>
+  <li><b>No geo targeting.</b> TMDB picks the country from <code>?locale=</code>, not from the exit IP. Nigeria (<code>NG</code>) rendered correctly from a German IP today, so the pool's default exit is fine and the paid city or ASN add-ons aren't needed.</li>
+</ul>
+<div class="tablewrap"><table>
+<tr><th></th><th>DataImpulse</th><th>Geonode</th></tr>
+<tr><td>First buy</td><td>Intro $5 = 5 GB, one time</td><td>Pay as you go, 10 GB = $8.80</td></tr>
+<tr><td>Price after</td><td>$1/GB ($50 for 50 GB)</td><td>$0.88/GB</td></tr>
+<tr><td>Credit expiry</td><td>Never</td><td>Never</td></tr>
+<tr><td>Hard cap at the provider</td><td>Yes: traffic limit per 24 h window, suspend + email. Set 0.35 GB above our 0.30 GB code cap.</td><td>No balance cap found; usage API only</td></tr>
+<tr><td>Benchmark</td><td>Proxyway 2026: 99.74% success, 0.97 s</td><td>None</td></tr>
+<tr><td>Weak points</td><td>Trustpilot score withheld (fake reviews), 49.6% of IPs flagged as proxies, opt-in SDK sourcing is their own claim</td><td>No benchmark, sourcing not stated, trial charge complaints</td></tr>
+<tr><td>Days of blocking covered at the cap</td><td class="n">~16 days on the $5</td><td class="n">~33 days on the $8.80</td></tr>
+</table></div>
+<p>Wiring as designed earlier: a Windmill secret <code>u/Alp/TMDB_PROXY_URL</code> (empty = off), a per-UTC-day byte counter in Valkey reserved atomically before each request, and the provider's 24-hour suspend as the backstop. Avoid NetNut (FBI seizure, July 2026) and the IPIDEA resellers (LunaProxy, PYPROXY, 922, ABCProxy).</p>
+
+<h2 id="quality">9. Data quality</h2>
+<h3>Niger: TMDB's page can't show it</h3>
+<ul>
+  <li><b>What happens.</b> <code>/movie/603-the-matrix/watch?locale=NE</code> returns HTTP 200 with the country selector set to <code>DE</code> and every clickout tagged <code>uct_country=de</code>. The page fell back to the visitor's country (Germany for both this machine and Hetzner). <code>locale=NG</code> works. Checked 2026-10-17.</li>
+  <li><b>Why it matters.</b> <code>validate_selected_country</code> correctly refuses the page, so no wrong data is saved. But 46.8k titles (104k rows) have Niger offers, and they took 11% of all fetches in the observation window.</li>
+  <li><b>Fix.</b> A small list of page-unsupported countries, starting with <code>NE</code>. Those pairs keep the API provider list with no links and are never fetched. A monthly canary on one Niger page removes the country from the list as soon as TMDB renders it. Why TMDB fails on <code>NE</code> is unknown; it may read it as a language code.</li>
+</ul>
+<h3>404s and deleted titles</h3>
+<ul>
+  <li><b>Today</b> a 404 (5 of 2,420 fetches) climbs the failure ladder up to 7 days and repeats forever.</li>
+  <li><b>Fix.</b> On a 404, call the TMDB API for the title. If the API also answers 404, set <code>tmdb_deleted</code> (the flag already exists and stops all crawling). If the API answers 200, refresh the watch URL from its <code>link</code> (a changed slug or a merge) and retry once. Also apply <code>/changes</code> deletions directly.</li>
+</ul>
+<h3>Links missing in half the rows</h3>
+<div class="tablewrap"><table>
+<tr><th>Rows in <code>streaming_availability</code></th><th class="n">Rows</th><th>Meaning</th></tr>
+<tr><td>API and page agree (link + TMDB data)</td><td class="n">6.97 M</td><td>Good</td></tr>
+<tr><td>API only, in pairs with <b>no link at all</b></td><td class="n">6.42 M</td><td>4.40 M pairs never fetched successfully, or not since the crawl stalled. The backlog: tiers and the ramp drain it.</td></tr>
+<tr><td>API only, in pairs that <b>do</b> have links</td><td class="n">2.92 M</td><td>The two sources disagree inside one pair.</td></tr>
+<tr><td>Page only (link, no API row)</td><td class="n">2.64 M</td><td>The other half of the same disagreement.</td></tr>
+</table></div>
+<ul>
+  <li><b>Much of the disagreement is a provider-mapping split.</b> In the US alone, about 93k (title, offer type) groups hold an API-only row <em>and</em> a page-only row of the same type. Most likely the same offer resolved to two service ids (for example a "with Ads" or "Channel" variant named differently by the page and the API).</li>
+  <li><b>Fix (phase 6).</b> Match the two rows in a pair by type and a provider alias table, keyed on the JustWatch package id inside the clickout's <code>cx</code> where possible. Merge them into one row, and report every name that still doesn't match.</li>
+  <li><b>Meanwhile</b>, rows with no link already fall back to TMDB's "where to watch" page on the site.</li>
+</ul>
+
+<h2 id="phases">10. Phased rollout</h2>
+<gx-wide><div class="tablewrap"><table>
+<tr><th>Phase</th><th>Work</th><th>Effort</th><th>Proof it worked</th></tr>
+<tr><td><b>P0</b> Stop waste</td><td>Niger page-unsupported list. The 404 → API check → deleted-or-new-URL path. Retire documents whose country left the API list.</td><td>½ day</td><td>A 30-minute window with 0 Niger attempts and a failure share under 0.5%, from the same counting method as the restart check.</td></tr>
+<tr><td><b>P1</b> Detector in shadow</td><td>Daily <code>watch/providers</code> poll for all titles, with its own API gate. Store per-pair hashes and count changed pairs per tier. Enqueue nothing yet.</td><td>1 day + 3 days observing</td><td>A measured changed-pairs-per-day figure replaces the 50k estimate, with 0 API 429s.</td></tr>
+<tr><td><b>P2</b> Tier queue and pacing</td><td>A tier-ordered claim (T0 → T4) and batched fetch jobs (20 pairs, one HTTP/2 connection) on the Valkey token bucket. Workers stay random. The title page raises "opened" demand.</td><td>2–3 days</td><td>The rate holds at the set value ±10%, there are fewer Windmill jobs per fetch, and a per-tier freshness report shows each tier within cadence.</td></tr>
+<tr><td><b>P3</b> Controlled ramp</td><td>2 → 3 → 4 req/s, 24 h each, then settle (section 6). Optional TMDB note before it starts.</td><td>½ day work, 3–4 days calendar</td><td>A per-step table of challenges, 429s, 5xx and p95, and the chosen operating rate.</td></tr>
+<tr><td><b>P4</b> Recovery upgrades</td><td>Soft 429 vs hard gate, slow start, freshness alert, HTTP/2 as the standard client. IPv6 only if Q49 says so.</td><td>1 day</td><td>Mongomock tests with 12 concurrent workers for each path, and a drill on a test gate document, never against TMDB.</td></tr>
+<tr><td><b>P5</b> Outreach</td><td>The owner sends the JustWatch email (and the TMDB note). If JustWatch grants access, write a separate plan to switch the link source.</td><td>½ day</td><td>A reply, or a follow-up after 3 weeks.</td></tr>
+<tr><td><b>P6</b> Reconcile rows</td><td>Provider alias table and merging the API-only and page-only rows within a pair.</td><td>1–2 days</td><td>The US split groups fall from 93k to near zero, and API-only rows in linked pairs fall from 2.92 M.</td></tr>
+<tr><td><b>P7</b> Optional fallbacks</td><td>Proxy lane (Q50), widget (Q52), Watchmode or Movie of the Night (Q53), only if chosen.</td><td>½–1 day each</td><td>A capped test: 200 pages through the proxy, with the share that passes country validation.</td></tr>
+</table></div></gx-wide>
+
+<h2 id="cost">11. Cost per day</h2>
+<div class="tablewrap"><table>
+<tr><th>Item</th><th class="n">One-off</th><th class="n">Normal day</th><th class="n">Blocked day</th><th>In the recommendation?</th></tr>
+<tr><td>TMDB API detector (361k calls/day)</td><td class="n">$0</td><td class="n">$0</td><td class="n">$0</td><td>Yes</td></tr>
+<tr><td>TMDB pages from our hosts (259k/day, ~11 GB in)</td><td class="n">$0</td><td class="n">$0</td><td class="n">$0</td><td>Yes</td></tr>
+<tr><td>Valkey token bucket (existing cluster)</td><td class="n">$0</td><td class="n">$0</td><td class="n">$0</td><td>Yes</td></tr>
+<tr><td>JustWatch partner access, widget</td><td class="n">$0 if granted free</td><td class="n">$0</td><td class="n">$0</td><td>Ask</td></tr>
+<tr><td>IPv6 on worker hosts</td><td class="n">$0</td><td class="n">$0</td><td class="n">$0</td><td>Optional</td></tr>
+<tr><td>Watchmode free / Movie of the Night free</td><td class="n">$0</td><td class="n">$0</td><td class="n">$0</td><td>Optional</td></tr>
+<tr><td>Extra Hetzner Primary IPv4 (€0.50/month)</td><td class="n">$0</td><td class="n">$0.02</td><td class="n">$0.02</td><td>No</td></tr>
+<tr><td>DataImpulse proxy, 0.30 GB/day cap (provider suspends at 0.35)</td><td class="n">$5</td><td class="n">$0</td><td class="n">≤ $0.35</td><td>No</td></tr>
+<tr><td>Geonode backup, same cap</td><td class="n">$8.80</td><td class="n">$0</td><td class="n">≤ $0.31</td><td>Only if DataImpulse fails</td></tr>
+<tr class="rec"><td><b>Recommended plan</b></td><td class="n"><b>$0</b></td><td class="n"><b>$0</b></td><td class="n"><b>$0</b></td><td></td></tr>
+<tr><td><b>Everything optional switched on</b></td><td class="n">$5</td><td class="n">$0.02</td><td class="n">≤ $0.37</td><td>Still under $1/day</td></tr>
+</table></div>
+
+<h2 id="decisions">12. Decisions</h2>
+<p>One question per decision; the recommended option comes first. Q44 and Q50 matter most. The others can take their defaults.</p>
+
+<gx-question tag="Q44" name="Q44 Tier plan" title="Which refresh plan should the crawler follow?">
+  <p>Section 5. All three keep provider lists daily for every title through the API. They differ in how often page links are re-checked.</p>
+  <gx-choice value="B: 3 req/s" recommended>B: opened, changed and top titles daily; popularity 20–50 every 3 days; sweep the rest<small>3 req/s, 259k fetches/day, about 2.2× today, after the ramp proves 4 req/s.</small></gx-choice>
+  <gx-choice value="A: today's pace">A: stay at today's pace<small>1.34 req/s. Opened and changed daily, popularity ≥ 20 weekly, very slow sweep.</small></gx-choice>
+  <gx-choice value="C: 6 req/s">C: popularity ≥ 20 re-checked daily<small>6 req/s, above the tested ceiling. Needs TMDB's agreement.</small></gx-choice>
+</gx-question>
+
+<gx-question tag="Q45" name="Q45 Detector" title="Should the TMDB API poll every title's provider list daily?">
+  <p>361k calls a day, 4.2 req/s, about 10% of TMDB's stated API limit. It finds the changed pairs, so pages are fetched only where needed.</p>
+  <gx-choice value="All titles daily" recommended>Yes, all titles daily</gx-choice>
+  <gx-choice value="Popular daily, rest weekly">Popularity ≥ 5 daily, the rest weekly<small>About 32k calls/day plus 47k/day. Lists for the long tail lag up to a week.</small></gx-choice>
+  <gx-choice value="No detector">No detector; pages on a fixed schedule only</gx-choice>
+</gx-question>
+
+<gx-question tag="Q46" name="Q46 Ramp ceiling" title="How high should the controlled ramp test?">
+  <p>Section 6. 24 hours per step. The first challenge or 429 ends it, and we settle at 75% of the highest clean step.</p>
+  <gx-choice value="Up to 4 req/s" recommended>Up to 4 req/s, operate at 3</gx-choice>
+  <gx-choice value="Up to 2.5 req/s">Up to 2.5 req/s, operate at 2<small>Safer. 173k/day: popularity 20–50 moves to weekly and the sweep drops to about 20k/day.</small></gx-choice>
+  <gx-choice value="Up to 8 req/s">Up to 8 req/s<small>Only after TMDB says yes.</small></gx-choice>
+</gx-question>
+
+<gx-question tag="Q47" name="Q47 On a block" title="What should happen when TMDB blocks the page crawl?">
+  <p>Section 7. Old links stay on the site in every case, and new offers show TMDB's "where to watch" link.</p>
+  <gx-choice value="Back off everywhere" recommended>Back off everywhere and probe until it reopens<small>Today's gate, plus slow start and the freshness alert. $0, clean terms.</small></gx-choice>
+  <gx-choice value="Fail over to other own IPs or IPv6">Fail over to our other IPs or IPv6<small>$0, but it is circumvention under TMDB's terms.</small></gx-choice>
+  <gx-choice value="Fail over to paid proxy for opened titles">Keep opened titles fresh through the paid proxy<small>≤ $0.35/day while blocked. Circumvention; risks the API key.</small></gx-choice>
+</gx-question>
+
+<gx-question tag="Q48" name="Q48 Client" title="Which HTTP client should the crawler use?">
+  <gx-choice value="HTTP/2, honest User-Agent" recommended>httpx over HTTP/2 with the honest GoodWatchBot User-Agent, as the standard client<small>Faster with keep-alive, fewer handshakes for TMDB.</small></gx-choice>
+  <gx-choice value="Keep requests HTTP/1.1">Keep today's requests client over HTTP/1.1<small>Proven today; slower, one TLS handshake per job.</small></gx-choice>
+  <gx-choice value="Add browser impersonation">Add curl_cffi browser impersonation as a fallback<small>Not recommended: it pretends to be Chrome.</small></gx-choice>
+</gx-question>
+
+<gx-question tag="Q49" name="Q49 IPv6" title="Should worker hosts use IPv6 for TMDB?">
+  <p>Free, but needs IPv6 enabled in Docker on each worker host. At 3 req/s our IPv4 hosts already sit near 0.75 req/s each.</p>
+  <gx-choice value="Not now" recommended>Not now; revisit if the ramp shows per-IP limits</gx-choice>
+  <gx-choice value="Always-on second path">Yes, one fixed IPv6 per host, used all the time</gx-choice>
+  <gx-choice value="Only as failover">Only as a failover during blocks<small>Circumvention under TMDB's terms.</small></gx-choice>
+</gx-question>
+
+<gx-question tag="Q50" name="Q50 Proxy" title="Should we buy the emergency residential proxy?">
+  <p>Section 8. It would serve only opened titles and the probe, only while the gate is closed, capped at 0.3 GB a day.</p>
+  <gx-choice value="Don't buy now" recommended>Don't buy now<small>Revisit if the gate stays closed longer than 24 h twice in one month.</small></gx-choice>
+  <gx-choice value="DataImpulse $5">Buy DataImpulse Intro, $5, wired but off until Q47 allows it</gx-choice>
+  <gx-choice value="Geonode $8.80">Buy Geonode pay-as-you-go, $8.80, instead</gx-choice>
+</gx-question>
+
+<gx-question tag="Q51" name="Q51 JustWatch email" title="Should we send the JustWatch email in section 4?">
+  <gx-choice value="Send as drafted" recommended>Send as drafted: API or data file first, widget second, guidance third</gx-choice>
+  <gx-choice value="Ask for the widget only">Ask only for a widget token</gx-choice>
+  <gx-choice value="Don't send">Don't contact JustWatch</gx-choice>
+</gx-question>
+
+<gx-question tag="Q52" name="Q52 Widget" title="If JustWatch grants a widget token, how should title pages use it?">
+  <p>The widget loads JustWatch's script and their branding on our page; we can't store its data.</p>
+  <gx-choice value="Click to load, titles without links" recommended>A "Show offers from JustWatch" button, only on titles where we have no links<small>No third-party script until the reader asks.</small></gx-choice>
+  <gx-choice value="Auto-load on titles without links">Load it automatically on titles without links</gx-choice>
+  <gx-choice value="Never">Don't use the widget</gx-choice>
+</gx-question>
+
+<gx-question tag="Q53" name="Q53 Free API fallbacks" title="Should we wire a free availability API for opened titles?">
+  <p>Both are free for us. Each covers only a few dozen titles a day, and adds one more parser and provider mapping to keep up.</p>
+  <gx-choice value="Not now" recommended>Not now; keep both documented as options</gx-choice>
+  <gx-choice value="Watchmode free">Watchmode free: about 80 titles/day, 3 countries, non-commercial plan</gx-choice>
+  <gx-choice value="Movie of the Night free">Movie of the Night free: about 33 titles/day, 65 countries</gx-choice>
+</gx-question>
+
+<gx-question tag="Q54" name="Q54 Niger" title="How should we handle Niger, which TMDB's page can't show?">
+  <gx-choice value="API list only, monthly canary" recommended>Keep the API provider list, never fetch the page, check one canary page monthly<small>Saves about 11% of today's fetches.</small></gx-choice>
+  <gx-choice value="Drop Niger">Drop Niger from availability entirely</gx-choice>
+  <gx-choice value="Keep trying">Keep fetching as today</gx-choice>
+</gx-question>
+
+<gx-question tag="Q55" name="Q55 Tell TMDB" title="Should we tell TMDB about the crawler before ramping up?">
+  <p>The note in section 4: who we are, our User-Agent, the planned rate, and a question whether that's acceptable.</p>
+  <gx-choice value="Send before the ramp" recommended>Yes, send it before going above 2 req/s</gx-choice>
+  <gx-choice value="Only if blocked">Only if we get blocked</gx-choice>
+  <gx-choice value="Don't contact">Don't contact TMDB</gx-choice>
+</gx-question>
+
+<gx-question name="Anything else" title="Anything else for this plan?" type="text"></gx-question>
+
+<h2>Sources</h2>
+<ul class="note">
+  <li>Measurements: production Crate (<code>streaming_availability</code>, <code>movie</code>, <code>show</code>, <code>crawl_priority</code>), PostHog <code>$pageview</code> on <code>/movie/</code> and <code>/show/</code> paths, Oct 3–17; <code>docs/implementation/tmdb-streaming-restart-20261017/verification.json</code>; two watch-page requests (NE, NG) from this machine with the GoodWatchBot User-Agent, 2026-10-17.</li>
+  <li>Code: <code>goodwatch-flows/windmill/f/tmdb_web/</code> (fetch.py, next.py, country_state.py, tmdb_init_providers), <code>f/priority/</code>, <code>f/sync/copy/tmdb_streaming.py</code> on main.</li>
+  <li>Earlier research: streaming-availability-options.html, research-justwatch.md, research-paid-apis.md, research-egress.md, emergency-proxy-provider.html (all 2026-10-17), with their primary sources: TMDB <a href="https://developer.themoviedb.org/reference/movie-watch-providers">watch providers</a>, <a href="https://developer.themoviedb.org/docs/rate-limiting">rate limiting</a>, <a href="https://www.themoviedb.org/api-terms-of-use">API terms</a>, <a href="https://www.themoviedb.org/terms-of-use">site terms</a>, <a href="https://www.themoviedb.org/talk/63de2458373ac200cafd16e6">providers not in /changes</a>; JustWatch <a href="https://support.justwatch.com/article/just-watchs-terms-of-use">terms</a>, <a href="https://apis.justwatch.com/docs/content_partner/">partner docs</a>, <a href="https://apis.justwatch.com/docs/widget/terms_and_conditions/">widget terms</a>; <a href="https://api.watchmode.com/">Watchmode</a>; <a href="https://www.movieofthenight.com/about/api/pricing">Movie of the Night</a>; <a href="https://dataimpulse.com/#pricing">DataImpulse</a>; <a href="https://geonode.com/pricing/">Geonode</a>.</li>
+</ul>
+
+</gx-questions>
+</body>
+</html>

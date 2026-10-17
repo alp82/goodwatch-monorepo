@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Streaming Availability Options</title>
+<style>
+:root{
+  --bg:#fbfaf7; --surface:#ffffff; --ink:#1d1f23; --muted:#5d6470; --line:#e3e1db;
+  --accent:#2f5bd3; --accent-soft:#e9eefc; --good:#1f7a4d; --good-soft:#e5f4ec;
+  --warn:#a35b00; --warn-soft:#fdf1e0; --bad:#b3261e; --bad-soft:#fbe9e7; --code:#f2f0eb;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#15171b; --surface:#1d2026; --ink:#e7e8ea; --muted:#a2a8b3; --line:#30343c;
+    --accent:#8aa8ff; --accent-soft:#232c45; --good:#6fd3a0; --good-soft:#1b3328;
+    --warn:#f2b45c; --warn-soft:#3a2c17; --bad:#ff8a80; --bad-soft:#3d1f1d; --code:#262a31;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#15171b; --surface:#1d2026; --ink:#e7e8ea; --muted:#a2a8b3; --line:#30343c;
+  --accent:#8aa8ff; --accent-soft:#232c45; --good:#6fd3a0; --good-soft:#1b3328;
+  --warn:#f2b45c; --warn-soft:#3a2c17; --bad:#ff8a80; --bad-soft:#3d1f1d; --code:#262a31;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:1040px;margin:0 auto;padding:32px 16px 80px}
+h1{font-size:1.9rem;line-height:1.2;margin:0 0 6px}
+h2{font-size:1.35rem;margin:48px 0 12px;padding-top:12px;border-top:1px solid var(--line)}
+h3{font-size:1.08rem;margin:24px 0 8px}
+p,li{max-width:76ch}
+.sub{color:var(--muted);margin:0 0 24px}
+a{color:var(--accent)}
+code{background:var(--code);padding:1px 5px;border-radius:4px;font-size:.88em;word-break:break-word}
+.callout{border-left:4px solid var(--accent);background:var(--accent-soft);padding:12px 16px;border-radius:6px;margin:16px 0}
+.callout.good{border-color:var(--good);background:var(--good-soft)}
+.callout.warn{border-color:var(--warn);background:var(--warn-soft)}
+.callout.bad{border-color:var(--bad);background:var(--bad-soft)}
+.callout p{margin:6px 0}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin:16px 0}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.tile .n{font-size:1.45rem;font-weight:650;font-variant-numeric:tabular-nums}
+.tile .l{color:var(--muted);font-size:.86rem}
+.tablewrap{overflow-x:auto;margin:12px 0 4px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+th,td{padding:8px 10px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}
+th{background:var(--code);font-weight:600;white-space:nowrap}
+tr:last-child td{border-bottom:0}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.yes{color:var(--good);font-weight:600}.no{color:var(--bad);font-weight:600}.mid{color:var(--warn);font-weight:600}
+.arch{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:4px 18px 14px;margin:18px 0}
+.arch.rec{border:2px solid var(--good)}
+.badge{display:inline-block;font-size:.75rem;font-weight:650;padding:2px 8px;border-radius:999px;background:var(--good-soft);color:var(--good);vertical-align:middle;margin-left:6px}
+.small{font-size:.85rem;color:var(--muted)}
+ol.q li{margin:6px 0}
+pre{background:var(--code);padding:12px;border-radius:8px;overflow-x:auto;font-size:.82rem;line-height:1.45}
+.toc{columns:2;column-gap:28px;padding-left:18px}
+@media (max-width:640px){.toc{columns:1}h1{font-size:1.5rem}}
+</style>
+</head>
+<body>
+<main>
+<h1>Streaming availability: how to get it again, faster</h1>
+<p class="sub">Read-only research for the GoodWatch owner, 2026-10-17. Nothing in code, schedules or data was changed. Prices are from official pages seen on 2026-10-17, excluding VAT, unless marked unverified.</p>
+
+<ul class="toc">
+  <li><a href="#summary">Summary and recommendation</a></li>
+  <li><a href="#block">What the "block" really is</a></li>
+  <li><a href="#state">Current state in numbers</a></li>
+  <li><a href="#measured">Measured payloads</a></li>
+  <li><a href="#sources">Data sources compared</a></li>
+  <li><a href="#paid">Paid APIs</a></li>
+  <li><a href="#methods">Crawling methods</a></li>
+  <li><a href="#egress">Egress options and cost</a></li>
+  <li><a href="#math">Cost math at our volume</a></li>
+  <li><a href="#arch">Three architectures</a></li>
+  <li><a href="#legal">Legal and terms risk</a></li>
+  <li><a href="#questions">Questions for the owner</a></li>
+  <li><a href="#refs">Sources</a></li>
+</ul>
+
+<h2 id="summary">Summary and recommendation</h2>
+<div class="callout good">
+<p><strong>The block is not on the IP.</strong> TMDB challenges any request that sends the User-Agent <code>Mozilla/5.0</code> over HTTP/1.1, which is exactly what <code>fetch.py</code> sends through <code>requests</code>. From the "blocked" IP 78.46.209.172, HTTP/2 or an honest User-Agent gets a 200 right now. Changing that one header would let the current crawler run again today.</p>
+</div>
+<ul>
+  <li><strong>No paid API with deep links fits $1/day.</strong> The cheapest is Movie of the Night at $299/month for 1 M requests. Watchmode starts at $349/month. JustWatch, Reelgood and Gracenote sell only through sales contracts.</li>
+  <li><strong>TMDB's watch data is JustWatch data.</strong> Every TMDB clickout is a <code>click.justwatch.com</code> redirect tagged <code>clickoutType: jw-content-partner-export-api</code>. JustWatch's own GraphQL API returns the same offers with direct service URLs, availability dates and quality. It returns many countries and many titles in one request, at about <strong>200 times fewer bytes</strong> per (title, country) than TMDB's watch page.</li>
+  <li><strong>We already hold the JustWatch id for 278k titles.</strong> It sits inside the stored clickouts (<code>title_context.jwEntityId</code>, e.g. <code>tm10</code> for The Matrix), so mapping TMDB ids to JustWatch ids is mostly done.</li>
+  <li><strong>Our own Hetzner IPs fit the budget at $0.</strong> Every architecture below runs on them. Residential proxies are affordable only for the small JustWatch payloads, and only as a capped emergency path.</li>
+  <li><strong>Recommendation: architecture C, built in steps.</strong>
+    <ul>
+      <li>Fix the client fingerprint and put a single upstream circuit breaker in place. That alone restarts the crawler.</li>
+      <li>Then make JustWatch GraphQL the main source of links, batched, with the full catalog refreshed daily (about 36k requests and 2 GB a day).</li>
+      <li>Keep TMDB's free API as an independent check and the fixed TMDB page crawler as the fallback.</li>
+      <li>Cost about $0/day, with an optional $5 one-off proxy credit capped at 0.3 GB/day.</li>
+    </ul>
+    The catch is the terms: JustWatch forbids scraping and commercial use, so that choice is the owner's (Q2).</li>
+</ul>
+
+<h2 id="block">What the "block" really is</h2>
+<p>Seven single requests to <code>/movie/603-the-matrix/watch?locale=US</code>, a few seconds apart, from the hosts themselves:</p>
+<div class="tablewrap"><table>
+<tr><th>From</th><th>Client</th><th>Protocol</th><th>User-Agent</th><th>Result</th></tr>
+<tr><td>gw-cache1 78.46.209.172 (the "blocked" IP)</td><td>curl</td><td>HTTP/2, IPv4</td><td>Mozilla/5.0</td><td class="yes">200, 41.6 KB</td></tr>
+<tr><td>gw-cache1, IPv6 2a01:4f8:c013:2394::1</td><td>curl</td><td>HTTP/2, IPv6</td><td>Mozilla/5.0</td><td class="yes">200</td></tr>
+<tr><td>gw-cache1</td><td>curl</td><td>HTTP/1.1</td><td>Mozilla/5.0</td><td class="no">403 "Just a moment..."</td></tr>
+<tr><td>gw-cache1</td><td>curl</td><td>HTTP/1.1</td><td>python-requests/2.31.0</td><td class="yes">200</td></tr>
+<tr><td>gw-cache1</td><td>Python requests</td><td>HTTP/1.1</td><td>Mozilla/5.0 (what fetch.py sends)</td><td class="no">403 "Just a moment..."</td></tr>
+<tr><td>gw-cache1</td><td>Python requests</td><td>HTTP/1.1</td><td>GoodWatchBot/1.0 (+https://goodwatch.app)</td><td class="yes">200, 196 KB raw</td></tr>
+<tr><td>gw-worker3 49.13.94.216 (another IP)</td><td>Python requests</td><td>HTTP/1.1</td><td>Mozilla/5.0</td><td class="no">403 "Just a moment..."</td></tr>
+</table></div>
+<ul>
+  <li><strong>Not Cloudflare.</strong> themoviedb.org runs on AWS CloudFront, an AWS load balancer and openresty. The 403 page is TMDB's own (<code>Just a moment... - The Movie Database (TMDb)</code>, <code>x-cache: Error from cloudfront</code>), and there is no <code>cf-ray</code> header.</li>
+  <li><strong>The rule:</strong> a client that claims to be a browser but speaks HTTP/1.1 gets challenged. Real browsers use HTTP/2 or HTTP/3, so the mismatch looks like a bot. An honest bot User-Agent, or HTTP/2 with the same header, passes.</li>
+  <li><strong>The handover was wrong on one point.</strong> It said "the same URL works from other IPs", but gw-worker3 fails the same way with the same client. Whoever checked before probably used a browser or curl, which speak HTTP/2.</li>
+  <li><strong>The self-block loop is real.</strong> <code>fetch.py</code> treats every 403 as a rate limit. <code>country_state.save_failure</code> then pushes <code>tmdb_streaming_upstream.blocked_until</code> forward by 30 minutes or more, writes a failure on the document, and the next probe repeats the whole cycle.</li>
+  <li><strong>Revalidation doesn't help on this page.</strong> Its ETag changes on every request (session and CSRF tokens), so <code>If-None-Match</code> still returns a full 200. The redirect is not a cost either: the URL stored from the API <code>link</code> already includes the slug, so there is no extra 301.</li>
+</ul>
+
+<h2 id="state">Current state in numbers</h2>
+<div class="tiles">
+  <div class="tile"><div class="n">18.9 M</div><div class="l">rows in <code>streaming_availability</code></div></div>
+  <div class="tile"><div class="n">9.34 M</div><div class="l">rows with no <code>stream_url</code> (provider only, from the TMDB API)</div></div>
+  <div class="tile"><div class="n">3.87 M</div><div class="l">(title, country) pairs that have at least one link</div></div>
+  <div class="tile"><div class="n">~9.3 M</div><div class="l">(title, country) documents in Mongo</div></div>
+  <div class="tile"><div class="n">285k + 77k</div><div class="l">movies + shows with any offer (139 countries)</div></div>
+  <div class="tile"><div class="n">278k</div><div class="l">titles whose clickouts already carry the JustWatch id</div></div>
+  <div class="tile"><div class="n">~43k/day</div><div class="l">page fetches before the block (10 per Windmill flow run)</div></div>
+  <div class="tile"><div class="n">1.33 M/day</div><div class="l">page fetches a 7-day freshness would need (15.4 per second)</div></div>
+</div>
+<p class="small">Source: read-only queries on production Crate <code>doc.streaming_availability</code>, 2026-10-17. The 9.3 M Mongo count comes from the brief. Throughput was limited mostly by orchestration rather than by TMDB: <code>next.py</code> picks 5 movies and 5 shows per run, then <code>crawl_all_by_id</code> starts one job per document, and each job opens and closes Mongo.</p>
+
+<h2 id="measured">Measured payloads</h2>
+<p>A handful of single requests from this machine and the hosts, no crawling. "Wire" means the compressed bytes actually transferred.</p>
+<div class="tablewrap"><table>
+<tr><th>Request</th><th class="num">Wire</th><th class="num">Raw</th><th>Covers</th><th class="num">Wire per (title, country)</th></tr>
+<tr><td>TMDB watch page, The Matrix, US</td><td class="num">41.6 KB</td><td class="num">196 KB</td><td>1 title × 1 country, 29 offers</td><td class="num">41.6 KB</td></tr>
+<tr><td>TMDB watch page, Breaking Bad, US</td><td class="num">42.1 KB</td><td class="num">183 KB</td><td>1 × 1, 13 offers</td><td class="num">42.1 KB</td></tr>
+<tr><td>TMDB API <code>/movie/603/watch/providers</code></td><td class="num">5.0 KB</td><td class="num">64.9 KB</td><td>1 title × 89 countries, 471 offers, <em>no links, prices or quality</em></td><td class="num">56 B</td></tr>
+<tr><td>TMDB API <code>/tv/1396/watch/providers</code></td><td class="num">2.4 KB</td><td class="num">35.2 KB</td><td>1 title × all its countries</td><td class="num">≈ 50 B</td></tr>
+<tr><td>JustWatch GraphQL, The Matrix, 40 country aliases, slim fields</td><td class="num">8.6 KB</td><td class="num">238 KB</td><td>1 × 40, 803 offers with direct links, price, quality, dates</td><td class="num">216 B</td></tr>
+<tr><td>JustWatch GraphQL, 21 titles × 10 countries, <code>bestOnly</code></td><td class="num">8.4 KB</td><td class="num">109 KB</td><td>210 pairs, 372 offers, 0.14 s</td><td class="num">40 B</td></tr>
+<tr><td>JustWatch GraphQL, title with no offers</td><td class="num">≈ 20 B</td><td></td><td>per country</td><td class="num">20 B</td></tr>
+</table></div>
+<p class="small">The Matrix is a heavy title, with 20 offers per country against an average of about 2 per (title, country) in our table. So 216 B per pair is a conservative upper bound for JustWatch, and the cost math below uses it.</p>
+
+<h2 id="sources">Data sources compared</h2>
+<div class="tablewrap"><table>
+<tr><th>Source</th><th>Deep links</th><th>Price / quality / dates</th><th>Countries per request</th><th>Freshness</th><th>Blocking seen</th><th>Cost</th></tr>
+<tr><td>TMDB watch page (current)</td><td class="mid">JustWatch clickout with the target URL in <code>r=</code></td><td>Price, quality; no dates</td><td class="num">1</td><td>Daily JustWatch export, 8–32 h lag</td><td>Fingerprint rule (above)</td><td class="yes">$0</td></tr>
+<tr><td>TMDB API <code>watch/providers</code></td><td class="no">No (TMDB page link)</td><td class="no">None</td><td class="num">all</td><td>Same daily export, 8–32 h lag; not in <code>/changes</code></td><td>None; about 40 req/s ceiling</td><td class="yes">$0 (non-commercial)</td></tr>
+<tr><td>JustWatch GraphQL (unofficial)</td><td class="yes">Direct service URLs, some with JustWatch affiliate tags; <code>deeplinkURL</code> for WEB, Roku, Android TV</td><td class="yes">Price, currency, SD/HD/4K, <code>availableFrom/To</code>, <code>dateCreated</code></td><td class="num">40+ in one request, many titles too</td><td>Live (title's <code>maxOfferUpdatedAt</code> was 1 h old)</td><td>None in 6 requests; Google LB, no rate headers</td><td class="yes">$0</td></tr>
+<tr><td>JustWatch site HTML</td><td>Clickouts</td><td>Price, quality</td><td class="num">1</td><td>Live</td><td>Not tested</td><td>$0</td></tr>
+<tr><td>JustWatch partner API (official)</td><td class="mid">Links to JustWatch pages; direct links unverified</td><td>Price, type</td><td>per locale</td><td>Daily</td><td>n/a</td><td class="no">Contract, price unpublished</td></tr>
+<tr><td>Movie of the Night API</td><td class="yes"><code>link</code> + <code>videoLink</code></td><td class="yes">Price, quality, <code>expiresOn</code>, <code>availableSince</code></td><td class="num">all 65</td><td>Daily</td><td>Hard quota</td><td class="no">$299/mo for 1 M req</td></tr>
+<tr><td>Watchmode API</td><td class="yes">web, iOS, Android, TV links (paid)</td><td class="yes">Price, format</td><td class="num">all 54</td><td>Daily (unverified)</td><td>240 req/min</td><td class="no">$349/mo for 40k credits</td></tr>
+</table></div>
+<div class="callout"><p><strong>Is TMDB's watch page just JustWatch?</strong> Yes. TMDB's API docs say the data is "powered by our partnership with JustWatch" and require JustWatch attribution. Every offer on the watch page is a <code>click.justwatch.com/a?cx=…&amp;r=&lt;service URL&gt;&amp;uct_country=xx</code> redirect whose context names <code>clickoutType: jw-content-partner-export-api</code>, JustWatch's provider id, and the JustWatch title id. TMDB staff say provider data comes from one daily JustWatch import and lags 8–32 h.</p></div>
+
+<h2 id="paid">Paid APIs</h2>
+<div class="tablewrap"><table>
+<tr><th>API</th><th>Price (2026)</th><th>Quota</th><th>Countries</th><th>Deep links</th><th>Rate limit</th><th>Terms</th><th>Fits $30/mo?</th></tr>
+<tr><td>Movie of the Night (direct)</td><td>Free / $49 / $99 / $299</td><td>1k / 25k / 100k / 1 M req, hard</td><td>65</td><td class="yes">yes</td><td>RapidAPI lists 100–250/s</td><td>Commercial OK on all plans; attribution; no resale</td><td class="no">No. $30 ≈ Free tier only (≈230 titles/week)</td></tr>
+<tr><td>Movie of the Night (RapidAPI)</td><td>$0 / $69 / $139 / $399</td><td>1k / 25k / 100k / 1 M</td><td>65</td><td class="yes">yes</td><td>100–250/s</td><td>same</td><td class="no">No</td></tr>
+<tr><td>Watchmode</td><td>Free / $349 / $599 / custom</td><td>2.5k / 40k / 100k credits</td><td>54 (free: 3)</td><td class="mid">web only on free; apps on paid</td><td>120 / 240 per min</td><td>Free is non-commercial; delete data on cancel</td><td class="no">No</td></tr>
+<tr><td>JustWatch partner API</td><td>Unpublished</td><td>Contract</td><td>120+</td><td class="mid">JustWatch pages</td><td>n/a</td><td>Branded attribution</td><td class="mid">Ask (Q7)</td></tr>
+<tr><td>Reelgood data</td><td>Unpublished</td><td>B2B</td><td>25+</td><td>unverified</td><td>n/a</td><td>Contract</td><td class="no">No</td></tr>
+<tr><td>Gracenote / Intl Showtimes</td><td>Unpublished</td><td>Enterprise</td><td>100+</td><td class="yes">yes</td><td>n/a</td><td>Contract</td><td class="no">No</td></tr>
+<tr><td>Utelly</td><td colspan="6">Bought by Synamedia in 2022; the RapidAPI listing and host now answer 404</td><td class="no">Dead</td></tr>
+<tr><td>Trakt <code>watchnow</code></td><td>Free</td><td>500 GET / 5 min</td><td>many</td><td class="yes">yes</td><td>500 / 5 min</td><td>"Limited Access", not on the public plan</td><td class="mid">Not dependable</td></tr>
+<tr><td>uNoGS</td><td>$10/mo</td><td>30k req</td><td>Netflix only</td><td>Netflix id</td><td>n/a</td><td>n/a</td><td class="mid">Netflix only</td></tr>
+<tr><td>StreamWatchHub</td><td>$4.99/mo</td><td>unstated</td><td>17</td><td>yes</td><td>n/a</td><td>Provenance unclear</td><td class="no">Too small</td></tr>
+<tr><td>Apify JustWatch scrapers</td><td>$0.005 per row</td><td>n/a</td><td>140+</td><td>yes</td><td>n/a</td><td>Breaks JustWatch terms</td><td class="no">$46.5k per sweep</td></tr>
+<tr><td>Simkl, TVmaze, KinoCheck, Plex</td><td colspan="7">No per-country availability endpoint</td></tr>
+</table></div>
+<p class="small">At our volume a weekly refresh of 300k titles takes 1.3 M requests/month, even with one request per title for all countries. At the cheapest published unit price ($0.000299 per request, MotN Scale), $30 buys about 100k requests, or about 23k titles a week.</p>
+
+<h2 id="methods">Crawling methods</h2>
+<h3>Request volume</h3>
+<ul>
+  <li><strong>Batch per request.</strong> The TMDB page covers one country per request, TMDB's API all countries, and JustWatch GraphQL several titles × all countries in one document. Going from page to JustWatch cuts requests about 250× and bytes about 200×.</li>
+  <li><strong>Change detection.</strong>
+    <ul>
+      <li><strong>TMDB <code>/changes</code> doesn't carry provider changes</strong> (TMDB staff, 2024). The working detector is to poll <code>watch/providers</code> per title, which is free, all countries per call and about 2 KB, and diff the provider set for each country. All 361k titles take about 0.7 GB and 10 hours a day at 10 req/s.</li>
+      <li><strong>JustWatch has a per-country daily feed.</strong> <code>newTitles(country, date, pageType: NEW)</code> listed 600 US titles with new offers for 2026-10-16. It covers additions only, so removals and price changes still need a sweep. JustWatch's <code>maxOfferUpdatedAt(country)</code> per title also shows whether anything changed.</li>
+    </ul></li>
+  <li><strong>Priority order</strong>, each from its own budget:
+    <ol>
+      <li>Titles a member opens (the existing <code>f/priority/crawl_all</code>).</li>
+      <li>Countries the detector flags as changed.</li>
+      <li>The JustWatch new-offer feed.</li>
+      <li>Popular titles.</li>
+      <li>A rolling sweep, oldest first.</li>
+    </ol></li>
+</ul>
+<h3>Conditional requests and caching</h3>
+<ul>
+  <li>The TMDB page ETag changes on every response, so revalidation is useless there.</li>
+  <li>GraphQL POSTs aren't cacheable.</li>
+  <li>The useful "cache" is our own: hash each country's offer set, skip the write and the Crate copy when the hash is unchanged, and keep <code>maxOfferUpdatedAt</code> to skip fetching.</li>
+</ul>
+<h3>Client fingerprint</h3>
+<ul>
+  <li><strong>What is needed:</strong> HTTP/2 (httpx with <code>http2=True</code>), or an honest User-Agent that doesn't pretend to be a browser. Either passes TMDB's present rule.</li>
+  <li><strong>curl_cffi</strong> copies a real browser's TLS and HTTP/2 fingerprint. It helps against fingerprint rules but runs no JavaScript, so it can't pass a real JavaScript challenge or an IP block. It's worth keeping as a second client profile.</li>
+  <li><strong>FlareSolverr and reusing clearance cookies</strong> is browser automation to get around a challenge. Not recommended; see legal.</li>
+</ul>
+<h3>Polite pacing (AIMD)</h3>
+<ul>
+  <li>One token bucket per upstream (TMDB page, TMDB API, JustWatch) and egress path, shared by every worker. Keep it in Valkey or the existing <code>tmdb_streaming_upstream</code> Mongo document.</li>
+  <li>Additive increase: +0.1 req/s per clean minute, up to a ceiling.</li>
+  <li>Multiplicative decrease: halve the rate on a 429, a challenge page or a latency spike.</li>
+  <li>Start at 1 req/s per path.</li>
+  <li>Keep connections alive, with 2–4 concurrent streams on HTTP/2.</li>
+</ul>
+<h3>Automatic recovery</h3>
+<ul>
+  <li><strong>Back off the upstream, not the document.</strong> A 403 challenge or a 429 opens that upstream's circuit. Documents are released with no failure count, which differs from today, where every probe writes a failure and re-blocks for 30 minutes.</li>
+  <li><strong>Half-open with a canary.</strong> After an exponential, jittered wait (1 → 2 → 4 … up to 60 minutes), send one request for a known-good URL (The Matrix, US). Close the circuit only when it parses.</li>
+  <li><strong>Classify responses:</strong> challenge page, 429 with <code>Retry-After</code>, 5xx, parse failure (a markup change, which should alert and not back off), or a genuine empty result.</li>
+  <li><strong>Fail over through a chain:</strong> client profile (honest User-Agent → HTTP/2 → curl_cffi), then egress path (host A → host B → IPv6 for TMDB → capped proxy), then source (JustWatch ↔ TMDB page).</li>
+  <li><strong>Health:</strong> a Windmill monitor that alerts when a circuit stays open more than 2 hours, or when the hourly success count falls below a floor.</li>
+</ul>
+
+<h2 id="egress">Egress options and cost</h2>
+<p class="small">$/day at three traffic levels, computed from published prices. 1 € ≈ $1.08.</p>
+<div class="tablewrap"><table>
+<tr><th>Option</th><th>Price</th><th class="num">0.5 GB/day</th><th class="num">2 GB/day</th><th class="num">10 GB/day</th><th>Notes</th></tr>
+<tr><td><strong>Our Hetzner hosts, IPv4</strong></td><td>included (20 TB/month per cloud server)</td><td class="num yes">0</td><td class="num yes">0</td><td class="num yes">0</td><td>16 public IPv4s in the cluster. Use workers and cache hosts, not the database hosts (Q4)</td></tr>
+<tr><td><strong>Hetzner IPv6 /64</strong></td><td>free on every server</td><td class="num yes">0</td><td class="num yes">0</td><td class="num yes">0</td><td>TMDB has AAAA records and the IPv6 test passed; JustWatch has no IPv6. Whether the WAF groups a /64 as one client is unverified</td></tr>
+<tr><td>Extra Hetzner Primary IPv4</td><td>€0.50/mo</td><td class="num">0.02</td><td class="num">0.02</td><td class="num">0.02</td><td>Floating IP €3/mo; dedicated extra IP €1.70/mo plus €4.90 setup</td></tr>
+<tr><td>Small VPS elsewhere (Netcup, Scaleway Stardust, OVH, Contabo)</td><td>€1.55–5.50/mo</td><td class="num">0.06–0.21</td><td class="num">0.06–0.21</td><td class="num">0.06–0.21</td><td>Other providers' IP ranges; still datacenter IPs. Oracle Always Free costs $0</td></tr>
+<tr><td>Cloudflare Workers Free</td><td>100k req/day free</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td>Adds a <code>CF-Worker</code> header; how AWS WAF treats Cloudflare's IPs is untested</td></tr>
+<tr><td>AWS Lambda</td><td>100 GB/mo free egress, then ~$0.09/GB</td><td class="num">0</td><td class="num">0</td><td class="num">0.62</td><td>AWS publishes its IP ranges, which are easy to block in one go</td></tr>
+<tr><td>Fly.io</td><td>$2.19/mo + $0.02/GB</td><td class="num">0.08</td><td class="num">0.11</td><td class="num">0.27</td><td></td></tr>
+<tr><td>Geonode residential</td><td>$0.88/GB pay-as-you-go, never expires</td><td class="num">0.44</td><td class="num mid">1.76</td><td class="num no">8.80</td><td>Cheapest reputable per-GB option found</td></tr>
+<tr><td>DataImpulse residential</td><td>$1/GB, $5 minimum, never expires</td><td class="num">0.50</td><td class="num mid">2.00</td><td class="num no">10.00</td><td>Good as a capped emergency path</td></tr>
+<tr><td>Evomi Core residential</td><td>$0.99/GB, 15 GB minimum</td><td class="num">0.50</td><td class="num mid">1.63</td><td class="num no">4.9–9.9</td><td></td></tr>
+<tr><td>Webshare / Decodo / Oxylabs / IPRoyal / Bright Data residential</td><td>$2.60–7.35/GB</td><td class="num mid">1.3–3.7</td><td class="num no">5–15</td><td class="num no">26–74</td><td>Too expensive for us</td></tr>
+<tr><td>Rayobyte residential, flat</td><td>$100/mo for 6.6 TB</td><td class="num no">3.33</td><td class="num no">3.33</td><td class="num no">3.33</td><td>Compliance review; 100 concurrent requests</td></tr>
+<tr><td>ISP / static residential</td><td>Webshare $0.30/IP/mo (min 20); others $2.1–2.7/IP</td><td class="num">0.20</td><td class="num">0.20</td><td class="num">0.20</td><td>A few fixed IPs get rate-limited like our own</td></tr>
+<tr><td>Datacenter proxies</td><td>Rayobyte $0.30/GB; Webshare 100 IPs $2.99/mo; free 10 IPs / 1 GB</td><td class="num">0.15</td><td class="num">0.60</td><td class="num">3.00</td><td>Same reputation as our Hetzner IPs</td></tr>
+<tr><td colspan="6" class="small">Avoid NetNut (FBI domain seizure, 2026-07) and IPIDEA-network resellers (LunaProxy, PYPROXY, 922Proxy, ABCProxy; Google takedown, 2026-01). Vercel's acceptable use policy forbids scraping and proxying.</td></tr>
+</table></div>
+
+<h2 id="math">Cost math at our volume</h2>
+<p>Scope: 9.3 M (title, country) pairs and about 361k titles. "Full freshness" means every pair is refreshed once.</p>
+<div class="tablewrap"><table>
+<tr><th>Plan</th><th class="num">Requests per full sweep</th><th class="num">GB per full sweep</th><th class="num">Sweep cadence</th><th class="num">Req/s needed</th><th class="num">GB/day</th><th class="num">$/day on own IPs</th><th class="num">$/day via $0.88–1/GB proxy</th></tr>
+<tr><td>TMDB pages, every pair</td><td class="num">9.3 M</td><td class="num">387</td><td class="num">7 days</td><td class="num">15.4</td><td class="num">55</td><td class="num yes">0</td><td class="num no">48–55</td></tr>
+<tr><td>TMDB pages, changed pairs + top titles (~430k/day)</td><td class="num">—</td><td class="num">—</td><td class="num">changes ≈1 day, sweep ≈22 days</td><td class="num">5</td><td class="num">18</td><td class="num yes">0</td><td class="num no">16–18</td></tr>
+<tr><td>TMDB API detector, all titles</td><td class="num">361k</td><td class="num">0.7</td><td class="num">daily</td><td class="num">4.2 (or 10 for 10 h)</td><td class="num">0.7</td><td class="num yes">0</td><td class="num">n/a (API, own IP)</td></tr>
+<tr><td>JustWatch, 10 titles × all countries per request</td><td class="num">36k</td><td class="num">2.0 (upper bound)</td><td class="num">daily</td><td class="num">0.42</td><td class="num">2.0</td><td class="num yes">0</td><td class="num mid">1.76–2.00</td></tr>
+<tr><td>JustWatch, same, weekly</td><td class="num">36k</td><td class="num">2.0</td><td class="num">7 days</td><td class="num">0.06</td><td class="num">0.29</td><td class="num yes">0</td><td class="num yes">0.26–0.29</td></tr>
+<tr><td>JustWatch, one-off id mapping for the ~83k titles without one</td><td class="num">≈83k searches</td><td class="num">≈0.2</td><td class="num">once</td><td class="num">1</td><td class="num">—</td><td class="num yes">0</td><td class="num">≈0.2 total</td></tr>
+<tr><td>Movie of the Night Scale, for comparison</td><td class="num">361k</td><td class="num">—</td><td class="num">≈19 days within 1 M/mo</td><td class="num">—</td><td class="num">—</td><td class="num no">$9.97 ($299/mo)</td><td class="num">—</td></tr>
+</table></div>
+<p class="small">The JustWatch GB figures use 216 B per pair, measured on The Matrix, our heaviest kind of title. The real average is likely 2–4 times lower. The ~430k/day TMDB page plan is a choice of pace (5 req/s), not a measured limit. The change rate is an estimate: JustWatch listed 600 US titles with new offers in one day, which suggests tens of thousands of changed pairs a day across all countries. Measuring that is the first thing the detector would do.</p>
+
+<h2 id="arch">Three architectures within $1/day</h2>
+
+<div class="arch">
+<h3>A. Fix the TMDB page crawler and drive it by changes</h3>
+<ul>
+  <li><strong>How it works.</strong>
+    <ul>
+      <li>Keep TMDB's watch page as the only source of links, with an honest User-Agent and HTTP/2.</li>
+      <li>One long-running fetch job per egress path replaces 10-document flow runs, with a shared AIMD token bucket.</li>
+      <li>The free TMDB API detector polls <code>watch/providers</code> daily per title and moves changed countries to the front.</li>
+      <li>The rest is a rolling sweep, oldest first.</li>
+      <li>Egress is 2–3 of our hosts plus IPv6.</li>
+    </ul></li>
+  <li><strong>Throughput:</strong> 5 req/s per path. With one path that is about 430k pages/day (18 GB, free); with three paths, 1.3 M/day.</li>
+  <li><strong>Time to full freshness:</strong> changed pairs within about 1–2 days, bounded by TMDB's own 8–32 h lag. A full sweep takes about 22 days on one path, or 7 days on three.</li>
+  <li><strong>Recovery:</strong> a circuit breaker per path with a canary and no per-document failures. On a challenge it switches client profile, then path. It alerts after 2 hours open.</li>
+  <li><strong>Code changes:</strong>
+    <ul>
+      <li><code>fetch.py</code>: an httpx HTTP/2 session and honest User-Agent; classify challenge, 429 and parse errors.</li>
+      <li><code>country_state.save_failure</code>: a rate-limit path that doesn't touch the document.</li>
+      <li><code>upstream_deadline</code> becomes a breaker with a canary.</li>
+      <li><code>next.py</code> and the flow become a loop job that runs for 55 minutes.</li>
+      <li>New: <code>f/tmdb_api/watch_provider_diff</code>, the detector.</li>
+    </ul></li>
+  <li><strong>Cost:</strong> $0.</li>
+  <li><strong>Risks:</strong>
+    <ul>
+      <li>TMDB can tighten the rule again; scraping is against TMDB's terms.</li>
+      <li>One country per request, at 42 KB a page.</li>
+      <li>Links lag JustWatch by up to 32 h.</li>
+      <li>Price changes are invisible to the detector, so they wait for the sweep.</li>
+    </ul></li>
+</ul>
+</div>
+
+<div class="arch">
+<h3>B. JustWatch GraphQL as the only source, batched</h3>
+<ul>
+  <li><strong>How it works.</strong>
+    <ul>
+      <li>Map TMDB ids to JustWatch ids. 278k titles come from the stored clickout context; the rest from a one-off search checked against <code>externalIds.tmdbId</code>.</li>
+      <li>Each request asks for about 10 titles × all their countries (aliases), with slim fields and <code>bestOnly</code>.</li>
+      <li>The full catalog is swept daily.</li>
+      <li><code>newTitles</code> per country runs a few times a day for new offers.</li>
+      <li>A title a member opens costs one request, about 100 ms.</li>
+    </ul></li>
+  <li><strong>Throughput:</strong> about 36k requests and 2 GB or less a day, an average of 0.4 req/s. One path is plenty.</li>
+  <li><strong>Time to full freshness:</strong> about 10 hours at 1 req/s, so a daily full refresh; new offers within hours.</li>
+  <li><strong>Recovery:</strong> the same breaker and AIMD. Failover across our IPv4 hosts (JustWatch has no IPv6), with a capped residential path as the last resort.</li>
+  <li><strong>Code changes:</strong>
+    <ul>
+      <li>New folder <code>f/justwatch/</code>: id map, a batched query builder, an offer parser into the existing <code>StreamingLink</code> shape, and the new-offers feed.</li>
+      <li>JustWatch <code>packageId</code> is the same id space as <code>providerId</code> in today's clickouts, so service mapping stays.</li>
+      <li><code>stream_url</code> changes from <code>click.justwatch.com</code> to direct URLs, so <code>provider_name_from_url</code> needs a JustWatch-package branch.</li>
+      <li>The Crate copy is unchanged.</li>
+    </ul></li>
+  <li><strong>Cost:</strong> $0, or about $0.3/day if all of it went through a proxy on a weekly sweep.</li>
+  <li><strong>Risks:</strong>
+    <ul>
+      <li>JustWatch's terms forbid scraping, commercial use and using proxies to get around blocks.</li>
+      <li>The API is unversioned; its schema can change any day.</li>
+      <li>There is no second source when it breaks.</li>
+      <li>Direct links drop JustWatch's click tracking, and some carry JustWatch's affiliate tags (Q3).</li>
+    </ul></li>
+</ul>
+</div>
+
+<div class="arch rec">
+<h3>C. Hybrid: JustWatch for links, TMDB API for checks, TMDB page as fallback <span class="badge">Recommended</span></h3>
+<ul>
+  <li><strong>How it works.</strong>
+    <ul>
+      <li>B is the main path.</li>
+      <li>The free TMDB API detector from A runs daily as an independent check. When JustWatch and TMDB disagree on a provider set for longer than 48 h, it flags that pair.</li>
+      <li>A's fixed page crawler runs at a low background pace (1 req/s) for pairs JustWatch can't map, and takes over automatically while JustWatch's circuit is open.</li>
+      <li>Egress is gw-worker1–3 and gw-cache1 (IPv4, plus IPv6 for TMDB). Optionally a $5 never-expiring residential credit, used only when every own path is open, with a hard cap of 0.3 GB/day ($0.30).</li>
+    </ul></li>
+  <li><strong>Throughput:</strong> JustWatch about 36k requests a day for all 9.3 M pairs, plus TMDB API 361k a day, plus TMDB pages up to 86k a day.</li>
+  <li><strong>Time to full freshness:</strong> about 1 day for every pair; hours for new offers and for titles members open. If JustWatch is down, it falls back to A's pace.</li>
+  <li><strong>Recovery:</strong> per-upstream breakers with canaries, AIMD per path, then failover first across paths and then across sources, with an alert after 2 hours. No manual unblocking.</li>
+  <li><strong>Code changes:</strong> A and B together, plus a source field on each link (<code>justwatch</code> or <code>tmdb_web</code>) and a disagreement report. Build it in steps:
+    <ol>
+      <li>Fingerprint fix and breaker. Hours of work, and it restarts today's crawler.</li>
+      <li>Loop job and detector.</li>
+      <li>JustWatch fetcher in shadow mode, comparing against TMDB pages for a week.</li>
+      <li>Switch the main path to JustWatch.</li>
+    </ol></li>
+  <li><strong>Cost:</strong> $0/day normally, and at most $0.30/day while the emergency proxy runs.</li>
+  <li><strong>Risks:</strong>
+    <ul>
+      <li>JustWatch's terms (the same as B), but any single source can fail without taking links down.</li>
+      <li>More moving parts than A.</li>
+      <li>Shadow mode needs a week of comparison before switching.</li>
+    </ul></li>
+</ul>
+</div>
+
+<div class="callout"><p><strong>Why C:</strong></p>
+<ul>
+  <li>It meets every goal. It is about 30 times fewer requests than today's 7-day target, refreshes daily instead of weekly, recovers on its own, keeps the links, and costs $0.</li>
+  <li>It doesn't bet everything on one undocumented API.</li>
+  <li>If the owner says no to JustWatch (Q2), A is the plan. Step 1 of C is the same as A's first step either way.</li>
+</ul></div>
+
+<h2 id="legal">Legal and terms risk, briefly</h2>
+<div class="tablewrap"><table>
+<tr><th>Option</th><th>Risk</th><th>Why</th></tr>
+<tr><td>TMDB watch page scraping (today)</td><td class="mid">Medium</td><td>TMDB's terms forbid scraping beyond personal use and getting around security features. An honest User-Agent is not circumvention; rotating IPs to escape a block would be.</td></tr>
+<tr><td>TMDB API <code>watch/providers</code></td><td class="yes">Low (non-commercial)</td><td>JustWatch attribution is required. Commercial use needs a written agreement (reported at about $149/month for small companies, unverified). Caching is limited to 6 months.</td></tr>
+<tr><td>JustWatch GraphQL</td><td class="no">Medium-high</td><td>JustWatch's terms (German law): §1.2 personal and non-commercial use only; §7.1 bans scraping, robots and commercial use, and getting around IP blocks with proxies. No lawsuits found. Low volume and attribution lower the practical risk but don't remove it.</td></tr>
+<tr><td>Residential proxies</td><td class="mid">Medium</td><td>Using them to get around a block falls under both sites' circumvention clauses. Some networks source IPs unethically (NetNut, IPIDEA).</td></tr>
+<tr><td>Movie of the Night, Watchmode</td><td class="yes">Low</td><td>Licensed, with attribution or a paid plan, but above budget.</td></tr>
+<tr><td>JustWatch partner API</td><td class="yes">None</td><td>Licensed. Price unknown (Q7).</td></tr>
+</table></div>
+
+<h2 id="questions">Questions for the owner</h2>
+<ol class="q">
+  <li><strong>Q1.</strong> May we apply the one-line client fix (honest User-Agent or HTTP/2) and the circuit breaker now? That restarts link crawling without any new source.</li>
+  <li><strong>Q2.</strong> Are you comfortable reading JustWatch's GraphQL API directly, given its terms forbid scraping and commercial use? Or should we stay on TMDB only (architecture A)?</li>
+  <li><strong>Q3.</strong> JustWatch returns direct service URLs, some carrying JustWatch's affiliate tags. Should we store them as they are, strip the tags, or keep sending clicks through <code>click.justwatch.com</code>?</li>
+  <li><strong>Q4.</strong> Which hosts may we use for outbound crawling: gw-worker1–3, gw-cache1, IPv6? Should the database hosts (pgnode, mongo, vector) stay out?</li>
+  <li><strong>Q5.</strong> May we buy a $5 never-expiring residential proxy credit (DataImpulse or Geonode) as an emergency path, hard-capped at 0.3 GB/day?</li>
+  <li><strong>Q6.</strong> What freshness do you want: daily for all 139 countries, or daily for popular and opened titles and weekly for the rest? Any countries we can drop?</li>
+  <li><strong>Q7.</strong> Is GoodWatch commercial today (ads, affiliate, subscriptions)? That decides whether we need TMDB's commercial license, and whether to ask JustWatch for a partner quote.</li>
+</ol>
+
+<h2 id="refs">Sources</h2>
+<ul class="small">
+  <li>Measurements: requests from this machine and from gw-cache1 / gw-worker3 on 2026-10-17. Samples are in <code>scratchpad/samples/</code>, and the research notes in <code>scratchpad/research-*.md</code>.</li>
+  <li>TMDB: <a href="https://developer.themoviedb.org/reference/movie-watch-providers">watch providers</a>, <a href="https://developer.themoviedb.org/docs/rate-limiting">rate limiting</a>, <a href="https://www.themoviedb.org/talk/63de2458373ac200cafd16e6">providers not in changes</a>, <a href="https://www.themoviedb.org/talk/673f68df46541bbcd379ee55">provider lag</a>, <a href="https://www.themoviedb.org/api-terms-of-use">API terms</a>, <a href="https://www.themoviedb.org/terms-of-use">site terms</a></li>
+  <li>JustWatch: <a href="https://support.justwatch.com/article/just-watchs-terms-of-use">terms of use</a>, <a href="https://apis.justwatch.com/docs/content_partner/">content partner API</a>, <a href="https://www.justwatch.com/us/JustWatch-Streaming-API">data API</a>, <a href="https://github.com/Electronic-Mango/simple-justwatch-python-api/blob/main/src/simplejustwatchapi/graphql.py">simple-justwatch-python-api queries</a>, <a href="https://github.com/Jisin0/filmigo/tree/main/justwatch/queries">filmigo queries</a></li>
+  <li>Paid APIs: <a href="https://www.movieofthenight.com/about/api/pricing">Movie of the Night pricing</a>, <a href="https://docs.movieofthenight.com/">docs</a>, <a href="https://rapidapi.com/movie-of-the-night-movie-of-the-night-default/api/streaming-availability/pricing">RapidAPI</a>, <a href="https://api.watchmode.com/">Watchmode</a>, <a href="https://api.watchmode.com/openapi.json">Watchmode OpenAPI</a>, <a href="https://data.reelgood.com/">Reelgood</a>, <a href="https://www.synamedia.com/press/synamedia-acquires-utelly-to-boost-synamedia-gos-content-discovery-capabilities/">Utelly acquisition</a>, <a href="https://github.com/trakt/trakt-api">Trakt API</a>, <a href="https://rapidapi.com/unogs/api/unogsng/pricing">uNoGS</a>, <a href="https://streamwatchhub.com/api/">StreamWatchHub</a>, <a href="https://apify.com/scrapemint/streaming-availability-scraper">Apify</a></li>
+  <li>Egress: <a href="https://geonode.com/pricing/">Geonode</a>, <a href="https://dataimpulse.com/#pricing">DataImpulse</a>, <a href="https://evomi.com/pricing">Evomi</a>, <a href="https://packetstream.io/pricing">PacketStream</a>, <a href="https://www.webshare.io/pricing">Webshare</a>, <a href="https://decodo.com/proxies/residential-proxies/pricing">Decodo</a>, <a href="https://brightdata.com/pricing/proxy-network/residential-proxies">Bright Data</a>, <a href="https://oxylabs.io/pricing/residential-proxy-pool">Oxylabs</a>, <a href="https://iproyal.com/pricing/residential-proxies/">IPRoyal</a>, <a href="https://rayobyte.com/pricing/">Rayobyte</a>, <a href="https://soax.com/pricing">SOAX</a>, <a href="https://www.proxy-cheap.com/pricing">Proxy-Cheap</a>, <a href="https://docs.hetzner.com/cloud/servers/primary-ips/faq/">Hetzner IPs</a>, <a href="https://www.hetzner.com/cloud">Hetzner Cloud</a>, <a href="https://developers.cloudflare.com/workers/platform/pricing/">Workers pricing</a>, <a href="https://aws.amazon.com/lambda/pricing/">Lambda</a>, <a href="https://docs.fly.io/about/pricing">Fly.io</a>, <a href="https://vercel.com/legal/acceptable-use-policy">Vercel AUP</a>, <a href="https://krebsonsecurity.com/2026/07/fbi-seizes-netnut-proxy-platform-popa-botnet/">NetNut seizure</a>, <a href="https://thehackernews.com/2026/01/google-disrupts-ipidea-one-of-worlds.html">IPIDEA takedown</a>, <a href="https://proxyway.com/research/proxy-market-research-2026">Proxyway 2026</a>, <a href="https://github.com/lexiforest/curl_cffi">curl_cffi</a>, <a href="https://docs.aws.amazon.com/waf/latest/developerguide/waf-captcha-and-challenge-actions.html">AWS WAF challenges</a></li>
+</ul>
+</main>
+</body>
+</html>

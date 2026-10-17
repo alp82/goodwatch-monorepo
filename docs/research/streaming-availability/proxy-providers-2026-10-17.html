@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Emergency Proxy Choice</title>
+<style>
+:root{
+  --bg:#fbfaf7; --fg:#1d1f23; --muted:#5d6370; --card:#ffffff; --line:#e3e1db;
+  --accent:#2457c5; --good:#1d7a46; --goodbg:#e6f4ec; --warn:#9a5b00; --warnbg:#fdf2dc;
+  --bad:#b3261e; --badbg:#fbe7e5; --code:#f2f0ea;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#15171b; --fg:#e7e8ea; --muted:#a2a8b3; --card:#1d2025; --line:#30343b;
+    --accent:#7aa2ff; --good:#6fd39a; --goodbg:#18301f; --warn:#f0b65a; --warnbg:#33280f;
+    --bad:#ff8a80; --badbg:#3a1a18; --code:#24282e;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#15171b; --fg:#e7e8ea; --muted:#a2a8b3; --card:#1d2025; --line:#30343b;
+  --accent:#7aa2ff; --good:#6fd39a; --goodbg:#18301f; --warn:#f0b65a; --warnbg:#33280f;
+  --bad:#ff8a80; --badbg:#3a1a18; --code:#24282e;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 64px}
+h1{font-size:1.7rem;margin:0 0 4px}
+h2{font-size:1.25rem;margin:36px 0 10px;padding-top:8px;border-top:1px solid var(--line)}
+h3{font-size:1.02rem;margin:22px 0 6px}
+p,li{max-width:80ch}
+.sub{color:var(--muted);margin:0 0 18px}
+a{color:var(--accent)}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:14px;margin:16px 0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.card h3{margin-top:0}
+.pick{border-left:4px solid var(--good)}
+.backup{border-left:4px solid var(--accent)}
+.caveat{border-left:4px solid var(--warn)}
+.big{font-size:1.5rem;font-weight:650}
+.tag{display:inline-block;font-size:.75rem;font-weight:600;padding:1px 7px;border-radius:999px;white-space:nowrap}
+.ok{background:var(--goodbg);color:var(--good)}
+.mid{background:var(--warnbg);color:var(--warn)}
+.no{background:var(--badbg);color:var(--bad)}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--card)}
+table{border-collapse:collapse;width:100%;font-size:.86rem}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top;text-align:left}
+th{position:sticky;top:0;background:var(--card);font-weight:650;white-space:nowrap}
+tr:last-child td{border-bottom:0}
+td.name{font-weight:650;white-space:nowrap}
+tr.excluded td{opacity:.62}
+code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.84rem}
+code{background:var(--code);padding:1px 5px;border-radius:4px}
+pre{background:var(--code);padding:12px 14px;border-radius:8px;overflow-x:auto;line-height:1.45}
+pre code{background:none;padding:0}
+.note{color:var(--muted);font-size:.86rem}
+ol.q li{margin-bottom:6px}
+</style>
+</head>
+<body>
+<main>
+<h1>Emergency residential proxy for the TMDB watch crawl</h1>
+<p class="sub">Research date 2026-10-17. Read-only: nothing was signed up for. Prices are list prices without VAT, read from official pages. Marked <span class="tag mid">UNVERIFIED</span> where only a third party or a half-rendered page said so.</p>
+
+<div class="cards">
+  <div class="card pick">
+    <h3>First choice: DataImpulse, Intro $5</h3>
+    <div class="big">$5 → 5 GB, $1/GB</div>
+    <p>Fits the $5 up front exactly. Traffic never expires, there's no subscription, and country targeting is free. It came 5th of 10 in Proxyway's 2026 benchmark with a 99.74% success rate. The dashboard can cap traffic over a rolling 24 h window and suspend when the cap is hit, which gives a hard backstop behind our own cap.</p>
+  </div>
+  <div class="card backup">
+    <h3>Backup: Geonode, pay as you go 10 GB</h3>
+    <div class="big">$8.80 → 10 GB, $0.88/GB</div>
+    <p>Purchased bandwidth doesn't expire and the page promises no multipliers. Its Trustpilot score is 4.5. It's the cheapest per GB of the providers checked, but the first buy is $3.80 over the $5 budget, and no independent benchmark covers it.</p>
+  </div>
+  <div class="card caveat">
+    <h3>What $0.30 a day buys</h3>
+    <div class="big">≈ 0.3 GB ≈ 6,000 pages</div>
+    <p>I measured 41.6 KB per page gzipped; uncompressed it's 195 KB, so <code>Accept-Encoding: gzip</code> matters. Response headers add ~2.3 KB. A new TLS tunnel adds ~6–8 KB more (<span class="tag mid">UNVERIFIED</span> estimate). Count about <b>50 KB per page</b> with fresh connections and ~44 KB with keep-alive.</p>
+  </div>
+</div>
+
+<h2>Recommendation</h2>
+<h3>Why DataImpulse first</h3>
+<ul>
+  <li><b>Price and credit:</b> It's the only provider at about $1/GB whose first purchase fits $5. "Unused GBs never expire" means a quiet month wastes nothing (<a href="https://dataimpulse.com/residential-proxies/">pricing</a>).</li>
+  <li><b>Reliability:</b> Proxyway 2026 measured 99.74% success and 0.97 s average response on the global pool. Its Premium pool reached 99.82%. Only Oxylabs, Decodo and SOAX scored higher, and they cost 3–6× more (<a href="https://proxyway.com/research/proxy-market-research-2026">Proxyway</a>).</li>
+  <li><b>Stability of the setup:</b> One gateway, <code>gw.dataimpulse.com</code>, port 823 for HTTP(S) rotating and 824 for SOCKS5. Settings go in the login after <code>__</code> (<a href="https://docs.dataimpulse.com/proxies/protocols.md">protocols</a>, <a href="https://docs.dataimpulse.com/proxies/parameters.md">parameters</a>). Sticky sessions last up to 120 min.</li>
+  <li><b>Hard cap at the provider:</b> A traffic limit over 1 h, 24 h, 7 d or 30 d windows can email you, suspend the account, or both. Requests then get <code>USER_RATE_LIMIT_EXCEEDED</code> (<a href="https://docs.dataimpulse.com/traffic-limit.md">traffic limit</a>).</li>
+  <li><b>Sourcing:</b> It says it's first-party, with people opting in through a disclosed SDK in partner apps in exchange for perks (<a href="https://dataimpulse.com/blog/how-to-tell-if-proxy-provider-is-ethical/">its own claim</a>). No KYC is needed for ordinary sites; TMDB isn't on its blocked list. Refunds are available for 7 days.</li>
+</ul>
+<h3>Weak points to accept</h3>
+<ul>
+  <li><b>Reputation:</b> Trustpilot withholds its score for "breach of guidelines" (fake reviews removed). IPRoyal and Evomi carry the same flag. Complaints mention more GB used than expected and a frozen account after a security incident.</li>
+  <li><b>IP quality:</b> In Proxyway's test, 49.6% of its IPs were flagged as residential proxies by IPinfo; Webshare was at 33.6% and IPRoyal at 16.7%. That matters only if TMDB's AWS WAF uses reputation lists. Today the block looks per-IP.</li>
+  <li><b>Next purchase:</b> The $5 Intro is one-time for new customers. The next tier is <b>$50 for 50 GB</b>, still $1/GB and never expiring. At the 0.3 GB/day cap, 5 GB covers ~16 blocked days and 50 GB covers ~166.</li>
+</ul>
+<h3>Why Geonode as backup</h3>
+<p>Geonode is the only other provider at about $1/GB with credit that doesn't expire and a small first buy. It's also the cleanest reputation in that price band: Trustpilot 4.5, with complaints about charges after the trial and slow speeds. Gateway <code>proxy.geonode.io:9000</code> rotating, username <code>user-country-DE-session-abc-lifetime-30</code>, SOCKS5 supported (<a href="https://docs.geonode.com/docs/proxies/api-reference/sticky-session/get-sticky-session/get-create">docs</a>). A 3-day $5 trial exists, but trials tend to roll into charges, so buy pay-as-you-go directly. <b>Downside:</b> no independent benchmark, and its API reports usage, not balance.</p>
+<p class="note">If both get blocked at TMDB, the quality fallback is IPRoyal: lowest flagged-IP share, a balance API (<code>GET https://resi-api.iproyal.com/v1/me</code>), per-sub-user daily limits and credit that never expires. At $7.35/GB, though, $0.30/day buys only ~40 MB, about 800 pages.</p>
+
+<h3>Exact purchase</h3>
+<ol>
+  <li><b>DataImpulse:</b> Residential Proxies → <b>Intro, $5 for 5 GB</b> (one-time, new customers). It's not Premium Residential, which is priced separately. Don't buy city, ASN or ZIP targeting add-ons; those are "extra costs".</li>
+  <li><b>In the dashboard:</b> Traffic limit on the plan, <b>24 h window, 0.35 GB, action = suspend + email</b>. That sits just above our code cap of 0.30 GB, so it only fires if our accounting is wrong.</li>
+  <li><b>Backup, only if DataImpulse fails or bans:</b> Geonode → Residential → <b>Pay as you go, 10 GB, $8.80</b>.</li>
+</ol>
+
+<h2>Wiring it in</h2>
+<h3>Secret</h3>
+<p>Create a Windmill secret variable <code>u/Alp/TMDB_PROXY_URL</code>, following the <code>u/Alp/REDIS_PASS</code> convention, with the value:</p>
+<pre><code>http://LOGIN:PASSWORD@gw.dataimpulse.com:823</code></pre>
+<p>No country parameter is set, so the exit comes from the whole pool. The country comes from <code>?locale=XX</code> in the URL, and <code>validate_selected_country</code> already checks it. If a test shows TMDB picks the country by IP instead, use <code>LOGIN__cr.us</code>. An empty value turns the proxy off. For Geonode, swap the value for <code>http://USER:PASS@proxy.geonode.io:9000</code>; nothing else changes.</p>
+
+<h3>Proxy only while we're blocked</h3>
+<p>Today <code>crawl_tmdb_watch_page</code> in <code>goodwatch-flows/windmill/f/tmdb_web/tmdb_crawl_providers/fetch.py</code> calls <code>requests.get</code> directly. The proposed flow:</p>
+<ol>
+  <li><b>Direct by default:</b> Go direct unless the Redis key <code>tmdb:egress:direct_blocked</code> exists.</li>
+  <li><b>On a direct block:</b> When a direct request comes back limited (403, 429 or "Request Error (403)"), set the key with a TTL of <code>Retry-After</code>, or 6 h if it's missing.</li>
+  <li><b>While the key exists:</b> Fetch through the proxy, provided <code>TMDB_PROXY_URL</code> is set and today's byte budget allows it.</li>
+  <li><b>After the TTL:</b> The next request goes direct again. If it's still blocked, the key is set again.</li>
+</ol>
+<p>The 12 workers share this state through the existing <code>f.db.redis.RedisConnector</code>, the same pattern as <code>f/dna/generate/spend_pause.py</code>.</p>
+
+<h3>Per-day byte cap, enforced before each request</h3>
+<p>Each request first reserves a conservative 60 KB in a per-UTC-day counter and then corrects it to the measured bytes. The reservation is atomic, so 12 random workers can't overshoot together. When the budget is spent, the crawl reports <code>rate_limit_reached</code> with <code>retry_at</code> = next UTC midnight; the existing code already backs off on that.</p>
+<pre><code>"""TMDB egress: direct by default, residential proxy only while direct is blocked."""
+from datetime import datetime, timedelta, timezone
+
+import requests
+import wmill
+
+from f.db.redis import RedisConnector
+
+BLOCKED_KEY = "tmdb:egress:direct_blocked"
+DAILY_PROXY_BYTES = 300_000_000          # 0.30 GB ≈ $0.30 at $1/GB
+RESERVE_BYTES = 60_000                   # body ~42 KB gz + headers + TLS/CONNECT
+TUNNEL_OVERHEAD_BYTES = 8_000            # UNVERIFIED estimate, reconcile with dashboard
+_session = requests.Session()            # keep-alive: reuses the tunnel and exit IP
+
+
+class ProxyBudgetSpent(Exception):
+    def __init__(self, retry_at):
+        self.retry_at = retry_at
+
+
+def _day_key(now):
+    return f"tmdb:proxy:bytes:{now:%Y-%m-%d}"
+
+
+def _next_midnight(now):
+    return (now + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+
+
+def fetch(url, headers, timeout):
+    redis = RedisConnector().get_redis()
+    proxy_url = (wmill.get_variable("u/Alp/TMDB_PROXY_URL") or "").strip()
+    if not proxy_url or not redis.exists(BLOCKED_KEY):
+        return _session.get(url, headers=headers, timeout=timeout), False
+
+    now = datetime.now(timezone.utc)
+    key = _day_key(now)
+    total = redis.incrby(key, RESERVE_BYTES)
+    redis.expire(key, 3 * 86400)
+    if total > DAILY_PROXY_BYTES:
+        redis.decrby(key, RESERVE_BYTES)
+        raise ProxyBudgetSpent(_next_midnight(now))
+    try:
+        response = _session.get(
+            url,
+            headers={**headers, "Accept-Encoding": "gzip"},
+            proxies={"http": proxy_url, "https": proxy_url},
+            timeout=timeout,
+        )
+    except requests.RequestException:
+        redis.decrby(key, RESERVE_BYTES - TUNNEL_OVERHEAD_BYTES)
+        raise
+    wire = response.raw.tell()            # compressed body bytes read off the socket
+    head = sum(len(k) + len(v) + 4 for k, v in response.headers.items())
+    redis.incrby(key, wire + head + TUNNEL_OVERHEAD_BYTES - RESERVE_BYTES)
+    return response, True
+
+
+def mark_direct_blocked(retry_after_seconds=None):
+    ttl = int(retry_after_seconds or 6 * 3600)
+    RedisConnector().get_redis().set(BLOCKED_KEY, "1", ex=max(60, ttl), nx=True)</code></pre>
+<p class="note">Notes: <code>response.raw.tell()</code> is urllib3 2.x and counts compressed wire bytes after <code>.text</code> is read. <code>requests</code> handles only HTTP/1.1; that's fine here. In <code>crawl_tmdb_watch_page</code>, call <code>fetch</code> instead of <code>requests.get</code>. When <code>via_proxy</code> is false and the response is limited, call <code>mark_direct_blocked(...)</code>. Map <code>ProxyBudgetSpent</code> to <code>rate_limit_reached=True, retry_at=e.retry_at</code>. A 403 through the proxy is still treated as limited, but it doesn't set the direct-blocked key.</p>
+
+<h3>httpx variant</h3>
+<pre><code>import httpx  # httpx &gt;= 0.26 uses proxy=; proxies= was removed in 0.28
+client = httpx.Client(proxy=proxy_url, http2=False, timeout=15,
+                      headers={"Accept-Encoding": "gzip"})
+response = client.get(url)
+wire = response.num_bytes_downloaded   # raw (compressed) body bytes
+# SOCKS5: proxy="socks5h://LOGIN:PASSWORD@gw.dataimpulse.com:824" needs `httpx[socks]`
+# (requests needs `requests[socks]`, scheme socks5h:// so DNS resolves at the exit).
+# HTTP/2: through an HTTP CONNECT tunnel TLS is end to end, so http2=True (needs `h2`)
+# should work; no provider documents it, so it's UNVERIFIED and not needed here.</code></pre>
+
+<h3>Reconcile</h3>
+<p>Once a day, a short Windmill script logs our counter next to DataImpulse's dashboard figure for the same day. The Reseller API might offer usage, <span class="tag mid">UNVERIFIED</span>. If the provider counts more than 10% above us, raise <code>TUNNEL_OVERHEAD_BYTES</code>. The dashboard's 0.35 GB/24 h suspend stays as the hard stop.</p>
+
+<h2>Rotating residential, compared</h2>
+<p class="note">"Fits" means a first buy of $5 or less and $0.30 a day or less at 0.3 GB, with credit that keeps. Benchmark is Proxyway 2026 global pool: success / average response / share flagged by IPinfo, on a 6 KB CDN endpoint from Germany (vendors were invited, and Bright Data didn't take part).</p>
+<div class="scroll"><table>
+<thead><tr><th>Provider</th><th>Smallest buy</th><th>Credit expiry</th><th>Fits</th><th>Pool · sticky</th><th>Protocols · gateway</th><th>Sourcing · KYC · trial</th><th>Benchmark</th><th>Reputation</th></tr></thead>
+<tbody>
+<tr><td class="name">DataImpulse</td><td>$1/GB; Intro $5 = 5 GB once, then $50 = 50 GB</td><td><span class="tag ok">Never</span></td><td><span class="tag ok">Yes</span></td><td>90M+ · rotating, sticky 1–120 min; country free, city/ASN extra</td><td>HTTP(S) :823, SOCKS5 :824, sticky 10000–20000 · <code>gw.dataimpulse.com</code></td><td>Own opt-in SDK claim · KYC only for gov/bank sites · 7-day refund, no trial</td><td>99.74% · 0.97 s · 49.6%</td><td>Trustpilot score withheld (review manipulation); overage complaints</td></tr>
+<tr><td class="name">Geonode</td><td>$0.88/GB PAYG, 10 GB = $8.80; $0.79 on subscription</td><td><span class="tag ok">Never</span></td><td><span class="tag mid">$8.80 up front</span></td><td>7.5M+/month · sticky 3–1440 min (one page says 60 for PAYG)</td><td>HTTP, SOCKS5 · <code>proxy.geonode.io:9000</code></td><td>Sourcing not stated · no KYC found · $5 3-day trial</td><td>None</td><td>Trustpilot 4.5 (190); slow speeds, trial charges</td></tr>
+<tr><td class="name">Evomi</td><td>$0.99/GB PAYG, 15 GB min ≈ $14.85; $49/mo = 100 GB</td><td><span class="tag ok">PAYG never</span></td><td><span class="tag no">$14.85 up front</span></td><td>54M+ · sticky up to 24 h</td><td>HTTP :1000, HTTPS :1001, SOCKS5 :1002 · <code>rp.evomi.com</code></td><td>Claims EWDCI, ISO 27001, SOC 2 · free trial rolls into paid · PAYG not refundable</td><td>99.58% (Premium) · 0.79 s · 50.9%</td><td>Trustpilot withheld; blacklisted/DC IPs, add-on pricing</td></tr>
+<tr><td class="name">PacketStream</td><td>$1/GB, $50 minimum</td><td><span class="tag ok">Never</span></td><td><span class="tag no">$50</span></td><td>Not stated · sticky ≤ 60 min, dies with the peer</td><td>HTTPS :31111, HTTP :31112, SOCKS5 :31113</td><td>Paid bandwidth sharing ($0.10/GB to sharers) · weak KYC (Spur)</td><td>None</td><td>Trustpilot 3.2, 9 reviews in a year; looks dormant</td></tr>
+<tr><td class="name">Proxy-Cheap</td><td>$2.99 entry; $1.50/GB at 3 GB; page inconsistent</td><td><span class="tag mid">UNVERIFIED</span> (may be monthly)</td><td><span class="tag mid">Unclear</span></td><td>80M–155M+ (two claims) · sticky unknown</td><td>HTTP, SOCKS5 · docs empty</td><td>"Ethically sourced", no detail</td><td>None</td><td>Trustpilot 2.7 "Poor"; Cloudflare blocks, refunds refused</td></tr>
+<tr><td class="name">Webshare</td><td>$3.50/GB (1 GB plan, 50% promo off $7)</td><td><span class="tag no">Monthly, no rollover</span></td><td><span class="tag no">No</span></td><td>80M+ · sticky by name, rotate by <code>-rotate</code></td><td>HTTP, SOCKS5 · <code>p.webshare.io:80</code></td><td>"Vetted partners" · no KYC · 2-day refund · owned by Oxylabs since 2022</td><td>99.28% · 0.86 s · 33.6%</td><td>Trustpilot 4.0 (1,463); support praised</td></tr>
+<tr><td class="name">Decodo (ex-Smartproxy)</td><td>$4/GB PAYG; $3.75 on 3 GB plan</td><td><span class="tag mid">PAYG 12 mo UNVERIFIED</span>; plans lost at renewal</td><td><span class="tag no">No</span></td><td>115M+ · sticky up to 24 h</td><td>HTTP(S), SOCKS5 · <code>gate.decodo.com:7000</code></td><td>EWDCI (secondary sources) · no KYC found · 100 MB / 3-day trial</td><td>99.92% · 0.53 s · 29.7%</td><td>Strong; rebrand April 2025, same company</td></tr>
+<tr><td class="name">IPRoyal</td><td>$7.35/GB PAYG, 1 GB</td><td><span class="tag ok">Never</span></td><td><span class="tag no">~40 MB/day</span></td><td>64M+ · sticky 1 s–7 d, kill switch</td><td>HTTP, SOCKS5 · <code>geo.iproyal.com</code></td><td>Pawns.app paid sharing, some resold · ID for some sites · no trial</td><td>96.11% · 1.24 s · <b>16.7%</b> (best)</td><td>Trustpilot withheld; refund refusals</td></tr>
+<tr><td class="name">Rayobyte</td><td>$3.50/GB PAYG (1–49 GB)</td><td><span class="tag mid">"Non-expiring" UNVERIFIED</span></td><td><span class="tag no">No</span></td><td>Not stated · sticky 1–120 min</td><td>Not checked</td><td>EWDCI · free trial · Scale tier needs compliance review</td><td>98.02% · 1.86 s · 47.7%</td><td>Long-running US company</td></tr>
+<tr><td class="name">Nodemaven</td><td>~$4.25/GB (2 GB = $8.50); paid trial $3.50/750 MB</td><td><span class="tag ok">Rolls over</span></td><td><span class="tag no">No</span></td><td>30M+ · sticky up to 24 h</td><td>HTTP, SOCKS5</td><td>No free trial</td><td>None</td><td>Not researched</td></tr>
+<tr><td class="name">Massive</td><td>$8/GB, $80 for 10 GB</td><td><span class="tag ok">Rolls over</span></td><td><span class="tag no">No</span></td><td>1M+ devices · sticky ≤ 1440 min</td><td>HTTPS :65535, HTTP :65534, SOCKS5 :65533</td><td>Opt-in SDK only (documented) · usage API</td><td>Vendor-run only</td><td>Not researched</td></tr>
+<tr><td class="name">Oxylabs</td><td>$6/GB small; Starter $30/mo</td><td><span class="tag mid">Monthly UNVERIFIED</span></td><td><span class="tag no">No</span></td><td>100M+ · sticky ≤ 24 h</td><td>HTTP(S), SOCKS5, HTTP/3 (MASQUE) · <code>pr.oxylabs.io:7777</code></td><td>EWDCI · KYC for residential (UNVERIFIED) · $5 credit</td><td>99.93% · 0.60 s · 27.9%</td><td>Top tier</td></tr>
+<tr><td class="name">SOAX</td><td>$5/GB Sandbox; $3 on $200/mo</td><td><span class="tag no">60 days</span></td><td><span class="tag no">No</span></td><td>Not stated</td><td>Not checked</td><td>KYC via Sumsub mandatory · no trial</td><td>99.78% · 0.89 s · 27.9%</td><td>Good</td></tr>
+<tr><td class="name">Bright Data</td><td>$4/GB with coupon (list $8)</td><td>No expiry stated</td><td><span class="tag no">No</span></td><td>400M+</td><td>HTTP(S)</td><td><b>Companies only, no hobby projects</b>; KYC and human review since 2026-07-07</td><td>Did not take part</td><td>Top tier, but closed to us</td></tr>
+<tr class="excluded"><td class="name">NetNut</td><td colspan="8"><span class="tag no">Excluded</span> FBI and IRS-CI seized its domains on 2026-07-02 over links to the Popa botnet; Alarum disputes this (<a href="https://krebsonsecurity.com/2026/07/fbi-seizes-netnut-proxy-platform-popa-botnet/">Krebs</a>). It also scored lowest in Proxyway 2026 (95.28%).</td></tr>
+<tr class="excluded"><td class="name">LunaProxy, PYPROXY, 922, ABCProxy, IP2World…</td><td colspan="8"><span class="tag no">Excluded</span> Part of the IPIDEA network that Google disrupted in January 2026, with exit nodes feeding the BadBox 2.0, Aisuru and Kimwolf botnets (<a href="https://www.theregister.com/2026/01/29/google_ipidea_crime_network/">The Register</a>).</td></tr>
+</tbody></table></div>
+
+<h2>Static residential (ISP) as an alternative</h2>
+<p>These are flat per IP per month, with traffic that doesn't count against a GB budget. They <b>don't fit "pay only while blocked"</b>: they're monthly subscriptions, and a static IP can get rate-limited just like our own. They make sense only if blocks become the normal state.</p>
+<div class="scroll"><table>
+<thead><tr><th>Product</th><th>Price</th><th>Minimum</th><th>Traffic</th><th>Per day</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td class="name">Webshare static residential</td><td>$0.30/IP/mo</td><td>20 IPs = $6/mo</td><td>"Up to unlimited", fair use</td><td>$0.20</td><td>Best fit: 20 IPs across 12 workers. US ISPs (AT&amp;T, Comcast, Cox). 2-day refund if under 1 GB used</td></tr>
+<tr><td class="name">IPRoyal ISP</td><td>From $1.80–2.70/IP / 30 days</td><td>1 IP</td><td>Unlimited</td><td>$0.09 per IP</td><td>Too few IPs at this budget</td></tr>
+<tr><td class="name">Nodemaven ISP</td><td>$2.33/IP / 30 days</td><td>1 IP</td><td>Unlimited</td><td>$0.08 per IP</td><td>From earlier research</td></tr>
+<tr><td class="name">Decodo ISP</td><td>Dedicated $3.33/IP (3 IPs $9.99); shared from $1.30/GB</td><td>3 IPs</td><td>Unlimited</td><td>$0.33</td><td>Over budget</td></tr>
+<tr><td class="name">Rayobyte ISP</td><td>$5/IP</td><td>5 IPs</td><td>Fair use</td><td>$0.83</td><td>Over budget</td></tr>
+</tbody></table></div>
+
+<h2>Caveats</h2>
+<ul>
+  <li><b>TMDB's terms:</b> They forbid circumventing security features. Using rotating proxies to get around a block placed on our IP is exactly that, as the earlier egress research noted. Read the <a href="https://www.themoviedb.org/terms-of-use">terms of use</a> before buying, and keep request rates polite even through the proxy.</li>
+  <li><b>Untested on TMDB:</b> No independent benchmark covers AWS CloudFront or AWS WAF targets, so the first $5 is the real test. Run ~200 pages through the proxy and record the share of 200 responses that pass <code>validate_selected_country</code>.</li>
+  <li><b>Billing accuracy:</b> How each provider counts bytes, in both directions and with TLS overhead, is unpublished. Our counter is an estimate; the dashboard limit is the authority.</li>
+  <li><b>Free options first:</b> The earlier egress research lists free options worth trying before paying: Hetzner IPv6 and a fixed TLS fingerprint.</li>
+</ul>
+
+<h2>Sources</h2>
+<p class="note">
+<a href="https://dataimpulse.com/residential-proxies/">DataImpulse pricing</a> ·
+<a href="https://docs.dataimpulse.com/traffic-limit.md">DataImpulse traffic limit</a> ·
+<a href="https://docs.dataimpulse.com/blocked-websites.md">DataImpulse blocked sites</a> ·
+<a href="https://geonode.com/pricing/residential-proxies">Geonode pricing</a> ·
+<a href="https://evomi.com/pricing">Evomi</a> ·
+<a href="https://packetstream.io/pricing/">PacketStream</a> ·
+<a href="https://www.proxy-cheap.com/services/rotating-residential-proxies">Proxy-Cheap</a> ·
+<a href="https://help.webshare.io/en/articles/8370524-how-does-the-bandwidth-limit-work">Webshare bandwidth</a> ·
+<a href="https://www.webshare.io/static-residential-proxy">Webshare static</a> ·
+<a href="https://decodo.com/proxies/residential-proxies/pricing">Decodo</a> ·
+<a href="https://iproyal.com/pricing/residential-proxies/">IPRoyal</a> ·
+<a href="https://docs.iproyal.com/proxies/residential/api/sub-users.md">IPRoyal sub-users</a> ·
+<a href="https://rayobyte.com/pricing/">Rayobyte</a> ·
+<a href="https://nodemaven.com/pricing/">Nodemaven</a> ·
+<a href="https://www.joinmassive.com/pricing">Massive</a> ·
+<a href="https://oxylabs.io/pricing/residential-proxy-pool">Oxylabs</a> ·
+<a href="https://soax.com/pricing">SOAX</a> ·
+<a href="https://docs.brightdata.com/products/residential/network-access">Bright Data access</a> ·
+<a href="https://proxyway.com/research/proxy-market-research-2026">Proxyway 2026</a> ·
+<a href="https://www.trustpilot.com/review/dataimpulse.com">Trustpilot DataImpulse</a> ·
+<a href="https://www.trustpilot.com/review/geonode.com">Trustpilot Geonode</a> ·
+<a href="https://krebsonsecurity.com/2026/07/fbi-seizes-netnut-proxy-platform-popa-botnet/">NetNut seizure</a> ·
+<a href="https://www.theregister.com/2026/01/29/google_ipidea_crime_network/">IPIDEA disruption</a>
+</p>
+</main>
+</body>
+</html>
