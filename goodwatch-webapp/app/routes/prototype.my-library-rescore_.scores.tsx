@@ -1,5 +1,5 @@
 // PROTOTYPE - throwaway. The rescoring list: every title you have scored, in one compact list with the ten score keys
-// beside each, plus search, filters and grouping. Four layouts, switchable with `?variant=strip|lanes|calibrate|table`.
+// beside each, plus search, filters and grouping. Four layouts, switchable with `?variant=e|strip|lanes|calibrate|table`.
 // It is a subpage of the My library hub prototype (/prototype/my-library-rescore). The member is PROTOTYPE_MEMBER_ID
 // from the environment; scores change in memory only, nothing is stored.
 // A production build leaves the route out (PROTOTYPES in vite.config.js).
@@ -12,13 +12,15 @@ import { Calibrate } from "~/ui/prototype-my-library/rescore/scores/Calibrate"
 import { Lanes } from "~/ui/prototype-my-library/rescore/scores/Lanes"
 import { Strip } from "~/ui/prototype-my-library/rescore/scores/Strip"
 import { Table } from "~/ui/prototype-my-library/rescore/scores/Table"
+import { TableE } from "~/ui/prototype-my-library/rescore/scores/TableE"
 import { PrototypeSwitcher } from "~/ui/prototype/PrototypeSwitcher"
 
 const VARIANTS = {
+	e: "E - Table, after notes",
 	strip: "A - Strip list",
 	lanes: "B - Score lanes",
 	calibrate: "C - Calibrate",
-	table: "D - Table",
+	table: "D - Table (first round)",
 }
 
 export async function loader() {
@@ -28,7 +30,7 @@ export async function loader() {
 export default function RescorePrototype() {
 	const data = useLoaderData<typeof loader>() as RescoreData | null
 	const [params] = useSearchParams()
-	const variant = params.get("variant") ?? "strip"
+	const variant = params.get("variant") ?? "e"
 	const hub = `/prototype/my-library-rescore${params.get("hub") ? `?variant=${params.get("hub")}` : ""}`
 	return (
 		<div className="overflow-x-clip pb-40" data-rescore={variant}>
@@ -49,6 +51,8 @@ export default function RescorePrototype() {
 					<Lanes titles={data.titles} />
 				) : variant === "calibrate" ? (
 					<Calibrate titles={data.titles} />
+				) : variant === "e" ? (
+					<TableE titles={data.titles} />
 				) : variant === "table" ? (
 					<Table titles={data.titles} />
 				) : (
