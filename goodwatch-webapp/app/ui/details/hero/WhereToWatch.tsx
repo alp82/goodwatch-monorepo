@@ -31,11 +31,9 @@ import {
 	OFFER_TABS,
 	type OfferTab,
 	TAB_TYPES,
-	brandName,
+	type StreamingLink,
 	duplicateProviderMapping,
-	getShorterProviderLabel,
-	getStreamingUrl,
-	ignoredProviders,
+	streamingLinks,
 } from "~/utils/streaming-links"
 import { useReplayedTap } from "~/utils/useReplayedTap"
 
@@ -49,16 +47,6 @@ export const OFFER_LABEL: Record<string, string> = {
 	ads: "Free with ads",
 }
 
-type StreamingLink = {
-	id: number
-	name: string
-	logoPath: string
-	url: string
-	type: StreamingType
-	owned: boolean
-	order: number
-}
-
 /** The ids of the member's services, with the ids of the same brand's other entries. */
 function useOwnedProviderIds() {
 	return useUserStreamingProviders().flatMap((p) =>
@@ -66,49 +54,6 @@ function useOwnedProviderIds() {
 			? [p.id, ...duplicateProviderMapping[p.id]]
 			: [p.id],
 	)
-}
-
-// Legal offers for the given offer types, one per brand, your services first.
-function streamingLinks(
-	media: Media,
-	country: string,
-	types: readonly string[],
-	owned: number[],
-): StreamingLink[] {
-	const {
-		details,
-		mediaType,
-		streaming_availabilities = [],
-		streaming_services = [],
-	} = media
-	const seen = new Set<string>()
-	return streaming_availabilities
-		.filter(
-			(l) =>
-				types.includes(l.streaming_type) &&
-				!ignoredProviders.includes(l.streaming_service_id),
-		)
-		.map((l) => {
-			const s = streaming_services.find(
-				(x) => x.tmdb_id === l.streaming_service_id,
-			)
-			return {
-				id: l.streaming_service_id,
-				name: s ? brandName(getShorterProviderLabel(s.name)) : "",
-				logoPath: s?.logo ?? "",
-				url: getStreamingUrl(l, details, country, mediaType),
-				type: l.streaming_type,
-				owned: owned.includes(l.streaming_service_id),
-				order: s?.order_default ?? 999,
-			}
-		})
-		.filter((l) => l.name)
-		.sort((a, b) => Number(b.owned) - Number(a.owned) || a.order - b.order)
-		.filter((l) => {
-			if (seen.has(l.name)) return false
-			seen.add(l.name)
-			return true
-		})
 }
 
 export function useStreamingLinks(

@@ -45,7 +45,7 @@ export const handle = START_AFTER_PAINT
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	if (!data) return [{ title: "Not Found | GoodWatch" }]
-	return detailsMetaTags(data.media, data.breadcrumb)
+	return detailsMetaTags(data.media, data.breadcrumb, data.params.country)
 }
 
 export type LoaderData = {

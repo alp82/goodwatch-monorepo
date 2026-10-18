@@ -1,3 +1,5 @@
+import type { StreamingType } from "~/server/types/details-types"
+
 export const duplicateProviders = [
 	24, // Quickflix Store
 	188, // YouTube Premium
@@ -97,6 +99,80 @@ export const getStreamingUrl = (
 	country: string,
 	mediaType: "movie" | "show",
 ) => offer.stream_url || tmdbWatchUrl(mediaType, details.tmdb_id, country)
+
+/** One tile of the where-to-watch block. */
+export type StreamingLink = {
+	id: number
+	name: string
+	logoPath: string
+	url: string
+	type: StreamingType
+	owned: boolean
+	order: number
+}
+
+/** What `streamingLinks` reads of a title: its offers and services for one country. */
+export type OfferSource = {
+	details: { tmdb_id: number }
+	mediaType: "movie" | "show"
+	streaming_availabilities?: readonly {
+		streaming_service_id: number
+		streaming_type: StreamingType
+		stream_url?: string | null
+	}[]
+	streaming_services?: readonly {
+		tmdb_id: number
+		name: string
+		logo?: string | null
+		order_default?: number | null
+	}[]
+}
+
+/**
+ * The where-to-watch block's tiles for the given offer types: legal offers, one per brand, the member's services
+ * (`owned`) first and then in the order of the country's services.
+ */
+export function streamingLinks(
+	media: OfferSource,
+	country: string,
+	types: readonly string[],
+	owned: readonly number[] = [],
+): StreamingLink[] {
+	const {
+		details,
+		mediaType,
+		streaming_availabilities = [],
+		streaming_services = [],
+	} = media
+	const seen = new Set<string>()
+	return streaming_availabilities
+		.filter(
+			(l) =>
+				types.includes(l.streaming_type) &&
+				!ignoredProviders.includes(l.streaming_service_id),
+		)
+		.map((l) => {
+			const s = streaming_services.find(
+				(x) => x.tmdb_id === l.streaming_service_id,
+			)
+			return {
+				id: l.streaming_service_id,
+				name: s ? brandName(getShorterProviderLabel(s.name)) : "",
+				logoPath: s?.logo ?? "",
+				url: getStreamingUrl(l, details, country, mediaType),
+				type: l.streaming_type,
+				owned: owned.includes(l.streaming_service_id),
+				order: s?.order_default ?? 999,
+			}
+		})
+		.filter((l) => l.name)
+		.sort((a, b) => Number(b.owned) - Number(a.owned) || a.order - b.order)
+		.filter((l) => {
+			if (seen.has(l.name)) return false
+			seen.add(l.name)
+			return true
+		})
+}
 
 /** The tabs of the where-to-watch block. Stream also lists the free offers. */
 export type OfferTab = "flatrate" | "rent" | "buy"

@@ -4,6 +4,7 @@ import { WORDMARK_VERSION } from "~/ui/brand/version"
 import { OG_IMAGE } from "~/ui/og-image/format"
 import { type Crumb, breadcrumbJsonLd } from "~/ui/nav/breadcrumb-trail"
 import { personPath } from "~/utils/helpers"
+import { watchActions } from "~/utils/watch-actions"
 
 export interface PageMeta {
 	title: string
@@ -79,6 +80,8 @@ export interface MetaOptions {
 	breadcrumbs?: readonly Crumb[]
 	/** One directive per page: a second robots tag only makes the page's intent unclear. */
 	robots?: RobotsDirective
+	/** The country the title page shows offers for: its WatchActions are that country's. */
+	country?: string
 }
 
 export const buildMeta = (params: MetaOptions) => {
@@ -86,7 +89,11 @@ export const buildMeta = (params: MetaOptions) => {
 	// Stays null on a page without structured data: an empty block is a block a crawler reads and reports.
 	let jsonLdContent: Record<string, unknown> | null = null
 	if (params.item) {
-		jsonLdContent = buildJsonLdDetail(params.pageMeta, params.item)
+		jsonLdContent = buildJsonLdDetail(
+			params.pageMeta,
+			params.item,
+			params.country,
+		)
 	} else if (params.items && params.items.length > 0) {
 		jsonLdContent = buildJsonLdCollection(params.pageMeta, params.items)
 	}
@@ -164,6 +171,7 @@ export const jsonLdPeople = (people: readonly { id: number; name: string }[]) =>
 export const buildJsonLdDetail = (
 	data: PageMeta,
 	media: MovieResult | ShowResult,
+	country?: string,
 ) => {
 	const { details } = media
 	const isMovie = media.mediaType === "movie"
@@ -225,6 +233,10 @@ export const buildJsonLdDetail = (
 		const creators = jsonLdPeople(media.credits.executive_producers)
 		if (creators.length) jsonLd.producer = creators
 	}
+
+	// One WatchAction per offer with a link of its own in the page's country; none at all without one.
+	const actions = country ? watchActions(media, country) : []
+	if (actions.length) jsonLd.potentialAction = actions
 
 	// No aggregateRating: Google only accepts ratings from this site's own
 	// users, and every GoodWatch score (user, official, overall) is built from

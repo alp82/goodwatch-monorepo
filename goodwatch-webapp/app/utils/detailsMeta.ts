@@ -7,15 +7,20 @@ import { type PageMeta, buildMeta } from "~/utils/meta"
 
 const clip = (text: string, max: number) => (text.length <= max ? text : `${text.slice(0, text.lastIndexOf(" ", max)).replace(/[,.;:]$/, "")}…`)
 
-/** A title page's meta tags and structured data, with its trail from the hub (title-breadcrumb.server.ts). */
+/**
+ * A title page's meta tags and structured data, with its trail from the hub (title-breadcrumb.server.ts) and the
+ * watch links of the country the page shows offers for.
+ */
 export function detailsMetaTags(
 	media: MovieResult | ShowResult,
 	breadcrumb: readonly Crumb[] = [],
+	country?: string,
 ) {
 	const pageMeta = detailsPageMeta(media)
 	return buildMeta({
 		pageMeta,
 		item: media,
+		country,
 		breadcrumbs: titleTrail(
 			breadcrumb,
 			media.details.title,
