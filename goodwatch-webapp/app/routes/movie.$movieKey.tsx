@@ -128,7 +128,6 @@ export const loader: LoaderFunction = async ({
 	const related = relatedSectionData(
 		relatedSection,
 		media.details.title,
-		request,
 		canonicalContent ? undefined : language,
 	)
 	const dehydratedState = mergeDehydratedStates(extrasState)

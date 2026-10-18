@@ -132,16 +132,12 @@ export function useRelatedMap(): RelatedMapData | undefined {
 }
 
 /**
- * The markup of a document's section. The loader's data of a document doesn't carry it (see
- * server/related-map.server.ts): the server reads what the loader drew, and the browser what the document holds.
+ * The markup of a document's section, in the browser. A document's page data doesn't carry it (see
+ * server/related-map-handoff.ts): the server renders it from the loader's data, and the browser reads what the
+ * document holds.
  */
-function documentMarkup(rootKey: string, language?: string): string {
-	if (typeof document === "undefined")
-		return (
-			(
-				globalThis as { __gwRelatedMapMarkup?: Map<string, string> }
-			).__gwRelatedMapMarkup?.get(`${rootKey}:${language ?? "canonical"}`) ?? ""
-		)
+function documentMarkup(rootKey: string): string {
+	if (typeof document === "undefined") return ""
 	return (
 		document.querySelector(`[data-related-map][data-pl-root="${rootKey}"]`)
 			?.innerHTML ?? ""
@@ -166,7 +162,7 @@ export default function RelatedMap({
 	const held = useRef<{ key: string; html: string; drawn: boolean; language?: string }>()
 	const localizedKey = `${rootKey}:${map?.language ?? "canonical"}`
 	if (map && held.current?.key !== localizedKey) {
-		const html = map.late ? "" : (map.html ?? documentMarkup(rootKey, map.language))
+		const html = map.late ? "" : (map.html ?? documentMarkup(rootKey))
 		held.current = html
 			? { key: localizedKey, html, drawn: true }
 			: { key: localizedKey, html: `<h2 class="pl-h">Titles like ${escapeHtml(media.details.title)}</h2>`, drawn: false }

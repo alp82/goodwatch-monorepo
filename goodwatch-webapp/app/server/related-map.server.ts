@@ -22,7 +22,6 @@ import {
 	type PackSource,
 	chipListLength,
 	floorOf,
-	isDocumentRequest,
 	levelIn,
 	packKey,
 	packLinks,
@@ -247,26 +246,6 @@ function relatedMapScript(): string | null {
 	return script
 }
 
-/**
- * The section's markup of the documents that are being rendered, by title. A document's loader data doesn't carry
- * the markup (it would be in the document twice): the section reads it from here while the server renders
- * (ui/related-map/RelatedMap.tsx), and the browser keeps what the document holds.
- */
-const DOCUMENT_MARKUP_MAX = 256
-type WithMarkup = typeof globalThis & {
-	__gwRelatedMapMarkup?: Map<string, string>
-}
-function keepForDocument(key: string, html: string) {
-	const all = globalThis as WithMarkup
-	all.__gwRelatedMapMarkup ??= new Map()
-	const kept = all.__gwRelatedMapMarkup
-	kept.delete(key)
-	kept.set(key, html)
-	// Maps iterate in insertion order: the oldest goes first.
-	if (kept.size > DOCUMENT_MARKUP_MAX)
-		kept.delete(kept.keys().next().value as string)
-}
-
 const outcomes = counter(
 	"goodwatch_related_map_total",
 	"Related map outcomes of title page renders",
@@ -332,7 +311,8 @@ export interface RelatedMapData {
 	script: string | null
 	/**
 	 * The section's inner markup: the picture of the page's title, drawn by the engine, and the plain title links.
-	 * Only in the data of a navigation inside the app. A document holds the markup itself.
+	 * The loader always sends it. A document render takes it out of the page data, because the document holds the
+	 * markup itself (related-map-handoff.ts).
 	 */
 	html?: string
 	/**
@@ -344,13 +324,12 @@ export interface RelatedMapData {
 
 /**
  * The section of a title page from its pack, or undefined when the title has no fingerprint and so no related titles.
- * `document`: the answer is rendered into a document now, and not sent to a browser as loader data. `language`: the
- * page's presentation language, for a late lookup.
+ * `language`: the page's presentation language, for a late lookup. The answer is the same for every request: a
+ * document and a navigation inside the app get the same data (see related-map-handoff.ts).
  */
 export function relatedMapData(
 	lookup: RelatedMapLookup,
 	title: string,
-	document: boolean,
 	language?: string,
 ): RelatedMapData | undefined {
 	if (lookup === "none") return undefined
@@ -361,8 +340,7 @@ export function relatedMapData(
 		pack: lookup,
 		links: packLinks(lookup),
 	})
-	if (document) keepForDocument(`${lookup.c[0]}:${lookup.language ?? "canonical"}`, html)
-	return { script: relatedMapScript(), language: lookup.language, ...(!document && { html }) }
+	return { script: relatedMapScript(), language: lookup.language, html }
 }
 
 // --- The title page's loader --------------------------------------------------------------------------------------
@@ -374,11 +352,10 @@ export function relatedMapData(
 export function relatedSectionData(
 	lookup: RelatedMapLookup,
 	title: string,
-	request: Request,
 	language?: string,
 ) {
 	return {
-		relatedMap: relatedMapData(lookup, title, isDocumentRequest(request), language),
+		relatedMap: relatedMapData(lookup, title, language),
 		complete: lookup !== "late",
 	}
 }

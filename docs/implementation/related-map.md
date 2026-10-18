@@ -37,8 +37,11 @@ what happens when its data isn't there.
 
 1. **The server's HTML.** The engine draws the first picture on the server, for a phone. The markup also holds 64
    plain `<a href>` links to the most alike titles. They are out of sight and out of the tab order, for crawlers and
-   screen readers. The markup is in the document once: a document's loader data doesn't repeat it, and the browser
-   keeps what the document holds. The data of a navigation inside the app carries it.
+   screen readers. The markup is in the document once. The loader's data carries it for every request, and the
+   document render takes it out of the page data that Remix writes into the document
+   (`app/server/related-map-handoff.ts`), so the browser keeps what the document holds. The data of a navigation
+   inside the app carries it. The loader doesn't look at the request's headers, so a stored page is the same
+   whichever client asked first (see [page-cache.md](../page-cache.md#a-page-depends-on-its-key-only)).
    The stage also holds the page title's levels on the twenty traits (`data-s`, 20 characters), so the browser draws
    that title's chips without its pack.
 2. **Two files of the build**, with a content hash in their names, `immutable` for a year, and on the same host as
@@ -152,5 +155,5 @@ fell to 47 and 56 ms, so `tbt_ms` is lowered from 350 to 200.
 
 ## Checks
 
-- Unit tests: `app/ui/related-map/*.test.ts` and `app/server/related-map-pack.test.ts`.
+- Unit tests: `app/ui/related-map/*.test.ts` and `app/server/related-map-pack.test.ts`. `app/server/related-map-handoff.test.ts` renders a document with Remix behind the page cache and checks that a page stored from a non-browser request is the lean page later browsers and Googlebot get.
 - The tap test has the control `related_step` (see `goodwatch-benchmark/README.md`).

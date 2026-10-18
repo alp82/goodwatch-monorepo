@@ -28,6 +28,7 @@ import { startTmdbConnectionCleanup } from "~/server/imports/tmdb-connect-runtim
 import { startLifecycle } from "~/server/lifecycle.server"
 import { capLogLines } from "~/server/log-cap.server"
 import { protectMediaResponse } from "~/server/media-read-health.server"
+import { withoutRelatedMapMarkup } from "~/server/related-map-handoff"
 import { routeLabelFor } from "~/server/metrics/http.server"
 import { startMetrics } from "~/server/metrics/index.server"
 import { startHotCards } from "~/server/og-image/hot-cards.server"
@@ -92,8 +93,10 @@ export default function handleRequest(
 	// takes the addresses of scripts, preloads and route style sheets from the build's file list, so the render gets
 	// the copy of the list for that address. `assetUrl` reads the same address for everything else.
 	const assetBase = currentAssetBase()
+	// The document holds the related map's markup once: the page data that Remix writes into it leaves it out, whatever
+	// the request's headers say (see related-map-handoff.ts).
 	const context = {
-		...remixContext,
+		...withoutRelatedMapMarkup(remixContext),
 		manifest: manifestForBase(remixContext.manifest, assetBase),
 	}
 	return renderWithAssetBase(assetBase, () =>

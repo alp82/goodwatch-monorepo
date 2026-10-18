@@ -49,7 +49,7 @@ A process that is shutting down answers hits and stale pages in the same way. Se
 
 ## Key
 
-`<build commit> | <Host> | <path and query without tracking parameters> | <identity> | <who named the identity> | <asset address>`
+`<build commit> | <Host> | <path and query without tracking parameters> | <identity> | <crawler or not> | <who named the identity> | <asset address>`
 
 - **Build commit:** `SOURCE_COMMIT`, which Coolify sets when it starts the container (see "The build's commit" in
   [webapp-deploys.md](webapp-deploys.md)). A deploy starts a new process with an empty cache. The commit is in the
@@ -58,12 +58,33 @@ A process that is shutting down answers hits and stale pages in the same way. Se
 - **Path and query:** parsed the way Remix parses the request. Every parameter keeps its bytes and its place, so
   `?a=1&b=2` and `?b=2&a=1` are two entries.
 - **Identity:** `identity.key` of `cacheIdentity`, for example `anon;US;en`.
+- **Crawler or not:** `isbot` on the `User-Agent`. A crawler gets the page in the canonical language and in one
+  piece. Any client that `isbot` names counts, a plain `curl` too.
 - **Who named it:** a front cache with the `GW-Cache-Identity` header (the page is `shared`), or the app from
   `Accept-Language` (the page is `keyed` and stays `private, max-age=0`). The two are separate entries, because their
   `Cache-Control` and `Vary` differ.
 - **Asset address:** where the page's files are: empty for the site's own host, or the static hostname. An instance
   that switches between the two doesn't serve a page that names the other one, and a render that was in flight
   during the switch isn't stored. See [static-assets.md](static-assets.md).
+
+### A page depends on its key only
+
+Whichever request comes first for a key builds the page that every later request with that key gets. So the HTML of
+a storable page may depend on the parts of the key and on nothing else of the request: not on `Accept`,
+`Sec-Fetch-*`, `Sec-CH-UA-Mobile`, the rest of the `User-Agent`, or a cookie that isn't the auth cookie or the
+localization cookie. Early Hints read `Sec-CH-UA-Mobile` and `Accept`, but they're headers sent before the page, not
+part of it.
+
+Until October 18, 2026 a title page broke this rule. Its loader guessed from `Sec-Fetch-Dest` and `Accept` whether it
+rendered a document, and a client without those headers (a plain `curl`, Bingbot) got the related map's markup a
+second time in the page data. The page cache then served that copy, 28 to 38 KB larger, to every later visitor of the
+address. Now the loader's data is the same for every request, and the document render takes the markup out of the
+page data (`app/server/related-map-handoff.ts`).
+
+Checked on October 18, 2026 with a local production build and the page cache off: a title, a show, a person, a
+category, a type, and the start page render the same HTML for a browser navigation, a phone, a `fetch` without
+navigation headers, no `Accept`, and another cookie, and the same HTML for Googlebot with and without `Accept:
+text/html`, Bingbot, and `curl`. The start page was checked without its start titles, which need the title snapshot.
 
 ### Tracking parameters
 
