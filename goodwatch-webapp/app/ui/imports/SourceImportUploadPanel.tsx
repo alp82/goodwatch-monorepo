@@ -53,7 +53,7 @@ function SingleFileUploadPanel({ source, onPreview, handoff }: PanelProps) {
 	return (
 		<section aria-labelledby={`${id}-heading`} className="flex flex-col gap-4">
 			<h3 id={`${id}-heading`} className={stepHeading}>
-				Upload your {sourceName(source)} export
+				{descriptor.heading ?? `Upload your ${sourceName(source)} export`}
 			</h3>
 			<UploadInstructions source={source} />
 			{handoff && <RecognizedLine handoff={handoff} />}

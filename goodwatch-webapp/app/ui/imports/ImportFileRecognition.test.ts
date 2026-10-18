@@ -245,3 +245,93 @@ test("a CSV header is read the way the generic import reads it: blank lines skip
 	)
 	assert.equal(result.source, "csv")
 })
+
+// Synthetic, in the shape of Watcharr's watched rows (docs/research/wishlist-exploration/watcharr-validation.md).
+const watcharrRow = (id: number, status: string) => ({
+	id,
+	createdAt: "2026-01-01T00:00:00Z",
+	status,
+	rating: 0,
+	content: {
+		id,
+		tmdbId: 800 + id,
+		title: `Synthetic title ${id}`,
+		type: "movie",
+		imdb_id: "",
+	},
+	activity: [],
+})
+const watcharrExport = (rows: number) =>
+	JSON.stringify(
+		Array.from({ length: rows }, (_, index) =>
+			watcharrRow(index + 1, index % 2 ? "FINISHED" : "PLANNED"),
+		),
+		undefined,
+		2,
+	)
+const sharedWishlist = (version: unknown) =>
+	JSON.stringify({
+		format: "goodwatch-wishlist",
+		version,
+		source: "netflix",
+		completeness: "partial",
+		items: [{ title: "Synthetic, with a comma", mediaType: "unknown" }],
+	})
+
+test("a Watcharr export and a wishlist file are recognized and go to the wishlist import", async () => {
+	const watcharr = await recognizeImportFile(
+		file("watcharr-export.json", watcharrExport(3), "application/json"),
+	)
+	assert.deepEqual(watcharr, { source: "wishlist", label: "Watcharr export" })
+	// On one line, the file's commas would read as a CSV header.
+	const shared = await recognizeImportFile(
+		file("my-list.json", sharedWishlist(1)),
+	)
+	assert.deepEqual(shared, { source: "wishlist", label: "wishlist file" })
+})
+
+test("a wishlist file in a newer layout stays unrecognized and says why", async () => {
+	const result = await recognizeImportFile(
+		file("my-list.json", sharedWishlist(2)),
+	)
+	assert.equal(result.source, null)
+	assert.ok(result.source === null && /newer layout/.test(result.hint))
+})
+
+test("a Watcharr export longer than the part GoodWatch reads is recognized from its start", async () => {
+	const text = watcharrExport(400)
+	assert.ok(text.length > 64 * 1024)
+	const long = new CountingFile([text], "watcharr-export.json")
+	assert.deepEqual(await recognizeImportFile(long), {
+		source: "wishlist",
+		label: "Watcharr export",
+	})
+	// The 64 KB head, plus the four bytes that tell a ZIP or gzip file apart.
+	assert.ok(long.read <= 64 * 1024 + 4, `read ${long.read} bytes`)
+})
+
+test("an empty list is a Watcharr export only under Watcharr's own file name", async () => {
+	assert.equal(
+		(await recognizeImportFile(file("watcharr-export.json", "[]"))).source,
+		"wishlist",
+	)
+	assert.equal(
+		(await recognizeImportFile(file("list.json", "[]"))).source,
+		null,
+	)
+})
+
+test("other JSON stays unrecognized and names the JSON files GoodWatch reads", async () => {
+	for (const content of [
+		'{"format":"something-else","items":[]}',
+		'[{"title":"Synthetic","status":"PLANNED"}]',
+		"{not json",
+	]) {
+		const result = await recognizeImportFile(file("data.json", content))
+		assert.equal(result.source, null, content)
+		assert.ok(
+			result.source === null && /Watcharr and wishlist files/.test(result.hint),
+			content,
+		)
+	}
+})

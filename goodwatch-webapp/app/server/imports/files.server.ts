@@ -1,4 +1,5 @@
 import { gunzipSync, inflateRawSync } from "node:zlib"
+import { parseWishlistFile } from "./wishlist.server.ts"
 import { SaxesParser, type SaxesTagPlain } from "saxes"
 import {
 	IMPORT_MAX_BYTES,
@@ -689,6 +690,7 @@ export async function parseImportFile(
 ): Promise<ParsedImport> {
 	if (!isFileImportSource(source))
 		fail("Use Connect for this source instead of uploading a file.")
+	if (source === "wishlist") return parseWishlistFile(bytes, fail)
 	if (source === "myanimelist") return myanimelist(bytes, fileName)
 	if (source === "kodi") return kodi(bytes)
 	if (source === "movielens") return movielens(bytes, wishlist)

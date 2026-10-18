@@ -82,6 +82,7 @@ export class ImportDb {
 	items: Row[] = []
 	favorites: Row[] = []
 	wishlist: Row[] = []
+	watches: Row[] = []
 	notInterested: Row[] = []
 	catalog: Row[] = []
 	episodes: Row[] = []
@@ -186,7 +187,13 @@ export class ImportDb {
 			)
 			return rows as T[]
 		}
-		if (s.includes("FROM user_watch_log")) return []
+		if (s.includes("FROM user_watch_log"))
+			return this.watches.filter(
+				(row) =>
+					row.user_id === params[0] &&
+					(params.length === 1 ||
+						(row.tmdb_id === params[1] && row.media_type === params[2])),
+			) as T[]
 		if (s.includes("FROM user_not_interested"))
 			return this.notInterested
 				.filter(

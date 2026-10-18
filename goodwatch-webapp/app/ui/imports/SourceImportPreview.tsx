@@ -10,6 +10,7 @@ import { FocusHeading } from "./FocusHeading"
 import { sourceImportCopy } from "./SourceImportCopy"
 import { SourceOutcomeRow } from "./SourceImportCounts"
 import { sourceImportRequirements } from "./SourceImportPreviewModel"
+import { WishlistImportPreview } from "./WishlistImportPreview"
 import { errorBox, formatCount, primaryButton, secondaryButton } from "./shared"
 
 const KIND_LABELS: Record<ImportKind, string> = {
@@ -29,21 +30,31 @@ const OUTCOMES: ImportOutcome[] = [
 	"invalid",
 ]
 
-export function SourceImportPreview({
-	summary,
-	focus,
-	confirming,
-	error,
-	onConfirm,
-	onBack,
-}: {
+type PreviewProps = {
 	summary: ImportSummary
 	focus: boolean
 	confirming: boolean
 	error: string | null
 	onConfirm: (options: ImportOptions) => void
 	onBack: () => void
-}) {
+}
+
+export function SourceImportPreview(props: PreviewProps) {
+	return props.summary.source === "wishlist" ? (
+		<WishlistImportPreview {...props} />
+	) : (
+		<GeneralImportPreview {...props} />
+	)
+}
+
+function GeneralImportPreview({
+	summary,
+	focus,
+	confirming,
+	error,
+	onConfirm,
+	onBack,
+}: PreviewProps) {
 	const copy = sourceImportCopy(summary.source)
 	const available = IMPORT_KINDS.filter((kind) => summary.kinds[kind] > 0)
 	const [kinds, setKinds] = useState<ImportKind[]>(available)

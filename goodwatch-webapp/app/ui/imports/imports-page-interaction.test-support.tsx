@@ -44,16 +44,16 @@ const summary = (
 	counts: {
 		new: 1,
 		unchanged: 0,
-		conflict: 0,
+		conflict: source === "wishlist" ? 1 : 0,
 		unmatched: 0,
 		unsupported: 0,
 		invalid: 0,
-		rows: 1,
+		rows: source === "wishlist" ? 2 : 1,
 	},
 	kinds: {
-		rating: 1,
+		rating: source === "wishlist" ? 0 : 1,
 		watch: 0,
-		want: 0,
+		want: source === "wishlist" ? 2 : 0,
 		favorite: 0,
 		review: 0,
 		show_status: 0,
@@ -124,6 +124,8 @@ globalThis.fetch = (async (input: string, init?: RequestInit) => {
 	}
 	if (url === "/api/imdb-import/preview")
 		return json({ import: imdbSummary("preview", null, PREVIEW_ID) })
+	if (url.includes("/items?by=title"))
+		return json({ operation: "apply", titles: 0, sections: [] })
 	if (url.includes("/items")) return json({ items: [], total: 0 })
 	if (url === "/api/imports" || url === "/api/imdb-import")
 		return json({ imports: [] })
@@ -206,6 +208,15 @@ async function page(props: Partial<PageProps> = {}) {
 								className: mark?.getAttribute("class") ?? "",
 							}
 				}),
+		/** Chooses the radio button whose label holds `label`. */
+		pick: async (label: string) => {
+			const input = [...container.querySelectorAll('input[type="radio"]')].find(
+				(element) => element.closest("label")?.textContent?.includes(label),
+			) as unknown as HTMLInputElement | undefined
+			if (!input) throw new Error(`No radio "${label}"`)
+			await act(async () => input.click())
+			await settle()
+		},
 		click: async (label: string) => {
 			const button = buttons().find((b) => b.textContent?.includes(label))
 			if (!button) throw new Error(`No button "${label}"`)
@@ -455,6 +466,64 @@ const movielens = (wishlist: boolean) =>
 		text: view.text(),
 		sent: [...sent],
 	}
+	await view.unmount()
+}
+
+{
+	const view = await page()
+	await view.search("watcharr")
+	results.watcharrSearch = { rows: view.rows(), text: view.text() }
+	for (const service of ["Netflix", "disney", "crunchyroll"]) {
+		await view.search(service)
+		results[`streaming-${service}`] = { rows: view.rows(), text: view.text() }
+	}
+	await view.click("Open the Trakt import")
+	results.streamingOpened = { rows: view.rows(), text: view.text() }
+	await view.unmount()
+}
+
+{
+	const view = await page()
+	await view.choose(
+		"any source",
+		new File(
+			[
+				JSON.stringify([
+					{
+						id: 1,
+						status: "PLANNED",
+						content: { id: 1, tmdbId: 862, title: "Synthetic", type: "movie" },
+					},
+				]),
+			],
+			"watcharr-export.json",
+			{ type: "application/json" },
+		),
+	)
+	results.oneBoxWatcharr = {
+		rows: view.rows(),
+		text: view.text(),
+		sent: [...sent],
+	}
+	await view.pick("Add it as Want to rewatch")
+	await view.click("Add to Want to See")
+	results.wishlistRewatch = {
+		rows: view.rows(),
+		text: view.text(),
+		sent: [...sent],
+	}
+	await view.unmount()
+}
+
+{
+	const done = summary("wishlist", "done", "2026-10-18T12:00:00.000Z")
+	const view = await page({
+		sourceImports: [done],
+		initialSource: "wishlist",
+		openImport: done.id,
+	})
+	await view.click("Undo import")
+	results.wishlistUndo = { rows: view.rows(), text: view.text() }
 	await view.unmount()
 }
 

@@ -37,6 +37,7 @@ test("the page lists every live source, most common first, and hides sources not
 			"MyAnimeList / Kitsu",
 			"Kodi",
 			"MovieLens",
+			"Watcharr / wishlist file",
 			"Generic CSV",
 		],
 	)
@@ -206,6 +207,7 @@ test("only IMDb, Trakt, and TMDB show a logo; every other source has the same ne
 			"MyAnimeList / Kitsu: MAL",
 			"Kodi: K",
 			"MovieLens: ML",
+			"Watcharr / wishlist file: W",
 			"Generic CSV: CSV",
 		],
 	)
@@ -222,7 +224,7 @@ test("the notices cover every logo in the list, TMDB's included", () => {
 test("the box's help names the sources from the list itself", () => {
 	assert.match(
 		runs.list.text,
-		/Reads files from IMDb, Letterboxd, Trakt, MyAnimeList \/ Kitsu, Kodi, MovieLens, and Generic CSV\. To bring TMDB or Plex, open it in the list and connect your account\./,
+		/Reads files from IMDb, Letterboxd, Trakt, MyAnimeList \/ Kitsu, Kodi, MovieLens, Watcharr \/ wishlist file, and Generic CSV\. To bring TMDB or Plex, open it in the list and connect your account\./,
 	)
 })
 
@@ -238,4 +240,56 @@ test("a return from Plex opens Plex's connection, and no other connect source ta
 	assert.deepEqual(openRows(runs.plexReturnThenTmdb), ["TMDB"])
 	assert.match(runs.plexReturnThenTmdb.text, /Connect TMDB/)
 	assert.doesNotMatch(runs.plexReturnThenTmdb.text, /Return from TMDB/)
+})
+
+test("Watcharr is found by name and opens the one upload for Watcharr exports and wishlist files", () => {
+	assert.deepEqual(
+		runs.watcharrSearch.rows.map((row) => row.name),
+		["Watcharr / wishlist file"],
+	)
+})
+
+test("a Watcharr export in the one box goes to the wishlist import's preview", () => {
+	const run = runs.oneBoxWatcharr
+	assert.deepEqual(previews(run), [
+		{
+			url: "/api/imports/preview",
+			body: { source: "wishlist", file: "file:watcharr-export.json" },
+		},
+	])
+	assert.deepEqual(openRows(run), ["Watcharr / wishlist file"])
+})
+
+test("a search for a streaming service says GoodWatch can't import it yet and points to sources that can", () => {
+	const netflix = runs["streaming-Netflix"]
+	assert.deepEqual(netflix.rows, [])
+	assert.match(
+		netflix.text,
+		/GoodWatch can't import your Netflix list yet\. ?If you also keep a watchlist on Trakt, TMDB, or Plex, import it from there\. To add titles now, search for them and choose Want to See\.Open the Trakt importOpen the TMDB importOpen the Plex import/,
+	)
+	assert.doesNotMatch(netflix.text, /try Generic CSV/)
+	assert.match(runs["streaming-disney"].text, /your Disney\+ list/)
+	assert.match(
+		runs["streaming-crunchyroll"].text,
+		/your Crunchyroll list yet\..*Open the MyAnimeList \/ Kitsu importOpen the Trakt import/,
+	)
+	assert.deepEqual(openRows(runs.streamingOpened), ["Trakt"])
+})
+
+test("a wishlist preview adds seen titles only when the member chooses Want to rewatch", () => {
+	const confirms = runs.wishlistRewatch.sent.filter((call) =>
+		call.url.endsWith("/confirm"),
+	)
+	assert.deepEqual(
+		confirms.map((call) => call.body),
+		[{ kinds: ["want"], conflictChoice: "source", watchDates: "preserve" }],
+	)
+})
+
+test("Undo of a wishlist import says what it takes back and that Not interested isn't put back", () => {
+	assert.match(
+		runs.wishlistUndo.text,
+		/Undo this import\? GoodWatch takes the titles this import added off Want to See\. Titles you changed since then stay as you left them\. Titles the import took off Not interested aren't marked Not interested again\. The result lists them so you can put them back\./,
+	)
+	assert.match(runs.wishlistUndo.text, /Import another file/)
 })

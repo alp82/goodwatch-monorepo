@@ -232,7 +232,9 @@ function Receipt({
 			))}
 			{summary.warnings.length > 0 && (
 				<div className="rounded-lg border border-amber-800 bg-amber-950/40 p-4">
-					<p className="font-semibold text-amber-100">Export notes</p>
+					<p className="font-semibold text-amber-100">
+						{summary.source === "wishlist" ? "About this file" : "Export notes"}
+					</p>
 					<ul className="mt-2 list-disc pl-5 text-amber-100">
 						{summary.warnings.map((warning) => (
 							<li key={warning}>{warning}</li>
@@ -263,13 +265,9 @@ function Receipt({
 				(askUndo ? (
 					<div className="rounded-lg border border-red-900 bg-red-950/40 p-4">
 						<p className="text-gray-100">
-							Undo this import? GoodWatch removes watches this import added,
-							even if you edited their dates later, and restores earlier show
-							statuses. Later status, rating and list changes stay protected.
-							Without added watches, restoring a status also restores its
-							cleared Want to See or Not interested choices. Undo of added
-							watches and Want to See does not restore those choices; the result
-							lists them so you can put them back.
+							{summary.source === "wishlist"
+								? "Undo this import? GoodWatch takes the titles this import added off Want to See. Titles you changed since then stay as you left them. Titles the import took off Not interested aren't marked Not interested again. The result lists them so you can put them back."
+								: "Undo this import? GoodWatch removes watches this import added, even if you edited their dates later, and restores earlier show statuses. Later status, rating and list changes stay protected. Without added watches, restoring a status also restores its cleared Want to See or Not interested choices. Undo of added watches and Want to See does not restore those choices; the result lists them so you can put them back."}
 						</p>
 						<div className="mt-3 flex flex-wrap gap-3">
 							<button
