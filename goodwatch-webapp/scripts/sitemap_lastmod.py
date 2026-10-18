@@ -1,25 +1,41 @@
-"""The date a title page was last changed, for <lastmod>. Kept apart from the generator so that it can be tested
-without a database."""
+"""Dates supported by evidence, independent of the database and generator."""
 from datetime import date, datetime, timezone
+from pathlib import Path
 from typing import Optional
-
-# Every title page was rebuilt and deployed on 2026-09-24/25, so each page changed on that day even when its data
-# did not. Without this floor most titles would report an older date, and Google would see no reason to fetch the
-# rebuilt page. Raise it to the deploy date when all title pages change again.
-TITLE_PAGE_REBUILT_ON = date(2026, 9, 25)
+import xml.etree.ElementTree as ET
 
 
-def latest_date(*timestamps: Optional[int]) -> Optional[date]:
-    """CrateDB returns timestamps as epoch milliseconds."""
-    values = [t for t in timestamps if t is not None]
-    if not values:
-        return None
-    return datetime.fromtimestamp(max(values) / 1000, tz=timezone.utc).date()
+def title_lastmod(dna_updated_at: Optional[int]) -> Optional[date]:
+    """DNA updated_at also advances for vector repairs, without visible changes.
+
+    Until a significant-content timestamp exists, neither it nor TMDB refresh
+    times are evidence of a page modification. There is no synthetic floor.
+    """
+    return None
 
 
-def title_lastmod(*timestamps: Optional[int]) -> date:
-    """The later of the data's last change and the rebuild of the page itself."""
-    data_changed_on = latest_date(*timestamps)
-    if data_changed_on is None:
-        return TITLE_PAGE_REBUILT_ON
-    return max(data_changed_on, TITLE_PAGE_REBUILT_ON)
+class SitemapHistory:
+    """Snapshot bytes and index dates before any generated files are replaced."""
+
+    def __init__(self, directory, today=None):
+        self.today = today or datetime.now(timezone.utc).date()
+        self.files = {p.name: p.read_bytes() for p in Path(directory).glob('sitemap*.xml')}
+        self.dates = {}
+        ns = {'s': 'http://www.sitemaps.org/schemas/sitemap/0.9'}
+        for content in self.files.values():
+            root = ET.fromstring(content)
+            for entry in root.findall('s:sitemap', ns):
+                loc = entry.findtext('s:loc', namespaces=ns)
+                value = entry.findtext('s:lastmod', namespaces=ns)
+                if loc and value:
+                    name = loc.rsplit('/', 1)[-1]
+                    parsed = date.fromisoformat(value)
+                    if name in self.dates and self.dates[name] != parsed:
+                        raise ValueError(f'Conflicting previous sitemap dates: {name}')
+                    self.dates[name] = parsed
+
+    def lastmod(self, filename, content):
+        """Unknown historic dates stay omitted until a real byte change occurs."""
+        if self.files.get(filename) == content:
+            return self.dates.get(filename)
+        return self.today

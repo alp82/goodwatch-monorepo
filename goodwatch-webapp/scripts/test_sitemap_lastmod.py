@@ -1,37 +1,45 @@
-"""Run with: python3 -m unittest test_sitemap_lastmod (in this directory)."""
+"""Evidence for page dates and artifact dates, without a database."""
+import tempfile
 import unittest
-from datetime import date, datetime, timezone
+from datetime import date
+from pathlib import Path
 
-from sitemap_lastmod import TITLE_PAGE_REBUILT_ON, latest_date, title_lastmod
-
-
-def millis(year: int, month: int, day: int, hour: int = 12) -> int:
-    return int(datetime(year, month, day, hour, tzinfo=timezone.utc).timestamp() * 1000)
+from sitemap_lastmod import SitemapHistory, title_lastmod
 
 
-class TitleLastmodTest(unittest.TestCase):
-    def test_the_floor_is_the_day_the_title_pages_were_rebuilt(self):
-        self.assertEqual(TITLE_PAGE_REBUILT_ON, date(2026, 9, 25))
+class LastmodTest(unittest.TestCase):
+    def test_refresh_or_dna_timestamp_cannot_prove_visible_change(self):
+        self.assertIsNone(title_lastmod(None))
+        self.assertIsNone(title_lastmod(1792303054840))
 
-    def test_data_older_than_the_rebuild_reports_the_rebuild(self):
-        self.assertEqual(title_lastmod(millis(2025, 3, 1), millis(2026, 9, 24)), TITLE_PAGE_REBUILT_ON)
+    def test_changed_new_and_unchanged_files(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / 'sitemap_movie.xml').write_bytes(b'<urlset/>')
+            (root / 'sitemap.xml').write_text('''<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+              <sitemap><loc>https://goodwatch.app/sitemaps/sitemap_movie.xml</loc>
+              <lastmod>2026-10-10</lastmod></sitemap></sitemapindex>''')
+            history = SitemapHistory(root, today=date(2026, 10, 18))
+            # Snapshot survives deletion/replacement of output files.
+            (root / 'sitemap_movie.xml').unlink()
+            self.assertEqual(history.lastmod('sitemap_movie.xml', b'<urlset/>'), date(2026, 10, 10))
+            self.assertEqual(history.lastmod('sitemap_movie.xml', b'changed'), date(2026, 10, 18))
+            self.assertEqual(history.lastmod('sitemap_new.xml', b'new'), date(2026, 10, 18))
 
-    def test_data_newer_than_the_rebuild_reports_its_own_date(self):
-        self.assertEqual(title_lastmod(millis(2026, 10, 7), millis(2026, 1, 1)), date(2026, 10, 7))
-        self.assertEqual(title_lastmod(millis(2026, 1, 1), millis(2026, 10, 7)), date(2026, 10, 7))
+    def test_unchanged_file_without_historic_date_stays_undated(self):
+        with tempfile.TemporaryDirectory() as directory:
+            (Path(directory) / 'sitemap_static.xml').write_bytes(b'<urlset/>')
+            self.assertIsNone(SitemapHistory(directory).lastmod('sitemap_static.xml', b'<urlset/>'))
 
-    def test_data_from_the_day_of_the_rebuild_reports_that_day(self):
-        self.assertEqual(title_lastmod(millis(2026, 9, 25, hour=0)), TITLE_PAGE_REBUILT_ON)
-        self.assertEqual(title_lastmod(millis(2026, 9, 25, hour=23)), TITLE_PAGE_REBUILT_ON)
-
-    def test_a_title_without_timestamps_reports_the_rebuild(self):
-        self.assertEqual(title_lastmod(None, None), TITLE_PAGE_REBUILT_ON)
-        self.assertEqual(title_lastmod(None, millis(2026, 10, 2)), date(2026, 10, 2))
-
-    def test_latest_date_has_no_floor(self):
-        self.assertEqual(latest_date(millis(2025, 3, 1), None), date(2025, 3, 1))
-        self.assertIsNone(latest_date(None, None))
+    def test_conflicting_historic_dates_fail_closed(self):
+        with tempfile.TemporaryDirectory() as directory:
+            for i, day in enumerate(('2026-10-10', '2026-10-11')):
+                (Path(directory) / f'sitemap_{i}.xml').write_text(f'''<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+                <sitemap><loc>https://goodwatch.app/sitemaps/sitemap_movie.xml</loc><lastmod>{day}</lastmod></sitemap>
+                </sitemapindex>''')
+            with self.assertRaisesRegex(ValueError, 'Conflicting'):
+                SitemapHistory(directory)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     unittest.main()

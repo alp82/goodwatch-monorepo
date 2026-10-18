@@ -35,6 +35,7 @@ class SitemapRegenerationTests(unittest.TestCase):
         existing = {p: worker.blob_sha(b) for p, b in files.items()} if unchanged else {}
         with (patch.object(worker, "snapshot", return_value=("head", "tree", existing)),
               patch.object(worker, "load_sources"),
+              patch.object(worker, "load_previous"),
               patch.object(worker, "generate_and_check", return_value=(1096, files)) as check,
               patch.object(worker, "publish", return_value="commit") as publish,
               patch.object(worker.wmill, "get_variable") as secret):
@@ -154,7 +155,7 @@ class SitemapRegenerationTests(unittest.TestCase):
                       patch("builtins.print")):
                     if status == 200:
                         count, files = worker.generate_and_check(root)
-                        self.assertEqual(count, 98)  # Two titles, 87 categories, nine static pages.
+                        self.assertEqual(count, 100)  # Two titles, 87 categories, nine static pages.
                         self.assertEqual(len(files), 7)
                     else:
                         with self.assertRaisesRegex(RuntimeError, "Sitemap check failed"):

@@ -58,7 +58,17 @@ Which titles are listed, and why, is explained in `goodwatch-webapp/scripts/site
 
 ## Dates
 
-A title's `<lastmod>` is the later of two dates: the last change of its data (TMDB details or fingerprint), and 2026-09-25, the day all title pages were rebuilt. The second date is `TITLE_PAGE_REBUILT_ON` in `goodwatch-webapp/scripts/sitemap_lastmod.py`. Raise it when all title pages change again.
+Title entries omit `<lastmod>` until there is evidence of a significant visible content change. `tmdb_details_updated_at` records refreshes, and `dna_updated_at` also advances for vector repairs with unchanged visible analysis. Neither proves a visible change. The September 25 rebuild floor has been removed; it must not fabricate dates for titles without reliable content timestamps. Static and category URL entries also remain undated.
+
+An index entry dates the referenced XML file, independently of its pages. The generator snapshots the previous files and their index dates before writing. A byte change (including a changed URL, membership or date) gets today's UTC date; identical bytes retain the previous index date. An unchanged file without a known previous date stays undated until its first observed change. Both master and legacy indexes use this rule.
+
+The manual command compares against `public/sitemaps/`, including when `--output-dir` writes to a temporary directory. Use `--previous-dir` to override the baseline. Windmill downloads the previous XML files from the same pinned `main` revision as the generator. No filesystem modification times or maximum title dates are used.
+
+### Timestamp investigation (2026-10-18)
+
+Read-only CrateDB queries using the unchanged selection found DNA timestamps for all 700 movies and 300 shows (681 movies and 291 shows dated September 25 or later). Catalog-wide, 164,614 of 1,262,680 movies and 87,126 of 234,765 shows had DNA timestamps. The copy reads MongoDB's `updated_at`; `f/dna/generate/vectors.py` and `release_fresh_dna` in `f/dna/generate/fetch.py` advance it when storing repaired vectors, even without changing the analysis. Analysis generation also saves without a significant-content equality comparison. A current database snapshot cannot establish which historical updates changed visible content, so **zero of the 1,000 title entries retain a date**.
+
+A content-hash-based timestamp is worth building later: compare a normalized set of significant public fields when publishing title data, update the timestamp only when that hash changes, and cover independent analysis, metadata, offers and episode updates. Exclude fetch clocks and incidental popularity fluctuations. Define significance for rating/availability changes before implementation, and handle genuine shared-template changes with evidenced deployment dates. This change does not implement hashing or alter title selection.
 
 ## Other commands
 

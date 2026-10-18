@@ -66,6 +66,16 @@ def load_sources(root, head):
             f"https://raw.githubusercontent.com/{REPOSITORY}/{head}/{path}", raw=True))
 
 
+def load_previous(root, head, existing):
+    """Read the previous artifacts from the same pinned revision as the code."""
+    directory = root / "previous-sitemaps"
+    directory.mkdir()
+    for path in existing:
+        if path.startswith(OUTPUT) and "/" not in path[len(OUTPUT):] and Path(path).match("sitemap*.xml"):
+            (directory / Path(path).name).write_bytes(request(
+                f"https://raw.githubusercontent.com/{REPOSITORY}/{head}/{path}", raw=True))
+
+
 def load_module(name, path):
     spec = importlib.util.spec_from_file_location(name, path)
     module = importlib.util.module_from_spec(spec)
@@ -83,6 +93,7 @@ def generate_and_check(root):
         output = root / OUTPUT
         output.mkdir(parents=True)
         generator.SITEMAP_DIR = str(output)
+        generator.prepare_sitemaps(root / "previous-sitemaps")
         # Same workspace variables and connection format as f/db/cratedb.
         connection = None
         try:
@@ -96,10 +107,11 @@ def generate_and_check(root):
             try:
                 movies = generator.create_detail_sitemaps(cursor, "movie")
                 shows = generator.create_detail_sitemaps(cursor, "show")
-                generator.create_category_sitemaps()
-                generator.create_landing_sitemaps()
+                categories = generator.create_category_sitemaps()
+                static = generator.create_landing_sitemaps()
                 generator.create_master_sitemap_index({
                     "movie": movies["lastmod"], "show": shows["lastmod"],
+                    "static": static["lastmod"], "categories": categories["lastmod"],
                 })
             finally:
                 cursor.close()
@@ -166,6 +178,7 @@ def main(dry_run: bool = True):
     with tempfile.TemporaryDirectory(prefix="goodwatch-sitemaps-") as directory:
         root = Path(directory)
         load_sources(root, head)
+        load_previous(root, head, existing)
         url_count, files = generate_and_check(root)
         changes = changes_for(files, existing)
         result = {"source_commit": head, "url_count": url_count, "check": "passed",

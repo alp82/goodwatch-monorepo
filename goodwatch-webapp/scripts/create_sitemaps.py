@@ -11,7 +11,7 @@ from crate import client
 from dotenv import load_dotenv
 
 from sitemap_crate import connect_args
-from sitemap_lastmod import title_lastmod
+from sitemap_lastmod import SitemapHistory, title_lastmod
 from sitemap_query import detail_query
 from utils import title_to_dashed
 
@@ -20,6 +20,14 @@ load_dotenv()
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 # Where the files are written. --output-dir replaces it, so that a run can be checked before it is published.
 SITEMAP_DIR = os.path.join(SCRIPT_DIR, "../public/sitemaps/")
+PREVIOUS_SITEMAPS = None
+
+
+def prepare_sitemaps(previous_dir):
+    global PREVIOUS_SITEMAPS
+    PREVIOUS_SITEMAPS = SitemapHistory(previous_dir)
+
+
 CATEGORY_DIR = os.path.join(SCRIPT_DIR, "../app/ui/explore/category/")
 BASE_URL = "https://goodwatch.app"
 
@@ -50,6 +58,8 @@ def write_urlset(filename: str, entries: List[str]):
         sitemap_file.write('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n')
         sitemap_file.writelines(entries)
         sitemap_file.write('</urlset>\n')
+    with open(os.path.join(SITEMAP_DIR, filename), 'rb') as generated:
+        return PREVIOUS_SITEMAPS.lastmod(filename, generated.read())
 
 
 def write_sitemap_index(filename: str, sitemaps: List[tuple]):
@@ -121,8 +131,9 @@ def create_category_sitemaps():
             for subcategory in extract_subcategories_from_typescript(media_type, category):
                 entries.append(url_entry(f"{BASE_URL}/{media_type}/{category}/{subcategory}"))
 
-    write_urlset(sitemap_filename, entries)
+    lastmod = write_urlset(sitemap_filename, entries)
     return {
+        "lastmod": lastmod,
         "category_url_count": len(entries),
         "sitemap_filename": sitemap_filename
     }
@@ -135,18 +146,15 @@ def create_detail_sitemaps(crate_cursor, table_name: Literal["movie", "show"]):
     rows = crate_cursor.fetchall()
 
     entries = []
-    lastmods = []
     for tmdb_id, title, original_title, details_updated_at, dna_updated_at in rows:
         # Same slug as the canonical URL in app/routes/movie.$movieKey.tsx and show.$showKey.tsx
         slug = title_to_dashed(title or original_title or "")
-        lastmod = title_lastmod(details_updated_at, dna_updated_at)
+        lastmod = title_lastmod(dna_updated_at)
         entries.append(url_entry(f"{BASE_URL}/{table_name}/{tmdb_id}-{slug}", lastmod))
-        lastmods.append(lastmod)
 
     # Filenames stay stable because Search Console has them submitted
     sitemap_filename = f"sitemap_{table_name}_detail_0.xml"
-    write_urlset(sitemap_filename, entries)
-    index_lastmod = max(lastmods) if lastmods else None
+    index_lastmod = write_urlset(sitemap_filename, entries)
     write_sitemap_index(f"sitemap_index_{table_name}_detail.xml", [(sitemap_filename, index_lastmod)])
 
     return {
@@ -158,9 +166,10 @@ def create_detail_sitemaps(crate_cursor, table_name: Literal["movie", "show"]):
 def create_landing_sitemaps():
     """Create sitemaps for main landing pages."""
     entries = [url_entry(f"{BASE_URL}{route}") for route in STATIC_ROUTES]
-    write_urlset("sitemap_static.xml", entries)
+    lastmod = write_urlset("sitemap_static.xml", entries)
     return {
         "static_url_count": len(entries),
+        "lastmod": lastmod,
     }
 
 
@@ -169,8 +178,8 @@ def create_master_sitemap_index(detail_lastmods: dict):
     # Link to URL sets directly: Google does not support nested sitemap indexes.
     # Keep the legacy detail indexes for their existing Search Console submissions.
     sitemap_files = [
-        ("sitemap_static.xml", None),
-        ("sitemap_categories.xml", None),
+        ("sitemap_static.xml", detail_lastmods["static"]),
+        ("sitemap_categories.xml", detail_lastmods["categories"]),
         ("sitemap_movie_detail_0.xml", detail_lastmods["movie"]),
         ("sitemap_show_detail_0.xml", detail_lastmods["show"]),
     ]
@@ -200,7 +209,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Write the sitemap files.")
     parser.add_argument("--output-dir", default=SITEMAP_DIR,
                         help="directory for the files (default: public/sitemaps); its sitemap*.xml are replaced")
-    SITEMAP_DIR = os.path.abspath(parser.parse_args().output_dir)
+    parser.add_argument("--previous-dir", default=SITEMAP_DIR,
+                        help="previous sitemap files (default: public/sitemaps, even with --output-dir)")
+    args = parser.parse_args()
+    prepare_sitemaps(args.previous_dir)
+    SITEMAP_DIR = os.path.abspath(args.output_dir)
     print(f"Writing sitemaps to {SITEMAP_DIR}")
 
     crate_connection = init_crate()
@@ -229,6 +242,8 @@ if __name__ == "__main__":
     master_result = create_master_sitemap_index({
         "movie": movies_result["lastmod"],
         "show": show_result["lastmod"],
+        "static": static_result["lastmod"],
+        "categories": category_result["lastmod"],
     })
     print(f"Master Sitemap Index Result: {master_result}")
 
