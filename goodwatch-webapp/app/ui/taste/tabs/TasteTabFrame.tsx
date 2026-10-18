@@ -2,7 +2,7 @@ import { Link } from "@remix-run/react"
 import type { ReactNode } from "react"
 import type { PortraitTab, PortraitViewOf } from "~/server/taste-portrait/view"
 import { QUIZ_PATH } from "~/ui/taste-quiz/TasteQuizPage"
-import { TasteStart } from "../TasteStart"
+import { TasteStart } from "../start/TasteStart"
 import { TasteBanner } from "./TasteBanner"
 import { useTasteView } from "./useTasteView"
 
