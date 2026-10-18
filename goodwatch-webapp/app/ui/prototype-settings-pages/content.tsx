@@ -4,21 +4,15 @@
 import { useId, useState } from "react"
 import { Switch } from "~/ui/toggle/Switch"
 import { regionName } from "~/utils/display-names"
-import {
-	AppsBlock,
-	CountryList,
-	DeleteAccount,
-	Flag,
-	LanguageList,
-	PasswordBlock,
-	ProfileBlock,
-	RestartSetup,
-	ServicesGrid,
-	SignInMethods,
-	TitlePreview,
-	languageLabel,
-	usePrefs,
-} from "./parts"
+import { ConnectAppBadge } from "~/ui/auth/connect"
+import { ConnectorAddressCard } from "~/ui/connector/ConnectorAddressCard"
+import { englishName, ownName } from "~/ui/media-preference/languages"
+import { BROWSER } from "~/ui/media-preference/machine"
+import { DISPLAY } from "~/ui/my-pages/bits"
+import { AccountPage } from "./AccountPage"
+import { APPS } from "./data"
+import { ProfileBlock, ServicesGrid, TextButton, TitlePreview, Flag, shownLanguage, usePrefs } from "./parts"
+import { CountryPicker, LanguagePicker, languageFlag } from "./pickers"
 import type { PageSlug } from "./pages"
 
 /** A titled part of a subpage. */
@@ -34,16 +28,29 @@ export function Part({ title, hint, children }: { title: string; hint?: string; 
 	)
 }
 
+/** The current choice, large: a flag and its name, with a line under it. */
+function Current({ flag, name, line, lang }: { flag: string; name: string; line: string; lang?: string }) {
+	return (
+		<div className="flex items-center gap-4">
+			<Flag code={flag} className="h-10 shadow-lg md:h-12" />
+			<div className="min-w-0">
+				<p lang={lang} className={`${DISPLAY} truncate text-3xl text-white md:text-4xl`}>
+					{name}
+				</p>
+				<p className="text-sm text-gray-400">{line}</p>
+			</div>
+		</div>
+	)
+}
+
 export function WhereYouWatchBody() {
 	const p = usePrefs()
 	return (
-		<div className="flex flex-col gap-10">
-			<Part title="Watching from" hint="Your country. It decides where to watch each title, which services you can pick, and the age ratings you see.">
-				<p className="flex items-center gap-2 text-sm text-gray-400">
-					Now: <Flag code={p.country} className="h-3.5" /> <b className="text-white">{regionName(p.country)}</b>
-				</p>
-				<div className="max-w-md">
-					<CountryList className="h-56" />
+		<div className="flex flex-col gap-12">
+			<Part title="Watching from">
+				<Current flag={p.country} name={regionName(p.country)} line={`Streaming offers and age ratings for ${regionName(p.country)}`} />
+				<div className="mt-2">
+					<CountryPicker />
 				</div>
 			</Part>
 			<Part title="Your services" hint="On my services keeps the titles on these, and you hear when a title you want lands on one.">
@@ -55,15 +62,21 @@ export function WhereYouWatchBody() {
 
 export function LanguageBody() {
 	const p = usePrefs()
+	const shown = shownLanguage(p.language, p.browserLanguage)
 	return (
-		<div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-			<div className="flex flex-col gap-3">
-				<p className="text-sm text-gray-400">
-					Now: <b className="text-white">{languageLabel(p.language, p.browserLanguage)}</b>
-				</p>
-				<TitlePreview />
+		<div className="flex flex-col gap-8">
+			<div className="flex flex-col gap-4">
+				<Current
+					flag={languageFlag(shown)}
+					name={englishName(shown)}
+					lang="en"
+					line={p.language === BROWSER ? `Follows your browser · ${ownName(shown)}` : ownName(shown)}
+				/>
+				<div className="max-w-xl">
+					<TitlePreview size="sm" />
+				</div>
 			</div>
-			<LanguageList className="h-[26rem]" />
+			<LanguagePicker />
 		</div>
 	)
 }
@@ -110,8 +123,66 @@ export function DiscoverPrivacyBody() {
 	)
 }
 
+function AppRow({ a }: { a: (typeof APPS)[number] }) {
+	const [confirming, setConfirming] = useState(false)
+	const [gone, setGone] = useState(false)
+	const onComputer = a.app.returnsTo === "this computer"
+	if (gone)
+		return (
+			<li className="flex flex-wrap items-center gap-3 p-4 text-sm text-gray-400">
+				{a.app.name} is disconnected.
+				<button type="button" onClick={() => setGone(false)} className="cursor-pointer font-semibold text-gray-200 underline underline-offset-4 hover:text-white">
+					Prototype: bring it back
+				</button>
+			</li>
+		)
+	return (
+		<li className={`p-4 ${confirming ? "bg-red-950/20" : ""}`}>
+			<div className="flex flex-wrap items-center gap-x-4 gap-y-3">
+				<ConnectAppBadge app={a.app} size="sm" />
+				<div className="min-w-0 flex-1 basis-40">
+					<p className="font-semibold text-gray-100">
+						{a.app.name}
+						{onComputer && <span className="ml-2 text-sm font-normal text-gray-500">On a computer</span>}
+					</p>
+					<p className={`text-sm ${a.canChange ? "text-amber-300" : "text-sky-300"}`}>{a.canChange ? "Can see and change" : "Can see only"}</p>
+					<p className="text-sm text-gray-500">
+						Connected {a.connected} · {a.lastUsed === "Not used yet" ? a.lastUsed : `Last used ${a.lastUsed}`}
+					</p>
+				</div>
+				{!confirming && <TextButton onClick={() => setConfirming(true)}>Disconnect</TextButton>}
+			</div>
+			{confirming && (
+				<div role="alert" className="mt-3 flex flex-wrap items-center gap-3 border-t border-red-900/60 pt-3">
+					<p className="min-w-0 flex-1 basis-56 text-sm text-red-100">
+						Disconnect {a.app.name}
+						{onComputer ? " on that computer" : ""}? It stops working with GoodWatch right away. Nothing you saved is lost, and you can connect it again later.
+					</p>
+					<button
+						type="button"
+						onClick={() => setGone(true)}
+						className="min-h-10 cursor-pointer rounded-md border border-red-700 bg-red-900/60 px-4 text-sm font-semibold text-red-100 hover:bg-red-800"
+					>
+						Disconnect {a.app.name}
+					</button>
+					<TextButton onClick={() => setConfirming(false)}>Keep it</TextButton>
+				</div>
+			)}
+		</li>
+	)
+}
+
 export function AppsBody() {
-	return <AppsBlock />
+	return (
+		<div className="flex flex-col gap-4">
+			<ul className="divide-y divide-gray-800 overflow-hidden rounded-xl border border-gray-700 bg-gray-800/40">
+				{APPS.map((a) => (
+					<AppRow key={a.id} a={a} />
+				))}
+			</ul>
+			<ConnectorAddressCard />
+		</div>
+	)
 }
 
 export function ProfileBody() {
@@ -123,22 +194,7 @@ export function ProfileBody() {
 }
 
 export function AccountBody() {
-	return (
-		<div className="flex max-w-2xl flex-col gap-10">
-			<Part title="Sign-in methods">
-				<SignInMethods />
-			</Part>
-			<Part title="Password">
-				<PasswordBlock />
-			</Part>
-			<Part title="Restart setup">
-				<RestartSetup />
-			</Part>
-			<Part title="Delete account">
-				<DeleteAccount />
-			</Part>
-		</div>
-	)
+	return <AccountPage />
 }
 
 /** The shared body of a subpage, or null for Imports, which each variant builds. */

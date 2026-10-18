@@ -26,7 +26,10 @@ import {
 	useImportStage,
 } from "./imports-kit"
 import { PAGES, PLink, type PageSlug, pageOf, useHref } from "./pages"
-import { Flag, ServiceLogos, languageLabel, shownLanguage, usePrefs } from "./parts"
+import { englishName, ownName } from "~/ui/media-preference/languages"
+import { BROWSER } from "~/ui/media-preference/machine"
+import { Flag, ServiceLogos, shownLanguage, usePrefs } from "./parts"
+import { languageFlag } from "./pickers"
 
 export function VariantA({ slug }: { slug: PageSlug | null }) {
 	if (!slug) return <Home />
@@ -90,20 +93,29 @@ function Home() {
 				<Tile slug="where-you-watch">
 					<span className="flex items-center gap-3">
 						<Flag code={p.country} className="h-8 md:h-10" />
-						<span className="text-2xl font-black text-white md:text-3xl">{regionName(p.country)}</span>
+						<span className="truncate text-2xl font-black text-white md:text-3xl">{regionName(p.country)}</span>
+					</span>
+					<span className="mt-1 block text-sm text-gray-400">
+						{p.services.length === 1 ? "1 service" : `${p.services.length} services`}
 					</span>
 					<span className="mt-4 flex">
 						<ServiceLogos max={7} size="h-10 w-10" />
 					</span>
 				</Tile>
 				<Tile slug="language">
-					<span className="flex gap-4">
-						<img src={tmdbImageUrl(SAMPLE_POSTER, "w154")} alt="" className="h-28 w-[4.7rem] shrink-0 rounded-md object-cover shadow-lg" />
+					<span className="flex items-center gap-3">
+						<Flag code={languageFlag(lang)} className="h-8 md:h-10" />
 						<span className="min-w-0">
-							<span lang={sample.title.lang} dir="auto" className="line-clamp-2 text-xl font-black text-white md:text-2xl">
-								{sample.title.text}
-							</span>
-							<span className="mt-1 block text-sm text-gray-400">{languageLabel(p.language, p.browserLanguage)}</span>
+							<span className="block truncate text-2xl font-black text-white md:text-3xl">{englishName(lang)}</span>
+						</span>
+					</span>
+					<span className="mt-1 block text-sm text-gray-400">
+						{p.language === BROWSER ? "Follows your browser" : ownName(lang)}
+					</span>
+					<span className="mt-4 flex items-center gap-3">
+						<img src={tmdbImageUrl(SAMPLE_POSTER, "w92")} alt="" className="h-12 w-8 shrink-0 rounded object-cover shadow" />
+						<span lang={sample.title.lang} dir="auto" className="min-w-0 truncate text-sm font-semibold text-gray-300">
+							{sample.title.text}
 						</span>
 					</span>
 				</Tile>

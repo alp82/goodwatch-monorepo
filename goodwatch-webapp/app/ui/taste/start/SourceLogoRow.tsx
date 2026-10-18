@@ -96,11 +96,11 @@ export function SourceLogoRow({
 			<p className="text-sm text-gray-400">
 				{prompt}
 			</p>
-			<ul className="mt-3 flex items-center justify-center pl-2.5 sm:pl-3">
+			<ul className="mt-3 flex items-center justify-center pl-2.5 sm:pl-1.5 md:-ml-1.5 md:pl-0">
 				{IMPORT_SOURCE_LIST.map((s, i) => (
 					<li
 						key={s.id}
-						className="-ml-2.5 sm:-ml-3"
+						className="-ml-2.5 sm:-ml-1.5 md:ml-1.5"
 						style={{ zIndex: hot === s.id ? 20 : 10 - Math.abs(i - 4) }}
 					>
 						<button

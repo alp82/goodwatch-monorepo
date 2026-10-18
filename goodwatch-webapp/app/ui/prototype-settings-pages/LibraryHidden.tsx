@@ -24,22 +24,22 @@ export function LibraryHidden() {
 				</p>
 				<ul className="grid grid-cols-3 gap-4 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
 					{shown.map((t) => (
-						<li key={t.key} className="flex flex-col gap-2">
+						<li key={t.key} className="flex flex-col">
 							<img
 								src={tmdbImageUrl(t.poster, "w185")}
 								alt=""
-								className="aspect-[2/3] w-full rounded-lg object-cover opacity-60 ring-1 ring-white/10 grayscale-[40%]"
+								className="mb-2 aspect-[2/3] w-full rounded-lg object-cover opacity-60 ring-1 ring-white/10 grayscale-[40%]"
 							/>
-							<span className="min-w-0">
-								<span className="line-clamp-2 text-sm font-semibold text-gray-100">{t.title}</span>
-								<span className="block text-xs text-gray-500">
+							<span className="mb-2 min-w-0">
+								<span className="line-clamp-2 min-h-10 text-sm leading-5 font-semibold text-gray-100" title={t.title}>{t.title}</span>
+								<span className="line-clamp-2 min-h-8 text-xs leading-4 text-gray-500">
 									{t.year} · hidden {t.hiddenAt}
 								</span>
 							</span>
 							<button
 								type="button"
 								onClick={() => setUnhidden([...unhidden, t.key])}
-								className="inline-flex min-h-9 cursor-pointer items-center justify-center gap-1.5 rounded-md border border-gray-600 text-sm font-semibold text-gray-200 hover:border-gray-400 hover:text-white"
+								className="mt-auto inline-flex min-h-9 cursor-pointer items-center justify-center gap-1.5 rounded-md border border-gray-600 text-sm font-semibold text-gray-200 hover:border-gray-400 hover:text-white"
 							>
 								<EyeIcon className="size-4" aria-hidden /> Unhide
 							</button>

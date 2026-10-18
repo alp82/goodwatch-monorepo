@@ -11,6 +11,15 @@ import {
 import imdbLogo from "~/img/import-sources/imdb.svg?no-inline"
 import tmdbLogo from "~/img/import-sources/tmdb.svg?no-inline"
 import traktLogo from "~/img/import-sources/trakt.svg?no-inline"
+// PROTOTYPE (prototype/settings-subpages): the real mark for every source, as the owner asked on 2026-10-19. Each
+// comment below keeps the brand caveat that made production use a letter tile; clear those before this ships.
+import csvLogo from "~/img/import-sources/csv.svg?no-inline"
+import kodiLogo from "~/img/import-sources/kodi.png?no-inline"
+import letterboxdLogo from "~/img/import-sources/letterboxd.svg?no-inline"
+import movielensLogo from "~/img/import-sources/movielens.png?no-inline"
+import myanimelistLogo from "~/img/import-sources/myanimelist.svg?no-inline"
+import plexLogo from "~/img/import-sources/plex.png?no-inline"
+import wishlistLogo from "~/img/import-sources/wishlist.png?no-inline"
 import type { RecognizedImportFile } from "./ImportFileRecognition"
 
 export type ImportSourceId = "imdb" | ImportSource
@@ -49,8 +58,8 @@ const SOURCES: Omit<ImportSourceEntry, "name">[] = [
 	},
 	{
 		id: "letterboxd",
-		// The owner chose a letter tile: Letterboxd's brand page forbids commercial use of its marks without consent.
-		logo: null,
+		// Prototype: Letterboxd's decal (letterboxd.com/about/brand). Caveat: its brand page forbids commercial use of its marks without consent.
+		logo: letterboxdLogo,
 		tile: "Lb",
 		gets: [
 			"Ratings",
@@ -90,8 +99,9 @@ const SOURCES: Omit<ImportSourceEntry, "name">[] = [
 	},
 	{
 		id: "plex",
-		// Plex's kit has only a wide wordmark, and its guidelines forbid icons derived from its marks.
-		logo: null,
+		// Prototype: Plex's own app icon (its favicon, via Wikimedia Commons), not one derived from it. Caveat: Plex's kit has
+		// only a wide wordmark, and its guidelines forbid icons derived from its marks.
+		logo: plexLogo,
 		tile: "Px",
 		// Each play from the member's own server, and Want to See from the personal watchlist feed.
 		gets: ["Watches with dates", "Rewatches", "Episodes", "Want to See"],
@@ -101,8 +111,9 @@ const SOURCES: Omit<ImportSourceEntry, "name">[] = [
 	},
 	{
 		id: "myanimelist",
-		// MyAnimeList allows its marks only with written permission; Kitsu publishes no usage terms.
-		logo: null,
+		// Prototype: MyAnimeList's favicon mark (Wikimedia Commons). Caveat: MyAnimeList allows its marks only with written
+		// permission; Kitsu publishes no usage terms.
+		logo: myanimelistLogo,
 		tile: "MAL",
 		gets: ["Episodes", "Show statuses", "Want to See"],
 		wait: "Right away",
@@ -111,8 +122,9 @@ const SOURCES: Omit<ImportSourceEntry, "name">[] = [
 	},
 	{
 		id: "kodi",
-		// The owner chose a letter tile: Kodi's guidelines ask for ® and a trademark notice with the logo.
-		logo: null,
+		// Prototype: Kodi's icon from the xbmc/xbmc repository. Caveat: Kodi's guidelines ask for ® and a trademark notice
+		// with the logo.
+		logo: kodiLogo,
 		tile: "K",
 		gets: ["Ratings", "Watches", "Episodes"],
 		wait: "Right away",
@@ -120,8 +132,8 @@ const SOURCES: Omit<ImportSourceEntry, "name">[] = [
 	},
 	{
 		id: "movielens",
-		// GroupLens publishes no brand assets.
-		logo: null,
+		// Prototype: MovieLens's site icon (movielens.org, 120 px). Caveat: GroupLens publishes no brand assets or terms.
+		logo: movielensLogo,
 		tile: "ML",
 		gets: ["Ratings", "Want to See"],
 		wait: "Right away",
@@ -129,8 +141,9 @@ const SOURCES: Omit<ImportSourceEntry, "name">[] = [
 	},
 	{
 		id: "wishlist",
-		// Watcharr publishes no brand terms. One row: the same import reads wishlist files made for GoodWatch.
-		logo: null,
+		// Prototype: Watcharr's logo from its repository (sbondCo/Watcharr). Caveat: Watcharr publishes no brand terms, and
+		// the row also reads wishlist files made for GoodWatch.
+		logo: wishlistLogo,
 		tile: "W",
 		gets: ["Want to See"],
 		wait: "Right away",
@@ -139,7 +152,8 @@ const SOURCES: Omit<ImportSourceEntry, "name">[] = [
 	},
 	{
 		id: "csv",
-		logo: null,
+		// Prototype: a plain spreadsheet file mark drawn for GoodWatch; CSV is no brand.
+		logo: csvLogo,
 		tile: "CSV",
 		gets: ["Ratings", "Watches with dates", "Reviews"],
 		wait: "Depends on the tool",
