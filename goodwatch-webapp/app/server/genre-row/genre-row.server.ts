@@ -1,5 +1,6 @@
 // The genre row of a title page: eight titles of the genre its breadcrumb shows, "More drama movies", linking to the
-// genre page. pick.ts chooses them; this module hands it the genre's titles and what their cards show.
+// genre page; for a Kids or Family title, its own kind (row-genre.ts). pick.ts chooses the titles; this module hands
+// it the genre's titles and what their cards show.
 //
 // A render reads nothing of its own: the sitemap's titles come with the build (the sitemap files' selection comment),
 // the genre's titles from the title snapshot in memory (kept per snapshot version), and their cards' names and posters
@@ -13,30 +14,28 @@ import {
 	overlayTitles,
 } from "~/server/media-overlay.server"
 import type { RelatedMapLookup } from "~/server/related-map.server"
-import { titleGenrePage } from "~/server/title-breadcrumb.server"
 import {
 	MAX_KEYS,
 	type TitleDisplay,
 	getDisplayFields,
 } from "~/server/title-cards.server"
 import {
-	FLAG_ADULT,
-	FLAG_POSTER,
 	type TitleSnapshot,
 	getTitleSnapshot,
 } from "~/server/title-snapshot/index.server"
 import type { MediaPresentation } from "~/utils/media-presentation"
 import { type TitleKey, titleKey } from "~/utils/title-key"
+import categorySitemap from "../../../public/sitemaps/sitemap_categories.xml?raw"
 import movieSitemap from "../../../public/sitemaps/sitemap_movie_detail_0.xml?raw"
 import showSitemap from "../../../public/sitemaps/sitemap_show_detail_0.xml?raw"
 import {
 	GENRE_ROW_SIZE,
-	type GenreRowCandidate,
 	genreRowHeading,
 	pickGenreRow,
 	rankGenreRow,
 	sitemapSelection,
 } from "./pick"
+import { type Pool, genrePool, rowGenre, sitemapPaths } from "./row-genre"
 
 /** What a card of the row shows. */
 export interface GenreRowTitle {
@@ -67,49 +66,35 @@ const SPARE = 16
 // As long as the title cards' cache keeps a card.
 const STORE_TTL_MS = 6 * 60 * 60 * 1000
 
+// The genre pages the sitemap lists, which a Kids or Family row may link to.
+const listedPages = sitemapPaths(categorySitemap)
+
 const cohort = new Set<TitleKey>([
 	...sitemapSelection(movieSitemap).map((id) => titleKey("movie", id)),
 	...sitemapSelection(showSitemap).map((id) => titleKey("show", id)),
 ])
 
-interface Pool {
-	preferred: GenreRowCandidate[]
-	fallback: GenreRowCandidate[]
-}
-
 let pools: { version: string; byGenre: Map<string, Pool> } | null = null
 
-/** The genre's titles of the media type with a poster, from one pass over the snapshot; kept until the next version. */
+/** The genre's pool for the media type, kept until the next snapshot version. */
 function poolOf(
 	snapshot: TitleSnapshot,
 	mediaType: "movie" | "show",
 	genre: string,
+	young: boolean,
 ): Pool {
 	if (pools?.version !== snapshot.version)
 		pools = { version: snapshot.version, byGenre: new Map() }
-	const name = `${mediaType}:${genre}`
+	const name = `${mediaType}:${genre}:${young ? "young" : "all"}`
 	const known = pools.byGenre.get(name)
 	if (known) return known
-	const { pointIds, genres, genreNames, votes, flags } = snapshot.columns
-	const bit = genreNames.indexOf(genre)
-	const pool: Pool = { preferred: [], fallback: [] }
-	if (bit >= 0) {
-		const low = titleKey(mediaType, 0)
-		const high =
-			mediaType === "movie" ? titleKey("show", 0) : Number.POSITIVE_INFINITY
-		const others: GenreRowCandidate[] = []
-		for (let row = 0; row < pointIds.length; row++) {
-			const key = pointIds[row]
-			if (key < low || key >= high) continue
-			if (!(genres[row] & (1 << bit))) continue
-			if (!(flags[row] & FLAG_POSTER) || flags[row] & FLAG_ADULT) continue
-			const title = { key, votes: votes[row] }
-			;(cohort.has(key) ? pool.preferred : others).push(title)
-		}
-		pool.fallback = others
-			.sort((a, b) => b.votes - a.votes || a.key - b.key)
-			.slice(0, FALLBACK_POOL)
-	}
+	const pool = genrePool(snapshot.columns, {
+		mediaType,
+		genre,
+		young,
+		preferred: cohort,
+		fallbackSize: FALLBACK_POOL,
+	})
 	pools.byGenre.set(name, pool)
 	return pool
 }
@@ -187,11 +172,12 @@ export async function genreRow(params: {
 	budgetMs: number
 	language?: string
 }): Promise<GenreRowResult> {
-	const page = titleGenrePage(params.mediaType, params.genres)
-	if (!page) return null
+	const genre = rowGenre(params.mediaType, params.genres, listedPages)
+	if (!genre) return null
+	const { page } = genre
 	const snapshot = getTitleSnapshot()
 	if (!snapshot) return "late"
-	const pool = poolOf(snapshot, params.mediaType, page.genre)
+	const pool = poolOf(snapshot, params.mediaType, page.genre, genre.young)
 	fill(pool)
 	const candidates = {
 		page: titleKey(params.mediaType, params.tmdbId),

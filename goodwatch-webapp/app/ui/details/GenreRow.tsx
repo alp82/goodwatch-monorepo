@@ -17,7 +17,7 @@ export interface GenreRowProps {
 }
 
 /**
- * Eight titles of the genre the breadcrumb shows, "More drama movies", with the heading linking to the genre page. The
+ * Eight titles of the page's genre, "More drama movies", with the heading linking to the genre page. The
  * hub rows' cards, four across and two rows on a phone, one row of eight from the large breakpoint.
  */
 export default function GenreRow({ row, mediaType }: GenreRowProps) {
