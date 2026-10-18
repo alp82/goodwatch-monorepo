@@ -30,6 +30,21 @@ export const seededRandomFromString = (seed: string) => {
 	return seededRandomXorshift(hash)
 }
 
+// String-based seeded random whose every input character moves every output bit (FNV-1a, then MurmurHash3's
+// finalizer). Seeds that differ in a few digits, such as two title ids, get unrelated numbers, which
+// seededRandomFromString doesn't promise: for a pick spread evenly across many seeds.
+export const seededRandomMixed = (seed: string) => {
+	let hash = 0x811c9dc5
+	for (let i = 0; i < seed.length; i++)
+		hash = Math.imul(hash ^ seed.charCodeAt(i), 0x01000193)
+	hash ^= hash >>> 16
+	hash = Math.imul(hash, 0x85ebca6b)
+	hash ^= hash >>> 13
+	hash = Math.imul(hash, 0xc2b2ae35)
+	hash ^= hash >>> 16
+	return (hash >>> 0) / 4294967296
+}
+
 export const randomEdge = (min: number, max: number, percent: number) => {
 	const val = Math.random() > 0.5 ? min : max
 	const rand = random(0, 100) * (percent / 100)

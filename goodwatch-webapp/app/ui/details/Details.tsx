@@ -26,6 +26,7 @@ import Breadcrumbs from "~/ui/nav/Breadcrumbs"
 import { type Crumb, titleTrail } from "~/ui/nav/breadcrumb-trail"
 import { titlePath } from "~/utils/helpers"
 import { canonicalMediaTitle } from "~/utils/media-presentation"
+import type { GenreRow } from "~/server/genre-row/genre-row.server"
 
 export interface DetailsProps {
 	media: MovieResult | ShowResult
@@ -37,6 +38,8 @@ export interface DetailsProps {
 	sides?: TitleSides | null
 	/** The hub and genre page above the title; the breadcrumb adds the title. */
 	breadcrumb?: readonly Crumb[]
+	/** Eight titles of the breadcrumb's genre, after the related titles. */
+	genreRow?: GenreRow
 }
 
 export default function Details(props: DetailsProps) {
@@ -61,6 +64,7 @@ function DetailsPage({
 	talkedAboutNow,
 	sides,
 	breadcrumb = [],
+	genreRow,
 }: DetailsProps) {
 	// The header pair's country and language, picked or saved, over the ones the page loaded with. Until their data
 	// is in (or when it fails), the page keeps the loaded title and offers, and where-to-watch says so; a picked
@@ -170,6 +174,7 @@ function DetailsPage({
 						country={country}
 						episodeGrid={episodeGrid}
 						questions={questions}
+						genreRow={genreRow}
 						sectionProps={sectionProps}
 						navigateToSection={navigateToSection}
 					/>

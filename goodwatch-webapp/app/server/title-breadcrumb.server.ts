@@ -7,16 +7,21 @@ import { type Crumb, crumbLabel } from "~/ui/nav/breadcrumb-trail"
 // TMDB's genre names where a genre page's label says it differently.
 const PAGE_LABEL: Record<string, string> = { Talk: "Talk Shows" }
 
-/** The hub and genre page above a title, from the title's genres in TMDB's order. */
-export function titleBreadcrumb(
+/** The genre page a title's breadcrumb shows, with the TMDB genre it stands for. */
+export interface TitleGenrePage {
+	/** The TMDB genre name, as the title and the title snapshot carry it. */
+	genre: string
+	/** The genre page's label, as the breadcrumb says it. */
+	label: string
+	path: string
+}
+
+/** The genre page of the title's first genre that has one, in TMDB's order; null when none has. */
+export function titleGenrePage(
 	mediaType: "movie" | "show",
 	genres: readonly string[] | null | undefined,
-): Crumb[] {
+): TitleGenrePage | null {
 	const type = mediaType === "movie" ? "movies" : "shows"
-	const hub: Crumb = {
-		label: mediaType === "movie" ? "Movies" : "Shows",
-		path: `/${type}`,
-	}
 	for (const genre of genres ?? []) {
 		const label = PAGE_LABEL[genre] ?? genre
 		const page = Object.values(genrePages).find(
@@ -25,10 +30,24 @@ export function titleBreadcrumb(
 				(candidate.type === "all" || candidate.type === type),
 		)
 		if (page)
-			return [
-				hub,
-				{ label: crumbLabel(page.label), path: `/${type}/genres/${page.path}` },
-			]
+			return {
+				genre,
+				label: crumbLabel(page.label),
+				path: `/${type}/genres/${page.path}`,
+			}
 	}
-	return [hub]
+	return null
+}
+
+/** The hub and genre page above a title, from the title's genres in TMDB's order. */
+export function titleBreadcrumb(
+	mediaType: "movie" | "show",
+	genres: readonly string[] | null | undefined,
+): Crumb[] {
+	const hub: Crumb = {
+		label: mediaType === "movie" ? "Movies" : "Shows",
+		path: mediaType === "movie" ? "/movies" : "/shows",
+	}
+	const page = titleGenrePage(mediaType, genres)
+	return page ? [hub, { label: page.label, path: page.path }] : [hub]
 }

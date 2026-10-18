@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from "react"
 import type { EpisodeGrid as EpisodeGridData } from "~/server/episode-grid.server"
+import type { GenreRow as GenreRowData } from "~/server/genre-row/genre-row.server"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import About from "~/ui/details/About"
 import Actors from "~/ui/details/Actors"
@@ -8,6 +9,7 @@ import DetailsQuestions from "~/ui/details/DetailsQuestions"
 import Media from "~/ui/details/Media"
 import SequelsPrequelsFranchise from "~/ui/details/SequelsPrequelsFranchise"
 import { belowFoldProps, useBelowFold } from "~/ui/details/below-fold"
+import GenreRow from "~/ui/details/GenreRow"
 import EpisodeGrid from "~/ui/details/episode-grid/EpisodeGrid"
 import { hasEpisodeGrid } from "~/ui/details/episode-grid/scale"
 import {
@@ -20,6 +22,7 @@ import {
 	actorsHeight,
 	crewHeight,
 	episodeGridHeight,
+	genreRowHeight,
 	mediaHeight,
 	questionsHeight,
 	relatedMapHeight,
@@ -40,6 +43,8 @@ export interface DetailsContentProps {
 	episodeGrid?: EpisodeGridData | null
 	/** The title's questions (useTitleQuestions); none means no questions section. */
 	questions: TitleQuestion[]
+	/** Eight titles of the breadcrumb's genre; none without one. */
+	genreRow?: GenreRowData
 	sectionProps: SectionProps<SectionIds>
 	navigateToSection: (section: Section) => void
 }
@@ -49,6 +54,7 @@ export default function DetailsContent({
 	country,
 	episodeGrid,
 	questions,
+	genreRow,
 	sectionProps,
 	navigateToSection,
 }: DetailsContentProps) {
@@ -132,13 +138,23 @@ export default function DetailsContent({
 			<div {...section(crewHeight(media))}>
 				<Crew crew={crew} />
 			</div>
+			{/* The genre row is part of Related: the navigation says so while it is on screen. */}
 			<div
-				{...section(
-					relatedMap ? relatedMapHeight() : { phone: 0, desktop: 0 },
-					sectionProps.related,
-				)}
+				{...sectionProps.related}
+				className={`flex flex-col gap-12 ${sectionProps.related.className}`}
 			>
-				<RelatedMap media={media} />
+				<div
+					{...section(
+						relatedMap ? relatedMapHeight() : { phone: 0, desktop: 0 },
+					)}
+				>
+					<RelatedMap media={media} />
+				</div>
+				{genreRow && (
+					<div {...section(genreRowHeight())}>
+						<GenreRow row={genreRow} mediaType={media.mediaType} />
+					</div>
+				)}
 			</div>
 			<div {...section(sequelsHeight(media))}>
 				<SequelsPrequelsFranchise media={media} />

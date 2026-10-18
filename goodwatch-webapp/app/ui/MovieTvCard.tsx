@@ -85,7 +85,13 @@ export function MovieTvCard({
 			className={`@container pointer-events-none absolute inset-[4px] ${skipOffscreen ? "[content-visibility:auto]" : ""}`}
 		>
 			<UserDataOverlay score={userScore} onWishList={onWishList} />
-			<RatingOverlay ratings={ratings} />
+			{/* A lazy poster's score logo is lazy too: below the fold, it would be the card's only early request. */}
+			<RatingOverlay
+				ratings={ratings}
+				logoLoading={
+					!posterPriority || posterPriority === "lazy" ? "lazy" : undefined
+				}
+			/>
 			{details.streaming_links && (
 				<StreamingOverlay links={details.streaming_links} newOn={newOn} />
 			)}

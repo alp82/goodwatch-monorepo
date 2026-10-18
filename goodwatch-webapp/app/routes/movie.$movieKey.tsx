@@ -29,11 +29,17 @@ import {
 import Details from "~/ui/details/Details"
 import type { Crumb } from "~/ui/nav/breadcrumb-trail"
 import { titleBreadcrumb } from "~/server/title-breadcrumb.server"
+import {
+	type GenreRow,
+	genreRow,
+	relatedMapKeys,
+} from "~/server/genre-row/genre-row.server"
 import { getUserIdFromRequest } from "~/utils/auth"
 import { detailsMetaTags } from "~/utils/detailsMeta"
 import { titleRedirectPath } from "~/utils/helpers"
 import { mergeDehydratedStates } from "~/utils/title-extras"
 import { canonicalTitleId } from "~/utils/title-identity"
+import { titleKey } from "~/utils/title-key"
 import { START_AFTER_PAINT } from "~/utils/start-after-paint"
 import { heroHints } from "~/server/hero-hints.server"
 import { heroBackdropFiles } from "~/ui/details/hero/Trailer"
@@ -60,6 +66,8 @@ export type LoaderData = {
 	sides: TitleSides | null
 	/** The hub and genre page above the title (title-breadcrumb.server.ts). */
 	breadcrumb: Crumb[]
+	/** Eight titles of the breadcrumb's genre (genre-row.server.ts); missing without one. */
+	genreRow?: GenreRow
 }
 
 export const loader: LoaderFunction = async ({
@@ -92,9 +100,10 @@ export const loader: LoaderFunction = async ({
 		country,
 		language,
 	}, { canonical: canonicalContent })
+	const relatedWork = relatedMapLookup({ type: "movie", id: Number(movieId), budgetMs, language: canonicalContent ? undefined : language })
 	const parts = Promise.all([
 		details,
-		relatedMapLookup({ type: "movie", id: Number(movieId), budgetMs, language: canonicalContent ? undefined : language }),
+		relatedWork,
 		// The header's genre links and the collection's movies, which the page requested after load before.
 		details.then(
 			(media) =>
@@ -108,6 +117,27 @@ export const loader: LoaderFunction = async ({
 			() => null,
 		),
 	])
+	// The genre row starts with the details and reads its cards while the related map loads. It leaves out the
+	// titles the related map and the collection show.
+	const genreWork = details.then(
+		(media) =>
+			genreRow({
+				mediaType: "movie",
+				tmdbId: media.details.tmdb_id,
+				genres: media.details.genres,
+				exclude: (media.movie_series?.movie_ids ?? []).map((id) =>
+					titleKey("movie", id),
+				),
+				later: relatedWork.then(relatedMapKeys, () => []),
+				budgetMs,
+				language: canonicalContent ? undefined : language,
+			}).catch((error: unknown) => {
+				console.error("Genre row failed", error)
+				return "late" as const
+			}),
+		// A failed details read fails the page below.
+		() => "late" as const,
+	)
 	// The await below throws a failed details read. This keeps the same failure from also counting as unhandled.
 	parts.catch(() => {})
 
@@ -132,7 +162,10 @@ export const loader: LoaderFunction = async ({
 	)
 	const dehydratedState = mergeDehydratedStates(extrasState)
 
-	const sides = await titleSidesWithin(sidesWork, sidesStart, TITLE_BUDGET_MS)
+	const [sides, genre] = await Promise.all([
+		titleSidesWithin(sidesWork, sidesStart, TITLE_BUDGET_MS),
+		genreWork,
+	])
 	// The page's next 103 Early Hints response names its hero (server/hero-hints.ts).
 	if (media.details.backdrop_path)
 		heroHints.remember(new URL(request.url).pathname, heroBackdropFiles(media.details.backdrop_path))
@@ -147,11 +180,13 @@ export const loader: LoaderFunction = async ({
 		breadcrumb: titleBreadcrumb("movie", media.details.genres),
 		dehydratedState,
 		...(related.relatedMap && { relatedMap: related.relatedMap }),
+		...(genre && genre !== "late" && { genreRow: genre }),
 	}
 	// Without the related titles or an extra (a lookup ran out of its budget or failed) the page is incomplete:
 	// no cache may keep it. The page cache and a cache in front follow this header.
 	const complete =
 		related.complete &&
+		genre !== "late" &&
 		titleExtrasEmbedded(extrasState, {
 			genres: media.details.genres,
 			movieSeries: media.movie_series,
@@ -162,7 +197,7 @@ export const loader: LoaderFunction = async ({
 }
 
 export default function DetailsMovie() {
-	const { media, params, countryIsFallback, talkedAboutNow, sides, breadcrumb } = useLoaderData<LoaderData>()
+	const { media, params, countryIsFallback, talkedAboutNow, sides, breadcrumb, genreRow } = useLoaderData<LoaderData>()
 	const { country } = params
 
 	// return (
@@ -196,5 +231,5 @@ export default function DetailsMovie() {
 		return () => controller.abort()
 	}, [media, country, countryIsFallback])
 
-	return <Details media={media} country={country} talkedAboutNow={talkedAboutNow} sides={sides} breadcrumb={breadcrumb} />
+	return <Details media={media} country={country} talkedAboutNow={talkedAboutNow} sides={sides} breadcrumb={breadcrumb} genreRow={genreRow} />
 }

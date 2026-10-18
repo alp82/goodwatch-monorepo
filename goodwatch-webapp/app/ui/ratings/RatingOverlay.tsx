@@ -14,11 +14,14 @@ export interface RatingsOverlayProps {
 	compact?: boolean
 	/** Shown under the score tab (the taste-match pill). */
 	children?: ReactNode
+	/** "lazy" for a card whose poster loads lazily, so its badge doesn't load ahead of it. */
+	logoLoading?: "lazy" | "eager"
 }
 
 export default function RatingOverlay({
 	ratings,
 	children,
+	logoLoading,
 }: RatingsOverlayProps) {
 	const small = useSmallBadges()
 	const hasScore =
@@ -39,7 +42,7 @@ export default function RatingOverlay({
 				<div
 					className={`${vibeColorIndex == null ? "bg-gray-700" : `bg-vibe-${vibeColorIndex}`} rounded-t-full flex flex-col items-center text-white px-3 pt-2 ${small ? "max-lg:px-1.5 max-lg:pt-1" : ""}`}
 				>
-					<img className={`h-5 w-auto ${small ? "max-lg:h-3" : ""}`} src={assetUrl(gwLogo)} alt="GoodWatch" />
+					<img className={`h-5 w-auto ${small ? "max-lg:h-3" : ""}`} src={assetUrl(gwLogo)} alt="GoodWatch" loading={logoLoading} />
 					<span className={`text-lg font-bold ${small ? "max-lg:text-[13px] max-lg:leading-[1.1rem]" : ""}`}>
 						{score}
 					</span>

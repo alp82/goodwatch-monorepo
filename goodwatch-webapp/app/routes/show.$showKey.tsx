@@ -35,6 +35,11 @@ import {
 import Details from "~/ui/details/Details"
 import type { Crumb } from "~/ui/nav/breadcrumb-trail"
 import { titleBreadcrumb } from "~/server/title-breadcrumb.server"
+import {
+	type GenreRow,
+	genreRow,
+	relatedMapKeys,
+} from "~/server/genre-row/genre-row.server"
 import { getUserIdFromRequest } from "~/utils/auth"
 import { detailsMetaTags } from "~/utils/detailsMeta"
 import {
@@ -74,6 +79,8 @@ type LoaderData = {
 	sides: TitleSides | null
 	/** The hub and genre page above the title (title-breadcrumb.server.ts). */
 	breadcrumb: Crumb[]
+	/** Eight titles of the breadcrumb's genre (genre-row.server.ts); missing without one. */
+	genreRow?: GenreRow
 }
 
 export const loader: LoaderFunction = async ({
@@ -103,6 +110,12 @@ export const loader: LoaderFunction = async ({
 		{ canonical: canonicalContent },
 	)
 	let episodeGridFailed = false
+	const relatedWork = relatedMapLookup({
+		type: "show",
+		id: Number(showId),
+		budgetMs,
+		language: canonicalContent ? undefined : language,
+	})
 	const parts = Promise.all([
 		details,
 		// A failed grid read hides the grid; it never fails the page. A long grid sends its newest part, which keeps
@@ -136,12 +149,7 @@ export const loader: LoaderFunction = async ({
 				console.error("episode grid failed", { showId, error })
 				return null
 			}),
-		relatedMapLookup({
-			type: "show",
-			id: Number(showId),
-			budgetMs,
-			language: canonicalContent ? undefined : language,
-		}),
+		relatedWork,
 		// The header's genre links, which the page requested after load before.
 		details.then(
 			(media) =>
@@ -154,6 +162,25 @@ export const loader: LoaderFunction = async ({
 			() => null,
 		),
 	])
+	// The genre row starts with the details and reads its cards while the related map loads. It leaves out the
+	// titles the related map shows.
+	const genreWork = details.then(
+		(media) =>
+			genreRow({
+				mediaType: "show",
+				tmdbId: media.details.tmdb_id,
+				genres: media.details.genres,
+				exclude: [],
+				later: relatedWork.then(relatedMapKeys, () => []),
+				budgetMs,
+				language: canonicalContent ? undefined : language,
+			}).catch((error: unknown) => {
+				console.error("Genre row failed", error)
+				return "late" as const
+			}),
+		// A failed details read fails the page below.
+		() => "late" as const,
+	)
 	// The await below throws a failed details read. This keeps the same failure from also counting as unhandled.
 	parts.catch(() => {})
 
@@ -193,7 +220,10 @@ export const loader: LoaderFunction = async ({
 	)
 	const dehydratedState = mergeDehydratedStates(extrasState)
 
-	const sides = await titleSidesWithin(sidesWork, sidesStart, TITLE_BUDGET_MS)
+	const [sides, genre] = await Promise.all([
+		titleSidesWithin(sidesWork, sidesStart, TITLE_BUDGET_MS),
+		genreWork,
+	])
 	// The page's next 103 Early Hints response names its hero (server/hero-hints.ts).
 	if (media.details.backdrop_path)
 		heroHints.remember(new URL(request.url).pathname, heroBackdropFiles(media.details.backdrop_path))
@@ -209,12 +239,14 @@ export const loader: LoaderFunction = async ({
 		breadcrumb: titleBreadcrumb("show", media.details.genres),
 		dehydratedState,
 		...(related.relatedMap && { relatedMap: related.relatedMap }),
+		...(genre && genre !== "late" && { genreRow: genre }),
 	}
 	// A failed grid read or missing related titles or a missing extra makes the page incomplete.
 	// No cache may keep it. A grid read that resolves to null is complete.
 	const complete =
 		!episodeGridFailed &&
 		related.complete &&
+		genre !== "late" &&
 		titleExtrasEmbedded(extrasState, { genres: media.details.genres })
 	return complete ? data : json(data, { headers: INCOMPLETE_PAGE_HEADERS })
 }
@@ -228,6 +260,7 @@ export default function DetailsTV() {
 		talkedAboutNow,
 		sides,
 		breadcrumb,
+		genreRow,
 	} = useLoaderData<LoaderData>()
 	const { country } = params
 	const episodeGrid = useMemo(
@@ -272,6 +305,6 @@ export default function DetailsTV() {
 	}, [media, country, countryIsFallback])
 
 	return (
-		<Details media={media} country={country} episodeGrid={episodeGrid} talkedAboutNow={talkedAboutNow} sides={sides} breadcrumb={breadcrumb} />
+		<Details media={media} country={country} episodeGrid={episodeGrid} talkedAboutNow={talkedAboutNow} sides={sides} breadcrumb={breadcrumb} genreRow={genreRow} />
 	)
 }

@@ -44,6 +44,13 @@ export const relatedMapHeight = (): ReservedHeight => ({
 	desktop: 576,
 })
 
+// The genre row: the heading and eight posters, two rows of four on a phone and one row of eight on a desktop.
+// Estimated at 412 and 1,440 px wide; measure again when the row's markup changes.
+export const genreRowHeight = (): ReservedHeight => ({
+	phone: 343,
+	desktop: 286,
+})
+
 // A grid of the collection's posters, two per row on a phone and six on a desktop, or one line of text.
 export function sequelsHeight(media: Media): ReservedHeight {
 	const count =
