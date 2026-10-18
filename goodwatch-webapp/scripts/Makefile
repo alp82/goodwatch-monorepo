@@ -25,7 +25,7 @@ sitemaps-checked:
 	echo "Replaced $(SITEMAP_DIR). Review with git diff, then commit and push to main."
 
 sitemaps-test:
-	python3 -m unittest test_sitemap_query test_sitemap_lastmod test_check_sitemap_urls test_sitemap_crate
+	python3 -m unittest test_sitemap_query test_sitemap_selection test_sitemap_lastmod test_check_sitemap_urls test_sitemap_crate
 
 # Weekly, by hand. See docs/research/discovery-search/index-record.md.
 index-record:

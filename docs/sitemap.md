@@ -52,7 +52,21 @@ For the manual fallback:
 | `sitemap_show_detail_0.xml` | 300 show pages. |
 | `sitemap_index_movie_detail.xml`, `sitemap_index_show_detail.xml` | Legacy indexes, kept for their earlier Search Console submissions. |
 
-Person pages are not listed.
+### Title selection and stability
+
+The owner-approved policy (2026-10-18) retains the vote (>5,000), poster, release-year and 30-day details freshness checks. It requires a nonempty synopsis, release/first-air date no later than selection time, adult not true, normalized overall score at least 60, and movie status Released. Shows exclude Talk, News, Soap and Reality, plus Kids with 300 or more episodes. Unknown adult flags remain eligible; unknown release dates do not.
+
+The initial cohort fills 630 movie and 270 show core slots by aggregate GoodWatch vote count descending (TMDB ID ascending for ties), then 70 and 30 attention slots by TMDB popularity descending from the rest. Those measures are cross-source aggregate votes and popularity, respectively.
+
+A `goodwatch-selection` JSON comment in each committed title sitemap records policy version, core IDs, attention IDs and attention review month. Both commands read the previous committed XML; no independent state store or database writes are needed. A sitemap without the comment bootstraps the approved policy once. Corrupt or inconsistent state fails generation rather than silently resetting the cohort.
+
+Eligible core members are retained indefinitely, even when their ranking drops. There are **zero discretionary core replacements**. Missing or newly ineligible members are replaced immediately by eligible vote-ranked titles, preserving attention occupants where possible. Attention members are retained within the UTC calendar month. The first successful run of a new month reviews popularity and replaces at most 35 movies and 15 shows (5% of each total); mandatory ineligibility replacements are exempt from that discretionary cap. Vacancies are filled immediately. A failed live check publishes neither files nor selection state, so a failed monthly review can be retried.
+
+The 30-day freshness filter stays in effect as requested. Investigate/refresh an established title before accepting a freshness-only removal. Broken, redirected or otherwise failing live pages block publication; fix/refresh their catalog data and rerun. The generator does not hide live failures by silently dropping URLs.
+
+### Count policy
+
+The title cap stays at **1,000 until at least 70% of listed titles are indexed**. After that threshold, add **250 titles at a time**, reviewing indexing before each further increase. This is an operating rule, not automatic growth logic.
 
 Which titles are listed, and why, is explained in `goodwatch-webapp/scripts/sitemap_query.py`. A title page answers 404 once TMDB deletes its id, and only a new run drops it. That is the reason for the weekly run.
 
@@ -68,7 +82,7 @@ The manual command compares against `public/sitemaps/`, including when `--output
 
 Read-only CrateDB queries using the unchanged selection found DNA timestamps for all 700 movies and 300 shows (681 movies and 291 shows dated September 25 or later). Catalog-wide, 164,614 of 1,262,680 movies and 87,126 of 234,765 shows had DNA timestamps. The copy reads MongoDB's `updated_at`; `f/dna/generate/vectors.py` and `release_fresh_dna` in `f/dna/generate/fetch.py` advance it when storing repaired vectors, even without changing the analysis. Analysis generation also saves without a significant-content equality comparison. A current database snapshot cannot establish which historical updates changed visible content, so **zero of the 1,000 title entries retain a date**.
 
-A content-hash-based timestamp is worth building later: compare a normalized set of significant public fields when publishing title data, update the timestamp only when that hash changes, and cover independent analysis, metadata, offers and episode updates. Exclude fetch clocks and incidental popularity fluctuations. Define significance for rating/availability changes before implementation, and handle genuine shared-template changes with evidenced deployment dates. This change does not implement hashing or alter title selection.
+A content-hash-based timestamp is worth building later: compare a normalized set of significant public fields when publishing title data, update the timestamp only when that hash changes, and cover independent analysis, metadata, offers and episode updates. Exclude fetch clocks and incidental popularity fluctuations. Define significance for rating/availability changes before implementation, and handle genuine shared-template changes with evidenced deployment dates. Hashing remains future work; selection is governed separately by the policy above.
 
 ## Other commands
 

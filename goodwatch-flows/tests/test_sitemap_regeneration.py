@@ -139,7 +139,11 @@ class SitemapRegenerationTests(unittest.TestCase):
                     target.parent.mkdir(parents=True, exist_ok=True)
                     shutil.copyfile(repo / name, target)
                 connection = Mock()
-                connection.cursor.return_value.fetchall.return_value = [(1, "Example", "Example", None, None)]
+                def execute(sql, *args):
+                    count = 700 if 'FROM movie WHERE' in sql else 300
+                    connection.cursor.return_value.fetchall.return_value = [
+                        (i, "Example", "Example", None, None, 10000-i, i) for i in range(1, count+1)]
+                connection.cursor.return_value.execute.side_effect = execute
                 original_load = worker.load_module
 
                 def load(name, path):
@@ -155,7 +159,7 @@ class SitemapRegenerationTests(unittest.TestCase):
                       patch("builtins.print")):
                     if status == 200:
                         count, files = worker.generate_and_check(root)
-                        self.assertEqual(count, 100)  # Two titles, 87 categories, nine static pages.
+                        self.assertEqual(count, 1098)  # 1,000 titles, 87 categories, 11 static pages.
                         self.assertEqual(len(files), 7)
                     else:
                         with self.assertRaisesRegex(RuntimeError, "Sitemap check failed"):

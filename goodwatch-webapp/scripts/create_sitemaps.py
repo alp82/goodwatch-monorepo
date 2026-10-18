@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 from sitemap_crate import connect_args
 from sitemap_lastmod import SitemapHistory, title_lastmod
 from sitemap_query import detail_query
+from sitemap_selection import select_titles, state_comment
 from utils import title_to_dashed
 
 load_dotenv()
@@ -52,10 +53,12 @@ def url_entry(loc: str, lastmod: Optional[date] = None) -> str:
     return entry + "  </url>\n"
 
 
-def write_urlset(filename: str, entries: List[str]):
+def write_urlset(filename: str, entries: List[str], selection=None):
     with open(os.path.join(SITEMAP_DIR, filename), "w", encoding="utf-8") as sitemap_file:
         sitemap_file.write('<?xml version="1.0" encoding="UTF-8"?>\n')
         sitemap_file.write('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n')
+        if selection is not None:
+            sitemap_file.write(state_comment(selection))
         sitemap_file.writelines(entries)
         sitemap_file.write('</urlset>\n')
     with open(os.path.join(SITEMAP_DIR, filename), 'rb') as generated:
@@ -143,10 +146,12 @@ def create_detail_sitemaps(crate_cursor, table_name: Literal["movie", "show"]):
     """Create sitemaps for the most popular movie and show detail pages."""
     # Which titles are listed, and why: see sitemap_query.py.
     crate_cursor.execute(detail_query(table_name))
-    rows = crate_cursor.fetchall()
+    sitemap_filename = f"sitemap_{table_name}_detail_0.xml"
+    rows, selection = select_titles(crate_cursor.fetchall(), table_name,
+                                    PREVIOUS_SITEMAPS.files.get(sitemap_filename))
 
     entries = []
-    for tmdb_id, title, original_title, details_updated_at, dna_updated_at in rows:
+    for tmdb_id, title, original_title, details_updated_at, dna_updated_at, votes, popularity in rows:
         # Same slug as the canonical URL in app/routes/movie.$movieKey.tsx and show.$showKey.tsx
         slug = title_to_dashed(title or original_title or "")
         lastmod = title_lastmod(dna_updated_at)
@@ -154,11 +159,12 @@ def create_detail_sitemaps(crate_cursor, table_name: Literal["movie", "show"]):
 
     # Filenames stay stable because Search Console has them submitted
     sitemap_filename = f"sitemap_{table_name}_detail_0.xml"
-    index_lastmod = write_urlset(sitemap_filename, entries)
+    index_lastmod = write_urlset(sitemap_filename, entries, selection)
     write_sitemap_index(f"sitemap_index_{table_name}_detail.xml", [(sitemap_filename, index_lastmod)])
 
     return {
         "total_url_count": len(entries),
+        "title_ids": [r[0] for r in rows],
         "lastmod": index_lastmod,
     }
 
