@@ -9,7 +9,13 @@ import tmdbLogo from "~/img/tmdb-logo.svg"
 import { GoodWatchWordmark } from "~/ui/brand/GoodWatchWordmark"
 import { assetUrl } from "~/utils/asset-url"
 import { InviteCard } from "./InviteCard"
-import { CREATOR_URL, FOOTER_COLUMNS, type FooterLink, XMark } from "./links"
+import {
+	CREATOR_URL,
+	FOOTER_COLUMNS,
+	type FooterColumn,
+	type FooterLink,
+	XMark,
+} from "./links"
 import { Reveal, ScrambleText, useFooterView } from "./motion"
 
 const TAGLINE = "Every score, every service, one place."
@@ -105,7 +111,9 @@ function PoweredBy() {
 	)
 }
 
-export default function Footer() {
+export default function Footer({
+	columns = FOOTER_COLUMNS,
+}: { columns?: FooterColumn[] } = {}) {
 	const { ref, hidden, onScreen } = useFooterView<HTMLElement>()
 	const [pointed, setPointed] = useState<FooterLink | null>(null)
 	const nav = useRef<HTMLElement>(null)
@@ -172,7 +180,7 @@ export default function Footer() {
 					<nav
 						ref={nav}
 						aria-label="Footer"
-						className="relative mt-10 grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3"
+						className={`relative mt-10 grid grid-cols-2 gap-x-6 gap-y-10 ${columns.length > 3 ? "sm:grid-cols-4" : "sm:grid-cols-3"}`}
 						onPointerLeave={() => pointAt(null, null)}
 					>
 						<span
@@ -180,7 +188,7 @@ export default function Footer() {
 							aria-hidden
 							className="pointer-events-none absolute top-0 left-0 rounded-lg bg-white/[0.07] opacity-0 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)] transition-[transform,opacity] duration-300 ease-out-back motion-reduce:transition-none"
 						/>
-						{FOOTER_COLUMNS.map((column, i) => (
+						{columns.map((column, i) => (
 							<Reveal key={column.title} hidden={hidden} delay={100 + i * 110}>
 								<h2 className="mb-2 text-xs font-bold tracking-wider text-gray-500 uppercase">
 									{column.title}
