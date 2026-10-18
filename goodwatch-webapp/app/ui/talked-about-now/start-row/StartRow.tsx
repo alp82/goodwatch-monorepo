@@ -28,11 +28,15 @@ import { NativeItems, Platform, SourceMark } from "./Items"
 import { Spark, dateLabel } from "./Spark"
 import type { TalkedQuery } from "./StartRowSlot"
 import "./start-row.css"
+import "./prototype-home.css"
+import { useSearchParams } from "@remix-run/react"
+import { PrototypeSwitcher } from "~/ui/prototype/PrototypeSwitcher"
+import { HOME_VARIANTS, HomeVariant } from "./PrototypeHomeVariants"
 
-const tmdb = (path: string, size: string) =>
+export const tmdb = (path: string, size: string) =>
 	`https://image.tmdb.org/t/p/${size}${path}`
 
-const hrefOf = (title: TalkedTitle) =>
+export const hrefOf = (title: TalkedTitle) =>
 	startTitleHref({
 		media_type: title.mediaType,
 		tmdb_id: title.tmdbId,
@@ -77,7 +81,7 @@ const REASON_ICON: Record<TalkedReason["kind"], string> = {
 	netflix_top10: "M4 13V3l8 10V3",
 }
 
-function ReasonIcon({ kind }: { kind: TalkedReason["kind"] }) {
+export function ReasonIcon({ kind }: { kind: TalkedReason["kind"] }) {
 	return (
 		<svg viewBox="0 0 16 16" className="tn-icon" aria-hidden="true">
 			<path
@@ -93,7 +97,7 @@ function ReasonIcon({ kind }: { kind: TalkedReason["kind"] }) {
 }
 
 /** Up, down or new since the day before. Color is never alone: an arrow or the word says it too. */
-function Move({ move }: { move: TalkedTitle["move"] }) {
+export function Move({ move }: { move: TalkedTitle["move"] }) {
 	if (move === null) return null
 	if (move === "new") return <span className="tn-new">NEW</span>
 	if (move === 0)
@@ -115,13 +119,13 @@ function Move({ move }: { move: TalkedTitle["move"] }) {
 }
 
 /** The board row's second line: the reason and its day, or how many read about it. */
-function why(title: TalkedTitle) {
+export function why(title: TalkedTitle) {
 	if (title.reason)
 		return `${reasonLabel(title.reason, title.mediaType)} · ${dateLabel(title.reason.day)}`
 	return `${compact(title.views)} Wikipedia reads in a day`
 }
 
-function Preview({ title }: { title: TalkedTitle }) {
+export function Preview({ title }: { title: TalkedTitle }) {
 	const pick = previewOf(title.items)
 	if (!pick) return null
 	return (
@@ -150,7 +154,7 @@ function Preview({ title }: { title: TalkedTitle }) {
 	)
 }
 
-function Featured({ title, day }: { title: TalkedTitle; day: string }) {
+export function Featured({ title, day }: { title: TalkedTitle; day: string }) {
 	const [box, width] = useWidth(300)
 	const video = title.items.some((item) => item.source === "youtube")
 	const head = (
@@ -320,8 +324,16 @@ function Board({ row }: { row: TalkedRow }) {
 
 export default function StartRow({ query }: { query: TalkedQuery }) {
 	const { data, isPending } = useQuery(query)
+	const [params] = useSearchParams()
 	// While it loads, the row holds about its place, so the titles below don't jump when it comes.
 	if (isPending) return <div className="tn-wait" aria-hidden />
 	if (!data?.titles.length) return null
-	return <Board row={data} />
+	// PROTOTYPE - throwaway: ?variant=A|B|C, or 0 for the row as it is on main.
+	const variant = params.get("variant") ?? "A"
+	return (
+		<>
+			{variant === "0" ? <Board row={data} /> : <HomeVariant row={data} variant={variant} />}
+			<PrototypeSwitcher variants={{ ...HOME_VARIANTS, 0: "Current row (main)" }} />
+		</>
+	)
 }
