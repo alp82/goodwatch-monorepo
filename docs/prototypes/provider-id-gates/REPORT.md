@@ -1,137 +1,143 @@
 # Provider-ID suggestion benchmark — #709
 
-Throwaway offline prototype on map #702. Owner verdict pending. Identifier-free matching remains #374. No UI or production changes.
+Throwaway offline prototype on map #702. Owner verdict pending. Identifier-free matching stays with #374. No UI or matcher changes. **Recommendation: keep Netflix suggestions member-reviewed as shipped. This benchmark found no reason to change the shipped matcher.** Other providers remain scheduled behind capture evidence that is not available yet; that is not an owner decision here.
 
-## Candidate gates — frozen before evaluation
+Fable independently reproduced the original `3d8160cd` counts and verified that the offline harness executes the shipped reader without production I/O. This revision addresses its framing concerns, adds two mirror cases, removes toy-index latency comparisons and adds one explicitly authorized read-only timestamp query. A sole misassigned provider link with no independent contradiction illustrates the **ceiling of provider-ID evidence**, not a demonstrated retrieval-route defect.
 
-These are proposed limits for **reviewable suggestions**, requiring explicit member acceptance. They do not authorize automatic resolution. This section is committed before harness evaluation; later results must not redefine thresholds.
+## Candidate gates and scope
 
-| Dimension | Candidate acceptance gate |
+The original gates were committed **before evaluation** in `3c951cde` ([frozen protocol](https://github.com/alp82/goodwatch-monorepo/blob/3c951cde/docs/prototypes/provider-id-gates/REPORT.md)). They remain inspectable there. Fable correctly identified that the 99% Wilson lower-bound threshold was too strong as the only option for member-reviewed suggestions, and the synthetic coverage/zero-error framing was inappropriate. The following are explicitly **revised proposals**, not retroactive passes. The owner has not selected either option, and real independent identity review is still pending.
+
+| Dimension | Revised candidate gate / interpretation |
 | --- | --- |
-| Precision | At least 99% observed proposal precision and a two-sided 95% Wilson lower bound ≥99% on independently reviewed provider references; report numerator/denominator. Synthetic challenge cases are a separate deterministic safety check, never population estimates. |
-| Wrong matches | Zero known wrong suggestions on the challenge set and reviewed real set. A sole stale link or a hidden conflicting target must not be described as proven identity. |
-| Coverage | ≥90% correct proposals / all eligible reviewed provider-ID groups, and ≥95% / groups with a valid unambiguous catalog identity. Publish both; do not omit hard cases. |
-| Ambiguity | All known conflicting canonical typed targets abstain; report ambiguous / all eligible groups separately. Missing evidence and backend failure are not ambiguity. |
-| Abstention | Every unsupported, contradictory, missing-target, stale-only or incomplete-evidence challenge abstains. Publish manual / all groups and unavailable / all groups separately; real-set combined abstention ≤10% is a usability target subordinate to precision. |
-| Latency | Ten-group page p50 ≤1.5s, p95 ≤3s, cold and warm reported separately, ≥200 independent page invocations per mode; production applicability requires representative transport/catalog size, not repeated fixture timing. Group deadline 2.5s and page deadline 12s retained. |
-| Requests | ≤100 catalog requests per ten-group page, ≤10 per group averaged on representative data; no provider HTTP calls. An index must report build cost separately; zero per-lookup requests cannot hide refresh cost. |
-| Rows inspected | ≤50,000 returned rows consumed per page and ≤10,000 per group, no sentinel truncation silently treated as absence. Report database rows scanned as unknown without backend query profiles. |
-| Concurrency | ≤3 groups and ≤6 concurrent reads per page, including failed siblings; report aggregate concurrency for simultaneous page calls separately. No implied global limit. |
-| Cancellation | Abort returns within 100ms in an abort-aware fixture transport; no reads start after cancellation, all active reads drain. Check pre-aborted, in-flight, sibling failure and actual deadline. Real transport cancellation remains a separate prerequisite. |
-| Index evidence | Preserve provider namespace, all conflicting typed targets, retired→canonical links and provenance. Reject stale/unknown observation age (candidate freshness ≤30 days), missing/adult targets and supplied-year contradiction. Freshness alone cannot validate a misassigned link. Report cold build and warm lookup separately. |
+| Precision option A — member-reviewed suggestions (recommended) | Zero wrong among **at least 75 independently reviewed proposed identities**; two-sided 95% Wilson lower bound >95%; real-set manual plus unavailable ≤10%. With 75/75 correct, lower bound is 95.13%. The mathematical minimum for that bound is 73 all-correct; the proposed policy minimum is 75. Review the two manual rows too, so the existing list requires **77 row reviews**, including 75 proposed matches. |
+| Precision option B — stricter evidence target | Observed precision ≥99% and two-sided 95% Wilson lower bound ≥99%; zero known wrong in the reviewed set. At least **381/381 all-correct independently reviewed proposals** are required (lower bound 99.002%); the present 75 proposals would need at least 306 additional independent reviews. This is a stronger target suited to considering unattended resolution, but passing it alone would not authorize unattended imports. |
+| Wrong matches | Report real known wrong matches separately from uncertainty and abstention. Test detectable contradictions, conflicts, missing targets and incomplete reads. Misassigned-link fixtures without independent contradictory evidence measure an evidence ceiling; zero errors on those fixtures cannot fairly be a route gate. |
+| Coverage | **Reviewed real set only:** ≥90% correct proposals / all eligible groups and ≥95% / groups with a valid unambiguous catalog identity. Historical proposal coverage is 75/77, not yet verified correct-match coverage. No 90% gate applies to a deliberately abstention-heavy challenge set. |
+| Ambiguity and abstention | Publish ambiguous, manual and unavailable / all eligible groups separately. Abstain on visible conflicts, supplied-year contradictions, missing/adult targets and incomplete reads. Evaluate the experimental freshness policy as a recall tradeoff, not an identity guarantee. Real-set combined abstention target ≤10%. |
+| Latency | Ten-group page p50 ≤1.5s and p95 ≤3s, with ≥200 representative independent invocations per mode and representative transport/catalog size. **Unevaluated here.** Two hundred sequential repetitions of one fixture do not satisfy this requirement. Existing 2.5s/group and 12s/page deadlines remain. |
+| Requests and rows | Proposed engineering budgets: ≤100 catalog calls and ≤50,000 returned rows consumed per ten-group page, with workload averages ≤10 calls/group and ≤10,000 returned rows/group. No provider requests; incomplete budget-limited work stays unavailable. Database scanned rows need query profiles and remain unknown. Index refresh/build costs must be separate from lookups. |
+| Concurrency and cancellation | Retain ≤3 group workers/≤6 catalog reads per page. Propose a separate process-wide ceiling of 24 catalog reads for suggestions, with abortable admission counted against existing deadlines. Caller abort should drain abort-aware fixture reads within 100ms; no reads should start after abort. Production transport cancellation and multi-process admission remain unverified. |
+| Index evidence | Preserve Netflix namespace, retired→canonical identities, all conflicting typed targets and snapshot completeness/version. The optional 30-day row-age policy must explicitly trade coverage for abstention; `updated_at` exists but does not prove identity correctness or provider check time. Never treat an incomplete/outdated snapshot as proof of absence. |
 
-## Protocol fixed before evaluation
+Wilson sample-size arithmetic assumes independently reviewed proposals and still does not remove selection bias from a single list/account. A fully reviewed historical list may establish a bounded pilot, not a population-wide or multi-provider guarantee. Neither confidence intervals nor the challenge-set counts resolve that limitation.
 
-Use actual shipped suggestion source with only catalog and import-group seams replaced in memory. Block all network access; do not import application boot/cache modules or load .env. Compare with a small in-memory provider-ID index using the shipped URL parser and canonicalization. Construct and audit truth labels from synthetic scenarios before running either route; retain rationale per case. Agent semantic review is explicit, not independent owner review.
+## What was built and how to reproduce
 
-Reuse the authorized 77-entry Netflix baseline aggregate and existing 24-entry type/year corroboration as historical evidence only. Do not open real exports or rerun healthy production queries. No precision denominator exists until an independent identity review is supplied. No source-capture recall can be inferred from this benchmark.
+Branch: `prototype/provider-id-gates`. Shipped reader baseline: `5a95d122`. Only `docs/prototypes/provider-id-gates/` changes. The handover supplies this revision's commit; `git log -1 --format=%H` identifies it locally. No issue closure or resolution comment is posted.
 
-Use ≥200 fresh page calls per route/mode with fixed synthetic 2ms per-read delay (event loop adds overhead). Cold means rebuilding index and module seams, not a cold production cache. Report warm repeated fixture behavior without claiming a service cache. Publish unique semantic denominators separately from repeated latency samples. Use nearest-rank percentiles; Wilson intervals describe binomial sampling assumptions only, not uncertainty over adversarial fixtures. Pin source hashes and record runtime/environment.
-
-## Results
-
-The frozen gates are in commit `3c951cde`, before harness execution. Final source baseline is `5a95d122`; this branch changes only `docs/prototypes/provider-id-gates/`. The reproducible artifact is on `prototype/provider-id-gates`; use `git log -1 --format=%H` for its final commit. The handover supplies the exact final commit. No owner verdict is supplied and #709 remains open.
-
-Run from the repository root with Node 24 (measured v24.15.0, Linux x64):
+From the repository root, with Node 24 (measured v24.15.0, Linux x64):
 
 ```sh
 git fetch origin prototype/provider-id-gates
 git switch prototype/provider-id-gates
 node docs/prototypes/provider-id-gates/benchmark.mjs
+git status --short
 ```
 
-The command writes `results.json` beside the harness; expected runtime is roughly 30 seconds. No npm packages, environment file, credentials, database, Redis or provider session are needed. `BENCH_SAMPLES=400 node docs/prototypes/provider-id-gates/benchmark.mjs` increases each timing cell to 400. Fewer than 200 are rejected. `stripTypeScriptTypes` may print Node's experimental warning.
+The run takes about 30 seconds and leaves the committed tree clean. Durations, timestamps and runtime diagnostics go to ignored `results.local.json`; deterministic per-case evidence goes to [semantic-results.json](semantic-results.json). `BENCH_SAMPLES=400` increases each reader timing cell; fewer than 200 are rejected. No npm packages, credentials, app build/server, Redis, database or provider session are needed. Node may print its TypeScript-stripping warning.
 
-The harness strips TypeScript and replaces the five runtime imports of the **actual shipped reader** with explicit seams; it does not reimplement its candidate algorithm. Real timeout/canonicalization helpers and the reader's own native-URL parser execute. Import-group enumeration and catalog transport are fixtures. Changed runtime import count fails closed. Fetch and socket connections throw, so no local build can touch production Redis. The infrastructure and isolated-Valkey notes were read; no app server/build or cache client is started.
+The harness strips TypeScript and substitutes only explicit import/group/catalog seams. It executes the actual shipped reader, real timeout/canonicalization helpers and the reader's own native URL parser. The source has **six import declarations: one `import type` is erased and five value imports remain**; the assertion of five counts those value imports, not the erased type line. This corrects the requested comment's premise. Fetch and socket connections throw in the offline harness. No application initialization or cache client runs.
 
-Reference: [semantic audit](REFERENCE.md), [synthetic fixtures](fixtures.mjs), [raw measured results](results.json), [historical aggregate](netflix-historical-aggregate.json). Truth labels were authored and audited by the implementing agent before their cases executed; this is **not independent owner review**. Cases added during harness development retained predeclared gates. Synthetic names include German and Japanese aliases, plus default English. No browser layouts or profile flows were exercised here.
+References: [reference audit](REFERENCE.md), [fixtures](fixtures.mjs), [semantic outcomes](semantic-results.json), [historical baseline aggregate](netflix-historical-aggregate.json), [one-query freshness aggregate](freshness-aggregate.json). Synthetic truth labels were authored and agent-audited before their cases executed; they are not independent owner adjudications.
 
-### Accuracy and abstention
+## Original challenge results, interpreted correctly
 
-Twenty-five unique semantic worlds include **24 eligible provider-ID groups and one unsupported-ID control**. Thirteen eligible worlds have a certifiable, unambiguous target. Timing repetitions add no identity references.
+The original 25 cases contain **24 eligible provider-ID groups and one unsupported control**. Eleven eligible cases require abstention under the original evidence policy, so its maximum certifiable coverage is **13/24 (54.2%)** by construction. Comparing it with the real-set 90% target is inappropriate. The same fixture worlds are repeated for timing; repetitions add no reviewed identities.
 
-| Metric | Bounded reader | Complete offline snapshot index |
-| --- | ---: | ---: |
-| Proposals / eligible | 13/24 | 14/24 |
-| Certified correct / proposals (conservative proposal precision) | 9/13 (69.2%) | 13/14 (92.9%) |
-| Known wrong target / proposals | 2/13 | 1/14 |
-| Uncertified proposal, identity not adjudicated / proposals | 2/13 | 0/14 |
-| Correct-proposal coverage / all eligible | 9/24 (37.5%) | 13/24 (54.2%) |
-| Correct-proposal coverage / certifiable targets | 9/13 (69.2%) | 13/13 (100%) |
-| Reported ambiguity / eligible | 1/24 | 2/24 |
-| Manual abstention / eligible | 8/24 | 10/24 |
-| Unavailable / eligible | 3/24 | 0/24 |
-| Manual plus unavailable / eligible | 11/24 | 10/24 |
-| Unsafe suggestions violating required abstention | 4/24 | 1/24 |
+**Original bounded-reader headline: 9 certified, 2 correct but uncertifiable, 2 known wrong, out of 13 suggestions.** The latter two are misassigned links whose wrong identity cannot be detected from the supplied provider-ID evidence. Age can trigger abstention for the stale case but cannot diagnose its correctness. The fresh case is inherently undetectable by either route without additional independent evidence.
 
-Both routes also leave the unsupported-ID control manual (all-group manual counts 9/25 and 11/25). States partition the eligible denominator; ambiguity is a subset of manual abstention. Wrong matches and uncertified suggestions partition noncertified proposals, not abstentions. Required-abstention failures overlap known wrong targets, so do not add those rows together.
+| Metric, original cases | Bounded reader | Offline index | Interpretation |
+| --- | ---: | ---: | --- |
+| Suggested / eligible | 13/24 | 14/24 | Challenge behavior, not population coverage. |
+| Certified suggestions | 9 | 13 | Certification by this challenge protocol; not proposal precision. |
+| Correct but uncertifiable suggestions | 2 | 0 | Hidden conflict and unknown age have synthetic underlying truth `movie:101`; the reader picks it but cannot certify it under the original protocol. |
+| Known wrong suggestions | 2 | 1 | Misassigned links; the shared fresh error measures the evidence ceiling. |
+| Reported ambiguity / eligible | 1/24 | 2/24 | Index sees the hidden conflict only because its snapshot is complete. |
+| Manual / eligible | 8/24 | 10/24 | Includes policy abstentions; not automatically better or worse. |
+| Unavailable / eligible | 3/24 | 0/24 | Structural: index already has a complete snapshot while the bounded transport fails/overflows. |
+| Certified / eligible | 9/24 | 13/24 | Descriptive only; no challenge coverage gate. |
 
-The bounded reader's two known errors are the stale wrong link and the fresh wrong link. Its hidden conflict and unknown-age suggestions cannot be certified, but are **not counted as proven wrong identities**. Actual identity precision for the challenge proposals is therefore bounded by 9/13 to 11/13; the conservative gate uses 9/13. The index rejects the hidden conflict and stale/unknown-age links but still follows the fresh wrong link. It also recovers the eleventh-ranked target. With a complete snapshot already available, it remains usable during candidate-lane failure/overflow; that is conditional availability, not evidence that a real refresh cannot fail.
+The unsupported control is manual in both routes (all-group manual counts 9/25 and 11/25). States partition the eligible denominator; ambiguity is a subset of manual. The old 9/13 “69.2% proposal precision” label is withdrawn. If counting known synthetic underlying identities, the bounded proposals comprise **11 correct and 2 wrong**, with certification status reported separately; this also is not a real-world precision estimate. No Wilson population inference is drawn from these selected cases.
 
-Diagnostic two-sided 95% Wilson intervals in `results.json` are 42.4–87.3% (9/13) and 68.5–98.7% (13/14). These are arithmetic illustrations only: the hand-picked challenge worlds are not random samples, and there is no population confidence claim. Neither route meets the zero-wrong-match/abstention gates. The index reaches the certifiable-target coverage gate in fixtures; no route passes the overall accuracy/coverage gate.
+### Structural comparison and mirror cases
 
-### Authorized Netflix baseline, reused without production queries
+| Case(s) | Observed difference | Structural assumption / limit |
+| --- | --- | --- |
+| `alias-overflow`, `offer-overflow`, `lane-failure` | Reader unavailable; index suggests. | Index's complete snapshot predates the failed bounded read. This does not test index refresh failure. |
+| `hidden-conflict` | Reader suggests the underlying correct work; index abstains. | The index is given catalog-wide conflict evidence unavailable in the bounded candidates. |
+| `stale-wrong-link`, `unknown-link-age` | Freshness policy abstains where the reader suggests. | Synthetic age/protocol assumptions; age does not establish which work is correct. Production row-age impact is measured separately below. |
+| `top-ten-miss` | Reader manual; index suggests. | Complete snapshot avoids title ranking's top-ten boundary; database ranking itself is scripted. |
+| **Mirror: `stale-correct-link`** | Reader gives a correct suggestion; index abstains. | A 45-day-old link can still preserve the correct identity. Freshness sacrifices a valid suggestion. |
+| **Mirror: `outdated-snapshot`** | Reader gives a correct suggestion; index manual. | Live catalog contains a new title/link absent from the index's earlier snapshot. Snapshot absence cannot establish catalog absence. |
 
-The saved final real-reader aggregate reports 75 suggested, two manual, zero unavailable out of 77 captured groups: **proposal coverage 75/77 (97.4%)**, manual 2/77, unavailable 0/77. Zero observed candidate-set ambiguity is not catalog-wide uniqueness. The eight sequential pages made 610 successful bounded SELECT requests (7.92/group), maximum six simultaneous reads, maximum 625 returned rows in one query, no overflow; 14.008s total, page range 1.150–2.225s. Total returned rows were not recorded in that aggregate and remain unknown. Eight page timings are inadequate for accepting p95; none is promoted into a production percentile claim.
+The two mirror cases are supplementary; original denominators above stay fixed. The final harness runs **27 cases total, 26 eligible**, with separate original/mirror summaries. Across the mirror pair the reader makes 2/2 correct suggestions; the index makes 0/2 suggestions and abstains twice. These cases expose tradeoffs, not a weighted route ranking. Complete-snapshot wins and snapshot-lag losses cannot establish their frequency in production.
 
-This was one authorized account/list/layout, with no layout/locale/profile generalization. The source reference size and capture recall are unknown. The earlier saved-page type/year agreement of 24/24 is **metadata corroboration**, not an independently reviewed identity denominator. It is also not guaranteed to cover every final reader proposal. Historical proposals in the private review packet predate the final reader validation and are labeled accordingly; per-row equivalence to the final reader was not persisted/proven. No healthy query was rerun to reconstruct that evidence.
+Localized German translation, Japanese alternative title, movie/show numeric-ID collisions, remakes, retired canonical IDs, lowercase wrappers, missing metadata/targets, adult targets, contradictory source observations, hostile hosts and overflow/failure behavior are covered. Candidate lanes and import-group enumeration are injected, so SQL ranking/tokenization and source-group construction are not validated. No real browser layouts/profile flows or new provider scopes are exercised.
 
-No proposal has an independent identity adjudication in this ticket: real precision is unknown (0 reviewed / 75 proposed), and correct-proposal coverage is bounded by 0/77–75/77 until review. Even if all 75 proposals were independently correct, the Wilson lower bound would be only 95.1%, below the proposed 99% lower-bound gate. At least 381 independent all-correct proposals would be needed mathematically; diversity and selection bias still matter. The present sample can reveal defects and guide scope, not satisfy that statistical gate.
+## Authorized Netflix baseline and partial review evidence
 
-### Latency and cost
+The historical actual-reader run returned **75 suggestions, two manual, zero unavailable / 77 captured groups**: proposal coverage 97.4%, abstention 2.6%. All 610 SELECT requests succeeded, maximum six concurrent reads, no overflow, largest returned query 625 rows. Eight pages took 14.008s total, range 1.150–2.225s. Total consumed rows were not recorded. Eight observations cannot establish p95. This is one authorized account/list/layout; capture completeness/reference size and locale/profile generalization are unknown.
 
-Each cell below is **200 sequential ten-group calls**, in one process, same tiny world, fixed 2ms abort-aware delay per catalog call. Cold reader includes creating a fresh source module; warm reader reuses the module. It still performs catalog calls every time: no reader result cache is introduced. Cold index includes building its snapshot; warm index reuses it. These are not cold OS/process/database/cache experiments and are not 800 independent production workloads. Route order is fixed; JIT, event-loop and timer effects limit comparison.
+Partial evidence **does exist**: the owner stated that mapping/matching worked on this list, and the research recorded **24/24 type and release-year agreements** with saved-page metadata. These support feasibility and compatibility. They are clearly **not independently adjudicated identity reviews** of each proposal. Independent identity review is still **0/75**, so a real precision numerator/denominator is not available yet. Correct-proposal coverage remains bounded by 0/77–75/77 until review; that uncertainty does not negate the owner's partial validation.
 
-| Route/mode | Calls | p50 ms | p95 ms | Min–max ms | Catalog calls/page | Returned rows consumed/page | Index rows examined/page |
-| --- | ---: | ---: | ---: | --- | ---: | ---: | ---: |
-| bounded-cold | 200 | 44.266 | 48.812 | 41.284–53.063 | 60 | 120 | 0 |
-| bounded-warm | 200 | 42.278 | 46.963 | 39.829–51.212 | 60 | 120 | 0 |
-| index-cold | 200 | 0.017 | 0.027 | 0.015–0.108 | 0 | 0 | 20 |
-| index-warm | 200 | 0.005 | 0.007 | 0.004–0.029 | 0 | 0 | 20 |
+The private packet contains historical 75 proposals and two manual rows. Per-row equivalence to the final reader output was not persisted/proven, although counts agree; review must preserve any discrepancies. The original healthy matching query was not rerun. The independent Fable reproduction confirms harness/count correctness, not Netflix proposal identity correctness.
 
-Catalog calls are in-process seam calls, **not HTTP requests** in this run. There are zero provider or catalog network requests. The historical baseline's 610 are actual read requests. Returned-row counts include repeated rows across queries; database scanned rows are unknown because no database query profiles are used.
+## New evidence: exactly one read-only timestamp query
 
-The small index build examines **11 input rows** (ten offers, one catalog row), separately from 20 evidence/catalog-row inspections per ten-group lookup page. Cold build p50 0.011ms, p95 0.013ms over 200 builds. Local JSON/snapshot loading and a production refresh are excluded. Synthetic `ageDays` and complete-snapshot status are fixture assumptions; the production reader does not currently supply that provenance. The index is restricted to the implicit Netflix namespace; it cannot mix providers. It preserves all canonical typed targets and offer provenance, including stale conflicts; it rejects unknown/stale sole evidence rather than deleting conflicting identities. It is not a deployed schema or a measured full-catalog service.
+Authorized exception to the offline benchmark: [freshness-audit.mjs](freshness-audit.mjs) issued **one bounded SELECT**, no retries, against Netflix service 8 and the 75 historical typed targets (including retired aliases where applicable). It selected only typed identity, link and `updated_at`, parsed exact Netflix IDs locally and published aggregates only. No production writes or member queries occurred; raw rows/IDs, credentials and exports were not persisted to Git. A private one-shot marker prevents accidental reruns. The configured read-only catalog route follows the memory notes' existing configured-connection recipe; no application build or Redis client was started.
 
-The healthy fixture meets candidate request/row/latency budgets **only for this workload** (60 calls/page, six/group, 120 rows/page, 12/group; peak six reads). The dense single-page stress case returns 5,000 offer rows per group and produces ten suggestions: **60 calls, 50,020 consumed rows/page, 5,002/group**. No individual overflow sentinel fires. It fails the proposed 50,000 page-row budget. Existing per-query caps do not enforce an aggregate page budget. This stress sample is one cost measurement, not a latency percentile dataset.
+At the UTC evaluation time recorded in [freshness-aggregate.json](freshness-aggregate.json):
 
-### Concurrency, cancellation and deadlines
+| Measurement | Count |
+| --- | ---: |
+| Requests | 1 |
+| Returned offer rows | 5,487 |
+| Rows matching a historical native ID and canonical target | 5,439 |
+| Matching rows updated within 30 days | 3,481 |
+| Matching rows older than 30 days | 1,958 |
+| Invalid/missing/future matching timestamps | 0 |
+| Proposals retained by at least one matching row aged 0–30 days | **74/75 (98.7%)** |
+| Proposals rejected, stale-only | **1/75 (1.3%)** |
+| No matching offer / unknown timestamp groups | 0 / 0 |
 
-The healthy page peaks at six active reads. Four simultaneous pages reach **24 active reads**, 240 calls, 480 returned rows; there is no global six-read admission limit. Three group workers/page are exercised by the shipped scheduler, but only read concurrency is directly instrumented.
+This would reduce historical proposal coverage from 75/77 to **74/77 (96.1%)**, with combined manual/policy abstention 3/77 (3.9%). It does **not** show that the rejected identity is wrong, or that any retained identity is right. Countries/offer variants are combined for identity evidence; this is not a country-specific watchability assertion.
 
-- Pre-aborted: zero reads, all ten groups unavailable, return about 2.6ms.
-- In-flight: six active reads aborted; return about 1.6ms after cancellation, zero reads started after abort, zero active reads left.
-- Early sibling failure: twenty reads across ten groups, ten stalled siblings cancelled, peak four, zero active reads left; about 1.5ms total.
-- Actual group deadline: ten groups consume four 2.5s waves, about 10.002s total, twenty reads aborted and zero active reads left. All groups stay unavailable rather than being labeled missing.
-- Index: pre-aborted lookup returns unavailable with zero requests. Its synchronous small build is not interruptible mid-loop; large-build cancellation and index rebuild recovery were not tested.
+Production **does have** `updated_at`: see the [timestamp contract](../../research/continuous-journey/availability-timestamp-contract.md) and [watch-link reader](../../../goodwatch-webapp/app/server/mcp/watch-links.server.ts). The contract distinguishes generic row publication/update time from independently verified provider-check time. Therefore this query measures the proposed `updated_at` age filter's coverage cost, not a validated observation-age or correctness gate. It is new timestamp evidence, not a replay to reproduce the healthy 75/77 matching count. Repeating it is not authorized by this report.
 
-These are one operational case each, not latency confidence estimates. The separate 12s page timer is retained in the real source but was not forced to expire. Socket/database cancellation, production cold/warm behavior, load admission across processes, a large snapshot, refresh publication/expiry and service failures remain unverified. The fixture timing gate passes; representative operational acceptance remains open.
+## Operational measurements and unevaluated latency gate
 
-## Limits and recommendation
+**The latency gate is unevaluated.** There are 200 sequential ten-group calls per reader mode on a single tiny fixture with a fixed 2ms abort-aware delay per catalog call. They are not independent representative invocations. Cold creates a new reader module; warm reuses it. Neither measures cold OS/process/database caches, production transport or workload variation. Descriptive p50/p95 values remain available in ignored `results.local.json`; they are not acceptance evidence.
 
-**Recommendation: narrow scope.** Keep the shipped Netflix route as explicitly member-reviewed suggestions; defer extending it to another provider and defer adopting a production identity index until the owner accepts limits and reviewed identity evidence exists. This is a recommendation, not a verdict or an acceptance decision. Nothing in this artifact changes the shipped matcher.
+Index latency rows are removed. The index uses only **11 input rows** (ten offers, one catalog row) and examines 20 evidence/catalog entries per ten-group lookup. That is inadequate for a realistic Netflix-slice latency comparison. Build duration is local diagnostic output only. Snapshot loading, full Netflix-slice build, refresh cost, memory, concurrent publication and recovery are unmeasured; even the historical query returned up to 625 rows and the new bounded timestamp query returned 5,487. No toy-index speed claim is retained.
 
-A complete index offers a cheap way to retain conflicts and avoid title-retrieval misses, but freshness plus a provider link is insufficient evidence of identity. It trades request work for refresh cost and trust in a snapshot that has not been measured here. It needs provenance and a conservative stale/partial-snapshot policy before a production comparison. The current reader lacks a page-wide row budget and its concurrency limit multiplies across requests; a future extension should explicitly decide both budgets. No broad scan, index refresh or infrastructure change is authorized by this result.
+The healthy reader fixture makes 60 catalog seam calls/page (six/group), consumes 120 returned rows/page (12/group), and peaks at six active reads. These are in-process calls, **zero network requests**. Database scanned rows are unknown. A dense single-page case consumes **50,020 rows** across 60 calls while still suggesting all ten groups; each offer lane returns 5,000 rows without triggering the 5,001 sentinel. This exceeds the proposed page budget, illustrating why an aggregate budget would complement per-query caps, not why an identity is wrong.
 
-Missing source metadata is safe only when identity evidence is sound. Same-name remakes, wrong provider associations, retired IDs, adult/missing targets and type collisions need separate controls. A bounded candidate set cannot establish global uniqueness. New providers need namespace/scope-specific parsing and independently reviewed native identity evidence; no Prime/JustWatch or season/episode identity support was tested. Identifier-free matching stays in [#374](https://github.com/alp82/goodwatch-monorepo/issues/374).
+Four simultaneous pages reach **24 active reads**, 240 calls and 480 consumed rows: the current six-read cap is per page, not global. Proposed follow-up limits are engineering recommendations: 100 calls/50,000 returned rows per page, 24 suggestion catalog reads per process, abortable admission inside existing deadlines, and unavailable for incompletely checked groups. Multi-instance capacity and fairness need load measurement; these choices do not require a product-owner budget question.
 
-## Owner decisions and minimal private review
+Operational assertions pass for pre-abort (zero reads), in-flight abort (six reads cancelled, return under 100ms), early failed sibling (all stalled siblings drained), actual 2.5s group deadlines (ten groups take four waves, about ten seconds), and index pre-abort. No reads start after cancellation and no active fixture reads remain. These are one case each, not latency confidence estimates. The 12s page timer was not forced to expire. Production socket/database cancellation, large synchronous index-build cancellation and multi-process admission remain unverified.
 
-No new capture, browser run or export is required for the existing Netflix review. A prepared **mode-0600** packet is at `~/goodwatch-private/709/review.json`, inside a mode-0700 directory. It contains 77 source rows, 75 historical catalog proposals, and two manual rows; its content never belongs in Git or an issue.
+## Recommendation and limits
 
-1. **Scope:** retain member-reviewed Netflix suggestions and defer other providers/index deployment (recommended), or defer further provider-ID work entirely? This benchmark does not justify automatic resolution.
-2. **Limits:** retain the candidate 99% observed precision plus 99% Wilson lower-bound gate for provider expansion (recommended), or explicitly approve a narrower pilot gate with its smaller denominator and known limitations? Decide the aggregate page-row and cross-request concurrency budgets as part of this choice; current per-query/per-page caps do not establish them globally.
-3. **Private reference review:** review the prepared packet against independent provider/work identity evidence (recommended), or defer identity validation? For each row set `review` to `correct`, `wrong`, `ambiguous`, `absent`, or `unknown`; correct/wrong require `referenceTarget` such as `movie:123` and `independentEvidence` explaining the separate source checked. Inspect both manual rows too. Never treat the same stored streaming link as independent proof. Leave unreviewable cases `unknown`, not correct. If historical rows differ from the final reader, preserve that distinction rather than silently certifying the final route.
+**Recommendation: keep Netflix suggestions member-reviewed as shipped.** This benchmark found no reason to change the shipped matcher. It documents boundaries and a production index's unmeasured tradeoffs; it is not evidence for an automatic identity resolver. The owner's row review is the next evidence needed for a bounded acceptance decision. Other providers wait for capture evidence; no provider-extension verdict is being requested here.
 
-After saving the private packet, produce aggregate counts locally:
+Freshness can remove a misassigned link accidentally, but also a correct old identity; a fresh wrong link remains indistinguishable from a correct one using only that evidence. An index can retain conflicts and recover title-candidate misses while losing newly added identities or completeness during refresh. Neither challenge mix establishes production error frequency. No production index implementation is recommended from the current size/cost evidence. Identifier-free matching remains [#374](https://github.com/alp82/goodwatch-monorepo/issues/374).
+
+## Owner questions — evidence first
+
+1. **Review the 77 rows (about 30 minutes), then run the aggregate command?** Recommended: complete `~/goodwatch-private/709/review.json` now; alternative: defer the decision until that review is possible. This is the evidence that unblocks the decision. Instructions are at the top. Change only the one-character `review` field: `c` correct, `w` wrong, `a` ambiguous, `?` unknown, `-` unreviewed; use `n` for a confirmed manual/absent row with no proposal. `c` attests an independent same-work check; no extra fields are required. Optional notes are useful for exceptions. Never infer correctness from the same stored streaming link. Unknown cases stay unknown. The packet remains mode 0600 outside Git; existing decisions were preserved when upgrading the format.
+2. **Keep Netflix suggestions member-reviewed as shipped, yes or no?** Recommended: **Yes**. The benchmark found no reason to change the shipped matcher. No asks about other providers' schedule or engineering budgets are included.
+3. **Which real-set precision gate should apply?** Recommended **A: member-reviewed gate**, zero wrong among ≥75 independently reviewed proposed identities, 95% Wilson lower bound >95%, combined real-set abstention ≤10% (existing list: 77 row reviews, including 75 proposals; 75/75 yields 95.13%). Alternative **B: stricter target**, observed precision ≥99%, 95% Wilson lower bound ≥99%, zero known wrong; requires at least 381 all-correct proposal reviews, 306 more than this list can provide. Option B still would not itself authorize unattended resolution. Both retain separately reported real coverage/ambiguity/abstention and explicit sample limitations.
+
+After review, from the repository root:
 
 ```sh
 node docs/prototypes/provider-id-gates/private-review.mjs aggregate "$HOME/goodwatch-private/709/review.json"
 ```
 
-The helper validates adjudication consistency and prints only counts and bounds; a partial subset remains explicitly incomplete. Return that aggregate and the chosen scope/gates through the orchestrator; keep notes and raw rows at the private path. An all-correct result for 75 proposals still cannot pass the predeclared statistical gate.
+Return only aggregate output and the two decisions through the orchestrator. Keep raw rows and notes private. The helper supports the one-character format and validates optional typed-reference consistency; unknown/ambiguous or unreviewed proposals cannot satisfy the 75-review gate. It cannot independently verify the owner's attestations.
 
-To regenerate a packet on a different machine with the already authorized local files (never use a new production query):
+To prepare a packet elsewhere using already authorized local files:
 
 ```sh
 mkdir -p "$HOME/goodwatch-private/709"
@@ -141,18 +147,18 @@ node docs/prototypes/provider-id-gates/private-review.mjs prepare \
   "$HOME/goodwatch-private/709/review.json"
 ```
 
-Preparation refuses to overwrite an existing packet. No issue resolution comment, closure, reassignment, follow-up creation, PR, merge or deployment was performed.
+Preparation refuses to overwrite. `upgrade PACKET` preserves prior review decisions while adding the quicker instructions. No new capture/export or production query is required for the owner step.
 
-## Follow-up ticket proposals — do not create yet
+## Proposed follow-ups — do not create yet
 
-- **Enforce provider suggestion page budgets:** What aggregate row/request and cross-request concurrency limits should stop work with an unavailable state?
-- **Audit native identity conflicts and provenance:** Can a bounded read-only snapshot preserve every typed conflict, observation age and incomplete-refresh marker without implying current availability equals identity?
-- **Validate accepted provider slice:** Which independently reviewed provider-specific reference set, permitted operational benchmark and owner-approved gates justify implementation under #702?
+- **Enforce provider suggestion engineering budgets:** Can abortable admission cap suggestion reads at 24/process and pages at 100 calls/50,000 returned rows, keeping incompletely checked groups unavailable within existing deadlines?
+- **Benchmark a realistic Netflix identity snapshot:** What build/refresh/lookup cost, memory and lag result from the actual Netflix slice while preserving conflicts, retired aliases and partial-refresh state?
+- **Validate an accepted provider slice:** Once capture evidence exists, which independently reviewed native-identity references and representative operational measurements support that provider's bounded member-reviewed route?
 
-These are proposed questions, not duplicate matching work under #374 or provider-capture tickets. Implementation would follow an owner decision and the map's build/validation/release cycle.
+These are proposed questions, not created tickets or duplicated work under #374. Accepted execution would follow #702's build/validation/release cycle.
 
-## Verification
+## Verification and remaining work
 
-The final harness completed all 25 semantic cases, 800 ten-group timing calls, four cancellation/deadline cases, four simultaneous pages, index pre-abort, and the dense-page case. Validity assertions passed; route acceptance gates deliberately did not. Private packet preparation and aggregate generation ran against existing local artifacts; there are zero independently adjudicated proposal rows so far. Node syntax checks and `git diff --check` passed. Production reader SHA-256 is `50b60a78cdc66f42470fc69c686b511ea684083241c51aa8cf3d7fd257a08dbe`; fixture SHA-256 is `4d64d05e3d3f07f035d64b5d3ad54c696864fc619bb6b617b88532c9345ca287`. Full precision/coverage counts, per-case outcomes, timing distributions and costs are in `results.json`.
+The revised harness runs 25 original cases plus two mirrors, 400 sequential reader timing calls (descriptive only), four cancellation/deadline cases, four simultaneous pages, index pre-abort and dense-page cost checks. All harness validity assertions pass; there is no synthetic route-acceptance verdict. Deterministic outcomes are committed; volatile timings are ignored so a reproduction leaves Git clean.
 
-No app build, full app suite, browser/provider capture, production database query/write, Redis access, deployment or large-index refresh was run in this ticket. Application code is unchanged; the remaining real reference review and owner verdict are explicit prerequisites rather than invented results.
+The private packet upgrade and aggregate command were exercised; current independent identity adjudication remains 0/75. The one newly authorized bounded timestamp SELECT completed successfully and only aggregate results were published. No other database reads, database/member/provider writes, Redis access, app build, deployment, issue resolution comment, closure, PR or merge occurred. Production latency and realistic index performance remain unevaluated. Owner review and verdict remain open.

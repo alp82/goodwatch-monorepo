@@ -1,0 +1,18 @@
+{
+  "evaluatedAt": "2026-10-18T23:55:34.965Z",
+  "requests": 1,
+  "readOnly": true,
+  "proposedGroups": 75,
+  "returnedRows": 5487,
+  "matchingNativeIdRows": 5439,
+  "recentMatchingRows": 3481,
+  "staleMatchingRows": 1958,
+  "invalidTimestampRows": 0,
+  "retainedGroups": 74,
+  "rejectedGroups": 1,
+  "staleOnlyGroups": 1,
+  "unknownTimestampGroups": 0,
+  "noMatchingOfferGroups": 0,
+  "rule": "At least one exact native-ID/canonical-target link with numeric UTC-ms updated_at age in [0,30 days]",
+  "caveat": "updated_at is a publication/update timestamp, not independent identity verification or proof of provider observation time; historical proposals only"
+}

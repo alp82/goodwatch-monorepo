@@ -39,16 +39,16 @@ export const fixtures = [
     names: { movie: [101], show: [102] }, show: [row(102)], offers: [link(), link(102, '8001', { media_type: 'show' })], expected: null,
   }),
   base('hidden-conflict', 'Conflicting show is outside title/alias candidates; a complete identity snapshot must retain it.', {
-    show: [row(102, 'Unrelated Label')], offers: [link(), link(102, '8001', { media_type: 'show' })], expected: null,
+    truth: 'movie:101', show: [row(102, 'Unrelated Label')], offers: [link(), link(102, '8001', { media_type: 'show' })], expected: null,
   }),
   base('stale-wrong-link', 'Only link points at the wrong remake and was observed 45 days ago; correct work is movie:102.', {
     movie: [row(), row(102, 'True Work')], offers: [link(101, '8001', { ageDays: 45 })], expected: 'movie:102', mustAbstain: true,
   }),
-  base('fresh-wrong-link', 'A newly observed but misassigned link is still wrong; truth is independent of link freshness.', {
+  base('fresh-wrong-link', 'Evidence ceiling: a fresh misassigned link cannot be detected by any method using only this provider-ID evidence.', {
     movie: [row(), row(102, 'True Work')], expected: 'movie:102', mustAbstain: true,
   }),
   base('unknown-link-age', 'Unknown observation age cannot meet a freshness gate.', {
-    offers: [link(101, '8001', { ageDays: null })], expected: null,
+    offers: [link(101, '8001', { ageDays: null })], expected: null, truth: 'movie:101',
   }),
   base('missing-source-metadata', 'Known identity remains usable without source year or original catalog year.', {
     movie: [row(101, 'Invented Work', null)],
@@ -73,6 +73,12 @@ export const fixtures = [
     offers: Array.from({ length: 5001 }, () => link()), expected: 'movie:101', readerUnavailable: true,
   }),
   base('lane-failure', 'One failed candidate lane must cancel its sibling and abstain.', { fail: true, expected: 'movie:101', readerUnavailable: true }),
+  base('stale-correct-link', 'Mirror: a correct identity link is 45 days old; freshness loses a valid suggestion.', {
+    offers: [link(101, '8001', { ageDays: 45 })], supplementary: true,
+  }),
+  base('outdated-snapshot', 'Mirror: live catalog has a newly added title, absent from the older index snapshot.', {
+    snapshotOffers: [], snapshotMovie: [], supplementary: true,
+  }),
   base('unsupported-id', 'Identifier-free/invalid provider-ID matching remains outside #709.', {
     source: { title: 'Invented Work', sourceId: null, year: null }, expected: null,
   }),

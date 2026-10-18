@@ -28,6 +28,8 @@ let imports = 0;
 async function loadReader() {
   let code = stripTypeScriptTypes(source);
   const importLines = code.match(/import\s+[\s\S]*?from\s+["'][^"']+["'];?/g) ?? [];
+  // Five VALUE imports remain after stripping; the sixth source declaration is
+  // `import type` and is erased by stripTypeScriptTypes (not counted here).
   assert.equal(importLines.length, 5, 'Review seam adaptation when production imports change');
   code = code.replace(/import\s+[\s\S]*?from\s+["'][^"']+["'];?/g, '');
   code = `const {withBackendTimeout,canonicalTitleId,searchQuery,chunks,marks,WishlistMatchError,matchingGroups}=globalThis.__providerIdBenchmark;\n${code}\nexport {nativeId};\n// instance ${imports++}`;
@@ -89,8 +91,9 @@ function buildIndex(f) {
   const start = performance.now();
   const map = new Map();
   const catalogRows = new Map();
-  for (const type of ['movie', 'show']) for (const row of f[type]) catalogRows.set(key(type, row.tmdb_id), row);
-  for (const offer of f.offers) {
+  const catalogs = {movie:f.snapshotMovie ?? f.movie, show:f.snapshotShow ?? f.show};
+  for (const type of ['movie', 'show']) for (const row of catalogs[type]) catalogRows.set(key(type, row.tmdb_id), row);
+  for (const offer of f.snapshotOffers ?? f.offers) {
     const id = reader.nativeId(offer.stream_url);
     if (!id) continue;
     if (!map.has(id)) map.set(id, new Map());
@@ -99,7 +102,7 @@ function buildIndex(f) {
     const evidence = targets.get(identity) ?? [];
     evidence.push(offer); targets.set(identity, evidence);
   }
-  return { map, catalogRows, buildMs: performance.now() - start, rowsInspected: f.offers.length + f.movie.length + f.show.length };
+  return { map, catalogRows, buildMs: performance.now() - start, rowsInspected: (f.snapshotOffers ?? f.offers).length + catalogs.movie.length + catalogs.show.length };
 }
 function indexLookup(f, index, group, signal, counters = { indexRowsInspected: 0 }) {
   if (signal?.aborted) return { state: 'unavailable', reason: 'cancelled' };
@@ -121,26 +124,22 @@ function indexLookup(f, index, group, signal, counters = { indexRowsInspected: 0
 }
 function classify(f, result) {
   const proposed = result.proposal ? key(result.proposal.mediaType, result.proposal.tmdbId) : null;
-  return { name: f.name, eligible: f.source.sourceId !== null, expected: f.expected, mustAbstain: f.mustAbstain ?? f.expected === null,
+  return { name: f.name, supplementary: f.supplementary ?? false, eligible: f.source.sourceId !== null, expected: f.expected, mustAbstain: f.mustAbstain ?? f.expected === null,
     state: result.state, reason: result.reason ?? null, proposed,
     correct: result.state === 'suggested' && proposed === f.expected && !f.mustAbstain,
+    correctButUncertifiable: result.state === 'suggested' && f.expected === null && proposed === f.truth,
     wrong: result.state === 'suggested' && f.expected !== null && proposed !== f.expected,
-    unsafe: result.state === 'suggested' && (f.expected === null || f.mustAbstain === true),
+    originalPolicyAbstentionViolation: result.state === 'suggested' && (f.expected === null || f.mustAbstain === true),
   };
-}
-function wilson(x, n) {
-  if (!n) return null;
-  const z = 1.95996398454, d = 1 + z*z/n, center = (x/n + z*z/(2*n))/d;
-  const half = z*Math.sqrt(x/n*(1-x/n)/n + z*z/(4*n*n))/d;
-  return [center-half, center+half];
 }
 function summarize(rows) {
   const e = rows.filter(r => r.eligible), proposed = e.filter(r => r.state === 'suggested');
   const correct = e.filter(r => r.correct).length, matchable = e.filter(r => r.expected && !r.mustAbstain).length;
   return { allGroups: rows.length, eligible: e.length, matchable,
     proposed: proposed.length, correct, wrong: e.filter(r => r.wrong).length, uncertified: e.filter(r => r.state === 'suggested' && r.expected === null).length,
-    unsafe: e.filter(r => r.unsafe).length,
-    precision: { numerator: correct, denominator: proposed.length, wilson95: wilson(correct, proposed.length), inferential: false },
+    originalPolicyAbstentionViolation: e.filter(r => r.originalPolicyAbstentionViolation).length,
+    correctButUncertifiable: e.filter(r => r.correctButUncertifiable).length,
+    certifiedFraction: { numerator: correct, denominator: proposed.length, inferential: false },
     coverage: { numerator: correct, denominator: e.length }, matchableCoverage: { numerator: correct, denominator: matchable },
     ambiguity: e.filter(r => r.reason === 'ambiguous_native_id').length,
     manual: e.filter(r => r.state === 'manual').length, unavailable: e.filter(r => r.state === 'unavailable').length,
@@ -165,26 +164,17 @@ const quantiles = a => { const v = [...a].sort((x,y) => x-y); return { n: v.leng
 const samples = Number(process.env.BENCH_SAMPLES ?? 200);
 assert.ok(Number.isSafeInteger(samples) && samples >= 200 && samples <= 2000);
 const latency = {};
-for (const route of ['bounded', 'index']) for (const mode of ['cold', 'warm']) {
-  const elapsed = [], builds = [], requests = [], rows = [], indexRows = []; let peak = 0;
-  const warmIndex = buildIndex(performanceFixture);
+for (const mode of ['cold', 'warm']) {
+  const elapsed = [], requests = [], rows = []; let peak = 0;
   for (let i=0; i<samples; i++) {
     const s = configure(performanceFixture, 10, { delayMs: 2 });
-    s.indexRowsInspected = 0;
     const started = performance.now();
-    if (route === 'bounded') {
-      const module = mode === 'cold' ? await loadReader() : reader;
-      const result = await module.getWishlistSuggestions('synthetic', 'synthetic');
-      assert.equal(result.groups.length, 10); assert.ok(result.groups.every(r => r.state === 'suggested'));
-    } else {
-      const index = mode === 'cold' ? buildIndex(performanceFixture) : warmIndex;
-      if (mode === 'cold') builds.push(index.buildMs);
-      for (const group of seam.groups) assert.equal(indexLookup(performanceFixture, index, group, undefined, s).state, 'suggested');
-    }
-    elapsed.push(performance.now() - started); requests.push(s.requests); rows.push(s.rowsConsumed); indexRows.push(s.indexRowsInspected); peak = Math.max(peak, s.peak);
+    const module = mode === 'cold' ? await loadReader() : reader;
+    const result = await module.getWishlistSuggestions('synthetic', 'synthetic');
+    assert.equal(result.groups.length,10); assert.ok(result.groups.every(r=>r.state==='suggested'));
+    elapsed.push(performance.now()-started); requests.push(s.requests); rows.push(s.rowsConsumed); peak=Math.max(peak,s.peak);
   }
-  latency[`${route}-${mode}`] = { pageMs: quantiles(elapsed), requestsPerPage: quantiles(requests), rowsConsumedPerPage: quantiles(rows), peakConcurrentReads: peak, indexRowsInspectedPerPage: quantiles(indexRows),
-    ...(builds.length ? { buildMs: quantiles(builds) } : {}), indexBuildRows: route === 'index' ? warmIndex.rowsInspected : null };
+  latency[`bounded-${mode}`] = {pageMs:quantiles(elapsed),requestsPerPage:quantiles(requests),rowsConsumedPerPage:quantiles(rows),peakConcurrentReads:peak};
 }
 const operations = [];
 for (const mode of ['pre-aborted', 'in-flight', 'failed-sibling', 'group-deadline']) {
@@ -220,10 +210,14 @@ const result = {
   schema: 1, generatedAt: new Date().toISOString(), runtime: process.version, platform: `${process.platform}/${process.arch}`,
   sourceSha256: hash(source), fixturesSha256: hash(await readFile(resolve(here, 'fixtures.mjs'))),
   network: 'Denied fetch and net.Socket.connect; no application boot or credentials loaded',
-  semantic: { bounded: summarize(semantic.bounded), index: summarize(semantic.index), cases: semantic },
+  semantic: { bounded: summarize(semantic.bounded.filter(r => !r.supplementary)), index: summarize(semantic.index.filter(r => !r.supplementary)),
+    mirrors: {bounded: summarize(semantic.bounded.filter(r => r.supplementary)), index: summarize(semantic.index.filter(r => r.supplementary))}, cases: semantic },
   latency, operations, simultaneousPages: { pages: 4, ...multi }, indexCancellation: indexCancelled,
-  percentiles: 'Nearest rank; 200+ sequential calls per route/mode, ten groups/page, 2ms synthetic transport/read',
+  percentiles: 'Descriptive nearest rank only; 200+ sequential calls on one fixture per reader mode, not independent representative invocations; latency gate UNEVALUATED',
 };
-await writeFile(resolve(here, 'results.json'), `${JSON.stringify(result, null, 2)}\n`);
+await writeFile(resolve(here, 'results.local.json'), `${JSON.stringify(result, null, 2)}\n`);
 console.log(JSON.stringify({ semantic: { bounded: result.semantic.bounded, index: result.semantic.index }, latency, operations, simultaneousPages: result.simultaneousPages }, null, 2));
+// Stable semantic evidence is committed; durations and timestamps remain local.
+const stable = { sourceSha256:result.sourceSha256, fixturesSha256:result.fixturesSha256, ...result.semantic, cases: Object.fromEntries(Object.entries(semantic).map(([route,rows]) => [route, rows.map(({build,...r}) => ({...r, ...(build ? {buildRowsInspected:build.rowsInspected} : {})}))])) };
+await writeFile(resolve(here, 'semantic-results.json'), `${JSON.stringify(stable, null, 2)}\n`);
 globalThis.fetch = originalFetch;
