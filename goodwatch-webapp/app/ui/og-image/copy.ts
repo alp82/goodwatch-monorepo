@@ -9,6 +9,7 @@
 // - Titles, names, years, and runtimes: the database.
 
 // Relative with the extension, because copy.test.ts runs this file in plain Node.
+import { type ListKind, listName, listNoun } from "../../domain/best-lists.ts"
 import { USE_WITH_AI_ASKS } from "../connector/example-prompts.ts"
 
 export const BRAND_NAME = "GoodWatch"
@@ -53,6 +54,13 @@ export const typeIndexCopy = (typeLabel: string): PageCopy => ({
 		"By genre, mood, or streaming service. Scored from IMDb, Rotten Tomatoes, and Metacritic.",
 })
 
+// /movies/best and /shows/best.
+export const bestListCopy = (kind: ListKind): PageCopy => ({
+	tag: listName(kind),
+	title: `The best ${listNoun(kind)} of all time`,
+	subtitle: "Ranked by GoodWatch score",
+})
+
 // /movies/moods, /shows/genres, and so on. categoryLabel is "Moods", "Streaming", "Genres".
 export const categoryIndexCopy = (
 	typeLabel: string,
@@ -87,6 +95,11 @@ export const STATIC_PAGE_COPY: Record<string, PageCopy> = {
 		tag: "Discover",
 		title: "Discover your next favorite",
 		subtitle: "Filter by streaming service, score, mood, cast, and more.",
+	},
+	"/people": {
+		tag: "People",
+		title: "Popular actors",
+		subtitle: "Their best-known movies and shows",
 	},
 	"/how-it-works": {
 		tag: "How it works",

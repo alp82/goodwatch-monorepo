@@ -2,6 +2,8 @@
 
 Date: October 18, 2026. Stage 1 of the plan in [the internal links proposal](../internal-links-proposal.md) (B2 and P3): names, contents, and layouts for the owner to choose. Nothing ships yet.
 
+**Decision (October 19, 2026):** the owner took every recommendation: the three addresses and headings, layout A for both lists and for people, GoodWatch score order, footer F1 with icons the page already draws, and a link from each hub. The prototype route is removed; the pages are `app/routes/$type.best.tsx` and `app/routes/people.tsx`.
+
 The mockups are screenshots of a prototype route that uses the site's real components and real data: open [mockups.html](mockups.html), or run the prototype (see [How to run the prototype](#how-to-run-the-prototype)).
 
 ## Recommendation
@@ -90,14 +92,9 @@ Every variant uses existing pieces only: the category grid's `MovieTvCard`, the 
 - Link names: Best movies, Best TV shows, People. Captions (shown on hover): "The 700 best, ranked", "The 300 best, ranked", "Popular actors, all their titles".
 - The start page sends 19,963 bytes of Brotli HTML against its 20,480-byte `html_bytes` line. Icons are inline SVG: a new shape costs about 0.25 KB, a repeated one almost nothing. Stage 2 runs `./bench.sh budget` for the footer change.
 
-## How to run the prototype
+## The prototype
 
-This thread's branch (`ghostex/1745cee9` when written; Ghostex renames it after the thread). Route `/prototype/best-of?view=movies|shows|people|footer&v=A|B|C&sort=score|votes&page=N`, with a switcher in the bottom-left corner.
-
-1. Start a throwaway Valkey cluster on port 6398 so nothing touches production Redis (see the local isolated Valkey recipe).
-2. In `goodwatch-webapp`, export the `.env` values, set `REDIS_HOST=127.0.0.1 REDIS_PORT=6398 REDIS_PASS=`, and run `npx remix vite:dev --port 3091`.
-
-Prototype files: `app/routes/prototype.best-of.tsx`, `app/ui/prototype-best-of/variants.tsx`, `app/server/prototype-best-of.server.ts`, and an optional `columns` prop on `app/ui/footer/Footer.tsx`. None of them ship: stage 2 builds the chosen variants as real routes.
+The screenshots came from a prototype route, `/prototype/best-of`, removed after the decision. Its code is in the commit that added this file (`app/routes/prototype.best-of.tsx`, `app/ui/prototype-best-of/variants.tsx`, `app/server/prototype-best-of.server.ts`). It ran on the dev server with a throwaway Valkey cluster, so nothing touched production Redis.
 
 ## Questions for the owner
 

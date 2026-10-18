@@ -1,4 +1,4 @@
-// Where the footer links go, grouped into its three columns, with the icon and the line that the footer's caption
+// Where the footer links go, grouped into its four columns, with the icon and the line that the footer's caption
 // shows while a link is pointed at.
 import {
 	CpuChipIcon,
@@ -14,6 +14,7 @@ import {
 	ScaleIcon,
 	SignalIcon,
 	TvIcon,
+	UserCircleIcon,
 } from "@heroicons/react/24/solid"
 import type { ComponentType } from "react"
 
@@ -127,6 +128,31 @@ export const FOOTER_COLUMNS: FooterColumn[] = [
 				href: "/taste",
 				blurb: "Your taste fingerprint",
 				icon: FingerPrintIcon,
+			},
+		],
+	},
+	// The sitemap's titles and people, each list one link from every page. The icons are ones the page already draws
+	// (Movies, Shows, and the header's Sign in), so the column adds no new image to every page's HTML.
+	{
+		title: "Best of",
+		links: [
+			{
+				name: "Best movies",
+				href: "/movies/best",
+				blurb: "The best-known movies, ranked",
+				icon: FilmIcon,
+			},
+			{
+				name: "Best TV shows",
+				href: "/shows/best",
+				blurb: "The best-known shows, ranked",
+				icon: TvIcon,
+			},
+			{
+				name: "People",
+				href: "/people",
+				blurb: "Popular actors and their titles",
+				icon: UserCircleIcon,
 			},
 		],
 	},

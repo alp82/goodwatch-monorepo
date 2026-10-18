@@ -212,3 +212,54 @@ test("a page has one robots tag: index by default, or the directive it asks for"
 		["noindex, nofollow"],
 	)
 })
+
+test("a ranked list page carries its entries as an ItemList and links its neighbor pages", () => {
+	const tags = buildMeta({
+		pageMeta: { ...page, url: "https://goodwatch.app/movies/best?page=2" },
+		itemList: {
+			paths: ["/movie/238-the-godfather", "/movie/389-12-angry-men"],
+			first: 251,
+		},
+		pages: { prev: "/movies/best", next: "/movies/best?page=3" },
+	}) as Record<string, unknown>[]
+	const list = tags.find(
+		(tag) =>
+			(tag["script:ld+json"] as { "@type"?: string } | undefined)?.["@type"] ===
+			"ItemList",
+	)?.["script:ld+json"]
+	assert.deepEqual(list, {
+		"@context": "https://schema.org",
+		"@type": "ItemList",
+		itemListElement: [
+			{
+				"@type": "ListItem",
+				position: 251,
+				url: "https://goodwatch.app/movie/238-the-godfather",
+			},
+			{
+				"@type": "ListItem",
+				position: 252,
+				url: "https://goodwatch.app/movie/389-12-angry-men",
+			},
+		],
+	})
+	const link = (rel: string) =>
+		tags.find((tag) => tag.tagName === "link" && tag.rel === rel)?.href
+	assert.equal(link("canonical"), "https://goodwatch.app/movies/best?page=2")
+	assert.equal(link("prev"), "https://goodwatch.app/movies/best")
+	assert.equal(link("next"), "https://goodwatch.app/movies/best?page=3")
+	assert.equal(
+		tags.find((tag) => tag.name === "robots")?.content,
+		"index, follow",
+	)
+})
+
+test("a page without list entries or neighbors has no ItemList and no prev or next link", () => {
+	const tags = buildMeta({
+		pageMeta: page,
+		itemList: { paths: [], first: 1 },
+		pages: {},
+	}) as Record<string, unknown>[]
+	assert.ok(!tags.some((tag) => JSON.stringify(tag).includes("ItemList")))
+	assert.ok(!tags.some((tag) => tag.rel === "prev" || tag.rel === "next"))
+})

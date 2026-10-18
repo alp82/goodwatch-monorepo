@@ -10,6 +10,7 @@ import { exploreAddressExists, notFound } from "~/ui/explore/address"
 import { type NavType, navLabel } from "~/ui/explore/config"
 import { mainNavigation } from "~/ui/explore/main-nav"
 import { exploreHubCopy } from "~/ui/explore/page-copy"
+import { listNoun } from "~/domain/best-lists"
 import {
 	type PageItem,
 	type PageMeta,
@@ -52,6 +53,9 @@ const canonicalLoader: LoaderFunction = async ({
 	}
 }
 
+const bestIntro = (type: NavType) =>
+	`The best-known ${listNoun(type)} on GoodWatch, ranked by one score from IMDb, Rotten Tomatoes, Metacritic and TMDB.`
+
 export default function Movies() {
 	const { type } = useLoaderData<LoaderData>()
 	const copy = exploreHubCopy(type)
@@ -63,6 +67,23 @@ export default function Movies() {
 			</h1>
 			<p className="mb-8 text-xl text-gray-400">{copy.intro}</p>
 			<div className="mt-4 flex flex-col gap-10">
+				{/* The ranked list of the sitemap's titles, in the same look as the category sections below. */}
+				<div>
+					<Link to={`/${type}/best`} prefetch="viewport">
+						<div className="text-6xl font-extrabold opacity-40 text-gray-400 hover:opacity-60 hover:text-amber-400 transition-all">
+							Best of all time
+						</div>
+					</Link>
+					<div className="my-2 text-2xl text-gray-400">
+						<span className="font-semibold">Ranked</span>:{" "}
+						<span className="text-xl">{bestIntro(type)}</span>
+					</div>
+					<Link to={`/${type}/best`} prefetch="viewport">
+						<div className="text-lg font-semibold text-indigo-500 hover:text-indigo-400 transition-all">
+							{`See the best ${listNoun(type)} of all time`}
+						</div>
+					</Link>
+				</div>
 				{Object.values(mainNavigation).map((navItem) => {
 					const items = Object.values(navItem.items).filter((pageData) => {
 						return ["all", type].includes(pageData?.type)

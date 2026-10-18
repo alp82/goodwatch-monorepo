@@ -82,6 +82,13 @@ export interface MetaOptions {
 	robots?: RobotsDirective
 	/** The country the title page shows offers for: its WatchActions are that country's. */
 	country?: string
+	/**
+	 * A ranked list's entries on this page, as ItemList structured data: the paths of their pages, and the rank of the
+	 * first one. Positions continue across the pages of a list.
+	 */
+	itemList?: { paths: readonly string[]; first: number }
+	/** The paths of the previous and the next page of a paged list. */
+	pages?: { prev?: string; next?: string }
 }
 
 export const buildMeta = (params: MetaOptions) => {
@@ -148,9 +155,37 @@ export const buildMeta = (params: MetaOptions) => {
 		? breadcrumbJsonLd(params.breadcrumbs)
 		: null
 	if (breadcrumbList) metaTags.push({ "script:ld+json": breadcrumbList })
+	if (params.itemList?.paths.length)
+		metaTags.push({ "script:ld+json": itemListJsonLd(params.itemList) })
+	for (const rel of ["prev", "next"] as const) {
+		const path = params.pages?.[rel]
+		if (path)
+			metaTags.push({
+				tagName: "link",
+				rel,
+				href: `https://goodwatch.app${path}`,
+			})
+	}
 
 	return metaTags
 }
+
+/**
+ * A ranked list as ItemList structured data, in the summary-page form: each entry is its position and the address of
+ * its own page, which carries the entry's details.
+ */
+export const itemListJsonLd = ({
+	paths,
+	first,
+}: { paths: readonly string[]; first: number }) => ({
+	"@context": "https://schema.org",
+	"@type": "ItemList",
+	itemListElement: paths.map((path, index) => ({
+		"@type": "ListItem",
+		position: first + index,
+		url: `https://goodwatch.app${path}`,
+	})),
+})
 
 /**
  * The people of a credit list as structured data, each person once. A list can name a person once per role or job
