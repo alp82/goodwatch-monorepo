@@ -29,6 +29,7 @@ import { PrototypeSwitcher } from "~/ui/prototype/PrototypeSwitcher"
 import type { ScoringMedia } from "~/ui/scoring/types"
 import { RatingDots } from "~/ui/taste-quiz/TasteQuizPage"
 import { ScoreControl } from "~/ui/title-actions/ScoreControl"
+import { Round2, VARIANTS_2 } from "./OnboardingImports2"
 
 export const VARIANTS = {
 	now: "Today: rate one at a time",
@@ -36,6 +37,10 @@ export const VARIANTS = {
 	B: "Two lanes",
 	C: "Drop first",
 	D: "Checklist",
+	E: "",
+	F: "",
+	G: "",
+	H: "",
 } as const
 type Variant = keyof typeof VARIANTS
 
@@ -44,20 +49,20 @@ export const onboardingVariant = (params: URLSearchParams) => {
 	return v && v in VARIANTS ? (v as Variant) : null
 }
 
-const GOAL = 5
-const LIKED = 7
-const keyOf = (t: { media_type: string; tmdb_id: number }) =>
+export const GOAL = 5
+export const LIKED = 7
+export const keyOf = (t: { media_type: string; tmdb_id: number }) =>
 	`${t.media_type}-${t.tmdb_id}`
-const image = (path: string | undefined, size: string) =>
+export const image = (path: string | undefined, size: string) =>
 	path ? `https://image.tmdb.org/t/p/${size}${path}` : undefined
-const ghost =
+export const ghost =
 	"inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-full border-2 border-gray-700 px-5 font-semibold text-gray-200 hover:border-gray-500 md:min-h-10"
 
-const source = (id: ImportSourceId) =>
+export const source = (id: ImportSourceId) =>
 	IMPORT_SOURCE_LIST.find((s) => s.id === id) as ImportSourceEntry
 /** The sources most new members come from, in the order the tiles show them. */
-const TOP: ImportSourceId[] = ["letterboxd", "imdb", "trakt", "tmdb", "plex"]
-const REST = IMPORT_SOURCE_LIST.filter((s) => !TOP.includes(s.id))
+export const TOP: ImportSourceId[] = ["letterboxd", "imdb", "trakt", "tmdb", "plex"]
+export const REST = IMPORT_SOURCE_LIST.filter((s) => !TOP.includes(s.id))
 
 // ---------------------------------------------------------------------------------------------------------------
 // Simulated import
@@ -89,7 +94,7 @@ const fakeCounts = (seed: number, src: ImportSourceId): Counts => {
 	}
 }
 
-function useFakeImport() {
+export function useFakeImport() {
 	const [phase, setPhase] = useState<Phase>({ kind: "idle" })
 	const later = (ms: number, next: Phase) =>
 		setTimeout(() => setPhase(next), ms)
@@ -130,10 +135,10 @@ function useFakeImport() {
 		reset: () => setPhase({ kind: "idle" }),
 	}
 }
-type FakeImport = ReturnType<typeof useFakeImport>
+export type FakeImport = ReturnType<typeof useFakeImport>
 
 /** Rated titles kept in memory; liked counts toward the goal together with the import. */
-function useRatings(shelf: ScoringMedia[]) {
+export function useRatings(shelf: ScoringMedia[]) {
 	const [done, setDone] = useState<string[]>([])
 	const [rated, setRated] = useState<{ title: ScoringMedia; score: Score }[]>([])
 	const queue = shelf.filter((t) => !done.includes(keyOf(t)))
@@ -148,10 +153,10 @@ function useRatings(shelf: ScoringMedia[]) {
 		skip: (t: ScoringMedia) => setDone((d) => [...d, keyOf(t)]),
 	}
 }
-type Ratings = ReturnType<typeof useRatings>
+export type Ratings = ReturnType<typeof useRatings>
 
 /** Takes a file dropped anywhere on the page, with a full-screen hint while dragging. */
-function PageDrop({ onFile }: { onFile: (f?: File) => void }) {
+export function PageDrop({ onFile }: { onFile: (f?: File) => void }) {
 	const [over, setOver] = useState(false)
 	useEffect(() => {
 		const enter = (e: DragEvent) => {
@@ -193,7 +198,7 @@ function PageDrop({ onFile }: { onFile: (f?: File) => void }) {
 // ---------------------------------------------------------------------------------------------------------------
 // Shared pieces, all built from today's components and classes
 
-function Eyebrow({ children }: { children: ReactNode }) {
+export function Eyebrow({ children }: { children: ReactNode }) {
 	return (
 		<div className="mb-1 text-xs font-bold uppercase tracking-wider text-amber-400/90">
 			{children}
@@ -201,7 +206,7 @@ function Eyebrow({ children }: { children: ReactNode }) {
 	)
 }
 
-function Progress({ liked }: { liked: number }) {
+export function Progress({ liked }: { liked: number }) {
 	return (
 		<div className="flex items-center gap-3 text-sm text-gray-400">
 			<RatingDots at={liked} of={GOAL} />
@@ -210,7 +215,7 @@ function Progress({ liked }: { liked: number }) {
 	)
 }
 
-function RateCard({ r, compact = false, boxFit = false }: { r: Ratings; compact?: boolean; boxFit?: boolean }) {
+export function RateCard({ r, compact = false, boxFit = false }: { r: Ratings; compact?: boolean; boxFit?: boolean }) {
 	const x = r.current
 	if (!x) return <p className="py-10 text-gray-400">That's every title for now.</p>
 	return (
@@ -258,7 +263,7 @@ function RateCard({ r, compact = false, boxFit = false }: { r: Ratings; compact?
 	)
 }
 
-function ExternalButton({ href, children }: { href: string; children: ReactNode }) {
+export function ExternalButton({ href, children }: { href: string; children: ReactNode }) {
 	return (
 		<a href={href} target="_blank" rel="noopener noreferrer" className={secondaryButton}>
 			{children}
@@ -268,7 +273,7 @@ function ExternalButton({ href, children }: { href: string; children: ReactNode 
 	)
 }
 
-function WaitChip({ s }: { s: ImportSourceEntry }) {
+export function WaitChip({ s }: { s: ImportSourceEntry }) {
 	return (
 		<span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-slate-700 px-2 py-0.5 text-xs font-semibold text-gray-300">
 			<ClockIcon className="size-3.5" aria-hidden />
@@ -278,7 +283,7 @@ function WaitChip({ s }: { s: ImportSourceEntry }) {
 }
 
 /** How to get a source's data: its steps and link, or a connect button. Words come from the real import contract. */
-function GetYourData({ id, imp, short = false }: { id: ImportSourceId; imp: FakeImport; short?: boolean }) {
+export function GetYourData({ id, imp, short = false }: { id: ImportSourceId; imp: FakeImport; short?: boolean }) {
 	const s = source(id)
 	if (s.connect)
 		return (
@@ -321,7 +326,7 @@ function GetYourData({ id, imp, short = false }: { id: ImportSourceId; imp: Fake
 	)
 }
 
-function DropBox({ imp, big = false, sampleOf, children }: { imp: FakeImport; big?: boolean; sampleOf?: ImportSourceId | null; children?: ReactNode }) {
+export function DropBox({ imp, big = false, sampleOf, children }: { imp: FakeImport; big?: boolean; sampleOf?: ImportSourceId | null; children?: ReactNode }) {
 	const sampleSource = sampleOf && !source(sampleOf).connect ? sampleOf : "letterboxd"
 	const input = useRef<HTMLInputElement>(null)
 	const [over, setOver] = useState(false)
@@ -366,7 +371,7 @@ function DropBox({ imp, big = false, sampleOf, children }: { imp: FakeImport; bi
 }
 
 /** What the import is doing: reading, the preview to confirm, and the result. Null while idle. */
-function ImportStatus({ imp, shelf }: { imp: FakeImport; shelf: ScoringMedia[] }) {
+export function ImportStatus({ imp, shelf }: { imp: FakeImport; shelf: ScoringMedia[] }) {
 	const p = imp.phase
 	if (p.kind === "idle") return null
 	const box = "rounded-2xl bg-gray-900 p-4 ring-1 ring-white/10 md:p-6"
@@ -439,7 +444,7 @@ function ImportStatus({ imp, shelf }: { imp: FakeImport; shelf: ScoringMedia[] }
 }
 
 /** Shown once 5 liked titles are in, from the import, ratings, or both. */
-function TasteReady({ liked, imported }: { liked: number; imported: boolean }) {
+export function TasteReady({ liked, imported }: { liked: number; imported: boolean }) {
 	return (
 		<div className="rounded-2xl bg-gradient-to-br from-amber-500/20 to-gray-900 p-6 ring-1 ring-amber-400/30">
 			<Eyebrow>Your taste is ready</Eyebrow>
@@ -456,7 +461,7 @@ function TasteReady({ liked, imported }: { liked: number; imported: boolean }) {
 	)
 }
 
-function SourceTile({ s, active, onClick, small = false }: { s: ImportSourceEntry; active?: boolean; onClick: () => void; small?: boolean }) {
+export function SourceTile({ s, active, onClick, small = false }: { s: ImportSourceEntry; active?: boolean; onClick: () => void; small?: boolean }) {
 	return (
 		<button
 			type="button"
@@ -473,14 +478,14 @@ function SourceTile({ s, active, onClick, small = false }: { s: ImportSourceEntr
 	)
 }
 
-function useCombined(shelf: ScoringMedia[]) {
+export function useCombined(shelf: ScoringMedia[]) {
 	const imp = useFakeImport()
 	const r = useRatings(shelf)
 	const imported = imp.phase.kind === "done" ? imp.phase.counts.liked : 0
 	return { imp, r, imported, liked: r.liked + imported }
 }
 
-const page = "mx-auto max-w-7xl px-4 pt-8 pb-32 text-white md:px-8 md:pt-12"
+export const page = "mx-auto max-w-7xl px-4 pt-8 pb-32 text-white md:px-8 md:pt-12"
 
 // ---------------------------------------------------------------------------------------------------------------
 // A: one question first, "Where do you keep track of what you watch?" Picking a source shows its steps and the
@@ -721,7 +726,7 @@ function VariantC({ shelf }: { shelf: ScoringMedia[] }) {
 // D: a short checklist that names the whole start: bring your history (optional), top up with ratings, see your
 // taste. The open step fills the page; a finished import skips the rating step when it already has 5 liked titles.
 
-function VariantD({ shelf }: { shelf: ScoringMedia[] }) {
+export function VariantD({ shelf }: { shelf: ScoringMedia[] }) {
 	const { imp, r, imported, liked } = useCombined(shelf)
 	const [step, setStep] = useState<1 | 2 | 3>(1)
 	const [pick, setPick] = useState<ImportSourceId | null>(null)
@@ -839,7 +844,9 @@ export function OnboardingImportsPrototype({ variant, shelf }: { variant: Varian
 			{variant === "B" && <VariantB shelf={shelf} />}
 			{variant === "C" && <VariantC shelf={shelf} />}
 			{variant === "D" && <VariantD shelf={shelf} />}
-			<PrototypeSwitcher variants={VARIANTS} />
+			{["E", "F", "G", "H"].includes(variant) && <Round2 variant={variant as "E"} shelf={shelf} />}
+			{/* Round 2 is on the bar; round 1's now, A, B, C still open by address. */}
+			<PrototypeSwitcher variants={variant in VARIANTS_2 ? VARIANTS_2 : VARIANTS} />
 		</>
 	)
 }
