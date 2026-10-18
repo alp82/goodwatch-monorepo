@@ -175,7 +175,10 @@ async function _getUserData({
 }
 
 /** The members whose reset waits for the end of a `withDeferredUserDataReset` call, per async call chain. */
-const deferredResets = new AsyncLocalStorage<Set<string>>()
+const deferredResets = new AsyncLocalStorage<{
+	pending: Set<string>
+	open: boolean
+}>()
 
 /**
  * Runs `work` with every `resetUserDataCache` inside it held back, then resets each member it named once.
@@ -183,16 +186,18 @@ const deferredResets = new AsyncLocalStorage<Set<string>>()
  * For a path that writes many titles in a row (a batch of MCP writes): each native writer ends with a reset, and a
  * reset refreshes every member table, so fifty writes would refresh them fifty times. The writers of one title read
  * that title's rows by key or refresh what they read themselves, so they don't need the reset of an earlier title.
- * The cache keeps the data from before `work` until it ends, also when `work` throws.
+ * The cache keeps the data from before `work` until it ends, also when `work` throws. A timer that `work` started
+ * and that resets after the end resets at once.
  */
 export async function withDeferredUserDataReset<T>(
 	work: () => Promise<T>,
 ): Promise<T> {
-	const pending = new Set<string>()
+	const scope = { pending: new Set<string>(), open: true }
 	try {
-		return await deferredResets.run(pending, work)
+		return await deferredResets.run(scope, work)
 	} finally {
-		for (const userId of pending) await resetUserDataCache({ user_id: userId })
+		scope.open = false
+		for (const userId of scope.pending) await resetUserDataCache({ user_id: userId })
 	}
 }
 
@@ -201,8 +206,8 @@ export const resetUserDataCache = async (params: GetUserDataParams) => {
 		return 0
 	}
 	const deferred = deferredResets.getStore()
-	if (deferred) {
-		deferred.add(params.user_id)
+	if (deferred?.open) {
+		deferred.pending.add(params.user_id)
 		return 0
 	}
 

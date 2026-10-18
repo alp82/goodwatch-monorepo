@@ -189,3 +189,15 @@ test("A deferred scope still resets when its work throws", async () => {
 	)
 	assert.equal(of("REFRESH TABLE user_score").length, 1)
 })
+
+test("A reset from a timer the scope started runs at once after the scope ended", async () => {
+	let later: Promise<unknown> = Promise.resolve()
+	await withDeferredUserDataReset(async () => {
+		later = new Promise((done) =>
+			setTimeout(() => done(resetUserDataCache({ user_id: MEMBER })), 5),
+		)
+	})
+	assert.equal(of("REFRESH TABLE user_score").length, 0, "nothing was held")
+	await later
+	assert.equal(of("REFRESH TABLE user_score").length, 1)
+})

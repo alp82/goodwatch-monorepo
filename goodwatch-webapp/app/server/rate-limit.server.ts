@@ -95,7 +95,7 @@ export function createRateLimiter(
 		 * request as that many (a batch of writes); a cost above a window's limit is never allowed.
 		 */
 		async take(name: string, client: string, windows: RateWindow[], requested = 1): Promise<RateVerdict> {
-			const cost = Math.max(1, Math.floor(requested))
+			const cost = Number.isFinite(requested) ? Math.max(1, Math.floor(requested)) : 1
 			const keys = keysOf(name, client, windows)
 			const valkey = redis()
 			if (valkey) {

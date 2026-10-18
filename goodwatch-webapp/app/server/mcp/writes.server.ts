@@ -78,15 +78,21 @@ export const liveWritePorts: WritePorts = {
 		applyShowTrackingAction(userId, { id: showId, event }),
 }
 
-/** The ID of the watches and groups one action makes: a single call's own, or one per batch item. */
+/**
+ * The ID of the watches and groups one action makes: a single call's own (unchanged since the first release), or
+ * one per batch item. An item's key is JSON, so no single call's action_id can produce it.
+ */
 const writeActionId = (userId: string, actionId: string, item?: number) =>
 	`mcp-${createHash("sha256")
 		.update(
 			item === undefined
 				? `${userId}:${actionId}`
-				: `${userId}:${actionId}:item:${item}`,
+				: JSON.stringify([userId, actionId, item]),
 		)
 		.digest("hex")}`
+
+/** A batch is undone once: every undo of it shares this receipt, so a repeat replays the first undo. */
+export const batchUndoKey = (batchId: string) => `batch-undo:${batchId}`
 
 export async function writeMemberTool(
 	userId: string,
@@ -189,10 +195,14 @@ export async function writeMemberTool(
 	}
 	if (name === "undo_watch" && args.batch_id) {
 		const undo = { ...args, batch_id: args.batch_id }
+		const key = batchUndoKey(undo.batch_id)
+		const undoHash = actionHash(name, { batch_id: undo.batch_id })
+		const earlier = await readAction(userId, key, undoHash)
+		if (earlier) return earlier
 		return runAction(
 			userId,
-			undo.action_id,
-			hash,
+			key,
+			undoHash,
 			() => undoBatch(ports, userId, origin, undo),
 			{ tool: name, batch_id: undo.batch_id },
 		)

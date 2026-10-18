@@ -43,20 +43,52 @@ export function isWriteCall(message: unknown): boolean {
 	)
 }
 
+/** What one title write costs: a whole show marked Seen or a whole season logs many episodes at once. */
+export const HEAVY_WRITE_COST = 5
+
 /**
- * How many title writes a request body asks for: each write call counts once, a batch call once per item (at
- * most the cap; a longer list is refused unwritten). The endpoint counts these against the member's write budget.
+ * What the write calls of a request body cost against the member's write budget, and how many of them are batches.
+ * A single write costs 1 (5 when heavy), a batch the sum of its items up to the cap (a longer list is refused
+ * unwritten), and undoing a batch as much as a full batch.
  */
-export function writeItemCount(body: unknown, cap: number): number {
+export function writeItemCount(
+	body: unknown,
+	cap: number,
+): { count: number; batches: number } {
 	let count = 0
+	let batches = 0
 	for (const message of Array.isArray(body) ? body : [body]) {
 		if (!isWriteCall(message)) continue
-		const params = (message as { params: { arguments?: unknown } }).params
-		const items =
+		const params = (
+			message as { params: { name: WriteToolName; arguments?: unknown } }
+		).params
+		const args =
 			params.arguments && typeof params.arguments === "object"
-				? (params.arguments as { items?: unknown }).items
-				: undefined
-		count += Array.isArray(items) ? Math.min(Math.max(items.length, 1), cap) : 1
+				? (params.arguments as Record<string, unknown>)
+				: {}
+		const cost = (fields: Record<string, unknown>) =>
+			(params.name === "set_show_status" && fields.status === "Seen") ||
+			(params.name === "log_watch" && fields.whole_season === true)
+				? HEAVY_WRITE_COST
+				: 1
+		if (params.name === "undo_watch" && args.batch_id !== undefined) {
+			batches++
+			count += cap
+		} else if (Array.isArray(args.items)) {
+			batches++
+			count += Math.max(
+				1,
+				args.items.slice(0, cap).reduce(
+					(sum: number, item: unknown) =>
+						sum +
+						cost({
+							...args,
+							...(item && typeof item === "object" ? item : {}),
+						}),
+					0,
+				),
+			)
+		} else count += cost(args)
 	}
-	return count
+	return { count, batches }
 }

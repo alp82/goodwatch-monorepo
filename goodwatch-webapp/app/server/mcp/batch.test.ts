@@ -830,16 +830,21 @@ test("undo_watch with batch_id takes back the member's own batch and keeps newer
 	assert.deepEqual(lib.get(ME, "show:3001").watches, [])
 	assert.ok(lib.calls.showEvents.includes("undoGroup"))
 
-	// Undoing again changes nothing, and a single action's ID is not a batch.
+	// A batch is undone once: a later undo, under any action_id, replays the first one. So re-rating a title by
+	// hand after the undo can't be taken back by undoing the batch again.
+	lib.set(ME, "movie:1001", { score: 8 })
+	const scoresBefore = lib.calls.updateScores.length
 	const again = await write(lib, "undo_watch", {
 		action_id: "undo-rate-2",
 		batch_id: "rate-3",
 	})
-	assert.equal(again.outcome, "not_applied")
+	assert.equal(again.replayed, true)
 	assert.deepEqual(
 		itemsOf(again).map((i) => i.status),
-		["already_undone", "already_undone", "changed_since"],
+		["undone", "undone", "changed_since"],
 	)
+	assert.equal(lib.calls.updateScores.length, scoresBefore)
+	assert.equal(lib.get(ME, "movie:1001").score, 8)
 	await write(lib, "rate_title", {
 		action_id: "one",
 		title_id: "movie:1020",
@@ -916,4 +921,86 @@ test("Every batch tool's item schema is its single-call schema", () => {
 		"log_watch",
 	] as const)
 		assert.ok(itemSchemas[name])
+})
+
+test("A write that fails part way but landed is reported done, with undo data", async () => {
+	const lib = fakeLibrary()
+	const apply = lib.ports.applyTitleWrite
+	lib.ports.applyTitleWrite = async (...args) => {
+		await apply(...args)
+		throw new Error("setGroupDate failed")
+	}
+	const result = await write(lib, "log_watch", {
+		action_id: "half",
+		items: [{ title_id: "show:3001", season: 1, whole_season: true }],
+	})
+	const [item] = itemsOf(result)
+	assert.equal(item.status, "done")
+	assert.match(item.message ?? "", /failed part way; these changes landed/)
+	assert.ok(item.undo?.group)
+	const undone = await write(lib, "undo_watch", {
+		action_id: "u",
+		batch_id: "half",
+	})
+	assert.deepEqual(
+		itemsOf(undone).map((i) => i.status),
+		["undone"],
+	)
+	assert.deepEqual(lib.get(ME, "show:3001").watches, [])
+})
+
+test("Undo puts Not interested back only on a title that is still unrated and unwatched", async () => {
+	const lib = fakeLibrary()
+	lib.set(ME, "movie:1001", { not_interested: true })
+	lib.set(ME, "movie:1002", { not_interested: true })
+	await write(lib, "set_not_interested", {
+		action_id: "unhide",
+		not_interested: false,
+		items: [{ title_id: "movie:1001" }, { title_id: "movie:1002" }],
+	})
+	// The member watches one of them since: hiding it again would break the single tool's rule.
+	lib.set(ME, "movie:1002", {
+		status: "seen",
+		watches: [
+			{
+				id: "w",
+				group_id: null,
+				origin: "single",
+				season: null,
+				episode: null,
+			},
+		],
+	})
+	const undone = await write(lib, "undo_watch", {
+		action_id: "u",
+		batch_id: "unhide",
+	})
+	assert.deepEqual(
+		itemsOf(undone).map((i) => i.status),
+		["undone", "not_undoable"],
+	)
+	assert.equal(lib.get(ME, "movie:1001").not_interested, true)
+	assert.equal(lib.get(ME, "movie:1002").not_interested, false)
+})
+
+test("An undo with nothing to take back makes no reset and no taste rebuild", async () => {
+	const lib = fakeLibrary()
+	await write(lib, "set_want_to_see", {
+		action_id: "w",
+		want_to_see: true,
+		items: [{ title_id: "movie:1001" }],
+	})
+	lib.set(ME, "movie:1001", { want_to_see: false })
+	const resets = lib.calls.resets
+	const taste = lib.calls.taste
+	const undone = await write(lib, "undo_watch", {
+		action_id: "u",
+		batch_id: "w",
+	})
+	assert.deepEqual(
+		itemsOf(undone).map((i) => i.status),
+		["already_undone"],
+	)
+	assert.equal(lib.calls.resets, resets)
+	assert.equal(lib.calls.taste, taste)
 })

@@ -192,7 +192,7 @@ function alreadySet(name: BatchToolName, args: WriteArgs, before: Snapshot) {
 function dedupeKey(name: BatchToolName, args: WriteArgs, title: CatalogTitle) {
 	const key = titleKey(title)
 	return name === "log_watch"
-		? `${key}|${args.season ?? ""}|${args.episode ?? ""}|${args.episode_end ?? ""}|${args.whole_season ? "season" : ""}`
+		? `${key}|${args.season ?? ""}|${args.episode ?? ""}|${args.episode_end ?? ""}|${args.whole_season ? "season" : ""}|${args.date ?? ""}`
 		: key
 }
 
@@ -407,13 +407,15 @@ export async function runBatch(
 				row.write = "failed"
 			}
 		}
-		if (pending.length) {
-			await ports.resetUserData(userId)
-			await ports.markTasteChanged(userId)
-		}
+		// The deferred scope turns this into the one real reset at its end, before the read-back below.
+		if (pending.length) await ports.resetUserData(userId)
 	})
+	if (pending.length) await ports.markTasteChanged(userId)
 
-	const after = pending.length ? await ports.userData(userId) : before
+	// Without the shared read, each title reads the member data itself: the items still report what landed.
+	const after = pending.length
+		? await ports.userData(userId).catch(() => undefined)
+		: before
 	const results = await mapPool(rows, 5, async (row) => {
 		const base: Data = {
 			index: row.index,
@@ -441,22 +443,23 @@ export async function runBatch(
 					row.write.refused ?? "This change was refused. Nothing was written.",
 			}
 		const now = await ports.snapshot(userId, title, after).catch(() => null)
-		if (row.write === "failed" || !now)
-			return {
-				...base,
-				status: "error",
-				message:
-					"Could not confirm this item's outcome. Read the title before retrying it with a new action_id.",
-				...(now ? { changes: changesOf(was, now) } : {}),
-			}
+		const unconfirmed = {
+			...base,
+			status: "error",
+			message:
+				"Could not confirm this item's outcome. Read the title before retrying it with a new action_id.",
+		}
+		if (!now) return unconfirmed
 		const watches = watchChanges(name, was, now, row.actionId)
 		const changes = changesOf(was, now)
-		if (
-			!Object.keys(changes).length &&
-			!watches.added.length &&
-			!watches.removed.length
-		)
-			return { ...base, status: "already_set" }
+		const landed =
+			Object.keys(changes).length > 0 ||
+			watches.added.length > 0 ||
+			watches.removed.length > 0
+		if (!landed)
+			return row.write === "failed"
+				? unconfirmed
+				: { ...base, status: "already_set" }
 		const event =
 			typeof row.write === "object" && "event" in row.write
 				? row.write.event
@@ -468,6 +471,13 @@ export async function runBatch(
 		return {
 			...base,
 			status: "done",
+			// The write failed part way, but these changes landed: they are reported, and undo can take them back.
+			...(row.write === "failed"
+				? {
+						message:
+							"The write failed part way; these changes landed. Read the title before retrying it.",
+					}
+				: {}),
 			changes,
 			// Undo puts a removed Wishlist entry back in its old place.
 			...(changes.want_to_see && was.want_to_see
@@ -615,9 +625,11 @@ export async function undoBatch(
 		number,
 		{ skipped: string[]; failed: boolean; notes: string[] }
 	>()
+	let wrote = false
 	await ports.deferResets(async () => {
 		for (const { item, title, current } of rows) {
 			const changes = item.changes ?? {}
+			const removed = new Set<string>()
 			const result = {
 				skipped: [] as string[],
 				failed: false,
@@ -645,15 +657,20 @@ export async function undoBatch(
 					undo?.group &&
 					current.watches.some((w) => w.group_id === undo.group)
 				) {
+					wrote = true
 					const answer = await ports.showEvent(userId, title.tmdb_id, {
 						type: "undoGroup",
 						group: undo.group,
 					})
 					if (answer.status !== "applied")
 						result.notes.push(answer.refused ?? "Could not remove its watches.")
+					else
+						for (const w of current.watches)
+							if (w.group_id === undo.group) removed.add(w.id)
 				}
 				for (const watchId of undo?.watch_ids ?? []) {
 					if (!current.watches.some((w) => w.id === watchId)) continue
+					wrote = true
 					const answer =
 						title.media_type === "movie"
 							? await ports.deleteMovieWatch(userId, title.tmdb_id, watchId)
@@ -663,6 +680,7 @@ export async function undoBatch(
 								})
 					if (answer.status !== "applied")
 						result.notes.push(answer.refused ?? "Could not remove a watch.")
+					else removed.add(watchId)
 				}
 				// 2. A show state change that made no watches: its native opposite.
 				if (
@@ -675,6 +693,7 @@ export async function undoBatch(
 							"Watching again can't be taken back here; set the show status yourself.",
 						)
 					else if (state === "revert") {
+						wrote = true
 						const answer = await ports.showEvent(userId, title.tmdb_id, {
 							type:
 								undo.event === "resume"
@@ -699,7 +718,8 @@ export async function undoBatch(
 							Number.isInteger(oldScore) &&
 							oldScore >= 1 &&
 							oldScore <= 10))
-				)
+				) {
+					wrote = true
 					await ports.updateScores({
 						user_id: userId,
 						tmdb_id: title.tmdb_id,
@@ -707,16 +727,32 @@ export async function undoBatch(
 						score: oldScore,
 						review: current.review ?? undefined,
 					})
-				else if (score === "changed") result.skipped.push("score")
+				} else if (score === "changed") result.skipped.push("score")
 				// 4. Not interested before Want to See: putting a title on the Wishlist clears Not interested.
+				// Put back only where the single tool would allow it: unrated, unwatched, and a show still Not started.
 				const hidden = field("not_interested")
-				if (hidden === "revert")
+				const scoreAfter = score === "revert" ? oldScore : current.score
+				const statusAfter =
+					field("status") === "revert" ? was("status") : current.status
+				const allowed =
+					scoreAfter === null &&
+					!result.notes.length &&
+					!current.watches.some(
+						(w) => !removed.has(w.id) && w.origin !== "score",
+					) &&
+					(title.media_type === "movie" || statusAfter === "not_started")
+				if (hidden === "revert" && was("not_interested") && !allowed)
+					result.notes.push(
+						"Not interested isn't put back on a title you have rated, watched or started.",
+					)
+				else if (hidden === "revert") {
+					wrote = true
 					await ports.notInterestedMany({
 						user_id: userId,
 						titles: [{ tmdb_id: title.tmdb_id, media_type: title.media_type }],
 						action: was("not_interested") ? "add" : "remove",
 					})
-				else if (hidden === "changed") result.skipped.push("not_interested")
+				} else if (hidden === "changed") result.skipped.push("not_interested")
 				// A watch or score of the batch may have taken the title off the Wishlist: it goes back at its old time.
 				const wanted = field("want_to_see")
 				if (wanted === "revert") {
@@ -724,6 +760,7 @@ export async function undoBatch(
 						typeof item.want_to_see_added_at === "string"
 							? new Date(item.want_to_see_added_at)
 							: null
+					wrote = true
 					await ports.wishlistMany({
 						user_id: userId,
 						titles: [
@@ -742,12 +779,12 @@ export async function undoBatch(
 				result.failed = true
 			}
 		}
-		if (rows.length) {
-			await ports.resetUserData(userId)
-			await ports.markTasteChanged(userId)
-		}
+		if (wrote) await ports.resetUserData(userId)
 	})
-	const fresh = rows.length ? await ports.userData(userId) : user
+	if (wrote) await ports.markTasteChanged(userId)
+	const fresh = wrote
+		? await ports.userData(userId).catch(() => undefined)
+		: user
 	const items = await mapPool(rows, 5, async ({ item, title, current }) => {
 		const now = await ports.snapshot(userId, title, fresh).catch(() => null)
 		const outcome = outcomes.get(item.index) ?? {
@@ -830,7 +867,6 @@ export async function undoBatch(
 				: summary.error || summary.changed_since || summary.not_undoable
 					? "not_applied"
 					: "unchanged",
-		action_id: args.action_id,
 		batch_id: args.batch_id,
 		undone_tool: tool,
 		summary,

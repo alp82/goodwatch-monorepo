@@ -117,6 +117,22 @@ function batchable(single: z.ZodType<WriteArgs>, fields: z.ZodRawShape) {
 			(field as z.ZodType).optional(),
 		]),
 	)
+	// The JSON Schema can't say "required unless items", so the description says it.
+	const topLevel = Object.fromEntries(
+		Object.entries(fields).map(([key, field]) => {
+			const schema = field as z.ZodType
+			return [
+				key,
+				schema.safeParse(undefined).success
+					? schema
+					: schema
+							.optional()
+							.describe(
+								"Required for a single title. With items, give it per item, or once here for every item.",
+							),
+			]
+		}),
+	)
 	const item = z
 		.object({ ...writeSelected.shape, ...optional })
 		.strict()
@@ -128,7 +144,7 @@ function batchable(single: z.ZodType<WriteArgs>, fields: z.ZodRawShape) {
 		.object({
 			...action,
 			...writeSelected.shape,
-			...optional,
+			...topLevel,
 			items: z
 				.array(item)
 				.min(1)
@@ -206,7 +222,7 @@ export const writeToolDefinitions: {
 		name: "undo_watch",
 		title: "Remove a watch",
 		description:
-			"Remove one watch record. Choose a watch_id, or omit it for the most recently logged individual watch of this title. Destructive: results identify the exact removed watch, date, pass and resulting marks; retrying the same action never removes a different watch. Or pass only batch_id (from a batch result) to take back every change that batch call made, title by title, through the same undo the site uses; a title changed again since keeps its newer value, and each title reports undone, partly_undone, already_undone, changed_since, not_undoable or error.",
+			"Remove one watch record. Choose a watch_id, or omit it for the most recently logged individual watch of this title. Destructive: results identify the exact removed watch, date, pass and resulting marks; retrying the same action never removes a different watch. Or pass only batch_id (from a batch result) to take back every change that batch call made, title by title, through the same undo the site uses; a title changed again since keeps its newer value, and each title reports undone, partly_undone, already_undone, changed_since, not_undoable or error. A batch is undone once: undoing it again returns the first undo's result.",
 		destructive: true,
 		schema: z
 			.object({

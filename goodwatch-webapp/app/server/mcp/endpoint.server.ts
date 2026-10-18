@@ -149,12 +149,26 @@ export function createReadMcpHandler(
 		if (!verdict.allowed)
 			return tooMany(verdict.retryAfterSeconds, { error: "rate_limited" })
 		const writes = writeItemCount(body, MAX_BATCH_ITEMS)
-		if (writes) {
+		// Batches of one member run one at a time per request: each judges its items against the data it read first.
+		if (writes.batches > 1 || writes.count > WRITE_ITEM_WINDOWS[0].limit)
+			return Response.json(
+				{
+					jsonrpc: "2.0",
+					id: null,
+					error: {
+						code: -32600,
+						message:
+							"Send one batch write (items or batch_id) per request, and split larger work into several requests.",
+					},
+				},
+				{ status: 400 },
+			)
+		if (writes.count) {
 			const budget = await limiter.take(
 				"mcp-write-items",
 				userId,
 				WRITE_ITEM_WINDOWS,
-				writes,
+				writes.count,
 			)
 			if (!budget.allowed)
 				return tooMany(budget.retryAfterSeconds, {

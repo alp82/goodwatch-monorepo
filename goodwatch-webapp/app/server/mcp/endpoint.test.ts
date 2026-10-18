@@ -741,12 +741,18 @@ test("Batch writes count once per item against the member's write budget", async
 		method: "tools/call",
 		params: { name, arguments: args },
 	})
-	assert.equal(writeItemCount(call({ title_id: "movie:1", score: 5 }), 50), 1)
-	assert.equal(
-		writeItemCount(call({ items: Array.from({ length: 30 }, () => ({})) }), 50),
-		30,
+	assert.deepEqual(
+		writeItemCount(call({ title_id: "movie:1", score: 5 }), 50),
+		{
+			count: 1,
+			batches: 0,
+		},
 	)
-	assert.equal(
+	assert.deepEqual(
+		writeItemCount(call({ items: Array.from({ length: 30 }, () => ({})) }), 50),
+		{ count: 30, batches: 1 },
+	)
+	assert.deepEqual(
 		writeItemCount(
 			[
 				call({ items: Array.from({ length: 80 }, () => ({})) }),
@@ -755,9 +761,37 @@ test("Batch writes count once per item against the member's write budget", async
 			],
 			50,
 		),
-		51,
+		{ count: 51, batches: 1 },
 	)
-	assert.equal(writeItemCount({ jsonrpc: "2.0", method: "tools/list" }, 50), 0)
+	// A whole show marked Seen or a whole season costs 5; undoing a batch costs a full batch.
+	assert.deepEqual(
+		writeItemCount(
+			call(
+				{ status: "Seen", items: [{}, {}, { status: "On hold" }] },
+				"set_show_status",
+			),
+			50,
+		),
+		{ count: 11, batches: 1 },
+	)
+	assert.deepEqual(
+		writeItemCount(
+			call({ title_id: "show:1", season: 1, whole_season: true }, "log_watch"),
+			50,
+		),
+		{ count: 5, batches: 0 },
+	)
+	assert.deepEqual(
+		writeItemCount(call({ action_id: "u", batch_id: "b" }, "undo_watch"), 50),
+		{ count: 50, batches: 1 },
+	)
+	assert.deepEqual(
+		writeItemCount({ jsonrpc: "2.0", method: "tools/list" }, 50),
+		{
+			count: 0,
+			batches: 0,
+		},
+	)
 
 	const takes: { name: string; cost?: number }[] = []
 	const limiter = {
@@ -806,4 +840,45 @@ test("Batch writes count once per item against the member's write budget", async
 	takes.length = 0
 	await handle(rpc("tools/list"))
 	assert.deepEqual(takes, [{ name: "mcp-read", cost: undefined }])
+})
+
+test("A request with two batch writes is refused before any write or budget charge", async () => {
+	const takes: string[] = []
+	const handle = createReadMcpHandler({
+		resource,
+		authorization: writer,
+		limiter: {
+			async take(name: string) {
+				takes.push(name)
+				return { allowed: true as const, store: "memory" as const }
+			},
+		},
+	})
+	const batch = (id: number) => ({
+		jsonrpc: "2.0",
+		id,
+		method: "tools/call",
+		params: {
+			name: "set_want_to_see",
+			arguments: {
+				action_id: `b${id}`,
+				want_to_see: true,
+				items: [{ title_id: "movie:100" }],
+			},
+		},
+	})
+	const response = await handle(
+		new Request(resource, {
+			method: "POST",
+			headers: {
+				Authorization: "Bearer local",
+				"Content-Type": "application/json",
+				Accept: "application/json, text/event-stream",
+			},
+			body: JSON.stringify([batch(1), batch(2)]),
+		}),
+	)
+	assert.equal(response.status, 400)
+	assert.match((await response.json()).error.message, /one batch write/)
+	assert.deepEqual(takes, ["mcp-read"])
 })
