@@ -28,7 +28,6 @@ const isMissingToken = (error: unknown): error is TmdbError =>
 	error instanceof TmdbError &&
 	((error.status === 401 && error.code === 35) ||
 		(error.status === 404 && error.code === 37))
-const ratingDate = z.string().datetime({ offset: true })
 const pageSchema = z.object({
 	page: z.number().int().positive(),
 	total_pages: z.number().int().nonnegative(),
@@ -40,15 +39,13 @@ const pageSchema = z.object({
 			name: z.string().optional(),
 			release_date: z.string().optional(),
 			first_air_date: z.string().optional(),
-			account_rating: z
-				.object({ value: z.unknown(), created_at: z.unknown().optional() })
-				.optional(),
+			rating: z.unknown().optional(),
 		}),
 	),
 })
 
 export function createTmdbClient(options: {
-	appToken: string
+	apiKey: string
 	fetch?: typeof fetch
 	sleep?: (ms: number) => Promise<unknown>
 }) {
@@ -56,11 +53,15 @@ export function createTmdbClient(options: {
 	const sleep = options.sleep ?? delay
 	async function request(
 		path: string,
-		token: string,
+		token = "",
 		method = "GET",
 		body?: object,
-		version: 3 | 4 = 4,
 	): Promise<unknown> {
+		if (!options.apiKey)
+			throw new TmdbError("TMDB Connect is not configured yet.", 503)
+		const url = new URL(`https://api.themoviedb.org/3/${path}`)
+		url.searchParams.set("api_key", options.apiKey)
+		if (token) url.searchParams.set("session_id", token)
 		for (let attempt = 0; ; attempt++) {
 			let wait = 0
 			try {
@@ -68,19 +69,15 @@ export function createTmdbClient(options: {
 					"TMDB",
 					timeoutSetting("TMDB_TIMEOUT_MS", TMDB_TIMEOUT_DEFAULT_MS),
 					async (signal) => {
-						const response = await send(
-							`https://api.themoviedb.org/${version}/${path}`,
-							{
-								method,
-								signal,
-								redirect: "error",
-								headers: {
-									Authorization: `Bearer ${token}`,
-									"Content-Type": "application/json",
-								},
-								...(body ? { body: JSON.stringify(body) } : {}),
+						const response = await send(url.toString(), {
+							method,
+							signal,
+							redirect: "error",
+							headers: {
+								"Content-Type": "application/json",
 							},
-						)
+							...(body ? { body: JSON.stringify(body) } : {}),
+						})
 						if (response.status === 429) {
 							const retry = response.headers.get("Retry-After")
 							const seconds = retry === null ? Number.NaN : Number(retry)
@@ -126,75 +123,65 @@ export function createTmdbClient(options: {
 		}
 	}
 	return {
-		async createRequest(redirectTo: string): Promise<string> {
-			if (!options.appToken)
-				throw new TmdbError("TMDB Connect is not configured yet.", 503)
+		async createRequest(): Promise<string> {
 			const result = z
 				.object({ success: z.literal(true), request_token: z.string().min(1) })
-				.safeParse(
-					await request("auth/request_token", options.appToken, "POST", {
-						redirect_to: redirectTo,
-					}),
-				)
+				.safeParse(await request("authentication/token/new"))
 			if (!result.success) throw new TmdbError()
 			return result.data.request_token
 		},
-		async exchange(
-			requestToken: string,
-		): Promise<{ accessToken: string; accountId: string }> {
-			const result = z
-				.object({
-					success: z.unknown(),
-					access_token: z.string().min(1),
-					account_id: z.unknown().optional(),
-				})
-				.safeParse(
-					await request("auth/access_token", options.appToken, "POST", {
-						request_token: requestToken,
-					}),
-				)
+		async exchange(requestToken: string): Promise<{ accessToken: string }> {
+			const result = z.object({ session_id: z.string().min(1) }).safeParse(
+				await request("authentication/session/new", "", "POST", {
+					request_token: requestToken,
+				}).catch((error: unknown) => {
+					if (
+						error instanceof TmdbError &&
+						error.status === 401 &&
+						[17, 35, 41].includes(error.code ?? 0)
+					) {
+						const expired = new TmdbError(
+							"TMDB approval expired or was not approved. Start again from Imports.",
+							error.status,
+						)
+						expired.code = error.code
+						throw expired
+					}
+					throw error
+				}),
+			)
 			if (!result.success) throw new TmdbError()
-			// Preserve any issued token even if the account metadata is malformed, so the flow can revoke it.
-			return {
-				accessToken: result.data.access_token,
-				accountId:
-					result.data.success === true &&
-					typeof result.data.account_id === "string"
-						? result.data.account_id
-						: "",
-			}
+			// The shared encrypted accessToken slot holds the v3 session ID.
+			// Return it before any account lookup so even a failed lookup can be revoked.
+			return { accessToken: result.data.session_id }
 		},
-		async revoke(accessToken: string, accountId?: string): Promise<void> {
+		async getAccountId(sessionId: string): Promise<string> {
+			const result = z
+				.object({ id: z.number().int().positive() })
+				.safeParse(await request("account", sessionId))
+			if (!result.success) throw new TmdbError()
+			return String(result.data.id)
+		},
+		async revoke(accessToken: string): Promise<void> {
 			for (let attempt = 0; ; attempt++) {
 				try {
-					const result = z.object({ status_code: z.literal(13) }).safeParse(
-						await request("auth/access_token", options.appToken, "DELETE", {
-							access_token: accessToken,
+					const result = z.object({ success: z.literal(true) }).safeParse(
+						await request("authentication/session", "", "DELETE", {
+							session_id: accessToken,
 						}),
 					)
 					if (!result.success) throw new TmdbError()
 					return
 				} catch (error) {
-					if (accountId && isMissingToken(error)) {
-						// Confirm both that the application bearer works and that the member token no longer reads its account.
+					if (isMissingToken(error)) {
+						// Confirm the key works and the session itself can no longer read an account.
 						try {
 							const auth = z
 								.object({ success: z.literal(true) })
-								.safeParse(
-									await request(
-										"authentication",
-										options.appToken,
-										"GET",
-										undefined,
-										3,
-									),
-								)
+								.safeParse(await request("authentication"))
 							if (auth.success) {
 								try {
-									await request(
-										`account/${encodeURIComponent(accountId)}/movie/rated?page=1`,
-										accessToken,
-									)
+									await request("account", accessToken)
 								} catch (probeError) {
 									if (isMissingToken(probeError)) return
 									throw probeError
@@ -223,17 +210,15 @@ export function createTmdbClient(options: {
 		): Promise<ParsedImport> {
 			const observations: ImportObservation[] = []
 			const deadline = Date.now() + 5 * 60_000
-			const timestamps = new Map<string, number>()
-			let invalidDates = 0
 			const warnings = [
 				"TMDB half-step ratings round up to whole numbers: 7.5 becomes 8; 0.5 becomes 1.",
-				"Episode ratings on TMDB were not read. TMDB has no watch history; rating dates are not viewing dates.",
+				"Episode ratings on TMDB were not read. TMDB v3 provides no rating dates or watch history; imported ratings are undated.",
 			]
 			for (const mediaType of ["movie", "show"] as const) {
 				for (const [list, kind] of [
 					["rated", "rating"],
 					["watchlist", "want"],
-					["favorites", "favorite"],
+					["favorite", "favorite"],
 				] as const) {
 					let pages = 1
 					let expected = 0
@@ -246,7 +231,7 @@ export function createTmdbClient(options: {
 						await sleep(30)
 						const result = pageSchema.safeParse(
 							await request(
-								`account/${encodeURIComponent(accountId)}/${mediaType === "show" ? "tv" : "movie"}/${list}?page=${page}&sort_by=created_at.asc`,
+								`account/${encodeURIComponent(accountId)}/${list}/${mediaType === "show" ? "tv" : "movies"}?page=${page}&sort_by=created_at.asc`,
 								accessToken,
 							),
 						)
@@ -284,7 +269,7 @@ export function createTmdbClient(options: {
 									"TMDB returned duplicate account items. Please try again.",
 								)
 							ids.add(item.id)
-							const value = item.account_rating?.value
+							const value = item.rating
 							const score =
 								typeof value === "number" &&
 								value >= 0.5 &&
@@ -292,17 +277,6 @@ export function createTmdbClient(options: {
 								Number.isInteger(value * 2)
 									? Math.round(value)
 									: null
-							const date = item.account_rating?.created_at
-							const addedAt =
-								typeof date === "string" && ratingDate.safeParse(date).success
-									? new Date(date).toISOString()
-									: null
-							if (kind === "rating" && date != null && !addedAt) invalidDates++
-							if (kind === "rating" && addedAt)
-								timestamps.set(
-									addedAt.slice(0, 10),
-									(timestamps.get(addedAt.slice(0, 10)) ?? 0) + 1,
-								)
 							const release =
 								mediaType === "movie" ? item.release_date : item.first_air_date
 							observations.push({
@@ -316,7 +290,7 @@ export function createTmdbClient(options: {
 										: null,
 								tmdbId: item.id,
 								imdbId: null,
-								addedAt: kind === "rating" ? addedAt : null,
+								addedAt: null,
 								...(kind === "rating"
 									? {
 											score,
@@ -345,13 +319,6 @@ export function createTmdbClient(options: {
 						)
 				}
 			}
-			if (invalidDates)
-				warnings.push(`${invalidDates} invalid rating dates were left undated.`)
-			const cluster = Math.max(0, ...timestamps.values())
-			if (cluster >= 100)
-				warnings.push(
-					`${cluster} ratings share one UTC calendar day on TMDB. These may be migration dates; the original rating dates were preserved.`,
-				)
 			return { source: "tmdb", observations, warnings }
 		},
 	}

@@ -2,20 +2,23 @@ import assert from "node:assert/strict"
 import test from "node:test"
 import { createTmdbClient } from "./tmdb-client.server.ts"
 
-test("TMDB reads all six paginated lists, rounds half steps up and keeps only rating dates", async () => {
+test("TMDB reads all six paginated lists, rounds half steps up and leaves v3 ratings undated", async () => {
 	const requests: string[] = []
 	const client = createTmdbClient({
-		appToken: "application-secret",
+		apiKey: "application-secret",
 		sleep: async () => {},
 		fetch: async (url, init) => {
 			requests.push(String(url))
-			assert.equal(
-				new Headers(init?.headers).get("Authorization"),
-				"Bearer member-secret",
-			)
+			assert.equal(new Headers(init?.headers).get("Authorization"), null)
 			const path = new URL(String(url))
+			assert.equal(path.searchParams.get("api_key"), "application-secret")
+			assert.equal(path.searchParams.get("session_id"), "member-secret")
+			assert.match(
+				path.pathname,
+				/^\/3\/account\/account\/(rated|watchlist|favorite)\/(movies|tv)$/,
+			)
 			const page = Number(path.searchParams.get("page"))
-			const rating = path.pathname.endsWith("/rated")
+			const rating = path.pathname.includes("/rated/")
 			return Response.json({
 				page,
 				total_pages: rating ? 2 : 1,
@@ -27,10 +30,7 @@ test("TMDB reads all six paginated lists, rounds half steps up and keeps only ra
 						name: "Show",
 						release_date: "1995-01-01",
 						first_air_date: "2001-01-01",
-						account_rating: {
-							value: page === 1 ? 7.5 : 0.5,
-							created_at: "2020-02-01T12:00:00Z",
-						},
+						rating: page === 1 ? 7.5 : 0.5,
 					},
 				],
 			})
@@ -42,12 +42,12 @@ test("TMDB reads all six paginated lists, rounds half steps up and keeps only ra
 	assert.deepEqual(
 		parsed.observations.map((x) => [x.key, x.score ?? null, x.addedAt]),
 		[
-			["tmdb:rating:movie:1", 8, "2020-02-01T12:00:00.000Z"],
-			["tmdb:rating:movie:2", 1, "2020-02-01T12:00:00.000Z"],
+			["tmdb:rating:movie:1", 8, null],
+			["tmdb:rating:movie:2", 1, null],
 			["tmdb:want:movie:1", null, null],
 			["tmdb:favorite:movie:1", null, null],
-			["tmdb:rating:show:1", 8, "2020-02-01T12:00:00.000Z"],
-			["tmdb:rating:show:2", 1, "2020-02-01T12:00:00.000Z"],
+			["tmdb:rating:show:1", 8, null],
+			["tmdb:rating:show:2", 1, null],
 			["tmdb:want:show:1", null, null],
 			["tmdb:favorite:show:1", null, null],
 		],
@@ -61,86 +61,78 @@ test("TMDB reads all six paginated lists, rounds half steps up and keeps only ra
 	assert.match(parsed.warnings.join(" "), /Episode ratings.*not read/)
 })
 
-test("v4 authentication uses the application token, retries 429 and deletes the member token", async () => {
+test("v3 authentication uses only the API key, retries 429 and deletes the session", async () => {
 	const waits: number[] = []
-	const calls: { url: string; init?: RequestInit }[] = []
+	const calls: { url: URL; init?: RequestInit }[] = []
 	const responses = [
 		new Response(null, { status: 429, headers: { "Retry-After": "2" } }),
 		Response.json({ success: true, request_token: "request-secret" }),
-		Response.json({
-			success: true,
-			access_token: "member-secret",
-			account_id: "account",
-		}),
-		Response.json({ success: true, status_code: 13 }),
+		Response.json({ success: true, session_id: "member-secret" }),
+		Response.json({ id: 123 }),
+		Response.json({ success: true }),
 	]
 	const client = createTmdbClient({
-		appToken: "app-secret",
+		apiKey: "app-secret",
 		sleep: async (ms) => {
 			waits.push(ms)
 		},
 		fetch: async (url, init) => {
-			calls.push({ url: String(url), init })
+			calls.push({ url: new URL(String(url)), init })
 			const response = responses.shift()
 			assert.ok(response)
 			return response
 		},
 	})
-	assert.equal(
-		await client.createRequest(
-			"https://goodwatch.test/settings/imports?connect=state",
-		),
-		"request-secret",
-	)
+	assert.equal(await client.createRequest(), "request-secret")
 	assert.deepEqual(await client.exchange("request-secret"), {
 		accessToken: "member-secret",
-		accountId: "account",
 	})
+	assert.equal(await client.getAccountId("member-secret"), "123")
 	await client.revoke("member-secret")
 	assert.deepEqual(waits, [2000])
-	assert.ok(
-		calls.every(
-			(x) =>
-				new Headers(x.init?.headers).get("Authorization") ===
-				"Bearer app-secret",
-		),
-	)
+	for (const call of calls) {
+		assert.equal(call.url.searchParams.get("api_key"), "app-secret")
+		assert.equal(new Headers(call.init?.headers).get("Authorization"), null)
+	}
 	assert.deepEqual(
-		calls.map((x) => x.init?.method),
-		["POST", "POST", "POST", "DELETE"],
+		calls.map((x) => [x.url.pathname, x.init?.method]),
+		[
+			["/3/authentication/token/new", "GET"],
+			["/3/authentication/token/new", "GET"],
+			["/3/authentication/session/new", "POST"],
+			["/3/account", "GET"],
+			["/3/authentication/session", "DELETE"],
+		],
 	)
-	assert.equal(calls[3].url, "https://api.themoviedb.org/4/auth/access_token")
-	assert.deepEqual(JSON.parse(String(calls[3].init?.body)), {
-		access_token: "member-secret",
+	assert.deepEqual(JSON.parse(String(calls[2].init?.body)), {
+		request_token: "request-secret",
+	})
+	assert.equal(calls[3].url.searchParams.get("session_id"), "member-secret")
+	assert.deepEqual(JSON.parse(String(calls[4].init?.body)), {
+		session_id: "member-secret",
 	})
 })
 
-test("invalid ratings stay visible, clustered dates warn, and partial or repeated pages cannot silently import", async () => {
+test("invalid ratings stay visible and partial or repeated pages cannot silently import", async () => {
 	const build = (results: unknown[], total = results.length) =>
 		createTmdbClient({
-			appToken: "app",
+			apiKey: "app",
 			sleep: async () => {},
 			fetch: async (url) =>
 				Response.json({
 					page: 1,
 					total_pages: 1,
-					total_results: String(url).includes("/movie/rated") ? total : 0,
-					results: String(url).includes("/movie/rated") ? results : [],
+					total_results: String(url).includes("/rated/movies") ? total : 0,
+					results: String(url).includes("/rated/movies") ? results : [],
 				}),
 		})
 	const rows = Array.from({ length: 100 }, (_, i) => ({
 		id: i + 1,
 		title: "Example",
-		account_rating: {
-			value: i === 0 ? 0 : 8.5,
-			created_at: new Date(
-				Date.parse("2020-02-01T12:00:00Z") + i * 1000,
-			).toISOString(),
-		},
+		rating: i === 0 ? 0 : 8.5,
 	}))
 	const parsed = await build(rows).readAccount("account", "secret")
 	assert.equal(parsed.observations[0].problem?.outcome, "invalid")
-	assert.match(parsed.warnings.join(" "), /100 ratings share.*day/)
 	const partial = await build(rows, 101).readAccount("account", "secret")
 	assert.equal(partial.observations.length, 100)
 	assert.match(partial.warnings.join(" "), /100 of 101.*movie rated/)
@@ -154,7 +146,7 @@ test("long Retry-After defers revocation without retrying early, and errors neve
 	let calls = 0
 	const waits: number[] = []
 	const client = createTmdbClient({
-		appToken: "app-secret",
+		apiKey: "app-secret",
 		sleep: async (ms) => {
 			waits.push(ms)
 		},
@@ -175,7 +167,7 @@ test("long Retry-After defers revocation without retrying early, and errors neve
 	assert.equal(calls, 1)
 	assert.deepEqual(waits, [])
 	const failed = createTmdbClient({
-		appToken: "app-secret",
+		apiKey: "app-secret",
 		sleep: async () => {},
 		fetch: async () => {
 			throw new Error("member-secret")
@@ -187,19 +179,21 @@ test("long Retry-After defers revocation without retrying early, and errors neve
 	)
 })
 
-test("incomplete or impossible rating dates stay undated rather than inventing a calendar day", async () => {
+test("v3 rating scores never acquire a date from release dates or unrelated metadata", async () => {
 	const client = createTmdbClient({
-		appToken: "app",
+		apiKey: "app",
 		sleep: async () => {},
 		fetch: async (url) => {
-			const results = String(url).includes("movie/rated")
-				? ["2020", "2020-02-30T12:00:00Z", "2020-02-01T12:00:00+02:00"].map(
-						(created_at, i) => ({
-							id: i + 1,
-							title: "Example",
-							account_rating: { value: 8, created_at },
-						}),
-					)
+			const results = String(url).includes("/rated/movies")
+				? [
+						{
+							id: 862,
+							title: "Toy Story",
+							rating: 8.5,
+							release_date: "1995-01-01",
+							account_rating: { value: 2, created_at: "2020-02-01T12:00:00Z" },
+						},
+					]
 				: []
 			return Response.json({
 				page: 1,
@@ -210,11 +204,10 @@ test("incomplete or impossible rating dates stay undated rather than inventing a
 		},
 	})
 	const parsed = await client.readAccount("account", "secret")
-	assert.deepEqual(
-		parsed.observations.map((x) => x.addedAt),
-		[null, null, "2020-02-01T10:00:00.000Z"],
-	)
-	assert.match(parsed.warnings.join(" "), /invalid rating dates/)
+	assert.equal(parsed.observations[0].score, 9)
+	assert.equal(parsed.observations[0].addedAt, null)
+	assert.equal(parsed.observations[0].watchedAt, undefined)
+	assert.match(parsed.warnings.join(" "), /no rating dates/)
 })
 
 test("revocation accepts confirmed invalid or missing tokens but never an application auth failure or generic 404", async () => {
@@ -226,12 +219,12 @@ test("revocation accepts confirmed invalid or missing tokens but never an applic
 	] as const) {
 		let deletes = 0
 		const client = createTmdbClient({
-			appToken: "app",
+			apiKey: "app",
 			sleep: async () => {},
 			fetch: async (url, init) => {
-				if (String(url).endsWith("/3/authentication"))
+				if (new URL(String(url)).pathname === "/3/authentication")
 					return Response.json({ success: true })
-				if (String(url).includes("/account/account/"))
+				if (new URL(String(url)).pathname === "/3/account")
 					return Response.json(
 						{ status_code: 35, success: false },
 						{ status: 401 },
@@ -245,7 +238,7 @@ test("revocation accepts confirmed invalid or missing tokens but never an applic
 			},
 		})
 		if (accepted) {
-			await client.revoke("member", "account")
+			await client.revoke("member")
 			assert.equal(deletes, 1)
 		} else
 			await assert.rejects(
@@ -254,13 +247,13 @@ test("revocation accepts confirmed invalid or missing tokens but never an applic
 			)
 	}
 	const invalidApp = createTmdbClient({
-		appToken: "bad-app",
+		apiKey: "bad-app",
 		sleep: async () => {},
 		fetch: async () =>
 			Response.json({ success: false, status_code: 35 }, { status: 401 }),
 	})
 	await assert.rejects(
-		invalidApp.revoke("member", "account"),
+		invalidApp.revoke("member"),
 		/not confirmed disconnection/,
 	)
 })
@@ -268,7 +261,7 @@ test("revocation accepts confirmed invalid or missing tokens but never an applic
 test("page counts are bounded in items, and changing counts warn while keeping the pages read", async () => {
 	let huge = true
 	const client = createTmdbClient({
-		appToken: "app",
+		apiKey: "app",
 		sleep: async () => {},
 		fetch: async (url) => {
 			const path = new URL(String(url))
@@ -290,10 +283,10 @@ test("page counts are bounded in items, and changing counts warn while keeping t
 
 test("an invalid-token logout response cannot discard a member token that still reads its account", async () => {
 	const client = createTmdbClient({
-		appToken: "app",
+		apiKey: "app",
 		sleep: async () => {},
 		fetch: async (url, init) => {
-			if (String(url).endsWith("/3/authentication"))
+			if (new URL(String(url)).pathname === "/3/authentication")
 				return Response.json({ success: true })
 			if (init?.method === "GET")
 				return Response.json({
@@ -305,8 +298,5 @@ test("an invalid-token logout response cannot discard a member token that still 
 			return Response.json({ status_code: 35, success: false }, { status: 401 })
 		},
 	})
-	await assert.rejects(
-		client.revoke("member", "account"),
-		/not confirmed disconnection/,
-	)
+	await assert.rejects(client.revoke("member"), /not confirmed disconnection/)
 })
