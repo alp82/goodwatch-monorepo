@@ -1,0 +1,130 @@
+{
+  "readOnlyPublicCatalog": true,
+  "productionJournalOrMemberRequests": 0,
+  "inputCount": 77,
+  "states": {
+    "suggested": 75,
+    "manual": 2,
+    "unavailable": 0,
+    "already_resolved": 0
+  },
+  "reasons": {
+    "no_native_id_match": 2
+  },
+  "pages": [
+    {
+      "offset": 0,
+      "groups": 10,
+      "elapsedMs": 2225,
+      "states": {
+        "suggested": 10,
+        "manual": 0,
+        "unavailable": 0,
+        "already_resolved": 0
+      }
+    },
+    {
+      "offset": 10,
+      "groups": 10,
+      "elapsedMs": 1944,
+      "states": {
+        "suggested": 10,
+        "manual": 0,
+        "unavailable": 0,
+        "already_resolved": 0
+      }
+    },
+    {
+      "offset": 20,
+      "groups": 10,
+      "elapsedMs": 1501,
+      "states": {
+        "suggested": 10,
+        "manual": 0,
+        "unavailable": 0,
+        "already_resolved": 0
+      }
+    },
+    {
+      "offset": 30,
+      "groups": 10,
+      "elapsedMs": 1861,
+      "states": {
+        "suggested": 10,
+        "manual": 0,
+        "unavailable": 0,
+        "already_resolved": 0
+      }
+    },
+    {
+      "offset": 40,
+      "groups": 10,
+      "elapsedMs": 1405,
+      "states": {
+        "suggested": 9,
+        "manual": 1,
+        "unavailable": 0,
+        "already_resolved": 0
+      }
+    },
+    {
+      "offset": 50,
+      "groups": 10,
+      "elapsedMs": 1957,
+      "states": {
+        "suggested": 10,
+        "manual": 0,
+        "unavailable": 0,
+        "already_resolved": 0
+      }
+    },
+    {
+      "offset": 60,
+      "groups": 10,
+      "elapsedMs": 1965,
+      "states": {
+        "suggested": 10,
+        "manual": 0,
+        "unavailable": 0,
+        "already_resolved": 0
+      }
+    },
+    {
+      "offset": 70,
+      "groups": 7,
+      "elapsedMs": 1150,
+      "states": {
+        "suggested": 6,
+        "manual": 1,
+        "unavailable": 0,
+        "already_resolved": 0
+      }
+    }
+  ],
+  "elapsedMs": 14008,
+  "stats": {
+    "requests": 610,
+    "successfulQueries": 610,
+    "rejectedQueries": 0,
+    "failedQueries": 0,
+    "maxConcurrentQueries": 6,
+    "queriesByTable": {
+      "movie": 153,
+      "show": 152,
+      "translation": 77,
+      "alternative_title": 77,
+      "streaming_availability": 151
+    },
+    "maxReturnedRowsByTable": {
+      "movie": 23,
+      "show": 11,
+      "translation": 38,
+      "alternative_title": 7,
+      "streaming_availability": 625
+    },
+    "capSentinelQueries": 0,
+    "maxReturnedRows": 625
+  },
+  "reviewOnly": true,
+  "identityCorrectnessValidated": false
+}
