@@ -148,7 +148,8 @@ Route: `/u/:handle/lists/:id`. It shows:
 - Meta tags: `og:title` ("<title> by @<handle> · GoodWatch"), `og:description` (the numbered titles),
   `og:image` and `twitter:image` with the versioned link preview URL, its type, width and height, and `twitter:card`
   `summary_large_image`.
-- `noindex, nofollow`.
+- `noindex, follow` (owner, 2026-10-19): lists stay out of search results, but a crawler that reaches a shared
+  list may follow it to the five title pages.
 
 A deleted list returns 404, including its image. A list whose owner made it unlisted still opens by link. A URL with a
 wrong or differently cased handle redirects to the canonical one.

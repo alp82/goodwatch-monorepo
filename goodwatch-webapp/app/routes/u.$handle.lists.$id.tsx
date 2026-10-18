@@ -3,7 +3,7 @@ import { canonicalMediaTitle } from "~/utils/media-presentation"
 import { presentCatalogLoader } from "~/server/media-payload.server"
 // Public share list page: /u/:handle/lists/:id. The card, large, and the five titles with where they stream in the
 // viewer's country. Lists are looked up by id; a wrong or differently cased handle redirects to the canonical URL, and deleted lists
-// (or lists of deleted accounts) answer 404. Unlisted lists open by link. The page is noindex. Its og:image is the
+// (or lists of deleted accounts) answer 404. Unlisted lists open by link. The page is noindex, follow. Its og:image is the
 // list's share card itself, as a small JPEG preview versioned by the list's content hash; the full-resolution card PNG
 // stays at the same path with .png.
 import { CheckIcon } from "@heroicons/react/20/solid"
@@ -81,7 +81,8 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 				]
 			: []),
 		{ name: "description", content: description },
-		{ name: "robots", content: "noindex, nofollow" },
+		// Lists stay out of results, but crawlers may follow a shared list to its five title pages.
+		{ name: "robots", content: "noindex, follow" },
 		{ tagName: "link", rel: "canonical", href: share.url },
 		{ property: "og:type", content: "website" },
 		{ property: "og:site_name", content: "GoodWatch" },
