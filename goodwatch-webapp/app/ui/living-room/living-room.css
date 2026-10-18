@@ -1451,9 +1451,8 @@ html[data-tv-transition] .tvr-bracket {
 		font-weight: 800;
 	}
 	.tvc-lvl.tvc-on {
-		background: rgba(255, 255, 255, 0.24);
-		transform: scale(1.04);
-		box-shadow: 0 0 0 4px #fff, 0 18px 40px rgba(0, 0, 0, 0.6);
+		outline: 2px solid rgba(255, 255, 255, 0.85);
+		outline-offset: 3px;
 		z-index: 2;
 	}
 	.tvc-num {
@@ -1462,9 +1461,9 @@ html[data-tv-transition] .tvr-bracket {
 		font-variant-numeric: tabular-nums;
 	}
 	.tvc-num.tvc-on {
-		color: #0b0c10;
-		transform: scale(1.12);
-		box-shadow: 0 0 0 4px #fff, 0 16px 36px rgba(0, 0, 0, 0.6);
+		color: #fff;
+		outline: 2px solid rgba(255, 255, 255, 0.85);
+		outline-offset: 3px;
 		z-index: 2;
 	}
 }

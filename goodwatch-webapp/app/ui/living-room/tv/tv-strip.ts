@@ -9,7 +9,7 @@ import {
 	RATING_LEVELS,
 	type RatingLevel,
 	levelOf,
-} from "../../taste-quiz/quiz-flow.ts"
+} from "../../scoring/score-model.ts"
 
 /** Where the focus is on the strip: the level it is in, and the exact score when it is on one. */
 export type StripFocus = {

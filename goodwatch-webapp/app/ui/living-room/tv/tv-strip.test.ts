@@ -49,7 +49,7 @@ describe("the rating strip's focus", () => {
 	})
 
 	it("knows every key the machine lists for the strip", () => {
-		const desktop = { ...EMPTY_CONTEXT, titles: ["movie-1"], exactScores: true }
+		const desktop = { ...EMPTY_CONTEXT, titles: ["movie-1"] }
 		const strip = tvItems({ name: "quiz" }, desktop).filter(
 			(item) => item.startsWith("level:") || item.startsWith("score:"),
 		)

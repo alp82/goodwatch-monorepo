@@ -27,11 +27,8 @@
 import type { Score } from "~/server/scores.server"
 import { titlePath } from "../../../utils/helpers.ts"
 import { parseTitleKey } from "../../../utils/title-key.ts"
-import {
-	QUIZ_GOAL,
-	RATING_LEVELS,
-	levelOf,
-} from "../../taste-quiz/quiz-flow.ts"
+import { QUIZ_GOAL } from "../../taste-quiz/quiz-flow.ts"
+import { RATING_LEVELS, SCORES, levelOf } from "../../scoring/score-model.ts"
 import { type TvBox, type TvDir, nextInDirection } from "./tv-move.ts"
 
 /** The apps on home, in order. My shows is a member's. */
@@ -157,8 +154,6 @@ export type TvContext = {
 	draft: string
 	/** Taste quiz scores toward the goal. */
 	quizProgress: number
-	/** The rating strip shows the ten exact scores under its levels: on the desktop, not on the phone. */
-	exactScores: boolean
 	/** The person's two streaming services, by TMDB provider id: the Remote's keys and home's tiles after the apps. */
 	services: readonly number[]
 	/**
@@ -188,7 +183,6 @@ export const EMPTY_CONTEXT: TvContext = {
 	titleName: null,
 	draft: "",
 	quizProgress: 0,
-	exactScores: false,
 	services: [],
 	homeSides: [],
 	nextEpisode: false,
@@ -925,10 +919,7 @@ export const STRIP_LEVELS: readonly Score[] = RATING_LEVELS.map(
 )
 
 /** The exact scores under the levels, low to high. */
-export const STRIP_SCORES: readonly Score[] = Array.from(
-	{ length: 10 },
-	(_, at) => (at + 1) as Score,
-)
+export const STRIP_SCORES = SCORES
 
 /** The level a score is under, as its item. */
 const levelItem = (score: number) =>
@@ -945,7 +936,7 @@ function stripItems(screen: StripScreen, ctx: TvContext): string[] {
 	if (screen.name === "quiz" && !ctx.titles.length) return []
 	return [
 		...STRIP_LEVELS.map((score) => `level:${score}`),
-		...(ctx.exactScores ? STRIP_SCORES.map((score) => `score:${score}`) : []),
+		...STRIP_SCORES.map((score) => `score:${score}`),
 		...(screen.name === "quiz" ? ["skip"] : []),
 	]
 }

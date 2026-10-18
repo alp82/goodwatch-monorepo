@@ -143,5 +143,15 @@ export const getScoreTextClass = (score: Score | null): string => {
 
 export const getScoreLabelText = (score: Score | null): string => {
 	if (!score) return scoreLabels[0]
-	return `${scoreLabels[score]} (${score})`
+	return `${scoreLabels[score]} · ${score}`
+}
+
+/** Selected personal score: white numeral, dark score fill, bright colored inset rim. */
+export const selectedScoreStyle = (score: Score) => {
+	const color = getVibeColorValue(score)
+	return {
+		color: "#fff",
+		background: `color-mix(in srgb, ${color} 42%, #181b20)`,
+		boxShadow: `inset 0 0 0 2px color-mix(in srgb, ${color} 70%, white)`,
+	}
 }

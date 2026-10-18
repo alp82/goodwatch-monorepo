@@ -288,7 +288,6 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 			...explorerContext,
 			// Slice 8: Taste's sides and lists, the quiz's title and progress, and where the strip has exact scores.
 			...tasteCtx,
-			exactScores: edition === "desktop",
 			// Home's guide is the desktop's (#673): the phone keeps the row of tiles.
 			...(edition === "phone" && { homeSides: [] }),
 			// My shows (slice 9): Seen it marks the Next episode of the show on screen.

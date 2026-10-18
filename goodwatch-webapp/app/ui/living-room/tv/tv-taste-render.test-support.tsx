@@ -84,7 +84,7 @@ const screensOf = (
 	taste,
 	quiz: { title: null, waiting: false, rated: 0, ...quiz },
 })
-/** The machine's context as the scene builds it: Taste's part, and whether the edition has exact scores. */
+/** The machine's context as the scene builds it: Taste's part; both editions have exact scores. */
 const ctxOf = (
 	screen: Screen,
 	shown: TvTasteScreens,
@@ -92,7 +92,6 @@ const ctxOf = (
 ): TvContext => ({
 	...EMPTY_CONTEXT,
 	...tasteContext(screen, shown),
-	exactScores: canvas.edition === "desktop",
 })
 
 /** A screen drawn as it is once its code is there. */
@@ -189,7 +188,6 @@ const rateOf = (title: TvTitleOnScreen, focus?: string) =>
 	editions((canvas) => {
 		const ctx: TvContext = {
 			...EMPTY_CONTEXT,
-			exactScores: canvas.edition === "desktop",
 		}
 		const items = tvItems(RATE, ctx)
 		return {

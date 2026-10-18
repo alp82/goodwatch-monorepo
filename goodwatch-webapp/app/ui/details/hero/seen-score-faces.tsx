@@ -3,7 +3,7 @@
 // something (NotSeenConfirm.tsx) draw the same faces, so the preview shows the control itself.
 import type { ReactNode } from "react"
 import type { Score } from "~/server/scores.server"
-import { getVibeColorValue, scoreLabels } from "~/utils/ratings"
+import { getVibeColorValue, scoreLabels, selectedScoreStyle } from "~/utils/ratings"
 
 /** Keyboard focus inside a half, drawn inset so the frame's rounded corners don't cut it. */
 export const HALF_FOCUS =
@@ -221,13 +221,12 @@ export function ScoreFace({
 	score,
 	ask,
 }: { score: Score | null; ask: string }) {
-	const color = score ? getVibeColorValue(score) : ""
 	return (
 		<span className="flex h-full min-w-0 flex-1 items-center gap-2 pl-2 pr-2 text-left sm:gap-2.5 sm:pr-3 lg:group-data-[big]/split:gap-3 lg:group-data-[big]/split:pl-2.5">
 			{score ? (
 				<span
 					className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-lg font-black tabular-nums lg:group-data-[big]/split:h-11 lg:group-data-[big]/split:w-11 lg:group-data-[big]/split:text-xl"
-					style={{ background: color, color: score <= 3 ? "#fff" : "#0a0a0a" }}
+					style={selectedScoreStyle(score)}
 				>
 					{score}
 				</span>

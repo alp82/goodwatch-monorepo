@@ -7,7 +7,7 @@ import {
 	XMarkIcon,
 } from "@heroicons/react/24/solid"
 import { Link } from "@remix-run/react"
-import { forwardRef } from "react"
+import { forwardRef, lazy, Suspense, useRef, useState } from "react"
 import type { ExplorerCard, ExplorerTitle } from "~/domain/explorer"
 import { useUserScore } from "~/hooks/useUserDataAccessors"
 import type { MovieResult } from "~/server/types/details-types"
@@ -15,7 +15,10 @@ import UserAction from "~/ui/auth/UserAction"
 import ScoreRing from "~/ui/details/hero/ScoreRing"
 import { SignUpPrompt } from "~/ui/sign-up-prompt/SignUpPrompt"
 import { ActionButton } from "~/ui/title-actions/ActionButton"
-import { TitleScore } from "~/ui/title-actions/TitleScore"
+import { getScoreLabelText } from "~/utils/ratings"
+import { reloadOnStaleChunk } from "~/utils/stale-chunk"
+
+const TitleScoreDialog = lazy(reloadOnStaleChunk(() => import("~/ui/scoring/TitleScoreDialog")))
 import {
 	SEEN_INSTRUCTIONS,
 	useTitleActions,
@@ -258,16 +261,17 @@ function Actions({
 		mediaType: title.mediaType,
 		details: { tmdb_id: title.tmdbId, title: title.title },
 	}
+	const [rating, setRating] = useState(false)
+	const opener = useRef<HTMLButtonElement>(null)
 	const a = useTitleActions(media)
 	const seen = a.seen || title.seen
 	return (
 		<>
 			<div className="mt-3">
-				<TitleScore
-					media={media}
-					size="compact"
-					onRated={() => onAction("Score saved", true)}
-				/>
+				<button ref={opener} type="button" aria-haspopup="dialog" aria-expanded={rating} onClick={() => setRating(true)} className="min-h-11 w-full cursor-pointer rounded-xl bg-white/10 px-3 py-2 text-sm font-bold text-white hover:bg-white/15">
+					{a.score ? `Your score: ${getScoreLabelText(a.score)}` : "Rate it"}
+				</button>
+				{rating && <Suspense fallback={null}><TitleScoreDialog media={media} open opener={opener} onClose={() => setRating(false)} onRated={() => { setRating(false); onAction("Score saved", true) }} /></Suspense>}
 			</div>
 			<div className="ex-acts">
 				<ActionButton

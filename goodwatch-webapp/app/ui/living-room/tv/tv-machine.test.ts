@@ -62,7 +62,7 @@ const TABS = ["tab:moods", "tab:themes", "tab:styles"]
 /** The rating strip: its levels low to high, and the exact scores the desktop shows under them. */
 const LEVELS = ["level:3", "level:5", "level:7", "level:9"]
 const SCORES = Array.from({ length: 10 }, (_, at) => `score:${at + 1}`)
-const desktop: TvContext = { ...guest, exactScores: true }
+const desktop: TvContext = { ...guest }
 
 const at = (query: string, depth = 0, ctx: TvContext = guest) =>
 	readTvState(new URLSearchParams(query), ctx, depth)
@@ -421,7 +421,7 @@ describe("the screens and their items, in reading order", () => {
 	})
 
 	it("the quiz: the strip's four levels from low to high, Haven't seen it, no Expand", () => {
-		assert.deepEqual(items("tv=quiz"), [...LEVELS, "skip", ...BAR])
+		assert.deepEqual(items("tv=quiz"), [...LEVELS, ...SCORES, "skip", ...BAR])
 	})
 
 	it("the quiz on the desktop: the ten exact scores under the levels", () => {
@@ -461,7 +461,7 @@ describe("the screens and their items, in reading order", () => {
 	})
 
 	it("the rating: the same strip without Haven't seen it, no Expand", () => {
-		assert.deepEqual(items("tv=rate&title=movie-1"), [...LEVELS, ...BAR])
+		assert.deepEqual(items("tv=rate&title=movie-1"), [...LEVELS, ...SCORES, ...BAR])
 		assert.deepEqual(items("tv=rate&title=movie-1", desktop), [
 			...LEVELS,
 			...SCORES,
@@ -470,6 +470,7 @@ describe("the screens and their items, in reading order", () => {
 		// Its title is in the address: the strip is there whatever list the page holds.
 		assert.deepEqual(items("tv=rate&title=movie-1", { ...guest, titles: [] }), [
 			...LEVELS,
+			...SCORES,
 			...BAR,
 		])
 	})
@@ -1210,15 +1211,11 @@ describe("the rating strip", () => {
 		}
 	})
 
-	it("has no exact score on the phone: choosing one does nothing", () => {
-		const start = at("tv=quiz", 1)
-		const t = run(start, guest, { type: "choose", item: "score:8" })
-		assert.equal(t.state, start)
-		assert.deepEqual(t.effects, [])
-		assert.equal(
-			run(start, guest, { type: "focus", item: "score:8" }).state,
-			start,
-		)
+	it("every exact score can be selected on the phone in quiz and title rating", () => {
+		for (let score = 1; score <= 10; score++) {
+			assert.deepEqual(choose("tv=quiz", `score:${score}`, guest).effects, [{ type: "quiz-rate", score }])
+			assert.deepEqual(choose("tv=rate&title=movie-1", `score:${score}`, guest).effects, [{ type: "rate", title: "movie-1", score }])
+		}
 	})
 
 	it("Left and Right move along the levels, and stop at the ends", () => {
@@ -1282,15 +1279,15 @@ describe("the rating strip", () => {
 		assert.equal(move("tv=quiz", "bar:menu", go("down")), "level:9")
 	})
 
-	it("on the phone, without exact scores, Down from a level is the direction rule's: Haven't seen it", () => {
-		const phone = boxes.filter((box) => !box.id.startsWith("score:"))
+	it("on the phone Down from a level reaches its exact scores", () => {
+		const phone = boxes
 		const t = run(
 			at("tv=quiz", 1),
 			guest,
 			{ type: "focus", item: "level:5" },
 			{ type: "move", dir: "down", boxes: phone },
 		)
-		assert.equal(focusedItem(t.state, guest), "skip")
+		assert.equal(focusedItem(t.state, guest), "score:5")
 	})
 
 	it("leaves the menu's own moves alone while the menu is open", () => {
