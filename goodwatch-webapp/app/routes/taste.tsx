@@ -2,7 +2,9 @@ import { Outlet, useLocation, useMatches } from "@remix-run/react"
 import { TasteTabs, isTasteTabPath } from "~/ui/taste/tabs/TasteTabs"
 
 export default function TasteLayout() {
-	const { pathname } = useLocation()
+	const { pathname, search } = useLocation()
+	// PROTOTYPE: no tabs on the onboarding variants.
+	const prototype = new URLSearchParams(search).has("variant")
 	// No tabs while a member starts their taste: there's nothing to tab through yet.
 	const starting = useMatches().some((m) => {
 		const view = (m.data as { view?: { status?: string; tab?: string } } | null)
@@ -11,7 +13,7 @@ export default function TasteLayout() {
 	})
 	return (
 		<>
-			{isTasteTabPath(pathname) && !starting && <TasteTabs />}
+			{isTasteTabPath(pathname) && !starting && !prototype && <TasteTabs />}
 			<Outlet />
 		</>
 	)

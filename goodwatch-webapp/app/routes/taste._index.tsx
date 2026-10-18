@@ -21,6 +21,10 @@ import {
 import { SidesOfYou } from "~/ui/taste/tabs/SidesOfYou"
 import { TasteTabFrame } from "~/ui/taste/tabs/TasteTabFrame"
 import { type PageMeta, buildMeta } from "~/utils/meta"
+import { getLocaleFromRequest } from "~/server/cache-identity.server"
+import { getSmartTitlesForGuest } from "~/server/smart-titles.server"
+import type { ScoringMedia } from "~/ui/scoring/types"
+import { OnboardingImportsPrototype, onboardingVariant } from "~/ui/prototype-onboarding-imports/OnboardingImports"
 
 export { pageHeaders as headers } from "~/utils/headers"
 
@@ -50,6 +54,12 @@ export const meta: MetaFunction<typeof loader> = () => {
 }
 
 async function canonicalLoader({ request }: LoaderFunctionArgs) {
+	// PROTOTYPE: ?variant= shows a fresh member's start, signed out, with the best-known titles to rate.
+	if (onboardingVariant(new URL(request.url).searchParams)) {
+		const { locale } = getLocaleFromRequest(request)
+		const shelf = await getSmartTitlesForGuest({ count: 120, locale, ratingsCount: 0 })
+		return { prototypeShelf: shelf as unknown as ScoringMedia[] } as unknown as TasteTabData<"sides">
+	}
 	const { userId } = await tastePageViewer(request)
 	return loadTasteTab(request, "sides", userId)
 }
@@ -66,6 +76,14 @@ export default function TasteRoute() {
 			}),
 		[setParams],
 	)
+	const prototype = onboardingVariant(params)
+	if (prototype)
+		return (
+			<OnboardingImportsPrototype
+				variant={prototype}
+				shelf={(data as unknown as { prototypeShelf?: ScoringMedia[] }).prototypeShelf ?? []}
+			/>
+		)
 
 	return (
 		<TasteTabFrame tab="sides" memberView={data.view}>
