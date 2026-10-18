@@ -3,7 +3,7 @@
 // It writes the shared wishlist file (v1) and a sanitized shape report. It reads one route,
 // GET /watchlist/items, and never calls a write route.
 
-import { existsSync, readFileSync, renameSync, statSync, writeFileSync, mkdirSync } from "node:fs"
+import { existsSync, readFileSync, realpathSync, renameSync, rmSync, statSync, writeFileSync, mkdirSync } from "node:fs"
 import { dirname, join, resolve } from "node:path"
 import { homedir } from "node:os"
 
@@ -77,29 +77,31 @@ function findHasMore(body, headers) {
 	}
 }
 
-function reportedTotal(body) {
-	if (!isObject(body.pagination)) return {}
-	const totals = {}
-	for (const [key, value] of Object.entries(body.pagination)) {
-		if (/total|count/i.test(key) && typeof value === "number") totals[key] = value
-	}
-	return totals
+/** Every field that looks like a count, whatever its type. Each one must reconcile before "complete". */
+function reportedTotals(body) {
+	if (!isObject(body.pagination)) return []
+	return Object.entries(body.pagination).filter(([key]) => /total|count/i.test(key))
 }
 
-/** A stable identity for one source row, used only to spot exact repeats. */
+/** The source row's native key, or null when the row carries no native ID at all. */
+function nativeKey(bucket, row) {
+	const ids = isObject(row.ids) ? row.ids : {}
+	const key = [ids.mdblist ?? null, row.id ?? null, ids.tmdb ?? null, ids.imdb ?? row.imdb_id ?? null]
+	if (key.every((part) => part === null || part === "")) return null
+	return JSON.stringify([bucket, ...key, row.season ?? row.season_number ?? null, row.episode ?? row.episode_number ?? null])
+}
+
+/** Everything the reader maps from a row. Two rows are an exact repeat only when all of it matches. */
 function rowIdentity(bucket, row) {
 	const ids = isObject(row.ids) ? row.ids : {}
 	return JSON.stringify([
-		bucket,
-		ids.mdblist ?? null,
-		row.id ?? null,
+		nativeKey(bucket, row),
+		row.mediatype ?? null,
+		row.title ?? null,
+		row.release_year ?? null,
 		ids.tmdb ?? null,
-		ids.imdb ?? row.imdb_id ?? null,
-		row.season ?? row.season_number ?? null,
-		row.episode ?? row.episode_number ?? null,
-		row.id === undefined && ids.mdblist === undefined && ids.tmdb === undefined
-			? [row.title ?? null, row.release_year ?? null]
-			: null,
+		ids.imdb ?? null,
+		row.imdb_id ?? null,
 	])
 }
 
@@ -176,7 +178,7 @@ export async function readWatchlist({
 		otherTopLevelKeys: {},
 		rateLimit: null,
 		shape: {},
-		rows: { received: 0, repeats: 0, wishes: 0, unsupported: 0, byBucket: {} },
+		rows: { received: 0, repeats: 0, wishes: 0, unsupported: 0, malformed: 0, identityConflicts: 0, byBucket: {} },
 		identity: {
 			missingCatalogId: 0,
 			imdbConflicts: 0,
@@ -256,8 +258,12 @@ export async function readWatchlist({
 			} catch {
 				fail("not-json", "MDBList sent something that isn't JSON. Nothing was written.")
 			}
-			if (!isObject(body) || !Object.entries(KNOWN_BUCKETS).some(([bucket]) => Array.isArray(body[bucket])))
+			if (!isObject(body) || !Object.keys(KNOWN_BUCKETS).some((bucket) => Array.isArray(body[bucket])))
 				fail("unknown-envelope", "MDBList's answer has no movies or shows list. Nothing was written.")
+			for (const bucket of Object.keys(KNOWN_BUCKETS)) {
+				if (bucket in body && !Array.isArray(body[bucket]))
+					fail("malformed-bucket", `MDBList's ${bucket} entry isn't a list. Nothing was written.`)
+			}
 			return { body, headers: response.headers }
 		}
 	}
@@ -266,6 +272,7 @@ export async function readWatchlist({
 	async function readAll(filter) {
 		const rows = []
 		const seenCursors = new Set()
+		const unexplained = []
 		let cursor
 		const totals = []
 		for (let page = 0; ; page++) {
@@ -275,9 +282,15 @@ export async function readWatchlist({
 			for (const [key, value] of Object.entries(body)) {
 				if (Array.isArray(value)) {
 					pageSummary.buckets[key] = value.length
-					for (const row of value) rows.push([key, isObject(row) ? row : {}])
+					for (const row of value) {
+						if (!isObject(row)) unexplained.push(`a ${key} row that isn't an object`)
+						rows.push([key, isObject(row) ? row : {}, !isObject(row)])
+					}
+				} else if (key === "pagination" && !isObject(value)) {
+					unexplained.push("pagination that isn't an object")
 				} else if (!["pagination", "next_cursor", "has_more"].includes(key)) {
 					report.otherTopLevelKeys[key] = typeName(value)
+					unexplained.push(`a top-level field the reader doesn't know`)
 				}
 			}
 			if (rows.length > MAX_ITEMS) fail("too-many", "The Watchlist has more than 50,000 rows. Nothing was written.")
@@ -287,8 +300,7 @@ export async function readWatchlist({
 			const more = findHasMore(body, headers)
 			if (more.conflict) fail("has-more-conflict", "MDBList said both that more items exist and that none do. Nothing was written.")
 			for (const where of more.locations) report.hasMoreLocations[where] = (report.hasMoreLocations[where] ?? 0) + 1
-			const total = reportedTotal(body)
-			if (Object.keys(total).length) totals.push(total)
+			totals.push(...reportedTotals(body))
 			pageSummary.cursor = found.cursor ? "present" : "absent"
 			pageSummary.hasMore = more.hasMore ?? "not stated"
 			if (filter === undefined) report.pages.push(pageSummary)
@@ -301,7 +313,7 @@ export async function readWatchlist({
 				continue
 			}
 			if (more.hasMore === true) fail("missing-cursor", "MDBList said more items exist but sent no cursor. Nothing was written.")
-			return { rows, proven: more.hasMore === false, totals }
+			return { rows, proven: more.hasMore === false, totals, unexplained }
 		}
 	}
 
@@ -311,9 +323,11 @@ export async function readWatchlist({
 	const counters = report.identity
 	const items = []
 	const seen = new Set()
+	const nativeKeys = new Map()
 	const identities = new Map()
-	for (const [bucket, row] of combined.rows) {
+	for (const [bucket, row, malformed] of combined.rows) {
 		report.rows.received++
+		if (malformed) report.rows.malformed++
 		report.rows.byBucket[bucket] = (report.rows.byBucket[bucket] ?? 0) + 1
 		report.shape[bucket] ??= {}
 		describeShape(report.shape[bucket], row)
@@ -323,10 +337,15 @@ export async function readWatchlist({
 			if (positiveInt(row.id) === positiveInt(row.ids.tmdb)) counters.rowsWhereIdEqualsIdsTmdb++
 		}
 		const identity = rowIdentity(bucket, row)
-		if (seen.has(identity)) {
+		const native = nativeKey(bucket, row)
+		// Only a row with a native ID whose mapped fields all match an earlier row is a repeat.
+		// A row with no native ID, or one whose fields differ, is always kept.
+		if (native && seen.has(identity)) {
 			report.rows.repeats++
 			continue
 		}
+		if (native && nativeKeys.has(native) && nativeKeys.get(native) !== identity) report.rows.identityConflicts++
+		if (native && !nativeKeys.has(native)) nativeKeys.set(native, identity)
 		seen.add(identity)
 		identities.set(identity, bucket)
 		const item = mapRow(bucket, row, counters)
@@ -345,13 +364,35 @@ export async function readWatchlist({
 		report.warnings.push("MDBList sent a list the reader doesn't know. Its rows stay visible as unsupported.")
 	}
 
-	const lastTotals = combined.totals.at(-1)
-	if (lastTotals) {
-		report.reportedTotals = lastTotals
-		const total = lastTotals.total ?? lastTotals.total_items ?? lastTotals.totalItems
-		if (typeof total === "number" && total !== report.rows.received) {
+	if (combined.unexplained.length) {
+		completeness = "unknown"
+		for (const what of new Set(combined.unexplained)) report.warnings.push(`MDBList sent ${what}, so the file says its coverage is unknown.`)
+	}
+	if (report.rows.identityConflicts)
+		report.warnings.push(`${report.rows.identityConflicts} rows share a native ID with an earlier row but differ; both are kept.`)
+
+	// Every count field on every page must equal the rows received. A mismatch is partial; a value
+	// that isn't a number is unknown.
+	if (combined.totals.length) {
+		report.reportedTotals = {}
+		let unreadable = false
+		const mismatched = new Set()
+		for (const [key, value] of combined.totals) {
+			report.reportedTotals[key] ??= new Set()
+			const number = typeof value === "string" && /^\d+$/.test(value.trim()) ? Number(value) : value
+			if (typeof number !== "number" || !Number.isFinite(number)) unreadable = true
+			else {
+				report.reportedTotals[key].add(number === report.rows.received ? "matches" : "differs")
+				if (number !== report.rows.received) mismatched.add(number)
+			}
+		}
+		for (const key of Object.keys(report.reportedTotals)) report.reportedTotals[key] = [...report.reportedTotals[key]]
+		if (mismatched.size) {
 			completeness = "partial"
-			report.warnings.push(`MDBList reported ${total} items but sent ${report.rows.received}.`)
+			report.warnings.push(`MDBList reported ${[...mismatched].join(" and ")} items but sent ${report.rows.received}.`)
+		} else if (unreadable && completeness === "complete") {
+			completeness = "unknown"
+			report.warnings.push("MDBList sent a count the reader can't read, so the file says its coverage is unknown.")
 		}
 	}
 
@@ -393,18 +434,43 @@ export async function readWatchlist({
 
 const DEFAULT_DIR = join(homedir(), "goodwatch-private", "711")
 
+/** The path with every existing part resolved through symlinks. */
+function realTarget(path) {
+	let existing = resolve(path)
+	const rest = []
+	while (!existsSync(existing)) {
+		rest.unshift(existing.slice(dirname(existing).length + 1))
+		if (dirname(existing) === existing) break
+		existing = dirname(existing)
+	}
+	return join(realpathSync(existing), ...rest)
+}
+
 function insideGitWorkTree(path) {
-	for (let dir = dirname(resolve(path)); ; dir = dirname(dir)) {
+	for (let dir = dirname(realTarget(path)); ; dir = dirname(dir)) {
 		if (existsSync(join(dir, ".git"))) return true
 		if (dirname(dir) === dir) return false
 	}
 }
 
-function writePrivate(path, data) {
-	mkdirSync(dirname(path), { recursive: true, mode: 0o700 })
-	const temporary = `${path}.tmp-${process.pid}`
-	writeFileSync(temporary, `${JSON.stringify(data, null, 2)}\n`, { mode: 0o600 })
-	renameSync(temporary, path)
+/**
+ * Writes all files or none of the wishlist: every file is staged next to its target first, and
+ * the wishlist is renamed last, so a failure leaves the previous wishlist in place.
+ */
+function writePrivate(entries) {
+	const staged = []
+	try {
+		for (const [path, data] of entries) {
+			mkdirSync(dirname(path), { recursive: true, mode: 0o700 })
+			const temporary = `${path}.tmp-${process.pid}`
+			staged.push([temporary, path])
+			writeFileSync(temporary, `${JSON.stringify(data, null, 2)}\n`, { mode: 0o600 })
+		}
+		for (const [temporary, path] of staged) renameSync(temporary, path)
+	} catch (error) {
+		for (const [temporary] of staged) rmSync(temporary, { force: true })
+		throw error
+	}
 }
 
 function parseArgs(argv) {
@@ -439,6 +505,9 @@ async function main() {
 	for (const path of [options.out, options.report]) {
 		if (insideGitWorkTree(path)) throw new Error(`Refusing to write ${path}: it is inside a Git work tree.`)
 	}
+	const targets = [options.out, options.report, options.keyFile].map(realTarget)
+	if (new Set(targets).size !== targets.length)
+		throw new Error("The wishlist file, the report and the key file must be three different files.")
 	let apiKey = process.env.MDBLIST_API_KEY
 	if (!apiKey) {
 		if (!existsSync(options.keyFile)) throw new Error(`No key. Save your MDBList API key to ${options.keyFile}.`)
@@ -453,8 +522,10 @@ async function main() {
 			// Tests only: point the reader at a local stand-in.
 			base: process.env.MDBLIST_TEST_BASE || API_BASE,
 		})
-		writePrivate(options.out, file)
-		writePrivate(options.report, report)
+		writePrivate([
+			[options.report, report],
+			[options.out, file],
+		])
 		console.log(
 			`Wrote ${file.items.length} entries (${report.rows.wishes} movies and shows, ${report.rows.unsupported} unsupported, ${report.rows.repeats} repeats skipped). Coverage: ${file.completeness}. Requests: ${report.requests}, retries: ${report.retries}, ${report.elapsedMs} ms.`,
 		)
@@ -462,8 +533,13 @@ async function main() {
 		for (const warning of report.warnings) console.log(`Note: ${warning}`)
 	} catch (error) {
 		if (error instanceof ReaderError) {
-			if (error.report) writePrivate(options.report, error.report)
-			console.error(`${error.message}\nShape report: ${options.report}`)
+			let where = `Shape report: ${options.report}`
+			try {
+				if (error.report) writePrivate([[options.report, error.report]])
+			} catch {
+				where = "The shape report couldn't be written either."
+			}
+			console.error(`${error.message}\n${where}`)
 			process.exitCode = 2
 			return
 		}

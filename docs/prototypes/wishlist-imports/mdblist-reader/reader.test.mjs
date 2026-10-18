@@ -182,3 +182,137 @@ test("CLI: a failed run leaves the previous file untouched and refuses Git paths
 	assert.equal(run(["--out", join(here, "nope.json")]), 2)
 	assert.ok(!existsSync(join(here, "nope.json")))
 })
+
+// ---------- review fixes (Astra on 960d739c) ----------
+
+const movie = rows[0].row
+const one = (json) => fakeMdblist(rows, { faults: { 1: { json } } })
+
+test("review 1: a malformed known bucket fails instead of giving a complete empty file", async () => {
+	await failsWith(read(one({ movies: [], shows: { items: [movie] }, has_more: false })), "malformed-bucket")
+	await failsWith(read(one({ movies: null, shows: [], has_more: false })), "malformed-bucket")
+})
+
+test("review 1: unexplained structure gives unknown coverage, never complete", async () => {
+	const extraKey = await read(one({ movies: [movie], shows: [], list_meta: { items: 3 }, has_more: false }))
+	assert.equal(extraKey.file.completeness, "unknown")
+	const badRow = await read(one({ movies: [movie, null], shows: [], has_more: false }))
+	assert.equal(badRow.file.completeness, "unknown")
+	assert.equal(badRow.report.rows.malformed, 1)
+	const badPagination = await read(one({ movies: [movie], shows: [], pagination: "x", has_more: false }))
+	assert.equal(badPagination.file.completeness, "unknown")
+})
+
+test("review 2: any reported total must reconcile before complete", async () => {
+	const totalCount = await read(one({ movies: [movie], shows: [], pagination: { total_count: 9 }, has_more: false }))
+	assert.equal(totalCount.file.completeness, "partial")
+	const stringTotal = await read(one({ movies: [movie], shows: [], pagination: { total: "9" }, has_more: false }))
+	assert.equal(stringTotal.file.completeness, "partial")
+	const unreadable = await read(one({ movies: [movie], shows: [], pagination: { total: "many" }, has_more: false }))
+	assert.equal(unreadable.file.completeness, "unknown")
+	const matching = await read(one({ movies: [movie], shows: [], pagination: { total_count: 1 }, has_more: false }))
+	assert.equal(matching.file.completeness, "complete")
+	// A disagreeing total on an earlier page still blocks complete, even when the last page agrees.
+	const earlier = await read(fakeMdblist(rows, { extraPagination: (page, count) => ({ total: page === 0 ? count + 5 : count }) }))
+	assert.equal(earlier.file.completeness, "partial")
+	const steady = await read(fakeMdblist(rows, { extraPagination: (page, count) => ({ total: count }) }))
+	assert.equal(steady.file.completeness, "complete")
+})
+
+test("review 3: a conflicting row never hides a valid row as a repeat", async () => {
+	const conflicting = { ...movie, mediatype: "show" }
+	const { file, report } = await read(one({ movies: [conflicting, movie], shows: [], has_more: false }))
+	assert.equal(report.rows.repeats, 0)
+	assert.equal(file.items.length, 2)
+	assert.ok(file.items.some((item) => item.mediaType === "movie" && item.tmdbId === 862))
+	assert.equal(report.rows.identityConflicts, 1)
+	const changedTitle = await read(one({ movies: [movie, { ...movie, title: "Toy Story (Different)" }], shows: [], has_more: false }))
+	assert.equal(changedTitle.report.rows.repeats, 0)
+	assert.equal(changedTitle.report.rows.identityConflicts, 1)
+})
+
+test("review 3: rows without any native ID are never collapsed", async () => {
+	const bare = { title: "Same Name", release_year: 2000, mediatype: "movie" }
+	const { file, report } = await read(one({ movies: [bare, { ...bare }], shows: [], has_more: false }))
+	assert.equal(report.rows.repeats, 0)
+	assert.equal(file.items.length, 2)
+})
+
+// ---------- CLI ----------
+
+import { createServer } from "node:http"
+import { symlinkSync, mkdirSync, chmodSync } from "node:fs"
+
+async function serve(fake) {
+	const server = createServer(async (request, response) => {
+		const answer = await fake.fetchImpl(new URL(request.url, "http://127.0.0.1"))
+		response.writeHead(answer.status, Object.fromEntries(answer.headers))
+		response.end(await answer.text())
+	})
+	await new Promise((done) => server.listen(0, "127.0.0.1", done))
+	return { base: `http://127.0.0.1:${server.address().port}`, close: () => server.close() }
+}
+function cli(args, env = {}) {
+	return new Promise((done) => {
+		const child = execFile(process.execPath, [join(here, "reader.mjs"), ...args], { env: { ...process.env, MDBLIST_API_KEY: "test-key", ...env } }, (error, stdout, stderr) =>
+			done({ status: error ? error.code : 0, stdout, stderr }),
+		)
+		child.stdin?.end()
+	})
+}
+import { execFile } from "node:child_process"
+const scratch = () => mkdtempSync(join(process.env.READER_TEST_TMP ?? tmpdir(), "mdblist-711-"))
+
+test("review 4: a symlink into a Git work tree is refused", async () => {
+	const dir = scratch()
+	symlinkSync(here, join(dir, "link"))
+	const result = await cli(["--out", join(dir, "link", "w.json"), "--report", join(dir, "r.json")])
+	assert.equal(result.status, 2)
+	assert.match(result.stderr, /Git work tree/)
+	assert.ok(!existsSync(join(here, "w.json")))
+	const reportLink = await cli(["--out", join(dir, "w.json"), "--report", join(dir, "link", "r.json")])
+	assert.equal(reportLink.status, 2)
+	assert.ok(!existsSync(join(here, "r.json")))
+})
+
+test("review 5: wishlist, report and key paths must differ", async () => {
+	const dir = scratch()
+	const out = join(dir, "w.json")
+	writeFileSync(out, "previous")
+	const same = await cli(["--out", out, "--report", out])
+	assert.equal(same.status, 2)
+	assert.equal(readFileSync(out, "utf8"), "previous")
+	const key = join(dir, "key")
+	writeFileSync(key, "test-key", { mode: 0o600 })
+	const keyReport = await cli(["--key-file", key, "--out", out, "--report", key], { MDBLIST_API_KEY: "" })
+	assert.equal(keyReport.status, 2)
+	assert.equal(readFileSync(key, "utf8"), "test-key")
+	symlinkSync(out, join(dir, "alias.json"))
+	const alias = await cli(["--out", out, "--report", join(dir, "alias.json")])
+	assert.equal(alias.status, 2)
+	assert.equal(readFileSync(out, "utf8"), "previous")
+})
+
+test("review 5: if the report can't be written, the wishlist stays as it was", async () => {
+	const server = await serve(fakeMdblist(rows))
+	try {
+		const dir = scratch()
+		const out = join(dir, "w.json")
+		writeFileSync(out, "previous")
+		const locked = join(dir, "locked")
+		mkdirSync(locked)
+		chmodSync(locked, 0o500)
+		const result = await cli(["--out", out, "--report", join(locked, "r.json"), "--limit", "2"], { MDBLIST_TEST_BASE: server.base })
+		assert.equal(result.status, 2)
+		assert.equal(readFileSync(out, "utf8"), "previous")
+		// The same run with a writable report replaces both.
+		const ok = await cli(["--out", out, "--report", join(dir, "r.json"), "--limit", "2"], { MDBLIST_TEST_BASE: server.base })
+		assert.equal(ok.status, 0, ok.stderr)
+		assert.equal(JSON.parse(readFileSync(out, "utf8")).items.length, 10)
+		assert.ok(existsSync(join(dir, "r.json")))
+		assert.deepEqual(readdirSync(dir).filter((name) => name.includes(".tmp-")), [])
+	} finally {
+		server.close()
+	}
+})
+import { readdirSync } from "node:fs"

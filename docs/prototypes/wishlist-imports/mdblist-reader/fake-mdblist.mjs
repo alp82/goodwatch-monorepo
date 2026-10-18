@@ -14,6 +14,7 @@ export function fakeMdblist(rows, options = {}) {
 		dropCursorOnPage = null,
 		repeatCursor = false,
 		skipInFilteredRead = null, // a mediatype whose filtered read loses one row
+		extraPagination = null, // (pageIndex, rowCount) -> extra pagination fields
 	} = options
 	const log = []
 	let requestNumber = 0
@@ -29,6 +30,9 @@ export function fakeMdblist(rows, options = {}) {
 				status: fault.status,
 				headers: fault.retryAfter !== undefined ? { "retry-after": String(fault.retryAfter) } : {},
 			})
+		}
+		if (fault?.json) {
+			return new Response(JSON.stringify(fault.json), { status: 200, headers: { "x-has-more": "false" } })
 		}
 		if (fault === "html") return new Response("<html>maintenance</html>", { status: 200 })
 		if (fault === "envelope") return new Response(JSON.stringify({ items: [] }), { status: 200 })
@@ -54,6 +58,7 @@ export function fakeMdblist(rows, options = {}) {
 		if (next) cursorAt === "top" ? (body.next_cursor = next) : (pagination.next_cursor = next)
 		if (hasMoreField) pagination.has_more = more
 		if (total) pagination.total = total === "right" ? selected.length : selected.length + 1
+		if (extraPagination) Object.assign(pagination, extraPagination(pageIndex, selected.length))
 		body.pagination = pagination
 
 		const headers = { "content-type": "application/json", "x-ratelimit-limit": "1000", "x-ratelimit-remaining": String(1000 - requestNumber), "x-ratelimit-reset": "1792368000" }

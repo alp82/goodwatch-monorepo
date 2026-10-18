@@ -12,20 +12,20 @@ Status on October 19, 2026: **synthetic fixture only.** The real-account run wai
 
 ## Results against the gates (fixture)
 
-25 of 25 tests pass (`node --test reader.test.mjs`, Node 24.15).
+33 of 33 tests pass (`node --test reader.test.mjs`, Node 24.15). The first 25 came with `960d739c`. The review of that commit added 8 more, each written failing first and then fixed.
 
 | Gate | Fixture result |
 | --- | --- |
-| G1 Accounted once | Pass. 11 rows received = 8 wishes + 2 unsupported + 1 repeat. |
+| G1 Accounted once | Pass. 11 rows received = 8 wishes + 2 unsupported + 1 repeat. A repeat needs a native ID and identical mapped fields. Rows without IDs, or with differing fields, are kept; differing ones count as identity conflicts. |
 | G2 Exhaustion proven | Pass. `complete` only with an explicit end signal; without one, `unknown`. |
-| G3 Counts agree | Pass. A total of 12 for 11 rows makes the file `partial`. The cross-check finds a row lost from the per-type read and makes the file `partial`. |
-| G4 Failure is never success | Pass, 14 cases: 401, 403 mid-way, wrong key, daily-limit 429, 429 twice, 429 with a 600 s wait, 5xx three times, network down, HTML body, unknown envelope, "more" without a cursor, repeated cursor, page cap, no key. The CLI leaves a previous file untouched and refuses a path inside Git. |
+| G3 Counts agree | Pass. Every count field on every page is checked: any name with "total" or "count", numeric strings included. A total of 12 for 11 rows, `total_count: 9` for 1 row, or a wrong total on an earlier page makes the file `partial`. An unreadable count makes it `unknown`. The cross-check finds a row lost from the per-type read and makes the file `partial`. |
+| G4 Failure is never success | Pass, 15 cases, including a malformed bucket (`shows` as an object): 401, 403 mid-way, wrong key, daily-limit 429, 429 twice, 429 with a 600 s wait, 5xx three times, network down, HTML body, unknown envelope, "more" without a cursor, repeated cursor, page cap, no key. The CLI leaves a previous file untouched, refuses a path inside Git also through a symlink, refuses equal wishlist, report, and key paths, and keeps the previous wishlist when the report can't be written. Unexplained fields or non-object rows give `unknown`. |
 | G5 Native identity | Pass. The show without `ids` keeps only its IMDb ID; `id` goes to `sourceId`. TMDB 1399 stays one movie and one show. |
 | G6 Unsupported visible | Pass. The season and episode rows reach the parser and come back `invalid`, with no wish snapshot. |
 | G7 Shipped parser accepts | Pass. No envelope error. The no-ID movie has a year, so the shared title-and-year rule decides it. |
 | G8 No invented dates | Pass. No `addedAt`. `exportedAt` is the capture time. |
 | G9 Budget | Pass on the fixture. 11 rows at `limit=2`: 6 requests; with cross-check: 13. A 1,000-title list at the default 100 per page: 10 requests (11 if the last page is full), 1% of the free daily 1,000. Cross-check roughly doubles it. |
-| G10 Operational steps | Pass by design, not yet observed: copy key, save file, run one command, upload one file. |
+| G10 Operational steps | Pass by design, not yet observed: copy key, save file, run one command, compare counts. Upload is optional. |
 
 Not measured: real cursor placement, whether real show rows carry `ids`, whether any per-item added time exists, real rate-limit headers, real time per page.
 
