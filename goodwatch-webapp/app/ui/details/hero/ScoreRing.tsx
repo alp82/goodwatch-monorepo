@@ -1,10 +1,14 @@
 import React from "react"
-import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import { goodwatchScoreDisplay, goodwatchVibeIndex, scoreLabels } from "~/utils/ratings"
 
 // The GoodWatch score as a ring filled to the score. With `label` its verdict word and caption
 // sit beside it; without, the ring carries them as its accessible name and tooltip.
-export default function ScoreRing({ media, size = 56, label = true }: { media: MovieResult | ShowResult; size?: number; label?: boolean }) {
+/** What the ring reads of a title: its GoodWatch score. A title page passes its whole movie or show. */
+export interface ScoreRingMedia {
+	details: { goodwatch_overall_score_normalized_percent?: number | null }
+}
+
+export default function ScoreRing({ media, size = 56, label = true }: { media: ScoreRingMedia; size?: number; label?: boolean }) {
 	const percent = media.details.goodwatch_overall_score_normalized_percent
 	const score = percent ? goodwatchScoreDisplay(percent) : null
 	const vibe = percent ? goodwatchVibeIndex(percent) : null

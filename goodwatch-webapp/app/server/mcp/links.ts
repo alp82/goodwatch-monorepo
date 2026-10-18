@@ -1,4 +1,10 @@
-import { type LibraryStatus, sortsFor } from "../../domain/my-library.ts"
+import {
+	LIBRARY_HUB,
+	type LibraryStatus,
+	SCORES_PAGE,
+	sortsFor,
+	statusPage,
+} from "../../domain/my-library.ts"
 import {
 	discoverParams,
 	hasDiscoverFilters,
@@ -86,18 +92,21 @@ export function withPageLink(
 		}
 		case "get_library": {
 			const filter = args.filter ?? "all"
+			const statusOf: Record<string, LibraryStatus> = {
+				want_to_see: "want",
+				seen: "seen",
+				watching: "watching",
+				on_hold: "on_hold",
+				dropped: "dropped",
+				unrated: "unrated",
+			}
 			if (filter === "not_interested") path = "/settings/hidden"
-			else if (filter === "want_to_see") path = "/my-library"
-			else if (
-				["seen", "watching", "on_hold", "dropped", "unrated"].includes(filter)
-			)
-				path = `/my-library?status=${filter}`
+			else if (filter === "rated") path = SCORES_PAGE
+			else if (statusOf[filter]) path = statusPage({ status: statusOf[filter] })
 			else {
-				path = filter === "rated" ? "/my-library?status=seen" : "/my-library"
+				path = LIBRARY_HUB
 				note =
-					filter === "rated"
-						? "My library's Seen view also includes unrated titles and follows the website's show-status rules; there is no rated-only page."
-						: "My library opens Want to see; switch status there to browse the rest of your marked titles."
+					"My library is a hub: it leads to Want to see, Seen, your scores, the shows in progress and Not rated, each on a page of its own."
 			}
 			const sort = data.sort ?? args.sort
 			const status = filter === "want_to_see" ? "want" : filter

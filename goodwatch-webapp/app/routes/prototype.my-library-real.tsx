@@ -286,7 +286,8 @@ export default function MyLibraryHarness() {
 				{chrome}
 				{loaded.page === "library" ? (
 					<MyLibraryPage
-						key={setup}
+						key={`${setup}-${loaded.library.status}`}
+						status={loaded.library.status}
 						initial={loaded.library}
 						now={loaded.now}
 						viewer={`${HARNESS_MEMBER}-${setup}`}

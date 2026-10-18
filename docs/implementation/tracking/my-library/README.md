@@ -9,6 +9,35 @@ What [#385](https://github.com/alp82/goodwatch-monorepo/issues/385) built, from 
 movie watch log and of episode tracking. Vocabulary: [`CONTEXT.md`](../../../../CONTEXT.md). Reads:
 [data-model.md](../data-model.md), section 4. Paths without a prefix are under `goodwatch-webapp/app/`.
 
+## My library as a hub, and Your scores (#700, October 18, 2026)
+
+Since [#700](https://github.com/alp82/goodwatch-monorepo/issues/700) `/my-library` is a hub and each list is a page
+of its own. The single page with its status switch, described in the next section, is how #385 built it.
+
+- **The hub** (`routes/my-library._index.tsx`, `ui/my-library/hub/LibraryHubPage.tsx`,
+  `server/my-library-hub.server.ts`): the Settings page's tiles. Your scores is the wide first tile with its count, the
+  last rated posters and the spread of the scores 1 to 10. Then Want to see, Seen, Shows in progress (Watching, On
+  hold and Dropped) and Not rated, each with its count and a few posters; then small tiles for My lists, Imports and
+  Hidden titles. My shows and My movies stay destinations of their own; the hub's head links to them.
+- **The list pages** (`routes/my-library.$list.tsx`, `ui/my-library/MyLibraryPage.tsx`): `/my-library/want`,
+  `/seen`, `/not-rated`, `/watching`, `/on-hold` and `/dropped`; another slug is not found. A page has a way back to
+  the hub and no status choice; Watching, On hold and Dropped share a small switch. The filter, search, sort and steps
+  are as before, with the choice in the query: `/my-library/seen?sort=score&type=movie&q=alien`.
+- **Old links**: `/my-library?status=…` answers 301 to that list's page, with its sort, filter and search. The MCP's
+  `get_library` links to the pages, and its `rated` filter to Your scores.
+- **Your scores** (`routes/my-library.scores.tsx`, `ui/my-library/scores/`, `domain/my-scores.ts`,
+  `server/my-scores.server.ts`): every scored title in one table, with the ten scores beside each in the score
+  control strip's colors (a dot marks GoodWatch's score). The site's tick box, in brand amber, selects a row, and the
+  title is its label. An arrow opens the row in place with the synopsis and tagline (`/api/my-scores/title`), the
+  dates, the GoodWatch ring and the score control. On a phone the score is one key that opens the row. Every column
+  sorts both ways. The filters are drawn as Discover's: search, Only what I changed, Group (by score, against
+  GoodWatch, genre, decade, kind or year rated) and the Filters sheet (My score, Movies or shows, Compared with
+  GoodWatch, Genre, GoodWatch score, Released, Rated in), each option with what it would leave. A press saves at
+  once through the score mutation; Undo writes the old score back. Selected rows change together, to one score or a
+  step up or down, through `/api/update-scores-batch` (50 a request, the site's score writer per title). A rescored
+  row stays where it is until the view changes. The table has no Clear score: the title page asks first.
+- The prototype is on the branch `prototype/rescore-library`; what was chosen and why is in #700.
+
 ## My library: the arrangement that had no prototype
 
 The owner's sentence after round 3 was "use the library but everything except the main 2 in a drop-down". Built from
@@ -119,7 +148,9 @@ No page scans the watch log.
 | --- | --- |
 | My shows | The member data (cached). One read of `show` by key for the tracked and wished shows (Q5, with the title, pictures, counts and `episode_runtime`). The cached episode list of each Continue row, at most 30. For a Continue row whose Next episode is in a gap, the show's log rows by key, all such shows in one statement |
 | Home doors, Tonight's pick | The same, with one episode list, and Watch next's plan over the Wishlist's movies with three title cards |
-| My library | The member data. The cards of one step by key (Q6). For the Title sort or a search, the titles of the status's keys by key, kept in memory for six hours |
+| My library hub | The member data. Six posters per tile by key, and which scored titles the catalog has (one read per 500 keys) |
+| My library lists | The member data. The cards of one step by key (Q6). For the Title sort or a search, the titles of the status's keys by key, kept in memory for six hours |
+| Your scores | The member data. Every scored title's card by key with its genres and GoodWatch score, one read per 500 keys; the browser filters, sorts and groups. An opened row reads one title's synopsis and tagline |
 | My movies | As Watch next. With a time chosen, the runtimes of the Wishlist's movies by key, kept in memory for six hours (`server/movie-runtimes.server.ts`): the title snapshot holds no runtime |
 
 **The member data gained nothing.** `watchState` already carries `episodesWatched`, `furthest` and

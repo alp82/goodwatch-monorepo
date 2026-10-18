@@ -1,6 +1,6 @@
 // Pieces My shows, My movies and My library share (#385): the page head with the ways to the other pages, the note
 // for an empty list, a poster, and what a guest sees in place of a member's page.
-import { ChevronRightIcon } from "@heroicons/react/20/solid"
+import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
 import type { ReactNode } from "react"
 import { SignUpPrompt } from "~/ui/sign-up-prompt/SignUpPrompt"
@@ -41,13 +41,31 @@ export function PageHead({
 	name,
 	line,
 	links = [],
-}: { name: string; line: ReactNode; links?: HeadLink[] }) {
+	back,
+}: {
+	name: string
+	line: ReactNode
+	links?: HeadLink[]
+	/** A page under another one: the way back, above the name. */
+	back?: HeadLink
+}) {
 	return (
 		<header
 			className={`${WRAP} flex flex-wrap items-end gap-x-6 gap-y-3 pb-4 pt-6`}
 			data-page-head
 		>
 			<div className="min-w-0">
+				{back && (
+					<Link
+						to={back.to}
+						prefetch="intent"
+						data-back
+						className="-ml-1 mb-1 inline-flex min-h-8 items-center gap-0.5 rounded-lg pr-2 text-sm text-gray-400 hover:text-white"
+					>
+						<ChevronLeftIcon className="h-4 w-4" aria-hidden />
+						{back.label}
+					</Link>
+				)}
 				<h1 className={`${DISPLAY} text-4xl text-white md:text-5xl`}>{name}</h1>
 				<p className="mt-1 text-sm text-gray-400">{line}</p>
 			</div>

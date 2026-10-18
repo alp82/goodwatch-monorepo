@@ -1,5 +1,6 @@
 import { presentCatalogLoader } from "~/server/media-payload.server"
-// My library (#385): every title a member has marked, one status at a time. A guest is asked to sign up
+// A list of My library (#385): /my-library/want, /seen, /not-rated, /watching, /on-hold and /dropped, one status
+// each, under the hub (/my-library). Another slug is not found. A guest is asked to sign up
 // (docs/implementation/tracking/my-library/README.md).
 import {
 	type LoaderFunctionArgs,
@@ -7,7 +8,12 @@ import {
 	json,
 } from "@remix-run/node"
 import { type ShouldRevalidateFunction, useLoaderData } from "@remix-run/react"
-import { libraryChoiceOf } from "~/domain/my-library"
+import {
+	type LibraryStatus,
+	STATUS_LABEL,
+	libraryChoiceOf,
+	statusOfSlug,
+} from "~/domain/my-library"
 import { type LibraryPage, getLibraryPage } from "~/server/my-library.server"
 import { newOnForLibrary } from "~/server/newly-available.server"
 import { MyLibraryPage } from "~/ui/my-library/MyLibraryPage"
@@ -16,8 +22,10 @@ import { getUserIdFromRequest } from "~/utils/auth"
 
 export { pageHeaders as headers } from "~/utils/headers"
 
-export const meta: MetaFunction = () => [
-	{ title: "My library | GoodWatch" },
+export const meta: MetaFunction = ({ params }) => [
+	{
+		title: `${STATUS_LABEL[statusOfSlug(params.list) ?? "want"]} | My library | GoodWatch`,
+	},
 	{
 		name: "description",
 		content:
@@ -40,24 +48,42 @@ export const shouldRevalidate: ShouldRevalidateFunction = ({
 
 const headers = { "Cache-Control": "private, no-store" }
 
-type Loaded = { page: LibraryPage; now: number; viewer: string } | null
+type Loaded = {
+	status: LibraryStatus
+	page: LibraryPage | null
+	now: number
+	viewer: string | null
+}
 
-async function canonicalLoader({ request }: LoaderFunctionArgs) {
+async function canonicalLoader({ request, params }: LoaderFunctionArgs) {
+	const status = statusOfSlug(params.list)
+	if (!status) throw new Response("Not found", { status: 404 })
 	const userId = (await getUserIdFromRequest({ request })) ?? null
-	if (!userId) return json<Loaded>(null, { headers })
-	const choice = libraryChoiceOf(new URL(request.url).searchParams)
+	if (!userId)
+		return json<Loaded>(
+			{ status, page: null, now: Date.now(), viewer: null },
+			{ headers },
+		)
+	// The page names the status; a `status` left in the query doesn't count.
+	const choice = {
+		...libraryChoiceOf(new URL(request.url).searchParams),
+		status,
+	}
 	const page = await getLibraryPage(
 		userId,
 		choice,
 		0,
 		await newOnForLibrary(request, userId, choice.status),
 	)
-	return json<Loaded>({ page, now: Date.now(), viewer: userId }, { headers })
+	return json<Loaded>(
+		{ status, page, now: Date.now(), viewer: userId },
+		{ headers },
+	)
 }
 
 export default function MyLibraryRoute() {
 	const loaded = useLoaderData<typeof loader>() as Loaded
-	if (!loaded)
+	if (!loaded.page || !loaded.viewer)
 		return (
 			<GuestPage
 				name="My library"
@@ -70,7 +96,10 @@ export default function MyLibraryRoute() {
 			/>
 		)
 	return (
+		// A page of its own per status: going from Watching to On hold starts the list over.
 		<MyLibraryPage
+			key={loaded.status}
+			status={loaded.status}
 			initial={loaded.page}
 			now={loaded.now}
 			viewer={loaded.viewer}

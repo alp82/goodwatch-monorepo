@@ -264,3 +264,53 @@ export function addedWords(
 	const years = Math.floor(days / 365)
 	return `Added ${years === 1 ? "over a year" : `${years} years`} ago`
 }
+
+// ---------------------------------------------------------------------------------------------------------
+// Pages: My library is a hub, and each status's list is a page of its own under it.
+
+export const LIBRARY_HUB = "/my-library"
+export const SCORES_PAGE = "/my-library/scores"
+
+/** The page of each status's list. */
+export const STATUS_SLUG: Record<LibraryStatus, string> = {
+	want: "want",
+	seen: "seen",
+	unrated: "not-rated",
+	watching: "watching",
+	on_hold: "on-hold",
+	dropped: "dropped",
+}
+
+/** The status a page's slug names; null for a slug that is no list. */
+export const statusOfSlug = (slug: string | undefined): LibraryStatus | null =>
+	(Object.entries(STATUS_SLUG).find(([, s]) => s === slug)?.[0] as
+		| LibraryStatus
+		| undefined) ?? null
+
+/** The page of a status, with the list's sort, filter and search in the query. */
+export function statusPage(
+	choice: Pick<LibraryChoice, "status"> & Partial<LibraryChoice>,
+): string {
+	const params = libraryParams({
+		sort: null,
+		kind: "all",
+		q: "",
+		...choice,
+	})
+	params.delete("status")
+	const query = params.toString()
+	return `${LIBRARY_HUB}/${STATUS_SLUG[choice.status]}${query ? `?${query}` : ""}`
+}
+
+/** Where an old link with `?status=` goes now (it named one list of the single page); null when it has none. */
+export function pageOfOldLink(params: URLSearchParams): string | null {
+	if (!params.has("status")) return null
+	return statusPage(libraryChoiceOf(params))
+}
+
+/** The three statuses of a show you started: their pages share a switch. */
+export const SHOW_STATUSES = [
+	"watching",
+	"on_hold",
+	"dropped",
+] as const satisfies readonly LibraryStatus[]

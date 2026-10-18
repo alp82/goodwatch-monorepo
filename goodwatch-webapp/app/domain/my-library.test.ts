@@ -236,3 +236,34 @@ test("a Want to see row says when the title was added", () => {
 	assert.equal(addedWords(at("2026-05-01"), now), "Added 5 months ago")
 	assert.equal(addedWords(at("2023-01-01"), now), "Added 3 years ago")
 })
+
+const { statusPage, statusOfSlug, pageOfOldLink, STATUS_SLUG } = await import(
+	"./my-library.ts"
+)
+
+test("each status has a page, and the page's slug names the status back", () => {
+	for (const [status, slug] of Object.entries(STATUS_SLUG)) {
+		assert.equal(statusOfSlug(slug), status)
+		assert.equal(statusPage({ status: status as never }), `/my-library/${slug}`)
+	}
+	assert.equal(statusOfSlug("scores"), null)
+	assert.equal(statusOfSlug(undefined), null)
+})
+
+test("a status page keeps the list's sort, filter and search, and leaves defaults out", () => {
+	assert.equal(
+		statusPage({ status: "seen", sort: "score", kind: "movie", q: "alien" }),
+		"/my-library/seen?sort=score&type=movie&q=alien",
+	)
+	assert.equal(statusPage({ status: "seen", sort: "last" }), "/my-library/seen")
+	assert.equal(statusPage({ status: "unrated" }), "/my-library/not-rated")
+})
+
+test("an old ?status= link goes to its page; the hub's own URL stays", () => {
+	const old = (query: string) => pageOfOldLink(new URLSearchParams(query))
+	assert.equal(old("status=seen&sort=score"), "/my-library/seen?sort=score")
+	assert.equal(old("status=on_hold"), "/my-library/on-hold")
+	assert.equal(old("status=nonsense"), "/my-library/want")
+	assert.equal(old(""), null)
+	assert.equal(old("type=movie"), null)
+})

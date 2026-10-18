@@ -7,19 +7,20 @@ const origin = "https://goodwatch.app"
 test("page links use existing website filters and encode search text", () => {
 	const data = { items: [] }
 	for (const [filter, path] of [
-		["want_to_see", "/my-library"],
-		["seen", "/my-library?status=seen"],
-		["watching", "/my-library?status=watching"],
-		["on_hold", "/my-library?status=on_hold"],
-		["dropped", "/my-library?status=dropped"],
-		["unrated", "/my-library?status=unrated"],
+		["want_to_see", "/my-library/want"],
+		["seen", "/my-library/seen"],
+		["watching", "/my-library/watching"],
+		["on_hold", "/my-library/on-hold"],
+		["dropped", "/my-library/dropped"],
+		["unrated", "/my-library/not-rated"],
+		["rated", "/my-library/scores"],
 		["not_interested", "/settings/hidden"],
 	])
 		assert.equal(
 			withPageLink(origin, "get_library", { filter }, data).page_url,
 			origin + path,
 		)
-	for (const filter of ["rated", "all"])
+	for (const filter of ["all"])
 		assert.ok(withPageLink(origin, "get_library", { filter }, data).page_note)
 	const query = "Arrival & aliens / 日本"
 	const link = withPageLink(origin, "search_titles", { query }, data)
@@ -83,7 +84,7 @@ test("Library links preserve supported UI sorts", () => {
 	assert.equal(
 		withPageLink(origin, "get_library", { filter: "seen", sort: "score" }, {})
 			.page_url,
-		`${origin}/my-library?status=seen&sort=score`,
+		`${origin}/my-library/seen?sort=score`,
 	)
 	assert.equal(
 		withPageLink(
@@ -92,7 +93,7 @@ test("Library links preserve supported UI sorts", () => {
 			{ filter: "want_to_see", sort: "title" },
 			{},
 		).page_url,
-		`${origin}/my-library?sort=title`,
+		`${origin}/my-library/want?sort=title`,
 	)
 })
 

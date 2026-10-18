@@ -1,3 +1,4 @@
+import { statusPage } from "~/domain/my-library"
 import {
 	type LoaderFunction,
 	type LoaderFunctionArgs,
@@ -30,9 +31,9 @@ export const loader: LoaderFunction = async ({
 }: LoaderFunctionArgs) => {
 	const url = new URL(request.url)
 	const userId = await getUserIdFromRequest({ request })
-	// A member's Wishlist is the first choice of My library (#385). Guests keep what they have.
+	// A member's Wishlist is My library's Want to see (#385, its own page since #700). Guests keep what they have.
 	if (userId)
-		return redirect("/my-library", {
+		return redirect(statusPage({ status: "want" }), {
 			headers: { "Cache-Control": "private, no-store", Vary: "Cookie" },
 		})
 	return redirect(watchNextUrl(url), {
