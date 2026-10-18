@@ -137,7 +137,7 @@ async function matchCatalog(source: ImportSource, rows: ImportObservation[]) {
 		}
 		// Letterboxd has no stable ID in some CSVs. Exact title and year is the sole safe fallback.
 		const titleMatches = new Map<string, CatalogRow[]>()
-		if (source === "letterboxd" || source === "csv")
+		if (source === "letterboxd" || source === "csv" || source === "wishlist")
 			for (const x of typed) {
 				if (found.has(x.index) || x.row.year === null || !x.row.title.trim())
 					continue
@@ -381,13 +381,19 @@ function classify(
 			return {
 				...base,
 				...title,
-				outcome:
-					current.wants.has(ref) || current.watched.has(ref)
-						? "unchanged"
+				outcome: current.wants.has(ref)
+					? "unchanged"
+					: current.watched.has(ref)
+						? row.wishlistEvidence
+							? "conflict"
+							: "unchanged"
 						: "new",
-				reason: current.watched.has(ref)
-					? "This title is already in your watch log."
-					: null,
+				reason:
+					!current.wants.has(ref) && current.watched.has(ref)
+						? row.wishlistEvidence
+							? "Seen in GoodWatch. Choose whether to add this title as Want to rewatch."
+							: "This title is already in your watch log."
+						: null,
 			}
 		if (row.kind === "favorite")
 			return {
@@ -516,6 +522,24 @@ export async function createParsedPreview(
 		currentValues(userId),
 	])
 	const items = classify(parsed.observations, matched, current)
+	await classifyWishlistShows(userId, items)
+	if (source === "wishlist") {
+		const seen = new Set<string>()
+		for (const item of items) {
+			if (
+				item.kind !== "want" ||
+				item.tmdbId === null ||
+				!["new", "conflict", "unchanged"].includes(item.outcome)
+			)
+				continue
+			const identity = key(item.mediaType, item.tmdbId)
+			if (seen.has(identity)) {
+				item.kind = "unsupported"
+				item.outcome = "unsupported"
+				item.reason = "Listed twice in the file. Added once."
+			} else seen.add(identity)
+		}
+	}
 	const specials = items.filter((item) => item.episodeSpecial).length
 	if (specials)
 		parsed.warnings.push(
@@ -572,6 +596,38 @@ export async function createParsedPreview(
 		throw error
 	}
 	return summarize(await getImportRow(userId, id))
+}
+
+async function classifyWishlistShows(userId: string, items: ImportItem[]) {
+	const wishes = items.filter(
+		(item) =>
+			item.kind === "want" &&
+			item.wishlistEvidence &&
+			item.mediaType === "show" &&
+			item.tmdbId !== null &&
+			["new", "conflict"].includes(item.outcome),
+	)
+	if (!wishes.length) return
+	const { getImportStatusSnapshots } = await import("../tracking.server.ts")
+	const snapshots = await getImportStatusSnapshots(userId, [
+		...new Set(
+			wishes.flatMap((item) => (item.tmdbId === null ? [] : [item.tmdbId])),
+		),
+	])
+	for (const item of wishes) {
+		if (item.tmdbId === null) continue
+		const snapshot = snapshots.get(item.tmdbId)
+		if (snapshot?.state?.state === "seen") {
+			item.outcome = "conflict"
+			item.reason =
+				"Seen in GoodWatch. Choose whether to add this title as Want to rewatch."
+		} else if (
+			!canImportWantToSee(snapshot?.state?.state, !!snapshot?.hasWatches)
+		) {
+			item.outcome = "unchanged"
+			item.reason = "Your GoodWatch show status is kept."
+		}
+	}
 }
 
 async function classifyShowStatuses(

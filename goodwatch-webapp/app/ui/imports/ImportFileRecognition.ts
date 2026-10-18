@@ -31,6 +31,8 @@ type Peek =
 	| { kind: "zip"; entries: string[] }
 	| { kind: "xml"; root: string; gzip: boolean }
 	| { kind: "csv"; header: string[]; gzip: boolean }
+	/** A file that opens as JSON: its first 64 KB, and whether that is the whole file. */
+	| { kind: "json"; text: string; whole: boolean }
 	| { kind: "unreadable-zip" }
 	| { kind: "other" }
 
@@ -44,6 +46,7 @@ const SIZE_LIMIT: Record<ImportFileTarget, number> = {
 	movielens: IMPORT_MAX_BYTES,
 	kodi: IMPORT_MAX_BYTES,
 	myanimelist: IMPORT_MAX_BYTES,
+	wishlist: IMPORT_MAX_BYTES,
 }
 const LARGEST_IMPORT = Math.max(...Object.values(SIZE_LIMIT))
 const tooLarge = (limit: number): ImportFileRecognition => ({
@@ -111,6 +114,7 @@ function recognize(peek: Peek, fileName: string): ImportFileRecognition {
 			}
 		}
 	}
+	if (peek.kind === "json") return recognizeJson(peek, fileName)
 	if (peek.kind === "csv") {
 		// Only the MyAnimeList import unpacks gzip; every CSV import reads plain text.
 		if (peek.gzip)
@@ -171,7 +175,78 @@ function recognize(peek: Peek, fileName: string): ImportFileRecognition {
 	return {
 		source: null,
 		label: "file",
-		hint: "GoodWatch reads ZIP, CSV, XML, and gzip exports. Upload the file as the site gave it to you, without opening or renaming it.",
+		hint: "GoodWatch reads ZIP, CSV, XML, gzip, and JSON exports. Upload the file as the site gave it to you, without opening or renaming it.",
+	}
+}
+
+const WATCHARR_STATUSES = ["PLANNED", "WATCHING", "FINISHED", "HOLD", "DROPPED"]
+
+/**
+ * Names a JSON file by its shape. A file within the first 64 KB is parsed whole; a longer one is judged by the start
+ * of its text. Either way this only routes the file: the wishlist import validates every field.
+ */
+function recognizeJson(
+	peek: Extract<Peek, { kind: "json" }>,
+	fileName: string,
+): ImportFileRecognition {
+	const parsed = peek.whole ? parseJson(peek.text) : undefined
+	const head = peek.text.replace(/^\uFEFF/, "").trimStart()
+	const shared = peek.whole
+		? isObject(parsed) && parsed.format === "goodwatch-wishlist"
+		: head.startsWith("{") &&
+			/"format"\s*:\s*"goodwatch-wishlist"/.test(peek.text)
+	if (shared) {
+		const version = peek.whole
+			? (parsed as Record<string, unknown>).version
+			: Number(/"version"\s*:\s*(\d+)/.exec(peek.text)?.[1])
+		return version === 1
+			? { source: "wishlist", label: "wishlist file" }
+			: {
+					source: null,
+					label: "wishlist file",
+					hint: "This wishlist file uses a newer layout than GoodWatch reads. Ask the maker of the tool that saved it for a file GoodWatch can read.",
+				}
+	}
+	// Validated against Watcharr's source and a running pinned backend with synthetic accounts; no real member export tested.
+	// See docs/research/wishlist-exploration/watcharr-validation.md.
+	const first = peek.whole
+		? Array.isArray(parsed)
+			? parsed[0]
+			: undefined
+		: undefined
+	const watcharr = peek.whole
+		? Array.isArray(parsed) &&
+			isObject(first) &&
+			typeof first.status === "string" &&
+			WATCHARR_STATUSES.includes(first.status) &&
+			(isObject(first.content) || isObject(first.game))
+		: head.startsWith("[") &&
+			new RegExp(`"status"\\s*:\\s*"(${WATCHARR_STATUSES.join("|")})"`).test(
+				peek.text,
+			) &&
+			/"(content|game)"\s*:\s*\{/.test(peek.text)
+	// Watcharr refuses to export an empty list, so an empty array is taken only under its own file name.
+	const emptyWatcharr =
+		Array.isArray(parsed) &&
+		parsed.length === 0 &&
+		fileName === "watcharr-export.json"
+	if (watcharr || emptyWatcharr)
+		return { source: "wishlist", label: "Watcharr export" }
+	return {
+		source: null,
+		label: "JSON file",
+		hint: "GoodWatch reads JSON exports from Watcharr and wishlist files made for GoodWatch. Upload the file as you got it, without editing it.",
+	}
+}
+
+const isObject = (value: unknown): value is Record<string, unknown> =>
+	!!value && typeof value === "object" && !Array.isArray(value)
+
+function parseJson(text: string): unknown {
+	try {
+		return JSON.parse(text.replace(/^\uFEFF/, ""))
+	} catch {
+		return undefined
 	}
 }
 
@@ -183,7 +258,10 @@ async function peek(file: File): Promise<Peek> {
 	}
 	if (head[0] === 0x1f && head[1] === 0x8b)
 		return peekText(await gunzipHead(file), true)
-	return peekText(await file.slice(0, TEXT_HEAD_BYTES).text())
+	const text = await file.slice(0, TEXT_HEAD_BYTES).text()
+	if (/^\uFEFF?\s*[[{]/.test(text))
+		return { kind: "json", text, whole: file.size <= TEXT_HEAD_BYTES }
+	return peekText(text)
 }
 
 /** Enough of a file to hold its CSV header or its XML root element. */

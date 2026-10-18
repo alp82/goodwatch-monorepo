@@ -2,6 +2,7 @@ import { ChevronDownIcon } from "@heroicons/react/20/solid"
 import { useId, useState } from "react"
 import { IMPORT_SHOW_STATUS_LABELS } from "~/domain/imports"
 import type { ImportItem, ImportOutcome } from "~/domain/imports"
+import { searchHref } from "~/ui/navigation/destinations"
 import { Spinner } from "~/ui/wait/Spinner"
 import { useSourceImportItems } from "./SourceImportHooks"
 import { formatCount, textLink } from "./shared"
@@ -15,14 +16,33 @@ export const SOURCE_OUTCOME_LABELS: Record<ImportOutcome, string> = {
 	invalid: "Rows we couldn't read",
 }
 
+/** The same outcomes, in the words of a wishlist import, which only adds to Want to See. */
+export const WISHLIST_OUTCOME_LABELS: Record<ImportOutcome, string> = {
+	new: "New to your Wishlist",
+	// Already on the Wishlist, or a show whose GoodWatch status stays.
+	unchanged: "Nothing to change",
+	conflict: "Seen in GoodWatch",
+	unmatched: "Not matched to a GoodWatch title",
+	unsupported: "Not added to Want to See",
+	invalid: "Entries we couldn't read",
+}
+
 export function SourceOutcomeRow({
 	importId,
 	outcome,
 	count,
-}: { importId: string; outcome: ImportOutcome; count: number }) {
+	wishlist = false,
+}: {
+	importId: string
+	outcome: ImportOutcome
+	count: number
+	wishlist?: boolean
+}) {
 	const [open, setOpen] = useState(false)
 	const panelId = useId()
-	const label = SOURCE_OUTCOME_LABELS[outcome]
+	const label = (wishlist ? WISHLIST_OUTCOME_LABELS : SOURCE_OUTCOME_LABELS)[
+		outcome
+	]
 	return (
 		<li>
 			<button
@@ -44,7 +64,12 @@ export function SourceOutcomeRow({
 			</button>
 			<div id={panelId} hidden={!open}>
 				{open && (
-					<SourceItems importId={importId} outcome={outcome} label={label} />
+					<SourceItems
+						importId={importId}
+						outcome={outcome}
+						label={label}
+						wishlist={wishlist}
+					/>
 				)}
 			</div>
 		</li>
@@ -55,7 +80,13 @@ function SourceItems({
 	importId,
 	outcome,
 	label,
-}: { importId: string; outcome: ImportOutcome; label: string }) {
+	wishlist,
+}: {
+	importId: string
+	outcome: ImportOutcome
+	label: string
+	wishlist: boolean
+}) {
 	const query = useSourceImportItems(importId, outcome, true)
 	const items = query.data?.pages.flatMap((page) => page.items) ?? []
 	const total = query.data?.pages.at(-1)?.total ?? 0
@@ -69,7 +100,11 @@ function SourceItems({
 			{items.length > 0 && (
 				<ul aria-label={label} className="flex flex-col gap-3">
 					{items.map((item) => (
-						<SourceItem key={`${item.index}-${item.key}`} item={item} />
+						<SourceItem
+							key={`${item.index}-${item.key}`}
+							item={item}
+							wishlist={wishlist}
+						/>
 					))}
 				</ul>
 			)}
@@ -114,13 +149,23 @@ function SourceItems({
 	)
 }
 
-function SourceItem({ item }: { item: ImportItem }) {
+/**
+ * One row of an outcome list. A wishlist row says Type unknown when its source didn't say (the row is stored as a
+ * movie), and an unmatched one links to a search for its title.
+ */
+export function SourceItem({
+	item,
+	wishlist = false,
+}: { item: ImportItem; wishlist?: boolean }) {
 	const location =
 		item.episode != null
 			? `S${item.season ?? "?"} E${item.episode}`
-			: item.mediaType === "show"
-				? "Show"
-				: "Movie"
+			: wishlist && item.wishlistEvidence?.mediaType === "unknown"
+				? "Type unknown"
+				: item.mediaType === "show"
+					? "Show"
+					: "Movie"
+	const search = wishlist && item.outcome === "unmatched" && item.title.trim()
 	const value = item.showStatus
 		? IMPORT_SHOW_STATUS_LABELS[item.showStatus]
 		: item.score != null
@@ -152,6 +197,16 @@ function SourceItem({ item }: { item: ImportItem }) {
 					</span>
 				</span>
 				<span className="flex gap-3 tabular-nums text-gray-300">
+					{search && (
+						<a
+							href={searchHref(item.title)}
+							target="_blank"
+							rel="noopener noreferrer"
+							className={textLink}
+						>
+							Search<span className="sr-only"> for {item.title} (new tab)</span>
+						</a>
+					)}
 					{value && <span>{value}</span>}
 					{applied && (
 						<span className="font-semibold text-gray-100">{applied}</span>

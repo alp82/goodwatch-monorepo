@@ -8,6 +8,18 @@ export function sourceImportCopy(source: ImportSource) {
 	const file = isFileImportSource(source)
 	const data = file ? "export" : `${IMPORT_SOURCE_NAMES[source]} data`
 	const connect = `Connect ${IMPORT_SOURCE_NAMES[source]} again`
+	// A wishlist import reads a file that isn't always an export.
+	if (source === "wishlist")
+		return {
+			data: "file",
+			details: "About this file",
+			conflict: "",
+			conflictDetail: "",
+			watchDates: "",
+			restart: "Choose another file",
+			another: "Import another file",
+			newer: "Upload a newer file",
+		}
 	return {
 		data,
 		details: file ? "Check these export details" : "Check these import details",

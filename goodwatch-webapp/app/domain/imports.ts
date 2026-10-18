@@ -10,6 +10,7 @@ export const IMPORT_SOURCES = [
 	"tmdb",
 	"plex",
 	"myanimelist",
+	"wishlist",
 ] as const
 export const IMPORT_SOURCE_NAMES = {
 	letterboxd: "Letterboxd",
@@ -20,11 +21,14 @@ export const IMPORT_SOURCE_NAMES = {
 	tmdb: "TMDB",
 	plex: "Plex",
 	myanimelist: "MyAnimeList / Kitsu",
+	wishlist: "Watcharr / wishlist file",
 } as const
 export type ImportSource = (typeof IMPORT_SOURCES)[number]
 export const IMPORT_MAX_BYTES = 20 * 1024 * 1024
 
 interface ImportUploadDescriptor {
+	/** The upload step's heading, when "Upload your <source> export" doesn't fit. */
+	heading: string | null
 	label: string
 	accept: string
 	extensions: readonly string[]
@@ -40,6 +44,7 @@ interface ImportUploadDescriptor {
 	credits: readonly { name: string; url: string; purpose: string }[]
 }
 const uploadDefaults: ImportUploadDescriptor = {
+	heading: null,
 	label: "",
 	accept: "",
 	extensions: [],
@@ -154,6 +159,26 @@ export const IMPORT_SOURCE_UPLOAD = {
 			},
 		],
 	},
+	// One import reads Watcharr's own export and wishlist files that a tool made for GoodWatch.
+	wishlist: {
+		...uploadDefaults,
+		heading: "Upload your Watcharr export or wishlist file",
+		label: "JSON",
+		extensions: [".json"],
+		accept: ".json,application/json",
+		acceptedMimeTypes: ["application/json"],
+		hint: "Drop watcharr-export.json or your wishlist file here, or choose it from your device.",
+		invalidFileMessage:
+			"Choose watcharr-export.json from Watcharr, or a wishlist file made for GoodWatch.",
+		oversizeHint: "Choose a smaller JSON file.",
+		instructions: [
+			"From Watcharr: open Settings, choose Export, then choose Export in the Export Watched List window. Upload the watcharr-export.json file it downloads, without opening or editing it.",
+			"From another tool: if a tool saved your list as a wishlist file for GoodWatch, upload that file as the tool saved it.",
+			"Maximum size: 20 MB.",
+		],
+		notes:
+			"GoodWatch adds titles to Want to See and never removes titles that aren't in the file. From Watcharr, only movies and shows marked Planned are added. Ratings, other statuses, tags, and games aren't imported.",
+	},
 	tmdb: null,
 	plex: null,
 } satisfies Record<ImportSource, ImportUploadDescriptor | null>
@@ -249,6 +274,17 @@ export interface ImportObservation {
 	precision?: "moment" | "day" | "unknown"
 	pass?: number
 	addedAt?: string | null
+	/** Source evidence only; native service IDs never stand in for catalog IDs. */
+	wishlistEvidence?: {
+		source: string
+		profileLabel?: string
+		country?: string
+		exportedAt?: string
+		completeness: "complete" | "partial" | "unknown"
+		sourceId?: string
+		sourceUrl?: string
+		mediaType: "movie" | "show" | "unknown"
+	}
 	problem?: {
 		outcome: "invalid" | "unsupported" | "unmatched"
 		reason: string

@@ -21,6 +21,7 @@ import {
 	importSourceName,
 	lastImported,
 	searchImportSources,
+	streamingServiceFor,
 } from "./ImportSources"
 import { SourceImportFlow } from "./SourceImportFlow"
 import { useSourceImports } from "./SourceImportHooks"
@@ -59,6 +60,7 @@ export function ImportSourcesPage({
 	const [open, setOpen] = useState<ImportSourceId | null>(initialSource ?? null)
 	const [query, setQuery] = useState("")
 	const found = searchImportSources(query)
+	const streaming = found.length === 0 ? streamingServiceFor(query) : null
 	const listId = useId()
 	// The latest file handed to a source; `count` gives each one a fresh flow.
 	const [handoff, setHandoff] = useState<
@@ -202,7 +204,32 @@ export function ImportSourcesPage({
 								{found.map(row)}
 							</ul>
 						)}
-						{found.length === 0 && (
+						{streaming && (
+							<div className="flex flex-col items-start text-gray-400">
+								<p className="font-semibold text-gray-100">
+									GoodWatch can't import your {streaming.name} list yet.
+								</p>
+								<p className="mt-1">
+									If you also keep a watchlist on Trakt, TMDB, or Plex, import
+									it from there. To add titles now, search for them and choose
+									Want to See.
+								</p>
+								{streaming.instead.map((id) => (
+									<button
+										key={id}
+										type="button"
+										className={`${textLink} min-h-11`}
+										onClick={() => {
+											setQuery("")
+											setOpen(id)
+										}}
+									>
+										Open the {importSourceName(id)} import
+									</button>
+								))}
+							</div>
+						)}
+						{found.length === 0 && !streaming && (
 							<p className="text-gray-400">
 								No source called "{query.trim()}". If your site can save a CSV
 								file, try {importSourceName("csv")}.

@@ -128,6 +128,16 @@ const SOURCES: Omit<ImportSourceEntry, "name">[] = [
 		aliases: "grouplens",
 	},
 	{
+		id: "wishlist",
+		// Watcharr publishes no brand terms. One row: the same import reads wishlist files made for GoodWatch.
+		logo: null,
+		tile: "W",
+		gets: ["Want to See"],
+		wait: "Right away",
+		aliases: "self-hosted planned watchlist json",
+		fileNoun: "a Watcharr export or wishlist file",
+	},
+	{
 		id: "csv",
 		logo: null,
 		tile: "CSV",
@@ -167,6 +177,59 @@ export function searchImportSources(query: string) {
 	if (!words) return IMPORT_SOURCE_LIST
 	return IMPORT_SOURCE_LIST.filter((source) =>
 		`${source.name} ${source.aliases}`.toLowerCase().includes(words),
+	)
+}
+
+/**
+ * Streaming services and trackers members look for that GoodWatch can't import from. A search that finds no source
+ * but names one of these says so, instead of suggesting a CSV file that holds no watchlist.
+ */
+const STREAMING_SERVICES: readonly {
+	name: string
+	terms: readonly string[]
+	/** The live imports to point to instead, in order. */
+	instead: readonly ImportSourceId[]
+}[] = [
+	["Netflix", []],
+	["Prime Video", ["amazon", "prime"]],
+	["Disney+", ["disney"]],
+	["Max", ["hbo", "hbo max"]],
+	["Hulu", []],
+	["Apple TV", []],
+	["Paramount+", ["paramount"]],
+	["Peacock", []],
+	["Crunchyroll", []],
+	["WOW", ["sky"]],
+	["RTL+", ["rtl"]],
+	["Joyn", []],
+	["ARD", []],
+	["ZDF", []],
+	["JustWatch", []],
+	["Simkl", []],
+	["Google TV", []],
+].map(([name, terms]) => ({
+	name: name as string,
+	terms: [(name as string).toLowerCase(), ...(terms as string[])],
+	instead: [
+		...(name === "Crunchyroll" ? (["myanimelist"] as const) : []),
+		"trakt",
+		"tmdb",
+		"plex",
+	],
+}))
+
+/** The streaming service a search names, as a whole word or the start of its name. */
+export function streamingServiceFor(query: string) {
+	const words = query.trim().toLowerCase()
+	if (!words) return null
+	return (
+		STREAMING_SERVICES.find((service) =>
+			service.terms.some(
+				(term) =>
+					` ${words} `.includes(` ${term} `) ||
+					(words.length >= 3 && term.startsWith(words)),
+			),
+		) ?? null
 	)
 }
 

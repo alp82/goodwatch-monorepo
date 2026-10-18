@@ -274,11 +274,31 @@ async function applyScoreLike(
 		: "failed"
 }
 
+async function canApplyWishlistShow(
+	userId: string,
+	item: ImportItem,
+	allowRewatch: boolean,
+) {
+	if (
+		!item.wishlistEvidence ||
+		item.mediaType !== "show" ||
+		item.tmdbId === null
+	)
+		return true
+	const { getImportStatusSnapshots } = await import("../tracking.server.ts")
+	const snapshots = await getImportStatusSnapshots(userId, [item.tmdbId])
+	const current = snapshots.get(item.tmdbId)
+	return current?.state?.state === "seen"
+		? allowRewatch
+		: canImportWantToSee(current?.state?.state, !!current?.hasWatches)
+}
+
 async function applySet(
 	userId: string,
 	importId: string,
 	item: ImportItem & { payload: Record<string, unknown> },
 	table: "user_wishlist" | "user_favorite",
+	allowRewatch = false,
 ) {
 	let journal = item.payload.journal as Journal | undefined
 	if (item.kind === "show_status" && item.tmdbId !== null) {
@@ -291,7 +311,12 @@ async function applySet(
 		await run(
 			`REFRESH TABLE ${table}${table === "user_wishlist" ? ", user_watch_log" : ""}`,
 		)
-		if (table === "user_wishlist") {
+		if (
+			table === "user_wishlist" &&
+			!(await canApplyWishlistShow(userId, item, allowRewatch))
+		)
+			return "kept" as const
+		if (table === "user_wishlist" && !(item.wishlistEvidence && allowRewatch)) {
 			const watched = await select<{ watch_id: string }>(
 				"SELECT watch_id FROM user_watch_log WHERE user_id = ? AND tmdb_id = ? AND media_type = ? LIMIT 1",
 				[userId, item.tmdbId, item.mediaType],
@@ -339,6 +364,11 @@ async function applySet(
 			return "added" as const
 		}
 		if (own) return "kept" as const
+		if (
+			table === "user_wishlist" &&
+			!(await canApplyWishlistShow(userId, item, allowRewatch))
+		)
+			return "kept" as const
 	}
 	const createdAt = journal.after.createdAt
 	if (!createdAt)
@@ -464,7 +494,13 @@ async function applyRun(userId: string, id: string, options: ImportOptions) {
 							journal.after,
 						])
 				} else if (isWant(item))
-					state = await applySet(userId, id, item, "user_wishlist")
+					state = await applySet(
+						userId,
+						id,
+						item,
+						"user_wishlist",
+						options.conflictChoice === "source",
+					)
 				else if (item.kind === "favorite")
 					state = await applySet(userId, id, item, "user_favorite")
 				// Watch rows are applied by the tracking phase below. Until a plan is available, leave them pending.

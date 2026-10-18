@@ -3258,3 +3258,393 @@ it("unresolved cour scores keep their facts and a reason without inventing episo
 		assert.match(score.reason ?? "", /kept for later.*not applied/)
 	}
 })
+
+it("shared Wishlist matches a unique typed title and year, preserves evidence, and undoes only imported wishes", async () => {
+	const db = new ImportDb()
+	db.catalog = [
+		{
+			tmdb_id: 862,
+			imdb_id: "tt0114709",
+			title: "Toy Story",
+			release_year: 1995,
+		},
+	]
+	setImportDbForTest(db)
+	setImportEffectsForTest(
+		async () => {},
+		async () => {},
+	)
+	const evidence = {
+		source: "test-capture",
+		completeness: "partial" as const,
+		mediaType: "movie" as const,
+		sourceId: "provider-42",
+	}
+	const preview = await previewParsedImport("member", "wishlist.json", {
+		source: "wishlist",
+		warnings: [],
+		observations: [
+			{
+				key: "wishlist:one",
+				kind: "want",
+				title: "Toy Story",
+				year: 1995,
+				mediaType: "movie",
+				tmdbId: null,
+				imdbId: null,
+				wishlistEvidence: evidence,
+			},
+		],
+	})
+	assert.equal(preview.counts.new, 1)
+	assert.equal(preview.kinds.watch, 0)
+	assert.equal(db.wishlist.length, 0)
+	const rows = await getImportItems("member", preview.id, undefined, 0, 50)
+	assert.equal(rows.items[0].tmdbId, 862)
+	assert.deepEqual(rows.items[0].wishlistEvidence, evidence)
+	await confirmImport("member", preview.id, { ...options, kinds: ["want"] })
+	await waitFor(db, "done")
+	assert.equal(db.wishlist.length, 1)
+	await undoImport("member", preview.id)
+	assert.equal(db.wishlist.length, 0)
+})
+
+it("shared Wishlist keeps ambiguous remakes and unknown media types unmatched", async () => {
+	const db = new ImportDb()
+	db.catalog = [
+		{ tmdb_id: 1, imdb_id: null, title: "Same title", release_year: 2000 },
+		{ tmdb_id: 2, imdb_id: null, title: "Same title", release_year: 2000 },
+	]
+	setImportDbForTest(db)
+	const preview = await previewParsedImport("member", "wishlist.json", {
+		source: "wishlist",
+		warnings: [],
+		observations: [
+			{
+				key: "one",
+				kind: "want",
+				title: "Same title",
+				year: 2000,
+				mediaType: "movie",
+				tmdbId: null,
+				imdbId: null,
+			},
+			{
+				key: "two",
+				kind: "want",
+				title: "Same title",
+				year: 2000,
+				mediaType: "movie",
+				tmdbId: 1,
+				imdbId: null,
+				problem: { outcome: "unmatched", reason: "Unknown media type" },
+				wishlistEvidence: {
+					source: "capture",
+					completeness: "unknown",
+					mediaType: "unknown",
+				},
+			},
+		],
+	})
+	assert.equal(preview.counts.new, 0)
+	assert.equal(preview.counts.unmatched, 2)
+	assert.equal(db.wishlist.length, 0)
+})
+
+it("an explicit Wishlist wish can coexist with a prior watch and Undo preserves that watch", async () => {
+	const db = new ImportDb()
+	db.catalog = [
+		{
+			tmdb_id: 862,
+			imdb_id: "tt0114709",
+			title: "Toy Story",
+			release_year: 1995,
+		},
+	]
+	const watch = {
+		user_id: "member",
+		tmdb_id: 862,
+		media_type: "movie",
+		watch_id: "existing-watch",
+	}
+	db.watches = [watch]
+	setImportDbForTest(db)
+	setImportEffectsForTest(
+		async () => {},
+		async () => {},
+	)
+	const preview = await previewParsedImport("member", "wishlist.json", {
+		source: "wishlist",
+		warnings: [],
+		observations: [
+			{
+				key: "one",
+				kind: "want",
+				title: "Toy Story",
+				year: 1995,
+				mediaType: "movie",
+				tmdbId: 862,
+				imdbId: null,
+				wishlistEvidence: {
+					source: "capture",
+					completeness: "complete",
+					mediaType: "movie",
+				},
+			},
+		],
+	})
+	assert.equal(preview.counts.conflict, 1)
+	await confirmImport("member", preview.id, { ...options, kinds: ["want"] })
+	await waitFor(db, "done")
+	assert.equal(db.wishlist.length, 1)
+	assert.deepEqual(db.watches, [watch])
+	await undoImport("member", preview.id)
+	assert.equal(db.wishlist.length, 0)
+	assert.deepEqual(db.watches, [watch])
+})
+
+function wishlistShowFixture(state: string) {
+	const db = new ImportDb()
+	db.catalog = [
+		{ tmdb_id: 1668, imdb_id: null, title: "Friends", release_year: 1994 },
+	]
+	const trackingDb = new FakeTrackingCrate()
+	const seedState = (next: string) => {
+		trackingDb.table("user_watch_state").length = 0
+		trackingDb.seed("user_watch_state", [
+			{
+				user_id: "member",
+				tmdb_id: 1668,
+				media_type: "show",
+				state: next,
+				pass: 1,
+				state_changed_at: 0,
+				updated_at: 1000,
+				created_at: 1000,
+				seen_press_group: null,
+				seen_press_from: null,
+				seen_question: null,
+				rate_prompt_dismissed_at: null,
+			},
+		])
+	}
+	seedState(state)
+	setImportDbForTest(db)
+	setCrateClientForTest(trackingDb)
+	setImportEffectsForTest(
+		async () => {},
+		async () => {},
+	)
+	const preview = () =>
+		previewParsedImport("member", "wishlist.json", {
+			source: "wishlist",
+			warnings: [],
+			observations: [
+				{
+					key: "wish",
+					kind: "want",
+					title: "Friends",
+					year: 1994,
+					mediaType: "show",
+					tmdbId: 1668,
+					imdbId: null,
+					wishlistEvidence: {
+						source: "capture",
+						completeness: "unknown",
+						mediaType: "show",
+					},
+				},
+			],
+		})
+	return { db, trackingDb, seedState, preview }
+}
+
+it("Wishlist imports preserve Watching, On hold and Dropped shows even when source wishes are selected", async () => {
+	for (const state of ["watching", "on_hold", "dropped"]) {
+		const { db, preview } = wishlistShowFixture(state)
+		const result = await preview()
+		assert.equal(result.counts.unchanged, 1, state)
+		await confirmImport("member", result.id, { ...options, kinds: ["want"] })
+		await waitFor(db, "done")
+		assert.equal(db.wishlist.length, 0, state)
+		assert.equal((await getShowTracking("member", 1668)).state?.state, state)
+	}
+})
+
+it("a Seen show without episode logs needs explicit rewatch opt-in and Undo preserves Seen", async () => {
+	for (const conflictChoice of ["keep", "source"] as const) {
+		const { db, preview } = wishlistShowFixture("seen")
+		const result = await preview()
+		assert.equal(result.counts.conflict, 1)
+		await confirmImport("member", result.id, {
+			...options,
+			kinds: ["want"],
+			conflictChoice,
+		})
+		await waitFor(db, "done")
+		assert.equal(db.wishlist.length, conflictChoice === "source" ? 1 : 0)
+		assert.equal((await getShowTracking("member", 1668)).state?.state, "seen")
+		await undoImport("member", result.id)
+		assert.equal(db.wishlist.length, 0)
+		const tracking = await getShowTracking("member", 1668)
+		assert.equal(tracking.state?.state, "seen")
+		assert.equal(tracking.log.length, 0)
+	}
+})
+
+it("Wishlist apply rechecks show state after preview before adding a wish", async () => {
+	for (const next of ["watching", "on_hold", "dropped", "seen"]) {
+		for (const conflictChoice of ["keep", "source"] as const) {
+			const { db, seedState, preview } = wishlistShowFixture("not_started")
+			const result = await preview()
+			assert.equal(result.counts.new, 1)
+			seedState(next)
+			await confirmImport("member", result.id, {
+				...options,
+				kinds: ["want"],
+				conflictChoice,
+			})
+			await waitFor(db, "done")
+			assert.equal(
+				db.wishlist.length,
+				next === "seen" && conflictChoice === "source" ? 1 : 0,
+				`${next}/${conflictChoice}`,
+			)
+			assert.equal((await getShowTracking("member", 1668)).state?.state, next)
+		}
+	}
+})
+
+it("Wishlist entries with different source identities resolving to one title are added and undone once", async () => {
+	const db = new ImportDb()
+	db.catalog = [
+		{
+			tmdb_id: 862,
+			imdb_id: "tt0114709",
+			title: "Toy Story",
+			release_year: 1995,
+		},
+	]
+	setImportDbForTest(db)
+	setImportEffectsForTest(
+		async () => {},
+		async () => {},
+	)
+	const result = await previewParsedImport("member", "wishlist.json", {
+		source: "wishlist",
+		warnings: [],
+		observations: [
+			{
+				key: "first",
+				kind: "want",
+				title: "Toy Story",
+				year: 1995,
+				mediaType: "movie",
+				tmdbId: 862,
+				imdbId: null,
+				wishlistEvidence: {
+					source: "capture",
+					sourceId: "native-one",
+					completeness: "unknown",
+					mediaType: "movie",
+				},
+			},
+			{
+				key: "second",
+				kind: "want",
+				title: "Toy Story",
+				year: 1995,
+				mediaType: "movie",
+				tmdbId: null,
+				imdbId: "tt0114709",
+				wishlistEvidence: {
+					source: "capture",
+					sourceId: "native-two",
+					completeness: "unknown",
+					mediaType: "movie",
+				},
+			},
+		],
+	})
+	assert.equal(result.counts.new, 1)
+	assert.equal(result.counts.unsupported, 1)
+	const rows = await getImportItems("member", result.id, undefined, 0, 50)
+	assert.equal(rows.items[1].reason, "Listed twice in the file. Added once.")
+	assert.equal(rows.items[1].wishlistEvidence?.sourceId, "native-two")
+	await confirmImport("member", result.id, { ...options, kinds: ["want"] })
+	await waitFor(db, "done")
+	assert.equal(db.wishlist.length, 1)
+	assert.equal((await getImport("member", result.id)).applied.added, 1)
+	await undoImport("member", result.id)
+	assert.equal(db.wishlist.length, 0)
+})
+
+it("Seen movies stay off Wishlist by default and an existing rewatch wish never invites another opt-in", async () => {
+	for (const conflictChoice of ["keep", "source"] as const) {
+		const db = new ImportDb()
+		db.catalog = [
+			{
+				tmdb_id: 862,
+				imdb_id: "tt0114709",
+				title: "Toy Story",
+				release_year: 1995,
+			},
+		]
+		db.watches = [
+			{
+				user_id: "member",
+				tmdb_id: 862,
+				media_type: "movie",
+				watch_id: "existing-watch",
+			},
+		]
+		setImportDbForTest(db)
+		setImportEffectsForTest(
+			async () => {},
+			async () => {},
+		)
+		const parsed = {
+			source: "wishlist" as const,
+			warnings: [],
+			observations: [
+				{
+					key: "wish",
+					kind: "want" as const,
+					title: "Toy Story",
+					year: 1995,
+					mediaType: "movie" as const,
+					tmdbId: 862,
+					imdbId: null,
+					wishlistEvidence: {
+						source: "capture",
+						completeness: "unknown" as const,
+						mediaType: "movie" as const,
+					},
+				},
+			],
+		}
+		const first = await previewParsedImport("member", "wishlist.json", parsed)
+		assert.equal(first.counts.conflict, 1)
+		await confirmImport("member", first.id, {
+			...options,
+			kinds: ["want"],
+			conflictChoice,
+		})
+		await waitFor(db, "done")
+		assert.equal(db.wishlist.length, conflictChoice === "source" ? 1 : 0)
+		if (conflictChoice === "source") {
+			const repeat = await previewParsedImport(
+				"member",
+				"wishlist.json",
+				parsed,
+			)
+			assert.equal(repeat.counts.unchanged, 1)
+			assert.equal(repeat.counts.conflict, 0)
+			const rows = await getImportItems("member", repeat.id, undefined, 0, 50)
+			assert.equal(rows.items[0].reason, null)
+		}
+		await undoImport("member", first.id)
+		assert.equal(db.wishlist.length, 0)
+		assert.equal(db.watches.length, 1)
+	}
+})
