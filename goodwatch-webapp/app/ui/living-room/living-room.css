@@ -1118,11 +1118,15 @@ html[data-tv-transition] .tvr-bracket {
 		.tvr[data-room="unmeasured"] .tvr-f-wall {
 			height: var(--f-seam);
 		}
+		/* The wall's picture keeps the photo's shape, and a transform stretches it to 1602 * seam / 448 tall
+		   (`stretched` in PhoneRoom.tsx). */
 		.tvr[data-room="unmeasured"] .tvr-f-wallimg {
 			left: var(--f-pl);
 			top: calc(-30 * var(--f-seam) / 448);
 			width: calc(1068 * var(--f-ps));
-			height: calc(1602 * var(--f-seam) / 448);
+			height: calc(1602 * var(--f-ps));
+			transform-origin: 0 0;
+			transform: scaleY(tan(atan2(var(--f-seam), calc(448 * var(--f-ps)))));
 		}
 		.tvr[data-room="unmeasured"] .tvr-f-floor {
 			top: var(--f-seam);

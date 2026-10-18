@@ -8,6 +8,9 @@ import {
 	type ImportSource,
 	type ImportSummary,
 } from "~/domain/imports"
+import imdbLogo from "~/img/import-sources/imdb.svg?no-inline"
+import tmdbLogo from "~/img/import-sources/tmdb.svg?no-inline"
+import traktLogo from "~/img/import-sources/trakt.svg?no-inline"
 import type { RecognizedImportFile } from "./ImportFileRecognition"
 
 export type ImportSourceId = "imdb" | ImportSource
@@ -15,7 +18,7 @@ export type ImportSourceId = "imdb" | ImportSource
 export interface ImportSourceEntry {
 	id: ImportSourceId
 	name: string
-	/** Official mark under public/, or null for a letter tile. */
+	/** Official mark, a build file with a hashed name (cached for a year), or null for a letter tile. */
 	logo: string | null
 	/** The letter tile's text when there is no logo. */
 	tile: string
@@ -38,7 +41,7 @@ const NAMES: Record<ImportSourceId, string> = {
 const SOURCES: Omit<ImportSourceEntry, "name">[] = [
 	{
 		id: "imdb",
-		logo: "/images/import-sources/imdb.svg",
+		logo: imdbLogo,
 		tile: "IMDb",
 		gets: ["Ratings"],
 		wait: "A few minutes",
@@ -62,7 +65,7 @@ const SOURCES: Omit<ImportSourceEntry, "name">[] = [
 	},
 	{
 		id: "trakt",
-		logo: "/images/import-sources/trakt.svg",
+		logo: traktLogo,
 		tile: "Tr",
 		gets: [
 			"Ratings",
@@ -78,7 +81,7 @@ const SOURCES: Omit<ImportSourceEntry, "name">[] = [
 	},
 	{
 		id: "tmdb",
-		logo: "/images/import-sources/tmdb.svg",
+		logo: tmdbLogo,
 		tile: "TMDB",
 		gets: ["Ratings", "Want to See", "Favorites"],
 		wait: "Seconds",

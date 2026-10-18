@@ -37,6 +37,16 @@ const FilmScreen = lazy(() => import("./FilmScreen"))
 
 /** The film's first scene deals in this long into the boot screen, as the boot screen fades. */
 const FILM_AFTER_BOOT = BOOT_MS - 350
+
+/**
+ * How long ago the page painted first, or 0 without paint timing. The server's boot screen plays from the first paint,
+ * and the page's scripts start after it (utils/start-after-paint.ts), so the film's wait counts from the paint, not
+ * from hydration.
+ */
+const sinceFirstPaint = () => {
+	const paint = performance.getEntriesByName?.("first-contentful-paint")[0]
+	return paint ? Math.max(0, performance.now() - paint.startTime) : 0
+}
 export const QUIZ_SCENE = CHAPTERS.findIndex(
 	(chapter) => chapter.id === "closer",
 )
@@ -105,7 +115,7 @@ export function useHomeIntro({ member }: { member: boolean }): HomeIntro {
 			kind: "film",
 			scene: start.scene,
 			enter: start.boot ? "deal" : "fade",
-			wait: start.boot ? FILM_AFTER_BOOT : 0,
+			wait: start.boot ? Math.max(0, FILM_AFTER_BOOT - sinceFirstPaint()) : 0,
 			run: runs.current,
 		})
 	}, [hydrated, member, tvScreen])

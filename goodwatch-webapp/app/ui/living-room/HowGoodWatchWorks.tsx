@@ -3,24 +3,28 @@
 // real page), and each item can start the TV's film at its chapter. Server-rendered, no animation, images lazy.
 import { Link } from "@remix-run/react"
 import type { ReactNode } from "react"
-import disneyLogo from "~/img/disneyplus-logo.webp?no-inline"
-import fingerprintIcon from "~/img/fingerprint.webp?no-inline"
-import imdbLogo from "~/img/imdb-logo-250.webp?no-inline"
-import metacriticLogo from "~/img/metacritic-logo-96.webp?no-inline"
+import disneyLogo from "~/img/disneyplus-logo-78.webp?no-inline"
+import fingerprintIcon from "~/img/fingerprint-156.webp?no-inline"
+import imdbLogo from "~/img/imdb-logo-78.webp?no-inline"
+import metacriticLogo from "~/img/metacritic-logo-78.webp?no-inline"
 import netflixLogo from "~/img/netflix-logo.svg?no-inline"
 import primeLogo from "~/img/primevideo-logo.svg?no-inline"
-import rottenLogo from "~/img/rotten-logo-96.webp?no-inline"
+import rottenLogo from "~/img/rotten-logo-78.webp?no-inline"
 import { GoodWatchG } from "~/ui/brand/GoodWatchWordmark"
 import { IMPORT_SOURCE_LIST } from "~/ui/imports/ImportSources"
 import { SourceMark } from "~/ui/imports/SourceMark"
 import { MapArt } from "~/ui/living-room/tv/screens/app-art"
 import { ROOM_ID } from "~/ui/living-room/use-below-room"
+import { assetUrl } from "~/utils/asset-url"
 import { FILM_CHAPTER_EVENT } from "./intro/events"
 import type { ChapterId } from "./intro/scene"
 
 const poster = (path: string) => `https://image.tmdb.org/t/p/w185${path}`
 
-/** A small image in a visual tile: sized, lazy, decorative where the text says it already. */
+/**
+ * A small image in a visual tile: sized, lazy, decorative where the text says it already. The logos and the fingerprint
+ * are files at three times the size they show at (their `-78` and `-156` copies), not the large originals.
+ */
 const Img = ({
 	src,
 	alt,
@@ -29,7 +33,7 @@ const Img = ({
 	className,
 }: { src: string; alt: string; w: number; h: number; className?: string }) => (
 	<img
-		src={src}
+		src={assetUrl(src)}
 		alt={alt}
 		width={w}
 		height={h}

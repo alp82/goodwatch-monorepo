@@ -199,7 +199,7 @@ async function page(props: Partial<PageProps> = {}) {
 					const mark = button.querySelector("[aria-hidden]")
 					const logo = mark?.querySelector("img")?.getAttribute("src")
 					return logo
-						? { name, logo: logo.split("/").at(-1) }
+						? { name, logo: logo.split("/").at(-1)?.split("?")[0] }
 						: {
 								name,
 								tile: mark?.textContent ?? "",

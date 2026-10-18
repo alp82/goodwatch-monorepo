@@ -20,9 +20,12 @@ import { TvLivingRoom } from "~/ui/living-room/tv/TvLivingRoom"
 import { isTvOnlyChange } from "~/ui/living-room/tv/tv-machine"
 import { assetUrl } from "~/utils/asset-url"
 import useLocale from "~/utils/locale"
+import { START_AFTER_PAINT } from "~/utils/start-after-paint"
 
 export { tvHomeLoader as loader } from "~/server/living-room/tv-loader.server"
 export { pageHeaders as headers } from "~/utils/headers"
+// The page paints from the server's HTML alone; its scripts start after that (utils/start-after-paint.ts).
+export const handle = START_AFTER_PAINT
 import { buildMeta, ogImageUrl } from "~/utils/meta"
 
 export const shouldRevalidate: ShouldRevalidateFunction = ({

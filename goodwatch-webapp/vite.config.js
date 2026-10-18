@@ -167,7 +167,7 @@ function leanStylesheet() {
 // 2. Everything else that the root route or the browser entry imports is on every page anyway. App code goes to
 //    `shell`, which changes with most deploys, and the remaining library code to `vendor`.
 // 3. App modules under 3 KB that more than one module imports (helpers, hooks, small components) also go to `shell`.
-//    Together they are about 30 KB minified, and each was a request of its own.
+//    Together they are about 30 KB minified, and each was a request of its own. A style sheet never goes there.
 // 4. Feature modules that load together get one chunk per group, see FEATURE_CHUNKS.
 // 5. Rollup splits the rest by route, as before.
 // Rollup puts a module's own imports into the same manual chunk unless a rule names another one. Rule 3 therefore only
@@ -192,6 +192,10 @@ const SHELL_ROOTS = /\/app\/(root|entry\.client)\.tsx$/
 const APP_MODULE = /\/app\/(?!routes\/)/
 // A shared module above this size stays with the routes that use it.
 const SHARED_SMALL_MODULE_MAX_BYTES = 3_000
+// Rule 3 never takes a style sheet. Its module is a stub of a few bytes, but its rules go wherever its chunk goes, and
+// the shell's style sheets block the first paint of every page. The intro film's style sheet (76 KB, 13 KB compressed)
+// went there once a second module imported it.
+const STYLE_SHEET = /\.css($|\?)/
 
 // Rule 4: modules that always load together but that Rollup would split, because different sets of routes import each.
 // The title action set (score control, Want to See, Seen, Not interested) is on the first view of every title page and
@@ -251,7 +255,12 @@ function clientChunks() {
 	}
 	const isSharedSmallModule = (id, graph, depth = 0) => {
 		const info = graph.getModuleInfo(id)
-		if (!info || id.includes("/node_modules/") || !APP_MODULE.test(id))
+		if (
+			!info ||
+			id.includes("/node_modules/") ||
+			!APP_MODULE.test(id) ||
+			STYLE_SHEET.test(id)
+		)
 			return false
 		if (info.importers.length < 2 && depth === 0) return false
 		if ((info.code?.length ?? 0) > SHARED_SMALL_MODULE_MAX_BYTES) return false

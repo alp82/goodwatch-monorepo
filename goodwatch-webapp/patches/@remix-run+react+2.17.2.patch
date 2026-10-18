@@ -1,0 +1,124 @@
+diff --git a/node_modules/@remix-run/react/dist/components.d.ts b/node_modules/@remix-run/react/dist/components.d.ts
+index 31f6eff..4e736b0 100644
+--- a/node_modules/@remix-run/react/dist/components.d.ts
++++ b/node_modules/@remix-run/react/dist/components.d.ts
+@@ -99,7 +99,10 @@ export type ScriptProps = Omit<React.HTMLProps<HTMLScriptElement>, "children" |
+  *
+  * @see https://remix.run/components/scripts
+  */
+-export declare function Scripts(props: ScriptProps): React.JSX.Element | null;
++export declare function Scripts(props: ScriptProps & {
++    /** GoodWatch patch: writes the classic script that starts the route modules' script and the module preloads. */
++    startAfterPaint?: (code: string, preloads: string[]) => string;
++}): React.JSX.Element | null;
+ export type UIMatch<D = AppData, H = RouteHandle> = UIMatchRR<SerializeFrom<D>, H>;
+ /**
+  * Returns the active route matches, useful for accessing loaderData for
+diff --git a/node_modules/@remix-run/react/dist/components.js b/node_modules/@remix-run/react/dist/components.js
+index 96dd2c4..5111d20 100644
+--- a/node_modules/@remix-run/react/dist/components.js
++++ b/node_modules/@remix-run/react/dist/components.js
+@@ -534,6 +534,14 @@ let isHydrated = false;
+  * @see https://remix.run/components/scripts
+  */
+ function Scripts(props) {
++  // GoodWatch patch: with `startAfterPaint`, the HTML has neither the module preloads nor the route modules' script.
++  // One classic script takes their place, and the function writes it: it starts them once the page has painted
++  // (app/utils/start-after-paint.ts). In the browser the script is empty, like Remix's own while it hydrates.
++  let {
++    startAfterPaint,
++    ...scriptProps
++  } = props;
++  props = scriptProps;
+   let {
+     manifest,
+     serverHandoffString,
+@@ -658,7 +666,14 @@ import(${JSON.stringify(manifest.entry.module)});`;
+       suppressHydrationWarning: true,
+       dangerouslySetInnerHTML: markup.createHtml(contextScript),
+       type: undefined
+-    })), /*#__PURE__*/React__namespace.createElement("script", _rollupPluginBabelHelpers["extends"]({}, props, {
++    })), startAfterPaint ? /*#__PURE__*/React__namespace.createElement("script", _rollupPluginBabelHelpers["extends"]({}, props, {
++      suppressHydrationWarning: true,
++      dangerouslySetInnerHTML: markup.createHtml(isStatic ? startAfterPaint(routeModulesScript, dedupe([...(enableFogOfWar ? [] : [manifest.url]), manifest.entry.module, ...manifest.entry.imports, ...matches.flatMap(match => {
++        let route = manifest.routes[match.route.id];
++        return (route.imports || []).concat([route.module]);
++      })])) : " "),
++      type: undefined
++    })) : /*#__PURE__*/React__namespace.createElement("script", _rollupPluginBabelHelpers["extends"]({}, props, {
+       suppressHydrationWarning: true,
+       dangerouslySetInnerHTML: markup.createHtml(routeModulesScript),
+       type: "module",
+@@ -684,15 +699,15 @@ import(${JSON.stringify(manifest.entry.module)});`;
+     return (route.imports || []).concat([route.module]);
+   }).flat(1);
+   let preloads = isHydrated ? [] : manifest.entry.imports.concat(routePreloads);
+-  return isHydrated ? null : /*#__PURE__*/React__namespace.createElement(React__namespace.Fragment, null, !enableFogOfWar ? /*#__PURE__*/React__namespace.createElement("link", {
++  return isHydrated ? null : /*#__PURE__*/React__namespace.createElement(React__namespace.Fragment, null, !enableFogOfWar && !startAfterPaint ? /*#__PURE__*/React__namespace.createElement("link", {
+     rel: "modulepreload",
+     href: manifest.url,
+     crossOrigin: props.crossOrigin
+-  }) : null, /*#__PURE__*/React__namespace.createElement("link", {
++  }) : null, startAfterPaint ? null : /*#__PURE__*/React__namespace.createElement("link", {
+     rel: "modulepreload",
+     href: manifest.entry.module,
+     crossOrigin: props.crossOrigin
+-  }), dedupe(preloads).map(path => /*#__PURE__*/React__namespace.createElement("link", {
++  }), (startAfterPaint ? [] : dedupe(preloads)).map(path => /*#__PURE__*/React__namespace.createElement("link", {
+     key: path,
+     rel: "modulepreload",
+     href: path,
+diff --git a/node_modules/@remix-run/react/dist/esm/components.js b/node_modules/@remix-run/react/dist/esm/components.js
+index 985d81f..739e60e 100644
+--- a/node_modules/@remix-run/react/dist/esm/components.js
++++ b/node_modules/@remix-run/react/dist/esm/components.js
+@@ -510,6 +510,14 @@ let isHydrated = false;
+  * @see https://remix.run/components/scripts
+  */
+ function Scripts(props) {
++  // GoodWatch patch: with `startAfterPaint`, the HTML has neither the module preloads nor the route modules' script.
++  // One classic script takes their place, and the function writes it: it starts them once the page has painted
++  // (app/utils/start-after-paint.ts). In the browser the script is empty, like Remix's own while it hydrates.
++  let {
++    startAfterPaint,
++    ...scriptProps
++  } = props;
++  props = scriptProps;
+   let {
+     manifest,
+     serverHandoffString,
+@@ -634,7 +642,14 @@ import(${JSON.stringify(manifest.entry.module)});`;
+       suppressHydrationWarning: true,
+       dangerouslySetInnerHTML: createHtml(contextScript),
+       type: undefined
+-    })), /*#__PURE__*/React.createElement("script", _extends({}, props, {
++    })), startAfterPaint ? /*#__PURE__*/React.createElement("script", _extends({}, props, {
++      suppressHydrationWarning: true,
++      dangerouslySetInnerHTML: createHtml(isStatic ? startAfterPaint(routeModulesScript, dedupe([...(enableFogOfWar ? [] : [manifest.url]), manifest.entry.module, ...manifest.entry.imports, ...matches.flatMap(match => {
++        let route = manifest.routes[match.route.id];
++        return (route.imports || []).concat([route.module]);
++      })])) : " "),
++      type: undefined
++    })) : /*#__PURE__*/React.createElement("script", _extends({}, props, {
+       suppressHydrationWarning: true,
+       dangerouslySetInnerHTML: createHtml(routeModulesScript),
+       type: "module",
+@@ -660,15 +675,15 @@ import(${JSON.stringify(manifest.entry.module)});`;
+     return (route.imports || []).concat([route.module]);
+   }).flat(1);
+   let preloads = isHydrated ? [] : manifest.entry.imports.concat(routePreloads);
+-  return isHydrated ? null : /*#__PURE__*/React.createElement(React.Fragment, null, !enableFogOfWar ? /*#__PURE__*/React.createElement("link", {
++  return isHydrated ? null : /*#__PURE__*/React.createElement(React.Fragment, null, !enableFogOfWar && !startAfterPaint ? /*#__PURE__*/React.createElement("link", {
+     rel: "modulepreload",
+     href: manifest.url,
+     crossOrigin: props.crossOrigin
+-  }) : null, /*#__PURE__*/React.createElement("link", {
++  }) : null, startAfterPaint ? null : /*#__PURE__*/React.createElement("link", {
+     rel: "modulepreload",
+     href: manifest.entry.module,
+     crossOrigin: props.crossOrigin
+-  }), dedupe(preloads).map(path => /*#__PURE__*/React.createElement("link", {
++  }), (startAfterPaint ? [] : dedupe(preloads)).map(path => /*#__PURE__*/React.createElement("link", {
+     key: path,
+     rel: "modulepreload",
+     href: path,

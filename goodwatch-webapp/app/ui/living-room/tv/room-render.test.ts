@@ -100,7 +100,11 @@ test("the room's HTML is the same on every render and holds nothing that depends
 		),
 		2,
 	)
-	assert.equal(count(room, 'fetchpriority="high"'), 2)
+	// The first screen's pictures come first: the desktop's photo, the phone's wall, and the hand in both Remotes.
+	assert.equal(count(room, 'fetchpriority="high"'), 4)
+	// The start page's scripts wait for these to paint (utils/start-after-paint.ts): both photos, the phone's twice, and
+	// the hand in both Remotes.
+	assert.equal(count(room, 'elementtiming="hero"'), 5)
 	// The screen once per edition.
 	assert.equal(count(room, '<div data-screen="true"></div>'), 2)
 	// A TV that is off draws no screen.

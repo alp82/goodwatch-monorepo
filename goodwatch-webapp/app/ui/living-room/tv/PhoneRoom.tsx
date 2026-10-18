@@ -5,15 +5,35 @@
 //
 // Without a layout (`L` null) the window is not measured yet: the parts are drawn for living-room.css to place
 // (`tvr-f-*`, the first paint), and the same nodes take their measured place afterwards.
+import type { CSSProperties } from "react"
 import { assetUrl } from "~/utils/asset-url"
+import { HERO_TIMING } from "~/utils/start-after-paint"
 import { PHONE_ROOM } from "../room"
 import { NOT_UPRIGHT_PHONE, NO_PICTURE, PHONE_ROOM_ART } from "./room-art"
 import {
 	type LandscapeRoomLayout,
+	PHONE_ROOM_PHOTO,
 	PHONE_STAND,
 	type PhoneRoomLayout,
 	type Rect,
 } from "./room-layout"
+
+/**
+ * The wall's picture in its box: laid out in the photo's own shape and stretched to the box's height by a transform.
+ * It looks the same as a stretched box, and an image box out of its file's shape reads as a distorted image to
+ * Lighthouse (Best Practices: image aspect ratio). living-room.css does the same for the first paint.
+ */
+const stretched = (box: Rect): CSSProperties => {
+	const height = (box.width * PHONE_ROOM_PHOTO.h) / PHONE_ROOM_PHOTO.w
+	return {
+		left: box.left,
+		top: box.top,
+		width: box.width,
+		height,
+		transformOrigin: "0 0",
+		transform: `scaleY(${box.height / height})`,
+	}
+}
 
 export function PhoneRoom({
 	L,
@@ -22,13 +42,18 @@ export function PhoneRoom({
 	const first = !L
 	/** The first paint's class of a part, which living-room.css places; once measured, the part's own style. */
 	const f = (part: string) => (first ? `tvr-f-up tvr-f-${part}` : "")
-	const photo = (style: Rect | undefined, part: string, lead: boolean) => (
+	const photo = (
+		style: CSSProperties | undefined,
+		part: string,
+		lead: boolean,
+	) => (
 		<picture>
 			{/* Before the window is measured: nothing is asked for where the phone's room is not drawn. */}
 			{first && <source media={NOT_UPRIGHT_PHONE} srcSet={NO_PICTURE} />}
 			<source type="image/avif" srcSet={assetUrl(PHONE_ROOM_ART.avif)} />
 			<img
 				{...(lead && { fetchpriority: "high" })}
+				{...HERO_TIMING}
 				src={assetUrl(PHONE_ROOM_ART.webp)}
 				alt=""
 				aria-hidden
@@ -49,7 +74,7 @@ export function PhoneRoom({
 				role="img"
 				aria-label={PHONE_ROOM.alt}
 			>
-				{photo(L?.wall, "wallimg", true)}
+				{photo(L ? stretched(L.wall) : undefined, "wallimg", true)}
 			</div>
 			{/* The furniture follows unstretched. */}
 			<div

@@ -27,6 +27,31 @@ browser. An inline script on the start page (`introStartScript`) runs before the
 unfinished film it forgets the tab's progress, so the film starts over; any other kept progress hides the boot screen,
 so coming back doesn't flash it. The power key reaches the intro through `TvLivingRoom`'s `onPower`.
 
+## Loading
+
+The start page paints from the server's HTML alone: the room, the boot screen and "How GoodWatch works" need no
+script, and hydration moves nothing. So the page's scripts start after it has painted:
+
+- `_index.tsx` has the handle `START_AFTER_PAINT`, and the root gives Remix's `Scripts` the `startAfterPaint` writer
+  (`app/utils/start-after-paint.ts`, a patch in `patches/@remix-run+react+2.17.2.patch`). The HTML then has no module
+  preloads and no module script, only a small classic script. It adds both once the browser reports the first
+  contentful paint and the paint of every room picture this window shows (`HERO_TIMING`, the `elementtiming`
+  attribute; Element Timing). Without Element Timing it waits for the first contentful paint only, without paint
+  timing it starts at once, and after 5 seconds it starts anyway.
+- The film's wait counts from the first paint (`sinceFirstPaint` in `HomeIntro.tsx`), as the boot screen does, so
+  the film still deals in as the boot screen fades when hydration comes later.
+- The room's pictures load first: `fetchpriority="high"` on the photos and the hand (the LCP on phones).
+- "How GoodWatch works" items have `content-visibility: auto`: an item below the first screen is laid out, and its
+  lazy pictures load, when it comes near the window. Its logos and fingerprint are copies at three times their shown
+  size (`-78`, `-156`).
+- `intro.css` loads with the film's code, never with the page: `vite.config.js` keeps style sheets out of the shell
+  chunk.
+
+On October 18, 2026 this took the mobile Lighthouse score from 82 to 96 (local production build behind TLS and
+HTTP/2, five runs each). What is left on a phone's first view is the network: the document, then a second connection
+to the static hostname for the style sheets, the font and the room's pictures. Served from the site's own host, the
+same build scored 99 (FCP 1.4 s, LCP 2.1 s instead of 1.8 s and 2.6 s).
+
 ## Files
 
 - `app/routes/_index.tsx`: renders the room with `useHomeIntro`, links `boot.css` and `how-goodwatch-works.css`.

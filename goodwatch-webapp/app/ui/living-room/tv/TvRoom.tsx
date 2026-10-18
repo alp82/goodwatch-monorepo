@@ -28,6 +28,7 @@ import {
 } from "react"
 import type { ReactNode } from "react"
 import { assetUrl } from "~/utils/asset-url"
+import { HERO_TIMING } from "~/utils/start-after-paint"
 import { BelowRoom } from "../BelowRoom"
 import { Remote, type RemoteService } from "../Remote"
 import type { StartTitle } from "../living-room-data"
@@ -272,6 +273,7 @@ export function TvRoom({
 							<source type="image/avif" srcSet={assetUrl(ROOM_ART.avif)} />
 							<img
 								{...{ fetchpriority: "high" }}
+								{...HERO_TIMING}
 								src={assetUrl(ROOM_ART.webp)}
 								alt={ROOM.alt}
 								width={ROOM_PHOTO.w}
@@ -447,7 +449,11 @@ function Hand({
 	return (
 		<picture>
 			<source type="image/avif" srcSet={assetUrl(HAND_IMAGE.avif)} />
+			{/* The hand around the phone's Remote is the largest picture of a phone's first screen (its LCP). The page's
+			    scripts start once it has painted (HERO_TIMING). */}
 			<img
+				{...{ fetchpriority: "high" }}
+				{...HERO_TIMING}
 				src={assetUrl(HAND_IMAGE.webp)}
 				alt=""
 				aria-hidden

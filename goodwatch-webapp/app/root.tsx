@@ -30,6 +30,7 @@ import {
 	ScrollRestoration,
 	useLoaderData,
 	useLocation,
+	useMatches,
 	useRouteError,
 	useRouteLoaderData,
 } from "@remix-run/react"
@@ -56,6 +57,7 @@ import {
 } from "~/ui/navigation"
 import { LocaleContext } from "~/utils/locale"
 import { assetBase, assetUrl } from "~/utils/asset-url"
+import { START_AFTER_PAINT, startAfterPaintScript } from "~/utils/start-after-paint"
 
 // One stylesheet for every page: it imports main.css, the brand font's rules, Swiper's, and the toast styles.
 import cssTailwind from "~/tailwind.css?url"
@@ -337,6 +339,11 @@ function Root() {
 			}),
 	)
 	const dehydratedState = useDehydratedState()
+	const afterPaint = useMatches().some(
+		(match) =>
+			(match.handle as { scripts?: string } | undefined)?.scripts ===
+			START_AFTER_PAINT.scripts,
+	)
 
 	return (
 		<html
@@ -370,7 +377,8 @@ function Root() {
 								<ToastContainer />
 								<TelemetryBoot />
 								{shouldUseScrollRestoration && <ScrollRestoration />}
-								<Scripts />
+								{/* The start page's scripts start after its first paint (utils/start-after-paint.ts). */}
+								<Scripts startAfterPaint={afterPaint ? startAfterPaintScript : undefined} />
 								{/* The tag's script loads after the page is interactive, see telemetry/google-tag.ts. */}
 								<script
 									// biome-ignore lint/security/noDangerouslySetInnerHtml: a constant script
