@@ -1,0 +1,9 @@
+summary: Collect independent daily buzz signals at 08:30 UTC
+schedule: 0 30 8 * * *
+timezone: UTC
+script_path: f/buzz/signals
+is_flow: true
+args: {}
+enabled: true
+no_flow_overlap: true
+cron_version: v2

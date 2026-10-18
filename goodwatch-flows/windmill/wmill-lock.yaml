@@ -6,6 +6,11 @@ locks:
   f/buzz/daily.flow:
     __flow_hash: 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
   f/buzz/score: 808666f15468b53436dfe87c1c4dcae83e702947764a689324e6088ae0a708e5
+  f/buzz/signal_parsers: bb20f92facdfcb5b2d30fdbdae0564dd69deb441af2f9de2c20077c5800af401
+  f/buzz/signal_store: 033783eaec825652f31eefd284b4e47fd8d561a0c96fa0312b144af0a4338dea
+  f/buzz/signals: 19cc9a5755807c3a132b26620eb9ab4366382db247c97dd07fab6b965bd3e6f9
+  f/buzz/signals.flow:
+    __flow_hash: 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
   f/buzz/store: 004d5fdb881c7bc6c8e464a22b5d69cbc7df32e2e8f3b0d3884c9e77115f96c1
   f/critic_sites/polite_http: 28950e75e2f9f69be195db67de94d2a17a52aa318100527e7a7f4c624236d0bd
   f/data_source/common: 442d137713e1bfd91db22e185a42c6f05ed356420d7cb5cb7d5e1f4a4464237e

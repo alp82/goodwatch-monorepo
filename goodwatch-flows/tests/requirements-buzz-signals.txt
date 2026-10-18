@@ -1,0 +1,2 @@
+-r requirements-buzz.txt
+beautifulsoup4==4.14.3

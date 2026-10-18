@@ -1,0 +1,17 @@
+summary: Collect independent buzz history
+description: TMDB exports, Trakt, IMDb, Letterboxd and US FlixPatrol charts.
+  Failures are isolated by source; no ranking changes.
+value:
+  modules:
+    - id: collect_signals
+      value:
+        type: script
+        input_transforms: {}
+        path: f/buzz/signals
+  concurrency_time_window_s: 0
+  concurrent_limit: 1
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties: {}
+  required: []

@@ -1,0 +1,9 @@
+summary: Independent buzz signal signal_store
+description: ''
+lock: '!inline f/buzz/signal_store.script.lock'
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties: {}
+  required: []

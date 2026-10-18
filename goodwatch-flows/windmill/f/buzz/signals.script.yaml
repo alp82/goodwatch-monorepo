@@ -1,0 +1,12 @@
+summary: Independent buzz signal signals
+description: ''
+lock: '!inline f/buzz/signals.script.lock'
+concurrency_time_window_s: 0
+concurrent_limit: 1
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties: {}
+  required: []
+timeout: 7200

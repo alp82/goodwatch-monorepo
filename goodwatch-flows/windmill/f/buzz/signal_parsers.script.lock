@@ -1,0 +1,6 @@
+# workspace-dependencies-mode: extra
+# py: 3.12
+beautifulsoup4==4.14.3
+bs4==0.0.2
+soupsieve==3.0.3
+typing-extensions==4.16.0
