@@ -4,11 +4,25 @@ This is a throwaway prototype. It isn't a GoodWatch feature, it isn't supported,
 
 The extension reads the titles that Netflix loads on your **My List** page while you scroll it. When you stop, it saves them as a local JSON file in the GoodWatch wishlist file layout.
 
-## What the file can't do yet
+## Version 0.0.2
 
-**This file won't add Netflix titles to GoodWatch yet.** This experiment doesn't work out whether a title is a movie or a show, so every title in the file has an unknown type. GoodWatch's importer doesn't match titles with an unknown type, and it can't match Netflix IDs yet. If you upload the file on the Imports page, its titles show as not matched, and nothing goes on your Wishlist.
+Version 0.0.2 changes only the instructions in this README and the popup. The capture, the permissions, and the file format are the same as in version 0.0.1. If you already saved a file with version 0.0.1, you don't need to capture your list again. Upload that file.
 
-Use the file to test the capture, not to move your list.
+## Add the titles to GoodWatch
+
+GoodWatch doesn't add the file's titles on its own. This experiment doesn't work out whether a title is a movie or a show, so every title in the file has an unknown type. GoodWatch doesn't match titles with an unknown type automatically, and it doesn't match Netflix IDs to its own titles.
+
+You can match each title yourself:
+
+1. In GoodWatch, upload the file on the Imports page.
+2. Under **Titles GoodWatch couldn't match**, choose **Match titles**.
+3. For each title you want, choose **Find a match**, search GoodWatch's movies and shows, and choose the right title. GoodWatch never picks a match for you, even when only one title fits.
+4. Choose **Update preview**. The counts now include your matches.
+5. Check the preview, then choose **Add to Want to See**.
+
+Titles you don't match aren't added. Titles you've already seen stay Seen, unless you choose **Add them as Want to rewatch**. To take the added titles off Want to See again, use **Undo** on the import.
+
+Matching has been tested with invented data only. Nobody has matched or imported a file from a real Netflix account yet.
 
 ## Limits
 
@@ -44,7 +58,7 @@ It asks the browser for only two permissions: `activeTab` (access to the current
 1. In Chrome, go to `chrome://extensions`. In Edge, go to `edge://extensions`.
 2. Turn on **Developer mode**.
 3. Click **Load unpacked**.
-4. Select this folder, `wishlist-capture-extension`.
+4. Select this folder, `wishlist-capture-extension-v002`.
 5. Optional: to keep the extension in reach, pin it from the browser's extensions menu.
 
 To remove the extension, click **Remove** on its card on the same page.
@@ -94,7 +108,9 @@ npm ci
 npm test
 ```
 
-A passing fixture test shows that the capture logic reads the cards it was written for. It doesn't show that the capture works on Netflix today. The fixture can't follow changes to Netflix's page, its languages, layouts, or lazy loading. The popup has no automated test.
+A passing fixture test shows that the capture logic reads the cards it was written for. It doesn't show that the capture works on Netflix today. The fixture can't follow changes to Netflix's page, its languages, layouts, or lazy loading.
+
+**Browser testing** loads the real extension in Chromium and runs its popup against the same invented page, served at a Netflix address on the test computer. The test starts, stops, and discards captures from the popup and checks the saved file. It never contacts Netflix. For the results and how to run it, see `VALIDATION.md`.
 
 **Real-account testing** hasn't happened. Before anyone treats this as working, someone with permission to use a Netflix account needs to:
 
@@ -103,7 +119,7 @@ A passing fixture test shows that the capture logic reads the cards it was writt
 3. Repeat with a second profile, an interrupted capture, and a profile switch during capture.
 4. Keep only redacted notes. Don't share the file, screenshots, or browser logs outside the test.
 
-Even a clean real-account test doesn't make the titles importable. GoodWatch first needs a way to match Netflix IDs to its own titles.
+A clean real-account test still doesn't match titles for you. You choose each match on GoodWatch's Imports page, as described in [Add the titles to GoodWatch](#add-the-titles-to-goodwatch).
 
 ## Files
 
@@ -113,4 +129,6 @@ Even a clean real-account test doesn't make the titles importable. GoodWatch fir
 | `capture.js` | Reads My List in the tab and builds the file |
 | `popup.html`, `popup.js`, `popup.css` | The popup you open from the extension button |
 | `capture.test.mjs`, `fixtures/` | Fixture test for `capture.js` |
+| `scripts/browser-integration.mjs` | Browser test for the extension and its popup |
+| `VALIDATION.md` | Results of the browser test |
 | `package.json`, `package-lock.json` | Test dependency (`happy-dom`), for development only |

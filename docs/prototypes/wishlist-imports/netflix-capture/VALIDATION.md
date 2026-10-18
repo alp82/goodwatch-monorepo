@@ -1,5 +1,7 @@
 # Synthetic browser validation
 
+Version note: the core tests and actual unpacked MV3 Chromium integration were rerun successfully for version 0.0.2 on 2026-10-18. This version updates instructions and version metadata; `capture.js`, `popup.js`, permissions, selectors, and the file format are unchanged. GoodWatch's manual matching wasn't part of this extension run.
+
 Validated 2026-10-18. **No live Netflix account or provider page was used.** This report describes a real unpacked MV3 extension running in Chromium against the local invented fixture served at a routed Netflix origin. It does not establish current Netflix selectors, accurate provider IDs, whole-list coverage, or successful GoodWatch matching.
 
 ## Results
