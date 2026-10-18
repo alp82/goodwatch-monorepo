@@ -65,7 +65,7 @@ export function Spark({
 			height={height}
 			className="tn-spark"
 			role="img"
-			aria-label={`Wikipedia reading over ${curve.length} days, ${liftLabel(title.lift)} its usual on ${dateLabel(day)}`}
+			aria-label={`${title.signal ? "TMDB popularity" : "Wikipedia reading"} over ${curve.length} days, ${liftLabel(title.signal ? (title.signal.tmdb_lift ?? 1) : title.lift)} its usual on ${dateLabel(day)}`}
 			onMouseLeave={() => setAt(null)}
 		>
 			<defs>
@@ -146,7 +146,7 @@ export function Spark({
 						height={32}
 					>
 						<div className="tn-tip">
-							{DATE.format(dayOf(day, back(at)))} · {compact(curve[at])} reads ·{" "}
+							{DATE.format(dayOf(day, back(at)))} · {compact(curve[at])} {title.signal ? "popularity" : "reads"} ·{" "}
 							<b>{liftLabel(curve[at] / Math.max(usual, 1))}</b>
 						</div>
 					</foreignObject>

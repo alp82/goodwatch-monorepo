@@ -12,12 +12,11 @@ import { useState } from "react"
 import {
 	type TalkedRow,
 	type TalkedTitle,
-	liftLabel,
 	previewOf,
 } from "~/domain/talked-about-now"
 import MediaText from "~/ui/media-text/MediaText"
 import { mediaFieldLanguage } from "~/utils/media-presentation"
-import { Move, ReasonIcon, hrefOf, tmdb, why } from "../parts"
+import { Move, ReasonIcon, backupSources, buzzLabel, hrefOf, isBackup, isMultiple, tmdb, why } from "../parts"
 import { Platform, SourceMark } from "./Items"
 import { Spark } from "./Spark"
 import type { TalkedQuery } from "./StartRowSlot"
@@ -71,7 +70,7 @@ function RowInner({ title, day }: { title: TalkedTitle; day: string }) {
 				<Spark title={title} day={day} width={96} height={34} />
 			</span>
 			<span className="tn-row-lift">
-				<b>{liftLabel(title.lift)}</b>
+				<b>{buzzLabel(title)}</b>
 			</span>
 		</>
 	)
@@ -94,8 +93,8 @@ function Panel({ title, day }: { title: TalkedTitle; day: string }) {
 				</p>
 				<div className="tn-panel-buzz">
 					<p className="tn-lift">
-						{liftLabel(title.lift)}
-						<small>its usual</small>
+						{buzzLabel(title)}
+						{isMultiple(title) && <small>its usual</small>}
 					</p>
 					<Spark title={title} day={day} width={220} height={52} />
 				</div>
@@ -118,6 +117,9 @@ function Board({ row }: { row: TalkedRow }) {
 				<div>
 					<p className="lrb-eye">Talked about now</p>
 					<h2 id="tn-title">Hot on socials</h2>
+					{isBackup(row) && (
+						<p className="tn-backup">From {backupSources(row)} while Wikipedia's reading figures are late</p>
+					)}
 				</div>
 				<div className="tn-head-end">
 					{sources.length > 0 && (

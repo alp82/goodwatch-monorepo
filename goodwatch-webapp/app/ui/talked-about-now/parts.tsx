@@ -3,8 +3,10 @@
 // second line of a ranking row. Styles are in start-row/start-row.css.
 import {
 	type TalkedReason,
+	type TalkedRow,
 	type TalkedTitle,
 	compact,
+	liftLabel,
 	reasonLabel,
 } from "~/domain/talked-about-now"
 import { startTitleHref } from "~/ui/living-room/BelowRoom"
@@ -69,6 +71,45 @@ export function Move({ move }: { move: TalkedTitle["move"] }) {
 export function why(title: TalkedTitle) {
 	if (title.reason)
 		return `${reasonLabel(title.reason, title.mediaType)} · ${dateLabel(title.reason.day)}`
-	return `${compact(title.views)} Wikipedia reads in a day`
+	const signal = title.signal
+	if (!signal) return `${compact(title.views)} Wikipedia reads in a day`
+	if (signal.trakt_watchers) return `${compact(signal.trakt_watchers)} watching on Trakt`
+	if (signal.justwatch_rank) return `#${signal.justwatch_rank} on JustWatch${signal.justwatch_country ? ` ${signal.justwatch_country}` : ""}`
+	return "Rising on TMDB"
+}
+
+/**
+ * How hot, in a few characters. A Wikipedia row says "×9.7" against its usual. A backup row's own score is a merged
+ * rank, not a multiple, so it says what was measured: TMDB's "×N" when it rose, else the JustWatch chart place, else
+ * how many watch on Trakt.
+ */
+export function buzzLabel(title: TalkedTitle): string {
+	const signal = title.signal
+	if (!signal) return liftLabel(title.lift)
+	if (signal.tmdb_lift && signal.tmdb_lift >= 1.1) return liftLabel(signal.tmdb_lift)
+	if (signal.justwatch_rank) return `#${signal.justwatch_rank}`
+	if (signal.trakt_watchers) return compact(signal.trakt_watchers)
+	return "–"
+}
+
+/** Whether buzzLabel is a multiple of the title's usual ("×N its usual"). */
+export const isMultiple = (title: TalkedTitle) =>
+	!title.signal || Boolean(title.signal.tmdb_lift && title.signal.tmdb_lift >= 1.1)
+
+/** A list made while Wikipedia's numbers are late: from Trakt, JustWatch and TMDB instead. */
+export const isBackup = (row: Pick<TalkedRow, "source">) => row.source === "backup_signals"
+
+const SOURCE_NAMES: Record<string, string> = {
+	trakt_trending: "Trakt",
+	trakt_watched_daily: "Trakt",
+	justwatch_chart: "JustWatch",
+	tmdb_popularity: "TMDB",
+}
+
+/** "Trakt, JustWatch and TMDB": the sources a backup list used. */
+export function backupSources(row: Pick<TalkedRow, "sources_used">): string {
+	const names = [...new Set((row.sources_used ?? []).map((s) => SOURCE_NAMES[s]).filter(Boolean))]
+	if (!names.length) return "Trakt, JustWatch and TMDB"
+	return names.length === 1 ? names[0] : `${names.slice(0, -1).join(", ")} and ${names.at(-1)}`
 }
 

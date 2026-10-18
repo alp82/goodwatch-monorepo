@@ -398,3 +398,8 @@
 .tn-quiet {
 	color: #737373;
 }
+.tn-backup {
+	margin-top: 0.25rem;
+	font-size: 12.5px;
+	color: #a3a3a3;
+}

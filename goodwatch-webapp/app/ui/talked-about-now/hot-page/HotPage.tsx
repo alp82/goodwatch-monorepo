@@ -6,11 +6,11 @@
 // only when pressed. Styles: hot-page.css, with the marks and curves of start-row.css.
 import { Link } from "@remix-run/react"
 import { useEffect, useMemo, useState } from "react"
-import { type TalkedItem, type TalkedRow, type TalkedTitle, liftLabel, reasonLabel } from "~/domain/talked-about-now"
+import { type TalkedItem, type TalkedRow, type TalkedTitle, reasonLabel } from "~/domain/talked-about-now"
 import MediaText from "~/ui/media-text/MediaText"
 import { SocialEmbed, type SocialEmbedItem } from "~/ui/social-embed/SocialEmbed"
 import { mediaFieldLanguage } from "~/utils/media-presentation"
-import { hrefOf, tmdb } from "../parts"
+import { backupSources, buzzLabel, hrefOf, isBackup, tmdb } from "../parts"
 import { SourceMark } from "../start-row/Items"
 import { Spark, dateLabel } from "../start-row/Spark"
 
@@ -165,7 +165,7 @@ function TitleList({ titles, f, set, day }: { titles: TalkedTitle[]; f: Filters;
 								{plural(t.items.length, "post")}
 							</small>
 						</span>
-						<span className="hx-t-lift">{liftLabel(t.lift)}</span>
+						<span className="hx-t-lift">{buzzLabel(t)}</span>
 					</button>
 				</li>
 			))}
@@ -183,7 +183,7 @@ function TitleTag({ title, onPick }: { title: TalkedTitle; onPick?: () => void }
 			<b>
 				<Name title={title} />
 			</b>
-			<span>{liftLabel(title.lift)}</span>
+			<span>{buzzLabel(title)}</span>
 		</button>
 	)
 }
@@ -283,7 +283,11 @@ function Head({ row }: { row: TalkedRow }) {
 		<header className="hx-head">
 			<p className="hx-eye">Talked about now · {dateLabel(row.day)}</p>
 			<h1>Hot on socials</h1>
-			<p>The titles people suddenly read about most, and what is being said about them.</p>
+			<p>
+				{isBackup(row)
+					? `Wikipedia's reading figures are late, so this list comes from ${backupSources(row)}: what people watch and look up right now, and what is being said about it.`
+					: "The titles people suddenly read about most, and what is being said about them."}
+			</p>
 		</header>
 	)
 }
@@ -401,7 +405,7 @@ function ClusterHead({ title, day, count }: { title: TalkedTitle; day: string; c
 				</p>
 			</div>
 			<div className="hx-chead-buzz">
-				<b>{liftLabel(title.lift)}</b>
+				<b>{buzzLabel(title)}</b>
 				<Spark title={title} day={day} width={110} height={32} mark={false} />
 			</div>
 		</header>
