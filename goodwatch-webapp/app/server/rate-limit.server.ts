@@ -22,15 +22,16 @@ export interface EvalClient {
 	eval(script: string, numKeys: number, ...args: (string | number)[]): Promise<unknown>
 }
 
-// KEYS: one counter per window. ARGV: the limit and the seconds of each window, in the keys' order.
-// Returns 0 when the request was counted, or the seconds to wait.
+// KEYS: one counter per window. ARGV: the limit and the seconds of each window, in the keys' order, then the cost
+// (1 when absent). Returns 0 when the request was counted, or the seconds to wait.
 export const RATE_LIMIT_SCRIPT = `
 local wait = 0
+local cost = tonumber(ARGV[2 * #KEYS + 1] or '1')
 for i, key in ipairs(KEYS) do
 	local limit = tonumber(ARGV[2 * i - 1])
 	local seconds = tonumber(ARGV[2 * i])
 	local count = tonumber(redis.call('GET', key) or '0')
-	if count >= limit then
+	if count + cost > limit then
 		local ttl = redis.call('TTL', key)
 		if ttl < 0 then
 			redis.call('EXPIRE', key, seconds)
@@ -41,7 +42,7 @@ for i, key in ipairs(KEYS) do
 end
 if wait > 0 then return wait end
 for i, key in ipairs(KEYS) do
-	if redis.call('INCR', key) == 1 then redis.call('EXPIRE', key, tonumber(ARGV[2 * i])) end
+	if redis.call('INCRBY', key, cost) == cost then redis.call('EXPIRE', key, tonumber(ARGV[2 * i])) end
 end
 return 0
 `
@@ -60,7 +61,7 @@ export function createRateLimiter(
 	const keysOf = (name: string, client: string, windows: RateWindow[]) =>
 		windows.map((window) => `${name}:{${client}}:${window.seconds}`)
 
-	const inMemory = (keys: string[], windows: RateWindow[]): RateVerdict => {
+	const inMemory = (keys: string[], windows: RateWindow[], cost: number): RateVerdict => {
 		const at = now()
 		let wait = 0
 		const counters = keys.map((key) => {
@@ -68,8 +69,9 @@ export function createRateLimiter(
 			return counter && counter.until > at ? counter : null
 		})
 		counters.forEach((counter, i) => {
-			if (counter && counter.count >= windows[i].limit)
+			if (counter && counter.count + cost > windows[i].limit)
 				wait = Math.max(wait, Math.ceil((counter.until - at) / 1000))
+			else if (!counter && cost > windows[i].limit) wait = Math.max(wait, windows[i].seconds)
 		})
 		if (wait > 0) return { allowed: false, store: "memory", retryAfterSeconds: wait }
 		if (memory.size + keys.length > MEMORY_KEYS) {
@@ -81,20 +83,24 @@ export function createRateLimiter(
 		}
 		keys.forEach((key, i) => {
 			const counter = counters[i]
-			if (counter) counter.count++
-			else memory.set(key, { count: 1, until: at + windows[i].seconds * 1000 })
+			if (counter) counter.count += cost
+			else memory.set(key, { count: cost, until: at + windows[i].seconds * 1000 })
 		})
 		return { allowed: true, store: "memory" }
 	}
 
 	return {
-		/** Counts one request of `client` under `name`, or says how long it must wait. Never throws. */
-		async take(name: string, client: string, windows: RateWindow[]): Promise<RateVerdict> {
+		/**
+		 * Counts one request of `client` under `name`, or says how long it must wait. Never throws. `cost` counts the
+		 * request as that many (a batch of writes); a cost above a window's limit is never allowed.
+		 */
+		async take(name: string, client: string, windows: RateWindow[], requested = 1): Promise<RateVerdict> {
+			const cost = Math.max(1, Math.floor(requested))
 			const keys = keysOf(name, client, windows)
 			const valkey = redis()
 			if (valkey) {
 				try {
-					const args = windows.flatMap((window) => [window.limit, window.seconds])
+					const args = [...windows.flatMap((window) => [window.limit, window.seconds]), cost]
 					const wait = Number(await valkey.eval(RATE_LIMIT_SCRIPT, keys.length, ...keys, ...args))
 					if (Number.isFinite(wait))
 						return wait > 0
@@ -104,7 +110,7 @@ export function createRateLimiter(
 					// Counted in memory below.
 				}
 			}
-			return inMemory(keys, windows)
+			return inMemory(keys, windows, cost)
 		},
 	}
 }

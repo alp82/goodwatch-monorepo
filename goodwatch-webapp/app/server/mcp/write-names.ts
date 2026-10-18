@@ -42,3 +42,21 @@ export function isWriteCall(message: unknown): boolean {
 			isWriteTool(params.name),
 	)
 }
+
+/**
+ * How many title writes a request body asks for: each write call counts once, a batch call once per item (at
+ * most the cap; a longer list is refused unwritten). The endpoint counts these against the member's write budget.
+ */
+export function writeItemCount(body: unknown, cap: number): number {
+	let count = 0
+	for (const message of Array.isArray(body) ? body : [body]) {
+		if (!isWriteCall(message)) continue
+		const params = (message as { params: { arguments?: unknown } }).params
+		const items =
+			params.arguments && typeof params.arguments === "object"
+				? (params.arguments as { items?: unknown }).items
+				: undefined
+		count += Array.isArray(items) ? Math.min(Math.max(items.length, 1), cap) : 1
+	}
+	return count
+}

@@ -649,3 +649,161 @@ test("foreign browser preflights cannot reach MCP or obtain CORS permission", as
 	assert.equal(response.headers.get("Access-Control-Allow-Origin"), null)
 	assert.equal(response.headers.get("Access-Control-Allow-Credentials"), null)
 })
+
+test("Batch write tools list items up to 50, the file import for whole histories, and undo by batch_id", async () => {
+	const handle = createReadMcpHandler({
+		resource,
+		authorization: writer,
+		limiter: unlimited,
+	})
+	const listed = (await result(await handle(rpc("tools/list")))).result.tools
+	const byName = new Map(
+		listed.map((tool: { name: string }) => [tool.name, tool]),
+	)
+	for (const name of [
+		"rate_title",
+		"set_want_to_see",
+		"set_not_interested",
+		"set_show_status",
+		"log_watch",
+	]) {
+		const tool = byName.get(name) as {
+			description: string
+			inputSchema: {
+				required: string[]
+				properties: Record<string, { maxItems?: number; minItems?: number }>
+			}
+			annotations: { destructiveHint: boolean }
+		}
+		assert.equal(tool.inputSchema.properties.items.maxItems, 50, name)
+		assert.equal(tool.inputSchema.properties.items.minItems, 1, name)
+		assert.deepEqual(tool.inputSchema.required, ["action_id"], name)
+		assert.match(tool.description, /up to 50 per call/, name)
+		assert.match(
+			tool.description,
+			/full history \(hundreds of titles or more\).*http:\/\/localhost:3336\/settings\/imports/,
+			name,
+		)
+		assert.match(tool.description, /undo_watch with that batch_id/, name)
+		assert.equal(tool.annotations.destructiveHint, true, name)
+	}
+	const undo = byName.get("undo_watch") as {
+		description: string
+		inputSchema: { properties: Record<string, unknown> }
+	}
+	assert.ok(undo.inputSchema.properties.batch_id)
+	assert.match(undo.description, /batch_id/)
+	assert.equal(
+		(
+			byName.get("set_my_services") as {
+				inputSchema: { properties: Record<string, unknown> }
+			}
+		).inputSchema.properties.items,
+		undefined,
+	)
+})
+
+test("A batch over 50 items is answered with a split message and never dispatched", async () => {
+	const server = createToolServer("member-A", new URL(resource).origin, true)
+	const handler = createMcpHandler(() => server, { legacy: "stateless" })
+	try {
+		const called = (
+			await result(
+				await handler.fetch(
+					rpc("tools/call", {
+						name: "set_want_to_see",
+						arguments: {
+							action_id: "too-many",
+							want_to_see: true,
+							items: Array.from({ length: 51 }, (_, i) => ({
+								title_id: `movie:${100 + i}`,
+							})),
+						},
+					}),
+				),
+			)
+		).result
+		assert.equal(called.isError, true)
+		assert.match(
+			JSON.stringify(called.content),
+			/At most 50 items per call\. Split the list into calls of 50 or fewer/,
+		)
+	} finally {
+		await handler.close()
+	}
+})
+
+test("Batch writes count once per item against the member's write budget", async () => {
+	const { writeItemCount } = await import("./write-names.ts")
+	const call = (args: Record<string, unknown>, name = "rate_title") => ({
+		jsonrpc: "2.0",
+		id: 1,
+		method: "tools/call",
+		params: { name, arguments: args },
+	})
+	assert.equal(writeItemCount(call({ title_id: "movie:1", score: 5 }), 50), 1)
+	assert.equal(
+		writeItemCount(call({ items: Array.from({ length: 30 }, () => ({})) }), 50),
+		30,
+	)
+	assert.equal(
+		writeItemCount(
+			[
+				call({ items: Array.from({ length: 80 }, () => ({})) }),
+				call({}, "get_title"),
+				call({}),
+			],
+			50,
+		),
+		51,
+	)
+	assert.equal(writeItemCount({ jsonrpc: "2.0", method: "tools/list" }, 50), 0)
+
+	const takes: { name: string; cost?: number }[] = []
+	const limiter = {
+		async take(
+			name: string,
+			_member: string,
+			_windows: unknown,
+			cost?: number,
+		) {
+			takes.push({ name, cost })
+			return name === "mcp-write-items"
+				? {
+						allowed: false as const,
+						store: "memory" as const,
+						retryAfterSeconds: 42,
+					}
+				: { allowed: true as const, store: "memory" as const }
+		},
+	}
+	const handle = createReadMcpHandler({
+		resource,
+		authorization: writer,
+		limiter,
+	})
+	const response = await handle(
+		rpc("tools/call", {
+			name: "set_want_to_see",
+			arguments: {
+				action_id: "budget",
+				want_to_see: true,
+				items: Array.from({ length: 12 }, (_, i) => ({
+					title_id: `movie:${100 + i}`,
+				})),
+			},
+		}),
+	)
+	assert.equal(response.status, 429)
+	assert.equal(response.headers.get("Retry-After"), "42")
+	const body = await response.json()
+	assert.equal(body.scope, "write_items")
+	assert.match(body.message, /http:\/\/localhost:3336\/settings\/imports/)
+	assert.deepEqual(takes, [
+		{ name: "mcp-read", cost: undefined },
+		{ name: "mcp-write-items", cost: 12 },
+	])
+	takes.length = 0
+	await handle(rpc("tools/list"))
+	assert.deepEqual(takes, [{ name: "mcp-read", cost: undefined }])
+})

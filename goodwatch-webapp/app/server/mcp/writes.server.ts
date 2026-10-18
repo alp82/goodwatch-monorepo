@@ -1,89 +1,102 @@
 import { createHash } from "node:crypto"
-import { updateNotInterested } from "../not-interested.server"
+import { titleKey } from "../../utils/title-key"
+import {
+	updateNotInterestedMany,
+	updateWishListMany,
+} from "../library-many.server"
 import { type Score, updateScores } from "../scores.server"
-import {
-	type ShowAction,
-	applyShowTrackingAction,
-} from "../show-tracking.server"
+import { applyShowTrackingAction } from "../show-tracking.server"
 import { markTasteChanged } from "../taste/index.server"
+import { getDisplayFields } from "../title-cards.server"
 import {
-	getEpisodeList,
-	getMovieTracking,
-	getShowTracking,
-} from "../tracking.server"
-import { getUserData, resetUserDataCache } from "../userData.server"
+	getUserData,
+	resetUserDataCache,
+	withDeferredUserDataReset,
+} from "../userData.server"
 import { applyWatchLogAction } from "../watch-log.server"
-import { updateWishList } from "../wishList.server"
-import { actionHash, readAction, runAction } from "./actions.server"
 import {
-	type CatalogTitle,
-	readMemberTool,
-	resolve,
-	summary,
-} from "./data.server.ts"
+	actionHash,
+	readAction,
+	readActionResult,
+	runAction,
+} from "./actions.server"
+import {
+	MAX_BATCH_ITEMS,
+	type Ports,
+	isBatchTool,
+	runBatch,
+	splitMessage,
+	undoBatch,
+} from "./batch.server.ts"
+import { type CatalogTitle, resolve, summary } from "./data.server.ts"
 import {
 	prepareServices,
 	savedServices,
 	writeServices,
 } from "./services.server"
+import { applyTitleWrite, snapshot } from "./title-write.server.ts"
 import type { ReadArgs } from "./tools.server"
 import type { WriteToolName } from "./write-names.ts"
-import type { WriteArgs } from "./write-tools.server.ts"
+import { type WriteArgs, itemSchemas } from "./write-tools.server.ts"
 
-async function snapshot(userId: string, title: CatalogTitle) {
-	const [tracking, user] = await Promise.all([
-		title.media_type === "movie"
-			? getMovieTracking(userId, title.tmdb_id)
-			: getShowTracking(userId, title.tmdb_id),
-		getUserData({ user_id: userId }),
-	])
-	const key = `${title.media_type}-${title.tmdb_id}` as const
-	const watches = [...tracking.log]
-		.sort(
-			(a, b) =>
-				b.created_at - a.created_at || a.watch_id.localeCompare(b.watch_id),
-		)
-		.map((watch) => ({
-			id: watch.watch_id,
-			record_created_at: new Date(watch.created_at).toISOString(),
-			watched_at:
-				watch.watched_at === null
-					? null
-					: new Date(watch.watched_at).toISOString(),
-			episode_id: watch.episode_tmdb_id,
-			group_id: watch.group_id,
-			import_id: watch.import_id,
-			season: watch.season_number,
-			episode: watch.episode_number,
-			date:
-				watch.watched_at === null
-					? null
-					: new Date(watch.watched_at).toISOString().slice(0, 10),
-			date_precision: watch.watched_at_precision,
-			date_note:
-				watch.watched_at === null ? "No date recorded" : "Recorded watch date",
-			pass: watch.pass,
-			origin: watch.origin,
-		}))
-	return {
-		status:
-			tracking.state?.state ??
-			(title.media_type === "show" ? "not_started" : null),
-		pass: tracking.state?.pass ?? (title.media_type === "show" ? 1 : null),
-		score: user.scores[key]?.score ?? null,
-		review: user.scores[key]?.review ?? null,
-		want_to_see: key in user.wishlist,
-		want_to_see_added_at: user.wishlist[key]?.createdAt ?? null,
-		not_interested: key in user.notInterested,
-		watches,
-	}
+/** Everything a title write reads and writes, so tests can run the single and batch paths without Crate. */
+export interface WritePorts extends Ports {
+	readAction: typeof readAction
+	runAction: typeof runAction
 }
+
+export const liveWritePorts: WritePorts = {
+	readAction,
+	runAction,
+	resolve,
+	async titlesById(keys) {
+		const displays = await getDisplayFields(
+			keys.map((key) => titleKey(key.media_type, key.tmdb_id)),
+		)
+		const found = new Map<string, CatalogTitle>()
+		for (const key of keys) {
+			const display = displays.get(titleKey(key.media_type, key.tmdb_id))
+			if (display) found.set(`${key.media_type}:${key.tmdb_id}`, display)
+		}
+		return found
+	},
+	userData: (userId) => getUserData({ user_id: userId }),
+	snapshot,
+	applyTitleWrite,
+	wishlistMany: updateWishListMany,
+	notInterestedMany: updateNotInterestedMany,
+	deferResets: withDeferredUserDataReset,
+	resetUserData: (userId) => resetUserDataCache({ user_id: userId }),
+	markTasteChanged,
+	summary,
+	readReceipt: readActionResult,
+	updateScores: (input) =>
+		updateScores({ ...input, score: input.score as Score | null }),
+	deleteMovieWatch: (userId, movieId, watchId) =>
+		applyWatchLogAction(userId, movieId, { type: "delete", watchId }),
+	showEvent: (userId, showId, event) =>
+		applyShowTrackingAction(userId, { id: showId, event }),
+}
+
+/** The ID of the watches and groups one action makes: a single call's own, or one per batch item. */
+const writeActionId = (userId: string, actionId: string, item?: number) =>
+	`mcp-${createHash("sha256")
+		.update(
+			item === undefined
+				? `${userId}:${actionId}`
+				: `${userId}:${actionId}:item:${item}`,
+		)
+		.digest("hex")}`
+
 export async function writeMemberTool(
 	userId: string,
 	origin: string,
 	name: WriteToolName,
-	args: WriteArgs,
+	input: WriteArgs,
+	ports: WritePorts = liveWritePorts,
 ): Promise<Record<string, unknown>> {
+	const { readAction, runAction } = ports
+	let args = input
 	const legacyHash = actionHash(name, args)
 	// Canonicalize ignored selectors before hashing, so an ID-only retry replays the same action.
 	if (args.title_id) {
@@ -99,6 +112,10 @@ export async function writeMemberTool(
 		args = { ...args, titles: args.titles.map(normalizeSelector) }
 	if (args.add_titles)
 		args = { ...args, add_titles: args.add_titles.map(normalizeSelector) }
+	if (args.items) args = { ...args, items: args.items.map(normalizeSelector) }
+	// The schema caps items too; this holds for any caller, and claims no receipt for a call that can't run.
+	if (args.items && args.items.length > MAX_BATCH_ITEMS)
+		return { outcome: "refused", message: splitMessage(origin) }
 	const hash = actionHash(name, args)
 	const prior = await readAction(userId, args.action_id, hash)
 	if (prior) {
@@ -152,7 +169,35 @@ export async function writeMemberTool(
 			},
 		)
 	}
-	const resolved = await resolve(args, origin)
+	if (args.items && isBatchTool(name)) {
+		const batch = args
+		return runAction(
+			userId,
+			batch.action_id,
+			hash,
+			() =>
+				runBatch(ports, itemSchemas, userId, origin, name, batch, (index) =>
+					writeActionId(userId, batch.action_id, index),
+				),
+			{
+				tool: name,
+				batch: true,
+				batch_id: batch.action_id,
+				item_count: batch.items?.length,
+			},
+		)
+	}
+	if (name === "undo_watch" && args.batch_id) {
+		const undo = { ...args, batch_id: args.batch_id }
+		return runAction(
+			userId,
+			undo.action_id,
+			hash,
+			() => undoBatch(ports, userId, origin, undo),
+			{ tool: name, batch_id: undo.batch_id },
+		)
+	}
+	const resolved = await ports.resolve(args, origin)
 	if ("result" in resolved) return { ...resolved.result, outcome: "unresolved" }
 	const title = resolved.title
 	return runAction(
@@ -160,277 +205,30 @@ export async function writeMemberTool(
 		args.action_id,
 		hash,
 		async () => {
-			const before = await snapshot(userId, title)
-			const actionId = `mcp-${createHash("sha256").update(`${userId}:${args.action_id}`).digest("hex")}`
-			let removedWatchId: string | null = null
-			if (name === "rate_title") {
-				if (args.score === undefined)
-					return {
-						outcome: "refused",
-						message: "A rating requires a score or null",
-					}
-				const updated = await updateScores({
-					user_id: userId,
-					tmdb_id: title.tmdb_id,
-					media_type: title.media_type,
-					score: args.score as Score | null,
-					review: before.review ?? undefined,
-				})
-				// Clearing an already absent score has a zero-row delete, but its native settlement still repairs tracking.
-				if (updated.status !== "success" && args.score !== null)
-					throw new Error("Rating write failed")
-			} else if (name === "set_want_to_see") {
-				if (args.want_to_see === undefined)
-					return {
-						outcome: "refused",
-						message: "Choose whether to add or remove Want to See",
-					}
-				if (title.media_type === "show" && args.want_to_see) {
-					const accepted = await applyShowTrackingAction(userId, {
-						id: title.tmdb_id,
-						event: { type: "wantToSee", on: true },
-					})
-					if (accepted.status !== "applied")
-						return { outcome: "refused", message: accepted.refused }
-				}
-				await updateWishList({
-					user_id: userId,
-					tmdb_id: title.tmdb_id,
-					media_type: title.media_type,
-					action: args.want_to_see ? "add" : "remove",
-				})
-			} else if (name === "set_not_interested") {
-				if (args.not_interested === undefined)
-					return {
-						outcome: "refused",
-						message: "Choose whether to set or clear Not interested",
-					}
-				if (
-					args.not_interested &&
-					(before.score !== null ||
-						before.watches.length > 0 ||
-						(title.media_type === "show" && before.status !== "not_started"))
-				)
-					return {
-						outcome: "refused",
-						message:
-							"Not interested is only available before watching or rating this title. Use Dropped for a started show.",
-					}
-				const updated = await updateNotInterested({
-					user_id: userId,
-					tmdb_id: title.tmdb_id,
-					media_type: title.media_type,
-					action: args.not_interested ? "add" : "remove",
-				})
-				if (updated.status !== "success")
-					throw new Error("Not interested write failed")
-			} else if (name === "set_show_status") {
-				if (title.media_type !== "show")
-					return {
-						outcome: "refused",
-						message: "Only shows have a show status",
-					}
-				if (!args.status)
-					return { outcome: "refused", message: "Choose a show status" }
-				const target = {
-					"Not started": "not_started",
-					Watching: "watching",
-					"On hold": "on_hold",
-					Dropped: "dropped",
-					Seen: "seen",
-				}[args.status]
-				let event: ShowAction["event"] | null = null
-				if (target === "seen") {
-					const progress =
-						before.status === "seen"
-							? await readMemberTool(userId, origin, "get_show_progress", {
-									title_id: `show:${title.tmdb_id}`,
-								})
-							: null
-					if (
-						!progress ||
-						Number(progress.episodes_watched) < Number(progress.aired_episodes)
-					)
-						event = { type: "pressSeen" }
-				} else if (target !== before.status) {
-					if (target === "watching" || target === "not_started") {
-						const progress = await readMemberTool(
-							userId,
-							origin,
-							"get_show_progress",
-							{ title_id: `show:${title.tmdb_id}` },
-						)
-						if (
-							target === "watching" &&
-							Number(progress.episodes_watched) > 0 &&
-							before.status === "seen"
-						)
-							event = { type: "watchAgain" }
-						else if (
-							["on_hold", "dropped"].includes(String(before.status)) &&
-							(target === "watching"
-								? Number(progress.episodes_watched) > 0
-								: Number(progress.episodes_watched) === 0)
-						)
-							event = { type: "resume" }
-						else
-							return {
-								outcome: "refused",
-								message:
-									"Log an episode to start Watching. Not started cannot clear your watch history.",
-							}
-					} else event = { type: target === "on_hold" ? "hold" : "drop" }
-				}
-				if (event) {
-					const applied = await applyShowTrackingAction(userId, {
-						id: title.tmdb_id,
-						actionId,
-						event,
-					})
-					if (applied.status !== "applied")
-						return { outcome: "refused", message: applied.refused }
-				}
-			} else if (name === "undo_watch") {
-				const watch = args.watch_id
-					? before.watches.find((watch) => watch.id === args.watch_id)
-					: before.watches.find(
-							(watch) =>
-								watch.origin === "single" &&
-								(title.media_type === "movie" || watch.pass === before.pass),
-						)
-				if (!watch)
-					return {
-						outcome: "refused",
-						message: "No matching watch in your log for this title",
-					}
-				if (watch.origin === "score")
-					return {
-						outcome: "refused",
-						message:
-							"This watch comes from your score. Clear the score to remove it.",
-					}
-				removedWatchId = watch.id
-				const applied =
-					title.media_type === "movie"
-						? await applyWatchLogAction(userId, title.tmdb_id, {
-								type: "delete",
-								watchId: watch.id,
-							})
-						: await applyShowTrackingAction(userId, {
-								id: title.tmdb_id,
-								event: { type: "deleteWatch", watchId: watch.id },
-							})
-				if (applied.status !== "applied")
-					return { outcome: "refused", message: applied.refused }
-			} else if (name === "log_watch") {
-				if (args.date && args.date > new Date().toISOString().slice(0, 10))
-					return {
-						outcome: "refused",
-						message: "A recorded watch date cannot be in the future",
-					}
-				const when = args.date
-					? { precision: "day" as const, day: args.date }
-					: { precision: "unknown" as const }
-				let applied: { status: string; refused: string | null }
-				if (title.media_type === "movie") {
-					if (
-						args.season !== undefined ||
-						args.episode !== undefined ||
-						args.episode_end !== undefined ||
-						args.whole_season
-					)
-						return {
-							outcome: "refused",
-							message: "A movie watch has no season or episode number",
-						}
-					applied = await applyWatchLogAction(userId, title.tmdb_id, {
-						type: "watch",
-						watchId: actionId,
-						when,
-					})
-				} else {
-					const { season, episode } = args
-					if (args.whole_season || args.episode_end !== undefined) {
-						const episodes = (await getEpisodeList(title.tmdb_id)).filter(
-							(row) =>
-								row.season_number === season &&
-								row.season_number > 0 &&
-								(args.whole_season ||
-									(row.episode_number >= episode! &&
-										row.episode_number <= args.episode_end!)),
-						)
-						if (
-							!episodes.some(
-								(row) =>
-									row.air_date !== null &&
-									new Date(row.air_date).getTime() <= Date.now(),
-							)
-						)
-							return {
-								outcome: "refused",
-								message: "No aired regular episodes in this season or range",
-							}
-						const result = await applyShowTrackingAction(userId, {
-							id: title.tmdb_id,
-							actionId,
-							event: args.whole_season
-								? { type: "markSeason", season: season! }
-								: {
-										type: "markRange",
-										season: season!,
-										from: episode!,
-										to: args.episode_end!,
-									},
-						})
-						if (
-							result.status !== "applied" &&
-							result.refused !==
-								"Every aired episode of it is watched in this pass."
-						)
-							return { outcome: "refused", message: result.refused }
-						if (
-							args.date &&
-							result.status === "applied" &&
-							result.rows.length
-						) {
-							const dated = await applyShowTrackingAction(userId, {
-								id: title.tmdb_id,
-								event: {
-									type: "setGroupDate",
-									group: actionId,
-									day: args.date,
-								},
-							})
-							if (dated.status !== "applied")
-								throw new Error("Could not set range watch date")
-						}
-						applied = { status: "applied", refused: null }
-					} else {
-						if (season === undefined || episode === undefined)
-							return {
-								outcome: "refused",
-								message: "An episode watch needs a season and episode number",
-							}
-						applied = await applyShowTrackingAction(userId, {
-							id: title.tmdb_id,
-							actionId,
-							event: { type: "watch", season, number: episode, when },
-						})
-					}
-				}
-				if (applied.status !== "applied")
-					return { outcome: "refused", message: applied.refused }
-			} else return { outcome: "refused", message: "Unsupported write tool" }
-			await resetUserDataCache({ user_id: userId })
-			await markTasteChanged(userId)
-			const after = await snapshot(userId, title)
+			const before = await ports.snapshot(userId, title)
+			const actionId = writeActionId(userId, args.action_id)
+			const write = await ports.applyTitleWrite(
+				userId,
+				origin,
+				name,
+				args,
+				title,
+				before,
+				actionId,
+			)
+			if ("refused" in write)
+				return { outcome: "refused", message: write.refused }
+			const removedWatchId = write.removedWatchId
+			await ports.resetUserData(userId)
+			await ports.markTasteChanged(userId)
+			const after = await ports.snapshot(userId, title)
 			return {
 				outcome:
 					JSON.stringify(before) === JSON.stringify(after)
 						? "unchanged"
 						: "applied",
 				action_id: args.action_id,
-				title: summary(title, origin),
+				title: ports.summary(title, origin),
 				before: {
 					...before,
 					watch_count: before.watches.length,

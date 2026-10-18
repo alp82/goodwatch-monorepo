@@ -10,10 +10,11 @@ import type { RateVerdict, RateWindow } from "../rate-limit.server.ts"
 import { isAddressedTo } from "../site-origin.server.ts"
 import { fillWebFetchGaps } from "../web-fetch-gaps.server.ts"
 import { mcpAuthorization } from "./authorization.server.ts"
+import { IMPORT_PATH, MAX_BATCH_ITEMS } from "./batch.server.ts"
 import type { RankedSearch } from "./ranked.server.ts"
 import { describeRpc } from "./rpc-log.ts"
 import { createToolServer, readToolNames } from "./tools.server.ts"
-import { isWriteCall, writeToolNames } from "./write-names.ts"
+import { isWriteCall, writeItemCount, writeToolNames } from "./write-names.ts"
 
 const knownTools: ReadonlySet<string> = new Set([
 	...readToolNames,
@@ -25,8 +26,28 @@ interface Limiter {
 		name: string,
 		member: string,
 		windows: RateWindow[],
+		cost?: number,
 	): Promise<RateVerdict>
 }
+
+/**
+ * Title writes per member, on top of the request limit: a batch counts once per item, so 60 batch calls a minute
+ * can't make 3,000 writes. Whole histories belong in the file import.
+ */
+export const WRITE_ITEM_WINDOWS: RateWindow[] = [
+	{ limit: 300, seconds: 60 },
+	{ limit: 2000, seconds: 3600 },
+]
+
+const tooMany = (retryAfterSeconds: number, body: Record<string, unknown>) =>
+	// Not Response.json: remix-serve's polyfilled Response has no static json().
+	new Response(JSON.stringify(body), {
+		status: 429,
+		headers: {
+			"Content-Type": "application/json",
+			"Retry-After": String(retryAfterSeconds),
+		},
+	})
 
 export function createReadMcpHandler(
 	options: {
@@ -126,14 +147,22 @@ export function createReadMcpHandler(
 			{ limit: 1000, seconds: 3600 },
 		])
 		if (!verdict.allowed)
-			// Not Response.json: remix-serve's polyfilled Response has no static json().
-			return new Response(JSON.stringify({ error: "rate_limited" }), {
-				status: 429,
-				headers: {
-					"Content-Type": "application/json",
-					"Retry-After": String(verdict.retryAfterSeconds),
-				},
-			})
+			return tooMany(verdict.retryAfterSeconds, { error: "rate_limited" })
+		const writes = writeItemCount(body, MAX_BATCH_ITEMS)
+		if (writes) {
+			const budget = await limiter.take(
+				"mcp-write-items",
+				userId,
+				WRITE_ITEM_WINDOWS,
+				writes,
+			)
+			if (!budget.allowed)
+				return tooMany(budget.retryAfterSeconds, {
+					error: "rate_limited",
+					scope: "write_items",
+					message: `Too many title writes for now; retry after ${budget.retryAfterSeconds} seconds. For a whole history, the member can use the file import: ${new URL(IMPORT_PATH, resource).href}`,
+				})
+		}
 		const handler = createMcpHandler(
 			() =>
 				createToolServer(

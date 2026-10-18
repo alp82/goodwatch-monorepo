@@ -22,8 +22,8 @@ const {
 } = await import("./rate-limit.server.ts")
 const { SEARCH_LIMITED_MESSAGE: BROWSER_MESSAGE } = await import("../../ui/search/search-client.ts")
 
-// A Valkey stand-in that runs the limiter's own script in Lua 5.1 (the version Valkey embeds), with GET, TTL, INCR
-// and EXPIRE on a table that lives in this process between calls. It checks that every key of one call shares a
+// A Valkey stand-in that runs the limiter's own script in Lua 5.1 (the version Valkey embeds), with GET, TTL, INCR,
+// INCRBY and EXPIRE on a table that lives in this process between calls. It checks that every key of one call shares a
 // hash tag (one cluster slot). Without a Lua 5.1 interpreter the tests that need it are skipped.
 const LUA = ["lua5.1", "luajit"].find((bin) => spawnSync(bin, ["-v"]).status === 0) ?? null
 const needsLua = LUA ? {} : { skip: "no Lua 5.1 interpreter (lua5.1 or luajit) on this machine" }
@@ -48,8 +48,9 @@ redis = { call = function(cmd, k, a)
 		if e.u < 0 then return -1 end
 		return math.floor((e.u - now + 500) / 1000)
 	end
-	if cmd == "INCR" then
-		if e then e.v = e.v + 1 else e = { v = 1, u = -1 }; store[k] = e end
+	if cmd == "INCR" or cmd == "INCRBY" then
+		local by = cmd == "INCRBY" and tonumber(a) or 1
+		if e then e.v = e.v + by else e = { v = by, u = -1 }; store[k] = e end
 		return e.v
 	end
 	if cmd == "EXPIRE" then
@@ -281,4 +282,23 @@ test("the limiter keeps the poster impressions' single window: 60 a minute", nee
 		store: "valkey",
 		retryAfterSeconds: 60,
 	})
+})
+
+test("a cost counts as that many requests, in Valkey and in memory", needsLua, async () => {
+	for (const shared of [true, false]) {
+		const clock = { now: 1_000_000 }
+		const valkey = fakeValkey(clock)
+		const limiter = createRateLimiter({ redis: () => (shared ? valkey : null), now: () => clock.now })
+		const windows = [{ limit: 50, seconds: 60 }]
+		assert.equal((await limiter.take("mcp-write-items", "member", windows, 30)).allowed, true)
+		const over = await limiter.take("mcp-write-items", "member", windows, 21)
+		assert.equal(over.allowed, false)
+		assert.equal(over.allowed === false && over.retryAfterSeconds > 0, true)
+		assert.equal((await limiter.take("mcp-write-items", "member", windows, 20)).allowed, true)
+		assert.equal((await limiter.take("mcp-write-items", "member", windows)).allowed, false)
+		// A cost above the limit is never allowed, even on an empty window.
+		assert.equal((await limiter.take("mcp-write-items", "fresh", windows, 51)).allowed, false)
+		clock.now += 61_000
+		assert.equal((await limiter.take("mcp-write-items", "member", windows, 50)).allowed, true)
+	}
 })

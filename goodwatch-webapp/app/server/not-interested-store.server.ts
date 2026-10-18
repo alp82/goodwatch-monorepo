@@ -34,6 +34,30 @@ export async function clearNotInterested(userId: string, tmdbId: number, mediaTy
 	}
 }
 
+/** `clearNotInterested` for many titles: one statement per media type. Best effort, like the single one. */
+export async function clearNotInterestedMany(
+	userId: string,
+	titles: readonly { tmdb_id: number; media_type: MediaType }[],
+) {
+	for (const media_type of ["movie", "show"] as const) {
+		const ids = [
+			...new Set(
+				titles.filter((t) => t.media_type === media_type).map((t) => canonicalTitleId(media_type, t.tmdb_id)),
+			),
+		]
+		if (!ids.length) continue
+		try {
+			const result = await execute(
+				`DELETE FROM user_not_interested WHERE user_id = ? AND media_type = ? AND tmdb_id IN (${ids.map(() => "?").join(", ")})`,
+				[userId, media_type, ...ids],
+			)
+			if (result.rowcount) markPersonalOrderChanged(userId)
+		} catch (error) {
+			if (!isMissingNotInterestedTable(error)) console.error("Clearing Not interested failed:", error)
+		}
+	}
+}
+
 export async function refreshNotInterested() {
 	try {
 		await execute("REFRESH TABLE user_not_interested")

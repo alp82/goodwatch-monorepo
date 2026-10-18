@@ -55,6 +55,24 @@ export async function readAction(
 	return row ? replay(row, hash) : null
 }
 
+/**
+ * The stored result of one of this member's own actions, by its action ID alone; null when the member has none.
+ * A claimed action without a result yet reads as indeterminate. Batch undo reads its batch this way.
+ */
+export async function readActionResult(
+	userId: string,
+	actionId: string,
+): Promise<Data | null> {
+	const row = await receipt(userId, actionId)
+	if (!row) return null
+	if (!row.result) return pending()
+	try {
+		return JSON.parse(row.result)
+	} catch {
+		return null
+	}
+}
+
 /** A unique primary-key claim plus owner readback handles an ambiguous Crate insert response safely. */
 export async function runAction(
 	userId: string,

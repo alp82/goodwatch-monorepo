@@ -1,3 +1,4 @@
+import { AsyncLocalStorage } from "node:async_hooks"
 import {
 	type GroupRow,
 	type TitleState,
@@ -173,8 +174,35 @@ async function _getUserData({
 	return result
 }
 
+/** The members whose reset waits for the end of a `withDeferredUserDataReset` call, per async call chain. */
+const deferredResets = new AsyncLocalStorage<Set<string>>()
+
+/**
+ * Runs `work` with every `resetUserDataCache` inside it held back, then resets each member it named once.
+ *
+ * For a path that writes many titles in a row (a batch of MCP writes): each native writer ends with a reset, and a
+ * reset refreshes every member table, so fifty writes would refresh them fifty times. The writers of one title read
+ * that title's rows by key or refresh what they read themselves, so they don't need the reset of an earlier title.
+ * The cache keeps the data from before `work` until it ends, also when `work` throws.
+ */
+export async function withDeferredUserDataReset<T>(
+	work: () => Promise<T>,
+): Promise<T> {
+	const pending = new Set<string>()
+	try {
+		return await deferredResets.run(pending, work)
+	} finally {
+		for (const userId of pending) await resetUserDataCache({ user_id: userId })
+	}
+}
+
 export const resetUserDataCache = async (params: GetUserDataParams) => {
 	if (!params.user_id) {
+		return 0
+	}
+	const deferred = deferredResets.getStore()
+	if (deferred) {
+		deferred.add(params.user_id)
 		return 0
 	}
 
