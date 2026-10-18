@@ -1,4 +1,5 @@
 """Bounded first-page search, with post AND author opt-out checks before storage."""
+from f.social import images
 from f.social.common import http_get, now, post, stamp
 
 BASE = 'https://api.bsky.app/xrpc/'
@@ -41,6 +42,7 @@ def collect(settings, start, end, *, get=http_get, pages=1, queries=QUERIES):
                 posts[uri] = post('bluesky', uri, 'https://bsky.app/profile/' + author['did'] + '/post/' + uri.rsplit('/', 1)[1],
                                   author['did'], author['handle'], record['createdAt'], record.get('text', ''),
                                   external.get('title', '') + ' ' + external.get('description', ''), 'search:' + query)
+                posts[uri]['image_url'] = images.bluesky_image(item)
         except Exception as exc:
             errors.append({'query': query, 'error': type(exc).__name__})
     # Profile failure fails closed: unverified posts are never persisted.

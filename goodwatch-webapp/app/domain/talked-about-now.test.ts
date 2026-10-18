@@ -170,6 +170,7 @@ const row = (
 	hoursAgo: number,
 	extra: Partial<SocialRow> = {},
 ): SocialRow => ({
+	image: null,
 	media_type: "movie",
 	media_tmdb_id: 1,
 	post_id: id,
@@ -394,4 +395,14 @@ test("the row's words", () => {
 		"The Hollywood Reporter",
 	)
 	assert.equal(publisherOf("https://example.org/a"), "example.org")
+})
+
+test("items expose the stored first-party preview supplied by the read", () => {
+	const base: SocialRow = {
+		media_type: "movie", media_tmdb_id: 1, post_id: "a".repeat(64), source: "rss",
+		source_id: null, url: "https://example.com/article", author: "Writer",
+		published_at: "2026-10-18T00:00:00Z", text: "An article", image: "/api/social/image/" + "a".repeat(64),
+	}
+	assert.equal(itemOf(base)?.image, base.image)
+	assert.equal(itemOf({ ...base, image: null })?.image, null)
 })

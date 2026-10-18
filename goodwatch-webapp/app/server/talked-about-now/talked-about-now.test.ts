@@ -238,9 +238,10 @@ test("missing tables read as nothing; other failures are thrown", async () => {
 })
 
 test("rows become facade items: news for RSS, purged posts left out, long text cut", () => {
-	const base = { post_id: hex(1), source_id: null, author: null, published_at: "2026-10-13T00:00:00.000Z", lane: "x", score: 0.5 }
+	const base = { image: null, post_id: hex(1), source_id: null, author: null, published_at: "2026-10-13T00:00:00.000Z", lane: "x", score: 0.5 }
 	assert.deepEqual(toItem({ ...base, source: "rss", url: "https://www.variety.com/a", text: "Headline" }), {
 		id: hex(1),
+		image: null,
 		source: "news",
 		url: "https://www.variety.com/a",
 		sourceId: null,

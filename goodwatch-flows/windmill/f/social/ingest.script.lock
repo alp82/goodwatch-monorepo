@@ -25,3 +25,4 @@ tqdm==4.70.1
 typing-extensions==4.16.0
 urllib3==2.8.0
 wmill==1.817.0
+pillow==11.3.0

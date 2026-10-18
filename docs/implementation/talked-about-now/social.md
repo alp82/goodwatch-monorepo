@@ -169,9 +169,73 @@ Suggested GET response shape for the title-page server loader:
 }
 ```
 
-Convert Crate epoch milliseconds to ISO UTC at the response boundary. Do not
-serve source images before an embed is loaded. The API may omit matcher fields
-from the member-facing response; they are diagnostics, not a quality claim.
+Convert Crate epoch milliseconds to ISO UTC at the response boundary. The API may
+omit matcher fields from the member-facing response; they are diagnostics, not a
+quality claim.
+
+### First-party preview images (owner decision, 2026-10-18)
+
+Post cards may show previews before an embed loads. Visitors load stored copies
+from GoodWatch, never preview URLs on publisher or CDN hosts. `TalkedItem.image`
+and title social items expose `/api/social/image/:postId`, or null without an
+`ok` image. Both social reads LEFT JOIN `doc.social_image`; no UI embed consent
+is required for these first-party previews.
+
+Discovery uses feed media/enclosures/HTML images, YouTube max-resolution thumbnails
+(with hqdefault on 404), Bluesky view embeds (including recordWithMedia), and
+Mastodon cards or image attachments. Only RSS entries without a supplied image
+need an article fetch for og:image/twitter:image. Downloads validate public IPs
+and pin connections to them (also across redirects), use the configured discovery
+UA, a roughly ten-second HTTP budget, a 5 MiB image cap and 1 MiB HTML/JSON cap.
+Pillow converts to JPEG at quality 78, at most 640 px in either dimension and
+60 KiB, discarding source metadata. Image failures never fail discovery.
+
+The regular Crate table (no BLOB cluster configuration) is:
+
+```sql
+CREATE TABLE IF NOT EXISTS doc.social_image (
+  post_id TEXT PRIMARY KEY,
+  source_url TEXT,
+  content_type TEXT,
+  width INTEGER,
+  height INTEGER,
+  bytes INTEGER,
+  data TEXT INDEX OFF STORAGE WITH (columnstore = false),
+  fetched_at TIMESTAMP WITH TIME ZONE,
+  status TEXT CHECK (status IN ('ok','none','failed')),
+  attempts INTEGER
+) CLUSTERED INTO 1 SHARDS WITH (number_of_replicas='0-1');
+```
+
+`data` is base64 JPEG; rows also record missing/failed attempts. Successful rows
+are reused; missing/failed rows retry only after a day and stop at three total
+attempts. `Store.save_posts` runs this after saving posts, skipping tombstones.
+`Store.remove` deletes copies on deletion/opt-out; `Store.retain` deletes expired,
+deleted and orphaned image rows before posts, in the same thirty-day pass.
+The route performs one SQL query constrained by post primary key, joined to the
+post to reject deleted, purged or expired posts. It serves JPEG or uncached 404,
+with `public, max-age=86400, stale-while-revalidate=3600` for successful responses.
+Existing browser/cache copies can therefore outlive deletion by that cache window.
+
+`wmill sync push` deploys scripts, not tables. `Store.initialize()` runs at the
+start of ingest and maintenance (and image backfill), creating this table. The
+central Crate schema imports the same `SOCIAL_SCHEMAS` definition. Deploy flows
+and run initialization before deploying the webapp reads.
+
+Backfill from the repository root (not run automatically or against production
+by this implementation):
+
+```sh
+python -m pip install -r goodwatch-flows/tests/requirements-social.txt
+python goodwatch-flows/scripts/social.py images-backfill --env-file /path/to/flows.env --max-posts 100
+```
+
+Repeat the backfill command until `processed` is zero. Each batch selects at most
+500 unexpired, undeleted posts without an image row, newest first, and uses the
+same fetch/store path. RSS uses article metadata, YouTube its ID, Bluesky the
+public post view, and Mastodon the status API. Posts without available previews
+remain null; backfill does not invent placeholder images or bypass opt-outs.
+
 
 ## Wrong-title write contract (title-page ticket)
 

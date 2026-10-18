@@ -9,6 +9,7 @@ export type SocialSource = "youtube" | "rss" | "bluesky" | "mastodon"
 /** One thing said about a title, as stored by social discovery: ids, a link and a short text, nothing else. */
 export type TalkedItem = {
 	id: string
+	image: string | null
 	source: SocialSource
 	/** The post, the video's page or the article. */
 	url: string
@@ -220,6 +221,7 @@ export type SocialRow = {
 	media_type: string
 	media_tmdb_id: number
 	post_id: string
+	image: string | null
 	source: string
 	source_id: string | null
 	url: string | null
@@ -288,6 +290,7 @@ export function itemOf(row: SocialRow): TalkedItem | null {
 	if (source === "youtube" && !video) return null
 	return {
 		id: row.post_id,
+		image: row.image ?? null,
 		source,
 		url: row.url,
 		author,

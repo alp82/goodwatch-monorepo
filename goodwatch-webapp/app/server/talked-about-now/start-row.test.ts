@@ -44,6 +44,7 @@ const post = (
 	source = "rss",
 	score = 0.5,
 ): SocialRow => ({
+	image: null,
 	media_type: kind,
 	media_tmdb_id: tmdbId,
 	post_id: id,
@@ -394,4 +395,11 @@ test("a wrong-title report drops the row's shared answer, so the next request re
 	}
 	await getTalkedAboutNow(start + 2000, fake)
 	assert.equal(readings, 2)
+})
+
+
+test("the start read includes successful stored previews without requiring one", () => {
+	const { sql } = socialQuery([{ mediaType: "movie", tmdbId: 1 }])
+	assert.match(sql, /LEFT JOIN doc.social_image i ON i.post_id = p.post_id AND i.status = 'ok'/)
+	assert.match(sql, /ELSE NULL END AS image/)
 })

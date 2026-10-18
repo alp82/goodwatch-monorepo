@@ -24,6 +24,7 @@ export interface SocialTitle {
 /** One visible post of a title, best-ranked first. Times are ISO strings in UTC. */
 export interface SocialPostRow {
 	post_id: string
+	image: string | null
 	source: SocialPostSource
 	source_id: string | null
 	url: string
@@ -104,11 +105,12 @@ const iso = (value: unknown): string => new Date(value instanceof Date ? value.g
 /** The read: relevant visible links of one title, one per duplicate group (the best-ranked), best-ranked first. */
 export function readTitleSql(schema: string, disabledLanes: readonly string[]): string {
 	const lanes = disabledLanes.length ? ` AND l.lane NOT IN (${disabledLanes.map(() => "?").join(", ")})` : ""
-	return `SELECT post_id, source, source_id, url, author, published_at, text, lane, score FROM (
-  SELECT p.post_id, p.source, p.source_id, p.url, p.author, p.published_at, p.text, l.lane, rel.score,
+	return `SELECT post_id, source, source_id, url, author, published_at, text, image, lane, score FROM (
+  SELECT p.post_id, p.source, p.source_id, p.url, p.author, p.published_at, p.text, CASE WHEN i.post_id IS NOT NULL THEN '/api/social/image/' || p.post_id ELSE NULL END AS image, l.lane, rel.score,
     ROW_NUMBER() OVER (PARTITION BY COALESCE(rel.dup_group, l.duplicate_group, l.post_id)
       ORDER BY rel.score DESC NULLS LAST, p.published_at DESC, p.post_id DESC) AS duplicate_rank
   FROM ${schema}.social_title_link l JOIN ${schema}.social_post p ON p.post_id = l.post_id
+  LEFT JOIN ${schema}.social_image i ON i.post_id = p.post_id AND i.status = 'ok'
   ${contentQualityJoin(schema)}
   ${relevanceJoin(schema)}
   LEFT JOIN ${schema}.social_link_report r ON r.media_type = l.media_type AND r.media_tmdb_id = l.media_tmdb_id
@@ -144,6 +146,7 @@ export function crateSocialStore({
 				])
 				return rows.map((row) => ({
 					post_id: String(row.post_id),
+					image: (row.image as string | null) ?? null,
 					source: row.source as SocialPostSource,
 					source_id: (row.source_id as string | null) ?? null,
 					url: String(row.url ?? ""),
@@ -325,6 +328,7 @@ export function fixtureSocialStore(fixture: SocialFixture, now: () => Date = () 
 				groups.add(group)
 				rows.push({
 					post_id: post.post_id,
+					image: null,
 					source: post.source,
 					source_id: post.source_id ?? null,
 					url: post.url,

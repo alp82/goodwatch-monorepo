@@ -41,6 +41,7 @@ def collect(settings, start, end, *, get=http_get, pages=1, channels=CHANNELS):
                     continue
                 posts[video] = post('youtube', video, 'https://www.youtube.com/watch?v=' + video,
                                     channel, name, date, text, context, 'channel:' + channel)
+                posts[video]['image_url'] = 'https://i.ytimg.com/vi/' + video + '/maxresdefault.jpg'
             audit.append({'channel': channel, 'route': route, 'returned': len(rows),
                           'missing_api_key': not bool(key), 'bounded_pages': pages if key else 1})
         except Exception as exc:

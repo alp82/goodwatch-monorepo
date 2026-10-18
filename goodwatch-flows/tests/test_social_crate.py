@@ -44,6 +44,7 @@ class CrateLifecycleTests(unittest.TestCase):
             self.db.execute('DELETE FROM doc.social_title_link WHERE post_id=?', [p['post_id']])
             self.db.execute('DELETE FROM doc.social_link_report WHERE post_id=?', [p['post_id']])
             self.db.execute('DELETE FROM doc.social_content_quality WHERE post_id=?', [p['post_id']])
+            self.db.execute('DELETE FROM doc.social_image WHERE post_id=?', [p['post_id']])
             self.db.execute('DELETE FROM doc.social_post WHERE post_id=?', [p['post_id']])
         self.store.refresh()
 

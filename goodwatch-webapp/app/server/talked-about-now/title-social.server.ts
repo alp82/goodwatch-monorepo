@@ -62,6 +62,7 @@ export function toItem(row: SocialPostRow): SocialEmbedItem | null {
 	if (!source || !text || !row.url) return null
 	return {
 		id: row.post_id,
+		image: row.image ?? null,
 		source,
 		url: row.url,
 		sourceId: row.source_id,

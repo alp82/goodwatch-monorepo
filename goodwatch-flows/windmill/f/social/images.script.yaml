@@ -1,0 +1,12 @@
+{
+  "summary": "Social images",
+  "description": "Bounded first-party social previews.",
+  "lock": "!inline f/social/images.script.lock",
+  "kind": "script",
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {},
+    "required": []
+  }
+}

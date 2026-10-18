@@ -15,7 +15,7 @@ from f.social.store import Crate, Store
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('command', choices=['ingest', 'maintenance', 'counts', 'read'])
+    parser.add_argument('command', choices=['ingest', 'maintenance', 'counts', 'read', 'images-backfill'])
     parser.add_argument('--env-file', required=True)
     parser.add_argument('--source', default='all')
     parser.add_argument('--days', type=int, default=3)
@@ -29,6 +29,9 @@ def main():
     if args.command == 'ingest':
         result = run(settings, source=args.source, days=args.days, pages=args.pages,
                      max_posts=args.max_posts, vector_enabled=not args.no_vector)
+    elif args.command == 'images-backfill':
+        from f.social.images import backfill
+        result = backfill(Store(Crate(settings)), args.max_posts)
     elif args.command == 'maintenance':
         result = maintain(settings, limit=args.max_posts, source=args.source)
     else:

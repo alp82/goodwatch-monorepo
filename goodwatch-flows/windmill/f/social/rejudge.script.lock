@@ -11,3 +11,4 @@ requests==2.34.2
 typing-extensions==4.16.0
 urllib3==2.8.0
 wmill==1.817.0
+pillow==11.3.0

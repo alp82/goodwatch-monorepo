@@ -97,6 +97,8 @@ class Store:
             self.db.execute(f"INSERT INTO doc.social_post ({','.join(cols)},discovered_at,last_seen_at,checked_at) VALUES ({','.join('?' for _ in cols)},?,?,?) ON CONFLICT (post_id) DO UPDATE SET {updates},last_seen_at=excluded.last_seen_at",
                             [p[c] for c in cols] + [at, at, at])
         self.refresh('social_post')
+        from f.social import images
+        images.save(self.db, posts)
         return self.screen(posts, previous=prior)
 
     def screen(self, posts, *, previous=None):
@@ -220,9 +222,10 @@ class Store:
     def remove(self, post_id, reason):
         self.db.execute('UPDATE doc.social_post SET deleted_at=?,deletion_reason=?,text=NULL,context=NULL,author=NULL,author_id=NULL,source_id=NULL,url=NULL,provenance=NULL,checked_at=? WHERE post_id=?',
                         [now().isoformat(), reason, now().isoformat(), post_id])
+        self.db.execute('DELETE FROM doc.social_image WHERE post_id=?', [post_id])
         self.db.execute('DELETE FROM doc.social_title_link WHERE post_id=?', [post_id])
         self.db.execute('DELETE FROM doc.social_content_quality WHERE post_id=?', [post_id])
-        self.refresh('social_post', 'social_title_link', 'social_content_quality')
+        self.refresh('social_post', 'social_title_link', 'social_content_quality', 'social_image')
 
     def remove_author(self, source, author_id):
         if source != 'bluesky' or not author_id:
@@ -238,6 +241,7 @@ class Store:
         self.db.execute(f"INSERT INTO doc.social_ingest_run ({','.join(cols)}) VALUES ({','.join('?' for _ in cols)}) ON CONFLICT (run_id) DO UPDATE SET " + ','.join(f'{c}=excluded.{c}' for c in cols if c != 'run_id'), list(row.values()))
 
     def retain(self):
+        self.db.execute("DELETE FROM doc.social_image WHERE post_id NOT IN (SELECT post_id FROM doc.social_post WHERE deleted_at IS NULL AND published_at >= CURRENT_TIMESTAMP - INTERVAL '30 days')")
         # Remove dependent rows first. Tombstones live thirty days from their deletion.
         self.db.execute("DELETE FROM doc.social_title_link WHERE post_id IN (SELECT post_id FROM doc.social_post WHERE published_at < CURRENT_TIMESTAMP - INTERVAL '30 days')")
         self.db.execute("DELETE FROM doc.social_content_quality WHERE post_id IN (SELECT post_id FROM doc.social_post WHERE deleted_at IS NOT NULL OR published_at < CURRENT_TIMESTAMP - INTERVAL '30 days')")

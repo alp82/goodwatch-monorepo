@@ -1222,4 +1222,5 @@ def main():
 
 # Social discovery owns these tables; its local initializer touches only these four.
 from f.social.schema import SOCIAL_SCHEMAS
+# Includes social_image: regular-table JPEG copies, owned and retained by social discovery.
 SCHEMAS.update(SOCIAL_SCHEMAS)

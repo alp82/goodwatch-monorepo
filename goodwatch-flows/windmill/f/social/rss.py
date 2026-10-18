@@ -1,4 +1,5 @@
 """The nineteen verified publisher feeds; bounded WordPress backfill pages."""
+from f.social import images
 from urllib.parse import urlsplit
 import xml.etree.ElementTree as ET
 from f.social.common import http_get, canonical, post, stamp
@@ -26,6 +27,7 @@ def collect(settings, start, end, *, get=http_get, pages=1, feeds=FEEDS):
                         author = entry.findtext('{http://purl.org/dc/elements/1.1/}creator') or urlsplit(feed).hostname
                         posts[link] = post('rss', link, link, urlsplit(feed).hostname, author, date,
                                            entry.findtext('title'), entry.findtext('description'), 'feed:' + feed)
+                        posts[link]['image_url'] = images.rss_image(entry, link)
                         posts[link]['quality_evidence'] = {'urls': html_urls(entry.findtext('description')), 'links_complete': True}
                     except (ValueError, TypeError):
                         errors.append({'feed': feed, 'error': 'invalid_entry'})

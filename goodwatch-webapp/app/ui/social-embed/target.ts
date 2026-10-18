@@ -10,6 +10,8 @@ export type SocialSource = "youtube" | "bluesky" | "mastodon" | "news"
 export interface SocialEmbedItem {
 	/** Stable id, the post_id of doc.social_post. */
 	id: string
+	/** First-party stored preview, when available. */
+	image?: string | null
 	source: SocialSource
 	/** The post's own address on its source. */
 	url: string
