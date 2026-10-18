@@ -169,7 +169,7 @@ def justwatch_chart(payload):
             tmdb = int(tmdb)
         if not kind or not isinstance(tmdb, int) or isinstance(tmdb, bool) or tmdb <= 0:
             continue
-        charts = (node.get('streamingCharts') or {}).get('edges', [])
+        charts = (node.get('streamingCharts') or {}).get('edges') or []
         # Do not guess which chart is daily when the server returns several.
         if len(charts) != 1:
             continue

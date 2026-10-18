@@ -107,6 +107,10 @@ class BackupTests(unittest.TestCase):
         # The live API sends ids as text.
         live = json.loads(json.dumps(payload).replace('"tmdbId": 603', '"tmdbId": "603"'))
         self.assertEqual(justwatch_chart(live)[0]['title_key'], 'movie:603')
+        # A title off the chart answers `streamingCharts: {edges: null}`.
+        off = {'data': {'popularTitles': {'edges': [{'node': {'id': 'tm1', 'objectType': 'MOVIE',
+            'content': {'title': 'Off', 'externalIds': {'tmdbId': '7'}}, 'streamingCharts': {'edges': None}}}]}}}
+        self.assertEqual(justwatch_chart(off), [])
         http = Mock()
         http.post.return_value.__enter__ = Mock(return_value=Mock(json=lambda: {'errors': [{'message': 'schema changed'}]}))
         http.post.return_value.__exit__ = Mock(return_value=False)
