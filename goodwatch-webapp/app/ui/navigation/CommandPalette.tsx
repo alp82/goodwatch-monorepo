@@ -58,6 +58,7 @@ const PALETTE_DESTINATIONS: DestinationKey[] = [
 	"explorer",
 	"movies",
 	"shows",
+	"hot",
 ]
 
 interface Row {

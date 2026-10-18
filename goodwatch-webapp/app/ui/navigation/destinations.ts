@@ -1,8 +1,9 @@
 // Where the site navigation goes, and which destination the current page belongs to. The hub sheet, the desktop
-// Browse panel, the dock's hub key, and the Browse button all read from here.
+// Browse panel, the dock's hub key, the Browse button, and the search palette all read from here.
 import {
 	BookmarkIcon,
 	FilmIcon,
+	FireIcon,
 	FingerPrintIcon,
 	HomeIcon,
 	MagnifyingGlassIcon,
@@ -20,6 +21,8 @@ export type DestinationKey =
 	| "explorer"
 	| "movies"
 	| "shows"
+	// The buzz ranking and what is said about it (routes/hot-on-socials.tsx).
+	| "hot"
 	// A member's pages (#385). They take Watch next's tile in the hub.
 	| "myShows"
 	| "myMovies"
@@ -99,6 +102,13 @@ export function getDestinations(): Record<DestinationKey, Destination> {
 			href: "/shows",
 			icon: TvIcon,
 		},
+		hot: {
+			key: "hot",
+			label: "Hot on socials",
+			short: "Hot",
+			href: "/hot-on-socials",
+			icon: FireIcon,
+		},
 		myShows: {
 			key: "myShows",
 			label: "My shows",
@@ -134,6 +144,7 @@ const PREFIXES: [string, DestinationKey][] = [
 	["/explorer", "explorer"],
 	["/movies", "movies"],
 	["/shows", "shows"],
+	["/hot-on-socials", "hot"],
 ]
 
 /** The destination the page at `pathname` belongs to; null for pages outside them (title pages, settings, …). */

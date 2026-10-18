@@ -4,6 +4,7 @@ import {
 	CpuChipIcon,
 	FilmIcon,
 	FingerPrintIcon,
+	FireIcon,
 	InformationCircleIcon,
 	LifebuoyIcon,
 	LightBulbIcon,
@@ -108,6 +109,12 @@ export const FOOTER_COLUMNS: FooterColumn[] = [
 				href: "/discover",
 				blurb: "Filter by score, service, mood",
 				icon: MagnifyingGlassIcon,
+			},
+			{
+				name: "Hot on socials",
+				href: "/hot-on-socials",
+				blurb: "What people talk about now",
+				icon: FireIcon,
 			},
 			{
 				name: "Watch next",

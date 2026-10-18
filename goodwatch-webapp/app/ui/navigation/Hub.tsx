@@ -308,6 +308,9 @@ function HubContent() {
 			<div className="grid grid-cols-2 gap-2.5">
 				<SecondaryKey destination={d.movies} here={here === "movies"} />
 				<SecondaryKey destination={d.shows} here={here === "shows"} />
+				<div className="col-span-2">
+					<SecondaryKey destination={d.hot} here={here === "hot"} />
+				</div>
 			</div>
 			<Link
 				to="/"
