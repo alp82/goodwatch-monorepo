@@ -11,14 +11,12 @@
 import type { LinksFunction, MetaFunction } from "@remix-run/node"
 import { type ShouldRevalidateFunction, useLoaderData } from "@remix-run/react"
 import type { tvHomeLoader } from "~/server/living-room/tv-loader.server"
-import howGoodWatchWorksCss from "~/ui/living-room/how-goodwatch-works.css?url"
+import { HOME_SHEETS } from "~/ui/living-room/home-sheets"
 import { QUIZ_SCENE, useHomeIntro } from "~/ui/living-room/intro/HomeIntro"
-import bootCss from "~/ui/living-room/intro/boot.css?url"
 import { introStartScript } from "~/ui/living-room/intro/progress"
-import livingRoomCss from "~/ui/living-room/living-room.css?url"
 import { TvLivingRoom } from "~/ui/living-room/tv/TvLivingRoom"
 import { isTvOnlyChange } from "~/ui/living-room/tv/tv-machine"
-import { assetUrl } from "~/utils/asset-url"
+import { assetBase, assetUrl } from "~/utils/asset-url"
 import useLocale from "~/utils/locale"
 import { START_AFTER_PAINT } from "~/utils/start-after-paint"
 
@@ -41,9 +39,13 @@ export const shouldRevalidate: ShouldRevalidateFunction = ({
 		: defaultShouldRevalidate
 
 export const links: LinksFunction = () => [
-	{ rel: "stylesheet", href: assetUrl(livingRoomCss) },
-	{ rel: "stylesheet", href: assetUrl(bootCss) },
-	{ rel: "stylesheet", href: assetUrl(howGoodWatchWorksCss) },
+	// Without credentials on the static hostname, like the site's style sheet in root.tsx: the 103 Early Hints response
+	// preloads them in that mode (server/early-hints.ts), and Chrome preloads a file of another host in no other.
+	...HOME_SHEETS.map((sheet) => ({
+		rel: "stylesheet",
+		href: assetUrl(sheet),
+		...(assetBase() ? { crossOrigin: "anonymous" as const } : {}),
+	})),
 	{ rel: "preconnect", href: "https://image.tmdb.org" },
 ]
 

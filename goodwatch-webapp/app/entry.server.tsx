@@ -21,6 +21,7 @@ import {
 	renderWithAssetBase,
 } from "~/server/asset-address.server"
 import { applyCachePolicy } from "~/server/cache-identity.server"
+import { startEarlyHints } from "~/server/early-hints.server"
 import { HtmlStream } from "~/server/html-stream.server"
 import { startPlexConnectionCleanup } from "~/server/imports/plex-connect-runtime.server"
 import { startTmdbConnectionCleanup } from "~/server/imports/tmdb-connect-runtime.server"
@@ -68,6 +69,9 @@ startTitleSnapshot()
 configurePageCache({ routeLabel: routeLabelFor })
 routeLabelFor("/", 200)
 startPageCache()
+// A page's 103 Early Hints response, before the render (see early-hints.server.ts). After the page cache, so that a
+// cached page gets its hints too, and before the static files, which answer files without them.
+startEarlyHints()
 // Also before the first request: the files of the client build are answered before Express (see
 // static-files.server.ts). The root loader starts the gate, but a static request never reaches it.
 startStaticFiles()

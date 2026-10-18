@@ -41,6 +41,9 @@ script, and hydration moves nothing. So the page's scripts start after it has pa
 - The film's wait counts from the first paint (`sinceFirstPaint` in `HomeIntro.tsx`), as the boot screen does, so
   the film still deals in as the boot screen fades when hydration comes later.
 - The room's pictures load first: `fetchpriority="high"` on the photos and the hand (the LCP on phones).
+- Its render-blocking style sheets load while the server renders: the 103 Early Hints response preloads
+  `tailwind.css` and the three sheets of `app/ui/living-room/home-sheets.ts`, which the page links with `crossorigin`
+  ([static-assets.md](../static-assets.md#early-hints)).
 - "How GoodWatch works" items have `content-visibility: auto`: an item below the first screen is laid out, and its
   lazy pictures load, when it comes near the window. Its logos and fingerprint are copies at three times their shown
   size (`-78`, `-156`).

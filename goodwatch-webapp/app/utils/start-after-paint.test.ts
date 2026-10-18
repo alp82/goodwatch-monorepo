@@ -153,6 +153,19 @@ describe("startAfterPaintScript", () => {
 		assert.equal(b.started(), true)
 	})
 
+	it("waits for a hero whose request hasn't started at the first contentful paint", () => {
+		const hand = img({ currentSrc: "" })
+		const b = browser({ heroes: [hand] })
+		b.run(startAfterPaintScript(CODE, PRELOADS))
+		b.paint("first-contentful-paint")
+		b.tick(0)
+		assert.equal(b.started(), false)
+		hand.currentSrc = "/assets/hand.avif"
+		b.painted(hand)
+		b.tick(0)
+		assert.equal(b.started(), true)
+	})
+
 	it("doesn't wait for a hero that this window hides, leaves empty, or that failed", () => {
 		const hidden = img({ shown: false })
 		const placeholder = img({ currentSrc: "data:image/gif;base64,R0lGOD" })
