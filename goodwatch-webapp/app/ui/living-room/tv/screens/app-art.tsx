@@ -81,6 +81,14 @@ export function artFiles(
 	return []
 }
 
+/** A TMDB poster file's own size, from its width in the address (`/t/p/w154/`): posters are 2 by 3. */
+function posterSize(
+	src: string,
+): { width: number; height: number } | undefined {
+	const width = Number(src.match(/\/t\/p\/w(\d+)\//)?.[1])
+	return width ? { width, height: Math.round(width * 1.5) } : undefined
+}
+
 /** An app's picture. Fills its box. */
 export function AppArt({
 	art,
@@ -93,7 +101,12 @@ export function AppArt({
 		return (
 			<span className={`flex bg-[#10131c] ${className}`}>
 				{files.map((src) => (
-					<Img key={src} src={src} className="h-full min-w-0 flex-1" />
+					<Img
+						key={src}
+						src={src}
+						{...posterSize(src)}
+						className="h-full min-w-0 flex-1"
+					/>
 				))}
 			</span>
 		)

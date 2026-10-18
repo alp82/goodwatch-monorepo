@@ -6,7 +6,7 @@
 // Without a layout (`L` null) the window is not measured yet: the parts are drawn for living-room.css to place
 // (`tvr-f-*`, the first paint), and the same nodes take their measured place afterwards.
 import type { CSSProperties } from "react"
-import { assetUrl } from "~/utils/asset-url"
+import { assetBase, assetUrl } from "~/utils/asset-url"
 import { HERO_TIMING } from "~/utils/start-after-paint"
 import { PHONE_ROOM } from "../room"
 import { NOT_UPRIGHT_PHONE, NO_PICTURE, PHONE_ROOM_ART } from "./room-art"
@@ -49,11 +49,13 @@ export function PhoneRoom({
 	) => (
 		<picture>
 			{/* Before the window is measured: nothing is asked for where the phone's room is not drawn. */}
+			{/* Without credentials on the static hostname, as the 103 Early Hints response preloads it (server/early-hints.ts). */}
 			{first && <source media={NOT_UPRIGHT_PHONE} srcSet={NO_PICTURE} />}
 			<source type="image/avif" srcSet={assetUrl(PHONE_ROOM_ART.avif)} />
 			<img
 				{...(lead && { fetchpriority: "high" })}
 				{...HERO_TIMING}
+				crossOrigin={assetBase() ? "anonymous" : undefined}
 				src={assetUrl(PHONE_ROOM_ART.webp)}
 				alt=""
 				aria-hidden

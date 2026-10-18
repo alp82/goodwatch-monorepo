@@ -122,15 +122,21 @@ is answered as before, so the origin stays a complete copy.
   and fonts use that connection. The stylesheet link carries `crossorigin` too while the page names the static
   hostname: a browser keeps requests with and without credentials on separate connections, and without the attribute
   the render-blocking stylesheet would wait for a second connection that no hint opened. The start page's own style
-  sheets carry it too. Images still use that second connection.
+  sheets and its room pictures carry it too. Other images still use that second connection.
 
 ### Early Hints
 
 A page answers `103 Early Hints` before it renders (`app/server/early-hints.server.ts`, what it says:
 `early-hints.ts`). While the loaders and the render run, the browser opens both connections to the static hostname
-(with and without credentials) and fetches the render-blocking style sheets: the site's on every page, the start
-page's own on `/`. The preloads name them with `crossorigin`, as the page's links do: Chrome preloads a file of
-another host from a 103 response in that mode only, and a preload in another mode than the link is fetched twice.
+(with and without credentials) and fetches what the first paint needs: the render-blocking style sheets (the site's
+on every page, the start page's own on `/`), the brand font's Latin file on every page, and the start page's room
+pictures. The preloads name them with `crossorigin`, as the page's elements do: Chrome preloads a file of another host
+from a 103 response in that mode only, and a preload in another mode than the element is fetched twice.
+
+- The room pictures depend on the window, which the server doesn't know. A Chromium browser says on every request
+  whether it is a phone (`Sec-CH-UA-Mobile`) and whether it takes AVIF (`Accept`): a phone gets the portrait room and
+  the hand, any other the room photo and the hand. A browser that doesn't send `Sec-CH-UA-Mobile` gets no picture
+  hints. A phone held sideways draws the room photo, so its hinted pictures go unused.
 
 - Only page navigations get it: `GET`, `Sec-Fetch-Dest: document` (or `Accept: text/html`), not files, `/api/`, data
   requests or the health checks. A page from the page cache gets it too.

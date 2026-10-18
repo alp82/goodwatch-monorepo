@@ -192,11 +192,21 @@ export function backdropSize(canvas: TvCanvas, width = canvas.w): string {
 export function Img({
 	src,
 	className = "",
-}: { src: string; className?: string }) {
+	width,
+	height,
+}: {
+	src: string
+	className?: string
+	/** The file's own size. The box comes from `className`; these only say the picture's shape. */
+	width?: number
+	height?: number
+}) {
 	const { canvas } = useTvView()
 	return (
 		<img
 			src={src}
+			width={width}
+			height={height}
 			alt=""
 			draggable={false}
 			decoding="async"

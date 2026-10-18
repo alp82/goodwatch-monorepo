@@ -1,10 +1,12 @@
 // What a page's 103 Early Hints response says (early-hints.server.ts sends it). While the server renders, the browser
-// already opens the connections to the static hostname and fetches the render-blocking style sheets.
+// already opens the connections to the static hostname and fetches what the first paint needs: the render-blocking
+// style sheets, the brand font, and on the start page the room's pictures.
 //
-// The hints follow the page's own links, so the browser can use what they fetch: while the style sheets come from the
-// static hostname, root.tsx and _index.tsx link them with `crossorigin`, and Chrome preloads a file of another host
-// from a 103 response in that mode only. The page's images go with credentials, and a browser keeps the two kinds on
-// separate connections, so there is a preconnect for each.
+// The hints follow the page's own elements, so the browser can use what they fetch: while the files come from the
+// static hostname, the style sheets (root.tsx, _index.tsx) and the room's pictures (TvRoom.tsx, PhoneRoom.tsx) ask with
+// `crossorigin`, and Chrome preloads a file of another host from a 103 response in that mode only. The page's other
+// images go with credentials, and a browser keeps the two kinds on separate connections, so there is a preconnect for
+// each.
 
 export type EarlyHintsRequest = {
 	method?: string
@@ -13,11 +15,22 @@ export type EarlyHintsRequest = {
 	headers: Record<string, string | string[] | undefined>
 }
 
-export type EarlyHintsSheets = {
-	/** The site's style sheet on every page, as a path from the root (`/assets/tailwind-AbCd1234.css`). */
+/** The files a hint can name, as paths from the root (`/assets/tailwind-AbCd1234.css`). */
+export type EarlyHintsFiles = {
+	/** The site's style sheet on every page. */
 	site: string
 	/** The start page's own style sheets, in the order the page links them. */
 	home: string[]
+	/**
+	 * The brand font's Latin file, which the root preloads: the site header's title on every page, and most of the
+	 * start page's first screen, are set in it.
+	 */
+	font: string
+	/**
+	 * The start page's room pictures in AVIF: the first screen's largest content (its LCP). A phone upright draws the
+	 * portrait room and the hand, a desktop the room photo and the hand.
+	 */
+	room: { phone: string[]; desktop: string[] }
 }
 
 const header = (value: string | string[] | undefined) =>
@@ -37,28 +50,47 @@ export function isPageNavigation(request: EarlyHintsRequest): boolean {
 }
 
 /**
+ * The room pictures to hint for this request, or none. The server doesn't know the window, so it reads what a Chromium
+ * browser says on every request: `Sec-CH-UA-Mobile` (`?1` on a phone) and whether `Accept` takes AVIF. Other browsers
+ * don't send the first, and get no picture hints. A phone held sideways draws the room photo, not the portrait room:
+ * its hinted pictures go unused, and the page fetches its own.
+ */
+function roomPictures(
+	request: EarlyHintsRequest,
+	room: EarlyHintsFiles["room"],
+): string[] {
+	const mobile = request.headers["sec-ch-ua-mobile"]
+	if (mobile === undefined) return []
+	if (!header(request.headers.accept).includes("image/avif")) return []
+	return header(mobile) === "?1" ? room.phone : room.desktop
+}
+
+/**
  * The `Link` values of the request's 103 response, or none. `base` is the static hostname's origin of this response,
  * or empty while the page names the site's own host.
  */
 export function earlyHintLinks(
 	request: EarlyHintsRequest,
 	base: string,
-	sheets: EarlyHintsSheets,
+	files: EarlyHintsFiles,
 ): string[] {
 	if (!isPageNavigation(request)) return []
 	const path = (request.url ?? "/").split("?", 1)[0]
+	const cors = base ? "; crossorigin" : ""
 	const links: string[] = []
 	if (base) {
 		links.push(`<${base}>; rel=preconnect; crossorigin`)
 		links.push(`<${base}>; rel=preconnect`)
 	}
+	links.push(`<${base}${files.site}>; rel=preload; as=style${cors}`)
+	// A font is always fetched without credentials, so its preload has `crossorigin` on any host, as the root's has.
 	links.push(
-		`<${base}${sheets.site}>; rel=preload; as=style${base ? "; crossorigin" : ""}`,
+		`<${base}${files.font}>; rel=preload; as=font; type="font/woff2"; crossorigin`,
 	)
-	if (path === "/")
-		for (const sheet of sheets.home)
-			links.push(
-				`<${base}${sheet}>; rel=preload; as=style${base ? "; crossorigin" : ""}`,
-			)
+	if (path !== "/") return links
+	for (const sheet of files.home)
+		links.push(`<${base}${sheet}>; rel=preload; as=style${cors}`)
+	for (const picture of roomPictures(request, files.room))
+		links.push(`<${base}${picture}>; rel=preload; as=image${cors}`)
 	return links
 }

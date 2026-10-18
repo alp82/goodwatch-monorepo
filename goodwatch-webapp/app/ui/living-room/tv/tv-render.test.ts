@@ -129,6 +129,11 @@ test("a guest's first picture is the first start title's backdrop: w1280 on the 
 	for (const html of Object.values(rendered.home.guest)) {
 		assert.equal(count(html, "https://image.tmdb.org/t/p/w154/poster"), 4)
 		assert.equal(count(html, "<img"), 6)
+		// Each says its file's size (2 by 3), so a report doesn't count it as an image without width and height.
+		assert.equal(
+			html.match(/w154\/poster[^"]*" width="154" height="231"/g)?.length,
+			4,
+		)
 	}
 })
 
