@@ -115,10 +115,7 @@ export const meta: MetaFunction = () => {
 		image: "https://goodwatch.app/og/lists/new.jpg",
 		alt: "Rank your top 5 movies or shows on GoodWatch and share them",
 	}
-	return [
-		...buildMeta({ pageMeta }).filter((tag) => !("name" in tag && tag.name === "robots")),
-		{ name: "robots", content: "noindex, nofollow" },
-	]
+	return buildMeta({ pageMeta, robots: "noindex, nofollow" })
 }
 
 export default function NewShareList() {

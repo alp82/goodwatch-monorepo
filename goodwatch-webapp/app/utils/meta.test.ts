@@ -164,3 +164,51 @@ test("the canonical address and og:url of a later page name that page", () => {
 		"https://goodwatch.app/og/movies/moods/scary.jpg?brand=D2",
 	)
 })
+
+test("a category page's title, description, and image description carry no emoji", async () => {
+	const { plainPageMeta, withoutEmoji } = await import("./meta.ts")
+	assert.equal(
+		withoutEmoji(
+			"Discover the best Mind-Bending 🌀 Movies to watch right now.",
+		),
+		"Discover the best Mind-Bending Movies to watch right now.",
+	)
+	assert.equal(withoutEmoji("Feel Good ❤️ Shows"), "Feel Good Shows")
+	assert.equal(withoutEmoji("Scary 👻: chills"), "Scary: chills")
+	assert.equal(withoutEmoji("Family 👨‍👩‍👧 and 👍🏽 fun"), "Family and fun")
+	assert.equal(withoutEmoji("Disney+ © 2026 ™"), "Disney+ © 2026 ™")
+	assert.equal(withoutEmoji("Rock’n’roll – loud"), "Rock’n’roll – loud")
+	const tags = buildMeta({
+		pageMeta: plainPageMeta({
+			title: "Scary 👻 Movies | GoodWatch",
+			description: "Discover the best Scary 👻 Movies to watch right now.",
+			url: "https://goodwatch.app/movies/moods/scary",
+			image: "",
+			alt: "Scary 👻 Movies on GoodWatch",
+		}),
+	})
+	const text = JSON.stringify(tags)
+	assert.doesNotMatch(text, /\p{Extended_Pictographic}/u)
+	assert.ok(tags.some((tag) => tag.title === "Scary Movies | GoodWatch"))
+	assert.ok(
+		tags.some(
+			(tag) =>
+				tag.property === "og:description" &&
+				tag.content === "Discover the best Scary Movies to watch right now.",
+		),
+	)
+})
+
+test("a page has one robots tag: index by default, or the directive it asks for", () => {
+	const robots = (tags: Record<string, unknown>[]) =>
+		tags.filter((tag) => tag.name === "robots").map((tag) => tag.content)
+	assert.deepEqual(robots(buildMeta({ pageMeta: page })), ["index, follow"])
+	assert.deepEqual(
+		robots(buildMeta({ pageMeta: page, robots: "noindex, follow" })),
+		["noindex, follow"],
+	)
+	assert.deepEqual(
+		robots(buildMeta({ pageMeta: page, robots: "noindex, nofollow" })),
+		["noindex, nofollow"],
+	)
+})

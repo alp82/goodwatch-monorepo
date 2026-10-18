@@ -10,7 +10,12 @@ import { exploreAddressExists, notFound } from "~/ui/explore/address"
 import { type NavType, navLabel } from "~/ui/explore/config"
 import { mainNavigation } from "~/ui/explore/main-nav"
 import { exploreHubCopy } from "~/ui/explore/page-copy"
-import { type PageItem, type PageMeta, buildMeta } from "~/utils/meta"
+import {
+	type PageItem,
+	type PageMeta,
+	buildMeta,
+	plainPageMeta,
+} from "~/utils/meta"
 
 export const meta: MetaFunction = ({ params }) => {
 	const type = params.type || ""
@@ -28,7 +33,7 @@ export const meta: MetaFunction = ({ params }) => {
 	// TODO
 	const items: PageItem[] = []
 
-	return buildMeta({ pageMeta, items })
+	return buildMeta({ pageMeta: plainPageMeta(pageMeta), items })
 }
 
 interface LoaderData {

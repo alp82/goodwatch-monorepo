@@ -36,12 +36,49 @@ export const pagedUrl = (url: string, search: string) => {
 	return page > 1 ? `${url}?page=${page}` : url
 }
 
+/**
+ * What a crawler may do with a page. A public page is indexed. A page that is personal, transactional, or empty
+ * without the visitor's own data is kept out of the index, and its links are still followed. The page stays
+ * crawlable (no robots.txt rule), or a crawler never reads this tag.
+ */
+export type RobotsDirective =
+	| "index, follow"
+	| "noindex, follow"
+	| "noindex, nofollow"
+
+// Emoji, with the joiners, variation selectors, skin tones, and keycap marks that build them. ©, ® and ™ are
+// pictographs in Unicode too, but they are text here.
+const EMOJI =
+	/(?![©®™])\p{Extended_Pictographic}|\u{FE0F}|\u{200D}|\u{20E3}|[\u{1F3FB}-\u{1F3FF}]|[\u{1F1E6}-\u{1F1FF}]/gu
+
+/** The text without its emoji, such as "Discover the best Mind-Bending Movies" for "… Mind-Bending 🌀 Movies". */
+export const withoutEmoji = (text: string) =>
+	text
+		.replace(EMOJI, "")
+		.replace(/[ \t]+/g, " ")
+		.replace(/ ([,.:;!?)])/g, "$1")
+		.trim()
+
+/**
+ * A page's meta without emoji: the category labels carry one ("Scary 👻"), and a search result or a link preview
+ * reads better without it. The title, the description, and the image's description go to the Open Graph and X tags
+ * too, so they are all plain.
+ */
+export const plainPageMeta = (pageMeta: PageMeta): PageMeta => ({
+	...pageMeta,
+	title: withoutEmoji(pageMeta.title),
+	description: withoutEmoji(pageMeta.description),
+	alt: withoutEmoji(pageMeta.alt),
+})
+
 export interface MetaOptions {
 	pageMeta: PageMeta
 	item?: MovieResult | ShowResult
 	items?: PageItem[]
 	/** The page's trail, the page itself last, for BreadcrumbList structured data. */
 	breadcrumbs?: readonly Crumb[]
+	/** One directive per page: a second robots tag only makes the page's intent unclear. */
+	robots?: RobotsDirective
 }
 
 export const buildMeta = (params: MetaOptions) => {
@@ -67,7 +104,7 @@ export const buildMeta = (params: MetaOptions) => {
 		},
 
 		// Additional SEO tags
-		{ name: "robots", content: "index, follow" },
+		{ name: "robots", content: params.robots ?? "index, follow" },
 		{ name: "google", content: "notranslate" },
 
 		// Open Graph

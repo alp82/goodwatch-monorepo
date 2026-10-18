@@ -39,7 +39,8 @@ export const meta: MetaFunction = () => {
 		alt: "Sign up for GoodWatch",
 	}
 
-	return buildMeta({ pageMeta, items: [] })
+	// A form, not a page to find in search results.
+	return buildMeta({ pageMeta, items: [], robots: "noindex, follow" })
 }
 
 export type LoaderData = {

@@ -49,10 +49,7 @@ export const meta: MetaFunction = () => {
 		alt: "GoodWatch Settings",
 	}
 
-	return [
-		...buildMeta({ pageMeta, items: [] }),
-		{ name: "robots", content: "noindex, nofollow" },
-	]
+	return buildMeta({ pageMeta, items: [], robots: "noindex, nofollow" })
 }
 
 export default function Settings() {

@@ -36,6 +36,7 @@ export const meta: MetaFunction = () => {
 			description:
 				"Change your GoodWatch password. All movie and tv show ratings and streaming providers on the same page",
 		},
+		{ name: "robots", content: "noindex, follow" },
 	];
 };
 

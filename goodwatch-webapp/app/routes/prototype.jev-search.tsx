@@ -9,6 +9,8 @@ import {
 } from "~/server/prototype-jev-search.server"
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
+	if (process.env.NODE_ENV === "production")
+		throw new Response("Not found", { status: 404 })
 	const params = new URL(request.url).searchParams
 	const q = params.get("q")?.trim() ?? ""
 	if (!q) return json({ search: null, error: null })

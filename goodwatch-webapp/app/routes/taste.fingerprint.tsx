@@ -21,7 +21,8 @@ export const meta: MetaFunction = () => {
 		image: "https://goodwatch.app/images/heroes/hero-movies.png",
 		alt: "Your fingerprint on GoodWatch",
 	}
-	return buildMeta({ pageMeta, items: [] })
+	// Personal: a guest's server HTML is an empty shell, the page fills from the browser.
+	return buildMeta({ pageMeta, items: [], robots: "noindex, follow" })
 }
 
 async function canonicalLoader({ request }: LoaderFunctionArgs) {

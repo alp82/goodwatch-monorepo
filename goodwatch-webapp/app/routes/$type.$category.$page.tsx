@@ -32,6 +32,7 @@ import {
 	type PageMeta,
 	buildMeta,
 	pagedUrl,
+	plainPageMeta,
 } from "~/utils/meta"
 import { useNav } from "~/utils/navigation"
 import { convertHyphensToWords } from "~/utils/string"
@@ -61,7 +62,7 @@ export const meta: MetaFunction = ({ params, location }) => {
 
 	// Movies › Moods › Mind-Bending: the hub, the list, and this page.
 	return buildMeta({
-		pageMeta,
+		pageMeta: plainPageMeta(pageMeta),
 		breadcrumbs: categoryCrumbs(`/${type}/${category}/${page}`, pageData.label),
 	})
 }

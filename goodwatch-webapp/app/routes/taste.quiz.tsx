@@ -35,7 +35,8 @@ export const meta: MetaFunction<typeof loader> = () => {
 		alt: "Build your taste profile on GoodWatch",
 	}
 
-	return buildMeta({ pageMeta, items: [] })
+	// Personal: a guest's server HTML is an empty shell, the page fills from the browser.
+	return buildMeta({ pageMeta, items: [], robots: "noindex, follow" })
 }
 
 type LoaderData = {

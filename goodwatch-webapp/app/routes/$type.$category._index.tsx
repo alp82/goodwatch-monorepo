@@ -25,7 +25,7 @@ import { exploreCategoryCopy } from "~/ui/explore/page-copy"
 import Breadcrumbs from "~/ui/nav/Breadcrumbs"
 import { categoryCrumbs } from "~/ui/nav/breadcrumb-trail"
 import { buildDiscoverParams } from "~/utils/discover"
-import { type PageMeta, buildMeta } from "~/utils/meta"
+import { type PageMeta, buildMeta, plainPageMeta } from "~/utils/meta"
 import { convertHyphensToWords } from "~/utils/string"
 
 export const meta: MetaFunction = ({ data, params }) => {
@@ -46,7 +46,7 @@ export const meta: MetaFunction = ({ data, params }) => {
 
 	// Movies › Moods: the hub and this list.
 	return buildMeta({
-		pageMeta,
+		pageMeta: plainPageMeta(pageMeta),
 		breadcrumbs: categoryCrumbs(`/${type}/${category}`),
 	})
 }

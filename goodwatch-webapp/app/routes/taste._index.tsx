@@ -45,7 +45,8 @@ export const meta: MetaFunction<typeof loader> = () => {
 		alt: "Your taste on GoodWatch",
 	}
 
-	return buildMeta({ pageMeta, items: [] })
+	// Personal: a guest's server HTML is an empty shell, the page fills from the browser.
+	return buildMeta({ pageMeta, items: [], robots: "noindex, follow" })
 }
 
 async function canonicalLoader({ request }: LoaderFunctionArgs) {

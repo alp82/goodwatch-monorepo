@@ -5,6 +5,8 @@ import { useState } from "react"
 import { type Result, type VectorComparison, runVectorComparison } from "~/server/prototype-jev-vector.server"
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
+	if (process.env.NODE_ENV === "production")
+		throw new Response("Not found", { status: 404 })
 	const params = new URL(request.url).searchParams
 	const q = params.get("q")?.trim() ?? ""
 	if (!q) return json({ comparison: null, error: null })

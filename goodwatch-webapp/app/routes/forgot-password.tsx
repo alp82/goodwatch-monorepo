@@ -23,7 +23,8 @@ export const meta: MetaFunction = () => {
 		alt: "Forgot Password - GoodWatch",
 	}
 
-	return buildMeta({ pageMeta, items: [] })
+	// A form, not a page to find in search results.
+	return buildMeta({ pageMeta, items: [], robots: "noindex, follow" })
 }
 
 // The Supabase path (BETTER_AUTH_ENABLED off) asks for the link here; Better Auth's is `/api/auth/request-password-reset`.

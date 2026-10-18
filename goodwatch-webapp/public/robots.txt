@@ -2,8 +2,6 @@ User-agent: *
 Disallow: /api/
 Disallow: /browser-check
 Disallow: /person/*?
-Disallow: /sign-in
-Disallow: /sign-up
 Disallow: /discover?
 Disallow: /discover/*?
 
