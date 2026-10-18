@@ -85,7 +85,7 @@ test("v3 authentication uses only the API key, retries 429 and deletes the sessi
 	})
 	assert.equal(await client.createRequest(), "request-secret")
 	assert.deepEqual(await client.exchange("request-secret"), {
-		accessToken: "member-secret",
+		sessionId: "member-secret",
 	})
 	assert.equal(await client.getAccountId("member-secret"), "123")
 	await client.revoke("member-secret")
@@ -210,12 +210,13 @@ test("v3 rating scores never acquire a date from release dates or unrelated meta
 	assert.match(parsed.warnings.join(" "), /no rating dates/)
 })
 
-test("revocation accepts confirmed invalid or missing tokens but never an application auth failure or generic 404", async () => {
-	for (const [status, code, accepted] of [
-		[401, 35, true],
-		[404, 37, true],
-		[401, 7, false],
-		[404, 34, false],
+test("revocation accepts a missing session only when the key works and account access rejects the session", async () => {
+	for (const [status, code, probeStatus, probeCode, accepted] of [
+		[404, 34, 401, 3, true],
+		[401, 7, 401, 3, false],
+		[404, 0, 401, 3, false],
+		[404, 34, 401, 7, false],
+		[404, 34, 404, 34, false],
 	] as const) {
 		let deletes = 0
 		const client = createTmdbClient({
@@ -226,8 +227,8 @@ test("revocation accepts confirmed invalid or missing tokens but never an applic
 					return Response.json({ success: true })
 				if (new URL(String(url)).pathname === "/3/account")
 					return Response.json(
-						{ status_code: 35, success: false },
-						{ status: 401 },
+						{ status_code: probeCode, success: false },
+						{ status: probeStatus },
 					)
 				assert.equal(init?.method, "DELETE")
 				deletes++
@@ -249,8 +250,10 @@ test("revocation accepts confirmed invalid or missing tokens but never an applic
 	const invalidApp = createTmdbClient({
 		apiKey: "bad-app",
 		sleep: async () => {},
-		fetch: async () =>
-			Response.json({ success: false, status_code: 35 }, { status: 401 }),
+		fetch: async (_url, init) =>
+			init?.method === "DELETE"
+				? Response.json({ success: false, status_code: 34 }, { status: 404 })
+				: Response.json({ success: false, status_code: 7 }, { status: 401 }),
 	})
 	await assert.rejects(
 		invalidApp.revoke("member"),
@@ -281,7 +284,7 @@ test("page counts are bounded in items, and changing counts warn while keeping t
 	assert.match(parsed.warnings.join(" "), /changed/)
 })
 
-test("an invalid-token logout response cannot discard a member token that still reads its account", async () => {
+test("a missing-session deletion response cannot discard a session that still reads its account", async () => {
 	const client = createTmdbClient({
 		apiKey: "app",
 		sleep: async () => {},
@@ -295,7 +298,7 @@ test("an invalid-token logout response cannot discard a member token that still 
 					total_results: 0,
 					results: [],
 				})
-			return Response.json({ status_code: 35, success: false }, { status: 401 })
+			return Response.json({ status_code: 34, success: false }, { status: 404 })
 		},
 	})
 	await assert.rejects(client.revoke("member"), /not confirmed disconnection/)

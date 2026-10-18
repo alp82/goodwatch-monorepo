@@ -24,10 +24,10 @@ export class TmdbError extends Error {
 		this.status = status
 	}
 }
-const isMissingToken = (error: unknown): error is TmdbError =>
-	error instanceof TmdbError &&
-	((error.status === 401 && error.code === 35) ||
-		(error.status === 404 && error.code === 37))
+const isMissingSession = (error: unknown): error is TmdbError =>
+	error instanceof TmdbError && error.status === 404 && error.code === 34
+const isRejectedSession = (error: unknown): error is TmdbError =>
+	error instanceof TmdbError && error.status === 401 && error.code === 3
 const pageSchema = z.object({
 	page: z.number().int().positive(),
 	total_pages: z.number().int().nonnegative(),
@@ -53,7 +53,7 @@ export function createTmdbClient(options: {
 	const sleep = options.sleep ?? delay
 	async function request(
 		path: string,
-		token = "",
+		sessionId = "",
 		method = "GET",
 		body?: object,
 	): Promise<unknown> {
@@ -61,7 +61,7 @@ export function createTmdbClient(options: {
 			throw new TmdbError("TMDB Connect is not configured yet.", 503)
 		const url = new URL(`https://api.themoviedb.org/3/${path}`)
 		url.searchParams.set("api_key", options.apiKey)
-		if (token) url.searchParams.set("session_id", token)
+		if (sessionId) url.searchParams.set("session_id", sessionId)
 		for (let attempt = 0; ; attempt++) {
 			let wait = 0
 			try {
@@ -130,7 +130,7 @@ export function createTmdbClient(options: {
 			if (!result.success) throw new TmdbError()
 			return result.data.request_token
 		},
-		async exchange(requestToken: string): Promise<{ accessToken: string }> {
+		async exchange(requestToken: string): Promise<{ sessionId: string }> {
 			const result = z.object({ session_id: z.string().min(1) }).safeParse(
 				await request("authentication/session/new", "", "POST", {
 					request_token: requestToken,
@@ -151,9 +151,9 @@ export function createTmdbClient(options: {
 				}),
 			)
 			if (!result.success) throw new TmdbError()
-			// The shared encrypted accessToken slot holds the v3 session ID.
+			// The connection handler maps sessionId to the shared encrypted accessToken slot.
 			// Return it before any account lookup so even a failed lookup can be revoked.
-			return { accessToken: result.data.session_id }
+			return { sessionId: result.data.session_id }
 		},
 		async getAccountId(sessionId: string): Promise<string> {
 			const result = z
@@ -162,18 +162,18 @@ export function createTmdbClient(options: {
 			if (!result.success) throw new TmdbError()
 			return String(result.data.id)
 		},
-		async revoke(accessToken: string): Promise<void> {
+		async revoke(sessionId: string): Promise<void> {
 			for (let attempt = 0; ; attempt++) {
 				try {
 					const result = z.object({ success: z.literal(true) }).safeParse(
 						await request("authentication/session", "", "DELETE", {
-							session_id: accessToken,
+							session_id: sessionId,
 						}),
 					)
 					if (!result.success) throw new TmdbError()
 					return
 				} catch (error) {
-					if (isMissingToken(error)) {
+					if (isMissingSession(error)) {
 						// Confirm the key works and the session itself can no longer read an account.
 						try {
 							const auth = z
@@ -181,9 +181,9 @@ export function createTmdbClient(options: {
 								.safeParse(await request("authentication"))
 							if (auth.success) {
 								try {
-									await request("account", accessToken)
+									await request("account", sessionId)
 								} catch (probeError) {
-									if (isMissingToken(probeError)) return
+									if (isRejectedSession(probeError)) return
 									throw probeError
 								}
 							}
@@ -206,7 +206,7 @@ export function createTmdbClient(options: {
 		},
 		async readAccount(
 			accountId: string,
-			accessToken: string,
+			sessionId: string,
 		): Promise<ParsedImport> {
 			const observations: ImportObservation[] = []
 			const deadline = Date.now() + 5 * 60_000
@@ -232,7 +232,7 @@ export function createTmdbClient(options: {
 						const result = pageSchema.safeParse(
 							await request(
 								`account/${encodeURIComponent(accountId)}/${list}/${mediaType === "show" ? "tv" : "movies"}?page=${page}&sort_by=created_at.asc`,
-								accessToken,
+								sessionId,
 							),
 						)
 						if (!result.success)

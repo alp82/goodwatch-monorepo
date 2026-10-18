@@ -18,7 +18,7 @@ function fixture(keys = { current: "11".repeat(32), previous: "" }) {
 	const client: TmdbClient = {
 		createRequest: async () => "request-secret",
 		exchange: async () => ({
-			accessToken: "member-secret",
+			sessionId: "member-secret",
 		}),
 		getAccountId: async () => "account",
 		readAccount: async () => ({
@@ -252,7 +252,7 @@ test("canceling before approval retains only cleanup work and catches a later ap
 	assert.equal(canceled.status, 303)
 	assert.equal(f.db.connections.size, 1)
 	f.client.exchange = async () => ({
-		accessToken: "late-secret",
+		sessionId: "late-secret",
 	})
 	f.advance(60_000)
 	await f.flow.sweep()
@@ -637,7 +637,7 @@ test("an expired TMDB request token shows a safe restart message and is eventual
 			new Response(
 				JSON.stringify({
 					success: false,
-					status_code: 35,
+					status_code: 17,
 					status_message: "Expired request-secret",
 				}),
 				{ status: 401 },
@@ -723,4 +723,69 @@ test("the v3 client and connection flow delete sessions after success, list fail
 			/member-secret|request-secret|app-secret/,
 		)
 	}
+})
+
+test("cleanup retries an already-deleted TMDB session and removes the retained connection row", async () => {
+	const f = fixture()
+	const calls: string[] = []
+	let deleted = false
+	f.client.revoke = createTmdbClient({
+		apiKey: "app-secret",
+		sleep: async () => {},
+		fetch: async (input, init) => {
+			const url = new URL(String(input))
+			assert.equal(url.searchParams.get("api_key"), "app-secret")
+			calls.push(`${init?.method} ${url.pathname}`)
+			if (url.pathname === "/3/authentication/session") {
+				assert.equal(init?.method, "DELETE")
+				assert.deepEqual(JSON.parse(String(init.body)), {
+					session_id: "member-secret",
+				})
+				if (deleted)
+					return new Response(
+						JSON.stringify({ success: false, status_code: 34 }),
+						{ status: 404 },
+					)
+				deleted = true
+				return new Response(JSON.stringify({ success: true }))
+			}
+			if (url.pathname === "/3/authentication")
+				return new Response(JSON.stringify({ success: true }))
+			assert.equal(url.pathname, "/3/account")
+			assert.equal(url.searchParams.get("session_id"), "member-secret")
+			return new Response(JSON.stringify({ success: false, status_code: 3 }), {
+				status: 401,
+			})
+		},
+	}).revoke
+	const remove = f.store.remove
+	let removals = 0
+	f.store.remove = async (id) => {
+		if (++removals === 1)
+			throw new Error("database unavailable after TMDB deleted the session")
+		await remove(id)
+	}
+	const start = await f.request("start")
+	const id = [...f.db.connections.keys()][0]
+	const response = await f.request(
+		"return",
+		id,
+		start.headers.get("Set-Cookie") ?? "",
+	)
+	assert.equal(response.status, 502)
+	assert.match(await response.text(), /retry automatically/)
+	assert.equal(f.db.connections.size, 1)
+	assert.equal(deleted, true)
+	f.advance(60_000)
+	await f.flow.sweep()
+	assert.deepEqual(calls, [
+		"DELETE /3/authentication/session",
+		"DELETE /3/authentication/session",
+		"GET /3/authentication",
+		"GET /3/account",
+	])
+	assert.equal(removals, 2)
+	assert.equal(f.db.connections.size, 0)
+	assert.equal(f.db.imports.length, 0)
+	assert.deepEqual(f.alerts, [])
 })

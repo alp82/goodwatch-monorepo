@@ -56,14 +56,13 @@ export function createTmdbConnect(deps: {
 					}
 					try {
 						if (!connection.accessToken) {
-							Object.assign(
-								connection,
-								await client.exchange(connection.requestToken),
-							)
+							connection.accessToken = (
+								await client.exchange(connection.requestToken)
+							).sessionId
 							try {
 								await store.save(connection)
 							} catch {
-								// Even without a durable write, revoke the token we just received.
+								// Even without a durable write, revoke the session we just received.
 								await disconnect(connection)
 								continue
 							}
@@ -71,7 +70,7 @@ export function createTmdbConnect(deps: {
 						await disconnect(connection)
 					} catch (error) {
 						// Unapproved request tokens expire on TMDB after 60 min. Retry until then,
-						// including late approval after Cancel; never discard a known access token.
+						// including late approval after Cancel; never discard a known session.
 						if (
 							!connection.accessToken &&
 							now() >=
@@ -134,7 +133,7 @@ export function createTmdbConnect(deps: {
 						connection.requestToken = await client.createRequest()
 						await store.save(connection, connection.expiresAt)
 					} catch (error) {
-						// No approval URL has left this server; no member access token can have been granted.
+						// No approval URL has left this server; no member session can have been granted.
 						await store.remove(id)
 						throw error
 					}
@@ -173,17 +172,17 @@ export function createTmdbConnect(deps: {
 				try {
 					if (connection.canceled || connection.accessToken) throw invalid()
 					const credentials = await client.exchange(connection.requestToken)
-					Object.assign(connection, credentials)
+					connection.accessToken = credentials.sessionId
 					await store.save(connection)
 					if (step === "return" && connection.expiresAt <= now())
 						throw new TmdbError("Connection expired, start again.", 410)
 					if (step === "return" && connection.expiresAt > now()) {
 						connection.accountId = await client.getAccountId(
-							credentials.accessToken,
+							credentials.sessionId,
 						)
 						parsed = await client.readAccount(
 							connection.accountId,
-							credentials.accessToken,
+							credentials.sessionId,
 						)
 					}
 				} catch (error) {
