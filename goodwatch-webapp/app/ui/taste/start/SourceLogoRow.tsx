@@ -15,7 +15,7 @@ import { WaitChip, connectPath } from "./StartImport"
 
 function Mark({ source }: { source: ImportSourceEntry }) {
 	const frame =
-		"flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl md:size-14"
+		"flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-xl sm:size-12 sm:rounded-2xl md:size-14"
 	if (!source.logo)
 		return (
 			<span
@@ -41,7 +41,14 @@ function Mark({ source }: { source: ImportSourceEntry }) {
 
 export function SourceLogoRow({
 	onPick,
-}: { onPick: (id: ImportSourceId) => void }) {
+	connectTo = connectPath,
+	prompt = "Need the file? Pick where it lives",
+}: {
+	onPick: (id: ImportSourceId) => void
+	/** Where an account source's Connect goes: the Imports page by default. */
+	connectTo?: (id: ImportSourceId) => string
+	prompt?: string
+}) {
 	const [hot, setHot] = useState<ImportSourceId | null>(null)
 	const [pinned, setPinned] = useState(false)
 	const row = useRef<HTMLDivElement>(null)
@@ -87,13 +94,13 @@ export function SourceLogoRow({
 			onMouseLeave={() => !pinned && setHot(null)}
 		>
 			<p className="text-sm text-gray-400">
-				Need the file? Pick where it lives
+				{prompt}
 			</p>
-			<ul className="mt-3 flex items-center justify-center pl-3">
+			<ul className="mt-3 flex items-center justify-center pl-2.5 sm:pl-3">
 				{IMPORT_SOURCE_LIST.map((s, i) => (
 					<li
 						key={s.id}
-						className="-ml-3"
+						className="-ml-2.5 sm:-ml-3"
 						style={{ zIndex: hot === s.id ? 20 : 10 - Math.abs(i - 4) }}
 					>
 						<button
@@ -155,7 +162,7 @@ export function SourceLogoRow({
 						</ul>
 						{source.connect ? (
 							<Link
-								to={connectPath(source.id)}
+								to={connectTo(source.id)}
 								className={`${primaryButton} mt-4 w-full`}
 							>
 								Connect {source.name}

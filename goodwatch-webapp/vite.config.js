@@ -95,9 +95,9 @@ function separateEntryFiles() {
 // class names that only they use (about a quarter of its rules).
 const PROTOTYPES = {
 	// Files in app/routes.
-	routes: ["prototype.media-language-ui*", "prototype.rec-*", "prototype.share-list*", "prototype.title-actions*", "prototype.watch-log*", "prototype.episode-list*", "prototype.episode-tracking*", "prototype.tracking*", "prototype.my-library*"],
+	routes: ["prototype.media-language-ui*", "prototype.rec-*", "prototype.share-list*", "prototype.title-actions*", "prototype.watch-log*", "prototype.episode-list*", "prototype.episode-tracking*", "prototype.tracking*", "prototype.my-library*", "prototype.settings*"],
 	// Directories in app/ui that only those routes import.
-	ui: ["prototype-rec-*", "prototype-share-list", "prototype-title-actions", "prototype-watch-log", "prototype-episode-list", "prototype-episode-list-2", "prototype-episode-list-3", "prototype-episode-list-4", "prototype-episode-tracking", "prototype-tracking-hub", "prototype-my-library"],
+	ui: ["prototype-rec-*", "prototype-share-list", "prototype-title-actions", "prototype-watch-log", "prototype-episode-list", "prototype-episode-list-2", "prototype-episode-list-3", "prototype-episode-list-4", "prototype-episode-tracking", "prototype-tracking-hub", "prototype-my-library", "prototype-settings-pages"],
 }
 const PROTOTYPE_SOURCES = [
 	...PROTOTYPES.routes.map((name) => `./routes/${name}`),
@@ -306,6 +306,7 @@ export default defineConfig(({ mode, isSsrBuild }) => ({
 
 	server: {
 		port: 3003,
+		allowedHosts: ["alppc", "alppc.tail3b99f1.ts.net"],
 	},
 
 	plugins: [
