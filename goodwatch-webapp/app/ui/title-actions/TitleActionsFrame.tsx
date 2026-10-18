@@ -77,7 +77,7 @@ export function TitleActionsFrame({
 			ref={frame}
 			onPointerEnter={arm}
 			onFocus={arm}
-			className={`group relative ${className} ${open === "score" ? `z-30 ${openClassName}` : ""} ${tile ? "[&>a]:invisible" : ""}`}
+			className={`group relative ${className} ${open === "score" ? `z-30 ${openClassName}` : ""} ${tile ? "[&>a]:invisible [&>[data-card-badges]]:invisible" : ""}`}
 		>
 			{children}
 			{touch && !tile && (

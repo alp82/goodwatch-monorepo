@@ -54,7 +54,7 @@ interface MovieTvCardProps {
 }
 
 // The card rests at 95% and grows to full size under the pointer. With title actions the frame around the link
-// carries that, so the actions scale with the card.
+// carries that, so the actions scale with the card; without them a plain box does.
 const SCALE =
 	"transition-transform duration-100 transform scale-95 hover:scale-100"
 
@@ -74,15 +74,29 @@ export function MovieTvCard({
 	const userScore = userScoreData?.score ?? null
 	const onWishList = useIsOnWishlist(mediaType, details.tmdb_id)
 
-	const card = (
+	// The badges (the viewer's score, the GoodWatch score, the services) sit over the poster but outside the link, so
+	// the link's text is the title and its year, which is what a crawler and a screen reader read as its name. They let
+	// the pointer through to the link. Inset by the link's 4 px border, they cover the same box as the poster.
+	const badges = (
+		<div
+			data-card-badges=""
+			className={`@container pointer-events-none absolute inset-[4px] ${skipOffscreen ? "[content-visibility:auto]" : ""}`}
+		>
+			<UserDataOverlay score={userScore} onWishList={onWishList} />
+			<RatingOverlay ratings={ratings} />
+			{details.streaming_links && (
+				<StreamingOverlay links={details.streaming_links} newOn={newOn} />
+			)}
+		</div>
+	)
+	const link = (
 		<Link
-			className={`
+			className="
 				@container
 				flex flex-col w-full
 				bg-gray-900 hover:bg-gray-800
 				border-4 rounded-lg border-gray-800 hover:border-amber-700/50
-				${actions ? "" : `${SCALE} group`}
-			`}
+			"
 			to={`/${mediaType}/${details.tmdb_id}-${titleToDashed(canonicalMediaTitle(details))}`}
 			prefetch={prefetch ? "viewport" : "intent"}
 			draggable="false"
@@ -94,11 +108,6 @@ export function MovieTvCard({
 						: "relative"
 				}
 			>
-				<UserDataOverlay score={userScore} onWishList={onWishList} />
-				<RatingOverlay ratings={ratings} />
-				{details.streaming_links && (
-					<StreamingOverlay links={details.streaming_links} newOn={newOn} />
-				)}
 				<Poster
 					path={details.poster_path}
 					title={details.title}
@@ -117,10 +126,11 @@ export function MovieTvCard({
 					/>
 				)}
 				<div
-					// Without a rating the layout is what it was before the badge existed.
+					// Without a rating the layout is what it was before the badge existed. The gradient covers the badges
+					// where the two meet (z-[1]), though the badges come after the link.
 					className={`
 						hidden @6xs:flex ${rating ? "flex-col items-start justify-end gap-1.5" : "items-end"}
-						absolute bottom-0 w-full min-h-40 px-2 py-2
+						absolute z-[1] bottom-0 w-full min-h-40 px-2 py-2
 						bg-linear-to-t from-black/70 to-transparent group-hover:from-black/90 group-hover:via-90%
 						overflow-hidden
 						${actions === "bottom" ? "can-hover:group-hover:pb-13 can-hover:group-focus-within:pb-13 touch:pr-13" : ""}
@@ -141,7 +151,13 @@ export function MovieTvCard({
 			</div>
 		</Link>
 	)
-	if (!actions) return card
+	if (!actions)
+		return (
+			<div className={`relative flex w-full ${SCALE} group`}>
+				{link}
+				{badges}
+			</div>
+		)
 	return (
 		<TitleActionsFrame
 			media={{ mediaType, details }}
@@ -149,7 +165,8 @@ export function MovieTvCard({
 			className={`w-full ${SCALE}`}
 			openClassName="scale-100"
 		>
-			{card}
+			{link}
+			{badges}
 		</TitleActionsFrame>
 	)
 }
