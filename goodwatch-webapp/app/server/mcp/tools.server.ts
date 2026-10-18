@@ -12,7 +12,7 @@ import {
 	validDiscoverRanges,
 } from "./discover-filters.ts"
 import { mcpServerInfo } from "./identity.ts"
-import { linkInstructions, withPageLink } from "./links.ts"
+import { resultFacts, withPageLink } from "./links.ts"
 import { readToolEnabled } from "./policy.server.ts"
 import {
 	POSTER_GRID_TOOLS,
@@ -94,7 +94,7 @@ export const readToolDefinitions: {
 		name: "search_titles",
 		title: "Search titles by name",
 		description:
-			"Search movie and show names across the GoodWatch catalog, separate from your library. Name lookup by default; for descriptive queries, explicitly set ranked=true for an optional smarter match, ordered For you by default. Defaults to everywhere and includes seen titles. Use the shared Discover filters to narrow by type, genres, years, runtime, score, services, moods and more; get_discover_filters lists genres/provider IDs. Repeat filters with offset cursors; ranked cursors inherit their view. Use discover_titles whenever no name or descriptive query is given. Except when paging with a ranked cursor, a missing, empty or whitespace-only query runs the same Discover path, filters and For you default as discover_titles; ranked is ignored and no smarter-match attempt is charged. Set exclude_seen=true for unseen results in one call; never loop over get_title to filter seen titles. Returns up to 40 results by default; request a smaller limit only when asked. Different works can share a name and year: use runtime_minutes to distinguish them. Smarter matches allow 20 uncached attempts per member per UTC day, one in flight, normalized queries cached for 60 seconds and paging is free.",
+			"Search movie and show names across the GoodWatch catalog, separate from your library. Name lookup by default; for descriptive queries, explicitly set ranked=true for an optional smarter match, ordered For you by default. Defaults to everywhere and includes seen titles. Use the shared Discover filters to narrow by type, genres, years, runtime, score, services, moods and more; get_discover_filters lists genres/provider IDs. Repeat filters with offset cursors; ranked cursors inherit their view. Use discover_titles whenever no name or descriptive query is given. Except when paging with a ranked cursor, a missing, empty or whitespace-only query runs the same Discover path, filters and For you default as discover_titles; ranked is ignored and no smarter-match attempt is charged. exclude_seen=true filters seen titles before paging. Returns up to 40 results by default. Different works can share a name and year; runtime_minutes can distinguish them. Smarter matches allow 20 uncached attempts per member per UTC day, one in flight, normalized queries cached for 60 seconds and paging is free.",
 		schema: z
 			.object({
 				...discoverFilters,
@@ -175,7 +175,7 @@ export const readToolDefinitions: {
 		name: "get_title",
 		title: "Get a title",
 		description:
-			"Catalog details, trailer, availability evidence and your marks. Default include=[cast,scores,analysis] adds five top-billed people and directors/creators, each with a ready-made person link to repeat VERBATIM, provider scores on labelled scales, and title analysis (moods, themes, tags, featured tropes). Pass include=[] for the smallest answer, or add seasons/episodes for the website’s season/episode ratings. Episodes use the website’s displayed numbering, which can differ from tracking; page with episode_cursor/episode_limit and optionally season_number. Unknown scores and watch dates stay unknown.",
+			"Catalog details, trailer, availability evidence and your marks. Default include=[cast,scores,analysis] adds five top-billed people and directors/creators, each with a ready-made person link, provider scores on labelled scales, and title analysis (moods, themes, tags, featured tropes). Pass include=[] for the smallest answer, or add seasons/episodes for the website’s season/episode ratings. Episodes use the website’s displayed numbering, which can differ from tracking; page with episode_cursor/episode_limit and optionally season_number. Unknown scores and watch dates stay unknown.",
 		schema: titleDetails,
 	},
 	{
@@ -253,7 +253,7 @@ export const readToolDefinitions: {
 		name: "search_people",
 		title: "Search people",
 		description:
-			"Search cast and crew matching the name query, most popular first (TMDB popularity). Repeat each person’s ready-made link VERBATIM in the text. Use the returned person_id with get_person for their acting, directing and writing filmography.",
+			"Search cast and crew matching the name query, most popular first (TMDB popularity). Results include each person’s ready-made link. Use the returned person_id with get_person for their acting, directing and writing filmography.",
 		schema: z
 			.object({ query: z.string().trim().min(2).max(120), ...paging })
 			.strict(),
@@ -262,7 +262,7 @@ export const readToolDefinitions: {
 		name: "get_person",
 		title: "Get a person's filmography",
 		description:
-			"A person's catalog credits with your GoodWatch taste match. Repeat the subject’s ready-made person link VERBATIM, and list credits as bullets with each title link first. Includes every title, even without a poster or score. Defaults to For you, everywhere, including seen titles. Newest and score sort the whole filmography before paging; exclude_seen uses the site's Not seen yet rule. Links open the person's real GoodWatch page; its grouping can differ.",
+			"A person's catalog credits with your GoodWatch taste match. Results include the subject’s ready-made person link and title links for credits. Includes every title, even without a poster or score. Defaults to For you, everywhere, including seen titles. Newest and score sort the whole filmography before paging; exclude_seen uses the site's Not seen yet rule. Links open the person's real GoodWatch page; its grouping can differ.",
 		schema: z
 			.object({
 				person_id: z.number().int().positive().max(2_000_000_000),
@@ -311,7 +311,7 @@ export function createToolServer(
 	enrich?: EnrichTitleResults,
 ) {
 	const server = new McpServer(mcpServerInfo, {
-		instructions: linkInstructions,
+		instructions: resultFacts,
 	})
 	for (const tool of readToolDefinitions) {
 		if (!readToolEnabled(userId, tool.name)) continue
@@ -320,7 +320,7 @@ export function createToolServer(
 			tool.name,
 			{
 				title: tool.title,
-				description: `${tool.description} ${linkInstructions}`,
+				description: tool.description,
 				inputSchema: tool.schema,
 				annotations: {
 					readOnlyHint: true,

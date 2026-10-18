@@ -11,7 +11,7 @@ import {
 	MAX_BATCH_ITEMS,
 	isBatchTool,
 } from "./batch.server.ts"
-import { linkInstructions, titleLink } from "./links.ts"
+import { titleLink } from "./links.ts"
 import { writeToolEnabled } from "./policy.server.ts"
 import { writeSelected } from "./schemas.ts"
 import type { ReadArgs } from "./tools.server.ts"
@@ -352,7 +352,7 @@ const batchItems = counter(
 
 /** How a batch tool's description explains items, the cap and the file import for whole histories. */
 export const batchHint = (origin: string) =>
-	`To change many titles at once, pass items instead of one title: up to ${MAX_BATCH_ITEMS} per call. Items are written independently and each reports done, already_set, not_found, ambiguous (with candidates; nothing written) or error, with a summary count and a batch_id; undo_watch with that batch_id takes back the whole call. For a full history (hundreds of titles or more), send the member to the file import instead: ${new URL(IMPORT_PATH, origin).href}`
+	`To change many titles at once, pass items instead of one title: up to ${MAX_BATCH_ITEMS} per call. Items are written independently and each reports done, already_set, not_found, ambiguous (with candidates; nothing written) or error, with a summary count and a batch_id; undo_watch with that batch_id takes back the whole call. Full history (hundreds of titles or more) file import is available at: ${new URL(IMPORT_PATH, origin).href}`
 
 export function registerWriteTools(
 	server: McpServer,
@@ -366,7 +366,7 @@ export function registerWriteTools(
 			tool.name,
 			{
 				title: tool.title,
-				description: `${tool.description}${isBatchTool(tool.name) ? ` ${batchHint(origin)}` : ""} For title actions, title_id takes precedence; title_name and year are ignored when an ID is supplied. Otherwise provide title_name and optionally year. ${linkInstructions} Replayed results describe the original action, not current state; read again for current state.`,
+				description: `${tool.description}${isBatchTool(tool.name) ? ` ${batchHint(origin)}` : ""} For title actions, title_id takes precedence; title_name and year are ignored when an ID is supplied. Without title_id, title_name is required and year is optional. Replayed results describe the original action, not current state; a new read returns current state.`,
 				inputSchema: tool.schema,
 				annotations: {
 					readOnlyHint: false,

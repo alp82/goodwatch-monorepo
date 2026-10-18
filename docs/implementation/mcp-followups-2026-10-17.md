@@ -14,7 +14,7 @@ When write is requested, consent offers **Read-only** (default) and **Read and c
 
 ## Links and search wording
 
-Existing shared title summaries already contain canonical GoodWatch `url` values, including ambiguity choices, receipts and cached search rows. Every read list now adds `page_url`; instructions in initialization and every tool description ask the client to link each title and end lists with **See it on GoodWatch:** and that page link.
+Existing shared title summaries already contain canonical GoodWatch `url` values, including ambiguity choices, receipts and cached search rows. Every read list adds `page_url`. The original formatting directives in initialization and tool descriptions were removed by the October 19 owner decision for directory review; URLs and ready-made links remain in results. See the [description cleanup report](mcp-description-cleanup-2026-10-19.md) for the policy assessment and every before/after description.
 
 | Tool/view | Existing destination |
 | --- | --- |
@@ -39,10 +39,10 @@ Every destination above was checked against production HTTP responses and the ro
 2. Connect GoodWatch again using `https://goodwatch.app/mcp`. Sign in to GoodWatch if needed. Choose **Read and change my GoodWatch** and then **Allow Claude** on the consent page.
 3. Inspect Claude's tool list: expect 14 tools, including **Set Want to See**, plus **Search titles by name**.
 4. Ask “Find Arrival (2016) by name and add it to my Wishlist.” Approve the write if Claude prompts. Verify Arrival in GoodWatch My library's Want to see view. Remove it afterward if it was only a test.
-5. Ask for Wishlist, My shows, tonight's pick, Taste, and a name search. Check linked title names and the final **See it on GoodWatch** page link. Descriptive queries can explicitly request a smarter match.
+5. Ask for Wishlist, My shows, tonight's pick, Taste, and a name search. Check canonical title `url`/`link` fields and the list’s `page_url` in tool results; response formatting is chosen by the client. Descriptive queries can explicitly request a smarter match.
 6. To check the read-only choice, disconnect and reconnect again, select **Read-only**, and expect seven read tools. Claude must be unable to add a title. Reconnect once more with Read and change if writes are wanted.
 
-Hosted Claude.ai permission refresh, approval prompts and answer formatting still require this owner retest; automated OAuth tests and model instructions cannot prove host behavior.
+Hosted Claude.ai permission refresh, approval prompts and answer formatting still require this owner retest; automated OAuth tests cannot prove host behavior.
 
 ## Verification
 

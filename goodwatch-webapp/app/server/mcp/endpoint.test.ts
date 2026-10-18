@@ -309,17 +309,9 @@ test("A member sees separate catalog and personal read tools, with valid schemas
 		assert.equal(tool.annotations.idempotentHint, true)
 		assert.equal(tool.annotations.destructiveHint, false)
 		assert.equal(tool.inputSchema.type, "object")
-		assert.match(tool.description, /ready-made link field VERBATIM/)
-		assert.match(tool.description, /page_url/)
-		assert.match(tool.description, /Poster cards do not replace the text/)
-		assert.match(
+		assert.doesNotMatch(
 			tool.description,
-			/bulleted list of links, one title per bullet/,
-		)
-		assert.match(tool.description, /ready-made link first, then a short note/)
-		assert.match(
-			tool.description,
-			/every person name.*ready-made link field VERBATIM/,
+			/VERBATIM|See it on GoodWatch|Poster cards|bulleted list/,
 		)
 	}
 })
@@ -559,7 +551,7 @@ test("The write-scope preflight bounds the body and rejects malformed JSON", asy
 	assert.match(response.headers.get("Cache-Control") ?? "", /no-transform/)
 })
 
-test("MCP initialization tells clients to link titles and end with the page link", async () => {
+test("MCP initialization describes result fields without answer-formatting instructions", async () => {
 	const handle = createReadMcpHandler({
 		resource,
 		authorization: verifier,
@@ -589,18 +581,15 @@ test("MCP initialization tells clients to link titles and end with the page link
 	const initialized = (await result(response)).result
 	const { mcpServerInfo } = await import("./identity.ts")
 	assert.deepEqual(initialized.serverInfo, mcpServerInfo)
-	assert.match(initialized.instructions, /ready-made link field VERBATIM/)
-	assert.match(initialized.instructions, /See it on GoodWatch:/)
-	assert.match(initialized.instructions, /Poster cards do not replace the text/)
-	assert.match(
+	assert.match(initialized.instructions, /canonical GoodWatch URLs in url/)
+	assert.match(initialized.instructions, /page_url/)
+	assert.match(initialized.instructions, /match_label.*null means/)
+	assert.match(initialized.instructions, /runtime_minutes/)
+	assert.match(initialized.instructions, /stream_link/)
+	assert.doesNotMatch(
 		initialized.instructions,
-		/bulleted list of links, one title per bullet/,
+		/VERBATIM|See it on GoodWatch|always|never|bulleted list/i,
 	)
-	assert.match(
-		initialized.instructions,
-		/every person name.*ready-made link field VERBATIM/,
-	)
-	assert.match(initialized.instructions, /stream_link field VERBATIM/)
 })
 
 test("Search, library and Watch next expose the requested client contract", async () => {
@@ -617,7 +606,10 @@ test("Search, library and Watch next expose the requested client contract", asyn
 	assert.equal(search.inputSchema.properties.limit.maximum, 40)
 	assert.equal(search.inputSchema.properties.for_you.type, "boolean")
 	assert.equal(search.inputSchema.properties.exclude_seen.type, "boolean")
-	assert.match(search.description, /never loop over get_title/)
+	assert.match(
+		search.description,
+		/exclude_seen=true filters seen titles before paging/,
+	)
 	const library = tools.find(
 		(tool: { name: string }) => tool.name === "get_library",
 	)
@@ -639,17 +631,21 @@ test("Search, library and Watch next expose the requested client contract", asyn
 	assert.match(next.description, /get_library/)
 })
 
-test("Server instructions require GoodWatch taste and native full-library runtime sorting", async () => {
-	const handle = createReadMcpHandler({
+test("All read and write descriptions omit answer-formatting commands and retain native library sorting", async () => {
+	const writeHandle = createReadMcpHandler({
 		resource,
-		authorization: verifier,
+		authorization: writer,
 		limiter: unlimited,
 	})
-	const tools = (await result(await handle(rpc("tools/list")))).result.tools
+	const tools = (await result(await writeHandle(rpc("tools/list")))).result
+		.tools
+	assert.equal(tools.length, 25)
 	for (const tool of tools) {
-		assert.match(tool.description, /GoodWatch match/)
-		assert.match(tool.description, /never replace them with your own judgment/)
-		assert.match(tool.description, /stream_link field VERBATIM/)
+		assert.doesNotMatch(
+			tool.description,
+			/VERBATIM|See it on GoodWatch|Poster cards|bulleted list|never replace|always write|every title mentioned|send the member/i,
+			tool.name,
+		)
 	}
 	const library = tools.find(
 		(tool: { name: string }) => tool.name === "get_library",
@@ -707,7 +703,7 @@ test("Batch write tools list items up to 50, the file import for whole histories
 		assert.match(tool.description, /up to 50 per call/, name)
 		assert.match(
 			tool.description,
-			/full history \(hundreds of titles or more\).*http:\/\/localhost:3336\/settings\/imports/,
+			/[Ff]ull history \(hundreds of titles or more\).*http:\/\/localhost:3336\/settings\/imports/,
 			name,
 		)
 		assert.match(tool.description, /undo_watch with that batch_id/, name)

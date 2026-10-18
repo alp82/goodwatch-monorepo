@@ -398,12 +398,12 @@ I reread the [submission page](https://claude.com/docs/connectors/building/submi
 ### Two review risks
 
 1. **Data handling and the TMDB terms.** The portal asks whether the API is your own, proxied with permission, or a third party's. GoodWatch's API is first-party, but titles, posters, and availability come from TMDB and others. Answer truthfully, and settle the TMDB question first.
-2. **Formatting rules in the tool descriptions.** Every tool description ends with the shared text in `goodwatch-webapp/app/server/mcp/links.ts`. It tells Claude to write every title and person as a link, and to "End every list-like answer with 'See it on GoodWatch:'" and a link. The checklist rejects descriptions that "tell Claude how to behave", including ones that "promote products and services". The automated scan may flag the footer line. If you want to lower the risk before submitting, drop that one sentence and keep the link rules, which describe the tool's own data. That's an MCP server change and isn't part of this kit.
+2. **Tool wording resolved October 19.** The owner chose to remove all answer-formatting and promotional directives from all 25 tool descriptions and replace initialization instructions with neutral result-field facts. Canonical title/person URLs, ready-made links and list `page_url` fields remain. The [cleanup report](../implementation/mcp-description-cleanup-2026-10-19.md) lists every description before/after and explains the current [review checklist](https://claude.com/docs/connectors/building/review-criteria) and [directory policy](https://support.claude.com/en/articles/13145358-anthropic-software-directory-policy). Deploy this change before submitting; directory acceptance remains Anthropic’s decision.
 
 ### Steps
 
 1. Decide the TMDB question.
-2. Optional: decide on the footer sentence in the preceding list.
+2. Deploy the October 19 description cleanup before submitting.
 3. In Claude.ai, add `https://goodwatch.app/mcp` as a custom connector and sign in as the reviewer account (password from the root-only file named in the kit).
 4. Run every tool once in Claude, and once in MCP Inspector (`npx @modelcontextprotocol/inspector`, transport Streamable HTTP, the same URL).
 5. Run the five carousel prompts from the kit. Capture only the response, as PNG, at least 1,000 px wide. Check the size with `file *.png`.
