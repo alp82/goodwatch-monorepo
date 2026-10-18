@@ -77,6 +77,9 @@ export type TalkedRow = {
 /** The board's length: the prototype's eight, which fill the list beside the featured title on a desktop. */
 export const BOARD_SIZE = 8
 export const ITEMS_PER_TITLE = 3
+/** The Hot on socials page (routes/hot-on-socials.tsx): the whole ranking, and more of what is said about each. */
+export const PAGE_BOARD_SIZE = 40
+export const PAGE_ITEMS_PER_TITLE = 12
 
 // ---------------------------------------------------------------------------------------------------------
 // The buzz snapshot
@@ -346,6 +349,8 @@ export function isEnglish(text: string, url = ""): boolean {
 export function pickItems(
 	rows: SocialRow[],
 	limit = ITEMS_PER_TITLE,
+	/** The start row shows one video per title; the page shows every one. */
+	oneVideo = true,
 ): TalkedItem[] {
 	const score = (row: SocialRow) =>
 		typeof row.score === "number" && Number.isFinite(row.score)
@@ -369,7 +374,7 @@ export function pickItems(
 		if (picked.length >= limit) break
 		const group = row.dup_group || row.post_id
 		if (groups.has(group)) continue
-		if (item.video && picked.some((other) => other.video)) continue
+		if (oneVideo && item.video && picked.some((other) => other.video)) continue
 		groups.add(group)
 		picked.push(item)
 	}

@@ -1,224 +1,108 @@
-// "Talked about now" (#557, variant E of #541): the titles read about most against their own usual, and what is
-// said about them. A board of eight, each with its 14-day curve, "×N its usual" and a one-line preview of what is
-// said; one of them is featured, large, with its curve and up to three pieces as they are on their platforms.
-// Pressing a row features that title. From 1024 px the featured title stands beside the board, as tall as it (the
-// two stretch to the taller one); below that it opens in the board, under its row.
+// "Hot on socials" on the start page (#557): the eight titles read about most against their own usual, and one
+// thing said about the chosen one. From 1024 px a panel stands beside the board, exactly as tall as the board
+// whatever it holds (`contain: size` in start-row.css), so pressing a row never moves the page. Below 1024 px
+// there is no panel: each row goes to that title on the Hot on socials page (routes/hot-on-socials.tsx), which
+// has every post. The heading's link goes there too.
 //
 // Loaded on its own (StartRowSlot.tsx), with its own stylesheet: nothing of it is in the start page's first
 // view. The same for every visitor; the data is the row's request (/api/talked-about-now).
-import {
-	canonicalMediaTitle,
-	mediaFieldLanguage,
-} from "~/utils/media-presentation"
-import MediaText from "~/ui/media-text/MediaText"
 import { Link } from "@remix-run/react"
 import { useQuery } from "@tanstack/react-query"
-import { useEffect, useRef, useState } from "react"
+import { useState } from "react"
 import {
-	type TalkedReason,
 	type TalkedRow,
 	type TalkedTitle,
-	compact,
 	liftLabel,
 	previewOf,
-	reasonLabel,
 } from "~/domain/talked-about-now"
-import { startTitleHref } from "~/ui/living-room/BelowRoom"
-import { NativeItems, Platform, SourceMark } from "./Items"
-import { Spark, dateLabel } from "./Spark"
+import MediaText from "~/ui/media-text/MediaText"
+import { mediaFieldLanguage } from "~/utils/media-presentation"
+import { Move, ReasonIcon, hrefOf, tmdb, why } from "../parts"
+import { Platform, SourceMark } from "./Items"
+import { Spark } from "./Spark"
 import type { TalkedQuery } from "./StartRowSlot"
 import "./start-row.css"
 
-const tmdb = (path: string, size: string) =>
-	`https://image.tmdb.org/t/p/${size}${path}`
+/** The Hot on socials page, opened at a title when one is given. */
+export const pageHref = (title?: TalkedTitle) =>
+	`/hot-on-socials${title ? `#${title.mediaType}-${title.tmdbId}` : ""}`
 
-const hrefOf = (title: TalkedTitle) =>
-	startTitleHref({
-		media_type: title.mediaType,
-		tmdb_id: title.tmdbId,
-		title: canonicalMediaTitle(title),
-	})
+const Name = ({ title }: { title: TalkedTitle }) => (
+	<MediaText value={{ text: title.title, lang: mediaFieldLanguage(title, "title") }} />
+)
 
-const WIDE = "(min-width: 1024px)"
-
-function useWide() {
-	const [wide, setWide] = useState(
-		() => typeof window !== "undefined" && window.matchMedia(WIDE).matches,
-	)
-	useEffect(() => {
-		const query = window.matchMedia(WIDE)
-		const update = () => setWide(query.matches)
-		query.addEventListener("change", update)
-		return () => query.removeEventListener("change", update)
-	}, [])
-	return wide
-}
-
-/** The box's width, once measured: the featured curve fills its card at every window size. */
-function useWidth(fallback: number) {
-	const ref = useRef<HTMLDivElement>(null)
-	const [width, setWidth] = useState(fallback)
-	useEffect(() => {
-		const el = ref.current
-		if (!el) return
-		const observer = new ResizeObserver(() =>
-			setWidth(Math.max(Math.round(el.clientWidth), 80)),
-		)
-		observer.observe(el)
-		return () => observer.disconnect()
-	}, [])
-	return [ref, width] as const
-}
-
-const REASON_ICON: Record<TalkedReason["kind"], string> = {
-	trailer: "M5 3.5v9l7-4.5z",
-	new_season: "M3 6h10M3 9.5h10M3 13h10M5 3h6",
-	new_release: "M2.5 5.5h11v2a1.5 1.5 0 000 3v2h-11v-2a1.5 1.5 0 000-3z",
-	netflix_top10: "M4 13V3l8 10V3",
-}
-
-function ReasonIcon({ kind }: { kind: TalkedReason["kind"] }) {
-	return (
-		<svg viewBox="0 0 16 16" className="tn-icon" aria-hidden="true">
-			<path
-				d={REASON_ICON[kind]}
-				fill={kind === "trailer" ? "currentColor" : "none"}
-				stroke={kind === "trailer" ? "none" : "currentColor"}
-				strokeWidth="1.6"
-				strokeLinecap="round"
-				strokeLinejoin="round"
-			/>
-		</svg>
-	)
-}
-
-/** Up, down or new since the day before. Color is never alone: an arrow or the word says it too. */
-function Move({ move }: { move: TalkedTitle["move"] }) {
-	if (move === null) return null
-	if (move === "new") return <span className="tn-new">NEW</span>
-	if (move === 0)
-		return (
-			<span className="tn-move" title="Same place as the day before">
-				=
-			</span>
-		)
-	const up = move > 0
-	return (
-		<span
-			className={`tn-move${up ? " tn-up" : ""}`}
-			title={`${up ? "Up" : "Down"} ${Math.abs(move)} since the day before`}
-		>
-			{up ? "▲" : "▼"}
-			{Math.abs(move)}
-		</span>
-	)
-}
-
-/** The board row's second line: the reason and its day, or how many read about it. */
-function why(title: TalkedTitle) {
-	if (title.reason)
-		return `${reasonLabel(title.reason, title.mediaType)} · ${dateLabel(title.reason.day)}`
-	return `${compact(title.views)} Wikipedia reads in a day`
-}
-
-function Preview({ title }: { title: TalkedTitle }) {
+/** One thing said, as plain text: the headline, the video's title, or the post. */
+function Said({ title }: { title: TalkedTitle }) {
 	const pick = previewOf(title.items)
-	if (!pick) return null
+	if (!pick) return <span className="tn-said tn-quiet">Nothing said yet beyond the reading spike</span>
 	return (
-		<span className="tn-preview">
-			<span className="tn-marks" aria-hidden="true">
-				{title.items.map((item) => (
-					<SourceMark key={item.id} source={item.source} />
-				))}
-			</span>
-			<span className="tn-preview-text">
-				{pick.source === "rss" ? (
-					<>
-						<b>{pick.publisher}</b> {pick.text}
-					</>
-				) : pick.source === "youtube" ? (
-					<>
-						<b>{pick.author}</b> {pick.text}
-					</>
-				) : (
-					<>
-						<i>“{pick.text}”</i> <small>{pick.author}</small>
-					</>
-				)}
+		<span className="tn-said">
+			<SourceMark source={pick.source} />
+			<span>
+				{pick.source === "bluesky" || pick.source === "mastodon" ? `“${pick.text}”` : pick.text}
+				<small> {pick.source === "rss" ? pick.publisher : pick.author}</small>
 			</span>
 		</span>
 	)
 }
 
-function Featured({ title, day }: { title: TalkedTitle; day: string }) {
-	const [box, width] = useWidth(300)
-	const video = title.items.some((item) => item.source === "youtube")
-	const head = (
+function RowInner({ title, day }: { title: TalkedTitle; day: string }) {
+	return (
 		<>
-			<p className="tn-rank">
-				#{title.rank} talked about <Move move={title.move} />
-			</p>
-			<Link to={hrefOf(title)} discover="none" className="tn-name">
-				<MediaText
-					value={{
-						text: title.title,
-						lang: mediaFieldLanguage(title, "title"),
-					}}
-				/>
-			</Link>
-			<p className="tn-kind">
-				{title.mediaType === "movie" ? "Movie" : "TV show"}
-				{title.year ? ` · ${title.year}` : ""}
-			</p>
+			<b className="tn-n">{title.rank}</b>
+			{title.poster ? (
+				<img src={tmdb(title.poster, "w92")} alt="" width={34} height={51} loading="lazy" />
+			) : (
+				<span className="tn-noposter" />
+			)}
+			<span className="tn-row-text">
+				<b className="tn-row-title">
+					<span>
+						<Name title={title} />
+					</span>
+					<Move move={title.move} />
+				</b>
+				<span className="tn-row-why">
+					{title.reason && <ReasonIcon kind={title.reason.kind} />}
+					<span>{why(title)}</span>
+				</span>
+			</span>
+			<span className="tn-row-spark">
+				<Spark title={title} day={day} width={96} height={34} />
+			</span>
+			<span className="tn-row-lift">
+				<b>{liftLabel(title.lift)}</b>
+			</span>
 		</>
 	)
+}
+
+function Panel({ title, day }: { title: TalkedTitle; day: string }) {
 	return (
-		<article className="tn-lead">
-			{/* With a video the trailer's picture is the title's backdrop already: the head stands on a faint one. */}
-			<div className={video ? "tn-lead-head tn-faint" : "tn-lead-head"}>
-				{title.backdrop && (
-					<img src={tmdb(title.backdrop, "w780")} alt="" loading="lazy" />
-				)}
-				<div>{head}</div>
-			</div>
-			<div className="tn-lead-body">
-				<p className="tn-why">
-					{title.reason && (
-						<span className={`tn-chip tn-chip-${title.reason.kind}`}>
-							<ReasonIcon kind={title.reason.kind} />
-							{reasonLabel(title.reason, title.mediaType)}
-						</span>
-					)}
-					<span>
-						{compact(title.views)} Wikipedia reads on {dateLabel(day)}, against{" "}
-						{compact(title.usual)} on a usual day
-					</span>
+		<article className="tn-panel">
+			{title.backdrop && <img src={tmdb(title.backdrop, "w780")} alt="" />}
+			<div className="tn-panel-in">
+				<p className="tn-rank">
+					#{title.rank} talked about <Move move={title.move} />
 				</p>
-				<div className="tn-buzz">
-					<div>
-						<p className="tn-label">Reading, {title.curve.length} days</p>
-						<p className="tn-lift">
-							{liftLabel(title.lift)}
-							<small>its usual</small>
-						</p>
-						{title.reason && (
-							<p className="tn-when">
-								<ReasonIcon kind={title.reason.kind} />
-								{reasonLabel(title.reason, title.mediaType)},{" "}
-								{dateLabel(title.reason.day)}
-							</p>
-						)}
-					</div>
-					<div ref={box} className="tn-buzz-curve">
-						<Spark title={title} day={day} width={width} height={64} hover />
-					</div>
+				<Link to={hrefOf(title)} discover="none" className="tn-panel-name">
+					<Name title={title} />
+				</Link>
+				<p className="tn-panel-why">
+					{title.reason && <ReasonIcon kind={title.reason.kind} />}
+					{why(title)}
+				</p>
+				<div className="tn-panel-buzz">
+					<p className="tn-lift">
+						{liftLabel(title.lift)}
+						<small>its usual</small>
+					</p>
+					<Spark title={title} day={day} width={220} height={52} />
 				</div>
-				{title.items.length > 0 && (
-					<div className="tn-said">
-						<p className="tn-label tn-rule">What is said about it</p>
-						<NativeItems items={title.items} still={title.backdrop} />
-					</div>
-				)}
+				<Said title={title} />
+				<Link to={pageHref(title)} className="tn-more tn-panel-more">
+					{title.items.length > 1 ? `See all ${title.items.length} posts →` : "See the buzz →"}
+				</Link>
 			</div>
 		</article>
 	)
@@ -226,11 +110,8 @@ function Featured({ title, day }: { title: TalkedTitle; day: string }) {
 
 function Board({ row }: { row: TalkedRow }) {
 	const [lead, setLead] = useState(0)
-	const wide = useWide()
 	const featured = row.titles[lead] ?? row.titles[0]
-	const sources = [
-		...new Set(row.titles.flatMap((t) => t.items.map((i) => i.source))),
-	]
+	const sources = [...new Set(row.titles.flatMap((t) => t.items.map((i) => i.source)))]
 	return (
 		<section aria-labelledby="tn-title" className="tn">
 			<header className="tn-top">
@@ -238,18 +119,20 @@ function Board({ row }: { row: TalkedRow }) {
 					<p className="lrb-eye">Talked about now</p>
 					<h2 id="tn-title">Hot on socials</h2>
 				</div>
-				{sources.length > 0 && (
-					<p className="tn-sources">
-						{sources.map((source) => (
-							<Platform key={source} source={source} />
-						))}
-					</p>
-				)}
+				<div className="tn-head-end">
+					{sources.length > 0 && (
+						<p className="tn-sources">
+							{sources.map((source) => (
+								<Platform key={source} source={source} />
+							))}
+						</p>
+					)}
+					<Link to={pageHref()} className="tn-more">
+						All the buzz →
+					</Link>
+				</div>
 			</header>
-			<div className="tn-grid">
-				{wide && (
-					<Featured key={featured.tmdbId} title={featured} day={row.day} />
-				)}
+			<div className="tn-split">
 				<ol className="tn-board">
 					{row.titles.map((title, i) => (
 						<li key={`${title.mediaType}-${title.tmdbId}`}>
@@ -257,62 +140,17 @@ function Board({ row }: { row: TalkedRow }) {
 								type="button"
 								onClick={() => setLead(i)}
 								aria-pressed={lead === i}
-								className="tn-row"
+								className="tn-row tn-wide-only"
 							>
-								<b className="tn-n">{title.rank}</b>
-								{title.poster ? (
-									<img
-										src={tmdb(title.poster, "w92")}
-										alt=""
-										width={34}
-										height={51}
-										loading="lazy"
-									/>
-								) : (
-									<span className="tn-noposter" />
-								)}
-								<span className="tn-row-text">
-									<b className="tn-row-title">
-										<span>
-											<MediaText
-												value={{
-													text: title.title,
-													lang: mediaFieldLanguage(title, "title"),
-												}}
-											/>
-										</span>
-										<Move move={title.move} />
-									</b>
-									<span className="tn-row-why">
-										{title.reason && <ReasonIcon kind={title.reason.kind} />}
-										<span>{why(title)}</span>
-									</span>
-									<Preview title={title} />
-								</span>
-								<span className="tn-row-spark">
-									<Spark title={title} day={row.day} width={96} height={34} />
-								</span>
-								<span className="tn-row-lift">
-									<span className="tn-row-spark-small">
-										<Spark
-											title={title}
-											day={row.day}
-											width={56}
-											height={22}
-											mark={false}
-										/>
-									</span>
-									<b>{liftLabel(title.lift)}</b>
-								</span>
+								<RowInner title={title} day={row.day} />
 							</button>
-							{!wide && lead === i && (
-								<div className="tn-inline">
-									<Featured title={title} day={row.day} />
-								</div>
-							)}
+							<Link to={pageHref(title)} className="tn-row tn-narrow-only">
+								<RowInner title={title} day={row.day} />
+							</Link>
 						</li>
 					))}
 				</ol>
+				<Panel title={featured} day={row.day} />
 			</div>
 		</section>
 	)

@@ -65,7 +65,9 @@ function LeadStory({ item, backdrop, actions }: { item: SocialEmbedItem; backdro
 	const href = safeHref(item.url)
 	const body = (
 		<>
-			{backdrop && (
+			{item.image ? (
+				<img src={item.image} alt="" className="absolute inset-0 h-full w-full object-cover" draggable={false} />
+			) : backdrop && (
 				<TmdbImage
 					kind="backdrop"
 					path={backdrop}

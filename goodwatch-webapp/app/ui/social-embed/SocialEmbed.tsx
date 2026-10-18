@@ -1,8 +1,9 @@
 // One click-to-load facade for every social source: YouTube videos and Shorts, Bluesky and Mastodon posts, and news
-// headlines. Shared by the title page's "Talked about now" section and the start page's row (map #537).
+// headlines. Used by the title page's "Talked about now" section and the Hot on socials page (map #537).
 //
-// Before the click a facade sends no request to any third party. It shows the stored text and, for a video, the
-// title's own TMDB artwork (image.tmdb.org, which the page uses anyway); no vendor thumbnail. The click is the consent
+// Before the click a facade sends no request to any third party. It shows the stored text and the picture social
+// discovery saved for the item, served by GoodWatch (/api/social/image/:postId); a video without one shows the
+// title's own TMDB artwork. The click is the consent
 // for that one item: the button says which company it loads, and the official player (players.tsx) takes the
 // facade's place. A news headline has no player: its card is a plain link to the publisher.
 //
@@ -156,10 +157,11 @@ export function SocialEmbed({
 	if (target.kind !== "youtube")
 		return (
 			<div
-				className={`flex min-w-0 flex-col gap-3 rounded-2xl bg-white/[.06] p-4 ring-1 ring-white/10 ${className}`}
+				className={`flex min-w-0 flex-col gap-3 overflow-hidden rounded-2xl bg-white/[.045] p-4 ${className}`}
 				data-social-item={item.id}
 				data-state={loaded ? "loaded" : "facade"}
 			>
+				{item.image && !loaded && <Picture src={item.image} className="-mx-4 -mt-4" />}
 				<SourceChip item={item} />
 				{loaded ? (
 					<SocialPlayer target={target} title={playerTitle} />
@@ -189,7 +191,9 @@ export function SocialEmbed({
 					</div>
 				) : (
 					<>
-						{art && (
+						{item.image ? (
+							<img src={item.image} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover" draggable={false} />
+						) : art && (
 							<TmdbImage
 								kind="backdrop"
 								path={art}
@@ -215,6 +219,15 @@ export function SocialEmbed({
 			</div>
 			{actions && <div className="flex justify-end">{actions}</div>}
 		</div>
+	)
+}
+
+/** A saved preview picture (social discovery's copy, /api/social/image/:postId), 16:9. */
+function Picture({ src, className = "" }: { src: string; className?: string }) {
+	return (
+		<span className={`block aspect-video overflow-hidden bg-gray-900 ${className}`}>
+			<img src={src} alt="" loading="lazy" className="h-full w-full object-cover" />
+		</span>
 	)
 }
 
@@ -262,30 +275,41 @@ function LinkItem({
 		return (
 			<div className={`flex min-w-0 flex-col gap-2 ${className}`} data-social-item={item.id}>
 				<RowTop item={item} now={now} actions={actions} />
-				{href ? (
-					<a href={href} target="_blank" rel="noopener noreferrer" className="text-[15px] font-semibold leading-snug break-words text-gray-100 hover:underline">
-						{headline}
-					</a>
-				) : (
-					<p className="text-[15px] font-semibold leading-snug break-words text-gray-100">{item.text}</p>
-				)}
-				<span className="min-w-0 truncate text-xs text-gray-400">{item.author || host}</span>
+				<div className="flex min-w-0 items-start gap-3">
+					<div className="flex min-w-0 flex-1 flex-col gap-1">
+						{href ? (
+							<a href={href} target="_blank" rel="noopener noreferrer" className="text-[15px] font-semibold leading-snug break-words text-gray-100 hover:underline">
+								{headline}
+							</a>
+						) : (
+							<p className="text-[15px] font-semibold leading-snug break-words text-gray-100">{item.text}</p>
+						)}
+						<span className="min-w-0 truncate text-xs text-gray-400">{item.author || host}</span>
+					</div>
+					{item.image && (
+						<img src={item.image} alt="" loading="lazy" className="h-14 w-24 shrink-0 rounded-lg object-cover" />
+					)}
+				</div>
 			</div>
 		)
 	return (
-		<div className={`flex min-w-0 flex-col gap-2 rounded-2xl bg-amber-950/30 p-4 ring-1 ring-amber-500/20 ${className}`} data-social-item={item.id}>
-			<span className="text-xs font-semibold text-amber-200">
-				{item.author || host} · {ago(item.publishedAt, now)}
-			</span>
+		<div className={`flex min-w-0 flex-col gap-2 overflow-hidden rounded-2xl bg-white/[.045] p-4 transition-colors hover:bg-white/[.07] ${className}`} data-social-item={item.id}>
+			{item.image && (
+				<a href={href ?? undefined} target="_blank" rel="noopener noreferrer" tabIndex={-1} aria-hidden="true" className="-mx-4 -mt-4 mb-1 block">
+					<Picture src={item.image} />
+				</a>
+			)}
 			{href ? (
-				<a href={href} target="_blank" rel="noopener noreferrer" className="text-[15px] font-semibold leading-snug break-words text-gray-100 hover:underline">
-					{headline}
+				<a href={href} target="_blank" rel="noopener noreferrer" className="text-[16px] font-bold leading-snug break-words text-white hover:text-amber-300">
+					{item.text}
 				</a>
 			) : (
-				<p className="text-[15px] font-semibold leading-snug break-words text-gray-100">{item.text}</p>
+				<p className="text-[16px] font-bold leading-snug break-words text-white">{item.text}</p>
 			)}
-			<div className="mt-auto flex items-center justify-between gap-3">
-				{host && <span className="text-xs text-amber-200/70">{host}</span>}
+			<div className="mt-auto flex items-center justify-between gap-3 text-xs text-gray-400">
+				<span className="min-w-0 truncate">
+					<span className="font-semibold text-gray-200">{item.author || host}</span> · {ago(item.publishedAt, now)}
+				</span>
 				{actions}
 			</div>
 		</div>

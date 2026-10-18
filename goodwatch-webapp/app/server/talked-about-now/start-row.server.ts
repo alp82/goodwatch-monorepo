@@ -14,6 +14,9 @@
 // Nothing here writes: no Crate table, no Valkey key of its own.
 import {
 	BOARD_SIZE,
+	ITEMS_PER_TITLE,
+	PAGE_BOARD_SIZE,
+	PAGE_ITEMS_PER_TITLE,
 	type BuzzTitle,
 	type SocialRow,
 	type TalkedRow,
@@ -131,11 +134,13 @@ const crateReads: Reads = {
 /** The row, or null without a ranking. Throws only when the ranking itself can't be read. */
 export async function readTalkedAboutNow(
 	reads: Reads = crateReads,
+	/** The start row's eight and three; the Hot on socials page asks for the whole ranking and more posts. */
+	size: { board: number; items: number; oneVideo: boolean } = { board: BOARD_SIZE, items: ITEMS_PER_TITLE, oneVideo: true },
 ): Promise<TalkedRow | null> {
 	const current = await reads.snapshot("current")
 	const parsed = current ? parseSnapshot(current.payload) : null
 	if (!parsed || !parsed.titles.length) return null
-	const board = parsed.titles.slice(0, BOARD_SIZE)
+	const board = parsed.titles.slice(0, size.board)
 
 	const [before, displays, rows] = await Promise.all([
 		reads
@@ -178,7 +183,7 @@ export async function readTalkedAboutNow(
 					display?.release_year ??
 					(releaseDate ? Number(releaseDate.slice(0, 4)) || null : null),
 				move: moveOf(key, title.rank, before),
-				items: pickItems(byTitle.get(key) ?? []),
+				items: pickItems(byTitle.get(key) ?? [], size.items, size.oneVideo),
 			}
 		}),
 	}
@@ -206,7 +211,26 @@ export function getTalkedAboutNow(
 	return entry.row
 }
 
+let keptPage: { at: number; ttl: number; row: Promise<TalkedRow | null> } | null = null
+
+/** The Hot on socials page's read, shared like the row's. */
+export function getHotOnSocials(now = Date.now(), reads: Reads = crateReads): Promise<TalkedRow | null> {
+	if (keptPage && now - keptPage.at < keptPage.ttl) return keptPage.row
+	const entry = {
+		at: now,
+		ttl: TALKED_TTL_MS,
+		row: readTalkedAboutNow(reads, { board: PAGE_BOARD_SIZE, items: PAGE_ITEMS_PER_TITLE, oneVideo: false }).catch((error) => {
+			console.error("Hot on socials: reading the ranking failed", error)
+			entry.ttl = FAILED_TTL_MS
+			return null
+		}),
+	}
+	keptPage = entry
+	return entry.row
+}
+
 /** Drops the shared answer, so the next request reads again: a "wrong title?" report calls this (`afterReport`). */
 export function forgetTalkedAboutNow() {
 	kept = null
+	keptPage = null
 }

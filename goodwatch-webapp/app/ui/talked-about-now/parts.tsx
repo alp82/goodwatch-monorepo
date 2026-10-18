@@ -1,0 +1,74 @@
+// Small pieces shared by the start page's row (start-row/StartRow.tsx) and the Hot on socials page
+// (hot-page/HotPage.tsx): image URLs, a title's link, the reason's icon, the move since the day before, and the
+// second line of a ranking row. Styles are in start-row/start-row.css.
+import {
+	type TalkedReason,
+	type TalkedTitle,
+	compact,
+	reasonLabel,
+} from "~/domain/talked-about-now"
+import { startTitleHref } from "~/ui/living-room/BelowRoom"
+import { canonicalMediaTitle } from "~/utils/media-presentation"
+import { dateLabel } from "./start-row/Spark"
+
+export const tmdb = (path: string, size: string) =>
+	`https://image.tmdb.org/t/p/${size}${path}`
+
+export const hrefOf = (title: TalkedTitle) =>
+	startTitleHref({
+		media_type: title.mediaType,
+		tmdb_id: title.tmdbId,
+		title: canonicalMediaTitle(title),
+	})
+
+const REASON_ICON: Record<TalkedReason["kind"], string> = {
+	trailer: "M5 3.5v9l7-4.5z",
+	new_season: "M3 6h10M3 9.5h10M3 13h10M5 3h6",
+	new_release: "M2.5 5.5h11v2a1.5 1.5 0 000 3v2h-11v-2a1.5 1.5 0 000-3z",
+	netflix_top10: "M4 13V3l8 10V3",
+}
+
+export function ReasonIcon({ kind }: { kind: TalkedReason["kind"] }) {
+	return (
+		<svg viewBox="0 0 16 16" className="tn-icon" aria-hidden="true">
+			<path
+				d={REASON_ICON[kind]}
+				fill={kind === "trailer" ? "currentColor" : "none"}
+				stroke={kind === "trailer" ? "none" : "currentColor"}
+				strokeWidth="1.6"
+				strokeLinecap="round"
+				strokeLinejoin="round"
+			/>
+		</svg>
+	)
+}
+
+/** Up, down or new since the day before. Color is never alone: an arrow or the word says it too. */
+export function Move({ move }: { move: TalkedTitle["move"] }) {
+	if (move === null) return null
+	if (move === "new") return <span className="tn-new">NEW</span>
+	if (move === 0)
+		return (
+			<span className="tn-move" title="Same place as the day before">
+				=
+			</span>
+		)
+	const up = move > 0
+	return (
+		<span
+			className={`tn-move${up ? " tn-up" : ""}`}
+			title={`${up ? "Up" : "Down"} ${Math.abs(move)} since the day before`}
+		>
+			{up ? "▲" : "▼"}
+			{Math.abs(move)}
+		</span>
+	)
+}
+
+/** The board row's second line: the reason and its day, or how many read about it. */
+export function why(title: TalkedTitle) {
+	if (title.reason)
+		return `${reasonLabel(title.reason, title.mediaType)} · ${dateLabel(title.reason.day)}`
+	return `${compact(title.views)} Wikipedia reads in a day`
+}
+
