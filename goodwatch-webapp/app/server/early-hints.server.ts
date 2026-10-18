@@ -1,7 +1,8 @@
 // Sends a page's 103 Early Hints response before Remix renders it (what it says: early-hints.ts). The render and its
 // loaders take most of the time to first byte; meanwhile the browser opens the connections to the static hostname and
-// fetches the render-blocking style sheets, the brand font and the start page's room pictures. Both proxies in front of the webapp (Traefik 2.10 on abio, Traefik 3.6 on
-// the second instance's host) forward a 103 as it comes, over HTTP/2 and HTTP/1.1 (tested October 18, 2026).
+// fetches the render-blocking style sheets, the brand font, the start page's room pictures and a title page's hero
+// (hero-hints.ts). Both proxies in front of the webapp (Traefik 2.10 on abio, Traefik 3.6 on the second instance's
+// host) forward a 103 as it comes, over HTTP/2 and HTTP/1.1 (tested October 18, 2026).
 // Chrome uses Early Hints on HTTP/2 and HTTP/3 navigations; other browsers ignore them.
 //
 // Remix's request handler never sees Node's response, so this module wraps the server's request listeners as the page
@@ -16,6 +17,7 @@ import { HAND_IMAGE } from "~/ui/living-room/room"
 import { PHONE_ROOM_ART, ROOM_ART } from "~/ui/living-room/tv/room-art"
 import { currentAssetBase, isStaticHost } from "./asset-address.server"
 import { earlyHintLinks } from "./early-hints"
+import { heroHints } from "./hero-hints.server"
 
 const FILES = {
 	site: cssTailwind,
@@ -53,6 +55,9 @@ export function startEarlyHints(): void {
 				!isStaticHost(request.headers.host)
 			) {
 				const link = earlyHintLinks(request, currentAssetBase(), FILES)
+				// A page navigation (the shared hints) of a title page this instance has rendered: its hero too.
+				const hero = link.length ? heroHints.link(request) : undefined
+				if (hero) link.push(hero)
 				if (link.length)
 					try {
 						response.writeEarlyHints({ link })

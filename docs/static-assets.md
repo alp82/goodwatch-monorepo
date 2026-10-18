@@ -138,6 +138,10 @@ from a 103 response in that mode only, and a preload in another mode than the el
   the hand, any other the room photo and the hand. A browser that doesn't send `Sec-CH-UA-Mobile` gets no picture
   hints. A phone held sideways draws the room photo, so its hinted pictures go unused.
 
+- A title page's hero picture: each instance remembers the hero files of a page it has rendered (the movie and show
+  loaders name them, `app/server/hero-hints.ts`), and that page's next 103 preloads the phone's or the desktop's
+  file by `Sec-CH-UA-Mobile`. No database query is in the hint path; the first visit after a start gets no hero hint.
+  The hero asks with `crossorigin`, which TMDB answers with the CORS header.
 - Only page navigations get it: `GET`, `Sec-Fetch-Dest: document` (or `Accept: text/html`), not files, `/api/`, data
   requests or the health checks. A page from the page cache gets it too.
 - Both proxies forward a 103 as it comes, over HTTP/2 and HTTP/1.1: Traefik 2.10.7 on abio, with its retry

@@ -45,6 +45,8 @@ import {
 import { titleRedirectPath } from "~/utils/helpers"
 import { windowEpisodeGrid } from "~/ui/details/episode-grid/window"
 import { START_AFTER_PAINT } from "~/utils/start-after-paint"
+import { heroHints } from "~/server/hero-hints.server"
+import { heroBackdropFiles } from "~/ui/details/hero/Trailer"
 import { mergeDehydratedStates } from "~/utils/title-extras"
 
 export { pageHeaders as headers } from "~/utils/headers"
@@ -187,6 +189,9 @@ export const loader: LoaderFunction = async ({
 	const dehydratedState = mergeDehydratedStates(extrasState)
 
 	const sides = await titleSidesWithin(sidesWork, sidesStart, TITLE_BUDGET_MS)
+	// The page's next 103 Early Hints response names its hero (server/hero-hints.ts).
+	if (media.details.backdrop_path)
+		heroHints.remember(new URL(request.url).pathname, heroBackdropFiles(media.details.backdrop_path))
 	const data = {
 		media,
 		episodeGrid,

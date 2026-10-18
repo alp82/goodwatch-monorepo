@@ -6,7 +6,7 @@ import { TmdbImage } from "~/ui/TmdbImage"
 import { useOpenedOnce } from "~/utils/first-use"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 import { HERO_TIMING } from "~/utils/start-after-paint"
-import type { SizeRule } from "~/utils/tmdb-image"
+import { type SizeRule, tmdbImageUrl } from "~/utils/tmdb-image"
 
 type Media = MovieResult | ShowResult
 
@@ -16,12 +16,22 @@ const HERO_BACKDROP_SIZES: SizeRule[] = [
 	[null, "100vw"],
 ]
 
+/**
+ * The hero's file on a phone and on a desktop, for the page's 103 Early Hints response (server/hero-hints.ts): what
+ * the srcSet below gives there. Under `sizes`, the usual phone windows (360 to 430 px wide at their pixel ratios, such
+ * as 412 at 1.75 or 2.625 and 390 at 3) pick w780; the desktop's banner is 1216 px wide and picks w1280.
+ */
+export function heroBackdropFiles(path: string) {
+	return { phone: tmdbImageUrl(path, "w780"), desktop: tmdbImageUrl(path, "w1280") }
+}
+
 export function HeroBackdropImage({ media, className }: { media: Media; className: string }) {
 	if (!media.details.backdrop_path) return null
 	// `maxWidth` stays at 780: it names the file that `src` holds, which the render path budget looks for, and every
 	// larger step is in the srcSet for the wide banner all the same.
-	// The page's scripts wait for it to paint (HERO_TIMING): it is the first screen's largest content.
-	return <TmdbImage kind="backdrop" path={media.details.backdrop_path} sizes={HERO_BACKDROP_SIZES} maxWidth={780} priority="high" className={className} {...HERO_TIMING} />
+	// The page's scripts wait for it to paint (HERO_TIMING): it is the first screen's largest content. It asks without
+	// credentials, as the 103 Early Hints response preloads it (TMDB answers with the CORS header).
+	return <TmdbImage kind="backdrop" path={media.details.backdrop_path} sizes={HERO_BACKDROP_SIZES} maxWidth={780} priority="high" className={className} crossOrigin="anonymous" {...HERO_TIMING} />
 }
 
 // The poster on the banner: 72 px wide on a phone, 128 px from md up.
