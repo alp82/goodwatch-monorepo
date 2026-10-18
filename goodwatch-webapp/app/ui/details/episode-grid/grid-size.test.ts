@@ -1,13 +1,19 @@
-// The episode grid's part of a show page's server HTML stays bounded, whatever the show's length. Googlebot reads
-// the first 2 MB of a page; the grid sits before the cast, related titles and questions.
+// The episode grid's part of a show page stays within its budget, whatever the show's length, and a scripted show
+// renders whole. Googlebot reads the first 2 MB of a page; the grid sits before the cast, related titles and
+// questions.
 import assert from "node:assert/strict"
 import { execFileSync } from "node:child_process"
 import { test } from "node:test"
 
 type Shape = {
+	wholeBytes: number
+	wholeEstimate: number
 	bytes: number
+	estimate: number
 	kept: boolean
 	seasons: number[]
+	shownEpisodes: number
+	gapCells: number
 	notice: string | null
 	button: string | null
 }
@@ -26,30 +32,62 @@ const rendered = JSON.parse(
 		.at(-1) ?? "",
 ) as Record<string, Shape>
 
-// The whole page stays under 1 MB with a title page's other content of about 400 KB.
-const GRID_HTML_LIMIT = 560_000
+// EPISODE_GRID_BUDGET: with the rest of a show page (about 450 KB), the page stays under about 1.5 MB.
+const BUDGET = 1_000_000
 
-test("a long show's grid renders its newest part within the limit", () => {
+test("the estimate is within 10% of the rendered HTML and loader data", () => {
 	for (const [name, shape] of Object.entries(rendered)) {
-		assert.ok(shape.bytes < GRID_HTML_LIMIT, `${name}: ${shape.bytes} bytes`)
+		const off =
+			Math.abs(shape.wholeBytes - shape.wholeEstimate) / shape.wholeBytes
+		assert.ok(
+			off < 0.1,
+			`${name}: ${shape.wholeBytes} rendered, ${shape.wholeEstimate} estimated`,
+		)
 	}
 })
 
-test("a part says what it shows and offers the rest", () => {
-	assert.equal(rendered.soap.notice, "Showing episodes 11,000 to 11,599")
-	assert.equal(rendered.soap.button, "Show all 195 episodes")
-	assert.deepEqual(rendered.lateNight.seasons, [30, 31])
-	assert.equal(rendered.lateNight.notice, "Showing the latest 2 of 31 seasons")
-	assert.equal(rendered.lateNight.button, "Show all 31 seasons")
-	assert.deepEqual(
-		rendered.cartoon.seasons,
-		[25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38],
-	)
-	assert.equal(rendered.cartoon.notice, "Showing the latest 14 of 38 seasons")
+test("every grid the page renders is within the budget", () => {
+	for (const [name, shape] of Object.entries(rendered)) {
+		assert.ok(shape.estimate <= BUDGET, `${name}: ${shape.estimate} estimated`)
+		assert.ok(shape.bytes <= BUDGET, `${name}: ${shape.bytes} rendered`)
+	}
 })
 
-test("a short show's grid is kept whole, without a notice", () => {
-	assert.equal(rendered.short.kept, true)
-	assert.equal(rendered.short.notice, null)
-	assert.equal(rendered.short.button, null)
+test("scripted runs and long anime render whole", () => {
+	for (const name of [
+		"simpsons",
+		"greys",
+		"svu",
+		"ncis",
+		"onePiece",
+		"short",
+	]) {
+		assert.equal(rendered[name].kept, true, name)
+		assert.equal(rendered[name].notice, null, name)
+	}
+	assert.equal(rendered.simpsons.seasons.length, 38)
+})
+
+test("a sparse soap renders whole, with its runs of unrated numbers as gap columns", () => {
+	assert.equal(rendered.soap.kept, true)
+	assert.equal(rendered.soap.shownEpisodes, 162)
+	// 11,599 numbers, 162 rated: every run between them is one gap column, not 69 cells.
+	assert.equal(rendered.soap.gapCells, 0)
+	assert.ok(rendered.soap.bytes < 300_000, `${rendered.soap.bytes}`)
+})
+
+test("an extreme show keeps its newest seasons or its latest episodes, and offers the rest", () => {
+	assert.equal(rendered.lateNight.kept, false)
+	assert.equal(rendered.lateNight.seasons.at(-1), 31)
+	assert.equal(
+		rendered.lateNight.notice,
+		`Showing the latest ${rendered.lateNight.seasons.length} of 31 seasons`,
+	)
+	assert.equal(rendered.lateNight.button, "Show all 31 seasons")
+	assert.equal(rendered.ratedSoap.kept, false)
+	assert.match(
+		rendered.ratedSoap.notice ?? "",
+		/^Showing episodes [\d,]+ to 7,399$/,
+	)
+	assert.equal(rendered.ratedSoap.button, "Show all 1,572 episodes")
 })

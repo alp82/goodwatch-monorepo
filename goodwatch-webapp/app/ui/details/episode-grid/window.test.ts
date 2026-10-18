@@ -1,10 +1,11 @@
-// The first part of a long episode grid on the show page.
+// The episode grid's columns and the part of a long grid that the show page renders first.
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import "../../../server/title-filter/test-alias.ts"
 
-const { windowEpisodeGrid, gridColumns, gridFirstEpisode } = await import(
-	"./window.ts"
+const { windowEpisodeGrid } = await import("./window.ts")
+const { estimateGridBytes, gridFirstEpisode, gridLayout } = await import(
+	"./layout.ts"
 )
 const { miniatureScores } = await import("./scale.ts")
 type EpisodeGrid = import("../../../server/episode-grid.server.ts").EpisodeGrid
@@ -47,9 +48,45 @@ const grid = (
 
 const range = (from: number, to: number) =>
 	Array.from({ length: to - from + 1 }, (_, i) => from + i)
-const limits = { episodes: 50, cells: 200 }
+const shape = (columns: ReturnType<typeof gridLayout>) =>
+	columns.map((c) =>
+		c.kind === "gap" ? `${c.from}-${c.to}` : String(c.number),
+	)
 
-test("a grid within both limits is kept whole, specials and all", () => {
+test("a run of three or more numbers that no season has is one gap column", () => {
+	assert.deepEqual(
+		shape(gridLayout(grid([[1, [1, 2, 6, 7, 11_599], 11_599]]))),
+		["1", "2", "3-5", "6", "7", "8-11598", "11599"],
+	)
+})
+
+test("a short run keeps its columns, so a missing episode is still a gap cell", () => {
+	assert.deepEqual(shape(gridLayout(grid([[1, [1, 2, 4, 5, 7], 8]]))), [
+		"1",
+		"2",
+		"3",
+		"4",
+		"5",
+		"6",
+		"7",
+		"8",
+	])
+})
+
+test("a number that any season has keeps its column", () => {
+	const columns = gridLayout(
+		grid([
+			[1, [1, 10], 10],
+			[2, range(1, 10), 10],
+		]),
+	)
+	assert.deepEqual(
+		shape(columns),
+		shape(gridLayout(grid([[1, range(1, 10), 10]]))),
+	)
+})
+
+test("a grid within the budget is kept whole, specials and all", () => {
 	const whole = grid(
 		[
 			[1, range(1, 10), 10],
@@ -57,16 +94,20 @@ test("a grid within both limits is kept whole, specials and all", () => {
 		],
 		3,
 	)
-	assert.equal(windowEpisodeGrid(whole, limits), whole)
+	assert.equal(windowEpisodeGrid(whole, estimateGridBytes(whole)), whole)
 })
 
-test("a long run keeps its newest seasons that fit, and the whole run's miniature", () => {
+test("a grid over the budget keeps its newest seasons that fit, and the whole run's miniature", () => {
 	const whole = grid(
 		range(1, 20).map((n) => [n, range(1, 12), 12]),
 		4,
 	)
-	const part = windowEpisodeGrid(whole, limits)
-	// 4 seasons of 12 = 48 rated episodes; a fifth would be 60.
+	const fourSeasons = estimateGridBytes({
+		...whole,
+		seasons: whole.seasons.slice(-4),
+		specials: [],
+	})
+	const part = windowEpisodeGrid(whole, fourSeasons)
 	assert.deepEqual(
 		part.seasons.map((s) => s.number),
 		[17, 18, 19, 20],
@@ -80,42 +121,20 @@ test("a long run keeps its newest seasons that fit, and the whole run's miniatur
 		miniature: miniatureScores(whole),
 	})
 	assert.deepEqual(miniatureScores(part), miniatureScores(whole))
+	assert.ok(estimateGridBytes(part) <= fourSeasons)
 })
 
-test("the cell limit counts the widest season's columns for every season kept", () => {
-	// Few rated episodes, but each season is 90 episodes wide: two seasons are 180 cells, three are 270.
-	const whole = grid(range(1, 5).map((n) => [n, [1, 45, 90], 90]))
-	const part = windowEpisodeGrid(whole, limits)
-	assert.deepEqual(
-		part.seasons.map((s) => s.number),
-		[4, 5],
-	)
-	assert.equal(gridColumns(part), 90)
-})
-
-test("a newest season too long on its own is cut to its latest episode numbers", () => {
-	// One IMDb season numbered into the thousands, as a daily soap has it.
-	const whole = grid([[1, [1, 2, 500, 9_000, 11_000, 11_500, 11_599], 11_599]])
-	const part = windowEpisodeGrid(whole, limits)
-	assert.equal(part.window?.firstEpisodeNumber, 11_400)
-	assert.equal(gridFirstEpisode(part), 11_400)
-	assert.equal(gridColumns(part), 200)
-	assert.deepEqual(
-		part.seasons[0].episodes.map((e) => e.number),
-		[11_500, 11_599],
-	)
-	assert.equal(part.window?.hiddenSeasons, 0)
-	assert.equal(part.window?.hiddenEpisodes, 5)
-})
-
-test("a cut season keeps no more rated episodes than the limit", () => {
+test("a newest season over the budget on its own keeps its latest episodes, its columns starting at the first", () => {
 	const whole = grid([[1, range(1, 150), 150]])
-	const part = windowEpisodeGrid(whole, limits)
-	assert.deepEqual(
-		part.seasons[0].episodes.map((e) => e.number),
-		range(101, 150),
-	)
-	assert.equal(part.window?.firstEpisodeNumber, 101)
+	const part = windowEpisodeGrid(whole, estimateGridBytes(whole) / 3)
+	const kept = part.seasons[0].episodes.map((e) => e.number)
+	assert.equal(kept.at(-1), 150)
+	assert.ok(kept.length > 30 && kept.length < 60, `${kept.length}`)
+	assert.equal(part.window?.firstEpisodeNumber, kept[0])
+	assert.equal(gridFirstEpisode(part), kept[0])
+	assert.equal(gridLayout(part).length, kept.length)
+	assert.equal(part.window?.hiddenSeasons, 0)
+	assert.equal(part.window?.hiddenEpisodes, 150 - kept.length)
 })
 
 test("the extra episodes outside every season are not taken for the newest season", () => {
@@ -127,7 +146,12 @@ test("the extra episodes outside every season are not taken for the newest seaso
 		]),
 		[-1, range(1, 30), 30],
 	])
-	const part = windowEpisodeGrid(whole, limits)
+	const budget = estimateGridBytes({
+		...whole,
+		seasons: whole.seasons.slice(5, 10),
+		specials: [],
+	})
+	const part = windowEpisodeGrid(whole, budget)
 	assert.deepEqual(
 		part.seasons.map((s) => s.number),
 		[6, 7, 8, 9, 10],
@@ -137,8 +161,8 @@ test("the extra episodes outside every season are not taken for the newest seaso
 
 test("a part of a grid with an episode 0 keeps its columns from 0", () => {
 	const whole = grid(range(1, 10).map((n) => [n, range(0, 9), 9]))
-	const part = windowEpisodeGrid(whole, limits)
+	const part = windowEpisodeGrid(whole, estimateGridBytes(whole) / 2)
 	assert.equal(part.hasEpisodeZero, true)
 	assert.equal(gridFirstEpisode(part), 0)
-	assert.equal(gridColumns(part), 10)
+	assert.equal(gridLayout(part).length, 10)
 })

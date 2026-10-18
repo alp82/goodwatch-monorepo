@@ -7,24 +7,30 @@
 //   which is the direction a phone scrolls anyway.
 //
 // Both are rendered and a container query on the grid's own box picks one. The query's
-// width is the rows table's width, worked out from the show's episode count, so the server
+// width is the rows table's width, worked out from the show's columns, so the server
 // render matches the client and nothing jumps on hydration. A grid wider than its box
 // scrolls sideways inside the box, never the page.
 //
 // Episodes are solid vibe tiles with the score in white. Each season label carries the
 // IMDb season score; hovering, focusing or tapping it opens every site's season score.
 // Titles and votes open the same way on an episode, and the key sits behind the info button.
+//
+// A long show renders thousands of cells, twice, in the page's HTML (see window.ts), so a cell's markup is kept
+// short: its look is in short classes that the grid's own style rule defines once. A run of episode numbers that no
+// season has is one narrow gap column (layout.ts).
 import { InformationCircleIcon } from "@heroicons/react/24/outline"
 import type { ReactNode } from "react"
-import { HEADER_HEIGHT, stickyHeadersBottom } from "~/ui/details/header-height"
 import type {
 	EpisodeGrid as EpisodeGridData,
 	GridEpisode,
 	GridSeason,
 	GridSpecial,
 } from "~/server/episode-grid.server"
+import { HEADER_HEIGHT, stickyHeadersBottom } from "~/ui/details/header-height"
+import { type GridColumn, gridLayout } from "~/ui/details/episode-grid/layout"
 import {
 	EPISODE_GRID_ANCHOR,
+	formatCount,
 	formatScore,
 	imdbVibe,
 	isLowVotes,
@@ -37,59 +43,96 @@ import {
 	LegendContent,
 	SeasonTip,
 	episodeLabel,
-	episodeSlots,
 	seasonLabel,
 	useFloat,
 } from "~/ui/details/episode-grid/shared"
-import { gridColumns, gridFirstEpisode } from "~/ui/details/episode-grid/window"
 
 type Episode = GridEpisode | GridSpecial
 type Orientation = "wide" | "narrow"
 
 const SURFACE = "bg-[#141923]"
-// Keep these in step with the rows table's classes: the season label column (min-w-[4.25rem]),
-// the tile width (w-10) and the cell spacing (border-spacing-[3px]).
+// Keep these in step with the rows table's cells: the season label column (min-w-[4.25rem]),
+// the tile width (.eg-w), the gap column width (.eg-rw) and the cell spacing (border-spacing-[3px]).
 const ROWS_LABEL_REM = 4.25
 const ROWS_CELL_REM = 2.5
+const ROWS_RUN_REM = 1
 const CELL_SPACING_REM = 3 / 16
 
-/** The width the rows table needs to show `columns` episode columns without scrolling. */
-const rowsWidthRem = (columns: number) =>
-	ROWS_LABEL_REM + columns * ROWS_CELL_REM + (columns + 2) * CELL_SPACING_REM
+/** The width the rows table needs to show every column without scrolling. */
+const rowsWidthRem = (columns: GridColumn[]) =>
+	ROWS_LABEL_REM +
+	columns.reduce(
+		(width, column) =>
+			width + (column.kind === "gap" ? ROWS_RUN_REM : ROWS_CELL_REM),
+		0,
+	) +
+	(columns.length + 2) * CELL_SPACING_REM
+
+const A = `#${EPISODE_GRID_ANCHOR}`
+const VIBES = Array.from({ length: 11 }, (_, i) => i * 10)
 
 /**
- * Shows the rows table only when its box is wide enough for every episode column, and the
- * columns table otherwise. Container query conditions cannot read custom properties, so
- * the width goes into the rule itself.
+ * The grid's own style: the cells' look, once for all of them, and the choice of table. Container query conditions
+ * cannot read custom properties, so the rows table's width goes into the rule itself.
  */
-const layoutRule = (columns: number) =>
-	`#${EPISODE_GRID_ANCHOR} [data-grid-layout="rows"]{display:none}` +
-	`@container episode-grid (min-width: ${rowsWidthRem(columns)}rem){` +
-	`#${EPISODE_GRID_ANCHOR} [data-grid-layout="rows"]{display:block}` +
-	`#${EPISODE_GRID_ANCHOR} [data-grid-layout="columns"]{display:none}}`
-const CELL_SIZE: Record<Orientation, string> = {
-	wide: "h-8 w-10 text-[12.5px]",
-	narrow: "h-7 w-full min-w-[2.125rem] text-xs",
+const gridStyle = (columns: GridColumn[]) =>
+	[
+		`${A} .eg-t{position:relative;display:block;flex-shrink:0;border-radius:4px;font-weight:600;font-variant-numeric:tabular-nums;color:#fff;outline-offset:1px;transition:filter .15s cubic-bezier(.4,0,.2,1)}`,
+		`@media (hover:hover){${A} .eg-t:hover{filter:brightness(1.25)}}`,
+		`${A} .eg-t:focus-visible{outline:2px solid #fff}`,
+		`${A} .eg-w{height:2rem;width:2.5rem;font-size:12.5px}`,
+		`${A} .eg-n{height:1.75rem;width:100%;min-width:2.125rem;font-size:.75rem;line-height:1rem}`,
+		`${A} .eg-g{display:block;border-radius:4px;background:rgb(255 255 255/.05)}`,
+		`${A} .eg-rw{height:2rem;width:1rem}`,
+		`${A} .eg-rn{height:.75rem;width:100%}`,
+		`${A} .eg-u{background:rgb(255 255 255/.06)}`,
+		...VIBES.map((v) => `${A} .eg-v${v}{background:${vibeTileColor(v)}}`),
+		...VIBES.map(
+			(v) =>
+				`${A} .eg-l${v}{border:1px dashed var(--color-vibe-${v});background:${vibeWash(v)}}`,
+		),
+		`${A} .eg-r{position:sticky;left:0;z-index:10;background:#141923;padding-right:.25rem;text-align:right;font-size:11px;font-weight:400;font-variant-numeric:tabular-nums;color:var(--color-gray-500,oklch(55.1% .027 264.364))}`,
+		`${A} [data-grid-layout="rows"]{display:none}`,
+		`@container episode-grid (min-width: ${rowsWidthRem(columns)}rem){`,
+		`${A} [data-grid-layout="rows"]{display:block}`,
+		`${A} [data-grid-layout="columns"]{display:none}}`,
+	].join("")
+
+const TILE: Record<Orientation, string> = {
+	wide: "eg-t eg-w",
+	narrow: "eg-t eg-n",
+}
+const GAP: Record<Orientation, string> = {
+	wide: "eg-g eg-w",
+	narrow: "eg-g eg-n",
+}
+const RUN: Record<Orientation, string> = {
+	wide: "eg-g eg-rw",
+	narrow: "eg-g eg-rn",
 }
 
 /**
- * The paint of an episode tile. Well-voted episodes are solid vibe tiles; episodes with few
+ * The paint class of an episode tile. Well-voted episodes are solid vibe tiles; episodes with few
  * votes are a faint wash of their vibe with a dashed vibe border. The number is white on both.
  */
-const tilePaint = (episode: Pick<Episode, "score" | "votes" | "unrated">) => {
-	if (episode.unrated)
-		return { className: "", style: { background: "rgba(255,255,255,0.06)" } }
+const tileClass = (episode: Pick<Episode, "score" | "votes" | "unrated">) => {
+	if (episode.unrated) return "eg-u"
 	const vibe = imdbVibe(episode.score)
-	return isLowVotes(episode.votes)
-		? {
-				className: "border border-dashed",
-				style: {
-					borderColor: `var(--color-vibe-${vibe})`,
-					background: vibeWash(vibe),
-				},
-			}
-		: { className: "", style: { background: vibeTileColor(vibe) } }
+	return isLowVotes(episode.votes) ? `eg-l${vibe}` : `eg-v${vibe}`
 }
+
+/** The few-votes look for the key, which sits outside the grid's style. */
+const lowVoteStyle = (score: number) => {
+	const vibe = imdbVibe(score)
+	return {
+		border: `1px dashed var(--color-vibe-${vibe})`,
+		background: vibeWash(vibe),
+	}
+}
+
+/** The words for a gap column: "Episodes 12 to 10,450". */
+const runWords = (column: Extract<GridColumn, { kind: "gap" }>) =>
+	`Episodes ${formatCount(column.from)} to ${formatCount(column.to)}`
 
 // The site bar above the sticky title header.
 const SITE_BAR_HEIGHT = 64
@@ -105,9 +148,7 @@ export default function EpisodeGrid({
 }) {
 	const float = useFloat()
 
-	const first = gridFirstEpisode(grid)
-	const columns = gridColumns(grid)
-	const episodeNumbers = Array.from({ length: columns }, (_, i) => first + i)
+	const columns = gridLayout(grid)
 	const hasSpecials = grid.specials.length > 0
 
 	// ---- cells ---------------------------------------------------------------------------
@@ -117,31 +158,64 @@ export default function EpisodeGrid({
 		episode: Episode,
 		o: Orientation,
 		id: string,
-	) => {
-		const { className, style } = tilePaint(episode)
-		return (
-			<button
-				key={id}
-				type="button"
-				aria-label={episodeLabel(season, episode)}
-				{...float.trigger(`ep-${id}`, () => (
-					<EpisodeTip season={season} episode={episode} />
-				))}
-				className={`relative block shrink-0 rounded-[4px] font-semibold tabular-nums text-white outline-offset-1 transition-[filter] hover:brightness-125 focus-visible:outline-2 focus-visible:outline-white ${CELL_SIZE[o]} ${className} ${
-					float.isOpen(`ep-${id}`) ? "outline-2 outline-white" : ""
-				}`}
-				style={style}
-			>
-				{episode.unrated ? "—" : formatScore(episode.score)}
-			</button>
-		)
-	}
+	) => (
+		<button
+			key={id}
+			type="button"
+			aria-label={episodeLabel(season, episode)}
+			{...float.trigger(`ep-${id}`, () => (
+				<EpisodeTip season={season} episode={episode} />
+			))}
+			className={`${TILE[o]} ${tileClass(episode)}${
+				float.isOpen(`ep-${id}`) ? " outline-2 outline-white" : ""
+			}`}
+		>
+			{episode.unrated ? "—" : formatScore(episode.score)}
+		</button>
+	)
 
 	const gap = (number: number, o: Orientation) => (
-		<span className={`block rounded-[4px] bg-white/[0.05] ${CELL_SIZE[o]}`}>
+		<span className={GAP[o]}>
 			<span className="sr-only">Episode {number} not rated</span>
 		</span>
 	)
+
+	const run = (
+		column: Extract<GridColumn, { kind: "gap" }>,
+		o: Orientation,
+	) => (
+		<span className={RUN[o]} title={`${runWords(column)}: no ratings`}>
+			<span className="sr-only">{runWords(column)}: no ratings</span>
+		</span>
+	)
+
+	/** A season's cell in a column: its tile, a gap inside the season, or nothing past its end. */
+	const seasonCell = (
+		season: GridSeason,
+		at: Map<number, GridEpisode>,
+		column: GridColumn,
+		o: Orientation,
+	) => {
+		if (column.kind === "gap")
+			return column.from <= season.maxEpisodeNumber ? run(column, o) : null
+		const episode = at.get(column.number)
+		if (episode)
+			return cell(
+				season.number,
+				episode,
+				o,
+				`${season.number}-${column.number}`,
+			)
+		return column.number >= 1 && column.number <= season.maxEpisodeNumber
+			? gap(column.number, o)
+			: null
+	}
+
+	const byNumber = grid.seasons.map(
+		(s) => new Map(s.episodes.map((e) => [e.number, e])),
+	)
+	const columnKey = (column: GridColumn) =>
+		column.kind === "gap" ? `run-${column.from}` : column.number
 
 	// ---- season labels -------------------------------------------------------------------
 
@@ -188,49 +262,46 @@ export default function EpisodeGrid({
 					>
 						<span className="sr-only">Season</span>
 					</th>
-					{episodeNumbers.map((number) => (
-						<th key={number} scope="col" className="font-normal tabular-nums">
-							<span className="sr-only">Episode </span>
-							{number}
-						</th>
-					))}
+					{columns.map((column) =>
+						column.kind === "gap" ? (
+							<th
+								key={columnKey(column)}
+								scope="col"
+								title={runWords(column)}
+								className="font-normal"
+							>
+								<span aria-hidden="true">⋯</span>
+								<span className="sr-only">{runWords(column)}</span>
+							</th>
+						) : (
+							<th
+								key={columnKey(column)}
+								scope="col"
+								className="font-normal tabular-nums"
+							>
+								<span className="sr-only">Episode </span>
+								{column.number}
+							</th>
+						),
+					)}
 				</tr>
 			</thead>
 			<tbody>
-				{grid.seasons.map((season) => {
-					const slots = episodeSlots(
-						season.episodes,
-						first,
-						season.maxEpisodeNumber,
-					)
-					return (
-						<tr key={season.number}>
-							<th
-								scope="row"
-								className={`sticky left-0 z-10 ${SURFACE} pr-1 text-left font-normal`}
-							>
-								{seasonHeader(season, "wide")}
-							</th>
-							{slots.map(({ number, episode }) => (
-								<td key={number} className="p-0">
-									{episode
-										? cell(
-												season.number,
-												episode,
-												"wide",
-												`${season.number}-${number}`,
-											)
-										: number >= 1
-											? gap(number, "wide")
-											: null}
-								</td>
-							))}
-							{episodeNumbers.slice(slots.length).map((number) => (
-								<td key={`pad-${number}`} />
-							))}
-						</tr>
-					)
-				})}
+				{grid.seasons.map((season, si) => (
+					<tr key={season.number}>
+						<th
+							scope="row"
+							className={`sticky left-0 z-10 ${SURFACE} pr-1 text-left font-normal`}
+						>
+							{seasonHeader(season, "wide")}
+						</th>
+						{columns.map((column) => (
+							<td key={columnKey(column)} className="p-0">
+								{seasonCell(season, byNumber[si], column, "wide")}
+							</td>
+						))}
+					</tr>
+				))}
 				{hasSpecials && (
 					<tr>
 						<th
@@ -239,7 +310,7 @@ export default function EpisodeGrid({
 						>
 							{specialsLabel("Specials")}
 						</th>
-						<td colSpan={columns} className="pt-2">
+						<td colSpan={columns.length} className="pt-2">
 							<div className="flex flex-wrap gap-[3px]">
 								{grid.specials.map((special, i) =>
 									cell(null, special, "wide", `sp-${i}`),
@@ -254,10 +325,7 @@ export default function EpisodeGrid({
 
 	// ---- narrow: seasons as columns ------------------------------------------------------
 
-	const rows = Math.max(columns, grid.specials.length)
-	const byNumber = grid.seasons.map(
-		(s) => new Map(s.episodes.map((e) => [e.number, e])),
-	)
+	const rows = Math.max(columns.length, grid.specials.length)
 	const narrow = (
 		<table className="w-full border-separate border-spacing-[3px]">
 			<caption className="sr-only">
@@ -287,37 +355,27 @@ export default function EpisodeGrid({
 			</thead>
 			<tbody>
 				{Array.from({ length: rows }, (_, i) => {
-					const number = first + i
+					const column: GridColumn | undefined = columns[i]
 					return (
-						<tr key={number}>
-							<th
-								scope="row"
-								className={`sticky left-0 z-10 ${SURFACE} pr-1 text-right text-[11px] font-normal tabular-nums text-gray-500`}
-							>
-								{number <= grid.maxEpisodeNumber ? (
+						<tr key={column ? columnKey(column) : `sp-row-${i}`}>
+							<th scope="row" className="eg-r">
+								{column?.kind === "gap" ? (
+									<span title={runWords(column)}>
+										<span aria-hidden="true">⋯</span>
+										<span className="sr-only">{runWords(column)}</span>
+									</span>
+								) : column ? (
 									<>
 										<span className="sr-only">Episode </span>
-										{number}
+										{column.number}
 									</>
 								) : null}
 							</th>
-							{grid.seasons.map((season, si) => {
-								const episode = byNumber[si].get(number)
-								return (
-									<td key={season.number} className="p-0">
-										{episode
-											? cell(
-													season.number,
-													episode,
-													"narrow",
-													`${season.number}-${number}`,
-												)
-											: number >= 1 && number <= season.maxEpisodeNumber
-												? gap(number, "narrow")
-												: null}
-									</td>
-								)
-							})}
+							{grid.seasons.map((season, si) => (
+								<td key={season.number} className="p-0">
+									{column && seasonCell(season, byNumber[si], column, "narrow")}
+								</td>
+							))}
 							{hasSpecials && (
 								<td className="p-0">
 									{grid.specials[i] &&
@@ -333,11 +391,10 @@ export default function EpisodeGrid({
 
 	// ---- frame ---------------------------------------------------------------------------
 
-	const sample = tilePaint({ score: 8.2, votes: 1 })
 	const lowVoteSample = (
 		<span
-			className={`inline-flex h-5 w-7 shrink-0 items-center justify-center rounded-[3px] text-[10px] font-semibold text-white ${sample.className}`}
-			style={sample.style}
+			className="inline-flex h-5 w-7 shrink-0 items-center justify-center rounded-[3px] text-[10px] font-semibold text-white"
+			style={lowVoteStyle(8.2)}
 		>
 			8.2
 		</span>
@@ -384,8 +441,8 @@ export default function EpisodeGrid({
 			</div>
 			{grid.note && <p className="mt-2 text-sm text-gray-400">{grid.note}</p>}
 			{notice}
-			{/* biome-ignore lint/security/noDangerouslySetInnerHtml: a fixed rule built from a number */}
-			<style dangerouslySetInnerHTML={{ __html: layoutRule(columns) }} />
+			{/* biome-ignore lint/security/noDangerouslySetInnerHtml: fixed rules built from numbers */}
+			<style dangerouslySetInnerHTML={{ __html: gridStyle(columns) }} />
 			<div
 				className={`@container/episode-grid mt-4 rounded-2xl border border-white/[0.06] ${SURFACE} p-2 sm:p-3`}
 			>

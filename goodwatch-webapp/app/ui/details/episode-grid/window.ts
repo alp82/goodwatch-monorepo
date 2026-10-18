@@ -1,55 +1,57 @@
-// The first part of a long episode grid, which the show page renders on the server. Search engines read only the
-// first part of a page (Googlebot stops at 2 MB of HTML), and the grid renders every cell twice, once per
-// orientation. A daily show has thousands of episodes, and some shows put all of them in one IMDb season numbered
-// into the thousands, so the whole grid can be several megabytes and push cast, related titles and questions out
-// of reach.
+// The part of a long episode grid that the show page renders on the server. Search engines read only the first part
+// of a page (Googlebot stops at 2 MB of HTML), and the grid sits before the cast, related titles and questions.
 //
-// The part is the newest seasons that fit both limits. When the newest season alone doesn't fit, it is cut to its
-// latest episode numbers. Specials are left out of a part. The rest of the grid loads on request
-// (useWholeEpisodeGrid).
+// A grid within the byte budget renders whole: that is every scripted show, The Simpsons and long anime included.
+// Only the extreme ones are cut (daily talk, news, soaps and wrestling with thousands of rated episodes): the part is
+// the newest seasons within the budget, or, when the newest season alone is over it, that season's latest episodes.
+// Specials are left out of a part. The rest of the grid loads on request (useWholeEpisodeGrid).
 import type { EpisodeGrid, GridSeason } from "~/server/episode-grid.server"
+import { estimateGridBytes } from "~/ui/details/episode-grid/layout"
 import { miniatureScores } from "~/ui/details/episode-grid/scale"
 
-export interface GridLimits {
-	/** Rated episodes. Each costs about 1 KB of HTML: a tile in each orientation. */
-	episodes: number
-	/** Cells: seasons times episode columns. An empty cell costs about 0.6 KB with its number headers. */
-	cells: number
-}
-
-/** Keeps the grid's part of a show page's HTML to about 500 KB at most, and the page under 1 MB. */
-export const EPISODE_GRID_LIMITS: GridLimits = { episodes: 360, cells: 600 }
+/**
+ * The bytes the grid may add to a show page. A show page without its grid is about 450 KB, so the page stays under
+ * about 1.5 MB, and the cast, related titles and questions after the grid end before 1.8 MB.
+ */
+export const EPISODE_GRID_BUDGET = 1_000_000
 
 const ratedIn = (seasons: GridSeason[]) =>
 	seasons.reduce((count, season) => count + season.episodes.length, 0)
 
-const firstNumber = (seasons: GridSeason[]) =>
-	seasons.some((season) => season.episodes[0]?.number === 0) ? 0 : 1
+/** The grid with only `seasons`, its columns starting at `firstEpisodeNumber` when the one season is cut. */
+const partOf = (
+	grid: EpisodeGrid,
+	seasons: GridSeason[],
+	firstEpisodeNumber?: number,
+): EpisodeGrid => ({
+	...grid,
+	seasons,
+	specials: [],
+	maxEpisodeNumber: Math.max(
+		0,
+		...seasons.map((season) => season.maxEpisodeNumber),
+	),
+	hasEpisodeZero:
+		firstEpisodeNumber === undefined &&
+		seasons.some((season) => season.episodes[0]?.number === 0),
+	...(firstEpisodeNumber !== undefined && {
+		window: {
+			seasons: 0,
+			episodes: 0,
+			hiddenSeasons: 0,
+			hiddenEpisodes: 0,
+			firstEpisodeNumber,
+			miniature: [],
+		},
+	}),
+})
 
-const cellsOf = (seasons: GridSeason[], first: number) =>
-	seasons.length *
-	(Math.max(0, ...seasons.map((season) => season.maxEpisodeNumber)) - first + 1)
-
-/** The first episode number the grid's columns start at. */
-export const gridFirstEpisode = (grid: EpisodeGrid) =>
-	grid.window?.firstEpisodeNumber ?? (grid.hasEpisodeZero ? 0 : 1)
-
-/** The grid's episode columns, from its first episode number to its widest season's last. */
-export const gridColumns = (grid: EpisodeGrid) =>
-	grid.maxEpisodeNumber - gridFirstEpisode(grid) + 1
-
-/** The grid as the show page renders it first: the whole grid when it fits the limits, else its newest part. */
+/** The grid as the show page renders it first: the whole grid when it fits the budget, else its newest part. */
 export function windowEpisodeGrid(
 	grid: EpisodeGrid,
-	limits: GridLimits = EPISODE_GRID_LIMITS,
+	budget: number = EPISODE_GRID_BUDGET,
 ): EpisodeGrid {
-	const total = ratedIn(grid.seasons) + grid.specials.length
-	if (
-		total <= limits.episodes &&
-		cellsOf(grid.seasons, firstNumber(grid.seasons)) + grid.specials.length <=
-			limits.cells
-	)
-		return grid
+	if (estimateGridBytes(grid) <= budget) return grid
 
 	// "More" (a negative number) holds episodes outside the shown seasons; it is not the newest season.
 	const numbered = grid.seasons.filter((season) => season.number >= 0)
@@ -57,49 +59,47 @@ export function windowEpisodeGrid(
 	let kept: GridSeason[] = []
 	for (let i = candidates.length - 1; i >= 0; i--) {
 		const next = [candidates[i], ...kept]
-		if (
-			ratedIn(next) > limits.episodes ||
-			cellsOf(next, firstNumber(next)) > limits.cells
-		)
-			break
+		if (estimateGridBytes(partOf(grid, next)) > budget) break
 		kept = next
 	}
 
 	let firstEpisodeNumber: number | undefined
 	if (!kept.length) {
-		// The newest season alone is too long: keep its latest episode numbers that fit both limits.
+		// The newest season alone is over the budget: keep the most of its latest episodes that fit.
 		const newest = candidates[candidates.length - 1]
-		const { episodes } = newest
-		const byCells = newest.maxEpisodeNumber - limits.cells + 1
-		const byEpisodes =
-			episodes.length > limits.episodes
-				? episodes[episodes.length - limits.episodes].number
-				: Number.NEGATIVE_INFINITY
-		const start = Math.max(byCells, byEpisodes, firstNumber([newest]))
-		kept = [
+		const latest = (count: number) => [
 			{
 				...newest,
-				episodes: episodes.filter((episode) => episode.number >= start),
+				episodes: newest.episodes.slice(newest.episodes.length - count),
 			},
 		]
-		if (start > firstNumber([newest])) firstEpisodeNumber = start
+		const fits = (count: number) => {
+			const seasons = latest(count)
+			return (
+				estimateGridBytes(
+					partOf(grid, seasons, seasons[0].episodes[0].number),
+				) <= budget
+			)
+		}
+		let low = 1
+		let high = newest.episodes.length - 1
+		while (low < high) {
+			const middle = Math.ceil((low + high) / 2)
+			if (fits(middle)) low = middle
+			else high = middle - 1
+		}
+		kept = latest(low)
+		firstEpisodeNumber = kept[0].episodes[0].number
 	}
 
-	const shown = ratedIn(kept)
+	const total = ratedIn(grid.seasons) + grid.specials.length
 	return {
-		...grid,
-		seasons: kept,
-		specials: [],
-		maxEpisodeNumber: Math.max(
-			0,
-			...kept.map((season) => season.maxEpisodeNumber),
-		),
-		hasEpisodeZero: firstEpisodeNumber === undefined && firstNumber(kept) === 0,
+		...partOf(grid, kept, firstEpisodeNumber),
 		window: {
 			seasons: grid.seasons.length,
 			episodes: total,
 			hiddenSeasons: grid.seasons.length - kept.length,
-			hiddenEpisodes: total - shown,
+			hiddenEpisodes: total - ratedIn(kept),
 			...(firstEpisodeNumber !== undefined && { firstEpisodeNumber }),
 			miniature: miniatureScores(grid),
 		},

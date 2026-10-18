@@ -5,7 +5,7 @@
 // The numbers are measured on phones (412 px wide) and desktops (1,440 px wide) across titles with and without a
 // poster, cast, trailer, collection, and streaming offers. Keep them in step with the sections' markup.
 import type { EpisodeGrid } from "~/server/episode-grid.server"
-import { gridColumns } from "~/ui/details/episode-grid/window"
+import { gridLayout } from "~/ui/details/episode-grid/layout"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 
 type Media = MovieResult | ShowResult
@@ -69,15 +69,21 @@ export const questionsHeight = (count: number): ReservedHeight =>
 	count ? { phone: 60 + count * 250, desktop: 60 + count * 135 } : same(0)
 
 // The episode grid shows seasons as rows when its box fits every episode column, and as columns otherwise
-// (see EpisodeGrid.tsx): up to 6 episode columns fit on a phone, and up to 26 on a desktop.
-// A part of a long grid has the line with the button for the rest above it.
+// (see EpisodeGrid.tsx): up to 6 episode columns fit on a phone, and up to 26 on a desktop. A gap column is
+// under half a column wide, and its row in the columns table is short. A part of a long grid has the line with the
+// button for the rest above it.
 export function episodeGridHeight(grid: EpisodeGrid): ReservedHeight {
-	const columns = gridColumns(grid)
+	const layout = gridLayout(grid)
+	const gaps = layout.filter((column) => column.kind === "gap").length
+	const columns = layout.length - gaps + gaps * 0.4
 	const notice = grid.window ? 40 : 0
 	const asRows =
 		100 + notice + grid.seasons.length * 35 + (grid.specials.length ? 48 : 0)
 	const asColumns =
-		121 + notice + Math.max(columns, grid.specials.length) * 31
+		121 +
+		notice +
+		Math.max(layout.length - gaps, grid.specials.length) * 31 +
+		gaps * 15
 	return {
 		phone: columns <= 6 ? asRows : asColumns,
 		desktop: columns <= 26 ? asRows : asColumns,

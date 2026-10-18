@@ -34,19 +34,6 @@ import {
 	vibeTileColor,
 } from "~/ui/details/episode-grid/scale"
 
-/** One slot per number from `first` to `last`; `episode` is null for an unrated number. */
-export const episodeSlots = (
-	episodes: GridEpisode[],
-	first: number,
-	last: number,
-) => {
-	const byNumber = new Map(episodes.map((e) => [e.number, e]))
-	const slots: { number: number; episode: GridEpisode | null }[] = []
-	for (let n = first; n <= last; n++)
-		slots.push({ number: n, episode: byNumber.get(n) ?? null })
-	return slots
-}
-
 import MediaText from "~/ui/media-text/MediaText"
 export { episodeLabel, episodeWhere } from "./labels"
 import { episodeWhere } from "./labels"
