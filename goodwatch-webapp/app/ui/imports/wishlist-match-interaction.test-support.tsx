@@ -1,0 +1,792 @@
+// Matching wishlist entries by hand in happy-dom: the real import flow, query hooks, and lazy panel, with a stand-in
+// network that answers the list (50 a page), entry, search, resolve, confirm, and item APIs with synthetic data. Each scenario acts like a member
+// and records what was sent, what the screen said, and where focus went, for WishlistImport.test.ts.
+import { Window } from "happy-dom"
+
+const window = new Window({ url: "https://goodwatch.app/settings/imports" })
+for (const key of [
+	"window",
+	"document",
+	"navigator",
+	"HTMLElement",
+	"HTMLInputElement",
+	"Node",
+	"Event",
+	"MouseEvent",
+	"KeyboardEvent",
+	"getComputedStyle",
+	"sessionStorage",
+	"localStorage",
+])
+	Object.defineProperty(globalThis, key, {
+		configurable: true,
+		writable: true,
+		value: (window as unknown as Record<string, unknown>)[key],
+	})
+;(
+	globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }
+).IS_REACT_ACT_ENVIRONMENT = true
+
+import type { ImportItem, ImportSummary } from "~/domain/imports"
+
+const PARENT = "00000000-0000-4000-8000-0000000000a1"
+const CHILD = "00000000-0000-4000-8000-0000000000b2"
+
+const summary = (
+	id: string,
+	counts: Partial<ImportSummary["counts"]>,
+	wishlistMatchCount: number,
+): ImportSummary => {
+	const all = {
+		new: 0,
+		unchanged: 0,
+		conflict: 0,
+		unmatched: 0,
+		unsupported: 0,
+		invalid: 0,
+		...counts,
+	}
+	return {
+		id,
+		source: "wishlist",
+		fileName: "netflix-wishlist.json",
+		status: "preview",
+		createdAt: "2026-10-18T10:00:00.000Z",
+		finishedAt: null,
+		counts: { ...all, rows: Object.values(all).reduce((a, b) => a + b, 0) },
+		kinds: {
+			rating: 0,
+			watch: 0,
+			want: 5,
+			favorite: 0,
+			review: 0,
+			show_status: 0,
+		},
+		warnings: [],
+		options: null,
+		processed: 0,
+		total: 0,
+		applied: { added: 0, updated: 0, kept: 0, failed: 0 },
+		stalled: false,
+		canUndo: false,
+		error: null,
+		wishlistMatchCount,
+	}
+}
+
+const evidence = (sourceId: string) => ({
+	source: "netflix",
+	completeness: "partial" as const,
+	mediaType: "unknown" as const,
+	sourceId,
+	sourceUrl: `https://www.netflix.com/title/${sourceId}`,
+})
+const unknownRow = (
+	index: number,
+	title: string,
+	sourceId: string,
+	patch: Partial<ImportItem> = {},
+): ImportItem => ({
+	index,
+	key: `wishlist:want:${sourceId}`,
+	kind: "want",
+	mediaType: "movie",
+	title,
+	year: null,
+	tmdbId: null,
+	imdbId: null,
+	outcome: "unmatched",
+	reason: "Your file doesn't say whether this is a movie or a show.",
+	wishlistEvidence: evidence(sourceId),
+	wishlistOriginal: {
+		key: `wishlist:want:${sourceId}`,
+		kind: "want",
+		mediaType: "unknown",
+		title,
+		year: null,
+		tmdbId: null,
+		imdbId: null,
+		wishlistEvidence: evidence(sourceId),
+	},
+	...patch,
+})
+const resolvedRow = unknownRow(9, "GoT", "70305903", {
+	outcome: "new",
+	reason: null,
+	mediaType: "show",
+	tmdbId: 1399,
+	wishlistResolution: {
+		basis: "member",
+		mediaType: "show",
+		tmdbId: 1399,
+		title: "Game of Thrones",
+		year: 2011,
+		selectedAt: "2026-10-18T10:00:00.000Z",
+		parentImportId: "00000000-0000-4000-8000-0000000000a0",
+		parentRowIndex: 9,
+	},
+})
+const groups = {
+	office: {
+		representativeIndex: 4,
+		item: unknownRow(4, "The Office", "70136120"),
+		entryCount: 3,
+		evidenceVariants: [
+			{ title: "The Office", year: null, sourceId: "70136120" },
+			{ title: "The Office (U.S.)", year: null, sourceId: "70136120" },
+		],
+		hasMoreEvidence: false,
+	},
+	dark: {
+		representativeIndex: 7,
+		item: unknownRow(7, "Dark", "80100172"),
+		entryCount: 1,
+		evidenceVariants: [{ title: "Dark", year: null, sourceId: "80100172" }],
+		hasMoreEvidence: false,
+	},
+	got: {
+		representativeIndex: 9,
+		item: resolvedRow,
+		entryCount: 1,
+		evidenceVariants: [{ title: "GoT", year: null, sourceId: "70305903" }],
+		hasMoreEvidence: false,
+	},
+}
+const matchedRow = (
+	index: number,
+	title: string,
+	sourceId: string,
+	target: {
+		mediaType: "movie" | "show"
+		tmdbId: number
+		title: string
+		year: number
+	},
+) =>
+	unknownRow(index, title, sourceId, {
+		outcome: "new",
+		reason: null,
+		mediaType: target.mediaType,
+		tmdbId: target.tmdbId,
+		wishlistResolution: {
+			basis: "member",
+			...target,
+			selectedAt: "2026-10-18T10:00:00.000Z",
+			parentImportId: "00000000-0000-4000-8000-0000000000a0",
+			parentRowIndex: index,
+		},
+	})
+const groupOf = (item: ImportItem, entryCount = 1) => ({
+	representativeIndex: item.index,
+	item,
+	entryCount,
+	evidenceVariants: [
+		{
+			title: item.title,
+			year: null,
+			sourceId: item.wishlistEvidence?.sourceId ?? "",
+		},
+	],
+	hasMoreEvidence: false,
+})
+const candidates: Record<string, unknown[]> = {
+	"The Office": [
+		{
+			mediaType: "show",
+			tmdbId: 2316,
+			title: "The Office",
+			year: 2005,
+			posterPath: "/office.jpg",
+		},
+	],
+	Dark: [
+		{
+			mediaType: "show",
+			tmdbId: 70523,
+			title: "Dark",
+			year: 2017,
+			posterPath: null,
+		},
+		{
+			mediaType: "movie",
+			tmdbId: 9999,
+			title: "Dark",
+			year: 2005,
+			posterPath: null,
+		},
+	],
+}
+
+type Reply = { status: number; body: unknown } | "offline"
+type Group = (typeof groups)["office"]
+type Net = {
+	groups: Group[] | { status: number; body: unknown }
+	resolve: Reply[]
+	/** Answers to entry lookups, used first. After them, a row finds its group by `leaves` or its own index. */
+	entry?: Reply[]
+	/** Rows that repeat an entry: row index to the entry's representative index. */
+	leaves?: Record<number, number>
+	/** Rows in the New to your Wishlist list. */
+	items?: ImportItem[]
+	/** Confirm never answers, so the preview stays in its importing state. */
+	holdConfirm?: boolean
+}
+let net: Net = { groups: [], resolve: [] }
+let sent: { method: string; url: string; body: unknown }[] = []
+const respond = (status: number, body: unknown) =>
+	new Response(JSON.stringify(body), {
+		status,
+		headers: { "Content-Type": "application/json" },
+	})
+globalThis.fetch = (async (input: string, init?: RequestInit) => {
+	const url = String(input)
+	const method = init?.method ?? "GET"
+	sent.push({
+		method,
+		url,
+		body: init?.body ? JSON.parse(String(init.body)) : null,
+	})
+	const parsed = new URL(url, "https://goodwatch.app")
+	if (parsed.pathname.endsWith("/resolve")) {
+		const reply = net.resolve.shift() ?? "offline"
+		if (reply === "offline") throw new TypeError("Failed to fetch")
+		return respond(reply.status, reply.body)
+	}
+	if (parsed.pathname.endsWith("/confirm") && net.holdConfirm)
+		return new Promise<Response>(() => {})
+	if (parsed.pathname.endsWith("/matches")) {
+		const entry = parsed.searchParams.get("entry")
+		if (entry !== null) {
+			const reply = net.entry?.shift()
+			if (reply === "offline") throw new TypeError("Failed to fetch")
+			if (reply) return respond(reply.status, reply.body)
+			const at = net.leaves?.[Number(entry)] ?? Number(entry)
+			const group = Array.isArray(net.groups)
+				? net.groups.find((item) => item.representativeIndex === at)
+				: undefined
+			return group
+				? respond(200, { group })
+				: respond(400, {
+						error: "Server text",
+						code: "wishlist_row_not_resolvable",
+					})
+		}
+		const q = parsed.searchParams.get("q")
+		if (q !== null) {
+			const type = parsed.searchParams.get("type")
+			return respond(200, {
+				index: Number(parsed.searchParams.get("index")),
+				candidates: (candidates[q] ?? []).filter(
+					(item) => !type || (item as { mediaType: string }).mediaType === type,
+				),
+			})
+		}
+		if (!Array.isArray(net.groups))
+			return respond(net.groups.status, net.groups.body)
+		const offset = Number(parsed.searchParams.get("offset") ?? 0)
+		return respond(200, {
+			groups: net.groups.slice(offset, offset + 50),
+			total: net.groups.length,
+			offset,
+			hasMore: offset + 50 < net.groups.length,
+		})
+	}
+	if (parsed.pathname.endsWith("/items")) {
+		const outcome = parsed.searchParams.get("outcome")
+		const items = outcome === "new" ? (net.items ?? [resolvedRow]) : []
+		return respond(200, { items, total: items.length })
+	}
+	if (url === "/api/imports") return respond(200, { imports: [] })
+	return respond(404, { error: "not stubbed" })
+}) as typeof fetch
+
+const { createElement: h, act } = await import("react")
+const { createRoot } = await import("react-dom/client")
+const { QueryClient, QueryClientProvider } = await import(
+	"@tanstack/react-query"
+)
+const { SourceImportFlow } = await import("./SourceImportFlow")
+
+const settle = async (times = 3) => {
+	for (let i = 0; i < times; i++)
+		await act(async () => new Promise((resolve) => setTimeout(resolve, 20)))
+}
+
+async function flow(start: ImportSummary, setup: Net) {
+	net = setup
+	sent = []
+	const client = new QueryClient({
+		defaultOptions: { queries: { retry: false } },
+	})
+	const container = document.createElement("div")
+	document.body.appendChild(container)
+	const root = createRoot(container as unknown as Element)
+	await act(async () =>
+		root.render(
+			h(
+				QueryClientProvider,
+				{ client },
+				h(SourceImportFlow, {
+					source: "wishlist",
+					initial: { imports: [start] },
+					initialId: start.id,
+				}),
+			),
+		),
+	)
+	await settle()
+	const all = <T,>(selector: string) =>
+		[...container.querySelectorAll(selector)] as unknown as T[]
+	// A member can't reach a control inside a hidden panel, so a click looks only at visible buttons.
+	const button = (name: string) => {
+		const names = all<HTMLButtonElement>("button")
+			.filter((item) => !item.closest("[hidden]"))
+			.map((item) => ({
+				item,
+				text: (item.textContent ?? "").replace(/\s+/g, " ").trim(),
+			}))
+		const found = (
+			names.find(({ text }) => text === name) ??
+			names.find(({ text }) => text.startsWith(name))
+		)?.item
+		if (!found) throw new Error(`No button "${name}"`)
+		return found
+	}
+	const radio = (label: string) => {
+		const found = all<HTMLInputElement>('input[type="radio"]').find((input) =>
+			input.closest("label")?.textContent?.includes(label),
+		)
+		if (!found) throw new Error(`No radio "${label}"`)
+		return found
+	}
+	const describeFocus = () => {
+		const active = document.activeElement as unknown as HTMLElement | null
+		if (!active || active === (document.body as unknown)) return null
+		return {
+			tag: active.tagName.toLowerCase(),
+			text: (active.textContent ?? "").replace(/\s+/g, " ").trim(),
+			type: active.getAttribute("type"),
+		}
+	}
+	return {
+		text: () => (container.textContent ?? "").replace(/\s+/g, " "),
+		focus: describeFocus,
+		sent: () => sent.map(({ method, url, body }) => ({ method, url, body })),
+		has: (name: string) => {
+			try {
+				button(name)
+				return true
+			} catch {
+				return false
+			}
+		},
+		disabled: (name: string) => button(name).disabled,
+		/** Whether each button with exactly this name is off. */
+		allDisabled: (name: string) =>
+			all<HTMLButtonElement>("button")
+				.filter(
+					(item) =>
+						(item.textContent ?? "").replace(/\s+/g, " ").trim() === name,
+				)
+				.map((item) => item.disabled),
+		searchDisabled: () =>
+			(
+				container.querySelector(
+					'input[type="search"]',
+				) as unknown as HTMLInputElement | null
+			)?.disabled ?? null,
+		describedBy: (name: string) =>
+			button(name).getAttribute("aria-describedby"),
+		checked: (label: string) => radio(label).checked,
+		titleRadios: () =>
+			all<HTMLInputElement>('input[type="radio"]')
+				.filter((input) => input.name.endsWith("-title"))
+				.map((input) => input.checked),
+		click: async (name: string) => {
+			const target = button(name)
+			await act(async () => target.click())
+			await settle()
+		},
+		/** A click on a control that needs no network, without waiting. */
+		tap: async (name: string) => {
+			const target = button(name)
+			await act(async () => target.click())
+		},
+		pick: async (label: string) => {
+			const target = radio(label)
+			await act(async () => target.click())
+			await settle()
+		},
+		type: async (value: string) => {
+			const input = container.querySelector(
+				'input[type="search"]',
+			) as unknown as HTMLInputElement
+			const setValue = Object.getOwnPropertyDescriptor(
+				window.HTMLInputElement.prototype,
+				"value",
+			)?.set
+			await act(async () => {
+				setValue?.call(input, value)
+				input.dispatchEvent(
+					new window.Event("input", { bubbles: true }) as unknown as Event,
+				)
+			})
+			await settle()
+		},
+		escape: async () => {
+			const active = document.activeElement as unknown as HTMLElement
+			await act(async () => {
+				active.dispatchEvent(
+					new window.KeyboardEvent("keydown", {
+						key: "Escape",
+						bubbles: true,
+					}) as unknown as Event,
+				)
+			})
+			await settle()
+		},
+		unmount: async () => {
+			await act(async () => root.unmount())
+			container.remove()
+		},
+	}
+}
+
+type View = Awaited<ReturnType<typeof flow>>
+const results: Record<string, unknown> = {}
+const snap = (view: View, extra: Record<string, unknown> = {}) => ({
+	text: view.text(),
+	focus: view.focus(),
+	sent: view.sent(),
+	...extra,
+})
+
+// Open, choose, fail, retry, and get a new preview.
+{
+	const parent = summary(PARENT, { new: 1, conflict: 1, unmatched: 2 }, 3)
+	const child = summary(CHILD, { new: 2, conflict: 2, unmatched: 1 }, 3)
+	const view = await flow(parent, {
+		groups: [groups.office, groups.dark, groups.got],
+		resolve: [
+			"offline",
+			{ status: 201, body: { import: child, parentImportId: PARENT } },
+		],
+	})
+	results.closed = snap(view)
+	await view.click("Match titles")
+	await settle(5)
+	results.opened = snap(view)
+	await view.click("Find a match for The Office")
+	results.entry = snap(view, {
+		radios: view.titleRadios(),
+		useDisabled: view.disabled("Use this match"),
+	})
+	await view.escape()
+	results.escaped = snap(view)
+	await view.click("Find a match for The Office")
+	await view.pick("2005 · Show")
+	results.picked = snap(view, {
+		useDisabled: view.disabled("Use this match"),
+		confirmDisabled: view.disabled("Add to Want to See"),
+	})
+	await view.click("Use this match")
+	results.used = snap(view, {
+		confirmDisabled: view.disabled("Add to Want to See"),
+		confirmReason: view.describedBy("Add to Want to See"),
+	})
+	await view.click("Clear the match for GoT")
+	results.cleared = snap(view)
+	await view.click("Hide matching")
+	await view.click("Match titles")
+	results.reshown = snap(view)
+	await view.pick("Add it as Want to rewatch")
+	await view.click("Update preview")
+	results.failed = snap(view, {
+		confirmDisabled: view.disabled("Add to Want to See"),
+		updateDisabled: view.disabled("Update preview"),
+	})
+	await view.click("Update preview")
+	await settle(3)
+	results.updated = snap(view, {
+		leaveChecked: view.checked("Leave them as Seen"),
+		confirmDisabled: view.disabled("Add to Want to See"),
+	})
+	await view.unmount()
+}
+
+// The preview was imported elsewhere: the server's answer and a way to start again.
+{
+	const view = await flow(summary(PARENT, { new: 1, unmatched: 1 }, 1), {
+		groups: [groups.dark],
+		resolve: [
+			{
+				status: 409,
+				body: {
+					error: "Server message for an imported preview.",
+					code: "wishlist_preview_required",
+				},
+			},
+		],
+	})
+	await view.click("Match titles")
+	await settle(5)
+	await view.click("Find a match for Dark")
+	await view.pick("2017 · Show")
+	await view.click("Use this match")
+	await view.click("Update preview")
+	results.restart = snap(view, {
+		chooseAgain: view.has("Choose the file again"),
+	})
+	await view.click("Choose the file again")
+	results.restarted = snap(view)
+	await view.unmount()
+}
+
+// Every entry already matched: the block stays, and matches can change from the panel and from the outcome list.
+{
+	const view = await flow(summary(PARENT, { new: 1 }, 1), {
+		groups: [groups.got],
+		resolve: [],
+	})
+	results.allResolved = snap(view)
+	await view.click("New to your Wishlist")
+	results.matchedRow = snap(view)
+	await view.click("Change the match for GoT")
+	await settle(5)
+	results.changeFromRow = snap(view)
+	await view.unmount()
+}
+
+// Change, Hide matching, then Change again: on another row, and on the same row after Cancel.
+{
+	const narcos = groupOf(
+		matchedRow(20, "Narcos", "80025172", {
+			mediaType: "show",
+			tmdbId: 63351,
+			title: "Narcos",
+			year: 2015,
+		}),
+	)
+	const view = await flow(summary(PARENT, { new: 2 }, 2), {
+		groups: [groups.got, narcos],
+		resolve: [],
+		items: [resolvedRow, narcos.item],
+	})
+	await view.click("New to your Wishlist")
+	await view.click("Change the match for GoT")
+	await settle(5)
+	await view.click("Hide matching")
+	await view.click("Change the match for Narcos")
+	await settle(5)
+	results.changeAfterHide = snap(view)
+	await view.click("Cancel")
+	await view.click("Hide matching")
+	await view.click("Change the match for Narcos")
+	await settle(5)
+	results.changeSameAfterHide = snap(view)
+	await view.unmount()
+}
+
+// Searching only when asked, and a type filter with no results.
+{
+	const view = await flow(summary(PARENT, { unmatched: 1 }, 1), {
+		groups: [groups.dark],
+		resolve: [],
+	})
+	await view.click("Match titles")
+	await settle(5)
+	await view.click("Find a match for Dark")
+	const before = view.sent().length
+	await view.type("Dark Matter")
+	results.typed = { sentWhileTyping: view.sent().length - before }
+	await view.pick("Shows")
+	await view.click("Search")
+	results.noResults = snap(view, {
+		widen: view.has("Search movies and shows"),
+	})
+	await view.type("D")
+	await view.click("Search")
+	results.tooShort = snap(view)
+	await view.unmount()
+}
+
+// A preview made before matching existed.
+{
+	const view = await flow(summary(PARENT, { unmatched: 1 }, 1), {
+		groups: {
+			status: 409,
+			body: {
+				error: "Server message for an old preview.",
+				code: "wishlist_snapshot_required",
+			},
+		},
+		resolve: [],
+	})
+	await view.click("Match titles")
+	await settle(5)
+	results.oldPreview = snap(view, {
+		chooseAgain: view.has("Choose the file again"),
+	})
+	await view.unmount()
+}
+
+// Change from the outcome list on a row that repeats an entry, and on an entry whose page isn't loaded.
+{
+	const narcos = {
+		mediaType: "show" as const,
+		tmdbId: 63351,
+		title: "Narcos",
+		year: 2015,
+	}
+	const dup = groupOf(matchedRow(20, "Narcos", "80025172", narcos), 2)
+	const leaf = matchedRow(21, "Narcos: Season 1", "80025172", narcos)
+	const late = groupOf(
+		matchedRow(300, "Mindhunter", "80114855", {
+			mediaType: "show",
+			tmdbId: 67744,
+			title: "Mindhunter",
+			year: 2017,
+		}),
+	)
+	const fillers = Array.from({ length: 48 }, (_, at) =>
+		groupOf(unknownRow(100 + at, `Filler ${at}`, `9000${at}`)),
+	)
+	const view = await flow(summary(PARENT, { new: 2, unmatched: 49 }, 51), {
+		groups: [groups.dark, dup, ...fillers, late],
+		resolve: [],
+		leaves: { 21: 20 },
+		items: [leaf, late.item],
+	})
+	await view.click("Match titles")
+	await settle(5)
+	await view.click("Find a match for Dark")
+	await view.pick("2017 · Show")
+	await view.click("Use this match")
+	await view.click("New to your Wishlist")
+	await view.click("Change the match for Narcos: Season 1")
+	await settle(5)
+	results.focusLeaf = snap(view)
+	await view.click("Cancel")
+	net.entry = ["offline"]
+	await view.click("Change the match for Mindhunter")
+	await settle(5)
+	results.focusFailed = snap(view)
+	await view.click("Try again")
+	await settle(5)
+	results.focusLater = snap(view)
+	await view.click("Cancel")
+	await view.click("Show more")
+	await settle(5)
+	results.focusMerged = snap(view)
+	await view.unmount()
+}
+
+// While Add to Want to See runs, no match can change, in the panel or from the outcome list.
+{
+	const view = await flow(summary(PARENT, { new: 1, unmatched: 1 }, 2), {
+		groups: [groups.dark, groups.got],
+		resolve: [],
+		holdConfirm: true,
+	})
+	await view.click("New to your Wishlist")
+	await view.click("Match titles")
+	await settle(5)
+	await view.click("Find a match for Dark")
+	await view.pick("2017 · Show")
+	await view.click("Add to Want to See")
+	await view.click("Clear the match for GoT")
+	results.locked = snap(view, {
+		use: view.disabled("Use this match"),
+		search: view.searchDisabled(),
+		clear: view.disabled("Clear the match for GoT"),
+		change: view.allDisabled("Change the match for GoT"),
+	})
+	await view.unmount()
+}
+
+// At 100 changes, Clear and Use stop for entries without a change; entries with one can still change.
+{
+	const saved = Array.from({ length: 101 }, (_, at) =>
+		groupOf(
+			matchedRow(1000 + at, `Saved ${at}`, `5000${at}`, {
+				mediaType: "movie",
+				tmdbId: 10000 + at,
+				title: `Saved title ${at}`,
+				year: 2000,
+			}),
+		),
+	)
+	for (const at of [0, 100])
+		candidates[`Saved ${at}`] = [
+			{
+				mediaType: "movie",
+				tmdbId: 20000 + at,
+				title: `Other ${at}`,
+				year: 2001,
+				posterPath: null,
+			},
+		]
+	const view = await flow(summary(PARENT, { new: 101 }, 101), {
+		groups: saved,
+		resolve: [
+			{
+				status: 201,
+				body: {
+					import: summary(CHILD, { new: 101 }, 101),
+					parentImportId: PARENT,
+				},
+			},
+		],
+	})
+	await view.click("Match titles")
+	await settle(5)
+	await view.click("Show more")
+	await view.click("Show more")
+	for (let at = 0; at < 100; at++)
+		await view.tap(`Clear the match for Saved ${at}`)
+	await settle()
+	const text = view.text()
+	results.capFull = {
+		changes: /100 changes aren't in this preview yet/.test(text),
+		full: /That's the most changes for one update\./.test(text),
+		clear: view.disabled("Clear the match for Saved 100"),
+		reason: view.describedBy("Clear the match for Saved 100"),
+		discard: view.disabled("Discard changes"),
+	}
+	await view.click("Change the match for Saved 100")
+	await view.pick("Other 100")
+	results.capBlocked = {
+		use: view.disabled("Use this match"),
+		full: /match more\.Use this match/.test(view.text()),
+	}
+	await view.click("Cancel")
+	await view.click("Find a match for Saved 0")
+	await view.pick("Other 0")
+	results.capChanged = { use: view.disabled("Use this match") }
+	await view.click("Use this match")
+	results.capChanged = {
+		...(results.capChanged as object),
+		changes: /100 changes aren't in this preview yet/.test(view.text()),
+		match:
+			/Your match: Other 0 \(2001\) · Movie · Not in this preview yet/.test(
+				view.text(),
+			),
+	}
+	await view.click("Update preview")
+	await settle(3)
+	const [sentResolve] = view
+		.sent()
+		.filter((item) => item.url.endsWith("/resolve"))
+	const choices = (
+		sentResolve.body as { choices: { index: number; target: unknown }[] }
+	).choices
+	results.capSent = {
+		count: choices.length,
+		first: choices.find((choice) => choice.index === 1000),
+		hasLast: choices.some((choice) => choice.index === 1100),
+	}
+	await view.unmount()
+}
+
+process.stdout.write(`__WISHLIST_MATCH__${JSON.stringify(results)}`)
+process.exit(0)

@@ -39,6 +39,7 @@ export const STALL_MS = 60_000
 export const activeRuns = new Set<string>()
 
 export class NativeImportError extends Error {
+	code?: string
 	status: number
 	constructor(status: number, message: string) {
 		super(message)
@@ -103,6 +104,10 @@ export function summarize(row: ImportRow): ImportSummary {
 		| ({ direction?: "apply" | "undo" } & NonNullable<ImportSummary["options"]>)
 		| null
 	>(row.options, null)
+	const { _wishlistMatchCount, ...kindCounts } = parse<Record<string, number>>(
+		row.kinds,
+		{},
+	)
 	return {
 		id: row.id,
 		source: row.source,
@@ -120,7 +125,7 @@ export function summarize(row: ImportRow): ImportSummary {
 			unsupported: 0,
 			invalid: 0,
 		}),
-		kinds: { ...emptyKinds, ...parse(row.kinds, emptyKinds) },
+		kinds: { ...emptyKinds, ...kindCounts },
 		warnings: parse(row.warnings, []),
 		options: storedOptions
 			? {
@@ -138,6 +143,9 @@ export function summarize(row: ImportRow): ImportSummary {
 			failed: Number(row.failed),
 		},
 		stalled: isStalled(row),
+		...(row.source === "wishlist"
+			? { wishlistMatchCount: Number(_wishlistMatchCount ?? 0) }
+			: {}),
 		canUndo:
 			row.status === "done" && Number(row.added) + Number(row.updated) > 0,
 		error:
@@ -248,34 +256,7 @@ export async function listItems(
 		`SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind <> 'state' ${outcome ? "AND outcome = ?" : ""} ORDER BY row_index LIMIT ? OFFSET ?`,
 		[id, userId, ...(outcome ? [outcome] : []), limit, offset],
 	)
-	const items = rows.map((row): ImportItem => {
-		const payload = parse<
-			ImportItem & {
-				_preview?: unknown
-				_previewStatus?: unknown
-				journal?: unknown
-			}
-		>(row.payload, {} as ImportItem)
-		const {
-			_preview: _privatePreview,
-			_previewStatus: _privateStatus,
-			journal: _privateJournal,
-			...observation
-		} = payload
-		return {
-			...observation,
-			index: Number(row.row_index),
-			key: row.source_key ?? `row:${row.row_index}`,
-			kind: row.kind === "state" ? "unsupported" : row.kind,
-			outcome: row.outcome,
-			reason: row.reason,
-			tmdbId: row.tmdb_id === null ? null : Number(row.tmdb_id),
-			mediaType: row.media_type ?? "movie",
-			currentScore:
-				row.current_score === null ? null : Number(row.current_score),
-			applyState: row.apply_state,
-		}
-	})
+	const items = rows.map(publicItemRow)
 	return {
 		items,
 		total: outcome ? summary.counts[outcome] : summary.counts.rows,
@@ -288,7 +269,56 @@ export async function skippedCsv(userId: string, id: string) {
 	return `${[
 		csvLine(["Kind", "Title", "Year", "TMDB ID", "IMDb ID", "Reason"]),
 		...items.map((x) =>
-			csvLine([x.kind, x.title, x.year, x.tmdbId, x.imdbId, x.reason]),
+			csvLine([
+				x.kind,
+				x.wishlistResolution?.title ?? x.title,
+				x.wishlistResolution ? x.wishlistResolution.year : x.year,
+				x.tmdbId,
+				x.imdbId,
+				x.reason,
+			]),
 		),
 	].join("\r\n")}\r\n`
+}
+
+function publicItemRow(row: ItemRow): ImportItem {
+	const payload = parse<
+		ImportItem & {
+			_preview?: unknown
+			_previewStatus?: unknown
+			journal?: unknown
+		}
+	>(row.payload, {} as ImportItem)
+	const {
+		_preview: _privatePreview,
+		_previewStatus: _privateStatus,
+		journal: _privateJournal,
+		...observation
+	} = payload
+	return {
+		...observation,
+		index: Number(row.row_index),
+		key: row.source_key ?? `row:${row.row_index}`,
+		kind: row.kind === "state" ? "unsupported" : row.kind,
+		outcome: row.outcome,
+		reason: row.reason,
+		tmdbId: row.tmdb_id === null ? null : Number(row.tmdb_id),
+		mediaType: row.media_type ?? "movie",
+		currentScore: row.current_score === null ? null : Number(row.current_score),
+		applyState: row.apply_state,
+	}
+}
+
+/** One member-owned row; candidate search must not read the whole import. */
+export async function getImportItem(
+	userId: string,
+	id: string,
+	index: number,
+): Promise<ImportItem | undefined> {
+	await getImportRow(userId, id)
+	const rows = await select<ItemRow>(
+		"SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND row_index = ? AND kind <> 'state' LIMIT 1",
+		[id, userId, index],
+	)
+	return rows[0] ? publicItemRow(rows[0]) : undefined
 }

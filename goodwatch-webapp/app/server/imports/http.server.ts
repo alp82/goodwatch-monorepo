@@ -4,25 +4,20 @@ import { getAuthFromRequest } from "~/utils/auth"
 import { ImportFileError } from "./files.server.ts"
 import { NativeImportError } from "./store.server.ts"
 
-const fail = (error: string, status: number, headers: Headers) =>
-	json({ error }, { status, headers })
+const fail = (error: string, status: number, headers: Headers, code?: string) =>
+	json({ error, ...(code ? { code } : {}) }, { status, headers })
 export async function withMember(
 	request: Request,
 	handler: (userId: string, headers: Headers) => Promise<Response>,
 ) {
 	const { user, headers } = await getAuthFromRequest({ request })
 	headers.set("Cache-Control", "private, no-store")
-	if (!user)
-		return fail(
-			"Sign in to import your Letterboxd or Trakt data.",
-			401,
-			headers,
-		)
+	if (!user) return fail("Sign in to import into GoodWatch.", 401, headers)
 	try {
 		return await handler(user.id, headers)
 	} catch (error) {
 		if (error instanceof NativeImportError)
-			return fail(error.message, error.status, headers)
+			return fail(error.message, error.status, headers, error.code)
 		if (error instanceof ImportFileError)
 			return fail(error.message, 400, headers)
 		const message = String(

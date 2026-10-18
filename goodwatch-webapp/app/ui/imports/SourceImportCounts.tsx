@@ -32,11 +32,17 @@ export function SourceOutcomeRow({
 	outcome,
 	count,
 	wishlist = false,
+	onChangeMatch,
+	matchLocked = false,
 }: {
 	importId: string
 	outcome: ImportOutcome
 	count: number
 	wishlist?: boolean
+	/** Opens the matching panel at a row the member matched, in a wishlist preview. */
+	onChangeMatch?: (index: number) => void
+	/** Turns Change off while the preview is being imported or updated. */
+	matchLocked?: boolean
 }) {
 	const [open, setOpen] = useState(false)
 	const panelId = useId()
@@ -69,6 +75,8 @@ export function SourceOutcomeRow({
 						outcome={outcome}
 						label={label}
 						wishlist={wishlist}
+						onChangeMatch={onChangeMatch}
+						matchLocked={matchLocked}
 					/>
 				)}
 			</div>
@@ -81,11 +89,15 @@ function SourceItems({
 	outcome,
 	label,
 	wishlist,
+	onChangeMatch,
+	matchLocked,
 }: {
 	importId: string
 	outcome: ImportOutcome
 	label: string
 	wishlist: boolean
+	onChangeMatch?: (index: number) => void
+	matchLocked: boolean
 }) {
 	const query = useSourceImportItems(importId, outcome, true)
 	const items = query.data?.pages.flatMap((page) => page.items) ?? []
@@ -104,6 +116,8 @@ function SourceItems({
 							key={`${item.index}-${item.key}`}
 							item={item}
 							wishlist={wishlist}
+							onChangeMatch={onChangeMatch}
+							matchLocked={matchLocked}
 						/>
 					))}
 				</ul>
@@ -151,12 +165,25 @@ function SourceItems({
 
 /**
  * One row of an outcome list. A wishlist row says Type unknown when its source didn't say (the row is stored as a
- * movie), and an unmatched one links to a search for its title.
+ * movie), and an unmatched one links to a search for its title. A row the member matched shows the GoodWatch title
+ * first and the file's own title, year, and ID after it.
  */
 export function SourceItem({
 	item,
 	wishlist = false,
-}: { item: ImportItem; wishlist?: boolean }) {
+	onChangeMatch,
+	matchLocked = false,
+}: {
+	item: ImportItem
+	wishlist?: boolean
+	onChangeMatch?: (index: number) => void
+	matchLocked?: boolean
+}) {
+	const matched = wishlist ? item.wishlistResolution : undefined
+	if (matched)
+		return (
+			<MatchedItem item={item} onChange={onChangeMatch} locked={matchLocked} />
+		)
 	const location =
 		item.episode != null
 			? `S${item.season ?? "?"} E${item.episode}`
@@ -213,6 +240,82 @@ export function SourceItem({
 					)}
 				</span>
 			</div>
+			{item.reason && <p className="text-gray-400">{item.reason}</p>}
+		</li>
+	)
+}
+
+const APPLY_LABELS = {
+	added: "Added",
+	updated: "Updated",
+	kept: "Kept",
+	failed: "Failed",
+	undone: "Undone",
+} as const
+
+function MatchedItem({
+	item,
+	onChange,
+	locked,
+}: {
+	item: ImportItem
+	onChange?: (index: number) => void
+	locked: boolean
+}) {
+	const matched = item.wishlistResolution
+	if (!matched) return null
+	const original = item.wishlistOriginal
+	const evidence = original?.wishlistEvidence ?? item.wishlistEvidence
+	const fileTitle = (original?.title ?? item.title).trim()
+	const fromFile = [
+		fileTitle || "No title",
+		original?.year ?? null,
+		evidence?.mediaType === "show"
+			? "Show"
+			: evidence?.mediaType === "movie"
+				? "Movie"
+				: "Type unknown",
+		evidence?.sourceId ? `ID ${evidence.sourceId}` : null,
+	]
+		.filter(Boolean)
+		.join(" · ")
+	return (
+		<li className="text-sm">
+			<div className="flex flex-wrap justify-between gap-2">
+				<span>
+					<span className="font-semibold text-gray-100">{matched.title}</span>
+					<span className="text-gray-400">
+						{" "}
+						·{" "}
+						{[matched.year, matched.mediaType === "show" ? "Show" : "Movie"]
+							.filter(Boolean)
+							.join(" · ")}
+					</span>
+					<span className="font-semibold text-gray-200"> · Matched by you</span>
+				</span>
+				<span className="flex gap-3 tabular-nums text-gray-300">
+					{onChange && (
+						<button
+							type="button"
+							className={`${textLink} min-h-11 disabled:cursor-not-allowed disabled:opacity-60`}
+							disabled={locked}
+							onClick={() => onChange(item.index)}
+						>
+							Change
+							<span className="sr-only">
+								{" "}
+								the match for {fileTitle || "this entry"}
+							</span>
+						</button>
+					)}
+					{item.applyState && (
+						<span className="font-semibold text-gray-100">
+							{APPLY_LABELS[item.applyState]}
+						</span>
+					)}
+				</span>
+			</div>
+			<p className="break-words text-gray-400">From your file: {fromFile}</p>
 			{item.reason && <p className="text-gray-400">{item.reason}</p>}
 		</li>
 	)

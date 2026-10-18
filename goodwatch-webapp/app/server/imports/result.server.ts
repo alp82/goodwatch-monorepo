@@ -206,7 +206,12 @@ function unchangedEntry(
 		return skippedEntry(
 			Number(row.row_index),
 			kind,
-			exportLabel(payload().title ?? "", payload().year),
+			exportLabel(
+				payload().wishlistResolution?.title ?? payload().title ?? "",
+				payload().wishlistResolution
+					? payload().wishlistResolution?.year
+					: payload().year,
+			),
 			row.reason ?? "GoodWatch can't import this row.",
 		)
 	if (!options?.kinds.includes(kind as ImportKind) || row.tmdb_id === null)
@@ -215,7 +220,12 @@ function unchangedEntry(
 		return skippedEntry(
 			Number(row.row_index),
 			kind,
-			exportLabel(payload().title ?? "", payload().year),
+			exportLabel(
+				payload().wishlistResolution?.title ?? payload().title ?? "",
+				payload().wishlistResolution
+					? payload().wishlistResolution?.year
+					: payload().year,
+			),
 			FAILED_REASON,
 		)
 	const reason = keptReason({
@@ -298,8 +308,10 @@ function entriesOf(
 		const title: ImportResultTitle = {
 			tmdbId: Number(row.tmdb_id),
 			mediaType: row.media_type ?? "movie",
-			title: payload.title ?? "",
-			year: payload.year ?? null,
+			title: payload.wishlistResolution?.title ?? payload.title ?? "",
+			year: payload.wishlistResolution
+				? payload.wishlistResolution.year
+				: (payload.year ?? null),
 			posterPath: null,
 		}
 		titles.set(key, title)

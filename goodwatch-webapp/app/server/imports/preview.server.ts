@@ -38,6 +38,10 @@ import {
 	select,
 	summarize,
 } from "./store.server.ts"
+import {
+	isUnknownWishlistSource,
+	wishlistSourceGroup,
+} from "./wishlist-evidence.server.ts"
 
 const key = (type: "movie" | "show", id: number) => `${type}:${id}`
 type CatalogRow = {
@@ -114,7 +118,10 @@ async function matchCatalog(source: ImportSource, rows: ImportObservation[]) {
 		const imdbIds = [
 			...new Set(
 				typed
-					.filter((x) => !found.has(x.index) && x.row.imdbId)
+					.filter(
+						(x) =>
+							!found.has(x.index) && x.row.imdbId && !x.row.wishlistResolution,
+					)
 					.flatMap((x) =>
 						typeof x.row.imdbId === "string" ? [x.row.imdbId] : [],
 					),
@@ -126,7 +133,8 @@ async function matchCatalog(source: ImportSource, rows: ImportObservation[]) {
 				batch,
 			)
 			for (const x of typed) {
-				if (found.has(x.index) || !x.row.imdbId) continue
+				if (found.has(x.index) || !x.row.imdbId || x.row.wishlistResolution)
+					continue
 				const matches = result.filter((r) => r.imdb_id === x.row.imdbId)
 				if (matches.length === 1)
 					found.set(x.index, {
@@ -139,7 +147,12 @@ async function matchCatalog(source: ImportSource, rows: ImportObservation[]) {
 		const titleMatches = new Map<string, CatalogRow[]>()
 		if (source === "letterboxd" || source === "csv" || source === "wishlist")
 			for (const x of typed) {
-				if (found.has(x.index) || x.row.year === null || !x.row.title.trim())
+				if (
+					found.has(x.index) ||
+					x.row.wishlistResolution ||
+					x.row.year === null ||
+					!x.row.title.trim()
+				)
 					continue
 				const lookup = `${x.row.title.trim().toLocaleLowerCase()}:${x.row.year}`
 				let result = titleMatches.get(lookup)
@@ -521,25 +534,27 @@ export async function createParsedPreview(
 		matchCatalog(source, parsed.observations),
 		currentValues(userId),
 	])
-	const items = classify(parsed.observations, matched, current)
-	await classifyWishlistShows(userId, items)
+	// Suppress duplicate effective identities before calculating any per-title library conflicts.
 	if (source === "wishlist") {
 		const seen = new Set<string>()
-		for (const item of items) {
-			if (
-				item.kind !== "want" ||
-				item.tmdbId === null ||
-				!["new", "conflict", "unchanged"].includes(item.outcome)
-			)
-				continue
-			const identity = key(item.mediaType, item.tmdbId)
+		for (const [index, row] of parsed.observations.entries()) {
+			const title = matched.get(index)
+			if (!title || row.kind !== "want" || row.problem) continue
+			const identity = key(title.mediaType, title.tmdbId)
 			if (seen.has(identity)) {
-				item.kind = "unsupported"
-				item.outcome = "unsupported"
-				item.reason = "Listed twice in the file. Added once."
+				row.kind = "unsupported"
+				row.tmdbId = title.tmdbId
+				row.mediaType = title.mediaType
+				row.problem = {
+					outcome: "unsupported",
+					reason: "Listed twice in the file. Added once.",
+				}
+				matched.delete(index)
 			} else seen.add(identity)
 		}
 	}
+	const items = classify(parsed.observations, matched, current)
+	await classifyWishlistShows(userId, items)
 	const specials = items.filter((item) => item.episodeSpecial).length
 	if (specials)
 		parsed.warnings.push(
@@ -584,7 +599,20 @@ export async function createParsedPreview(
 				now,
 				now,
 				JSON.stringify(parsed.warnings),
-				JSON.stringify(kinds),
+				JSON.stringify({
+					...kinds,
+					...(source === "wishlist"
+						? {
+								_wishlistMatchCount: new Set(
+									parsed.observations.flatMap((row, index) =>
+										isUnknownWishlistSource(row.wishlistOriginal)
+											? [wishlistSourceGroup(row.wishlistOriginal, index)]
+											: [],
+									),
+								).size,
+							}
+						: {}),
+				}),
 				hash,
 			],
 		)

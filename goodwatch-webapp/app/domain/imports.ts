@@ -285,10 +285,48 @@ export interface ImportObservation {
 		sourceUrl?: string
 		mediaType: "movie" | "show" | "unknown"
 	}
+	/** Validated source observation, captured before matching; never replaced by a member choice. */
+	wishlistOriginal?: WishlistOriginalObservation
+	wishlistResolution?: {
+		basis: "member"
+		mediaType: ImportMediaType
+		tmdbId: number
+		title: string
+		year: number | null
+		selectedAt: string
+		parentImportId: string
+		parentRowIndex: number
+	}
+	wishlistParent?: { importId: string; rowIndex: number }
 	problem?: {
 		outcome: "invalid" | "unsupported" | "unmatched"
 		reason: string
 	}
+}
+
+export type WishlistMatchErrorCode =
+	| "wishlist_preview_required"
+	| "wishlist_snapshot_required"
+	| "wishlist_resolution_invalid"
+	| "wishlist_row_not_resolvable"
+	| "wishlist_source_choice_conflict"
+	| "wishlist_target_missing"
+	| "wishlist_search_invalid"
+	| "wishlist_search_unavailable"
+	| "wishlist_body_too_large"
+	| "method_not_allowed"
+
+export interface WishlistOriginalObservation {
+	key: string
+	kind: "want"
+	mediaType: "movie" | "show" | "unknown"
+	title: string
+	year: number | null
+	tmdbId: number | null
+	imdbId: string | null
+	addedAt?: string | null
+	wishlistEvidence: NonNullable<ImportObservation["wishlistEvidence"]>
+	problem?: ImportObservation["problem"]
 }
 
 export interface ParsedImport {
@@ -303,6 +341,20 @@ export interface ImportItem extends ImportObservation {
 	reason: string | null
 	currentScore?: number | null
 	applyState?: "added" | "updated" | "kept" | "failed" | "undone" | null
+}
+
+export interface WishlistMatchEvidenceVariant {
+	title: string
+	year: number | null
+	sourceId?: string
+	sourceUrl?: string
+}
+export interface WishlistMatchGroup {
+	representativeIndex: number
+	item: ImportItem
+	entryCount: number
+	evidenceVariants: WishlistMatchEvidenceVariant[]
+	hasMoreEvidence: boolean
 }
 
 export interface ImportOptions {
@@ -327,6 +379,8 @@ export interface ImportSummary {
 	total: number
 	applied: { added: number; updated: number; kept: number; failed: number }
 	stalled: boolean
+	/** Originally valid unknown-type source groups, including resolved groups. */
+	wishlistMatchCount?: number
 	canUndo: boolean
 	error: string | null
 	/** The durable direction of a running/failed job, so Resume continues the same operation. */

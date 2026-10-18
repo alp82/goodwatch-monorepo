@@ -15,7 +15,7 @@ Watcharr's unmodified pinned backend has now been run locally with synthetic acc
 5. **Wishlist imports only add.** Missing titles never remove anything. Every wishlist preview says so.
 6. **Seen titles stay Seen by default.** Adding them as Want to rewatch is an explicit choice in the preview.
 7. **Not interested follows the existing import rule.** Adding a title to Want to See takes it off Not interested, and Undo doesn't mark it Not interested again. Every wishlist preview says so, and the Undo result offers **Mark Not interested again** for each such title.
-8. **No match editor.** Only ID matches and unique title-and-year matches of a known type apply. Other rows are unmatched, with a **Search** link.
+8. **Members match untyped titles themselves.** ID matches and unique title-and-year matches of a known type apply on their own. Entries whose file gives no type can be matched by the member in the preview, one explicit choice each. Nothing is matched for them. See [matching titles yourself](wishlist-manual-matching-ux.md). Other unmatched rows keep a **Search** link.
 9. **The wishlist preview is shorter** than the general preview. It hides the data-type checkboxes, the rating conflict radios, and the watch-date choice. Its button reads **Add to Want to See**, without a count.
 
 ## First release: what is built
@@ -228,7 +228,7 @@ These use synthetic fixtures. They don't establish compatibility with a real acc
 | 5 | `[]` as `watcharr-export.json` and as another name | Recognized only under Watcharr's name | `ImportFileRecognition.test.ts` |
 | 6 | Seen title | Default leaves it Seen; Want to rewatch sends `conflictChoice: "source"` | `WishlistImport.test.ts`, `ImportSourcesPage.test.ts` |
 | 7 | Nothing to add | Button off, with the reason | `WishlistImport.test.ts` |
-| 8 | Title with unknown type | **Type unknown** and a **Search** link (new tab) | `WishlistImport.test.ts` |
+| 8 | Title with unknown type | **Type unknown** and a **Search** link (new tab); can be matched in the preview, see [matching titles yourself](wishlist-manual-matching-ux.md) | `WishlistImport.test.ts` |
 | 9 | Source search "netflix", "disney", "crunchyroll" | No-support message with the right links; no Generic CSV hint | `ImportSourcesPage.test.ts` |
 | 10 | Source search "watcharr" | One row: Watcharr / wishlist file | `ImportSourcesPage.test.ts` |
 | 11 | Undo question | Says Not interested isn't put back | `ImportSourcesPage.test.ts` |

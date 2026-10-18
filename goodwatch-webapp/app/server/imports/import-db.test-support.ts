@@ -42,6 +42,8 @@ const supportedImportSql = new Set([
 	"SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state, undo_outcome FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind <> 'state' AND (apply_state IS NULL OR apply_state = 'failed') ORDER BY row_index LIMIT 100001",
 	"SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state, undo_outcome FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind <> 'state' ORDER BY row_index LIMIT 100001",
 	"SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind <> 'state' ORDER BY row_index LIMIT ? OFFSET ?",
+	"SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind <> 'state' AND outcome = ? ORDER BY row_index LIMIT ? OFFSET ?",
+	"SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND row_index = ? AND kind <> 'state' LIMIT 1",
 	"SELECT row_index, source_key, payload, apply_state, undo_outcome FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind = 'state' LIMIT 100001",
 	"SELECT score, review, created_at, updated_at, _seq_no, _primary_term FROM user_score WHERE user_id = ? AND tmdb_id = ? AND media_type = ?",
 	"SELECT tmdb_id, imdb_id, title, release_year FROM movie WHERE imdb_id IN (?)",
@@ -222,6 +224,15 @@ export class ImportDb {
 				(x) =>
 					x.import_id === params[0] && (!params[1] || x.user_id === params[1]),
 			)
+			if (s.includes("AND row_index = ?"))
+				rows = rows.filter((x) => x.row_index === params[2])
+			if (s.includes("AND outcome = ?"))
+				rows = rows.filter((x) => x.outcome === params[2])
+			if (s.includes("LIMIT ? OFFSET ?"))
+				rows = rows.slice(
+					Number(params.at(-1)),
+					Number(params.at(-1)) + Number(params.at(-2)),
+				)
 			if (s.includes("kind = 'state'"))
 				rows = rows.filter((x) => x.kind === "state")
 			if (s.includes("kind <> 'state'"))

@@ -198,6 +198,21 @@ function sharedWishlist(input: unknown, fail: Fail): ParsedImport {
 					reason:
 						"This entry has no ID or year, so GoodWatch can't match it safely. Search for it to add it.",
 				}
+			if (!invalid && observation.wishlistEvidence)
+				observation.wishlistOriginal = {
+					key: observation.key,
+					kind: "want",
+					mediaType,
+					title: observation.title,
+					year: observation.year,
+					tmdbId: observation.tmdbId,
+					imdbId: observation.imdbId,
+					addedAt: observation.addedAt,
+					wishlistEvidence: structuredClone(observation.wishlistEvidence),
+					...(observation.problem
+						? { problem: structuredClone(observation.problem) }
+						: {}),
+				}
 			return observation
 		}),
 	}
@@ -288,6 +303,12 @@ function watcharr(rows: unknown[], fail: Fail): ParsedImport {
 				reason: "GoodWatch couldn't read this Watcharr entry.",
 			}
 		}
+		if (
+			item.kind !== "want" ||
+			item.problem?.outcome === "invalid" ||
+			item.problem?.outcome === "unsupported"
+		)
+			item.wishlistOriginal = undefined
 	}
 	return parsed
 }

@@ -19,6 +19,7 @@ import {
 	useUndoSourceImport,
 } from "./SourceImportHooks"
 import { SourceImportPreview } from "./SourceImportPreview"
+import type { WishlistPreviewUpdate } from "./WishlistImportPreview"
 import {
 	dangerButton,
 	errorBox,
@@ -35,7 +36,18 @@ export function SourceImportCurrent({
 	id,
 	focus,
 	onUploadAnother,
-}: { id: string; focus: boolean; onUploadAnother: () => void }) {
+	onPreviewReplaced,
+	updated,
+}: {
+	id: string
+	focus: boolean
+	onUploadAnother: () => void
+	onPreviewReplaced?: (
+		next: ImportSummary,
+		update: WishlistPreviewUpdate,
+	) => void
+	updated?: WishlistPreviewUpdate
+}) {
 	const query = useSourceImport(id)
 	const confirm = useConfirmSourceImport(id)
 	const undo = useUndoSourceImport(id)
@@ -77,6 +89,8 @@ export function SourceImportCurrent({
 				error={confirm.isError ? confirm.error.message : null}
 				onConfirm={(options) => confirm.mutate(options)}
 				onBack={onUploadAnother}
+				onPreviewReplaced={onPreviewReplaced}
+				updated={updated}
 			/>
 		)
 	if (summary.status === "running") {

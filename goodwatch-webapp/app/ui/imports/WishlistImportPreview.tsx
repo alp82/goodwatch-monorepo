@@ -1,15 +1,38 @@
 // The preview of a wishlist import (a Watcharr export or a wishlist file). It only adds Want to See, so it hides the
 // general preview's data-type, conflict, and watch-date choices. Its one choice is for titles already watched:
 // they stay Seen unless the member adds them as Want to rewatch (conflictChoice "source").
-import { useState } from "react"
+// Entries whose file gave no type can be matched by hand in a panel that loads on first use. Its choices live here,
+// in memory, so hiding the panel keeps them; Update preview turns them into a new preview.
+import { Suspense, lazy, useRef, useState } from "react"
 import type {
 	ImportOptions,
 	ImportOutcome,
 	ImportSummary,
 } from "~/domain/imports"
+import { Spinner } from "~/ui/wait/Spinner"
+import { useOpenedOnce } from "~/utils/first-use"
+import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 import { FocusHeading } from "./FocusHeading"
 import { SourceOutcomeRow } from "./SourceImportCounts"
-import { errorBox, formatCount, primaryButton, secondaryButton } from "./shared"
+import {
+	WISHLIST_MATCH_MAX_CHANGES,
+	type WishlistMatchGroup,
+	useResolveWishlistImport,
+} from "./SourceImportHooks"
+import type { MatchDraft, MatchTitle } from "./WishlistMatchPanel"
+import {
+	errorBox,
+	formatCount,
+	infoBox,
+	primaryButton,
+	secondaryButton,
+} from "./shared"
+
+const loadMatchPanel = () => import("./WishlistMatchPanel")
+const WishlistMatchPanel = lazy(reloadOnStaleChunk(loadMatchPanel))
+
+/** How this preview came about, when it replaced one the member updated with their matches. */
+export type WishlistPreviewUpdate = { rewatchReset: boolean }
 
 const OUTCOMES: ImportOutcome[] = [
 	"new",
@@ -27,6 +50,8 @@ export function WishlistImportPreview({
 	error,
 	onConfirm,
 	onBack,
+	onPreviewReplaced,
+	updated,
 }: {
 	summary: ImportSummary
 	focus: boolean
@@ -34,14 +59,80 @@ export function WishlistImportPreview({
 	error: string | null
 	onConfirm: (options: ImportOptions) => void
 	onBack: () => void
+	/** Shows the new preview that Update preview made. This preview stays as it was. */
+	onPreviewReplaced?: (
+		next: ImportSummary,
+		update: WishlistPreviewUpdate,
+	) => void
+	updated?: WishlistPreviewUpdate
 }) {
 	const [seenChoice, setSeenChoice] =
 		useState<ImportOptions["conflictChoice"]>("keep")
+	const [matching, setMatching] = useState(false)
+	const opened = useOpenedOnce(matching)
+	const [draft, setDraft] = useState<MatchDraft>(new Map())
+	const [request, setRequest] = useState<{ index: number; seq: number } | null>(
+		null,
+	)
+	// Hide matching clears the request, but the panel stays mounted and remembers the last sequence it handled.
+	// So the sequence keeps counting on its own: a later Change, even for the same row, always gets a new one.
+	const requestSeq = useRef(0)
+	const resolve = useResolveWishlistImport(summary.id)
 	const seen = summary.counts.conflict
 	const one = seen === 1
 	const rewatch = seen > 0 && seenChoice === "source"
+	const matchable = summary.wishlistMatchCount ?? 0
+	const unapplied = draft.size > 0 || resolve.isPending
 	// No count on the button: the import rechecks each title against the current library as it runs.
 	const canImport = summary.counts.new > 0 || rewatch
+	const reason = unapplied
+		? "wishlist-import-unapplied"
+		: !canImport
+			? "wishlist-import-required"
+			: undefined
+	// While Confirm or Update preview runs, no match can change: a choice made now would vanish with this preview.
+	const locked = confirming || resolve.isPending
+	/** Records a choice, or returns false when it can't: while locked, or when it would pass the per-update limit. */
+	const choose = (group: WishlistMatchGroup, title: MatchTitle | null) => {
+		if (locked) return false
+		const index = group.representativeIndex
+		const saved = group.item.wishlistResolution
+		const same = title
+			? saved?.mediaType === title.mediaType && saved.tmdbId === title.tmdbId
+			: !saved
+		if (!same && !draft.has(index) && draft.size >= WISHLIST_MATCH_MAX_CHANGES)
+			return false
+		const next = new Map(draft)
+		if (same) next.delete(index)
+		else next.set(index, title)
+		setDraft(next)
+		return true
+	}
+	const discard = () => {
+		if (!locked) setDraft(new Map())
+	}
+	const update = () => {
+		if (locked || draft.size === 0 || draft.size > WISHLIST_MATCH_MAX_CHANGES)
+			return
+		resolve.mutate(
+			[...draft].map(([index, title]) => ({
+				index,
+				target: title
+					? { mediaType: title.mediaType, tmdbId: title.tmdbId }
+					: null,
+			})),
+			{
+				onSuccess: (response) =>
+					onPreviewReplaced?.(response.import, { rewatchReset: rewatch }),
+			},
+		)
+	}
+	const changeMatch = (index: number) => {
+		if (locked) return
+		setMatching(true)
+		requestSeq.current += 1
+		setRequest({ index, seq: requestSeq.current })
+	}
 	return (
 		<section className="flex flex-col gap-5">
 			<div className="space-y-2">
@@ -54,6 +145,13 @@ export function WishlistImportPreview({
 					. Nothing has been saved yet.
 				</p>
 			</div>
+			{updated && (
+				<p className={infoBox}>
+					Updated with your changes. The counts include them.
+					{updated.rewatchReset &&
+						" Your choice for titles you've already seen is back to Leave them as Seen."}
+				</p>
+			)}
 			{summary.warnings.length > 0 && (
 				<div
 					className="rounded-lg border border-amber-700 bg-amber-950/50 p-4 text-amber-100"
@@ -111,6 +209,56 @@ export function WishlistImportPreview({
 					</div>
 				</fieldset>
 			)}
+			{matchable > 0 && (
+				<div className="flex flex-col gap-3">
+					<div className="space-y-1">
+						<h4 className="font-semibold text-gray-100">
+							Titles GoodWatch couldn't match
+						</h4>
+						<p className="text-gray-300">
+							Your file doesn't say whether{" "}
+							{matchable === 1
+								? "this entry is a movie or a show"
+								: `these ${formatCount(matchable)} entries are movies or shows`}
+							, so GoodWatch didn't match {matchable === 1 ? "it" : "them"} on
+							its own. You can find {matchable === 1 ? "it" : "each one"}{" "}
+							yourself. Titles you don't match aren't added.
+						</p>
+					</div>
+					<button
+						type="button"
+						className={`${secondaryButton} self-start`}
+						aria-expanded={matching}
+						onPointerEnter={() => void loadMatchPanel()}
+						onFocus={() => void loadMatchPanel()}
+						onClick={() => {
+							setRequest(null)
+							setMatching((value) => !value)
+						}}
+					>
+						{matching ? "Hide matching" : "Match titles"}
+					</button>
+					<div hidden={!matching}>
+						{opened && (
+							<Suspense fallback={<Spinner size="medium" />}>
+								<WishlistMatchPanel
+									importId={summary.id}
+									visible={matching}
+									draft={draft}
+									request={request}
+									updating={resolve.isPending}
+									locked={locked}
+									error={resolve.isError ? resolve.error : null}
+									onChoose={choose}
+									onDiscard={discard}
+									onUpdate={update}
+									onBack={onBack}
+								/>
+							</Suspense>
+						)}
+					</div>
+				</div>
+			)}
 			<div>
 				<h4 className="mb-2 font-semibold text-gray-100">How titles compare</h4>
 				<ul className="divide-y divide-slate-800 rounded-lg border border-slate-700 bg-slate-900/60">
@@ -122,6 +270,8 @@ export function WishlistImportPreview({
 								outcome={outcome}
 								count={summary.counts[outcome]}
 								wishlist
+								onChangeMatch={matchable > 0 ? changeMatch : undefined}
+								matchLocked={locked}
 							/>
 						),
 					)}
@@ -133,6 +283,13 @@ export function WishlistImportPreview({
 					</li>
 				</ul>
 			</div>
+			{unapplied && (
+				<p id="wishlist-import-unapplied" className="text-sm text-gray-300">
+					Your matches aren't in this preview yet. Choose Update preview to add
+					them, or Discard changes. Choosing another file or leaving this page
+					discards them.
+				</p>
+			)}
 			{!canImport && (
 				<p id="wishlist-import-required" className="text-sm text-gray-300">
 					{seen > 0
@@ -144,10 +301,11 @@ export function WishlistImportPreview({
 				<button
 					type="button"
 					className={primaryButton}
-					disabled={!canImport || confirming}
-					aria-describedby={!canImport ? "wishlist-import-required" : undefined}
+					disabled={!canImport || unapplied || confirming}
+					aria-describedby={reason}
 					onClick={() =>
 						canImport &&
+						!unapplied &&
 						onConfirm({
 							kinds: ["want"],
 							conflictChoice: seenChoice,
@@ -160,7 +318,7 @@ export function WishlistImportPreview({
 				<button
 					type="button"
 					className={secondaryButton}
-					disabled={confirming}
+					disabled={confirming || resolve.isPending}
 					onClick={onBack}
 				>
 					Choose another file

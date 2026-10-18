@@ -82,3 +82,47 @@ export const previewFetchedImport = (
 	displayName: string,
 	observations: ParsedImport,
 ) => previewParsedImport(userId, displayName, observations)
+
+/** A member's explicit catalog choices produce a new immutable preview. */
+export const resolveWishlistImport = async (
+	userId: string,
+	id: string,
+	input: unknown,
+) =>
+	(await import("./wishlist-resolution.server.ts")).resolveWishlistImport(
+		userId,
+		id,
+		input,
+	)
+
+export const getWishlistMatchingGroups = async (
+	userId: string,
+	id: string,
+	offset = 0,
+) =>
+	(await import("./wishlist-resolution.server.ts")).getWishlistMatchingGroups(
+		userId,
+		id,
+		offset,
+	)
+export const searchWishlistMatches = async (
+	userId: string,
+	id: string,
+	input: unknown,
+) =>
+	(await import("./wishlist-resolution.server.ts")).searchWishlistMatches(
+		userId,
+		id,
+		input,
+	)
+
+export const getWishlistMatchGroup = async (
+	userId: string,
+	id: string,
+	index: number,
+) =>
+	(await import("./wishlist-resolution.server.ts")).getWishlistMatchGroup(
+		userId,
+		id,
+		index,
+	)

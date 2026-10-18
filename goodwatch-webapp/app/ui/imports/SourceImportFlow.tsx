@@ -12,6 +12,7 @@ import { SourceImportCurrent } from "./SourceImportCurrent"
 import { type ImportListResponse, useSourceImports } from "./SourceImportHooks"
 import { SourceImportUploadPanel } from "./SourceImportUploadPanel"
 import { TmdbConnectPanel } from "./TmdbConnectPanel"
+import type { WishlistPreviewUpdate } from "./WishlistImportPreview"
 import {
 	card,
 	formatCount,
@@ -57,6 +58,10 @@ export function SourceImportFlow({
 	const [acted, setActed] = useState(!!handoff)
 	// Used once: going back to the upload later doesn't send it again.
 	const [pending, setPending] = useState(handoff)
+	// A wishlist preview the member updated with their matches. The earlier preview isn't deleted, only left.
+	const [replaced, setReplaced] = useState<
+		(WishlistPreviewUpdate & { id: string }) | null
+	>(null)
 	const shownId =
 		openId ?? (!uploadOpen && latest?.status === "running" ? latest.id : null)
 	useEffect(() => {
@@ -83,6 +88,11 @@ export function SourceImportFlow({
 					id={shownId}
 					focus={acted}
 					onUploadAnother={upload}
+					onPreviewReplaced={(next, update) => {
+						setReplaced({ id: next.id, ...update })
+						open(next.id)
+					}}
+					updated={replaced?.id === shownId ? replaced : undefined}
 				/>
 			) : (
 				<>

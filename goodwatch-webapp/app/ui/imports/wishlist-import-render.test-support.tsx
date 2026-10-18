@@ -51,14 +51,18 @@ const summary = (
 
 const preview = (item: ImportSummary, confirming = false) =>
 	renderToStaticMarkup(
-		createElement(SourceImportPreview, {
-			summary: item,
-			focus: false,
-			confirming,
-			error: null,
-			onConfirm: () => {},
-			onBack: () => {},
-		}),
+		createElement(
+			QueryClientProvider,
+			{ client: new QueryClient() },
+			createElement(SourceImportPreview, {
+				summary: item,
+				focus: false,
+				confirming,
+				error: null,
+				onConfirm: () => {},
+				onBack: () => {},
+			}),
+		),
 	)
 
 const evidence = (mediaType: "movie" | "show" | "unknown") => ({
