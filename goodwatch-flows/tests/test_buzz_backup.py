@@ -104,6 +104,9 @@ class BackupTests(unittest.TestCase):
         rows = justwatch_chart(payload)
         self.assertEqual([(r['title_key'], r['rank'], r['value']) for r in rows], [('movie:603', 4, .25), ('tv:1396', 2, .5)])
         self.assertEqual(rows[0]['raw']['country'], 'US')
+        # The live API sends ids as text.
+        live = json.loads(json.dumps(payload).replace('"tmdbId": 603', '"tmdbId": "603"'))
+        self.assertEqual(justwatch_chart(live)[0]['title_key'], 'movie:603')
         http = Mock()
         http.post.return_value.__enter__ = Mock(return_value=Mock(json=lambda: {'errors': [{'message': 'schema changed'}]}))
         http.post.return_value.__exit__ = Mock(return_value=False)

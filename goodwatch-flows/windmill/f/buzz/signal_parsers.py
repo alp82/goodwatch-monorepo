@@ -164,6 +164,9 @@ def justwatch_chart(payload):
         kind = {'MOVIE': 'movie', 'SHOW': 'tv'}.get(node.get('objectType'))
         content = node.get('content') or {}
         tmdb = (content.get('externalIds') or {}).get('tmdbId')
+        # The live API sends the id as text ("213562").
+        if isinstance(tmdb, str) and tmdb.isdigit():
+            tmdb = int(tmdb)
         if not kind or not isinstance(tmdb, int) or isinstance(tmdb, bool) or tmdb <= 0:
             continue
         charts = (node.get('streamingCharts') or {}).get('edges', [])
