@@ -30,11 +30,11 @@ import {
 // ---------------------------------------------------------------------------------------------------------------
 // One flow for every round 2 variant: the step, the picked source, and when to move on.
 
-type Step = 1 | 2 | 3
-const STEP_LABELS = ["Bring your history", "Rate a few", "Your taste"] as const
-const SLOW: ImportSourceId[] = ["imdb", "trakt"]
+export type Step = 1 | 2 | 3
+export const STEP_LABELS = ["Bring your history", "Rate a few", "Your taste"] as const
+export const SLOW: ImportSourceId[] = ["imdb", "trakt"]
 
-function useFlow(shelf: ScoringMedia[]) {
+export function useFlow(shelf: ScoringMedia[]) {
 	const c = useCombined(shelf)
 	const [step, setStep] = useState<Step>(1)
 	const [pick, setPick] = useState<ImportSourceId | null>(null)
@@ -85,12 +85,12 @@ function useFlow(shelf: ScoringMedia[]) {
 						: "",
 	}
 }
-type Flow = ReturnType<typeof useFlow>
+export type Flow = ReturnType<typeof useFlow>
 
 // ---------------------------------------------------------------------------------------------------------------
 // Shared look from C: the poster wall, and A's words for each step.
 
-function PosterWall({ shelf, from = 0, count = 24, cols = "grid-cols-6 md:grid-cols-12", opacity = "opacity-15", className = "", fade = true, children }: { shelf: ScoringMedia[]; from?: number; count?: number; cols?: string; opacity?: string; className?: string; fade?: boolean; children: ReactNode }) {
+export function PosterWall({ shelf, from = 0, count = 24, cols = "grid-cols-6 md:grid-cols-12", opacity = "opacity-15", className = "", fade = true, children }: { shelf: ScoringMedia[]; from?: number; count?: number; cols?: string; opacity?: string; className?: string; fade?: boolean; children: ReactNode }) {
 	const wall = useMemo(() => shelf.slice(from, from + count), [shelf, from, count])
 	// The wall fades out into the page's own background, so it never ends on a hard edge.
 	const mask = fade ? { maskImage: "linear-gradient(to bottom, black 45%, transparent)", WebkitMaskImage: "linear-gradient(to bottom, black 45%, transparent)" } : undefined
@@ -113,7 +113,7 @@ const H1 = "text-3xl font-extrabold tracking-tight text-white md:text-5xl"
 const lead = "mt-3 text-gray-300 md:text-lg"
 
 /** The words at the top of each step: A's question first, then the picked source's. */
-function stepWords(f: Flow): { title: string; text: string } {
+export function stepWords(f: Flow): { title: string; text: string } {
 	if (f.step === 1) {
 		if (f.imp.phase.kind === "done")
 			return { title: "That's your history in.", text: "Everything you imported is in your library now. You can undo it in Settings." }
@@ -145,7 +145,7 @@ function stepWords(f: Flow): { title: string; text: string } {
 }
 
 /** The liked titles, fanned out: what the taste is built from. */
-function PosterFan({ f, shelf }: { f: Flow; shelf: ScoringMedia[] }) {
+export function PosterFan({ f, shelf }: { f: Flow; shelf: ScoringMedia[] }) {
 	const rated = f.r.rated.filter((x) => x.score >= 7).map((x) => x.title)
 	const titles = [...rated, ...(f.imported > 0 ? shelf.slice(20, 34) : [])].slice(0, 7)
 	const mid = (titles.length - 1) / 2
@@ -164,7 +164,7 @@ function PosterFan({ f, shelf }: { f: Flow; shelf: ScoringMedia[] }) {
 	)
 }
 
-function ReadyActions({ f }: { f: Flow }) {
+export function ReadyActions({ f }: { f: Flow }) {
 	return (
 		<div className="flex flex-wrap items-center justify-center gap-3">
 			<a href="/taste" className={primaryButton}>
@@ -258,7 +258,7 @@ function HistoryBody({ f, shelf, tiles = "grid-cols-2 sm:grid-cols-3", center = 
 }
 
 /** Step 2's note while a slow export is on its way. */
-function WaitingNote({ f }: { f: Flow }) {
+export function WaitingNote({ f }: { f: Flow }) {
 	if (!f.waiting || f.imp.phase.kind !== "idle") return null
 	return (
 		<div className="flex flex-wrap items-center gap-3 rounded-lg border border-slate-700 bg-slate-900/80 px-4 py-3 text-sm text-gray-300">
@@ -268,7 +268,7 @@ function WaitingNote({ f }: { f: Flow }) {
 	)
 }
 
-function RateBody({ f }: { f: Flow }) {
+export function RateBody({ f }: { f: Flow }) {
 	return (
 		<div className="flex flex-col gap-4 text-left">
 			<WaitingNote f={f} />

@@ -30,6 +30,9 @@ import type { ScoringMedia } from "~/ui/scoring/types"
 import { RatingDots } from "~/ui/taste-quiz/TasteQuizPage"
 import { ScoreControl } from "~/ui/title-actions/ScoreControl"
 import { Round2, VARIANTS_2 } from "./OnboardingImports2"
+import { VariantI } from "./OnboardingImports3"
+
+const VARIANTS_3 = { I: "Full width, drop first", H: "Round 2: one card", E: "Round 2: stage" } as const
 
 export const VARIANTS = {
 	now: "Today: rate one at a time",
@@ -41,6 +44,7 @@ export const VARIANTS = {
 	F: "",
 	G: "",
 	H: "",
+	I: "",
 } as const
 type Variant = keyof typeof VARIANTS
 
@@ -846,7 +850,8 @@ export function OnboardingImportsPrototype({ variant, shelf }: { variant: Varian
 			{variant === "D" && <VariantD shelf={shelf} />}
 			{["E", "F", "G", "H"].includes(variant) && <Round2 variant={variant as "E"} shelf={shelf} />}
 			{/* Round 2 is on the bar; round 1's now, A, B, C still open by address. */}
-			<PrototypeSwitcher variants={variant in VARIANTS_2 ? VARIANTS_2 : VARIANTS} />
+			{variant === "I" && <VariantI shelf={shelf} />}
+			<PrototypeSwitcher variants={variant in VARIANTS_3 ? VARIANTS_3 : variant in VARIANTS_2 ? VARIANTS_2 : VARIANTS} />
 		</>
 	)
 }
