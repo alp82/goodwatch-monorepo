@@ -317,6 +317,69 @@ main:has(.lr-page) + footer {
 	}
 }
 
+/* A window taller than the room's cap (1600px and the header): the space under the room would show the section's
+   first lines, cut off. The lip takes that space instead, as a band across the window: a quiet invitation in the
+   middle and the round key under it. Its height is exactly what is left, so the first screen ends with it, and
+   `#browse` lands past it. Below 120px of space the tab stays, over the section's empty top padding. */
+@media (min-width: 768px) and (min-height: calc(1600px + 4rem + 120px)) {
+	.lrb {
+		--lrb-band: calc(100svh - 4rem - 1600px);
+		scroll-margin-top: calc(4rem - var(--lrb-band));
+	}
+	.lrb-lip {
+		position: relative;
+		inset: auto;
+		height: var(--lrb-band);
+		flex-direction: column;
+		justify-content: center;
+		gap: 18px;
+		padding: 0 1.5rem;
+		border: 0;
+		border-radius: 0;
+		box-shadow: none;
+		text-align: center;
+		background:
+			radial-gradient(ellipse 42rem 70% at 50% 0, rgba(252, 211, 77, 0.13), transparent 70%),
+			var(--lrb-top);
+	}
+	.lrb-lip b {
+		font-size: clamp(22px, 1.6vw, 30px);
+		letter-spacing: -0.01em;
+	}
+	.lrb-lip small {
+		margin-top: 6px;
+		font-size: 14px;
+	}
+	.lrb-lip i {
+		width: 52px;
+		height: 52px;
+		box-shadow: 0 0 0 8px rgba(252, 211, 77, 0.08), 0 10px 30px rgba(245, 158, 11, 0.25);
+		animation: lrb-bob 2.4s ease-in-out infinite;
+	}
+	.lrb-lip:hover i,
+	.lrb-lip:focus-visible i {
+		animation-play-state: paused;
+	}
+	.lrb-lip:focus-visible {
+		outline-offset: -6px;
+	}
+}
+@keyframes lrb-bob {
+	0%,
+	60%,
+	100% {
+		transform: translateY(0);
+	}
+	30% {
+		transform: translateY(6px);
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.lrb-lip i {
+		animation: none;
+	}
+}
+
 .lrb-in {
 	max-width: 76rem;
 	margin: 0 auto;

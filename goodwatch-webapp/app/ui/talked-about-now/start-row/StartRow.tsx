@@ -235,22 +235,16 @@ function Board({ row }: { row: TalkedRow }) {
 		<section aria-labelledby="tn-title" className="tn">
 			<header className="tn-top">
 				<div>
-					<p className="lrb-eye">Read about most, against its usual</p>
+					<p className="lrb-eye">Hot on social media</p>
 					<h2 id="tn-title">Talked about now</h2>
 				</div>
-				<p className="tn-note">
-					<span>
-						Wikipedia reading on {dateLabel(row.day)} against each title's
-						28-day usual · curves on each title's own scale
-					</span>
-					{sources.length > 0 && (
-						<span className="tn-sources">
-							{sources.map((source) => (
-								<Platform key={source} source={source} />
-							))}
-						</span>
-					)}
-				</p>
+				{sources.length > 0 && (
+					<p className="tn-sources">
+						{sources.map((source) => (
+							<Platform key={source} source={source} />
+						))}
+					</p>
+				)}
 			</header>
 			<div className="tn-grid">
 				{wide && (

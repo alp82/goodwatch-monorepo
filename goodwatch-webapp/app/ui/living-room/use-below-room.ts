@@ -1,10 +1,11 @@
 // How the start page moves between the living room and the section below it (#352). This hook is the one owner.
 //
 // A visit starts locked: the room is the whole first screen and the page doesn't move. The wheel, a swipe, and the
-// keys are the room's and the Remote's. The lip at the room's bottom edge is the way down.
+// keys are the room's and the Remote's. The lip at the room's bottom edge is the way down, and so is the wheel
+// turned down anywhere but over the Remote's wheel.
 //
-// The first arrival below opens the page for the rest of the tab's session: a press of the lip, a link to
-// `#browse`, or keyboard focus that lands in the section. From then on the page scrolls like any page, between the
+// The first arrival below opens the page for the rest of the tab's session: a press of the lip, the wheel, a link
+// to `#browse`, or keyboard focus that lands in the section. From then on the page scrolls like any page, between the
 // room and the section and back, also after leaving the start page and returning. A new tab starts locked again.
 //
 // - `<html data-lr="locked|open">` is what the stylesheet reads (living-room.css). Open is remembered in
@@ -213,11 +214,35 @@ export function useBelowRoom(): BelowRoom {
 			rememberOpened()
 			setOpen(true)
 		}
+		// Locked, a wheel turned down is a way down too: it opens the page and the page scrolls from there. Not over
+		// the Remote's wheel (it steps the screen) or a box that can still scroll down itself.
+		const onWheel = (e: WheelEvent) => {
+			if (latest.current.open || latest.current.landscape || e.deltaY <= 0 || e.ctrlKey) return
+			const target = e.target
+			if (!(target instanceof Element) || target.closest(".remote-wheel")) return
+			for (let el: Element | null = target; el && el !== document.body; el = el.parentElement) {
+				const { overflowY } = getComputedStyle(el)
+				if (
+					(overflowY === "auto" || overflowY === "scroll") &&
+					el.scrollTop + el.clientHeight < el.scrollHeight - 1
+				)
+					return
+			}
+			leaving.current = true
+			rememberOpened()
+			setOpen(true)
+			const by = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY
+			// The stylesheet unlocks the root now, not after React's effect, so this first turn already moves the page.
+			document.documentElement.dataset.lr = "open"
+			window.scrollBy({ top: by })
+		}
 		window.addEventListener("scroll", onScroll, { passive: true })
+		window.addEventListener("wheel", onWheel, { passive: true })
 		window.addEventListener("keydown", onKey)
 		document.addEventListener("focusin", onFocus)
 		return () => {
 			window.removeEventListener("scroll", onScroll)
+			window.removeEventListener("wheel", onWheel)
 			window.removeEventListener("keydown", onKey)
 			document.removeEventListener("focusin", onFocus)
 		}
