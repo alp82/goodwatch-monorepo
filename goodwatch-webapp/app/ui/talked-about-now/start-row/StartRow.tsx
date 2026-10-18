@@ -235,8 +235,8 @@ function Board({ row }: { row: TalkedRow }) {
 		<section aria-labelledby="tn-title" className="tn">
 			<header className="tn-top">
 				<div>
-					<p className="lrb-eye">Hot on social media</p>
-					<h2 id="tn-title">Talked about now</h2>
+					<p className="lrb-eye">Talked about now</p>
+					<h2 id="tn-title">Hot on socials</h2>
 				</div>
 				{sources.length > 0 && (
 					<p className="tn-sources">
