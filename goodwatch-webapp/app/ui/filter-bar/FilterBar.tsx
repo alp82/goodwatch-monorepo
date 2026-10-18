@@ -56,6 +56,11 @@ export interface FilterBarProps {
 	insightLead?: ReactNode
 	/** Phones: replaces the slab's hidden line. */
 	slabLine?: ReactNode
+	/**
+	 * In place of On my services, Not seen yet and For you, on the desktop row and in the slab (Discover's sign-up key
+	 * for visitors).
+	 */
+	signUpKey?: { row: ReactNode; slab: ReactNode }
 }
 
 export function FilterBar(props: FilterBarProps) {
@@ -130,6 +135,8 @@ export function FilterBar(props: FilterBarProps) {
 			<div className="hidden lg:block">
 				<div className="flex flex-wrap items-center gap-2.5">
 					{props.rowLead}
+					{props.signUpKey?.row ?? (
+					<>
 					<ServicesControl
 						on={state.onMyServices}
 						hasServices={hasServices}
@@ -145,6 +152,8 @@ export function FilterBar(props: FilterBarProps) {
 						onChange={(on) => filters.set({ notSeenYet: on })}
 					/>
 					{forYou && <ForYouSwitch forYou={forYou} />}
+					</>
+					)}
 					<SortControl
 						options={sorts}
 						value={sort}
@@ -229,6 +238,7 @@ export function FilterBar(props: FilterBarProps) {
 					searching={filters.searching}
 					groups={groups}
 					line={props.slabLine}
+					signUpKey={props.signUpKey?.slab}
 				/>
 			</div>
 		</MotionConfig>

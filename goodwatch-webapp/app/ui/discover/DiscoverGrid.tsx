@@ -14,12 +14,13 @@ import type { TitleCard } from "~/server/title-cards.server"
 import { compactCount } from "~/ui/filter-bar/labels"
 import { SPRING } from "~/ui/filter-bar/motion"
 import { HiddenTileContext, useKeptCards } from "~/ui/title-actions/hide-feedback"
+import { SmallBadgesContext } from "~/ui/title-card/small-badges"
 import { TitlePosterCard } from "~/ui/title-card/TitlePosterCard"
 import { gridPosterPriority } from "~/utils/tmdb-image"
 import type { TitleKey } from "~/utils/title-key"
 
 export const DISCOVER_GRID =
-	"grid grid-cols-2 gap-3 xs:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 lg:gap-5 xl:grid-cols-6"
+	"grid grid-cols-3 gap-2 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 lg:gap-5 xl:grid-cols-6"
 
 const EASE_OUT = [0.22, 1, 0.36, 1] as const
 // A new order (filters, sort): a quick glide on a slightly overshooting ease.
@@ -50,6 +51,7 @@ export function DiscoverGrid({
 	const { cards, keeper } = useKeptCards(listed)
 	return (
 		<div className={DISCOVER_GRID}>
+			<SmallBadgesContext.Provider value={true}>
 			<HiddenTileContext.Provider value={keeper}>
 			<AnimatePresence initial={false} mode="popLayout">
 				{cards.map((card, index) => {
@@ -86,6 +88,7 @@ export function DiscoverGrid({
 				})}
 			</AnimatePresence>
 			</HiddenTileContext.Provider>
+			</SmallBadgesContext.Provider>
 			{children}
 		</div>
 	)

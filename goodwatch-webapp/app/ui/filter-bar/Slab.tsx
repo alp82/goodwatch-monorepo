@@ -245,6 +245,8 @@ export interface SlabProps {
 	groups: FilterGroupsData
 	/** Replaces the hidden line, always shown (for example a search's own line). */
 	line?: ReactNode
+	/** In place of the strip's first three segments (Discover's sign-up key for visitors). */
+	signUpKey?: ReactNode
 }
 
 export function Slab(props: SlabProps) {
@@ -329,6 +331,8 @@ export function Slab(props: SlabProps) {
 				line={props.line ?? hiddenLine}
 				strip={
 					<>
+						{props.signUpKey ?? (
+						<>
 						<motion.button
 							type="button"
 							role="switch"
@@ -412,6 +416,8 @@ export function Slab(props: SlabProps) {
 									}
 								/>
 							))}
+						</>
+						)}
 						<motion.button
 							ref={sortTrigger}
 							type="button"

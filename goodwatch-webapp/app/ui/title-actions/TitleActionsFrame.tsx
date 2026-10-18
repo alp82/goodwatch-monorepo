@@ -8,6 +8,7 @@ import { type ReactNode, Suspense, lazy, useCallback, useContext, useEffect, use
 import type { ScoredMedia } from "~/ui/user/actions/ScoreAction"
 import { onFirstInteraction } from "~/utils/first-interaction"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
+import { useSmallBadges } from "~/ui/title-card/small-badges"
 import { HiddenTileContext } from "./hide-feedback"
 import { useTouchPointer } from "./pointer"
 
@@ -54,6 +55,7 @@ export function TitleActionsFrame({
 	children: ReactNode
 }) {
 	const touch = useTouchPointer()
+	const small = useSmallBadges()
 	const frame = useRef<HTMLDivElement>(null)
 	const [armed, setArmed] = useState(false)
 	const [open, setOpen] = useState<OpenActions>(null)
@@ -89,9 +91,12 @@ export function TitleActionsFrame({
 						setArmed(true)
 						setOpen("sheet")
 					}}
-					className={`absolute z-20 flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg bg-gray-700/90 text-white focus-visible:outline-2 focus-visible:outline-white ${MORE_AT[placement]}`}
+					className={`absolute z-20 flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg bg-gray-700/90 text-white focus-visible:outline-2 focus-visible:outline-white ${MORE_AT[placement]} ${small ? "max-lg:h-7 max-lg:w-7 max-lg:rounded-md max-lg:right-1.5 max-lg:bottom-1.5" : ""}`}
 				>
-					<EllipsisHorizontalIcon className="h-6 w-6" aria-hidden />
+					<EllipsisHorizontalIcon
+						className={`h-6 w-6 ${small ? "max-lg:h-4.5 max-lg:w-4.5" : ""}`}
+						aria-hidden
+					/>
 				</button>
 			)}
 			{armed && (

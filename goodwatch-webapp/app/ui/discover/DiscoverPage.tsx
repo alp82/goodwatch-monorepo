@@ -7,6 +7,8 @@
 // Relevance joins the sorts and is chosen, and the counts and recoveries cover the search's top 100. Clearing the
 // search returns to the sort used before it.
 //
+// A visitor who uses none of On my services, Not seen yet and For you sees one sign-up key in their place (SignUpKey).
+//
 // Best match (the sort by taste match) and the Taste match filter need taste; the bar hears from the results whether
 // the viewer has it. Under Best match For you shows on and flipping it leads to another sort (see the filter bar's
 // useForYouUnderBestMatch).
@@ -49,6 +51,7 @@ import { DiscoverGrid } from "./DiscoverGrid"
 import { DiscoverHeading } from "./DiscoverHeading"
 import { ForYouNeedsTaste, ForYouSignUp } from "./ForYouStates"
 import { HiddenTitles } from "./HiddenTitles"
+import { SignUpKey } from "./SignUpKey"
 import { SideBanner, SideRows, sideRowsOf } from "./SideRows"
 import { TasteExplanation } from "./TasteExplanation"
 import {
@@ -361,6 +364,21 @@ export function DiscoverPage({
 			),
 	}
 
+	// A visitor without services, without Not seen yet and without taste gets one sign-up key in place of the three
+	// controls. A visitor using any of them keeps the controls, so nothing they turned on is hidden.
+	const signUpKey =
+		!member &&
+		status === "signUp" &&
+		!defaults.onMyServices &&
+		!defaults.notSeenYet &&
+		!filters.state.onMyServices &&
+		!filters.state.notSeenYet
+			? {
+					row: <SignUpKey country={scope.country} size="row" />,
+					slab: <SignUpKey country={scope.country} size="slab" />,
+				}
+			: undefined
+
 	const counts = stale ? null : first
 	const busy =
 		search.loading ||
@@ -404,6 +422,7 @@ export function DiscoverPage({
 				<div className="lg:mt-7">
 					<FilterBar
 						filters={filters}
+						signUpKey={signUpKey}
 						counts={counts}
 						forYou={forYouControl}
 						taste={taste}
@@ -429,7 +448,7 @@ export function DiscoverPage({
 				{searching && (
 					<div
 						role="status"
-						className="mt-4 flex min-h-5 flex-wrap items-center gap-3 text-sm text-gray-400"
+						className="mt-1 flex min-h-5 flex-wrap items-center gap-3 text-sm text-gray-400 lg:mt-4"
 					>
 						{search.error ? (
 							<>
@@ -462,7 +481,7 @@ export function DiscoverPage({
 						/>
 					</div>
 				)}
-				<div className="mt-5 lg:mt-7" aria-busy={busy}>
+				<div className="mt-3 lg:mt-7" aria-busy={busy}>
 					{browse.isError && !first ? (
 						<p className="py-16 text-center text-gray-400">
 							Discover couldn't load right now. Try again in a moment.

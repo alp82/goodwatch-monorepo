@@ -17,6 +17,7 @@ import {
 } from "~/ui/title-actions/TitleActionsFrame"
 import { RatingMark } from "~/ui/title-card/RatingMark"
 import type { CardTaste } from "~/ui/title-card/TasteMatchPill"
+import { useSmallBadges } from "~/ui/title-card/small-badges"
 import UserDataOverlay from "~/ui/user/UserDataOverlay"
 import { titleToDashed } from "~/utils/helpers"
 import { canonicalMediaTitle } from "~/utils/media-presentation"
@@ -70,6 +71,7 @@ export function MovieTvCard({
 	newOn,
 }: MovieTvCardProps) {
 	const ratings = extractRatings(details)
+	const small = useSmallBadges()
 	const userScoreData = useUserScore(mediaType, details.tmdb_id)
 	const userScore = userScoreData?.score ?? null
 	const onWishList = useIsOnWishlist(mediaType, details.tmdb_id)
@@ -91,12 +93,13 @@ export function MovieTvCard({
 	)
 	const link = (
 		<Link
-			className="
+			className={`
 				@container
 				flex flex-col w-full
 				bg-gray-900 hover:bg-gray-800
 				border-4 rounded-lg border-gray-800 hover:border-amber-700/50
-			"
+				${small ? "max-lg:border-2" : ""}
+			`}
 			to={`/${mediaType}/${details.tmdb_id}-${titleToDashed(canonicalMediaTitle(details))}`}
 			prefetch={prefetch ? "viewport" : "intent"}
 			draggable="false"

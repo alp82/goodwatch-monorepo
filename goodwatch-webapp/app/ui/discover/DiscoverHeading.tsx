@@ -196,7 +196,7 @@ export function DiscoverHeading({
 									className="group flex min-w-0 items-center gap-3 rounded-xl text-left cursor-text outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
 								>
 									<h1
-										className={`brand-header min-w-0 overflow-hidden text-white ${q ? `text-4xl lg:text-5xl ${PRIVATE}` : "text-3xl lg:text-4xl"}`}
+										className={`brand-header min-w-0 overflow-hidden text-white ${q ? `text-xl lg:text-5xl ${PRIVATE}` : "text-3xl lg:text-4xl"}`}
 									>
 										<Swap
 											k={q ?? "browse"}

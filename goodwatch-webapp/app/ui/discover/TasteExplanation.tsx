@@ -1,7 +1,7 @@
 // The explanation at the top right of Discover. Browsing with For you lifting titles: what the person's taste leans
 // to, as small chips in the fingerprint's colors (the rule itself is in For you's own tooltip); without enough liked
 // titles, a nudge to rate a few more. Searching: "Read as" and
-// how the search read the query, as chips, in the same slot. Guests with taste also get the sign-up prompt to keep it.
+// how the search read the query, as chips, in the same slot (phones: one sideways-scrolling row, without the "Read as"). Guests with taste also get the sign-up prompt to keep it.
 import { FingerPrintIcon } from "@heroicons/react/24/solid"
 import { Link } from "@remix-run/react"
 import { AnimatePresence, motion } from "framer-motion"
@@ -55,7 +55,7 @@ export function TasteExplanation({
 						initial="enter"
 						animate="center"
 						exit="leave"
-						className="flex flex-wrap items-center gap-x-2 gap-y-1.5 text-xs text-gray-400 sm:text-sm"
+						className={`flex items-center gap-x-2 gap-y-1.5 text-xs text-gray-400 sm:text-sm ${search ? "flex-nowrap lg:flex-wrap" : "flex-wrap"}`}
 						aria-live={search ? "polite" : undefined}
 					>
 						<FingerPrintIcon
@@ -106,8 +106,12 @@ function SearchLine({ search }: { search: SearchExplanation }) {
 		return <span>Matched by titles and descriptions</span>
 	return (
 		<>
-			<span>Read as</span>
-			<ReadAsChips reading={search.reading} />
+			<span className="hidden lg:inline">Read as</span>
+			{/* Phones: one row that scrolls sideways, to the screen's edge. */}
+			<ReadAsChips
+				reading={search.reading}
+				className="-mr-4 min-w-0 flex-1 !flex-nowrap overflow-x-auto pr-4 [scrollbar-width:none] [&>li]:shrink-0 [&>li]:whitespace-nowrap lg:mr-0 lg:!flex-wrap lg:overflow-visible lg:pr-0"
+			/>
 		</>
 	)
 }
