@@ -1,12 +1,16 @@
 # GoodWatch My List capture (experiment)
 
-This is a throwaway prototype. It isn't a GoodWatch feature, it isn't supported, and it isn't in any extension store. Nobody has tested it on a real, signed-in Netflix account.
+This is a throwaway prototype. It isn't a GoodWatch feature, it isn't supported, and it isn't in any extension store.
 
-The extension reads the titles that Netflix loads on your **My List** page while you scroll it. When you stop, it saves them as a local JSON file in the GoodWatch wishlist file layout.
+The first live attempt, on a real Netflix account, revealed a layout that the earlier collector didn't support. Version 0.0.3 updates the capture for that layout. It has passed synthetic tests only and is pending a real-account test.
 
-## Version 0.0.2
+The extension reads the titles that Netflix loads on your **My List** page while you go through it. When you stop, it saves them as a local JSON file in the GoodWatch wishlist file layout.
 
-Version 0.0.2 changes only the instructions in this README and the popup. The capture, the permissions, and the file format are the same as in version 0.0.1. If you already saved a file with version 0.0.1, you don't need to capture your list again. Upload that file.
+## Version 0.0.3
+
+On the first live attempt, Netflix showed My List inside the **Mein Netflix** page, as one horizontal row among others, such as **Weiterschauen** and **Nochmal ansehen**. The earlier collector couldn't identify My List there and stopped with the code `boundary_missing`. Versions 0.0.1 and 0.0.2 share that collector, and the installed version wasn't confirmed.
+
+Version 0.0.3 looks for a row headed exactly **My List** or **Meine Liste** and reads only that row. It still reads the grid layout that earlier versions supported. The permissions and the file format haven't changed.
 
 ## Add the titles to GoodWatch
 
@@ -27,10 +31,11 @@ Matching has been tested with invented data only. Nobody has matched or imported
 ## Limits
 
 - **Desktop Chromium only.** It's meant for Chrome, Edge, Brave, or another Chromium browser on a computer. It doesn't run on phones or tablets.
-- **The file may not hold your whole list.** It holds only the titles that Netflix loaded on the page while you scrolled. Titles that Netflix doesn't show in your country may be missing. The file marks its coverage as unknown, or as partial when the capture ended early. It never claims to be complete.
-- **The count isn't the size of your list.** **Titles captured so far** counts the title cards that Netflix loaded on the page during this capture, including cards that may be off screen. It isn't a count of what you saw.
+- **The file may not hold your whole list.** It holds only the titles that Netflix loaded on the page while you went through the list. Titles that Netflix doesn't show in your country may be missing. The file marks its coverage as unknown, or as partial when the capture ended early. It never claims to be complete.
+- **The count isn't the size of your list.** **Titles captured so far** counts the title cards that Netflix loaded on the page during this capture, including cards that may be off screen. It isn't a count of what you saw. A count that stops growing doesn't prove that the file is complete.
 - **One profile per file.** If the extension sees the profile change, it ends the capture and throws away what it captured. If it can't tell which profile is open, the popup asks you to stay on one profile.
 - **Titles and IDs are experimental readings.** The capture reads the page with guessed selectors, not a documented Netflix format. Any title or Netflix ID in the file can be wrong until real-account testing shows otherwise.
+- **Only one list layout at a time.** The capture reads either the My List grid or the My List row. It doesn't read other rows, such as **Weiterschauen** or **Nochmal ansehen**.
 - **Captures end on their own.** A capture ends if the tab leaves My List, if My List disappears from the page, or if the capture reaches its time or size limit. After a time limit, a size limit, or My List disappearing, you can still save what was captured.
 
 ## What it does and doesn't do
@@ -58,21 +63,34 @@ It asks the browser for only two permissions: `activeTab` (access to the current
 1. In Chrome, go to `chrome://extensions`. In Edge, go to `edge://extensions`.
 2. Turn on **Developer mode**.
 3. Click **Load unpacked**.
-4. Select this folder, `wishlist-capture-extension-v002`.
+4. Select this folder, `wishlist-capture-extension-v003`.
 5. Optional: to keep the extension in reach, pin it from the browser's extensions menu.
 
 To remove the extension, click **Remove** on its card on the same page.
 
+### Update from an earlier version
+
+1. Go to `chrome://extensions` or `edge://extensions`.
+2. Do one of the following:
+   - If you have the new `wishlist-capture-extension-v003` folder, click **Remove** on the earlier version's card. Then click **Load unpacked** and select the new folder.
+   - If you replaced the files in the folder that you loaded before, click **Reload** on the extension's card.
+3. Check that the card shows version 0.0.3.
+4. Refresh every Netflix tab that was open before the update. This step is essential. A tab that isn't refreshed keeps running the previous version's capture, and the new version can't replace it.
+
 ## Capture My List
 
 1. Sign in to Netflix and choose the profile whose list you want.
-2. Open **My List** (`https://www.netflix.com/browse/my-list`) and wait until it loads.
-3. Click the GoodWatch extension button, then choose **Start capture**.
-4. Scroll My List slowly to the end. The popup closes when you click the page. The capture keeps running in the tab.
+2. Open **My List** (`https://www.netflix.com/browse/my-list`) and wait until it loads. If you updated the extension, refresh this tab first.
+3. Click the GoodWatch extension button, then choose **Start capture**. The popup closes when you click the page. The capture keeps running in the tab.
+4. Go through My List to the end yourself. How you do this depends on the layout:
+   - **Grid:** scroll down slowly to the end of the list.
+   - **Row named My List or Meine Liste:** click the next arrow at the row's right edge until you've seen every title in the row. The arrow may appear only when you point at the row. Netflix rows can wrap around to the first titles, so the arrow may never disappear. When titles start repeating, stop. Use only this row. Don't use the arrows on other rows.
 5. To check the count, open the popup again. If the popup can't reach the tab or doesn't get an answer it understands, it drops any file it was holding. Start a new capture.
 6. Choose **Stop and save file**. The browser saves `goodwatch-wishlist-netflix-<date>-<time>.json` to your Downloads folder.
 
 If the browser doesn't save the file, choose **Save file** in the popup. To throw a capture away, choose **Cancel and discard**.
+
+If the popup says that GoodWatch couldn't identify My List, Netflix is showing a layout that this version doesn't support. Refresh the tab, wait until the page loads, and try once more. If the message comes back, report the code that the popup shows, the heading of your list row, and whether the list is a grid or a row.
 
 ## What's in the file
 
@@ -112,10 +130,10 @@ A passing fixture test shows that the capture logic reads the cards it was writt
 
 **Browser testing** loads the real extension in Chromium and runs its popup against the same invented page, served at a Netflix address on the test computer. The test starts, stops, and discards captures from the popup and checks the saved file. It never contacts Netflix. For the results and how to run it, see `VALIDATION.md`.
 
-**Real-account testing** hasn't happened. Before anyone treats this as working, someone with permission to use a Netflix account needs to:
+**Real-account testing** has started. The first attempt, with the earlier collector, stopped with `boundary_missing` because Netflix showed My List as a row on the **Mein Netflix** page. No file was saved. Version 0.0.3 is pending a real-account test. Before anyone treats this as working, someone with permission to use a Netflix account needs to:
 
-1. Write down a known set of titles on one profile's My List, including a movie, a show, two titles with the same name, and enough titles to need scrolling.
-2. Capture the list and compare the file with that set: missing titles, extra titles from other rows, and wrong IDs.
+1. Write down a known set of titles on one profile's My List, including a movie, a show, two titles with the same name, and enough titles to need scrolling or the next arrow.
+2. Capture the list and compare the file with that set: missing titles, extra titles from other rows, and wrong IDs. If My List is a row, check whether it wraps around to its first titles. If My List is a row, check that the file has no titles from rows such as **Weiterschauen** or **Nochmal ansehen**.
 3. Repeat with a second profile, an interrupted capture, and a profile switch during capture.
 4. Keep only redacted notes. Don't share the file, screenshots, or browser logs outside the test.
 

@@ -65,13 +65,15 @@ h2 {
 }
 
 section,
-footer {
-  margin-top: 12px;
+.notice,
+.more {
+  margin-top: 10px;
 }
 
 .tag,
 .hint,
-.privacy,
+.notice,
+.more,
 .code {
   color: var(--muted);
   font-size: 12px;
@@ -82,20 +84,31 @@ footer {
   border-left-width: 4px;
   border-radius: 6px;
   background: var(--notice-bg);
-  padding: 8px 10px;
+  padding: 6px 10px;
+  color: var(--fg);
 }
 
 .steps ol {
   padding-left: 20px;
+  font-size: 13px;
 }
 
 .steps li + li {
   margin-top: 2px;
 }
 
-.status {
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.steps {
   border-top: 1px solid var(--line);
-  padding-top: 10px;
+  padding-top: 8px;
 }
 
 .state {
@@ -183,7 +196,17 @@ button:focus-visible {
   margin-top: 8px;
 }
 
-.privacy {
-  border-top: 1px solid var(--line);
-  padding-top: 8px;
+.more summary {
+  cursor: pointer;
+  color: var(--fg);
+  font-weight: 600;
+}
+
+.more summary:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.more p {
+  margin-top: 6px;
 }

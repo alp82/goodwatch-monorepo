@@ -3,7 +3,10 @@
 	if (globalThis.__goodwatchWishlistCaptureCommand) return;
 	const BOUNDARIES = '.mainView .gallery, [data-uia="my-list-gallery"]';
 	const EXCLUDED =
-		'[role="dialog"], .bob-card, .previewModal, .recommendations, .lolomoRow, .rowContainer, .billboard-row';
+		'[role="dialog"], .bob-card, .previewModal, .recommendations, .billboard-row';
+	const ROWS = '.lolomoRow, .rowContainer';
+	const HEADINGS = 'h1, h2, h3, h4, h5, h6, [role="heading"]';
+	const MY_LIST_LABELS = new Set(['My List', 'Meine Liste']);
 	const MAX_ROWS = 5000;
 	const MAX_TIME = 10 * 60 * 1000;
 	let state = "idle";
@@ -45,13 +48,36 @@
 			? JSON.stringify([node.getAttribute("alt"), node.getAttribute("src")])
 			: null;
 	}
+	function headingLabel(heading) {
+		const titles = heading.querySelectorAll('.row-header-title');
+		if (titles.length > 1) return null;
+		return (titles.length === 1 ? titles[0].textContent : heading.getAttribute('aria-label') || heading.textContent)?.trim().replace(/\s+/g, ' ');
+	}
+	function ownHeadings(row) {
+		return [...row.querySelectorAll(HEADINGS)].filter(heading =>
+			heading.closest(ROWS) === row && !heading.closest(`${EXCLUDED}, .ptrack-content`));
+	}
 	function boundaries() {
-		return [...document.querySelectorAll(BOUNDARIES)]
-			.filter((node) => !node.closest(EXCLUDED))
-			.filter(
-				(node, _, nodes) =>
-					!nodes.some((other) => other !== node && other.contains(node)),
-			);
+		const grids = [...document.querySelectorAll(BOUNDARIES)]
+			.filter(node => !node.closest(EXCLUDED) && !node.closest(ROWS))
+			.filter((node, _, nodes) => !nodes.some(other => other !== node && other.contains(node)));
+		// A heading identifies its nearest row only. A wrapper owning multiple headings
+		// or independent headed rows may be the entire hub, so refuse it.
+		const rows = [...document.querySelectorAll(HEADINGS)]
+			.filter(heading => !heading.closest(`${EXCLUDED}, .ptrack-content`) && MY_LIST_LABELS.has(headingLabel(heading)))
+			.map(heading => heading.closest(ROWS)).filter(row => row &&
+				ownHeadings(row).length === 1 &&
+				![...row.querySelectorAll(ROWS)].some(nested => !nested.closest(EXCLUDED) && ownHeadings(nested).length));
+		return [...grids, ...rows];
+	}
+	function excludedCard(card) {
+		if (card.closest(EXCLUDED)) return true;
+		// A heading-free rowContainer can be the selected row's structural slider
+		// wrapper. Independent nested rows remain excluded; grids exclude all rows.
+		for (let parent = card.parentElement; parent && parent !== boundary; parent = parent.parentElement) {
+			if (parent.matches(ROWS) && (!boundary.matches(ROWS) || parent.matches('.lolomoRow') || ownHeadings(parent).length)) return true;
+		}
+		return false;
 	}
 	function disconnect() {
 		observer?.disconnect();
@@ -87,7 +113,7 @@
 		}
 	}
 	function readCard(card) {
-		if (card.closest(EXCLUDED)) return;
+		if (excludedCard(card)) return;
 		const ids = new Set();
 		const tracking = card.getAttribute("data-ui-tracking-context");
 		if (tracking !== null && tracking.length > 4096) {

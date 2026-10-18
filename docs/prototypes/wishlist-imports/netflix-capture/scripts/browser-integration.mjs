@@ -8,7 +8,9 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 const moduleName = process.env.GOODWATCH_PLAYWRIGHT_MODULE
 const { chromium } = await import(moduleName ? pathToFileURL(resolve(moduleName)).href : 'playwright-core')
 const extension = resolve(dirname(fileURLToPath(import.meta.url)), '..')
-const fixture = readFileSync(join(extension, 'fixtures/my-list.html'), 'utf8')
+const fixtureMode = process.env.GOODWATCH_CAPTURE_FIXTURE || 'hub'
+assert.ok(['hub', 'grid'].includes(fixtureMode), 'fixture must be hub or grid')
+const fixture = readFileSync(join(extension, fixtureMode === 'hub' ? 'fixtures/my-netflix-hub.html' : 'fixtures/my-list.html'), 'utf8')
 const profile = mkdtempSync(join(tmpdir(), 'goodwatch-mv3-validation-'))
 const context = await chromium.launchPersistentContext(profile, {
   executablePath: process.env.GOODWATCH_CHROMIUM_PATH || chromium.executablePath(),
@@ -112,7 +114,7 @@ try {
 
   // The DOM contains only the latest card; previous cards must remain accumulated.
   await page.evaluate(() => {
-    document.querySelector('.gallery').innerHTML = '<div class="ptrack-content" data-ui-tracking-context="%7B%22video_id%22%3A%221003%22%7D"><a href="/title/1003?token=discard#private"><span class="fallback-text">Synthetic third</span></a></div>'
+    document.querySelector('#synthetic-my-list .slider, .gallery').innerHTML = '<div class="ptrack-content" data-ui-tracking-context="%7B%22video_id%22%3A%221003%22%7D"><a href="/title/1003?token=discard#private"><span class="fallback-text">Synthetic third</span></a></div>'
   })
   const accumulated = await popup.evaluate(async () => run('status'))
   assert.equal(accumulated.observedCount, 3)
@@ -120,11 +122,11 @@ try {
   results.push('real MutationObserver handles recycled cards and once-encoded tracking metadata')
 
   await page.evaluate(() => {
-    document.querySelector('.gallery').insertAdjacentHTML('beforeend', '<div class="ptrack-content" data-ui-tracking-context="{&quot;video_id&quot;:&quot;1001&quot;}"><a href="/title/1001"><span class="fallback-text">Conflicting title</span></a></div>')
+    document.querySelector('#synthetic-my-list .slider, .gallery').insertAdjacentHTML('beforeend', '<div class="ptrack-content" data-ui-tracking-context="{&quot;video_id&quot;:&quot;1001&quot;}"><a href="/title/1001"><span class="fallback-text">Conflicting title</span></a></div>')
   })
   const conflict = await popup.evaluate(async () => run('status'))
   assert.equal(conflict.observedCount, 2)
-  await page.evaluate(() => document.querySelector('.gallery .ptrack-content:last-child .fallback-text').textContent = 'Synthetic movie')
+  await page.evaluate(() => document.querySelector('#synthetic-my-list .slider .ptrack-content:last-child .fallback-text, .gallery .ptrack-content:last-child .fallback-text').textContent = 'Synthetic movie')
   const quarantined = await popup.evaluate(async () => run('status'))
   assert.ok(!quarantined.envelope.items.some(value => value.sourceId === '1001'))
   results.push('contradictory title evidence removes the earlier item permanently for this capture')
@@ -158,6 +160,17 @@ try {
     writeFileSync(process.env.GOODWATCH_CAPTURE_SCREENSHOT, Buffer.from(screenshot.data, 'base64'))
   }
 
+  if (fixtureMode === 'hub') {
+    await popup.evaluate(() => document.getElementById('start').click())
+    await popup.waitForFunction(() => current.state === 'capturing')
+    await page.evaluate(() => document.querySelector('#synthetic-my-list .row-header-title').textContent = 'Continue watching')
+    await popup.evaluate(async () => { accept(await run('status')); render() })
+    assert.equal(await popup.evaluate(() => current.code), 'terminated_boundary')
+    assert.equal(await popup.evaluate(() => envelope.completeness), 'partial')
+    await page.evaluate(() => document.querySelector('#synthetic-my-list .row-header-title').textContent = 'Meine Liste')
+    results.push('changing the synthetic row heading terminates capture with a partial receipt')
+  }
+
   await popup.evaluate(() => document.getElementById('start').click())
   await popup.waitForFunction(() => current.state === 'capturing')
   await page.evaluate(() => document.querySelector('.account-dropdown-button .profile-icon').setAttribute('src', '/avatar-b.png'))
@@ -177,7 +190,7 @@ try {
   results.push('SPA navigation away from My List discards capture and popup save state')
   assert.deepEqual(errors, [])
   console.log(JSON.stringify({
-    status: 'passed', synthetic: true, liveProviderValidated: false,
+    status: 'passed', fixture: fixtureMode, synthetic: true, liveProviderValidated: false,
     fixtureRequestsFulfilledLocally: fixtureRequests, otherRequestsBlocked: blockedRequests,
     downloadName: download.suggestedFilename, results,
   }, null, 2))

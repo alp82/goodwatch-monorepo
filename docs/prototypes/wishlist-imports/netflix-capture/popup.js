@@ -8,7 +8,7 @@ const POLL_MS = 1500
 
 const MESSAGES = {
   idle: 'Not capturing. Open My List on netflix.com in this tab, then choose Start capture.',
-  capturing: 'Capturing. Scroll My List slowly to the end, then open this popup again to stop.',
+  capturing: 'Capturing. Go through My List to the end, then open this popup again to stop.',
   stopped: 'Capture stopped.',
   cancelled: 'Capture canceled. Nothing was saved.',
   terminated_navigation: 'The capture ended because this tab left My List. Nothing was kept. Open My List and start again.',
@@ -17,12 +17,12 @@ const MESSAGES = {
   limit_rows: 'The capture reached its size limit and ended. You can save the titles captured so far.',
   limit_time: 'The capture reached its time limit and ended. You can save the titles captured so far.',
   wrong_page: 'This tab isn\'t showing My List. Open netflix.com/browse/my-list, then choose Start capture.',
-  boundary_missing: 'GoodWatch can\'t find My List on this page. Wait until the list has loaded, then choose Start capture again.',
+  boundary_missing: 'GoodWatch couldn\'t identify My List on this page. Netflix may be showing a layout that this version doesn\'t support. Wait until the page has loaded, then choose Start capture again. If this message comes back, report the code that follows and the heading of your list row, such as My List or Meine Liste.',
   boundary_ambiguous: 'GoodWatch found more than one list on this page and can\'t tell which one is My List. Close any open title details, then try again.',
   invalid_command: 'The capture didn\'t understand that request. Close this popup, open it again, and retry.',
   // Codes set by this popup, not by capture.js.
   tab_unreachable: 'This extension can\'t run on this page. Open My List on netflix.com in this tab, then open this popup again.',
-  no_response: 'The capture didn\'t answer. Reload My List, then choose Start capture again.',
+  no_response: 'The capture didn\'t answer. Refresh the Netflix tab, then choose Start capture again.',
 }
 
 const FALLBACK_MESSAGE = 'Something unexpected happened. The code that follows can help whoever is testing this.'

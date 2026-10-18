@@ -10,29 +10,14 @@
   <main>
     <header class="head">
       <h1>GoodWatch My List capture</h1>
-      <p class="tag">Experiment. Not tested on a real Netflix account.</p>
+      <p class="tag">Experiment. Passed synthetic tests, not yet verified on a real Netflix page.</p>
     </header>
 
-    <section class="notice" aria-labelledby="notice-title">
-      <h2 id="notice-title">For testing only</h2>
-      <p>The file doesn't say whether a title is a movie or a show, so GoodWatch doesn't match its titles on its own. When you upload it on GoodWatch's Imports page, choose <strong>Match titles</strong> and pick the right GoodWatch title for each one you want. Titles you don't match aren't added.</p>
-    </section>
-
-    <section class="steps" aria-labelledby="steps-title">
-      <h2 id="steps-title">How to capture</h2>
-      <ol>
-        <li>In this tab, open <strong>My List</strong> on netflix.com, with the profile you want.</li>
-        <li>Choose <strong>Start capture</strong>.</li>
-        <li>Scroll My List slowly to the end yourself. This popup closes when you click the page. The capture keeps running.</li>
-        <li>Open this popup again and choose <strong>Stop and save file</strong>.</li>
-      </ol>
-    </section>
-
     <section class="status" aria-labelledby="status-title">
-      <h2 id="status-title">Status</h2>
+      <h2 id="status-title" class="visually-hidden">Status</h2>
       <p id="state" class="state" role="status" aria-live="polite">Checking this tab…</p>
       <p id="detail" class="detail" hidden></p>
-      <p id="profile-warning" class="warn" hidden>GoodWatch can't tell which Netflix profile is open. Stay on the same profile until you stop the capture. If you switch, the file mixes two lists.</p>
+      <p id="profile-warning" class="warn" hidden>GoodWatch can't tell which Netflix profile is open. Stay on the same profile until you stop, or the file mixes two lists.</p>
 
       <dl class="counts" id="counts" hidden>
         <div>
@@ -44,7 +29,7 @@
           <dd id="rejected">0</dd>
         </div>
       </dl>
-      <p class="hint" id="counts-hint" hidden>This counts titles that Netflix loaded on the page while capturing, including some that may be off screen. It isn't the size of your whole list.</p>
+      <p class="hint" id="counts-hint" hidden>Counts titles Netflix loaded while capturing. It isn't your list size, and a count that stops growing doesn't prove the file is complete.</p>
 
       <div class="actions">
         <button type="button" id="start" class="primary" disabled>Start capture</button>
@@ -55,15 +40,32 @@
 
       <div id="saved" class="saved" hidden>
         <p id="saved-line"></p>
-        <p>This file may not hold your whole list. Titles that Netflix didn't load while you scrolled are missing, and Netflix may hide titles that aren't available in your country. The titles and Netflix IDs in it are experimental readings of the page.</p>
+        <p>The file may miss titles Netflix didn't load or hides in your country. Titles and Netflix IDs are experimental readings of the page.</p>
       </div>
 
       <p id="code-line" class="code" hidden>Code: <code id="code"></code></p>
     </section>
 
-    <footer class="privacy">
-      <p>This works only in this tab. Opening this popup checks the tab for a running capture. Titles are read only after you choose <strong>Start capture</strong>. It doesn't scroll, open pages, or send anything anywhere. The file holds titles and Netflix links only, with no cookies or account details. It doesn't change your Netflix list.</p>
-    </footer>
+    <section class="steps" aria-labelledby="steps-title">
+      <h2 id="steps-title">How to capture</h2>
+      <ol>
+        <li>In this tab, open <strong>My List</strong> on netflix.com with your profile. If you updated this extension, refresh the tab first.</li>
+        <li>Choose <strong>Start capture</strong>. It keeps running after this popup closes.</li>
+        <li>Grid: scroll slowly to the end. Row named <strong>My List</strong> or <strong>Meine Liste</strong>: click that row's next arrow (point at the row to show it) until titles repeat. Don't use other rows' arrows.</li>
+        <li>Open this popup again and choose <strong>Stop and save file</strong>.</li>
+      </ol>
+    </section>
+
+    <p class="notice">GoodWatch doesn't match these titles on its own. On the Imports page, choose <strong>Match titles</strong> and pick each one. Unmatched titles aren't added.</p>
+
+    <details class="more">
+      <summary>More about this capture</summary>
+      <p>The first live attempt found a Netflix layout that the capture didn't support. This version passed synthetic tests but isn't yet verified on a real Netflix page.</p>
+      <p>The file doesn't say whether a title is a movie or a show, so GoodWatch doesn't match its titles on its own. When you upload it on GoodWatch's Imports page, choose <strong>Match titles</strong> and pick the right GoodWatch title for each one you want. Titles you don't match aren't added.</p>
+      <p>This popup closes when you click the page, but the capture keeps running. The <strong>My List</strong> row can wrap around to its first titles, so stop when titles start repeating.</p>
+      <p>The count includes titles that Netflix loaded on the page while capturing, including some that may be off screen. Netflix may hide titles that aren't available in your country.</p>
+      <p>This works only in this tab. Opening this popup checks the tab for a running capture. Titles are read only after you choose <strong>Start capture</strong>. It doesn't scroll, click, open pages, or send anything anywhere. The file holds titles and Netflix links only, with no cookies or account details. It doesn't change your Netflix list.</p>
+    </details>
   </main>
   <script src="popup.js"></script>
 </body>
