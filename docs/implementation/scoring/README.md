@@ -24,6 +24,8 @@ Watch semantics, guest limits, quiz progression and the details page's first-sho
 - Production build passes. The full repository typecheck still reports errors outside the scoring changes; no errors were reported in changed scoring files after correction.
 - `goodwatch-benchmark/bench.sh budget --runs 1 --label scoring` stops before Lighthouse because `SHARE_LIST_PATH` is not configured. No budget pass is claimed. A deployed performance check remains outstanding.
 
-Integrated with current main before shipping: the new Your scores row and bulk picker also use ScoreChoices, retaining the GoodWatch comparison dot and showing a white selected numeral. The 23 library domain tests and the library picker rendering check pass.
+Integrated with current main before shipping: the new Your scores row and bulk picker also used ScoreChoices at first, retaining the GoodWatch comparison dot and showing a white selected numeral. The 23 library domain tests and the library picker rendering check pass.
+
+**Exception, owner decision October 18, 2026:** Your scores (`/my-library/scores`) went back to its compact strip of ten exact scores in each row, in the selection bar and in the phone's score key (`ui/my-library/scores/ScoreRow.tsx`, `ScoreKeys`). The page is for rescoring many titles in a row and is aimed at power users. Its opened row keeps the shared control. Don't move those keys to ScoreChoices.
 
 Screenshots in this directory use the development harness, not a real account.

@@ -10,13 +10,11 @@ import type { ScoredTitleDetails } from "~/server/my-scores.server"
 import type { Score } from "~/server/scores.server"
 import ScoreRing from "~/ui/details/hero/ScoreRing"
 import { Poster } from "~/ui/my-pages/bits"
-import { ScoreChoices } from "~/ui/scoring/ScoreChoices"
 import { ScoreControl } from "~/ui/title-actions/ScoreControl"
 import { titleToDashed } from "~/utils/helpers"
 import { canonicalMediaTitle, mediaFieldLanguage } from "~/utils/media-presentation"
-import { getScoreLabelText, goodwatchVibeIndex, selectedScoreStyle } from "~/utils/ratings"
+import { getVibeColorValue, goodwatchVibeIndex, scoreLabels } from "~/utils/ratings"
 import { VERSUS_LABEL } from "./ScoreFilters"
-
 
 export const titleHref = (t: ScoredTitle) => `/${t.mediaType}/${t.tmdbId}-${titleToDashed(canonicalMediaTitle(t))}`
 const day = (iso: string | null) =>
@@ -38,7 +36,17 @@ export function TickBox({ on, mixed = false }: { on: boolean; mixed?: boolean })
 	)
 }
 
-/** Shared word/number choices, retaining the GoodWatch comparison dot. */
+const SCORES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as const
+
+/**
+ * The ten keys in the score control strip's colors: the score in its full color with a white ring, a dot under
+ * GoodWatch's score.
+ *
+ * Deliberately not the shared word and number control (ui/scoring/ScoreChoices) the rest of the site uses: owner
+ * decision, October 18, 2026. Your scores is for rescoring many titles in a row and is aimed at power users, so each
+ * row and the selection bar keep one compact strip of exact scores, one press per change. The opened row keeps the
+ * shared control. Don't swap this for ScoreChoices when the site's scoring changes again.
+ */
 export function ScoreKeys({
 	score,
 	gw,
@@ -53,18 +61,28 @@ export function ScoreKeys({
 	label: string
 }) {
 	return (
-		<div role="group" aria-label={label}>
-			<ScoreChoices value={score as Score | null} hot={null} renderChoice={(choice) => (
-				<button key={choice.id} type="button" aria-pressed={choice.selected}
-					aria-label={choice.label} onClick={() => onPick(choice.score)}
-					data-give={choice.kind === "score" ? choice.score : undefined}
-					className="relative flex min-h-11 min-w-0 cursor-pointer items-center justify-center rounded-md text-[11px] font-bold text-white hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-					style={choice.style}>
-					{choice.children}
-					{choice.kind === "score" && gw === choice.score && !choice.selected && <span aria-hidden className="absolute bottom-1 h-1 w-1 rounded-full bg-white/80" />}
-				</button>
-			)} />
-		</div>
+		<fieldset className="grid grid-cols-10 gap-1">
+			<legend className="sr-only">{label}</legend>
+			{SCORES.map((n) => {
+				const picked = score === n
+				return (
+					<button
+						key={n}
+						type="button"
+						aria-pressed={score === null ? undefined : picked}
+						aria-label={`${n}, ${scoreLabels[n]}`}
+						title={`${n} · ${scoreLabels[n]}`}
+						onClick={() => onPick(n)}
+						data-give={n}
+						className={`relative flex h-7 cursor-pointer items-center justify-center rounded-md text-xs font-black tabular-nums transition hover:scale-110 hover:text-gray-950 focus-visible:scale-110 focus-visible:outline-2 focus-visible:outline-amber-400 motion-reduce:transition-none ${picked ? "scale-110 text-gray-950 ring-2 ring-white" : "text-white/75"}`}
+						style={{ background: `${getVibeColorValue(n as Score)}${picked ? "" : "44"}` }}
+					>
+						{n}
+						{gw === n && !picked && <span aria-hidden className="absolute -bottom-1 h-1 w-1 rounded-full bg-white/80" />}
+					</button>
+				)
+			})}
+		</fieldset>
 	)
 }
 
@@ -202,10 +220,11 @@ export const ScoreRow = memo(function ScoreRow({
 						type="button"
 						onClick={() => onOpen(t.key)}
 						aria-label={`Your score for ${t.title}: ${score}. Change it`}
-						className="min-h-11 cursor-pointer rounded-lg px-2 text-xs font-bold tabular-nums text-white"
-						style={selectedScoreStyle(score as Score)}
+						// The exact score in its strip color, like the keys above (see ScoreKeys for why).
+						className="h-9 w-10 cursor-pointer rounded-lg text-sm font-black tabular-nums text-gray-950 ring-2 ring-white/80"
+						style={{ background: getVibeColorValue(score as Score) }}
 					>
-						{getScoreLabelText(score as Score)}
+						{score}
 					</button>
 				</td>
 				<td className="hidden px-1 text-right text-xs font-semibold text-amber-300 md:table-cell">
