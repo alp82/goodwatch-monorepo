@@ -44,6 +44,7 @@ export const sections = {
 		id: "media",
 		label: "Media",
 	},
+	// The questions section. Left out of the navigation when the title has none.
 	faq: {
 		id: "faq",
 		label: "Q&A",
@@ -52,9 +53,11 @@ export const sections = {
 
 export type SectionIds = keyof typeof sections
 
-/** The sections the page's navigation lists: all of them, but Episodes only on a page that has them. */
-export function navSections(episodes: boolean) {
+/** The sections the page's navigation lists: all of them, but Episodes and Q&A only on a page that has them. */
+export function navSections(episodes: boolean, questions = true) {
 	return Object.values(sections).filter(
-		(section) => episodes || section.id !== "episodes",
+		(section) =>
+			(episodes || section.id !== "episodes") &&
+			(questions || section.id !== "faq"),
 	)
 }

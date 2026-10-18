@@ -2,6 +2,13 @@
 
 Date: 2026-10-18. Proposal only: no code is changed. Source read at `origin/main` `1b9587d5`; live pages fetched on the same day.
 
+**Status:** The owner approved the recommended settings on 2026-10-18, and the rework is implemented in `titleQuestions.ts`, `fingerprintQuestions.ts` and `season-summary.ts` under `goodwatch-webapp/app/ui/details/`. Differences from this proposal:
+
+- The source question ("Is X based on a true story?") is dropped entirely (owner decision).
+- The streaming question reads "Where can I stream X?". Its services are the ones Where to Watch lists, so the stores Where to Watch leaves out (Amazon Video, Amazon Prime Video, Apple TV Plus as separate entries) are left out of the answer too.
+- The details payload still carries the four source keywords, so the cached details shape doesn't change. They go with the next version of the details cache names.
+- On the 1,000 sitemap titles, 3 fall under the floor of 3 questions, and 420 reach the cap of 7.
+
 ## Recommendation
 
 - **Show 4 to 7 questions per title instead of 14 to 16, and only questions whose answer carries a fact about that title.** Two questions stay on every page because they're the page's purpose: where to stream it and whether it's worth watching. Every other question appears only when its data clears a threshold, so the set varies by title. In a simulation of the rules on 20 sitemap titles, 19 of the 20 pages get a different set.

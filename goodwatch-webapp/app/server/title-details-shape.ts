@@ -16,7 +16,8 @@ import {
 	type FingerprintResult,
 	buildFingerprint,
 } from "~/server/utils/fingerprint"
-import { SOURCE_KEYWORDS, featuredTropes } from "~/ui/details/titleQuestions"
+import { FEATURED_TROPES } from "~/ui/details/titleQuestions"
+import { seededRandomFromString } from "~/utils/random"
 import { OFFER_TABS, servicesByCountry } from "~/utils/streaming-links"
 import { documentCast } from "~/utils/title-cast"
 import {
@@ -24,6 +25,31 @@ import {
 	MOVIE_DETAILS_FIELDS,
 	SHOW_DETAILS_FIELDS,
 } from "./title-details-fields"
+
+/**
+ * The keywords the details keep. Nothing reads them since the title page stopped asking whether a title is based on a
+ * true story; they stay so the cached shape (DETAILS_MOVIE_CACHE_NAME, DETAILS_SHOW_CACHE_NAME) doesn't change. Drop
+ * them with the next version of those names.
+ */
+export const SOURCE_KEYWORDS = ["based on true story", "based on novel or book", "based on comic", "based on video game"] as const
+
+// Some titles list their signature tropes first, then the rest A to Z. Keep that leading run and fill up with a stable
+// sample from the alphabetical rest, so the chips don't all start with "A". Seeded, so every request gets the same.
+/** The tropes the questions section shows as chips, in their order. */
+export function orderTropes(details: { tmdb_id: number; tropes?: string[] | null }, n = FEATURED_TROPES) {
+	const tropes = details.tropes ?? []
+	let start = tropes.length - 1
+	while (start > 0 && tropes[start - 1].localeCompare(tropes[start]) <= 0) start--
+	// A real signature run is short; a long "lead" means the A-to-Z check broke early.
+	if (start > 10) start = 0
+	const lead = tropes.slice(0, start)
+	const rest = tropes
+		.slice(start)
+		.map((tr) => ({ tr, k: seededRandomFromString(`${details.tmdb_id}:${tr}`) }))
+		.sort((a, b) => a.k - b.k)
+		.map((x) => x.tr)
+	return [...lead, ...rest].slice(0, n)
+}
 
 export interface CastRow {
 	id: number
@@ -173,8 +199,7 @@ export function trimTitleDetails(
 				(code) => code && certification.startsWith(`${code}_`),
 			),
 	)
-	// featuredTropes must see the full list before tropes_count marks it as trimmed.
-	details.tropes = featuredTropes({ details })
+	details.tropes = orderTropes(details)
 	details.tropes_count = raw.details.tropes?.length ?? 0
 	details.keywords = (raw.details.keywords ?? []).filter((keyword) =>
 		(SOURCE_KEYWORDS as readonly string[]).includes(keyword),

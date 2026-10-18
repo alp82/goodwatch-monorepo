@@ -44,6 +44,7 @@ import {
 } from "~/utils/episode-grid-wire"
 import { titleRedirectPath } from "~/utils/helpers"
 import { windowEpisodeGrid } from "~/ui/details/episode-grid/window"
+import { seasonSummary } from "~/ui/details/season-summary"
 import { START_AFTER_PAINT } from "~/utils/start-after-paint"
 import { heroHints } from "~/server/hero-hints.server"
 import { heroBackdropFiles } from "~/ui/details/hero/Trailer"
@@ -126,6 +127,8 @@ export const loader: LoaderFunction = async ({
 							episode_count: s.episodes.length,
 						})),
 					presentationVersion: grid.presentationVersion,
+					// The whole grid, for the questions section's season summary below.
+					whole: grid,
 				}
 			})
 			.catch((error) => {
@@ -178,7 +181,10 @@ export const loader: LoaderFunction = async ({
 				},
 			}
 		: catalogMedia
-	const media = alignedMedia
+	const media = {
+		...alignedMedia,
+		season_summary: seasonSummary(gridRead?.whole, alignedMedia.details.title),
+	}
 	// The related map's section.
 	const related = relatedSectionData(
 		relatedSection,

@@ -14,7 +14,8 @@ export interface MovieCollectionParams {
 
 export const getMoviesInCollection = async (params: MovieCollectionParams) => {
 	return await cached<MovieCollectionParams, MoviesInCollection>({
-		name: "movie-collection",
+		// The name is part of the cache key: v2 values carry the release year.
+		name: "movie-collection-v2",
 		target: _getMoviesInCollection,
 		params,
 		ttlMinutes: 60 * 24,
@@ -27,7 +28,7 @@ export async function _getMoviesInCollection({
 }: MovieCollectionParams): Promise<MoviesInCollection> {
 	const movieIdsArray = movieIds.split(",").map(id => parseInt(id.trim()));
 	const collectionQuery = `
-    SELECT tmdb_id, title, poster_path, goodwatch_overall_score_normalized_percent
+    SELECT tmdb_id, title, release_year, poster_path, goodwatch_overall_score_normalized_percent
     FROM movie
     WHERE tmdb_id IN (${movieIdsArray.map(() => '?').join(', ')})
     ORDER BY release_date ASC

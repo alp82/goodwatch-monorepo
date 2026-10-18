@@ -1,25 +1,24 @@
-// Questions people search for, answered from GoodWatch data, as cards with a
-// small visual each. The same questions go into FAQPage structured data.
+// Questions people search for, answered from GoodWatch data, as cards with a small visual each. The questions are
+// in the server's HTML as headings and paragraphs, without structured data: Google shows no FAQ results any more.
 
 import { ChevronDownIcon } from "@heroicons/react/20/solid"
 import {
 	ArrowsRightLeftIcon,
 	BanknotesIcon,
-	BookOpenIcon,
-	CalendarDaysIcon,
+	ChartBarIcon,
 	ClockIcon,
 	FaceSmileIcon,
-	GlobeAltIcon,
+	FilmIcon,
 	HeartIcon,
 	LanguageIcon,
 	MoonIcon,
-	ScaleIcon,
 	ShieldCheckIcon,
 	SparklesIcon,
 	StarIcon,
 	SunIcon,
 	TvIcon,
 } from "@heroicons/react/24/outline"
+import { Link } from "@remix-run/react"
 import type React from "react"
 import { useState } from "react"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
@@ -29,8 +28,7 @@ import { TmdbImage } from "~/ui/TmdbImage"
 import { AREA_COLOR } from "~/ui/details/fingerprint/areas"
 import type { FingerprintVisual } from "~/ui/details/fingerprintQuestions"
 import { getFingerprintMeta } from "~/ui/fingerprint/fingerprintMeta"
-import { type QuestionId, type TitleQuestion, ageInfo, agreement, FEATURED_TROPES, featuredTropes, money, titleQuestions, tropeCount } from "~/ui/details/titleQuestions"
-import { countryFlagUrl } from "~/utils/country-flag"
+import { type QuestionId, type TitleQuestion, ageInfo, FEATURED_TROPES, featuredTropes, money, tropeCount } from "~/ui/details/titleQuestions"
 import { languageName } from "~/utils/display-names"
 import MediaText from "~/ui/media-text/MediaText"
 import { presentedText } from "~/ui/media-text/media-text"
@@ -44,16 +42,11 @@ export default function DetailsQuestions({
 }: {
 	media: Media
 	country: string
-	/** The title's questions, when the caller has them already. */
-	questions?: TitleQuestion[]
+	/** The title's questions (useTitleQuestions). */
+	questions: TitleQuestion[]
 }) {
-	const faqs = questions ?? titleQuestions(media, country)
+	const faqs = questions
 	if (!faqs.length) return null
-	const jsonLd = {
-		"@context": "https://schema.org",
-		"@type": "FAQPage",
-		mainEntity: faqs.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
-	}
 	return (
 		<section>
 			<h2 className="text-2xl font-bold">
@@ -68,11 +61,6 @@ export default function DetailsQuestions({
 					return <QuestionCard key={f.id} media={media} country={country} faq={f} wide={lastOdd} />
 				})}
 			</div>
-			<script
-				type="application/ld+json"
-				// biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD from our own data
-				dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-			/>
 		</section>
 	)
 }
@@ -80,14 +68,12 @@ export default function DetailsQuestions({
 const FAQ_ICON: Record<QuestionId, React.ComponentType<{ className?: string }>> = {
 	stream: TvIcon,
 	worth: StarIcon,
-	rated: ShieldCheckIcon,
-	length: ClockIcon,
-	source: BookOpenIcon,
-	agree: ScaleIcon,
+	seasons: ChartBarIcon,
+	sequel: FilmIcon,
+	kids: ShieldCheckIcon,
+	binge: ClockIcon,
 	boxoffice: BanknotesIcon,
-	aired: CalendarDaysIcon,
 	language: LanguageIcon,
-	countries: GlobeAltIcon,
 	tropes: SparklesIcon,
 	laugh: FaceSmileIcon,
 	drive: ArrowsRightLeftIcon,
@@ -112,6 +98,7 @@ function EyeIcon(props: React.SVGProps<SVGSVGElement>) {
 	)
 }
 
+// The first and the last card: a wide card between two narrow ones would leave a hole beside each.
 const WIDE: QuestionId[] = ["stream", "tropes"]
 
 function QuestionCard({
@@ -136,7 +123,7 @@ function QuestionCard({
 			</span>
 			<div className="min-w-0 grow">
 				<h3 className="text-lg font-semibold leading-snug">{faq.q}</h3>
-				{fingerprint ? <FingerprintAnswerVisual visual={fingerprint.visual} /> : <AnswerVisual media={media} country={country} id={faq.id} />}
+				{fingerprint ? <FingerprintAnswerVisual visual={fingerprint.visual} /> : <AnswerVisual media={media} country={country} faq={faq} />}
 				<p className="mt-3 text-gray-300 leading-relaxed">
 					{faq.a}
 					{fingerprint && (
@@ -242,7 +229,8 @@ function FingerprintAnswerVisual({ visual }: { visual: FingerprintVisual }) {
 	)
 }
 
-function AnswerVisual({ media, country, id }: { media: Media; country: string; id: QuestionId }) {
+function AnswerVisual({ media, country, faq }: { media: Media; country: string; faq: TitleQuestion }) {
+	const id = faq.id
 	const links = useStreamingLinks(media, country, ["flatrate", "flatrate_and_buy", "free", "ads"])
 	if (id === "stream" && links.length > 0)
 		return (
@@ -261,7 +249,7 @@ function AnswerVisual({ media, country, id }: { media: Media; country: string; i
 				<ScoreRing media={media} size={52} />
 			</div>
 		)
-	if (id === "rated") {
+	if (id === "kids") {
 		const { cert, advisories } = ageInfo(media, country)
 		return (
 			<div className="mt-4 flex flex-wrap items-center gap-2">
@@ -274,37 +262,57 @@ function AnswerVisual({ media, country, id }: { media: Media; country: string; i
 			</div>
 		)
 	}
-	if (id === "length") {
-		const d = media.details as unknown as Record<string, unknown>
-		const rt = d.runtime as number | null
-		const figure =
-			media.mediaType === "movie"
-				? rt
-					? `${Math.floor(rt / 60)} h ${rt % 60} min`
-					: null
-				: d.number_of_seasons
-					? `${d.number_of_seasons} season${d.number_of_seasons === 1 ? "" : "s"}`
-					: null
-		return figure ? <p className="mt-3 text-3xl font-bold tracking-tight">{figure}</p> : null
+	if (id === "binge") {
+		const d = media.details as unknown as { number_of_episodes?: number; episode_runtime?: number[] | null }
+		const minutes = (d.number_of_episodes ?? 0) * (d.episode_runtime?.[0] ?? 0)
+		return minutes ? <p className="mt-3 text-3xl font-bold tracking-tight">{`${Math.round(minutes / 60)} h`}</p> : null
 	}
-	if (id === "agree") {
-		const { critics, audience } = agreement(media)
-		const bar = (label: string, v: number | null, color: string) => (
-			<div className="grid grid-cols-[5.5rem_1fr_2rem] items-center gap-3 text-sm">
-				<span className="text-gray-300">{label}</span>
-				<span className="h-2.5 rounded-full bg-white/8">
-					<span className="block h-2.5 rounded-full" style={{ width: `${v ?? 0}%`, background: color }} />
-				</span>
-				<span className="text-right font-semibold tabular-nums">{v ?? "–"}</span>
+	if (id === "seasons" && media.mediaType === "show") {
+		const seasons = media.season_summary?.seasons ?? []
+		const scores = seasons.map((x) => x.score)
+		const top = Math.max(...scores)
+		const low = Math.min(...scores)
+		// Bars from a floor under the weakest season, so the differences show. Long-running shows get thin bars and a
+		// label on every fifth season, so the chart stays inside a phone's width.
+		const floor = Math.max(0, Math.floor(low) - 1)
+		const many = seasons.length > 12
+		return seasons.length ? (
+			<div
+				className={`mt-4 flex h-20 items-end ${many ? "gap-px" : "gap-1.5"}`}
+				role="img"
+				aria-label={seasons.map((x) => `Season ${x.number}: ${x.score.toFixed(1)}`).join(", ")}
+			>
+				{seasons.map((x, i) => (
+					<span key={x.number} className="flex min-w-0 flex-1 flex-col items-center gap-1">
+						{!many && <span className="text-[10px] tabular-nums text-gray-300">{x.score.toFixed(1)}</span>}
+						<span
+							className={`w-full rounded-sm ${x.score === top ? "bg-emerald-400/80" : x.score === low ? "bg-rose-400/70" : "bg-sky-400/60"}`}
+							style={{ height: `${Math.max(3, ((x.score - floor) / Math.max(0.1, top - floor)) * 40)}px` }}
+						/>
+						<span className="whitespace-nowrap text-[10px] text-gray-400">{!many || i === 0 || x.number % 5 === 0 ? `S${x.number}` : " "}</span>
+					</span>
+				))}
 			</div>
-		)
+		) : null
+	}
+	if (id === "sequel" && faq.titles?.length)
 		return (
-			<div className="mt-4 space-y-2">
-				{bar("Critics", critics, "#a78bfa")}
-				{bar("Audiences", audience, "#fbbf24")}
-			</div>
+			<ol className="mt-4 flex flex-wrap gap-2 text-sm">
+				{faq.titles.map((t) => (
+					<li key={t.id}>
+						{t.current ? (
+							<span aria-current="page" className="inline-flex rounded-full bg-white px-2.5 py-1 font-semibold text-black">
+								{t.label}
+							</span>
+						) : (
+							<Link prefetch="intent" to={t.path} className="inline-flex rounded-full border border-white/15 px-2.5 py-1 text-gray-200 hover:bg-white/10">
+								{t.label}
+							</Link>
+						)}
+					</li>
+				))}
+			</ol>
 		)
-	}
 	if (id === "boxoffice") {
 		const { budget, revenue } = media.details
 		const max = Math.max(budget ?? 0, revenue ?? 0)
@@ -324,24 +332,6 @@ function AnswerVisual({ media, country, id }: { media: Media; country: string; i
 			</div>
 		) : null
 	}
-	if (id === "aired" && media.mediaType === "show") {
-		const seasons = (media as unknown as { seasons?: { season_number: number; episode_count: number }[] }).seasons ?? []
-		const real = seasons.filter((x) => x.season_number > 0)
-		const most = Math.max(1, ...real.map((x) => x.episode_count))
-		// Long-running shows get thin bars and a label on every fifth season, so the chart
-		// stays inside a phone's width.
-		const many = real.length > 12
-		return real.length ? (
-			<div className={`mt-4 flex h-16 items-end ${many ? "gap-px" : "gap-1.5"}`} role="img" aria-label={real.map((x) => `Season ${x.season_number}: ${x.episode_count} episodes`).join(", ")}>
-				{real.map((x, i) => (
-					<span key={x.season_number} className="flex min-w-0 flex-1 flex-col items-center gap-1">
-						<span className="w-full rounded-sm bg-sky-400/70" style={{ height: `${(x.episode_count / most) * 44}px` }} />
-						<span className="whitespace-nowrap text-[10px] text-gray-400">{!many || i === 0 || x.season_number % 5 === 0 ? `S${x.season_number}` : "\u00a0"}</span>
-					</span>
-				))}
-			</div>
-		) : null
-	}
 	if (id === "language") {
 		const d = media.details
 		const langs = [d.original_language_code, ...(d.spoken_language_codes ?? []).filter((c) => c !== d.original_language_code)]
@@ -352,20 +342,6 @@ function AnswerVisual({ media, country, id }: { media: Media; country: string; i
 						{languageName(c)}
 					</span>
 				))}
-			</div>
-		)
-	}
-	if (id === "countries") {
-		const codes = media.details.streaming_country_codes ?? []
-		return (
-			<div className="mt-3 flex items-center gap-4">
-				<span className="text-3xl font-bold tabular-nums">{codes.length}</span>
-				<span className="flex flex-wrap gap-1">
-					{codes.slice(0, 14).map((c) => (
-						<img key={c} loading="lazy" decoding="async" width={21} height={14} src={countryFlagUrl(c)} alt={c} title={c} className="h-3.5 w-auto rounded-[2px]" />
-					))}
-					{codes.length > 14 && <span className="text-xs text-gray-400">+{codes.length - 14}</span>}
-				</span>
 			</div>
 		)
 	}
@@ -384,4 +360,3 @@ function AnswerVisual({ media, country, id }: { media: Media; country: string; i
 	}
 	return null
 }
-

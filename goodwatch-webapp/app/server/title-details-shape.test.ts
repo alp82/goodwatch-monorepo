@@ -7,9 +7,7 @@ const { trimTitleDetails, toCastMembers } = await import(
 )
 const { COMMON_DETAILS_FIELDS, MOVIE_DETAILS_FIELDS, SHOW_DETAILS_FIELDS } =
 	await import("./title-details-fields.ts")
-const { featuredTropes, SOURCE_KEYWORDS } = await import(
-	"../ui/details/titleQuestions.ts"
-)
+const { SOURCE_KEYWORDS, orderTropes } = await import("./title-details-shape.ts")
 
 const rawFixture = () => ({
 	details: {
@@ -93,7 +91,7 @@ test("trim caches only the permitted shape, keeping array order and null video l
 		assert.equal(result.details.tropes_count, 35)
 		assert.deepEqual(
 			result.details.tropes,
-			featuredTropes({ details: raw.details } as unknown as typeof result),
+			orderTropes(raw.details as never),
 		)
 		assert.equal(raw.details.tropes.length, 35)
 		assert.deepEqual(result.images, { backdrops: [{ file_path: "one" }] })

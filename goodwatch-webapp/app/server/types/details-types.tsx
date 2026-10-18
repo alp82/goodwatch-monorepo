@@ -2,6 +2,7 @@ import type { PresentedMedia } from "~/utils/media-presentation"
 import type { EpisodeTextPresentation } from "~/server/episode-text-overlay.server"
 import type { FingerprintResult } from "~/server/utils/fingerprint"
 import type { AllRatings } from "~/utils/ratings"
+import type { SeasonSummary } from "~/ui/details/season-summary"
 
 export interface Collection {
 	id: number
@@ -348,6 +349,8 @@ export interface ShowResult extends ResultBase {
 	details: ShowDetails
 	mediaType: "show"
 	seasons: SeasonResult[]
+	/** The seasons and standout episodes of the whole episode grid, for the questions section; the page adds it. */
+	season_summary?: SeasonSummary | null
 }
 export type MovieQueryResult = MovieResult
 export type ShowQueryResult = ShowResult

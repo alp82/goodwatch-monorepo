@@ -2,6 +2,7 @@ import React from "react"
 import DetailsContent from "~/ui/details/DetailsContent"
 import DetailsSideNav from "~/ui/details/DetailsSideNav"
 import { navSections, sections } from "~/ui/details/sections"
+import { useTitleQuestions } from "~/ui/details/useTitleQuestions"
 import { useEpisodeTracking } from "~/ui/tracking/gate"
 import DetailsHeader from "~/ui/details/DetailsHeader"
 import DetailsFingerprint from "~/ui/details/DetailsFingerprint"
@@ -90,7 +91,12 @@ function DetailsPage({
 	const { layOutAll } = useBelowFold()
 	// Episodes is listed for a show with an episode grid, or with the episode list a member gets.
 	const tracking = useEpisodeTracking(media)
-	const listed = navSections(tracking || hasEpisodeGrid(episodeGrid))
+	// Q&A is listed when the title has questions.
+	const questions = useTitleQuestions(media, country)
+	const listed = navSections(
+		tracking || hasEpisodeGrid(episodeGrid),
+		questions.length > 0,
+	)
 	const navigateToSection = (section: Section) => {
 		layOutAll()
 		scrollToSection(section)
@@ -163,6 +169,7 @@ function DetailsPage({
 						media={media}
 						country={country}
 						episodeGrid={episodeGrid}
+						questions={questions}
 						sectionProps={sectionProps}
 						navigateToSection={navigateToSection}
 					/>

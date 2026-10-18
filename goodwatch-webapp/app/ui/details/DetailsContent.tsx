@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef } from "react"
+import React, { useEffect, useRef } from "react"
 import type { EpisodeGrid as EpisodeGridData } from "~/server/episode-grid.server"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import About from "~/ui/details/About"
@@ -26,7 +26,7 @@ import {
 	sequelsHeight,
 } from "~/ui/details/section-heights"
 import type { SectionIds } from "~/ui/details/sections"
-import { titleQuestions } from "~/ui/details/titleQuestions"
+import type { TitleQuestion } from "~/ui/details/titleQuestions"
 import Ratings from "~/ui/ratings/Ratings"
 import RelatedMap, { useRelatedMap } from "~/ui/related-map/RelatedMap"
 import Streaming from "~/ui/streaming/Streaming"
@@ -38,6 +38,8 @@ export interface DetailsContentProps {
 	media: MovieResult | ShowResult
 	country: string
 	episodeGrid?: EpisodeGridData | null
+	/** The title's questions (useTitleQuestions); none means no questions section. */
+	questions: TitleQuestion[]
 	sectionProps: SectionProps<SectionIds>
 	navigateToSection: (section: Section) => void
 }
@@ -46,14 +48,11 @@ export default function DetailsContent({
 	media,
 	country,
 	episodeGrid,
+	questions,
 	sectionProps,
 	navigateToSection,
 }: DetailsContentProps) {
 	const { details, cast, cast_total, crew, videos } = media
-	const questions = useMemo(
-		() => titleQuestions(media, country),
-		[media, country],
-	)
 	// Every section here starts below the first screen, so each one skips its layout until it is near the viewport.
 	const { skipping } = useBelowFold()
 	const section = (
@@ -151,13 +150,15 @@ export default function DetailsContent({
 					backdropPath={details.backdrop_path}
 				/>
 			</div>
-			<div {...section(questionsHeight(questions.length), sectionProps.faq)}>
-				<DetailsQuestions
-					media={media}
-					country={country}
-					questions={questions}
-				/>
-			</div>
+			{questions.length > 0 && (
+				<div {...section(questionsHeight(questions.length), sectionProps.faq)}>
+					<DetailsQuestions
+						media={media}
+						country={country}
+						questions={questions}
+					/>
+				</div>
+			)}
 		</div>
 	)
 }
