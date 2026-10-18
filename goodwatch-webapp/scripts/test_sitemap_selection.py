@@ -44,6 +44,17 @@ class SelectionTest(unittest.TestCase):
         self.assertEqual(len(after), 700)
         self.assertEqual(new['core'][:629], state['core'][1:])
 
+    def test_show_monthly_cap_and_ties(self):
+        pool = [r[:5] + (10000, 1) for r in rows()]
+        selected, state = select_titles(pool, 'show', today=date(2026, 10, 18))
+        self.assertEqual(state['core'], list(range(1, 271)))
+        self.assertEqual(state['attention'], list(range(271, 301)))
+        baseline = xml(selected, state).replace(b'/movie/', b'/show/')
+        changed = [r[:6] + (r[0],) for r in pool]
+        _, new = select_titles(changed, 'show', baseline, date(2026, 11, 1))
+        self.assertEqual(len(set(new['attention']) - set(state['attention'])), 15)
+        self.assertEqual(new['core'], state['core'])
+
     def test_insufficient_pool_or_corrupt_state_fails_closed(self):
         with self.assertRaisesRegex(ValueError, 'Not enough'):
             select_titles(rows()[:699], 'movie')

@@ -1,5 +1,6 @@
 """Sitemap publication boundary: checked output, narrow scope, atomic update."""
 import io
+from datetime import date
 import sys
 import tempfile
 import unittest
@@ -36,7 +37,7 @@ class SitemapRegenerationTests(unittest.TestCase):
         with (patch.object(worker, "snapshot", return_value=("head", "tree", existing)),
               patch.object(worker, "load_sources"),
               patch.object(worker, "load_previous"),
-              patch.object(worker, "generate_and_check", return_value=(1096, files)) as check,
+              patch.object(worker, "generate_and_check", return_value=(1128, files)) as check,
               patch.object(worker, "publish", return_value="commit") as publish,
               patch.object(worker.wmill, "get_variable") as secret):
             if failed:
@@ -46,7 +47,7 @@ class SitemapRegenerationTests(unittest.TestCase):
                 publish.assert_not_called()
             else:
                 result = worker.main(dry_run)
-                self.assertEqual(result["url_count"], 1096)
+                self.assertEqual(result["url_count"], 1128)
                 if dry_run or unchanged:
                     publish.assert_not_called()
                     self.assertIsNone(result["commit"])
@@ -167,9 +168,13 @@ class SitemapRegenerationTests(unittest.TestCase):
                         (i, "Example", "Example", None, None, 10000-i, i) for i in range(1, count+1)]
                 connection.cursor.return_value.execute.side_effect = execute
                 original_load = worker.load_module
+                generation_day = [date(2026, 10, 18)]
 
                 def load(name, path):
                     module = original_load(name, path)
+                    if name == "sitemap_generator":
+                        history_class = module.SitemapHistory
+                        module.SitemapHistory = lambda directory: history_class(directory, today=generation_day[0])
                     if name == "sitemap_checker":
                         module.fetch = lambda url: (status, f'<link rel="canonical" href="{url}">', None)
                         module.MIN_DELAY_SECONDS = 0
@@ -190,6 +195,7 @@ class SitemapRegenerationTests(unittest.TestCase):
                         for path, content in files.items():
                             (previous / Path(path).name).write_bytes(content)
                         shutil.rmtree(root / worker.OUTPUT)
+                        generation_day[0] = date(2026, 10, 25)
                         again_count, again = worker.generate_and_check(root)
                         self.assertEqual(again_count, count)
                         self.assertEqual(again, files)

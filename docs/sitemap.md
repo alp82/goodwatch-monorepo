@@ -11,6 +11,8 @@ make sitemaps-checked
 
 Windmill runs `f/seo/regenerate_sitemaps` automatically every Saturday at **03:00 UTC** with `dry_run: false`. The schedule lives in Windmill only, like the other schedules, and is not deployed from git; change it in the Windmill UI. The command above remains the manual fallback.
 
+Deploy the updated `f/seo/regenerate_sitemaps` wrapper with these generator changes: it must download the previous XML artifacts and the selection/person helpers. The weekly schedule itself is unchanged.
+
 The job downloads the existing generator, its helpers, category definitions, and URL checker from one pinned `main` revision. It uses the existing `u/Alp/CRATE_HOSTS`, `u/Alp/CRATE_USER`, and `u/Alp/CRATE_PASS` workspace variables; it does not keep a second copy of the generation or checking rules.
 
 The job reads the GitHub token from the secret Windmill workspace variable **`u/Alp/GITHUB_SITEMAP_TOKEN`**, which the schedule's execution identity must be able to read. Use a fine-grained GitHub personal access token restricted to **alp82/goodwatch-monorepo**, with **Contents: read and write** (and GitHub's required Metadata read access). No workflow or administration permissions are needed. The token's identity must be allowed to commit to `main`; repository rules can reject that operation. Keep the value out of git and renew it before expiry.
@@ -26,7 +28,7 @@ The command takes about 50 minutes and does three things:
 ## What it needs
 
 - `uv` and `make`.
-- `goodwatch-webapp/.env` with `CRATE_HOSTS`, `CRATE_PORT`, `CRATE_USER`, and `CRATE_PASS` for the production database. The generator only reads.
+- `goodwatch-webapp/scripts/.env` (or `goodwatch-webapp/.env`) with `CRATE_HOSTS`, `CRATE_PORT`, `CRATE_USER`, and `CRATE_PASS` for the production database. The generator only reads.
 - Network access to the database and to https://goodwatch.app.
 
 ## Publishing
