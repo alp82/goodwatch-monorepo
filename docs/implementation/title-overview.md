@@ -147,6 +147,13 @@ So a tap from that time is remembered and done when its control is mounted:
 | A fingerprint band segment, scale, or colored headline word | `area:<area>` | `ui/details/DetailsFingerprint.tsx` |
 | Episode cells, season labels, the grid's key | `float:<id>` | `ui/details/episode-grid/shared.tsx` |
 | The arrows of a carousel row, such as the cast | `row:previous`, `row:next` | `ui/ListSwiper.tsx` |
+| Play trailer | `trailer` | `ui/details/hero/Trailer.tsx` |
+| The score half of the hero's control (Rate this, or the member's score) | `score:none`, `score:<score>` | `ui/details/hero/SeenScore.tsx` |
+| Share this page | `share` | `ui/button/ShareButton.tsx` |
+| The section navigation: a section, or the phone's menu | `nav:<section>`, `nav:menu` | `ui/details/DetailsInlineNav.tsx`, `ui/details/DetailsSideNav.tsx` |
+
+Share replays as a click, so the browser's share sheet opens only while the tap's activation lasts (a few seconds in
+Chrome); without a share sheet the link is copied, as for any press.
 
 The rules:
 

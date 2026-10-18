@@ -33,6 +33,10 @@ const CONTROLS = {
   related_tab: "Related tab (the first one that isn't selected)",
   related_next: "Related row: next arrow (the first row)",
   related_step: "Related map: the first poster (a step onto that title)",
+  trailer: "Hero: Play trailer",
+  rate: "Hero: Rate this (the score half)",
+  share: "Share this page",
+  nav_menu: "Section menu (the phone's dropdown in the title header)",
 };
 // Controls of the related titles carousel, which serves only for a title whose related map was not there in time.
 // They run only when TAP_CONTROLS names them.
@@ -125,6 +129,30 @@ function pageLib(plan) {
       begin: (el) => ({ key: el.getAttribute("data-pl-step") }),
       done: (_el, ctx) => document.querySelector("#related [data-pl-stage]")?.getAttribute("data-pl-at") === ctx.key,
       ready: () => Boolean(window.__gwRelatedMap),
+    },
+    // Effect: the trailer's dialog is open (its close button is in the document). The player loads after that.
+    trailer: {
+      find: () => q("button[data-trailer]").find(shown) ?? null,
+      done: () => document.querySelector('button[aria-label="Close trailer"]') != null,
+      ready: reactReady,
+    },
+    // Effect: the score picker is open. A signed-out visitor gets it too; picking a score asks to sign in.
+    rate: {
+      find: () => q('button[aria-haspopup="dialog"]').find((el) => /^Rate this /.test(el.getAttribute("aria-label") || "")) ?? null,
+      done: () => q('[role="dialog"]').some((dialog) => /^Your score for /.test(dialog.getAttribute("aria-label") || "")),
+      ready: reactReady,
+    },
+    // Effect: the link is copied, as a browser without a share sheet (this one) does it: the toast says so.
+    share: {
+      find: () => q('button[aria-label="Share this page"]').find(shown) ?? null,
+      done: () => /Copied link to clipboard/.test(document.body.textContent || ""),
+      ready: reactReady,
+    },
+    // Effect: the menu is open.
+    nav_menu: {
+      find: () => q('nav button[aria-haspopup="listbox"]').find(shown) ?? null,
+      done: (el) => el.getAttribute("aria-expanded") === "true",
+      ready: reactReady,
     },
   };
 

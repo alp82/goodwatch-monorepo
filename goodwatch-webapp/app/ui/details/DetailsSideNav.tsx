@@ -1,10 +1,11 @@
-import React from "react"
+import React, { useRef } from "react"
 import { HEADER_HEIGHT } from "~/ui/details/header-height"
 import {
 	type ActiveSections,
 	type Section,
 	useActiveSections,
 } from "~/utils/scroll"
+import { useReplayedTap } from "~/utils/useReplayedTap"
 
 export type DetailsSideNavProps = {
 	activeSections: ActiveSections
@@ -19,6 +20,9 @@ export default function DetailsSideNav({
 	sections,
 }: DetailsSideNavProps) {
 	const activeSections = useActiveSections(active)
+	const navRef = useRef<HTMLElement>(null)
+	// A tap from before the app was there goes to its section once the nav is ready (utils/replay-tap.ts).
+	useReplayedTap("nav", (el) => Boolean(navRef.current?.contains(el)))
 	return (
 		<div
 			className="hidden 2xl:block absolute left-0 right-0 m-auto max-w-[104rem] h-full"
@@ -29,6 +33,7 @@ export default function DetailsSideNav({
 				style={{ top: `calc(${HEADER_HEIGHT} + 76px)` }}
 			>
 				<nav
+					ref={navRef}
 					aria-label="Details sections"
 					className="flex flex-col p-2 bg-black/20 text-lg space-y-1"
 				>
@@ -36,6 +41,7 @@ export default function DetailsSideNav({
 						<button
 							key={section.id}
 							type="button"
+							data-replay-tap={`nav:${section.id}`}
 							className={`border-l-8 pl-4 ${
 								activeSections.includes(section.id)
 									? "border-amber-500 text-amber-300"

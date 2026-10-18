@@ -3,8 +3,9 @@ import {
 	ShareIcon,
 } from "@heroicons/react/24/solid"
 import { useLocation } from "@remix-run/react"
-import React, { useState } from "react"
+import React, { useRef, useState } from "react"
 import { toast } from "react-toastify"
+import { useReplayedTap } from "~/utils/useReplayedTap"
 
 const isBrowser = typeof window !== "undefined"
 
@@ -14,6 +15,10 @@ export interface ShareButtonProps {
 
 export default function ShareButton({ link }: ShareButtonProps) {
 	const location = useLocation()
+	const button = useRef<HTMLButtonElement>(null)
+	// On a title page a tap from before the app was there shares once the button is ready (utils/replay-tap.ts).
+	// The browser's share sheet needs the tap's activation, which lasts a few seconds.
+	useReplayedTap("share", (el) => el === button.current)
 
 	const hasShareFunctionality = isBrowser && navigator.share
 	const linkToShare =
@@ -66,7 +71,9 @@ export default function ShareButton({ link }: ShareButtonProps) {
 
 	return (
 		<button
+			ref={button}
 			type="button"
+			data-replay-tap="share"
 			className="p-2 border-2 rounded-full border-gray-700 bg-gray-800/50 hover:bg-gray-800 cursor-pointer"
 			aria-label="Share this page"
 			title="Share this page"

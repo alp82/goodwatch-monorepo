@@ -35,3 +35,7 @@ test("the hero asks without credentials, and the 103's files are what its srcset
 	for (const file of Object.values(rendered.files) as string[])
 		assert.ok(rendered.hero.includes(file), file)
 })
+
+test("a tap on the trailer button from before the app was there is kept for it (utils/replay-tap.ts)", () => {
+	assert.match(rendered.trailer, /data-replay-tap="trailer"/)
+})

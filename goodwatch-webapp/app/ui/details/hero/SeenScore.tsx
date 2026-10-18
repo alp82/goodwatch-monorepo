@@ -125,6 +125,8 @@ export default function SeenScore({
 
 	// The hero is in the server's HTML, so a tap can come before the app's script; the mark carries what Seen showed.
 	useReplayedTap("seen", (el) => Boolean(root.current?.contains(el)))
+	// The score half too: a tap from before the app was there opens the picker once it is ready.
+	useReplayedTap("score", (el) => Boolean(root.current?.contains(el)))
 
 	const pressSeen = (event: { currentTarget: EventTarget | null }) => {
 		const was = a.seen
@@ -231,6 +233,7 @@ export default function SeenScore({
 						ref={scoreButton}
 						type="button"
 						data-own-score={score ?? "none"}
+						data-replay-tap={`score:${score ?? "none"}`}
 						aria-haspopup="dialog"
 						aria-expanded={open}
 						aria-label={

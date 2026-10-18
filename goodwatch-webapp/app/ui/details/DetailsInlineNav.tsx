@@ -4,6 +4,7 @@ import {
 	type Section,
 	useActiveSections,
 } from "~/utils/scroll"
+import { useReplayedTap } from "~/utils/useReplayedTap"
 
 export type DetailsInlineNavProps = {
 	activeSections: ActiveSections
@@ -20,6 +21,10 @@ export default function DetailsInlineNav({
 	const activeSections = useActiveSections(active)
 	const [dropdownOpen, setDropdownOpen] = useState(false)
 	const dropdownRef = useRef<HTMLDivElement>(null)
+	const navRef = useRef<HTMLElement>(null)
+	// A tap from before the app was there goes to its section, or opens the phone's menu, once the nav is ready
+	// (utils/replay-tap.ts). The side nav (DetailsSideNav.tsx) has its own buttons in the same group.
+	useReplayedTap("nav", (el) => Boolean(navRef.current?.contains(el)))
 
 	// Close dropdown on outside click
 	useEffect(() => {
@@ -60,7 +65,10 @@ export default function DetailsInlineNav({
 		.join(", ")
 
 	return (
-		<nav className="2xl:hidden bg-white/5 border-t border-white/10">
+		<nav
+			ref={navRef}
+			className="2xl:hidden bg-white/5 border-t border-white/10"
+		>
 			<div className="relative m-auto px-4 pt-1 pb-3 w-full max-w-7xl">
 				{/* Mobile: dropdown + progress bar */}
 				<div className="sm:hidden w-full flex items-center gap-3 relative">
@@ -103,6 +111,7 @@ export default function DetailsInlineNav({
 					<div ref={dropdownRef} className="relative w-full">
 						<button
 							type="button"
+							data-replay-tap="nav:menu"
 							onClick={() => setDropdownOpen((o) => !o)}
 							className="w-full flex items-center justify-between bg-white/10 hover:bg-white/20 text-white/90 text-xs rounded-md px-2 py-1 border border-white/20 min-h-0 h-7 cursor-pointer"
 							aria-haspopup="listbox"
@@ -151,6 +160,7 @@ export default function DetailsInlineNav({
 						<button
 							key={section.id}
 							type="button"
+							data-replay-tap={`nav:${section.id}`}
 							className={`mx-1 flex-1 min-w-0 border-b-[3px] ${
 								activeSections.includes(section.id)
 									? "border-amber-500 text-amber-300"

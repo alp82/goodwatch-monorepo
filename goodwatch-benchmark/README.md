@@ -253,6 +253,10 @@ Every measurement is its own page load in a new browser: empty cache, no cookies
 | `related_step` | The first poster of the related map in `#related` | The map is about the tapped title: the stage's `data-pl-at` is the poster's key. The section's inline script does it, before hydration. |
 | `related_tab` | The first tab in `#related` that isn't pressed | That tab has `aria-pressed="true"`. The rows of the new panel load after that and aren't part of the time. Runs only when `--controls` names it. |
 | `related_next` | The next arrow of the first row in `#related` | The row's active slide is another one than before the tap. Runs only when `--controls` names it. |
+| `trailer` | "Play trailer" in the hero | The trailer's dialog is open (its close button is in the document) |
+| `rate` | "Rate this movie" or "Rate this show", the score half of the hero's control | The score picker is open (a `dialog` named "Your score for ...") |
+| `share` | "Share this page" | The link is copied: a browser without a share sheet, as this one, shows the toast "Copied link to clipboard" |
+| `nav_menu` | The section menu in the title header, the phone's dropdown | The menu is open (`aria-expanded="true"`) |
 
 `related_tab` and `related_next` belong to the related titles carousel, which serves only for a title whose related map was not there in time. A default run leaves them out.
 

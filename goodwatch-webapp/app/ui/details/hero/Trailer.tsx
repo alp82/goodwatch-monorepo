@@ -5,6 +5,7 @@ import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import { TmdbImage } from "~/ui/TmdbImage"
 import { useOpenedOnce } from "~/utils/first-use"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
+import { useReplayedTap } from "~/utils/useReplayedTap"
 import { HERO_TIMING } from "~/utils/start-after-paint"
 import { type SizeRule, tmdbImageUrl } from "~/utils/tmdb-image"
 
@@ -72,13 +73,18 @@ export function PlayPill({ label = "Play trailer" }: { label?: string }) {
 export function TrailerButton({ media, className = "" }: { media: Media; className?: string }) {
 	const [open, setOpen] = useState(false)
 	const opened = useOpenedOnce(open)
+	const button = useRef<HTMLButtonElement>(null)
+	// A tap from before the app was there plays the trailer once the button is ready (utils/replay-tap.ts).
+	useReplayedTap("trailer", (el) => el === button.current)
 	const key = trailerKey(media)
 	if (!key) return null
 	return (
 		<>
 			<button
+				ref={button}
 				type="button"
 				data-trailer
+				data-replay-tap="trailer"
 				onClick={() => setOpen(true)}
 				onPointerEnter={preloadTrailerDialog}
 				onTouchStart={preloadTrailerDialog}
