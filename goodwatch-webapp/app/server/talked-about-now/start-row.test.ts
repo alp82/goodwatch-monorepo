@@ -403,3 +403,10 @@ test("the start read includes successful stored previews without requiring one",
 	assert.match(sql, /LEFT JOIN doc.social_image i ON i.post_id = p.post_id AND i.status = 'ok'/)
 	assert.match(sql, /ELSE NULL END AS image/)
 })
+
+test("the loader carries the snapshot source to the row", async () => {
+	const current = snapshot("2026-10-13", ten)
+	current.payload = JSON.stringify({ ...JSON.parse(current.payload), source: "wikipedia_dumps" })
+	const { reads: fake } = reads({ current })
+	assert.equal((await readTalkedAboutNow(fake))?.source, "wikipedia_dumps")
+})

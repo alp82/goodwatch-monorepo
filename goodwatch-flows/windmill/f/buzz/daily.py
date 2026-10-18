@@ -14,11 +14,11 @@ from f.buzz.store import BuzzStore
 # Stable, high-traffic articles make missing-day probes independent of catalog mappings.
 PUBLICATION_PROBES = ('https://en.wikipedia.org/wiki/Breaking_Bad',
                       'https://en.wikipedia.org/wiki/The_Godfather')
-FINAL_ATTEMPT_HOUR_UTC = 23
+FINAL_ATTEMPT_UTC = (23, 30)
 
 
 def wait_or_fail(stats, now, status, message):
-    if now.hour >= FINAL_ATTEMPT_HOUR_UTC:
+    if (now.hour, now.minute) >= FINAL_ATTEMPT_UTC:
         raise RuntimeError(message)
     return dict(stats, status=status, message=message)
 
@@ -34,8 +34,11 @@ def run(store, signals, *, now=None):
         # Also repair a crash between the immutable date write and advancing current.
         store.publish(end.isoformat(), None, now)
         return dict(stats, status='already_published')
+    source = 'wikipedia_api'
     if not any(end.isoformat() in signals.pageviews(article, end, end)
                for article in PUBLICATION_PROBES):
+        source = 'wikipedia_dumps'
+    if source == 'wikipedia_dumps' and not signals.dumps_available(end):
         return wait_or_fail(stats, now, 'waiting_for_publication',
                             f'Wikimedia has not published {end.isoformat()}; current snapshot preserved')
     trending = store.read_trending(now)
@@ -66,12 +69,20 @@ def run(store, signals, *, now=None):
     if not matched:
         raise RuntimeError('No enwiki mappings; current snapshot preserved')
     series = store.read_pageviews(matched, start, end)
+    if source == 'wikipedia_dumps':
+        values = signals.dump_pageviews([t['article'] for t in matched], end)
+        if values is None:
+            return wait_or_fail(stats, now, 'waiting_for_publication', 'Wikipedia hourly files disappeared; current preserved')
+        for title in matched:
+            observed = {end.isoformat(): values[title['article']]}
+            store.save_pageviews(title, observed, now, source=source)
+            series.setdefault(title['title_key'], {}).update(observed)
     for index, title in enumerate(matched):
         existing = series.setdefault(title['title_key'], {})
         missing = [start + dt.timedelta(days=i) for i in range(60)
                    if (start + dt.timedelta(days=i)).isoformat() not in existing]
         if missing:
-            values = signals.pageviews(title['article'], min(missing), end)
+            values = signals.pageviews(title['article'], min(missing), max(missing))
             store.save_pageviews(title, values, now)
             existing.update(values)
         if index % 25 == 0:
@@ -87,6 +98,8 @@ def run(store, signals, *, now=None):
     published = store.published_days()
     all_days = [(start + dt.timedelta(days=i), rank_day(matched, series, start + dt.timedelta(days=i)))
                 for i in range(28, 60) if (start + dt.timedelta(days=i)).isoformat() not in published]
+    # Never supersede a fallback with a partially recovered historical cohort.
+    all_days = [(day, rows) for day, rows in all_days if len(rows) >= 0.8 * len(matched)]
     netflix = signals.netflix(store.catalog_names) if all_days else []
     featured = {r['title_key'] for _, rows in all_days for r in rows if r['rank'] and r['rank'] <= 20}
     details = {}
@@ -104,7 +117,7 @@ def run(store, signals, *, now=None):
         store.save_scores(day.isoformat(), rows)
         top = [r for r in rows if r['rank'] and r['rank'] <= 20]
         payload = dict(schema_version=1, formula_version=FORMULA_VERSION, day=day.isoformat(),
-                       source='Wikipedia en.wikipedia.org / all-access / user',
+                       source=source if day == end else 'wikipedia_api',
                        baseline_days=28, curve_days=14, candidate_pool_collected_at=now.isoformat(),
                        history_mode='current-candidate-pool backfill' if day < end else 'daily',
                        diagnostics=dict(stats, scorable=len(rows), eligible=sum(r['eligible'] for r in rows)), top20=top)

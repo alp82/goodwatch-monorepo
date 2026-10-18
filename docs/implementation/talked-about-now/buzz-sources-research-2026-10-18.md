@@ -475,13 +475,13 @@ Each snapshot keeps `source` and `day`. The page heading stays "Hot on
 socials", and the subline says what the list is based on. Example: "From
 Trakt watchers and TMDB activity, 18 Oct. Wikipedia data is delayed." When
 Wikipedia catches up, the next run publishes the real Wikipedia day and
-`current` moves back to it.
+`current` uses it only if it is the same or a newer day; it never moves backwards.
 
 Keep the snapshots separate by formula version, as the code already does
-with `formula_version`. Do not overwrite a fallback day's dated snapshot with
-the Wikipedia version for the same day unless we decide that dated snapshots
-may be superseded. That is a change to today's "dated snapshots are
-immutable" rule.
+with `formula_version`. Owner decision (2026-10-18): replace the preferred fallback day with Wikipedia,
+while retaining immutable source/formula snapshot copies. API and dumps both
+beat other fallback sources for the same day. See buzz-score.md for the alias
+and migration contract.
 
 ### C. Blended score every day
 
@@ -538,8 +538,8 @@ option that needs a long-running process or a metered replay key.
 3. When does TMDB refresh `trending/day`, and which day does the 08:00 UTC
    export's popularity describe? Measure from `doc.buzz_trending` captures
    and consecutive export files.
-4. Should a fallback day's snapshot be replaced when Wikipedia catches up, or
-   should both stay? This touches the immutability rule in buzz-score.md.
+4. Resolved by owner (2026-10-18): Wikipedia replaces the preferred fallback
+   for the same day; retain both source snapshots and never regress `current`.
 5. Is Trakt's "permitted: displays public discovery information" enough, or
    should we email support@trakt.tv to confirm a blended score on a public
    page? The policy invites that for unclear cases.

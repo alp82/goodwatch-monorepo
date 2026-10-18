@@ -6,8 +6,8 @@ The [table design](https://github.com/alp82/goodwatch-monorepo/issues/555#issuec
 was posted before implementation. This ticket adds no member-facing behavior.
 
 `f/buzz/daily` is the Python entry point; `f/buzz/daily.flow` wraps it.
-The enabled `f/buzz/daily` schedule runs hourly at 08:00–23:00 UTC
-(`0 0 8-23 * * *`, parser v2, `no_flow_overlap: true`). The scripts and flow
+The enabled `f/buzz/daily` schedule runs hourly at 02:30–23:30 UTC
+(`0 30 2-23 * * *`, parser v2, `no_flow_overlap: true`). The scripts and flow
 carry a concurrency limit of one (where supported by the Windmill edition). Snapshot publication also uses Crate's
 optimistic version check, so a stale writer cannot regress the current date.
 
@@ -48,25 +48,51 @@ descending views, then title key. The movie/show balance affects the candidate
 pool, not rank weights. The 14-day curve ends on the scored day. The initial
 60-day capture supports 32 scored days, with a complete baseline for each.
 
-Before any TMDB, mapping or bulk pageview work, an existing dated snapshot ends
+Before any TMDB, mapping or bulk pageview work, an existing Wikipedia dated snapshot ends
 an attempt successfully (`already_published`), repairing `current` if a prior run
 stopped between publication writes. Otherwise probe only the requested UTC day
 for Breaking Bad and, only if absent there, The Godfather. One actual observation
-(including zero) allows collection; two missing observations return successfully
-with `waiting_for_publication`. Both use the normal polite HTTP adapter.
+(including zero) allows collection; two missing observations check whether all 24 hourly dump files exist before
+collecting candidates. If any file is absent, return `waiting_for_publication`.
+API probes use the normal polite HTTP adapter.
+
+When the API lacks yesterday but all hourly files exist, stream gzip files
+sequentially from `dumps.wikimedia.org/other/pageviews`, summing exact article
+DBkeys under `en` and `en.m`. Filenames mark the **end** of the hour: day D is
+D-010000 through D+1-000000 (including month/year directory rollover).
+The [format docs](https://wikitech.wikimedia.org/wiki/Data_Platform/Data_Lake/Traffic/Pageviews)
+describe the four columns and decoded titles. More precisely, the
+[producer query](https://github.com/wikimedia/analytics-refinery/blob/5a3e9d2b6f7230a9d94ebf69a3e55dfa5fcd0400/hql/pageview/hourly/transform_pageview_to_legacy_format.hql)
+filters `agent_type = 'user'`, excluding both `spider` and `automated`, and
+combines mobile web and mobile app in `.m`. Thus `en` + `en.m` corresponds to
+API `en.wikipedia.org/all-access/user`; there is no agent column to filter locally.
+Do not decode dump titles again or include redirects/other projects.
+
+The collector uses the identifying UA, 10s connect/30s read timeouts, four
+HTTP attempts with bounded Retry-After, a 3-minute availability budget and a
+20-minute streaming budget (checked between reads, plus any in-flight read).
+Corrupt/interrupted gzip streams retry the hour up to three times with fresh
+counters. Memory holds only candidate totals and at most a 64 KiB line; no dump
+is written to disk. A missing file or failed stream never persists partial-day
+counts. Absence of an article becomes zero only after all 24 files validate.
+API history still supplies the baseline; the 80% coverage guard still applies.
+Observations record `wikipedia_api` or `wikipedia_dumps` in `buzz_pageview.source`.
+The offline fixture tests domain filtering, app-inclusive mobile counts,
+Unicode, literal percent escapes, zeroes, truncated gzip and day boundaries.
+A new full-day live equivalence/throughput measurement has not been run.
 
 If fewer than 80% of mapped titles have the latest 29 observations, preserve
 `current` and return `waiting_for_coverage`; successfully collected observations
 are retained for the next attempt. Missing publication or coverage raises a real
-failure at the final attempt (23:00 UTC or later). HTTP and other operational
+failure at the final attempt (23:30 UTC or later). HTTP and other operational
 errors still fail visibly. Once collection succeeds, later hourly attempts do
-no signal requests or collection. Date snapshots remain immutable and `current`
-still advances monotonically under optimistic concurrency checks.
+no signal requests or collection. Source/formula copies remain immutable; preferred date aliases and `current`
+use optimistic concurrency checks and the replacement rule below.
 
 The webapp reads `current` without a wall-clock freshness cutoff in
 `app/server/talked-about-now/start-row.server.ts`, and caches it for ten minutes.
 It therefore continues serving the previous snapshot while publication is late;
-no webapp change or cache write is needed.
+the parsed row now also exposes the snapshot source.
 
 Reasons are dated context hints, not claimed causes of the attention lift.
 Release/first-air dates, later season premiere dates and official YouTube trailers
@@ -88,10 +114,10 @@ no Valkey client is imported or used.
 | Table | Primary key | Data |
 | --- | --- | --- |
 | `doc.buzz_title` | `title_key` | Catalog identity/card fields, article/QID, mapping status/check time, last candidate time |
-| `doc.buzz_pageview` | `title_key`, `day` | ISO UTC date, article, observed views, fetch time |
+| `doc.buzz_pageview` | `title_key`, `day` | ISO UTC date, article, observed views, source, fetch time |
 | `doc.buzz_trending` | `snapshot_day`, `kind`, `tmdb_id` | Actual collection UTC date, daily rank/popularity/title, raw TMDB result JSON, fetch time |
 | `doc.buzz_score` | `day`, `title_key` | Lift, eligibility/rank, views/mean/SD/z, curve/card/reasons JSON |
-| `doc.buzz_snapshot` | `snapshot_key` | Scored day, generation time, complete top-20 payload JSON; keys `current` and ISO dates |
+| `doc.buzz_snapshot` | `snapshot_key` | Scored day, generation time, complete top-20 payload JSON; keys `current`, ISO date aliases and `day:source:formula_version` history |
 
 JSON fields are `TEXT INDEX OFF`, decoded once by the reader. Tables have one
 shard and one replica. Date strings sort chronologically. There is no pretend
@@ -100,10 +126,30 @@ retained and reused on retries. An `expected_count` field detects partial bulk
 writes, which are recollected and replaced in full. Retrying cannot combine
 different captures of the day.
 
-Dated score snapshots are immutable once published. Future runs fill newly
-available dates, retaining the cohort and top 20 originally published for earlier
-dates. A date row is stored before moving `current`; reruns repair an interruption
-between those two writes. Historical backfill snapshots never advance `current`.
+Owner decision (2026-10-18): source/formula snapshots are immutable, but a
+fallback day's preferred date alias may be superseded by Wikipedia. API and
+dumps have equal priority, both above any other source; the first Wikipedia
+publication wins. New publications include `source` and `formula_version` and
+retain `day:source:formula_version` copies. The ISO date key remains the preferred
+snapshot for existing readers. A fallback is archived before its alias is
+replaced. `current` prefers the newest day, then Wikipedia on the same day;
+catching up an older day never regresses it. Both alias updates use CAS and
+bounded retries. Reruns repair interrupted publication. Fresh historical
+backfill does not advance `current`; replacement of a previously served fallback
+retains its daily status. Fallback dates remain eligible for scoring when
+Wikipedia catches up in the 60-day window.
+
+Existing snapshots are not bulk rewritten: missing source or the legacy
+`Wikipedia en.wikipedia.org / all-access / user` label is interpreted as
+`wikipedia_api`. Legacy aliases are archived lazily before replacement.
+`buzz_pageview.source TEXT` is added automatically by `initialize()` on existing
+strict-schema tables. Older observations retain NULL, meaning legacy API data.
+No manual DDL is needed if the flow identity has ALTER privileges. The webapp's
+optional `TalkedRow.source` is populated by `parseSnapshot`, with the same legacy
+API default. Payload schema stays at 1 and Wikipedia formula stays
+`wikipedia-lift-28d-v1`. `buzz_score` remains the preferred computed score table;
+the immutable snapshot payloads retain fallback ranking history.
+
 Scoring failures leave the served payload unchanged. Retention prunes observations,
 trending, scores, dated snapshots and unused mappings older than 180 days;
 `current` is always retained.
@@ -160,7 +206,7 @@ npx --yes windmill-cli@1.803.0 sync push --yes --keep-deleted \
 ```
 
 Read back `f/buzz/daily` and its next queued job to confirm the enabled UTC hourly
-schedule, flow target, overlap protection and final 23:00 attempt. Trigger the
+schedule, flow target, overlap protection and final 23:30 attempt. Trigger the
 flow once to verify a cheap wait or a publication, then repeat after publication
 to verify `already_published`. Keep the 80% guard; missing days are never zeroes.
 

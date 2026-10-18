@@ -9,7 +9,7 @@ DDL = {
     'buzz_title': '''title_key TEXT PRIMARY KEY, kind TEXT, tmdb_id INTEGER, title TEXT,
         original_title TEXT, poster_path TEXT, release_date TEXT, popularity DOUBLE PRECISION,
         article TEXT, qid TEXT, mapping_status TEXT, mapping_checked_at TEXT, last_candidate_at TEXT''',
-    'buzz_pageview': '''title_key TEXT, day TEXT, article TEXT, views BIGINT, fetched_at TEXT,
+    'buzz_pageview': '''title_key TEXT, day TEXT, article TEXT, views BIGINT, fetched_at TEXT, source TEXT,
         PRIMARY KEY (title_key, day)''',
     'buzz_trending': '''snapshot_day TEXT, kind TEXT, tmdb_id INTEGER, rank INTEGER,
         popularity DOUBLE PRECISION, title TEXT, raw TEXT INDEX OFF, fetched_at TEXT, expected_count INTEGER,
@@ -27,6 +27,18 @@ def encode(value):
     return json.dumps(value, ensure_ascii=False, separators=(',', ':'), allow_nan=False)
 
 
+WIKIPEDIA_SOURCES = {'wikipedia_api', 'wikipedia_dumps'}
+
+
+def snapshot_source(payload):
+    source = payload.get('source')
+    return 'wikipedia_api' if not source or source == 'Wikipedia en.wikipedia.org / all-access / user' else source
+
+
+def priority(row):
+    return int(snapshot_source(json.loads(row['payload'])) in WIKIPEDIA_SOURCES)
+
+
 class BuzzStore:
     def __init__(self, crate):
         self.crate = crate
@@ -38,6 +50,10 @@ class BuzzStore:
         columns = self.crate.select("SELECT column_name FROM information_schema.columns WHERE table_schema = 'doc' AND table_name = 'buzz_trending' AND column_name = 'expected_count'")
         if not columns:
             self.crate.run('ALTER TABLE doc.buzz_trending ADD COLUMN expected_count INTEGER')
+
+        columns = self.crate.select("SELECT column_name FROM information_schema.columns WHERE table_schema = 'doc' AND table_name = 'buzz_pageview' AND column_name = 'source'")
+        if not columns:
+            self.crate.run('ALTER TABLE doc.buzz_pageview ADD COLUMN source TEXT')
 
     def refresh(self, table):
         assert table in TABLES
@@ -114,9 +130,9 @@ class BuzzStore:
                 out[row['title_key']][row['day']] = row['views']
         return out
 
-    def save_pageviews(self, title, values, now):
+    def save_pageviews(self, title, values, now, source='wikipedia_api'):
         self.upsert('buzz_pageview', [dict(title_key=title['title_key'], day=day, article=title['article'], views=views,
-                                         fetched_at=now.isoformat()) for day, views in values.items()], ['title_key', 'day'])
+                                         fetched_at=now.isoformat(), source=source) for day, views in values.items()], ['title_key', 'day'])
 
     def save_scores(self, day, rows):
         # Remove obsolete eligibility/ranks on retry (all remaining rows rewritten below).
@@ -124,37 +140,64 @@ class BuzzStore:
         self.upsert('buzz_score', [dict(r, curve=encode(r['curve']), card=encode(r['card']), reasons=encode(r['reasons']))
                                   for r in rows], ['day', 'title_key'])
 
+    def snapshot(self, key):
+        rows = self.crate.select('SELECT snapshot_key, day, generated_at, payload, _seq_no, _primary_term FROM doc.buzz_snapshot WHERE snapshot_key = ?', (key,))
+        return rows[0] if rows else None
+
+    def archive(self, row):
+        payload = json.loads(row['payload'])
+        key = f"{row['day']}:{snapshot_source(payload)}:{payload.get('formula_version', 'wikipedia-lift-28d-v1')}"
+        self.upsert('buzz_snapshot', [dict(snapshot_key=key, day=row['day'],
+                    generated_at=row['generated_at'], payload=row['payload'])], ['snapshot_key'], replace=False)
+
+    def prefer(self, key, row):
+        # CAS protects both the date alias and current against stale writers.
+        for _ in range(4):
+            self.refresh('buzz_snapshot')
+            old = self.snapshot(key)
+            if old and (old['day'] > row['day'] or
+                        (old['day'] == row['day'] and priority(old) >= priority(row))):
+                return old
+            if old:
+                self.archive(old)
+                self.crate.run("UPDATE doc.buzz_snapshot SET day = ?, generated_at = ?, payload = ? WHERE snapshot_key = ? AND _seq_no = ? AND _primary_term = ?",
+                               (row['day'], row['generated_at'], row['payload'], key, old['_seq_no'], old['_primary_term']))
+            else:
+                self.upsert('buzz_snapshot', [dict(snapshot_key=key, day=row['day'],
+                            generated_at=row['generated_at'], payload=row['payload'])], ['snapshot_key'], replace=False)
+        self.refresh('buzz_snapshot')
+        result = self.snapshot(key)
+        if result and (result['day'], priority(result)) >= (row['day'], priority(row)):
+            return result
+        raise RuntimeError('Concurrent buzz publication; rerun to advance snapshot')
+
     def publish(self, day, payload, now):
-        # Published historical snapshots are immutable. A later changing cohort must
-        # not rewrite yesterday's top 20; score history may be recomputed separately.
+        self.refresh('buzz_snapshot')
+        old = self.snapshot(day)
         if payload is not None:
+            payload = dict(payload, source=snapshot_source(payload),
+                           formula_version=payload.get('formula_version', 'wikipedia-lift-28d-v1'))
+            # A previously served fallback remains a daily publication on catch-up.
+            if old and json.loads(old['payload']).get('history_mode') == 'daily':
+                payload['history_mode'] = 'daily'
             row = dict(snapshot_key=day, day=day, generated_at=now.isoformat(), payload=encode(payload))
-            self.upsert('buzz_snapshot', [row], ['snapshot_key'], replace=False)
-        self.refresh('buzz_snapshot')
-        stored = self.crate.select('SELECT snapshot_key, day, generated_at, payload FROM doc.buzz_snapshot WHERE snapshot_key = ?', (day,))
-        if not stored:
-            raise RuntimeError('Cannot publish a missing daily snapshot')
-        row = stored[0]
-        if json.loads(row['payload'])['history_mode'] != 'daily':
-            return
-        current = self.crate.select("SELECT day, _seq_no, _primary_term FROM doc.buzz_snapshot WHERE snapshot_key = 'current'")
-        if current and current[0]['day'] >= day:
-            return
-        if current:
-            old = current[0]
-            self.crate.run("UPDATE doc.buzz_snapshot SET day = ?, generated_at = ?, payload = ? WHERE snapshot_key = 'current' AND _seq_no = ? AND _primary_term = ?",
-                           (day, row['generated_at'], row['payload'], old['_seq_no'], old['_primary_term']))
+            self.archive(row)
+            # Reuse the immutable source/formula copy after an interrupted write.
+            self.refresh('buzz_snapshot')
+            key = f"{day}:{payload['source']}:{payload['formula_version']}"
+            row = self.prefer(day, self.snapshot(key))
         else:
-            self.upsert('buzz_snapshot', [dict(row, snapshot_key='current')], ['snapshot_key'], replace=False)
-        # Verify a competing publication did not leave an older snapshot current.
-        self.refresh('buzz_snapshot')
-        check = self.crate.select("SELECT day FROM doc.buzz_snapshot WHERE snapshot_key = 'current'")
-        if not check or check[0]['day'] < day:
-            raise RuntimeError('Concurrent buzz publication; rerun to advance current')
+            row = old
+        if row is None:
+            raise RuntimeError('Cannot publish a missing daily snapshot')
+        if json.loads(row['payload'])['history_mode'] == 'daily':
+            self.prefer('current', row)
 
     def published_days(self):
+        """Wikipedia-complete days; fallback days remain eligible for catch-up."""
         self.refresh('buzz_snapshot')
-        return {r['day'] for r in self.crate.select("SELECT day FROM doc.buzz_snapshot WHERE snapshot_key != 'current'")}
+        return {r['day'] for r in self.crate.select("SELECT snapshot_key, day, payload FROM doc.buzz_snapshot WHERE snapshot_key != 'current'")
+                if r['snapshot_key'] == r['day'] and snapshot_source(json.loads(r['payload'])) in WIKIPEDIA_SOURCES}
 
     def cleanup(self, now):
         cutoff = (now.date() - dt.timedelta(days=180)).isoformat()

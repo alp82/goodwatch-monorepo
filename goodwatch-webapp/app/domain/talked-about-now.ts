@@ -69,6 +69,7 @@ export type TalkedTitle = {
 }
 
 export type TalkedRow = {
+	source?: string
 	/** The scored day (ISO), the last of every curve. */
 	day: string
 	titles: TalkedTitle[]
@@ -133,7 +134,7 @@ export function reasonOf(
  */
 export function parseSnapshot(
 	payload: unknown,
-): { day: string; titles: BuzzTitle[] } | null {
+): { day: string; source: string; titles: BuzzTitle[] } | null {
 	const data = (
 		typeof payload === "string" ? safeJson(payload) : payload
 	) as Record<string, unknown> | null
@@ -181,7 +182,14 @@ export function parseSnapshot(
 	titles.forEach((title, i) => {
 		title.rank = i + 1
 	})
-	return { day, titles }
+	const source = str(data.source)
+	return {
+		day,
+		source: !source || source === "Wikipedia en.wikipedia.org / all-access / user"
+			? "wikipedia_api"
+			: source,
+		titles,
+	}
 }
 
 /** The ranks of the day before's eligible titles, by `kind:tmdb_id`, for each title's move. */

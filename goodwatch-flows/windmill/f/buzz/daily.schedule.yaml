@@ -1,5 +1,5 @@
-summary: Daily buzz with hourly Wikimedia catch-up, 08:00–23:00 UTC
-schedule: 0 0 8-23 * * *
+summary: Daily buzz with hourly Wikimedia catch-up, 02:30–23:30 UTC
+schedule: 0 30 2-23 * * *
 timezone: UTC
 script_path: f/buzz/daily
 is_flow: true

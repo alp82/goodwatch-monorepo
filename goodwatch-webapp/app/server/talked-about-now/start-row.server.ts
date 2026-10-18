@@ -173,6 +173,7 @@ export async function readTalkedAboutNow(
 	}
 	return {
 		day: parsed.day,
+		source: parsed.source,
 		titles: board.map(({ key, releaseDate, ...title }) => {
 			const display = displays.get(titleKey(title.mediaType, title.tmdbId))
 			return {

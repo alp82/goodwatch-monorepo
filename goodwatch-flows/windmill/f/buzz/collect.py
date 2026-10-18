@@ -3,6 +3,9 @@ import csv
 import datetime as dt
 from email.utils import parsedate_to_datetime
 import io
+import gzip
+import zlib
+import urllib3
 import time
 from urllib.parse import quote, unquote
 
@@ -85,6 +88,98 @@ class Signals:
                 raise RuntimeError(f'Signal HTTP {response.status_code}')
             return response
         raise RuntimeError(f'Signal HTTP {response.status_code} after four attempts')
+
+    @staticmethod
+    def dump_urls(day):
+        # Filenames mark the END of the hour, including next month's/year's 00:00.
+        start = dt.datetime.combine(day, dt.time())
+        return [f'https://dumps.wikimedia.org/other/pageviews/{hour:%Y/%Y-%m}/pageviews-{hour:%Y%m%d-%H}0000.gz'
+                for hour in (start + dt.timedelta(hours=i) for i in range(1, 25))]
+
+    def dump_request(self, url, *, head=False, deadline):
+        for attempt in range(4):
+            if time.monotonic() >= deadline:
+                raise TimeoutError('Wikipedia dump time budget exhausted')
+            response = None
+            try:
+                method = self.http.head if head else self.http.get
+                response = method(url, stream=True, timeout=(10, 30))
+                if response.status_code == 404:
+                    response.close()
+                    return None
+                if response.status_code not in (429, 500, 502, 503, 504):
+                    if not response.ok:
+                        raise RuntimeError(f'Dump HTTP {response.status_code}')
+                    return response
+                delay = response.headers.get('Retry-After', '')
+                try:
+                    wait = float(delay)
+                except ValueError:
+                    wait = max(0, (parsedate_to_datetime(delay) - dt.datetime.now(dt.timezone.utc)).total_seconds()) if delay else 10 * (attempt + 1)
+            except requests.RequestException:
+                wait = 5 * (attempt + 1)
+            finally:
+                if response is not None and not response.ok:
+                    response.close()
+                self.sleep(0.5)
+            if attempt < 3:
+                self.sleep(min(max(wait, 0), 300, max(0, deadline - time.monotonic())))
+        raise RuntimeError('Dump request failed after four attempts')
+
+    def dumps_available(self, day):
+        deadline = time.monotonic() + 180
+        for url in self.dump_urls(day):
+            response = self.dump_request(url, head=True, deadline=deadline)
+            if response is None:
+                return False
+            response.close()
+        return True
+
+    def dump_pageviews(self, articles, day):
+        """Stream complete user-only hourly files; never persist partial-day totals.
+
+        Producer filters agent_type='user'. en/en.m include app traffic too.
+        Titles in the dump are already URL-decoded DBkeys; do not unquote twice.
+        """
+        names = {article: unquote(article.split('/wiki/', 1)[1]).replace(' ', '_').encode('utf-8')
+                 for article in articles}
+        totals = dict.fromkeys(names.values(), 0)
+        deadline = time.monotonic() + 1200
+        for url in self.dump_urls(day):
+            for attempt in range(3):
+                response = self.dump_request(url, deadline=deadline)
+                if response is None:
+                    return None
+                hourly = dict.fromkeys(totals, 0)
+                try:
+                    with gzip.GzipFile(fileobj=response.raw) as stream:
+                        while True:
+                            if time.monotonic() >= deadline:
+                                raise TimeoutError('Wikipedia dump time budget exhausted')
+                            line = stream.readline(65537)
+                            if not line:
+                                break
+                            if len(line) > 65536:
+                                raise ValueError('Oversized dump line')
+                            fields = line.split()
+                            if len(fields) != 4:
+                                raise ValueError('Malformed dump line')
+                            if fields[0] in (b'en', b'en.m') and fields[1] in hourly:
+                                count = int(fields[2])
+                                if count < 0:
+                                    raise ValueError('Negative dump count')
+                                hourly[fields[1]] += count
+                    break
+                except TimeoutError:
+                    raise
+                except (OSError, EOFError, zlib.error, requests.RequestException, urllib3.exceptions.HTTPError):
+                    if attempt == 2:
+                        raise RuntimeError('Incomplete Wikipedia dump after three attempts') from None
+                finally:
+                    response.close()
+            for name, count in hourly.items():
+                totals[name] += count
+        return {article: totals[name] for article, name in names.items()}
 
     def trending(self):
         lists = {}

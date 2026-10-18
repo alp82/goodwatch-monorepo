@@ -406,3 +406,11 @@ test("items expose the stored first-party preview supplied by the read", () => {
 	assert.equal(itemOf(base)?.image, base.image)
 	assert.equal(itemOf({ ...base, image: null })?.image, null)
 })
+
+test("snapshot source is exposed with a legacy Wikipedia default", () => {
+	const payload = { schema_version: 1, day: "2026-10-13", top20: [] }
+	for (const source of [undefined, "Wikipedia en.wikipedia.org / all-access / user", "wikipedia_api", "wikipedia_dumps", "tmdb"]) {
+		assert.equal(parseSnapshot({ ...payload, source })?.source,
+			!source || source.startsWith("Wikipedia ") ? "wikipedia_api" : source)
+	}
+})

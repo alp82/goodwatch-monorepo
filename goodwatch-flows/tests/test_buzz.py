@@ -84,7 +84,7 @@ class DailyTests(unittest.TestCase):
         # No candidate collection, mapping, metadata or bulk pageviews on a delayed day.
         self.assertEqual(len(store.snapshots), 32)
         with self.assertRaisesRegex(RuntimeError, 'Wikimedia.*2026-10-14'):
-            run(store, signals, now=dt.datetime(2026, 10, 15, 23, tzinfo=dt.timezone.utc))
+            run(store, signals, now=dt.datetime(2026, 10, 15, 23, 30, tzinfo=dt.timezone.utc))
         result = run(store, FakeSignals(), now=dt.datetime(2026, 10, 15, 22, tzinfo=dt.timezone.utc))
         self.assertEqual(store.current['day'], '2026-10-14')
         self.assertIn('top20', result)
@@ -96,7 +96,7 @@ class DailyTests(unittest.TestCase):
         run(store, FakeSignals(), now=now)
         payload = store.current
         store.current = None  # Crash after date write, before advancing current.
-        result = run(store, object(), now=now.replace(hour=23))
+        result = run(store, object(), now=now.replace(hour=23, minute=30))
         self.assertEqual(result['status'], 'already_published')
         self.assertIs(store.current, payload)
         self.assertEqual(len(store.snapshots), 32)
@@ -112,7 +112,7 @@ class DailyTests(unittest.TestCase):
         self.assertEqual(run(store, PartialSignals(), now=now)['status'], 'waiting_for_coverage')
         self.assertIsNone(store.current)
         with self.assertRaisesRegex(RuntimeError, 'latest 29 days'):
-            run(store, PartialSignals(), now=now.replace(hour=23))
+            run(store, PartialSignals(), now=now.replace(hour=23, minute=30))
 
     def test_second_probe_can_confirm_publication_and_stops_at_two(self):
         from f.buzz.daily import run, PUBLICATION_PROBES
@@ -218,7 +218,7 @@ class MemoryStore:
     def read_trending(self, now): return self.trending.get(now.date().isoformat())
     def save_trending(self, lists, now): self.trending[now.date().isoformat()] = lists
     def read_pageviews(self, titles, start, end): return self.pageviews
-    def save_pageviews(self, title, values, now): self.pageviews.setdefault(title['title_key'], {}).update(values)
+    def save_pageviews(self, title, values, now, source="wikipedia_api"): self.pageviews.setdefault(title['title_key'], {}).update(values)
     def save_scores(self, day, rows): pass
     def publish(self, day, payload, now):
         if payload is not None:
@@ -231,6 +231,7 @@ class MemoryStore:
 
 class FakeSignals:
     def __init__(self): self.ranges = []
+    def dumps_available(self, day): return False
     def trending(self): return {'movie': [{'id': 1}], 'tv': []}
     def mappings(self, titles):
         return {t['title_key']: {'article': 'https://en.wikipedia.org/wiki/Example',
@@ -256,8 +257,8 @@ class SnapshotCrate:
             if self.race:
                 self.race(self)
                 self.race = None
-            day, generated, payload, seq, term = params
-            old = self.rows['current']
+            day, generated, payload, key, seq, term = params
+            old = self.rows[key]
             if (old['_seq_no'], old['_primary_term']) == (seq, term):
                 old.update(day=day, generated_at=generated, payload=payload, _seq_no=seq + 1)
             return
@@ -265,7 +266,7 @@ class SnapshotCrate:
     def select(self, sql, params=()):
         if params: key = params[0]
         elif "snapshot_key = 'current'" in sql: key = 'current'
-        else: return [dict(day=r['day']) for k, r in self.rows.items() if k != 'current']
+        else: return [dict(r) for k, r in self.rows.items() if k != 'current']
         columns = sql.split(' FROM ', 1)[0].removeprefix('SELECT ').split(', ')
         return [{column: self.rows[key][column] for column in columns}] if key in self.rows else []
 
@@ -333,6 +334,196 @@ class LocalDriverTests(unittest.TestCase):
                     'INSERT INTO doc.search_history (query) VALUES (?)', 'REFRESH TABLE doc.movie'):
             with self.assertRaisesRegex(ValueError, 'outside the new buzz tables'):
                 crate.run(sql)
+
+
+class DumpTests(unittest.TestCase):
+    def http(self, bodies):
+        import gzip
+        import io
+        class StreamResponse(Response):
+            def __init__(self, body):
+                super().__init__(404 if body is None else 200)
+                self.raw = io.BytesIO(gzip.compress(body) if body is not None else b'')
+                self.closed = False
+            def close(self): self.closed = True
+        class HTTP(FakeHTTP):
+            head = FakeHTTP.get
+        responses = [StreamResponse(body) for body in bodies]
+        return HTTP(responses), responses
+
+    def test_end_of_hour_crosses_year_and_month(self):
+        from f.buzz.collect import Signals
+        urls = Signals.dump_urls(dt.date(2026, 12, 31))
+        self.assertEqual(len(urls), 24)
+        self.assertTrue(urls[0].endswith('/2026/2026-12/pageviews-20261231-010000.gz'))
+        self.assertTrue(urls[-1].endswith('/2027/2027-01/pageviews-20270101-000000.gz'))
+
+    def test_fixture_matches_all_access_user_including_apps_and_unicode(self):
+        from f.buzz.collect import Signals
+        # User-only producer combines mobile web + mobile app under en.m.
+        fixture = 'en Example 10 0\nen.m Example 7 0\nen.d Example 900 0\nde Example 800 0\nen Café 3 0\nen 100%25 4 0\n'.encode()
+        http, responses = self.http([fixture] * 24)
+        articles = ['https://en.wikipedia.org/wiki/' + name for name in ('Example', 'Caf%C3%A9', '100%2525', 'Absent')]
+        signals = Signals('', session=http, sleep=lambda _: None)
+        self.assertEqual(signals.dump_pageviews(articles, DAY), dict(zip(articles, [408, 72, 96, 0])))
+        self.assertTrue(all(r.closed for r in responses))
+        self.assertTrue(all(kwargs['stream'] for _, kwargs in http.requests))
+        self.assertIn('hello@goodwatch.app', http.headers['User-Agent'])
+
+    def test_missing_hour_prevents_collection_and_partial_day_is_unknown(self):
+        from f.buzz.collect import Signals
+        http, responses = self.http([b''] * 23 + [None])
+        self.assertFalse(Signals('', session=http, sleep=lambda _: None).dumps_available(DAY))
+        self.assertTrue(all(r.closed for r in responses))
+        http, _ = self.http([b'en Example 10 0', None])
+        self.assertIsNone(Signals('', session=http, sleep=lambda _: None).dump_pageviews(['https://en.wikipedia.org/wiki/Example'], DAY))
+
+    def test_corrupt_stream_retries_without_double_counting(self):
+        import io
+        from f.buzz.collect import Signals
+        http, responses = self.http([b'en Example 10 0\n'] * 25)
+        responses[0].raw = io.BytesIO(responses[0].raw.getvalue()[:-5])
+        article = 'https://en.wikipedia.org/wiki/Example'
+        self.assertEqual(Signals('', session=http, sleep=lambda _: None).dump_pageviews([article], DAY), {article: 240})
+        self.assertEqual(len(http.requests), 25)
+        self.assertTrue(responses[0].closed)
+
+    def test_time_budget_and_retry_after(self):
+        import time
+        from unittest.mock import patch
+        from f.buzz.collect import Signals
+        http, responses = self.http([b'', b''])
+        responses[0].status_code = 429
+        responses[0].ok = False
+        responses[0].headers = {'Retry-After': '2'}
+        sleeps = []
+        signals = Signals('', session=http, sleep=sleeps.append)
+        response = signals.dump_request('fixture', deadline=time.monotonic() + 60)
+        response.close()
+        self.assertIn(2, sleeps)
+        self.assertTrue(responses[0].closed)
+        with self.assertRaises(TimeoutError):
+            signals.dump_request('fixture', deadline=0)
+        with patch('f.buzz.collect.time.monotonic', side_effect=[0, 0, 1201]):
+            http, _ = self.http([b'en Example 10 0'])
+            with self.assertRaises(TimeoutError):
+                Signals('', session=http, sleep=lambda _: None).dump_pageviews(['https://en.wikipedia.org/wiki/Example'], DAY)
+
+    def test_daily_dump_path_scores_using_api_baseline(self):
+        from f.buzz.daily import run
+        class DumpSignals(FakeSignals):
+            def dumps_available(self, day): return True
+            def dump_pageviews(self, articles, day): return dict.fromkeys(articles, 2000)
+            def pageviews(self, article, start, end):
+                return {k: v for k, v in super().pageviews(article, start, end).items() if k != DAY.isoformat()}
+        class Store(MemoryStore):
+            sources = []
+            def save_pageviews(self, title, values, now, source='wikipedia_api'):
+                self.sources.append(source)
+                super().save_pageviews(title, values, now)
+        store = Store()
+        run(store, DumpSignals(), now=dt.datetime(2026, 10, 14, 2, 30, tzinfo=dt.timezone.utc))
+        self.assertEqual(store.current['source'], 'wikipedia_dumps')
+        self.assertEqual(store.current['top20'][0]['score'], 20)
+        self.assertEqual(store.sources, ['wikipedia_dumps', 'wikipedia_api'])
+
+    def test_final_attempt_starts_at_2330(self):
+        from f.buzz.daily import wait_or_fail
+        now = dt.datetime(2026, 10, 14, 23, 29, tzinfo=dt.timezone.utc)
+        self.assertEqual(wait_or_fail({}, now, 'waiting', 'late')['status'], 'waiting')
+        with self.assertRaises(RuntimeError):
+            wait_or_fail({}, now.replace(minute=30), 'waiting', 'late')
+
+
+class SourcePublicationTests(unittest.TestCase):
+    def test_wikipedia_supersedes_fallback_but_keeps_source_history(self):
+        from f.buzz.store import BuzzStore
+        crate = SnapshotCrate()
+        store = BuzzStore(crate)
+        now = dt.datetime(2026, 10, 14, tzinfo=dt.timezone.utc)
+        fallback = dict(day=DAY.isoformat(), source='tmdb', formula_version='tmdb-v1', history_mode='daily', top20=['fallback'])
+        store.publish(DAY.isoformat(), fallback, now)
+        self.assertNotIn(DAY.isoformat(), store.published_days())
+        wiki = dict(fallback, source='wikipedia_dumps', formula_version='wikipedia-lift-28d-v1', top20=['wiki'])
+        store.publish(DAY.isoformat(), wiki, now)
+        self.assertEqual(json.loads(crate.rows['current']['payload'])['top20'], ['wiki'])
+        self.assertEqual(json.loads(crate.rows[DAY.isoformat() + ':tmdb:tmdb-v1']['payload']), fallback)
+        self.assertIn(DAY.isoformat(), store.published_days())
+        store.publish(DAY.isoformat(), fallback, now)
+        store.publish(DAY.isoformat(), dict(wiki, source='wikipedia_api', top20=['api']), now)
+        self.assertEqual(json.loads(crate.rows['current']['payload'])['top20'], ['wiki'])
+        store.publish('2026-10-14', dict(fallback, day='2026-10-14'), now)
+        store.publish(DAY.isoformat(), wiki, now)
+        self.assertEqual(crate.rows['current']['day'], '2026-10-14')
+
+    def test_source_column_upgrade_is_idempotent(self):
+        from f.buzz.store import BuzzStore
+        class SchemaCrate:
+            source_exists = False
+            alters = []
+            def select(self, sql):
+                if "'source'" in sql:
+                    return [{'column_name': 'source'}] if self.source_exists else []
+                return [{'column_name': 'expected_count'}]
+            def run(self, sql):
+                if sql.startswith('ALTER'):
+                    self.alters.append(sql)
+                    self.source_exists = True
+        crate = SchemaCrate()
+        BuzzStore(crate).initialize()
+        BuzzStore(crate).initialize()
+        self.assertEqual(crate.alters, ['ALTER TABLE doc.buzz_pageview ADD COLUMN source TEXT'])
+
+    def test_daily_runner_replaces_fallback_and_records_observation_source(self):
+        from f.buzz.daily import run
+        from f.buzz.store import BuzzStore
+        crate = SnapshotCrate()
+        publisher = BuzzStore(crate)
+        class Store(MemoryStore):
+            def published_days(self): return publisher.published_days()
+            def publish(self, *args): publisher.publish(*args)
+        now = dt.datetime(2026, 10, 14, 3, 30, tzinfo=dt.timezone.utc)
+        publisher.publish(DAY.isoformat(), dict(day=DAY.isoformat(), source='tmdb', formula_version='tmdb-v1', history_mode='daily'), now)
+        run(Store(), FakeSignals(), now=now)
+        payload = json.loads(crate.rows['current']['payload'])
+        self.assertEqual(payload['source'], 'wikipedia_api')
+        self.assertEqual(payload['top20'][0]['score'], 20)
+        self.assertIn(DAY.isoformat() + ':tmdb:tmdb-v1', crate.rows)
+        class ObservationsCrate:
+            def run_many(self, sql, rows): self.sql, self.rows = sql, rows
+        observations = ObservationsCrate()
+        BuzzStore(observations).save_pageviews({'title_key': 'movie:1', 'article': 'Example'}, {DAY.isoformat(): 2000}, now, source='wikipedia_dumps')
+        self.assertIn('"source"', observations.sql)
+        self.assertEqual(observations.rows[0][-1], 'wikipedia_dumps')
+
+    def test_legacy_fallback_archived_before_replacement_and_repair(self):
+        from f.buzz.store import BuzzStore, encode
+        crate = SnapshotCrate()
+        store = BuzzStore(crate)
+        now = dt.datetime(2026, 10, 14, tzinfo=dt.timezone.utc)
+        fallback = dict(day=DAY.isoformat(), source='tmdb', formula_version='tmdb-v1', history_mode='daily')
+        row = dict(snapshot_key=DAY.isoformat(), day=DAY.isoformat(), generated_at=now.isoformat(), payload=encode(fallback), _seq_no=0, _primary_term=1)
+        crate.rows[DAY.isoformat()] = row.copy()
+        crate.rows['current'] = dict(row, snapshot_key='current')
+        store.publish(DAY.isoformat(), dict(fallback, source='wikipedia_api', formula_version='wikipedia-lift-28d-v1', history_mode='current-candidate-pool backfill'), now)
+        self.assertIn(DAY.isoformat() + ':tmdb:tmdb-v1', crate.rows)
+        self.assertEqual(json.loads(crate.rows['current']['payload'])['source'], 'wikipedia_api')
+        crate.rows['current'] = dict(row, snapshot_key='current')
+        store.publish(DAY.isoformat(), None, now)
+        self.assertEqual(json.loads(crate.rows['current']['payload'])['source'], 'wikipedia_api')
+
+    def test_same_day_wikipedia_wins_concurrent_fallback_writer(self):
+        from f.buzz.store import BuzzStore, encode
+        crate = SnapshotCrate()
+        store = BuzzStore(crate)
+        now = dt.datetime(2026, 10, 14, tzinfo=dt.timezone.utc)
+        store.publish('2026-10-12', dict(day='2026-10-12', source='tmdb', history_mode='daily'), now)
+        def wiki_wins(crate):
+            crate.rows['current'].update(day=DAY.isoformat(), payload=encode(dict(day=DAY.isoformat(), source='wikipedia_api', history_mode='daily')), _seq_no=1)
+        crate.race = wiki_wins
+        store.publish(DAY.isoformat(), dict(day=DAY.isoformat(), source='tmdb', history_mode='daily'), now)
+        self.assertEqual(json.loads(crate.rows['current']['payload'])['source'], 'wikipedia_api')
+
 
 if __name__ == '__main__':
     unittest.main()
