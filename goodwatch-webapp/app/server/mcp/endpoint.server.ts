@@ -122,7 +122,7 @@ export function createReadMcpHandler(
 		}
 		const protocolHeader = request.headers.get("MCP-Protocol-Version")
 		for (const message of Array.isArray(body) ? body : [body]) {
-			const line = describeRpc(message, knownTools, protocolHeader)
+			const line = describeRpc(message, knownTools, protocolHeader, userId)
 			if (line) console.log(line)
 		}
 		if (

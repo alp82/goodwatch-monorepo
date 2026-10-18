@@ -1,7 +1,8 @@
 // One log line per JSON-RPC message that reaches the MCP tools: which method a client called, and on initialize
 // which client it is and whether it supports MCP Apps (the poster grid). Diagnostics for client behavior only.
-// Never logs tokens, arguments, query text, member IDs or results: tool names and UI resource URIs are the only
-// request values, and both come from fixed sets.
+// Every line names the member by internal GoodWatch user ID (user=-  when the request isn't authenticated), so
+// usage can be traced per member. Never logs tokens, email, names, arguments, query text or results: tool names and
+// UI resource URIs are the only request values, and both come from fixed sets.
 import { POSTER_GRID_URI } from "./poster-grid.server.ts"
 
 const UI_EXTENSION = "io.modelcontextprotocol/ui"
@@ -30,12 +31,13 @@ export function describeRpc(
 	message: unknown,
 	knownTools: ReadonlySet<string>,
 	protocolHeader: string | null,
+	userId: string | null = null,
 ): string | null {
 	const rpc = record(message)
 	if (!rpc || typeof rpc.method !== "string") return null
 	const params = record(rpc.params)
 	const meta = record(params?._meta)
-	const parts = [`method=${clean(rpc.method)}`]
+	const parts = [`user=${clean(userId, 80)}`, `method=${clean(rpc.method)}`]
 	if (rpc.method === "tools/call")
 		parts.push(
 			`tool=${typeof params?.name === "string" && knownTools.has(params.name) ? params.name : "other"}`,

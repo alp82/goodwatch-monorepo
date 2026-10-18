@@ -455,7 +455,7 @@ test("A client on the older stateless protocol reads the same resource", async (
 	}
 })
 
-test("The MCP rpc log names methods and UI support, never arguments or identities", async () => {
+test("The MCP rpc log names the member id, methods and UI support, never arguments, email or tokens", async () => {
 	const { describeRpc } = await import("./rpc-log.ts")
 	const tools = new Set(["search_titles"])
 	assert.equal(
@@ -476,8 +476,9 @@ test("The MCP rpc log names methods and UI support, never arguments or identitie
 			},
 			tools,
 			null,
+			"user_123",
 		),
-		"MCP rpc: method=initialize protocol=2025-06-18 client=claude-ai?forged line/0.1.0 ui=text/html;profile=mcp-app",
+		"MCP rpc: user=user_123 method=initialize protocol=2025-06-18 client=claude-ai?forged line/0.1.0 ui=text/html;profile=mcp-app",
 	)
 	const call = describeRpc(
 		{
@@ -486,18 +487,20 @@ test("The MCP rpc log names methods and UI support, never arguments or identitie
 		},
 		tools,
 		"2025-06-18",
+		"user_123",
 	)
 	assert.equal(
 		call,
-		"MCP rpc: method=tools/call tool=search_titles protocol=2025-06-18",
+		"MCP rpc: user=user_123 method=tools/call tool=search_titles protocol=2025-06-18",
 	)
 	assert.equal(
 		describeRpc(
 			{ method: "tools/call", params: { name: "member-A" } },
 			tools,
 			null,
+			"user_123",
 		),
-		"MCP rpc: method=tools/call tool=other protocol=-",
+		"MCP rpc: user=user_123 method=tools/call tool=other protocol=-",
 	)
 	assert.equal(
 		describeRpc(
@@ -505,7 +508,7 @@ test("The MCP rpc log names methods and UI support, never arguments or identitie
 			tools,
 			null,
 		),
-		`MCP rpc: method=resources/read uri=${POSTER_GRID_URI} protocol=-`,
+		`MCP rpc: user=- method=resources/read uri=${POSTER_GRID_URI} protocol=-`,
 	)
 	assert.equal(
 		describeRpc(
@@ -520,8 +523,23 @@ test("The MCP rpc log names methods and UI support, never arguments or identitie
 			},
 			tools,
 			"2026-07-28",
+			"user_123",
 		),
-		"MCP rpc: method=tools/list protocol=2026-07-28 ui=none",
+		"MCP rpc: user=user_123 method=tools/list protocol=2026-07-28 ui=none",
+	)
+	assert.equal(
+		describeRpc(
+			{ method: "tools/call", params: { name: "search_titles" } },
+			tools,
+			null,
+			"user_1\nforged=1",
+		),
+		"MCP rpc: user=user_1?forged=1 method=tools/call tool=search_titles protocol=-",
+	)
+	assert.doesNotMatch(
+		call ?? "",
+		/secret|@|token/i,
+		"arguments, email and tokens never reach the line",
 	)
 	assert.equal(describeRpc({ id: 1, result: {} }, tools, null), null)
 })

@@ -143,6 +143,32 @@ test("MCP rate limiting returns a retry delay before dispatch", async () => {
 	assert.equal(response.headers.get("Retry-After"), "17")
 })
 
+test("The usage log line carries the authenticated member id, never the arguments or the token", async (t) => {
+	const lines: string[] = []
+	t.mock.method(console, "log", (line: unknown) => lines.push(String(line)))
+	const handle = createReadMcpHandler({
+		resource,
+		authorization: verifier,
+		limiter: {
+			async take() {
+				return { allowed: false, store: "valkey", retryAfterSeconds: 1 }
+			},
+		},
+	})
+	await handle(
+		rpc("tools/call", {
+			name: "search_titles",
+			arguments: { query: "secret query" },
+		}),
+	)
+	const anonymous = await handle(new Request(resource, { method: "POST" }))
+	assert.equal(anonymous.status, 401)
+	assert.deepEqual(lines, [
+		"MCP rpc: user=member-A method=tools/call tool=search_titles protocol=2026-07-28 ui=none",
+	])
+	assert.doesNotMatch(lines.join("\n"), /secret|test-token/)
+})
+
 test("Read-only tokens cannot force a write and receive an HTTP scope challenge", async () => {
 	const handle = createReadMcpHandler({
 		resource,
