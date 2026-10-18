@@ -1,23 +1,11 @@
-import { mediaTextAttributes } from "~/ui/media-text/media-text"
-import { MediaFact } from "./MediaFact"
-// The TV's rating strip, and the screen that asks for a score with it: the taste quiz (screens/Quiz.tsx) and "How
-// was it?" after Seen it (screens/Rate.tsx) are both this one screen.
-//
-// The strip is the app's own score control (ui/title-actions/ScoreControl.tsx) at TV size. Four labelled levels
-// from low on the left to high on the right, read from `RATING_LEVELS`, each with its colour and, on the desktop,
-// as wide as the scores it spans; under them the ten exact scores, each in its own colour. OK on a level gives the
-// level's score; Down goes to the exact scores under it (the machine names that move, tv-machine.ts). The level
-// the focus is in lights its scores, and a line over the strip says what the focus would give.
-//
-// On the phone the strip is the four levels alone, as equal keys in one row: a phone's score is 3, 5, 7 or 9, and
-// the exact score is on the title's page. Which keys there are is the machine's (`items`, from `tvItems`).
-//
-// Every key is an `Item`: pointing at it gives it the focus, a click or a tap gives its score.
+// TV uses the same word/number layout and selection treatment as the web picker.
+// Item registers each choice with the remote navigation machine.
 import type { ReactNode } from "react"
 import type { Score } from "~/server/scores.server"
-import { getVibeColorValue, scoreLabels } from "~/utils/ratings"
+import { ScoreChoices } from "~/ui/scoring/ScoreChoices"
+import { mediaTextAttributes } from "~/ui/media-text/media-text"
 import { tmdbImageUrl } from "~/utils/tmdb-image"
-import { RATING_LEVELS, levelOf } from "../../taste-quiz/quiz-flow"
+import { MediaFact } from "./MediaFact"
 import {
 	Ambient,
 	CornerBar,
@@ -27,103 +15,47 @@ import {
 	useKeySize,
 	useTvView,
 } from "./kit"
-import { STRIP_SCORES } from "./tv-machine"
-import { scoreLight, stripFocus, stripSays } from "./tv-strip"
+import { stripFocus, stripSays } from "./tv-strip"
 
-/** How strong a score's colour is, by how it is lit: the last two digits of its `#rrggbbaa`. */
-const TINT = { on: "", lit: "88", even: "55", dim: "30" }
-
-/**
- * The strip. `value` is the score the title has already: its level and its exact score are marked, as the app's
- * control marks them.
- */
 export function RatingStrip({
 	items,
 	value = null,
-}: {
-	/** The screen's items, from `tvItems`: the levels, and the exact scores where they show. */
-	items: readonly string[]
-	value?: number | null
-}) {
+}: { items: readonly string[]; value?: number | null }) {
 	const { canvas, focused } = useTvView()
-	const P = canvas.edition === "phone"
+	const phone = canvas.edition === "phone"
 	const focus = stripFocus(focused)
-	const mine = value ? levelOf(value) : -1
-	// On the phone a level is a touch target, 44 px or more on the phone's screen.
-	const phoneKey = useKeySize(68)
-	const levels = RATING_LEVELS.filter((level) =>
-		items.includes(`level:${level.score}`),
-	)
-	const scores = STRIP_SCORES.filter((score) =>
-		items.includes(`score:${score}`),
-	)
+	const phoneKey = useKeySize(58)
+	const numberKey = useKeySize(44)
 	return (
-		<fieldset
-			aria-label="Your score"
-			className={`grid ${P ? "gap-1.5" : "gap-2"}`}
-			style={{
-				gridTemplateColumns: `repeat(${P ? levels.length : 10}, minmax(0, 1fr))`,
-			}}
-		>
-			{levels.map((level) => {
-				const color = getVibeColorValue(level.score)
-				const id = `level:${level.score}`
-				// The level of the title's own score is marked, as the app's control marks it; the focus has its own look.
-				const marked = RATING_LEVELS[mine] === level && focused !== id
-				return (
-					<Item
-						key={level.name}
-						id={id}
-						label={`${level.name}, ${level.score}`}
-						className={`tvc-lvl flex items-center ${P ? "flex-col justify-center gap-1.5 px-1" : "h-[92px] gap-4 px-5"}`}
-						style={{
-							...(P
-								? { height: phoneKey }
-								: { gridColumn: `span ${level.hi - level.lo + 1}` }),
-							...(marked && {
-								background: `${color}55`,
-								boxShadow: `inset 0 0 0 3px ${color}`,
-							}),
-						}}
-					>
-						<span
-							className={`shrink-0 rounded-full ${P ? "h-1.5 w-10" : "h-10 w-2"}`}
-							style={{ background: color }}
-						/>
-						{P ? (
-							<span className="text-[20px] leading-none">{level.name}</span>
-						) : (
-							// The name over its scores, as the app's control shows them at its roomy size.
-							<span className="flex min-w-0 flex-col gap-1.5 leading-none">
-								<span className="text-[28px]">{level.name}</span>
-								<span className="whitespace-nowrap text-[21px] font-semibold tabular-nums text-white/55">
-									{level.lo}–{level.hi}
-								</span>
-							</span>
-						)}
-					</Item>
-				)
-			})}
-			{scores.map((score) => {
-				const light = scoreLight(score, focus)
-				return (
-					<Item
-						key={score}
-						id={`score:${score}`}
-						label={`${score}, ${scoreLabels[score]}`}
-						// The focused score is dark type on its full colour (living-room.css).
-						className={`tvc-num flex h-[64px] items-center justify-center text-[30px] ${light === "on" ? "" : light === "dim" ? "text-white/60" : "text-white"}`}
-						style={{
-							background: `${getVibeColorValue(score as Score)}${TINT[light]}`,
-							...(value === score &&
-								light !== "on" && { boxShadow: "inset 0 0 0 3px #fff" }),
-						}}
-					>
-						{score}
-					</Item>
-				)
-			})}
-		</fieldset>
+		<div className="@container [&_[data-score-range]]:text-[18px]">
+			<ScoreChoices
+				value={value as Score | null}
+				hot={focus?.at ?? null}
+				renderChoice={(choice) =>
+					items.includes(choice.id) ? (
+						<Item
+							key={choice.id}
+							id={choice.id}
+							label={choice.label}
+							pressed={choice.selected}
+							className={`flex min-w-0 items-center justify-center gap-1.5 text-white ${choice.kind === "level" ? `tvc-lvl ${phone ? "text-[16px]" : "text-[26px]"}` : `tvc-num ${phone ? "text-[18px]" : "text-[30px]"}`}`}
+							style={{
+								...choice.style,
+								height: phone
+									? choice.kind === "level"
+										? phoneKey
+										: numberKey
+									: choice.kind === "level"
+										? 92
+										: 64,
+							}}
+						>
+							{choice.children}
+						</Item>
+					) : null
+				}
+			/>
+		</div>
 	)
 }
 
@@ -165,6 +97,7 @@ export function RatingScreen({
 	const { canvas, focused } = useTvView()
 	const P = canvas.edition === "phone"
 	const says = stripSays(focused, P)
+	const short = canvas.h < 400
 	return (
 		<>
 			{backdrop && (
@@ -173,21 +106,32 @@ export function RatingScreen({
 			<Shade dim={0.82} />
 			{P ? (
 				// The phone: the strip stands at the bottom, as large as a thumb needs, and the words in what is left
-				// over it, under the bar's keys, which are touch targets. With the exact scores gone there is room
-				// for the line that says what the focus would give.
+				// over it, under the bar's keys. Both words and exact scores stay visible.
 				<div className="absolute inset-0 flex flex-col px-5 pb-4 pt-[84px]">
 					<div className="flex min-h-0 flex-1 flex-col justify-center">
-						<div className="truncate text-[20px] font-bold uppercase leading-tight tracking-[0.12em] text-white/75">
+						<div
+							className={
+								short
+									? "sr-only"
+									: "shrink-0 truncate text-[16px] font-bold uppercase leading-tight tracking-[0.12em] text-white/75"
+							}
+						>
 							{kicker}
 						</div>
 						<div
-							className="mt-1 line-clamp-2 font-bold leading-[1.05] tracking-tight"
+							className="mt-1 shrink-0 line-clamp-2 font-bold leading-[1.05] tracking-tight"
 							{...mediaTextAttributes(questionLanguage ?? "en")}
-							style={{ fontSize: questionSize(question, 32, 26) }}
+							style={{ fontSize: questionSize(question, 26, 22) }}
 						>
 							<MediaFact text={question} media={questionMedia} />
 						</div>
-						<div className="mt-1.5 h-[24px] truncate text-[20px] leading-tight text-white/85">
+						<div
+							className={
+								short
+									? "sr-only"
+									: "mt-1 h-[20px] shrink-0 truncate text-[16px] leading-tight text-white/85"
+							}
+						>
 							{says ?? line}
 						</div>
 					</div>

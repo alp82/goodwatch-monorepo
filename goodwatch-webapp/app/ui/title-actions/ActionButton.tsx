@@ -2,7 +2,7 @@ import { BookmarkIcon, EyeIcon, NoSymbolIcon, StarIcon } from "@heroicons/react/
 import type React from "react"
 import { forwardRef } from "react"
 import type { Score } from "~/server/scores.server"
-import { getScoreLabelText } from "~/utils/ratings"
+import { getScoreLabelText, selectedScoreStyle } from "~/utils/ratings"
 
 const ACTIONS = {
 	want: { Icon: BookmarkIcon, short: "Want", on: "Want to See", off: "Want to See", active: "bg-amber-500 text-black", tint: "text-amber-300" },
@@ -109,11 +109,12 @@ export const ScoreButton = forwardRef<
 			aria-label={score ? `Your score: ${getScoreLabelText(score)}. Change it` : "Score it"}
 			title={score ? `Your score: ${getScoreLabelText(score)}` : "Score it"}
 			className={`inline-flex h-9 w-full min-w-0 items-center justify-center rounded-lg px-0 text-sm font-bold cursor-pointer transition-colors ${FOCUS} ${
-				score ? `bg-vibe-${score * 10} text-white` : "bg-white/10 text-gray-100 hover:bg-white/20"
+				score ? "text-white" : "bg-white/10 text-gray-100 hover:bg-white/20"
 			} ${className}`}
+			style={score ? selectedScoreStyle(score) : undefined}
 			{...rest}
 		>
-			{score ? <span className="tabular-nums">{score}</span> : <StarIcon className="h-4 w-4 shrink-0 text-yellow-300" />}
+			{score ? <span className="truncate px-1 text-xs tabular-nums">{getScoreLabelText(score)}</span> : <StarIcon className="h-4 w-4 shrink-0 text-yellow-300" />}
 		</button>
 	)
 })

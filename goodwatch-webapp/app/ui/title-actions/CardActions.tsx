@@ -1,15 +1,13 @@
 // The title actions of a poster card, loaded on demand by TitleActionsFrame: the hover row (Want to See, then Seen
 // and the score side by side, then Not interested), the score popover, the phone sheet, and the "Hidden" tile.
 // Marking a title Seen from the row opens the score popover.
-import { type RefObject, useContext, useEffect, useLayoutEffect, useRef, useState } from "react"
-import { createPortal } from "react-dom"
+import { type RefObject, useContext, useEffect, useRef } from "react"
 import UserAction from "~/ui/auth/UserAction"
-import Drawer from "~/ui/modal/Drawer"
+import TitleScoreDialog from "~/ui/scoring/TitleScoreDialog"
 import type { ScoredMedia } from "~/ui/user/actions/ScoreAction"
 import { ActionButton, ScoreButton } from "./ActionButton"
 import { TitleActionSet } from "./TitleActionSet"
 import type { ActionsPlacement, OpenActions } from "./TitleActionsFrame"
-import { TitleScore } from "./TitleScore"
 import { HideFeedbackContext } from "./hide-feedback"
 import { SEEN_INSTRUCTIONS, SEEN_SO_NOT_HIDEABLE, useTitleActions } from "./useTitleActions"
 
@@ -18,9 +16,6 @@ const ROW_AT: Record<ActionsPlacement, string> = {
 	raised: "bottom-14",
 	top: "top-2.5",
 }
-// From the card's edge to the far side of the row, plus a small gap: where the popover starts.
-const ROW_REACH: Record<ActionsPlacement, number> = { bottom: 58, raised: 104, top: 58 }
-
 export default function CardActions({
 	media,
 	frame,
@@ -42,6 +37,8 @@ export default function CardActions({
 }) {
 	const a = useTitleActions(media)
 	const scoreButton = useRef<HTMLButtonElement>(null)
+	const sheetOpener = useRef<HTMLElement | null>(null)
+	if (open === "sheet") sheetOpener.current = frame.current?.querySelector<HTMLElement>("[aria-haspopup=dialog]") ?? null
 	const undo = useRef<() => void>(() => {})
 
 	const feedback = useContext(HideFeedbackContext)
@@ -77,15 +74,11 @@ export default function CardActions({
 			</div>
 		)
 
-	const closeScore = (refocus: boolean) => {
-		setOpen(null)
-		if (refocus) scoreButton.current?.focus()
-	}
 	return (
 		<>
 			{!touch && (
 				<div
-					className={`absolute inset-x-2.5 z-20 hidden gap-1 rounded-lg bg-gray-900/90 p-1 transition-opacity can-hover:flex ${ROW_AT[placement]} ${
+					className={`absolute inset-x-2.5 z-20 hidden gap-1 rounded-lg bg-gray-900/90 p-1 transition-opacity can-hover:grid can-hover:grid-cols-3 ${ROW_AT[placement]} ${
 						open === "score" ? "opacity-100" : "opacity-0 group-hover:opacity-100 focus-within:opacity-100"
 					}`}
 				>
@@ -116,6 +109,7 @@ export default function CardActions({
 					</UserAction>
 					<ScoreButton
 						ref={scoreButton}
+						className="col-span-3 row-start-2"
 						score={a.score}
 						aria-haspopup="dialog"
 						aria-expanded={open === "score"}
@@ -132,112 +126,12 @@ export default function CardActions({
 					/>
 				</div>
 			)}
-			{open === "score" &&
-				createPortal(
-					<ScorePopover
-						media={media}
-						frame={frame}
-						placement={placement}
-						opener={scoreButton}
-						onClose={closeScore}
-					/>,
-					document.body,
-				)}
-			{touch && (
-				<Drawer open={open === "sheet"} onClose={() => setOpen(null)} allSizes>
-					<div className="mx-auto max-w-md p-1">
-						<h3 className="mb-3 truncate text-sm font-semibold text-gray-300">{media.details.title}</h3>
-						{/* The watch log is a sheet of its own, so this one closes when Seen opens it. */}
-						{open === "sheet" && (
-							<TitleActionSet media={media} onHide={onHide} onOpenLog={() => setOpen(null)} />
-						)}
-					</div>
-				</Drawer>
-			)}
+			{open !== null && <TitleScoreDialog
+				media={media} open onClose={() => setOpen(null)}
+				opener={touch ? sheetOpener : scoreButton}
+				onRated={() => setOpen(null)}
+				footer={open === "sheet" ? <TitleActionSet media={media} scoring={false} onHide={onHide} onOpenLog={() => setOpen(null)} /> : undefined}
+			/>}
 		</>
-	)
-}
-
-const POPOVER_WIDTH = 320
-const EDGE = 8
-
-// Sits beside the row of actions, at the end of the page so no scrolling row or card transform can clip it. Above the
-// row when the row is at the card's bottom (below the card when there is no room above), below it when at the top.
-function ScorePopover({
-	media,
-	frame,
-	placement,
-	opener,
-	onClose,
-}: {
-	media: ScoredMedia
-	frame: RefObject<HTMLDivElement>
-	placement: ActionsPlacement
-	opener: RefObject<HTMLButtonElement>
-	onClose: (refocus: boolean) => void
-}) {
-	const panel = useRef<HTMLDivElement>(null)
-	const [at, setAt] = useState<{ left: number; top: number; width: number } | null>(null)
-
-	useLayoutEffect(() => {
-		const place = () => {
-			const card = frame.current?.getBoundingClientRect()
-			const height = panel.current?.offsetHeight ?? 0
-			if (!card) return
-			const width = Math.min(POPOVER_WIDTH, window.innerWidth - 2 * EDGE)
-			const left = Math.max(EDGE, Math.min(card.left + card.width / 2 - width / 2, window.innerWidth - width - EDGE))
-			let top = card.top + ROW_REACH[placement]
-			if (placement !== "top") {
-				top = card.bottom - ROW_REACH[placement] - height
-				if (top < EDGE) top = card.bottom + 4
-			}
-			setAt({ left: left + window.scrollX, top: top + window.scrollY, width })
-		}
-		place()
-		panel.current?.focus({ preventScroll: true })
-		window.addEventListener("resize", place)
-		return () => window.removeEventListener("resize", place)
-	}, [frame, placement])
-
-	useEffect(() => {
-		const onDown = (event: MouseEvent) => {
-			const target = event.target as Node
-			// A press on the score button closes the popover through the button's own click.
-			if (panel.current?.contains(target) || opener.current?.contains(target)) return
-			onClose(false)
-		}
-		const onKey = (event: KeyboardEvent) => event.key === "Escape" && onClose(true)
-		document.addEventListener("mousedown", onDown)
-		window.addEventListener("keydown", onKey)
-		return () => {
-			document.removeEventListener("mousedown", onDown)
-			window.removeEventListener("keydown", onKey)
-		}
-	}, [onClose, opener])
-
-	return (
-		<div
-			ref={panel}
-			// biome-ignore lint/a11y/useSemanticElements: a non-modal popover beside its button, not a <dialog>.
-			role="dialog"
-			aria-label={`Your score for ${media.details.title}`}
-			tabIndex={-1}
-			// Tabbing out of either end returns to the score button, since the popover is not next to it in the page.
-			onKeyDown={(event) => {
-				if (event.key !== "Tab") return
-				const buttons = panel.current?.querySelectorAll("button")
-				const edge = event.shiftKey ? buttons?.[0] : buttons?.[buttons.length - 1]
-				const leaving =
-					document.activeElement === edge || (event.shiftKey && document.activeElement === panel.current)
-				if (!leaving) return
-				event.preventDefault()
-				onClose(true)
-			}}
-			className="absolute z-[90] rounded-2xl border border-white/10 bg-stone-900 p-4 text-white shadow-2xl shadow-black/70 outline-none"
-			style={at ? { left: at.left, top: at.top, width: at.width } : { left: 0, top: 0, width: POPOVER_WIDTH, visibility: "hidden" }}
-		>
-			<h3 className="mb-3 truncate text-sm font-semibold text-gray-300">{media.details.title}</h3>
-			<TitleScore media={media} size="compact" onRated={() => onClose(false)} />
-		</div>
 	)
 }

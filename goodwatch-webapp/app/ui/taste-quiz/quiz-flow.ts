@@ -116,24 +116,8 @@ export function picksOnPage<T>(picks: readonly T[], page: number): T[] {
 // The rating control: four levels over the ten scores. A level press stores its `score`; a press on the 1-10
 // strip stores the exact score.
 
-export type RatingLevel = {
-	name: "Bad" | "Mediocre" | "Good" | "Excellent"
-	lo: Score
-	hi: Score
-	score: Score
-}
-
-export const RATING_LEVELS: readonly RatingLevel[] = [
-	{ name: "Bad", lo: 1, hi: 4, score: 3 },
-	{ name: "Mediocre", lo: 5, hi: 6, score: 5 },
-	{ name: "Good", lo: 7, hi: 8, score: 7 },
-	{ name: "Excellent", lo: 9, hi: 10, score: 9 },
-]
-
-/** The index of the level a score belongs to. */
-export function levelOf(score: number): number {
-	return RATING_LEVELS.findIndex((level) => score <= level.hi)
-}
+// Compatibility for prototype consumers; production pickers use the neutral scoring model.
+export { RATING_LEVELS, levelOf, type RatingLevel } from "../scoring/score-model.ts"
 
 // ---------------------------------------------------------------------------------------------------------
 // Keys: 1-9 score, 0 is 10, S skips, P goes back to the picks, the arrows turn the picks pages.

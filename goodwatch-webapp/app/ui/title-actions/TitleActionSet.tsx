@@ -19,9 +19,11 @@ export function TitleActionSet({
 	onHide,
 	onOpenLog,
 	layout = "sheet",
+	scoring = true,
 }: {
 	media: ScoredMedia
 	layout?: "sheet" | "row"
+	scoring?: boolean
 	/** After Not interested was turned on; `undo` takes it back. */
 	onHide?: (undo: () => void) => void
 	/** The Seen button is about to open the movie's watch log: a sheet that holds this set makes room for it. */
@@ -53,7 +55,7 @@ export function TitleActionSet({
 		)
 	return (
 		<div className="@container">
-			<TitleScore media={media} />
+			{scoring && <TitleScore media={media} />}
 			<div className="mt-3 grid grid-cols-2 gap-2 @lg:grid-cols-3">
 				<ActionButton kind="want" label="long" rewatch={a.seen} active={a.want} disabled={a.wantPending} onClick={a.toggleWant} />
 				<UserAction instructions={SEEN_INSTRUCTIONS}>

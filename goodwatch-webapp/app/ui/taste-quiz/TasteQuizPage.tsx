@@ -234,7 +234,7 @@ function QuizStep({ q }: { q: TasteQuiz }) {
 									.join(" · ")}
 							</div>
 							<div className="mt-5">
-								<ScoreControl onRate={q.rate} fit="screen" />
+								<ScoreControl onRate={q.rate} />
 							</div>
 							<div className="mt-3 flex flex-wrap items-center gap-2">
 								<button type="button" className={ghost} onClick={q.skip}>

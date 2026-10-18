@@ -352,11 +352,9 @@ const BAR = ["bar:back", "bar:search", "bar:menu"]
 const ctxOf = (
 	screen: TvScreen,
 	shown: TvTasteScreens,
-	exactScores = false,
 ): TvContext => ({
 	...EMPTY_CONTEXT,
 	...tasteContext(screen, shown),
-	exactScores,
 })
 
 describe("the machine's context for Taste, and the items it gives", () => {
@@ -434,11 +432,6 @@ describe("the machine's context for Taste, and the items it gives", () => {
 		const levels = STRIP_LEVELS.map((score) => `level:${score}`)
 		assert.deepEqual(tvItems(QUIZ, ctxOf(QUIZ, shown)), [
 			...levels,
-			"skip",
-			...BAR,
-		])
-		assert.deepEqual(tvItems(QUIZ, ctxOf(QUIZ, shown, true)), [
-			...levels,
 			...STRIP_SCORES.map((score) => `score:${score}`),
 			"skip",
 			...BAR,
@@ -447,7 +440,7 @@ describe("the machine's context for Taste, and the items it gives", () => {
 			{ state: "start", rated: 3, backdrop: null },
 			{ waiting: true },
 		)
-		assert.deepEqual(tvItems(QUIZ, ctxOf(QUIZ, waiting, true)), BAR)
+		assert.deepEqual(tvItems(QUIZ, ctxOf(QUIZ, waiting)), BAR)
 	})
 
 	it("nothing of Taste on another screen", () => {
@@ -522,14 +515,14 @@ describe("the quiz's write path", () => {
 	it("an exact score is stored as given", () => {
 		const quiz = recorder()
 		for (const score of STRIP_SCORES)
-			press(`score:${score}`, ctxOf(QUIZ, shown, true), quiz)
+			press(`score:${score}`, ctxOf(QUIZ, shown), quiz)
 		assert.deepEqual(quiz.stored, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
 	})
 
-	it("on the phone an exact score is no key: nothing is stored", () => {
+	it("on the phone an exact score is stored", () => {
 		const quiz = recorder()
 		press("score:8", ctxOf(QUIZ, shown), quiz)
-		assert.deepEqual(quiz.stored, [])
+		assert.deepEqual(quiz.stored, [8])
 	})
 
 	it("Haven't seen it skips, and stores no score", () => {

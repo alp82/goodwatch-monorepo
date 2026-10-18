@@ -1,14 +1,14 @@
 // After "I watched it": the score control in a dialog, with Rate later, and the toast that names what rose into the
 // hero, with Undo.
-import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react"
-import { CheckIcon } from "@heroicons/react/24/solid"
 import { Suspense, lazy, useMemo } from "react"
 import type { WatchNext } from "~/server/watch-next.server"
-import { TitleScore } from "~/ui/title-actions/TitleScore"
 import { UndoToast } from "~/ui/title-actions/UndoToast"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
-import { posterUrl } from "./style"
 import type { Finished } from "./useFinish"
+
+const TitleScoreDialog = lazy(
+	reloadOnStaleChunk(() => import("~/ui/scoring/TitleScoreDialog")),
+)
 
 // The date line of the dialog, with the date choice behind its "Change": loaded when the dialog first shows it.
 const WatchedLine = lazy(
@@ -28,46 +28,20 @@ export function FinishPrompt({
 		() => finished?.undo?.then((undo) => undo?.watchId ?? null) ?? null,
 		[finished?.undo],
 	)
+	if (!title) return null
 	return (
-		<Dialog
-			open={!!finished}
-			onClose={() => onClose(false)}
-			className="relative z-[1100]"
-		>
-			<div className="fixed inset-0 bg-black/60" aria-hidden />
-			<div className="fixed inset-0 flex items-end justify-center p-0 sm:items-center sm:p-4">
-				{title && (
-					<DialogPanel className="w-full rounded-t-2xl border border-white/10 bg-stone-900 p-5 text-white shadow-2xl shadow-black/70 sm:w-[26rem] sm:rounded-2xl">
-						<div className="flex items-center gap-3">
-							<img
-								src={posterUrl(title.poster_path, "w154")}
-								alt=""
-								className="h-20 w-[3.35rem] shrink-0 rounded-md object-cover"
-							/>
-							<div className="min-w-0">
-								<p className="text-xs font-semibold text-green-300">
-									<CheckIcon className="mr-1 inline h-3.5 w-3.5" aria-hidden />
-									Moved to Seen
-								</p>
-								<DialogTitle className="truncate text-lg font-bold">
-									How was {title.title}?
-								</DialogTitle>
-								<p className="text-xs text-gray-400">
-									Your score sharpens what we suggest next.
-								</p>
-							</div>
-						</div>
-						<div className="mt-4">
-							<TitleScore
-								media={{
-									mediaType: title.media_type,
-									details: { tmdb_id: title.tmdb_id, title: title.title },
-								}}
-								size="compact"
-								onRated={() => onClose(true)}
-							/>
-						</div>
-						{/* The movie watch log: the watch was recorded for now, and one line lets the person say otherwise. */}
+		<Suspense fallback={null}>
+			<TitleScoreDialog
+				open
+				media={{
+					mediaType: title.media_type,
+					details: { tmdb_id: title.tmdb_id, title: title.title },
+				}}
+				onClose={() => onClose(false)}
+				onRated={() => onClose(true)}
+				aside={<span className="text-xs text-green-300">✓ Seen</span>}
+				footer={
+					<>
 						{title.media_type === "movie" && watchId && (
 							<Suspense fallback={null}>
 								<WatchedLine movieId={title.tmdb_id} watchId={watchId} />
@@ -82,10 +56,10 @@ export function FinishPrompt({
 								Rate later
 							</button>
 						</div>
-					</DialogPanel>
-				)}
-			</div>
-		</Dialog>
+					</>
+				}
+			/>
+		</Suspense>
 	)
 }
 

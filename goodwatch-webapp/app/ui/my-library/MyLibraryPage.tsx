@@ -1,3 +1,4 @@
+import { getScoreLabelText, selectedScoreStyle } from "~/utils/ratings"
 import { mediaFieldLanguage } from "~/utils/media-presentation"
 import { canonicalMediaTitle } from "~/utils/media-presentation"
 import useLocale from "~/utils/locale"
@@ -282,10 +283,11 @@ function ScoreKey({
 			data-score={item.key}
 			onClick={() => onAsk(item)}
 			onPointerEnter={() => void loadRateBar().catch(() => {})}
-			aria-label={`Your score for ${item.title}: ${score}. Change it`}
-			className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-lg text-base font-black tabular-nums text-amber-300 ring-1 ring-amber-400/40 hover:bg-amber-400 hover:text-black"
+			aria-label={`Your score for ${item.title}: ${getScoreLabelText(score as Score)}. Change it`}
+			style={selectedScoreStyle(score as Score)}
+			className="flex min-h-11 min-w-11 shrink-0 cursor-pointer items-center justify-center rounded-lg px-2 text-xs font-bold tabular-nums text-white hover:brightness-110"
 		>
-			{score}
+			{getScoreLabelText(score as Score)}
 		</button>
 	) : (
 		<button
@@ -523,8 +525,10 @@ export function MyLibraryPage({
 			rate(
 				{ mediaType: item.mediaType, tmdbId: item.tmdbId, score },
 				{
-					onSettled: () =>
-						client.invalidateQueries({ queryKey: libraryQueryKey }),
+					onSettled: async () => {
+						await client.invalidateQueries({ queryKey: libraryQueryKey })
+						setGiven((current) => { if (current[item.key] !== score) return current; const next = { ...current }; delete next[item.key]; return next })
+					},
 				},
 			)
 		},

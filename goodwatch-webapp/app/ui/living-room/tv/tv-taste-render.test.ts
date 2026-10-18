@@ -1,6 +1,6 @@
 // Taste, a side's screen, the taste quiz and the rating as they are drawn: the items in the markup are the
 // machine's, in its order, in both editions; the rating strip is the app's levels from low to high with the ten
-// exact scores on the desktop and without them on the phone; and the Expand key's corner stays free.
+// exact scores on desktop and phone; and the Expand key's corner stays free.
 import assert from "node:assert/strict"
 import { execFileSync } from "node:child_process"
 import { test } from "node:test"
@@ -327,24 +327,13 @@ test("the strip on the desktop: four levels low to high, each as wide as its sco
 	}
 })
 
-test("the strip on the phone: the four levels alone, as equal keys in one row, without the exact scores", () => {
-	for (const { items, html } of [
-		rendered.quiz.asking.phone,
-		rendered.rate.fresh.phone,
-	]) {
-		assert.deepEqual(
-			items.filter((item) => item.startsWith("level:")),
-			LEVELS,
-		)
-		assert.equal(items.filter((item) => item.startsWith("score:")).length, 0)
-		assert.equal(count(html, 'data-tv-item="score:'), 0)
-		assert.match(html, /grid-template-columns:repeat\(4,/)
-		for (const level of RATING_LEVELS) {
-			assert.ok(html.includes(`>${level.name}<`))
-			// No range, and no span: the keys are equal.
-			assert.ok(!html.includes(`>${level.lo}–${level.hi}<`))
-			assert.ok(!styleOf(html, `level:${level.score}`).includes("grid-column"))
-		}
+test("both phone rating screens render the four words above all ten exact scores", () => {
+	for (const { items, html } of [rendered.quiz.asking.phone, rendered.rate.fresh.phone]) {
+		assert.deepEqual(items.filter((item) => /^(level|score):/.test(item)), [...LEVELS, ...SCORES])
+		assert.equal(count(html, 'data-tv-item="score:'), 10)
+		assert.match(html, /grid-template-columns:repeat\(10,/)
+		for (const level of RATING_LEVELS)
+			assert.match(styleOf(html, `level:${level.score}`), new RegExp(`grid-column:span ${level.hi - level.lo + 1}`))
 	}
 })
 
@@ -357,31 +346,20 @@ test("a line says what the focus would give, on a level and on an exact score", 
 	// Off the strip the line is the quiz's question.
 	assert.match(onSkip.desktop.html, />2005 · Show\. Have you seen it\?</)
 	assert.match(onSkip.phone.html, />2005 · Show\. Have you seen it\?</)
-	// The phone has no exact score to focus: its focus falls back to Good.
-	assert.equal(onScore.phone.focus, "level:7")
+	// The phone keeps its exact-score focus, just like desktop.
+	assert.equal(onScore.phone.focus, "score:8")
 })
 
-test("the level the focus is in lights its scores; the focused score is at full colour", () => {
-	const alpha = (html: string, score: number) =>
-		/background:#[0-9a-f]{6}([0-9a-f]{2})?/i.exec(
-			styleOf(html, `score:${score}`),
-		)?.[1] ?? ""
-	const good = rendered.quiz.asking.desktop.html
-	assert.deepEqual(
-		[6, 7, 8, 9].map((score) => alpha(good, score)),
-		["30", "88", "88", "30"],
-	)
-	const eight = rendered.quiz.onScore.desktop.html
-	assert.deepEqual(
-		[6, 7, 8, 9].map((score) => alpha(eight, score)),
-		["30", "88", "", "30"],
-	)
-	// With the focus off the strip every score is lit the same.
-	const off = rendered.quiz.onSkip.desktop.html
-	assert.deepEqual(
-		[1, 5, 8, 10].map((score) => alpha(off, score)),
-		["55", "55", "55", "55"],
-	)
+test("selected numerals stay white on a dark fill, with a colored inset rim independent of focus", () => {
+	for (const edition of EDITIONS) {
+		for (const drawn of [rendered.rate.again[edition], rendered.rate.againOnIt[edition]]) {
+			assert.match(tag(drawn.html, "score:8"), /aria-pressed="true"/)
+			assert.match(styleOf(drawn.html, "score:8"), /color:#fff/)
+			assert.match(styleOf(drawn.html, "score:8"), /42%, #181b20/)
+			assert.match(styleOf(drawn.html, "score:8"), /inset 0 0 0 2px color-mix/)
+			assert.match(tag(drawn.html, "level:7"), /aria-pressed="true"/)
+		}
+	}
 })
 
 test("the quiz asks about one title: its name, how far the person is, and Haven't seen it as its own key", () => {
@@ -418,21 +396,7 @@ test("the rating is the same strip without Haven't seen it, and marks the score 
 		assert.ok(!ids(fresh[edition].html).includes("skip"))
 		assert.ok(!fresh[edition].html.includes("inset 0 0 0 3px"))
 	}
-	// Rated 8 before: Good is marked in its colour, and the 8 has a white edge. The focus is on Good, whose own
-	// look goes first, so the level's mark shows once the focus is elsewhere.
-	assert.match(styleOf(again.desktop.html, "score:8"), /inset 0 0 0 3px #fff/)
-	assert.ok(!styleOf(again.desktop.html, "level:7").includes("inset"))
-	assert.match(
-		styleOf(againOnIt.desktop.html, "level:7"),
-		/box-shadow:inset 0 0 0 3px #/,
-	)
-	assert.ok(!styleOf(againOnIt.desktop.html, "score:8").includes("inset"))
-	assert.ok(!styleOf(againOnLevel.desktop.html, "level:9").includes("inset"))
-	// The phone marks the level: it has no exact score.
-	assert.match(
-		styleOf(rendered.rate.againOnIt.phone.html, "level:7"),
-		/^height:\d+px$/,
-	)
+
 })
 
 test("on every phone of the room's table every key is 44 px or more on the phone's screen", () => {
@@ -459,8 +423,8 @@ test("on every phone of the room's table every key is 44 px or more on the phone
 		}
 	// The strip's levels are 68 canvas px tall, 45 px or more on every phone.
 	const narrow = rendered.phones[0]
-	assert.equal(heightOf(narrow.quiz.html, "level:7"), 68)
-	assert.ok(68 * narrow.scale >= 45)
+	assert.ok(heightOf(narrow.quiz.html, "level:7") * narrow.scale >= 44)
+	assert.ok(heightOf(narrow.quiz.html, "score:7") * narrow.scale >= 44)
 })
 
 test("on the phone the last row keeps the Expand key's corner free, with or without Rate more", () => {

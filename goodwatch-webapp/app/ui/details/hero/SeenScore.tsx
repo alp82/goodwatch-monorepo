@@ -38,7 +38,7 @@ import {
 	StatusFace,
 } from "./seen-score-faces"
 
-const loadScoreDialog = () => import("~/ui/details/hero/ScoreDialog")
+const loadScoreDialog = () => import("~/ui/scoring/ScoreDialog")
 const ScoreDialog = lazy(reloadOnStaleChunk(loadScoreDialog))
 const preloadScoreDialog = () => {
 	void loadScoreDialog().catch(() => {})
