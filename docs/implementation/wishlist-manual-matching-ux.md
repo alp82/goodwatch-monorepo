@@ -1,6 +1,6 @@
 # Wishlist imports: matching titles yourself
 
-Implementation dated 2026-10-18. This document describes the behavior as built. It extends the wishlist preview in [shared wishlist imports: UX](shared-wishlist-imports-ux.md) and replaces that document's decision 8. Only wishlist previews (source `wishlist`) change.
+Implementation dated 2026-10-18. This document describes the behavior as built. Since then, [reviewing suggested matches](wishlist-automatic-matching-ux.md) has renamed the block **Titles to check before you add them**, and the button and panel heading **Review matches**. It has also added suggestions to the panel. Everything else here still holds. It extends the wishlist preview in [shared wishlist imports: UX](shared-wishlist-imports-ux.md) and replaces that document's decision 8. Only wishlist previews (source `wishlist`) change.
 
 Scope: the rows that need matching are wishlist file entries whose file gives no type. The current experimental producer is a prototype Netflix reader in the browser extension (version 0.0.1); a live test is pending. Nothing in the product names Netflix or any other service as supported.
 

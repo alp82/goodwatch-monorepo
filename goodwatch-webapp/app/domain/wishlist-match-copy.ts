@@ -40,3 +40,26 @@ export const WISHLIST_MATCH_RESTART_CODES: readonly WishlistMatchErrorCode[] = [
 	"wishlist_snapshot_required",
 	"wishlist_row_not_resolvable",
 ]
+
+// What a member reads about GoodWatch's suggestions. A suggestion rests only on the file's own Netflix ID matching a
+// GoodWatch title's Netflix link, so its one reason says that and never claims the match is right.
+export const WISHLIST_SUGGESTION_COPY = {
+	reason: "Same Netflix ID as your file",
+	looking: "Looking for matches",
+	lookingRow: "Looking for a match",
+	unchecked: "Not checked yet",
+	failed:
+		"GoodWatch couldn't check some titles for a match right now. You can still match them yourself.",
+	check:
+		"Each title shows what your file says next to the suggestion. Check them before you accept.",
+} as const
+
+/** Why an entry has no suggestion. Only an entry GoodWatch couldn't check says so; the others read Not matched. */
+export function wishlistSuggestionNote(
+	state: "loading" | "failed" | "unavailable" | "manual" | "already_resolved",
+): string | null {
+	if (state === "loading") return WISHLIST_SUGGESTION_COPY.lookingRow
+	if (state === "failed" || state === "unavailable")
+		return WISHLIST_SUGGESTION_COPY.unchecked
+	return null
+}

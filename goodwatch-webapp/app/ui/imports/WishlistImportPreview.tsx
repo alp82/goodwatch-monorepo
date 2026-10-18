@@ -1,8 +1,9 @@
 // The preview of a wishlist import (a Watcharr export or a wishlist file). It only adds Want to See, so it hides the
 // general preview's data-type, conflict, and watch-date choices. Its one choice is for titles already watched:
 // they stay Seen unless the member adds them as Want to rewatch (conflictChoice "source").
-// Entries whose file gave no type can be matched by hand in a panel that loads on first use. Its choices live here,
-// in memory, so hiding the panel keeps them; Update preview turns them into a new preview.
+// Entries whose file gave no type are reviewed in a panel that loads on first use: the member accepts GoodWatch's
+// suggestions or matches entries by hand. Its choices live here, in memory, so hiding the panel keeps them; Update
+// preview turns them into a new preview.
 import { Suspense, lazy, useRef, useState } from "react"
 import type {
 	ImportOptions,
@@ -71,6 +72,8 @@ export function WishlistImportPreview({
 	const [matching, setMatching] = useState(false)
 	const opened = useOpenedOnce(matching)
 	const [draft, setDraft] = useState<MatchDraft>(new Map())
+	// The suggestions the last bulk accepts put in the draft. Undo takes back only those still as accepted.
+	const [bulk, setBulk] = useState<MatchDraft>(new Map())
 	const [request, setRequest] = useState<{ index: number; seq: number } | null>(
 		null,
 	)
@@ -106,10 +109,83 @@ export function WishlistImportPreview({
 		if (same) next.delete(index)
 		else next.set(index, title)
 		setDraft(next)
+		if (bulk.has(index)) {
+			const owned = new Map(bulk)
+			owned.delete(index)
+			setBulk(owned)
+		}
 		return true
 	}
+	/** Takes back a pending change, so the entry is as this preview has it. */
+	const revert = (group: WishlistMatchGroup) => {
+		if (locked || !draft.has(group.representativeIndex)) return false
+		const next = new Map(draft)
+		next.delete(group.representativeIndex)
+		setDraft(next)
+		if (bulk.has(group.representativeIndex)) {
+			const owned = new Map(bulk)
+			owned.delete(group.representativeIndex)
+			setBulk(owned)
+		}
+		return true
+	}
+	/** Accepts every given suggestion as one change, or none of them when locked or past the per-update limit. */
+	const acceptAll = (
+		accepted: readonly { group: WishlistMatchGroup; title: MatchTitle }[],
+	) => {
+		const fresh = accepted.filter(
+			({ group }) => !draft.has(group.representativeIndex),
+		)
+		if (
+			locked ||
+			fresh.length === 0 ||
+			draft.size + fresh.length > WISHLIST_MATCH_MAX_CHANGES
+		)
+			return false
+		const next = new Map(draft)
+		const owned = new Map(bulk)
+		for (const { group, title } of fresh) {
+			next.set(group.representativeIndex, title)
+			owned.set(group.representativeIndex, title)
+		}
+		setDraft(next)
+		setBulk(owned)
+		return true
+	}
+	/** Takes back the bulk accepts the member hasn't changed since. Returns how many. */
+	const undoAccepted = () => {
+		if (locked) return 0
+		const next = new Map(draft)
+		let undone = 0
+		for (const [index, title] of bulk) {
+			const now = draft.get(index)
+			if (
+				now &&
+				title &&
+				now.mediaType === title.mediaType &&
+				now.tmdbId === title.tmdbId
+			) {
+				next.delete(index)
+				undone++
+			}
+		}
+		setDraft(next)
+		setBulk(new Map())
+		return undone
+	}
+	const bulkOwned = [...bulk].filter(([index, title]) => {
+		const now = draft.get(index)
+		return (
+			!!now &&
+			!!title &&
+			now.mediaType === title.mediaType &&
+			now.tmdbId === title.tmdbId
+		)
+	}).length
 	const discard = () => {
-		if (!locked) setDraft(new Map())
+		if (locked) return
+		setDraft(new Map())
+		setBulk(new Map())
 	}
 	const update = () => {
 		if (locked || draft.size === 0 || draft.size > WISHLIST_MATCH_MAX_CHANGES)
@@ -213,16 +289,18 @@ export function WishlistImportPreview({
 				<div className="flex flex-col gap-3">
 					<div className="space-y-1">
 						<h4 className="font-semibold text-gray-100">
-							Titles GoodWatch couldn't match
+							Titles to check before you add them
 						</h4>
 						<p className="text-gray-300">
 							Your file doesn't say whether{" "}
 							{matchable === 1
 								? "this entry is a movie or a show"
 								: `these ${formatCount(matchable)} entries are movies or shows`}
-							, so GoodWatch didn't match {matchable === 1 ? "it" : "them"} on
-							its own. You can find {matchable === 1 ? "it" : "each one"}{" "}
-							yourself. Titles you don't match aren't added.
+							, so GoodWatch didn't add {matchable === 1 ? "it" : "them"} on its
+							own. Review {matchable === 1 ? "it" : "them"} to accept a match
+							GoodWatch suggests or to find{" "}
+							{matchable === 1 ? "it" : "each one"} yourself. Titles you don't
+							accept or match aren't added.
 						</p>
 					</div>
 					<button
@@ -236,7 +314,7 @@ export function WishlistImportPreview({
 							setMatching((value) => !value)
 						}}
 					>
-						{matching ? "Hide matching" : "Match titles"}
+						{matching ? "Hide matching" : "Review matches"}
 					</button>
 					<div hidden={!matching}>
 						{opened && (
@@ -250,6 +328,10 @@ export function WishlistImportPreview({
 									locked={locked}
 									error={resolve.isError ? resolve.error : null}
 									onChoose={choose}
+									onRevert={revert}
+									onAcceptAll={acceptAll}
+									onUndoAccepted={undoAccepted}
+									bulkAccepted={bulkOwned}
 									onDiscard={discard}
 									onUpdate={update}
 									onBack={onBack}

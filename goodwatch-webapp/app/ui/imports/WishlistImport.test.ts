@@ -154,16 +154,19 @@ const resolves = (run: MatchRun) =>
 	run.sent.filter((item) => item.url.endsWith("/resolve"))
 
 test("the match block shows only when the server counts entries to match, and loads nothing until opened", () => {
-	assert.doesNotMatch(text(rendered.mixed), /Titles GoodWatch couldn't match/)
+	assert.doesNotMatch(
+		text(rendered.mixed),
+		/Titles to check before you add them/,
+	)
 	const closed = matching.closed
-	assert.match(closed.text, /Titles GoodWatch couldn't match/)
+	assert.match(closed.text, /Titles to check before you add them/)
 	assert.match(closed.text, /these 3 entries are movies or shows/)
 	assert.ok(!urls(closed).some((url) => url.includes("/matches")))
 	const opened = matching.opened
 	assert.ok(urls(opened).some((url) => url.endsWith("/matches?offset=0")))
 	assert.deepEqual(opened.focus, {
 		tag: "h4",
-		text: "Match titles",
+		text: "Review matches",
 		type: null,
 	})
 	assert.ok(!urls(opened).some((url) => /\/api\/(combined-)?search/.test(url)))
@@ -296,7 +299,7 @@ test("a preview that can't take matches shows GoodWatch's own message for the co
 })
 
 test("with every entry matched, the block stays and a matched row shows the file's evidence and Change", () => {
-	assert.match(matching.allResolved.text, /Titles GoodWatch couldn't match/)
+	assert.match(matching.allResolved.text, /Titles to check before you add them/)
 	assert.match(
 		matching.matchedRow.text,
 		/Game of Thrones · 2011 · Show · Matched by youChange the match for GoTFrom your file: GoT · Type unknown · ID 70305903/,
@@ -363,7 +366,7 @@ test("Change on an entry whose page isn't loaded shows a failed lookup with Try 
 	)
 	assert.deepEqual(failed.focus, {
 		tag: "h4",
-		text: "Match titles",
+		text: "Review matches",
 		type: null,
 	})
 	assert.match(failed.text, /1 change isn't in this preview yet/)
@@ -415,4 +418,325 @@ test("at 100 changes, entries without a change can't Clear or Use, changed entri
 		first: { index: 1000, target: { mediaType: "movie", tmdbId: 20000 } },
 		hasLast: false,
 	})
+})
+
+test("opening the panel asks for GoodWatch's suggestions and shows each one next to the file's entry, counting nothing yet", () => {
+	const run = matching.suggested
+	assert.ok(!urls(matching.closed).some((url) => url.includes("/suggestions")))
+	const asked = run.sent.filter((item) => item.url.includes("/suggestions"))
+	assert.deepEqual(
+		asked.map((item) => item.url),
+		[
+			`/api/imports/${"00000000-0000-4000-8000-0000000000a1"}/suggestions?offset=0`,
+		],
+	)
+	assert.ok(asked.every((item) => (item as { signal?: boolean }).signal))
+	assert.match(
+		run.text,
+		/The OfficeType unknown · ID 70136120 · Listed 3 timesSuggested: The Office \(2005\) · Show · Same Netflix ID as your file/,
+	)
+	assert.deepEqual(
+		(run.posters as string[]).map((src) => src.includes("/office.jpg")),
+		[true],
+	)
+	assert.match(run.text, /DarkType unknown · ID 80100172Not matched/)
+	assert.equal(run.confirmDisabled, false)
+	assert.doesNotMatch(run.text, /Not in this preview yet/)
+})
+
+test("Accept makes the suggestion a pending match that only Update preview counts", () => {
+	const run = matching.accepted
+	assert.match(
+		run.text,
+		/Your match: The Office \(2005\) · Show · Accepted · Not in this preview yet/,
+	)
+	assert.match(run.text, /Accepted The Office \(2005\), show\./)
+	assert.deepEqual(run.focus, {
+		tag: "button",
+		text: "Change the match for The Office",
+		type: "button",
+	})
+	assert.equal(run.confirmDisabled, true)
+	assert.equal(resolves(run).length, 0)
+	const [sentResolve] = resolves(matching.acceptedSent)
+	assert.deepEqual(sentResolve.body, {
+		choices: [{ index: 4, target: { mediaType: "show", tmdbId: 2316 } }],
+	})
+})
+
+test("suggestions load a page of 10 at a time for the entries shown, each request cancellable", () => {
+	const asked = matching.bulkBefore.sent.filter((item) =>
+		item.url.includes("/suggestions"),
+	)
+	assert.deepEqual(
+		asked.map((item) => item.url.replace(/.*\//, "")),
+		["suggestions?offset=0", "suggestions?offset=10"],
+	)
+	assert.ok(asked.every((item) => (item as { signal?: boolean }).signal))
+})
+
+test("accepting every suggestion shown is one action that skips an entry the member already matched", () => {
+	assert.match(
+		matching.bulkBefore.text,
+		/Each title shows what your file says next to the suggestion\. Check them before you accept\./,
+	)
+	const run = matching.bulkAccepted
+	assert.match(
+		run.text,
+		/Accepted 11 suggestions\. They aren't in this preview yet\. 1 you changed stays as you set it\./,
+	)
+	assert.equal(run.keptFocus, true)
+	assert.deepEqual(run.focus, {
+		tag: "button",
+		text: "Undo accept all",
+		type: "button",
+	})
+	assert.match(
+		run.text,
+		/Your match: Dark \(2005\) · Movie · Not in this preview yet/,
+	)
+	assert.match(
+		run.text,
+		/Filler 9Type unknown · ID 91009Your match: Film 9 \(2001\) · Movie · Accepted · Not in this preview yet/,
+	)
+	assert.match(
+		run.text,
+		/12 changes aren't in this preview yet, 11 of them accepted suggestions\. Update the preview to count them\./,
+	)
+	assert.equal(run.confirmDisabled, true)
+	assert.equal(resolves(run).length, 0)
+})
+
+test("Undo accept all takes back only the bulk accepts the member didn't change afterwards", () => {
+	const run = matching.bulkUndone
+	assert.match(run.text, /Took back 10 accepted suggestions\./)
+	assert.equal(run.keptFocus, true)
+	assert.deepEqual(run.focus, {
+		tag: "button",
+		text: "Accept the 10 suggestions shown",
+		type: "button",
+	})
+	assert.match(
+		run.text,
+		/Your match: Dark \(2005\) · Movie · Not in this preview yet/,
+	)
+	assert.match(
+		run.text,
+		/Your match: Other film \(1999\) · Movie · Not in this preview yet/,
+	)
+	assert.match(
+		run.text,
+		/Filler 9Type unknown · ID 91009Suggested: Film 9 \(2001\) · Movie · Same Netflix ID as your file/,
+	)
+	assert.match(run.text, /2 changes aren't in this preview yet\./)
+	const [sentResolve] = resolves(matching.bulkSent)
+	assert.deepEqual(sentResolve.body, {
+		choices: [
+			{ index: 7, target: { mediaType: "movie", tmdbId: 9999 } },
+			{ index: 100, target: { mediaType: "movie", tmdbId: 40000 } },
+		],
+	})
+})
+
+test("when the suggestions shown don't fit in the 100-change limit, bulk accept stays off, says why, and accepts none", () => {
+	const run = matching.bulkCap
+	assert.equal(run.bulk, true)
+	assert.match(String(run.reason), /-bulk-full$/)
+	assert.match(
+		run.text,
+		/There's room for 9 more changes in this update, so GoodWatch can't accept all 10\. Update the preview first, or accept them one at a time\./,
+	)
+	assert.match(run.text, /91 changes aren't in this preview yet\./)
+	assert.doesNotMatch(run.text, /Accepted 10 suggestions|· Accepted ·/)
+	const one = matching.bulkCapOne
+	assert.match(
+		one.text,
+		/Your match: Film 3 \(2001\) · Movie · Accepted · Not in this preview yet/,
+	)
+	assert.match(
+		one.text,
+		/92 changes aren't in this preview yet, 1 of them accepted suggestion\./,
+	)
+})
+
+test("a failed suggestion page says the titles weren't checked, never that nothing matched, without the server's words", () => {
+	const run = matching.suggestFailed
+	assert.match(
+		run.text,
+		/GoodWatch couldn't check some titles for a match right now\. You can still match them yourself\. 12 titles weren't checked\.Try again/,
+	)
+	assert.match(run.text, /DarkType unknown · ID 80100172Not checked yet/)
+	assert.doesNotMatch(
+		run.text,
+		/ID \d+Not matched|Internal|exploded|Suggested:/,
+	)
+})
+
+test("Try again asks only for unchecked pages, and the member's own match wins over a suggestion that arrives later", () => {
+	const run = matching.suggestRetried
+	const asked = (r: MatchRun) =>
+		r.sent
+			.filter((item) => item.url.includes("/suggestions"))
+			.map((item) => item.url.replace(/.*\//, ""))
+	assert.deepEqual(asked(run), [
+		"suggestions?offset=0",
+		"suggestions?offset=10",
+		"suggestions?offset=0",
+		"suggestions?offset=10",
+	])
+	assert.match(
+		run.text,
+		/DarkType unknown · ID 80100172Your match: Dark \(2005\) · Movie · Not in this preview yet/,
+	)
+	assert.match(run.text, /Filler 1Type unknown · ID 91001Not checked yet/)
+	assert.match(run.text, /1 title wasn't checked\./)
+	assert.match(
+		run.text,
+		/Filler 0Type unknown · ID 91000Suggested: Film 0 \(2001\)/,
+	)
+	assert.match(run.text, /Accept the 10 suggestions shown/)
+	const again = matching.suggestRetriedAgain
+	assert.deepEqual(asked(again).slice(4), ["suggestions?offset=0"])
+	assert.match(again.text, /Filler 1Type unknown · ID 91001Suggested: Film 1/)
+	assert.doesNotMatch(again.text, /weren't checked|wasn't checked/)
+	assert.match(
+		again.text,
+		/Your match: Dark \(2005\) · Movie · Not in this preview yet/,
+	)
+})
+
+test("while suggestions load, the panel says so and matching by hand still works", () => {
+	const run = matching.suggestLoading
+	assert.match(
+		run.text,
+		/Review matches(Loading\.\.\. )?Looking for matchesDark/,
+	)
+	assert.match(
+		run.text,
+		/DarkType unknown · ID 80100172Looking for a matchFind a match for Dark/,
+	)
+	assert.match(
+		matching.suggestLoadingChosen.text,
+		/Your match: Dark \(2017\) · Show · Not in this preview yet/,
+	)
+	const asked = matching.suggestLoadingChosen.sent.filter((item) =>
+		item.url.includes("/suggestions"),
+	)
+	assert.equal(asked.length, 1)
+})
+
+test("a new preview cancels the open suggestion request and asks for no more pages until its panel opens", () => {
+	const run = matching.suggestCancelled
+	assert.match(
+		run.text,
+		/Updated with your changes\. The counts include them\./,
+	)
+	assert.deepEqual(
+		(run.aborted as string[]).map((url) => url.replace(/.*\//, "")),
+		["suggestions?offset=0"],
+	)
+	assert.deepEqual(
+		run.sent
+			.filter((item) => item.url.includes("/suggestions"))
+			.map((item) => item.url.replace(/.*\//, "")),
+		["suggestions?offset=0"],
+	)
+	assert.match(run.text, /Review matches/)
+	assert.doesNotMatch(run.text, /Looking for matches|Hide matching/)
+})
+
+test("while Update preview runs, Accept, bulk accept, Undo accept, and Change are off and a tap changes nothing", () => {
+	const run = matching.suggestLocked
+	assert.equal(run.accept, true)
+	assert.equal(run.bulk, true)
+	assert.equal(run.undo, true)
+	assert.equal(run.change, true)
+	assert.match(run.text, /Updating preview/)
+	assert.match(
+		run.text,
+		/DarkType unknown · ID 80100172Suggested: Dark \(2017\)/,
+	)
+	assert.doesNotMatch(run.text, /Accepted 2 suggestions|Accepted Dark/)
+	assert.match(run.text, /1 accepted suggestion isn't in this preview yet\./)
+})
+
+test("Undo accept puts the suggestion back as it was, with focus on its Accept", () => {
+	const run = matching.acceptUndone
+	assert.match(
+		run.text,
+		/Listed 3 timesSuggested: The Office \(2005\) · Show · Same Netflix ID as your file/,
+	)
+	assert.match(run.text, /The Office isn't accepted anymore\./)
+	assert.deepEqual(run.focus, {
+		tag: "button",
+		text: "Accept the suggestion for The Office",
+		type: "button",
+	})
+	assert.equal(run.confirmDisabled, false)
+	assert.doesNotMatch(run.text, /Not in this preview yet/)
+})
+
+test("Show more brings in the next page's suggestions, and a Change outside the loaded pages asks for none of the pages between", () => {
+	const offsets = (run: MatchRun) =>
+		run.sent
+			.filter((item) => item.url.includes("/suggestions"))
+			.map((item) => Number(item.url.replace(/.*offset=/, "")))
+	assert.deepEqual(
+		offsets(matching.bulkCap),
+		Array.from({ length: 11 }, (_, at) => at * 10),
+	)
+	assert.deepEqual(offsets(matching.focusLater), [0, 10, 20, 30, 40])
+	assert.deepEqual(offsets(matching.focusMerged), [0, 10, 20, 30, 40, 50])
+})
+
+test("loaded suggestions aren't asked for again when the tab regains focus or reconnects, open or hidden", () => {
+	const run = matching.warmCache
+	const asked = run.sent.filter((item) => item.url.includes("/suggestions"))
+	assert.deepEqual(
+		asked.map((item) => Number(item.url.replace(/.*offset=/, ""))),
+		[0, 10, 20, 30, 40],
+	)
+	assert.ok(run.sent.length >= Number(run.before))
+})
+
+test("entries without a suggestion are named above the list, and each name opens that entry's search in place", () => {
+	assert.match(
+		matching.suggested.text,
+		/1 title has no suggestion\. Match it yourself:Match Dark yourself/,
+	)
+	assert.doesNotMatch(
+		matching.suggested.text,
+		/Match The Office yourself|Match GoT yourself/,
+	)
+	assert.doesNotMatch(matching.bulkAccepted.text, /no suggestion/)
+	const run = matching.exceptionOpened
+	assert.deepEqual(run.focus, { tag: "input", text: "", type: "search" })
+	assert.match(run.text, /Which GoodWatch title is "Dark"\?/)
+	assert.match(
+		run.text,
+		/The OfficeType unknown · ID 70136120 · Listed 3 timesSuggested: The Office.*DarkType unknown · ID 80100172Not matched/,
+	)
+})
+
+const suggestionOffsets = (run: MatchRun) =>
+	run.sent
+		.filter((item) => item.url.includes("/suggestions"))
+		.map((item) => Number(item.url.replace(/.*offset=/, "")))
+
+test("Try again on unchecked pages that aren't next to each other asks for the later one only after the earlier one answers", () => {
+	assert.deepEqual(suggestionOffsets(matching.gapsChecked), [0, 10, 20])
+	assert.match(matching.gapsChecked.text, /2 titles weren't checked\./)
+	const run = matching.gapsRetrying
+	assert.deepEqual(suggestionOffsets(run), [0, 10, 20, 0])
+	assert.match(run.text, /Looking for matches/)
+})
+
+test("coming back to the page doesn't ask again for pages that failed; only Try again does, one page at a time", () => {
+	assert.deepEqual(suggestionOffsets(matching.cachedFailed), [0, 10, 20])
+	const back = matching.cachedRemounted
+	assert.deepEqual(suggestionOffsets(back), [0, 10, 20])
+	assert.match(back.text, /20 titles weren't checked\./)
+	assert.match(back.text, /Thirty 0Type unknown · ID 97000Not checked yet/)
+	assert.match(back.text, /Thirty 10Type unknown · ID 970010Not matched/)
+	assert.deepEqual(suggestionOffsets(matching.cachedRetrying), [0, 10, 20, 0])
 })

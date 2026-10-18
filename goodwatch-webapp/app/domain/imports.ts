@@ -329,6 +329,34 @@ export interface WishlistOriginalObservation {
 	problem?: ImportObservation["problem"]
 }
 
+export interface WishlistSuggestionProposal {
+	mediaType: "movie" | "show"
+	tmdbId: number
+	title: string
+	year: number | null
+	posterPath: string | null
+}
+export type WishlistSuggestionReason =
+	| "unsupported_source"
+	| "conflicting_source_evidence"
+	| "no_native_id_match"
+	| "ambiguous_native_id"
+	| "source_metadata_conflict"
+	| "catalog_unavailable"
+export interface WishlistSuggestion {
+	representativeIndex: number
+	state: "suggested" | "manual" | "unavailable" | "already_resolved"
+	proposal?: WishlistSuggestionProposal
+	reason?: WishlistSuggestionReason
+}
+export interface WishlistSuggestions {
+	groups: WishlistSuggestion[]
+	total: number
+	offset: number
+	hasMore: boolean
+	nextOffset: number | null
+}
+
 export interface ParsedImport {
 	source: ImportSource
 	observations: ImportObservation[]

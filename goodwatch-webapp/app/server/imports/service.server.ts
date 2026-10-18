@@ -126,3 +126,17 @@ export const getWishlistMatchGroup = async (
 		id,
 		index,
 	)
+
+/** Read-only proposals; only explicit member choices change an import preview. */
+export const getWishlistSuggestions = async (
+	userId: string,
+	id: string,
+	offset = 0,
+	signal?: AbortSignal,
+) =>
+	(await import("./wishlist-suggestions.server.ts")).getWishlistSuggestions(
+		userId,
+		id,
+		offset,
+		signal,
+	)

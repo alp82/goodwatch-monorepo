@@ -1,12 +1,15 @@
-// Matching a wishlist preview's entries by hand, loaded on first use. The server groups the entries and lists the
-// ones a member can match. The member searches the GoodWatch catalog for each one and picks the title; nothing is
-// ever picked for them. Choices stay in this preview's memory until Update preview sends them, and the answer is a
+// Reviewing a wishlist preview's entries, loaded on first use. The server groups the entries and lists the ones a
+// member can match. For the entries shown, GoodWatch suggests a title when the file's Netflix ID matches one; the
+// member accepts a suggestion, one by one or all shown at once, or searches the GoodWatch catalog and picks the title.
+// Nothing is ever picked for them, and a suggestion counts only once accepted. Choices stay in this preview's memory until Update preview sends them, and the answer is a
 // new preview. Leaving or reloading the page loses choices that weren't sent. A Change from the preview's lists asks
 // the server for that row's entry, so it opens even when the row repeats an entry or sits on a page not loaded yet.
 import { type FormEvent, useEffect, useId, useRef, useState } from "react"
 import {
 	WISHLIST_MATCH_ERROR_MESSAGES,
 	WISHLIST_MATCH_RESTART_CODES,
+	WISHLIST_SUGGESTION_COPY,
+	wishlistSuggestionNote,
 } from "~/domain/wishlist-match-copy"
 import { Spinner } from "~/ui/wait/Spinner"
 import { tmdbFixedImage } from "~/utils/tmdb-image"
@@ -16,9 +19,11 @@ import {
 	type WishlistMatchCandidate,
 	type WishlistMatchGroup,
 	type WishlistMatchSearch,
+	type WishlistRowSuggestion,
 	useWishlistMatchCandidates,
 	useWishlistMatchEntry,
 	useWishlistMatchGroups,
+	useWishlistSuggestions,
 } from "./SourceImportHooks"
 import {
 	errorBox,
@@ -38,6 +43,8 @@ const FULL =
 
 /** The search answers at most this many titles. */
 const MAX_CANDIDATES = 20
+/** Above this many entries without a suggestion, the panel doesn't list them above the entries. */
+const MAX_EXCEPTION_LINKS = 10
 const POSTER_WIDTH = 46
 
 const typeName = (mediaType: MatchTitle["mediaType"]) =>
@@ -51,6 +58,8 @@ const titleKey = (title: MatchTitle) => `${title.mediaType}:${title.tmdbId}`
 /** The file's title for an entry, never the chosen catalog title. */
 export const fileTitle = (group: WishlistMatchGroup) =>
 	(group.item.wishlistOriginal?.title ?? group.item.title).trim()
+const entryName = (group: WishlistMatchGroup) =>
+	fileTitle(group) || "This entry"
 const evidenceOf = (group: WishlistMatchGroup) =>
 	group.item.wishlistOriginal?.wishlistEvidence ?? group.item.wishlistEvidence
 
@@ -82,7 +91,13 @@ const isRestart = (error: ImportRequestError | null) =>
 	!!error?.code &&
 	(WISHLIST_MATCH_RESTART_CODES as readonly string[]).includes(error.code)
 
-type Focus = { index: number; on: "toggle" | "search" } | null
+type Focus = { index: number; on: "toggle" | "search" | "accept" } | null
+
+/** The suggestion as a title the member can accept. */
+const suggestedTitle = (
+	suggestion: WishlistRowSuggestion | undefined,
+): MatchTitle | null =>
+	suggestion?.state === "suggested" ? { ...suggestion.proposal } : null
 
 export default function WishlistMatchPanel({
 	importId,
@@ -93,6 +108,10 @@ export default function WishlistMatchPanel({
 	locked,
 	error,
 	onChoose,
+	onRevert,
+	onAcceptAll,
+	onUndoAccepted,
+	bulkAccepted,
 	onDiscard,
 	onUpdate,
 	onBack,
@@ -108,12 +127,24 @@ export default function WishlistMatchPanel({
 	error: ImportRequestError | null
 	/** Returns false when the choice can't be kept: while locked, or past the per-update limit. */
 	onChoose: (group: WishlistMatchGroup, title: MatchTitle | null) => boolean
+	/** Takes back an entry's pending change. Returns false while locked. */
+	onRevert: (group: WishlistMatchGroup) => boolean
+	/** Accepts all the given suggestions as one change, or none: while locked, or past the per-update limit. */
+	onAcceptAll: (
+		accepted: readonly { group: WishlistMatchGroup; title: MatchTitle }[],
+	) => boolean
+	/** Takes back the bulk accepts not changed since, and returns how many. */
+	onUndoAccepted: () => number
+	/** How many bulk accepts are still pending as accepted. */
+	bulkAccepted: number
 	onDiscard: () => void
 	onUpdate: () => void
 	onBack: () => void
 }) {
 	const query = useWishlistMatchGroups(importId, true)
 	const loaded = query.data?.pages.flatMap((page) => page.groups) ?? []
+	// Suggestions cover the loaded pages only. An entry a Change opened from elsewhere is matched by hand.
+	const suggestions = useWishlistSuggestions(importId, loaded)
 	const total = query.data?.pages.at(-1)?.total ?? 0
 	// Entries opened by a Change before their page loaded. A page that brings one in takes its place.
 	const [extras, setExtras] = useState<WishlistMatchGroup[]>([])
@@ -136,6 +167,8 @@ export default function WishlistMatchPanel({
 	const [said, setSaid] = useState("")
 	const handled = useRef(0)
 	const id = useId()
+	const wasLoading = useRef(false)
+	const bulkRef = useRef<HTMLButtonElement>(null)
 
 	useEffect(() => {
 		if (visible && !request) headingRef.current?.focus()
@@ -197,6 +230,79 @@ export default function WishlistMatchPanel({
 	const full = draft.size >= WISHLIST_MATCH_MAX_CHANGES
 	const changes = draft.size
 	const fullId = `${id}-full`
+	const bulkFullId = `${id}-bulk-full`
+	const suggestionOf = (group: WishlistMatchGroup) =>
+		savedMatch(group)
+			? undefined
+			: suggestions.rows.get(group.representativeIndex)
+	const isAccepted = (group: WishlistMatchGroup) => {
+		const suggested = suggestedTitle(suggestionOf(group))
+		const pending = draft.get(group.representativeIndex)
+		return !!suggested && !!pending && sameTitle(suggested, pending)
+	}
+	const acceptedCount = groups.filter(isAccepted).length
+	const suggestedCount = groups.filter(
+		(group) => suggestionOf(group)?.state === "suggested",
+	).length
+	// Bulk accept covers suggestions shown that the member hasn't accepted, changed, or chosen yet.
+	const acceptable = groups.flatMap((group) => {
+		const title = suggestedTitle(suggestionOf(group))
+		return title && !draft.has(group.representativeIndex)
+			? [{ group, title }]
+			: []
+	})
+	const changedByMember = groups.filter(
+		(group) =>
+			suggestionOf(group)?.state === "suggested" &&
+			draft.has(group.representativeIndex) &&
+			!isAccepted(group),
+	).length
+	const bulkTooMany =
+		acceptable.length > 0 &&
+		draft.size + acceptable.length > WISHLIST_MATCH_MAX_CHANGES
+	const unchecked = groups.filter((group) =>
+		["failed", "unavailable"].includes(suggestionOf(group)?.state ?? ""),
+	).length
+	// The few entries GoodWatch had no suggestion for, named above a long list of suggestions so they're easy to reach.
+	// A long list of them is the list itself, so the shortcut shows only beside suggestions and up to a handful.
+	const exceptions = groups.filter(
+		(group) =>
+			suggestionOf(group)?.state === "manual" &&
+			!draft.has(group.representativeIndex),
+	)
+	const showExceptions =
+		suggestedCount > 0 &&
+		exceptions.length > 0 &&
+		exceptions.length <= MAX_EXCEPTION_LINKS
+	useEffect(() => {
+		if (wasLoading.current && !suggestions.loading && suggestedCount > 0)
+			setSaid(
+				suggestedCount === 1
+					? "GoodWatch suggested a match for 1 title. Check it before you accept it."
+					: `GoodWatch suggested matches for ${formatCount(suggestedCount)} titles. Check each one before you accept it.`,
+			)
+		wasLoading.current = suggestions.loading
+	}, [suggestions.loading, suggestedCount])
+	const acceptAll = () => {
+		const count = acceptable.length
+		if (!onAcceptAll(acceptable)) {
+			setSaid(locked ? "" : FULL)
+			return
+		}
+		bulkRef.current?.focus()
+		setSaid(
+			`Accepted ${formatCount(count)} ${count === 1 ? "suggestion" : "suggestions"}. They aren't in this preview yet.${changedByMember > 0 ? ` ${formatCount(changedByMember)} you changed ${changedByMember === 1 ? "stays" : "stay"} as you set ${changedByMember === 1 ? "it" : "them"}.` : ""}`,
+		)
+	}
+	const undoAll = () => {
+		const undone = onUndoAccepted()
+		bulkRef.current?.focus()
+		setSaid(
+			undone === 1
+				? "Took back 1 accepted suggestion."
+				: `Took back ${formatCount(undone)} accepted suggestions.`,
+		)
+	}
 
 	return (
 		<div className="flex flex-col gap-4 rounded-lg border border-slate-700 bg-slate-900/60 p-4">
@@ -205,7 +311,7 @@ export default function WishlistMatchPanel({
 				tabIndex={-1}
 				className="font-semibold text-gray-100 outline-none"
 			>
-				Match titles
+				Review matches
 			</h4>
 			<p className="sr-only" aria-live="polite">
 				{said}
@@ -281,6 +387,107 @@ export default function WishlistMatchPanel({
 					</button>
 				</div>
 			)}
+			{suggestions.loading && (
+				<div className="flex items-center gap-2 text-sm text-gray-400">
+					<Spinner size="small" /> {WISHLIST_SUGGESTION_COPY.looking}
+				</div>
+			)}
+			<div aria-live="assertive">
+				{!suggestions.loading && unchecked > 0 && (
+					<div className="space-y-3">
+						<p className={errorBox}>
+							{WISHLIST_SUGGESTION_COPY.failed}{" "}
+							{unchecked === 1
+								? "1 title wasn't checked."
+								: `${formatCount(unchecked)} titles weren't checked.`}
+						</p>
+						<button
+							type="button"
+							className={secondaryButton}
+							disabled={locked}
+							onClick={suggestions.retry}
+						>
+							Try again
+							<span className="sr-only"> to check titles for a match</span>
+						</button>
+					</div>
+				)}
+			</div>
+			{showExceptions && (
+				<div className="flex flex-col gap-2">
+					<p className="text-sm text-gray-300">
+						{exceptions.length === 1
+							? "1 title has no suggestion. Match it yourself:"
+							: `${formatCount(exceptions.length)} titles have no suggestion. Match them yourself:`}
+					</p>
+					<ul className="flex flex-wrap gap-x-4">
+						{exceptions.map((group) => (
+							<li key={group.representativeIndex}>
+								<button
+									type="button"
+									className={`${textLink} min-h-11 break-words text-left text-sm`}
+									disabled={locked}
+									onClick={() => {
+										setOpenIndex(group.representativeIndex)
+										setFocus({ index: group.representativeIndex, on: "search" })
+									}}
+								>
+									<span className="sr-only">Match </span>
+									{fileTitle(group) || "No title in your file"}
+									<span className="sr-only"> yourself</span>
+								</button>
+							</li>
+						))}
+					</ul>
+				</div>
+			)}
+			{(acceptable.length > 0 || bulkAccepted > 0) && (
+				<div className="flex flex-col gap-2">
+					{acceptable.length > 0 && (
+						<p className="text-sm text-gray-300">
+							{WISHLIST_SUGGESTION_COPY.check}
+						</p>
+					)}
+					<div className="flex flex-wrap gap-3">
+						<button
+							ref={bulkRef}
+							type="button"
+							className={secondaryButton}
+							disabled={locked || bulkTooMany}
+							aria-describedby={bulkTooMany ? bulkFullId : undefined}
+							onClick={acceptable.length > 0 ? acceptAll : undoAll}
+						>
+							{acceptable.length > 0
+								? acceptable.length === 1
+									? "Accept the 1 suggestion shown"
+									: `Accept the ${formatCount(acceptable.length)} suggestions shown`
+								: "Undo accept all"}
+						</button>
+						{acceptable.length > 0 && bulkAccepted > 0 && (
+							<button
+								type="button"
+								className={secondaryButton}
+								disabled={locked}
+								onClick={undoAll}
+							>
+								Undo accept all
+							</button>
+						)}
+					</div>
+					{bulkTooMany && (
+						<p id={bulkFullId} className="text-sm text-gray-300">
+							There's room for{" "}
+							{formatCount(WISHLIST_MATCH_MAX_CHANGES - draft.size)} more{" "}
+							{WISHLIST_MATCH_MAX_CHANGES - draft.size === 1
+								? "change"
+								: "changes"}{" "}
+							in this update, so GoodWatch can't accept all{" "}
+							{formatCount(acceptable.length)}. Update the preview first, or
+							accept them one at a time.
+						</p>
+					)}
+				</div>
+			)}
 			{groups.length > 0 && (
 				<div ref={listRef}>
 					<ul aria-label="Entries to match" className="flex flex-col gap-3">
@@ -307,6 +514,8 @@ export default function WishlistMatchPanel({
 									title={title}
 									pending={draft.has(index)}
 									hadMatch={savedMatch(group) !== null}
+									suggestion={suggestionOf(group)}
+									accepted={isAccepted(group)}
 									alsoChosen={
 										others === 1 && otherName
 											? `You also chose this title for "${otherName}".`
@@ -337,6 +546,21 @@ export default function WishlistMatchPanel({
 										setSaid(
 											`Matched to ${describe(chosen)}, ${typeName(chosen.mediaType).toLowerCase()}.`,
 										)
+									}}
+									onAccept={(suggested) => {
+										if (!onChoose(group, suggested)) {
+											setSaid(locked ? "" : FULL)
+											return
+										}
+										setFocus({ index, on: "toggle" })
+										setSaid(
+											`Accepted ${describe(suggested)}, ${typeName(suggested.mediaType).toLowerCase()}.`,
+										)
+									}}
+									onUndoAccept={() => {
+										if (!onRevert(group)) return
+										setFocus({ index, on: "accept" })
+										setSaid(`${entryName(group)} isn't accepted anymore.`)
 									}}
 									onClear={() => {
 										if (!onChoose(group, null)) {
@@ -375,9 +599,13 @@ export default function WishlistMatchPanel({
 				<div className="flex flex-col gap-3 border-t border-slate-700 pt-4">
 					{changes > 0 && (
 						<p className="text-sm text-gray-300">
-							{changes === 1
-								? "1 change isn't in this preview yet. Update the preview to count it."
-								: `${formatCount(changes)} changes aren't in this preview yet. Update the preview to count them.`}
+							{acceptedCount === changes
+								? changes === 1
+									? "1 accepted suggestion isn't in this preview yet. Update the preview to count it."
+									: `${formatCount(changes)} accepted suggestions aren't in this preview yet. Update the preview to count them.`
+								: changes === 1
+									? "1 change isn't in this preview yet. Update the preview to count it."
+									: `${formatCount(changes)} changes aren't in this preview yet${acceptedCount > 0 ? `, ${formatCount(acceptedCount)} of them accepted ${acceptedCount === 1 ? "suggestion" : "suggestions"}` : ""}. Update the preview to count them.`}
 						</p>
 					)}
 					{full && (
@@ -436,6 +664,8 @@ function Entry({
 	title,
 	pending,
 	hadMatch,
+	suggestion,
+	accepted,
 	alsoChosen,
 	open,
 	disabled,
@@ -445,6 +675,8 @@ function Entry({
 	onOpen,
 	onCancel,
 	onUse,
+	onAccept,
+	onUndoAccept,
 	onClear,
 }: {
 	importId: string
@@ -452,6 +684,10 @@ function Entry({
 	title: MatchTitle | null
 	pending: boolean
 	hadMatch: boolean
+	/** GoodWatch's suggestion, for an entry on a loaded page without a match in this preview. */
+	suggestion: WishlistRowSuggestion | undefined
+	/** True when the pending match is the accepted suggestion. */
+	accepted: boolean
 	alsoChosen: string | null
 	open: boolean
 	disabled: boolean
@@ -462,9 +698,20 @@ function Entry({
 	onOpen: () => void
 	onCancel: () => void
 	onUse: (title: MatchTitle) => void
+	onAccept: (title: MatchTitle) => void
+	onUndoAccept: () => void
 	onClear: () => void
 }) {
 	const index = group.representativeIndex
+	const suggested = title || pending ? null : suggestedTitle(suggestion)
+	const note =
+		title || pending || !suggestion || suggestion.state === "suggested"
+			? null
+			: wishlistSuggestionNote(suggestion.state)
+	const shown = title ?? suggested
+	const poster = shown?.posterPath
+		? tmdbFixedImage("poster", shown.posterPath, POSTER_WIDTH)
+		: null
 	const name = fileTitle(group)
 	const evidence = evidenceOf(group)
 	const year = group.item.wishlistOriginal?.year ?? group.item.year
@@ -481,28 +728,62 @@ function Entry({
 	const label = name || "this entry"
 	return (
 		<li className="rounded-lg border border-slate-700 bg-gray-950/50 p-3 text-sm">
-			<p className="break-words font-semibold text-gray-100">
-				{name || "No title in your file"}
-			</p>
-			<p className="break-words text-gray-400">{line}</p>
-			<p className="mt-1 break-words text-gray-200">
-				{title ? (
-					<>
-						<span className="font-semibold">Your match:</span> {describe(title)}{" "}
-						· {typeName(title.mediaType)}
-					</>
-				) : hadMatch ? (
-					"Match removed"
-				) : (
-					"Not matched"
+			<div className="flex items-start gap-3">
+				{poster && (
+					<img
+						src={poster.src}
+						srcSet={poster.srcSet}
+						alt=""
+						width={POSTER_WIDTH}
+						height={69}
+						loading="lazy"
+						className="h-[69px] w-[46px] shrink-0 rounded bg-slate-800 object-cover"
+					/>
 				)}
-				{pending && (
-					<span className="text-gray-400"> · Not in this preview yet</span>
-				)}
-			</p>
+				<div className="min-w-0">
+					<p className="break-words font-semibold text-gray-100">
+						{name || "No title in your file"}
+					</p>
+					<p className="break-words text-gray-400">{line}</p>
+					<p className="mt-1 break-words text-gray-200">
+						{title ? (
+							<>
+								<span className="font-semibold">Your match:</span>{" "}
+								{describe(title)} · {typeName(title.mediaType)}
+								{accepted && " · Accepted"}
+							</>
+						) : suggested ? (
+							<>
+								<span className="font-semibold">Suggested:</span>{" "}
+								{describe(suggested)} · {typeName(suggested.mediaType)} ·{" "}
+								{WISHLIST_SUGGESTION_COPY.reason}
+							</>
+						) : hadMatch ? (
+							"Match removed"
+						) : (
+							(note ?? "Not matched")
+						)}
+						{pending && (
+							<span className="text-gray-400"> · Not in this preview yet</span>
+						)}
+					</p>
+				</div>
+			</div>
 			{alsoChosen && <p className="text-gray-400">{alsoChosen}</p>}
 			{!open && (
 				<div className="mt-2 flex flex-wrap gap-3">
+					{suggested && (
+						<button
+							type="button"
+							className={secondaryButton}
+							data-focus={`accept-${index}`}
+							disabled={disabled || !canChoose}
+							aria-describedby={canChoose ? undefined : fullId}
+							onClick={() => onAccept(suggested)}
+						>
+							Accept<span className="sr-only"> the suggestion for {label}</span>
+						</button>
+					)}
 					<button
 						type="button"
 						className={secondaryButton}
@@ -512,21 +793,32 @@ function Entry({
 						disabled={disabled}
 						onClick={onOpen}
 					>
-						{title ? "Change" : "Find a match"}
+						{title || suggested ? "Change" : "Find a match"}
 						<span className="sr-only">
-							{title ? ` the match for ${label}` : ` for ${label}`}
+							{title || suggested ? ` the match for ${label}` : ` for ${label}`}
 						</span>
 					</button>
-					{title && (
+					{accepted ? (
 						<button
 							type="button"
 							className={secondaryButton}
-							disabled={disabled || !canChoose}
-							aria-describedby={canChoose ? undefined : fullId}
-							onClick={onClear}
+							disabled={disabled}
+							onClick={onUndoAccept}
 						>
-							Clear<span className="sr-only"> the match for {label}</span>
+							Undo accept<span className="sr-only"> for {label}</span>
 						</button>
+					) : (
+						title && (
+							<button
+								type="button"
+								className={secondaryButton}
+								disabled={disabled || !canChoose}
+								aria-describedby={canChoose ? undefined : fullId}
+								onClick={onClear}
+							>
+								Clear<span className="sr-only"> the match for {label}</span>
+							</button>
+						)
 					)}
 				</div>
 			)}

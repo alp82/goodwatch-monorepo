@@ -7,8 +7,9 @@ Research date: 2026-10-18. This follows [the first streaming-watchlist investiga
 - [Tracker routes](tracker-routes.md): Simkl, Trakt, their import/export ecosystems, and adjacent tracker formats.
 - [Browser routes](browser-routes.md): extensions, userscripts, bookmarklets, extraction code, browser capabilities and alternatives.
 - [Alternative routes](alternative-routes.md): privacy archives, portable personal collections, self-hosted tools and overlooked bridges.
+- [Automatic Netflix matching validation](netflix-automatic-matching-validation.md): later owner-supplied 77-title capture, 75 Netflix-ID-backed candidate proposals, measured limits and implementation recommendation. Links to the backend, metadata, external resolver and Opus review-design investigations.
 
-Each track distinguishes provider contracts, inspected implementation, publisher claims and hypotheses. No authenticated streaming account was tested. The research does not imply that an endpoint seen in community code is an officially supported integration.
+Each track distinguishes provider contracts, inspected implementation, publisher claims and hypotheses. The initial three-track survey did not test an authenticated streaming account; the later Netflix validation uses the owner's local capture and saved page. The research does not imply that an endpoint seen in community code is an officially supported integration.
 
 ## What changed after the first survey
 
@@ -107,6 +108,8 @@ The smallest useful product slice is **a shared wishlist intake plus one reliabl
 ## Implementation follow-up
 
 The first implementation follows the shared-file and native-adapter path. See the [version 1 producer contract](../../implementation/shared-wishlist-format.md) and the [Opus UX decisions](../../implementation/shared-wishlist-imports-ux.md). It adds original Watcharr Planned entries and compatible shared files to the existing preview, confirmation, receipt, and Undo pipeline.
+
+The subsequent [Netflix suggestion implementation](../../implementation/wishlist-suggestions.md) adds reviewable matches for captured Netflix IDs using existing catalog streaming links. Its real-reader check produced 75 suggestions and two manual cases for the owner's 77-entry capture. The implementation notes describe the final API and resource bounds; earlier research proposals below are historical. Suggestions still require member acceptance, and this does not establish a general Netflix connector or global matching accuracy.
 
 Further validation notes:
 

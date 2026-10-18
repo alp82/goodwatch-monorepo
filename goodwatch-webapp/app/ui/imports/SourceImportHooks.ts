@@ -1,10 +1,11 @@
 import {
 	useInfiniteQuery,
 	useMutation,
+	useQueries,
 	useQuery,
 	useQueryClient,
 } from "@tanstack/react-query"
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import type {
 	FileImportSource,
 	ImportItem,
@@ -14,6 +15,8 @@ import type {
 	ImportStatus,
 	ImportSummary,
 	WishlistMatchGroup,
+	WishlistSuggestionProposal,
+	WishlistSuggestions,
 } from "~/domain/imports"
 import { wishlistMatchErrorMessage } from "~/domain/wishlist-match-copy"
 import { buildSourceImportUpload } from "./SourceImportUpload"
@@ -38,6 +41,8 @@ export const sourceImportKeys = {
 		[KEY, "match-entry", id, entry] as const,
 	matchCandidates: (id: string, search: WishlistMatchSearch) =>
 		[KEY, "match-candidates", id, search] as const,
+	suggestions: (id: string, offset: number, round: number) =>
+		[KEY, "suggestions", id, offset, round] as const,
 }
 
 export const sourceSkippedDownloadUrl = (id: string) =>
@@ -220,6 +225,107 @@ export function useWishlistMatchCandidates(
 			)
 		},
 	})
+}
+
+/** The server answers suggestions for this many entries at a time, in the order of the match list. */
+const SUGGESTIONS_PAGE_SIZE = 10
+
+/** What GoodWatch suggests for one shown entry, or where finding that out stands. */
+export type WishlistRowSuggestion =
+	| {
+			state:
+				| "loading"
+				| "failed"
+				| "unavailable"
+				| "manual"
+				| "already_resolved"
+	  }
+	| { state: "suggested"; proposal: WishlistSuggestionProposal }
+
+/**
+ * GoodWatch's suggestions for the entries shown, in the match list's order. It asks for one page of 10 at a time and
+ * only for entries already loaded, so a long file never sends a burst of requests. A page that failed, or an entry the
+ * server couldn't check, stays unknown until `retry`, which asks for just those pages again, one at a time.
+ */
+export function useWishlistSuggestions(
+	id: string,
+	shown: readonly { representativeIndex: number }[],
+) {
+	const client = useQueryClient()
+	const offsets = Array.from(
+		{ length: Math.ceil(shown.length / SUGGESTIONS_PAGE_SIZE) },
+		(_, at) => at * SUGGESTIONS_PAGE_SIZE,
+	)
+	// A retried page gets a new key, so it starts from nothing and waits for its turn like any other page.
+	const [rounds, setRounds] = useState<ReadonlyMap<number, number>>(new Map())
+	const keys = offsets.map((offset) =>
+		sourceImportKeys.suggestions(id, offset, rounds.get(offset) ?? 0),
+	)
+	// A page is asked for once every page before it has answered or failed, so a retry of pages apart still goes one
+	// at a time. A page that answered or failed stays enabled, so a retry of an earlier page doesn't ask for it again.
+	const settled = (at: number) =>
+		["success", "error"].includes(client.getQueryState(keys[at])?.status ?? "")
+	const pages = useQueries({
+		queries: offsets.map((offset, at) => ({
+			queryKey: keys[at],
+			enabled:
+				settled(at) || keys.slice(0, at).every((_, before) => settled(before)),
+			// A preview never changes, so its suggestions don't either. Refetching on focus, reconnect, or mount would
+			// ask for every loaded page at once; Try again is the only way to ask again, one page at a time.
+			refetchOnWindowFocus: false,
+			refetchOnReconnect: false,
+			refetchOnMount: false,
+			// A failed page in the cache isn't asked for again on mount either.
+			retryOnMount: false,
+			queryFn: ({ signal }: { signal: AbortSignal }) =>
+				request<WishlistSuggestions>(
+					`${API}/${encodeURIComponent(id)}/suggestions?offset=${offset}`,
+					{ signal },
+				),
+		})),
+	})
+	const rows = new Map<number, WishlistRowSuggestion>()
+	shown.forEach((group, position) => {
+		const page = pages[Math.floor(position / SUGGESTIONS_PAGE_SIZE)]
+		if (page.isError) rows.set(group.representativeIndex, { state: "failed" })
+		else if (!page.isSuccess)
+			rows.set(group.representativeIndex, { state: "loading" })
+		else {
+			const found = page.data.groups.find(
+				(item) => item.representativeIndex === group.representativeIndex,
+			)
+			rows.set(
+				group.representativeIndex,
+				!found
+					? { state: "unavailable" }
+					: found.state === "suggested"
+						? found.proposal
+							? { state: "suggested", proposal: found.proposal }
+							: { state: "manual" }
+						: { state: found.state },
+			)
+		}
+	})
+	const unchecked = (offset: number, at: number) =>
+		pages[at].isError ||
+		shown
+			.slice(offset, offset + SUGGESTIONS_PAGE_SIZE)
+			.some(
+				(group) => rows.get(group.representativeIndex)?.state === "unavailable",
+			)
+	return {
+		rows,
+		loading: pages.some((page) => page.isPending),
+		retry: () =>
+			setRounds((current) => {
+				const next = new Map(current)
+				offsets.forEach((offset, at) => {
+					if (unchecked(offset, at))
+						next.set(offset, (current.get(offset) ?? 0) + 1)
+				})
+				return next
+			}),
+	}
 }
 
 /** Sends the member's changes. The server answers with a new preview; this one stays as it was. */

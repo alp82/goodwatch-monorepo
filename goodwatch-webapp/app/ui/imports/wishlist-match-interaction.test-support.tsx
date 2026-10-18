@@ -221,7 +221,8 @@ type Reply = { status: number; body: unknown } | "offline"
 type Group = (typeof groups)["office"]
 type Net = {
 	groups: Group[] | { status: number; body: unknown }
-	resolve: Reply[]
+	/** "hold" never answers, so the update stays running. */
+	resolve: (Reply | "hold")[]
 	/** Answers to entry lookups, used first. After them, a row finds its group by `leaves` or its own index. */
 	entry?: Reply[]
 	/** Rows that repeat an entry: row index to the entry's representative index. */
@@ -230,9 +231,38 @@ type Net = {
 	items?: ImportItem[]
 	/** Confirm never answers, so the preview stays in its importing state. */
 	holdConfirm?: boolean
+	/** GoodWatch's suggestion for an entry. Entries without one come back as `manual`. */
+	suggest?: Record<number, Suggestion>
+	/** Answers to suggestion pages, used first, in order. "hold" never answers until the request is aborted. */
+	suggestions?: (Reply | "hold" | "default")[]
+	/** Entries the suggestion pages leave out, as a partial answer would. */
+	omit?: number[]
 }
+type Suggestion = {
+	state: "suggested" | "manual" | "unavailable" | "already_resolved"
+	proposal?: {
+		mediaType: "movie" | "show"
+		tmdbId: number
+		title: string
+		year: number | null
+		posterPath: string | null
+	}
+	reason?: string
+}
+const proposal = (
+	mediaType: "movie" | "show",
+	tmdbId: number,
+	title: string,
+	year: number | null,
+	posterPath: string | null = null,
+): Suggestion => ({
+	state: "suggested",
+	proposal: { mediaType, tmdbId, title, year, posterPath },
+})
 let net: Net = { groups: [], resolve: [] }
-let sent: { method: string; url: string; body: unknown }[] = []
+let sent: { method: string; url: string; body: unknown; signal: boolean }[] = []
+/** Suggestion requests whose signal aborted before they answered. */
+let aborted: string[] = []
 const respond = (status: number, body: unknown) =>
 	new Response(JSON.stringify(body), {
 		status,
@@ -245,11 +275,44 @@ globalThis.fetch = (async (input: string, init?: RequestInit) => {
 		method,
 		url,
 		body: init?.body ? JSON.parse(String(init.body)) : null,
+		signal: init?.signal instanceof AbortSignal,
 	})
 	const parsed = new URL(url, "https://goodwatch.app")
+	if (parsed.pathname.endsWith("/suggestions")) {
+		const queued = net.suggestions?.shift()
+		const reply = queued === "default" ? undefined : queued
+		if (reply === "offline") throw new TypeError("Failed to fetch")
+		if (reply === "hold")
+			return new Promise<Response>((_, reject) => {
+				init?.signal?.addEventListener("abort", () => {
+					aborted.push(url)
+					reject(new DOMException("Aborted", "AbortError"))
+				})
+			})
+		if (reply) return respond(reply.status, reply.body)
+		const list = Array.isArray(net.groups) ? net.groups : []
+		const offset = Number(parsed.searchParams.get("offset") ?? 0)
+		const page = list.slice(offset, offset + 10)
+		return respond(200, {
+			groups: page
+				.filter((group) => !net.omit?.includes(group.representativeIndex))
+				.map((group) => ({
+					representativeIndex: group.representativeIndex,
+					...(net.suggest?.[group.representativeIndex] ??
+						(group.item.wishlistResolution
+							? { state: "already_resolved" }
+							: { state: "manual", reason: "no_native_id_match" })),
+				})),
+			total: list.length,
+			offset,
+			hasMore: offset + 10 < list.length,
+			nextOffset: offset + 10 < list.length ? offset + 10 : null,
+		})
+	}
 	if (parsed.pathname.endsWith("/resolve")) {
 		const reply = net.resolve.shift() ?? "offline"
 		if (reply === "offline") throw new TypeError("Failed to fetch")
+		if (reply === "hold") return new Promise<Response>(() => {})
 		return respond(reply.status, reply.body)
 	}
 	if (parsed.pathname.endsWith("/confirm") && net.holdConfirm)
@@ -315,25 +378,28 @@ const settle = async (times = 3) => {
 async function flow(start: ImportSummary, setup: Net) {
 	net = setup
 	sent = []
+	aborted = []
 	const client = new QueryClient({
 		defaultOptions: { queries: { retry: false } },
 	})
 	const container = document.createElement("div")
 	document.body.appendChild(container)
-	const root = createRoot(container as unknown as Element)
-	await act(async () =>
-		root.render(
-			h(
-				QueryClientProvider,
-				{ client },
-				h(SourceImportFlow, {
-					source: "wishlist",
-					initial: { imports: [start] },
-					initialId: start.id,
-				}),
+	let root = createRoot(container as unknown as Element)
+	const render = () =>
+		act(async () =>
+			root.render(
+				h(
+					QueryClientProvider,
+					{ client },
+					h(SourceImportFlow, {
+						source: "wishlist",
+						initial: { imports: [start] },
+						initialId: start.id,
+					}),
+				),
 			),
-		),
-	)
+		)
+	await render()
 	await settle()
 	const all = <T,>(selector: string) =>
 		[...container.querySelectorAll(selector)] as unknown as T[]
@@ -371,7 +437,13 @@ async function flow(start: ImportSummary, setup: Net) {
 	return {
 		text: () => (container.textContent ?? "").replace(/\s+/g, " "),
 		focus: describeFocus,
-		sent: () => sent.map(({ method, url, body }) => ({ method, url, body })),
+		sent: () => sent.map((item) => ({ ...item })),
+		aborted: () => [...aborted],
+		/** Poster sources shown in the panel's entries, outside any open editor. */
+		posters: () =>
+			all<HTMLImageElement>("li img")
+				.filter((img) => !img.closest("fieldset"))
+				.map((img) => img.getAttribute("src") ?? ""),
 		has: (name: string) => {
 			try {
 				button(name)
@@ -406,6 +478,16 @@ async function flow(start: ImportSummary, setup: Net) {
 			const target = button(name)
 			await act(async () => target.click())
 			await settle()
+		},
+		/** A keyboard press: focus the button, activate it, and say whether focus is still on that same button. */
+		press: async (name: string) => {
+			const target = button(name)
+			await act(async () => {
+				target.focus()
+				target.click()
+			})
+			await settle()
+			return document.activeElement === (target as unknown)
 		},
 		/** A click on a control that needs no network, without waiting. */
 		tap: async (name: string) => {
@@ -445,6 +527,22 @@ async function flow(start: ImportSummary, setup: Net) {
 			})
 			await settle()
 		},
+		/** The member comes back to the tab, then the connection drops and returns. */
+		refocusAndReconnect: async () => {
+			await act(async () => {
+				window.dispatchEvent(new window.Event("visibilitychange"))
+				window.dispatchEvent(new window.Event("offline"))
+				window.dispatchEvent(new window.Event("online"))
+			})
+			await settle(8)
+		},
+		/** The member leaves the page and comes back: a new render that keeps the same query cache. */
+		remount: async () => {
+			await act(async () => root.unmount())
+			root = createRoot(container as unknown as Element)
+			await render()
+			await settle()
+		},
 		unmount: async () => {
 			await act(async () => root.unmount())
 			container.remove()
@@ -473,7 +571,7 @@ const snap = (view: View, extra: Record<string, unknown> = {}) => ({
 		],
 	})
 	results.closed = snap(view)
-	await view.click("Match titles")
+	await view.click("Review matches")
 	await settle(5)
 	results.opened = snap(view)
 	await view.click("Find a match for The Office")
@@ -497,7 +595,7 @@ const snap = (view: View, extra: Record<string, unknown> = {}) => ({
 	await view.click("Clear the match for GoT")
 	results.cleared = snap(view)
 	await view.click("Hide matching")
-	await view.click("Match titles")
+	await view.click("Review matches")
 	results.reshown = snap(view)
 	await view.pick("Add it as Want to rewatch")
 	await view.click("Update preview")
@@ -528,7 +626,7 @@ const snap = (view: View, extra: Record<string, unknown> = {}) => ({
 			},
 		],
 	})
-	await view.click("Match titles")
+	await view.click("Review matches")
 	await settle(5)
 	await view.click("Find a match for Dark")
 	await view.pick("2017 · Show")
@@ -593,7 +691,7 @@ const snap = (view: View, extra: Record<string, unknown> = {}) => ({
 		groups: [groups.dark],
 		resolve: [],
 	})
-	await view.click("Match titles")
+	await view.click("Review matches")
 	await settle(5)
 	await view.click("Find a match for Dark")
 	const before = view.sent().length
@@ -622,7 +720,7 @@ const snap = (view: View, extra: Record<string, unknown> = {}) => ({
 		},
 		resolve: [],
 	})
-	await view.click("Match titles")
+	await view.click("Review matches")
 	await settle(5)
 	results.oldPreview = snap(view, {
 		chooseAgain: view.has("Choose the file again"),
@@ -657,7 +755,7 @@ const snap = (view: View, extra: Record<string, unknown> = {}) => ({
 		leaves: { 21: 20 },
 		items: [leaf, late.item],
 	})
-	await view.click("Match titles")
+	await view.click("Review matches")
 	await settle(5)
 	await view.click("Find a match for Dark")
 	await view.pick("2017 · Show")
@@ -689,7 +787,7 @@ const snap = (view: View, extra: Record<string, unknown> = {}) => ({
 		holdConfirm: true,
 	})
 	await view.click("New to your Wishlist")
-	await view.click("Match titles")
+	await view.click("Review matches")
 	await settle(5)
 	await view.click("Find a match for Dark")
 	await view.pick("2017 · Show")
@@ -738,7 +836,7 @@ const snap = (view: View, extra: Record<string, unknown> = {}) => ({
 			},
 		],
 	})
-	await view.click("Match titles")
+	await view.click("Review matches")
 	await settle(5)
 	await view.click("Show more")
 	await view.click("Show more")
@@ -788,5 +886,301 @@ const snap = (view: View, extra: Record<string, unknown> = {}) => ({
 	await view.unmount()
 }
 
-process.stdout.write(`__WISHLIST_MATCH__${JSON.stringify(results)}`)
-process.exit(0)
+// GoodWatch suggests a match by the file's Netflix ID; the member checks it and accepts it.
+{
+	const view = await flow(summary(PARENT, { new: 1, unmatched: 2 }, 3), {
+		groups: [groups.office, groups.dark, groups.got],
+		suggest: {
+			4: proposal("show", 2316, "The Office", 2005, "/office.jpg"),
+		},
+		resolve: [
+			{
+				status: 201,
+				body: {
+					import: summary(CHILD, { new: 2, unmatched: 1 }, 3),
+					parentImportId: PARENT,
+				},
+			},
+		],
+	})
+	await view.click("Review matches")
+	await settle(5)
+	results.suggested = snap(view, {
+		posters: view.posters(),
+		confirmDisabled: view.disabled("Add to Want to See"),
+	})
+	await view.click("Match Dark yourself")
+	results.exceptionOpened = snap(view)
+	await view.click("Cancel")
+	await view.click("Accept the suggestion for The Office")
+	results.accepted = snap(view, {
+		confirmDisabled: view.disabled("Add to Want to See"),
+	})
+	await view.click("Undo accept for The Office")
+	results.acceptUndone = snap(view, {
+		confirmDisabled: view.disabled("Add to Want to See"),
+	})
+	await view.click("Accept the suggestion for The Office")
+	await view.click("Update preview")
+	await settle(3)
+	results.acceptedSent = snap(view)
+	await view.unmount()
+}
+
+// Accepting every suggestion shown at once keeps the member's own choices, and Undo takes back only the bulk accepts.
+const films = Array.from({ length: 10 }, (_, at) =>
+	groupOf(unknownRow(100 + at, `Filler ${at}`, `9100${at}`)),
+)
+const filmSuggestions = Object.fromEntries(
+	films.map((group, at) => [
+		group.representativeIndex,
+		proposal("movie", 30000 + at, `Film ${at}`, 2001),
+	]),
+)
+{
+	candidates["Filler 0"] = [
+		{
+			mediaType: "movie",
+			tmdbId: 40000,
+			title: "Other film",
+			year: 1999,
+			posterPath: null,
+		},
+	]
+	const view = await flow(summary(PARENT, { unmatched: 12 }, 12), {
+		groups: [groups.office, groups.dark, ...films],
+		suggest: {
+			4: proposal("show", 2316, "The Office", 2005, "/office.jpg"),
+			7: proposal("show", 70523, "Dark", 2017),
+			...filmSuggestions,
+		},
+		resolve: [
+			{
+				status: 201,
+				body: {
+					import: summary(CHILD, { new: 2, unmatched: 10 }, 12),
+					parentImportId: PARENT,
+				},
+			},
+		],
+	})
+	await view.click("Review matches")
+	await settle(8)
+	await view.click("Change the match for Dark")
+	await view.pick("2005 · Movie")
+	await view.click("Use this match")
+	results.bulkBefore = snap(view)
+	const keptOnAccept = await view.press("Accept the 11 suggestions shown")
+	results.bulkAccepted = snap(view, {
+		confirmDisabled: view.disabled("Add to Want to See"),
+		keptFocus: keptOnAccept,
+	})
+	await view.click("Change the match for Filler 0")
+	await view.pick("1999 · Movie")
+	await view.click("Use this match")
+	const keptOnUndo = await view.press("Undo accept all")
+	results.bulkUndone = snap(view, { keptFocus: keptOnUndo })
+	await view.click("Update preview")
+	await settle(3)
+	results.bulkSent = snap(view)
+	await view.unmount()
+}
+
+// Bulk accept never takes part of the list: past the 100-change limit it stays off and says why.
+{
+	const saved = Array.from({ length: 95 }, (_, at) =>
+		groupOf(
+			matchedRow(2000 + at, `Kept ${at}`, `6000${at}`, {
+				mediaType: "movie",
+				tmdbId: 50000 + at,
+				title: `Kept title ${at}`,
+				year: 2000,
+			}),
+		),
+	)
+	const view = await flow(summary(PARENT, { new: 95, unmatched: 10 }, 105), {
+		groups: [...films, ...saved],
+		suggest: filmSuggestions,
+		resolve: [],
+	})
+	await view.click("Review matches")
+	await settle(5)
+	await view.click("Show more")
+	await view.click("Show more")
+	await settle(10)
+	for (let at = 0; at < 91; at++)
+		await view.tap(`Clear the match for Kept ${at}`)
+	await settle()
+	await view.click("Accept the 10 suggestions shown")
+	results.bulkCap = snap(view, {
+		bulk: view.disabled("Accept the 10 suggestions shown"),
+		reason: view.describedBy("Accept the 10 suggestions shown"),
+	})
+	await view.click("Accept the suggestion for Filler 3")
+	results.bulkCapOne = snap(view)
+	await view.unmount()
+}
+
+// A suggestion page that fails, and an entry the server couldn't check, read as not checked, never as no match. Try
+// again asks only for those pages, and a match the member made meanwhile stays.
+{
+	const view = await flow(summary(PARENT, { unmatched: 12 }, 12), {
+		groups: [groups.dark, groups.office, ...films],
+		suggestions: [
+			"offline",
+			{ status: 500, body: { error: "Internal: catalog lane exploded" } },
+		],
+		suggest: {
+			4: proposal("show", 2316, "The Office", 2005, "/office.jpg"),
+			7: proposal("show", 70523, "Dark", 2017),
+			...filmSuggestions,
+		},
+		resolve: [],
+	})
+	await view.click("Review matches")
+	await settle(8)
+	results.suggestFailed = snap(view)
+	await view.click("Find a match for Dark")
+	await view.pick("2005 · Movie")
+	await view.click("Use this match")
+	net.omit = [101]
+	await view.click("Try again to check titles for a match")
+	await settle(8)
+	results.suggestRetried = snap(view)
+	net.omit = []
+	await view.click("Try again to check titles for a match")
+	await settle(8)
+	results.suggestRetriedAgain = snap(view)
+	await view.unmount()
+}
+
+// While suggestions load, matching by hand works; hiding the panel doesn't ask again; a new preview cancels the
+// request that's still open and asks for nothing more until its own panel opens.
+{
+	const view = await flow(summary(PARENT, { unmatched: 12 }, 12), {
+		groups: [groups.dark, groups.office, ...films],
+		suggestions: ["hold"],
+		suggest: filmSuggestions,
+		resolve: [
+			{
+				status: 201,
+				body: {
+					import: summary(CHILD, { new: 1, unmatched: 11 }, 12),
+					parentImportId: PARENT,
+				},
+			},
+		],
+	})
+	await view.click("Review matches")
+	await settle(5)
+	results.suggestLoading = snap(view)
+	await view.click("Hide matching")
+	await view.click("Review matches")
+	await view.click("Find a match for Dark")
+	await view.pick("2017 · Show")
+	await view.click("Use this match")
+	results.suggestLoadingChosen = snap(view)
+	await view.click("Update preview")
+	await settle(5)
+	results.suggestCancelled = snap(view, { aborted: view.aborted() })
+	await view.unmount()
+}
+
+// While Update preview runs, no suggestion can be accepted or taken back, one by one or all at once.
+{
+	const view = await flow(summary(PARENT, { unmatched: 3 }, 3), {
+		groups: [groups.office, groups.dark, films[0]],
+		suggest: {
+			4: proposal("show", 2316, "The Office", 2005),
+			7: proposal("show", 70523, "Dark", 2017),
+			100: proposal("movie", 30000, "Film 0", 2001),
+		},
+		resolve: ["hold"],
+	})
+	await view.click("Review matches")
+	await settle(5)
+	await view.click("Accept the suggestion for The Office")
+	await view.click("Update preview")
+	await view.tap("Accept the suggestion for Dark")
+	await view.tap("Accept the 2 suggestions shown")
+	await settle()
+	results.suggestLocked = snap(view, {
+		accept: view.disabled("Accept the suggestion for Dark"),
+		bulk: view.disabled("Accept the 2 suggestions shown"),
+		undo: view.disabled("Undo accept for The Office"),
+		change: view.disabled("Change the match for Dark"),
+	})
+	await view.unmount()
+}
+
+// Suggestions already loaded aren't asked for again when the tab regains focus or the connection returns.
+{
+	const many = Array.from({ length: 50 }, (_, at) =>
+		groupOf(unknownRow(500 + at, `Many ${at}`, `9500${at}`)),
+	)
+	const view = await flow(summary(PARENT, { unmatched: 50 }, 50), {
+		groups: many,
+		suggest: Object.fromEntries(
+			many.map((group, at) => [
+				group.representativeIndex,
+				proposal("movie", 60000 + at, `Many film ${at}`, 2003),
+			]),
+		),
+		resolve: [],
+	})
+	await view.click("Review matches")
+	await settle(10)
+	const before = view.sent().length
+	await view.refocusAndReconnect()
+	await view.click("Hide matching")
+	await view.refocusAndReconnect()
+	results.warmCache = snap(view, { before })
+	await view.unmount()
+}
+
+// Exit only once the pipe took everything: the results are larger than one pipe buffer.
+// Try again on pages that aren't next to each other still asks for one page at a time.
+const thirty = Array.from({ length: 30 }, (_, at) =>
+	groupOf(unknownRow(700 + at, `Thirty ${at}`, `9700${at}`)),
+)
+{
+	const view = await flow(summary(PARENT, { unmatched: 30 }, 30), {
+		groups: thirty,
+		omit: [700, 720],
+		resolve: [],
+	})
+	await view.click("Review matches")
+	await settle(8)
+	results.gapsChecked = snap(view)
+	net.omit = []
+	net.suggestions = ["hold", "hold"]
+	await view.click("Try again to check titles for a match")
+	await settle(8)
+	results.gapsRetrying = snap(view)
+	await view.unmount()
+}
+
+// Failed pages in the cache aren't asked for again when the member comes back to the page; only Try again does.
+{
+	const view = await flow(summary(PARENT, { unmatched: 30 }, 30), {
+		groups: thirty,
+		suggestions: ["offline", "default", "offline"],
+		resolve: [],
+	})
+	await view.click("Review matches")
+	await settle(8)
+	results.cachedFailed = snap(view)
+	await view.remount()
+	await view.click("Review matches")
+	await settle(8)
+	results.cachedRemounted = snap(view)
+	net.suggestions = ["hold", "hold"]
+	await view.click("Try again to check titles for a match")
+	await settle(8)
+	results.cachedRetrying = snap(view)
+	await view.unmount()
+}
+
+process.stdout.write(`__WISHLIST_MATCH__${JSON.stringify(results)}`, () =>
+	process.exit(0),
+)

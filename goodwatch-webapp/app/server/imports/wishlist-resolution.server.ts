@@ -247,7 +247,7 @@ export async function resolveWishlistImport(
 	return { import: preview, parentImportId: id }
 }
 
-async function matchingGroups(
+export async function matchingGroups(
 	userId: string,
 	id: string,
 ): Promise<WishlistMatchGroup[]> {
