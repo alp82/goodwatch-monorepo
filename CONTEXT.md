@@ -292,7 +292,7 @@ _Avoid_: Signature, Display name, Username
 The page listing a person's public share lists under their handle. For its owner, it is also where they manage all their share lists.
 
 **Episode grid**:
-A show's episode ratings laid out with one row per season and one cell per episode. Its numbering follows IMDb except where a reviewed episode presentation gives it the same seasons as the episode list.
+A show's episode ratings laid out with one row per season and one tile per episode, wrapping to fit the screen. Everyone gets the same Grid and Consistency views; members also see watched marks and can track episodes. Its numbering follows IMDb except where a reviewed episode presentation gives it the same seasons as the episode list.
 
 **Episode list**:
 A show's episodes by season, where a person marks the episodes they have watched. Numbering follows TMDB except for shows with a reviewed episode presentation shared with the episode grid; watched history always refers to the same catalog episodes.

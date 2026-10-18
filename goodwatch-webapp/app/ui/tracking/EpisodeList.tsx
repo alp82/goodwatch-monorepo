@@ -32,6 +32,7 @@ import type { PageEpisode, ShowView } from "~/domain/tracking/show-page"
 import type { LogRow } from "~/domain/tracking/storage"
 import type { EpisodeGrid } from "~/server/episode-grid.server"
 import { useBelowFold } from "~/ui/details/below-fold"
+import RatingsGrid from "~/ui/details/episode-grid/RatingsGrid"
 import {
 	EPISODE_GRID_ANCHOR,
 	formatScore,
@@ -43,10 +44,8 @@ import MediaText from "~/ui/media-text/MediaText"
 import { episodeText } from "~/ui/media-text/media-text"
 import { tmdbImageUrl } from "~/utils/tmdb-image"
 import OpenSeason from "./OpenSeason"
-import RatingsGrid from "./RatingsGrid"
 import {
 	ConfirmPanel,
-	POPOVER,
 	TAKE_BACK_LOOK,
 	TrackingToastHost,
 	useDismiss,
@@ -63,7 +62,6 @@ import {
 	formatDay,
 	formatWatched,
 	plural,
-	seasonShort,
 	seasonTitle,
 	useShowTracking,
 } from "./store"
@@ -96,36 +94,12 @@ export default function EpisodeList({
 // What every part reads
 // ---------------------------------------------------------------------------------------------------------
 
-/** A score as a small tile in the episode grid's colours. */
-export function ScoreTile({
-	score,
-	title,
-	className = "h-5 min-w-8 text-[11px]",
-}: {
-	score: number | null
-	title?: string
-	className?: string
-}) {
-	if (score === null) return null
-	return (
-		<span
-			title={title}
-			className={`inline-flex shrink-0 items-center justify-center rounded-[4px] px-1 font-semibold tabular-nums text-white ${className}`}
-			style={{ background: vibeTileColor(imdbVibe(score)) }}
-		>
-			{formatScore(score)}
-		</span>
-	)
-}
+import { ScoreTile } from "~/ui/details/episode-grid/ScoreTile"
 
 const SITE_BAR_HEIGHT = 64
 /** What stays clear above a place the page scrolls to: the site bar and the title page's sticky header. */
 const UNDER_HEADERS = `calc(${HEADER_HEIGHT} + ${SITE_BAR_HEIGHT + 16}px)`
 const ROW_SCROLL_MARGIN = { scrollMarginTop: UNDER_HEADERS }
-
-const PANEL = `min-w-0 overflow-hidden rounded-xl border border-white/[0.06] ${SURFACE}`
-const norm = (name: string | null) =>
-	(name ?? "").toLowerCase().replace(/[^a-z0-9]/g, "")
 
 export function useIsDesktop() {
 	const [is, setIs] = useState(
@@ -180,7 +154,6 @@ export interface Nav {
 	/** The open season's number; null at the matrix alone. */
 	open: number | null
 	season: Season
-	index: number
 	target: Target | null
 	selected: number | null
 	goEpisode: (
@@ -188,14 +161,8 @@ export interface Nav {
 		how?: Partial<Target>,
 		pressed?: boolean,
 	) => void
-	goSeason: (
-		season: Season | undefined,
-		focus?: boolean,
-		pressed?: boolean,
-	) => void
 	toggle: (season: Season) => void
 	close: () => void
-	step: (by: number) => void
 	jumpNext: (page?: boolean) => void
 }
 
@@ -244,7 +211,7 @@ function useNav(model: Model): Nav {
 
 	const anchor = (of: Season) =>
 		next && displaySeason(next) === of.number ? next : of.episodes[0]
-	const goSeason: Nav["goSeason"] = (to, focus = false, pressed = false) => {
+	const goSeason = (to: Season | undefined, focus = false, pressed = false) => {
 		const episode = to && anchor(to)
 		if (!to || !episode) return
 		if (pressed && opened !== to.number) keep(to.number)
@@ -269,15 +236,12 @@ function useNav(model: Model): Nav {
 		many,
 		open,
 		season,
-		index,
 		target,
 		selected,
 		goEpisode,
-		goSeason,
 		close,
 		toggle: (to) =>
 			opened === to.number ? close() : goSeason(to, false, true),
-		step: (by) => goSeason(seasons[index + by], true),
 		jumpNext: (page = false) => {
 			if (next) goEpisode(next, { focus: !page, page })
 		},

@@ -12,20 +12,40 @@ import { CheckIcon } from "@heroicons/react/24/solid"
 import {
 	type KeyboardEvent,
 	type ReactNode,
+	useEffect,
 	useLayoutEffect,
 	useMemo,
 	useRef,
 	useState,
 } from "react"
-import { episodeLabel } from "~/domain/tracking/machine"
+import { episodeCode as episodeLabel } from "~/domain/episode-label"
 import type { PageEpisode } from "~/domain/tracking/show-page"
 import {
 	formatScore,
 	imdbVibe,
 	vibeTileColor,
 } from "~/ui/details/episode-grid/scale"
-import { type Model, ScoreTile } from "./EpisodeList"
-import { FOCUS, type Season, seasonShort } from "./store"
+import type { Season } from "~/ui/tracking/store"
+import { ScoreTile } from "./ScoreTile"
+import { FOCUS, seasonShort } from "./presentation"
+
+const useIsoLayoutEffect =
+	typeof window === "undefined" ? useEffect : useLayoutEffect
+
+/** Only the watch decorations the shared renderer reads; guests supply an empty history. */
+export interface GridModel {
+	tracked: boolean
+	nextId: number | null
+	view: { watched: ReadonlySet<number> }
+	aired: (episode: PageEpisode) => boolean
+	count: (season: Season) => {
+		total: number
+		aired: number
+		watched: number
+		done: boolean
+	}
+	seasonScore: (season: number) => number | null
+}
 
 const LABEL_W = 44
 const SCORE_W = 36
@@ -71,7 +91,7 @@ export const seasonStats = (season: Season): SeasonStats => {
 function useWidth() {
 	const ref = useRef<HTMLDivElement>(null)
 	const [width, setWidth] = useState(0)
-	useLayoutEffect(() => {
+	useIsoLayoutEffect(() => {
 		const el = ref.current
 		if (!el) return
 		const observer = new ResizeObserver(() => setWidth(el.clientWidth))
@@ -84,7 +104,7 @@ function useWidth() {
 
 function useReducedMotion() {
 	const [reduced, setReduced] = useState(false)
-	useLayoutEffect(() => {
+	useIsoLayoutEffect(() => {
 		const media = window.matchMedia("(prefers-reduced-motion: reduce)")
 		const on = () => setReduced(media.matches)
 		on()
@@ -95,6 +115,7 @@ function useReducedMotion() {
 }
 
 interface Layout {
+	measured: boolean
 	/** Width of the area that holds the tiles and the dots. */
 	plotW: number
 	cell: number
@@ -118,7 +139,7 @@ export default function RatingsGrid({
 	afterRow,
 	seasonScores,
 }: {
-	model: Model
+	model: GridModel
 	seasons: Season[]
 	chart: boolean
 	selectedSeason: number | null
@@ -167,6 +188,7 @@ export default function RatingsGrid({
 			? all.reduce((sum, e) => sum + (e.rating ?? 0), 0) / all.length
 			: null
 		return {
+			measured: width > 0,
 			plotW,
 			cell,
 			readable: cell >= MIN_READABLE,
@@ -216,60 +238,79 @@ export default function RatingsGrid({
 			onKeyDown={onKeyDown}
 			className="w-full"
 			data-morph={chart ? "chart" : "grid"}
+			data-measured={layout.measured}
 		>
-			{width > 0 && (
-				<>
-					<Head
-						layout={layout}
-						chart={chart}
-						most={most}
-						transition={transition}
-					/>
-					{/* Wrapped seasons are told apart by space, not by text. */}
-					<div
-						className="flex flex-col"
-						style={{ gap: layout.wrapped ? 12 : GAP }}
-					>
-						{stats.map((s) => (
-							<div key={s.season.number} data-season-row={s.season.number}>
-								<SeasonRow
-									s={s}
-									model={model}
-									layout={layout}
-									chart={chart}
-									most={most}
-									selected={selectedSeason === s.season.number}
-									selectedEpisode={selectedEpisode}
-									roving={roving}
-									onFocusCell={setFocusId}
-									onSeason={onSeason}
-									onEpisode={onEpisode}
-									seasonScores={seasonScores}
-									transition={transition}
-									reduced={reduced}
-								/>
-								{afterRow(s.season)}
-							</div>
-						))}
+			<style>
+				{
+					".episode-rating-tile{position:absolute;left:0;top:0;display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:600;font-variant-numeric:tabular-nums;font-size:11.5px;color:#fff;will-change:transform}.episode-rating-tile:hover{filter:brightness(1.25)}.episode-rating-tile:focus-visible{outline:2px solid white;outline-offset:2px}[data-measured=false] .episode-rating-tile{position:relative;width:100%;height:30px;border-radius:3px}"
+				}
+			</style>
+			<Head
+				layout={layout}
+				chart={chart}
+				most={most}
+				numbers={Array.from({ length: most }, (_, i) => {
+					const numbers = new Set(
+						seasons.flatMap((s) =>
+							s.episodes[i] ? [s.episodes[i].number] : [],
+						),
+					)
+					return numbers.size === 1 ? [...numbers][0] : null
+				})}
+				transition={transition}
+			/>
+			{/* Wrapped seasons are told apart by space, not by text. */}
+			<div className="flex flex-col" style={{ gap: layout.wrapped ? 12 : GAP }}>
+				{stats.map((s) => (
+					<div key={s.season.number} data-season-row={s.season.number}>
+						<SeasonRow
+							s={s}
+							model={model}
+							layout={layout}
+							chart={chart}
+							most={most}
+							selected={selectedSeason === s.season.number}
+							selectedEpisode={selectedEpisode}
+							roving={roving}
+							onFocusCell={setFocusId}
+							onSeason={onSeason}
+							onEpisode={onEpisode}
+							seasonScores={seasonScores}
+							transition={transition}
+							reduced={reduced}
+						/>
+						{afterRow(s.season)}
 					</div>
-				</>
-			)}
+				))}
+			</div>
 		</div>
 	)
 }
 
 /** The strip above the rows: episode numbers in the grid, the score axis in the chart, cross-fading. */
 function Head({
+	numbers,
 	layout,
 	chart,
 	most,
 	transition,
-}: { layout: Layout; chart: boolean; most: number; transition: string }) {
+}: {
+	numbers: (number | null)[]
+	layout: Layout
+	chart: boolean
+	most: number
+	transition: string
+}) {
 	const fade = (on: boolean) => ({ opacity: on ? 1 : 0, transition })
 	return (
 		<div
 			className="relative"
-			style={{ height: HEAD_H, marginLeft: LABEL_W + GAP, width: layout.plotW }}
+			style={{
+				height: HEAD_H,
+				marginLeft: LABEL_W + GAP,
+				width: layout.measured ? layout.plotW : undefined,
+				visibility: layout.measured ? undefined : "hidden",
+			}}
 			aria-hidden
 		>
 			{!layout.wrapped && layout.plotW >= 420 && (
@@ -281,7 +322,7 @@ function Head({
 							className="absolute top-1 text-center text-[10px] tabular-nums text-gray-500"
 							style={{ left: i * (layout.cell + GAP), width: layout.cell }}
 						>
-							{i + 1}
+							{numbers[i]}
 						</span>
 					))}
 				</div>
@@ -326,7 +367,7 @@ function SeasonRow({
 	reduced,
 }: {
 	s: SeasonStats
-	model: Model
+	model: GridModel
 	layout: Layout
 	chart: boolean
 	most: number
@@ -429,7 +470,7 @@ function SeasonRow({
 		<div
 			className="grid items-start"
 			style={{
-				gridTemplateColumns: `${LABEL_W}px ${plotW}px ${seasonScores ? `${SCORE_W}px` : ""}`,
+				gridTemplateColumns: `${LABEL_W}px ${layout.measured ? `${plotW}px` : "minmax(0,1fr)"} ${seasonScores ? `${SCORE_W}px` : ""}`,
 				columnGap: GAP,
 			}}
 		>
@@ -447,7 +488,19 @@ function SeasonRow({
 					{count.done && <CheckIcon className="h-3 w-3 shrink-0" />}
 				</span>
 			</button>
-			<div className="relative" style={{ height: rowH, width: plotW }}>
+			<div
+				className="relative"
+				style={
+					layout.measured
+						? { height: rowH, width: plotW }
+						: {
+								display: "grid",
+								gridTemplateColumns: `repeat(auto-fill, minmax(28px, ${MAX_CELL}px))`,
+								gap: GAP,
+								minHeight: ROW_MIN,
+							}
+				}
+			>
 				{/* The row behind the tiles and dots: its free space (the end of a short season, a wrapped season's last
 				line, the chart's gaps) opens the season too. */}
 				<button
@@ -462,7 +515,10 @@ function SeasonRow({
 				<div
 					aria-hidden
 					className="pointer-events-none absolute inset-0"
-					style={fade(chart, 150)}
+					style={{
+						...fade(chart, 150),
+						display: layout.measured ? undefined : "none",
+					}}
 				>
 					{layout.ticks.map((t) => (
 						<span
@@ -558,47 +614,61 @@ function SeasonRow({
 							title={label}
 							onFocus={() => onFocusCell(e.id)}
 							onClick={() => onEpisode(e)}
-							className={`absolute left-0 top-0 flex cursor-pointer items-center justify-center font-semibold tabular-nums text-white will-change-transform hover:brightness-125 ${FOCUS} ${cell >= 28 ? "text-[11.5px]" : "text-[10px] tracking-tight"} ${aired ? "" : "border border-dashed border-white/25"}`}
-							style={{
-								width: cell,
-								height: TILE_H,
-								transform,
-								transformOrigin: "0 0",
-								// No background, radius or shadow change here: a tile and a dot are two layers that cross-fade, so
-								// the morph only animates transform and opacity and never waits for a repaint to look right.
-								opacity: chart && !rated ? 0 : 1,
-								pointerEvents: chart && !rated ? "none" : undefined,
-								zIndex: sel ? 3 : isNext ? 2 : 1,
-								transition: transition === "none" ? "none" : transition,
-								transitionDelay: `${stagger}ms`,
-							}}
+							className={`episode-rating-tile ${aired ? "" : "border border-dashed border-white/25"}`}
+							style={
+								layout.measured
+									? {
+											width: cell,
+											fontSize: cell >= 28 ? 11.5 : 10,
+											position: layout.measured ? "absolute" : "relative",
+											height: TILE_H,
+											transform: layout.measured ? transform : undefined,
+											transformOrigin: "0 0",
+											// No background, radius or shadow change here: a tile and a dot are two layers that cross-fade, so
+											// the morph only animates transform and opacity and never waits for a repaint to look right.
+											opacity: chart && !rated ? 0 : 1,
+											pointerEvents: chart && !rated ? "none" : undefined,
+											zIndex: sel ? 3 : isNext ? 2 : 1,
+											transition: transition === "none" ? "none" : transition,
+											transitionDelay: `${stagger}ms`,
+										}
+									: { background: aired ? colour : undefined }
+							}
 						>
-							<span
-								aria-hidden
-								className="absolute inset-0 rounded-[3px]"
-								style={{
-									background: aired ? colour : undefined,
-									boxShadow: chart ? undefined : ring,
-									...fade(!chart),
-								}}
-							/>
-							<span
-								aria-hidden
-								className="absolute inset-0 rounded-[50%]"
-								style={{
-									background: aired ? colour : undefined,
-									boxShadow: chart ? ring : undefined,
-									...fade(chart),
-								}}
-							/>
-							{/* The score, gone in the chart: the dot's place on the axis says it. */}
-							<span
-								className="relative"
-								style={fade(!chart && readable && rated)}
-								aria-hidden
-							>
-								{rated ? formatScore(e.rating ?? 0) : null}
-							</span>
+							{layout.measured ? (
+								<>
+									<span
+										aria-hidden
+										className="absolute inset-0 rounded-[3px]"
+										style={{
+											background: aired ? colour : undefined,
+											boxShadow: chart ? undefined : ring,
+											...fade(!chart),
+										}}
+									/>
+									<span
+										aria-hidden
+										className="absolute inset-0 rounded-[50%]"
+										style={{
+											background: aired ? colour : undefined,
+											boxShadow: chart ? ring : undefined,
+											...fade(chart),
+										}}
+									/>
+									{/* The score, gone in the chart: the dot's place on the axis says it. */}
+									<span
+										className="relative"
+										style={fade(
+											!chart && (!layout.measured || readable) && rated,
+										)}
+										aria-hidden
+									>
+										{rated ? formatScore(e.rating ?? 0) : null}
+									</span>
+								</>
+							) : rated ? (
+								formatScore(e.rating ?? 0)
+							) : null}
 							{/* An unwatched dot is a ring: a hole of the page colour, its border kept at 2 screen pixels. */}
 							{model.tracked && !watched && rated && (
 								<span

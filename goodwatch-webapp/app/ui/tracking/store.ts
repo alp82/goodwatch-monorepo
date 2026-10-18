@@ -1,12 +1,10 @@
-import useLocale from "~/utils/locale"
-import { mediaLanguageUrl } from "~/utils/media-presentation"
-import { displaySeason, displayNumber } from "~/domain/tracking/machine"
 // One show's tracking on its page, for a member (#384). The hero box and the episode list are separate chunks that
 // load at different times, so what they share lives here, outside React: the show's session (the browser's copy
 // and the actions on their way), the toast, the dialog that sets a group's date, and the request to open an
 // episode in the list. Loaded on first use, never with the page.
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useEffect, useMemo, useSyncExternalStore } from "react"
+import { displayNumber, displaySeason } from "~/domain/tracking/machine"
 import type { DateWords } from "~/domain/tracking/seen-press"
 import { afterShowTracking } from "~/domain/tracking/show-member-data"
 import {
@@ -26,6 +24,8 @@ import { useIsOnWishlist, useUserScore } from "~/hooks/useUserDataAccessors"
 import { getQueryKeyUserData } from "~/routes/api.user-data"
 import type { UserData } from "~/types/user-data"
 import { useUser } from "~/utils/auth"
+import useLocale from "~/utils/locale"
+import { mediaLanguageUrl } from "~/utils/media-presentation"
 
 // The name of gate.tsx's OPEN_EPISODES_EVENT, written out and not imported: the new TV on the start page marks a
 // show's Next episode through this store (ui/living-room/tv/use-tv-episode.ts), so this module is also loaded
@@ -380,22 +380,15 @@ export function useShowTracking(showId: number): ShowTracking {
 // Words and dates the hero box and the episode list share
 // ---------------------------------------------------------------------------------------------------------
 
-export const FOCUS =
-	"focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-/** The surface of the episode grid, which the episode list sits on too. */
-export const SURFACE = "bg-[#141923]"
+export {
+	FOCUS,
+	SURFACE,
+	seasonTitle,
+	seasonShort,
+} from "~/ui/details/episode-grid/presentation"
 
 export const plural = (count: number, word: string) =>
 	`${count} ${word}${count === 1 ? "" : "s"}`
-
-export const seasonTitle = (season: number) =>
-	season === 0
-		? "Specials"
-		: season < 0
-			? "Additional episodes"
-			: `Season ${season}`
-export const seasonShort = (season: number) =>
-	season === 0 ? "Sp" : season < 0 ? "More" : `S${season}`
 
 const MONTHS = [
 	"Jan",

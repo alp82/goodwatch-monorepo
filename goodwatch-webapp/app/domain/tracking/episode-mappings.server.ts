@@ -283,5 +283,202 @@ export const MF_GHOST_MAPPING: EpisodeMapping = {
 	],
 }
 
+// Dark uses English TMDB titles and German IMDb titles. Reviewed one-to-one identities;
+// all three seasons keep their catalog order. See fixtures/dark-episodes.json.
+export const DARK_MAPPING: EpisodeMapping = {
+	showId: 70523,
+	version: "70523-20261018-v1",
+	imdbParentId: "tt5753856",
+	entries: [
+		{
+			id: 1279454,
+			canonical: [1, 1],
+			display: [1, 1],
+			imdbId: "tt6305578",
+			reviewedNames: ["Secrets", "Geheimnisse"],
+		},
+		{
+			id: 1375781,
+			canonical: [1, 2],
+			display: [1, 2],
+			imdbId: "tt7305776",
+			reviewedNames: ["Lies", "Lügen"],
+		},
+		{
+			id: 1375782,
+			canonical: [1, 3],
+			display: [1, 3],
+			imdbId: "tt7305820",
+			reviewedNames: ["Past and Present", "Gestern und heute"],
+		},
+		{
+			id: 1375783,
+			canonical: [1, 4],
+			display: [1, 4],
+			imdbId: "tt7305818",
+			reviewedNames: ["Double Lives", "Doppelleben"],
+		},
+		{
+			id: 1375784,
+			canonical: [1, 5],
+			display: [1, 5],
+			imdbId: "tt7313308",
+			reviewedNames: ["Truths", "Wahrheiten"],
+		},
+		{
+			id: 1375785,
+			canonical: [1, 6],
+			display: [1, 6],
+			imdbId: "tt7313312",
+			reviewedNames: ["Sic Mundus Creatus Est", "Sic Mundus Creatus Est"],
+		},
+		{
+			id: 1375786,
+			canonical: [1, 7],
+			display: [1, 7],
+			imdbId: "tt7305824",
+			reviewedNames: ["Crossroads", "Kreuzwege"],
+		},
+		{
+			id: 1375787,
+			canonical: [1, 8],
+			display: [1, 8],
+			imdbId: "tt7313316",
+			reviewedNames: [
+				"As You Sow, So You Shall Reap",
+				"Was man sät, das wird man ernten",
+			],
+		},
+		{
+			id: 1375788,
+			canonical: [1, 9],
+			display: [1, 9],
+			imdbId: "tt7313320",
+			reviewedNames: ["Everything Is Now", "Alles ist jetzt"],
+		},
+		{
+			id: 1375789,
+			canonical: [1, 10],
+			display: [1, 10],
+			imdbId: "tt7313322",
+			reviewedNames: ["Alpha and Omega", "Alpha und Omega"],
+		},
+		{
+			id: 1793851,
+			canonical: [2, 1],
+			display: [2, 1],
+			imdbId: "tt7787482",
+			reviewedNames: ["Beginnings and Endings", "Anfänge und Enden"],
+		},
+		{
+			id: 1829343,
+			canonical: [2, 2],
+			display: [2, 2],
+			imdbId: "tt10454716",
+			reviewedNames: ["Dark Matter", "Dunkle Materie"],
+		},
+		{
+			id: 1829344,
+			canonical: [2, 3],
+			display: [2, 3],
+			imdbId: "tt10454722",
+			reviewedNames: ["Ghosts", "Gespenster"],
+		},
+		{
+			id: 1829345,
+			canonical: [2, 4],
+			display: [2, 4],
+			imdbId: "tt10454726",
+			reviewedNames: ["The Travelers", "Die Reisenden"],
+		},
+		{
+			id: 1829346,
+			canonical: [2, 5],
+			display: [2, 5],
+			imdbId: "tt10454732",
+			reviewedNames: ["Lost and Found", "Vom Suchen und Finden"],
+		},
+		{
+			id: 1829347,
+			canonical: [2, 6],
+			display: [2, 6],
+			imdbId: "tt10454734",
+			reviewedNames: ["An Endless Cycle", "Ein unendlicher Kreis"],
+		},
+		{
+			id: 1829348,
+			canonical: [2, 7],
+			display: [2, 7],
+			imdbId: "tt10457652",
+			reviewedNames: ["The White Devil", "Der weiße Teufel"],
+		},
+		{
+			id: 1829349,
+			canonical: [2, 8],
+			display: [2, 8],
+			imdbId: "tt10457654",
+			reviewedNames: ["Endings and Beginnings", "Enden und Anfänge"],
+		},
+		{
+			id: 2284012,
+			canonical: [3, 1],
+			display: [3, 1],
+			imdbId: "tt10414808",
+			reviewedNames: ["Deja-vu", "Deja-vu"],
+		},
+		{
+			id: 2284013,
+			canonical: [3, 2],
+			display: [3, 2],
+			imdbId: "tt12557670",
+			reviewedNames: ["The Survivors", "Die Überlebenden"],
+		},
+		{
+			id: 2284014,
+			canonical: [3, 3],
+			display: [3, 3],
+			imdbId: "tt12557682",
+			reviewedNames: ["Adam and Eva", "Adam und Eva"],
+		},
+		{
+			id: 2284015,
+			canonical: [3, 4],
+			display: [3, 4],
+			imdbId: "tt12557686",
+			reviewedNames: ["The Origin", "Der Ursprung"],
+		},
+		{
+			id: 2284016,
+			canonical: [3, 5],
+			display: [3, 5],
+			imdbId: "tt12557688",
+			reviewedNames: ["Life and Death", "Leben und Tod"],
+		},
+		{
+			id: 2284017,
+			canonical: [3, 6],
+			display: [3, 6],
+			imdbId: "tt12557694",
+			reviewedNames: ["Light and Shadow", "Licht und Schatten"],
+		},
+		{
+			id: 2284018,
+			canonical: [3, 7],
+			display: [3, 7],
+			imdbId: "tt12557700",
+			reviewedNames: ["Between the Time", "Zwischen der Zeit"],
+		},
+		{
+			id: 2284019,
+			canonical: [3, 8],
+			display: [3, 8],
+			imdbId: "tt12557704",
+			reviewedNames: ["The Paradise", "Das Paradies"],
+		},
+	],
+}
+
 export const episodeMapping = (showId: number): EpisodeMapping | null =>
-	showId === MF_GHOST_MAPPING.showId ? MF_GHOST_MAPPING : null
+	[MF_GHOST_MAPPING, DARK_MAPPING].find(
+		(mapping) => mapping.showId === showId,
+	) ?? null

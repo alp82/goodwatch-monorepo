@@ -1177,3 +1177,86 @@ test("the new TV's Seen it key leaves a show on hold alone", async () => {
 	assert.equal(derived.next?.number, 2)
 	assert.equal(episodeToMark(derived), null)
 })
+
+test("Dark keeps all 26 ratings when the initial IMDb grid becomes the tracking grid", async () => {
+	const fixture = JSON.parse(
+		readFileSync(
+			new URL(
+				"../domain/tracking/fixtures/dark-episodes.json",
+				import.meta.url,
+			),
+			"utf8",
+		),
+	)
+	db.seed("show", [{ tmdb_id: 70523, status: "Ended" }])
+	db.seed(
+		"episode",
+		fixture.catalog.map((e: Row) => ({
+			...episode(
+				Number(e.tmdb_id),
+				Number(e.season_number),
+				Number(e.episode_number),
+				String(e.name),
+				LONG_AGO,
+			),
+			...e,
+			show_id: 70523,
+		})),
+	)
+	db.seed(
+		"imdb_episode",
+		fixture.imdb.map((e: Row) => ({
+			...e,
+			show_id: 70523,
+			imdb_show_id: "tt5753856",
+			imdb_user_score_original: e.score,
+			imdb_user_score_rating_count: e.votes,
+		})),
+	)
+	const initial: EpisodeGrid = {
+		showId: 70523,
+		maxEpisodeNumber: 10,
+		hasEpisodeZero: false,
+		specials: [],
+		providers: ["imdb"],
+		seasons: [1, 2, 3].map((number) => ({
+			number,
+			maxEpisodeNumber: number === 1 ? 10 : 8,
+			scores: none,
+			episodes: fixture.imdb
+				.filter((e: Row) => e.season_number === number)
+				.map((e: Row) => ({
+					number: Number(e.episode_number),
+					name: String(e.name),
+					score: Number(e.score),
+					votes: Number(e.votes),
+				})),
+		})),
+	}
+	const { DARK_MAPPING } = await import(
+		"../domain/tracking/episode-mappings.server.ts"
+	)
+	assert.equal(fixture.externalIds.length, 26)
+	for (const entry of DARK_MAPPING.entries) {
+		const proof = fixture.externalIds.find((e: Row) => e.tmdbId === entry.id)
+		assert.ok(proof)
+		assert.equal(proof.imdbId, entry.imdbId)
+		assert.deepEqual([proof.season, proof.number], entry.canonical)
+		assert.deepEqual(entry.display, entry.canonical)
+	}
+	const page = await getShowTrackingPage(user, 70523, async () => initial)
+	const regular = page.episodes.filter((e) => e.season > 0)
+	assert.equal(regular.filter((e) => e.rating !== null).length, 26)
+	for (const e of regular) {
+		assert.equal(
+			e.rating,
+			initial.seasons
+				.find((s) => s.number === e.season)
+				?.episodes.find((r) => r.number === e.number)?.score,
+		)
+	}
+	assert.ok(
+		page.episodes.filter((e) => e.season === 0).every((e) => e.rating === null),
+	)
+	assert.deepEqual(page.log, [])
+})

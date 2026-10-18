@@ -1,7 +1,4 @@
-// Pieces of the episode grid: the floating tip and popover, and the episode tip, season
-// scores, provider marks and legend that live inside them.
-import { assetUrl } from "~/utils/asset-url"
-import { useReplayedTap } from "~/utils/useReplayedTap"
+// Episode details, provider scores, and the floating panel shared with member season controls.
 import {
 	type ReactNode,
 	useCallback,
@@ -11,41 +8,31 @@ import {
 	useState,
 } from "react"
 import { createPortal } from "react-dom"
+import imdbLogo from "~/img/imdb-logo-250.webp?no-inline"
+import metacriticLogoIcon from "~/img/metacritic-logo-icon-64.webp?no-inline"
+import rottenLogoIcon from "~/img/rotten-logo-icon-64.webp"
+import tmdbLogo from "~/img/tmdb-logo.svg"
 import type {
 	GridEpisode,
 	GridSeason,
 	GridSpecial,
 } from "~/server/episode-grid.server"
-import imdbLogo from "~/img/imdb-logo-250.webp?no-inline"
-import metacriticLogoIcon from "~/img/metacritic-logo-icon-64.webp?no-inline"
-import rottenLogoIcon from "~/img/rotten-logo-icon-64.webp"
-import tmdbLogo from "~/img/tmdb-logo.svg"
 import {
 	LOW_VOTE_THRESHOLD,
 	PROVIDERS,
 	type ProviderKey,
-	describeProviderScore,
 	formatCount,
 	formatScore,
 	imdbVibe,
 	isLowVotes,
-	vibeLabel,
-	vibeTextColor,
 	vibeTileColor,
 } from "~/ui/details/episode-grid/scale"
+import { assetUrl } from "~/utils/asset-url"
+import { useReplayedTap } from "~/utils/useReplayedTap"
 
 import MediaText from "~/ui/media-text/MediaText"
 export { episodeLabel, episodeWhere } from "./labels"
 import { episodeWhere } from "./labels"
-
-/** The accessible name of a season trigger: every site's season score. */
-export const seasonLabel = (season: GridSeason, providers: ProviderKey[]) => {
-	const scores = providers.flatMap((p) => {
-		const value = season.scores[p]
-		return value ? [describeProviderScore(p, value)] : []
-	})
-	return `${season.number < 0 ? "Additional episodes" : `Season ${season.number}`}. ${scores.length ? scores.join("; ") : "No season scores"}.`
-}
 
 // useLayoutEffect warns during server rendering; the float never renders there anyway.
 const useIsoLayoutEffect =
@@ -317,74 +304,5 @@ export function SeasonScoreList({
 				)
 			})}
 		</ul>
-	)
-}
-
-export function SeasonTip({
-	season,
-	providers,
-}: { season: GridSeason; providers: ProviderKey[] }) {
-	return (
-		<div className="min-w-52">
-			<p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-gray-400">
-				{season.number < 0 ? "Additional episodes" : `Season ${season.number}`}{" "}
-				by site
-			</p>
-			{season.coverage && (
-				<p className="mb-1 text-xs text-gray-400">
-					{season.coverage.rated}/{season.coverage.total} episodes rated
-				</p>
-			)}
-			<SeasonScoreList season={season} providers={providers} />
-		</div>
-	)
-}
-
-/** The key to the grid: the vibe steps episodes actually use, the few-votes mark and gaps. */
-export function LegendContent({
-	lowVoteSample,
-	children,
-}: { lowVoteSample: ReactNode; children?: ReactNode }) {
-	const steps = [
-		{ vibe: 90, range: "9+" },
-		{ vibe: 80, range: "8" },
-		{ vibe: 70, range: "7" },
-		{ vibe: 60, range: "6" },
-		{ vibe: 50, range: "5" },
-		{ vibe: 40, range: "<5" },
-	]
-	return (
-		<div className="w-64 space-y-2 text-xs text-gray-300">
-			<p className="text-gray-400">
-				IMDb episode ratings, coloured like every GoodWatch score.
-			</p>
-			<ul className="flex gap-0.5">
-				{steps.map(({ vibe, range }) => (
-					<li key={vibe} className="flex-1 text-center">
-						<span
-							className="block rounded-sm py-0.5 text-[11px] font-semibold text-white"
-							style={{ background: vibeTileColor(vibe) }}
-						>
-							{range}
-						</span>
-						<span
-							className="mt-0.5 block text-[10px] leading-tight"
-							style={{ color: vibeTextColor(vibe) }}
-						>
-							{vibeLabel(vibe)}
-						</span>
-					</li>
-				))}
-			</ul>
-			<p className="flex items-center gap-2">
-				{lowVoteSample}
-				<span>Under {LOW_VOTE_THRESHOLD} votes: may still move</span>
-			</p>
-			<p className="flex items-center gap-2">
-				<span className="inline-block h-3 w-4 rounded-sm bg-white/[0.06]" />
-				<span>Not rated on IMDb</span>
-			</p>
-			{children}
-		</div>
 	)
 }

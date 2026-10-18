@@ -1,0 +1,589 @@
+{
+	"catalog": [
+		{
+			"tmdb_id": 1463575,
+			"imdb_id": null,
+			"season_number": 0,
+			"episode_number": 1,
+			"name": "Aftershow | Time Travel"
+		},
+		{
+			"tmdb_id": 1463576,
+			"imdb_id": null,
+			"season_number": 0,
+			"episode_number": 2,
+			"name": "Aftershow | Relationships"
+		},
+		{
+			"tmdb_id": 1463577,
+			"imdb_id": null,
+			"season_number": 0,
+			"episode_number": 3,
+			"name": "Aftershow | Showrunner"
+		},
+		{
+			"tmdb_id": 1463578,
+			"imdb_id": null,
+			"season_number": 0,
+			"episode_number": 4,
+			"name": "Aftershow | Small Town Secrets"
+		},
+		{
+			"tmdb_id": 5412591,
+			"imdb_id": null,
+			"season_number": 0,
+			"episode_number": 5,
+			"name": "The big DARK farewell show"
+		},
+		{
+			"tmdb_id": 1279454,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 1,
+			"name": "Secrets"
+		},
+		{
+			"tmdb_id": 1375781,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 2,
+			"name": "Lies"
+		},
+		{
+			"tmdb_id": 1375782,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 3,
+			"name": "Past and Present"
+		},
+		{
+			"tmdb_id": 1375783,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 4,
+			"name": "Double Lives"
+		},
+		{
+			"tmdb_id": 1375784,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 5,
+			"name": "Truths"
+		},
+		{
+			"tmdb_id": 1375785,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 6,
+			"name": "Sic Mundus Creatus Est"
+		},
+		{
+			"tmdb_id": 1375786,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 7,
+			"name": "Crossroads"
+		},
+		{
+			"tmdb_id": 1375787,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 8,
+			"name": "As You Sow, So You Shall Reap"
+		},
+		{
+			"tmdb_id": 1375788,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 9,
+			"name": "Everything Is Now"
+		},
+		{
+			"tmdb_id": 1375789,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 10,
+			"name": "Alpha and Omega"
+		},
+		{
+			"tmdb_id": 1793851,
+			"imdb_id": null,
+			"season_number": 2,
+			"episode_number": 1,
+			"name": "Beginnings and Endings"
+		},
+		{
+			"tmdb_id": 1829343,
+			"imdb_id": null,
+			"season_number": 2,
+			"episode_number": 2,
+			"name": "Dark Matter"
+		},
+		{
+			"tmdb_id": 1829344,
+			"imdb_id": null,
+			"season_number": 2,
+			"episode_number": 3,
+			"name": "Ghosts"
+		},
+		{
+			"tmdb_id": 1829345,
+			"imdb_id": null,
+			"season_number": 2,
+			"episode_number": 4,
+			"name": "The Travelers"
+		},
+		{
+			"tmdb_id": 1829346,
+			"imdb_id": null,
+			"season_number": 2,
+			"episode_number": 5,
+			"name": "Lost and Found"
+		},
+		{
+			"tmdb_id": 1829347,
+			"imdb_id": null,
+			"season_number": 2,
+			"episode_number": 6,
+			"name": "An Endless Cycle"
+		},
+		{
+			"tmdb_id": 1829348,
+			"imdb_id": null,
+			"season_number": 2,
+			"episode_number": 7,
+			"name": "The White Devil"
+		},
+		{
+			"tmdb_id": 1829349,
+			"imdb_id": null,
+			"season_number": 2,
+			"episode_number": 8,
+			"name": "Endings and Beginnings"
+		},
+		{
+			"tmdb_id": 2284012,
+			"imdb_id": null,
+			"season_number": 3,
+			"episode_number": 1,
+			"name": "Deja-vu"
+		},
+		{
+			"tmdb_id": 2284013,
+			"imdb_id": null,
+			"season_number": 3,
+			"episode_number": 2,
+			"name": "The Survivors"
+		},
+		{
+			"tmdb_id": 2284014,
+			"imdb_id": null,
+			"season_number": 3,
+			"episode_number": 3,
+			"name": "Adam and Eva"
+		},
+		{
+			"tmdb_id": 2284015,
+			"imdb_id": null,
+			"season_number": 3,
+			"episode_number": 4,
+			"name": "The Origin"
+		},
+		{
+			"tmdb_id": 2284016,
+			"imdb_id": null,
+			"season_number": 3,
+			"episode_number": 5,
+			"name": "Life and Death"
+		},
+		{
+			"tmdb_id": 2284017,
+			"imdb_id": null,
+			"season_number": 3,
+			"episode_number": 6,
+			"name": "Light and Shadow"
+		},
+		{
+			"tmdb_id": 2284018,
+			"imdb_id": null,
+			"season_number": 3,
+			"episode_number": 7,
+			"name": "Between the Time"
+		},
+		{
+			"tmdb_id": 2284019,
+			"imdb_id": null,
+			"season_number": 3,
+			"episode_number": 8,
+			"name": "The Paradise"
+		}
+	],
+	"imdb": [
+		{
+			"imdb_episode_id": "tt6305578",
+			"season_number": 1,
+			"episode_number": 1,
+			"name": "Geheimnisse",
+			"score": 8.2,
+			"votes": 22201
+		},
+		{
+			"imdb_episode_id": "tt7305776",
+			"season_number": 1,
+			"episode_number": 2,
+			"name": "Lügen",
+			"score": 8.1,
+			"votes": 21611
+		},
+		{
+			"imdb_episode_id": "tt7305820",
+			"season_number": 1,
+			"episode_number": 3,
+			"name": "Gestern und heute",
+			"score": 8.5,
+			"votes": 18840
+		},
+		{
+			"imdb_episode_id": "tt7305818",
+			"season_number": 1,
+			"episode_number": 4,
+			"name": "Doppelleben",
+			"score": 8.1,
+			"votes": 17778
+		},
+		{
+			"imdb_episode_id": "tt7313308",
+			"season_number": 1,
+			"episode_number": 5,
+			"name": "Wahrheiten",
+			"score": 8.9,
+			"votes": 18972
+		},
+		{
+			"imdb_episode_id": "tt7313312",
+			"season_number": 1,
+			"episode_number": 6,
+			"name": "Sic Mundus Creatus Est",
+			"score": 9,
+			"votes": 18475
+		},
+		{
+			"imdb_episode_id": "tt7305824",
+			"season_number": 1,
+			"episode_number": 7,
+			"name": "Kreuzwege",
+			"score": 8.6,
+			"votes": 16985
+		},
+		{
+			"imdb_episode_id": "tt7313316",
+			"season_number": 1,
+			"episode_number": 8,
+			"name": "Was man sät, das wird man ernten",
+			"score": 9.1,
+			"votes": 18216
+		},
+		{
+			"imdb_episode_id": "tt7313320",
+			"season_number": 1,
+			"episode_number": 9,
+			"name": "Alles ist jetzt",
+			"score": 8.6,
+			"votes": 16653
+		},
+		{
+			"imdb_episode_id": "tt7313322",
+			"season_number": 1,
+			"episode_number": 10,
+			"name": "Alpha und Omega",
+			"score": 9.2,
+			"votes": 18993
+		},
+		{
+			"imdb_episode_id": "tt7787482",
+			"season_number": 2,
+			"episode_number": 1,
+			"name": "Anfänge und Enden",
+			"score": 8.6,
+			"votes": 17923
+		},
+		{
+			"imdb_episode_id": "tt10454716",
+			"season_number": 2,
+			"episode_number": 2,
+			"name": "Dunkle Materie",
+			"score": 8.8,
+			"votes": 16844
+		},
+		{
+			"imdb_episode_id": "tt10454722",
+			"season_number": 2,
+			"episode_number": 3,
+			"name": "Gespenster",
+			"score": 9,
+			"votes": 16917
+		},
+		{
+			"imdb_episode_id": "tt10454726",
+			"season_number": 2,
+			"episode_number": 4,
+			"name": "Die Reisenden",
+			"score": 9.4,
+			"votes": 18767
+		},
+		{
+			"imdb_episode_id": "tt10454732",
+			"season_number": 2,
+			"episode_number": 5,
+			"name": "Vom Suchen und Finden",
+			"score": 9.2,
+			"votes": 17026
+		},
+		{
+			"imdb_episode_id": "tt10454734",
+			"season_number": 2,
+			"episode_number": 6,
+			"name": "Ein unendlicher Kreis",
+			"score": 9.5,
+			"votes": 22007
+		},
+		{
+			"imdb_episode_id": "tt10457652",
+			"season_number": 2,
+			"episode_number": 7,
+			"name": "Der weiße Teufel",
+			"score": 9.1,
+			"votes": 16788
+		},
+		{
+			"imdb_episode_id": "tt10457654",
+			"season_number": 2,
+			"episode_number": 8,
+			"name": "Enden und Anfänge",
+			"score": 9.4,
+			"votes": 20262
+		},
+		{
+			"imdb_episode_id": "tt10414808",
+			"season_number": 3,
+			"episode_number": 1,
+			"name": "Deja-vu",
+			"score": 8.8,
+			"votes": 18675
+		},
+		{
+			"imdb_episode_id": "tt12557670",
+			"season_number": 3,
+			"episode_number": 2,
+			"name": "Die Überlebenden",
+			"score": 8.6,
+			"votes": 17152
+		},
+		{
+			"imdb_episode_id": "tt12557682",
+			"season_number": 3,
+			"episode_number": 3,
+			"name": "Adam und Eva",
+			"score": 8.6,
+			"votes": 16867
+		},
+		{
+			"imdb_episode_id": "tt12557686",
+			"season_number": 3,
+			"episode_number": 4,
+			"name": "Der Ursprung",
+			"score": 8.8,
+			"votes": 17074
+		},
+		{
+			"imdb_episode_id": "tt12557688",
+			"season_number": 3,
+			"episode_number": 5,
+			"name": "Leben und Tod",
+			"score": 9.2,
+			"votes": 18687
+		},
+		{
+			"imdb_episode_id": "tt12557694",
+			"season_number": 3,
+			"episode_number": 6,
+			"name": "Licht und Schatten",
+			"score": 9,
+			"votes": 17897
+		},
+		{
+			"imdb_episode_id": "tt12557700",
+			"season_number": 3,
+			"episode_number": 7,
+			"name": "Zwischen der Zeit",
+			"score": 9.4,
+			"votes": 22788
+		},
+		{
+			"imdb_episode_id": "tt12557704",
+			"season_number": 3,
+			"episode_number": 8,
+			"name": "Das Paradies",
+			"score": 9.6,
+			"votes": 32006
+		}
+	],
+	"externalIds": [
+		{
+			"tmdbId": 1279454,
+			"imdbId": "tt6305578",
+			"season": 1,
+			"number": 1
+		},
+		{
+			"tmdbId": 1375781,
+			"imdbId": "tt7305776",
+			"season": 1,
+			"number": 2
+		},
+		{
+			"tmdbId": 1375782,
+			"imdbId": "tt7305820",
+			"season": 1,
+			"number": 3
+		},
+		{
+			"tmdbId": 1375783,
+			"imdbId": "tt7305818",
+			"season": 1,
+			"number": 4
+		},
+		{
+			"tmdbId": 1375784,
+			"imdbId": "tt7313308",
+			"season": 1,
+			"number": 5
+		},
+		{
+			"tmdbId": 1375785,
+			"imdbId": "tt7313312",
+			"season": 1,
+			"number": 6
+		},
+		{
+			"tmdbId": 1375786,
+			"imdbId": "tt7305824",
+			"season": 1,
+			"number": 7
+		},
+		{
+			"tmdbId": 1375787,
+			"imdbId": "tt7313316",
+			"season": 1,
+			"number": 8
+		},
+		{
+			"tmdbId": 1375788,
+			"imdbId": "tt7313320",
+			"season": 1,
+			"number": 9
+		},
+		{
+			"tmdbId": 1375789,
+			"imdbId": "tt7313322",
+			"season": 1,
+			"number": 10
+		},
+		{
+			"tmdbId": 1793851,
+			"imdbId": "tt7787482",
+			"season": 2,
+			"number": 1
+		},
+		{
+			"tmdbId": 1829343,
+			"imdbId": "tt10454716",
+			"season": 2,
+			"number": 2
+		},
+		{
+			"tmdbId": 1829344,
+			"imdbId": "tt10454722",
+			"season": 2,
+			"number": 3
+		},
+		{
+			"tmdbId": 1829345,
+			"imdbId": "tt10454726",
+			"season": 2,
+			"number": 4
+		},
+		{
+			"tmdbId": 1829346,
+			"imdbId": "tt10454732",
+			"season": 2,
+			"number": 5
+		},
+		{
+			"tmdbId": 1829347,
+			"imdbId": "tt10454734",
+			"season": 2,
+			"number": 6
+		},
+		{
+			"tmdbId": 1829348,
+			"imdbId": "tt10457652",
+			"season": 2,
+			"number": 7
+		},
+		{
+			"tmdbId": 1829349,
+			"imdbId": "tt10457654",
+			"season": 2,
+			"number": 8
+		},
+		{
+			"tmdbId": 2284012,
+			"imdbId": "tt10414808",
+			"season": 3,
+			"number": 1
+		},
+		{
+			"tmdbId": 2284013,
+			"imdbId": "tt12557670",
+			"season": 3,
+			"number": 2
+		},
+		{
+			"tmdbId": 2284014,
+			"imdbId": "tt12557682",
+			"season": 3,
+			"number": 3
+		},
+		{
+			"tmdbId": 2284015,
+			"imdbId": "tt12557686",
+			"season": 3,
+			"number": 4
+		},
+		{
+			"tmdbId": 2284016,
+			"imdbId": "tt12557688",
+			"season": 3,
+			"number": 5
+		},
+		{
+			"tmdbId": 2284017,
+			"imdbId": "tt12557694",
+			"season": 3,
+			"number": 6
+		},
+		{
+			"tmdbId": 2284018,
+			"imdbId": "tt12557700",
+			"season": 3,
+			"number": 7
+		},
+		{
+			"tmdbId": 2284019,
+			"imdbId": "tt12557704",
+			"season": 3,
+			"number": 8
+		}
+	]
+}

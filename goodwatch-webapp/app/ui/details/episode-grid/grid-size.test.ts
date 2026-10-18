@@ -68,10 +68,10 @@ test("scripted runs and long anime render whole", () => {
 	assert.equal(rendered.simpsons.seasons.length, 38)
 })
 
-test("a sparse soap renders whole, with its runs of unrated numbers as gap columns", () => {
+test("a sparse soap renders only its 162 cataloged episodes", () => {
 	assert.equal(rendered.soap.kept, true)
 	assert.equal(rendered.soap.shownEpisodes, 162)
-	// 11,599 numbers, 162 rated: every run between them is one gap column, not 69 cells.
+	// 11,599 numbers, 162 rated: no empty cells for the missing numbers.
 	assert.equal(rendered.soap.gapCells, 0)
 	assert.ok(rendered.soap.bytes < 300_000, `${rendered.soap.bytes}`)
 })
@@ -84,10 +84,7 @@ test("an extreme show keeps its newest seasons or its latest episodes, and offer
 		`Showing the latest ${rendered.lateNight.seasons.length} of 31 seasons`,
 	)
 	assert.equal(rendered.lateNight.button, "Show all 31 seasons")
-	assert.equal(rendered.ratedSoap.kept, false)
-	assert.match(
-		rendered.ratedSoap.notice ?? "",
-		/^Showing episodes [\d,]+ to 7,399$/,
-	)
-	assert.equal(rendered.ratedSoap.button, "Show all 1,572 episodes")
+	// The single shared grid is small enough to render this run whole, too.
+	assert.equal(rendered.ratedSoap.kept, true)
+	assert.equal(rendered.ratedSoap.shownEpisodes, 1572)
 })

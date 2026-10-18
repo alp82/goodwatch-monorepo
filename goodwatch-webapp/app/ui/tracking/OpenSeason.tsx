@@ -4,17 +4,12 @@
 // their own, half the width each. Then the season's rows.
 import { CheckIcon, ChevronDownIcon } from "@heroicons/react/24/solid"
 import type { EpisodeGrid } from "~/server/episode-grid.server"
+import { ScoreTile } from "~/ui/details/episode-grid/ScoreTile"
 import { formatScore } from "~/ui/details/episode-grid/scale"
 import { FloatLayer, useFloat } from "~/ui/details/episode-grid/shared"
 import { stickyHeadersBottom } from "~/ui/details/header-height"
 import { RatingChipRow } from "~/ui/details/hero/RatingChips"
-import {
-	type Model,
-	type Nav,
-	Rows,
-	ScoreTile,
-	useIsDesktop,
-} from "./EpisodeList"
+import { type Model, type Nav, Rows, useIsDesktop } from "./EpisodeList"
 import { FOCUS, SURFACE, type Season, seasonTitle } from "./store"
 
 // The site bar above the sticky title header.

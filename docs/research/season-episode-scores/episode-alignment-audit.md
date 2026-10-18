@@ -62,3 +62,11 @@ Generalize the presentation module and test it against fixtures from the other s
 TMDB groups exist for 65/113 sampled shows, and only 12 shows passed the inspected candidate groups' catalog-membership, size and order checks. We inspected up to three groups per mismatch, so this is a search result rather than proof that other shows have no usable group. A manually reviewed ID mapping can still work without a group.
 
 Official references: [episode external IDs](https://developer.themoviedb.org/reference/tv-episode-external-ids), [episode groups](https://developer.themoviedb.org/reference/tv-episode-group-details) and the separate [method limits and validation gates](episode-alignment-method-limits.md). The implementation plan is [here](../../implementation/tracking/episode-season-alignment-plan.md).
+
+## Dark: translated titles (October 18, 2026)
+
+Dark (TMDB 70523, IMDb tt5753856) loses 24 of 26 ratings when the member's tracking grid replaces the initial IMDb grid: TMDB stores English titles and IMDb stores German titles. Only S1 E6 and S3 E1 match by title. The season memberships and episode order agree (10 / 8 / 8).
+
+All 26 regular episodes were checked against TMDB's episode details with `append_to_response=external_ids`. Every live TMDB episode ID and its IMDb external ID agrees with the stored IMDb episode at the same position. The five TMDB specials remain outside regular season scores. The checked IDs and catalog snapshot are in [dark-episodes.json](../../../goodwatch-webapp/app/domain/tracking/fixtures/dark-episodes.json). `DARK_MAPPING` pins these identities and both source titles through the existing reviewed presentation, preserving canonical tracking positions. It does not infer identities from equal season counts.
+
+Regression: `node --test --test-name-pattern='Dark keeps' app/server/show-tracking.test.ts` from `goodwatch-webapp` failed with `2 !== 26` before enabling the mapping and passes with all 26 ratings afterwards.

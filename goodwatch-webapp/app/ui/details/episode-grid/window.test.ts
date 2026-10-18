@@ -1,12 +1,10 @@
-// The episode grid's columns and the part of a long grid that the show page renders first.
+// The part of a long grid that the show page renders first.
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import "../../../server/title-filter/test-alias.ts"
 
 const { windowEpisodeGrid } = await import("./window.ts")
-const { estimateGridBytes, gridFirstEpisode, gridLayout } = await import(
-	"./layout.ts"
-)
+const { estimateGridBytes } = await import("./layout.ts")
 const { miniatureScores } = await import("./scale.ts")
 type EpisodeGrid = import("../../../server/episode-grid.server.ts").EpisodeGrid
 
@@ -48,44 +46,6 @@ const grid = (
 
 const range = (from: number, to: number) =>
 	Array.from({ length: to - from + 1 }, (_, i) => from + i)
-const shape = (columns: ReturnType<typeof gridLayout>) =>
-	columns.map((c) =>
-		c.kind === "gap" ? `${c.from}-${c.to}` : String(c.number),
-	)
-
-test("a run of three or more numbers that no season has is one gap column", () => {
-	assert.deepEqual(
-		shape(gridLayout(grid([[1, [1, 2, 6, 7, 11_599], 11_599]]))),
-		["1", "2", "3-5", "6", "7", "8-11598", "11599"],
-	)
-})
-
-test("a short run keeps its columns, so a missing episode is still a gap cell", () => {
-	assert.deepEqual(shape(gridLayout(grid([[1, [1, 2, 4, 5, 7], 8]]))), [
-		"1",
-		"2",
-		"3",
-		"4",
-		"5",
-		"6",
-		"7",
-		"8",
-	])
-})
-
-test("a number that any season has keeps its column", () => {
-	const columns = gridLayout(
-		grid([
-			[1, [1, 10], 10],
-			[2, range(1, 10), 10],
-		]),
-	)
-	assert.deepEqual(
-		shape(columns),
-		shape(gridLayout(grid([[1, range(1, 10), 10]]))),
-	)
-})
-
 test("a grid within the budget is kept whole, specials and all", () => {
 	const whole = grid(
 		[
@@ -124,15 +84,13 @@ test("a grid over the budget keeps its newest seasons that fit, and the whole ru
 	assert.ok(estimateGridBytes(part) <= fourSeasons)
 })
 
-test("a newest season over the budget on its own keeps its latest episodes, its columns starting at the first", () => {
+test("a newest season over the budget on its own keeps its latest episodes, preserving the first shown number", () => {
 	const whole = grid([[1, range(1, 150), 150]])
 	const part = windowEpisodeGrid(whole, estimateGridBytes(whole) / 3)
 	const kept = part.seasons[0].episodes.map((e) => e.number)
 	assert.equal(kept.at(-1), 150)
 	assert.ok(kept.length > 30 && kept.length < 60, `${kept.length}`)
 	assert.equal(part.window?.firstEpisodeNumber, kept[0])
-	assert.equal(gridFirstEpisode(part), kept[0])
-	assert.equal(gridLayout(part).length, kept.length)
 	assert.equal(part.window?.hiddenSeasons, 0)
 	assert.equal(part.window?.hiddenEpisodes, 150 - kept.length)
 })
@@ -159,10 +117,8 @@ test("the extra episodes outside every season are not taken for the newest seaso
 	assert.equal(part.window?.hiddenSeasons, 6)
 })
 
-test("a part of a grid with an episode 0 keeps its columns from 0", () => {
+test("a part of a grid with an episode 0 preserves episode 0", () => {
 	const whole = grid(range(1, 10).map((n) => [n, range(0, 9), 9]))
 	const part = windowEpisodeGrid(whole, estimateGridBytes(whole) / 2)
 	assert.equal(part.hasEpisodeZero, true)
-	assert.equal(gridFirstEpisode(part), 0)
-	assert.equal(gridLayout(part).length, 10)
 })

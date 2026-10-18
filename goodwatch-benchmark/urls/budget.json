@@ -55,20 +55,22 @@
       "lcp_element": { "tag": "img", "contains": "src=\"https://image.tmdb.org/t/p/w780/" },
       "budget": {
         "html_bytes": { "max": 67072 },
-        "host_requests": { "max": 36 },
-        "script_count": { "max": 20 },
-        "script_bytes": { "max": 307200 },
-        "image_count": { "max": 11 },
-        "image_bytes": { "max": 153088 },
+        "host_requests": { "max": 42 },
+        "script_count": { "max": 26 },
+        "script_bytes": { "max": 360448 },
+        "image_count": { "max": 20 },
+        "image_bytes": { "max": 184320 },
         "font_requests": { "max": 1 },
         "blocking_requests": { "max": 1 },
         "third_party_origins": { "max": 1 },
-        "total_bytes": { "max": 606208 },
+        "total_bytes": { "max": 716800 },
         "lcp_ms": { "max": 6250 },
         "tbt_ms": { "max": 150 },
         "cls": { "max": 0.01 },
         "score": { "min": 62 }
-      }
+      },
+      "calibrated": "2026-10-19",
+      "calibration_note": "Shared guest/member episode grid. Measured against unchanged main and this build; see docs/implementation/tracking/episode-grid/README.md."
     },
     "person": {
       "path": "/person/138-quentin-tarantino",
