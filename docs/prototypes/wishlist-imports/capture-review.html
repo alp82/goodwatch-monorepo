@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PROTOTYPE - Wishlist preview: partial Netflix capture and match choice</title>
+<style>
+	:root { --accent: #6366f1; --bg: #0f172a; --panel: #111827; --line: #334155; --text: #e5e7eb; --muted: #9ca3af; --warn: #fbbf24; }
+	* { box-sizing: border-box; }
+	body { margin: 0; font: 16px/1.5 system-ui, sans-serif; background: var(--bg); color: var(--text); }
+	main { max-width: 1100px; margin: 0 auto; padding: 16px; }
+	.banner { background: #7f1d1d; color: #fff; padding: 12px 16px; font-weight: 700; border-bottom: 4px solid #ef4444; }
+	.banner small { display: block; font-weight: 400; }
+	h1 { font-size: 1.4rem; margin: 16px 0 4px; }
+	h2 { font-size: 1.1rem; margin: 0 0 8px; }
+	h3 { font-size: 1rem; margin: 12px 0 6px; }
+	p { margin: 4px 0; }
+	.muted { color: var(--muted); font-size: .9rem; }
+	.grid { display: grid; gap: 16px; grid-template-columns: 1fr; }
+	@media (min-width: 900px) { .grid { grid-template-columns: 3fr 2fr; } }
+	.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 16px; }
+	.warn { border: 1px solid #b45309; background: #451a03; color: #fde68a; border-radius: 8px; padding: 12px; margin: 8px 0; }
+	button { font: inherit; min-height: 44px; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--line); background: #1e293b; color: var(--text); cursor: pointer; margin: 2px; }
+	button:hover:not(:disabled) { background: #334155; }
+	button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+	button:disabled { opacity: .5; cursor: not-allowed; }
+	button.next { outline: 2px solid var(--accent); }
+	.cands { display: grid; gap: 6px; grid-template-columns: 1fr; }
+	@media (min-width: 600px) { .cands { grid-template-columns: repeat(3, 1fr); } }
+	label.card { display: flex; gap: 8px; align-items: center; min-height: 44px; border: 1px solid var(--line); border-radius: 8px; padding: 8px; cursor: pointer; }
+	label.card.on { border-color: var(--accent); background: #1e1b4b; }
+	.poster { width: 28px; height: 42px; border-radius: 3px; background: #334155; flex: none; display: grid; place-items: center; font-size: .65rem; color: var(--muted); }
+	fieldset { border: 1px solid var(--line); border-radius: 8px; margin: 10px 0; padding: 10px; }
+	legend { font-weight: 600; padding: 0 4px; }
+	table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+	td, th { text-align: left; padding: 4px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+	.tag { display: inline-block; padding: 0 6px; border-radius: 999px; font-size: .75rem; background: #334155; }
+	.tag.add { background: #065f46; } .tag.choose { background: #92400e; } .tag.skip { background: #3f3f46; }
+	.changed { background: #312e81; }
+	.tabs button[aria-selected="true"] { background: var(--accent); color: #fff; }
+	.log { font-size: .85rem; max-height: 180px; overflow: auto; }
+	dl { display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; margin: 0; font-size: .9rem; }
+	dt { color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="banner" role="alert">
+	PROTOTYPE - NOT LIVE-TESTED. Netflix import isn't available in GoodWatch.
+	<small>All titles, IDs, and library entries are made up. Nothing is sent over the network and nothing is saved: reload the page to start over. This page has not been checked against a real Netflix account, capture, or archive.</small>
+</div>
+<main>
+	<h1>Wishlist preview: a partial Netflix capture with title-only rows</h1>
+	<p><strong>Question:</strong> When a capture of a Netflix My List stops partway and its rows carry a title but no year or type, does this preview model stay honest? Specifically: is the coverage gap visible, does every title-only guess wait for the member's choice, does the number on the button equal what Add would really add (after duplicates, Seen titles, and choices), and do Not interested and Undo behave as the member would expect?</p>
+	<p class="muted">The production release has none of this: no Netflix row, no match choice. Wishlist files there apply only ID matches and unique title-and-year matches.</p>
+
+	<div class="grid">
+		<section class="panel" aria-labelledby="preview-h">
+			<h2 id="preview-h">What the member sees</h2>
+			<div id="preview"></div>
+		</section>
+		<section class="panel" aria-labelledby="state-h">
+			<h2 id="state-h">Current state</h2>
+			<div id="state"></div>
+		</section>
+	</div>
+
+	<section class="panel" style="margin-top:16px" aria-labelledby="free-h">
+		<h2 id="free-h">Free play</h2>
+		<p class="muted">Each button is one thing that can happen. Press them in any order.</p>
+		<div id="free"></div>
+	</section>
+
+	<section class="panel" style="margin-top:16px" aria-labelledby="walk-h">
+		<h2 id="walk-h">Guided walkthroughs</h2>
+		<div class="tabs" role="tablist" id="tabs"></div>
+		<div id="walk"></div>
+	</section>
+</main>
+
+<script>
+// ---------------------------------------------------------------------------------------------------------------
+// Portable logic: pure functions over plain data. No DOM in this block.
+// ---------------------------------------------------------------------------------------------------------------
+const WishlistModel = (() => {
+	/** Synthetic catalog. "netflixId" stands for GoodWatch's own streaming-link data. */
+	const CATALOG = [
+		{ id: "m-arrival", title: "Arrival", year: 2016, type: "Movie", onNetflix: true, netflixId: "n100" },
+		{ id: "s-office-us", title: "The Office", year: 2005, type: "Show", onNetflix: true },
+		{ id: "s-office-uk", title: "The Office", year: 2001, type: "Show", onNetflix: false },
+		{ id: "m-dune-84", title: "Dune", year: 1984, type: "Movie", onNetflix: false },
+		{ id: "m-dune-21", title: "Dune", year: 2021, type: "Movie", onNetflix: true },
+		{ id: "s-shogun-80", title: "Shogun", year: 1980, type: "Show", onNetflix: false },
+		{ id: "s-shogun-24", title: "Shogun", year: 2024, type: "Show", onNetflix: false },
+		{ id: "s-dark", title: "Dark", year: 2017, type: "Show", onNetflix: true, netflixId: "n200" },
+		{ id: "s-ozark", title: "Ozark", year: 2017, type: "Show", onNetflix: true, netflixId: "n300" },
+		{ id: "m-roma", title: "Roma", year: 2018, type: "Movie", onNetflix: true },
+		{ id: "m-heat", title: "Heat", year: 1995, type: "Movie", onNetflix: false },
+		{ id: "m-heat-72", title: "Heat", year: 1972, type: "Movie", onNetflix: false },
+		{ id: "m-heat-13", title: "Heat", year: 2013, type: "Movie", onNetflix: false },
+		{ id: "m-heat-86", title: "Heat", year: 1986, type: "Movie", onNetflix: false },
+	]
+	const byId = Object.fromEntries(CATALOG.map((t) => [t.id, t]))
+
+	/** The capture arrives in pages; it stops after the first unless the member captures more. */
+	const PAGES = [
+		[
+			{ row: 1, title: "Dark", netflixId: "n200" },
+			{ row: 2, title: "The Office", netflixId: "n401" },
+			{ row: 3, title: "Arrival", netflixId: "n100" },
+			{ row: 4, title: "Dune", netflixId: "n402" },
+			{ row: 5, title: "Ozark", netflixId: "n300" },
+			{ row: 6, title: "Shogun", netflixId: "n403" },
+		],
+		[
+			{ row: 7, title: "Roma", netflixId: "n404" },
+			{ row: 8, title: "The Office", netflixId: "n401" },
+			{ row: 9, title: "Heat", netflixId: "n405" },
+			{ row: 10, title: "Kids' Live Stream", netflixId: "n406", live: true },
+		],
+	]
+	const REPORTED_TOTAL = 10
+
+	const initial = () => ({
+		pagesCaptured: 1,
+		/** Netflix's own count, as the capture saw it; not proof of completeness. */
+		reportedTotal: REPORTED_TOTAL,
+		choices: {}, // row -> candidate id, or "none"
+		seenChoice: "keep", // "keep" | "rewatch"
+		library: {
+			wishlist: ["s-dark"],
+			seen: ["m-arrival"],
+			notInterested: ["s-ozark"],
+		},
+		phase: "preview", // "preview" | "done" | "undone"
+		lastImport: null,
+	})
+
+	const rows = (state) => PAGES.slice(0, state.pagesCaptured).flat()
+
+	/** How GoodWatch finds a row's title: a Netflix link applies; an exact name only suggests, at most three. */
+	function candidatesFor(row) {
+		if (row.live) return { kind: "unsupported", reason: "Only movies and shows can go on your Wishlist." }
+		const linked = CATALOG.filter((t) => t.netflixId && t.netflixId === row.netflixId)
+		if (linked.length === 1) return { kind: "linked", id: linked[0].id }
+		const named = CATALOG.filter((t) => t.title.toLowerCase() === row.title.toLowerCase())
+		if (named.length === 0) return { kind: "unmatched", reason: "No GoodWatch title has this name." }
+		if (named.length > 3) return { kind: "unmatched", reason: "Too many GoodWatch titles have this name. Search for it to add the right one." }
+		const onNetflix = named.filter((t) => t.onNetflix)
+		return {
+			kind: "suggest",
+			ids: named.map((t) => t.id),
+			// One candidate on Netflix is preselected; otherwise nothing is.
+			preselect: onNetflix.length === 1 ? onNetflix[0].id : null,
+		}
+	}
+
+	/** Every row's fate if the member pressed Add now. */
+	function plan(state) {
+		const lib = state.library
+		const seenIds = new Set()
+		const seenSource = new Set()
+		const out = rows(state).map((row) => {
+			const found = candidatesFor(row)
+			// The same Netflix entry twice is one wish: drop it before matching, so two listings can't match apart.
+			if (seenSource.has(row.netflixId))
+				return { row, fate: "duplicate", reason: "Listed twice in the file. Added once.", found: { kind: "repeat" } }
+			seenSource.add(row.netflixId)
+			let id = null
+			let basis = null
+			if (found.kind === "unsupported") return { row, fate: "unsupported", reason: found.reason, found }
+			if (found.kind === "unmatched") return { row, fate: "unmatched", reason: found.reason, found }
+			if (found.kind === "linked") { id = found.id; basis = "Matched by Netflix link" }
+			if (found.kind === "suggest") {
+				const choice = state.choices[row.row] ?? found.preselect
+				if (!choice) return { row, fate: "needs-choice", reason: "Choose the right title, or leave it out.", found }
+				if (choice === "none") return { row, fate: "left-out", reason: "You left this title out.", found }
+				id = choice
+				basis = state.choices[row.row] ? "You chose this match" : "Suggested: the one on Netflix"
+			}
+			if (seenIds.has(id)) return { row, id, fate: "duplicate", reason: "Listed twice in the file. Added once.", found, basis }
+			seenIds.add(id)
+			if (lib.wishlist.includes(id)) return { row, id, fate: "already", reason: "Already in your Wishlist.", found, basis }
+			if (lib.seen.includes(id))
+				return state.seenChoice === "rewatch"
+					? { row, id, fate: "add", rewatch: true, reason: "Added as Want to rewatch.", found, basis }
+					: { row, id, fate: "seen-kept", reason: "Seen in GoodWatch. Left as Seen.", found, basis }
+			return { row, id, fate: "add", clearsNotInterested: lib.notInterested.includes(id), found, basis }
+		})
+		return out
+	}
+
+	const summary = (state) => {
+		const p = plan(state)
+		const count = (fate) => p.filter((x) => x.fate === fate).length
+		return {
+			add: count("add"),
+			needsChoice: count("needs-choice"),
+			seen: p.filter((x) => x.fate === "seen-kept" || (x.fate === "add" && x.rewatch)).length,
+			clearsNotInterested: p.filter((x) => x.clearsNotInterested).length,
+			captured: rows(state).length,
+			reportedTotal: state.reportedTotal,
+			partial: rows(state).length < state.reportedTotal,
+		}
+	}
+
+	function reduce(state, action) {
+		if (state.phase !== "preview" && !["undo", "reset", "putBackNotInterested"].includes(action.type)) return state
+		switch (action.type) {
+			case "reset":
+				return initial()
+			case "captureMore":
+				return state.pagesCaptured >= PAGES.length ? state : { ...state, pagesCaptured: state.pagesCaptured + 1 }
+			case "choose": {
+				const found = candidatesFor(rows(state).find((r) => r.row === action.row) ?? {})
+				// A choice is legal only among the suggested candidates, or "none".
+				if (found.kind !== "suggest" || (action.id !== "none" && !found.ids.includes(action.id))) return state
+				return { ...state, choices: { ...state.choices, [action.row]: action.id } }
+			}
+			case "seen":
+				return { ...state, seenChoice: action.choice }
+			case "add": {
+				const p = plan(state)
+				const added = p.filter((x) => x.fate === "add")
+				const cleared = added.filter((x) => x.clearsNotInterested).map((x) => x.id)
+				return {
+					...state,
+					phase: "done",
+					library: {
+						...state.library,
+						wishlist: [...state.library.wishlist, ...added.map((x) => x.id)],
+						notInterested: state.library.notInterested.filter((id) => !cleared.includes(id)),
+					},
+					lastImport: { added: added.map((x) => x.id), cleared },
+				}
+			}
+			case "undo": {
+				if (state.phase !== "done") return state
+				const { added } = state.lastImport
+				// Undo takes added titles off Want to See. It doesn't mark cleared titles Not interested again.
+				return {
+					...state,
+					phase: "undone",
+					library: { ...state.library, wishlist: state.library.wishlist.filter((id) => !added.includes(id)) },
+				}
+			}
+			case "putBackNotInterested": {
+				if (state.phase !== "undone" || !state.lastImport.cleared.includes(action.id)) return state
+				return { ...state, library: { ...state.library, notInterested: [...new Set([...state.library.notInterested, action.id])] } }
+			}
+			default:
+				return state
+		}
+	}
+
+	return { CATALOG, byId, initial, reduce, plan, summary, rows, candidatesFor }
+})()
+
+// ---------------------------------------------------------------------------------------------------------------
+// Throwaway page shell.
+// ---------------------------------------------------------------------------------------------------------------
+const M = WishlistModel
+let state = M.initial()
+let previous = state
+let log = []
+const name = (id) => { const t = M.byId[id]; return t ? `${t.title} (${t.year}, ${t.type})` : id }
+const plural = (n, one, many = one + "s") => `${n} ${n === 1 ? one : many}`
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c])
+
+function dispatch(action, label) {
+	previous = state
+	state = M.reduce(state, action)
+	log.unshift(state === previous ? `${label}: not allowed now, nothing changed` : label)
+	render()
+}
+
+function renderPreview() {
+	const s = M.summary(state)
+	const p = M.plan(state)
+	const el = document.getElementById("preview")
+	if (state.phase !== "preview") {
+		const { added, cleared } = state.lastImport
+		el.innerHTML = state.phase === "done"
+			? `<h3>Import complete</h3>
+				<p>${plural(added.length, "title")} added to Want to See. From your Netflix list (synthetic).</p>
+				${cleared.map((id) => `<p class="muted">${esc(name(id))}: Off Not interested, because you added it to Want to See. Undo won't put it back.</p>`).join("")}
+				${s.partial ? `<div class="warn">This file holds ${s.captured} of ${s.reportedTotal} titles. Titles that aren't in the file stay as they are in GoodWatch.</div>` : ""}
+				<button onclick="dispatch({type:'undo'}, 'Undo import')">Undo import</button>`
+			: `<h3>Import undone</h3>
+				<p>${plural(added.length, "title")} removed from Want to See.</p>
+				${cleared.map((id) => `<p>${esc(name(id))}: Was on Not interested before the import.
+					${state.library.notInterested.includes(id) ? "<strong>Back on Not interested</strong>" : `<button onclick="dispatch({type:'putBackNotInterested', id:'${id}'}, 'Mark ${esc(M.byId[id].title)} Not interested again')">Mark Not interested again</button>`}</p>`).join("")}`
+		return
+	}
+	const choose = p.filter((x) => x.found.kind === "suggest")
+	el.innerHTML = `
+		<h3>Check before you import</h3>
+		<p>Here is what we found in <strong>netflix-my-list.json</strong> (synthetic). Nothing has been saved yet.</p>
+		${s.partial
+			? `<div class="warn" role="status"><strong>This file holds ${s.captured} of ${s.reportedTotal} titles</strong><br>The tool stopped before reaching the end of the list. Titles that aren't in the file stay as they are in GoodWatch.</div>`
+			: ""}
+		<p class="muted">Importing only adds titles to Want to See. It never removes anything from your Wishlist.</p>
+		<p class="muted">Adding a title to Want to See takes it off Not interested. Undo takes the title off Want to See but doesn't mark it Not interested again.</p>
+		${s.seen ? `<fieldset><legend>${plural(s.seen, "title")} you've already seen</legend>
+			<label class="card ${state.seenChoice === "keep" ? "on" : ""}"><input type="radio" name="seen" ${state.seenChoice === "keep" ? "checked" : ""} onchange="dispatch({type:'seen',choice:'keep'}, 'Leave seen titles as Seen')"> Leave ${s.seen === 1 ? "it" : "them"} as Seen</label>
+			<label class="card ${state.seenChoice === "rewatch" ? "on" : ""}"><input type="radio" name="seen" ${state.seenChoice === "rewatch" ? "checked" : ""} onchange="dispatch({type:'seen',choice:'rewatch'}, 'Add seen titles as Want to rewatch')"> Add ${s.seen === 1 ? "it" : "them"} as Want to rewatch</label>
+		</fieldset>` : ""}
+		${choose.length ? `<h3>${plural(choose.length, "title needs", "titles need")} your choice</h3>
+			<p class="muted">These titles came without a year, so GoodWatch found more than one possible match. Choose the right one, or leave a title out.</p>
+			${choose.map((x) => {
+				const current = state.choices[x.row.row] ?? x.found.preselect ?? "none"
+				return `<fieldset><legend>"${esc(x.row.title)}" from your list</legend><div class="cands">
+					${x.found.ids.map((id) => { const t = M.byId[id]; return `<label class="card ${current === id ? "on" : ""}"><span class="poster">poster</span><span style="flex:1">${esc(t.title)}<br><span class="muted">${t.year} · ${t.type}${t.onNetflix ? " · On Netflix" : ""}</span></span><input type="radio" name="c${x.row.row}" ${current === id ? "checked" : ""} onchange="dispatch({type:'choose',row:${x.row.row},id:'${id}'}, 'Choose ${esc(t.title)} ${t.year} for row ${x.row.row}')"></label>` }).join("")}
+					<label class="card ${current === "none" ? "on" : ""}"><span style="flex:1">None of these</span><input type="radio" name="c${x.row.row}" ${current === "none" ? "checked" : ""} onchange="dispatch({type:'choose',row:${x.row.row},id:'none'}, 'Leave row ${x.row.row} out')"></label>
+				</div></fieldset>`
+			}).join("")}` : ""}
+		<h3>Every row</h3>
+		<table><thead><tr><th>Row</th><th>From your list</th><th>Outcome</th></tr></thead><tbody>
+			${p.map((x) => `<tr><td>${x.row.row}</td><td>${esc(x.row.title)}${x.id ? `<br><span class="muted">${esc(name(x.id))}${x.basis ? ` · ${esc(x.basis)}` : ""}</span>` : ""}</td><td><span class="tag ${x.fate === "add" ? "add" : x.fate === "needs-choice" ? "choose" : "skip"}">${x.fate === "add" ? (x.rewatch ? "Want to rewatch" : "Add") : x.fate.replace("-", " ")}</span> ${x.reason ? `<span class="muted">${esc(x.reason)}</span>` : ""}${x.fate === "unmatched" ? ` <a href="#" onclick="return false" style="color:#a5b4fc">Search (new tab, disabled here)</a>` : ""}${x.clearsNotInterested ? ` <span class="muted">Takes it off Not interested.</span>` : ""}</td></tr>`).join("")}
+		</tbody></table>
+		${s.needsChoice ? `<p class="muted">${plural(s.needsChoice, "title")} without a choice won't be added.</p>` : ""}
+		<p><button class="primary" ${s.add ? "" : "disabled"} onclick="dispatch({type:'add'}, 'Add to Want to See')">${s.add ? `Add ${s.add} to Want to See` : "Nothing to add"}</button></p>`
+}
+
+function renderState() {
+	const s = M.summary(state)
+	const changed = (key) => JSON.stringify(previous.library[key]) !== JSON.stringify(state.library[key]) ? "changed" : ""
+	document.getElementById("state").innerHTML = `
+		<dl>
+			<dt>Screen</dt><dd>${{ preview: "Preview", done: "Import complete", undone: "Import undone" }[state.phase]}</dd>
+			<dt>Captured</dt><dd>${s.captured} of ${s.reportedTotal} titles Netflix reported${s.partial ? " (partial)" : ""}</dd>
+			<dt>Would add now</dt><dd>${s.add}</dd>
+			<dt>Waiting for a choice</dt><dd>${s.needsChoice}</dd>
+			<dt>Seen titles</dt><dd>${state.seenChoice === "keep" ? "Leave as Seen" : "Add as Want to rewatch"}</dd>
+			<dt>Takes off Not interested</dt><dd>${s.clearsNotInterested}</dd>
+		</dl>
+		<h3>Member's GoodWatch library</h3>
+		<dl>
+			<dt>Wishlist</dt><dd class="${changed("wishlist")}">${state.library.wishlist.map(name).join(", ") || "empty"}</dd>
+			<dt>Seen</dt><dd class="${changed("seen")}">${state.library.seen.map(name).join(", ") || "none"}</dd>
+			<dt>Not interested</dt><dd class="${changed("notInterested")}">${state.library.notInterested.map(name).join(", ") || "none"}</dd>
+		</dl>
+		<h3>What happened</h3>
+		<ol class="log">${log.map((l) => `<li>${esc(l)}</li>`).join("") || "<li>Nothing yet</li>"}</ol>`
+}
+
+const FREE = [
+	["Capture the rest of the list", { type: "captureMore" }],
+	["Choose The Office (2001, UK) for row 2", { type: "choose", row: 2, id: "s-office-uk" }],
+	["Choose The Office (2005, US) for row 2", { type: "choose", row: 2, id: "s-office-us" }],
+	["Choose Dune (2021) for row 4", { type: "choose", row: 4, id: "m-dune-21" }],
+	["Leave Dune out", { type: "choose", row: 4, id: "none" }],
+	["Choose Shogun (2024) for row 6", { type: "choose", row: 6, id: "s-shogun-24" }],
+	["Try to choose Roma for row 4 (not a candidate)", { type: "choose", row: 4, id: "m-roma" }],
+	["Add seen titles as Want to rewatch", { type: "seen", choice: "rewatch" }],
+	["Leave seen titles as Seen", { type: "seen", choice: "keep" }],
+	["Add to Want to See", { type: "add" }],
+	["Undo import", { type: "undo" }],
+	["Mark Ozark Not interested again", { type: "putBackNotInterested", id: "s-ozark" }],
+	["Start over", { type: "reset" }],
+]
+
+const WALKS = [
+	{
+		name: "Partial capture",
+		text: "The capture stopped after 6 of the 10 titles Netflix reported. Watch the amber box: it says the file is partial and that missing titles stay as they are. Then capture the rest and watch the box disappear and the counts change.",
+		steps: [0, 9],
+	},
+	{
+		name: "Ambiguous match",
+		text: "\"The Office\" has two shows by that name. The US one is on Netflix, so it is suggested. Choose the UK one instead and see the row's basis change to \"You chose this match\". \"Shogun\" has two candidates and neither is on Netflix: nothing is preselected, so it waits. An illegal choice (Roma for Dune) changes nothing.",
+		steps: [1, 6, 5, 3, 9],
+	},
+	{
+		name: "Duplicate after more capture",
+		text: "Capturing more brings \"The Office\" a second time. The count on the button must not grow by two: the second listing is marked as a duplicate, added once.",
+		steps: [0, 2, 9],
+	},
+	{
+		name: "Seen title",
+		text: "Arrival is Seen in GoodWatch. By default it stays Seen and the button doesn't count it. Choose Want to rewatch and watch the button count go up by one.",
+		steps: [7, 8, 7, 9],
+	},
+	{
+		name: "Not interested and Undo",
+		text: "Ozark is Not interested, and its Netflix link matches. Adding it takes it off Not interested. Undo takes it off Want to See but doesn't put Not interested back; the member can do that from the Undo result.",
+		steps: [9, 10, 11],
+	},
+]
+let walk = 0
+let step = 0
+
+function renderFree() {
+	document.getElementById("free").innerHTML = FREE.map(([label], i) => `<button data-free="${i}">${esc(label)}</button>`).join("")
+	document.querySelectorAll("[data-free]").forEach((b) => (b.onclick = () => { const [label, action] = FREE[b.dataset.free]; dispatch(action, label) }))
+}
+
+function renderWalk() {
+	document.getElementById("tabs").innerHTML = WALKS.map((w, i) => `<button role="tab" aria-selected="${i === walk}" data-tab="${i}">${esc(w.name)}</button>`).join("")
+	document.querySelectorAll("[data-tab]").forEach((b) => (b.onclick = () => { walk = Number(b.dataset.tab); step = 0; state = M.initial(); previous = state; log = [`Started walkthrough: ${WALKS[walk].name}`]; render() }))
+	const w = WALKS[walk]
+	document.getElementById("walk").innerHTML = `<p>${esc(w.text)}</p><p class="muted">Starting a tab resets to the same initial state. Press the steps in order.</p>
+		${w.steps.map((f, i) => `<button data-step="${i}" class="${i === step ? "next" : ""}" ${i === step ? "" : "disabled"}>${i + 1}. ${esc(FREE[f][0])}</button>`).join("")}
+		${step >= w.steps.length ? "<p><strong>Walkthrough finished.</strong> Pick another tab, or keep going with free play.</p>" : ""}`
+	document.querySelectorAll("[data-step]").forEach((b) => (b.onclick = () => { const [label, action] = FREE[w.steps[step]]; step++; dispatch(action, label) }))
+}
+
+function render() { renderPreview(); renderState(); renderFree(); renderWalk() }
+log = [`Started walkthrough: ${WALKS[0].name}`]
+render()
+</script>
+</body>
+</html>
