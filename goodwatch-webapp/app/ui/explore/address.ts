@@ -2,7 +2,7 @@
 // Those routes match every path of one to three segments that no other route names, so they also decide what an
 // unknown path answers. An unknown path answers 404: a redirect to the start page or a hub reads as a soft 404 to a
 // crawler, and whatever the address had earned is dropped.
-import { validUrlParams } from "~/ui/explore/config"
+import { type PageData, validUrlParams } from "~/ui/explore/config"
 import { mainHierarchy } from "~/ui/explore/main-nav"
 
 export interface ExploreAddress {
@@ -15,12 +15,16 @@ export interface ExploreAddress {
 const has = (object: object, key: string) =>
 	Object.prototype.hasOwnProperty.call(object, key)
 
-const pagesOf = (category: string): Record<string, unknown> | undefined =>
+const pagesOf = (category: string): Record<string, PageData> | undefined =>
 	has(mainHierarchy, category)
 		? mainHierarchy[category as keyof typeof mainHierarchy]
 		: undefined
 
-/** Whether the address names a page. A segment the address doesn't have is left out or empty. */
+/**
+ * Whether the address names a page. A segment the address doesn't have is left out or empty. A list belongs to the
+ * movies, the shows, or both: `/movies/genres/talk` and `/shows/genres/action` name no page, since they would only
+ * ever list nothing. The sitemap lists the same pages (scripts/create_sitemaps.py).
+ */
 export const exploreAddressExists = ({
 	type = "",
 	category = "",
@@ -30,7 +34,8 @@ export const exploreAddressExists = ({
 	if (!category) return !page
 	const pages = pagesOf(category)
 	if (!pages) return false
-	return !page || has(pages, page)
+	if (!page) return true
+	return has(pages, page) && ["all", type].includes(pages[page].type)
 }
 
 /** The loaders' answer for an address that names no page. */

@@ -113,3 +113,66 @@ test("a tv-shows address moves to the same path under shows and keeps its query"
 		"/shows/tv-shows/x/y",
 	)
 })
+
+test("a list exists only under the type it lists", () => {
+	assert.equal(
+		exploreAddressExists({ type: "movies", category: "genres", page: "talk" }),
+		false,
+	)
+	assert.equal(
+		exploreAddressExists({ type: "shows", category: "genres", page: "action" }),
+		false,
+	)
+	assert.equal(
+		exploreAddressExists({ type: "shows", category: "genres", page: "talk" }),
+		true,
+	)
+	assert.equal(
+		exploreAddressExists({ type: "movies", category: "genres", page: "action" }),
+		true,
+	)
+	// Lists of both types.
+	assert.equal(
+		exploreAddressExists({ type: "shows", category: "genres", page: "drama" }),
+		true,
+	)
+	assert.equal(
+		exploreAddressExists({
+			type: "shows",
+			category: "streaming",
+			page: "netflix",
+		}),
+		true,
+	)
+	assert.equal(formerExplorePath("movies", "genres", "talk"), null)
+})
+
+test("the category sitemap lists exactly the category pages that exist", async () => {
+	const { readFile } = await import("node:fs/promises")
+	const { mainHierarchy } = await import("./main-nav.ts")
+	const xml = await readFile(
+		new URL("../../../public/sitemaps/sitemap_categories.xml", import.meta.url),
+		"utf8",
+	)
+	const listed = [...xml.matchAll(/<loc>https:\/\/goodwatch\.app\/([^<]*)<\/loc>/g)].map(
+		(match) => match[1],
+	)
+	assert.ok(listed.length > 0)
+	for (const path of listed) {
+		const [type, category, page] = path.split("/")
+		assert.equal(
+			exploreAddressExists({ type, category, page }),
+			true,
+			`/${path} is in the sitemap`,
+		)
+	}
+	const existing: string[] = []
+	for (const type of ["movies", "shows"])
+		for (const [category, pages] of Object.entries(mainHierarchy)) {
+			existing.push(`${type}/${category}`)
+			for (const page of Object.keys(pages))
+				if (exploreAddressExists({ type, category, page }))
+					existing.push(`${type}/${category}/${page}`)
+		}
+	assert.deepEqual([...listed].sort(), existing.sort())
+})
