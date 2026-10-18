@@ -46,16 +46,18 @@ function Current({ flag, name, line, lang }: { flag: string; name: string; line:
 export function WhereYouWatchBody() {
 	const p = usePrefs()
 	return (
-		<div className="flex flex-col gap-12">
-			<Part title="Watching from">
-				<Current flag={p.country} name={regionName(p.country)} line={`Streaming offers and age ratings for ${regionName(p.country)}`} />
-				<div className="mt-2">
-					<CountryPicker />
-				</div>
-			</Part>
-			<Part title="Your services" hint="On my services keeps the titles on these, and you hear when a title you want lands on one.">
-				<ServicesGrid limit={24} />
-			</Part>
+		<div className="flex flex-col gap-6">
+			<Current flag={p.country} name={regionName(p.country)} line={`Streaming offers and age ratings for ${regionName(p.country)}`} />
+			<CountryPicker />
+		</div>
+	)
+}
+
+export function ServicesBody() {
+	const p = usePrefs()
+	return (
+		<div className="flex flex-col gap-6">
+			<ServicesGrid limit={32} />
 		</div>
 	)
 }
@@ -202,6 +204,8 @@ export function SharedBody({ slug }: { slug: PageSlug }) {
 	switch (slug) {
 		case "where-you-watch":
 			return <WhereYouWatchBody />
+		case "services":
+			return <ServicesBody />
 		case "language":
 			return <LanguageBody />
 		case "discover-privacy":

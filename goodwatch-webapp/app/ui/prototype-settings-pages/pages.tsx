@@ -7,6 +7,7 @@ import {
 	LanguageIcon,
 	ShieldCheckIcon,
 	SparklesIcon,
+	TvIcon,
 	UserCircleIcon,
 } from "@heroicons/react/24/outline"
 import { Link, useSearchParams } from "@remix-run/react"
@@ -16,6 +17,7 @@ export const BASE = "/prototype/settings-pages"
 
 export type PageSlug =
 	| "where-you-watch"
+	| "services"
 	| "language"
 	| "imports"
 	| "connected-apps"
@@ -37,10 +39,18 @@ export interface PageInfo {
 export const PAGES: PageInfo[] = [
 	{
 		slug: "where-you-watch",
-		name: "Where you watch",
-		hint: "Your country and your streaming services",
-		intro: "Your country decides where to watch each title, which services you can pick, and the age ratings you see.",
+		name: "Watching from",
+		hint: "Your country",
+		intro: "Your country decides where to watch each title, which streaming services you can pick, and the age ratings you see. It doesn't change the language.",
 		icon: GlobeAltIcon,
+		group: "watching",
+	},
+	{
+		slug: "services",
+		name: "Your services",
+		hint: "The streaming services you pay for",
+		intro: "On my services keeps the titles on these, and you hear when a title you want lands on one. The list shows the services in your country.",
+		icon: TvIcon,
 		group: "watching",
 	},
 	{

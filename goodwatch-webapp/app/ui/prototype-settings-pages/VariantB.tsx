@@ -43,6 +43,7 @@ function useSummary(): Record<PageSlug, ReactNode> {
 				{regionName(p.country)} · {p.services.length} {p.services.length === 1 ? "service" : "services"}
 			</span>
 		),
+		services: `${p.services.length} services`,
 		language: languageLabel(p.language, p.browserLanguage),
 		"discover-privacy": "For you on · Cookies allowed",
 		imports: `Last import ${HISTORY[0].when.replace(", 2026", "")}`,

@@ -49,8 +49,8 @@ function Tile({ slug, className = "", children }: { slug: PageSlug; className?: 
 		<PLink to={slug} className={`${tileClass} ${className}`}>
 			<span className="text-xs font-semibold tracking-wide text-gray-500 uppercase">{page.name}</span>
 			<span className="mb-4 text-sm text-gray-400">{page.hint}</span>
-			<span className="mt-auto">{children}</span>
-			<span className="mt-4 text-sm font-semibold text-amber-500 group-hover:text-amber-400">Open</span>
+			<span>{children}</span>
+			<span className="mt-auto pt-4 text-sm font-semibold text-amber-500 group-hover:text-amber-400">Open</span>
 		</PLink>
 	)
 }
@@ -95,12 +95,7 @@ function Home() {
 						<Flag code={p.country} className="h-8 md:h-10" />
 						<span className="truncate text-2xl font-black text-white md:text-3xl">{regionName(p.country)}</span>
 					</span>
-					<span className="mt-1 block text-sm text-gray-400">
-						{p.services.length === 1 ? "1 service" : `${p.services.length} services`}
-					</span>
-					<span className="mt-4 flex">
-						<ServiceLogos max={7} size="h-10 w-10" />
-					</span>
+					<span className="mt-1 block text-sm text-gray-400">Streaming offers and age ratings</span>
 				</Tile>
 				<Tile slug="language">
 					<span className="flex items-center gap-3">
@@ -116,6 +111,14 @@ function Home() {
 						<img src={tmdbImageUrl(SAMPLE_POSTER, "w92")} alt="" className="h-12 w-8 shrink-0 rounded object-cover shadow" />
 						<span lang={sample.title.lang} dir="auto" className="min-w-0 truncate text-sm font-semibold text-gray-300">
 							{sample.title.text}
+						</span>
+					</span>
+				</Tile>
+				<Tile slug="services" className="md:col-span-2 md:min-h-0">
+					<span className="flex flex-wrap items-center gap-x-6 gap-y-3">
+						<ServiceLogos max={12} size="h-12 w-12" />
+						<span className="text-sm text-gray-400">
+							{p.services.length === 1 ? "1 service" : `${p.services.length} services`} in {regionName(p.country)}
 						</span>
 					</span>
 				</Tile>
