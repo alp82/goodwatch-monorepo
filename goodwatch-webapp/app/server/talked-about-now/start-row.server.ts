@@ -130,11 +130,13 @@ const crateReads: Reads = {
 /** The row, or null without a ranking. Throws only when the ranking itself can't be read. */
 export async function readTalkedAboutNow(
 	reads: Reads = crateReads,
+	// PROTOTYPE: the deeper page asks for the whole ranking and more posts per title.
+	opts: { board?: number; items?: number } = {},
 ): Promise<TalkedRow | null> {
 	const current = await reads.snapshot("current")
 	const parsed = current ? parseSnapshot(current.payload) : null
 	if (!parsed || !parsed.titles.length) return null
-	const board = parsed.titles.slice(0, BOARD_SIZE)
+	const board = parsed.titles.slice(0, opts.board ?? BOARD_SIZE)
 
 	const [before, displays, rows] = await Promise.all([
 		reads
@@ -177,10 +179,25 @@ export async function readTalkedAboutNow(
 					display?.release_year ??
 					(releaseDate ? Number(releaseDate.slice(0, 4)) || null : null),
 				move: moveOf(key, title.rank, before),
-				items: pickItems(byTitle.get(key) ?? []),
+				items: pickItems(byTitle.get(key) ?? [], opts.items),
+				// PROTOTYPE: context for the deeper page.
+				extra: {
+					score: display?.goodwatch_overall_score_normalized_percent ?? null,
+					tagline: display?.tagline ?? null,
+					runtime: display?.runtime ?? null,
+					allItems: (byTitle.get(key) ?? []).length,
+				},
 			}
 		}),
 	}
+}
+
+/** PROTOTYPE: the deeper page's read, cached like the row's. */
+let keptDeep: { at: number; row: Promise<TalkedRow | null> } | null = null
+export function getHotOnSocialsDeep(now = Date.now()) {
+	if (keptDeep && now - keptDeep.at < TALKED_TTL_MS) return keptDeep.row
+	keptDeep = { at: now, row: readTalkedAboutNow(crateReads, { board: 40, items: 12 }) }
+	return keptDeep.row
 }
 
 let kept: { at: number; ttl: number; row: Promise<TalkedRow | null> } | null =

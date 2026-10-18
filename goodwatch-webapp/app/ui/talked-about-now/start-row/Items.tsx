@@ -28,7 +28,7 @@ export function Platform({ source }: { source: TalkedItem["source"] }) {
 	)
 }
 
-const embedOf = (item: TalkedItem): SocialEmbedItem => ({
+export const embedOf = (item: TalkedItem): SocialEmbedItem => ({
 	id: item.id,
 	source: item.source === "rss" ? "news" : item.source,
 	url: item.url,

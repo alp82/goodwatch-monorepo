@@ -65,6 +65,8 @@ export type TalkedTitle = {
 	move: number | "new" | null
 	/** At most three, best-ranked first, at most one video; none when nothing said is relevant enough. */
 	items: TalkedItem[]
+	/** PROTOTYPE: only on the deeper page's read. */
+	extra?: { score: number | null; tagline: string | null; runtime: number | null; allItems: number }
 }
 
 export type TalkedRow = {
@@ -366,7 +368,8 @@ export function pickItems(
 		if (picked.length >= limit) break
 		const group = row.dup_group || row.post_id
 		if (groups.has(group)) continue
-		if (item.video && picked.some((other) => other.video)) continue
+		// PROTOTYPE: the deeper page (a longer limit) keeps every video.
+		if (item.video && limit <= ITEMS_PER_TITLE && picked.some((other) => other.video)) continue
 		groups.add(group)
 		picked.push(item)
 	}
