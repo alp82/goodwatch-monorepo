@@ -1,5 +1,16 @@
 # Capture validation
 
+## Version 0.0.4: supplied saved-page evidence
+
+The owner supplied a complete local HTML save after version 0.0.3 also returned `boundary_missing`. Inert inspection found no legacy grid, row or card classes. The actual saved structure uses `section.carousel-row`, a semantic My List heading, and `a[data-uia="standard-card"]` with the title on the anchor’s `aria-label` and one numeric `jbv` query parameter on a Netflix `/browse` link. The original saved HTML, account details, title names, IDs and assets are not published. The regression fixture preserves the relevant structure with invented data.
+
+The private offline replay compares exact IDs and titles: version 0.0.3 returns `boundary_missing`; version 0.0.4 captures exactly the five loaded My List cards among sixteen card occurrences across five rows. Eleven other-row occurrences are excluded. Some titles occur in several rows, so this is an exact comparison with the intended row rather than an assumption that every row has disjoint IDs. Page scripts were disabled, resource requests blocked, and no provider requests sent. This establishes compatibility with the saved snapshot, not whole-list completeness or live carousel loading.
+
+Modern cards retain their exact observed native `sourceId`; `sourceUrl` is omitted because the shared importer strips query parameters, and the saved `/browse?jbv=…` link does not itself establish an alternative route. No movie/show type or catalog identity is inferred. The active-profile marker now uses the exact unique profile-menu trigger/avatar structure found in the saved page; names and avatar URLs stay in memory and never enter the file. Private replay reports the marker present. Synthetic marker-change/disappearance tests discard capture; real profile switching remains unverified.
+
+Final version 0.0.4 validation: 26 command tests pass, and actual unpacked MV3 popup/collector/download runs pass for modern carousel, legacy row and grid fixtures. The new default browser fixture is `modern`; use `GOODWATCH_CAPTURE_FIXTURE=hub` or `grid` for the previous layouts. The permissions remain activeTab and scripting.
+
+
 ## First live attempt and version 0.0.3
 
 The owner supplied a screenshot of `/browse/my-list` showing the German Mein Netflix hub with a horizontal Meine Liste row among other sections, and reported `boundary_missing` after Start. The exact installed version was not confirmed; 0.0.1 and 0.0.2 share the same grid-only collector. This establishes a real layout incompatibility, not a successful capture. No account DOM, source HTML, capture file or credentials were supplied. The private screenshot is not included in this artifact.

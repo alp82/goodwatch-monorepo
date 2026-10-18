@@ -1,10 +1,12 @@
-/* Experimental original collector. Selectors are hypotheses, not a verified Netflix contract. */
+/* Experimental collector. Carousel selectors observed in one saved DOM; other selectors remain hypotheses. */
 (() => {
 	if (globalThis.__goodwatchWishlistCaptureCommand) return;
 	const BOUNDARIES = '.mainView .gallery, [data-uia="my-list-gallery"]';
 	const EXCLUDED =
 		'[role="dialog"], .bob-card, .previewModal, .recommendations, .billboard-row';
-	const ROWS = '.lolomoRow, .rowContainer';
+	const ROWS = '.lolomoRow, .rowContainer, section.carousel-row';
+	const MODERN_ROW = 'section.carousel-row';
+	const MODERN_CARD = 'a[data-uia="standard-card"]';
 	const HEADINGS = 'h1, h2, h3, h4, h5, h6, [role="heading"]';
 	const MY_LIST_LABELS = new Set(['My List', 'Meine Liste']);
 	const MAX_ROWS = 5000;
@@ -41,11 +43,19 @@
 		);
 	}
 	function profileMarker() {
-		const node = document.querySelector(
-			".account-dropdown-button .profile-icon",
-		);
-		return node
-			? JSON.stringify([node.getAttribute("alt"), node.getAttribute("src")])
+		// Only the active trigger owns this marker. Hidden menu avatars are not
+		// evidence of the active profile, and no marker values leave this closure.
+		const triggers = document.querySelectorAll('button[data-uia="navigation+profile-menu+trigger"]');
+		if (triggers.length) {
+			if (triggers.length !== 1) return null;
+			const avatars = triggers[0].querySelectorAll('img[data-uia="navigation+profile-menu+Avatar"]');
+			return avatars.length === 1
+				? JSON.stringify(['modern', avatars[0].getAttribute('alt'), avatars[0].getAttribute('src')])
+				: null;
+		}
+		const nodes = document.querySelectorAll('.account-dropdown-button .profile-icon');
+		return nodes.length === 1
+			? JSON.stringify(['legacy', nodes[0].getAttribute('alt'), nodes[0].getAttribute('src')])
 			: null;
 	}
 	function headingLabel(heading) {
@@ -55,7 +65,7 @@
 	}
 	function ownHeadings(row) {
 		return [...row.querySelectorAll(HEADINGS)].filter(heading =>
-			heading.closest(ROWS) === row && !heading.closest(`${EXCLUDED}, .ptrack-content`));
+			heading.closest(ROWS) === row && !heading.closest(`${EXCLUDED}, .ptrack-content, ${MODERN_CARD}`));
 	}
 	function boundaries() {
 		const grids = [...document.querySelectorAll(BOUNDARIES)]
@@ -64,7 +74,7 @@
 		// A heading identifies its nearest row only. A wrapper owning multiple headings
 		// or independent headed rows may be the entire hub, so refuse it.
 		const rows = [...document.querySelectorAll(HEADINGS)]
-			.filter(heading => !heading.closest(`${EXCLUDED}, .ptrack-content`) && MY_LIST_LABELS.has(headingLabel(heading)))
+			.filter(heading => !heading.closest(`${EXCLUDED}, .ptrack-content, ${MODERN_CARD}`) && MY_LIST_LABELS.has(headingLabel(heading)))
 			.map(heading => heading.closest(ROWS)).filter(row => row &&
 				ownHeadings(row).length === 1 &&
 				![...row.querySelectorAll(ROWS)].some(nested => !nested.closest(EXCLUDED) && ownHeadings(nested).length));
@@ -75,7 +85,7 @@
 		// A heading-free rowContainer can be the selected row's structural slider
 		// wrapper. Independent nested rows remain excluded; grids exclude all rows.
 		for (let parent = card.parentElement; parent && parent !== boundary; parent = parent.parentElement) {
-			if (parent.matches(ROWS) && (!boundary.matches(ROWS) || parent.matches('.lolomoRow') || ownHeadings(parent).length)) return true;
+			if (parent.matches(ROWS) && (!boundary.matches(ROWS) || parent.matches('.lolomoRow, section.carousel-row') || ownHeadings(parent).length)) return true;
 		}
 		return false;
 	}
@@ -142,7 +152,12 @@
 			}
 		}
 		let sourceUrl;
-		const anchors = card.querySelectorAll("a[href]");
+		const modern = card.matches(MODERN_CARD);
+		if (modern && !card.hasAttribute("href")) {
+			reject(card, "card_invalid_link");
+			return;
+		}
+		const anchors = [...(card.matches("a[href]") ? [card] : []), ...card.querySelectorAll("a[href]")];
 		if (anchors.length > 20) {
 			reject(card, "card_invalid_link");
 			return;
@@ -163,6 +178,21 @@
 			} catch {
 				reject(card, "card_invalid_link");
 				return;
+			}
+			if (modern) {
+				// The observed card anchor uses one native jbv ID on /browse. Keep
+				// only that evidence; no title/episode inference or tracking query.
+				const entries = [...url.searchParams];
+				const id = entries.length === 1 && entries[0][0] === 'jbv' && nativeId(entries[0][1]);
+				if (url.origin !== 'https://www.netflix.com' || url.username || url.password ||
+					url.pathname !== '/browse' || !id) {
+					reject(card, 'card_invalid_link');
+					return;
+				}
+				ids.add(id);
+				// Shared imports strip query strings; retain sourceId without emitting
+				// a lossy /browse link or inventing a /title URL from this evidence.
+				continue;
 			}
 			if (!/^\/title(?:\/|$)/.test(url.pathname)) continue;
 			const match = /^\/title\/([1-9]\d{0,19})\/?$/.exec(url.pathname);
@@ -197,6 +227,7 @@
 		const sourceId = [...ids][0];
 		if (quarantined.has(sourceId)) return;
 		const title =
+			modern ? card.getAttribute("aria-label")?.trim() :
 			card.querySelector(".fallback-text")?.textContent?.trim() ||
 			card.querySelector("a[aria-label]")?.getAttribute("aria-label")?.trim();
 		if (!validText(title)) {
@@ -242,7 +273,7 @@
 			terminate("limit_time", false);
 			return;
 		}
-		const cards = boundary.querySelectorAll(".ptrack-content");
+		const cards = boundary.querySelectorAll(boundary.matches(MODERN_ROW) ? MODERN_CARD : ".ptrack-content");
 		for (
 			let index = 0;
 			index < cards.length && state === "capturing";

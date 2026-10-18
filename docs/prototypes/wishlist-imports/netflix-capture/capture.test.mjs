@@ -426,3 +426,107 @@ test('excludes nested semantic rows before their headings mount', () => {
   assert.deepEqual(Array.from(result.envelope.items,item=>item.sourceId),['1001']);
  } finally {w.close();}
 });
+
+const carouselFixture=readFileSync(new URL('./fixtures/my-netflix-carousel.html',import.meta.url),'utf8');
+const modernCard=(id,title)=>`<a data-uia="standard-card" aria-label="${title}" href="/browse?jbv=${id}"><img alt=""></a>`;
+test('captures observed carousel structure with root standard-card aria labels and browse jbv IDs',()=>{
+ const w=world(carouselFixture);
+ try {
+  const result=w.command({action:'start'});
+  assert.equal(result.state,'capturing');
+  assert.deepEqual(Array.from(result.envelope.items,item=>[item.sourceId,item.title,item.sourceUrl,item.mediaType]),[
+   ['1001','Synthetic movie',undefined,'unknown'],
+   ['1002','Synthetic show',undefined,'unknown'],
+  ]);
+  assert.equal(result.envelope.completeness,'unknown');
+ }finally{w.close();}
+});
+
+test('modern cards reject hostile, ambiguous, playback and malformed browse identities',()=>{
+ const links=[
+  'https://evil.example/browse?jbv=1001','https://www.netflix.com.evil.example/browse?jbv=1001',
+  'https://user:secret@www.netflix.com/browse?jbv=1001','http://www.netflix.com/browse?jbv=1001',
+  '/browse?jbv=1001&jbv=1001','/browse?jbv=1001&jbv=1002','/browse?jbv=1001&token=private',
+  '/browse?jbv=0','/browse?jbv=-1','/browse?jbv=1.5','/browse?jbv=1e3','/browse?jbv=01',
+  '/browse?jbv=','/browse','/watch/1001','/title/1001','/browse/?jbv=1001',
+  '/browse?jbv=1001\\','/browse?jbv=1001\t',
+ ];
+ for(const href of links){
+  const w=world(carouselFixture);
+  try{
+   w.window.document.querySelector('#synthetic-my-list [data-uia="standard-card"]').setAttribute('href',href);
+   const result=w.command({action:'start'});
+   assert.deepEqual(Array.from(result.envelope.items,item=>item.sourceId),['1002']);
+   assert.ok(Array.from(result.issues).some(issue=>issue.code==='card_invalid_link'));
+  }finally{w.close();}
+ }
+});
+test('modern root title and later conflicting identity evidence fail closed permanently',()=>{
+ const w=world(carouselFixture);
+ try{
+  w.command({action:'start'});
+  const anchor=w.window.document.querySelector('#synthetic-my-list [data-uia="standard-card"]');
+  anchor.setAttribute('data-ui-tracking-context','{"video_id":"1002"}');
+  let result=w.command({action:'status'});
+  assert.equal(result.observedCount,0);
+  anchor.removeAttribute('data-ui-tracking-context');
+  assert.equal(w.command({action:'status'}).observedCount,0);
+ }finally{w.close();}
+ const missing=world(carouselFixture);
+ try{
+  const anchor=missing.window.document.querySelector('#synthetic-my-list [data-uia="standard-card"]');
+  anchor.removeAttribute('aria-label');
+  anchor.innerHTML='<img alt="Untrusted image"><span class="fallback-text">Untrusted fallback</span>';
+  const result=missing.command({action:'start'});
+  assert.deepEqual(Array.from(result.envelope.items,item=>item.sourceId),['1002']);
+ }finally{missing.close();}
+});
+test('modern carousel excludes unheaded nested rows and revalidates heading, row and duplicate boundaries',()=>{
+ const w=world(carouselFixture);
+ try{
+  const row=w.window.document.querySelector('#synthetic-my-list');
+  row.insertAdjacentHTML('beforeend',`<section class="carousel-row">${modernCard('9004','Other nested')}</section>`);
+  assert.equal(w.command({action:'start'}).observedCount,2);
+  row.querySelector('.slider').innerHTML=modernCard('1003','Third');
+  w.tick();
+  assert.equal(w.command({action:'status'}).observedCount,3);
+  row.querySelector('h2').textContent='Continue watching';
+  const result=w.command({action:'status'});
+  assert.equal(result.code,'terminated_boundary');
+  assert.equal(result.envelope.completeness,'partial');
+ }finally{w.close();}
+ for(const mutate of [row=>row.remove(),row=>row.insertAdjacentHTML('beforeend','<h2>My List</h2>'),row=>row.parentElement.insertAdjacentHTML('beforeend','<section class="carousel-row"><h2>My List</h2></section>')]){
+  const w=world(carouselFixture);
+  try{w.command({action:'start'});mutate(w.window.document.querySelector('#synthetic-my-list'));assert.equal(w.command({action:'status'}).code,'terminated_boundary');}finally{w.close();}
+ }
+});
+
+test('modern tracking evidence cannot replace required root browse href',()=>{
+ const w=world(carouselFixture);
+ try{
+  const anchor=w.window.document.querySelector('#synthetic-my-list [data-uia="standard-card"]');
+  anchor.removeAttribute('href');
+  anchor.setAttribute('data-ui-tracking-context','{"video_id":"1001"}');
+  const result=w.command({action:'start'});
+  assert.deepEqual(Array.from(result.envelope.items,item=>item.sourceId),['1002']);
+ }finally{w.close();}
+});
+
+test('modern active profile marker excludes hidden menu avatars and discards on change or disappearance',()=>{
+ for(const mutate of [img=>img.setAttribute('src','/changed.png'),img=>img.setAttribute('alt','Changed synthetic profile'),img=>img.remove()]){
+  const w=world(carouselFixture);
+  try{
+   const result=w.command({action:'start'});
+   assert.equal(result.profileGuard,true);
+   assert.equal(result.envelope.profileLabel,undefined);
+   const hidden=w.window.document.querySelector('[data-uia="synthetic-profile-menu"] img');
+   hidden.setAttribute('src','/hidden-menu-change.png');
+   assert.equal(w.command({action:'status'}).state,'capturing');
+   mutate(w.window.document.querySelector('button[data-uia="navigation+profile-menu+trigger"] img'));
+   const stopped=w.command({action:'status'});
+   assert.equal(stopped.code,'terminated_profile');
+   assert.equal(stopped.observedCount,0);
+   assert.equal(stopped.envelope,undefined);
+  }finally{w.close();}
+ }
+});

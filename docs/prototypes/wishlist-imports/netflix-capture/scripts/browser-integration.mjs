@@ -8,9 +8,9 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 const moduleName = process.env.GOODWATCH_PLAYWRIGHT_MODULE
 const { chromium } = await import(moduleName ? pathToFileURL(resolve(moduleName)).href : 'playwright-core')
 const extension = resolve(dirname(fileURLToPath(import.meta.url)), '..')
-const fixtureMode = process.env.GOODWATCH_CAPTURE_FIXTURE || 'hub'
-assert.ok(['hub', 'grid'].includes(fixtureMode), 'fixture must be hub or grid')
-const fixture = readFileSync(join(extension, fixtureMode === 'hub' ? 'fixtures/my-netflix-hub.html' : 'fixtures/my-list.html'), 'utf8')
+const fixtureMode = process.env.GOODWATCH_CAPTURE_FIXTURE || 'modern'
+assert.ok(['modern', 'hub', 'grid'].includes(fixtureMode), 'fixture must be modern, hub or grid')
+const fixture = readFileSync(join(extension, fixtureMode === 'modern' ? 'fixtures/my-netflix-carousel.html' : fixtureMode === 'hub' ? 'fixtures/my-netflix-hub.html' : 'fixtures/my-list.html'), 'utf8')
 const profile = mkdtempSync(join(tmpdir(), 'goodwatch-mv3-validation-'))
 const context = await chromium.launchPersistentContext(profile, {
   executablePath: process.env.GOODWATCH_CHROMIUM_PATH || chromium.executablePath(),
@@ -113,20 +113,23 @@ try {
   results.push('popup Start injects capture.js into the isolated world, captures two list cards and excludes recommendation')
 
   // The DOM contains only the latest card; previous cards must remain accumulated.
-  await page.evaluate(() => {
-    document.querySelector('#synthetic-my-list .slider, .gallery').innerHTML = '<div class="ptrack-content" data-ui-tracking-context="%7B%22video_id%22%3A%221003%22%7D"><a href="/title/1003?token=discard#private"><span class="fallback-text">Synthetic third</span></a></div>'
-  })
+  await page.evaluate(modern => {
+    document.querySelector('#synthetic-my-list .slider, .gallery').innerHTML = modern ? '<a data-uia="standard-card" aria-label="Synthetic third" href="/browse?jbv=1003" data-ui-tracking-context="%7B%22video_id%22%3A%221003%22%7D"><img alt=""></a>' : '<div class="ptrack-content" data-ui-tracking-context="%7B%22video_id%22%3A%221003%22%7D"><a href="/title/1003?token=discard#private"><span class="fallback-text">Synthetic third</span></a></div>'
+  }, fixtureMode === 'modern')
   const accumulated = await popup.evaluate(async () => run('status'))
   assert.equal(accumulated.observedCount, 3)
   assert.deepEqual(accumulated.envelope.items.map(value => value.sourceId).sort(), ['1001', '1002', '1003'])
   results.push('real MutationObserver handles recycled cards and once-encoded tracking metadata')
 
-  await page.evaluate(() => {
-    document.querySelector('#synthetic-my-list .slider, .gallery').insertAdjacentHTML('beforeend', '<div class="ptrack-content" data-ui-tracking-context="{&quot;video_id&quot;:&quot;1001&quot;}"><a href="/title/1001"><span class="fallback-text">Conflicting title</span></a></div>')
-  })
+  await page.evaluate(modern => {
+    document.querySelector('#synthetic-my-list .slider, .gallery').insertAdjacentHTML('beforeend', modern ? '<a data-uia="standard-card" aria-label="Conflicting title" href="/browse?jbv=1001"><img alt=""></a>' : '<div class="ptrack-content" data-ui-tracking-context="{&quot;video_id&quot;:&quot;1001&quot;}"><a href="/title/1001"><span class="fallback-text">Conflicting title</span></a></div>')
+  }, fixtureMode === 'modern')
   const conflict = await popup.evaluate(async () => run('status'))
   assert.equal(conflict.observedCount, 2)
-  await page.evaluate(() => document.querySelector('#synthetic-my-list .slider .ptrack-content:last-child .fallback-text, .gallery .ptrack-content:last-child .fallback-text').textContent = 'Synthetic movie')
+  await page.evaluate(modern => {
+    if (modern) document.querySelector('#synthetic-my-list [data-uia="standard-card"]:last-child').setAttribute('aria-label', 'Synthetic movie')
+    else document.querySelector('#synthetic-my-list .slider .ptrack-content:last-child .fallback-text, .gallery .ptrack-content:last-child .fallback-text').textContent = 'Synthetic movie'
+  }, fixtureMode === 'modern')
   const quarantined = await popup.evaluate(async () => run('status'))
   assert.ok(!quarantined.envelope.items.some(value => value.sourceId === '1001'))
   results.push('contradictory title evidence removes the earlier item permanently for this capture')
@@ -160,20 +163,20 @@ try {
     writeFileSync(process.env.GOODWATCH_CAPTURE_SCREENSHOT, Buffer.from(screenshot.data, 'base64'))
   }
 
-  if (fixtureMode === 'hub') {
+  if (fixtureMode !== 'grid') {
     await popup.evaluate(() => document.getElementById('start').click())
     await popup.waitForFunction(() => current.state === 'capturing')
-    await page.evaluate(() => document.querySelector('#synthetic-my-list .row-header-title').textContent = 'Continue watching')
+    await page.evaluate(() => document.querySelector('#synthetic-my-list .row-header-title, #synthetic-my-list h2').textContent = 'Continue watching')
     await popup.evaluate(async () => { accept(await run('status')); render() })
     assert.equal(await popup.evaluate(() => current.code), 'terminated_boundary')
     assert.equal(await popup.evaluate(() => envelope.completeness), 'partial')
-    await page.evaluate(() => document.querySelector('#synthetic-my-list .row-header-title').textContent = 'Meine Liste')
+    await page.evaluate(() => document.querySelector('#synthetic-my-list .row-header-title, #synthetic-my-list h2').textContent = 'Meine Liste')
     results.push('changing the synthetic row heading terminates capture with a partial receipt')
   }
 
   await popup.evaluate(() => document.getElementById('start').click())
   await popup.waitForFunction(() => current.state === 'capturing')
-  await page.evaluate(() => document.querySelector('.account-dropdown-button .profile-icon').setAttribute('src', '/avatar-b.png'))
+  await page.evaluate(() => document.querySelector('button[data-uia="navigation+profile-menu+trigger"] img[data-uia="navigation+profile-menu+Avatar"], .account-dropdown-button .profile-icon').setAttribute('src', '/avatar-b.png'))
   await popup.evaluate(async () => { accept(await run('status')); render() })
   assert.equal(await popup.evaluate(() => current.code), 'terminated_profile')
   assert.equal(await popup.evaluate(() => envelope), null)

@@ -2,15 +2,15 @@
 
 This is a throwaway prototype. It isn't a GoodWatch feature, it isn't supported, and it isn't in any extension store.
 
-The first live attempt, on a real Netflix account, revealed a layout that the earlier collector didn't support. Version 0.0.3 updates the capture for that layout. It has passed synthetic tests only and is pending a real-account test.
+Version 0.0.4 updates the capture for the My List layout that Netflix shows today. Live capture on Netflix is still unverified.
 
 The extension reads the titles that Netflix loads on your **My List** page while you go through it. When you stop, it saves them as a local JSON file in the GoodWatch wishlist file layout.
 
-## Version 0.0.3
+## Version 0.0.4
 
-On the first live attempt, Netflix showed My List inside the **Mein Netflix** page, as one horizontal row among others, such as **Weiterschauen** and **Nochmal ansehen**. The earlier collector couldn't identify My List there and stopped with the code `boundary_missing`. Versions 0.0.1 and 0.0.2 share that collector, and the installed version wasn't confirmed.
+Earlier versions stopped with the code `boundary_missing` on a real account because Netflix's current page doesn't match the layout they looked for. Version 0.0.4 finds the **My List** or **Meine Liste** row in the current layout, reads only that row's title cards, and takes each title's Netflix ID from the card's link. It doesn't read other rows. The permissions and the file format haven't changed.
 
-Version 0.0.3 looks for a row headed exactly **My List** or **Meine Liste** and reads only that row. It still reads the grid layout that earlier versions supported. The permissions and the file format haven't changed.
+The current layout was taken from a My List page that a member saved from their own account. Checking the capture against that saved page offline shows whether the capture reads that copy of the page. It doesn't show that the capture works in a live Netflix tab. Only a fresh live test can show that.
 
 ## Add the titles to GoodWatch
 
@@ -63,7 +63,7 @@ It asks the browser for only two permissions: `activeTab` (access to the current
 1. In Chrome, go to `chrome://extensions`. In Edge, go to `edge://extensions`.
 2. Turn on **Developer mode**.
 3. Click **Load unpacked**.
-4. Select this folder, `wishlist-capture-extension-v003`.
+4. Select this folder, `wishlist-capture-extension-v004`.
 5. Optional: to keep the extension in reach, pin it from the browser's extensions menu.
 
 To remove the extension, click **Remove** on its card on the same page.
@@ -72,9 +72,9 @@ To remove the extension, click **Remove** on its card on the same page.
 
 1. Go to `chrome://extensions` or `edge://extensions`.
 2. Do one of the following:
-   - If you have the new `wishlist-capture-extension-v003` folder, click **Remove** on the earlier version's card. Then click **Load unpacked** and select the new folder.
+   - If you have the new `wishlist-capture-extension-v004` folder, click **Remove** on the earlier version's card, such as 0.0.3. Then click **Load unpacked** and select the `wishlist-capture-extension-v004` folder.
    - If you replaced the files in the folder that you loaded before, click **Reload** on the extension's card.
-3. Check that the card shows version 0.0.3.
+3. Check that the card shows version 0.0.4. If it shows an earlier version, the browser is still running the old folder.
 4. Refresh every Netflix tab that was open before the update. This step is essential. A tab that isn't refreshed keeps running the previous version's capture, and the new version can't replace it.
 
 ## Capture My List
@@ -130,12 +130,15 @@ A passing fixture test shows that the capture logic reads the cards it was writt
 
 **Browser testing** loads the real extension in Chromium and runs its popup against the same invented page, served at a Netflix address on the test computer. The test starts, stops, and discards captures from the popup and checks the saved file. It never contacts Netflix. For the results and how to run it, see `VALIDATION.md`.
 
-**Real-account testing** has started. The first attempt, with the earlier collector, stopped with `boundary_missing` because Netflix showed My List as a row on the **Mein Netflix** page. No file was saved. Version 0.0.3 is pending a real-account test. Before anyone treats this as working, someone with permission to use a Netflix account needs to:
+**Saved-page testing** runs the capture offline against a My List page that a member saved from their own account. It shows whether the capture reads that saved copy. It can't show how a live tab behaves, for example how Netflix loads more titles or wraps the row. The saved page is private. Don't share or publish it.
 
-1. Write down a known set of titles on one profile's My List, including a movie, a show, two titles with the same name, and enough titles to need scrolling or the next arrow.
-2. Capture the list and compare the file with that set: missing titles, extra titles from other rows, and wrong IDs. If My List is a row, check whether it wraps around to its first titles. If My List is a row, check that the file has no titles from rows such as **Weiterschauen** or **Nochmal ansehen**.
-3. Repeat with a second profile, an interrupted capture, and a profile switch during capture.
-4. Keep only redacted notes. Don't share the file, screenshots, or browser logs outside the test.
+**Real-account testing** is still needed for version 0.0.4. Earlier versions stopped with `boundary_missing` on a real account and saved no file. Before anyone treats this as working, someone with permission to use a Netflix account needs to:
+
+1. Load version 0.0.4 and refresh the Netflix tab, as described in [Update from an earlier version](#update-from-an-earlier-version).
+2. Write down a known set of titles on one profile's My List, including a movie, a show, two titles with the same name, and enough titles to need scrolling or the next arrow.
+3. Capture the list and compare the file with that set: missing titles, extra titles from other rows, and wrong IDs. If My List is a row, check whether it wraps around to its first titles. If My List is a row, check that the file has no titles from rows such as **Weiterschauen** or **Nochmal ansehen**.
+4. Repeat with a second profile, an interrupted capture, and a profile switch during capture.
+5. Keep only redacted notes. Don't share the file, screenshots, or browser logs outside the test.
 
 A clean real-account test still doesn't match titles for you. You choose each match on GoodWatch's Imports page, as described in [Add the titles to GoodWatch](#add-the-titles-to-goodwatch).
 
