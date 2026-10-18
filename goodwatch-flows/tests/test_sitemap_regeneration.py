@@ -177,6 +177,7 @@ class SitemapRegenerationTests(unittest.TestCase):
                         module.SitemapHistory = lambda directory: history_class(directory, today=generation_day[0])
                     if name == "sitemap_checker":
                         module.fetch = lambda url: (status, f'<link rel="canonical" href="{url}">', None)
+                        module.fetch_robots = lambda: (module.RobotsRules("User-agent: *\nDisallow: /api/\n"), None)
                         module.MIN_DELAY_SECONDS = 0
                     return module
 

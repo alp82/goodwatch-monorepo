@@ -126,11 +126,17 @@ def generate_and_check(root):
                 connection.close()
         urls, problems = checker.read_sitemap_urls(str(output))
         print(f"Generated {len(urls)} URLs; checking every URL live", flush=True)
+        # A listed URL that the live robots.txt disallows fails; a page larger than Google reads warns.
+        robots, robots_problem = checker.fetch_robots()
+        if robots_problem:
+            problems.append(robots_problem)
+        time.sleep(checker.MIN_DELAY_SECONDS)
+        warnings = []
         failures = checker.check_urls(
             urls, checker.fetch, lambda: time.sleep(checker.MIN_DELAY_SECONDS),
-            lambda line: print(line, flush=True),
+            lambda line: print(line, flush=True), robots, warnings,
         )
-        print(checker.summary(len(urls), failures, problems), flush=True)
+        print(checker.summary(len(urls), failures, problems, warnings), flush=True)
         if failures or problems or not urls:
             raise RuntimeError(f"Sitemap check failed: {len(failures)} URLs, {len(problems)} file problems; nothing committed")
         return len(urls), {OUTPUT + p.name: p.read_bytes() for p in sorted(output.glob("sitemap*.xml"))}

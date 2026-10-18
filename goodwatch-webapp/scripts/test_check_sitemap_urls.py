@@ -3,15 +3,34 @@ import os
 import tempfile
 import unittest
 
-from check_sitemap_urls import check_urls, find_canonicals, judge, read_sitemap_urls, summary
+import io
+
+from check_sitemap_urls import (GOOGLE_HTML_LIMIT_BYTES, Response, RobotsRules, check_urls, find_canonicals,
+                                find_robots_meta, header_says_noindex, judge, read_page, read_sitemap_urls, summary,
+                                warn)
 
 XMLNS = 'xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"'
 MOVIE = "https://goodwatch.app/movie/603-the-matrix"
 SHOW = "https://goodwatch.app/show/1396-breaking-bad"
 
 
-def page(canonical: str) -> str:
-    return f'<html><head><title>T</title><link rel="canonical" href="{canonical}"/></head><body></body></html>'
+def page(canonical: str, robots: str = "index, follow") -> str:
+    return (f'<html><head><title>T</title><link rel="canonical" href="{canonical}"/>'
+            f'<meta name="robots" content="{robots}"/></head><body></body></html>')
+
+# The live site's rules when this was written, with the sign-in rules it had before.
+SITE_ROBOTS = """User-agent: *
+Disallow: /api/
+Disallow: /browser-check
+Disallow: /person/*?
+Disallow: /sign-in
+Disallow: /discover?
+Disallow: /discover/*?
+
+Allow: /
+
+Sitemap: https://goodwatch.app/sitemaps/sitemap.xml
+"""
 
 
 def urlset(*locs: str) -> str:
@@ -133,9 +152,143 @@ class CheckUrlsTest(unittest.TestCase):
     def test_never_requests_another_site(self):
         requested = []
         failures = check_urls(["https://example.com/movie/1", "http://goodwatch.app/"],
-                              lambda url: requested.append(url), lambda: None)
+                            lambda url: requested.append(url), lambda: None)
         self.assertEqual(requested, [])
         self.assertEqual(len(failures), 2)
+
+    def test_fails_a_url_robots_txt_disallows_without_requesting_it(self):
+        events = []
+
+        def fetch(url):
+            events.append(url)
+            return 200, page(url), None
+
+        blocked = "https://goodwatch.app/sign-in"
+        failures = check_urls([MOVIE, blocked, SHOW], fetch, lambda: events.append("pause"),
+                            robots=RobotsRules(SITE_ROBOTS))
+        self.assertEqual(events, [MOVIE, "pause", SHOW])
+        self.assertEqual(failures,
+                         [(blocked, "robots.txt disallows it for Googlebot (Disallow: /sign-in), not requested")])
+
+    def test_warns_about_a_large_page_and_still_passes_it(self):
+        def fetch(url):
+            return Response(200, page(url), None, (), GOOGLE_HTML_LIMIT_BYTES + 1 if url == SHOW else 1000)
+
+        lines, warnings = [], []
+        failures = check_urls([MOVIE, SHOW], fetch, lambda: None, lines.append, warnings=warnings)
+        self.assertEqual(failures, [])
+        self.assertEqual([url for url, _ in warnings], [SHOW])
+        self.assertIn("2,000,001 bytes", warnings[0][1])
+        self.assertTrue(any(line.startswith(f"WARN {SHOW}") for line in lines))
+
+    def test_a_page_that_fails_gets_no_size_warning(self):
+        def fetch(url):
+            return Response(200, page(url, "noindex"), None, (), GOOGLE_HTML_LIMIT_BYTES * 3)
+
+        warnings = []
+        failures = check_urls([MOVIE], fetch, lambda: None, warnings=warnings)
+        self.assertEqual(len(failures), 1)
+        self.assertEqual(warnings, [])
+
+
+class NoindexTest(unittest.TestCase):
+    def test_fails_a_page_whose_robots_meta_says_noindex(self):
+        for robots in ("noindex", "noindex, follow", "noindex,nofollow", "NOINDEX", "none", "follow, noindex"):
+            reason = judge(MOVIE, 200, page(MOVIE, robots))
+            self.assertIsNotNone(reason, robots)
+            self.assertIn("robots meta tag", reason)
+
+    def test_a_googlebot_meta_tag_counts_and_another_crawlers_does_not(self):
+        html = page(MOVIE).replace("</head>", '<meta name="googlebot" content="noindex"></head>')
+        self.assertIn("noindex", judge(MOVIE, 200, html))
+        html = page(MOVIE).replace("</head>", '<meta name="bingbot" content="noindex"></head>')
+        self.assertIsNone(judge(MOVIE, 200, html))
+
+    def test_fails_a_page_with_both_index_and_noindex(self):
+        html = page(MOVIE).replace("</head>", '<meta name="robots" content="noindex, nofollow"></head>')
+        self.assertIn("noindex, nofollow", judge(MOVIE, 200, html))
+
+    def test_passes_an_indexable_page(self):
+        for robots in ("index, follow", "all", "max-image-preview:large", "nofollow"):
+            self.assertIsNone(judge(MOVIE, 200, page(MOVIE, robots)), robots)
+
+    def test_reads_the_robots_meta_tag(self):
+        self.assertEqual(find_robots_meta(page(MOVIE, "noindex, follow")), ["noindex, follow"])
+        self.assertEqual(find_robots_meta('<META NAME="Robots" CONTENT="none">'), ["none"])
+        self.assertEqual(find_robots_meta('<meta property="robots" content="noindex">'), [])
+
+    def test_fails_a_page_whose_x_robots_tag_says_noindex(self):
+        reason = judge(MOVIE, 200, page(MOVIE), None, ("noindex",))
+        self.assertIn("X-Robots-Tag", reason)
+        self.assertIn("X-Robots-Tag", judge(MOVIE, 200, page(MOVIE), None, ("max-snippet:50", "googlebot: none")))
+
+    def test_an_x_robots_tag_for_another_crawler_does_not_count(self):
+        self.assertFalse(header_says_noindex("otherbot: noindex, nofollow"))
+        self.assertTrue(header_says_noindex("googlebot: noindex"))
+        self.assertTrue(header_says_noindex("noindex, nofollow"))
+        self.assertFalse(header_says_noindex("unavailable_after: 25 Jun 2010 15:00:00 PST"))
+        self.assertFalse(header_says_noindex("max-image-preview: large"))
+        self.assertIsNone(judge(MOVIE, 200, page(MOVIE), None, ("otherbot: noindex",)))
+
+
+class RobotsRulesTest(unittest.TestCase):
+    def blocked(self, text: str, path: str):
+        return RobotsRules(text).blocking_rule("https://goodwatch.app" + path)
+
+    def test_reads_the_site_rules_as_google_does(self):
+        self.assertIsNone(self.blocked(SITE_ROBOTS, "/movie/603-the-matrix"))
+        self.assertIsNone(self.blocked(SITE_ROBOTS, "/person/287-brad-pitt"))
+        self.assertEqual(self.blocked(SITE_ROBOTS, "/person/287-brad-pitt?country=US"), "/person/*?")
+        self.assertEqual(self.blocked(SITE_ROBOTS, "/discover?type=movie"), "/discover?")
+        self.assertIsNone(self.blocked(SITE_ROBOTS, "/discover"))
+        self.assertEqual(self.blocked(SITE_ROBOTS, "/api/discover"), "/api/")
+        self.assertEqual(self.blocked(SITE_ROBOTS, "/sign-in"), "/sign-in")
+        self.assertIsNone(self.blocked(SITE_ROBOTS, "/"))
+
+    def test_the_longest_rule_wins_and_allow_wins_a_tie(self):
+        text = "User-agent: *\nDisallow: /movies\nAllow: /movies/moods\nDisallow: /shows/\nAllow: /shows/\n"
+        self.assertEqual(self.blocked(text, "/movies/genres"), "/movies")
+        self.assertIsNone(self.blocked(text, "/movies/moods/scary"))
+        self.assertIsNone(self.blocked(text, "/shows/moods"))
+
+    def test_a_dollar_ends_the_path(self):
+        text = "User-agent: *\nDisallow: /*.xml$\n"
+        self.assertEqual(self.blocked(text, "/sitemaps/sitemap.xml"), "/*.xml$")
+        self.assertIsNone(self.blocked(text, "/sitemaps/sitemap.xml?x=1"))
+
+    def test_a_group_for_googlebot_replaces_the_star_group(self):
+        text = "User-agent: *\nDisallow: /\n\nUser-agent: Googlebot\nDisallow: /private\n"
+        self.assertIsNone(self.blocked(text, "/movies"))
+        self.assertEqual(self.blocked(text, "/private/1"), "/private")
+
+    def test_another_crawlers_group_does_not_apply(self):
+        text = "User-agent: Bingbot\nDisallow: /\n\nUser-agent: *\nDisallow: /api/\n"
+        self.assertIsNone(self.blocked(text, "/movies"))
+
+    def test_several_agents_share_a_group_and_comments_are_ignored(self):
+        text = "User-agent: Bingbot\nUser-agent: Googlebot # the same rules\nDisallow: /x # not this\n"
+        self.assertEqual(self.blocked(text, "/x/1"), "/x")
+
+    def test_an_empty_disallow_or_file_allows_everything(self):
+        self.assertIsNone(self.blocked("User-agent: *\nDisallow:\n", "/movies"))
+        self.assertIsNone(self.blocked("", "/movies"))
+
+
+class ReadPageTest(unittest.TestCase):
+    def test_counts_every_byte_and_keeps_the_head(self):
+        body = b"<html><head><link rel=canonical href=x></head><body>" + b"x" * 300_000 + b"</body></html>"
+        html, size = read_page(io.BytesIO(body))
+        self.assertEqual(size, len(body))
+        self.assertIn("</head>", html)
+        self.assertLess(len(html), 70_000)
+
+
+class WarnTest(unittest.TestCase):
+    def test_warns_only_above_the_limit(self):
+        self.assertIsNone(warn(Response(200, "", None, (), GOOGLE_HTML_LIMIT_BYTES)))
+        self.assertIsNotNone(warn(Response(200, "", None, (), GOOGLE_HTML_LIMIT_BYTES + 1)))
+        self.assertIsNone(warn(Response(200, "", None, (), None)))
+        self.assertIsNone(warn(Response(404, "", None, (), GOOGLE_HTML_LIMIT_BYTES * 2)))
 
 
 class SummaryTest(unittest.TestCase):
@@ -146,6 +299,12 @@ class SummaryTest(unittest.TestCase):
         self.assertIn("Failed: 1", text)
         self.assertIn(f"FAIL {SHOW}: status 404", text)
         self.assertTrue(text.endswith("Result: FAILED"))
+
+    def test_lists_warnings_without_failing(self):
+        text = summary(2, [], [], [(SHOW, "HTML is 3,000,000 bytes")])
+        self.assertIn("Warnings: 1", text)
+        self.assertIn(f"WARN {SHOW}: HTML is 3,000,000 bytes", text)
+        self.assertTrue(text.endswith("Result: passed"))
 
     def test_passes_only_with_urls_and_without_failures_or_problems(self):
         self.assertTrue(summary(3, [], []).endswith("Result: passed"))

@@ -22,7 +22,7 @@ The scheduled invocation sets `dry_run: false`. Preview/manual invocations defau
 The command takes about 50 minutes and does three things:
 
 1. It writes the sitemap files to a temporary directory.
-2. It requests every listed URL on https://goodwatch.app once, 2 seconds apart. A URL passes when it answers 200 without a redirect and the page's `<link rel="canonical">` equals the listed URL.
+2. It reads the live `robots.txt`, then requests every listed URL on https://goodwatch.app once, 2 seconds apart. A URL passes when it answers 200 without a redirect, the page's `<link rel="canonical">` equals the listed URL, neither a robots meta tag nor an `X-Robots-Tag` header says `noindex`, and `robots.txt` lets Googlebot fetch it. A URL that `robots.txt` disallows fails without being requested. A page whose HTML is larger than 2 MB gets a warning but passes: Google reads only the first 2 MB, so links and text after that point are lost.
 3. When every URL passes, it replaces the files in `public/sitemaps/`. When one fails, it changes nothing, prints each failing URL with its reason, and names the directory that holds the rejected files.
 
 ## What it needs
