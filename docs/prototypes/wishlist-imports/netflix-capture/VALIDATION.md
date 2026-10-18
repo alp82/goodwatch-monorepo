@@ -1,5 +1,14 @@
 # Capture validation
 
+## First successful live capture, 2026-10-18
+
+The owner reported that version 0.0.4 worked in their live Netflix tab and supplied the downloaded shared wishlist JSON. Local validation found 13 entries with 13 distinct native IDs, source `netflix`, shared format version 1, unknown media type and unknown completeness. The file contains only source/title/type data and export metadata; no catalog IDs, credentials or profile fields are present. All five known wishlist cards from the earlier saved page are present with exact titles and IDs, with eight additional native IDs in the live capture. Private title names, IDs, JSON and the raw saved page are not published.
+
+The actual shipped wishlist parser accepts all 13 as Want to See observations with unknown source type, unmatched outcome and immutable original evidence eligible for explicit member matching. It emits the expected single unknown-coverage warning. This was parser-only validation: no member tables, preview creation, production import or library mutations were performed.
+
+This establishes a successful live capture and a file compatible with the shipped importer for one account/layout. The owner has been asked to confirm all 13 belong to My List and whether any titles are missing; that comparison is pending. Live profile switching, unavailable-title coverage and authenticated GoodWatch match/Confirm/Undo are not established by this run. The collector continues to report unknown completeness.
+
+
 ## Version 0.0.4: supplied saved-page evidence
 
 The owner supplied a complete local HTML save after version 0.0.3 also returned `boundary_missing`. Inert inspection found no legacy grid, row or card classes. The actual saved structure uses `section.carousel-row`, a semantic My List heading, and `a[data-uia="standard-card"]` with the title on the anchor’s `aria-label` and one numeric `jbv` query parameter on a Netflix `/browse` link. The original saved HTML, account details, title names, IDs and assets are not published. The regression fixture preserves the relevant structure with invented data.
