@@ -21,6 +21,10 @@ import {
 import type { TitleSides } from "~/server/title-sides.server"
 import { useTitlePreview } from "~/ui/media-preference/useTitlePreview"
 import { TalkedAboutNowSlot } from "~/ui/talked-about-now/TalkedAboutNowSlot"
+import Breadcrumbs from "~/ui/nav/Breadcrumbs"
+import { type Crumb, titleTrail } from "~/ui/nav/breadcrumb-trail"
+import { titlePath } from "~/utils/helpers"
+import { canonicalMediaTitle } from "~/utils/media-presentation"
 
 export interface DetailsProps {
 	media: MovieResult | ShowResult
@@ -30,6 +34,8 @@ export interface DetailsProps {
 	talkedAboutNow?: boolean
 	/** Where the title sits in the signed-in member's taste (taste groups). */
 	sides?: TitleSides | null
+	/** The hub and genre page above the title; the breadcrumb adds the title. */
+	breadcrumb?: readonly Crumb[]
 }
 
 export default function Details(props: DetailsProps) {
@@ -53,6 +59,7 @@ function DetailsPage({
 	episodeGrid,
 	talkedAboutNow,
 	sides,
+	breadcrumb = [],
 }: DetailsProps) {
 	// The header pair's country and language, picked or saved, over the ones the page loaded with. Until their data
 	// is in (or when it fails), the page keeps the loaded title and offers, and where-to-watch says so; a picked
@@ -89,6 +96,12 @@ function DetailsPage({
 		scrollToSection(section)
 	}
 
+	const trail = titleTrail(
+		breadcrumb,
+		details.title,
+		titlePath(media.mediaType, details.tmdb_id, canonicalMediaTitle(details)),
+	)
+
 	const content = (
 		<>
 			{/* Remembers a tap on a control that comes before the app's script. Before every control it serves. */}
@@ -106,6 +119,9 @@ function DetailsPage({
 					}}
 				/>
 			)}
+
+			{/* Positioned, so it paints over the blurred backdrop. */}
+			{trail.length > 0 && <Breadcrumbs items={trail} className="relative" />}
 
 			<DetailsHeader
 				media={media}

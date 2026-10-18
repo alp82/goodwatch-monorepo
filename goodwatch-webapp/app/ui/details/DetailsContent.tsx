@@ -1,4 +1,4 @@
-import React, { useMemo } from "react"
+import React, { useEffect, useMemo, useRef } from "react"
 import type { EpisodeGrid as EpisodeGridData } from "~/server/episode-grid.server"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import About from "~/ui/details/About"
@@ -10,6 +10,10 @@ import SequelsPrequelsFranchise from "~/ui/details/SequelsPrequelsFranchise"
 import { belowFoldProps, useBelowFold } from "~/ui/details/below-fold"
 import EpisodeGrid from "~/ui/details/episode-grid/EpisodeGrid"
 import { hasEpisodeGrid } from "~/ui/details/episode-grid/scale"
+import {
+	GridWindowNotice,
+	useWholeEpisodeGrid,
+} from "~/ui/details/episode-grid/whole"
 import {
 	type ReservedHeight,
 	aboutHeight,
@@ -65,25 +69,44 @@ export default function DetailsContent({
 
 	// A member with episode tracking gets the episode list in the grid's place, once they come near it.
 	const tracking = useEpisodeTracking(media)
-	const grid = hasEpisodeGrid(episodeGrid) ? episodeGrid : null
+	// A long grid comes as its newest part; the rest loads when the visitor asks or the member's list needs it.
+	const whole = useWholeEpisodeGrid(hasEpisodeGrid(episodeGrid) ? episodeGrid : null)
+	const grid = whole.shown
+	// The button for the rest goes when every season is in; the keyboard focus moves to the grid's heading.
+	const partial = Boolean(grid?.window)
+	const wasPartial = useRef(partial)
+	useEffect(() => {
+		if (wasPartial.current && !partial)
+			document
+				.getElementById("episode-grid-title")
+				?.focus({ preventScroll: true })
+		wasPartial.current = partial
+	}, [partial])
+	const gridView = grid && (
+		<EpisodeGrid
+			grid={grid}
+			notice={<GridWindowNotice grid={grid} whole={whole} />}
+		/>
+	)
 
 	return (
 		<div className="flex flex-col gap-12">
 			{tracking ? (
 				<TrackedEpisodes
 					media={media}
-					grid={grid}
+					grid={whole.scores}
+					onWanted={whole.load}
 					wrapper={section(
 						grid ? episodeGridHeight(grid) : { phone: 0, desktop: 0 },
 						sectionProps.episodes,
 					)}
 				>
-					{grid && <EpisodeGrid grid={grid} />}
+					{gridView}
 				</TrackedEpisodes>
 			) : (
 				grid && (
 					<div {...section(episodeGridHeight(grid), sectionProps.episodes)}>
-						<EpisodeGrid grid={grid} />
+						{gridView}
 					</div>
 				)
 			)}

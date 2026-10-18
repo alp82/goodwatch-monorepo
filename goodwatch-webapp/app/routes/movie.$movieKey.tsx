@@ -27,10 +27,11 @@ import {
 	titleSidesWithin,
 } from "~/server/title-sides.server"
 import Details from "~/ui/details/Details"
+import type { Crumb } from "~/ui/nav/breadcrumb-trail"
+import { titleBreadcrumb } from "~/server/title-breadcrumb.server"
 import { getUserIdFromRequest } from "~/utils/auth"
-import { detailsPageMeta } from "~/utils/detailsMeta"
+import { detailsMetaTags } from "~/utils/detailsMeta"
 import { titleRedirectPath } from "~/utils/helpers"
-import { buildMeta } from "~/utils/meta"
 import { mergeDehydratedStates } from "~/utils/title-extras"
 import { canonicalTitleId } from "~/utils/title-identity"
 
@@ -38,7 +39,7 @@ export { pageHeaders as headers } from "~/utils/headers"
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	if (!data) return [{ title: "Not Found | GoodWatch" }]
-	return buildMeta({ pageMeta: detailsPageMeta(data.media), item: data.media })
+	return detailsMetaTags(data.media, data.breadcrumb)
 }
 
 export type LoaderData = {
@@ -51,6 +52,8 @@ export type LoaderData = {
 	talkedAboutNow: boolean
 	/** Where the title sits in the signed-in member's taste (taste groups); null for everyone else. */
 	sides: TitleSides | null
+	/** The hub and genre page above the title (title-breadcrumb.server.ts). */
+	breadcrumb: Crumb[]
 }
 
 export const loader: LoaderFunction = async ({
@@ -133,6 +136,7 @@ export const loader: LoaderFunction = async ({
 		countryIsFallback,
 		talkedAboutNow: talkedAboutNowEnabled("title", userId),
 		sides,
+		breadcrumb: titleBreadcrumb("movie", media.details.genres),
 		dehydratedState,
 		...(related.relatedMap && { relatedMap: related.relatedMap }),
 	}
@@ -150,7 +154,7 @@ export const loader: LoaderFunction = async ({
 }
 
 export default function DetailsMovie() {
-	const { media, params, countryIsFallback, talkedAboutNow, sides } = useLoaderData<LoaderData>()
+	const { media, params, countryIsFallback, talkedAboutNow, sides, breadcrumb } = useLoaderData<LoaderData>()
 	const { country } = params
 
 	// return (
@@ -184,5 +188,5 @@ export default function DetailsMovie() {
 		return () => controller.abort()
 	}, [media, country, countryIsFallback])
 
-	return <Details media={media} country={country} talkedAboutNow={talkedAboutNow} sides={sides} />
+	return <Details media={media} country={country} talkedAboutNow={talkedAboutNow} sides={sides} breadcrumb={breadcrumb} />
 }

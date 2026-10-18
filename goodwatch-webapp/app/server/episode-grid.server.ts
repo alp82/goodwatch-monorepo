@@ -80,6 +80,26 @@ export type EpisodeGrid = {
 	hasEpisodeZero: boolean
 	/** Which providers have a score for at least one season. */
 	providers: (keyof SeasonScores)[]
+	/** Set when this is the show page's first part of a longer grid (see ui/details/episode-grid/window.ts). */
+	window?: GridWindow
+}
+
+/** What a part of the grid leaves out, and the whole grid's facts that the page shows anyway. */
+export type GridWindow = {
+	/** Seasons in the whole grid. */
+	seasons: number
+	/** Rated episodes and specials in the whole grid. */
+	episodes: number
+	/** Seasons left out; a cut season does not count. */
+	hiddenSeasons: number
+	/** Rated episodes and specials left out. */
+	hiddenEpisodes: number
+	/** The first episode number shown, when the only season shown is cut to its latest episodes. */
+	firstEpisodeNumber?: number
+	/** The hero miniature of the whole grid (see miniatureScores). */
+	miniature: number[]
+	/** The language the part's episode names were asked in, for asking the rest in it; absent for canonical text. */
+	language?: string
 }
 
 export const PROVIDER_ORDER: (keyof SeasonScores)[] = [

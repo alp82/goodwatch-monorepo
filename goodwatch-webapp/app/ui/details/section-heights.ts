@@ -5,6 +5,7 @@
 // The numbers are measured on phones (412 px wide) and desktops (1,440 px wide) across titles with and without a
 // poster, cast, trailer, collection, and streaming offers. Keep them in step with the sections' markup.
 import type { EpisodeGrid } from "~/server/episode-grid.server"
+import { gridColumns } from "~/ui/details/episode-grid/window"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 
 type Media = MovieResult | ShowResult
@@ -69,11 +70,14 @@ export const questionsHeight = (count: number): ReservedHeight =>
 
 // The episode grid shows seasons as rows when its box fits every episode column, and as columns otherwise
 // (see EpisodeGrid.tsx): up to 6 episode columns fit on a phone, and up to 26 on a desktop.
+// A part of a long grid has the line with the button for the rest above it.
 export function episodeGridHeight(grid: EpisodeGrid): ReservedHeight {
-	const columns = grid.maxEpisodeNumber - (grid.hasEpisodeZero ? 0 : 1) + 1
+	const columns = gridColumns(grid)
+	const notice = grid.window ? 40 : 0
 	const asRows =
-		100 + grid.seasons.length * 35 + (grid.specials.length ? 48 : 0)
-	const asColumns = 121 + Math.max(columns, grid.specials.length) * 31
+		100 + notice + grid.seasons.length * 35 + (grid.specials.length ? 48 : 0)
+	const asColumns =
+		121 + notice + Math.max(columns, grid.specials.length) * 31
 	return {
 		phone: columns <= 6 ? asRows : asColumns,
 		desktop: columns <= 26 ? asRows : asColumns,

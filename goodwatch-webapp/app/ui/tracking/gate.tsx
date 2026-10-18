@@ -101,12 +101,15 @@ export function TrackedTitleActions({
 export function TrackedEpisodes({
 	media,
 	grid = null,
+	onWanted,
 	wrapper,
 	children,
 }: {
 	media: TrackedMedia
 	/** The ratings grid's data, which the list reads every site's season scores from; null for a show without one. */
 	grid?: EpisodeGrid | null
+	/** Called once the list is wanted, so a long grid's other seasons load for their scores. */
+	onWanted?: () => void
 	/** The section's wrapper on the title page: its class, reserved height, and the page navigation's id and ref. */
 	wrapper: {
 		id?: string
@@ -119,6 +122,9 @@ export function TrackedEpisodes({
 }) {
 	const section = useRef<HTMLDivElement | null>(null)
 	const [wanted, setWanted] = useState(false)
+	useEffect(() => {
+		if (wanted) onWanted?.()
+	}, [wanted])
 	useEffect(() => {
 		const want = () => setWanted(true)
 		window.addEventListener(OPEN_EPISODES_EVENT, want)

@@ -2,9 +2,27 @@ import { canonicalMediaTitle } from "~/utils/media-presentation"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import { pillarLine, summary } from "~/ui/fingerprint/fingerprintText"
 import { titlePath } from "~/utils/helpers"
-import type { PageMeta } from "~/utils/meta"
+import { type Crumb, titleTrail } from "~/ui/nav/breadcrumb-trail"
+import { type PageMeta, buildMeta } from "~/utils/meta"
 
 const clip = (text: string, max: number) => (text.length <= max ? text : `${text.slice(0, text.lastIndexOf(" ", max)).replace(/[,.;:]$/, "")}…`)
+
+/** A title page's meta tags and structured data, with its trail from the hub (title-breadcrumb.server.ts). */
+export function detailsMetaTags(
+	media: MovieResult | ShowResult,
+	breadcrumb: readonly Crumb[] = [],
+) {
+	const pageMeta = detailsPageMeta(media)
+	return buildMeta({
+		pageMeta,
+		item: media,
+		breadcrumbs: titleTrail(
+			breadcrumb,
+			media.details.title,
+			new URL(pageMeta.url).pathname,
+		),
+	})
+}
 
 // Title, description, and share image for a movie or show page. The
 // description leads with the fingerprint summary, which only GoodWatch has,

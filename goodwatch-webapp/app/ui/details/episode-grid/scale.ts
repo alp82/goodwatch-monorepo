@@ -26,6 +26,8 @@ export const MINIATURE_CELLS = 12
  * always full.
  */
 export function miniatureScores(grid: EpisodeGrid): number[] {
+	// A part of the grid carries the whole grid's miniature.
+	if (grid.window) return grid.window.miniature
 	const scores = grid.seasons.flatMap((season) => season.episodes.map((episode) => episode.score))
 	if (!scores.length) return []
 	return Array.from({ length: MINIATURE_CELLS }, (_, cell) => {

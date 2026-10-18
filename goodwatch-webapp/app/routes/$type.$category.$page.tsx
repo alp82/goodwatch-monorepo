@@ -25,6 +25,7 @@ import { explorePageCopy } from "~/ui/explore/page-copy"
 import { DidntWatchCheckbox } from "~/ui/filter/explore/DidntWatchCheckbox"
 import { MyStreamingCheckbox } from "~/ui/filter/explore/MyStreamingCheckbox"
 import Breadcrumbs from "~/ui/nav/Breadcrumbs"
+import { categoryCrumbs } from "~/ui/nav/breadcrumb-trail"
 import { buildDiscoverParams } from "~/utils/discover"
 import {
 	type PageItem,
@@ -58,7 +59,11 @@ export const meta: MetaFunction = ({ params, location }) => {
 		alt: `${convertHyphensToWords(page)} ${typeLabel} on GoodWatch`,
 	}
 
-	return buildMeta({ pageMeta })
+	// Movies › Moods › Mind-Bending: the hub, the list, and this page.
+	return buildMeta({
+		pageMeta,
+		breadcrumbs: categoryCrumbs(`/${type}/${category}/${page}`, pageData.label),
+	})
 }
 
 interface LoaderData {
@@ -153,7 +158,7 @@ export default function MoviesCategoryPage() {
 
 	return (
 		<>
-			<Breadcrumbs path={path} />
+			<Breadcrumbs path={path} label={pageData.label} />
 
 			<div className="max-w-7xl mx-auto p-4 flex flex-col gap-4">
 				<div

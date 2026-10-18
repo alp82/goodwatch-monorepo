@@ -15,6 +15,7 @@
 // IMDb season score; hovering, focusing or tapping it opens every site's season score.
 // Titles and votes open the same way on an episode, and the key sits behind the info button.
 import { InformationCircleIcon } from "@heroicons/react/24/outline"
+import type { ReactNode } from "react"
 import { HEADER_HEIGHT, stickyHeadersBottom } from "~/ui/details/header-height"
 import type {
 	EpisodeGrid as EpisodeGridData,
@@ -40,6 +41,7 @@ import {
 	seasonLabel,
 	useFloat,
 } from "~/ui/details/episode-grid/shared"
+import { gridColumns, gridFirstEpisode } from "~/ui/details/episode-grid/window"
 
 type Episode = GridEpisode | GridSpecial
 type Orientation = "wide" | "narrow"
@@ -93,11 +95,18 @@ const tilePaint = (episode: Pick<Episode, "score" | "votes" | "unrated">) => {
 const SITE_BAR_HEIGHT = 64
 const headersBottom = () => stickyHeadersBottom(SITE_BAR_HEIGHT)
 
-export default function EpisodeGrid({ grid }: { grid: EpisodeGridData }) {
+export default function EpisodeGrid({
+	grid,
+	notice,
+}: {
+	grid: EpisodeGridData
+	/** A line under the heading: for a part of the grid, what it shows and the way to the rest. */
+	notice?: ReactNode
+}) {
 	const float = useFloat()
 
-	const first = grid.hasEpisodeZero ? 0 : 1
-	const columns = grid.maxEpisodeNumber - first + 1
+	const first = gridFirstEpisode(grid)
+	const columns = gridColumns(grid)
 	const episodeNumbers = Array.from({ length: columns }, (_, i) => first + i)
 	const hasSpecials = grid.specials.length > 0
 
@@ -374,6 +383,7 @@ export default function EpisodeGrid({ grid }: { grid: EpisodeGridData }) {
 				</button>
 			</div>
 			{grid.note && <p className="mt-2 text-sm text-gray-400">{grid.note}</p>}
+			{notice}
 			{/* biome-ignore lint/security/noDangerouslySetInnerHtml: a fixed rule built from a number */}
 			<style dangerouslySetInnerHTML={{ __html: layoutRule(columns) }} />
 			<div

@@ -2,6 +2,7 @@ import type { MovieDetails, TVDetails } from "~/server/details.server"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import { WORDMARK_VERSION } from "~/ui/brand/version"
 import { OG_IMAGE } from "~/ui/og-image/format"
+import { type Crumb, breadcrumbJsonLd } from "~/ui/nav/breadcrumb-trail"
 import { personPath } from "~/utils/helpers"
 
 export interface PageMeta {
@@ -39,6 +40,8 @@ export interface MetaOptions {
 	pageMeta: PageMeta
 	item?: MovieResult | ShowResult
 	items?: PageItem[]
+	/** The page's trail, the page itself last, for BreadcrumbList structured data. */
+	breadcrumbs?: readonly Crumb[]
 }
 
 export const buildMeta = (params: MetaOptions) => {
@@ -97,6 +100,10 @@ export const buildMeta = (params: MetaOptions) => {
 
 	// JSON-LD Schema
 	if (jsonLdContent) metaTags.push({ "script:ld+json": jsonLdContent })
+	const breadcrumbList = params.breadcrumbs
+		? breadcrumbJsonLd(params.breadcrumbs)
+		: null
+	if (breadcrumbList) metaTags.push({ "script:ld+json": breadcrumbList })
 
 	return metaTags
 }
@@ -140,7 +147,8 @@ export const buildJsonLdDetail = (
 					height: "750",
 				}
 			: undefined,
-		genre: details.genres,
+		// A missing value is left out, never null or an empty list.
+		genre: details.genres?.length ? details.genres : undefined,
 		inLanguage: details.original_language_code || undefined,
 		countryOfOrigin: details.production_country_codes?.length
 			? details.production_country_codes.map((code) => ({
@@ -175,8 +183,8 @@ export const buildJsonLdDetail = (
 			jsonLd.startDate = new Date(d.first_air_date).toISOString().slice(0, 10)
 		if (d.last_air_date && !d.in_production)
 			jsonLd.endDate = new Date(d.last_air_date).toISOString().slice(0, 10)
-		jsonLd.numberOfSeasons = d.number_of_seasons
-		jsonLd.numberOfEpisodes = d.number_of_episodes
+		if (d.number_of_seasons) jsonLd.numberOfSeasons = d.number_of_seasons
+		if (d.number_of_episodes) jsonLd.numberOfEpisodes = d.number_of_episodes
 		const creators = jsonLdPeople(media.credits.executive_producers)
 		if (creators.length) jsonLd.producer = creators
 	}

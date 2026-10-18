@@ -23,8 +23,9 @@ import {
 import { mainHierarchy, mainNavigation } from "~/ui/explore/main-nav"
 import { exploreCategoryCopy } from "~/ui/explore/page-copy"
 import Breadcrumbs from "~/ui/nav/Breadcrumbs"
+import { categoryCrumbs } from "~/ui/nav/breadcrumb-trail"
 import { buildDiscoverParams } from "~/utils/discover"
-import { type PageItem, type PageMeta, buildMeta } from "~/utils/meta"
+import { type PageMeta, buildMeta } from "~/utils/meta"
 import { convertHyphensToWords } from "~/utils/string"
 
 export const meta: MetaFunction = ({ data, params }) => {
@@ -43,21 +44,11 @@ export const meta: MetaFunction = ({ data, params }) => {
 		alt: `${typeLabel} by ${mainData.label.toLowerCase()} on GoodWatch`,
 	}
 
-	const items: PageItem[] = [
-		{ name: "Home", description: "GoodWatch Home", url: "/" },
-		{
-			name: typeLabel,
-			description: `Best ${typeLabel} to Watch`,
-			url: `/${type}`,
-		},
-		{
-			name: convertHyphensToWords(category),
-			description: `Discover the best ${mainData.label} ${typeLabel} to watch`,
-			url: `/${type}/${category}`,
-		},
-	]
-
-	return buildMeta({ pageMeta, items })
+	// Movies › Moods: the hub and this list.
+	return buildMeta({
+		pageMeta,
+		breadcrumbs: categoryCrumbs(`/${type}/${category}`),
+	})
 }
 
 interface PageResult {

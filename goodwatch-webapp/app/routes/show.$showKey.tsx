@@ -33,26 +33,29 @@ import {
 	titleSidesWithin,
 } from "~/server/title-sides.server"
 import Details from "~/ui/details/Details"
+import type { Crumb } from "~/ui/nav/breadcrumb-trail"
+import { titleBreadcrumb } from "~/server/title-breadcrumb.server"
 import { getUserIdFromRequest } from "~/utils/auth"
-import { detailsPageMeta } from "~/utils/detailsMeta"
+import { detailsMetaTags } from "~/utils/detailsMeta"
 import {
 	type EpisodeGridWire,
 	packEpisodeGrid,
 	unpackEpisodeGrid,
 } from "~/utils/episode-grid-wire"
 import { titleRedirectPath } from "~/utils/helpers"
-import { buildMeta } from "~/utils/meta"
+import { windowEpisodeGrid } from "~/ui/details/episode-grid/window"
 import { mergeDehydratedStates } from "~/utils/title-extras"
 
 export { pageHeaders as headers } from "~/utils/headers"
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	if (!data) return [{ title: "Not Found | GoodWatch" }]
-	return buildMeta({ pageMeta: detailsPageMeta(data.media), item: data.media })
+	return detailsMetaTags(data.media, data.breadcrumb)
 }
 
 type LoaderData = {
 	media: ShowQueryResult
+	/** The whole grid, or its newest part when it is long (see episode-grid/window.ts). */
 	episodeGrid: EpisodeGridWire | null
 	params: {
 		country: string
@@ -62,6 +65,8 @@ type LoaderData = {
 	talkedAboutNow: boolean
 	/** Where the title sits in the signed-in member's taste (taste groups); null for everyone else. */
 	sides: TitleSides | null
+	/** The hub and genre page above the title (title-breadcrumb.server.ts). */
+	breadcrumb: Crumb[]
 }
 
 export const loader: LoaderFunction = async ({
@@ -93,15 +98,30 @@ export const loader: LoaderFunction = async ({
 	let episodeGridFailed = false
 	const parts = Promise.all([
 		details,
-		// A failed grid read hides the grid; it never fails the page.
+		// A failed grid read hides the grid; it never fails the page. A long grid sends its newest part, which keeps
+		// the page within what search engines read; the rest loads on request (api.episode-grid.ts).
 		getEpisodeGrid({ showId })
-			.then(
-				async (grid) =>
-					grid &&
-					packEpisodeGrid(
-						canonicalContent ? grid : await overlayAlignedGrid(grid, language),
+			.then(async (grid) => {
+				if (!grid) return null
+				const first = windowEpisodeGrid(grid)
+				const part =
+					first.window && !canonicalContent
+						? { ...first, window: { ...first.window, language } }
+						: first
+				return {
+					wire: packEpisodeGrid(
+						canonicalContent ? part : await overlayAlignedGrid(part, language),
 					),
-			)
+					// The whole grid's seasons, for the page's season list.
+					seasons: grid.seasons
+						.filter((s) => s.number > 0)
+						.map((s) => ({
+							season_number: s.number,
+							episode_count: s.episodes.length,
+						})),
+					presentationVersion: grid.presentationVersion,
+				}
+			})
 			.catch((error) => {
 				episodeGridFailed = true
 				console.error("episode grid failed", { showId, error })
@@ -140,16 +160,15 @@ export const loader: LoaderFunction = async ({
 	})
 	if (canonical) return redirect(canonical, 301)
 
-	const [catalogMedia, episodeGrid, relatedSection, extrasState] = await parts
-	const alignedMedia = episodeGrid?.presentationVersion
+	const [catalogMedia, gridRead, relatedSection, extrasState] = await parts
+	const episodeGrid = gridRead?.wire ?? null
+	const alignedMedia = gridRead?.presentationVersion
 		? {
 				...catalogMedia,
-				seasons: episodeGrid.seasons
-					.filter((s) => s[0] > 0)
-					.map((s) => ({ season_number: s[0], episode_count: s[2].length })),
+				seasons: gridRead.seasons,
 				details: {
 					...catalogMedia.details,
-					number_of_seasons: episodeGrid.seasons.filter((s) => s[0] > 0).length,
+					number_of_seasons: gridRead.seasons.length,
 				},
 			}
 		: catalogMedia
@@ -173,6 +192,7 @@ export const loader: LoaderFunction = async ({
 		countryIsFallback,
 		talkedAboutNow: talkedAboutNowEnabled("title", userId),
 		sides,
+		breadcrumb: titleBreadcrumb("show", media.details.genres),
 		dehydratedState,
 		...(related.relatedMap && { relatedMap: related.relatedMap }),
 	}
@@ -193,6 +213,7 @@ export default function DetailsTV() {
 		countryIsFallback,
 		talkedAboutNow,
 		sides,
+		breadcrumb,
 	} = useLoaderData<LoaderData>()
 	const { country } = params
 	const episodeGrid = useMemo(
@@ -237,6 +258,6 @@ export default function DetailsTV() {
 	}, [media, country, countryIsFallback])
 
 	return (
-		<Details media={media} country={country} episodeGrid={episodeGrid} talkedAboutNow={talkedAboutNow} sides={sides} />
+		<Details media={media} country={country} episodeGrid={episodeGrid} talkedAboutNow={talkedAboutNow} sides={sides} breadcrumb={breadcrumb} />
 	)
 }

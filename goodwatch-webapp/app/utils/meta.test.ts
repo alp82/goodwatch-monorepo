@@ -73,6 +73,20 @@ test("a title without actors has no actor property", () => {
 	assert.equal(jsonLd.actor, undefined)
 })
 
+test("a title's structured data has no null value and no empty list", () => {
+	const bare = show([]) as {
+		details: Record<string, unknown>
+		credits: Record<string, unknown>
+	}
+	Object.assign(bare.details, { genres: [], number_of_seasons: null, number_of_episodes: 0 })
+	bare.credits.executive_producers = []
+	const json = JSON.stringify(buildJsonLdDetail(page, bare as never))
+	assert.doesNotMatch(json, /null|\[\]/)
+	const parsed = JSON.parse(json)
+	for (const key of ["genre", "numberOfSeasons", "numberOfEpisodes", "producer", "actor"])
+		assert.equal(key in parsed, false, key)
+})
+
 test("a page's Open Graph image is the JPEG under /og/, with index for the home page", () => {
 	assert.equal(
 		ogImageUrl("https://goodwatch.app/"),
