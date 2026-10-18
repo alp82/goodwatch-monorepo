@@ -7,6 +7,13 @@ Research date: 2026-10-18. This follows [the first streaming-watchlist investiga
 - [Tracker routes](tracker-routes.md): Simkl, Trakt, their import/export ecosystems, and adjacent tracker formats.
 - [Browser routes](browser-routes.md): extensions, userscripts, bookmarklets, extraction code, browser capabilities and alternatives.
 - [Alternative routes](alternative-routes.md): privacy archives, portable personal collections, self-hosted tools and overlooked bridges.
+- [Netflix catalog crosswalk validation](netflix-crosswalk-validation.md): three bounded, read-only catalog samples; 60 observed native-ID associations, strict URL parsing and a proposed exact lookup boundary.
+
+## Implemented follow-up
+
+The initial proposals below describe the investigation before implementation. Shared wishlist JSON and Watcharr PLANNED imports shipped in `2be7dc39` on 2026-10-18; both production page hosts were verified on that commit. The current contract is [shared wishlist format](../../implementation/shared-wishlist-format.md). The release does not include Netflix capture or native-ID resolution. Watcharr serialization was checked against an unmodified backend with synthetic users; see [Watcharr validation](watcharr-validation.md).
+
+Release validation: 3,440 full-suite tests passed, with one existing TODO and one skip; 478 focused tests passed; production build passed. Typecheck retained the same 185 baseline diagnostics, with none added. Deployment smoke checks retained the two pre-existing failures (related-panel 404 and static-mode detection), with no new 5xx counter increases. Authenticated production import/Undo was not exercised for this slice.
 
 Each track distinguishes provider contracts, inspected implementation, publisher claims and hypotheses. No authenticated streaming account was tested. The research does not imply that an endpoint seen in community code is an officially supported integration.
 

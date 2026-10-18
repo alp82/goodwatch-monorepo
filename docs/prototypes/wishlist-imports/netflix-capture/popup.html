@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GoodWatch My List capture (experiment)</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <main>
+    <header class="head">
+      <h1>GoodWatch My List capture</h1>
+      <p class="tag">Experiment. Not tested on a real Netflix account.</p>
+    </header>
+
+    <section class="notice" aria-labelledby="notice-title">
+      <h2 id="notice-title">For testing only</h2>
+      <p>The file this saves <strong>won't add Netflix titles to GoodWatch yet.</strong> This experiment doesn't record whether a title is a movie or a show, and GoodWatch can't match Netflix titles yet. If you upload the file, its titles show as not matched.</p>
+    </section>
+
+    <section class="steps" aria-labelledby="steps-title">
+      <h2 id="steps-title">How to capture</h2>
+      <ol>
+        <li>In this tab, open <strong>My List</strong> on netflix.com, with the profile you want.</li>
+        <li>Choose <strong>Start capture</strong>.</li>
+        <li>Scroll My List slowly to the end yourself. This popup closes when you click the page. The capture keeps running.</li>
+        <li>Open this popup again and choose <strong>Stop and save file</strong>.</li>
+      </ol>
+    </section>
+
+    <section class="status" aria-labelledby="status-title">
+      <h2 id="status-title">Status</h2>
+      <p id="state" class="state" role="status" aria-live="polite">Checking this tab…</p>
+      <p id="detail" class="detail" hidden></p>
+      <p id="profile-warning" class="warn" hidden>GoodWatch can't tell which Netflix profile is open. Stay on the same profile until you stop the capture. If you switch, the file mixes two lists.</p>
+
+      <dl class="counts" id="counts" hidden>
+        <div>
+          <dt>Titles captured so far</dt>
+          <dd id="observed">0</dd>
+        </div>
+        <div>
+          <dt>Cards skipped</dt>
+          <dd id="rejected">0</dd>
+        </div>
+      </dl>
+      <p class="hint" id="counts-hint" hidden>This counts titles that Netflix loaded on the page while capturing, including some that may be off screen. It isn't the size of your whole list.</p>
+
+      <div class="actions">
+        <button type="button" id="start" class="primary" disabled>Start capture</button>
+        <button type="button" id="stop" class="primary" hidden>Stop and save file</button>
+        <button type="button" id="save" class="primary" hidden>Save file again</button>
+        <button type="button" id="cancel" hidden>Cancel and discard</button>
+      </div>
+
+      <div id="saved" class="saved" hidden>
+        <p id="saved-line"></p>
+        <p>This file may not hold your whole list. Titles that Netflix didn't load while you scrolled are missing, and Netflix may hide titles that aren't available in your country. The titles and Netflix IDs in it are experimental readings of the page.</p>
+      </div>
+
+      <p id="code-line" class="code" hidden>Code: <code id="code"></code></p>
+    </section>
+
+    <footer class="privacy">
+      <p>This works only in this tab. Opening this popup checks the tab for a running capture. Titles are read only after you choose <strong>Start capture</strong>. It doesn't scroll, open pages, or send anything anywhere. The file holds titles and Netflix links only, with no cookies or account details. It doesn't change your Netflix list.</p>
+    </footer>
+  </main>
+  <script src="popup.js"></script>
+</body>
+</html>

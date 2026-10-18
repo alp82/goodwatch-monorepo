@@ -1,0 +1,12 @@
+{
+  "manifest_version": 3,
+  "name": "GoodWatch My List capture (experiment)",
+  "version": "0.0.1",
+  "permissions": [
+    "activeTab",
+    "scripting"
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  }
+}
