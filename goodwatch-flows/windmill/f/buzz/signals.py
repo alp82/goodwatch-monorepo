@@ -13,13 +13,13 @@ from urllib.parse import urlparse
 import requests
 
 from f.buzz.signal_parsers import (tmdb_export, trakt_page, imdb_chart, letterboxd_chart,
-    tmdb_link, flixpatrol_chart, flixpatrol_details)
+    tmdb_link, flixpatrol_chart, flixpatrol_details, justwatch_chart)
 from f.buzz.signal_store import SignalStore
 
 UA = 'GoodWatchBuzz/1.0 (https://goodwatch.app; hello@goodwatch.app)'
 SERVICES = ('netflix', 'amazon-prime', 'disney', 'hbo', 'apple-tv', 'hulu', 'paramount-plus')
 SOURCES = ('tmdb_popularity', 'trakt_trending', 'trakt_watched_daily', 'imdb_moviemeter',
-           'imdb_tvmeter', 'letterboxd_popular_week', 'flixpatrol_top10')
+           'imdb_tvmeter', 'letterboxd_popular_week', 'flixpatrol_top10', 'justwatch_chart')
 
 
 class SourceError(RuntimeError):
@@ -35,12 +35,18 @@ class Http:
         self.blocked_hosts = set()
 
     def get(self, url, **kwargs):
+        return self.request("get", url, **kwargs)
+
+    def post(self, url, **kwargs):
+        return self.request("post", url, **kwargs)
+
+    def request(self, method, url, **kwargs):
         host = urlparse(url).netloc
         if host in self.blocked_hosts:
             raise SourceError('Host blocked earlier in this run')
         self.sleep(1)
         try:
-            response = self.session.get(url, timeout=(10, 120), **kwargs)
+            response = getattr(self.session, method)(url, timeout=(10, 120), **kwargs)
         except requests.RequestException:
             raise SourceError('Transport failure') from None
         if response.status_code != 200:
@@ -105,6 +111,27 @@ class Collector:
         for row in rows:
             unique.setdefault(row['title_key'], row)
         return list(unique.values())
+
+    def justwatch(self):
+        # Two bounded requests daily; rank is the streaming chart, not edge order.
+        rows = {}
+        for kind in ('MOVIE', 'SHOW'):
+            def fetch():
+                query = """query { popularTitles(country: US, first: 100, sortBy: TRENDING,
+                  filter: {objectTypes: [KIND]}) { edges { node { id objectType
+                  ... on MovieOrShow { content(country: US, language: "en") {
+                    title externalIds { tmdbId imdbId } }
+                    streamingCharts(country: US) { edges { streamingChartInfo {
+                      rank trend trendDifference daysInTop10 topRank updatedAt
+                    } } } } } } } }""".replace('KIND', kind)
+                with self.http.post('https://apis.justwatch.com/graphql', json={'query': query}) as response:
+                    payload = response.json()
+                if payload.get('errors'):
+                    raise SourceError('JustWatch GraphQL errors')
+                return justwatch_chart(payload)
+            for row in self.attempt(kind, fetch):
+                rows.setdefault(row['title_key'], row)
+        return list(rows.values())
 
     def imdb(self, kind):
         chart = 'moviemeter' if kind == 'movie' else 'tvmeter'
@@ -176,7 +203,7 @@ class Collector:
         self.errors = []
         if source.startswith('trakt_') and not self.trakt_id:
             return [], {'status': 'needs_owner', 'message': 'Missing u/Alp/TRAKT_CLIENT_ID'}
-        funcs = {'tmdb_popularity': lambda: self.tmdb(day),
+        funcs = {'justwatch_chart': self.justwatch, 'tmdb_popularity': lambda: self.tmdb(day),
             'trakt_trending': lambda: self.trakt(), 'trakt_watched_daily': lambda: self.trakt(True),
             'imdb_moviemeter': lambda: self.imdb('movie'), 'imdb_tvmeter': lambda: self.imdb('tv'),
             'letterboxd_popular_week': self.letterboxd, 'flixpatrol_top10': lambda: self.flixpatrol(day)}

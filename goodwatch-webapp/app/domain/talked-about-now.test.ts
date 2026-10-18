@@ -414,3 +414,14 @@ test("snapshot source is exposed with a legacy Wikipedia default", () => {
 			!source || source.startsWith("Wikipedia ") ? "wikipedia_api" : source)
 	}
 })
+
+test("backup sources and metrics survive parsing without invented history", () => {
+	const signal = { kind: "backup", sources_used: ["trakt_trending"], source_lifts: {}, trakt_watchers: 12 }
+	const parsed = parseSnapshot({ schema_version: 1, day: "2026-10-17", source: "backup_signals", sources_used: ["trakt_trending"], top20: [entry("movie", 2, 1 / 62, { signal, views: null, mean28: null, curve: [] }), entry("movie", 1, 1 / 61, { signal })] })!
+	assert.deepEqual(parsed.sources_used, ["trakt_trending"])
+	assert.deepEqual(parsed.titles.map(t => t.tmdbId), [1, 2])
+	assert.deepEqual(parsed.titles[1].signal, signal)
+	assert.deepEqual(parsed.titles[1].curve, [])
+	assert.equal(parsed.titles[1].views, 0)
+	assert.equal(parsed.titles[1].lift, 1 / 62)
+})

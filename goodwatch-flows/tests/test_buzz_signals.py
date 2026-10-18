@@ -127,7 +127,7 @@ class Collection(unittest.TestCase):
         http.get.side_effect = SourceError('HTTP 403')
         store.save.side_effect = [RuntimeError('db'), None, None, None, None, None, None]
         result = run(store, now=NOW, http=http)
-        self.assertEqual(len(result['sources']),7)
+        self.assertEqual(len(result['sources']),8)
         self.assertEqual(result['sources']['tmdb_popularity']['status'],'storage_error')
         self.assertEqual(result['sources']['trakt_trending']['status'],'needs_owner')
         self.assertEqual(result['sources']['flixpatrol_top10']['status'],'blocked')

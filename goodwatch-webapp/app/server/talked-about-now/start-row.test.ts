@@ -410,3 +410,15 @@ test("the loader carries the snapshot source to the row", async () => {
 	const { reads: fake } = reads({ current })
 	assert.equal((await readTalkedAboutNow(fake))?.source, "wikipedia_dumps")
 })
+
+test("the loader preserves backup provenance and per-title signals", async () => {
+	const current = snapshot("2026-10-13", ten)
+	const payload = JSON.parse(current.payload)
+	payload.source = "backup_signals"
+	payload.sources_used = ["trakt_trending"]
+	for (const row of payload.top20) row.signal = { kind: "backup", sources_used: ["trakt_trending"], source_lifts: {}, trakt_watchers: 20 }
+	current.payload = JSON.stringify(payload)
+	const row = await readTalkedAboutNow(reads({ current }).reads)
+	assert.deepEqual(row?.sources_used, ["trakt_trending"])
+	assert.equal(row?.titles[0].signal?.trakt_watchers, 20)
+})

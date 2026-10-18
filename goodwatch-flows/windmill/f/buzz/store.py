@@ -119,6 +119,18 @@ class BuzzStore:
             return None
         return {kind: [json.loads(r['raw']) for r in rows if r['kind'] == kind] for kind in ('movie', 'tv')}
 
+    def read_backup_signals(self, titles, day):
+        from f.buzz.backup import SOURCES
+        # Only complete successful source-days; failed/partial captures cannot rank.
+        if not self.crate.select("SELECT table_name FROM information_schema.tables WHERE table_schema = 'doc' AND table_name = 'buzz_signal_run'"):
+            return []
+        return self.crate.select("""SELECT s.source, s.day, s.title_key, s.rank, s.value, s.raw
+            FROM doc.buzz_signal s JOIN doc.buzz_signal_run r ON s.source = r.source AND s.day = r.day
+            WHERE r.status = 'works' AND s.source = ANY(?) AND s.title_key = ANY(?)
+              AND s.day >= ? AND s.day <= ? LIMIT 200000""",
+            (list(SOURCES), [t['title_key'] for t in titles],
+             (day-dt.timedelta(days=28)).isoformat(), day.isoformat()))
+
     def read_pageviews(self, titles, start, end):
         self.refresh('buzz_pageview')
         out = {t['title_key']: {} for t in titles}

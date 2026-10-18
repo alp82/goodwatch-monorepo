@@ -6,6 +6,7 @@
 import datetime as dt
 import time
 
+from f.buzz.backup import snapshot as backup_snapshot
 from f.buzz.collect import Signals, reason_hints
 from f.buzz.score import FORMULA_VERSION, rank_day
 from f.buzz.store import BuzzStore
@@ -39,6 +40,16 @@ def run(store, signals, *, now=None):
                for article in PUBLICATION_PROBES):
         source = 'wikipedia_dumps'
     if source == 'wikipedia_dumps' and not signals.dumps_available(end):
+        if (now.hour, now.minute) >= (9, 30):
+            trending = store.read_trending(now)
+            if trending is None:
+                trending = signals.trending()
+                store.save_trending(trending, now)
+            titles = store.candidates(trending)
+            payload = backup_snapshot(titles, store.read_backup_signals(titles, end), end, now)
+            if payload:
+                store.publish(end.isoformat(), payload, now)
+                return dict(stats, status='published_backup', sources_used=payload['sources_used'])
         return wait_or_fail(stats, now, 'waiting_for_publication',
                             f'Wikimedia has not published {end.isoformat()}; current snapshot preserved')
     trending = store.read_trending(now)

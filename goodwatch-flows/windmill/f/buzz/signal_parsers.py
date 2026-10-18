@@ -154,3 +154,26 @@ def flixpatrol_details(html):
                 year = str(node.get('datePublished', ''))[:4]
                 return node.get('name'), int(year) if year.isdigit() else None, 'movie' if node['@type'] == 'Movie' else 'tv'
     return None, None, None
+
+
+def justwatch_chart(payload):
+    """US streaming ranks, preserving chart metadata and native identities."""
+    rows = []
+    for edge in payload['data']['popularTitles']['edges']:
+        node = edge['node']
+        kind = {'MOVIE': 'movie', 'SHOW': 'tv'}.get(node.get('objectType'))
+        content = node.get('content') or {}
+        tmdb = (content.get('externalIds') or {}).get('tmdbId')
+        if not kind or not isinstance(tmdb, int) or isinstance(tmdb, bool) or tmdb <= 0:
+            continue
+        charts = (node.get('streamingCharts') or {}).get('edges', [])
+        # Do not guess which chart is daily when the server returns several.
+        if len(charts) != 1:
+            continue
+        info = charts[0].get('streamingChartInfo') or {}
+        rank = info.get('rank')
+        if not isinstance(rank, int) or isinstance(rank, bool) or rank <= 0:
+            continue
+        rows.append(dict(title_key=f'{kind}:{tmdb}', rank=rank, value=1/rank,
+                         raw=dict(info, country='US', id=node.get('id'), title=content.get('title'))))
+    return rows

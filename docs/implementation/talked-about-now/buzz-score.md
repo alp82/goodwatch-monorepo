@@ -225,3 +225,101 @@ consumer and social-content flows are other tickets in the map.
 API references: [Wikimedia pageviews](https://doc.wikimedia.org/generated-data-platform/aqs/analytics-api/reference/page-views.html),
 [TMDB daily trending](https://developer.themoviedb.org/reference/trending-movies),
 [Windmill dependency locks](https://www.windmill.dev/docs/advanced/dependencies_in_python).
+
+## Backup ranking when Wikipedia is late
+
+`backup_signals`, formula `signals-rrf-28d-v1`, publishes from **09:30 UTC**
+when yesterday is absent from both API probes and the complete hourly dumps.
+The hour after the signals schedule leaves a margin for collection. The backup
+claims **yesterday's capture/export date**, never today's observations shifted
+back a day. Thus Trakt first captured on October 18 participates for October 18
+on October 19. TMDB's underlying activity window remains undocumented.
+No backup is used for a partially recovered Wikipedia cohort (coverage failures).
+
+Candidates use exactly `store.candidates`: catalog top 250 per kind plus catalog
+members of today's persisted/fresh TMDB trending capture. Only signal rows
+whose source/day run status is `works` count. Partial, blocked and absent sources
+are excluded, including from baselines. Missing signal tables yield no backup.
+At least **20 eligible candidates** are required; otherwise keep current and
+retain the normal final-attempt failure. A successful backup is sufficient at
+the final attempt. No reason metadata or Wikipedia mappings are fetched for it.
+
+For each source/title, require an actual finite, nonnegative observation on the
+scored day. With all 28 preceding calendar days, compute
+`lift = value / max(mean28, floor)`. Never fill absent days with zero:
+
+| Source | Value | Denominator floor | Eligibility |
+| --- | --- | --- | --- |
+| TMDB | popularity | 1 | Complete baseline, value ≥5 and increase ≥2.5 (backtest floors) |
+| Trakt trending | watchers | 5 | value ≥5; with baseline also increase ≥2 |
+| JustWatch US | 1 / streaming chart rank | 0.01 | positive; with baseline lift >1 |
+
+Within each source, order by lift when available, otherwise raw value (only
+Trakt/JustWatch have this cold-start mode), then value, JustWatch `UP` trend,
+then title key. Each eligible source contributes **1 / (60 + source rank)**.
+Sum contributions with equal weights; missing sources contribute nothing.
+Final order is descending sum then ascending title key. This intentionally
+rewards agreement, without renormalizing away missing sources. As history grows,
+individual titles automatically switch to lift; mixed-baseline periods compare
+lift and raw values and can change the list's character. These exploratory
+floors and ranks are not calibrated evidence of better quality than Wikipedia.
+`trakt_watched_daily` is excluded to avoid counting the same audience twice.
+
+Top-level `sources_used` lists contributors to the top 20. Each row adds:
+
+```json
+{
+  "kind": "backup",
+  "sources_used": ["tmdb_popularity", "trakt_trending", "justwatch_chart"],
+  "source_lifts": {"tmdb_popularity": 2.0},
+  "tmdb_lift": 2.0,
+  "trakt_watchers": 12,
+  "justwatch_rank": 4,
+  "justwatch_country": "US",
+  "justwatch_trend": "UP"
+}
+```
+
+This object is the row's `signal` field. A [complete generated example row](buzz-backup-row-example.json) shows the exact JSON shape, including all 14 curve points. Source-specific fields are omitted when
+that source did not contribute; `source_lifts` gains Trakt/JustWatch keys after
+complete baselines exist. The regular row `score` (and parsed `lift`) is the
+**RRF sum, not a × multiplier**. `views`, `mean28` and the 14 dated `curve[].views`
+are TMDB popularity, its complete 28-day mean, and its daily popularity history;
+unknown values are JSON null. `sd28` and `z` are null, `reasons` is empty.
+`eligible`, `rank`, `title_key`, `day`, and `card` retain their existing shapes.
+For compatibility with existing numeric presentation types, `parseSnapshot`
+uses 0 placeholders for null `views`/`mean28` and omits unknown curve points
+(possibly leaving an empty curve). These placeholders must not be labelled as
+measured zeroes or Wikipedia views. UI wording must branch on `signal.kind`;
+`signal.tmdb_lift` is the optional real multiplier. No UI components change here.
+The loader passes `sources_used` and `signal` through; movement retains the
+existing comparison with the previous day's preferred ranking, even across sources.
+
+Backups write **snapshots only**, not `buzz_score` (whose BIGINT views and Wikipedia
+semantics remain unchanged). No DDL/schema migration is introduced; payload
+schema stays 1. Existing CAS publication keeps `day:backup_signals:signals-rrf-28d-v1`
+immutable, advances current only to newer dates, and lets Wikipedia replace the
+same day's alias/current without losing the backup. Wikipedia catch-up keeps
+using the existing 60-day window and coverage guard.
+
+A SELECT-only local preview, with no initialization, REFRESH, source network
+collection, or publication:
+
+```sh
+python goodwatch-flows/tools/run_buzz.py --env /path/to/production.env \
+  --backup-dry-run 2026-10-17 --output /tmp/buzz-backup-preview.json
+```
+
+It uses the latest complete **stored** trending capture plus the current catalog;
+therefore candidate membership may differ from a future live daily capture.
+It returns `insufficient_signals` rather than an empty publishable snapshot.
+This change has not been deployed or exercised against production data.
+
+
+Validation for this change: 69 offline Python tests and 47 requested webapp tests
+passed. The full webapp typecheck reports errors outside the changed files.
+`goodwatch-benchmark/bench.sh budget` stops because `SHARE_LIST_PATH` is unset;
+no landing-surface budget result is claimed. Existing dependency locks are
+unchanged (no new third-party imports); the new pure backup module has an empty
+Python 3.12 lock. Metadata content hashes were refreshed locally using the
+existing CLI hash format, without running remote dependency jobs.

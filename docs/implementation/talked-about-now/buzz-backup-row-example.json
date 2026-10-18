@@ -1,0 +1,92 @@
+{
+  "title_key": "movie:1",
+  "day": "2026-10-17",
+  "score": 0.04918032786885246,
+  "eligible": true,
+  "views": 10,
+  "mean28": 5,
+  "sd28": null,
+  "z": null,
+  "curve": [
+    {
+      "day": "2026-10-04",
+      "views": 5
+    },
+    {
+      "day": "2026-10-05",
+      "views": 5
+    },
+    {
+      "day": "2026-10-06",
+      "views": 5
+    },
+    {
+      "day": "2026-10-07",
+      "views": 5
+    },
+    {
+      "day": "2026-10-08",
+      "views": 5
+    },
+    {
+      "day": "2026-10-09",
+      "views": 5
+    },
+    {
+      "day": "2026-10-10",
+      "views": 5
+    },
+    {
+      "day": "2026-10-11",
+      "views": 5
+    },
+    {
+      "day": "2026-10-12",
+      "views": 5
+    },
+    {
+      "day": "2026-10-13",
+      "views": 5
+    },
+    {
+      "day": "2026-10-14",
+      "views": 5
+    },
+    {
+      "day": "2026-10-15",
+      "views": 5
+    },
+    {
+      "day": "2026-10-16",
+      "views": 5
+    },
+    {
+      "day": "2026-10-17",
+      "views": 10
+    }
+  ],
+  "card": {
+    "title_key": "movie:1",
+    "kind": "movie",
+    "tmdb_id": 1,
+    "title": "Title 1"
+  },
+  "reasons": [],
+  "signal": {
+    "kind": "backup",
+    "sources_used": [
+      "tmdb_popularity",
+      "trakt_trending",
+      "justwatch_chart"
+    ],
+    "source_lifts": {
+      "tmdb_popularity": 2.0
+    },
+    "tmdb_lift": 2.0,
+    "trakt_watchers": 12,
+    "justwatch_rank": 4,
+    "justwatch_country": "US",
+    "justwatch_trend": "UP"
+  },
+  "rank": 1
+}

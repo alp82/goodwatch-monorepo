@@ -43,7 +43,41 @@ export type TalkedReason = {
 	season?: number
 }
 
+/** Backup metrics are streaming activity, never Wikipedia reads. */
+export type BackupSignal = {
+	kind: "backup"
+	sources_used: string[]
+	source_lifts: Record<string, number>
+	tmdb_lift?: number
+	trakt_watchers?: number
+	justwatch_rank?: number
+	justwatch_country?: string
+	justwatch_trend?: string
+}
+
+function backupSignal(value: unknown): BackupSignal | undefined {
+	if (!value || typeof value !== "object") return undefined
+	const raw = value as Record<string, unknown>
+	if (raw.kind !== "backup") return undefined
+	const result: BackupSignal = { kind: "backup", sources_used: Array.isArray(raw.sources_used) ? raw.sources_used.filter((s): s is string => typeof s === "string") : [], source_lifts: {} }
+	for (const key of ["tmdb_lift", "trakt_watchers", "justwatch_rank"] as const) {
+		const value = num(raw[key])
+		if (value !== null && value >= 0) result[key] = value
+	}
+	for (const key of ["justwatch_country", "justwatch_trend"] as const) {
+		const value = str(raw[key])
+		if (value) result[key] = value
+	}
+	if (raw.source_lifts && typeof raw.source_lifts === "object") {
+		for (const [key, value] of Object.entries(raw.source_lifts)) {
+			if (num(value) !== null && value >= 0) result.source_lifts[key] = value
+		}
+	}
+	return result
+}
+
 export type TalkedTitle = {
+	signal?: BackupSignal
 	/** Optional live presentation; ranking and source-language social prose remain canonical. */
 	canonical_title?: string
 	presentation?: import("../utils/media-presentation").MediaPresentation
@@ -55,11 +89,11 @@ export type TalkedTitle = {
 	backdrop: string | null
 	/** 1 is the most talked about. */
 	rank: number
-	/** Yesterday's views over the 28 days' mean before: "×9.7 its usual". */
+	/** Wikipedia lift; for backup rows this is the RRF score, not a multiplier. Use signal.tmdb_lift for a measured lift. */
 	lift: number
 	views: number
 	usual: number
-	/** Views per day, oldest first; the last is the row's `day`. */
+	/** Wikipedia views or backup TMDB popularity, oldest first; unknown points are omitted. */
 	curve: number[]
 	reason: TalkedReason | null
 	/** Places up since the day before (down is negative), "new" for a title that wasn't in the top 20; null unknown. */
@@ -69,6 +103,7 @@ export type TalkedTitle = {
 }
 
 export type TalkedRow = {
+	sources_used?: string[]
 	source?: string
 	/** The scored day (ISO), the last of every curve. */
 	day: string
@@ -134,7 +169,7 @@ export function reasonOf(
  */
 export function parseSnapshot(
 	payload: unknown,
-): { day: string; source: string; titles: BuzzTitle[] } | null {
+): { day: string; source: string; sources_used?: string[]; titles: BuzzTitle[] } | null {
 	const data = (
 		typeof payload === "string" ? safeJson(payload) : payload
 	) as Record<string, unknown> | null
@@ -149,9 +184,10 @@ export function parseSnapshot(
 		const kind = card.kind
 		const tmdbId = num(card.tmdb_id)
 		const title = str(card.title)
+		const signal = data.source === "backup_signals" ? backupSignal(raw.signal) : undefined
 		const lift = num(raw.score)
-		const views = num(raw.views)
-		const usual = num(raw.mean28)
+		const views = num(raw.views) ?? (signal ? 0 : null)
+		const usual = num(raw.mean28) ?? (signal ? 0 : null)
 		if ((kind !== "movie" && kind !== "tv") || !tmdbId || !title) continue
 		if (lift === null || views === null || usual === null) continue
 		const curve = Array.isArray(raw.curve)
@@ -162,8 +198,9 @@ export function parseSnapshot(
 			const at = str(point?.day)
 			return value === null || !at ? [] : [{ day: at, views: value }]
 		})
-		if (points.length < 2) continue
+		if (points.length < 2 && !signal) continue
 		titles.push({
+			...(signal ? { signal } : {}),
 			key: `${kind}:${tmdbId}`,
 			mediaType: kind === "tv" ? "show" : "movie",
 			tmdbId,
@@ -175,16 +212,17 @@ export function parseSnapshot(
 			views,
 			usual,
 			curve: points.map((point) => point.views),
-			reason: reasonOf(raw.reasons, points[0].day, points.at(-1)?.day ?? day),
+			reason: reasonOf(raw.reasons, points[0]?.day ?? day, points.at(-1)?.day ?? day),
 		})
 	}
-	titles.sort((a, b) => b.lift - a.lift || b.views - a.views)
+	titles.sort((a, b) => b.lift - a.lift || (data.source === "backup_signals" ? (a.key < b.key ? -1 : a.key > b.key ? 1 : 0) : b.views - a.views))
 	titles.forEach((title, i) => {
 		title.rank = i + 1
 	})
 	const source = str(data.source)
 	return {
 		day,
+		...(Array.isArray(data.sources_used) ? { sources_used: data.sources_used.filter((s): s is string => typeof s === "string") } : {}),
 		source: !source || source === "Wikipedia en.wikipedia.org / all-access / user"
 			? "wikipedia_api"
 			: source,

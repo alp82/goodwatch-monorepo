@@ -2,8 +2,8 @@
 
 Owner decisions, 2026-10-18: GoodWatch remains free/open source; non-commercial
 terms do not block this work; attempt scraping; assume Trakt approval for a
-blended public score. This collection does not change the Wikipedia score or
-any member-facing ranking.
+blended public score. Collection does not change the Wikipedia formula. The daily buzz flow can now
+use these observations for the labelled [backup ranking](buzz-score.md#backup-ranking-when-wikipedia-is-late).
 
 `f/buzz/signals` and its flow collect at **08:30 UTC daily**, cron
 `0 30 8 * * *`, with overlap protection. All source failures are returned and
@@ -18,8 +18,8 @@ activity.
 ## Storage
 
 The collector creates its own tables; catalog/Wikipedia tables are read-only.
-No shared schema registration or edits to `daily.py`, `store.py`, or the existing
-schedule are needed. All three tables have one shard, one replica, strict columns.
+No shared schema registration or schedule changes are needed. The daily flow
+reads signal history without initializing or writing these tables. All three tables have one shard, one replica, strict columns.
 
 ```sql
 CREATE TABLE IF NOT EXISTS doc.buzz_signal (
@@ -66,6 +66,7 @@ reconciliation pass, not a fresh scrape of historical charts.
 | --- | --- | --- |
 | `tmdb_popularity` | Streaming gzip JSONL, movie + TV daily ID exports | Popularity ≥5, highest 20,000 per kind, plus Wikipedia candidate/history winners and top 250 catalog titles per kind regardless of value. Native TMDB IDs. At most 40,000 plus the retained cohort per day. |
 | `trakt_trending` | Movies + shows, watcher count | Up to 10 pages ×100 per kind, stop at server page count; native `ids.tmdb`, otherwise Trakt ID. |
+| `justwatch_chart` | US movies and shows, first 100 TRENDING titles each; two public GraphQL POSTs/day | Native `externalIds.tmdbId`, MOVIE→movie / SHOW→tv. Streaming rank (not list position), value = 1/rank. |
 | `trakt_watched_daily` | Movies + shows, `watcher_count` | Same pagination; capture of the current daily list, not a closed calendar-day measurement. |
 | `imdb_moviemeter`, `imdb_tvmeter` | One chart request each unless the host rate-limits this run | Embedded NEXT_DATA meter rank/change preferred, JSON-LD rank fallback. Existing Crate movie/show `imdb_id` fields publish TMDB-primary/Wikidata-fallback identities; duplicate mappings rejected. |
 | `letterboxd_popular_week` | First three 72-entry pages | Film page `data-tmdb-id` or TMDB anchor; slug mapping cache. |
@@ -208,3 +209,29 @@ and available on June 19. This observed retention is about four months, longer
 than the official three-month description; the tool defaults to 130 days to
 cover it. The eight unavailable dates are not fabricated as zero observations.
 There were no failed or partial captures within the 122-day available range.
+
+
+## JustWatch collector (2026-10-18)
+
+POST `https://apis.justwatch.com/graphql`, without credentials, using the existing
+identifying UA, sequential one-second spacing, bounded timeouts and host-wide
+429 stop. Two independent scopes (MOVIE, SHOW), US only; GB/DE are deferred to
+avoid conflating country ranks under one source key. Fetching the first 100 per
+kind is deliberately bounded; no pagination/full-chart claim is made.
+
+`popularTitles(country: US, first: 100, sortBy: TRENDING,
+filter: {objectTypes: [MOVIE]})` selects titles. `streamingCharts(country: US)`
+supplies the rank and `trend`, `trendDifference`, `daysInTop10`, `topRank`,
+`updatedAt`; all are retained in raw alongside `country`, JustWatch `id` and title.
+Only a positive integer rank, one unambiguous chart edge, and a positive native
+TMDB id are accepted. Missing identities/ranks or multiple chart edges are
+skipped. GraphQL errors and HTTP/transport failures produce blocked/partial
+statuses and never suppress other vendors. The day is the UTC collection date;
+raw `updatedAt` remains available to audit vendor freshness.
+
+The owner verified this endpoint from the server on October 18. This workspace's
+trial returned HTTP 403, so exact live schema, chart-edge cardinality and coverage
+remain unverified here. Fixtures are synthetic examples of the supplied schema.
+The earlier partner-API access observation in the research document describes a
+different API; this implementation uses the public website GraphQL endpoint.
+No deployment or production collection was performed for this change.

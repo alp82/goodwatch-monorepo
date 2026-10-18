@@ -19,7 +19,7 @@ import requests
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'windmill'))
 from f.buzz.collect import Signals
 from f.buzz.daily import run
-from f.buzz.store import BuzzStore, TABLES
+from f.buzz.store import BuzzStore, TABLES, snapshot_source, WIKIPEDIA_SOURCES
 
 
 class LocalCrate:
@@ -110,12 +110,16 @@ def verify(crate):
         rows.sort(key=lambda r: (-r['score'], -r['views'], r['title_key']))
         if [r['rank'] for r in rows] != list(range(1, len(rows) + 1)):
             raise RuntimeError('Non-deterministic or non-contiguous eligible ranks')
+    audited_snapshots = 0
     for snapshot in result['snapshots']:
+        if snapshot_source(snapshot['payload']) not in WIKIPEDIA_SOURCES:
+            continue
+        audited_snapshots += 1
         expected = [r['title_key'] for r in ranked[snapshot['day']][:20]]
         actual = [r['title_key'] for r in snapshot['payload']['top20']]
         if expected != actual:
             raise RuntimeError('Published snapshot disagrees with stored ranks')
-    result['independent_audit'] = {'scores_checked': len(scores), 'ranked_days': len(ranked), 'snapshots_checked': len(result['snapshots']), 'passed': True}
+    result['independent_audit'] = {'scores_checked': len(scores), 'ranked_days': len(ranked), 'snapshots_checked': audited_snapshots, 'passed': True}
     return result
 
 
@@ -124,6 +128,7 @@ def main():
     parser.add_argument('--env', required=True)
     parser.add_argument('--output', required=True)
     parser.add_argument('--verify', action='store_true')
+    parser.add_argument('--backup-dry-run', metavar='YYYY-MM-DD', help='SELECT-only backup preview; no source HTTP requests')
     args = parser.parse_args()
     env = {}
     for line in Path(args.env).read_text().splitlines():
@@ -132,7 +137,31 @@ def main():
             env[key.strip()] = value.strip().strip('"').strip("'")
     crate = LocalCrate(env)
     started = time.monotonic()
-    result = verify(crate) if args.verify else run(BuzzStore(crate), Signals(env['TMDB_API_KEY']))
+    if args.backup_dry_run:
+        import datetime as dt
+        from f.buzz.backup import snapshot
+        original = crate.request
+        def readonly(sql, **params):
+            if not sql.lstrip().upper().startswith('SELECT '):
+                raise ValueError('Dry run permits SELECT only')
+            return original(sql, **params)
+        crate.request = readonly
+        day = dt.date.fromisoformat(args.backup_dry_run)
+        now = dt.datetime.now(dt.timezone.utc)
+        store = BuzzStore(crate)
+        # Latest complete persisted candidate capture, with no REFRESH or HTTP collection.
+        captures = crate.select('SELECT snapshot_day, kind, raw, expected_count FROM doc.buzz_trending ORDER BY snapshot_day DESC LIMIT 100000')
+        trending = {'movie': [], 'tv': []}
+        for capture_day in sorted({r['snapshot_day'] for r in captures}, reverse=True):
+            rows = [r for r in captures if r['snapshot_day'] == capture_day]
+            if all(r['expected_count'] == len(rows) for r in rows):
+                trending = {kind: [json.loads(r['raw']) for r in rows if r['kind'] == kind] for kind in trending}
+                break
+        titles = store.candidates(trending)
+        payload = snapshot(titles, store.read_backup_signals(titles, day), day, now)
+        result = {'status': 'preview' if payload else 'insufficient_signals', 'snapshot': payload}
+    else:
+        result = verify(crate) if args.verify else run(BuzzStore(crate), Signals(env['TMDB_API_KEY']))
     result['elapsed_seconds'] = round(time.monotonic() - started, 2)
     Path(args.output).write_text(json.dumps(result, indent=2, ensure_ascii=False, allow_nan=False) + '\n')
     print(json.dumps({k: v for k, v in result.items() if k != 'snapshots'}, indent=2, ensure_ascii=False), flush=True)

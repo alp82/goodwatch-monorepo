@@ -73,10 +73,10 @@ class DailyTests(unittest.TestCase):
             def pageviews(self, article, start, end):
                 self.ranges.append((start.isoformat(), end.isoformat()))
                 return {}
-            def trending(self): raise AssertionError('Trending called before publication')
+            def trending(self): return super().trending()
             def mappings(self, titles): raise AssertionError('Mappings called before publication')
         signals = DelayedSignals()
-        result = run(store, signals, now=dt.datetime(2026, 10, 15, 10, tzinfo=dt.timezone.utc))
+        result = run(store, signals, now=dt.datetime(2026, 10, 15, 8, tzinfo=dt.timezone.utc))
         self.assertEqual(result['status'], 'waiting_for_publication')
         self.assertEqual(signals.ranges, [('2026-10-14', '2026-10-14')] * 2)
         self.assertEqual(store.current['day'], '2026-10-13')
@@ -209,6 +209,7 @@ class MemoryStore:
         self.trending = {}
 
     def initialize(self): pass
+    def read_backup_signals(self, titles, day): return []
     def candidates(self, trending):
         return [{'title_key': 'movie:1', 'kind': 'movie', 'tmdb_id': 1, 'title': 'Example'}]
     def catalog_names(self, names): return self.candidates({})
