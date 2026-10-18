@@ -1,21 +1,23 @@
-// PROTOTYPE - throwaway. The deeper "Hot on socials" page, round 2: the whole ranking (not 8), up to 12 posts per
-// title (not 3), and each title's GoodWatch score and tagline. Three story-feed designs:
-//   /prototype/hot-on-socials?variant=A|B|C   (#movie-123 or #show-456 jumps to a title)
-// A: Magazine. Poster column and a masonry of posts per title; the top three larger.
-// B: Shelves. A slim backdrop band per title, its posts as a row to scroll sideways.
-// C: Feed. Every post of every title in one stream, newest first, with the ranking beside it as a filter.
-// Titles with nothing said yet sit together at the end ("Also rising"). Reads getHotOnSocialsDeep() directly.
+// PROTOTYPE - throwaway. The deeper "Hot on socials" page, round 3: one combined feed of what is said about the
+// whole ranking, with search and filters. Owner's round 2 notes: C's combined feed is the direction; nav must say
+// what it is and work on a phone; less border clutter; the outbound link cards were ugly; phones get less detail.
+//   /prototype/hot-on-socials?variant=A|B|C   (#movie-123 or #show-456 opens filtered to that title)
+// A: Stream. One calm column. Desktop: a filter panel at the left. Phone: search on top, a Filters sheet.
+// B: Digest. Grouped by day, two columns; titles as a labeled poster row above.
+// C: Clusters. One block per title with its best posts; "All N posts" narrows the feed to that title.
+// Shared: search (title, headline, post, publisher), source, movie/show, title, sort. Cards are this file's own;
+// a video or a post loads its platform's player only on press (the shared facade's rule).
 import { type LinksFunction, json } from "@remix-run/node"
 import { Link, useLoaderData, useSearchParams } from "@remix-run/react"
-import { useMemo, useState } from "react"
-import { type TalkedItem, type TalkedRow, type TalkedTitle, compact, liftLabel, reasonLabel } from "~/domain/talked-about-now"
+import { useEffect, useMemo, useState } from "react"
+import { type TalkedItem, type TalkedRow, type TalkedTitle, liftLabel, reasonLabel } from "~/domain/talked-about-now"
 import livingRoomCss from "~/ui/living-room/living-room.css?url"
 import MediaText from "~/ui/media-text/MediaText"
 import { PrototypeSwitcher } from "~/ui/prototype/PrototypeSwitcher"
 import { SocialEmbed } from "~/ui/social-embed/SocialEmbed"
-import { Platform, SourceMark, embedOf } from "~/ui/talked-about-now/start-row/Items"
+import { SourceMark, embedOf } from "~/ui/talked-about-now/start-row/Items"
 import { Spark, dateLabel } from "~/ui/talked-about-now/start-row/Spark"
-import { Move, ReasonIcon, hrefOf, tmdb } from "~/ui/talked-about-now/start-row/StartRow"
+import { hrefOf, tmdb } from "~/ui/talked-about-now/start-row/StartRow"
 import { mediaFieldLanguage } from "~/utils/media-presentation"
 
 export async function loader() {
@@ -27,323 +29,496 @@ export const links: LinksFunction = () => [{ rel: "stylesheet", href: livingRoom
 export const shouldRevalidate = () => false
 export const meta = () => [{ title: "Hot on socials (prototype) · GoodWatch" }, { name: "robots", content: "noindex, nofollow" }]
 
-const VARIANTS = { A: "Magazine", B: "Shelves", C: "Feed" }
+const VARIANTS = { A: "Stream", B: "Digest", C: "Clusters" }
 const keyOf = (t: TalkedTitle) => `${t.mediaType}-${t.tmdbId}`
 const Name = ({ title }: { title: TalkedTitle }) => (
 	<MediaText value={{ text: title.title, lang: mediaFieldLanguage(title, "title") }} />
 )
-const kind = (t: TalkedTitle) => `${t.mediaType === "movie" ? "Movie" : "TV show"}${t.year ? ` · ${t.year}` : ""}`
+const plural = (n: number, one: string) => `${n} ${one}${n === 1 ? "" : "s"}`
 
-function Score({ title }: { title: TalkedTitle }) {
-	const score = title.extra?.score
-	if (score == null) return null
+// ---------------------------------------------------------------------------------------------------------
+// Filters
+
+type Source = "all" | "news" | "video" | "social"
+type Kind = "all" | "movie" | "show"
+type Sort = "new" | "hot"
+type Filters = { q: string; source: Source; kind: Kind; title: string | null; sort: Sort }
+type Post = { item: TalkedItem; title: TalkedTitle }
+
+const SOURCES: [Source, string][] = [
+	["all", "All"],
+	["news", "News"],
+	["video", "Videos"],
+	["social", "Posts"],
+]
+const KINDS: [Kind, string][] = [
+	["all", "All"],
+	["movie", "Movies"],
+	["show", "Shows"],
+]
+const sourceOf = (item: TalkedItem): Source =>
+	item.source === "rss" ? "news" : item.source === "youtube" ? "video" : "social"
+
+function useFilters() {
+	const [f, setF] = useState<Filters>({ q: "", source: "all", kind: "all", title: null, sort: "new" })
+	useEffect(() => {
+		const hash = window.location.hash.slice(1)
+		if (hash) setF((old) => ({ ...old, title: hash }))
+	}, [])
+	const set = (patch: Partial<Filters>) => setF((old) => ({ ...old, ...patch }))
+	return [f, set] as const
+}
+
+function filterPosts(titles: TalkedTitle[], f: Filters, ignoreTitle = false): Post[] {
+	const q = f.q.trim().toLowerCase()
+	return titles
+		.filter((t) => f.kind === "all" || t.mediaType === f.kind)
+		.filter((t) => ignoreTitle || !f.title || keyOf(t) === f.title)
+		.flatMap((t) => t.items.map((item) => ({ item, title: t })))
+		.filter(({ item }) => f.source === "all" || sourceOf(item) === f.source)
+		.filter(
+			({ item, title }) =>
+				!q || `${title.title} ${item.text} ${item.publisher} ${item.author}`.toLowerCase().includes(q),
+		)
+		.sort((a, b) =>
+			f.sort === "hot" ? a.title.rank - b.title.rank || b.item.at.localeCompare(a.item.at) : b.item.at.localeCompare(a.item.at),
+		)
+}
+
+const ago = (iso: string) => {
+	const h = Math.max(0, (Date.now() - Date.parse(iso)) / 3_600_000)
+	if (h < 1) return "just now"
+	if (h < 24) return `${Math.floor(h)}h ago`
+	const d = Math.floor(h / 24)
+	return d === 1 ? "yesterday" : `${d} days ago`
+}
+
+function Seg<T extends string>({ value, options, onChange, label }: { value: T; options: [T, string][]; onChange: (v: T) => void; label: string }) {
 	return (
-		<span className="hs-score" title="GoodWatch score">
-			<b>{Math.round(score)}</b>
-		</span>
+		<div className="hx-seg" role="group" aria-label={label}>
+			{options.map(([v, text]) => (
+				<button key={v} type="button" aria-pressed={value === v} onClick={() => onChange(v)}>
+					{text}
+				</button>
+			))}
+		</div>
 	)
 }
 
-function Reason({ title }: { title: TalkedTitle }) {
-	if (!title.reason) return null
+function Search({ f, set }: { f: Filters; set: (p: Partial<Filters>) => void }) {
 	return (
-		<span className={`tn-chip tn-chip-${title.reason.kind}`}>
-			<ReasonIcon kind={title.reason.kind} />
-			{reasonLabel(title.reason, title.mediaType)}, {dateLabel(title.reason.day)}
-		</span>
+		<label className="hx-search">
+			<svg viewBox="0 0 20 20" aria-hidden="true">
+				<circle cx="9" cy="9" r="6" fill="none" stroke="currentColor" strokeWidth="2" />
+				<path d="M14 14l4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+			</svg>
+			<input
+				type="search"
+				value={f.q}
+				onChange={(e) => set({ q: e.target.value })}
+				placeholder="Search titles, headlines, posts"
+				aria-label="Search what is said"
+			/>
+		</label>
 	)
 }
 
-function Post({ item, title, variant = "card" }: { item: TalkedItem; title: TalkedTitle; variant?: "card" | "row" }) {
+/** The filters that are on, as chips that take themselves off. */
+function Active({ f, set, titles, count }: { f: Filters; set: (p: Partial<Filters>) => void; titles: TalkedTitle[]; count: number }) {
+	const title = titles.find((t) => keyOf(t) === f.title)
+	const chips: [string, () => void][] = []
+	if (title) chips.push([title.title, () => set({ title: null })])
+	if (f.source !== "all") chips.push([SOURCES.find(([v]) => v === f.source)?.[1] ?? "", () => set({ source: "all" })])
+	if (f.kind !== "all") chips.push([KINDS.find(([v]) => v === f.kind)?.[1] ?? "", () => set({ kind: "all" })])
+	if (f.q.trim()) chips.push([`“${f.q.trim()}”`, () => set({ q: "" })])
 	return (
-		<SocialEmbed
-			item={embedOf(item)}
-			art={item.source === "youtube" ? title.backdrop : undefined}
-			artSizes={[[null, "480px"]]}
-			variant={variant}
-			className="h-full"
-		/>
+		<div className="hx-active">
+			<b>{plural(count, "post")}</b>
+			{chips.map(([text, off]) => (
+				<button key={text} type="button" onClick={off}>
+					{text} <span aria-hidden>×</span>
+				</button>
+			))}
+			{chips.length > 1 && (
+				<button type="button" className="hx-clear" onClick={() => set({ q: "", source: "all", kind: "all", title: null })}>
+					Clear all
+				</button>
+			)}
+		</div>
 	)
 }
 
-/** The page's head: what the ranking is, and the day's totals. */
-function Head({ row, said }: { row: TalkedRow; said: TalkedTitle[] }) {
-	const sources = [...new Set(row.titles.flatMap((t) => t.items.map((i) => i.source)))]
-	const posts = row.titles.reduce((n, t) => n + t.items.length, 0)
-	const top = row.titles[0]
+/** The ranking as a list of names: what each title is, how hot, how much is said. Picks the title filter. */
+function TitleList({ titles, f, set, day }: { titles: TalkedTitle[]; f: Filters; set: (p: Partial<Filters>) => void; day: string }) {
 	return (
-		<header className="hs-head">
-			<div>
-				<p className="lrb-eye">Talked about now · {dateLabel(row.day)}</p>
-				<h1 className="hs-h1">Hot on socials</h1>
-				<p className="hs-lede">Who the internet is reading about, and what it is saying.</p>
+		<ol className="hx-titles">
+			{titles.map((t) => (
+				<li key={keyOf(t)}>
+					<button
+						type="button"
+						aria-pressed={f.title === keyOf(t)}
+						onClick={() => set({ title: f.title === keyOf(t) ? null : keyOf(t) })}
+					>
+						<span className="hx-t-n">{t.rank}</span>
+						{t.poster ? <img src={tmdb(t.poster, "w92")} alt="" /> : <span className="hx-noposter" />}
+						<span className="hx-t-text">
+							<b>
+								<Name title={t} />
+							</b>
+							<small>
+								{t.reason ? reasonLabel(t.reason, t.mediaType) : t.mediaType === "movie" ? "Movie" : "TV show"} ·{" "}
+								{plural(t.items.length, "post")}
+							</small>
+						</span>
+						<span className="hx-t-lift">{liftLabel(t.lift)}</span>
+					</button>
+				</li>
+			))}
+		</ol>
+	)
+}
+
+// ---------------------------------------------------------------------------------------------------------
+// The cards
+
+function TitleTag({ title, onPick }: { title: TalkedTitle; onPick?: () => void }) {
+	return (
+		<button type="button" className="hx-tag" onClick={onPick} disabled={!onPick}>
+			{title.poster && <img src={tmdb(title.poster, "w92")} alt="" />}
+			<b>
+				<Name title={title} />
+			</b>
+			<span>{liftLabel(title.lift)}</span>
+		</button>
+	)
+}
+
+const PLATFORM = { rss: "", youtube: "YouTube", bluesky: "Bluesky", mastodon: "Mastodon" } as const
+
+function PostCard({ post, onPick, showTitle = true }: { post: Post; onPick?: () => void; showTitle?: boolean }) {
+	const { item, title } = post
+	const [open, setOpen] = useState(false)
+	const by = item.source === "rss" ? item.publisher : item.author
+	const meta = (
+		<p className="hx-meta">
+			<SourceMark source={item.source} />
+			<b>{by}</b>
+			{item.source !== "rss" && <span>on {PLATFORM[item.source]}</span>}
+			<span>· {ago(item.at)}</span>
+		</p>
+	)
+	if (open && item.source !== "rss")
+		return (
+			<article className="hx-card hx-card-open">
+				{showTitle && <TitleTag title={title} onPick={onPick} />}
+				<SocialEmbed item={embedOf(item)} loaded art={title.backdrop} />
+			</article>
+		)
+	if (item.source === "youtube")
+		return (
+			<article className="hx-card hx-video">
+				<button type="button" className="hx-thumb" onClick={() => setOpen(true)} aria-label={`Play ${item.text}`}>
+					{title.backdrop && <img src={tmdb(title.backdrop, "w780")} alt="" loading="lazy" />}
+					<span className="hx-play" aria-hidden />
+					<small>Plays from YouTube</small>
+				</button>
+				<div className="hx-body">
+					{showTitle && <TitleTag title={title} onPick={onPick} />}
+					<h3>{item.text}</h3>
+					{meta}
+				</div>
+			</article>
+		)
+	if (item.source === "rss")
+		return (
+			<article className="hx-card hx-news">
+				<div className="hx-body">
+					{showTitle && <TitleTag title={title} onPick={onPick} />}
+					<a href={item.url} target="_blank" rel="noopener noreferrer" className="hx-headline">
+						<h3>{item.text}</h3>
+					</a>
+					{meta}
+				</div>
+			</article>
+		)
+	return (
+		<article className="hx-card hx-social">
+			<div className="hx-body">
+				{showTitle && <TitleTag title={title} onPick={onPick} />}
+				<blockquote>{item.text}</blockquote>
+				<div className="hx-social-foot">
+					{meta}
+					<button type="button" className="hx-show" onClick={() => setOpen(true)}>
+						Show on {PLATFORM[item.source]}
+					</button>
+				</div>
 			</div>
-			<dl className="hs-stats">
-				<div>
-					<dt>Titles rising</dt>
-					<dd>{row.titles.length}</dd>
-				</div>
-				<div>
-					<dt>Posts</dt>
-					<dd>{posts}</dd>
-				</div>
-				<div>
-					<dt>Top spike</dt>
-					<dd>{liftLabel(top.lift)}</dd>
-				</div>
-				<div>
-					<dt>Sources</dt>
-					<dd className="hs-stat-sources">
-						{sources.map((source) => (
-							<Platform key={source} source={source} />
-						))}
-					</dd>
-				</div>
-			</dl>
+		</article>
+	)
+}
+
+function Empty({ set }: { set: (p: Partial<Filters>) => void }) {
+	return (
+		<div className="hx-empty">
+			<p>Nothing said matches.</p>
+			<button type="button" onClick={() => set({ q: "", source: "all", kind: "all", title: null })}>
+				Clear filters
+			</button>
+		</div>
+	)
+}
+
+function Head({ row }: { row: TalkedRow }) {
+	return (
+		<header className="hx-head">
+			<p className="lrb-eye">Talked about now · {dateLabel(row.day)}</p>
+			<h1>Hot on socials</h1>
+			<p>The titles people suddenly read about most, and what is being said about them.</p>
 		</header>
 	)
 }
 
-/** A sticky strip of every title with something said: poster, rank, ×N. */
-function Strip({ titles }: { titles: TalkedTitle[] }) {
+/** On a phone: one bar on top with the search and a Filters button; the filters open as a sheet from the bottom. */
+function PhoneBar({ f, set, titles, day, count }: { f: Filters; set: (p: Partial<Filters>) => void; titles: TalkedTitle[]; day: string; count: number }) {
+	const [open, setOpen] = useState(false)
+	const on = [f.title, f.source !== "all", f.kind !== "all"].filter(Boolean).length
 	return (
-		<nav className="hs-strip" aria-label="Titles">
-			{titles.map((t) => (
-				<a key={keyOf(t)} href={`#${keyOf(t)}`}>
-					{t.poster && <img src={tmdb(t.poster, "w92")} alt="" />}
-					<b>{t.rank}</b>
-					<small>{liftLabel(t.lift)}</small>
-				</a>
-			))}
-		</nav>
-	)
-}
-
-/** The titles with nothing said yet: a compact grid at the end. */
-function AlsoRising({ titles, day }: { titles: TalkedTitle[]; day: string }) {
-	if (!titles.length) return null
-	return (
-		<section className="hs-also">
-			<h2>Also rising</h2>
-			<p className="hs-lede">Read about far more than usual, nothing said about them yet.</p>
-			<ol>
-				{titles.map((t) => (
-					<li key={keyOf(t)} id={keyOf(t)}>
-						<Link to={hrefOf(t)} discover="none">
-							{t.poster ? <img src={tmdb(t.poster, "w92")} alt="" /> : <span className="tn-noposter" />}
-							<span>
-								<b>
-									{t.rank}. <Name title={t} />
-								</b>
-								<small>{t.reason ? reasonLabel(t.reason, t.mediaType) : kind(t)}</small>
-							</span>
-							<Spark title={t} day={day} width={72} height={26} mark={false} />
-							<em>{liftLabel(t.lift)}</em>
-						</Link>
-					</li>
-				))}
-			</ol>
-		</section>
-	)
-}
-
-// A: Magazine.
-function Magazine({ said, day }: { said: TalkedTitle[]; day: string }) {
-	return (
-		<div className="hs-mag">
-			{said.map((t) => (
-				<article key={keyOf(t)} id={keyOf(t)} className={`hs-mag-item${t.rank <= 3 ? " hs-big" : ""}`}>
-					<aside className="hs-mag-side">
-						<Link to={hrefOf(t)} discover="none" className="hs-mag-poster">
-							{t.poster && <img src={tmdb(t.poster, "w342")} alt="" loading="lazy" />}
-							<b className="hs-rank-badge">{t.rank}</b>
-						</Link>
-					</aside>
-					<div className="hs-mag-main">
-						<header>
-							<p className="tn-rank">
-								#{t.rank} talked about <Move move={t.move} />
-							</p>
-							<h2>
-								<Link to={hrefOf(t)} discover="none">
-									<Name title={t} />
-								</Link>
-								<Score title={t} />
-							</h2>
-							<p className="hs-meta">
-								{kind(t)}
-								{t.extra?.tagline ? <i> · {t.extra.tagline}</i> : null}
-							</p>
-							<Reason title={t} />
-						</header>
-						<div className="hs-mag-curve">
-							<div>
-								<p className="tn-lift">
-									{liftLabel(t.lift)}
-									<small>its usual</small>
-								</p>
-								<p className="hs-reads">
-									{compact(t.views)} Wikipedia reads on {dateLabel(day)}
-									<br />
-									{compact(t.usual)} on a usual day
-								</p>
-							</div>
-							<Spark title={t} day={day} width={640} height={72} hover />
+		<>
+			<div className="hx-phonebar">
+				<Search f={f} set={set} />
+				<button type="button" className="hx-filters-btn" onClick={() => setOpen(true)}>
+					Filters{on ? <b>{on}</b> : null}
+				</button>
+			</div>
+			{open && (
+				<div className="hx-sheet" role="dialog" aria-label="Filters">
+					<button type="button" className="hx-sheet-bg" aria-label="Close" onClick={() => setOpen(false)} />
+					<div className="hx-sheet-in">
+						<div className="hx-sheet-head">
+							<b>Filters</b>
+							<button type="button" onClick={() => setOpen(false)}>
+								Show {plural(count, "post")}
+							</button>
 						</div>
-						<div className="hs-masonry">
-							{t.items.map((item) => (
-								<div key={item.id}>
-									<Post item={item} title={t} />
-								</div>
-							))}
-						</div>
+						<p className="hx-label">Source</p>
+						<Seg value={f.source} options={SOURCES} onChange={(source) => set({ source })} label="Source" />
+						<p className="hx-label">Type</p>
+						<Seg value={f.kind} options={KINDS} onChange={(kind) => set({ kind })} label="Type" />
+						<p className="hx-label">Sort</p>
+						<Seg value={f.sort} options={[["new", "Newest"], ["hot", "Hottest title"]]} onChange={(sort) => set({ sort })} label="Sort" />
+						<p className="hx-label">Title</p>
+						<TitleList titles={titles} f={f} set={(p) => (set(p), setOpen(false))} day={day} />
 					</div>
-				</article>
-			))}
-		</div>
+				</div>
+			)}
+		</>
 	)
 }
 
-// B: Shelves.
-function Shelves({ said, day }: { said: TalkedTitle[]; day: string }) {
+// ---------------------------------------------------------------------------------------------------------
+// A: Stream
+
+function Stream({ row, said }: { row: TalkedRow; said: TalkedTitle[] }) {
+	const [f, set] = useFilters()
+	const posts = filterPosts(said, f)
 	return (
-		<div className="hs-shelves">
-			{said.map((t) => (
-				<section key={keyOf(t)} id={keyOf(t)} className="hs-shelf">
-					<header className="hs-band">
-						{t.backdrop && <img src={tmdb(t.backdrop, "w1280")} alt="" loading="lazy" />}
-						<div className="hs-band-in">
-							<b className="hs-band-rank">{t.rank}</b>
-							<div>
-								<h2>
-									<Link to={hrefOf(t)} discover="none">
-										<Name title={t} />
-									</Link>
-									<Move move={t.move} />
-									<Score title={t} />
-								</h2>
-								<p className="hs-meta">
-									{kind(t)} · {t.items.length} {t.items.length === 1 ? "post" : "posts"}
-								</p>
-								<Reason title={t} />
-							</div>
-						</div>
-						<div className="hs-band-buzz">
-							<p className="tn-lift">
-								{liftLabel(t.lift)}
-								<small>its usual</small>
-							</p>
-							<Spark title={t} day={day} width={220} height={48} hover />
-						</div>
-					</header>
-					<div className="hs-shelf-row">
-						{t.items.map((item) => (
-							<div key={item.id} className={item.source === "youtube" ? "hs-wide" : ""}>
-								<Post item={item} title={t} />
-							</div>
+		<div className="hx-a">
+			<aside className="hx-panel">
+				<Search f={f} set={set} />
+				<p className="hx-label">Source</p>
+				<Seg value={f.source} options={SOURCES} onChange={(source) => set({ source })} label="Source" />
+				<p className="hx-label">Type</p>
+				<Seg value={f.kind} options={KINDS} onChange={(kind) => set({ kind })} label="Type" />
+				<p className="hx-label">Titles</p>
+				<TitleList titles={said} f={f} set={set} day={row.day} />
+			</aside>
+			<div className="hx-main">
+				<PhoneBar f={f} set={set} titles={said} day={row.day} count={posts.length} />
+				<div className="hx-mainbar">
+					<Active f={f} set={set} titles={said} count={posts.length} />
+					<Seg value={f.sort} options={[["new", "Newest"], ["hot", "Hottest"]]} onChange={(sort) => set({ sort })} label="Sort" />
+				</div>
+				{posts.length ? (
+					<div className="hx-stream">
+						{posts.map((p) => (
+							<PostCard key={`${keyOf(p.title)}-${p.item.id}`} post={p} onPick={() => set({ title: keyOf(p.title) })} showTitle={!f.title} />
 						))}
 					</div>
-				</section>
-			))}
+				) : (
+					<Empty set={set} />
+				)}
+			</div>
 		</div>
 	)
 }
 
-// C: Feed.
-function Feed({ said, day }: { said: TalkedTitle[]; day: string }) {
-	const [only, setOnly] = useState<string | null>(null)
-	const posts = useMemo(
-		() =>
-			said
-				.flatMap((t) => t.items.map((item) => ({ item, title: t })))
-				.filter((p) => !only || keyOf(p.title) === only)
-				.sort((a, b) => b.item.at.localeCompare(a.item.at)),
-		[said, only],
-	)
+// ---------------------------------------------------------------------------------------------------------
+// B: Digest
+
+const dayGroup = (iso: string) => {
+	const d = Math.floor((Date.now() - Date.parse(iso)) / 86_400_000)
+	return d <= 0 ? "Today" : d === 1 ? "Yesterday" : d < 7 ? "Earlier this week" : "Older"
+}
+
+function Digest({ row, said }: { row: TalkedRow; said: TalkedTitle[] }) {
+	const [f, set] = useFilters()
+	const posts = filterPosts(said, { ...f, sort: "new" })
+	const groups = posts.reduce<[string, Post[]][]>((out, p) => {
+		const g = dayGroup(p.item.at)
+		const last = out.at(-1)
+		if (last && last[0] === g) last[1].push(p)
+		else out.push([g, [p]])
+		return out
+	}, [])
 	return (
-		<div className="hs-feedc">
-			<ol className="tn-board hs-feedc-board">
-				<li>
-					<button type="button" className="tn-row hs-all" aria-pressed={!only} onClick={() => setOnly(null)}>
-						All titles <small>{said.reduce((n, t) => n + t.items.length, 0)} posts</small>
-					</button>
-				</li>
+		<div className="hx-b">
+			<div className="hx-shelf" role="group" aria-label="Titles">
 				{said.map((t) => (
-					<li key={keyOf(t)}>
-						<button
-							type="button"
-							className="tn-row"
-							aria-pressed={only === keyOf(t)}
-							onClick={() => setOnly(only === keyOf(t) ? null : keyOf(t))}
-						>
-							<b className="tn-n">{t.rank}</b>
-							{t.poster ? <img src={tmdb(t.poster, "w92")} alt="" width={34} height={51} /> : <span className="tn-noposter" />}
-							<span className="tn-row-text">
-								<b className="tn-row-title">
-									<span>
-										<Name title={t} />
-									</span>
-									<Move move={t.move} />
-								</b>
-								<span className="tn-row-why">
-									<span>{t.items.length === 1 ? "1 post" : `${t.items.length} posts`}</span>
-								</span>
-							</span>
-							<span className="tn-row-lift">
-								<b>{liftLabel(t.lift)}</b>
-							</span>
-						</button>
-					</li>
+					<button
+						key={keyOf(t)}
+						type="button"
+						aria-pressed={f.title === keyOf(t)}
+						onClick={() => set({ title: f.title === keyOf(t) ? null : keyOf(t) })}
+					>
+						<span className="hx-shelf-poster">
+							{t.poster && <img src={tmdb(t.poster, "w185")} alt="" />}
+							<em>{liftLabel(t.lift)}</em>
+						</span>
+						<b>
+							<Name title={t} />
+						</b>
+						<small>{plural(t.items.length, "post")}</small>
+					</button>
 				))}
-			</ol>
-			<ol className="hs-stream">
-				{posts.map(({ item, title }) => (
-					<li key={`${keyOf(title)}-${item.id}`}>
-						<Link to={`#${keyOf(title)}`} onClick={() => setOnly(keyOf(title))} className="hs-stream-title">
-							{title.poster && <img src={tmdb(title.poster, "w92")} alt="" />}
-							<span>
-								<b>
-									<Name title={title} />
-								</b>
-								<small>
-									#{title.rank} · {liftLabel(title.lift)}
-								</small>
-							</span>
-							<SourceMark source={item.source} />
-						</Link>
-						<Post item={item} title={title} />
-					</li>
-				))}
-			</ol>
+			</div>
+			<div className="hx-b-bar">
+				<div className="hx-b-wide">
+					<Search f={f} set={set} />
+					<Seg value={f.source} options={SOURCES} onChange={(source) => set({ source })} label="Source" />
+					<Seg value={f.kind} options={KINDS} onChange={(kind) => set({ kind })} label="Type" />
+				</div>
+				<PhoneBar f={f} set={set} titles={said} day={row.day} count={posts.length} />
+			</div>
+			<Active f={f} set={set} titles={said} count={posts.length} />
+			{groups.length ? (
+				groups.map(([g, list]) => (
+					<section key={g} className="hx-day">
+						<h2>{g}</h2>
+						<div className="hx-grid">
+							{list.map((p) => (
+								<PostCard key={`${keyOf(p.title)}-${p.item.id}`} post={p} onPick={() => set({ title: keyOf(p.title) })} showTitle={!f.title} />
+							))}
+						</div>
+					</section>
+				))
+			) : (
+				<Empty set={set} />
+			)}
 		</div>
 	)
 }
+
+// ---------------------------------------------------------------------------------------------------------
+// C: Clusters
+
+function Clusters({ row, said }: { row: TalkedRow; said: TalkedTitle[] }) {
+	const [f, set] = useFilters()
+	const posts = filterPosts(said, f, true)
+	const byTitle = said
+		.map((t) => ({ title: t, posts: posts.filter((p) => p.title === t) }))
+		.filter((c) => c.posts.length)
+	const focus = said.find((t) => keyOf(t) === f.title)
+	return (
+		<div className="hx-c">
+			<div className="hx-c-bar">
+				<div className="hx-b-wide">
+					<Search f={f} set={set} />
+					<Seg value={f.source} options={SOURCES} onChange={(source) => set({ source })} label="Source" />
+					<Seg value={f.kind} options={KINDS} onChange={(kind) => set({ kind })} label="Type" />
+				</div>
+				<PhoneBar f={f} set={set} titles={said} day={row.day} count={posts.length} />
+			</div>
+			{focus ? (
+				<>
+					<button type="button" className="hx-back" onClick={() => set({ title: null })}>
+						← All titles
+					</button>
+					<ClusterHead title={focus} day={row.day} count={posts.filter((p) => p.title === focus).length} />
+					<div className="hx-grid">
+						{posts
+							.filter((p) => p.title === focus)
+							.map((p) => (
+								<PostCard key={p.item.id} post={p} showTitle={false} />
+							))}
+					</div>
+				</>
+			) : byTitle.length ? (
+				<div className="hx-clusters">
+					{byTitle.map(({ title, posts: list }) => (
+						<section key={keyOf(title)} className="hx-cluster">
+							<ClusterHead title={title} day={row.day} count={list.length} />
+							<div className="hx-cluster-posts">
+								{list.slice(0, 2).map((p) => (
+									<PostCard key={p.item.id} post={p} showTitle={false} />
+								))}
+							</div>
+							{list.length > 1 && (
+								<button type="button" className="hx-more" onClick={() => (set({ title: keyOf(title) }), window.scrollTo({ top: 0 }))}>
+									All {list.length} posts about <Name title={title} /> →
+								</button>
+							)}
+						</section>
+					))}
+				</div>
+			) : (
+				<Empty set={set} />
+			)}
+		</div>
+	)
+}
+
+function ClusterHead({ title, day, count }: { title: TalkedTitle; day: string; count: number }) {
+	return (
+		<header className="hx-chead">
+			<span className="hx-t-n">{title.rank}</span>
+			{title.poster && <img src={tmdb(title.poster, "w154")} alt="" />}
+			<div>
+				<Link to={hrefOf(title)} discover="none">
+					<h2>
+						<Name title={title} />
+					</h2>
+				</Link>
+				<p>
+					{title.reason ? `${reasonLabel(title.reason, title.mediaType)} · ` : ""}
+					{plural(count, "post")}
+				</p>
+			</div>
+			<div className="hx-chead-buzz">
+				<b>{liftLabel(title.lift)}</b>
+				<Spark title={title} day={day} width={110} height={32} mark={false} />
+			</div>
+		</header>
+	)
+}
+
+// ---------------------------------------------------------------------------------------------------------
 
 export default function HotOnSocialsPrototype() {
 	const { row } = useLoaderData<typeof loader>() as { row: TalkedRow | null }
 	const [params] = useSearchParams()
 	const variant = params.get("variant") ?? "A"
+	const said = useMemo(() => row?.titles.filter((t) => t.items.length > 0) ?? [], [row])
 	if (!row?.titles.length)
 		return (
-			<div className="lrb hs">
-				<p className="lrb-in">No ranking today. Is the buzz snapshot there?</p>
+			<div className="lrb hx">
+				<p className="lrb-in">No ranking today.</p>
 			</div>
 		)
-	const said = row.titles.filter((t) => t.items.length > 0)
-	const quiet = row.titles.filter((t) => t.items.length === 0)
 	return (
-		<div className="lrb hs">
-			<div className="tn lrb-in hs-in">
-				<Head row={row} said={said} />
-				{variant !== "C" && <Strip titles={said} />}
-				{variant === "B" ? (
-					<Shelves said={said} day={row.day} />
-				) : variant === "C" ? (
-					<Feed said={said} day={row.day} />
-				) : (
-					<Magazine said={said} day={row.day} />
-				)}
-				<AlsoRising titles={quiet} day={row.day} />
+		<div className="lrb hx">
+			<div className="lrb-in hx-in">
+				<Head row={row} />
+				{variant === "B" ? <Digest row={row} said={said} /> : variant === "C" ? <Clusters row={row} said={said} /> : <Stream row={row} said={said} />}
 			</div>
 			<PrototypeSwitcher variants={VARIANTS} />
 		</div>
