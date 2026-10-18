@@ -306,6 +306,7 @@ export default defineConfig(({ mode, isSsrBuild }) => ({
 
 	server: {
 		port: 3003,
+		allowedHosts: ["alppc", "alppc.tail3b99f1.ts.net"],
 	},
 
 	plugins: [
