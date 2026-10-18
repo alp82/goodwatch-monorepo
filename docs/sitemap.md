@@ -45,11 +45,12 @@ For the manual fallback:
 
 | File | Content |
 | --- | --- |
-| `sitemap.xml` | The index that Search Console has. It lists the four URL sets below. |
+| `sitemap.xml` | The index that Search Console has. It lists the five URL sets below. |
 | `sitemap_static.xml` | The landing pages. |
 | `sitemap_categories.xml` | The category pages of movies and shows. |
 | `sitemap_movie_detail_0.xml` | 700 movie pages. |
 | `sitemap_show_detail_0.xml` | 300 show pages. |
+| `sitemap_people.xml` | 30 stable cast/director pages linked from the selected title cohort. |
 | `sitemap_index_movie_detail.xml`, `sitemap_index_show_detail.xml` | Legacy indexes, kept for their earlier Search Console submissions. |
 
 ### Title selection and stability
@@ -63,6 +64,10 @@ A `goodwatch-selection` JSON comment in each committed title sitemap records pol
 Eligible core members are retained indefinitely, even when their ranking drops. There are **zero discretionary core replacements**. Missing or newly ineligible members are replaced immediately by eligible vote-ranked titles, preserving attention occupants where possible. Attention members are retained within the UTC calendar month. The first successful run of a new month reviews popularity and replaces at most 35 movies and 15 shows (5% of each total); mandatory ineligibility replacements are exempt from that discretionary cap. Vacancies are filled immediately. A failed live check publishes neither files nor selection state, so a failed monthly review can be retried.
 
 The 30-day freshness filter stays in effect as requested. Investigate/refresh an established title before accepting a freshness-only removal. Broken, redirected or otherwise failing live pages block publication; fix/refresh their catalog data and rerun. The generator does not hide live failures by silently dropping URLs.
+
+### Person pages
+
+Thirty people are selected from top-five billed cast and directors of the selected title cohort. A person needs distinct credits on at least three cohort titles, a nonempty name, a portrait, positive popularity and adult not true. That provides substantive filmography pages and links from the selected titles. The initial list ranks by person popularity descending, then TMDB ID ascending; duplicate people and duplicate credits do not consume slots. Existing eligible members from `sitemap_people.xml` remain indefinitely; only vacancies are filled. Person URL entries omit lastmod. Every URL passes the same live status/canonical gate before publication; a failed person URL blocks the entire run.
 
 ### Count policy
 

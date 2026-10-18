@@ -14,6 +14,7 @@ from sitemap_crate import connect_args
 from sitemap_lastmod import SitemapHistory, title_lastmod
 from sitemap_query import detail_query
 from sitemap_selection import select_titles, state_comment
+from sitemap_people import select_people
 from utils import title_to_dashed
 
 load_dotenv()
@@ -143,7 +144,7 @@ def create_category_sitemaps():
 
 
 def create_detail_sitemaps(crate_cursor, table_name: Literal["movie", "show"]):
-    """Create sitemaps for the most popular movie and show detail pages."""
+    """Create the stable core and attention title cohorts."""
     # Which titles are listed, and why: see sitemap_query.py.
     crate_cursor.execute(detail_query(table_name))
     sitemap_filename = f"sitemap_{table_name}_detail_0.xml"
@@ -179,15 +180,23 @@ def create_landing_sitemaps():
     }
 
 
-def create_master_sitemap_index(detail_lastmods: dict):
+def create_person_sitemap(crate_cursor, title_ids):
+    filename = "sitemap_people.xml"
+    people = select_people(crate_cursor, title_ids, PREVIOUS_SITEMAPS.files.get(filename))
+    lastmod = write_urlset(filename, [url_entry(p["url"]) for p in people])
+    return {"total_url_count": len(people), "lastmod": lastmod, "people": people}
+
+
+def create_master_sitemap_index(file_lastmods: dict):
     """Create a master sitemap index that links to all other sitemap files."""
     # Link to URL sets directly: Google does not support nested sitemap indexes.
     # Keep the legacy detail indexes for their existing Search Console submissions.
     sitemap_files = [
-        ("sitemap_static.xml", detail_lastmods["static"]),
-        ("sitemap_categories.xml", detail_lastmods["categories"]),
-        ("sitemap_movie_detail_0.xml", detail_lastmods["movie"]),
-        ("sitemap_show_detail_0.xml", detail_lastmods["show"]),
+        ("sitemap_static.xml", file_lastmods["static"]),
+        ("sitemap_categories.xml", file_lastmods["categories"]),
+        ("sitemap_movie_detail_0.xml", file_lastmods["movie"]),
+        ("sitemap_show_detail_0.xml", file_lastmods["show"]),
+        ("sitemap_people.xml", file_lastmods["people"]),
     ]
     write_sitemap_index("sitemap.xml", sitemap_files)
     return {
@@ -244,12 +253,18 @@ if __name__ == "__main__":
     static_result = create_landing_sitemaps()
     print(f"Static Sitemap Result: {static_result}")
 
+    people_result = create_person_sitemap(crate_cursor, {
+        "movie": movies_result["title_ids"], "show": show_result["title_ids"],
+    })
+    print(f"People Sitemap Result: {people_result}")
+
     # Create master sitemap index
     master_result = create_master_sitemap_index({
         "movie": movies_result["lastmod"],
         "show": show_result["lastmod"],
         "static": static_result["lastmod"],
         "categories": category_result["lastmod"],
+        "people": people_result["lastmod"],
     })
     print(f"Master Sitemap Index Result: {master_result}")
 

@@ -110,6 +110,21 @@ class SitemapRegenerationTests(unittest.TestCase):
                 self.assertEqual((Path(directory) / path).read_bytes(), b"source")
                 self.assertNotIn("token", call.kwargs)
 
+    def test_previous_artifacts_pinned_and_scope_limited(self):
+        with tempfile.TemporaryDirectory() as directory, patch.object(worker, "request", return_value=b"xml") as api:
+            root = Path(directory)
+            existing = {worker.OUTPUT + "sitemap.xml": "sha",
+                        worker.OUTPUT + "sitemap_movie_detail_0.xml": "sha",
+                        worker.OUTPUT + "nested/sitemap.xml": "sha",
+                        worker.OUTPUT + "keep.txt": "sha", "elsewhere/sitemap.xml": "sha"}
+            worker.load_previous(root, "pinned-sha", existing)
+            self.assertEqual(sorted(p.name for p in (root / "previous-sitemaps").iterdir()),
+                             ["sitemap.xml", "sitemap_movie_detail_0.xml"])
+            self.assertEqual(api.call_count, 2)
+            for call in api.call_args_list:
+                self.assertIn("/pinned-sha/" + worker.OUTPUT, call.args[0])
+                self.assertNotIn("token", call.kwargs)
+
     def test_missing_token_never_calls_github(self):
         with (patch.object(worker.wmill, "get_variable", return_value=""),
               patch.object(worker, "request") as api,
@@ -140,6 +155,13 @@ class SitemapRegenerationTests(unittest.TestCase):
                     shutil.copyfile(repo / name, target)
                 connection = Mock()
                 def execute(sql, *args):
+                    if 'FROM person_appeared_in' in sql or 'FROM person_worked_on' in sql:
+                        connection.cursor.return_value.fetchall.return_value = [
+                            (i, j) for i in range(1, 31) for j in (1, 2, 3)]
+                        return
+                    if 'FROM person WHERE' in sql:
+                        connection.cursor.return_value.fetchall.return_value = [(i, f'Person {i}', 100-i) for i in range(1,31)]
+                        return
                     count = 700 if 'FROM movie WHERE' in sql else 300
                     connection.cursor.return_value.fetchall.return_value = [
                         (i, "Example", "Example", None, None, 10000-i, i) for i in range(1, count+1)]
@@ -159,13 +181,26 @@ class SitemapRegenerationTests(unittest.TestCase):
                       patch("builtins.print")):
                     if status == 200:
                         count, files = worker.generate_and_check(root)
-                        self.assertEqual(count, 1098)  # 1,000 titles, 87 categories, 11 static pages.
-                        self.assertEqual(len(files), 7)
+                        self.assertEqual(count, 1128)  # Titles, people, categories and static pages.
+                        self.assertEqual(len(files), 8)
+                        # Replay from the exact generated artifacts: history and cohort
+                        # state must preserve every byte on an unchanged rerun.
+                        previous = root / "previous-sitemaps"
+                        previous.mkdir()
+                        for path, content in files.items():
+                            (previous / Path(path).name).write_bytes(content)
+                        shutil.rmtree(root / worker.OUTPUT)
+                        again_count, again = worker.generate_and_check(root)
+                        self.assertEqual(again_count, count)
+                        self.assertEqual(again, files)
+                        for path, content in files.items():
+                            if "detail_0" in path or "people" in path or "static" in path or "categories" in path:
+                                self.assertNotIn(b"<lastmod>", content)
                     else:
                         with self.assertRaisesRegex(RuntimeError, "Sitemap check failed"):
                             worker.generate_and_check(root)
-                connection.close.assert_called_once()
-                connection.cursor.return_value.close.assert_called_once()
+                self.assertEqual(connection.close.call_count, 2 if status == 200 else 1)
+                self.assertEqual(connection.cursor.return_value.close.call_count, 2 if status == 200 else 1)
 
 
 if __name__ == "__main__":

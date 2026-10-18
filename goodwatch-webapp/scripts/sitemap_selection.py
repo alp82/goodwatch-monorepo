@@ -17,7 +17,7 @@ def previous_ids(content, kind):
     root = ET.fromstring(content)
     ids = []
     for loc in root.findall('s:url/s:loc', NS):
-        match = re.fullmatch(rf'https://goodwatch.app/{kind}/(\d+)-[^/?#]*', loc.text or '')
+        match = re.fullmatch(rf'https://goodwatch.app/{kind}/(\d+)(?:-[^/?#]*)?', loc.text or '')
         if not match:
             raise ValueError(f'Unexpected previous {kind} URL')
         ids.append(int(match[1]))
