@@ -34,6 +34,11 @@ class BackupTests(unittest.TestCase):
         self.assertEqual(rank_backup(TITLES, [dict(r, value=4) for r in history()], DAY), [])
         self.assertEqual(rank_backup(TITLES, [dict(r, value=float('nan')) for r in history()], DAY), [])
 
+    def test_one_source_alone_publishes_nothing(self):
+        self.assertIsNone(snapshot(TITLES, history(), DAY, NOW))
+        self.assertEqual(snapshot(TITLES, history() + history('trakt_trending', 1), DAY, NOW)['sources_used'],
+                         ['tmdb_popularity', 'trakt_trending'])
+
     def test_new_sources_rank_then_automatically_lift(self):
         rows = rank_backup(TITLES, history('trakt_trending', 1), DAY)
         self.assertEqual(rows[0]['signal']['source_lifts'], {})
@@ -58,7 +63,7 @@ class BackupTests(unittest.TestCase):
         store.published_days.return_value = set()
         store.read_trending.return_value = {'movie': [], 'tv': []}
         store.candidates.return_value = TITLES
-        store.read_backup_signals.return_value = history()
+        store.read_backup_signals.return_value = history() + history('trakt_trending', 1)
         signals.pageviews.return_value = {}
         signals.dumps_available.return_value = False
         self.assertEqual(run(store, signals, now=NOW.replace(hour=8))['status'], 'waiting_for_publication')
@@ -84,7 +89,7 @@ class BackupTests(unittest.TestCase):
         from test_buzz import SnapshotCrate
         crate = SnapshotCrate()
         store = BuzzStore(crate)
-        payload = snapshot(TITLES, history(), DAY, NOW)
+        payload = snapshot(TITLES, history() + history('trakt_trending', 1), DAY, NOW)
         store.publish(DAY.isoformat(), payload, NOW)
         store.publish(DAY.isoformat(), dict(payload, top20=[]), NOW)
         self.assertEqual(json.loads(crate.rows['current']['payload']), payload)

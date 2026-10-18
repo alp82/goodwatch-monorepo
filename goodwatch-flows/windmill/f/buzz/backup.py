@@ -9,6 +9,9 @@ SOURCES = ('tmdb_popularity', 'trakt_trending', 'justwatch_chart')
 MIN_TITLES = 20
 
 
+MIN_SOURCES = 2
+
+
 def number(value):
     return isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value) and value >= 0
 
@@ -84,7 +87,12 @@ def snapshot(titles, observations, day, now):
     rows = rank_backup(titles, observations, day)
     if len(rows) < MIN_TITLES:
         return None
+    sources = sorted({s for r in rows[:20] for s in r['signal']['sources_used']})
+    # One source alone is too noisy to stand in for Wikipedia (TMDB popularity alone ranked obscure titles first on
+    # 2026-10-17); keep the old snapshot instead.
+    if len(sources) < MIN_SOURCES:
+        return None
     return dict(schema_version=1, formula_version=FORMULA_VERSION, source='backup_signals',
         day=day.isoformat(), baseline_days=28, curve_days=14, history_mode='daily',
-        candidate_pool_collected_at=now.isoformat(), sources_used=sorted({s for r in rows[:20] for s in r['signal']['sources_used']}),
+        candidate_pool_collected_at=now.isoformat(), sources_used=sources,
         diagnostics={'eligible': len(rows), 'minimum_titles': MIN_TITLES}, top20=rows[:20])
