@@ -40,7 +40,7 @@ const SCORES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as const
 
 /**
  * The ten keys in the score control strip's colors: the score in its full color with a white ring, a dot under
- * GoodWatch's score.
+ * GoodWatch's score. Hovering a key draws a subtle border; its number keeps its color.
  *
  * Deliberately not the shared word and number control (ui/scoring/ScoreChoices) the rest of the site uses: owner
  * decision, October 18, 2026. Your scores is for rescoring many titles in a row and is aimed at power users, so each
@@ -74,7 +74,7 @@ export function ScoreKeys({
 						title={`${n} · ${scoreLabels[n]}`}
 						onClick={() => onPick(n)}
 						data-give={n}
-						className={`relative flex h-7 cursor-pointer items-center justify-center rounded-md text-xs font-black tabular-nums transition hover:scale-110 hover:text-gray-950 focus-visible:scale-110 focus-visible:outline-2 focus-visible:outline-amber-400 motion-reduce:transition-none ${picked ? "scale-110 text-gray-950 ring-2 ring-white" : "text-white/75"}`}
+						className={`relative flex h-7 cursor-pointer items-center justify-center rounded-md text-xs font-black tabular-nums transition focus-visible:outline-2 focus-visible:outline-amber-400 motion-reduce:transition-none ${picked ? "scale-110 text-gray-950 ring-2 ring-white" : "text-white/75 hover:ring-1 hover:ring-white/40"}`}
 						style={{ background: `${getVibeColorValue(n as Score)}${picked ? "" : "44"}` }}
 					>
 						{n}
