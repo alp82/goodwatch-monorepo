@@ -1,0 +1,1298 @@
+[
+	{
+		"scenario": "clean, 47 titles over 3 pages",
+		"capture": {
+			"terminal": "exhausted",
+			"singleClaimed": "complete",
+			"singleFalseComplete": false,
+			"chosenRun": 2,
+			"claimed": "complete",
+			"reasons": [],
+			"requests": 6,
+			"pages": 3,
+			"reference": 47,
+			"captured": 47,
+			"duplicates": 0,
+			"falseComplete": false,
+			"excluded": 0
+		},
+		"conversion": {
+			"items": 47,
+			"contamination": 0,
+			"stale": 0,
+			"scopeErrors": 0,
+			"guessedIds": 0,
+			"objectIdAsTmdb": 0,
+			"uniqueSourceIds": true
+		},
+		"preview": {
+			"rows": 47,
+			"counts": {
+				"rows": 47,
+				"new": 37,
+				"unchanged": 2,
+				"conflict": 1,
+				"unmatched": 4,
+				"unsupported": 1,
+				"invalid": 2
+			},
+			"unaccounted": 0,
+			"correct": 40,
+			"wrong": 0,
+			"abstained": 1,
+			"providerWrongMatched": 1,
+			"idConflictsFlagged": 1,
+			"outcomeMismatches": [
+				"provider TMDB ID contradicts its IMDb ID: expected new, got unsupported (\"Listed twice in the file. Added once.\", matched TMDB 603 instead of 27205)"
+			],
+			"partialWarned": false,
+			"catalogReads": 6,
+			"wishlistWrites": 0
+		},
+		"loss": {
+			"objectId": {
+				"count": 47,
+				"note": "Numeric JustWatch object ID not carried; sourceId holds the native ID."
+			},
+			"seenlistEntry": {
+				"count": 2,
+				"note": "Seen on JustWatch and also on the Watchlist; the file can't say so. GoodWatch's own Seen state decides rewatch."
+			},
+			"tvShowTrackingEntry": {
+				"count": 1,
+				"note": "Tracking start date not carried."
+			},
+			"seenState.progress": {
+				"count": 1,
+				"note": "Show progress above zero not carried; the wish is kept."
+			},
+			"externalIds.tmdbId:absent": {
+				"count": 4,
+				"note": "Provider returned no TMDB ID."
+			},
+			"externalIds.imdbId:absent": {
+				"count": 5,
+				"note": "Provider returned no IMDb ID."
+			},
+			"externalIds.tmdbId": {
+				"count": 1,
+				"note": "Malformed provider TMDB ID dropped, not repaired."
+			},
+			"objectType": {
+				"count": 1,
+				"note": "Provider type SHOW_SEASON has no shared-format type; kept as unknown."
+			},
+			"watchlistEntryV2.createdAt:absent": {
+				"count": 1,
+				"note": "No added date; left absent."
+			},
+			"title": {
+				"count": 2,
+				"note": "Missing or unreadable title; the parser marks the row invalid."
+			},
+			"content.title:localized": {
+				"count": 47,
+				"note": "Titles are in the capture language, not the original title."
+			}
+		}
+	},
+	{
+		"scenario": "repeated cursor on page 2",
+		"capture": {
+			"terminal": "repeated-cursor",
+			"singleClaimed": "partial",
+			"singleFalseComplete": false,
+			"chosenRun": 2,
+			"claimed": "partial",
+			"reasons": [
+				"run 1: stopped: repeated-cursor; accounted 40 of reported 47",
+				"run 2: stopped: repeated-cursor; accounted 40 of reported 47"
+			],
+			"requests": 4,
+			"pages": 2,
+			"reference": 47,
+			"captured": 40,
+			"duplicates": 0,
+			"falseComplete": false,
+			"excluded": 0
+		},
+		"conversion": {
+			"items": 40,
+			"contamination": 0,
+			"stale": 0,
+			"scopeErrors": 0,
+			"guessedIds": 0,
+			"objectIdAsTmdb": 0,
+			"uniqueSourceIds": true
+		},
+		"preview": {
+			"rows": 40,
+			"counts": {
+				"rows": 40,
+				"new": 30,
+				"unchanged": 2,
+				"conflict": 1,
+				"unmatched": 4,
+				"unsupported": 1,
+				"invalid": 2
+			},
+			"unaccounted": 0,
+			"correct": 33,
+			"wrong": 0,
+			"abstained": 1,
+			"providerWrongMatched": 1,
+			"idConflictsFlagged": 1,
+			"outcomeMismatches": [
+				"provider TMDB ID contradicts its IMDb ID: expected new, got unsupported (\"Listed twice in the file. Added once.\", matched TMDB 603 instead of 27205)"
+			],
+			"partialWarned": true,
+			"catalogReads": 6,
+			"wishlistWrites": 0
+		},
+		"loss": {
+			"objectId": {
+				"count": 40,
+				"note": "Numeric JustWatch object ID not carried; sourceId holds the native ID."
+			},
+			"seenlistEntry": {
+				"count": 2,
+				"note": "Seen on JustWatch and also on the Watchlist; the file can't say so. GoodWatch's own Seen state decides rewatch."
+			},
+			"tvShowTrackingEntry": {
+				"count": 1,
+				"note": "Tracking start date not carried."
+			},
+			"seenState.progress": {
+				"count": 1,
+				"note": "Show progress above zero not carried; the wish is kept."
+			},
+			"externalIds.tmdbId:absent": {
+				"count": 4,
+				"note": "Provider returned no TMDB ID."
+			},
+			"externalIds.imdbId:absent": {
+				"count": 5,
+				"note": "Provider returned no IMDb ID."
+			},
+			"externalIds.tmdbId": {
+				"count": 1,
+				"note": "Malformed provider TMDB ID dropped, not repaired."
+			},
+			"objectType": {
+				"count": 1,
+				"note": "Provider type SHOW_SEASON has no shared-format type; kept as unknown."
+			},
+			"watchlistEntryV2.createdAt:absent": {
+				"count": 1,
+				"note": "No added date; left absent."
+			},
+			"title": {
+				"count": 2,
+				"note": "Missing or unreadable title; the parser marks the row invalid."
+			},
+			"content.title:localized": {
+				"count": 40,
+				"note": "Titles are in the capture language, not the original title."
+			}
+		}
+	},
+	{
+		"scenario": "missing cursor on page 1",
+		"capture": {
+			"terminal": "missing-cursor",
+			"singleClaimed": "partial",
+			"singleFalseComplete": false,
+			"chosenRun": 2,
+			"claimed": "partial",
+			"reasons": [
+				"run 1: stopped: missing-cursor; accounted 20 of reported 47",
+				"run 2: stopped: missing-cursor; accounted 20 of reported 47"
+			],
+			"requests": 2,
+			"pages": 1,
+			"reference": 47,
+			"captured": 20,
+			"duplicates": 0,
+			"falseComplete": false,
+			"excluded": 0
+		},
+		"conversion": {
+			"items": 20,
+			"contamination": 0,
+			"stale": 0,
+			"scopeErrors": 0,
+			"guessedIds": 0,
+			"objectIdAsTmdb": 0,
+			"uniqueSourceIds": true
+		},
+		"preview": {
+			"rows": 20,
+			"counts": {
+				"rows": 20,
+				"new": 11,
+				"unchanged": 2,
+				"conflict": 1,
+				"unmatched": 3,
+				"unsupported": 1,
+				"invalid": 2
+			},
+			"unaccounted": 0,
+			"correct": 14,
+			"wrong": 0,
+			"abstained": 1,
+			"providerWrongMatched": 1,
+			"idConflictsFlagged": 1,
+			"outcomeMismatches": [
+				"provider TMDB ID contradicts its IMDb ID: expected new, got unsupported (\"Listed twice in the file. Added once.\", matched TMDB 603 instead of 27205)"
+			],
+			"partialWarned": true,
+			"catalogReads": 5,
+			"wishlistWrites": 0
+		},
+		"loss": {
+			"objectId": {
+				"count": 20,
+				"note": "Numeric JustWatch object ID not carried; sourceId holds the native ID."
+			},
+			"seenlistEntry": {
+				"count": 1,
+				"note": "Seen on JustWatch and also on the Watchlist; the file can't say so. GoodWatch's own Seen state decides rewatch."
+			},
+			"tvShowTrackingEntry": {
+				"count": 1,
+				"note": "Tracking start date not carried."
+			},
+			"seenState.progress": {
+				"count": 1,
+				"note": "Show progress above zero not carried; the wish is kept."
+			},
+			"externalIds.tmdbId:absent": {
+				"count": 4,
+				"note": "Provider returned no TMDB ID."
+			},
+			"externalIds.imdbId:absent": {
+				"count": 4,
+				"note": "Provider returned no IMDb ID."
+			},
+			"externalIds.tmdbId": {
+				"count": 1,
+				"note": "Malformed provider TMDB ID dropped, not repaired."
+			},
+			"objectType": {
+				"count": 1,
+				"note": "Provider type SHOW_SEASON has no shared-format type; kept as unknown."
+			},
+			"watchlistEntryV2.createdAt:absent": {
+				"count": 1,
+				"note": "No added date; left absent."
+			},
+			"title": {
+				"count": 2,
+				"note": "Missing or unreadable title; the parser marks the row invalid."
+			},
+			"content.title:localized": {
+				"count": 20,
+				"note": "Titles are in the capture language, not the original title."
+			}
+		}
+	},
+	{
+		"scenario": "GraphQL field error on page 2 (IDs lost)",
+		"capture": {
+			"terminal": "exhausted",
+			"singleClaimed": "unknown",
+			"singleFalseComplete": false,
+			"chosenRun": 2,
+			"claimed": "unknown",
+			"reasons": [
+				"run 1: 1 GraphQL errors",
+				"run 2: 1 GraphQL errors"
+			],
+			"requests": 6,
+			"pages": 3,
+			"reference": 47,
+			"captured": 47,
+			"duplicates": 0,
+			"falseComplete": false,
+			"excluded": 0
+		},
+		"conversion": {
+			"items": 47,
+			"contamination": 0,
+			"stale": 0,
+			"scopeErrors": 0,
+			"guessedIds": 0,
+			"objectIdAsTmdb": 0,
+			"uniqueSourceIds": true
+		},
+		"preview": {
+			"rows": 47,
+			"counts": {
+				"rows": 47,
+				"new": 37,
+				"unchanged": 2,
+				"conflict": 1,
+				"unmatched": 4,
+				"unsupported": 1,
+				"invalid": 2
+			},
+			"unaccounted": 0,
+			"correct": 40,
+			"wrong": 0,
+			"abstained": 1,
+			"providerWrongMatched": 1,
+			"idConflictsFlagged": 1,
+			"outcomeMismatches": [
+				"provider TMDB ID contradicts its IMDb ID: expected new, got unsupported (\"Listed twice in the file. Added once.\", matched TMDB 603 instead of 27205)"
+			],
+			"partialWarned": true,
+			"catalogReads": 25,
+			"wishlistWrites": 0
+		},
+		"loss": {
+			"objectId": {
+				"count": 47,
+				"note": "Numeric JustWatch object ID not carried; sourceId holds the native ID."
+			},
+			"seenlistEntry": {
+				"count": 2,
+				"note": "Seen on JustWatch and also on the Watchlist; the file can't say so. GoodWatch's own Seen state decides rewatch."
+			},
+			"tvShowTrackingEntry": {
+				"count": 1,
+				"note": "Tracking start date not carried."
+			},
+			"seenState.progress": {
+				"count": 1,
+				"note": "Show progress above zero not carried; the wish is kept."
+			},
+			"externalIds.tmdbId:absent": {
+				"count": 24,
+				"note": "Provider returned no TMDB ID."
+			},
+			"externalIds.imdbId:absent": {
+				"count": 24,
+				"note": "Provider returned no IMDb ID."
+			},
+			"externalIds.tmdbId": {
+				"count": 1,
+				"note": "Malformed provider TMDB ID dropped, not repaired."
+			},
+			"objectType": {
+				"count": 1,
+				"note": "Provider type SHOW_SEASON has no shared-format type; kept as unknown."
+			},
+			"watchlistEntryV2.createdAt:absent": {
+				"count": 1,
+				"note": "No added date; left absent."
+			},
+			"title": {
+				"count": 2,
+				"note": "Missing or unreadable title; the parser marks the row invalid."
+			},
+			"content.title:localized": {
+				"count": 47,
+				"note": "Titles are in the capture language, not the original title."
+			}
+		}
+	},
+	{
+		"scenario": "HTTP 500 on page 3 after retries",
+		"capture": {
+			"terminal": "http-500",
+			"singleClaimed": "partial",
+			"singleFalseComplete": false,
+			"chosenRun": 2,
+			"claimed": "partial",
+			"reasons": [
+				"run 1: stopped: http-500; accounted 40 of reported 47",
+				"run 2: stopped: http-500; accounted 40 of reported 47"
+			],
+			"requests": 10,
+			"pages": 2,
+			"reference": 47,
+			"captured": 40,
+			"duplicates": 0,
+			"falseComplete": false,
+			"excluded": 0
+		},
+		"conversion": {
+			"items": 40,
+			"contamination": 0,
+			"stale": 0,
+			"scopeErrors": 0,
+			"guessedIds": 0,
+			"objectIdAsTmdb": 0,
+			"uniqueSourceIds": true
+		},
+		"preview": {
+			"rows": 40,
+			"counts": {
+				"rows": 40,
+				"new": 30,
+				"unchanged": 2,
+				"conflict": 1,
+				"unmatched": 4,
+				"unsupported": 1,
+				"invalid": 2
+			},
+			"unaccounted": 0,
+			"correct": 33,
+			"wrong": 0,
+			"abstained": 1,
+			"providerWrongMatched": 1,
+			"idConflictsFlagged": 1,
+			"outcomeMismatches": [
+				"provider TMDB ID contradicts its IMDb ID: expected new, got unsupported (\"Listed twice in the file. Added once.\", matched TMDB 603 instead of 27205)"
+			],
+			"partialWarned": true,
+			"catalogReads": 6,
+			"wishlistWrites": 0
+		},
+		"loss": {
+			"objectId": {
+				"count": 40,
+				"note": "Numeric JustWatch object ID not carried; sourceId holds the native ID."
+			},
+			"seenlistEntry": {
+				"count": 2,
+				"note": "Seen on JustWatch and also on the Watchlist; the file can't say so. GoodWatch's own Seen state decides rewatch."
+			},
+			"tvShowTrackingEntry": {
+				"count": 1,
+				"note": "Tracking start date not carried."
+			},
+			"seenState.progress": {
+				"count": 1,
+				"note": "Show progress above zero not carried; the wish is kept."
+			},
+			"externalIds.tmdbId:absent": {
+				"count": 4,
+				"note": "Provider returned no TMDB ID."
+			},
+			"externalIds.imdbId:absent": {
+				"count": 5,
+				"note": "Provider returned no IMDb ID."
+			},
+			"externalIds.tmdbId": {
+				"count": 1,
+				"note": "Malformed provider TMDB ID dropped, not repaired."
+			},
+			"objectType": {
+				"count": 1,
+				"note": "Provider type SHOW_SEASON has no shared-format type; kept as unknown."
+			},
+			"watchlistEntryV2.createdAt:absent": {
+				"count": 1,
+				"note": "No added date; left absent."
+			},
+			"title": {
+				"count": 2,
+				"note": "Missing or unreadable title; the parser marks the row invalid."
+			},
+			"content.title:localized": {
+				"count": 40,
+				"note": "Titles are in the capture language, not the original title."
+			}
+		}
+	},
+	{
+		"scenario": "session expired on page 2",
+		"capture": {
+			"terminal": "auth",
+			"singleClaimed": "partial",
+			"singleFalseComplete": false,
+			"chosenRun": 2,
+			"claimed": "partial",
+			"reasons": [
+				"run 1: stopped: auth; accounted 20 of reported 47",
+				"run 2: stopped: auth; accounted 20 of reported 47"
+			],
+			"requests": 4,
+			"pages": 1,
+			"reference": 47,
+			"captured": 20,
+			"duplicates": 0,
+			"falseComplete": false,
+			"excluded": 0
+		},
+		"conversion": {
+			"items": 20,
+			"contamination": 0,
+			"stale": 0,
+			"scopeErrors": 0,
+			"guessedIds": 0,
+			"objectIdAsTmdb": 0,
+			"uniqueSourceIds": true
+		},
+		"preview": {
+			"rows": 20,
+			"counts": {
+				"rows": 20,
+				"new": 11,
+				"unchanged": 2,
+				"conflict": 1,
+				"unmatched": 3,
+				"unsupported": 1,
+				"invalid": 2
+			},
+			"unaccounted": 0,
+			"correct": 14,
+			"wrong": 0,
+			"abstained": 1,
+			"providerWrongMatched": 1,
+			"idConflictsFlagged": 1,
+			"outcomeMismatches": [
+				"provider TMDB ID contradicts its IMDb ID: expected new, got unsupported (\"Listed twice in the file. Added once.\", matched TMDB 603 instead of 27205)"
+			],
+			"partialWarned": true,
+			"catalogReads": 5,
+			"wishlistWrites": 0
+		},
+		"loss": {
+			"objectId": {
+				"count": 20,
+				"note": "Numeric JustWatch object ID not carried; sourceId holds the native ID."
+			},
+			"seenlistEntry": {
+				"count": 1,
+				"note": "Seen on JustWatch and also on the Watchlist; the file can't say so. GoodWatch's own Seen state decides rewatch."
+			},
+			"tvShowTrackingEntry": {
+				"count": 1,
+				"note": "Tracking start date not carried."
+			},
+			"seenState.progress": {
+				"count": 1,
+				"note": "Show progress above zero not carried; the wish is kept."
+			},
+			"externalIds.tmdbId:absent": {
+				"count": 4,
+				"note": "Provider returned no TMDB ID."
+			},
+			"externalIds.imdbId:absent": {
+				"count": 4,
+				"note": "Provider returned no IMDb ID."
+			},
+			"externalIds.tmdbId": {
+				"count": 1,
+				"note": "Malformed provider TMDB ID dropped, not repaired."
+			},
+			"objectType": {
+				"count": 1,
+				"note": "Provider type SHOW_SEASON has no shared-format type; kept as unknown."
+			},
+			"watchlistEntryV2.createdAt:absent": {
+				"count": 1,
+				"note": "No added date; left absent."
+			},
+			"title": {
+				"count": 2,
+				"note": "Missing or unreadable title; the parser marks the row invalid."
+			},
+			"content.title:localized": {
+				"count": 20,
+				"note": "Titles are in the capture language, not the original title."
+			}
+		}
+	},
+	{
+		"scenario": "title added during capture (offset shift)",
+		"capture": {
+			"terminal": "exhausted",
+			"singleClaimed": "unknown",
+			"singleFalseComplete": false,
+			"chosenRun": 2,
+			"claimed": "unknown",
+			"reasons": [
+				"run 1: totalCount changed: 47 → 48; 1 repeated native IDs across pages",
+				"runs disagree: 0 only in run 1, 1 only in run 2"
+			],
+			"requests": 6,
+			"pages": 3,
+			"reference": 48,
+			"captured": 48,
+			"duplicates": 0,
+			"falseComplete": false,
+			"excluded": 0
+		},
+		"conversion": {
+			"items": 48,
+			"contamination": 0,
+			"stale": 0,
+			"scopeErrors": 0,
+			"guessedIds": 0,
+			"objectIdAsTmdb": 0,
+			"uniqueSourceIds": true
+		},
+		"preview": {
+			"rows": 48,
+			"counts": {
+				"rows": 48,
+				"new": 38,
+				"unchanged": 2,
+				"conflict": 1,
+				"unmatched": 4,
+				"unsupported": 1,
+				"invalid": 2
+			},
+			"unaccounted": 0,
+			"correct": 41,
+			"wrong": 0,
+			"abstained": 1,
+			"providerWrongMatched": 1,
+			"idConflictsFlagged": 1,
+			"outcomeMismatches": [
+				"provider TMDB ID contradicts its IMDb ID: expected new, got unsupported (\"Listed twice in the file. Added once.\", matched TMDB 603 instead of 27205)"
+			],
+			"partialWarned": true,
+			"catalogReads": 6,
+			"wishlistWrites": 0
+		},
+		"loss": {
+			"objectId": {
+				"count": 48,
+				"note": "Numeric JustWatch object ID not carried; sourceId holds the native ID."
+			},
+			"seenlistEntry": {
+				"count": 2,
+				"note": "Seen on JustWatch and also on the Watchlist; the file can't say so. GoodWatch's own Seen state decides rewatch."
+			},
+			"tvShowTrackingEntry": {
+				"count": 1,
+				"note": "Tracking start date not carried."
+			},
+			"seenState.progress": {
+				"count": 1,
+				"note": "Show progress above zero not carried; the wish is kept."
+			},
+			"externalIds.tmdbId:absent": {
+				"count": 4,
+				"note": "Provider returned no TMDB ID."
+			},
+			"externalIds.imdbId:absent": {
+				"count": 5,
+				"note": "Provider returned no IMDb ID."
+			},
+			"externalIds.tmdbId": {
+				"count": 1,
+				"note": "Malformed provider TMDB ID dropped, not repaired."
+			},
+			"objectType": {
+				"count": 1,
+				"note": "Provider type SHOW_SEASON has no shared-format type; kept as unknown."
+			},
+			"watchlistEntryV2.createdAt:absent": {
+				"count": 1,
+				"note": "No added date; left absent."
+			},
+			"title": {
+				"count": 2,
+				"note": "Missing or unreadable title; the parser marks the row invalid."
+			},
+			"content.title:localized": {
+				"count": 48,
+				"note": "Titles are in the capture language, not the original title."
+			}
+		}
+	},
+	{
+		"scenario": "title removed during capture (offset shift)",
+		"capture": {
+			"terminal": "exhausted",
+			"singleClaimed": "unknown",
+			"singleFalseComplete": false,
+			"chosenRun": 2,
+			"claimed": "unknown",
+			"reasons": [
+				"run 1: totalCount changed: 47 → 46",
+				"runs disagree: 1 only in run 1, 1 only in run 2"
+			],
+			"requests": 6,
+			"pages": 3,
+			"reference": 46,
+			"captured": 46,
+			"duplicates": 0,
+			"falseComplete": false,
+			"excluded": 0
+		},
+		"conversion": {
+			"items": 46,
+			"contamination": 0,
+			"stale": 0,
+			"scopeErrors": 0,
+			"guessedIds": 0,
+			"objectIdAsTmdb": 0,
+			"uniqueSourceIds": true
+		},
+		"preview": {
+			"rows": 46,
+			"counts": {
+				"rows": 46,
+				"new": 36,
+				"unchanged": 2,
+				"conflict": 1,
+				"unmatched": 4,
+				"unsupported": 1,
+				"invalid": 2
+			},
+			"unaccounted": 0,
+			"correct": 39,
+			"wrong": 0,
+			"abstained": 1,
+			"providerWrongMatched": 1,
+			"idConflictsFlagged": 1,
+			"outcomeMismatches": [
+				"provider TMDB ID contradicts its IMDb ID: expected new, got unsupported (\"Listed twice in the file. Added once.\", matched TMDB 603 instead of 27205)"
+			],
+			"partialWarned": true,
+			"catalogReads": 6,
+			"wishlistWrites": 0
+		},
+		"loss": {
+			"objectId": {
+				"count": 46,
+				"note": "Numeric JustWatch object ID not carried; sourceId holds the native ID."
+			},
+			"seenlistEntry": {
+				"count": 2,
+				"note": "Seen on JustWatch and also on the Watchlist; the file can't say so. GoodWatch's own Seen state decides rewatch."
+			},
+			"tvShowTrackingEntry": {
+				"count": 1,
+				"note": "Tracking start date not carried."
+			},
+			"seenState.progress": {
+				"count": 1,
+				"note": "Show progress above zero not carried; the wish is kept."
+			},
+			"externalIds.tmdbId:absent": {
+				"count": 4,
+				"note": "Provider returned no TMDB ID."
+			},
+			"externalIds.imdbId:absent": {
+				"count": 5,
+				"note": "Provider returned no IMDb ID."
+			},
+			"externalIds.tmdbId": {
+				"count": 1,
+				"note": "Malformed provider TMDB ID dropped, not repaired."
+			},
+			"objectType": {
+				"count": 1,
+				"note": "Provider type SHOW_SEASON has no shared-format type; kept as unknown."
+			},
+			"watchlistEntryV2.createdAt:absent": {
+				"count": 1,
+				"note": "No added date; left absent."
+			},
+			"title": {
+				"count": 2,
+				"note": "Missing or unreadable title; the parser marks the row invalid."
+			},
+			"content.title:localized": {
+				"count": 46,
+				"note": "Titles are in the capture language, not the original title."
+			}
+		}
+	},
+	{
+		"scenario": "one added and one removed during capture",
+		"capture": {
+			"terminal": "exhausted",
+			"singleClaimed": "complete",
+			"singleFalseComplete": true,
+			"chosenRun": 2,
+			"claimed": "unknown",
+			"reasons": [
+				"runs disagree: 1 only in run 1, 1 only in run 2"
+			],
+			"requests": 6,
+			"pages": 3,
+			"reference": 47,
+			"captured": 47,
+			"duplicates": 0,
+			"falseComplete": false,
+			"excluded": 0
+		},
+		"conversion": {
+			"items": 47,
+			"contamination": 0,
+			"stale": 0,
+			"scopeErrors": 0,
+			"guessedIds": 0,
+			"objectIdAsTmdb": 0,
+			"uniqueSourceIds": true
+		},
+		"preview": {
+			"rows": 47,
+			"counts": {
+				"rows": 47,
+				"new": 37,
+				"unchanged": 2,
+				"conflict": 1,
+				"unmatched": 4,
+				"unsupported": 1,
+				"invalid": 2
+			},
+			"unaccounted": 0,
+			"correct": 40,
+			"wrong": 0,
+			"abstained": 1,
+			"providerWrongMatched": 1,
+			"idConflictsFlagged": 1,
+			"outcomeMismatches": [
+				"provider TMDB ID contradicts its IMDb ID: expected new, got unsupported (\"Listed twice in the file. Added once.\", matched TMDB 603 instead of 27205)"
+			],
+			"partialWarned": true,
+			"catalogReads": 6,
+			"wishlistWrites": 0
+		},
+		"loss": {
+			"objectId": {
+				"count": 47,
+				"note": "Numeric JustWatch object ID not carried; sourceId holds the native ID."
+			},
+			"seenlistEntry": {
+				"count": 2,
+				"note": "Seen on JustWatch and also on the Watchlist; the file can't say so. GoodWatch's own Seen state decides rewatch."
+			},
+			"tvShowTrackingEntry": {
+				"count": 1,
+				"note": "Tracking start date not carried."
+			},
+			"seenState.progress": {
+				"count": 1,
+				"note": "Show progress above zero not carried; the wish is kept."
+			},
+			"externalIds.tmdbId:absent": {
+				"count": 4,
+				"note": "Provider returned no TMDB ID."
+			},
+			"externalIds.imdbId:absent": {
+				"count": 5,
+				"note": "Provider returned no IMDb ID."
+			},
+			"externalIds.tmdbId": {
+				"count": 1,
+				"note": "Malformed provider TMDB ID dropped, not repaired."
+			},
+			"objectType": {
+				"count": 1,
+				"note": "Provider type SHOW_SEASON has no shared-format type; kept as unknown."
+			},
+			"watchlistEntryV2.createdAt:absent": {
+				"count": 1,
+				"note": "No added date; left absent."
+			},
+			"title": {
+				"count": 2,
+				"note": "Missing or unreadable title; the parser marks the row invalid."
+			},
+			"content.title:localized": {
+				"count": 47,
+				"note": "Titles are in the capture language, not the original title."
+			}
+		}
+	},
+	{
+		"scenario": "empty page claiming more",
+		"capture": {
+			"terminal": "empty-page",
+			"singleClaimed": "partial",
+			"singleFalseComplete": false,
+			"chosenRun": 2,
+			"claimed": "partial",
+			"reasons": [
+				"run 1: stopped: empty-page; accounted 20 of reported 47",
+				"run 2: stopped: empty-page; accounted 20 of reported 47"
+			],
+			"requests": 4,
+			"pages": 2,
+			"reference": 47,
+			"captured": 20,
+			"duplicates": 0,
+			"falseComplete": false,
+			"excluded": 0
+		},
+		"conversion": {
+			"items": 20,
+			"contamination": 0,
+			"stale": 0,
+			"scopeErrors": 0,
+			"guessedIds": 0,
+			"objectIdAsTmdb": 0,
+			"uniqueSourceIds": true
+		},
+		"preview": {
+			"rows": 20,
+			"counts": {
+				"rows": 20,
+				"new": 11,
+				"unchanged": 2,
+				"conflict": 1,
+				"unmatched": 3,
+				"unsupported": 1,
+				"invalid": 2
+			},
+			"unaccounted": 0,
+			"correct": 14,
+			"wrong": 0,
+			"abstained": 1,
+			"providerWrongMatched": 1,
+			"idConflictsFlagged": 1,
+			"outcomeMismatches": [
+				"provider TMDB ID contradicts its IMDb ID: expected new, got unsupported (\"Listed twice in the file. Added once.\", matched TMDB 603 instead of 27205)"
+			],
+			"partialWarned": true,
+			"catalogReads": 5,
+			"wishlistWrites": 0
+		},
+		"loss": {
+			"objectId": {
+				"count": 20,
+				"note": "Numeric JustWatch object ID not carried; sourceId holds the native ID."
+			},
+			"seenlistEntry": {
+				"count": 1,
+				"note": "Seen on JustWatch and also on the Watchlist; the file can't say so. GoodWatch's own Seen state decides rewatch."
+			},
+			"tvShowTrackingEntry": {
+				"count": 1,
+				"note": "Tracking start date not carried."
+			},
+			"seenState.progress": {
+				"count": 1,
+				"note": "Show progress above zero not carried; the wish is kept."
+			},
+			"externalIds.tmdbId:absent": {
+				"count": 4,
+				"note": "Provider returned no TMDB ID."
+			},
+			"externalIds.imdbId:absent": {
+				"count": 4,
+				"note": "Provider returned no IMDb ID."
+			},
+			"externalIds.tmdbId": {
+				"count": 1,
+				"note": "Malformed provider TMDB ID dropped, not repaired."
+			},
+			"objectType": {
+				"count": 1,
+				"note": "Provider type SHOW_SEASON has no shared-format type; kept as unknown."
+			},
+			"watchlistEntryV2.createdAt:absent": {
+				"count": 1,
+				"note": "No added date; left absent."
+			},
+			"title": {
+				"count": 2,
+				"note": "Missing or unreadable title; the parser marks the row invalid."
+			},
+			"content.title:localized": {
+				"count": 20,
+				"note": "Titles are in the capture language, not the original title."
+			}
+		}
+	},
+	{
+		"scenario": "seen-only title leaks into Watchlist response",
+		"capture": {
+			"terminal": "exhausted",
+			"singleClaimed": "unknown",
+			"singleFalseComplete": false,
+			"chosenRun": 2,
+			"claimed": "unknown",
+			"reasons": [
+				"run 1: accounted 48 of reported 47",
+				"run 2: accounted 48 of reported 47"
+			],
+			"requests": 6,
+			"pages": 3,
+			"reference": 47,
+			"captured": 47,
+			"duplicates": 0,
+			"falseComplete": false,
+			"excluded": 1
+		},
+		"conversion": {
+			"items": 47,
+			"contamination": 0,
+			"stale": 0,
+			"scopeErrors": 0,
+			"guessedIds": 0,
+			"objectIdAsTmdb": 0,
+			"uniqueSourceIds": true
+		},
+		"preview": {
+			"rows": 47,
+			"counts": {
+				"rows": 47,
+				"new": 37,
+				"unchanged": 2,
+				"conflict": 1,
+				"unmatched": 4,
+				"unsupported": 1,
+				"invalid": 2
+			},
+			"unaccounted": 0,
+			"correct": 40,
+			"wrong": 0,
+			"abstained": 1,
+			"providerWrongMatched": 1,
+			"idConflictsFlagged": 1,
+			"outcomeMismatches": [
+				"provider TMDB ID contradicts its IMDb ID: expected new, got unsupported (\"Listed twice in the file. Added once.\", matched TMDB 603 instead of 27205)"
+			],
+			"partialWarned": true,
+			"catalogReads": 6,
+			"wishlistWrites": 0
+		},
+		"loss": {
+			"objectId": {
+				"count": 47,
+				"note": "Numeric JustWatch object ID not carried; sourceId holds the native ID."
+			},
+			"seenlistEntry": {
+				"count": 2,
+				"note": "Seen on JustWatch and also on the Watchlist; the file can't say so. GoodWatch's own Seen state decides rewatch."
+			},
+			"tvShowTrackingEntry": {
+				"count": 1,
+				"note": "Tracking start date not carried."
+			},
+			"seenState.progress": {
+				"count": 1,
+				"note": "Show progress above zero not carried; the wish is kept."
+			},
+			"externalIds.tmdbId:absent": {
+				"count": 4,
+				"note": "Provider returned no TMDB ID."
+			},
+			"externalIds.imdbId:absent": {
+				"count": 5,
+				"note": "Provider returned no IMDb ID."
+			},
+			"externalIds.tmdbId": {
+				"count": 1,
+				"note": "Malformed provider TMDB ID dropped, not repaired."
+			},
+			"objectType": {
+				"count": 1,
+				"note": "Provider type SHOW_SEASON has no shared-format type; kept as unknown."
+			},
+			"watchlistEntryV2.createdAt:absent": {
+				"count": 1,
+				"note": "No added date; left absent."
+			},
+			"title": {
+				"count": 2,
+				"note": "Missing or unreadable title; the parser marks the row invalid."
+			},
+			"content.title:localized": {
+				"count": 47,
+				"note": "Titles are in the capture language, not the original title."
+			}
+		}
+	},
+	{
+		"scenario": "page limit reached",
+		"capture": {
+			"terminal": "page-limit",
+			"singleClaimed": "partial",
+			"singleFalseComplete": false,
+			"chosenRun": 2,
+			"claimed": "partial",
+			"reasons": [
+				"run 1: stopped: page-limit; accounted 40 of reported 47",
+				"run 2: stopped: page-limit; accounted 40 of reported 47"
+			],
+			"requests": 4,
+			"pages": 2,
+			"reference": 47,
+			"captured": 40,
+			"duplicates": 0,
+			"falseComplete": false,
+			"excluded": 0
+		},
+		"conversion": {
+			"items": 40,
+			"contamination": 0,
+			"stale": 0,
+			"scopeErrors": 0,
+			"guessedIds": 0,
+			"objectIdAsTmdb": 0,
+			"uniqueSourceIds": true
+		},
+		"preview": {
+			"rows": 40,
+			"counts": {
+				"rows": 40,
+				"new": 30,
+				"unchanged": 2,
+				"conflict": 1,
+				"unmatched": 4,
+				"unsupported": 1,
+				"invalid": 2
+			},
+			"unaccounted": 0,
+			"correct": 33,
+			"wrong": 0,
+			"abstained": 1,
+			"providerWrongMatched": 1,
+			"idConflictsFlagged": 1,
+			"outcomeMismatches": [
+				"provider TMDB ID contradicts its IMDb ID: expected new, got unsupported (\"Listed twice in the file. Added once.\", matched TMDB 603 instead of 27205)"
+			],
+			"partialWarned": true,
+			"catalogReads": 6,
+			"wishlistWrites": 0
+		},
+		"loss": {
+			"objectId": {
+				"count": 40,
+				"note": "Numeric JustWatch object ID not carried; sourceId holds the native ID."
+			},
+			"seenlistEntry": {
+				"count": 2,
+				"note": "Seen on JustWatch and also on the Watchlist; the file can't say so. GoodWatch's own Seen state decides rewatch."
+			},
+			"tvShowTrackingEntry": {
+				"count": 1,
+				"note": "Tracking start date not carried."
+			},
+			"seenState.progress": {
+				"count": 1,
+				"note": "Show progress above zero not carried; the wish is kept."
+			},
+			"externalIds.tmdbId:absent": {
+				"count": 4,
+				"note": "Provider returned no TMDB ID."
+			},
+			"externalIds.imdbId:absent": {
+				"count": 5,
+				"note": "Provider returned no IMDb ID."
+			},
+			"externalIds.tmdbId": {
+				"count": 1,
+				"note": "Malformed provider TMDB ID dropped, not repaired."
+			},
+			"objectType": {
+				"count": 1,
+				"note": "Provider type SHOW_SEASON has no shared-format type; kept as unknown."
+			},
+			"watchlistEntryV2.createdAt:absent": {
+				"count": 1,
+				"note": "No added date; left absent."
+			},
+			"title": {
+				"count": 2,
+				"note": "Missing or unreadable title; the parser marks the row invalid."
+			},
+			"content.title:localized": {
+				"count": 40,
+				"note": "Titles are in the capture language, not the original title."
+			}
+		}
+	},
+	{
+		"scenario": "totalCount overstates by 2",
+		"capture": {
+			"terminal": "exhausted",
+			"singleClaimed": "unknown",
+			"singleFalseComplete": false,
+			"chosenRun": 2,
+			"claimed": "unknown",
+			"reasons": [
+				"run 1: accounted 47 of reported 49",
+				"run 2: accounted 47 of reported 49"
+			],
+			"requests": 6,
+			"pages": 3,
+			"reference": 47,
+			"captured": 47,
+			"duplicates": 0,
+			"falseComplete": false,
+			"excluded": 0
+		},
+		"conversion": {
+			"items": 47,
+			"contamination": 0,
+			"stale": 0,
+			"scopeErrors": 0,
+			"guessedIds": 0,
+			"objectIdAsTmdb": 0,
+			"uniqueSourceIds": true
+		},
+		"preview": {
+			"rows": 47,
+			"counts": {
+				"rows": 47,
+				"new": 37,
+				"unchanged": 2,
+				"conflict": 1,
+				"unmatched": 4,
+				"unsupported": 1,
+				"invalid": 2
+			},
+			"unaccounted": 0,
+			"correct": 40,
+			"wrong": 0,
+			"abstained": 1,
+			"providerWrongMatched": 1,
+			"idConflictsFlagged": 1,
+			"outcomeMismatches": [
+				"provider TMDB ID contradicts its IMDb ID: expected new, got unsupported (\"Listed twice in the file. Added once.\", matched TMDB 603 instead of 27205)"
+			],
+			"partialWarned": true,
+			"catalogReads": 6,
+			"wishlistWrites": 0
+		},
+		"loss": {
+			"objectId": {
+				"count": 47,
+				"note": "Numeric JustWatch object ID not carried; sourceId holds the native ID."
+			},
+			"seenlistEntry": {
+				"count": 2,
+				"note": "Seen on JustWatch and also on the Watchlist; the file can't say so. GoodWatch's own Seen state decides rewatch."
+			},
+			"tvShowTrackingEntry": {
+				"count": 1,
+				"note": "Tracking start date not carried."
+			},
+			"seenState.progress": {
+				"count": 1,
+				"note": "Show progress above zero not carried; the wish is kept."
+			},
+			"externalIds.tmdbId:absent": {
+				"count": 4,
+				"note": "Provider returned no TMDB ID."
+			},
+			"externalIds.imdbId:absent": {
+				"count": 5,
+				"note": "Provider returned no IMDb ID."
+			},
+			"externalIds.tmdbId": {
+				"count": 1,
+				"note": "Malformed provider TMDB ID dropped, not repaired."
+			},
+			"objectType": {
+				"count": 1,
+				"note": "Provider type SHOW_SEASON has no shared-format type; kept as unknown."
+			},
+			"watchlistEntryV2.createdAt:absent": {
+				"count": 1,
+				"note": "No added date; left absent."
+			},
+			"title": {
+				"count": 2,
+				"note": "Missing or unreadable title; the parser marks the row invalid."
+			},
+			"content.title:localized": {
+				"count": 47,
+				"note": "Titles are in the capture language, not the original title."
+			}
+		}
+	}
+]
