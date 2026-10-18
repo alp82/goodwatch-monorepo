@@ -44,9 +44,13 @@ import {
 } from "~/utils/episode-grid-wire"
 import { titleRedirectPath } from "~/utils/helpers"
 import { windowEpisodeGrid } from "~/ui/details/episode-grid/window"
+import { START_AFTER_PAINT } from "~/utils/start-after-paint"
 import { mergeDehydratedStates } from "~/utils/title-extras"
 
 export { pageHeaders as headers } from "~/utils/headers"
+// The page paints from the server's HTML alone; its scripts start after that (utils/start-after-paint.ts). A tap
+// before then waits for its control (utils/replay-tap.ts).
+export const handle = START_AFTER_PAINT
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	if (!data) return [{ title: "Not Found | GoodWatch" }]

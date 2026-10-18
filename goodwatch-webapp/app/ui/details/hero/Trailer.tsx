@@ -5,6 +5,7 @@ import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import { TmdbImage } from "~/ui/TmdbImage"
 import { useOpenedOnce } from "~/utils/first-use"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
+import { HERO_TIMING } from "~/utils/start-after-paint"
 import type { SizeRule } from "~/utils/tmdb-image"
 
 type Media = MovieResult | ShowResult
@@ -19,7 +20,8 @@ export function HeroBackdropImage({ media, className }: { media: Media; classNam
 	if (!media.details.backdrop_path) return null
 	// `maxWidth` stays at 780: it names the file that `src` holds, which the render path budget looks for, and every
 	// larger step is in the srcSet for the wide banner all the same.
-	return <TmdbImage kind="backdrop" path={media.details.backdrop_path} sizes={HERO_BACKDROP_SIZES} maxWidth={780} priority="high" className={className} />
+	// The page's scripts wait for it to paint (HERO_TIMING): it is the first screen's largest content.
+	return <TmdbImage kind="backdrop" path={media.details.backdrop_path} sizes={HERO_BACKDROP_SIZES} maxWidth={780} priority="high" className={className} {...HERO_TIMING} />
 }
 
 // The poster on the banner: 72 px wide on a phone, 128 px from md up.

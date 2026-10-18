@@ -1,15 +1,16 @@
-// The start page's scripts start once the page has painted (docs/implementation/home-intro.md, "Loading").
+// A landing page's scripts start once the page has painted: the start page (docs/implementation/home-intro.md,
+// "Loading") and the title pages.
 //
-// The page is complete in the server's HTML: the room, the TV's boot screen and "How GoodWatch works" paint before any
-// script runs, and hydration moves nothing. Remix's own markup asks for every module of the page from the HTML, so on
-// a slow connection the scripts (about 200 KB) share the bandwidth with the style sheets and the room's pictures, and
-// the first paint waits for all of them. A route whose handle is START_AFTER_PAINT gets one classic script in their
-// place (a patch to Remix's `Scripts`, patches/@remix-run+react+*.patch): it asks for the modules once the page is on
-// screen.
+// Such a page is complete in the server's HTML and paints before any script runs: the start page's room and boot
+// screen, a title page's hero and sections, whose early taps wait for the app (utils/replay-tap.ts). Remix's own markup
+// asks for every module of the page from the HTML, so on a slow connection the scripts (200 to 280 KB) share the
+// bandwidth with the style sheets and the first screen's pictures, and the first paint waits for all of them. A route
+// whose handle is START_AFTER_PAINT gets one classic script in their place (a patch to Remix's `Scripts`,
+// patches/@remix-run+react+*.patch): it asks for the modules once the page is on screen.
 //
 // On screen means: the first contentful paint, and every picture marked with HERO_TIMING that this window shows has
-// been painted (Element Timing). The room's pictures are the largest content of the first screen, and they can paint a
-// frame after the first paint. A browser without Element Timing waits for the first contentful paint only, one without
+// been painted (Element Timing). Those are the first screen's largest content (the start page's room, a title's
+// backdrop), and they can paint a frame after the first paint. A browser without Element Timing waits for the first contentful paint only, one without
 // paint timing starts the modules at once, and a tab that never paints (opened in the background) starts them after
 // FALLBACK_MS.
 
