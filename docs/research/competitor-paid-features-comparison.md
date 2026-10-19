@@ -1,18 +1,18 @@
 # Movie & TV tools: competitor and feature research overview
 
-**Research snapshot: 2026-10-19. Phase 1: overview design using the existing evidence base; expansion research awaits integration.**
+**Research snapshot: 2026-10-19. Expanded overview: baseline, named-product and deep-discovery evidence integrated; bounded research, not an exhaustive census or a release.**
 
-Start with the products, then explore what they do. This overview groups **58 competitor families**, **302 offer observations** and **347 capability records** so their free baselines, paid differences, exact limits and uncertainties can be compared without choosing a build order. These counts include adjacent services, historical offers and open evidence; they are not 302 current subscriptions or 347 distinct paid-only features.
+Start with the products, then explore what they do. This overview groups **121 product families**, **514 offer observations** and **757 capability records** so their free baselines, paid differences, exact limits and uncertainties can be compared without choosing a build order. These counts include adjacent services, historical offers and open evidence; they are not 514 current subscriptions or 757 distinct paid-only features.
 
 The interactive report is an exploratory research tool. Product selection narrows capability records by overlap, while each record retains its full vendor and tier qualifications. GoodWatch appears as a secondary factual comparison, with code, partial behavior, concrete issues and unknowns kept separate. No independently verified live GoodWatch parity claim is established. No new roadmap, implementation priority or campaign is proposed by this design phase.
 
 ## Read and explore
 
-- [Interactive overview](competitor-paid-features-report.html): competitors first, features second, evidence third. All 58 families are initially visible in expanded groups, without pagination. Product details show complete offer observations and source boundaries. Select products to explore their feature records; search and expand grouped capabilities to compare precise free/paid behavior.
-- [Canonical product inventory](competitor-paid-features-inventory.csv): 58 family identities and aliases, statuses, commercial evidence and sources.
-- [Plan and offer ledger](competitor-paid-features-plans.csv): 302 observations, preserving amounts, currencies, periods, platforms, countries, qualifications and exact entitlement/context associations.
-- [Capability ledger](competitor-paid-features-opportunities.csv): 347 stable records, including free benchmarks, unresolved evidence and exclusions. The existing filename and archived priority/wave fields remain for provenance; they are not displayed as recommendations.
-- Evidence dossiers: [core](competitor-paid-features-core.md), [landscape](competitor-paid-features-landscape.md), [GoodWatch code and issues](competitor-paid-features-goodwatch.md). All three CSVs and four Markdown companions are embedded byte-for-byte inside the standalone HTML. Internal dossier/record references open its evidence viewer. View/copy source is the reliable fallback; file downloads are an optional attempt because the Ghostex host has blocked Blob download completion.
+- [Interactive overview](competitor-paid-features-report.html): competitors first, features second, evidence third. All 121 families are initially visible in expanded groups, without pagination. Product details show complete offer observations and source boundaries. Select products to explore their feature records; search and expand grouped capabilities to compare precise free/paid behavior.
+- [Canonical product inventory](competitor-paid-features-inventory.csv): 121 family identities and aliases, statuses, commercial evidence and sources.
+- [Plan and offer ledger](competitor-paid-features-plans.csv): 514 observations, preserving amounts, currencies, periods, platforms, countries, qualifications and exact entitlement/context associations.
+- [Capability ledger](competitor-paid-features-opportunities.csv): 757 stable records, including free benchmarks, unresolved evidence and exclusions. The existing filename and archived priority/wave fields remain for provenance; they are not displayed as recommendations.
+- Evidence dossiers: [core](competitor-paid-features-core.md), [landscape](competitor-paid-features-landscape.md), [GoodWatch code and issues](competitor-paid-features-goodwatch.md), [requested-name expansion](competitor-paid-features-named-expansion.md) and [deep discovery](competitor-paid-features-discovery-expansion.md). All three CSVs and six Markdown companions are embedded byte-for-byte inside the standalone HTML. Internal dossier/record references open its evidence viewer. View/copy source is the reliable fallback; file downloads are an optional attempt because the Ghostex host has blocked Blob download completion.
 
 ## Competitors first: browse groups
 
@@ -20,21 +20,48 @@ The groups are editorial navigation based on the existing inventory's documented
 
 | Browse group | Families | Purpose |
 |---|---:|---|
-| Find your next watch | 12 | Streaming search, personal recommendations and discovery. |
-| Log films & connect | 6 | Diaries, opinions, collections and communities. |
-| Keep up with TV | 11 | Episode progress, calendars and broader movie/TV trackers. |
-| Choose a tracking app | 10 | App-focused experiences, often connected to another tracking service. |
-| Explore anime & regional communities | 9 | Specialist catalogs, languages and communities. |
-| Organize across media | 3 | Personal lists and progress across more than movies and TV. |
-| Manage collections & self-host | 7 | Owned media, servers and self-hosted trackers. Adjacent jobs stay distinct. |
+| Find your next watch | 19 | Streaming search, reference tools and personal recommendations. |
+| Log films & connect | 10 | Diaries, opinions, film lists and communities. |
+| Keep up with TV | 19 | Episode progress, calendars and hosted movie/TV trackers. |
+| Choose a tracking app | 16 | App-focused experiences, often connected to another tracking service. |
+| Explore regional communities | 12 | Local-language film culture, ratings and discovery. |
+| Follow anime & Asian drama | 9 | Specialist catalogs, episode schedules and communities. |
+| Choose something together | 8 | Couple and group selection; matching does not mean synchronized playback. |
+| Organize lists & other media | 5 | Personal collections, dynamic lists and automation. |
+| Catalog what you own | 6 | Owned editions, copies, loans and personal-media inventories. |
+| Host or sync your own tracker | 9 | Self-hosted tracking and synchronization; setup and provider costs stay separate. |
+| Explore library & player overlap | 7 | Adjacent playback, household media libraries and library-funded content. |
+| Resolve the enterprise namesake | 1 | Exact-name identity retained; business video hosting is outside consumer parity. |
 
 The complete inventory remains available on initial load. Search includes names and aliases; category, commercial evidence, public-presence status and documented offer-platform filters are independent. The platform filter means **offer evidence on that surface**, not every supported device or a complete cross-platform entitlement matrix. Price snippets are labeled individual observations, not cheapest-price claims. Product details retain offer state, country, currency, billing period, qualifications and primary citations.
 
 Commercial badges are intentionally scoped: **paid functional features** requires a mapped consumer entitlement outside purely decorative/support rewards; **explicit free baseline** means the dossier describes a free core, not that every function is free; **cosmetic/supporter** can coexist with functional gates; **terms incomplete** preserves missing or disputed matrices. Business APIs, professional services and personal-media playback do not make an unrelated consumer baseline paid. Full commercial wording remains in product details.
 
-### Requested names and phase boundary
+### Requested names, homonyms and coverage reconciliation
 
-Phase 1 retains the existing entries for Reelgood, CineTrak, Showly, Taste and Moviebase without treating new spellings as proven aliases. Separate research is covering **Reelgood, Playpilot, CineTrak, Showly, Taste.io, Streamio/Stremio, Moviebase, Streamguide, Watch Next, Matched and Filmfriend**, plus a deeper discovery sweep. Their incomplete working dossiers are not inputs to this phase. Phase 2 will resolve publisher/store identities, deduplicate aliases, integrate completed evidence and update counts and companions. This overview is not yet the final expanded landscape.
+The canonical reconciliation is **58 baseline + ten named additions + 53 discovery candidates = 121 families**. The five refreshed named families retain their original IDs and are not counted again. Identity review found no additional duplicate among the 53 accepted discovery candidates and the baseline/named union. **120 families are consumer products or adjacent consumer services/source projects; one exact-spelling enterprise identity is explicitly outside consumer parity.** Adjacent ownership, playback, content access and self-hosted operation remain grouped separately.
+
+The full requested-name reconciliation is visible in the HTML with a top-of-list jump link and individual product links. Supported homonyms stay separate instead of silently selecting an intended product:
+
+| Requested spelling | Exact identities to carry forward | Prior coverage → this pass | Remaining identity qualification |
+| --- | --- | --- | --- |
+| Reelgood | `reelgood`; Apple `1031391869`, Android `com.reelgoodapp.reelgood` | Existing → added iOS custom-list history and newer maintenance evidence than Android alone. | Consumer operation uncertain; business data must not become a consumer tier. |
+| Playpilot | `playpilot`; Apple `1345884752`, Android `com.playpilot.apps` | Missing → new direct, explicitly free benchmark. | Capitalization PlayPilot is publisher styling. Collections were renamed Lists; same family. |
+| CineTrak | `cinetrak`; Android `com.cinetrak.mobile`, Elias Haikal | Existing → one-time payment, ad-removal and premium-theme evidence; regional text conflicts. | Historical iOS ID `1434447127` could not be verified; do not inherit Android entitlements. |
+| Showly | `showly`; Apple `6739016219`, Android `com.michaldrabik.showly2` | Existing → rechecked store offers, ownership and Android source snapshot. | Android source is not proof of shipped iOS gates. |
+| Taste.io | `taste`; Apple `1361180197`, Android `com.tasteio`, Taste Labs | Existing → rechecked Premium SKUs and distinguished Matched. | TasteDive is a separate baseline family; Taste Premium matrix still unavailable. |
+| Streamio | `streamio-rackfish` **and possible intended** `stremio` | Missing → exact-spelling enterprise product plus separate consumer candidate. | User intent between these remains unresolved; neither is an alias of the other. |
+| Moviebase | `moviebase`; Apple `6795568303`, Android `com.moviebase` | Existing → paid local backup/restore/CSV export and refreshed regional prices. | Moviebase and StreamGuide share a publisher but remain distinct apps. |
+| Streamguide | `streamguide-krueger` (`6793172127`, `app.streamguide`) **and** `stream-guide-plata` (`6520387127`) | Missing → two evidenced consumer products with paid offers. | Krueger's is the strongest exact-brand match; Plata's spaced name is a separate plausible candidate. |
+| Watch Next | `watch-next-frulli` (`6450368827`, `com.filippefrulli.watch_next`); `watchnext-app` (`watchnext.app`); `watch-next-baser` (`com.baser.watchnext`) | Missing → three evidenced overlapping products. | No evidence selects one as the intended name. **Next Episode is a different existing competitor.** |
+| Matched | `matched-taste`; Apple `1623287922`, Android `io.taste.matched` | Missing → separate couples app linked by Taste's publisher and its own website. | Strong movie/TV-context identification; not merged with other “match” apps or a dating service. |
+| Filmfriend | `filmfriend`; Apple `1359787175`, Android `de.filmfriend` | Missing → verified library-funded access and watchlist/offline overlap. | Country/library eligibility varies; a library membership fee is not a filmfriend subscription. |
+
+Two client names remain visible without inflating family count: **Rippple II** is a related official **Trakt** client with backend VIP pricing/limits; legacy Mark I remains a migration context. **Reeel** is the **MDBList** companion, with its recurring store SKUs recorded separately from the website's one-time-support wording. Shared ownership does not prove purchase transfer. **Floppy** is a separately maintained Yamtrack fork and remains a separate source family. **Pierre TROMP's TV Time** is a distinct app ID and publisher, not a revival of the discontinued original TV Time. [Discovery identity evidence](competitor-paid-features-discovery-expansion.md#deferred-seed-reconciliation-and-identity-exclusions).
+
+An expandable **research-leads area** preserves 18 grouped screening entries from discovery plus the historical unverified CineTrak iOS identity: **19 displayed grouped entries**, not 19 newly verified families. These include Mergen's FlickList, PublicMetaDB, SideReel, automation namesakes, self-hosted projects, regional/anime/client leads and explicit unrelated exclusions. Each retains its decision, reason and available primary link; the complete source log remains embedded. A blocked page or deferred investigation is not a shutdown/free-policy claim. [Screening log](competitor-paid-features-discovery-expansion.md#other-screened-excluded-and-unresolved-candidates).
+
+Both completed expansion dossiers are integrated. Further identity clarifications can refine this bounded inventory; it does not claim every movie/TV website or app is represented.
 
 ## Features second: compare user jobs
 
@@ -59,18 +86,20 @@ Groups summarize record counts, not unique features or popularity. Expanding a r
 
 ## Coverage, identity and confidence
 
-The canonical union was checked by product identity: **9 core families + 50 landscape families − Bingers counted in both = 58**. It contains **49 active public presences, seven uncertain leads, and two discontinued services**. Active means current first-party material is available, not a successful signup, checkout, sync or alert test. No product was operationally exercised by this synthesis. The 29 detailed landscape paid-offer sections and eight core families with documented paid offers reconcile to **36 distinct detailed paid-offer families** after Bingers deduplication; this includes IMDb's professional offer and incomplete matrices. Separate B2B offers do not make an otherwise free consumer app paid.
+The baseline union remains **9 core + 50 landscape − one duplicate Bingers = 58**. The expanded inventory adds ten named identities and 53 discovery identities, producing **121 families: 110 active public presences, nine uncertain-operation/maintenance entries and two discontinued services**. MediaTracker and MovieMatch for Plex add older-maintenance repository qualifications to the baseline's seven uncertain entries. Public presence is documentary, not a successful signup, checkout, sync or alert test. No product was operationally exercised by this synthesis. Store variants, source repositories, trials, unknowns, conditional discounts and enterprise offers are observations, not a count of active consumer subscriptions.
 
 | Evidence grouping | Families / handling |
 |---|---|
 | Core tracking/discovery/community | IMDb/IMDbPro, JustWatch, Trakt, SIMKL, Letterboxd, TV Time, Serializd, Criticker, Bingers. Bingers appears only once in the CSV. |
 | Wider landscape | All 50 numbered families in the landscape dossier are retained, including regional/anime products, collection managers and self-hosted alternatives. No undocumented lead was promoted into the canonical inventory. |
-| Uncertain current operation | Reelgood, iShows/ShowPal, Must, Flickmetrix, Kitsu, MyDramaList, FilmAffinity. Reachable listings or blocked pages are not enough to claim working service or shutdown. |
+| Named expansion | Five existing families refreshed and ten added; eleven requested names resolve to fifteen supported identities. Homonyms remain separate. |
+| Deep discovery | All 53 accepted families retained; related Rippple II and Reeel client names remain visible under Trakt and MDBList. Screened/deferred identities have their own expandable area. |
+| Uncertain current operation | Reelgood, iShows/ShowPal, Must, Flickmetrix, Kitsu, MyDramaList, FilmAffinity, MediaTracker and MovieMatch for Plex. Reachable listings or blocked pages are not enough to claim working service or shutdown. |
 | Discontinued | Original TV Time and Marathon. Saved archives may be useful; generating a new export or recovering unsaved data is not promised. |
 | Renamed/umbrella identities | iShows→ShowPal, TVSofa→Sofa Time, Likewise→Pix, Hummingbird→Kitsu, CLZ/Movie Connect, AniList/AniChart stay one family each. Sofa and Sofa Time remain separate. Taste and TasteDive remain separate. My Movies by Binnerup is not the Blu-ray.com product. |
 | Ecosystem, not duplicate competitors | Trakt Time and related client variants do not create extra Trakt tiers. A client purchase does not remove backend Trakt caps. WATCHA PEDIA is not WATCHA streaming; APIs/HQ/professional variants stay within their family with separate scope. |
 
-This is a **bounded inventory**, not every app on the internet. Next-search leads remain in the landscape dossier: Rippple, Television Time, Movie Tracker, Callsheet, Cinopsys, Cronica, MUBI community, Anime-Planet, LiveChart, Bangumi/Douban, AlloCiné, Filmweb, Kinopoisk, SensaCine and Blu-ray.com's My Movies. Their existence as leads is not a verified current plan matrix.
+The landscape's earlier next-search leads are now reconciled in the discovery dossier: accepted families are inventoried, Rippple is a Trakt client, and remaining screened/deferred candidates stay in the research-leads area. This is bounded primary-source research, not an exhaustive web census or popularity ranking.
 
 Commercial-model labels have different meanings: **explicitly free** is a publisher policy; **no paid tier found** is incomplete evidence; **donation/supporter** can be voluntary or include a real entitlement; **paid offer with unknown matrix** proves monetization but not which advertised functions are paid. Prices remain literal: US Apple observations are not world prices; an unspecified `$` is not silently USD; a larger SKU is not automatically annual/lifetime. Identical repeated labels/amounts with no distinguishable terms are consolidated and noted. Different currencies, periods, platforms, named offers and eligibility qualifications remain separate. Expired promotions are marked historical, never the default current price.
 
@@ -85,7 +114,7 @@ Commercial-model labels have different meanings: **explicitly free** is a publis
 
 ### Offer-to-capability schema and interpretation
 
-The price ledger is also a bounded entitlement map. All **302 offer observations** now have plan-specific summaries, a platform-scoped group and explicit associations. The inventory remains **58 families**; the corrected opportunity ledger contains **347 rows**. A price observation, an entitlement and a GoodWatch implementation are different objects.
+The price ledger is also a bounded entitlement map. All **514 offer observations** have plan-specific summaries, a platform-scoped group and explicit associations. The inventory contains **121 families** and the capability ledger **757 records**. The original 58 family IDs, PLAN-001–302 and OP-001–347 remain addressable. New observations append PLAN-303–514 and OP-348–743; exact-control splits append OP-744–757; new rows have no proposed priority or wave. A price observation, an entitlement and a GoodWatch implementation are different objects.
 
 | Field | Meaning |
 |---|---|
@@ -125,15 +154,88 @@ Current statuses remain separate from planning:
 - **Unknown:** Exact control, live setting, fidelity or competitor boundary cannot be established.
 - **Concrete issue:** Linked existing scope; no delivery promise. **Related issue** means it does not authorize the proposed equivalent. **Uncommitted suggestion** means this report proposes work only. Professional/playback exclusions and supporter rewards receive explicit dispositions.
 
-## Phase-1 validation and reproducibility
+## Material integration boundaries
 
-The three CSV ledgers and three evidence dossiers are unchanged by the design phase. The existing stable IDs, 126 entitlement groups, 1,251 documented entitlement edges and 913 context-only edges are preserved. The HTML embeds the exact three CSVs and four Markdown companions, including this overview. Presentation metadata adds navigation groups and short descriptions derived from inventory evidence; it does not add product facts or new plan allocations.
+- **Existing-family refreshes:** Reelgood gains iOS custom-list/profile history without an operation claim. CineTrak gains developer-confirmed one-time themes and regionally documented ad removal; statistics/export remain unallocated. Showly retains Android source-only paid subsets, with iOS purchase observations contextual. Moviebase adds Premium local backup/restore and CSV export. Taste's exact Premium matrix remains unknown; Matched is a separate product. [Named evidence](competitor-paid-features-named-expansion.md).
+- **Conflicting prices and periods:** Moviebase's earlier LU EUR0.99/week, 2.99/month, 10.99/year and 32.99/lifetime observations remain under their old IDs, explicitly not reproduced by the newer fetch. Reproduced higher values and new EUR2.99/week / generic12.99 observations stay separate. Bare-dollar Stremio/WatchNext.app observations are not asserted USD; WatchNext's US-context inference remains in qualifications. Streamio's yearly-tab numbers are monthly rates billed yearly, not annual totals. No cheapest/current-price aggregation is performed. [Offer evidence](competitor-paid-features-named-expansion.md#public-consumer-offers-and-prices).
+- **Paid versus general/future:** Generic Taste, Matched, TV Club, Movie Night, MovieMatch, Reeel and Combo SKUs do not inherit every family feature. WeTrakr's announced prices and provisional gates remain context while beta VIP is free; its closed-eligibility lifetime reward is not a purchasable offer. Flickchart Coming Soon, MyEpisodes under-development and iCollect planned features remain non-entitled context. [Discovery paid boundaries](competitor-paid-features-discovery-expansion.md#newly-documented-paid-plans-and-exact-boundaries).
+- **Exact numerical objects:** MDBList separately records dynamic/static/shared/external/feed/AI lists, items/list, collaborators, sync lists/items, refresh cadence, daily API quotas and shared burst limits. Basic gets no Standard-only priority-list/clone entitlement. WatchNext.app preserves 50+50 / 100+100 / uncapped tracking and Unlimited-only calendar/feed/summary/portability scope, with homepage and retention contradictions. Stremio's six profiles are separate from media-player/download rights. [MDBList matrix](competitor-paid-features-discovery-expansion.md#mdblist-and-reeel--substantial-omitted-tier-system), [WatchNext evidence](competitor-paid-features-named-expansion.md#watchnextapp--free--premium--unlimited-with-explicit-conflicts).
+- **Scope and free benchmarks:** Free calendar feeds in EpisodeCalendar, free statistics/sync in Cinopsys, free CSV export in Libib and free-source scrobbling/sync are not described as paid-only gaps. Family purchase sharing, group selection, profile separation and synchronized playback remain different jobs. Streamio is enterprise; filmfriend supplies eligible library content; Infuse/Emby/Jellyfin/Kodi have adjacent player/server scope. Partner discounts, supporter recognition and licensed content do not inflate paid tracking parity. [Free/source evidence](competitor-paid-features-discovery-expansion.md#free-benchmarks-and-migrationdependency-evidence).
+- **GoodWatch mapping:** The final correction pass reviews every OP-348+ mapping. Positive matches require scoped route/UI/writer evidence; related cards, search, storage and imports no longer count as exact implementation. Compound controls are split or explicitly partial; unassessed exact comparisons are unknown. The correction register below lists every classification change and all remaining unknowns. Guest 20-score, per-movie 200-occurrence reads, per-show 20,000-log-row reads, import 20 MiB/50,000 observations (IMDb 10 MiB), MCP and query bounds remain; no free/unlimited/live policy is inferred. No new feature plan is approved by this integration. [GoodWatch audit](competitor-paid-features-goodwatch.md).
 
-Headless Chromium 156 checks passed on an isolated HTTP route serving **only the HTML**. Initial content is competitors first with all 58 cards visible in seven expanded groups; twelve feature groups preserve all 347 records. Checks cover name/alias search, empty/reset behavior, category/commercial/presence/offer-platform filters, group collapse/expand, multi-product union filtering, exact feature/state search, product-to-feature navigation, modal keyboard focus/Escape return and browser Back. Desktop/light and 390px mobile/dark screenshots were inspected; cards, product details and feature details fit the viewport without horizontal scrolling.
+## Validation and reproducibility
 
-All seven embedded companion texts and all seven HTTP-route downloads were byte-compared with the current source files. The offer ledger exposes all 302 records, search, entitlement/context/group filters, reverse PLAN/OP links, inheritance and exact dossier headings. Complete-file copy works independently of filters; denied clipboard and blocked Blob creation expose selected full-source fallbacks. Actual Ghostex-host download completion was reported blocked by the orchestrator, so the UI labels downloads as an attempt and prominently offers view/copy instead. No report publication or new host check was performed in this phase.
+The five source dossiers are preserved byte-for-byte. Existing IDs remain stable; new observations append without replacing historical conflicts. The ledgers contain **273 entitlement groups, 2,108 documentary entitlement edges and 2,154 context-only edges**, with exact reverse associations and explicit acyclic inheritance. The three CSVs and six Markdown companions are embedded once as complete source text; the browser parses the CSVs in memory instead of serializing duplicate datasets. All record fields and external primary citations remain available. The standalone HTML is comfortably below Ghostex's **8 MiB** page limit.
 
-Both browser suites recorded zero JavaScript errors and no network requests beyond the HTML route. Static checks passed for the 58/302/347 counts, stable IDs, 126 acyclic entitlement groups, 1,251 entitlement edges, 913 context edges, reverse associations, 1,119 dossier references and 36 pinned code paths. The main UI does not expose priority or wave controls. Existing CSVs and dossiers remain byte-identical to the phase-start committed versions. Application tests, live competitor checkout/entitlement tests and GoodWatch deployment verification are outside this documentation-only phase. No application changes, issue mutations, commits, pushes or publication were performed.
+Browser verification serves only the report HTML from an isolated HTTP route, with no sibling files. Checks cover all 121 cards in 12 groups, search/aliases, commercial/category/status/offer-platform filters, requested-name links, research leads, Rippple/Reeel visibility, group collapse/expand, product selection, grouped feature records, exact offers, keyboard focus/Escape/Back, and desktop/mobile overflow. Companion checks cover all nine files, full-source/download byte equality independent of filters, complete 514-offer inspection, entitlement/context/group filtering, reverse links, primary citations and clipboard/download-denial fallbacks. Browser CSV parsing is compared with Python's CSV parser for all fields, including quoted commas/newlines and CRLF source text.
+
+Actual Ghostex-host Blob download completion was previously reported blocked by the orchestrator; the UI presents downloads as an attempt and keeps full view/copy available. No new publication or hosted entitlement testing occurred. These are documentation/report checks, not application acceptance or live parity evidence. No application tests, checkout/paid-enforcement tests, deployment verification, application changes, issue mutations, commits, pushes or publication are part of this integration.
+
+## Exact GoodWatch mapping correction register
+
+This is a data-correction pass, not new competitor research or a roadmap. All 396 original expansion records (OP-348–743), including all 120 originally partial and 34 originally implemented rows, were reconsidered against the pinned audit and targeted code. Original competitor statements, prices, source URLs and identities remain intact. Fourteen component splits bring the ledger to **757 records**. Baseline OP-001–347 remains byte-for-byte unchanged; no plan or implementation is promoted by this review.
+
+The 410 expansion/split records now classify as **27 implemented in code, 15 partial, 156 absent in inspected scope, 179 unknown/unassessed, and 33 outside functional consumer parity**. These counts describe scoped records, not full-product parity. Capacity unknowns remain unknown even where basic tracking is coded. The unknown label does not mean absent: it means an exact comparison was not substantiated. All new requirements/acceptance fields distinguish an assessed component from an unassessed requirement; no capability label alone is presented as a completed requirements review.
+
+### Component splits and preserved IDs
+
+Original rows now describe only their supported component. The new rows retain the original documentary source and precise offer relationship. The over-cap archival row is **context only**, not an invented paid entitlement. Review authoring is absent while imported-review storage/preservation remains a separately qualified partial capability in the GoodWatch audit; title ratings cannot imply a native publishing journey.
+
+| Original ID and retained scope | Appended component | Exact GoodWatch state |
+|---|---|---|
+| OP-684: Movie/show title ratings and watched/wanted state | OP-744: Native review authoring/publishing | `absent_inspected` |
+| OP-691: Movie/show title ratings | OP-745: Native review authoring/publishing | `absent_inspected` |
+| OP-377: Provider discovery and taste recommendations | OP-746: Roulette / random title picker | `absent_inspected` |
+| OP-363: Movie/show tracking, repeat watches and title ratings | OP-747: Unlimited tracked-title allowance | `unknown` |
+| OP-409: Movie/show tracking (capacity and retention separate) | OP-748: Separate show/movie tracking capacity | `unknown` |
+| OP-409: Movie/show tracking (capacity and retention separate) | OP-749: Over-cap archival and stopped alerts | `absent_inspected` |
+| OP-471: Per-title watch history and episode marking | OP-750: Global chronological diary | `absent_inspected` |
+| OP-471: Per-title watch history and episode marking | OP-751: Apple Watch episode marking | `absent_inspected` |
+| OP-710: Per-title movie/episode watch history | OP-752: Global unified chronological history | `absent_inspected` |
+| OP-694: Anime movie/show title progress and ratings | OP-753: Non-movie/show ACG tracking | `absent_inspected` |
+| OP-707: Movie/show tracking subset | OP-754: Books/games and other non-movie/show tracking | `absent_inspected` |
+| OP-731: Manual movie/show watch tracking | OP-755: Local tracker operation | `unknown` |
+| OP-731: Manual movie/show watch tracking | OP-756: User snapshots and snapshot recovery | `absent_inspected` |
+| OP-697: Anime title ratings | OP-757: Eight independently named tracking marks | `partial` |
+
+### Material scope corrections
+
+- **OP-358/397:** Episode/season marking and **movie/show title ratings**, with score-writer and tracking-action citations. No competitor episode-rating requirement is invented.
+- **OP-612:** Partial: Just now records the current moment and manual backdating/editing supports day/unknown; arbitrary historical hour/minute entry is not available. [DateChoice](https://github.com/alp82/goodwatch-monorepo/blob/b15b6cbe6f8dd8aa4fc861b5e7c8443c37d39768/goodwatch-webapp/app/ui/watch-log/DateChoice.tsx#L1), [API date schema](https://github.com/alp82/goodwatch-monorepo/blob/b15b6cbe6f8dd8aa4fc861b5e7c8443c37d39768/goodwatch-webapp/app/routes/api.watch-log.ts#L30).
+- **OP-586/698:** Partial: Not interested recommendation exclusion, not arbitrary title hiding or selectable hiding by each tracking mark. [Exclusion writer](https://github.com/alp82/goodwatch-monorepo/blob/b15b6cbe6f8dd8aa4fc861b5e7c8443c37d39768/goodwatch-webapp/app/server/not-interested-store.server.ts#L69).
+- **OP-617:** Partial grouped-discovery overlap, not all Flickz clusters. [Connected taste picker](https://github.com/alp82/goodwatch-monorepo/blob/b15b6cbe6f8dd8aa4fc861b5e7c8443c37d39768/goodwatch-webapp/app/server/watch-next-taste-picker.server.ts#L1), [picker UI](https://github.com/alp82/goodwatch-monorepo/blob/b15b6cbe6f8dd8aa4fc861b5e7c8443c37d39768/goodwatch-webapp/app/ui/watch-next/TasteShelf.tsx#L1).
+- **OP-371/676/718:** Watched-library membership is not owned inventory; the limited permanent-handle/share-list profile is not a full social profile; manually logged watches are not playback capture. OP-676 is partial. [Handle route](https://github.com/alp82/goodwatch-monorepo/blob/b15b6cbe6f8dd8aa4fc861b5e7c8443c37d39768/goodwatch-webapp/app/routes/api.handle.ts#L1), [watch-log route](https://github.com/alp82/goodwatch-monorepo/blob/b15b6cbe6f8dd8aa4fc861b5e7c8443c37d39768/goodwatch-webapp/app/routes/api.watch-log.ts#L14).
+- **OP-456/464/485/747/748:** Exact tracked-title capacity is unknown. **200 is the maximum returned occurrences for one movie; 20,000 is returned log rows for one show across passes. Neither is a library-title allowance.** No unlimited promise follows. [Tracking readers](https://github.com/alp82/goodwatch-monorepo/blob/b15b6cbe6f8dd8aa4fc861b5e7c8443c37d39768/goodwatch-webapp/app/server/tracking-sql.ts#L40).
+- **OP-426/439/470/488/597/643:** Social-link recognition, catalog hide/reorder/rename, on-device tags/annual prose, achievements, video preferences and promotional opt-out are unknown/unassessed. File import, card styling, descriptive search and private visibility are not their implementations. **OP-460/598** native app-icon selection is absent in the audited native-client scope; **OP-610** Discord recognition is outside functional software parity.
+- **Same-pattern controls:** iCloud/Core Data contracts, share-sheet ingestion, AI scan credits, public API quotas, exact list capacities/clone controls, artwork and language controls no longer receive partial credit from unrelated infrastructure. Their exact support stays unknown unless the row supplies a specific independently evidenced overlap.
+
+### Exact classification-change index
+
+The following lists every original expansion ID whose classification changed. IDs retaining a classification may still have narrower labels, evidence, requirements and limits; the component table and full corrected CSV preserve those edits.
+
+| Before → after | Exact IDs |
+|---|---|
+| `absent_inspected` → `partial` | OP-350, OP-386, OP-427, OP-559, OP-576, OP-641, OP-687, OP-703 |
+| `absent_inspected` → `unknown` | OP-370, OP-383, OP-429, OP-468, OP-474, OP-511, OP-515, OP-532, OP-533, OP-558, OP-569, OP-570, OP-573, OP-637, OP-689, OP-699, OP-716 |
+| `implemented_code` → `partial` | OP-586, OP-612, OP-617, OP-676, OP-698 |
+| `implemented_code` → `unknown` | OP-456, OP-485 |
+| `partial` → `absent_inspected` | OP-356, OP-357, OP-378, OP-387, OP-393, OP-399, OP-408, OP-414, OP-460, OP-568, OP-598, OP-616, OP-704, OP-723 |
+| `partial` → `out_of_consumer_scope` | OP-610 |
+| `partial` → `unknown` | OP-349, OP-352, OP-364, OP-366, OP-368, OP-369, OP-375, OP-376, OP-379, OP-385, OP-390, OP-395, OP-398, OP-400, OP-401, OP-403, OP-404, OP-420, OP-425, OP-426, OP-433, OP-435, OP-439, OP-440, OP-442, OP-446, OP-450, OP-463, OP-464, OP-465, OP-466, OP-469, OP-470, OP-475, OP-482, OP-486, OP-488, OP-491, OP-499, OP-501, OP-502, OP-519, OP-520, OP-522, OP-527, OP-534, OP-535, OP-536, OP-538, OP-539, OP-540, OP-541, OP-543, OP-546, OP-547, OP-548, OP-549, OP-555, OP-566, OP-567, OP-577, OP-580, OP-583, OP-587, OP-588, OP-591, OP-595, OP-597, OP-608, OP-613, OP-615, OP-618, OP-620, OP-622, OP-628, OP-630, OP-640, OP-642, OP-643, OP-644, OP-645, OP-653, OP-654, OP-659, OP-662, OP-664, OP-669, OP-672, OP-674, OP-679, OP-682, OP-685, OP-688, OP-692, OP-695, OP-696, OP-712, OP-715, OP-717, OP-720, OP-724, OP-729, OP-732, OP-736 |
+
+**All retained expansion implementation claims:** OP-358, OP-363, OP-371, OP-377, OP-380, OP-381, OP-382, OP-384, OP-391, OP-397, OP-407, OP-409, OP-471, OP-525, OP-564, OP-660, OP-668, OP-678, OP-684, OP-691, OP-694, OP-697, OP-706, OP-707, OP-710, OP-718, OP-731. Each row now cites the relevant pinned route/UI/writer rather than a tracking SQL read alone.
+
+**All remaining expansion partial matches:** OP-350, OP-386, OP-427, OP-559, OP-576, OP-586, OP-612, OP-617, OP-641, OP-676, OP-687, OP-698, OP-703, OP-708, OP-757. Each states both the implemented subset and missing exact behavior.
+
+### Remaining exact comparisons not assessed
+
+The following **179 IDs** are unknown/unassessed, including three split components. Their competitor evidence remains available; no blanket partial match is claimed. Requirements must be resolved control by control before a parity statement.
+
+OP-348, OP-349, OP-352, OP-354, OP-364, OP-366, OP-368, OP-369, OP-370, OP-373, OP-375, OP-376, OP-379, OP-383, OP-385, OP-388, OP-389, OP-390, OP-392, OP-394, OP-395, OP-398, OP-400, OP-401, OP-402, OP-403, OP-404, OP-405, OP-406, OP-410, OP-420, OP-424, OP-425, OP-426, OP-429, OP-431, OP-433, OP-434, OP-435, OP-436, OP-439, OP-440, OP-442, OP-446, OP-450, OP-456, OP-463, OP-464, OP-465, OP-466, OP-468, OP-469, OP-470, OP-473, OP-474, OP-475, OP-477, OP-478, OP-479, OP-480, OP-481, OP-482, OP-484, OP-485, OP-486, OP-487, OP-488, OP-491, OP-494, OP-496, OP-499, OP-501, OP-502, OP-511, OP-515, OP-519, OP-520, OP-522, OP-524, OP-527, OP-532, OP-533, OP-534, OP-535, OP-536, OP-538, OP-539, OP-540, OP-541, OP-543, OP-545, OP-546, OP-547, OP-548, OP-549, OP-553, OP-555, OP-558, OP-560, OP-565, OP-566, OP-567, OP-569, OP-570, OP-571, OP-572, OP-573, OP-575, OP-577, OP-578, OP-579, OP-580, OP-583, OP-587, OP-588, OP-590, OP-591, OP-594, OP-595, OP-596, OP-597, OP-599, OP-600, OP-602, OP-605, OP-607, OP-608, OP-611, OP-613, OP-615, OP-618, OP-619, OP-620, OP-622, OP-623, OP-626, OP-628, OP-630, OP-637, OP-640, OP-642, OP-643, OP-644, OP-645, OP-648, OP-652, OP-653, OP-654, OP-659, OP-662, OP-663, OP-664, OP-669, OP-672, OP-674, OP-675, OP-679, OP-682, OP-685, OP-688, OP-689, OP-692, OP-695, OP-696, OP-699, OP-702, OP-712, OP-715, OP-716, OP-717, OP-720, OP-724, OP-729, OP-732, OP-734, OP-736, OP-747, OP-748, OP-755.
+
+### Correction-pass validation
+
+Validation covers stable original IDs and unchanged competitor fields; all original and appended direct/inherited/context edges and reverse links; the reported feature-scope corrections; all pinned positive-evidence paths; unchanged source dossiers; browser-rendered corrected states and split controls; and all nine byte-exact embedded companions on an HTML-only route. No application or live competitor entitlement tests were run. The UI layout, requested-name reconciliation and source snapshots are preserved.
 
 ## Archived planning notes — not the current proposal
 
