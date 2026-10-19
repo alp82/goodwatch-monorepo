@@ -119,7 +119,7 @@ export const STATIC_PAGE_COPY: Record<string, PageCopy> = {
 	},
 	"/blog/streaming-by-country-2026": {
 		tag: "Data study",
-		title: "Studio Ghibli streams in 129 countries, but not in Japan",
+		title: "Studio Ghibli's films stream in 129 countries. In Japan, just one does.",
 		subtitle: "Streaming in 139 countries, counted.",
 	},
 	"/taste": {
