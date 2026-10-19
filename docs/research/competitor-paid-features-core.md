@@ -240,6 +240,9 @@ VIP includes PRO; Lifetime and student/teacher VIP share VIP entitlements. Suppo
 | LIST collaboration | No creator entitlement verified | No creator entitlement verified | Up to 10 participants **including creator**; permissions/suggestions | Detailed collaboration docs are more precise than generic VIP wording. [S9][s9] |
 | ADS | Advertising | Removed | Removed | [S2][s2] |
 | IDENTITY / privacy | Public profile/favorites | Public/unlisted/private; favorite background; PRO badge | Included, VIP badge/private Discord | Not all cosmetics are a new functional tier. [S2][s2] [S4][s4] |
+| SOCIAL group movie selection | Not available in comparison matrix | Watch with friends | Included | Compare wanted/seen films with up to three friends and share a selection link; synchronized playback is not established. [S3][s3] [S17][s17] |
+| LOCALIZATION anime-title display | No preference entitlement in comparison | English, Romaji or Japanese names across lists | Included | PRO guide calls the control “VIP settings”; table marks both paid tiers. This is title display, not audio/subtitles or interface translation. [S2][s2] [S3][s3] |
+| SUPPORT loyalty acceleration | 20 active days/month for claimed PRO reward | Separate Supporter add-on, not bundled | Separate Supporter add-on, not bundled | $1/month adds five loyalty days (15 active days needed); badge/Discord role. No unconditional PRO/VIP access. [S1][s1] [S8][s8] [S18][s18] |
 | MATCH recommendations | Basic catalog/discovery | Personalized recommendations | Included | Paid plan advertises personalized engine; no recommendation-count cap verified. [S2][s2] |
 | FILTER / LIST bulk editing | Basic catalog filters | Sorting, advanced filtering, bulk deletion/rating entry | Included | Exact full filter set needs UI-level verification. [S2][s2] |
 | HISTORY rewatches | No entitlement established | Rewatch sessions/history/progress/stats | Included | Website-only while beta. [S1][s1] |
@@ -274,6 +277,8 @@ These extend the feature-level inventory beyond a generic “advanced filters”
 | IDENTITY / LIST layouts | Table/poster/card views; choose columns; fade watched; saved layouts; clone and clipboard tools | No numeric layout cap or independent per-control paywall supplied. [S16][s16] |
 | LIST sorting | Rank/drop rate/personal score/votes; remaining episodes/progress; release/next-episode/DVD dates; episode count/runtime | Media-specific applicability; ordinary ordering is separate from automated selection. [S16][s16] |
 
+The October 19 correction pass re-read the comparison and PRO pages, the detailed group-selection guide and current plan page. “Watch with friends” concerns group film selection, not proof of a synchronized player. Its guide advertises room links for nonmembers, but actual guest permissions and privacy were not exercised. The Supporter accelerator remains a support/loyalty mechanism rather than a new functional tier. [S1][s1] [S2][s2] [S3][s3] [S17][s17] [S18][s18]
+
 ### Portability and documentation conflicts
 
 The dedicated backup page provides a **simple CSV backup free for everyone** and a **manual JSON download free once a month**, while automated monthly delivery requires VIP. Its CSV carries the last watched episode and can omit gaps in watched episodes; JSON/API is therefore materially different for faithful migration. The page advertises full-data API export. No purchase or actual download was performed. [S5][s5]
@@ -283,6 +288,7 @@ The dedicated backup page provides a **simple CSV backup free for everyone** and
 | CSV access | Older comparison/PRO docs categorize manual CSV as paid; dedicated backup page says free. [S2][s2] [S3][s3] [S5][s5] | Do not claim basic CSV export is definitely paywalled. Distinguish complete backup and list-feed features. |
 | PRO per-list cap | Comparison page says 1,000; plan page and detailed PRO/VIP docs say 2,000. [S1][s1] [S2][s2] [S3][s3] [S4][s4] | Prefer neither silently: retain both; stronger agreement supports 2,000 as the current advertised value, enforcement untested. |
 | PRO/VIP hierarchy | Comparison prose says PRO includes VIP; its table and detailed plan pages give VIP the superset. [S2][s2] [S3][s3] [S4][s4] | Treat reversed sentence as unresolved editorial error, not a second inverse entitlement model. |
+| Loyalty reward duration | PRO FAQ says a free year after 20 visits; dedicated loyalty guide says a manually claimed month, reset monthly. [S2][s2] [S18][s18] | Preserve the contradiction; activity alone is not verified activation or a guaranteed annual entitlement. |
 | “Unlimited” custom lists | Detailed PRO prose uses unlimited, then gives 30. [S2][s2] | Use the numeric cap, flag incompatible wording. |
 | Import breadth | Older comparison says 14+ general imports; current importer/plan page says 20+ and gates named sources. [S1][s1] [S3][s3] [S12][s12] | Source count is not an entitlement for every import adapter. |
 | Auto versus regular caps | Auto List docs explicitly exempt items and saved filters from limits, while generic plan matrices give custom-list caps. [S15][s15] [S1][s1] | Preserve list type; aggregate accounting remains undocumented. Do not apply regular-list caps to Auto Lists by assumption. |
@@ -504,6 +510,8 @@ Access date for **every row and link below: 2026-10-19**. “Undated” means no
 | S14 | [SIMKL movie filters][s14] | Undated; public Markdown fetched directly. |
 | S15 | [SIMKL Auto Lists][s15] | Undated; public Markdown fetched directly; explicit item/filter-limit exception and future actor/director criteria. |
 | S16 | [SIMKL layouts/views][s16] | Undated; public Markdown fetched directly; controls and sort options, per-control entitlement not established. |
+| S17 | [SIMKL group movie selection][s17] | Detailed primary guide re-read 2026-10-19; no playback or permission test. |
+| S18 | [SIMKL loyalty program][s18] | Primary guide retrieved 2026-10-19; conflicts with PRO FAQ reward duration. |
 | L1 | [Letterboxd web subscriptions][l1] | Undated; 30-day username wording. |
 | L2 | [Letterboxd app subscriptions][l2] | Undated; 90-day wording, cast/crew images, icons/tag editing. |
 | L3 | [Letterboxd US iOS][l3] | Undated price list; US/USD. |
@@ -608,3 +616,6 @@ Access date for **every row and link below: 2026-10-19**. “Undated” means no
 [c1]: https://www.criticker.com/sponsor/
 [c2]: https://www.criticker.com/faq/
 [c3]: https://www.criticker.com/import/
+
+[s17]: https://docs.simkl.org/how-to-use-simkl/core-features/social-and-community/watch-party-with-friends
+[s18]: https://docs.simkl.org/how-to-use-simkl/account-and-billing/special-plans/offers/loyalty-program
