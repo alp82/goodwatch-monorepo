@@ -14,6 +14,11 @@ import {
 import { Spinner } from "~/ui/wait/Spinner"
 import { tmdbFixedImage } from "~/utils/tmdb-image"
 import {
+	tvtimeIntentLine,
+	tvtimeMatchEffect,
+	tvtimeReleaseDate,
+} from "./TvTimeMatchCopy"
+import {
 	type ImportRequestError,
 	WISHLIST_MATCH_MAX_CHANGES,
 	type WishlistMatchCandidate,
@@ -62,6 +67,17 @@ const entryName = (group: WishlistMatchGroup) =>
 	fileTitle(group) || "This entry"
 const evidenceOf = (group: WishlistMatchGroup) =>
 	group.item.wishlistOriginal?.wishlistEvidence ?? group.item.wishlistEvidence
+/** An entry the server lets the member match to a movie only, such as a movie named in TV Time's own export. */
+const movieOnly = (group: WishlistMatchGroup) =>
+	group.allowedMediaTypes?.length === 1 &&
+	group.allowedMediaTypes[0] === "movie"
+/** The source's release date for an entry, as a calendar day, when it has one. */
+const releaseDateOf = (group: WishlistMatchGroup) =>
+	tvtimeReleaseDate(
+		group.item.wishlistOriginal?.tvtimeMovie?.releaseDate ??
+			group.evidenceVariants[0]?.releaseDate,
+	)
+const SOURCE_NAMES: Record<string, string> = { tvtime: "TV Time" }
 
 /** The match this preview holds for an entry, from the server. */
 export function savedMatch(group: WishlistMatchGroup): MatchTitle | null {
@@ -115,6 +131,8 @@ export default function WishlistMatchPanel({
 	onDiscard,
 	onUpdate,
 	onBack,
+	suggest = true,
+	note,
 }: {
 	importId: string
 	visible: boolean
@@ -140,11 +158,15 @@ export default function WishlistMatchPanel({
 	onDiscard: () => void
 	onUpdate: () => void
 	onBack: () => void
+	/** False for a source GoodWatch never suggests matches for, so no suggestions are asked for. */
+	suggest?: boolean
+	/** A line under the heading about how this source's matches apply. */
+	note?: string
 }) {
 	const query = useWishlistMatchGroups(importId, true)
 	const loaded = query.data?.pages.flatMap((page) => page.groups) ?? []
 	// Suggestions cover the loaded pages only. An entry a Change opened from elsewhere is matched by hand.
-	const suggestions = useWishlistSuggestions(importId, loaded)
+	const suggestions = useWishlistSuggestions(importId, suggest ? loaded : [])
 	const total = query.data?.pages.at(-1)?.total ?? 0
 	// Entries opened by a Change before their page loaded. A page that brings one in takes its place.
 	const [extras, setExtras] = useState<WishlistMatchGroup[]>([])
@@ -313,6 +335,7 @@ export default function WishlistMatchPanel({
 			>
 				Review matches
 			</h4>
+			{note && <p className="text-sm text-gray-300">{note}</p>}
 			<p className="sr-only" aria-live="polite">
 				{said}
 			</p>
@@ -715,16 +738,23 @@ function Entry({
 	const name = fileTitle(group)
 	const evidence = evidenceOf(group)
 	const year = group.item.wishlistOriginal?.year ?? group.item.year
-	const line = [
-		year,
-		evidence?.mediaType === "unknown" ? "Type unknown" : null,
-		evidence?.sourceId ? `ID ${evidence.sourceId}` : null,
-		group.entryCount > 1
-			? `Listed ${formatCount(group.entryCount)} times`
-			: null,
-	]
+	// A movie-only entry says what the source has for it: its release date, watches, and For later.
+	const movie = movieOnly(group)
+	const line = (
+		movie
+			? [releaseDateOf(group) ?? year, tvtimeIntentLine(group.intentCounts)]
+			: [
+					year,
+					evidence?.mediaType === "unknown" ? "Type unknown" : null,
+					evidence?.sourceId ? `ID ${evidence.sourceId}` : null,
+					group.entryCount > 1
+						? `Listed ${formatCount(group.entryCount)} times`
+						: null,
+				]
+	)
 		.filter(Boolean)
 		.join(" · ")
+	const effect = movie ? tvtimeMatchEffect(group.intentCounts) : ""
 	const label = name || "this entry"
 	return (
 		<li className="rounded-lg border border-slate-700 bg-gray-950/50 p-3 text-sm">
@@ -769,6 +799,7 @@ function Entry({
 					</p>
 				</div>
 			</div>
+			{effect && <p className="mt-1 text-gray-400">{effect}</p>}
 			{alsoChosen && <p className="text-gray-400">{alsoChosen}</p>}
 			{!open && (
 				<div className="mt-2 flex flex-wrap gap-3">
@@ -867,15 +898,19 @@ function Editor({
 	const evidence = evidenceOf(group)
 	const original = group.item.wishlistOriginal ?? group.item
 	const host = httpsHost(evidence?.sourceUrl)
+	const movie = movieOnly(group)
+	const released = releaseDateOf(group)
 	const id = useId()
 	const [text, setText] = useState(name)
-	const [mediaType, setMediaType] =
-		useState<WishlistMatchSearch["mediaType"]>(null)
+	// A movie-only entry always searches movies; the server refuses a show for it.
+	const [mediaType, setMediaType] = useState<WishlistMatchSearch["mediaType"]>(
+		movie ? "movie" : null,
+	)
 	const [tooShort, setTooShort] = useState(false)
 	// The file's title is searched once when the entry opens; after that, only when the member sends a search.
 	const [search, setSearch] = useState<WishlistMatchSearch | null>(() =>
 		name.length >= 2
-			? { index, query: name.slice(0, 100), mediaType: null }
+			? { index, query: name.slice(0, 100), mediaType: movie ? "movie" : null }
 			: null,
 	)
 	const [picked, setPicked] = useState<string | null>(null)
@@ -897,9 +932,10 @@ function Editor({
 		run(mediaType)
 	}
 	const chosen = candidates.find((item) => titleKey(item) === picked) ?? null
+	const kind = movie ? "movie" : "title"
 	const question = name
-		? `Which GoodWatch title is "${name}"?`
-		: "Which GoodWatch title is this?"
+		? `Which GoodWatch ${kind} is "${name}"?`
+		: `Which GoodWatch ${kind} is this?`
 	return (
 		<div
 			className="mt-3 flex flex-col gap-4"
@@ -918,12 +954,23 @@ function Editor({
 					<dt className="text-gray-400">Year</dt>
 					<dd>{original.year ?? "Not in your file"}</dd>
 					<dt className="text-gray-400">Type</dt>
-					<dd>Not in your file</dd>
+					<dd>{movie ? "Movie" : "Not in your file"}</dd>
+					{released && (
+						<>
+							<dt className="text-gray-400">Released</dt>
+							<dd>{released}</dd>
+						</>
+					)}
 					{evidence?.sourceId && (
 						<>
-							<dt className="text-gray-400">ID</dt>
+							<dt className="text-gray-400">
+								{SOURCE_NAMES[evidence.source]
+									? `${SOURCE_NAMES[evidence.source]} ID`
+									: "ID"}
+							</dt>
 							<dd className="break-words">
-								{evidence.sourceId} ({evidence.source})
+								{evidence.sourceId}
+								{SOURCE_NAMES[evidence.source] ? "" : ` (${evidence.source})`}
 							</dd>
 						</>
 					)}
@@ -943,7 +990,11 @@ function Editor({
 										className="break-words"
 									>
 										{variant.title ? `"${variant.title}"` : "No title"}
-										{variant.year ? ` (${variant.year})` : ""}
+										{tvtimeReleaseDate(variant.releaseDate)
+											? ` (${tvtimeReleaseDate(variant.releaseDate)})`
+											: variant.year
+												? ` (${variant.year})`
+												: ""}
 									</li>
 								))}
 								{group.hasMoreEvidence && <li>Other spellings too</li>}
@@ -981,26 +1032,28 @@ function Editor({
 						className="min-h-11 rounded-md border border-slate-600 bg-slate-950 px-3 text-base text-gray-100"
 					/>
 				</label>
-				<fieldset disabled={disabled}>
-					<legend className="mb-1 text-gray-400">Show</legend>
-					<div className="grid grid-cols-3 gap-2 max-[340px]:grid-cols-1">
-						{TYPES.map((type) => (
-							<label
-								key={type.label}
-								className={`flex min-h-11 cursor-pointer items-center gap-2 rounded-md border px-2 ${mediaType === type.value ? "border-indigo-500 bg-indigo-950/50" : "border-slate-700"}`}
-							>
-								<input
-									type="radio"
-									name={`${id}-type`}
-									checked={mediaType === type.value}
-									onChange={() => setMediaType(type.value)}
-									className="size-4 accent-indigo-500"
-								/>
-								{type.label}
-							</label>
-						))}
-					</div>
-				</fieldset>
+				{!movie && (
+					<fieldset disabled={disabled}>
+						<legend className="mb-1 text-gray-400">Show</legend>
+						<div className="grid grid-cols-3 gap-2 max-[340px]:grid-cols-1">
+							{TYPES.map((type) => (
+								<label
+									key={type.label}
+									className={`flex min-h-11 cursor-pointer items-center gap-2 rounded-md border px-2 ${mediaType === type.value ? "border-indigo-500 bg-indigo-950/50" : "border-slate-700"}`}
+								>
+									<input
+										type="radio"
+										name={`${id}-type`}
+										checked={mediaType === type.value}
+										onChange={() => setMediaType(type.value)}
+										className="size-4 accent-indigo-500"
+									/>
+									{type.label}
+								</label>
+							))}
+						</div>
+					</fieldset>
+				)}
 				<button
 					type="submit"
 					className={`${secondaryButton} self-start`}
@@ -1037,7 +1090,8 @@ function Editor({
 			{search &&
 				query.isSuccess &&
 				candidates.length === 0 &&
-				search.mediaType && (
+				search.mediaType &&
+				!movie && (
 					<button
 						type="button"
 						className={`${textLink} min-h-11 self-start`}

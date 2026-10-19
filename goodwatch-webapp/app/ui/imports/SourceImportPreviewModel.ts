@@ -1,4 +1,8 @@
 import type { ImportKind, ImportOptions } from "~/domain/imports"
+import type { WishlistPreviewUpdate } from "./WishlistImportPreview"
+
+/** Why a new preview replaced the one on screen: the member's matches, or a TV Time rerun of the same file. */
+export type PreviewUpdate = WishlistPreviewUpdate & { rerun?: boolean }
 
 export function sourceImportRequirements(
 	availableWatches: number,

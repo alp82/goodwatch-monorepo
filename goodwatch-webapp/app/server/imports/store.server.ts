@@ -108,6 +108,8 @@ export function summarize(row: ImportRow): ImportSummary {
 		_wishlistMatchCount,
 		_wishlistShowChoiceCount,
 		_wishlistRewatchChoiceCount,
+		_tvtimeLookupLimitCount,
+		_tvtimeLookupUnavailableCount,
 		...kindCounts
 	} = parse<Record<string, number>>(row.kinds, {})
 	return {
@@ -157,6 +159,14 @@ export function summarize(row: ImportRow): ImportSummary {
 								wishlistRewatchChoiceCount: Number(_wishlistRewatchChoiceCount),
 							}
 						: {}),
+				}
+			: {}),
+		...(row.source === "tvtime"
+			? {
+					tvtimeLookupLimitCount: Number(_tvtimeLookupLimitCount ?? 0),
+					tvtimeLookupUnavailableCount: Number(
+						_tvtimeLookupUnavailableCount ?? 0,
+					),
 				}
 			: {}),
 		canUndo:

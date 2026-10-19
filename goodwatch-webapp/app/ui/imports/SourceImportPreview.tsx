@@ -9,11 +9,18 @@ import {
 import { FocusHeading } from "./FocusHeading"
 import { sourceImportCopy } from "./SourceImportCopy"
 import { SourceOutcomeRow } from "./SourceImportCounts"
-import { sourceImportRequirements } from "./SourceImportPreviewModel"
 import {
-	WishlistImportPreview,
-	type WishlistPreviewUpdate,
-} from "./WishlistImportPreview"
+	type PreviewUpdate,
+	sourceImportRequirements,
+} from "./SourceImportPreviewModel"
+import {
+	TvTimeLookupNotices,
+	TvTimeMatchSection,
+	type TvTimeMatching,
+	TvTimeUpdatedNotice,
+	useTvTimeMatching,
+} from "./TvTimePreviewParts"
+import { WishlistImportPreview } from "./WishlistImportPreview"
 import { errorBox, formatCount, primaryButton, secondaryButton } from "./shared"
 
 const KIND_LABELS: Record<ImportKind, string> = {
@@ -40,20 +47,31 @@ type PreviewProps = {
 	error: string | null
 	onConfirm: (options: ImportOptions) => void
 	onBack: () => void
-	/** Wishlist only: a new preview replaced this one on screen. */
-	onPreviewReplaced?: (
-		next: ImportSummary,
-		update: WishlistPreviewUpdate,
-	) => void
-	updated?: WishlistPreviewUpdate
+	/** Wishlist and TV Time: a new preview replaced this one on screen. */
+	onPreviewReplaced?: (next: ImportSummary, update: PreviewUpdate) => void
+	updated?: PreviewUpdate
+	/** TV Time: the file behind this preview, so it can run again. */
+	file?: File
 }
 
 export function SourceImportPreview(props: PreviewProps) {
 	return props.summary.source === "wishlist" ? (
 		<WishlistImportPreview {...props} />
+	) : props.summary.source === "tvtime" ? (
+		<TvTimeImportPreview {...props} />
 	) : (
 		<GeneralImportPreview {...props} />
 	)
+}
+
+/** TV Time keeps the general preview and adds movie matching and lookup notices to it. */
+function TvTimeImportPreview(props: PreviewProps) {
+	const matching = useTvTimeMatching(
+		props.summary,
+		props.confirming,
+		props.onPreviewReplaced,
+	)
+	return <GeneralImportPreview {...props} matching={matching} />
 }
 
 function GeneralImportPreview({
@@ -63,8 +81,13 @@ function GeneralImportPreview({
 	error,
 	onConfirm,
 	onBack,
-}: PreviewProps) {
+	updated,
+	file,
+	matching,
+}: PreviewProps & { matching?: TvTimeMatching }) {
 	const copy = sourceImportCopy(summary.source)
+	const unapplied = !!matching?.unapplied
+	const locked = !!matching?.locked
 	const available = IMPORT_KINDS.filter((kind) => summary.kinds[kind] > 0)
 	const [kinds, setKinds] = useState<ImportKind[]>(available)
 	const [conflictChoice, setConflictChoice] =
@@ -83,7 +106,8 @@ function GeneralImportPreview({
 		kinds,
 		watchDates,
 	)
-	const { importsWatches, canImport } = requirements
+	const { importsWatches } = requirements
+	const canImport = requirements.canImport && !unapplied
 	return (
 		<section className="flex flex-col gap-5">
 			<div className="space-y-2">
@@ -96,6 +120,15 @@ function GeneralImportPreview({
 					. Nothing has been saved yet.
 				</p>
 			</div>
+			{matching && updated && <TvTimeUpdatedNotice update={updated} />}
+			{matching && (
+				<TvTimeLookupNotices
+					summary={summary}
+					matching={matching}
+					file={file}
+					onBack={onBack}
+				/>
+			)}
 			{summary.warnings.length > 0 && (
 				<div
 					className="rounded-lg border border-amber-700 bg-amber-950/50 p-4 text-amber-100"
@@ -138,6 +171,13 @@ function GeneralImportPreview({
 					))}
 				</div>
 			</fieldset>
+			{matching && (
+				<TvTimeMatchSection
+					summary={summary}
+					matching={matching}
+					onBack={onBack}
+				/>
+			)}
 			<div>
 				<h4 className="mb-2 font-semibold text-gray-100">How rows compare</h4>
 				<ul className="divide-y divide-slate-800 rounded-lg border border-slate-700 bg-slate-900/60">
@@ -219,7 +259,14 @@ function GeneralImportPreview({
 					airing. Completion of a part does not mark the whole show Seen.
 				</p>
 			)}
-			{!canImport && (
+			{unapplied && (
+				<p id="source-import-unapplied" className="text-sm text-gray-300">
+					Your matches aren't in this preview yet. Choose Update preview to add
+					them, or Discard changes. Choosing another file or leaving this page
+					discards them.
+				</p>
+			)}
+			{!requirements.canImport && (
 				<p id="source-import-required" className="text-sm text-gray-300">
 					{kinds.length === 0
 						? "Select at least one data type."
@@ -230,8 +277,14 @@ function GeneralImportPreview({
 				<button
 					type="button"
 					className={primaryButton}
-					disabled={!canImport || confirming}
-					aria-describedby={!canImport ? "source-import-required" : undefined}
+					disabled={!canImport || confirming || locked}
+					aria-describedby={
+						!requirements.canImport
+							? "source-import-required"
+							: unapplied
+								? "source-import-unapplied"
+								: undefined
+					}
 					onClick={() =>
 						canImport &&
 						onConfirm({
@@ -246,7 +299,7 @@ function GeneralImportPreview({
 				<button
 					type="button"
 					className={secondaryButton}
-					disabled={confirming}
+					disabled={confirming || locked}
 					onClick={onBack}
 				>
 					{copy.restart}

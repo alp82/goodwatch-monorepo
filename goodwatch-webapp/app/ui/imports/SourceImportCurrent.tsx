@@ -19,7 +19,7 @@ import {
 	useUndoSourceImport,
 } from "./SourceImportHooks"
 import { SourceImportPreview } from "./SourceImportPreview"
-import type { WishlistPreviewUpdate } from "./WishlistImportPreview"
+import type { PreviewUpdate } from "./SourceImportPreviewModel"
 import {
 	dangerButton,
 	errorBox,
@@ -35,18 +35,18 @@ const skippedCount = (summary: ImportSummary) =>
 export function SourceImportCurrent({
 	id,
 	focus,
+	file,
 	onUploadAnother,
 	onPreviewReplaced,
 	updated,
 }: {
 	id: string
 	focus: boolean
+	/** The file behind this preview, when the page still holds it. */
+	file?: File | null
 	onUploadAnother: () => void
-	onPreviewReplaced?: (
-		next: ImportSummary,
-		update: WishlistPreviewUpdate,
-	) => void
-	updated?: WishlistPreviewUpdate
+	onPreviewReplaced?: (next: ImportSummary, update: PreviewUpdate) => void
+	updated?: PreviewUpdate
 }) {
 	const query = useSourceImport(id)
 	const confirm = useConfirmSourceImport(id)
@@ -91,6 +91,7 @@ export function SourceImportCurrent({
 				onBack={onUploadAnother}
 				onPreviewReplaced={onPreviewReplaced}
 				updated={updated}
+				file={file ?? undefined}
 			/>
 		)
 	if (summary.status === "running") {

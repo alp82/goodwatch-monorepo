@@ -551,6 +551,10 @@ export interface ImportSummary {
 	wishlistMatchCount?: number
 	wishlistShowChoiceCount?: number
 	wishlistRewatchChoiceCount?: number
+	/** TV Time rows left unmatched because this preview reached its lookup limit; a rerun can match more. */
+	tvtimeLookupLimitCount?: number
+	/** TV Time rows left unmatched because TMDB's TVDB lookup was unavailable. */
+	tvtimeLookupUnavailableCount?: number
 	canUndo: boolean
 	error: string | null
 	/** The durable direction of a running/failed job, so Resume continues the same operation. */

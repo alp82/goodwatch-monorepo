@@ -901,6 +901,17 @@ export async function createParsedPreview(
 								).size,
 							}
 						: {}),
+					...(source === "tvtime"
+						? {
+								_tvtimeLookupLimitCount: items.filter(
+									(item) =>
+										item.problem?.code === "tvtime_lookup_budget_exhausted",
+								).length,
+								_tvtimeLookupUnavailableCount: items.filter(
+									(item) => item.problem?.code === "tvtime_lookup_unavailable",
+								).length,
+							}
+						: {}),
 				}),
 				hash,
 			],

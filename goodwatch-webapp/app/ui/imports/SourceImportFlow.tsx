@@ -10,9 +10,9 @@ import { PlexConnectPanel } from "./PlexConnectPanel"
 import { sourceImportCopy } from "./SourceImportCopy"
 import { SourceImportCurrent } from "./SourceImportCurrent"
 import { type ImportListResponse, useSourceImports } from "./SourceImportHooks"
+import type { PreviewUpdate } from "./SourceImportPreviewModel"
 import { SourceImportUploadPanel } from "./SourceImportUploadPanel"
 import { TmdbConnectPanel } from "./TmdbConnectPanel"
-import type { WishlistPreviewUpdate } from "./WishlistImportPreview"
 import {
 	card,
 	formatCount,
@@ -58,10 +58,12 @@ export function SourceImportFlow({
 	const [acted, setActed] = useState(!!handoff)
 	// Used once: going back to the upload later doesn't send it again.
 	const [pending, setPending] = useState(handoff)
-	// A wishlist preview the member updated with their matches. The earlier preview isn't deleted, only left.
+	// A preview the member updated with their matches, or ran again. The earlier preview isn't deleted, only left.
 	const [replaced, setReplaced] = useState<
-		(WishlistPreviewUpdate & { id: string }) | null
+		(PreviewUpdate & { id: string }) | null
 	>(null)
+	// The file behind the latest preview, in memory only, so a TV Time preview can run it again.
+	const [file, setFile] = useState<File | null>(null)
 	const shownId =
 		openId ?? (!uploadOpen && latest?.status === "running" ? latest.id : null)
 	useEffect(() => {
@@ -87,6 +89,7 @@ export function SourceImportFlow({
 					key={shownId}
 					id={shownId}
 					focus={acted}
+					file={file}
 					onUploadAnother={upload}
 					onPreviewReplaced={(next, update) => {
 						setReplaced({ id: next.id, ...update })
@@ -138,7 +141,10 @@ export function SourceImportFlow({
 						) : (
 							<SourceImportUploadPanel
 								source={source}
-								onPreview={(summary) => open(summary.id)}
+								onPreview={(summary, chosen) => {
+									setFile(chosen ?? null)
+									open(summary.id)
+								}}
 								handoff={pending}
 							/>
 						))}

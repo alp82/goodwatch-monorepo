@@ -5,9 +5,6 @@ import {
 } from "~/domain/imports"
 
 export function sourceImportCopy(source: ImportSource) {
-	const file = isFileImportSource(source)
-	const data = file ? "export" : `${IMPORT_SOURCE_NAMES[source]} data`
-	const connect = `Connect ${IMPORT_SOURCE_NAMES[source]} again`
 	// A wishlist import reads a file that isn't always an export.
 	if (source === "wishlist")
 		return {
@@ -20,6 +17,20 @@ export function sourceImportCopy(source: ImportSource) {
 			another: "Import another file",
 			newer: "Upload a newer file",
 		}
+	// TV Time's Use the export choice also decides For later titles already Seen in GoodWatch.
+	if (source === "tvtime")
+		return {
+			...general(source),
+			conflictDetail:
+				"Replaces conflicting ratings with the export's, and adds For later titles you've already seen as Want to rewatch.",
+		}
+	return general(source)
+}
+
+function general(source: ImportSource) {
+	const file = isFileImportSource(source)
+	const data = file ? "export" : `${IMPORT_SOURCE_NAMES[source]} data`
+	const connect = `Connect ${IMPORT_SOURCE_NAMES[source]} again`
 	return {
 		data,
 		details: file ? "Check these export details" : "Check these import details",

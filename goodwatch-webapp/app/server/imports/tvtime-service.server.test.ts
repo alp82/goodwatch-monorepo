@@ -965,6 +965,13 @@ test("TV Time receipts distinguish lookup limits from outages identically in par
 				phase,
 			)
 			reasons.push(row.reason ?? "")
+			// The summary counts each kind of lookup failure, so the page can offer a rerun without loading every row.
+			assert.equal(p.tvtimeLookupLimitCount, status === 429 ? 1 : 0)
+			assert.equal(p.tvtimeLookupUnavailableCount, status === 429 ? 0 : 1)
+			assert.equal(
+				(await getImport("member", p.id)).tvtimeLookupLimitCount,
+				status === 429 ? 1 : 0,
+			)
 		}
 		assert.equal(reasons[0], reasons[1])
 		assert.match(

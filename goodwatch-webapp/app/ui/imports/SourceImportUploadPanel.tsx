@@ -22,7 +22,8 @@ const sourceName = (source: FileImportSource) => IMPORT_SOURCE_NAMES[source]
 
 type PanelProps = {
 	source: FileImportSource
-	onPreview: (summary: ImportSummary) => void
+	/** The file goes along, so a TV Time preview can run it again without asking for it. */
+	onPreview: (summary: ImportSummary, file?: File) => void
 	/** A file the page recognized as this source's; it is sent at once. */
 	handoff?: ImportHandoff
 }
@@ -38,7 +39,7 @@ function SingleFileUploadPanel({ source, onPreview, handoff }: PanelProps) {
 	const upload = (file: File) =>
 		preview.mutate(
 			{ source, file },
-			{ onSuccess: (response) => onPreview(response.import) },
+			{ onSuccess: (response) => onPreview(response.import, file) },
 		)
 	const send = async (file?: File) => {
 		if (!file || preview.isPending) return
