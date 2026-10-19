@@ -96,3 +96,149 @@ test("once movies are matched, the section says how many of them, and that the r
 	assert.equal(tvtimeMatchedLine(3, 3), "3")
 	assert.equal(tvtimeMatchedLine(3, undefined), "3")
 })
+
+const {
+	tvtimeProgress,
+	tvtimeSuggestionEvidence,
+	tvtimeSuggestionNote,
+	tvtimeBusyHint,
+} = await import("./TvTimeMatchCopy.ts")
+
+const proof = (
+	title: "primary" | "original" | "alternative" | "translation",
+	date: { basis: "primary" | "country"; country?: string },
+) =>
+	({
+		rule: "tvtime_exact_title_release_date_v1",
+		mediaType: "movie",
+		tmdbId: 862,
+		sourceFingerprint: "f",
+		title: { value: "Toy Story", kind: title, locale: "und" },
+		date: { value: "1995-11-22", ...date },
+		candidateCount: 1,
+		sourceCountry: null,
+		verifiedCandidates: 1,
+		discoveryBound: { pages: 5, candidates: 100 },
+		discoveryComplete: true,
+		pages: 1,
+		verifiedAt: "2026-10-19T00:00:00Z",
+	}) as const
+
+test("a suggestion's evidence reads in plain words: which title and which release date match on TMDB", () => {
+	assert.equal(
+		tvtimeSuggestionEvidence(proof("primary", { basis: "primary" })),
+		"Same title and release date on TMDB",
+	)
+	assert.equal(
+		tvtimeSuggestionEvidence(proof("original", { basis: "primary" })),
+		"Same original title and release date on TMDB",
+	)
+	assert.equal(
+		tvtimeSuggestionEvidence(
+			proof("translation", { basis: "country", country: "DE" }),
+		),
+		"Same translated title and release date in Germany on TMDB",
+	)
+	assert.equal(
+		tvtimeSuggestionEvidence(proof("alternative", { basis: "primary" })),
+		"Same alternative title and release date on TMDB",
+	)
+})
+
+test("a movie without a suggestion says why, and a lookup failure reads differently from no match", () => {
+	assert.equal(
+		tvtimeSuggestionNote("tvtime_suggestion_pending"),
+		"Checking movie suggestions…",
+	)
+	assert.equal(
+		tvtimeSuggestionNote("tvtime_suggestion_no_exact_match"),
+		"No movie on TMDB has this exact title and release date. Find it yourself.",
+	)
+	assert.equal(
+		tvtimeSuggestionNote("tvtime_suggestion_ambiguous"),
+		"More than one movie fits. Choose the right one.",
+	)
+	assert.equal(
+		tvtimeSuggestionNote("tvtime_suggestion_unavailable"),
+		"GoodWatch couldn't check this movie right now. Find it yourself.",
+	)
+	assert.equal(
+		tvtimeSuggestionNote("tvtime_suggestion_rejected"),
+		"You turned down the suggestion.",
+	)
+	assert.equal(tvtimeSuggestionNote(undefined), null)
+	assert.equal(tvtimeSuggestionNote("no_native_id_match"), null)
+})
+
+test("progress names the step and counts checked and matched rows", () => {
+	assert.deepEqual(
+		tvtimeProgress({
+			state: "running",
+			phase: "episodes",
+			total: 8088,
+			processed: 2400,
+			matched: 1900,
+		}),
+		{
+			active: true,
+			step: "Matching shows and episodes…",
+			line: "Checked 2,400 of 8,088 rows. 1,900 matched so far.",
+		},
+	)
+	assert.equal(
+		tvtimeProgress({
+			state: "running",
+			phase: "movies",
+			total: 1,
+			processed: 0,
+			matched: 0,
+		}).step,
+		"Checking movie suggestions…",
+	)
+	assert.equal(
+		tvtimeProgress({
+			state: "queued",
+			phase: "watched_parents",
+			total: 10,
+			processed: 0,
+			matched: 0,
+		}).step,
+		"Waiting to start…",
+	)
+	assert.equal(
+		tvtimeProgress({
+			state: "editing",
+			phase: "publishing",
+			total: 10,
+			processed: 10,
+			matched: 9,
+		}).step,
+		"Putting the preview together…",
+	)
+	assert.equal(
+		tvtimeProgress({
+			state: "completed",
+			phase: "publishing",
+			total: 10,
+			processed: 10,
+			matched: 9,
+		}).active,
+		false,
+	)
+})
+
+test("a busy refusal says when to try again", () => {
+	assert.equal(
+		tvtimeBusyHint("tvtime_resolution_member_busy"),
+		"Open it to follow its progress, or discard it to start again.",
+	)
+	assert.equal(
+		tvtimeBusyHint("tvtime_resolution_global_busy"),
+		"Matching a large export can take about 15 minutes.",
+	)
+	assert.equal(
+		tvtimeBusyHint("tvtime_resolution_busy"),
+		"Try again in a minute.",
+	)
+	assert.equal(tvtimeBusyHint("something_else"), null)
+})

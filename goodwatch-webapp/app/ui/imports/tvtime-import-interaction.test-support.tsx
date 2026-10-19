@@ -36,6 +36,72 @@ import type {
 const PARENT = "00000000-0000-4000-8000-0000000000a1"
 const CHILD = "00000000-0000-4000-8000-0000000000b2"
 const RERUN = "00000000-0000-4000-8000-0000000000c3"
+const BULK = "00000000-0000-4000-8000-0000000000d4"
+const NEXT = "00000000-0000-4000-8000-0000000000e5"
+
+const resolution = (
+	patch: Partial<NonNullable<ImportSummary["resolution"]>> = {},
+): NonNullable<ImportSummary["resolution"]> => ({
+	jobId: "job-1",
+	state: "running",
+	phase: "episodes",
+	total: 8088,
+	processed: 2400,
+	matched: 1900,
+	held: 500,
+	pending: 5688,
+	failedByCode: {},
+	failed: 0,
+	heldByCode: {},
+	attempts: 120,
+	updatedAt: "2026-10-19T10:01:00.000Z",
+	deadline: "2026-10-19T10:30:00.000Z",
+	replacementId: null,
+	...patch,
+})
+const proof = {
+	rule: "tvtime_exact_title_release_date_v1",
+	mediaType: "movie",
+	tmdbId: 862,
+	sourceFingerprint: "f1",
+	title: { value: "Toy Story", kind: "primary", locale: "und" },
+	date: { value: "1995-11-22", basis: "primary" },
+	candidateCount: 1,
+	sourceCountry: null,
+	verifiedCandidates: 1,
+	discoveryBound: { pages: 5, candidates: 100 },
+	discoveryComplete: true,
+	pages: 1,
+	verifiedAt: "2026-10-19T10:00:00.000Z",
+}
+const suggested = {
+	groups: [
+		{
+			representativeIndex: 2,
+			suggestionId: "s1",
+			state: "suggested",
+			proof,
+			proposal: {
+				mediaType: "movie",
+				tmdbId: 862,
+				title: "Toy Story",
+				year: 1995,
+				posterPath: null,
+			},
+		},
+	],
+	total: 1,
+	offset: 0,
+	hasMore: false,
+	nextOffset: null,
+	bulkAccept: {
+		token: "token-1",
+		eligibleCount: 2,
+		previewId: PARENT,
+		generation: 1,
+		expiresAt: "2026-10-19T10:30:00.000Z",
+	},
+}
 
 const summary = (
 	id: string,
@@ -131,7 +197,16 @@ const group: WishlistMatchGroup = {
 type Net = {
 	/** Answers to POST /preview, in order. */
 	previews?: ImportSummary[]
+	/** A refusal to answer POST /preview with instead. */
+	previewRefusal?: { status: number; body: unknown }
+	/** Answers to GET /api/imports/:id, in order; the last one repeats. */
+	summaries?: Record<string, ImportSummary[]>
+	/** The suggestions page to answer. */
+	suggestions?: unknown
+	/** The import list. */
+	list?: ImportSummary[]
 }
+const discarded = new Set<string>()
 let net: Net = {}
 /** Previews the member confirmed; any other preview stays a preview when asked again. */
 const confirmed = new Set<string>()
@@ -163,12 +238,30 @@ globalThis.fetch = (async (input: string, init?: RequestInit) => {
 	})
 	const parsed = new URL(url, "https://goodwatch.app")
 	if (parsed.pathname === "/api/imports/preview") {
+		if (net.previewRefusal)
+			return respond(net.previewRefusal.status, net.previewRefusal.body)
 		const next = net.previews?.shift()
 		if (next) known.set(next.id, next)
 		return next
 			? respond(200, { import: next })
 			: respond(400, { error: "No preview" })
 	}
+	if (parsed.pathname.endsWith("/accept-suggestions")) {
+		const child = summary(BULK, { wishlistUnresolvedMatchCount: 1 })
+		known.set(BULK, child)
+		return respond(201, {
+			import: child,
+			parentImportId: parsed.pathname.split("/")[3],
+			acceptedCount: 2,
+			skippedCount: 0,
+		})
+	}
+	if (parsed.pathname.endsWith("/discard")) {
+		discarded.add(parsed.pathname.split("/")[3])
+		return respond(200, { resolution: { state: "cancelled" } })
+	}
+	if (parsed.pathname.endsWith("/suggestions") && net.suggestions)
+		return respond(200, net.suggestions)
 	if (parsed.pathname.endsWith("/suggestions"))
 		return respond(200, {
 			groups: [
@@ -219,8 +312,19 @@ globalThis.fetch = (async (input: string, init?: RequestInit) => {
 	}
 	if (parsed.pathname.endsWith("/items"))
 		return respond(200, { items: [], total: 0 })
-	if (parsed.pathname === "/api/imports") return respond(200, { imports: [] })
+	if (parsed.pathname === "/api/imports")
+		return respond(200, { imports: net.list ?? [] })
 	const id = /^\/api\/imports\/([^/]+)$/.exec(parsed.pathname)?.[1]
+	if (id && discarded.has(id))
+		return respond(404, {
+			error: "This preview was discarded. Upload the file again.",
+			code: "tvtime_preview_discarded",
+		})
+	const queued = id ? net.summaries?.[id] : undefined
+	if (queued?.length)
+		return respond(200, {
+			import: queued.length > 1 ? queued.shift() : queued[0],
+		})
 	if (id)
 		return respond(200, {
 			import: confirmed.has(id)
@@ -245,13 +349,20 @@ const settle = async (times = 4) => {
 const gdprZip = () =>
 	new File(["PK"], "gdpr-data.zip", { type: "application/zip" })
 
+/** Waits long enough for the preview's 1.5-second progress poll to run. */
+const poll = async () => {
+	await act(async () => new Promise((resolve) => setTimeout(resolve, 1700)))
+	await settle()
+}
+
 async function flow(
-	props: { start?: ImportSummary; handoff?: boolean },
+	props: { start?: ImportSummary; handoff?: boolean; open?: boolean },
 	setup: Net = {},
 ) {
 	net = setup
 	sent = []
 	known.clear()
+	discarded.clear()
 	if (props.start) known.set(props.start.id, props.start)
 	const client = new QueryClient({
 		defaultOptions: { queries: { retry: false } },
@@ -266,8 +377,10 @@ async function flow(
 				{ client },
 				h(SourceImportFlow, {
 					source: "tvtime",
-					initial: { imports: props.start ? [props.start] : [] },
-					initialId: props.start?.id,
+					initial: {
+						imports: setup.list ?? (props.start ? [props.start] : []),
+					},
+					initialId: props.open === false ? undefined : props.start?.id,
 					handoff: props.handoff
 						? {
 								file: gdprZip(),
@@ -361,37 +474,174 @@ const results: Record<string, unknown> = {}
 }
 
 {
+	// A run in progress publishes a replacement, and the page moves to it.
+	const running = summary(PARENT, { resolution: resolution() })
 	const view = await flow(
-		{ handoff: true },
+		{ start: running },
 		{
-			previews: [
-				summary(PARENT, { tvtimeLookupLimitCount: 2400 }),
-				summary(RERUN, { tvtimeLookupLimitCount: 0 }),
-			],
+			summaries: {
+				[PARENT]: [
+					running,
+					summary(PARENT, {
+						resolution: resolution({
+							state: "completed",
+							phase: "publishing",
+							processed: 8088,
+							matched: 5866,
+							pending: 0,
+							replacementId: NEXT,
+						}),
+					}),
+				],
+				[NEXT]: [
+					summary(NEXT, {
+						resolution: resolution({
+							state: "completed",
+							phase: "publishing",
+							processed: 8088,
+							matched: 5866,
+							pending: 0,
+							replacementId: NEXT,
+						}),
+					}),
+				],
+			},
 		},
 	)
-	results.limit = { text: view.text(), buttons: view.buttons() }
-	await view.click("Run the import again")
-	results.rerun = { text: view.text(), sent: view.sent() }
+	results.progress = { text: view.text(), buttons: view.buttons() }
+	await poll()
+	await poll()
+	results.replaced = { text: view.text(), sent: view.sent() }
 	await view.unmount()
 }
 
 {
-	const view = await flow({
-		start: summary(PARENT, { tvtimeLookupLimitCount: 1 }),
-	})
-	results.limitNoFile = { text: view.text(), buttons: view.buttons() }
+	// Early Confirm imports what's matched so far.
+	const running = summary(PARENT, { resolution: resolution() })
+	const view = await flow({ start: running }, { summaries: { [PARENT]: [running] } })
+	await view.pick("Preserve dates")
+	results.early = { text: view.text(), buttons: view.buttons() }
+	await view.click("Import what's matched so far")
+	results.earlyConfirmed = { sent: view.sent() }
 	await view.unmount()
 }
 
 {
-	const view = await flow({
-		start: summary(PARENT, {
-			tvtimeLookupUnavailableCount: 2,
-			wishlistMatchCount: 0,
-		}),
+	// Discarding during a run cancels it, and its later replacement is never followed.
+	const running = summary(PARENT, { resolution: resolution() })
+	const view = await flow(
+		{ start: running },
+		{
+			summaries: {
+				[PARENT]: [
+					running,
+					summary(PARENT, {
+						resolution: resolution({ state: "completed", replacementId: NEXT }),
+					}),
+				],
+			},
+		},
+	)
+	await view.click("Discard and choose another file")
+	await poll()
+	results.discarded = { text: view.text(), sent: view.sent() }
+	await view.unmount()
+}
+
+{
+	// Matches not yet sent hold back a replacement until the member loads it.
+	const view = await flow(
+		{ start: summary(PARENT, { resolution: resolution() }) },
+		{
+			summaries: {
+				[PARENT]: [
+					summary(PARENT, { resolution: resolution() }),
+					summary(PARENT, {
+						resolution: resolution({ state: "completed", replacementId: NEXT }),
+					}),
+				],
+			},
+		},
+	)
+	await view.click("Match movies")
+	await view.click("Find a match")
+	await view.pick("Toy Story")
+	await view.click("Use this match")
+	await poll()
+	await poll()
+	results.held = { text: view.text(), buttons: view.buttons(), sent: view.sent() }
+	await view.unmount()
+}
+
+{
+	// Suggestions: evidence in plain words, Accept all, and Reject.
+	const done = summary(PARENT, {
+		resolution: resolution({ state: "completed", pending: 0 }),
 	})
-	results.outage = { text: view.text(), buttons: view.buttons() }
+	const view = await flow(
+		{ start: done },
+		{ summaries: { [PARENT]: [done] }, suggestions: suggested },
+	)
+	await view.click("Match movies")
+	results.suggested = { text: view.text(), buttons: view.buttons(), sent: view.sent() }
+	await view.click("Accept all 2 suggestions")
+	results.bulk = { text: view.text(), sent: view.sent() }
+	await view.unmount()
+}
+
+{
+	const done = summary(PARENT, {
+		resolution: resolution({ state: "completed", pending: 0 }),
+	})
+	const view = await flow(
+		{ start: done },
+		{ summaries: { [PARENT]: [done] }, suggestions: suggested },
+	)
+	await view.click("Match movies")
+	await view.click("Reject")
+	results.rejected = { text: view.text() }
+	await view.click("Update preview")
+	results.rejectSent = { sent: view.sent() }
+	await view.unmount()
+}
+
+{
+	// Busy refusals say so, and when to try again.
+	for (const [name, code, error] of [
+		["busyGlobal", "tvtime_resolution_global_busy", "Two imports are already matching. Try again after one finishes."],
+		["busyMember", "tvtime_resolution_member_busy", "You already have an import matching. Wait for it to finish or discard it."],
+	] as const) {
+		const matching = summary(RERUN, { createdAt: "2026-10-19T09:00:00.000Z" })
+		const view = await flow(
+			{ handoff: true },
+			{
+				previewRefusal: { status: 409, body: { error, code } },
+				list: name === "busyMember" ? [matching] : [],
+			},
+		)
+		results[name] = { text: view.text(), buttons: view.buttons() }
+		await view.unmount()
+	}
+}
+
+{
+	// Coming back: an unconfirmed TV Time preview opens again.
+	const running = summary(PARENT, { resolution: resolution() })
+	const view = await flow(
+		{ start: running, open: false },
+		{ list: [running], summaries: { [PARENT]: [running] } },
+	)
+	results.resumed = { text: view.text() }
+	await view.unmount()
+}
+
+{
+	const limited = summary(PARENT, {
+		tvtimeLookupLimitCount: 3,
+		resolution: resolution({ state: "limited", pending: 0 }),
+	})
+	const view = await flow({ start: limited }, { summaries: { [PARENT]: [limited] } })
+	results.limited = { text: view.text(), buttons: view.buttons() }
 	await view.unmount()
 }
 
@@ -399,7 +649,7 @@ const results: Record<string, unknown> = {}
 	const view = await flow({
 		start: summary(PARENT, { tvtimeLookupUnavailableCount: 2 }),
 	})
-	results.outageWithMatches = { text: view.text(), buttons: view.buttons() }
+	results.outage = { text: view.text(), buttons: view.buttons() }
 	await view.unmount()
 }
 

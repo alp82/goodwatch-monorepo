@@ -2,7 +2,11 @@
 // TV Time's own export names movies without a catalog ID, so the member picks the GoodWatch movie; the server groups a
 // movie's rows and counts them by kind (`intentCounts`). The lookup strings repeat the server's row reasons
 // (app/server/imports/tvdb-lookup.server.ts), so the box and the rows say the same.
-import type { ImportKind } from "~/domain/imports"
+import type {
+	ImportKind,
+	TvtimeSuggestionProof,
+	WishlistSuggestionReason,
+} from "~/domain/imports"
 import { formatCount } from "./shared"
 
 type IntentCounts = Partial<Record<ImportKind, number>> | undefined
@@ -99,3 +103,86 @@ export const tvtimeRowsLeft = (count: number) =>
 	count === 1
 		? "1 row isn't matched yet."
 		: `${formatCount(count)} rows aren't matched yet.`
+
+const REGION = new Intl.DisplayNames(["en"], { type: "region" })
+const regionName = (code: string | undefined) => {
+	if (!code) return null
+	try {
+		return REGION.of(code.toUpperCase()) ?? null
+	} catch {
+		return null
+	}
+}
+const TITLE_KIND: Record<TvtimeSuggestionProof["title"]["kind"], string> = {
+	primary: "title",
+	original: "original title",
+	alternative: "alternative title",
+	translation: "translated title",
+}
+
+/** What a suggestion rests on, in plain words: "Same title and release date on TMDB". */
+export function tvtimeSuggestionEvidence(proof: TvtimeSuggestionProof) {
+	const country =
+		proof.date.basis === "country" ? regionName(proof.date.country) : null
+	return `Same ${TITLE_KIND[proof.title.kind]} and release date${country ? ` in ${country}` : ""} on TMDB`
+}
+
+const SUGGESTION_NOTES: Partial<Record<WishlistSuggestionReason, string>> = {
+	tvtime_suggestion_pending: "Checking movie suggestions…",
+	tvtime_suggestion_no_exact_match:
+		"No movie on TMDB has this exact title and release date. Find it yourself.",
+	tvtime_suggestion_ambiguous:
+		"More than one movie fits. Choose the right one.",
+	tvtime_suggestion_search_incomplete:
+		"Too many movies share this title to suggest one. Find it yourself.",
+	tvtime_suggestion_catalog_missing:
+		"The movie that fits isn't in GoodWatch yet. Find another match or leave it.",
+	tvtime_suggestion_unavailable:
+		"GoodWatch couldn't check this movie right now. Find it yourself.",
+	tvtime_suggestion_rejected: "You turned down the suggestion.",
+	tvtime_lookup_budget_exhausted:
+		"Matching stopped before this movie. Find it yourself.",
+	conflicting_source_evidence:
+		"Your export has different details for this movie. Find it yourself.",
+}
+
+/** Why a TV Time movie has no suggestion, or null for a reason this copy doesn't cover. */
+export const tvtimeSuggestionNote = (reason: string | undefined) =>
+	(reason && SUGGESTION_NOTES[reason as WishlistSuggestionReason]) || null
+
+const STEPS: Record<string, string> = {
+	watched_parents: "Matching shows and episodes…",
+	episodes: "Matching shows and episodes…",
+	other_parents: "Matching shows and episodes…",
+	movies: "Checking movie suggestions…",
+	publishing: "Putting the preview together…",
+}
+
+/** Where a background run stands: whether it's still going, its step, and a line of counts. */
+export function tvtimeProgress(resolution: {
+	state: string
+	phase: string
+	total: number
+	processed: number
+	matched: number
+}) {
+	const active = ["queued", "running", "editing"].includes(resolution.state)
+	return {
+		active,
+		step:
+			resolution.state === "queued"
+				? "Waiting to start…"
+				: (STEPS[resolution.phase] ?? "Matching your titles…"),
+		line: `Checked ${formatCount(resolution.processed)} of ${formatCount(resolution.total)} rows. ${formatCount(resolution.matched)} matched so far.`,
+	}
+}
+
+/** When to try again after the server refused to start matching. */
+export function tvtimeBusyHint(code: string | null | undefined) {
+	if (code === "tvtime_resolution_member_busy")
+		return "Open it to follow its progress, or discard it to start again."
+	if (code === "tvtime_resolution_global_busy")
+		return "Matching a large export can take about 15 minutes."
+	if (code === "tvtime_resolution_busy") return "Try again in a minute."
+	return null
+}
