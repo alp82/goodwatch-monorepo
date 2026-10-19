@@ -36735,5 +36735,25 @@
       "wetrakr"
     ],
     "rule": "All identities are discoverable regardless of eligibility. No eligible mapped row is not evidence of no paid features. Entitlement predicates are per record and per offer, never transitive through a multi-product row."
+  },
+  "editorial_popularity": {
+    "preset_value": "__popular__",
+    "preset_label": "Most popular competitors",
+    "sort_value": "popular",
+    "sort_label": "Most popular first",
+    "ordered_product_ids": [
+      "imdb",
+      "justwatch",
+      "letterboxd",
+      "trakt",
+      "reelgood",
+      "playpilot",
+      "simkl",
+      "moviebase",
+      "showly",
+      "serializd"
+    ],
+    "basis": "Editorial mainstream shortlist for convenient comparison, ordered by editorial judgment. Not measured traffic, market share or a verified popularity ranking.",
+    "scope_rule": "Only each member’s documented eligible consumer paid components contribute. Free, unallocated and excluded/professional components never acquire eligibility through this preset."
   }
 }
