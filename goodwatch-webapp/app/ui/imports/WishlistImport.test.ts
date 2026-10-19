@@ -746,3 +746,38 @@ test("matching groups only label originally unknown types as Type unknown", () =
 	assert.doesNotMatch(matching.knownType_show.text, /Type unknown/)
 	assert.match(matching.opened.text, /Type unknown/)
 })
+
+test("a season choice offers Want to See the show unchecked without describing it as Seen", () => {
+	const page = text(rendered.seasonChoice)
+	assert.match(page, /Want to See the show/)
+	assert.doesNotMatch(page, /already seen|Seen in GoodWatch/)
+	assert.match(rendered.seasonChoice, /<input type="checkbox"[^>]*>/)
+	assert.doesNotMatch(
+		rendered.seasonChoice,
+		/<input type="checkbox"[^>]*checked/,
+	)
+	assert.match(
+		rendered.seasonChoice,
+		/<button type="button"[^>]*disabled=""[^>]*>Add to Want to See/,
+	)
+})
+test("source-Seen evidence offers rewatch without claiming GoodWatch has a Seen status", () => {
+	const page = text(rendered.sourceSeen)
+	assert.match(page, /marked Seen in GoodWatch or in this file/)
+	assert.match(page, /Add it as Want to rewatch/)
+	assert.match(page, /Leave off Wishlist/)
+	assert.doesNotMatch(page, /Leave it as Seen|Seen in GoodWatch 1/)
+})
+
+test("confirming a whole-show choice does not also opt into rewatch", () => {
+	const confirms = matching.showChoiceConfirmed.sent.filter((item) =>
+		item.url.endsWith("/confirm"),
+	)
+	assert.equal(confirms.length, 1)
+	assert.deepEqual(confirms[0].body, {
+		kinds: ["want"],
+		conflictChoice: "keep",
+		watchDates: "preserve",
+		wishlistShows: true,
+	})
+})

@@ -31,6 +31,7 @@ export function SourceOutcomeRow({
 	importId,
 	outcome,
 	count,
+	labelOverride,
 	wishlist = false,
 	onChangeMatch,
 	matchLocked = false,
@@ -38,6 +39,7 @@ export function SourceOutcomeRow({
 	importId: string
 	outcome: ImportOutcome
 	count: number
+	labelOverride?: string
 	wishlist?: boolean
 	/** Opens the matching panel at a row the member matched, in a wishlist preview. */
 	onChangeMatch?: (index: number) => void
@@ -46,9 +48,9 @@ export function SourceOutcomeRow({
 }) {
 	const [open, setOpen] = useState(false)
 	const panelId = useId()
-	const label = (wishlist ? WISHLIST_OUTCOME_LABELS : SOURCE_OUTCOME_LABELS)[
-		outcome
-	]
+	const label =
+		labelOverride ??
+		(wishlist ? WISHLIST_OUTCOME_LABELS : SOURCE_OUTCOME_LABELS)[outcome]
 	return (
 		<li>
 			<button
@@ -185,13 +187,15 @@ export function SourceItem({
 			<MatchedItem item={item} onChange={onChangeMatch} locked={matchLocked} />
 		)
 	const location =
-		item.episode != null
-			? `S${item.season ?? "?"} E${item.episode}`
-			: wishlist && item.wishlistEvidence?.mediaType === "unknown"
-				? "Type unknown"
-				: item.mediaType === "show"
-					? "Show"
-					: "Movie"
+		wishlist && item.wishlistEvidence?.mediaType === "season"
+			? `S${item.season ?? "?"}`
+			: item.episode != null
+				? `S${item.season ?? "?"} E${item.episode}`
+				: wishlist && item.wishlistEvidence?.mediaType === "unknown"
+					? "Type unknown"
+					: item.mediaType === "show"
+						? "Show"
+						: "Movie"
 	const search = wishlist && item.outcome === "unmatched" && item.title.trim()
 	const value = item.showStatus
 		? IMPORT_SHOW_STATUS_LABELS[item.showStatus]

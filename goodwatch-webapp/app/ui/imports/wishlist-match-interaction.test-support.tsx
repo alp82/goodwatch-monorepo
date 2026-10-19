@@ -494,6 +494,13 @@ async function flow(start: ImportSummary, setup: Net) {
 			const target = button(name)
 			await act(async () => target.click())
 		},
+		toggleShowChoice: async () => {
+			const target = container.querySelector(
+				'input[type="checkbox"]',
+			) as unknown as HTMLInputElement
+			await act(async () => target.click())
+			await settle()
+		},
 		pick: async (label: string) => {
 			const target = radio(label)
 			await act(async () => target.click())
@@ -1199,6 +1206,21 @@ for (const mediaType of ["movie", "show"] as const) {
 	await view.click("Review matches")
 	await settle(5)
 	results[`knownType_${mediaType}`] = snap(view)
+	await view.unmount()
+}
+
+// The whole-show conversion stays independent of the choice about Seen titles.
+{
+	const parent = {
+		...summary(PARENT, { conflict: 2 }, 0),
+		wishlistShowChoiceCount: 1,
+		wishlistRewatchChoiceCount: 1,
+	}
+	const view = await flow(parent, { groups: [], resolve: [] })
+	results.showChoiceBefore = snap(view)
+	await view.toggleShowChoice()
+	await view.click("Add to Want to See")
+	results.showChoiceConfirmed = snap(view)
 	await view.unmount()
 }
 
