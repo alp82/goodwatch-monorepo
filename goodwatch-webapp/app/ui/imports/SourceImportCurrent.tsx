@@ -19,7 +19,10 @@ import {
 	useUndoSourceImport,
 } from "./SourceImportHooks"
 import { SourceImportPreview } from "./SourceImportPreview"
-import type { PreviewUpdate } from "./SourceImportPreviewModel"
+import type {
+	PreviewUpdate,
+	SourceImportChoices,
+} from "./SourceImportPreviewModel"
 import {
 	dangerButton,
 	errorBox,
@@ -38,12 +41,16 @@ export function SourceImportCurrent({
 	onUploadAnother,
 	onPreviewReplaced,
 	updated,
+	initialChoices,
+	onChoicesChange,
 }: {
 	id: string
 	focus: boolean
 	onUploadAnother: () => void
 	onPreviewReplaced?: (next: ImportSummary, update: PreviewUpdate) => void
 	updated?: PreviewUpdate
+	initialChoices?: SourceImportChoices
+	onChoicesChange?: (choices: SourceImportChoices) => void
 }) {
 	const query = useSourceImport(id)
 	const confirm = useConfirmSourceImport(id)
@@ -88,6 +95,8 @@ export function SourceImportCurrent({
 				onBack={onUploadAnother}
 				onPreviewReplaced={onPreviewReplaced}
 				updated={updated}
+				initialChoices={initialChoices}
+				onChoicesChange={onChoicesChange}
 			/>
 		)
 	if (summary.status === "running") {

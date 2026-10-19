@@ -11,6 +11,7 @@ import { sourceImportCopy } from "./SourceImportCopy"
 import { SourceOutcomeRow } from "./SourceImportCounts"
 import {
 	type PreviewUpdate,
+	type SourceImportChoices,
 	sourceImportRequirements,
 } from "./SourceImportPreviewModel"
 import { tvtimeProgress } from "./TvTimeMatchCopy"
@@ -51,6 +52,8 @@ type PreviewProps = {
 	/** Wishlist and TV Time: a new preview replaced this one on screen. */
 	onPreviewReplaced?: (next: ImportSummary, update: PreviewUpdate) => void
 	updated?: PreviewUpdate
+	initialChoices?: SourceImportChoices
+	onChoicesChange?: (choices: SourceImportChoices) => void
 }
 
 export function SourceImportPreview(props: PreviewProps) {
@@ -82,6 +85,8 @@ function GeneralImportPreview({
 	onBack,
 	updated,
 	matching,
+	initialChoices,
+	onChoicesChange,
 }: PreviewProps & { matching?: TvTimeMatching }) {
 	const copy = sourceImportCopy(summary.source)
 	const unapplied = !!matching?.unapplied
@@ -92,18 +97,26 @@ function GeneralImportPreview({
 		tvtimeProgress(summary.resolution).active
 	const back = matching ? () => matching.discardPreview(onBack) : onBack
 	const available = IMPORT_KINDS.filter((kind) => summary.kinds[kind] > 0)
-	const [kinds, setKinds] = useState<ImportKind[]>(available)
-	const [conflictChoice, setConflictChoice] =
-		useState<ImportOptions["conflictChoice"]>("keep")
-	const [watchDates, setWatchDates] = useState<
-		ImportOptions["watchDates"] | null
-	>(null)
+	const [choices, setChoices] = useState<SourceImportChoices>(
+		() =>
+			initialChoices ?? {
+				kinds: available,
+				conflictChoice: "keep",
+				watchDates: null,
+			},
+	)
+	const { kinds, conflictChoice, watchDates } = choices
+	const choose = (next: SourceImportChoices) => {
+		setChoices(next)
+		onChoicesChange?.(next)
+	}
 	const toggle = (kind: ImportKind) =>
-		setKinds((current) =>
-			current.includes(kind)
-				? current.filter((item) => item !== kind)
-				: [...current, kind],
-		)
+		choose({
+			...choices,
+			kinds: kinds.includes(kind)
+				? kinds.filter((item) => item !== kind)
+				: [...kinds, kind],
+		})
 	const requirements = sourceImportRequirements(
 		summary.kinds.watch,
 		kinds,
@@ -204,14 +217,14 @@ function GeneralImportPreview({
 				<Radio
 					name="source-conflict"
 					checked={conflictChoice === "keep"}
-					onChange={() => setConflictChoice("keep")}
+					onChange={() => choose({ ...choices, conflictChoice: "keep" })}
 					label="Keep my GoodWatch changes"
 					detail="Keeps ratings and reviews you already changed in GoodWatch."
 				/>
 				<Radio
 					name="source-conflict"
 					checked={conflictChoice === "source"}
-					onChange={() => setConflictChoice("source")}
+					onChange={() => choose({ ...choices, conflictChoice: "source" })}
 					label={copy.conflict}
 					detail={copy.conflictDetail}
 				/>
@@ -228,14 +241,14 @@ function GeneralImportPreview({
 					<Radio
 						name="watch-dates"
 						checked={watchDates === "preserve"}
-						onChange={() => setWatchDates("preserve")}
+						onChange={() => choose({ ...choices, watchDates: "preserve" })}
 						label={`Preserve dates from the ${copy.data}`}
 						detail={copy.watchDates}
 					/>
 					<Radio
 						name="watch-dates"
 						checked={watchDates === "unknown"}
-						onChange={() => setWatchDates("unknown")}
+						onChange={() => choose({ ...choices, watchDates: "unknown" })}
 						label="Import watches with unknown dates"
 						detail="Imports the watches but stores no date for them."
 					/>

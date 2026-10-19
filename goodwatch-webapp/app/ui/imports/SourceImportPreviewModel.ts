@@ -1,6 +1,13 @@
 import type { ImportKind, ImportOptions } from "~/domain/imports"
 import type { WishlistPreviewUpdate } from "./WishlistImportPreview"
 
+/** In-memory member choices shared only by replacements of the same TV Time preview. */
+export type SourceImportChoices = {
+	kinds: ImportKind[]
+	conflictChoice: ImportOptions["conflictChoice"]
+	watchDates: ImportOptions["watchDates"] | null
+}
+
 /** Why a new preview replaced the one on screen: the member's matches, accepted suggestions, or background matching. */
 export type PreviewUpdate = WishlistPreviewUpdate & {
 	background?: boolean

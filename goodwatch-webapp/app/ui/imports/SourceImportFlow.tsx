@@ -10,7 +10,10 @@ import { PlexConnectPanel } from "./PlexConnectPanel"
 import { sourceImportCopy } from "./SourceImportCopy"
 import { SourceImportCurrent } from "./SourceImportCurrent"
 import { type ImportListResponse, useSourceImports } from "./SourceImportHooks"
-import type { PreviewUpdate } from "./SourceImportPreviewModel"
+import type {
+	PreviewUpdate,
+	SourceImportChoices,
+} from "./SourceImportPreviewModel"
 import { SourceImportUploadPanel } from "./SourceImportUploadPanel"
 import { TmdbConnectPanel } from "./TmdbConnectPanel"
 import {
@@ -70,18 +73,21 @@ export function SourceImportFlow({
 	const [replaced, setReplaced] = useState<
 		(PreviewUpdate & { id: string }) | null
 	>(null)
+	const [previewChoices, setPreviewChoices] = useState<SourceImportChoices>()
 	const shownId =
 		openId ?? (!uploadOpen && latest?.status === "running" ? latest.id : null)
 	useEffect(() => {
 		if (!openId && shownId) setOpenId(shownId)
 	}, [openId, shownId])
-	const open = (id: string) => {
+	const open = (id: string, preserveChoices = false) => {
+		if (!preserveChoices) setPreviewChoices(undefined)
 		setActed(true)
 		setPending(undefined)
 		setUploadOpen(false)
 		setOpenId(id)
 	}
 	const upload = () => {
+		setPreviewChoices(undefined)
 		setActed(true)
 		setPending(undefined)
 		setOpenId(null)
@@ -95,10 +101,12 @@ export function SourceImportFlow({
 					key={shownId}
 					id={shownId}
 					focus={acted}
+					initialChoices={source === "tvtime" ? previewChoices : undefined}
+					onChoicesChange={source === "tvtime" ? setPreviewChoices : undefined}
 					onUploadAnother={upload}
 					onPreviewReplaced={(next, update) => {
 						setReplaced({ id: next.id, ...update })
-						open(next.id)
+						open(next.id, true)
 					}}
 					updated={replaced?.id === shownId ? replaced : undefined}
 				/>

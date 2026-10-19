@@ -7,6 +7,7 @@ type Run = {
 	text: string
 	sent: Sent[]
 	buttons: string[]
+	checked: string[]
 	radios: string[]
 	startDisabled: boolean
 	bulkDisabled: boolean
@@ -283,5 +284,111 @@ test("a failed discard keeps the preview open and offers the discard again", () 
 	assert.match(runs.discardFailed.text, /Checked 2,400 of 8,088 rows/)
 	assert.ok(
 		runs.discardFailed.buttons.includes("Discard and choose another file"),
+	)
+})
+
+test("Update preview rebases pending movie choices onto the published preview instead of submitting the old ID", () => {
+	assert.match(runs.heldUpdated.text, /Updated with your matches/)
+	assert.doesNotMatch(
+		runs.heldUpdated.text,
+		/This preview has been replaced. Review the latest preview/,
+	)
+	assert.deepEqual(
+		runs.heldUpdated.sent.filter((item) => item.url.endsWith("/resolve")),
+		[
+			{
+				method: "POST",
+				url: `/api/imports/${NEXT}/resolve`,
+				body: {
+					choices: [{ index: 2, target: { mediaType: "movie", tmdbId: 862 } }],
+				},
+			},
+		],
+	)
+})
+
+test("background and manual replacements keep excluded kinds, conflict choice and the explicit watch-date choice", () => {
+	for (const run of [runs.replaced, runs.child]) {
+		assert.ok(
+			!run.checked.some((label) => label.startsWith("Want to See")),
+			"Excluded Want to See must stay excluded",
+		)
+		assert.ok(
+			run.checked.some((label) => label.startsWith("Use the export instead")),
+			"Keep the conflict choice",
+		)
+		assert.ok(
+			run.checked.some((label) =>
+				label.startsWith("Preserve dates from the export"),
+			),
+			"Keep the explicit date choice",
+		)
+	}
+	const confirms = runs.replacedConfirmed.sent.filter((item) =>
+		item.url.endsWith("/confirm"),
+	)
+	assert.deepEqual(confirms, [
+		{
+			method: "POST",
+			url: `/api/imports/${NEXT}/confirm`,
+			body: {
+				kinds: ["watch", "show_status"],
+				conflictChoice: "source",
+				watchDates: "preserve",
+			},
+		},
+	])
+})
+
+test("a publication race retries the same manual or rejection choices against the fresh preview", () => {
+	for (const mode of ["manual", "reject"]) {
+		const run = runs[`publicationRace${mode}`]
+		assert.match(run.text, /Updated with your matches/)
+		assert.deepEqual(
+			run.sent.filter((item) => item.url.endsWith("/resolve")),
+			[PARENT, NEXT].map((id) => ({
+				method: "POST",
+				url: `/api/imports/${id}/resolve`,
+				body: {
+					choices: [
+						{
+							index: 2,
+							target:
+								mode === "manual" ? { mediaType: "movie", tmdbId: 862 } : null,
+						},
+					],
+				},
+			})),
+		)
+	}
+})
+
+test("bulk replacement preserves unknown dates and excluded kinds, while a new file starts with fresh choices", () => {
+	assert.ok(!runs.bulk.checked.some((label) => label.startsWith("Want to See")))
+	assert.ok(
+		runs.bulk.checked.some((label) =>
+			label.startsWith("Use the export instead"),
+		),
+	)
+	assert.ok(
+		runs.bulk.checked.some((label) =>
+			label.startsWith("Import watches with unknown dates"),
+		),
+	)
+	assert.match(runs.freshFile.text, /Check before you import/)
+	assert.ok(
+		runs.freshFile.checked.some((label) => label.startsWith("Want to See")),
+	)
+	assert.ok(
+		runs.freshFile.checked.some((label) =>
+			label.startsWith("Keep my GoodWatch changes"),
+		),
+	)
+	assert.ok(
+		!runs.freshFile.checked.some(
+			(label) =>
+				label.startsWith("Import watches with unknown dates") ||
+				label.startsWith("Preserve dates"),
+		),
 	)
 })

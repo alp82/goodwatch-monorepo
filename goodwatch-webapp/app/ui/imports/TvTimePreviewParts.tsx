@@ -9,7 +9,7 @@ import {
 	useAcceptTvTimeSuggestions,
 	useDiscardSourceImport,
 	useLoadSourceImport,
-	useResolveWishlistImport,
+	useResolveTvTimeImport,
 } from "./SourceImportHooks"
 import type { PreviewUpdate } from "./SourceImportPreviewModel"
 import {
@@ -34,7 +34,7 @@ export function useTvTimeMatching(
 	onReplaced?: Replace,
 ) {
 	const [draft, setDraft] = useState<MatchDraft>(new Map())
-	const resolve = useResolveWishlistImport(summary.id)
+	const resolve = useResolveTvTimeImport(summary.id)
 	const bulk = useAcceptTvTimeSuggestions(summary.id)
 	const cancel = useDiscardSourceImport(summary.id)
 	const load = useLoadSourceImport()

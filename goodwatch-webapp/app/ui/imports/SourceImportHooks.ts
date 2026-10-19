@@ -362,6 +362,41 @@ export function useResolveWishlistImport(id: string) {
 	})
 }
 
+/** TV Time publication preserves source row indices. Apply the draft to the latest projection of those rows. */
+export function useResolveTvTimeImport(id: string) {
+	const store = useStoreImport()
+	return useMutation<
+		ImportResponse & { parentImportId: string },
+		ImportRequestError,
+		WishlistMatchChange[]
+	>({
+		mutationFn: async (choices) => {
+			for (let attempt = 0; ; attempt++) {
+				// Read the owned family again, even if the last progress poll has not seen publication yet.
+				const current = await request<ImportResponse>(
+					`${API}/${encodeURIComponent(id)}`,
+				)
+				const target = current.import.resolution?.replacementId ?? id
+				try {
+					return await request(
+						`${API}/${encodeURIComponent(target)}/resolve`,
+						post({ choices }),
+					)
+				} catch (error) {
+					// A stale-ID refusal did not accept the choices. Network/unknown failures are never replayed.
+					if (
+						!(error instanceof ImportRequestError) ||
+						error.code !== "tvtime_preview_replaced" ||
+						attempt >= 2
+					)
+						throw error
+				}
+			}
+		},
+		onSuccess: store,
+	})
+}
+
 /** Loads a published replacement only when the member can leave the current preview. */
 export function useLoadSourceImport() {
 	const store = useStoreImport()

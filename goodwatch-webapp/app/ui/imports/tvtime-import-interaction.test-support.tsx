@@ -203,6 +203,8 @@ type Net = {
 	summaries?: Record<string, ImportSummary[]>
 	/** The suggestions page to answer. */
 	suggestions?: unknown
+	/** The backend refuses a parent once this preview has replaced it. */
+	resolveOnly?: string
 	bulkRefusal?: { status: number; body: unknown }
 	discardRefusal?: { status: number; body: unknown }
 	/** The import list. */
@@ -287,6 +289,11 @@ globalThis.fetch = (async (input: string, init?: RequestInit) => {
 			nextOffset: null,
 		})
 	if (parsed.pathname.endsWith("/resolve")) {
+		if (net.resolveOnly && parsed.pathname.split("/")[3] !== net.resolveOnly)
+			return respond(409, {
+				code: "tvtime_preview_replaced",
+				error: "This preview has been replaced. Review the latest preview.",
+			})
 		const child = summary(CHILD, {
 			counts: { ...summary(CHILD).counts, new: 5, unmatched: 2 },
 			wishlistUnresolvedMatchCount: 0,
@@ -435,6 +442,32 @@ async function flow(
 		text: () => (container.textContent ?? "").replace(/\s+/g, " "),
 		sent: () => sent.map((item) => ({ ...item })),
 		buttons: () => visible().map(({ text }) => text),
+		uploadFile: async () => {
+			const input = container.querySelector('input[type="file"]')
+			if (!input) throw new Error("No file input")
+			Object.defineProperty(input, "files", {
+				configurable: true,
+				value: [gdprZip()],
+			})
+			await act(async () =>
+				input.dispatchEvent(new Event("change", { bubbles: true })),
+			)
+			await settle()
+		},
+		checked: () =>
+			all<HTMLInputElement>("input:checked").map(
+				(input) =>
+					input.closest("label")?.textContent?.replace(/\s+/g, " ").trim() ??
+					"",
+			),
+		toggle: async (label: string) => {
+			const input = all<HTMLInputElement>('input[type="checkbox"]').find(
+				(item) => item.closest("label")?.textContent?.startsWith(label),
+			)
+			if (!input) throw new Error(`No checkbox "${label}"`)
+			await act(async () => input.click())
+			await settle()
+		},
 		disabled: (name: string) => button(name).disabled,
 		radios: () =>
 			all<HTMLInputElement>('input[type="radio"]').map(
@@ -461,6 +494,9 @@ const results: Record<string, unknown> = {}
 {
 	const view = await flow({ start: summary(PARENT) })
 	results.closed = { text: view.text(), sent: view.sent() }
+	await view.toggle("Want to See")
+	await view.pick("Use the export instead")
+	await view.pick("Preserve dates")
 	await view.click("Match movies")
 	results.opened = { text: view.text(), sent: view.sent() }
 	await view.click("Find a match")
@@ -477,6 +513,7 @@ const results: Record<string, unknown> = {}
 	}
 	await view.click("Update preview")
 	results.child = {
+		checked: view.checked(),
 		text: view.text(),
 		sent: view.sent(),
 		buttons: view.buttons(),
@@ -523,9 +560,18 @@ const results: Record<string, unknown> = {}
 		},
 	)
 	results.progress = { text: view.text(), buttons: view.buttons() }
+	await view.toggle("Want to See")
+	await view.pick("Use the export instead")
+	await view.pick("Preserve dates")
 	await poll()
 	await poll()
-	results.replaced = { text: view.text(), sent: view.sent() }
+	results.replaced = {
+		text: view.text(),
+		sent: view.sent(),
+		checked: view.checked(),
+	}
+	await view.click("Start import")
+	results.replacedConfirmed = { sent: view.sent() }
 	await view.unmount()
 }
 
@@ -570,6 +616,7 @@ const results: Record<string, unknown> = {}
 	const view = await flow(
 		{ start: summary(PARENT, { resolution: resolution() }) },
 		{
+			resolveOnly: NEXT,
 			summaries: {
 				[PARENT]: [
 					summary(PARENT, { resolution: resolution() }),
@@ -591,6 +638,8 @@ const results: Record<string, unknown> = {}
 		buttons: view.buttons(),
 		sent: view.sent(),
 	}
+	await view.click("Update preview")
+	results.heldUpdated = { text: view.text(), sent: view.sent() }
 	await view.unmount()
 }
 
@@ -601,8 +650,15 @@ const results: Record<string, unknown> = {}
 	})
 	const view = await flow(
 		{ start: done },
-		{ summaries: { [PARENT]: [done] }, suggestions: suggested },
+		{
+			summaries: { [PARENT]: [done] },
+			suggestions: suggested,
+			previews: [summary(RERUN)],
+		},
 	)
+	await view.toggle("Want to See")
+	await view.pick("Use the export instead")
+	await view.pick("Import watches with unknown dates")
 	await view.click("Match movies")
 	results.suggested = {
 		text: view.text(),
@@ -610,7 +666,14 @@ const results: Record<string, unknown> = {}
 		sent: view.sent(),
 	}
 	await view.click("Accept all 2 suggestions")
-	results.bulk = { text: view.text(), sent: view.sent() }
+	results.bulk = {
+		text: view.text(),
+		sent: view.sent(),
+		checked: view.checked(),
+	}
+	await view.click("Discard and choose another file")
+	await view.uploadFile()
+	results.freshFile = { text: view.text(), checked: view.checked() }
 	await view.unmount()
 }
 
@@ -690,6 +753,36 @@ const results: Record<string, unknown> = {}
 	)
 	await view.click("Discard and choose another file")
 	results.discardFailed = { text: view.text(), buttons: view.buttons() }
+	await view.unmount()
+}
+
+// Publication can also win after Update's read, before its resolve request reaches the server.
+for (const mode of ["manual", "reject"] as const) {
+	const running = summary(PARENT, { resolution: resolution() })
+	const view = await flow(
+		{ start: running },
+		{
+			resolveOnly: NEXT,
+			suggestions: mode === "reject" ? suggested : undefined,
+			summaries: {
+				[PARENT]: [
+					running,
+					running,
+					summary(PARENT, {
+						resolution: resolution({ state: "completed", replacementId: NEXT }),
+					}),
+				],
+			},
+		},
+	)
+	await view.click("Match movies")
+	if (mode === "manual") {
+		await view.click("Find a match")
+		await view.pick("Toy Story")
+		await view.click("Use this match")
+	} else await view.click("Reject")
+	await view.click("Update preview")
+	results[`publicationRace${mode}`] = { text: view.text(), sent: view.sent() }
 	await view.unmount()
 }
 
