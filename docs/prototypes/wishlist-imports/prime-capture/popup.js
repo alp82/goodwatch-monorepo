@@ -16,6 +16,7 @@ const MESSAGES = {
   limit_items: 'The capture reached its size limit. You can save what was read so far. It is marked partial.',
   limit_time: 'The capture reached its 15-minute limit. You can save what was read so far. It is marked partial.',
   wrong_page: 'This tab isn\'t showing a Prime Video Watchlist. Open the Watchlist from the Prime Video menu, then try again.',
+  collector_error: 'The capture hit an error and stopped. You can save what was read so far. It is marked partial.',
   invalid_command: 'The capture didn\'t understand that request. Close this popup, open it again, and retry.',
   tab_unreachable: 'This extension can\'t run on this page. Open your Prime Video Watchlist in this tab, then open this popup again.',
   no_response: 'The capture didn\'t answer. Refresh the Prime Video tab and start again.',
@@ -40,7 +41,7 @@ const REASONS = {
 
 const KNOWN_STATES = new Set(['idle', 'capturing', 'stopped', 'cancelled', 'terminated'])
 const el = (id) => document.getElementById(id)
-const ui = Object.fromEntries(['state', 'detail', 'profile-warning', 'counts', 'items', 'structured', 'visible', 'both', 'coverage', 'completeness', 'reasons', 'start', 'stop', 'save', 'cancel', 'saved', 'saved-line', 'code-line', 'code'].map((id) => [id, el(id)]))
+const ui = Object.fromEntries(['state', 'detail', 'profile-warning', 'counts', 'items', 'structured', 'visible', 'both', 'coverage', 'completeness', 'reasons', 'start', 'stop', 'save', 'save-report', 'cancel', 'saved', 'saved-line', 'code-line', 'code'].map((id) => [id, el(id)]))
 
 let tabId = null
 let busy = false
@@ -83,6 +84,8 @@ function render() {
   ui.cancel.disabled = busy
   ui.save.hidden = capturing || files === null
   ui.save.disabled = busy
+  ui['save-report'].hidden = ui.save.hidden
+  ui['save-report'].disabled = busy
   ui.saved.hidden = savedNames === null
   if (savedNames) ui['saved-line'].textContent = `Saved ${savedNames.join(' and ')} to your Downloads folder.`
   const showCode = code !== '' && !['idle', 'capturing', 'stopped', 'cancelled'].includes(code)
@@ -185,12 +188,18 @@ function download(name, value) {
   setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
 
-function saveFiles() {
+function saveFiles(which = 'both') {
   if (files === null) return
   const s = stamp()
-  const names = [`goodwatch-wishlist-prime-video-${s}.json`, `goodwatch-prime-capture-report-${s}.json`]
-  download(names[0], files.envelope)
-  download(names[1], files.report)
+  const names = []
+  if (which !== 'report') {
+    names.push(`goodwatch-wishlist-prime-video-${s}.json`)
+    download(names[names.length - 1], files.envelope)
+  }
+  if (which !== 'wishlist') {
+    names.push(`goodwatch-prime-capture-report-${s}.json`)
+    download(names[names.length - 1], files.report)
+  }
   savedNames = names
 }
 
@@ -219,7 +228,11 @@ ui.start.addEventListener('click', () => {
 ui.stop.addEventListener('click', () => act('stop'))
 ui.cancel.addEventListener('click', () => act('cancel'))
 ui.save.addEventListener('click', () => {
-  saveFiles()
+  saveFiles('wishlist')
+  render()
+})
+ui['save-report'].addEventListener('click', () => {
+  saveFiles('report')
   render()
 })
 document.addEventListener('visibilitychange', syncPolling)

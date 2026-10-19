@@ -15,11 +15,7 @@
 	const MAX_BODY = 8 * 1024 * 1024;
 	const LIST_PATH = /watchlist|mystuff|my-stuff|paginat|getlandingpage|getpage|\/api\//i;
 
-	const redactPath = (pathname) =>
-		pathname
-			.split("/")
-			.map((p) => (/^[A-Za-z0-9]{8,40}$/.test(p) && /\d/.test(p) ? "<id>" : p))
-			.join("/");
+	const redactPath = X.redactPath;
 
 	function report(url, status, text) {
 		let parsed;

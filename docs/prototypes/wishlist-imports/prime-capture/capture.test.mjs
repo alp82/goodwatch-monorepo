@@ -207,7 +207,11 @@ test("profile change discards everything; state-free pages fall back to the head
 	try {
 		const r = w.command("start");
 		assert.equal(r.profileGuard, "dom");
+		// An avatar URL change alone is no evidence (lazy loading, cache-busting).
 		w.document.querySelector('[data-testid="pv-nav-profile-button"] img').setAttribute("src", "/avatar-b.png");
+		await w.flush();
+		assert.equal(w.command("status").state, "capturing");
+		w.document.querySelector('[data-testid="pv-nav-profile-button"]').setAttribute("aria-label", "Profile: Other");
 		await w.flush();
 		const after = w.command("status");
 		assert.equal(after.code, "terminated_profile");
@@ -463,5 +467,155 @@ test("a reload loses the capture: a fresh page reports idle, never a stale file"
 	} finally {
 		fresh.happyDOM.abort();
 		fresh.close();
+	}
+});
+
+// Regressions from the 2026-10-19 review of version 0.1.0.
+
+test("review: a terminal flag on a second Watchlist collection doesn't end the main chain", async () => {
+	const state = hydration({
+		page: { watchlist: { items: [entity(1), entity(2)], hasMoreItems: true }, watchlistRecent: { recentlyAddedItems: [entity(1)], pagination: null } },
+	});
+	const w = world(page({ state, grid: [1, 2] }));
+	try {
+		w.command("start");
+		const r = w.command("stop");
+		assert.notEqual(r.completeness, "complete");
+		assert.ok(r.reasons.includes("continuation_pending"));
+	} finally {
+		w.close();
+	}
+});
+
+test("review: a null paginator is no evidence of the end", () => {
+	const w = new Window({ url: EU });
+	try {
+		w.eval(read("extract.js"));
+		assert.equal(w.__goodwatchPrimeExtract.pagination([{ pagination: null }]).terminal, null);
+	} finally {
+		w.happyDOM.abort();
+		w.close();
+	}
+});
+
+test("review: dotted Amazon IDs, slugs and title keys are redacted in the report", async () => {
+	const odd = { byTitle: { "the-synthetic-movie": { a: 1 }, "Synthetic Movie": { a: 1 }, B0SHORT1: 1, okKey: 1 } };
+	const w = world(page({ state: hydration({ page: viewOutputPage([1], { next: 1, total: 1 }) }), grid: [1] }), EU, {
+		"/region/eu/api/amzn1.dv.gti.00000000-0000-4000-8000-000000000009/watchlist": odd,
+	});
+	try {
+		w.command("start");
+		await w.load("/region/eu/api/amzn1.dv.gti.00000000-0000-4000-8000-000000000009/watchlist");
+		const rep = w.command("stop").report;
+		const text = JSON.stringify(rep);
+		for (const leak of ["amzn1.dv.gti.0", "synthetic-movie", "Synthetic", "B0SHORT1"]) {
+			const at = text.indexOf(leak);
+			assert.equal(at, -1, `${leak} leaks: ${text.slice(Math.max(0, at - 120), at + 40)}`);
+		}
+		assert.ok(text.includes("okKey"));
+		assert.equal(w.window.__goodwatchPrimeExtract.redactPath("/region/eu/api/amzn1.dv.gti.00000000-0000-4000-8000-000000000009/watchlist"), "/region/eu/api/<id>/watchlist");
+		assert.equal(w.window.__goodwatchPrimeExtract.redactPath("/gp/video/detail/B0ABCDEF12/"), "/gp/video/detail/<id>/");
+	} finally {
+		w.close();
+	}
+});
+
+test("review: a card with a play link and a title link is read once with its card-level title", async () => {
+	const html = page({ state: hydration({ page: viewOutputPage([1], { next: 1, total: 1 }) }), grid: [] }).replace(
+		'<ul role="list" data-testid="watchlist-grid" id="grid"></ul>',
+		`<ul role="list" id="grid"><li><article><a href="/region/eu/detail/${token(1)}/ref=play" aria-label="Play Synthetic Movie"><img alt="Synthetic Movie"></a><a href="/region/eu/detail/${token(1)}/" aria-label="Synthetic Movie">Synthetic Movie</a></article></li></ul>`,
+	);
+	const w = world(html);
+	try {
+		w.command("start");
+		const r = w.command("stop");
+		assert.equal(r.completeness, "complete", JSON.stringify(r.reasons));
+		assert.equal(r.report.counts.quarantined, 0);
+		assert.equal(r.report.counts.titleDisagreements, 0);
+	} finally {
+		w.close();
+	}
+});
+
+test("review: a card linking to two different titles is skipped, not merged", async () => {
+	const html = page({ state: hydration({ page: viewOutputPage([1], { next: 1, total: 1 }) }), grid: [1] }).replace(
+		"</ul>",
+		`<li><article data-card-title="Mixed"><a href="/region/eu/detail/${token(2)}/"></a><a href="/region/eu/detail/${token(4)}/"></a></article></li></ul>`,
+	);
+	const w = world(html);
+	try {
+		w.command("start");
+		const r = w.command("stop");
+		assert.ok(r.report.counts.rejectedCardSightings.card_conflicting_links >= 1);
+		assert.deepEqual(r.envelope.items.map((i) => i.title), ["Synthetic Movie"]);
+	} finally {
+		w.close();
+	}
+});
+
+test("review: a Watchlist nested under a profile key is still the Watchlist", async () => {
+	const state = { props: { profiles: { "synthetic-profile-a": { watchlist: { items: [entity(1)], hasMoreItems: false } } }, cerberus: { activeProfile: { id: "p" } } } };
+	const w = world(page({ state, grid: [1] }));
+	try {
+		w.command("start");
+		const r = w.command("stop");
+		assert.equal(r.counts.structured, 1);
+		assert.equal(r.completeness, "complete", JSON.stringify(r.reasons));
+	} finally {
+		w.close();
+	}
+});
+
+test("review: a retried response for the same page isn't a repeated cursor", async () => {
+	const w = world(page({ state: hydration({ page: p1 }), grid: [1, 2] }), EU, routes);
+	try {
+		w.command("start");
+		await w.load("/region/eu/api/watchlist/page2", { show: [3, 4] });
+		await w.load("/region/eu/api/watchlist/page2");
+		await w.load("/region/eu/api/watchlist/page3", { show: [5] });
+		const r = w.command("stop");
+		assert.ok(!r.reasons.includes("cursor_repeated"), JSON.stringify(r.reasons));
+		assert.equal(r.completeness, "complete", JSON.stringify(r.reasons));
+	} finally {
+		w.close();
+	}
+});
+
+test("review: a live entry counted in the reported total isn't a total mismatch", async () => {
+	const w = world(page({ state: hydration({ page: viewOutputPage([1, 70], { next: 2, total: 2 }) }), grid: [1] }));
+	try {
+		w.command("start");
+		const r = w.command("stop");
+		assert.ok(!r.reasons.includes("total_mismatch"), JSON.stringify(r.reasons));
+	} finally {
+		w.close();
+	}
+});
+
+test("review: with a state profile marker, a header label change still discards the capture", async () => {
+	const w = world(page({ state: hydration({ page: p1 }), grid: [1, 2] }));
+	try {
+		assert.equal(w.command("start").profileGuard, "state");
+		w.document.querySelector('[data-testid="pv-nav-profile-button"]').setAttribute("aria-label", "Profile: Other");
+		await w.flush();
+		assert.equal(w.command("status").code, "terminated_profile");
+	} finally {
+		w.close();
+	}
+});
+
+test("review: a later group overlapping the page data better than the chosen one is flagged", async () => {
+	// At Start only a recommendation row is rendered; the grid arrives later.
+	const html = page({ state: hydration({ page: viewOutputPage([1, 2], { next: 2, total: 2 }) }), grid: [] });
+	const w = world(html);
+	try {
+		w.command("start");
+		w.document.getElementById("grid").insertAdjacentHTML("beforeend", card(1) + card(2));
+		await w.flush();
+		const r = w.command("stop");
+		assert.ok(r.reasons.includes("visible_group_contested") || r.reasons.includes("visible_group_unconfirmed"), JSON.stringify(r.reasons));
+		assert.notEqual(r.completeness, "complete");
+	} finally {
+		w.close();
 	}
 });

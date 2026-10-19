@@ -76,7 +76,7 @@ export function page({ state, grid = [], recs = [60, 61, 62], lang = "en-gb", pr
 <main>
 <h1>Watchlist</h1>
 <ul role="list" data-testid="watchlist-grid" id="grid">${grid.map((n) => card(n, { prefix })).join("")}</ul>
-<section aria-label="Customers also watched" id="recs"><ul class="carousel">${recs.map((n) => card(n, { prefix })).join("")}</ul></section>
+<section aria-label="Customers also watched" id="recs"><ul class="carousel" aria-label="Because you watched Synthetic Movie">${recs.map((n) => card(n, { prefix })).join("")}</ul></section>
 </main>
 ${state ? `<script type="text/template">${JSON.stringify(state).replace(/</g, "\\u003c")}</script>` : ""}
 ${script}

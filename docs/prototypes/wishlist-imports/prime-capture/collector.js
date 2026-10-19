@@ -37,6 +37,7 @@
 			interval: null,
 			listener: null,
 			marker: null,
+			domMarker: null,
 			markerSource: "none",
 			entries: new Map(), // key -> entry
 			aliases: new Map(), // gti -> key
@@ -71,18 +72,14 @@
 	const isWatchlist = () =>
 		/(^|\.)(primevideo\.com|amazon\.[a-z.]{2,12})$/.test(location.hostname) && /\/watchlist(\/|$)/i.test(location.pathname);
 
-	function redact(pathname) {
-		return pathname
-			.split("/")
-			.map((p) => (/^[A-Za-z0-9]{8,40}$/.test(p) && /\d/.test(p) ? "<id>" : p))
-			.join("/");
-	}
+	const redact = (pathname) => X.redactPath(pathname);
 
 	function filterKey() {
 		const after = location.pathname.replace(/^.*?\/watchlist/i, "").replace(/\/$/, "");
 		const params = [...new URLSearchParams(location.search)]
 			.filter(([k]) => /filter|type|sort|view|offer|category/i.test(k))
-			.map(([k, v]) => `${k}=${v.slice(0, 40)}`)
+			// Values are kept only when they look like a filter word (movie, tv, all).
+			.map(([k, v]) => `${X.safeKey(k)}=${/^[a-z_-]{1,20}$/i.test(v) ? v : "<value>"}`)
 			.sort();
 		return redact(after) + (params.length ? `?${params.join("&")}` : "");
 	}
@@ -91,12 +88,16 @@
 		const nodes = [...document.querySelectorAll(PROFILE)].filter((n) => n.closest(OUTSIDE));
 		if (!nodes.length) return null;
 		const n = nodes[0];
-		const img = n.querySelector("img");
-		return X.hash(`d:${n.getAttribute("aria-label") || ""}|${img?.getAttribute("alt") || ""}|${img?.getAttribute("src") || ""}`);
+		// Labels only: an avatar URL can change while lazy loading or cache-busting.
+		const label = `${n.getAttribute("aria-label") || ""}|${n.querySelector("img")?.getAttribute("alt") || ""}`;
+		return label === "|" ? null : X.hash(`d:${label}`);
 	}
 
-	function currentMarker() {
-		return s.markerSource === "dom" ? domMarker() : s.marker;
+	// State markers come from hydration read at Start, so they can't change
+	// later. The header marker is compared on every scan whenever one existed.
+	function profileChanged() {
+		if (s.markerSource === "dom") return domMarker() !== s.marker;
+		return s.domMarker !== null && domMarker() !== s.domMarker;
 	}
 
 	function bump(map, code) {
@@ -180,7 +181,8 @@
 			const p = c.pagination;
 			// The same page can be embedded in more than one hydration script.
 			const sig = X.hash(JSON.stringify([p.cursor, c.items.map((i) => i.token || i.gti)]));
-			if (origin === "state" && s.pageSignatures.has(sig)) {
+			// A retried request returns the same page again; that isn't a loop.
+			if (s.pageSignatures.has(sig)) {
 				s.duplicatePages++;
 				continue;
 			}
@@ -193,6 +195,7 @@
 				origin,
 				source: path,
 				path: c.path,
+				chain: c.chain || c.path,
 				count: c.items.length,
 				terminal: p.terminal,
 				totalItems: p.totalItems,
@@ -230,24 +233,38 @@
 	function signature(group) {
 		if (!group) return "document";
 		const classes = [...group.classList].slice(0, 3).join(".");
-		return [group.tagName.toLowerCase(), group.getAttribute("role") || "", group.getAttribute("data-testid") || "", group.getAttribute("aria-label") || "", classes].join("|");
+		// A row label can name a title ("Because you watched …"), so it is hashed.
+		const label = group.getAttribute("aria-label");
+		return [group.tagName.toLowerCase(), group.getAttribute("role") || "", group.getAttribute("data-testid") || "", label ? `label#${X.hash(label)}` : "", classes].join("|");
 	}
 
 	function readCards() {
-		const seen = new Map(); // signature -> tokens in this pass
+		const seen = new Map(); // signature -> cards in this pass
+		// A card can hold several detail links (poster, title, play). Read each
+		// card once; links to two different titles make the card unusable.
+		const roots = new Map();
 		for (const a of document.querySelectorAll(CARD_LINK)) {
 			if (a.closest(OUTSIDE)) continue;
 			const root = a.closest(CARD_ROOT) || a;
-			const group = root.parentElement?.closest(GROUP) || null;
-			const sig = signature(group);
-			const link = X.detailLink(a.getAttribute("href"), location.href);
-			if (!link) {
+			if (!roots.has(root)) roots.set(root, []);
+			roots.get(root).push(a);
+		}
+		for (const [root, links] of roots) {
+			const parsed = links.map((a) => X.detailLink(a.getAttribute("href"), location.href));
+			if (parsed.some((l) => !l)) {
 				bump(s.domRejected, "card_invalid_link");
+				if (parsed.every((l) => !l)) continue;
+			}
+			const tokens = new Set(parsed.filter(Boolean).map((l) => l.token));
+			if (tokens.size !== 1) {
+				bump(s.domRejected, "card_conflicting_links");
 				continue;
 			}
+			const link = parsed.find(Boolean);
+			const sig = signature(root.parentElement?.closest(GROUP) || null);
 			for (const attr of root.getAttributeNames()) if (attr.startsWith("data-")) s.cardAttributes.add(attr);
 			if (!seen.has(sig)) seen.set(sig, []);
-			seen.get(sig).push({ a, root, link });
+			seen.get(sig).push({ links, root, link });
 		}
 		if (!s.primary && seen.size) {
 			// Prefer the group that shares the most cards with structured Watchlist
@@ -261,12 +278,26 @@
 		}
 		for (const [sig, cards] of seen) {
 			if (!s.groups.has(sig)) s.groups.set(sig, { tokens: new Set() });
+			if (sig !== s.primary) {
+				const other = cards.filter((c) => s.structuredKeys.has(c.link.token)).length;
+				const mine = [...(s.groups.get(s.primary)?.tokens || [])].filter((t) => s.structuredKeys.has(t)).length;
+				if (other > mine) s.primaryContested = true;
+			}
 			const g = s.groups.get(sig);
 			for (const c of cards) g.tokens.add(c.link.token);
 			if (sig !== s.primary) continue;
-			for (const { a, root, link } of cards) {
+			for (const { links, root, link } of cards) {
 				s.domSightings++;
-				const title = (root.getAttribute("data-card-title") || a.getAttribute("aria-label") || root.querySelector("img[alt]")?.getAttribute("alt") || a.textContent || "").trim().replace(/\s+/g, " ");
+				const labels = [...new Set(links.map((a) => a.getAttribute("aria-label")?.trim()).filter(Boolean))];
+				// Card-level names first; a link label can be an action ("Play …").
+				const title = (
+					root.getAttribute("data-card-title") ||
+					root.querySelector("img[alt]:not([alt=''])")?.getAttribute("alt") ||
+					root.querySelector("h2, h3, h4, [data-testid*='title' i]")?.textContent ||
+					(labels.length === 1 ? labels[0] : "") ||
+					(links.length === 1 ? links[0].textContent : "") ||
+					""
+				).trim().replace(/\s+/g, " ");
 				if (!X.isText(title)) {
 					bump(s.domRejected, "card_missing_title");
 					continue;
@@ -292,14 +323,21 @@
 			...c,
 			items: c.items.filter((i) => i && X.isText(i.title) && (typeof i.gti === "string" ? X.GTI.test(i.gti) : true)),
 		}));
-		acceptCollections(clean, "response", String(m.path).slice(0, 200));
-		scan();
+		try {
+			acceptCollections(clean, "response", String(m.path).slice(0, 200));
+		} catch {
+			terminate("collector_error", false);
+			return;
+		}
+		safeScan();
 	}
 
 	function disconnect() {
 		s.observer?.disconnect();
 		s.observer = null;
 		if (s.interval !== null) clearInterval(s.interval);
+		if (s.pending) clearTimeout(s.pending);
+		s.pending = null;
 		s.interval = null;
 		if (s.listener) window.removeEventListener("message", s.listener);
 		s.listener = null;
@@ -321,11 +359,20 @@
 	function scan() {
 		if (s.state !== "capturing") return;
 		if (location.origin !== s.origin || !isWatchlist()) return terminate("terminated_navigation", false);
-		if (s.markerSource !== "none" && currentMarker() !== s.marker) return terminate("terminated_profile", true);
+		if (s.markerSource !== "none" && profileChanged()) return terminate("terminated_profile", true);
 		if (filterKey() !== s.filter) s.filterChanged = true;
 		if (Date.now() - s.started >= MAX_TIME) return terminate("limit_time", false);
 		readScripts();
 		if (s.state === "capturing") readCards();
+	}
+
+	// A collector error must end the capture visibly, never leave it "capturing".
+	function safeScan() {
+		try {
+			scan();
+		} catch {
+			if (s.state === "capturing") terminate("collector_error", false);
+		}
 	}
 
 	/** The in-extension gate. Reasons are codes; no titles or IDs. */
@@ -334,23 +381,31 @@
 		const unknown = [];
 		if (s.state === "terminated") partial.push(s.code);
 		if (!s.pages.length) unknown.push("no_structured_watchlist");
-		const last = s.pages[s.pages.length - 1];
-		if (s.pages.length) {
-			if (s.pages.some((p) => p.terminal === true)) {
-				if (last.terminal === false) partial.push("continuation_after_end");
-			} else if (last.terminal === false) partial.push("continuation_pending");
+		// Each Watchlist collection path is its own chain. Every chain must end
+		// on an explicit last page; one chain's end says nothing about another.
+		const chains = new Map();
+		for (const p of s.pages) chains.set(p.chain, [...(chains.get(p.chain) || []), p]);
+		for (const pages of chains.values()) {
+			const last = pages[pages.length - 1];
+			if (last.terminal === true) continue;
+			if (last.terminal === false) partial.push(pages.some((p) => p.terminal === true) ? "continuation_after_end" : "continuation_pending");
 			else unknown.push("no_terminal_evidence");
 		}
+		if (chains.size > 1) unknown.push("several_watchlist_chains");
 		if (s.cursorRepeats) partial.push("cursor_repeated");
 		const totals = [...new Set(s.pages.map((p) => p.totalItems).filter((t) => t !== null))];
 		if (totals.length > 1) partial.push("total_changed");
-		if (totals.length === 1 && totals[0] !== s.structuredKeys.size) partial.push("total_mismatch");
+		// Live entries count toward a reported total but stay out of the file.
+		if (totals.length === 1 && totals[0] !== s.structuredKeys.size + s.liveExcluded) partial.push("total_mismatch");
 		const domOnly = [...s.domKeys].filter((k) => !s.structuredKeys.has(k)).length;
 		const structuredOnly = [...s.structuredKeys].filter((k) => !s.domKeys.has(k)).length;
 		if (s.pages.length && domOnly) partial.push("visible_not_in_structured");
 		if (structuredOnly) partial.push("structured_not_seen_visible");
 		if (!s.domKeys.size) unknown.push("no_visible_cards");
 		if (s.primaryBy === "first_of_several_guess") unknown.push("visible_group_guessed");
+		if (s.primaryContested) partial.push("visible_group_contested");
+		const primaryTokens = [...(s.groups.get(s.primary)?.tokens || [])];
+		if (s.pages.length && primaryTokens.length && !primaryTokens.some((t) => s.structuredKeys.has(t))) unknown.push("visible_group_unconfirmed");
 		if (s.quarantined.size) partial.push("conflicting_identity");
 		if (s.unparsedListResponses) unknown.push("unknown_response_schema");
 		if (s.filterChanged) partial.push("filter_changed");
@@ -426,10 +481,11 @@
 				withoutDetailLink: list.filter((e) => !e.url).length,
 				unknownType: list.filter((e) => e.mediaType === "unknown").length,
 				withYear: list.filter((e) => e.year).length,
-				rejectedCards: Object.fromEntries(s.domRejected),
+				// Per scan pass, so one bad card counts once per pass it was seen in.
+				rejectedCardSightings: Object.fromEntries(s.domRejected),
 			},
 			pagination: {
-				pages: s.pages.map(({ origin, path, count, terminal, totalItems, nextIndex, paginationKeys, at }) => ({ origin, path, count, terminal, totalItems, nextIndex, paginationKeys, atSeconds: Math.round(at / 1000) })),
+				pages: s.pages.map(({ origin, path, chain, count, terminal, totalItems, nextIndex, paginationKeys, at }) => ({ origin, path, chain, count, terminal, totalItems, nextIndex, paginationKeys, atSeconds: Math.round(at / 1000) })),
 				reportedTotals: gate.totals,
 				distinctCursors: s.cursors.size,
 				duplicateStatePages: s.duplicatePages,
@@ -441,6 +497,7 @@
 				overlapWithVisible: [...tokens].filter((t) => domTokens.has(t)).length,
 			})),
 			primaryGroupChosenBy: s.primaryBy || null,
+			chains: [...new Set(s.pages.map((p) => p.chain))].length,
 			cardGroups: [...s.groups].map(([sig, g]) => ({ signature: sig, primary: sig === s.primary, cards: g.tokens.size })),
 			cardAttributes: [...s.cardAttributes].sort(),
 			scripts: s.scripts.slice(0, 50),
@@ -502,8 +559,9 @@
 			s.pathPattern = redact(location.pathname);
 			s.started = Date.now();
 			readScripts();
+			s.domMarker = domMarker();
 			if (!s.marker) {
-				s.marker = domMarker();
+				s.marker = s.domMarker;
 				s.markerSource = s.marker ? "dom" : "none";
 			}
 			s.state = "capturing";
@@ -512,9 +570,16 @@
 				s.listener = onMessage;
 				window.addEventListener("message", s.listener);
 			}
-			s.observer = new MutationObserver(scan);
-			s.observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ["href", "aria-label", "data-card-title", "src", "alt"] });
-			s.interval = setInterval(scan, 500);
+			// Mutations come in bursts while the grid renders; scan at most every 100 ms.
+			s.observer = new MutationObserver(() => {
+				if (s.pending) return;
+				s.pending = setTimeout(() => {
+					s.pending = null;
+					safeScan();
+				}, 100);
+			});
+			s.observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ["href", "aria-label", "data-card-title", "alt"] });
+			s.interval = setInterval(safeScan, 500);
 			scan();
 			return result(false);
 		}

@@ -19,8 +19,20 @@
 	// path excludes the collection, even under a Watchlist key.
 	const EXCLUDED_KEY =
 		/library|purchase|rental|recommend|similar|related|morelike|more-like|customersalso|continuewatching|watchnext|history|hero|billboard|^nav|menu|search|profile|cerberus|channel|station|^live|epg|sport|trailer|extras?$|bonus|episodes?$|seasons?$|siblings|children|cast|people/i;
+	const PROFILE_KEY = /profile/i;
 	const ID_LIKE = /^(amzn1\.|[0-9a-f]{8}-[0-9a-f-]{27,}|[A-Z0-9]{10,}$|\d{6,}$)/;
 
+	// One redactor for URL path segments and object keys in the report.
+	const redactSegment = (p) =>
+		ID_LIKE.test(p) || (/^[A-Za-z0-9._-]{8,}$/.test(p) && /\d/.test(p)) || p.includes("amzn1.") ? "<id>" : p;
+	const redactPath = (pathname) => pathname.split("/").map(redactSegment).join("/");
+	// Report keys must look like code identifiers; anything else (slugs, titles,
+	// names, short IDs) becomes <key>.
+	// A hyphenated key is kept only with a structural word in it, because
+	// "legacy-watchlist" and a title slug like "the-matrix" look alike.
+	const STRUCTURAL = /watchlist|filter|data|view|list|page|item|content|legacy|offer|nav|collection|container|feature|output|hydration/i;
+	const safeKey = (k) =>
+		/^[A-Za-z_$][A-Za-z0-9_$-]{0,40}$/.test(k) && !/\d{3,}/.test(k) && redactSegment(k) === k && (!k.includes("-") || STRUCTURAL.test(k)) ? k : "<key>";
 	const isText = (v) =>
 		typeof v === "string" &&
 		v.trim().length > 0 &&
@@ -177,8 +189,9 @@
 					out.terminal ??= false;
 				}
 			} else if (has("pagination") && p === null) {
+				// Seen as a key only. A null paginator can mean "no pager here",
+				// not "this is the last page", so it proves nothing.
 				out.keys.push("pagination=null");
-				out.terminal ??= true;
 			}
 		}
 		out.keys = [...new Set(out.keys)];
@@ -186,12 +199,16 @@
 	}
 
 	const pathPattern = (path) =>
-		path.map((k) => (typeof k === "number" ? "[]" : ID_LIKE.test(k) ? "<id>" : k)).join(".");
+		path.map((k) => (typeof k === "number" ? "[]" : safeKey(k))).join(".");
 
 	function classify(path) {
 		const keys = path.filter((k) => typeof k === "string");
-		if (keys.some((k) => EXCLUDED_KEY.test(k))) return "excluded";
-		if (keys.some((k) => WATCHLIST_KEY.test(k))) return "watchlist";
+		const w = keys.findLastIndex((k) => WATCHLIST_KEY.test(k));
+		// A profile container may hold the Watchlist (profiles.<id>.watchlist…);
+		// other exclusions apply anywhere on the path.
+		const excluded = keys.some((k, i) => EXCLUDED_KEY.test(k) && !(PROFILE_KEY.test(k) && i < w));
+		if (excluded) return "excluded";
+		if (w >= 0) return "watchlist";
 		return "unclassified";
 	}
 
@@ -221,6 +238,9 @@
 				if (items.length && items.length * 2 >= objects) {
 					found.push({
 						path: pathPattern(path),
+						// The chain is named from the Watchlist key on, so a hydration page
+						// (props.viewOutput…) and a response page (viewOutput…) line up.
+						chain: pathPattern(path.slice(Math.max(0, path.findLastIndex((k) => typeof k === "string" && WATCHLIST_KEY.test(k))))),
 						classification: classify(path),
 						items,
 						objects,
@@ -248,7 +268,9 @@
 		if (depth >= 7) return "{…}";
 		const out = {};
 		for (const [k, v] of Object.entries(value).slice(0, 60)) {
-			out[ID_LIKE.test(k) ? "<id>" : k] = shape(v, depth + 1, budget);
+			const key = safeKey(k);
+			if (key in out) continue;
+			out[key] = shape(v, depth + 1, budget);
 		}
 		return out;
 	}
@@ -309,6 +331,8 @@
 		shape,
 		profileMarker,
 		parseScripts,
+		redactPath,
+		safeKey,
 		isText,
 		mediaType,
 	});

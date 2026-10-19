@@ -84,13 +84,33 @@ Every case is an invented page with invented titles, IDs and cursors. Field name
 | Detail-link parsing | No credentials, no query, provider hosts only, HTTPS only | Pass |
 | The report holds no title, ID, cursor or profile value | Checked against every invented secret | Pass |
 
+| A terminal flag on a second Watchlist collection (review) | The main chain still needs its own end: not `complete` | Pass, after a fix |
+| `pagination: null` | No evidence of the end | Pass, after a fix |
+| Report keys that are slugs, titles or short IDs; dotted `amzn1.` path IDs (review) | Redacted as `<key>` or `<id>` | Pass, after a fix |
+| A card with a play link and a title link (review) | Read once with its card-level title, not quarantined | Pass, after a fix |
+| A card linking to two different titles | Skipped and counted | Pass |
+| A Watchlist nested under a profile key (review) | Still the Watchlist | Pass, after a fix |
+| A retried response for the same page (review) | Not a repeated cursor | Pass, after a fix |
+| A live entry counted in the reported total (review) | No total mismatch | Pass, after a fix |
+| State profile marker plus a changed header label (review) | Capture discarded | Pass, after a fix |
+| An avatar URL change alone | No evidence; capture continues | Pass, after a fix |
+| The grid renders after a recommendation row was chosen (review) | Flagged; not `complete` | Pass, after a fix |
+
 Failure found while building: with no Watchlist-named collection, the first collector draft took the largest card group, which was the recommendation row. It now prefers the group that overlaps the page data. With no overlap, it takes the first group in page order and reports `visible_group_guessed`, which keeps the file `unknown`.
+
+### Independent review
+
+A separate reviewer read version 0.1.0 before any live run and probed it with scratch pages. It confirmed one false `complete`: page data with a Watchlist collection that said "more" plus a sibling Watchlist-named collection with `pagination: null` was reported `complete` after an immediate stop. Pages are now grouped into chains named from the Watchlist key on. Every chain must end on an explicit last page, and several chains make the file `unknown`. `pagination: null` no longer counts as an end.
+
+The same review found report keys and path segments that could carry titles or IDs, cards with several links being quarantined, an avatar-URL profile guard that could discard a whole run, a profile-key exclusion that could hide a nested Watchlist, retries counted as loops, live entries breaking totals, and a two-download prompt that could drop the report. Each now has a regression above, and the popup has separate **Save wishlist file** and **Save report** buttons.
+
+Accepted risks, not fixed: a page that bound `fetch` before Start, `responseType: "json"` requests, and pages loaded before Start all leave the page-data channel blind. The file then says `partial` or `unknown`, as designed. The page can forge messages to the collector. The report's per-card rejection counts are per scan pass, not per card.
 
 ## Results so far
 
 Validated 2026-10-19.
 
-- **Fixture, happy-dom:** 25 of 25 tests pass (`npm test`).
+- **Fixture, happy-dom:** 35 of 35 tests pass (`npm test`).
 - **Fixture, real Chromium:** the unpacked MV3 extension loads with no host permissions. The real popup injects the collector into the isolated world and the response reader into the page world. A `fetch` response and an `XMLHttpRequest` response from the invented page are both observed. The grid accumulates while cards are removed. **Stop** downloads both files: a complete five-item wishlist file and a report without titles or IDs. Leaving the Watchlist ends the capture as partial. The harness served 4 requests locally and blocked 0 others. No Amazon request was made.
 - **Parser:** the shipped `parseWishlistFile` accepts the five-item synthetic file: 5 observations (3 movies, 2 shows), 5 GTI source IDs, completeness `complete`, 0 warnings.
 - **Live:** not run. No signed-in Watchlist, current Prime Video page, real response shape or regional layout has been tested. Every selector and JSON path is a hypothesis until the owner's run.
