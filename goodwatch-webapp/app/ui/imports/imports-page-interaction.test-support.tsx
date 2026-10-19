@@ -411,6 +411,28 @@ const results: Record<string, unknown> = {}
 }
 
 {
+	// A file both imports read: the source the member chose takes it.
+	const view = await page()
+	await view.open("Generic CSV")
+	await view.choose(
+		"Generic CSV",
+		new File(
+			[
+				"title,tvdb_id,imdb_id,is_watched,watched_at,rating\nAlien,1,tt0078748,1,2024-01-01,8\n",
+			],
+			"mine.csv",
+			{ type: "text/csv" },
+		),
+	)
+	results.chosenGeneric = {
+		opened: view.opened(),
+		text: view.text(),
+		sent: [...sent],
+	}
+	await view.unmount()
+}
+
+{
 	const view = await page()
 	await view.open("Letterboxd")
 	await view.choose("Letterboxd", traktZip())

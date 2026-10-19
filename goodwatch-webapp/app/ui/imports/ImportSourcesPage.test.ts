@@ -133,6 +133,16 @@ test("a file the one box doesn't recognize is never sent, and the member learns 
 	)
 })
 
+test("a file both TV Time and the generic import read goes to the source the member chose", () => {
+	assert.deepEqual(previews(runs.chosenGeneric), [
+		{
+			url: "/api/imports/preview",
+			body: { source: "csv", file: "file:mine.csv" },
+		},
+	])
+	assert.doesNotMatch(runs.chosenGeneric.text, /looks like/)
+})
+
 test("a source's own box holds back a file from another source and offers to import it as that source", () => {
 	assert.deepEqual(previews(runs.caught), [])
 	assert.match(

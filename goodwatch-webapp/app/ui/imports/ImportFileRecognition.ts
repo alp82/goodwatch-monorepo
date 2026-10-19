@@ -14,6 +14,8 @@ export type ImportFileRecognition =
 	| {
 			source: Exclude<ImportFileTarget, "movielens" | "myanimelist">
 			label: string
+			/** Other imports that read the same file. A member who chose one of them keeps that choice. */
+			alsoReads?: ImportFileTarget[]
 	  }
 	/** MovieLens takes a ratings file and an optional wishlist file together. */
 	| { source: "movielens"; label: string; wishlist: boolean }
@@ -96,8 +98,9 @@ const isTvTimeFile = (entry: string) => {
 }
 
 /**
- * A TV Time CSV by its columns, as the TV Time import tells its layouts apart. A lone "key" column is too common to
- * name TV Time, so the newer tracking layout also needs its show or episode ID.
+ * A TV Time CSV by columns only TV Time files have, as the TV Time import tells its layouts apart. A lone "key" column
+ * is too common to name TV Time, so the newer tracking layout also needs its show or episode ID, and an extension
+ * file needs a TVDB ID: Title, an IMDb ID and a Status column alone are a generic CSV.
  */
 const isTvTimeCsv = (columns: string[]) => {
 	const has = (name: string) => columns.includes(name)
@@ -107,7 +110,7 @@ const isTvTimeCsv = (columns: string[]) => {
 		has("tvshowid") ||
 		has("votekey") ||
 		(has("title") &&
-			(has("tvdbid") || has("imdbid")) &&
+			(has("tvdbid") || has("seriestvdbid")) &&
 			(has("iswatched") || has("status")))
 	)
 }
@@ -174,27 +177,21 @@ function recognize(peek: Peek, fileName: string): ImportFileRecognition {
 			return header.has("rating")
 				? { source: "movielens", label: "MovieLens ratings", wishlist: false }
 				: { source: "movielens", label: "MovieLens wishlist", wishlist: true }
-		// Before the generic rule: a TV Time extension CSV also has Title and Rating columns.
+		const generic = isGenericCsv(peek.header)
+		// Before the generic rule: a TV Time extension CSV also has Title and Rating columns. When the generic import
+		// reads it too, a member who chose Generic CSV keeps that choice.
 		if (
 			isTvTimeFile(fileName) ||
 			isTvTimeCsv(
 				peek.header.map((name) => name.toLowerCase().replace(/[^a-z0-9]/g, "")),
 			)
 		)
-			return { source: "tvtime", label: "TV Time export" }
-		// The generic import compares names without spaces, refuses duplicate columns, and skips a row with no
-		// rating, watch date, or review. Its own rating in "Your Rating" would be lost, so such a file isn't offered.
-		const compact = peek.header.map((name) =>
-			name.trim().toLowerCase().replace(/ /g, ""),
-		)
-		const usable = (names: string[]) =>
-			names.some((name) => compact.includes(name))
-		if (
-			new Set(compact).size === compact.length &&
-			!compact.includes("yourrating") &&
-			usable(["title", "name", "tmdbid", "imdbid", "letterboxduri"]) &&
-			usable(["rating", "rating10", "watcheddate", "review"])
-		)
+			return {
+				source: "tvtime",
+				label: "TV Time export",
+				...(generic ? { alsoReads: ["csv" as const] } : {}),
+			}
+		if (generic)
 			return { source: "csv", label: "CSV in Letterboxd's import format" }
 		return {
 			source: null,
@@ -225,6 +222,24 @@ function recognize(peek: Peek, fileName: string): ImportFileRecognition {
 		label: "file",
 		hint: "GoodWatch reads ZIP, CSV, XML, gzip, and JSON exports. Upload the file as the site gave it to you, without opening or renaming it.",
 	}
+}
+
+/**
+ * The generic import compares names without spaces, refuses duplicate columns, and skips a row with no rating, watch
+ * date, or review. Its own rating in "Your Rating" would be lost, so such a file isn't offered.
+ */
+function isGenericCsv(header: string[]) {
+	const compact = header.map((name) =>
+		name.trim().toLowerCase().replace(/ /g, ""),
+	)
+	const usable = (names: string[]) =>
+		names.some((name) => compact.includes(name))
+	return (
+		new Set(compact).size === compact.length &&
+		!compact.includes("yourrating") &&
+		usable(["title", "name", "tmdbid", "imdbid", "letterboxduri"]) &&
+		usable(["rating", "rating10", "watcheddate", "review"])
+	)
 }
 
 const WATCHARR_STATUSES = ["PLANNED", "WATCHING", "FINISHED", "HOLD", "DROPPED"]
@@ -287,7 +302,7 @@ function recognizeJson(
 			isObject(first.id) &&
 			("tvdb" in first.id || "imdb" in first.id)
 		: head.startsWith("[") &&
-			/"id"\s*:\s*\{\s*"(tvdb|imdb)"\s*:/.test(peek.text)
+			/"id"\s*:\s*\{[^{}]*"(tvdb|imdb)"\s*:/.test(peek.text)
 	if (isTvTimeFile(fileName) || tvtime)
 		return { source: "tvtime", label: "TV Time export" }
 	return {

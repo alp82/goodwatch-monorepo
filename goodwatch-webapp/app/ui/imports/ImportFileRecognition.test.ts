@@ -373,9 +373,7 @@ test("a loose TV Time CSV is recognized by its columns, before the generic CSV r
 		"type,entity_type,uuid,movie_name,release_date,created_at",
 		"tv_show_id,tv_show_name,active,archived",
 		"episode_id,movie_name,uuid,vote_key",
-		// An extension CSV also has Title and Rating, which the generic import would take.
-		"title,tvdb_id,imdb_id,is_watched,watched_at,rating",
-		"Title,IMDb ID,Status",
+		"title,series_tvdb_id,is_watched",
 	]) {
 		const result = await recognizeImportFile(file("renamed.csv", `${header}\n`))
 		assert.equal(result.source, "tvtime", header)
@@ -417,4 +415,45 @@ test("TV Time extension JSON is recognized by name or by TVDB/IMDb ids, never a 
 		),
 	)
 	assert.equal(watcharr.source, "wishlist")
+})
+
+test("a generic CSV with IMDb IDs and a status column stays generic: TV Time needs TV Time's own columns", async () => {
+	for (const content of [
+		"Title,imdbID,Rating,Status\nAlien,tt0078748,4,seen\n",
+		"Title,IMDb ID,Status\nAlien,tt0078748,seen\n",
+	]) {
+		const result = await recognizeImportFile(file("mine.csv", content))
+		assert.notEqual(result.source, "tvtime", content)
+	}
+	const generic = await recognizeImportFile(
+		file("mine.csv", "Title,imdbID,Rating,Status\nAlien,tt0078748,4,seen\n"),
+	)
+	assert.equal(generic.source, "csv")
+})
+
+test("a TV Time extension CSV the generic import could also read names both, so an explicit choice wins", async () => {
+	const result = await recognizeImportFile(
+		file("renamed.csv", "title,tvdb_id,imdb_id,is_watched,watched_at,rating\n"),
+	)
+	assert.equal(result.source, "tvtime")
+	assert.ok(result.source !== null && result.alsoReads?.includes("csv"))
+	const official = await recognizeImportFile(
+		file("renamed.csv", "key,s_id,ep_id,s_no,ep_no,created_at\n"),
+	)
+	assert.ok(official.source !== null && !official.alsoReads)
+})
+
+test("renamed TV Time JSON is recognized whatever the order of its ID fields, short or long", async () => {
+	const item = (n: number) =>
+		`{"title":"Synthetic ${n}","id":{"tmdb":${n},"imdb":"tt${n}","tvdb":${n}},"is_watched":true}`
+	const short = await recognizeImportFile(file("mine.json", `[${item(1)}]`))
+	assert.equal(short.source, "tvtime")
+	const long = `[${Array.from({ length: 1200 }, (_, n) => item(n)).join(",")}]`
+	assert.ok(long.length > 64 * 1024)
+	const result = await recognizeImportFile(file("mine.json", long))
+	assert.equal(result.source, "tvtime")
+	const tmdbOnly = await recognizeImportFile(
+		file("mine.json", `[{"title":"x","id":{"tmdb":1}}]`),
+	)
+	assert.equal(tmdbOnly.source, null)
 })

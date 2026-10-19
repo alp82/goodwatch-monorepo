@@ -63,7 +63,12 @@ export function useWrongSourceCatch(source: ImportFileTarget): {
 	const check = async (file: File) => {
 		setCaught(null)
 		const recognition = await recognizeImportFile(file).catch(() => null)
-		if (!route || !recognition?.source || recognition.source === source)
+		if (
+			!route ||
+			!recognition?.source ||
+			recognition.source === source ||
+			("alsoReads" in recognition && recognition.alsoReads?.includes(source))
+		)
 			return { send: true, recognition }
 		setCaught({ file, recognition })
 		return { send: false, recognition }
