@@ -9,13 +9,13 @@ export const tmdbConnect = createTmdbConnect({
 		() => process.env.TMDB_CONNECT_KEY ?? "",
 		() => process.env.TMDB_CONNECT_PREVIOUS_KEY ?? "",
 	),
-	client: createTmdbClient({ appToken: process.env.TMDB_API_TOKEN ?? "" }),
+	client: createTmdbClient({ apiKey: process.env.TMDB_API_KEY ?? "" }),
 	origin: siteOrigin,
 	member: connectMember,
 })
 export const startTmdbConnectionCleanup = connectionCleanup(
 	"tmdb",
 	() => tmdbConnect.sweep(),
-	() => !!process.env.TMDB_CONNECT_KEY && !!process.env.TMDB_API_TOKEN,
+	() => !!process.env.TMDB_CONNECT_KEY && !!process.env.TMDB_API_KEY,
 	"TMDB connection cleanup is unavailable; credentials remain queued for retry.",
 )

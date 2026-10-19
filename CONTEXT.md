@@ -48,6 +48,12 @@ A guest's title interactions available across Taste, title details, and Wishlist
 The action expressing an intention to watch a title and placing it in Wishlist.
 _Avoid_: Save
 
+**Season or episode wish on an import**:
+A source wishlist entry for a season or episode, offered for the member to confirm as Want to See for the whole show. GoodWatch has no season- or episode-level wishes.
+
+**Want to See the show**:
+The choice confirming that a season or episode wish on an import should add the whole show to Wishlist.
+
 **Want to rewatch**:
 Want to See on a title the person has Seen: it places the title in Wishlist to be watched again and changes nothing else. It lasts while the title stays Seen and ends with the next watch of a movie or Watch again on a show.
 _Avoid_: Rewatch list, Want to See again
@@ -268,6 +274,13 @@ A reviewer's assessment of how faithfully a fingerprint describes a title, suppo
 **Share list**:
 A person's ranking of exactly five movies or shows under a title, published at its own link under its owner's handle and shown as a share card. A share list is separate from ratings, Want to See, and the taste profile.
 _Avoid_: Top list, Collection
+
+**Best-of list**:
+GoodWatch's ranking of the movies, or of the shows, that the sitemap lists: best GoodWatch score first, 250 to a page, the same for everyone. It holds exactly the sitemap's titles and changes when the sitemap changes. A share list is a person's ranking; a best-of list is GoodWatch's.
+_Avoid_: Top list, Top 250
+
+**People list**:
+The page of the people the sitemap lists, each with their best-known titles from the sitemap. It changes when the sitemap changes.
 
 **Share card**:
 The image of a share list in one card design and color theme, signed with its owner's handle. It changes when the share list changes.

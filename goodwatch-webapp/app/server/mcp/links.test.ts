@@ -14,7 +14,7 @@ test("page links use existing website filters and encode search text", () => {
 		["dropped", "/my-library/dropped"],
 		["unrated", "/my-library/not-rated"],
 		["rated", "/my-library/scores"],
-		["not_interested", "/settings/hidden"],
+		["not_interested", "/my-library/hidden"],
 	])
 		assert.equal(
 			withPageLink(origin, "get_library", { filter }, data).page_url,

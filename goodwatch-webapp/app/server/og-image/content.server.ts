@@ -25,6 +25,7 @@ import {
 	HOME_COPY,
 	MEDIA_LABELS,
 	STATIC_PAGE_COPY,
+	bestListCopy,
 	categoryIndexCopy,
 	collectionCopy,
 	personTag,
@@ -82,6 +83,7 @@ export function canonicalOgPath(path: string): string | null {
 	}
 	if (first === "movies" || first === "shows") {
 		if (segments.length === 1) return `/${first}`
+		if (second === "best" && segments.length === 2) return `/${first}/best`
 		if (!hasKey(mainHierarchy, second) || segments.length > 3) return null
 		if (third && !hasKey(mainHierarchy[second as Category], third)) return null
 		return `/${segments.join("/")}`
@@ -227,6 +229,18 @@ async function browseContent(path: string): Promise<OgContent | null> {
 	]
 	const typeLabel = navLabel[type]
 	const discoverType = type === "shows" ? "show" : "movie"
+
+	if ((category as string) === "best") {
+		const backdrops = await discoverBackdrops({
+			type: discoverType,
+			minScore: "85",
+		})
+		return {
+			kind: "page",
+			...bestListCopy(type),
+			backdrop: rotateByPath(backdrops, path)[0] ?? null,
+		}
+	}
 
 	if (!category) {
 		const backdrops = await discoverBackdrops({

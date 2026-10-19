@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Best-of list mockups</title>
+<style>
+	:root { --bg: #0b1120; --panel: #111827; --line: #1f2937; --text: #e5e7eb; --muted: #9ca3af; --amber: #fbbf24; }
+	* { box-sizing: border-box; }
+	body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 system-ui, sans-serif; }
+	main { max-width: 1500px; margin: 0 auto; padding: 24px 16px 80px; }
+	h1 { font-size: 28px; margin: 0 0 4px; }
+	h2 { font-size: 22px; margin: 48px 0 4px; border-top: 1px solid var(--line); padding-top: 24px; }
+	h3 { font-size: 17px; margin: 28px 0 4px; color: var(--amber); }
+	p, li { color: var(--muted); max-width: 900px; }
+	nav a { color: var(--amber); margin-right: 14px; }
+	.pair { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 16px; align-items: start; }
+	figure { margin: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 8px; }
+	figcaption { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+	.scroll { max-height: 900px; overflow: auto; border-radius: 6px; }
+	img { display: block; width: 100%; height: auto; }
+	@media (max-width: 800px) { .pair { grid-template-columns: minmax(0, 1fr); } }
+</style>
+</head>
+<body>
+<main>
+	<h1>Best-of lists, people list, footer: layout variants</h1>
+	<p>Screenshots of the prototype route, built from the site's own components with the real sitemap cohort, at 390 px and 1440 px. Long pages are cut at 2,600 px (phone) and 1,800 px (desktop); each frame scrolls. The reasoning and the owner questions are in <a href="proposal.md" style="color:var(--amber)">proposal.md</a>.</p>
+	<nav><a href="#movies">Movies</a><a href="#shows">Shows</a><a href="#people">People</a><a href="#footer">Footer</a></nav>
+
+	<h2 id="movies">/movies/best: the best movies of all time</h2>
+
+	<h3>A. Ranked rows, 250 a page (recommended)</h3>
+	<p>Rank, small poster, title, year and two genres, GoodWatch score ring. Numbered page links 1-250, 251-500, 501-700. About 21 KB of Brotli HTML a page.</p>
+	<div class="pair">
+		<figure><figcaption>390 px</figcaption><div class="scroll"><img src="shots/movies-A-390.webp" alt="Phone: ranked rows of movies, The Godfather first, with page links at the top" loading="lazy"></div></figure>
+		<figure><figcaption>1440 px</figcaption><div class="scroll"><img src="shots/movies-A-1440.webp" alt="Desktop: ranked rows of movies in two columns" loading="lazy"></div></figure>
+	</div>
+
+	<h3>B. Poster grid by decade, one page</h3>
+	<p>The category pages' poster cards under decade headings, with a decade chip row. About 64 KB of Brotli HTML and 1.7 MB raw for 700 movies.</p>
+	<div class="pair">
+		<figure><figcaption>390 px</figcaption><div class="scroll"><img src="shots/movies-B-390.webp" alt="Phone: poster cards two across under the 2020s heading" loading="lazy"></div></figure>
+		<figure><figcaption>1440 px</figcaption><div class="scroll"><img src="shots/movies-B-1440.webp" alt="Desktop: poster cards six across under decade headings" loading="lazy"></div></figure>
+	</div>
+
+	<h3>C. Top 12 as posters, then a genre index, one page</h3>
+	<p>Twelve poster cards, then every other movie as a text link with its score ring, grouped by first genre, each group linking its genre page. About 51 KB of Brotli HTML.</p>
+	<div class="pair">
+		<figure><figcaption>390 px</figcaption><div class="scroll"><img src="shots/movies-C-390.webp" alt="Phone: twelve posters, genre chips, then the Action list" loading="lazy"></div></figure>
+		<figure><figcaption>1440 px</figcaption><div class="scroll"><img src="shots/movies-C-1440.webp" alt="Desktop: twelve posters, genre chips, then a three-column Action list" loading="lazy"></div></figure>
+	</div>
+
+	<h2 id="shows">/shows/best: the best TV shows of all time</h2>
+	<p>The same three layouts. Layout A shown; B and C differ only in their data (300 shows, 2 pages for A).</p>
+	<div class="pair">
+		<figure><figcaption>390 px</figcaption><div class="scroll"><img src="shots/shows-A-390.webp" alt="Phone: ranked rows of TV shows" loading="lazy"></div></figure>
+		<figure><figcaption>1440 px</figcaption><div class="scroll"><img src="shots/shows-A-1440.webp" alt="Desktop: ranked rows of TV shows in two columns" loading="lazy"></div></figure>
+	</div>
+
+	<h2 id="people">/people: popular actors</h2>
+
+	<h3>A. Cards with title links (recommended)</h3>
+	<p>The person page's collaborator cards: portrait, name, role, up to four sitemap titles as links. About 7.7 KB.</p>
+	<div class="pair">
+		<figure><figcaption>390 px</figcaption><div class="scroll"><img src="shots/people-A-390.webp" alt="Phone: one card per person with known-for titles" loading="lazy"></div></figure>
+		<figure><figcaption>1440 px</figcaption><div class="scroll"><img src="shots/people-A-1440.webp" alt="Desktop: person cards three across" loading="lazy"></div></figure>
+	</div>
+
+	<h3>B. Portrait wall</h3>
+	<p>Portraits at poster-card size with name and role. No title links. About 6.8 KB.</p>
+	<div class="pair">
+		<figure><figcaption>390 px</figcaption><div class="scroll"><img src="shots/people-B-390.webp" alt="Phone: portraits three across" loading="lazy"></div></figure>
+		<figure><figcaption>1440 px</figcaption><div class="scroll"><img src="shots/people-B-1440.webp" alt="Desktop: portraits six across" loading="lazy"></div></figure>
+	</div>
+
+	<h3>C. Rows with known-for posters</h3>
+	<p>People search's banner look: portrait, name block with "See all titles", three posters. About 8.5 KB.</p>
+	<div class="pair">
+		<figure><figcaption>390 px</figcaption><div class="scroll"><img src="shots/people-C-390.webp" alt="Phone: person rows with three posters under each name" loading="lazy"></div></figure>
+		<figure><figcaption>1440 px</figcaption><div class="scroll"><img src="shots/people-C-1440.webp" alt="Desktop: person rows two across with posters at the right" loading="lazy"></div></figure>
+	</div>
+
+	<h2 id="footer">Footer placement</h2>
+
+	<h3>F1. A fourth column, Best of (recommended)</h3>
+	<div class="pair">
+		<figure><figcaption>390 px</figcaption><img src="shots/footer-F1-390.webp" alt="Phone footer: Explore and Best of side by side, then GoodWatch and Elsewhere" loading="lazy"></figure>
+		<figure><figcaption>1440 px</figcaption><img src="shots/footer-F1-1440.webp" alt="Desktop footer: four columns, Best of second" loading="lazy"></figure>
+	</div>
+
+	<h3>F2. Inside Explore</h3>
+	<div class="pair">
+		<figure><figcaption>390 px</figcaption><img src="shots/footer-F2-390.webp" alt="Phone footer: Explore with eight links" loading="lazy"></figure>
+		<figure><figcaption>1440 px</figcaption><img src="shots/footer-F2-1440.webp" alt="Desktop footer: Explore with eight links next to GoodWatch and Elsewhere" loading="lazy"></figure>
+	</div>
+
+	<h3>F3. Explore split into Browse and For you</h3>
+	<div class="pair">
+		<figure><figcaption>390 px</figcaption><img src="shots/footer-F3-390.webp" alt="Phone footer: Browse, For you, GoodWatch, Elsewhere" loading="lazy"></figure>
+		<figure><figcaption>1440 px</figcaption><img src="shots/footer-F3-1440.webp" alt="Desktop footer: four columns starting with Browse and For you" loading="lazy"></figure>
+	</div>
+</main>
+</body>
+</html>

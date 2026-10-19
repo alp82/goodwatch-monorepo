@@ -121,6 +121,16 @@ process.stdout.write(
 			),
 		),
 		oneSeen: preview(summary({ conflict: 1 })),
+		seasonChoice: preview({
+			...summary({ conflict: 1 }),
+			wishlistShowChoiceCount: 1,
+			wishlistRewatchChoiceCount: 0,
+		}),
+		sourceSeen: preview({
+			...summary({ conflict: 1 }),
+			wishlistShowChoiceCount: 0,
+			wishlistRewatchChoiceCount: 1,
+		}),
 		nothing: preview(summary({ unchanged: 2, unsupported: 1 })),
 		confirming: preview(summary({ new: 1 }), true),
 		unknownType: row(

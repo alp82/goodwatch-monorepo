@@ -424,3 +424,247 @@ it("reads original bytes of an actual Watcharr backend export from a synthetic a
 		["1", "2", "3"],
 	)
 })
+
+it("reads v1.1 source Seen evidence without making it a GoodWatch watch", async () => {
+	const row = {
+		title: "Movie",
+		mediaType: "movie",
+		tmdbId: 42,
+		sourceSeen: true,
+		sourceSeenAt: "2026-10-01",
+	}
+	const parsed = await parseImportFile(
+		"wishlist",
+		bytes(envelope([row], { version: 1.1 })),
+	)
+	const item = parsed.observations[0]
+	assert.equal(item.problem, undefined)
+	assert.equal(item.kind, "want")
+	assert.equal(item.wishlistEvidence?.sourceSeen, true)
+	assert.equal(item.wishlistEvidence?.sourceSeenAt, "2026-10-01")
+	assert.deepEqual(
+		item.wishlistOriginal?.wishlistEvidence,
+		item.wishlistEvidence,
+	)
+	assert.equal(item.watchedAt, undefined)
+	assert.equal(item.score, undefined)
+	assert.equal(item.showStatus, undefined)
+	const legacy = await parseImportFile("wishlist", bytes(envelope([row])))
+	assert.equal(legacy.observations[0].wishlistEvidence?.sourceSeen, undefined)
+	assert.equal(legacy.observations[0].wishlistEvidence?.sourceSeenAt, undefined)
+})
+
+it("rejects malformed v1.1 Seen evidence without interpreting a date as Seen", async () => {
+	for (const fields of [
+		{ sourceSeen: "true" },
+		{ sourceSeen: null },
+		{ sourceSeen: true, sourceSeenAt: "2026-02-30" },
+		{ sourceSeenAt: "2026-10-01" },
+		{ sourceSeen: false, sourceSeenAt: "2026-10-01" },
+	]) {
+		const parsed = await parseImportFile(
+			"wishlist",
+			bytes(
+				envelope(
+					[{ title: "Movie", mediaType: "movie", tmdbId: 42, ...fields }],
+					{ version: 1.1 },
+				),
+			),
+		)
+		assert.equal(parsed.observations[0].problem?.outcome, "invalid")
+		assert.equal(parsed.observations[0].wishlistOriginal, undefined)
+	}
+})
+
+it("carries v1.1 season and episode rows as show identities with distinct original coordinates", async () => {
+	const parsed = await parseImportFile(
+		"wishlist",
+		bytes(
+			envelope(
+				[
+					{ title: "Show", mediaType: "season", tmdbId: 42, season: 2 },
+					{
+						title: "Show",
+						mediaType: "episode",
+						tmdbId: 42,
+						season: 2,
+						episode: 3,
+					},
+					{ title: "Show", mediaType: "season", tmdbId: 42, season: 3 },
+				],
+				{ version: 1.1 },
+			),
+		),
+	)
+	assert.deepEqual(
+		parsed.observations.map((row) => [
+			row.kind,
+			row.mediaType,
+			row.season,
+			row.episode,
+			row.problem,
+		]),
+		[
+			["want", "show", 2, undefined, undefined],
+			["want", "show", 2, 3, undefined],
+			["want", "show", 3, undefined, undefined],
+		],
+	)
+	assert.deepEqual(
+		parsed.observations.map((row) => [
+			row.wishlistOriginal?.mediaType,
+			row.wishlistOriginal?.season,
+			row.wishlistOriginal?.episode,
+		]),
+		[
+			["season", 2, undefined],
+			["episode", 2, 3],
+			["season", 3, undefined],
+		],
+	)
+	assert.equal(new Set(parsed.observations.map((row) => row.key)).size, 3)
+	const legacy = await parseImportFile(
+		"wishlist",
+		bytes(
+			envelope([{ title: "Show", mediaType: "season", season: 2, tmdbId: 42 }]),
+		),
+	)
+	assert.equal(legacy.observations[0].problem?.outcome, "invalid")
+})
+
+it("requires valid v1.1 coordinates and rejects episode coordinates on other row types", async () => {
+	for (const fields of [
+		{ mediaType: "season" },
+		{ mediaType: "season", season: -1 },
+		{ mediaType: "season", season: 1.5 },
+		{ mediaType: "season", season: "2" },
+		{ mediaType: "season", season: 2, episode: 3 },
+		{ mediaType: "episode", season: 2 },
+		{ mediaType: "episode", season: 2, episode: 0 },
+		{ mediaType: "episode", season: 2, episode: 1.5 },
+		{ mediaType: "movie", season: 2 },
+		{ mediaType: "show", episode: 3 },
+		{ mediaType: "unknown", season: 1 },
+		{ mediaType: "season", season: 1e20 },
+	]) {
+		const parsed = await parseImportFile(
+			"wishlist",
+			bytes(
+				envelope([{ title: "Show", tmdbId: 42, ...fields }], { version: 1.1 }),
+			),
+		)
+		assert.equal(
+			parsed.observations[0].problem?.outcome,
+			"invalid",
+			JSON.stringify(fields),
+		)
+	}
+	const special = await parseImportFile(
+		"wishlist",
+		bytes(
+			envelope(
+				[
+					{
+						title: "Show",
+						mediaType: "episode",
+						tmdbId: 42,
+						season: 0,
+						episode: 1,
+					},
+					{ title: "Movie", mediaType: "movie", tmdbId: 43, sourceSeen: false },
+				],
+				{ version: 1.1 },
+			),
+		),
+	)
+	assert.ok(special.observations.every((row) => !row.problem))
+	assert.equal(special.observations[1].wishlistEvidence?.sourceSeen, false)
+})
+
+it("keeps malformed coordinates out of typed storage while retaining an invalid row", async () => {
+	const parsed = await parseImportFile(
+		"wishlist",
+		bytes(
+			envelope(
+				[
+					{
+						title: "Show",
+						mediaType: "episode",
+						tmdbId: 42,
+						season: "private-invalid-value",
+						episode: {},
+					},
+				],
+				{ version: 1.1 },
+			),
+		),
+	)
+	assert.equal(parsed.observations[0].problem?.outcome, "invalid")
+	assert.equal(parsed.observations[0].season, null)
+	assert.equal(parsed.observations[0].episode, null)
+})
+
+it("caps v1.1 season and episode coordinates at 10,000 while retaining oversized rows as invalid", async () => {
+	const parsed = await parseImportFile(
+		"wishlist",
+		bytes(
+			envelope(
+				[
+					{ title: "Show", mediaType: "season", tmdbId: 42, season: 10000 },
+					{
+						title: "Show",
+						mediaType: "episode",
+						tmdbId: 42,
+						season: 10000,
+						episode: 10000,
+					},
+					{ title: "Show", mediaType: "season", tmdbId: 42, season: 10001 },
+					{
+						title: "Show",
+						mediaType: "episode",
+						tmdbId: 42,
+						season: 10001,
+						episode: 1,
+					},
+					{
+						title: "Show",
+						mediaType: "episode",
+						tmdbId: 42,
+						season: 1,
+						episode: 10001,
+					},
+				],
+				{ version: 1.1 },
+			),
+		),
+	)
+	assert.deepEqual(
+		parsed.observations.map((row) => row.problem?.outcome),
+		[undefined, undefined, "invalid", "invalid", "invalid"],
+	)
+	assert.equal(parsed.observations[2].season, null)
+	assert.equal(parsed.observations[3].season, null)
+	assert.equal(parsed.observations[4].episode, null)
+	assert.ok(
+		parsed.observations
+			.slice(2)
+			.every((row) => row.wishlistOriginal === undefined),
+	)
+})
+
+it("explains that a string version must be a number instead of calling it a newer layout", async () => {
+	for (const version of ["1", "1.1", "2"]) {
+		await assert.rejects(
+			parseImportFile("wishlist", bytes(envelope([], { version }))),
+			{
+				name: "Error",
+				message:
+					"This wishlist file's version must be a number. Ask the maker of the tool that saved it for a file GoodWatch can read.",
+			},
+		)
+	}
+	await assert.rejects(
+		parseImportFile("wishlist", bytes(envelope([], { version: 2 }))),
+		/newer layout/,
+	)
+})

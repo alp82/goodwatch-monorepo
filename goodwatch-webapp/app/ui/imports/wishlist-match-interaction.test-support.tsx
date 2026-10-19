@@ -494,6 +494,13 @@ async function flow(start: ImportSummary, setup: Net) {
 			const target = button(name)
 			await act(async () => target.click())
 		},
+		toggleShowChoice: async () => {
+			const target = container.querySelector(
+				'input[type="checkbox"]',
+			) as unknown as HTMLInputElement
+			await act(async () => target.click())
+			await settle()
+		},
 		pick: async (label: string) => {
 			const target = radio(label)
 			await act(async () => target.click())
@@ -1178,6 +1185,42 @@ const thirty = Array.from({ length: 30 }, (_, at) =>
 	await view.click("Try again to check titles for a match")
 	await settle(8)
 	results.cachedRetrying = snap(view)
+	await view.unmount()
+}
+
+// Known-type ID conflicts must not be labelled as an unknown source type.
+for (const mediaType of ["movie", "show"] as const) {
+	const item = unknownRow(4, "Known conflict", "known")
+	item.wishlistEvidence = { ...item.wishlistEvidence!, mediaType }
+	item.wishlistOriginal = {
+		...item.wishlistOriginal!,
+		mediaType,
+		wishlistEvidence: item.wishlistEvidence,
+	}
+	item.mediaType = mediaType
+	item.wishlistMatchRequired = "id_conflict"
+	const view = await flow(summary(PARENT, { unmatched: 1 }, 1), {
+		groups: [groupOf(item)],
+		resolve: [],
+	})
+	await view.click("Review matches")
+	await settle(5)
+	results[`knownType_${mediaType}`] = snap(view)
+	await view.unmount()
+}
+
+// The whole-show conversion stays independent of the choice about Seen titles.
+{
+	const parent = {
+		...summary(PARENT, { conflict: 2 }, 0),
+		wishlistShowChoiceCount: 1,
+		wishlistRewatchChoiceCount: 1,
+	}
+	const view = await flow(parent, { groups: [], resolve: [] })
+	results.showChoiceBefore = snap(view)
+	await view.toggleShowChoice()
+	await view.click("Add to Want to See")
+	results.showChoiceConfirmed = snap(view)
 	await view.unmount()
 }
 

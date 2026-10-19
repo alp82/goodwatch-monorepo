@@ -717,7 +717,7 @@ function Entry({
 	const year = group.item.wishlistOriginal?.year ?? group.item.year
 	const line = [
 		year,
-		"Type unknown",
+		evidence?.mediaType === "unknown" ? "Type unknown" : null,
 		evidence?.sourceId ? `ID ${evidence.sourceId}` : null,
 		group.entryCount > 1
 			? `Listed ${formatCount(group.entryCount)} times`

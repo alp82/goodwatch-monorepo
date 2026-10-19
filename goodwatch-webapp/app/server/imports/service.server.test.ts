@@ -2684,19 +2684,23 @@ it("TMDB's six fetched lists share kind selection, skipped receipts, repeat prev
 		"./service.server.ts"
 	)
 	const client = createTmdbClient({
-		appToken: "app",
+		apiKey: "app",
 		sleep: async () => {},
 		fetch: async (url) => {
 			const path = new URL(String(url)).pathname
-			const id = path.endsWith("rated") ? 1 : path.endsWith("watchlist") ? 2 : 3
+			const id = path.includes("/rated/")
+				? 1
+				: path.includes("/watchlist/")
+					? 2
+					: 3
 			const results = [
 				{
 					id,
 					title: "Synthetic title",
 					name: "Synthetic show",
-					account_rating: { value: 8.5, created_at: "2020-01-01T12:00:00Z" },
+					rating: 8.5,
 				},
-				...(path.endsWith("movie/rated")
+				...(path.endsWith("rated/movies")
 					? [{ id: 99, title: "Missing title" }]
 					: []),
 			]

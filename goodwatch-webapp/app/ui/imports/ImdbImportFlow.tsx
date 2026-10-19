@@ -37,13 +37,16 @@ const importHeading = (summary: ImdbImportSummary) => {
 export function ImdbImportFlow({
 	initial,
 	handoff,
+	initialId,
 }: {
 	initial?: ImdbImportListResponse
 	/** A file the page recognized as an IMDb ratings export: the upload opens and sends it. */
 	handoff?: ImportHandoff
+	/** An import to open on arrival, chosen in the page's history. */
+	initialId?: string
 }) {
 	const list = useImdbImports(initial)
-	const [openId, setOpenId] = useState<string | null>(null)
+	const [openId, setOpenId] = useState<string | null>(initialId ?? null)
 	const [uploadOpen, setUploadOpen] = useState(!!handoff)
 	// Once the person has done something here, a step that appears takes focus. Not on arrival.
 	const [acted, setActed] = useState(!!handoff)

@@ -1,6 +1,7 @@
 // The top bar: the control that moves the map ("Viewing: Whole map", a menu of the places), the selection once islands
 // are picked, and the filters behind one Filters button, built from the filter bar's controls (ui/filter-bar): a strip
 // of controls under the bar, on phones the bottom sheet.
+import { SERVICES_PATH } from "~/ui/settings/paths"
 import { MapIcon, MapPinIcon } from "@heroicons/react/20/solid"
 import { AnimatePresence, motion } from "framer-motion"
 import { type ReactNode, useEffect, useRef, useState } from "react"
@@ -185,7 +186,7 @@ function FilterControls({
 					providers={mine}
 					onChange={p.onServices}
 					onAddServices={() => {
-						window.location.href = "/settings/where-you-watch"
+						window.location.href = SERVICES_PATH
 					}}
 					size="sm"
 				/>

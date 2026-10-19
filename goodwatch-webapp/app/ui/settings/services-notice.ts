@@ -1,4 +1,4 @@
-// What Where you watch tells a member whose saved services don't all stream in their country: services are saved apart
+// What Your services tells a member whose saved services don't all stream in their country: services are saved apart
 // from the country, so a country change can leave some behind, or all of them, which empties On my services.
 
 export interface ServicesNotice {

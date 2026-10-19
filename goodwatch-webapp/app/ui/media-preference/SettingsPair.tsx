@@ -1,17 +1,14 @@
 // The country and the titles language on Settings: the header pair's rules (machine.ts, MediaPreference.tsx) without
-// the preview. Settings shows them on two sheets, Where you watch (the country, as "Watching from") and Show titles in
-// (the language), under one provider, so a save on one shows on the other and on the tiles. A settings page has no title
+// the preview. Settings shows them on two pages, Watching from (the country) and Show titles in (the language), under one
+// provider, so a save on one shows on the other and on the tiles. A settings page has no title
 // to show a pick on, so a pick saves at once, the whole pair in one call, and the toast offers Undo of the whole pair
 // through the same call. While it saves, both lists are off; a failure keeps the pick shown as not saved, with Retry and
 // Cancel. A country pick saves only the country: no language is offered alongside.
-import { MagnifyingGlassIcon } from "@heroicons/react/24/solid"
-import { useEffect, useRef, useState } from "react"
-import { useCountries } from "~/routes/api.countries"
-import { countryFlagUrl } from "~/utils/country-flag"
+import { type ReactNode, useEffect } from "react"
 import { regionName } from "~/utils/display-names"
 import { describePair, useMediaPreference } from "./MediaPreference"
-import { englishName } from "./languages"
-import { TitlesList } from "./TitlesList"
+import { CountryGrid, Flag, LanguageGrid } from "./PickerGrids"
+import { englishName, languageFlag, ownName } from "./languages"
 import { BROWSER, intended } from "./machine"
 
 /** The pair as Settings shows it: what a save is about to keep, and whether the lists are off while it saves or reads. */
@@ -34,7 +31,7 @@ export function titlesLanguageName(language: string, browserLanguage: string) {
 		: englishName(language)
 }
 
-/** Saving, a failed save with Retry and Cancel, or a failed read. Each sheet shows it above its list. */
+/** Saving, a failed save with Retry and Cancel, or a failed read. Each page shows it above its picker. */
 export function PairStatus() {
 	const { p, next, failed } = useSettingsPair()
 	const { state, saving, changed, browserLanguage } = p
@@ -91,23 +88,52 @@ export function PairStatus() {
 	)
 }
 
-/** Watching from: every country, searchable. A pick saves the country at once. */
-export function WatchingFromList({ className = "h-72" }: { className?: string }) {
+/** The heading font of My library (my-pages/bits DISPLAY), copied: that module brings the router along. */
+const DISPLAY = "font-['Gabarito'] font-black tracking-[-0.03em]"
+
+/** The current choice, large: its flag and name, with a line under it. */
+function Current({
+	flag,
+	name,
+	line,
+	data,
+}: {
+	flag: string
+	name: string
+	line: string
+	data: Record<string, string>
+}) {
+	return (
+		<div className="flex items-center gap-4">
+			<Flag code={flag} className="h-10 shadow-lg md:h-12" />
+			<div className="min-w-0">
+				<p {...data} className={`${DISPLAY} truncate text-3xl text-white md:text-4xl`}>
+					{name}
+				</p>
+				<p className="text-sm text-gray-400">{line}</p>
+			</div>
+		</div>
+	)
+}
+
+/** Watching from: the current country, then the country grid. A pick saves the country at once. */
+export function WatchingFromList() {
 	const { p, next, failed, off } = useSettingsPair()
 	return (
 		<fieldset
 			data-watching-from
 			disabled={off}
 			aria-busy={p.saving || undefined}
-			className={off ? "opacity-60" : ""}
+			className={`flex flex-col gap-6 ${off ? "opacity-60" : ""}`}
 		>
 			<legend className="sr-only">Watching from</legend>
-			<p data-country-current className="text-sm text-gray-400">
-				{regionName(next.country)}
-				{failed && p.changed.country && " · not saved"}
-			</p>
-			<CountryPicker
-				className={className}
+			<Current
+				flag={next.country}
+				name={`${regionName(next.country)}${failed && p.changed.country ? " · not saved" : ""}`}
+				line={`Streaming offers and age ratings for ${regionName(next.country)}`}
+				data={{ "data-country-current": "" }}
+			/>
+			<CountryGrid
 				current={next.country}
 				onPick={(code) => {
 					p.pickCountry(code)
@@ -118,23 +144,29 @@ export function WatchingFromList({ className = "h-72" }: { className?: string })
 	)
 }
 
-/** Show titles in: "Browser default" and the offered languages. A pick saves the language at once. */
-export function ShowTitlesInList({ className = "h-[22rem]" }: { className?: string }) {
+/** Show titles in: the current language, then "Browser default" and the offered languages. A pick saves at once. */
+export function ShowTitlesInList({ preview }: { preview?: ReactNode }) {
 	const { p, next, failed, off } = useSettingsPair()
+	const shown = next.language === BROWSER ? p.browserLanguage : next.language
+	const own = ownName(shown)
 	return (
 		<fieldset
 			data-show-titles-in
 			disabled={off}
 			aria-busy={p.saving || undefined}
-			className={off ? "opacity-60" : ""}
+			className={`flex flex-col gap-6 ${off ? "opacity-60" : ""}`}
 		>
 			<legend className="sr-only">Show titles in</legend>
-			<p data-titles-current className="text-sm text-gray-400">
-				{titlesLanguageName(next.language, p.browserLanguage)}
-				{failed && p.changed.language && " · not saved"}
-			</p>
-			<TitlesList
-				className={`mt-2 ${className}`}
+			<div className="flex flex-col gap-4">
+				<Current
+					flag={languageFlag(shown)}
+					name={`${englishName(shown)}${failed && p.changed.language ? " · not saved" : ""}`}
+					line={next.language === BROWSER ? ["Follows your browser", own].filter(Boolean).join(" · ") : own || "Chosen by you"}
+					data={{ "data-titles-current": "" }}
+				/>
+				{preview}
+			</div>
+			<LanguageGrid
 				value={next.language}
 				browserLanguage={p.browserLanguage}
 				onPick={(l) => {
@@ -146,88 +178,3 @@ export function ShowTitlesInList({ className = "h-[22rem]" }: { className?: stri
 	)
 }
 
-/** Every country, searchable, the current one in view. A settings page has no title, so no offers order or mark it. */
-function CountryPicker({
-	current,
-	onPick,
-	className,
-}: {
-	current: string
-	onPick: (code: string) => void
-	className: string
-}) {
-	const countries = useCountries()
-	const [query, setQuery] = useState("")
-	const q = query.trim().toLowerCase()
-	const rows = (countries.data ?? []).filter(
-		(c) => !q || c.name.toLowerCase().includes(q) || c.code.toLowerCase() === q,
-	)
-	// The current country starts in view, scrolled inside the list only.
-	const list = useRef<HTMLUListElement>(null)
-	const loaded = Boolean(countries.data)
-	useEffect(() => {
-		const ul = list.current
-		const at = ul?.querySelector<HTMLElement>("[aria-current]")
-		if (ul && at) ul.scrollTop = at.offsetTop - ul.offsetTop - 8
-	}, [loaded])
-	return (
-		<div className="mt-3">
-			<label className="flex h-9 items-center gap-2 rounded-lg bg-white/[0.07] px-2 ring-1 ring-white/10 focus-within:ring-white/30">
-				<MagnifyingGlassIcon className="h-4 w-4 shrink-0 text-gray-400" />
-				<input
-					value={query}
-					onChange={(e) => setQuery(e.target.value)}
-					placeholder="Search countries"
-					aria-label="Search countries"
-					className="min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-gray-500"
-				/>
-			</label>
-			<ul
-				ref={list}
-				aria-label="Countries"
-				className={`mt-2 overflow-y-auto overscroll-contain pr-1 ${className}`}
-			>
-				{rows.map((c) => (
-					<li key={c.code}>
-						<button
-							type="button"
-							data-country-code={c.code}
-							aria-current={c.code === current || undefined}
-							onClick={() => onPick(c.code)}
-							className={`flex h-9 w-full cursor-pointer items-center gap-2.5 rounded-lg px-2 text-left text-sm text-white hover:bg-white/[0.08] focus-visible:outline-2 focus-visible:outline-white disabled:cursor-wait ${c.code === current ? "bg-white/[0.1] ring-1 ring-white/20" : ""}`}
-						>
-							<img
-								src={countryFlagUrl(c.code)}
-								alt=""
-								className="h-3 rounded-[1px]"
-							/>
-							<span className="min-w-0 flex-1 truncate">{c.name}</span>
-						</button>
-					</li>
-				))}
-				{countries.isPending && (
-					<li className="px-2 py-2 text-xs text-gray-500" aria-busy="true">
-						Loading countries…
-					</li>
-				)}
-				{countries.isError && (
-					<li className="px-2 py-2 text-xs text-gray-400">
-						Countries could not be loaded.{" "}
-						<button
-							type="button"
-							className="cursor-pointer underline"
-							onClick={() => countries.refetch()}
-						>
-							Try again
-						</button>
-					</li>
-				)}
-				{q && countries.data && rows.length === 0 && (
-					<li className="px-2 py-2 text-sm text-gray-500">
-						No country matches.
-					</li>
-				)}
-			</ul>
-		</div>
-	)
-}

@@ -14,13 +14,14 @@ export function wishlistSourceGroup(
 			])
 		: `row:${index}`
 }
-export function isUnknownWishlistSource(
+export function isManuallyMatchableWishlistSource(
 	original: WishlistOriginalObservation | undefined,
+	required?: "id_conflict",
 ): original is WishlistOriginalObservation {
 	return (
 		!!original &&
 		original.kind === "want" &&
-		original.mediaType === "unknown" &&
+		(original.mediaType === "unknown" || required === "id_conflict") &&
 		!["invalid", "unsupported"].includes(original.problem?.outcome ?? "")
 	)
 }

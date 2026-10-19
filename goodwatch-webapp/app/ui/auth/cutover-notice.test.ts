@@ -341,7 +341,7 @@ test("settings: the change-password section shows the notice and no fields with 
 		assert.doesNotMatch(html, /<input|Change Password/)
 	}
 	const open = renderToStaticMarkup(h(AuthContext.Provider, { value: useAuthDefaults() }, h(ChangePasswordSection)))
-	assert.match(open, /Change Password/)
+	assert.match(open, /Change password/)
 	assert.match(open, /<input/)
 	assert.ok(!open.includes(TITLE))
 })
