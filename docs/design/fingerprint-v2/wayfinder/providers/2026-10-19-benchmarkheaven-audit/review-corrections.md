@@ -1,0 +1,18 @@
+# Astra review corrections — 2026-10-19
+
+All four documentary findings are applied to the report and machine-readable findings. No documentary review finding remains unresolved. This correction uses already retrieved public source bytes, not new provider/API calls, runtime execution or account/device inspection.
+
+| Finding | Corrected conclusion | Primary evidence |
+|---|---|---|
+| H2O binary floor omitted | Ordinary and two-way modes configure 0.801. This is not raw calibrated uncertainty or a transferable Jev threshold. Disabling it would change the configuration. | [Pinned configuration](https://huggingface.co/h2oai/h2o-lightning-4b/raw/898fa17e31fb3cdeaf294492b4b78adb5073229c/serve_config.json), retained byte-for-byte in `captures/h2o-serve-config.json`. |
+| Torchcast grouped-work warning incomplete | Noncausal mode disables shared-prefix/CUDA-graph paths, so full question prompts count. Above 26 choices, elimination and final rounds plus residual allocation are not one joint initial-option readout. Small native schemas remain plausible. | [Pinned runtime](https://huggingface.co/torchcast-ai/torchcast-decision-4b/raw/d54b248f2643df847979ca15638ee502ec79b788/torchcast_decision/model.py), noncausal setup and `_wide`; response hash retained. |
+| Decisio identity imprecise | Observed package 0.17.0 at `80b0d9ba256e077585861fbc0fd3ce4013584ad5`, not a selected runtime pin. Board 0.8/0.9 rows are different configurations. Base weights/readout/calibration require separate selection. Earlier README hash matched; this is a wording correction, not evidence of source drift. | [Package version](https://github.com/aminry/decisio/blob/80b0d9ba256e077585861fbc0fd3ce4013584ad5/pyproject.toml), [README](https://github.com/aminry/decisio/blob/80b0d9ba256e077585861fbc0fd3ce4013584ad5/README.md). |
+| Kettei accounting units conflated | Shared-tokenizer billed input and model-rendered prompt/work need separate bounds. Our 16k billed-input ceiling does not prove model-prompt fit. No repeated-state rule is imported from another host. | [Metering](https://docs.sqwish.ai/guides/accounts-and-usage.md), [API limits](https://docs.sqwish.ai/api.md); response hashes retained. |
+
+The narrow screening recommendation is Celeris first, Kettei fallback, and at most one H2O hypothesis if existing hardware is already known to be plausible. It selects no challenger and authorizes no calls. Existing resources/access may defer or reorder it. Torchcast, Quyet and Decisio remain alternatives, not automatic new arms. No exhaustive census is required for research closure.
+
+`captures/astra-review-receipt.json` records review-document hashes and 25 verified public source response hashes. It notes prior reviewer exposure; this was not blind evidence. Raw private reviewer/session/account metadata was not copied. Original review files remain external read-only context.
+
+The complete pre-review addendum is preserved at `history/2026-10-19-pre-astra/`, including its original `checks.json` and `SHA256SUMS`; that relative seal still verifies all eight historical files. The new top-level seal covers corrected current files and retained history. Historical statements are superseded, not erased. The original `../2026-10-19-v1/` package and its 34-file seal remain unchanged at `f94973b4`.
+
+R1/R2, native representation flexibility, the current 16k ceiling, complete-companion economics and historical token/cost qualifications remain intact. Call-admission prerequisites remain downstream; they are not a reason to hold documentary research open. Q8/Q9 remain unresolved. Q7 authorized baseline/evaluation publication only and does not authorize this provider branch. Root owns scoped commit, publication and ticket/map actions.

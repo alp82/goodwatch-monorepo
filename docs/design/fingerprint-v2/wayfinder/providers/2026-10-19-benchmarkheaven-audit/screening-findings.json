@@ -1,0 +1,554 @@
+{
+  "as_of": "2026-10-19",
+  "readiness": "Conditional research ready; no executable admission, selected challenger or publication",
+  "representation_policy": "No mandatory 74-field/eleven-category native format; concrete native variants precede user selection. Legacy adapter findings remain conditional to that adapter.",
+  "historical_admission": {
+    "jev_113_l10_mean_input_tokens": 18840,
+    "jev_113_l6_mean_input_tokens": 13068,
+    "l6_upper_bound_proof": false,
+    "historical_jev_cost_scope": "Scores only",
+    "historical_qwen_cost_scope": "Complete documents with substantial caching",
+    "old_disagreement_is_factual_error": false,
+    "rerun_synopsis_batch_sweep": false
+  },
+  "preserved_corrections": {
+    "liquid_repeated_state": "Conservative scenario only; actual shared-state/criterion/host accounting unresolved; not admitted",
+    "clef_64_question_scope": "Workers AI only; other OpenRouter hosts unverified/not admitted, not proven incompatible",
+    "jev_choice_scope": "Old proposed eleven integer categories plus explicit states; native coarse Score projection possible and different"
+  },
+  "all_candidates_admitted": false,
+  "rows": [
+    {
+      "key": "h2o-lightning",
+      "identity": {
+        "model": "h2oai/h2o-lightning-4b",
+        "observed_card_revision": "898fa17e31fb3cdeaf294492b4b78adb5073229c",
+        "base": "Qwen/Qwen3.5-4B",
+        "license": "apache-2.0",
+        "resource_access_verified": false,
+        "runtime_pin": null
+      },
+      "status": "conditional_single_local_hypothesis_only",
+      "admitted": false,
+      "claim_level": "Maker documentation, not actual compatibility or movie knowledge evidence",
+      "documented": {
+        "types": [
+          "choice",
+          "noul",
+          "score"
+        ],
+        "max_choices": 255,
+        "state_cut_default_tokens": 32000,
+        "billing": null,
+        "input_usage": "Shared head counted once in usage.input_tokens; two-way mode processed_input_tokens rereads each prompt",
+        "board_version": "v1.1",
+        "current_card_version": "v1.3.1",
+        "tag_v131_revision": "e5c86b7564de9574fc48e759c226e50819d079ec",
+        "noul_commit_floor": 0.801,
+        "noul_commit_floor_modes": [
+          "ordinary",
+          "two-way"
+        ],
+        "uncertainty": "Configured binary commitment floor is not raw calibrated uncertainty; changing it is another runtime configuration"
+      },
+      "remaining_gates": [
+        "Concrete native schema; full rendered input bound",
+        "Pin weights/shim/runtime/calibration/attention mode; no truncation",
+        "Existing hardware; startup probes and all internal processing explicitly accounted; no Box generation",
+        "Do not disable floor silently or inherit a Jev probability-to-unknown threshold"
+      ],
+      "source_keys": [
+        "card:h2oai/h2o-lightning-4b",
+        "review:h2o-config"
+      ]
+    },
+    {
+      "key": "torchcast-4b-v12",
+      "identity": {
+        "model": "torchcast-ai/torchcast-decision-4b",
+        "observed_card_revision": "d54b248f2643df847979ca15638ee502ec79b788",
+        "base": "Qwen/Qwen3.5-4B",
+        "license": "apache-2.0",
+        "resource_access_verified": false,
+        "runtime_pin": null
+      },
+      "status": "documented_alternative_not_next_arm",
+      "admitted": false,
+      "claim_level": "Maker documentation, not actual compatibility or movie knowledge evidence",
+      "documented": {
+        "types": [
+          "choice",
+          "noul",
+          "score"
+        ],
+        "state_trimming_prompt_threshold": 16384,
+        "grouped_option_passes_above": 26,
+        "noul_commit_floor": 0.801,
+        "attention": "Bundled noncausal full-attention runtime; generic causal loaders differ",
+        "served_model": "torchcast-decision-4b-v1.2",
+        "shared_prefix_noncausal": false,
+        "cuda_graphs_noncausal": false,
+        "wide_choice_readout": "tournament",
+        "wide_choice_probability_semantics": "Grouped elimination and final rounds; discarded options receive fixed total residual allocation weighted by first-round probabilities, not a single joint distribution readout over all initial options",
+        "processed_work": "Full per-question prompts in noncausal v1.2; include every elimination/final round"
+      },
+      "remaining_gates": [
+        "Concrete native schema, full prompt count below truncation",
+        "Existing device and exact runtime pin; bound all per-question/grouped work",
+        "Use native uncertainty semantics; no inherited Jev thresholds",
+        "Bound every full-prompt pass and wide-choice probability semantics; our 16k units do not prove prompt is below 16,384 runtime-token trimming threshold"
+      ],
+      "source_keys": [
+        "card:torchcast-ai/torchcast-decision-4b",
+        "review:torchcast-runtime"
+      ]
+    },
+    {
+      "key": "quyet-medium",
+      "identity": {
+        "model": "chinhnc/Quyet-1.0-Medium",
+        "observed_card_revision": "bd509d64070e8ff39328e0b883ac86b9313d15f0",
+        "base": "Qwen/Qwen3.5-4B",
+        "license": "apache-2.0",
+        "resource_access_verified": false,
+        "runtime_pin": null
+      },
+      "status": "documented_native_alternative_not_next_arm",
+      "admitted": false,
+      "claim_level": "Maker documentation, not actual compatibility or movie knowledge evidence",
+      "documented": {
+        "types": [
+          "choice",
+          "noul",
+          "score"
+        ],
+        "max_options": 10,
+        "max_state_tokens": 6000,
+        "max_prompt_tokens": 8000,
+        "truncation": "State: recent conversation turns, otherwise beginning",
+        "legacy_14_choice_adapter": "Cannot directly represent; optional comparison adapter only, not a universal admission gate"
+      },
+      "remaining_gates": [
+        "Concrete native representation, explicit unknown/N/A and projection",
+        "Complete evidence packet within smaller bounds; prohibit state loss",
+        "Pin quyet package/prompt/temperature and existing resources"
+      ],
+      "source_keys": [
+        "card:chinhnc/Quyet-1.0-Medium"
+      ]
+    },
+    {
+      "key": "quyet-large",
+      "identity": {
+        "model": "chinhnc/Quyet-1.0-Large",
+        "observed_card_revision": "9a0f051112ba4301f6e4c8b87fc088ce00b11aae",
+        "base": "google/gemma-4-31B-it",
+        "license": "apache-2.0",
+        "resource_access_verified": false,
+        "runtime_pin": null
+      },
+      "status": "documented_native_alternative_not_next_arm",
+      "admitted": false,
+      "claim_level": "Maker documentation, not actual compatibility or movie knowledge evidence",
+      "documented": {
+        "types": [
+          "choice",
+          "noul",
+          "score"
+        ],
+        "max_options": 10,
+        "max_state_tokens": 6000,
+        "max_prompt_tokens": 8000,
+        "truncation": "State: recent conversation turns, otherwise beginning",
+        "legacy_14_choice_adapter": "Cannot directly represent; optional comparison adapter only, not a universal admission gate"
+      },
+      "remaining_gates": [
+        "Concrete native representation, explicit unknown/N/A and projection",
+        "Complete evidence packet within smaller bounds; prohibit state loss",
+        "Pin quyet package/prompt/temperature and existing resources"
+      ],
+      "source_keys": [
+        "card:chinhnc/Quyet-1.0-Large"
+      ]
+    },
+    {
+      "key": "basal-ultra",
+      "identity": {
+        "model": "Remek/basal-omni-1.0-ultra",
+        "observed_card_revision": "e347c65ca04f9823c1d480c6bc7702212b25d925",
+        "base": "google/gemma-4-31B-it",
+        "license": "apache-2.0",
+        "resource_access_verified": false,
+        "runtime_pin": null
+      },
+      "status": "resource_dependent_discovery",
+      "admitted": false,
+      "claim_level": "Maker documentation, not actual compatibility or movie knowledge evidence",
+      "documented": {
+        "types": [
+          "choice",
+          "noul",
+          "score",
+          "multi",
+          "act",
+          "tool selection, not arguments"
+        ],
+        "max_choices": 255,
+        "weight_bf16_gb_approx": 62,
+        "maker_state_tokens_approx": {
+          "80GB_one_order": 10000,
+          "H200_141GB_one_order": 32000
+        },
+        "orders_two": "Roughly doubles question work",
+        "board_revision": "b8e214cb42d0a7a4cb2c3a93b0ba02c65d7590e4"
+      },
+      "remaining_gates": [
+        "Existing suitable device and no provisioning",
+        "Pin current model and basal runtime, native schema and full input/work bounds"
+      ],
+      "source_keys": [
+        "card:Remek/basal-omni-1.0-ultra"
+      ]
+    },
+    {
+      "key": "decisio",
+      "identity": {
+        "runtime": "aminry/decisio",
+        "base": "Separately pinned frozen Qwen/Gemma",
+        "observed_runtime_readme": "Observed package 0.17.0; board 0.8/0.9 are different configurations",
+        "runtime_pin": null,
+        "observed_runtime_commit": "80b0d9ba256e077585861fbc0fd3ce4013584ad5",
+        "observed_package_version": "0.17.0"
+      },
+      "status": "documented_alternative_for_distinct_shared_state_runtime_hypothesis",
+      "admitted": false,
+      "claim_level": "Maker documentation, not actual compatibility or movie knowledge evidence",
+      "documented": {
+        "max_choices": 255,
+        "processing": "Shared-state prefill or per-question variants; calibrated finite readout",
+        "model_family": "Serving/readout runtime, not TypeSafe weights",
+        "uncertainty": "Expected-level score; choice confidence rescaled from uniform, score confidence describes concentration; neither is factual evidence support"
+      },
+      "remaining_gates": [
+        "Pin runtime/base model and calibration mode",
+        "No fitting/training, hidden generation or extra inferred access",
+        "Native schema, billed/processed units, existing hardware"
+      ],
+      "source_keys": [
+        "decisio-readme",
+        "review:decisio-version",
+        "review:decisio-readme",
+        "review:decisio-api"
+      ]
+    },
+    {
+      "key": "celeris-decision",
+      "identity": {
+        "model": "celeris-1-decision",
+        "base_url": "https://inference.celeris.ai/celeris-1-decision/v1",
+        "endpoints": [
+          "/systemone",
+          "/decisions"
+        ],
+        "immutable_version": null
+      },
+      "status": "hosted_native_contract_screening",
+      "admitted": false,
+      "claim_level": "Maker documentation, not actual compatibility or movie knowledge evidence",
+      "documented": {
+        "types": [
+          "choice",
+          "noul/binary",
+          "score"
+        ],
+        "max_questions_explain_off": 512,
+        "max_questions_explain_on": 64,
+        "max_choice_options": 512,
+        "max_score_levels": 64,
+        "context_tokens": 131072,
+        "input_limit": "Less than context due fixed answer reserve; exact bound unresolved",
+        "max_tokens_parameter": false,
+        "prices_usd_per_million": {
+          "input": 0.04,
+          "cached_input": 0.04,
+          "output": 0
+        },
+        "usage_rule": "Includes formatting beyond payload; pre-dispatch upper bound not established"
+      },
+      "remaining_gates": [
+        "Explanations off; concrete native output and state semantics",
+        "Pre-dispatch bound for formatted billed units under 16k; response bytes",
+        "Current version/access/account allowance and unchanged policies; no credit purchase"
+      ],
+      "source_keys": [
+        "celeris-decisions",
+        "celeris-models",
+        "celeris-pricing"
+      ]
+    },
+    {
+      "key": "kettei",
+      "identity": {
+        "models": [
+          "kettei-fat",
+          "kettei-chub",
+          "kettei-core"
+        ],
+        "native_url": "https://api.sqwish.ai/v1/decide",
+        "compatibility_endpoint": "/v1/systemone",
+        "immutable_version": null
+      },
+      "status": "hosted_native_contract_screening",
+      "admitted": false,
+      "claim_level": "Maker documentation, not actual compatibility or movie knowledge evidence",
+      "documented": {
+        "types": [
+          "binary",
+          "single",
+          "ordinal"
+        ],
+        "max_billed_input_tokens": 65536,
+        "native_schema_max_decisions": 128,
+        "model_max_questions": "Must inspect for selected base model; schema ceiling is not assurance",
+        "finetune_max_questions": 32,
+        "prices_usd_per_million_input": {
+          "kettei-fat": 0.06,
+          "kettei-chub": 0.04,
+          "kettei-core": 0.02
+        },
+        "output_price": 0,
+        "availability": "Base deployment readiness not verified. Fat fine-tuning is early preview/not available; this does not establish base API unavailability.",
+        "fallback_default": "auto",
+        "billing_units": "usage.input_tokens uses shared billing tokenizer named by usage.tokenizer, not model-rendered prompt",
+        "rendered_model_bound": "Separate prompt/work constraint; below 65,536 billed tokens can still overflow model formatting"
+      },
+      "remaining_gates": [
+        "Concrete native schema and selected model question/choice limits. Separate bounds for shared-tokenizer billed input (under our 16k ceiling) and model-rendered prompt/work; both must satisfy relevant contracts",
+        "Set fallback none; record returned model/version and temperature; no presumed deployment availability",
+        "Existing permitted access/allowance/account price and limits; no fine/prompt-tuning or keep-warm purchase"
+      ],
+      "source_keys": [
+        "sqwish-api",
+        "sqwish-models",
+        "sqwish-price",
+        "sqwish-run",
+        "sqwish-jev",
+        "review:sqwish-metering"
+      ]
+    },
+    {
+      "key": "sage",
+      "identity": {
+        "provider": "Levanto",
+        "api_paths": [
+          "/decide",
+          "/decide/batch"
+        ],
+        "doc_response_model": "levanto-sage-v1.3",
+        "board_also": "levanto-sage-v1.4",
+        "current_requested_identity": null
+      },
+      "status": "conditional_native_discovery",
+      "admitted": false,
+      "claim_level": "Maker documentation, not actual compatibility or movie knowledge evidence",
+      "documented": {
+        "types": [
+          "choice",
+          "yesno",
+          "scale",
+          "tags",
+          "sort"
+        ],
+        "max_text_choices": 120,
+        "max_image_choices": 20,
+        "max_scale_levels": 26,
+        "context": "32k or extended 128k plan",
+        "null": "May abstain; not automatically unknown/N/A",
+        "billing": "Content counted per question, tag or sorted item; batch saves round trips, not tokens",
+        "prices_usd_per_million_input": [
+          0.05,
+          0.046,
+          0.042,
+          0.038
+        ],
+        "reasoning_usd_per_million_output": 10,
+        "search_usd_each": 0.1,
+        "free_tier": "Published, current account eligibility unverified"
+      },
+      "remaining_gates": [
+        "Concrete native schema; repeated-content accounting may exceed 16k even if wire request fits",
+        "Reasoning off, no grounding/search; no hidden companion generation",
+        "Resolve current exact route/model; existing permitted allowance; no subscription/provisioning"
+      ],
+      "source_keys": [
+        "levanto-limits",
+        "levanto-batch",
+        "levanto-reasoning",
+        "levanto-price"
+      ]
+    },
+    {
+      "key": "nimble-hosted",
+      "identity": {
+        "provider": "Bespoke Labs",
+        "model": "nimble-v4-max",
+        "url": "https://api.bespokelabs.ai/v1/systemone",
+        "aliases": {
+          "nimble-latest": "nimble-v4-max",
+          "nimble-v4": "deprecated; maps to nimble-v4-max"
+        }
+      },
+      "status": "native_representation_question_count_dependent",
+      "admitted": false,
+      "claim_level": "Maker documentation, not actual compatibility or movie knowledge evidence",
+      "documented": {
+        "max_questions": 64,
+        "max_choice_options": 255,
+        "max_score_levels": 255,
+        "max_prompt_per_question": "256k",
+        "truncation": false,
+        "prices_usd_per_million": {
+          "input": 0.04,
+          "output": 0
+        },
+        "billing": "Shared state and questions counted once per request despite per-question prompts",
+        "legacy_98_atomic_adapter": "Incompatible on this direct host, not a native universal exclusion"
+      },
+      "remaining_gates": [
+        "Concrete native representation may fit <=64 questions; no hidden packing/splitting",
+        "Billed-input bound, response-size bound, existing access and allowance",
+        "No inferred cap or availability for other hosts"
+      ],
+      "source_keys": [
+        "bespoke-limits",
+        "bespoke-price",
+        "bespoke-start"
+      ]
+    },
+    {
+      "key": "nimble-local-v3",
+      "identity": {
+        "model": "bespokelabs/Bespoke-Nimble-9B-v3",
+        "observed_card_revision": "8e927b9b4afdbb14479fac10a7364d1a695be208",
+        "base": "Qwen/Qwen3.5-9B",
+        "license": "cc-by-nc-4.0",
+        "resource_access_verified": false,
+        "runtime_pin": null
+      },
+      "status": "separate_local_discovery",
+      "admitted": false,
+      "claim_level": "Maker documentation, not actual compatibility or movie knowledge evidence",
+      "documented": {
+        "kind": "Qwen3.5-9B LoRA; not current hosted v4-max",
+        "license": "cc-by-nc-4.0"
+      },
+      "remaining_gates": [
+        "License/use constraints and runtime/base pins",
+        "Existing device, native schema and resource bounds"
+      ],
+      "source_keys": [
+        "card:bespokelabs/Bespoke-Nimble-9B-v3"
+      ]
+    },
+    {
+      "key": "qwen-reranker",
+      "identity": {
+        "model": "Qwen/Qwen3-Reranker-0.6B",
+        "observed_card_revision": "e61197ed45024b0ed8a2d74b80b4d909f1255473",
+        "base": [
+          "Qwen/Qwen3-0.6B-Base"
+        ],
+        "license": "apache-2.0",
+        "resource_access_verified": false,
+        "runtime_pin": null
+      },
+      "status": "narrow_evidence_or_query_stage_only",
+      "admitted": false,
+      "claim_level": "Maker documentation, not actual compatibility or movie knowledge evidence",
+      "documented": {
+        "context_tokens": 32768,
+        "task": "Query-document relevance readout; not general ordinal/multifield/prose output"
+      },
+      "remaining_gates": [
+        "Concrete relevance/evidence task and binding; not whole-title substitute",
+        "Runtime/device/input bounds; no inference or downloads in research"
+      ],
+      "source_keys": [
+        "card:Qwen/Qwen3-Reranker-0.6B"
+      ]
+    }
+  ],
+  "unverified_discovery": [
+    "Wity",
+    "Surd SPX",
+    "Attest",
+    "Instinct",
+    "Vansa",
+    "SubQ",
+    "Other fine-tunes/encoders/wrappers in coverage-inventory.json"
+  ],
+  "recommendation": "Narrow documentary order: Celeris first (explanations off), Kettei fallback (one usable base route, no automatic three-size expansion), at most one H2O-Lightning hypothesis only if already-known existing hardware is plausible. Torchcast/Quyet/Decisio remain alternatives, not extra arms. No selected challenger or launch approval; Jev remains researched comparator.",
+  "documentary_screening_order": [
+    {
+      "priority": 1,
+      "key": "celeris-decision",
+      "status": "Documentary hosted lead only; no admission",
+      "conditions": [
+        "Native request/evidence/unknown/companion ownership agreed",
+        "Provider-formatted billed upper bound, selected route/version policy and existing permitted access"
+      ]
+    },
+    {
+      "priority": 2,
+      "key": "kettei",
+      "status": "Hosted fallback; one base route only, conditional on existing metadata/access",
+      "starting_point": "Chub is reasonable paper starting point, not selected",
+      "conditions": [
+        "Actual usable model with exact question/choice limits, fallback none and returned identity/temperature",
+        "Separate billing-token and model-rendered prompt/work bounds"
+      ]
+    },
+    {
+      "priority": 3,
+      "key": "h2o-lightning",
+      "status": "At most one local hypothesis; defer if existing hardware absent or unknown",
+      "conditions": [
+        "Already-known device plausibly fits roughly 9.3GB weights plus runtime/KV overhead; no inventory check performed",
+        "One exact version/attention/shim, all startup guards/full-prompt passes counted and binary floor disclosed"
+      ]
+    }
+  ],
+  "call_admission_dependencies": [
+    {
+      "name": "Representation and evidence contract",
+      "owner": "Representation/protocol owners",
+      "requires": "Agreed native schema, explicit unknown/N/A/evidence bindings and polarity/scope, independently checked evidence and complete companion ownership; Q8/Q9 unresolved"
+    },
+    {
+      "name": "Route and runtime identity contract",
+      "owner": "Adapter/runner owner",
+      "requires": "One selected endpoint/model/runtime/settings; immutable revisions where available, otherwise explicit mutable route and returned-identity/drift handling; no fallback or hidden generation"
+    },
+    {
+      "name": "Rendered input, output and work bounds",
+      "owner": "Adapter/runner owner",
+      "requires": "Pre-dispatch provider-specific billed input <=16k and model-formatted prompt/work limits, all questions/options/wrappers/passes, no evidence truncation, response-size bounds; generative completion+reasoning <=8192"
+    },
+    {
+      "name": "Complete pipeline reservation and ledger",
+      "owner": "Runner/protocol owner",
+      "requires": "Evidence plus classifier plus full companions, repairs/retries/uncertain charges and applicable fixed costs under shared $5/$3.50 title budget and approved request/time/concurrency limits; no fabricated full-run total"
+    },
+    {
+      "name": "Existing permitted access and resources",
+      "owner": "Runner/owner when authorized",
+      "requires": "Existing allowance/key/tariff/route availability or already-known device; no purchases, provisioning, account policy changes or access assumptions"
+    },
+    {
+      "name": "Approved execution and scheduled compatibility",
+      "owner": "Root/protocol owner",
+      "requires": "Protocol approvals before calls; first scheduled bounded request verifies compatibility, not extra paid preflight; stop on incompatibility. Fresh holdout separate and unfunded"
+    }
+  ],
+  "review_disposition": "Four documentary corrections applied; no unresolved documentary finding. Research completion does not require exhaustive 224-row census or paid compatibility."
+}

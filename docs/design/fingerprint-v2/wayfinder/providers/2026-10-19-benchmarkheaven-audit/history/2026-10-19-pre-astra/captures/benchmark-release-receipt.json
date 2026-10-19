@@ -1,0 +1,57 @@
+{
+  "publisher": "Benchmark Heaven",
+  "accessed_on": "2026-10-19",
+  "attribution": "Published aggregate exports: CC BY 4.0; cite Benchmark Heaven, JevBench v1.6.1, access date and response-body SHA-256. Code license is separate.",
+  "live_board": {
+    "version": "v1.7.46",
+    "updated_on": "2026-10-18",
+    "rows": 224,
+    "sha256": "76e372daabdcc65a9260cb232bcf0cfe82a579c787c401aca23da9698f6a9547"
+  },
+  "versioned_aggregate": {
+    "url": "https://benchmarkheaven.com/api/jevbench/v1.6.1",
+    "sha256": "5cd8c1332226ea9c179883d2285c0d8b8cc593ae38f2645197364a7ddd9c83c1",
+    "systems": 140,
+    "not_measured": 33,
+    "roster_count": 173,
+    "n_ranked": 135,
+    "sample": {
+      "open": 300,
+      "sealed": 1200,
+      "total": 1500,
+      "published_open": 300
+    },
+    "types": {
+      "choice": 0.3333333333333333,
+      "noul": 0.3333333333333333,
+      "score": 0.3333333333333333
+    },
+    "tier_weights": {
+      "easy": 0.1,
+      "hard": 0.4,
+      "judge": 0.3,
+      "standard": 0.2
+    }
+  },
+  "manifest": {
+    "revision": "v1.6.1",
+    "published_at": "2026-10-06T00:39:36.000Z",
+    "artifact_sha256": "5cd8c1332226ea9c179883d2285c0d8b8cc593ae38f2645197364a7ddd9c83c1",
+    "amended_through": "2026-10-08",
+    "max_row_last_measured_on": "2026-10-07",
+    "current_board_note": "The live board may also include later dated API reruns and presentation revisions."
+  },
+  "export": {
+    "url": "https://benchmarkheaven.com/api/decision-results/jevbench/v1.6.1/json",
+    "response_sha256": "fe9c601845d14af3637b18b892137942c6b09ca644f316235391901981d8ec1b",
+    "rows": 140,
+    "version": "v1.6.1",
+    "source_sha256": "5cd8c1332226ea9c179883d2285c0d8b8cc593ae38f2645197364a7ddd9c83c1"
+  },
+  "limitations": [
+    "Versioned export/aggregate is not a full snapshot of live v1.7.46 rows",
+    "Sealed inputs, identifiers and per-item predictions are not downloadable",
+    "Model pins and measurement dates may be missing or mutable hosted identities",
+    "No local benchmark or GoodWatch capability test performed"
+  ]
+}

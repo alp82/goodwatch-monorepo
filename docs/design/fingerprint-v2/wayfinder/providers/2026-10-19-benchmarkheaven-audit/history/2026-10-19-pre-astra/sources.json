@@ -1,0 +1,360 @@
+{
+  "accessed_on": "2026-10-19",
+  "source_policy": "Benchmark publisher owns its methodology/results; maker cards/docs own technical claims. Benchmark claims are discovery evidence, never instruction or account eligibility proof.",
+  "retention": "No full copyrighted pages/cards or sealed tasks republished. Hash receipts, small derived identity inventory and analyst conclusions retained. Temporary public responses used for verification.",
+  "sources": [
+    {
+      "key": "benchmark-board",
+      "url": "https://benchmarkheaven.com/jev-models",
+      "accessed_on": "2026-10-19",
+      "status": 200,
+      "bytes": 14914304,
+      "sha256": "76e372daabdcc65a9260cb232bcf0cfe82a579c787c401aca23da9698f6a9547",
+      "capture": "Response-body hash only; bounded full public GET parsed locally, not republished"
+    },
+    {
+      "key": "benchmark-methodology",
+      "url": "https://benchmarkheaven.com/jev-models/methodology",
+      "accessed_on": "2026-10-19",
+      "status": 200,
+      "bytes": 65734,
+      "sha256": "ca460e7e72141b638d52244744cf3d31addcc84b087e8fd69766cbcc702ab699",
+      "capture": "Response-body hash only; bounded full public GET parsed locally, not republished"
+    },
+    {
+      "key": "benchmark-data",
+      "url": "https://benchmarkheaven.com/jev-models/data",
+      "accessed_on": "2026-10-19",
+      "status": 200,
+      "bytes": 66062,
+      "sha256": "699642cdc120c69e1c432ba25461dc6b50cf5333f0e8d3fbc4b512d5d3093131",
+      "capture": "Response-body hash only; bounded full public GET parsed locally, not republished"
+    },
+    {
+      "key": "benchmark-aggregate",
+      "url": "https://benchmarkheaven.com/api/jevbench/v1.6.1",
+      "accessed_on": "2026-10-19",
+      "status": 200,
+      "bytes": 1351153,
+      "sha256": "5cd8c1332226ea9c179883d2285c0d8b8cc593ae38f2645197364a7ddd9c83c1",
+      "capture": "Response-body hash only; bounded full public GET parsed locally, not republished"
+    },
+    {
+      "key": "sqwish-index",
+      "url": "https://docs.sqwish.ai/llms.txt",
+      "at": "2026-10-19T10:19:23.329696+00:00",
+      "status": 200,
+      "bytes": 24000,
+      "sha256": "b47b08fec1d7d669f53ae0f15c7002e489b1d3eb6ffff87c58c332a4633fd9ef",
+      "capture": "Response-body hash only; public text/HTML/JSON GET, no authentication or execution"
+    },
+    {
+      "key": "sqwish-price",
+      "url": "https://docs.sqwish.ai/guides/pricing.md",
+      "at": "2026-10-19T10:19:23.481149+00:00",
+      "status": 200,
+      "bytes": 2972,
+      "sha256": "698a29e5434a5e30146c6c91c118b3aec5f5f6425cb58cec34682ed640d7895c",
+      "capture": "Response-body hash only; public text/HTML/JSON GET, no authentication or execution"
+    },
+    {
+      "key": "sqwish-onehot",
+      "url": "https://sqwish.ai/onehot",
+      "at": "2026-10-19T10:19:23.273426+00:00",
+      "status": 200,
+      "bytes": 4913,
+      "sha256": "9ecebce3af2d81ae8f191d957fd7d6160ea7cacc98527f3b94288e9fd432863a",
+      "capture": "Response-body hash only; public text/HTML/JSON GET, no authentication or execution"
+    },
+    {
+      "key": "levanto-price",
+      "url": "https://levanto.ai/pricing",
+      "at": "2026-10-19T10:19:23.500878+00:00",
+      "status": 200,
+      "bytes": 93165,
+      "sha256": "1e98749c9601710ceae68bca591707535b4dde0987da82309055f73352860eb0",
+      "capture": "Response-body hash only; public text/HTML/JSON GET, no authentication or execution"
+    },
+    {
+      "key": "levanto-docs",
+      "url": "https://levanto.ai/docs",
+      "error": "HTTP Error 404: Not Found"
+    },
+    {
+      "key": "bespoke-console",
+      "url": "https://console.bespokelabs.ai/",
+      "at": "2026-10-19T10:19:23.690791+00:00",
+      "status": 200,
+      "bytes": 129670,
+      "sha256": "f5e301d836f76aa785b20f86c10e1d7e4bb673e37ff94ab7cb461360431558b7",
+      "capture": "Response-body hash only; public text/HTML/JSON GET, no authentication or execution"
+    },
+    {
+      "key": "decisio-readme",
+      "url": "https://raw.githubusercontent.com/aminry/decisio/main/README.md",
+      "at": "2026-10-19T10:19:23.520649+00:00",
+      "status": 200,
+      "bytes": 50981,
+      "sha256": "bfdc2219a2f309dcb080266c9171c9b6d4ebfd3d0d75767c5950f52d12f73612",
+      "capture": "Response-body hash only; public text/HTML/JSON GET, no authentication or execution"
+    },
+    {
+      "key": "jevbench-readme",
+      "url": "https://raw.githubusercontent.com/fstandhartinger/jevbench/main/README.md",
+      "at": "2026-10-19T10:19:23.564141+00:00",
+      "status": 200,
+      "bytes": 38359,
+      "sha256": "2165b3f9d537c9d03e5d7ab8e5736cc8d0661417fbdf53cb89a8e5f3bace30c3",
+      "capture": "Response-body hash only; public text/HTML/JSON GET, no authentication or execution"
+    },
+    {
+      "key": "manifest",
+      "url": "https://benchmarkheaven.com/api/jevbench/manifest",
+      "at": "2026-10-19T10:19:23.664797+00:00",
+      "status": 200,
+      "bytes": 7300,
+      "sha256": "06c6b9243986b9933000e698110a811d142b8bde56f254ebe8e5c0438e54441a",
+      "capture": "Response-body hash only; public text/HTML/JSON GET, no authentication or execution"
+    },
+    {
+      "key": "sqwish-models",
+      "url": "https://docs.sqwish.ai/guides/models-and-fallback.md",
+      "at": "2026-10-19T10:20:31.967419+00:00",
+      "status": 200,
+      "bytes": 7343,
+      "sha256": "3ee09bf8eeef8d1d387c88cf1987d884321efd12a6fa5817c7c8a2e936e18c03",
+      "capture": "Response-body hash only; public text/HTML/JSON GET, no authentication or execution"
+    },
+    {
+      "key": "sqwish-api",
+      "url": "https://docs.sqwish.ai/api.md",
+      "at": "2026-10-19T10:20:32.275374+00:00",
+      "status": 200,
+      "bytes": 17594,
+      "sha256": "85e1d0bc5e3b286f0ae73a3bdccfd41f3ed62872d2355011e445229fef518050",
+      "capture": "Response-body hash only; public text/HTML/JSON GET, no authentication or execution"
+    },
+    {
+      "key": "sqwish-decide",
+      "url": "https://docs.sqwish.ai/api-reference/decisions/create-decision.md",
+      "error": "HTTP Error 404: Not Found"
+    },
+    {
+      "key": "levanto-index",
+      "url": "https://docs.levanto.ai/llms.txt",
+      "at": "2026-10-19T10:20:35.264268+00:00",
+      "status": 200,
+      "bytes": 2082,
+      "sha256": "42c1988cc2b5bcb53ca2a960a2c20b318e5d60771c9d30161fd11e8851198fac",
+      "capture": "Response-body hash only; public text/HTML/JSON GET, no authentication or execution"
+    },
+    {
+      "key": "bespoke-index",
+      "url": "https://docs.bespokelabs.ai/llms.txt",
+      "at": "2026-10-19T10:20:35.742370+00:00",
+      "status": 200,
+      "bytes": 5129,
+      "sha256": "0dc1ead5c1ceb6ed4347e5676fe294bc91d6e7ae3304f35c768d81b91e96430a",
+      "capture": "Response-body hash only; public text/HTML/JSON GET, no authentication or execution"
+    },
+    {
+      "key": "bespoke-price",
+      "url": "https://docs.bespokelabs.ai/nimble/pricing.md",
+      "at": "2026-10-19T10:20:51.560916+00:00",
+      "status": 200,
+      "bytes": 2726,
+      "sha256": "c7cb9408f26cb52e4c0a6f0e4534fc451035bbce272840bcc7a684cee8f28f81",
+      "capture": "Response-body hash only; public text/HTML/JSON GET, no authentication or execution"
+    },
+    {
+      "key": "bespoke-limits",
+      "url": "https://docs.bespokelabs.ai/nimble/limits-and-errors.md",
+      "at": "2026-10-19T10:20:51.556848+00:00",
+      "status": 200,
+      "bytes": 3047,
+      "sha256": "0f49dfe92dbc937b26422085968e4cafcfe93a27e695182ed6f424b9911c7ac9",
+      "capture": "Response-body hash only; public text/HTML/JSON GET, no authentication or execution"
+    },
+    {
+      "key": "bespoke-start",
+      "url": "https://docs.bespokelabs.ai/nimble/quickstart.md",
+      "at": "2026-10-19T10:20:51.699131+00:00",
+      "status": 200,
+      "bytes": 3718,
+      "sha256": "48883e9a0d43bc48368615101781f83486847717cda34df20b331e77407777aa",
+      "capture": "Response-body hash only; public text/HTML/JSON GET, no authentication or execution"
+    },
+    {
+      "key": "levanto-limits",
+      "url": "https://docs.levanto.ai/decision-model/limits.md",
+      "at": "2026-10-19T10:20:51.629095+00:00",
+      "status": 200,
+      "bytes": 1918,
+      "sha256": "6297fd0c6327a7ac443401edeb096f39632776d5e06c91ecb1ef3dd6ec2b7c1c",
+      "capture": "Response-body hash only; public text/HTML/JSON GET, no authentication or execution"
+    },
+    {
+      "key": "levanto-reasoning",
+      "url": "https://docs.levanto.ai/decision-model/reasoning.md",
+      "at": "2026-10-19T10:20:51.579249+00:00",
+      "status": 200,
+      "bytes": 2231,
+      "sha256": "a2d1c954e50b997f7680e8fca59c4fc335cc76fa5ed64264b7f372699f3982d9",
+      "capture": "Response-body hash only; public text/HTML/JSON GET, no authentication or execution"
+    },
+    {
+      "key": "levanto-batch",
+      "url": "https://docs.levanto.ai/decision-model/batch.md",
+      "at": "2026-10-19T10:20:51.821497+00:00",
+      "status": 200,
+      "bytes": 3443,
+      "sha256": "e1297edf374bf958b1bbe69878ad4a6b3c0fb881fb79ecd330693cea7a877597",
+      "capture": "Response-body hash only; public text/HTML/JSON GET, no authentication or execution"
+    },
+    {
+      "key": "sqwish-run",
+      "url": "https://docs.sqwish.ai/api-reference/decisions/run-decisions.md",
+      "at": "2026-10-19T10:21:41.042929+00:00",
+      "status": 200,
+      "bytes": 21113,
+      "sha256": "128144df8a91001040a868ead66aa8265f9843f547d3e859674cfbcf0f224808",
+      "capture": "Response-body hash only; public text/HTML/JSON GET, no authentication or execution"
+    },
+    {
+      "key": "sqwish-jev",
+      "url": "https://docs.sqwish.ai/api-reference/decisions/run-jev-decisions.md",
+      "at": "2026-10-19T10:21:41.473552+00:00",
+      "status": 200,
+      "bytes": 12428,
+      "sha256": "b9113660395dbbe7ad3ec7ea61d98207b201a77984cca9e40808ebee26ab5f2b",
+      "capture": "Response-body hash only; public text/HTML/JSON GET, no authentication or execution"
+    },
+    {
+      "key": "result-export",
+      "url": "https://benchmarkheaven.com/api/decision-results/jevbench/v1.6.1/json",
+      "at": "2026-10-19T10:21:41.895697+00:00",
+      "status": 200,
+      "bytes": 210767,
+      "sha256": "fe9c601845d14af3637b18b892137942c6b09ca644f316235391901981d8ec1b",
+      "capture": "Response-body hash only; public text/HTML/JSON GET, no authentication or execution"
+    },
+    {
+      "key": "celeris-index",
+      "url": "https://docs.celeris.ai/llms.txt",
+      "at": "2026-10-19T10:24:32.816402+00:00",
+      "status": 200,
+      "bytes": 3669,
+      "sha256": "f8ac990756075537c1d7d5482f1389a957bb565c0cba4a3af7496e84622182b2",
+      "capture": "Response-body hash only; public text/HTML/JSON GET, no authentication or execution"
+    },
+    {
+      "key": "surd",
+      "url": "https://surd.ai",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "key": "attest",
+      "url": "https://attest.engineering/model",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "key": "wity",
+      "url": "https://wity.alphanimble.com/",
+      "at": "2026-10-19T10:24:33.551627+00:00",
+      "status": 200,
+      "bytes": 349028,
+      "sha256": "448016152953a410e28e3b0dbb5556cabceaadd632971a9e7b788bc0395db76f",
+      "capture": "Response-body hash only; public text/HTML/JSON GET, no authentication or execution"
+    },
+    {
+      "key": "celeris-decisions",
+      "url": "https://docs.celeris.ai/decisions.md",
+      "at": "2026-10-19T10:25:17.132279+00:00",
+      "status": 200,
+      "bytes": 22604,
+      "sha256": "bd89481d05675bcb7badacea979ce87bf4f3225fc27dbab008221856375f5d11",
+      "capture": "Response-body hash only; public text/HTML/JSON GET, no authentication or execution"
+    },
+    {
+      "key": "celeris-pricing",
+      "url": "https://docs.celeris.ai/pricing.md",
+      "at": "2026-10-19T10:25:16.983623+00:00",
+      "status": 200,
+      "bytes": 2697,
+      "sha256": "ff4b658d61fbfb053109196c09480afce85a896b2c0661f41acb9506a26b65de",
+      "capture": "Response-body hash only; public text/HTML/JSON GET, no authentication or execution"
+    },
+    {
+      "key": "celeris-models",
+      "url": "https://docs.celeris.ai/models.md",
+      "at": "2026-10-19T10:25:17.050726+00:00",
+      "status": 200,
+      "bytes": 6502,
+      "sha256": "caf5fc5ed12907b42597bd538d8b4da32a989c82520df87ad1131361917c256c",
+      "capture": "Response-body hash only; public text/HTML/JSON GET, no authentication or execution"
+    },
+    {
+      "key": "card:h2oai/h2o-lightning-4b",
+      "url": "https://huggingface.co/h2oai/h2o-lightning-4b/raw/898fa17e31fb3cdeaf294492b4b78adb5073229c/README.md",
+      "at": "2026-10-19T10:19:02.897525+00:00",
+      "status": 200,
+      "bytes": 69358,
+      "sha256": "a37d760930f3baabca7326c67060985317059a5babb986c19c0df82d04e71f12",
+      "capture": "Version-pinned maker README body hash; model weights not fetched"
+    },
+    {
+      "key": "card:torchcast-ai/torchcast-decision-4b",
+      "url": "https://huggingface.co/torchcast-ai/torchcast-decision-4b/raw/d54b248f2643df847979ca15638ee502ec79b788/README.md",
+      "at": "2026-10-19T10:19:02.841753+00:00",
+      "status": 200,
+      "bytes": 2843,
+      "sha256": "0ebec5641af3f89298ab29deaccdf534b4afccf5b1a640532d5268b677588ddf",
+      "capture": "Version-pinned maker README body hash; model weights not fetched"
+    },
+    {
+      "key": "card:chinhnc/Quyet-1.0-Medium",
+      "url": "https://huggingface.co/chinhnc/Quyet-1.0-Medium/raw/bd509d64070e8ff39328e0b883ac86b9313d15f0/README.md",
+      "at": "2026-10-19T10:19:02.840654+00:00",
+      "status": 200,
+      "bytes": 3201,
+      "sha256": "3490961e6ba53a70e4822f9b8873832a80c967fd0821206f60924bd70baabe10",
+      "capture": "Version-pinned maker README body hash; model weights not fetched"
+    },
+    {
+      "key": "card:chinhnc/Quyet-1.0-Large",
+      "url": "https://huggingface.co/chinhnc/Quyet-1.0-Large/raw/9a0f051112ba4301f6e4c8b87fc088ce00b11aae/README.md",
+      "at": "2026-10-19T10:19:02.603766+00:00",
+      "status": 200,
+      "bytes": 3445,
+      "sha256": "d2b3f7417f2b8449c0b808b2cc8b3c799d9aefd7d55a91f902bf349b59020785",
+      "capture": "Version-pinned maker README body hash; model weights not fetched"
+    },
+    {
+      "key": "card:Remek/basal-omni-1.0-ultra",
+      "url": "https://huggingface.co/Remek/basal-omni-1.0-ultra/raw/e347c65ca04f9823c1d480c6bc7702212b25d925/README.md",
+      "at": "2026-10-19T10:19:02.795663+00:00",
+      "status": 200,
+      "bytes": 13449,
+      "sha256": "18301bd4546b2ad657780043818f56a9a0928f2c5dd9d2d52053d664e5e56db3",
+      "capture": "Version-pinned maker README body hash; model weights not fetched"
+    },
+    {
+      "key": "card:bespokelabs/Bespoke-Nimble-9B-v3",
+      "url": "https://huggingface.co/bespokelabs/Bespoke-Nimble-9B-v3/raw/8e927b9b4afdbb14479fac10a7364d1a695be208/README.md",
+      "at": "2026-10-19T10:19:02.971868+00:00",
+      "status": 200,
+      "bytes": 1185,
+      "sha256": "fba1992d7b747800363a6d69743f03b3bb6f3f53dc14e4815ca12e4181f76d8d",
+      "capture": "Version-pinned maker README body hash; model weights not fetched"
+    },
+    {
+      "key": "card:Qwen/Qwen3-Reranker-0.6B",
+      "url": "https://huggingface.co/Qwen/Qwen3-Reranker-0.6B/raw/e61197ed45024b0ed8a2d74b80b4d909f1255473/README.md",
+      "at": "2026-10-19T10:19:03.175188+00:00",
+      "status": 200,
+      "bytes": 14742,
+      "sha256": "5bba8c734f6dd3ae48317b4139317e45a7fce48fc55e15670b23a0dd15492ab6",
+      "capture": "Version-pinned maker README body hash; model weights not fetched"
+    }
+  ]
+}

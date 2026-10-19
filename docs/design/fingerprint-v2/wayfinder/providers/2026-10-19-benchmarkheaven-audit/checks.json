@@ -1,0 +1,61 @@
+{
+  "checked_on": "2026-10-19",
+  "result": "pass",
+  "scope": "Offline documentary correction, provenance and integrity; no provider/API/device/account/inference checks",
+  "review_corrections": {
+    "h2o_binary_floor": true,
+    "torchcast_noncausal_and_tournament_semantics": true,
+    "decisio_observed_0170_commit_not_selected": true,
+    "kettei_billed_vs_model_rendered_bounds": true
+  },
+  "documentary_review_findings_unresolved": [],
+  "source_records": 48,
+  "source_refs_resolve": true,
+  "review_source_body_hashes_verified": 25,
+  "review_document_hashes_verified": 5,
+  "private_review_session_account_metadata_copied": false,
+  "all_json_valid": true,
+  "json_file_count": 16,
+  "relative_markdown_links_verified": 9,
+  "original_package_sealed_files_verified": 34,
+  "original_package_seal_sha256": "c83e4a0ae801f2519292145eb1595034c0d61c9904102758d37fa76639feaa0d",
+  "original_package_diff_empty": true,
+  "pre_review_addendum_sealed_files_verified": 8,
+  "pre_review_addendum_seal_sha256": "7b878e01cf2306de0ad252483034e7c7022e5ab23350a1b73662dfee2737d555",
+  "pre_review_addendum_checks_sha256": "71dc049168af08cbe74a138169be8d7c063a439ea282c6ad9630608dde495d99",
+  "complete_pre_review_snapshot_files": 9,
+  "original_discovery_capture_bytes_unchanged": [
+    "coverage-inventory.json",
+    "captures/model-card-receipts.json",
+    "captures/benchmark-release-receipt.json"
+  ],
+  "narrow_documentary_order": [
+    "celeris-decision",
+    "kettei",
+    "h2o-lightning"
+  ],
+  "local_hypothesis_max": 1,
+  "local_resource_condition_unverified": true,
+  "focused_findings": 12,
+  "candidates_admitted": 0,
+  "call_admission_dependencies_named": 6,
+  "representation_flexible": true,
+  "r1_r2_preserved": true,
+  "input_ceiling": 16000,
+  "full_run_cost_claimed": false,
+  "publication_authorized": false,
+  "q7_scope": "Baseline/evaluation only; excludes provider branch",
+  "q8_q9": "Unresolved",
+  "head": "f94973b4655174e392c6374ea65d87210582d1f3",
+  "head_unchanged": true,
+  "branch": "research/fingerprint-provider-contracts-20261019",
+  "all_changes_confined_to_addendum": true,
+  "new_sealed_files": 21,
+  "untested": [
+    "Native rendered schema, source binding and projection compatibility",
+    "Provider-specific billed/rendered/processed upper bounds and complete companion cost",
+    "Existing permitted account/route/key/allowance or device availability",
+    "Inference, benchmark, movie knowledge, accuracy, calibration, latency and throughput"
+  ],
+  "prohibited_actions_performed": false
+}

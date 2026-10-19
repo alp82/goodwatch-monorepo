@@ -1,0 +1,266 @@
+{
+  "reviewed_on": "2026-10-19",
+  "review_kind": "Independent Astra documentary review, with prior project/reviewer exposure; not blind evidence",
+  "scope": "Primary-source contract additions, observed runtime identity and narrow documentary screening order",
+  "disposition": "Four documentary corrections applied; no unresolved documentary review finding. Conditional research ready after root review; publication and call admission remain separate.",
+  "review_artifact_hashes": [
+    {
+      "name": "review-report.md",
+      "sha256": "db31c5f3268cdef8e527e103707bddd274f6b8f0476db6824a5b87b1567bca25",
+      "bytes": 10007
+    },
+    {
+      "name": "screening-order.md",
+      "sha256": "e6424fadf83fd72d05124438dc60af23f650993e1996f7be024184563f48984f",
+      "bytes": 3698
+    },
+    {
+      "name": "sources.json",
+      "sha256": "26fcc54bfe2ac89e6fbeeffc3a194784847d9ac1ea9203beb7137918a49e90b1",
+      "bytes": 10685
+    },
+    {
+      "name": "checks.json",
+      "sha256": "8ab88ee3124778662e8380ea36bca9f363a015481b5edd48ccf544ee43d1e5e4",
+      "bytes": 14070
+    },
+    {
+      "name": "provenance.json",
+      "sha256": "dedb437f5b3fa75f27baae448429b2079fac92132d507cae2ef4fc14ec6c0ccb",
+      "bytes": 2965
+    }
+  ],
+  "privacy": "Only document hashes, public source receipts and selected documentary findings retained; no raw reviewer/session/account metadata copied.",
+  "source_receipts": [
+    {
+      "key": "celeris-decisions",
+      "url": "https://docs.celeris.ai/decisions.md",
+      "retrieved_at": "2026-10-19T10:32:17.387682+00:00",
+      "sha256": "bd89481d05675bcb7badacea979ce87bf4f3225fc27dbab008221856375f5d11",
+      "bytes": 22604,
+      "status": 200
+    },
+    {
+      "key": "celeris-models",
+      "url": "https://docs.celeris.ai/models.md",
+      "retrieved_at": "2026-10-19T10:32:17.375433+00:00",
+      "sha256": "caf5fc5ed12907b42597bd538d8b4da32a989c82520df87ad1131361917c256c",
+      "bytes": 6502,
+      "status": 200
+    },
+    {
+      "key": "celeris-pricing",
+      "url": "https://docs.celeris.ai/pricing.md",
+      "retrieved_at": "2026-10-19T10:32:17.388623+00:00",
+      "sha256": "ff4b658d61fbfb053109196c09480afce85a896b2c0661f41acb9506a26b65de",
+      "bytes": 2697,
+      "status": 200
+    },
+    {
+      "key": "sqwish-api",
+      "url": "https://docs.sqwish.ai/api.md",
+      "retrieved_at": "2026-10-19T10:32:17.142494+00:00",
+      "sha256": "85e1d0bc5e3b286f0ae73a3bdccfd41f3ed62872d2355011e445229fef518050",
+      "bytes": 17594,
+      "status": 200
+    },
+    {
+      "key": "sqwish-models",
+      "url": "https://docs.sqwish.ai/guides/models-and-fallback.md",
+      "retrieved_at": "2026-10-19T10:32:17.166279+00:00",
+      "sha256": "3ee09bf8eeef8d1d387c88cf1987d884321efd12a6fa5817c7c8a2e936e18c03",
+      "bytes": 7343,
+      "status": 200
+    },
+    {
+      "key": "sqwish-pricing",
+      "url": "https://docs.sqwish.ai/guides/pricing.md",
+      "retrieved_at": "2026-10-19T10:32:17.405808+00:00",
+      "sha256": "698a29e5434a5e30146c6c91c118b3aec5f5f6425cb58cec34682ed640d7895c",
+      "bytes": 2972,
+      "status": 200
+    },
+    {
+      "key": "methodology",
+      "url": "https://benchmarkheaven.com/jev-models/methodology",
+      "retrieved_at": "2026-10-19T10:32:17.515968+00:00",
+      "sha256": "ca460e7e72141b638d52244744cf3d31addcc84b087e8fd69766cbcc702ab699",
+      "bytes": 65734,
+      "status": 200
+    },
+    {
+      "key": "data",
+      "url": "https://benchmarkheaven.com/jev-models/data",
+      "retrieved_at": "2026-10-19T10:32:17.571159+00:00",
+      "sha256": "699642cdc120c69e1c432ba25461dc6b50cf5333f0e8d3fbc4b512d5d3093131",
+      "bytes": 66062,
+      "status": 200
+    },
+    {
+      "key": "manifest",
+      "url": "https://benchmarkheaven.com/api/jevbench/manifest",
+      "retrieved_at": "2026-10-19T10:32:17.573546+00:00",
+      "sha256": "06c6b9243986b9933000e698110a811d142b8bde56f254ebe8e5c0438e54441a",
+      "bytes": 7300,
+      "status": 200
+    },
+    {
+      "key": "sqwish-run",
+      "url": "https://docs.sqwish.ai/api-reference/decisions/run-decisions.md",
+      "retrieved_at": "2026-10-19T10:33:02.539172+00:00",
+      "sha256": "128144df8a91001040a868ead66aa8265f9843f547d3e859674cfbcf0f224808",
+      "bytes": 21113,
+      "status": 200
+    },
+    {
+      "key": "sqwish-jev",
+      "url": "https://docs.sqwish.ai/api-reference/decisions/run-jev-decisions.md",
+      "retrieved_at": "2026-10-19T10:33:02.470357+00:00",
+      "sha256": "b9113660395dbbe7ad3ec7ea61d98207b201a77984cca9e40808ebee26ab5f2b",
+      "bytes": 12428,
+      "status": 200
+    },
+    {
+      "key": "aggregate",
+      "url": "https://benchmarkheaven.com/api/jevbench/v1.6.1",
+      "retrieved_at": "2026-10-19T10:33:02.577359+00:00",
+      "sha256": "5cd8c1332226ea9c179883d2285c0d8b8cc593ae38f2645197364a7ddd9c83c1",
+      "bytes": 1351153,
+      "status": 200
+    },
+    {
+      "key": "export",
+      "url": "https://benchmarkheaven.com/api/decision-results/jevbench/v1.6.1/json",
+      "retrieved_at": "2026-10-19T10:33:02.619917+00:00",
+      "sha256": "fe9c601845d14af3637b18b892137942c6b09ca644f316235391901981d8ec1b",
+      "bytes": 210767,
+      "status": 200
+    },
+    {
+      "key": "board",
+      "url": "https://benchmarkheaven.com/jev-models",
+      "retrieved_at": "2026-10-19T10:33:04.078440+00:00",
+      "sha256": "76e372daabdcc65a9260cb232bcf0cfe82a579c787c401aca23da9698f6a9547",
+      "bytes": 14914304,
+      "status": 200
+    },
+    {
+      "key": "sqwish-metering",
+      "url": "https://docs.sqwish.ai/guides/accounts-and-usage.md",
+      "retrieved_at": "2026-10-19T10:33:02.798561+00:00",
+      "sha256": "8f17e4e21d3e34b6d9caf183fe3f520815ac3a79564f06f628393b7467a6a848",
+      "bytes": 15299,
+      "status": 200
+    },
+    {
+      "key": "h2o-config",
+      "url": "https://huggingface.co/h2oai/h2o-lightning-4b/raw/898fa17e31fb3cdeaf294492b4b78adb5073229c/serve_config.json",
+      "retrieved_at": "2026-10-19T10:33:47.733780+00:00",
+      "sha256": "1157d869d84ec5560cb3760c6697bc2e31d503a699d4c24cf45d932f7a9e8a8c",
+      "bytes": 3830,
+      "status": 200
+    },
+    {
+      "key": "torchcast-runtime",
+      "url": "https://huggingface.co/torchcast-ai/torchcast-decision-4b/raw/d54b248f2643df847979ca15638ee502ec79b788/torchcast_decision/model.py",
+      "retrieved_at": "2026-10-19T10:33:47.746246+00:00",
+      "sha256": "c12588f3d621ae019233076aa6374f474d441c4364c959f32326b9d2f8077ccb",
+      "bytes": 43612,
+      "status": 200
+    },
+    {
+      "key": "quyet-config",
+      "url": "https://huggingface.co/chinhnc/Quyet-1.0-Medium/raw/bd509d64070e8ff39328e0b883ac86b9313d15f0/quyet_config.json",
+      "retrieved_at": "2026-10-19T10:33:47.725475+00:00",
+      "sha256": "c8a015ddaaebe345ffc586a8a2c80ff7f15110027fd8088c4424917ec292183f",
+      "bytes": 542,
+      "status": 200
+    },
+    {
+      "key": "decisio-version",
+      "url": "https://raw.githubusercontent.com/aminry/decisio/80b0d9ba256e077585861fbc0fd3ce4013584ad5/pyproject.toml",
+      "retrieved_at": "2026-10-19T10:33:47.574956+00:00",
+      "sha256": "d454f7e0c0a1606b6744b85b883f3e9d65a216a823d096f21d21ae248e06aa00",
+      "bytes": 3595,
+      "status": 200
+    },
+    {
+      "key": "decisio-api",
+      "url": "https://raw.githubusercontent.com/aminry/decisio/80b0d9ba256e077585861fbc0fd3ce4013584ad5/docs/api.md",
+      "retrieved_at": "2026-10-19T10:33:47.647794+00:00",
+      "sha256": "28f76ad1267030dca1936ad6e3885e1b1859e5ba04a2c9930ca10c74e8d2bf2e",
+      "bytes": 27609,
+      "status": 200
+    },
+    {
+      "key": "decisio-readme",
+      "url": "https://raw.githubusercontent.com/aminry/decisio/80b0d9ba256e077585861fbc0fd3ce4013584ad5/README.md",
+      "retrieved_at": "2026-10-19T10:33:47.931051+00:00",
+      "sha256": "bfdc2219a2f309dcb080266c9171c9b6d4ebfd3d0d75767c5950f52d12f73612",
+      "bytes": 50981,
+      "status": 200
+    },
+    {
+      "key": "card-h2oai--h2o-lightning-4b",
+      "url": "https://huggingface.co/h2oai/h2o-lightning-4b/raw/898fa17e31fb3cdeaf294492b4b78adb5073229c/README.md",
+      "retrieved_at": "2026-10-19T10:34:12.927192+00:00",
+      "sha256": "a37d760930f3baabca7326c67060985317059a5babb986c19c0df82d04e71f12",
+      "bytes": 69358,
+      "status": 200
+    },
+    {
+      "key": "card-torchcast-ai--torchcast-decision-4b",
+      "url": "https://huggingface.co/torchcast-ai/torchcast-decision-4b/raw/d54b248f2643df847979ca15638ee502ec79b788/README.md",
+      "retrieved_at": "2026-10-19T10:34:12.886256+00:00",
+      "sha256": "0ebec5641af3f89298ab29deaccdf534b4afccf5b1a640532d5268b677588ddf",
+      "bytes": 2843,
+      "status": 200
+    },
+    {
+      "key": "card-chinhnc--Quyet-1.0-Medium",
+      "url": "https://huggingface.co/chinhnc/Quyet-1.0-Medium/raw/bd509d64070e8ff39328e0b883ac86b9313d15f0/README.md",
+      "retrieved_at": "2026-10-19T10:34:12.897103+00:00",
+      "sha256": "3490961e6ba53a70e4822f9b8873832a80c967fd0821206f60924bd70baabe10",
+      "bytes": 3201,
+      "status": 200
+    },
+    {
+      "key": "card-chinhnc--Quyet-1.0-Large",
+      "url": "https://huggingface.co/chinhnc/Quyet-1.0-Large/raw/9a0f051112ba4301f6e4c8b87fc088ce00b11aae/README.md",
+      "retrieved_at": "2026-10-19T10:34:12.889582+00:00",
+      "sha256": "d2b3f7417f2b8449c0b808b2cc8b3c799d9aefd7d55a91f902bf349b59020785",
+      "bytes": 3445,
+      "status": 200
+    }
+  ],
+  "source_hashes_locally_verified": 25,
+  "existing_package_files_verified": 34,
+  "pre_review_addendum_files_verified": 8,
+  "no_network_or_inference_in_correction_turn": true,
+  "correction_evidence": {
+    "h2o": {
+      "ordinary_noul_floor": 0.801,
+      "two_way_noul_floor": 0.801,
+      "config_capture": "captures/h2o-serve-config.json"
+    },
+    "torchcast": {
+      "runtime_source_key": "review:torchcast-runtime",
+      "noncausal_fast_paths_disabled_at_line": 374,
+      "wide_choice_function_lines": [
+        676,
+        701
+      ],
+      "wide_residual": "Discarded options share fixed residual mass proportionally to first-round probabilities, not a joint initial-option readout"
+    },
+    "decisio": {
+      "version": "0.17.0",
+      "observed_commit": "80b0d9ba256e077585861fbc0fd3ce4013584ad5",
+      "selected_runtime_pin": false
+    },
+    "kettei": {
+      "metering_source_key": "review:sqwish-metering",
+      "billed_input": "Shared billing tokenizer usage.input_tokens; tokenizer named in usage.tokenizer",
+      "rendered_work": "Distinct model-rendered prompt/work bound; billed limit alone does not prove fit"
+    }
+  }
+}
