@@ -8,14 +8,15 @@
     "competitor-paid-features-goodwatch.md": "6eaf09a2b6730e18a3453303d907e5a35e579302bc32a773ef0b3c4646f991bd",
     "competitor-paid-features-inventory.csv": "3baecd660b144ca4acbfdedaecafe006632900531557afc935a19a7bef22983b",
     "competitor-paid-features-plans.csv": "f39785fa0f21c55dd7ee2caec1941c2666c33936a9ab6080a11934ec40f52ece",
-    "competitor-paid-features-opportunities.csv": "bf055fbcb192291ed54deff0648a08c529dcfdb6bdab9907b47b09fa2d22228a",
+    "competitor-paid-features-opportunities.csv": "c1f2142914565c3c99b42dcf3a1af8bd0226eab5a7e21535960750b154a02a7b",
     "competitor-paid-features-named-expansion.md": "50e9b62bfb000918f0eb5d82fd8681744b1d34ab7a568f42f6246ba34639d7d9",
     "competitor-paid-features-discovery-expansion.md": "36851ff9ad509a167bab8577e810757dbf18df2b8b8283975b38040f20016135",
     "competitor-paid-features-checked-organization.md": "f5edf6ad886bf6d289e52b0de672add0eca0a95676cd082c95d0317f145c95f1",
-    "competitor-paid-features-checked-discovery.md": "b57c74086c68c6e6700fcae497958e01c296864b03e5b49f77e9fe2d3f303583"
+    "competitor-paid-features-checked-discovery.md": "b57c74086c68c6e6700fcae497958e01c296864b03e5b49f77e9fe2d3f303583",
+    "competitor-paid-features-checked-remaining.md": "5288a3cb81aeac3487bb4f3f4472a9f33e2db585c0794f886339e4ee96ac2681"
   },
   "default_filter": "gaps",
-  "legend": "Have means code-backed for the stated scope; deployment is unverified. Code snapshots and vendor uncertainties are retained per record. All 30 formerly Not checked groups have been assessed.",
+  "legend": "All 359 included paid source records are assessed for their stated scope. Have is code-backed; deployment unverified. Vendor allocation uncertainty and free/context-only raw unknowns remain separate.",
   "groups": [
     [
       "find",
@@ -519,8 +520,8 @@
         "OP-580"
       ],
       "state": "partial",
-      "summary": "Wishlist and top-five sharing exist; arbitrary private lists do not.",
-      "state_rationale": "Narrow existing lists are not variable-length private collections. Counts and vendor objects stay distinct in the variants.",
+      "summary": "Manual top 5 lists exist; Spaces, custom show groups, people and typed collections remain gaps.",
+      "state_rationale": "Multiple top 5 title rankings are assessed Partial for general-list scopes. Named Spaces/custom My shows groups/multiple Watch-Seen-Owned collections are Missing. Five titles per list and 200-row readers remain explicit.",
       "cosmetic": false,
       "eligible_offer_ids": [
         "PLAN-007",
@@ -587,7 +588,18 @@
         "PLAN-421",
         "PLAN-422",
         "PLAN-423"
-      ]
+      ],
+      "remaining_audit": {
+        "dossier": "competitor-paid-features-checked-remaining.md",
+        "code_sha": "97eb3179844c4f68a70ccbd997bab4f2a735516d",
+        "record_ids": [
+          "OP-465",
+          "OP-475",
+          "OP-486",
+          "OP-502",
+          "OP-580"
+        ]
+      }
     },
     {
       "id": "share-lists",
@@ -1508,8 +1520,8 @@
         "OP-620"
       ],
       "state": "partial",
-      "summary": "Taste charts exist; paid breakdowns are only partly covered.",
-      "state_rationale": "Different genre/year/country metrics and a full style card are not asserted implemented; unknown variants stay unknown in details.",
+      "summary": "Computed taste identity and charts exist; full breakdowns and shareable identity-card output remain incomplete.",
+      "state_rationale": "Flickz identity is assessed from the actual fingerprint route/builder/render. A shareable computed card is missing; unpublished vendor fields remain an external specification boundary, not an unperformed code check.",
       "cosmetic": false,
       "eligible_offer_ids": [
         "PLAN-024",
@@ -1521,7 +1533,14 @@
         "PLAN-298",
         "PLAN-444",
         "PLAN-445"
-      ]
+      ],
+      "remaining_audit": {
+        "dossier": "competitor-paid-features-checked-remaining.md",
+        "code_sha": "97eb3179844c4f68a70ccbd997bab4f2a735516d",
+        "record_ids": [
+          "OP-620"
+        ]
+      }
     },
     {
       "id": "prediction-stats",
@@ -1878,8 +1897,8 @@
         "OP-640"
       ],
       "state": "partial",
-      "summary": "Some file adapters exist; exact sources and formats differ.",
-      "state_rationale": "Trakt file overlap does not establish TV Time, name-only, desktop CSV or cloud/API imports; missing/unknown variants remain separate.",
+      "summary": "Named file/account imports and bounded name/CSV ingestion exist; connection, schema and destination gaps differ.",
+      "state_rationale": "WerStreamt.es named Letterboxd-file/TMDB-one-time-account/Trakt-file source coverage is Have within stated limits. WatchNext Trakt account authorization/import/disconnect is Missing. MDBList name ingestion and iCollect desktop-browser CSV are Partial, not fuzzy/external-list or native owned-collection parity.",
       "cosmetic": false,
       "eligible_offer_ids": [
         "PLAN-017",
@@ -1909,7 +1928,17 @@
         "PLAN-462",
         "PLAN-463",
         "PLAN-464"
-      ]
+      ],
+      "remaining_audit": {
+        "dossier": "competitor-paid-features-checked-remaining.md",
+        "code_sha": "97eb3179844c4f68a70ccbd997bab4f2a735516d",
+        "record_ids": [
+          "OP-420",
+          "OP-519",
+          "OP-588",
+          "OP-640"
+        ]
+      }
     },
     {
       "id": "export",
@@ -18963,10 +18992,12 @@
     "Streamer/vintage presentation modes are separated from language; promotional opt-out is separated from ad removal.",
     "Letterboxd third-party ads and associated ad tracking differ from TVmaze/Upflix broader no-tracking wording.",
     "All 121 researched identities are available in Paid on, including dated/unallocated paid matrices, cosmetics, professional-only offers and discontinued products.",
-    "Seven omitted components recovered; exact record allowlists prevent player/server plan leakage. No source offer IDs, prices, country/platform facts or entitlement edges were changed."
+    "Seven omitted components recovered; exact record allowlists prevent player/server plan leakage. No source offer IDs, prices, country/platform facts or entitlement edges were changed.",
+    "Remaining ten exact variants assessed at 97eb317: one Have, five Partial, four Missing; no legacy Not checked record remains in the included paid scope.",
+    "OP-588 Have is named-source coverage with explicit transport/limits, not Trakt account sync or arbitrary foreign-list fidelity; OP-420 account connection stays Missing."
   ],
   "competitor_comparison": {
-    "phase": "Phase 2; all 30 assigned groups assessed",
+    "phase": "Completed scoped paid-record assessment",
     "evidence_snapshots": [
       "b15b6cbe6f8dd8aa4fc861b5e7c8443c37d39768",
       "97eb3179844c4f68a70ccbd997bab4f2a735516d"
@@ -18975,7 +19006,7 @@
       "Count distinct normalized capabilities, never offer observations.",
       "Only exact eligible entitlements for the same identity establish membership.",
       "Per-vendor state uses its own assessed variants, not global group state.",
-      "Unknown legacy variants outside the two audits remain explicitly unassessed; vendor and deployment uncertainty do not negate completed code assessment."
+      "Every included paid record is assessed; vendor/deployment uncertainty remains explicitly separate."
     ],
     "products": {
       "anilist": {
@@ -23794,7 +23825,7 @@
           },
           {
             "feature_id": "imports",
-            "state": "not_checked",
+            "state": "missing",
             "record_ids": [
               "OP-419",
               "OP-420"
@@ -23803,11 +23834,15 @@
               "PLAN-326",
               "PLAN-327"
             ],
-            "summary": "Legacy exact variant outside this audit remains unassessed; not counted as a known gap.",
-            "state_rationale": "Legacy exact variant outside the two 30-group audits remains unassessed; not a known gap or Have claim.",
+            "summary": "TV Time JSON import and Trakt account connection are missing in their respective pinned scopes; Trakt ZIP ingestion is a separate workflow.",
+            "state_rationale": "The exact required object/control is absent in inspected code; related alternatives do not satisfy this requirement.",
             "cosmetic": false,
             "evidence_snapshots": [
+              "97eb3179844c4f68a70ccbd997bab4f2a735516d",
               "b15b6cbe6f8dd8aa4fc861b5e7c8443c37d39768"
+            ],
+            "assessment_dossiers": [
+              "competitor-paid-features-checked-remaining.md"
             ]
           },
           {
@@ -23849,10 +23884,10 @@
         ],
         "functional_counts": {
           "partial": 2,
-          "missing": 7,
-          "not_checked": 1,
+          "missing": 8,
           "have": 0,
-          "gaps": 9
+          "not_checked": 0,
+          "gaps": 10
         },
         "coverage": "known_gaps"
       },
@@ -24110,7 +24145,7 @@
         "features": [
           {
             "feature_id": "custom-lists",
-            "state": "not_checked",
+            "state": "missing",
             "record_ids": [
               "OP-465"
             ],
@@ -24119,11 +24154,14 @@
               "PLAN-351",
               "PLAN-352"
             ],
-            "summary": "Legacy exact variant outside this audit remains unassessed; not counted as a known gap.",
-            "state_rationale": "Legacy exact variant outside the two 30-group audits remains unassessed; not a known gap or Have claim.",
+            "summary": "Watchlist-organizing Spaces are missing; named top 5 cards are a different object.",
+            "state_rationale": "The exact required object/control is absent in inspected code; related alternatives do not satisfy this requirement.",
             "cosmetic": false,
             "evidence_snapshots": [
-              "b15b6cbe6f8dd8aa4fc861b5e7c8443c37d39768"
+              "97eb3179844c4f68a70ccbd997bab4f2a735516d"
+            ],
+            "assessment_dossiers": [
+              "competitor-paid-features-checked-remaining.md"
             ]
           },
           {
@@ -24146,11 +24184,11 @@
           }
         ],
         "functional_counts": {
-          "not_checked": 1,
+          "missing": 1,
           "partial": 1,
-          "missing": 0,
           "have": 0,
-          "gaps": 1
+          "not_checked": 0,
+          "gaps": 2
         },
         "coverage": "known_gaps"
       },
@@ -24198,7 +24236,7 @@
           },
           {
             "feature_id": "custom-lists",
-            "state": "not_checked",
+            "state": "partial",
             "record_ids": [
               "OP-475"
             ],
@@ -24208,11 +24246,14 @@
               "PLAN-356",
               "PLAN-357"
             ],
-            "summary": "Legacy exact variant outside this audit remains unassessed; not counted as a known gap.",
-            "state_rationale": "Legacy exact variant outside the two 30-group audits remains unassessed; not a known gap or Have claim.",
+            "summary": "Top 5 title lists exist; people entries, variable lengths and unlimited list management are missing.",
+            "state_rationale": "An inspected useful subset exists; the precise object, destination, schema, capacity or output gaps remain.",
             "cosmetic": false,
             "evidence_snapshots": [
-              "b15b6cbe6f8dd8aa4fc861b5e7c8443c37d39768"
+              "97eb3179844c4f68a70ccbd997bab4f2a735516d"
+            ],
+            "assessment_dossiers": [
+              "competitor-paid-features-checked-remaining.md"
             ]
           },
           {
@@ -24255,11 +24296,11 @@
           }
         ],
         "functional_counts": {
-          "partial": 2,
+          "partial": 3,
           "missing": 2,
-          "not_checked": 1,
           "have": 0,
-          "gaps": 4
+          "not_checked": 0,
+          "gaps": 5
         },
         "coverage": "known_gaps"
       },
@@ -24363,18 +24404,21 @@
         "features": [
           {
             "feature_id": "custom-lists",
-            "state": "not_checked",
+            "state": "missing",
             "record_ids": [
               "OP-486"
             ],
             "eligible_offer_ids": [
               "PLAN-375"
             ],
-            "summary": "Legacy exact variant outside this audit remains unassessed; not counted as a known gap.",
-            "state_rationale": "Legacy exact variant outside the two 30-group audits remains unassessed; not a known gap or Have claim.",
+            "summary": "My shows uses fixed derived groups; custom My shows grouping is missing.",
+            "state_rationale": "The exact required object/control is absent in inspected code; related alternatives do not satisfy this requirement.",
             "cosmetic": false,
             "evidence_snapshots": [
-              "b15b6cbe6f8dd8aa4fc861b5e7c8443c37d39768"
+              "97eb3179844c4f68a70ccbd997bab4f2a735516d"
+            ],
+            "assessment_dossiers": [
+              "competitor-paid-features-checked-remaining.md"
             ]
           },
           {
@@ -24427,11 +24471,11 @@
           }
         ],
         "functional_counts": {
-          "not_checked": 1,
+          "missing": 1,
           "partial": 2,
-          "missing": 0,
           "have": 0,
-          "gaps": 2
+          "not_checked": 0,
+          "gaps": 3
         },
         "coverage": "known_gaps"
       },
@@ -24508,7 +24552,7 @@
         "features": [
           {
             "feature_id": "custom-lists",
-            "state": "not_checked",
+            "state": "partial",
             "record_ids": [
               "OP-502"
             ],
@@ -24528,11 +24572,14 @@
               "PLAN-394",
               "PLAN-395"
             ],
-            "summary": "Legacy exact variant outside this audit remains unassessed; not counted as a known gap.",
-            "state_rationale": "Legacy exact variant outside the two 30-group audits remains unassessed; not a known gap or Have claim.",
+            "summary": "Static top 5 title lists exist; 200-row readers and fixed list length fall short of general static lists.",
+            "state_rationale": "An inspected useful subset exists; the precise object, destination, schema, capacity or output gaps remain.",
             "cosmetic": false,
             "evidence_snapshots": [
-              "b15b6cbe6f8dd8aa4fc861b5e7c8443c37d39768"
+              "97eb3179844c4f68a70ccbd997bab4f2a735516d"
+            ],
+            "assessment_dossiers": [
+              "competitor-paid-features-checked-remaining.md"
             ]
           },
           {
@@ -24718,7 +24765,7 @@
           },
           {
             "feature_id": "imports",
-            "state": "not_checked",
+            "state": "partial",
             "record_ids": [
               "OP-519"
             ],
@@ -24738,11 +24785,14 @@
               "PLAN-394",
               "PLAN-395"
             ],
-            "summary": "Legacy exact variant outside this audit remains unassessed; not counted as a known gap.",
-            "state_rationale": "Legacy exact variant outside the two 30-group audits remains unassessed; not a known gap or Have claim.",
+            "summary": "Structured name ingestion/MCP exists; no fuzzy switch, general static-list destination or external Trakt-list writes.",
+            "state_rationale": "An inspected useful subset exists; the precise object, destination, schema, capacity or output gaps remain.",
             "cosmetic": false,
             "evidence_snapshots": [
-              "b15b6cbe6f8dd8aa4fc861b5e7c8443c37d39768"
+              "97eb3179844c4f68a70ccbd997bab4f2a735516d"
+            ],
+            "assessment_dossiers": [
+              "competitor-paid-features-checked-remaining.md"
             ]
           },
           {
@@ -24867,11 +24917,11 @@
           }
         ],
         "functional_counts": {
-          "not_checked": 2,
+          "partial": 4,
           "missing": 8,
-          "partial": 2,
           "have": 0,
-          "gaps": 10
+          "not_checked": 0,
+          "gaps": 12
         },
         "coverage": "known_gaps"
       },
@@ -25312,7 +25362,7 @@
           },
           {
             "feature_id": "custom-lists",
-            "state": "not_checked",
+            "state": "missing",
             "record_ids": [
               "OP-580"
             ],
@@ -25322,11 +25372,14 @@
               "PLAN-422",
               "PLAN-423"
             ],
-            "summary": "Legacy exact variant outside this audit remains unassessed; not counted as a known gap.",
-            "state_rationale": "Legacy exact variant outside the two 30-group audits remains unassessed; not a known gap or Have claim.",
+            "summary": "No multiple typed Watch/Seen/Owned collections; Wishlist and derived status views are different.",
+            "state_rationale": "The exact required object/control is absent in inspected code; related alternatives do not satisfy this requirement.",
             "cosmetic": false,
             "evidence_snapshots": [
-              "b15b6cbe6f8dd8aa4fc861b5e7c8443c37d39768"
+              "97eb3179844c4f68a70ccbd997bab4f2a735516d"
+            ],
+            "assessment_dossiers": [
+              "competitor-paid-features-checked-remaining.md"
             ]
           },
           {
@@ -25426,7 +25479,7 @@
           },
           {
             "feature_id": "imports",
-            "state": "not_checked",
+            "state": "have",
             "record_ids": [
               "OP-588"
             ],
@@ -25436,11 +25489,14 @@
               "PLAN-422",
               "PLAN-423"
             ],
-            "summary": "Legacy exact variant outside this audit remains unassessed; not counted as a known gap.",
-            "state_rationale": "Legacy exact variant outside the two 30-group audits remains unassessed; not a known gap or Have claim.",
+            "summary": "Letterboxd files, one-time TMDB account reads and Trakt files are supported; no ongoing sync or arbitrary-list fidelity.",
+            "state_rationale": "Exact named-source coverage is code-backed within the listed methods and exclusions; no ongoing sync, foreign arbitrary-list fidelity or deployment claim.",
             "cosmetic": false,
             "evidence_snapshots": [
-              "b15b6cbe6f8dd8aa4fc861b5e7c8443c37d39768"
+              "97eb3179844c4f68a70ccbd997bab4f2a735516d"
+            ],
+            "assessment_dossiers": [
+              "competitor-paid-features-checked-remaining.md"
             ]
           },
           {
@@ -25484,10 +25540,10 @@
         ],
         "functional_counts": {
           "partial": 4,
-          "not_checked": 2,
-          "missing": 4,
-          "have": 0,
-          "gaps": 8
+          "missing": 5,
+          "have": 1,
+          "not_checked": 0,
+          "gaps": 9
         },
         "coverage": "known_gaps"
       },
@@ -25931,7 +25987,7 @@
           },
           {
             "feature_id": "taste-stats",
-            "state": "not_checked",
+            "state": "partial",
             "record_ids": [
               "OP-620"
             ],
@@ -25939,11 +25995,14 @@
               "PLAN-444",
               "PLAN-445"
             ],
-            "summary": "Legacy exact variant outside this audit remains unassessed; not counted as a known gap.",
-            "state_rationale": "Legacy exact variant outside the two 30-group audits remains unassessed; not a known gap or Have claim.",
+            "summary": "Computed taste identity exists; shareable full identity-card output is missing.",
+            "state_rationale": "An inspected useful subset exists; the precise object, destination, schema, capacity or output gaps remain.",
             "cosmetic": false,
             "evidence_snapshots": [
-              "b15b6cbe6f8dd8aa4fc861b5e7c8443c37d39768"
+              "97eb3179844c4f68a70ccbd997bab4f2a735516d"
+            ],
+            "assessment_dossiers": [
+              "competitor-paid-features-checked-remaining.md"
             ]
           },
           {
@@ -25965,11 +26024,11 @@
           }
         ],
         "functional_counts": {
-          "partial": 3,
-          "not_checked": 1,
+          "partial": 4,
           "missing": 0,
           "have": 0,
-          "gaps": 3
+          "not_checked": 0,
+          "gaps": 4
         },
         "coverage": "known_gaps"
       },
@@ -26120,7 +26179,7 @@
         "features": [
           {
             "feature_id": "imports",
-            "state": "not_checked",
+            "state": "partial",
             "record_ids": [
               "OP-640"
             ],
@@ -26129,11 +26188,14 @@
               "PLAN-463",
               "PLAN-464"
             ],
-            "summary": "Legacy exact variant outside this audit remains unassessed; not counted as a known gap.",
-            "state_rationale": "Legacy exact variant outside the two 30-group audits remains unassessed; not a known gap or Have claim.",
+            "summary": "Self-service browser CSV exists; native owned-collection schema and Item-ID replacement semantics are missing.",
+            "state_rationale": "An inspected useful subset exists; the precise object, destination, schema, capacity or output gaps remain.",
             "cosmetic": false,
             "evidence_snapshots": [
-              "b15b6cbe6f8dd8aa4fc861b5e7c8443c37d39768"
+              "97eb3179844c4f68a70ccbd997bab4f2a735516d"
+            ],
+            "assessment_dossiers": [
+              "competitor-paid-features-checked-remaining.md"
             ]
           },
           {
@@ -26308,11 +26370,11 @@
           }
         ],
         "functional_counts": {
-          "not_checked": 1,
+          "partial": 2,
           "missing": 6,
-          "partial": 1,
           "have": 0,
-          "gaps": 7
+          "not_checked": 0,
+          "gaps": 8
         },
         "coverage": "known_gaps"
       },
@@ -26602,19 +26664,8 @@
       "partial": 61
     },
     "remaining_unassessed_assigned_records": [],
-    "legacy_included_unassessed_records_outside_assignment": [
-      "OP-420",
-      "OP-465",
-      "OP-475",
-      "OP-486",
-      "OP-502",
-      "OP-519",
-      "OP-580",
-      "OP-588",
-      "OP-620",
-      "OP-640"
-    ],
-    "scope_note": "The 150 assigned records are assessed. Ten older variants inside previously Partial groups (imports, custom lists and taste statistics) were outside these two assignments and retain their earlier unknown status; this is distinct from audited vendor/deployment uncertainty.",
+    "legacy_included_unassessed_records_outside_assignment": [],
+    "scope_note": "All 359 included paid source records have scoped code assessments. Original 150-record handoff and six supplemental recovered inspections remain separately attributed; this ten-record completion closes the legacy unknown variants. External vendor allocation/operation uncertainties and excluded free/context raw unknowns remain distinct.",
     "records": {
       "OP-001": {
         "source_group": "filters",
@@ -30214,6 +30265,1390 @@
         "reason": "Software PRO badge recovered from a mixed badge/priority-help record. Human priority help stays outside the comparison.",
         "cosmetic": true
       }
+    },
+    "remaining_audit": {
+      "file": "competitor-paid-features-checked-remaining.md",
+      "sha256": "5288a3cb81aeac3487bb4f3f4472a9f33e2db585c0794f886339e4ee96ac2681",
+      "code_sha": "97eb3179844c4f68a70ccbd997bab4f2a735516d",
+      "record_count": 10,
+      "record_states": {
+        "Missing": 4,
+        "Partial": 5,
+        "Have": 1
+      },
+      "records": {
+        "OP-420": {
+          "state": "missing",
+          "code_sha": "97eb3179844c4f68a70ccbd997bab4f2a735516d",
+          "scope": "Trakt account authorization, server-side history/progress fetch and disconnect control",
+          "implemented_subset": "Manual upload of Trakt export ZIP; watched-history movie/episode observations, ratings, Watchlist and favorites.",
+          "missing_subset": "Connect Trakt account, fetch/sync watched shows and episode progress from that account, and disconnect that external grant.",
+          "limits": "File alternative:20MiB upload/50,000 observations; custom lists and season/episode ratings unsupported. WatchNext account import itself is server-option dependent; no enabled-server assertion.",
+          "variants": [
+            {
+              "requirement": "Trakt account connect/import/disconnect",
+              "state": "Missing"
+            },
+            {
+              "requirement": "Trakt export-file migration",
+              "state": "Have",
+              "scope": "Alternative workflow, not fulfillment of account-connection requirement."
+            }
+          ],
+          "evidence_ids": [
+            "R01",
+            "R02",
+            "R04",
+            "R14"
+          ],
+          "vendor_spec_uncertainties": [
+            "WatchNext homepage uses broader Premium wording than FAQ/terms. FAQ server option does not establish current live enabled state."
+          ],
+          "dossier": "competitor-paid-features-checked-remaining.md"
+        },
+        "OP-465": {
+          "state": "missing",
+          "code_sha": "97eb3179844c4f68a70ccbd997bab4f2a735516d",
+          "scope": "Custom watchlist Spaces and their count, independent of title count",
+          "implemented_subset": "One combined movie/show Wishlist and status views; separately named top 5 share lists.",
+          "missing_subset": "Create and manage multiple custom Spaces containing selected watchlist titles, with space membership independent of the single Wishlist/status views.",
+          "limits": "Share lists require exactly five titles/public handle and public/unlisted visibility; owner/public readers200. Do not compare free one Space with five items/card.",
+          "variants": [
+            {
+              "requirement": "Named watchlist-organizing Space object",
+              "state": "Missing"
+            },
+            {
+              "requirement": "Unlimited Space count",
+              "state": "Missing"
+            }
+          ],
+          "evidence_ids": [
+            "R08",
+            "R09",
+            "R10",
+            "R11"
+          ],
+          "vendor_spec_uncertainties": [
+            "Apple listing did not reopen in this pass;1/unlimited entitlement retained from canonical primary dossier. Per-Space item and nesting limits undocumented; no hierarchy/permissions assumption. Original SKU not equated to Pro."
+          ],
+          "dossier": "competitor-paid-features-checked-remaining.md"
+        },
+        "OP-475": {
+          "state": "partial",
+          "code_sha": "97eb3179844c4f68a70ccbd997bab4f2a735516d",
+          "scope": "Multiple manually curated title/people lists, shared membership and unlimited count",
+          "implemented_subset": "Create/edit/order multiple five-title movie/show share lists; same title can occur in more than one list because uniqueness is per list.",
+          "missing_subset": "Saved lists containing people; general variable-length/empty personal lists; unrestricted count and general move-between-list workflow.",
+          "limits": "Exactly five unique resolvable movie/show keys/list; publication requires account/handle; owner/public list reads200 without continuation. No unlimited claim from absent writer count guard.",
+          "variants": [
+            {
+              "requirement": "Multiple named manually ordered title lists",
+              "state": "Have",
+              "scope": "Exactly-five public/unlisted rankings only."
+            },
+            {
+              "requirement": "People as saved list members",
+              "state": "Missing"
+            },
+            {
+              "requirement": "Unlimited general lists",
+              "state": "Missing"
+            }
+          ],
+          "evidence_ids": [
+            "R08",
+            "R09",
+            "R11"
+          ],
+          "vendor_spec_uncertainties": [
+            "No numeric per-list item limit published in reviewed source; do not assert unlimited items/list."
+          ],
+          "dossier": "competitor-paid-features-checked-remaining.md"
+        },
+        "OP-486": {
+          "state": "missing",
+          "code_sha": "97eb3179844c4f68a70ccbd997bab4f2a735516d",
+          "scope": "User-defined groups/lists within My shows",
+          "implemented_subset": "Continue/Start/Pick up/Waiting/On hold/Dropped groups plus status library filters.",
+          "missing_subset": "Create My shows lists and group shows as chosen instead of the default groups.",
+          "limits": "Renaming a five-title public share card or switching a status/filter does not regroup My shows. No vendor list/member-count cap invented.",
+          "variants": [
+            {
+              "requirement": "Default derived show groups",
+              "state": "Have",
+              "scope": "Baseline only."
+            },
+            {
+              "requirement": "Custom My shows groups",
+              "state": "Missing"
+            }
+          ],
+          "evidence_ids": [
+            "R10",
+            "R11",
+            "R08"
+          ],
+          "vendor_spec_uncertainties": [
+            "Premium price requires login; exact custom-list/item limits remain unpublished. Goodwatch custom-group absence is assessed independently."
+          ],
+          "dossier": "competitor-paid-features-checked-remaining.md"
+        },
+        "OP-502": {
+          "state": "partial",
+          "code_sha": "97eb3179844c4f68a70ccbd997bab4f2a735516d",
+          "scope": "Static-list object behavior and count, not dynamic-list/item/shared-list allowances",
+          "implemented_subset": "Create/edit/reorder independent static top 5 title lists; Remix creates a copy.",
+          "missing_subset": "Empty or arbitrary-length static lists; append arbitrary source items; guaranteed600-list management/visibility and full MDBList object parity.",
+          "limits": "MDBList static counts:Free4; Basic20; Standard60; Plus80; VIP5 120; VIP10 300; VIP15 400; VIP20 600. Goodwatch reader200 is a list-count bound; five is an item-count invariant.20/60/80/120 fall inside reader window, while300/400/600 do not. Storage past200 is not proof of manageable capacity.",
+          "variants": [
+            {
+              "requirement": "Manual static title curation",
+              "state": "Have",
+              "scope": "Exactly-five rankings only."
+            },
+            {
+              "requirement": "Arbitrary-length static list",
+              "state": "Missing"
+            },
+            {
+              "requirement": "300/400/600 lists visible through list management",
+              "state": "Missing",
+              "scope": "Underlying owner/public reader stops200; primary-key links do not supply general list management."
+            }
+          ],
+          "evidence_ids": [
+            "R08",
+            "R09"
+          ],
+          "vendor_spec_uncertainties": [
+            "Large-list-count operation not load-tested; no end-to-end guarantee beyond inspected model/reader. This does not block Partial assessment."
+          ],
+          "dossier": "competitor-paid-features-checked-remaining.md"
+        },
+        "OP-519": {
+          "state": "partial",
+          "code_sha": "97eb3179844c4f68a70ccbd997bab4f2a735516d",
+          "scope": "Name-based title recognition plus import input/destinations/fuzzy control",
+          "implemented_subset": "Wishlist JSON with title+year can uniquely match movie/show catalog entries. Unknown-media JSON names can be matched by member in preview. MCP batch up to50 title_name selectors with optional year resolves unique names and adds them to Wishlist.",
+          "missing_subset": "Plain name-list import control with optional fuzzy-match switch, general MDBList static-list destination and external Trakt list writes. No automatic no-year match guarantee across file schemas.",
+          "limits": "JSON needs goodwatch-wishlist v1/1.1 envelope,20MiB/50,000 entries. Typed movie/show no-ID/no-year rows remain unmatched and are not all eligible for manual repair. CSV movie name-only row without rating/date/review is invalid; exact Title/Year fallback. MCP50/call, OAuth/resource/tool gates,300 title writes/minute and2,000/hour; ambiguity returns choices.",
+          "variants": [
+            {
+              "requirement": "Recognize/import movie/show names",
+              "state": "Have",
+              "scope": "Bounded structured JSON/CSV and MCP workflows described above."
+            },
+            {
+              "requirement": "Fuzzy-match switch",
+              "state": "Missing"
+            },
+            {
+              "requirement": "Write recognized names into external Trakt list/general static list",
+              "state": "Missing"
+            }
+          ],
+          "evidence_ids": [
+            "R05",
+            "R06",
+            "R07",
+            "R04"
+          ],
+          "vendor_spec_uncertainties": [
+            "MDBList ambiguity handling and recognition fidelity are not documented/tested. Do not promise typo equivalence or current Trakt write availability from the guide."
+          ],
+          "dossier": "competitor-paid-features-checked-remaining.md"
+        },
+        "OP-580": {
+          "state": "missing",
+          "code_sha": "97eb3179844c4f68a70ccbd997bab4f2a735516d",
+          "scope": "Multiple independently named Watch, Seen and Owned collection memberships",
+          "implemented_subset": "Single Wishlist plus derived Seen/status library; independent five-title share rankings.",
+          "missing_subset": "Multiple lists per Watch/Seen/Owned role, independent per-list memberships and owned-content state.",
+          "limits": "Movie/show title state may be Want to rewatch while Seen, but that is one Wishlist plus watched state, not two custom collections. No paid-cancellation feature lock exists; vendor stored-after-cancellation policy retained as vendor behavior.",
+          "variants": [
+            {
+              "requirement": "Single Want/Seen status views",
+              "state": "Have",
+              "scope": "Baseline only."
+            },
+            {
+              "requirement": "Multiple independently named typed lists",
+              "state": "Missing"
+            },
+            {
+              "requirement": "Owned collection membership",
+              "state": "Missing"
+            }
+          ],
+          "evidence_ids": [
+            "R10",
+            "R11",
+            "R08"
+          ],
+          "vendor_spec_uncertainties": [
+            "Official Pro page did not reopen in this pass; named-source assertion retained from primary dossier. Exact list/item caps and type-specific editing restrictions not public in reviewed evidence."
+          ],
+          "dossier": "competitor-paid-features-checked-remaining.md"
+        },
+        "OP-588": {
+          "state": "have",
+          "code_sha": "97eb3179844c4f68a70ccbd997bab4f2a735516d",
+          "scope": "Named-source ingestion from Letterboxd, TMDB and Trakt; methods/fidelity stated explicitly",
+          "implemented_subset": "Letterboxd export ZIP: movie watches/ratings/reviews/Watchlist/film likes. Trakt export ZIP: movie/show history including episode watches, title ratings/Watchlist/favorites. TMDB temporary authorized account read: movie/show ratings/Watchlist/favorites.",
+          "missing_subset": "For broader comparisons: imported arbitrary custom-list identity/order, Trakt live account connection and ongoing external synchronization. These are not established by this source-coverage row and remain separate gaps.",
+          "limits": "Files20MiB;50,000 rows/result observations; ordinary ZIP200 files,32MiB/entry64MiB expansion. Trakt season/episode ratings/custom lists unsupported; Letterboxd parser does not ingest arbitrary list files. TMDB50,000 observations/five-minute read/temporary connection; no TMDB watch history or rating dates. Member sign-in; no paid check in route; deployed DB/keys not tested.",
+          "variants": [
+            {
+              "requirement": "Letterboxd file ingestion",
+              "state": "Have"
+            },
+            {
+              "requirement": "TMDB one-time account ingestion",
+              "state": "Have",
+              "scope": "Configured keys/origin required; source lacks watch history."
+            },
+            {
+              "requirement": "Trakt file ingestion",
+              "state": "Have"
+            },
+            {
+              "requirement": "Trakt account connection",
+              "state": "Missing",
+              "scope": "Separate OP-420, not required merely by named source coverage."
+            }
+          ],
+          "evidence_ids": [
+            "R01",
+            "R02",
+            "R03",
+            "R04",
+            "R14"
+          ],
+          "vendor_spec_uncertainties": [
+            "Official Pro page blocked in this pass; canonical primary dossier retained. Vendor exact method/field fidelity and baseline sources unspecified. Do not convert unspecified transport into an assumed OAuth or list-preservation requirement."
+          ],
+          "dossier": "competitor-paid-features-checked-remaining.md"
+        },
+        "OP-620": {
+          "state": "partial",
+          "code_sha": "97eb3179844c4f68a70ccbd997bab4f2a735516d",
+          "scope": "Computed personal taste identity, representative titles and shareable full-card output",
+          "implemented_subset": "Member/qualified-guest fingerprint identity, five families/74 attributes and up to 16 representative titles, with three header posters.",
+          "missing_subset": "Publish/download/share the computed personal identity as a card another viewer can open; exact equivalence to every field in Flickz full card is not established.",
+          "limits": "Minimum five rated titles with analysis for fingerprint; guests below five get sample taste; unavailable snapshot can prevent result. Current session/guest determines /taste content, so copying /taste does not share the sender identity. Five-title public share cards are manually curated, a different output. Identity can be null unless positive leanings in two different families support it; five ratings alone do not guarantee an archetype name.",
+          "variants": [
+            {
+              "requirement": "Computed named taste identity and representative titles",
+              "state": "Have"
+            },
+            {
+              "requirement": "Shareable computed identity-card output",
+              "state": "Missing"
+            },
+            {
+              "requirement": "Every field/limit of vendor full Premium card",
+              "state": "Partial",
+              "scope": "Goodwatch identity display inspected; unpublished vendor field set cannot be mapped completely."
+            }
+          ],
+          "evidence_ids": [
+            "R12",
+            "R13",
+            "R08"
+          ],
+          "vendor_spec_uncertainties": [
+            "Complete Premium card fields/free truncation remain external specification gaps; screenshot fetch failed and no account was used. Code identity support and missing share output are nevertheless assessed."
+          ],
+          "dossier": "competitor-paid-features-checked-remaining.md"
+        },
+        "OP-640": {
+          "state": "partial",
+          "code_sha": "97eb3179844c4f68a70ccbd997bab4f2a735516d",
+          "scope": "Self-service CSV workflow on desktop versus native owned-collection schema/replacement semantics",
+          "implemented_subset": "Real web CSV file chooser/drop, schema validation, preview and user confirmation, with direct application of supported movie rating/watch/review observations.",
+          "missing_subset": "Native desktop-app importer for owned/collectible items, Item-ID updates, removal of collection items absent from input, barcode enrichment and collection-specific fields.",
+          "limits": "20MiB/50,000 input rows and generated observations; fixed Letterboxd-style fields, unknown columns ignored, tags/directors/rewatch metadata not applied. No field creation/import of owned data. iCollect tutorial itself disallows creating new custom fields and documents replacement/deletion; generic CSV upload must not be presented as that complete schema.",
+          "variants": [
+            {
+              "requirement": "Self-service supported CSV import from desktop computer",
+              "state": "Have",
+              "scope": "Web browser, movie rating/history schema only."
+            },
+            {
+              "requirement": "Native desktop owned-collection CSV schema/replacement import",
+              "state": "Missing"
+            }
+          ],
+          "evidence_ids": [
+            "R01",
+            "R04",
+            "R05",
+            "R11",
+            "R14"
+          ],
+          "vendor_spec_uncertainties": [
+            "Existing vendor lifetime-unlock/Pro prerequisite wording conflict retained; not needed to determine exact Goodwatch CSV workflow. No vendor row/file cap documented in reviewed tutorial."
+          ],
+          "dossier": "competitor-paid-features-checked-remaining.md"
+        }
+      },
+      "change_log": {
+        "OP-420": {
+          "opportunity_id": "OP-420",
+          "family": "Portability",
+          "capability": "Server-enabled Trakt import",
+          "product_ids": "watchnext-app",
+          "competitors": "WatchNext.app",
+          "tiers": "Documented tier allocation with source conflict",
+          "competitor_free_behavior": "No Free/Premium import entitlement.",
+          "competitor_paid_behavior": "Unlimited and server option; not guaranteed enabled everywhere.",
+          "competitor_evidence_status": "conflicting_documented; named dossier2026-10-19; documentary evidence, no entitlement/operation test",
+          "primary_sources": "https://watchnext.app/faq; https://watchnext.app/terms",
+          "goodwatch_current_status": "unknown",
+          "goodwatch_current_behavior_limits": "Exact GoodWatch support for this control has not been assessed. Related search, cards, tracking, storage or import infrastructure does not establish this capability.",
+          "goodwatch_code_evidence": "",
+          "goodwatch_plan_state": "no_new_plan_in_this_integration",
+          "goodwatch_issue_urls": "",
+          "missing_behavior": "Exact control-level support remains unknown/unassessed; do not count related infrastructure as partial parity.",
+          "priority": "not_prioritized",
+          "proposed_wave": "not_proposed",
+          "disposition": "capability_comparison",
+          "acceptance_evidence": "Verify on an identified released build and competitor platform/tier: Requirements not assessed for Server-enabled Trakt import. Resolve the exact controls, object types and numerical boundaries described by this record's competitor evidence before comparing implementations. Record results separately for each named component; this documentary comparison does not verify deployment.",
+          "dependencies_cost_drivers": "Scope-specific validation: Requirements not assessed for Server-enabled Trakt import. Resolve the exact controls, object types and numerical boundaries described by this record's competitor evidence before comparing implementations.",
+          "deployment_verified": "no",
+          "research_date": "2026-10-19",
+          "dossiers": "competitor-paid-features-named-expansion.md#watchnextapp--free--premium--unlimited-with-explicit-conflicts; competitor-paid-features-goodwatch.md; competitor-paid-features-goodwatch.md#calendars-alerts-integrations-and-account-experience",
+          "entitled_offer_ids": "PLAN-326;PLAN-327",
+          "context_offer_ids": "PLAN-323;PLAN-324;PLAN-325;PLAN-328",
+          "offer_association_note": "Only explicitly documented offer subsets are entitled; generic product descriptions, free baselines, conflicts and unallocated SKUs remain contextual.",
+          "reviewed_capability_requirements": "Requirements not assessed for Server-enabled Trakt import. Resolve the exact controls, object types and numerical boundaries described by this record's competitor evidence before comparing implementations.",
+          "goodwatch_assessment_date": "",
+          "goodwatch_code_snapshot": "",
+          "goodwatch_assessment_basis": "",
+          "goodwatch_assessment_dossier": "",
+          "goodwatch_assessment_scope": ""
+        },
+        "OP-465": {
+          "opportunity_id": "OP-465",
+          "family": "Lists",
+          "capability": "Space count",
+          "product_ids": "movie-tracker-montalto",
+          "competitors": "Movie Tracker — Simone Montalto",
+          "tiers": "Named paid tier; see exact offer associations",
+          "competitor_free_behavior": "Free1 Space.",
+          "competitor_paid_behavior": "Pro unlimited Spaces; Space behavior differs from5-title share cards.",
+          "competitor_evidence_status": "paid_documented; named dossier2026-10-19; documentary evidence, no entitlement/operation test",
+          "primary_sources": "https://apps.apple.com/us/app/id6443877426",
+          "goodwatch_current_status": "unknown",
+          "goodwatch_current_behavior_limits": "Exact GoodWatch support for this control has not been assessed. Related search, cards, tracking, storage or import infrastructure does not establish this capability.",
+          "goodwatch_code_evidence": "",
+          "goodwatch_plan_state": "no_new_plan_in_this_integration",
+          "goodwatch_issue_urls": "",
+          "missing_behavior": "Exact control-level support remains unknown/unassessed; do not count related infrastructure as partial parity.",
+          "priority": "not_prioritized",
+          "proposed_wave": "not_proposed",
+          "disposition": "capability_comparison",
+          "acceptance_evidence": "Verify on an identified released build and competitor platform/tier: Requirements not assessed for Space count. Resolve the exact controls, object types and numerical boundaries described by this record's competitor evidence before comparing implementations. Record results separately for each named component; this documentary comparison does not verify deployment.",
+          "dependencies_cost_drivers": "Scope-specific validation: Requirements not assessed for Space count. Resolve the exact controls, object types and numerical boundaries described by this record's competitor evidence before comparing implementations.",
+          "deployment_verified": "no",
+          "research_date": "2026-10-19",
+          "dossiers": "competitor-paid-features-discovery-expansion.md#personal-trackers-diaries-and-clients--16-families; competitor-paid-features-goodwatch.md; competitor-paid-features-goodwatch.md#calendars-alerts-integrations-and-account-experience",
+          "entitled_offer_ids": "PLAN-350;PLAN-351;PLAN-352",
+          "context_offer_ids": "PLAN-353;PLAN-510",
+          "offer_association_note": "Only explicitly documented offer subsets are entitled; generic product descriptions, free baselines, conflicts and unallocated SKUs remain contextual.",
+          "reviewed_capability_requirements": "Requirements not assessed for Space count. Resolve the exact controls, object types and numerical boundaries described by this record's competitor evidence before comparing implementations.",
+          "goodwatch_assessment_date": "",
+          "goodwatch_code_snapshot": "",
+          "goodwatch_assessment_basis": "",
+          "goodwatch_assessment_dossier": "",
+          "goodwatch_assessment_scope": ""
+        },
+        "OP-475": {
+          "opportunity_id": "OP-475",
+          "family": "Lists",
+          "capability": "Unlimited lists of titles and people",
+          "product_ids": "callsheet",
+          "competitors": "Callsheet",
+          "tiers": "Named paid tier; see exact offer associations",
+          "competitor_free_behavior": "Available during free allowance.",
+          "competitor_paid_behavior": "Subscription access: as many lists as wanted, item in multiple lists.",
+          "competitor_evidence_status": "paid_documented; named dossier2026-10-19; documentary evidence, no entitlement/operation test",
+          "primary_sources": "https://callsheetapp.com/; https://apps.apple.com/us/app/callsheet-find-cast-crew/id1672356376",
+          "goodwatch_current_status": "unknown",
+          "goodwatch_current_behavior_limits": "Exact GoodWatch support for this control has not been assessed. Related search, cards, tracking, storage or import infrastructure does not establish this capability.",
+          "goodwatch_code_evidence": "",
+          "goodwatch_plan_state": "no_new_plan_in_this_integration",
+          "goodwatch_issue_urls": "",
+          "missing_behavior": "Exact control-level support remains unknown/unassessed; do not count related infrastructure as partial parity.",
+          "priority": "not_prioritized",
+          "proposed_wave": "not_proposed",
+          "disposition": "capability_comparison",
+          "acceptance_evidence": "Verify on an identified released build and competitor platform/tier: Requirements not assessed for Unlimited lists of titles and people. Resolve the exact controls, object types and numerical boundaries described by this record's competitor evidence before comparing implementations. Record results separately for each named component; this documentary comparison does not verify deployment.",
+          "dependencies_cost_drivers": "Scope-specific validation: Requirements not assessed for Unlimited lists of titles and people. Resolve the exact controls, object types and numerical boundaries described by this record's competitor evidence before comparing implementations.",
+          "deployment_verified": "no",
+          "research_date": "2026-10-19",
+          "dossiers": "competitor-paid-features-discovery-expansion.md#personal-trackers-diaries-and-clients--16-families; competitor-paid-features-goodwatch.md; competitor-paid-features-goodwatch.md#calendars-alerts-integrations-and-account-experience",
+          "entitled_offer_ids": "PLAN-354;PLAN-355;PLAN-356;PLAN-357",
+          "context_offer_ids": "",
+          "offer_association_note": "Only explicitly documented offer subsets are entitled; generic product descriptions, free baselines, conflicts and unallocated SKUs remain contextual.",
+          "reviewed_capability_requirements": "Requirements not assessed for Unlimited lists of titles and people. Resolve the exact controls, object types and numerical boundaries described by this record's competitor evidence before comparing implementations.",
+          "goodwatch_assessment_date": "",
+          "goodwatch_code_snapshot": "",
+          "goodwatch_assessment_basis": "",
+          "goodwatch_assessment_dossier": "",
+          "goodwatch_assessment_scope": ""
+        },
+        "OP-486": {
+          "opportunity_id": "OP-486",
+          "family": "Lists",
+          "capability": "Custom My Shows lists",
+          "product_ids": "episodecalendar",
+          "competitors": "TV Episode Calendar / EpisodeCalendar",
+          "tiers": "Named paid tier; see exact offer associations",
+          "competitor_free_behavior": "Basic tracking/list view.",
+          "competitor_paid_behavior": "Premium custom lists.",
+          "competitor_evidence_status": "paid_documented; named dossier2026-10-19; documentary evidence, no entitlement/operation test",
+          "primary_sources": "https://episodecalendar.com/en/pages/features; https://episodecalendar.com/en/pages/premium",
+          "goodwatch_current_status": "unknown",
+          "goodwatch_current_behavior_limits": "Exact GoodWatch support for this control has not been assessed. Related search, cards, tracking, storage or import infrastructure does not establish this capability.",
+          "goodwatch_code_evidence": "",
+          "goodwatch_plan_state": "no_new_plan_in_this_integration",
+          "goodwatch_issue_urls": "",
+          "missing_behavior": "Exact control-level support remains unknown/unassessed; do not count related infrastructure as partial parity.",
+          "priority": "not_prioritized",
+          "proposed_wave": "not_proposed",
+          "disposition": "capability_comparison",
+          "acceptance_evidence": "Verify on an identified released build and competitor platform/tier: Requirements not assessed for Custom My Shows lists. Resolve the exact controls, object types and numerical boundaries described by this record's competitor evidence before comparing implementations. Record results separately for each named component; this documentary comparison does not verify deployment.",
+          "dependencies_cost_drivers": "Scope-specific validation: Requirements not assessed for Custom My Shows lists. Resolve the exact controls, object types and numerical boundaries described by this record's competitor evidence before comparing implementations.",
+          "deployment_verified": "no",
+          "research_date": "2026-10-19",
+          "dossiers": "competitor-paid-features-discovery-expansion.md#personal-trackers-diaries-and-clients--16-families; competitor-paid-features-goodwatch.md; competitor-paid-features-goodwatch.md#calendars-alerts-integrations-and-account-experience",
+          "entitled_offer_ids": "PLAN-375",
+          "context_offer_ids": "PLAN-511",
+          "offer_association_note": "Only explicitly documented offer subsets are entitled; generic product descriptions, free baselines, conflicts and unallocated SKUs remain contextual.",
+          "reviewed_capability_requirements": "Requirements not assessed for Custom My Shows lists. Resolve the exact controls, object types and numerical boundaries described by this record's competitor evidence before comparing implementations.",
+          "goodwatch_assessment_date": "",
+          "goodwatch_code_snapshot": "",
+          "goodwatch_assessment_basis": "",
+          "goodwatch_assessment_dossier": "",
+          "goodwatch_assessment_scope": ""
+        },
+        "OP-502": {
+          "opportunity_id": "OP-502",
+          "family": "Lists",
+          "capability": "Static list count",
+          "product_ids": "mdblist",
+          "competitors": "MDBList / Reeel",
+          "tiers": "Named paid tier; see exact offer associations",
+          "competitor_free_behavior": "Free: 4.",
+          "competitor_paid_behavior": "Basic: 20; Standard: 60; Plus: 80; VIP5: 120; VIP10: 300; VIP15: 400; VIP20: 600. Separate object-specific caps; no aggregate conflation.",
+          "competitor_evidence_status": "paid_documented; named dossier2026-10-19; documentary evidence, no entitlement/operation test",
+          "primary_sources": "https://docs.mdblist.com/docs/supporter; https://mdblist.memberful.com/join?splash=1; https://docs.mdblist.com/docs/api",
+          "goodwatch_current_status": "unknown",
+          "goodwatch_current_behavior_limits": "Exact GoodWatch support for this control has not been assessed. Related search, cards, tracking, storage or import infrastructure does not establish this capability.",
+          "goodwatch_code_evidence": "",
+          "goodwatch_plan_state": "no_new_plan_in_this_integration",
+          "goodwatch_issue_urls": "",
+          "missing_behavior": "Exact control-level support remains unknown/unassessed; do not count related infrastructure as partial parity.",
+          "priority": "not_prioritized",
+          "proposed_wave": "not_proposed",
+          "disposition": "capability_comparison",
+          "acceptance_evidence": "Verify on an identified released build and competitor platform/tier: Requirements not assessed for Static list count. Resolve the exact controls, object types and numerical boundaries described by this record's competitor evidence before comparing implementations. Record results separately for each named component; this documentary comparison does not verify deployment.",
+          "dependencies_cost_drivers": "Scope-specific validation: Requirements not assessed for Static list count. Resolve the exact controls, object types and numerical boundaries described by this record's competitor evidence before comparing implementations.",
+          "deployment_verified": "no",
+          "research_date": "2026-10-19",
+          "dossiers": "competitor-paid-features-discovery-expansion.md#personal-trackers-diaries-and-clients--16-families; competitor-paid-features-goodwatch.md; competitor-paid-features-goodwatch.md#calendars-alerts-integrations-and-account-experience",
+          "entitled_offer_ids": "PLAN-382;PLAN-383;PLAN-384;PLAN-385;PLAN-386;PLAN-387;PLAN-388;PLAN-389;PLAN-390;PLAN-391;PLAN-392;PLAN-393;PLAN-394;PLAN-395",
+          "context_offer_ids": "PLAN-396;PLAN-397;PLAN-398;PLAN-399;PLAN-400;PLAN-401;PLAN-402;PLAN-403",
+          "offer_association_note": "Only explicitly documented offer subsets are entitled; generic product descriptions, free baselines, conflicts and unallocated SKUs remain contextual.",
+          "reviewed_capability_requirements": "Requirements not assessed for Static list count. Resolve the exact controls, object types and numerical boundaries described by this record's competitor evidence before comparing implementations.",
+          "goodwatch_assessment_date": "",
+          "goodwatch_code_snapshot": "",
+          "goodwatch_assessment_basis": "",
+          "goodwatch_assessment_dossier": "",
+          "goodwatch_assessment_scope": ""
+        },
+        "OP-519": {
+          "opportunity_id": "OP-519",
+          "family": "Portability",
+          "capability": "Name import",
+          "product_ids": "mdblist",
+          "competitors": "MDBList / Reeel",
+          "tiers": "Named paid tier; see exact offer associations",
+          "competitor_free_behavior": "Free source import subset unspecified.",
+          "competitor_paid_behavior": "All paid levels name import; ambiguity/fidelity untested.",
+          "competitor_evidence_status": "paid_documented; named dossier2026-10-19; documentary evidence, no entitlement/operation test",
+          "primary_sources": "https://docs.mdblist.com/docs/supporter; https://mdblist.com/new-features/",
+          "goodwatch_current_status": "unknown",
+          "goodwatch_current_behavior_limits": "Exact GoodWatch support for this control has not been assessed. Related search, cards, tracking, storage or import infrastructure does not establish this capability.",
+          "goodwatch_code_evidence": "",
+          "goodwatch_plan_state": "no_new_plan_in_this_integration",
+          "goodwatch_issue_urls": "",
+          "missing_behavior": "Exact control-level support remains unknown/unassessed; do not count related infrastructure as partial parity.",
+          "priority": "not_prioritized",
+          "proposed_wave": "not_proposed",
+          "disposition": "capability_comparison",
+          "acceptance_evidence": "Verify on an identified released build and competitor platform/tier: Requirements not assessed for Name import. Resolve the exact controls, object types and numerical boundaries described by this record's competitor evidence before comparing implementations. Record results separately for each named component; this documentary comparison does not verify deployment.",
+          "dependencies_cost_drivers": "Scope-specific validation: Requirements not assessed for Name import. Resolve the exact controls, object types and numerical boundaries described by this record's competitor evidence before comparing implementations.",
+          "deployment_verified": "no",
+          "research_date": "2026-10-19",
+          "dossiers": "competitor-paid-features-discovery-expansion.md#personal-trackers-diaries-and-clients--16-families; competitor-paid-features-goodwatch.md; competitor-paid-features-goodwatch.md#calendars-alerts-integrations-and-account-experience",
+          "entitled_offer_ids": "PLAN-382;PLAN-383;PLAN-384;PLAN-385;PLAN-386;PLAN-387;PLAN-388;PLAN-389;PLAN-390;PLAN-391;PLAN-392;PLAN-393;PLAN-394;PLAN-395",
+          "context_offer_ids": "PLAN-396;PLAN-397;PLAN-398;PLAN-399;PLAN-400;PLAN-401;PLAN-402;PLAN-403",
+          "offer_association_note": "Only explicitly documented offer subsets are entitled; generic product descriptions, free baselines, conflicts and unallocated SKUs remain contextual.",
+          "reviewed_capability_requirements": "Requirements not assessed for Name import. Resolve the exact controls, object types and numerical boundaries described by this record's competitor evidence before comparing implementations.",
+          "goodwatch_assessment_date": "",
+          "goodwatch_code_snapshot": "",
+          "goodwatch_assessment_basis": "",
+          "goodwatch_assessment_dossier": "",
+          "goodwatch_assessment_scope": ""
+        },
+        "OP-580": {
+          "opportunity_id": "OP-580",
+          "family": "Lists",
+          "capability": "Multiple Watch, Seen and Owned lists",
+          "product_ids": "werstreamt-es",
+          "competitors": "WerStreamt.es",
+          "tiers": "Named paid tier; see exact offer associations",
+          "competitor_free_behavior": "Ordinary Watch/Seen free.",
+          "competitor_paid_behavior": "Pro multiple lists; stored after cancellation, paid controls disabled.",
+          "competitor_evidence_status": "paid_documented; named dossier2026-10-19; documentary evidence, no entitlement/operation test",
+          "primary_sources": "https://www.werstreamt.es/pro/; https://www.werstreamt.es/",
+          "goodwatch_current_status": "unknown",
+          "goodwatch_current_behavior_limits": "Exact GoodWatch support for this control has not been assessed. Related search, cards, tracking, storage or import infrastructure does not establish this capability.",
+          "goodwatch_code_evidence": "",
+          "goodwatch_plan_state": "no_new_plan_in_this_integration",
+          "goodwatch_issue_urls": "",
+          "missing_behavior": "Exact control-level support remains unknown/unassessed; do not count related infrastructure as partial parity.",
+          "priority": "not_prioritized",
+          "proposed_wave": "not_proposed",
+          "disposition": "capability_comparison",
+          "acceptance_evidence": "Verify on an identified released build and competitor platform/tier: Requirements not assessed for Multiple Watch, Seen and Owned lists. Resolve the exact controls, object types and numerical boundaries described by this record's competitor evidence before comparing implementations. Record results separately for each named component; this documentary comparison does not verify deployment.",
+          "dependencies_cost_drivers": "Scope-specific validation: Requirements not assessed for Multiple Watch, Seen and Owned lists. Resolve the exact controls, object types and numerical boundaries described by this record's competitor evidence before comparing implementations.",
+          "deployment_verified": "no",
+          "research_date": "2026-10-19",
+          "dossiers": "competitor-paid-features-discovery-expansion.md#ratings-communities-and-regional-discovery-guides--13-families; competitor-paid-features-goodwatch.md; competitor-paid-features-goodwatch.md#calendars-alerts-integrations-and-account-experience",
+          "entitled_offer_ids": "PLAN-420;PLAN-421;PLAN-422;PLAN-423",
+          "context_offer_ids": "",
+          "offer_association_note": "Only explicitly documented offer subsets are entitled; generic product descriptions, free baselines, conflicts and unallocated SKUs remain contextual.",
+          "reviewed_capability_requirements": "Requirements not assessed for Multiple Watch, Seen and Owned lists. Resolve the exact controls, object types and numerical boundaries described by this record's competitor evidence before comparing implementations.",
+          "goodwatch_assessment_date": "",
+          "goodwatch_code_snapshot": "",
+          "goodwatch_assessment_basis": "",
+          "goodwatch_assessment_dossier": "",
+          "goodwatch_assessment_scope": ""
+        },
+        "OP-588": {
+          "opportunity_id": "OP-588",
+          "family": "Portability",
+          "capability": "Letterboxd, TMDB and Trakt imports",
+          "product_ids": "werstreamt-es",
+          "competitors": "WerStreamt.es",
+          "tiers": "Named paid tier; see exact offer associations",
+          "competitor_free_behavior": "Baseline source imports unspecified.",
+          "competitor_paid_behavior": "Pro extra named-source imports.",
+          "competitor_evidence_status": "paid_documented; named dossier2026-10-19; documentary evidence, no entitlement/operation test",
+          "primary_sources": "https://www.werstreamt.es/pro/; https://www.werstreamt.es/",
+          "goodwatch_current_status": "unknown",
+          "goodwatch_current_behavior_limits": "Exact GoodWatch support for this control has not been assessed. Related search, cards, tracking, storage or import infrastructure does not establish this capability.",
+          "goodwatch_code_evidence": "",
+          "goodwatch_plan_state": "no_new_plan_in_this_integration",
+          "goodwatch_issue_urls": "",
+          "missing_behavior": "Exact control-level support remains unknown/unassessed; do not count related infrastructure as partial parity.",
+          "priority": "not_prioritized",
+          "proposed_wave": "not_proposed",
+          "disposition": "capability_comparison",
+          "acceptance_evidence": "Verify on an identified released build and competitor platform/tier: Requirements not assessed for Letterboxd, TMDB and Trakt imports. Resolve the exact controls, object types and numerical boundaries described by this record's competitor evidence before comparing implementations. Record results separately for each named component; this documentary comparison does not verify deployment.",
+          "dependencies_cost_drivers": "Scope-specific validation: Requirements not assessed for Letterboxd, TMDB and Trakt imports. Resolve the exact controls, object types and numerical boundaries described by this record's competitor evidence before comparing implementations.",
+          "deployment_verified": "no",
+          "research_date": "2026-10-19",
+          "dossiers": "competitor-paid-features-discovery-expansion.md#ratings-communities-and-regional-discovery-guides--13-families; competitor-paid-features-goodwatch.md; competitor-paid-features-goodwatch.md#calendars-alerts-integrations-and-account-experience",
+          "entitled_offer_ids": "PLAN-420;PLAN-421;PLAN-422;PLAN-423",
+          "context_offer_ids": "",
+          "offer_association_note": "Only explicitly documented offer subsets are entitled; generic product descriptions, free baselines, conflicts and unallocated SKUs remain contextual.",
+          "reviewed_capability_requirements": "Requirements not assessed for Letterboxd, TMDB and Trakt imports. Resolve the exact controls, object types and numerical boundaries described by this record's competitor evidence before comparing implementations.",
+          "goodwatch_assessment_date": "",
+          "goodwatch_code_snapshot": "",
+          "goodwatch_assessment_basis": "",
+          "goodwatch_assessment_dossier": "",
+          "goodwatch_assessment_scope": ""
+        },
+        "OP-620": {
+          "opportunity_id": "OP-620",
+          "family": "Recommendations",
+          "capability": "Full Taste Identity card",
+          "product_ids": "flickz",
+          "competitors": "Flickz",
+          "tiers": "Named paid tier; see exact offer associations",
+          "competitor_free_behavior": "Free card subset unspecified.",
+          "competitor_paid_behavior": "Premium full card.",
+          "competitor_evidence_status": "paid_documented; named dossier2026-10-19; documentary evidence, no entitlement/operation test",
+          "primary_sources": "https://flickz.app/",
+          "goodwatch_current_status": "unknown",
+          "goodwatch_current_behavior_limits": "Exact GoodWatch support for this control has not been assessed. Related search, cards, tracking, storage or import infrastructure does not establish this capability.",
+          "goodwatch_code_evidence": "",
+          "goodwatch_plan_state": "no_new_plan_in_this_integration",
+          "goodwatch_issue_urls": "",
+          "missing_behavior": "Exact control-level support remains unknown/unassessed; do not count related infrastructure as partial parity.",
+          "priority": "not_prioritized",
+          "proposed_wave": "not_proposed",
+          "disposition": "capability_comparison",
+          "acceptance_evidence": "Verify on an identified released build and competitor platform/tier: Requirements not assessed for Full Taste Identity card. Resolve the exact controls, object types and numerical boundaries described by this record's competitor evidence before comparing implementations. Record results separately for each named component; this documentary comparison does not verify deployment.",
+          "dependencies_cost_drivers": "Scope-specific validation: Requirements not assessed for Full Taste Identity card. Resolve the exact controls, object types and numerical boundaries described by this record's competitor evidence before comparing implementations.",
+          "deployment_verified": "no",
+          "research_date": "2026-10-19",
+          "dossiers": "competitor-paid-features-discovery-expansion.md#choosing-together--seven-distinct-products; competitor-paid-features-goodwatch.md; competitor-paid-features-goodwatch.md#calendars-alerts-integrations-and-account-experience",
+          "entitled_offer_ids": "PLAN-444;PLAN-445",
+          "context_offer_ids": "",
+          "offer_association_note": "Only explicitly documented offer subsets are entitled; generic product descriptions, free baselines, conflicts and unallocated SKUs remain contextual.",
+          "reviewed_capability_requirements": "Requirements not assessed for Full Taste Identity card. Resolve the exact controls, object types and numerical boundaries described by this record's competitor evidence before comparing implementations.",
+          "goodwatch_assessment_date": "",
+          "goodwatch_code_snapshot": "",
+          "goodwatch_assessment_basis": "",
+          "goodwatch_assessment_dossier": "",
+          "goodwatch_assessment_scope": ""
+        },
+        "OP-640": {
+          "opportunity_id": "OP-640",
+          "family": "Portability",
+          "capability": "Self-service desktop CSV import",
+          "product_ids": "icollect",
+          "competitors": "iCollect Movies / iCollect Everything",
+          "tiers": "Named paid tier; see exact offer associations",
+          "competitor_free_behavior": "Other CSV imports support-assisted.",
+          "competitor_paid_behavior": "Pro self-service desktop import; not all imports paid.",
+          "competitor_evidence_status": "paid_documented; named dossier2026-10-19; documentary evidence, no entitlement/operation test",
+          "primary_sources": "https://www.icollecteverything.com/2024/10/26/heres-the-price-differences-and-breakdown-of-our-product-offerings/; https://www.icollecteverything.com/support/",
+          "goodwatch_current_status": "unknown",
+          "goodwatch_current_behavior_limits": "Exact GoodWatch support for this control has not been assessed. Related search, cards, tracking, storage or import infrastructure does not establish this capability.",
+          "goodwatch_code_evidence": "",
+          "goodwatch_plan_state": "no_new_plan_in_this_integration",
+          "goodwatch_issue_urls": "",
+          "missing_behavior": "Exact control-level support remains unknown/unassessed; do not count related infrastructure as partial parity.",
+          "priority": "not_prioritized",
+          "proposed_wave": "not_proposed",
+          "disposition": "capability_comparison",
+          "acceptance_evidence": "Verify on an identified released build and competitor platform/tier: Requirements not assessed for Self-service desktop CSV import. Resolve the exact controls, object types and numerical boundaries described by this record's competitor evidence before comparing implementations. Record results separately for each named component; this documentary comparison does not verify deployment.",
+          "dependencies_cost_drivers": "Scope-specific validation: Requirements not assessed for Self-service desktop CSV import. Resolve the exact controls, object types and numerical boundaries described by this record's competitor evidence before comparing implementations.",
+          "deployment_verified": "no",
+          "research_date": "2026-10-19",
+          "dossiers": "competitor-paid-features-discovery-expansion.md#owned-media-collection-managers--three-families; competitor-paid-features-goodwatch.md; competitor-paid-features-goodwatch.md#calendars-alerts-integrations-and-account-experience",
+          "entitled_offer_ids": "PLAN-462;PLAN-463;PLAN-464",
+          "context_offer_ids": "PLAN-460;PLAN-461;PLAN-465;PLAN-466;PLAN-467;PLAN-513",
+          "offer_association_note": "Only explicitly documented offer subsets are entitled; generic product descriptions, free baselines, conflicts and unallocated SKUs remain contextual.",
+          "reviewed_capability_requirements": "Requirements not assessed for Self-service desktop CSV import. Resolve the exact controls, object types and numerical boundaries described by this record's competitor evidence before comparing implementations.",
+          "goodwatch_assessment_date": "",
+          "goodwatch_code_snapshot": "",
+          "goodwatch_assessment_basis": "",
+          "goodwatch_assessment_dossier": "",
+          "goodwatch_assessment_scope": ""
+        }
+      },
+      "evidence": {
+        "R01": {
+          "title": "Connected import UI and upload/connection selection",
+          "inspection_bounds": "Settings imports renders ImportSourcesPage and SourceImportFlow. Trakt and Letterboxd are file sources; only TMDB/Plex have connection flows. Production file chooser/drop zone calls preview. No conclusion rests on a logo or source label alone.",
+          "sources": [
+            {
+              "path": "goodwatch-webapp/app/routes/settings.imports.tsx",
+              "start_line": 23,
+              "end_line": 41,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/routes/settings.imports.tsx#L23-L41"
+            },
+            {
+              "path": "goodwatch-webapp/app/ui/imports/ImportSources.ts",
+              "start_line": 57,
+              "end_line": 101,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/ui/imports/ImportSources.ts#L57-L101"
+            },
+            {
+              "path": "goodwatch-webapp/app/ui/imports/ImportSourcesPage.tsx",
+              "start_line": 132,
+              "end_line": 165,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/ui/imports/ImportSourcesPage.tsx#L132-L165"
+            },
+            {
+              "path": "goodwatch-webapp/app/ui/imports/SourceImportFlow.tsx",
+              "start_line": 130,
+              "end_line": 147,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/ui/imports/SourceImportFlow.tsx#L130-L147"
+            },
+            {
+              "path": "goodwatch-webapp/app/ui/imports/SourceImportUploadPanel.tsx",
+              "start_line": 31,
+              "end_line": 100,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/ui/imports/SourceImportUploadPanel.tsx#L31-L100"
+            },
+            {
+              "path": "goodwatch-webapp/app/domain/imports.ts",
+              "start_line": 101,
+              "end_line": 127,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/domain/imports.ts#L101-L127"
+            },
+            {
+              "path": "goodwatch-webapp/app/domain/imports.ts",
+              "start_line": 190,
+              "end_line": 202,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/domain/imports.ts#L190-L202"
+            }
+          ]
+        },
+        "R02": {
+          "title": "Trakt file ingestion; account connection absent",
+          "inspection_bounds": "The export ZIP parser explicitly consumes watched-history, movie/show ratings, Watchlist and favorites JSON, including episode coordinates. Custom Trakt lists and episode/season ratings become unsupported items. Existing connection-source type is TMDB/Plex only. Production app scan found no Trakt API/OAuth endpoint/client/token configuration; similarly named Trakt trend counts are public catalog signals, not member account connection. Generic Goodwatch/MCP OAuth is not Trakt authorization.",
+          "sources": [
+            {
+              "path": "goodwatch-webapp/app/server/imports/files.server.ts",
+              "start_line": 497,
+              "end_line": 525,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/server/imports/files.server.ts#L497-L525"
+            },
+            {
+              "path": "goodwatch-webapp/app/server/imports/files.server.ts",
+              "start_line": 550,
+              "end_line": 688,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/server/imports/files.server.ts#L550-L688"
+            },
+            {
+              "path": "goodwatch-webapp/app/server/imports/connect-store.server.ts",
+              "start_line": 1,
+              "end_line": 15,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/server/imports/connect-store.server.ts#L1-L15"
+            },
+            {
+              "path": "goodwatch-webapp/app/domain/imports.ts",
+              "start_line": 109,
+              "end_line": 117,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/domain/imports.ts#L109-L117"
+            },
+            {
+              "path": "goodwatch-webapp/app/ui/imports/SourceImportFlow.tsx",
+              "start_line": 130,
+              "end_line": 147,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/ui/imports/SourceImportFlow.tsx#L130-L147"
+            }
+          ]
+        },
+        "R03": {
+          "title": "TMDB one-time account import",
+          "inspection_bounds": "Connected TMDB panel posts to actual route/runtime, obtains account lists then revokes temporary access before preview. Reads movie/show rated/watchlist/favorite lists, with 50,000 total observations and five-minute read deadline. TMDB provides no rating dates/watch history; episode ratings not read. Requires configured API/connect keys, site origin and a signed-in member. This is account ingestion, not scraping a public list URL or ongoing sync.",
+          "sources": [
+            {
+              "path": "goodwatch-webapp/app/ui/imports/TmdbConnectPanel.tsx",
+              "start_line": 18,
+              "end_line": 30,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/ui/imports/TmdbConnectPanel.tsx#L18-L30"
+            },
+            {
+              "path": "goodwatch-webapp/app/ui/imports/TmdbConnectPanel.tsx",
+              "start_line": 48,
+              "end_line": 70,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/ui/imports/TmdbConnectPanel.tsx#L48-L70"
+            },
+            {
+              "path": "goodwatch-webapp/app/routes/api.imports.tmdb.$step.ts",
+              "start_line": 1,
+              "end_line": 7,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/routes/api.imports.tmdb.$step.ts#L1-L7"
+            },
+            {
+              "path": "goodwatch-webapp/app/server/imports/tmdb-connect-runtime.server.ts",
+              "start_line": 7,
+              "end_line": 20,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/server/imports/tmdb-connect-runtime.server.ts#L7-L20"
+            },
+            {
+              "path": "goodwatch-webapp/app/server/imports/tmdb-connect.server.ts",
+              "start_line": 175,
+              "end_line": 235,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/server/imports/tmdb-connect.server.ts#L175-L235"
+            },
+            {
+              "path": "goodwatch-webapp/app/server/imports/tmdb-client.server.ts",
+              "start_line": 211,
+              "end_line": 255,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/server/imports/tmdb-client.server.ts#L211-L255"
+            },
+            {
+              "path": "goodwatch-webapp/app/server/imports/tmdb-client.server.ts",
+              "start_line": 282,
+              "end_line": 322,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/server/imports/tmdb-client.server.ts#L282-L322"
+            }
+          ]
+        },
+        "R04": {
+          "title": "Preview, confirmation and real per-record application",
+          "inspection_bounds": "File endpoint invokes previewImport for authenticated member, then confirmation chooses import kinds/conflict/date policy. confirmImport claims the import and runs applyRun. Intent/favorite writes are keyed user/title; ratings/reviews and watches use their dedicated application paths. The import is therefore connected beyond parsing. Rows already present or changed here are handled by explicit preservation/conflict policy; importing is not blanket replacement/deletion of an owned collection.",
+          "sources": [
+            {
+              "path": "goodwatch-webapp/app/routes/api.imports.preview.ts",
+              "start_line": 53,
+              "end_line": 98,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/routes/api.imports.preview.ts#L53-L98"
+            },
+            {
+              "path": "goodwatch-webapp/app/routes/api.imports.$id.confirm.ts",
+              "start_line": 7,
+              "end_line": 28,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/routes/api.imports.$id.confirm.ts#L7-L28"
+            },
+            {
+              "path": "goodwatch-webapp/app/server/imports/service.server.ts",
+              "start_line": 15,
+              "end_line": 44,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/server/imports/service.server.ts#L15-L44"
+            },
+            {
+              "path": "goodwatch-webapp/app/server/imports/apply.server.ts",
+              "start_line": 310,
+              "end_line": 380,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/server/imports/apply.server.ts#L310-L380"
+            },
+            {
+              "path": "goodwatch-webapp/app/server/imports/apply.server.ts",
+              "start_line": 480,
+              "end_line": 534,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/server/imports/apply.server.ts#L480-L534"
+            },
+            {
+              "path": "goodwatch-webapp/app/server/imports/apply.server.ts",
+              "start_line": 565,
+              "end_line": 601,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/server/imports/apply.server.ts#L565-L601"
+            }
+          ]
+        },
+        "R05": {
+          "title": "Generic CSV schema and exact limits",
+          "inspection_bounds": "CSV upload path is real and self-service in a desktop browser, but schema is movie-centric Letterboxd-style data. Header aliases are normalized; known fields are fixed. Unknown columns are ignored with warning, tags/directors/rewatch metadata not applied. A name-only row without rating, watch date or review is invalid; Title/Year fallback needs a unique exact title/year match. Rating10 is whole 1–10, Rating is half-step 0.5–5; WatchedDate creates day watches; reviews truncated20,000 chars. It is not an iCollect edition/ownership/barcode/Item-ID replacement import.",
+          "sources": [
+            {
+              "path": "goodwatch-webapp/app/ui/imports/SourceImportUpload.ts",
+              "start_line": 8,
+              "end_line": 37,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/ui/imports/SourceImportUpload.ts#L8-L37"
+            },
+            {
+              "path": "goodwatch-webapp/app/domain/imports.ts",
+              "start_line": 118,
+              "end_line": 124,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/domain/imports.ts#L118-L124"
+            },
+            {
+              "path": "goodwatch-webapp/app/server/imports/files.server.ts",
+              "start_line": 745,
+              "end_line": 813,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/server/imports/files.server.ts#L745-L813"
+            },
+            {
+              "path": "goodwatch-webapp/app/server/imports/files.server.ts",
+              "start_line": 817,
+              "end_line": 902,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/server/imports/files.server.ts#L817-L902"
+            },
+            {
+              "path": "goodwatch-webapp/app/server/imports/preview.server.ts",
+              "start_line": 243,
+              "end_line": 268,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/server/imports/preview.server.ts#L243-L268"
+            }
+          ]
+        },
+        "R06": {
+          "title": "Structured name-based Wishlist import and manual matching",
+          "inspection_bounds": "Wishlist JSON must use goodwatch-wishlist envelope version1 or1.1, with source/completeness/items; it is not a plain newline list. Movie/show names with year can use unique exact title/year fallback. Unknown-media items preserve source evidence and can be matched by searching/picking a catalog result in the connected preview panel. Typed movie/show name-only rows lacking ID/year remain unmatched; the eligibility predicate does not enable generic manual repair for all typed rows. No user Enable Fuzzy match option or Trakt list write destination in this flow.",
+          "sources": [
+            {
+              "path": "goodwatch-webapp/app/domain/imports.ts",
+              "start_line": 172,
+              "end_line": 189,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/domain/imports.ts#L172-L189"
+            },
+            {
+              "path": "goodwatch-webapp/app/server/imports/wishlist.server.ts",
+              "start_line": 38,
+              "end_line": 84,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/server/imports/wishlist.server.ts#L38-L84"
+            },
+            {
+              "path": "goodwatch-webapp/app/server/imports/wishlist.server.ts",
+              "start_line": 235,
+              "end_line": 278,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/server/imports/wishlist.server.ts#L235-L278"
+            },
+            {
+              "path": "goodwatch-webapp/app/server/imports/preview.server.ts",
+              "start_line": 243,
+              "end_line": 268,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/server/imports/preview.server.ts#L243-L268"
+            },
+            {
+              "path": "goodwatch-webapp/app/server/imports/wishlist-evidence.server.ts",
+              "start_line": 17,
+              "end_line": 34,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/server/imports/wishlist-evidence.server.ts#L17-L34"
+            },
+            {
+              "path": "goodwatch-webapp/app/server/imports/wishlist-resolution.server.ts",
+              "start_line": 429,
+              "end_line": 486,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/server/imports/wishlist-resolution.server.ts#L429-L486"
+            },
+            {
+              "path": "goodwatch-webapp/app/ui/imports/WishlistMatchPanel.tsx",
+              "start_line": 1,
+              "end_line": 45,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/ui/imports/WishlistMatchPanel.tsx#L1-L45"
+            },
+            {
+              "path": "goodwatch-webapp/app/ui/imports/WishlistImportPreview.tsx",
+              "start_line": 350,
+              "end_line": 378,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/ui/imports/WishlistImportPreview.tsx#L350-L378"
+            }
+          ]
+        },
+        "R07": {
+          "title": "MCP name batches are a concrete additional subset",
+          "inspection_bounds": "MCP title writes accept up to50 name selectors with optional year. Each name goes through full-text catalog lookup, prefers normalized exact-name matches, and accepts only one result; ambiguities return choices instead of writing that item. set_want_to_see routes batch membership to actual Wishlist writer. No free-form pasted-name import UI, fuzzy-match toggle, arbitrary-length static-list destination or external Trakt list writer. OAuth/config/tool gates and rate budgets qualify this code Have subset.",
+          "sources": [
+            {
+              "path": "goodwatch-webapp/app/server/mcp/data.server.ts",
+              "start_line": 237,
+              "end_line": 316,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/server/mcp/data.server.ts#L237-L316"
+            },
+            {
+              "path": "goodwatch-webapp/app/server/mcp/batch.server.ts",
+              "start_line": 21,
+              "end_line": 35,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/server/mcp/batch.server.ts#L21-L35"
+            },
+            {
+              "path": "goodwatch-webapp/app/server/mcp/batch.server.ts",
+              "start_line": 281,
+              "end_line": 307,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/server/mcp/batch.server.ts#L281-L307"
+            },
+            {
+              "path": "goodwatch-webapp/app/server/mcp/batch.server.ts",
+              "start_line": 350,
+              "end_line": 380,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/server/mcp/batch.server.ts#L350-L380"
+            },
+            {
+              "path": "goodwatch-webapp/app/server/mcp/write-tools.server.ts",
+              "start_line": 143,
+              "end_line": 157,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/server/mcp/write-tools.server.ts#L143-L157"
+            },
+            {
+              "path": "goodwatch-webapp/app/server/mcp/write-tools.server.ts",
+              "start_line": 197,
+              "end_line": 204,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/server/mcp/write-tools.server.ts#L197-L204"
+            },
+            {
+              "path": "goodwatch-webapp/app/server/mcp/policy.server.ts",
+              "start_line": 1,
+              "end_line": 23,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/server/mcp/policy.server.ts#L1-L23"
+            },
+            {
+              "path": "goodwatch-webapp/app/server/mcp/endpoint.server.ts",
+              "start_line": 33,
+              "end_line": 39,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/server/mcp/endpoint.server.ts#L33-L39"
+            },
+            {
+              "path": "goodwatch-webapp/app/server/mcp/endpoint.server.ts",
+              "start_line": 95,
+              "end_line": 104,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/server/mcp/endpoint.server.ts#L95-L104"
+            },
+            {
+              "path": "goodwatch-webapp/app/server/mcp/endpoint.server.ts",
+              "start_line": 125,
+              "end_line": 185,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/server/mcp/endpoint.server.ts#L125-L185"
+            }
+          ]
+        },
+        "R08": {
+          "title": "Actual manual share-list model, writer and editor",
+          "inspection_bounds": "Named lists accept exactly five unique resolvable movie/show keys; parser rejects person keys. Create validates per-list uniqueness only, so a title may occur in multiple independent lists. Create requires public handle and inserts without account-list-count guard. Production editor adds/removes/reorders ranks and persists them; cannot publish an empty or arbitrary-length list. Public/unlisted is not a private organizing Space or typed Owned/Seen/Watch collection.",
+          "sources": [
+            {
+              "path": "goodwatch-webapp/app/server/share-lists/store.server.ts",
+              "start_line": 19,
+              "end_line": 44,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/server/share-lists/store.server.ts#L19-L44"
+            },
+            {
+              "path": "goodwatch-webapp/app/server/share-lists/store.server.ts",
+              "start_line": 93,
+              "end_line": 111,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/server/share-lists/store.server.ts#L93-L111"
+            },
+            {
+              "path": "goodwatch-webapp/app/server/share-lists/store.server.ts",
+              "start_line": 123,
+              "end_line": 146,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/server/share-lists/store.server.ts#L123-L146"
+            },
+            {
+              "path": "goodwatch-webapp/app/server/share-lists/store.server.ts",
+              "start_line": 149,
+              "end_line": 175,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/server/share-lists/store.server.ts#L149-L175"
+            },
+            {
+              "path": "goodwatch-webapp/app/server/share-lists/titles.server.ts",
+              "start_line": 41,
+              "end_line": 49,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/server/share-lists/titles.server.ts#L41-L49"
+            },
+            {
+              "path": "goodwatch-webapp/app/ui/share-list-editor/Ranking.tsx",
+              "start_line": 27,
+              "end_line": 95,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/ui/share-list-editor/Ranking.tsx#L27-L95"
+            },
+            {
+              "path": "goodwatch-webapp/app/ui/share-list-editor/list-state.ts",
+              "start_line": 81,
+              "end_line": 112,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/ui/share-list-editor/list-state.ts#L81-L112"
+            },
+            {
+              "path": "goodwatch-webapp/app/ui/share-list-editor/ShareFlow.tsx",
+              "start_line": 59,
+              "end_line": 77,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/ui/share-list-editor/ShareFlow.tsx#L59-L77"
+            }
+          ]
+        },
+        "R09": {
+          "title": "List-count reader bounds and consumers",
+          "inspection_bounds": "Owner reader LIMIT200 and public reader LIMIT200 have no continuation. Owner/public profile renders returned lists; MCP readLists paginates after the bounded owner read, not before. Thus absence of a writer count guard does not promise unlimited list visibility. Numbers count lists, separately from exactly-five items/list. Basic20/Standard60/Plus80/VIP5 120 fit within that reader window in code, but this is not large-library runtime verification or general MDBList static-list parity; VIP10 300/VIP15 400/VIP20 600 exceed it.",
+          "sources": [
+            {
+              "path": "goodwatch-webapp/app/server/share-lists/store.server.ts",
+              "start_line": 123,
+              "end_line": 125,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/server/share-lists/store.server.ts#L123-L125"
+            },
+            {
+              "path": "goodwatch-webapp/app/server/share-lists/view.server.ts",
+              "start_line": 134,
+              "end_line": 139,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/server/share-lists/view.server.ts#L134-L139"
+            },
+            {
+              "path": "goodwatch-webapp/app/server/share-lists/page-loaders.server.ts",
+              "start_line": 115,
+              "end_line": 159,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/server/share-lists/page-loaders.server.ts#L115-L159"
+            },
+            {
+              "path": "goodwatch-webapp/app/routes/u.$handle._index.tsx",
+              "start_line": 108,
+              "end_line": 125,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/routes/u.$handle._index.tsx#L108-L125"
+            },
+            {
+              "path": "goodwatch-webapp/app/server/mcp/lists.server.ts",
+              "start_line": 59,
+              "end_line": 83,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/server/mcp/lists.server.ts#L59-L83"
+            }
+          ]
+        },
+        "R10": {
+          "title": "My shows and status-library groups are derived, not custom lists",
+          "inspection_bounds": "My shows domain fixes Continue, Start, Pick up, Waiting, On hold and Dropped groups and derives membership/order from status, activity and Wishlist. Route passes member context to getMyShows. Library statuses are fixed Want/Seen/Watching/On hold/Dropped/Not rated with status/type/query/sort choices. No group ID/name/member editor or user-defined group storage is accepted by these consumers. Renaming a top 5 share card does not change My shows grouping.",
+          "sources": [
+            {
+              "path": "CONTEXT.md",
+              "start_line": 65,
+              "end_line": 86,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/CONTEXT.md#L65-L86"
+            },
+            {
+              "path": "goodwatch-webapp/app/domain/my-shows.ts",
+              "start_line": 65,
+              "end_line": 79,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/domain/my-shows.ts#L65-L79"
+            },
+            {
+              "path": "goodwatch-webapp/app/domain/my-shows.ts",
+              "start_line": 91,
+              "end_line": 166,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/domain/my-shows.ts#L91-L166"
+            },
+            {
+              "path": "goodwatch-webapp/app/routes/my-shows.tsx",
+              "start_line": 49,
+              "end_line": 61,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/routes/my-shows.tsx#L49-L61"
+            },
+            {
+              "path": "goodwatch-webapp/app/server/my-shows.server.ts",
+              "start_line": 398,
+              "end_line": 464,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/server/my-shows.server.ts#L398-L464"
+            },
+            {
+              "path": "goodwatch-webapp/app/domain/my-library.ts",
+              "start_line": 7,
+              "end_line": 64,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/domain/my-library.ts#L7-L64"
+            },
+            {
+              "path": "goodwatch-webapp/app/server/my-library.server.ts",
+              "start_line": 151,
+              "end_line": 173,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/server/my-library.server.ts#L151-L173"
+            }
+          ]
+        },
+        "R11": {
+          "title": "Personal state and public people lookup are not owned/people collections",
+          "inspection_bounds": "UserData stores title scores/Wishlist/watchState/favorites/skipped/notInterested keyed movie/show IDs, no owned-edition or named status-list membership. Wishlist writer takes user/title key, no list ID. Person lookup displays catalog data without user saved-person-list fields. Share-list parser cannot accept person keys and its model has no Watch/Seen/Owned type. Library franchise collection lookup is catalog-only. Scoped model/writer/reader/API inspection establishes missing typed ownership/people/custom status-list controls.",
+          "sources": [
+            {
+              "path": "goodwatch-webapp/app/types/user-data.ts",
+              "start_line": 6,
+              "end_line": 40,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/types/user-data.ts#L6-L40"
+            },
+            {
+              "path": "goodwatch-webapp/app/server/wishList.server.ts",
+              "start_line": 24,
+              "end_line": 68,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/server/wishList.server.ts#L24-L68"
+            },
+            {
+              "path": "goodwatch-webapp/app/server/share-lists/titles.server.ts",
+              "start_line": 41,
+              "end_line": 49,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/server/share-lists/titles.server.ts#L41-L49"
+            },
+            {
+              "path": "goodwatch-webapp/app/server/share-lists/store.server.ts",
+              "start_line": 19,
+              "end_line": 44,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/server/share-lists/store.server.ts#L19-L44"
+            },
+            {
+              "path": "goodwatch-webapp/app/server/person.server.ts",
+              "start_line": 537,
+              "end_line": 546,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/server/person.server.ts#L537-L546"
+            },
+            {
+              "path": "goodwatch-webapp/app/server/collection.server.ts",
+              "start_line": 25,
+              "end_line": 44,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/server/collection.server.ts#L25-L44"
+            },
+            {
+              "path": "goodwatch-webapp/app/domain/my-library.ts",
+              "start_line": 7,
+              "end_line": 36,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/domain/my-library.ts#L7-L36"
+            }
+          ]
+        },
+        "R12": {
+          "title": "Real personal taste identity and representative titles",
+          "inspection_bounds": "Production /taste/fingerprint route loads the member/guest portrait and renders Fingerprint. Builder computes named identity from five families/74 attributes, with minimum five rated titles carrying analysis and up to 16 representative titles. UI renders identity name, explanation, attribute comparisons and representative posters, with three header posters. Guests under five ratings see sample taste; snapshot availability can produce unavailable view. No subscription branch in these inspected paths. Identity name additionally requires a positive leaning supported by another fingerprint family; it can be null even after the five-title minimum.",
+          "sources": [
+            {
+              "path": "goodwatch-webapp/app/routes/taste.fingerprint.tsx",
+              "start_line": 28,
+              "end_line": 42,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/routes/taste.fingerprint.tsx#L28-L42"
+            },
+            {
+              "path": "goodwatch-webapp/app/server/taste-portrait/index.server.ts",
+              "start_line": 65,
+              "end_line": 95,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/server/taste-portrait/index.server.ts#L65-L95"
+            },
+            {
+              "path": "goodwatch-webapp/app/server/taste-portrait/index.server.ts",
+              "start_line": 100,
+              "end_line": 128,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/server/taste-portrait/index.server.ts#L100-L128"
+            },
+            {
+              "path": "goodwatch-webapp/app/server/taste-portrait/fingerprint.server.ts",
+              "start_line": 1,
+              "end_line": 32,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/server/taste-portrait/fingerprint.server.ts#L1-L32"
+            },
+            {
+              "path": "goodwatch-webapp/app/server/taste-portrait/fingerprint.server.ts",
+              "start_line": 48,
+              "end_line": 61,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/server/taste-portrait/fingerprint.server.ts#L48-L61"
+            },
+            {
+              "path": "goodwatch-webapp/app/ui/taste/tabs/Fingerprint.tsx",
+              "start_line": 84,
+              "end_line": 139,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/ui/taste/tabs/Fingerprint.tsx#L84-L139"
+            },
+            {
+              "path": "goodwatch-webapp/app/ui/taste/tabs/Fingerprint.tsx",
+              "start_line": 244,
+              "end_line": 256,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/ui/taste/tabs/Fingerprint.tsx#L244-L256"
+            },
+            {
+              "path": "goodwatch-webapp/app/routes/api.taste.portrait.ts",
+              "start_line": 17,
+              "end_line": 35,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/routes/api.taste.portrait.ts#L17-L35"
+            },
+            {
+              "path": "goodwatch-webapp/app/server/taste-portrait/fingerprint.server.ts",
+              "start_line": 197,
+              "end_line": 235,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/server/taste-portrait/fingerprint.server.ts#L197-L235"
+            }
+          ]
+        },
+        "R13": {
+          "title": "No connected shareable taste-identity card",
+          "inspection_bounds": "Taste API chooses current session/guest viewer and returns private,no-store personal view, not a share ID for another viewer. Production Taste tabs/routes and taste-portrait modules have no navigator.share/image-download/blob-export/shareUrl control. Existing public card endpoint/viewer consumes ShareList, and public profile renders share lists only. A manually curated top 5 card and copying /taste URL do not publish the computed identity portrait. Negative bound: these consumer/API/card/profile paths, excluding prototype routes.",
+          "sources": [
+            {
+              "path": "goodwatch-webapp/app/routes/api.taste.portrait.ts",
+              "start_line": 43,
+              "end_line": 47,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/routes/api.taste.portrait.ts#L43-L47"
+            },
+            {
+              "path": "goodwatch-webapp/app/server/taste-portrait/index.server.ts",
+              "start_line": 65,
+              "end_line": 81,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/server/taste-portrait/index.server.ts#L65-L81"
+            },
+            {
+              "path": "goodwatch-webapp/app/ui/taste/tabs/Fingerprint.tsx",
+              "start_line": 84,
+              "end_line": 139,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/ui/taste/tabs/Fingerprint.tsx#L84-L139"
+            },
+            {
+              "path": "goodwatch-webapp/app/ui/taste/tabs/Fingerprint.tsx",
+              "start_line": 244,
+              "end_line": 259,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/ui/taste/tabs/Fingerprint.tsx#L244-L259"
+            },
+            {
+              "path": "goodwatch-webapp/app/routes/og.lists.$id.$file.tsx",
+              "start_line": 1,
+              "end_line": 73,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/routes/og.lists.$id.$file.tsx#L1-L73"
+            },
+            {
+              "path": "goodwatch-webapp/app/routes/u.$handle._index.tsx",
+              "start_line": 108,
+              "end_line": 125,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/routes/u.$handle._index.tsx#L108-L125"
+            },
+            {
+              "path": "goodwatch-webapp/app/server/share-lists/view.server.ts",
+              "start_line": 76,
+              "end_line": 84,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/server/share-lists/view.server.ts#L76-L84"
+            }
+          ]
+        },
+        "R14": {
+          "title": "Import size/security/gates are separate from paid availability",
+          "inspection_bounds": "Uploads are limited20×1024² bytes, with a21MiB multipart envelope allowance; CSV/input rows and resulting import observations capped50,000. ZIP expansion bounded200 files (normal Letterboxd/Trakt path),32MiB/entry and64MiB total. Member/authenticated routes have no paid-tier test, but database absence returns503 and TMDB requires deployed keys/origin. Actual deployment, server options and external credentials not exercised. Reading code establishes bounded support; it is not unlimited import or operational parity proof.",
+          "sources": [
+            {
+              "path": "goodwatch-webapp/app/domain/imports.ts",
+              "start_line": 28,
+              "end_line": 29,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/domain/imports.ts#L28-L29"
+            },
+            {
+              "path": "goodwatch-webapp/app/domain/imports.ts",
+              "start_line": 251,
+              "end_line": 251,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/domain/imports.ts#L251-L251"
+            },
+            {
+              "path": "goodwatch-webapp/app/routes/api.imports.preview.ts",
+              "start_line": 12,
+              "end_line": 21,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/routes/api.imports.preview.ts#L12-L21"
+            },
+            {
+              "path": "goodwatch-webapp/app/routes/api.imports.preview.ts",
+              "start_line": 74,
+              "end_line": 95,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/routes/api.imports.preview.ts#L74-L95"
+            },
+            {
+              "path": "goodwatch-webapp/app/server/imports/files.server.ts",
+              "start_line": 15,
+              "end_line": 18,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/server/imports/files.server.ts#L15-L18"
+            },
+            {
+              "path": "goodwatch-webapp/app/server/imports/files.server.ts",
+              "start_line": 235,
+              "end_line": 247,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/server/imports/files.server.ts#L235-L247"
+            },
+            {
+              "path": "goodwatch-webapp/app/server/imports/files.server.ts",
+              "start_line": 745,
+              "end_line": 763,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/server/imports/files.server.ts#L745-L763"
+            },
+            {
+              "path": "goodwatch-webapp/app/server/imports/files.server.ts",
+              "start_line": 899,
+              "end_line": 902,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/server/imports/files.server.ts#L899-L902"
+            },
+            {
+              "path": "goodwatch-webapp/app/server/imports/http.server.ts",
+              "start_line": 9,
+              "end_line": 35,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/server/imports/http.server.ts#L9-L35"
+            },
+            {
+              "path": "goodwatch-webapp/app/server/imports/tmdb-connect-runtime.server.ts",
+              "start_line": 7,
+              "end_line": 20,
+              "url": "https://github.com/alp82/goodwatch-monorepo/blob/97eb3179844c4f68a70ccbd997bab4f2a735516d/goodwatch-webapp/app/server/imports/tmdb-connect-runtime.server.ts#L7-L20"
+            }
+          ]
+        }
+      },
+      "completed": true
+    },
+    "compact_coverage": {
+      "included_records": 359,
+      "assessed_records": 359,
+      "unassessed_record_ids": [],
+      "states": {
+        "implemented_code": 30,
+        "absent_inspected": 237,
+        "partial": 92
+      },
+      "scope": "The eligible compact paid scope only, not a universal audit of all 757 raw records. Existing per-record code snapshots remain operative."
     }
   },
   "visibility_audit": {
