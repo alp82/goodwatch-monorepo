@@ -561,11 +561,20 @@ export function parseTvTime(
 			}
 			if (base.mediaType === "show")
 				base.showTvdbId = id(row.sid) ?? id(row.seriesid)
-			else if (string(row.moviename))
+			else {
+				base.title = string(row.moviename) || "TV Time movie"
 				base.tvtimeMovie = {
 					...(string(row.uuid) ? { sourceId: string(row.uuid) } : {}),
 					releaseDate: string(row.releasedate) || null,
 				}
+				if (!string(row.moviename))
+					base.problem = {
+						outcome: "unmatched",
+						code: "tvtime_movie_title_missing",
+						reason:
+							"This TV Time movie has no title in the export. It wasn't matched.",
+					}
+			}
 			if (
 				(kind === "v2" &&
 					/^(?:watch|rewatch)-episode-/.test(string(row.key))) ||

@@ -52,6 +52,8 @@ A title-only movie stays unmatched until the member chooses. Search is restricte
 
 Limits are the existing 20 MiB upload, bounded ZIP decoding and UTF-8/CSV validation, plus 50,000 non-omitted rows and 50,000 output observations. Unwatched episode rows without ratings are omitted before the 50,000-row counter, for CSV and nested JSON alike; malformed flags and rating-bearing rows remain reviewable. A separate 500,000 raw-row ceiling bounds parsing work across the accepted files. JSON representations with duplicate CSVs are applied once. Protected ZIPs reject with local extraction guidance. No provider credentials, source account IDs, unrelated JSON properties or private CSV columns are retained.
 
+Official movie rows without a movie name retain their watch/wish intention, native source ID and release date, but stay unmatched with `tvtime_movie_title_missing`. Their fallback label is **TV Time movie**. They do not enter title-only manual matching because the source has no title to identify; no title is invented from a show field or another movie. Their original viewing dates and source keys are retained.
+
 ## Copy handover
 
 The following strings are produced by the new backend. Codes live on `ImportFileError.code` or `ImportObservation.problem.code`; codes are not inserted into the member-facing text. Generic UTF-8/CSV limit/corruption errors retain their existing wording and receive `tvtime_file_invalid` when they lack a more specific TV Time code. Uncoded failures while opening a ZIP receive the generic `tvtime_zip_unreadable` message; password/encryption detection keeps the regex on the existing error text and its specific extraction guidance.
@@ -74,6 +76,7 @@ The following strings are produced by the new backend. Codes live on `ImportFile
 | `tvtime_rating_invalid` | This value isn't on TV Time's rating scale, so it wasn't imported. |
 | `tvtime_vote_scale_unknown` | TV Time official vote keys have no verified rating scale. Ratings are not applied. |
 | `tvtime_movie_identity_missing` | This TV Time movie has no catalog ID. Choose a movie to match it. |
+| `tvtime_movie_title_missing` | This TV Time movie has no title in the export. It wasn't matched. |
 | `tvtime_movie_match_required` | Choose a movie for this TV Time entry. |
 | `tvtime_movie_imdb_missing` | This TV Time movie has no IMDb ID, so it wasn't matched. |
 | `tvtime_rating_scale_unknown` | This export's rating scale isn't known, so this rating wasn't imported. |

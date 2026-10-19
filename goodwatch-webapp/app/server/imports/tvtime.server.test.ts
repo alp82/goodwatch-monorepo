@@ -5,6 +5,51 @@ import { zipFixture } from "./zip-fixture.test-support.ts"
 
 // Synthetic records, written from the headers in research/tv-time-exports
 // (b202e111). No third-party fixtures or member data are used.
+test("official movie intents without a name retain their evidence and explain the missing title", async () => {
+	const parsed = await parseImportFile(
+		"tvtime",
+		Buffer.from(
+			"type,entity_type,uuid,movie_name,release_date,created_at\nfollow,movie,synthetic-nameless-follow,,2001-02-03 00:00:00,2024-04-05 12:00:00\nwatch,movie,synthetic-nameless-watch,,2002-03-04 00:00:00,2024-05-06 12:00:00\n",
+		),
+		undefined,
+		"tracking-prod-records.csv",
+	)
+	assert.deepEqual(
+		parsed.observations.map((row) => [
+			row.kind,
+			row.mediaType,
+			row.title,
+			row.problem?.outcome,
+			row.problem?.code,
+		]),
+		[
+			[
+				"want",
+				"movie",
+				"TV Time movie",
+				"unmatched",
+				"tvtime_movie_title_missing",
+			],
+			[
+				"watch",
+				"movie",
+				"TV Time movie",
+				"unmatched",
+				"tvtime_movie_title_missing",
+			],
+		],
+	)
+	assert.deepEqual(
+		parsed.observations.map((row) => row.tvtimeMovie?.releaseDate),
+		["2001-02-03 00:00:00", "2002-03-04 00:00:00"],
+	)
+	assert.ok(
+		parsed.observations.every(
+			(row) => row.tvtimeMovie?.sourceId && !row.wishlistOriginal,
+		),
+	)
+})
+
 test("TV Time GDPR episode plays keep TVDB evidence and zone-less viewing days", async () => {
 	const parsed = await parseImportFile(
 		"tvtime",
