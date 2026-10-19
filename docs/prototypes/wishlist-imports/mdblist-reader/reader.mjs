@@ -132,6 +132,32 @@ export function mapRow(bucket, row, counters) {
 		if (!item.tmdbId && !item.imdbId) counters.missingCatalogId++
 	}
 
+	if (mediaType === "season" || mediaType === "episode") {
+		// v1.1: catalog IDs, title and year name the parent show. They come only from fields that
+		// name the show, never from the row's own ids, which may belong to the season or episode.
+		const show = isObject(row.show) ? row.show : {}
+		const showIds = isObject(show.ids) ? show.ids : {}
+		delete item.year
+		if (typeof show.title === "string") item.title = show.title
+		const showYear = positiveInt(show.release_year)
+		if (showYear && showYear >= 1800 && showYear <= 9999) item.year = showYear
+		const tmdbId = positiveInt(showIds.tmdb) ?? positiveInt(show.tmdb_id) ?? positiveInt(row.show_tmdb_id) ?? positiveInt(row.tmdb_show_id)
+		const imdbId = imdb(showIds.imdb) ?? imdb(show.imdb_id) ?? imdb(row.show_imdb_id) ?? imdb(row.imdb_show_id)
+		if (tmdbId) item.tmdbId = tmdbId
+		if (imdbId) item.imdbId = imdbId
+		tmdbId || imdbId ? counters.parentShowIdsProven++ : counters.parentShowIdsMissing++
+		const coordinate = (value, min) => {
+			const number = positiveInt(value) ?? (value === 0 || value === "0" ? 0 : null)
+			return number !== null && number >= min && number <= 10_000 ? number : null
+		}
+		const season = coordinate(row.season ?? row.season_number, 0)
+		if (season !== null) item.season = season
+		if (mediaType === "episode") {
+			const episode = coordinate(row.episode ?? row.episode_number, 1)
+			if (episode !== null) item.episode = episode
+		}
+	}
+
 	// Native IDs stay source-scoped. The generic `id` is never treated as a TMDB ID.
 	if (ids && typeof ids.mdblist === "string" && ids.mdblist) item.sourceId = ids.mdblist
 	else if (row.id !== undefined && row.id !== null) item.sourceId = `mdblist-${bucket}-${row.id}`
@@ -187,6 +213,8 @@ export async function readWatchlist({
 			showsWithoutIdsObject: 0,
 			rowsWithIdAndIdsTmdb: 0,
 			rowsWhereIdEqualsIdsTmdb: 0,
+			parentShowIdsProven: 0,
+			parentShowIdsMissing: 0,
 		},
 		addedLikeKeys: [],
 		exhaustion: null,
@@ -420,7 +448,7 @@ export async function readWatchlist({
 	report.elapsedMs = Date.now() - started
 	const file = {
 		format: "goodwatch-wishlist",
-		version: 1,
+		version: 1.1,
 		source: "mdblist",
 		profileLabel: "MDBList Watchlist",
 		exportedAt: now().toISOString().replace(/\.\d{3}Z$/, "Z"),

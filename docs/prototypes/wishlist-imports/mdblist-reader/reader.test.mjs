@@ -44,16 +44,40 @@ test("G1, G2, G5, G6: every row is accounted for once with limit=2", async () =>
 	const byTitle = (title) => file.items.filter((item) => item.title === title)
 	assert.equal(byTitle("Toy Story").length, 1)
 	assert.deepEqual(byTitle("Dune").map((item) => item.tmdbId), [841, 438631])
-	const [dark, darkSeason, darkEpisode] = byTitle("Dark")
+	const [dark, darkSeason] = byTitle("Dark")
 	assert.deepEqual(dark, { title: "Dark", mediaType: "show", year: 2017, imdbId: "tt5753856", sourceId: "mdblist-shows-70523" })
 	assert.equal(dark.tmdbId, undefined, "the generic id is never a TMDB ID")
-	assert.equal(darkSeason.mediaType, "season")
-	assert.equal(darkEpisode.mediaType, "episode")
+	// v1.1: a season row names its parent show. IDs come only from the nested show object.
+	assert.deepEqual(darkSeason, { title: "Dark", mediaType: "season", year: 2017, tmdbId: 70523, imdbId: "tt5753856", sourceId: "mdblist-seasons-70523", season: 2 })
+	// An episode row's own IDs never become parent-show IDs.
+	const episode = file.items.find((item) => item.mediaType === "episode")
+	assert.deepEqual(episode, { title: "Secrets", mediaType: "episode", sourceId: "mdblist-episodes-70523", season: 1, episode: 1 })
 	const shared = file.items.filter((item) => item.tmdbId === 1399).map((item) => item.mediaType)
 	assert.deepEqual(shared.sort(), ["movie", "show"])
 	assert.equal(report.identity.showsWithoutIdsObject, 1)
 	assert.equal(report.identity.showsWithIdsObject, 1)
 	assert.equal(report.identity.missingCatalogId, 1)
+})
+
+test("v1.1: the file declares version 1.1 and never claims source Seen", async () => {
+	const { file } = await read(fakeMdblist(rows))
+	assert.equal(file.version, 1.1)
+	assert.ok(file.items.every((item) => !("sourceSeen" in item) && !("sourceSeenAt" in item)))
+})
+
+test("v1.1: a season or episode row without coordinates stays visible as invalid", async () => {
+	const { file } = await read(one({ movies: [], shows: [], seasons: [{ id: 5, title: "X", mediatype: "season" }], episodes: [{ id: 6, title: "Y", season: 1, mediatype: "episode" }], has_more: false }))
+	assert.deepEqual(file.items.map((item) => [item.mediaType, item.season ?? null, item.episode ?? null]), [["season", null, null], ["episode", 1, null]])
+	const parsed = parse(file)
+	assert.deepEqual(parsed.observations.map((observation) => observation.problem?.outcome), ["invalid", "invalid"])
+})
+
+test("v1.1: parent show fields named for the show are used; flat season ids are not", async () => {
+	const season = { id: 7, title: "Season title", season: 3, season_number: 3, mediatype: "season", ids: { tmdb: 555, imdb: "tt0000555" }, show_tmdb_id: 1399, show_imdb_id: "tt0944947" }
+	const { file } = await read(one({ movies: [], shows: [], seasons: [season], has_more: false }))
+	assert.equal(file.items[0].tmdbId, 1399)
+	assert.equal(file.items[0].imdbId, "tt0944947")
+	assert.equal(file.items[0].year, undefined, "a season's own year isn't the show's")
 })
 
 test("G7: the shipped parser accepts the file and keeps unsupported rows visible", async () => {
@@ -70,14 +94,17 @@ test("G7: the shipped parser accepts the file and keeps unsupported rows visible
 		"movie:candidate",
 		"movie:candidate",
 		"movie:candidate",
-		"season:invalid",
+		"season:candidate", // parent show IDs proven
+
 		"movie:candidate", // no ID, but title and year: the shared title-and-year rule decides
 		"show:candidate",
 		"movie:candidate",
-		"episode:invalid",
+		"episode:unmatched", // no parent show ID or year
+
 	])
 	assert.equal(parsed.observations[6].tmdbId, null)
-	assert.ok(parsed.observations.every((observation, index) => !["season", "episode"].includes(file.items[index].mediaType) || !observation.wishlistOriginal))
+	assert.equal(parsed.observations[5].mediaType, "show", "a season wish's effective identity is the show")
+	assert.equal(parsed.observations[5].tmdbId, 70523)
 })
 
 test("G8: no added date is written, and exportedAt is the capture time", async () => {

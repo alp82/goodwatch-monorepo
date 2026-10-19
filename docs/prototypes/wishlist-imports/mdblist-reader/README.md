@@ -1,6 +1,6 @@
 # MDBList Watchlist reader (prototype, #711)
 
-A local, read-only command that reads a member's MDBList personal Watchlist and writes a [shared wishlist file](../../../implementation/shared-wishlist-format.md) for the GoodWatch Imports page. It calls one route, `GET https://api.mdblist.com/watchlist/items`, with cursor pagination. It never calls a write route and needs no OAuth app.
+A local, read-only command that reads a member's MDBList personal Watchlist and writes a [shared wishlist file](../../../implementation/shared-wishlist-format.md) (version 1.1) for the GoodWatch Imports page. It calls one route, `GET https://api.mdblist.com/watchlist/items`, with cursor pagination. It never calls a write route and needs no OAuth app.
 
 Gates: [GATES.md](GATES.md), committed before the reader was written. Results: [VALIDATION.md](VALIDATION.md).
 
@@ -53,13 +53,13 @@ Options: `--key-file`, `--out`, `--report`, `--limit 1..1000`, `--cross-check`. 
 | --- | --- |
 | `movies` | `mediaType: "movie"`. `tmdbId` from `ids.tmdb`, `imdbId` from `ids.imdb` or `imdb_id`, `year` from `release_year`, `sourceId` from `ids.mdblist`. |
 | `shows` | `mediaType: "show"`. Same rules. When the row has no `ids` object (the schema's show shape), `tmdbId` stays empty; the generic `id` goes into `sourceId` as `mdblist-shows-<id>`, never into `tmdbId`. |
-| `seasons`, `episodes` | Kept with `mediaType: "season"` or `"episode"`. The shipped parser shows them as entries it can't read, and they can't become wishes. |
+| `seasons`, `episodes` | `mediaType: "season"` or `"episode"` with `season` (0 to 10,000) and, for episodes, `episode` (1 to 10,000), from `season`/`season_number` and `episode`/`episode_number`. Title, year, `tmdbId` and `imdbId` name the **parent show** and come only from a nested `show` object or fields named for the show (`show_tmdb_id`, `show_imdb_id`). The row's own `ids` are never copied, because they may belong to the season or episode. Without proven parent IDs, the row has no catalog ID and no year, so GoodWatch leaves it unmatched. Missing coordinates make the row invalid but visible. The preview offers Want to See the show, unchecked, as #715 specifies. |
 | Another list name | Kept as unsupported; the file's coverage becomes `unknown`. |
 | The same row twice | Written once and counted as a repeat, only when the row has a native ID and every mapped field matches. |
 | Same native ID, different fields | Both kept; counted as an identity conflict. |
 | A row with no native ID | Always kept, even when another row has the same title and year. |
 
-The reader never writes `addedAt`. It reports field names that look like dates (`addedLikeKeys`) so a real sample can show whether MDBList sends one.
+The reader never writes `addedAt`, `sourceSeen` or `sourceSeenAt`: the Watchlist route proves no added date or watched flag. It reports field names that look like dates (`addedLikeKeys`) so a real sample can show whether MDBList sends one.
 
 ## Completeness rules
 
