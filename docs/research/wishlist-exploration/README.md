@@ -7,6 +7,7 @@ Research date: 2026-10-18. This follows [the first streaming-watchlist investiga
 - [Tracker routes](tracker-routes.md): Simkl, Trakt, their import/export ecosystems, and adjacent tracker formats.
 - [Browser routes](browser-routes.md): extensions, userscripts, bookmarklets, extraction code, browser capabilities and alternatives.
 - [Alternative routes](alternative-routes.md): privacy archives, portable personal collections, self-hosted tools and overlooked bridges.
+- [Seerr Watchlist reader prototype](../../prototypes/wishlist-imports/seerr-reader/README.md): #712 local reader, coverage labels, local-list and mock-Plex results across two Seerr builds. Real Plex behavior is pending an owner check.
 - [Automatic Netflix matching validation](netflix-automatic-matching-validation.md): later owner-supplied 77-title capture, 75 Netflix-ID-backed candidate proposals, measured limits and implementation recommendation. Links to the backend, metadata, external resolver and Opus review-design investigations.
 
 Each track distinguishes provider contracts, inspected implementation, publisher claims and hypotheses. The initial three-track survey did not test an authenticated streaming account; the later Netflix validation uses the owner's local capture and saved page. The research does not imply that an endpoint seen in community code is an officially supported integration.

@@ -1,0 +1,369 @@
+{
+  "format": "goodwatch-wishlist",
+  "version": 1,
+  "source": "seerr",
+  "exportedAt": "2026-10-19T00:00:49Z",
+  "completeness": "complete",
+  "items": [
+    {
+      "title": "movie 14000",
+      "mediaType": "movie",
+      "tmdbId": 14000,
+      "addedAt": "2026-10-19"
+    },
+    {
+      "title": "tv 14000",
+      "mediaType": "show",
+      "tmdbId": 14000,
+      "addedAt": "2026-10-19"
+    },
+    {
+      "title": "movie 14001",
+      "mediaType": "movie",
+      "tmdbId": 14001,
+      "addedAt": "2026-10-19"
+    },
+    {
+      "title": "tv 14001",
+      "mediaType": "show",
+      "tmdbId": 14001,
+      "addedAt": "2026-10-19"
+    },
+    {
+      "title": "movie 14002",
+      "mediaType": "movie",
+      "tmdbId": 14002,
+      "addedAt": "2026-10-19"
+    },
+    {
+      "title": "tv 14002",
+      "mediaType": "show",
+      "tmdbId": 14002,
+      "addedAt": "2026-10-19"
+    },
+    {
+      "title": "movie 14003",
+      "mediaType": "movie",
+      "tmdbId": 14003,
+      "addedAt": "2026-10-19"
+    },
+    {
+      "title": "tv 14003",
+      "mediaType": "show",
+      "tmdbId": 14003,
+      "addedAt": "2026-10-19"
+    },
+    {
+      "title": "movie 14004",
+      "mediaType": "movie",
+      "tmdbId": 14004,
+      "addedAt": "2026-10-19"
+    },
+    {
+      "title": "tv 14004",
+      "mediaType": "show",
+      "tmdbId": 14004,
+      "addedAt": "2026-10-19"
+    },
+    {
+      "title": "movie 14005",
+      "mediaType": "movie",
+      "tmdbId": 14005,
+      "addedAt": "2026-10-19"
+    },
+    {
+      "title": "tv 14005",
+      "mediaType": "show",
+      "tmdbId": 14005,
+      "addedAt": "2026-10-19"
+    },
+    {
+      "title": "movie 14006",
+      "mediaType": "movie",
+      "tmdbId": 14006,
+      "addedAt": "2026-10-19"
+    },
+    {
+      "title": "tv 14007",
+      "mediaType": "show",
+      "tmdbId": 14007,
+      "addedAt": "2026-10-19"
+    },
+    {
+      "title": "movie 14008",
+      "mediaType": "movie",
+      "tmdbId": 14008,
+      "addedAt": "2026-10-19"
+    },
+    {
+      "title": "tv 14009",
+      "mediaType": "show",
+      "tmdbId": 14009,
+      "addedAt": "2026-10-19"
+    },
+    {
+      "title": "Title with a line break and a tab here",
+      "mediaType": "movie",
+      "tmdbId": 14010,
+      "addedAt": "2026-10-19"
+    },
+    {
+      "title": "Ünïcödé 🎬 title",
+      "mediaType": "show",
+      "tmdbId": 14011,
+      "addedAt": "2026-10-19"
+    },
+    {
+      "title": "movie 14012",
+      "mediaType": "movie",
+      "tmdbId": 14012,
+      "addedAt": "2026-10-19"
+    },
+    {
+      "title": "tv 14013",
+      "mediaType": "show",
+      "tmdbId": 14013,
+      "addedAt": "2026-10-19"
+    },
+    {
+      "title": "movie 14014",
+      "mediaType": "movie",
+      "tmdbId": 14014,
+      "addedAt": "2026-10-19"
+    },
+    {
+      "title": "tv 14015",
+      "mediaType": "show",
+      "tmdbId": 14015,
+      "addedAt": "2026-10-19"
+    },
+    {
+      "title": "movie 14016",
+      "mediaType": "movie",
+      "tmdbId": 14016,
+      "addedAt": "2026-10-19"
+    },
+    {
+      "title": "tv 14017",
+      "mediaType": "show",
+      "tmdbId": 14017,
+      "addedAt": "2026-10-19"
+    },
+    {
+      "title": "movie 14018",
+      "mediaType": "movie",
+      "tmdbId": 14018,
+      "addedAt": "2026-10-19"
+    },
+    {
+      "title": "tv 14019",
+      "mediaType": "show",
+      "tmdbId": 14019,
+      "addedAt": "2026-10-19"
+    },
+    {
+      "title": "movie 14020",
+      "mediaType": "movie",
+      "tmdbId": 14020,
+      "addedAt": "2026-10-19"
+    },
+    {
+      "title": "tv 14021",
+      "mediaType": "show",
+      "tmdbId": 14021,
+      "addedAt": "2026-10-19"
+    },
+    {
+      "title": "movie 14022",
+      "mediaType": "movie",
+      "tmdbId": 14022,
+      "addedAt": "2026-10-19"
+    },
+    {
+      "title": "tv 14023",
+      "mediaType": "show",
+      "tmdbId": 14023,
+      "addedAt": "2026-10-19"
+    },
+    {
+      "title": "movie 14024",
+      "mediaType": "movie",
+      "tmdbId": 14024,
+      "addedAt": "2026-10-19"
+    },
+    {
+      "title": "tv 14025",
+      "mediaType": "show",
+      "tmdbId": 14025,
+      "addedAt": "2026-10-19"
+    },
+    {
+      "title": "movie 14026",
+      "mediaType": "movie",
+      "tmdbId": 14026,
+      "addedAt": "2026-10-19"
+    },
+    {
+      "title": "tv 14027",
+      "mediaType": "show",
+      "tmdbId": 14027,
+      "addedAt": "2026-10-19"
+    },
+    {
+      "title": "movie 14028",
+      "mediaType": "movie",
+      "tmdbId": 14028,
+      "addedAt": "2026-10-19"
+    },
+    {
+      "title": "tv 14029",
+      "mediaType": "show",
+      "tmdbId": 14029,
+      "addedAt": "2026-10-19"
+    },
+    {
+      "title": "movie 14030",
+      "mediaType": "movie",
+      "tmdbId": 14030,
+      "addedAt": "2026-10-19"
+    },
+    {
+      "title": "tv 14031",
+      "mediaType": "show",
+      "tmdbId": 14031,
+      "addedAt": "2026-10-19"
+    },
+    {
+      "title": "movie 14032",
+      "mediaType": "movie",
+      "tmdbId": 14032,
+      "addedAt": "2026-10-19"
+    },
+    {
+      "title": "tv 14033",
+      "mediaType": "show",
+      "tmdbId": 14033,
+      "addedAt": "2026-10-19"
+    },
+    {
+      "title": "movie 14034",
+      "mediaType": "movie",
+      "tmdbId": 14034,
+      "addedAt": "2026-10-19"
+    },
+    {
+      "title": "tv 14035",
+      "mediaType": "show",
+      "tmdbId": 14035,
+      "addedAt": "2026-10-19"
+    },
+    {
+      "title": "movie 14036",
+      "mediaType": "movie",
+      "tmdbId": 14036,
+      "addedAt": "2026-10-19"
+    },
+    {
+      "title": "tv 14037",
+      "mediaType": "show",
+      "tmdbId": 14037,
+      "addedAt": "2026-10-19"
+    },
+    {
+      "title": "movie 14038",
+      "mediaType": "movie",
+      "tmdbId": 14038,
+      "addedAt": "2026-10-19"
+    },
+    {
+      "title": "tv 14039",
+      "mediaType": "show",
+      "tmdbId": 14039,
+      "addedAt": "2026-10-19"
+    },
+    {
+      "title": "movie 14040",
+      "mediaType": "movie",
+      "tmdbId": 14040,
+      "addedAt": "2026-10-19"
+    },
+    {
+      "title": "tv 14041",
+      "mediaType": "show",
+      "tmdbId": 14041,
+      "addedAt": "2026-10-19"
+    },
+    {
+      "title": "movie 14042",
+      "mediaType": "movie",
+      "tmdbId": 14042,
+      "addedAt": "2026-10-19"
+    },
+    {
+      "title": "tv 14043",
+      "mediaType": "show",
+      "tmdbId": 14043,
+      "addedAt": "2026-10-19"
+    },
+    {
+      "title": "movie 14044",
+      "mediaType": "movie",
+      "tmdbId": 14044,
+      "addedAt": "2026-10-19"
+    },
+    {
+      "title": "tv 14045",
+      "mediaType": "show",
+      "tmdbId": 14045,
+      "addedAt": "2026-10-19"
+    },
+    {
+      "title": "movie 14046",
+      "mediaType": "movie",
+      "tmdbId": 14046,
+      "addedAt": "2026-10-19"
+    },
+    {
+      "title": "tv 14047",
+      "mediaType": "show",
+      "tmdbId": 14047,
+      "addedAt": "2026-10-19"
+    },
+    {
+      "title": "movie 14048",
+      "mediaType": "movie",
+      "tmdbId": 14048,
+      "addedAt": "2026-10-19"
+    },
+    {
+      "title": "tv 14049",
+      "mediaType": "show",
+      "tmdbId": 14049,
+      "addedAt": "2026-10-19"
+    },
+    {
+      "title": "movie 14050",
+      "mediaType": "movie",
+      "tmdbId": 14050,
+      "addedAt": "2026-10-19"
+    },
+    {
+      "title": "tv 14051",
+      "mediaType": "show",
+      "tmdbId": 14051,
+      "addedAt": "2026-10-19"
+    },
+    {
+      "title": "movie 14052",
+      "mediaType": "movie",
+      "tmdbId": 14052,
+      "addedAt": "2026-10-19"
+    },
+    {
+      "title": "tv 14053",
+      "mediaType": "show",
+      "tmdbId": 14053,
+      "addedAt": "2026-10-19"
+    }
+  ]
+}
