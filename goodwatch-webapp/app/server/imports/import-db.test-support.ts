@@ -7,6 +7,7 @@ function requiredRow(row: Row | undefined): Row {
 // The fake implements only these statement shapes. Reject changed predicates or columns
 // instead of silently returning empty rows/success. Placeholder lists may vary in length.
 const supportedImportSql = new Set([
+	"SELECT i.id FROM doc.user_import i INNER JOIN doc.user_import_item j ON i.id = j.import_id WHERE i.user_id = ? AND i.source = 'tvtime' AND j.kind = 'resolution' AND j.row_index = -1 ORDER BY i.created_at DESC, i.id DESC LIMIT 1",
 	"SELECT source_key, payload FROM doc.user_import_item WHERE import_id LIKE ? AND source_key > ? AND kind = 'resolution' ORDER BY source_key LIMIT 4",
 	"SELECT status, user_id FROM doc.user_import WHERE id = ?",
 	"SELECT payload, _seq_no, _primary_term FROM doc.user_import_item WHERE import_id = ? AND row_index = ? AND kind = 'resolution'",
@@ -305,6 +306,27 @@ export class ImportDb {
 						x.media_type === params[2],
 				)
 				.map((x) => ({ ...x })) as T[]
+		if (s.startsWith("SELECT i.id FROM doc.user_import i INNER JOIN")) {
+			return this.imports
+				.filter(
+					(row) =>
+						row.user_id === params[0] &&
+						row.source === "tvtime" &&
+						this.items.some(
+							(item) =>
+								item.import_id === row.id &&
+								item.kind === "resolution" &&
+								item.row_index === -1,
+						),
+				)
+				.sort(
+					(a, b) =>
+						String(b.created_at).localeCompare(String(a.created_at)) ||
+						String(b.id).localeCompare(String(a.id)),
+				)
+				.slice(0, 1)
+				.map((row) => ({ id: row.id })) as unknown as T[]
+		}
 		if (s.includes("FROM doc.user_import WHERE user_id = ?"))
 			return this.imports
 				.filter(

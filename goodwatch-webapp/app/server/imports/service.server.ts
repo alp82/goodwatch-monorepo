@@ -49,8 +49,15 @@ export const previewParsedImport = async (
 		fileHash,
 	)
 
-export const listImports = async (userId: string): Promise<ImportSummary[]> =>
-	(await listImportRows(userId)).map(summarize)
+export const listImports = async (userId: string): Promise<ImportSummary[]> => {
+	const [history, preview] = await Promise.all([
+		listImportRows(userId),
+		import("./resolution-runtime.server.ts").then((runtime) =>
+			runtime.resumableTvtimePreview(userId),
+		),
+	])
+	return [...(preview ? [preview] : []), ...history.map(summarize)]
+}
 export const getImport = async (userId: string, id: string) => {
 	const row = await getImportRow(userId, id)
 	return {

@@ -446,6 +446,25 @@ export async function resolutionVisible(member: string, id: string) {
 	}
 	return visible
 }
+/** Only roots have a job row. Resume its published active preview, never a staged child. */
+export async function resumableTvtimePreview(
+	member: string,
+): Promise<ImportSummary | null> {
+	const roots = await select<{ id: string }>(
+		"SELECT i.id FROM doc.user_import i INNER JOIN doc.user_import_item j ON i.id = j.import_id WHERE i.user_id = ? AND i.source = 'tvtime' AND j.kind = 'resolution' AND j.row_index = -1 ORDER BY i.created_at DESC, i.id DESC LIMIT 1",
+		[member],
+	)
+	if (!roots[0]) return null
+	const job = await resolutionJobs.read(roots[0].id)
+	if (!job || job.member !== member || job.state === "cancelled") return null
+	const row = await getImportRow(member, job.activePreviewId)
+	if (row.status !== "preview") return null
+	return {
+		...summarize(row),
+		resolution: await resolutionSummary(member, row.id),
+	}
+}
+
 export async function resolutionSummary(member: string, id: string) {
 	const root = await resolutionRoot(member, id)
 	if (!root) return undefined

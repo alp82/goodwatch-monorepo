@@ -996,3 +996,30 @@ test("discard removes the preview family and all source-bearing resolution metad
 	assert.equal(db.imports.length, 0)
 	assert.equal(db.items.length, 1)
 })
+
+test("the import list resumes the member's current TV Time preview, follows publication, and drops it after discard", async () => {
+	setCrateClientForTest(new FakeTrackingCrate())
+	setImportDbForTest(new ImportDb())
+	runtime.setResolutionNetworkForTest(async () => ({
+		results: [],
+		total_pages: 1,
+	}))
+	const initial = await service.previewImport(
+		"member",
+		"tvtime",
+		"tracking-prod-records.csv",
+		Buffer.from(
+			"type,entity_type,uuid,movie_name,release_date,created_at\nwatch,movie,resume-1,Synthetic movie,2001-02-03,2024-01-01\n",
+		),
+	)
+	assert.equal((await service.listImports("member"))[0]?.id, initial.id)
+	assert.equal((await service.listImports("other-member")).length, 0)
+	await runtime.resolutionJobs.run(initial.id)
+	const parent = await service.getImport("member", initial.id)
+	const listed = await service.listImports("member")
+	assert.equal(listed.length, 1)
+	assert.equal(listed[0].id, parent.resolution?.replacementId)
+	assert.equal(listed[0].resolution?.state, "completed")
+	await service.discardImport("member", listed[0].id)
+	assert.equal((await service.listImports("member")).length, 0)
+})
