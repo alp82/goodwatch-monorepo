@@ -1,3 +1,4 @@
+import { hasGoodwatchScore } from "../../../utils/ratings.ts"
 // What "On <service>" on the TV says and asks for: the screen a streaming key of the Remote and a service's tile
 // on home open, with titles to watch on that one service. Pure, so the words and the rules stay in one place and
 // have tests.
@@ -93,7 +94,7 @@ export function serviceFacts(
 	const score = card.goodwatch_overall_score_normalized_percent
 	return [
 		titleKicker(card),
-		score == null ? null : `${Math.round(score)} score`,
+		hasGoodwatchScore(score) ? `${Math.round(score)} score` : null,
 		card.match == null ? null : `${card.match}% match`,
 	]
 		.filter(Boolean)

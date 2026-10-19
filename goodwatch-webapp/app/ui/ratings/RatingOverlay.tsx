@@ -5,6 +5,7 @@ import {
 	type AllRatings,
 	goodwatchScoreDisplay,
 	goodwatchVibeIndex,
+	hasGoodwatchScore,
 } from "~/utils/ratings"
 
 export interface RatingsOverlayProps {
@@ -20,7 +21,7 @@ export default function RatingOverlay({
 	children,
 }: RatingsOverlayProps) {
 	const hasScore =
-		typeof ratings?.goodwatch_overall_score_normalized_percent === "number"
+		hasGoodwatchScore(ratings?.goodwatch_overall_score_normalized_percent)
 	const score = hasScore
 		? goodwatchScoreDisplay(ratings.goodwatch_overall_score_normalized_percent)
 		: null

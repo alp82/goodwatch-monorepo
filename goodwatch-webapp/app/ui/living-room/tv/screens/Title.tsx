@@ -1,3 +1,4 @@
+import { hasGoodwatchScore } from "~/utils/ratings"
 import { mediaFieldLanguage } from "~/utils/media-presentation"
 import { mediaTextAttributes } from "~/ui/media-text/media-text"
 // One title, large: its backdrop is the picture, its name and facts stand at the bottom left over its keys. The
@@ -118,7 +119,7 @@ export function TitleView({
 				<div
 					className={`flex flex-wrap items-center ${P ? "mt-2.5 gap-x-5 text-[21px]" : "mt-5 gap-x-7 text-[30px]"}`}
 				>
-					{score != null && (
+					{hasGoodwatchScore(score) && (
 						<span>
 							<b>{Math.round(score)}</b>{" "}
 							<span className="text-white/65">score</span>

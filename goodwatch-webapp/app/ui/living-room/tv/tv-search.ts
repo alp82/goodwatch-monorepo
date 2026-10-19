@@ -1,3 +1,4 @@
+import { hasGoodwatchScore } from "../../../utils/ratings.ts"
 import { presentationLanguage } from "../../../utils/media-presentation.ts"
 // What the TV's search says, and the search it asks for. Pure.
 //
@@ -76,7 +77,7 @@ export function searchFacts(
 	const score = card.goodwatch_overall_score_normalized_percent
 	return [
 		titleKicker(card),
-		score == null ? null : `${Math.round(score)} score`,
+		hasGoodwatchScore(score) ? `${Math.round(score)} score` : null,
 		card.match == null ? null : `${card.match}% match`,
 		whereLine(card, []),
 	]

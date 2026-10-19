@@ -13,7 +13,7 @@ import {
 	row,
 	vibeColor,
 } from "~/ui/og-image/parts"
-import { goodwatchScoreDisplay } from "~/utils/ratings"
+import { goodwatchScoreDisplay, hasGoodwatchScore } from "~/utils/ratings"
 
 export type DiscoveryFeature = "explorer" | "discover"
 
@@ -48,7 +48,7 @@ function Poster({
 					style={{ objectFit: "cover" }}
 				/>
 			)}
-			{showScore && poster?.score != null && (
+			{showScore && hasGoodwatchScore(poster?.score) && (
 				<div
 					style={{
 						display: "flex",

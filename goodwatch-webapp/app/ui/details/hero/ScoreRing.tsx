@@ -1,13 +1,13 @@
 import React from "react"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
-import { goodwatchScoreDisplay, goodwatchVibeIndex, scoreLabels } from "~/utils/ratings"
+import { goodwatchScoreDisplay, goodwatchVibeIndex, hasGoodwatchScore, scoreLabels } from "~/utils/ratings"
 
 // The GoodWatch score as a ring filled to the score. With `label` its verdict word and caption
 // sit beside it; without, the ring carries them as its accessible name and tooltip.
 export default function ScoreRing({ media, size = 56, label = true }: { media: MovieResult | ShowResult; size?: number; label?: boolean }) {
 	const percent = media.details.goodwatch_overall_score_normalized_percent
-	const score = percent ? goodwatchScoreDisplay(percent) : null
-	const vibe = percent ? goodwatchVibeIndex(percent) : null
+	const score = hasGoodwatchScore(percent) ? goodwatchScoreDisplay(percent) : null
+	const vibe = hasGoodwatchScore(percent) ? goodwatchVibeIndex(percent) : null
 	const verdict = score == null ? "Not rated yet" : scoreLabels[Math.max(1, Math.round(score / 10))]
 	const stroke = size / 11
 	const r = (size - stroke) / 2
