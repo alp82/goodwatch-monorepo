@@ -78,12 +78,20 @@ function projection(
 	resolution?: ImportObservation["wishlistResolution"],
 	catalogImdbId: string | null = null,
 ): ImportObservation {
+	if (
+		["season", "episode"].includes(original.mediaType) &&
+		resolution &&
+		resolution.mediaType !== "show"
+	)
+		fail("wishlist_resolution_invalid")
 	const snapshot = structuredClone(original)
 	return {
 		...snapshot,
 		mediaType:
 			resolution?.mediaType ??
-			(original.mediaType === "show" ? "show" : "movie"),
+			(["show", "season", "episode"].includes(original.mediaType)
+				? "show"
+				: "movie"),
 		tmdbId: resolution?.tmdbId ?? original.tmdbId,
 		imdbId: resolution ? catalogImdbId : original.imdbId,
 		wishlistOriginal: snapshot,
@@ -156,6 +164,12 @@ export async function resolveWishlistImport(
 		}
 		if (!eligible(row.wishlistOriginal, row.wishlistMatchRequired))
 			fail("wishlist_row_not_resolvable")
+		if (
+			["season", "episode"].includes(row.wishlistOriginal.mediaType) &&
+			choice.target &&
+			choice.target.mediaType !== "show"
+		)
+			fail("wishlist_resolution_invalid")
 		const group = wishlistSourceGroup(row.wishlistOriginal, choice.index)
 		const previous = choices.get(group)
 		if (

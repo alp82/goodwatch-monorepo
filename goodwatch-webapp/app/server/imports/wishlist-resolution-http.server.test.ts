@@ -27,10 +27,14 @@ registerHooks({
 	},
 })
 const { setImportDbForTest } = await import("./store.server.ts")
-const { previewImport } = await import("./service.server.ts")
+const { previewImport, getImport } = await import("./service.server.ts")
+const { setImportEffectsForTest } = await import("./apply.server.ts")
 const { action } = await import("../../routes/api.imports.$id.resolve.ts")
 const { loader } = await import("../../routes/api.imports.$id.matches.ts")
-afterEach(() => setImportDbForTest())
+afterEach(() => {
+	setImportDbForTest()
+	setImportEffectsForTest()
+})
 
 it("authenticates the resolution HTTP boundary, bounds actual body bytes and returns stable codes alongside authored messages", async () => {
 	const db = new ImportDb()
@@ -154,4 +158,57 @@ it("authenticates the resolution HTTP boundary, bounds actual body bytes and ret
 		assert.equal(mixed.status, 400)
 		assert.equal((await mixed.json()).code, "wishlist_search_invalid")
 	}
+})
+
+it("accepts an explicit whole-show choice at confirmation and rejects non-boolean choices", async () => {
+	setImportEffectsForTest(
+		async () => {},
+		async () => {},
+	)
+	const db = new ImportDb()
+	setImportDbForTest(db)
+	const preview = await previewImport(
+		"member",
+		"wishlist",
+		"empty.json",
+		new TextEncoder().encode(
+			JSON.stringify({
+				format: "goodwatch-wishlist",
+				version: 1.1,
+				source: "synthetic",
+				completeness: "complete",
+				items: [],
+			}),
+		),
+	)
+	const { action: confirm } = await import(
+		"../../routes/api.imports.$id.confirm.ts"
+	)
+	const send = (wishlistShows: unknown) =>
+		confirm({
+			request: new Request("https://example.test/confirm", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					"x-fixture-member": "member",
+				},
+				body: JSON.stringify({
+					kinds: ["want"],
+					conflictChoice: "keep",
+					watchDates: "preserve",
+					wishlistShows,
+				}),
+			}),
+			params: { id: preview.id },
+			context: {},
+		})
+	assert.equal((await send("true")).status, 400)
+	const response = await send(true)
+	assert.equal(response.status, 200)
+	assert.equal((await response.json()).import.options.wishlistShows, true)
+	for (let attempt = 0; attempt < 100; attempt++) {
+		if ((await getImport("member", preview.id)).status === "done") break
+		await new Promise((resolve) => setTimeout(resolve, 5))
+	}
+	assert.equal((await getImport("member", preview.id)).status, "done")
 })

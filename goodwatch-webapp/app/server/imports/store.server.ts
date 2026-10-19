@@ -104,10 +104,12 @@ export function summarize(row: ImportRow): ImportSummary {
 		| ({ direction?: "apply" | "undo" } & NonNullable<ImportSummary["options"]>)
 		| null
 	>(row.options, null)
-	const { _wishlistMatchCount, ...kindCounts } = parse<Record<string, number>>(
-		row.kinds,
-		{},
-	)
+	const {
+		_wishlistMatchCount,
+		_wishlistShowChoiceCount,
+		_wishlistRewatchChoiceCount,
+		...kindCounts
+	} = parse<Record<string, number>>(row.kinds, {})
 	return {
 		id: row.id,
 		source: row.source,
@@ -132,6 +134,9 @@ export function summarize(row: ImportRow): ImportSummary {
 					kinds: storedOptions.kinds,
 					conflictChoice: storedOptions.conflictChoice,
 					watchDates: storedOptions.watchDates,
+					...(storedOptions.wishlistShows !== undefined
+						? { wishlistShows: storedOptions.wishlistShows }
+						: {}),
 				}
 			: null,
 		processed: Number(row.processed),
@@ -144,7 +149,15 @@ export function summarize(row: ImportRow): ImportSummary {
 		},
 		stalled: isStalled(row),
 		...(row.source === "wishlist"
-			? { wishlistMatchCount: Number(_wishlistMatchCount ?? 0) }
+			? {
+					wishlistMatchCount: Number(_wishlistMatchCount ?? 0),
+					wishlistShowChoiceCount: Number(_wishlistShowChoiceCount ?? 0),
+					...(_wishlistRewatchChoiceCount !== undefined
+						? {
+								wishlistRewatchChoiceCount: Number(_wishlistRewatchChoiceCount),
+							}
+						: {}),
+				}
 			: {}),
 		canUndo:
 			row.status === "done" && Number(row.added) + Number(row.updated) > 0,

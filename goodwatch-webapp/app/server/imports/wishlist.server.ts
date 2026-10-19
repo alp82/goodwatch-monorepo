@@ -54,7 +54,7 @@ function sharedWishlist(input: unknown, fail: Fail): ParsedImport {
 		fail(
 			"Choose watcharr-export.json from Watcharr, or a wishlist file made for GoodWatch.",
 		)
-	if (input.version !== 1)
+	if (input.version !== 1 && input.version !== 1.1)
 		fail(
 			"This wishlist file uses a newer layout than GoodWatch reads. Ask the maker of the tool that saved it for a file GoodWatch can read.",
 		)
@@ -77,6 +77,7 @@ function sharedWishlist(input: unknown, fail: Fail): ParsedImport {
 			"That file has more than 50,000 titles. GoodWatch imports up to 50,000 at a time.",
 		)
 	const data = input as ObjectValue & { items: ObjectValue[] }
+	const v11 = data.version === 1.1
 	const metadata = {
 		source: data.source as string,
 		completeness: data.completeness as "complete" | "partial" | "unknown",
@@ -99,7 +100,9 @@ function sharedWishlist(input: unknown, fail: Fail): ParsedImport {
 		observations: data.items.map((value) => {
 			const item = object(value) ? value : {}
 			const mediaType =
-				item.mediaType === "movie" || item.mediaType === "show"
+				item.mediaType === "movie" ||
+				item.mediaType === "show" ||
+				(v11 && (item.mediaType === "season" || item.mediaType === "episode"))
 					? item.mediaType
 					: "unknown"
 			const validTmdb = (id: unknown): id is number =>
@@ -119,11 +122,28 @@ function sharedWishlist(input: unknown, fail: Fail): ParsedImport {
 					return false
 				}
 			}
+			const validCoordinate = (value: unknown, minimum: number) =>
+				typeof value === "number" &&
+				Number.isSafeInteger(value) &&
+				value >= minimum
+			const invalidCoordinates =
+				v11 &&
+				((mediaType === "season" || mediaType === "episode"
+					? !validCoordinate(item.season, 0)
+					: item.season !== undefined) ||
+					(mediaType === "episode"
+						? !validCoordinate(item.episode, 1)
+						: item.episode !== undefined))
 			const invalid =
+				invalidCoordinates ||
 				!object(value) ||
 				!text(item.title, 1000) ||
 				typeof item.mediaType !== "string" ||
-				!["movie", "show", "unknown"].includes(item.mediaType) ||
+				!(
+					v11
+						? ["movie", "show", "unknown", "season", "episode"]
+						: ["movie", "show", "unknown"]
+				).includes(item.mediaType) ||
 				(item.tmdbId !== undefined && !validTmdb(item.tmdbId)) ||
 				(item.imdbId !== undefined && !validImdb(item.imdbId)) ||
 				(item.year !== undefined &&
@@ -132,12 +152,21 @@ function sharedWishlist(input: unknown, fail: Fail): ParsedImport {
 						item.year < 1800 ||
 						item.year > 9999)) ||
 				(item.addedAt !== undefined && !date(item.addedAt)) ||
+				(v11 &&
+					item.sourceSeen !== undefined &&
+					typeof item.sourceSeen !== "boolean") ||
+				(v11 &&
+					item.sourceSeenAt !== undefined &&
+					(item.sourceSeen !== true || !date(item.sourceSeenAt))) ||
 				(item.sourceId !== undefined && !text(item.sourceId)) ||
 				(item.sourceUrl !== undefined && !validUrl(item.sourceUrl))
 			const observation: ImportObservation = {
 				key: `wishlist:want:${createHash("sha256")
 					.update(
 						JSON.stringify([
+							...(v11 && (mediaType === "season" || mediaType === "episode")
+								? [item.season, item.episode ?? null]
+								: []),
 							metadata.source,
 							metadata.profileLabel ?? null,
 							mediaType,
@@ -155,7 +184,23 @@ function sharedWishlist(input: unknown, fail: Fail): ParsedImport {
 					.digest("hex")}`,
 				kind: "want",
 				// Storage requires a supported type. An unknown scope is always blocked by problem below.
-				mediaType: mediaType === "show" ? "show" : "movie",
+				mediaType: ["show", "season", "episode"].includes(mediaType)
+					? "show"
+					: "movie",
+				...(v11 && (mediaType === "season" || mediaType === "episode")
+					? {
+							season: validCoordinate(item.season, 0)
+								? (item.season as number)
+								: null,
+							...(mediaType === "episode"
+								? {
+										episode: validCoordinate(item.episode, 1)
+											? (item.episode as number)
+											: null,
+									}
+								: {}),
+						}
+					: {}),
 				title: text(item.title, 1000) ? item.title : "",
 				year:
 					typeof item.year === "number" && Number.isInteger(item.year)
@@ -167,6 +212,12 @@ function sharedWishlist(input: unknown, fail: Fail): ParsedImport {
 				wishlistEvidence: {
 					...metadata,
 					mediaType,
+					...(v11 && typeof item.sourceSeen === "boolean"
+						? { sourceSeen: item.sourceSeen }
+						: {}),
+					...(v11 && date(item.sourceSeenAt)
+						? { sourceSeenAt: item.sourceSeenAt }
+						: {}),
 					...(text(item.sourceId) ? { sourceId: item.sourceId } : {}),
 					...(validUrl(item.sourceUrl)
 						? {
@@ -200,6 +251,14 @@ function sharedWishlist(input: unknown, fail: Fail): ParsedImport {
 				}
 			if (!invalid && observation.wishlistEvidence)
 				observation.wishlistOriginal = {
+					...(v11 && (mediaType === "season" || mediaType === "episode")
+						? {
+								season: observation.season as number,
+								...(mediaType === "episode"
+									? { episode: observation.episode as number }
+									: {}),
+							}
+						: {}),
 					key: observation.key,
 					kind: "want",
 					mediaType,

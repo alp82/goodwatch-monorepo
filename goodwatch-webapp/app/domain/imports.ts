@@ -282,11 +282,16 @@ export interface ImportObservation {
 		exportedAt?: string
 		completeness: "complete" | "partial" | "unknown"
 		sourceId?: string
+		sourceSeen?: boolean
+		sourceSeenAt?: string
 		sourceUrl?: string
-		mediaType: "movie" | "show" | "unknown"
+		mediaType: "movie" | "show" | "unknown" | "season" | "episode"
 	}
 	/** Validated source observation, captured before matching; never replaced by a member choice. */
 	wishlistOriginal?: WishlistOriginalObservation
+	/** Server-derived holds after canonical duplicate grouping. */
+	wishlistShowChoice?: boolean
+	wishlistRewatchChoice?: boolean
 	wishlistResolution?: {
 		basis: "member"
 		mediaType: ImportMediaType
@@ -333,9 +338,11 @@ export type WishlistMatchErrorCode =
 	| "method_not_allowed"
 
 export interface WishlistOriginalObservation {
+	season?: number
+	episode?: number
 	key: string
 	kind: "want"
-	mediaType: "movie" | "show" | "unknown"
+	mediaType: "movie" | "show" | "unknown" | "season" | "episode"
 	title: string
 	year: number | null
 	tmdbId: number | null
@@ -402,6 +409,8 @@ export interface WishlistMatchGroup {
 }
 
 export interface ImportOptions {
+	/** Explicit conversion of source season/episode wishes to whole-show wishes. */
+	wishlistShows?: boolean
 	kinds: ImportKind[]
 	conflictChoice: "keep" | "source"
 	/** Explicit choice; never inferred from clusters of equal timestamps. */
@@ -425,6 +434,8 @@ export interface ImportSummary {
 	stalled: boolean
 	/** Manually matchable source groups (unknown type or conflicting IDs), including resolved groups. */
 	wishlistMatchCount?: number
+	wishlistShowChoiceCount?: number
+	wishlistRewatchChoiceCount?: number
 	canUndo: boolean
 	error: string | null
 	/** The durable direction of a running/failed job, so Resume continues the same operation. */

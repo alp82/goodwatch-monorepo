@@ -217,6 +217,7 @@ async function matchCatalog(source: ImportSource, rows: ImportObservation[]) {
 	for (const [index, title] of found) {
 		const row = rows[index]
 		if (
+			(source === "wishlist" && row.kind === "want") ||
 			title.mediaType !== "show" ||
 			(row.episodeTmdbId == null &&
 				!(row.animeEntry && row.kind === "watch") &&
@@ -440,17 +441,27 @@ function classify(
 				...title,
 				outcome: current.wants.has(ref)
 					? "unchanged"
-					: current.watched.has(ref)
+					: current.watched.has(ref) || row.wishlistRewatchChoice
 						? row.wishlistEvidence
 							? "conflict"
 							: "unchanged"
-						: "new",
+						: row.wishlistShowChoice
+							? "conflict"
+							: "new",
+				wishlistRewatchChoice:
+					!!row.wishlistEvidence &&
+					(current.watched.has(ref) || !!row.wishlistRewatchChoice),
 				reason:
-					!current.wants.has(ref) && current.watched.has(ref)
+					!current.wants.has(ref) &&
+					(current.watched.has(ref) || row.wishlistRewatchChoice)
 						? row.wishlistEvidence
-							? "Seen in GoodWatch. Choose whether to add this title as Want to rewatch."
+							? current.watched.has(ref)
+								? "Seen in GoodWatch. Choose whether to add this title as Want to rewatch."
+								: "Seen at the source. Choose whether to add this title as Want to rewatch."
 							: "This title is already in your watch log."
-						: null,
+						: row.wishlistShowChoice && !current.wants.has(ref)
+							? "This file lists a season or episode. Choose Want to See the show to add the whole show."
+							: null,
 			}
 		if (row.kind === "favorite")
 			return {
@@ -681,12 +692,19 @@ export async function createParsedPreview(
 	}
 	// Suppress duplicate effective identities before calculating any per-title library conflicts.
 	if (source === "wishlist") {
-		const seen = new Set<string>()
+		const representatives = new Map<string, ImportObservation>()
 		for (const [index, row] of parsed.observations.entries()) {
 			const title = matched.get(index)
 			if (!title || row.kind !== "want" || row.problem) continue
+			row.wishlistShowChoice =
+				row.wishlistEvidence?.mediaType === "season" ||
+				row.wishlistEvidence?.mediaType === "episode"
+			row.wishlistRewatchChoice = row.wishlistEvidence?.sourceSeen === true
 			const identity = key(title.mediaType, title.tmdbId)
-			if (seen.has(identity)) {
+			const representative = representatives.get(identity)
+			if (representative) {
+				representative.wishlistShowChoice ||= row.wishlistShowChoice
+				representative.wishlistRewatchChoice ||= row.wishlistRewatchChoice
 				row.kind = "unsupported"
 				row.tmdbId = title.tmdbId
 				row.mediaType = title.mediaType
@@ -695,7 +713,7 @@ export async function createParsedPreview(
 					reason: "Listed twice in the file. Added once.",
 				}
 				matched.delete(index)
-			} else seen.add(identity)
+			} else representatives.set(identity, row)
 		}
 	}
 	const items = classify(parsed.observations, matched, current)
@@ -748,6 +766,14 @@ export async function createParsedPreview(
 					...kinds,
 					...(source === "wishlist"
 						? {
+								_wishlistShowChoiceCount: items.filter(
+									(item) =>
+										item.outcome === "conflict" && item.wishlistShowChoice,
+								).length,
+								_wishlistRewatchChoiceCount: items.filter(
+									(item) =>
+										item.outcome === "conflict" && item.wishlistRewatchChoice,
+								).length,
 								_wishlistMatchCount: new Set(
 									parsed.observations.flatMap((row, index) =>
 										isManuallyMatchableWishlistSource(
@@ -794,6 +820,7 @@ async function classifyWishlistShows(userId: string, items: ImportItem[]) {
 		if (item.tmdbId === null) continue
 		const snapshot = snapshots.get(item.tmdbId)
 		if (snapshot?.state?.state === "seen") {
+			item.wishlistRewatchChoice = true
 			item.outcome = "conflict"
 			item.reason =
 				"Seen in GoodWatch. Choose whether to add this title as Want to rewatch."

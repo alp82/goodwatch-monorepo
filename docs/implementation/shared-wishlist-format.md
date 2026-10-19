@@ -1,4 +1,4 @@
-# Shared wishlist interchange, version 1
+# Shared wishlist interchange, versions 1 and 1.1
 
 This is a producer contract for additive wishlist intake. It is not a request for members to convert their exports. The Imports page accepts the original Watcharr JSON export through an adapter, as well as this shared format. Browser capture remains experimental; see [capture validation](../research/wishlist-exploration/capture-validation.md).
 
@@ -69,3 +69,41 @@ Signals are considered in this order:
 A tie at one level proceeds to the next; if no level distinguishes a candidate, nothing is suggested. A choice creates a child preview with the same immutable original observation and provider evidence. Clear restores the conflicting source IDs and recalculates the hold. Ordinary canonical duplicate suppression runs only after an explicit choice, as before.
 
 Member-facing copy added for UX review: “The supplied TMDB and IMDb IDs identify different titles. Choose a match.” The match panel shows the existing “Type unknown” label only for unknown source types. Presentation and preselection of the suggested default belong to the separate UX thread.
+
+
+## Version 1.1: source Seen and season/episode wishes (#715)
+
+Use numeric `version: 1.1` (not a string) for the additional fields below. Version 1 continues to parse identically: its extra source-Seen and coordinate fields are ignored, and season/episode types remain invalid. All existing movie/show/unknown rows also work in 1.1, with no new required fields. See the complete [synthetic example file](shared-wishlist-v1.1.example.json).
+
+| Item field | Contract |
+| --- | --- |
+| `sourceSeen` | Optional boolean. `true` is explicit source-side Seen evidence; `false` does not override GoodWatch Seen or other rows' positive evidence. Omit when unknown. |
+| `sourceSeenAt` | Optional date in the same day/timestamp syntax as `addedAt`, allowed only with `sourceSeen: true`. Omit an unknown date; never substitute capture time, a tracking-start date, or partial episode progress. |
+| `mediaType` | Also accepts `season` and `episode`. The title, year, TMDB ID and IMDb ID identify the **parent show**, never the season or episode. `sourceId` still identifies the original source row. |
+| `season` | Required on season/episode rows, a nonnegative safe integer. Zero preserves a source special's coordinates without making it regular progress. Omitted on movie/show/unknown rows. |
+| `episode` | Required on episode rows, a positive safe integer. Omitted on every other row type. |
+
+A season or episode row is still a source wishlist entry. A Seen-list-only row is not a wish: a producer may attach source Seen evidence only to a row with independently established wishlist membership. For JustWatch, explicit Seen-list evidence can populate `sourceSeen` and a known Seen date can populate `sourceSeenAt`; `seenState.progress > 0` alone does not establish whole-show Seen. For MDBList, retain `mediaType: "season" | "episode"`, copy its known `season`/`episode` numbers, and supply independently established parent-show IDs. Do not copy a season/episode catalog ID into the parent-show ID fields. Neither prototype branch is changed by this contract.
+
+Malformed flags, impossible dates, missing/invalid coordinates and coordinates attached to the wrong v1.1 row type make that row invalid. Valid source-Seen fields live in `wishlistEvidence` and its immutable `wishlistOriginal.wishlistEvidence` copy. Original media type and coordinates remain in `wishlistOriginal`; effective identity uses `show` for season/episode wishes. Coordinates are source evidence, not permission to resolve or import episode progress. Stable source keys distinguish seasons and episodes but do not depend on Seen flags or dates.
+
+After matching and the #714 disagreement hold, canonical duplicates collapse to one show choice regardless of row order, including duplicates between whole-show, season and episode rows. Every original row remains stored. Positive source-Seen evidence and the requirement for a whole-show choice combine across those duplicates without rewriting any original evidence. An unresolved ID disagreement remains held independently until the member chooses a match; a season/episode can only resolve to a show. Rebuilding or clearing another match retains the original show namespace and all original coordinates.
+
+The preview leaves **Want to See the show** unchecked. Confirmation must explicitly include `wishlistShows: true` to convert season/episode wishes into whole-show wishes. Source-Seen and GoodWatch-Seen titles additionally require the existing `conflictChoice: "source"` rewatch opt-in; neither choice supplies the other. Existing wishes remain unchanged. Watching, On hold, Dropped and shows with existing watches keep their authoritative tracking state. A Seen show can receive a rewatch wish after both applicable choices. Confirmation and Undo never write or change watches, scores, Seen status, passes or viewing activity from these fields.
+
+The API adds server-owned row flags `wishlistShowChoice` and `wishlistRewatchChoice` and summary counts `wishlistShowChoiceCount` and `wishlistRewatchChoiceCount`. Counts include only actionable representative conflicts, not duplicates or unchanged titles. Uploaded flags do not authorize anything. Historical summaries without the new counts keep their existing rewatch UI behavior. `wishlistShows` is optional on confirmation, defaults to no conversion, and is retained for resume and receipts. The current UI uses one whole-show checkbox for the applicable rows and its existing rewatch choice; a broader review redesign remains separate.
+
+### Member-facing strings for UX review
+
+This is a compatibility adjustment to the current review, not its redesign. New text:
+
+- “Want to See the show”
+- “This file lists seasons or episodes of {count} show/shows. Add the whole show to your Wishlist. No episode progress is imported. Titles marked Seen also need your Want to rewatch choice.”
+- “{count} title/titles marked Seen in GoodWatch or in this file”
+- “Leave off Wishlist”
+- “Needs your choice”
+- “Choose Want to See the show to add whole shows from season or episode entries. Titles marked Seen also need your Want to rewatch choice.”
+- “Your optional choices have been reset. Review them before adding titles.”
+- “Seen at the source. Choose whether to add this title as Want to rewatch.”
+- “This file lists a season or episode. Choose Want to See the show to add the whole show.”
+- Season rows use `S{season}`; episode rows retain the existing `S{season} E{episode}` notation.
