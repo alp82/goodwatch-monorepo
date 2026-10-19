@@ -1,0 +1,8 @@
+{
+  "captured_at": "2026-10-19T06:40:20.512273+00:00",
+  "root": "/home/alp/dev/projects/goodwatch/goodwatch-monorepo",
+  "branch": "feat/shared-scoring",
+  "head": "aa11d4a0c0ad4ce39da534c9eb2ef99bdfc93860",
+  "status_porcelain_v1": " M docs/research/competitor-paid-features-core.md\n?? docs/design/\n?? docs/prototypes/scoring/\n?? docs/research/competitor-paid-features-comparison.md\n?? docs/research/competitor-paid-features-inventory.csv\n?? docs/research/competitor-paid-features-opportunities.csv\n?? docs/research/competitor-paid-features-plans.csv\n?? docs/research/competitor-paid-features-report.html\n?? docs/research/fingerprint-v2-gap-audit/\n",
+  "index_tree": "4edcb5dd58497520ca84e6b5940e76b998fc243d"
+}

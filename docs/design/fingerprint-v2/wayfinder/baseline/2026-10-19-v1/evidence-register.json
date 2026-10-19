@@ -1,0 +1,550 @@
+{
+  "version": "1.0.0",
+  "records": [
+    {
+      "id": "current-source-contract",
+      "classification": [
+        "measured"
+      ],
+      "statement": "Current V1 generation/reading/pipeline source identities are captured at local HEAD; source observations are static.",
+      "sources": [
+        {
+          "path": "goodwatch-flows/windmill/f/dna/generate/fetch.py",
+          "sha256": "ec7528a7fb0dcf082112aef3a4b4697afdf18ff7c92c5b81ef597e0bed10942a",
+          "snapshot": "snapshots/goodwatch-flows/windmill/f/dna/generate/fetch.py"
+        },
+        {
+          "path": "goodwatch-flows/windmill/f/dna/models.py",
+          "sha256": "581e8941e36ff8ca5fa29100292ad9a58d5e216449d94c28a897594a11050d68",
+          "snapshot": "snapshots/goodwatch-flows/windmill/f/dna/models.py"
+        },
+        {
+          "path": "goodwatch-webapp/app/server/search-runtime/runtime.server.ts",
+          "sha256": "8fc296eec0a09395ecf8057af7c1ff71b1b5c21d64b650bb52b9d871bf38336f",
+          "snapshot": "snapshots/goodwatch-webapp/app/server/search-runtime/runtime.server.ts"
+        },
+        {
+          "path": "goodwatch-flows/windmill/f/search/title_text.py",
+          "sha256": "66b9fc625ee7393cc00c96869cb1242686eb5e92e4a8f6441998ad2379dbb98a",
+          "snapshot": "snapshots/goodwatch-flows/windmill/f/search/title_text.py"
+        }
+      ],
+      "limitations": "No deployed hashes, environment values, running jobs, live catalog or storage manifests inspected.",
+      "reuse": "Fixed comparison contract and scope for future controlled experiments; require live attestation only if a later decision needs it."
+    },
+    {
+      "id": "v2-proposals",
+      "classification": [
+        "proposed",
+        "illustrative"
+      ],
+      "statement": "Full and compact V2 definitions and both Matrix examples are draft/illustrative. The verbose schema does not validate compact output.",
+      "sources": [
+        {
+          "path": "docs/design/fingerprint-v2/definition.json",
+          "sha256": "9345d50a12f54c48ffa65f6a56cfc400f4d090592052144d195f73259dd02dc9",
+          "snapshot": "snapshots/docs/design/fingerprint-v2/definition.json"
+        },
+        {
+          "path": "docs/design/fingerprint-v2/schema.json",
+          "sha256": "5286159091fe873a3a4340632a7cf32a897c61433b4b58f8d58951b9f8cbeb96",
+          "snapshot": "snapshots/docs/design/fingerprint-v2/schema.json"
+        },
+        {
+          "path": "docs/design/fingerprint-v2/example-matrix.json",
+          "sha256": "21d66c6312c7dec7421c653e2f808d751cd67bcc688feb3acfdb774f3bd23d4f",
+          "snapshot": "snapshots/docs/design/fingerprint-v2/example-matrix.json"
+        },
+        {
+          "path": "docs/design/fingerprint-v2/llm-definition.json",
+          "sha256": "2de0ba02055bb185400ecbeab2f506ea4c35abdbb142aefd51aaa7396a6238a3",
+          "snapshot": "snapshots/docs/design/fingerprint-v2/llm-definition.json"
+        },
+        {
+          "path": "docs/design/fingerprint-v2/llm-example-matrix.json",
+          "sha256": "b785cb41f373b399b8521306a1d6ec0421dfd8fcdf0bd3dbfb8ce8eaea304d3e",
+          "snapshot": "snapshots/docs/design/fingerprint-v2/llm-example-matrix.json"
+        }
+      ],
+      "limitations": "No V2 model generation, approved production schema or compatibility validation.",
+      "reuse": "Vocabulary and transport candidates; no automatic feature selection or gold scores."
+    },
+    {
+      "id": "inventory-title",
+      "classification": [
+        "measured",
+        "historical"
+      ],
+      "statement": "Existing SELECT-only 2026-10-19 exports preserve 2,000 vote-ranked movies and 1,000 shows, with no hidden presentability filter.",
+      "sources": [
+        {
+          "path": "docs/research/fingerprint-v2-gap-audit/title-extraction-manifest.json",
+          "sha256": "e876bc95f3bb125671c3f03e43a9e78cb82240ad55728866744e717eb7f5a075",
+          "snapshot": "snapshots/docs/research/fingerprint-v2-gap-audit/title-extraction-manifest.json"
+        },
+        {
+          "path": "docs/research/fingerprint-v2-gap-audit/top-movies.json",
+          "sha256": "26507252462b557d28173a75f375352d131ba20c45dd09adcedebbe5fb80d6ff",
+          "snapshot": "snapshots/docs/research/fingerprint-v2-gap-audit/top-movies.json"
+        },
+        {
+          "path": "docs/research/fingerprint-v2-gap-audit/top-shows.json",
+          "sha256": "816eeb52273c5e1609b2130f820f4fbe4313d13b5442dd5c963fb9f7ed83ff9e",
+          "snapshot": "snapshots/docs/research/fingerprint-v2-gap-audit/top-shows.json"
+        }
+      ],
+      "limitations": "No independent viewing or work identity verification. Release-year/IMDb/edition metadata are absent from these exports. No current live re-export.",
+      "reuse": "Reuse exact frozen rows as catalog evidence; independently judge a selected corpus before gold admission."
+    },
+    {
+      "id": "inventory-essence",
+      "classification": [
+        "measured",
+        "historical"
+      ],
+      "statement": "Existing exact-label exports contain 334,284 merged labels and 2,224,427 assignments; compressed and decompressed hashes verified.",
+      "sources": [
+        {
+          "path": "docs/research/fingerprint-v2-gap-audit/essence-extraction-manifest.json",
+          "sha256": "0cf5bae95d13b566176d33d14726fc276987e09fc2089cc39a419c11543abca3",
+          "snapshot": "snapshots/docs/research/fingerprint-v2-gap-audit/essence-extraction-manifest.json"
+        },
+        {
+          "path": "docs/research/fingerprint-v2-gap-audit/essence-triage-summary.json",
+          "sha256": "97ea6ed840c88bd8f870986cb02de579bbb41fdb6b95cad39331e146eb04d185",
+          "snapshot": "snapshots/docs/research/fingerprint-v2-gap-audit/essence-triage-summary.json"
+        },
+        {
+          "path": "docs/research/fingerprint-v2-gap-audit/essence-findings.md",
+          "sha256": "6f6855ee2df30219d462ad1b0264d59ef737abf3d6e70cc52206d10ea382ba34",
+          "snapshot": "snapshots/docs/research/fingerprint-v2-gap-audit/essence-findings.md"
+        }
+      ],
+      "limitations": "Generated assertions; 823 prioritized labels semantically reviewed according to the prior report. Exhaustive lexical screening is not exhaustive semantic review.",
+      "reuse": "Vocabulary coverage and missingness hypotheses, not reference answers."
+    },
+    {
+      "id": "inventory-tropes",
+      "classification": [
+        "measured",
+        "historical"
+      ],
+      "statement": "42,936 exact names, 42,142 stored URL strings, 468 stored excerpts; arrays and detailed rows use different association units.",
+      "sources": [
+        {
+          "path": "docs/research/fingerprint-v2-gap-audit/tropes-extraction-manifest.json",
+          "sha256": "a72e19ca6fc727da48bdb95e2ae2d46f9614b5f082cf82e07cf1743d91fe5f33",
+          "snapshot": "snapshots/docs/research/fingerprint-v2-gap-audit/tropes-extraction-manifest.json"
+        },
+        {
+          "path": "docs/research/fingerprint-v2-gap-audit/tropes-example-extraction-manifest.json",
+          "sha256": "ce7b14ed9a5f26308db2e525a39df3f33ce057e12434135ebfa8f142865aa25a",
+          "snapshot": "snapshots/docs/research/fingerprint-v2-gap-audit/tropes-example-extraction-manifest.json"
+        },
+        {
+          "path": "docs/research/fingerprint-v2-gap-audit/tropes-vocabulary-findings.md",
+          "sha256": "306602dcf4f117d591ece9e016f2e56e900464c76d5989ae8b1a25b9478da689",
+          "snapshot": "snapshots/docs/research/fingerprint-v2-gap-audit/tropes-vocabulary-findings.md"
+        }
+      ],
+      "limitations": "Sampled stored excerpts can be truncated HTML, wrong-work, wrong-medium, segment-specific or averted applications. 1,282 names were semantically reviewed; counts are not prevalence or demand.",
+      "reuse": "Quarantine identity/scope/polarity candidates. Preserve URL aliases and source strings, never convert all mentions to positive scores."
+    },
+    {
+      "id": "gap-ledgers",
+      "classification": [
+        "historical",
+        "proposed"
+      ],
+      "statement": "All essence/movie/show/trope ledgers, proposals, screening scripts and samples are frozen in the file manifest.",
+      "sources": [
+        {
+          "path": "docs/research/fingerprint-v2-gap-audit/README.md",
+          "sha256": "5cdb842075704e68c9a1ffb1871a302e66e33b847d56cb76867d1adfd4a3ab7e",
+          "snapshot": "snapshots/docs/research/fingerprint-v2-gap-audit/README.md"
+        },
+        {
+          "path": "docs/research/fingerprint-v2-gap-audit/movies-coverage.json",
+          "sha256": "2c9219420760399bccecbd368bd0fdd0c527e5ed16c805266ffbff309a2e9062",
+          "snapshot": "snapshots/docs/research/fingerprint-v2-gap-audit/movies-coverage.json"
+        },
+        {
+          "path": "docs/research/fingerprint-v2-gap-audit/shows-ledger.json",
+          "sha256": "79f5c285f2dadc2c52ad80c015d60774a47c734ea13198a79eba62283a9e999b",
+          "snapshot": "snapshots/docs/research/fingerprint-v2-gap-audit/shows-ledger.json"
+        },
+        {
+          "path": "docs/research/fingerprint-v2-gap-audit/recommended-changes.json",
+          "sha256": "f540dd279dd194fcb4ae94271bd7a14437b6304ddb9d0278015220fbe0151915",
+          "snapshot": "snapshots/docs/research/fingerprint-v2-gap-audit/recommended-changes.json"
+        }
+      ],
+      "limitations": "Movie report: all names, four tags for 798 residual rows and 77 detailed reviews. Show report: all names/three rare tags, 160 expanded residuals and 99 detailed reviews. These scopes are not 3,000 deep reviews.",
+      "reuse": "Use reviewed snippets and source pointers to design cases; retain residuals and missingness."
+    },
+    {
+      "id": "synthetic-searches",
+      "classification": [
+        "illustrative",
+        "proposed"
+      ],
+      "statement": "256 imagined query cases in 32 categories and 78 trope-inspired scenarios in 29 families retain the expressiveness discussion.",
+      "sources": [
+        {
+          "path": "docs/research/fingerprint-v2-gap-audit/queries-cases.json",
+          "sha256": "150873601b1567f0cdc975d9a819d5131aabe01d9d17e297916f951139eaa4da",
+          "snapshot": "snapshots/docs/research/fingerprint-v2-gap-audit/queries-cases.json"
+        },
+        {
+          "path": "docs/research/fingerprint-v2-gap-audit/tropes-search-proposals.json",
+          "sha256": "f5d9cb58483df7ee90f45d65920c40f06ca1aeb2ccca06b0c895c9f0ecac0ae5",
+          "snapshot": "snapshots/docs/research/fingerprint-v2-gap-audit/tropes-search-proposals.json"
+        }
+      ],
+      "limitations": "No observed query frequency, graded retrieval improvement or hidden confirmation set; openly discussed development material.",
+      "reuse": "Stratified development cases after independent relevance/reference review; never call them a new blind holdout."
+    },
+    {
+      "id": "human-selection",
+      "classification": [
+        "measured",
+        "historical"
+      ],
+      "statement": "Historical POC: 90 valid full outputs across nine executed configurations after three repairs. Owner selected Qwen3.8 primary / Qwen3.7 fallback on 2026-09-12.",
+      "sources": [
+        {
+          "path": "docs/benchmarks/fingerprint/poc/human-review/results.md",
+          "sha256": "f40bd3c6f229092b2e67d765c1c5e2cd8391d7d399f1c4db70d6409a0c274e0e",
+          "snapshot": "snapshots/docs/benchmarks/fingerprint/poc/human-review/results.md"
+        },
+        {
+          "path": "docs/benchmarks/fingerprint/poc/human-review/selection.json",
+          "sha256": "55f975240884df1689a8562c86107cf798b77c50810320f1e3a2adb0fc503af2",
+          "snapshot": "snapshots/docs/benchmarks/fingerprint/poc/human-review/selection.json"
+        }
+      ],
+      "limitations": "Human preference is scoped to ten titles; assistant quality stars are a synthesis. Four blocked/incompatible routes are not quality losers. Current configuration is separately captured.",
+      "reuse": "Whole-output comparator, route/failure history and human review provenance."
+    },
+    {
+      "id": "independent-review-waiver",
+      "classification": [
+        "waived",
+        "superseded"
+      ],
+      "statement": "Owner resolution explicitly waived independent Astra/Fable first-pass reviews as a gate; old pending wording is superseded for that gate.",
+      "sources": [
+        {
+          "path": "docs/design/fingerprint-v2/wayfinder/history-issue-33.json",
+          "sha256": "986587f316a89d03b54c351ba8896caff2978ccd2cad76ac63aac5b1f43b2b3f",
+          "snapshot": "snapshots/docs/design/fingerprint-v2/wayfinder/history-issue-33.json"
+        },
+        {
+          "path": "docs/benchmarks/fingerprint/poc/human-review/selection.json",
+          "sha256": "55f975240884df1689a8562c86107cf798b77c50810320f1e3a2adb0fc503af2",
+          "snapshot": "snapshots/docs/benchmarks/fingerprint/poc/human-review/selection.json"
+        },
+        {
+          "path": "docs/benchmarks/fingerprint/protocol.md",
+          "sha256": "f15baa46066d362c0ed387d94ceb59be8af9a3bbcea41cd007aba7a5759ad9b6",
+          "snapshot": "snapshots/docs/benchmarks/fingerprint/protocol.md"
+        }
+      ],
+      "limitations": "A waiver is not a passing independent review. It applies to the earlier strategy, not a new V2 quality protocol.",
+      "reuse": "Preserve waiver and outstanding-check history without resurrecting a waived prerequisite."
+    },
+    {
+      "id": "repeat-cost",
+      "classification": [
+        "measured",
+        "historical"
+      ],
+      "statement": "20/20 historical repeats completed. Observed generation charges $0.01179756; unresolved-rejection reservations $0.006466144.",
+      "sources": [
+        {
+          "path": "docs/benchmarks/fingerprint/poc/repeat-cost/repeatability.md",
+          "sha256": "254bf57d6579ab11ef06c59c49cd378e719394e73378531d2ad08919f22dd9e5",
+          "snapshot": "snapshots/docs/benchmarks/fingerprint/poc/repeat-cost/repeatability.md"
+        },
+        {
+          "path": "docs/benchmarks/fingerprint/poc/repeat-cost/comparison.json",
+          "sha256": "4becb9e19107ea8d8ab4724c1087ec2dfcdecc31d413c6578754c7b915e28f00",
+          "snapshot": "snapshots/docs/benchmarks/fingerprint/poc/repeat-cost/comparison.json"
+        },
+        {
+          "path": "docs/benchmarks/fingerprint/poc/repeat-cost/cost-summary.json",
+          "sha256": "f27674c8db7e00cda43b587aa4a7588984e453214e39693b68779b7dd005ce5d",
+          "snapshot": "snapshots/docs/benchmarks/fingerprint/poc/repeat-cost/cost-summary.json"
+        }
+      ],
+      "limitations": "Both models changed highlights for all ten titles; score drift includes semantic regressions. Reservations are not charges. Frozen POC replay is not current production acceptance.",
+      "reuse": "Noise baseline and cost-ledger semantics; preserve drift rather than editing outputs."
+    },
+    {
+      "id": "paid-embedding-history",
+      "classification": [
+        "measured",
+        "historical",
+        "superseded"
+      ],
+      "statement": "2026-09-14 historical embedding call: 20 valid 768-D vectors, 1,881 measured input tokens; $0.0003762 rate-derived, not invoice-confirmed.",
+      "sources": [
+        {
+          "path": "docs/benchmarks/fingerprint/poc/repeat-cost/embedding-cost.md",
+          "sha256": "8e0e29c818df48a1bfd472b36d3b47013787831a108c34768d50ca0125555824",
+          "snapshot": "snapshots/docs/benchmarks/fingerprint/poc/repeat-cost/embedding-cost.md"
+        },
+        {
+          "path": "docs/benchmarks/fingerprint/poc/repeat-cost/embedding-ledger.json",
+          "sha256": "5a3ff4686b1619ad05b48c5ef9a481650e0cc01c04e0ebdf58a507624c2ac1cd",
+          "snapshot": "snapshots/docs/benchmarks/fingerprint/poc/repeat-cost/embedding-ledger.json"
+        },
+        {
+          "path": "docs/text-embedding-removal.md",
+          "sha256": "b8d12c54c2ad94dfd81f17e2bb8ee8b7fd62ccc10499f55404e0c89e5aac3c62",
+          "snapshot": "snapshots/docs/text-embedding-removal.md"
+        },
+        {
+          "path": "docs/adr/0002-local-text-embeddings-for-search.md",
+          "sha256": "0c6800aefc9b3e488862da445a642423ab9be90af1d0a05383334558b669341d",
+          "snapshot": "snapshots/docs/adr/0002-local-text-embeddings-for-search.md"
+        }
+      ],
+      "limitations": "Old paid embedding acquisition differs from current local title/query encoders. Combined $0.018639904 includes reservations and rate estimates, not all observed charges.",
+      "reuse": "Accounting example only; never use as current local-encoder cost or proof text vectors are absent."
+    },
+    {
+      "id": "jev-title-scoring",
+      "classification": [
+        "measured",
+        "historical"
+      ],
+      "statement": "September 17 Jev-1.13.0 synopsis-only experiment: 10 titles × 74 scores, MAE vs reviewed Qwen 2.65 against Qwen repeat noise 0.51.",
+      "sources": [
+        {
+          "path": "docs/benchmarks/fingerprint/jev/README.md",
+          "sha256": "f2fe5ef878f309835b4c0ca8345c5f1148c962ffe36e2925e0a95631148da005",
+          "snapshot": "snapshots/docs/benchmarks/fingerprint/jev/README.md"
+        },
+        {
+          "path": "docs/benchmarks/fingerprint/jev/results.json",
+          "sha256": "fe7b9802d3466031e84e44efc40213e99f69275f7963911b5a0eee488ec61a6b",
+          "snapshot": "snapshots/docs/benchmarks/fingerprint/jev/results.json"
+        },
+        {
+          "path": "docs/benchmarks/fingerprint/jev/scores.json",
+          "sha256": "83270818b903d963e8c54dc7dd2f1ba16cca456f0c9341930b5d61968ddd756e",
+          "snapshot": "snapshots/docs/benchmarks/fingerprint/jev/scores.json"
+        },
+        {
+          "path": "docs/adr/0001-no-jev-for-fingerprint-scoring.md",
+          "sha256": "985e9dba784b1fc96e2143343f4ad8af0a5b9329b880ac8b1571a8e9b80a1428",
+          "snapshot": "snapshots/docs/adr/0001-no-jev-for-fingerprint-scoring.md"
+        }
+      ],
+      "limitations": "Qwen agreement is not correctness. Scores-only and full-output costs are unequal scope. Enriched evidence was unrun; raw private captures absent locally. ADR 0001 remains accepted.",
+      "reuse": "Motivation for controlled evidence arms, not a universal provider verdict. Six levels map to 0,2,4,6,8,10; ten native levels mapped to 0..10 are not eleven levels."
+    },
+    {
+      "id": "acceptance-followups",
+      "classification": [
+        "measured",
+        "historical",
+        "superseded"
+      ],
+      "statement": "Initial acceptance found invalid highlights; regeneration and actual monthly-budget rejection later superseded those specific unresolved claims.",
+      "sources": [
+        {
+          "path": "docs/benchmarks/fingerprint/acceptance/README.md",
+          "sha256": "5b375d1218ae50bc9dba46181055685a386dded7e894df803f8ba77ad0ea206c",
+          "snapshot": "snapshots/docs/benchmarks/fingerprint/acceptance/README.md"
+        },
+        {
+          "path": "docs/benchmarks/fingerprint/acceptance/regeneration.md",
+          "sha256": "8e601be693a88e81db7cbba6d33ab4cf83c993e206fb5000b880d03e146fe96a",
+          "snapshot": "snapshots/docs/benchmarks/fingerprint/acceptance/regeneration.md"
+        },
+        {
+          "path": "docs/benchmarks/fingerprint/acceptance/monthly-live.md",
+          "sha256": "d342930d7b5c4af472739d5aa3fc5a350e14c8c49fffe78339d5a47732c144cf",
+          "snapshot": "snapshots/docs/benchmarks/fingerprint/acceptance/monthly-live.md"
+        },
+        {
+          "path": "docs/benchmarks/fingerprint/acceptance/followups/reconcile-cost.md",
+          "sha256": "08a398938741a0c1f821c27c9e8339e2f34d2f2e0ea9ba33b8e779638153e370",
+          "snapshot": "snapshots/docs/benchmarks/fingerprint/acceptance/followups/reconcile-cost.md"
+        }
+      ],
+      "limitations": "Missing request-cost reconciliation was not silently resolved. Historical disabled-schedule statements do not establish the schedule today.",
+      "reuse": "Preserve original failure plus fix evidence, route hashes and retained unknown-cost reservations."
+    },
+    {
+      "id": "early-query-reading",
+      "classification": [
+        "historical"
+      ],
+      "statement": "Early Jev search A–E/D1–D5/D4+ results are retained assistant reports plus final code, not a complete set of raw API responses.",
+      "sources": [
+        {
+          "path": "docs/research/jev-search-prototypes.md",
+          "sha256": "1965f1d53c5ee76b7d639a15eed187f3f8739944bbbfaa7d6c0067dedb6f5fe6",
+          "snapshot": "snapshots/docs/research/jev-search-prototypes.md"
+        },
+        {
+          "path": "docs/research/jev-search/historical-reports.json",
+          "sha256": "400042a3acb400820e4c42e999615ab6d5964272b87b53511bb64b5481c88dda",
+          "snapshot": "snapshots/docs/research/jev-search/historical-reports.json"
+        },
+        {
+          "path": "docs/research/jev-search/snapshot.json",
+          "sha256": "0dcdeab6e6da621707fc7d24b421d5e14bb26cdb2b3c6ed90b1d9e15fef93743",
+          "snapshot": "snapshots/docs/research/jev-search/snapshot.json"
+        }
+      ],
+      "limitations": "Variant names reused; some historical costs omit shared reading. One current source differs from frozen snapshot; all four original files recovered by hash from c22696bfe961651a01c0da63778cdb9b00c7caa2.",
+      "reuse": "Mechanism hypotheses and historical lineage, not fresh measured title knowledge or new inference authorization."
+    },
+    {
+      "id": "holdout5-provenance",
+      "classification": [
+        "measured",
+        "historical",
+        "superseded"
+      ],
+      "statement": "holdout5 was 30 blind agent-written queries h5-01..h5-30; frozen combo-safe-v2 scored .794 vs r6 .764 and captured prod .511. Later v3 is an exposed-set regression check.",
+      "sources": [
+        {
+          "path": "docs/prototypes/search-arena/results/LOG.md",
+          "sha256": "89e638a6660aebcb36b09f85190ba1f2672444aaa042fee8ba50c14e8b555d0b",
+          "snapshot": "snapshots/docs/prototypes/search-arena/results/LOG.md"
+        },
+        {
+          "path": "docs/prototypes/search-arena/evaluation-contract.md",
+          "sha256": "baf0ae35981c9fe6e1b7ff1c43be6b318b3419aad732cff59f63064945b180fb",
+          "snapshot": "snapshots/docs/prototypes/search-arena/evaluation-contract.md"
+        },
+        {
+          "path": "docs/prototypes/search-arena/results/simplify/holdout5/lists/combo-safe-v2.json",
+          "sha256": "0eec3bec2e7f235cb13299e668362772210f7f96f313dcd908f1c804f3563da2",
+          "snapshot": "snapshots/docs/prototypes/search-arena/results/simplify/holdout5/lists/combo-safe-v2.json"
+        },
+        {
+          "path": "docs/design/fingerprint-v2/wayfinder/evidence-index.md",
+          "sha256": "7c5aa57a806012e60a8c246f81b86f6e1b7923a93d204261b1573f2b548f5336",
+          "snapshot": "snapshots/docs/design/fingerprint-v2/wayfinder/evidence-index.md"
+        },
+        {
+          "path": "docs/design/fingerprint-v2/wayfinder/discovery-evidence-index.md",
+          "sha256": "9e144f21742788eafa1841977465f1e28d8a2ab474db059722985580b88d9d63",
+          "snapshot": "snapshots/docs/design/fingerprint-v2/wayfinder/discovery-evidence-index.md"
+        }
+      ],
+      "limitations": "evidence-index.md says five-query, contradicting discovery index, protocol and measured run log. Two historical Sonnet assessors and blind-third adjudication are provenance only; no new Claude work was launched. Agent-written/graded queries are not real-user confirmation.",
+      "reuse": "Correct count is 30. Preserve discrepant source unchanged. Treat every exposed historical holdout as development/regression evidence now."
+    },
+    {
+      "id": "ranking-components",
+      "classification": [
+        "measured",
+        "historical"
+      ],
+      "statement": "All six simplification branches, grading/rubric overlays, parity, encoder, sparse, stores, backfill and language-negation results are indexed and captured.",
+      "sources": [
+        {
+          "path": "docs/design/fingerprint-v2/wayfinder/discovery-evidence-index.md",
+          "sha256": "9e144f21742788eafa1841977465f1e28d8a2ab474db059722985580b88d9d63",
+          "snapshot": "snapshots/docs/design/fingerprint-v2/wayfinder/discovery-evidence-index.md"
+        },
+        {
+          "path": "docs/prototypes/search-arena/results/simplify/HOW-IT-WORKS.md",
+          "sha256": "a59c46734ba054d120063b6ae62d772e7022dae1f81f574bba7a4494f06af72b",
+          "snapshot": "snapshots/docs/prototypes/search-arena/results/simplify/HOW-IT-WORKS.md"
+        },
+        {
+          "path": "docs/prototypes/search-arena/results/bench/encoders.json",
+          "sha256": "0f6cc8a965d67f7845a4a95717088f9a6c29cac0bff6127f1034db66398cd261",
+          "snapshot": "snapshots/docs/prototypes/search-arena/results/bench/encoders.json"
+        },
+        {
+          "path": "docs/prototypes/search-arena/results/bench/parity.json",
+          "sha256": "77fcd1f7027dd910f30b001dd8302843029d53afe249c77ed05fd7284a26cfbc",
+          "snapshot": "snapshots/docs/prototypes/search-arena/results/bench/parity.json"
+        }
+      ],
+      "limitations": "Historical CPU/ranking timings, cached encodes, synthetic grades and production endpoint latency have different scopes. Catalog/vector/capture files needed for full replay are not local.",
+      "reuse": "Keep catalog fixed for ranker-only comparisons; pair embeddings with exact row order, text prep and reading versions."
+    },
+    {
+      "id": "search-latency",
+      "classification": [
+        "measured",
+        "historical"
+      ],
+      "statement": "September 26 followup reports fresh/cached whole-search p95 835/389 ms after changes on 35/11 searches; before populations differ.",
+      "sources": [
+        {
+          "path": "docs/implementation/search-ranking/README.md",
+          "sha256": "ebe1534dfd43889cdf13dc43fc2b12516d8d483ec9a5781580e2d9472bfd4f09",
+          "snapshot": "snapshots/docs/implementation/search-ranking/README.md"
+        },
+        {
+          "path": "docs/adr/0011-search-runs-as-a-role-of-the-webapp-image.md",
+          "sha256": "5641a0235530c268e88bdb15fb5caac8da57a655e814e46ba518200cc7667d63",
+          "snapshot": "snapshots/docs/adr/0011-search-runs-as-a-role-of-the-webapp-image.md"
+        }
+      ],
+      "limitations": "No current latency probe. Historical role benchmark links may live on bench/search-role; no current role/host identity or traffic distribution captured. First delivery is not complete response or browser paint.",
+      "reuse": "Stage-cost vocabulary and capacity hypotheses; new authorized measurements must record complete vs partial results and concurrent load."
+    },
+    {
+      "id": "source-qa-history",
+      "classification": [
+        "measured",
+        "historical",
+        "unavailable"
+      ],
+      "statement": "Prior trope repair/recheck metadata and 689 local source-body hashes are indexed. Source bodies stay at original local locations; later recovery bodies are missing locally.",
+      "sources": [
+        {
+          "path": "docs/tvtropes.md",
+          "sha256": "3745c1a39dd6499487abcf91cf578b10e491d3b4840478538dc8fd1eb97d94ba",
+          "snapshot": "snapshots/docs/tvtropes.md"
+        },
+        {
+          "path": "docs/research/tvtropes-repair/README.md",
+          "sha256": "6e29c0a01377b8b2edde3f551c7bc8395e7d85c38b5902ff6a9024a309c92fbb",
+          "snapshot": "snapshots/docs/research/tvtropes-repair/README.md"
+        },
+        {
+          "path": "goodwatch-flows/windmill/f/tvtropes_web/pages.py",
+          "sha256": "e8be3e8ec078136c87615c5f085c8878bd69e3cb2c7bb138898e179a15e51fd4",
+          "snapshot": "snapshots/goodwatch-flows/windmill/f/tvtropes_web/pages.py"
+        }
+      ],
+      "limitations": "Prior reviewed imports/rollback manifests are historical, not evidence that every exported association has correct work/scope/polarity today. Missing saved pages cannot be replaced by an unapproved crawl.",
+      "reuse": "Reuse existing local pages and reviewed identity rules with custodian help; no new fetches."
+    },
+    {
+      "id": "prepared-only-work",
+      "classification": [
+        "proposed",
+        "illustrative"
+      ],
+      "statement": "Recent offline BM25 reader/validator source manifests explicitly distinguish preparation and synthetic tests from host execution.",
+      "sources": [
+        {
+          "path": "docs/implementation/search-ranking/bm25-acquisition-20261013/offline-bm25-reader-20261013/source-manifest.json",
+          "sha256": "08bcbcd6fa89efd194a309c330bba43e2a00db509c5026fdd7672214d1ed9e8d",
+          "snapshot": "snapshots/docs/implementation/search-ranking/bm25-acquisition-20261013/offline-bm25-reader-20261013/source-manifest.json"
+        },
+        {
+          "path": "docs/implementation/search-ranking/bm25-acquisition-20261013/offline-bm25-validator-20261013/source-manifest.json",
+          "sha256": "2efd723cba79dde884f05c4dcce73e7223f4cdd36849faa09294ba21c504800a",
+          "snapshot": "snapshots/docs/implementation/search-ranking/bm25-acquisition-20261013/offline-bm25-validator-20261013/source-manifest.json"
+        }
+      ],
+      "limitations": "preparedOnly / hostExecuted:false is not a production acquisition or measurement; full-size synthetic fixtures are not live data.",
+      "reuse": "Preserve intended source bindings without upgrading them to performed work."
+    }
+  ]
+}

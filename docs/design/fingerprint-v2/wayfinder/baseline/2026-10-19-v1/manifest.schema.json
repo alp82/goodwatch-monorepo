@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:goodwatch:fingerprint-baseline:v1",
+  "title": "GoodWatch audited fingerprint baseline v1",
+  "type": "object",
+  "required": ["schema_version", "bundle_version", "captured_at", "repository", "repository_root", "head", "branch", "map", "task", "published_evidence_ref", "capture_scope", "classification_values", "files", "integrity_policy", "provenance_discrepancies", "gold_admissions"],
+  "properties": {
+    "schema_version": {"const": "goodwatch.fingerprint-baseline.v1"},
+    "bundle_version": {"const": "1.0.0"},
+    "captured_at": {"type": "string", "format": "date-time"},
+    "repository": {"const": "alp82/goodwatch-monorepo"},
+    "repository_root": {"type": "string", "minLength": 1},
+    "head": {"$ref": "#/$defs/gitSha"},
+    "branch": {"const": "feat/shared-scoring"},
+    "published_evidence_ref": {"$ref": "#/$defs/gitSha"},
+    "map": {"$ref": "#/$defs/issue"},
+    "task": {"$ref": "#/$defs/issue"},
+    "capture_scope": {"type": "string", "minLength": 1},
+    "classification_values": {"type": "array", "uniqueItems": true, "minItems": 7, "maxItems": 7, "items": {"$ref": "#/$defs/classification"}},
+    "files": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/file"}},
+    "integrity_policy": {"type": "object", "required": ["hash", "self_exclusion", "semantic_review"]},
+    "provenance_discrepancies": {"type": "array", "minItems": 1, "items": {"type": "object", "required": ["id", "classification", "correction"], "properties": {"id": {"type": "string"}, "correction": {"type": "string"}, "classification": {"type": "array", "items": {"$ref": "#/$defs/classification"}}}}},
+    "gold_admissions": {"const": 0}
+  },
+  "$defs": {
+    "gitSha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "classification": {"enum": ["measured", "historical", "proposed", "illustrative", "waived", "unavailable", "superseded"]},
+    "issue": {"type": "object", "required": ["title", "url"], "properties": {"title": {"type": "string", "minLength": 1}, "url": {"type": "string", "pattern": "^https://github.com/alp82/goodwatch-monorepo/issues/[0-9]+$"}}},
+    "file": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "group", "bytes", "sha256", "snapshot", "availability", "classification", "evidence_quality", "git_status", "head_blob", "observed_at", "semantic_review"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "group": {"type": "string", "minLength": 1},
+        "bytes": {"type": "integer", "minimum": 0},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "snapshot": {"type": ["string", "null"]},
+        "availability": {"enum": ["captured", "local_only", "excluded_sensitive"]},
+        "classification": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/classification"}},
+        "evidence_quality": {"type": "string", "minLength": 1},
+        "git_status": {"type": "string", "minLength": 1},
+        "head_blob": {"anyOf": [{"$ref": "#/$defs/gitSha"}, {"type": "null"}]},
+        "observed_at": {"type": "string", "format": "date-time"},
+        "semantic_review": {"type": "string", "minLength": 1}
+      },
+      "allOf": [
+        {"if": {"properties": {"availability": {"const": "captured"}}}, "then": {"properties": {"snapshot": {"type": "string", "pattern": "^snapshots/"}}}, "else": {"properties": {"snapshot": {"type": "null"}}}}
+      ]
+    }
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "note": "Optional filename variants are selectors, not asserted evidence assets.",
+  "selectors": [
+    "goodwatch-webapp/app/ui/fingerprint/fingerprintMeta.tsx",
+    "goodwatch-webapp/pnpm-lock.yaml"
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "captured_at": "2026-10-19T06:58:00.648895+00:00",
+  "root": "/home/alp/dev/projects/goodwatch/goodwatch-monorepo",
+  "branch": "feat/shared-scoring",
+  "head": "beaa474a0823b61bdfc6c4f547f84ee66739ebf2",
+  "status_porcelain_v1": "?? docs/design/\n?? docs/prototypes/scoring/\n?? docs/research/fingerprint-v2-gap-audit/\n",
+  "staged_diff_empty": true
+}

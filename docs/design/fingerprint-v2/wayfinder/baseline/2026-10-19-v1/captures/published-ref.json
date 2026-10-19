@@ -1,0 +1,10 @@
+{
+  "ref": "refs/heads/planning/fingerprint-discovery-v2-20261019",
+  "node_id": "REF_kwDOJCFabtoANXJlZnMvaGVhZHMvcGxhbm5pbmcvZmluZ2VycHJpbnQtZGlzY292ZXJ5LXYyLTIwMjYxMDE5",
+  "url": "https://api.github.com/repos/alp82/goodwatch-monorepo/git/refs/heads/planning/fingerprint-discovery-v2-20261019",
+  "object": {
+    "sha": "30f1c85ff7c73f13cd5a2d9f57ad5d9acf89d1bb",
+    "type": "commit",
+    "url": "https://api.github.com/repos/alp82/goodwatch-monorepo/git/commits/30f1c85ff7c73f13cd5a2d9f57ad5d9acf89d1bb"
+  }
+}

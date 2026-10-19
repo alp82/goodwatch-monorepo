@@ -1,0 +1,259 @@
+{
+  "version": "1.0.0",
+  "observation": "static source only; no environment values or deployed identity attested",
+  "generation": {
+    "sources": [
+      {
+        "path": "goodwatch-flows/windmill/f/dna/generate/fetch.py",
+        "sha256": "ec7528a7fb0dcf082112aef3a4b4697afdf18ff7c92c5b81ef597e0bed10942a",
+        "snapshot": "snapshots/goodwatch-flows/windmill/f/dna/generate/fetch.py"
+      },
+      {
+        "path": "goodwatch-flows/windmill/f/dna/models.py",
+        "sha256": "581e8941e36ff8ca5fa29100292ad9a58d5e216449d94c28a897594a11050d68",
+        "snapshot": "snapshots/goodwatch-flows/windmill/f/dna/models.py"
+      },
+      {
+        "path": "goodwatch-flows/windmill/f/dna/generate/spend_pause.py",
+        "sha256": "56a21fdd74f1cc4168526dfab8c6034f9c3da7364a1abeb618352e4c939a156f",
+        "snapshot": "snapshots/goodwatch-flows/windmill/f/dna/generate/spend_pause.py"
+      }
+    ],
+    "prompt": "current-system-instructions.txt",
+    "schema_source": "current-schema-annotations.json",
+    "score_order": "current-score-keys.json",
+    "score_count": 74,
+    "input": "original_title (release_year) - Movie|Show: overview",
+    "primary": "qwen/qwen3.8-flash",
+    "fallback": "qwen/qwen3.7-flash",
+    "endpoint": "https://openrouter.ai/api/v1/chat/completions",
+    "provider": {
+      "only": [
+        "alibaba"
+      ],
+      "allow_fallbacks": false,
+      "require_parameters": true
+    },
+    "reasoning": {
+      "enabled": false
+    },
+    "max_tokens": 8192,
+    "timeout_seconds": [
+      10,
+      120
+    ],
+    "response_modes": {
+      "primary": "strict json_schema from DNAAnalysis via strict_schema()",
+      "fallback": "json_object + local strict validation"
+    },
+    "tier": "Primary if TMDB popularity >=1.0 or release date within the last calendar year through today; otherwise fallback first. Each can try the other.",
+    "retry": "At most 6 requests per title total; per model one validation repair, at most two transport retries for 429/502/503 honoring Retry-After or exponential delay. No quality retry. All-zero scores skip repair and try alternate model. Non-budget 401/403 raise.",
+    "freshness_days": 180,
+    "queue_batch_size": 100,
+    "chunk_size": 5,
+    "flow_parallel_chunks": 5,
+    "claim_buffer_minutes": 60,
+    "priority_failed_cooldown_days": 7,
+    "spend_pause": "402 => next UTC midnight; explicit monthly-budget 403 => next UTC month; Redis longest pause wins; unprocessed claims released. Provider $1/day $30/month limits are historical owner configuration, not verified live.",
+    "persistence": "Mongo analysis, generation timestamp, raw ordered vector, route name and release saved together; vector persistence rechecks stored scores with conditional update and no model call.",
+    "provenance_format": "openrouter:<model>@alibaba"
+  },
+  "query_reading": {
+    "sources": [
+      {
+        "path": "goodwatch-webapp/app/server/combined-search/reading-retrieval.server.ts",
+        "sha256": "a939d65b2193e4e31f111fec2992da5a2acf04f0dc52ad5eb2e259257d291b3f",
+        "snapshot": "snapshots/goodwatch-webapp/app/server/combined-search/reading-retrieval.server.ts"
+      },
+      {
+        "path": "goodwatch-webapp/app/server/search-runtime/runtime.server.ts",
+        "sha256": "8fc296eec0a09395ecf8057af7c1ff71b1b5c21d64b650bb52b9d871bf38336f",
+        "snapshot": "snapshots/goodwatch-webapp/app/server/search-runtime/runtime.server.ts"
+      },
+      {
+        "path": "goodwatch-webapp/app/server/combined-search/search.server.ts",
+        "sha256": "25a18b6806810fae1e26e338b9fa7a8b66d88061308bf39c1bc5b4e51148084d",
+        "snapshot": "snapshots/goodwatch-webapp/app/server/combined-search/search.server.ts"
+      }
+    ],
+    "model": "jev-1.13.0",
+    "question_version": "accepted-d4-corrected-v1",
+    "requests": "Two parallel locked requests: lean full-criteria attributes/concrete words/phrase choice, plus 148 want/avoid noul questions (74 keys).",
+    "fingerprint_state": "Shared short task + normalized request",
+    "weight": "2*(want-avoid); wanted >=0.5, avoided <=-1.2; up to 74 dims, strongest fallback if empty",
+    "flag_probability": 0.5,
+    "concrete_probability": 0.6,
+    "second_phrase_probability": 0.15,
+    "contract_cache_key": "d4+/<model>/<questionVersion>/<language.mode>/<language.version> plus canonical requests/language/text via keyed digest",
+    "reading_normalization": "lowercase + collapsed whitespace; original text kept elsewhere; request key normalizes NFC",
+    "deadline_ms": 1500,
+    "retry_529_delays_ms": [
+      100,
+      250
+    ],
+    "retry_min_remaining_ms": 700,
+    "sdk_automatic_retries": 0,
+    "input_bound_tokens_per_request": 65536,
+    "rate_config": "42 nanoUSD/input token; typesafe-public-2026-09-21-42nano-v1 (dated source constant, not current price verification)",
+    "reserve_nano_usd": 5505024,
+    "language": "five-language-markers-v2; optional gpt-4.1-nano translation only when SEARCH_TRANSLATION_ENABLED=true; runtime env not read",
+    "admission": "shared store, cache, claim, limits and settlement; errors retain unknown-usage reservation, not assumed zero"
+  },
+  "title_text": {
+    "sources": [
+      {
+        "path": "goodwatch-flows/windmill/f/search/title_text.py",
+        "sha256": "66b9fc625ee7393cc00c96869cb1242686eb5e92e4a8f6441998ad2379dbb98a",
+        "snapshot": "snapshots/goodwatch-flows/windmill/f/search/title_text.py"
+      },
+      {
+        "path": "goodwatch-flows/windmill/f/search/terms.py",
+        "sha256": "411990881c3bde3b1f9e502f7ae661549d1d57143fb0675f97ff33a2f495caee",
+        "snapshot": "snapshots/goodwatch-flows/windmill/f/search/terms.py"
+      }
+    ],
+    "contract": "text_en_v1+text_multi_v1+terms_bm25f_v1",
+    "inputs": "Qdrant payload title/original_title/release_year/genres/tropes plus Crate original_title, essence_text, tags, substr(synopsis,1,600), keywords/tropes fallback. Stores may differ.",
+    "english": "No title or prefix, year retained; genres + tags + essence_text or synopsis + first 25 keywords + first 15 tropes. Exact punctuation/order frozen in source.",
+    "multilingual": "passage: prefix + title or original_title and same body",
+    "sparse": "All tags/keywords/tropes/essence fields, no dense top-N cuts; stable term IDs, local tokenization/stemming, field weights 2/2/1/1, K1=1.2, B=.75 and frozen float32 average lengths.",
+    "hash": "SHA256 JSON of [contract, english_text, multilingual_text, term_fields]"
+  },
+  "encoders": {
+    "title_config": {
+      "path": "goodwatch-flows/windmill/f/search/text_encoder.py",
+      "sha256": "08cafad4ede4c89176c1e417c473edb5b066aacaf422000c65f682c13ac41738",
+      "snapshot": "snapshots/goodwatch-flows/windmill/f/search/text_encoder.py"
+    },
+    "query_config": {
+      "path": "goodwatch-webapp/app/server/search-ranking/query-models.server.ts",
+      "sha256": "7137a06d37ac8756e2b52ad447cdaf85f9675e9b720699b240de1d84163403d4",
+      "snapshot": "snapshots/goodwatch-webapp/app/server/search-ranking/query-models.server.ts"
+    },
+    "query_runtime": {
+      "path": "goodwatch-webapp/app/server/search-ranking/query-encoder.worker.js",
+      "sha256": "af3fddbeac11833e6f6c2432a83f0a560fe678e94be52e42ea114e231bb104a6",
+      "snapshot": "snapshots/goodwatch-webapp/app/server/search-ranking/query-encoder.worker.js"
+    },
+    "title_bge": {
+      "repo": "BAAI/bge-base-en-v1.5",
+      "revision": "a5beb1e3e68b9ab74eb54cfd186867f64f240e1a",
+      "onnx_sha256": "9bc579acdba21c253c62a9bf866891355a63ffa3442b52c8a37d75b2ccb91848",
+      "pooling": "CLS",
+      "dimensions": 768
+    },
+    "title_multi": {
+      "repo": "intfloat/multilingual-e5-small",
+      "revision": "614241f622f53c4eeff9890bdc4f31cfecc418b3",
+      "onnx_sha256": "ca456c06b3a9505ddfd9131408916dd79290368331e7d76bb621f1cba6bc8665",
+      "pooling": "attention-mask mean",
+      "dimensions": 384
+    },
+    "query_bge": {
+      "repo": "Xenova/bge-base-en-v1.5",
+      "revision": "4d6cd88e18e51a5e020c2c305726d76ada9c03cf",
+      "onnx_sha256": "9bc579acdba21c253c62a9bf866891355a63ffa3442b52c8a37d75b2ccb91848",
+      "prefix": "Represent this sentence for searching relevant passages: "
+    },
+    "query_multi": {
+      "repo": "Xenova/multilingual-e5-small",
+      "revision": "761b726dd34fb83930e26aab4e9ac3899aa1fa78",
+      "onnx_sha256": "4aa845c27760e06e9a686b9d8b5d440eae4b6612cd09e5b522b716d3941f77ff",
+      "prefix": "query: "
+    },
+    "runtime": "fp32 CPU ONNX; L2 normalization. Title max512/batch32/threads4; query config max512 but worker caps128; search role defaults2 threads, in-flight4; other roles use core-dependent default. Environment overrides unverified.",
+    "parity_qualification": "Different multilingual title/query ONNX byte identities, with historical encoder parity evidence; no new binary or vector parity run. Do not equate model-name agreement with byte identity."
+  },
+  "storage": {
+    "qdrant": {
+      "source": {
+        "path": "goodwatch-flows/windmill/f/sync/models/qdrant_schemas.py",
+        "sha256": "a455ccc654d6d3c61dae0d3256e5c6ddf4aa6b04bc7373e05f55a0fa37e5553a",
+        "snapshot": "snapshots/goodwatch-flows/windmill/f/sync/models/qdrant_schemas.py"
+      },
+      "collection": "media_fingerprint_v1",
+      "vectors": {
+        "fingerprint_v1": "74 Cosine, raw score input normalized by Qdrant",
+        "fingerprint_v1_raw": "74 Dot, exact-only m=0",
+        "text_en_v1": "768 Cosine float16 storage",
+        "text_multi_v1": "384 Cosine float16 storage",
+        "terms_bm25f_v1": "sparse, no Qdrant IDF modifier"
+      },
+      "reference_collection": "search_reference_profiles",
+      "point_id": "1e12+tmdb_id for movie; 2e12+tmdb_id for show",
+      "ownership": "Fingerprint publish updates owned vectors/payload and retains text vectors. Text publish updates only its three vectors."
+    },
+    "sync_checkpoint": {
+      "source": {
+        "path": "goodwatch-flows/windmill/f/sync/copy/sync_state.py",
+        "sha256": "127c103b214855265e80cd40b551ffcdc3e807084c3200888581c18beb7d6010",
+        "snapshot": "snapshots/goodwatch-flows/windmill/f/sync/copy/sync_state.py"
+      },
+      "overlap_minutes": 30,
+      "fallback_hours": 48,
+      "max_lookback_days": 7,
+      "success_rule": "Commit checkpoint only after media type succeeds; carried missing-streaming IDs retained. ID-scoped runs keep fixed window and do not advance scheduled checkpoint."
+    },
+    "text_pipeline": {
+      "source": {
+        "path": "goodwatch-flows/windmill/f/search/embed_titles.py",
+        "sha256": "bf3577458e4493fc8fa1c01db27613438dc9e78c98bfff1a0cb4aa5da45f84c4",
+        "snapshot": "snapshots/goodwatch-flows/windmill/f/search/embed_titles.py"
+      },
+      "incremental_overlap_hours": 72,
+      "chunk_size": 1000,
+      "write_batch_size": 250,
+      "trigger_columns": [
+        "tmdb_details_updated_at",
+        "dna_updated_at",
+        "tvtropes_tags_updated_at"
+      ],
+      "state_tables": [
+        "search_embedding_inputs",
+        "search_terms",
+        "search_embedding_state"
+      ],
+      "sweep": "Daily full input-hash sweep catches older-source timestamp publication; no full run performed."
+    },
+    "search_index": {
+      "source": {
+        "path": "goodwatch-flows/windmill/f/search/build_indexes.py",
+        "sha256": "139eb191ce78071352376da8e8f7d3d19f1e38f5f773a88307a1e4de496cb56d",
+        "snapshot": "snapshots/goodwatch-flows/windmill/f/search/build_indexes.py"
+      },
+      "format": 1,
+      "eligibility": "votes>=2000 and not adult; alias rules/version retained",
+      "manifest": "search_index_builds[current]: format,build_id,created_at,previous_build_id,files{sha1,bytes},alias_version,profiles,stats",
+      "blobs": "search_index_files: deterministic gzip JSON addressed by SHA-1; runtime checks SHA-1. Audit uses SHA-256 of captured files.",
+      "publication": "Build files + reference profiles, then complete/current CAS; retains current/previous and running builds. No live build captured."
+    },
+    "title_snapshot": {
+      "writer": {
+        "path": "goodwatch-flows/windmill/f/sync/copy/title_snapshot.py",
+        "sha256": "28c2ccc0bc0e74bc5427a911b5cda8a92977337853c91dbbcc7db0e83cfe198c",
+        "snapshot": "snapshots/goodwatch-flows/windmill/f/sync/copy/title_snapshot.py"
+      },
+      "reader": {
+        "path": "goodwatch-webapp/app/server/title-snapshot/format.server.ts",
+        "sha256": "81857b93d4945e65e2e314fb9783a790c1315ba763fb66019fca34ca4815af4f",
+        "snapshot": "snapshots/goodwatch-webapp/app/server/title-snapshot/format.server.ts"
+      },
+      "format": 1,
+      "base_bytes_per_title": 101,
+      "scores": "74 uint8 values 0..10; 255 missing; ordered keys",
+      "manifest": "title-snapshot:current -> version,count,format,sha256,keyOrder,genres,origins,builtAt,sourceMark, optional ratings",
+      "chunk_bytes": 1048576,
+      "ratings_sidecar": "format1; 2+country_count bytes/title, separate chunk hashes; precise layout in source",
+      "source_mark": "Per movie/show count and sum(dna_updated_at), plus ratings-format/config inputs; metadata freshness is not a live evidence attestation."
+    }
+  },
+  "ranker": {
+    "source": {
+      "path": "goodwatch-webapp/app/server/search-ranking/ranking.server.ts",
+      "sha256": "0812d15f3b45f075c34e7eef76ffd789082fa5b416054515723b9547e49352d7",
+      "snapshot": "snapshots/goodwatch-webapp/app/server/search-ranking/ranking.server.ts"
+    },
+    "version": "hybrid-v2",
+    "scope": "Current source identity is separate from historical combo-safe-v2/v3 prototype names. Fusion/config/layout/consumer files are captured, no ranking run performed."
+  }
+}
