@@ -137,7 +137,15 @@ async function resolveTvdb(
 	}
 	const hits = result.tv_episode_results
 	if (hits.length !== 1 || hits[0].show_id !== showId)
-		return unmatched("TVDB episode ID did not match uniquely within this show.")
+		return {
+			...unmatched("TVDB episode ID did not match uniquely within this show."),
+			code:
+				hits.length === 0
+					? "episode_tvdb_not_found"
+					: hits.length > 1
+						? "episode_tvdb_ambiguous"
+						: "episode_tvdb_parent_mismatch",
+		}
 	const candidates = episodes.filter((e) => Number(e.tmdb_id) === hits[0].id)
 	if (candidates.length !== 1)
 		return unmatched(

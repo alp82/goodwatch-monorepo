@@ -226,6 +226,9 @@ Both parent and episode lookup failures now expose identical `item.problem.code`
 | --- | --- | --- |
 | `tvtime_lookup_budget_exhausted` | This preview reached its lookup limit. Run the import again to match more. | Request cap, elapsed budget, a request cut short by the remaining budget, or Retry-After exceeding that budget |
 | `tvtime_lookup_unavailable` | TMDB's TVDB lookup is unavailable; retry this import later. | HTTP/provider failure, malformed response, ordinary request timeout, or exhausted provider retries |
+| `episode_tvdb_not_found` | TVDB episode ID did not match uniquely within this show. | A successful TMDB lookup returned no episode for the supplied TVDB ID |
+| `episode_tvdb_ambiguous` | TVDB episode ID did not match uniquely within this show. | A successful TMDB lookup returned multiple episodes |
+| `episode_tvdb_parent_mismatch` | TVDB episode ID did not match uniquely within this show. | The sole TMDB episode belongs to a different show |
 
 These are the only changed/new member-facing strings in this follow-up. No UI component or source row changed. Known identity ambiguities keep their existing specific unmatched explanations.
 

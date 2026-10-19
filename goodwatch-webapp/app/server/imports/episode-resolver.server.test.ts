@@ -422,6 +422,12 @@ test("an empty community group does not prevent resolving a complete Netflix gro
 })
 
 test("TVDB ambiguity, removed catalog episodes and transport failures stay unmatched", async () => {
+	const codes = [
+		"episode_tvdb_not_found",
+		"episode_tvdb_ambiguous",
+		undefined,
+		undefined,
+	]
 	const reasons = [
 		"TVDB episode ID did not match uniquely within this show.",
 		"TVDB episode ID did not match uniquely within this show.",
@@ -450,7 +456,11 @@ test("TVDB ambiguity, removed catalog episodes and transport failures stay unmat
 		})
 		const result = await resolve({ showId: 1668, episodeTvdbId: 555 })
 		assert.equal(result.status, "unmatched")
-		assert.deepEqual(result, { status: "unmatched", reason: reasons[index] })
+		assert.deepEqual(result, {
+			status: "unmatched",
+			reason: reasons[index],
+			...(codes[index] ? { code: codes[index] } : {}),
+		})
 	}
 })
 
@@ -818,6 +828,7 @@ test("a fresh negative TVDB response defeats a stored cache hit", async () => {
 	})
 	assert.deepEqual(await resolve({ showId: 1668, episodeTvdbId: 555 }), {
 		status: "unmatched",
+		code: "episode_tvdb_parent_mismatch",
 		reason: "TVDB episode ID did not match uniquely within this show.",
 	})
 })
