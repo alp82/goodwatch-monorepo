@@ -1,0 +1,46 @@
+{
+  "record_type": "actual_human_answers_relayed_by_orchestrator",
+  "recorded_date": "2026-10-19",
+  "ticket": {
+    "title": "Choose the benchmark goals, quality gates, and experiment limits",
+    "url": "https://github.com/alp82/goodwatch-monorepo/issues/717"
+  },
+  "provenance": "Exact answers and note supplied in the orchestrator follow-up in this thread. No direct interview or inferred human answers added.",
+  "answers": {
+    "Q1": "quality_first",
+    "Q2": "45_minutes",
+    "Q2_note": "use titles that i'm well aware of, from the 1990-2010 era that i scored highly and few low ones. reviews should always include a frontier model judging the quality and summarize that + recommendations for my picks",
+    "Q3": "usd_5_draft_envelope"
+  },
+  "application": {
+    "priorities": "Quality first; complete title analysis and discovery usefulness before cost/speed tradeoffs.",
+    "human_review_minutes_total": 45,
+    "corpus_constraint": "Initial development review: familiar titles from own recorded ratings; 1990–2010 inclusive; mostly high-rated, a few low-rated contrasts. Exact identities/mix remain with corpus decision.",
+    "frontier_review": "Required each review round before picks, using existing authorized Astra sessions, summarized with evidence, uncertainty and recommendations. No separately billed judge APIs.",
+    "human_evidence_classification": "Assisted after exposure to frontier recommendation; candidate-label blinding is separate from independence.",
+    "shared_development_budget_usd": {
+      "title_prose": "3.50",
+      "enrichment": "0.50",
+      "queries": "0.50",
+      "embeddings": "0.10",
+      "unresolved_charge_contingency": "0.40",
+      "total": "5.00"
+    },
+    "limits": "Unchanged sample/request/concurrency/retry/time/token ceilings from the presented draft.",
+    "execution_authorized_now": false,
+    "fresh_confirmation_funded": false,
+    "baseline_local_commit": "af0e21b1",
+    "baseline_remote_publication": "pending"
+  },
+  "reversible_defaults_not_new_human_answers": [
+    "Suggest 8 high-rated and 2 low-rated titles if 10 suitable familiar records exist; exact mix and rating definitions belong to corpus decision.",
+    "Retain target of 20 paired reference/relevance judgments and 6 full-output spot checks within the 45-minute human cap; do not treat as independent evidence after recommendation exposure.",
+    "Astra initial quality pass uses shuffled candidate labels with provider/rank/cost hidden where feasible; preserve exposure and show requested recommendations before human picks."
+  ],
+  "readiness": {
+    "goals_decision": "ready_for_orchestrator_resolution",
+    "corpus_selection": "open",
+    "paid_execution": "blocked_by_remaining_experiment_dependencies",
+    "github_mutated": false
+  }
+}
