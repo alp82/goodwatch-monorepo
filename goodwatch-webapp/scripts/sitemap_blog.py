@@ -1,7 +1,9 @@
 """The blog URLs of sitemap_static.xml, read from app/content/blog/posts.json. Why they carry dates: docs/sitemap.md.
 
-posts.json is the single list of published posts: a JSON array of
-{"slug": "...", "published": "YYYY-MM-DD", "updated": "YYYY-MM-DD"}. Other keys are ignored."""
+posts.json is the single list of posts: a JSON array of
+{"slug": "...", "published": "YYYY-MM-DD", "updated": "YYYY-MM-DD", "draft": true|false}. A draft renders at its
+address with robots noindex, nofollow, so it is left out here, as it is on /blog and in the feed
+(app/utils/blog-posts.ts). Other keys are ignored."""
 from datetime import date
 from typing import List, Optional, Tuple
 import json
@@ -22,10 +24,11 @@ def _day(value, field: str, slug: str) -> date:
 
 
 def read_blog_posts(path: str, today: Optional[date] = None) -> List[dict]:
-    """Returns the posts as {"slug", "published", "updated"} with dates, sorted by slug.
+    """Returns the published posts as {"slug", "published", "updated"} with dates, sorted by slug. Drafts are left out.
 
     A missing file means no posts. Anything that would list a broken or falsely dated URL fails:
-    a bad slug, a bad date, updated before published or after today, or a duplicate slug."""
+    a bad slug, a bad date, updated before published or after today, a duplicate slug, or a draft flag that isn't
+    true or false. A draft's dates aren't checked against today, since it isn't listed."""
     if not os.path.exists(path):
         return []
     with open(path, encoding="utf-8") as posts_file:
@@ -37,18 +40,25 @@ def read_blog_posts(path: str, today: Optional[date] = None) -> List[dict]:
         raise ValueError(f"{path} must hold a JSON array of posts")
 
     posts = {}
+    drafts = set()
     for item in raw:
         if not isinstance(item, dict):
             raise ValueError(f"Every entry of {path} must be an object, got {item!r}")
         slug = item.get("slug")
         if not isinstance(slug, str) or not SLUG.match(slug):
             raise ValueError(f"Blog post slug must match {SLUG.pattern}, got {slug!r}")
-        if slug in posts:
+        if slug in posts or slug in drafts:
             raise ValueError(f"Blog post {slug!r} is listed twice")
+        draft = item.get("draft", False)
+        if not isinstance(draft, bool):
+            raise ValueError(f"Blog post {slug!r}: draft must be true or false, got {draft!r}")
         published = _day(item.get("published"), "published", slug)
         updated = _day(item.get("updated"), "updated", slug)
         if updated < published:
             raise ValueError(f"Blog post {slug!r}: updated {updated} is before published {published}")
+        if draft:
+            drafts.add(slug)
+            continue
         if today is not None and updated > today:
             raise ValueError(f"Blog post {slug!r}: updated {updated} is after today ({today})")
         posts[slug] = {"slug": slug, "published": published, "updated": updated}

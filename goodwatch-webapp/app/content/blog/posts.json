@@ -1,10 +1,16 @@
 [
 	{
 		"slug": "streaming-by-country-2026",
-		"title": "Studio Ghibli's films stream in 129 countries. In Japan, just one does.",
-		"description": "We counted where 4,683 well-known movies and 717 shows stream in 139 countries. Ghibli all but skips Japan, the US streams the most, and Netflix US has fewer than almost any other Netflix.",
+		"title": "Spirited Away has a better passport than you",
+		"description": "It streams on Netflix in 129 countries and can't get into Japan. GoodWatch checked 4,683 movies and 717 shows in 139 countries to see what else gets stopped at the border.",
 		"kind": "Data study",
 		"published": "2026-10-19",
-		"updated": "2026-10-19"
+		"updated": "2026-10-19",
+		"draft": true,
+		"card": {
+			"dek": "It streams on Netflix in 129 countries and can't get into Japan. We checked 4,683 movies and 717 shows in 139 countries to see what else gets stopped at the border, and what your friend's \"it's on Netflix\" is worth where you live.",
+			"date_label": "Snapshot: October 18, 2026",
+			"link_label": "Read the study"
+		}
 	}
 ]

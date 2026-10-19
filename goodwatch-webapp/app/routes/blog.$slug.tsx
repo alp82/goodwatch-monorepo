@@ -14,6 +14,7 @@ import { postComponents } from "~/ui/blog/mdx-components"
 import { Kicker } from "~/ui/info-page"
 import Breadcrumbs from "~/ui/nav/Breadcrumbs"
 import type { Crumb } from "~/ui/nav/breadcrumb-trail"
+import { isDraft, postRobots } from "~/utils/blog-posts"
 import {
 	type BlogPost,
 	blogPostUrl,
@@ -69,6 +70,8 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 		article: { published: post.published, modified: post.updated },
 		structuredData,
 		breadcrumbs: trail(post),
+		// A draft renders for a preview but stays out of the index, and its links aren't followed.
+		robots: postRobots(post),
 	})
 }
 
@@ -99,6 +102,16 @@ export default function BlogPostPage() {
 			<Breadcrumbs items={trail(post)} />
 			<article className="mx-auto w-full max-w-2xl px-4 pt-10 pb-24 text-base text-gray-300 sm:px-8 sm:text-lg md:pt-16">
 				<header className="flex flex-col gap-6">
+					{isDraft(post) ? (
+						<p
+							role="note"
+							className="rounded-2xl bg-white/[0.04] px-4 py-3 text-sm text-gray-400 ring-1 ring-white/10"
+						>
+							<span className="font-semibold text-amber-400">Draft.</span> This
+							post isn't listed on the blog, in the feed or in the sitemap, and
+							search engines don't index it.
+						</p>
+					) : null}
 					<Kicker>{post.kind}</Kicker>
 					<h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl">
 						{post.title}

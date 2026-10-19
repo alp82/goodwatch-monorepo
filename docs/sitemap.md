@@ -73,14 +73,16 @@ Thirty people are selected from top-five billed cast and directors of the select
 
 ### Blog posts
 
-`goodwatch-webapp/app/content/blog/posts.json` is the single list of published posts. Each entry has a `slug`, a `published` date, and an `updated` date, as `YYYY-MM-DD`. `sitemap_blog.py` reads it, and `create_sitemaps.py` adds the URLs to `sitemap_static.xml` after the landing pages:
+`goodwatch-webapp/app/content/blog/posts.json` is the single list of blog posts. Each entry has a `slug`, a `published` date, and an `updated` date, as `YYYY-MM-DD`, and optionally `"draft": true`. `sitemap_blog.py` reads it, and `create_sitemaps.py` adds the URLs of the posts that aren't drafts to `sitemap_static.xml` after the landing pages:
 
-1. `https://goodwatch.app/blog`, dated with the newest `updated` date of all posts.
-2. `https://goodwatch.app/blog/<slug>` for every post, sorted by slug, dated with its own `updated` date.
+1. `https://goodwatch.app/blog`, dated with the newest `updated` date of those posts.
+2. `https://goodwatch.app/blog/<slug>` for each of them, sorted by slug, dated with its own `updated` date.
 
-A post's author sets `updated` only when the post visibly changes, so the date is evidence of a visible change, as the dating rule requires. The blog index lists the posts, so it changes visibly whenever a post is added or updated, and the newest `updated` date dates that change. Without the file, or with an empty list, the set has no blog URLs.
+A draft renders at its address with robots `noindex, nofollow`, for a preview, and is left out of the sitemap, of `/blog` and of the feed. `/blog` without a listed post is `noindex` too, so it stays out of the sitemap until the first post is published. Publishing a post means removing its `draft` flag and setting its dates.
 
-Generation fails, and writes no static set, when an entry has a slug that does not match `^[a-z0-9]+(?:-[a-z0-9]+)*$`, a date that is not a real `YYYY-MM-DD` day, an `updated` date before `published` or after today (UTC), or a slug that another entry already has. Fix `posts.json` and rerun.
+A post's author sets `updated` only when the post visibly changes, so the date is evidence of a visible change, as the dating rule requires. The blog index lists the posts, so it changes visibly whenever a post is added or updated, and the newest `updated` date dates that change. Without the file, with an empty list, or with drafts only, the set has no blog URLs.
+
+Generation fails, and writes no static set, when an entry has a slug that does not match `^[a-z0-9]+(?:-[a-z0-9]+)*$`, a date that is not a real `YYYY-MM-DD` day, an `updated` date before `published`, a `draft` value that isn't `true` or `false`, or a slug that another entry already has. A published post's `updated` date also may not be after today (UTC). Fix `posts.json` and rerun.
 
 The blog URLs are part of the existing static set, so the files that `sitemap.xml` lists stay the same and Search Console needs no resubmission. Blog URLs pass the same live check as every other URL: each page must answer 200 with a canonical link equal to its listed URL.
 

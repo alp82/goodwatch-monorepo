@@ -314,7 +314,17 @@ export default defineConfig(({ mode, isSsrBuild }) => ({
 		// remixDevTools(),
 		// Blog posts (app/content/blog/*/post.mdx) become React at build time; nothing of MDX runs in the browser. It
 		// comes before Remix, which only reads JavaScript.
-		{ enforce: "pre", ...mdx({ remarkPlugins: [remarkGfm] }) },
+		// A footnote's link back is the arrow as text (U+FE0E): without it, phones draw the arrow as a colored emoji.
+		{
+			enforce: "pre",
+			...mdx({
+				remarkPlugins: [remarkGfm],
+				remarkRehypeOptions: {
+					footnoteBackContent: "↩︎",
+					footnoteBackLabel: (n) => `Back to note ${n + 1} in the text`,
+				},
+			}),
+		},
 		remix({
 			serverMinify: false,
 			ignoredRouteFiles: process.argv.some((arg) => arg === "vite:build" || arg === "build")

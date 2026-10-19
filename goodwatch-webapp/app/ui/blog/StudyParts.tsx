@@ -185,8 +185,25 @@ export function StudyCredits() {
 			</div>
 			<p>
 				This product uses the TMDB API but is not endorsed or certified by TMDB.
-				Streaming data from JustWatch, through TMDB. Information courtesy of
-				IMDb (
+			</p>
+			<p>
+				Streaming data from{" "}
+				<a
+					href="https://www.justwatch.com/"
+					className={linkClass}
+					rel="noreferrer"
+				>
+					JustWatch
+				</a>
+				, through{" "}
+				<a
+					href="https://www.themoviedb.org/"
+					className={linkClass}
+					rel="noreferrer"
+				>
+					TMDB
+				</a>
+				. Information courtesy of IMDb (
 				<a href="https://www.imdb.com" className={linkClass} rel="noreferrer">
 					https://www.imdb.com
 				</a>

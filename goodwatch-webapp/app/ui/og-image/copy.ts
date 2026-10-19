@@ -119,8 +119,8 @@ export const STATIC_PAGE_COPY: Record<string, PageCopy> = {
 	},
 	"/blog/streaming-by-country-2026": {
 		tag: "Data study",
-		title: "Studio Ghibli's films stream in 129 countries. In Japan, just one does.",
-		subtitle: "Streaming in 139 countries, counted.",
+		title: "Spirited Away has a better passport than you",
+		subtitle: "On Netflix in 129 countries. Not Japan.",
 	},
 	"/taste": {
 		tag: "Taste profile",

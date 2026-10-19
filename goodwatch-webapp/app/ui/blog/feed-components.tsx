@@ -21,13 +21,28 @@ export const feedComponents = {
 	a: ({ href = "", children }: ComponentProps<"a">) => (
 		<a href={absolute(href)}>{children}</a>
 	),
-	Chart: ({ data, id }: { data: StudyData; id: ChartId }) => {
+	Chart: ({
+		data,
+		id,
+		question,
+		children,
+	}: {
+		data: StudyData
+		id: ChartId
+		question?: string
+		children?: ReactNode
+	}) => {
 		const spec = chartSpec(data, id)
 		return (
-			<p>
-				<strong>{spec.question}</strong> {spec.answer}{" "}
-				<a href={`${postUrl(data)}#chart-${id}`}>See the chart</a>
-			</p>
+			<>
+				<p>
+					<strong>{question ?? spec.question}</strong>
+				</p>
+				{children ?? <p>{spec.answer}</p>}
+				<p>
+					<a href={`${postUrl(data)}#chart-${id}`}>See the chart</a>
+				</p>
+			</>
 		)
 	},
 	CountryTable: ({ data }: { data: StudyData }) => (

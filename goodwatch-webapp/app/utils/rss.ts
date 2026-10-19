@@ -16,8 +16,8 @@ export type Feed = {
 	url: string
 	feedUrl: string
 	description: string
-	/** YYYY-MM-DD */
-	updated: string
+	/** YYYY-MM-DD, or null while no post is listed: the feed then has no date. */
+	updated: string | null
 	items: FeedItem[]
 }
 
@@ -59,7 +59,7 @@ export function rssFeed(feed: Feed) {
 		<atom:link href="${escapeXml(feed.feedUrl)}" rel="self" type="application/rss+xml"/>
 		<description>${escapeXml(feed.description)}</description>
 		<language>en</language>
-		<lastBuildDate>${rssDate(feed.updated)}</lastBuildDate>${items}
+		${feed.updated ? `<lastBuildDate>${rssDate(feed.updated)}</lastBuildDate>` : ""}${items}
 	</channel>
 </rss>
 `

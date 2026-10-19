@@ -15,6 +15,13 @@ export type BlogPost = {
 	published: string
 	/** YYYY-MM-DD */
 	updated: string
+	/**
+	 * A draft renders at its address for a preview, with robots noindex, nofollow, and is left out of /blog, the
+	 * feed and the sitemap (see blog-posts.ts and scripts/sitemap_blog.py).
+	 */
+	draft?: boolean
+	/** How /blog shows the post. Without it, the card uses the title and the description. */
+	card?: { dek?: string; date_label?: string; link_label?: string }
 }
 
 export const blogPostUrl = (slug: string) => `${SITE}/blog/${slug}`

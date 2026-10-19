@@ -71,6 +71,16 @@ class ReadBlogPostsTest(unittest.TestCase):
             ("https://goodwatch.app/blog/b", date(2026, 10, 5)),
         ])
 
+    def test_drafts_are_left_out_and_only_drafts_list_no_blog_index(self):
+        posts = self.read([post("live"), post("wip", draft=True), post("kept", draft=False)])
+        self.assertEqual([p["slug"] for p in posts], ["kept", "live"])
+        only_drafts = self.read([post("wip", draft=True)])
+        self.assertEqual(only_drafts, [])
+        self.assertEqual(blog_urls("https://goodwatch.app", only_drafts), [])
+
+    def test_a_drafts_future_date_doesnt_fail_generation(self):
+        self.assertEqual(self.read([post("wip", published="2026-12-01", updated="2026-12-01", draft=True)]), [])
+
     def test_bad_input_fails_with_a_clear_error(self):
         cases = [
             ("not valid JSON", "[{"),
@@ -88,6 +98,8 @@ class ReadBlogPostsTest(unittest.TestCase):
             ("not a real date", [post("a", updated="2026-02-30")]),
             ("before published", [post("a", published="2026-10-02", updated="2026-10-01")]),
             ("after today", [post("a", published="2026-10-19", updated="2026-10-20")]),
+            ("draft must be true or false", [post("a", draft="yes")]),
+            ("listed twice", [post("a", draft=True), post("a")]),
         ]
         for message, posts in cases:
             with self.subTest(posts=posts), self.assertRaisesRegex(ValueError, message):
@@ -128,6 +140,14 @@ class StaticSitemapTest(unittest.TestCase):
         ])
         self.assertEqual(result["static_url_count"], len(landing) + 3)
         self.assertEqual(result["blog_post_count"], 2)
+
+    def test_a_draft_stays_out_of_the_static_set(self):
+        with open(self.posts, "w", encoding="utf-8") as posts_file:
+            json.dump([post("streaming-by-country-2026", "2026-10-19", "2026-10-19", draft=True)], posts_file)
+        result = create_sitemaps.create_landing_sitemaps()
+        self.assertEqual(self.entries(),
+                         [(f"https://goodwatch.app{route}", None) for route in create_sitemaps.STATIC_ROUTES])
+        self.assertEqual(result["blog_post_count"], 0)
 
     def test_without_posts_the_static_set_is_unchanged(self):
         create_sitemaps.create_landing_sitemaps()

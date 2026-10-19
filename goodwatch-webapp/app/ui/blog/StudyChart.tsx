@@ -1,13 +1,27 @@
-// One of the streaming study's charts: the question as its heading, the answer under it, ranked bars drawn as SVG in
-// the server's HTML (no script needed), and a note with the source. Every bar has a native tooltip, the SVG has a
-// description, and the numbers of every country are in the table the note links to.
+// One of the streaming study's charts: the question as its heading, ranked bars drawn as SVG in the server's HTML (no
+// script needed), the caption, and a note with the source. Every bar has a native tooltip, the SVG has a description,
+// and the numbers of every country are in the table the note links to.
+// A post can give its own question and caption (its children, written in Markdown, footnote markers included). Without
+// them the chart says the question and the one-sentence answer study-charts.ts builds from the data.
+import type { ReactNode } from "react"
 import { layoutBars } from "./ranked-bars-layout"
 import { type ChartId, type StudyData, chartSpec, fmt } from "./study-charts"
 
 export const COUNTRY_TABLE_ID = "every-country"
 
-export function StudyChart({ data, id }: { data: StudyData; id: ChartId }) {
-	const spec = chartSpec(data, id)
+export function StudyChart({
+	data,
+	id,
+	question,
+	children,
+}: {
+	data: StudyData
+	id: ChartId
+	question?: string
+	children?: ReactNode
+}) {
+	const generated = chartSpec(data, id)
+	const spec = { ...generated, question: question ?? generated.question }
 	const layout = layoutBars(spec.rows, spec)
 	const headingId = `chart-${id}`
 	const descriptionId = `chart-${id}-description`
@@ -25,7 +39,9 @@ export function StudyChart({ data, id }: { data: StudyData; id: ChartId }) {
 			>
 				{spec.question}
 			</h3>
-			<p className="text-base leading-relaxed text-gray-300">{spec.answer}</p>
+			{children ? null : (
+				<p className="text-base leading-relaxed text-gray-300">{spec.answer}</p>
+			)}
 			<svg
 				viewBox={`0 0 ${layout.width} ${layout.height}`}
 				role="img"
@@ -89,14 +105,21 @@ export function StudyChart({ data, id }: { data: StudyData; id: ChartId }) {
 					</g>
 				))}
 			</svg>
-			<figcaption className="text-xs leading-relaxed text-gray-400">
-				{spec.note}{" "}
-				<a
-					href={`#${COUNTRY_TABLE_ID}`}
-					className="font-semibold text-amber-500 hover:text-amber-400"
-				>
-					Every country's numbers
-				</a>
+			<figcaption className="flex flex-col gap-2">
+				{children ? (
+					<div className="text-base leading-relaxed text-gray-300 [&_p]:my-0">
+						{children}
+					</div>
+				) : null}
+				<p className="text-xs leading-relaxed text-gray-400">
+					{spec.note}{" "}
+					<a
+						href={`#${COUNTRY_TABLE_ID}`}
+						className="font-semibold text-amber-500 hover:text-amber-400"
+					>
+						Every country's numbers
+					</a>
+				</p>
 			</figcaption>
 		</figure>
 	)

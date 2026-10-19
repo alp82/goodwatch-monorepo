@@ -1,96 +1,88 @@
 import data from "./data.json"
-import { aboutShare, fmt } from "../../../ui/blog/study-charts.ts"
 
-export const f = data.findings
-export const at = (code) => data.countries.find((c) => c.code === code)
-export const movies = (code) => at(code).movies
-export const shows = (code) => at(code).shows
-export const catalogue = (code) => at(code).netflix_catalogue
-export const M = data.movies.titles
-export const S = data.shows.titles
-export const day = new Date(`${data.snapshot.date}T12:00:00Z`).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" })
+{/*
+Draft (posts.json "draft": true): the owner edits this text. Every number here matches data.json, snapshot of
+2026-10-18; topical references are sourced in sources.md next to this file. The title and the dek are in posts.json.
+*/}
 
-"Well-known" means at least 50,000 votes on IMDb. We read every title's streaming offers on {day}, in all {data.countries.length} countries that TMDB's streaming data covers.
+Netflix knows which household you're in. Your friend who texts "it's on Netflix" does not.
 
-<KeyNumbers items={[
-	{ n: fmt(f.ghibli_netflix_countries), label: "countries where Ghibli is on Netflix" },
-	{ n: String(f.ghibli_in_japan), label: `of those ${f.ghibli} films stream in Japan` },
-	{ n: fmt(movies("US").subscription), label: `of ${fmt(M)} movies stream in the US` },
-	{ n: fmt(movies("US").netflix), label: "of them are on Netflix US" },
-]} />
+## TL;DR
 
-## Studio Ghibli, almost everywhere but Japan
+**A service name without a country is a rumour.**
 
-{f.ghibli} of the {f.ghibli + data.lists.ghibli_apart.length} Studio Ghibli films in the list are on Netflix in {f.ghibli_netflix_countries} countries: every country in our data where Netflix is tracked, except the United States and Japan. In the US, they're on HBO Max. In Japan, where they were made, none of the {f.ghibli} streams at all: the data lists no offer of any kind there, not even to rent or buy, and JustWatch's Japanese site says the same.
+- **Ghibli:** 17 Studio Ghibli films are on Netflix in 129 countries and have no offer of any kind in Japan. They were reported leaving Netflix on August 1. They didn't.
+- **Movies:** The US streams 3,478 of 4,683. Netflix US has 548 of them, 50th of 55. March's price rise took the Standard plan to $19.99; the rank came at no extra charge.
+- **One service:** Japan's U‑NEXT carries 1,863 of the movies by itself. Prime Video, the biggest in the US, has 639. Japan can't stream Totoro and can stream nearly everything else.
+- **Shows:** Netflix carries the most of the 717 shows in 55 of 56 larger markets. The friend who only watches shows was right all along. Don't tell them.
 
-The films: <TitleRun items={data.lists.ghibli} />.
+## Japan would like its movies back
 
-The exception is <TitleLink item={data.lists.ghibli_apart[0]} /> ({data.lists.ghibli_apart[0].year}), whose rights sit apart from the others with the publisher Shinchosha. Netflix has streamed it in Japan since July 2025, and it's on Netflix in all {data.lists.ghibli_apart[0].netflix} of our Netflix countries.
+*[Spirited Away](/movie/129-spirited-away)*, *[My Neighbor Totoro](/movie/8392-my-neighbor-totoro)*, *[Princess Mononoke](/movie/128-princess-mononoke)* and 14 more are on Netflix everywhere our data tracks it, except the US and Japan.[^129] In the US they're on HBO Max, which was Max until July 2025 and has belonged to Paramount since October 6. The films haven't moved; their landlord has changed names twice and owners once.
 
-It goes beyond Ghibli. Of the {f.japanese} films in the list that were made in Japan, {f.japanese_in_us} stream on a subscription in the US and {f.japanese_in_japan} in Japan.
+In Japan the data lists nothing, except *[Grave of the Fireflies](/movie/12477-grave-of-the-fireflies)*, whose rights sit apart with the publisher Shinchosha; Netflix first streamed it there in July 2025. So the one Ghibli film Japan can stream is the one about two children starving. Nobody planned that.
 
-## The US streams the most of these movies
+Ghibli's producer said in September that people got bored of the AI Ghibli images "as expected." The real ones are harder to shift: Spanish outlets reported them leaving Netflix on August 1, and on October 18 all 17 were still there.
 
-<Chart data={data} id="movies-by-country" />
+{/*
+Image to come: original illustration, no borrowed art. A passport page covered in 129 entry stamps and one red DENIED
+stamp. The passport is issued in Tokyo. Caption: "129 stamps, one denial. Passport issued in Tokyo."
+*/}
 
-In the United States, {fmt(movies("US").subscription)} of the {fmt(M)} movies are on a subscription, ahead of Chile ({fmt(movies("CL").subscription)}), Japan ({fmt(movies("JP").subscription)}) and Colombia ({fmt(movies("CO").subscription)}). Ukraine ({fmt(movies("UA").subscription)}), Israel ({fmt(movies("IL").subscription)}) and Pakistan ({fmt(movies("PK").subscription)}) have the fewest of the larger markets. Israel's count is partly a gap in the data: JustWatch doesn't track Disney+ there, which has run in Israel since 2022 and carries about 670 of these movies in a typical country, nor the pay-TV services yes, HOT, Cellcom TV and Partner TV.
+<Chart data={data} id="movies-by-country" question="How many of these movies can you stream in your country?">
 
-The list leans American: {fmt(f.us_first_country)} of the {fmt(M)} movies, {aboutShare(f.us_first_country, M)}, were made in the US, and that helps the US here. Take only the {fmt(data.movies.top_cut)} best-rated movies of the list, by GoodWatch score, and Spain comes first with {fmt(movies("ES").top_subscription)}, ahead of the US ({fmt(movies("US").top_subscription)}), Japan ({fmt(movies("JP").top_subscription)}) and the UK ({fmt(movies("GB").top_subscription)}).
+*The US leads with 3,478 of 4,683; Ukraine has 633. Before the US takes a victory lap: 3,078 of these movies are American. It's a home game.*[^israel]
 
-## One subscription goes further in some countries
+</Chart>
 
-<Chart data={data} id="one-subscription" />
+Take the 1,000 best-rated and Spain comes first with 757, ahead of the US (714), Japan (713) and the UK (702). Netflix also bought Spain's rights to every match of the 2030 World Cup last week. Good October for Spain. Nobody has said why.
 
-In Japan, U-NEXT alone carries {fmt(movies("JP").biggest_service_titles)} of the movies, {aboutShare(movies("JP").biggest_service_titles, M)}: the most of any streaming service with its own library, in any country we looked at. Spot checks on U-NEXT's own site found films it includes that the data misses, so the real number is probably higher. In the US, the biggest single service is Prime Video, with {fmt(movies("US").biggest_service_titles)}.
+<Chart data={data} id="one-subscription" question="How far does one subscription get you?">
 
-Chile's Movistar TV lists even more, {fmt(movies("CL").biggest_service_titles)}, but it's a different kind of service. It's the TV app of Movistar's pay-TV plans, and most of its films are Prime Video, Disney+, HBO Max and Paramount+ titles shown inside the app, which need one of those as an add-on. Netflix is the biggest service for these movies in {f.netflix_biggest_movies} of the {f.majors} larger markets.
+*U‑NEXT in Japan: 1,863 on its own. Prime Video in the US: 639. Chile's Movistar TV shows 1,924, mostly through other services' add-ons: a nesting doll that bills monthly.*[^paytv]
 
-## Netflix isn't the same everywhere
+</Chart>
 
-<Chart data={data} id="netflix" />
+U‑NEXT is the biggest stand-alone library anywhere we looked.[^unext] Movistar TV is what US bundles want to be when they grow up: four other services in one app, each still billing you.
 
-Netflix's catalogue differs from country to country. Netflix France lists {fmt(catalogue("FR").movies)} movies in all, and Netflix US {fmt(catalogue("US").movies)}: {ordinal(f.netflix_catalogue_us_rank_movies)} of {f.netflix_catalogue_countries} Netflix countries. For shows it's the other way round, and Netflix US is {ordinal(f.netflix_catalogue_us_rank_shows)}.
+<Chart data={data} id="netflix" question="How many of these movies are on your Netflix?">
 
-Of the {fmt(data.movies.netflix.titles_somewhere)} movies in the list that are on Netflix somewhere, {fmt(data.movies.netflix.titles_everywhere)} are on Netflix in all {data.movies.netflix.countries} countries, and {fmt(data.movies.netflix.titles_in_one)} in only one.
+*Switzerland has 799. The US has 548, 50th of 55. Swiss law makes streamers put 4% of local revenue into Swiss film. Neutrality has never been this well stocked.*
 
-export const ordinal = (n) => `${n}${n % 100 >= 11 && n % 100 <= 13 ? "th" : ["th", "st", "nd", "rd"][n % 10] ?? "th"}`
+</Chart>
 
-## Indian films: the most and the least streamable
+Of the 2,027 movies on Netflix somewhere, 214 are on Netflix everywhere and 374 in exactly one country. Those are the ones your friend recommends.
 
-Indian films are {fmt(f.indian)} of the {fmt(M)} movies, about {Math.round((100 * f.indian) / M)}%. Yet they're {f.widest_indian} of the {f.widest} movies that the big global services (Netflix, Prime Video, Disney+, HBO Max, Apple TV and Paramount+) carry in 130 countries or more, and {f.nowhere_indian} of the {f.nowhere} movies that are on no subscription anywhere.
+<Chart data={data} id="shows-by-country" question="And the shows?">
 
-The best-rated movies streamed most widely are <TitleRun items={data.lists.widest_best_rated.slice(0, 2)} />, each in {data.lists.widest_best_rated[0].countries} countries. Among those on no subscription anywhere are <TitleRun items={data.lists.nowhere_indian.slice(0, 5)} />.
+*The US has 659 of 717 shows; Russia has 198. Netflix leads for shows in 55 of 56 larger markets. The 56th is Russia, where Netflix left in 2022 and Kinopoisk kept the remote.*[^seasons]
 
-## Shows: Netflix almost everywhere
+</Chart>
 
-<Chart data={data} id="shows-by-country" />
+For shows, "it's on Netflix" mostly survives the trip. Bring the actual remote: Netflix stopped letting phones cast to most TVs last November.
 
-Netflix carries the most of the {fmt(S)} shows in {f.netflix_biggest_shows} of the {f.majors} larger markets; in Russia, where Netflix doesn't operate, it's Kinopoisk. Shows are easier to find than movies: {fmt(shows("US").subscription)} of them stream in the US, and about 600 in western Europe.
+## Before you buy another subscription
 
-## Free with ads, or with a library card
+In the US, 1,575 of these movies stream free with ads and 1,010 come with a library card through Kanopy or Hoopla. The library is the last streaming service that doesn't ask who's in your household. LA County cut Hoopla borrows from eight a month to five in January, so even the library is tightening the plan.
 
-North America has the most to watch for free. In the US, {fmt(movies("US").free_with_ads)} of the movies stream free with ads, and {fmt(movies("US").library)} with a public library card, through Kanopy or Hoopla. Canada has {fmt(movies("CA").free_with_ads)} and {fmt(movies("CA").library)}, and the UK {fmt(movies("GB").free_with_ads)} free with ads. Library services carry the most outside North America in Norway ({fmt(movies("NO").library)}), Sweden ({fmt(movies("SE").library)}) and Denmark ({fmt(movies("DK").library)}).
+Recommend the movie. Say the country. If it's Ghibli, check where your friend lives before you ruin their evening.
 
 <CountryTable data={data} />
 
-## How we counted
+## Methodology and credits
 
-- **The titles.** Every movie and show in GoodWatch's catalogue with at least 50,000 IMDb votes, a GoodWatch score and a poster, first released at least 180 days before {day}: {fmt(M)} movies and {fmt(S)} shows. Shows leave out talk, news, soap and reality shows. The vote count keeps out mismatched entries that other vote counts let in. The best-rated cut is the {fmt(data.movies.top_cut)} movies and {fmt(data.shows.top_cut)} shows with the highest GoodWatch score.
-- **The data.** TMDB's watch providers, which come from JustWatch, read for every title on {day}. Catalogues change every week, so every number here is that day's.
-- **On a subscription.** A service lists the title in that country as included in its subscription. A service's plans and add-on channels count once: Netflix with ads is Netflix, and HBO Max through Prime Video is HBO Max.
-- **Pay-TV apps count.** Services that come with a TV or internet plan, such as Movistar TV in Chile and Colombia or Lepsi TV in Czechia, count as subscriptions. They're often the biggest service in their country.
-- **Not counted.** Bloodstream, Artify, Artiflix and Cultpix list a few public-domain and classic films in about 100 to 138 countries. They'd make those films look available everywhere, so they're left out.
-- **Free.** Free with ads (such as Tubi, Pluto TV or Plex) and free with a library card (such as Kanopy and Hoopla) are counted apart from subscriptions.
-- **Countries.** The charts show 56 larger markets. The table and the files have all {data.countries.length}. Very small territories often show a neighbor's catalogue.
-- **Limits.** JustWatch tracks most streaming services, but not every local one, and not every title of the ones it tracks. A low count can partly mean that a country's own services aren't tracked, as in Israel. "{f.ghibli_netflix_countries} countries" for Netflix means the countries in our data where Netflix is tracked; Netflix itself operates in more than 190.
-- **Checked by hand.** Before publishing we checked the main findings on the services' own sites: the Ghibli films on JustWatch Japan and U-NEXT, 35 titles on U-NEXT's title pages, Movistar TV Chile's public catalogue, and which services JustWatch tracks in Israel.
+Snapshot of October 18, 2026. Every movie and show in GoodWatch's catalogue with at least 50,000 IMDb votes, a GoodWatch score and a poster, released at least 180 days earlier: 4,683 movies and 717 shows. Availability from TMDB's watch providers, which come from JustWatch, read for every title that day in all 139 countries covered. Subscription offers count once per title and country; a service's plans and channels are grouped. Bloodstream, Artify, Artiflix and Cultpix are left out. Charts show the 56 larger markets. A missing listing isn't proof a film is unavailable. Main findings were hand-checked on JustWatch Japan, U‑NEXT, Movistar TV Chile and the Israel provider list on October 19, 2026.
 
-## Download the data
-
-Both files are free to use under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/): credit "GoodWatch" and link to this page. They hold counts only.
-
-<Downloads data={data} />
-
-To cite this study: GoodWatch, "Studio Ghibli's films stream in 129 countries. In Japan, just one does.", 2026, https://goodwatch.app/blog/streaming-by-country-2026.
+[Country counts](/downloads/streaming-by-country-2026/goodwatch-streaming-by-country-2026.csv) · [Title counts](/downloads/streaming-by-country-2026/goodwatch-streaming-by-title-2026.csv), both [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/): credit GoodWatch and link to this page.
 
 <StudyCredits />
+
+[^129]: 129 means the countries in our data where JustWatch tracks Netflix, minus the US and Japan. Netflix itself operates in more than 190. Its 2020 licence excluded the US, Canada and Japan; Canada was added later.
+
+[^israel]: The list is picked by IMDb votes, so it leans American. Israel's 725 is partly a data gap: JustWatch doesn't track Disney+ there, or the pay-TV services yes, HOT, Cellcom TV and Partner TV.
+
+[^unext]: Spot checks on U‑NEXT's own pages found films it includes that the data misses, so 1,863 is a floor.
+
+[^paytv]: Pay-TV apps count as subscriptions, add-on listings included. Most of Movistar TV's 1,924 need a Prime Video, Disney+, HBO Max or Paramount+ add-on or bundle.
+
+[^seasons]: A show counts if any part of it is on a subscription. That doesn't guarantee every season.

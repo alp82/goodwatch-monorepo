@@ -1,8 +1,8 @@
-// /blog/rss.xml: every post in full, newest first. With the whole text in the feed, a reader shows the post, and
-// dev.to's import brings it in as a draft whose canonical address is the post on goodwatch.app.
+// /blog/rss.xml: every listed post in full, newest first; drafts stay out. With the whole text in the feed, a reader
+// shows the post, and dev.to's import brings it in as a draft whose canonical address is the post on goodwatch.app.
 import { createElement } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
-import { blogPosts, blogUpdated } from "~/server/blog/posts.server"
+import { blogUpdated, listedBlogPosts } from "~/server/blog/posts.server"
 import { feedComponents } from "~/ui/blog/feed-components"
 import { blogPostUrl } from "~/utils/blog-structured-data"
 import { rssFeed } from "~/utils/rss"
@@ -16,7 +16,7 @@ const POSTS = import.meta.glob<PostModule>("../content/blog/*/post.mdx", {
 })
 
 export const loader = () => {
-	const items = blogPosts.flatMap((post) => {
+	const items = listedBlogPosts.flatMap((post) => {
 		const Text = POSTS[`../content/blog/${post.slug}/post.mdx`]?.default
 		if (!Text) return []
 		return [

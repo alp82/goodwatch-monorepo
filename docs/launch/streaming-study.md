@@ -35,7 +35,13 @@ The raw snapshot stays in `~/.cache/goodwatch-streaming-study/study-snapshot.jso
 After a new run:
 
 1. Read the printed findings and compare the post's sentences with them. Sentences built from `data.json` follow the numbers. Words that describe them, such as "the US streams the most", don't.
-2. Update `published` or `updated` in `goodwatch-webapp/app/content/blog/posts.json`, and the title in `posts.json` and in `STATIC_PAGE_COPY` (`app/ui/og-image/copy.ts`) if the headline number changed. `study-charts.test.ts` checks that the two titles match.
+2. Update `published` or `updated` in `goodwatch-webapp/app/content/blog/posts.json`, and the title in `posts.json` and in `STATIC_PAGE_COPY` (`app/ui/og-image/copy.ts`) if the headline number changed. `study-charts.test.ts` checks that the two titles match. The post's text has its numbers written out, so check them against the printed findings too.
+
+## Draft and publishing
+
+The post is a draft (`"draft": true` in `posts.json`, 2026-10-19): it renders at `/blog/streaming-by-country-2026` with robots `noindex, nofollow` and a draft notice, and it isn't on `/blog`, in the feed or in the sitemap. `/blog?drafts` shows its index card for a preview; that view is never indexed. To publish, remove `draft`, set `published` and `updated` to the publication day, and deploy; the next weekly sitemap run lists it.
+
+The text is the Fable draft the owner chose, `post.mdx`; its topical references are sourced in `sources.md` next to it, which the site doesn't render.
 3. Run `npm test` in `goodwatch-webapp`.
 
 ## What was checked by hand
