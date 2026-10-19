@@ -633,3 +633,55 @@ test('regression: XHR json responses are inspected without calling page-defined 
 function titled(title) {
   return { data: { node: { __typename: 'PinotCarouselSection', _id: 'ROW1', displayString: 'Meine Liste', version: '1', entities: { totalCount: 30, edges: [{ cursor: b64(0), node: { __typename: 'PinotStandardBoxshotEntityTreatment', displayString: title, unifiedEntity: { __typename: 'Movie', videoId: 1 } } }], pageInfo: { hasNextPage: true } } } } }
 }
+
+// ---- Re-review of 6e40c0b2 ------------------------------------------------------
+
+test('re-review 1: XHR state never keeps unrelated URLs, and keeps no URL after cleanup', async () => {
+  const page = await context.newPage()
+  server = serveList()
+  await page.goto('https://www.netflix.com/test')
+  await page.evaluate(() => {
+    const Original = WeakMap
+    window.__maps = []
+    window.WeakMap = class extends Original { constructor() { super(); window.__maps.push(this) } }
+  })
+  await page.addScriptTag({ content: OBSERVER })
+  await page.evaluate(cfg => window.__gwDiagObserverInstall(cfg), CFG)
+  const before = await page.evaluate(([b]) => new Promise(resolve => {
+    window.__unrelated = new XMLHttpRequest()
+    window.__unrelated.open('GET', '/raw-unrelated?private=sentinel-unrelated')
+    window.__pinned = new XMLHttpRequest()
+    window.__pinned.open('POST', '/graphql?private=sentinel-pinned')
+    window.__pinned.onloadend = () => resolve(window.__maps.map(m => JSON.stringify([m.get(window.__unrelated) || null])).join(''))
+    window.__pinned.send(JSON.stringify(b))
+  }), [carouselBody(12, 6)])
+  assert.ok(!before.includes('sentinel-unrelated'), 'unrelated URL stored')
+  await op(page, 'cleanup')
+  const after = await page.evaluate(() => window.__maps.map(m => JSON.stringify([m.get(window.__unrelated) || null, m.get(window.__pinned) || null])).join(''))
+  assert.ok(!after.includes('sentinel'), after)
+  await page.close()
+})
+
+test('re-review 2: interrupted replies give back their memory charges', async () => {
+  const page = await openPage({
+    serve: serveList(),
+    beforeInstall: () => {
+      window.fetch = function () {
+        return Promise.resolve(new Response(new ReadableStream({ start(c) { c.enqueue(new Uint8Array(1024 * 1024).fill(32)); setTimeout(() => c.error(new Error('network interrupted')), 30) } })))
+      }
+    },
+  })
+  const peaks = []
+  let last
+  for (let i = 0; i < 4; i++) {
+    await page.evaluate(b => fetch('/graphql', { method: 'POST', body: JSON.stringify(b) }).then(r => r.text()).catch(() => {}), carouselBody(-1, 1))
+    await sleep(80)
+    last = await op(page, 'pull')
+    peaks.push(last.counters.budgetPeakBytes)
+  }
+  assert.ok(peaks.every(p => p <= 3.5 * 1024 * 1024), peaks.join(','))
+  assert.ok(!last.sticky.includes('observer_overloaded'), last.sticky.join(','))
+  assert.equal(last.counters.budgetBytes, 0)
+  assert.ok(last.sticky.includes('response_rejected_stream'))
+  await page.close()
+})

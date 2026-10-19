@@ -280,7 +280,7 @@ The carousel's wrap and lap evidence aren't used.
 | `response_unreadable`, `xhr_reused` | Response already consumed or unclonable; XHR reopened before the observer read it | Sticky |
 | `response_too_large`, `observer_overloaded`, `entries_limit`, `observer_error` | Bounds or an internal error | Sticky |
 | `cleanup_failed` | Cleanup failed (it runs before the result is computed) | Sticky |
-| `response_rejected_*` (`status`, `json`, `errors`, `node`, `row_id`, `label`, `version`, `connection`, `total`, `positions`, `entity`, `has_next`) | A My List response failed matching | Sticky |
+| `response_rejected_*` (`status`, `stream`, `json`, `errors`, `node`, `row_id`, `label`, `version`, `connection`, `total`, `positions`, `entity`, `has_next`) | A My List response failed matching | Sticky |
 | `entry_malformed`, `entity_type_unknown` | Bad or unrecognized entry | Sticky |
 | `page_conflict`, `position_conflict`, `id_conflict` | Disagreeing reads | Sticky |
 | `pending_unresolved`, `finalize_timeout` | Lifecycle bounds | Sticky, or no file |

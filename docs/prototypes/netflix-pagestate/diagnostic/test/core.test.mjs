@@ -322,8 +322,34 @@ test('review 4: finalize and discard keep only the counts-only result', () => {
     const s = start(w)
     w.c.advance(60000)
     if (end === 'finalize') finish(w, s); else s.cancel()
-    assert.deepEqual({ ...s.retainedEvidence() }, { membership: 0, positions: 0, signatures: 0, cards: 0, reference: false, marker: false, timers: 0 }, end)
+    assert.deepEqual({ ...s.retainedEvidence() }, { membership: 0, positions: 0, signatures: 0, cards: 0, cardStates: 0, reference: false, marker: false, timers: 0 }, end)
     assert.equal(w.module.released, true, end)
     assert.ok(s.status().result)
+  }
+})
+
+// ---- Re-review of 6e40c0b2 ------------------------------------------------------
+
+test('re-review 1: after release no map still holds card IDs or titles, checked by actual values', () => {
+  const captured = []
+  class CapturedWeakMap extends WeakMap { constructor() { super(); captured.push(this) } }
+  class CapturedMap extends Map { constructor(...a) { super(...a); captured.push(this) } }
+  const ctx = vm.createContext({ WeakMap: CapturedWeakMap, Map: CapturedMap })
+  vm.runInContext(readFileSync(new URL('../extension/core.js', import.meta.url), 'utf8'), ctx)
+  for (const end of ['finalize', 'cancel']) {
+    const w = world()
+    const element = {}
+    w.state.cards = [{ element, sourceId: '5001', title: 'Invented 0' }]
+    const s = ctx.GWCore.createSession({ module: w.module, bridge: w.bridge, clock: w.c, random: () => 'abc' })
+    s.prepare()
+    s.begin({ ok: true, installedAtMsAfterLoad: 1 })
+    w.c.advance(60000)
+    if (end === 'finalize') finish(w, s); else s.cancel()
+    for (const m of captured) {
+      if (m instanceof CapturedWeakMap) assert.equal(m.get(element), undefined, `${end}: a WeakMap still holds the card`)
+      else assert.equal(m.size, 0, `${end}: a Map still holds entries`)
+    }
+    assert.equal(s.retainedEvidence().cardStates, 0, end)
+    assert.ok(!JSON.stringify(s.status().result).includes('Invented'))
   }
 })

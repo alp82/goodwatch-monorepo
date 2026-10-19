@@ -1,4 +1,4 @@
-# GoodWatch capture diagnostic, version 2 (experiment)
+# GoodWatch capture diagnostic, version 3 (experiment)
 
 A counts-only diagnostic for ticket [#730](https://github.com/alp82/goodwatch-monorepo/issues/730), built to `../DESIGN.md` revision 3 with the two follow-up changes from the review of `54bfb420`. It isn't a GoodWatch feature and writes no file.
 
@@ -20,8 +20,8 @@ The verdict stays `partial` with `snapshot_unproven` when every position was obs
 | `extension/observer.js` | Page-world observer (pass-through `fetch` and XHR wrappers) |
 | `extension/content.js` | Isolated-world entry and the event-channel bridge |
 | `extension/popup.*`, `extension/manifest.json` | Popup; permissions `activeTab` and `scripting` only |
-| `test/core.test.mjs` | 20 Node tests: traversal bounds, guards before each click, lifecycle, evidence release, report |
-| `test/observer.browser.mjs` | 29 Chromium tests against native `fetch` and XHR (P8, P9, implementation review) |
+| `test/core.test.mjs` | 21 Node tests: traversal bounds, guards before each click, lifecycle, evidence release (actual map values), report |
+| `test/observer.browser.mjs` | 31 Chromium tests against native `fetch` and XHR (P8, P9, both implementation reviews) |
 | `test/e2e.browser.mjs` | 8 Chromium tests with the real unpacked extension and popup |
 | `test/fixture.mjs` | Synthetic Netflix page and fake GraphQL server |
 

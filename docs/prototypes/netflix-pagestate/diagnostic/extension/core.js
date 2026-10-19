@@ -44,7 +44,9 @@
 		let acceptedRanges = 0;
 		let cleanupResult = null;
 		const cardSeen = new Map(); // id -> title
-		const cardStability = new WeakMap();
+		// Element -> evidence signature while a card settles. A Map, pruned every
+		// scan and cleared on release, so nothing survives in a weak structure.
+		const cardStability = new Map();
 		let titleConflicts = 0;
 		// Traversal
 		let clickCap = 0;
@@ -106,7 +108,10 @@
 
 		function readCards() {
 			const now = clock.now();
-			for (const card of module.readCards() || []) {
+			const cards = module.readCards() || [];
+			const present = new Set(cards.map(card => card.element));
+			for (const element of cardStability.keys()) if (!present.has(element)) cardStability.delete(element);
+			for (const card of cards) {
 				const signature = `${card.sourceId}\n${card.title}`;
 				const seen = cardStability.get(card.element);
 				if (!seen || seen.signature !== signature) { cardStability.set(card.element, { signature, since: now }); continue; }
@@ -279,6 +284,7 @@
 			positionOf.clear();
 			pageSignatures.clear();
 			cardSeen.clear();
+			cardStability.clear();
 			reference = null;
 			marker = null;
 			try { if (typeof module.release === 'function') module.release(); } catch {}
@@ -379,7 +385,7 @@
 			// Test hook: sizes of what the session still holds.
 			retainedEvidence() {
 				return Object.freeze({
-					membership: membership.size, positions: positionOf.size, signatures: pageSignatures.size, cards: cardSeen.size,
+					membership: membership.size, positions: positionOf.size, signatures: pageSignatures.size, cards: cardSeen.size, cardStates: cardStability.size,
 					reference: reference !== null, marker: marker !== null, timers: timers.size + (guardInterval !== null ? 1 : 0),
 				});
 			},

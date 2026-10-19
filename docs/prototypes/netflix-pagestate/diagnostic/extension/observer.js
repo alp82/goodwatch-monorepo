@@ -75,7 +75,10 @@
 		const sticky = new Set();
 		const readers = new Set();
 		let activeReads = 0;
-		const xhrState = new WeakMap(); // xhr -> { openGen, method, url }
+		// xhr -> { openGen, kind, method, url }. Only requests to a pinned endpoint keep
+		// a method and URL; their records are wiped and the map replaced on cleanup.
+		let xhrState = new WeakMap();
+		const pinnedRecords = new Set();
 		const xhrListeners = new Set(); // [xhr, handler]
 		let budget = 0;
 		let budgetPeak = 0;
@@ -89,10 +92,11 @@
 		const installedAtMsAfterLoad = Math.round(performance.now());
 		const flag = code => { sticky.add(code); };
 		const reject = code => { counters.rejected[code] = (counters.rejected[code] || 0) + 1; flag(code); };
+		// Reserves n bytes; a reservation that would exceed the budget is rolled back.
 		const charge = n => {
+			if (budget + n > LIMITS.budgetBytes) { flag('observer_overloaded'); return false; }
 			budget += n;
 			if (budget > budgetPeak) budgetPeak = budget;
-			if (budget > LIMITS.budgetBytes) { flag('observer_overloaded'); return false; }
 			return true;
 		};
 		const release = n => { budget = Math.max(0, budget - n); };
@@ -272,30 +276,43 @@
 				let bytes = 0;
 				let charged = 0;
 				try {
-					for (;;) {
-						const { done, value } = await readerRead.call(reader);
-						if (b.gen !== generation) { counters.lateDropped++; cancelQuietly(reader); return; }
-						if (done) break;
-						bytes += value.byteLength;
-						if (bytes > LIMITS.responseBytes) {
-							counters.sizeDrops++; flag('response_too_large');
-							cancelQuietly(reader);
-							resolveBinding(b); return;
+					try {
+						for (;;) {
+							let step;
+							try {
+								step = await readerRead.call(reader);
+							} catch {
+								// The page's own stream failed or was interrupted.
+								if (b.gen === generation) { reject('response_rejected_stream'); resolveBinding(b); } else counters.lateDropped++;
+								return;
+							}
+							const { done, value } = step;
+							if (b.gen !== generation) { counters.lateDropped++; cancelQuietly(reader); return; }
+							if (done) break;
+							bytes += value.byteLength;
+							if (bytes > LIMITS.responseBytes) {
+								counters.sizeDrops++; flag('response_too_large');
+								cancelQuietly(reader);
+								resolveBinding(b); return;
+							}
+							const chunk = decode(value, true);
+							if (!charge(value.byteLength + 2 * chunk.length)) { cancelQuietly(reader); resolveBinding(b); return; }
+							charged += value.byteLength + 2 * chunk.length;
+							text += chunk;
 						}
-						const chunk = decode(value, true);
-						if (!charge(value.byteLength + 2 * chunk.length)) { cancelQuietly(reader); resolveBinding(b); return; }
-						charged += value.byteLength + 2 * chunk.length;
-						text += chunk;
+						text += decode(new Uint8Array(0), false);
+					} finally {
+						readers.delete(reader);
+						activeReads--;
 					}
-					text += decode(new Uint8Array(0), false);
+					let json;
+					try { json = parseJson(text); } catch { reject('response_rejected_json'); resolveBinding(b); return; }
+					text = '';
+					accept(json, b);
 				} finally {
-					readers.delete(reader);
-					activeReads--;
+					// Every exit, including interrupted streams, gives back its charges.
+					release(charged);
 				}
-				let json;
-				try { json = parseJson(text); } catch { release(charged); reject('response_rejected_json'); resolveBinding(b); return; }
-				release(charged);
-				accept(json, b);
 			} catch {
 				if (b.gen === generation) { flag('observer_error'); resolveBinding(b); }
 			}
@@ -353,7 +370,16 @@
 			const result = origOpen.apply(this, arguments);
 			try {
 				const prev = xhrState.get(this);
-				xhrState.set(this, { openGen: (prev ? prev.openGen : 0) + 1, method: typeof method === 'string' ? method.toUpperCase() : null, url: typeof url === 'string' ? url : urlOf(url) });
+				const urlString = typeof url === 'string' ? url : urlOf(url);
+				const kind = endpointOf(urlString).kind;
+				const record = { openGen: (prev ? prev.openGen : 0) + 1, kind, method: null, url: null };
+				if (kind === 'pinned') {
+					record.method = typeof method === 'string' ? method.toUpperCase() : null;
+					record.url = urlString;
+					pinnedRecords.add(record);
+				}
+				if (prev && prev.kind === 'pinned') { prev.url = null; prev.method = null; pinnedRecords.delete(prev); }
+				xhrState.set(this, record);
 			} catch { flag('observer_error'); }
 			return result;
 		}
@@ -364,9 +390,11 @@
 			let handler = null;
 			try {
 				const st = xhrState.get(xhr);
-				if (st && st.method) {
+				if (st && st.kind === 'other') counters.endpointOther++;
+				if (st && st.kind === 'too_large') { counters.requestTooLarge++; flag('request_too_large'); }
+				if (st && st.kind === 'pinned' && st.method) {
 					if (body !== undefined && body !== null && typeof body !== 'string') {
-						if (endpointOf(st.url).kind === 'pinned') { counters.transportXhr++; counters.unsupportedBody++; flag('unsupported_body'); }
+						counters.transportXhr++; counters.unsupportedBody++; flag('unsupported_body');
 					} else {
 						binding = classify('xhr', st.method, st.url, body === null ? undefined : body);
 					}
@@ -387,8 +415,9 @@
 									const text = xhrResponseText.call(xhr);
 									if (text.length * 2 > LIMITS.responseBytes * 2 || text.length > LIMITS.responseBytes) { counters.sizeDrops++; flag('response_too_large'); resolveBinding(b); return; }
 									if (!charge(2 * text.length)) { resolveBinding(b); return; }
-									try { json = parseJson(text); } catch { release(2 * text.length); reject('response_rejected_json'); resolveBinding(b); return; }
+									try { json = parseJson(text); } catch { json = undefined; }
 									release(2 * text.length);
+									if (json === undefined) { reject('response_rejected_json'); resolveBinding(b); return; }
 								} else if (type === 'json') {
 									json = xhrResponse.call(xhr);
 									if (countNodes(json, 0, LIMITS.jsonNodes) > LIMITS.jsonNodes) { counters.sizeDrops++; flag('response_too_large'); resolveBinding(b); return; }
@@ -425,11 +454,12 @@
 		// ---- Channel to the isolated collector -----------------------------------
 		const integrity = () => ({ fetch: W.fetch === wrappedFetch, open: XHRProto.open === wrappedOpen, send: XHRProto.send === wrappedSend });
 		const snapshot = () => ({
-			generation, pending: pending.size, sticky: [...sticky], counters: { ...counters, rejected: { ...counters.rejected }, budgetPeakBytes: budgetPeak }, integrity: integrity(), installedAtMsAfterLoad,
+			generation, pending: pending.size, sticky: [...sticky], counters: { ...counters, rejected: { ...counters.rejected }, budgetPeakBytes: budgetPeak, budgetBytes: budget }, integrity: integrity(), installedAtMsAfterLoad,
 		});
 		function seal() {
 			for (const b of pending.values()) { void b; flag('pending_unresolved'); }
 			pending.clear();
+			for (const p of outbox) release(p.cost);
 			outbox.length = 0;
 			generation++;
 			for (const r of readers) cancelQuietly(r);
@@ -459,7 +489,11 @@
 			readers.clear();
 			// Release transient evidence and configuration; only counters remain.
 			pending.clear();
+			for (const p of outbox) release(p.cost);
 			outbox.length = 0;
+			for (const record of pinnedRecords) { record.url = null; record.method = null; }
+			pinnedRecords.clear();
+			xhrState = new WeakMap();
 			released = true;
 			return failed ? 'failed' : displaced ? 'inert' : 'restored';
 		}
