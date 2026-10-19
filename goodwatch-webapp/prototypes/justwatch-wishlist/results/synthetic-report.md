@@ -83,7 +83,7 @@ Correct, wrong and abstained count wishes whose correct catalog title is known a
 | `externalIds.tmdbId:absent` | 4 | Provider returned no TMDB ID. |
 | `externalIds.imdbId:absent` | 5 | Provider returned no IMDb ID. |
 | `externalIds.tmdbId` | 1 | Malformed provider TMDB ID dropped, not repaired. |
-| `objectType` | 1 | Provider type SHOW_SEASON has no shared-format type; kept as unknown. |
+| `objectType:SHOW_SEASON` | 1 | Provider type has no shared-format type; kept as unknown. |
 | `watchlistEntryV2.createdAt:absent` | 1 | No added date; left absent. |
 | `title` | 2 | Missing or unreadable title; the parser marks the row invalid. |
 | `content.title:localized` | 47 | Titles are in the capture language, not the original title. |

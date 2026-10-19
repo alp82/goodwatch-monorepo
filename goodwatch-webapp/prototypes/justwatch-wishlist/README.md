@@ -15,7 +15,9 @@ The candidate gates were committed before the first measurement: [GATES.md](GATE
 | `fixture.js`, `fake-justwatch.js` | Synthetic account and a fake `titleListV2` endpoint with offset cursors and injectable faults. |
 | `preview-runner.ts` | Runs the real `parseWishlistFile` and `previewImport` against the in-memory import journal. Catalog reads go to an in-memory table or, on request, to production Crate read-only. |
 | `synthetic.ts` | The synthetic round trip. Writes `results/synthetic-report.md` and `results/synthetic-results.json`. |
-| `real-report.ts` | Aggregates-only report for the owner's real capture file. |
+| `snippet-harness.mjs` | Browser stubs shared by the smoke test and the adversarial tests. |
+| `report-core.ts`, `real-report.ts` | Aggregates-only report for the owner's real capture file, and its command-line wrapper. |
+| `adversarial.test.ts` | The independent review's adversarial cases (see "Review fixes"). |
 
 ## Run
 
@@ -25,6 +27,7 @@ From `goodwatch-webapp` after `npm ci`:
 node prototypes/justwatch-wishlist/synthetic.ts
 node prototypes/justwatch-wishlist/build-snippet.mjs
 node prototypes/justwatch-wishlist/snippet-smoke.mjs
+node --test prototypes/justwatch-wishlist/adversarial.test.ts
 # After the owner saves a real capture:
 node prototypes/justwatch-wishlist/real-report.ts ~/goodwatch-private/708/justwatch-708-capture.json \
   --reference=<count the Watchlist page shows> \
@@ -70,7 +73,18 @@ Loss ledger for the clean run:
 
 The snippet smoke test passed in both modes. It sent 7 requests (8 with the fallback), all `POST` to `https://apis.justwatch.com/graphql` with `credentials: "omit"`. The token, login ID and device ID never appear in the file.
 
-The real-file report was also run against the synthetic capture with the production catalog, read-only: 16 allowlisted SELECTs, 0 writes, about 8.6 seconds.
+The real-file report was also run against the synthetic capture with the production catalog, read-only: 18 allowlisted SELECTs (16 from the preview, 2 from the report's own TMDB-IMDb conflict check), 0 writes, about 8.7 seconds. An earlier version reported 16 because the conflict check bypassed the counter.
+
+## Review fixes
+
+An independent review of `0c2ae215` found six problems. Each one got a failing case in `adversarial.test.ts` (commit `1552cf6d`) before its fix.
+
+1. **Server text in the download.** Raw GraphQL error messages, codes and paths were saved; an error that echoed a bearer token put the token in the file. Errors are now saved only as a category (`auth`, `rate-limit`, `validation`, `internal`, `other`) with a count. Cursors are no longer saved. Native IDs, object types, external IDs and paths are kept only when they match a strict shape. The report prints categories only.
+2. **Empty file marked complete.** A `totalCount` of 1 with a null node, or with a node that has no Watchlist entry, gave zero wishes and `complete`. Entries without a readable native ID, and returned entries without Watchlist membership, now make the file `unknown` or `partial`.
+3. **Missing `hasNextPage`.** An absent, null or non-boolean value counted as the end of the list. Only a literal `false` ends a run as `exhausted`; anything else stops with `invalid-page-info`.
+4. **Wrong run in the report.** Identity and membership checks always used run 1, even when the file came from run 2. They now use the run the file was built from. Seen overlap is reported as "at least" when the Seen capture is incomplete.
+5. **Uncounted catalog reads.** The report now counts every statement at the catalog boundary.
+6. **Owner steps.** The owner step now asks for the unfiltered count and for which test cases the account already has.
 
 ## Limits
 
@@ -85,10 +99,19 @@ The real-file report was also run against the synthetic capture with the product
 
 ## Owner step (about 3 minutes)
 
-1. In the browser where you're signed in to JustWatch, open your Watchlist page, for example `https://www.justwatch.com/de/watchlist`. Don't add or remove titles until step 4 finishes.
-2. Optional: note the number of titles the page shows, with any **Hide seen** filter turned off.
-3. Copy the snippet: `wl-copy < ~/goodwatch-private/708/justwatch-capture.snippet.js`. Its SHA-256 is printed by `build-snippet.mjs`.
-4. Open the developer console (F12, then **Console**). If the browser asks, type `allow pasting` and press Enter. Paste and press Enter. Wait for `[GoodWatch] Saved justwatch-708-capture.json`. A long Seen list can take a few minutes.
-5. Move the file: `mv ~/Downloads/justwatch-708-capture.json ~/goodwatch-private/708/`.
+Use your account as it is. Don't add, remove or mark any titles for this experiment. A case your account doesn't already have stays untested.
 
-The file holds your Watchlist titles and JustWatch IDs, and the IDs of your Seen list without titles. It holds no token, cookie, login ID or device ID. Keep it outside Git.
+1. In the browser where you're signed in to JustWatch, open your Watchlist page, for example `https://www.justwatch.com/de/watchlist`. Don't add or remove titles until step 5 finishes.
+2. Clear every display filter on that page (services, genres, type, price), turn **Hide seen** off, and note the number of titles the page shows. That number is the unfiltered reference count.
+3. Note yes or no for each of these, from what your account already has:
+   - The Watchlist has movies.
+   - The Watchlist has shows.
+   - The Watchlist has more than 20 titles.
+   - A title is on the Seen list but not on the Watchlist.
+   - A show is tracked (started or followed) but not on the Watchlist.
+   - A title is both on the Watchlist and on the Seen list.
+4. Copy the snippet: `wl-copy < ~/goodwatch-private/708/justwatch-capture.snippet.js`. Its SHA-256 is printed by `build-snippet.mjs`.
+5. Open the developer console (F12, then **Console**). If the browser asks, type `allow pasting` and press Enter. Paste and press Enter. Wait for `[GoodWatch] Saved justwatch-708-capture.json`. A long Seen list can take a few minutes.
+6. Move the file: `mv ~/Downloads/justwatch-708-capture.json ~/goodwatch-private/708/`.
+
+The file holds your Watchlist titles and JustWatch IDs, and the IDs of your Seen list without titles. It holds no token, cookie, login ID or device ID, and no server error text. Keep it outside Git.

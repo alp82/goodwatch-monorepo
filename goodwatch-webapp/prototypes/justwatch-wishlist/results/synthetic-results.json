@@ -78,9 +78,9 @@
 				"count": 1,
 				"note": "Malformed provider TMDB ID dropped, not repaired."
 			},
-			"objectType": {
+			"objectType:SHOW_SEASON": {
 				"count": 1,
-				"note": "Provider type SHOW_SEASON has no shared-format type; kept as unknown."
+				"note": "Provider type has no shared-format type; kept as unknown."
 			},
 			"watchlistEntryV2.createdAt:absent": {
 				"count": 1,
@@ -178,9 +178,9 @@
 				"count": 1,
 				"note": "Malformed provider TMDB ID dropped, not repaired."
 			},
-			"objectType": {
+			"objectType:SHOW_SEASON": {
 				"count": 1,
-				"note": "Provider type SHOW_SEASON has no shared-format type; kept as unknown."
+				"note": "Provider type has no shared-format type; kept as unknown."
 			},
 			"watchlistEntryV2.createdAt:absent": {
 				"count": 1,
@@ -278,9 +278,9 @@
 				"count": 1,
 				"note": "Malformed provider TMDB ID dropped, not repaired."
 			},
-			"objectType": {
+			"objectType:SHOW_SEASON": {
 				"count": 1,
-				"note": "Provider type SHOW_SEASON has no shared-format type; kept as unknown."
+				"note": "Provider type has no shared-format type; kept as unknown."
 			},
 			"watchlistEntryV2.createdAt:absent": {
 				"count": 1,
@@ -378,9 +378,9 @@
 				"count": 1,
 				"note": "Malformed provider TMDB ID dropped, not repaired."
 			},
-			"objectType": {
+			"objectType:SHOW_SEASON": {
 				"count": 1,
-				"note": "Provider type SHOW_SEASON has no shared-format type; kept as unknown."
+				"note": "Provider type has no shared-format type; kept as unknown."
 			},
 			"watchlistEntryV2.createdAt:absent": {
 				"count": 1,
@@ -478,9 +478,9 @@
 				"count": 1,
 				"note": "Malformed provider TMDB ID dropped, not repaired."
 			},
-			"objectType": {
+			"objectType:SHOW_SEASON": {
 				"count": 1,
-				"note": "Provider type SHOW_SEASON has no shared-format type; kept as unknown."
+				"note": "Provider type has no shared-format type; kept as unknown."
 			},
 			"watchlistEntryV2.createdAt:absent": {
 				"count": 1,
@@ -578,9 +578,9 @@
 				"count": 1,
 				"note": "Malformed provider TMDB ID dropped, not repaired."
 			},
-			"objectType": {
+			"objectType:SHOW_SEASON": {
 				"count": 1,
-				"note": "Provider type SHOW_SEASON has no shared-format type; kept as unknown."
+				"note": "Provider type has no shared-format type; kept as unknown."
 			},
 			"watchlistEntryV2.createdAt:absent": {
 				"count": 1,
@@ -678,9 +678,9 @@
 				"count": 1,
 				"note": "Malformed provider TMDB ID dropped, not repaired."
 			},
-			"objectType": {
+			"objectType:SHOW_SEASON": {
 				"count": 1,
-				"note": "Provider type SHOW_SEASON has no shared-format type; kept as unknown."
+				"note": "Provider type has no shared-format type; kept as unknown."
 			},
 			"watchlistEntryV2.createdAt:absent": {
 				"count": 1,
@@ -778,9 +778,9 @@
 				"count": 1,
 				"note": "Malformed provider TMDB ID dropped, not repaired."
 			},
-			"objectType": {
+			"objectType:SHOW_SEASON": {
 				"count": 1,
-				"note": "Provider type SHOW_SEASON has no shared-format type; kept as unknown."
+				"note": "Provider type has no shared-format type; kept as unknown."
 			},
 			"watchlistEntryV2.createdAt:absent": {
 				"count": 1,
@@ -877,9 +877,9 @@
 				"count": 1,
 				"note": "Malformed provider TMDB ID dropped, not repaired."
 			},
-			"objectType": {
+			"objectType:SHOW_SEASON": {
 				"count": 1,
-				"note": "Provider type SHOW_SEASON has no shared-format type; kept as unknown."
+				"note": "Provider type has no shared-format type; kept as unknown."
 			},
 			"watchlistEntryV2.createdAt:absent": {
 				"count": 1,
@@ -977,9 +977,9 @@
 				"count": 1,
 				"note": "Malformed provider TMDB ID dropped, not repaired."
 			},
-			"objectType": {
+			"objectType:SHOW_SEASON": {
 				"count": 1,
-				"note": "Provider type SHOW_SEASON has no shared-format type; kept as unknown."
+				"note": "Provider type has no shared-format type; kept as unknown."
 			},
 			"watchlistEntryV2.createdAt:absent": {
 				"count": 1,
@@ -1077,9 +1077,9 @@
 				"count": 1,
 				"note": "Malformed provider TMDB ID dropped, not repaired."
 			},
-			"objectType": {
+			"objectType:SHOW_SEASON": {
 				"count": 1,
-				"note": "Provider type SHOW_SEASON has no shared-format type; kept as unknown."
+				"note": "Provider type has no shared-format type; kept as unknown."
 			},
 			"watchlistEntryV2.createdAt:absent": {
 				"count": 1,
@@ -1177,9 +1177,9 @@
 				"count": 1,
 				"note": "Malformed provider TMDB ID dropped, not repaired."
 			},
-			"objectType": {
+			"objectType:SHOW_SEASON": {
 				"count": 1,
-				"note": "Provider type SHOW_SEASON has no shared-format type; kept as unknown."
+				"note": "Provider type has no shared-format type; kept as unknown."
 			},
 			"watchlistEntryV2.createdAt:absent": {
 				"count": 1,
@@ -1277,9 +1277,9 @@
 				"count": 1,
 				"note": "Malformed provider TMDB ID dropped, not repaired."
 			},
-			"objectType": {
+			"objectType:SHOW_SEASON": {
 				"count": 1,
-				"note": "Provider type SHOW_SEASON has no shared-format type; kept as unknown."
+				"note": "Provider type has no shared-format type; kept as unknown."
 			},
 			"watchlistEntryV2.createdAt:absent": {
 				"count": 1,

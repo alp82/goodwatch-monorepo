@@ -12,7 +12,7 @@ const scripted = (responses: unknown[]) => {
 }
 const page = (edges: unknown[], { totalCount = edges.length, pageInfo = { endCursor: "c1", hasNextPage: false } as unknown } = {}) => ({
 	status: 200,
-	body: { data: { titleListV2: { totalCount, ...(pageInfo === undefined ? {} : { pageInfo }), edges } } },
+	body: { data: { titleListV2: { totalCount, ...(pageInfo === "omit" ? {} : { pageInfo }), edges } } },
 })
 const wish = (id: string, extra: Record<string, unknown> = {}) => ({
 	node: {
@@ -76,7 +76,7 @@ it("2. a node without Watchlist membership makes the file not complete", async (
 })
 
 it("3. missing or non-boolean hasNextPage never ends a run as exhausted", async () => {
-	for (const pageInfo of [undefined, { endCursor: "c1" }, { endCursor: "c1", hasNextPage: null }, { endCursor: "c1", hasNextPage: "false" }]) {
+	for (const pageInfo of ["omit", { endCursor: "c1" }, { endCursor: "c1", hasNextPage: null }, { endCursor: "c1", hasNextPage: "false" }]) {
 		const { first, shared } = await twoRunFile([page([wish("tm1")], { pageInfo })])
 		assert.notEqual(first.terminal, "exhausted", JSON.stringify(pageInfo))
 		assert.notEqual(shared.file.completeness, "complete", JSON.stringify(pageInfo))

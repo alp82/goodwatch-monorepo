@@ -33,6 +33,26 @@ export const LIST_QUERY = `query GoodWatchListCapture($country: Country!, $langu
   }
 }`
 
+// Server text is never saved: errors become one of these categories, and IDs, cursors and
+// types are kept only when they match a strict shape.
+export const ERROR_CATEGORIES = ["auth", "rate-limit", "validation", "internal", "other"]
+const AUTH_CODES = ["UNAUTHENTICATED", "AUTHORIZATION_REQUIRED", "FORBIDDEN"]
+const VALIDATION_CODES = ["GRAPHQL_VALIDATION_FAILED", "GRAPHQL_PARSE_FAILED", "BAD_USER_INPUT"]
+export function errorCategory(error) {
+	const code = typeof error?.extensions?.code === "string" ? error.extensions.code : ""
+	if (AUTH_CODES.includes(code)) return "auth"
+	if (VALIDATION_CODES.includes(code)) return "validation"
+	if (code === "INTERNAL_SERVER_ERROR") return "internal"
+	if (/rate.?limit|too many requests/i.test(`${code} ${typeof error?.message === "string" ? error.message : ""}`)) return "rate-limit"
+	return "other"
+}
+const SAFE_ID = /^[A-Za-z0-9_-]{1,64}$/
+const SAFE_TYPE = /^[A-Z_]{1,32}$/
+const SAFE_PATH = /^\/[A-Za-z0-9\-._~\/%]{1,500}$/
+const safeType = (value) => (typeof value === "string" && SAFE_TYPE.test(value) ? value : "OTHER")
+const safeTmdb = (value) => (value == null || value === "" ? null : /^\d{1,15}$/.test(String(value)) ? String(value) : "malformed")
+const safeImdb = (value) => (value == null || value === "" ? null : /^tt\d{7,10}$/.test(String(value)) ? String(value) : "malformed")
+
 /** The field set the public CSV exporter is known to use, for a server that rejects `objectId`. */
 export const FALLBACK_QUERY = LIST_QUERY.replace("        objectId\n", "")
 
@@ -93,8 +113,7 @@ export async function captureList({
 			if (attempt < MAX_ATTEMPTS) await sleep(1000 * 2 ** attempt)
 		}
 		if (lastStatus !== 200 && Array.isArray(response?.body?.errors))
-			for (const error of response.body.errors)
-				graphqlErrors.push({ page: pages.length, code: String(error?.extensions?.code ?? ""), message: String(error?.message ?? "").slice(0, 200), path: "" })
+			for (const error of response.body.errors) graphqlErrors.push({ page: pages.length, category: errorCategory(error) })
 		if (lastStatus === 401 || lastStatus === 403) {
 			terminal = "auth"
 			break
@@ -105,20 +124,8 @@ export async function captureList({
 		}
 		const body = response.body ?? {}
 		const errors = Array.isArray(body.errors) ? body.errors : []
-		for (const error of errors)
-			graphqlErrors.push({
-				page: pages.length,
-				code: String(error?.extensions?.code ?? ""),
-				message: String(error?.message ?? "").slice(0, 200),
-				path: Array.isArray(error?.path) ? error.path.join(".") : "",
-			})
-		if (
-			errors.some((error) =>
-				["UNAUTHENTICATED", "AUTHORIZATION_REQUIRED", "FORBIDDEN"].includes(
-					error?.extensions?.code,
-				),
-			)
-		) {
+		for (const error of errors) graphqlErrors.push({ page: pages.length, category: errorCategory(error) })
+		if (errors.some((error) => errorCategory(error) === "auth")) {
 			terminal = "auth"
 			break
 		}
@@ -127,19 +134,22 @@ export async function captureList({
 			terminal = "no-list-data"
 			break
 		}
+		const endCursor = typeof page.pageInfo?.endCursor === "string" && page.pageInfo.endCursor ? page.pageInfo.endCursor : null
+		const hasNextPage = typeof page.pageInfo?.hasNextPage === "boolean" ? page.pageInfo.hasNextPage : null
+		// The record keeps no server strings: the cursor stays in this loop only.
 		const record = {
-			after,
+			hadCursor: after !== null,
 			totalCount: Number.isInteger(page.totalCount) ? page.totalCount : null,
 			edges: page.edges.length,
-			endCursor: page.pageInfo?.endCursor ?? null,
-			hasNextPage: page.pageInfo?.hasNextPage === true,
+			hadEndCursor: endCursor !== null,
+			hasNextPage,
 			errors: errors.length,
 		}
 		pages.push(record)
 		for (const [position, edge] of page.edges.entries()) {
 			const node = edge?.node
-			if (!node || typeof node.id !== "string" || !node.id) {
-				skipped.push({ page: pages.length - 1, position, reason: "no-native-id" })
+			if (!node || typeof node.id !== "string" || !SAFE_ID.test(node.id)) {
+				skipped.push({ page: pages.length - 1, position, reason: node ? "unreadable-native-id" : "no-node" })
 				continue
 			}
 			if (byId.has(node.id)) {
@@ -150,13 +160,14 @@ export async function captureList({
 			nodes.push(node)
 		}
 		onPage({ pages: pages.length, unique: nodes.length, total: record.totalCount })
-		if (!record.hasNextPage) terminal = "exhausted"
+		if (hasNextPage === false) terminal = "exhausted"
+		else if (hasNextPage === null) terminal = "invalid-page-info"
 		else if (!page.edges.length) terminal = "empty-page"
-		else if (!record.endCursor) terminal = "missing-cursor"
-		else if (cursors.has(record.endCursor)) terminal = "repeated-cursor"
+		else if (!endCursor) terminal = "missing-cursor"
+		else if (cursors.has(endCursor)) terminal = "repeated-cursor"
 		else {
-			cursors.add(record.endCursor)
-			after = record.endCursor
+			cursors.add(endCursor)
+			after = endCursor
 		}
 	}
 	const totals = [...new Set(pages.map((page) => page.totalCount))]
@@ -170,6 +181,7 @@ export async function captureList({
 	else if (accounted !== lastTotal)
 		reasons.push(`accounted ${accounted} of reported ${lastTotal}`)
 	if (duplicates.length) reasons.push(`${duplicates.length} repeated native IDs across pages`)
+	if (skipped.length) reasons.push(`${skipped.length} entries without a readable native ID`)
 	return {
 		listType,
 		country,
@@ -241,14 +253,14 @@ export function toSharedWishlist(capture, { profileLabel, exportedAt }) {
 	const items = []
 	for (const node of capture.nodes) {
 		const content = node.content ?? {}
-		if (!node.watchlistEntryV2) {
+		if (!node.watchlistEntryV2 || typeof node.watchlistEntryV2 !== "object") {
 			// The list query said Watchlist but the node carries no Watchlist entry.
 			excluded.push({ id: node.id, reason: "no-watchlist-entry" })
 			continue
 		}
 		const mediaType = MEDIA[node.objectType] ?? "unknown"
 		if (mediaType === "unknown")
-			count("objectType", `Provider type ${node.objectType} has no shared-format type; kept as unknown.`)
+			count(`objectType:${safeType(node.objectType)}`, "Provider type has no shared-format type; kept as unknown.")
 		const title = cleanText(content.title, 1000)
 		const item = { title: title ?? "", mediaType }
 		if (!title) count("title", "Missing or unreadable title; the parser marks the row invalid.")
@@ -266,7 +278,7 @@ export function toSharedWishlist(capture, { profileLabel, exportedAt }) {
 			else count("externalIds.imdbId", "Malformed provider IMDb ID dropped, not repaired.")
 		} else count("externalIds.imdbId:absent", "Provider returned no IMDb ID.")
 		item.sourceId = node.id
-		if (typeof content.fullPath === "string" && content.fullPath.startsWith("/"))
+		if (typeof content.fullPath === "string" && SAFE_PATH.test(content.fullPath))
 			item.sourceUrl = `https://www.justwatch.com${content.fullPath}`
 		const added = node.watchlistEntryV2?.createdAt
 		if (isDate(added)) item.addedAt = added
@@ -281,6 +293,10 @@ export function toSharedWishlist(capture, { profileLabel, exportedAt }) {
 	}
 	count("content.title:localized", "Titles are in the capture language, not the original title.")
 	loss["content.title:localized"].count = items.length
+	// A returned entry that can't be shown to be a wish means the file can't claim the whole list.
+	const reasons = [...(capture.completenessReasons ?? [])]
+	if (excluded.length) reasons.push(`${excluded.length} returned entries without Watchlist membership`)
+	const completeness = capture.completeness === "complete" && excluded.length ? "unknown" : capture.completeness
 	return {
 		file: {
 			format: "goodwatch-wishlist",
@@ -289,9 +305,10 @@ export function toSharedWishlist(capture, { profileLabel, exportedAt }) {
 			...(profileLabel ? { profileLabel } : {}),
 			...(/^[A-Z]{2}$/.test(capture.country) ? { country: capture.country } : {}),
 			exportedAt,
-			completeness: capture.completeness,
+			completeness,
 			items,
 		},
+		completenessReasons: reasons,
 		loss,
 		excluded,
 	}
@@ -307,20 +324,20 @@ export function evidenceOf(capture) {
 		completenessReasons: capture.completenessReasons,
 		requests: capture.requests,
 		durationMs: capture.durationMs,
-		pages: capture.pages.map(({ after, ...page }) => ({ ...page, hadCursor: after !== null })),
+		pages: capture.pages,
 		totals: capture.totals,
 		duplicates: capture.duplicates.length,
 		skipped: capture.skipped.length,
 		graphqlErrors: capture.graphqlErrors,
 		members: capture.nodes.map((node) => ({
 			id: node.id,
-			objectType: node.objectType,
-			watchlist: !!node.watchlistEntryV2,
+			objectType: safeType(node.objectType),
+			watchlist: !!node.watchlistEntryV2 && typeof node.watchlistEntryV2 === "object",
 			seen: !!node.seenlistEntry,
 			tracked: !!node.tvShowTrackingEntry,
-			progress: typeof node.seenState?.progress === "number" ? node.seenState.progress : null,
-			tmdb: node.content?.externalIds?.tmdbId ?? null,
-			imdb: node.content?.externalIds?.imdbId ?? null,
+			progress: Number.isFinite(node.seenState?.progress) ? node.seenState.progress : null,
+			tmdb: safeTmdb(node.content?.externalIds?.tmdbId),
+			imdb: safeImdb(node.content?.externalIds?.imdbId),
 		})),
 	}
 }

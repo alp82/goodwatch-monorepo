@@ -65,7 +65,7 @@ const bundle = {
 	language,
 	snippet: "prototype/justwatch-roundtrip",
 	watchlistRuns: [evidenceOf(first), evidenceOf(second)],
-	reconciled: { chosenRun: reconciled.chosen, completeness: reconciled.capture.completeness, reasons: reconciled.capture.completenessReasons },
+	reconciled: { chosenRun: reconciled.chosen, completeness: shared.file.completeness, reasons: shared.completenessReasons },
 	seenlist: evidenceOf(seen),
 	sharedFile: shared.file,
 	loss: shared.loss,
@@ -77,5 +77,5 @@ document.body.append(link)
 link.click()
 link.remove()
 console.log(
-	`[GoodWatch] Saved justwatch-708-capture.json. Watchlist: ${first.nodes.length} titles (${first.completeness}), second run ${second.nodes.length} (${second.completeness}), file says ${reconciled.capture.completeness}. Seen list ${seen.nodes.length}.`,
+	`[GoodWatch] Saved justwatch-708-capture.json. Watchlist: ${first.nodes.length} titles (${first.completeness}), second run ${second.nodes.length} (${second.completeness}), file says ${shared.file.completeness}. Seen list ${seen.nodes.length}.`,
 )
