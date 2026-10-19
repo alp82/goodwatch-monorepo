@@ -1,0 +1,16 @@
+{
+  "source_version": "native-challenger-prep/versions/review-v2",
+  "source_native_contract_sha256": "101473d7aaeb16bcc3a6b297b4089c1e9f1660e9ae45ae875c19b8dd6304a971",
+  "adapted_native_contract_sha256": "2d55a259020e08d90b477376f3b45fed0f58d780e637e6b4babf17d35e69a45e",
+  "changes": [
+    "Use existing harness field contract rather than duplicate file",
+    "Explicit expected_keys subset for declared chunks",
+    "Explicit include_nonordinal_states for separate Choice11 and Choice16 lanes"
+  ],
+  "unchanged_corrections": [
+    "Score consistency and documented precision policy",
+    "Celeris separate pairwise and aggregate tolerances; nonunit ineligible",
+    "Raw normalization/custody envelope"
+  ],
+  "scope": "Offline preparation only; source parser is normalization, not host/build or dispatch admission"
+}

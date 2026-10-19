@@ -1,0 +1,507 @@
+{
+  "version": "v1-74-compatibility-1",
+  "historical_source_commit": "5a24c90cc26bc6329aa11058015a8393ff43c7b5",
+  "score_keys": [
+    "adrenaline",
+    "tension",
+    "scare",
+    "violence",
+    "romance",
+    "eroticism",
+    "wholesome",
+    "wonder",
+    "pathos",
+    "melancholy",
+    "uncanny",
+    "catharsis",
+    "nostalgia",
+    "situational_comedy",
+    "wit_wordplay",
+    "physical_comedy",
+    "cringe_humor",
+    "absurdist_humor",
+    "satire_parody",
+    "dark_humor",
+    "fantasy",
+    "futuristic",
+    "historical",
+    "contemporary_realism",
+    "crime",
+    "mystery",
+    "warfare",
+    "political",
+    "sports",
+    "biographical",
+    "coming_of_age",
+    "family_dynamics",
+    "psychological",
+    "showbiz",
+    "gaming",
+    "pop_culture",
+    "social_commentary",
+    "class_and_capitalism",
+    "technology_and_humanity",
+    "spiritual",
+    "narrative_structure",
+    "dialogue_quality",
+    "character_depth",
+    "slow_burn",
+    "fast_pace",
+    "intrigue",
+    "complexity",
+    "rewatchability",
+    "hopefulness",
+    "bleakness",
+    "ambiguity",
+    "novelty",
+    "homage_and_reference",
+    "non_linear_narrative",
+    "meta_narrative",
+    "surrealism",
+    "eccentricity",
+    "philosophical",
+    "educational",
+    "direction",
+    "acting",
+    "cinematography",
+    "editing",
+    "music_composition",
+    "world_immersion",
+    "spectacle",
+    "visual_stylization",
+    "pastiche",
+    "psychedelic",
+    "grotesque",
+    "camp_and_irony",
+    "dialogue_centrality",
+    "music_centrality",
+    "sound_centrality"
+  ],
+  "fields": [
+    {
+      "key": "adrenaline",
+      "family": "emotional",
+      "definition": "Excitement, thrills, and high-energy action."
+    },
+    {
+      "key": "tension",
+      "family": "emotional",
+      "definition": "Suspense, dread, and the anticipation of conflict."
+    },
+    {
+      "key": "scare",
+      "family": "emotional",
+      "definition": "Moments of horror, shock, and startle-reflex."
+    },
+    {
+      "key": "violence",
+      "family": "emotional",
+      "definition": "The degree and visceral impact of physical conflict."
+    },
+    {
+      "key": "romance",
+      "family": "emotional",
+      "definition": "Feelings of love, affection, and romantic connection."
+    },
+    {
+      "key": "eroticism",
+      "family": "emotional",
+      "definition": "Sexual tension, sensuality, and explicit content."
+    },
+    {
+      "key": "wholesome",
+      "family": "emotional",
+      "definition": "Feelings of comfort, safety, and heartwarming positivity."
+    },
+    {
+      "key": "wonder",
+      "family": "emotional",
+      "definition": "A sense of awe, amazement, or the sublime and magical."
+    },
+    {
+      "key": "pathos",
+      "family": "emotional",
+      "definition": "The evocation of pity, tragedy, and profound sadness."
+    },
+    {
+      "key": "melancholy",
+      "family": "emotional",
+      "definition": "A sense of lingering sadness, pensive sorrow."
+    },
+    {
+      "key": "uncanny",
+      "family": "emotional",
+      "definition": "The unsettling feeling from things that are almost-human but not quite."
+    },
+    {
+      "key": "catharsis",
+      "family": "emotional",
+      "definition": "The feeling of emotional release, purification, or closure after experiencing intense drama."
+    },
+    {
+      "key": "nostalgia",
+      "family": "emotional",
+      "definition": "A sentimental longing or wistful affection for a period in the past."
+    },
+    {
+      "key": "situational_comedy",
+      "family": "humor",
+      "definition": "Humor derived from a consistent cast reacting to episodic, often formulaic, situations."
+    },
+    {
+      "key": "wit_wordplay",
+      "family": "humor",
+      "definition": "Clever dialogue, intellectual humor, and puns."
+    },
+    {
+      "key": "physical_comedy",
+      "family": "humor",
+      "definition": "Slapstick, farcical situations, and action-based gags."
+    },
+    {
+      "key": "cringe_humor",
+      "family": "humor",
+      "definition": "Humor from social awkwardness and uncomfortable situations."
+    },
+    {
+      "key": "absurdist_humor",
+      "family": "humor",
+      "definition": "Nonsensical, bizarre, or surreal comedy."
+    },
+    {
+      "key": "satire_parody",
+      "family": "humor",
+      "definition": "Critiquing society or other media through imitation and irony."
+    },
+    {
+      "key": "dark_humor",
+      "family": "humor",
+      "definition": "Comedy derived from morbid, taboo, or tragic subjects."
+    },
+    {
+      "key": "fantasy",
+      "family": "thematic_world",
+      "definition": "A world containing magic, mythical creatures, or non-historical lore."
+    },
+    {
+      "key": "futuristic",
+      "family": "thematic_world",
+      "definition": "A focus on science fiction, advanced technology, or future societies."
+    },
+    {
+      "key": "historical",
+      "family": "thematic_world",
+      "definition": "Set in and focused on a specific, real-world past era."
+    },
+    {
+      "key": "contemporary_realism",
+      "family": "thematic_world",
+      "definition": "Set in the present day with a focus on believable situations and characters."
+    },
+    {
+      "key": "crime",
+      "family": "thematic_world",
+      "definition": "Centered on criminal acts, investigation, and the justice system."
+    },
+    {
+      "key": "mystery",
+      "family": "thematic_world",
+      "definition": "A focus on solving a specific puzzle or uncovering a central unknown."
+    },
+    {
+      "key": "warfare",
+      "family": "thematic_world",
+      "definition": "Centered on military conflict and its consequences."
+    },
+    {
+      "key": "political",
+      "family": "thematic_world",
+      "definition": "A focus on governance, power structures, and political maneuvering."
+    },
+    {
+      "key": "sports",
+      "family": "thematic_world",
+      "definition": "Centered on competitive sports, including athletics, racing, or games."
+    },
+    {
+      "key": "biographical",
+      "family": "thematic_world",
+      "definition": "The depiction of the life of a real person."
+    },
+    {
+      "key": "coming_of_age",
+      "family": "thematic_world",
+      "definition": "A focus on a character's transition from youth to adulthood."
+    },
+    {
+      "key": "family_dynamics",
+      "family": "thematic_world",
+      "definition": "A focus on blood-related or \"found family\" bonds, conflicts, and relationships."
+    },
+    {
+      "key": "psychological",
+      "family": "thematic_world",
+      "definition": "A focus on internal struggles, mental states, and perception vs. reality."
+    },
+    {
+      "key": "showbiz",
+      "family": "thematic_world",
+      "definition": "Centered on the entertainment industry, including filmmaking, music, or theater."
+    },
+    {
+      "key": "gaming",
+      "family": "thematic_world",
+      "definition": "Centered on video games, virtual reality, or other forms of interactive play."
+    },
+    {
+      "key": "pop_culture",
+      "family": "thematic_world",
+      "definition": "A focus on contemporary pop culture, celebrity, or internet phenomena as a central theme."
+    },
+    {
+      "key": "social_commentary",
+      "family": "thematic_world",
+      "definition": "The use of narrative to explicitly or implicitly critique societal norms."
+    },
+    {
+      "key": "class_and_capitalism",
+      "family": "thematic_world",
+      "definition": "A direct focus on economic disparity, class struggle, and the mechanics of capitalism."
+    },
+    {
+      "key": "technology_and_humanity",
+      "family": "thematic_world",
+      "definition": "The thematic exploration of how technology affects the human condition."
+    },
+    {
+      "key": "spiritual",
+      "family": "thematic_world",
+      "definition": "The exploration of faith, religion, or metaphysical concepts."
+    },
+    {
+      "key": "narrative_structure",
+      "family": "cognitive_structural",
+      "definition": "The quality of the story's construction—coherence, pacing, and setup/payoff."
+    },
+    {
+      "key": "dialogue_quality",
+      "family": "cognitive_structural",
+      "definition": "The quality of the writing itself—how sharp, realistic, or poetic the dialogue is."
+    },
+    {
+      "key": "character_depth",
+      "family": "cognitive_structural",
+      "definition": "The nuance, development, and psychological realism of the characters."
+    },
+    {
+      "key": "slow_burn",
+      "family": "cognitive_structural",
+      "definition": "A deliberately paced narrative that builds tension and character gradually."
+    },
+    {
+      "key": "fast_pace",
+      "family": "cognitive_structural",
+      "definition": "A narrative with high-energy, rapid plot progression."
+    },
+    {
+      "key": "intrigue",
+      "family": "cognitive_structural",
+      "definition": "The power of the plot to hook the viewer and make them want to know what happens next."
+    },
+    {
+      "key": "complexity",
+      "family": "cognitive_structural",
+      "definition": "The intricacy of the plot, number of characters, and interwoven storylines."
+    },
+    {
+      "key": "rewatchability",
+      "family": "cognitive_structural",
+      "definition": "The likelihood of gaining more from subsequent viewings."
+    },
+    {
+      "key": "hopefulness",
+      "family": "cognitive_structural",
+      "definition": "The degree to which the narrative has a positive or optimistic outlook."
+    },
+    {
+      "key": "bleakness",
+      "family": "cognitive_structural",
+      "definition": "The degree to which the narrative has a pessimistic, nihilistic, or tragic outlook."
+    },
+    {
+      "key": "ambiguity",
+      "family": "cognitive_structural",
+      "definition": "The degree to which the narrative deliberately leaves elements open to interpretation."
+    },
+    {
+      "key": "novelty",
+      "family": "cognitive_structural",
+      "definition": "Originality in concept, execution, or storytelling method."
+    },
+    {
+      "key": "homage_and_reference",
+      "family": "cognitive_structural",
+      "definition": "The use of respectful tributes and \"easter egg\" references to other works."
+    },
+    {
+      "key": "non_linear_narrative",
+      "family": "cognitive_structural",
+      "definition": "Storytelling that does not follow a chronological sequence."
+    },
+    {
+      "key": "meta_narrative",
+      "family": "cognitive_structural",
+      "definition": "The use of self-referential storytelling or breaking the fourth wall."
+    },
+    {
+      "key": "surrealism",
+      "family": "cognitive_structural",
+      "definition": "The use of dream logic and bizarre, uncanny scenarios that challenge narrative reality."
+    },
+    {
+      "key": "eccentricity",
+      "family": "cognitive_structural",
+      "definition": "A focus on bizarre characters or unconventional logic that requires cognitive adaptation."
+    },
+    {
+      "key": "philosophical",
+      "family": "cognitive_structural",
+      "definition": "The extent to which the work explicitly explores complex philosophical questions."
+    },
+    {
+      "key": "educational",
+      "family": "cognitive_structural",
+      "definition": "The extent to which the work imparts factual knowledge."
+    },
+    {
+      "key": "direction",
+      "family": "aesthetic_production",
+      "definition": "The quality of the overall creative vision and its execution."
+    },
+    {
+      "key": "acting",
+      "family": "aesthetic_production",
+      "definition": "The quality of the performances."
+    },
+    {
+      "key": "cinematography",
+      "family": "aesthetic_production",
+      "definition": "The art of visual storytelling, including camera work, color, and lighting."
+    },
+    {
+      "key": "editing",
+      "family": "aesthetic_production",
+      "definition": "The pacing, rhythm, and assembly of shots to create the final flow."
+    },
+    {
+      "key": "music_composition",
+      "family": "aesthetic_production",
+      "definition": "The quality of the original score."
+    },
+    {
+      "key": "world_immersion",
+      "family": "aesthetic_production",
+      "definition": "How convincingly the production elements absorb the audience into the story's world."
+    },
+    {
+      "key": "spectacle",
+      "family": "aesthetic_production",
+      "definition": "The \"wow factor\" from large-scale visuals, action, or set pieces."
+    },
+    {
+      "key": "visual_stylization",
+      "family": "aesthetic_production",
+      "definition": "The degree of a unique, non-naturalistic visual or auditory style."
+    },
+    {
+      "key": "pastiche",
+      "family": "aesthetic_production",
+      "definition": "The intentional imitation of the artistic style of another work, artist, or genre."
+    },
+    {
+      "key": "psychedelic",
+      "family": "aesthetic_production",
+      "definition": "An aesthetic characterized by hallucinatory, distorted, or highly vibrant sensory experiences."
+    },
+    {
+      "key": "grotesque",
+      "family": "aesthetic_production",
+      "definition": "The aesthetic use of biologically strange, body horror, or aesthetically repulsive imagery."
+    },
+    {
+      "key": "camp_and_irony",
+      "family": "aesthetic_production",
+      "definition": "The use of theatricality, artifice, and a \"so bad it's good\" sensibility."
+    },
+    {
+      "key": "dialogue_centrality",
+      "family": "aesthetic_production",
+      "definition": "How crucial dialogue is to understanding and enjoying the work."
+    },
+    {
+      "key": "music_centrality",
+      "family": "aesthetic_production",
+      "definition": "How crucial the score or soundtrack is to the emotional experience."
+    },
+    {
+      "key": "sound_centrality",
+      "family": "aesthetic_production",
+      "definition": "How crucial non-musical sound design is to the atmosphere and storytelling."
+    }
+  ],
+  "scale": {
+    "minimum": 0,
+    "maximum": 10,
+    "integer": true,
+    "zero": "not present/irrelevant (historical conflation)",
+    "one": "minimal presence",
+    "ten": "defining attribute",
+    "unknown": null
+  },
+  "source_files": [
+    {
+      "path": "docs/benchmarks/fingerprint/score-keys.json",
+      "sha256": "d43f6e429107a705c5599f8ef55e0dd63a83d93bea3c452ce7dbdc581e3a5f5b"
+    },
+    {
+      "path": "docs/benchmarks/fingerprint/system-instructions.txt",
+      "sha256": "be8ae514d383b844037e627929e611141c68d08d87b3033604dc14a745599771"
+    },
+    {
+      "path": "docs/benchmarks/fingerprint/models.py.snapshot",
+      "sha256": "d9ef1511b76f5fa50aa8ab0cbaadc055e7a4aa59765e3496c57440414469b9ef"
+    },
+    {
+      "path": "goodwatch-flows/windmill/f/dna/models.py",
+      "sha256": "581e8941e36ff8ca5fa29100292ad9a58d5e216449d94c28a897594a11050d68"
+    },
+    {
+      "path": "goodwatch-flows/windmill/f/dna/prototype_comparison/jev_run.py",
+      "sha256": "d1b275e2037e302a08ea39edaa9820618110de8e7ea29c4c0ae8ba16fa9ae518"
+    },
+    {
+      "path": "goodwatch-flows/windmill/f/dna/prototype_comparison/jev_report.py",
+      "sha256": "5ee3c4da5e2bf43b76edbc1e2969cf97ab048b2db44e19551f25336f479c4f38"
+    },
+    {
+      "path": "goodwatch-flows/windmill/f/dna/prototype_comparison/prepare.py",
+      "sha256": "1a68aecb268fbe2a315afda94d60979ebea2cb7798d54ad92846784213575480"
+    },
+    {
+      "path": "goodwatch-webapp/app/server/utils/fingerprint.ts",
+      "sha256": "bc42b46bbfc565f3b507202fcfa59cc587a71c36a6b339161e6d3dc86695bcb7"
+    },
+    {
+      "path": "docs/prototypes/search-arena/data/catalog-schema.md",
+      "sha256": "ee92339fd965bd4d07b24e4ce220a22bf2ae950d28b2bcd9d94469d026a82274"
+    }
+  ],
+  "field_order_sha256": "d43f6e429107a705c5599f8ef55e0dd63a83d93bea3c452ce7dbdc581e3a5f5b",
+  "stored_vector": "float conversion of the raw 74 attributes, in declaration order; no normalization",
+  "review_packet_hashes": {
+    "contract.md": "9156e034754d29953fff1da78ca0083c3d2a3caa56007ce08db5576afe3d7956",
+    "field-contract.json": "6188aec697d764db407789fda4766cfed3bcc1df8df6c7d8983b998f3aef2c21",
+    "metrics-and-review-policy.json": "6a67db2a8a62479812d233c491ed1863fee7ca70ce25994c84a5dbf94f84520d",
+    "review.schema.json": "576e88940c663ad4e32a93bf1c3e73e20af895c59853110d46135dbcb070ce96"
+  }
+}

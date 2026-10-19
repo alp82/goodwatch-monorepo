@@ -1,0 +1,614 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:goodwatch:v1-vector-judging:review-v1",
+  "title": "V1 vector review report, not provider response schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "report_id",
+    "evidence_kind",
+    "contract_order_sha256",
+    "reviewer",
+    "scope",
+    "model_results",
+    "comparisons",
+    "human_decision",
+    "limits"
+  ],
+  "properties": {
+    "report_id": {
+      "type": "string"
+    },
+    "evidence_kind": {
+      "enum": [
+        "synthetic",
+        "historical",
+        "new_observation"
+      ]
+    },
+    "contract_order_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "reviewer": {
+      "type": "object",
+      "required": [
+        "model",
+        "effort",
+        "exposure",
+        "assisted"
+      ],
+      "properties": {
+        "model": {
+          "type": "string"
+        },
+        "effort": {
+          "type": "string"
+        },
+        "exposure": {
+          "type": "string"
+        },
+        "assisted": {
+          "const": true
+        }
+      }
+    },
+    "scope": {
+      "type": "string"
+    },
+    "model_results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "configuration_id",
+          "native_kind",
+          "compatibility_lane",
+          "recipe_match",
+          "pins",
+          "coverage",
+          "baseline_disagreement",
+          "repeat_noise",
+          "efficiency",
+          "strengths",
+          "failures",
+          "recommendation"
+        ],
+        "properties": {
+          "configuration_id": {
+            "type": "string"
+          },
+          "native_kind": {
+            "enum": [
+              "choice11",
+              "ordinal10",
+              "other_ordinal",
+              "presence_probability",
+              "generative_integer",
+              "fixture"
+            ]
+          },
+          "compatibility_lane": {
+            "enum": [
+              "strict_v1",
+              "projected_scale",
+              "partial",
+              "incompatible"
+            ]
+          },
+          "recipe_match": {
+            "enum": [
+              "same_frozen_input",
+              "historical_exact_recipe",
+              "stored_unmatched_recipe",
+              "synthetic_only"
+            ]
+          },
+          "pins": {
+            "type": "object",
+            "required": [
+              "route",
+              "model_revision",
+              "prompt_sha256",
+              "input_manifest_sha256",
+              "adapter_sha256"
+            ],
+            "properties": {
+              "route": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "model_revision": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "prompt_sha256": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "input_manifest_sha256": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "adapter_sha256": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          },
+          "coverage": {
+            "type": "object",
+            "required": [
+              "expected_titles",
+              "attempted_titles",
+              "returned_titles",
+              "identity_valid_titles",
+              "strict74_titles",
+              "projected74_titles",
+              "expected_cells",
+              "assessed_cells",
+              "unknown_cells",
+              "invalid_cells",
+              "not_attempted_titles"
+            ],
+            "properties": {
+              "expected_titles": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "attempted_titles": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "returned_titles": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "identity_valid_titles": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "strict74_titles": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "projected74_titles": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "expected_cells": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "assessed_cells": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "unknown_cells": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "invalid_cells": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "not_attempted_titles": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          },
+          "baseline_disagreement": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "baseline_id",
+                "paired_cells",
+                "macro_title_mean_abs_delta",
+                "mean_signed_delta",
+                "family_mean_abs_delta",
+                "count_abs_delta_ge3",
+                "is_accuracy"
+              ],
+              "properties": {
+                "baseline_id": {
+                  "type": "string"
+                },
+                "paired_cells": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "macro_title_mean_abs_delta": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "mean_signed_delta": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "family_mean_abs_delta": {
+                  "type": "object",
+                  "properties": {
+                    "emotional": {
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    },
+                    "humor": {
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    },
+                    "thematic_world": {
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    },
+                    "cognitive_structural": {
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    },
+                    "aesthetic_production": {
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    }
+                  }
+                },
+                "count_abs_delta_ge3": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "is_accuracy": {
+                  "const": false
+                }
+              }
+            }
+          },
+          "repeat_noise": {
+            "type": "object",
+            "required": [
+              "available",
+              "basis",
+              "mean_abs_delta"
+            ],
+            "properties": {
+              "available": {
+                "type": "boolean"
+              },
+              "basis": {
+                "type": "string"
+              },
+              "mean_abs_delta": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            }
+          },
+          "efficiency": {
+            "type": "object",
+            "required": [
+              "measurement_scope",
+              "paid_requests",
+              "cash_usd",
+              "pending_bound_usd",
+              "title_latency_median_seconds",
+              "vector_throughput_per_hour",
+              "n_timings",
+              "concurrency"
+            ],
+            "properties": {
+              "measurement_scope": {
+                "enum": [
+                  "scores_only",
+                  "historical_complete_output",
+                  "synthetic_unmeasured"
+                ]
+              },
+              "paid_requests": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 0
+              },
+              "cash_usd": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "pending_bound_usd": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "title_latency_median_seconds": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "vector_throughput_per_hour": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "n_timings": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "concurrency": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 1
+              }
+            }
+          },
+          "strengths": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "failures": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "enum": [
+              "advance_to_finalist_review",
+              "select_development_candidate",
+              "reject_configuration",
+              "inconclusive",
+              "unreviewed"
+            ]
+          }
+        }
+      }
+    },
+    "comparisons": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "title",
+          "work_key",
+          "scope",
+          "field",
+          "family",
+          "baselines",
+          "native_prediction",
+          "normalized_value",
+          "mapping",
+          "evidence_basis",
+          "source_locators",
+          "verdict",
+          "rationale",
+          "consequence",
+          "model_source_witness"
+        ],
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "work_key": {
+            "type": "string"
+          },
+          "scope": {
+            "type": "string"
+          },
+          "field": {
+            "enum": [
+              "adrenaline",
+              "tension",
+              "scare",
+              "violence",
+              "romance",
+              "eroticism",
+              "wholesome",
+              "wonder",
+              "pathos",
+              "melancholy",
+              "uncanny",
+              "catharsis",
+              "nostalgia",
+              "situational_comedy",
+              "wit_wordplay",
+              "physical_comedy",
+              "cringe_humor",
+              "absurdist_humor",
+              "satire_parody",
+              "dark_humor",
+              "fantasy",
+              "futuristic",
+              "historical",
+              "contemporary_realism",
+              "crime",
+              "mystery",
+              "warfare",
+              "political",
+              "sports",
+              "biographical",
+              "coming_of_age",
+              "family_dynamics",
+              "psychological",
+              "showbiz",
+              "gaming",
+              "pop_culture",
+              "social_commentary",
+              "class_and_capitalism",
+              "technology_and_humanity",
+              "spiritual",
+              "narrative_structure",
+              "dialogue_quality",
+              "character_depth",
+              "slow_burn",
+              "fast_pace",
+              "intrigue",
+              "complexity",
+              "rewatchability",
+              "hopefulness",
+              "bleakness",
+              "ambiguity",
+              "novelty",
+              "homage_and_reference",
+              "non_linear_narrative",
+              "meta_narrative",
+              "surrealism",
+              "eccentricity",
+              "philosophical",
+              "educational",
+              "direction",
+              "acting",
+              "cinematography",
+              "editing",
+              "music_composition",
+              "world_immersion",
+              "spectacle",
+              "visual_stylization",
+              "pastiche",
+              "psychedelic",
+              "grotesque",
+              "camp_and_irony",
+              "dialogue_centrality",
+              "music_centrality",
+              "sound_centrality"
+            ]
+          },
+          "family": {
+            "enum": [
+              "emotional",
+              "humor",
+              "thematic_world",
+              "cognitive_structural",
+              "aesthetic_production"
+            ]
+          },
+          "baselines": {
+            "type": "object",
+            "additionalProperties": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "native_prediction": {
+            "type": "object"
+          },
+          "normalized_value": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "mapping": {
+            "type": "string"
+          },
+          "evidence_basis": {
+            "enum": [
+              "retained_primary_source",
+              "historical_human_judgment",
+              "reviewer_memory_unverified",
+              "synthetic_fixture",
+              "none"
+            ]
+          },
+          "source_locators": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "verdict": {
+            "enum": [
+              "source_supported",
+              "source_contradicted",
+              "plausible_interpretation",
+              "uncertain",
+              "definition_mismatch",
+              "synthetic_only"
+            ]
+          },
+          "rationale": {
+            "type": "string"
+          },
+          "consequence": {
+            "type": "string"
+          },
+          "model_source_witness": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "human_decision": {
+      "type": "object",
+      "required": [
+        "status",
+        "selection",
+        "review_minutes_used"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "pending",
+            "selected",
+            "rejected",
+            "inconclusive",
+            "not_requested_synthetic"
+          ]
+        },
+        "selection": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "review_minutes_used": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "limits": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

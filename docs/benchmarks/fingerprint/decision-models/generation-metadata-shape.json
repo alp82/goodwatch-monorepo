@@ -1,0 +1,535 @@
+{
+  "source_schema_extract_sha256": "126e34029b48c4c2a81e5068e7e4158e2980041fb8f795789740b7c52dd53215",
+  "generation_required": [
+    "id",
+    "upstream_id",
+    "total_cost",
+    "cache_discount",
+    "upstream_inference_cost",
+    "created_at",
+    "model",
+    "app_id",
+    "streamed",
+    "cancelled",
+    "provider_name",
+    "latency",
+    "moderation_latency",
+    "generation_time",
+    "finish_reason",
+    "service_tier",
+    "tokens_prompt",
+    "tokens_completion",
+    "native_tokens_prompt",
+    "native_tokens_completion",
+    "native_tokens_completion_images",
+    "native_tokens_reasoning",
+    "native_tokens_cached",
+    "num_media_prompt",
+    "num_input_audio_prompt",
+    "num_media_completion",
+    "num_search_results",
+    "num_fetches",
+    "web_search_engine",
+    "origin",
+    "usage",
+    "is_byok",
+    "native_finish_reason",
+    "external_user",
+    "api_type",
+    "preset_id",
+    "router",
+    "provider_responses",
+    "user_agent",
+    "http_referer",
+    "data_region",
+    "workspace_id"
+  ],
+  "generation_properties": {
+    "api_type": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "completions",
+        "embeddings",
+        "rerank",
+        "decisions",
+        "video",
+        "tts",
+        "stt",
+        "image",
+        null
+      ]
+    },
+    "app_id": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "cache_discount": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "cancelled": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "created_at": {
+      "type": "string"
+    },
+    "data_region": {
+      "type": "string",
+      "enum": [
+        "global",
+        "europe",
+        "us"
+      ]
+    },
+    "external_user": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "finish_reason": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "generation_time": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "http_referer": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "id": {
+      "type": "string"
+    },
+    "is_byok": {
+      "type": "boolean"
+    },
+    "latency": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "model": {
+      "type": "string"
+    },
+    "moderation_latency": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "native_finish_reason": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "native_tokens_cached": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "native_tokens_completion": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "native_tokens_completion_images": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "native_tokens_prompt": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "native_tokens_reasoning": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "num_fetches": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "num_input_audio_prompt": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "num_media_completion": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "num_media_prompt": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "num_search_results": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "origin": {
+      "type": "string"
+    },
+    "preset_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "provider_name": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "provider_responses": {
+      "type": [
+        "array",
+        "null"
+      ]
+    },
+    "request_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "response_cache_source_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "router": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "service_tier": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "session_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "streamed": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "tokens_completion": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "tokens_prompt": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "total_cost": {
+      "type": "number"
+    },
+    "upstream_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "upstream_inference_cost": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "usage": {
+      "type": "number"
+    },
+    "user_agent": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "web_search_engine": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "workspace_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "provider_response_item": {
+    "required": [
+      "status"
+    ],
+    "properties": {
+      "endpoint_id": {
+        "type": "string"
+      },
+      "id": {
+        "type": "string"
+      },
+      "is_byok": {
+        "type": "boolean"
+      },
+      "latency": {
+        "type": "number"
+      },
+      "model_permaslug": {
+        "type": "string"
+      },
+      "provider_name": {
+        "type": "string",
+        "enum": [
+          "AnyScale",
+          "Atoma",
+          "Cent-ML",
+          "CrofAI",
+          "Enfer",
+          "GoPomelo",
+          "HuggingFace",
+          "Hyperbolic",
+          "Hyperbolic 2",
+          "InoCloud",
+          "Kluster",
+          "Lambda",
+          "Lepton",
+          "Lynn 2",
+          "Lynn",
+          "Mancer",
+          "Modal",
+          "NCompass",
+          "Nineteen",
+          "OctoAI",
+          "Recursal",
+          "Reflection",
+          "Replicate",
+          "SambaNova 2",
+          "SF Compute",
+          "Targon",
+          "Together 2",
+          "Ubicloud",
+          "01.AI",
+          "AkashML",
+          "AI21",
+          "AionLabs",
+          "Alibaba",
+          "Ambient",
+          "Baidu",
+          "Amazon Bedrock",
+          "Amazon Nova",
+          "Anthropic",
+          "Arcee AI",
+          "AssemblyAI",
+          "AtlasCloud",
+          "Avian",
+          "Azure",
+          "BaseTen",
+          "BytePlus",
+          "Black Forest Labs",
+          "Cerebras",
+          "Chutes",
+          "Cirrascale",
+          "Claude Platform on AWS",
+          "Clarifai",
+          "Cloudflare",
+          "Cohere",
+          "CoreWeave",
+          "Cosine",
+          "Crucible",
+          "Crusoe",
+          "Darkbloom",
+          "Databricks",
+          "Decart",
+          "Deepgram",
+          "DeepInfra",
+          "DeepSeek",
+          "DekaLLM",
+          "DigitalOcean",
+          "ElevenLabs",
+          "Featherless",
+          "Fireworks",
+          "Fish Audio",
+          "Friendli",
+          "GMICloud",
+          "Google",
+          "Google AI Studio",
+          "Groq",
+          "HeyGen",
+          "Inception",
+          "Inceptron",
+          "InferenceNet",
+          "Ionstream",
+          "Infermatic",
+          "Io Net",
+          "Inferact vLLM",
+          "Inflection",
+          "Liquid",
+          "Makora",
+          "Mara",
+          "Mancer 2",
+          "Meta",
+          "Minimax",
+          "ModelRun",
+          "Mistral",
+          "Modular",
+          "Moonshot AI",
+          "Morph",
+          "VoyageAI by MongoDB",
+          "TypeSafe",
+          "Near AI",
+          "Nebius",
+          "Nex AGI",
+          "NextBit",
+          "Novita",
+          "Nvidia",
+          "Ollama",
+          "OpenAI",
+          "OpenInference",
+          "Parasail",
+          "Poolside",
+          "PrimeIntellect",
+          "Perceptron",
+          "Perplexity",
+          "Phala",
+          "Recraft",
+          "Reka",
+          "Relace",
+          "Respan",
+          "Sail Research",
+          "Sakana AI",
+          "SambaNova",
+          "ScaleDown",
+          "Seed",
+          "SiliconFlow",
+          "Sourceful",
+          "StepFun",
+          "Stealth",
+          "StreamLake",
+          "Switchpoint",
+          "Tencent",
+          "Tenstorrent",
+          "Thinking Machines",
+          "Together",
+          "Unbiased",
+          "Upstage",
+          "Venice",
+          "Wafer",
+          "WandB",
+          "Quiver",
+          "Krea",
+          "Runway",
+          "Xiaomi",
+          "xAI",
+          "Z.AI",
+          "FakeProvider"
+        ]
+      },
+      "routed_service_tier": {
+        "type": "string",
+        "enum": [
+          "flex",
+          "priority",
+          "ultrafast"
+        ]
+      },
+      "status": {
+        "type": [
+          "integer",
+          "null"
+        ]
+      }
+    }
+  },
+  "native_response": {
+    "properties": {
+      "answers": {
+        "type": "object"
+      },
+      "id": {
+        "type": "string"
+      },
+      "model": {
+        "type": "string"
+      },
+      "provider": {
+        "type": "string"
+      },
+      "usage": {
+        "properties": {
+          "cost": {
+            "type": "number"
+          },
+          "input_tokens": {
+            "type": "integer"
+          },
+          "output_tokens": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "input_tokens",
+          "output_tokens"
+        ],
+        "type": "object"
+      }
+    },
+    "required": [
+      "model",
+      "answers",
+      "usage"
+    ],
+    "type": "object"
+  },
+  "scope": "Source-derived structural classification. Values in nonselected personal fields validated in memory and never persisted."
+}

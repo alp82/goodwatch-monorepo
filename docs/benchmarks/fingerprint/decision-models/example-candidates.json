@@ -1,0 +1,140 @@
+[
+  {
+    "enabled": false,
+    "admission_status": "UNVERIFIED",
+    "full_cost_bound_usd": "0.01",
+    "model": "MODEL_ID_PENDING_VERIFICATION",
+    "provider": "PROVIDER_ENDPOINT_PENDING_VERIFICATION",
+    "allowed_returned_models": [],
+    "allowed_returned_providers": [],
+    "max_price": {
+      "input": 0,
+      "output": 0,
+      "request": 0
+    },
+    "reasoning": {
+      "enabled": false
+    },
+    "max_completion_tokens": 8182,
+    "total_output_cap": 8192,
+    "input_cap": 16000,
+    "input_bound_tokens": null,
+    "input_bound_proof_status": "UNVERIFIED",
+    "output_accounting": "UNVERIFIED",
+    "subcalls_per_vector": 1,
+    "internal_passes": "UNVERIFIED",
+    "id": "catalog-pending-chat",
+    "adapter": "openrouter",
+    "mode": "json_schema",
+    "native_kind": "generative_integer",
+    "compatibility_lane": "strict_v1",
+    "mapping": {
+      "kind": "identity_integer"
+    }
+  },
+  {
+    "enabled": false,
+    "admission_status": "UNVERIFIED",
+    "full_cost_bound_usd": "0.01",
+    "model": "MODEL_ID_PENDING_VERIFICATION",
+    "provider": "PROVIDER_ENDPOINT_PENDING_VERIFICATION",
+    "allowed_returned_models": [],
+    "allowed_returned_providers": [],
+    "max_price": {
+      "input": 0,
+      "output": 0,
+      "request": 0
+    },
+    "reasoning": {
+      "enabled": false
+    },
+    "max_completion_tokens": 8182,
+    "total_output_cap": 8192,
+    "input_cap": 16000,
+    "input_bound_tokens": null,
+    "input_bound_proof_status": "UNVERIFIED",
+    "output_accounting": "UNVERIFIED",
+    "subcalls_per_vector": 1,
+    "internal_passes": "UNVERIFIED",
+    "id": "catalog-pending-native",
+    "adapter": "typesafe_native",
+    "question_type": "score",
+    "native_kind": "ordinal10",
+    "compatibility_lane": "projected_scale",
+    "criteria": [
+      "0: absent or irrelevant",
+      "1: minimal presence",
+      "2: slight presence",
+      "3: minor element",
+      "4: modest element",
+      "5: moderate element",
+      "6: significant element",
+      "7: major element",
+      "8: dominant element",
+      "9: defining attribute"
+    ],
+    "mapping": {
+      "kind": "native_expected_linear",
+      "native_top": 9
+    }
+  },
+  {
+    "enabled": false,
+    "admission_status": "UNVERIFIED",
+    "full_cost_bound_usd": "0.01",
+    "model": "MODEL_ID_PENDING_VERIFICATION",
+    "provider": "PROVIDER_ENDPOINT_PENDING_VERIFICATION",
+    "allowed_returned_models": [],
+    "allowed_returned_providers": [],
+    "max_price": {
+      "input": 0,
+      "output": 0,
+      "request": 0
+    },
+    "reasoning": {
+      "enabled": false
+    },
+    "max_completion_tokens": 8182,
+    "total_output_cap": 8192,
+    "input_cap": 16000,
+    "input_bound_tokens": null,
+    "input_bound_proof_status": "UNVERIFIED",
+    "output_accounting": "UNVERIFIED",
+    "subcalls_per_vector": 1,
+    "internal_passes": "UNVERIFIED",
+    "id": "catalog-pending-choice11",
+    "adapter": "typesafe_native",
+    "question_type": "choice",
+    "native_kind": "choice11",
+    "compatibility_lane": "strict_v1",
+    "criteria": {
+      "s0": "0: not present/irrelevant",
+      "s1": "1: minimal presence",
+      "s2": "2: intermediate historical V1 level",
+      "s3": "3: intermediate historical V1 level",
+      "s4": "4: intermediate historical V1 level",
+      "s5": "5: intermediate historical V1 level",
+      "s6": "6: intermediate historical V1 level",
+      "s7": "7: intermediate historical V1 level",
+      "s8": "8: intermediate historical V1 level",
+      "s9": "9: intermediate historical V1 level",
+      "s10": "10: defining attribute"
+    },
+    "mapping": {
+      "kind": "choice_labels",
+      "labels": {
+        "s0": 0,
+        "s1": 1,
+        "s2": 2,
+        "s3": 3,
+        "s4": 4,
+        "s5": 5,
+        "s6": 6,
+        "s7": 7,
+        "s8": 8,
+        "s9": 9,
+        "s10": 10
+      }
+    }
+  }
+]

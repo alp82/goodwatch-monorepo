@@ -1,0 +1,6 @@
+{
+  "source": "reviewed transport_diagnostics.py review-v2 (private custody path excluded)",
+  "source_sha256": "2c2af91bcbe36bb6f6d2f58f1159fdb69c709ceb598ed9941b99965e78db1fa6",
+  "adaptation": "Five explicit native POST endpoint keys added (including root alpha/decisions override), native_post phase, and successful native raw-byte custody. All timeout/sanitization/bounded-read mechanics unchanged; no dynamic endpoint or automatic request.",
+  "privacy": "No credentials or historical payloads copied."
+}

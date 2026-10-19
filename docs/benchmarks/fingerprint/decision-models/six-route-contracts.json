@@ -1,0 +1,260 @@
+{
+  "version": "six-route-documentary-v1",
+  "status": "PROPOSED_NOT_ADMITTED",
+  "source_matrix_sha256": "64d2975048b6e8c69b6cd698bcef52f1ec8cfb4d691e8192af45c6818d82ee94",
+  "source_schema_sha256": "126e34029b48c4c2a81e5068e7e4158e2980041fb8f795789740b7c52dd53215",
+  "routes": [
+    {
+      "candidate_id": "openrouter:typesafe/jev-1.14",
+      "model": "typesafe/jev-1.14",
+      "provider_tag": "typesafe",
+      "provider_display_name": "TypeSafe",
+      "advertised_dated_slug": "typesafe/jev-1.14-20261014",
+      "documented_max_price_proposal": {
+        "prompt": "0.042000000",
+        "completion": "0"
+      },
+      "context_tokens": 262144,
+      "max_prompt_tokens_metadata": 262144,
+      "rates_usd_per_million": {
+        "input": "0.042000000",
+        "output": "0"
+      },
+      "endpoint_metadata_url": "https://openrouter.ai/api/v1/models/typesafe/jev-1.14/endpoints",
+      "endpoint_capture_sha256": "e95ee387c4bb60e207c04553675cccf44bdacce35d75d3dfbb7de9eefa7f2705",
+      "native_work": {
+        "external_POSTs_per_complete_vector": 1,
+        "external_POSTs_in_frozen_screen": 3,
+        "native_questions_per_complete_vector": 74,
+        "observed_provider_subrequests": null,
+        "observed_native_groups_or_passes": null,
+        "provider_response_attempts_metadata": "Optional generation.provider_responses reports serving/fallback attempts; not a census of74 heads or internal thought rereads",
+        "billed_aggregation": "Whole state+question request, context262144; native74 evaluations do not mean74 billed contexts",
+        "native_work": "74 typed questions; exact number of forward passes/provider RPCs not observed",
+        "mode": "Automatic longcontext above about32000text bytes; current source requests below marker, no hard-mode proof"
+      },
+      "model_custody_proposal": {
+        "allowed_reported_models": [
+          "typesafe/jev-1.14",
+          "typesafe/jev-1.14-20261014"
+        ],
+        "reported_slug_status": "If alias echoed, mark actual_dated_build unverified unless attributed generation.model/provider_responses establishes it; do not fill datedbuild from catalog",
+        "allowed_provider_display_names": [
+          "TypeSafe"
+        ],
+        "join_alternate_generation_receipt_when_provider_or_cost_missing": true,
+        "stop_on_unexpected_model_or_provider": true
+      }
+    },
+    {
+      "candidate_id": "openrouter:perplexity/pplx-decider-flash-v1.2",
+      "model": "perplexity/pplx-decider-flash-v1.2",
+      "provider_tag": "perplexity",
+      "provider_display_name": "Perplexity",
+      "advertised_dated_slug": "perplexity/pplx-decider-flash-v1.2-20261016",
+      "documented_max_price_proposal": {
+        "prompt": "0.01000000",
+        "completion": "0"
+      },
+      "context_tokens": 262144,
+      "max_prompt_tokens_metadata": null,
+      "rates_usd_per_million": {
+        "input": "0.01000000",
+        "output": "0"
+      },
+      "endpoint_metadata_url": "https://openrouter.ai/api/v1/models/perplexity/pplx-decider-flash-v1.2/endpoints",
+      "endpoint_capture_sha256": "5689a046a4cd974a17a02dc91f1fc3cb431a0fbc7a4bd298865eaf7df0a33b67",
+      "native_work": {
+        "external_POSTs_per_complete_vector": 1,
+        "external_POSTs_in_frozen_screen": 3,
+        "native_questions_per_complete_vector": 74,
+        "observed_provider_subrequests": null,
+        "observed_native_groups_or_passes": null,
+        "provider_response_attempts_metadata": "Optional generation.provider_responses reports serving/fallback attempts; not a census of74 heads or internal thought rereads",
+        "billed_aggregation": "Shared state once per adaptive joint group; conservative<=74 nonempty groups of262144 each",
+        "native_work": "74 evaluations,<=74 joint groups; actualgroups unknown if telemetry unavailable, no74singletonPOSTs",
+        "mode": "Adaptive-host-grouped exploratory; no unsplit-control claim"
+      },
+      "model_custody_proposal": {
+        "allowed_reported_models": [
+          "perplexity/pplx-decider-flash-v1.2",
+          "perplexity/pplx-decider-flash-v1.2-20261016"
+        ],
+        "reported_slug_status": "If alias echoed, mark actual_dated_build unverified unless attributed generation.model/provider_responses establishes it; do not fill datedbuild from catalog",
+        "allowed_provider_display_names": [
+          "Perplexity"
+        ],
+        "join_alternate_generation_receipt_when_provider_or_cost_missing": true,
+        "stop_on_unexpected_model_or_provider": true
+      }
+    },
+    {
+      "candidate_id": "openrouter:respan/span-02",
+      "model": "respan/span-02",
+      "provider_tag": "respan",
+      "provider_display_name": "Respan",
+      "advertised_dated_slug": "respan/span-02-20261015",
+      "documented_max_price_proposal": {
+        "prompt": "0.01000000",
+        "completion": "0"
+      },
+      "context_tokens": 131072,
+      "max_prompt_tokens_metadata": null,
+      "rates_usd_per_million": {
+        "input": "0.01000000",
+        "output": "0"
+      },
+      "endpoint_metadata_url": "https://openrouter.ai/api/v1/models/respan/span-02/endpoints",
+      "endpoint_capture_sha256": "b52683ceb835c1cb57673de46b9d7b264fda38ba2ad1d821e32b373c7870943f",
+      "native_work": {
+        "external_POSTs_per_complete_vector": 1,
+        "external_POSTs_in_frozen_screen": 3,
+        "native_questions_per_complete_vector": 74,
+        "observed_provider_subrequests": null,
+        "observed_native_groups_or_passes": null,
+        "provider_response_attempts_metadata": "Optional generation.provider_responses reports serving/fallback attempts; not a census of74 heads or internal thought rereads",
+        "billed_aggregation": "74per-question full contexts131072 each; compute reuse not billing discount",
+        "native_work": "74question reads plus optional thought rereads; thought tokens unbilled per hostedmaker contract; providerRPCfanout unknown",
+        "mode": "Upstream defaultauto; no documented ORnative reasoningoverride; never assert nointernalgeneration"
+      },
+      "model_custody_proposal": {
+        "allowed_reported_models": [
+          "respan/span-02",
+          "respan/span-02-20261015"
+        ],
+        "reported_slug_status": "If alias echoed, mark actual_dated_build unverified unless attributed generation.model/provider_responses establishes it; do not fill datedbuild from catalog",
+        "allowed_provider_display_names": [
+          "Respan"
+        ],
+        "join_alternate_generation_receipt_when_provider_or_cost_missing": true,
+        "stop_on_unexpected_model_or_provider": true
+      }
+    },
+    {
+      "candidate_id": "openrouter:microsoft/microsoft-decision-1",
+      "model": "microsoft/microsoft-decision-1",
+      "provider_tag": "azure",
+      "provider_display_name": "Azure",
+      "advertised_dated_slug": "microsoft/microsoft-decision-1-20261009",
+      "documented_max_price_proposal": {
+        "prompt": "0.042000000",
+        "completion": "0"
+      },
+      "context_tokens": 32768,
+      "max_prompt_tokens_metadata": null,
+      "rates_usd_per_million": {
+        "input": "0.042000000",
+        "output": "0"
+      },
+      "endpoint_metadata_url": "https://openrouter.ai/api/v1/models/microsoft/microsoft-decision-1/endpoints",
+      "endpoint_capture_sha256": "a3748cefb9601f855ed4f42aa385ecfe61cceeb2d58fe24acb65e5d27057e133",
+      "native_work": {
+        "external_POSTs_per_complete_vector": 1,
+        "external_POSTs_in_frozen_screen": 3,
+        "native_questions_per_complete_vector": 74,
+        "observed_provider_subrequests": null,
+        "observed_native_groups_or_passes": null,
+        "provider_response_attempts_metadata": "Optional generation.provider_responses reports serving/fallback attempts; not a census of74 heads or internal thought rereads",
+        "billed_aggregation": "Conservative74full32768contexts; single-pass fixedoption maker evidence supports covering shared/repeatedstate alternatives",
+        "native_work": "74evaluations; actualpasses/providerRPCs unobserved",
+        "mode": "TypedChoice; no prose/explanation/search requested"
+      },
+      "model_custody_proposal": {
+        "allowed_reported_models": [
+          "microsoft/microsoft-decision-1",
+          "microsoft/microsoft-decision-1-20261009"
+        ],
+        "reported_slug_status": "If alias echoed, mark actual_dated_build unverified unless attributed generation.model/provider_responses establishes it; do not fill datedbuild from catalog",
+        "allowed_provider_display_names": [
+          "Azure"
+        ],
+        "join_alternate_generation_receipt_when_provider_or_cost_missing": true,
+        "stop_on_unexpected_model_or_provider": true
+      }
+    },
+    {
+      "candidate_id": "openrouter:liquid/d1",
+      "model": "liquid/d1",
+      "provider_tag": "liquid",
+      "provider_display_name": "Liquid",
+      "advertised_dated_slug": "liquid/d1-20260930",
+      "documented_max_price_proposal": {
+        "prompt": "0.02000000",
+        "completion": "0"
+      },
+      "context_tokens": 65536,
+      "max_prompt_tokens_metadata": null,
+      "rates_usd_per_million": {
+        "input": "0.02000000",
+        "output": "0"
+      },
+      "endpoint_metadata_url": "https://openrouter.ai/api/v1/models/liquid/d1/endpoints",
+      "endpoint_capture_sha256": "834611eeadb621013c9add041b645e11c2f6e99643f58106bc9fdac530262549",
+      "native_work": {
+        "external_POSTs_per_complete_vector": 1,
+        "external_POSTs_in_frozen_screen": 3,
+        "native_questions_per_complete_vector": 74,
+        "observed_provider_subrequests": null,
+        "observed_native_groups_or_passes": null,
+        "provider_response_attempts_metadata": "Optional generation.provider_responses reports serving/fallback attempts; not a census of74 heads or internal thought rereads",
+        "billed_aggregation": "74separately billed question prompts of65536 each; totalusage sumsquestions",
+        "native_work": "74question evaluations/prompts; providerRPCs unobserved, not74extra scheduledrequests",
+        "mode": "TypedChoice; no prose/explanation/search requested"
+      },
+      "model_custody_proposal": {
+        "allowed_reported_models": [
+          "liquid/d1",
+          "liquid/d1-20260930"
+        ],
+        "reported_slug_status": "If alias echoed, mark actual_dated_build unverified unless attributed generation.model/provider_responses establishes it; do not fill datedbuild from catalog",
+        "allowed_provider_display_names": [
+          "Liquid"
+        ],
+        "join_alternate_generation_receipt_when_provider_or_cost_missing": true,
+        "stop_on_unexpected_model_or_provider": true
+      }
+    },
+    {
+      "candidate_id": "openrouter:nace-ai/drex-v2.0",
+      "model": "nace-ai/drex-v2.0",
+      "provider_tag": "deepinfra/us",
+      "provider_display_name": "DeepInfra",
+      "advertised_dated_slug": "nace-ai/drex-v2.0-20261009",
+      "documented_max_price_proposal": {
+        "prompt": "0.06000000",
+        "completion": "0"
+      },
+      "context_tokens": 131072,
+      "max_prompt_tokens_metadata": null,
+      "rates_usd_per_million": {
+        "input": "0.06000000",
+        "output": "0"
+      },
+      "endpoint_metadata_url": "https://openrouter.ai/api/v1/models/nace-ai/drex-v2.0/endpoints",
+      "endpoint_capture_sha256": "585bd85c33599fe5565adceb3bc649fcbf6e789221507a0d5be3f8dfb99be94a",
+      "native_work": {
+        "external_POSTs_per_complete_vector": 2,
+        "external_POSTs_in_frozen_screen": 6,
+        "native_questions_per_complete_vector": 74,
+        "observed_provider_subrequests": null,
+        "observed_native_groups_or_passes": null,
+        "provider_response_attempts_metadata": "Optional generation.provider_responses reports serving/fallback attempts; not a census of74 heads or internal thought rereads",
+        "billed_aggregation": "64*131072 plus10*131072 atDeepInfra.06/M; do not borrow directNace sharedstate tariff",
+        "native_work": "Exactly2explicit adjacent canonicalchunks[64,10],74evaluations; providerRPCfanout unobserved",
+        "mode": "Hostmax64questions/52choices;16optionsfit; no partialfullvectorranking"
+      },
+      "model_custody_proposal": {
+        "allowed_reported_models": [
+          "nace-ai/drex-v2.0",
+          "nace-ai/drex-v2.0-20261009"
+        ],
+        "reported_slug_status": "If alias echoed, mark actual_dated_build unverified unless attributed generation.model/provider_responses establishes it; do not fill datedbuild from catalog",
+        "allowed_provider_display_names": [
+          "DeepInfra"
+        ],
+        "join_alternate_generation_receipt_when_provider_or_cost_missing": true,
+        "stop_on_unexpected_model_or_provider": true
+      }
+    }
+  ]
+}
