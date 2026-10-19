@@ -168,5 +168,5 @@ export const acceptSuggestedImport = (
 	)
 export const discardImport = (userId: string, id: string) =>
 	import("./resolution-runtime.server.ts").then((runtime) =>
-		runtime.cancelResolution(userId, id),
+		runtime.discardResolution(userId, id),
 	)

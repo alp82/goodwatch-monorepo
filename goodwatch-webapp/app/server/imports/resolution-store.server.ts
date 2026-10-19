@@ -1,5 +1,8 @@
 import type { ImportItem } from "../../domain/imports.ts"
-import type { ResolutionStore } from "./resolution-job.server.ts"
+import type {
+	ResolutionContext,
+	ResolutionStore,
+} from "./resolution-job.server.ts"
 import { refreshItems, run, select } from "./store.server.ts"
 function location(key: string): [string, number] {
 	return key.startsWith("job/") ? [key.slice(4), -1] : [`resolution:${key}`, -1]
@@ -73,3 +76,32 @@ export async function resolutionRecordsPage(
 	)
 }
 export const refreshResolution = refreshItems
+
+/** Immutable lookup receipts: one bounded insert batch per checkpoint, never per HTTP request. */
+export async function flushResolutionCache(
+	ctx: ResolutionContext,
+	entries: [string, unknown][],
+) {
+	for (let offset = 0; offset < entries.length; offset += 50) {
+		const batch = entries.slice(offset, offset + 50)
+		const params = batch.flatMap(([key, value]) => {
+			const payload = JSON.stringify(value)
+			if (Buffer.byteLength(payload) > 2 * 1024 * 1024)
+				throw Error("Resolution checkpoint is too large")
+			return [
+				`resolution:${key}`,
+				-1,
+				"resolution",
+				"resolution",
+				key,
+				payload,
+				"unsupported",
+			]
+		})
+		await ctx.check()
+		await run(
+			`INSERT INTO doc.user_import_item (import_id,row_index,user_id,kind,source_key,payload,outcome) VALUES ${batch.map(() => "(?,?,?,?,?,?,?)").join(",")} ON CONFLICT (import_id,row_index) DO NOTHING`,
+			params,
+		)
+	}
+}

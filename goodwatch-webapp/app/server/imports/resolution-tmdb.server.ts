@@ -24,7 +24,14 @@ const schemas = {
 			tv_episode_results: v.tv_episode_results ?? [],
 		})),
 	search: z.object({
-		results: z.array(z.object({ id })),
+		results: z.array(
+			z.object({
+				id,
+				title: z.string().optional(),
+				original_title: z.string().optional(),
+				release_date: z.string().optional(),
+			}),
+		),
 		total_pages: z.number().int().min(0).max(500),
 	}),
 	movie: z.object({
@@ -102,10 +109,15 @@ export function createResolutionTmdb(
 		.digest("hex")
 		.slice(0, 24)
 	const cooldownKey = `import-tmdb:{${rateKey}}:cooldown`
+	async function check(ctx: ResolutionContext) {
+		if (ctx.localCheck) ctx.localCheck()
+		else await ctx.check()
+	}
+
 	async function pause(ctx: ResolutionContext, ms: number) {
 		if (ms >= ctx.job.deadline - now()) throw new ResolutionBudget()
 		for (let left = ms; left > 0; ) {
-			await ctx.check()
+			await check(ctx)
 			const delay = Math.min(left, 1000)
 			await wait(delay)
 			left -= delay
@@ -129,16 +141,21 @@ export function createResolutionTmdb(
 				.update(path + JSON.stringify(params))
 				.digest("hex")}`
 			if (options.cache !== false) {
+				const local = ctx.lookupCache?.get(cacheKey)
+				if (local !== undefined) {
+					await check(ctx)
+					return local
+				}
 				const hit = await resolutionStore.read(cacheKey)
 				if (hit) {
-					await ctx.check()
+					await check(ctx)
 					return hit.value
 				}
 			}
 			await acquire()
 			try {
 				for (let attempt = 0; attempt < 3; attempt++) {
-					await ctx.check()
+					await check(ctx)
 					try {
 						const shared = Number(await getRedisCluster()?.get(cooldownKey))
 						if (Number.isFinite(shared)) cooldown = Math.max(cooldown, shared)
@@ -153,7 +170,7 @@ export function createResolutionTmdb(
 						await pause(ctx, permit.retryAfterSeconds * 1000)
 					}
 					await ctx.attempt()
-					await ctx.check()
+					await check(ctx)
 					const url = new URL(`https://api.themoviedb.org/3${path}`)
 					for (const [k, v] of Object.entries({
 						api_key: process.env.TMDB_API_KEY ?? "",
@@ -201,8 +218,11 @@ export function createResolutionTmdb(
 							throw Error("Provider unavailable")
 						}
 						const value = schema.parse(await response.json())
-						await ctx.check()
-						if (options.cache !== false) await ctx.commit(cacheKey, value)
+						await check(ctx)
+						if (options.cache !== false) {
+							if (ctx.deferCache) ctx.deferCache(cacheKey, value)
+							else await ctx.commit(cacheKey, value)
+						}
 						return value
 					} catch (error) {
 						if (ctx.signal.aborted) throw new ResolutionStopped()

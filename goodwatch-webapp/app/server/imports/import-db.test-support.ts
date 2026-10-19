@@ -14,7 +14,9 @@ const supportedImportSql = new Set([
 	"SELECT row_index, payload FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND row_index > ? AND kind NOT IN ('state','resolution') ORDER BY row_index LIMIT 200",
 	"UPDATE doc.user_import_item SET payload = ? WHERE import_id = ? AND row_index = ? AND kind = 'resolution' AND _seq_no = ? AND _primary_term = ?",
 	"INSERT INTO doc.user_import_item (import_id,row_index,user_id,kind,source_key,payload,outcome) VALUES (?, ?, ?, 'resolution', ?, ?, 'unsupported') ON CONFLICT (import_id,row_index) DO NOTHING",
+	"INSERT INTO doc.user_import_item (import_id,row_index,user_id,kind,source_key,payload,outcome) VALUES (?) ON CONFLICT (import_id,row_index) DO NOTHING",
 	"DELETE FROM doc.user_import_item WHERE import_id = ?",
+	"DELETE FROM doc.user_import WHERE id = ? AND user_id = ? AND status = 'preview'",
 	"DELETE FROM doc.user_import_item WHERE import_id LIKE ?",
 	"SELECT 'episode' AS kind, tvdb_id, tmdb_id, show_id FROM episode WHERE tvdb_id IN (?) AND removed_at IS NULL UNION ALL SELECT 'show' AS kind, tvdb_id, tmdb_id, tmdb_id AS show_id FROM show WHERE tvdb_id IN (?) LIMIT 100001",
 	"SELECT 'episode' AS kind, tvdb_id, tmdb_id, show_id FROM episode WHERE tvdb_id IN (NULL) AND removed_at IS NULL UNION ALL SELECT 'show' AS kind, tvdb_id, tmdb_id, tmdb_id AS show_id FROM show WHERE tvdb_id IN (?) LIMIT 100001",
@@ -469,18 +471,40 @@ export class ImportDb {
 			)
 			return { rowcount: 1 }
 		}
+		if (
+			s ===
+			"DELETE FROM doc.user_import WHERE id = ? AND user_id = ? AND status = 'preview'"
+		) {
+			this.imports = this.imports.filter(
+				(row) =>
+					!(
+						row.id === params[0] &&
+						row.user_id === params[1] &&
+						row.status === "preview"
+					),
+			)
+			return { rowcount: 1 }
+		}
 		if (s === "DELETE FROM doc.user_import_item WHERE import_id = ?") {
 			this.items = this.items.filter((x) => x.import_id !== params[0])
 			return { rowcount: 1 }
 		}
 		if (s.startsWith("INSERT INTO doc.user_import_item (")) {
 			const columns = s.slice(s.indexOf("(") + 1, s.indexOf(")")).split(",")
-			for (let i = 0; i < params.length; i += columns.length)
-				this.items.push(
-					Object.fromEntries(
-						columns.map((column, j) => [column, params[i + j]]),
-					),
+			for (let i = 0; i < params.length; i += columns.length) {
+				const row = Object.fromEntries(
+					columns.map((column, j) => [column, params[i + j]]),
 				)
+				if (
+					s.endsWith("DO NOTHING") &&
+					this.items.some(
+						(x) =>
+							x.import_id === row.import_id && x.row_index === row.row_index,
+					)
+				)
+					continue
+				this.items.push({ ...row, _seq_no: ++this.version, _primary_term: 1 })
+			}
 			return { rowcount: params.length / columns.length }
 		}
 		if (s.startsWith("UPDATE show SET tvdb_id")) {

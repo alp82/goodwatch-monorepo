@@ -82,14 +82,32 @@ export async function suggestTvtimeMovie(
 	)
 		return manual("conflicting_source_evidence")
 	try {
-		const ids = new Set<number>()
+		const ids = new Map<
+			number,
+			{ title?: string; releaseDate?: string; outsideYear: boolean }
+		>()
+		const sourceYear = Number(dates[0].slice(0, 4))
+		const outsideYear = (date?: string) =>
+			!!date &&
+			/^\d{4}-\d{2}-\d{2}$/.test(date) &&
+			Number.isFinite(Date.parse(date)) &&
+			new Date(date).toISOString().slice(0, 10) === date &&
+			Math.abs(Number(date.slice(0, 4)) - sourceYear) > 1
 		let pages = 1
 		for (let page = 1; page <= pages; page++) {
 			const found = (await io.get("/search/movie", {
 				query: titles[0],
 				include_adult: "true",
 				page: String(page),
-			})) as { results?: { id: number }[]; total_pages?: number }
+			})) as {
+				results?: {
+					id: number
+					title?: string
+					original_title?: string
+					release_date?: string
+				}[]
+				total_pages?: number
+			}
 			if (
 				!Array.isArray(found.results) ||
 				!Number.isInteger(found.total_pages) ||
@@ -109,7 +127,22 @@ export async function suggestTvtimeMovie(
 						state: "unavailable",
 						reason: "tvtime_suggestion_unavailable",
 					}
-				ids.add(result.id)
+				const previous = ids.get(result.id)
+				ids.set(result.id, {
+					title: result.title,
+					releaseDate: result.release_date,
+					outsideYear:
+						outsideYear(result.release_date) &&
+						!(
+							countries.length === 1 &&
+							[result.title, result.original_title].some(
+								(title) =>
+									title !== undefined &&
+									normalizeTvtimeTitle(title) === titles[0],
+							)
+						) &&
+						(!previous || previous.outsideYear),
+				})
 			}
 			if (ids.size > 100) return manual("tvtime_suggestion_search_incomplete")
 		}
@@ -118,7 +151,12 @@ export async function suggestTvtimeMovie(
 			title: TvtimeSuggestionProof["title"]
 			date: TvtimeSuggestionProof["date"]
 		}[] = []
-		for (const id of ids) {
+		let yearExcludedCandidates = 0
+		for (const [id, search] of ids) {
+			if (search.outsideYear) {
+				yearExcludedCandidates++
+				continue
+			}
 			const m = (await io.get(`/movie/${id}`, {
 				append_to_response: "alternative_titles,release_dates,translations",
 			})) as Movie
@@ -204,7 +242,14 @@ export async function suggestTvtimeMovie(
 				date: match.date,
 				candidateCount: 1,
 				sourceCountry: countries[0] ?? null,
-				verifiedCandidates: ids.size,
+				verifiedCandidates: ids.size - yearExcludedCandidates,
+				discoveredCandidates: ids.size,
+				yearExcludedCandidates,
+				searchYearWindow: {
+					sourceYear,
+					toleranceYears: 1,
+					countryExactTitleException: true,
+				},
 				discoveryBound: { pages: 5, candidates: 100 },
 				discoveryComplete: true,
 				pages,

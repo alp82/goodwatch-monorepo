@@ -98,3 +98,33 @@ test("provider failures use at most three counted attempts and are not mistaken 
 	await assert.rejects(api.get(ctx, "/find/100"), /unavailable/)
 	assert.equal(attempts, 3)
 })
+
+test("search transport retains titles and release dates for conservative year filtering", async () => {
+	const ctx = {
+		job: { root: "root", deadline: Date.now() + 30000 },
+		signal: new AbortController().signal,
+		check: async () => ({}),
+		attempt: async () => {},
+		commit: async () => {},
+	} as unknown as ResolutionContext
+	const result = {
+		results: [
+			{
+				id: 42,
+				title: "Localized",
+				original_title: "Original",
+				release_date: "2001-02-03",
+			},
+		],
+		total_pages: 1,
+	}
+	const api = createResolutionTmdb({
+		cache: false,
+		take: async () => ({ allowed: true, store: "memory" }),
+		fetch: async () => Response.json(result),
+	})
+	assert.deepEqual(
+		await api.get(ctx, "/search/movie", { query: "Localized" }),
+		result,
+	)
+})

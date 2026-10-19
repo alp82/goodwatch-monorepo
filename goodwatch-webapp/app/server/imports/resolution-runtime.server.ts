@@ -21,6 +21,7 @@ import {
 	jobKey,
 } from "./resolution-job.server.ts"
 import {
+	flushResolutionCache,
 	refreshResolution,
 	resolutionRecordsPage,
 	resolutionSourcePage,
@@ -333,6 +334,7 @@ const childId = (job: ResolutionJob, purpose = "matched") => {
 async function publish(ctx: ResolutionContext) {
 	const j = await ctx.check()
 	const id = childId(j)
+	await ctx.commit(`family/${j.root}/${id}`, { id })
 	await ctx.commit(`link/${id}`, {
 		root: j.root,
 		member: j.member,
@@ -405,6 +407,7 @@ export const resolutionJobs = createResolutionJobs({
 	step,
 	publish,
 	finished: cleanupResolution,
+	flushCache: flushResolutionCache,
 })
 export function scheduleResolution(root: string) {
 	if (testNetwork) return
@@ -495,7 +498,27 @@ export async function previewTvtime(
 		undefined,
 		{ cachedOnly: true, pending: true },
 	)
-	await resolutionJobs.admit(member, initial.id, initial.counts.rows)
+	try {
+		await resolutionJobs.admit(member, initial.id, initial.counts.rows)
+	} catch (error) {
+		if (
+			error instanceof NativeImportError &&
+			[
+				"tvtime_resolution_member_busy",
+				"tvtime_resolution_global_busy",
+				"tvtime_resolution_busy",
+			].includes(error.code ?? "")
+		) {
+			await run("DELETE FROM doc.user_import_item WHERE import_id = ?", [
+				initial.id,
+			])
+			await run(
+				"DELETE FROM doc.user_import WHERE id = ? AND user_id = ? AND status = 'preview'",
+				[initial.id, member],
+			)
+		}
+		throw error
+	}
 	scheduleResolution(initial.id)
 	return {
 		...initial,
@@ -503,7 +526,8 @@ export async function previewTvtime(
 	}
 }
 export async function cancelResolution(member: string, id: string) {
-	await getImportRow(member, id)
+	const row = await getImportRow(member, id)
+	if (row.status !== "preview") return resolutionSummary(member, id)
 	const root = await resolutionRoot(member, id)
 	if (root) {
 		await resolutionJobs.cancel(member, root)
@@ -512,6 +536,115 @@ export async function cancelResolution(member: string, id: string) {
 	}
 	return resolutionSummary(member, id)
 }
+type DiscardCheckpoint = {
+	legacyLinks?: boolean
+	member: string
+	root: string
+	id: string
+	activePreviewId: string
+}
+/** Discard unconfirmed projections and their auxiliary evidence; Confirm only cancels work. */
+export async function discardResolution(member: string, id: string) {
+	const row = await getImportRow(member, id)
+	if (row.status !== "preview") return resolutionSummary(member, id)
+	const root = await resolutionRoot(member, id)
+	if (!root) return undefined
+	await cancelResolution(member, id)
+	const summary = await resolutionSummary(member, id)
+	const j = await resolutionJobs.read(root)
+	if (!j || j.state !== "cancelled") return summary
+	const checkpoint = {
+		member,
+		root,
+		id,
+		activePreviewId: j.activePreviewId,
+		legacyLinks: !j.familyIndexed,
+	}
+	await resolutionStore.cas(`discard/${root}`, null, checkpoint)
+	await finishDiscard(checkpoint)
+	return summary
+}
+async function finishDiscard({
+	member,
+	root,
+	id,
+	activePreviewId,
+	legacyLinks,
+}: DiscardCheckpoint) {
+	await refreshResolution()
+	const ids = new Set([root, id, activePreviewId])
+	let after = ""
+	for (;;) {
+		const page = await resolutionRecordsPage(`family/${root}/`, after)
+		if (!page.length) break
+		for (const record of page)
+			ids.add((JSON.parse(record.payload) as { id: string }).id)
+		after = page.at(-1)?.source_key ?? after
+	}
+	if (legacyLinks) {
+		let cursor = ""
+		for (;;) {
+			const page = await resolutionRecordsPage("link/", cursor)
+			if (!page.length) break
+			for (const record of page) {
+				const link = JSON.parse(record.payload) as Link
+				if (link.root === root && link.member === member)
+					ids.add(record.source_key.slice("link/".length))
+			}
+			cursor = page.at(-1)?.source_key ?? cursor
+		}
+	}
+
+	for (const child of ids) {
+		const removed = await run(
+			"DELETE FROM doc.user_import WHERE id = ? AND user_id = ? AND status = 'preview'",
+			[child, member],
+		)
+		// A replay may find the import header already deleted; retain any confirmed journal.
+		const remaining = (
+			await select<{ status: string }>(
+				"SELECT status, user_id FROM doc.user_import WHERE id = ?",
+				[child],
+			)
+		)[0]
+		if (removed.rowcount || !remaining)
+			await run("DELETE FROM doc.user_import_item WHERE import_id = ?", [child])
+		await run("DELETE FROM doc.user_import_item WHERE import_id = ?", [
+			`resolution:link/${child}`,
+		])
+	}
+	for (const prefix of [
+		"cache",
+		"parent",
+		"enrich",
+		"group",
+		"decision",
+		"accept",
+		"family",
+	])
+		await run("DELETE FROM doc.user_import_item WHERE import_id LIKE ?", [
+			`resolution:${prefix}/${root}/%`,
+		])
+	await resolutionJobs.forget(member, root)
+	await run("DELETE FROM doc.user_import_item WHERE import_id = ?", [
+		`resolution:discard/${root}`,
+	])
+	await refreshResolution()
+	await run("REFRESH TABLE doc.user_import", [])
+}
+export async function reconcileImportResolution() {
+	await refreshResolution()
+	let after = ""
+	for (;;) {
+		const page = await resolutionRecordsPage("discard/", after)
+		if (!page.length) break
+		for (const row of page)
+			await finishDiscard(JSON.parse(row.payload) as DiscardCheckpoint)
+		after = page.at(-1)?.source_key ?? after
+	}
+	await resolutionJobs.reconcile(false)
+}
+
 export async function editResolution(
 	member: string,
 	id: string,
@@ -536,6 +669,8 @@ export async function editResolution(
 				if (current?.generation !== generation || current.state !== "editing")
 					throw new ResolutionStopped()
 			}
+			await guard()
+			await resolutionStore.cas(`family/${root}/${child}`, null, { id: child })
 			await guard()
 			await resolutionStore.cas(`link/${child}`, null, {
 				parentImportId: id,
@@ -585,9 +720,7 @@ export async function editResolution(
 }
 export const startImportResolutionReconciler = connectionCleanup(
 	"import-resolution",
-	async () => {
-		await resolutionJobs.reconcile(false)
-	},
+	reconcileImportResolution,
 	() => !!process.env.TMDB_API_KEY,
 	"Import matching recovery is unavailable; pending work will be retried.",
 )

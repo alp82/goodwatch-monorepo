@@ -403,6 +403,14 @@ export interface TvtimeSuggestionProof {
 	candidateCount: 1
 	sourceCountry: string | null
 	verifiedCandidates: number
+	/** Search-result year pruning; absent on older proofs. */
+	discoveredCandidates?: number
+	yearExcludedCandidates?: number
+	searchYearWindow?: {
+		sourceYear: number
+		toleranceYears: 1
+		countryExactTitleException?: true
+	}
 	discoveryBound: { pages: 5; candidates: 100 }
 	discoveryComplete: true
 	pages: number

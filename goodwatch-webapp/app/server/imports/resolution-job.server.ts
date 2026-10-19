@@ -20,6 +20,7 @@ export type ResolutionPhase =
 	| "publishing"
 export interface ResolutionJob {
 	root: string
+	familyIndexed?: boolean
 	member: string
 	activePreviewId: string
 	generation: number
@@ -51,6 +52,9 @@ export interface ResolutionContext {
 	job: ResolutionJob
 	signal: AbortSignal
 	check(): Promise<ResolutionJob>
+	localCheck?(): void
+	lookupCache?: Map<string, unknown>
+	deferCache?(key: string, value: unknown): void
 	attempt(): Promise<void>
 	commit(key: string, value: unknown): Promise<void>
 }
@@ -109,6 +113,10 @@ export function createResolutionJobs(options: {
 	step: (ctx: ResolutionContext) => Promise<ResolutionStep>
 	publish: (ctx: ResolutionContext) => Promise<string>
 	finished?: (job: ResolutionJob) => Promise<void>
+	flushCache?: (
+		ctx: ResolutionContext,
+		entries: [string, unknown][],
+	) => Promise<void>
 }) {
 	const { store } = options
 	const now = options.now ?? Date.now
@@ -180,6 +188,7 @@ export function createResolutionJobs(options: {
 		const value: ResolutionJob = {
 			root,
 			member,
+			familyIndexed: true,
 			activePreviewId: root,
 			generation: 1,
 			state: "queued",
@@ -241,24 +250,63 @@ export function createResolutionJobs(options: {
 				const j = await read(root)
 				if (!j) throw new ResolutionStopped()
 				owned(j)
+				return j
+			}
+			const previewCheck = async () => {
+				const j = await check()
 				if (!(await store.preview(j.member, j.activePreviewId)))
 					throw new ResolutionStopped()
 				return j
 			}
-			const mutate = async (change: (j: ResolutionJob) => ResolutionJob) => {
-				await check()
-				return update(root, (j) => change(owned(j)))
+			const mutate = (change: (j: ResolutionJob) => ResolutionJob) =>
+				update(root, (j) => change(owned(j)))
+			let leaseUntil = captured.leaseUntil
+			const localCheck = () => {
+				if (abort.signal.aborted || leaseUntil <= now())
+					throw new ResolutionStopped()
 			}
+			let credits = 0
+			let reservation: Promise<void> | undefined
+			const lookupCache = new Map<string, unknown>()
+			const deferred = new Map<string, unknown>()
 			const ctx: ResolutionContext = {
 				job: captured,
 				signal: abort.signal,
 				check,
+				localCheck,
+				lookupCache,
+				deferCache(key, value) {
+					localCheck()
+					if (!key.startsWith(`cache/${root}/`) || deferred.size >= 512)
+						throw Error("Resolution cache batch is too large")
+					lookupCache.set(key, value)
+					deferred.set(key, value)
+				},
 				async attempt() {
-					await mutate((j) => {
-						if (j.deadline <= now() || j.attempts >= RESOLUTION_LIMITS.attempts)
-							throw new ResolutionBudget()
-						return { ...j, attempts: j.attempts + 1 }
-					})
+					localCheck()
+					if (captured && captured.deadline <= now())
+						throw new ResolutionBudget()
+					while (!credits) {
+						if (!reservation)
+							reservation = (async () => {
+								let size = 0
+								await mutate((j) => {
+									if (
+										j.deadline <= now() ||
+										j.attempts >= RESOLUTION_LIMITS.attempts
+									)
+										throw new ResolutionBudget()
+									size = Math.min(50, RESOLUTION_LIMITS.attempts - j.attempts)
+									return { ...j, attempts: j.attempts + size }
+								})
+								credits += size
+							})().finally(() => {
+								reservation = undefined
+							})
+						await reservation
+						localCheck()
+					}
+					credits--
 				},
 				async commit(key, value) {
 					await check()
@@ -272,16 +320,20 @@ export function createResolutionJobs(options: {
 			}
 			context = ctx
 			const heartbeat = setInterval(() => {
-				void mutate((j) => ({
-					...j,
-					leaseUntil: now() + RESOLUTION_LIMITS.leaseMs,
-					updatedAt: now(),
-				})).catch(() => abort.abort())
+				void (async () => {
+					await previewCheck()
+					const j = await mutate((j) => ({
+						...j,
+						leaseUntil: now() + RESOLUTION_LIMITS.leaseMs,
+						updatedAt: now(),
+					}))
+					leaseUntil = j.leaseUntil
+				})().catch(() => abort.abort())
 			}, RESOLUTION_LIMITS.heartbeatMs)
 			heartbeat.unref()
 			try {
 				for (;;) {
-					ctx.job = await check()
+					ctx.job = await previewCheck()
 					if (ctx.job.phase === "publishing") break
 					if (
 						ctx.job.deadline <= now() ||
@@ -289,6 +341,16 @@ export function createResolutionJobs(options: {
 					)
 						throw new ResolutionBudget()
 					const result = await options.step(ctx)
+					if (deferred.size) {
+						await check()
+						if (options.flushCache) await options.flushCache(ctx, [...deferred])
+						else
+							for (const [key, value] of deferred) await ctx.commit(key, value)
+						await check()
+					}
+					deferred.clear()
+					lookupCache.clear()
+					const unused = credits
 					captured = await mutate((j) => {
 						const failed = { ...j.failed }
 						for (const [code, count] of Object.entries(result.failed))
@@ -296,6 +358,7 @@ export function createResolutionJobs(options: {
 						const next = phases[phases.indexOf(j.phase) + 1]
 						return {
 							...j,
+							attempts: j.attempts - unused,
 							processed: j.processed + result.processed,
 							matched: j.matched + result.matched,
 							held: j.held + result.held,
@@ -305,11 +368,12 @@ export function createResolutionJobs(options: {
 							updatedAt: now(),
 						}
 					})
+					credits -= unused
 					if (result.done && ctx.job.phase === "movies") break
 				}
-				ctx.job = await check()
+				ctx.job = await previewCheck()
 				const replacementId = await options.publish(ctx)
-				await check()
+				await previewCheck()
 				await mutate((j) => ({
 					...j,
 					state: "completed",
@@ -339,6 +403,7 @@ export function createResolutionJobs(options: {
 							? {
 									...j,
 									state: "cancelled",
+									replacementId: null,
 									generation: j.generation + 1,
 									owner: null,
 									leaseUntil: 0,
@@ -415,6 +480,7 @@ export function createResolutionJobs(options: {
 			)
 				throw error
 		} finally {
+			abort.abort()
 			active.delete(root)
 			const settled = await read(root).catch(() => undefined)
 			if (settled && terminal(settled.state))
@@ -425,15 +491,25 @@ export function createResolutionJobs(options: {
 		const existing = await read(root)
 		if (!existing || existing.member !== member)
 			throw new NativeImportError(404, "We couldn't find that import.")
+		if (
+			existing.state === "cancelled" ||
+			!(await store.preview(member, existing.activePreviewId))
+		)
+			return existing
 		active.get(root)?.abort()
-		return update(root, (j) => ({
-			...j,
-			state: "cancelled",
-			generation: j.generation + 1,
-			owner: null,
-			leaseUntil: 0,
-			updatedAt: now(),
-		}))
+		return update(root, (j) =>
+			j.state === "cancelled"
+				? j
+				: {
+						...j,
+						replacementId: null,
+						state: "cancelled",
+						generation: j.generation + 1,
+						owner: null,
+						leaseUntil: 0,
+						updatedAt: now(),
+					},
+		)
 	}
 	async function edit(
 		member: string,
@@ -478,7 +554,11 @@ export function createResolutionJobs(options: {
 					throw new ResolutionStopped()
 				return {
 					...j,
-					state: terminal(existing.state) ? "completed" : "queued",
+					state: terminal(existing.state)
+						? existing.state === "limited"
+							? "limited"
+							: "completed"
+						: "queued",
 					activePreviewId: id,
 					replacementId: id,
 					snapshot: randomUUID(),
@@ -492,7 +572,11 @@ export function createResolutionJobs(options: {
 				j.generation === editing.generation && j.state === "editing"
 					? {
 							...j,
-							state: terminal(existing.state) ? "completed" : "queued",
+							state: terminal(existing.state)
+								? existing.state === "limited"
+									? "limited"
+									: "completed"
+								: "queued",
 							leaseUntil: 0,
 						}
 					: j,
@@ -500,6 +584,29 @@ export function createResolutionJobs(options: {
 			throw e
 		}
 	}
+	async function forget(member: string, root: string) {
+		const job = await read(root)
+		if (
+			job
+				? job.member !== member || job.state !== "cancelled"
+				: await store.preview(member, root)
+		)
+			throw new ResolutionStopped()
+		for (let n = 0; n < 20; n++) {
+			const row = await store.read(slotsKey)
+			if (!row) return
+			if (
+				await store.cas(
+					slotsKey,
+					row.version,
+					(row.value as Reservation[]).filter((entry) => entry.root !== root),
+				)
+			)
+				return
+		}
+		throw new ResolutionStopped()
+	}
+
 	async function reconcile(waitForCompletion = true) {
 		const slots = (await store.read(slotsKey))?.value as
 			| Reservation[]
@@ -507,7 +614,11 @@ export function createResolutionJobs(options: {
 		await Promise.all(
 			(slots ?? []).map(async (entry) => {
 				let j = await read(entry.root)
-				if (!j && entry.deadline > now())
+				if (
+					!j &&
+					entry.deadline > now() &&
+					(await store.preview(entry.member, entry.root))
+				)
 					j = await admit(entry.member, entry.root, entry.total)
 				if (j && terminal(j.state)) await options.finished?.(j)
 				if (j && !terminal(j.state) && j.leaseUntil <= now()) {
@@ -539,5 +650,5 @@ export function createResolutionJobs(options: {
 				: j,
 		)
 	}
-	return { admit, read, run, cancel, edit, reconcile, refreshSnapshot }
+	return { admit, read, run, cancel, edit, forget, reconcile, refreshSnapshot }
 }

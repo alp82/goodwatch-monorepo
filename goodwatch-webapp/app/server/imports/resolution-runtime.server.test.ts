@@ -737,6 +737,14 @@ test("a confirmed suggested watch is not duplicated on re-import and Undo remove
 		await wait(first.id)
 		const { getMovieTracking } = await import("../tracking.server.ts")
 		assert.equal((await getMovieTracking("member", 42)).log.length, 1)
+		const beforeDiscard = (await service.getImport("member", first.id))
+			.resolution
+		await service.discardImport("member", first.id)
+		assert.deepEqual(
+			(await service.getImport("member", first.id)).resolution,
+			beforeDiscard,
+		)
+		assert.equal((await getMovieTracking("member", 42)).log.length, 1)
 		const repeated = await preview()
 		assert.equal(repeated.counts.unchanged, 1)
 		await service.confirmImport("member", repeated.id, {
@@ -865,4 +873,126 @@ test("a missing release date does not contradict the full date supplied by anoth
 		original.items[1].wishlistOriginal?.tvtimeMovie?.releaseDate,
 		"2001-02-03",
 	)
+})
+
+for (const busy of ["member", "global"])
+	test(`${busy}-busy upload leaves no orphan preview or still-matching rows`, async () => {
+		setCrateClientForTest(new FakeTrackingCrate())
+		const db = new ImportDb()
+		setImportDbForTest(db)
+		runtime.setResolutionNetworkForTest(async () => {
+			throw Error("No lookup during upload")
+		})
+		const upload = (member: string) =>
+			service.previewImport(
+				member,
+				"tvtime",
+				"tracking-prod-records.csv",
+				Buffer.from(
+					"type,entity_type,uuid,movie_name,release_date,created_at\nfollow,movie,synthetic,Synthetic movie,2001-02-03,2024-01-01\n",
+				),
+			)
+		await upload("first")
+		if (busy === "global") await upload("second")
+		const before = db.imports.map((row) => row.id)
+		const rows = db.items.length
+		await assert.rejects(
+			upload(busy === "member" ? "first" : "third"),
+			(error: unknown) =>
+				error instanceof Error &&
+				"code" in error &&
+				error.code === `tvtime_resolution_${busy}_busy`,
+		)
+		assert.deepEqual(
+			db.imports.map((row) => row.id),
+			before,
+		)
+		assert.equal(db.items.length, rows)
+	})
+
+test("discard removes the preview family and all source-bearing resolution metadata; restart cannot recreate it", async () => {
+	setCrateClientForTest(new FakeTrackingCrate())
+	const db = new ImportDb()
+	db.catalog = [
+		{
+			media_type: "movie",
+			tmdb_id: 42,
+			imdb_id: null,
+			title: "Synthetic movie",
+			release_year: 2001,
+			poster_path: null,
+		},
+	]
+	setImportDbForTest(db)
+	runtime.setResolutionNetworkForTest(async (_ctx, path) =>
+		path === "/search/movie"
+			? { results: [{ id: 42 }], total_pages: 1 }
+			: {
+					id: 42,
+					title: "Synthetic movie",
+					original_title: "Other",
+					release_date: "2001-02-03",
+					alternative_titles: { titles: [] },
+					translations: { translations: [] },
+					release_dates: { results: [] },
+				},
+	)
+	const p = await service.previewImport(
+		"member",
+		"tvtime",
+		"tracking-prod-records.csv",
+		Buffer.from(
+			"type,entity_type,uuid,movie_name,release_date,created_at\nfollow,movie,synthetic,Synthetic movie,2001-02-03,2024-01-01\n",
+		),
+	)
+	await runtime.resolutionJobs.run(p.id)
+	const child = (await runtime.resolutionJobs.read(p.id))?.replacementId
+	assert.ok(child)
+	const suggestions = await service.getWishlistSuggestions("member", child)
+	const accepted = await service.acceptSuggestedImport("member", child, {
+		token: suggestions.bulkAccept?.token,
+	})
+	assert.ok(
+		db.items.some((row) => String(row.source_key).startsWith("accept/")),
+	)
+	// Simulate preview generations written before the family index existed.
+	db.items = db.items.filter(
+		(row) => !String(row.source_key).startsWith(`family/${p.id}/`),
+	)
+	const oldJob = db.items.find(
+		(row) => row.import_id === p.id && row.kind === "resolution",
+	)
+	assert.ok(oldJob)
+	const oldPayload = JSON.parse(String(oldJob.payload))
+	oldPayload.familyIndexed = undefined
+	oldJob.payload = JSON.stringify(oldPayload)
+	const write = db.run.bind(db)
+	let interrupted = false
+	db.run = async (sql, params) => {
+		if (
+			!interrupted &&
+			sql === "DELETE FROM doc.user_import_item WHERE import_id LIKE ?" &&
+			String(params[0]).startsWith("resolution:group/")
+		) {
+			interrupted = true
+			throw Error("Process stopped during discard")
+		}
+		return write(sql, params)
+	}
+	await assert.rejects(
+		service.discardImport("member", accepted.import.id),
+		/Process stopped during discard/,
+	)
+	await runtime.reconcileImportResolution()
+
+	await assert.rejects(service.getImport("member", p.id), /couldn't find/i)
+	await assert.rejects(service.getImport("member", child), /couldn't find/i)
+	await assert.rejects(
+		service.getImport("member", accepted.import.id),
+		/couldn't find/i,
+	)
+	assert.equal(db.items.length, 1) // Only the global admission record remains.
+	await runtime.resolutionJobs.reconcile()
+	assert.equal(db.imports.length, 0)
+	assert.equal(db.items.length, 1)
 })

@@ -135,3 +135,99 @@ test("a provider failure is held rather than producing a partially verified sugg
 		reason: "tvtime_suggestion_unavailable",
 	})
 })
+
+test("search year prefilter skips only dated candidates beyond one year; remaining candidates are fully verified", async () => {
+	const details: number[] = []
+	const result = await suggestTvtimeMovie(evidence, {
+		get: async (path) => {
+			if (path === "/search/movie")
+				return {
+					results: [
+						{ id: 42, title: "Localized movie", release_date: "2001-01-01" },
+						{ id: 43, title: "Another name", release_date: "1990-01-01" },
+						{ id: 44, title: "Unknown date", release_date: "" },
+					],
+					total_pages: 1,
+				}
+			const id = Number(path.split("/").at(-1))
+			details.push(id)
+			if (id === 43)
+				throw Error("A far-year candidate must not request details")
+			return id === 42
+				? movie
+				: { ...movie, id: 44, alternative_titles: { titles: [] } }
+		},
+		catalog: async () => ({
+			title: "Catalog movie",
+			year: 2001,
+			posterPath: null,
+		}),
+	})
+	assert.equal(result.state, "suggested")
+	assert.deepEqual(details, [42, 44])
+	assert.equal(result.proof?.verifiedCandidates, 2)
+	assert.equal(result.proof?.discoveredCandidates, 3)
+	assert.equal(result.proof?.yearExcludedCandidates, 1)
+})
+
+test("adjacent years, missing dates and conflicting duplicate search evidence still require full verification", async () => {
+	for (const releaseDate of ["2000-01-01", "2002-01-01", "", "invalid"]) {
+		let details = 0
+		const result = await suggestTvtimeMovie(evidence, {
+			get: async (path) => {
+				if (path === "/search/movie")
+					return {
+						results: [
+							{ id: 42, release_date: "2001-01-01" },
+							{ id: 43, release_date: releaseDate },
+						],
+						total_pages: 1,
+					}
+				details++
+				return { ...movie, id: Number(path.split("/").at(-1)) }
+			},
+			catalog: async () => ({ title: "Movie", year: 2001, posterPath: null }),
+		})
+		assert.equal(result.reason, "tvtime_suggestion_ambiguous")
+		assert.equal(details, 2)
+	}
+	let details = 0
+	const result = await suggestTvtimeMovie(evidence, {
+		get: async (path) => {
+			if (path === "/search/movie")
+				return {
+					results: [
+						{ id: 42, release_date: "1990-01-01" },
+						{ id: 42, release_date: "2001-01-01" },
+					],
+					total_pages: 1,
+				}
+			details++
+			return movie
+		},
+		catalog: async () => ({ title: "Movie", year: 2001, posterPath: null }),
+	})
+	assert.equal(result.state, "suggested")
+	assert.equal(details, 1)
+})
+
+test("an exact search title with an explicit country still verifies a distant country release", async () => {
+	let details = 0
+	const result = await suggestTvtimeMovie(evidence, {
+		get: async (path) => {
+			if (path === "/search/movie")
+				return {
+					results: [
+						{ id: 42, title: "Localized movie", release_date: "2003-01-01" },
+					],
+					total_pages: 1,
+				}
+			details++
+			return { ...movie, release_date: "2003-01-01" }
+		},
+		catalog: async () => ({ title: "Movie", year: 2003, posterPath: null }),
+	})
+	assert.equal(result.state, "suggested")
+	assert.equal(details, 1)
+	assert.equal(result.proof?.date.basis, "country")
+})
