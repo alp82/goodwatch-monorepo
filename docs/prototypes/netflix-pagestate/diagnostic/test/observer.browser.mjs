@@ -479,3 +479,17 @@ test('P9: a cleanup that can\'t restore reports failed', async () => {
   assert.equal(c.cleanupResult, 'failed')
   await page.close()
 })
+
+test('P9: the observer removes itself when its session lifetime ends', async () => {
+  const page = await openPage({ serve: serveList() })
+  await page.close()
+  const page2 = await context.newPage()
+  await page2.goto('https://www.netflix.com/test')
+  await page2.addScriptTag({ content: OBSERVER })
+  await page2.evaluate(cfg => window.__gwDiagObserverInstall({ ...cfg, sessionMs: 400 }), CFG)
+  await sleep(700)
+  const r = await page2.evaluate(() => ({ native: /\[native code\]/.test(Function.prototype.toString.call(window.fetch)) }))
+  assert.equal(r.native, true)
+  assert.equal(await op(page2, 'pull'), null)
+  await page2.close()
+})

@@ -45,6 +45,7 @@
 	const decode = (bytes, stream) => decoder.decode(bytes, { stream });
 	const querySelector = Document.prototype.querySelector;
 	const getAttribute = Element.prototype.getAttribute;
+	const nativeSetTimeout = W.setTimeout.bind(W);
 
 	const LIMITS = {
 		urlChars: 16 * 1024, bodyChars: 64 * 1024, variablesChars: 16 * 1024,
@@ -470,6 +471,15 @@
 			dispatch.call(document, new NativeCustomEvent(`${cfg.channel}:res`, { detail: stringify(reply) }));
 		}
 		addListener.call(document, `${cfg.channel}:req`, onRequest);
+		// Self-removal when the session lifetime ends (10 minutes by default).
+		const lifetime = Number.isSafeInteger(cfg.sessionMs) && cfg.sessionMs > 0 ? cfg.sessionMs : 10 * 60 * 1000;
+		nativeSetTimeout(() => {
+			try {
+				bindingOpen = false;
+				cleanup();
+				removeListener.call(document, `${cfg.channel}:req`, onRequest);
+			} catch {}
+		}, lifetime);
 		return { ok: true, installedAtMsAfterLoad };
 	};
 })();
