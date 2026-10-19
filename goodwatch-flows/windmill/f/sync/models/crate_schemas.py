@@ -224,6 +224,7 @@ SCHEMAS = {
     "show": {
         "columns": {
             "tmdb_id": "INTEGER",
+            "tvdb_id": "INTEGER",
             "title": "TEXT INDEX USING FULLTEXT",
             "original_title": "TEXT INDEX USING FULLTEXT",
             "tagline": "TEXT INDEX USING FULLTEXT",

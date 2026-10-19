@@ -243,6 +243,7 @@ class Movie(MediaBase):
 
 
 class Show(MediaBase):
+    tvdb_id: Optional[int] = None
     first_air_date: Optional[float] = None  # Unix timestamp
     last_air_date: Optional[float] = None  # Unix timestamp
     number_of_seasons: Optional[int] = None

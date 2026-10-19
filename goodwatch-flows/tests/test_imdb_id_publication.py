@@ -71,6 +71,18 @@ class ImdbIdPublicationTest(unittest.TestCase):
             self.assertIsNone(shows[tmdb_id].imdb_url)
             self.assertIsNone(shows[tmdb_id].imdb_id)
 
+    def test_show_rows_publish_positive_tvdb_ids_for_catalog_first_imports(self):
+        self.mongo.tmdb_tv_details.insert_many([
+            {"tmdb_id": 1, "title": "Mapped", "external_ids": {"tvdb_id": 81189}},
+            {"tmdb_id": 2, "title": "Missing", "external_ids": {}},
+            {"tmdb_id": 3, "title": "Invalid", "external_ids": {"tvdb_id": -1}},
+        ])
+        tmdb_details.copy_media(self.connector, {}, "show", recent_only=False)
+        shows = self.published("show")
+        self.assertEqual(shows[1].tvdb_id, 81189)
+        self.assertIsNone(shows[2].tvdb_id)
+        self.assertIsNone(shows[3].tvdb_id)
+
     def test_wikidata_override_fills_a_missing_tmdb_id(self):
         """#150 fills `imdb_id_override`; the details copy must publish it, not clear it."""
         self.mongo.tmdb_tv_details.insert_many([

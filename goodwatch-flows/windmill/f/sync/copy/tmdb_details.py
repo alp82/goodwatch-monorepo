@@ -416,6 +416,8 @@ def copy_media(
                 media.movie_series_id = tmdb_details.get("belongs_to_collection", {}).get("id")
                 media.runtime = tmdb_details.get("runtime")
             else:
+                tvdb_id = (tmdb_details.get("external_ids") or {}).get("tvdb_id")
+                media.tvdb_id = tvdb_id if type(tvdb_id) is int and tvdb_id > 0 else None
                 media.first_air_date = to_timestamp(tmdb_details.get("first_air_date"))
                 media.last_air_date = to_timestamp(tmdb_details.get("last_air_date"))
                 media.number_of_seasons = tmdb_details.get("number_of_seasons")
