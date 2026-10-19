@@ -30,20 +30,56 @@ if (!token) {
 
 let requests = 0
 let networkErrors = 0
-async function get(path, headers = {}) {
+let redirectsRefused = 0
+// Only what Seerr reads from each answer (server/api/plextv.ts). Error
+// bodies are dropped entirely: Seerr only looks at their status.
+const ok = (status) => status >= 200 && status <= 299
+const keyOnly = (items) => (Array.isArray(items) ? items.map((item) => ({ ratingKey: String(item?.ratingKey ?? "") })) : undefined)
+function projectList(body) {
+	const container = body?.MediaContainer
+	if (!container || typeof container !== "object" || Array.isArray(container)) return undefined
+	const projected = { totalSize: container.totalSize }
+	if (container.Metadata !== undefined) projected.Metadata = keyOnly(container.Metadata)
+	if (container.Video !== undefined) projected.Video = keyOnly(container.Video)
+	return { MediaContainer: projected }
+}
+function projectMetadata(body) {
+	const container = body?.MediaContainer
+	const pick = (items) =>
+		Array.isArray(items) && items[0]
+			? [
+					{
+						ratingKey: String(items[0].ratingKey ?? ""),
+						type: String(items[0].type ?? ""),
+						title: String(items[0].title ?? ""),
+						Guid: Array.isArray(items[0].Guid) ? items[0].Guid.map((guid) => ({ id: String(guid?.id ?? "") })) : undefined,
+					},
+				]
+			: undefined
+	if (!container || typeof container !== "object") return {}
+	const projected = {}
+	if (container.Metadata !== undefined) projected.Metadata = pick(container.Metadata)
+	if (container.Video !== undefined) projected.Video = pick(container.Video)
+	return { MediaContainer: projected }
+}
+async function get(path, project, headers = {}) {
 	requests += 1
 	try {
 		const response = await fetch(`${PLEX}${path}`, {
 			headers: { "X-Plex-Token": token, "Content-Type": "application/json", Accept: "application/json", ...headers },
+			// Never send the token to whatever host a redirect names.
+			redirect: "error",
 		})
 		const text = await response.text()
 		let body
-		try {
-			body = text ? JSON.parse(text) : undefined
-		} catch {}
+		if (ok(response.status))
+			try {
+				body = text ? project(JSON.parse(text)) : undefined
+			} catch {}
 		return { status: response.status, etag: response.headers.get("etag") ?? undefined, body }
-	} catch {
-		networkErrors += 1
+	} catch (error) {
+		if (String(error?.cause?.message ?? "").includes("redirect")) redirectsRefused += 1
+		else networkErrors += 1
 		return { status: 0 }
 	}
 }
@@ -61,6 +97,7 @@ async function listPage(start) {
 	const ifNoneMatch = cached?.etag ?? ""
 	const response = await get(
 		`/library/sections/watchlist/all?X-Plex-Container-Start=${start}&X-Plex-Container-Size=${PAGE_SIZE}`,
+		projectList,
 		ifNoneMatch ? { "If-None-Match": ifNoneMatch } : {},
 	)
 	const key = `${start}|${ifNoneMatch}`
@@ -93,7 +130,7 @@ const keys = [...ratingKeys]
 for (let index = 0; index < keys.length; index += 4) {
 	await Promise.all(
 		keys.slice(index, index + 4).map(async (ratingKey) => {
-			const response = await get(`/library/metadata/${encodeURIComponent(ratingKey)}`)
+			const response = await get(`/library/metadata/${encodeURIComponent(ratingKey)}`, projectMetadata)
 			metadata[ratingKey] = { status: response.status, body: response.body }
 			counts.checked += 1
 			if (response.status === 404) return (counts.notFound += 1)
@@ -118,11 +155,26 @@ const direct = {
 	laterPagesAnswered304: conditionalPages.notModified,
 	cappedAtPages: capped ? MAX_PAGES : null,
 	networkErrors,
+	redirectsRefused,
 	plexRequests: requests,
 }
 
 // The recording holds titles and Plex keys; it only ever lives in the pipe
-// and the replay's memory. Remove the token wherever a response echoed it.
-const recording = JSON.stringify({ direct, metadataCounts: counts, list, metadata }).split(token).join("[removed]")
+// and the replay's memory. It keeps only projected fields, so a body that
+// echoed the token is gone already. As a last check, refuse to send anything
+// that still holds the token in any common encoding.
+const recording = JSON.stringify({ direct, metadataCounts: counts, list, metadata })
+const forms = [
+	token,
+	encodeURIComponent(token),
+	Buffer.from(token).toString("base64"),
+	Buffer.from(token).toString("base64url"),
+	JSON.stringify(token).slice(1, -1),
+	JSON.stringify(token).slice(1, -1).replaceAll("/", "\\/"),
+].filter(Boolean)
 token = ""
+if (forms.some((form) => recording.includes(form) || recording.includes(form.replace(/=+$/, "")))) {
+	console.error("A Plex answer repeats the token in a field Seerr needs; stopping without a recording.")
+	process.exit(1)
+}
 process.stdout.write(`${recording}\n`)

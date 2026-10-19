@@ -59,6 +59,18 @@ An independent review of `66dac1a0` found false `complete` labels and unsafe tok
 | O1 | Cleanup | Errors, INT and TERM leave 0 owned containers, networks and tmpfs folders. |
 | O2 | Networks | A same-named network without the `gw712` label, or with the wrong `Internal` setting, is refused before any container starts. |
 
+## Gates added after the second review
+
+A second review of `a27ae182` found five more problems. These gates were added on 2026-10-19 with failing reproductions (`ef8d0708`), before the fixes were measured.
+
+| ID | Gate | Pass |
+| --- | --- | --- |
+| L9 (extended) | Envelope | Every page in both passes reports the same total and page count. Totals of 60, 59 and 60 are never labelled `complete`. |
+| L10 | Rows without identity | Rows without a TMDB ID are never merged with each other. Three such rows produce three items. |
+| S2 | Arguments | The owner's token is never a process argument or environment variable. A static check allows `$token` only in shell builtins, and a scan of every readable `/proc/*/cmdline` and `environ` runs during the dry run. |
+| S3 | Echoes | When Plex bodies echo the token (literal, percent-encoded, base64 or JSON-escaped, in 200 and 401 bodies), the fetch recording holds no form of it. |
+| S4 | Redirects | When Plex redirects to another host, the token is never sent there. |
+
 ## Route comparison (informational, no gate)
 
 Source inspection shows `GET /api/v1/discover/watchlist` skips local rows whenever the user has a Plex token. The harness records what this route and the ticket's `GET /api/v1/user/:id/watchlist` return for the same user, so the owner can see which list a member sees in Seerr's UI.

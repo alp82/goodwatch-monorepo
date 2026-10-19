@@ -158,6 +158,7 @@ export async function readWatchlist({ getPage, onPage }) {
 	const summarize = (pages, passOrigins) => {
 		const keys = []
 		const items = []
+		const unkeyed = []
 		let rows = 0
 		let duplicates = 0
 		let withoutId = 0
@@ -168,15 +169,33 @@ export async function readWatchlist({ getPage, onPage }) {
 				const item = project(row, passOrigins[index])
 				const key = identity(item)
 				keys.push(key ?? `row:${rows}`)
-				if (!key) withoutId += 1
-				else if (seen.has(key)) {
+				// Only established identities are deduplicated. Rows without
+				// one stay separate.
+				if (!key) {
+					withoutId += 1
+					unkeyed.push(item)
+				} else if (seen.has(key)) {
 					duplicates += 1
 					continue
 				} else seen.add(key)
 				items.push({ key, item })
 			}
 		})
-		return { total: pages[0].body.totalResults, totalPages: pages[0].body.totalPages, keys, items, rows, duplicates, withoutId, distinct: seen.size }
+		const totals = new Set(pages.map(({ body }) => body.totalResults))
+		const pageCounts = new Set(pages.map(({ body }) => body.totalPages))
+		return {
+			total: pages[0].body.totalResults,
+			totalPages: pages[0].body.totalPages,
+			totals,
+			pageCounts,
+			keys,
+			items,
+			unkeyed,
+			rows,
+			duplicates,
+			withoutId,
+			distinct: seen.size,
+		}
 	}
 	const one = summarize(passOne, origins.slice(0, passOne.length))
 	const two = summarize(passTwo, origins.slice(passOne.length))
@@ -187,15 +206,23 @@ export async function readWatchlist({ getPage, onPage }) {
 		if (pass.rows === pass.total && pass.distinct + pass.withoutId !== pass.total)
 			addReason("The number of distinct titles doesn't match Seerr's total.")
 	}
-	if (one.total !== two.total || one.totalPages !== two.totalPages) addReason("Seerr's total changed between the two passes.")
+	// Every page in both passes must report the same total and page count.
+	const allTotals = new Set([...one.totals, ...two.totals])
+	const allPageCounts = new Set([...one.pageCounts, ...two.pageCounts])
+	if (one.totals.size > 1 || two.totals.size > 1 || one.pageCounts.size > 1 || two.pageCounts.size > 1)
+		addReason("Seerr's total changed from page to page.")
+	if (allTotals.size > 1 || allPageCounts.size > 1) addReason("Seerr's total changed between the two passes.")
 	else if (one.keys.join("\n") !== two.keys.join("\n")) addReason("The two passes returned different titles or a different order.")
 
 	const completeness = source === "local" && reasons.length === 0 ? "complete" : "unknown"
 	// Both passes, first-seen order. An incomplete capture is reviewed anyway,
 	// and an import never removes wishes.
 	const merged = new Map()
-	for (const { key, item } of [...one.items, ...two.items]) if (!merged.has(key)) merged.set(key, item)
-	const items = [...merged.values()]
+	for (const { key, item } of [...one.items, ...two.items]) if (key && !merged.has(key)) merged.set(key, item)
+	// Rows without an identity can't be matched across passes, so take them
+	// from the pass that has more of them.
+	const unkeyed = two.unkeyed.length > one.unkeyed.length ? two.unkeyed : one.unkeyed
+	const items = [...merged.values(), ...unkeyed]
 
 	let emptyReason
 	if (items.length === 0)

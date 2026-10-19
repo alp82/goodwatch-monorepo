@@ -22,6 +22,10 @@ const SYNTHETIC = `gw712-replay-${randomBytes(12).toString("hex")}`
 
 let input = ""
 for await (const chunk of process.stdin) input += chunk
+if (!input.trim()) {
+	console.error("No recording from the fetch step; it stopped before sending one.")
+	process.exit(1)
+}
 const recording = JSON.parse(input)
 input = ""
 

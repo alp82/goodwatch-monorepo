@@ -42,7 +42,7 @@ docs/prototypes/wishlist-imports/seerr-reader/harness/run.sh develop   # the ins
 docs/prototypes/wishlist-imports/seerr-reader/harness/run.sh latest    # release v3.5.0
 ```
 
-Each run takes about 45 seconds. It creates a fresh Seerr on an internal Docker network with no internet access and no published port, seeds it through Seerr's API, runs 33 scenarios and exits nonzero if any scenario fails. Images are pinned by digest in `harness/lib.sh`. Seerr's data lives on tmpfs under `/dev/shm`. Results land in `../seerr-712-validation/work/out-<tag>/` next to the repository (override with `GW712_WORK`), never in Git.
+Each run takes about 45 seconds. It creates a fresh Seerr on an internal Docker network with no internet access and no published port, seeds it through Seerr's API, runs 35 scenarios and exits nonzero if any scenario fails. Images are pinned by digest in `harness/lib.sh`. Seerr's data lives on tmpfs under `/dev/shm`. Results land in `../seerr-712-validation/work/out-<tag>/` next to the repository (override with `GW712_WORK`), never in Git.
 
 Every container and network carries the labels `gw712=1` and `gw712.run=<run>`. On every exit (success, error, Ctrl-C or TERM), the scripts remove what carries their run's label and their tmpfs folder. They refuse to use a same-named network that lacks the `gw712` label or has the wrong `Internal` setting.
 
@@ -50,6 +50,7 @@ The script tests need the same tools, and no `gw712` containers may be running b
 
 ```sh
 docs/prototypes/wishlist-imports/seerr-reader/harness/tests/owner-check-test.sh   # token handling, about 1 minute
+docs/prototypes/wishlist-imports/seerr-reader/harness/tests/fetch-test.sh         # echoed tokens and redirects, under 1 minute
 docs/prototypes/wishlist-imports/seerr-reader/harness/tests/cleanup-test.sh       # error, INT and TERM cleanup, about 3 minutes
 docs/prototypes/wishlist-imports/seerr-reader/harness/tests/network-test.sh       # network ownership, about 1 minute
 ```
@@ -65,7 +66,8 @@ The mock shows what Seerr does with each Plex answer. Only a real token shows wh
 
 What the script does:
 
-- A fetch container gets your token on stdin and reads your Plex Watchlist with `GET` requests, in the order Seerr would make them. It keeps the responses in memory and removes your token from them.
+- A fetch container gets your token on stdin and reads your Plex Watchlist with `GET` requests, in the order Seerr would make them. It refuses redirects, keeps only the response fields Seerr reads, and drops error bodies. It refuses to continue if any form of your token is left.
+- The script never passes your token as a command argument. It uses the token only in shell builtins, and `harness/secret-scan.py` checks the summary by reading the token on stdin.
 - The responses go through a pipe to a replay container, which plays Plex for a fresh, pinned Seerr (`v3.5.0`) from memory. Seerr gets a synthetic token, never yours, runs without internet access, logs to nowhere and keeps its data on tmpfs. This matters because Seerr can print a Plex token on stderr when a background refresh fails.
 - The script removes every container and the tmpfs folder on every exit, including errors and Ctrl-C.
 - It writes nothing to Plex or to any existing Seerr.

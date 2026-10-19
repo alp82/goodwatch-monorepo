@@ -1,6 +1,6 @@
 {
   "label": "develop (63705622eac5dd4e1006775e9fc43215c3ea0c88 develop)",
-  "scenarios": 33,
+  "scenarios": 35,
   "failedScenarios": [],
   "falseComplete": 0,
   "routeComparison": {
@@ -73,7 +73,7 @@
           "local"
         ],
         "requests": 2,
-        "milliseconds": 42
+        "milliseconds": 18
       },
       "expect": [
         "complete"
@@ -140,7 +140,7 @@
           "local"
         ],
         "requests": 2,
-        "milliseconds": 15
+        "milliseconds": 11
       },
       "expect": [
         "complete"
@@ -209,7 +209,7 @@
           "local"
         ],
         "requests": 4,
-        "milliseconds": 19
+        "milliseconds": 20
       },
       "expect": [
         "complete"
@@ -290,7 +290,7 @@
           "local"
         ],
         "requests": 6,
-        "milliseconds": 31
+        "milliseconds": 32
       },
       "expect": [
         "complete"
@@ -383,7 +383,7 @@
           "local"
         ],
         "requests": 6,
-        "milliseconds": 31
+        "milliseconds": 32
       },
       "expect": [
         "complete"
@@ -451,10 +451,10 @@
           "local"
         ],
         "requests": 4,
-        "milliseconds": 23
+        "milliseconds": 47
       },
       "exitCode": 0,
-      "wallMs": 232,
+      "wallMs": 287,
       "expect": [
         "complete"
       ],
@@ -542,10 +542,10 @@
           "local"
         ],
         "requests": 6,
-        "milliseconds": 65
+        "milliseconds": 104
       },
       "exitCode": 0,
-      "wallMs": 85,
+      "wallMs": 125,
       "expect": [
         "complete"
       ],
@@ -573,7 +573,7 @@
       "projectionOk": true,
       "leaks": [],
       "exitCode": 4,
-      "wallMs": 52,
+      "wallMs": 67,
       "expect": [
         "no file"
       ],
@@ -601,7 +601,7 @@
       "projectionOk": true,
       "leaks": [],
       "exitCode": 4,
-      "wallMs": 190,
+      "wallMs": 212,
       "expect": [
         "no file"
       ],
@@ -630,7 +630,7 @@
       "projectionOk": true,
       "leaks": [],
       "exitCode": 4,
-      "wallMs": 210,
+      "wallMs": 249,
       "expect": [
         "no file"
       ],
@@ -658,7 +658,7 @@
       "projectionOk": true,
       "leaks": [],
       "exitCode": 4,
-      "wallMs": 36,
+      "wallMs": 57,
       "expect": [
         "no file"
       ],
@@ -986,6 +986,7 @@
         "completeness": "unknown",
         "reasons": [
           "Seerr reported 41 titles but sent 42 in the first pass.",
+          "Seerr's total changed from page to page.",
           "Seerr's total changed between the two passes."
         ],
         "reportedTotal": 41,
@@ -1011,7 +1012,7 @@
           "local"
         ],
         "requests": 6,
-        "milliseconds": 28
+        "milliseconds": 60
       },
       "expect": [
         "unknown",
@@ -1069,6 +1070,7 @@
         "completeness": "unknown",
         "reasons": [
           "Seerr reported 41 titles but sent 40 in the first pass.",
+          "Seerr's total changed from page to page.",
           "Seerr's total changed between the two passes."
         ],
         "reportedTotal": 41,
@@ -1093,11 +1095,189 @@
           "local"
         ],
         "requests": 5,
-        "milliseconds": 27
+        "milliseconds": 55
       },
       "expect": [
         "unknown",
         "no file"
+      ],
+      "failures": []
+    },
+    {
+      "name": "stub-page-totals-differ",
+      "gates": [
+        "L9"
+      ],
+      "expectedTitles": 60,
+      "outputTitles": 60,
+      "missing": 0,
+      "extra": 0,
+      "duplicateOut": 0,
+      "exact": true,
+      "label": "unknown",
+      "falseComplete": false,
+      "parser": {
+        "accepted": true,
+        "wants": 60,
+        "invalid": 0,
+        "movieWants": 60,
+        "movieWishKeys": [
+          "movie:1",
+          "movie:2",
+          "movie:3",
+          "movie:4",
+          "movie:5",
+          "movie:6",
+          "movie:7",
+          "movie:8",
+          "movie:9",
+          "movie:10",
+          "movie:11",
+          "movie:12",
+          "movie:13",
+          "movie:14",
+          "movie:15",
+          "movie:16",
+          "movie:17",
+          "movie:18",
+          "movie:19",
+          "movie:20",
+          "movie:21",
+          "movie:22",
+          "movie:23",
+          "movie:24",
+          "movie:25",
+          "movie:26",
+          "movie:27",
+          "movie:28",
+          "movie:29",
+          "movie:30",
+          "movie:31",
+          "movie:32",
+          "movie:33",
+          "movie:34",
+          "movie:35",
+          "movie:36",
+          "movie:37",
+          "movie:38",
+          "movie:39",
+          "movie:40",
+          "movie:41",
+          "movie:42",
+          "movie:43",
+          "movie:44",
+          "movie:45",
+          "movie:46",
+          "movie:47",
+          "movie:48",
+          "movie:49",
+          "movie:50",
+          "movie:51",
+          "movie:52",
+          "movie:53",
+          "movie:54",
+          "movie:55",
+          "movie:56",
+          "movie:57",
+          "movie:58",
+          "movie:59",
+          "movie:60"
+        ],
+        "completeness": "unknown"
+      },
+      "projectionOk": true,
+      "leaks": [],
+      "report": {
+        "source": "local",
+        "completeness": "unknown",
+        "reasons": [
+          "Seerr's total changed from page to page.",
+          "Seerr's total changed between the two passes."
+        ],
+        "reportedTotal": 60,
+        "rowsReceived": 60,
+        "distinctTitles": 60,
+        "duplicates": 0,
+        "withoutId": 0,
+        "secondPass": {
+          "reportedTotal": 60,
+          "rowsReceived": 60,
+          "distinctTitles": 60,
+          "sameSequence": true
+        },
+        "pages": 3,
+        "pageOrigins": [
+          "local",
+          "local",
+          "local"
+        ],
+        "secondPassOrigins": [
+          "local",
+          "local",
+          "local"
+        ],
+        "requests": 6,
+        "milliseconds": 0
+      },
+      "expect": [
+        "unknown",
+        "no file"
+      ],
+      "failures": []
+    },
+    {
+      "name": "stub-rows-without-identity",
+      "gates": [
+        "L6",
+        "L9"
+      ],
+      "expectedTitles": 3,
+      "outputTitles": 3,
+      "missing": 0,
+      "extra": 0,
+      "duplicateOut": 0,
+      "exact": true,
+      "label": "unknown",
+      "falseComplete": false,
+      "parser": {
+        "accepted": true,
+        "wants": 3,
+        "invalid": 0,
+        "movieWants": 0,
+        "movieWishKeys": [],
+        "completeness": "unknown"
+      },
+      "projectionOk": true,
+      "leaks": [],
+      "report": {
+        "source": "local",
+        "completeness": "unknown",
+        "reasons": [
+          "3 titles have no TMDB ID."
+        ],
+        "reportedTotal": 3,
+        "rowsReceived": 3,
+        "distinctTitles": 0,
+        "duplicates": 0,
+        "withoutId": 3,
+        "secondPass": {
+          "reportedTotal": 3,
+          "rowsReceived": 3,
+          "distinctTitles": 0,
+          "sameSequence": true
+        },
+        "pages": 1,
+        "pageOrigins": [
+          "local"
+        ],
+        "secondPassOrigins": [
+          "local"
+        ],
+        "requests": 2,
+        "milliseconds": 0
+      },
+      "expect": [
+        "unknown"
       ],
       "failures": []
     },
@@ -1186,7 +1366,7 @@
           "local"
         ],
         "requests": 6,
-        "milliseconds": 33
+        "milliseconds": 60
       },
       "expect": [
         "unknown",
@@ -1298,7 +1478,7 @@
           "plex"
         ],
         "requests": 4,
-        "milliseconds": 35
+        "milliseconds": 28
       },
       "expect": [
         "unknown"
@@ -1361,7 +1541,7 @@
           "plex"
         ],
         "requests": 4,
-        "milliseconds": 19
+        "milliseconds": 22
       },
       "expect": [
         "unknown"
@@ -1424,7 +1604,7 @@
           "plex"
         ],
         "requests": 4,
-        "milliseconds": 23
+        "milliseconds": 21
       },
       "expect": [
         "unknown"
@@ -1476,7 +1656,7 @@
           "empty"
         ],
         "requests": 2,
-        "milliseconds": 15
+        "milliseconds": 11
       },
       "expect": [
         "no file"
@@ -1528,7 +1708,7 @@
           "empty"
         ],
         "requests": 2,
-        "milliseconds": 7
+        "milliseconds": 21
       },
       "expect": [
         "no file"
@@ -1580,7 +1760,7 @@
           "empty"
         ],
         "requests": 2,
-        "milliseconds": 8
+        "milliseconds": 7
       },
       "expect": [
         "no file"
@@ -1619,7 +1799,9 @@
           "Seerr answered from the Plex fallback, which can drop rows and hide failures.",
           "Seerr reports every Plex title that isn't a show as a movie, so those titles need a type before import.",
           "Seerr reported 30 titles but sent 20 in the first pass.",
-          "Seerr reported 30 titles but sent 20 in the second pass."
+          "Seerr reported 30 titles but sent 20 in the second pass.",
+          "Seerr's total changed from page to page.",
+          "Seerr's total changed between the two passes."
         ],
         "reportedTotal": 30,
         "rowsReceived": 20,
@@ -1642,7 +1824,7 @@
           "empty"
         ],
         "requests": 4,
-        "milliseconds": 19
+        "milliseconds": 18
       },
       "expect": [
         "unknown"
@@ -1707,7 +1889,7 @@
           "plex"
         ],
         "requests": 4,
-        "milliseconds": 19
+        "milliseconds": 17
       },
       "expect": [
         "unknown"
@@ -1759,7 +1941,7 @@
           "empty"
         ],
         "requests": 2,
-        "milliseconds": 10
+        "milliseconds": 7
       },
       "expect": [
         "no file"
@@ -1816,7 +1998,7 @@
           "plex"
         ],
         "requests": 2,
-        "milliseconds": 10
+        "milliseconds": 9
       },
       "expect": [
         "unknown"
@@ -1865,6 +2047,7 @@
           "Pages came from different Seerr sources.",
           "Seerr reports every Plex title that isn't a show as a movie, so those titles need a type before import.",
           "Seerr reported 21 titles but sent 25 in the first pass.",
+          "Seerr's total changed from page to page.",
           "Seerr's total changed between the two passes."
         ],
         "reportedTotal": 21,
@@ -1888,7 +2071,7 @@
           "plex"
         ],
         "requests": 4,
-        "milliseconds": 103
+        "milliseconds": 71
       },
       "expect": [
         "unknown"
@@ -1956,7 +2139,7 @@
           "local"
         ],
         "requests": 4,
-        "milliseconds": 16
+        "milliseconds": 13
       },
       "expect": [
         "complete"
@@ -2013,7 +2196,7 @@
           "plex"
         ],
         "requests": 2,
-        "milliseconds": 9
+        "milliseconds": 8
       },
       "expect": [
         "unknown"

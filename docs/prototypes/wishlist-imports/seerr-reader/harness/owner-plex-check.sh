@@ -95,11 +95,16 @@ fetch_and_replay() {
 }
 run_waiting fetch_and_replay
 
-if grep -qF -- "$token" "$WORK/summary.json"; then
+# The scanner reads the token on stdin, so it never becomes a process
+# argument. It also checks percent, base64 and JSON-escaped forms.
+leak=0
+printf '%s\n' "$token" |
+	python3 "$HERE/secret-scan.py" files "$WORK/summary.json" >/dev/null || leak=1
+unset token
+if [ "$leak" != 0 ]; then
 	echo "The summary contains the token; not keeping it." >&2
 	exit 1
 fi
-unset token
 python3 -c 'import json, sys; json.load(open(sys.argv[1]))' "$WORK/summary.json"
 mkdir -p "$PRIVATE"
 chmod 700 "$PRIVATE"

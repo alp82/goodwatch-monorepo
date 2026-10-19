@@ -4,6 +4,7 @@
 //
 // The Plex responses follow the shape Seerr's parser expects
 // (server/api/plextv.ts). They are not recorded Plex responses.
+import { createHash } from "node:crypto"
 import { readFileSync } from "node:fs"
 import { createServer } from "node:https"
 
@@ -89,7 +90,9 @@ function plexList(req, res, url) {
 		res.writeHead(302, { location: `https://gw712-redirect-target${req.url}` })
 		return res.end()
 	}
-	const etag = scenario.etag === "list" ? `"${token.slice(0, 40)}-list"` : `"${token.slice(0, 40)}-${start}"`
+	// ETags come from a hash of the token, never the token itself.
+	const tag = createHash("sha256").update(token).digest("hex").slice(0, 16)
+	const etag = scenario.etag === "list" ? `"${tag}-list"` : `"${tag}-${start}"`
 	if (scenario.echo && req.headers["if-none-match"] !== etag) {
 		const body = JSON.stringify({ MediaContainer: { offset: start, size, totalSize: scenario.items.length, Metadata: scenario.items.slice(start, start + size) } })
 		res.writeHead(200, { "content-type": "application/json", etag })
