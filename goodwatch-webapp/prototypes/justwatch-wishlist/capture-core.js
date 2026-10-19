@@ -238,10 +238,13 @@ const cleanText = (value, max) =>
 		: null
 
 /**
- * Turns a Watchlist capture into shared wishlist JSON v1 plus an explicit loss ledger.
+ * Turns a Watchlist capture into shared wishlist JSON v1.1 plus an explicit loss ledger.
  * Only provider-returned external IDs are written; nothing is looked up or guessed.
+ * `seen` is the Seen list capture: it only adds source Seen evidence to wishes, never wishes.
  */
-export function toSharedWishlist(capture, { profileLabel, exportedAt }) {
+export function toSharedWishlist(capture, { profileLabel, exportedAt, seen }) {
+	const seenDates = new Map()
+	for (const node of seen?.nodes ?? []) seenDates.set(node.id, isDate(node.seenlistEntry?.createdAt) ? node.seenlistEntry.createdAt : null)
 	if (capture.listType !== "WATCHLIST")
 		throw new Error("Only a Watchlist capture can become a wishlist file.")
 	const loss = {}
@@ -260,7 +263,7 @@ export function toSharedWishlist(capture, { profileLabel, exportedAt }) {
 		}
 		const mediaType = MEDIA[node.objectType] ?? "unknown"
 		if (mediaType === "unknown")
-			count(`objectType:${safeType(node.objectType)}`, "Provider type has no shared-format type; kept as unknown.")
+			count(`objectType:${safeType(node.objectType)}`, "Kept as unknown. Season rows (v1.1, #715) need a season number and parent-show IDs, which this capture doesn't request or verify.")
 		const title = cleanText(content.title, 1000)
 		const item = { title: title ?? "", mediaType }
 		if (!title) count("title", "Missing or unreadable title; the parser marks the row invalid.")
@@ -285,7 +288,14 @@ export function toSharedWishlist(capture, { profileLabel, exportedAt }) {
 		else if (added != null) count("watchlistEntryV2.createdAt", "Unreadable added date dropped, not replaced with export time.")
 		else count("watchlistEntryV2.createdAt:absent", "No added date; left absent.")
 		if (node.objectId != null) count("objectId", "Numeric JustWatch object ID not carried; sourceId holds the native ID.")
-		if (node.seenlistEntry) count("seenlistEntry", "Seen on JustWatch and also on the Watchlist; the file can't say so. GoodWatch's own Seen state decides rewatch.")
+		// Source Seen evidence (v1.1, #715): the wish's own Seen entry or its ID in the Seen capture.
+		// Never from tracking or show progress; an unknown date stays absent.
+		if (node.seenlistEntry || seenDates.has(node.id)) {
+			item.sourceSeen = true
+			const seenAt = isDate(node.seenlistEntry?.createdAt) ? node.seenlistEntry.createdAt : seenDates.get(node.id)
+			if (seenAt) item.sourceSeenAt = seenAt
+			else count("sourceSeenAt:absent", "Seen on JustWatch without a readable Seen date (shows have none); sourceSeenAt omitted.")
+		}
 		if (node.tvShowTrackingEntry) count("tvShowTrackingEntry", "Tracking start date not carried.")
 		if (node.seenState && typeof node.seenState.progress === "number" && node.seenState.progress > 0)
 			count("seenState.progress", "Show progress above zero not carried; the wish is kept.")
@@ -300,7 +310,7 @@ export function toSharedWishlist(capture, { profileLabel, exportedAt }) {
 	return {
 		file: {
 			format: "goodwatch-wishlist",
-			version: 1,
+			version: 1.1,
 			source: "justwatch",
 			...(profileLabel ? { profileLabel } : {}),
 			...(/^[A-Z]{2}$/.test(capture.country) ? { country: capture.country } : {}),

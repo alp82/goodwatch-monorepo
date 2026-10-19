@@ -33,7 +33,7 @@ export const watchlist = [
 	[movie(1006, "Obscure Festival Short", 2019, null, wish(10)), { type: "movie", tmdb: null, case: "no external IDs, not in catalog", outcome: "unmatched" }],
 	[movie(1007, "Amélie", 2001, { tmdbId: null, imdbId: "tt0211915" }, wish(11)), { type: "movie", tmdb: 194, case: "IMDb only" }],
 	[movie(1008, "The Matrix", 1999, { tmdbId: "abc", imdbId: "tt0133093" }, wish(12)), { type: "movie", tmdb: 603, case: "malformed TMDB ID, good IMDb ID" }],
-	[movie(1009, "Inception", 2010, { tmdbId: "603", imdbId: "tt1375666" }, wish(13)), { type: "movie", tmdb: 27205, case: "provider TMDB ID contradicts its IMDb ID", providerIdWrong: true }],
+	[movie(1009, "Inception", 2010, { tmdbId: "603", imdbId: "tt1375666" }, wish(13)), { type: "movie", tmdb: 27205, case: "provider TMDB ID contradicts its IMDb ID (held for a choice by #714)", outcome: "unmatched", providerIdWrong: true }],
 	[movie(680, "Die Verurteilten", 1994, null, wish(14)), { type: "movie", tmdb: 278, case: "localized title, no IDs, objectId equals another title's TMDB ID", outcome: "unmatched" }],
 	[{ id: "tse2005", objectId: 2005, objectType: "SHOW_SEASON", content: { title: "Stranger Things – Season 2", originalReleaseYear: 2017, fullPath: "/us/tv-show/stranger-things/season-2", externalIds: { tmdbId: "66732", imdbId: null } }, ...wish(15) }, { type: "unknown", tmdb: null, case: "season object type", outcome: "unmatched" }],
 	[movie(1011, "Arrival", 2016, { tmdbId: "329865", imdbId: "tt2543164" }, { watchlistEntryV2: { createdAt: null } }), { type: "movie", tmdb: 329865, case: "no added date" }],
@@ -44,7 +44,7 @@ export const watchlist = [
 	[movie(1016, "The Dark Knight", 2008, { tmdbId: 155, imdbId: "tt0468569" }, wish(21)), { type: "movie", tmdb: 155, case: "TMDB ID as number" }],
 	[movie(1017, "Upcoming Film", 2027, { tmdbId: "99999999", imdbId: null }, wish(22)), { type: "movie", tmdb: null, case: "TMDB ID not in catalog", outcome: "unmatched" }],
 	[show(2007, "Sherlock", 2010, { tmdbId: "19885", imdbId: "tt1475582" }, wish(23)), { type: "show", tmdb: 19885, case: "TMDB ID also used by a movie" }],
-	[movie(1018, "Spirited Away", 2001, { tmdbId: "129", imdbId: "tt0245429" }, { ...wish(24), seenlistEntry: { createdAt: at(32) } }), { type: "movie", tmdb: 129, case: "seen on JustWatch and wished; not Seen in GoodWatch" }],
+	[movie(1018, "Spirited Away", 2001, { tmdbId: "129", imdbId: "tt0245429" }, { ...wish(24), seenlistEntry: { createdAt: at(32) } }), { type: "movie", tmdb: 129, case: "seen on JustWatch and wished; not Seen in GoodWatch (source Seen, v1.1)", outcome: "conflict" }],
 ]
 // Plain filler so the list spans three 20-item pages.
 for (let index = 0; index < 23; index++) {

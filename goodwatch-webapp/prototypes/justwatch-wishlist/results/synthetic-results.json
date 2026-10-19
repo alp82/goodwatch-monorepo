@@ -29,34 +29,28 @@
 			"rows": 47,
 			"counts": {
 				"rows": 47,
-				"new": 37,
+				"new": 36,
 				"unchanged": 2,
-				"conflict": 1,
-				"unmatched": 4,
-				"unsupported": 1,
+				"conflict": 2,
+				"unmatched": 5,
+				"unsupported": 0,
 				"invalid": 2
 			},
 			"unaccounted": 0,
 			"correct": 40,
 			"wrong": 0,
 			"abstained": 1,
-			"providerWrongMatched": 1,
-			"idConflictsFlagged": 1,
-			"outcomeMismatches": [
-				"provider TMDB ID contradicts its IMDb ID: expected new, got unsupported (\"Listed twice in the file. Added once.\", matched TMDB 603 instead of 27205)"
-			],
+			"providerWrongMatched": 0,
+			"idConflictsFlagged": 0,
+			"outcomeMismatches": [],
 			"partialWarned": false,
-			"catalogReads": 6,
+			"catalogReads": 8,
 			"wishlistWrites": 0
 		},
 		"loss": {
 			"objectId": {
 				"count": 47,
 				"note": "Numeric JustWatch object ID not carried; sourceId holds the native ID."
-			},
-			"seenlistEntry": {
-				"count": 2,
-				"note": "Seen on JustWatch and also on the Watchlist; the file can't say so. GoodWatch's own Seen state decides rewatch."
 			},
 			"tvShowTrackingEntry": {
 				"count": 1,
@@ -80,7 +74,7 @@
 			},
 			"objectType:SHOW_SEASON": {
 				"count": 1,
-				"note": "Provider type has no shared-format type; kept as unknown."
+				"note": "Kept as unknown. Season rows (v1.1, #715) need a season number and parent-show IDs, which this capture doesn't request or verify."
 			},
 			"watchlistEntryV2.createdAt:absent": {
 				"count": 1,
@@ -129,34 +123,28 @@
 			"rows": 40,
 			"counts": {
 				"rows": 40,
-				"new": 30,
+				"new": 29,
 				"unchanged": 2,
-				"conflict": 1,
-				"unmatched": 4,
-				"unsupported": 1,
+				"conflict": 2,
+				"unmatched": 5,
+				"unsupported": 0,
 				"invalid": 2
 			},
 			"unaccounted": 0,
 			"correct": 33,
 			"wrong": 0,
 			"abstained": 1,
-			"providerWrongMatched": 1,
-			"idConflictsFlagged": 1,
-			"outcomeMismatches": [
-				"provider TMDB ID contradicts its IMDb ID: expected new, got unsupported (\"Listed twice in the file. Added once.\", matched TMDB 603 instead of 27205)"
-			],
+			"providerWrongMatched": 0,
+			"idConflictsFlagged": 0,
+			"outcomeMismatches": [],
 			"partialWarned": true,
-			"catalogReads": 6,
+			"catalogReads": 8,
 			"wishlistWrites": 0
 		},
 		"loss": {
 			"objectId": {
 				"count": 40,
 				"note": "Numeric JustWatch object ID not carried; sourceId holds the native ID."
-			},
-			"seenlistEntry": {
-				"count": 2,
-				"note": "Seen on JustWatch and also on the Watchlist; the file can't say so. GoodWatch's own Seen state decides rewatch."
 			},
 			"tvShowTrackingEntry": {
 				"count": 1,
@@ -180,7 +168,7 @@
 			},
 			"objectType:SHOW_SEASON": {
 				"count": 1,
-				"note": "Provider type has no shared-format type; kept as unknown."
+				"note": "Kept as unknown. Season rows (v1.1, #715) need a season number and parent-show IDs, which this capture doesn't request or verify."
 			},
 			"watchlistEntryV2.createdAt:absent": {
 				"count": 1,
@@ -232,31 +220,25 @@
 				"new": 11,
 				"unchanged": 2,
 				"conflict": 1,
-				"unmatched": 3,
-				"unsupported": 1,
+				"unmatched": 4,
+				"unsupported": 0,
 				"invalid": 2
 			},
 			"unaccounted": 0,
 			"correct": 14,
 			"wrong": 0,
 			"abstained": 1,
-			"providerWrongMatched": 1,
-			"idConflictsFlagged": 1,
-			"outcomeMismatches": [
-				"provider TMDB ID contradicts its IMDb ID: expected new, got unsupported (\"Listed twice in the file. Added once.\", matched TMDB 603 instead of 27205)"
-			],
+			"providerWrongMatched": 0,
+			"idConflictsFlagged": 0,
+			"outcomeMismatches": [],
 			"partialWarned": true,
-			"catalogReads": 5,
+			"catalogReads": 7,
 			"wishlistWrites": 0
 		},
 		"loss": {
 			"objectId": {
 				"count": 20,
 				"note": "Numeric JustWatch object ID not carried; sourceId holds the native ID."
-			},
-			"seenlistEntry": {
-				"count": 1,
-				"note": "Seen on JustWatch and also on the Watchlist; the file can't say so. GoodWatch's own Seen state decides rewatch."
 			},
 			"tvShowTrackingEntry": {
 				"count": 1,
@@ -280,7 +262,7 @@
 			},
 			"objectType:SHOW_SEASON": {
 				"count": 1,
-				"note": "Provider type has no shared-format type; kept as unknown."
+				"note": "Kept as unknown. Season rows (v1.1, #715) need a season number and parent-show IDs, which this capture doesn't request or verify."
 			},
 			"watchlistEntryV2.createdAt:absent": {
 				"count": 1,
@@ -329,34 +311,28 @@
 			"rows": 47,
 			"counts": {
 				"rows": 47,
-				"new": 37,
+				"new": 36,
 				"unchanged": 2,
-				"conflict": 1,
-				"unmatched": 4,
-				"unsupported": 1,
+				"conflict": 2,
+				"unmatched": 5,
+				"unsupported": 0,
 				"invalid": 2
 			},
 			"unaccounted": 0,
 			"correct": 40,
 			"wrong": 0,
 			"abstained": 1,
-			"providerWrongMatched": 1,
-			"idConflictsFlagged": 1,
-			"outcomeMismatches": [
-				"provider TMDB ID contradicts its IMDb ID: expected new, got unsupported (\"Listed twice in the file. Added once.\", matched TMDB 603 instead of 27205)"
-			],
+			"providerWrongMatched": 0,
+			"idConflictsFlagged": 0,
+			"outcomeMismatches": [],
 			"partialWarned": true,
-			"catalogReads": 25,
+			"catalogReads": 27,
 			"wishlistWrites": 0
 		},
 		"loss": {
 			"objectId": {
 				"count": 47,
 				"note": "Numeric JustWatch object ID not carried; sourceId holds the native ID."
-			},
-			"seenlistEntry": {
-				"count": 2,
-				"note": "Seen on JustWatch and also on the Watchlist; the file can't say so. GoodWatch's own Seen state decides rewatch."
 			},
 			"tvShowTrackingEntry": {
 				"count": 1,
@@ -380,7 +356,7 @@
 			},
 			"objectType:SHOW_SEASON": {
 				"count": 1,
-				"note": "Provider type has no shared-format type; kept as unknown."
+				"note": "Kept as unknown. Season rows (v1.1, #715) need a season number and parent-show IDs, which this capture doesn't request or verify."
 			},
 			"watchlistEntryV2.createdAt:absent": {
 				"count": 1,
@@ -429,34 +405,28 @@
 			"rows": 40,
 			"counts": {
 				"rows": 40,
-				"new": 30,
+				"new": 29,
 				"unchanged": 2,
-				"conflict": 1,
-				"unmatched": 4,
-				"unsupported": 1,
+				"conflict": 2,
+				"unmatched": 5,
+				"unsupported": 0,
 				"invalid": 2
 			},
 			"unaccounted": 0,
 			"correct": 33,
 			"wrong": 0,
 			"abstained": 1,
-			"providerWrongMatched": 1,
-			"idConflictsFlagged": 1,
-			"outcomeMismatches": [
-				"provider TMDB ID contradicts its IMDb ID: expected new, got unsupported (\"Listed twice in the file. Added once.\", matched TMDB 603 instead of 27205)"
-			],
+			"providerWrongMatched": 0,
+			"idConflictsFlagged": 0,
+			"outcomeMismatches": [],
 			"partialWarned": true,
-			"catalogReads": 6,
+			"catalogReads": 8,
 			"wishlistWrites": 0
 		},
 		"loss": {
 			"objectId": {
 				"count": 40,
 				"note": "Numeric JustWatch object ID not carried; sourceId holds the native ID."
-			},
-			"seenlistEntry": {
-				"count": 2,
-				"note": "Seen on JustWatch and also on the Watchlist; the file can't say so. GoodWatch's own Seen state decides rewatch."
 			},
 			"tvShowTrackingEntry": {
 				"count": 1,
@@ -480,7 +450,7 @@
 			},
 			"objectType:SHOW_SEASON": {
 				"count": 1,
-				"note": "Provider type has no shared-format type; kept as unknown."
+				"note": "Kept as unknown. Season rows (v1.1, #715) need a season number and parent-show IDs, which this capture doesn't request or verify."
 			},
 			"watchlistEntryV2.createdAt:absent": {
 				"count": 1,
@@ -532,31 +502,25 @@
 				"new": 11,
 				"unchanged": 2,
 				"conflict": 1,
-				"unmatched": 3,
-				"unsupported": 1,
+				"unmatched": 4,
+				"unsupported": 0,
 				"invalid": 2
 			},
 			"unaccounted": 0,
 			"correct": 14,
 			"wrong": 0,
 			"abstained": 1,
-			"providerWrongMatched": 1,
-			"idConflictsFlagged": 1,
-			"outcomeMismatches": [
-				"provider TMDB ID contradicts its IMDb ID: expected new, got unsupported (\"Listed twice in the file. Added once.\", matched TMDB 603 instead of 27205)"
-			],
+			"providerWrongMatched": 0,
+			"idConflictsFlagged": 0,
+			"outcomeMismatches": [],
 			"partialWarned": true,
-			"catalogReads": 5,
+			"catalogReads": 7,
 			"wishlistWrites": 0
 		},
 		"loss": {
 			"objectId": {
 				"count": 20,
 				"note": "Numeric JustWatch object ID not carried; sourceId holds the native ID."
-			},
-			"seenlistEntry": {
-				"count": 1,
-				"note": "Seen on JustWatch and also on the Watchlist; the file can't say so. GoodWatch's own Seen state decides rewatch."
 			},
 			"tvShowTrackingEntry": {
 				"count": 1,
@@ -580,7 +544,7 @@
 			},
 			"objectType:SHOW_SEASON": {
 				"count": 1,
-				"note": "Provider type has no shared-format type; kept as unknown."
+				"note": "Kept as unknown. Season rows (v1.1, #715) need a season number and parent-show IDs, which this capture doesn't request or verify."
 			},
 			"watchlistEntryV2.createdAt:absent": {
 				"count": 1,
@@ -629,34 +593,28 @@
 			"rows": 48,
 			"counts": {
 				"rows": 48,
-				"new": 38,
+				"new": 37,
 				"unchanged": 2,
-				"conflict": 1,
-				"unmatched": 4,
-				"unsupported": 1,
+				"conflict": 2,
+				"unmatched": 5,
+				"unsupported": 0,
 				"invalid": 2
 			},
 			"unaccounted": 0,
 			"correct": 41,
 			"wrong": 0,
 			"abstained": 1,
-			"providerWrongMatched": 1,
-			"idConflictsFlagged": 1,
-			"outcomeMismatches": [
-				"provider TMDB ID contradicts its IMDb ID: expected new, got unsupported (\"Listed twice in the file. Added once.\", matched TMDB 603 instead of 27205)"
-			],
+			"providerWrongMatched": 0,
+			"idConflictsFlagged": 0,
+			"outcomeMismatches": [],
 			"partialWarned": true,
-			"catalogReads": 6,
+			"catalogReads": 8,
 			"wishlistWrites": 0
 		},
 		"loss": {
 			"objectId": {
 				"count": 48,
 				"note": "Numeric JustWatch object ID not carried; sourceId holds the native ID."
-			},
-			"seenlistEntry": {
-				"count": 2,
-				"note": "Seen on JustWatch and also on the Watchlist; the file can't say so. GoodWatch's own Seen state decides rewatch."
 			},
 			"tvShowTrackingEntry": {
 				"count": 1,
@@ -680,7 +638,7 @@
 			},
 			"objectType:SHOW_SEASON": {
 				"count": 1,
-				"note": "Provider type has no shared-format type; kept as unknown."
+				"note": "Kept as unknown. Season rows (v1.1, #715) need a season number and parent-show IDs, which this capture doesn't request or verify."
 			},
 			"watchlistEntryV2.createdAt:absent": {
 				"count": 1,
@@ -729,34 +687,28 @@
 			"rows": 46,
 			"counts": {
 				"rows": 46,
-				"new": 36,
+				"new": 35,
 				"unchanged": 2,
-				"conflict": 1,
-				"unmatched": 4,
-				"unsupported": 1,
+				"conflict": 2,
+				"unmatched": 5,
+				"unsupported": 0,
 				"invalid": 2
 			},
 			"unaccounted": 0,
 			"correct": 39,
 			"wrong": 0,
 			"abstained": 1,
-			"providerWrongMatched": 1,
-			"idConflictsFlagged": 1,
-			"outcomeMismatches": [
-				"provider TMDB ID contradicts its IMDb ID: expected new, got unsupported (\"Listed twice in the file. Added once.\", matched TMDB 603 instead of 27205)"
-			],
+			"providerWrongMatched": 0,
+			"idConflictsFlagged": 0,
+			"outcomeMismatches": [],
 			"partialWarned": true,
-			"catalogReads": 6,
+			"catalogReads": 8,
 			"wishlistWrites": 0
 		},
 		"loss": {
 			"objectId": {
 				"count": 46,
 				"note": "Numeric JustWatch object ID not carried; sourceId holds the native ID."
-			},
-			"seenlistEntry": {
-				"count": 2,
-				"note": "Seen on JustWatch and also on the Watchlist; the file can't say so. GoodWatch's own Seen state decides rewatch."
 			},
 			"tvShowTrackingEntry": {
 				"count": 1,
@@ -780,7 +732,7 @@
 			},
 			"objectType:SHOW_SEASON": {
 				"count": 1,
-				"note": "Provider type has no shared-format type; kept as unknown."
+				"note": "Kept as unknown. Season rows (v1.1, #715) need a season number and parent-show IDs, which this capture doesn't request or verify."
 			},
 			"watchlistEntryV2.createdAt:absent": {
 				"count": 1,
@@ -828,34 +780,28 @@
 			"rows": 47,
 			"counts": {
 				"rows": 47,
-				"new": 37,
+				"new": 36,
 				"unchanged": 2,
-				"conflict": 1,
-				"unmatched": 4,
-				"unsupported": 1,
+				"conflict": 2,
+				"unmatched": 5,
+				"unsupported": 0,
 				"invalid": 2
 			},
 			"unaccounted": 0,
 			"correct": 40,
 			"wrong": 0,
 			"abstained": 1,
-			"providerWrongMatched": 1,
-			"idConflictsFlagged": 1,
-			"outcomeMismatches": [
-				"provider TMDB ID contradicts its IMDb ID: expected new, got unsupported (\"Listed twice in the file. Added once.\", matched TMDB 603 instead of 27205)"
-			],
+			"providerWrongMatched": 0,
+			"idConflictsFlagged": 0,
+			"outcomeMismatches": [],
 			"partialWarned": true,
-			"catalogReads": 6,
+			"catalogReads": 8,
 			"wishlistWrites": 0
 		},
 		"loss": {
 			"objectId": {
 				"count": 47,
 				"note": "Numeric JustWatch object ID not carried; sourceId holds the native ID."
-			},
-			"seenlistEntry": {
-				"count": 2,
-				"note": "Seen on JustWatch and also on the Watchlist; the file can't say so. GoodWatch's own Seen state decides rewatch."
 			},
 			"tvShowTrackingEntry": {
 				"count": 1,
@@ -879,7 +825,7 @@
 			},
 			"objectType:SHOW_SEASON": {
 				"count": 1,
-				"note": "Provider type has no shared-format type; kept as unknown."
+				"note": "Kept as unknown. Season rows (v1.1, #715) need a season number and parent-show IDs, which this capture doesn't request or verify."
 			},
 			"watchlistEntryV2.createdAt:absent": {
 				"count": 1,
@@ -931,31 +877,25 @@
 				"new": 11,
 				"unchanged": 2,
 				"conflict": 1,
-				"unmatched": 3,
-				"unsupported": 1,
+				"unmatched": 4,
+				"unsupported": 0,
 				"invalid": 2
 			},
 			"unaccounted": 0,
 			"correct": 14,
 			"wrong": 0,
 			"abstained": 1,
-			"providerWrongMatched": 1,
-			"idConflictsFlagged": 1,
-			"outcomeMismatches": [
-				"provider TMDB ID contradicts its IMDb ID: expected new, got unsupported (\"Listed twice in the file. Added once.\", matched TMDB 603 instead of 27205)"
-			],
+			"providerWrongMatched": 0,
+			"idConflictsFlagged": 0,
+			"outcomeMismatches": [],
 			"partialWarned": true,
-			"catalogReads": 5,
+			"catalogReads": 7,
 			"wishlistWrites": 0
 		},
 		"loss": {
 			"objectId": {
 				"count": 20,
 				"note": "Numeric JustWatch object ID not carried; sourceId holds the native ID."
-			},
-			"seenlistEntry": {
-				"count": 1,
-				"note": "Seen on JustWatch and also on the Watchlist; the file can't say so. GoodWatch's own Seen state decides rewatch."
 			},
 			"tvShowTrackingEntry": {
 				"count": 1,
@@ -979,7 +919,7 @@
 			},
 			"objectType:SHOW_SEASON": {
 				"count": 1,
-				"note": "Provider type has no shared-format type; kept as unknown."
+				"note": "Kept as unknown. Season rows (v1.1, #715) need a season number and parent-show IDs, which this capture doesn't request or verify."
 			},
 			"watchlistEntryV2.createdAt:absent": {
 				"count": 1,
@@ -1028,34 +968,28 @@
 			"rows": 47,
 			"counts": {
 				"rows": 47,
-				"new": 37,
+				"new": 36,
 				"unchanged": 2,
-				"conflict": 1,
-				"unmatched": 4,
-				"unsupported": 1,
+				"conflict": 2,
+				"unmatched": 5,
+				"unsupported": 0,
 				"invalid": 2
 			},
 			"unaccounted": 0,
 			"correct": 40,
 			"wrong": 0,
 			"abstained": 1,
-			"providerWrongMatched": 1,
-			"idConflictsFlagged": 1,
-			"outcomeMismatches": [
-				"provider TMDB ID contradicts its IMDb ID: expected new, got unsupported (\"Listed twice in the file. Added once.\", matched TMDB 603 instead of 27205)"
-			],
+			"providerWrongMatched": 0,
+			"idConflictsFlagged": 0,
+			"outcomeMismatches": [],
 			"partialWarned": true,
-			"catalogReads": 6,
+			"catalogReads": 8,
 			"wishlistWrites": 0
 		},
 		"loss": {
 			"objectId": {
 				"count": 47,
 				"note": "Numeric JustWatch object ID not carried; sourceId holds the native ID."
-			},
-			"seenlistEntry": {
-				"count": 2,
-				"note": "Seen on JustWatch and also on the Watchlist; the file can't say so. GoodWatch's own Seen state decides rewatch."
 			},
 			"tvShowTrackingEntry": {
 				"count": 1,
@@ -1079,7 +1013,7 @@
 			},
 			"objectType:SHOW_SEASON": {
 				"count": 1,
-				"note": "Provider type has no shared-format type; kept as unknown."
+				"note": "Kept as unknown. Season rows (v1.1, #715) need a season number and parent-show IDs, which this capture doesn't request or verify."
 			},
 			"watchlistEntryV2.createdAt:absent": {
 				"count": 1,
@@ -1128,34 +1062,28 @@
 			"rows": 40,
 			"counts": {
 				"rows": 40,
-				"new": 30,
+				"new": 29,
 				"unchanged": 2,
-				"conflict": 1,
-				"unmatched": 4,
-				"unsupported": 1,
+				"conflict": 2,
+				"unmatched": 5,
+				"unsupported": 0,
 				"invalid": 2
 			},
 			"unaccounted": 0,
 			"correct": 33,
 			"wrong": 0,
 			"abstained": 1,
-			"providerWrongMatched": 1,
-			"idConflictsFlagged": 1,
-			"outcomeMismatches": [
-				"provider TMDB ID contradicts its IMDb ID: expected new, got unsupported (\"Listed twice in the file. Added once.\", matched TMDB 603 instead of 27205)"
-			],
+			"providerWrongMatched": 0,
+			"idConflictsFlagged": 0,
+			"outcomeMismatches": [],
 			"partialWarned": true,
-			"catalogReads": 6,
+			"catalogReads": 8,
 			"wishlistWrites": 0
 		},
 		"loss": {
 			"objectId": {
 				"count": 40,
 				"note": "Numeric JustWatch object ID not carried; sourceId holds the native ID."
-			},
-			"seenlistEntry": {
-				"count": 2,
-				"note": "Seen on JustWatch and also on the Watchlist; the file can't say so. GoodWatch's own Seen state decides rewatch."
 			},
 			"tvShowTrackingEntry": {
 				"count": 1,
@@ -1179,7 +1107,7 @@
 			},
 			"objectType:SHOW_SEASON": {
 				"count": 1,
-				"note": "Provider type has no shared-format type; kept as unknown."
+				"note": "Kept as unknown. Season rows (v1.1, #715) need a season number and parent-show IDs, which this capture doesn't request or verify."
 			},
 			"watchlistEntryV2.createdAt:absent": {
 				"count": 1,
@@ -1228,34 +1156,28 @@
 			"rows": 47,
 			"counts": {
 				"rows": 47,
-				"new": 37,
+				"new": 36,
 				"unchanged": 2,
-				"conflict": 1,
-				"unmatched": 4,
-				"unsupported": 1,
+				"conflict": 2,
+				"unmatched": 5,
+				"unsupported": 0,
 				"invalid": 2
 			},
 			"unaccounted": 0,
 			"correct": 40,
 			"wrong": 0,
 			"abstained": 1,
-			"providerWrongMatched": 1,
-			"idConflictsFlagged": 1,
-			"outcomeMismatches": [
-				"provider TMDB ID contradicts its IMDb ID: expected new, got unsupported (\"Listed twice in the file. Added once.\", matched TMDB 603 instead of 27205)"
-			],
+			"providerWrongMatched": 0,
+			"idConflictsFlagged": 0,
+			"outcomeMismatches": [],
 			"partialWarned": true,
-			"catalogReads": 6,
+			"catalogReads": 8,
 			"wishlistWrites": 0
 		},
 		"loss": {
 			"objectId": {
 				"count": 47,
 				"note": "Numeric JustWatch object ID not carried; sourceId holds the native ID."
-			},
-			"seenlistEntry": {
-				"count": 2,
-				"note": "Seen on JustWatch and also on the Watchlist; the file can't say so. GoodWatch's own Seen state decides rewatch."
 			},
 			"tvShowTrackingEntry": {
 				"count": 1,
@@ -1279,7 +1201,7 @@
 			},
 			"objectType:SHOW_SEASON": {
 				"count": 1,
-				"note": "Provider type has no shared-format type; kept as unknown."
+				"note": "Kept as unknown. Season rows (v1.1, #715) need a season number and parent-show IDs, which this capture doesn't request or verify."
 			},
 			"watchlistEntryV2.createdAt:absent": {
 				"count": 1,

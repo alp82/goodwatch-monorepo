@@ -4,7 +4,20 @@ import { type Catalog, runPreview } from "./preview-runner.ts"
 
 export async function buildReport(bundle: any, rawCatalog: Catalog, { reference, catalogLabel = "none (shape check only; every row is unmatched)" }: { reference?: string; catalogLabel?: string } = {}) {
 const [first, second] = bundle.watchlistRuns
-const file = bundle.sharedFile
+// Captures from the earlier snippet hold a version 1 file. The evidence still says which wishes
+// are Seen on JustWatch, so the preview runs the version 1.1 form (without Seen dates, which v1 captures lack).
+const fileVersion = bundle.sharedFile.version
+const file =
+	fileVersion === 1
+		? {
+				...bundle.sharedFile,
+				version: 1.1,
+				items: bundle.sharedFile.items.map((item: any) => {
+					const seenSource = bundle.watchlistRuns.some((r: any) => r.members.some((m: any) => m.id === item.sourceId && m.seen)) || bundle.seenlist.members.some((m: any) => m.id === item.sourceId)
+					return seenSource ? { ...item, sourceSeen: true } : item
+				}),
+			}
+		: bundle.sharedFile
 // Every catalog statement, from the preview and from the conflict check, passes this counter.
 let catalogStatements = 0
 const catalog: Catalog = (...args) => {
@@ -36,7 +49,8 @@ const idMismatch = items.filter((item) => {
 	const tmdb = member?.tmdb == null || member.tmdb === "" ? undefined : Number(member.tmdb)
 	return (item.tmdbId !== undefined && item.tmdbId !== tmdb) || (item.imdbId !== undefined && item.imdbId !== member?.imdb)
 }).length
-const types = { movie: 0, show: 0, unknown: 0 } as Record<string, number>
+const sourceSeenRows = items.filter((item) => item.sourceSeen === true).length
+const types = { movie: 0, show: 0, unknown: 0, season: 0, episode: 0 } as Record<string, number>
 for (const item of items) types[item.mediaType]++
 const idCoverage = {
 	both: items.filter((item) => item.tmdbId && item.imdbId).length,
@@ -96,6 +110,7 @@ const lines = [
 	`- Provider IDs: both ${idCoverage.both}, TMDB only ${idCoverage.tmdbOnly}, IMDb only ${idCoverage.imdbOnly}, none ${idCoverage.none}.`,
 	`- File IDs that differ from what JustWatch returned: ${idMismatch}.`,
 	`- File completeness: ${file.completeness}.`,
+	`- File version: ${fileVersion}${fileVersion === 1 ? "; the preview used it upgraded from version 1 to 1.1 with source Seen from the capture evidence (no Seen dates)" : ""}. Wishes with source Seen: ${sourceSeenRows}, with a Seen date: ${items.filter((item) => item.sourceSeenAt).length}.`,
 	"",
 	"| Source field | Count | What happens |",
 	"| --- | ---: | --- |",
@@ -111,6 +126,6 @@ const lines = [
 ]
 return {
 	lines,
-	metrics: { idMismatch, flaggedNotWished, trackedNotWished, wishedAndSeen, idConflicts, listedTwice, unaccounted, previewCatalogReads: run.catalogReads, catalogStatements },
+	metrics: { idMismatch, flaggedNotWished, trackedNotWished, wishedAndSeen, idConflicts, listedTwice, unaccounted, previewCatalogReads: run.catalogReads, catalogStatements, fileVersion, sourceSeenRows },
 }
 }

@@ -15,7 +15,7 @@ const option = (name: string) => args.find((arg) => arg.startsWith(`--${name}=`)
 const bundle = JSON.parse(readFileSync(path, "utf8"))
 if (bundle.kind !== "goodwatch-708-justwatch-capture") throw new Error("Not a #708 capture file.")
 
-const ALLOWED = /^SELECT tmdb_id, imdb_id, title, release_year FROM (movie|show) WHERE (tmdb_id IN \(\?(?:,\?)*\)|imdb_id IN \(\?(?:,\?)*\)|lower\(title\) = lower\(\?\) AND release_year = \? LIMIT 2)$/
+const ALLOWED = /^SELECT tmdb_id, (?:imdb_id, title, release_year FROM (?:movie|show) WHERE (?:tmdb_id IN \(\?(?:,\?)*\)|imdb_id IN \(\?(?:,\?)*\)|lower\(title\) = lower\(\?\) AND release_year = \? LIMIT 2)|popularity FROM (?:movie|show) WHERE tmdb_id IN \(\?(?:,\?)*\))$/
 function crateCatalog(envPath: string): Catalog {
 	const env = Object.fromEntries(
 		readFileSync(envPath, "utf8")

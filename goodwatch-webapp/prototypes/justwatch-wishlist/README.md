@@ -1,6 +1,6 @@
 # JustWatch Watchlist round trip (#708 prototype)
 
-Throwaway prototype for [#708](https://github.com/alp82/goodwatch-monorepo/issues/708) on [map #702](https://github.com/alp82/goodwatch-monorepo/issues/702). It follows the route chosen in [#704](https://github.com/alp82/goodwatch-monorepo/issues/704#issuecomment-6255538043): read the signed-in member's explicit JustWatch **Watchlist** in their own browser, keep native identities and cursor evidence, and write [shared wishlist JSON v1](../../../docs/implementation/shared-wishlist-format.md) directly. Simkl's file dialect stays deferred. Don't merge this folder.
+Throwaway prototype for [#708](https://github.com/alp82/goodwatch-monorepo/issues/708) on [map #702](https://github.com/alp82/goodwatch-monorepo/issues/702). It follows the route chosen in [#704](https://github.com/alp82/goodwatch-monorepo/issues/704#issuecomment-6255538043): read the signed-in member's explicit JustWatch **Watchlist** in their own browser, keep native identities and cursor evidence, and write [shared wishlist JSON](../../../docs/implementation/shared-wishlist-format.md) directly, version 1.1 since `#715` (earlier captures hold version 1). Simkl's file dialect stays deferred. Don't merge this folder.
 
 The candidate gates were committed before the first measurement: [GATES.md](GATES.md).
 
@@ -18,6 +18,7 @@ The candidate gates were committed before the first measurement: [GATES.md](GATE
 | `snippet-harness.mjs` | Browser stubs shared by the smoke test and the adversarial tests. |
 | `report-core.ts`, `real-report.ts` | Aggregates-only report for the owner's real capture file, and its command-line wrapper. |
 | `adversarial.test.ts` | The independent review's adversarial cases (see "Review fixes"). |
+| `v11.test.ts` | Version 1.1 output against the shipped parser and preview on main, and the report for v1 and v1.1 captures. |
 
 ## Run
 
@@ -27,7 +28,7 @@ From `goodwatch-webapp` after `npm ci`:
 node prototypes/justwatch-wishlist/synthetic.ts
 node prototypes/justwatch-wishlist/build-snippet.mjs
 node prototypes/justwatch-wishlist/snippet-smoke.mjs
-node --test prototypes/justwatch-wishlist/adversarial.test.ts
+node --test prototypes/justwatch-wishlist/adversarial.test.ts prototypes/justwatch-wishlist/v11.test.ts
 # After the owner saves a real capture:
 node prototypes/justwatch-wishlist/real-report.ts ~/goodwatch-private/708/justwatch-708-capture.json \
   --reference=<count the Watchlist page shows> \
@@ -53,7 +54,7 @@ Fixture: 47 Watchlist titles (33 movies, 13 shows, 1 season object), 4 negative 
 | V5 Valid file | Pass. 2 rows are `invalid`, both deliberate (no content, control character in a title). | 47 rows |
 | P1 Accounted for | Pass. Every wish has exactly one preview row. | 47 wishes, every scenario |
 | P2 Correct match from good IDs | 40 correct, 0 wrong, 1 abstained (a localized title with no IDs). | 41 wishes with a known catalog title and honest IDs |
-| P3 Wrong provider IDs | **Finding.** A provider TMDB ID that contradicts its IMDb ID is trusted. The wish matched the wrong film, then the preview hid it as "Listed twice in the file. Added once." because the correct film was also wished. The harness flagged it; the preview didn't. | 1 planted case |
+| P3 Wrong provider IDs | **Finding, fixed on main by #714.** Before #714 the preview trusted a TMDB ID that contradicted its IMDb ID: the wish matched the wrong film and was hidden as "Listed twice in the file. Added once." With main merged, the row is held: "The supplied TMDB and IMDb IDs identify different titles. Choose a match." | 1 planted case |
 | P4 Library semantics | Pass. Seen in GoodWatch → rewatch conflict; Watching show → status kept; existing wish → unchanged. | 3 planted cases |
 | P5 Partial stays additive | Pass. 12 of 12 non-complete previews show the partial warning; 0 library writes. | 12 scenarios |
 
@@ -63,17 +64,23 @@ Loss ledger for the clean run:
 | --- | ---: | --- |
 | `objectId` | 47 | Not carried; `sourceId` holds the native node ID. |
 | `content.title` (localized) | 47 | Titles are in the capture language. Without IDs, the exact title-and-year fallback fails for a localized title. |
-| `seenlistEntry` | 2 | A wish that is also Seen on JustWatch stays a plain wish. GoodWatch asks about rewatch only when GoodWatch itself has it Seen. |
+| `seenlistEntry` | 2 | **Addressed by #715.** Written as `sourceSeen: true`, with `sourceSeenAt` when JustWatch gives a readable Seen date (movies only). The preview then asks about rewatch ("Seen at the source"). Tracking and show progress never count as Seen. |
 | `tvShowTrackingEntry`, `seenState.progress` | 1 each | Tracking and progress are not carried; the wish is kept. |
 | `externalIds` absent | 4 TMDB, 5 IMDb | Left absent, never looked up. |
 | `externalIds.tmdbId` malformed | 1 | Dropped, not repaired. |
-| `objectType` `SHOW_SEASON` | 1 | Kept as `unknown`. |
+| `objectType` `SHOW_SEASON` | 1 | Kept as `unknown`, but still gets `sourceSeen` from its native ID. A v1.1 `season` row needs a season number and parent-show IDs; this capture doesn't request them, and nothing shows that a season node's external IDs belong to the parent show. |
 | `watchlistEntryV2.createdAt` absent | 1 | Left absent; export time is never substituted. |
 | Unreadable title | 2 | Row kept and marked invalid. |
 
 The snippet smoke test passed in both modes. It sent 7 requests (8 with the fallback), all `POST` to `https://apis.justwatch.com/graphql` with `credentials: "omit"`. The token, login ID and device ID never appear in the file.
 
 The real-file report was also run against the synthetic capture with the production catalog, read-only: 18 allowlisted SELECTs (16 from the preview, 2 from the report's own TMDB-IMDb conflict check), 0 writes, about 8.7 seconds. An earlier version reported 16 because the conflict check bypassed the counter.
+
+## Owner decisions (2026-10-19)
+
+- File completeness: `complete` only when two reads agree.
+- Source Seen: added to the format as v1.1 (#715). The loss is addressed, not accepted.
+- ID disagreements: held for a manual choice with a suggested default (#714).
 
 ## Review fixes
 
@@ -90,8 +97,9 @@ An independent review of `0c2ae215` found six problems. Each one got a failing c
 
 - **No real account yet.** Everything above is synthetic. Field availability (`objectId`, `externalIds`, `watchlistEntryV2`), cursor behavior, page size and rate limits on a real account are unverified.
 - **Snapshot.** The API has no snapshot guarantee. Two agreeing runs are evidence, not proof. Edits between runs make the file `unknown`, which is safe but noisy.
-- **Wrong provider IDs pass silently** in the shipped preview (P3). This is a preview gap, not an exporter gap. It affects any source that supplies both IDs.
-- **Seen on JustWatch only** becomes a plain Want to See. The shared format has no field for source-side seen evidence.
+- **Wrong provider IDs** (P3) are held for a member choice on main since #714. The suggested default uses interactions, then title and year, then popularity; the real-file report reads popularity from the catalog read-only.
+- **Source Seen** (#715) is only as complete as the Seen capture. A missing flag means "not known", never "not seen". Captures from the earlier v1 snippet carry the flags in their evidence but no Seen dates; the report previews them upgraded to v1.1.
+- **Season rows** stay `unknown` until a real sample shows season nodes' season numbers and parent-show IDs.
 - **Localized titles** weaken the title-and-year fallback when IDs are missing.
 - **Session expiry** stops the run as `partial`; the snippet doesn't renew the session. A large list may need a page reload and a second try.
 - **Country.** The snippet reads the country from the page path. One file holds one country's view; availability-only differences between countries are not tested.

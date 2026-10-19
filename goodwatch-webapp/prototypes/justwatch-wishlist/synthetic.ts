@@ -37,7 +37,8 @@ for (const scenario of scenarios) {
 	const again = await captureList({ request: server.request, country: "US", listType: "WATCHLIST", maxPages: scenario.maxPages })
 	const reconciled = reconcileRuns(single, again)
 	const capture = reconciled.capture
-	const { file, loss, excluded } = toSharedWishlist(capture, { exportedAt: "2026-10-19T12:00:00Z" })
+	const seenCapture = await captureList({ request: server.request, country: "US", listType: "SEENLIST" })
+	const { file, loss, excluded } = toSharedWishlist(capture, { exportedAt: "2026-10-19T12:00:00Z", seen: seenCapture })
 	const singleIds = new Set(single.nodes.map((node: any) => node.id))
 	const bytes = new TextEncoder().encode(JSON.stringify(file))
 	const reference = new Set(watchlist.map(([node]) => node.id as string))

@@ -26,19 +26,19 @@ Correct, wrong and abstained count wishes whose correct catalog title is known a
 
 | Scenario | Rows | New | Unchanged | Conflict | Unmatched | Invalid | Unsupported | Unaccounted | Correct | Wrong | Abstained | Wrong provider ID matched | Flagged by harness | Partial warning |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
-| clean, 47 titles over 3 pages | 47 | 37 | 2 | 1 | 4 | 2 | 1 | 0 | 40 | 0 | 1 | 1 | 1 | n/a |
-| repeated cursor on page 2 | 40 | 30 | 2 | 1 | 4 | 2 | 1 | 0 | 33 | 0 | 1 | 1 | 1 | yes |
-| missing cursor on page 1 | 20 | 11 | 2 | 1 | 3 | 2 | 1 | 0 | 14 | 0 | 1 | 1 | 1 | yes |
-| GraphQL field error on page 2 (IDs lost) | 47 | 37 | 2 | 1 | 4 | 2 | 1 | 0 | 40 | 0 | 1 | 1 | 1 | yes |
-| HTTP 500 on page 3 after retries | 40 | 30 | 2 | 1 | 4 | 2 | 1 | 0 | 33 | 0 | 1 | 1 | 1 | yes |
-| session expired on page 2 | 20 | 11 | 2 | 1 | 3 | 2 | 1 | 0 | 14 | 0 | 1 | 1 | 1 | yes |
-| title added during capture (offset shift) | 48 | 38 | 2 | 1 | 4 | 2 | 1 | 0 | 41 | 0 | 1 | 1 | 1 | yes |
-| title removed during capture (offset shift) | 46 | 36 | 2 | 1 | 4 | 2 | 1 | 0 | 39 | 0 | 1 | 1 | 1 | yes |
-| one added and one removed during capture | 47 | 37 | 2 | 1 | 4 | 2 | 1 | 0 | 40 | 0 | 1 | 1 | 1 | yes |
-| empty page claiming more | 20 | 11 | 2 | 1 | 3 | 2 | 1 | 0 | 14 | 0 | 1 | 1 | 1 | yes |
-| seen-only title leaks into Watchlist response | 47 | 37 | 2 | 1 | 4 | 2 | 1 | 0 | 40 | 0 | 1 | 1 | 1 | yes |
-| page limit reached | 40 | 30 | 2 | 1 | 4 | 2 | 1 | 0 | 33 | 0 | 1 | 1 | 1 | yes |
-| totalCount overstates by 2 | 47 | 37 | 2 | 1 | 4 | 2 | 1 | 0 | 40 | 0 | 1 | 1 | 1 | yes |
+| clean, 47 titles over 3 pages | 47 | 36 | 2 | 2 | 5 | 2 | 0 | 0 | 40 | 0 | 1 | 0 | 0 | n/a |
+| repeated cursor on page 2 | 40 | 29 | 2 | 2 | 5 | 2 | 0 | 0 | 33 | 0 | 1 | 0 | 0 | yes |
+| missing cursor on page 1 | 20 | 11 | 2 | 1 | 4 | 2 | 0 | 0 | 14 | 0 | 1 | 0 | 0 | yes |
+| GraphQL field error on page 2 (IDs lost) | 47 | 36 | 2 | 2 | 5 | 2 | 0 | 0 | 40 | 0 | 1 | 0 | 0 | yes |
+| HTTP 500 on page 3 after retries | 40 | 29 | 2 | 2 | 5 | 2 | 0 | 0 | 33 | 0 | 1 | 0 | 0 | yes |
+| session expired on page 2 | 20 | 11 | 2 | 1 | 4 | 2 | 0 | 0 | 14 | 0 | 1 | 0 | 0 | yes |
+| title added during capture (offset shift) | 48 | 37 | 2 | 2 | 5 | 2 | 0 | 0 | 41 | 0 | 1 | 0 | 0 | yes |
+| title removed during capture (offset shift) | 46 | 35 | 2 | 2 | 5 | 2 | 0 | 0 | 39 | 0 | 1 | 0 | 0 | yes |
+| one added and one removed during capture | 47 | 36 | 2 | 2 | 5 | 2 | 0 | 0 | 40 | 0 | 1 | 0 | 0 | yes |
+| empty page claiming more | 20 | 11 | 2 | 1 | 4 | 2 | 0 | 0 | 14 | 0 | 1 | 0 | 0 | yes |
+| seen-only title leaks into Watchlist response | 47 | 36 | 2 | 2 | 5 | 2 | 0 | 0 | 40 | 0 | 1 | 0 | 0 | yes |
+| page limit reached | 40 | 29 | 2 | 2 | 5 | 2 | 0 | 0 | 33 | 0 | 1 | 0 | 0 | yes |
+| totalCount overstates by 2 | 47 | 36 | 2 | 2 | 5 | 2 | 0 | 0 | 40 | 0 | 1 | 0 | 0 | yes |
 
 ## Completeness reasons
 
@@ -58,32 +58,18 @@ Correct, wrong and abstained count wishes whose correct catalog title is known a
 
 ## Outcome differences from the fixture's naive expectation (findings)
 
-- clean, 47 titles over 3 pages: provider TMDB ID contradicts its IMDb ID: expected new, got unsupported ("Listed twice in the file. Added once.", matched TMDB 603 instead of 27205)
-- repeated cursor on page 2: provider TMDB ID contradicts its IMDb ID: expected new, got unsupported ("Listed twice in the file. Added once.", matched TMDB 603 instead of 27205)
-- missing cursor on page 1: provider TMDB ID contradicts its IMDb ID: expected new, got unsupported ("Listed twice in the file. Added once.", matched TMDB 603 instead of 27205)
-- GraphQL field error on page 2 (IDs lost): provider TMDB ID contradicts its IMDb ID: expected new, got unsupported ("Listed twice in the file. Added once.", matched TMDB 603 instead of 27205)
-- HTTP 500 on page 3 after retries: provider TMDB ID contradicts its IMDb ID: expected new, got unsupported ("Listed twice in the file. Added once.", matched TMDB 603 instead of 27205)
-- session expired on page 2: provider TMDB ID contradicts its IMDb ID: expected new, got unsupported ("Listed twice in the file. Added once.", matched TMDB 603 instead of 27205)
-- title added during capture (offset shift): provider TMDB ID contradicts its IMDb ID: expected new, got unsupported ("Listed twice in the file. Added once.", matched TMDB 603 instead of 27205)
-- title removed during capture (offset shift): provider TMDB ID contradicts its IMDb ID: expected new, got unsupported ("Listed twice in the file. Added once.", matched TMDB 603 instead of 27205)
-- one added and one removed during capture: provider TMDB ID contradicts its IMDb ID: expected new, got unsupported ("Listed twice in the file. Added once.", matched TMDB 603 instead of 27205)
-- empty page claiming more: provider TMDB ID contradicts its IMDb ID: expected new, got unsupported ("Listed twice in the file. Added once.", matched TMDB 603 instead of 27205)
-- seen-only title leaks into Watchlist response: provider TMDB ID contradicts its IMDb ID: expected new, got unsupported ("Listed twice in the file. Added once.", matched TMDB 603 instead of 27205)
-- page limit reached: provider TMDB ID contradicts its IMDb ID: expected new, got unsupported ("Listed twice in the file. Added once.", matched TMDB 603 instead of 27205)
-- totalCount overstates by 2: provider TMDB ID contradicts its IMDb ID: expected new, got unsupported ("Listed twice in the file. Added once.", matched TMDB 603 instead of 27205)
 
 ## Loss ledger, clean scenario
 
 | Source field | Count | What happens |
 | --- | ---: | --- |
 | `objectId` | 47 | Numeric JustWatch object ID not carried; sourceId holds the native ID. |
-| `seenlistEntry` | 2 | Seen on JustWatch and also on the Watchlist; the file can't say so. GoodWatch's own Seen state decides rewatch. |
 | `tvShowTrackingEntry` | 1 | Tracking start date not carried. |
 | `seenState.progress` | 1 | Show progress above zero not carried; the wish is kept. |
 | `externalIds.tmdbId:absent` | 4 | Provider returned no TMDB ID. |
 | `externalIds.imdbId:absent` | 5 | Provider returned no IMDb ID. |
 | `externalIds.tmdbId` | 1 | Malformed provider TMDB ID dropped, not repaired. |
-| `objectType:SHOW_SEASON` | 1 | Provider type has no shared-format type; kept as unknown. |
+| `objectType:SHOW_SEASON` | 1 | Kept as unknown. Season rows (v1.1, #715) need a season number and parent-show IDs, which this capture doesn't request or verify. |
 | `watchlistEntryV2.createdAt:absent` | 1 | No added date; left absent. |
 | `title` | 2 | Missing or unreadable title; the parser marks the row invalid. |
 | `content.title:localized` | 47 | Titles are in the capture language, not the original title. |

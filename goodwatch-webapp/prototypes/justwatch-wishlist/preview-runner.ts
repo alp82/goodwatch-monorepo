@@ -43,7 +43,8 @@ class TypedCatalogDb extends ImportDb {
 	catalogReads = 0
 	override async select<T extends {}>(sql: string, params: Param[]): Promise<T[]> {
 		const s = sql.replace(/\s+/g, " ").trim()
-		const table = s.match(/^SELECT tmdb_id, imdb_id, title, release_year FROM (movie|show) WHERE /)?.[1]
+		// Matching reads plus the #714 popularity read for ID-disagreement suggestions.
+		const table = s.match(/^SELECT tmdb_id, (?:imdb_id, title, release_year|popularity) FROM (movie|show) WHERE /)?.[1]
 		if (table === "movie" || table === "show") {
 			this.catalogReads++
 			return (await this.catalogLookup(table, s, params)) as unknown as T[]

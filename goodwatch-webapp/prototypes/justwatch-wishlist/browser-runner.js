@@ -56,7 +56,7 @@ await sleep(1500)
 const seen = await run("SEENLIST", "Seen list")
 const exportedAt = new Date().toISOString().replace(/\.\d{3}Z$/, "Z")
 const reconciled = reconcileRuns(first, second)
-const shared = toSharedWishlist(reconciled.capture, { exportedAt })
+const shared = toSharedWishlist(reconciled.capture, { exportedAt, seen })
 const bundle = {
 	kind: "goodwatch-708-justwatch-capture",
 	version: 1,
