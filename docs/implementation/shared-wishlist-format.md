@@ -109,3 +109,7 @@ This is a compatibility adjustment to the current review, not its redesign. New 
 - “Seen in GoodWatch. This file lists a season or episode. Choose Want to See the show and Want to rewatch to add the whole show.”
 - “This wishlist file's version must be a number. Ask the maker of the tool that saved it for a file GoodWatch can read.”
 - Season rows use `S{season}`; episode rows retain the existing `S{season} E{episode}` notation.
+
+## TV Time official movie matching (Q15, 2026-10-19)
+
+The server's existing manual-matching endpoints also accept TV Time previews for official title-only movie observations. This does not extend the shared wishlist producer format: source JSON cannot supply a trusted snapshot or eligibility marker. The TV Time parser captures immutable `wishlistOriginal` snapshots with `manualMatchScope: tvtime_movie` for its valid official movie intents. A choice is restricted to a local catalog movie and creates a fresh child preview retaining the `tvtime` source, stable play keys and unrelated archive rows. It writes library data only after ordinary Confirm. Grouping follows TV Time's native movie ID; absent IDs never group by title. No title/year auto-match or new suggestion rule is introduced. Original release date, kind and watch/score evidence survive matching, clearing, confirmation and Undo. Unsupported official rating keys remain unsupported. API fields and UI integration boundaries are listed in [TV Time import](imports/tvtime.md#q15-interface-handover-for-opus).

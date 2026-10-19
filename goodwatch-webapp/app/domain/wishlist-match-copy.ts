@@ -4,6 +4,7 @@
 import type { WishlistMatchErrorCode } from "./imports.ts"
 
 export const WISHLIST_MATCH_ERROR_MESSAGES = {
+	tvtime_movie_match_required: "Choose a movie for this TV Time entry.",
 	wishlist_preview_required:
 		"This preview can't change anymore, because it was imported or is no longer a preview. To match titles, choose the file again.",
 	wishlist_snapshot_required:

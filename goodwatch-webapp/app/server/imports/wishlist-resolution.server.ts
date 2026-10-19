@@ -69,7 +69,10 @@ const ref = (target: Target) =>
 
 async function ownedPreview(userId: string, id: string) {
 	const parent = await getImportRow(userId, id)
-	if (parent.source !== "wishlist" || parent.status !== "preview")
+	if (
+		!["wishlist", "tvtime"].includes(parent.source) ||
+		parent.status !== "preview"
+	)
 		fail("wishlist_preview_required", 409)
 	return parent
 }
@@ -78,6 +81,12 @@ function projection(
 	resolution?: ImportObservation["wishlistResolution"],
 	catalogImdbId: string | null = null,
 ): ImportObservation {
+	if (
+		original.manualMatchScope === "tvtime_movie" &&
+		resolution &&
+		resolution.mediaType !== "movie"
+	)
+		fail("tvtime_movie_match_required")
 	if (
 		["season", "episode"].includes(original.mediaType) &&
 		resolution &&
@@ -128,6 +137,31 @@ function preservedIssue(item: ImportItem): ImportObservation {
 	}
 }
 
+/** Keep other TV Time intents when a member matches a movie in a mixed archive. Rebuild preview plans afresh. */
+function preservedTvTime(item: ImportItem): ImportObservation {
+	const copy = structuredClone(item) as ImportItem & {
+		payload?: unknown
+		undoOutcome?: unknown
+		_preview?: unknown
+		_previewStatus?: unknown
+		journal?: unknown
+	}
+	const {
+		index,
+		outcome,
+		reason,
+		currentScore,
+		applyState,
+		payload,
+		undoOutcome,
+		_preview,
+		_previewStatus,
+		journal,
+		...observation
+	} = copy
+	return observation
+}
+
 export async function resolveWishlistImport(
 	userId: string,
 	id: string,
@@ -143,7 +177,9 @@ export async function resolveWishlistImport(
 					...projection(item.wishlistOriginal, item.wishlistResolution),
 					wishlistMatchRequired: item.wishlistMatchRequired,
 				}
-			: preservedIssue(item),
+			: parent.source === "tvtime"
+				? preservedTvTime(item)
+				: preservedIssue(item),
 	)
 	const choices = new Map<string, { target: Target | null; index: number }>()
 	const requestedIndexes = new Set<number>()
@@ -164,6 +200,12 @@ export async function resolveWishlistImport(
 		}
 		if (!eligible(row.wishlistOriginal, row.wishlistMatchRequired))
 			fail("wishlist_row_not_resolvable")
+		if (
+			row.wishlistOriginal.manualMatchScope === "tvtime_movie" &&
+			choice.target &&
+			choice.target.mediaType !== "movie"
+		)
+			fail("tvtime_movie_match_required")
 		if (
 			["season", "episode"].includes(row.wishlistOriginal.mediaType) &&
 			choice.target &&
@@ -262,7 +304,7 @@ export async function resolveWishlistImport(
 	for (const [index, row] of rows.entries())
 		row.wishlistParent = { importId: id, rowIndex: index }
 	const preview = await createParsedPreview(userId, parent.file_name ?? "", {
-		source: "wishlist",
+		source: parent.source,
 		observations: rows,
 		warnings: JSON.parse(parent.warnings ?? "[]"),
 	})
@@ -283,6 +325,9 @@ export async function matchingGroups(
 		const evidence: WishlistMatchEvidenceVariant = {
 			title: original.title,
 			year: original.year,
+			...(original.tvtimeMovie
+				? { releaseDate: original.tvtimeMovie.releaseDate }
+				: {}),
 			...(original.wishlistEvidence.sourceId
 				? { sourceId: original.wishlistEvidence.sourceId }
 				: {}),
@@ -298,10 +343,20 @@ export async function matchingGroups(
 				entryCount: 1,
 				evidenceVariants: [evidence],
 				hasMoreEvidence: false,
+				...(original.manualMatchScope === "tvtime_movie"
+					? {
+							matchScope: "tvtime_movie",
+							allowedMediaTypes: ["movie"],
+							intentCounts: { [original.kind]: 1 },
+						}
+					: {}),
 			})
 			continue
 		}
 		group.entryCount++
+		if (group.intentCounts)
+			group.intentCounts[original.kind] =
+				(group.intentCounts[original.kind] ?? 0) + 1
 		if (
 			group.evidenceVariants.some(
 				(variant) => JSON.stringify(variant) === JSON.stringify(evidence),
@@ -393,6 +448,9 @@ export async function searchWishlistMatches(
 	}
 	if (!eligible(row.wishlistOriginal, row.wishlistMatchRequired))
 		fail("wishlist_row_not_resolvable")
+	const movieOnly = row.wishlistOriginal.manualMatchScope === "tvtime_movie"
+	if (movieOnly && request.data.mediaType && request.data.mediaType !== "movie")
+		fail("tvtime_movie_match_required")
 	const { withBackendTimeout } = await import("../../utils/backend-timeout.ts")
 	const { searchQuery } = await import("../combined-search/catalog.server.ts")
 	type Candidate = {
@@ -410,7 +468,8 @@ export async function searchWishlistMatches(
 					(["movie", "show"] as const)
 						.filter(
 							(type) =>
-								!request.data.mediaType || type === request.data.mediaType,
+								(!movieOnly || type === "movie") &&
+								(!request.data.mediaType || type === request.data.mediaType),
 						)
 						.map(async (mediaType) => {
 							const rows = await searchQuery<Candidate>(

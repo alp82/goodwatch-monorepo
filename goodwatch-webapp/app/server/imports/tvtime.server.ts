@@ -500,6 +500,11 @@ export function parseTvTime(
 			}
 			if (base.mediaType === "show")
 				base.showTvdbId = id(row.sid) ?? id(row.seriesid)
+			else if (string(row.moviename))
+				base.tvtimeMovie = {
+					...(string(row.uuid) ? { sourceId: string(row.uuid) } : {}),
+					releaseDate: string(row.releasedate) || null,
+				}
 			if (
 				(kind === "v2" &&
 					/^(?:watch|rewatch)-episode-/.test(string(row.key))) ||
@@ -570,6 +575,46 @@ export function parseTvTime(
 			row.wishlistEvidence = undefined
 		}
 	}
+	// Snapshot only after collapsing repeated source plays, before catalog matching.
+	for (const row of observations) {
+		if (
+			row.tvtimeMovie &&
+			row.title.trim() &&
+			(row.kind === "watch" || row.kind === "want" || row.kind === "rating") &&
+			!row.problem
+		) {
+			const evidence = {
+				source: "tvtime",
+				mediaType: "movie" as const,
+				completeness: "unknown" as const,
+				...(row.tvtimeMovie.sourceId
+					? { sourceId: row.tvtimeMovie.sourceId }
+					: {}),
+			}
+			if (row.kind === "want") row.wishlistEvidence = evidence
+			row.wishlistOriginal = {
+				key: row.key,
+				kind: row.kind,
+				mediaType: "movie",
+				title: row.title,
+				year: row.year,
+				tmdbId: null,
+				imdbId: null,
+				manualMatchScope: "tvtime_movie",
+				tvtimeMovie: structuredClone(row.tvtimeMovie),
+				wishlistEvidence: evidence,
+				...(row.watchedAt !== undefined
+					? {
+							watchedAt: row.watchedAt,
+							precision: row.precision,
+							pass: row.pass,
+						}
+					: {}),
+				...(row.score !== undefined ? { score: row.score } : {}),
+			}
+		}
+	}
+
 	return {
 		source: "tvtime",
 		observations: observations.filter(

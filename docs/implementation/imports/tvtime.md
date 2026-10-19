@@ -33,7 +33,7 @@ The original research is `docs/research/imports/tv-time-exports.md` at `b202e111
 | `is_followed` / active follow | Watching when this export also has watches for the show; otherwise Want to See. V2 show flags supersede older followed-table rows |
 | `is_for_later`, `not_started_yet`, v1 movie `towatch`/`follow`, explicitly unwatched extension movies | Additive Want to See, with shared wishlist evidence and guards |
 | Extension movie `imdb_id`, JSON movie `id.imdb` | Typed local IMDb match; `-1` is missing. TVDB movie IDs never become TMDB IDs |
-| Official `movie_name`, `release_date`, `uuid` | Title/year/source identity retained for review; no title-only movie auto-match, even on unique exact title/year agreement |
+| Official `movie_name`, `release_date`, `uuid` | Immutable source evidence for explicit movie matching; no title-only movie auto-match, even on unique exact title/year agreement |
 | Extension `rating` | Movie score 2/4/6/8/10; invalid scores stay invalid. Episode scores stay unsupported |
 | Official `vote_key` | Unsupported observation; the live scale can no longer be verified |
 | A resolved TMDB special | Watch is imported and flagged; does not count toward regular episode progress |
@@ -44,7 +44,9 @@ Watches and explicit source statuses go through the shipped writer. Imports do n
 
 #645 covers every status needed here; #621 is no longer a blocker. `up_to_date` has no independent whole-TMDB-show completion evidence and does not set Completed.
 
-#374 remains relevant to official movie watches and wishes. Automatic exact title/year matching currently applies to Letterboxd, generic CSV and shared wishlist sources, not TV Time's localized movie names. The manual matching shipped in `a3954d76` and the #714 hold only support shared-wishlist previews, for originally unknown types and conflicting supplied IDs. They cannot resolve typed title-only TV Time watch rows. TV Time therefore keeps these rows unmatched and visible in the receipt/skipped export. There is no new manual matching endpoint or interaction in this backend build. The member must identify those titles outside this import until a separate reviewed matching extension exists. Extension IMDb movies can match today. Missing/ambiguous/unavailable TVDB parents, episodes outside the matched show, and episodes with only TVDB coordinates stay unmatched too.
+Owner decision Q15, 2026-10-19: title-only official movie rows can now be resolved through the shipped manual matching endpoints before TV Time goes live. #374's general title-only matching work is not needed for this explicit path. Automatic exact title/year matching still does not apply to TV Time's localized movie names. An explicit member choice creates a fresh TV Time child preview; no watch, rating or wish is written until Confirm. The source snapshots retain localized title, full release date, native movie ID, stable source play key, original kind, date/precision and any supported score. Grouping uses the native movie ID, never title text. Clearing a choice restores these snapshots; separate native IDs remain separate even with identical names. The child retains unrelated watches, statuses and unsupported rows from a mixed archive. Re-importing and explicitly choosing the same target keeps existing source watches instead of duplicating them. Undo removes only what the confirmed child added, preserving earlier member watches.
+
+A title-only movie stays unmatched until the member chooses. Search is restricted to local catalog movies and never selects a result automatically. There is no reviewed suggestion rule for localized TV Time names: the existing suggestions endpoint returns `manual` / `unsupported_source` for these groups and offers no proposal or preselection. Explicit choice provenance is recorded as `wishlistResolution.basis = member`, with the typed canonical target, catalog title/year, selection time and parent preview/row. Movies with valid extension IMDb IDs still match directly. Missing/ambiguous/unavailable TVDB parents, episodes outside the matched show, and episodes with only TVDB coordinates stay unmatched. Official vote keys remain unsupported because their scale is unverified; selecting a title does not make an unsupported rating applicable.
 
 Limits are the existing 20 MiB upload, bounded ZIP decoding and UTF-8/CSV validation, plus 50,000 source rows across accepted files and 50,000 output observations. Nested JSON episodes count even when unwatched; supplementary and duplicate CSV rows count toward the input limit. JSON representations with duplicate CSVs are applied once. Protected ZIPs reject with local extraction guidance. No provider credentials, source account IDs, unrelated JSON properties or private CSV columns are retained.
 
@@ -69,7 +71,8 @@ The following strings are produced by the new backend. Codes live on `ImportFile
 | `tvtime_episode_rating` | TV Time episode ratings are not applied. |
 | `tvtime_rating_invalid` | TV Time ratings must be 2, 4, 6, 8 or 10. |
 | `tvtime_vote_scale_unknown` | TV Time official vote keys have no verified rating scale. Ratings are not applied. |
-| `tvtime_movie_identity_missing` | This TV Time movie has only a title and release date. It stays unmatched for review; no title-only match was applied. |
+| `tvtime_movie_identity_missing` | This TV Time movie has no catalog ID. Choose a movie to match it. |
+| `tvtime_movie_match_required` | Choose a movie for this TV Time entry. |
 | `tvtime_show_unmatched` | This TV Time show could not be matched uniquely by its TVDB identity. Its episodes and status were not applied. |
 
 New receipt warnings:
@@ -108,3 +111,39 @@ Final checks on 2026-10-19:
 - `npm run typecheck`: 185 existing diagnostics. An independent `git archive` of base main `b15b6cbe`, using the same installed dependencies, also reports 185. Compared by file, diagnostic code/message and multiplicity with line/column numbers removed: zero additions and zero removals. Typecheck still exits 2 because of those baseline diagnostics.
 - Biome checks all eight touched TypeScript files; `git diff --check` passes.
 - The private export directory remained empty at the final check; real match/unmatched aggregates are unavailable.
+
+
+## Q15 interface handover for Opus
+
+No UI component changed in Q15. TV Time still uses the general import preview; the UI thread must compose its existing kind/date controls with the match panel. Do not route the source into the wishlist-only confirmer: TV Time also contains watches and statuses. The existing hooks and routes accept the added fields without a compatibility change.
+
+Existing endpoints now also accept owned TV Time previews:
+
+- `GET /api/imports/:id/matches?offset=0`: grouped eligible official movie rows, 50 groups per page. The summary exposes `wishlistMatchCount` including resolved groups, plus `wishlistRewatchChoiceCount` when relevant.
+- `GET /api/imports/:id/matches?entry=<row index>`: opens the whole native-ID group from any of its rows.
+- `GET /api/imports/:id/matches?index=<row index>&q=<query>[&type=movie]`: bounded catalog candidates, always movies for this scope. `type=show` returns `tvtime_movie_match_required`.
+- `GET /api/imports/:id/suggestions?offset=0`: no TV Time suggestions; `state: manual`, `reason: unsupported_source` until resolved, then `already_resolved`. No new confidence signal is invented.
+- `POST /api/imports/:id/resolve`: unchanged body `{choices:[{index:0,target:{mediaType:"movie",tmdbId:862}}]}`; `target:null` clears that native-ID group's choice. Response `{import,parentImportId}` names a new preview, with `import.source: tvtime`. The regular Confirm endpoint and kind/date/rewatch decisions still apply afterwards.
+
+Added or extended data fields:
+
+| Field | Meaning |
+| --- | --- |
+| `group.matchScope: tvtime_movie` | Explicit title-only official movie matching scope |
+| `group.allowedMediaTypes: [movie]` | Movie-only target constraint |
+| `group.intentCounts` | Counts by original kind, e.g. `{watch:2,want:1}` |
+| `group.entryCount` | All eligible observations sharing the native movie ID |
+| `group.evidenceVariants[].releaseDate` | Full original release date; other evidence fields remain title, year and native source ID |
+| `item.tvtimeMovie` | `{sourceId?,releaseDate}` from official tracking rows, never catalog identity |
+| `item.wishlistOriginal` | Immutable normalized observation; `manualMatchScope`, original `kind`, localized title/year, TV Time evidence, stable source key, watch date/precision/pass or supported score |
+| `item.wishlistResolution` | Existing explicit selection provenance and authoritative catalog identity; source fields remain in the immutable snapshot |
+| `item.wishlistParent` | Immediate child-preview lineage, `{importId,rowIndex}` |
+
+Only new/changed member-facing strings in Q15:
+
+- `tvtime_movie_identity_missing` now says: **This TV Time movie has no catalog ID. Choose a movie to match it.**
+- New error `tvtime_movie_match_required`: **Choose a movie for this TV Time entry.**
+
+The existing manual-matching error messages, including missing target, conflicting source choices, ownership, stale preview and restart guidance, are reused. Pre-Q15 TV Time previews lack the immutable snapshots needed here and require reupload. Unsupported official votes and extension rows cannot opt into this scope by supplying extra JSON fields.
+
+Q15 checkpoint: imports server 318/318, legacy IMDb 12/12, imports UI 100/100, tracking 263 passed with the existing TODO. Typecheck remains the same 185 diagnostics as base main, with zero added or removed normalized diagnostics. Nine tests were added for the manual path. The independent review's corrections to the original adapter are being handled in subsequent commits.

@@ -301,6 +301,8 @@ export interface ImportObservation {
 	}
 	/** Validated source observation, captured before matching; never replaced by a member choice. */
 	wishlistOriginal?: WishlistOriginalObservation
+	/** Official TV Time movie identity; never a catalog ID. */
+	tvtimeMovie?: { sourceId?: string; releaseDate: string | null }
 	/** Server-derived holds after canonical duplicate grouping. */
 	wishlistShowChoice?: boolean
 	wishlistRewatchChoice?: boolean
@@ -339,6 +341,7 @@ export interface ImportObservation {
 }
 
 export type WishlistMatchErrorCode =
+	| "tvtime_movie_match_required"
 	| "wishlist_preview_required"
 	| "wishlist_snapshot_required"
 	| "wishlist_resolution_invalid"
@@ -354,7 +357,14 @@ export interface WishlistOriginalObservation {
 	season?: number
 	episode?: number
 	key: string
-	kind: "want"
+	kind: "want" | "watch" | "rating"
+	/** Server-owned eligibility for official title-only TV Time movie intents. */
+	manualMatchScope?: "tvtime_movie"
+	tvtimeMovie?: ImportObservation["tvtimeMovie"]
+	watchedAt?: ImportObservation["watchedAt"]
+	precision?: ImportObservation["precision"]
+	pass?: number
+	score?: number | null
 	mediaType: "movie" | "show" | "unknown" | "season" | "episode"
 	title: string
 	year: number | null
@@ -412,6 +422,8 @@ export interface WishlistMatchEvidenceVariant {
 	year: number | null
 	sourceId?: string
 	sourceUrl?: string
+	/** TV Time keeps the complete source release date, separately from catalog year. */
+	releaseDate?: string | null
 }
 export interface WishlistMatchGroup {
 	representativeIndex: number
@@ -419,6 +431,9 @@ export interface WishlistMatchGroup {
 	entryCount: number
 	evidenceVariants: WishlistMatchEvidenceVariant[]
 	hasMoreEvidence: boolean
+	matchScope?: "tvtime_movie"
+	allowedMediaTypes?: ["movie"]
+	intentCounts?: Partial<Record<ImportKind, number>>
 }
 
 export interface ImportOptions {

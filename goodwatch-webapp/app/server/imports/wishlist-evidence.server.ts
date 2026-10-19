@@ -20,8 +20,16 @@ export function isManuallyMatchableWishlistSource(
 ): original is WishlistOriginalObservation {
 	return (
 		!!original &&
-		original.kind === "want" &&
-		(original.mediaType === "unknown" || required === "id_conflict") &&
+		((original.kind === "want" &&
+			(original.mediaType === "unknown" || required === "id_conflict")) ||
+			(original.manualMatchScope === "tvtime_movie" &&
+				original.mediaType === "movie" &&
+				original.wishlistEvidence.source === "tvtime" &&
+				!!original.tvtimeMovie &&
+				!!original.title.trim() &&
+				original.tmdbId === null &&
+				original.imdbId === null &&
+				["want", "watch", "rating"].includes(original.kind))) &&
 		!["invalid", "unsupported"].includes(original.problem?.outcome ?? "")
 	)
 }

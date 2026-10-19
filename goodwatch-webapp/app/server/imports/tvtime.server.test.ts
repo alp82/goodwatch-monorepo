@@ -471,3 +471,20 @@ test("TV Time official movie play IDs preserve separate undated rewatches", asyn
 	assert.equal(new Set(p.observations.map((r) => r.key)).size, 2)
 	assert.ok(p.observations.every((r) => r.precision === "unknown"))
 })
+
+test("official movie snapshots use the final stable play key after timestamp collapse", async () => {
+	const p = await parseImportFile(
+		"tvtime",
+		Buffer.from(
+			"type,entity_type,uuid,type-uuid-n,movie_name,release_date,created_at\nrewatch,movie,m1,rewatch-m1-z,Localized,1995-11-22,2024-01-01 12:00:00\nrewatch,movie,m1,rewatch-m1-a,Localized,1995-11-22,2024-01-01 12:00:00\n",
+		),
+		undefined,
+		"tracking-prod-records.csv",
+	)
+	assert.equal(p.observations.length, 1)
+	assert.equal(p.observations[0].key, p.observations[0].wishlistOriginal?.key)
+	assert.equal(
+		p.observations[0].wishlistOriginal?.tvtimeMovie?.releaseDate,
+		"1995-11-22",
+	)
+})

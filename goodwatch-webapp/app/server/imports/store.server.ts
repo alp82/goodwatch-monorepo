@@ -148,7 +148,7 @@ export function summarize(row: ImportRow): ImportSummary {
 			failed: Number(row.failed),
 		},
 		stalled: isStalled(row),
-		...(row.source === "wishlist"
+		...(row.source === "wishlist" || row.source === "tvtime"
 			? {
 					wishlistMatchCount: Number(_wishlistMatchCount ?? 0),
 					wishlistShowChoiceCount: Number(_wishlistShowChoiceCount ?? 0),

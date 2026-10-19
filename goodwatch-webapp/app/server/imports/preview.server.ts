@@ -65,7 +65,7 @@ async function matchCatalog(source: ImportSource, rows: ImportObservation[]) {
 				outcome: "unmatched",
 				code: "tvtime_movie_identity_missing",
 				reason:
-					"This TV Time movie has only a title and release date. It stays unmatched for review; no title-only match was applied.",
+					"This TV Time movie has no catalog ID. Choose a movie to match it.",
 			}
 			continue
 		}
@@ -796,7 +796,7 @@ export async function createParsedPreview(
 				JSON.stringify(parsed.warnings),
 				JSON.stringify({
 					...kinds,
-					...(source === "wishlist"
+					...(source === "wishlist" || source === "tvtime"
 						? {
 								_wishlistShowChoiceCount: items.filter(
 									(item) =>
