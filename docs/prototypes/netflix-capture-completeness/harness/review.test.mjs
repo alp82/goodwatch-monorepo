@@ -99,7 +99,10 @@ test('3: an empty result is discarded after a profile switch and navigation', as
   const clock = createClock()
   const page = createPage(clock, { items: [], emptyRow: 'state-only' })
   const command = loadCollector(page, clock, collector)
-  assert.equal(command({ action: 'start' }).code, 'list_empty')
+  command({ action: 'start' })
+  // Since 0.0.7 the empty result waits for the row to stay absent.
+  await clock.advance(3000)
+  assert.equal(command({ action: 'status' }).code, 'list_empty')
   page.switchProfile()
   page.navigateAway()
   const r = command({ action: 'status' })

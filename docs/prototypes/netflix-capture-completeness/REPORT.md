@@ -1,27 +1,42 @@
 # Netflix My List capture: completeness prototype report
 
-Ticket [#706](https://github.com/alp82/goodwatch-monorepo/issues/706) on map [#702](https://github.com/alp82/goodwatch-monorepo/issues/702). Prototype date: 2026-10-19. Branch `prototype/netflix-completeness`. Current version: 0.0.6, after one independent review of 0.0.5. This is evidence for the owner's verdict, not a verdict.
+Ticket [#706](https://github.com/alp82/goodwatch-monorepo/issues/706) on map [#702](https://github.com/alp82/goodwatch-monorepo/issues/702). Prototype date: 2026-10-19. Branch `prototype/netflix-completeness`. Current version: 0.0.7, after two independent reviews (of 0.0.5 and 0.0.6). This is evidence for the owner's verdict, not a verdict.
 
 ## Answer so far
 
 Yes, with two known blind spots, on synthetic pages and one real saved page. A live account run is still needed.
 
-Netflix's My List page carries a count of the titles on the open profile's My List and the IDs of its first 13 titles with their positions. Version 0.0.6 uses that count only when the page state names the profile on screen, that profile's name is unique on the account, the My List section belongs to the page the state describes, and the tab was first loaded on My List. A file is `complete` only when:
+Netflix's My List page carries a count of the titles on the open profile's My List and the IDs of its first 13 titles with their positions. Version 0.0.7 uses that count only when the page state names the profile on screen, that profile's name is unique on the account, the My List section belongs to the page the state describes, the tab was first loaded on My List less than 10 minutes ago, and the page-state script hasn't changed since Start. A file is `complete` only when:
 
 - Exactly that many titles were captured, all known titles among them.
 - Every known position was seen next to its neighbor in Netflix's order.
-- The row came back to its first title, shown by ID.
+- A card was seen directly before the first title, in an adjacent slot or in a settled window that directly preceded the first title's window. An unmount and remount of the cards can't produce this.
 - The profile and page didn't change.
 
 Silence, a stalled count, a click count, a missing arrow, or a repeated window never count as evidence. Only cards proven to sit in the My List row enter the file.
 
-- **Synthetic benchmark:** 27 scenarios × 3 routes (81 runs). Version 0.0.6 marked 30 of 54 runs complete, and 28 of those were exact. The 2 wrong ones are the adversarial scenario S23: a foreign card beyond the 13 known positions plus a title Netflix counts but never shows.
+- **Synthetic benchmark:** 27 scenarios × 3 routes (81 runs). Version 0.0.7 marked 30 of 54 runs complete, and 28 of those were exact. The 2 wrong ones are the adversarial scenario S23: a foreign card beyond the 13 known positions plus a title Netflix counts but never shows.
 - **Randomized stress:** 900 scenarios × 2 routes (1,800 runs). There were 4 false completes, all in the 8 runs that combined a never-shown title with a title added elsewhere during the capture. The other 1,792 runs had none.
-- **Reaching complete:** on lists of 8 or more titles where an exact capture was possible, assisted mode reached `complete` in 468 of 524 runs and manual in 419 of 524. Lists of 7 or fewer that fit on screen reached it in 12 of 224 runs, because they can't show a wrap. Version 0.0.5 had reached about 99 percent, partly by accepting evidence the review showed to be unsafe.
-- **Real saved page (owner, de-DE, carousel):** 0.0.6 accepts the reference: the state's current profile matches the avatar on screen, the name is unique among 5 profiles, and the section belongs to the browse page. The count is 77, with 13 known positions, and the 5 cards shown raise no position mismatch. Applied to the owner's earlier files, the rule marks the 13-title file `partial` (13 of 77). The 77-title file meets the count rule. Positions and lap weren't recorded in version 0.0.4.
-- **Real Chromium 156 with the unpacked 0.0.6 extension (synthetic page, no Netflix request):** assisted mode captured 77 of 77 in 26 seconds with 3 member actions and 12 arrow clicks, using real page-state provenance and a real navigation entry. With 2 titles never shown it saved a `partial` file, 75 of 77. Manual mode at 1.2 s per click reported 67 of 77 after the first lap and 77 after a second (31 actions, 34 seconds). A profile change discarded the capture.
+- **Reaching complete:** on lists of 8 or more titles where an exact capture was possible, assisted mode reached `complete` in 458 of 524 runs and manual in 419 of 524. Lists of 7 or fewer that fit on screen reached it in 12 of 224 runs, because they can't show a wrap. Version 0.0.5 had reached about 99 percent, partly by accepting evidence the review showed to be unsafe.
+- **Real saved page (owner, de-DE, carousel):** 0.0.7 accepts the reference: the state's current profile matches the avatar on screen, the name is unique among 5 profiles, and the section belongs to the browse page. The count is 77, with 13 known positions, and the 5 cards shown raise no position mismatch. Applied to the owner's earlier files, the rule marks the 13-title file `partial` (13 of 77). The 77-title file meets the count rule. Positions and lap weren't recorded in version 0.0.4.
+- **Real Chromium 156 with the unpacked 0.0.7 extension (synthetic page, no Netflix request):** assisted mode captured 77 of 77 in 26 seconds with 3 member actions and 12 arrow clicks, using real page-state provenance and a real navigation entry. With 2 titles never shown it saved a `partial` file, 75 of 77. Manual mode at 1.2 s per click reported 67 of 77 after the first lap and 77 after a second (31 actions, 34 seconds). A profile change discarded the capture.
 
-## Review fixes in 0.0.6
+## Second review fixes in 0.0.7
+
+A second review of `cc5ffe31` found 0.0.6 safe to load for a supervised test, but completeness still unreliable. Each finding has a failing-first test in `harness/review2.test.mjs`. 8 of the 9 tests failed against 0.0.6. The ninth guards the real wrap without a partly visible neighbor card and must keep passing. All pass against 0.0.7. The reviewer's three probe scripts give the results noted per row.
+
+| Finding | Fix |
+| --- | --- |
+| 1. Emptying and restoring the cards counted as leaving and returning, so a stale 7-title reference over a 30-title row gave `complete`. | The leave-and-return lap rule is removed. A lap now needs a card directly before the first title, in an adjacent slot or across continuous settled windows. The reference is refused when the document loaded more than 10 minutes ago (`reference_stale`). The verdict also requires the page-state script to be unchanged since Start (`reference_changed`). Probe: `partial`, `lap_not_finished`. |
+| 2. A zero count completed while the row was absent and stayed complete after a row appeared. | An empty result first watches for 2 seconds (`checking_empty`). A My List row appearing, or the script changing, ends it as `terminated_row_appeared`, during the check and on every later status or stop. Probe: `partial`. |
+| 3. The click cap came from the first gain (26 clicks against the protocol's 12). | The cap is fixed at Start: `ceil(total / cards in view at Start) + 3`, plus 3 without new titles. Assisted mode stops there with `advance_limit`. Probes: 12 of 12 and 17 of 17 clicks, both `partial`. |
+| 4. Completeness text was truncated, not validated. | Only `complete`, `partial` and `unknown` are printed; anything else prints `completeness_invalid`. |
+| 5. A foreign card rendered as an ordinary card in the scroller enters partial files too. Together with a never-shown title it gives `complete` (S23). | No code change: the DOM offers no way to tell such a card apart. Disclosed in the README and below. The 0.0.6 and 0.0.7 checklists both ask whether any title outside My List appears in the file. |
+| 6. The replay required a plain `entities` key. | It accepts exactly one `entities` or `entities(...)` key, like the collector. |
+
+"Cards in view" counts every mounted card at Start, including a partly visible neighbor. That makes the cap slightly stricter than the benchmark's own G12 check, which uses the scenario's full-card count. The stricter cap cost recall: assisted complete-when-possible on lists of 8 or more fell from 468 to 458 of 524 (`below_total` 9 → 19).
+
+## First review fixes in 0.0.6
 
 An independent review of `961cd4a6` and `e62cedf4` found eight problems. Each now has a failing-first regression test in `harness/review.test.mjs`. All 17 tests failed against 0.0.5 and pass against 0.0.6.
 
@@ -48,12 +63,12 @@ Both fixes can only turn `complete` into `partial`, never the reverse.
 | Path | What it is |
 | --- | --- |
 | `PROTOCOL.md` | Reference-set protocol and candidate gates, committed in `961cd4a6` before any measurement. Unchanged. |
-| `extension/` | Unpacked MV3 extension, version 0.0.6. Permissions: `activeTab` and `scripting`. |
+| `extension/` | Unpacked MV3 extension, version 0.0.7. Permissions: `activeTab` and `scripting`. |
 | `baseline/capture-v004.js` | The 0.0.4 collector, unchanged, for the M0 baseline. |
 | `harness/sim.mjs` | Synthetic Netflix page with a virtual clock: page state with profiles and page, rows, virtual slots, recycled cards, lazy pages, wrap-around, load URL. |
 | `harness/benchmark.mjs`, `harness/runner.mjs` | 27 scenarios across 3 routes with gate checks. |
 | `harness/stress.mjs` | Seeded randomized layouts, delays, recycling, click speeds and list changes. |
-| `harness/collector.test.mjs`, `harness/review.test.mjs` | 12 rule tests and 17 review regression tests. |
+| `harness/collector.test.mjs`, `harness/review.test.mjs`, `harness/review2.test.mjs` | 12 rule tests and 26 review regression tests. |
 | `harness/live-fixture.mjs`, `scripts/browser-run.mjs` | Self-running synthetic page and a real Chromium run of the unpacked extension. |
 | `scripts/private-replay.mjs`, `scripts/compare-captures.mjs` | Offline replay and comparison of private files. Counts and fixed codes only. |
 | `benchmark/` | `results.md`, `results.json`, `stress-{706,9001,1234}.json`, `browser-run.json`. |
@@ -64,7 +79,7 @@ Both fixes can only turn `complete` into `partial`, never the reverse.
 ```sh
 cd docs/prototypes/netflix-capture-completeness
 npm ci
-npm test                                   # 29 tests
+npm test                                   # 38 tests
 npm run benchmark                          # writes benchmark/results.{md,json}
 node harness/stress.mjs 300 706 --json benchmark/stress-706.json
 TMPDIR=$HOME/.cache/gw706 \
@@ -78,9 +93,9 @@ Use a short `TMPDIR` for the review tests and the browser run. Chromium aborts w
 
 ## Candidate gates and measured results
 
-Gates as committed in `PROTOCOL.md`. Denominators: 27 scenarios × 3 routes = 81 runs, of which 54 are version 0.0.6 (M1 and A). S25 to S27 were added after the first run of 0.0.5.
+Gates as committed in `PROTOCOL.md`. Denominators: 27 scenarios × 3 routes = 81 runs, of which 54 are version 0.0.7 (M1 and A). S25 to S27 were added after the first run of 0.0.5.
 
-| Gate | Result | Measured on 0.0.6 |
+| Gate | Result | Measured on 0.0.7 |
 | --- | --- | --- |
 | G1 False complete | **Fail** | 2 of 54 benchmark runs (S23, both routes). Stress: 4 of 1,800, all in the 8 runs combining a never-shown title with a concurrent addition. |
 | G2 Recall when complete | **Fail** | 28 of 30 complete benchmark runs exact. The same S23 runs. |
@@ -93,7 +108,7 @@ Gates as committed in `PROTOCOL.md`. Denominators: 27 scenarios × 3 routes = 81
 | G9 Profile change | Pass | S13 discarded in both routes, and in real Chromium. |
 | G10 Unavailable titles | Pass | S10: 28 of 30, `partial` in both routes. |
 | G11 Empty list | Pass | No row: `unknown`. Reported 0: `complete` with 0 items (S18). An empty result is discarded after a profile switch or navigation (review test). |
-| G12 Bounded traversal | Pass | Protocol formula, checked independently: 23 of 23 benchmark runs and all stress runs within `ceil(total / visible) + 3 + 3`. Longest traversal 106.1 s in the benchmark, exactly 180.0 s in stress. |
+| G12 Bounded traversal | Pass | The collector caps at `ceil(total / cards in view) + 6`. Protocol formula, checked independently: 23 of 23 benchmark runs and all stress runs within `ceil(total / visible) + 3 + 3`. Longest traversal 106.1 s in the benchmark, exactly 180.0 s in stress. |
 | G13 Effort | Pass | S01 assisted: 3 actions, 27 s simulated. Manual M1: 17 actions, 20.5 s (patient member). |
 | G14 Real sample | **Not run** | Needs the owner's live run. |
 
@@ -102,19 +117,19 @@ Gates as committed in `PROTOCOL.md`. Denominators: 27 scenarios × 3 routes = 81
 | Benchmark, 27 scenarios each | Complete | Partial | Unknown | No file | False complete | Mean recall of files |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 | M0, version 0.0.4 manual | 0 | 2 | 21 | 4 | 0 | 85.6% |
-| M1, version 0.0.6 manual | 15 | 7 | 2 | 3 | 1 | 99.5% |
-| A, version 0.0.6 assisted | 15 | 7 | 2 | 3 | 1 | 99.5% |
+| M1, version 0.0.7 manual | 15 | 7 | 2 | 3 | 1 | 99.5% |
+| A, version 0.0.7 assisted | 15 | 7 | 2 | 3 | 1 | 99.5% |
 
 | Stress, 3 seeds × 300 scenarios | Manual M1 | Assisted A |
 | --- | ---: | ---: |
 | Runs | 900 | 900 |
 | False complete | 2 | 2 |
-| Complete when exact was possible, lists of 8 or more | 419 of 524 | 468 of 524 |
+| Complete when exact was possible, lists of 8 or more | 419 of 524 | 458 of 524 |
 | Complete when exact was possible, lists of 7 or fewer | 12 of 224 | 12 of 224 |
-| Mean recall | 96.1% | 99.6% |
+| Mean recall | 96.1% | 99.5% |
 | G12 violations (protocol formula) | not applicable | 0 |
 
-Assisted runs that could have been exact but came out `partial` (56 of 524 lists of 8 or more) were `positions_unconfirmed` (47) or `below_total` (9). All 47 `positions_unconfirmed` runs are lists of 12 to 14 titles with 7 or 8 cards per view and no partly visible neighbor card. The second view wraps onto the first, so the boundary between them is never side by side.
+Assisted runs that could have been exact but came out `partial` (66 of 524 lists of 8 or more) were `positions_unconfirmed` (47) or `below_total` (19, mostly the stricter cap). All 47 `positions_unconfirmed` runs are lists of 12 to 14 titles with 7 or 8 cards per view and no partly visible neighbor card. The second view wraps onto the first, so the boundary between them is never side by side.
 
 ### What was actually tested
 
@@ -128,10 +143,10 @@ Not tested: a live Netflix tab, any other language, a real grid layout, a second
 
 ## Limits and failure modes
 
-1. **Two blind spots.** The count stays equal when a counted title never shows and either a title is added from another device during the capture, or a foreign card appears beyond the 13 known positions. Positions after the first 13 aren't known, and cards carry no absolute position. Follow-up 1 would close this.
+1. **Two blind spots.** The count stays equal when a counted title never shows and either a title is added from another device during the capture, or a foreign card looking like an ordinary card appears beyond the 13 known positions. Such a foreign card also lands in partial files. Its real-world frequency is unknown. Positions after the first 13 aren't known, and cards carry no absolute position. Follow-up 1 would close this.
 2. **Untrusted clicks.** Assisted mode uses `element.click()`. If Netflix ignores untrusted clicks, assisted mode stalls and reports `partial`, and the manual route still works.
 3. **Short lists.** Lists that fit on screen without wrapping can't be `complete`. Lists of 12 to 14 titles in wide views without a partly visible neighbor card usually stay `partial`.
-4. **Provenance assumptions.** The profile check assumes the avatar's alt text is the profile name, as on the saved page. The page check needs the tab to have been loaded on My List; arriving from another Netflix page needs a refresh.
+4. **Provenance assumptions.** The profile check assumes the avatar's alt text is the profile name, as on the saved page. The page check needs the tab to have been loaded on My List less than 10 minutes before Start; otherwise a refresh is needed. Freshness is limited to document age and an unchanged script: a list edited in the same tab after load without a reload isn't detected.
 5. **Unavailable titles.** If Netflix counts titles it doesn't show, such a list can never be `complete`.
 6. **Labels and layouts.** Only "My List" and "Meine Liste" and one saved layout.
 7. **Manual effort.** Fast clicking skips loading cards; the popup asks for another, slower lap.
@@ -144,7 +159,7 @@ Not tested: a live Netflix tab, any other language, a real grid layout, a second
 
 ## Owner's live check (about 15 minutes, 12 without another profile)
 
-Everything stays on the owner's computer. The kit is in `~/goodwatch-private/706/`, outside Git: `wishlist-capture-extension-v006/`, `CHECKLIST.md` and `results.md`.
+Everything stays on the owner's computer, outside Git. Version 0.0.6 is in `~/goodwatch-private/706/` (`wishlist-capture-extension-v006/`, `CHECKLIST.md`, `results.md`) and is left untouched for a run in progress. Version 0.0.7 is separate, in `~/goodwatch-private/706/v007/` (`wishlist-capture-extension-v007/`, `CHECKLIST.md`, `results.md`).
 
 ## Owner decisions
 

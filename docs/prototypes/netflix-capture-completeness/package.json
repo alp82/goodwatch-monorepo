@@ -1,7 +1,7 @@
 {
   "name": "goodwatch-wishlist-capture-experiment",
   "private": true,
-  "version": "0.0.6",
+  "version": "0.0.7",
   "type": "module",
   "scripts": {
     "test": "node --test harness/*.test.mjs",

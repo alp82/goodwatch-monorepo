@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-19T00:36:48.832Z",
+  "generatedAt": "2026-10-19T07:37:14.713Z",
   "synthetic": true,
   "scenarios": 27,
   "routes": 3,
@@ -8,7 +8,7 @@
     {
       "gate": "G1 False complete",
       "pass": false,
-      "detail": "2 of 54 version 0.0.6 runs falsely complete: M1/S23, A/S23"
+      "detail": "2 of 54 version 0.0.7 runs falsely complete: M1/S23, A/S23"
     },
     {
       "gate": "G2 Recall when complete",
@@ -48,7 +48,7 @@
     {
       "gate": "G9 Profile change",
       "pass": true,
-      "detail": "S13 discarded in both version 0.0.6 routes"
+      "detail": "S13 discarded in both version 0.0.7 routes"
     },
     {
       "gate": "G10 Unavailable titles",
@@ -1530,14 +1530,14 @@
       "reason": "reported_empty",
       "reportedTotal": 0,
       "falseComplete": false,
-      "actions": 2,
+      "actions": 4,
       "arrowClicks": 0,
       "protocolAdvanceCap": null,
       "lastRunAdvances": null,
-      "collectorElapsedMs": 0,
+      "collectorElapsedMs": 2000,
       "traversalOutcome": null,
       "assistOutcome": null,
-      "elapsedS": 0,
+      "elapsedS": 5,
       "restarted": false,
       "removedDuringCapture": 0,
       "missingIds": []
@@ -1557,14 +1557,14 @@
       "reason": "reported_empty",
       "reportedTotal": 0,
       "falseComplete": false,
-      "actions": 2,
+      "actions": 3,
       "arrowClicks": 0,
       "protocolAdvanceCap": null,
       "lastRunAdvances": null,
-      "collectorElapsedMs": 0,
+      "collectorElapsedMs": 2000,
       "traversalOutcome": null,
       "assistOutcome": null,
-      "elapsedS": 0,
+      "elapsedS": 3,
       "restarted": false,
       "removedDuringCapture": 0,
       "missingIds": []

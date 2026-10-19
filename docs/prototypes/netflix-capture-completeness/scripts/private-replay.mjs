@@ -14,6 +14,9 @@ const require = createRequire(import.meta.url)
 const { Window } = require('happy-dom')
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const [htmlPath, ...capturePaths] = process.argv.slice(2)
+// Only known values are printed; anything else becomes a fixed code.
+const COMPLETENESS = new Set(['complete', 'partial', 'unknown'])
+const completenessOf = value => (COMPLETENESS.has(value) ? value : 'completeness_invalid')
 const print = value => console.log(JSON.stringify(value, null, 2))
 if (!htmlPath) {
   print({ error: 'usage: node scripts/private-replay.mjs <saved-page.html> [capture.json ...]' })
@@ -67,7 +70,7 @@ try {
         : loadedPresent < reference.loaded.length ? 'partial (loaded_title_missing)'
           : ids.size < reference.total ? 'partial (below_total)'
             : 'count rule met (positions and lap not recorded in the file)'
-      out.captures.push({ file: label, fileCompleteness: String(file.completeness).slice(0, 12), distinctIds: ids.size, reportedTotal: reference.total, loadedEdgesPresent: `${loadedPresent}/${reference.loaded.length}`, ruleVerdict: verdict })
+      out.captures.push({ file: label, fileCompleteness: completenessOf(file.completeness), distinctIds: ids.size, reportedTotal: reference.total, loadedEdgesPresent: `${loadedPresent}/${reference.loaded.length}`, ruleVerdict: verdict })
     } catch {
       out.captures.push({ file: label, error: 'capture_unreadable' })
     }
@@ -103,6 +106,10 @@ function readLoadedIds(doc) {
   const labels = new Set(['My List', 'Meine Liste'])
   const sections = Object.values(data).filter(e => e?.__typename === 'PinotCarouselSection' && labels.has(e.displayString))
   if (sections.length !== 1) return null
-  const edges = [...sections[0].entities.edges].sort((a, b) => Number(atob(a.cursor)) - Number(atob(b.cursor)))
-  return { total: sections[0].entities.totalCount, loaded: edges.map(edge => String(data[data[edge.node.__ref].unifiedEntity.__ref].videoId)) }
+  // Same key rule as the collector: exactly one entities or entities(...) field.
+  const connections = Object.entries(sections[0]).filter(([key, value]) => /^entities(\(|$)/.test(key) && value && typeof value === 'object')
+  if (connections.length !== 1) return null
+  const connection = connections[0][1]
+  const edges = [...connection.edges].sort((a, b) => Number(atob(a.cursor)) - Number(atob(b.cursor)))
+  return { total: connection.totalCount, loaded: edges.map(edge => String(data[data[edge.node.__ref].unifiedEntity.__ref].videoId)) }
 }

@@ -1,6 +1,6 @@
 'use strict'
 
-// Popup for the experimental My List capture, version 0.0.6. It talks to
+// Popup for the experimental My List capture, version 0.0.7. It talks to
 // capture.js in the active tab through chrome.scripting only, after the member
 // opens the popup. Page values reach the DOM via textContent only.
 
@@ -15,6 +15,7 @@ const STATE_TEXT = {
   cancelled: 'Capture canceled. Nothing was saved.',
   terminated_navigation: 'The tab left My List, so the capture was thrown away.',
   terminated_profile: 'The Netflix profile changed, so the capture was thrown away.',
+  terminated_row_appeared: 'Netflix said My List was empty, but a My List row appeared. Refresh My List and try again.',
   tab_unreachable: 'This extension can\'t run on this page.',
   no_response: 'The capture didn\'t answer. Refresh the Netflix tab and try again.',
 }
@@ -42,6 +43,8 @@ const REFERENCE_TEXT = {
   reference_other_page: 'This tab didn\'t open on My List, so Netflix\'s count may be out of date. Refresh My List and try again.',
   reference_profile_ambiguous: 'Two profiles share this name, so GoodWatch can\'t tell whose count this is.',
   reference_no_profile: 'GoodWatch couldn\'t confirm which profile Netflix\'s count belongs to.',
+  reference_stale: 'This tab has been open a while, so Netflix\'s count may be out of date. Refresh My List and try again.',
+  reference_changed: 'Netflix\'s count changed during the capture. Refresh My List and try again.',
 }
 
 const KNOWN_STATES = new Set(['idle', 'capturing', 'stopped', 'cancelled', 'terminated'])
@@ -120,7 +123,9 @@ function render() {
   let line = STATE_TEXT[code] ?? STATE_TEXT[state] ?? 'Something unexpected happened.'
   if (state === 'idle' && code === 'idle' && onMyList) line = 'Ready to capture My List in this tab.'
   let detail = ''
-  if (capturing) {
+  if (capturing && current.emptyCheck === true) {
+    line = 'Checking that My List is empty…'
+  } else if (capturing) {
     line = assisted ? 'Going through My List…' : 'Click the next arrow on the My List row until its first title comes back.'
     if (current.traversal?.outcome === 'needs_reference') {
       detail = REFERENCE_TEXT[text(current.reference?.reason)] ?? 'Netflix didn\'t report a total for this row, so GoodWatch can\'t go through it for you or tell when it\'s complete.'

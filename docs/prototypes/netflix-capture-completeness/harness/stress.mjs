@@ -1,5 +1,5 @@
 // Randomized timing and layout stress for ticket #706. Seeded, so reruns match.
-// Checks that no version 0.0.6 capture is marked complete unless it is exact.
+// Checks that no version 0.0.7 capture is marked complete unless it is exact.
 // Usage: node harness/stress.mjs [runs=300] [seed=706] [--json out.json]
 import { writeFileSync } from 'node:fs'
 import { runScenario } from './runner.mjs'

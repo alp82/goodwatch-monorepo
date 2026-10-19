@@ -52,8 +52,8 @@
 | S17 Empty list, no My List row | M1 | 0 | - | n/a | 0 | no file | not_read | 2 | 0 | 0 |
 | S17 Empty list, no My List row | A | 0 | - | n/a | 0 | no file | not_read | 2 | 0 | 0 |
 | S18 Empty list, page state reports 0 | M0 | 0 | - | n/a | 0 | no file | boundary_missing | 2 | 0 | 0 |
-| S18 Empty list, page state reports 0 | M1 | 0 | 0 | 100% | 0 | complete | reported_empty | 2 | 0 | 0 |
-| S18 Empty list, page state reports 0 | A | 0 | 0 | 100% | 0 | complete | reported_empty | 2 | 0 | 0 |
+| S18 Empty list, page state reports 0 | M1 | 0 | 0 | 100% | 0 | complete | reported_empty | 4 | 0 | 5 |
+| S18 Empty list, page state reports 0 | A | 0 | 0 | 100% | 0 | complete | reported_empty | 3 | 0 | 3 |
 | S19 No page-state script | M0 | 77 | 77 | 100% | 0 | unknown | stopped | 17 | 13 | 20.5 |
 | S19 No page-state script | M1 | 77 | 77 | 100% | 0 | unknown | reference_missing | 17 | 13 | 20.5 |
 | S19 No page-state script | A | 77 | 77 | 100% | 0 | unknown | reference_missing | 18 | 13 | 20.5 |
@@ -84,7 +84,7 @@
 
 | Gate | Result | Detail |
 | --- | --- | --- |
-| G1 False complete | Fail | 2 of 54 version 0.0.6 runs falsely complete: M1/S23, A/S23 |
+| G1 False complete | Fail | 2 of 54 version 0.0.7 runs falsely complete: M1/S23, A/S23 |
 | G2 Recall when complete | Fail | 28 of 30 complete runs exact |
 | G3 Truthful partial | Pass | 24 non-complete runs, each with a reason |
 | G4 Duplicates | Pass | Wrap-around counted once; same-name distinct IDs kept (S01, S09) |
@@ -92,7 +92,7 @@
 | G6 Recycled cards | Pass | S04 M0 100%, M1 100%, A 100%; S05 M0 13%, M1 100%, A 100%; S06 M0 13%, M1 100%, A 100% |
 | G7 Lazy loading | Pass | S07 assisted: complete, 37.5 s |
 | G8 Interruption | Pass | S14 discards; S16 restart reaches complete with no resume claim |
-| G9 Profile change | Pass | S13 discarded in both version 0.0.6 routes |
+| G9 Profile change | Pass | S13 discarded in both version 0.0.7 routes |
 | G10 Unavailable titles | Pass | S10: M1 partial 28/30, A partial 28/30 |
 | G11 Empty list | Pass | S17 unknown (no row); S18 empty complete from reported 0 |
 | G12 Bounded traversal | Pass | 23 of 23 assisted runs within ceil(total / visible) + 3 + 3; longest traversal 106.05 s of 180 s |

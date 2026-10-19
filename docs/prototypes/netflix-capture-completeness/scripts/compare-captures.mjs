@@ -4,6 +4,10 @@
 // Usage: node scripts/compare-captures.mjs <a.json> <b.json> [...]
 import { readFileSync } from 'node:fs'
 
+// Only known values are printed; anything else becomes a fixed code.
+const COMPLETENESS = new Set(['complete', 'partial', 'unknown'])
+const completenessOf = value => (COMPLETENESS.has(value) ? value : 'completeness_invalid')
+
 const paths = process.argv.slice(2)
 if (!paths.length) {
   console.log(JSON.stringify({ error: 'usage: node scripts/compare-captures.mjs <a.json> [b.json ...]' }))
@@ -15,7 +19,7 @@ const files = paths.map((path, i) => {
     const data = JSON.parse(readFileSync(path, 'utf8'))
     if (!Array.isArray(data?.items)) throw new Error()
     const titles = new Map(data.items.map(item => [String(item?.sourceId), item?.title]))
-    return { label, completeness: String(data.completeness).slice(0, 12), items: data.items.length, titles }
+    return { label, completeness: completenessOf(data.completeness), items: data.items.length, titles }
   } catch {
     return { label, error: 'capture_unreadable' }
   }

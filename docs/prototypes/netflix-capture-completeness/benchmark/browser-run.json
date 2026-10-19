@@ -10,7 +10,7 @@
       "run": "assisted-77",
       "completeness": "complete",
       "items": 77,
-      "seconds": 26.119,
+      "seconds": 26.058,
       "advances": 12,
       "outcome": "lap_complete",
       "untrustedClicks": 12,
@@ -22,13 +22,13 @@
       "items": 75,
       "reportedTotal": 77,
       "reason": "below_total",
-      "seconds": 35.04
+      "seconds": 35.09
     },
     {
       "run": "manual-77-at-1.2s-clicks",
       "completeness": "complete",
       "items": 77,
-      "seconds": 34.388,
+      "seconds": 34.66,
       "arrowClicks": 26,
       "memberActions": 31,
       "laps": [

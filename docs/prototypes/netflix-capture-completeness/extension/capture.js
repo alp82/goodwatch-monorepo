@@ -1,19 +1,25 @@
-/* Experimental My List collector, version 0.0.6 (ticket #706).
+/* Experimental My List collector, version 0.0.7 (ticket #706).
  * - Page-state reference: Netflix's own reported total for the selected row,
  *   read from the inline page-state script text, accepted only when it belongs
- *   to the current profile and to a document first loaded on My List.
+ *   to the current profile and to a document first loaded on My List less
+ *   than REFERENCE_MAX_AGE_MS ago, and only while the script is unchanged.
  * - Card ownership: only cards proven to sit in the My List row's own scroller
  *   (or the My List grid) enter the file, whatever the verdict.
  * - Stable reads: a card is accepted only after its link and label stay the
  *   same for STABLE_MS.
  * - Position checks: every known position is checked against the cards'
- *   order as it comes into view; a lap needs positive wrap evidence by ID.
+ *   order as it comes into view; a lap needs a card seen directly before the
+ *   first title (adjacent slots or continuous settled windows), which an
+ *   unmount and remount can't produce.
+ * - An empty list is complete only after the row stays absent for
+ *   EMPTY_SETTLE_MS, and stops being complete if a row appears.
  * - Optional bounded assisted traversal that clicks only the row scroller's
- *   own next arrow; when unsure, it falls back to manual capture.
+ *   own next arrow, at most ceil(total / cards in view) + 3 + 3 times; when
+ *   unsure, it falls back to manual capture.
  * Selectors come from one saved de-DE page; they remain hypotheses. */
 (() => {
 	if (globalThis.__goodwatchWishlistCaptureCommand) return;
-	const VERSION = '0.0.6';
+	const VERSION = '0.0.7';
 	const BOUNDARIES = '.mainView .gallery, [data-uia="my-list-gallery"]';
 	const EXCLUDED =
 		'[role="dialog"], [role="alertdialog"], [aria-modal="true"], dialog, .bob-card, .previewModal, .recommendations, .billboard-row';
@@ -39,6 +45,9 @@
 	const ASSIST_STALL_LIMIT = 3;
 	const ASSIST_EXTRA_ADVANCES = 3;
 	const ASSIST_MAX_TIME = 3 * 60 * 1000;
+	// The inline state describes the list when the document loaded.
+	const REFERENCE_MAX_AGE_MS = 10 * 60 * 1000;
+	const EMPTY_SETTLE_MS = 2000;
 
 	let state = 'idle';
 	let code = 'idle';
@@ -68,11 +77,10 @@
 	let prevWindow = [];
 	let maxWindow = 0;
 	let sinceIds = new Set();
-	// Lap: the first title leaves view and returns, or a card is seen directly
-	// before the first title (the row wrapped). Both are positive, by ID.
-	let firstId = null;
-	let leftStart = false;
+	// Lap: a card seen directly before the first title (the row wrapped).
 	let lapSeen = false;
+	let stateFingerprint = null;
+	let emptyCheck = false;
 	let rebinds = 0;
 	const issues = new Map();
 
@@ -182,6 +190,16 @@
 		}
 	}
 	const refuse = reason => ({ reference: null, reason });
+	// Cheap FNV-1a hash of the page-state script, to notice it changing.
+	function fingerprint(text) {
+		let h = 0x811c9dc5;
+		for (let i = 0; i < text.length; i++) h = Math.imul(h ^ text.charCodeAt(i), 0x01000193);
+		return `${text.length}:${h >>> 0}`;
+	}
+	function stateUnchanged() {
+		const scripts = [...document.querySelectorAll('script:not([src])')].filter(script => (script.textContent || '').includes(STATE_MARKER));
+		return scripts.length === 1 && fingerprint(scripts[0].textContent) === reference?.fingerprint;
+	}
 	// Reads only the section whose label equals the selected row's heading,
 	// after checking that the state belongs to the open profile and page.
 	function readReference(label) {
@@ -192,6 +210,13 @@
 		if (scripts.length !== 1) return refuse(scripts.length ? 'reference_ambiguous' : 'reference_missing');
 		const text = scripts[0].textContent;
 		if (text.length > MAX_STATE_CHARS) return refuse('reference_too_large');
+		let age;
+		try {
+			age = performance.now();
+		} catch {
+			age = NaN;
+		}
+		if (!(age >= 0 && age <= REFERENCE_MAX_AGE_MS)) return refuse('reference_stale');
 		const literal = decodeLiteral(text, text.indexOf(STATE_MARKER) + STATE_MARKER.length);
 		let data;
 		try {
@@ -241,7 +266,7 @@
 		loaded.sort((a, b) => a.position - b.position);
 		// Known positions must run 0, 1, 2, ... without gaps.
 		if (loaded.some((edge, k) => edge.position !== k)) return refuse('reference_bad_edge');
-		return { reference: { total, loaded }, reason: 'reference_found' };
+		return { reference: { total, loaded, fingerprint: fingerprint(text) }, reason: 'reference_found' };
 	}
 
 	// ---- Card ownership ---------------------------------------------------
@@ -481,10 +506,6 @@
 				else mismatchSeen = true;
 			}
 		}
-		if (!firstId || lapSeen) return;
-		const raw = cards.map(rawId);
-		if (!raw.includes(firstId)) leftStart = true;
-		else if (leftStart && ids.includes(firstId)) lapSeen = true;
 	}
 	function guard() {
 		if (!isMyList() || location.pathname !== initialUrl) {
@@ -500,6 +521,19 @@
 	function scan() {
 		if (state !== 'capturing') return;
 		if (!guard()) return;
+		if (emptyCheck) {
+			// Netflix reported zero: the row must stay absent for EMPTY_SETTLE_MS.
+			if (boundaries().length || !stateUnchanged()) {
+				terminate('terminated_row_appeared', true);
+			} else if (Date.now() - started >= EMPTY_SETTLE_MS) {
+				disconnect();
+				emptyCheck = false;
+				state = 'stopped';
+				code = 'list_empty';
+				ended = Date.now();
+			}
+			return;
+		}
 		const found = boundaries();
 		if (!boundary?.isConnected || found.length !== 1 || found[0] !== boundary) {
 			const same = found.length === 1 && found[0].matches(MODERN_ROW) && rowLabel &&
@@ -545,7 +579,12 @@
 		const result = (completeness, reason) => ({ completeness, reason, missingLoaded, ...base });
 		if (state === 'terminated') return result('partial', `ended_${code}`);
 		if (marker === null) return result('partial', 'no_profile_guard');
-		if (code === 'list_empty') return captured === 0 && reference.total === 0 ? result('complete', 'reported_empty') : result('partial', 'unreadable_cards');
+		if (!stateUnchanged()) return result('partial', 'reference_changed');
+		if (emptyCheck) return result('partial', 'checking_empty');
+		if (code === 'list_empty') {
+			if (boundaries().length) return result('partial', 'row_appeared');
+			return captured === 0 && reference.total === 0 ? result('complete', 'reported_empty') : result('partial', 'unreadable_cards');
+		}
 		if (quarantined.size) return result('partial', 'conflicting_cards');
 		if (rejected.size) return result('partial', 'unreadable_cards');
 		if (captured > reference.total) return result('partial', 'above_total');
@@ -604,19 +643,14 @@
 		}
 		if (pastDeadline()) return finishAssist('assist_time_limit');
 		if (assist.advances === 0) {
-			assist.countAtStart = items.size;
 			assist.fullCount = mountedIds().length;
+			// Protocol G12: ceil(total / cards in view) + 3, plus a stall budget of 3,
+			// fixed at Start and independent of how far each click moves the row.
+			assist.maxAdvances = Math.ceil(reference.total / Math.max(1, assist.fullCount)) + ASSIST_EXTRA_ADVANCES;
+		} else if (items.size > assist.countAtAdvance) {
+			assist.stalls = 0;
 		} else {
-			const gained = items.size - assist.countAtAdvance;
-			if (gained > 0) {
-				assist.stalls = 0;
-				if (assist.firstGain === null) {
-					assist.firstGain = gained;
-					assist.maxAdvances = Math.ceil(Math.max(0, reference.total - assist.countAtStart) / gained) + ASSIST_EXTRA_ADVANCES;
-				}
-			} else {
-				assist.stalls++;
-			}
+			assist.stalls++;
 		}
 		if (lapSeen && items.size < reference.total && !assist.finalWait) {
 			assist.finalWait = true;
@@ -626,7 +660,7 @@
 		}
 		if (lapSeen) return finishAssist('lap_complete');
 		if (assist.stalls >= ASSIST_STALL_LIMIT) return finishAssist('stalled');
-		if (assist.maxAdvances !== null && assist.advances >= assist.maxAdvances + ASSIST_STALL_LIMIT) return finishAssist('advance_limit');
+		if (assist.advances >= assist.maxAdvances + ASSIST_STALL_LIMIT) return finishAssist('advance_limit');
 		const button = nextButton();
 		if (!button) return fallBackToManual();
 		assist.countAtAdvance = items.size;
@@ -685,6 +719,7 @@
 				maxAdvances: assist.maxAdvances, outcome: assist.outcome,
 			} : { mode: 'manual' },
 			lapSeen,
+			emptyCheck,
 			rebinds,
 			orderCheck: orderCheck(),
 			elapsedMs: started ? (ended || Date.now()) - started : 0,
@@ -729,9 +764,9 @@
 		prevWindow = [];
 		maxWindow = 0;
 		sinceIds = new Set();
-		firstId = null;
-		leftStart = false;
 		lapSeen = false;
+		stateFingerprint = null;
+		emptyCheck = false;
 		rebinds = 0;
 		started = 0;
 		ended = 0;
@@ -758,9 +793,13 @@
 						referenceReason = 'reference_found';
 						marker = profileMarker();
 						initialUrl = location.pathname;
-						state = 'stopped';
-						code = 'list_empty';
-						started = ended = Date.now();
+						started = Date.now();
+						emptyCheck = true;
+						state = 'capturing';
+						code = 'capturing';
+						observer = new MutationObserver(scan);
+						observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true, characterData: true });
+						interval = setInterval(scan, 250);
 						return result();
 					}
 				}
@@ -775,7 +814,6 @@
 			}
 			marker = profileMarker();
 			initialUrl = location.pathname;
-			firstId = idAt[0] ?? null;
 			started = Date.now();
 			state = 'capturing';
 			code = 'capturing';
@@ -792,8 +830,8 @@
 					assist = { advances: 0, stalls: 0, maxAdvances: null, outcome: 'needs_reference', timer: null };
 				} else {
 					assist = {
-						advances: 0, stalls: 0, firstGain: null, maxAdvances: null, outcome: null,
-						countAtStart: 0, countAtAdvance: 0, clickedAt: 0, timer: null, finalWait: false,
+						advances: 0, stalls: 0, maxAdvances: null, outcome: null,
+						countAtAdvance: 0, clickedAt: 0, timer: null, finalWait: false,
 					};
 					assist.timer = later(assistStep, STABLE_MS + 200);
 				}
@@ -811,6 +849,7 @@
 		if (state === 'stopped') {
 			if (!isMyList() || location.pathname !== initialUrl) terminate('terminated_navigation', true);
 			else if (profileMarker() !== marker) terminate('terminated_profile', true);
+			else if (code === 'list_empty' && (boundaries().length || !stateUnchanged())) terminate('terminated_row_appeared', true);
 		}
 		scan();
 		if (command.action === 'stop' && state === 'capturing') {

@@ -86,7 +86,7 @@ export function pageStateScript(rows, loadedCount, profile = { profiles: ['Synth
     data[sectionKey] = {
       __typename: 'PinotCarouselSection',
       displayString: row.label,
-      entities: {
+      [row.entitiesKey ?? 'entities']: {
         __typename: 'PinotEntityConnection',
         totalCount: row.stateTotal,
         edges,
@@ -133,6 +133,8 @@ const DEFAULTS = {
   stateProfile: undefined,
   // Path the document was first loaded at (SPA arrival when it differs).
   loadedPath: '/browse/my-list',
+  // How long before the page was created the document was loaded.
+  loadedAgoMs: 2000,
 }
 
 export function createPage(clock, options = {}) {
@@ -189,6 +191,7 @@ export function createPage(clock, options = {}) {
     window,
     document: doc,
     loadedUrl: `https://www.netflix.com${o.loadedPath}`,
+    loadedAt: clock.now() - o.loadedAgoMs,
     myList: mine,
     groundTruth: o.items.map(item => item.id),
     otherIds: new Set(o.otherRows.flatMap(row => row.items.map(item => item.id))),
@@ -353,7 +356,11 @@ export function loadCollector(page, clock, collectorPath) {
     setInterval: clock.setInterval,
     clearInterval: clock.clearInterval,
     // The document's own navigation entry: where it was first loaded.
-    performance: { getEntriesByType: type => (type === 'navigation' ? [{ name: page.loadedUrl ?? 'https://www.netflix.com/browse/my-list' }] : []) },
+    performance: {
+      getEntriesByType: type => (type === 'navigation' ? [{ name: page.loadedUrl ?? 'https://www.netflix.com/browse/my-list' }] : []),
+      // Milliseconds since the document loaded.
+      now: () => clock.now() - (page.loadedAt ?? clock.now() - 2000),
+    },
   })
   vm.runInContext(source, context)
   return command => context.__goodwatchWishlistCaptureCommand(command)
