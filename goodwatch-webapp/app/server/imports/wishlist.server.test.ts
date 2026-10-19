@@ -603,3 +603,68 @@ it("keeps malformed coordinates out of typed storage while retaining an invalid 
 	assert.equal(parsed.observations[0].season, null)
 	assert.equal(parsed.observations[0].episode, null)
 })
+
+it("caps v1.1 season and episode coordinates at 10,000 while retaining oversized rows as invalid", async () => {
+	const parsed = await parseImportFile(
+		"wishlist",
+		bytes(
+			envelope(
+				[
+					{ title: "Show", mediaType: "season", tmdbId: 42, season: 10000 },
+					{
+						title: "Show",
+						mediaType: "episode",
+						tmdbId: 42,
+						season: 10000,
+						episode: 10000,
+					},
+					{ title: "Show", mediaType: "season", tmdbId: 42, season: 10001 },
+					{
+						title: "Show",
+						mediaType: "episode",
+						tmdbId: 42,
+						season: 10001,
+						episode: 1,
+					},
+					{
+						title: "Show",
+						mediaType: "episode",
+						tmdbId: 42,
+						season: 1,
+						episode: 10001,
+					},
+				],
+				{ version: 1.1 },
+			),
+		),
+	)
+	assert.deepEqual(
+		parsed.observations.map((row) => row.problem?.outcome),
+		[undefined, undefined, "invalid", "invalid", "invalid"],
+	)
+	assert.equal(parsed.observations[2].season, null)
+	assert.equal(parsed.observations[3].season, null)
+	assert.equal(parsed.observations[4].episode, null)
+	assert.ok(
+		parsed.observations
+			.slice(2)
+			.every((row) => row.wishlistOriginal === undefined),
+	)
+})
+
+it("explains that a string version must be a number instead of calling it a newer layout", async () => {
+	for (const version of ["1", "1.1", "2"]) {
+		await assert.rejects(
+			parseImportFile("wishlist", bytes(envelope([], { version }))),
+			{
+				name: "Error",
+				message:
+					"This wishlist file's version must be a number. Ask the maker of the tool that saved it for a file GoodWatch can read.",
+			},
+		)
+	}
+	await assert.rejects(
+		parseImportFile("wishlist", bytes(envelope([], { version: 2 }))),
+		/newer layout/,
+	)
+})

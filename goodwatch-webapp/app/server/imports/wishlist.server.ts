@@ -54,6 +54,10 @@ function sharedWishlist(input: unknown, fail: Fail): ParsedImport {
 		fail(
 			"Choose watcharr-export.json from Watcharr, or a wishlist file made for GoodWatch.",
 		)
+	if (typeof input.version === "string")
+		fail(
+			"This wishlist file's version must be a number. Ask the maker of the tool that saved it for a file GoodWatch can read.",
+		)
 	if (input.version !== 1 && input.version !== 1.1)
 		fail(
 			"This wishlist file uses a newer layout than GoodWatch reads. Ask the maker of the tool that saved it for a file GoodWatch can read.",
@@ -125,7 +129,8 @@ function sharedWishlist(input: unknown, fail: Fail): ParsedImport {
 			const validCoordinate = (value: unknown, minimum: number) =>
 				typeof value === "number" &&
 				Number.isSafeInteger(value) &&
-				value >= minimum
+				value >= minimum &&
+				value <= 10_000
 			const invalidCoordinates =
 				v11 &&
 				((mediaType === "season" || mediaType === "episode"

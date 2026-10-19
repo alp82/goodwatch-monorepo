@@ -80,8 +80,8 @@ Use numeric `version: 1.1` (not a string) for the additional fields below. Versi
 | `sourceSeen` | Optional boolean. `true` is explicit source-side Seen evidence; `false` does not override GoodWatch Seen or other rows' positive evidence. Omit when unknown. |
 | `sourceSeenAt` | Optional date in the same day/timestamp syntax as `addedAt`, allowed only with `sourceSeen: true`. Omit an unknown date; never substitute capture time, a tracking-start date, or partial episode progress. |
 | `mediaType` | Also accepts `season` and `episode`. The title, year, TMDB ID and IMDb ID identify the **parent show**, never the season or episode. `sourceId` still identifies the original source row. |
-| `season` | Required on season/episode rows, a nonnegative safe integer. Zero preserves a source special's coordinates without making it regular progress. Omitted on movie/show/unknown rows. |
-| `episode` | Required on episode rows, a positive safe integer. Omitted on every other row type. |
+| `season` | Required on season/episode rows, an integer from 0 through 10,000. Zero preserves a source special's coordinates without making it regular progress. Omitted on movie/show/unknown rows. |
+| `episode` | Required on episode rows, an integer from 1 through 10,000. Omitted on every other row type. |
 
 A season or episode row is still a source wishlist entry. A Seen-list-only row is not a wish: a producer may attach source Seen evidence only to a row with independently established wishlist membership. For JustWatch, explicit Seen-list evidence can populate `sourceSeen` and a known Seen date can populate `sourceSeenAt`; `seenState.progress > 0` alone does not establish whole-show Seen. For MDBList, retain `mediaType: "season" | "episode"`, copy its known `season`/`episode` numbers, and supply independently established parent-show IDs. Do not copy a season/episode catalog ID into the parent-show ID fields. Neither prototype branch is changed by this contract.
 
@@ -106,4 +106,6 @@ This is a compatibility adjustment to the current review, not its redesign. New 
 - “Your optional choices have been reset. Review them before adding titles.”
 - “Seen at the source. Choose whether to add this title as Want to rewatch.”
 - “This file lists a season or episode. Choose Want to See the show to add the whole show.”
+- “Seen in GoodWatch. This file lists a season or episode. Choose Want to See the show and Want to rewatch to add the whole show.”
+- “This wishlist file's version must be a number. Ask the maker of the tool that saved it for a file GoodWatch can read.”
 - Season rows use `S{season}`; episode rows retain the existing `S{season} E{episode}` notation.

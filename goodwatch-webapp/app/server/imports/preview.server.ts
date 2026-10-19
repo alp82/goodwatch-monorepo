@@ -216,6 +216,8 @@ async function matchCatalog(source: ImportSource, rows: ImportObservation[]) {
 	}
 	for (const [index, title] of found) {
 		const row = rows[index]
+		// Wishlist season/episode rows reuse episode-scope fields as source evidence;
+		// their target is the whole show, so they must skip episode resolution.
 		if (
 			(source === "wishlist" && row.kind === "want") ||
 			title.mediaType !== "show" ||
@@ -822,8 +824,9 @@ async function classifyWishlistShows(userId: string, items: ImportItem[]) {
 		if (snapshot?.state?.state === "seen") {
 			item.wishlistRewatchChoice = true
 			item.outcome = "conflict"
-			item.reason =
-				"Seen in GoodWatch. Choose whether to add this title as Want to rewatch."
+			item.reason = item.wishlistShowChoice
+				? "Seen in GoodWatch. This file lists a season or episode. Choose Want to See the show and Want to rewatch to add the whole show."
+				: "Seen in GoodWatch. Choose whether to add this title as Want to rewatch."
 		} else if (
 			!canImportWantToSee(snapshot?.state?.state, !!snapshot?.hasWatches)
 		) {

@@ -48,6 +48,12 @@ A guest's title interactions available across Taste, title details, and Wishlist
 The action expressing an intention to watch a title and placing it in Wishlist.
 _Avoid_: Save
 
+**Season or episode wish on an import**:
+A source wishlist entry for a season or episode, offered for the member to confirm as Want to See for the whole show. GoodWatch has no season- or episode-level wishes.
+
+**Want to See the show**:
+The choice confirming that a season or episode wish on an import should add the whole show to Wishlist.
+
 **Want to rewatch**:
 Want to See on a title the person has Seen: it places the title in Wishlist to be watched again and changes nothing else. It lasts while the title stays Seen and ends with the next watch of a movie or Watch again on a show.
 _Avoid_: Rewatch list, Want to See again

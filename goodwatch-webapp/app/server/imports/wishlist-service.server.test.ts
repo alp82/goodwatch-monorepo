@@ -397,3 +397,40 @@ it("combines source-Seen duplicate evidence in either source order without rewri
 		)
 	}
 })
+
+it("explains both whole-show and rewatch choices for source seasons and episodes of a Seen show", async () => {
+	for (const mediaType of ["season", "episode"] as const) {
+		const { tracking } = setupV11()
+		tracking
+			.table("user_watch_state")
+			.push({
+				user_id: "member",
+				tmdb_id: 862,
+				media_type: "show",
+				state: "seen",
+				pass: 1,
+				state_changed_at: "2026-10-01",
+				created_at: "2026-10-01",
+				updated_at: "2026-10-01",
+			})
+		tracking.refresh("user_watch_state")
+		const preview = await uploadV11([
+			{
+				title: "Toy Story",
+				mediaType,
+				tmdbId: 862,
+				season: 2,
+				...(mediaType === "episode" ? { episode: 4 } : {}),
+			},
+		])
+		const row = (await getImportItems("member", preview.id, undefined, 0, 50))
+			.items[0]
+		assert.equal(row.outcome, "conflict")
+		assert.equal(row.wishlistShowChoice, true)
+		assert.equal(row.wishlistRewatchChoice, true)
+		assert.equal(
+			row.reason,
+			"Seen in GoodWatch. This file lists a season or episode. Choose Want to See the show and Want to rewatch to add the whole show.",
+		)
+	}
+})
