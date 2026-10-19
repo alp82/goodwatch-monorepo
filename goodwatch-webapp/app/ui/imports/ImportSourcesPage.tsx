@@ -173,7 +173,10 @@ export function ImportSourcesPage({
 							show({ id, importId })
 						}}
 					/>
-					<Notes onTrakt={() => pick("trakt")} />
+					<Notes
+						onTvTime={() => pick("tvtime")}
+						onTrakt={() => pick("trakt")}
+					/>
 				</div>
 			</MovieLensFilesContext.Provider>
 		</ImportFileRouting.Provider>
@@ -278,22 +281,35 @@ function History({
 }
 
 /** TV Time, streaming services, and the logos' notices. */
-function Notes({ onTrakt }: { onTrakt: () => void }) {
+function Notes({
+	onTvTime,
+	onTrakt,
+}: { onTvTime: () => void; onTrakt: () => void }) {
 	return (
 		<div className="flex max-w-3xl flex-col gap-4 text-sm text-gray-400">
 			<div className="flex flex-col items-start">
 				<p>
-					Coming from TV Time? TV Time closed on July 15, 2026. Trakt imports a
-					saved TV Time file: import it on Trakt, then upload your Trakt export
-					here.
+					Coming from TV Time? TV Time closed on July 15, 2026. Upload the
+					export you saved: TV Time's own gdpr-data.zip, or a file from the TV
+					Time Liberator or TV Time Out extension. If you already moved your
+					history to Trakt, import your Trakt export instead.
 				</p>
-				<button
-					type="button"
-					className={`${textLink} min-h-11`}
-					onClick={onTrakt}
-				>
-					Open the Trakt import
-				</button>
+				<div className="flex flex-wrap gap-x-5">
+					<button
+						type="button"
+						className={`${textLink} min-h-11`}
+						onClick={onTvTime}
+					>
+						Open the TV Time import
+					</button>
+					<button
+						type="button"
+						className={`${textLink} min-h-11`}
+						onClick={onTrakt}
+					>
+						Open the Trakt import
+					</button>
+				</div>
 			</div>
 			<p>
 				Netflix, Prime Video, Disney+ and other streaming services don't give

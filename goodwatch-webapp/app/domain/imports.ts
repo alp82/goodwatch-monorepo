@@ -89,8 +89,15 @@ export const IMPORT_SOURCE_UPLOAD = {
 		label: "ZIP, CSV or JSON",
 		extensions: [".zip", ".csv", ".json"],
 		accept: ".zip,.csv,.json,application/zip,text/csv,application/json",
+		hint: "Drop gdpr-data.zip or another TV Time file here, or choose it from your device.",
 		invalidFileMessage: "Choose a TV Time ZIP, CSV or JSON export.",
 		oversizeHint: "Choose a smaller TV Time export.",
+		instructions: [
+			"TV Time closed on July 15, 2026, so use the export you saved before then. GoodWatch reads TV Time's own gdpr-data.zip, or the tracking CSV files inside it, and the files from the TV Time Liberator and TV Time Out browser extensions. Upload the ZIP as you saved it.",
+			"If your ZIP asks for a password, open it on your computer with that password. Put the CSV files from inside it in a new ZIP without a password and upload that, or upload tracking-prod-records-v2.csv by itself.",
+		],
+		notes:
+			"GoodWatch imports episode and movie watches, Watching and Dropped show statuses, and For later as Want to See. Movie ratings come only from TV Time Liberator files. Movies in TV Time's own export have no catalog ID, so you choose the GoodWatch movie for each one before it's added. Maximum size: 20 MB.",
 	},
 	letterboxd: {
 		...zipUpload,

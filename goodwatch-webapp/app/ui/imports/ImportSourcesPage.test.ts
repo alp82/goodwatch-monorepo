@@ -33,6 +33,7 @@ test("the logo row shows every live source, most common first, each with its own
 		{ name: "Trakt", logo: "trakt.svg" },
 		{ name: "TMDB", logo: "tmdb.svg" },
 		{ name: "Plex", logo: "plex.png" },
+		{ name: "TV Time", logo: "tvtime.svg" },
 		{ name: "MyAnimeList / Kitsu", logo: "myanimelist.svg" },
 		{ name: "Kodi", logo: "kodi.png" },
 		{ name: "MovieLens", logo: "movielens.png" },
@@ -60,13 +61,29 @@ test("a history row opens its source on that import", () => {
 	assert.match(runs.historyOpened.text, /Import another file|Undo import/)
 })
 
-test("TV Time members are pointed to Trakt, which imports a saved TV Time file", () => {
+test("TV Time members learn which saved files the TV Time import reads, and that a Trakt move also works", () => {
 	assert.match(
 		runs.tvTime.text,
-		/Coming from TV Time\? TV Time closed on July 15, 2026\. Trakt imports a saved TV Time file: import it on Trakt, then upload your Trakt export here\./,
+		/Coming from TV Time\? TV Time closed on July 15, 2026\. Upload the export you saved: TV Time's own gdpr-data\.zip, or a file from the TV Time Liberator or TV Time Out extension\. If you already moved your history to Trakt, import your Trakt export instead\./,
 	)
-	assert.equal(runs.tvTimeOpened.opened, "Trakt")
-	assert.match(runs.tvTimeOpened.text, /Upload your Trakt export/)
+	assert.doesNotMatch(runs.tvTime.text, /import it on Trakt/)
+	assert.equal(runs.tvTimeOpened.opened, "TV Time")
+	assert.match(runs.tvTimeOpened.text, /Upload your TV Time export/)
+	assert.match(runs.tvTimeOpened.text, /gdpr-data\.zip/)
+	assert.match(runs.tvTimeOpened.text, /password/)
+	assert.equal(runs.tvTimeTrakt.opened, "Trakt")
+	assert.match(runs.tvTimeTrakt.text, /Upload your Trakt export/)
+})
+
+test("TV Time's official export dropped in the one box goes to the TV Time preview", () => {
+	const run = runs.oneBoxTvTime
+	assert.deepEqual(previews(run), [
+		{
+			url: "/api/imports/preview",
+			body: { source: "tvtime", file: "file:gdpr-data.zip" },
+		},
+	])
+	assert.deepEqual(openRows(run), ["TV Time"])
 })
 
 test("streaming services are named as not importable yet, with where to import from instead", () => {

@@ -19,6 +19,7 @@ import myanimelistLogo from "~/img/import-sources/myanimelist.svg?no-inline"
 import plexLogo from "~/img/import-sources/plex.png?no-inline"
 import tmdbLogo from "~/img/import-sources/tmdb.svg?no-inline"
 import traktLogo from "~/img/import-sources/trakt.svg?no-inline"
+import tvtimeLogo from "~/img/import-sources/tvtime.svg?no-inline"
 import wishlistLogo from "~/img/import-sources/wishlist.png?no-inline"
 import type { RecognizedImportFile } from "./ImportFileRecognition"
 
@@ -100,6 +101,23 @@ const SOURCES: Omit<ImportSourceEntry, "name">[] = [
 		gets: ["Watches with dates", "Rewatches", "Episodes", "Want to See"],
 		wait: "About a minute",
 		connect: true,
+	},
+	{
+		id: "tvtime",
+		// TV Time's block mark as redrawn on Wikimedia Commons (File:Logo_TV_Time.svg, CC BY-SA 4.0), colors unchanged.
+		// TV Time closed on July 15, 2026 and publishes no brand terms; members bring an export they saved before then.
+		logo: tvtimeLogo,
+		tile: "TV",
+		gets: [
+			"Watches with dates",
+			"Rewatches",
+			"Episodes",
+			"Show statuses",
+			"Want to See",
+			"Movie ratings",
+		],
+		wait: "Right away",
+		fileNoun: "a TV Time export",
 	},
 	{
 		id: "myanimelist",

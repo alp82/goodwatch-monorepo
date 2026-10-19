@@ -331,8 +331,34 @@ const results: Record<string, unknown> = {}
 {
 	const view = await page()
 	results.tvTime = { opened: view.opened(), text: view.text() }
-	await view.click("Open the Trakt import")
+	await view.click("Open the TV Time import")
 	results.tvTimeOpened = { opened: view.opened(), text: view.text() }
+	await view.click("Pick another source")
+	await view.click("Open the Trakt import")
+	results.tvTimeTrakt = { opened: view.opened(), text: view.text() }
+	await view.unmount()
+}
+
+{
+	const view = await page()
+	await view.choose(
+		"any source",
+		new File(
+			[
+				zipFixture({
+					"gdpr-data/tracking-prod-records-v2.csv": "key,s_id,ep_id\n",
+					"gdpr-data/user.csv": "id\n",
+				}),
+			],
+			"gdpr-data.zip",
+			{ type: "application/zip" },
+		),
+	)
+	results.oneBoxTvTime = {
+		opened: view.opened(),
+		text: view.text(),
+		sent: [...sent],
+	}
 	await view.unmount()
 }
 

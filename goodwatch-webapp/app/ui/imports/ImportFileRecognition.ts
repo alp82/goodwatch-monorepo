@@ -75,6 +75,43 @@ const isTraktFile = (entry: string) =>
 	/^ratings-(movies|shows|seasons|episodes)\.json$/.test(entry) ||
 	/^lists-(?!collaborations\.json$).+\.json$/.test(entry)
 
+/**
+ * The files the TV Time import opens, by name: the official export's tracking CSVs and the Liberator and TV Time Out
+ * extension files. Mirrors `fileKind` in app/server/imports/tvtime.server.ts, which compares the last path part with
+ * case and punctuation removed, so nested folders and hash prefixes still match. Built from the research notes'
+ * headers and names; no real export seen yet (docs/implementation/imports/tvtime.md).
+ */
+const isTvTimeFile = (entry: string) => {
+	const name = (entry.split("/").at(-1) ?? entry)
+		.toLowerCase()
+		.replace(/[^a-z0-9]/g, "")
+	return (
+		["showsjson", "moviesjson", "activityhistorycsv"].includes(name) ||
+		/^tvtime(series|movies)\d.*json$/.test(name) ||
+		/^tvtime(seriesepisodes|series|movies)\d.*csv$/.test(name) ||
+		/(followedtvshow|usertvshowdata|ratingslivevotes|trackingprodrecordsv2|trackingprodrecords)csv$/.test(
+			name,
+		)
+	)
+}
+
+/**
+ * A TV Time CSV by its columns, as the TV Time import tells its layouts apart. A lone "key" column is too common to
+ * name TV Time, so the newer tracking layout also needs its show or episode ID.
+ */
+const isTvTimeCsv = (columns: string[]) => {
+	const has = (name: string) => columns.includes(name)
+	return (
+		(has("key") && (has("sid") || has("epid"))) ||
+		(has("entitytype") && has("type")) ||
+		has("tvshowid") ||
+		has("votekey") ||
+		(has("title") &&
+			(has("tvdbid") || has("imdbid")) &&
+			(has("iswatched") || has("status")))
+	)
+}
+
 export async function recognizeImportFile(
 	file: File,
 ): Promise<ImportFileRecognition> {
@@ -99,6 +136,8 @@ function recognize(peek: Peek, fileName: string): ImportFileRecognition {
 			).length === 1
 		)
 			return { source: "kodi", label: "Kodi library export" }
+		if (peek.entries.some(isTvTimeFile))
+			return { source: "tvtime", label: "TV Time export" }
 	}
 	if (peek.kind === "xml") {
 		// The Kodi import reads plain XML only; the MyAnimeList import also unpacks gzip.
@@ -135,6 +174,14 @@ function recognize(peek: Peek, fileName: string): ImportFileRecognition {
 			return header.has("rating")
 				? { source: "movielens", label: "MovieLens ratings", wishlist: false }
 				: { source: "movielens", label: "MovieLens wishlist", wishlist: true }
+		// Before the generic rule: a TV Time extension CSV also has Title and Rating columns.
+		if (
+			isTvTimeFile(fileName) ||
+			isTvTimeCsv(
+				peek.header.map((name) => name.toLowerCase().replace(/[^a-z0-9]/g, "")),
+			)
+		)
+			return { source: "tvtime", label: "TV Time export" }
 		// The generic import compares names without spaces, refuses duplicate columns, and skips a row with no
 		// rating, watch date, or review. Its own rating in "Your Rating" would be lost, so such a file isn't offered.
 		const compact = peek.header.map((name) =>
@@ -233,10 +280,20 @@ function recognizeJson(
 		fileName === "watcharr-export.json"
 	if (watcharr || emptyWatcharr)
 		return { source: "wishlist", label: "Watcharr export" }
+	// TV Time's extension exports: shows.json, movies.json, or a renamed array of titles with TVDB or IMDb IDs.
+	const tvtime = peek.whole
+		? Array.isArray(parsed) &&
+			isObject(first) &&
+			isObject(first.id) &&
+			("tvdb" in first.id || "imdb" in first.id)
+		: head.startsWith("[") &&
+			/"id"\s*:\s*\{\s*"(tvdb|imdb)"\s*:/.test(peek.text)
+	if (isTvTimeFile(fileName) || tvtime)
+		return { source: "tvtime", label: "TV Time export" }
 	return {
 		source: null,
 		label: "JSON file",
-		hint: "GoodWatch reads JSON exports from Watcharr and wishlist files made for GoodWatch. Upload the file as you got it, without editing it.",
+		hint: "GoodWatch reads JSON exports from Watcharr, TV Time, and wishlist files made for GoodWatch. Upload the file as you got it, without editing it.",
 	}
 }
 

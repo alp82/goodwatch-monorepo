@@ -330,8 +330,91 @@ test("other JSON stays unrecognized and names the JSON files GoodWatch reads", a
 		const result = await recognizeImportFile(file("data.json", content))
 		assert.equal(result.source, null, content)
 		assert.ok(
-			result.source === null && /Watcharr and wishlist files/.test(result.hint),
+			result.source === null &&
+				/Watcharr, TV Time, and wishlist files/.test(result.hint),
 			content,
 		)
 	}
+})
+
+test("TV Time's official export is recognized by its tracking files, also nested or hash-prefixed", async () => {
+	for (const files of [
+		{ "gdpr-data/tracking-prod-records-v2.csv": "key,s_id,ep_id\n" },
+		{ "a1b2c3_tracking-prod-records.csv": "type,entity_type,uuid\n" },
+		{ "export/Followed_TV_Show.csv": "tv_show_id,tv_show_name\n" },
+		{ "user_tv_show_data.csv": "tv_show_id,is_followed\n" },
+		{ "ratings-live-votes.csv": "vote_key,uuid\n" },
+	] as Record<string, string>[]) {
+		const result = await recognizeImportFile(
+			file("gdpr-data.zip", zipFixture({ "account.csv": "id\n", ...files })),
+		)
+		assert.equal(result.source, "tvtime", Object.keys(files)[0])
+		assert.equal(result.label, "TV Time export")
+	}
+})
+
+test("TV Time Liberator and TV Time Out extension ZIPs are recognized by their file names", async () => {
+	for (const files of [
+		{ "shows.json": "[]", "movies.json": "[]", "activity_history.csv": "" },
+		{ "tvtime-series-2026-07-01.json": "[]" },
+		{ "tvtime-series-episodes-2026-07-01.csv": "" },
+		{ "tvtime-movies-2026-07-01.csv": "" },
+	] as Record<string, string>[]) {
+		const result = await recognizeImportFile(
+			file("tv-time-export.zip", zipFixture(files)),
+		)
+		assert.equal(result.source, "tvtime", Object.keys(files)[0])
+	}
+})
+
+test("a loose TV Time CSV is recognized by its columns, before the generic CSV rule can claim it", async () => {
+	for (const header of [
+		"key,s_id,ep_id,s_no,ep_no,created_at",
+		"type,entity_type,uuid,movie_name,release_date,created_at",
+		"tv_show_id,tv_show_name,active,archived",
+		"episode_id,movie_name,uuid,vote_key",
+		// An extension CSV also has Title and Rating, which the generic import would take.
+		"title,tvdb_id,imdb_id,is_watched,watched_at,rating",
+		"Title,IMDb ID,Status",
+	]) {
+		const result = await recognizeImportFile(file("renamed.csv", `${header}\n`))
+		assert.equal(result.source, "tvtime", header)
+	}
+	const byName = await recognizeImportFile(
+		file("tracking-prod-records-v2.csv", "something,else\n"),
+	)
+	assert.equal(byName.source, "tvtime")
+})
+
+test("a CSV with a lone key column isn't taken for TV Time", async () => {
+	const result = await recognizeImportFile(file("export.csv", "key,value\n"))
+	assert.equal(result.source, null)
+})
+
+test("TV Time extension JSON is recognized by name or by TVDB/IMDb ids, never a Watcharr export", async () => {
+	const named = await recognizeImportFile(file("shows.json", "[]"))
+	assert.equal(named.source, "tvtime")
+	const renamed = await recognizeImportFile(
+		file(
+			"mine.json",
+			JSON.stringify([
+				{ title: "Synthetic", id: { tvdb: 1, imdb: "tt1" }, is_watched: true },
+			]),
+		),
+	)
+	assert.equal(renamed.source, "tvtime")
+	const show = await recognizeImportFile(
+		file(
+			"mine.json",
+			`[{"title":"Synthetic","id":{"tvdb":1},"seasons":[${'{"number":1},'.repeat(9000)}{"number":2}]}]`,
+		),
+	)
+	assert.equal(show.source, "tvtime")
+	const watcharr = await recognizeImportFile(
+		file(
+			"watcharr-export.json",
+			'[{"status":"PLANNED","content":{"title":"Synthetic","tmdbId":1}}]',
+		),
+	)
+	assert.equal(watcharr.source, "wishlist")
 })
