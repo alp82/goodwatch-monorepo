@@ -11,7 +11,11 @@ import {
 	createEpisodeResolver,
 } from "./episode-resolver.server.ts"
 import { run, select } from "./store.server.ts"
-import { type TvdbLookup, createTvdbLookup } from "./tvdb-lookup.server.ts"
+import {
+	type TvdbLookup,
+	createTvdbLookup,
+	tvdbLookupProblem,
+} from "./tvdb-lookup.server.ts"
 
 const id = z.number().int().positive()
 const summary = z.object({
@@ -81,11 +85,15 @@ export function createTvdbParentLookup(
 		identity: string,
 	): Promise<
 		| { status: "matched"; showId: number }
-		| { status: "unmatched" | "unavailable" }
+		| { status: "unmatched" }
+		| { status: "unavailable"; problem: ReturnType<typeof tvdbLookupProblem> }
 	> => {
 		const [kind, externalId] = identity.split(":")
 		try {
-			const result = await lookup(Number(externalId))
+			const result = await lookup(
+				Number(externalId),
+				kind === "show" ? "show" : "episode",
+			)
 			const parents =
 				kind === "show"
 					? result.tv_results.map((row) => row.id)
@@ -93,8 +101,8 @@ export function createTvdbParentLookup(
 			return parents.length === 1
 				? { status: "matched", showId: parents[0] }
 				: { status: "unmatched" }
-		} catch {
-			return { status: "unavailable" }
+		} catch (error) {
+			return { status: "unavailable", problem: tvdbLookupProblem(error) }
 		}
 	}
 }
@@ -113,7 +121,7 @@ export function createCatalogEpisodeResolver(
 			),
 		),
 		findTvdb:
-			tvdbLookup ??
+			(tvdbLookup ? (id: number) => tvdbLookup(id, "episode") : undefined) ??
 			memoize((tvdbId: number) =>
 				tmdb(
 					`find/${tvdbId}`,
@@ -136,6 +144,8 @@ export function createCatalogEpisodeResolver(
 			tmdb(`tv/episode_group/${encodeURIComponent(groupId)}`, group),
 		),
 		cacheTvdb: async (showId, episodeId, tvdbId, expectedTvdbId) => {
+			// TV Time already trusts these stored identities: no revalidation or rewrite.
+			if (tvdbLookup && expectedTvdbId === tvdbId) return false
 			// Fresh TMDB evidence may correct an old mapping, but never overwrite a value
 			// that changed since the catalog read or resurrect a removed episode.
 			const result = await run(

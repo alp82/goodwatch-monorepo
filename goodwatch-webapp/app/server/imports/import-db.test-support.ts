@@ -7,6 +7,10 @@ function requiredRow(row: Row | undefined): Row {
 // The fake implements only these statement shapes. Reject changed predicates or columns
 // instead of silently returning empty rows/success. Placeholder lists may vary in length.
 const supportedImportSql = new Set([
+	"SELECT 'episode' AS kind, tvdb_id, tmdb_id, show_id FROM episode WHERE tvdb_id IN (?) AND removed_at IS NULL UNION ALL SELECT 'show' AS kind, tvdb_id, tmdb_id, tmdb_id AS show_id FROM show WHERE tvdb_id IN (?) LIMIT 100001",
+	"SELECT 'episode' AS kind, tvdb_id, tmdb_id, show_id FROM episode WHERE tvdb_id IN (NULL) AND removed_at IS NULL UNION ALL SELECT 'show' AS kind, tvdb_id, tmdb_id, tmdb_id AS show_id FROM show WHERE tvdb_id IN (?) LIMIT 100001",
+	"SELECT 'episode' AS kind, tvdb_id, tmdb_id, show_id FROM episode WHERE tvdb_id IN (?) AND removed_at IS NULL UNION ALL SELECT 'show' AS kind, tvdb_id, tmdb_id, tmdb_id AS show_id FROM show WHERE tvdb_id IN (NULL) LIMIT 100001",
+	"UPDATE show SET tvdb_id = ? WHERE tmdb_id = ? AND tvdb_id IS NULL",
 	"SELECT tmdb_id, popularity FROM movie WHERE tmdb_id IN (?)",
 	"SELECT tmdb_id, popularity FROM show WHERE tmdb_id IN (?)",
 	"SELECT tmdb_id, state FROM user_watch_state WHERE user_id = ? AND media_type = 'show' AND tmdb_id IN (?)",
@@ -71,6 +75,8 @@ const supportedImportSql = new Set([
 	"UPDATE doc.user_import_item SET apply_state = ?, watch_id = ?, applied_at = CURRENT_TIMESTAMP WHERE import_id = ? AND row_index = ? AND (apply_state IS NULL OR apply_state = 'failed')",
 	"UPDATE doc.user_import_item SET payload = ? WHERE import_id = ? AND row_index = ?",
 	"UPDATE episode SET tvdb_id = ? WHERE show_id = ? AND tmdb_id = ? AND removed_at IS NULL AND tvdb_id = ?",
+	"UPDATE episode SET tvdb_id = ? WHERE show_id = ? AND tmdb_id = ? AND removed_at IS NULL AND tvdb_id IS NULL",
+	"UPDATE episode SET tvdb_id = NULL WHERE show_id = ? AND tmdb_id <> ? AND tvdb_id = ?",
 	"UPDATE user_score SET score = ?, review = ?, created_at = ?, updated_at = ? WHERE user_id = ? AND tmdb_id = ? AND media_type = ? AND _seq_no = ? AND _primary_term = ?",
 	"UPDATE user_score SET score = ?, review = ?, updated_at = ? WHERE user_id = ? AND tmdb_id = ? AND media_type = ? AND _seq_no = ? AND _primary_term = ?",
 ])
@@ -186,8 +192,32 @@ export class ImportDb {
 					row.media_type === "show" &&
 					params.slice(1).includes(Number(row.tmdb_id)),
 			) as T[]
+		if (s.includes("UNION ALL SELECT 'show' AS kind")) {
+			this.catalogQueries.push({ sql: s, params: [...params] })
+			const episodeCount = s.split("UNION ALL")[0].match(/\?/g)?.length ?? 0
+			const episodeIds = params.slice(0, episodeCount)
+			const showIds = params.slice(episodeCount)
+			return [
+				...this.episodes
+					.filter(
+						(row) =>
+							row.removed_at == null &&
+							episodeIds.includes(Number(row.tvdb_id)),
+					)
+					.map((row) => ({ ...row, kind: "episode" })),
+				...this.catalog
+					.filter(
+						(row) =>
+							row.media_type === "show" &&
+							showIds.includes(Number(row.tvdb_id)),
+					)
+					.map((row) => ({ ...row, kind: "show", show_id: row.tmdb_id })),
+			].slice(0, 100001) as unknown as T[]
+		}
 		if (s.includes("FROM episode WHERE"))
-			return this.episodes.filter((row) => row.show_id === params[0]) as T[]
+			return this.episodes.filter(
+				(row) => row.show_id === params[0] && row.removed_at == null,
+			) as T[]
 		if (s.includes("FROM movie WHERE") || s.includes("FROM show WHERE")) {
 			this.catalogQueries.push({ sql: s, params: [...params] })
 			const rows = this.catalog
@@ -362,7 +392,39 @@ export class ImportDb {
 				)
 			return { rowcount: params.length / columns.length }
 		}
-		if (s.startsWith("UPDATE episode SET")) return { rowcount: 0 }
+		if (s.startsWith("UPDATE show SET tvdb_id")) {
+			const row = this.catalog.find(
+				(row) =>
+					row.media_type === "show" &&
+					row.tmdb_id === params[1] &&
+					row.tvdb_id == null,
+			)
+			if (!row) return { rowcount: 0 }
+			row.tvdb_id = params[0]
+			return { rowcount: 1 }
+		}
+		if (s.startsWith("UPDATE episode SET tvdb_id = ?")) {
+			const row = this.episodes.find(
+				(row) =>
+					row.show_id === params[1] &&
+					row.tmdb_id === params[2] &&
+					row.removed_at == null &&
+					(row.tvdb_id ?? null) === (params[3] ?? null),
+			)
+			if (!row) return { rowcount: 0 }
+			row.tvdb_id = params[0]
+			return { rowcount: 1 }
+		}
+		if (s.startsWith("UPDATE episode SET tvdb_id = NULL")) {
+			const rows = this.episodes.filter(
+				(row) =>
+					row.show_id === params[0] &&
+					row.tmdb_id !== params[1] &&
+					row.tvdb_id === params[2],
+			)
+			for (const row of rows) row.tvdb_id = null
+			return { rowcount: rows.length }
+		}
 		if (s.startsWith("REFRESH TABLE")) return { rowcount: 1 }
 		if (s.startsWith("UPDATE doc.user_import SET")) {
 			if (s.includes("_seq_no = ?")) {

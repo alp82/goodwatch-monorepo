@@ -1,6 +1,9 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { createTvdbLookup } from "./tvdb-lookup.server.ts"
+import {
+	TvdbLookupBudgetExceeded,
+	createTvdbLookup,
+} from "./tvdb-lookup.server.ts"
 
 test("TVDB lookups respect Retry-After before retrying and reuse only successful evidence", async (t) => {
 	let clock = Date.parse("2026-10-19T00:00:00Z")
@@ -52,7 +55,7 @@ test("TVDB requests have bounded concurrency and fail open when the overall look
 		budgetMs: 100,
 		now: () => clock,
 	})
-	const all = Promise.all([1, 2, 3, 4].map(lookup))
+	const all = Promise.all([1, 2, 3, 4].map((id) => lookup(id)))
 	await new Promise((resolve) => setImmediate(resolve))
 	assert.equal(peak, 2)
 	finish.splice(0).forEach((resolve) => resolve())
@@ -61,7 +64,7 @@ test("TVDB requests have bounded concurrency and fail open when the overall look
 	await all
 	assert.equal(peak, 2)
 	clock = 100
-	await assert.rejects(lookup(5), /unavailable.*retry/)
+	await assert.rejects(lookup(5), TvdbLookupBudgetExceeded)
 	assert.equal(requests, 4)
 })
 
@@ -118,7 +121,7 @@ test("TVDB Retry-After dates, exponential fallback, request caps and exhausted b
 	})
 	const capped = createTvdbLookup({ maxRequests: 1 })
 	await capped(100)
-	await assert.rejects(capped(101), /unavailable.*retry/)
+	await assert.rejects(capped(101), TvdbLookupBudgetExceeded)
 	assert.equal(requests, 1)
 	requests = 0
 	t.mock.method(globalThis, "fetch", async () => {
@@ -129,7 +132,7 @@ test("TVDB Retry-After dates, exponential fallback, request caps and exhausted b
 		budgetMs: 100,
 		wait: async () => assert.fail("Must not wait beyond the budget"),
 	})
-	await assert.rejects(expired(100), /unavailable.*retry/)
+	await assert.rejects(expired(100), TvdbLookupBudgetExceeded)
 	assert.equal(requests, 1)
 	let clock = 0
 	requests = 0
@@ -158,6 +161,6 @@ test("an in-flight TVDB request cannot outlive the remaining preview budget", as
 		},
 	)
 	const lookup = createTvdbLookup({ now: () => 0, budgetMs: 20 })
-	await assert.rejects(lookup(100), /unavailable.*retry/)
+	await assert.rejects(lookup(100), TvdbLookupBudgetExceeded)
 	assert.equal(signal?.aborted, true)
 })

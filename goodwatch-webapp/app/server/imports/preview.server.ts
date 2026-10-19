@@ -41,7 +41,8 @@ import {
 	select,
 	summarize,
 } from "./store.server.ts"
-import { TVDB_LOOKUP_LIMITS, createTvdbLookup } from "./tvdb-lookup.server.ts"
+import { TVDB_LOOKUP_LIMITS } from "./tvdb-lookup.server.ts"
+import { createTvtimeCatalogLookup } from "./tvtime-catalog.server.ts"
 import {
 	isManuallyMatchableWishlistSource,
 	wishlistSourceGroup,
@@ -57,16 +58,14 @@ type CatalogRow = {
 
 async function matchCatalog(source: ImportSource, rows: ImportObservation[]) {
 	const animeMappings = createCatalogAnimeLookup()
-	const lookup = source === "tvtime" ? createTvdbLookup() : undefined
+	const lookup =
+		source === "tvtime" ? await createTvtimeCatalogLookup(rows) : undefined
 	const resolveEpisode = createCatalogEpisodeResolver(animeMappings, lookup)
 	const tvdbParent = createTvdbParentLookup(lookup)
-	const unavailableParents = new Set<ImportObservation>()
-	const unavailableProblem = {
-		outcome: "unmatched",
-		code: "tvtime_lookup_unavailable",
-		reason:
-			"The TVDB lookup is unavailable or reached this preview's limit. Retry this import later.",
-	} as const
+	const unavailableParents = new Map<
+		ImportObservation,
+		NonNullable<ImportObservation["problem"]>
+	>()
 	if (source === "tvtime")
 		for (const batch of chunks(rows, TVDB_LOOKUP_LIMITS.concurrency))
 			await Promise.all(
@@ -94,9 +93,10 @@ async function matchCatalog(source: ImportSource, rows: ImportObservation[]) {
 						? await tvdbParent(identity)
 						: { status: "unmatched" as const }
 					if (parent.status === "matched") row.tmdbId = parent.showId
-					if (parent.status === "unavailable") unavailableParents.add(row)
+					if (parent.status === "unavailable")
+						unavailableParents.set(row, parent.problem)
 					if (parent.status === "unavailable" && !row.imdbId) {
-						row.problem = unavailableProblem
+						row.problem = parent.problem
 						return
 					}
 					if (!row.tmdbId && !row.imdbId)
@@ -270,7 +270,7 @@ async function matchCatalog(source: ImportSource, rows: ImportObservation[]) {
 	}
 	for (const [index, row] of rows.entries())
 		if (unavailableParents.has(row) && !found.has(index))
-			row.problem = unavailableProblem
+			row.problem = unavailableParents.get(row)
 	for (const batch of chunks(
 		[...found],
 		source === "tvtime" ? TVDB_LOOKUP_LIMITS.concurrency : 1,
@@ -299,7 +299,11 @@ async function matchCatalog(source: ImportSource, rows: ImportObservation[]) {
 				})
 				if (result.status === "unmatched") {
 					found.delete(index)
-					row.problem = { outcome: "unmatched", reason: result.reason }
+					row.problem = {
+						outcome: "unmatched",
+						reason: result.reason,
+						...(result.code ? { code: result.code } : {}),
+					}
 				} else {
 					if (result.datePolicy && row.kind === "watch") {
 						row.watchedAt = result.watchedAt ?? null

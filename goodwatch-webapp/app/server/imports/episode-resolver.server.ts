@@ -6,6 +6,11 @@ import {
 	type AnimeMappings,
 	resolveAnimeParent,
 } from "./anime-mapping-data.server.ts"
+import {
+	TvdbLookupBudgetExceeded,
+	TvdbLookupUnavailable,
+	tvdbLookupProblem,
+} from "./tvdb-lookup.server.ts"
 export const EPISODE_CATALOG_LIMIT = 50_000
 const DIGITAL_EPISODE_GROUP = 4
 const normalize = (value: string | null | undefined) =>
@@ -42,7 +47,7 @@ export type EpisodeResolution =
 			datePolicy?: "unknown" | "day"
 			watchedAt?: string
 	  }
-	| { status: "unmatched"; reason: string }
+	| { status: "unmatched"; reason: string; code?: string }
 export interface EpisodeGroupSummary {
 	id: string
 	name: string
@@ -115,10 +120,17 @@ async function resolveTvdb(
 	let result: Awaited<ReturnType<EpisodeResolverData["findTvdb"]>>
 	try {
 		result = await data.findTvdb(episodeTvdbId)
-	} catch {
+	} catch (error) {
 		if (cached.length === 1) return matched(cached[0])
 		if (cached.length > 1)
 			return unmatched("TVDB episode ID is ambiguous within this show.")
+		if (
+			error instanceof TvdbLookupBudgetExceeded ||
+			error instanceof TvdbLookupUnavailable
+		) {
+			const problem = tvdbLookupProblem(error)
+			return { status: "unmatched", reason: problem.reason, code: problem.code }
+		}
 		return unmatched(
 			"TMDB's TVDB lookup is unavailable; retry this import later.",
 		)
@@ -323,11 +335,11 @@ export function createEpisodeResolver(data: EpisodeResolverData) {
 				"The episode catalog is too large to establish a unique match.",
 			)
 		const episodes = catalog.filter((e) => Number(e.show_id) === row.showId)
-		let reason: string | undefined
+		let failure: Extract<EpisodeResolution, { status: "unmatched" }> | undefined
 		if (row.episodeTmdbId != null) {
 			const result = resolveTmdb(row.episodeTmdbId, episodes)
 			if (result.status === "matched") return result
-			reason = result.reason
+			failure = result
 		}
 		if (row.episodeTvdbId != null) {
 			const result = await resolveTvdb(
@@ -337,14 +349,14 @@ export function createEpisodeResolver(data: EpisodeResolverData) {
 				data,
 			)
 			if (result.status === "matched") return result
-			reason = result.reason
+			failure = result
 		}
 		if (row.animeEntry)
 			return resolveAnime(row, row.animeEntry, episodes, data, animeCache)
 		if (row.episodeGroup) {
 			const result = await resolveGroup(row, row.episodeGroup, episodes, data)
 			if (result.status === "matched") return result
-			reason = result.reason
+			failure = result
 		}
 		if (row.episode == null && row.episodeName?.trim()) {
 			const candidates = episodes.filter(
@@ -359,9 +371,11 @@ export function createEpisodeResolver(data: EpisodeResolverData) {
 				: unmatched("Episode name did not match uniquely within this show.")
 		}
 		if (row.numbering !== "tmdb" || row.season == null || row.episode == null)
-			return unmatched(
-				reason ??
+			return (
+				failure ??
+				unmatched(
 					"This source does not use TMDB episode numbering; an episode ID or group is needed.",
+				)
 			)
 		const candidates = episodes.filter(
 			(e) =>

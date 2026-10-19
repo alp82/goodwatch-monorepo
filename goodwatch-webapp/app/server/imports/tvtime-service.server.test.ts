@@ -901,3 +901,215 @@ test("an unavailable TVDB parent remains retryable when the supplied IMDb fallba
 	const row = (await getImportItems("member", p.id, undefined, 0, 50)).items[0]
 	assert.equal(row.problem?.code, "tvtime_lookup_unavailable")
 })
+
+test("TV Time trusts catalog show and episode TVDB identities before making any remote lookup", async (t) => {
+	const { db } = setup()
+	db.catalog[0].tvdb_id = 100
+	let requests = 0
+	t.mock.method(globalThis, "fetch", async () => {
+		requests++
+		throw new Error("Cached catalog identities must not need TMDB")
+	})
+	const p = await previewImport(
+		"member",
+		"tvtime",
+		"tracking-prod-records-v2.csv",
+		Buffer.from(
+			"key,s_id,ep_id,s_no,ep_no,created_at\nwatch-episode-one,100,200,4,24,2024-01-02 12:00:00\nrewatch-episode-one-1,100,200,4,24,2025-01-02 12:00:00\n",
+		),
+	)
+	assert.equal(p.counts.new, 2)
+	assert.equal(p.counts.unmatched, 0)
+	assert.equal(requests, 0)
+	const rows = (await getImportItems("member", p.id, undefined, 0, 50)).items
+	assert.deepEqual(
+		rows.map((r) => [r.tmdbId, r.episodeTmdbId, r.episode]),
+		[
+			[1668, 101, 23],
+			[1668, 101, 23],
+		],
+	)
+})
+
+test("TV Time receipts distinguish lookup limits from outages identically in parent and episode phases", async (t) => {
+	for (const status of [503, 429]) {
+		const reasons: string[] = []
+		for (const phase of ["parent", "episode"]) {
+			const { db } = setup()
+			if (phase === "episode") db.catalog[0].tvdb_id = 100
+			db.episodes[0].tvdb_id = null
+			t.mock.method(
+				globalThis,
+				"fetch",
+				async () =>
+					new Response("", { status, headers: { "Retry-After": "60" } }),
+			)
+			const p = await previewImport(
+				"member",
+				"tvtime",
+				"tracking-prod-records-v2.csv",
+				Buffer.from(
+					"key,s_id,ep_id,s_no,ep_no,created_at\nwatch-episode-one,100,200,4,24,2024-01-02 12:00:00\n",
+				),
+			)
+			const row = (await getImportItems("member", p.id, undefined, 0, 50))
+				.items[0]
+			assert.equal(p.counts.unmatched, 1)
+			assert.equal(
+				row.problem?.code,
+				status === 429
+					? "tvtime_lookup_budget_exhausted"
+					: "tvtime_lookup_unavailable",
+				phase,
+			)
+			reasons.push(row.reason ?? "")
+		}
+		assert.equal(reasons[0], reasons[1])
+		assert.match(
+			reasons[0],
+			status === 429 ? /limit.*again/i : /unavailable.*retry/i,
+		)
+	}
+})
+
+test("a cached show TVDB ID does not hide a different episode with the same numeric TVDB ID", async (t) => {
+	const { db } = setup()
+	db.catalog[0].tvdb_id = 100
+	db.catalog.push({
+		media_type: "show",
+		tmdb_id: 999,
+		tvdb_id: 200,
+		title: "Other show",
+	})
+	db.episodes[0].tvdb_id = null
+	const requested: string[] = []
+	t.mock.method(globalThis, "fetch", async (url: string | URL | Request) => {
+		requested.push(String(url))
+		return new Response(
+			JSON.stringify({ tv_episode_results: [{ id: 101, show_id: 1668 }] }),
+		)
+	})
+	const p = await previewImport(
+		"member",
+		"tvtime",
+		"tracking-prod-records-v2.csv",
+		Buffer.from(
+			"key,s_id,ep_id,s_no,ep_no,created_at\nwatch-episode-one,100,200,4,24,2024-01-02 12:00:00\n",
+		),
+	)
+	assert.equal(p.counts.new, 1)
+	assert.equal(requested.length, 1)
+	assert.match(requested[0], /\/find\/200\?/)
+})
+
+test("a second large TV Time preview spends its budget on the remaining uncached episodes", async (t) => {
+	const { db } = setup()
+	db.catalog[0].tvdb_id = 100
+	db.episodes = Array.from({ length: 2100 }, (_, i) => ({
+		tmdb_id: i + 101,
+		show_id: 1668,
+		season_number: 1,
+		episode_number: i + 1,
+		tvdb_id: null,
+		name: null,
+	}))
+	let requests = 0
+	t.mock.method(globalThis, "fetch", async (url: string | URL | Request) => {
+		requests++
+		const id = Number(String(url).match(/\/find\/(\d+)/)?.[1])
+		assert.ok(
+			db.catalogQueries.some((q) => q.sql.includes("UNION ALL")),
+			"Catalog identities must be read before remote requests",
+		)
+		return new Response(
+			JSON.stringify({
+				tv_episode_results: [{ id: id - 20000 + 101, show_id: 1668 }],
+			}),
+		)
+	})
+	const file = Buffer.from(
+		`key,s_id,ep_id,s_no,ep_no,created_at\n${Array.from({ length: 2100 }, (_, i) => `watch-episode-${i},100,${i + 20000},1,${i + 1},2024-01-01 12:00:00\n`).join("")}`,
+	)
+	const first = await previewImport(
+		"member",
+		"tvtime",
+		"tracking-prod-records-v2.csv",
+		file,
+	)
+	assert.equal(first.counts.new, 2000)
+	assert.equal(first.counts.unmatched, 100)
+	assert.equal(requests, 2000)
+	requests = 0
+	const second = await previewImport(
+		"member",
+		"tvtime",
+		"tracking-prod-records-v2.csv",
+		file,
+	)
+	assert.equal(second.counts.new, 2100)
+	assert.equal(second.counts.unmatched, 0)
+	assert.equal(requests, 100)
+	assert.equal(
+		db.catalogQueries.filter((q) => q.sql.includes("UNION ALL")).length,
+		2,
+	)
+})
+
+test("ambiguous stored TVDB identities stay unmatched without remote revalidation", async (t) => {
+	for (const scope of ["show", "episode"]) {
+		const { db } = setup()
+		db.catalog[0].tvdb_id = 100
+		if (scope === "show") db.catalog.push({ ...db.catalog[0], tmdb_id: 999 })
+		else
+			db.episodes.push({ ...db.episodes[0], tmdb_id: 102, episode_number: 24 })
+		let calls = 0
+		t.mock.method(globalThis, "fetch", async () => {
+			calls++
+			throw new Error("Stored ambiguous identities must remain held")
+		})
+		const p = await previewImport(
+			"member",
+			"tvtime",
+			"tracking-prod-records-v2.csv",
+			Buffer.from(
+				"key,s_id,ep_id,s_no,ep_no,created_at\nwatch-episode-one,100,200,4,24,2024-01-02 12:00:00\n",
+			),
+		)
+		assert.equal(p.counts.new, 0, scope)
+		assert.equal(p.counts.unmatched, 1, scope)
+		assert.equal(calls, 0, scope)
+	}
+})
+
+test("removed episode cache entries do not suppress a lookup for their live replacement", async (t) => {
+	const { db } = setup()
+	db.catalog[0].tvdb_id = 100
+	db.episodes[0].removed_at = "2026-01-01"
+	db.episodes.push({
+		...db.episodes[0],
+		tmdb_id: 102,
+		episode_number: 24,
+		tvdb_id: null,
+		removed_at: null,
+	})
+	const requested: string[] = []
+	t.mock.method(globalThis, "fetch", async (url: string | URL | Request) => {
+		requested.push(String(url))
+		return new Response(
+			JSON.stringify({ tv_episode_results: [{ id: 102, show_id: 1668 }] }),
+		)
+	})
+	const p = await previewImport(
+		"member",
+		"tvtime",
+		"tracking-prod-records-v2.csv",
+		Buffer.from(
+			"key,s_id,ep_id,s_no,ep_no,created_at\nwatch-episode-one,100,200,4,24,2024-01-02 12:00:00\n",
+		),
+	)
+	assert.equal(p.counts.new, 1)
+	const row = (await getImportItems("member", p.id, undefined, 0, 50)).items[0]
+	assert.equal(row.episodeTmdbId, 102)
+	assert.equal(requested.length, 1)
+	assert.match(requested[0], /\/find\/200\?/)
+})

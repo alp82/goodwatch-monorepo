@@ -1,6 +1,7 @@
 import { setTimeout as delay } from "node:timers/promises"
 import { z } from "zod"
 import {
+	BackendTimeoutError,
 	TMDB_TIMEOUT_DEFAULT_MS,
 	timeoutSetting,
 	withBackendTimeout,
@@ -22,10 +23,33 @@ const resultSchema = z
 		tv_episode_results: result.tv_episode_results ?? [],
 	}))
 export type TvdbLookupResult = z.output<typeof resultSchema>
-export type TvdbLookup = (id: number) => Promise<TvdbLookupResult>
+export type TvdbLookup = (
+	id: number,
+	kind?: "show" | "episode",
+) => Promise<TvdbLookupResult>
 export class TvdbLookupUnavailable extends Error {
 	constructor() {
 		super("The TVDB lookup is unavailable; retry this import later.")
+	}
+}
+export class TvdbLookupBudgetExceeded extends Error {
+	constructor() {
+		super(
+			"This preview reached its lookup limit. Run the import again to match more.",
+		)
+	}
+}
+export function tvdbLookupProblem(error: unknown) {
+	return {
+		outcome: "unmatched" as const,
+		code:
+			error instanceof TvdbLookupBudgetExceeded
+				? "tvtime_lookup_budget_exhausted"
+				: "tvtime_lookup_unavailable",
+		reason:
+			error instanceof TvdbLookupBudgetExceeded
+				? error.message
+				: "TMDB's TVDB lookup is unavailable; retry this import later.",
 	}
 }
 interface LookupOptions {
@@ -70,7 +94,7 @@ export function createTvdbLookup(options: LookupOptions = {}): TvdbLookup {
 	}
 	const remaining = () => {
 		const ms = deadline - now()
-		if (ms <= 0 || requests >= maxRequests) throw new TvdbLookupUnavailable()
+		if (ms <= 0 || requests >= maxRequests) throw new TvdbLookupBudgetExceeded()
 		return ms
 	}
 	let cooldownUntil = 0
@@ -85,13 +109,15 @@ export function createTvdbLookup(options: LookupOptions = {}): TvdbLookup {
 				remaining()
 				while (cooldownUntil > now()) {
 					const pause = cooldownUntil - now()
-					if (pause >= remaining()) throw new TvdbLookupUnavailable()
+					if (pause >= remaining()) throw new TvdbLookupBudgetExceeded()
 					await wait(pause)
 				}
-				const timeoutMs = Math.min(
-					remaining(),
-					timeoutSetting("TMDB_TIMEOUT_MS", TMDB_TIMEOUT_DEFAULT_MS),
+				const timeLeft = remaining()
+				const requestTimeout = timeoutSetting(
+					"TMDB_TIMEOUT_MS",
+					TMDB_TIMEOUT_DEFAULT_MS,
 				)
+				const timeoutMs = Math.min(timeLeft, requestTimeout)
 				requests++
 				const query = new URLSearchParams({
 					api_key: process.env.TMDB_API_KEY ?? "",
@@ -129,7 +155,14 @@ export function createTvdbLookup(options: LookupOptions = {}): TvdbLookup {
 						}
 						return resultSchema.parse(await response.json())
 					},
-				)
+				).catch((error: unknown) => {
+					if (
+						error instanceof BackendTimeoutError &&
+						timeLeft <= requestTimeout
+					)
+						throw new TvdbLookupBudgetExceeded()
+					throw error
+				})
 				if (result) return result
 			}
 			throw new TvdbLookupUnavailable()
@@ -140,8 +173,9 @@ export function createTvdbLookup(options: LookupOptions = {}): TvdbLookup {
 	return (tvdbId) => {
 		let request = pending.get(tvdbId)
 		if (!request) {
-			request = load(tvdbId).catch(() => {
+			request = load(tvdbId).catch((error: unknown) => {
 				pending.delete(tvdbId)
+				if (error instanceof TvdbLookupBudgetExceeded) throw error
 				throw new TvdbLookupUnavailable()
 			})
 			pending.set(tvdbId, request)
