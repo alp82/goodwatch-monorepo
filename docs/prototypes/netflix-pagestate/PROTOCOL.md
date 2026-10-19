@@ -28,14 +28,19 @@ This first step is offline only: the owner's saved My List page (private, de-DE,
 
 ## Candidate gates
 
+Revised 2026-10-19 after the design review of `a84c685b`; the original gates are in `b3855a4a`. No measurement had been made against them, apart from the offline coverage counts in `FINDINGS.md`. Changes: P3 adds version and binding agreement. P4 now withholds `complete` on unknown entity types and covers malformed entries, `hasNextPage` contradictions and the zero-entry case. P7 to P9 are new.
+
 | Gate | Candidate threshold |
 | --- | --- |
 | P1 Coverage | The source gives exactly one entry for every position from 0 to count minus 1: no gap, no duplicate position, no duplicate ID. |
 | P2 Exactness | The source's ID set equals the reference set: 0 missing, 0 foreign. Reported against each reference used, with its denominator. |
-| P3 Provenance | The 0.0.7 rules hold: current profile matches the avatar and is unique, the section belongs to the page, the document loaded on My List within 10 minutes, and the data is unchanged or its count is unchanged between reads. |
-| P4 Fails safe | On synthetic fault injection (missing position, duplicate position or ID, count change, wrong section, unknown entity type, missing cursor), the verdict is never `complete`: 100 percent detection. |
+| P3 Provenance | The 0.0.7 rules hold: current profile matches the avatar and is unique, the section belongs to the page, the document loaded on My List within 10 minutes, and the inline state is unchanged. Every accepted page is bound at request time to the current session, document, profile and row, and reports the same version and total as the reference. |
+| P4 Fails safe | On synthetic fault injection, the verdict is never `complete`: 100 percent detection. Faults: missing position, duplicate position or ID, count or version change, wrong section, unknown entity type, malformed entry, missing cursor, `hasNextPage` contradiction, unsafe integers, over-long titles, and a zero total with a row present or appearing. |
 | P5 Safety | No requests of its own, no clicks beyond the reviewed arrow, no cookie, token or storage reads. Page-world code only with written justification and review. Output holds counts and codes only. |
-| P6 Agreement with the cards | Every ID read from the My List cards is in the source's set. Source IDs never rendered are counted and reported, not hidden. |
+| P6 Agreement with the cards | Every stable card ID read from the My List row is in the source's set, with a matching title. Source IDs never rendered are counted and reported, not hidden. Cards can only downgrade. |
+| P7 Snapshot claim | `complete` names the snapshot it describes. A snapshot-consistent `complete` needs a server snapshot identifier bound to every page. Without one, full coverage is reported as coverage, and `complete` is withheld unless the owner accepts a window-bounded claim (see `DESIGN.md`). |
+| P8 Pass-through | On a fixture page with its own fetch and XHR, the page's requests and responses are identical with and without the observer: same promise, same bodies, same headers, no aborts. Bounds and cleanup hold. |
+| P9 Lifecycle | Callbacks from earlier generations, or after finalize or discard, never change a result. Pending My List requests at finalize, timeouts and dropped observations withhold `complete`. Save writes only what finalize returns. |
 
 ## What is reported
 
