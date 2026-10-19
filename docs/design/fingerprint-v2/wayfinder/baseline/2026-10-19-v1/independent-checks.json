@@ -1,0 +1,62 @@
+{
+  "current_head": "beaa474a0823b61bdfc6c4f547f84ee66739ebf2",
+  "source_hash_mismatches": [],
+  "python_key_order_and_prompt_ast_match": true,
+  "titles": {
+    "movie": {
+      "rows": 2000,
+      "duplicate_ids": 0,
+      "same_name_groups": 32,
+      "missing_synopsis": 0,
+      "missing_tags": 8
+    },
+    "show": {
+      "rows": 1000,
+      "duplicate_ids": 0,
+      "same_name_groups": 9,
+      "missing_synopsis": 5,
+      "missing_tags": 8
+    }
+  },
+  "excerpt_rows": 468,
+  "shared_url_excerpt_groups": 15,
+  "averted_examples": [
+    {
+      "title": "Hard Boiled",
+      "trope": "Heroic BSoD"
+    },
+    {
+      "title": "To Kill a Mockingbird",
+      "trope": "Karma Houdini"
+    },
+    {
+      "title": "Great Expectations",
+      "trope": "My God, What Have I Done?"
+    }
+  ],
+  "malformed_urls": {
+    "strings": 1452,
+    "associations": 3416
+  },
+  "historical_jev_git_matches": 4,
+  "grading_files_captured": [
+    "docs/prototypes/search-arena/results/grading/GRADER.md",
+    "docs/prototypes/search-arena/results/grading/human-calibration-grades.json",
+    "docs/prototypes/search-arena/results/grading/human-calibration.json",
+    "docs/prototypes/search-arena/results/grading/pre-r6-style-grades.json",
+    "docs/prototypes/search-arena/results/grading/r6-p145-A-part1.json",
+    "docs/prototypes/search-arena/results/grading/r6-p145-B-part1.json",
+    "docs/prototypes/search-arena/results/grading/r6-p145-C-packets.json",
+    "docs/prototypes/search-arena/results/grading/r6-p145-disagreements.json",
+    "docs/prototypes/search-arena/results/grading/r6-p145-merged-detail.json",
+    "docs/prototypes/search-arena/results/grading/r6-p145-part1-rev.json",
+    "docs/prototypes/search-arena/results/grading/r6-p145-part1.json",
+    "docs/prototypes/search-arena/results/grading/r6-p169-A-part1.json",
+    "docs/prototypes/search-arena/results/grading/r6-p169-B-part1.json",
+    "docs/prototypes/search-arena/results/grading/r6-p169-C-packets.json",
+    "docs/prototypes/search-arena/results/grading/r6-p169-disagreements.json",
+    "docs/prototypes/search-arena/results/grading/r6-p169-merged-detail.json",
+    "docs/prototypes/search-arena/results/grading/r6-p169-part1-rev.json",
+    "docs/prototypes/search-arena/results/grading/r6-p169-part1.json"
+  ]
+}

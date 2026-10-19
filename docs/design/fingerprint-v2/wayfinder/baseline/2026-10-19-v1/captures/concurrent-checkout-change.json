@@ -1,0 +1,16 @@
+{
+  "observed_at": "2026-10-19T06:54:33.923769+00:00",
+  "from_head": "aa11d4a0c0ad4ce39da534c9eb2ef99bdfc93860",
+  "to_head": "beaa474a0823b61bdfc6c4f547f84ee66739ebf2",
+  "changed_paths": [
+    "docs/research/competitor-paid-features-comparison.md",
+    "docs/research/competitor-paid-features-core.md",
+    "docs/research/competitor-paid-features-inventory.csv",
+    "docs/research/competitor-paid-features-opportunities.csv",
+    "docs/research/competitor-paid-features-plans.csv",
+    "docs/research/competitor-paid-features-report.html"
+  ],
+  "audited_paths_changed": [],
+  "interpretation": "Concurrent unrelated competitor-doc commit observed during audit; not created by this thread. It was preserved. Baseline source identity remains starting HEAD plus per-file hashes. No audited source hash changed.",
+  "commit_metadata": "commit beaa474a0823b61bdfc6c4f547f84ee66739ebf2\nAuthor:     Alper Ortac <alportac@gmail.com>\nAuthorDate: Mon Oct 19 08:44:42 2026 +0200\nCommit:     Alper Ortac <alportac@gmail.com>\nCommitDate: Mon Oct 19 08:44:42 2026 +0200\n\n    docs: compare competitor entitlements and propose free feature roadmap\n"
+}

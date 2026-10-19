@@ -1,0 +1,402 @@
+{
+  "scope": "All design and gap-audit assets in this review packet, including source inventories, branch findings, proposals, examples, scripts, ledgers and historical issue captures. Existing tracked historical benchmarks/prototypes remain linked in the evidence indexes.",
+  "self_excluded": "This catalog excludes itself to avoid a recursive checksum.",
+  "created_at": "2026-10-19T06:31:22.863256+00:00",
+  "files": [
+    {
+      "path": "docs/design/fingerprint-v2/definition.json",
+      "bytes": 174539,
+      "sha256": "9345d50a12f54c48ffa65f6a56cfc400f4d090592052144d195f73259dd02dc9"
+    },
+    {
+      "path": "docs/design/fingerprint-v2/example-matrix.json",
+      "bytes": 7520,
+      "sha256": "21d66c6312c7dec7421c653e2f808d751cd67bcc688feb3acfdb774f3bd23d4f"
+    },
+    {
+      "path": "docs/design/fingerprint-v2/llm-definition.json",
+      "bytes": 54942,
+      "sha256": "2de0ba02055bb185400ecbeab2f506ea4c35abdbb142aefd51aaa7396a6238a3"
+    },
+    {
+      "path": "docs/design/fingerprint-v2/llm-example-matrix.json",
+      "bytes": 20313,
+      "sha256": "b785cb41f373b399b8521306a1d6ec0421dfd8fcdf0bd3dbfb8ce8eaea304d3e"
+    },
+    {
+      "path": "docs/design/fingerprint-v2/schema.json",
+      "bytes": 94328,
+      "sha256": "5286159091fe873a3a4340632a7cf32a897c61433b4b58f8d58951b9f8cbeb96"
+    },
+    {
+      "path": "docs/design/fingerprint-v2/wayfinder/README.md",
+      "bytes": 6145,
+      "sha256": "219e12b5852acd12ff5754f7effbb444395b78f92affad5fe5516d1830678281"
+    },
+    {
+      "path": "docs/design/fingerprint-v2/wayfinder/architecture-impact.md",
+      "bytes": 15174,
+      "sha256": "6deca62446fa07a313dcf96e14c98ad8f9d59c5b14f7c3936b20980e03cd643b"
+    },
+    {
+      "path": "docs/design/fingerprint-v2/wayfinder/discovery-evidence-index.md",
+      "bytes": 16856,
+      "sha256": "9e144f21742788eafa1841977465f1e28d8a2ab474db059722985580b88d9d63"
+    },
+    {
+      "path": "docs/design/fingerprint-v2/wayfinder/evidence-index.md",
+      "bytes": 15490,
+      "sha256": "7c5aa57a806012e60a8c246f81b86f6e1b7923a93d204261b1573f2b548f5336"
+    },
+    {
+      "path": "docs/design/fingerprint-v2/wayfinder/history-issue-27.json",
+      "bytes": 6069,
+      "sha256": "ef48b09b7648c8191eac359997c2259aee0a8eef978c4e9c06a03af78ec7c0f0"
+    },
+    {
+      "path": "docs/design/fingerprint-v2/wayfinder/history-issue-31.json",
+      "bytes": 16414,
+      "sha256": "09422dc0418e9b752d9bf22e3e28c00dfbd81980de29c256d44ff6df8efd2b9e"
+    },
+    {
+      "path": "docs/design/fingerprint-v2/wayfinder/history-issue-32.json",
+      "bytes": 29576,
+      "sha256": "52f8eded312793d5fed276dfa9fcc06965d84ae106b7dbf1cda7f2b32c7e1d12"
+    },
+    {
+      "path": "docs/design/fingerprint-v2/wayfinder/history-issue-33.json",
+      "bytes": 8841,
+      "sha256": "986587f316a89d03b54c351ba8896caff2978ccd2cad76ac63aac5b1f43b2b3f"
+    },
+    {
+      "path": "docs/design/fingerprint-v2/wayfinder/history-issue-35.json",
+      "bytes": 7270,
+      "sha256": "bfbb8239889eecfea07594547f68be7ebc265d27a6a7f41945bc6c9ba0598a10"
+    },
+    {
+      "path": "docs/design/fingerprint-v2/wayfinder/history-issue-58.json",
+      "bytes": 8685,
+      "sha256": "ec07c9597b2223b952b6d31a8d7d28d4644c9834adc955757c2578d326886ed7"
+    },
+    {
+      "path": "docs/design/fingerprint-v2/wayfinder/history-issue-71.json",
+      "bytes": 3761,
+      "sha256": "c023ddd32f9596995ada6f299b349e81a9e213b1d320efee49b471f6cfa0a7cf"
+    },
+    {
+      "path": "docs/design/fingerprint-v2/wayfinder/history-issue-73.json",
+      "bytes": 3532,
+      "sha256": "9c68427efd7ecf6e3781028e9a0d5f4fde2de2b600fc42a537673895defd6831"
+    },
+    {
+      "path": "docs/design/fingerprint-v2/wayfinder/manifest.json",
+      "bytes": 10616,
+      "sha256": "e5742274aac24ea12dabf12495c15a6edb60cdb88b4e22f7d6e4365f4557ddce"
+    },
+    {
+      "path": "docs/design/fingerprint-v2/wayfinder/map.md",
+      "bytes": 4972,
+      "sha256": "59779400a3de76d1fa61dcff242593e92049eec1f4c6eb0b08d0296ee034c87a"
+    },
+    {
+      "path": "docs/design/fingerprint-v2/wayfinder/tickets/baseline.md",
+      "bytes": 1996,
+      "sha256": "cd43f47c7078c6719b09b43824dd8a65471bf27f5142cf7267d6f29284e0da6c"
+    },
+    {
+      "path": "docs/design/fingerprint-v2/wayfinder/tickets/corpus.md",
+      "bytes": 2768,
+      "sha256": "5c1ee4458bb57d8d4a20c3a120553d0be2385f6557e4c0d38d090258b6b6df67"
+    },
+    {
+      "path": "docs/design/fingerprint-v2/wayfinder/tickets/discovery-prototype.md",
+      "bytes": 2137,
+      "sha256": "b3806bdf797b38b2b80a72d59c9bbbb14a5d95b25978e1d59226e78b2bd9b6e2"
+    },
+    {
+      "path": "docs/design/fingerprint-v2/wayfinder/tickets/display-prototype.md",
+      "bytes": 1819,
+      "sha256": "eac33c8f782a56c09c198004c986995773f6a72be467196458fbe262fa77ee57"
+    },
+    {
+      "path": "docs/design/fingerprint-v2/wayfinder/tickets/extras-prototype.md",
+      "bytes": 1836,
+      "sha256": "f12e7251ef9115b27fbd82af33ac1f314bb64e6182124308ae3b1fa01f204f6c"
+    },
+    {
+      "path": "docs/design/fingerprint-v2/wayfinder/tickets/extras.md",
+      "bytes": 2487,
+      "sha256": "1d86559d260c65ba3cfe489e1454b7eb31aa18640683635912ae941fbe49e039"
+    },
+    {
+      "path": "docs/design/fingerprint-v2/wayfinder/tickets/goals.md",
+      "bytes": 2325,
+      "sha256": "365a4d732a1f0068d5bca1962482a380ff34fcef32707806e41b542931e1e3db"
+    },
+    {
+      "path": "docs/design/fingerprint-v2/wayfinder/tickets/holdout.md",
+      "bytes": 1880,
+      "sha256": "a97f8f62c47e392ab95b489d54f8e8e395f45406a0b6e92cac0bebd7eb74dcfb"
+    },
+    {
+      "path": "docs/design/fingerprint-v2/wayfinder/tickets/knowledge-prototype.md",
+      "bytes": 2035,
+      "sha256": "1e43420b7dee601c7bd85d0434be223901c5d96838ce5dfd204ed896fa481e9d"
+    },
+    {
+      "path": "docs/design/fingerprint-v2/wayfinder/tickets/providers.md",
+      "bytes": 2103,
+      "sha256": "740a2f0536f1253db68bb29da7645e62b7a329e5f0d51cc75e2581b7ceb02909"
+    },
+    {
+      "path": "docs/design/fingerprint-v2/wayfinder/tickets/representations.md",
+      "bytes": 2538,
+      "sha256": "a632455fa174c3837e6e06bbac468247cf62b6fc8806b784c3972b273c157779"
+    },
+    {
+      "path": "docs/design/fingerprint-v2/wayfinder/tickets/scale-prototype.md",
+      "bytes": 1847,
+      "sha256": "e2ef2a9e0a03cefeaf4a499d62d0dff0d06ae2d8764860d0a6a1592e014e3a2e"
+    },
+    {
+      "path": "docs/design/fingerprint-v2/wayfinder/tickets/strategy.md",
+      "bytes": 2430,
+      "sha256": "507282ace6195a508f735313270886fa4d4f3c4c83de798b0db7714f9428c0b1"
+    },
+    {
+      "path": "docs/research/fingerprint-v2-gap-audit/README.md",
+      "bytes": 12059,
+      "sha256": "5cdb842075704e68c9a1ffb1871a302e66e33b847d56cb76867d1adfd4a3ab7e"
+    },
+    {
+      "path": "docs/research/fingerprint-v2-gap-audit/essence-audit.py",
+      "bytes": 10256,
+      "sha256": "321d5970eef05106ed1d832f94351e00ebb388176b6e47fd817cad7ecaf68f33"
+    },
+    {
+      "path": "docs/research/fingerprint-v2-gap-audit/essence-extraction-manifest.json",
+      "bytes": 2145,
+      "sha256": "0cf5bae95d13b566176d33d14726fc276987e09fc2089cc39a419c11543abca3"
+    },
+    {
+      "path": "docs/research/fingerprint-v2-gap-audit/essence-findings.md",
+      "bytes": 16177,
+      "sha256": "6f6855ee2df30219d462ad1b0264d59ef737abf3d6e70cc52206d10ea382ba34"
+    },
+    {
+      "path": "docs/research/fingerprint-v2-gap-audit/essence-reviewed-sample.json",
+      "bytes": 300684,
+      "sha256": "1d64abc0fb0ebf1ba02fe995d2e43adb981ab850aee833de0179a37acfb414e7"
+    },
+    {
+      "path": "docs/research/fingerprint-v2-gap-audit/essence-tag-triage.csv.gz",
+      "bytes": 2518003,
+      "sha256": "c94f345510ea18d9a1d60add2428f6a8233963351def87fec24301dafab3a37c"
+    },
+    {
+      "path": "docs/research/fingerprint-v2-gap-audit/essence-tags-all.json.gz",
+      "bytes": 7798646,
+      "sha256": "85e320fa22647067370993ccc85ad2d8e31152917322b4dca16cb260d0da90dd"
+    },
+    {
+      "path": "docs/research/fingerprint-v2-gap-audit/essence-tags-movie.json.gz",
+      "bytes": 4567509,
+      "sha256": "1b4935a6e65e3f0caec473551ce44ce717b8c0ffa472d5c8cc9472844b83ad9e"
+    },
+    {
+      "path": "docs/research/fingerprint-v2-gap-audit/essence-tags-show.json.gz",
+      "bytes": 2904745,
+      "sha256": "ea1747c916eb58ec5aa04e56c42cbf64b3db0c57bf6b59ce0334823f8956b279"
+    },
+    {
+      "path": "docs/research/fingerprint-v2-gap-audit/essence-triage-summary.json",
+      "bytes": 248340,
+      "sha256": "97ea6ed840c88bd8f870986cb02de579bbb41fdb6b95cad39331e146eb04d185"
+    },
+    {
+      "path": "docs/research/fingerprint-v2-gap-audit/movies-audit.py",
+      "bytes": 7863,
+      "sha256": "d9e8141204da6766d0a21680659bb62931d12c13a80c757c452a72d04fe10f0e"
+    },
+    {
+      "path": "docs/research/fingerprint-v2-gap-audit/movies-candidate-mentions.json",
+      "bytes": 1702327,
+      "sha256": "d856c0751c15c3592960391cc5c1fc7f04ca847387bd764f9b986f81c49984eb"
+    },
+    {
+      "path": "docs/research/fingerprint-v2-gap-audit/movies-coverage.json",
+      "bytes": 935,
+      "sha256": "2c9219420760399bccecbd368bd0fdd0c527e5ed16c805266ffbff309a2e9062"
+    },
+    {
+      "path": "docs/research/fingerprint-v2-gap-audit/movies-proposals.json",
+      "bytes": 46068,
+      "sha256": "b3fc5f0ec6dbd4c53f78beaa5879f514e27d8dea0d110f108c3207eaa3bc089f"
+    },
+    {
+      "path": "docs/research/fingerprint-v2-gap-audit/movies-report.md",
+      "bytes": 20263,
+      "sha256": "c3d7ef1b87580d3cc9ff48b73b8091565eaf66685b71971c6b4c5387579f619d"
+    },
+    {
+      "path": "docs/research/fingerprint-v2-gap-audit/movies-title-ledger.json",
+      "bytes": 1291676,
+      "sha256": "40dd62ee7fc8e6dcac4943a6b49b1c75c69f0f71c7edf9f5c040ee00ad314eec"
+    },
+    {
+      "path": "docs/research/fingerprint-v2-gap-audit/queries-cases.json",
+      "bytes": 235312,
+      "sha256": "150873601b1567f0cdc975d9a819d5131aabe01d9d17e297916f951139eaa4da"
+    },
+    {
+      "path": "docs/research/fingerprint-v2-gap-audit/queries-findings.md",
+      "bytes": 11394,
+      "sha256": "cf945dadabbe1e2e6e91eb1120c49343db9b8ca8dfa67407574e5d8bb3a41877"
+    },
+    {
+      "path": "docs/research/fingerprint-v2-gap-audit/recommended-changes.json",
+      "bytes": 12494,
+      "sha256": "f540dd279dd194fcb4ae94271bd7a14437b6304ddb9d0278015220fbe0151915"
+    },
+    {
+      "path": "docs/research/fingerprint-v2-gap-audit/root-frequency-crosscheck.json",
+      "bytes": 6132,
+      "sha256": "835fdd07b3e91fc564a2008d966a8161adafd4399eab5672e7ad355beeba4f06"
+    },
+    {
+      "path": "docs/research/fingerprint-v2-gap-audit/shows-findings.md",
+      "bytes": 12604,
+      "sha256": "703ea22310853cdb1bce5cc92987bab690eae1027500095d9939e4cdbf862d2e"
+    },
+    {
+      "path": "docs/research/fingerprint-v2-gap-audit/shows-ledger.csv",
+      "bytes": 94499,
+      "sha256": "32155fb38da225ea1d7e38863f818fee9804d54e5c61365b1ac07e7a2d2448cc"
+    },
+    {
+      "path": "docs/research/fingerprint-v2-gap-audit/shows-ledger.json",
+      "bytes": 1633523,
+      "sha256": "79f5c285f2dadc2c52ad80c015d60774a47c734ea13198a79eba62283a9e999b"
+    },
+    {
+      "path": "docs/research/fingerprint-v2-gap-audit/shows-proposals.json",
+      "bytes": 205164,
+      "sha256": "b597869e7fd3df785d696da51cba4dea1177ac66879044cfc2c4223ed9bd28aa"
+    },
+    {
+      "path": "docs/research/fingerprint-v2-gap-audit/title-extraction-manifest.json",
+      "bytes": 1212,
+      "sha256": "e876bc95f3bb125671c3f03e43a9e78cb82240ad55728866744e717eb7f5a075"
+    },
+    {
+      "path": "docs/research/fingerprint-v2-gap-audit/top-movies.json",
+      "bytes": 3571413,
+      "sha256": "26507252462b557d28173a75f375352d131ba20c45dd09adcedebbe5fb80d6ff"
+    },
+    {
+      "path": "docs/research/fingerprint-v2-gap-audit/top-shows.json",
+      "bytes": 1664520,
+      "sha256": "816eeb52273c5e1609b2130f820f4fbe4313d13b5442dd5c963fb9f7ed83ff9e"
+    },
+    {
+      "path": "docs/research/fingerprint-v2-gap-audit/tropes-example-extraction-manifest.json",
+      "bytes": 7544,
+      "sha256": "ce7b14ed9a5f26308db2e525a39df3f33ce057e12434135ebfa8f142865aa25a"
+    },
+    {
+      "path": "docs/research/fingerprint-v2-gap-audit/tropes-extraction-manifest.json",
+      "bytes": 2565,
+      "sha256": "a72e19ca6fc727da48bdb95e2ae2d46f9614b5f082cf82e07cf1743d91fe5f33"
+    },
+    {
+      "path": "docs/research/fingerprint-v2-gap-audit/tropes-findings.md",
+      "bytes": 5106,
+      "sha256": "9f78099ed10ae69d80f264c3f18a9fabbbe81e38f017657caa8dbc14187614a9"
+    },
+    {
+      "path": "docs/research/fingerprint-v2-gap-audit/tropes-inventory-all.json",
+      "bytes": 13320175,
+      "sha256": "b95794512c13869a6a7444dbb0813bffe8d7780da5ed25f5ada2a8c36ad80f04"
+    },
+    {
+      "path": "docs/research/fingerprint-v2-gap-audit/tropes-inventory-movie.json",
+      "bytes": 4685265,
+      "sha256": "34f19232673d004b5f6439cbec4080f58e7bc3b974eb4782c250dd8b803ed44b"
+    },
+    {
+      "path": "docs/research/fingerprint-v2-gap-audit/tropes-inventory-show.json",
+      "bytes": 4733279,
+      "sha256": "82e2f685007287626b2bccd44fe3e43a6c161259a5e50938adcf1153fac9bac0"
+    },
+    {
+      "path": "docs/research/fingerprint-v2-gap-audit/tropes-narrative-findings.md",
+      "bytes": 15785,
+      "sha256": "470a69485a1f0bae01353c883497b1ebb7feeefc84ea669a34378b4f2b4ee2f9"
+    },
+    {
+      "path": "docs/research/fingerprint-v2-gap-audit/tropes-narrative-proposals.json",
+      "bytes": 55205,
+      "sha256": "fe88f1d696c3461a8f1df37a2cac43238c00a74426e47c3bc54444aa1449b18b"
+    },
+    {
+      "path": "docs/research/fingerprint-v2-gap-audit/tropes-search-findings.md",
+      "bytes": 13276,
+      "sha256": "11ca3b2c7f6f27f9618bda3ca61016159f643ce47b53598ae4533490753b4687"
+    },
+    {
+      "path": "docs/research/fingerprint-v2-gap-audit/tropes-search-proposals.json",
+      "bytes": 69910,
+      "sha256": "f5d9cb58483df7ee90f45d65920c40f06ca1aeb2ccca06b0c895c9f0ecac0ae5"
+    },
+    {
+      "path": "docs/research/fingerprint-v2-gap-audit/tropes-stored-examples.json",
+      "bytes": 414286,
+      "sha256": "b23d981487ea9306b5221fc77fa347282778658f1f93b52619800e57ebd93e37"
+    },
+    {
+      "path": "docs/research/fingerprint-v2-gap-audit/tropes-url-inventory.json",
+      "bytes": 7003639,
+      "sha256": "65baecb6c120cb649e2250bbae58360ca389c6e3da63a3d098fd2eaca347b81f"
+    },
+    {
+      "path": "docs/research/fingerprint-v2-gap-audit/tropes-vocabulary-audit.py",
+      "bytes": 16906,
+      "sha256": "eb42ff204474767dcbb062b61b97fc3153b1533fb29148f5f771662158193880"
+    },
+    {
+      "path": "docs/research/fingerprint-v2-gap-audit/tropes-vocabulary-findings.md",
+      "bytes": 17063,
+      "sha256": "306602dcf4f117d591ece9e016f2e56e900464c76d5989ae8b1a25b9478da689"
+    },
+    {
+      "path": "docs/research/fingerprint-v2-gap-audit/tropes-vocabulary-ledger.json.gz",
+      "bytes": 1876113,
+      "sha256": "65c63b4314ccb0f4697733bb4f0b999ce9514ae86bd7a54a360a76471cfe3e12"
+    },
+    {
+      "path": "docs/research/fingerprint-v2-gap-audit/tropes-vocabulary-proposals.json",
+      "bytes": 28019,
+      "sha256": "1b99541f053c5171181d281ab803f3c9956f927be699555b1c865ceb7afdf97b"
+    },
+    {
+      "path": "docs/research/fingerprint-v2-gap-audit/tropes-vocabulary-reviewed-sample.json",
+      "bytes": 467940,
+      "sha256": "9fd6e73002328624ab240df31de15c673dd752e3b0e67677354f41d3b01ead46"
+    },
+    {
+      "path": "docs/research/fingerprint-v2-gap-audit/tropes-vocabulary-screening.json",
+      "bytes": 181222,
+      "sha256": "60f64ed33b51c16d64da835b1df2c4bba9d84bcc70b322d13cca471babcfc819"
+    },
+    {
+      "path": "docs/research/fingerprint-v2-gap-audit/tropes-vocabulary-tail-sample.json",
+      "bytes": 33661,
+      "sha256": "701b5bf31165b9bb93db2eaebc555250960d4217f9e2859b882e3ea03d4d9265"
+    },
+    {
+      "path": "docs/research/fingerprint-v2-gap-audit/tropes-vocabulary-url-roles.json",
+      "bytes": 31854,
+      "sha256": "947ba9017cf30d65e347bedf91e1c13350f148a2d1485e1f4ca28681ee14f1c4"
+    }
+  ]
+}

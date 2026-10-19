@@ -1,0 +1,545 @@
+{
+  "capture_method": "AST only; exact models.py bytes are authoritative. Not a runtime model_json_schema execution.",
+  "models": {
+    "CoreScores": [
+      {
+        "field": "adrenaline",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "tension",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "scare",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "violence",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "romance",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "eroticism",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "wholesome",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "wonder",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "pathos",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "melancholy",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "uncanny",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "catharsis",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "nostalgia",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "situational_comedy",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "wit_wordplay",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "physical_comedy",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "cringe_humor",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "absurdist_humor",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "satire_parody",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "dark_humor",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "fantasy",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "futuristic",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "historical",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "contemporary_realism",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "crime",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "mystery",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "warfare",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "political",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "sports",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "biographical",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "coming_of_age",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "family_dynamics",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "psychological",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "showbiz",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "gaming",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "pop_culture",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "social_commentary",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "class_and_capitalism",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "technology_and_humanity",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "spiritual",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "narrative_structure",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "dialogue_quality",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "character_depth",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "slow_burn",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "fast_pace",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "intrigue",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "complexity",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "rewatchability",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "hopefulness",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "bleakness",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "ambiguity",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "novelty",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "homage_and_reference",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "non_linear_narrative",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "meta_narrative",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "surrealism",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "eccentricity",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "philosophical",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "educational",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "direction",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "acting",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "cinematography",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "editing",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "music_composition",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "world_immersion",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "spectacle",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "visual_stylization",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "pastiche",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "psychedelic",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "grotesque",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "camp_and_irony",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "dialogue_centrality",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "music_centrality",
+        "annotation": "int",
+        "default": null
+      },
+      {
+        "field": "sound_centrality",
+        "annotation": "int",
+        "default": null
+      }
+    ],
+    "MediaFingerprint": [
+      {
+        "field": "scores",
+        "annotation": "CoreScores",
+        "default": null
+      },
+      {
+        "field": "highlight_keys",
+        "annotation": "list[str]",
+        "default": null
+      }
+    ],
+    "ProductionInfo": [
+      {
+        "field": "method",
+        "annotation": "Literal['Live-Action', 'Animation', 'Mixed-Media']",
+        "default": null
+      },
+      {
+        "field": "animation_style",
+        "annotation": "Optional[Literal['2D Traditional', '3D CGI', 'Stop-Motion', 'Rotoscoping', 'Anime', 'Other']]",
+        "default": "None"
+      }
+    ],
+    "SocialSuitability": [
+      {
+        "field": "solo_watch",
+        "annotation": "bool",
+        "default": null
+      },
+      {
+        "field": "date_night",
+        "annotation": "bool",
+        "default": null
+      },
+      {
+        "field": "group_party",
+        "annotation": "bool",
+        "default": null
+      },
+      {
+        "field": "family",
+        "annotation": "bool",
+        "default": null
+      },
+      {
+        "field": "partner",
+        "annotation": "bool",
+        "default": null
+      },
+      {
+        "field": "friends",
+        "annotation": "bool",
+        "default": null
+      },
+      {
+        "field": "kids",
+        "annotation": "bool",
+        "default": null
+      },
+      {
+        "field": "teens",
+        "annotation": "bool",
+        "default": null
+      },
+      {
+        "field": "adults",
+        "annotation": "bool",
+        "default": null
+      },
+      {
+        "field": "intergenerational",
+        "annotation": "bool",
+        "default": null
+      },
+      {
+        "field": "public_viewing_safe",
+        "annotation": "bool",
+        "default": null
+      }
+    ],
+    "ViewingContext": [
+      {
+        "field": "is_thought_provoking",
+        "annotation": "bool",
+        "default": null
+      },
+      {
+        "field": "is_pure_escapism",
+        "annotation": "bool",
+        "default": null
+      },
+      {
+        "field": "is_background_friendly",
+        "annotation": "bool",
+        "default": null
+      },
+      {
+        "field": "is_comfort_watch",
+        "annotation": "bool",
+        "default": null
+      },
+      {
+        "field": "is_binge_friendly",
+        "annotation": "bool",
+        "default": null
+      },
+      {
+        "field": "is_drop_in_friendly",
+        "annotation": "bool",
+        "default": null
+      }
+    ],
+    "DNAAnalysis": [
+      {
+        "field": "fingerprint",
+        "annotation": "MediaFingerprint",
+        "default": null
+      },
+      {
+        "field": "is_anime",
+        "annotation": "bool",
+        "default": null
+      },
+      {
+        "field": "production_info",
+        "annotation": "ProductionInfo",
+        "default": null
+      },
+      {
+        "field": "content_advisories",
+        "annotation": "list[ContentAdvisory]",
+        "default": null
+      },
+      {
+        "field": "social_suitability",
+        "annotation": "SocialSuitability",
+        "default": null
+      },
+      {
+        "field": "viewing_context",
+        "annotation": "ViewingContext",
+        "default": null
+      },
+      {
+        "field": "essence_tags",
+        "annotation": "list[str]",
+        "default": null
+      },
+      {
+        "field": "essence_text",
+        "annotation": "str",
+        "default": null
+      }
+    ]
+  },
+  "runtime_strict_schema": "fetch.strict_schema makes every object disallow additional properties, requires every property including nullable animation_style, and removes defaults.",
+  "validation_after_parse": [
+    "strict Pydantic JSON validation",
+    "score range 0..10",
+    "at least one nonzero score",
+    "highlight keys must exist among score keys"
+  ],
+  "prompt_constraints_not_explicitly_validated_in_fetch": [
+    "highlight count 4..8 and uniqueness",
+    "tag count 8..10 and distinctness",
+    "essence sentence count",
+    "anime/style conditional"
+  ]
+}

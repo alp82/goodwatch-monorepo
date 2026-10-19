@@ -1,0 +1,40 @@
+{
+  "schema_version": "goodwatch.fingerprint-baseline-verification.v1",
+  "verified_at": "2026-10-19T06:58:07.455613+00:00",
+  "success": true,
+  "mode": "source_and_snapshot",
+  "manifest_schema_valid": true,
+  "source_files_checked": 2804,
+  "snapshot_files_checked": 2115,
+  "archive_members_checked": 2115,
+  "local_only_source_files": 689,
+  "inherited_hash_checks": 101,
+  "inherited_matches": 100,
+  "preserved_mismatches_with_exact_historical_recovery": [
+    "goodwatch-webapp/app/server/prototype-jev-vector.server.ts"
+  ],
+  "recovered_historical_files_checked": 4,
+  "inline_hashed_source_references_checked": 90,
+  "sealed_files_checked": 2151,
+  "seal_sha256": "2631845aaf7cb93e422cd670f71746dad559342a4e429d30e110e20124c2fe95",
+  "v1_key_count_and_order_verified": 74,
+  "holdout5_query_keys_verified": 30,
+  "qa_counts_recomputed": true,
+  "gold_admissions": 0,
+  "checkout": "concurrent_unrelated_commit_recorded; all_audited_source_hashes_unchanged; branch_unchanged; no_staged_changes",
+  "negative_checks": [
+    "invalid_hash_rejected_by_schema",
+    "missing_required_field_rejected",
+    "absolute_and_traversal_paths_rejected",
+    "tampered_file_rejected_by_hash_validator"
+  ],
+  "not_run": [
+    "Application tests",
+    "Model inference or benchmark replay",
+    "Live production/configuration/storage checks",
+    "Model binary/vector parity",
+    "Invoice reconciliation",
+    "Independent title-content/gold judgment"
+  ],
+  "local_only_portability": "Snapshot-only mode cannot verify omitted local-only source bodies without the original machine; their recorded hashes remain provenance."
+}

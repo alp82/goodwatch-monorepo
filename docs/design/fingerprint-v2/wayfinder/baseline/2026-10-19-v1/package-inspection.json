@@ -1,0 +1,1139 @@
+{
+  "archive_bytes": 43366609,
+  "member_count": 2115,
+  "expanded_bytes": 130711895,
+  "all_regular_safe_paths": true,
+  "filename_extensions": {
+    ".md": 118,
+    ".txt": 115,
+    ".json": 1460,
+    "": 10,
+    ".snapshot": 2,
+    ".html": 5,
+    ".py": 197,
+    ".mjs": 8,
+    ".ts": 65,
+    ".sh": 4,
+    ".patch": 1,
+    ".gz": 5,
+    ".csv": 1,
+    ".jsonl": 20,
+    ".sha256": 10,
+    ".lock": 43,
+    ".yaml": 50,
+    ".js": 1
+  },
+  "duplicate_groups": [
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/acceptance/comparison-data.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/human-review/comparison-data.json"
+      ],
+      "size": 11458
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/acceptance/completed-review.original.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/human-review/completed-review.original.json"
+      ],
+      "size": 15001
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/acceptance/titles.json",
+        "snapshots/docs/benchmarks/fingerprint/titles.json"
+      ],
+      "size": 4605
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0000/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0001/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0001/key-before.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0002/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0002/key-before.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0003/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0003/key-before.json"
+      ],
+      "size": 231
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0001/request.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0002/request.json"
+      ],
+      "size": 60148
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0003/key-after-refreshed.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0004/key-before.json"
+      ],
+      "size": 233
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0004/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0005/key-before.json"
+      ],
+      "size": 233
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0005/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0006/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0006/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0007/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0007/key-before.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0008/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0008/key-before.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0009/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0007/request.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0008/request.json"
+      ],
+      "size": 60338
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0009/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0010/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0009/request.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/repeat-cost/16-1/request.json"
+      ],
+      "size": 60362
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0010/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0011/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0011/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0012/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0011/request.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/repeat-cost/04-1/request.json"
+      ],
+      "size": 60265
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0012/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0013/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0013/key-before.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0014/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0014/key-before.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0015/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0013/request.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0014/request.json"
+      ],
+      "size": 60206
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0015/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0016/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0016/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0017/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0017/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0018/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0018/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0019/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0019/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0020/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0020/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0021/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0021/key-before.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0022/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0022/key-before.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0023/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0021/request.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0022/request.json"
+      ],
+      "size": 60282
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0023/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0024/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0024/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0025/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0025/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0026/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0025/request.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/repeat-cost/05-1/request.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/repeat-cost/05-2/request.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/repeat-cost/05-3/request.json"
+      ],
+      "size": 29945
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0026/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0027/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0027/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0028/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0028/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0029/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0029/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0030/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0030/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0031/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0030/request.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/repeat-cost/09-1/request.json"
+      ],
+      "size": 29922
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0031/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0032/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0032/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0033/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0033/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0034/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0034/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0035/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0035/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0036/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0036/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0037/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0037/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0038/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0038/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0039/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0039/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0040/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0039/request.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/repeat-cost/11-1/request.json"
+      ],
+      "size": 60313
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0040/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0041/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0041/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0042/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0042/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0043/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0043/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0044/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0044/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0045/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0045/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0046/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0045/request.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/repeat-cost/03-1/request.json"
+      ],
+      "size": 30044
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0046/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0047/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0046/request.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/repeat-cost/02-1/request.json"
+      ],
+      "size": 29972
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0047/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0048/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0048/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0049/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0049/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0050/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0049/request.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/repeat-cost/00-1/request.json"
+      ],
+      "size": 60345
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0050/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0051/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0051/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0052/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0052/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0053/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0053/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0054/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0054/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0055/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0055/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0056/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0056/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0057/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0057/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0058/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0058/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0059/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0058/request.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/repeat-cost/10-1/request.json"
+      ],
+      "size": 60166
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0059/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0060/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0060/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0061/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0061/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0062/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0062/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0063/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0063/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0064/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0064/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0065/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0065/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0066/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0066/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0067/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0067/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0068/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0068/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0069/key-before.json"
+      ],
+      "size": 233
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0069/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0070/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0070/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0071/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0071/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0072/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0071/request.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/repeat-cost/01-1/request.json"
+      ],
+      "size": 60325
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0072/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0073/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0073/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0074/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0073/request.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/repeat-cost/12-1/request.json"
+      ],
+      "size": 60317
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0074/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0075/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0074/request.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/repeat-cost/17-1/request.json"
+      ],
+      "size": 60143
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0075/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0076/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0076/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0077/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0077/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0078/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0077/request.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/repeat-cost/08-1/request.json"
+      ],
+      "size": 30104
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0078/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0079/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0079/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0080/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0080/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0081/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0080/request.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/repeat-cost/19-1/request.json"
+      ],
+      "size": 29996
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0081/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0082/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0082/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0083/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0082/request.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/repeat-cost/18-1/request.json"
+      ],
+      "size": 30092
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0083/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0084/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0084/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0085/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0084/request.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/repeat-cost/14-1/request.json"
+      ],
+      "size": 60217
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0085/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0086/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0086/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0087/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0087/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0088/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0088/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0089/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0088/request.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/repeat-cost/06-1/request.json"
+      ],
+      "size": 60193
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0089/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0090/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0090/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0091/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0091/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0092/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0092/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0093/key-before.json"
+      ],
+      "size": 241
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0092/request.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/repeat-cost/15-1/request.json"
+      ],
+      "size": 30124
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0093/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0094/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0094/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0095/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0094/request.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/repeat-cost/13-1/request.json"
+      ],
+      "size": 30096
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0095/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0096/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0096/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0097/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0097/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0098/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0098/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0099/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0098/request.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/repeat-cost/07-1/request.json"
+      ],
+      "size": 30141
+    },
+    {
+      "paths": [
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0099/key-after.json",
+        "snapshots/docs/benchmarks/fingerprint/poc/evidence-first/0100/key-before.json"
+      ],
+      "size": 235
+    },
+    {
+      "paths": [
+        "snapshots/docs/prototypes/search-arena/results/grading/r6-p145-C-packets.json",
+        "snapshots/docs/prototypes/search-arena/results/grading/r6-p169-C-packets.json"
+      ],
+      "size": 2
+    },
+    {
+      "paths": [
+        "snapshots/docs/prototypes/search-arena/results/grading/r6-p145-disagreements.json",
+        "snapshots/docs/prototypes/search-arena/results/grading/r6-p169-disagreements.json"
+      ],
+      "size": 2
+    },
+    {
+      "paths": [
+        "snapshots/docs/prototypes/search-arena/results/simplify/entity/complexity-simp.txt",
+        "snapshots/docs/prototypes/search-arena/results/simplify/fusion/complexity-simp.txt"
+      ],
+      "size": 1099
+    },
+    {
+      "paths": [
+        "snapshots/docs/prototypes/search-arena/results/simplify/holdout5/lists/combo-safe-v2-wcred-par.json",
+        "snapshots/docs/prototypes/search-arena/results/simplify/holdout5/lists/combo-safe-v2-wcred.json"
+      ],
+      "size": 161315
+    },
+    {
+      "paths": [
+        "snapshots/docs/prototypes/search-arena/results/simplify/holdout5/lists/combo-safe-v3-scan.json",
+        "snapshots/docs/prototypes/search-arena/results/simplify/holdout5/lists/neg-lex2.json",
+        "snapshots/docs/prototypes/search-arena/results/simplify/holdout5/lists/trope-scoped.json"
+      ],
+      "size": 161324
+    },
+    {
+      "paths": [
+        "snapshots/goodwatch-flows/windmill/f/dna/generate/iterate.script.lock",
+        "snapshots/goodwatch-flows/windmill/f/dna/init/update.script.lock"
+      ],
+      "size": 278
+    },
+    {
+      "paths": [
+        "snapshots/goodwatch-flows/windmill/f/priority/init.script.lock",
+        "snapshots/goodwatch-flows/windmill/f/priority/reset.script.lock"
+      ],
+      "size": 281
+    },
+    {
+      "paths": [
+        "snapshots/goodwatch-flows/windmill/f/priority/next.script.lock",
+        "snapshots/goodwatch-flows/windmill/f/sync/copy/tmdb_daily.script.lock"
+      ],
+      "size": 334
+    },
+    {
+      "paths": [
+        "snapshots/goodwatch-flows/windmill/f/priority/publish.script.lock",
+        "snapshots/goodwatch-flows/windmill/f/sync/copy/vector_data.script.lock"
+      ],
+      "size": 498
+    },
+    {
+      "paths": [
+        "snapshots/goodwatch-flows/windmill/f/priority/queue.script.lock",
+        "snapshots/goodwatch-flows/windmill/f/search/title_text.script.lock",
+        "snapshots/goodwatch-flows/windmill/f/sync/copy/deleted_titles.script.lock",
+        "snapshots/goodwatch-flows/windmill/f/sync/copy/stale_child_rows.script.lock",
+        "snapshots/goodwatch-flows/windmill/f/sync/copy/sync_state.script.lock",
+        "snapshots/goodwatch-flows/windmill/f/sync/models/crate_schemas.script.lock"
+      ],
+      "size": 11
+    },
+    {
+      "paths": [
+        "snapshots/goodwatch-flows/windmill/f/search/build_indexes.script.lock",
+        "snapshots/goodwatch-flows/windmill/f/search/embed_titles.script.lock"
+      ],
+      "size": 686
+    },
+    {
+      "paths": [
+        "snapshots/goodwatch-flows/windmill/f/search/index_builders.script.lock",
+        "snapshots/goodwatch-flows/windmill/f/search/terms.script.lock"
+      ],
+      "size": 23
+    },
+    {
+      "paths": [
+        "snapshots/goodwatch-flows/windmill/f/sync/copy/all_ratings.script.lock",
+        "snapshots/goodwatch-flows/windmill/f/sync/copy/dna_data.script.lock",
+        "snapshots/goodwatch-flows/windmill/f/sync/copy/orphaned_titles.script.lock",
+        "snapshots/goodwatch-flows/windmill/f/sync/copy/tmdb_details.script.lock",
+        "snapshots/goodwatch-flows/windmill/f/sync/copy/tmdb_episodes.script.lock",
+        "snapshots/goodwatch-flows/windmill/f/sync/copy/tmdb_streaming.script.lock",
+        "snapshots/goodwatch-flows/windmill/f/sync/copy/tvtropes.script.lock"
+      ],
+      "size": 334
+    },
+    {
+      "paths": [
+        "snapshots/goodwatch-flows/windmill/f/sync/copy/personal_order_trigger.script.lock",
+        "snapshots/goodwatch-flows/windmill/f/sync/copy/title_snapshot.script.lock"
+      ],
+      "size": 384
+    },
+    {
+      "paths": [
+        "snapshots/goodwatch-flows/windmill/f/sync/models/crate_models.script.lock",
+        "snapshots/goodwatch-flows/windmill/f/sync/models/qdrant_models.script.lock"
+      ],
+      "size": 176
+    }
+  ],
+  "duplicate_redundant_bytes": 1750386,
+  "candidate_hits": [
+    {
+      "path": "snapshots/docs/benchmarks/fingerprint/poc/repeat-cost/00-1/generation.json",
+      "category": "private_query_identity_key",
+      "count": 1
+    },
+    {
+      "path": "snapshots/docs/benchmarks/fingerprint/poc/repeat-cost/01-1/generation.json",
+      "category": "private_query_identity_key",
+      "count": 1
+    },
+    {
+      "path": "snapshots/docs/benchmarks/fingerprint/poc/repeat-cost/02-1/generation.json",
+      "category": "private_query_identity_key",
+      "count": 1
+    },
+    {
+      "path": "snapshots/docs/benchmarks/fingerprint/poc/repeat-cost/02-2/generation.json",
+      "category": "private_query_identity_key",
+      "count": 1
+    },
+    {
+      "path": "snapshots/docs/benchmarks/fingerprint/poc/repeat-cost/03-1/generation.json",
+      "category": "private_query_identity_key",
+      "count": 1
+    },
+    {
+      "path": "snapshots/docs/benchmarks/fingerprint/poc/repeat-cost/04-1/generation.json",
+      "category": "private_query_identity_key",
+      "count": 1
+    },
+    {
+      "path": "snapshots/docs/benchmarks/fingerprint/poc/repeat-cost/05-1/response.json",
+      "category": "private_query_identity_key",
+      "count": 1
+    },
+    {
+      "path": "snapshots/docs/benchmarks/fingerprint/poc/repeat-cost/05-2/response.json",
+      "category": "private_query_identity_key",
+      "count": 1
+    },
+    {
+      "path": "snapshots/docs/benchmarks/fingerprint/poc/repeat-cost/05-3/generation.json",
+      "category": "private_query_identity_key",
+      "count": 1
+    },
+    {
+      "path": "snapshots/docs/benchmarks/fingerprint/poc/repeat-cost/06-1/generation.json",
+      "category": "private_query_identity_key",
+      "count": 1
+    },
+    {
+      "path": "snapshots/docs/benchmarks/fingerprint/poc/repeat-cost/07-1/generation.json",
+      "category": "private_query_identity_key",
+      "count": 1
+    },
+    {
+      "path": "snapshots/docs/benchmarks/fingerprint/poc/repeat-cost/07-2/generation.json",
+      "category": "private_query_identity_key",
+      "count": 1
+    },
+    {
+      "path": "snapshots/docs/benchmarks/fingerprint/poc/repeat-cost/08-1/generation.json",
+      "category": "private_query_identity_key",
+      "count": 1
+    },
+    {
+      "path": "snapshots/docs/benchmarks/fingerprint/poc/repeat-cost/09-1/generation.json",
+      "category": "private_query_identity_key",
+      "count": 1
+    },
+    {
+      "path": "snapshots/docs/benchmarks/fingerprint/poc/repeat-cost/10-1/generation.json",
+      "category": "private_query_identity_key",
+      "count": 1
+    },
+    {
+      "path": "snapshots/docs/benchmarks/fingerprint/poc/repeat-cost/11-1/generation.json",
+      "category": "private_query_identity_key",
+      "count": 1
+    },
+    {
+      "path": "snapshots/docs/benchmarks/fingerprint/poc/repeat-cost/12-1/generation.json",
+      "category": "private_query_identity_key",
+      "count": 1
+    },
+    {
+      "path": "snapshots/docs/benchmarks/fingerprint/poc/repeat-cost/13-1/generation.json",
+      "category": "private_query_identity_key",
+      "count": 1
+    },
+    {
+      "path": "snapshots/docs/benchmarks/fingerprint/poc/repeat-cost/14-1/generation.json",
+      "category": "private_query_identity_key",
+      "count": 1
+    },
+    {
+      "path": "snapshots/docs/benchmarks/fingerprint/poc/repeat-cost/15-1/generation.json",
+      "category": "private_query_identity_key",
+      "count": 1
+    },
+    {
+      "path": "snapshots/docs/benchmarks/fingerprint/poc/repeat-cost/16-1/generation.json",
+      "category": "private_query_identity_key",
+      "count": 1
+    },
+    {
+      "path": "snapshots/docs/benchmarks/fingerprint/poc/repeat-cost/17-1/generation.json",
+      "category": "private_query_identity_key",
+      "count": 1
+    },
+    {
+      "path": "snapshots/docs/benchmarks/fingerprint/poc/repeat-cost/18-1/generation.json",
+      "category": "private_query_identity_key",
+      "count": 1
+    },
+    {
+      "path": "snapshots/docs/benchmarks/fingerprint/poc/repeat-cost/18-2/generation.json",
+      "category": "private_query_identity_key",
+      "count": 1
+    },
+    {
+      "path": "snapshots/docs/benchmarks/fingerprint/poc/repeat-cost/19-1/generation.json",
+      "category": "private_query_identity_key",
+      "count": 1
+    },
+    {
+      "path": "snapshots/docs/benchmarks/fingerprint/poc/repeat-cost/continuation-manifest.json",
+      "category": "literal_credential",
+      "count": 1
+    },
+    {
+      "path": "snapshots/goodwatch-flows/windmill/f/sync/models/crate_schemas.py",
+      "category": "private_query_identity_key",
+      "count": 15
+    },
+    {
+      "path": "snapshots/goodwatch-webapp/package-lock.json",
+      "category": "private_query_identity_key",
+      "count": 3
+    }
+  ],
+  "scope": "Signature scan including decompressed inner gzip; candidates require manual review; absence does not prove absence of every secret or personal datum."
+}

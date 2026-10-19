@@ -1,0 +1,74 @@
+[
+  {
+    "location": "docs/benchmarks/fingerprint/jev/private/experiment.env",
+    "status": "unavailable_local",
+    "reason": "Credentials are never opened; Jev raw captures are gitignored, sanitized results alone do not reproduce every call.",
+    "reuse_or_recovery": "Owner/private custodian can provide redacted capture manifest, response IDs and cost ledger; never publish credential files."
+  },
+  {
+    "location": "docs/benchmarks/fingerprint/jev/private/runs",
+    "status": "unavailable_local",
+    "reason": "Credentials are never opened; Jev raw captures are gitignored, sanitized results alone do not reproduce every call.",
+    "reuse_or_recovery": "Owner/private custodian can provide redacted capture manifest, response IDs and cost ledger; never publish credential files."
+  },
+  {
+    "location": "docs/prototypes/search-arena/data/catalog.jsonl.gz",
+    "status": "unavailable_local",
+    "reason": "Arena README archives raw captures/grading on proto/search-simplify; large catalog and vectors are gitignored even there.",
+    "reuse_or_recovery": "Reuse existing custodian copies or immutable archive branch; do not regenerate paid readings or inventory. Hash catalog row order, embeddings, dtype/dimensions and matching readings before a replay."
+  },
+  {
+    "location": "docs/prototypes/search-arena/data/catalog.pkl",
+    "status": "unavailable_local",
+    "reason": "Arena README archives raw captures/grading on proto/search-simplify; large catalog and vectors are gitignored even there.",
+    "reuse_or_recovery": "Reuse existing custodian copies or immutable archive branch; do not regenerate paid readings or inventory. Hash catalog row order, embeddings, dtype/dimensions and matching readings before a replay."
+  },
+  {
+    "location": "docs/prototypes/search-arena/data/emb-bge-base-en-v1.5-notitle.npy",
+    "status": "unavailable_local",
+    "reason": "Arena README archives raw captures/grading on proto/search-simplify; large catalog and vectors are gitignored even there.",
+    "reuse_or_recovery": "Reuse existing custodian copies or immutable archive branch; do not regenerate paid readings or inventory. Hash catalog row order, embeddings, dtype/dimensions and matching readings before a replay."
+  },
+  {
+    "location": "docs/prototypes/search-arena/data/emb-multilingual-e5-small.npy",
+    "status": "unavailable_local",
+    "reason": "Arena README archives raw captures/grading on proto/search-simplify; large catalog and vectors are gitignored even there.",
+    "reuse_or_recovery": "Reuse existing custodian copies or immutable archive branch; do not regenerate paid readings or inventory. Hash catalog row order, embeddings, dtype/dimensions and matching readings before a replay."
+  },
+  {
+    "location": "docs/prototypes/search-arena/data/captures",
+    "status": "unavailable_local",
+    "reason": "Arena README archives raw captures/grading on proto/search-simplify; large catalog and vectors are gitignored even there.",
+    "reuse_or_recovery": "Reuse existing custodian copies or immutable archive branch; do not regenerate paid readings or inventory. Hash catalog row order, embeddings, dtype/dimensions and matching readings before a replay."
+  },
+  {
+    "location": "docs/prototypes/search-arena/results/grading",
+    "status": "present_not_loaded",
+    "reason": "Arena README archives raw captures/grading on proto/search-simplify; large catalog and vectors are gitignored even there.",
+    "reuse_or_recovery": "Reuse existing custodian copies or immutable archive branch; do not regenerate paid readings or inventory. Hash catalog row order, embeddings, dtype/dimensions and matching readings before a replay."
+  },
+  {
+    "location": "docs/research/tvtropes-repair/run-2026-09-26b/sources",
+    "status": "unavailable_local",
+    "reason": "TV Tropes source page bodies stay local; historical review/import metadata is preserved.",
+    "reuse_or_recovery": "Private custodian supplies local body manifest if needed; no new fetch or crawl."
+  },
+  {
+    "location": "Production: title-snapshot:current + title-snapshot:<version>:*; search_index_builds[current] + blob files; Qdrant collection/vector config and counts; Windmill schedules/script hashes; role deployment commits",
+    "status": "unverified_live",
+    "reason": "No production connections, schedule reads, manifests or host inspection performed; local HEAD is not a deployment identity.",
+    "reuse_or_recovery": "If a later trial needs live-baseline parity, obtain an authorized sanitized read-only capture with UTC timestamp, manifest/chunk hashes, collection/version, per-role deployment commits and source watermark. No broad inventory re-export."
+  },
+  {
+    "location": "Pinned encoder binaries and host caches: SEARCH_MODEL_CACHE / SEARCH_MODEL_DIR",
+    "status": "unverified_binary",
+    "reason": "Code revisions, hashes, pooling, dimensions and limits are captured; no model files loaded/downloaded or on-host hash audit.",
+    "reuse_or_recovery": "Reuse verified cached files; compare file hashes with pinned source config before any authorized replay."
+  },
+  {
+    "location": "Original private conversation links in TODO.md; independently judged V2 references and new blind holdout",
+    "status": "unavailable_or_uncreated",
+    "reason": "Private discussion contents not fetched; V2 examples are illustrative, synthetic queries exposed.",
+    "reuse_or_recovery": "Corpus/quality and holdout tickets own independent judgments and fresh hidden confirmation. This prerequisite does not invent them."
+  }
+]
