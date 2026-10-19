@@ -70,3 +70,13 @@ Dark (TMDB 70523, IMDb tt5753856) loses 24 of 26 ratings when the member's track
 All 26 regular episodes were checked against TMDB's episode details with `append_to_response=external_ids`. Every live TMDB episode ID and its IMDb external ID agrees with the stored IMDb episode at the same position. The five TMDB specials remain outside regular season scores. The checked IDs and catalog snapshot are in [dark-episodes.json](../../../goodwatch-webapp/app/domain/tracking/fixtures/dark-episodes.json). `DARK_MAPPING` pins these identities and both source titles through the existing reviewed presentation, preserving canonical tracking positions. It does not infer identities from equal season counts.
 
 Regression: `node --test --test-name-pattern='Dark keeps' app/server/show-tracking.test.ts` from `goodwatch-webapp` failed with `2 !== 26` before enabling the mapping and passes with all 26 ratings afterwards.
+
+## The Apothecary Diaries: shared guest and tracking seasons
+
+October 19, 2026. Show 220542's guest grid had 51 IMDb ratings in three seasons (24 / 24 / 3), but the tracking view retained only two ratings in one season. TMDB's catalog stores all 60 regular episodes in season 1; IMDb also uses different, often romanized titles. The existing same-season title matcher therefore cannot preserve this grid when tracking loads.
+
+All 51 rated episodes were checked through TMDB's individual episode details with `append_to_response=external_ids`. Their external IDs match unique IMDb episodes under parent `tt26743760`. TMDB's [Seasons episode group](https://www.themoviedb.org/tv/220542/episode_group/6782169d78cfcd77ed4e89be) independently agrees with all 51 IMDb positions. The source snapshot, external ID checks and group membership are in [apothecary-episodes.json](../../../goodwatch-webapp/app/domain/tracking/fixtures/apothecary-episodes.json). Specials remain catalog specials; this mapping does not infer their identities from the group's differing special count.
+
+`APOTHECARY_DIARIES_MAPPING` opts into the existing shared episode presentation for guest ratings, tracking, and displayed-season actions. Canonical IDs and watched positions remain unchanged. The nine trailing catalog episodes without a reviewed IMDb rating mapping stay in Additional episodes, as ADR 0012 requires, and have no invented ratings or season membership.
+
+Regression: `node --test --test-name-pattern='Apothecary' app/server/show-tracking.test.ts` failed with `2 !== 51` before the mapping and passes afterwards. It compares guest and tracking season membership and every rating, checks each pinned identity against both sources, and verifies that marking displayed S2 records canonical S1 E25–E48.

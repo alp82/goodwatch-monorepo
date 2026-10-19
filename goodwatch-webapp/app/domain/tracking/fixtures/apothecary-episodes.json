@@ -1,0 +1,2313 @@
+{
+	"catalog": [
+		{
+			"tmdb_id": 4872352,
+			"imdb_id": null,
+			"season_number": 0,
+			"episode_number": 1,
+			"name": "The Maomao Diaries: White Face Powder",
+			"air_date": 1698019200000
+		},
+		{
+			"tmdb_id": 4872354,
+			"imdb_id": null,
+			"season_number": 0,
+			"episode_number": 2,
+			"name": "The Maomao Diaries: Chocolate",
+			"air_date": 1698019200000
+		},
+		{
+			"tmdb_id": 4872357,
+			"imdb_id": null,
+			"season_number": 0,
+			"episode_number": 3,
+			"name": "The Maomao Diaries: Fuyou",
+			"air_date": 1698019200000
+		},
+		{
+			"tmdb_id": 4896174,
+			"imdb_id": null,
+			"season_number": 0,
+			"episode_number": 4,
+			"name": "The Maomao Diaries: Steam Bath",
+			"air_date": 1698624000000
+		},
+		{
+			"tmdb_id": 4896176,
+			"imdb_id": null,
+			"season_number": 0,
+			"episode_number": 5,
+			"name": "The Maomao Diaries: Ginger and Orange Candy",
+			"air_date": 1699228800000
+		},
+		{
+			"tmdb_id": 4896177,
+			"imdb_id": null,
+			"season_number": 0,
+			"episode_number": 6,
+			"name": "The Maomao Diaries: Things a Person Cannot Eat",
+			"air_date": 1699833600000
+		},
+		{
+			"tmdb_id": 4896178,
+			"imdb_id": null,
+			"season_number": 0,
+			"episode_number": 7,
+			"name": "The Maomao Diaries: A Cure for Drowsiness???",
+			"air_date": 1700438400000
+		},
+		{
+			"tmdb_id": 4896179,
+			"imdb_id": null,
+			"season_number": 0,
+			"episode_number": 8,
+			"name": "The Maomao Diaries: Charcoal",
+			"air_date": 1701043200000
+		},
+		{
+			"tmdb_id": 4896180,
+			"imdb_id": null,
+			"season_number": 0,
+			"episode_number": 9,
+			"name": "The Maomao Diaries: Heavenly Bamboo",
+			"air_date": 1701648000000
+		},
+		{
+			"tmdb_id": 4896181,
+			"imdb_id": null,
+			"season_number": 0,
+			"episode_number": 10,
+			"name": "The Maomao Diaries: Aconite Flower and Syrup",
+			"air_date": 1702252800000
+		},
+		{
+			"tmdb_id": 4896186,
+			"imdb_id": null,
+			"season_number": 0,
+			"episode_number": 11,
+			"name": "The Maomao Diaries: Azalea",
+			"air_date": 1702857600000
+		},
+		{
+			"tmdb_id": 4896188,
+			"imdb_id": null,
+			"season_number": 0,
+			"episode_number": 12,
+			"name": "The Maomao Diaries: Caterpillar Fungus",
+			"air_date": 1703462400000
+		},
+		{
+			"tmdb_id": 4896189,
+			"imdb_id": null,
+			"season_number": 0,
+			"episode_number": 13,
+			"name": "The Maomao Diaries: Pheromones",
+			"air_date": 1704672000000
+		},
+		{
+			"tmdb_id": 4896190,
+			"imdb_id": null,
+			"season_number": 0,
+			"episode_number": 14,
+			"name": "The Maomao Diaries: Wheat Flour",
+			"air_date": 1705276800000
+		},
+		{
+			"tmdb_id": 4896191,
+			"imdb_id": null,
+			"season_number": 0,
+			"episode_number": 15,
+			"name": "The Maomao Diaries: Seaweed",
+			"air_date": 1705881600000
+		},
+		{
+			"tmdb_id": 4896192,
+			"imdb_id": null,
+			"season_number": 0,
+			"episode_number": 16,
+			"name": "The Maomao Diaries: Lead",
+			"air_date": 1706486400000
+		},
+		{
+			"tmdb_id": 4896193,
+			"imdb_id": null,
+			"season_number": 0,
+			"episode_number": 17,
+			"name": "The Maomao Diaries: Delusion",
+			"air_date": 1707091200000
+		},
+		{
+			"tmdb_id": 4896194,
+			"imdb_id": null,
+			"season_number": 0,
+			"episode_number": 18,
+			"name": "The Maomao Diaries: Herbs",
+			"air_date": 1707696000000
+		},
+		{
+			"tmdb_id": 4896195,
+			"imdb_id": null,
+			"season_number": 0,
+			"episode_number": 19,
+			"name": "The Maomao Diaries: Ox Bezoar",
+			"air_date": 1708300800000
+		},
+		{
+			"tmdb_id": 4896196,
+			"imdb_id": null,
+			"season_number": 0,
+			"episode_number": 20,
+			"name": "The Maomao Diaries: Potatoes",
+			"air_date": 1708905600000
+		},
+		{
+			"tmdb_id": 4896197,
+			"imdb_id": null,
+			"season_number": 0,
+			"episode_number": 21,
+			"name": "The Maomao Diaries: Plum",
+			"air_date": 1709510400000
+		},
+		{
+			"tmdb_id": 4896198,
+			"imdb_id": null,
+			"season_number": 0,
+			"episode_number": 22,
+			"name": "The Maomao Diaries: Blue Rose",
+			"air_date": 1710115200000
+		},
+		{
+			"tmdb_id": 4896199,
+			"imdb_id": null,
+			"season_number": 0,
+			"episode_number": 23,
+			"name": "The Maomao Diaries: Balsam and Woodsorrel",
+			"air_date": 1710720000000
+		},
+		{
+			"tmdb_id": 4896200,
+			"imdb_id": null,
+			"season_number": 0,
+			"episode_number": 24,
+			"name": "The Maomao Diaries: Rumors",
+			"air_date": 1711324800000
+		},
+		{
+			"tmdb_id": 5897959,
+			"imdb_id": null,
+			"season_number": 0,
+			"episode_number": 25,
+			"name": "The Maomao Diaries: Calico Cat",
+			"air_date": 1736726400000
+		},
+		{
+			"tmdb_id": 5898531,
+			"imdb_id": null,
+			"season_number": 0,
+			"episode_number": 26,
+			"name": "The Maomao Diaries: Datura Metel",
+			"air_date": 1737331200000
+		},
+		{
+			"tmdb_id": 5898532,
+			"imdb_id": null,
+			"season_number": 0,
+			"episode_number": 27,
+			"name": "The Maomao Diaries: Mushroom",
+			"air_date": 1737936000000
+		},
+		{
+			"tmdb_id": 5944901,
+			"imdb_id": null,
+			"season_number": 0,
+			"episode_number": 28,
+			"name": "The Maomao Diaries: Bear Gallbladder",
+			"air_date": 1738540800000
+		},
+		{
+			"tmdb_id": 5944902,
+			"imdb_id": null,
+			"season_number": 0,
+			"episode_number": 29,
+			"name": "The Maomao Diaries: Moths",
+			"air_date": 1739145600000
+		},
+		{
+			"tmdb_id": 5944903,
+			"imdb_id": null,
+			"season_number": 0,
+			"episode_number": 30,
+			"name": "The Maomao Diaries: Lizard",
+			"air_date": 1739750400000
+		},
+		{
+			"tmdb_id": 5989765,
+			"imdb_id": null,
+			"season_number": 0,
+			"episode_number": 31,
+			"name": "The Maomao Diaries: Master Jinshi's Diaries",
+			"air_date": 1740355200000
+		},
+		{
+			"tmdb_id": 5989766,
+			"imdb_id": null,
+			"season_number": 0,
+			"episode_number": 32,
+			"name": "The Maomao Diaries: Bell Cricket",
+			"air_date": 1740960000000
+		},
+		{
+			"tmdb_id": 5989768,
+			"imdb_id": null,
+			"season_number": 0,
+			"episode_number": 33,
+			"name": "The Maomao Diaries: Orpiment",
+			"air_date": 1741564800000
+		},
+		{
+			"tmdb_id": 6039742,
+			"imdb_id": null,
+			"season_number": 0,
+			"episode_number": 34,
+			"name": "The Maomao Diaries: Poisoning",
+			"air_date": 1742169600000
+		},
+		{
+			"tmdb_id": 6039743,
+			"imdb_id": null,
+			"season_number": 0,
+			"episode_number": 35,
+			"name": "The Maomao Diaries: Soft-Shelled Turtle",
+			"air_date": 1742774400000
+		},
+		{
+			"tmdb_id": 6084978,
+			"imdb_id": null,
+			"season_number": 0,
+			"episode_number": 36,
+			"name": "The Maomao Diaries: Dog",
+			"air_date": 1743379200000
+		},
+		{
+			"tmdb_id": 6084979,
+			"imdb_id": null,
+			"season_number": 0,
+			"episode_number": 37,
+			"name": "The Maomao Diaries: Modesty",
+			"air_date": 1743984000000
+		},
+		{
+			"tmdb_id": 6084980,
+			"imdb_id": null,
+			"season_number": 0,
+			"episode_number": 38,
+			"name": "The Maomao Diaries: Magic Mirror and Secrets",
+			"air_date": 1744588800000
+		},
+		{
+			"tmdb_id": 6084981,
+			"imdb_id": null,
+			"season_number": 0,
+			"episode_number": 39,
+			"name": "The Maomao Diaries: Knowledgeable",
+			"air_date": 1745193600000
+		},
+		{
+			"tmdb_id": 6084982,
+			"imdb_id": null,
+			"season_number": 0,
+			"episode_number": 40,
+			"name": "The Maomao Diaries: Moxibustion",
+			"air_date": 1745798400000
+		},
+		{
+			"tmdb_id": 6197763,
+			"imdb_id": null,
+			"season_number": 0,
+			"episode_number": 41,
+			"name": "The Maomao Diaries: Two of a Kind?",
+			"air_date": 1746403200000
+		},
+		{
+			"tmdb_id": 6197764,
+			"imdb_id": null,
+			"season_number": 0,
+			"episode_number": 42,
+			"name": "The Maomao Diaries: Wicked",
+			"air_date": 1747008000000
+		},
+		{
+			"tmdb_id": 6197765,
+			"imdb_id": null,
+			"season_number": 0,
+			"episode_number": 43,
+			"name": "The Maomao Diaries: Side Effects",
+			"air_date": 1748217600000
+		},
+		{
+			"tmdb_id": 6197767,
+			"imdb_id": null,
+			"season_number": 0,
+			"episode_number": 44,
+			"name": "The Maomao Diaries: Composure",
+			"air_date": 1748822400000
+		},
+		{
+			"tmdb_id": 6294318,
+			"imdb_id": null,
+			"season_number": 0,
+			"episode_number": 45,
+			"name": "The Maomao Diaries: Monologuing",
+			"air_date": 1749427200000
+		},
+		{
+			"tmdb_id": 6298723,
+			"imdb_id": null,
+			"season_number": 0,
+			"episode_number": 46,
+			"name": "The Maomao Diaries: Hairpin",
+			"air_date": 1750032000000
+		},
+		{
+			"tmdb_id": 6322664,
+			"imdb_id": null,
+			"season_number": 0,
+			"episode_number": 47,
+			"name": "The Maomao Diaries: Investigate USJ! (1)",
+			"air_date": 1750291200000
+		},
+		{
+			"tmdb_id": 6338535,
+			"imdb_id": null,
+			"season_number": 0,
+			"episode_number": 48,
+			"name": "The Maomao Diaries: Investigate USJ! (2)",
+			"air_date": 1750896000000
+		},
+		{
+			"tmdb_id": 6349090,
+			"imdb_id": null,
+			"season_number": 0,
+			"episode_number": 49,
+			"name": "The Maomao Diaries: Friends",
+			"air_date": 1751241600000
+		},
+		{
+			"tmdb_id": 6363749,
+			"imdb_id": null,
+			"season_number": 0,
+			"episode_number": 50,
+			"name": "The Maomao Diaries: Masks",
+			"air_date": 1751846400000
+		},
+		{
+			"tmdb_id": 7909747,
+			"imdb_id": null,
+			"season_number": 0,
+			"episode_number": 51,
+			"name": "Episode 51",
+			"air_date": 1791158400000
+		},
+		{
+			"tmdb_id": 7937652,
+			"imdb_id": null,
+			"season_number": 0,
+			"episode_number": 52,
+			"name": "Episode 52",
+			"air_date": 1791763200000
+		},
+		{
+			"tmdb_id": 4237712,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 1,
+			"name": "Maomao",
+			"air_date": 1697932800000
+		},
+		{
+			"tmdb_id": 4680388,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 2,
+			"name": "Chilly Apothecary",
+			"air_date": 1697932800000
+		},
+		{
+			"tmdb_id": 4680389,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 3,
+			"name": "The Unsettling Matter of the Spirit",
+			"air_date": 1697932800000
+		},
+		{
+			"tmdb_id": 4698615,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 4,
+			"name": "The Threat",
+			"air_date": 1698537600000
+		},
+		{
+			"tmdb_id": 4698617,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 5,
+			"name": "Covert Operations",
+			"air_date": 1699142400000
+		},
+		{
+			"tmdb_id": 4698618,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 6,
+			"name": "The Garden Party",
+			"air_date": 1699747200000
+		},
+		{
+			"tmdb_id": 4698620,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 7,
+			"name": "Homecoming",
+			"air_date": 1700352000000
+		},
+		{
+			"tmdb_id": 4698622,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 8,
+			"name": "Wheat Stalks",
+			"air_date": 1700956800000
+		},
+		{
+			"tmdb_id": 4698624,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 9,
+			"name": "Suicide or Murder?",
+			"air_date": 1701561600000
+		},
+		{
+			"tmdb_id": 4698625,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 10,
+			"name": "Honey",
+			"air_date": 1702166400000
+		},
+		{
+			"tmdb_id": 4698626,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 11,
+			"name": "Reducing Two to One",
+			"air_date": 1702771200000
+		},
+		{
+			"tmdb_id": 4698629,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 12,
+			"name": "The Eunuch and the Courtesan",
+			"air_date": 1703376000000
+		},
+		{
+			"tmdb_id": 4835220,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 13,
+			"name": "Serving in the Outer Court",
+			"air_date": 1704585600000
+		},
+		{
+			"tmdb_id": 4835221,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 14,
+			"name": "The New Pure Consort",
+			"air_date": 1705190400000
+		},
+		{
+			"tmdb_id": 4835222,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 15,
+			"name": "Raw Fish",
+			"air_date": 1705795200000
+		},
+		{
+			"tmdb_id": 4835223,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 16,
+			"name": "Lead",
+			"air_date": 1706400000000
+		},
+		{
+			"tmdb_id": 4835224,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 17,
+			"name": "A Jaunt Around Town",
+			"air_date": 1707004800000
+		},
+		{
+			"tmdb_id": 4835225,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 18,
+			"name": "Lakan",
+			"air_date": 1707609600000
+		},
+		{
+			"tmdb_id": 4835226,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 19,
+			"name": "Chance or Something More",
+			"air_date": 1708214400000
+		},
+		{
+			"tmdb_id": 4835227,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 20,
+			"name": "Thornapple",
+			"air_date": 1708819200000
+		},
+		{
+			"tmdb_id": 4835228,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 21,
+			"name": "How to Buy Out a Contract",
+			"air_date": 1709424000000
+		},
+		{
+			"tmdb_id": 4835229,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 22,
+			"name": "Blue Roses",
+			"air_date": 1710028800000
+		},
+		{
+			"tmdb_id": 4835230,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 23,
+			"name": "Balsam and Woodsorrel",
+			"air_date": 1710633600000
+		},
+		{
+			"tmdb_id": 4835231,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 24,
+			"name": "Jinshi and Maomao",
+			"air_date": 1711238400000
+		},
+		{
+			"tmdb_id": 5892111,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 25,
+			"name": "Maomao and Maomao",
+			"air_date": 1736467200000
+		},
+		{
+			"tmdb_id": 5892112,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 26,
+			"name": "Caravan",
+			"air_date": 1737072000000
+		},
+		{
+			"tmdb_id": 5892113,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 27,
+			"name": "Corpse Fungus",
+			"air_date": 1737676800000
+		},
+		{
+			"tmdb_id": 5892114,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 28,
+			"name": "Mirror",
+			"air_date": 1738281600000
+		},
+		{
+			"tmdb_id": 5892115,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 29,
+			"name": "The Moon Fairy",
+			"air_date": 1738886400000
+		},
+		{
+			"tmdb_id": 5892116,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 30,
+			"name": "The Crystal Pavilion, for the Third Time",
+			"air_date": 1739491200000
+		},
+		{
+			"tmdb_id": 5892117,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 31,
+			"name": "The Shrine of Choosing",
+			"air_date": 1740096000000
+		},
+		{
+			"tmdb_id": 5892118,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 32,
+			"name": "The Empress Dowager",
+			"air_date": 1740700800000
+		},
+		{
+			"tmdb_id": 5892119,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 33,
+			"name": "The Late Emperor",
+			"air_date": 1741305600000
+		},
+		{
+			"tmdb_id": 5892120,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 34,
+			"name": "A Ghost Story",
+			"air_date": 1741910400000
+		},
+		{
+			"tmdb_id": 5892121,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 35,
+			"name": "The Hunt",
+			"air_date": 1742515200000
+		},
+		{
+			"tmdb_id": 5892122,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 36,
+			"name": "Ka Zuigetsu",
+			"air_date": 1743120000000
+		},
+		{
+			"tmdb_id": 5892123,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 37,
+			"name": "The Baths",
+			"air_date": 1743724800000
+		},
+		{
+			"tmdb_id": 5892124,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 38,
+			"name": "The Dancing Ghost",
+			"air_date": 1744329600000
+		},
+		{
+			"tmdb_id": 5892125,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 39,
+			"name": "Ice",
+			"air_date": 1744934400000
+		},
+		{
+			"tmdb_id": 5892126,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 40,
+			"name": "Festering Resentment",
+			"air_date": 1745539200000
+		},
+		{
+			"tmdb_id": 5892127,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 41,
+			"name": "The Fox Village",
+			"air_date": 1746144000000
+		},
+		{
+			"tmdb_id": 5892128,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 42,
+			"name": "Lantern Plant",
+			"air_date": 1746748800000
+		},
+		{
+			"tmdb_id": 5892129,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 43,
+			"name": "Festival",
+			"air_date": 1747958400000
+		},
+		{
+			"tmdb_id": 5892130,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 44,
+			"name": "The Stronghold",
+			"air_date": 1748563200000
+		},
+		{
+			"tmdb_id": 5892131,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 45,
+			"name": "Taibon",
+			"air_date": 1749168000000
+		},
+		{
+			"tmdb_id": 5892132,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 46,
+			"name": "Royal Guard",
+			"air_date": 1749772800000
+		},
+		{
+			"tmdb_id": 5892133,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 47,
+			"name": "The Shi Clan",
+			"air_date": 1750982400000
+		},
+		{
+			"tmdb_id": 5892134,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 48,
+			"name": "The Beginning",
+			"air_date": 1751587200000
+		},
+		{
+			"tmdb_id": 7810328,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 49,
+			"name": "Locusts",
+			"air_date": 1790899200000
+		},
+		{
+			"tmdb_id": 7810338,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 50,
+			"name": "The Fire-Rat Cloak",
+			"air_date": 1791504000000
+		},
+		{
+			"tmdb_id": 7810340,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 51,
+			"name": "Let Them Eat Cake",
+			"air_date": 1792108800000
+		},
+		{
+			"tmdb_id": 7810341,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 52,
+			"name": "The Last Volume",
+			"air_date": 1792713600000
+		},
+		{
+			"tmdb_id": 7810342,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 53,
+			"name": "Episode 53",
+			"air_date": 1793318400000
+		},
+		{
+			"tmdb_id": 7810343,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 54,
+			"name": "Episode 54",
+			"air_date": 1793923200000
+		},
+		{
+			"tmdb_id": 7810345,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 55,
+			"name": "Episode 55",
+			"air_date": 1794528000000
+		},
+		{
+			"tmdb_id": 7810349,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 56,
+			"name": "Episode 56",
+			"air_date": 1795132800000
+		},
+		{
+			"tmdb_id": 7810357,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 57,
+			"name": "Episode 57",
+			"air_date": 1795737600000
+		},
+		{
+			"tmdb_id": 7810361,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 58,
+			"name": "Episode 58",
+			"air_date": 1796342400000
+		},
+		{
+			"tmdb_id": 7810363,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 59,
+			"name": "Episode 59",
+			"air_date": 1796947200000
+		},
+		{
+			"tmdb_id": 7810366,
+			"imdb_id": null,
+			"season_number": 1,
+			"episode_number": 60,
+			"name": "Episode 60",
+			"air_date": 1797552000000
+		}
+	],
+	"imdb": [
+		{
+			"imdb_episode_id": "tt26743791",
+			"imdb_show_id": "tt26743760",
+			"season_number": 1,
+			"episode_number": 1,
+			"name": "Maomao",
+			"score": 7.7,
+			"votes": 1809
+		},
+		{
+			"imdb_episode_id": "tt28765100",
+			"imdb_show_id": "tt26743760",
+			"season_number": 1,
+			"episode_number": 2,
+			"name": "Buaisô na kusushi",
+			"score": 7.7,
+			"votes": 1608
+		},
+		{
+			"imdb_episode_id": "tt28765101",
+			"imdb_show_id": "tt26743760",
+			"season_number": 1,
+			"episode_number": 3,
+			"name": "Yûrei sôdô",
+			"score": 8.0,
+			"votes": 1649
+		},
+		{
+			"imdb_episode_id": "tt29582848",
+			"imdb_show_id": "tt26743760",
+			"season_number": 1,
+			"episode_number": 4,
+			"name": "Dôkatsu",
+			"score": 8.5,
+			"votes": 1669
+		},
+		{
+			"imdb_episode_id": "tt29609530",
+			"imdb_show_id": "tt26743760",
+			"season_number": 1,
+			"episode_number": 5,
+			"name": "Anyaku",
+			"score": 7.9,
+			"votes": 1471
+		},
+		{
+			"imdb_episode_id": "tt29609533",
+			"imdb_show_id": "tt26743760",
+			"season_number": 1,
+			"episode_number": 6,
+			"name": "Enyûkai",
+			"score": 8.3,
+			"votes": 1544
+		},
+		{
+			"imdb_episode_id": "tt29609534",
+			"imdb_show_id": "tt26743760",
+			"season_number": 1,
+			"episode_number": 7,
+			"name": "Satogaeri",
+			"score": 7.8,
+			"votes": 1401
+		},
+		{
+			"imdb_episode_id": "tt29609539",
+			"imdb_show_id": "tt26743760",
+			"season_number": 1,
+			"episode_number": 8,
+			"name": "Mugiwara",
+			"score": 8.1,
+			"votes": 1413
+		},
+		{
+			"imdb_episode_id": "tt29609538",
+			"imdb_show_id": "tt26743760",
+			"season_number": 1,
+			"episode_number": 9,
+			"name": "Jisatsu ka tasatsu ka",
+			"score": 7.7,
+			"votes": 1358
+		},
+		{
+			"imdb_episode_id": "tt29609537",
+			"imdb_show_id": "tt26743760",
+			"season_number": 1,
+			"episode_number": 10,
+			"name": "Hachimitsu",
+			"score": 7.8,
+			"votes": 1325
+		},
+		{
+			"imdb_episode_id": "tt29609540",
+			"imdb_show_id": "tt26743760",
+			"season_number": 1,
+			"episode_number": 11,
+			"name": "Futatsu o hitotsu ni",
+			"score": 8.7,
+			"votes": 1520
+		},
+		{
+			"imdb_episode_id": "tt29609541",
+			"imdb_show_id": "tt26743760",
+			"season_number": 1,
+			"episode_number": 12,
+			"name": "Kangan to gijo",
+			"score": 8.0,
+			"votes": 1340
+		},
+		{
+			"imdb_episode_id": "tt30192638",
+			"imdb_show_id": "tt26743760",
+			"season_number": 1,
+			"episode_number": 13,
+			"name": "Gaitei kinmu",
+			"score": 7.8,
+			"votes": 1289
+		},
+		{
+			"imdb_episode_id": "tt30192639",
+			"imdb_show_id": "tt26743760",
+			"season_number": 1,
+			"episode_number": 14,
+			"name": "Atarashii shukuhi",
+			"score": 7.6,
+			"votes": 1256
+		},
+		{
+			"imdb_episode_id": "tt30192642",
+			"imdb_show_id": "tt26743760",
+			"season_number": 1,
+			"episode_number": 15,
+			"name": "Namasu",
+			"score": 7.6,
+			"votes": 1246
+		},
+		{
+			"imdb_episode_id": "tt30192643",
+			"imdb_show_id": "tt26743760",
+			"season_number": 1,
+			"episode_number": 16,
+			"name": "Namari",
+			"score": 7.6,
+			"votes": 1226
+		},
+		{
+			"imdb_episode_id": "tt30192646",
+			"imdb_show_id": "tt26743760",
+			"season_number": 1,
+			"episode_number": 17,
+			"name": "Machi aruki",
+			"score": 7.9,
+			"votes": 1234
+		},
+		{
+			"imdb_episode_id": "tt30192651",
+			"imdb_show_id": "tt26743760",
+			"season_number": 1,
+			"episode_number": 18,
+			"name": "Lakan",
+			"score": 8.2,
+			"votes": 1301
+		},
+		{
+			"imdb_episode_id": "tt30192654",
+			"imdb_show_id": "tt26743760",
+			"season_number": 1,
+			"episode_number": 19,
+			"name": "Gûzen ka hitsuzen ka",
+			"score": 9.2,
+			"votes": 2067
+		},
+		{
+			"imdb_episode_id": "tt30192657",
+			"imdb_show_id": "tt26743760",
+			"season_number": 1,
+			"episode_number": 20,
+			"name": "Mandarage",
+			"score": 8.2,
+			"votes": 1247
+		},
+		{
+			"imdb_episode_id": "tt30192658",
+			"imdb_show_id": "tt26743760",
+			"season_number": 1,
+			"episode_number": 21,
+			"name": "Miuke sakusen",
+			"score": 7.8,
+			"votes": 1221
+		},
+		{
+			"imdb_episode_id": "tt30192660",
+			"imdb_show_id": "tt26743760",
+			"season_number": 1,
+			"episode_number": 22,
+			"name": "Aoi sôbi",
+			"score": 7.9,
+			"votes": 1228
+		},
+		{
+			"imdb_episode_id": "tt30192663",
+			"imdb_show_id": "tt26743760",
+			"season_number": 1,
+			"episode_number": 23,
+			"name": "Hôsenka to katabami",
+			"score": 8.9,
+			"votes": 1528
+		},
+		{
+			"imdb_episode_id": "tt30192667",
+			"imdb_show_id": "tt26743760",
+			"season_number": 1,
+			"episode_number": 24,
+			"name": "Jinshi to Maomao",
+			"score": 9.0,
+			"votes": 1598
+		},
+		{
+			"imdb_episode_id": "tt31887138",
+			"imdb_show_id": "tt26743760",
+			"season_number": 2,
+			"episode_number": 1,
+			"name": "Maomao and Maomao",
+			"score": 7.8,
+			"votes": 1202
+		},
+		{
+			"imdb_episode_id": "tt35427965",
+			"imdb_show_id": "tt26743760",
+			"season_number": 2,
+			"episode_number": 2,
+			"name": "Caravan",
+			"score": 7.9,
+			"votes": 1089
+		},
+		{
+			"imdb_episode_id": "tt35509005",
+			"imdb_show_id": "tt26743760",
+			"season_number": 2,
+			"episode_number": 3,
+			"name": "Corpse Fungus",
+			"score": 8.1,
+			"votes": 1083
+		},
+		{
+			"imdb_episode_id": "tt35635982",
+			"imdb_show_id": "tt26743760",
+			"season_number": 2,
+			"episode_number": 4,
+			"name": "Mirrors",
+			"score": 7.5,
+			"votes": 1049
+		},
+		{
+			"imdb_episode_id": "tt35659709",
+			"imdb_show_id": "tt26743760",
+			"season_number": 2,
+			"episode_number": 5,
+			"name": "Moon Fairy",
+			"score": 7.9,
+			"votes": 1079
+		},
+		{
+			"imdb_episode_id": "tt35677590",
+			"imdb_show_id": "tt26743760",
+			"season_number": 2,
+			"episode_number": 6,
+			"name": "The Crystal Pavilion, for the Third Time",
+			"score": 8.5,
+			"votes": 1096
+		},
+		{
+			"imdb_episode_id": "tt35871691",
+			"imdb_show_id": "tt26743760",
+			"season_number": 2,
+			"episode_number": 7,
+			"name": "The Shrine of Choosing",
+			"score": 8.5,
+			"votes": 1095
+		},
+		{
+			"imdb_episode_id": "tt35931477",
+			"imdb_show_id": "tt26743760",
+			"season_number": 2,
+			"episode_number": 8,
+			"name": "The Empress Dowager",
+			"score": 7.8,
+			"votes": 992
+		},
+		{
+			"imdb_episode_id": "tt36041603",
+			"imdb_show_id": "tt26743760",
+			"season_number": 2,
+			"episode_number": 9,
+			"name": "The Late Emperor",
+			"score": 8.4,
+			"votes": 1100
+		},
+		{
+			"imdb_episode_id": "tt36151297",
+			"imdb_show_id": "tt26743760",
+			"season_number": 2,
+			"episode_number": 10,
+			"name": "A Ghost Story",
+			"score": 7.5,
+			"votes": 1026
+		},
+		{
+			"imdb_episode_id": "tt36272593",
+			"imdb_show_id": "tt26743760",
+			"season_number": 2,
+			"episode_number": 11,
+			"name": "The Hunt",
+			"score": 8.9,
+			"votes": 1383
+		},
+		{
+			"imdb_episode_id": "tt36334412",
+			"imdb_show_id": "tt26743760",
+			"season_number": 2,
+			"episode_number": 12,
+			"name": "Moon Prince",
+			"score": 8.8,
+			"votes": 1154
+		},
+		{
+			"imdb_episode_id": "tt36335080",
+			"imdb_show_id": "tt26743760",
+			"season_number": 2,
+			"episode_number": 13,
+			"name": "The Baths",
+			"score": 7.4,
+			"votes": 944
+		},
+		{
+			"imdb_episode_id": "tt36335083",
+			"imdb_show_id": "tt26743760",
+			"season_number": 2,
+			"episode_number": 14,
+			"name": "The Dancing Ghost",
+			"score": 7.7,
+			"votes": 916
+		},
+		{
+			"imdb_episode_id": "tt36335084",
+			"imdb_show_id": "tt26743760",
+			"season_number": 2,
+			"episode_number": 15,
+			"name": "Ice",
+			"score": 7.9,
+			"votes": 916
+		},
+		{
+			"imdb_episode_id": "tt36335085",
+			"imdb_show_id": "tt26743760",
+			"season_number": 2,
+			"episode_number": 16,
+			"name": "Festering Resentment",
+			"score": 8.3,
+			"votes": 913
+		},
+		{
+			"imdb_episode_id": "tt36335087",
+			"imdb_show_id": "tt26743760",
+			"season_number": 2,
+			"episode_number": 17,
+			"name": "The Fox Village",
+			"score": 8.3,
+			"votes": 915
+		},
+		{
+			"imdb_episode_id": "tt36335091",
+			"imdb_show_id": "tt26743760",
+			"season_number": 2,
+			"episode_number": 18,
+			"name": "Lantern Plant",
+			"score": 8.7,
+			"votes": 959
+		},
+		{
+			"imdb_episode_id": "tt36335102",
+			"imdb_show_id": "tt26743760",
+			"season_number": 2,
+			"episode_number": 19,
+			"name": "Festival",
+			"score": 7.9,
+			"votes": 893
+		},
+		{
+			"imdb_episode_id": "tt36335092",
+			"imdb_show_id": "tt26743760",
+			"season_number": 2,
+			"episode_number": 20,
+			"name": "The Stronghold",
+			"score": 8.8,
+			"votes": 1039
+		},
+		{
+			"imdb_episode_id": "tt36335093",
+			"imdb_show_id": "tt26743760",
+			"season_number": 2,
+			"episode_number": 21,
+			"name": "Taibon",
+			"score": 9.1,
+			"votes": 1178
+		},
+		{
+			"imdb_episode_id": "tt36335095",
+			"imdb_show_id": "tt26743760",
+			"season_number": 2,
+			"episode_number": 22,
+			"name": "Royal Guard",
+			"score": 8.8,
+			"votes": 1022
+		},
+		{
+			"imdb_episode_id": "tt36335096",
+			"imdb_show_id": "tt26743760",
+			"season_number": 2,
+			"episode_number": 23,
+			"name": "The Shi Clan",
+			"score": 9.3,
+			"votes": 1474
+		},
+		{
+			"imdb_episode_id": "tt36335097",
+			"imdb_show_id": "tt26743760",
+			"season_number": 2,
+			"episode_number": 24,
+			"name": "The Beginning",
+			"score": 9.0,
+			"votes": 1220
+		},
+		{
+			"imdb_episode_id": "tt37529070",
+			"imdb_show_id": "tt26743760",
+			"season_number": 3,
+			"episode_number": 1,
+			"name": "Inago",
+			"score": 8.0,
+			"votes": 719
+		},
+		{
+			"imdb_episode_id": "tt48391343",
+			"imdb_show_id": "tt26743760",
+			"season_number": 3,
+			"episode_number": 2,
+			"name": "Hinezumi no Kawagoro",
+			"score": 8.1,
+			"votes": 367
+		},
+		{
+			"imdb_episode_id": "tt48391348",
+			"imdb_show_id": "tt26743760",
+			"season_number": 3,
+			"episode_number": 3,
+			"name": null,
+			"score": 8.2,
+			"votes": 166
+		}
+	],
+	"externalIds": [
+		{
+			"tmdbId": 4237712,
+			"season": 1,
+			"number": 1,
+			"name": "Maomao",
+			"imdbId": "tt26743791",
+			"airDate": "2023-10-22"
+		},
+		{
+			"tmdbId": 4680388,
+			"season": 1,
+			"number": 2,
+			"name": "Chilly Apothecary",
+			"imdbId": "tt28765100",
+			"airDate": "2023-10-22"
+		},
+		{
+			"tmdbId": 4680389,
+			"season": 1,
+			"number": 3,
+			"name": "The Unsettling Matter of the Spirit",
+			"imdbId": "tt28765101",
+			"airDate": "2023-10-22"
+		},
+		{
+			"tmdbId": 4698615,
+			"season": 1,
+			"number": 4,
+			"name": "The Threat",
+			"imdbId": "tt29582848",
+			"airDate": "2023-10-29"
+		},
+		{
+			"tmdbId": 4698617,
+			"season": 1,
+			"number": 5,
+			"name": "Covert Operations",
+			"imdbId": "tt29609530",
+			"airDate": "2023-11-05"
+		},
+		{
+			"tmdbId": 4698618,
+			"season": 1,
+			"number": 6,
+			"name": "The Garden Party",
+			"imdbId": "tt29609533",
+			"airDate": "2023-11-12"
+		},
+		{
+			"tmdbId": 4698620,
+			"season": 1,
+			"number": 7,
+			"name": "Homecoming",
+			"imdbId": "tt29609534",
+			"airDate": "2023-11-19"
+		},
+		{
+			"tmdbId": 4698622,
+			"season": 1,
+			"number": 8,
+			"name": "Wheat Stalks",
+			"imdbId": "tt29609539",
+			"airDate": "2023-11-26"
+		},
+		{
+			"tmdbId": 4698624,
+			"season": 1,
+			"number": 9,
+			"name": "Suicide or Murder?",
+			"imdbId": "tt29609538",
+			"airDate": "2023-12-03"
+		},
+		{
+			"tmdbId": 4698625,
+			"season": 1,
+			"number": 10,
+			"name": "Honey",
+			"imdbId": "tt29609537",
+			"airDate": "2023-12-10"
+		},
+		{
+			"tmdbId": 4698626,
+			"season": 1,
+			"number": 11,
+			"name": "Reducing Two to One",
+			"imdbId": "tt29609540",
+			"airDate": "2023-12-17"
+		},
+		{
+			"tmdbId": 4698629,
+			"season": 1,
+			"number": 12,
+			"name": "The Eunuch and the Courtesan",
+			"imdbId": "tt29609541",
+			"airDate": "2023-12-24"
+		},
+		{
+			"tmdbId": 4835220,
+			"season": 1,
+			"number": 13,
+			"name": "Serving in the Outer Court",
+			"imdbId": "tt30192638",
+			"airDate": "2024-01-07"
+		},
+		{
+			"tmdbId": 4835221,
+			"season": 1,
+			"number": 14,
+			"name": "The New Pure Consort",
+			"imdbId": "tt30192639",
+			"airDate": "2024-01-14"
+		},
+		{
+			"tmdbId": 4835222,
+			"season": 1,
+			"number": 15,
+			"name": "Raw Fish",
+			"imdbId": "tt30192642",
+			"airDate": "2024-01-21"
+		},
+		{
+			"tmdbId": 4835223,
+			"season": 1,
+			"number": 16,
+			"name": "Lead",
+			"imdbId": "tt30192643",
+			"airDate": "2024-01-28"
+		},
+		{
+			"tmdbId": 4835224,
+			"season": 1,
+			"number": 17,
+			"name": "A Jaunt Around Town",
+			"imdbId": "tt30192646",
+			"airDate": "2024-02-04"
+		},
+		{
+			"tmdbId": 4835225,
+			"season": 1,
+			"number": 18,
+			"name": "Lakan",
+			"imdbId": "tt30192651",
+			"airDate": "2024-02-11"
+		},
+		{
+			"tmdbId": 4835226,
+			"season": 1,
+			"number": 19,
+			"name": "Chance or Something More",
+			"imdbId": "tt30192654",
+			"airDate": "2024-02-18"
+		},
+		{
+			"tmdbId": 4835227,
+			"season": 1,
+			"number": 20,
+			"name": "Thornapple",
+			"imdbId": "tt30192657",
+			"airDate": "2024-02-25"
+		},
+		{
+			"tmdbId": 4835228,
+			"season": 1,
+			"number": 21,
+			"name": "How to Buy Out a Contract",
+			"imdbId": "tt30192658",
+			"airDate": "2024-03-03"
+		},
+		{
+			"tmdbId": 4835229,
+			"season": 1,
+			"number": 22,
+			"name": "Blue Roses",
+			"imdbId": "tt30192660",
+			"airDate": "2024-03-10"
+		},
+		{
+			"tmdbId": 4835230,
+			"season": 1,
+			"number": 23,
+			"name": "Balsam and Woodsorrel",
+			"imdbId": "tt30192663",
+			"airDate": "2024-03-17"
+		},
+		{
+			"tmdbId": 4835231,
+			"season": 1,
+			"number": 24,
+			"name": "Jinshi and Maomao",
+			"imdbId": "tt30192667",
+			"airDate": "2024-03-24"
+		},
+		{
+			"tmdbId": 5892111,
+			"season": 1,
+			"number": 25,
+			"name": "Maomao and Maomao",
+			"imdbId": "tt31887138",
+			"airDate": "2025-01-10"
+		},
+		{
+			"tmdbId": 5892112,
+			"season": 1,
+			"number": 26,
+			"name": "Caravan",
+			"imdbId": "tt35427965",
+			"airDate": "2025-01-17"
+		},
+		{
+			"tmdbId": 5892113,
+			"season": 1,
+			"number": 27,
+			"name": "Corpse Fungus",
+			"imdbId": "tt35509005",
+			"airDate": "2025-01-24"
+		},
+		{
+			"tmdbId": 5892114,
+			"season": 1,
+			"number": 28,
+			"name": "Mirror",
+			"imdbId": "tt35635982",
+			"airDate": "2025-01-31"
+		},
+		{
+			"tmdbId": 5892115,
+			"season": 1,
+			"number": 29,
+			"name": "The Moon Fairy",
+			"imdbId": "tt35659709",
+			"airDate": "2025-02-07"
+		},
+		{
+			"tmdbId": 5892116,
+			"season": 1,
+			"number": 30,
+			"name": "The Crystal Pavilion, for the Third Time",
+			"imdbId": "tt35677590",
+			"airDate": "2025-02-14"
+		},
+		{
+			"tmdbId": 5892117,
+			"season": 1,
+			"number": 31,
+			"name": "The Shrine of Choosing",
+			"imdbId": "tt35871691",
+			"airDate": "2025-02-21"
+		},
+		{
+			"tmdbId": 5892118,
+			"season": 1,
+			"number": 32,
+			"name": "The Empress Dowager",
+			"imdbId": "tt35931477",
+			"airDate": "2025-02-28"
+		},
+		{
+			"tmdbId": 5892119,
+			"season": 1,
+			"number": 33,
+			"name": "The Late Emperor",
+			"imdbId": "tt36041603",
+			"airDate": "2025-03-07"
+		},
+		{
+			"tmdbId": 5892120,
+			"season": 1,
+			"number": 34,
+			"name": "A Ghost Story",
+			"imdbId": "tt36151297",
+			"airDate": "2025-03-14"
+		},
+		{
+			"tmdbId": 5892121,
+			"season": 1,
+			"number": 35,
+			"name": "The Hunt",
+			"imdbId": "tt36272593",
+			"airDate": "2025-03-21"
+		},
+		{
+			"tmdbId": 5892122,
+			"season": 1,
+			"number": 36,
+			"name": "Ka Zuigetsu",
+			"imdbId": "tt36334412",
+			"airDate": "2025-03-28"
+		},
+		{
+			"tmdbId": 5892123,
+			"season": 1,
+			"number": 37,
+			"name": "The Baths",
+			"imdbId": "tt36335080",
+			"airDate": "2025-04-04"
+		},
+		{
+			"tmdbId": 5892124,
+			"season": 1,
+			"number": 38,
+			"name": "The Dancing Ghost",
+			"imdbId": "tt36335083",
+			"airDate": "2025-04-11"
+		},
+		{
+			"tmdbId": 5892125,
+			"season": 1,
+			"number": 39,
+			"name": "Ice",
+			"imdbId": "tt36335084",
+			"airDate": "2025-04-18"
+		},
+		{
+			"tmdbId": 5892126,
+			"season": 1,
+			"number": 40,
+			"name": "Festering Resentment",
+			"imdbId": "tt36335085",
+			"airDate": "2025-04-25"
+		},
+		{
+			"tmdbId": 5892127,
+			"season": 1,
+			"number": 41,
+			"name": "The Fox Village",
+			"imdbId": "tt36335087",
+			"airDate": "2025-05-02"
+		},
+		{
+			"tmdbId": 5892128,
+			"season": 1,
+			"number": 42,
+			"name": "Lantern Plant",
+			"imdbId": "tt36335091",
+			"airDate": "2025-05-09"
+		},
+		{
+			"tmdbId": 5892129,
+			"season": 1,
+			"number": 43,
+			"name": "Festival",
+			"imdbId": "tt36335102",
+			"airDate": "2025-05-23"
+		},
+		{
+			"tmdbId": 5892130,
+			"season": 1,
+			"number": 44,
+			"name": "The Stronghold",
+			"imdbId": "tt36335092",
+			"airDate": "2025-05-30"
+		},
+		{
+			"tmdbId": 5892131,
+			"season": 1,
+			"number": 45,
+			"name": "Taibon",
+			"imdbId": "tt36335093",
+			"airDate": "2025-06-06"
+		},
+		{
+			"tmdbId": 5892132,
+			"season": 1,
+			"number": 46,
+			"name": "Royal Guard",
+			"imdbId": "tt36335095",
+			"airDate": "2025-06-13"
+		},
+		{
+			"tmdbId": 5892133,
+			"season": 1,
+			"number": 47,
+			"name": "The Shi Clan",
+			"imdbId": "tt36335096",
+			"airDate": "2025-06-27"
+		},
+		{
+			"tmdbId": 5892134,
+			"season": 1,
+			"number": 48,
+			"name": "The Beginning",
+			"imdbId": "tt36335097",
+			"airDate": "2025-07-04"
+		},
+		{
+			"tmdbId": 7810328,
+			"season": 1,
+			"number": 49,
+			"name": "Locusts",
+			"imdbId": "tt37529070",
+			"airDate": "2026-10-02"
+		},
+		{
+			"tmdbId": 7810338,
+			"season": 1,
+			"number": 50,
+			"name": "The Fire-Rat Cloak",
+			"imdbId": "tt48391343",
+			"airDate": "2026-10-09"
+		},
+		{
+			"tmdbId": 7810340,
+			"season": 1,
+			"number": 51,
+			"name": "Let Them Eat Cake",
+			"imdbId": "tt48391348",
+			"airDate": "2026-10-16"
+		},
+		{
+			"tmdbId": 7810341,
+			"season": 1,
+			"number": 52,
+			"name": "The Last Volume",
+			"imdbId": "tt48391354",
+			"airDate": "2026-10-23"
+		},
+		{
+			"tmdbId": 7810342,
+			"season": 1,
+			"number": 53,
+			"name": "Episode 53",
+			"imdbId": "tt48391356",
+			"airDate": "2026-10-30"
+		},
+		{
+			"tmdbId": 7810343,
+			"season": 1,
+			"number": 54,
+			"name": "Episode 54",
+			"imdbId": "tt48391364",
+			"airDate": "2026-11-06"
+		},
+		{
+			"tmdbId": 7810345,
+			"season": 1,
+			"number": 55,
+			"name": "Episode 55",
+			"imdbId": null,
+			"airDate": "2026-11-13"
+		},
+		{
+			"tmdbId": 7810349,
+			"season": 1,
+			"number": 56,
+			"name": "Episode 56",
+			"imdbId": null,
+			"airDate": "2026-11-20"
+		},
+		{
+			"tmdbId": 7810357,
+			"season": 1,
+			"number": 57,
+			"name": "Episode 57",
+			"imdbId": null,
+			"airDate": "2026-11-27"
+		},
+		{
+			"tmdbId": 7810361,
+			"season": 1,
+			"number": 58,
+			"name": "Episode 58",
+			"imdbId": null,
+			"airDate": "2026-12-04"
+		},
+		{
+			"tmdbId": 7810363,
+			"season": 1,
+			"number": 59,
+			"name": "Episode 59",
+			"imdbId": null,
+			"airDate": "2026-12-11"
+		},
+		{
+			"tmdbId": 7810366,
+			"season": 1,
+			"number": 60,
+			"name": "Episode 60",
+			"imdbId": null,
+			"airDate": "2026-12-18"
+		}
+	],
+	"parentId": "tt26743760",
+	"seasonGroup": {
+		"id": "6782169d78cfcd77ed4e89be",
+		"groups": [
+			{
+				"name": "Season 1",
+				"order": 1,
+				"episodes": [
+					{
+						"id": 4237712,
+						"order": 0
+					},
+					{
+						"id": 4680388,
+						"order": 1
+					},
+					{
+						"id": 4680389,
+						"order": 2
+					},
+					{
+						"id": 4698615,
+						"order": 3
+					},
+					{
+						"id": 4698617,
+						"order": 4
+					},
+					{
+						"id": 4698618,
+						"order": 5
+					},
+					{
+						"id": 4698620,
+						"order": 6
+					},
+					{
+						"id": 4698622,
+						"order": 7
+					},
+					{
+						"id": 4698624,
+						"order": 8
+					},
+					{
+						"id": 4698625,
+						"order": 9
+					},
+					{
+						"id": 4698626,
+						"order": 10
+					},
+					{
+						"id": 4698629,
+						"order": 11
+					},
+					{
+						"id": 4835220,
+						"order": 12
+					},
+					{
+						"id": 4835221,
+						"order": 13
+					},
+					{
+						"id": 4835222,
+						"order": 14
+					},
+					{
+						"id": 4835223,
+						"order": 15
+					},
+					{
+						"id": 4835224,
+						"order": 16
+					},
+					{
+						"id": 4835225,
+						"order": 17
+					},
+					{
+						"id": 4835226,
+						"order": 18
+					},
+					{
+						"id": 4835227,
+						"order": 19
+					},
+					{
+						"id": 4835228,
+						"order": 20
+					},
+					{
+						"id": 4835229,
+						"order": 21
+					},
+					{
+						"id": 4835230,
+						"order": 22
+					},
+					{
+						"id": 4835231,
+						"order": 23
+					}
+				]
+			},
+			{
+				"name": "Season 2",
+				"order": 2,
+				"episodes": [
+					{
+						"id": 5892111,
+						"order": 0
+					},
+					{
+						"id": 5892112,
+						"order": 1
+					},
+					{
+						"id": 5892113,
+						"order": 2
+					},
+					{
+						"id": 5892114,
+						"order": 3
+					},
+					{
+						"id": 5892115,
+						"order": 4
+					},
+					{
+						"id": 5892116,
+						"order": 5
+					},
+					{
+						"id": 5892117,
+						"order": 6
+					},
+					{
+						"id": 5892118,
+						"order": 7
+					},
+					{
+						"id": 5892119,
+						"order": 8
+					},
+					{
+						"id": 5892120,
+						"order": 9
+					},
+					{
+						"id": 5892121,
+						"order": 10
+					},
+					{
+						"id": 5892122,
+						"order": 11
+					},
+					{
+						"id": 5892123,
+						"order": 12
+					},
+					{
+						"id": 5892124,
+						"order": 13
+					},
+					{
+						"id": 5892125,
+						"order": 14
+					},
+					{
+						"id": 5892126,
+						"order": 15
+					},
+					{
+						"id": 5892127,
+						"order": 16
+					},
+					{
+						"id": 5892128,
+						"order": 17
+					},
+					{
+						"id": 5892129,
+						"order": 18
+					},
+					{
+						"id": 5892130,
+						"order": 19
+					},
+					{
+						"id": 5892131,
+						"order": 20
+					},
+					{
+						"id": 5892132,
+						"order": 21
+					},
+					{
+						"id": 5892133,
+						"order": 22
+					},
+					{
+						"id": 5892134,
+						"order": 23
+					}
+				]
+			},
+			{
+				"name": "Specials",
+				"order": 0,
+				"episodes": [
+					{
+						"id": 4872352,
+						"order": 0
+					},
+					{
+						"id": 4872354,
+						"order": 1
+					},
+					{
+						"id": 4872357,
+						"order": 2
+					},
+					{
+						"id": 4896174,
+						"order": 3
+					},
+					{
+						"id": 4896176,
+						"order": 4
+					},
+					{
+						"id": 4896177,
+						"order": 5
+					},
+					{
+						"id": 4896178,
+						"order": 6
+					},
+					{
+						"id": 4896179,
+						"order": 7
+					},
+					{
+						"id": 4896180,
+						"order": 8
+					},
+					{
+						"id": 4896181,
+						"order": 9
+					},
+					{
+						"id": 4896186,
+						"order": 10
+					},
+					{
+						"id": 4896188,
+						"order": 11
+					},
+					{
+						"id": 4896189,
+						"order": 12
+					},
+					{
+						"id": 4896190,
+						"order": 13
+					},
+					{
+						"id": 4896191,
+						"order": 14
+					},
+					{
+						"id": 4896192,
+						"order": 15
+					},
+					{
+						"id": 4896193,
+						"order": 16
+					},
+					{
+						"id": 4896194,
+						"order": 17
+					},
+					{
+						"id": 4896195,
+						"order": 18
+					},
+					{
+						"id": 4896196,
+						"order": 19
+					},
+					{
+						"id": 4896197,
+						"order": 20
+					},
+					{
+						"id": 4896198,
+						"order": 21
+					},
+					{
+						"id": 4896199,
+						"order": 22
+					},
+					{
+						"id": 4896200,
+						"order": 23
+					},
+					{
+						"id": 5897959,
+						"order": 24
+					},
+					{
+						"id": 5898531,
+						"order": 25
+					},
+					{
+						"id": 5898532,
+						"order": 26
+					},
+					{
+						"id": 5944901,
+						"order": 27
+					},
+					{
+						"id": 5944902,
+						"order": 28
+					},
+					{
+						"id": 5944903,
+						"order": 29
+					},
+					{
+						"id": 5989765,
+						"order": 30
+					},
+					{
+						"id": 5989766,
+						"order": 31
+					},
+					{
+						"id": 5989768,
+						"order": 32
+					},
+					{
+						"id": 6039742,
+						"order": 33
+					},
+					{
+						"id": 6039743,
+						"order": 34
+					},
+					{
+						"id": 6084978,
+						"order": 35
+					},
+					{
+						"id": 6084979,
+						"order": 36
+					},
+					{
+						"id": 6084980,
+						"order": 37
+					},
+					{
+						"id": 6084981,
+						"order": 38
+					},
+					{
+						"id": 6084982,
+						"order": 39
+					},
+					{
+						"id": 6197763,
+						"order": 40
+					},
+					{
+						"id": 6197764,
+						"order": 41
+					},
+					{
+						"id": 6197765,
+						"order": 42
+					},
+					{
+						"id": 6197767,
+						"order": 43
+					},
+					{
+						"id": 6294318,
+						"order": 44
+					},
+					{
+						"id": 6298723,
+						"order": 45
+					},
+					{
+						"id": 6322664,
+						"order": 46
+					},
+					{
+						"id": 6338535,
+						"order": 47
+					},
+					{
+						"id": 6349090,
+						"order": 48
+					},
+					{
+						"id": 6363749,
+						"order": 49
+					}
+				]
+			},
+			{
+				"name": "Season 3",
+				"order": 3,
+				"episodes": [
+					{
+						"id": 7810328,
+						"order": 0
+					},
+					{
+						"id": 7810338,
+						"order": 1
+					},
+					{
+						"id": 7810340,
+						"order": 2
+					},
+					{
+						"id": 7810341,
+						"order": 3
+					},
+					{
+						"id": 7810342,
+						"order": 4
+					},
+					{
+						"id": 7810343,
+						"order": 5
+					},
+					{
+						"id": 7810345,
+						"order": 6
+					},
+					{
+						"id": 7810349,
+						"order": 7
+					},
+					{
+						"id": 7810357,
+						"order": 8
+					},
+					{
+						"id": 7810361,
+						"order": 9
+					},
+					{
+						"id": 7810363,
+						"order": 10
+					},
+					{
+						"id": 7810366,
+						"order": 11
+					}
+				]
+			}
+		]
+	}
+}

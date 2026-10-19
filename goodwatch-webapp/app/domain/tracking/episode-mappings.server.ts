@@ -1,4 +1,5 @@
 // Opt-in, reviewed identity mappings. Source: docs/research/season-episode-scores/episode-alignment-audit.md.
+import { APOTHECARY_DIARIES_MAPPING } from "./apothecary-mapping.server.ts"
 import type { EpisodeMapping } from "./episode-presentation.ts"
 
 export const MF_GHOST_MAPPING: EpisodeMapping = {
@@ -479,6 +480,6 @@ export const DARK_MAPPING: EpisodeMapping = {
 }
 
 export const episodeMapping = (showId: number): EpisodeMapping | null =>
-	[MF_GHOST_MAPPING, DARK_MAPPING].find(
+	[MF_GHOST_MAPPING, DARK_MAPPING, APOTHECARY_DIARIES_MAPPING].find(
 		(mapping) => mapping.showId === showId,
 	) ?? null

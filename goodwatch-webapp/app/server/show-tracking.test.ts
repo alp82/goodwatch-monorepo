@@ -1260,3 +1260,79 @@ test("Dark keeps all 26 ratings when the initial IMDb grid becomes the tracking 
 	)
 	assert.deepEqual(page.log, [])
 })
+
+test("The Apothecary Diaries keeps 51 ratings in three seasons in the tracking grid", async () => {
+	const fixture = JSON.parse(readFileSync(new URL(
+		"../domain/tracking/fixtures/apothecary-episodes.json", import.meta.url,
+	), "utf8"))
+	const showId = 220542
+	db.seed("show", [{ tmdb_id: showId, status: "Returning Series" }])
+	db.seed("episode", fixture.catalog.map((e: Row) => ({
+		...episode(Number(e.tmdb_id), Number(e.season_number), Number(e.episode_number), String(e.name), Number(e.air_date)),
+		...e, show_id: showId,
+	})))
+	db.seed("imdb_episode", fixture.imdb.map((e: Row) => ({
+		...e, show_id: showId,
+		imdb_user_score_original: e.score,
+		imdb_user_score_rating_count: e.votes,
+	})))
+	const initial: EpisodeGrid = {
+		showId, maxEpisodeNumber: 24, hasEpisodeZero: false,
+		specials: [], providers: ["imdb"],
+		seasons: [1, 2, 3].map((number) => ({
+			number, maxEpisodeNumber: number === 3 ? 3 : 24, scores: none,
+			episodes: fixture.imdb.filter((e: Row) => e.season_number === number).map((e: Row) => ({
+				number: Number(e.episode_number), name: String(e.name),
+				score: Number(e.score), votes: Number(e.votes),
+			})),
+		})),
+	}
+	const page = await getShowTrackingPage(user, showId, async () => initial)
+	const regular = page.episodes.filter((e) => e.season > 0)
+	assert.equal(regular.filter((e) => e.rating !== null).length, 51)
+	assert.deepEqual([...new Set(regular.map((e) => e.displaySeason))].filter((s) => s !== undefined && s > 0), [1, 2, 3])
+	assert.equal(page.presentation?.active, true)
+	assert.equal(page.episodes.length, fixture.catalog.length)
+	assert.equal(page.episodes.filter((e) => e.season === 0).length, 52)
+	assert.equal(regular.filter((e) => e.displaySeason === -1).length, 9)
+	assert.ok(regular.filter((e) => e.displaySeason === -1).every((e) => e.rating === null))
+	const { APOTHECARY_DIARIES_MAPPING } = await import("../domain/tracking/apothecary-mapping.server.ts")
+	for (const entry of APOTHECARY_DIARIES_MAPPING.entries) {
+		const proof = fixture.externalIds.find((e: Row) => e.tmdbId === entry.id)
+		assert.ok(proof)
+		assert.equal(proof.imdbId, entry.imdbId)
+		assert.deepEqual([proof.season, proof.number], entry.canonical)
+		const group = fixture.seasonGroup.groups.find((g: Row) => g.order === entry.display[0])
+		assert.ok(group)
+		assert.equal(group.episodes.find((e: Row) => e.id === entry.id)?.order + 1, entry.display[1])
+		const source = fixture.imdb.find((e: Row) => e.imdb_episode_id === entry.imdbId)
+		assert.equal(source.imdb_show_id, APOTHECARY_DIARIES_MAPPING.imdbParentId)
+		assert.equal(regular.find((e) => e.id === entry.id)?.rating, source.score)
+	}
+	// Both page variants read the same presentation, not two independent rating matches.
+	const { getEpisodeGrid } = await import("./episode-grid.server.ts")
+	const guest = await getEpisodeGrid({ showId: String(showId) })
+	assert.ok(guest)
+	assert.equal(guest.presentationVersion, page.presentation?.version)
+	assert.deepEqual(guest.seasons.map((s) => [s.number, s.episodes.length]), [[1, 24], [2, 24], [3, 3], [-1, 9]])
+	for (const season of guest.seasons) {
+		for (const tile of season.episodes) {
+			const tracked = page.episodes.find((e) => e.id === tile.tmdbId)
+			assert.ok(tracked)
+			assert.equal(tracked.displaySeason, season.number)
+			assert.equal(tracked.displayNumber, tile.number)
+			assert.equal(tracked.rating, tile.unrated ? null : tile.score)
+		}
+	}
+	// Marking displayed S2 still writes the original catalog S1 E25-E48.
+	const action = parseShowAction({ id: showId, actionId: "apothecary-season-2", event: {
+		type: "markEpisodes", displaySeason: 2,
+		episodeIds: regular.filter((e) => e.displaySeason === 2).map((e) => e.id),
+		presentationVersion: page.presentation!.version, today: "2026-10-19",
+	} })
+	assert.ok(action)
+	const marked = await applyShowTrackingAction(user, action)
+	assert.equal(marked.status, "applied")
+	assert.equal(marked.rows.length, 24)
+	assert.ok(marked.rows.every((r) => r.season_number === 1 && r.episode_number! >= 25 && r.episode_number! <= 48))
+})
