@@ -1,0 +1,1733 @@
+{
+  "scope": "All 42,936 inventory names computationally screened; representative ranked/domain label lists and supplied stored contexts inspected semantically. Not all labels independently defined or fact-checked. Stored title associations may describe subversion/aversion rather than positive trope occurrence.",
+  "sources": [
+    "tropes-inventory-all.json",
+    "tropes-stored-examples.json",
+    "recommended-changes.json",
+    "../../design/fingerprint-v2/llm-definition.json",
+    "../../design/fingerprint-v2/definition.json"
+  ],
+  "proposals": [
+    {
+      "id": "blackmail_extortion",
+      "delta_against_previous_recommendations": "new concrete subject",
+      "concepts": [
+        "blackmail",
+        "extortion",
+        "protection_racket",
+        "predatory_lending"
+      ],
+      "stored_labels": [
+        {
+          "name": "Blackmail",
+          "title_count": 1365,
+          "movie_title_count": 1032,
+          "show_title_count": 333
+        },
+        {
+          "name": "Sexual Extortion",
+          "title_count": 158,
+          "movie_title_count": 118,
+          "show_title_count": 40
+        },
+        {
+          "name": "Protection Racket",
+          "title_count": 32,
+          "movie_title_count": 16,
+          "show_title_count": 16
+        },
+        {
+          "name": "Loan Shark",
+          "title_count": 284,
+          "movie_title_count": 204,
+          "show_title_count": 80
+        }
+      ],
+      "sample_queries": [
+        "thrillers about blackmail without a kidnapping",
+        "crime stories about protection rackets",
+        "someone escapes a predatory lender"
+      ],
+      "existing_overlap": [
+        "themes.crime_centrality",
+        "themes.trust_and_betrayal_centrality",
+        "relationships.coercive_relationship_centrality"
+      ],
+      "why_not_equivalent": "A threat to reveal information differs from bodily captivity, generic deception and sexual violence. Debt and protection rackets are distinct mechanisms.",
+      "representation": "Sparse typed concepts, with source evidence and participant/event/scope binding when needed.",
+      "evidence_level": "Representative stored work-specific contexts inspected; do not infer canonical universal definition.",
+      "stored_contexts": [
+        {
+          "name": "Blackmail",
+          "url": "https://tvtropes.orghttps://tvtropes.org/pmwiki/pmwiki.php/Main/Blackmail",
+          "media_type": "movie",
+          "tmdb_id": 99946,
+          "title": "Exit Smiling",
+          "excerpt_text": "Another evil-doer threatens Watson, telling him that if Watson doesn't pay him money owed, he will reveal Watson's frame job that implicated Jimmy in embezzlement. Violet sets out to interrupt their rendezvous, hoping to cause the blackmailer to expose Watson and clear Jimmy's name."
+        }
+      ],
+      "spoiler_sensitive": false
+    },
+    {
+      "id": "frameup_scapegoating",
+      "delta_against_previous_recommendations": "new concrete subject",
+      "concepts": [
+        "frame_up",
+        "false_accusation",
+        "scapegoating"
+      ],
+      "stored_labels": [
+        {
+          "name": "Frame-Up",
+          "title_count": 1135,
+          "movie_title_count": 762,
+          "show_title_count": 373
+        },
+        {
+          "name": "The Scapegoat",
+          "title_count": 435,
+          "movie_title_count": 290,
+          "show_title_count": 145
+        },
+        {
+          "name": "Promoted to Scapegoat",
+          "title_count": 36,
+          "movie_title_count": 18,
+          "show_title_count": 18
+        }
+      ],
+      "sample_queries": [
+        "an innocent person framed for murder",
+        "a scapegoat clears their name",
+        "a company blames one employee for its crimes"
+      ],
+      "existing_overlap": [
+        "themes.justice_centrality",
+        "prior sparse wrongful-conviction discussion",
+        "themes.trust_and_betrayal_centrality"
+      ],
+      "why_not_equivalent": "Being falsely blamed can occur before trial or outside criminal law; wrongful conviction is a narrower legal outcome.",
+      "representation": "Sparse typed concepts, with source evidence and participant/event/scope binding when needed.",
+      "evidence_level": "Inventory-label hypothesis only; no matching stored excerpt inspected.",
+      "stored_contexts": [],
+      "spoiler_sensitive": true
+    },
+    {
+      "id": "witness_protection",
+      "delta_against_previous_recommendations": "new concrete premise",
+      "concepts": [
+        "witness_protection",
+        "witness_tampering"
+      ],
+      "stored_labels": [
+        {
+          "name": "Witness Protection",
+          "title_count": 104,
+          "movie_title_count": 57,
+          "show_title_count": 47
+        },
+        {
+          "name": "Jury and Witness Tampering",
+          "title_count": 74,
+          "movie_title_count": 41,
+          "show_title_count": 33
+        },
+        {
+          "name": "Leave No Witnesses",
+          "title_count": 408,
+          "movie_title_count": 355,
+          "show_title_count": 53
+        }
+      ],
+      "sample_queries": [
+        "a witness starting over under a new identity",
+        "courtroom stories about intimidation of witnesses"
+      ],
+      "existing_overlap": [
+        "tropes.secret_identity_centrality",
+        "narrative_engines.legal_case_centrality",
+        "prior undercover_infiltration"
+      ],
+      "why_not_equivalent": "Protected testimony differs from voluntary secret identity and undercover investigation. Witness tampering should identify the threat/action, not just presumed crime.",
+      "representation": "Sparse typed concepts, with source evidence and participant/event/scope binding when needed.",
+      "evidence_level": "Inventory-label hypothesis only; no matching stored excerpt inspected.",
+      "stored_contexts": [],
+      "spoiler_sensitive": false
+    },
+    {
+      "id": "hostage_bargaining",
+      "delta_against_previous_recommendations": "refines existing advisory into premise",
+      "concepts": [
+        "hostage_negotiation",
+        "hostage_leverage",
+        "siege"
+      ],
+      "stored_labels": [
+        {
+          "name": "Hostage Situation",
+          "title_count": 425,
+          "movie_title_count": 271,
+          "show_title_count": 154
+        },
+        {
+          "name": "Hostage for MacGuffin",
+          "title_count": 274,
+          "movie_title_count": 208,
+          "show_title_count": 66
+        },
+        {
+          "name": "The Siege",
+          "title_count": 274,
+          "movie_title_count": 229,
+          "show_title_count": 45
+        },
+        {
+          "name": "Human Shield",
+          "title_count": 433,
+          "movie_title_count": 370,
+          "show_title_count": 63
+        }
+      ],
+      "sample_queries": [
+        "hostage negotiation without a rescue shootout",
+        "a hostage crisis inside a bank",
+        "a siege with civilians trapped inside"
+      ],
+      "existing_overlap": [
+        "advisory_topics.kidnapping_and_confinement",
+        "narrative_engines.rescue_centrality",
+        "narrative_engines.escape_centrality",
+        "prior diplomacy and confined settings"
+      ],
+      "why_not_equivalent": "A hostage is held as leverage; confinement alone does not establish bargaining, negotiators or a siege.",
+      "representation": "Sparse typed concepts, with source evidence and participant/event/scope binding when needed.",
+      "evidence_level": "Representative stored work-specific contexts inspected; do not infer canonical universal definition.",
+      "stored_contexts": [
+        {
+          "name": "Hostage Situation",
+          "url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/HostageSituation",
+          "media_type": "movie",
+          "tmdb_id": 446916,
+          "title": "Hold Up",
+          "excerpt_text": "Grimm takes 30 people hostage inside the bank. His two accomplices pass as hostage bank customers."
+        },
+        {
+          "name": "Hostage Situation",
+          "url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/HostageSituation",
+          "media_type": "movie",
+          "tmdb_id": 448841,
+          "title": "Roller Coaster",
+          "excerpt_text": "The Young Man is confronted by Caulder and a team of FBI agents at gunpoint, but the Young Man initially holds the upper hand, with his finger on a radio detonator to blow up the roller coaster ride currently on the rails. The Young Man demands a gun and says he's going to take Caulder as a hostage to get away from the park. As Caulder is handing him a gun, Hoyt announces that they have jammed the Young Man's radio frequency, and Caulder wounds the Young Man while they grapple for the gun. The Young Man takes off with FBI agents in hot pursuit."
+        },
+        {
+          "name": "Hostage Situation",
+          "url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/HostageSituation",
+          "media_type": "movie",
+          "tmdb_id": 574539,
+          "title": "Graduation",
+          "excerpt_text": "After the plan comes unstuck, and Carl gets shot by Chauncey, Jackson fakes a hostage situation to buy time and allow him to smuggle Carl and Suzie out of the bank under the guise of pretending to release hostages."
+        },
+        {
+          "name": "Human Shield",
+          "url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/HumanShield",
+          "media_type": "movie",
+          "tmdb_id": 487672,
+          "title": "Reign of the Supermen",
+          "excerpt_text": "When the Eradicator shows up to eliminate Lex for his crimes, Lex thanks Mercy then tosses her in the path of the first beam before running like hell."
+        }
+      ],
+      "spoiler_sensitive": false
+    },
+    {
+      "id": "death_row",
+      "delta_against_previous_recommendations": "new setting and institutional situation",
+      "concepts": [
+        "death_row",
+        "capital_punishment"
+      ],
+      "stored_labels": [
+        {
+          "name": "Death Row",
+          "title_count": 37,
+          "movie_title_count": 28,
+          "show_title_count": 9
+        }
+      ],
+      "sample_queries": [
+        "dramas about people awaiting execution",
+        "debates about the death penalty without a prison escape"
+      ],
+      "existing_overlap": [
+        "settings.prison_centrality",
+        "themes.justice_centrality",
+        "prior wrongful conviction"
+      ],
+      "why_not_equivalent": "Prison, impending death and execution by the state are different searchable concerns.",
+      "representation": "Sparse typed concepts, with source evidence and participant/event/scope binding when needed.",
+      "evidence_level": "Inventory-label hypothesis only; no matching stored excerpt inspected.",
+      "stored_contexts": [],
+      "spoiler_sensitive": false
+    },
+    {
+      "id": "genocide",
+      "delta_against_previous_recommendations": "new specific social theme",
+      "concepts": [
+        "genocide",
+        "genocide_survival"
+      ],
+      "stored_labels": [
+        {
+          "name": "Would Be Rude to Say \"Genocide\"",
+          "title_count": 144,
+          "movie_title_count": 134,
+          "show_title_count": 10
+        },
+        {
+          "name": "Genocide Survivor",
+          "title_count": 51,
+          "movie_title_count": 28,
+          "show_title_count": 23
+        },
+        {
+          "name": "Genocide Dilemma",
+          "title_count": 15,
+          "movie_title_count": 9,
+          "show_title_count": 6
+        }
+      ],
+      "sample_queries": [
+        "stories about survivors of genocide",
+        "science fiction about an attempted genocide"
+      ],
+      "existing_overlap": [
+        "themes.war_centrality",
+        "themes.racism_centrality",
+        "themes.displacement_centrality"
+      ],
+      "why_not_equivalent": "War, prejudice or migration alone does not establish organized destruction of a group. Do not promote a euphemism label into a confirmed event without context.",
+      "representation": "Sparse typed concepts, with source evidence and participant/event/scope binding when needed.",
+      "evidence_level": "Inventory-label hypothesis only; no matching stored excerpt inspected.",
+      "stored_contexts": [],
+      "spoiler_sensitive": false
+    },
+    {
+      "id": "child_soldiers",
+      "delta_against_previous_recommendations": "new specific role subject",
+      "concepts": [
+        "child_soldier",
+        "forced_recruitment"
+      ],
+      "stored_labels": [
+        {
+          "name": "Child Soldiers",
+          "title_count": 419,
+          "movie_title_count": 307,
+          "show_title_count": 112
+        },
+        {
+          "name": "Child Soldier",
+          "title_count": 84,
+          "movie_title_count": 50,
+          "show_title_count": 34
+        },
+        {
+          "name": "Press-Ganged",
+          "title_count": 28,
+          "movie_title_count": 16,
+          "show_title_count": 12
+        }
+      ],
+      "sample_queries": [
+        "child soldiers escaping an armed group",
+        "forced recruitment into a navy"
+      ],
+      "existing_overlap": [
+        "characters.child_protagonist_centrality",
+        "characters.child_agency_centrality",
+        "occupations.military_centrality",
+        "prior forced_labor"
+      ],
+      "why_not_equivalent": "Bind child identity and armed role to the same participant; child presence plus warfare cannot establish this.",
+      "representation": "Sparse typed concepts, with source evidence and participant/event/scope binding when needed.",
+      "evidence_level": "Inventory-label hypothesis only; no matching stored excerpt inspected.",
+      "stored_contexts": [],
+      "spoiler_sensitive": false
+    },
+    {
+      "id": "cannibalism",
+      "delta_against_previous_recommendations": "new specific content and advisory subject",
+      "concepts": [
+        "cannibalism",
+        "autocannibalism"
+      ],
+      "stored_labels": [
+        {
+          "name": "Cannibal Clan",
+          "title_count": 156,
+          "movie_title_count": 142,
+          "show_title_count": 14
+        },
+        {
+          "name": "Cannibal Larder",
+          "title_count": 89,
+          "movie_title_count": 74,
+          "show_title_count": 15
+        },
+        {
+          "name": "Autocannibalism",
+          "title_count": 67,
+          "movie_title_count": 39,
+          "show_title_count": 28
+        },
+        {
+          "name": "High-Class Cannibal",
+          "title_count": 22,
+          "movie_title_count": 19,
+          "show_title_count": 3
+        }
+      ],
+      "sample_queries": [
+        "cannibal horror without zombies",
+        "a cannibal as the protagonist",
+        "no cannibalism even if it is only discussed"
+      ],
+      "existing_overlap": [
+        "genres.zombie_membership",
+        "advisory_topics.gore",
+        "advisory_topics.disturbing_imagery"
+      ],
+      "why_not_equivalent": "Cannibalism can be human, non-zombie, non-graphic, implied or discussed. It needs its own content concept and explicit exposure coverage for exclusion.",
+      "representation": "Sparse typed concepts, with source evidence and participant/event/scope binding when needed.",
+      "evidence_level": "Inventory-label hypothesis only; no matching stored excerpt inspected.",
+      "stored_contexts": [],
+      "spoiler_sensitive": false
+    },
+    {
+      "id": "villain_protagonist_role",
+      "delta_against_previous_recommendations": "new role distinction",
+      "concepts": [
+        "villain_protagonist",
+        "hero_antagonist",
+        "no_personified_antagonist"
+      ],
+      "stored_labels": [
+        {
+          "name": "Villain Protagonist",
+          "title_count": 2562,
+          "movie_title_count": 2247,
+          "show_title_count": 315
+        },
+        {
+          "name": "Hero Antagonist",
+          "title_count": 816,
+          "movie_title_count": 667,
+          "show_title_count": 149
+        },
+        {
+          "name": "No Antagonist",
+          "title_count": 1473,
+          "movie_title_count": 1202,
+          "show_title_count": 271
+        }
+      ],
+      "sample_queries": [
+        "the main character is the villain",
+        "a decent detective is the antagonist",
+        "a story without an evil villain"
+      ],
+      "existing_overlap": [
+        "characters.antihero_centrality",
+        "characters.morally_ambiguous_cast_centrality",
+        "prior ethical_dilemmas"
+      ],
+      "why_not_equivalent": "Protagonist is narrative focus; antagonist opposes that focus; virtue, sympathy and effectiveness are separate axes. Antihero is not always villain.",
+      "representation": "Sparse typed concepts, with source evidence and participant/event/scope binding when needed.",
+      "evidence_level": "Representative stored work-specific contexts inspected; do not infer canonical universal definition.",
+      "stored_contexts": [
+        {
+          "name": "No Antagonist",
+          "url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/NoAntagonist",
+          "media_type": "movie",
+          "tmdb_id": 1256826,
+          "title": "The Wall",
+          "excerpt_text": "The album is really about Pink's inner demons, how they got there and how they may have been overcome . There's no real antagonist for Pink, as he is his own worst enemy."
+        },
+        {
+          "name": "No Antagonist",
+          "url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/NoAntagonist",
+          "media_type": "movie",
+          "tmdb_id": 1266418,
+          "title": "Another Year",
+          "excerpt_text": "The characters themselves tend to be their own worst enemies."
+        },
+        {
+          "name": "No Antagonist",
+          "url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/NoAntagonist",
+          "media_type": "movie",
+          "tmdb_id": 1281775,
+          "title": "FLOW",
+          "excerpt_text": "While there are various obstacles and jerks encountered along the way, there is no single overarching villain in the story. Instead, the primary antagonist is the relentless and impersonal force of the flood."
+        },
+        {
+          "name": "Villain Protagonist",
+          "url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/VillainProtagonist",
+          "media_type": "movie",
+          "tmdb_id": 1255507,
+          "title": "Teddy",
+          "excerpt_text": "Jamie is a young outcast boy who feeds his tormentors to monsters in the woods."
+        }
+      ],
+      "spoiler_sensitive": true
+    },
+    {
+      "id": "allegiance_direction",
+      "delta_against_previous_recommendations": "refines existing redemption and corruption",
+      "concepts": [
+        "villain_to_ally",
+        "hero_to_villain",
+        "failed_redemption",
+        "repeated_allegiance_change"
+      ],
+      "stored_labels": [
+        {
+          "name": "Heel\u2013Face Turn",
+          "title_count": 3067,
+          "movie_title_count": 2154,
+          "show_title_count": 913
+        },
+        {
+          "name": "Face\u2013Heel Turn",
+          "title_count": 1334,
+          "movie_title_count": 935,
+          "show_title_count": 399
+        },
+        {
+          "name": "Heel\u2013Face Door-Slam",
+          "title_count": 536,
+          "movie_title_count": 435,
+          "show_title_count": 101
+        },
+        {
+          "name": "Heel\u2013Face Revolving Door",
+          "title_count": 346,
+          "movie_title_count": 195,
+          "show_title_count": 151
+        }
+      ],
+      "sample_queries": [
+        "a villain joins the heroes",
+        "a hero slowly becomes the antagonist",
+        "a villain tries to reform but fails"
+      ],
+      "existing_overlap": [
+        "tropes.redemption_centrality",
+        "characters.transformation_arc_centrality",
+        "prior corruption_centrality"
+      ],
+      "why_not_equivalent": "Direction and result of a role/allegiance change are not determined by generic transformation or redemption centrality. Brainwashing-induced alignment is not necessarily ethical growth.",
+      "representation": "Sparse typed concepts, with source evidence and participant/event/scope binding when needed.",
+      "evidence_level": "Representative stored work-specific contexts inspected; do not infer canonical universal definition.",
+      "stored_contexts": [
+        {
+          "name": "Heel\u2013Face Turn",
+          "url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/HeelFaceTurn",
+          "media_type": "movie",
+          "tmdb_id": 595,
+          "title": "To Kill a Mockingbird",
+          "excerpt_text": "Mr. Cunningham is introduced properly in a lynch mob out to kill Tom Robinson before being talked down from his rage by Scout. He's so ashamed of his behavior that he argues for Tom in the trial and had to be talked down by the other jurors."
+        },
+        {
+          "name": "Heel\u2013Face Turn",
+          "url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/HeelFaceTurn",
+          "media_type": "movie",
+          "tmdb_id": 1613,
+          "title": "The 51st State",
+          "excerpt_text": "Dawn, predictably."
+        },
+        {
+          "name": "Heel\u2013Face Turn",
+          "url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/HeelFaceTurn",
+          "media_type": "movie",
+          "tmdb_id": 3025,
+          "title": "The Two Faces of Dr. Jekyll",
+          "excerpt_text": "Paul Allen, disgusted by Hyde's request to \"borrow\" Kitty, is \"shocked into morality\" as Hyde puts it."
+        },
+        {
+          "name": "Face\u2013Heel Turn",
+          "url": "https://tvtropes.orghttps://tvtropes.org/pmwiki/pmwiki.php/Main/FaceHeelTurn",
+          "media_type": "show",
+          "tmdb_id": 65,
+          "title": "The Job",
+          "excerpt_text": "Tommy, unexplained, halfway through season 1. Presumably he got tired of being the Butt Monkey. Heel\u2013Face Turn : After he starts dating Connie, it becomes really hard not to feel sorry for him."
+        }
+      ],
+      "spoiler_sensitive": true
+    },
+    {
+      "id": "maliciousness_and_benevolence",
+      "delta_against_previous_recommendations": "refines existing entities and moral evaluation",
+      "concepts": [
+        "nonmalicious_monster",
+        "protective_monster",
+        "villain_with_ethical_limits",
+        "reluctant_harm"
+      ],
+      "stored_labels": [
+        {
+          "name": "Non-Malicious Monster",
+          "title_count": 341,
+          "movie_title_count": 292,
+          "show_title_count": 49
+        },
+        {
+          "name": "Reluctant Monster",
+          "title_count": 33,
+          "movie_title_count": 18,
+          "show_title_count": 15
+        },
+        {
+          "name": "Even Evil Has Standards",
+          "title_count": 4346,
+          "movie_title_count": 3331,
+          "show_title_count": 1015
+        },
+        {
+          "name": "Noble Demon",
+          "title_count": 415,
+          "movie_title_count": 341,
+          "show_title_count": 74
+        }
+      ],
+      "sample_queries": [
+        "friendly monsters who are misunderstood",
+        "a frightening creature trying not to hurt people",
+        "villains who refuse to harm children"
+      ],
+      "existing_overlap": [
+        "entities.mythical_creatures_centrality",
+        "characters.morally_ambiguous_cast_centrality",
+        "experience.warmth_intensity"
+      ],
+      "why_not_equivalent": "Creature type and moral behavior must bind to the same participant; overall warmth or threat does not establish a benevolent monster. Noble Demon is not proof of a literal demon.",
+      "representation": "Sparse typed concepts, with source evidence and participant/event/scope binding when needed.",
+      "evidence_level": "Representative stored work-specific contexts inspected; do not infer canonical universal definition.",
+      "stored_contexts": [
+        {
+          "name": "Even Evil Has Standards",
+          "url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/EvenEvilHasStandards",
+          "media_type": "movie",
+          "tmdb_id": 548,
+          "title": "Rashomon",
+          "excerpt_text": "In the dead man's version of the story, the wife orders Taj\u014dumaru to kill her husband, and Taj\u014dumaru looks shocked and refuses."
+        },
+        {
+          "name": "Even Evil Has Standards",
+          "url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/EvenEvilHasStandards",
+          "media_type": "movie",
+          "tmdb_id": 701,
+          "title": "Our Hospitality",
+          "excerpt_text": "The Canfields don't kill Willie because it's disrespectful to kill anyone who is a guest in their house ."
+        },
+        {
+          "name": "Even Evil Has Standards",
+          "url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/EvenEvilHasStandards",
+          "media_type": "movie",
+          "tmdb_id": 949,
+          "title": "Heat",
+          "excerpt_text": "Neil is willing to commit murder if he thinks it's necessary, but he usually tries to avoid that necessity. Of the three heist attempts we see, one is after midnight at a business with no night shift, while the other two are carefully choreographed plans that rely on intimidation, surprise, and nonlethal violence (with the clear threat of lethal escalation if someone doesn't cooperate) to cow security guards and witnesses. As Hanna points out, the third armored truck guard was murdered because at that point, a third murder would cost them less than a live witness to the first two , and Neil is pissed about those first two. So pissed, in fact, that he and his crew try to kill Waingro for it."
+        }
+      ],
+      "spoiler_sensitive": true
+    },
+    {
+      "id": "pacifism_constraints",
+      "delta_against_previous_recommendations": "new ethical and action-treatment concept",
+      "concepts": [
+        "pacifism",
+        "no_killing_rule",
+        "nonlethal_combat"
+      ],
+      "stored_labels": [
+        {
+          "name": "Actual Pacifist",
+          "title_count": 175,
+          "movie_title_count": 135,
+          "show_title_count": 40
+        },
+        {
+          "name": "Technical Pacifist",
+          "title_count": 212,
+          "movie_title_count": 150,
+          "show_title_count": 62
+        },
+        {
+          "name": "Martial Pacifist",
+          "title_count": 131,
+          "movie_title_count": 87,
+          "show_title_count": 44
+        },
+        {
+          "name": "Non-Lethal Warfare",
+          "title_count": 91,
+          "movie_title_count": 58,
+          "show_title_count": 33
+        }
+      ],
+      "sample_queries": [
+        "a martial arts hero who refuses to kill",
+        "nonviolent resistance without fighting",
+        "action resolved with nonlethal tactics"
+      ],
+      "existing_overlap": [
+        "themes.ethical_dilemmas_centrality proposed",
+        "action.hand_to_hand_intensity",
+        "advisory_topics.violence"
+      ],
+      "why_not_equivalent": "Low violence is not principled pacifism; fighting while avoiding kills is not complete nonviolence. These require separate definitions and verified behavior, not one shared label.",
+      "representation": "Sparse typed concepts, with source evidence and participant/event/scope binding when needed.",
+      "evidence_level": "Inventory-label hypothesis only; no matching stored excerpt inspected.",
+      "stored_contexts": [],
+      "spoiler_sensitive": false
+    },
+    {
+      "id": "justice_outcome",
+      "delta_against_previous_recommendations": "new spoiler-sensitive outcome qualifiers",
+      "concepts": [
+        "wrongdoer_escapes_consequences",
+        "wrongdoer_held_accountable",
+        "moral_impunity"
+      ],
+      "stored_labels": [
+        {
+          "name": "Karma Houdini",
+          "title_count": 6614,
+          "movie_title_count": 5345,
+          "show_title_count": 1269
+        },
+        {
+          "name": "Laser-Guided Karma",
+          "title_count": 3885,
+          "movie_title_count": 3041,
+          "show_title_count": 844
+        },
+        {
+          "name": "The Bad Guy Wins",
+          "title_count": 1935,
+          "movie_title_count": 1542,
+          "show_title_count": 393
+        }
+      ],
+      "sample_queries": [
+        "a thriller where the villain gets away with it",
+        "the corrupt executive actually faces consequences"
+      ],
+      "existing_overlap": [
+        "ending.happiness_intensity",
+        "ending.conflict_resolution_intensity",
+        "themes.justice_centrality"
+      ],
+      "why_not_equivalent": "A happy or resolved ending does not establish which person is held accountable; stored contexts may explicitly say a trope was averted.",
+      "representation": "Sparse typed concepts, with source evidence and participant/event/scope binding when needed.",
+      "evidence_level": "Representative stored work-specific contexts inspected; do not infer canonical universal definition.",
+      "stored_contexts": [
+        {
+          "name": "Karma Houdini",
+          "url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/KarmaHoudini",
+          "media_type": "movie",
+          "tmdb_id": 595,
+          "title": "To Kill a Mockingbird",
+          "excerpt_text": "Averted with Bob Ewell thanks to Boo Radley . Played straight with the racist jury who find Tom guilty despite knowing full well he is innocent ."
+        },
+        {
+          "name": "Karma Houdini",
+          "url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/KarmaHoudini",
+          "media_type": "movie",
+          "tmdb_id": 829,
+          "title": "Chinatown",
+          "excerpt_text": "Noah Cross died of old age, rich and powerful despite all the horrific evils he committed. Jake flat-out says that any attempt to make Earl Rawley pay is doomed to failure due to how much money he has."
+        },
+        {
+          "name": "Karma Houdini",
+          "url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/KarmaHoudini",
+          "media_type": "movie",
+          "tmdb_id": 1483,
+          "title": "Begotten",
+          "excerpt_text": "The nomads rape and kill Mother Earth, then kill Son of Earth, and leave the film afterwards, never to be seen again."
+        },
+        {
+          "name": "Laser-Guided Karma",
+          "url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/LaserGuidedKarma",
+          "media_type": "movie",
+          "tmdb_id": 881,
+          "title": "A Few Good Men",
+          "excerpt_text": "Jessep getting charged with Santiago's death after trying to pin it on Dawson and Downey."
+        }
+      ],
+      "spoiler_sensitive": true
+    },
+    {
+      "id": "bodyguard_relation",
+      "delta_against_previous_recommendations": "new occupation and protection relation",
+      "concepts": [
+        "bodyguard",
+        "protective_detail",
+        "protector_romance"
+      ],
+      "stored_labels": [
+        {
+          "name": "Bodyguard Crush",
+          "title_count": 192,
+          "movie_title_count": 95,
+          "show_title_count": 97
+        },
+        {
+          "name": "Bodyguard Betrayal",
+          "title_count": 137,
+          "movie_title_count": 79,
+          "show_title_count": 58
+        },
+        {
+          "name": "Bodyguarding a Badass",
+          "title_count": 66,
+          "movie_title_count": 46,
+          "show_title_count": 20
+        }
+      ],
+      "sample_queries": [
+        "a bodyguard falls in love with their client",
+        "a bodyguard protecting someone more capable than them"
+      ],
+      "existing_overlap": [
+        "occupations.policing_centrality",
+        "occupations.military_centrality",
+        "relationships.caregiver_dependent_centrality"
+      ],
+      "why_not_equivalent": "Protective security is not necessarily police/military or caregiving. A romantic/protective relation needs role binding.",
+      "representation": "Sparse typed concepts, with source evidence and participant/event/scope binding when needed.",
+      "evidence_level": "Inventory-label hypothesis only; no matching stored excerpt inspected.",
+      "stored_contexts": [],
+      "spoiler_sensitive": false
+    },
+    {
+      "id": "unwitting_manipulation",
+      "delta_against_previous_recommendations": "new role-specific manipulation mechanism",
+      "concepts": [
+        "unwitting_pawn",
+        "staged_victimhood",
+        "manipulated_investigator"
+      ],
+      "stored_labels": [
+        {
+          "name": "Unwitting Pawn",
+          "title_count": 627,
+          "movie_title_count": 439,
+          "show_title_count": 188
+        },
+        {
+          "name": "Wounded Gazelle Gambit",
+          "title_count": 1026,
+          "movie_title_count": 740,
+          "show_title_count": 286
+        },
+        {
+          "name": "The Mole",
+          "title_count": 1685,
+          "movie_title_count": 1131,
+          "show_title_count": 554
+        }
+      ],
+      "sample_queries": [
+        "someone unknowingly carries out the villains plan",
+        "a character fakes helplessness to manipulate others",
+        "a captive secretly informs on the group"
+      ],
+      "existing_overlap": [
+        "themes.trust_and_betrayal_centrality",
+        "tropes.conspiracy_centrality",
+        "prior deception split and undercover_infiltration"
+      ],
+      "why_not_equivalent": "Unaware instrument, deceptive victim presentation and embedded informer are different knowledge/role relations. Neither animal content nor ordinary rivalry follows from these labels.",
+      "representation": "Sparse typed concepts, with source evidence and participant/event/scope binding when needed.",
+      "evidence_level": "Representative stored work-specific contexts inspected; do not infer canonical universal definition.",
+      "stored_contexts": [
+        {
+          "name": "Unwitting Pawn",
+          "url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/UnwittingPawn",
+          "media_type": "movie",
+          "tmdb_id": 559907,
+          "title": "The Green Knight",
+          "excerpt_text": "The implications that Gawain's mother is Morgan le Fay herself suggests that the entire quest to the Green Chapel was her Batman Gambit to use Gawain and his cowardice to bring about Camelot's fall as shown in the Bad Future . Gawain clearly has no idea of his mother's involvement in his quest."
+        },
+        {
+          "name": "Unwitting Pawn",
+          "url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/UnwittingPawn",
+          "media_type": "movie",
+          "tmdb_id": 1264162,
+          "title": "Ice",
+          "excerpt_text": "Julia spends the series searching for what she thinks is a mass-producer of ICE that can be used to create offspring ; when she finally finds it and puts it to use, Hitomi informs her that it is actually a terraforming Lost Superweapon that Kisaragi tricked her into uncovering ."
+        },
+        {
+          "name": "Unwitting Pawn",
+          "url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/UnwittingPawn",
+          "media_type": "movie",
+          "tmdb_id": 1275052,
+          "title": "Hamlet",
+          "excerpt_text": "Ophelia, who innocently waits in the lobby to converse with Hamlet, while Claudius, Polonius, and Gertrude wait in hidden chambers to overhear the conversation and determine if Hamlet's madness is the result of unrequited love."
+        },
+        {
+          "name": "Wounded Gazelle Gambit",
+          "url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/WoundedGazelleGambit",
+          "media_type": "movie",
+          "tmdb_id": 909,
+          "title": "Meet Me in St. Louis",
+          "excerpt_text": "Tootie tries this to avoid admitting how she hurt herself and getting in trouble."
+        }
+      ],
+      "spoiler_sensitive": false
+    },
+    {
+      "id": "defection",
+      "delta_against_previous_recommendations": "new alignment and political-life concept",
+      "concepts": [
+        "defection",
+        "desertion",
+        "ideological_disillusionment"
+      ],
+      "stored_labels": [
+        {
+          "name": "Defector from Decadence",
+          "title_count": 297,
+          "movie_title_count": 197,
+          "show_title_count": 100
+        },
+        {
+          "name": "Fake Defector",
+          "title_count": 233,
+          "movie_title_count": 116,
+          "show_title_count": 117
+        },
+        {
+          "name": "Dangerous Deserter",
+          "title_count": 178,
+          "movie_title_count": 164,
+          "show_title_count": 14
+        }
+      ],
+      "sample_queries": [
+        "someone leaves an oppressive regime",
+        "a soldier defects rather than obey orders",
+        "a fake defection used to infiltrate the enemy"
+      ],
+      "existing_overlap": [
+        "prior undercover_infiltration",
+        "themes.politics_centrality",
+        "tropes.redemption_centrality"
+      ],
+      "why_not_equivalent": "Leaving a faction is not necessarily becoming morally better; fake defection also differs from actual belief change.",
+      "representation": "Sparse typed concepts, with source evidence and participant/event/scope binding when needed.",
+      "evidence_level": "Representative stored work-specific contexts inspected; do not infer canonical universal definition.",
+      "stored_contexts": [
+        {
+          "name": "Defector from Decadence",
+          "url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/DefectorFromDecadence",
+          "media_type": "movie",
+          "tmdb_id": 740122,
+          "title": "Blind Chance",
+          "excerpt_text": "Both Werner and Adam, and to a different degree, too. Adam is very open about his lack of faith in the system, looking for realistic ways to fix it, while Werner is an idealist who wants to reform it from the inside, using youth movements."
+        },
+        {
+          "name": "Defector from Decadence",
+          "url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/DefectorFromDecadence",
+          "media_type": "movie",
+          "tmdb_id": 938970,
+          "title": "Barbie",
+          "excerpt_text": "Weird Barbie partially secludes herself from the other Barbies, because she's considered weird enough that they treat her as a scary, ugly freak, and she initially wants none of it (the other Barbies excluding her from typical Barbie activities helps, though). It's also implied the other strange dolls who are seen at her house are in the same situation and they live together. It's revealed when the Kens overthrow Barbieland that there are at least two Kens there as well, who left for similar reasons as Weird Barbie did. In their case, though, one\u2014Earring Magic Ken\u2014is coded as gay and the other\u2014Sugar's Daddy Ken\u2014is coded as older, which adds dimension to the Kens being made up of picture-perfect heterosexual-implied dudes under 30. Allan completely rejects the Kendom and actively tries to escape it, and eventually joins forces with the Barbies to overthrow it."
+        },
+        {
+          "name": "Defector from Decadence",
+          "url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/DefectorFromDecadence",
+          "media_type": "movie",
+          "tmdb_id": 1122727,
+          "title": "The A-Team",
+          "excerpt_text": "General Morrison tries to spin his betrayal as this, evoking the Pentagon's We Have Reserves and War for Fun and Profit tendencies. Hannibal isn't having any of it. Morrison : Don't you get it, Hannibal? We fight for them, we bleed for them, we die for them, they don't give a rat's ass. Death and destruction, they're selling it like it was on a goddamn commodities exchange! Hannibal : Don't push this off on them. This is not about them! Your war protest was... stealing billions of dollars! Who are you?"
+        }
+      ],
+      "spoiler_sensitive": false
+    },
+    {
+      "id": "platonic_and_crossboundary_bonds",
+      "delta_against_previous_recommendations": "refines existing friendship and family",
+      "concepts": [
+        "platonic_life_partnership",
+        "platonic_coparenting",
+        "interclass_friendship",
+        "interspecies_friendship",
+        "forbidden_friendship"
+      ],
+      "stored_labels": [
+        {
+          "name": "Platonic Life-Partners",
+          "title_count": 526,
+          "movie_title_count": 267,
+          "show_title_count": 259
+        },
+        {
+          "name": "Platonic Co-Parenting",
+          "title_count": 75,
+          "movie_title_count": 16,
+          "show_title_count": 59
+        },
+        {
+          "name": "Interclass Friendship",
+          "title_count": 101,
+          "movie_title_count": 35,
+          "show_title_count": 66
+        },
+        {
+          "name": "Interspecies Friendship",
+          "title_count": 174,
+          "movie_title_count": 90,
+          "show_title_count": 84
+        },
+        {
+          "name": "Forbidden Friendship",
+          "title_count": 32,
+          "movie_title_count": 18,
+          "show_title_count": 14
+        }
+      ],
+      "sample_queries": [
+        "two platonic friends raising a child",
+        "a lifelong partnership with no romance",
+        "friendship across a forbidden social boundary"
+      ],
+      "existing_overlap": [
+        "relationships.friendship_centrality",
+        "relationships.parent_child_centrality",
+        "prior adoption, fake dating and long-distance romance"
+      ],
+      "why_not_equivalent": "Strong friendship does not establish household partnership, coparenting, cross-class participants or a prohibition; forbidden_romance cannot answer forbidden friendship.",
+      "representation": "Sparse typed concepts, with source evidence and participant/event/scope binding when needed.",
+      "evidence_level": "Representative stored work-specific contexts inspected; do not infer canonical universal definition.",
+      "stored_contexts": [
+        {
+          "name": "Platonic Life-Partners",
+          "url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/PlatonicLifePartners",
+          "media_type": "movie",
+          "tmdb_id": 445632,
+          "title": "The Swap",
+          "excerpt_text": "Jack and Ellie seem to turn out this way by the end of the movie. Given how their parents are getting along, they may end up as family. Comes as a bit of a surprise though given who's telling the story. Disney has a long and proud history of pairing their leads up romantically."
+        },
+        {
+          "name": "Platonic Life-Partners",
+          "url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/PlatonicLifePartners",
+          "media_type": "movie",
+          "tmdb_id": 605898,
+          "title": "Clouds",
+          "excerpt_text": "Zach and Sammy have quite a bond."
+        },
+        {
+          "name": "Platonic Life-Partners",
+          "url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/PlatonicLifePartners",
+          "media_type": "show",
+          "tmdb_id": 76672,
+          "title": "Celebrity Big Brother",
+          "excerpt_text": "Gary and Topaz were acknowledged as this within the house though considering how she fucked him over during the finale, the status of their friendship outside the house is likely a little tense."
+        }
+      ],
+      "spoiler_sensitive": false
+    },
+    {
+      "id": "marriage_function",
+      "delta_against_previous_recommendations": "new relationship-purpose qualifiers",
+      "concepts": [
+        "marriage_of_convenience",
+        "citizenship_marriage",
+        "arranged_marriage"
+      ],
+      "stored_labels": [
+        {
+          "name": "Marriage of Convenience",
+          "title_count": 199,
+          "movie_title_count": 133,
+          "show_title_count": 66
+        },
+        {
+          "name": "Citizenship Marriage",
+          "title_count": 253,
+          "movie_title_count": 142,
+          "show_title_count": 111
+        },
+        {
+          "name": "Arranged Marriage",
+          "title_count": 856,
+          "movie_title_count": 525,
+          "show_title_count": 331
+        }
+      ],
+      "sample_queries": [
+        "married for citizenship but genuinely fall in love",
+        "a practical marriage with no romance"
+      ],
+      "existing_overlap": [
+        "relationships.marriage_centrality",
+        "prior fake_dating",
+        "prior relationship audit arranged marriage"
+      ],
+      "why_not_equivalent": "Practical/legal function, arrangement by third parties and whether romance develops are independent facts. Arranged marriage is a previously proposed vocabulary extension, not entirely new here.",
+      "representation": "Sparse typed concepts, with source evidence and participant/event/scope binding when needed.",
+      "evidence_level": "Representative stored work-specific contexts inspected; do not infer canonical universal definition.",
+      "stored_contexts": [
+        {
+          "name": "Marriage of Convenience",
+          "url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/MarriageOfConvenience",
+          "media_type": "movie",
+          "tmdb_id": 401905,
+          "title": "Fahrenheit 451",
+          "excerpt_text": "Overlaps with Marry for Love , strangely enough. While Montag and Mildred's relationship is rocky at best (Mildred is implied to only be with Montag because he has a paying job), they're actually not sure whether they were in love from the beginning. Neither of them can recall where they first met. Montag finally remembers that he did love Mildred when the bombs destroy the city and kill Mildred."
+        },
+        {
+          "name": "Marriage of Convenience",
+          "url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/MarriageOfConvenience",
+          "media_type": "movie",
+          "tmdb_id": 943134,
+          "title": "The Animal Kingdom",
+          "excerpt_text": "Daisy proposes one to Tom, so she can lawfully have a kid. Daisy : On the boat coming over, the sweetest small boy, about two, and I got crazy about him and I want one. I want one badly . So would you please be good enough to marry me? Tom : [Startled and stands straight up] Daisy : Oh, you always said you wanted to and I wouldn't let you. Well, it isn't terribly serious, not a life sentence, you know, just for a little while if you like. Will be such a dirty trick on him if you didn't."
+        },
+        {
+          "name": "Marriage of Convenience",
+          "url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/MarriageOfConvenience",
+          "media_type": "show",
+          "tmdb_id": 124788,
+          "title": "Recht op Recht",
+          "excerpt_text": "The victim of the episode \"Mariska\" and his widow had this kind of marriage. Widow : For 29 years, my husband and I have lived alongside eachother in harmony..."
+        },
+        {
+          "name": "Arranged Marriage",
+          "url": "https://tvtropes.orghttps://tvtropes.org/pmwiki/pmwiki.php/Main/ArrangedMarriage",
+          "media_type": "movie",
+          "tmdb_id": 359151,
+          "title": "Tanna",
+          "excerpt_text": "How young people of the Yakel are supposed to get married. Wawa is not on board."
+        }
+      ],
+      "spoiler_sensitive": false
+    },
+    {
+      "id": "idealized_romance",
+      "delta_against_previous_recommendations": "new relationship/psychological mechanism",
+      "concepts": [
+        "idealization_of_partner",
+        "projected_romantic_identity"
+      ],
+      "stored_labels": [
+        {
+          "name": "Loving a Shadow",
+          "title_count": 319,
+          "movie_title_count": 241,
+          "show_title_count": 78
+        },
+        {
+          "name": "False Soulmate",
+          "title_count": 103,
+          "movie_title_count": 98,
+          "show_title_count": 5
+        }
+      ],
+      "sample_queries": [
+        "someone loves an imagined version of their partner",
+        "a romance about seeing a partner as a real person"
+      ],
+      "existing_overlap": [
+        "relationships.romantic_development_centrality",
+        "relationships.partner_bereavement_centrality",
+        "themes.obsession_centrality"
+      ],
+      "why_not_equivalent": "Idealizing someone is not proof of their death, supernatural identity or stalking. Loving a Shadow must never imply ghost romance.",
+      "representation": "Sparse typed concepts, with source evidence and participant/event/scope binding when needed.",
+      "evidence_level": "Representative stored work-specific contexts inspected; do not infer canonical universal definition.",
+      "stored_contexts": [
+        {
+          "name": "Loving a Shadow",
+          "url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/LovingAShadow",
+          "media_type": "movie",
+          "tmdb_id": 10773,
+          "title": "Mrs. Henderson Presents",
+          "excerpt_text": "Maureen discusses this; saying that the men who come to watch them, specifically her admirer Paul, don't know the real her."
+        },
+        {
+          "name": "Loving a Shadow",
+          "url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/LovingAShadow",
+          "media_type": "movie",
+          "tmdb_id": 73121,
+          "title": "Love Story",
+          "excerpt_text": "Oliver's new girlfriend in the sequel accuses him of this in regards to Jenny, suggesting that deep down he probably wants her to turn out to be a bad person so that he can dump her and continue to hang on to his memories of Jenny."
+        },
+        {
+          "name": "Loving a Shadow",
+          "url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/LovingAShadow",
+          "media_type": "movie",
+          "tmdb_id": 151027,
+          "title": "School Days",
+          "excerpt_text": "Heavily in play for several of the characters that have feelings for Makoto. Most of them begin showing interest in him after seeing him at his best moments (Otome knew him in middle school when he was a nicer person, Setsuna met him when he defended her from a bully) and their feelings are based on that, which causes them to ignore glaring red flags about Makoto's behavior and who he actually is as a person. Otome in particular struggles to reconcile the version of Makoto she knew in middle school, who was genuinely kind and friendly, with the Makoto of the current day, and eventually comes to the conclusion that she can't."
+        }
+      ],
+      "spoiler_sensitive": false
+    },
+    {
+      "id": "hive_minds",
+      "delta_against_previous_recommendations": "new speculative organization mechanism",
+      "concepts": [
+        "hive_mind",
+        "collective_consciousness",
+        "networked_minds"
+      ],
+      "stored_labels": [
+        {
+          "name": "Hive Mind",
+          "title_count": 174,
+          "movie_title_count": 102,
+          "show_title_count": 72
+        },
+        {
+          "name": "Collective Identity",
+          "title_count": 68,
+          "movie_title_count": 58,
+          "show_title_count": 10
+        },
+        {
+          "name": "Mind Hive",
+          "title_count": 17,
+          "movie_title_count": 11,
+          "show_title_count": 6
+        }
+      ],
+      "sample_queries": [
+        "a society with a shared consciousness",
+        "people connected mentally without a central controller"
+      ],
+      "existing_overlap": [
+        "themes.consciousness_centrality",
+        "prior telepathy",
+        "prior mind_control"
+      ],
+      "why_not_equivalent": "Communication, shared identity, distributed cognition and external domination differ. One stored Hivemind context shows both shared processing and coercive consequences; do not make these universal.",
+      "representation": "Sparse typed concepts, with source evidence and participant/event/scope binding when needed.",
+      "evidence_level": "Representative stored work-specific contexts inspected; do not infer canonical universal definition.",
+      "stored_contexts": [
+        {
+          "name": "Hivemind",
+          "url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/Hivemind",
+          "media_type": "show",
+          "tmdb_id": 30977,
+          "title": "A Certain Scientific Railgun",
+          "excerpt_text": "The true purpose of the \"Level Upper\" is simply to harness the combined mental power of 10,000 espers as a super-computer substitute; this has the side effects of temporarily increasing the participants' powers (through leaked experiences) and granting the mastermind All Your Powers Combined but later sends the users into a coma . And of course, the SISTERS' hivemind also makes an appearance here."
+        }
+      ],
+      "spoiler_sensitive": false
+    },
+    {
+      "id": "souls_and_projection",
+      "delta_against_previous_recommendations": "new supernatural mechanism family",
+      "concepts": [
+        "soul_container",
+        "externalized_life_force",
+        "astral_projection",
+        "soul_transfer",
+        "soul_bargain"
+      ],
+      "stored_labels": [
+        {
+          "name": "Soul Jar",
+          "title_count": 219,
+          "movie_title_count": 166,
+          "show_title_count": 53
+        },
+        {
+          "name": "Astral Projection",
+          "title_count": 145,
+          "movie_title_count": 93,
+          "show_title_count": 52
+        },
+        {
+          "name": "Your Soul Is Mine!",
+          "title_count": 100,
+          "movie_title_count": 69,
+          "show_title_count": 31
+        },
+        {
+          "name": "Deal with the Devil",
+          "title_count": 1040,
+          "movie_title_count": 699,
+          "show_title_count": 341
+        }
+      ],
+      "sample_queries": [
+        "a villain hides their soul inside an object",
+        "astral projection without ghosts",
+        "a bargain where someone sells their soul"
+      ],
+      "existing_overlap": [
+        "world.magic_centrality",
+        "entities.ghosts_centrality",
+        "prior afterlife and immortality"
+      ],
+      "why_not_equivalent": "Ghost presence is not out-of-body projection; externally stored life force is not generic immortality; bargaining mechanism should be distinct from demon species.",
+      "representation": "Sparse typed concepts, with source evidence and participant/event/scope binding when needed.",
+      "evidence_level": "Representative stored work-specific contexts inspected; do not infer canonical universal definition.",
+      "stored_contexts": [
+        {
+          "name": "Soul Jar",
+          "url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/SoulJar",
+          "media_type": "movie",
+          "tmdb_id": 165644,
+          "title": "Nutcracker Fantasy",
+          "excerpt_text": "Queen Morphia\u2019s heart is in \u201cThe Shell of Darkness\u201d, a nut-like container said to be impervious to almost anything."
+        },
+        {
+          "name": "Soul Jar",
+          "url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/SoulJar",
+          "media_type": "movie",
+          "tmdb_id": 495198,
+          "title": "The Nutcracker",
+          "excerpt_text": "The Mouse King's magic crown apparently serves as this to him. He dies when the heroine's thrown shoe knocks it off his head and shatters it."
+        },
+        {
+          "name": "Soul Jar",
+          "url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/SoulJar",
+          "media_type": "movie",
+          "tmdb_id": 565065,
+          "title": "The Nutcracker",
+          "excerpt_text": "The Mouse King's magic crown apparently serves as this to him. He dies when the heroine's thrown shoe knocks it off his head and shatters it."
+        }
+      ],
+      "spoiler_sensitive": false
+    },
+    {
+      "id": "body_hopping",
+      "delta_against_previous_recommendations": "new mechanism subtype",
+      "concepts": [
+        "body_hopping",
+        "consciousness_transfer",
+        "shared_body_control"
+      ],
+      "stored_labels": [
+        {
+          "name": "Body Surf",
+          "title_count": 188,
+          "movie_title_count": 132,
+          "show_title_count": 56
+        },
+        {
+          "name": "People Puppets",
+          "title_count": 200,
+          "movie_title_count": 135,
+          "show_title_count": 65
+        }
+      ],
+      "sample_queries": [
+        "a consciousness moves between different bodies",
+        "someone remains aware while another mind controls their body"
+      ],
+      "existing_overlap": [
+        "tropes.body_swap_centrality",
+        "horror_modes.possession_centrality",
+        "prior mind_control, cloning and memory_manipulation"
+      ],
+      "why_not_equivalent": "Body swap implies exchanged occupants; serial body occupation and simultaneous internal agency differ. Control may be technological, supernatural or unexplained.",
+      "representation": "Sparse typed concepts, with source evidence and participant/event/scope binding when needed.",
+      "evidence_level": "Inventory-label hypothesis only; no matching stored excerpt inspected.",
+      "stored_contexts": [],
+      "spoiler_sensitive": false
+    },
+    {
+      "id": "shared_manipulated_dreams",
+      "delta_against_previous_recommendations": "new world mechanism distinction",
+      "concepts": [
+        "shared_dream",
+        "dream_manipulation",
+        "dream_infiltration"
+      ],
+      "stored_labels": [
+        {
+          "name": "Shared Dream",
+          "title_count": 51,
+          "movie_title_count": 24,
+          "show_title_count": 27
+        },
+        {
+          "name": "Dream Weaver",
+          "title_count": 70,
+          "movie_title_count": 42,
+          "show_title_count": 28
+        },
+        {
+          "name": "Dream Within a Dream",
+          "title_count": 236,
+          "movie_title_count": 164,
+          "show_title_count": 72
+        }
+      ],
+      "sample_queries": [
+        "people exploring the same dream together",
+        "an enemy invades someone else dreams"
+      ],
+      "existing_overlap": [
+        "storytelling.dream_sequences_intensity",
+        "world.virtual_reality_centrality",
+        "prior unreliable reality"
+      ],
+      "why_not_equivalent": "A narrative dream sequence does not establish shared dreams, oneiric agency or a dream as a stable world layer.",
+      "representation": "Sparse typed concepts, with source evidence and participant/event/scope binding when needed.",
+      "evidence_level": "Inventory-label hypothesis only; no matching stored excerpt inspected.",
+      "stored_contexts": [],
+      "spoiler_sensitive": false
+    },
+    {
+      "id": "temporal_spatial_powers",
+      "delta_against_previous_recommendations": "new narrow mechanisms",
+      "concepts": [
+        "time_stopping",
+        "pocket_dimension",
+        "astral_realm"
+      ],
+      "stored_labels": [
+        {
+          "name": "Time Stands Still",
+          "title_count": 264,
+          "movie_title_count": 147,
+          "show_title_count": 117
+        },
+        {
+          "name": "Move in the Frozen Time",
+          "title_count": 15,
+          "movie_title_count": 4,
+          "show_title_count": 11
+        },
+        {
+          "name": "Pocket Dimension",
+          "title_count": 38,
+          "movie_title_count": 11,
+          "show_title_count": 27
+        },
+        {
+          "name": "Spirit World",
+          "title_count": 46,
+          "movie_title_count": 29,
+          "show_title_count": 17
+        }
+      ],
+      "sample_queries": [
+        "time stops for everyone except one person",
+        "a house larger inside than outside",
+        "a hidden pocket world inside an ordinary place"
+      ],
+      "existing_overlap": [
+        "world.time_travel_centrality",
+        "world.parallel_worlds_centrality",
+        "prior teleportation"
+      ],
+      "why_not_equivalent": "Time suspension does not require travel between dates; a pocket realm need not be an alternate history universe. Exact spatial examples remain hypotheses until contexts confirm them.",
+      "representation": "Sparse typed concepts, with source evidence and participant/event/scope binding when needed.",
+      "evidence_level": "Inventory-label hypothesis only; no matching stored excerpt inspected.",
+      "stored_contexts": [],
+      "spoiler_sensitive": false
+    },
+    {
+      "id": "parasitic_and_elemental_mechanisms",
+      "delta_against_previous_recommendations": "new narrow creature/power qualifiers",
+      "concepts": [
+        "parasitic_control",
+        "symbiosis",
+        "nanotechnology",
+        "weather_manipulation",
+        "elemental_control"
+      ],
+      "stored_labels": [
+        {
+          "name": "Puppeteer Parasite",
+          "title_count": 204,
+          "movie_title_count": 138,
+          "show_title_count": 66
+        },
+        {
+          "name": "Parasite Zombie",
+          "title_count": 48,
+          "movie_title_count": 44,
+          "show_title_count": 4
+        },
+        {
+          "name": "Nanomachines",
+          "title_count": 120,
+          "movie_title_count": 55,
+          "show_title_count": 65
+        },
+        {
+          "name": "Weather Manipulation",
+          "title_count": 55,
+          "movie_title_count": 26,
+          "show_title_count": 29
+        },
+        {
+          "name": "Elemental Powers",
+          "title_count": 274,
+          "movie_title_count": 109,
+          "show_title_count": 165
+        }
+      ],
+      "sample_queries": [
+        "a parasite controls its host",
+        "nanomachines changing human bodies",
+        "characters who control the weather"
+      ],
+      "existing_overlap": [
+        "horror_modes.possession_centrality",
+        "themes.disease_and_pandemics_centrality",
+        "prior genetic_engineering and body_transformation"
+      ],
+      "why_not_equivalent": "A biological agent, swarm technology and supernatural force need distinct causal concepts. Infection does not necessarily imply epidemic scale or body horror.",
+      "representation": "Sparse typed concepts, with source evidence and participant/event/scope binding when needed.",
+      "evidence_level": "Inventory-label hypothesis only; no matching stored excerpt inspected.",
+      "stored_contexts": [],
+      "spoiler_sensitive": false
+    },
+    {
+      "id": "unusual_habitats",
+      "delta_against_previous_recommendations": "new environment/entity subtypes",
+      "concepts": [
+        "generation_ship",
+        "sleeper_ship",
+        "living_ship",
+        "artificial_megastructure",
+        "underwater_city",
+        "tidally_locked_planet"
+      ],
+      "stored_labels": [
+        {
+          "name": "Generation Ship",
+          "title_count": 12,
+          "movie_title_count": 9,
+          "show_title_count": 3
+        },
+        {
+          "name": "Sleeper Ship",
+          "title_count": 68,
+          "movie_title_count": 66,
+          "show_title_count": 2
+        },
+        {
+          "name": "Living Ship",
+          "title_count": 44,
+          "movie_title_count": 27,
+          "show_title_count": 17
+        },
+        {
+          "name": "Dyson Sphere",
+          "title_count": 12,
+          "movie_title_count": 7,
+          "show_title_count": 5
+        },
+        {
+          "name": "Ringworld Planet",
+          "title_count": 8,
+          "movie_title_count": 8,
+          "show_title_count": 0
+        },
+        {
+          "name": "Underwater City",
+          "title_count": 31,
+          "movie_title_count": 12,
+          "show_title_count": 19
+        },
+        {
+          "name": "Tidally Locked Planet",
+          "title_count": 56,
+          "movie_title_count": 48,
+          "show_title_count": 8
+        }
+      ],
+      "sample_queries": [
+        "generations living aboard a starship",
+        "a city under the sea",
+        "a sentient biological spaceship",
+        "life on a tidally locked world"
+      ],
+      "existing_overlap": [
+        "settings.spacecraft_centrality",
+        "settings.space_station_centrality",
+        "prior underwater_facility and sentient_object"
+      ],
+      "why_not_equivalent": "Contained population history, ecology, sentience and physical environment are not established by spacecraft or ocean scores. Treat as sparse entities/settings with factual-world qualifiers.",
+      "representation": "Sparse typed concepts, with source evidence and participant/event/scope binding when needed.",
+      "evidence_level": "Inventory-label hypothesis only; no matching stored excerpt inspected.",
+      "stored_contexts": [],
+      "spoiler_sensitive": false
+    },
+    {
+      "id": "improvised_vehicle_weapons",
+      "delta_against_previous_recommendations": "new action device subtypes",
+      "concepts": [
+        "improvised_weapons",
+        "vehicle_as_weapon",
+        "booby_trap"
+      ],
+      "stored_labels": [
+        {
+          "name": "Improvised Weapon",
+          "title_count": 1520,
+          "movie_title_count": 1305,
+          "show_title_count": 215
+        },
+        {
+          "name": "Car Fu",
+          "title_count": 1445,
+          "movie_title_count": 1293,
+          "show_title_count": 152
+        },
+        {
+          "name": "Booby Trap",
+          "title_count": 320,
+          "movie_title_count": 283,
+          "show_title_count": 37
+        }
+      ],
+      "sample_queries": [
+        "fights using everyday objects as weapons",
+        "cars used as weapons rather than just chased",
+        "a thriller full of homemade traps"
+      ],
+      "existing_overlap": [
+        "action.environmental_choreography_intensity",
+        "action.chases_intensity",
+        "entities.cars_centrality"
+      ],
+      "why_not_equivalent": "Environmental creativity is broader than weapons made from objects; vehicle attacks differ from pursuit; traps need not involve a fight.",
+      "representation": "Sparse typed concepts, with source evidence and participant/event/scope binding when needed.",
+      "evidence_level": "Inventory-label hypothesis only; no matching stored excerpt inspected.",
+      "stored_contexts": [],
+      "spoiler_sensitive": false
+    },
+    {
+      "id": "action_modes",
+      "delta_against_previous_recommendations": "new action treatment subtypes",
+      "concepts": [
+        "parkour",
+        "wire_fu",
+        "aerial_dogfight",
+        "sniper_duel",
+        "armed_standoff",
+        "bomb_disposal"
+      ],
+      "stored_labels": [
+        {
+          "name": "Le Parkour",
+          "title_count": 273,
+          "movie_title_count": 201,
+          "show_title_count": 72
+        },
+        {
+          "name": "Combat Parkour",
+          "title_count": 100,
+          "movie_title_count": 77,
+          "show_title_count": 23
+        },
+        {
+          "name": "Wire Fu",
+          "title_count": 156,
+          "movie_title_count": 130,
+          "show_title_count": 26
+        },
+        {
+          "name": "Old-School Dogfight",
+          "title_count": 119,
+          "movie_title_count": 98,
+          "show_title_count": 21
+        },
+        {
+          "name": "Sniper Duel",
+          "title_count": 55,
+          "movie_title_count": 49,
+          "show_title_count": 6
+        },
+        {
+          "name": "Mexican Standoff",
+          "title_count": 568,
+          "movie_title_count": 472,
+          "show_title_count": 96
+        },
+        {
+          "name": "Bomb Disposal",
+          "title_count": 73,
+          "movie_title_count": 54,
+          "show_title_count": 19
+        }
+      ],
+      "sample_queries": [
+        "parkour escapes across rooftops",
+        "wire-assisted martial arts",
+        "aerial dogfights with propeller aircraft",
+        "a tense bomb disposal scene with no shootouts"
+      ],
+      "existing_overlap": [
+        "action.chases_intensity",
+        "action.martial_arts_choreography_intensity",
+        "action.gunplay_intensity",
+        "tropes.race_against_time_centrality"
+      ],
+      "why_not_equivalent": "Mode, weapon geometry, vehicle role and technical task improve targeted retrieval; standoff label does not establish Mexico as setting or culture.",
+      "representation": "Sparse typed concepts, with source evidence and participant/event/scope binding when needed.",
+      "evidence_level": "Inventory-label hypothesis only; no matching stored excerpt inspected.",
+      "stored_contexts": [],
+      "spoiler_sensitive": false
+    },
+    {
+      "id": "entity_behavior_qualifiers",
+      "delta_against_previous_recommendations": "refines existing vampire and entity concepts",
+      "concepts": [
+        "nonpredatory_vampire",
+        "consensual_feeding",
+        "species_rules"
+      ],
+      "stored_labels": [
+        {
+          "name": "Vegetarian Vampire",
+          "title_count": 128,
+          "movie_title_count": 94,
+          "show_title_count": 34
+        },
+        {
+          "name": "Friendly Neighborhood Vampire",
+          "title_count": 96,
+          "movie_title_count": 55,
+          "show_title_count": 41
+        },
+        {
+          "name": "Daywalking Vampire",
+          "title_count": 92,
+          "movie_title_count": 56,
+          "show_title_count": 36
+        },
+        {
+          "name": "Voluntary Vampire Victim",
+          "title_count": 36,
+          "movie_title_count": 28,
+          "show_title_count": 8
+        }
+      ],
+      "sample_queries": [
+        "vampires who refuse to hurt people",
+        "a vampire romance with consensual feeding",
+        "vampires who can go outside in daylight"
+      ],
+      "existing_overlap": [
+        "entities.vampires_centrality",
+        "prior benevolent entity concepts"
+      ],
+      "why_not_equivalent": "Taxon presence cannot establish diet, ethics, consent or sunlight rules. Vegetarian is a trope alias and may not mean ordinary plant-based diet.",
+      "representation": "Sparse typed concepts, with source evidence and participant/event/scope binding when needed.",
+      "evidence_level": "Inventory-label hypothesis only; no matching stored excerpt inspected.",
+      "stored_contexts": [],
+      "spoiler_sensitive": false
+    }
+  ]
+}

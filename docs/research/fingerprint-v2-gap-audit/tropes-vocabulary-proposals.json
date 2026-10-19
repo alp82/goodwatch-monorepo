@@ -1,0 +1,859 @@
+{
+  "status": "Recommendations only. No definitions or production changed. Exact source title counts preserve array inventory scope; not verified title facts or measured demand.",
+  "proposals": [
+    {
+      "id": "foreshadowing_setup_payoff",
+      "priority": "highest",
+      "disposition": "scoring_candidate_plus_sparse_devices",
+      "novelty_vs_previous_recommendations": "Planted cues and introduced elements matter later. Information withholding, twist impact and repeat-discovery suitability do not describe the mechanism. Do not automatically add separate independent similarity votes for every device.",
+      "optional_fixed_keys": [
+        "storytelling.foreshadowing_intensity"
+      ],
+      "sparse_concept_seeds": [
+        "setup_payoff",
+        "chekhov_object",
+        "delayed_joke_payoff"
+      ],
+      "exact_source_names": [
+        {
+          "name": "Foreshadowing",
+          "occurrences": 12322,
+          "title_count": 12133,
+          "movie_title_count": 9932,
+          "show_title_count": 2201
+        },
+        {
+          "name": "Chekhov's Gun",
+          "occurrences": 10342,
+          "title_count": 10266,
+          "movie_title_count": 8640,
+          "show_title_count": 1626
+        },
+        {
+          "name": "Chekhov's Skill",
+          "occurrences": 3390,
+          "title_count": 3361,
+          "movie_title_count": 2878,
+          "show_title_count": 483
+        },
+        {
+          "name": "Brick Joke",
+          "occurrences": 5335,
+          "title_count": 5306,
+          "movie_title_count": 4087,
+          "show_title_count": 1219
+        }
+      ],
+      "synthetic_query": "Movies where seemingly minor details become important later",
+      "novelty_class": "new_specific_concepts_or_distinctions"
+    },
+    {
+      "id": "dramatic_irony",
+      "priority": "highest",
+      "disposition": "scoring_candidate",
+      "novelty_vs_previous_recommendations": "The audience knows significant facts a character does not. Distinct from ironic aesthetic distance, plot complexity and unreliable narration.",
+      "optional_fixed_keys": [
+        "storytelling.dramatic_irony_intensity"
+      ],
+      "sparse_concept_seeds": [
+        "audience_character_knowledge_asymmetry"
+      ],
+      "exact_source_names": [
+        {
+          "name": "Dramatic Irony",
+          "occurrences": 2396,
+          "title_count": 2389,
+          "movie_title_count": 1888,
+          "show_title_count": 501
+        },
+        {
+          "name": "Locked Out of the Loop",
+          "occurrences": 794,
+          "title_count": 794,
+          "movie_title_count": 530,
+          "show_title_count": 264
+        },
+        {
+          "name": "Internal Reveal",
+          "occurrences": 861,
+          "title_count": 855,
+          "movie_title_count": 577,
+          "show_title_count": 278
+        }
+      ],
+      "synthetic_query": "Suspense where we know the killer but the protagonist does not",
+      "novelty_class": "new_specific_concepts_or_distinctions"
+    },
+    {
+      "id": "nested_narrative",
+      "priority": "highest",
+      "disposition": "structured_annotation",
+      "novelty_vs_previous_recommendations": "Nested stories, frames, conflicting retellings and beginning mid-action require narrative structure and account/layer relations. Multiple viewpoints and nonlinearity cover parents but do not establish these forms. Prior multiple-account and layer structures were not expressly proposed; the underlying event/role framework already was.",
+      "optional_fixed_keys": [],
+      "sparse_concept_seeds": [
+        "framing_device",
+        "story_within_story",
+        "conflicting_retellings",
+        "in_medias_res"
+      ],
+      "exact_source_names": [
+        {
+          "name": "Framing Device",
+          "occurrences": 1056,
+          "title_count": 1052,
+          "movie_title_count": 873,
+          "show_title_count": 179
+        },
+        {
+          "name": "Show Within a Show",
+          "occurrences": 1872,
+          "title_count": 1871,
+          "movie_title_count": 1158,
+          "show_title_count": 713
+        },
+        {
+          "name": "Story Within a Story",
+          "occurrences": 51,
+          "title_count": 51,
+          "movie_title_count": 49,
+          "show_title_count": 2
+        },
+        {
+          "name": "In Medias Res",
+          "occurrences": 842,
+          "title_count": 841,
+          "movie_title_count": 610,
+          "show_title_count": 231
+        },
+        {
+          "name": "\"Rashomon\"-Style",
+          "occurrences": 386,
+          "title_count": 384,
+          "movie_title_count": 227,
+          "show_title_count": 157
+        },
+        {
+          "name": "Once More, with Clarity",
+          "occurrences": 1410,
+          "title_count": 1409,
+          "movie_title_count": 1144,
+          "show_title_count": 265
+        }
+      ],
+      "synthetic_query": "Stories retold from conflicting perspectives",
+      "novelty_class": "new_specific_concepts_or_distinctions"
+    },
+    {
+      "id": "symbolic_motifs",
+      "priority": "high",
+      "disposition": "scoring_candidate_plus_sparse_devices",
+      "novelty_vs_previous_recommendations": "Symbolic and recurrent motifs can structure meaning without referencing other works or being surreal. Distinguish visual, verbal and musical channels.",
+      "optional_fixed_keys": [
+        "storytelling.symbolism_intensity"
+      ],
+      "sparse_concept_seeds": [
+        "symbolic_motif",
+        "musical_leitmotif",
+        "color_symbolism"
+      ],
+      "exact_source_names": [
+        {
+          "name": "Rule of Symbolism",
+          "occurrences": 2261,
+          "title_count": 2259,
+          "movie_title_count": 2028,
+          "show_title_count": 231
+        },
+        {
+          "name": "Animal Motifs",
+          "occurrences": 1345,
+          "title_count": 1334,
+          "movie_title_count": 1044,
+          "show_title_count": 290
+        },
+        {
+          "name": "Leitmotif",
+          "occurrences": 1813,
+          "title_count": 1805,
+          "movie_title_count": 1244,
+          "show_title_count": 561
+        },
+        {
+          "name": "Meaningful Name",
+          "occurrences": 7156,
+          "title_count": 7105,
+          "movie_title_count": 5284,
+          "show_title_count": 1821
+        },
+        {
+          "name": "Color-Coded Characters",
+          "occurrences": 555,
+          "title_count": 555,
+          "movie_title_count": 273,
+          "show_title_count": 282
+        }
+      ],
+      "synthetic_query": "Movies with recurring visual symbols and musical character themes",
+      "novelty_class": "new_specific_concepts_or_distinctions"
+    },
+    {
+      "id": "tonal_genre_transitions",
+      "priority": "high",
+      "disposition": "structured_annotation",
+      "novelty_vs_previous_recommendations": "Full design temporal segments already support change; add explicit transition concepts and boundaries. A work scoring high in comedy and horror does not necessarily change from one to the other.",
+      "optional_fixed_keys": [],
+      "sparse_concept_seeds": [
+        "abrupt_tonal_transition",
+        "genre_transition",
+        "midstory_engine_change"
+      ],
+      "exact_source_names": [
+        {
+          "name": "Mood Whiplash",
+          "occurrences": 5438,
+          "title_count": 5398,
+          "movie_title_count": 4099,
+          "show_title_count": 1299
+        },
+        {
+          "name": "Genre Shift",
+          "occurrences": 1310,
+          "title_count": 1291,
+          "movie_title_count": 983,
+          "show_title_count": 308
+        },
+        {
+          "name": "Halfway Plot Switch",
+          "occurrences": 663,
+          "title_count": 662,
+          "movie_title_count": 584,
+          "show_title_count": 78
+        },
+        {
+          "name": "Cerebus Syndrome",
+          "occurrences": 796,
+          "title_count": 790,
+          "movie_title_count": 384,
+          "show_title_count": 406
+        },
+        {
+          "name": "Breather Episode",
+          "occurrences": 721,
+          "title_count": 719,
+          "movie_title_count": 264,
+          "show_title_count": 455
+        }
+      ],
+      "synthetic_query": "Comedies that turn into horror halfway through",
+      "novelty_class": "refinement_of_existing_temporal_segments"
+    },
+    {
+      "id": "audio_emotional_counterpoint",
+      "priority": "high",
+      "disposition": "sparse_technique",
+      "novelty_vs_previous_recommendations": "Music can oppose the scene emotion or repeat a theme in altered emotional form. Music genre, centrality and diegetic status do not express that relationship.",
+      "optional_fixed_keys": [],
+      "sparse_concept_seeds": [
+        "music_emotion_counterpoint",
+        "recontextualized_musical_motif"
+      ],
+      "exact_source_names": [
+        {
+          "name": "Soundtrack Dissonance",
+          "occurrences": 2628,
+          "title_count": 2625,
+          "movie_title_count": 2165,
+          "show_title_count": 460
+        },
+        {
+          "name": "Leitmotif",
+          "occurrences": 1813,
+          "title_count": 1805,
+          "movie_title_count": 1244,
+          "show_title_count": 561
+        },
+        {
+          "name": "Dark Reprise",
+          "occurrences": 908,
+          "title_count": 908,
+          "movie_title_count": 762,
+          "show_title_count": 146
+        }
+      ],
+      "synthetic_query": "Cheerful music playing over disturbing scenes",
+      "novelty_class": "new_specific_concepts_or_distinctions"
+    },
+    {
+      "id": "opposition_and_role",
+      "priority": "high",
+      "disposition": "role_annotation",
+      "novelty_vs_previous_recommendations": "Protagonist and antagonist are narrative functions, not moral judgments. Extend already proposed event/role binding with viewpoint role and opposition relations; avoid equating villain protagonist with antihero.",
+      "optional_fixed_keys": [],
+      "sparse_concept_seeds": [
+        "villain_protagonist",
+        "hero_antagonist",
+        "decoy_protagonist",
+        "no_personified_antagonist",
+        "character_foil",
+        "henchman"
+      ],
+      "exact_source_names": [
+        {
+          "name": "Villain Protagonist",
+          "occurrences": 2585,
+          "title_count": 2562,
+          "movie_title_count": 2247,
+          "show_title_count": 315
+        },
+        {
+          "name": "Hero Antagonist",
+          "occurrences": 816,
+          "title_count": 816,
+          "movie_title_count": 667,
+          "show_title_count": 149
+        },
+        {
+          "name": "Decoy Protagonist",
+          "occurrences": 1819,
+          "title_count": 1802,
+          "movie_title_count": 1577,
+          "show_title_count": 225
+        },
+        {
+          "name": "No Antagonist",
+          "occurrences": 1473,
+          "title_count": 1473,
+          "movie_title_count": 1202,
+          "show_title_count": 271
+        },
+        {
+          "name": "The Dragon",
+          "occurrences": 2363,
+          "title_count": 2359,
+          "movie_title_count": 1905,
+          "show_title_count": 454
+        },
+        {
+          "name": "Foil",
+          "occurrences": 1775,
+          "title_count": 1764,
+          "movie_title_count": 1279,
+          "show_title_count": 485
+        },
+        {
+          "name": "Well-Intentioned Extremist",
+          "occurrences": 1762,
+          "title_count": 1759,
+          "movie_title_count": 1231,
+          "show_title_count": 528
+        }
+      ],
+      "synthetic_query": "Movies with a villain protagonist and a heroic antagonist",
+      "novelty_class": "new_role_values_for_previously_proposed_binding"
+    },
+    {
+      "id": "ending_outcome_roles",
+      "priority": "high",
+      "disposition": "event_outcome_annotation",
+      "novelty_vs_previous_recommendations": "Existing ending tone and closure scores do not identify who wins, dies or pays the cost. Extend prior role/event binding with outcomes and uncertainty; spoiler-sensitive.",
+      "optional_fixed_keys": [],
+      "sparse_concept_seeds": [
+        "antagonist_victory",
+        "protagonist_death",
+        "costly_victory"
+      ],
+      "exact_source_names": [
+        {
+          "name": "The Bad Guy Wins",
+          "occurrences": 1959,
+          "title_count": 1935,
+          "movie_title_count": 1542,
+          "show_title_count": 393
+        },
+        {
+          "name": "The Hero Dies",
+          "occurrences": 1074,
+          "title_count": 1069,
+          "movie_title_count": 978,
+          "show_title_count": 91
+        },
+        {
+          "name": "Pyrrhic Victory",
+          "occurrences": 930,
+          "title_count": 929,
+          "movie_title_count": 662,
+          "show_title_count": 267
+        },
+        {
+          "name": "Anyone Can Die",
+          "occurrences": 2150,
+          "title_count": 2135,
+          "movie_title_count": 1474,
+          "show_title_count": 661
+        }
+      ],
+      "synthetic_query": "Stories where the villain wins but the ending is emotionally satisfying",
+      "novelty_class": "corroboration_and_new_values_for_previously_proposed_outcomes"
+    },
+    {
+      "id": "causality_and_persistent_consequences",
+      "priority": "medium",
+      "disposition": "targeted_storytelling_concepts",
+      "novelty_vs_previous_recommendations": "Narrative causal protection, chance-driven resolution, resets and moral accountability are not captured by coherence quality or formula repetition. Evaluative interpretations require source and scope. Responsibility/consequences was already a query-audit candidate; the new distinctions are chance-driven resolution, plot protection and reset mechanisms.",
+      "optional_fixed_keys": [],
+      "sparse_concept_seeds": [
+        "chance_driven_resolution",
+        "protagonist_protection",
+        "continuity_reset",
+        "persistent_consequences",
+        "moral_accountability"
+      ],
+      "exact_source_names": [
+        {
+          "name": "Deus ex Machina",
+          "occurrences": 1311,
+          "title_count": 1309,
+          "movie_title_count": 981,
+          "show_title_count": 328
+        },
+        {
+          "name": "Contrived Coincidence",
+          "occurrences": 2931,
+          "title_count": 2923,
+          "movie_title_count": 2282,
+          "show_title_count": 641
+        },
+        {
+          "name": "Plot Armor",
+          "occurrences": 392,
+          "title_count": 391,
+          "movie_title_count": 287,
+          "show_title_count": 104
+        },
+        {
+          "name": "Status Quo Is God",
+          "occurrences": 874,
+          "title_count": 872,
+          "movie_title_count": 282,
+          "show_title_count": 590
+        },
+        {
+          "name": "Reset Button",
+          "occurrences": 384,
+          "title_count": 384,
+          "movie_title_count": 162,
+          "show_title_count": 222
+        },
+        {
+          "name": "Karma Houdini",
+          "occurrences": 6783,
+          "title_count": 6614,
+          "movie_title_count": 5345,
+          "show_title_count": 1269
+        }
+      ],
+      "synthetic_query": "Series where major actions have lasting consequences",
+      "novelty_class": "mixed_new_devices_and_previously_suggested_consequences"
+    },
+    {
+      "id": "coercion_justice_relationships",
+      "priority": "high",
+      "disposition": "sparse_social_concepts",
+      "novelty_vs_previous_recommendations": "Wrongful accusation, exoneration, blackmail, stalking, gaslighting, incest, teen pregnancy and abortion-related story subjects extend the prior vocabulary. Arranged marriage and infertility were already in queries-findings.md; consent/bodily autonomy was already a broad candidate. Existing justice/coercive relationships and advisories provide broader coverage.",
+      "optional_fixed_keys": [],
+      "sparse_concept_seeds": [
+        "wrongful_accusation",
+        "exoneration",
+        "blackmail",
+        "stalking",
+        "gaslighting",
+        "arranged_marriage",
+        "forced_marriage",
+        "incest",
+        "teen_pregnancy",
+        "reproductive_choice"
+      ],
+      "exact_source_names": [
+        {
+          "name": "Frame-Up",
+          "occurrences": 1140,
+          "title_count": 1135,
+          "movie_title_count": 762,
+          "show_title_count": 373
+        },
+        {
+          "name": "Clear My Name",
+          "occurrences": 883,
+          "title_count": 883,
+          "movie_title_count": 600,
+          "show_title_count": 283
+        },
+        {
+          "name": "Miscarriage of Justice",
+          "occurrences": 371,
+          "title_count": 371,
+          "movie_title_count": 242,
+          "show_title_count": 129
+        },
+        {
+          "name": "Blackmail",
+          "occurrences": 1368,
+          "title_count": 1365,
+          "movie_title_count": 1032,
+          "show_title_count": 333
+        },
+        {
+          "name": "Stalker with a Crush",
+          "occurrences": 1794,
+          "title_count": 1791,
+          "movie_title_count": 1242,
+          "show_title_count": 549
+        },
+        {
+          "name": "Gaslighting",
+          "occurrences": 847,
+          "title_count": 844,
+          "movie_title_count": 677,
+          "show_title_count": 167
+        },
+        {
+          "name": "Arranged Marriage",
+          "occurrences": 856,
+          "title_count": 856,
+          "movie_title_count": 525,
+          "show_title_count": 331
+        },
+        {
+          "name": "Brother–Sister Incest",
+          "occurrences": 853,
+          "title_count": 853,
+          "movie_title_count": 564,
+          "show_title_count": 289
+        },
+        {
+          "name": "Teen Pregnancy",
+          "occurrences": 580,
+          "title_count": 579,
+          "movie_title_count": 372,
+          "show_title_count": 207
+        },
+        {
+          "name": "Abortion Fallout Drama",
+          "occurrences": 206,
+          "title_count": 206,
+          "movie_title_count": 142,
+          "show_title_count": 64
+        }
+      ],
+      "synthetic_query": "A protagonist trying to clear their name after being framed",
+      "novelty_class": "mixed_new_specifics_and_prior_relationship_concepts",
+      "previously_identified_here": [
+        "arranged_marriage",
+        "infertility",
+        "consent_or_bodily_autonomy"
+      ]
+    },
+    {
+      "id": "nonhuman_sapience",
+      "priority": "medium",
+      "disposition": "entity_capability_annotation",
+      "novelty_vs_previous_recommendations": "Existing animal entities and proposed sentient objects do not fully encode cognition, communication, uplift or collective minds. Bind the capability to the actual entity.",
+      "optional_fixed_keys": [],
+      "sparse_concept_seeds": [
+        "animal_speech",
+        "anthropomorphism",
+        "collective_mind",
+        "engineered_sapience"
+      ],
+      "exact_source_names": [
+        {
+          "name": "Talking Animal",
+          "occurrences": 684,
+          "title_count": 684,
+          "movie_title_count": 401,
+          "show_title_count": 283
+        },
+        {
+          "name": "Animal Talk",
+          "occurrences": 275,
+          "title_count": 272,
+          "movie_title_count": 192,
+          "show_title_count": 80
+        },
+        {
+          "name": "Hive Mind",
+          "occurrences": 174,
+          "title_count": 174,
+          "movie_title_count": 102,
+          "show_title_count": 72
+        },
+        {
+          "name": "Uplifted Animal",
+          "occurrences": 91,
+          "title_count": 91,
+          "movie_title_count": 75,
+          "show_title_count": 16
+        },
+        {
+          "name": "Sapient Ship",
+          "occurrences": 71,
+          "title_count": 71,
+          "movie_title_count": 47,
+          "show_title_count": 24
+        },
+        {
+          "name": "Animate Inanimate Object",
+          "occurrences": 498,
+          "title_count": 498,
+          "movie_title_count": 295,
+          "show_title_count": 203
+        }
+      ],
+      "synthetic_query": "Animals that talk to each other but humans cannot understand",
+      "novelty_class": "new_specific_concepts_or_distinctions"
+    },
+    {
+      "id": "spiritual_dream_spatial_mechanisms",
+      "priority": "medium",
+      "disposition": "sparse_world_mechanisms",
+      "novelty_vs_previous_recommendations": "Broader supernatural, dream sequences, superpowered combat and proposed mind control do not identify bargains, soul containment, curses, out-of-body states, nested dream worlds, impossible spaces or environment remaking. Curses, wishes and precognition were already in the query audit; this is fresh corroboration, not a new discovery. Soul containment, astral projection, nested dreams, impossible geometry and terraforming are new specifics.",
+      "optional_fixed_keys": [],
+      "sparse_concept_seeds": [
+        "faustian_bargain",
+        "curse",
+        "soul_containment",
+        "astral_projection",
+        "nested_dreams",
+        "non_euclidean_space",
+        "terraforming",
+        "super_strength",
+        "super_speed"
+      ],
+      "exact_source_names": [
+        {
+          "name": "Deal with the Devil",
+          "occurrences": 1040,
+          "title_count": 1040,
+          "movie_title_count": 699,
+          "show_title_count": 341
+        },
+        {
+          "name": "Soul Jar",
+          "occurrences": 220,
+          "title_count": 219,
+          "movie_title_count": 166,
+          "show_title_count": 53
+        },
+        {
+          "name": "Curse",
+          "occurrences": 143,
+          "title_count": 143,
+          "movie_title_count": 71,
+          "show_title_count": 72
+        },
+        {
+          "name": "Astral Projection",
+          "occurrences": 145,
+          "title_count": 145,
+          "movie_title_count": 93,
+          "show_title_count": 52
+        },
+        {
+          "name": "Dream Within a Dream",
+          "occurrences": 236,
+          "title_count": 236,
+          "movie_title_count": 164,
+          "show_title_count": 72
+        },
+        {
+          "name": "Alien Geometries",
+          "occurrences": 144,
+          "title_count": 142,
+          "movie_title_count": 113,
+          "show_title_count": 29
+        },
+        {
+          "name": "Hostile Terraforming",
+          "occurrences": 77,
+          "title_count": 77,
+          "movie_title_count": 33,
+          "show_title_count": 44
+        },
+        {
+          "name": "Super-Strength",
+          "occurrences": 591,
+          "title_count": 587,
+          "movie_title_count": 420,
+          "show_title_count": 167
+        },
+        {
+          "name": "Super-Speed",
+          "occurrences": 322,
+          "title_count": 322,
+          "movie_title_count": 194,
+          "show_title_count": 128
+        }
+      ],
+      "synthetic_query": "A haunted building that is bigger inside and keeps changing layout",
+      "novelty_class": "mixed_new_mechanisms_and_prior_supernatural_seeds",
+      "previously_identified_here": [
+        "curse",
+        "wishes",
+        "precognition"
+      ]
+    },
+    {
+      "id": "additional_entity_taxonomy",
+      "priority": "medium",
+      "disposition": "sparse_entity_concepts",
+      "novelty_vs_previous_recommendations": "The prior seed list covers dragons, witches and shapeshifters but omits additional recognizable creature types. A creature mention, metaphor and costume are different assertions.",
+      "optional_fixed_keys": [],
+      "sparse_concept_seeds": [
+        "goblin",
+        "golem",
+        "unicorn",
+        "mummy",
+        "giant",
+        "giant_arachnid"
+      ],
+      "exact_source_names": [
+        {
+          "name": "Our Goblins Are Different",
+          "occurrences": 110,
+          "title_count": 110,
+          "movie_title_count": 79,
+          "show_title_count": 31
+        },
+        {
+          "name": "Golem",
+          "occurrences": 124,
+          "title_count": 124,
+          "movie_title_count": 83,
+          "show_title_count": 41
+        },
+        {
+          "name": "Unicorn",
+          "occurrences": 60,
+          "title_count": 60,
+          "movie_title_count": 27,
+          "show_title_count": 33
+        },
+        {
+          "name": "Mummy",
+          "occurrences": 66,
+          "title_count": 66,
+          "movie_title_count": 34,
+          "show_title_count": 32
+        },
+        {
+          "name": "Giant Spider",
+          "occurrences": 252,
+          "title_count": 247,
+          "movie_title_count": 149,
+          "show_title_count": 98
+        }
+      ],
+      "synthetic_query": "Fantasy with golems and goblins",
+      "novelty_class": "new_specific_concepts_or_distinctions"
+    },
+    {
+      "id": "subversion_and_conventions",
+      "priority": "medium",
+      "disposition": "attributed_style_concepts",
+      "novelty_vs_previous_recommendations": "Subversion and examination of genre conventions are not necessarily parody, satire, homage or self-reference. Attribute interpretive claims and bind them to the convention examined.",
+      "optional_fixed_keys": [],
+      "sparse_concept_seeds": [
+        "genre_deconstruction",
+        "trope_aware_character",
+        "lampshading"
+      ],
+      "exact_source_names": [
+        {
+          "name": "Deconstruction",
+          "occurrences": 1240,
+          "title_count": 1234,
+          "movie_title_count": 978,
+          "show_title_count": 256
+        },
+        {
+          "name": "Genre Deconstruction",
+          "occurrences": 406,
+          "title_count": 406,
+          "movie_title_count": 338,
+          "show_title_count": 68
+        },
+        {
+          "name": "Lampshade Hanging",
+          "occurrences": 1497,
+          "title_count": 1491,
+          "movie_title_count": 922,
+          "show_title_count": 569
+        },
+        {
+          "name": "Genre Savvy",
+          "occurrences": 1331,
+          "title_count": 1328,
+          "movie_title_count": 936,
+          "show_title_count": 392
+        }
+      ],
+      "synthetic_query": "A superhero story that examines the consequences of superhero conventions",
+      "novelty_class": "new_specific_concepts_or_distinctions"
+    },
+    {
+      "id": "additional_visual_techniques",
+      "priority": "medium",
+      "disposition": "sparse_technique_concepts",
+      "novelty_vs_previous_recommendations": "Specific cuts and camera treatments remain searchable technical vocabulary; existing editing quality and stylization do not provide those identifiers.",
+      "optional_fixed_keys": [],
+      "sparse_concept_seeds": [
+        "match_cut",
+        "dutch_angle",
+        "ironic_editing_juxtaposition",
+        "freeze_frame_detail",
+        "slow_motion"
+      ],
+      "exact_source_names": [
+        {
+          "name": "Match Cut",
+          "occurrences": 1750,
+          "title_count": 1750,
+          "movie_title_count": 1637,
+          "show_title_count": 113
+        },
+        {
+          "name": "Dutch Angle",
+          "occurrences": 568,
+          "title_count": 567,
+          "movie_title_count": 485,
+          "show_title_count": 82
+        },
+        {
+          "name": "Gilligan Cut",
+          "occurrences": 2117,
+          "title_count": 2116,
+          "movie_title_count": 1565,
+          "show_title_count": 551
+        },
+        {
+          "name": "Freeze-Frame Bonus",
+          "occurrences": 3204,
+          "title_count": 3179,
+          "movie_title_count": 2420,
+          "show_title_count": 759
+        }
+      ],
+      "synthetic_query": "Stylized suspense with Dutch angles and match cuts",
+      "novelty_class": "new_specific_concepts_or_distinctions"
+    }
+  ],
+  "comparison_scope": [
+    "llm-definition.json",
+    "definition.json",
+    "recommended-changes.json",
+    "essence-findings.md",
+    "movies-report.md",
+    "shows-findings.md",
+    "queries-findings.md"
+  ]
+}

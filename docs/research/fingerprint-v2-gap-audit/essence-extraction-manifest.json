@@ -1,0 +1,34 @@
+{
+  "started_at": "2026-10-19T05:19:43.247973+00:00",
+  "source": "Production Crate public catalog fields only; SELECT statements only.",
+  "counting": "occurrences counts unnest rows, title_count deduplicates repeated identical tags within each title. Case and spelling preserved. Example title is lexicographically first title carrying that exact tag.",
+  "queries": [
+    "SELECT tag, count(*) AS occurrences, count(DISTINCT tmdb_id) AS title_count, min(title) AS example_title FROM (SELECT unnest(essence_tags) AS tag, tmdb_id, title FROM movie WHERE essence_tags IS NOT NULL) t GROUP BY tag ORDER BY occurrences DESC, tag ASC LIMIT 1000000",
+    "SELECT tag, count(*) AS occurrences, count(DISTINCT tmdb_id) AS title_count, min(title) AS example_title FROM (SELECT unnest(essence_tags) AS tag, tmdb_id, title FROM show WHERE essence_tags IS NOT NULL) t GROUP BY tag ORDER BY occurrences DESC, tag ASC LIMIT 1000000"
+  ],
+  "datasets": {
+    "essence-tags-movie.json": {
+      "unique_tags": 236695,
+      "occurrences": 1435446,
+      "sha256": "3c38a516fb251ab5c788be64568a8ea3a647cfc06c058ced9c4aad4c2c52dd6c",
+      "archive_file": "essence-tags-movie.json.gz",
+      "archive_sha256": "1b4935a6e65e3f0caec473551ce44ce717b8c0ffa472d5c8cc9472844b83ad9e"
+    },
+    "essence-tags-show.json": {
+      "unique_tags": 151875,
+      "occurrences": 788981,
+      "sha256": "c0acdcad236f5b54f9ab730dd5fc2dc542c1863922d9084e57a95a01012e1942",
+      "archive_file": "essence-tags-show.json.gz",
+      "archive_sha256": "ea1747c916eb58ec5aa04e56c42cbf64b3db0c57bf6b59ce0334823f8956b279"
+    },
+    "essence-tags-all.json": {
+      "unique_tags": 334284,
+      "occurrences": 2224427,
+      "sha256": "26a17418e9db8f8c453c97e9abf4810326d641f89602e2d7cea8e0c699f338c4",
+      "archive_file": "essence-tags-all.json.gz",
+      "archive_sha256": "85e320fa22647067370993ccc85ad2d8e31152917322b4dca16cb260d0da90dd"
+    }
+  },
+  "finished_at": "2026-10-19T05:20:31.335865+00:00",
+  "archive_note": "Large source exports are gzip-compressed. Dataset sha256 values describe decompressed original JSON bytes; archive_sha256 describes the saved gzip file."
+}

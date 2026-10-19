@@ -1,0 +1,1132 @@
+{
+  "status": "Proposals only; current definition and other audit artifacts unchanged.",
+  "inventory_source": "tropes-inventory-all.json",
+  "stored_context_source": "tropes-stored-examples.json",
+  "inventory_exact_names": 42936,
+  "review_method": "Reviewed the 450 most frequent exact labels, focused candidate-name families and available targeted stored application snippets. This is not semantic review of all 42,936 names.",
+  "first_tranche": "Foreshadowing/setup-payoff and dramatic irony are the strongest additional fixed-score evaluation candidates. Implement sparse structure/role concepts first for the remaining families.",
+  "proposals": [
+    {
+      "id": "setup_payoff",
+      "priority": "high",
+      "route": "new_scored_attribute_evaluation_candidate",
+      "meaning": "Earlier details anticipate or enable later developments; setup is linked to payoff rather than merely recurring.",
+      "existing_coverage_boundary": "Twist frequency/impact measure revelations, and repeat_discovery measures affordance; neither identifies advance preparation. Narrative cohesion is a quality judgment.",
+      "proposed_change": "Add sparse foreshadowing and consequential_setup_payoff concepts plus optional setup_event→payoff_event links. Evaluate storytelling.foreshadowing_intensity as a broad descriptor, independently of quality. Do not automatically add separate foreshadowing, Chekhov gun and payoff scores to similarity.",
+      "example_query": "Intricate thrillers where small early details matter later",
+      "exact_label_statistics": [
+        {
+          "exact_name": "Foreshadowing",
+          "title_count": 12133,
+          "occurrences": 12322,
+          "movie_title_count": 9932,
+          "show_title_count": 2201
+        },
+        {
+          "exact_name": "Chekhov's Gun",
+          "title_count": 10266,
+          "occurrences": 10342,
+          "movie_title_count": 8640,
+          "show_title_count": 1626
+        },
+        {
+          "exact_name": "Chekhov's Skill",
+          "title_count": 3361,
+          "occurrences": 3390,
+          "movie_title_count": 2878,
+          "show_title_count": 483
+        }
+      ],
+      "stored_context_summary": "The stored FLOW entry explains an initially discarded buoy later helping the cat survive; Vortex links an early unattended stove to a later event. These establish a setup/payoff relation, not merely a surprise twist.",
+      "stored_example_references": [
+        {
+          "trope_name": "Chekhov's Gun",
+          "trope_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/ChekhovsGun",
+          "media_type": "movie",
+          "media_tmdb_id": 1262061,
+          "stored_title": "The Guest",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "Chekhov's Gun",
+          "trope_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/ChekhovsGun",
+          "media_type": "movie",
+          "media_tmdb_id": 1271616,
+          "stored_title": "Jo",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "Chekhov's Gun",
+          "trope_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/ChekhovsGun",
+          "media_type": "movie",
+          "media_tmdb_id": 1281775,
+          "stored_title": "FLOW",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "Foreshadowing",
+          "trope_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/Foreshadowing",
+          "media_type": "movie",
+          "media_tmdb_id": 1260533,
+          "stored_title": "Vortex",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "Foreshadowing",
+          "trope_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/Foreshadowing",
+          "media_type": "movie",
+          "media_tmdb_id": 1274978,
+          "stored_title": "Threads",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "Foreshadowing",
+          "trope_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/Foreshadowing",
+          "media_type": "movie",
+          "media_tmdb_id": 1275366,
+          "stored_title": "Tommy",
+          "source_file": "tropes-stored-examples.json"
+        }
+      ],
+      "evidence_limit": "Statistics count stored catalog IDs per exact label, not independently verified distinct works or observed searches. Stored snippets are title-specific applications, not canonical trope definitions; identity, application polarity and scope require validation."
+    },
+    {
+      "id": "dramatic_irony",
+      "priority": "high",
+      "route": "new_scored_attribute_evaluation_candidate",
+      "meaning": "The audience knows important facts that one or more characters do not.",
+      "existing_coverage_boundary": "Information withholding is a delay in information supplied to the viewer; dramatic irony can instead give the audience more information than a character. Unreliable narration is not required.",
+      "proposed_change": "Add dramatic_irony/asymmetric_audience_knowledge as a narrative concept; evaluate a scoped storytelling.dramatic_irony_intensity descriptor if this repeatedly improves suspense/comedy search. Bind knowledge to audience and character where exact requests need it.",
+      "example_query": "Thrillers where we know who the killer is while the characters do not",
+      "exact_label_statistics": [
+        {
+          "exact_name": "Dramatic Irony",
+          "title_count": 2389,
+          "occurrences": 2396,
+          "movie_title_count": 1888,
+          "show_title_count": 501
+        }
+      ],
+      "stored_context_summary": "The Exit Smiling explanation describes a character wishing someone could play a role that the audience already knows she performed for him. Only one stored example was available in the targeted extract, so broader calibration remains outstanding.",
+      "stored_example_references": [
+        {
+          "trope_name": "Dramatic Irony",
+          "trope_url": "https://tvtropes.orghttps://tvtropes.org/pmwiki/pmwiki.php/Main/DramaticIrony",
+          "media_type": "movie",
+          "media_tmdb_id": 99946,
+          "stored_title": "Exit Smiling",
+          "source_file": "tropes-stored-examples.json"
+        }
+      ],
+      "evidence_limit": "Statistics count stored catalog IDs per exact label, not independently verified distinct works or observed searches. Stored snippets are title-specific applications, not canonical trope definitions; identity, application polarity and scope require validation."
+    },
+    {
+      "id": "frame_and_embedded_stories",
+      "priority": "high",
+      "route": "sparse_structure_concepts",
+      "meaning": "A framing situation contains a narrated, written, performed or otherwise embedded story.",
+      "existing_coverage_boundary": "Meta-narrative and multiple viewpoints can occur without nested stories; flashbacks and anthology structure do not imply a narrative frame.",
+      "proposed_change": "Add frame_narrative and embedded_story structure concepts, with parent_story/embedded_story and narrator relations. Avoid a universal nesting-complexity score.",
+      "example_query": "Movies told as someone recounting their past; stories inside stories",
+      "exact_label_statistics": [
+        {
+          "exact_name": "Framing Device",
+          "title_count": 1052,
+          "occurrences": 1056,
+          "movie_title_count": 873,
+          "show_title_count": 179
+        },
+        {
+          "exact_name": "Story Within a Story",
+          "title_count": 51,
+          "occurrences": 51,
+          "movie_title_count": 49,
+          "show_title_count": 2
+        }
+      ],
+      "stored_context_summary": "The Sandakan No. 8 explanation describes a reporter eliciting an older woman’s story. King of Devil’s Island describes letters recasting events as a whaling story. These illustrate different frame/embedding uses.",
+      "stored_example_references": [
+        {
+          "trope_name": "Story Within a Story",
+          "trope_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/StoryWithinAStory",
+          "media_type": "movie",
+          "media_tmdb_id": 73211,
+          "stored_title": "King of Devil's Island",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "Story Within a Story",
+          "trope_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/StoryWithinAStory",
+          "media_type": "movie",
+          "media_tmdb_id": 469840,
+          "stored_title": "Rigoletto",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "Story Within a Story",
+          "trope_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/StoryWithinAStory",
+          "media_type": "movie",
+          "media_tmdb_id": 806170,
+          "stored_title": "Rigoletto",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "Framing Device",
+          "trope_url": "https://tvtropes.orghttps://tvtropes.org/pmwiki/pmwiki.php/Main/FramingDevice",
+          "media_type": "movie",
+          "media_tmdb_id": 12470,
+          "stored_title": "Sandakan No. 8",
+          "source_file": "tropes-stored-examples.json"
+        }
+      ],
+      "evidence_limit": "Statistics count stored catalog IDs per exact label, not independently verified distinct works or observed searches. Stored snippets are title-specific applications, not canonical trope definitions; identity, application polarity and scope require validation."
+    },
+    {
+      "id": "retellings_and_refocalization",
+      "priority": "medium",
+      "route": "sparse_structure_concepts",
+      "meaning": "The same event can be retold through conflicting accounts or revisited with new context.",
+      "existing_coverage_boundary": "Nonlinearity and multiple_viewpoints already cover broad structure. They do not establish that perspectives revisit the same event or contradict each other.",
+      "proposed_change": "Add conflicting_retellings, repeated_event_new_perspective and retrospective_recontextualization as precise structure concepts. Preserve relations among accounts and the event; do not duplicate generic nonlinearity.",
+      "example_query": "The same incident retold from conflicting perspectives",
+      "exact_label_statistics": [
+        {
+          "exact_name": "\"Rashomon\"-Style",
+          "title_count": 384,
+          "occurrences": 386,
+          "movie_title_count": 227,
+          "show_title_count": 157
+        },
+        {
+          "exact_name": "Once More, with Clarity",
+          "title_count": 1409,
+          "occurrences": 1410,
+          "movie_title_count": 1144,
+          "show_title_count": 265
+        },
+        {
+          "exact_name": "Anachronic Order",
+          "title_count": 1073,
+          "occurrences": 1077,
+          "movie_title_count": 791,
+          "show_title_count": 282
+        }
+      ],
+      "stored_context_summary": "The Mexican source describes repeated, changing versions of a gun’s history; the My Tomorrow, Your Yesterday source describes revisiting earlier moments from another character’s perspective after a revelation.",
+      "stored_example_references": [
+        {
+          "trope_name": "\"Rashomon\"-Style",
+          "trope_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/RashomonStyle",
+          "media_type": "movie",
+          "media_tmdb_id": 10900,
+          "stored_title": "Surveillance",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "\"Rashomon\"-Style",
+          "trope_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/RashomonStyle",
+          "media_type": "movie",
+          "media_tmdb_id": 670942,
+          "stored_title": "The Mexican",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "\"Rashomon\"-Style",
+          "trope_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/RashomonStyle",
+          "media_type": "movie",
+          "media_tmdb_id": 786602,
+          "stored_title": "Fame",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "Anachronic Order",
+          "trope_url": "https://tvtropes.orghttps://tvtropes.org/pmwiki/pmwiki.php/Main/AnachronicOrder",
+          "media_type": "movie",
+          "media_tmdb_id": 49603,
+          "stored_title": "Toyland",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "Anachronic Order",
+          "trope_url": "https://tvtropes.orghttps://tvtropes.org/pmwiki/pmwiki.php/Main/AnachronicOrder",
+          "media_type": "movie",
+          "media_tmdb_id": 252813,
+          "stored_title": "Toyland",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "Anachronic Order",
+          "trope_url": "https://tvtropes.orghttps://tvtropes.org/pmwiki/pmwiki.php/Main/AnachronicOrder",
+          "media_type": "movie",
+          "media_tmdb_id": 428099,
+          "stored_title": "My Tomorrow, Your Yesterday",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "Once More, with Clarity",
+          "trope_url": "https://tvtropes.orghttps://tvtropes.org/pmwiki/pmwiki.php/Main/OnceMoreWithClarity",
+          "media_type": "movie",
+          "media_tmdb_id": 428099,
+          "stored_title": "My Tomorrow, Your Yesterday",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "Once More, with Clarity",
+          "trope_url": "https://tvtropes.orghttps://tvtropes.org/pmwiki/pmwiki.php/Main/OnceMoreWithClarity",
+          "media_type": "movie",
+          "media_tmdb_id": 1478016,
+          "stored_title": "My Tomorrow Your Yesterday",
+          "source_file": "tropes-stored-examples.json"
+        }
+      ],
+      "evidence_limit": "Statistics count stored catalog IDs per exact label, not independently verified distinct works or observed searches. Stored snippets are title-specific applications, not canonical trope definitions; identity, application polarity and scope require validation."
+    },
+    {
+      "id": "tonal_and_genre_transitions",
+      "priority": "high",
+      "route": "extend_existing_temporal_segments",
+      "meaning": "Abrupt local tone changes and sustained tonal/genre evolution differ from mixed averages.",
+      "existing_coverage_boundary": "The full V2 already has temporal_segments and explicitly distinguishes within-work from season-level change. This is an annotation/query extension, not a wholly absent data structure.",
+      "proposed_change": "Add scoped abrupt_tonal_shift, sustained_darkening, sustained_lightening and genre_transition concepts; connect neighboring segments where evidence supports the transition. Defer any required global tonal_volatility score.",
+      "example_query": "Comedies that turn into horror halfway through; sudden shifts between funny and disturbing",
+      "exact_label_statistics": [
+        {
+          "exact_name": "Mood Whiplash",
+          "title_count": 5398,
+          "occurrences": 5438,
+          "movie_title_count": 4099,
+          "show_title_count": 1299
+        },
+        {
+          "exact_name": "Genre Shift",
+          "title_count": 1291,
+          "occurrences": 1310,
+          "movie_title_count": 983,
+          "show_title_count": 308
+        },
+        {
+          "exact_name": "Cerebus Syndrome",
+          "title_count": 790,
+          "occurrences": 796,
+          "movie_title_count": 384,
+          "show_title_count": 406
+        }
+      ],
+      "stored_context_summary": "The Guest source describes a late transition from mystery-thriller to action-horror; the Super source describes humor diminishing as violence escalates; the Nowhere source describes repeated shifts among comedy, sex, sadness, violence and aliens.",
+      "stored_example_references": [
+        {
+          "trope_name": "Cerebus Syndrome",
+          "trope_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/CerebusSyndrome",
+          "media_type": "movie",
+          "media_tmdb_id": 406960,
+          "stored_title": "Super",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "Cerebus Syndrome",
+          "trope_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/CerebusSyndrome",
+          "media_type": "movie",
+          "media_tmdb_id": 1369004,
+          "stored_title": "Frank",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "Cerebus Syndrome",
+          "trope_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/CerebusSyndrome",
+          "media_type": "movie",
+          "media_tmdb_id": 1371634,
+          "stored_title": "Frank",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "Genre Shift",
+          "trope_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/GenreShift",
+          "media_type": "movie",
+          "media_tmdb_id": 1262061,
+          "stored_title": "The Guest",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "Genre Shift",
+          "trope_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/GenreShift",
+          "media_type": "movie",
+          "media_tmdb_id": 1286637,
+          "stored_title": "Irreversible",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "Genre Shift",
+          "trope_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/GenreShift",
+          "media_type": "movie",
+          "media_tmdb_id": 1484849,
+          "stored_title": "Akira",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "Mood Whiplash",
+          "trope_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/MoodWhiplash",
+          "media_type": "movie",
+          "media_tmdb_id": 1258322,
+          "stored_title": "Elemental",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "Mood Whiplash",
+          "trope_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/MoodWhiplash",
+          "media_type": "movie",
+          "media_tmdb_id": 1258578,
+          "stored_title": "Nowhere",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "Mood Whiplash",
+          "trope_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/MoodWhiplash",
+          "media_type": "movie",
+          "media_tmdb_id": 1303691,
+          "stored_title": "INSIDE OUT",
+          "source_file": "tropes-stored-examples.json"
+        }
+      ],
+      "evidence_limit": "Statistics count stored catalog IDs per exact label, not independently verified distinct works or observed searches. Stored snippets are title-specific applications, not canonical trope definitions; identity, application polarity and scope require validation."
+    },
+    {
+      "id": "conflict_topology_and_protagonist_role",
+      "priority": "high",
+      "route": "role_and_conflict_annotations",
+      "meaning": "Who is focal is distinct from who opposes whom, whether they are heroic, and whether opposition is a person, institution, environment or internal conflict.",
+      "existing_coverage_boundary": "Antihero is already broadly defined as departing from conventional heroic ethics/behavior. Morally ambiguous cast and character_emphasis do not establish villain protagonist or absence of a central villain.",
+      "proposed_change": "Add villain_protagonist, decoy_protagonist and nonhuman_or_internal_opposition as role-bound concepts. Do not add a literal no_antagonist boolean: the stored No Antagonist example for FLOW explicitly calls the flood its antagonist. Record absence of a central villain only with assessed coverage.",
+      "example_query": "Movies without a central villain; stories told from the villain’s perspective",
+      "exact_label_statistics": [
+        {
+          "exact_name": "Villain Protagonist",
+          "title_count": 2562,
+          "occurrences": 2585,
+          "movie_title_count": 2247,
+          "show_title_count": 315
+        },
+        {
+          "exact_name": "No Antagonist",
+          "title_count": 1473,
+          "occurrences": 1473,
+          "movie_title_count": 1202,
+          "show_title_count": 271
+        },
+        {
+          "exact_name": "Decoy Protagonist",
+          "title_count": 1802,
+          "occurrences": 1819,
+          "movie_title_count": 1577,
+          "show_title_count": 225
+        }
+      ],
+      "stored_context_summary": "The Letter explanation identifies the focal character as an adulterer and murderer. The FLOW explanation distinguishes obstacles and an impersonal flood from a single overarching villain. The Fargo example describes delayed focal-character introduction.",
+      "stored_example_references": [
+        {
+          "trope_name": "Decoy Protagonist",
+          "trope_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/DecoyProtagonist",
+          "media_type": "movie",
+          "media_tmdb_id": 275,
+          "stored_title": "Fargo",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "Decoy Protagonist",
+          "trope_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/DecoyProtagonist",
+          "media_type": "movie",
+          "media_tmdb_id": 10513,
+          "stored_title": "Plan 9 from Outer Space",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "Decoy Protagonist",
+          "trope_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/DecoyProtagonist",
+          "media_type": "movie",
+          "media_tmdb_id": 993554,
+          "stored_title": "The Sixth Day",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "No Antagonist",
+          "trope_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/NoAntagonist",
+          "media_type": "movie",
+          "media_tmdb_id": 1256826,
+          "stored_title": "The Wall",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "No Antagonist",
+          "trope_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/NoAntagonist",
+          "media_type": "movie",
+          "media_tmdb_id": 1266418,
+          "stored_title": "Another Year",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "No Antagonist",
+          "trope_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/NoAntagonist",
+          "media_type": "movie",
+          "media_tmdb_id": 1281775,
+          "stored_title": "FLOW",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "Villain Protagonist",
+          "trope_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/VillainProtagonist",
+          "media_type": "movie",
+          "media_tmdb_id": 1255507,
+          "stored_title": "Teddy",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "Villain Protagonist",
+          "trope_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/VillainProtagonist",
+          "media_type": "movie",
+          "media_tmdb_id": 1281708,
+          "stored_title": "The Letter",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "Villain Protagonist",
+          "trope_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/VillainProtagonist",
+          "media_type": "movie",
+          "media_tmdb_id": 1296828,
+          "stored_title": "TEDDY",
+          "source_file": "tropes-stored-examples.json"
+        }
+      ],
+      "evidence_limit": "Statistics count stored catalog IDs per exact label, not independently verified distinct works or observed searches. Stored snippets are title-specific applications, not canonical trope definitions; identity, application polarity and scope require validation."
+    },
+    {
+      "id": "agency_and_practical_competence",
+      "priority": "medium",
+      "route": "sparse_character_and_activity_concepts",
+      "meaning": "An active planner, a person swept along by events, a witness-narrator and a skilled practical worker are different character/story arrangements.",
+      "existing_coverage_boundary": "Child/female agency are existing dimensions, and intellectual_problem_solver covers reasoning. Practical competence, focality and general agency should not be collapsed into genius or action strength.",
+      "proposed_change": "Add reactive_protagonist, supporting_narrator and practical_problem_solving concepts with role/scope. Consider replacing demographic-specific agency with a general agentive-character annotation plus role binding before adding another scalar.",
+      "example_query": "Capable professionals doing their jobs; ordinary people swept into events",
+      "exact_label_statistics": [
+        {
+          "exact_name": "Pinball Protagonist",
+          "title_count": 199,
+          "occurrences": 199,
+          "movie_title_count": 181,
+          "show_title_count": 18
+        },
+        {
+          "exact_name": "Supporting Protagonist",
+          "title_count": 259,
+          "occurrences": 259,
+          "movie_title_count": 211,
+          "show_title_count": 48
+        },
+        {
+          "exact_name": "Competence Porn",
+          "title_count": 62,
+          "occurrences": 62,
+          "movie_title_count": 34,
+          "show_title_count": 28
+        },
+        {
+          "exact_name": "Non-Action Guy",
+          "title_count": 387,
+          "occurrences": 391,
+          "movie_title_count": 270,
+          "show_title_count": 117
+        }
+      ],
+      "stored_context_summary": "The Cast Away explanation describes trial-and-error survival engineering and rope calculations; the Spotlight explanation describes careful journalistic work. These are practical/problem-solving treatment, not a diagnosis of intellectual genius.",
+      "stored_example_references": [
+        {
+          "trope_name": "Competence Porn",
+          "trope_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/CompetencePorn",
+          "media_type": "movie",
+          "media_tmdb_id": 534416,
+          "stored_title": "Cast Away",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "Competence Porn",
+          "trope_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/CompetencePorn",
+          "media_type": "movie",
+          "media_tmdb_id": 676568,
+          "stored_title": "Spotlight",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "Competence Porn",
+          "trope_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/CompetencePorn",
+          "media_type": "movie",
+          "media_tmdb_id": 764230,
+          "stored_title": "Castaway",
+          "source_file": "tropes-stored-examples.json"
+        }
+      ],
+      "evidence_limit": "Statistics count stored catalog IDs per exact label, not independently verified distinct works or observed searches. Stored snippets are title-specific applications, not canonical trope definitions; identity, application polarity and scope require validation."
+    },
+    {
+      "id": "moral_and_allegiance_arc_subtypes",
+      "priority": "medium",
+      "route": "refine_existing_arc_concepts",
+      "meaning": "Moral decline, reform and changes of allegiance are related but not interchangeable.",
+      "existing_coverage_boundary": "tropes.fall_from_grace explicitly includes losing moral standing; redemption and transformation_arc already exist. The new proposed corruption score concerns abuse of entrusted power, not every moral decline.",
+      "proposed_change": "Use protagonist-bound moral_descent, moral_reform and allegiance_change subtypes only where useful. Reuse existing parent scores; do not add another broad moral_descent, corruption_arc or redemption score. Distinguish genuine reform from undercover deception or coerced alignment.",
+      "example_query": "Protagonists who gradually become villains; enemies who genuinely reform",
+      "exact_label_statistics": [
+        {
+          "exact_name": "Protagonist Journey to Villain",
+          "title_count": 386,
+          "occurrences": 386,
+          "movie_title_count": 327,
+          "show_title_count": 59
+        },
+        {
+          "exact_name": "Face–Heel Turn",
+          "title_count": 1334,
+          "occurrences": 1337,
+          "movie_title_count": 935,
+          "show_title_count": 399
+        },
+        {
+          "exact_name": "Heel–Face Turn",
+          "title_count": 3067,
+          "occurrences": 3109,
+          "movie_title_count": 2154,
+          "show_title_count": 913
+        }
+      ],
+      "stored_context_summary": "The Menace II Society explanation describes a child growing into an embraced criminal lifestyle. The To Kill a Mockingbird source describes a member of a lynch mob being shamed into changing his stance. These are directional arcs.",
+      "stored_example_references": [
+        {
+          "trope_name": "Heel–Face Turn",
+          "trope_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/HeelFaceTurn",
+          "media_type": "movie",
+          "media_tmdb_id": 595,
+          "stored_title": "To Kill a Mockingbird",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "Heel–Face Turn",
+          "trope_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/HeelFaceTurn",
+          "media_type": "movie",
+          "media_tmdb_id": 1613,
+          "stored_title": "The 51st State",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "Heel–Face Turn",
+          "trope_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/HeelFaceTurn",
+          "media_type": "movie",
+          "media_tmdb_id": 3025,
+          "stored_title": "The Two Faces of Dr. Jekyll",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "Protagonist Journey to Villain",
+          "trope_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/ProtagonistJourneyToVillain",
+          "media_type": "movie",
+          "media_tmdb_id": 9516,
+          "stored_title": "Menace II Society",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "Protagonist Journey to Villain",
+          "trope_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/ProtagonistJourneyToVillain",
+          "media_type": "movie",
+          "media_tmdb_id": 1262249,
+          "stored_title": "The Apprentice",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "Protagonist Journey to Villain",
+          "trope_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/ProtagonistJourneyToVillain",
+          "media_type": "movie",
+          "media_tmdb_id": 1280984,
+          "stored_title": "Báite",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "Face–Heel Turn",
+          "trope_url": "https://tvtropes.orghttps://tvtropes.org/pmwiki/pmwiki.php/Main/FaceHeelTurn",
+          "media_type": "show",
+          "media_tmdb_id": 65,
+          "stored_title": "The Job",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "Face–Heel Turn",
+          "trope_url": "https://tvtropes.orghttps://tvtropes.org/pmwiki/pmwiki.php/Main/FaceHeelTurn",
+          "media_type": "show",
+          "media_tmdb_id": 58759,
+          "stored_title": "The Job",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "Heel–Face Turn",
+          "trope_url": "https://tvtropes.orghttps://tvtropes.org/pmwiki/pmwiki.php/Main/HeelFaceTurn",
+          "media_type": "movie",
+          "media_tmdb_id": 32695,
+          "stored_title": "Walking Vengeance",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "Heel–Face Turn",
+          "trope_url": "https://tvtropes.orghttps://tvtropes.org/pmwiki/pmwiki.php/Main/HeelFaceTurn",
+          "media_type": "show",
+          "media_tmdb_id": 238469,
+          "stored_title": "The Fearless",
+          "source_file": "tropes-stored-examples.json"
+        }
+      ],
+      "evidence_limit": "Statistics count stored catalog IDs per exact label, not independently verified distinct works or observed searches. Stored snippets are title-specific applications, not canonical trope definitions; identity, application polarity and scope require validation."
+    },
+    {
+      "id": "relationship_origin_and_commitment",
+      "priority": "medium",
+      "route": "sparse_relationship_concepts",
+      "meaning": "How a bond began and what commitment it involves are separate from current marriage/friendship/romance centrality.",
+      "existing_coverage_boundary": "Current seeds include fake_dating, friends_to_lovers and second_chance_romance; those do not imply arranged marriage, transactional marriage, childhood connection or enduring platonic partnership.",
+      "proposed_change": "Add arranged_marriage, marriage_of_convenience, childhood_friends and enduring_platonic_partnership with character bindings. Do not infer sexual orientation from Heterosexual Life-Partners or explicit LGBTQ identity from shipping/ambiguous-relationship labels. Keep mutual romance versus interpretation separate.",
+      "example_query": "Arranged marriages that become loving; lifelong platonic partners",
+      "exact_label_statistics": [
+        {
+          "exact_name": "Arranged Marriage",
+          "title_count": 856,
+          "occurrences": 856,
+          "movie_title_count": 525,
+          "show_title_count": 331
+        },
+        {
+          "exact_name": "Marriage of Convenience",
+          "title_count": 199,
+          "occurrences": 199,
+          "movie_title_count": 133,
+          "show_title_count": 66
+        },
+        {
+          "exact_name": "Platonic Life-Partners",
+          "title_count": 526,
+          "occurrences": 526,
+          "movie_title_count": 267,
+          "show_title_count": 259
+        },
+        {
+          "exact_name": "Childhood Friend Romance",
+          "title_count": 704,
+          "occurrences": 707,
+          "movie_title_count": 444,
+          "show_title_count": 260
+        },
+        {
+          "exact_name": "Childhood Friends",
+          "title_count": 411,
+          "occurrences": 411,
+          "movie_title_count": 222,
+          "show_title_count": 189
+        }
+      ],
+      "stored_context_summary": "The Tanna explanation says marriage is arranged by community custom and the character objects. The Animal Kingdom explanation describes a marriage proposed for legal parenthood. The Swap source frames an enduring bond as potentially becoming family rather than a romantic pairing.",
+      "stored_example_references": [
+        {
+          "trope_name": "Childhood Friends",
+          "trope_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/ChildhoodFriends",
+          "media_type": "movie",
+          "media_tmdb_id": 10744,
+          "stored_title": "The Cooler",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "Childhood Friends",
+          "trope_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/ChildhoodFriends",
+          "media_type": "movie",
+          "media_tmdb_id": 15069,
+          "stored_title": "WΔZ",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "Childhood Friends",
+          "trope_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/ChildhoodFriends",
+          "media_type": "show",
+          "media_tmdb_id": 285037,
+          "stored_title": "Passions",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "Marriage of Convenience",
+          "trope_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/MarriageOfConvenience",
+          "media_type": "movie",
+          "media_tmdb_id": 401905,
+          "stored_title": "Fahrenheit 451",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "Marriage of Convenience",
+          "trope_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/MarriageOfConvenience",
+          "media_type": "movie",
+          "media_tmdb_id": 943134,
+          "stored_title": "The Animal Kingdom",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "Marriage of Convenience",
+          "trope_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/MarriageOfConvenience",
+          "media_type": "show",
+          "media_tmdb_id": 124788,
+          "stored_title": "Recht op Recht",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "Platonic Life-Partners",
+          "trope_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/PlatonicLifePartners",
+          "media_type": "movie",
+          "media_tmdb_id": 445632,
+          "stored_title": "The Swap",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "Platonic Life-Partners",
+          "trope_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/PlatonicLifePartners",
+          "media_type": "movie",
+          "media_tmdb_id": 605898,
+          "stored_title": "Clouds",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "Platonic Life-Partners",
+          "trope_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/PlatonicLifePartners",
+          "media_type": "show",
+          "media_tmdb_id": 76672,
+          "stored_title": "Celebrity Big Brother",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "Arranged Marriage",
+          "trope_url": "https://tvtropes.orghttps://tvtropes.org/pmwiki/pmwiki.php/Main/ArrangedMarriage",
+          "media_type": "movie",
+          "media_tmdb_id": 359151,
+          "stored_title": "Tanna",
+          "source_file": "tropes-stored-examples.json"
+        }
+      ],
+      "evidence_limit": "Statistics count stored catalog IDs per exact label, not independently verified distinct works or observed searches. Stored snippets are title-specific applications, not canonical trope definitions; identity, application polarity and scope require validation."
+    },
+    {
+      "id": "coercive_and_false_accusation_mechanisms",
+      "priority": "medium",
+      "route": "sparse_narrative_concepts",
+      "meaning": "Blackmail and framing someone for wrongdoing identify specific coercive/deceptive plot mechanisms.",
+      "existing_coverage_boundary": "Crime, coercive_relationship, institutional corruption and general deception do not establish these mechanisms. Do not treat them as synonymous with all betrayal or wrongful accusation.",
+      "proposed_change": "Add blackmail and frame_up; model blackmailer, target, leverage and falsely accused roles when queries require specificity. Distinguish knowingly framing someone from an innocent mistaken accusation.",
+      "example_query": "Blackmail thrillers; innocent people deliberately framed for crimes",
+      "exact_label_statistics": [
+        {
+          "exact_name": "Blackmail",
+          "title_count": 1365,
+          "occurrences": 1368,
+          "movie_title_count": 1032,
+          "show_title_count": 333
+        },
+        {
+          "exact_name": "Frame-Up",
+          "title_count": 1135,
+          "occurrences": 1140,
+          "movie_title_count": 762,
+          "show_title_count": 373
+        }
+      ],
+      "stored_context_summary": "The Exit Smiling source describes a threatened revelation of an earlier embezzlement frame-up, including the blackmailer, leverage and attempt to clear an accused person.",
+      "stored_example_references": [
+        {
+          "trope_name": "Blackmail",
+          "trope_url": "https://tvtropes.orghttps://tvtropes.org/pmwiki/pmwiki.php/Main/Blackmail",
+          "media_type": "movie",
+          "media_tmdb_id": 99946,
+          "stored_title": "Exit Smiling",
+          "source_file": "tropes-stored-examples.json"
+        }
+      ],
+      "evidence_limit": "Statistics count stored catalog IDs per exact label, not independently verified distinct works or observed searches. Stored snippets are title-specific applications, not canonical trope definitions; identity, application polarity and scope require validation."
+    },
+    {
+      "id": "red_herrings_and_investigative_misdirection",
+      "priority": "medium",
+      "route": "sparse_narrative_concepts",
+      "meaning": "False leads and restricted access to suspects/escape routes are narrower than mystery membership.",
+      "existing_coverage_boundary": "Puzzle-box, information_withholding and locked_room are related. The current locked_room definition concerns an apparently inaccessible crime scene, not a whole group unable to leave or get help.",
+      "proposed_change": "Add red_herring and closed_circle as precise concepts. Closed-circle can belong to survival/horror without a whodunit. Treat an averted expected payoff as a red-herring interpretation, not automatically failed writing.",
+      "example_query": "Closed-circle mysteries where nobody can leave; mysteries full of false leads",
+      "exact_label_statistics": [
+        {
+          "exact_name": "Red Herring",
+          "title_count": 2947,
+          "occurrences": 2971,
+          "movie_title_count": 2398,
+          "show_title_count": 549
+        },
+        {
+          "exact_name": "Closed Circle",
+          "title_count": 749,
+          "occurrences": 772,
+          "movie_title_count": 666,
+          "show_title_count": 83
+        }
+      ],
+      "stored_context_summary": "The Abigail explanation describes surrendered phones and a locked-down mansion. The Three O’Clock High source describes multiple barriers preventing departure from school. The Highway to Hell source describes a warning apparently pointing at the wrong person.",
+      "stored_example_references": [
+        {
+          "trope_name": "Closed Circle",
+          "trope_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/ClosedCircle",
+          "media_type": "movie",
+          "media_tmdb_id": 13339,
+          "stored_title": "Three O'Clock High",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "Closed Circle",
+          "trope_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/ClosedCircle",
+          "media_type": "movie",
+          "media_tmdb_id": 76804,
+          "stored_title": "The Cat and the Canary",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "Closed Circle",
+          "trope_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/ClosedCircle",
+          "media_type": "movie",
+          "media_tmdb_id": 1035866,
+          "stored_title": "Abigail",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "Red Herring",
+          "trope_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/RedHerring",
+          "media_type": "movie",
+          "media_tmdb_id": 1256679,
+          "stored_title": "Highway to Hell",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "Red Herring",
+          "trope_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/RedHerring",
+          "media_type": "movie",
+          "media_tmdb_id": 1301227,
+          "stored_title": "the awakening",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "Red Herring",
+          "trope_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/RedHerring",
+          "media_type": "movie",
+          "media_tmdb_id": 1312420,
+          "stored_title": "Big Game",
+          "source_file": "tropes-stored-examples.json"
+        }
+      ],
+      "evidence_limit": "Statistics count stored catalog IDs per exact label, not independently verified distinct works or observed searches. Stored snippets are title-specific applications, not canonical trope definitions; identity, application polarity and scope require validation."
+    },
+    {
+      "id": "deconstruction_and_symbolic_treatment",
+      "priority": "medium",
+      "route": "sparse_treatment_concepts",
+      "meaning": "Examining a convention’s consequences differs from parody; a recurring symbolic or musical idea differs from homage.",
+      "existing_coverage_boundary": "Parody/satire require comedy; self_reference is awareness of construction, and homage is tribute. Neither guarantees serious genre deconstruction. Symbolic/allegorical treatment is not automatically philosophical dialogue.",
+      "proposed_change": "Add genre_deconstruction, reconstruction, allegory, symbolic_motif and leitmotif as treatment concepts where supported. Do not add one scalar for every symbolic object or evaluative profundity. Motif relations link occurrences to ideas/characters.",
+      "example_query": "Serious deconstructions of superhero conventions; recurring symbolic imagery",
+      "exact_label_statistics": [
+        {
+          "exact_name": "Deconstruction",
+          "title_count": 1234,
+          "occurrences": 1240,
+          "movie_title_count": 978,
+          "show_title_count": 256
+        },
+        {
+          "exact_name": "Genre Deconstruction",
+          "title_count": 406,
+          "occurrences": 406,
+          "movie_title_count": 338,
+          "show_title_count": 68
+        },
+        {
+          "exact_name": "Rule of Symbolism",
+          "title_count": 2259,
+          "occurrences": 2261,
+          "movie_title_count": 2028,
+          "show_title_count": 231
+        },
+        {
+          "exact_name": "Leitmotif",
+          "title_count": 1805,
+          "occurrences": 1813,
+          "movie_title_count": 1244,
+          "show_title_count": 561
+        }
+      ],
+      "stored_context_summary": "The Split source explicitly examines how terrifying superhuman violence is to ordinary people. Current Rule of Symbolism examples only say nearly everything is symbolic; those excerpts are too vague for calibrated scoring. Leitmotif has inventory support but initially no reviewed snippet.",
+      "stored_example_references": [
+        {
+          "trope_name": "Deconstruction",
+          "trope_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/Deconstruction",
+          "media_type": "movie",
+          "media_tmdb_id": 1245598,
+          "stored_title": "Split",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "Deconstruction",
+          "trope_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/Deconstruction",
+          "media_type": "movie",
+          "media_tmdb_id": 1246918,
+          "stored_title": "The Last Supper",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "Deconstruction",
+          "trope_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/Deconstruction",
+          "media_type": "movie",
+          "media_tmdb_id": 1287356,
+          "stored_title": "Speak",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "Rule of Symbolism",
+          "trope_url": "https://tvtropes.orghttps://tvtropes.org/pmwiki/pmwiki.php/Main/RuleOfSymbolism",
+          "media_type": "movie",
+          "media_tmdb_id": 83934,
+          "stored_title": "You Are Here",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "Rule of Symbolism",
+          "trope_url": "https://tvtropes.orghttps://tvtropes.org/pmwiki/pmwiki.php/Main/RuleOfSymbolism",
+          "media_type": "movie",
+          "media_tmdb_id": 620853,
+          "stored_title": "You Are Here",
+          "source_file": "tropes-stored-examples.json"
+        }
+      ],
+      "evidence_limit": "Statistics count stored catalog IDs per exact label, not independently verified distinct works or observed searches. Stored snippets are title-specific applications, not canonical trope definitions; identity, application polarity and scope require validation."
+    },
+    {
+      "id": "episodic_reset_and_persistent_consequences",
+      "priority": "medium",
+      "route": "series_structure_concept",
+      "meaning": "Episodes can reset consequential changes even while continuity references persist.",
+      "existing_coverage_boundary": "formula_repetition concerns repeated plot patterns; episodic_independence concerns comprehension; serialized_dependence concerns prior knowledge. None alone establishes whether major changes persist.",
+      "proposed_change": "Add episodic_status_quo_reset or persistent_consequences structure concept with episode/season scope. Avoid interpreting renewal status or sitcom format as proof. No new broad score is necessary before evidence/calibration.",
+      "example_query": "Episodic shows where everything resets after each episode",
+      "exact_label_statistics": [
+        {
+          "exact_name": "Status Quo Is God",
+          "title_count": 872,
+          "occurrences": 874,
+          "movie_title_count": 282,
+          "show_title_count": 590
+        }
+      ],
+      "stored_context_summary": "The exact inventory label supports a candidate, but the initial stored-example extract did not include its application context. Keep this lower-evidence pending a representative source excerpt.",
+      "stored_example_references": [],
+      "evidence_limit": "Statistics count stored catalog IDs per exact label, not independently verified distinct works or observed searches. Stored snippets are title-specific applications, not canonical trope definitions; identity, application polarity and scope require validation."
+    },
+    {
+      "id": "vulnerability_survival_and_character_outcomes",
+      "priority": "medium",
+      "route": "event_outcome_annotations_not_scalar",
+      "meaning": "Character mortality, implausible survival and progressive cast attrition are different claims.",
+      "existing_coverage_boundary": "Personal stakes, ending tragedy and gore do not establish who survives. Anyone Can Die is critical shorthand, not a probabilistic guarantee that each protagonist is equally vulnerable.",
+      "proposed_change": "Add optional cast_attrition concept and character-specific outcome/arc relations under the already proposed event/role layer. Defer plot_armor or survival_predictability scalars; protect spoilers and preserve ambiguity. Never infer that a specific character dies from overall tragedy.",
+      "example_query": "Survival horror where the group dwindles; does the main couple survive?",
+      "exact_label_statistics": [
+        {
+          "exact_name": "Anyone Can Die",
+          "title_count": 2135,
+          "occurrences": 2150,
+          "movie_title_count": 1474,
+          "show_title_count": 661
+        },
+        {
+          "exact_name": "Plot Armor",
+          "title_count": 391,
+          "occurrences": 392,
+          "movie_title_count": 287,
+          "show_title_count": 104
+        },
+        {
+          "exact_name": "Dwindling Party",
+          "title_count": 1203,
+          "occurrences": 1212,
+          "movie_title_count": 1039,
+          "show_title_count": 164
+        }
+      ],
+      "stored_context_summary": "The Time-lapse source lists particular survivors and deaths, whereas the Das Boot Plot Armor source offers a detailed interpretive discussion of one survivor and wider losses. Different semantics require different representations.",
+      "stored_example_references": [
+        {
+          "trope_name": "Anyone Can Die",
+          "trope_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/AnyoneCanDie",
+          "media_type": "movie",
+          "media_tmdb_id": 1274978,
+          "stored_title": "Threads",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "Anyone Can Die",
+          "trope_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/AnyoneCanDie",
+          "media_type": "movie",
+          "media_tmdb_id": 1309061,
+          "stored_title": "Time-lapse",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "Anyone Can Die",
+          "trope_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/AnyoneCanDie",
+          "media_type": "movie",
+          "media_tmdb_id": 1309897,
+          "stored_title": "The Guest",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "Plot Armor",
+          "trope_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/PlotArmor",
+          "media_type": "movie",
+          "media_tmdb_id": 387,
+          "stored_title": "Das Boot",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "Plot Armor",
+          "trope_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/PlotArmor",
+          "media_type": "movie",
+          "media_tmdb_id": 1149001,
+          "stored_title": "Salt",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "Plot Armor",
+          "trope_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/PlotArmor",
+          "media_type": "movie",
+          "media_tmdb_id": 1293194,
+          "stored_title": "Drop",
+          "source_file": "tropes-stored-examples.json"
+        },
+        {
+          "trope_name": "Dwindling Party",
+          "trope_url": "https://tvtropes.orghttps://tvtropes.org/pmwiki/pmwiki.php/Main/DwindlingParty",
+          "media_type": "movie",
+          "media_tmdb_id": 46249,
+          "stored_title": "Planzet",
+          "source_file": "tropes-stored-examples.json"
+        }
+      ],
+      "evidence_limit": "Statistics count stored catalog IDs per exact label, not independently verified distinct works or observed searches. Stored snippets are title-specific applications, not canonical trope definitions; identity, application polarity and scope require validation."
+    }
+  ],
+  "conversion_contract_additions": [
+    "Resolve canonical URL identity and aliases; exact names are not unique stable concepts.",
+    "Preserve media type, catalog ID, source page, scope, evidence and application status.",
+    "Detect played-straight, subverted, inverted, averted, defied, discussed and uncertain applications from prose before deriving content presence.",
+    "Do not use trope labels to infer an animal, occupation, disability, represented identity or on-screen event.",
+    "Treat role-bound outcomes and revelation details as spoilers.",
+    "Deduplicate actual work identities separately from distinct catalog IDs before interpreting prevalence."
+  ]
+}

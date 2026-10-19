@@ -1,0 +1,1742 @@
+[
+  {
+    "name": "Adults are Useless",
+    "occurrences": 1,
+    "title_count": 1,
+    "movie_title_count": 0,
+    "show_title_count": 1,
+    "examples": [
+      {
+        "media_type": "show",
+        "title": "Hetty Feather"
+      }
+    ]
+  },
+  {
+    "name": "Anti-Cavalry",
+    "occurrences": 5,
+    "title_count": 5,
+    "movie_title_count": 4,
+    "show_title_count": 1,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "Braveheart"
+      },
+      {
+        "media_type": "show",
+        "title": "Deadliest Warrior"
+      }
+    ]
+  },
+  {
+    "name": "Godzilla, Mothra, King Ghidorah: Giant Monsters All-Out Attack!",
+    "occurrences": 3,
+    "title_count": 3,
+    "movie_title_count": 2,
+    "show_title_count": 1,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "Godzilla"
+      },
+      {
+        "media_type": "show",
+        "title": "Godzilla"
+      }
+    ]
+  },
+  {
+    "name": "Rockin' with Judy Jetson",
+    "occurrences": 1,
+    "title_count": 1,
+    "movie_title_count": 0,
+    "show_title_count": 1,
+    "examples": [
+      {
+        "media_type": "show",
+        "title": "Hanna-Barbera Superstars 10"
+      }
+    ]
+  },
+  {
+    "name": "Power Creep",
+    "occurrences": 2,
+    "title_count": 2,
+    "movie_title_count": 0,
+    "show_title_count": 2,
+    "examples": [
+      {
+        "media_type": "show",
+        "title": "Kamen Rider Geats"
+      }
+    ]
+  },
+  {
+    "name": "Fixed Camera",
+    "occurrences": 2,
+    "title_count": 2,
+    "movie_title_count": 2,
+    "show_title_count": 0,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "Dead Stream"
+      }
+    ]
+  },
+  {
+    "name": "Flying Broom Stick",
+    "occurrences": 9,
+    "title_count": 9,
+    "movie_title_count": 9,
+    "show_title_count": 0,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "Bewitched"
+      }
+    ]
+  },
+  {
+    "name": "Chain of Harm",
+    "occurrences": 1,
+    "title_count": 1,
+    "movie_title_count": 0,
+    "show_title_count": 1,
+    "examples": [
+      {
+        "media_type": "show",
+        "title": "The Maxx"
+      }
+    ]
+  },
+  {
+    "name": "Nuclear Nullifier",
+    "occurrences": 5,
+    "title_count": 5,
+    "movie_title_count": 3,
+    "show_title_count": 2,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "Ghost in the Shell: Stand Alone Complex - The Laughing Man"
+      },
+      {
+        "media_type": "show",
+        "title": "Ghost in the Shell: Stand Alone Complex"
+      }
+    ]
+  },
+  {
+    "name": "FTL Travel Sickness",
+    "occurrences": 10,
+    "title_count": 10,
+    "movie_title_count": 6,
+    "show_title_count": 4,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "Airplane II: The Sequel"
+      },
+      {
+        "media_type": "show",
+        "title": "Babylon 5"
+      }
+    ]
+  },
+  {
+    "name": "Ramone \"Gug\" Gugleamo",
+    "occurrences": 2,
+    "title_count": 2,
+    "movie_title_count": 0,
+    "show_title_count": 2,
+    "examples": [
+      {
+        "media_type": "show",
+        "title": "Detention"
+      }
+    ]
+  },
+  {
+    "name": "Multipart Episode",
+    "occurrences": 1,
+    "title_count": 1,
+    "movie_title_count": 0,
+    "show_title_count": 1,
+    "examples": [
+      {
+        "media_type": "show",
+        "title": "Tenderness in Legal net"
+      }
+    ]
+  },
+  {
+    "name": "Hero on Hiatus",
+    "occurrences": 2,
+    "title_count": 2,
+    "movie_title_count": 0,
+    "show_title_count": 2,
+    "examples": [
+      {
+        "media_type": "show",
+        "title": "Dragon Ball Z"
+      }
+    ]
+  },
+  {
+    "name": "With Europe, but Not of It",
+    "occurrences": 2,
+    "title_count": 2,
+    "movie_title_count": 2,
+    "show_title_count": 0,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "Death Line"
+      }
+    ]
+  },
+  {
+    "name": "Losing Is Worse Than Death",
+    "occurrences": 7,
+    "title_count": 7,
+    "movie_title_count": 3,
+    "show_title_count": 4,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "Snatch"
+      },
+      {
+        "media_type": "show",
+        "title": "Akagi"
+      }
+    ]
+  },
+  {
+    "name": "Narrating the Present",
+    "occurrences": 7,
+    "title_count": 7,
+    "movie_title_count": 3,
+    "show_title_count": 4,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "The Impostors"
+      },
+      {
+        "media_type": "show",
+        "title": "A Certain Magical Index"
+      }
+    ]
+  },
+  {
+    "name": "Forgot I Had A Phaser",
+    "occurrences": 1,
+    "title_count": 1,
+    "movie_title_count": 0,
+    "show_title_count": 1,
+    "examples": [
+      {
+        "media_type": "show",
+        "title": "Time Squad"
+      }
+    ]
+  },
+  {
+    "name": "Brits with Battleships",
+    "occurrences": 2,
+    "title_count": 2,
+    "movie_title_count": 1,
+    "show_title_count": 1,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "Thunderball"
+      },
+      {
+        "media_type": "show",
+        "title": "Master Keaton"
+      }
+    ]
+  },
+  {
+    "name": "Scary Movie 3",
+    "occurrences": 3,
+    "title_count": 3,
+    "movie_title_count": 3,
+    "show_title_count": 0,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "Scary Movie"
+      }
+    ]
+  },
+  {
+    "name": "Orphans Benefit",
+    "occurrences": 2,
+    "title_count": 1,
+    "movie_title_count": 0,
+    "show_title_count": 1,
+    "examples": [
+      {
+        "media_type": "show",
+        "title": "Mickey Mouse"
+      }
+    ]
+  },
+  {
+    "name": "Perpetually Shiny Bodies",
+    "occurrences": 7,
+    "title_count": 7,
+    "movie_title_count": 0,
+    "show_title_count": 7,
+    "examples": [
+      {
+        "media_type": "show",
+        "title": "Conan the Adventurer"
+      }
+    ]
+  },
+  {
+    "name": "Supering in Your Sleep",
+    "occurrences": 4,
+    "title_count": 4,
+    "movie_title_count": 2,
+    "show_title_count": 2,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "Forbidden Planet"
+      },
+      {
+        "media_type": "show",
+        "title": "Miss Kobayashi's Dragon Maid"
+      }
+    ]
+  },
+  {
+    "name": "How to Train Your Dragon",
+    "occurrences": 2,
+    "title_count": 1,
+    "movie_title_count": 1,
+    "show_title_count": 0,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "How to Train Your Dragon"
+      }
+    ]
+  },
+  {
+    "name": "Black Jesus",
+    "occurrences": 1,
+    "title_count": 1,
+    "movie_title_count": 0,
+    "show_title_count": 1,
+    "examples": [
+      {
+        "media_type": "show",
+        "title": "Mary Shelley's Frankenhole"
+      }
+    ]
+  },
+  {
+    "name": "Vehicle-Roof Body Disposal",
+    "occurrences": 10,
+    "title_count": 10,
+    "movie_title_count": 2,
+    "show_title_count": 8,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "Stripped to Kill"
+      },
+      {
+        "media_type": "show",
+        "title": "Bottom"
+      }
+    ]
+  },
+  {
+    "name": "Base on",
+    "occurrences": 1,
+    "title_count": 1,
+    "movie_title_count": 0,
+    "show_title_count": 1,
+    "examples": [
+      {
+        "media_type": "show",
+        "title": "Air Gear"
+      }
+    ]
+  },
+  {
+    "name": "Ghost Carriage",
+    "occurrences": 2,
+    "title_count": 2,
+    "movie_title_count": 2,
+    "show_title_count": 0,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "Vampyr"
+      }
+    ]
+  },
+  {
+    "name": "Sliding Scaleof Anthropomorphism",
+    "occurrences": 4,
+    "title_count": 4,
+    "movie_title_count": 0,
+    "show_title_count": 4,
+    "examples": [
+      {
+        "media_type": "show",
+        "title": "Aladdin"
+      }
+    ]
+  },
+  {
+    "name": "Foreign Sounding Gibberish",
+    "occurrences": 6,
+    "title_count": 6,
+    "movie_title_count": 3,
+    "show_title_count": 3,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "Coraline"
+      },
+      {
+        "media_type": "show",
+        "title": "Baccano!"
+      }
+    ]
+  },
+  {
+    "name": "Disney's Magical Quest",
+    "occurrences": 1,
+    "title_count": 1,
+    "movie_title_count": 0,
+    "show_title_count": 1,
+    "examples": [
+      {
+        "media_type": "show",
+        "title": "Mickey Mouse"
+      }
+    ]
+  },
+  {
+    "name": "Sensitive Artist",
+    "occurrences": 9,
+    "title_count": 9,
+    "movie_title_count": 3,
+    "show_title_count": 6,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "Bedazzled"
+      },
+      {
+        "media_type": "show",
+        "title": "Cluedo"
+      }
+    ]
+  },
+  {
+    "name": "Georgie Farmer",
+    "occurrences": 1,
+    "title_count": 1,
+    "movie_title_count": 0,
+    "show_title_count": 1,
+    "examples": [
+      {
+        "media_type": "show",
+        "title": "Wednesday"
+      }
+    ]
+  },
+  {
+    "name": "\"Dating Best Friend's Sibling\" Drama",
+    "occurrences": 10,
+    "title_count": 10,
+    "movie_title_count": 1,
+    "show_title_count": 9,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "The Edge of Seventeen"
+      },
+      {
+        "media_type": "show",
+        "title": "Bridgerton"
+      }
+    ]
+  },
+  {
+    "name": "Common Mary Sue Traits",
+    "occurrences": 1,
+    "title_count": 1,
+    "movie_title_count": 0,
+    "show_title_count": 1,
+    "examples": [
+      {
+        "media_type": "show",
+        "title": "Neo Yokio"
+      }
+    ]
+  },
+  {
+    "name": "Amazingly Embarrassing Father",
+    "occurrences": 1,
+    "title_count": 1,
+    "movie_title_count": 0,
+    "show_title_count": 1,
+    "examples": [
+      {
+        "media_type": "show",
+        "title": "Fringe"
+      }
+    ]
+  },
+  {
+    "name": "Subsystem Damage",
+    "occurrences": 1,
+    "title_count": 1,
+    "movie_title_count": 0,
+    "show_title_count": 1,
+    "examples": [
+      {
+        "media_type": "show",
+        "title": "Mobile Suit Victory Gundam"
+      }
+    ]
+  },
+  {
+    "name": "First Boy Wins",
+    "occurrences": 2,
+    "title_count": 2,
+    "movie_title_count": 1,
+    "show_title_count": 1,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "Love of Siam"
+      },
+      {
+        "media_type": "show",
+        "title": "Offspring"
+      }
+    ]
+  },
+  {
+    "name": "Substitute Media Liaison",
+    "occurrences": 2,
+    "title_count": 2,
+    "movie_title_count": 0,
+    "show_title_count": 2,
+    "examples": [
+      {
+        "media_type": "show",
+        "title": "Criminal Minds"
+      }
+    ]
+  },
+  {
+    "name": "All Caps",
+    "occurrences": 1,
+    "title_count": 1,
+    "movie_title_count": 0,
+    "show_title_count": 1,
+    "examples": [
+      {
+        "media_type": "show",
+        "title": "Hazbin Hotel"
+      }
+    ]
+  },
+  {
+    "name": "Ballistic Bone",
+    "occurrences": 2,
+    "title_count": 2,
+    "movie_title_count": 2,
+    "show_title_count": 0,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "X-Men: The Last Stand"
+      }
+    ]
+  },
+  {
+    "name": "Playboy Has a Daughter",
+    "occurrences": 6,
+    "title_count": 6,
+    "movie_title_count": 4,
+    "show_title_count": 2,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "Mrs DOUBTFIRE - Μάρκος Σεφερλής"
+      },
+      {
+        "media_type": "show",
+        "title": "Rags to Riches"
+      }
+    ]
+  },
+  {
+    "name": "Mind Hug",
+    "occurrences": 5,
+    "title_count": 5,
+    "movie_title_count": 1,
+    "show_title_count": 4,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "Journey to the West: Conquering the Demons"
+      },
+      {
+        "media_type": "show",
+        "title": "Birdy the Mighty"
+      }
+    ]
+  },
+  {
+    "name": "Thats An Order",
+    "occurrences": 1,
+    "title_count": 1,
+    "movie_title_count": 1,
+    "show_title_count": 0,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "Independence Day"
+      }
+    ]
+  },
+  {
+    "name": "Robinson Crusoe",
+    "occurrences": 1,
+    "title_count": 1,
+    "movie_title_count": 0,
+    "show_title_count": 1,
+    "examples": [
+      {
+        "media_type": "show",
+        "title": "An Idiot Abroad"
+      }
+    ]
+  },
+  {
+    "name": "Delta Goodrem",
+    "occurrences": 7,
+    "title_count": 7,
+    "movie_title_count": 0,
+    "show_title_count": 7,
+    "examples": [
+      {
+        "media_type": "show",
+        "title": "Take Two with Phineas and Ferb"
+      }
+    ]
+  },
+  {
+    "name": "The Night Before Christmas In Wonderland",
+    "occurrences": 3,
+    "title_count": 3,
+    "movie_title_count": 3,
+    "show_title_count": 0,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "Alice's Adventures in Wonderland"
+      }
+    ]
+  },
+  {
+    "name": "Hostile as a Hawk",
+    "occurrences": 3,
+    "title_count": 3,
+    "movie_title_count": 3,
+    "show_title_count": 0,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "King Rat"
+      }
+    ]
+  },
+  {
+    "name": "Everything Sounds Menacing In German",
+    "occurrences": 1,
+    "title_count": 1,
+    "movie_title_count": 1,
+    "show_title_count": 0,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "On Her Majesty's Secret Service"
+      }
+    ]
+  },
+  {
+    "name": "Entertainment Tonight",
+    "occurrences": 8,
+    "title_count": 8,
+    "movie_title_count": 0,
+    "show_title_count": 8,
+    "examples": [
+      {
+        "media_type": "show",
+        "title": "Canada's Drag Race"
+      }
+    ]
+  },
+  {
+    "name": "Chair Entrance",
+    "occurrences": 1,
+    "title_count": 1,
+    "movie_title_count": 0,
+    "show_title_count": 1,
+    "examples": [
+      {
+        "media_type": "show",
+        "title": "Hollyoaks"
+      }
+    ]
+  },
+  {
+    "name": "Theodore Roosevelt",
+    "occurrences": 2,
+    "title_count": 2,
+    "movie_title_count": 1,
+    "show_title_count": 1,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "Our Miss Brooks"
+      },
+      {
+        "media_type": "show",
+        "title": "Our Miss Brooks"
+      }
+    ]
+  },
+  {
+    "name": "third spinoff",
+    "occurrences": 3,
+    "title_count": 3,
+    "movie_title_count": 0,
+    "show_title_count": 3,
+    "examples": [
+      {
+        "media_type": "show",
+        "title": "The Boys"
+      }
+    ]
+  },
+  {
+    "name": "The Trouble with Tickets",
+    "occurrences": 9,
+    "title_count": 9,
+    "movie_title_count": 2,
+    "show_title_count": 7,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "Max Keeble's Big Move"
+      },
+      {
+        "media_type": "show",
+        "title": "Dr. Katz, Professional Therapist"
+      }
+    ]
+  },
+  {
+    "name": "Undead Fossils",
+    "occurrences": 3,
+    "title_count": 3,
+    "movie_title_count": 2,
+    "show_title_count": 1,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "Extreme Dinosaurs"
+      },
+      {
+        "media_type": "show",
+        "title": "Extreme Dinosaurs"
+      }
+    ]
+  },
+  {
+    "name": "Führer",
+    "occurrences": 1,
+    "title_count": 1,
+    "movie_title_count": 0,
+    "show_title_count": 1,
+    "examples": [
+      {
+        "media_type": "show",
+        "title": "Dennou Keisatsu Cybercop"
+      }
+    ]
+  },
+  {
+    "name": "Character Alignment",
+    "occurrences": 2,
+    "title_count": 2,
+    "movie_title_count": 1,
+    "show_title_count": 1,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "The Gamers: Dorkness Rising"
+      },
+      {
+        "media_type": "show",
+        "title": "Goblin Slayer"
+      }
+    ]
+  },
+  {
+    "name": "Pacifist Dojo",
+    "occurrences": 6,
+    "title_count": 6,
+    "movie_title_count": 4,
+    "show_title_count": 2,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "Enter the Dragon"
+      },
+      {
+        "media_type": "show",
+        "title": "Cobra Kai"
+      }
+    ]
+  },
+  {
+    "name": "You Said You Would Let Me Go",
+    "occurrences": 2,
+    "title_count": 2,
+    "movie_title_count": 0,
+    "show_title_count": 2,
+    "examples": [
+      {
+        "media_type": "show",
+        "title": "Futurama"
+      }
+    ]
+  },
+  {
+    "name": "We Win Because You Didn't",
+    "occurrences": 10,
+    "title_count": 10,
+    "movie_title_count": 7,
+    "show_title_count": 3,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "Iron Jawed Angels"
+      },
+      {
+        "media_type": "show",
+        "title": "Top Gear"
+      }
+    ]
+  },
+  {
+    "name": "Yuval Scharf",
+    "occurrences": 1,
+    "title_count": 1,
+    "movie_title_count": 0,
+    "show_title_count": 1,
+    "examples": [
+      {
+        "media_type": "show",
+        "title": "Take Two with Phineas and Ferb"
+      }
+    ]
+  },
+  {
+    "name": "I Have No Nephew!",
+    "occurrences": 1,
+    "title_count": 1,
+    "movie_title_count": 0,
+    "show_title_count": 1,
+    "examples": [
+      {
+        "media_type": "show",
+        "title": "Masked Rider"
+      }
+    ]
+  },
+  {
+    "name": "Emancipated Child",
+    "occurrences": 4,
+    "title_count": 4,
+    "movie_title_count": 1,
+    "show_title_count": 3,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "Irreconcilable Differences"
+      },
+      {
+        "media_type": "show",
+        "title": "Legal High"
+      }
+    ]
+  },
+  {
+    "name": "Grey-and-Black Morality",
+    "occurrences": 2,
+    "title_count": 2,
+    "movie_title_count": 2,
+    "show_title_count": 0,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "Breaker Morant"
+      }
+    ]
+  },
+  {
+    "name": "What The Hell Lawyer",
+    "occurrences": 1,
+    "title_count": 1,
+    "movie_title_count": 1,
+    "show_title_count": 0,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "Reign Over Me"
+      }
+    ]
+  },
+  {
+    "name": "spiritual successor",
+    "occurrences": 8,
+    "title_count": 8,
+    "movie_title_count": 0,
+    "show_title_count": 8,
+    "examples": [
+      {
+        "media_type": "show",
+        "title": "Canada's Drag Race"
+      }
+    ]
+  },
+  {
+    "name": "The Spear of Destiny",
+    "occurrences": 1,
+    "title_count": 1,
+    "movie_title_count": 1,
+    "show_title_count": 0,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "Reign of the Gargoyles"
+      }
+    ]
+  },
+  {
+    "name": "Shōnen Genre",
+    "occurrences": 2,
+    "title_count": 2,
+    "movie_title_count": 0,
+    "show_title_count": 2,
+    "examples": [
+      {
+        "media_type": "show",
+        "title": "Chronicles of the Going Home Club"
+      }
+    ]
+  },
+  {
+    "name": "Thought Crime",
+    "occurrences": 4,
+    "title_count": 4,
+    "movie_title_count": 1,
+    "show_title_count": 3,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "The Trial of the Chicago 7"
+      },
+      {
+        "media_type": "show",
+        "title": "Dinosaurs"
+      }
+    ]
+  },
+  {
+    "name": "Beginning of the End",
+    "occurrences": 1,
+    "title_count": 1,
+    "movie_title_count": 1,
+    "show_title_count": 0,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "It Came from Hollywood"
+      }
+    ]
+  },
+  {
+    "name": "Suspicious Videogame Generosity",
+    "occurrences": 1,
+    "title_count": 1,
+    "movie_title_count": 1,
+    "show_title_count": 0,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "School-Live!"
+      }
+    ]
+  },
+  {
+    "name": "Forty-Niner",
+    "occurrences": 6,
+    "title_count": 6,
+    "movie_title_count": 3,
+    "show_title_count": 3,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "Gold Diggers of '49"
+      },
+      {
+        "media_type": "show",
+        "title": "Scooby-Doo, Where Are You!"
+      }
+    ]
+  },
+  {
+    "name": "A Bug's Life",
+    "occurrences": 1,
+    "title_count": 1,
+    "movie_title_count": 0,
+    "show_title_count": 1,
+    "examples": [
+      {
+        "media_type": "show",
+        "title": "How Not to Draw"
+      }
+    ]
+  },
+  {
+    "name": "Cranky Crabs",
+    "occurrences": 4,
+    "title_count": 4,
+    "movie_title_count": 2,
+    "show_title_count": 2,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "Finding Nemo"
+      },
+      {
+        "media_type": "show",
+        "title": "Dinotrux"
+      }
+    ]
+  },
+  {
+    "name": "Spiritual Crossover",
+    "occurrences": 2,
+    "title_count": 2,
+    "movie_title_count": 1,
+    "show_title_count": 1,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "Giant Robo: The Day the Earth Stood Still"
+      },
+      {
+        "media_type": "show",
+        "title": "Giant Robo: The Day the Earth Stood Still"
+      }
+    ]
+  },
+  {
+    "name": "And Then Jack Was a Terrorist",
+    "occurrences": 1,
+    "title_count": 1,
+    "movie_title_count": 0,
+    "show_title_count": 1,
+    "examples": [
+      {
+        "media_type": "show",
+        "title": "24"
+      }
+    ]
+  },
+  {
+    "name": "Anthropomorphic Animal",
+    "occurrences": 3,
+    "title_count": 3,
+    "movie_title_count": 2,
+    "show_title_count": 1,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "Every Child"
+      },
+      {
+        "media_type": "show",
+        "title": "Morimori Bokkun"
+      }
+    ]
+  },
+  {
+    "name": "Dual-World Gameplay",
+    "occurrences": 2,
+    "title_count": 2,
+    "movie_title_count": 1,
+    "show_title_count": 1,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "Victor and Valentino"
+      },
+      {
+        "media_type": "show",
+        "title": "Victor and Valentino"
+      }
+    ]
+  },
+  {
+    "name": "Fantasia",
+    "occurrences": 1,
+    "title_count": 1,
+    "movie_title_count": 0,
+    "show_title_count": 1,
+    "examples": [
+      {
+        "media_type": "show",
+        "title": "Mickey Mouse"
+      }
+    ]
+  },
+  {
+    "name": "Brain Upload",
+    "occurrences": 2,
+    "title_count": 2,
+    "movie_title_count": 1,
+    "show_title_count": 1,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "Ready Player One"
+      },
+      {
+        "media_type": "show",
+        "title": "Muromi-san"
+      }
+    ]
+  },
+  {
+    "name": "Disposable Superhero Maker",
+    "occurrences": 8,
+    "title_count": 8,
+    "movie_title_count": 1,
+    "show_title_count": 7,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "Fantastic Four"
+      },
+      {
+        "media_type": "show",
+        "title": "Danny Phantom"
+      }
+    ]
+  },
+  {
+    "name": "Aladdin (SIMS Co.)",
+    "occurrences": 1,
+    "title_count": 1,
+    "movie_title_count": 1,
+    "show_title_count": 0,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "Aladdin"
+      }
+    ]
+  },
+  {
+    "name": "Vampire Doctor",
+    "occurrences": 9,
+    "title_count": 9,
+    "movie_title_count": 2,
+    "show_title_count": 7,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "Dr. Terror's House of Horrors"
+      },
+      {
+        "media_type": "show",
+        "title": "Robot Chicken"
+      }
+    ]
+  },
+  {
+    "name": "preschool spin-off",
+    "occurrences": 2,
+    "title_count": 2,
+    "movie_title_count": 0,
+    "show_title_count": 2,
+    "examples": [
+      {
+        "media_type": "show",
+        "title": "Kikoriki"
+      }
+    ]
+  },
+  {
+    "name": "Noah B Taylor",
+    "occurrences": 1,
+    "title_count": 1,
+    "movie_title_count": 0,
+    "show_title_count": 1,
+    "examples": [
+      {
+        "media_type": "show",
+        "title": "Wednesday"
+      }
+    ]
+  },
+  {
+    "name": "The Omni Present",
+    "occurrences": 5,
+    "title_count": 5,
+    "movie_title_count": 5,
+    "show_title_count": 0,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "Jumper"
+      }
+    ]
+  },
+  {
+    "name": "Where The Hell Is Umi City?",
+    "occurrences": 1,
+    "title_count": 1,
+    "movie_title_count": 0,
+    "show_title_count": 1,
+    "examples": [
+      {
+        "media_type": "show",
+        "title": "Team Umizoomi"
+      }
+    ]
+  },
+  {
+    "name": "Bats Equals Rabies",
+    "occurrences": 6,
+    "title_count": 6,
+    "movie_title_count": 2,
+    "show_title_count": 4,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "The Bat People"
+      },
+      {
+        "media_type": "show",
+        "title": "Arthur"
+      }
+    ]
+  },
+  {
+    "name": "Lupin Zero",
+    "occurrences": 1,
+    "title_count": 1,
+    "movie_title_count": 0,
+    "show_title_count": 1,
+    "examples": [
+      {
+        "media_type": "show",
+        "title": "Lupin the 3rd"
+      }
+    ]
+  },
+  {
+    "name": "The Case of the Queenly Contestant",
+    "occurrences": 1,
+    "title_count": 1,
+    "movie_title_count": 0,
+    "show_title_count": 1,
+    "examples": [
+      {
+        "media_type": "show",
+        "title": "Perry Mason"
+      }
+    ]
+  },
+  {
+    "name": "Storm of Magic",
+    "occurrences": 2,
+    "title_count": 2,
+    "movie_title_count": 1,
+    "show_title_count": 1,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "Fantastic Beasts and Where to Find Them"
+      },
+      {
+        "media_type": "show",
+        "title": "Misfits"
+      }
+    ]
+  },
+  {
+    "name": "Perfect Poision",
+    "occurrences": 1,
+    "title_count": 1,
+    "movie_title_count": 0,
+    "show_title_count": 1,
+    "examples": [
+      {
+        "media_type": "show",
+        "title": "Greenhouse Academy"
+      }
+    ]
+  },
+  {
+    "name": "Elemental Tiers",
+    "occurrences": 3,
+    "title_count": 3,
+    "movie_title_count": 2,
+    "show_title_count": 1,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "One Piece! 水玉 COLLECTION"
+      },
+      {
+        "media_type": "show",
+        "title": "Fairy Tail"
+      }
+    ]
+  },
+  {
+    "name": "Fail Polish",
+    "occurrences": 2,
+    "title_count": 2,
+    "movie_title_count": 0,
+    "show_title_count": 2,
+    "examples": [
+      {
+        "media_type": "show",
+        "title": "Charmed"
+      }
+    ]
+  },
+  {
+    "name": "Archnemesis Mom",
+    "occurrences": 2,
+    "title_count": 2,
+    "movie_title_count": 2,
+    "show_title_count": 0,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "Monkey Shines"
+      }
+    ]
+  },
+  {
+    "name": "Confidence-Building Scheme",
+    "occurrences": 1,
+    "title_count": 1,
+    "movie_title_count": 1,
+    "show_title_count": 0,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "Back to the Future"
+      }
+    ]
+  },
+  {
+    "name": "Grown Ups 1",
+    "occurrences": 3,
+    "title_count": 3,
+    "movie_title_count": 3,
+    "show_title_count": 0,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "Grown Ups"
+      }
+    ]
+  },
+  {
+    "name": "Booze-Based Buff",
+    "occurrences": 8,
+    "title_count": 7,
+    "movie_title_count": 4,
+    "show_title_count": 3,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "Drunken Master"
+      },
+      {
+        "media_type": "show",
+        "title": "Mushi-Shi"
+      }
+    ]
+  },
+  {
+    "name": "Black Magician Girl",
+    "occurrences": 9,
+    "title_count": 9,
+    "movie_title_count": 1,
+    "show_title_count": 8,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "Yu☆Gi☆Oh!"
+      },
+      {
+        "media_type": "show",
+        "title": "Ben 10"
+      }
+    ]
+  },
+  {
+    "name": "Covered In Grunge",
+    "occurrences": 1,
+    "title_count": 1,
+    "movie_title_count": 0,
+    "show_title_count": 1,
+    "examples": [
+      {
+        "media_type": "show",
+        "title": "Barbie: It Takes Two"
+      }
+    ]
+  },
+  {
+    "name": "Ultra Terrestrials",
+    "occurrences": 5,
+    "title_count": 5,
+    "movie_title_count": 0,
+    "show_title_count": 5,
+    "examples": [
+      {
+        "media_type": "show",
+        "title": "Buck Rogers in the 25th Century"
+      }
+    ]
+  },
+  {
+    "name": "Abusive Advertising",
+    "occurrences": 5,
+    "title_count": 5,
+    "movie_title_count": 4,
+    "show_title_count": 1,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "Bigbug"
+      },
+      {
+        "media_type": "show",
+        "title": "Mutant League"
+      }
+    ]
+  },
+  {
+    "name": "French Jerks",
+    "occurrences": 2,
+    "title_count": 2,
+    "movie_title_count": 0,
+    "show_title_count": 2,
+    "examples": [
+      {
+        "media_type": "show",
+        "title": "Salamander"
+      }
+    ]
+  },
+  {
+    "name": "That One Boss",
+    "occurrences": 2,
+    "title_count": 2,
+    "movie_title_count": 1,
+    "show_title_count": 1,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "Toy Story 2"
+      },
+      {
+        "media_type": "show",
+        "title": "Zig and Sharko"
+      }
+    ]
+  },
+  {
+    "name": "Black Hole Sue",
+    "occurrences": 2,
+    "title_count": 2,
+    "movie_title_count": 0,
+    "show_title_count": 2,
+    "examples": [
+      {
+        "media_type": "show",
+        "title": "Frasier"
+      }
+    ]
+  },
+  {
+    "name": "Mirth to Power",
+    "occurrences": 3,
+    "title_count": 3,
+    "movie_title_count": 1,
+    "show_title_count": 2,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "Godspell"
+      },
+      {
+        "media_type": "show",
+        "title": "Babylon 5"
+      }
+    ]
+  },
+  {
+    "name": "Actress Allusion",
+    "occurrences": 4,
+    "title_count": 4,
+    "movie_title_count": 1,
+    "show_title_count": 3,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "Zootopia 2"
+      },
+      {
+        "media_type": "show",
+        "title": "Felicity"
+      }
+    ]
+  },
+  {
+    "name": "Glorious Mother",
+    "occurrences": 3,
+    "title_count": 3,
+    "movie_title_count": 1,
+    "show_title_count": 2,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "Rocky and Bullwinkle"
+      },
+      {
+        "media_type": "show",
+        "title": "The Adventures of Rocky and Bullwinkle and Friends"
+      }
+    ]
+  },
+  {
+    "name": "Brave Little Tailor",
+    "occurrences": 2,
+    "title_count": 1,
+    "movie_title_count": 0,
+    "show_title_count": 1,
+    "examples": [
+      {
+        "media_type": "show",
+        "title": "Mickey Mouse"
+      }
+    ]
+  },
+  {
+    "name": "Pillars of Moral Character",
+    "occurrences": 4,
+    "title_count": 4,
+    "movie_title_count": 2,
+    "show_title_count": 2,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "13 Assassins"
+      },
+      {
+        "media_type": "show",
+        "title": "Babylon 5"
+      }
+    ]
+  },
+  {
+    "name": "The Cattle Raid of Cooley",
+    "occurrences": 4,
+    "title_count": 4,
+    "movie_title_count": 4,
+    "show_title_count": 0,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "Legend"
+      }
+    ]
+  },
+  {
+    "name": "Immortal Genius",
+    "occurrences": 4,
+    "title_count": 4,
+    "movie_title_count": 1,
+    "show_title_count": 3,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "The Man from Earth"
+      },
+      {
+        "media_type": "show",
+        "title": "Forever"
+      }
+    ]
+  },
+  {
+    "name": "Problem Child",
+    "occurrences": 1,
+    "title_count": 1,
+    "movie_title_count": 0,
+    "show_title_count": 1,
+    "examples": [
+      {
+        "media_type": "show",
+        "title": "That'll Teach 'Em"
+      }
+    ]
+  },
+  {
+    "name": "Transformers: TransTech",
+    "occurrences": 1,
+    "title_count": 1,
+    "movie_title_count": 0,
+    "show_title_count": 1,
+    "examples": [
+      {
+        "media_type": "show",
+        "title": "Transformers"
+      }
+    ]
+  },
+  {
+    "name": "The Phantom of Manhattan",
+    "occurrences": 10,
+    "title_count": 10,
+    "movie_title_count": 10,
+    "show_title_count": 0,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "The Phantom of the Opera"
+      }
+    ]
+  },
+  {
+    "name": "Season 5",
+    "occurrences": 1,
+    "title_count": 1,
+    "movie_title_count": 0,
+    "show_title_count": 1,
+    "examples": [
+      {
+        "media_type": "show",
+        "title": "Samurai Jack"
+      }
+    ]
+  },
+  {
+    "name": "ISO Standard Human Spaceship",
+    "occurrences": 6,
+    "title_count": 6,
+    "movie_title_count": 0,
+    "show_title_count": 6,
+    "examples": [
+      {
+        "media_type": "show",
+        "title": "Ateşböceği"
+      }
+    ]
+  },
+  {
+    "name": "Paladins",
+    "occurrences": 4,
+    "title_count": 4,
+    "movie_title_count": 4,
+    "show_title_count": 0,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "Rambo"
+      }
+    ]
+  },
+  {
+    "name": "Defrosting the Ice King",
+    "occurrences": 1,
+    "title_count": 1,
+    "movie_title_count": 0,
+    "show_title_count": 1,
+    "examples": [
+      {
+        "media_type": "show",
+        "title": "Kamisama Kiss"
+      }
+    ]
+  },
+  {
+    "name": "My Little Pony: Equestria Girls – Rainbow Rocks",
+    "occurrences": 2,
+    "title_count": 2,
+    "movie_title_count": 1,
+    "show_title_count": 1,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "My Little Pony: Equestria Girls"
+      },
+      {
+        "media_type": "show",
+        "title": "My Little Pony: Equestria Girls"
+      }
+    ]
+  },
+  {
+    "name": "I Read That As",
+    "occurrences": 8,
+    "title_count": 8,
+    "movie_title_count": 3,
+    "show_title_count": 5,
+    "examples": [
+      {
+        "media_type": "movie",
+        "title": "Here Come the Girls"
+      },
+      {
+        "media_type": "show",
+        "title": "The Soup"
+      }
+    ]
+  }
+]

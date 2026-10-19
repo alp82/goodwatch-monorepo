@@ -1,0 +1,260 @@
+{
+  "format_version": "2.0.0-draft.1",
+  "document_status": "illustrative",
+  "title": {
+    "catalog_id": null,
+    "name": "The Matrix",
+    "release_year": 1999,
+    "media_type": "movie"
+  },
+  "provenance": {
+    "generated_at": "2026-10-19T00:00:00Z",
+    "generator": null,
+    "rubric_version": "2.0.0-draft.1",
+    "review_status": "illustrative_only",
+    "notes": "Synthetic timestamp. Selected values adapt the user draft to demonstrate shape only. No film review or independent verification was performed. Confidence is deliberately low. Missing fields are not assessed."
+  },
+  "evidence": [
+    {
+      "id": "user-matrix-draft",
+      "kind": "user_draft",
+      "locator": "Conversation: user-provided The Matrix fingerprint V2 draft",
+      "accessed_at": "2026-10-19",
+      "coverage_description": "User-supplied illustrative scores, not a full-work review or verified advisory source.",
+      "supports_verified_absence": false
+    }
+  ],
+  "catalog_refs": {
+    "catalog_snapshot_id": null,
+    "availability_snapshot_id": null
+  },
+  "analyses": [
+    {
+      "scope": {
+        "id": "movie",
+        "kind": "movie",
+        "as_of": "2026-10-19",
+        "coverage_description": "Movie-level illustrative mapping of selected user-draft scores. Full work not checked.",
+        "edition_id": null
+      },
+      "fingerprint": {
+        "experience": {
+          "adrenaline": {
+            "status": "assessed",
+            "value": 9,
+            "confidence": "low",
+            "evidence_refs": [
+              "user-matrix-draft"
+            ]
+          },
+          "tension": {
+            "status": "assessed",
+            "value": 8,
+            "confidence": "low",
+            "evidence_refs": [
+              "user-matrix-draft"
+            ]
+          },
+          "wonder": {
+            "status": "assessed",
+            "value": 8,
+            "confidence": "low",
+            "evidence_refs": [
+              "user-matrix-draft"
+            ]
+          },
+          "thought_provocation": {
+            "status": "assessed",
+            "value": 9,
+            "confidence": "low",
+            "evidence_refs": [
+              "user-matrix-draft"
+            ]
+          }
+        },
+        "humor": {
+          "overall": {
+            "status": "not_assessed",
+            "value": null,
+            "confidence": null,
+            "evidence_refs": [],
+            "notes": "No overall comedy score was supplied; do not infer it by summing humor styles."
+          },
+          "deadpan": {
+            "status": "assessed",
+            "value": 3,
+            "confidence": "low",
+            "evidence_refs": [
+              "user-matrix-draft"
+            ]
+          }
+        },
+        "themes": {
+          "technology_and_humanity": {
+            "status": "assessed",
+            "value": 10,
+            "confidence": "low",
+            "evidence_refs": [
+              "user-matrix-draft"
+            ]
+          },
+          "identity": {
+            "status": "assessed",
+            "value": 8,
+            "confidence": "low",
+            "evidence_refs": [
+              "user-matrix-draft"
+            ]
+          },
+          "consciousness": {
+            "status": "unknown",
+            "value": null,
+            "confidence": null,
+            "evidence_refs": [],
+            "notes": "The supplied AI-consciousness compound score does not establish a separate consciousness score."
+          }
+        },
+        "world": {
+          "simulation": {
+            "status": "assessed",
+            "value": 10,
+            "confidence": "low",
+            "evidence_refs": [
+              "user-matrix-draft"
+            ]
+          }
+        },
+        "relationships": {
+          "mentor_mentee": {
+            "status": "assessed",
+            "value": 9,
+            "confidence": "low",
+            "evidence_refs": [
+              "user-matrix-draft"
+            ]
+          },
+          "found_family": {
+            "status": "assessed",
+            "value": 6,
+            "confidence": "low",
+            "evidence_refs": [
+              "user-matrix-draft"
+            ]
+          }
+        },
+        "aesthetics": {
+          "cyberpunk": {
+            "status": "assessed",
+            "value": 9,
+            "confidence": "low",
+            "evidence_refs": [
+              "user-matrix-draft"
+            ]
+          },
+          "stylization": {
+            "status": "assessed",
+            "value": 9,
+            "confidence": "low",
+            "evidence_refs": [
+              "user-matrix-draft"
+            ]
+          }
+        },
+        "action": {
+          "martial_arts_choreography": {
+            "status": "assessed",
+            "value": 10,
+            "confidence": "low",
+            "evidence_refs": [
+              "user-matrix-draft"
+            ]
+          },
+          "gun_fu": {
+            "status": "assessed",
+            "value": 10,
+            "confidence": "low",
+            "evidence_refs": [
+              "user-matrix-draft"
+            ]
+          }
+        },
+        "sports": {
+          "boxing": {
+            "status": "unknown",
+            "value": null,
+            "confidence": null,
+            "evidence_refs": [],
+            "notes": "Martial arts choreography does not establish boxing as a depicted sport."
+          },
+          "mixed_martial_arts": {
+            "status": "unknown",
+            "value": null,
+            "confidence": null,
+            "evidence_refs": [],
+            "notes": "The original compound boxing/MMA score cannot be safely migrated."
+          }
+        },
+        "viewing_affordances": {
+          "background_viewing": {
+            "status": "assessed",
+            "value": 2,
+            "confidence": "low",
+            "evidence_refs": [
+              "user-matrix-draft"
+            ],
+            "notes": "One canonical assessment replaces duplicate background-viewing fields."
+          }
+        },
+        "ending": {
+          "conflict_resolution": {
+            "status": "not_assessed",
+            "value": null,
+            "confidence": null,
+            "evidence_refs": [],
+            "notes": "Satisfaction and openness scores cannot determine conflict resolution."
+          }
+        },
+        "series": {
+          "episodic_independence": {
+            "status": "not_applicable",
+            "value": null,
+            "confidence": null,
+            "evidence_refs": [],
+            "notes": "This scope is a movie, not a series."
+          }
+        }
+      },
+      "advisories": {
+        "animal_harm": {
+          "status": "unknown",
+          "presence": null,
+          "coverage": "insufficient",
+          "confidence": null,
+          "depiction_modes": [],
+          "evidence_refs": [
+            "user-matrix-draft"
+          ],
+          "spoiler_sensitive": false,
+          "notes": "The draft zero does not constitute verified absence."
+        }
+      },
+      "evaluations": {
+        "acting": {
+          "status": "not_assessed",
+          "value": null,
+          "confidence": null,
+          "evidence_refs": [],
+          "notes": "Retained as a separate evaluative output; excluded from descriptive similarity."
+        }
+      },
+      "audience_contexts": [],
+      "world_contexts": [],
+      "cultural_contexts": [],
+      "seasonal_contexts": [],
+      "representation_annotations": [],
+      "format_facts": {},
+      "reception": [],
+      "temporal_segments": []
+    }
+  ]
+}

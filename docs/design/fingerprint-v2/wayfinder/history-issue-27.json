@@ -1,0 +1,38 @@
+{
+  "body": "## Destination\n\nChoose a model/provider strategy for Windmill fingerprinting, backed by comparative POCs on a fixed set of movies and shows, with measured quality and actual cost. Finish with the decisions needed to implement that strategy.\n\n## Notes\n\n- The user approved this map and its six initial decision tickets on 2026-09-11.\n- Use wayfinder; use grilling and domain-modeling for human decisions, research for external facts, and prototype for POCs.\n- Execution exception: bounded comparative POCs are in scope to inform the recommendation. Production rollout is outside this map. Agree on experiment budget before running paid inference.\n- A fingerprint is the 74 named trait scores serialized in schema order. The separate essence-text embedding API stage must be accounted for independently when investigating pipeline cost.\n- Include Gemini as a comparison candidate; do not treat its output as ground truth. Investigate low-cost alternatives including the user's DeepSeek, Muse, GLM, and Luna examples; establish exact model IDs and providers before treating names as candidates.\n- Use the agreed benchmark and review rules linked in Decisions so far; settle remaining experiment settings in the comparison protocol ticket.\n- Current entry points: `goodwatch-flows/windmill/f/dna/generate/fetch.py`, `vectors.py`, `models.py` under `f/dna`, and `f/dna/test/generate.py`.\n- Prior research: `docs/research/gemini-dna-model-costs-2026-09.md`; independently reverify claims against current primary sources and actual code. Local request guards do not establish billing-tier eligibility.\n- GitHub native sub-issues and blocking dependencies define the frontier. Research assets live on `research/<name>` branches with pointers from their tickets. Claim a ticket by assigning it to the driving developer before work.\n\n- Expanded candidate research: [OpenRouter candidates for Windmill fingerprinting](https://github.com/alp82/goodwatch-monorepo/blob/4990785/docs/research/openrouter-fingerprint-candidates.md); approved shortlist and protocol are indexed below.\n\n## Decisions so far\n\n<!-- Add a named ticket link and one-line gist only after resolution. -->\n\n- [Identify eligible low-cost models](https://github.com/alp82/goodwatch-monorepo/issues/29): Screened a provisional Gemini/DeepSeek/GLM/Luna/Groq shortlist; Muse API evidence and intended names remain protocol follow-ups.\n\n- [Explain current charges](https://github.com/alp82/goodwatch-monorepo/issues/28#issuecomment-5642849181): Screenshots and owner confirmation attribute the displayed API spend to Windmill on Paid Tier 2; request guards do not confer free pricing.\n\n- [Define the benchmark and quality bar](https://github.com/alp82/goodwatch-monorepo/issues/30#issuecomment-5643029338): Fixed ten familiar titles and independent human/Astra/Fable attribute review; Gemini is not ground truth, with a US$5 target and US$10 ceiling.\n\n- [Choose the POC comparison protocol](https://github.com/alp82/goodwatch-monorepo/issues/31#issuecomment-5643388612): Approved thirteen pinned OpenRouter configurations, including Grok 4.6, bounded full-response runs, independent subscription reviews, and separately measured finalist embeddings.\n\n- [Compare candidate fingerprints](https://github.com/alp82/goodwatch-monorepo/issues/32): Owner accepted the first-pass comparison and completed human review ($0.3764 measured inference); selected Qwen3.8 Flash primary and Qwen3.7 Flash fallback. Unperformed independent reviews, repeats and embedding-cost validation carry into #33.\n\n- [Choose the fingerprinting strategy](https://github.com/alp82/goodwatch-monorepo/issues/33#issuecomment-5645458516): Qwen3.8 Flash primary and Qwen3.7 Flash fallback via OpenRouter, tiered at popularity 1.0, bounded retries, $1/day spend pause, no soft reset; Astra/Fable reviews waived; implementation handed to [Implement the Windmill fingerprinting strategy](https://github.com/alp82/goodwatch-monorepo/issues/35).\n\n## Not yet specified\n\n<!-- Cleared on 2026-09-12: the route to the destination is complete. -->\n\n## Out of scope\n\n- Production rollout, catalog-wide regeneration/backfills, and switching the live provider.\n- General recommendation-system redesign or replacing text embeddings as a separate optimization project; account for their existing cost here.\n- Switching from OpenRouter to direct Alibaba Model Studio: about 5% to 30% cheaper on list price, untested; a later cost optimization.\n- A cheaper or better embedding model: charted as a separate wayfinder map after the implementation map, using the embedding-cost baseline from ticket #40.\n- A soft reset of Gemini-era fingerprints: owner decided on 2026-09-12 to leave the completeness queue as is.\n",
+  "comments": [
+    {
+      "id": "IC_kwDOJCFabs8AAAABUH7iUA",
+      "author": {
+        "login": "alp82"
+      },
+      "authorAssociation": "OWNER",
+      "body": "Route complete: every ticket is closed and the destination is reached with the resolution on [Choose the fingerprinting strategy](https://github.com/alp82/goodwatch-monorepo/issues/33). Implementation continues on [Implement the Windmill fingerprinting strategy](https://github.com/alp82/goodwatch-monorepo/issues/35). Closing the map.",
+      "createdAt": "2026-09-12T10:57:59Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/alp82/goodwatch-monorepo/issues/27#issuecomment-5645460048",
+      "viewerDidAuthor": true
+    }
+  ],
+  "labels": [
+    {
+      "id": "LA_kwDOJCFabs8AAAAC1KW42Q",
+      "name": "wayfinder:map",
+      "description": "Shared map of decisions",
+      "color": "5319E7"
+    },
+    {
+      "id": "LA_kwDOJCFabs8AAAAC1KW6Ig",
+      "name": "needs-triage",
+      "description": "Requires evaluation.",
+      "color": "D4C5F9"
+    }
+  ],
+  "number": 27,
+  "state": "CLOSED",
+  "title": "Optimize Windmill fingerprint quality and cost",
+  "url": "https://github.com/alp82/goodwatch-monorepo/issues/27"
+}

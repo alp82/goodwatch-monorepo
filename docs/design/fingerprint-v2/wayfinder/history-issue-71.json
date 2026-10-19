@@ -1,0 +1,32 @@
+{
+  "body": "Part of [GoodWatch living roadmap](https://github.com/alp82/goodwatch-monorepo/issues/52).\n\nMode: HITL\n\n## Question\n\nHow well can the existing 74 Fingerprint attributes express understandable browsing choices and selective-similarity requests, and what must be investigated before prototyping?\n\nInspect current definitions, pillar mappings, display/filter semantics, and matching behavior; use representative title data where accessible and state coverage and runtime limits. Ground the assessment in \u201cGame of Thrones, but sci-fi,\u201d \u201ctense but not bleak,\u201d \u201csomething strange and dreamlike,\u201d and \u201cclever dialogue, little action.\u201d Do not assume which Game of Thrones attributes the user intends to preserve: use evidence and examples to discuss alternatives. Include examples that support exploring connections, understanding titles, and unfamiliar cinema.\n\nDistinguish ambiguous labels, attribute expressiveness, assigned-data accuracy, control effort, and result quality. Identify what is supported, what is uncertain, and whether targeted runtime or external research is needed. Consult existing fingerprint generation maps before proposing schema or engine changes. Resolve with a user-reviewed set of example requests and interpretations, evidence and gaps, and constraints for the two prototype discussions. Do not preselect a free-text interface, new dimensions, or pillar replacement.\n\nStart from [Choose worthwhile discovery and Fingerprint directions](https://github.com/alp82/goodwatch-monorepo/issues/58#issuecomment-5688122796). Preserve equal investigation of watch selection and open-ended exploration. Cross-area priority remains with [Choose the next focus across the backlog](https://github.com/alp82/goodwatch-monorepo/issues/65). No production implementation is authorized by this ticket.\n",
+  "comments": [
+    {
+      "id": "IC_kwDOJCFabs8AAAABU77HaA",
+      "author": {
+        "login": "alp82"
+      },
+      "authorAssociation": "OWNER",
+      "body": "## Scope disposition \u2014 deferred beyond the living roadmap\n\nFollowing the user-approved scope audit, this ticket is closed as **not planned within the GoodWatch living roadmap**. It is not resolved on its merits, and its underlying idea is not rejected.\n\nThe roadmap exists to compare opportunities and choose what deserves attention next. This ticket goes into focused investigation, feature scope, or design before that cross-backlog choice. The relevant opportunity and preferences remain in the existing area resolution and backlog; this ticket is preserved as a reference in the [roadmap's Out of scope index](https://github.com/alp82/goodwatch-monorepo/issues/52).\n\nIf the effort is selected later, use this reference to chart fresh, appropriately scoped decisions in its own focused map. A narrower evidence question can separately become a roadmap prerequisite if its answer would change prioritization. This ticket is not a blocker of [Choose the next focus across the backlog](https://github.com/alp82/goodwatch-monorepo/issues/65).\n",
+      "createdAt": "2026-09-16T15:23:29Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/alp82/goodwatch-monorepo/issues/71#issuecomment-5699979112",
+      "viewerDidAuthor": true
+    }
+  ],
+  "labels": [
+    {
+      "id": "LA_kwDOJCFabs8AAAAC1KW5Sg",
+      "name": "wayfinder:grilling",
+      "description": "Decision made with the human",
+      "color": "D876E3"
+    }
+  ],
+  "number": 71,
+  "state": "CLOSED",
+  "title": "Assess how Fingerprint attributes express discovery requests",
+  "url": "https://github.com/alp82/goodwatch-monorepo/issues/71"
+}

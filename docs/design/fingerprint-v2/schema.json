@@ -1,0 +1,3313 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "GoodWatch title analysis V2 draft 1",
+  "description": "Proposal only. Registry definitions live in definition.json. Omitted attributes are not assessed.",
+  "type": "object",
+  "properties": {
+    "format_version": {
+      "const": "2.0.0-draft.1"
+    },
+    "document_status": {
+      "enum": [
+        "illustrative",
+        "generated",
+        "reviewed"
+      ]
+    },
+    "title": {
+      "type": "object",
+      "properties": {
+        "catalog_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "release_year": {
+          "type": "integer"
+        },
+        "media_type": {
+          "enum": [
+            "movie",
+            "show"
+          ]
+        }
+      },
+      "required": [
+        "catalog_id",
+        "name",
+        "release_year",
+        "media_type"
+      ],
+      "additionalProperties": false
+    },
+    "provenance": {
+      "type": "object",
+      "properties": {
+        "generated_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "generator": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "rubric_version": {
+          "const": "2.0.0-draft.1"
+        },
+        "review_status": {
+          "enum": [
+            "unreviewed",
+            "editorial_reviewed",
+            "illustrative_only"
+          ]
+        },
+        "notes": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "generated_at",
+        "generator",
+        "rubric_version",
+        "review_status"
+      ],
+      "additionalProperties": false
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/evidence"
+      }
+    },
+    "catalog_refs": {
+      "type": "object",
+      "properties": {
+        "catalog_snapshot_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "availability_snapshot_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "catalog_snapshot_id",
+        "availability_snapshot_id"
+      ],
+      "additionalProperties": false
+    },
+    "analyses": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/analysis"
+      },
+      "minItems": 1
+    }
+  },
+  "required": [
+    "format_version",
+    "document_status",
+    "title",
+    "provenance",
+    "evidence",
+    "catalog_refs",
+    "analyses"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "assessment": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "enum": [
+            "assessed",
+            "unknown",
+            "not_applicable",
+            "not_assessed"
+          ]
+        },
+        "value": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 10
+        },
+        "confidence": {
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            null
+          ]
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "notes": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "status",
+        "value",
+        "confidence",
+        "evidence_refs"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "assessed"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 10
+              },
+              "confidence": {
+                "enum": [
+                  "low",
+                  "medium",
+                  "high"
+                ]
+              },
+              "evidence_refs": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "minItems": 1,
+                "uniqueItems": true
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "value": {
+                "type": "null"
+              },
+              "confidence": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "fact": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "enum": [
+            "assessed",
+            "unknown",
+            "not_applicable",
+            "not_assessed"
+          ]
+        },
+        "value": {
+          "type": [
+            "string",
+            "boolean",
+            "number",
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "notes": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "status",
+        "value",
+        "evidence_refs"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "assessed"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "not": {
+                  "type": "null"
+                }
+              },
+              "evidence_refs": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "minItems": 1,
+                "uniqueItems": true
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "value": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "scope": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "enum": [
+            "movie",
+            "whole_show",
+            "season",
+            "episode"
+          ]
+        },
+        "season_number": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "episode_number": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "as_of": {
+          "type": "string",
+          "format": "date"
+        },
+        "coverage_description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "covered_seasons": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "covered_episode_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "edition_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "as_of",
+        "coverage_description",
+        "edition_id"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "season"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "season_number"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "episode"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "season_number",
+              "episode_number"
+            ]
+          }
+        }
+      ]
+    },
+    "advisory": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "enum": [
+            "assessed",
+            "unknown",
+            "not_applicable",
+            "not_assessed"
+          ]
+        },
+        "presence": {
+          "enum": [
+            "present",
+            "absent",
+            null
+          ]
+        },
+        "coverage": {
+          "enum": [
+            "full_work",
+            "targeted_verified",
+            "partial",
+            "insufficient"
+          ]
+        },
+        "confidence": {
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            null
+          ]
+        },
+        "depiction_modes": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "on_screen",
+              "off_screen",
+              "implied",
+              "verbal_reference"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "intensity": {
+          "$ref": "#/$defs/assessment"
+        },
+        "frequency": {
+          "$ref": "#/$defs/assessment"
+        },
+        "explicitness": {
+          "$ref": "#/$defs/assessment"
+        },
+        "centrality": {
+          "$ref": "#/$defs/assessment"
+        },
+        "duration_seconds": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "notes": {
+          "type": "string",
+          "minLength": 1
+        },
+        "spoiler_sensitive": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "status",
+        "presence",
+        "coverage",
+        "confidence",
+        "depiction_modes",
+        "evidence_refs",
+        "spoiler_sensitive"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "assessed"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "presence": {
+                "enum": [
+                  "present",
+                  "absent"
+                ]
+              },
+              "confidence": {
+                "enum": [
+                  "low",
+                  "medium",
+                  "high"
+                ]
+              },
+              "evidence_refs": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "minItems": 1,
+                "uniqueItems": true
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "presence": {
+                "type": "null"
+              },
+              "confidence": {
+                "type": "null"
+              },
+              "depiction_modes": {
+                "maxItems": 0
+              },
+              "duration_seconds": {
+                "type": "null"
+              }
+            },
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "intensity"
+                  ]
+                },
+                {
+                  "required": [
+                    "frequency"
+                  ]
+                },
+                {
+                  "required": [
+                    "explicitness"
+                  ]
+                },
+                {
+                  "required": [
+                    "centrality"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "presence": {
+                "const": "absent"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "coverage": {
+                "enum": [
+                  "full_work",
+                  "targeted_verified"
+                ]
+              },
+              "depiction_modes": {
+                "maxItems": 0
+              },
+              "duration_seconds": {
+                "enum": [
+                  0,
+                  null
+                ]
+              }
+            },
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "intensity"
+                  ]
+                },
+                {
+                  "required": [
+                    "frequency"
+                  ]
+                },
+                {
+                  "required": [
+                    "explicitness"
+                  ]
+                },
+                {
+                  "required": [
+                    "centrality"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "presence": {
+                "const": "present"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "depiction_modes": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "evidence": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "enum": [
+            "user_draft",
+            "catalog",
+            "full_work_review",
+            "review",
+            "plot_summary",
+            "content_guide",
+            "creator_statement",
+            "critical_interpretation",
+            "editorial_assessment",
+            "model_prior"
+          ]
+        },
+        "locator": {
+          "type": "string",
+          "minLength": 1
+        },
+        "accessed_at": {
+          "type": "string",
+          "format": "date"
+        },
+        "coverage_description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "supports_verified_absence": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "locator",
+        "accessed_at",
+        "coverage_description",
+        "supports_verified_absence"
+      ],
+      "additionalProperties": false
+    },
+    "world_context": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "layer_type": {
+          "enum": [
+            "primary",
+            "simulation",
+            "virtual",
+            "dream",
+            "parallel",
+            "nested",
+            "unspecified"
+          ]
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "era": {
+          "enum": [
+            "prehistoric",
+            "ancient",
+            "medieval",
+            "early_modern",
+            "nineteenth_century",
+            "early_twentieth_century",
+            "late_twentieth_century",
+            "twenty_first_century",
+            "future",
+            "timeless",
+            "mixed",
+            "unspecified"
+          ]
+        },
+        "calendar_system": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "start_year": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "end_year": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "relative_time": {
+          "enum": [
+            "distant_past",
+            "recent_past",
+            "contemporary_at_release",
+            "near_future",
+            "far_future",
+            "mixed",
+            "unspecified"
+          ]
+        },
+        "places": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "concept_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "label": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "concept_id",
+              "label"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "historical_contexts": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "centrality": {
+          "$ref": "#/$defs/assessment"
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "spoiler_sensitive": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "layer_type",
+        "label",
+        "era",
+        "relative_time",
+        "evidence_refs",
+        "spoiler_sensitive"
+      ],
+      "additionalProperties": false
+    },
+    "cultural_context": {
+      "type": "object",
+      "properties": {
+        "relation": {
+          "enum": [
+            "depicted_culture",
+            "artistic_influence",
+            "industry_tradition",
+            "critical_interpretation"
+          ]
+        },
+        "concept_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "attribution": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "centrality": {
+          "$ref": "#/$defs/assessment"
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "spoiler_sensitive": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "relation",
+        "concept_id",
+        "attribution",
+        "centrality",
+        "evidence_refs",
+        "spoiler_sensitive"
+      ],
+      "additionalProperties": false
+    },
+    "seasonal_context": {
+      "type": "object",
+      "properties": {
+        "relation": {
+          "enum": [
+            "depicted_season",
+            "depicted_holiday",
+            "holiday_theme",
+            "viewing_association"
+          ]
+        },
+        "concept_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "calendar": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "hemisphere": {
+          "enum": [
+            "northern",
+            "southern",
+            "not_applicable",
+            "unspecified"
+          ]
+        },
+        "assessment": {
+          "$ref": "#/$defs/assessment"
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "relation",
+        "concept_id",
+        "calendar",
+        "hemisphere",
+        "assessment",
+        "evidence_refs"
+      ],
+      "additionalProperties": false
+    },
+    "representation_annotation": {
+      "type": "object",
+      "properties": {
+        "concept_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "character_label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "role": {
+          "enum": [
+            "protagonist",
+            "co_protagonist",
+            "supporting",
+            "minor",
+            "ensemble"
+          ]
+        },
+        "establishment": {
+          "enum": [
+            "explicit_text",
+            "attributed_source"
+          ]
+        },
+        "portrayal_notes": {
+          "type": "string",
+          "minLength": 1
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "spoiler_sensitive": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "concept_id",
+        "character_label",
+        "role",
+        "establishment",
+        "portrayal_notes",
+        "evidence_refs",
+        "spoiler_sensitive"
+      ],
+      "additionalProperties": false
+    },
+    "audience_context": {
+      "type": "object",
+      "properties": {
+        "context_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "audience": {
+          "type": "object",
+          "properties": {
+            "minimum_age": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "maximum_age": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "age_basis": {
+              "enum": [
+                "explicit_range",
+                "adults",
+                "mixed_ages",
+                "unspecified"
+              ]
+            },
+            "language_context": {
+              "type": "string",
+              "minLength": 1
+            },
+            "familiarity": {
+              "enum": [
+                "first_watch",
+                "rewatch",
+                "mixed",
+                "unspecified"
+              ]
+            },
+            "content_tolerances": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          },
+          "required": [
+            "minimum_age",
+            "maximum_age",
+            "age_basis",
+            "language_context",
+            "familiarity",
+            "content_tolerances"
+          ],
+          "additionalProperties": false
+        },
+        "assumptions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "fit": {
+          "$ref": "#/$defs/assessment"
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "context_id",
+        "audience",
+        "assumptions",
+        "fit",
+        "evidence_refs"
+      ],
+      "additionalProperties": false
+    },
+    "reception_observation": {
+      "type": "object",
+      "properties": {
+        "concept_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "claim": {
+          "type": "string",
+          "minLength": 1
+        },
+        "observation_type": {
+          "enum": [
+            "measured_fact",
+            "attributed_judgment",
+            "editorial_hypothesis"
+          ]
+        },
+        "audience_or_critic_population": {
+          "type": "string",
+          "minLength": 1
+        },
+        "observed_at": {
+          "type": "string",
+          "format": "date"
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "concept_id",
+        "claim",
+        "observation_type",
+        "audience_or_critic_population",
+        "observed_at",
+        "evidence_refs"
+      ],
+      "additionalProperties": false
+    },
+    "temporal_segment": {
+      "type": "object",
+      "properties": {
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "start_fraction": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "end_fraction": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "spoiler_sensitive": {
+          "type": "boolean"
+        },
+        "experience": {
+          "type": "object",
+          "properties": {
+            "adrenaline": {
+              "$ref": "#/$defs/assessment"
+            },
+            "tension": {
+              "$ref": "#/$defs/assessment"
+            },
+            "fear": {
+              "$ref": "#/$defs/assessment"
+            },
+            "perceived_threat": {
+              "$ref": "#/$defs/assessment"
+            },
+            "romantic_feeling": {
+              "$ref": "#/$defs/assessment"
+            },
+            "sensuality": {
+              "$ref": "#/$defs/assessment"
+            },
+            "warmth": {
+              "$ref": "#/$defs/assessment"
+            },
+            "wholesomeness": {
+              "$ref": "#/$defs/assessment"
+            },
+            "wonder": {
+              "$ref": "#/$defs/assessment"
+            },
+            "pathos": {
+              "$ref": "#/$defs/assessment"
+            },
+            "melancholy": {
+              "$ref": "#/$defs/assessment"
+            },
+            "uncanniness": {
+              "$ref": "#/$defs/assessment"
+            },
+            "catharsis": {
+              "$ref": "#/$defs/assessment"
+            },
+            "nostalgia": {
+              "$ref": "#/$defs/assessment"
+            },
+            "hopefulness": {
+              "$ref": "#/$defs/assessment"
+            },
+            "bleakness": {
+              "$ref": "#/$defs/assessment"
+            },
+            "emotional_intensity": {
+              "$ref": "#/$defs/assessment"
+            },
+            "stress": {
+              "$ref": "#/$defs/assessment"
+            },
+            "uplift": {
+              "$ref": "#/$defs/assessment"
+            },
+            "thought_provocation": {
+              "$ref": "#/$defs/assessment"
+            },
+            "playfulness": {
+              "$ref": "#/$defs/assessment"
+            },
+            "sentimentality": {
+              "$ref": "#/$defs/assessment"
+            },
+            "emotional_restraint": {
+              "$ref": "#/$defs/assessment"
+            },
+            "bittersweetness": {
+              "$ref": "#/$defs/assessment"
+            },
+            "absurdity": {
+              "$ref": "#/$defs/assessment"
+            },
+            "escapism": {
+              "$ref": "#/$defs/assessment"
+            },
+            "wish_fulfillment": {
+              "$ref": "#/$defs/assessment"
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        },
+        "storytelling": {
+          "type": "object",
+          "properties": {
+            "plot_velocity": {
+              "$ref": "#/$defs/assessment"
+            },
+            "gradual_development": {
+              "$ref": "#/$defs/assessment"
+            },
+            "intrigue": {
+              "$ref": "#/$defs/assessment"
+            },
+            "plot_complexity": {
+              "$ref": "#/$defs/assessment"
+            },
+            "interpretive_ambiguity": {
+              "$ref": "#/$defs/assessment"
+            },
+            "twist_frequency": {
+              "$ref": "#/$defs/assessment"
+            },
+            "twist_impact": {
+              "$ref": "#/$defs/assessment"
+            },
+            "nonlinearity": {
+              "$ref": "#/$defs/assessment"
+            },
+            "multiple_timelines": {
+              "$ref": "#/$defs/assessment"
+            },
+            "multiple_viewpoints": {
+              "$ref": "#/$defs/assessment"
+            },
+            "unreliable_narration": {
+              "$ref": "#/$defs/assessment"
+            },
+            "unreliable_reality": {
+              "$ref": "#/$defs/assessment"
+            },
+            "self_reference": {
+              "$ref": "#/$defs/assessment"
+            },
+            "fourth_wall_breaking": {
+              "$ref": "#/$defs/assessment"
+            },
+            "voiceover": {
+              "$ref": "#/$defs/assessment"
+            },
+            "dream_sequences": {
+              "$ref": "#/$defs/assessment"
+            },
+            "observational_mode": {
+              "$ref": "#/$defs/assessment"
+            },
+            "slice_of_life": {
+              "$ref": "#/$defs/assessment"
+            },
+            "exposition_load": {
+              "$ref": "#/$defs/assessment"
+            },
+            "information_withholding": {
+              "$ref": "#/$defs/assessment"
+            },
+            "philosophical_inquiry": {
+              "$ref": "#/$defs/assessment"
+            },
+            "educational_intent": {
+              "$ref": "#/$defs/assessment"
+            },
+            "formal_challenge": {
+              "$ref": "#/$defs/assessment"
+            },
+            "homage": {
+              "$ref": "#/$defs/assessment"
+            },
+            "pastiche": {
+              "$ref": "#/$defs/assessment"
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "label",
+        "start_fraction",
+        "end_fraction",
+        "spoiler_sensitive"
+      ],
+      "additionalProperties": false
+    },
+    "analysis": {
+      "type": "object",
+      "properties": {
+        "scope": {
+          "$ref": "#/$defs/scope"
+        },
+        "fingerprint": {
+          "type": "object",
+          "properties": {
+            "experience": {
+              "type": "object",
+              "properties": {
+                "adrenaline": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "tension": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "fear": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "perceived_threat": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "romantic_feeling": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "sensuality": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "warmth": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "wholesomeness": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "wonder": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "pathos": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "melancholy": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "uncanniness": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "catharsis": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "nostalgia": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "hopefulness": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "bleakness": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "emotional_intensity": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "stress": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "uplift": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "thought_provocation": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "playfulness": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "sentimentality": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "emotional_restraint": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "bittersweetness": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "absurdity": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "escapism": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "wish_fulfillment": {
+                  "$ref": "#/$defs/assessment"
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "humor": {
+              "type": "object",
+              "properties": {
+                "overall": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "situational": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "wit_wordplay": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "physical": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "cringe": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "absurdist": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "satire": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "parody": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "dark": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "running_gags": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "meta": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "deadpan": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "gross_out": {
+                  "$ref": "#/$defs/assessment"
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "themes": {
+              "type": "object",
+              "properties": {
+                "crime": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "mystery": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "war": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "politics": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "family": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "psychology": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "entertainment_industry": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "social_critique": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "class": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "capitalism": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "technology_and_humanity": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "faith_and_spirituality": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "business": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "finance": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "environment": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "science": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "popular_culture": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "survival": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "adventure": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "hacking": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "artificial_intelligence": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "consciousness": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "identity": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "existential_meaning": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "grief": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "trauma": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "recovery": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "mental_health": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "addiction": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "addiction_recovery": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "trust_and_betrayal": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "coming_of_age": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "coming_out": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "sexuality": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "gender_identity": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "immigration": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "displacement": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "gentrification": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "surveillance": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "disease_and_pandemics": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "climate_change": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "inherited_wealth": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "social_media": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "public_shaming": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "justice": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "guilt": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "forgiveness": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "loyalty": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "belonging": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "loneliness": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "ambition": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "obsession": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "labor": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "colonialism": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "racism": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "sexism": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "caregiving": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "parenthood": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "aging": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "midlife": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "retirement": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "early_adulthood": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "education": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "artistic_creation": {
+                  "$ref": "#/$defs/assessment"
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "genres": {
+              "type": "object",
+              "properties": {
+                "action": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "adventure": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "comedy": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "drama": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "thriller": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "horror": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "science_fiction": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "fantasy": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "romance": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "mystery": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "crime": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "western": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "neo_western": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "giallo": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "kaiju": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "disaster": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "superhero": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "zombie": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "slasher": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "creature_feature": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "neo_noir": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "space_western": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "sword_and_sorcery": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "cozy_mystery": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "romantic_comedy": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "melodrama": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "musical": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "war": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "historical_drama": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "biographical": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "true_crime": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "psychological_thriller": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "conspiracy_thriller": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "survival_thriller": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "legal_thriller": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "police_procedural": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "gangster": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "whodunit": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "puzzle_box": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "space_opera": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "epic_fantasy": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "urban_fantasy": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "dark_fantasy": {
+                  "$ref": "#/$defs/assessment"
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "narrative_engines": {
+              "type": "object",
+              "properties": {
+                "investigation": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "pursuit": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "rescue": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "escape": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "quest": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "competition": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "relationship_development": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "everyday_life": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "survival": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "heist": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "espionage": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "military_operation": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "legal_case": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "political_struggle": {
+                  "$ref": "#/$defs/assessment"
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "tropes": {
+              "type": "object",
+              "properties": {
+                "underdog_rise": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "revenge": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "vigilantism": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "rags_to_riches": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "fall_from_grace": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "redemption": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "mistaken_identity": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "memory_loss": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "body_swap": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "fish_out_of_water": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "secret_identity": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "road_trip": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "tournament": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "training": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "race_against_time": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "single_night": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "locked_room": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "conspiracy": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "apocalypse_survival": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "haunted_house": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "chosen_one": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "prophecy": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "macguffin_quest": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "final_survivor": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "apparent_death": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "mentor_death": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "doppelganger": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "hidden_antagonist_reveal": {
+                  "$ref": "#/$defs/assessment"
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "relationships": {
+              "type": "object",
+              "properties": {
+                "romantic_development": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "established_couple": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "marriage": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "breakup_or_divorce": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "partner_bereavement": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "love_triangle": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "enemies_to_lovers": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "forbidden_romance": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "slow_burn_romance": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "queer_romance": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "workplace_romance": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "age_gap_romance": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "friendship": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "male_friendship": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "female_friendship": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "mentor_mentee": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "student_teacher": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "rivalry": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "forced_proximity": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "adversaries_cooperate": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "found_family": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "family_conflict": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "intergenerational": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "generational_trauma": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "parent_child": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "siblings": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "caregiver_dependent": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "human_animal_companionship": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "coercive_relationship": {
+                  "$ref": "#/$defs/assessment"
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "characters": {
+              "type": "object",
+              "properties": {
+                "ensemble": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "antihero": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "morally_ambiguous_cast": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "transformation_arc": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "intellectual_problem_solver": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "detective_lead": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "female_protagonist": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "child_protagonist": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "teen_protagonist": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "older_adult_protagonist": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "child_agency": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "female_character_agency": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "workplace_team": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "family_business": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "unaccompanied_children": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "teen_peer_group": {
+                  "$ref": "#/$defs/assessment"
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "representation": {
+              "type": "object",
+              "properties": {
+                "lgbtq_characters": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "neurodivergent_characters": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "disabled_characters": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "immigrant_characters": {
+                  "$ref": "#/$defs/assessment"
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "world": {
+              "type": "object",
+              "properties": {
+                "advanced_technology": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "magic": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "simulation": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "virtual_reality": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "parallel_worlds": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "time_travel": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "travel_to_past": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "travel_to_future": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "time_loop": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "dystopian_society": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "post_apocalyptic": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "spacefaring": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "robots": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "myth_and_folklore": {
+                  "$ref": "#/$defs/assessment"
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "world_treatment": {
+              "type": "object",
+              "properties": {
+                "scientific_rigor": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "speculative_freedom": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "worldbuilding_depth": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "lore_dependence": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "magic_rule_detail": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "everyday_realism": {
+                  "$ref": "#/$defs/assessment"
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "settings": {
+              "type": "object",
+              "properties": {
+                "urban": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "small_town": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "rural": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "frontier": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "polar": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "mountains": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "forest": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "desert": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "ocean": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "island": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "space_station": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "spacecraft": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "underground": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "bunker": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "mansion": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "home": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "school": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "university": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "office": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "hospital": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "restaurant": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "bar_or_club": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "hotel": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "factory": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "laboratory": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "prison": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "salon": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "subway": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "airport": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "amusement_park": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "circus": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "theater": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "museum": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "library_or_bookshop": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "religious_site": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "cemetery": {
+                  "$ref": "#/$defs/assessment"
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "occupations": {
+              "type": "object",
+              "properties": {
+                "engineering": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "computing": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "healthcare": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "policing": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "military": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "law": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "business": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "finance": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "service": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "arts": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "education": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "journalism": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "organized_crime": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "piracy": {
+                  "$ref": "#/$defs/assessment"
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "activities": {
+              "type": "object",
+              "properties": {
+                "cooking": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "baking": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "dining": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "travel": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "backpacking": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "gardening": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "diving": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "vehicle_tuning": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "aviation": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "rail_enthusiasm": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "fitness": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "video_games": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "fashion": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "crafts": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "photography": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "filmmaking": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "reading": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "comics": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "anime_fandom": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "visual_art": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "theater": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "hiking": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "woodworking": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "home_improvement": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "language_learning": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "instrument_playing": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "singing": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "dancing": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "stage_magic": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "animal_care": {
+                  "$ref": "#/$defs/assessment"
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "sports": {
+              "type": "object",
+              "properties": {
+                "ice_hockey": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "tennis": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "golf": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "association_football": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "basketball": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "baseball": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "american_football": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "boxing": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "mixed_martial_arts": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "motorsport": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "skiing": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "snowboarding": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "running": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "cycling": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "cricket": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "rugby": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "volleyball": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "swimming": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "diving": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "gymnastics": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "skateboarding": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "esports": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "professional_wrestling": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "surfing": {
+                  "$ref": "#/$defs/assessment"
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "entities": {
+              "type": "object",
+              "properties": {
+                "dogs": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "cats": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "horses": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "farm_animals": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "wildlife": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "birds": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "reptiles": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "amphibians": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "marine_animals": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "arthropods": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "dinosaurs": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "mythical_creatures": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "vampires": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "werewolves": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "ghosts": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "demons": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "extraterrestrials": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "cars": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "trains": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "aircraft": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "watercraft": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "special_machinery": {
+                  "$ref": "#/$defs/assessment"
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "storytelling": {
+              "type": "object",
+              "properties": {
+                "plot_velocity": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "gradual_development": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "intrigue": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "plot_complexity": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "interpretive_ambiguity": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "twist_frequency": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "twist_impact": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "nonlinearity": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "multiple_timelines": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "multiple_viewpoints": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "unreliable_narration": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "unreliable_reality": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "self_reference": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "fourth_wall_breaking": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "voiceover": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "dream_sequences": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "observational_mode": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "slice_of_life": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "exposition_load": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "information_withholding": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "philosophical_inquiry": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "educational_intent": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "formal_challenge": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "homage": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "pastiche": {
+                  "$ref": "#/$defs/assessment"
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "stakes": {
+              "type": "object",
+              "properties": {
+                "personal": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "relationship": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "community": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "societal": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "planetary": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "cosmic": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "urgency": {
+                  "$ref": "#/$defs/assessment"
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "dialogue": {
+              "type": "object",
+              "properties": {
+                "density": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "dependence": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "monologues": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "technical_jargon": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "overlap": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "naturalistic_delivery": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "theatrical_delivery": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "multilingual_exchange": {
+                  "$ref": "#/$defs/assessment"
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "aesthetics": {
+              "type": "object",
+              "properties": {
+                "cyberpunk": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "steampunk": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "gothic": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "noir": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "retro": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "minimalism": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "stylization": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "surrealism": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "psychedelia": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "grotesquerie": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "camp": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "ironic_distance": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "intimacy": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "spectacle": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "immersion": {
+                  "$ref": "#/$defs/assessment"
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "visuals": {
+              "type": "object",
+              "properties": {
+                "vibrant_palette": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "muted_palette": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "pastel_palette": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "neon_palette": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "restricted_palette": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "warm_color": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "cool_color": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "low_key_lighting": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "high_key_lighting": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "high_contrast": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "diffused_light": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "long_takes": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "handheld_motion": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "aerial_viewpoints": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "closeups": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "wide_compositions": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "symmetry": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "practical_effects": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "digital_effects": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "costume_emphasis": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "production_design_detail": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "split_screen": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "aspect_ratio_changes": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "grain_texture": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "distressed_texture": {
+                  "$ref": "#/$defs/assessment"
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "action": {
+              "type": "object",
+              "properties": {
+                "hand_to_hand": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "martial_arts_choreography": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "grappling": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "gunplay": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "gun_fu": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "blade_combat": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "superpowered_combat": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "chases": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "large_battles": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "environmental_choreography": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "gritty_combat": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "stylized_violence": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "realistic_violence": {
+                  "$ref": "#/$defs/assessment"
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "horror_modes": {
+              "type": "object",
+              "properties": {
+                "possession": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "body_horror": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "folk_horror": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "cosmic_horror": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "psychological_horror": {
+                  "$ref": "#/$defs/assessment"
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "sound": {
+              "type": "object",
+              "properties": {
+                "design_prominence": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "ambient_soundscapes": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "silence": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "sparse_score": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "audio_startles": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "audio_self_reference": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "music_dependence": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "nonmusical_sound_dependence": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "diegetic_music": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "preexisting_recordings": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "live_performance": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "musical_numbers": {
+                  "$ref": "#/$defs/assessment"
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "music_styles": {
+              "type": "object",
+              "properties": {
+                "orchestral": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "electronic": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "jazz": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "classical": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "rock": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "pop": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "metal": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "hip_hop": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "country": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "folk": {
+                  "$ref": "#/$defs/assessment"
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "ending": {
+              "type": "object",
+              "properties": {
+                "conflict_resolution": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "interpretive_openness": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "emotional_closure": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "happiness": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "tragedy": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "bittersweetness": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "twist_impact": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "cliffhanger": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "sequel_dependence": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "cyclical_return": {
+                  "$ref": "#/$defs/assessment"
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "series": {
+              "type": "object",
+              "properties": {
+                "episodic_independence": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "serialized_dependence": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "anthology_independence": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "episode_cliffhangers": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "bottle_episode_pattern": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "cold_open_hooks": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "formula_repetition": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "conceptual_renewal": {
+                  "$ref": "#/$defs/assessment"
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "viewing_demands": {
+              "type": "object",
+              "properties": {
+                "attention": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "visual_dependence": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "auditory_dependence": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "sensory_intensity": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "franchise_knowledge": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "genre_knowledge": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "historical_knowledge": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "cultural_knowledge": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "onscreen_reading": {
+                  "$ref": "#/$defs/assessment"
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "viewing_affordances": {
+              "type": "object",
+              "properties": {
+                "background_viewing": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "drop_in_viewing": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "standalone_viewing": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "discussion": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "theorizing": {
+                  "$ref": "#/$defs/assessment"
+                },
+                "repeat_discovery": {
+                  "$ref": "#/$defs/assessment"
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        },
+        "world_contexts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/world_context"
+          }
+        },
+        "cultural_contexts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/cultural_context"
+          }
+        },
+        "seasonal_contexts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/seasonal_context"
+          }
+        },
+        "representation_annotations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/representation_annotation"
+          }
+        },
+        "format_facts": {
+          "type": "object",
+          "properties": {
+            "production_method": {
+              "$ref": "#/$defs/fact"
+            },
+            "animation_techniques": {
+              "$ref": "#/$defs/fact"
+            },
+            "narrative_mode": {
+              "$ref": "#/$defs/fact"
+            },
+            "presentation_modes": {
+              "$ref": "#/$defs/fact"
+            },
+            "series_structure": {
+              "$ref": "#/$defs/fact"
+            },
+            "post_credits_scene_present": {
+              "$ref": "#/$defs/fact"
+            },
+            "alternate_endings_present": {
+              "$ref": "#/$defs/fact"
+            },
+            "episode_runtime_min_minutes": {
+              "$ref": "#/$defs/fact"
+            },
+            "episode_runtime_max_minutes": {
+              "$ref": "#/$defs/fact"
+            },
+            "approximate_ensemble_size": {
+              "$ref": "#/$defs/fact"
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        },
+        "advisories": {
+          "type": "object",
+          "properties": {
+            "violence": {
+              "$ref": "#/$defs/advisory"
+            },
+            "gore": {
+              "$ref": "#/$defs/advisory"
+            },
+            "sexual_activity": {
+              "$ref": "#/$defs/advisory"
+            },
+            "nudity": {
+              "$ref": "#/$defs/advisory"
+            },
+            "substance_use": {
+              "$ref": "#/$defs/advisory"
+            },
+            "profanity": {
+              "$ref": "#/$defs/advisory"
+            },
+            "disturbing_imagery": {
+              "$ref": "#/$defs/advisory"
+            },
+            "child_endangerment": {
+              "$ref": "#/$defs/advisory"
+            },
+            "animal_harm": {
+              "$ref": "#/$defs/advisory"
+            },
+            "eating_disorders": {
+              "$ref": "#/$defs/advisory"
+            },
+            "self_harm": {
+              "$ref": "#/$defs/advisory"
+            },
+            "suicide": {
+              "$ref": "#/$defs/advisory"
+            },
+            "sexual_violence": {
+              "$ref": "#/$defs/advisory"
+            },
+            "domestic_abuse": {
+              "$ref": "#/$defs/advisory"
+            },
+            "police_brutality": {
+              "$ref": "#/$defs/advisory"
+            },
+            "torture": {
+              "$ref": "#/$defs/advisory"
+            },
+            "kidnapping_and_confinement": {
+              "$ref": "#/$defs/advisory"
+            },
+            "pregnancy_loss": {
+              "$ref": "#/$defs/advisory"
+            },
+            "childbirth": {
+              "$ref": "#/$defs/advisory"
+            },
+            "discrimination": {
+              "$ref": "#/$defs/advisory"
+            },
+            "flashing_imagery": {
+              "$ref": "#/$defs/advisory"
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        },
+        "audience_contexts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/audience_context"
+          }
+        },
+        "evaluations": {
+          "type": "object",
+          "properties": {
+            "direction": {
+              "$ref": "#/$defs/assessment"
+            },
+            "acting": {
+              "$ref": "#/$defs/assessment"
+            },
+            "writing": {
+              "$ref": "#/$defs/assessment"
+            },
+            "dialogue": {
+              "$ref": "#/$defs/assessment"
+            },
+            "characterization": {
+              "$ref": "#/$defs/assessment"
+            },
+            "narrative_cohesion": {
+              "$ref": "#/$defs/assessment"
+            },
+            "cinematography": {
+              "$ref": "#/$defs/assessment"
+            },
+            "editing": {
+              "$ref": "#/$defs/assessment"
+            },
+            "original_score": {
+              "$ref": "#/$defs/assessment"
+            },
+            "sound_design": {
+              "$ref": "#/$defs/assessment"
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        },
+        "reception": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/reception_observation"
+          }
+        },
+        "temporal_segments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/temporal_segment"
+          }
+        }
+      },
+      "required": [
+        "scope",
+        "fingerprint"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

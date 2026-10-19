@@ -1,0 +1,203 @@
+{
+  "body": "## Question\n\nOn the agreed corpus and protocol, how do the candidate models compare in fingerprint quality, consistency, validity, latency, and actual cost?\n\nUse prototype to create and run bounded, reproducible comparative POCs, preserving the agreed input snapshot, raw responses, usage and error records, normalized 74-score results, and comparison artifacts. Label estimated costs separately from measured charges. Obtain live human review of trait judgments and full-response plausibility; do not stand in for the human. Record limitations, failures, and any justified follow-up questions. Link assets and execution instructions from this ticket. No production data writes or rollout.\n\nResolve only after the human has reviewed the evidence.\n\n\n## Agreed execution protocol\n\nFollow [Choose the POC comparison protocol](https://github.com/alp82/goodwatch-monorepo/issues/31#issuecomment-5643388612) and its [versioned protocol asset](https://github.com/alp82/goodwatch-monorepo/blob/f582e9d/docs/benchmarks/fingerprint/protocol.md). The decision fixes the thirteen configurations, including Grok 4.6 on the pinned `xai` route with low reasoning, shared full-response contract, exact routes and requested reasoning, bounded attempts and cost rules, independent subscription judges, and finalist embedding sample.\n\nThe benchmark evaluates the 74 trait values; similar-title ranking is outside this comparison. Capture coverage and unsupported title assertions alongside validity and cost. Account access and route compatibility are execution checks, not permission to substitute models or expand the agreed budget. Preserve incomplete arms and obtain live human review before resolution.\n\n",
+  "comments": [
+    {
+      "id": "IC_kwDOJCFabs8AAAABUGAsOQ",
+      "author": {
+        "login": "alp82"
+      },
+      "authorAssociation": "OWNER",
+      "body": "## Execution preparation \u2014 credential location pending\n\nClaimed this ticket and published [the throwaway preparation and execution handoff](https://github.com/alp82/goodwatch-monorepo/blob/983d806/goodwatch-flows/windmill/f/dna/prototype_comparison/README.md) on `prototype/fingerprint-comparison`, commit `983d806`.\n\n- Restored the exact frozen benchmark assets and verified every source hash.\n- Prepared the common full-response envelope, derived schema, local validator, exact thirteen configurations, and seeded 130-pair first-pass request order. Optional animation style is represented as required-but-nullable for strict transport compatibility. All trait definitions and the production example analysis are preserved.\n- Captured current public routes with URLs and timestamps. All thirteen pinned tags are listed; DeepSeek's selected route reports status `-2`, requiring an availability check. Public metadata does not establish account access or prove reasoning/cap adapter behavior.\n- Offline smoke checks accepted the production example and rejected ten malformed, association, conditional, and abstention cases. New-content whitespace checks passed; the frozen schema snapshot retains six original trailing-whitespace lines to preserve its hash.\n\nNo inference, paid judging, embeddings, or production writes occurred. No candidate outputs or quality verdicts exist. The paid execution driver and cost ledger remain to be implemented once account access is established; the linked README records the remaining work.\n\nAsked the owner for the local file path or environment variable containing the OpenRouter credential, not the secret in chat. It was not present in the process environment or root/webapp `.env` files. The approved protocol requires verification of an experiment-isolated, non-resetting allowance of at most $9 before paid execution. No shared key allowance has been changed.\n\nThis ticket stays open and claimed. Independent live review, human finalist selection, repeat runs, and the separate embedding-stage measurement remain pending. No decision is added to the map because this is preparation, not resolution.\n",
+      "createdAt": "2026-09-12T04:27:19Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/alp82/goodwatch-monorepo/issues/32#issuecomment-5643447353",
+      "viewerDidAuthor": true
+    },
+    {
+      "id": "IC_kwDOJCFabs8AAAABUGDmKQ",
+      "author": {
+        "login": "alp82"
+      },
+      "authorAssociation": "OWNER",
+      "body": "## Credential checked; dedicated allowance pending\n\nThe owner supplied a local credential location. A read-only OpenRouter key query succeeded. The supplied ordinary inference key has a **$1 weekly resetting limit**, $1 remaining at inspection, and zero reported BYOK usage; it is not a management/provisioning key. No secret or key identifier is included here. No key settings were changed.\n\nThis does not meet the approved experiment-only, non-resetting allowance. Asked the owner to store a dedicated key with a non-resetting cap of at most $9 locally and provide its path/variable. This is an account prerequisite, not a request to reapprove the experiment or its spending ceiling.\n\nWhile awaiting that key, published [the first-pass driver and handoff](https://github.com/alp82/goodwatch-monorepo/blob/6892e04/goodwatch-flows/windmill/f/dna/prototype_comparison/README.md) on `prototype/fingerprint-comparison`, commit `6892e04`. It adds durable per-attempt reservations, sequential execution, bounded structural retries, raw capture and three-way reconciliation between response usage, generation cost and key-usage delta. Unresolved charges/HTTP failures/timeouts remain reserved and stop subsequent inference. Default invocation performs read-only preflight; paid execution defaults to at most one compatibility attempt per invocation.\n\nEight offline guard checks passed, covering account limits, missing/discrepant costs, BYOK, overspend and token-cap overruns, rate/cache reservations, malformed/abstaining output, and the frozen configurations. Whitespace checks passed. Read-only preflight succeeded and correctly reports the resetting key as an execution blocker. No paid HTTP execution has been tested and **no inference has run**.\n\nThe ticket remains open and claimed. First-pass execution, independent human/Astra/Fable review, human-selected finalists, repeats, and separate embedding-stage measurement remain pending. No map resolution is recorded.\n",
+      "createdAt": "2026-09-12T04:38:00Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/alp82/goodwatch-monorepo/issues/32#issuecomment-5643494953",
+      "viewerDidAuthor": true
+    },
+    {
+      "id": "IC_kwDOJCFabs8AAAABUGIRxg",
+      "author": {
+        "login": "alp82"
+      },
+      "authorAssociation": "OWNER",
+      "body": "## Replacement credential preflight\n\nRead the replacement credential from the repository `.env` file supplied by the owner. Authentication succeeds and reported usage is zero, but both `limit` and `limit_remaining` are null: this key currently has no configured cap. It is an ordinary inference key, not a management/provisioning key, so the execution session cannot configure its limit through management access.\n\nRead-only preflight correctly stops before inference. The remaining action is to set this key's limit to at most $9 with no reset in OpenRouter; no further credential relocation is needed. The approved protocol's capped allowance is unchanged. No inference has run and no key settings were changed.\n",
+      "createdAt": "2026-09-12T04:53:14Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/alp82/goodwatch-monorepo/issues/32#issuecomment-5643571654",
+      "viewerDidAuthor": true
+    },
+    {
+      "id": "IC_kwDOJCFabs8AAAABUGiYfw",
+      "author": {
+        "login": "alp82"
+      },
+      "authorAssociation": "OWNER",
+      "body": "## First pass complete \u2014 independent review is next\n\nThe owner configured the dedicated key's $9 non-resetting cap; it was verified before inference. The bounded first pass is now complete on `prototype/fingerprint-comparison`, commit `5b5fa59`.\n\n### Results and measured spend\n\n- Nine configurations completed all ten titles, yielding **90 valid full responses after repair**.\n- **87** full responses passed on their first attempt. Three JSON-only responses used their single allowed structural repair: two omitted the required-null animation-style transport field; one used an invalid highlight key. Both original and repaired outputs are preserved.\n- All **90 first generation responses had structurally valid, correctly associated 74-score sets**. This is a structural result, not a factual or trait-quality verdict. The 93 original/repair score vectors are retained in schema order.\n- Four configurations stopped after two transport attempts each: both Gemini routes rejected the common schema's complexity; GLM's pinned DeepInfra route returned upstream 429 errors; Muse Contributor was excluded by the existing account privacy policy. No providers, models, reasoning settings, or account privacy settings were substituted or changed.\n- **101 total inference attempts** covered 94 of the 130 planned candidate/title pairs. The remaining 36 pairs were not attempted after their configurations stopped. No incomplete arm is omitted from the report.\n- Reconciled inference charges: **$0.3764186484**. The final key-usage counter reports $0.376418648, agreeing to displayed precision. Rejected requests retain **$0.3525869667** of conservative reservations; these are not measured charges. No credits were purchased. No judge API or embedding calls occurred.\n\n### Assets\n\nReviewers should open only the blind materials until they have recorded their independent judgments:\n\n- [Blind review packets and instructions](https://github.com/alp82/goodwatch-monorepo/tree/5b5fa59/docs/benchmarks/fingerprint/poc/blind-first): ten per-title packets, common attribute definitions, and independent-review instructions.\n- [Offline human review form](https://github.com/alp82/goodwatch-monorepo/blob/5b5fa59/docs/benchmarks/fingerprint/poc/blind-first/review.html): download/open locally, flag traits, write verdicts, and export/import review progress. Candidate labels are stable and anonymized.\n\nKeep these outside the independent reviewers' initial context:\n\n- [Execution report and sanitized raw evidence](https://github.com/alp82/goodwatch-monorepo/tree/5b5fa59/docs/benchmarks/fingerprint/poc/evidence-first): per-attempt requests/responses, route snapshots, cost reconciliation, normalized scores, coverage, and latency statistics.\n- [Execution/reproduction handoff](https://github.com/alp82/goodwatch-monorepo/blob/5b5fa59/goodwatch-flows/windmill/f/dna/prototype_comparison/README.md): drivers, limitations, and remaining work. The label key is stored separately from the blind directory.\n\n### Validation and limits\n\nFrozen input hashes, request settings, 74-score ordering, coverage totals, monetary reconciliation, and public-export redaction were checked. Nine offline monetary/request guard checks passed; the review form's JavaScript passed syntax validation; final changes pass whitespace checks. Private account-linked originals and the resumable ledger remain in the original local worktree and are excluded from git.\n\nGeneration metadata and account counters sometimes lagged or returned stale values. The runner paused and reconciled with read-only lookups, retaining reservations; these lookups did not repeat inference. Runtime models' dated canonical IDs were checked against the captured public catalog. Raw requested reasoning controls and reported reasoning usage remain available; zero reported reasoning alone does not prove internally disabled computation. Complete-pair timing includes intervening retries/waits, and HTTP request latency is reported separately.\n\nThis ticket remains open and claimed. **No quality judgments, winner, or finalists have been invented.** Next: independent human/Astra/Fable subscription reviews with exact judge identities/settings recorded; the human then selects two finalists. Unchanged repeat runs and separately billed finalist embeddings follow that selection. The map's strategy decision remains blocked on this ticket, and no resolution is added to Decisions so far yet.\n",
+      "createdAt": "2026-09-12T05:52:32Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/alp82/goodwatch-monorepo/issues/32#issuecomment-5643999359",
+      "viewerDidAuthor": true
+    },
+    {
+      "id": "IC_kwDOJCFabs8AAAABUGp-ow",
+      "author": {
+        "login": "alp82"
+      },
+      "authorAssociation": "OWNER",
+      "body": "## Human Matrix review received; remaining human review narrowed\n\nThe owner supplied their Matrix review and requested early elimination of unimpressive candidates to reduce the remaining review workload. The [original export](https://github.com/alp82/goodwatch-monorepo/blob/e33f40f/docs/benchmarks/fingerprint/poc/human-review/matrix-review.original.json) is preserved byte for byte, outside the independent judge packets.\n\nApplied the screen to the two explicit \u201cnot impressed\u201d verdicts: H and M. The owner subsequently asked for their identities: H is Mistral Small 4 and M is DeepSeek V4.1 Flash. This is a provisional human-review screen from one title, not evidence of catalog-wide inferiority or final finalist selection.\n\nC, J, K and L are also hidden from the human form because they have no usable results. As explained to the owner, these correspond to Muse Contributor (account privacy restriction), GLM Flash (upstream rate limits), and Gemini 3.6/2.5 Flash (schema complexity rejection); they were not rejected on quality.\n\nA, B, D, E, F, G and I remain. G is retained provisionally: the owner flagged several inflated traits but said the rest was \u201cok.\u201d This leaves **63 human reviews across the remaining nine titles**, down from 81 usable responses still awaiting human review.\n\nThe [personalized review form](https://github.com/alp82/goodwatch-monorepo/blob/e33f40f/docs/benchmarks/fingerprint/poc/human-review/review.html) loads all Matrix notes and resumes at Fight Club, candidate A. Stable candidate labels, previous judgments (including those screened out), and export/import progress are preserved. The [screening note](https://github.com/alp82/goodwatch-monorepo/blob/e33f40f/docs/benchmarks/fingerprint/poc/human-review/README.md) documents scope and limitations.\n\nIndependent Astra/Fable packets remain unchanged and contain no human judgments or screening decisions. No additional inference ran. Verified exact original-file preservation, seven-label navigation data, 63 remaining reviews, the resume point, JavaScript syntax and whitespace. The ticket remains open for the remaining independent review, human finalist selection, repeats and embeddings.\n",
+      "createdAt": "2026-09-12T06:14:45Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/alp82/goodwatch-monorepo/issues/32#issuecomment-5644123811",
+      "viewerDidAuthor": true
+    },
+    {
+      "id": "IC_kwDOJCFabs8AAAABUGu-pg",
+      "author": {
+        "login": "alp82"
+      },
+      "authorAssociation": "OWNER",
+      "body": "## Human Fight Club review received; G screened out with owner confirmation\n\nPreserved the [new cumulative human export](https://github.com/alp82/goodwatch-monorepo/blob/d7a0f57/docs/benchmarks/fingerprint/poc/human-review/fight-club-review.original.json) byte for byte. The owner rated A, E, F and I \u201cvery strong,\u201d D \u201cvery good,\u201d B \u201clooks great otherwise\u201d with trait concerns, and G \u201cotherwise good\u201d with further inflated traits.\n\nRecommended G as the next workload-based cut because its relative weakness recurs across Matrix and Fight Club; retained B despite repeated coming-of-age inflation because its overall judgments remain positive. The owner confirmed the cut and requested its identity: **G is GPT-5.6 Luna**, on the pinned OpenAI route. The earlier quality cuts remain H (Mistral Small 4) and M (DeepSeek V4.1 Flash). This is an early human-review screen, not a claim of universal model inferiority.\n\nThe [updated human form](https://github.com/alp82/goodwatch-monorepo/blob/d7a0f57/docs/benchmarks/fingerprint/poc/human-review/review.html) now includes **A, B, D, E, F and I**, retains every existing judgment including G's, and resumes at **Everything Everywhere All at Once, candidate A**. **48 reviews remain across eight titles.** The selection and review source are explicit in settings.json so later review rounds can resume without losing prior notes.\n\nIndependent judge packets and original model outputs remain unchanged; human judgments are kept outside their initial context. No inference ran. Verified source-byte preservation, six active labels, 48 remaining reviews, preserved excluded-candidate history, correct resume point, JavaScript syntax and whitespace. This ticket remains open pending the remaining review and finalist experiments.\n",
+      "createdAt": "2026-09-12T06:30:33Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/alp82/goodwatch-monorepo/issues/32#issuecomment-5644205734",
+      "viewerDidAuthor": true
+    },
+    {
+      "id": "IC_kwDOJCFabs8AAAABUG5v7g",
+      "author": {
+        "login": "alp82"
+      },
+      "authorAssociation": "OWNER",
+      "body": "## Third human title review saved; keyboard navigation and score backgrounds added\n\nPreserved the owner's [cumulative Everything Everywhere All at Once review](https://github.com/alp82/goodwatch-monorepo/blob/9cb973b/docs/benchmarks/fingerprint/poc/human-review/eeaao-review.original.json) without modifying its judgments. No additional candidate elimination was requested or applied in this round.\n\nThe [updated human review form](https://github.com/alp82/goodwatch-monorepo/blob/9cb973b/docs/benchmarks/fingerprint/poc/human-review/review.html) now supports Left/Right arrow keys for previous/next, including navigation across title boundaries. Shortcuts do not intercept text editing, dropdown controls, composition, or modified key combinations. Each score chip has a proportional 0\u201310 background fill; flagged traits retain a distinct amber fill/border and pressed-state accessibility metadata.\n\nAll previous notes are preloaded. The next review is **Das Kanu des Manitu, candidate A**; six candidates remain with **42 reviews left**. Verified imported judgments, remaining count, resume point, JavaScript syntax and whitespace. No new inference ran. Independent judge packets remain separate from human judgments. Ticket remains open for the remaining reviews and finalist experiments.\n",
+      "createdAt": "2026-09-12T07:09:51Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/alp82/goodwatch-monorepo/issues/32#issuecomment-5644382190",
+      "viewerDidAuthor": true
+    },
+    {
+      "id": "IC_kwDOJCFabs8AAAABUG-y0w",
+      "author": {
+        "login": "alp82"
+      },
+      "authorAssociation": "OWNER",
+      "body": "## All five human movie reviews saved; next screening recommendation pending\n\nPreserved the [latest cumulative human export](https://github.com/alp82/goodwatch-monorepo/blob/dca4f2b/docs/benchmarks/fingerprint/poc/human-review/all-movies-review.original.json) byte for byte. It adds Das Kanu des Manitu and Inside Out. The [human form](https://github.com/alp82/goodwatch-monorepo/blob/dca4f2b/docs/benchmarks/fingerprint/poc/human-review/review.html) loads all notes and resumes at Breaking Bad, candidate A.\n\nRecommended screening out I next: its latest three overall verdicts are \u201coverall ok,\u201d \u201cnot so good,\u201d and \u201cokay,\u201d with recurring inflated traits. B remains a watchlist candidate: the owner found Das Kanu des Manitu \u201coverall a bit off,\u201d but its other verdicts remain positive. A rebounded with \u201cvery strong\u201d for Inside Out; D, E and F remain consistently positive in the owner's judgments.\n\nAsked the owner to choose between dropping I alone (recommended, 25 remaining reviews), dropping I and B (20), or keeping all six for the first show (30). This choice is still pending: no new elimination or identity disclosure has been applied. All reviewed titles so far are movies, so retaining B through at least the first show preserves a chance to assess series performance.\n\nVerified exact import, prior-note preservation, remaining count, correct resume point, JavaScript syntax and whitespace. No inference ran; independent judge packets remain unchanged. Ticket remains open for the remaining reviews and finalist experiments.\n",
+      "createdAt": "2026-09-12T07:28:10Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/alp82/goodwatch-monorepo/issues/32#issuecomment-5644464851",
+      "viewerDidAuthor": true
+    },
+    {
+      "id": "IC_kwDOJCFabs8AAAABUHCQQQ",
+      "author": {
+        "login": "alp82"
+      },
+      "authorAssociation": "OWNER",
+      "body": "## First two human show reviews saved; I screened from remaining human work\n\nPreserved the owner's [cumulative export including Breaking Bad and Game of Thrones](https://github.com/alp82/goodwatch-monorepo/blob/6d1d62d/docs/benchmarks/fingerprint/poc/human-review/first-two-shows-review.original.json) byte for byte. The owner again asked whether the new evidence supports cutting candidates.\n\nApplied the previously proposed screen to I after the new show judgments reinforced it: its latest five verdicts are \u201coverall ok,\u201d \u201cnot so good,\u201d \u201cokay,\u201d \u201cgood/okay,\u201d and \u201cnot that good.\u201d The concerns now span movies and shows, including inflated or poorly fitting traits. I is **NVIDIA Nemotron 3.5 Lightning**, on the pinned DeepInfra BF16 route. This is a workload-based human screen within the pilot, not a catalog-wide model verdict or the final two-candidate selection.\n\nRetained B: the owner judged its two show responses \u201clooks good\u201d and \u201cvery strong.\u201d A, D, E and F also have positive show judgments, so no further cut is supported by this round. The five active labels are **A, B, D, E and F**.\n\nThe [updated human form](https://github.com/alp82/goodwatch-monorepo/blob/6d1d62d/docs/benchmarks/fingerprint/poc/human-review/review.html) preserves all earlier notes, including I's, and resumes at **Adolescence, candidate A**. **15 reviews remain** across Adolescence, Black Mirror and Preacher. Arrow navigation, score fills and collapsed raw JSON are retained.\n\nVerified exact review import, historical-note preservation, five-label coverage, remaining count, resume point, JavaScript syntax and whitespace. No inference ran; independent judge packets remain unchanged and separate from human judgments. Ticket remains open pending the remaining independent reviews and finalist experiments.\n",
+      "createdAt": "2026-09-12T07:41:06Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/alp82/goodwatch-monorepo/issues/32#issuecomment-5644521537",
+      "viewerDidAuthor": true
+    },
+    {
+      "id": "IC_kwDOJCFabs8AAAABUHI1Lw",
+      "author": {
+        "login": "alp82"
+      },
+      "authorAssociation": "OWNER",
+      "body": "Human review is complete for all ten titles and the five retained candidates (A/B/D/E/F). The final export is preserved byte-for-byte, the review page has zero remaining judgments, and the results and measured cost comparison are committed in a3376d6 on prototype/fingerprint-comparison.\n\n[Full human results and cost breakdown](https://github.com/alp82/goodwatch-monorepo/blob/a3376d6/docs/benchmarks/fingerprint/poc/human-review/results.md)\n\nProvisional interpretation: F (Qwen3.8 Flash) is the strongest default-value candidate; A (Grok 4.6) is the premium comparison, especially on shows. Their measured ten-title charges were $0.00846388 and $0.286144 respectively (33.81x). D (Qwen3.7 Flash) is the cheaper challenger with three full-response repairs; B (MiniMax M3) is the fastest survivor; E (MiMo V2.5) was consistently positive but has no obvious broad advantage over F in the human notes. This is a qualitative interpretation, not invented numeric accuracy scoring.\n\nTotal reconciled first-pass inference charges remain $0.3764186484. No additional inference, judge APIs, embeddings or production writes ran. Linear cost projections in the report include observed repairs and caching and exclude embeddings.\n\nNo new eliminations or finalist selections were applied. Issue remains open: independent Astra/Fable judgments, owner selection of two finalists, repeat runs and embedding measurement are still pending. Independent judges should receive only the original blind-first packets, without this human report or the revealed identities.\n",
+      "createdAt": "2026-09-12T08:05:38Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/alp82/goodwatch-monorepo/issues/32#issuecomment-5644629295",
+      "viewerDidAuthor": true
+    },
+    {
+      "id": "IC_kwDOJCFabs8AAAABUHM5kw",
+      "author": {
+        "login": "alp82"
+      },
+      "authorAssociation": "OWNER",
+      "body": "Owner selected **F (Qwen3.8 Flash) as primary and D (Qwen3.7 Flash) as fallback** after the completed human review and full cost table. This supersedes the assistant's earlier proposed F/A pair.\n\nBoth retain the tested Alibaba route and requested disabled reasoning. F uses strict schema; D uses JSON-object mode with local validation. D's three first-pass full-response repairs must inform the implementation's validation and bounded repair handling.\n\n[Recorded selection and validation status](https://github.com/alp82/goodwatch-monorepo/blob/a7841d2/docs/benchmarks/fingerprint/poc/human-review/selection.json). Updated results are in the same commit on prototype/fingerprint-comparison.\n\nIndependent Astra/Fable reviews, unchanged-configuration F/D repeat runs, and embedding-stage cost measurement remain pending. The choice does not waive these steps. Exact production fallback triggers, retry rules and implementation acceptance criteria remain part of the strategy handoff. No new inference or production changes were made; issues remain open for the outstanding work.\n",
+      "createdAt": "2026-09-12T08:20:39Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/alp82/goodwatch-monorepo/issues/32#issuecomment-5644695955",
+      "viewerDidAuthor": true
+    },
+    {
+      "id": "IC_kwDOJCFabs8AAAABUHOQ5g",
+      "author": {
+        "login": "alp82"
+      },
+      "authorAssociation": "OWNER",
+      "body": "Closing at the owner's request after completed human review and selection of **F (Qwen3.8 Flash) as primary / D (Qwen3.7 Flash) as fallback**.\n\n[Published results and full cost comparison](https://github.com/alp82/goodwatch-monorepo/blob/a7841d2/docs/benchmarks/fingerprint/poc/human-review/results.md) preserve all candidates, failures, review coverage and limitations. Nine configurations generated ten titles each; 90 full responses were valid after three repairs, and actual reconciled inference charges totaled $0.3764186484. The owner reviewed all ten titles for the five survivors; early cuts retain their partial reviews.\n\nThis closes the comparison on the accepted first-pass evidence and human review, with the following original protocol work explicitly carried into #33: independent Astra/Fable reviews, F/D repeatability runs and separate embedding-cost measurement. These checks have not run and are not claimed as passed or waived. #33 now records them alongside fallback triggers, retry/repair behavior, guardrails and implementation acceptance criteria.\n\nNo new inference or production rollout was performed for closure. The parent strategy map remains open.\n",
+      "createdAt": "2026-09-12T08:25:28Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/alp82/goodwatch-monorepo/issues/32#issuecomment-5644718310",
+      "viewerDidAuthor": true
+    }
+  ],
+  "labels": [
+    {
+      "id": "LA_kwDOJCFabs8AAAAC1KW5fA",
+      "name": "wayfinder:prototype",
+      "description": "Prototype reviewed with the human",
+      "color": "A2EEEF"
+    },
+    {
+      "id": "LA_kwDOJCFabs8AAAAC1KW6eQ",
+      "name": "needs-info",
+      "description": "Requires additional information.",
+      "color": "D876E3"
+    }
+  ],
+  "number": 32,
+  "state": "CLOSED",
+  "title": "Compare candidate fingerprints",
+  "url": "https://github.com/alp82/goodwatch-monorepo/issues/32"
+}

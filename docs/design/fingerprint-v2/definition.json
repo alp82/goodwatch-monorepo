@@ -1,0 +1,4543 @@
+{
+  "format": "goodwatch.title_analysis_v2",
+  "version": "2.0.0-draft.1",
+  "status": "proposal",
+  "purpose": "A richer title-analysis envelope containing fingerprint attributes plus separate facts, advisories, contexts, evaluations, and reception.",
+  "terminology": {
+    "fingerprint": "Descriptive experience, content, world, and form attributes. Quality evaluations and reception are separate outputs of title analysis.",
+    "attribute_id": "Stable group.key identifier; display labels and aliases do not create additional dimensions.",
+    "core_candidate": "Eligible for evaluation as a general-similarity feature; inclusion and weight are not yet decided.",
+    "targeted_only": "Available for targeted retrieval and filters; not automatically a general-similarity feature."
+  },
+  "source_notes": [
+    "TODO.md: fingerprint v2",
+    "TODO.md: subgenre descriptions through holiday + audience",
+    "User-provided V2 drafts and critique"
+  ],
+  "output_contract": {
+    "definition_file": "definition.json contains the vocabulary, definitions, measurement rubrics, migration examples, and retrieval policies.",
+    "instance_schema": "schema.json defines a single title-analysis document; example-matrix.json demonstrates that document shape.",
+    "fingerprint_path": "analyses[].fingerprint contains descriptive groups. The evaluations registry group is emitted at analyses[].evaluations, outside the fingerprint.",
+    "vocabulary_not_checklist": "The registry is a broad vocabulary, not a requirement to generate hundreds of scores for every title. Record coverage and assess only traits supported by the available evidence.",
+    "generation_strategy": "Evaluate a stable core candidate set, retrieve relevant long-tail concepts, and explicitly assess requested exclusion topics. Do not silently convert unselected concepts to absence.",
+    "cost_and_reliability": "Measure generation cost, repeat-run stability, human agreement, and evidence coverage before adding any trait to the required production core.",
+    "compatibility": "This draft does not change V1 storage, attribute order, generated scores, UI families, or production retrieval. Migrating compound fields requires reassessment rather than copying one value into every split field."
+  },
+  "scoring_contract": {
+    "number_type": "integer",
+    "minimum": 0,
+    "maximum": 10,
+    "intermediate_values": "Integers between anchors interpolate within the same rubric. Do not imply measured precision beyond evidence.",
+    "statuses": {
+      "assessed": "Evidence supports a value, including zero.",
+      "unknown": "Assessment attempted but evidence is insufficient or conflicting; value must be null.",
+      "not_applicable": "The concept does not apply to this work or scope; value must be null.",
+      "not_assessed": "No assessment was attempted; value must be null."
+    },
+    "omission": "An omitted field is not assessed, never zero, false, or verified absent.",
+    "confidence": "Ordinal editorial assessment of evidence support, not a calibrated probability. Assessed values require low, medium, or high plus evidence references.",
+    "scope": "Every assessment belongs to an explicit movie, whole-show, season, or episode scope with an as-of date and coverage statement.",
+    "rubrics": {
+      "intensity": {
+        "0": "Absent.",
+        "2": "Mild.",
+        "5": "Moderate.",
+        "8": "Strong.",
+        "10": "Exceptionally strong or pervasive in the defined scope."
+      },
+      "centrality": {
+        "0": "Absent.",
+        "2": "Incidental or minor.",
+        "5": "Meaningful secondary component.",
+        "8": "Major organizing component.",
+        "10": "Defining focus; removing it fundamentally changes the work."
+      },
+      "membership": {
+        "0": "Does not use the genre conventions.",
+        "2": "Trace influence.",
+        "5": "Substantial hybrid membership.",
+        "8": "Clear genre identity.",
+        "10": "Genre conventions define the work."
+      },
+      "prominence": {
+        "0": "Absent.",
+        "2": "Occasional or faint.",
+        "5": "Clearly noticeable.",
+        "8": "Prominent across much of the scope.",
+        "10": "Dominant throughout the scope."
+      },
+      "frequency": {
+        "0": "Never.",
+        "2": "Isolated.",
+        "5": "Recurring.",
+        "8": "Frequent.",
+        "10": "Near-continuous."
+      },
+      "explicitness": {
+        "0": "No explicit sensory detail.",
+        "2": "Suggested or minimally detailed.",
+        "5": "Clearly presented.",
+        "8": "Graphic or highly detailed.",
+        "10": "Exceptionally graphic or sustained detail."
+      },
+      "quality": {
+        "0": "Exceptionally unsuccessful execution.",
+        "2": "Weak execution.",
+        "5": "Mixed or adequate execution.",
+        "8": "Strong execution.",
+        "10": "Exceptional execution. Absence is not a zero-quality score."
+      },
+      "suitability": {
+        "0": "Very poor fit under the stated assumptions.",
+        "2": "Limited fit.",
+        "5": "Mixed fit.",
+        "8": "Strong fit.",
+        "10": "Exceptionally strong fit. Not a universal audience verdict."
+      }
+    },
+    "separate_dimensions": [
+      "Intensity is not centrality.",
+      "Genre membership is not subject presence.",
+      "Depiction is not endorsement.",
+      "Quality is not descriptive similarity.",
+      "Release era is not setting era.",
+      "Production origin is not depicted culture or influence.",
+      "Intended audience is not age suitability.",
+      "Aesthetic appearance does not establish production technique."
+    ],
+    "coexistence": [
+      "hopefulness and bleakness",
+      "plot_velocity and gradual_development",
+      "warm_color and cool_color",
+      "practical_effects and digital_effects",
+      "personal and planetary stakes",
+      "conflict_resolution and interpretive_openness"
+    ],
+    "advisory_absence": "An absent advisory requires sufficient coverage of the relevant scope and version. Do not turn synopsis silence into absence.",
+    "series_policy": "Movie scopes mark series traits not_applicable or omit them. Whole-show assessments name covered seasons/episodes. Compare scoped assessments for change over time; never encode viewer lost-interest as an intrinsic trait."
+  },
+  "attribute_groups": {
+    "experience": {
+      "adrenaline": {
+        "definition": "Excitement and visceral exhilaration during viewing.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "tension": {
+        "definition": "Suspense, dread, or anticipation of an uncertain outcome.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "fear": {
+        "definition": "Fright or horror experienced, independently of horror genre membership.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "perceived_threat": {
+        "definition": "Sense that characters face harm, including harm never shown.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "romantic_feeling": {
+        "definition": "Romantic affection or longing evoked in the viewer.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "sensuality": {
+        "definition": "Erotic atmosphere or sexual tension, independently of explicit sexual depiction.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "warmth": {
+        "definition": "Affectionate, kind, or emotionally welcoming tone.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "wholesomeness": {
+        "definition": "Reassurance through care, kindness, and emotional safety.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "wonder": {
+        "definition": "Awe, amazement, or fascination with discovery.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "pathos": {
+        "definition": "Acute pity, sorrow, or tragic emotional impact.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "melancholy": {
+        "definition": "Lingering, reflective sadness.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "uncanniness": {
+        "definition": "Unease from the strangely familiar or almost natural.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "catharsis": {
+        "definition": "Emotional release after accumulated tension or feeling.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "nostalgia": {
+        "definition": "Longing for a remembered or imagined past evoked by the work; not release age.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "hopefulness": {
+        "definition": "Optimistic outlook or belief in positive possibilities.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "bleakness": {
+        "definition": "Pessimistic, despairing, or nihilistic outlook.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "emotional_intensity": {
+        "definition": "Overall strength of emotional engagement, regardless of positive or negative tone.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "stress": {
+        "definition": "Sustained pressure, discomfort, or anxiety experienced during viewing.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "uplift": {
+        "definition": "Encouragement, joy, or improved spirits evoked.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "thought_provocation": {
+        "definition": "Invitation to reflect on ideas, ethics, or interpretations beyond the immediate plot.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "playfulness": {
+        "definition": "Light, mischievous, or freely inventive tone.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "sentimentality": {
+        "definition": "Overt appeal to tender feelings and emotional attachment.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "emotional_restraint": {
+        "definition": "Understated expression and withholding of overt emotional display.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "bittersweetness": {
+        "definition": "Positive and painful feelings intertwined rather than merely appearing separately.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "absurdity": {
+        "definition": "Experience of incongruity, illogic, or strangeness, whether humorous or unsettling.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "escapism": {
+        "definition": "Immersion away from everyday concerns; not limited to fantasy settings.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "wish_fulfillment": {
+        "definition": "Invitation to imagine desired powers, relationships, status, or ways of life.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      }
+    },
+    "humor": {
+      "overall": {
+        "definition": "Overall amount and strength of comedy, independently of individual humor styles.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "situational": {
+        "definition": "Humor from circumstances, misunderstandings, and complications; no episodic-format requirement.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "wit_wordplay": {
+        "definition": "Humor from verbal cleverness, puns, or linguistic ambiguity.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "physical": {
+        "definition": "Humor from bodily action, slapstick, or visual physical mishaps.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "cringe": {
+        "definition": "Humor from embarrassment or uncomfortable social situations.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "absurdist": {
+        "definition": "Humor from nonsense, illogic, or bizarre juxtapositions.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "satire": {
+        "definition": "Humorous critique of institutions, behavior, or social conventions.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "parody": {
+        "definition": "Humorous imitation of a recognizable work, genre, or style.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "dark": {
+        "definition": "Humor about death, suffering, taboo, or tragedy.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "running_gags": {
+        "definition": "Recurring jokes whose repetition or variation creates humor.",
+        "measurement": "frequency",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "meta": {
+        "definition": "Humor about storytelling, production, audiences, or the work itself.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "deadpan": {
+        "definition": "Humor delivered with apparent seriousness or minimal emotional reaction.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "gross_out": {
+        "definition": "Humor relying on bodily fluids, disgust, or vulgar physical material.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      }
+    },
+    "themes": {
+      "crime": {
+        "definition": "Criminal acts and their consequences as subject matter.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "mystery": {
+        "definition": "Uncovering an important unknown as a central concern.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "war": {
+        "definition": "Armed conflict and its human or societal consequences.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "politics": {
+        "definition": "Governance, political institutions, and struggles for political power.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "family": {
+        "definition": "Family bonds, conflict, obligations, and belonging.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "psychology": {
+        "definition": "Mental processes, internal conflict, or perception as subject matter.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "entertainment_industry": {
+        "definition": "The business and practice of entertainment and celebrity.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "social_critique": {
+        "definition": "Examination or criticism of social arrangements and norms.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "class": {
+        "definition": "Social class, economic inequality, and mobility.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "capitalism": {
+        "definition": "Economic systems organized around capital, profit, and ownership.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "technology_and_humanity": {
+        "definition": "Effects of technology on human identity, relationships, and society.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "faith_and_spirituality": {
+        "definition": "Religious belief, spiritual practice, or metaphysical meaning.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "business": {
+        "definition": "Commercial organizations, enterprise, and work decisions.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "finance": {
+        "definition": "Money management, financial systems, investing, or debt.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "environment": {
+        "definition": "Relationships between human activity and ecosystems.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "science": {
+        "definition": "Scientific inquiry and its ideas, practice, or consequences.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "popular_culture": {
+        "definition": "Popular media, celebrity, fandom, or shared cultural trends.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "survival": {
+        "definition": "Meeting essential needs or overcoming threats to continued life.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "adventure": {
+        "definition": "Exploration, risk, and discovery outside ordinary life.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "hacking": {
+        "definition": "Intrusion into or manipulation of computer systems.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "artificial_intelligence": {
+        "definition": "Artificial agents and their interaction with the world.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "consciousness": {
+        "definition": "The nature of subjective experience and personhood.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "identity": {
+        "definition": "Formation, discovery, concealment, or change of personal identity.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "existential_meaning": {
+        "definition": "Purpose, freedom, mortality, and the meaning of existence.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "grief": {
+        "definition": "Responses to loss and mourning.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "trauma": {
+        "definition": "Lasting effects of overwhelming or harmful experiences.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "recovery": {
+        "definition": "Processes of rebuilding after trauma, illness, or crisis.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "mental_health": {
+        "definition": "Mental health conditions, care, and lived experience.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "addiction": {
+        "definition": "Dependency and its effects on people and relationships.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "addiction_recovery": {
+        "definition": "Attempts to overcome dependency and maintain recovery.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "trust_and_betrayal": {
+        "definition": "Reliance on others, deception, and broken trust.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "coming_of_age": {
+        "definition": "Development toward adult identity, agency, or responsibility.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "coming_out": {
+        "definition": "Disclosure or recognition of LGBTQ identity in a social context.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "sexuality": {
+        "definition": "Sexual identity, desire, and their social meaning.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "gender_identity": {
+        "definition": "Gender identity and its personal or social implications.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "immigration": {
+        "definition": "Migration across borders and the experience of settlement.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "displacement": {
+        "definition": "Loss of home or community through conflict, coercion, or other forces.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "gentrification": {
+        "definition": "Neighborhood change associated with investment and displacement.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "surveillance": {
+        "definition": "Monitoring, privacy, and control through observation.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "disease_and_pandemics": {
+        "definition": "Disease, epidemics, or public-health responses.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "climate_change": {
+        "definition": "Climate processes, human causes, or consequences.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "inherited_wealth": {
+        "definition": "Inheritance, dynastic wealth, and intergenerational economic advantage.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "social_media": {
+        "definition": "Online social platforms and their effects on life.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "public_shaming": {
+        "definition": "Public condemnation, reputational punishment, or social exclusion.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "justice": {
+        "definition": "Fairness, accountability, punishment, and redress.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "guilt": {
+        "definition": "Responsibility, remorse, and moral burden.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "forgiveness": {
+        "definition": "Letting go of blame or reconciling after harm.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "loyalty": {
+        "definition": "Commitment to people, groups, or principles under pressure.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "belonging": {
+        "definition": "Acceptance, community, and finding a place among others.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "loneliness": {
+        "definition": "Isolation and unmet desire for connection.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "ambition": {
+        "definition": "Pursuit of achievement, status, or recognition.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "obsession": {
+        "definition": "Consuming fixation and its consequences.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "labor": {
+        "definition": "Working conditions, worker identity, organizing, and exploitation.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "colonialism": {
+        "definition": "Colonial domination, resistance, and its legacies.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "racism": {
+        "definition": "Racial discrimination and its personal or structural consequences.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "sexism": {
+        "definition": "Discrimination or domination based on sex or gender.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "caregiving": {
+        "definition": "Responsibility for another person's everyday support and wellbeing.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "parenthood": {
+        "definition": "Becoming or being a parent and its consequences.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "aging": {
+        "definition": "Later life, changing capacities, and social experiences of aging.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "midlife": {
+        "definition": "Reassessment and transitions in middle adulthood.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "retirement": {
+        "definition": "Leaving paid work and adjusting to life afterward.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "early_adulthood": {
+        "definition": "Independence, work, and relationships in early adult life.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "education": {
+        "definition": "Learning, schooling, and educational institutions.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "artistic_creation": {
+        "definition": "Making art and the motivations or struggles involved.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      }
+    },
+    "genres": {
+      "action": {
+        "definition": "Genre identity organized substantially around physical action and conflict.",
+        "measurement": "membership",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "adventure": {
+        "definition": "Genre identity organized around journeys, exploration, and peril.",
+        "measurement": "membership",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "comedy": {
+        "definition": "Genre identity organized around humor.",
+        "measurement": "membership",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "drama": {
+        "definition": "Genre identity organized around sustained human conflict and emotional development.",
+        "measurement": "membership",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "thriller": {
+        "definition": "Genre identity organized around suspense, danger, and escalating uncertainty.",
+        "measurement": "membership",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "horror": {
+        "definition": "Genre identity organized around fear, dread, or horror.",
+        "measurement": "membership",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "science_fiction": {
+        "definition": "Genre identity involving speculative science, technology, or societies.",
+        "measurement": "membership",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "fantasy": {
+        "definition": "Genre identity involving supernatural or magical premises.",
+        "measurement": "membership",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "romance": {
+        "definition": "Genre identity centered on a romantic relationship and its development.",
+        "measurement": "membership",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "mystery": {
+        "definition": "Genre identity centered on uncovering an unknown or solving a puzzle.",
+        "measurement": "membership",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "crime": {
+        "definition": "Genre identity centered on crime, criminals, or criminal investigation.",
+        "measurement": "membership",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "western": {
+        "definition": "Genre identity drawing on frontier-western conventions.",
+        "measurement": "membership",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "neo_western": {
+        "definition": "Western conventions adapted to a modern setting.",
+        "measurement": "membership",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "giallo": {
+        "definition": "Genre identity drawing on stylized Italian mystery-thriller and horror conventions.",
+        "measurement": "membership",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "kaiju": {
+        "definition": "Genre identity centered on giant monsters and their impact.",
+        "measurement": "membership",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "disaster": {
+        "definition": "Genre identity organized around a major catastrophe.",
+        "measurement": "membership",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "superhero": {
+        "definition": "Genre identity drawing on superhero narrative conventions; powers alone do not establish membership.",
+        "measurement": "membership",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "zombie": {
+        "definition": "Genre identity organized around zombies or zombie-like contagion.",
+        "measurement": "membership",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "slasher": {
+        "definition": "Horror genre identity organized around a killer stalking and attacking victims.",
+        "measurement": "membership",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "creature_feature": {
+        "definition": "Genre identity organized around encounters with threatening creatures.",
+        "measurement": "membership",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "neo_noir": {
+        "definition": "Modern use of noir conventions such as fatalism, moral ambiguity, and criminal intrigue.",
+        "measurement": "membership",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "space_western": {
+        "definition": "Combination of western conventions and a spacefaring setting.",
+        "measurement": "membership",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "sword_and_sorcery": {
+        "definition": "Fantasy adventure organized around personal peril, swordplay, and sorcery.",
+        "measurement": "membership",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "cozy_mystery": {
+        "definition": "Mystery conventions with a reassuring social setting and limited graphic menace.",
+        "measurement": "membership",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "romantic_comedy": {
+        "definition": "Romance and comedy jointly organize the work.",
+        "measurement": "membership",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "melodrama": {
+        "definition": "Genre mode built around heightened emotional conflict and expressive plotting.",
+        "measurement": "membership",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "musical": {
+        "definition": "Genre identity in which musical performance is integral to storytelling.",
+        "measurement": "membership",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "war": {
+        "definition": "Genre identity substantially organized around warfare.",
+        "measurement": "membership",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "historical_drama": {
+        "definition": "Dramatic genre identity grounded in a past historical setting.",
+        "measurement": "membership",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "biographical": {
+        "definition": "Genre identity organized around the life of a real person.",
+        "measurement": "membership",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "true_crime": {
+        "definition": "Factual treatment of actual crime; fictional crime is insufficient.",
+        "measurement": "membership",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "psychological_thriller": {
+        "definition": "Thriller conventions organized around perception, manipulation, or mental conflict.",
+        "measurement": "membership",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "conspiracy_thriller": {
+        "definition": "Thriller conventions organized around concealed coordination and institutional danger.",
+        "measurement": "membership",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "survival_thriller": {
+        "definition": "Thriller conventions organized around immediate survival under sustained threat.",
+        "measurement": "membership",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "legal_thriller": {
+        "definition": "Thriller conventions organized around legal conflict and proceedings.",
+        "measurement": "membership",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "police_procedural": {
+        "definition": "Crime conventions emphasizing investigative procedure and institutional police work.",
+        "measurement": "membership",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "gangster": {
+        "definition": "Crime conventions emphasizing organized criminal groups and their internal lives.",
+        "measurement": "membership",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "whodunit": {
+        "definition": "Mystery conventions organized around identifying who committed a crime.",
+        "measurement": "membership",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "puzzle_box": {
+        "definition": "Mystery conventions inviting reconstruction of deliberately concealed narrative rules or structure.",
+        "measurement": "membership",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "space_opera": {
+        "definition": "Science-fiction conventions emphasizing large-scale space adventure and heightened conflict.",
+        "measurement": "membership",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "epic_fantasy": {
+        "definition": "Fantasy conventions emphasizing expansive worlds, large stakes, and extended quests or conflicts.",
+        "measurement": "membership",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "urban_fantasy": {
+        "definition": "Fantasy conventions combined with a recognizably urban, usually modern social environment.",
+        "measurement": "membership",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "dark_fantasy": {
+        "definition": "Fantasy conventions combined with a threatening or macabre horror-inflected atmosphere.",
+        "measurement": "membership",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      }
+    },
+    "narrative_engines": {
+      "investigation": {
+        "definition": "Characters gather evidence to explain an event or identify responsibility.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "pursuit": {
+        "definition": "An extended chase or hunt organizes the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "rescue": {
+        "definition": "Saving someone from captivity or danger organizes the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "escape": {
+        "definition": "Getting out of confinement or an unsafe situation organizes the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "quest": {
+        "definition": "A journey toward a defined objective organizes the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "competition": {
+        "definition": "A contest with rivals and an outcome organizes the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "relationship_development": {
+        "definition": "Changes in a relationship organize the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "everyday_life": {
+        "definition": "Ordinary routines and small events organize the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "survival": {
+        "definition": "Remaining alive under threatening conditions organizes the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "heist": {
+        "definition": "Planning, carrying out, or dealing with a theft organizes the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "espionage": {
+        "definition": "Secret intelligence gathering or covert state operations organize the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "military_operation": {
+        "definition": "An organized military mission structures the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "legal_case": {
+        "definition": "Legal proceedings or preparation for them structure the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "political_struggle": {
+        "definition": "Pursuit or exercise of political power structures the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      }
+    },
+    "tropes": {
+      "underdog_rise": {
+        "definition": "An initially disadvantaged character gains standing or succeeds against stronger opposition.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": true,
+        "applicability": "all"
+      },
+      "revenge": {
+        "definition": "Retaliation for a perceived wrong drives an arc.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": true,
+        "applicability": "all"
+      },
+      "vigilantism": {
+        "definition": "Characters enforce their own justice outside formal authority.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": true,
+        "applicability": "all"
+      },
+      "rags_to_riches": {
+        "definition": "A character moves from poverty to substantial wealth.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": true,
+        "applicability": "all"
+      },
+      "fall_from_grace": {
+        "definition": "A character loses status, reputation, or moral standing.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": true,
+        "applicability": "all"
+      },
+      "redemption": {
+        "definition": "A character attempts to make amends or change after wrongdoing.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": true,
+        "applicability": "all"
+      },
+      "mistaken_identity": {
+        "definition": "A character is consequentially taken to be someone else.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": true,
+        "applicability": "all"
+      },
+      "memory_loss": {
+        "definition": "Lost or inaccessible memories drive the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": true,
+        "applicability": "all"
+      },
+      "body_swap": {
+        "definition": "Characters exchange bodies or consciousness across bodies.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": true,
+        "applicability": "all"
+      },
+      "fish_out_of_water": {
+        "definition": "An unfamiliar social or physical environment challenges a character.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": true,
+        "applicability": "all"
+      },
+      "secret_identity": {
+        "definition": "Concealing an identity or maintaining a double life drives the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": true,
+        "applicability": "all"
+      },
+      "road_trip": {
+        "definition": "An overland journey with encounters along the way structures the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": true,
+        "applicability": "all"
+      },
+      "tournament": {
+        "definition": "A sequence of competitive rounds structures an arc.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": true,
+        "applicability": "all"
+      },
+      "training": {
+        "definition": "Learning or practice builds abilities toward a later challenge.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": true,
+        "applicability": "all"
+      },
+      "race_against_time": {
+        "definition": "A consequential deadline structures the conflict.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": true,
+        "applicability": "all"
+      },
+      "single_night": {
+        "definition": "The main action is concentrated in one eventful night.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": true,
+        "applicability": "all"
+      },
+      "locked_room": {
+        "definition": "An apparently inaccessible crime scene creates the central puzzle.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": true,
+        "applicability": "all"
+      },
+      "conspiracy": {
+        "definition": "Hidden coordination among powerful actors drives the plot.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": true,
+        "applicability": "all"
+      },
+      "apocalypse_survival": {
+        "definition": "Surviving societal collapse or a world-ending event drives the plot.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": true,
+        "applicability": "all"
+      },
+      "haunted_house": {
+        "definition": "An inhabited or visited dwelling is the focal site of a haunting.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": true,
+        "applicability": "all"
+      },
+      "chosen_one": {
+        "definition": "A character is singled out for a special, consequential role.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": true,
+        "applicability": "all"
+      },
+      "prophecy": {
+        "definition": "Predictions of destiny shape choices and events.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": true,
+        "applicability": "all"
+      },
+      "macguffin_quest": {
+        "definition": "Pursuit of an object whose plot function exceeds its intrinsic characterization.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": true,
+        "applicability": "all"
+      },
+      "final_survivor": {
+        "definition": "A surviving focal character confronts a threat after others are eliminated.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": true,
+        "applicability": "all"
+      },
+      "apparent_death": {
+        "definition": "A character appears to die but is later revealed to be alive.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": true,
+        "applicability": "all"
+      },
+      "mentor_death": {
+        "definition": "A mentor dies and the death matters to the mentee's arc.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": true,
+        "applicability": "all"
+      },
+      "doppelganger": {
+        "definition": "A double or lookalike creates consequential conflict.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": true,
+        "applicability": "all"
+      },
+      "hidden_antagonist_reveal": {
+        "definition": "A character's antagonistic role is concealed and later revealed.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": true,
+        "applicability": "all"
+      }
+    },
+    "relationships": {
+      "romantic_development": {
+        "definition": "Formation or deepening of a romantic relationship matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "established_couple": {
+        "definition": "An existing romantic partnership matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "marriage": {
+        "definition": "Marriage and its obligations or conflicts matter to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "breakup_or_divorce": {
+        "definition": "Ending a partnership matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "partner_bereavement": {
+        "definition": "Loss of a romantic partner matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "love_triangle": {
+        "definition": "Competing romantic attachments among three people matter to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "enemies_to_lovers": {
+        "definition": "An antagonistic relationship develops into romance.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "forbidden_romance": {
+        "definition": "A romantic relationship faces a consequential social or institutional prohibition.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "slow_burn_romance": {
+        "definition": "Romantic development unfolds gradually through delayed intimacy or commitment.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "queer_romance": {
+        "definition": "An explicitly depicted LGBTQ romantic relationship matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "workplace_romance": {
+        "definition": "A romantic relationship between coworkers matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "age_gap_romance": {
+        "definition": "A substantial age difference is consequential to a romantic relationship.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "friendship": {
+        "definition": "Non-romantic bonds of friendship matter to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "male_friendship": {
+        "definition": "Friendship among men matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "female_friendship": {
+        "definition": "Friendship among women matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "mentor_mentee": {
+        "definition": "Guidance and learning between mentor and mentee matter to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "student_teacher": {
+        "definition": "A formal educational student-teacher relationship matters to the story; no romantic implication.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "rivalry": {
+        "definition": "Competition or mutual opposition between characters matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "forced_proximity": {
+        "definition": "Circumstances oblige characters to remain close or share space.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "adversaries_cooperate": {
+        "definition": "Opposing characters must work together.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "found_family": {
+        "definition": "Chosen bonds serve a family-like role in the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "family_conflict": {
+        "definition": "Sustained conflict or harmful dysfunction within a family matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "intergenerational": {
+        "definition": "Relationships across generations matter to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "generational_trauma": {
+        "definition": "Trauma transmitted or repeated across generations matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "parent_child": {
+        "definition": "The relationship between parent and child matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "siblings": {
+        "definition": "Sibling relationships matter to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "caregiver_dependent": {
+        "definition": "Care and dependence between characters matter to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "human_animal_companionship": {
+        "definition": "An emotional bond between a person and animal matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "coercive_relationship": {
+        "definition": "Manipulation, coercion, or control within a relationship matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      }
+    },
+    "characters": {
+      "ensemble": {
+        "definition": "Several focal characters share narrative attention and agency.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "antihero": {
+        "definition": "A focal character departs substantially from conventional heroic ethics or behavior.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "morally_ambiguous_cast": {
+        "definition": "Moral ambiguity among multiple major characters matters to the work.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "transformation_arc": {
+        "definition": "Substantial change in a focal character's beliefs, identity, or behavior.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "intellectual_problem_solver": {
+        "definition": "A focal character's reasoning or specialized intellectual ability drives events.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "detective_lead": {
+        "definition": "A focal character acts as an investigator or detective.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "female_protagonist": {
+        "definition": "A woman or girl occupies a protagonist role, independently of competence or characterization quality.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "child_protagonist": {
+        "definition": "A child occupies a protagonist role.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "teen_protagonist": {
+        "definition": "A teenager occupies a protagonist role.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "older_adult_protagonist": {
+        "definition": "An older adult occupies a protagonist role.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "child_agency": {
+        "definition": "Children make consequential choices that affect events.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "female_character_agency": {
+        "definition": "Women or girls make consequential choices that affect events.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "workplace_team": {
+        "definition": "A team formed through work is a central social unit.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "family_business": {
+        "definition": "A family-run business is a central social unit.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "unaccompanied_children": {
+        "definition": "Children without their usual caregivers form a central social situation.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "teen_peer_group": {
+        "definition": "Teenage friendships and peer-group dynamics form a central social situation.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      }
+    },
+    "representation": {
+      "lgbtq_characters": {
+        "definition": "Explicitly established LGBTQ characters have narrative importance; do not infer from allegory or creator identity.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "neurodivergent_characters": {
+        "definition": "Explicitly established neurodivergent characters have narrative importance; do not diagnose from behavior.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "disabled_characters": {
+        "definition": "Explicitly established disabled characters have narrative importance.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "immigrant_characters": {
+        "definition": "Explicitly established immigrant characters have narrative importance.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      }
+    },
+    "world": {
+      "advanced_technology": {
+        "definition": "Technology substantially beyond the work's contemporary baseline shapes its world.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "magic": {
+        "definition": "Supernatural abilities or forces understood as magic shape the world.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "simulation": {
+        "definition": "An artificial simulation is an important layer of reality.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "virtual_reality": {
+        "definition": "Characters experience an interactive digitally mediated environment.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "parallel_worlds": {
+        "definition": "Coexisting alternative realities matter to the world.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "time_travel": {
+        "definition": "Movement across time outside ordinary chronological passage matters to the world.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "travel_to_past": {
+        "definition": "Travel to an earlier time matters to the world.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "travel_to_future": {
+        "definition": "Travel to a later time matters to the world.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "time_loop": {
+        "definition": "Repetition of a period of time matters to the world or narrative.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "dystopian_society": {
+        "definition": "Oppressive or deeply dysfunctional social arrangements define the world.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "post_apocalyptic": {
+        "definition": "Life after a civilization-scale catastrophe defines the world.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "spacefaring": {
+        "definition": "Travel or life beyond Earth is consequential to the world.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "robots": {
+        "definition": "Embodied artificial machines functioning as agents matter to the world; not synonymous with AI.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "myth_and_folklore": {
+        "definition": "Recognizable mythological or folkloric traditions shape the world.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      }
+    },
+    "world_treatment": {
+      "scientific_rigor": {
+        "definition": "Attention to scientific constraints and explanatory consistency; not an inverse of speculative freedom.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "speculative_freedom": {
+        "definition": "Freedom to use speculative premises without scientific elaboration.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "worldbuilding_depth": {
+        "definition": "Detail and interconnection in the world's institutions, history, and rules.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "lore_dependence": {
+        "definition": "Importance of remembering mythology or lore to follow the work.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "magic_rule_detail": {
+        "definition": "Elaboration of rules and constraints governing magic.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "everyday_realism": {
+        "definition": "Attention to plausible ordinary behavior and material conditions, independently of era.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      }
+    },
+    "settings": {
+      "urban": {
+        "definition": "A city environment is narratively important.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "small_town": {
+        "definition": "A small town environment is narratively important.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "rural": {
+        "definition": "A countryside or village environment is narratively important.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "frontier": {
+        "definition": "A frontier environment is narratively important.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "polar": {
+        "definition": "An Arctic, Antarctic, or comparable polar environment is narratively important.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "mountains": {
+        "definition": "Mountain landscapes are narratively important.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "forest": {
+        "definition": "Woodland environments are narratively important.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "desert": {
+        "definition": "Desert environments are narratively important.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "ocean": {
+        "definition": "Open sea or marine environments are narratively important.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "island": {
+        "definition": "Island environments are narratively important.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "space_station": {
+        "definition": "An orbital or deep-space station is narratively important.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "spacecraft": {
+        "definition": "A vehicle traveling through space is narratively important.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "underground": {
+        "definition": "Underground spaces are narratively important.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "bunker": {
+        "definition": "A protective or military bunker is narratively important.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "mansion": {
+        "definition": "A large private residence or estate is narratively important.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "home": {
+        "definition": "Domestic living spaces are narratively important.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "school": {
+        "definition": "A primary or secondary school is narratively important.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "university": {
+        "definition": "A university or college environment is narratively important.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "office": {
+        "definition": "An office workplace is narratively important.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "hospital": {
+        "definition": "A hospital or clinic is narratively important.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "restaurant": {
+        "definition": "A restaurant or cafe is narratively important.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "bar_or_club": {
+        "definition": "A bar, nightclub, or similar nightlife venue is narratively important.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "hotel": {
+        "definition": "A hotel or resort is narratively important.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "factory": {
+        "definition": "An industrial production site is narratively important.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "laboratory": {
+        "definition": "A research or testing laboratory is narratively important.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "prison": {
+        "definition": "A prison or detention facility is narratively important.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "salon": {
+        "definition": "A beauty or hair salon is narratively important.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "subway": {
+        "definition": "An underground urban rail system is narratively important.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "airport": {
+        "definition": "An airport is narratively important.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "amusement_park": {
+        "definition": "An amusement park is narratively important.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "circus": {
+        "definition": "A circus or carnival is narratively important.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "theater": {
+        "definition": "A theater or performance stage is narratively important.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "museum": {
+        "definition": "A museum or gallery is narratively important.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "library_or_bookshop": {
+        "definition": "A library or bookshop is narratively important.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "religious_site": {
+        "definition": "A place of worship or religious practice is narratively important.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "cemetery": {
+        "definition": "A cemetery or burial ground is narratively important.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      }
+    },
+    "occupations": {
+      "engineering": {
+        "definition": "Engineering work matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "computing": {
+        "definition": "Computing and information-technology work matter to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "healthcare": {
+        "definition": "Healthcare work matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "policing": {
+        "definition": "Police work matters to the story; separate from military work.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "military": {
+        "definition": "Military service matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "law": {
+        "definition": "Legal professional work matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "business": {
+        "definition": "Business management or entrepreneurship matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "finance": {
+        "definition": "Financial professional work matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "service": {
+        "definition": "Hospitality, retail, or other service work matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "arts": {
+        "definition": "Artistic or entertainment work matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "education": {
+        "definition": "Teaching or academic work matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "journalism": {
+        "definition": "Reporting and news production matter to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "organized_crime": {
+        "definition": "Work within organized criminal enterprises matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "piracy": {
+        "definition": "Maritime piracy as an occupation or way of life matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      }
+    },
+    "activities": {
+      "cooking": {
+        "definition": "Preparing food matters to the story; includes professional and domestic contexts.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "baking": {
+        "definition": "Baking matters to the story as a specific culinary activity.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "dining": {
+        "definition": "Eating out and food experiences matter to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "travel": {
+        "definition": "Travel and encounters away from home matter to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "backpacking": {
+        "definition": "Backpacking travel matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "gardening": {
+        "definition": "Cultivating plants matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "diving": {
+        "definition": "Underwater diving matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "vehicle_tuning": {
+        "definition": "Modification or customization of vehicles matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "aviation": {
+        "definition": "Flying and aviation activity matter to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "rail_enthusiasm": {
+        "definition": "Enthusiasm for railways matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "fitness": {
+        "definition": "Physical training for fitness or bodybuilding matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "video_games": {
+        "definition": "Playing or making video games matters to the story; virtual reality alone is insufficient.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "fashion": {
+        "definition": "Clothing and personal fashion practice matter to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "crafts": {
+        "definition": "Handcraft and making activities matter to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "photography": {
+        "definition": "Photography matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "filmmaking": {
+        "definition": "Making movies or shows matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "reading": {
+        "definition": "Reading and literary engagement matter to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "comics": {
+        "definition": "Making, reading, or collecting comics matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "anime_fandom": {
+        "definition": "Participation in anime or manga fandom matters to the story; visual influence alone is insufficient.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "visual_art": {
+        "definition": "Drawing, painting, or related visual-art practice matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "theater": {
+        "definition": "Acting on stage or participating in theater matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "hiking": {
+        "definition": "Hiking and walking in natural environments matter to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "woodworking": {
+        "definition": "Woodworking matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "home_improvement": {
+        "definition": "Renovating or repairing homes matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "language_learning": {
+        "definition": "Learning languages matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "instrument_playing": {
+        "definition": "Playing musical instruments matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "singing": {
+        "definition": "Singing as an activity matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "dancing": {
+        "definition": "Dancing as an activity matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "stage_magic": {
+        "definition": "Performance illusion and conjuring matter to the story; separate from supernatural magic.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "animal_care": {
+        "definition": "Caring for animals matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      }
+    },
+    "sports": {
+      "ice_hockey": {
+        "definition": "Ice hockey as sport matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "tennis": {
+        "definition": "Tennis as sport matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "golf": {
+        "definition": "Golf as sport matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "association_football": {
+        "definition": "Association football or soccer as sport matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "basketball": {
+        "definition": "Basketball as sport matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "baseball": {
+        "definition": "Baseball as sport matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "american_football": {
+        "definition": "American football as sport matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "boxing": {
+        "definition": "Boxing as sport matters to the story; action choreography alone is insufficient.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "mixed_martial_arts": {
+        "definition": "MMA as sport matters to the story; martial arts combat alone is insufficient.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "motorsport": {
+        "definition": "Competitive motor racing matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "skiing": {
+        "definition": "Skiing as sport matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "snowboarding": {
+        "definition": "Snowboarding as sport matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "running": {
+        "definition": "Competitive or recreational running matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "cycling": {
+        "definition": "Cycling as sport matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "cricket": {
+        "definition": "Cricket as sport matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "rugby": {
+        "definition": "Rugby as sport matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "volleyball": {
+        "definition": "Volleyball as sport matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "swimming": {
+        "definition": "Swimming as sport matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "diving": {
+        "definition": "Competitive diving matters to the story; separate from underwater diving.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "gymnastics": {
+        "definition": "Gymnastics as sport matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "skateboarding": {
+        "definition": "Skateboarding as sport matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "esports": {
+        "definition": "Competitive video gaming matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "professional_wrestling": {
+        "definition": "Professional wrestling as performance and competition matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "surfing": {
+        "definition": "Surfing as sport matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      }
+    },
+    "entities": {
+      "dogs": {
+        "definition": "Dogs matter to the story; not a count or mere-presence flag.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "cats": {
+        "definition": "Cats matter to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "horses": {
+        "definition": "Horses matter to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "farm_animals": {
+        "definition": "Farm animals matter to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "wildlife": {
+        "definition": "Non-domesticated animals matter to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "birds": {
+        "definition": "Birds matter to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "reptiles": {
+        "definition": "Reptiles matter to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "amphibians": {
+        "definition": "Amphibians matter to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "marine_animals": {
+        "definition": "Marine animals matter to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "arthropods": {
+        "definition": "Insects, spiders, or other arthropods matter to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "dinosaurs": {
+        "definition": "Dinosaurs matter to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "mythical_creatures": {
+        "definition": "Creatures from myth or fantasy matter to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "vampires": {
+        "definition": "Vampires matter to the story, independently of genre membership.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "werewolves": {
+        "definition": "Werewolves matter to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "ghosts": {
+        "definition": "Ghosts or spirits of the dead matter to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "demons": {
+        "definition": "Demons matter to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "extraterrestrials": {
+        "definition": "Extraterrestrial beings matter to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "cars": {
+        "definition": "Cars matter to the story, independently of motorsport or enthusiasm for cars.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "trains": {
+        "definition": "Trains matter to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "aircraft": {
+        "definition": "Aircraft operating within an atmosphere matter to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "watercraft": {
+        "definition": "Boats and ships operating on water matter to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "special_machinery": {
+        "definition": "Special-purpose industrial or construction machinery matters to the story.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      }
+    },
+    "storytelling": {
+      "plot_velocity": {
+        "definition": "Rate at which consequential plot events occur.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "gradual_development": {
+        "definition": "Deliberate accumulation of character, relationships, or tension over time; can coexist with rapid action.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "intrigue": {
+        "definition": "Strength of curiosity about what happens or what is concealed.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "plot_complexity": {
+        "definition": "Interdependence of events, causes, and plot threads.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "interpretive_ambiguity": {
+        "definition": "Extent to which meaning or events support multiple interpretations.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "twist_frequency": {
+        "definition": "Recurrence of major reversals or revelations over the work.",
+        "measurement": "frequency",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "twist_impact": {
+        "definition": "Extent to which revelations alter understanding or expectations.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "nonlinearity": {
+        "definition": "Departure from chronological storytelling.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "multiple_timelines": {
+        "definition": "Use of distinct temporal strands; not necessarily time travel.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "multiple_viewpoints": {
+        "definition": "Distribution of storytelling across distinct character perspectives.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "unreliable_narration": {
+        "definition": "Uncertainty created by an unreliable narrator or viewpoint.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "unreliable_reality": {
+        "definition": "Uncertainty about which presented events or reality layers are real.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "self_reference": {
+        "definition": "Attention to the work's own storytelling or construction.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "fourth_wall_breaking": {
+        "definition": "Direct acknowledgment of the audience or representational frame.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "voiceover": {
+        "definition": "Use of spoken narration over images outside ordinary scene dialogue.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "dream_sequences": {
+        "definition": "Use of dreams or hallucinations as presented sequences.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "observational_mode": {
+        "definition": "Attention to behavior and environments without strong explanatory or plot intervention.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "slice_of_life": {
+        "definition": "Emphasis on ordinary experience rather than extraordinary plot escalation.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "exposition_load": {
+        "definition": "Amount of explanatory information the viewer must absorb.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "information_withholding": {
+        "definition": "Deliberate delay in supplying information needed to understand events.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "philosophical_inquiry": {
+        "definition": "Explicit exploration of philosophical questions.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "educational_intent": {
+        "definition": "Deliberate presentation of factual knowledge for learning.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "formal_challenge": {
+        "definition": "Departure from familiar formal conventions that demands adaptation.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "homage": {
+        "definition": "Recognizable tributes and references to other works.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "pastiche": {
+        "definition": "Imitation or combination of recognizable artistic styles.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      }
+    },
+    "stakes": {
+      "personal": {
+        "definition": "Consequences for an individual's life, identity, or goals.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "relationship": {
+        "definition": "Consequences for a central relationship or small social unit.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "community": {
+        "definition": "Consequences for a locality or community.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "societal": {
+        "definition": "Consequences for institutions, a society, or civilization.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "planetary": {
+        "definition": "Consequences extending to a planet or humanity as a whole.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "cosmic": {
+        "definition": "Consequences extending beyond planetary life to cosmic reality.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "urgency": {
+        "definition": "Time pressure on consequential decisions or events.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      }
+    },
+    "dialogue": {
+      "density": {
+        "definition": "Amount of spoken dialogue relative to the work's running time.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "dependence": {
+        "definition": "Importance of understanding dialogue to follow the work.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "monologues": {
+        "definition": "Use of extended uninterrupted speeches.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "technical_jargon": {
+        "definition": "Use of specialized technical vocabulary.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "overlap": {
+        "definition": "Use of simultaneous or overlapping speech.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "naturalistic_delivery": {
+        "definition": "Conversational delivery resembling spontaneous everyday speech.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "theatrical_delivery": {
+        "definition": "Heightened, rhetorical, or explicitly performative speech.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "multilingual_exchange": {
+        "definition": "Use of multiple languages within the work; factual languages are catalog data.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      }
+    },
+    "aesthetics": {
+      "cyberpunk": {
+        "definition": "High technology combined with alienation, social stratification, or countercultural urban imagery.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "steampunk": {
+        "definition": "Retro-industrial speculative imagery drawing on steam-age technology.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "gothic": {
+        "definition": "Ominous, decaying, or romantically macabre visual atmosphere.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "noir": {
+        "definition": "Shadowed, morally uneasy visual and atmospheric treatment, independently of crime plotting.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "retro": {
+        "definition": "Deliberately retrospective visual or sonic styling; not merely an older release.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "minimalism": {
+        "definition": "Reduction of visual, sonic, or formal elements.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "stylization": {
+        "definition": "Departure from naturalistic presentation through a distinctive audiovisual treatment.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "surrealism": {
+        "definition": "Dreamlike or illogical relationships in presented images and events.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "psychedelia": {
+        "definition": "Hallucinatory, distorted, or perceptually altered sensory treatment.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "grotesquerie": {
+        "definition": "Emphasis on distorted, repulsive, or biologically unsettling forms.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "camp": {
+        "definition": "Theatrical excess and conspicuous artifice with an invitation to enjoy that excess.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "ironic_distance": {
+        "definition": "Presentation that invites distance from its apparent surface meaning.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "intimacy": {
+        "definition": "Presentation fostering closeness to characters' private experience.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "spectacle": {
+        "definition": "Emphasis on impressive scale, effects, and set pieces.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "immersion": {
+        "definition": "Strength of the sensory sense of inhabiting the work's world.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      }
+    },
+    "visuals": {
+      "vibrant_palette": {
+        "definition": "Use of strongly saturated colors.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "muted_palette": {
+        "definition": "Use of restrained or desaturated colors.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "pastel_palette": {
+        "definition": "Use of pale, soft colors.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "neon_palette": {
+        "definition": "Use of luminous, neon-like color accents.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "restricted_palette": {
+        "definition": "Use of a narrow or monochromatic color range.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "warm_color": {
+        "definition": "Prominence of warm hues and lighting.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "cool_color": {
+        "definition": "Prominence of cool hues and lighting.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "low_key_lighting": {
+        "definition": "Predominance of dark lighting with selective illumination.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "high_key_lighting": {
+        "definition": "Predominance of bright, evenly illuminated scenes.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "high_contrast": {
+        "definition": "Strong contrast between light and dark regions.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "diffused_light": {
+        "definition": "Soft illumination with gentle shadows.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "long_takes": {
+        "definition": "Prominence of extended shots without cuts; method of capture is irrelevant.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "handheld_motion": {
+        "definition": "Prominence of visibly handheld or unstable camera movement.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "aerial_viewpoints": {
+        "definition": "Prominence of aerial views, independently of capture technology.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "closeups": {
+        "definition": "Prominence of tight framing on faces or details.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "wide_compositions": {
+        "definition": "Prominence of broad spatial framing.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "symmetry": {
+        "definition": "Prominence of symmetrical composition.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "practical_effects": {
+        "definition": "Prominence of physical on-set effects; do not infer exact production method from appearance alone.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "digital_effects": {
+        "definition": "Prominence of digitally produced or altered imagery.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "costume_emphasis": {
+        "definition": "Expressive prominence of clothing and costume design.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "production_design_detail": {
+        "definition": "Density of expressive detail in constructed environments and props.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "split_screen": {
+        "definition": "Prominence of simultaneous images in separate screen regions.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "aspect_ratio_changes": {
+        "definition": "Expressive use of changes in frame proportions.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "grain_texture": {
+        "definition": "Visible grain-like image texture, independently of capture medium.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "distressed_texture": {
+        "definition": "Deliberate wear, damage, or degraded-image treatment.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      }
+    },
+    "action": {
+      "hand_to_hand": {
+        "definition": "Unarmed physical combat.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "martial_arts_choreography": {
+        "definition": "Combat organized around recognizable or stylized martial arts movement.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "grappling": {
+        "definition": "Combat involving holds, clinches, throws, or ground fighting.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "gunplay": {
+        "definition": "Firearms combat and shootouts.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "gun_fu": {
+        "definition": "Highly stylized choreography combining firearms and close-quarters movement.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "blade_combat": {
+        "definition": "Combat involving swords, knives, or similar blades.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "superpowered_combat": {
+        "definition": "Combat involving abilities beyond ordinary human capacities.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "chases": {
+        "definition": "Pursuits presented as action sequences.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "large_battles": {
+        "definition": "Combat involving many participants or military-scale engagement.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "environmental_choreography": {
+        "definition": "Creative use of surroundings and objects in action.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "gritty_combat": {
+        "definition": "Combat presented as physically punishing, messy, and effortful.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "stylized_violence": {
+        "definition": "Violence presented through conspicuously aestheticized movement or imagery.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "realistic_violence": {
+        "definition": "Violence presented with plausible physical consequences and vulnerability.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      }
+    },
+    "horror_modes": {
+      "possession": {
+        "definition": "Possession of a person by a supernatural entity matters to the horror.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "body_horror": {
+        "definition": "Transformation, violation, or instability of the body matters to the horror.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "folk_horror": {
+        "definition": "Folk belief, ritual, landscape, or insular tradition matters to the horror.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "cosmic_horror": {
+        "definition": "Human insignificance before incomprehensible forces matters to the horror.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "psychological_horror": {
+        "definition": "Perception, mental distress, or internal instability drives the horror.",
+        "measurement": "centrality",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      }
+    },
+    "sound": {
+      "design_prominence": {
+        "definition": "Expressive prominence of non-musical sound design; not a quality judgment.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "ambient_soundscapes": {
+        "definition": "Use of environmental sound to create atmosphere.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "silence": {
+        "definition": "Expressive use of silence or near silence.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "sparse_score": {
+        "definition": "Use of little or no non-diegetic score.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "audio_startles": {
+        "definition": "Abrupt sound events intended to startle.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "audio_self_reference": {
+        "definition": "Sound that acknowledges or plays with the work's representational frame.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "music_dependence": {
+        "definition": "Importance of music to emotional or narrative understanding.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "nonmusical_sound_dependence": {
+        "definition": "Importance of non-musical sound to emotional or narrative understanding.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "diegetic_music": {
+        "definition": "Prominence of music audible within the story world.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "preexisting_recordings": {
+        "definition": "Prominence of preexisting recorded songs or pieces placed in the soundtrack.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "live_performance": {
+        "definition": "Prominence of scenes depicting musical performance.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "musical_numbers": {
+        "definition": "Prominence of song or dance sequences functioning as narrative expression.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      }
+    },
+    "music_styles": {
+      "orchestral": {
+        "definition": "Orchestral music in the audible soundtrack.",
+        "measurement": "prominence",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "electronic": {
+        "definition": "Electronic music in the audible soundtrack.",
+        "measurement": "prominence",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "jazz": {
+        "definition": "Jazz in the audible soundtrack.",
+        "measurement": "prominence",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "classical": {
+        "definition": "Classical traditions in the audible soundtrack; can coexist with orchestral instrumentation.",
+        "measurement": "prominence",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "rock": {
+        "definition": "Rock in the audible soundtrack.",
+        "measurement": "prominence",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "pop": {
+        "definition": "Pop in the audible soundtrack.",
+        "measurement": "prominence",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "metal": {
+        "definition": "Metal in the audible soundtrack.",
+        "measurement": "prominence",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "hip_hop": {
+        "definition": "Hip-hop or rap in the audible soundtrack.",
+        "measurement": "prominence",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "country": {
+        "definition": "Country in the audible soundtrack.",
+        "measurement": "prominence",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "folk": {
+        "definition": "Folk traditions in the audible soundtrack; name specific traditions in cultural annotations.",
+        "measurement": "prominence",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      }
+    },
+    "ending": {
+      "conflict_resolution": {
+        "definition": "Extent to which central dramatic conflicts receive an outcome; independent of happiness.",
+        "measurement": "intensity",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": true,
+        "applicability": "all"
+      },
+      "interpretive_openness": {
+        "definition": "Extent to which the ending permits multiple interpretations.",
+        "measurement": "intensity",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": true,
+        "applicability": "all"
+      },
+      "emotional_closure": {
+        "definition": "Extent of emotional completion or release at the ending.",
+        "measurement": "intensity",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": true,
+        "applicability": "all"
+      },
+      "happiness": {
+        "definition": "Positive emotional outcome for focal characters at the ending.",
+        "measurement": "intensity",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": true,
+        "applicability": "all"
+      },
+      "tragedy": {
+        "definition": "Loss, defeat, or suffering defining the ending.",
+        "measurement": "intensity",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": true,
+        "applicability": "all"
+      },
+      "bittersweetness": {
+        "definition": "Intertwined positive and painful outcomes at the ending.",
+        "measurement": "intensity",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": true,
+        "applicability": "all"
+      },
+      "twist_impact": {
+        "definition": "Extent to which the ending reframes prior understanding.",
+        "measurement": "intensity",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": true,
+        "applicability": "all"
+      },
+      "cliffhanger": {
+        "definition": "Extent to which the ending suspends an urgent unresolved event.",
+        "measurement": "intensity",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": true,
+        "applicability": "all"
+      },
+      "sequel_dependence": {
+        "definition": "Extent to which another installment is needed to resolve central conflicts.",
+        "measurement": "intensity",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": true,
+        "applicability": "all"
+      },
+      "cyclical_return": {
+        "definition": "Extent to which the ending returns to or repeats the initial situation.",
+        "measurement": "intensity",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": true,
+        "applicability": "all"
+      }
+    },
+    "series": {
+      "episodic_independence": {
+        "definition": "Extent to which episodes provide independently understandable stories.",
+        "measurement": "intensity",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "show"
+      },
+      "serialized_dependence": {
+        "definition": "Extent to which episodes rely on ongoing arcs and prior episodes.",
+        "measurement": "intensity",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "show"
+      },
+      "anthology_independence": {
+        "definition": "Extent to which episodes or seasons form distinct stories with separate continuity.",
+        "measurement": "intensity",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "show"
+      },
+      "episode_cliffhangers": {
+        "definition": "Strength of suspended outcomes at episode boundaries.",
+        "measurement": "intensity",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "show"
+      },
+      "bottle_episode_pattern": {
+        "definition": "Prominence of episodes deliberately limited in location or cast.",
+        "measurement": "frequency",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "show"
+      },
+      "cold_open_hooks": {
+        "definition": "Prominence of openings designed to generate curiosity before titles or setup.",
+        "measurement": "frequency",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "show"
+      },
+      "formula_repetition": {
+        "definition": "Recurrence of substantially similar plot patterns across episodes.",
+        "measurement": "intensity",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "show"
+      },
+      "conceptual_renewal": {
+        "definition": "Introduction of new situations, ideas, or narrative directions across episodes.",
+        "measurement": "intensity",
+        "similarity_role": "targeted_only",
+        "spoiler_sensitive": false,
+        "applicability": "show"
+      }
+    },
+    "viewing_demands": {
+      "attention": {
+        "definition": "Sustained concentration needed to follow the work.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "visual_dependence": {
+        "definition": "Importance of watching the image to understand events; distinct from spectacle.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "auditory_dependence": {
+        "definition": "Importance of hearing sound to follow events; accessibility version may alter this.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "sensory_intensity": {
+        "definition": "Strength and density of audiovisual stimulation.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "franchise_knowledge": {
+        "definition": "Need for familiarity with other installments to understand this work.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "genre_knowledge": {
+        "definition": "Need for familiarity with genre conventions to understand this work.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "historical_knowledge": {
+        "definition": "Need for historical background not explained in the work.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "cultural_knowledge": {
+        "definition": "Need for cultural background not explained in the work.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "onscreen_reading": {
+        "definition": "Importance of reading text embedded in the image; subtitle demand is derived separately per viewer and offer.",
+        "measurement": "intensity",
+        "similarity_role": "core_candidate",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      }
+    },
+    "viewing_affordances": {
+      "background_viewing": {
+        "definition": "Ease of following the work with intermittent attention; not inferred from pace alone.",
+        "measurement": "suitability",
+        "similarity_role": "context_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "drop_in_viewing": {
+        "definition": "Ease of joining after the start without significant confusion.",
+        "measurement": "suitability",
+        "similarity_role": "context_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "standalone_viewing": {
+        "definition": "Ease of understanding this work without other franchise installments.",
+        "measurement": "suitability",
+        "similarity_role": "context_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "discussion": {
+        "definition": "Scope for discussion of ideas, characters, or interpretation after viewing.",
+        "measurement": "suitability",
+        "similarity_role": "context_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "theorizing": {
+        "definition": "Scope for speculation about concealed information or unresolved mysteries.",
+        "measurement": "suitability",
+        "similarity_role": "context_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "repeat_discovery": {
+        "definition": "Scope for discovering additional details or interpretations on another viewing; distinct from personal desire to rewatch.",
+        "measurement": "suitability",
+        "similarity_role": "context_only",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      }
+    },
+    "evaluations": {
+      "direction": {
+        "definition": "Assessment of coherence and execution of the creative vision.",
+        "measurement": "quality",
+        "similarity_role": "excluded",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "acting": {
+        "definition": "Assessment of performance execution, not the presence of live-action performers.",
+        "measurement": "quality",
+        "similarity_role": "excluded",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "writing": {
+        "definition": "Assessment of the overall writing.",
+        "measurement": "quality",
+        "similarity_role": "excluded",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "dialogue": {
+        "definition": "Assessment of dialogue writing as a component of writing.",
+        "measurement": "quality",
+        "similarity_role": "excluded",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "characterization": {
+        "definition": "Assessment of nuance and development in character writing.",
+        "measurement": "quality",
+        "similarity_role": "excluded",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "narrative_cohesion": {
+        "definition": "Assessment of causal, structural, and thematic coherence.",
+        "measurement": "quality",
+        "similarity_role": "excluded",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "cinematography": {
+        "definition": "Assessment of visual storytelling and photographic execution.",
+        "measurement": "quality",
+        "similarity_role": "excluded",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "editing": {
+        "definition": "Assessment of shot assembly, rhythm, and transitions.",
+        "measurement": "quality",
+        "similarity_role": "excluded",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "original_score": {
+        "definition": "Assessment of original musical composition, when present.",
+        "measurement": "quality",
+        "similarity_role": "excluded",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      },
+      "sound_design": {
+        "definition": "Assessment of the execution of non-musical sound.",
+        "measurement": "quality",
+        "similarity_role": "excluded",
+        "spoiler_sensitive": false,
+        "applicability": "all"
+      }
+    }
+  },
+  "related_attributes": [
+    {
+      "ids": [
+        "genres.romance",
+        "relationships.romantic_development",
+        "experience.romantic_feeling"
+      ],
+      "relationship": "genre_identity_vs_story_content_vs_viewer_experience",
+      "weighting": "Do not sum as independent evidence without evaluating correlation."
+    },
+    {
+      "ids": [
+        "genres.horror",
+        "experience.fear",
+        "experience.tension"
+      ],
+      "relationship": "genre_identity_vs_viewer_experience",
+      "weighting": "A horror genre match does not establish matching fear intensity."
+    },
+    {
+      "ids": [
+        "themes.artificial_intelligence",
+        "themes.consciousness",
+        "world.robots"
+      ],
+      "relationship": "distinct_topics_and_world_entities",
+      "weighting": "Do not infer any one from either of the others."
+    },
+    {
+      "ids": [
+        "themes.family",
+        "relationships.found_family"
+      ],
+      "relationship": "broad_topic_and_specific_relationship",
+      "weighting": "Broad and specific matches share a feature budget."
+    },
+    {
+      "ids": [
+        "activities.cooking",
+        "activities.baking"
+      ],
+      "relationship": "broad_activity_and_specific_activity",
+      "weighting": "Do not independently double count the broad and specific match."
+    },
+    {
+      "ids": [
+        "world.time_travel",
+        "world.travel_to_past",
+        "world.travel_to_future",
+        "world.time_loop"
+      ],
+      "relationship": "mechanism_and_specific_forms",
+      "weighting": "Keep direction-specific retrieval without multiplying the broad mechanism contribution."
+    },
+    {
+      "ids": [
+        "genres.slasher",
+        "genres.creature_feature",
+        "genres.horror"
+      ],
+      "relationship": "subgenres_and_broad_genre",
+      "weighting": "Normalize within the genre group; no additive hierarchy bonus."
+    }
+  ],
+  "advisory_topics": {
+    "violence": "Physical violence or intentional bodily harm.",
+    "gore": "Graphic wounds, blood, or bodily destruction.",
+    "sexual_activity": "Depicted or discussed sexual activity.",
+    "nudity": "Depicted nudity, independently of sexual activity.",
+    "substance_use": "Use of intoxicating or addictive substances.",
+    "profanity": "Strong or profane language.",
+    "disturbing_imagery": "Imagery likely to be upsetting through its content rather than plot stakes alone.",
+    "child_endangerment": "Threatened or actual harm to a child.",
+    "animal_harm": "Threatened or actual injury, cruelty, or death affecting an animal.",
+    "eating_disorders": "Eating-disorder behavior or discussion.",
+    "self_harm": "Intentional self-injury, separately from suicidal behavior.",
+    "suicide": "Suicidal ideation, attempts, or death by suicide.",
+    "sexual_violence": "Sexual assault, coercive sexual conduct, or threats of such conduct.",
+    "domestic_abuse": "Abuse within intimate or domestic relationships.",
+    "police_brutality": "Abusive force or treatment by police.",
+    "torture": "Deliberate infliction of severe suffering on a captive or controlled person.",
+    "kidnapping_and_confinement": "Abduction or involuntary confinement.",
+    "pregnancy_loss": "Miscarriage, stillbirth, or other loss of a pregnancy.",
+    "childbirth": "Childbirth and related medical distress.",
+    "discrimination": "Discriminatory abuse or exclusion; identify its specific target in notes.",
+    "flashing_imagery": "Flashing or strobing imagery; an editorial observation is not a technical accessibility certification."
+  },
+  "structured_annotations": {
+    "world_contexts": {
+      "purpose": "Separate reality layers and their settings rather than conflating apparent era with actual chronology.",
+      "fields": [
+        "id",
+        "layer_type",
+        "label",
+        "era",
+        "calendar_system",
+        "start_year",
+        "end_year",
+        "relative_time",
+        "places",
+        "historical_contexts",
+        "evidence_refs",
+        "spoiler_sensitive"
+      ],
+      "era_values": [
+        "prehistoric",
+        "ancient",
+        "medieval",
+        "early_modern",
+        "nineteenth_century",
+        "early_twentieth_century",
+        "late_twentieth_century",
+        "twenty_first_century",
+        "future",
+        "timeless",
+        "mixed",
+        "unspecified"
+      ],
+      "relative_time_values": [
+        "distant_past",
+        "recent_past",
+        "contemporary_at_release",
+        "near_future",
+        "far_future",
+        "mixed",
+        "unspecified"
+      ],
+      "historical_context_examples": [
+        "ancient_rome",
+        "viking_age"
+      ],
+      "place_policy": "Use controlled place identifiers when established; do not infer setting from production country or filming location."
+    },
+    "cultural_contexts": {
+      "relation_values": [
+        "depicted_culture",
+        "artistic_influence",
+        "industry_tradition",
+        "critical_interpretation"
+      ],
+      "policy": "Use named controlled concepts, not one-dimensional national-character scores. Interpretations require attribution and never establish explicit representation.",
+      "examples": [
+        "hong_kong_action_cinema",
+        "japanese_anime",
+        "hollywood_blockbuster",
+        "european_arthouse",
+        "korean_television_drama",
+        "chinese_television_drama",
+        "bollywood_masala",
+        "nollywood",
+        "telenovela",
+        "mumblecore",
+        "french_new_wave",
+        "italian_neorealism",
+        "soviet_montage",
+        "queer_cinema",
+        "feminist_cinema",
+        "black_cinema"
+      ]
+    },
+    "seasonal_contexts": {
+      "relation_values": [
+        "depicted_season",
+        "depicted_holiday",
+        "holiday_theme",
+        "viewing_association"
+      ],
+      "policy": "Christmas taking place in the story, Christmas as a major theme, and suitability for Christmas viewing are distinct. Calendar and hemisphere qualify seasonal labels.",
+      "examples": [
+        "winter",
+        "spring",
+        "summer",
+        "autumn",
+        "christmas",
+        "halloween",
+        "thanksgiving",
+        "new_years_eve",
+        "new_years_day",
+        "lunar_new_year",
+        "diwali",
+        "eid_al_fitr",
+        "hanukkah"
+      ]
+    },
+    "format": {
+      "production_method_values": [
+        "live_action",
+        "animation",
+        "mixed_media"
+      ],
+      "animation_technique_examples": [
+        "traditional_2d",
+        "digital_2d",
+        "cgi_3d",
+        "stop_motion",
+        "rotoscoping",
+        "mixed"
+      ],
+      "narrative_mode_values": [
+        "fiction",
+        "nonfiction",
+        "hybrid"
+      ],
+      "presentation_examples": [
+        "mockumentary",
+        "found_footage",
+        "sketch",
+        "observational_documentary",
+        "expository_documentary",
+        "participatory_documentary",
+        "essay",
+        "reality_competition",
+        "reality_observational",
+        "experimental"
+      ],
+      "series_structure_values": [
+        "limited",
+        "ongoing_serial",
+        "episodic",
+        "anthology",
+        "mixed"
+      ],
+      "other_facts": [
+        "post_credits_scene_present",
+        "alternate_endings_present",
+        "episode_runtime_min_minutes",
+        "episode_runtime_max_minutes",
+        "approximate_ensemble_size"
+      ],
+      "policy": "These are sourced facts. Limited-series design is separate from current renewal/cancellation status. Anime tradition is separate from animation technique."
+    },
+    "representation_annotations": {
+      "fields": [
+        "concept_id",
+        "character_label",
+        "role",
+        "establishment",
+        "portrayal_notes",
+        "evidence_refs",
+        "spoiler_sensitive"
+      ],
+      "role_values": [
+        "protagonist",
+        "co_protagonist",
+        "supporting",
+        "minor",
+        "ensemble"
+      ],
+      "policy": "Only explicit_text or attributed_source establishes a represented identity. Allegory and critical interpretations belong in cultural_contexts. Specific racial, ethnic, religious, gender, and disability identities use sourced annotations rather than an aggregate diversity score."
+    },
+    "temporal_segments": {
+      "purpose": "Optional opening, middle, and ending assessments preserve emotional and pacing changes hidden by whole-work averages.",
+      "policy": "Segment positions use fractions of the assessed scope. Distinguish within-work changes from season-to-season changes."
+    },
+    "audience_contexts": {
+      "context_examples": [
+        "date_night",
+        "friends_night",
+        "family_night",
+        "solo",
+        "travel",
+        "sick_day",
+        "comfort_rewatch",
+        "consecutive_episodes"
+      ],
+      "fields": [
+        "context_id",
+        "audience",
+        "assumptions",
+        "fit",
+        "evidence_refs"
+      ],
+      "policy": "Require age bounds where age suitability is claimed, plus language, familiarity, and content tolerances when relevant. Familiar comfort and rewatch desire depend on the viewer. Do not invent universal kids, teen, or date-night scores."
+    },
+    "reception": {
+      "purpose": "Attributed observations and interpretations outside descriptive fingerprint similarity.",
+      "concept_examples": [
+        "critical_acclaim",
+        "audience_reception",
+        "commercial_reach",
+        "cult_following",
+        "mainstream_reach",
+        "niche_appeal",
+        "divisiveness",
+        "quotability",
+        "meme_circulation",
+        "fan_fiction_activity",
+        "cultural_influence",
+        "perceived_originality_at_release",
+        "predictability",
+        "franchise_fatigue",
+        "perceived_quality",
+        "awards_recognition",
+        "classic_reputation"
+      ],
+      "fields": [
+        "concept_id",
+        "claim",
+        "observation_type",
+        "audience_or_critic_population",
+        "observed_at",
+        "evidence_refs"
+      ],
+      "policy": "Separate measured facts, attributed judgments, and hypotheses. Claims of quality decline, controversy, or problematic portrayals require specific scope and explanation. Spin-off potential is an editorial hypothesis, not a content fact."
+    }
+  },
+  "catalog_query_contract": {
+    "policy": "Join authoritative catalog facts and current availability; never ask the descriptive fingerprint to invent them.",
+    "filters": {
+      "identity": [
+        "title_id",
+        "media_type"
+      ],
+      "release": [
+        "release_date",
+        "release_year",
+        "release_decade"
+      ],
+      "people": [
+        "cast_person_ids",
+        "director_person_ids",
+        "writer_person_ids",
+        "source_author_person_ids"
+      ],
+      "organizations": [
+        "production_company_ids",
+        "brand_ids",
+        "distributor_ids"
+      ],
+      "franchises": [
+        "franchise_ids",
+        "collection_ids",
+        "installment_order"
+      ],
+      "language": [
+        "original_language_codes",
+        "spoken_language_codes",
+        "available_audio_language_codes",
+        "available_subtitle_language_codes"
+      ],
+      "origin": [
+        "production_country_codes"
+      ],
+      "source_material": [
+        "adaptation_type",
+        "source_work_ids",
+        "factual_basis"
+      ],
+      "audience": [
+        "intended_audience",
+        "certifications_by_jurisdiction"
+      ],
+      "release_status": [
+        "show_status",
+        "cancellation_status",
+        "available_seasons",
+        "available_episodes"
+      ],
+      "availability": [
+        "country_code",
+        "service_id",
+        "offer_type",
+        "checked_at",
+        "stay_start",
+        "stay_end",
+        "date_precision"
+      ],
+      "presentation": [
+        "edition_id",
+        "offer_video_resolution",
+        "offer_hdr_formats",
+        "offer_audio_formats",
+        "runtime_minutes"
+      ],
+      "reception_facts": [
+        "ratings_by_source",
+        "rating_vote_counts",
+        "awards",
+        "box_office",
+        "budget",
+        "currency",
+        "observation_date"
+      ]
+    },
+    "entity_resolution": [
+      "Disney and Pixar can denote companies or brands; resolve intent explicitly.",
+      "Star Wars, Marvel, James Bond, and Godzilla queries require franchise or brand identifiers.",
+      "Studio Ghibli is an organization query.",
+      "Stephen King is a person/source-author query, not a franchise.",
+      "Language labels such as Korean, Malayalam, Hindi, Telugu, Tamil, or Japanese do not establish culture or genre."
+    ],
+    "freshness": "Use the existing catalog availability precision and freshness rules. Unknown availability is distinct from a confirmed nonmatching offer.",
+    "best": "A ranking intent with explicit quality/popularity sources and vote support, not a fingerprint attribute.",
+    "reading_demand": "Derive per viewer and offer from language proficiency, selected audio/subtitles, visual text, and accessibility version; not a fixed property of the original-language title."
+  },
+  "retrieval_contract": {
+    "profiles": {
+      "general_similarity": "Evaluate a compact selection of core_candidate traits, normalize group contribution, and compare intensity as well as profile shape.",
+      "content_similarity": "Use relevant themes, mechanisms, relationships, and narrative engines; avoid counting the same concept through aliases or parent/child features.",
+      "aesthetic_similarity": "Prioritize visual, sonic, action, and storytelling treatment.",
+      "tonight": "Combine viewing demands, contextual fit, runtime, personal preferences, and watchability.",
+      "advisory_exclusion": "Apply explicit advisory rules with an unknown policy rather than subtracting similarity."
+    },
+    "weights": "No production weights are prescribed by this draft. Fit and evaluate them using judged title pairs and actual query tasks.",
+    "missingness": "Compare jointly assessed features and report evidence coverage. Too little overlap yields insufficient evidence, not a high match.",
+    "zeros": "Shared absence of sparse topics is not positive evidence of content similarity.",
+    "metric": "Do not use cosine alone when absolute intensity matters; evaluate intensity-sensitive distances and separate group scores.",
+    "hierarchy": "Broad themes and narrow concepts may coexist for filtering, but hierarchy membership is not an extra independent similarity vote.",
+    "negation": "Hard exclusions use independently evaluated predicates, not a negative embedding or a positive-score complement.",
+    "spoilers": "Spoiler-sensitive attributes can support private matching but must not appear in explanations, facets, or generated copy without the viewer opting in.",
+    "evaluation_tasks": [
+      "same premise, different tone",
+      "same tone, different genre",
+      "one graphic scene in an otherwise gentle work",
+      "quiet slice-of-life versus plot-driven drama",
+      "Christmas setting versus Christmas viewing association",
+      "resolved central conflict with an ambiguous final image",
+      "movie versus franchise-wide knowledge",
+      "a show whose seasons substantially change",
+      "less-known or international titles with incomplete evidence"
+    ]
+  },
+  "query_examples": [
+    {
+      "query": "Best Christmas movies for children aged 8 to 12 on my services",
+      "catalog_filters": {
+        "media_type": "movie",
+        "availability": "Member country and saved services; apply existing freshness rules."
+      },
+      "content_filter": {
+        "annotation": "seasonal_contexts",
+        "relation": "holiday_theme",
+        "concept_id": "christmas",
+        "minimum_value": 5
+      },
+      "audience_filter": {
+        "context_id": "family_night",
+        "minimum_age": 8,
+        "maximum_age": 12,
+        "requires": "An assessment covering these ages and the requested content tolerances, plus relevant sourced certifications."
+      },
+      "ranking": "Explicit quality source and vote support, then audience fit; no timeless best score.",
+      "unknown_policy": "Unknown age/content suitability is not verified suitable."
+    },
+    {
+      "query": "Stylized martial arts with no graphic gore",
+      "positive_filters": [
+        {
+          "attribute_id": "action.martial_arts_choreography",
+          "minimum_value": 7
+        }
+      ],
+      "advisory_rule": {
+        "topic": "gore",
+        "acceptable": "Verified absent or assessed explicitness at most 2, under the viewer-defined tolerance.",
+        "unknown_policy": "Exclude unknown or inadequately covered assessments from the strict result set."
+      },
+      "ranking": "Action and aesthetic similarity with intensity-sensitive comparison."
+    },
+    {
+      "query": "Time travel to the distant past with a clear resolution and an ambiguous ending",
+      "positive_filters": [
+        {
+          "attribute_id": "world.travel_to_past",
+          "minimum_value": 7
+        },
+        {
+          "attribute_id": "ending.conflict_resolution",
+          "minimum_value": 7
+        },
+        {
+          "attribute_id": "ending.interpretive_openness",
+          "minimum_value": 6
+        }
+      ],
+      "annotation_filter": {
+        "annotation": "world_contexts",
+        "relative_time": "distant_past"
+      },
+      "explanation_policy": "Use ending attributes privately; suppress specific ending details without spoiler opt-in."
+    },
+    {
+      "query": "Best Japanese-language Studio Ghibli movies available in 4K",
+      "catalog_filters": {
+        "media_type": "movie",
+        "original_language_codes": [
+          "ja"
+        ],
+        "production_company_ids": "Resolved Studio Ghibli organization ID",
+        "offer_video_resolution": "2160p for the matching offer in the viewer country"
+      },
+      "ranking": "Explicit quality source and vote support.",
+      "fingerprint_requirement": "No invented Ghibli, Japanese-culture, or 4K trait."
+    }
+  ],
+  "migration_examples": {
+    "culture_middle_east / culture_middle_eastern": "Replace with a sourced cultural-context concept; eliminate the spelling mismatch.",
+    "exp_second_screen_friendly / context_background_while_multitasking / view_background_friendly": "viewing_affordances.background_viewing",
+    "context_family_movie_night / format_family_movie_suitability": "audience_contexts with context_id=family_night and explicit audience assumptions",
+    "context_found_family_context / rel_found_family_trope": "relationships.found_family",
+    "action_heist / crime_heist_caper / trope_heist": "narrative_engines.heist; assess comedy separately",
+    "genre_slasher_teen / horror_slasher": "genres.slasher plus characters.teen_protagonist or an intended-audience fact",
+    "style_hyper_stylized / vis_visual_stylization": "aesthetics.stylization",
+    "humor_satire_parody": "humor.satire and humor.parody; re-assess rather than copy the same old value to both",
+    "genre_vampire_werewolf": "entities.vampires and entities.werewolves",
+    "profession_law_enforcement_military": "occupations.policing and occupations.military",
+    "char_neurodivergent_or_disability_representation": "representation.neurodivergent_characters and representation.disabled_characters",
+    "setting_factory_lab": "settings.factory and settings.laboratory",
+    "sport_boxing_mma": "sports.boxing and sports.mixed_martial_arts; exclude ordinary action combat",
+    "theme_multiverse_identity": "world.parallel_worlds and themes.identity",
+    "theme_cancel_culture_social_media": "themes.public_shaming and themes.social_media",
+    "char_strong_female_lead": "characters.female_protagonist and characters.female_character_agency; no single strong score",
+    "char_diversity_representation": "Specific sourced representation annotations; no aggregate score",
+    "theme_based_on_true_story": "catalog source_material.factual_basis",
+    "style_anime / culture_east_asian_japanese": "Separate production technique, attributed artistic influence, and depicted culture",
+    "pace_satisfying_ending": "ending.conflict_resolution and ending.emotional_closure; satisfaction belongs to a viewer or attributed reception",
+    "pace_quality_gets_better_over_time / pace_quality_gets_worse_over_time": "Scoped season evaluations and attributed reception with dates",
+    "pace_quality_consistency": "Compare scoped evaluations; do not infer from one whole-show score",
+    "exp_meme_potential / exp_fan_fiction_potential / exp_spin_off_potential": "Observed reception or explicitly labeled editorial hypotheses",
+    "meta_box_office_vs_critical_darling": "Separate commercial facts, critic reception, and audience reception",
+    "meta_problematic_by_modern_standards": "Specific attributed reception claims and descriptive advisories",
+    "meta_ahead_of_its_time / struct_novelty": "Attributed originality-at-release or cultural-influence claims with historical context",
+    "interest_*": "Score depicted activity or subject centrality. Audience affinity is a recommendation inference, not another duplicate title score."
+  },
+  "validation_boundary": "JSON Schema validates structure, known attribute names, ranges, statuses, and local enums. A semantic validator must resolve evidence/scope IDs, enforce registry applicability and fact value types, check coverage before advisory absence, and enforce spoiler handling.",
+  "not_decided": [
+    "Final core-similarity feature subset and weights",
+    "Calibration examples for each individual trait",
+    "Controlled vocabulary ownership and extension process",
+    "Evidence requirements by trait and source type",
+    "Automatic versus human-reviewed advisory absence",
+    "Measured reliability of each newly introduced trait"
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "rows": 2000,
+  "lexical_candidate_families": 94,
+  "initial_lexical_candidate_families": 63,
+  "initial_residual_rows": 798,
+  "manual_title_list_screened": 2000,
+  "manual_residual_first_four_essence_tags_screened": 798,
+  "targeted_synopsis_tags_keywords_reviewed": 77,
+  "proposals": 35,
+  "missing_essence_tags": 8,
+  "missing_synopsis": 0,
+  "limitations": [
+    "All rows scanned in six catalog fields; this does not constitute 2,000 deep editorial reviews.",
+    "All 2,000 title names were manually screened for candidates; 798 initial residual rows had their first four essence tags read.",
+    "77 selected source descriptions/essence tags/keywords were substantively reviewed, without external fact checking.",
+    "Lexical mention counts include metaphor, names and cult-classic false positives; they are not asserted trait counts.",
+    "No live user demand measurement; examples are proposed query scenarios."
+  ]
+}

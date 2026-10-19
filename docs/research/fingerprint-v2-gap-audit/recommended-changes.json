@@ -1,0 +1,355 @@
+{
+  "status": "Recommendations only; no V2 definition or production change applied.",
+  "new_scored_attribute_candidates": {
+    "storytelling": {
+      "character_emphasis_intensity": "Degree to which character experience, psychology, and development organize the work. Independent of characterization quality and compatible with strong external plot."
+    },
+    "themes": {
+      "ethical_dilemmas_centrality": "Importance of consequential choices between competing moral duties, values, or harms; does not require a morally gray cast.",
+      "memory_centrality": "Importance of remembrance, forgetting, recollection, and the personal or social meaning of memory; not limited to amnesia.",
+      "sacrifice_centrality": "Importance of voluntarily giving up something significant for another person, commitment, or larger purpose.",
+      "corruption_centrality": "Importance of misuse of entrusted power or institutional responsibility for private or factional benefit; not generic crime or moral ambiguity."
+    }
+  },
+  "scoring_policy": "These additions are proposed vocabulary. Promote them to required generation or similarity features only after checking reliability, evidence coverage, and judged retrieval benefit.",
+  "revise_existing_attributes": [
+    {
+      "existing": "themes.trust_and_betrayal_centrality",
+      "proposal": "Split or explicitly distinguish trust, betrayal, and deception. The current definition already includes deception; do not add an overlapping independent vote without revising it."
+    },
+    {
+      "existing": "series.anthology_independence_intensity / format.series_structure",
+      "proposal": "Add general work-level anthology/vignette structure for movies and shows; preserve series-specific episode/season continuity assessments."
+    },
+    {
+      "existing": "intensity and explicitness anchors",
+      "proposal": "Remove pervasive or sustained from severity anchors. Assess peak severity separately from frequency, duration, or fraction of exposure."
+    },
+    {
+      "existing": "visuals.restricted_palette_intensity",
+      "proposal": "Keep its broader meaning; add explicit color treatment. Restricted colors do not imply black and white."
+    }
+  ],
+  "new_structured_representation": {
+    "color_treatment": {
+      "values": [
+        "black_and_white",
+        "color",
+        "mixed",
+        "selective_color",
+        "tinted_monochrome"
+      ],
+      "qualifiers": [
+        "work_or_segment_scope",
+        "edition_id"
+      ],
+      "optional_score": {
+        "visuals.black_and_white_prominence": "Extent of achromatic grayscale imagery in the assessed scope. Tinted monochrome is a separate treatment."
+      }
+    },
+    "sparse_concepts": {
+      "fields": [
+        "canonical_concept_id",
+        "relation_or_role",
+        "scope",
+        "optional_centrality_or_intensity"
+      ],
+      "policy": "Do not require every concept on every title. Keep aliases and hierarchy in a shared registry; preserve unknown and not-assessed states outside bare score values."
+    },
+    "event_and_role_binding": {
+      "fields": [
+        "event_or_segment_id",
+        "event_concept",
+        "participants_and_roles",
+        "setting",
+        "visual_and_sound_treatment",
+        "evidence"
+      ],
+      "policy": "Only assert co-occurrence when supported. Do not invent timestamps from a synopsis or infer same-scene facts from independent title scores."
+    },
+    "presentation_and_format": {
+      "add_values": [
+        "screenlife",
+        "silent_film",
+        "archival_footage",
+        "single_location",
+        "physical_isolation",
+        "real_time",
+        "inverted_mystery",
+        "case_of_week",
+        "monster_of_week",
+        "multi_camera_sitcom",
+        "improvised_performance",
+        "hidden_camera",
+        "prank",
+        "stand_up",
+        "concert_recording",
+        "stage_recording",
+        "quiz",
+        "panel",
+        "variety",
+        "presenter_travelogue",
+        "instructional",
+        "scientific_demonstration"
+      ],
+      "policy": "Extend the existing full-design annotations; actual capture method and apparent presentation remain distinct."
+    },
+    "advisory_detail": {
+      "add_topics": [
+        "vomiting",
+        "needles_and_injections",
+        "drowning",
+        "suffocation",
+        "eye_injury",
+        "dental_injury",
+        "sudden_loud_sound"
+      ],
+      "policy": "Specific phobias need assessed presence/exposure/absence and evidence coverage; low topic centrality is insufficient."
+    },
+    "edition_and_offer": {
+      "add_capabilities": [
+        "audio_description",
+        "closed_captions",
+        "sdh",
+        "sign_language_interpretation",
+        "sensory_adjusted_version",
+        "alternate_cut",
+        "colorized_version"
+      ],
+      "policy": "Catalog facts with edition/offer scope; do not infer from fingerprint traits."
+    }
+  },
+  "sparse_concept_seed_families": {
+    "entities": [
+      "dragon",
+      "witch",
+      "wizard",
+      "angel",
+      "deity",
+      "shapeshifter",
+      "cyborg",
+      "sentient_object",
+      "zombie",
+      "shark",
+      "ape",
+      "snake"
+    ],
+    "sports_and_games": [
+      "chess",
+      "figure_skating",
+      "amateur_wrestling",
+      "table_tennis",
+      "dodgeball",
+      "bowling",
+      "climbing",
+      "archery",
+      "fencing",
+      "horse_racing",
+      "billiards",
+      "gambling",
+      "poker",
+      "fantasy_sports"
+    ],
+    "world_mechanisms": [
+      "supernatural",
+      "afterlife",
+      "reincarnation",
+      "resurrection",
+      "immortality",
+      "cloning",
+      "genetic_engineering",
+      "memory_manipulation",
+      "mind_control",
+      "telepathy",
+      "telekinesis",
+      "teleportation",
+      "invisibility",
+      "scale_change",
+      "body_transformation",
+      "alternate_history",
+      "utopia"
+    ],
+    "premises_and_narrative_conventions": [
+      "first_contact",
+      "alien_invasion",
+      "human_alien_coexistence",
+      "death_game",
+      "confidence_trick",
+      "undercover_infiltration",
+      "whistleblowing",
+      "forensic_investigation",
+      "cold_case",
+      "counterfeiting",
+      "money_laundering",
+      "royal_succession",
+      "mecha",
+      "isekai",
+      "game_progression",
+      "magical_realism"
+    ],
+    "social_and_relationship_topics": [
+      "poverty",
+      "homelessness",
+      "unemployment",
+      "food_insecurity",
+      "slavery",
+      "forced_labor",
+      "human_trafficking",
+      "coercive_group",
+      "bullying",
+      "body_image",
+      "adoption",
+      "foster_care",
+      "custody",
+      "stepfamily",
+      "infidelity",
+      "unrequited_romance",
+      "friends_to_lovers",
+      "fake_dating",
+      "second_chance_romance",
+      "long_distance_romance",
+      "resilience",
+      "teamwork"
+    ],
+    "settings": [
+      "courtroom",
+      "jury_room",
+      "jungle",
+      "summer_camp",
+      "boarding_school",
+      "orphanage",
+      "psychiatric_institution",
+      "submarine",
+      "underwater_facility",
+      "planet_surface",
+      "retirement_home"
+    ],
+    "occupations_and_specialties": [
+      "firefighting",
+      "farming",
+      "mining",
+      "social_work",
+      "sex_work",
+      "game_development",
+      "diagnostic_medicine",
+      "emergency_medicine",
+      "midwifery",
+      "psychotherapy",
+      "prosecution",
+      "criminal_defense"
+    ],
+    "music_and_performance": [
+      "opera",
+      "blues",
+      "gospel",
+      "reggae",
+      "punk",
+      "funk",
+      "soul",
+      "disco",
+      "synthwave",
+      "ballet",
+      "ballroom",
+      "cheerleading"
+    ],
+    "disasters": [
+      "earthquake",
+      "tsunami",
+      "avalanche",
+      "tornado",
+      "hurricane",
+      "volcanic_eruption",
+      "impact_event",
+      "shipwreck",
+      "industrial_accident"
+    ],
+    "condition_specific_topics": [
+      "cancer",
+      "dementia",
+      "hiv_aids"
+    ]
+  },
+  "defer_fixed_scoring": [
+    "resilience",
+    "eccentricity",
+    "general_supernatural_parent",
+    "introspection",
+    "magical_realism",
+    "claustrophobia",
+    "mortality",
+    "freedom",
+    "utopia",
+    "diplomacy"
+  ],
+  "defer_note": "These remain searchable concepts or calibration candidates. Existing existential_meaning explicitly includes freedom and mortality. Isolation, spatial restriction, and felt claustrophobia must stay distinct.",
+  "retain_companion_outputs": [
+    "essence_text",
+    "essence_tags",
+    "world_contexts",
+    "cultural_contexts",
+    "seasonal_contexts",
+    "representation_annotations",
+    "format_facts",
+    "advisories",
+    "audience_contexts",
+    "provenance_and_scope"
+  ],
+  "source_reports": [
+    "essence-findings.md",
+    "movies-report.md",
+    "shows-findings.md",
+    "queries-findings.md"
+  ],
+  "evidence_limits": "Generated catalog text establishes available vocabulary, not independently verified title facts. Title audits use all-row screening and targeted semantic review. Synthetic queries do not establish audience demand. Concept seeds are proposals; not every seed was independently confirmed in the sampled title corpus.",
+  "trope_audit_addendum": {
+    "status": "Additional evaluation candidates and sparse concepts only; not applied to the 547-attribute draft.",
+    "evidence": "tropes-findings.md",
+    "scored_candidates": {
+      "storytelling.foreshadowing_intensity": "Importance of planted cues that anticipate later developments and reward retrospective recognition. Separate exact setup/payoff devices from surprise and writing quality.",
+      "storytelling.dramatic_irony_intensity": "Importance of consequential differences between audience and character knowledge. Preserve knowledge-holder and fact relations where supported."
+    },
+    "optional_calibration_candidate": {
+      "storytelling.symbolism_intensity": "Importance of symbolic objects, imagery, language or recurring motifs to meaning; test reliability before adding a mandatory score."
+    },
+    "sparse_families": [
+      "narrative frames and embedded stories",
+      "conflicting retellings and recontextualization",
+      "symbolic and musical motifs; soundtrack counterpoint",
+      "scoped tone and genre transitions",
+      "protagonist, opponent, moral and allegiance roles",
+      "demonstrated competence and agency",
+      "wrongful accusation, exoneration, blackmail, stalking and coercion",
+      "platonic partnerships and marriage functions",
+      "hostage bargaining, siege, witness protection and death-row settings",
+      "cannibalism, genocide and child soldiers with separate advisory assessments",
+      "animal speech and nonhuman communication",
+      "hive minds, soul containment, astral projection, body hopping and shared dreams",
+      "time stopping, pocket dimensions, impossible geometry and terraforming",
+      "nanotechnology, parasitic control, elemental powers and faustian bargains",
+      "improvised weapons, traps, parkour, wire-fu, dogfights, sniper duels and standoffs",
+      "generation ships, living ships and megastructures",
+      "additional literal creature types",
+      "scoped outcomes, accountability, cast attrition and continuity resets"
+    ],
+    "overlap_rules": [
+      "Existing fall_from_grace already includes moral decline; do not add a redundant scalar.",
+      "Existing temporal segments can hold tone/genre transitions.",
+      "Existing event/outcome relations can hold survival, victory and accountability.",
+      "Bookends aliases can overlap; existing cyclical ending already covers some cases.",
+      "Earlier query proposals remain earlier proposals, including arranged marriage, curses, wishes and precognition."
+    ],
+    "source_requirements": [
+      "Preserve asserted, averted, subverted, hypothetical, quoted and referential modes.",
+      "Bind concepts to participants, events, scopes and editions when supported.",
+      "Normalize URL identities and aliases before aggregating; keep original strings and provenance.",
+      "Do not infer literal entities from trope labels such as The Dragon or The Ghost.",
+      "Verify source title identity and episode/book/adaptation scope.",
+      "Keep source labels distinct from preferred product terminology."
+    ],
+    "detailed_proposals": [
+      "tropes-vocabulary-proposals.json",
+      "tropes-narrative-proposals.json",
+      "tropes-search-proposals.json"
+    ]
+  }
+}

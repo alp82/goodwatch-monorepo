@@ -1,0 +1,251 @@
+{
+  "counting_note": "Counts sum tag-title incidences across case variants; a title carrying multiple variants may be counted more than once. These are vocabulary occurrences, not verified content or user demand.",
+  "terms": [
+    {
+      "term": "character-driven",
+      "exact_case_variants": [
+        {
+          "tag": "Character-Driven",
+          "movie_title_count": 16638,
+          "show_title_count": 10436,
+          "title_count": 27074
+        },
+        {
+          "tag": "Character-driven",
+          "movie_title_count": 83,
+          "show_title_count": 74,
+          "title_count": 157
+        },
+        {
+          "tag": "character-driven",
+          "movie_title_count": 4,
+          "show_title_count": 0,
+          "title_count": 4
+        }
+      ],
+      "casefold_tag_title_incidences": 27235
+    },
+    {
+      "term": "character study",
+      "exact_case_variants": [
+        {
+          "tag": "Character Study",
+          "movie_title_count": 8005,
+          "show_title_count": 2929,
+          "title_count": 10934
+        },
+        {
+          "tag": "Character study",
+          "movie_title_count": 8,
+          "show_title_count": 2,
+          "title_count": 10
+        },
+        {
+          "tag": "character study",
+          "movie_title_count": 1,
+          "show_title_count": 0,
+          "title_count": 1
+        }
+      ],
+      "casefold_tag_title_incidences": 10945
+    },
+    {
+      "term": "moral dilemma",
+      "exact_case_variants": [
+        {
+          "tag": "Moral Dilemma",
+          "movie_title_count": 3014,
+          "show_title_count": 285,
+          "title_count": 3299
+        },
+        {
+          "tag": "Moral dilemma",
+          "movie_title_count": 5,
+          "show_title_count": 0,
+          "title_count": 5
+        },
+        {
+          "tag": "moral dilemma",
+          "movie_title_count": 2,
+          "show_title_count": 0,
+          "title_count": 2
+        }
+      ],
+      "casefold_tag_title_incidences": 3306
+    },
+    {
+      "term": "introspective",
+      "exact_case_variants": [
+        {
+          "tag": "Introspective",
+          "movie_title_count": 945,
+          "show_title_count": 99,
+          "title_count": 1044
+        },
+        {
+          "tag": "introspective",
+          "movie_title_count": 1,
+          "show_title_count": 0,
+          "title_count": 1
+        }
+      ],
+      "casefold_tag_title_incidences": 1045
+    },
+    {
+      "term": "self-sacrifice",
+      "exact_case_variants": [
+        {
+          "tag": "Self-Sacrifice",
+          "movie_title_count": 36,
+          "show_title_count": 2,
+          "title_count": 38
+        }
+      ],
+      "casefold_tag_title_incidences": 38
+    },
+    {
+      "term": "resilience",
+      "exact_case_variants": [
+        {
+          "tag": "Resilience",
+          "movie_title_count": 475,
+          "show_title_count": 224,
+          "title_count": 699
+        }
+      ],
+      "casefold_tag_title_incidences": 699
+    },
+    {
+      "term": "deception",
+      "exact_case_variants": [
+        {
+          "tag": "Deception",
+          "movie_title_count": 236,
+          "show_title_count": 45,
+          "title_count": 281
+        }
+      ],
+      "casefold_tag_title_incidences": 281
+    },
+    {
+      "term": "corruption",
+      "exact_case_variants": [
+        {
+          "tag": "Corruption",
+          "movie_title_count": 426,
+          "show_title_count": 61,
+          "title_count": 487
+        },
+        {
+          "tag": "corruption",
+          "movie_title_count": 2,
+          "show_title_count": 0,
+          "title_count": 2
+        }
+      ],
+      "casefold_tag_title_incidences": 489
+    },
+    {
+      "term": "eccentric characters",
+      "exact_case_variants": [
+        {
+          "tag": "Eccentric Characters",
+          "movie_title_count": 2156,
+          "show_title_count": 960,
+          "title_count": 3116
+        },
+        {
+          "tag": "Eccentric characters",
+          "movie_title_count": 4,
+          "show_title_count": 2,
+          "title_count": 6
+        },
+        {
+          "tag": "eccentric characters",
+          "movie_title_count": 2,
+          "show_title_count": 0,
+          "title_count": 2
+        }
+      ],
+      "casefold_tag_title_incidences": 3124
+    },
+    {
+      "term": "supernatural",
+      "exact_case_variants": [
+        {
+          "tag": "Supernatural",
+          "movie_title_count": 882,
+          "show_title_count": 148,
+          "title_count": 1030
+        },
+        {
+          "tag": "SUPERNATURAL",
+          "movie_title_count": 1,
+          "show_title_count": 0,
+          "title_count": 1
+        }
+      ],
+      "casefold_tag_title_incidences": 1031
+    },
+    {
+      "term": "magical realism",
+      "exact_case_variants": [
+        {
+          "tag": "Magical Realism",
+          "movie_title_count": 1012,
+          "show_title_count": 447,
+          "title_count": 1459
+        },
+        {
+          "tag": "Magical realism",
+          "movie_title_count": 1,
+          "show_title_count": 0,
+          "title_count": 1
+        }
+      ],
+      "casefold_tag_title_incidences": 1460
+    },
+    {
+      "term": "black-and-white",
+      "exact_case_variants": [
+        {
+          "tag": "Black-and-White",
+          "movie_title_count": 3,
+          "show_title_count": 1,
+          "title_count": 4
+        }
+      ],
+      "casefold_tag_title_incidences": 4
+    },
+    {
+      "term": "screenlife",
+      "exact_case_variants": [
+        {
+          "tag": "Screenlife",
+          "movie_title_count": 0,
+          "show_title_count": 1,
+          "title_count": 1
+        }
+      ],
+      "casefold_tag_title_incidences": 1
+    },
+    {
+      "term": "silent film",
+      "exact_case_variants": [
+        {
+          "tag": "Silent Film",
+          "movie_title_count": 940,
+          "show_title_count": 0,
+          "title_count": 940
+        },
+        {
+          "tag": "silent film",
+          "movie_title_count": 2,
+          "show_title_count": 0,
+          "title_count": 2
+        }
+      ],
+      "casefold_tag_title_incidences": 942
+    }
+  ]
+}
