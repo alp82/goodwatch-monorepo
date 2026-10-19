@@ -89,6 +89,10 @@ export interface MetaOptions {
 	itemList?: { paths: readonly string[]; first: number }
 	/** The paths of the previous and the next page of a paged list. */
 	pages?: { prev?: string; next?: string }
+	/** A blog post: og:type is article, with the days it was published and last changed (YYYY-MM-DD). */
+	article?: { published: string; modified: string }
+	/** Structured data the page builds itself, such as a blog post's BlogPosting and Dataset. */
+	structuredData?: readonly Record<string, unknown>[]
 }
 
 export const buildMeta = (params: MetaOptions) => {
@@ -128,8 +132,22 @@ export const buildMeta = (params: MetaOptions) => {
 				? params.item.mediaType === "movie"
 					? "video.movie"
 					: "video.tv_show"
-				: "website",
+				: params.article
+					? "article"
+					: "website",
 		},
+		...(params.article
+			? [
+					{
+						property: "article:published_time",
+						content: params.article.published,
+					},
+					{
+						property: "article:modified_time",
+						content: params.article.modified,
+					},
+				]
+			: []),
 		{ property: "og:site_name", content: "GoodWatch" },
 		{ property: "og:title", content: params.pageMeta.title },
 		{ property: "og:description", content: params.pageMeta.description },
@@ -151,6 +169,8 @@ export const buildMeta = (params: MetaOptions) => {
 
 	// JSON-LD Schema
 	if (jsonLdContent) metaTags.push({ "script:ld+json": jsonLdContent })
+	for (const block of params.structuredData ?? [])
+		metaTags.push({ "script:ld+json": block })
 	const breadcrumbList = params.breadcrumbs
 		? breadcrumbJsonLd(params.breadcrumbs)
 		: null

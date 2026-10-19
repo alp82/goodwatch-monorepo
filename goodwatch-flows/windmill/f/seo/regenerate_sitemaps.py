@@ -23,11 +23,13 @@ API = f"https://api.github.com/repos/{REPOSITORY}"
 OUTPUT = "goodwatch-webapp/public/sitemaps/"
 SCRIPTS = "goodwatch-webapp/scripts/"
 CATEGORIES = "goodwatch-webapp/app/ui/explore/category/"
+BLOG_POSTS = "goodwatch-webapp/app/content/blog/posts.json"
 TOKEN_VARIABLE = "u/Alp/GITHUB_SITEMAP_TOKEN"
 SOURCE_FILES = [SCRIPTS + name for name in (
     "create_sitemaps.py", "check_sitemap_urls.py", "sitemap_query.py",
-    "sitemap_lastmod.py", "sitemap_selection.py", "sitemap_people.py", "sitemap_crate.py", "utils.py",
-)] + [CATEGORIES + name + ".ts" for name in ("moods", "streaming", "genres")]
+    "sitemap_lastmod.py", "sitemap_selection.py", "sitemap_people.py", "sitemap_crate.py", "sitemap_blog.py",
+    "utils.py",
+)] + [CATEGORIES + name + ".ts" for name in ("moods", "streaming", "genres")] + [BLOG_POSTS]
 
 
 def request(url, method="GET", data=None, token=None, raw=False):
@@ -142,7 +144,8 @@ def generate_and_check(root):
         return len(urls), {OUTPUT + p.name: p.read_bytes() for p in sorted(output.glob("sitemap*.xml"))}
     finally:
         sys.path.remove(str(scripts))
-        for name in ("sitemap_lastmod", "sitemap_selection", "sitemap_people", "sitemap_query", "sitemap_crate", "utils"):
+        for name in ("sitemap_lastmod", "sitemap_selection", "sitemap_people", "sitemap_query", "sitemap_crate",
+                     "sitemap_blog", "utils"):
             sys.modules.pop(name, None)
 
 

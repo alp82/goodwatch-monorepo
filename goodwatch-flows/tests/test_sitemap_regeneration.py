@@ -1,5 +1,6 @@
 """Sitemap publication boundary: checked output, narrow scope, atomic update."""
 import io
+import json
 from datetime import date
 import sys
 import tempfile
@@ -154,6 +155,11 @@ class SitemapRegenerationTests(unittest.TestCase):
                     target = root / name
                     target.parent.mkdir(parents=True, exist_ok=True)
                     shutil.copyfile(repo / name, target)
+                # Fixed posts, so the count does not follow the repository's blog.
+                (root / worker.BLOG_POSTS).write_text(json.dumps([
+                    {"slug": "b-post", "published": "2026-10-01", "updated": "2026-10-12"},
+                    {"slug": "a-post", "published": "2026-10-02", "updated": "2026-10-02"},
+                ]))
                 connection = Mock()
                 def execute(sql, *args):
                     if 'FROM person_appeared_in' in sql or 'FROM person_worked_on' in sql:
@@ -187,7 +193,14 @@ class SitemapRegenerationTests(unittest.TestCase):
                       patch("builtins.print")):
                     if status == 200:
                         count, files = worker.generate_and_check(root)
-                        self.assertEqual(count, 1128)  # Titles, people, categories and static pages.
+                        self.assertEqual(count, 1131)  # Titles, people, categories, static and blog pages.
+                        static = files[worker.OUTPUT + "sitemap_static.xml"].decode()
+                        self.assertIn("<loc>https://goodwatch.app/blog</loc>\n    <lastmod>2026-10-12</lastmod>", static)
+                        self.assertIn("<loc>https://goodwatch.app/blog/a-post</loc>\n    <lastmod>2026-10-02</lastmod>", static)
+                        self.assertIn("<loc>https://goodwatch.app/blog/b-post</loc>\n    <lastmod>2026-10-12</lastmod>", static)
+                        self.assertEqual(static.count("<lastmod>"), 3)
+                        self.assertLess(static.index("/use-with-ai<"), static.index("/blog<"))
+                        self.assertLess(static.index("/blog/a-post<"), static.index("/blog/b-post<"))
                         self.assertEqual(len(files), 8)
                         # Replay from the exact generated artifacts: history and cohort
                         # state must preserve every byte on an unchanged rerun.
@@ -201,7 +214,7 @@ class SitemapRegenerationTests(unittest.TestCase):
                         self.assertEqual(again_count, count)
                         self.assertEqual(again, files)
                         for path, content in files.items():
-                            if "detail_0" in path or "people" in path or "static" in path or "categories" in path:
+                            if "detail_0" in path or "people" in path or "categories" in path:
                                 self.assertNotIn(b"<lastmod>", content)
                     else:
                         with self.assertRaisesRegex(RuntimeError, "Sitemap check failed"):

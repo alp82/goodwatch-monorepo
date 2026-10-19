@@ -7,7 +7,7 @@ import { constants, brotliCompress, gzip } from "node:zlib"
 const brotli = promisify(brotliCompress)
 const gz = promisify(gzip)
 const textTypes = new Set(
-	"js mjs css html svg json map webmanifest xml txt".split(" "),
+	"js mjs css html svg json map webmanifest xml txt csv".split(" "),
 )
 const compressible = new Set([...textTypes, "ttf", "otf", "ico", "wasm"])
 

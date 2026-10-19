@@ -10,6 +10,7 @@ import re
 from crate import client
 from dotenv import load_dotenv
 
+from sitemap_blog import blog_urls, read_blog_posts
 from sitemap_crate import connect_args
 from sitemap_lastmod import SitemapHistory, title_lastmod
 from sitemap_query import detail_query
@@ -31,6 +32,8 @@ def prepare_sitemaps(previous_dir):
 
 
 CATEGORY_DIR = os.path.join(SCRIPT_DIR, "../app/ui/explore/category/")
+# The published blog posts, with the dates that sitemap_static.xml gives their URLs.
+BLOG_POSTS = os.path.join(SCRIPT_DIR, "../app/content/blog/posts.json")
 BASE_URL = "https://goodwatch.app"
 
 # Must match mainHierarchy in app/ui/explore/main-nav.ts
@@ -172,11 +175,15 @@ def create_detail_sitemaps(crate_cursor, table_name: Literal["movie", "show"]):
 
 
 def create_landing_sitemaps():
-    """Create sitemaps for main landing pages."""
+    """Create sitemaps for main landing pages, then the blog index and its posts."""
+    # Landing pages stay undated. Blog URLs carry the posts' updated dates, see docs/sitemap.md.
     entries = [url_entry(f"{BASE_URL}{route}") for route in STATIC_ROUTES]
+    posts = read_blog_posts(BLOG_POSTS, PREVIOUS_SITEMAPS.today)
+    entries += [url_entry(loc, lastmod) for loc, lastmod in blog_urls(BASE_URL, posts)]
     lastmod = write_urlset("sitemap_static.xml", entries)
     return {
         "static_url_count": len(entries),
+        "blog_post_count": len(posts),
         "lastmod": lastmod,
     }
 

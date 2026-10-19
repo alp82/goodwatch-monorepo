@@ -2,10 +2,12 @@ import { createHash } from "node:crypto"
 import { copyFileSync, mkdirSync, writeFileSync } from "node:fs"
 import { createRequire } from "node:module"
 import { basename, join, resolve } from "node:path"
+import mdx from "@mdx-js/rollup"
 import { vitePlugin as remix } from "@remix-run/dev"
 import { installGlobals } from "@remix-run/node"
 import { sentryVitePlugin } from "@sentry/vite-plugin"
 import tailwindcss from "@tailwindcss/vite"
+import remarkGfm from "remark-gfm"
 import { defineConfig } from "vite"
 // import { remixDevTools } from "remix-development-tools/vite";
 import tsconfigPaths from "vite-tsconfig-paths"
@@ -310,6 +312,9 @@ export default defineConfig(({ mode, isSsrBuild }) => ({
 
 	plugins: [
 		// remixDevTools(),
+		// Blog posts (app/content/blog/*/post.mdx) become React at build time; nothing of MDX runs in the browser. It
+		// comes before Remix, which only reads JavaScript.
+		{ enforce: "pre", ...mdx({ remarkPlugins: [remarkGfm] }) },
 		remix({
 			serverMinify: false,
 			ignoredRouteFiles: process.argv.some((arg) => arg === "vite:build" || arg === "build")

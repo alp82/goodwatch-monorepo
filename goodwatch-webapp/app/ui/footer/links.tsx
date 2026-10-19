@@ -217,9 +217,8 @@ export const FOOTER_COLUMNS: FooterColumn[] = [
 			},
 			{
 				name: "Blog",
-				href: "https://dev.to/t/goodwatch",
-				external: true,
-				blurb: "Build notes on dev.to",
+				href: "/blog",
+				blurb: "Data studies and build notes",
 				icon: NewspaperIcon,
 			},
 			{

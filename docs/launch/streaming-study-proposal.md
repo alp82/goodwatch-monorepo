@@ -2,7 +2,9 @@
 
 Written 2026-10-18 and revised 2026-10-19 with the owner's answers. The owner decided on 2026-10-18 that originals live on a small `/blog` on goodwatch.app and are cross-posted to dev.to with a canonical link back. The first post is a data study of the streaming catalogue per country; a critics-versus-audiences study comes later.
 
-This is still a proposal: nothing is built. Every number comes from read-only CrateDB queries and read-only TMDB API requests. Nothing was written to any GoodWatch database. The published study repeats the snapshot on its publication day, so the numbers will move a little.
+**Status, 2026-10-19:** built. `/blog`, `/blog/streaming-by-country-2026` and `/blog/rss.xml` exist, with the headline the owner chose: "Studio Ghibli streams in 129 countries, but not in Japan". How to run the study again: [`streaming-study.md`](streaming-study.md). Changes from this proposal: the CSV files are served from `/downloads/streaming-by-country-2026/`, because a folder under `public/blog/` turns `/blog` into a redirect to `/blog/`. Chile's and Colombia's biggest service is Movistar TV, a separate product from Spain's Movistar Plus+; the earlier draft folded the two together. The mockups in `streaming-study/` are the approved designs; the page draws the same charts from `app/ui/blog/`.
+
+The rest of this file is the proposal as approved. Every number comes from read-only CrateDB queries and read-only TMDB API requests. Nothing was written to any GoodWatch database. The published study repeats the snapshot on its publication day, so the numbers will move a little.
 
 Background reading: [`backlinks-research.md`](../research/discovery-search/backlinks-research.md) (moves 3 and 4, the blog question), [`05-linkable-assets-pr.md`](../research/discovery-search/backlinks/05-linkable-assets-pr.md) (study formats that earned links, licensing limits), [`07-dev-platforms.md`](../research/discovery-search/backlinks/07-dev-platforms.md) (dev.to canonical, blog option), [`sitemap.md`](../sitemap.md).
 
@@ -95,6 +97,20 @@ From the 2026-10-18 snapshot of 4,683 movies and 717 shows in 139 countries.
 Almost everything can be rented: 4,604 of the 4,683 movies (98%) can be streamed in the US one way or another.
 
 Before publication, each finding gets a hand check on the services' own sites for two countries or more. Check first: U-NEXT and Movistar Plus+ counts, Ghibli in Japan, Russia's free services, Israel's low count, and where Like Stars on Earth and Lagaan can be rented.
+
+### Hand checks (2026-10-19)
+
+The checks of 2026-10-19 compared the snapshot with a live TMDB re-read, JustWatch's own pages, U-NEXT's title and search pages, Movistar TV Chile's public catalogue API, and press releases. The post was changed where the evidence called for it.
+
+| Finding | Verdict | Evidence | Change in the post |
+| --- | --- | --- | --- |
+| Ghibli on Netflix in 129 countries, HBO Max in the US | Confirmed | A live TMDB re-read matched the snapshot. Netflix's press release of 2020-01-20 licensed 21 films "globally excluding the US, Canada and Japan"; Canada followed in June 2020. Warner Bros. Discovery renewed the US deal with GKIDS in March 2024. | "129 countries" is explained: the countries in our data where JustWatch tracks Netflix, minus the US and Japan. Netflix itself operates in more than 190. |
+| None of the 17 streams in Japan | Confirmed, with an exception | No offer of any kind in TMDB or JustWatch Japan ("can't be streamed in Japan", 81 Japanese services checked); U-NEXT's search has none. But Grave of the Fireflies, an 18th Ghibli film in the list whose rights are with Shinchosha, has been on Netflix in Japan since 2025-07-15 (Netflix Japan press release, 2025-05-14). | The post names the exception. It doesn't say Ghibli refuses to stream in Japan: no statement by Ghibli was found. |
+| U-NEXT carries 1,863 | Confirmed as a floor | 25 of 25 sampled titles are included on U-NEXT's own pages. Of 10 titles the data says aren't, 4 are included: JustWatch misses some. U-NEXT's press release of 2025-11-26 says it has Japan's largest included catalogue. | "The most of any streaming service with its own library"; the real number is probably higher. |
+| Chile's Movistar TV carries 1,924 | The number reproduces, but it isn't one library | About 97% of the film items in Movistar TV's own catalogue API (10,000-item sample) are Prime Video, Disney+, HBO Max and Paramount+ titles shown inside the app, sold as add-ons. 1,204 of the 1,924 are also on Disney+, Prime Video or HBO Max in Chile. | Pay-TV apps still count (owner decision). The chart's answer leads with U-NEXT, and its note and the text say what Movistar TV's count holds. The name is Movistar TV, not Spain's Movistar Plus+. |
+| Israel's 725 | A coverage gap and a real effect | JustWatch tracks 39 services in Israel but not Disney+ (in Israel since 2022, about 670 of these movies elsewhere), yes, HOT, Cellcom TV or Partner TV. Netflix Israel's catalogue is also small: 513, against a median of 606. | The text says so. |
+
+Not verified: Netflix availability outside Germany (its pages show only the visitor's region), a 2026 renewal of the Ghibli licences, the end of the HBO Max US deal, Movistar TV's catalogue beyond 10,000 items, and the film libraries of the Israeli pay-TV services. The full notes, with every source URL and date, are in [`streaming-study/hand-checks.md`](streaming-study/hand-checks.md).
 
 ### Charts
 

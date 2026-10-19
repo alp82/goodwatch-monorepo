@@ -111,6 +111,17 @@ export const STATIC_PAGE_COPY: Record<string, PageCopy> = {
 		title: "Why GoodWatch exists",
 		subtitle: "Made by people who watch too much.",
 	},
+	// The blog and one entry per post in app/content/blog/posts.json (copy.test.ts checks that each has one).
+	"/blog": {
+		tag: "Blog",
+		title: "Studies and notes",
+		subtitle: "Data studies and how GoodWatch is built.",
+	},
+	"/blog/streaming-by-country-2026": {
+		tag: "Data study",
+		title: "Studio Ghibli streams in 129 countries, but not in Japan",
+		subtitle: "Streaming in 139 countries, counted.",
+	},
 	"/taste": {
 		tag: "Taste profile",
 		title: "Your taste",

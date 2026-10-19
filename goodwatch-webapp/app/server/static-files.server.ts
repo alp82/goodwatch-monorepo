@@ -77,6 +77,8 @@ export const contentTypes: Record<string, string> = {
 	webmanifest: "application/manifest+json; charset=utf-8",
 	xml: "application/xml; charset=utf-8",
 	txt: "text/plain; charset=utf-8",
+	// The blog's data downloads (public/blog/<slug>/*.csv).
+	csv: "text/csv; charset=utf-8",
 	svg: "image/svg+xml",
 	ico: "image/x-icon",
 	jpg: "image/jpeg",
@@ -91,8 +93,8 @@ for (const extension of ["mp4", "webm"])
 	contentTypes[extension] = `video/${extension}`
 
 const compressible =
-	/^(js|mjs|css|html|svg|json|map|webmanifest|xml|txt|ttf|otf|ico|wasm)$/
-const shortCache = new Set("txt xml json webmanifest html".split(" "))
+	/^(js|mjs|css|html|svg|json|map|webmanifest|xml|txt|csv|ttf|otf|ico|wasm)$/
+const shortCache = new Set("txt xml json webmanifest html csv".split(" "))
 function cachePolicy(
 	urlPath: string,
 	extension: string,

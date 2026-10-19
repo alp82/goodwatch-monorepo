@@ -60,7 +60,8 @@ const FIND_US: {
 		name: "GitHub",
 		href: "https://github.com/alp82/goodwatch-monorepo",
 	},
-	{ icon: NewspaperIcon, name: "Blog", href: "https://dev.to/t/goodwatch" },
+	{ icon: NewspaperIcon, name: "Blog", href: "/blog" },
+	{ icon: NewspaperIcon, name: "dev.to", href: "https://dev.to/t/goodwatch" },
 	{
 		icon: SignalIcon,
 		name: "Status",

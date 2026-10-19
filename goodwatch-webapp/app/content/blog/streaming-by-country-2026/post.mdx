@@ -1,0 +1,96 @@
+import data from "./data.json"
+import { aboutShare, fmt } from "../../../ui/blog/study-charts.ts"
+
+export const f = data.findings
+export const at = (code) => data.countries.find((c) => c.code === code)
+export const movies = (code) => at(code).movies
+export const shows = (code) => at(code).shows
+export const catalogue = (code) => at(code).netflix_catalogue
+export const M = data.movies.titles
+export const S = data.shows.titles
+export const day = new Date(`${data.snapshot.date}T12:00:00Z`).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" })
+
+"Well-known" means at least 50,000 votes on IMDb. We read every title's streaming offers on {day}, in all {data.countries.length} countries that TMDB's streaming data covers.
+
+<KeyNumbers items={[
+	{ n: fmt(f.ghibli_netflix_countries), label: "countries where Ghibli is on Netflix" },
+	{ n: String(f.ghibli_in_japan), label: `of those ${f.ghibli} films stream in Japan` },
+	{ n: fmt(movies("US").subscription), label: `of ${fmt(M)} movies stream in the US` },
+	{ n: fmt(movies("US").netflix), label: "of them are on Netflix US" },
+]} />
+
+## Studio Ghibli, everywhere but Japan
+
+{f.ghibli} of the {f.ghibli + data.lists.ghibli_apart.length} Studio Ghibli films in the list are on Netflix in {f.ghibli_netflix_countries} countries: every country in our data where Netflix is tracked, except the United States and Japan. In the US, they're on HBO Max. In Japan, where they were made, none of the {f.ghibli} streams at all: the data lists no offer of any kind there, not even to rent or buy, and JustWatch's Japanese site says the same.
+
+The films: <TitleRun items={data.lists.ghibli} />.
+
+The exception is <TitleLink item={data.lists.ghibli_apart[0]} /> ({data.lists.ghibli_apart[0].year}), whose rights sit apart from the others with the publisher Shinchosha. Netflix has streamed it in Japan since July 2025, and it's on Netflix in all {data.lists.ghibli_apart[0].netflix} of our Netflix countries.
+
+It goes beyond Ghibli. Of the {f.japanese} films in the list that were made in Japan, {f.japanese_in_us} stream on a subscription in the US and {f.japanese_in_japan} in Japan.
+
+## The US streams the most of these movies
+
+<Chart data={data} id="movies-by-country" />
+
+In the United States, {fmt(movies("US").subscription)} of the {fmt(M)} movies are on a subscription, ahead of Chile ({fmt(movies("CL").subscription)}), Japan ({fmt(movies("JP").subscription)}) and Colombia ({fmt(movies("CO").subscription)}). Ukraine ({fmt(movies("UA").subscription)}), Israel ({fmt(movies("IL").subscription)}) and Pakistan ({fmt(movies("PK").subscription)}) have the fewest of the larger markets. Israel's count is partly a gap in the data: JustWatch doesn't track Disney+ there, which has run in Israel since 2022 and carries about 670 of these movies in a typical country, nor the pay-TV services yes, HOT, Cellcom TV and Partner TV.
+
+The list leans American: {fmt(f.us_first_country)} of the {fmt(M)} movies, {aboutShare(f.us_first_country, M)}, were made in the US, and that helps the US here. Take only the {fmt(data.movies.top_cut)} best-rated movies of the list, by GoodWatch score, and Spain comes first with {fmt(movies("ES").top_subscription)}, ahead of the US ({fmt(movies("US").top_subscription)}), Japan ({fmt(movies("JP").top_subscription)}) and the UK ({fmt(movies("GB").top_subscription)}).
+
+## One subscription goes further in some countries
+
+<Chart data={data} id="one-subscription" />
+
+In Japan, U-NEXT alone carries {fmt(movies("JP").biggest_service_titles)} of the movies, {aboutShare(movies("JP").biggest_service_titles, M)}: the most of any streaming service with its own library, in any country we looked at. Spot checks on U-NEXT's own site found films it includes that the data misses, so the real number is probably higher. In the US, the biggest single service is Prime Video, with {fmt(movies("US").biggest_service_titles)}.
+
+Chile's Movistar TV lists even more, {fmt(movies("CL").biggest_service_titles)}, but it's a different kind of service. It's the TV app of Movistar's pay-TV plans, and most of its films are Prime Video, Disney+, HBO Max and Paramount+ titles shown inside the app, which need one of those as an add-on. Netflix is the biggest service for these movies in {f.netflix_biggest_movies} of the {f.majors} larger markets.
+
+## Netflix isn't the same everywhere
+
+<Chart data={data} id="netflix" />
+
+Netflix's catalogue differs from country to country. Netflix France lists {fmt(catalogue("FR").movies)} movies in all, and Netflix US {fmt(catalogue("US").movies)}: {ordinal(f.netflix_catalogue_us_rank_movies)} of {f.netflix_catalogue_countries} Netflix countries. For shows it's the other way round, and Netflix US is {ordinal(f.netflix_catalogue_us_rank_shows)}.
+
+Of the {fmt(data.movies.netflix.titles_somewhere)} movies in the list that are on Netflix somewhere, {fmt(data.movies.netflix.titles_everywhere)} are on Netflix in all {data.movies.netflix.countries} countries, and {fmt(data.movies.netflix.titles_in_one)} in only one.
+
+export const ordinal = (n) => `${n}${n % 100 >= 11 && n % 100 <= 13 ? "th" : ["th", "st", "nd", "rd"][n % 10] ?? "th"}`
+
+## Indian films: the most and the least streamable
+
+Indian films are {fmt(f.indian)} of the {fmt(M)} movies, about {Math.round((100 * f.indian) / M)}%. Yet they're {f.widest_indian} of the {f.widest} movies that the big global services (Netflix, Prime Video, Disney+, HBO Max, Apple TV and Paramount+) carry in 130 countries or more, and {f.nowhere_indian} of the {f.nowhere} movies that are on no subscription anywhere.
+
+The best-rated movies streamed most widely are <TitleRun items={data.lists.widest_best_rated.slice(0, 2)} />, each in {data.lists.widest_best_rated[0].countries} countries. Among those on no subscription anywhere are <TitleRun items={data.lists.nowhere_indian.slice(0, 5)} />.
+
+## Shows: Netflix almost everywhere
+
+<Chart data={data} id="shows-by-country" />
+
+Netflix carries the most of the {fmt(S)} shows in {f.netflix_biggest_shows} of the {f.majors} larger markets; in Russia, where Netflix doesn't operate, it's Kinopoisk. Shows are easier to find than movies: {fmt(shows("US").subscription)} of them stream in the US, and about 600 in western Europe.
+
+## Free with ads, or with a library card
+
+North America has the most to watch for free. In the US, {fmt(movies("US").free_with_ads)} of the movies stream free with ads, and {fmt(movies("US").library)} with a public library card, through Kanopy or Hoopla. Canada has {fmt(movies("CA").free_with_ads)} and {fmt(movies("CA").library)}, and the UK {fmt(movies("GB").free_with_ads)} free with ads. Library services carry the most outside North America in Norway ({fmt(movies("NO").library)}), Sweden ({fmt(movies("SE").library)}) and Denmark ({fmt(movies("DK").library)}).
+
+<CountryTable data={data} />
+
+## How we counted
+
+- **The titles.** Every movie and show in GoodWatch's catalogue with at least 50,000 IMDb votes, a GoodWatch score and a poster, first released at least 180 days before {day}: {fmt(M)} movies and {fmt(S)} shows. Shows leave out talk, news, soap and reality shows. The vote count keeps out mismatched entries that other vote counts let in. The best-rated cut is the {fmt(data.movies.top_cut)} movies and {fmt(data.shows.top_cut)} shows with the highest GoodWatch score.
+- **The data.** TMDB's watch providers, which come from JustWatch, read for every title on {day}. Catalogues change every week, so every number here is that day's.
+- **On a subscription.** A service lists the title in that country as included in its subscription. A service's plans and add-on channels count once: Netflix with ads is Netflix, and HBO Max through Prime Video is HBO Max.
+- **Pay-TV apps count.** Services that come with a TV or internet plan, such as Movistar TV in Chile and Colombia or Lepsi TV in Czechia, count as subscriptions. They're often the biggest service in their country.
+- **Not counted.** Bloodstream, Artify, Artiflix and Cultpix list a few public-domain and classic films in about 100 to 138 countries. They'd make those films look available everywhere, so they're left out.
+- **Free.** Free with ads (such as Tubi, Pluto TV or Plex) and free with a library card (such as Kanopy and Hoopla) are counted apart from subscriptions.
+- **Countries.** The charts show 56 larger markets. The table and the files have all {data.countries.length}. Very small territories often show a neighbor's catalogue.
+- **Limits.** JustWatch tracks most streaming services, but not every local one, and not every title of the ones it tracks. A low count can partly mean that a country's own services aren't tracked, as in Israel. "{f.ghibli_netflix_countries} countries" for Netflix means the countries in our data where Netflix is tracked; Netflix itself operates in more than 190.
+- **Checked by hand.** Before publishing we checked the main findings on the services' own sites: the Ghibli films on JustWatch Japan and U-NEXT, 35 titles on U-NEXT's title pages, Movistar TV Chile's public catalogue, and which services JustWatch tracks in Israel.
+
+## Download the data
+
+Both files are free to use under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/): credit "GoodWatch" and link to this page. They hold counts only.
+
+<Downloads data={data} />
+
+To cite this study: GoodWatch, "Studio Ghibli streams in 129 countries, but not in Japan", 2026, https://goodwatch.app/blog/streaming-by-country-2026.
+
+<StudyCredits />

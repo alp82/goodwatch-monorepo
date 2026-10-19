@@ -1,7 +1,7 @@
 # How and when to run these: docs/sitemap.md.
 SITEMAP_DIR := ../public/sitemaps
 
-.PHONY: sitemaps sitemaps-checked sitemaps-test index-record
+.PHONY: sitemaps sitemaps-checked sitemaps-test index-record streaming-study streaming-study-test
 
 # Writes the sitemap files straight into public/sitemaps, unchecked.
 sitemaps:
@@ -25,7 +25,15 @@ sitemaps-checked:
 	echo "Replaced $(SITEMAP_DIR). Review with git diff, then commit and push to main."
 
 sitemaps-test:
-	python3 -m unittest test_sitemap_query test_sitemap_selection test_sitemap_people test_sitemap_lastmod test_check_sitemap_urls test_sitemap_crate
+	python3 -m unittest test_sitemap_query test_sitemap_selection test_sitemap_people test_sitemap_lastmod test_sitemap_blog test_check_sitemap_urls test_sitemap_crate
+
+# The data of /blog/streaming-by-country-2026 from a fresh, read-only TMDB snapshot (about 5 minutes). Needs the
+# Crate variables in .env and TMDB_API_KEY in ../.env. See docs/launch/streaming-study.md.
+streaming-study:
+	python3 streaming_study.py
+
+streaming-study-test:
+	python3 -m unittest test_streaming_study
 
 # Weekly, by hand. See docs/research/discovery-search/index-record.md.
 index-record:

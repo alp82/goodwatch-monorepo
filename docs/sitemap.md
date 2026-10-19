@@ -11,9 +11,9 @@ make sitemaps-checked
 
 Windmill runs `f/seo/regenerate_sitemaps` automatically every Saturday at **03:00 UTC** with `dry_run: false`. The schedule lives in Windmill only, like the other schedules, and is not deployed from git; change it in the Windmill UI. The command above remains the manual fallback.
 
-Deploy the updated `f/seo/regenerate_sitemaps` wrapper with these generator changes: it must download the previous XML artifacts and the selection/person helpers. The weekly schedule itself is unchanged.
+Deploy the updated `f/seo/regenerate_sitemaps` wrapper with these generator changes: it must download the previous XML artifacts, the selection/person/blog helpers, and the blog post list. The weekly schedule itself is unchanged.
 
-The job downloads the existing generator, its helpers, category definitions, and URL checker from one pinned `main` revision. It uses the existing `u/Alp/CRATE_HOSTS`, `u/Alp/CRATE_USER`, and `u/Alp/CRATE_PASS` workspace variables; it does not keep a second copy of the generation or checking rules.
+The job downloads the existing generator, its helpers, category definitions, blog post list (`goodwatch-webapp/app/content/blog/posts.json`), and URL checker from one pinned `main` revision. Each file keeps its repository path, so the generator finds them where it finds them locally. The job fails when one of them is missing on `main`. It uses the existing `u/Alp/CRATE_HOSTS`, `u/Alp/CRATE_USER`, and `u/Alp/CRATE_PASS` workspace variables; it does not keep a second copy of the generation or checking rules.
 
 The job reads the GitHub token from the secret Windmill workspace variable **`u/Alp/GITHUB_SITEMAP_TOKEN`**, which the schedule's execution identity must be able to read. Use a fine-grained GitHub personal access token restricted to **alp82/goodwatch-monorepo**, with **Contents: read and write** (and GitHub's required Metadata read access). No workflow or administration permissions are needed. The token's identity must be allowed to commit to `main`; repository rules can reject that operation. Keep the value out of git and renew it before expiry.
 
@@ -48,7 +48,7 @@ For the manual fallback:
 | File | Content |
 | --- | --- |
 | `sitemap.xml` | The index that Search Console has. It lists the five URL sets below. |
-| `sitemap_static.xml` | The landing pages. |
+| `sitemap_static.xml` | The landing pages, then `/blog` and every blog post. |
 | `sitemap_categories.xml` | The category pages of movies and shows. |
 | `sitemap_movie_detail_0.xml` | 700 movie pages. |
 | `sitemap_show_detail_0.xml` | 300 show pages. |
@@ -71,6 +71,19 @@ The 30-day freshness filter stays in effect as requested. Investigate/refresh an
 
 Thirty people are selected from top-five billed cast and directors of the selected title cohort. A person needs distinct credits on at least three cohort titles, a nonempty name, a portrait, positive popularity and adult not true. That provides substantive filmography pages and links from the selected titles. The initial list ranks by person popularity descending, then TMDB ID ascending; duplicate people and duplicate credits do not consume slots. Existing eligible members from `sitemap_people.xml` remain indefinitely; only vacancies are filled. Person URL entries omit lastmod. Every URL passes the same live status/canonical gate before publication; a failed person URL blocks the entire run.
 
+### Blog posts
+
+`goodwatch-webapp/app/content/blog/posts.json` is the single list of published posts. Each entry has a `slug`, a `published` date, and an `updated` date, as `YYYY-MM-DD`. `sitemap_blog.py` reads it, and `create_sitemaps.py` adds the URLs to `sitemap_static.xml` after the landing pages:
+
+1. `https://goodwatch.app/blog`, dated with the newest `updated` date of all posts.
+2. `https://goodwatch.app/blog/<slug>` for every post, sorted by slug, dated with its own `updated` date.
+
+A post's author sets `updated` only when the post visibly changes, so the date is evidence of a visible change, as the dating rule requires. The blog index lists the posts, so it changes visibly whenever a post is added or updated, and the newest `updated` date dates that change. Without the file, or with an empty list, the set has no blog URLs.
+
+Generation fails, and writes no static set, when an entry has a slug that does not match `^[a-z0-9]+(?:-[a-z0-9]+)*$`, a date that is not a real `YYYY-MM-DD` day, an `updated` date before `published` or after today (UTC), or a slug that another entry already has. Fix `posts.json` and rerun.
+
+The blog URLs are part of the existing static set, so the files that `sitemap.xml` lists stay the same and Search Console needs no resubmission. Blog URLs pass the same live check as every other URL: each page must answer 200 with a canonical link equal to its listed URL.
+
 ### Count policy
 
 The title cap stays at **1,000 until at least 70% of listed titles are indexed**. After that threshold, add **250 titles at a time**, reviewing indexing before each further increase. This is an operating rule, not automatic growth logic.
@@ -79,7 +92,7 @@ Which titles are listed, and why, is explained in `goodwatch-webapp/scripts/site
 
 ## Dates
 
-Title entries omit `<lastmod>` until there is evidence of a significant visible content change. `tmdb_details_updated_at` records refreshes, and `dna_updated_at` also advances for vector repairs with unchanged visible analysis. Neither proves a visible change. The September 25 rebuild floor has been removed; it must not fabricate dates for titles without reliable content timestamps. Static and category URL entries also remain undated.
+Title entries omit `<lastmod>` until there is evidence of a significant visible content change. `tmdb_details_updated_at` records refreshes, and `dna_updated_at` also advances for vector repairs with unchanged visible analysis. Neither proves a visible change. The September 25 rebuild floor has been removed; it must not fabricate dates for titles without reliable content timestamps. Landing page and category URL entries also remain undated. Blog URLs are the exception, see below.
 
 An index entry dates the referenced XML file, independently of its pages. The generator snapshots the previous files and their index dates before writing. A byte change (including a changed URL, membership or date) gets today's UTC date; identical bytes retain the previous index date. An unchanged file without a known previous date stays undated until its first observed change. Both master and legacy indexes use this rule.
 
