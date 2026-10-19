@@ -82,6 +82,8 @@ function world(o = {}) {
     cardsInView: () => o.cardsInView ?? 7,
     observerConfig: (ref, marker, token, channel) => ({ token, channel, rowId: ref.rowId }),
     verdict: GWNetflixVerdict,
+    release() { module.released = true },
+    released: false,
   }
   const bridge = {
     request(op) {
@@ -296,4 +298,32 @@ test('cancel seals and cleans up; the report holds counts and codes only', () =>
 test('the verdict is never complete, even with full coverage and a clean session', () => {
   const v = GWNetflixVerdict({ reference: true, ended: null, profileGuard: true, sticky: [], unobserved: 0, unknownTypes: 0, cardsOutside: 0, titleConflicts: 0 })
   assert.deepEqual({ ...v }, { verdict: 'partial', reason: 'snapshot_unproven' })
+})
+
+// ---- Implementation review of 361b99e0 -------------------------------------------
+
+test('review 5: every guard runs right before the arrow is clicked', () => {
+  for (const [key, value, reason] of [['page', false, 'ended_terminated_navigation'], ['marker', 'P2', 'ended_terminated_profile']]) {
+    const w = world()
+    const s = start(w)
+    w.c.advance(599)
+    w.state[key] = value
+    w.c.advance(1)
+    assert.equal(w.state.clicks, 0, key)
+    assert.equal(s.status().state, 'discarded', key)
+    assert.equal(s.status().result.reason, reason, key)
+  }
+})
+
+test('review 4: finalize and discard keep only the counts-only result', () => {
+  for (const end of ['finalize', 'cancel']) {
+    const w = world()
+    w.state.cards = [{ element: {}, sourceId: '5001', title: 'Invented 0' }]
+    const s = start(w)
+    w.c.advance(60000)
+    if (end === 'finalize') finish(w, s); else s.cancel()
+    assert.deepEqual({ ...s.retainedEvidence() }, { membership: 0, positions: 0, signatures: 0, cards: 0, reference: false, marker: false, timers: 0 }, end)
+    assert.equal(w.module.released, true, end)
+    assert.ok(s.status().result)
+  }
 })

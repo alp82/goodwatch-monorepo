@@ -353,5 +353,7 @@
 			otherGraphqlOrigins: ['https://web.prod.cloud.netflix.com', 'https://sgw.prod.cloud.netflix.com'],
 		}),
 		verdict,
+		// Drops the reference and row the module kept for this session.
+		release() { reference = null; boundary = null; },
 	};
 })();

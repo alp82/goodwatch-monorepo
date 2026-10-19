@@ -150,6 +150,12 @@
 			if (clock.now() >= deadline) return stopTraversal('assist_time_limit');
 			if (stalls >= LIMITS.stallLimit) return stopTraversal('stalled');
 			if (advances >= maxClicks) return stopTraversal('advance_limit');
+			// Every guard runs synchronously right before the arrow is chosen and
+			// clicked, not only on the guard interval.
+			const failure = guardFailure();
+			if (failure) { discard(failure); return; }
+			pull();
+			if (observerSticky.includes('profile_changed')) { discard('terminated_profile'); return; }
 			const button = module.nextButton();
 			if (!button) {
 				// Unsure about the arrow: stop clicking; the member may click. The
@@ -266,6 +272,17 @@
 			}
 			if (cleanupResult === 'failed') sticky.add('cleanup_failed');
 		}
+		// After a result exists, only the counts-only result is kept.
+		function releaseEvidence() {
+			clearTimers();
+			membership.clear();
+			positionOf.clear();
+			pageSignatures.clear();
+			cardSeen.clear();
+			reference = null;
+			marker = null;
+			try { if (typeof module.release === 'function') module.release(); } catch {}
+		}
 		function discard(code) {
 			if (state === 'finalized' || state === 'discarded') return;
 			clearTimers();
@@ -275,6 +292,7 @@
 			state = 'discarded';
 			const f = facts();
 			result = freezeResult(module.verdict(f), f);
+			releaseEvidence();
 		}
 
 		return {
@@ -296,6 +314,7 @@
 				state = 'finalized';
 				const f = facts();
 				result = freezeResult(module.verdict(f), f);
+				releaseEvidence();
 				return { ok: false, result };
 			},
 			begin(install) {
@@ -340,21 +359,29 @@
 					state = 'finalized';
 					const f = facts();
 					result = freezeResult(module.verdict(f), f);
+					releaseEvidence();
 				};
 				drain();
 				return this.status();
 			},
 			status() {
-				const f = facts();
+				const live = result ? null : report(facts());
 				return {
 					state,
-					observed: covered(),
-					reportedTotal: reference ? reference.total : null,
+					observed: result ? result.report.positionsCovered : covered(),
+					reportedTotal: result ? result.report.reportedTotal : reference ? reference.total : null,
 					traversalOutcome,
 					pending: lastPending,
-					report: result ? result.report : report(f),
+					report: result ? result.report : live,
 					result,
 				};
+			},
+			// Test hook: sizes of what the session still holds.
+			retainedEvidence() {
+				return Object.freeze({
+					membership: membership.size, positions: positionOf.size, signatures: pageSignatures.size, cards: cardSeen.size,
+					reference: reference !== null, marker: marker !== null, timers: timers.size + (guardInterval !== null ? 1 : 0),
+				});
 			},
 		};
 	}

@@ -41,17 +41,26 @@
 	const hasOwn = Object.prototype.hasOwnProperty;
 	const NativeURL = URL;
 	const NativeCustomEvent = CustomEvent;
-	const decoder = new TextDecoder();
-	const decode = (bytes, stream) => decoder.decode(bytes, { stream });
+	const NativeTextDecoder = TextDecoder;
+	const decoderDecode = TextDecoder.prototype.decode;
 	const querySelector = Document.prototype.querySelector;
 	const getAttribute = Element.prototype.getAttribute;
 	const nativeSetTimeout = W.setTimeout.bind(W);
+	const nativeClearTimeout = W.clearTimeout.bind(W);
 
 	const LIMITS = {
 		urlChars: 16 * 1024, bodyChars: 64 * 1024, variablesChars: 16 * 1024,
 		responseBytes: 2 * 1024 * 1024, readers: 4, budgetBytes: 8 * 1024 * 1024,
 		entries: 5000, titleChars: 1000, jsonDepth: 64, jsonNodes: 200000,
 		totalMax: 5000, cursorMax: 4999, pageSizeMax: 200,
+	};
+	// Cancels an observer-owned reader; a rejected cancellation is handled
+	// without being awaited, so it never delays cleanup.
+	const cancelQuietly = reader => {
+		try {
+			const p = readerCancel.call(reader);
+			if (p && typeof p === 'object') nativeThen.call(p, undefined, () => {});
+		} catch {}
 	};
 	const TREATMENTS = new Set(['PinotStandardBoxshotEntityTreatment', 'PinotUnentitledBoxshotEntityTreatment']);
 
@@ -65,6 +74,7 @@
 		const outbox = [];
 		const sticky = new Set();
 		const readers = new Set();
+		let activeReads = 0;
 		const xhrState = new WeakMap(); // xhr -> { openGen, method, url }
 		const xhrListeners = new Set(); // [xhr, handler]
 		let budget = 0;
@@ -247,35 +257,40 @@
 				if (b.gen !== generation) { counters.lateDropped++; return; }
 				if (responseStatus.call(response) !== 200) { reject('response_rejected_status'); resolveBinding(b); return; }
 				if (responseBodyUsed.call(response)) { counters.responseUnreadable++; flag('response_unreadable'); resolveBinding(b); return; }
+				// Capacity is reserved before cloning, so no clone is ever left unread.
+				if (activeReads >= LIMITS.readers) { flag('observer_overloaded'); resolveBinding(b); return; }
+				activeReads++;
 				let copy;
-				try { copy = responseClone.call(response); } catch { counters.responseUnreadable++; flag('response_unreadable'); resolveBinding(b); return; }
-				if (readers.size >= LIMITS.readers) { flag('observer_overloaded'); resolveBinding(b); return; }
+				try { copy = responseClone.call(response); } catch { activeReads--; counters.responseUnreadable++; flag('response_unreadable'); resolveBinding(b); return; }
 				const body = responseBody.call(copy);
-				if (!body) { reject('response_rejected_json'); resolveBinding(b); return; }
+				if (!body) { activeReads--; reject('response_rejected_json'); resolveBinding(b); return; }
 				const reader = getReader.call(body);
 				readers.add(reader);
+				const decoder = new NativeTextDecoder();
+				const decode = (bytes, stream) => decoderDecode.call(decoder, bytes, { stream });
 				let text = '';
 				let bytes = 0;
 				let charged = 0;
 				try {
 					for (;;) {
 						const { done, value } = await readerRead.call(reader);
-						if (b.gen !== generation) { counters.lateDropped++; try { await readerCancel.call(reader); } catch {} return; }
+						if (b.gen !== generation) { counters.lateDropped++; cancelQuietly(reader); return; }
 						if (done) break;
 						bytes += value.byteLength;
 						if (bytes > LIMITS.responseBytes) {
 							counters.sizeDrops++; flag('response_too_large');
-							try { await readerCancel.call(reader); } catch {}
+							cancelQuietly(reader);
 							resolveBinding(b); return;
 						}
 						const chunk = decode(value, true);
-						if (!charge(value.byteLength + 2 * chunk.length)) { try { await readerCancel.call(reader); } catch {} resolveBinding(b); return; }
+						if (!charge(value.byteLength + 2 * chunk.length)) { cancelQuietly(reader); resolveBinding(b); return; }
 						charged += value.byteLength + 2 * chunk.length;
 						text += chunk;
 					}
 					text += decode(new Uint8Array(0), false);
 				} finally {
 					readers.delete(reader);
+					activeReads--;
 				}
 				let json;
 				try { json = parseJson(text); } catch { release(charged); reject('response_rejected_json'); resolveBinding(b); return; }
@@ -417,10 +432,13 @@
 			pending.clear();
 			outbox.length = 0;
 			generation++;
-			for (const r of readers) { try { readerCancel.call(r); } catch {} }
+			for (const r of readers) cancelQuietly(r);
 			readers.clear();
 		}
 		function cleanup() {
+			// Every wrapper becomes a pure pass-through first, whatever happens next.
+			inert = true;
+			if (lifetimeTimer !== null) { nativeClearTimeout(lifetimeTimer); lifetimeTimer = null; }
 			let failed = false;
 			let displaced = false;
 			const restore = (owner, key, wrapper, original) => {
@@ -434,19 +452,23 @@
 			restore(W, 'fetch', wrappedFetch, origFetch);
 			restore(XHRProto, 'open', wrappedOpen, origOpen);
 			restore(XHRProto, 'send', wrappedSend, origSend);
-			if (failed || displaced) inert = true;
 			for (const [xhr, h] of xhrListeners) { try { removeListener.call(xhr, 'loadend', h); } catch {} }
 			xhrListeners.clear();
 			if (generation === snapshotGen) seal();
-			for (const r of readers) { try { readerCancel.call(r); } catch {} }
+			for (const r of readers) cancelQuietly(r);
 			readers.clear();
+			// Release transient evidence and configuration; only counters remain.
+			pending.clear();
+			outbox.length = 0;
+			released = true;
 			return failed ? 'failed' : displaced ? 'inert' : 'restored';
 		}
 		let snapshotGen = generation;
+		let lifetimeTimer = null;
 		function onRequest(event) {
 			let msg;
 			try { msg = parseJson(event.detail); } catch { return; }
-			if (!msg || msg.token !== cfg.token) return;
+			if (!msg || msg.token !== token || released) return;
 			let reply;
 			if (msg.op === 'pull') {
 				const pages = outbox.splice(0, outbox.length);
@@ -464,20 +486,27 @@
 				bindingOpen = false;
 				const cleanupResult = cleanup();
 				reply = { ...snapshot(), cleanupResult };
-				removeListener.call(document, `${cfg.channel}:req`, onRequest);
+				removeListener.call(document, reqEvent, onRequest);
 			} else {
 				reply = snapshot();
 			}
-			dispatch.call(document, new NativeCustomEvent(`${cfg.channel}:res`, { detail: stringify(reply) }));
+			dispatch.call(document, new NativeCustomEvent(resEvent, { detail: stringify(reply) }));
+			if (released) cfg = null;
 		}
-		addListener.call(document, `${cfg.channel}:req`, onRequest);
+		const reqEvent = `${cfg.channel}:req`;
+		const resEvent = `${cfg.channel}:res`;
+		const token = cfg.token;
+		let released = false;
+		addListener.call(document, reqEvent, onRequest);
 		// Self-removal when the session lifetime ends (10 minutes by default).
 		const lifetime = Number.isSafeInteger(cfg.sessionMs) && cfg.sessionMs > 0 ? cfg.sessionMs : 10 * 60 * 1000;
-		nativeSetTimeout(() => {
+		lifetimeTimer = nativeSetTimeout(() => {
+			lifetimeTimer = null;
 			try {
 				bindingOpen = false;
 				cleanup();
-				removeListener.call(document, `${cfg.channel}:req`, onRequest);
+				removeListener.call(document, reqEvent, onRequest);
+				cfg = null;
 			} catch {}
 		}, lifetime);
 		return { ok: true, installedAtMsAfterLoad };

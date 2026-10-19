@@ -43,10 +43,14 @@
 			return { ok: r.ok, cfg: r.ok ? r.cfg : null, status: session.status() };
 		}
 		if (!session) return { status: { state: 'idle' } };
-		if (action === 'begin') return { status: session.begin(command.install) };
-		if (action === 'stop') return { status: session.stop() };
-		if (action === 'finalize') return { status: session.finalize() };
-		if (action === 'cancel') return { status: session.cancel() };
-		return { status: session.status() };
+		let status;
+		if (action === 'begin') status = session.begin(command.install);
+		else if (action === 'stop') status = session.stop();
+		else if (action === 'finalize') status = session.finalize();
+		else if (action === 'cancel') status = session.cancel();
+		else status = session.status();
+		// Once a result exists, drop the channel and token; keep only the result.
+		if (status.result) { channel = null; token = null; }
+		return { status };
 	};
 })();

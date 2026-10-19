@@ -493,3 +493,143 @@ test('P9: the observer removes itself when its session lifetime ends', async () 
   assert.equal(await op(page2, 'pull'), null)
   await page2.close()
 })
+
+// ---- Implementation review of 361b99e0 -------------------------------------------
+
+test('review 1: capacity is checked before cloning; five simultaneous replies make at most four clones', async () => {
+  const page = await openPage({
+    serve: serveList(),
+    beforeInstall: () => {
+      window.__clones = 0
+      const clone = Response.prototype.clone
+      Response.prototype.clone = function () { window.__clones++; return clone.call(this) }
+      window.__controllers = []
+      window.fetch = function () { return Promise.resolve(new Response(new ReadableStream({ start(c) { window.__controllers.push(c) } }))) }
+    },
+  })
+  await page.evaluate(b => { for (let i = 0; i < 5; i++) fetch('/graphql', { method: 'POST', body: JSON.stringify(b) }) }, carouselBody(-1, 1))
+  await sleep(100)
+  const r = await op(page, 'pull')
+  assert.equal(await page.evaluate(() => window.__clones), 4)
+  assert.ok(r.sticky.includes('observer_overloaded'))
+  await page.close()
+})
+
+test('review 2: rejected stream cancellations never become unhandled rejections', async () => {
+  const page = await openPage({
+    serve: serveList(),
+    beforeInstall: () => {
+      window.__responses = []
+      window.fetch = function () {
+        const r = new Response(new ReadableStream({ start() {}, cancel() { return Promise.reject(new Error('synthetic cancel rejection')) } }))
+        window.__responses.push(r)
+        return Promise.resolve(r)
+      }
+    },
+  })
+  await page.evaluate(b => { for (let i = 0; i < 4; i++) fetch('/graphql', { method: 'POST', body: JSON.stringify(b) }) }, carouselBody(-1, 1))
+  await sleep(100)
+  // The source's cancel runs (and rejects) only once both stream branches are
+  // cancelled, so the page cancels its own branch first, handling its result.
+  await page.evaluate(() => { for (const r of window.__responses) r.body.cancel().catch(() => {}) })
+  await op(page, 'seal')
+  await op(page, 'cleanup')
+  await sleep(300)
+  assert.equal(await page.evaluate(() => window.__unhandled), 0)
+  await page.close()
+})
+
+test('review 3: after cleanup a cached wrapper classifies nothing, even when restore succeeded', async () => {
+  const page = await openPage({ serve: serveList() })
+  const r = await page.evaluate(async ([ch, token]) => {
+    const cached = window.fetch
+    let result
+    const f = e => { result = JSON.parse(e.detail) }
+    document.addEventListener(`${ch}:res`, f)
+    document.dispatchEvent(new CustomEvent(`${ch}:req`, { detail: JSON.stringify({ token, op: 'cleanup' }) }))
+    document.removeEventListener(`${ch}:res`, f)
+    let traps = 0
+    const init = new Proxy({ method: 'POST', body: '{}' }, {
+      getPrototypeOf(t) { traps++; return Reflect.getPrototypeOf(t) },
+      getOwnPropertyDescriptor(t, k) { traps++; return Reflect.getOwnPropertyDescriptor(t, k) },
+    })
+    await fetch('/graphql', init).then(x => x.text())
+    const nativeTraps = traps
+    traps = 0
+    await cached('/graphql', init).then(x => x.text())
+    return { cleanup: result.cleanupResult, nativeTraps, cachedTraps: traps }
+  }, [CFG.channel, CFG.token])
+  assert.equal(r.cleanup, 'restored')
+  assert.equal(r.cachedTraps, r.nativeTraps)
+  await page.close()
+})
+
+test('review 4: cleanup cancels the lifetime timer', async () => {
+  const page = await openPage({
+    serve: serveList(),
+    beforeInstall: () => {
+      window.__timers = new Set()
+      const st = window.setTimeout
+      const ct = window.clearTimeout
+      window.setTimeout = function (fn, ms) { const id = st.call(window, () => { window.__timers.delete(id); fn() }, ms); if (ms >= 60000) window.__timers.add(id); return id }
+      window.clearTimeout = function (id) { window.__timers.delete(id); return ct.call(window, id) }
+    },
+  })
+  assert.equal(await page.evaluate(() => window.__timers.size), 1)
+  await op(page, 'cleanup')
+  assert.equal(await page.evaluate(() => window.__timers.size), 0)
+  await page.close()
+})
+
+test('review 6: two interleaved replies split inside UTF-8 characters both decode correctly', async () => {
+  const page = await openPage({
+    serve: serveList(),
+    beforeInstall: () => {
+      window.__controllers = []
+      window.fetch = function () { return Promise.resolve(new Response(new ReadableStream({ start(c) { window.__controllers.push(c) } }))) }
+    },
+  })
+  const result = await page.evaluate(async ([a, b, ch, token]) => {
+    const enc = new TextEncoder()
+    const sleep = () => new Promise(r => setTimeout(r, 50))
+    const aa = enc.encode(JSON.stringify(a))
+    const bb = enc.encode(JSON.stringify(b))
+    const ai = aa.indexOf(195) + 1
+    const bi = bb.indexOf(195) + 1
+    const body = JSON.stringify({ operationName: 'CarouselPage', variables: { rowId: 'ROW1', carouselAfterCursor: null, carouselPageSize: 1, carouselVersion: '1' } })
+    const ps = [fetch('/graphql', { method: 'POST', body }).then(r => r.json()), fetch('/graphql', { method: 'POST', body }).then(r => r.json())]
+    window.__controllers[0].enqueue(aa.slice(0, ai)); await sleep()
+    window.__controllers[1].enqueue(bb.slice(0, bi)); await sleep()
+    window.__controllers[0].enqueue(aa.slice(ai)); window.__controllers[0].close(); await sleep()
+    window.__controllers[1].enqueue(bb.slice(bi)); window.__controllers[1].close()
+    await Promise.all(ps); await sleep()
+    let out
+    const f = e => { out = JSON.parse(e.detail) }
+    document.addEventListener(`${ch}:res`, f)
+    document.dispatchEvent(new CustomEvent(`${ch}:req`, { detail: JSON.stringify({ token, op: 'pull' }) }))
+    document.removeEventListener(`${ch}:res`, f)
+    return { accepted: out.counters.accepted, titles: out.outbox.map(p => p.entries[0].title), sticky: out.sticky }
+  }, [titled('é'), titled('ö'), CFG.channel, CFG.token])
+  assert.equal(result.accepted, 2, result.sticky.join(','))
+  assert.deepEqual(result.titles.sort(), ['é', 'ö'])
+  await page.close()
+})
+
+test('regression: XHR json responses are inspected without calling page-defined getters', async () => {
+  const page = await openPage({ serve: serveList() })
+  const r = await page.evaluate(b => new Promise(resolve => {
+    window.__hits = 0
+    const x = new XMLHttpRequest()
+    x.open('POST', '/graphql')
+    x.responseType = 'json'
+    x.onload = () => { Object.defineProperty(x.response, 'extra', { enumerable: true, get() { window.__hits++; return 1 } }) }
+    x.onloadend = () => setTimeout(() => resolve(window.__hits), 50)
+    x.send(JSON.stringify(b))
+  }), carouselBody(12, 6))
+  assert.equal(r, 0)
+  await page.close()
+})
+
+function titled(title) {
+  return { data: { node: { __typename: 'PinotCarouselSection', _id: 'ROW1', displayString: 'Meine Liste', version: '1', entities: { totalCount: 30, edges: [{ cursor: b64(0), node: { __typename: 'PinotStandardBoxshotEntityTreatment', displayString: title, unifiedEntity: { __typename: 'Movie', videoId: 1 } } }], pageInfo: { hasNextPage: true } } } } }
+}
