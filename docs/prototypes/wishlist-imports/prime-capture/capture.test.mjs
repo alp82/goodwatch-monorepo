@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { test } from "node:test";
 import { Window } from "happy-dom";
 import { card, entity, gti, hydration, nextHref, page, token, viewOutputPage } from "./fixtures/synthetic.mjs";
@@ -25,8 +25,11 @@ function world(html, url = EU, routes = {}) {
 	};
 	window.eval(read("extract.js"));
 	window.eval(read("collector.js"));
-	window.__goodwatchPrimeObserverArgs = ["nonce-test"];
-	window.eval(read("observer.js"));
+	// Up to 0.2.0 Start also injected a page-world response reader.
+	if (existsSync(new URL("./observer.js", import.meta.url))) {
+		window.__goodwatchPrimeObserverArgs = ["nonce-test"];
+		window.eval(read("observer.js"));
+	}
 	const flush = () => new Promise((r) => setTimeout(r, 20));
 	return {
 		window,
@@ -34,12 +37,13 @@ function world(html, url = EU, routes = {}) {
 		command: (action, extra = {}) => plain(window.__goodwatchPrimeCommand({ action, nonce: "nonce-test", ...extra })),
 		// Simulates the page loading its next Watchlist page and rendering it.
 		async load(path, { show = [], hide = [] } = {}) {
-			await window.fetch(path);
+			if (path) await window.fetch(path).catch(() => {});
 			await flush();
 			const grid = window.document.getElementById("grid");
 			for (const n of hide) grid.querySelector(`a[href*="${token(n)}"]`)?.closest("li").remove();
 			grid.insertAdjacentHTML("beforeend", show.map((n) => card(n)).join(""));
-			await flush();
+			// Scans are throttled to one per 100 ms after a mutation.
+			await new Promise((r) => setTimeout(r, 150));
 		},
 		flush,
 		close() {
@@ -61,10 +65,15 @@ async function fullRun(w) {
 	return w.command("stop");
 }
 
-test("mixed two-page-plus-terminal Watchlist is complete, keeps native IDs and excludes library, recommendations and nav", async () => {
-	const w = world(page({ state: hydration({ page: p1 }), grid: [1, 2] }), EU, routes);
+test("mixed movie, show and season list held in page data is complete; virtualized cards accumulate; library, recommendations and nav stay out", async () => {
+	const all = viewOutputPage([1, 2, 3, 4, 5], { next: 5, total: 5 });
+	const w = world(page({ state: hydration({ page: all }), grid: [1, 2] }));
 	try {
-		const r = await fullRun(w);
+		assert.equal(w.command("start").state, "capturing");
+		// Scrolling: the grid drops earlier cards and renders later ones.
+		await w.load(null, { show: [3, 4], hide: [1, 2] });
+		await w.load(null, { show: [5], hide: [3] });
+		const r = w.command("stop");
 		assert.equal(r.completeness, "complete", JSON.stringify(r.reasons));
 		const items = r.envelope.items;
 		assert.deepEqual(
@@ -86,9 +95,10 @@ test("mixed two-page-plus-terminal Watchlist is complete, keeps native IDs and e
 		assert.equal(rep.counts.seasons, 1);
 		assert.equal(rep.counts.sameTitleDistinctIds, 2);
 		assert.equal(rep.counts.withGti, 5);
-		assert.equal(rep.pagination.pages.length, 3);
+		assert.equal(rep.pagination.pages.length, 1);
 		assert.deepEqual(rep.pagination.reportedTotals, [5]);
 		assert.equal(rep.profileGuard, "state+dom");
+		assert.equal(rep.responsesRead, 0);
 		assert.equal(rep.primaryGroupChosenBy, "structured_overlap");
 		assert.ok(rep.otherCollections.some((c) => c.classification === "excluded" && c.path.includes("recommendations")));
 		assert.ok(rep.otherCollections.some((c) => c.classification === "excluded" && c.path.includes("library")));
@@ -108,15 +118,16 @@ test("report carries no titles, native IDs, cursors or profile values", async ()
 	}
 });
 
-test("stopping before the terminal page is partial with continuation_pending", async () => {
-	const w = world(page({ state: hydration({ page: p1 }), grid: [1, 2] }), EU, routes);
+test("a list longer than the page data's first page is partial with continuation_pending", async () => {
+	const w = world(page({ state: hydration({ page: p1 }), grid: [1, 2] }));
 	try {
 		w.command("start");
-		await w.load(nextHref(2, "c1"), { show: [3, 4] });
+		await w.load(null, { show: [3, 4] });
 		const r = w.command("stop");
 		assert.equal(r.completeness, "partial");
 		assert.ok(r.reasons.includes("continuation_pending"));
-		assert.equal(r.envelope.items.length, 4);
+		assert.ok(r.reasons.includes("visible_not_in_structured"));
+		assert.equal(r.envelope.items.length, 2, "only page-data entries are in the file");
 	} finally {
 		w.close();
 	}
@@ -136,12 +147,12 @@ test("state without pagination evidence stays unknown", async () => {
 
 test("a repeated cursor on a different page is partial", async () => {
 	const loop = viewOutputPage([3], { next: 2, total: 5, cursor: "c1" });
-	const w = world(page({ state: hydration({ page: p1 }), grid: [1, 2] }), EU, { [nextHref(2, "c1")]: loop });
+	const html = page({ state: hydration({ page: p1 }), grid: [1, 2] }).replace("</body>", `<script type="text/template">${JSON.stringify({ props: loop })}</script></body>`);
+	const w = world(html);
 	try {
 		w.command("start");
-		await w.load(nextHref(2, "c1"), { show: [3] });
 		const r = w.command("stop");
-		assert.ok(r.reasons.includes("cursor_repeated"));
+		assert.ok(r.reasons.includes("cursor_repeated"), JSON.stringify(r.reasons));
 		assert.equal(r.completeness, "partial");
 	} finally {
 		w.close();
@@ -164,18 +175,16 @@ test("the same page embedded in two hydration scripts is not a repeated cursor",
 	}
 });
 
-test("a missed response leaves visible cards outside the structured set: partial", async () => {
-	const w = world(page({ state: hydration({ page: p1 }), grid: [1, 2] }), EU, routes);
+test("cards that aren't in the page data make the capture partial and stay out of the file", async () => {
+	const w = world(page({ state: hydration({ page: viewOutputPage([1, 2], { next: 2, total: 2 }) }), grid: [1, 2] }));
 	try {
 		w.command("start");
-		// Page 2 rendered without its response being observed (requested before Start).
 		w.document.getElementById("grid").insertAdjacentHTML("beforeend", card(3) + card(4));
-		await w.load(nextHref(4, "c2"), { show: [5] });
+		await w.flush();
 		const r = w.command("stop");
 		assert.equal(r.completeness, "partial");
 		assert.ok(r.reasons.includes("visible_not_in_structured"));
-		assert.ok(r.reasons.includes("total_mismatch"));
-		assert.equal(r.envelope.items.length, 5, "visible members are still offered");
+		assert.equal(r.envelope.items.length, 2);
 	} finally {
 		w.close();
 	}
@@ -288,7 +297,7 @@ test("containers layout without a Watchlist key: membership comes from cards onl
 		assert.ok(r.reasons.includes("no_structured_watchlist"));
 		assert.ok(r.reasons.includes("visible_group_guessed"));
 		assert.equal(r.envelope.items.length, 0, "cards that can't be tied to the Watchlist stay out of the file");
-		assert.equal(r.report.counts.visibleUnresolved, 2);
+		assert.equal(r.report.counts.visibleOnly, 2);
 		const other = r.report.otherCollections.find((c) => c.classification === "unclassified");
 		assert.equal(other.path, "props.content.baseOutput.containers.[].entities");
 		assert.equal(other.overlapWithVisible, 2);
@@ -340,21 +349,8 @@ test("conflicting card titles for one ID quarantine it and make the capture part
 	}
 });
 
-test("an unreadable Watchlist response marks the capture unknown", async () => {
-	const w = world(page({ state: hydration({ page: viewOutputPage([1], { next: 1, total: 1 }) }), grid: [1] }), EU, {
-		"/region/eu/api/watchlist/odd": { something: { else: [1, 2, 3] } },
-	});
-	try {
-		w.command("start");
-		await w.load("/region/eu/api/watchlist/odd");
-		const r = w.command("stop");
-		assert.ok(r.reasons.includes("unknown_response_schema"));
-		assert.equal(r.report.responses[0].parsed, true);
-		assert.equal(r.report.responses[0].shape["<key>"], 1, "unknown keys are only counted");
-	} finally {
-		w.close();
-	}
-});
+// "An unreadable Watchlist response" tested the 0.2.0 response reader.
+// Version 0.3.0 reads no responses; see r3-1.
 
 test("a recommendation row larger than the grid doesn't become the membership group", async () => {
 	const w = world(page({ state: hydration({ page: viewOutputPage([1], { next: 1, total: 1 }) }), grid: [1], recs: [60, 61, 62] }));
@@ -380,7 +376,7 @@ test("wrong page, cancel and messages with another nonce", async () => {
 		c.command("start");
 		c.window.postMessage({ goodwatchPrime: "forged", message: { kind: "response", path: "/x/watchlist", parsed: true, collections: [] } }, "*");
 		await c.flush();
-		assert.equal(c.command("status", { report: true }).report.responses.length, 0);
+		assert.equal(c.command("status", { report: true }).report.responsesRead, 0, "nothing listens for page messages");
 		const r = c.command("cancel");
 		assert.equal(r.state, "cancelled");
 		assert.equal(r.envelope, undefined);
@@ -556,7 +552,8 @@ test("review: a card linking to two different titles is skipped, not merged", as
 });
 
 test("review: a Watchlist nested under a profile key is still the Watchlist", async () => {
-	const state = { props: { profiles: { "synthetic-profile-a": { watchlist: { items: [entity(1)], hasMoreItems: false } } }, cerberus: { activeProfile: { id: "p" } }, ...ALL } };
+	// The Watchlist filter sits beside the Watchlist, inside the profile object.
+	const state = { props: { profiles: { "synthetic-profile-a": { watchlist: { items: [entity(1)], hasMoreItems: false }, ...ALL } }, cerberus: { activeProfile: { id: "p" } } } };
 	const w = world(page({ state, grid: [1] }));
 	try {
 		w.command("start");
@@ -568,20 +565,7 @@ test("review: a Watchlist nested under a profile key is still the Watchlist", as
 	}
 });
 
-test("review: a retried response for the same page isn't a repeated cursor", async () => {
-	const w = world(page({ state: hydration({ page: p1 }), grid: [1, 2] }), EU, routes);
-	try {
-		w.command("start");
-		await w.load(nextHref(2, "c1"), { show: [3, 4] });
-		await w.load(nextHref(2, "c1"));
-		await w.load(nextHref(4, "c2"), { show: [5] });
-		const r = w.command("stop");
-		assert.ok(!r.reasons.includes("cursor_repeated"), JSON.stringify(r.reasons));
-		assert.equal(r.completeness, "complete", JSON.stringify(r.reasons));
-	} finally {
-		w.close();
-	}
-});
+// "A retried response" tested the 0.2.0 response reader; see r3-1.
 
 test("review: a live entry counted in the reported total isn't a total mismatch", async () => {
 	const w = world(page({ state: hydration({ page: viewOutputPage([1, 70], { next: 2, total: 2 }) }), grid: [1] }));

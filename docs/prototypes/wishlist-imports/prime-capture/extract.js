@@ -1,6 +1,6 @@
 /*
- * Experimental Prime Video Watchlist extraction. Pure functions shared by the
- * isolated-world collector and the page-world response observer.
+ * Experimental Prime Video Watchlist extraction. Pure functions used by the
+ * isolated-world collector. Version 0.3.0 reads no network responses.
  *
  * Every JSON shape here comes from inspected community source (Amazon VOD for
  * Kodi at bfb3940e) or is a hypothesis. None is a documented Amazon contract.
@@ -14,7 +14,6 @@
 	const MAX_ITEMS_PER_COLLECTION = 1000;
 	const GTI = /^amzn1\.dv\.gti\.[A-Za-z0-9-]{8,64}$/;
 	const TOKEN = /^[A-Za-z0-9]{8,40}$/;
-	const HEX = /^[0-9a-f]{1,8}$/;
 	// A collection is Watchlist membership only when its own path names it.
 	const WATCHLIST_KEY = /watchlist/i;
 	// Other collections the Watchlist page can carry. A match on any key of the
@@ -135,42 +134,17 @@
 	}
 
 	/**
-	 * Keys of a URL: its path with query, and each query value. Hashes only.
-	 * Continuation keys skip one-character values, which would link by chance;
-	 * request keys keep every value so an index link ("startIndex=2") can be
-	 * checked together with the item count.
-	 */
-	function urlKeys(href, base, minValue = 2) {
-		const keys = [];
-		try {
-			const u = new URL(href, base);
-			keys.push(hash(`p:${u.pathname}${u.search}`));
-			for (const v of [...u.searchParams.values()].slice(0, 40)) if (v.length >= minValue) keys.push(hash(`v:${v}`));
-		} catch {}
-		return keys;
-	}
-	const requestKeys = (href, base) => urlKeys(href, base, 1);
-
-	/**
 	 * Pagination evidence of one page, from the object that holds its items
 	 * only. Ancestors are ignored: an outer flag can belong to another list.
 	 * End and continuation signals together make the page "conflict".
-	 * `strong` holds keys a successor request must carry to link to this page.
+	 * `cursor` is a hash used only to spot the same page twice.
 	 */
-	function pagination(holder, base) {
-		const out = { terminal: null, keys: [], cursor: null, strong: [], nextIndex: null, totalItems: null };
+	function pagination(holder) {
+		const out = { terminal: null, keys: [], cursor: null, nextIndex: null, totalItems: null };
 		if (!holder || typeof holder !== "object" || Array.isArray(holder)) return out;
 		let end = 0;
 		let more = 0;
-		const link = (href) => {
-			const keys = urlKeys(href, base);
-			out.strong.push(...keys);
-			out.cursor ??= keys[0] || null;
-		};
-		const token = (v) => {
-			out.strong.push(hash(`v:${v}`));
-			out.cursor ??= hash(`v:${v}`);
-		};
+		const cursor = (v) => (out.cursor ??= hash(`c:${v}`));
 		if (typeof holder.hasMoreItems === "boolean") {
 			out.keys.push("hasMoreItems");
 			holder.hasMoreItems ? more++ : end++;
@@ -187,13 +161,13 @@
 		if (typeof holder.seeMoreHref === "string" && holder.seeMoreHref) {
 			out.keys.push("seeMoreHref");
 			more++;
-			link(holder.seeMoreHref);
+			cursor(holder.seeMoreHref);
 		}
 		for (const k of ["paginationTargetId", "paginationServiceToken", "paginationTargetUrl", "nextToken", "continuationToken"]) {
 			if (typeof holder[k] === "string" && holder[k]) {
 				out.keys.push(k);
 				more++;
-				token(holder[k]);
+				cursor(holder[k]);
 			}
 		}
 		const p = holder.pagination;
@@ -206,16 +180,15 @@
 				);
 				if (next?.href) {
 					more++;
-					link(next.href);
+					cursor(next.href);
 				} else end++;
 			} else if (p.queryParameters && typeof p.queryParameters === "object") {
 				out.keys.push("queryParameters");
 				more++;
-				for (const v of Object.values(p.queryParameters).slice(0, 40)) if (typeof v === "string" && v.length >= 2) token(v);
+				cursor(JSON.stringify(p.queryParameters).slice(0, 2000));
 			}
 		}
 		out.terminal = end && more ? "conflict" : end ? true : more ? false : null;
-		out.strong = [...new Set(out.strong)].slice(0, 40);
 		return out;
 	}
 
@@ -261,7 +234,9 @@
 						items: items.slice(0, MAX_ITEMS_PER_COLLECTION),
 						overflow: items.length > MAX_ITEMS_PER_COLLECTION,
 						objects,
-						pagination: pagination(holder, base),
+						// Raw keys stay in memory only, to scope filter evidence.
+						scope: path.slice(0, Math.max(0, w)).filter((k) => typeof k === "string"),
+						pagination: pagination(holder),
 					});
 				}
 				value.forEach((v, i) => {
@@ -311,29 +286,31 @@
 	const FLAG_KEYS = ["active", "applied", "isCurrentlyApplied", "selected", "isSelected"];
 
 	/**
-	 * Watchlist filter evidence: groups of two or more options under a key
-	 * naming a filter, each with an on/off flag. One entry per group: "all"
-	 * (exactly one option on, and it is All), "filtered" or "none".
+	 * Filter evidence: groups of two or more options under a key naming a
+	 * filter, each with an on/off flag. One entry per group with its raw key
+	 * path (kept in memory only): "all" (exactly one option on, and it is
+	 * All), "filtered" or "none". The collector counts a group only when it
+	 * sits beside the Watchlist collection it belongs to.
 	 */
 	function filterEvidence(root) {
 		const groups = [];
 		let n = 0;
-		const walk = (v, underFilter) => {
+		const walk = (v, path, underFilter) => {
 			if (!v || typeof v !== "object" || ++n > 50000 || groups.length > 20) return;
 			if (Array.isArray(v)) {
 				const options = v.filter((o) => o && typeof o === "object" && FLAG_KEYS.some((k) => typeof o[k] === "boolean"));
 				if (underFilter && options.length >= 2) {
 					const on = options.filter((o) => FLAG_KEYS.some((k) => o[k] === true));
 					const value = (o) => String(o.viewType ?? o.id ?? o.value ?? o.key ?? o.type ?? "").replace(/^.*[-_:]/, "");
-					groups.push(on.length === 0 ? "none" : on.length === 1 && ALL_VALUE.test(value(on[0])) ? "all" : "filtered");
+					groups.push({ value: on.length === 0 ? "none" : on.length === 1 && ALL_VALUE.test(value(on[0])) ? "all" : "filtered", path });
 					return;
 				}
-				for (const c of v) walk(c, underFilter);
+				for (const c of v) walk(c, path, underFilter);
 				return;
 			}
-			for (const [k, c] of Object.entries(v)) walk(c, underFilter || /filter/i.test(k));
+			for (const [k, c] of Object.entries(v)) walk(c, [...path, k], underFilter || /filter/i.test(k));
 		};
-		walk(root, false);
+		walk(root, [], false);
 		return groups;
 	}
 
@@ -354,84 +331,12 @@
 		return docs;
 	}
 
-	/*
-	 * Validation of reduced data that crossed from the page world. The page can
-	 * forge messages, so nothing is trusted: every field is type-checked and
-	 * bounded, and URLs are parsed again here.
-	 */
-	const int = (v, max = 1e7) => (Number.isSafeInteger(v) && v >= 0 && v <= max ? v : null);
-	const hexList = (v, max = 40) => (Array.isArray(v) ? v.filter((x) => typeof x === "string" && HEX.test(x)).slice(0, max) : []);
-
-	function validEntity(e, base) {
-		if (!e || typeof e !== "object") return null;
-		const gti = typeof e.gti === "string" && GTI.test(e.gti) ? e.gti : null;
-		let token = null;
-		let url = null;
-		if (e.url !== null && e.url !== undefined) {
-			const link = detailLink(e.url, base);
-			if (!link || link.url !== e.url) return null;
-			({ token, url } = link);
-		}
-		if ((e.token ?? null) !== token) return null;
-		if ((!gti && !token) || !isText(e.title)) return null;
-		return {
-			gti,
-			token,
-			url,
-			title: e.title.trim(),
-			mediaType: ["movie", "show", "unknown"].includes(e.mediaType) ? e.mediaType : "unknown",
-			season: e.season === true,
-			hasLive: e.hasLive === true,
-			...((int(e.year, 9999) ?? 0) >= 1800 ? { year: e.year } : {}),
-			parentKnown: e.parentKnown === true,
-		};
-	}
-
-	function validCollection(c, base) {
-		if (!c || typeof c !== "object" || !Array.isArray(c.items)) return null;
-		const p = c.pagination && typeof c.pagination === "object" ? c.pagination : {};
-		const items = [];
-		for (const e of c.items.slice(0, MAX_ITEMS_PER_COLLECTION)) {
-			const v = validEntity(e, base);
-			if (v) items.push(v);
-		}
-		return {
-			path: vocabPattern(c.path),
-			chain: vocabPattern(c.chain),
-			classification: ["watchlist", "excluded", "unclassified"].includes(c.classification) ? c.classification : "unclassified",
-			items,
-			overflow: c.overflow === true || c.items.length > MAX_ITEMS_PER_COLLECTION,
-			objects: int(c.objects, 1e6) ?? 0,
-			pagination: {
-				terminal: [true, false, null, "conflict"].includes(p.terminal) ? p.terminal : null,
-				keys: Array.isArray(p.keys) ? p.keys.filter((k) => KEYS.has(k)).slice(0, 20) : [],
-				cursor: typeof p.cursor === "string" && HEX.test(p.cursor) ? p.cursor : null,
-				strong: hexList(p.strong),
-				nextIndex: int(p.nextIndex),
-				totalItems: int(p.totalItems),
-			},
-		};
-	}
-
-	/** Re-sanitizes a shape that crossed from the page world. */
-	function validShape(v, depth = 0, budget = { n: 0 }) {
-		if (++budget.n > 1500 || depth > 7) return "…";
-		if (Array.isArray(v)) return v.length === 2 && int(v[0], 100000) !== null ? [v[0], validShape(v[1], depth + 1, budget)] : [];
-		if (v && typeof v === "object") {
-			const out = {};
-			for (const [k, c] of Object.entries(v).slice(0, 80)) {
-				if (k === KEY_OTHER) out[k] = int(c, 1e6) ?? 0;
-				else if (KEYS.has(k)) out[k] = validShape(c, depth + 1, budget);
-			}
-			return out;
-		}
-		return ["string", "number", "boolean", "null", "other", "{…}", "…"].includes(v) ? v : "other";
-	}
+	/** True when a raw key path passes through an excluded collection key. */
+	const excludedPath = (path) => path.some((k) => typeof k === "string" && EXCLUDED_KEY.test(k) && !PROFILE_KEY.test(k));
 
 	globalThis.__goodwatchPrimeExtract = Object.freeze({
 		GTI,
 		TOKEN,
-		HEX,
 		KEYS,
 		KEY_OTHER,
 		hash,
@@ -439,10 +344,7 @@
 		readEntity,
 		findCollections,
 		pagination,
-		urlKeys,
-		requestKeys,
 		shape,
-		validShape,
 		profileMarkers,
 		filterEvidence,
 		parseScripts,
@@ -452,8 +354,6 @@
 		redactPath,
 		vocabKey,
 		vocabPattern,
-		validCollection,
-		hexList,
-		int,
+		excludedPath,
 	});
 })();

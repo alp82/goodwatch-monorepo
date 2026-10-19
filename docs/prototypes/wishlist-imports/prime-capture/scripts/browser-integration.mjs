@@ -6,7 +6,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
-import { card, hydration, nextHref, page, viewOutputPage } from '../fixtures/synthetic.mjs'
+import { card, hydration, page, viewOutputPage } from '../fixtures/synthetic.mjs'
 
 const moduleName = process.env.GOODWATCH_PLAYWRIGHT_MODULE
 const { chromium } = await import(moduleName ? pathToFileURL(resolve(moduleName)).href : 'playwright-core')
@@ -14,8 +14,9 @@ const extension = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const ORIGIN = 'https://www.primevideo.com'
 const WATCHLIST = `${ORIGIN}/region/eu/mystuff/watchlist`
 
-// The page loads page 2 with fetch and page 3 with XMLHttpRequest, then
-// renders the new cards and drops earlier ones, like a virtualized grid.
+// The page data holds the whole list. Scrolling is simulated: the grid drops
+// earlier cards and renders later ones, like a virtualized grid. The page also
+// requests JSON while the capture runs; 0.3.0 must not read any of it.
 const loader = `<script>
 const cardHtml = ${JSON.stringify(Object.fromEntries([1, 2, 3, 4, 5].map((n) => [n, card(n)])))};
 function render(show, hide) {
@@ -23,20 +24,18 @@ function render(show, hide) {
   for (const n of hide) grid.querySelector('a[href*="' + n.toString().padStart(6, '0') + 'X"]')?.closest('li').remove();
   grid.insertAdjacentHTML('beforeend', show.map((n) => cardHtml[n]).join(''));
 }
-window.loadPage2 = () => fetch(${JSON.stringify(nextHref(2, 'c1'))}).then((r) => r.json()).then(() => render([3, 4], [1, 2]));
-window.loadAccount = () => fetch('/region/eu/account/settings.json').then((r) => r.json());
-window.loadPage3 = () => new Promise((done) => {
+window.scroll1 = () => fetch('/region/eu/api/watchlist?startIndex=2').then((r) => r.json()).then(() => render([3, 4], [1, 2]));
+window.scroll2 = () => new Promise((done) => {
   const x = new XMLHttpRequest();
-  x.open('GET', ${JSON.stringify(nextHref(4, 'c2'))});
+  x.open('GET', '/region/eu/api/account/settings.json');
   x.onload = () => { render([5], [3]); done(); };
   x.send();
 });
 </script>`
-const fixture = page({ state: hydration({ page: viewOutputPage([1, 2], { next: 2, total: 5, cursor: 'c1' }) }), grid: [1, 2], script: loader })
+const fixture = page({ state: hydration({ page: viewOutputPage([1, 2, 3, 4, 5], { next: 5, total: 5 }) }), grid: [1, 2], script: loader })
 const api = {
-  [nextHref(2, 'c1')]: viewOutputPage([3, 4], { next: 4, total: 5, cursor: 'c2' }),
-  [nextHref(4, 'c2')]: viewOutputPage([5], { next: 5, total: 5 }),
-  '/region/eu/account/settings.json': { unrelated: true },
+  '/region/eu/api/watchlist': viewOutputPage([3, 4], { next: 4, total: 5 }),
+  '/region/eu/api/account/settings.json': { unrelated: true },
 }
 
 const profile = mkdtempSync(join(tmpdir(), 'goodwatch-prime-mv3-'))
@@ -138,19 +137,18 @@ try {
 
   await popup.evaluate(() => document.getElementById('start').click())
   await popup.waitFor(() => current.state === 'capturing')
-  assert.equal(await popup.evaluate(() => current.counts.structured), 2)
+  assert.equal(await popup.evaluate(() => current.counts.structured), 5)
   assert.equal(await popup.evaluate(() => current.counts.visible), 2)
   assert.equal(await tab.evaluate(() => typeof globalThis.__goodwatchPrimeCommand), 'undefined', 'collector stays in the isolated world')
-  assert.equal(await tab.evaluate(() => globalThis.__goodwatchPrimeObserver?.active), true, 'observer runs in the main world')
-  results.push('Start reads the first page from hydration state and the grid; library and recommendation rows stay out')
+  const pageWorld = () => [String(window.fetch).includes('[native code]'), String(XMLHttpRequest.prototype.open).includes('[native code]'), String(XMLHttpRequest.prototype.send).includes('[native code]'), typeof globalThis.__goodwatchPrimeObserver]
+  assert.deepEqual(await tab.evaluate(pageWorld), [true, true, true, 'undefined'], 'nothing installed in the page world')
+  results.push('Start reads hydration state and the grid in the isolated world only; library and recommendation rows stay out; the page keeps native fetch and XMLHttpRequest')
 
-  await tab.evaluate(() => window.loadAccount())
-  await tab.evaluate(() => window.loadPage2())
-  await tab.evaluate(() => window.loadPage3())
-  await popup.waitFor(() => run('status').then((r) => { accept(r); render(); return r.counts.structured === 5 && r.counts.visible === 5 }))
-  const observed = await popup.evaluate(() => run('status', { report: true }).then((r) => r.report.responses.length))
-  assert.equal(observed, 2, 'only the two Watchlist responses were read; the unrelated JSON response was not')
-  results.push('linked fetch and XMLHttpRequest pages are observed in the main world; an unrelated same-origin JSON response is not read; virtualized cards accumulate')
+  await tab.evaluate(() => window.scroll1())
+  await new Promise((r) => setTimeout(r, 300))
+  await tab.evaluate(() => window.scroll2())
+  await popup.waitFor(() => run('status').then((r) => { accept(r); render(); return r.counts.visible === 5 }))
+  results.push('cards accumulate while the virtualized grid drops earlier ones; JSON requests made meanwhile are not read')
 
   await popup.evaluate(() => document.getElementById('stop').click())
   for (let i = 0; i < 100 && finished.length < 2; i++) await new Promise((r) => setTimeout(r, 50))
@@ -172,12 +170,11 @@ try {
     writeFileSync(join(process.env.GOODWATCH_CAPTURE_OUT, 'synthetic-report.json'), JSON.stringify(report, null, 2))
   }
   assert.equal(report.counts.inBoth, 5)
-  assert.ok(report.responses.length >= 2)
+  assert.equal(report.responsesRead, 0)
   assert.ok(!/Synthetic|Remake|amzn1\.dv\.gti\.0|0SYNTH|synthetic-profile/.test(JSON.stringify(report)), 'report has no titles or IDs')
   results.push('Stop downloads a complete five-item shared wishlist file and a report without titles or IDs')
-  const restored = await tab.evaluate(() => [String(window.fetch).includes('[native code]'), String(XMLHttpRequest.prototype.open).includes('[native code]'), String(XMLHttpRequest.prototype.send).includes('[native code]'), globalThis.__goodwatchPrimeObserver?.active])
-  assert.deepEqual(restored, [true, true, true, false], 'native fetch and XMLHttpRequest restored, observer inactive')
-  results.push('after Stop the page has its native fetch and XMLHttpRequest back and observation is off')
+  assert.deepEqual(await tab.evaluate(pageWorld), [true, true, true, 'undefined'], 'page world untouched after Stop')
+  results.push('after Stop the page world is still untouched')
 
   await popup.evaluate(() => document.getElementById('start').click())
   await popup.waitFor(() => current.state === 'capturing')

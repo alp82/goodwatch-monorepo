@@ -2,7 +2,7 @@
 // Each test was written to fail on e4939330 before its fix.
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
@@ -49,8 +49,11 @@ function world(html, url = EU, routes = {}) {
 	window.fetch = original;
 	window.eval(read("extract.js"));
 	window.eval(read("collector.js"));
-	window.__goodwatchPrimeObserverArgs = ["nonce-test"];
-	window.eval(read("observer.js"));
+	// Up to 0.2.0 Start also injected a page-world response reader.
+	if (existsSync(new URL("./observer.js", import.meta.url))) {
+		window.__goodwatchPrimeObserverArgs = ["nonce-test"];
+		window.eval(read("observer.js"));
+	}
 	const messages = [];
 	window.addEventListener("message", (e) => {
 		if (e.data?.goodwatchPrime) messages.push(e.data);
@@ -109,45 +112,8 @@ test("1a: unrelated and cross-origin responses are never cloned or read", async 
 	}
 });
 
-test("1b: an oversized list response is read only up to the cap and not parsed", async () => {
-	const huge = JSON.stringify({ viewOutput: { features: { "legacy-watchlist": { content: { items: [], pad: "x".repeat(9 * 1024 * 1024) } } } } });
-	const w = world(base(), EU, { "/region/eu/api/watchlist/huge": huge });
-	try {
-		w.command("start");
-		await w.load("/region/eu/api/watchlist/huge");
-		const rep = w.command("status", { report: true }).report;
-		assert.equal(rep.responses.length, 1);
-		assert.equal(rep.responses[0].tooLarge, true);
-		assert.equal(rep.responses[0].parsed, false);
-		assert.equal(w.reads.texts, 0, "no unbounded text() read");
-	} finally {
-		w.close();
-	}
-});
-
-for (const exit of ["stop", "cancel", "navigation"]) {
-	test(`1c: observation ends on ${exit} and the page's own fetch is restored`, async () => {
-		const w = world(base(), EU, routes);
-		try {
-			w.command("start");
-			assert.notEqual(w.window.fetch, w.original, "wrapped while capturing");
-			if (exit === "navigation") {
-				w.window.history.pushState({}, "", "/region/eu/storefront");
-				await w.flush();
-				w.command("status");
-			} else w.command(exit);
-			await w.flush();
-			assert.equal(w.window.fetch, w.original, "fetch restored");
-			const before = w.messages.length;
-			const clones = w.reads.clones;
-			await w.load(nextHref(2, "c1"));
-			assert.equal(w.messages.length, before, "no messages after the capture ended");
-			assert.equal(w.reads.clones, clones, "no reads after the capture ended");
-		} finally {
-			w.close();
-		}
-	});
-}
+// 1b and 1c (bounded reads, observation lifetime) tested the 0.2.0 response
+// reader. Version 0.3.0 reads no responses; see r3-1 and r3-2.
 
 // 2. Report anonymity and message validation
 
@@ -167,21 +133,15 @@ test("2a: names, script IDs, classes and test IDs never reach the report", async
 	}
 });
 
-test("2b: forged messages can't plant private strings in the report or exhaust memory", async () => {
+test("2b: forged page messages have no effect: nothing listens for them", async () => {
 	const w = world(base());
 	try {
-		w.command("start");
-		const items = Array.from({ length: 20000 }, (_, i) => ({ gti: null, token: `0FORGED${String(i).padStart(6, "0")}`, url: "javascript:alert(1)", title: "Planted Secret", mediaType: "movie" }));
-		w.post({ kind: "response", path: "/Alice/watchlist", status: "Alice", parsed: true, shape: { Alice: "Alice" }, collections: [{ path: "Alice", chain: "Alice", classification: "watchlist", objects: 1, items, pagination: { terminal: true, keys: ["Alice"], cursor: "Alice", totalItems: 2 } }] });
-		for (let i = 0; i < 1500; i++) w.post({ kind: "response", path: `/x${i}/watchlist`, status: 200, parsed: false, collections: [] });
-		await w.flush();
+		const before = w.command("start").counts;
+		w.post({ kind: "response", path: "/Alice/watchlist", status: 200, parsed: true, collections: [{ classification: "watchlist", items: [{ title: "Planted Secret", token: "0FORGED00001", url: "https://www.primevideo.com/detail/0FORGED00001" }], pagination: { terminal: true } }] });
 		await w.flush();
 		const r = w.command("stop");
-		const text = JSON.stringify(r.report);
-		assert.ok(!text.includes("Alice") && !text.includes("Planted"), "no planted strings in the report");
-		assert.ok(r.report.responses.length <= 100, "bounded response log");
-		assert.ok(!r.envelope.items.some((i) => i.title === "Planted Secret" && !/^https:/.test(i.sourceUrl || "https:")), "invalid URLs never pass");
-		assert.ok(r.envelope.items.filter((i) => i.title === "Planted Secret").length <= 1000, "bounded items per message");
+		assert.deepEqual(r.counts, before);
+		assert.ok(!JSON.stringify(r).includes("Planted") && !JSON.stringify(r.report).includes("Alice"));
 	} finally {
 		w.close();
 	}
@@ -214,33 +174,8 @@ test("3b: hasMoreItems:false next to a continuation token is a contradiction", a
 	}
 });
 
-test("3c: a terminal page that doesn't follow the previous page leaves a gap", async () => {
-	const lastWithoutLink = viewOutputPage([3, 4, 5], { next: 5, total: 5 });
-	const w = world(base(), EU, { "/region/eu/api/watchlist/other": lastWithoutLink });
-	try {
-		w.command("start");
-		await w.load("/region/eu/api/watchlist/other", { show: [3, 4, 5] });
-		const r = w.command("stop");
-		assert.notEqual(r.completeness, "complete");
-		assert.ok(r.reasons.includes("chain_gap"), JSON.stringify(r.reasons));
-	} finally {
-		w.close();
-	}
-});
-
-test("3d: the linked chain still completes", async () => {
-	const w = world(base(), EU, routes);
-	try {
-		w.command("start");
-		await w.load(nextHref(2, "c1"), { show: [3, 4], hide: [1] });
-		await w.load(nextHref(4, "c2"), { show: [5], hide: [2] });
-		const r = w.command("stop");
-		assert.equal(r.completeness, "complete", JSON.stringify(r.reasons));
-		assert.deepEqual(r.report.pagination.pages.map((p) => p.link), ["start", "cursor", "cursor"]);
-	} finally {
-		w.close();
-	}
-});
+// 3c and 3d tested links between response pages. Version 0.3.0 reads no
+// responses, so a list longer than the page data stays partial; see r3-3.
 
 // 4. All view and profile
 
@@ -289,18 +224,8 @@ test("4c: a profile change seen only in new page state discards the capture", as
 	}
 });
 
-test("4d: a profile change seen only in a list response discards the capture", async () => {
-	const html = base().replace(/<button[^]*?<\/button>/, "");
-	const other = { ...p2, profiles: { activeProfile: { id: "synthetic-profile-b" } } };
-	const w = world(html, EU, { [nextHref(2, "c1")]: other });
-	try {
-		w.command("start");
-		await w.load(nextHref(2, "c1"), { show: [3, 4] });
-		assert.equal(w.command("status").code, "terminated_profile");
-	} finally {
-		w.close();
-	}
-});
+// 4d (profile change in a list response) is moot without response reading;
+// in-place state changes are covered by r3-5.
 
 // 5. Card groups by element identity; unresolved cards stay out of the file
 
@@ -324,7 +249,7 @@ test("5b: with no page-data Watchlist, guessed cards stay out of the file", asyn
 		const r = w.command("stop");
 		assert.equal(r.completeness, "unknown");
 		assert.equal(r.envelope.items.length, 0, "no unresolved cards in the import file");
-		assert.equal(r.report.counts.visibleUnresolved, 2);
+		assert.equal(r.report.counts.visibleOnly, 2);
 	} finally {
 		w.close();
 	}

@@ -24,33 +24,28 @@ const MESSAGES = {
 
 // Plain words for the gate's reason codes. The code itself stays visible.
 const REASONS = {
-  continuation_pending: 'Prime Video says more titles exist than were loaded.',
+  continuation_pending: 'The list is longer than the page data holds. This version reads only the page data, so later titles aren\'t in the file.',
   no_terminal_evidence: 'The page data never said where the list ends.',
   no_structured_watchlist: 'The page data didn\'t name a Watchlist, so only cards were read.',
-  visible_not_in_structured: 'Some cards weren\'t in the page data.',
+  visible_not_in_structured: 'Some cards weren\'t in the page data, so they aren\'t in the file.',
   structured_not_seen_visible: 'Some titles in the page data never appeared as cards.',
   total_mismatch: 'The count Prime Video reports differs from what was read.',
   cursor_repeated: 'Prime Video repeated a page.',
   filter_changed: 'The Watchlist filter changed during the capture.',
   filtered_view: 'The capture started on a filtered view, not All.',
   profile_unconfirmed: 'The open profile couldn\'t be confirmed.',
-  unknown_response_schema: 'Prime Video sent list data in a shape this version can\'t read.',
   visible_group_guessed: 'The page has several card groups and the Watchlist grid was guessed.',
   conflicting_identity: 'A title appeared with two different names or IDs and was left out.',
   pagination_contradiction: 'A page said both that the list ends and that more follows.',
-  chain_gap: 'A page arrived that doesn\'t follow the previous one.',
-  chain_start_unobserved: 'The first page of the list wasn\'t in the page data.',
   several_chain_starts: 'The page data started the list more than once.',
   several_watchlist_chains: 'The page data holds more than one Watchlist list.',
-  index_mismatch: 'A page\'s position doesn\'t match the titles read before it.',
-  all_view_unconfirmed: 'The page didn\'t show that the All view is selected.',
+  all_view_unconfirmed: 'The page data beside the Watchlist didn\'t show that the All view is selected.',
   channel_title_disagreement: 'A title has a different name in the page data than on its card.',
   channel_type_disagreement: 'A title is a movie in one place and a show in the other.',
   visible_group_contested: 'Another card group matched the page data better than the chosen grid.',
-  visible_group_unconfirmed: 'The cards couldn\'t be tied to the Watchlist in the page data; they aren\'t in the file.',
+  visible_group_unconfirmed: 'The cards couldn\'t be tied to the Watchlist in the page data.',
   profile_ambiguous: 'The page data names more than one profile.',
   collection_overflow: 'A page held more titles than this version reads.',
-  messages_dropped: 'The page sent more list data than this version reads.',
 }
 
 const KNOWN_STATES = new Set(['idle', 'capturing', 'stopped', 'cancelled', 'terminated'])
@@ -143,30 +138,24 @@ function pageCommand(command, probeOnly) {
   return api(command)
 }
 
-// Runs in the page's main world. Ends response observation and restores the
-// page's own fetch and XMLHttpRequest, as a second safeguard after Stop.
-function deactivateObserver() {
-  globalThis.__goodwatchPrimeObserver?.deactivate?.()
-  return globalThis.__goodwatchPrimeObserver?.active === true
-}
-
-// Runs in the page's main world before observer.js, to hand it the nonce.
-function setObserverArgs(nonce) {
-  globalThis.__goodwatchPrimeObserverArgs = [nonce]
+// Same rule as collector.js. Checked before anything is injected, so a Start
+// on another page installs nothing.
+const isWatchlistUrl = (raw) => {
+  try {
+    const u = new URL(raw)
+    return u.protocol === 'https:' && /(^|\.)(primevideo\.com|amazon\.[a-z.]{2,12})$/.test(u.hostname) && /\/watchlist(\/|$)/i.test(u.pathname)
+  } catch {
+    return false
+  }
 }
 
 async function run(action, { start = false, probeOnly = false, report = false } = {}) {
-  const command = { action, report }
   if (start) {
-    command.nonce = crypto.randomUUID()
+    const tab = await chrome.tabs.get(tabId)
+    if (!isWatchlistUrl(tab.url)) return { state: 'idle', code: 'wrong_page' }
     await chrome.scripting.executeScript({ target: { tabId }, files: ['extract.js', 'collector.js'] })
-    await chrome.scripting.executeScript({ target: { tabId }, world: 'MAIN', func: setObserverArgs, args: [command.nonce] })
-    await chrome.scripting.executeScript({ target: { tabId }, world: 'MAIN', files: ['extract.js', 'observer.js'] })
   }
-  const [frame] = await chrome.scripting.executeScript({ target: { tabId }, func: pageCommand, args: [command, probeOnly] })
-  if (action === 'stop' || action === 'cancel') {
-    await chrome.scripting.executeScript({ target: { tabId }, world: 'MAIN', func: deactivateObserver }).catch(() => {})
-  }
+  const [frame] = await chrome.scripting.executeScript({ target: { tabId }, func: pageCommand, args: [{ action, report }, probeOnly] })
   return frame ? frame.result : null
 }
 

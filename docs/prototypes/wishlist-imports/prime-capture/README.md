@@ -1,6 +1,6 @@
 # GoodWatch Prime Video Watchlist capture (experiment)
 
-This is a throwaway prototype for [ticket #707](https://github.com/alp82/goodwatch-monorepo/issues/707). It isn't a GoodWatch feature, it isn't supported, and it isn't in any extension store. Version 0.2.0 has been tested only against invented pages. Live capture on Prime Video is unverified.
+This is a throwaway prototype for [ticket #707](https://github.com/alp82/goodwatch-monorepo/issues/707). It isn't a GoodWatch feature, it isn't supported, and it isn't in any extension store. Version 0.3.0 has been tested only against invented pages. Live capture on Prime Video is unverified.
 
 The extension reads your Prime Video **Watchlist** while you scroll through it. When you stop, it saves two files:
 
@@ -9,23 +9,24 @@ The extension reads your Prime Video **Watchlist** while you scroll through it. 
 
 ## How it decides what's on your Watchlist
 
-The capture reads the Watchlist in two independent ways during the same scroll:
+The capture reads two things that are already in the page, during the same scroll:
 
-1. **Page data.** Prime Video puts the first part of the list into the page as inert JSON. As you scroll, the page loads more of the list. The capture reads copies of those Watchlist responses only (see [What it reads](#what-it-reads)). It accepts a collection only when its own data path names the Watchlist. It leaves out library, purchases, recommendations, navigation, live entries and anything nested in a title.
-2. **Title cards.** It keeps every card that appears in one grid while you scroll, including cards the page later removes. The grid is identified by its element, not by its attributes, and only a grid that shares titles with the page data counts as the Watchlist.
+1. **Page data.** Prime Video puts the Watchlist, or its first part, into the page as inert JSON. The capture accepts a collection only when its own data path names the Watchlist. It leaves out library, purchases, recommendations, navigation, live entries and anything nested in a title.
+2. **Title cards.** It keeps every card that appears in one grid while you scroll, including cards the page later removes. The grid is identified by its element, and the one that shares the most titles with the page data is used.
+
+It reads no network responses. A list longer than what the page data holds is therefore saved as `partial`: the rest of the list is never read. This is deliberate. The goal of this experiment is a truthful complete-or-partial verdict for one account, not the most titles.
+
+The file holds **page-data Watchlist entries only**. Cards are a check, not a source: a card never adds a title to the file.
 
 The file says `complete` only when all of the following hold:
 
-- Every Watchlist page chain starts in the page data and is connected: each later page was requested with the continuation its predecessor named (or with its start index, when the titles read so far match it).
-- The last page of each chain says it is the end, with no contradicting continuation on the same page. Evidence from enclosing objects doesn't count.
-- No cursor repeats, and any total that Prime Video reports equals what was read.
-- Every card is in the page data, every page-data title appeared as a card, and both agree on each title's name and type.
-- The page positively shows the **All** view, nothing showed a filter, and the URL didn't change filter.
-- The profile was confirmed at Start and nothing named another profile during the capture.
+- The page data holds one Watchlist page that ends explicitly, with no contradicting continuation on the same object. Evidence from enclosing objects doesn't count.
+- Any total that Prime Video reports equals what was read.
+- Every page-data entry appeared as a card, every card in the grid is in the page data, and both agree on each title's name and type.
+- The page data beside the Watchlist shows the **All** view. A selected type filter anywhere on the page, a filtered URL or a filter change counts against it; an **All** control alone doesn't count for it.
+- The profile was confirmed at Start, and no page data or header named another profile during the capture. State scripts are re-read whenever their content changes, and in full at **Stop**.
 
 Otherwise the file says `partial` when there's a known gap, or `unknown` when there's no evidence either way. The popup and the report name the reasons.
-
-The file holds only titles tied to the Watchlist: page-data Watchlist entries, and cards in a grid that shares titles with them. Cards that can't be tied to the Watchlist stay out of the file, whatever its coverage. The report counts them as `visibleUnresolved`.
 
 The file keeps provider identity and GoodWatch identity apart:
 
@@ -38,8 +39,8 @@ The file keeps provider identity and GoodWatch identity apart:
 
 1. In Chrome, Edge, Brave or another Chromium browser on a computer, go to `chrome://extensions` (Edge: `edge://extensions`).
 2. Turn on **Developer mode**.
-3. Click **Load unpacked** and select this folder, or the copy at `~/goodwatch-private/707/prime-capture-extension-v020/`.
-4. Check that the card shows version 0.2.0. Remove any earlier version first.
+3. Click **Load unpacked** and select this folder, or the copy at `~/goodwatch-private/707/prime-capture-extension-v030/`.
+4. Check that the card shows version 0.3.0. Remove any earlier version first.
 
 To remove the extension, click **Remove** on its card.
 
@@ -58,39 +59,30 @@ A page refresh or a full page load ends the capture without a file. Start again 
 
 It does:
 
-- Run only in the tab where you open the popup, and only after **Start capture**.
-- Read the inert JSON in the page and the Watchlist cards.
-- Read copies of Watchlist responses the page itself requests while the capture runs.
+- Run only in the tab where you open the popup, and only after **Start capture** on a Watchlist address. On any other page, **Start** injects nothing.
+- Read the inert JSON in the page and the Watchlist cards, from the extension's isolated world.
 
 It doesn't:
 
-- Scroll, click, open pages or send requests. It never replays or builds Prime Video API requests.
+- Read network responses, or wrap or change anything in the page's own JavaScript.
+- Scroll, click, open pages or send requests.
 - Send anything over the network, to GoodWatch or anywhere else.
 - Read cookies, passwords, account details or profile names.
 - Change your Watchlist.
 
 It asks for two permissions: `activeTab` (the current tab, after you click the extension) and `scripting` (running the capture there). No host permissions.
 
-### What it reads
-
-The response reader runs in the page's own JavaScript world, because an extension's isolated world can't see the page's responses. It wraps `fetch` and `XMLHttpRequest`. The wrappers keep requests and responses intact: they pass each call through unchanged and read only a copy.
-
-- **Scope.** Before anything is read, the request URL must be on the page's own origin with a list-like path, and the response must be JSON. Other responses are never copied or read.
-- **Size.** A copy is read up to 8 MiB, then reading stops and the response is reported as too large, without parsing.
-- **Lifetime.** Reading ends when the capture stops, is canceled or ends on its own, when the page is hidden, and after 16 minutes at most. Ending restores the page's own `fetch` and `XMLHttpRequest`. After **Stop**, the popup also switches it off directly, as a second safeguard. Until this has been confirmed on a live page, refresh or close the tab after stopping.
-
-The reader posts reduced fields back to the isolated collector with a per-capture code. The page itself can forge those messages. The collector therefore validates and bounds every field, parses every URL again, and keeps forged strings out of the report. The page remains the data source, so a hostile page could still feed made-up titles into the file. A shipped version would need a review of that boundary.
+Version 0.2.0 also read copies of list responses in the page's own world. The #705 route research names no specific Watchlist endpoint, and a reviewer showed that a broad path rule read unrelated responses. Version 0.3.0 removes that reader.
 
 ## Files
 
 | File | Purpose |
 | --- | --- |
 | `manifest.json` | Extension settings and permissions |
-| `extract.js` | Pure extraction: entity fields, detail links, collections, pagination evidence, redacted shapes |
-| `collector.js` | Isolated-world collector: both channels, guards, the completeness gate, the file and report |
-| `observer.js` | Page-world response reader for list responses the page requests after Start |
+| `extract.js` | Pure extraction: entity fields, detail links, collections, pagination and filter evidence, report vocabulary |
+| `collector.js` | Isolated-world collector: page data and cards, guards, the completeness gate, the file and report |
 | `popup.html`, `popup.js`, `popup.css` | The popup |
-| `capture.test.mjs`, `hardening.test.mjs`, `fixtures/synthetic.mjs` | Fixture tests with invented pages; `hardening.test.mjs` holds the second review's reproductions |
+| `capture.test.mjs`, `hardening.test.mjs`, `review3.test.mjs`, `fixtures/synthetic.mjs` | Fixture tests with invented pages; the second and third reviews' reproductions are in `hardening.test.mjs` and `review3.test.mjs` |
 | `scripts/browser-integration.mjs` | Loads the real extension in Chromium against invented pages at Prime Video addresses |
 | `scripts/parser-check.mjs` | Runs a file through the shipped GoodWatch wishlist parser, counts only |
 | `scripts/compare.mjs` | Compares a file with the owner's private reference (full or sampled), counts only |

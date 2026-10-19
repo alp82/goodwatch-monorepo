@@ -1,44 +1,45 @@
 /*
  * Experimental Prime Video Watchlist collector (isolated world).
  *
- * Two independent membership channels:
- *  - page data: Watchlist collections in the page's inert hydration scripts,
- *    plus validated, reduced copies of the page's own list responses posted
- *    by observer.js;
- *  - cards: continuous accumulation of title cards in one Watchlist grid,
- *    identified by element, not by attributes.
- * The file says "complete" only when every Watchlist page chain is connected
- * and ends explicitly, both channels agree exactly, the All view and the
- * profile are positively confirmed, and nothing conflicts. Cards that can't
- * be tied to the Watchlist never enter the file.
+ * Version 0.3.0 reads two things only, both already in the page:
+ *  - page data: Watchlist collections in the page's inert hydration scripts;
+ *  - cards: title cards in one Watchlist grid, accumulated while scrolling.
+ * It reads no network responses and wraps nothing in the page.
+ *
+ * The file holds page-data Watchlist entries only. Cards are a check: every
+ * page-data entry must appear as a card and every card in the grid must be in
+ * the page data. The file says "complete" only when the page data holds the
+ * whole list on one page that ends explicitly, both channels agree exactly,
+ * the All view is shown beside the Watchlist, and the profile is confirmed.
+ * A list longer than the page data's first page is "partial": the rest of
+ * the list was never read.
  */
 (() => {
 	if (globalThis.__goodwatchPrimeCommand) return;
 	const X = globalThis.__goodwatchPrimeExtract;
-	const VERSION = "0.2.0";
+	const VERSION = "0.3.0";
 	const MAX_ITEMS = 5000;
 	const MAX_TIME = 15 * 60 * 1000;
-	const MAX_MESSAGES = 1000;
-	const MAX_LOGGED_RESPONSES = 100;
 	const CARD_LINK = 'a[href*="/detail/"]';
 	const CARD_ROOT = '[data-card-title], [data-testid="card"], article, li';
 	const GROUP = 'ul, ol, [role="list"], [role="grid"], [role="rowgroup"], section';
 	const OUTSIDE = 'header, nav, footer, [role="dialog"], [aria-modal="true"], [role="banner"], [role="navigation"]';
 	const PROFILE = '[data-testid*="profile" i], [aria-label*="profile" i], [aria-label*="profil" i]';
-	const SELECTED = '[aria-selected="true"], [aria-pressed="true"], [aria-checked="true"], [aria-current="true"], [aria-current="page"]';
-	// Filter control words, for the DOM evidence of the All view.
-	const ALL_WORDS = /^(all|alle|alles|tout|tous|todo|todos|tutti|tudo|allemaal)$/i;
+	const SCRIPTS = 'script[type="text/template"], script[type="application/json"]';
+	// A selected control showing a type filter anywhere on the page counts
+	// against the All view. Nothing on the page counts for it: only page data
+	// beside the Watchlist can confirm All.
+	const SELECTED = '[aria-selected="true"], [aria-pressed="true"], [aria-checked="true"], [aria-current="true"], [aria-current="page"], option:checked';
 	const FILTER_WORDS = /^(movies?|films?|filme|tv|tv shows?|shows?|series|serien|séries|películas|serie tv|tv-serien|tv-sendungen|filmes)$/i;
 	const DATA_ATTRS = new Set(["data-card-title", "data-card-entity-type", "data-testid", "data-card-id", "data-asin", "data-gti", "data-automation-id", "data-card-type"]);
 
 	const REASONS = new Set([
 		"terminated_navigation", "terminated_profile", "limit_items", "limit_time", "collector_error",
-		"no_structured_watchlist", "no_terminal_evidence", "continuation_pending", "continuation_after_end", "pagination_contradiction",
-		"chain_gap", "chain_start_unobserved", "several_chain_starts", "several_watchlist_chains", "index_mismatch", "cursor_repeated",
-		"total_changed", "total_mismatch", "visible_not_in_structured", "structured_not_seen_visible", "no_visible_cards",
-		"visible_group_guessed", "visible_group_contested", "visible_group_unconfirmed", "conflicting_identity",
-		"channel_title_disagreement", "channel_type_disagreement", "unknown_response_schema", "filter_changed", "filtered_view",
-		"all_view_unconfirmed", "state_truncated", "collection_overflow", "profile_unconfirmed", "profile_ambiguous", "messages_dropped",
+		"no_structured_watchlist", "no_terminal_evidence", "continuation_pending", "pagination_contradiction", "several_chain_starts",
+		"several_watchlist_chains", "cursor_repeated", "total_changed", "total_mismatch", "visible_not_in_structured",
+		"structured_not_seen_visible", "no_visible_cards", "visible_group_guessed", "visible_group_contested", "visible_group_unconfirmed",
+		"conflicting_identity", "channel_title_disagreement", "channel_type_disagreement", "filter_changed", "filtered_view",
+		"all_view_unconfirmed", "state_truncated", "collection_overflow", "profile_unconfirmed", "profile_ambiguous",
 	]);
 
 	let s = fresh();
@@ -47,7 +48,6 @@
 		return {
 			state: "idle",
 			code: "idle",
-			nonce: null,
 			origin: "",
 			lang: "",
 			filter: "",
@@ -57,11 +57,11 @@
 			observer: null,
 			interval: null,
 			pending: null,
-			listener: null,
 			marker: null,
 			markerSource: "none",
 			stateMarkers: 0,
 			lateMarker: false,
+			profileAmbiguous: false,
 			domMarker: null,
 			entries: new Map(), // key -> entry
 			aliases: new Map(), // gti -> key
@@ -73,29 +73,23 @@
 			domRejected: new Map(),
 			titleDisagreements: 0,
 			typeDisagreements: 0,
-			typeFromCards: 0,
 			liveExcluded: 0,
 			groupIds: new WeakMap(), // element -> id
 			groups: new Map(), // id -> { el, tokens, tag, role, labeled }
 			nextGroup: 1,
 			primary: null,
 			primaryBy: null,
-			primaryReplacements: 0,
-			confirmedGroups: new Set(),
 			primaryContested: false,
-			seenScripts: new WeakSet(),
-			scripts: { count: 0, parsed: 0, template: 0, json: 0, bytes: 0 },
+			docs: new Map(), // script element -> { hash, filters, scopes }
+			dirty: new Set(),
+			scripts: { count: 0, parsed: 0, template: 0, json: 0, bytes: 0, changed: 0 },
 			pages: [],
 			otherCollections: [],
 			pageSignatures: new Set(),
 			duplicatePages: 0,
-			cursors: new Map(), // cursor -> page signature
+			cursors: new Set(),
 			cursorRepeats: 0,
-			responses: [],
-			messages: 0,
-			droppedMessages: 0,
-			unparsedListResponses: 0,
-			filterEvidence: { all: 0, filtered: 0, none: 0, domAll: 0, domFiltered: 0 },
+			domFiltered: 0,
 			filterChanged: false,
 			truncated: false,
 			overflow: false,
@@ -105,8 +99,7 @@
 		};
 	}
 
-	const isWatchlist = () =>
-		/(^|\.)(primevideo\.com|amazon\.[a-z.]{2,12})$/.test(location.hostname) && /\/watchlist(\/|$)/i.test(location.pathname);
+	const isWatchlist = () => /(^|\.)(primevideo\.com|amazon\.[a-z.]{2,12})$/.test(location.hostname) && /\/watchlist(\/|$)/i.test(location.pathname);
 
 	function filterKey() {
 		const after = location.pathname.replace(/^.*?\/watchlist/i, "").replace(/\/$/, "");
@@ -142,26 +135,18 @@
 		s.domKeys.delete(key);
 	}
 
-	function upsert(e, channel, groupId) {
+	function upsert(e, channel) {
 		if (e.hasLive) {
 			s.liveExcluded++;
 			return;
 		}
 		const key = keyFor(e);
 		if (!key || s.quarantined.has(key)) return;
-		// A structured entity can name the GTI of an earlier link-less one.
-		if (e.gti && e.token && s.entries.has(`gti:${e.gti}`) && !s.entries.has(e.token)) {
-			const moved = s.entries.get(`gti:${e.gti}`);
-			s.entries.delete(`gti:${e.gti}`);
-			moved.key = e.token;
-			s.entries.set(e.token, moved);
-			for (const set of [s.structuredKeys, s.domKeys]) if (set.delete(`gti:${e.gti}`)) set.add(e.token);
-		}
 		if (e.gti) s.aliases.set(e.gti, key);
 		let entry = s.entries.get(key);
 		if (!entry) {
 			if (s.entries.size >= MAX_ITEMS) return terminate("limit_items", false);
-			entry = { key, gti: null, url: null, title: null, domTitle: null, mediaType: "unknown", domType: "unknown", season: false, groupIds: new Set() };
+			entry = { key, gti: null, url: null, title: null, domTitle: null, mediaType: "unknown", domType: "unknown", season: false };
 			s.entries.set(key, entry);
 		}
 		if (e.gti && entry.gti && entry.gti !== e.gti) return quarantine(key);
@@ -171,7 +156,6 @@
 			if (entry.domTitle && X.normTitle(entry.domTitle) !== X.normTitle(e.title)) return quarantine(key);
 			entry.domTitle = e.title;
 			if (e.mediaType !== "unknown") entry.domType = e.mediaType;
-			entry.groupIds.add(groupId);
 			s.domKeys.add(key);
 		} else {
 			if (entry.title && X.normTitle(entry.title) !== X.normTitle(e.title)) return quarantine(key);
@@ -188,46 +172,30 @@
 		}
 	}
 
-	function noteFilters(groups) {
-		for (const g of groups) if (g in s.filterEvidence) s.filterEvidence[g]++;
-	}
-
-	function noteProfiles(markers, origin) {
+	function noteProfiles(markers) {
 		if (!markers.length) return;
 		if (s.state === "idle") {
-			// Start: the hydration state names the profile.
 			s.stateMarkers += markers.length;
 			s.marker ??= markers[0];
 			if (markers.some((m) => m !== s.marker)) s.profileAmbiguous = true;
 			return;
 		}
-		if (!s.marker) {
-			s.lateMarker = true;
-			return;
-		}
-		if (markers.some((m) => m !== s.marker)) terminate("terminated_profile", true);
-		void origin;
+		if (!s.marker) s.lateMarker = true;
+		else if (markers.some((m) => m !== s.marker)) terminate("terminated_profile", true);
 	}
 
-	function acceptCollections(collections, origin, requestKeys) {
+	function acceptCollections(collections) {
+		const scopes = [];
 		for (const c of collections) {
-			if (s.state !== "capturing" && s.state !== "idle") return;
 			if (c.overflow) s.overflow = true;
 			if (c.classification !== "watchlist") {
 				if (s.otherCollections.length < 200)
-					s.otherCollections.push({
-						origin,
-						path: c.path,
-						classification: c.classification,
-						count: c.items.length,
-						objects: c.objects,
-						paginationKeys: c.pagination.keys,
-						tokens: new Set(c.items.map((i) => i.token).filter(Boolean)),
-					});
+					s.otherCollections.push({ path: c.path, classification: c.classification, count: c.items.length, objects: c.objects, paginationKeys: c.pagination.keys, tokens: new Set(c.items.map((i) => i.token).filter(Boolean)) });
 				continue;
 			}
+			scopes.push(c.scope);
 			const p = c.pagination;
-			// A retried request returns the same page again; that isn't a loop.
+			// The same page can be embedded twice, or a script re-read after a change.
 			const sig = X.hash(JSON.stringify([c.chain, p.cursor, c.items.map((i) => i.token || i.gti)]));
 			if (s.pageSignatures.has(sig)) {
 				s.duplicatePages++;
@@ -236,45 +204,53 @@
 			s.pageSignatures.add(sig);
 			if (p.cursor) {
 				if (s.cursors.has(p.cursor)) s.cursorRepeats++;
-				s.cursors.set(p.cursor, sig);
+				s.cursors.add(p.cursor);
 			}
-			s.pages.push({
-				origin,
-				chain: c.chain,
-				path: c.path,
-				count: c.items.length,
-				terminal: p.terminal,
-				totalItems: p.totalItems,
-				nextIndex: p.nextIndex,
-				strong: p.strong,
-				requestKeys: requestKeys || [],
-				paginationKeys: p.keys,
-				at: Date.now() - s.started,
-			});
+			s.pages.push({ chain: c.chain, path: c.path, count: c.items.length, terminal: p.terminal, totalItems: p.totalItems, nextIndex: p.nextIndex, paginationKeys: p.keys, at: Date.now() - s.started });
 			for (const e of c.items) upsert(e, "structured");
 		}
+		return scopes;
 	}
 
-	function readScripts() {
-		for (const el of document.querySelectorAll('script[type="text/template"], script[type="application/json"]')) {
-			if (s.seenScripts.has(el)) continue;
-			s.seenScripts.add(el);
+	/** Filter groups that sit beside a Watchlist collection of the same document. */
+	function scopedFilters(groups, scopes) {
+		return groups
+			.filter((g) => !X.excludedPath(g.path) && scopes.some((scope) => scope.length > 0 && scope.every((k, i) => g.path[i] === k)))
+			.map((g) => g.value);
+	}
+
+	/** Reads new scripts and scripts whose content changed since last read. */
+	function readScripts(all) {
+		const elements = all ? [...document.querySelectorAll(SCRIPTS)] : [...document.querySelectorAll(SCRIPTS)].filter((el) => !s.docs.has(el) || s.dirty.has(el));
+		s.dirty.clear();
+		for (const el of elements) {
+			const text = el.textContent || "";
+			const hash = X.hash(text);
+			const known = s.docs.get(el);
+			if (known && known.hash === hash) continue;
+			if (known) {
+				s.scripts.changed++;
+				if (s.state === "capturing") s.stateChanged = true;
+			} else {
+				s.scripts.count++;
+				s.scripts.bytes += text.length;
+				if (el.getAttribute("type") === "text/template") s.scripts.template++;
+				else s.scripts.json++;
+			}
 			const holder = document.createElement("div");
 			holder.appendChild(el.cloneNode(true));
 			const [doc] = X.parseScripts(holder);
-			if (!doc) continue;
-			s.scripts.count++;
-			s.scripts.bytes += doc.size;
-			if (doc.type === "text/template") s.scripts.template++;
-			else s.scripts.json++;
-			if (!doc.json) continue;
-			s.scripts.parsed++;
-			noteProfiles(X.profileMarkers(doc.json), "state");
+			const record = { hash, filters: [] };
+			s.docs.set(el, record);
+			if (!doc?.json) continue;
+			if (!known) s.scripts.parsed++;
+			noteProfiles(X.profileMarkers(doc.json));
 			if (s.state === "terminated") return;
-			noteFilters(X.filterEvidence(doc.json));
 			const found = X.findCollections(doc.json, location.href);
 			s.truncated ||= found.truncated;
-			acceptCollections(found.collections, "state", null);
+			const scopes = acceptCollections(found.collections);
+			record.filters = scopedFilters(X.filterEvidence(doc.json), scopes);
+			if (known && JSON.stringify(known.filters) !== JSON.stringify(record.filters)) s.filterChanged = true;
 		}
 	}
 
@@ -300,9 +276,7 @@
 	function readFilterControls() {
 		for (const el of document.querySelectorAll(SELECTED)) {
 			if (el.closest(OUTSIDE)) continue;
-			const text = (el.textContent || "").trim().replace(/\s+/g, " ");
-			if (ALL_WORDS.test(text)) s.filterEvidence.domAll++;
-			else if (FILTER_WORDS.test(text)) s.filterEvidence.domFiltered++;
+			if (FILTER_WORDS.test((el.textContent || "").trim().replace(/\s+/g, " "))) s.domFiltered++;
 		}
 	}
 
@@ -328,8 +302,7 @@
 				bump(s.domRejected, "card_conflicting_links");
 				continue;
 			}
-			for (const attr of root.getAttributeNames())
-				if (attr.startsWith("data-")) DATA_ATTRS.has(attr) ? s.cardAttributes.add(attr) : s.otherDataAttributes++;
+			for (const attr of root.getAttributeNames()) if (attr.startsWith("data-")) DATA_ATTRS.has(attr) ? s.cardAttributes.add(attr) : s.otherDataAttributes++;
 			const id = groupId(root.parentElement?.closest(GROUP) || null);
 			if (!seen.has(id)) seen.set(id, []);
 			seen.get(id).push({ links, root, link: parsed.find(Boolean) });
@@ -338,26 +311,22 @@
 			const g = s.groups.get(id);
 			if (g) for (const c of cards) g.tokens.add(c.link.token);
 		}
-		for (const [id, g] of s.groups) if (overlapOf(g.tokens)) s.confirmedGroups.add(id);
 		const primaryGone = s.primary !== null && !s.groups.get(s.primary)?.el.isConnected;
 		if ((s.primary === null || primaryGone) && seen.size) {
 			const order = [...seen.keys()];
-			const best = order.reduce((b, id) => (overlapOf(seen.get(id).map((c) => c.link.token)) > overlapOf(seen.get(b).map((c) => c.link.token)) ? id : b), order[0]);
-			const confirmed = overlapOf(seen.get(best).map((c) => c.link.token)) > 0;
+			const score = (id) => overlapOf(seen.get(id).map((c) => c.link.token));
+			const best = order.reduce((b, id) => (score(id) > score(b) ? id : b), order[0]);
 			if (s.primary === null) {
 				s.primary = best;
-				s.primaryBy = confirmed ? "structured_overlap" : order.length > 1 ? "first_of_several_guess" : "only_group";
-			} else if (confirmed) {
-				// The grid element was replaced; take its successor only when the
-				// successor is tied to the page data too.
+				s.primaryBy = score(best) ? "structured_overlap" : order.length > 1 ? "first_of_several_guess" : "only_group";
+			} else if (score(best)) {
 				s.primary = best;
-				s.primaryReplacements++;
+				s.primaryReplacements = (s.primaryReplacements || 0) + 1;
 			}
 		}
 		const mine = overlapOf(s.groups.get(s.primary)?.tokens || []);
 		for (const [id, g] of s.groups) if (id !== s.primary && overlapOf(g.tokens) > mine) s.primaryContested = true;
-		const cards = seen.get(s.primary) || [];
-		for (const { links, root, link } of cards) {
+		for (const { links, root, link } of seen.get(s.primary) || []) {
 			s.domSightings++;
 			const labels = [...new Set(links.map((a) => a.getAttribute("aria-label")?.trim()).filter(Boolean))];
 			// Card-level names first; a link label can be an action ("Play …").
@@ -376,52 +345,9 @@
 				continue;
 			}
 			const type = X.mediaType(root.getAttribute("data-card-entity-type") || undefined);
-			upsert({ gti: null, token: link.token, url: link.url, title, mediaType: type.mediaType, season: type.season, hasLive: false }, "dom", s.primary);
+			upsert({ gti: null, token: link.token, url: link.url, title, mediaType: type.mediaType, season: type.season, hasLive: false }, "dom");
 			if (s.state !== "capturing") return;
 		}
-	}
-
-	function validMessage(m) {
-		if (!m || typeof m !== "object" || m.kind !== "response") return null;
-		return {
-			path: X.redactPath(m.path),
-			status: X.int(m.status, 999),
-			parsed: m.parsed === true,
-			tooLarge: m.tooLarge === true,
-			truncated: m.truncated === true,
-			requestKeys: X.hexList(m.requestKeys),
-			collections: Array.isArray(m.collections) ? m.collections.slice(0, 50).map((c) => X.validCollection(c, location.href)).filter(Boolean) : [],
-			profiles: X.hexList(m.profiles, 5),
-			filters: Array.isArray(m.filters) ? m.filters.filter((f) => ["all", "filtered", "none"].includes(f)).slice(0, 20) : [],
-			shape: m.shape === undefined ? null : X.validShape(m.shape),
-		};
-	}
-
-	function onMessage(event) {
-		// Only this origin, only with the per-capture code. The page can still
-		// forge messages, so every field is validated and bounded.
-		if (event.origin !== location.origin || !event.data || event.data.goodwatchPrime !== s.nonce || s.state !== "capturing") return;
-		if (++s.messages > MAX_MESSAGES) {
-			s.droppedMessages++;
-			return;
-		}
-		const m = validMessage(event.data.message);
-		if (!m) return;
-		const watch = m.collections.filter((c) => c.classification === "watchlist");
-		if (s.responses.length < MAX_LOGGED_RESPONSES)
-			s.responses.push({ path: m.path, status: m.status, parsed: m.parsed, tooLarge: m.tooLarge, collections: m.collections.length, watchlist: watch.length, shape: m.shape });
-		if (/watchlist/i.test(m.path) && (!m.parsed || !m.collections.length)) s.unparsedListResponses++;
-		s.truncated ||= m.truncated;
-		try {
-			noteProfiles(m.profiles, "response");
-			if (s.state !== "capturing") return;
-			noteFilters(m.filters);
-			acceptCollections(m.collections, "response", m.requestKeys);
-		} catch {
-			terminate("collector_error", false);
-			return;
-		}
-		safeScan();
 	}
 
 	function disconnect() {
@@ -431,10 +357,6 @@
 		s.interval = null;
 		if (s.pending) clearTimeout(s.pending);
 		s.pending = null;
-		if (s.listener) window.removeEventListener("message", s.listener);
-		s.listener = null;
-		// Ends page-world observation on every exit path.
-		if (s.nonce) window.postMessage({ goodwatchPrimeControl: s.nonce, action: "deactivate" }, location.origin);
 	}
 
 	function terminate(code, discard) {
@@ -450,59 +372,24 @@
 		}
 	}
 
-	function scan() {
+	function scan(all = false) {
 		if (s.state !== "capturing") return;
 		if (location.origin !== s.origin || !isWatchlist()) return terminate("terminated_navigation", false);
 		if (s.domMarker !== null && domMarker() !== s.domMarker) return terminate("terminated_profile", true);
 		if (filterKey() !== s.filter) s.filterChanged = true;
 		if (Date.now() - s.started >= MAX_TIME) return terminate("limit_time", false);
-		readScripts();
+		readScripts(all);
 		if (s.state !== "capturing") return;
 		readFilterControls();
 		readCards();
 	}
 
 	// A collector error must end the capture visibly, never leave it "capturing".
-	function safeScan() {
+	function safeScan(all = false) {
 		try {
-			scan();
+			scan(all);
 		} catch {
 			if (s.state === "capturing") terminate("collector_error", false);
-		}
-	}
-
-	/** Pagination chains: connected, ending explicitly, counts consistent. */
-	function chainReasons(partial, unknown) {
-		const chains = new Map();
-		for (const p of s.pages) chains.set(p.chain, [...(chains.get(p.chain) || []), p]);
-		if (chains.size > 1) unknown.push("several_watchlist_chains");
-		for (const pages of chains.values()) {
-			let cumulative = 0;
-			pages.forEach((p, i) => {
-				if (i === 0) {
-					p.link = "start";
-					if (p.origin !== "state") unknown.push("chain_start_unobserved");
-				} else {
-					const prev = pages[i - 1];
-					if (p.origin === "state") {
-						p.link = "none";
-						partial.push("several_chain_starts");
-					} else if (prev.strong.some((k) => p.requestKeys.includes(k))) p.link = "cursor";
-					else if (prev.nextIndex !== null && cumulative === prev.nextIndex && p.requestKeys.includes(X.hash(`v:${prev.nextIndex}`))) p.link = "index";
-					else {
-						p.link = "none";
-						partial.push("chain_gap");
-					}
-					if (prev.terminal === true) partial.push("continuation_after_end");
-					if (prev.terminal === "conflict") partial.push("pagination_contradiction");
-				}
-				cumulative += p.count;
-				if (p.nextIndex !== null && p.terminal !== true && cumulative !== p.nextIndex) partial.push("index_mismatch");
-			});
-			const last = pages[pages.length - 1];
-			if (last.terminal === "conflict") partial.push("pagination_contradiction");
-			else if (last.terminal === false) partial.push("continuation_pending");
-			else if (last.terminal === null) unknown.push("no_terminal_evidence");
 		}
 	}
 
@@ -512,7 +399,17 @@
 		const unknown = [];
 		if (s.state === "terminated") partial.push(s.code);
 		if (!s.pages.length) unknown.push("no_structured_watchlist");
-		else chainReasons(partial, unknown);
+		const chains = new Map();
+		for (const p of s.pages) chains.set(p.chain, [...(chains.get(p.chain) || []), p]);
+		if (chains.size > 1) unknown.push("several_watchlist_chains");
+		for (const pages of chains.values()) {
+			// Without network responses, a chain is one page from the page data.
+			if (pages.length > 1) partial.push("several_chain_starts");
+			const last = pages[pages.length - 1];
+			if (last.terminal === "conflict") partial.push("pagination_contradiction");
+			else if (last.terminal === false) partial.push("continuation_pending");
+			else if (last.terminal === null) unknown.push("no_terminal_evidence");
+		}
 		if (s.cursorRepeats) partial.push("cursor_repeated");
 		const totals = [...new Set(s.pages.map((p) => p.totalItems).filter((t) => t !== null))];
 		if (totals.length > 1) partial.push("total_changed");
@@ -525,7 +422,7 @@
 		if (!s.domKeys.size) unknown.push("no_visible_cards");
 		if (s.primaryBy === "first_of_several_guess") unknown.push("visible_group_guessed");
 		if (s.primaryContested) partial.push("visible_group_contested");
-		if (s.primary !== null && !s.confirmedGroups.has(s.primary)) unknown.push("visible_group_unconfirmed");
+		if (s.primary !== null && !overlapOf(s.groups.get(s.primary)?.tokens || [])) unknown.push("visible_group_unconfirmed");
 		if (s.quarantined.size) partial.push("conflicting_identity");
 		let titles = 0;
 		let types = 0;
@@ -537,43 +434,28 @@
 		s.typeDisagreements = types;
 		if (titles) partial.push("channel_title_disagreement");
 		if (types) partial.push("channel_type_disagreement");
-		if (s.unparsedListResponses) unknown.push("unknown_response_schema");
 		if (s.filterChanged) partial.push("filter_changed");
-		const f = s.filterEvidence;
-		if (s.filter !== "" || f.filtered || f.domFiltered) partial.push("filtered_view");
-		else if (!f.all && !f.domAll) unknown.push("all_view_unconfirmed");
+		const filters = [...s.docs.values()].flatMap((d) => d.filters);
+		if (s.filter !== "" || s.domFiltered || filters.some((f) => f !== "all")) partial.push("filtered_view");
+		else if (!filters.includes("all")) unknown.push("all_view_unconfirmed");
 		if (s.truncated) partial.push("state_truncated");
 		if (s.overflow) partial.push("collection_overflow");
-		if (s.droppedMessages) partial.push("messages_dropped");
 		if (s.profileAmbiguous) unknown.push("profile_ambiguous");
 		if (s.markerSource === "none") unknown.push("profile_unconfirmed");
-		const uniq = (a) => [...new Set(a)];
-		const p = uniq(partial);
-		const u = uniq(unknown);
-		return { completeness: p.length ? "partial" : u.length ? "unknown" : "complete", partial: p, unknown: u, domOnly, structuredOnly, totals };
+		const p = [...new Set(partial)];
+		const u = [...new Set(unknown)];
+		return { completeness: p.length ? "partial" : u.length ? "unknown" : "complete", partial: p, unknown: u, domOnly, structuredOnly, totals, filters };
 	}
 
-	/** Members only: page-data Watchlist items, or cards in a grid tied to it. */
-	function member(e) {
-		if (s.quarantined.has(e.key)) return false;
-		if (s.structuredKeys.has(e.key)) return true;
-		return s.domKeys.has(e.key) && [...e.groupIds].some((id) => s.confirmedGroups.has(id));
-	}
+	/** The file holds page-data Watchlist entries only. */
+	const member = (e) => s.structuredKeys.has(e.key) && !s.quarantined.has(e.key);
 
 	function items() {
 		const out = [];
 		for (const e of s.entries.values()) {
-			if (!member(e)) continue;
-			const title = e.title || e.domTitle;
-			if (!X.isText(title)) continue;
+			if (!member(e) || !X.isText(e.title)) continue;
 			const mediaType = e.mediaType !== "unknown" ? e.mediaType : e.domType;
-			out.push({
-				title,
-				mediaType,
-				...(e.year ? { year: e.year } : {}),
-				sourceId: e.gti || e.key,
-				...(e.url ? { sourceUrl: e.url } : {}),
-			});
+			out.push({ title: e.title, mediaType, ...(e.year ? { year: e.year } : {}), sourceId: e.gti || e.key, ...(e.url ? { sourceUrl: e.url } : {}) });
 		}
 		return out;
 	}
@@ -585,12 +467,23 @@
 	 */
 	const FIXED = new Set([
 		...REASONS, "goodwatch-prime-capture-report", "complete", "partial", "unknown", "capturing", "stopped", "cancelled", "terminated", "idle",
-		"state", "dom", "state+dom", "none", "response", "start", "cursor", "index", "conflict", "watchlist", "excluded", "unclassified",
+		"state", "dom", "state+dom", "none", "all", "filtered", "conflict", "watchlist", "excluded", "unclassified",
 		"structured_overlap", "first_of_several_guess", "only_group", "ul", "ol", "section", "div", "other", "list", "grid", "rowgroup",
-		"string", "number", "boolean", "null", "{…}", "…", "<key>", "<seg>", "<value>", "<other>",
-		...DATA_ATTRS, "Counts, fixed codes and report-vocabulary words only. No titles, IDs, cursors or profile values.",
+		"<key>", "<seg>", "<value>", "<other>", ...DATA_ATTRS,
+		"Counts, fixed codes and report-vocabulary words only. No titles, IDs, cursors or profile values.",
 	]);
-	const PIECES = new Set([...X.KEYS, "[]", "<key>", "<seg>", "<value>", "", "region", "eu", "na", "fe", "gp", "video", "mystuff", "my-stuff", "api", "detail", "storefront", "movie", "movies", "tv", "all", "getDataByTransform", "paginateCollection", "getLandingPage", "getPage", "v1", "v2", "v3", "web", "lib"]);
+	const PIECES = new Set([...X.KEYS, "[]", "<key>", "<seg>", "<value>", "", "region", "eu", "na", "fe", "gp", "video", "mystuff", "my-stuff", "api", "detail", "storefront", "movie", "movies", "tv", "all", "v1", "v2", "v3", "web", "lib"]);
+	const REPORT_KEYS = new Set(
+		(
+			"format collectorVersion note browser host lang pathPattern filter filterChanged stateChanged filterEvidence watchlistFilters domFilteredControls elapsedSeconds stop " +
+			"profileGuard profileMarkersInState profileMarkerLate completeness partialReasons unknownReasons counts fileItems structuredUnique visibleUnique inBoth " +
+			"visibleOnly structuredOnly visibleSightings structuredSightings quarantined titleDisagreements typeDisagreements typeFromCards " +
+			"sameTitleDistinctIds liveExcluded withGti withDetailToken withoutDetailLink tokenAsinLike movies shows seasons seasonsWithParent unknownType withYear " +
+			"rejectedCardSightings pagination chains pages chain path count terminal totalItems nextIndex paginationKeys atSeconds reportedTotals " +
+			"distinctCursors cursorRepeats duplicatePages otherCollections classification objects overlapWithVisible primaryGroupChosenBy primaryReplacements " +
+			"cardGroups index tag role labeled cards overlap primary cardAttributes otherDataAttributes scripts parsed template json bytes changed responsesRead"
+		).split(" "),
+	);
 	const allowedString = (v, field) => {
 		if (FIXED.has(v)) return true;
 		if (field === "host") return /^www\.(primevideo\.com|amazon\.[a-z]{2,3}(\.[a-z]{2})?)$/.test(v);
@@ -611,19 +504,6 @@
 		}
 		return null;
 	}
-	// Every field name the report itself uses. Shape keys come from the vocabulary.
-	const REPORT_KEYS = new Set(
-		(
-			"format collectorVersion note browser host lang pathPattern filter filterChanged filterEvidence all filtered none domAll domFiltered elapsedSeconds stop " +
-			"profileGuard profileMarkersInState profileMarkerLate completeness partialReasons unknownReasons counts fileItems structuredUnique visibleUnique inBoth " +
-			"visibleOnly structuredOnly visibleUnresolved visibleSightings structuredSightings quarantined titleDisagreements typeDisagreements typeFromCards " +
-			"sameTitleDistinctIds liveExcluded withGti withDetailToken withoutDetailLink tokenAsinLike movies shows seasons seasonsWithParent unknownType withYear " +
-			"rejectedCardSightings pagination chains pages origin chain path count terminal link totalItems nextIndex paginationKeys atSeconds reportedTotals " +
-			"distinctCursors cursorRepeats duplicatePages responses status parsed tooLarge collections watchlist shape responseMessages droppedMessages " +
-			"otherCollections classification objects overlapWithVisible primaryGroupChosenBy primaryReplacements cardGroups index tag role labeled cards overlap " +
-			"primary confirmed cardAttributes otherDataAttributes scripts parsed template json bytes"
-		).split(" "),
-	);
 
 	function report(gate) {
 		const list = [...s.entries.values()];
@@ -631,18 +511,20 @@
 		const titles = new Map();
 		for (const i of fileItems) titles.set(X.normTitle(i.title).toLowerCase(), (titles.get(X.normTitle(i.title).toLowerCase()) || 0) + 1);
 		const domTokens = new Set(s.domKeys);
-		const host = s.origin.replace(/^https:\/\//, "");
 		return sanitize({
 			format: "goodwatch-prime-capture-report",
 			collectorVersion: VERSION,
 			note: "Counts, fixed codes and report-vocabulary words only. No titles, IDs, cursors or profile values.",
 			browser: (navigator.userAgent.match(/(Chrome|Edg|Firefox)\/(\d+)/) || []).slice(1).join(" ") || "other",
-			host,
+			host: s.origin.replace(/^https:\/\//, ""),
 			lang: s.lang || "none",
 			pathPattern: s.pathPattern,
 			filter: s.filter,
 			filterChanged: s.filterChanged,
-			filterEvidence: { ...s.filterEvidence },
+			stateChanged: Boolean(s.stateChanged),
+			watchlistFilters: gate.filters,
+			domFilteredControls: s.domFiltered,
+			responsesRead: 0,
 			elapsedSeconds: Math.round(((s.stoppedAt || Date.now()) - s.started) / 1000),
 			stop: REASONS.has(s.code) || FIXED.has(s.code) ? s.code : "other",
 			profileGuard: s.markerSource,
@@ -658,7 +540,6 @@
 				inBoth: [...s.domKeys].filter((k) => s.structuredKeys.has(k)).length,
 				visibleOnly: gate.domOnly,
 				structuredOnly: gate.structuredOnly,
-				visibleUnresolved: list.filter((e) => s.domKeys.has(e.key) && !member(e)).length,
 				visibleSightings: s.domSightings,
 				structuredSightings: s.structuredSightings,
 				quarantined: s.quarantined.size,
@@ -681,32 +562,18 @@
 			},
 			pagination: {
 				chains: new Set(s.pages.map((p) => p.chain)).size,
-				pages: s.pages.map((p) => ({
-					origin: p.origin,
-					chain: p.chain,
-					path: p.path,
-					count: p.count,
-					terminal: p.terminal,
-					link: p.link || "none",
-					totalItems: p.totalItems,
-					nextIndex: p.nextIndex,
-					paginationKeys: p.paginationKeys,
-					atSeconds: Math.round(p.at / 1000),
-				})),
+				pages: s.pages.map((p) => ({ chain: p.chain, path: p.path, count: p.count, terminal: p.terminal, totalItems: p.totalItems, nextIndex: p.nextIndex, paginationKeys: p.paginationKeys, atSeconds: Math.round(p.at / 1000) })),
 				reportedTotals: gate.totals,
 				distinctCursors: s.cursors.size,
 				cursorRepeats: s.cursorRepeats,
 				duplicatePages: s.duplicatePages,
 			},
-			responses: s.responses,
-			responseMessages: Math.min(s.messages, MAX_MESSAGES),
-			droppedMessages: s.droppedMessages,
 			otherCollections: s.otherCollections.map(({ tokens, ...c }) => ({ ...c, overlapWithVisible: [...tokens].filter((t) => domTokens.has(t)).length })),
 			primaryGroupChosenBy: s.primaryBy || "none",
-			primaryReplacements: s.primaryReplacements,
+			primaryReplacements: s.primaryReplacements || 0,
 			cardGroups: [...s.groups]
 				.slice(0, 30)
-				.map(([id, g], index) => ({ index, tag: g.tag, role: g.role, labeled: g.labeled, cards: g.tokens.size, overlap: overlapOf(g.tokens), primary: id === s.primary, confirmed: s.confirmedGroups.has(id) })),
+				.map(([id, g], index) => ({ index, tag: g.tag, role: g.role, labeled: g.labeled, cards: g.tokens.size, overlap: overlapOf(g.tokens), primary: id === s.primary })),
 			cardAttributes: [...s.cardAttributes].sort(),
 			otherDataAttributes: s.otherDataAttributes,
 			scripts: { ...s.scripts, bytes: Math.round(s.scripts.bytes / 1024) },
@@ -724,18 +591,10 @@
 			code: s.code,
 			version: VERSION,
 			profileGuard: s.markerSource,
-			counts: {
-				items: fileItems.length,
-				structured: s.structuredKeys.size,
-				visible: s.domKeys.size,
-				inBoth: [...s.domKeys].filter((k) => s.structuredKeys.has(k)).length,
-				pages: s.pages.length,
-			},
+			counts: { items: fileItems.length, structured: s.structuredKeys.size, visible: s.domKeys.size, inBoth: [...s.domKeys].filter((k) => s.structuredKeys.has(k)).length, pages: s.pages.length },
 			completeness: gate.completeness,
 			reasons: [...gate.partial, ...gate.unknown],
-			...(keep
-				? { envelope: { format: "goodwatch-wishlist", version: 1, source: "prime-video", exportedAt: new Date().toISOString(), completeness: gate.completeness, items: fileItems } }
-				: {}),
+			...(keep ? { envelope: { format: "goodwatch-wishlist", version: 1, source: "prime-video", exportedAt: new Date().toISOString(), completeness: gate.completeness, items: fileItems } } : {}),
 			...(withReport && s.state !== "idle" && s.state !== "cancelled" ? { report: report(gate) } : {}),
 		};
 	}
@@ -745,31 +604,31 @@
 		if (!["start", "status", "stop", "cancel"].includes(action)) return { ...result(false), code: "invalid_command" };
 		if (action === "start") {
 			if (s.state === "capturing") {
-				// Start re-injects observer.js, which adopts the new code.
-				if (typeof command.nonce === "string") s.nonce = command.nonce;
 				safeScan();
 				return result(false);
 			}
 			disconnect();
 			s = fresh();
+			// Validate before installing anything.
 			if (!isWatchlist()) return { ...result(false), code: "wrong_page" };
-			s.nonce = typeof command.nonce === "string" ? command.nonce : null;
 			s.origin = location.origin;
 			s.lang = (document.documentElement.getAttribute("lang") || "").slice(0, 20);
 			s.filter = filterKey();
 			s.pathPattern = X.redactPath(location.pathname);
 			s.started = Date.now();
-			readScripts();
+			readScripts(true);
 			s.domMarker = domMarker();
 			s.markerSource = s.marker && !s.profileAmbiguous ? (s.domMarker ? "state+dom" : "state") : s.domMarker ? "dom" : "none";
 			s.state = "capturing";
 			s.code = "capturing";
-			if (s.nonce) {
-				s.listener = onMessage;
-				window.addEventListener("message", s.listener);
-			}
-			// Mutations come in bursts while the grid renders; scan at most every 100 ms.
-			s.observer = new MutationObserver(() => {
+			// Mutations come in bursts while the grid renders; scan at most every
+			// 100 ms. A change inside a state script marks it for re-reading.
+			s.observer = new MutationObserver((records) => {
+				for (const r of records) {
+					const node = r.target.nodeType === 1 ? r.target : r.target.parentElement;
+					const script = node?.closest?.(SCRIPTS);
+					if (script) s.dirty.add(script);
+				}
 				if (s.pending) return;
 				s.pending = setTimeout(() => {
 					s.pending = null;
@@ -779,8 +638,9 @@
 			s.observer.observe(document.documentElement, {
 				childList: true,
 				subtree: true,
+				characterData: true,
 				attributes: true,
-				attributeFilter: ["href", "aria-label", "data-card-title", "alt", "aria-selected", "aria-pressed", "aria-checked", "aria-current"],
+				attributeFilter: ["href", "aria-label", "data-card-title", "alt", "aria-selected", "aria-pressed", "aria-checked", "aria-current", "selected"],
 			});
 			s.interval = setInterval(safeScan, 500);
 			safeScan();
@@ -793,7 +653,8 @@
 			s.code = "cancelled";
 			return result(false);
 		}
-		safeScan();
+		// Stop re-reads every script in full, in case a change was missed.
+		safeScan(action === "stop");
 		if (action === "stop" && s.state === "capturing") {
 			disconnect();
 			s.state = "stopped";

@@ -6,7 +6,8 @@
 // Two reference modes (private, never in Git):
 //
 // Full membership: every Watchlist entry, each with a detail link, or a title
-// and year. This is the only mode that can establish exact membership.
+// and year. This is the only mode that can establish exact membership. Any
+// entry with neither a year nor a link withholds the exact verdict.
 //   { "members": [ { "title": "…", "year": 2001 }, { "link": "https://…/detail/…" } ] }
 //
 // Sampled evidence: counts, a sample of entries and some non-members. It can't
@@ -87,7 +88,11 @@ if (Array.isArray(ref.members)) {
     duplicateSourceIds,
     referenceWithoutYearOrLink: members.filter((m) => !m.token && m.year === undefined).length,
     recall: members.length ? matched / members.length : null,
-    exactMembership: matched === members.length && extras.length === 0 && ambiguous === 0 && duplicateSourceIds === 0,
+    // A title alone can match the wrong same-name entry, so any entry without
+    // a year or link withholds the exact verdict.
+    exactMembership: members.some((m) => !m.token && m.year === undefined)
+      ? 'withheld'
+      : matched === members.length && extras.length === 0 && ambiguous === 0 && duplicateSourceIds === 0,
   }
   privateLines.push(['Missing or ambiguous reference entries:', missed.map((m) => m.title || m.link)], ['Captured entries not in the reference:', extras.map((c) => `${c.title} (${c.year ?? '?'})`)])
 } else {
