@@ -18,6 +18,7 @@ import type { PreviewUpdate } from "./SourceImportPreviewModel"
 import {
 	TVTIME_COPY,
 	tvtimeMatchIntro,
+	tvtimeMatchedLine,
 	tvtimeRowsLeft,
 } from "./TvTimeMatchCopy"
 import type { MatchDraft, MatchTitle } from "./WishlistMatchPanel"
@@ -164,7 +165,6 @@ export function TvTimeLookupNotices({
 				<div className={`${infoBox} flex flex-col gap-1`}>
 					<p className="font-semibold">{TVTIME_COPY.lookupLimit}</p>
 					<p>{tvtimeRowsLeft(limit)}</p>
-					{matchable && <p>{TVTIME_COPY.rerunBeforeMatching}</p>}
 				</div>
 			)}
 			{outage > 0 && (
@@ -172,6 +172,12 @@ export function TvTimeLookupNotices({
 					<p className="font-semibold">{TVTIME_COPY.lookupUnavailable}</p>
 					<p>{tvtimeRowsLeft(outage)}</p>
 				</div>
+			)}
+			{/* Either rerun reads the file afresh, so the member's matches don't carry over. */}
+			{matchable && (
+				<p className="text-sm text-gray-300">
+					{TVTIME_COPY.rerunBeforeMatching}
+				</p>
 			)}
 			{again}
 			<div aria-live="assertive">
@@ -202,10 +208,12 @@ export function TvTimeMatchSection({
 				<h4 className="font-semibold text-gray-100">
 					{TVTIME_COPY.matchHeading}{" "}
 					<span className="font-normal text-gray-400">
-						{formatCount(count)}
+						{tvtimeMatchedLine(count, summary.wishlistUnresolvedMatchCount)}
 					</span>
 				</h4>
-				<p className="text-gray-300">{tvtimeMatchIntro(count)}</p>
+				<p className="text-gray-300">
+					{tvtimeMatchIntro(count, summary.wishlistUnresolvedMatchCount)}
+				</p>
 			</div>
 			<button
 				type="button"

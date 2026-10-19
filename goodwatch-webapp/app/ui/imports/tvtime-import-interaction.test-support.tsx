@@ -186,6 +186,7 @@ globalThis.fetch = (async (input: string, init?: RequestInit) => {
 	if (parsed.pathname.endsWith("/resolve")) {
 		const child = summary(CHILD, {
 			counts: { ...summary(CHILD).counts, new: 5, unmatched: 2 },
+			wishlistUnresolvedMatchCount: 0,
 		})
 		known.set(CHILD, child)
 		return respond(200, { import: child, parentImportId: PARENT })
@@ -391,6 +392,14 @@ const results: Record<string, unknown> = {}
 		}),
 	})
 	results.outage = { text: view.text(), buttons: view.buttons() }
+	await view.unmount()
+}
+
+{
+	const view = await flow({
+		start: summary(PARENT, { tvtimeLookupUnavailableCount: 2 }),
+	})
+	results.outageWithMatches = { text: view.text(), buttons: view.buttons() }
 	await view.unmount()
 }
 

@@ -323,6 +323,8 @@ test("a member matches an official title-only movie into a new preview and its w
 	)
 	assert.equal(parent.counts.unmatched, 1)
 	assert.equal(parent.wishlistMatchCount, 1)
+	// The count still to match lets the page say how many of them the member matched.
+	assert.equal(parent.wishlistUnresolvedMatchCount, 1)
 	const groups = await getWishlistMatchingGroups("member", parent.id)
 	assert.equal(groups.groups.length, 1)
 	assert.equal(groups.groups[0].item.wishlistOriginal?.title, "Localized movie")
@@ -334,6 +336,8 @@ test("a member matches an official title-only movie into a new preview and its w
 	assert.notEqual(derived.import.id, parent.id)
 	assert.equal(derived.parentImportId, parent.id)
 	assert.equal(derived.import.counts.new, 1)
+	assert.equal(derived.import.wishlistMatchCount, 1)
+	assert.equal(derived.import.wishlistUnresolvedMatchCount, 0)
 	const child = (
 		await getImportItems("member", derived.import.id, undefined, 0, 50)
 	).items[0]

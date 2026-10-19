@@ -106,6 +106,7 @@ export function summarize(row: ImportRow): ImportSummary {
 	>(row.options, null)
 	const {
 		_wishlistMatchCount,
+		_wishlistUnresolvedMatchCount,
 		_wishlistShowChoiceCount,
 		_wishlistRewatchChoiceCount,
 		_tvtimeLookupLimitCount,
@@ -153,6 +154,13 @@ export function summarize(row: ImportRow): ImportSummary {
 		...(row.source === "wishlist" || row.source === "tvtime"
 			? {
 					wishlistMatchCount: Number(_wishlistMatchCount ?? 0),
+					...(_wishlistUnresolvedMatchCount !== undefined
+						? {
+								wishlistUnresolvedMatchCount: Number(
+									_wishlistUnresolvedMatchCount,
+								),
+							}
+						: {}),
 					wishlistShowChoiceCount: Number(_wishlistShowChoiceCount ?? 0),
 					...(_wishlistRewatchChoiceCount !== undefined
 						? {

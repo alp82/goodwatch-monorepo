@@ -549,6 +549,8 @@ export interface ImportSummary {
 	stalled: boolean
 	/** Manually matchable source groups (unknown type or conflicting IDs), including resolved groups. */
 	wishlistMatchCount?: number
+	/** Of those groups, the ones without a member's match yet. Absent on previews made before it was counted. */
+	wishlistUnresolvedMatchCount?: number
 	wishlistShowChoiceCount?: number
 	wishlistRewatchChoiceCount?: number
 	/** TV Time rows left unmatched because this preview reached its lookup limit; a rerun can match more. */

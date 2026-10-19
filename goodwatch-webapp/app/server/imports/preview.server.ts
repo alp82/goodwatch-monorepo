@@ -860,6 +860,20 @@ export async function createParsedPreview(
 	}
 	for (const item of items) if (item.kind !== "unsupported") kinds[item.kind]++
 	const now = new Date()
+	// Manually matchable source groups, and those that already carry a member's match.
+	const matchGroups = { all: new Set<string>(), resolved: new Set<string>() }
+	parsed.observations.forEach((row, index) => {
+		if (
+			!isManuallyMatchableWishlistSource(
+				row.wishlistOriginal,
+				row.wishlistMatchRequired,
+			)
+		)
+			return
+		const group = wishlistSourceGroup(row.wishlistOriginal, index)
+		matchGroups.all.add(group)
+		if (row.wishlistResolution) matchGroups.resolved.add(group)
+	})
 
 	try {
 		await insertItems(id, userId, items, mode?.guard)
@@ -889,16 +903,11 @@ export async function createParsedPreview(
 									(item) =>
 										item.outcome === "conflict" && item.wishlistRewatchChoice,
 								).length,
-								_wishlistMatchCount: new Set(
-									parsed.observations.flatMap((row, index) =>
-										isManuallyMatchableWishlistSource(
-											row.wishlistOriginal,
-											row.wishlistMatchRequired,
-										)
-											? [wishlistSourceGroup(row.wishlistOriginal, index)]
-											: [],
-									),
-								).size,
+								_wishlistMatchCount: matchGroups.all.size,
+								// Groups the member hasn't matched yet, so the page can say "2 of 3 matched".
+								_wishlistUnresolvedMatchCount: [...matchGroups.all].filter(
+									(group) => !matchGroups.resolved.has(group),
+								).length,
 							}
 						: {}),
 					...(source === "tvtime"

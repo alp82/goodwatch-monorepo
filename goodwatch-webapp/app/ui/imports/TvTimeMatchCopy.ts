@@ -55,11 +55,29 @@ export function tvtimeReleaseDate(value: string | null | undefined) {
 	return Number.isNaN(date.getTime()) ? null : DAY.format(date)
 }
 
-/** The match section's introduction, for one movie or many. */
-export function tvtimeMatchIntro(count: number) {
+/**
+ * The match section's introduction, for one movie or many. `unresolved` is how many the member hasn't matched yet;
+ * a preview from before that was counted leaves it out, and reads as nothing matched.
+ */
+export function tvtimeMatchIntro(count: number, unresolved = count) {
+	const matched = count - unresolved
+	if (matched > 0 && unresolved === 0)
+		return count === 1
+			? "You matched the movie. Change the match if it's wrong."
+			: `You matched all ${formatCount(count)} movies. Change a match if one is wrong.`
+	if (matched > 0)
+		return `You matched ${formatCount(matched)} of ${formatCount(count)} movies. TV Time's export has no catalog ID for the other ${formatCount(unresolved)}, so ${unresolved === 1 ? "it isn't added until you match it" : "they aren't added until you match them"}.`
 	return count === 1
 		? "TV Time's export names this movie but has no catalog ID for it, so GoodWatch didn't add it on its own. Choose the GoodWatch movie it is. A movie you don't match isn't added."
 		: `TV Time's export names these ${formatCount(count)} movies but has no catalog ID for them, so GoodWatch didn't add them on its own. Choose the GoodWatch movie for each one. Movies you don't match aren't added.`
+}
+
+/** The count beside the section heading: "2 of 3 matched", or the number of movies before any is matched. */
+export function tvtimeMatchedLine(count: number, unresolved = count) {
+	const matched = count - unresolved
+	return matched > 0
+		? `${formatCount(matched)} of ${formatCount(count)} matched`
+		: formatCount(count)
 }
 
 export const TVTIME_COPY = {

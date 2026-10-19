@@ -635,7 +635,7 @@ test("TV Time ZIP failures distinguish password detection from a generic unreada
 		{
 			code: "tvtime_zip_encrypted",
 			message:
-				"This TV Time ZIP is password-protected. Extract it locally, then upload its tracking CSV files.",
+				"This TV Time ZIP is password-protected. Open it on your computer with its password, then upload its CSV files in a new ZIP without a password, or upload tracking-prod-records-v2.csv by itself.",
 		},
 	)
 	await assert.rejects(

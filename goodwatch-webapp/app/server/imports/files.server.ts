@@ -716,7 +716,7 @@ export async function parseImportFile(
 			if (error instanceof ImportFileError) {
 				if (/password-protected|encrypted/i.test(error.message))
 					fail(
-						"This TV Time ZIP is password-protected. Extract it locally, then upload its tracking CSV files.",
+						"This TV Time ZIP is password-protected. Open it on your computer with its password, then upload its CSV files in a new ZIP without a password, or upload tracking-prod-records-v2.csv by itself.",
 						"tvtime_zip_encrypted",
 					)
 				if (!error.code && isZip)

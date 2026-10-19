@@ -92,6 +92,11 @@ test("the child preview replaces the parent, so only the child can be imported",
 		runs.child.text,
 		/Updated with your matches\. This preview replaces the earlier one, and the counts include your matches\./,
 	)
+	assert.match(runs.child.text, /Movies to match 1 of 1 matched/)
+	assert.match(
+		runs.child.text,
+		/You matched the movie\. Change the match if it's wrong\./,
+	)
 	assert.equal(
 		runs.child.buttons.filter((name) => name === "Start import").length,
 		1,
@@ -148,4 +153,14 @@ test("a lookup outage reads as an outage, not as the lookup limit", () => {
 	)
 	assert.doesNotMatch(text, /lookup limit/)
 	assert.doesNotMatch(text, /Movies to match/)
+})
+
+test("an outage rerun warns about matches too, since a new run starts without them", () => {
+	const { text } = runs.outageWithMatches
+	assert.match(text, /TMDB's TVDB lookup is unavailable/)
+	assert.match(
+		text,
+		/Run it again before you match movies: a new run starts without your matches\./,
+	)
+	assert.doesNotMatch(text, /lookup limit/)
 })

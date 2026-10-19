@@ -8,6 +8,7 @@ const {
 	tvtimeReleaseDate,
 	tvtimeMatchIntro,
 	tvtimeRowsLeft,
+	tvtimeMatchedLine,
 } = await import("./TvTimeMatchCopy.ts")
 
 test("an entry names what TV Time has for the movie: watches, For later, a rating", () => {
@@ -74,4 +75,24 @@ test("the match section explains one movie or many, and that a watch wins over F
 test("the lookup boxes count the rows a rerun can still match", () => {
 	assert.equal(tvtimeRowsLeft(1), "1 row isn't matched yet.")
 	assert.equal(tvtimeRowsLeft(2400), "2,400 rows aren't matched yet.")
+})
+
+test("once movies are matched, the section says how many of them, and that the rest aren't added", () => {
+	assert.equal(
+		tvtimeMatchIntro(3, 1),
+		"You matched 2 of 3 movies. TV Time's export has no catalog ID for the other 1, so it isn't added until you match it.",
+	)
+	assert.equal(
+		tvtimeMatchIntro(3, 0),
+		"You matched all 3 movies. Change a match if one is wrong.",
+	)
+	assert.equal(
+		tvtimeMatchIntro(1, 0),
+		"You matched the movie. Change the match if it's wrong.",
+	)
+	// A preview from before the count counts every movie as unmatched.
+	assert.equal(tvtimeMatchIntro(3, undefined), tvtimeMatchIntro(3))
+	assert.equal(tvtimeMatchedLine(3, 1), "2 of 3 matched")
+	assert.equal(tvtimeMatchedLine(3, 3), "3")
+	assert.equal(tvtimeMatchedLine(3, undefined), "3")
 })

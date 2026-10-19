@@ -72,7 +72,7 @@ The following strings are produced by the new backend. Codes live on `ImportFile
 | `tvtime_columns_duplicate` | The TV Time CSV has duplicate columns. |
 | `tvtime_variant_unsupported` | This older TV Time or Data Extractor layout is not supported. Use a Trakt export if you moved your history there. |
 | `tvtime_format_unknown` | The TV Time export columns are not recognized. |
-| `tvtime_zip_encrypted` | This TV Time ZIP is password-protected. Extract it locally, then upload its tracking CSV files. |
+| `tvtime_zip_encrypted` | This TV Time ZIP is password-protected. Open it on your computer with its password, then upload its CSV files in a new ZIP without a password, or upload tracking-prod-records-v2.csv by itself. |
 | `tvtime_row_invalid` | This TV Time row is missing an identity, title or valid watched flag. |
 | `tvtime_episode_identity_missing` | This TV Time episode has no TVDB episode ID. TVDB season and episode numbers alone cannot identify a TMDB episode. |
 | `tvtime_status_unknown` | This TV Time show status is unknown and was not applied. |
@@ -264,3 +264,15 @@ Fable reviewed `02afb203` and accepted the trust/ambiguity model and reproduced 
 The public service regression uses more than 800 episode IDs, repeats an ambiguous episode on both sides of the input boundary, and reads a show with that same numeric TVDB ID in a later catalog batch. Both ambiguous observations stay held with their specific identity explanation, the separate show matches, and no TMDB call occurs. Further coverage checks the combined sentinel and an individually truncated later batch. The existing 2,100-episode retry test now uses three catalog reads per preview and still resolves only the remaining 100 episodes on retry.
 
 Validation: imports server **337 passed**, legacy IMDb **12 passed**, imports UI **100 passed**, tracking **263 passed** with one existing TODO; zero failures. Typecheck remains **185 diagnostics**, with zero normalized additions/removals against main's 185. The synthetic 5,000-episode request-cap probe remains **2,000 then 4,000** matches, with limit codes on all remaining rows. Biome and `git diff --check` pass. No flows code, dependency locks, workspace hashes, UI components or member-facing strings changed in this correction. The private export folder remains empty; production schema, Windmill runtime/relocking and live catalog behavior were not exercised.
+
+## Imports page (#629 frontend)
+
+The Imports page exposes TV Time as its own source. Three preview summary fields support it:
+
+| Field | Meaning |
+| --- | --- |
+| `tvtimeLookupLimitCount` | TV Time rows unmatched with `tvtime_lookup_budget_exhausted`. The preview offers to run the same file again. |
+| `tvtimeLookupUnavailableCount` | TV Time rows unmatched with `tvtime_lookup_unavailable`. Shown as an outage, with the same rerun. |
+| `wishlistUnresolvedMatchCount` | Manually matchable groups without a member's match yet, for wishlist and TV Time previews. Absent on previews made before it was counted, which read as nothing matched. |
+
+`tvtime_zip_encrypted` now says: **This TV Time ZIP is password-protected. Open it on your computer with its password, then upload its CSV files in a new ZIP without a password, or upload tracking-prod-records-v2.csv by itself.** It matches the page's upload steps.
