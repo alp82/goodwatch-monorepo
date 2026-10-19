@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GoodWatch capture diagnostic</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <main>
+    <h1>GoodWatch capture diagnostic</h1>
+    <p class="tag">Experiment for ticket #730. Writes no file. The report holds counts and codes only.</p>
+    <p id="state" class="state" role="status" aria-live="polite">Checking this tab…</p>
+    <p id="progress" class="progress" hidden></p>
+    <div class="actions">
+      <button type="button" id="start" class="primary" hidden>Start diagnostic</button>
+      <button type="button" id="finish" class="primary" hidden>Finish and show report</button>
+      <button type="button" id="stop" hidden>Stop clicking</button>
+      <button type="button" id="cancel" hidden>Cancel</button>
+      <button type="button" id="copy" hidden>Copy report</button>
+    </div>
+    <pre id="report" class="report" hidden></pre>
+  </main>
+  <script src="popup.js"></script>
+</body>
+</html>
