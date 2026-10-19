@@ -821,3 +821,82 @@ test("a fresh negative TVDB response defeats a stored cache hit", async () => {
 		reason: "TVDB episode ID did not match uniquely within this show.",
 	})
 })
+
+test("reviewed display seasons never replace canonical import identities or imply TMDB numbering", async () => {
+	const { readFileSync } = await import("node:fs")
+	const { episodeMapping } = await import(
+		"../../domain/tracking/episode-mappings.server.ts"
+	)
+	const audited = JSON.parse(
+		readFileSync(
+			new URL(
+				"../../domain/tracking/fixtures/episode-alignment.json",
+				import.meta.url,
+			),
+			"utf8",
+		),
+	)
+	for (const showId of [154526, 70523, 220542]) {
+		const mapping = episodeMapping(showId)!
+		const fixture =
+			showId === 154526
+				? audited.find(
+						(f: { mapping: { showId: number } }) => f.mapping.showId === showId,
+					)
+				: JSON.parse(
+						readFileSync(
+							new URL(
+								`../../domain/tracking/fixtures/${showId === 70523 ? "dark" : "apothecary"}-episodes.json`,
+								import.meta.url,
+							),
+							"utf8",
+						),
+					)
+		const episodes = fixture.catalog.map((e: Record<string, unknown>) => ({
+			tmdb_id: Number(e.tmdb_id ?? e.id),
+			show_id: showId,
+			season_number: Number(e.season_number ?? e.season),
+			episode_number: Number(e.episode_number ?? e.number),
+			name: String(e.name),
+			tvdb_id: null,
+		}))
+		const resolve = resolver({ episodes: async () => episodes })
+		for (const entry of mapping.entries) {
+			const canonical = {
+				status: "matched",
+				episodeTmdbId: entry.id,
+				season: entry.canonical[0],
+				episode: entry.canonical[1],
+				special: false,
+			}
+			assert.deepEqual(
+				await resolve({
+					showId,
+					episodeTmdbId: entry.id,
+					season: entry.display[0],
+					episode: entry.display[1],
+				}),
+				canonical,
+			)
+			assert.deepEqual(
+				await resolve({
+					showId,
+					numbering: "tmdb",
+					season: entry.canonical[0],
+					episode: entry.canonical[1],
+				}),
+				canonical,
+			)
+			assert.equal(
+				(
+					await resolve({
+						showId,
+						season: entry.display[0],
+						episode: entry.display[1],
+					})
+				).status,
+				"unmatched",
+			)
+		}
+	}
+})

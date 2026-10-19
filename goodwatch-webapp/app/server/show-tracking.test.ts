@@ -1336,3 +1336,394 @@ test("The Apothecary Diaries keeps 51 ratings in three seasons in the tracking g
 	assert.equal(marked.rows.length, 24)
 	assert.ok(marked.rows.every((r) => r.season_number === 1 && r.episode_number! >= 25 && r.episode_number! <= 48))
 })
+
+/** Use the real captured catalogs to protect persisted member rows across every enabled mapping. */
+function seedReviewedShow(showId: number) {
+	if (showId === 154526) {
+		seedAligned()
+	} else {
+		const name = showId === 70523 ? "dark" : "apothecary"
+		const fixture = JSON.parse(
+			readFileSync(
+				new URL(
+					`../domain/tracking/fixtures/${name}-episodes.json`,
+					import.meta.url,
+				),
+				"utf8",
+			),
+		)
+		db.seed("show", [{ tmdb_id: showId, status: "Returning Series" }])
+		db.seed(
+			"episode",
+			fixture.catalog.map((e: Row) => ({
+				...episode(
+					Number(e.tmdb_id),
+					Number(e.season_number),
+					Number(e.episode_number),
+					String(e.name),
+					LONG_AGO,
+				),
+				...e,
+				show_id: showId,
+			})),
+		)
+		db.seed(
+			"imdb_episode",
+			fixture.imdb.map((e: Row) => ({
+				...e,
+				show_id: showId,
+				imdb_show_id: e.imdb_show_id ?? "tt5753856",
+				imdb_user_score_original: e.score,
+				imdb_user_score_rating_count: e.votes,
+			})),
+		)
+	}
+}
+
+for (const [showId, name, rated] of [
+	[154526, "MF GHOST", 37],
+	[70523, "Dark", 26],
+	[220542, "The Apothecary Diaries", 51],
+] as const) {
+	for (const state of ["on_hold", "seen"] as const) {
+		test(`${name}: shared presentation preserves existing ${state} history, rewatch passes, imports and personal score`, async () => {
+			seedReviewedShow(showId)
+			const { episodeMapping } = await import(
+				"../domain/tracking/episode-mappings.server.ts"
+			)
+			const mapping = episodeMapping(showId)!
+			const first = mapping.entries[0]
+			const secondSeason = mapping.entries.find((e) => e.display[0] === 2)!
+			const title = { user_id: user, media_type: "show", tmdb_id: showId }
+			const watch = (
+				entry: typeof first,
+				pass: number,
+				id: string,
+				origin: string,
+			) => ({
+				...title,
+				watch_id: id,
+				episode_tmdb_id: entry.id,
+				season_number: entry.canonical[0],
+				episode_number: entry.canonical[1],
+				pass,
+				origin,
+				import_id: origin === "import" ? "previous-import" : null,
+				group_id: origin === "seen" ? "previous-seen-press" : null,
+				watched_at: origin === "import" ? null : LONG_AGO,
+				watched_at_precision: origin === "import" ? "unknown" : "day",
+				created_at: LONG_AGO,
+				updated_at: LONG_AGO,
+			})
+			db.seed("user_watch_log", [
+				watch(first, 1, "earlier-pass", "import"),
+				watch(first, 2, "current-import", "import"),
+				watch(
+					secondSeason,
+					2,
+					"current-watch",
+					state === "seen" ? "seen" : "single",
+				),
+			])
+			db.seed("user_watch_state", [
+				{
+					...title,
+					state,
+					pass: 2,
+					state_changed_at: LONG_AGO,
+					seen_press_group: state === "seen" ? "previous-seen-press" : null,
+					seen_press_from: state === "seen" ? "watching" : null,
+					rate_prompt_dismissed_at: LONG_AGO,
+					seen_question: "answered",
+					created_at: LONG_AGO,
+					updated_at: LONG_AGO,
+				},
+			])
+			db.seed("user_score", [
+				{
+					...title,
+					score: 9,
+					review: "Existing review",
+					created_at: LONG_AGO,
+					updated_at: LONG_AGO,
+				},
+			])
+			const protectedTables = [
+				"user_watch_log",
+				"user_watch_state",
+				"user_score",
+			]
+			const before = protectedTables.map((table) =>
+				structuredClone(db.table(table)),
+			)
+			const start = db.statements.length
+			const page = await getShowTrackingPage(user, showId)
+			const { getEpisodeGrid } = await import("./episode-grid.server.ts")
+			const guest = await getEpisodeGrid({ showId: String(showId) })
+			assert.ok(guest)
+			assert.equal(guest.presentationVersion, page.presentation?.version)
+			assert.equal(page.episodes.filter((e) => e.rating !== null).length, rated)
+			assert.deepEqual(
+				protectedTables.map((table) => db.table(table)),
+				before,
+			)
+			assert.ok(
+				db.statements
+					.slice(start)
+					.every((s) => !/^(INSERT|UPDATE|DELETE)/i.test(s.sql.trim())),
+			)
+			assert.equal(page.log.length, 3)
+			assert.equal(page.state?.pass, 2)
+			assert.equal(page.state?.state, state)
+			for (const season of guest.seasons) {
+				for (const tile of season.episodes) {
+					const episode = page.episodes.find((e) => e.id === tile.tmdbId)!
+					assert.equal(episode.displaySeason, season.number)
+					assert.equal(episode.displayNumber, tile.number)
+					assert.equal(episode.rating, tile.unrated ? null : tile.score)
+				}
+			}
+			const { viewOf } = await import("../domain/tracking/show-page.ts")
+			const context = { today: "2026-10-19", running: page.running, score: 9 }
+			const view = viewOf(page, page.episodes, context)
+			const canonical = page.episodes.map(
+				({ displaySeason, displayNumber, ...episode }) => episode,
+			)
+			const oldView = viewOf(page, canonical, context)
+			assert.deepEqual(view.watched, oldView.watched)
+			assert.deepEqual(view.watched, new Set([first.id, secondSeason.id]))
+			assert.equal(view.watchesOf.get(first.id)?.length, 2)
+			const canonicalProgress = (derived: typeof view.derived) => ({
+				...derived,
+				next: derived.next && {
+					id: derived.next.id,
+					season: derived.next.season,
+					number: derived.next.number,
+					aired: derived.next.aired,
+				},
+			})
+			assert.deepEqual(
+				canonicalProgress(view.derived),
+				canonicalProgress(oldView.derived),
+			)
+		})
+	}
+}
+
+for (const showId of [154526, 70523, 220542]) {
+	test(`reviewed show ${showId}: season Mark, retry, Undo, Unmark and restore preserve earlier rewatch passes`, async () => {
+		seedReviewedShow(showId)
+		const send = async (event: unknown, actionId?: string) => {
+			const action = parseShowAction({ id: showId, event, actionId })
+			assert.ok(action)
+			return applyShowTrackingAction(user, action)
+		}
+		assert.equal(
+			(
+				await send(
+					{ type: "pressSeen", today: iso(midnight(0)) },
+					"first-pass-seen",
+				)
+			).status,
+			"applied",
+		)
+		assert.equal((await send({ type: "watchAgain" })).status, "applied")
+		let page = await getShowTrackingPage(user, showId)
+		assert.equal(page.state?.pass, 2)
+		const first = page.episodes.find((e) => e.season > 0)!
+		assert.equal(
+			(
+				await send(
+					{ type: "watch", season: first.season, number: first.number },
+					"second-pass-first",
+				)
+			).status,
+			"applied",
+		)
+		const previousPass = structuredClone(
+			db.table("user_watch_log").filter((r) => r.pass === 1),
+		)
+		assert.ok(previousPass.length)
+		const score = {
+			user_id: user,
+			media_type: "show",
+			tmdb_id: showId,
+			score: 8,
+			review: "Keep me",
+			created_at: LONG_AGO,
+			updated_at: LONG_AGO,
+		}
+		db.seed("user_score", [score])
+		const scores = structuredClone(db.table("user_score"))
+		const members = page.episodes.filter((e) => e.displaySeason === 2)
+		const event = {
+			type: "markEpisodes",
+			displaySeason: 2,
+			episodeIds: members.map((e) => e.id),
+			presentationVersion: page.presentation!.version,
+			today: iso(midnight(0)),
+		}
+		const marked = await send(event, "rewatch-season-two")
+		assert.equal(marked.status, "applied")
+		assert.equal(marked.rows.length, members.length)
+		for (const row of marked.rows) {
+			const canonical = members.find((e) => e.id === row.episode_tmdb_id)!
+			assert.equal(row.pass, 2)
+			assert.equal(row.season_number, canonical.season)
+			assert.equal(row.episode_number, canonical.number)
+		}
+		const afterMark = structuredClone(db.table("user_watch_log"))
+		assert.equal((await send(event, "rewatch-season-two")).status, "applied")
+		assert.deepEqual(db.table("user_watch_log"), afterMark)
+		assert.equal(
+			(await send({ type: "undoGroup", group: "rewatch-season-two" })).status,
+			"applied",
+		)
+		page = await getShowTrackingPage(user, showId)
+		assert.equal(page.log.filter((r) => r.pass === 2).length, 1)
+		assert.deepEqual(
+			db.table("user_watch_log").filter((r) => r.pass === 1),
+			previousPass,
+		)
+		assert.equal(
+			(await send(event, "rewatch-season-two-again")).status,
+			"applied",
+		)
+		const beforeUnmark = await getShowTrackingPage(user, showId)
+		const removed = await send({ ...event, type: "unmarkEpisodes" })
+		assert.equal(removed.status, "applied")
+		assert.equal(removed.deleted.length, members.length)
+		assert.deepEqual(
+			db.table("user_watch_log").filter((r) => r.pass === 1),
+			previousPass,
+		)
+		const restore = seasonRestore(
+			beforeUnmark.state,
+			beforeUnmark.log.filter((r) => removed.deleted.includes(r.watch_id)),
+		)
+		assert.ok(restore)
+		assert.equal((await send(restore)).status, "applied")
+		const restored = await getShowTrackingPage(user, showId)
+		const order = (rows: typeof restored.log) =>
+			[...rows].sort((a, b) => a.watch_id.localeCompare(b.watch_id))
+		assert.deepEqual(order(restored.log), order(beforeUnmark.log))
+		assert.deepEqual(restored.state, beforeUnmark.state)
+		assert.deepEqual(db.table("user_score"), scores)
+		const beforeStale = structuredClone(db.table("user_watch_log"))
+		const refused = await send(
+			{ ...event, presentationVersion: "outdated-presentation" },
+			"new-stale-action",
+		)
+		assert.equal(refused.status, "refused")
+		assert.deepEqual(db.table("user_watch_log"), beforeStale)
+	})
+}
+
+for (const showId of [154526, 70523, 220542]) {
+	test(`reviewed show ${showId}: a replaced catalog ID preserves old watch rows through canonical-position fallback`, async () => {
+		seedReviewedShow(showId)
+		const { episodeMapping } = await import(
+			"../domain/tracking/episode-mappings.server.ts"
+		)
+		const entry = episodeMapping(showId)!.entries[0]
+		const replacement = 99000000 + showId
+		const rows = db.table("episode")
+		const index = rows.findIndex(
+			(e) => e.show_id === showId && e.tmdb_id === entry.id,
+		)
+		assert.ok(index >= 0)
+		rows[index] = { ...rows[index], tmdb_id: replacement }
+		db.refresh("episode")
+		db.seed("user_watch_log", [
+			{
+				user_id: user,
+				media_type: "show",
+				tmdb_id: showId,
+				watch_id: "before-catalog-replacement",
+				episode_tmdb_id: entry.id,
+				season_number: entry.canonical[0],
+				episode_number: entry.canonical[1],
+				pass: 1,
+				origin: "import",
+				import_id: "old-import",
+				group_id: null,
+				watched_at: null,
+				watched_at_precision: "unknown",
+				created_at: LONG_AGO,
+				updated_at: LONG_AGO,
+			},
+		])
+		const before = structuredClone(db.table("user_watch_log"))
+		const page = await getShowTrackingPage(user, showId)
+		assert.equal(page.presentation?.active, false)
+		assert.equal(page.episodes.find((e) => e.id === replacement)?.rating, null)
+		const { viewOf } = await import("../domain/tracking/show-page.ts")
+		const view = viewOf(page, page.episodes, {
+			today: "2026-10-19",
+			running: true,
+			score: null,
+		})
+		assert.deepEqual(view.watched, new Set([replacement]))
+		assert.equal(
+			view.watchesOf.get(replacement)?.[0]?.episode_tmdb_id,
+			entry.id,
+		)
+		assert.deepEqual(db.table("user_watch_log"), before)
+	})
+}
+
+for (const showId of [154526, 70523, 220542]) {
+	test(`reviewed show ${showId}: catalog renumbering disables presentation without rewriting historical watch coordinates`, async () => {
+		seedReviewedShow(showId)
+		const { episodeMapping } = await import(
+			"../domain/tracking/episode-mappings.server.ts"
+		)
+		const entry = episodeMapping(showId)!.entries[0]
+		const catalog = db
+			.table("episode")
+			.find((e) => e.show_id === showId && e.tmdb_id === entry.id)!
+		catalog.episode_number = 999
+		db.refresh("episode")
+		db.seed("user_watch_log", [
+			{
+				user_id: user,
+				media_type: "show",
+				tmdb_id: showId,
+				watch_id: "before-catalog-renumbering",
+				episode_tmdb_id: entry.id,
+				season_number: entry.canonical[0],
+				episode_number: entry.canonical[1],
+				pass: 1,
+				origin: "single",
+				import_id: null,
+				group_id: null,
+				watched_at: LONG_AGO,
+				watched_at_precision: "day",
+				created_at: LONG_AGO,
+				updated_at: LONG_AGO,
+			},
+		])
+		const before = structuredClone(db.table("user_watch_log"))
+		const page = await getShowTrackingPage(user, showId)
+		assert.equal(page.presentation?.active, false)
+		const shifted = page.episodes.find((e) => e.id === entry.id)!
+		assert.equal(shifted.number, 999)
+		assert.equal(shifted.displayNumber, 999)
+		assert.equal(shifted.displaySeason, shifted.season)
+		const { getEpisodeGrid } = await import("./episode-grid.server.ts")
+		const guest = await getEpisodeGrid({ showId: String(showId) })
+		assert.equal(guest?.presentationVersion, page.presentation?.version)
+		const { viewOf } = await import("../domain/tracking/show-page.ts")
+		const view = viewOf(page, page.episodes, {
+			today: "2026-10-19",
+			running: true,
+			score: null,
+		})
+		assert.deepEqual(view.watched, new Set([entry.id]))
+		assert.equal(
+			view.watchesOf.get(entry.id)?.[0]?.episode_number,
+			entry.canonical[1],
+		)
+		assert.deepEqual(db.table("user_watch_log"), before)
+	})
+}
