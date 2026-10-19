@@ -381,7 +381,7 @@ export function parseTvTime(
 				completeness: "unknown",
 			},
 		})
-	// Owner decision pending: keep unwatched movies as wishes; isolate this policy for a later preview choice.
+	// Owner decision Q16 (2026-10-19): unwatched extension movies become Want to See, like For later.
 	const unwatchedMovieIntention = (base: ImportObservation) => want(base)
 	for (const entry of entries) {
 		const format = fileKind(entry.name)

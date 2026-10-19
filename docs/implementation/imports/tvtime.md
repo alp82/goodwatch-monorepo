@@ -40,6 +40,8 @@ The original research is `docs/research/imports/tv-time-exports.md` at `b202e111
 
 Watches and explicit source statuses go through the shipped writer. Imports do not overwrite member Seen, On hold or Dropped decisions. Imported activity does not become recent member activity. Wishes never remove absent titles. Existing show tracking remains authoritative. Seen titles need the existing explicit Want to rewatch choice (`conflictChoice=source`) before a wish is added; default keep leaves them alone. Watches selected in the same import take precedence over that import's wishes. Undo uses the existing journals and member-edit protections.
 
+Owner decision Q16, 2026-10-19: explicitly unwatched extension movies automatically become Want to See intentions, like For later. This confirms the existing behavior; no extra preview choice is required. The existing Confirm step and Seen-title explicit rewatch choice still apply.
+
 ## Matching limits and blocker re-check
 
 #645 covers every status needed here; #621 is no longer a blocker. `up_to_date` has no independent whole-TMDB-show completion evidence and does not set Completed.
@@ -167,7 +169,7 @@ The original commits `ec6e982e` and `4aefef10` are unchanged. Q15 and the review
 - `continuing` and `up_to_date` can explicitly write Watching with zero imported watches, as #645 permits. They never imply whole-show completion.
 - Only Liberator movie scores use the verified 2/4/6/8/10 mapping. Named Liberator JSON files or its distinctive activity CSV shape establish that adapter provenance. Renamed, unidentified JSON and TV Time Out rating fields remain unsupported; episode and show scores remain unsupported. No real file has established another scale.
 - **Cross-source receipt compatibility:** native import preview items now persist their declared `media_type` even when unmatched, where main stored null. This fixes unmatched shows reading back as movies across native sources. It does not establish a match: `tmdbId: null` and the unmatched outcome remain authoritative, and shared-wishlist unknown-type placeholders still carry explicit unknown source evidence. A regression test reads an unmatched show from the separate shared-wishlist source. No schema change is required; the separate legacy IMDb implementation is unchanged.
-- Unwatched extension movies still become Want to See pending the owner's decision. That single policy is isolated in `unwatchedMovieIntention()` for a later preview choice. Bulk marks remain undated as accepted by the owner. Nothing has been enabled in production by these commits.
+- Owner decision Q16 (2026-10-19) confirms that unwatched extension movies automatically become Want to See, like For later. That policy remains isolated in `unwatchedMovieIntention()`. Bulk marks remain undated as accepted by the owner. Nothing has been enabled in production by these commits.
 
 New coverage uses synthetic source rows and mocked network/time/database boundaries. Provider tests cover bounded concurrency, Retry-After seconds and dates, fallback backoff, attempt limits, time/request budgets, aborted in-flight requests, malformed responses and failure-cache eviction. The private export remains outside Git and is never included in fixtures.
 
@@ -185,7 +187,7 @@ Final combined Q15 + review validation, 2026-10-19:
 
 ## Large-export convergence follow-up
 
-The owner accepted the re-review of `892a3b04` and merged it to main. This follow-up starts at that fetched main on `fix/tvtime-import-convergence`; it does not amend or rebase the reviewed commits. Q16 remains pending: unwatched extension movies still create Want to See intentions.
+The owner accepted the re-review of `892a3b04` and merged it to main. This follow-up starts at that fetched main on `fix/tvtime-import-convergence`; it does not amend or rebase the reviewed commits. Q16 confirms the existing automatic Want to See intentions for unwatched extension movies.
 
 TV Time now reads every requested show/episode TVDB ID in **parameterized Crate batches of at most 800 IDs total** before any TMDB request: `episode.tvdb_id` for live episodes, unioned with `show.tvdb_id`. Show and episode IDs retain separate namespaces even when their numeric IDs overlap. Only stored positive evidence is trusted; absence in one namespace is not a negative result for the other. Duplicates remain unmatched, removed episodes are excluded, and a 100,001-row sentinel across the combined batches discards the entire identity read rather than inferring uniqueness from a truncated batch or an oversized total. IDs are deduplicated per namespace before batching, so all candidates for one typed identity are fetched together. The shared map appends evidence across batches; later show evidence for a numeric ID cannot replace an earlier ambiguous episode mapping, or vice versa. The shared resolver still validates the matched parent and live canonical episode. Other sources keep their existing TMDB revalidation policy.
 
