@@ -101,22 +101,20 @@ interface CardEvidence { sourceId: string; title: string; stable: boolean; owned
 | `discarded` | Cancel, termination, profile or navigation change, session timeout, finalize timeout | Removed | Cleared |
 
 - **Pending:** A My List binding is pending from request initiation until its result has been accepted or rejected **and** transferred to the isolated collector. That covers the network wait, streaming, decoding, validation and the transfer.
-- **Generations:** Every session has a generation number and a random session token. Sealing, finalizing and discarding each increment it.
+- **Generations:** Every session has a generation number and a random session token. Entering `finalizing` and draining keep the generation unchanged, so requests pending when Save begins can still finish. Only **sealing** and **discarding** increment it.
 - **Late callbacks:** Every callback checks its binding's generation before touching anything. A callback from an earlier generation is dropped and counted (`late_dropped`), and can never change a sealed, finalized or discarded session.
 - **Stop keeps data:** Stop doesn't clear the buffer. Observation doesn't continue through Save: after the cutoff, only already pending bindings resolve.
 
 ## Finalize
 
-1. **Enter `finalizing`.** If the session is still `collecting`, it first passes through `traversal_stopped`, which sets the cutoff. The cutoff is the moment of `traversal_stopped`, not Save.
-2. **Bounded drain.** Wait up to 3 seconds for every pending binding to finish all of its stages. At the bound:
-   - The observer cancels its own readers and abandons its own decoding and validation for those bindings.
-   - Each unfinished binding sets the sticky code `pending_unresolved`.
-   - The session is **sealed**: the generation increments, so no later callback can mutate it.
-3. **Freeze.** Only now is the buffer frozen.
-4. **Recheck guards.** Profile (avatar and state), page path, document age, inline-state fingerprint and row presence. For the empty case, also recheck that no row appeared.
-5. **Compute one result** from the frozen buffer, the counters, the sticky codes and the module's verdict rule.
-6. **Clean up** (see "Cleanup"), clear the buffer, enter `finalized`.
-7. **Return** the result. The popup writes exactly this result, or nothing if finalize failed.
+1. **Enter `finalizing`.** If the session is still `collecting`, it first passes through `traversal_stopped`, which sets the cutoff. The cutoff is the moment of `traversal_stopped`, not Save. The generation stays the same.
+2. **Bounded drain.** Wait up to 3 seconds for every pending binding to finish all of its stages, including transfer to the collector. A response bound before the cutoff that arrives during the drain is accepted and transferred normally. At the bound, the observer cancels its own readers and abandons its own decoding and validation for unfinished bindings. Each one sets the sticky code `pending_unresolved`.
+3. **Seal.** The generation increments, so no later callback can change the session.
+4. **Freeze** the evidence: buffer, counters and sticky codes.
+5. **Clean up** (see "Cleanup") and collect `cleanupResult`. A failed cleanup adds `cleanup_failed` to the frozen evidence.
+6. **Recheck guards.** Profile (avatar and state), page path, document age, inline-state fingerprint and row presence. For the empty case, also recheck that no row appeared.
+7. **Compute one immutable result** from the frozen evidence, `cleanupResult` and the module's verdict rule, then clear the buffer and enter `finalized`.
+8. **Return** the result. The popup writes exactly this result, or nothing if finalize failed.
 
 Finalize as a whole is bounded at 5 seconds. Beyond that, the session is sealed and discarded with `finalize_timeout`, and no file is written. **Save again** reruns the guards of step 4 on the stored immutable result and refuses if they fail. The popup never keeps an envelope of its own.
 
@@ -190,7 +188,7 @@ Cleanup runs on finalize, discard and session timeout:
 - **Per wrapped method** (`window.fetch`, `XMLHttpRequest.prototype.open`, `XMLHttpRequest.prototype.send`): if the method is still the observer's own wrapper, restore the saved original. If anything else replaced or wrapped it, never restore over it. Set the observer's wrapper **inert** instead, so it becomes a pure pass-through that classifies and records nothing, for the rest of the document's life.
 - **Listeners:** Remove every `loadend` listener the observer added, using stored references.
 - **Readers:** Cancel every observer-owned reader. This touches only the observer's clone branch, never Netflix's request, response or branch.
-- **Result:** Recorded as `cleanupResult`: `restored`, `inert` or `failed`. `failed` is a sticky code if it happens before the result is computed.
+- **Result:** Recorded as `cleanupResult`: `restored`, `inert` or `failed`. Cleanup runs before the result is computed (finalize steps 5 and 7), so a failure is always part of the result as `cleanup_failed`.
 
 ## Binding and matching
 
@@ -281,7 +279,7 @@ The carousel's wrap and lap evidence aren't used.
 | `unsupported_input`, `unsupported_body`, `unsupported_response_type`, `request_too_large` | A pinned-endpoint request the observer can't classify or read | Sticky |
 | `response_unreadable`, `xhr_reused` | Response already consumed or unclonable; XHR reopened before the observer read it | Sticky |
 | `response_too_large`, `observer_overloaded`, `entries_limit`, `observer_error` | Bounds or an internal error | Sticky |
-| `cleanup_failed` | Cleanup failed before the result was computed | Sticky |
+| `cleanup_failed` | Cleanup failed (it runs before the result is computed) | Sticky |
 | `response_rejected_*` (`status`, `json`, `errors`, `node`, `row_id`, `label`, `version`, `connection`, `total`, `positions`, `entity`, `has_next`) | A My List response failed matching | Sticky |
 | `entry_malformed`, `entity_type_unknown` | Bad or unrecognized entry | Sticky |
 | `page_conflict`, `position_conflict`, `id_conflict` | Disagreeing reads | Sticky |
