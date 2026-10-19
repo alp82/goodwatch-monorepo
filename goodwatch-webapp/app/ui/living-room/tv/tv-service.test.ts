@@ -173,3 +173,11 @@ test("without titles the list says they are on their way, or that the service ha
 		"Nothing to watch here right now.",
 	)
 })
+
+
+test("an unrated title has no zero score in its service facts", () => {
+	assert.doesNotMatch(
+		serviceFacts(card({ goodwatch_overall_score_normalized_percent: 0 })),
+		/0 score/,
+	)
+})

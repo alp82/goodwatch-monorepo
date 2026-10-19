@@ -1,3 +1,4 @@
+import { hasGoodwatchScore } from "~/utils/ratings"
 // Maps a page path to what its Open Graph card shows. Image fields hold remote URLs here;
 // the renderer inlines them.
 import { getDetailsForMovie, getDetailsForShow } from "~/server/details.server"
@@ -201,7 +202,7 @@ async function titleContent(
 			.join(" · "),
 		title: clip(d.title),
 		score:
-			typeof score === "number" && score >= 0 && score <= 100 ? score : null,
+			hasGoodwatchScore(score) && score <= 100 ? score : null,
 		poster: tmdbImage("w500", d.poster_path),
 	}
 }

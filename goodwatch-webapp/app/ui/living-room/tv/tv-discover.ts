@@ -1,3 +1,4 @@
+import { hasGoodwatchScore } from "../../../utils/ratings.ts"
 // What mini Discover on the TV says and asks for: the eighteen options of its three tabs in words and colours,
 // the request for the titles of one choice, and a title's line of facts. Pure, so the words and the rules stay in
 // one place and have tests.
@@ -179,7 +180,7 @@ export function listFacts(
 	const score = card.goodwatch_overall_score_normalized_percent
 	return [
 		titleKicker(card),
-		score == null ? null : `${Math.round(score)} score`,
+		hasGoodwatchScore(score) ? `${Math.round(score)} score` : null,
 		card.match == null ? null : `${card.match}% match`,
 		// A card's services are the viewer's own first.
 		whereLine(card, []),

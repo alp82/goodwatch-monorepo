@@ -1,3 +1,4 @@
+import { hasGoodwatchScore } from "~/utils/ratings"
 // The Open Graph card for a page, one layout per kind of page:
 // - Movies and shows: amber panel with the title and score, poster on the right.
 // - People and collections: picture on the left, amber panel on the right.
@@ -116,7 +117,7 @@ function TitleCard({ content }: { content: OgTitleContent }) {
 						[999, 58],
 					]}
 				/>
-				{content.score != null && <ScoreBlock score={content.score} />}
+				{hasGoodwatchScore(content.score) && <ScoreBlock score={content.score} />}
 			</div>
 		</Frame>
 	)

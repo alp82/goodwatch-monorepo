@@ -9,6 +9,7 @@ import {
 	type AllRatings,
 	goodwatchScoreDisplay,
 	goodwatchVibeIndex,
+	hasGoodwatchScore,
 } from "~/utils/ratings"
 
 export interface RatingsProps {
@@ -22,7 +23,7 @@ export default function Ratings({
 	title = "Ratings",
 	compact = false,
 }: RatingsProps) {
-	const vibeColorIndex = ratings?.goodwatch_overall_score_normalized_percent
+	const vibeColorIndex = hasGoodwatchScore(ratings?.goodwatch_overall_score_normalized_percent)
 		? goodwatchVibeIndex(ratings.goodwatch_overall_score_normalized_percent)
 		: null
 
@@ -40,7 +41,7 @@ export default function Ratings({
 					<dd
 						className={`${vibeColorIndex == null ? "text-gray-300" : "text-gray-100"} mt-1 text-5xl font-semibold tracking-tight`}
 					>
-						{ratings?.goodwatch_overall_score_normalized_percent
+						{hasGoodwatchScore(ratings?.goodwatch_overall_score_normalized_percent)
 							? goodwatchScoreDisplay(ratings.goodwatch_overall_score_normalized_percent)
 							: "--"}
 					</dd>

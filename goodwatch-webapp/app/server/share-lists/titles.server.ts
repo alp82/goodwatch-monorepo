@@ -1,3 +1,4 @@
+import { hasGoodwatchScore } from "~/utils/ratings"
 // Catalog lookups for share lists: the titles a card shows, quick picks per list prompt, and title search.
 import { type CardTitle, LIST_PROMPTS, type MediaType, titleKey } from "~/ui/share-card/model"
 import { query } from "~/utils/crate"
@@ -34,7 +35,7 @@ const toCardTitle = (type: MediaType, r: Row): CardTitle => ({
 	poster: r.poster_path ? `${TMDB_IMAGES}/w500${r.poster_path}` : null,
 	backdrop: r.backdrop_path ? `${TMDB_IMAGES}/w1280${r.backdrop_path}` : null,
 	genre: r.genres?.[0] ?? null,
-	score: r.score == null ? null : Math.round(r.score),
+	score: hasGoodwatchScore(r.score) ? Math.round(r.score) : null,
 })
 
 export const entryKey = (e: ListEntry) => titleKey(e.media_type, e.tmdb_id)

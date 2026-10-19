@@ -77,6 +77,10 @@ export const extractRatings = (
 	return ratings as AllRatings
 }
 
+// Catalog scores use zero for unrated titles. Check the raw value before rounding or coloring it.
+export const hasGoodwatchScore = (percent: unknown): percent is number =>
+	typeof percent === "number" && Number.isFinite(percent) && percent > 0
+
 // A GoodWatch score (0 to 100) as shown everywhere: whole points, rounded down, so 95.6 reads 95.
 export const goodwatchScoreDisplay = (percent: number): number => Math.floor(percent)
 
