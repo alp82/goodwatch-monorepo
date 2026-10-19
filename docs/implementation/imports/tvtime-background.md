@@ -132,3 +132,25 @@ Total statements fell **84.5%**. Probe runtimes were 302 ms before and 193 ms af
 The private offline audit caught one valid country-date suggestion that a simple year window would remove. Keeping full verification for exact search titles with an explicit country preserves the reviewed set: **335 suggestions, zero added and zero removed** against the saved strict-rule reference. The year filter never authorizes a match by itself; retained candidates still need the full exact title/date/country evidence and typed catalog validation. The final live read-only request/time measurement follows below.
 
 Review-fix validation: imports server **389 passed**, legacy IMDb **12 passed**, imports UI **101 passed**, and tracking **263 passed** plus **50 additional show-tracking tests** (313 passed total), with one existing TODO and zero failures. Typecheck remains **185 diagnostics**, zero normalized additions/removals against main. Biome and `git diff --check` pass. The review tests cover both admission refusals, exact/conservative attempt accounting and restart, the final two attempts under contention, generation-fenced cache flushing, closed request permits, confirmation during child construction, limited edits, confirmed-import discard, interrupted/legacy-family cleanup and the search-year/country exception.
+
+### Final cold read-only run after the review fixes
+
+The complete upload/job/publication/suggestion path was rerun with **all TMDB responses live**, production catalog access restricted to allowlisted SELECTs, and every import/checkpoint/catalog-cache write kept in memory. No Confirm, acceptance or production write ran. The export stayed in place outside Git, and only aggregates are recorded here.
+
+| Metric | Earlier cold run | Review-fix cold run |
+| --- | ---: | ---: |
+| Upload preview | 2.822 s | 2.950 s |
+| Background completion | 17m40.442s | **11m12.100s** |
+| Live TMDB requests | 14,584 | **9,741** |
+| Catalog SELECTs | 769 | 771 |
+| Final matched observations | 5,866 | 5,866 |
+
+Requests fell **33.2%** (4,843 fewer); observed background time fell **36.6%**. Provider latency and current positive catalog caches can affect timing; production import-metadata writes were intercepted in both runs. The current catalog immediately matched 147 observations versus 145 in the earlier run, while final per-kind counts stayed identical. The earlier cold run's 334 suggestions preceded the missing-date grouping fix; the comparison below uses the saved, reviewed **335**-suggestion reference.
+
+The final suggestion set is **identical: 335 expected, 335 actual, zero added, zero removed**, comparing native source groups and typed targets privately. Of 599 named movie groups, 264 remain for individual review. Two additional movie observations lack titles. The exact-title/source-country exception is necessary: omitting it removes one valid reviewed suggestion whose country release differs by two years from the primary release. The exception retains full title/date/country verification; it does not authorize a year-only match.
+
+All **8,088** observations settled: **5,866 new, 2,170 unmatched, 52 unsupported, zero invalid**, including **5,434 matched episodes out of 6,398**. Per-kind counts and unmatched codes remain those in the earlier aggregate table. There are no uncoded unmatched observations, no lookup-budget holds, and pending is zero. The one unavailable movie group still accounts for two held observations and three HTTP 404 attempts; the other **9,738** requests returned HTTP 200. Settled attempt accounting is exactly **9,741**, matching dispatched requests.
+
+A second cached preview took **6.992 seconds**, made **zero TMDB requests** and **114 catalog SELECTs**, and immediately recovered the same 5,866 matches; it was discarded before another background pass. Maximum source page remained **200 rows**. Intercepted positive-cache calls were 614 show-cache attempts, 5,434 episode-cache attempts and 5,434 duplicate-cache-clear attempts, with **zero production writes**. Suggestions remain unmatched until explicit acceptance; Confirm remains the only application step.
+
+These review fixes add no member-facing strings, source-page/UI components, schema, credentials or schedules. The progress `attempts` field now reports reserved budget units while a run is active; a completed step returns unused credits, and an interrupted reservation can conservatively consume up to 49 unused units. Proofs additionally expose the search-year window, discovered/verified/excluded counts and the country exact-title exception. Live production metadata writes and deployed-process restart were not repeated under this read-only constraint; the corresponding shared-store, restart, cancellation and cleanup tests pass.
