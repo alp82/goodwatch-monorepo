@@ -5,9 +5,14 @@ import { setServerAssetBase } from "~/utils/asset-url"
 import { SourceImportPreview } from "./SourceImportPreview"
 setServerAssetBase(() => "https://static.goodwatch.test")
 import { TmdbConnectControls } from "./TmdbConnectPanel"
-const render = (state?: string, pending = false, error?: string) =>
+const render = (
+	state?: string,
+	pending = false,
+	error?: string,
+	denied = false,
+) =>
 	renderToStaticMarkup(
-		createElement(TmdbConnectControls, { state, pending, error }),
+		createElement(TmdbConnectControls, { state, pending, error, denied }),
 	)
 const preview = (source: ImportSource) => {
 	const summary: ImportSummary = {
@@ -55,5 +60,5 @@ const preview = (source: ImportSource) => {
 	)
 }
 process.stdout.write(
-	`__TMDB_RENDER__${JSON.stringify({ preview: preview("tmdb"), filePreview: preview("csv"), start: render(), returned: render("flow-id"), busy: render("flow-id", true), failed: render("flow-id", false, "Please try again") })}`,
+	`__TMDB_RENDER__${JSON.stringify({ preview: preview("tmdb"), filePreview: preview("csv"), start: render(), denied: render("flow-id", false, undefined, true), returned: render("flow-id"), busy: render("flow-id", true), failed: render("flow-id", false, "Please try again") })}`,
 )

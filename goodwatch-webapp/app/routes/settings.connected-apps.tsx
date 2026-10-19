@@ -9,7 +9,7 @@ import { type ConnectedApp, connectedAppsPage } from "~/server/auth/connected-ap
 import { ConnectAppBadge } from "~/ui/auth/connect"
 import { ConnectorAddressCard } from "~/ui/connector/ConnectorAddressCard"
 import { USE_WITH_AI_PATH } from "~/ui/connector/connector"
-import { SettingsSheet } from "~/ui/settings/SettingsSheet"
+import { SettingsPage } from "~/ui/settings/SettingsPage"
 import { Spinner } from "~/ui/wait/Spinner"
 
 export const meta: MetaFunction = () => [{ title: "Connected apps | GoodWatch" }, { name: "robots", content: "noindex, nofollow" }]
@@ -24,10 +24,7 @@ export default function ConnectedApps() {
 	const { apps, now } = useLoaderData<typeof loader>()
 	const [removed, setRemoved] = useState<string | null>(null)
 	return (
-		<SettingsSheet
-			title="Connected apps"
-			subtitle="Assistants that can reach your GoodWatch. Disconnecting stops them right away; nothing you saved is lost."
-		>
+		<SettingsPage title="Connected apps" intro="Assistants that can reach your GoodWatch. Disconnecting stops them right away; nothing you saved is lost.">
 			<section className="flex flex-col gap-5 text-base">
 				{removed && (
 					<output className="flex items-center gap-2 rounded-lg border border-emerald-800 bg-emerald-950/50 px-4 py-3 text-sm text-emerald-100">
@@ -58,7 +55,7 @@ export default function ConnectedApps() {
 				)}
 				<ConnectorAddressCard />
 			</section>
-		</SettingsSheet>
+		</SettingsPage>
 	)
 }
 

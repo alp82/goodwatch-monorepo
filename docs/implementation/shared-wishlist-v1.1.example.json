@@ -1,0 +1,31 @@
+{
+  "format": "goodwatch-wishlist",
+  "version": 1.1,
+  "source": "synthetic-example",
+  "completeness": "partial",
+  "items": [
+    {
+      "title": "Toy Story",
+      "mediaType": "movie",
+      "tmdbId": 862,
+      "sourceId": "example-movie-42",
+      "sourceSeen": true,
+      "sourceSeenAt": "2026-10-01"
+    },
+    {
+      "title": "Example Show",
+      "mediaType": "season",
+      "tmdbId": 1399,
+      "sourceId": "example-season-2",
+      "season": 2
+    },
+    {
+      "title": "Example Show",
+      "mediaType": "episode",
+      "tmdbId": 1399,
+      "sourceId": "example-episode-3-4",
+      "season": 3,
+      "episode": 4
+    }
+  ]
+}

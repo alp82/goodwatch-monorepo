@@ -1,4 +1,4 @@
-// Every import source as a row of overlapping marks. Hover, focus, or a tap opens a pop-out under the row with the
+// Every import source as a row of marks, overlapping a little on a phone so all fit. Hover, focus, or a tap opens a pop-out under the row with the
 // source's name, how it comes in, how long it takes, and what GoodWatch takes from it. The pop-out sits under the
 // whole row, with a pointer at its mark, so it never runs off a phone's screen.
 import { Link } from "@remix-run/react"
@@ -15,7 +15,7 @@ import { WaitChip, connectPath } from "./StartImport"
 
 function Mark({ source }: { source: ImportSourceEntry }) {
 	const frame =
-		"flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl md:size-14"
+		"flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-xl sm:size-12 sm:rounded-2xl md:size-14"
 	if (!source.logo)
 		return (
 			<span
@@ -41,7 +41,17 @@ function Mark({ source }: { source: ImportSourceEntry }) {
 
 export function SourceLogoRow({
 	onPick,
-}: { onPick: (id: ImportSourceId) => void }) {
+	onConnect,
+	pickLabel = (source) => `How to get your ${source.name} file`,
+	prompt = "Need the file? Pick where it lives",
+}: {
+	onPick: (id: ImportSourceId) => void
+	/** An account source's Connect. Left out, Connect links to that source on the Imports page. */
+	onConnect?: (id: ImportSourceId) => void
+	/** The pop-out's button for a file source. */
+	pickLabel?: (source: ImportSourceEntry) => string
+	prompt?: string
+}) {
 	const [hot, setHot] = useState<ImportSourceId | null>(null)
 	const [pinned, setPinned] = useState(false)
 	const row = useRef<HTMLDivElement>(null)
@@ -86,14 +96,12 @@ export function SourceLogoRow({
 			className="relative mx-auto flex w-full max-w-xl flex-col items-center"
 			onMouseLeave={() => !pinned && setHot(null)}
 		>
-			<p className="text-sm text-gray-400">
-				Need the file? Pick where it lives
-			</p>
-			<ul className="mt-3 flex items-center justify-center pl-3">
+			<p className="text-sm text-gray-400">{prompt}</p>
+			<ul className="mt-3 flex items-center justify-center pl-2.5 sm:pl-1.5 md:-ml-1.5 md:pl-0">
 				{IMPORT_SOURCE_LIST.map((s, i) => (
 					<li
 						key={s.id}
-						className="-ml-3"
+						className="-ml-2.5 sm:-ml-1.5 md:ml-1.5"
 						style={{ zIndex: hot === s.id ? 20 : 10 - Math.abs(i - 4) }}
 					>
 						<button
@@ -153,7 +161,18 @@ export function SourceLogoRow({
 								</li>
 							))}
 						</ul>
-						{source.connect ? (
+						{source.connect && onConnect ? (
+							<button
+								type="button"
+								className={`${primaryButton} mt-4 w-full`}
+								onClick={() => {
+									close()
+									onConnect(source.id)
+								}}
+							>
+								Connect {source.name}
+							</button>
+						) : source.connect ? (
 							<Link
 								to={connectPath(source.id)}
 								className={`${primaryButton} mt-4 w-full`}
@@ -169,7 +188,7 @@ export function SourceLogoRow({
 									onPick(source.id)
 								}}
 							>
-								How to get your {source.name} file
+								{pickLabel(source)}
 							</button>
 						)}
 					</section>

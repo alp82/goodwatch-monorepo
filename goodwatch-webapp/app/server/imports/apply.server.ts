@@ -476,7 +476,9 @@ async function applyRun(userId: string, id: string, options: ImportOptions) {
 					state = "kept"
 				else if (
 					item.outcome === "conflict" &&
-					options.conflictChoice === "keep"
+					((item.wishlistShowChoice && options.wishlistShows !== true) ||
+						(item.wishlistRewatchChoice !== false &&
+							options.conflictChoice === "keep"))
 				)
 					state = "kept"
 				else if (isWant(item) && watchRefs.has(ref(item))) state = "kept"
@@ -579,6 +581,7 @@ export async function confirmImport(
 				kinds: stored.kinds,
 				conflictChoice: stored.conflictChoice,
 				watchDates: stored.watchDates,
+				wishlistShows: stored.wishlistShows,
 			}
 		: options
 	if (row.status === "done" || row.status === "undone") return summarize(row)

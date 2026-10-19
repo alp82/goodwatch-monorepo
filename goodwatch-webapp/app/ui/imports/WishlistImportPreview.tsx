@@ -1,6 +1,6 @@
 // The preview of a wishlist import (a Watcharr export or a wishlist file). It only adds Want to See, so it hides the
-// general preview's data-type, conflict, and watch-date choices. Its one choice is for titles already watched:
-// they stay Seen unless the member adds them as Want to rewatch (conflictChoice "source").
+// general preview's data-type and watch-date choices. Source Seen evidence can offer Want to rewatch;
+// season/episode entries additionally need the independent whole-show opt-in. Neither creates viewing history.
 // Entries whose file gave no type are reviewed in a panel that loads on first use: the member accepts GoodWatch's
 // suggestions or matches entries by hand. Its choices live here, in memory, so hiding the panel keeps them; Update
 // preview turns them into a new preview.
@@ -69,6 +69,7 @@ export function WishlistImportPreview({
 }) {
 	const [seenChoice, setSeenChoice] =
 		useState<ImportOptions["conflictChoice"]>("keep")
+	const [wishlistShows, setWishlistShows] = useState(false)
 	const [matching, setMatching] = useState(false)
 	const opened = useOpenedOnce(matching)
 	const [draft, setDraft] = useState<MatchDraft>(new Map())
@@ -81,13 +82,20 @@ export function WishlistImportPreview({
 	// So the sequence keeps counting on its own: a later Change, even for the same row, always gets a new one.
 	const requestSeq = useRef(0)
 	const resolve = useResolveWishlistImport(summary.id)
-	const seen = summary.counts.conflict
+	const showChoices = summary.wishlistShowChoiceCount ?? 0
+	const explicitChoices = summary.wishlistRewatchChoiceCount !== undefined
+	const seen = summary.wishlistRewatchChoiceCount ?? summary.counts.conflict
 	const one = seen === 1
 	const rewatch = seen > 0 && seenChoice === "source"
 	const matchable = summary.wishlistMatchCount ?? 0
 	const unapplied = draft.size > 0 || resolve.isPending
 	// No count on the button: the import rechecks each title against the current library as it runs.
-	const canImport = summary.counts.new > 0 || rewatch
+	const rewatchOnly = summary.counts.conflict - showChoices
+	const showOnly = summary.counts.conflict - seen
+	const canImport =
+		summary.counts.new > 0 ||
+		(rewatch && (rewatchOnly > 0 || wishlistShows)) ||
+		(wishlistShows && showOnly > 0)
 	const reason = unapplied
 		? "wishlist-import-unapplied"
 		: !canImport
@@ -199,7 +207,9 @@ export function WishlistImportPreview({
 			})),
 			{
 				onSuccess: (response) =>
-					onPreviewReplaced?.(response.import, { rewatchReset: rewatch }),
+					onPreviewReplaced?.(response.import, {
+						rewatchReset: rewatch || wishlistShows,
+					}),
 			},
 		)
 	}
@@ -225,7 +235,9 @@ export function WishlistImportPreview({
 				<p className={infoBox}>
 					Updated with your changes. The counts include them.
 					{updated.rewatchReset &&
-						" Your choice for titles you've already seen is back to Leave them as Seen."}
+						(explicitChoices
+							? " Your optional choices have been reset. Review them before adding titles."
+							: " Your choice for titles you've already seen is back to Leave them as Seen.")}
 				</p>
 			)}
 			{summary.warnings.length > 0 && (
@@ -252,16 +264,47 @@ export function WishlistImportPreview({
 					the title off Want to See but doesn't mark it Not interested again.
 				</p>
 			</div>
+			{showChoices > 0 && (
+				<label className="flex items-start gap-3 rounded-lg border border-slate-700 p-3">
+					<input
+						type="checkbox"
+						checked={wishlistShows}
+						onChange={(event) => setWishlistShows(event.target.checked)}
+						disabled={locked}
+						className="mt-1 size-4 accent-indigo-500"
+					/>
+					<span>
+						<span className="block font-semibold text-gray-100">
+							Want to See the show
+						</span>
+						<span className="block text-sm text-gray-400">
+							This file lists seasons or episodes of {formatCount(showChoices)}{" "}
+							{showChoices === 1 ? "show" : "shows"}. Add the whole show to your
+							Wishlist. No episode progress is imported. Titles marked Seen also
+							need your Want to rewatch choice.
+						</span>
+					</span>
+				</label>
+			)}
 			{seen > 0 && (
 				<fieldset className="space-y-2">
 					<legend className="mb-1 font-semibold text-gray-100">
-						{formatCount(seen)} {one ? "title" : "titles"} you've already seen
+						{formatCount(seen)} {one ? "title" : "titles"}{" "}
+						{explicitChoices
+							? "marked Seen in GoodWatch or in this file"
+							: "you've already seen"}
 					</legend>
 					<div className="grid gap-2 sm:grid-cols-2">
 						<Radio
 							checked={seenChoice === "keep"}
 							onChange={() => setSeenChoice("keep")}
-							label={one ? "Leave it as Seen" : "Leave them as Seen"}
+							label={
+								explicitChoices
+									? "Leave off Wishlist"
+									: one
+										? "Leave it as Seen"
+										: "Leave them as Seen"
+							}
 							detail={
 								one
 									? "It stays off your Wishlist."
@@ -351,6 +394,11 @@ export function WishlistImportPreview({
 								importId={summary.id}
 								outcome={outcome}
 								count={summary.counts[outcome]}
+								labelOverride={
+									explicitChoices && outcome === "conflict"
+										? "Needs your choice"
+										: undefined
+								}
 								wishlist
 								onChangeMatch={matchable > 0 ? changeMatch : undefined}
 								matchLocked={locked}
@@ -374,9 +422,11 @@ export function WishlistImportPreview({
 			)}
 			{!canImport && (
 				<p id="wishlist-import-required" className="text-sm text-gray-300">
-					{seen > 0
-						? `Nothing new to add. To add the ${one ? "title" : "titles"} you've already seen, choose ${one ? "Add it" : "Add them"} as Want to rewatch.`
-						: "Nothing to add. GoodWatch already has the titles in this file, or can't add them."}
+					{showChoices > 0
+						? "Choose Want to See the show to add whole shows from season or episode entries. Titles marked Seen also need your Want to rewatch choice."
+						: seen > 0
+							? `Nothing new to add. To add the ${one ? "title" : "titles"} you've already seen, choose ${one ? "Add it" : "Add them"} as Want to rewatch.`
+							: "Nothing to add. GoodWatch already has the titles in this file, or can't add them."}
 				</p>
 			)}
 			<div className="flex flex-wrap gap-3">
@@ -392,6 +442,7 @@ export function WishlistImportPreview({
 							kinds: ["want"],
 							conflictChoice: seenChoice,
 							watchDates: "preserve",
+							...(showChoices > 0 ? { wishlistShows } : {}),
 						})
 					}
 				>

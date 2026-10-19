@@ -9,6 +9,7 @@ const schema = z
 		kinds: z.array(z.enum(IMPORT_KINDS)).min(1).max(IMPORT_KINDS.length),
 		conflictChoice: z.enum(["keep", "source"]),
 		watchDates: z.enum(["preserve", "unknown"]),
+		wishlistShows: z.boolean().optional(),
 	})
 	.strict()
 export const action = ({ request, params }: ActionFunctionArgs) =>

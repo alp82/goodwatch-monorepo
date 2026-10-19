@@ -3,6 +3,7 @@
 // active chips where the bar sits, and the slab fixed at the bottom. The surface owns the data: it binds the state
 // with useFilterState, fetches counts for `filters.query`, and passes them in. It also says whether the viewer has
 // taste (`taste`), which Best match and the Taste match filter need.
+import { SERVICES_PATH } from "~/ui/settings/paths"
 import { useNavigate } from "@remix-run/react"
 import { MotionConfig } from "framer-motion"
 import { type ReactNode, useMemo, useRef, useState } from "react"
@@ -105,7 +106,7 @@ export function FilterBar(props: FilterBarProps) {
 			? undefined
 			: "Relevance joins once you search."
 	const onAddServices =
-		props.onAddServices ?? (() => navigate("/settings/where-you-watch"))
+		props.onAddServices ?? (() => navigate(SERVICES_PATH))
 	const onChange = (next: typeof state) => filters.update(() => next)
 	const notSeen = counts?.optionCounts.notSeenYet
 	const notSeenHides = notSeen

@@ -1,4 +1,4 @@
-// The site footer: the wordmark with a caption that names the link under the pointer, three link columns that one
+// The site footer: the wordmark with a caption that names the link under the pointer, four link columns that one
 // highlight glides through, the Discord invite card, the credits, and a large faint wordmark that closes the page.
 // The columns and the card rise into place the first time the footer scrolls into view.
 import { ArrowUpRightIcon } from "@heroicons/react/20/solid"
@@ -172,7 +172,7 @@ export default function Footer() {
 					<nav
 						ref={nav}
 						aria-label="Footer"
-						className="relative mt-10 grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3"
+						className="relative mt-10 grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-4"
 						onPointerLeave={() => pointAt(null, null)}
 					>
 						<span

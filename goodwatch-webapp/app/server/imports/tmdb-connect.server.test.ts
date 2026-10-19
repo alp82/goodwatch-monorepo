@@ -18,9 +18,9 @@ function fixture(keys = { current: "11".repeat(32), previous: "" }) {
 	const client: TmdbClient = {
 		createRequest: async () => "request-secret",
 		exchange: async () => ({
-			accessToken: "member-secret",
-			accountId: "account",
+			sessionId: "member-secret",
 		}),
+		getAccountId: async () => "account",
 		readAccount: async () => ({
 			source: "tmdb",
 			observations: [
@@ -63,7 +63,13 @@ function fixture(keys = { current: "11".repeat(32), previous: "" }) {
 		}),
 		origin: () => "https://goodwatch.test",
 	})
-	const request = (step: string, id = "", cookie = "", member = "member") =>
+	const request = (
+		step: string,
+		id = "",
+		cookie = "",
+		member = "member",
+		denied = false,
+	) =>
 		flow.handle(
 			new Request(`https://goodwatch.test/api/imports/tmdb/${step}`, {
 				method: "POST",
@@ -73,7 +79,7 @@ function fixture(keys = { current: "11".repeat(32), previous: "" }) {
 					Cookie: cookie,
 					"Content-Type": "application/x-www-form-urlencoded",
 				},
-				body: new URLSearchParams({ state: id }),
+				body: new URLSearchParams({ state: id, denied: String(denied) }),
 			}),
 			step,
 		)
@@ -111,10 +117,10 @@ test("start returns a safe JSON error under the production Remix runtime when TM
 	assert.equal(f.db.connections.size, 0)
 })
 
-test("TMDB application-token rejection reaches the member as JSON without leaking provider text", async () => {
+test("TMDB API-key rejection reaches the member as JSON without leaking provider text", async () => {
 	const f = fixture()
 	f.client.createRequest = createTmdbClient({
-		appToken: "application-secret",
+		apiKey: "application-secret",
 		fetch: async () =>
 			new Response(
 				JSON.stringify({
@@ -139,7 +145,13 @@ test("start and return bind approval to the member and browser, then revoke befo
 	assert.equal(start.status, 303)
 	assert.match(
 		start.headers.get("Location") ?? "",
-		/^https:\/\/www.themoviedb.org\/auth\/access\?request_token=request-secret$/,
+		/^https:\/\/www.themoviedb.org\/authenticate\/request-secret\?redirect_to=/,
+	)
+	assert.equal(
+		new URL(start.headers.get("Location") ?? "").searchParams.get(
+			"redirect_to",
+		),
+		`https://goodwatch.test/settings/imports?source=tmdb&connect=${[...f.db.connections.keys()][0]}`,
 	)
 	assert.match(start.headers.get("Cache-Control") ?? "", /no-store/)
 	const cookie = start.headers.get("Set-Cookie") ?? ""
@@ -240,8 +252,7 @@ test("canceling before approval retains only cleanup work and catches a later ap
 	assert.equal(canceled.status, 303)
 	assert.equal(f.db.connections.size, 1)
 	f.client.exchange = async () => ({
-		accessToken: "late-secret",
-		accountId: "account",
+		sessionId: "late-secret",
 	})
 	f.advance(60_000)
 	await f.flow.sweep()
@@ -261,6 +272,9 @@ test("a denied or never-approved request expires without creating an import", as
 	await f.flow.sweep()
 	assert.equal(f.db.connections.size, 1)
 	f.advance(5 * 60_000)
+	await f.flow.sweep()
+	assert.equal(f.db.connections.size, 1)
+	f.advance(50 * 60_000)
 	await f.flow.sweep()
 	assert.equal(f.db.connections.size, 0)
 	assert.equal(f.revoked.length, 0)
@@ -344,14 +358,13 @@ test("credential storage failure after exchange still revokes the newly minted t
 	assert.equal(f.db.imports.length, 0)
 })
 
-test("an access token in a malformed exchange response is revoked without reading an account", async () => {
+test("a session is revoked when the account lookup fails", async () => {
 	const f = fixture()
 	const start = await f.request("start")
 	const id = [...f.db.connections.keys()][0]
-	f.client.exchange = async () => ({
-		accessToken: "member-secret",
-		accountId: "",
-	})
+	f.client.getAccountId = async () => {
+		throw new Error("member-secret")
+	}
 	let read = false
 	f.client.readAccount = async () => {
 		read = true
@@ -591,4 +604,188 @@ test("missing or malformed encryption keys reject start before any TMDB request"
 		assert.equal(minted, 0)
 		assert.equal(f.db.connections.size, 0)
 	}
+})
+
+test("denied sign-in clears the connection without minting a session or importing", async () => {
+	const f = fixture()
+	const start = await f.request("start")
+	const id = [...f.db.connections.keys()][0]
+	f.client.exchange = async () => {
+		throw new Error("must not exchange denied request")
+	}
+	const response = await f.request(
+		"return",
+		id,
+		start.headers.get("Set-Cookie") ?? "",
+		"member",
+		true,
+	)
+	assert.equal(response.status, 403)
+	assert.match(await response.text(), /denied.*start again/i)
+	assert.equal(f.db.connections.size, 0)
+	assert.equal(f.db.imports.length, 0)
+	assert.deepEqual(f.revoked, [])
+})
+
+test("an expired TMDB request token shows a safe restart message and is eventually erased", async () => {
+	const f = fixture()
+	const start = await f.request("start")
+	const id = [...f.db.connections.keys()][0]
+	f.client.exchange = createTmdbClient({
+		apiKey: "app-secret",
+		fetch: async () =>
+			new Response(
+				JSON.stringify({
+					success: false,
+					status_code: 17,
+					status_message: "Expired request-secret",
+				}),
+				{ status: 401 },
+			),
+	}).exchange
+	f.advance(65 * 60_000)
+	const response = await f.request(
+		"return",
+		id,
+		start.headers.get("Set-Cookie") ?? "",
+	)
+	assert.equal(response.status, 401)
+	const body = await response.text()
+	assert.match(body, /expired.*Start again/)
+	assert.doesNotMatch(body, /request-secret|app-secret/)
+	assert.equal(f.db.imports.length, 0)
+	assert.deepEqual(f.revoked, [])
+	f.advance(60_000)
+	await f.flow.sweep()
+	assert.equal(f.db.connections.size, 0)
+})
+
+test("the v3 client and connection flow delete sessions after success, list failure and account failure", async () => {
+	for (const mode of ["success", "list-failure", "account-failure"]) {
+		const f = fixture()
+		const calls: { path: string; method: string; body?: string }[] = []
+		const client = createTmdbClient({
+			apiKey: "app-secret",
+			sleep: async () => {},
+			fetch: async (input, init) => {
+				const url = new URL(String(input))
+				assert.equal(url.searchParams.get("api_key"), "app-secret")
+				assert.equal(new Headers(init?.headers).get("Authorization"), null)
+				calls.push({
+					path: url.pathname,
+					method: init?.method ?? "GET",
+					body: init?.body?.toString(),
+				})
+				if (url.pathname === "/3/authentication/token/new")
+					return new Response(
+						JSON.stringify({ success: true, request_token: "request-secret" }),
+					)
+				if (url.pathname === "/3/authentication/session/new")
+					return new Response(
+						JSON.stringify({ success: true, session_id: "member-secret" }),
+					)
+				if (url.pathname === "/3/authentication/session")
+					return new Response(JSON.stringify({ success: true }))
+				assert.equal(url.searchParams.get("session_id"), "member-secret")
+				if (url.pathname === "/3/account") {
+					if (mode === "account-failure") throw new Error("member-secret")
+					return new Response(JSON.stringify({ id: 123 }))
+				}
+				if (mode === "list-failure") throw new Error("member-secret")
+				return new Response(
+					JSON.stringify({
+						page: 1,
+						total_pages: 1,
+						total_results: 1,
+						results: [{ id: 862, title: "Toy Story", rating: 7.5 }],
+					}),
+				)
+			},
+		})
+		Object.assign(f.client, client)
+		const start = await f.request("start")
+		const id = [...f.db.connections.keys()][0]
+		const response = await f.request(
+			"return",
+			id,
+			start.headers.get("Set-Cookie") ?? "",
+		)
+		assert.equal(response.status, mode === "success" ? 303 : 502)
+		assert.deepEqual(calls.at(-1), {
+			path: "/3/authentication/session",
+			method: "DELETE",
+			body: '{"session_id":"member-secret"}',
+		})
+		assert.equal(f.db.connections.size, 0)
+		assert.equal(f.db.imports.length, mode === "success" ? 1 : 0)
+		assert.doesNotMatch(
+			await response.text(),
+			/member-secret|request-secret|app-secret/,
+		)
+	}
+})
+
+test("cleanup retries an already-deleted TMDB session and removes the retained connection row", async () => {
+	const f = fixture()
+	const calls: string[] = []
+	let deleted = false
+	f.client.revoke = createTmdbClient({
+		apiKey: "app-secret",
+		sleep: async () => {},
+		fetch: async (input, init) => {
+			const url = new URL(String(input))
+			assert.equal(url.searchParams.get("api_key"), "app-secret")
+			calls.push(`${init?.method} ${url.pathname}`)
+			if (url.pathname === "/3/authentication/session") {
+				assert.equal(init?.method, "DELETE")
+				assert.deepEqual(JSON.parse(String(init.body)), {
+					session_id: "member-secret",
+				})
+				if (deleted)
+					return new Response(
+						JSON.stringify({ success: false, status_code: 34 }),
+						{ status: 404 },
+					)
+				deleted = true
+				return new Response(JSON.stringify({ success: true }))
+			}
+			if (url.pathname === "/3/authentication")
+				return new Response(JSON.stringify({ success: true }))
+			assert.equal(url.pathname, "/3/account")
+			assert.equal(url.searchParams.get("session_id"), "member-secret")
+			return new Response(JSON.stringify({ success: false, status_code: 3 }), {
+				status: 401,
+			})
+		},
+	}).revoke
+	const remove = f.store.remove
+	let removals = 0
+	f.store.remove = async (id) => {
+		if (++removals === 1)
+			throw new Error("database unavailable after TMDB deleted the session")
+		await remove(id)
+	}
+	const start = await f.request("start")
+	const id = [...f.db.connections.keys()][0]
+	const response = await f.request(
+		"return",
+		id,
+		start.headers.get("Set-Cookie") ?? "",
+	)
+	assert.equal(response.status, 502)
+	assert.match(await response.text(), /retry automatically/)
+	assert.equal(f.db.connections.size, 1)
+	assert.equal(deleted, true)
+	f.advance(60_000)
+	await f.flow.sweep()
+	assert.deepEqual(calls, [
+		"DELETE /3/authentication/session",
+		"DELETE /3/authentication/session",
+		"GET /3/authentication",
+		"GET /3/account",
+	])
+	assert.equal(removals, 2)
+	assert.equal(f.db.connections.size, 0)
+	assert.equal(f.db.imports.length, 0)
+	assert.deepEqual(f.alerts, [])
 })

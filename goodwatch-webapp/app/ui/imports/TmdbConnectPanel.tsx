@@ -1,4 +1,4 @@
-import { useFetcher } from "@remix-run/react"
+import { useFetcher, useSearchParams } from "@remix-run/react"
 import { assetUrl } from "~/utils/asset-url"
 import { errorBox, primaryButton, secondaryButton, stepHeading } from "./shared"
 
@@ -6,7 +6,13 @@ export function TmdbConnectControls({
 	state,
 	pending,
 	error,
-}: { state?: string; pending: boolean; error?: string }) {
+	denied = false,
+}: { state?: string; pending: boolean; error?: string; denied?: boolean }) {
+	const message =
+		error ??
+		(denied
+			? "TMDB sign-in was denied. Close this connection or start again."
+			: undefined)
 	return (
 		<>
 			<h3 className={stepHeading}>
@@ -38,6 +44,7 @@ export function TmdbConnectControls({
 				</p>
 			</div>
 			{state && <input type="hidden" name="state" value={state} />}
+			{denied && <input type="hidden" name="denied" value="true" />}
 			<div className="flex flex-wrap gap-3">
 				<button
 					type="submit"
@@ -48,7 +55,9 @@ export function TmdbConnectControls({
 					{pending
 						? "Connecting…"
 						: state
-							? "Preview TMDB import"
+							? denied
+								? "Close connection"
+								: "Preview TMDB import"
 							: "Connect TMDB"}
 				</button>
 				{state && (
@@ -61,7 +70,7 @@ export function TmdbConnectControls({
 						Cancel connection
 					</button>
 				)}
-				{state && error && (
+				{state && message && (
 					<button
 						type="submit"
 						formAction="/api/imports/tmdb/start"
@@ -72,9 +81,9 @@ export function TmdbConnectControls({
 					</button>
 				)}
 			</div>
-			{error && (
+			{message && (
 				<p className={errorBox} role="alert">
-					{error}
+					{message}
 				</p>
 			)}
 		</>
@@ -83,10 +92,12 @@ export function TmdbConnectControls({
 
 export function TmdbConnectPanel({ state }: { state?: string }) {
 	const fetcher = useFetcher<{ error?: string }>()
+	const [params] = useSearchParams()
 	return (
 		<fetcher.Form method="post" className="flex flex-col gap-4">
 			<TmdbConnectControls
 				state={state}
+				denied={!!state && params.get("denied") === "true"}
 				pending={fetcher.state !== "idle"}
 				error={fetcher.data?.error}
 			/>

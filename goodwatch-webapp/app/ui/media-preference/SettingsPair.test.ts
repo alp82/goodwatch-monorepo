@@ -283,7 +283,7 @@ test("the toast's Undo saves the pair from before through the same call", async 
 
 	saves[1].answer(saved(saves[1].body, "v2"))
 	await settle()
-	assert.match(titlesHeading(), /Follow browser \(currently German\)/)
+	assert.match(titlesHeading(), /^German$/)
 	assert.match(toastText(), /^Restored on this device: /)
 	assert.equal(toastUndo(), undefined, "no Undo of the Undo")
 	await unmount()
@@ -334,7 +334,7 @@ test("Cancel after a failed save goes back to what is saved", async () => {
 	await click(button("Cancel"))
 	await settle()
 	assert.equal($('[role="alert"]'), null)
-	assert.match(titlesHeading(), /Follow browser \(currently German\)/)
+	assert.match(titlesHeading(), /^German$/)
 	assert.doesNotMatch(titlesHeading(), /not saved/)
 	assert.equal(saves.length, 1, "Cancel saves nothing")
 	await unmount()

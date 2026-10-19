@@ -1,5 +1,6 @@
 // The glass strip docked on the hero's top edge: the picks, how many titles fit, On my services, and the sort. Once it
 // scrolls away, the same line pins under the site header. From the large breakpoint up; phones use PhoneControls.
+import { SERVICES_PATH } from "~/ui/settings/paths"
 import { PlusIcon } from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
 import { motion } from "framer-motion"
@@ -48,7 +49,7 @@ function ServicesToggle({
 	if (!data.hasServices)
 		return (
 			<Link
-				to="/settings/where-you-watch"
+				to={SERVICES_PATH}
 				className={`inline-flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap pl-2.5 pr-3 text-sm font-bold text-gray-200 outline-none transition-colors hover:text-white hover:ring-white/20 focus-visible:ring-2 focus-visible:ring-amber-400 ${SHELL}`}
 			>
 				<PlusIcon className="h-4 w-4 shrink-0" aria-hidden />
