@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>Match review</title>
+<style>
+  :root {
+    --bg: #111827; --panel: #1f2937; --panel-2: #172033; --line: #374151;
+    --text: #f3f4f6; --muted: #9ca3af; --accent: #f59e0b;
+    --ok: #10b981; --bad: #f43f5e; --warn: #fbbf24; --info: #38bdf8;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+    font: 15px/1.45 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  header { position: sticky; top: 0; z-index: 2; background: #0b1220ee; border-bottom: 1px solid var(--line);
+    padding: 10px 16px; display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: center; }
+  header h1 { font-size: 16px; margin: 0; }
+  .progress { font-variant-numeric: tabular-nums; }
+  .progress b { color: var(--accent); }
+  .bar { width: 160px; height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; }
+  .bar i { display: block; height: 100%; background: var(--accent); }
+  .counts span { margin-right: 10px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .keys { color: var(--muted); font-size: 13px; }
+  kbd { font: 12px ui-monospace, monospace; background: var(--panel); border: 1px solid var(--line);
+    border-radius: 4px; padding: 0 5px; color: var(--text); }
+  label.filter { display: flex; gap: 6px; align-items: center; cursor: pointer; }
+  #status { font-size: 13px; color: var(--muted); min-width: 90px; }
+  #status.err { color: var(--bad); }
+  main { max-width: 1100px; margin: 0 auto; padding: 12px 16px 80vh; }
+  .done { border: 1px solid var(--ok); background: #052e22; border-radius: 8px; padding: 12px 14px; margin-bottom: 12px; }
+  .done code { display: block; margin-top: 6px; padding: 8px; background: #000; border-radius: 6px;
+    font: 13px ui-monospace, monospace; white-space: pre-wrap; word-break: break-all; user-select: all; }
+  .row { display: grid; grid-template-columns: 44px 1fr 1fr 150px; gap: 14px; align-items: start;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; }
+  .row.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); background: var(--panel-2); }
+  .row .num { color: var(--muted); font-variant-numeric: tabular-nums; font-size: 13px; padding-top: 2px; }
+  .side h3 { margin: 0 0 2px; font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+  .side .title { font-size: 16px; font-weight: 600; }
+  .side .meta { color: var(--muted); font-size: 13px; }
+  .side a { color: var(--info); font-size: 13px; }
+  .prop { display: flex; gap: 10px; }
+  .poster { width: 62px; height: 93px; flex: none; border-radius: 4px; background: #0b1220; object-fit: cover; border: 1px solid var(--line); }
+  .overview { color: var(--muted); font-size: 12px; margin-top: 4px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .row.active .overview { -webkit-line-clamp: 8; }
+  .cues { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+  .cue { font-size: 12px; border-radius: 4px; padding: 1px 6px; border: 1px solid; }
+  .cue.warn { color: var(--warn); border-color: #a16207; background: #422006; }
+  .cue.info { color: var(--info); border-color: #0369a1; background: #082f49; }
+  .cue.bad { color: var(--bad); border-color: #9f1239; background: #4c0519; }
+  .type { display: inline-block; font-size: 11px; font-weight: 700; padding: 0 6px; border-radius: 4px; background: #374151; margin-right: 4px; }
+  .verdict { display: flex; flex-direction: column; gap: 6px; }
+  .choices { display: flex; flex-wrap: wrap; gap: 4px; }
+  .choices button { font: 13px ui-monospace, monospace; background: #111827; color: var(--muted); border: 1px solid var(--line);
+    border-radius: 4px; padding: 2px 7px; cursor: pointer; }
+  .choices button[disabled] { opacity: .3; cursor: not-allowed; }
+  .choices button.on { color: #000; font-weight: 700; }
+  .choices button.on[data-code=c] { background: var(--ok); border-color: var(--ok); }
+  .choices button.on[data-code=w] { background: var(--bad); border-color: var(--bad); }
+  .choices button.on[data-code=a], .choices button.on[data-code="?"] { background: var(--warn); border-color: var(--warn); }
+  .choices button.on[data-code=n] { background: var(--info); border-color: var(--info); }
+  .label { font-size: 13px; }
+  .notes { width: 100%; font: 12px ui-sans-serif, system-ui, sans-serif; background: #0b1220; color: var(--text);
+    border: 1px solid var(--line); border-radius: 4px; padding: 3px 5px; }
+  .noproposal { color: var(--muted); font-style: italic; }
+  @media (max-width: 760px) { .row { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Netflix match review</h1>
+  <div class="progress"><b id="done">0</b> / <span id="total">0</span> reviewed</div>
+  <div class="bar"><i id="bar" style="width:0"></i></div>
+  <div class="counts" id="counts"></div>
+  <label class="filter"><input type="checkbox" id="filter"> Unreviewed only <kbd>u</kbd></label>
+  <span id="status">Loading</span>
+  <div class="keys">
+    <kbd>c</kbd> correct <kbd>w</kbd> wrong <kbd>a</kbd> ambiguous <kbd>?</kbd> unknown <kbd>n</kbd> no proposal, confirmed
+    <kbd>-</kbd> clear · <kbd>j</kbd>/<kbd>k</kbd> or arrows move · <kbd>o</kbd> open both links
+    <kbd>1</kbd> Netflix <kbd>2</kbd> TMDB · <kbd>e</kbd> note
+  </div>
+</header>
+<main>
+  <div id="done-box"></div>
+  <div id="rows"></div>
+</main>
+<script>
+const TOKEN = '__TOKEN__';
+const LABELS = { c: 'correct', w: 'wrong', a: 'ambiguous', '?': 'unknown', n: 'confirmed absent', '-': 'not reviewed' };
+let data, entries = [], active = 0, onlyOpen = false;
+const tmdb = new Map();
+const $ = id => document.getElementById(id);
+const api = (path, opts = {}) => fetch(path, { ...opts, headers: { 'x-review-token': TOKEN, 'content-type': 'application/json' } })
+  .then(async r => { const body = await r.json(); if (!r.ok) throw new Error(body.error || r.status); return body; });
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const norm = s => String(s ?? '').toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '').replace(/&/g, 'and').replace(/[^a-z0-9]+/g, ' ').trim();
+const tmdbType = p => p.mediaType === 'show' ? 'tv' : 'movie';
+const netflixUrl = e => `https://www.netflix.com/title/${encodeURIComponent(e.source.sourceId)}`;
+const tmdbUrl = p => `https://www.themoviedb.org/${tmdbType(p)}/${p.tmdb_id}`;
+const visible = () => entries.filter(e => !onlyOpen || e.review === '-' || e.index === entries[active]?.index);
+
+function cues(e) {
+  const s = e.source, p = e.historicalProposal, out = [];
+  if (!p) return out;
+  if (s.year && p.release_year) {
+    const d = Math.abs(s.year - p.release_year);
+    if (d > 1) out.push(['bad', `Year differs by ${d}: ${s.year} vs ${p.release_year}`]);
+    else if (d === 1) out.push(['warn', `Year off by 1: ${s.year} vs ${p.release_year}`]);
+  } else if (!s.year) out.push(['info', 'Netflix year unknown']);
+  const st = norm(s.title), pt = norm(p.title), ot = norm(p.original_title);
+  if (st !== pt && st !== ot) out.push(['warn', 'Title differs from Netflix title']);
+  else if (st !== pt && st === ot) out.push(['info', 'Matches original title, not TMDB title']);
+  if (pt !== ot && p.original_title) out.push(['info', 'Original title differs']);
+  const showWords = /\b(season|series|limited series|part \d|volume \d|docuseries|miniseries)\b/i;
+  if (showWords.test(s.title) && p.mediaType === 'movie') out.push(['warn', 'Netflix title sounds like a show, proposal is a movie']);
+  if (p.adult) out.push(['bad', 'Adult title']);
+  const t = tmdb.get(e.index);
+  if (t?.missing) out.push(['bad', 'TMDB id not found']);
+  return out;
+}
+
+function choices(e) {
+  const has = Boolean(e.historicalProposal);
+  return ['c', 'w', 'a', '?', 'n', '-'].map(code => {
+    const disabled = (code === 'n' && has) || ((code === 'c' || code === 'w') && !has);
+    return `<button data-code="${esc(code)}" class="${e.review === code ? 'on' : ''}" ${disabled ? 'disabled' : ''} title="${esc(LABELS[code])}">${esc(code)}</button>`;
+  }).join('');
+}
+
+function rowHtml(e, isActive) {
+  const s = e.source, p = e.historicalProposal, t = tmdb.get(e.index);
+  const proposal = p ? `
+    <div class="prop">
+      ${data.posters ? `<img class="poster" alt="Poster for ${esc(p.title)}" src="${esc(t?.poster || '')}" ${t?.poster ? '' : 'style="visibility:hidden"'}>` : ''}
+      <div>
+        <h3>Proposed (TMDB)</h3>
+        <div class="title"><span class="type">${p.mediaType === 'show' ? 'SHOW' : 'MOVIE'}</span>${esc(p.title)}</div>
+        <div class="meta">${p.original_title && p.original_title !== p.title ? `Original: ${esc(p.original_title)} · ` : ''}${esc(p.release_year ?? 'year unknown')}${t?.originalLanguage ? ` · ${esc(t.originalLanguage)}` : ''}${t?.countries?.length ? ` · ${esc(t.countries.join(', '))}` : ''}${t?.seasons ? ` · ${t.seasons} season${t.seasons > 1 ? 's' : ''}` : ''}${t?.runtime ? ` · ${t.runtime} min` : ''}</div>
+        <a href="${esc(tmdbUrl(p))}" target="_blank" rel="noopener noreferrer">TMDB ${esc(tmdbType(p))}/${esc(p.tmdb_id)} (opens new tab)</a>
+        ${t?.overview ? `<div class="overview">${esc(t.overview)}</div>` : ''}
+      </div>
+    </div>` : `<div><h3>Proposed (TMDB)</h3><div class="noproposal">No proposal. Confirm with n, or use a or ?.</div></div>`;
+  return `<div class="row ${isActive ? 'active' : ''}" data-index="${e.index}">
+    <div class="num">#${e.index + 1}</div>
+    <div class="side">
+      <h3>Netflix</h3>
+      <div class="title">${esc(s.title)}</div>
+      <div class="meta">${s.year ? esc(s.year) : 'Year unknown'} · id ${esc(s.sourceId)}</div>
+      <a href="${esc(netflixUrl(e))}" target="_blank" rel="noopener noreferrer">Netflix title page (opens new tab)</a>
+      <div class="cues">${cues(e).map(([k, text]) => `<span class="cue ${k}">${esc(text)}</span>`).join('')}</div>
+    </div>
+    <div class="side">${proposal}</div>
+    <div class="verdict">
+      <div class="label">${esc(LABELS[e.review] ?? e.review)}</div>
+      <div class="choices">${choices(e)}</div>
+      <input class="notes" placeholder="Note (optional)" value="${esc(e.notes)}" aria-label="Note for row ${e.index + 1}">
+      ${e.referenceTarget ? `<div class="meta">referenceTarget ${esc(e.referenceTarget)}</div>` : ''}
+    </div>
+  </div>`;
+}
+
+function render(scroll = true) {
+  const list = visible();
+  $('rows').innerHTML = list.map(e => rowHtml(e, e.index === entries[active]?.index)).join('') ||
+    '<p>No rows match the filter.</p>';
+  const reviewed = entries.filter(e => e.review !== '-').length;
+  $('done').textContent = reviewed; $('total').textContent = entries.length;
+  $('bar').style.width = `${(100 * reviewed / Math.max(entries.length, 1)).toFixed(1)}%`;
+  const count = code => entries.filter(e => e.review === code).length;
+  $('counts').innerHTML = ['c', 'w', 'a', '?', 'n'].map(c => `<span>${esc(LABELS[c])} ${count(c)}</span>`).join('');
+  $('done-box').innerHTML = reviewed === entries.length && entries.length ? `<div class="done">
+    All ${entries.length} rows reviewed. Run the aggregate from any folder:
+    <code id="agg">${esc(data.aggregateCommand)}</code></div>` : '';
+  if (scroll) document.querySelector('.row.active')?.scrollIntoView({ block: 'center' });
+  loadTmdb();
+}
+
+// Fetch TMDB details for the active row and its neighbours only.
+function loadTmdb() {
+  if (!data.posters) return;
+  for (let i = active - 2; i <= active + 4; i++) {
+    const e = entries[i];
+    if (!e?.historicalProposal || tmdb.has(e.index)) continue;
+    tmdb.set(e.index, null);
+    api(`/api/tmdb/${tmdbType(e.historicalProposal)}/${e.historicalProposal.tmdb_id}`)
+      .then(t => { tmdb.set(e.index, t); patchRow(e); })
+      .catch(() => tmdb.delete(e.index));
+  }
+}
+
+function patchRow(e) {
+  const el = document.querySelector(`.row[data-index="${e.index}"]`);
+  if (el && !el.contains(document.activeElement)) el.outerHTML = rowHtml(e, e.index === entries[active]?.index);
+}
+
+function setStatus(text, err = false) { $('status').textContent = text; $('status').classList.toggle('err', err); }
+
+async function save(e, change) {
+  const before = { review: e.review, notes: e.notes };
+  Object.assign(e, change);
+  setStatus('Saving');
+  try {
+    const saved = await api('/api/review', { method: 'POST', body: JSON.stringify({ index: e.index, ...change }) });
+    Object.assign(e, { review: saved.review, notes: saved.notes });
+    setStatus('Saved');
+  } catch (err) {
+    Object.assign(e, before);
+    setStatus(`Not saved: ${err.message}`, true);
+  }
+  render(false);
+}
+
+function move(delta) {
+  const list = visible();
+  const pos = list.findIndex(e => e.index === entries[active].index);
+  const next = list[Math.min(Math.max(pos + delta, 0), list.length - 1)];
+  if (next) active = entries.indexOf(next);
+  render();
+}
+
+async function setReview(code) {
+  const e = entries[active];
+  if (!e) return;
+  const has = Boolean(e.historicalProposal);
+  if ((code === 'n' && has) || ((code === 'c' || code === 'w') && !has)) {
+    return setStatus(code === 'n' ? 'n is only for rows with no proposal' : 'No proposal: use n, a or ?', true);
+  }
+  await save(e, { review: code });
+  if (code !== '-') {
+    const list = entries.filter(x => !onlyOpen || x.review === '-' || x.index === e.index);
+    const pos = list.indexOf(e);
+    const next = list[pos + 1] ?? (onlyOpen ? list.find(x => x.review === '-') : null);
+    if (next) active = entries.indexOf(next);
+    render();
+  }
+}
+
+function openLinks(which) {
+  const e = entries[active];
+  if (!e) return;
+  if (which !== 'tmdb') window.open(netflixUrl(e), '_blank', 'noopener,noreferrer');
+  if (which !== 'netflix' && e.historicalProposal) window.open(tmdbUrl(e.historicalProposal), '_blank', 'noopener,noreferrer');
+}
+
+document.addEventListener('keydown', ev => {
+  if (ev.target.matches('input.notes')) {
+    if (ev.key === 'Enter' || ev.key === 'Escape') {
+      const e = entries.find(x => x.index === Number(ev.target.closest('.row').dataset.index));
+      const value = ev.target.value;
+      ev.target.blur();
+      if (ev.key === 'Enter' && value !== e.notes) save(e, { notes: value });
+      else render(false);
+    }
+    return;
+  }
+  if (ev.target.matches('input') || ev.metaKey || ev.ctrlKey || ev.altKey) return;
+  const k = ev.key;
+  if (['c', 'w', 'a', '?', 'n', '-'].includes(k)) setReview(k);
+  else if (k === 'j' || k === 'ArrowDown') move(1);
+  else if (k === 'k' || k === 'ArrowUp') move(-1);
+  else if (k === 'o') openLinks('both');
+  else if (k === '1') openLinks('netflix');
+  else if (k === '2') openLinks('tmdb');
+  else if (k === 'u') { $('filter').checked = !$('filter').checked; toggleFilter(); }
+  else if (k === 'e') { document.querySelector('.row.active input.notes')?.focus(); }
+  else return;
+  ev.preventDefault();
+});
+
+document.addEventListener('click', ev => {
+  const row = ev.target.closest('.row');
+  if (!row) return;
+  const e = entries.find(x => x.index === Number(row.dataset.index));
+  const btn = ev.target.closest('.choices button');
+  if (entries[active] !== e) { active = entries.indexOf(e); if (!btn && !ev.target.closest('a, input')) render(false); }
+  if (btn && !btn.disabled) setReview(btn.dataset.code);
+});
+document.addEventListener('focusout', ev => {
+  if (!ev.target.matches('input.notes')) return;
+  const e = entries.find(x => x.index === Number(ev.target.closest('.row')?.dataset.index));
+  if (e && ev.target.value !== e.notes) save(e, { notes: ev.target.value });
+});
+
+function toggleFilter() {
+  onlyOpen = $('filter').checked;
+  try { localStorage.setItem('gw709-filter', onlyOpen ? '1' : '0'); } catch {}
+  if (onlyOpen && entries[active]?.review !== '-') {
+    const next = entries.find((e, i) => i >= active && e.review === '-') ?? entries.find(e => e.review === '-');
+    if (next) active = entries.indexOf(next);
+  }
+  render();
+}
+$('filter').addEventListener('change', toggleFilter);
+
+api('/api/packet').then(d => {
+  data = d; entries = d.entries;
+  try { onlyOpen = localStorage.getItem('gw709-filter') === '1'; } catch {}
+  $('filter').checked = onlyOpen;
+  const firstOpen = entries.findIndex(e => e.review === '-');
+  active = firstOpen >= 0 ? firstOpen : 0;
+  setStatus(`Saves to ${d.packetPath.split('/').slice(-2).join('/')}`);
+  render();
+}).catch(err => setStatus(`Load failed: ${err.message}`, true));
+</script>
+</body>
+</html>
