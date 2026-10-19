@@ -193,7 +193,7 @@ class SitemapRegenerationTests(unittest.TestCase):
                       patch("builtins.print")):
                     if status == 200:
                         count, files = worker.generate_and_check(root)
-                        self.assertEqual(count, 1131)  # Titles, people, categories, static and blog pages.
+                        self.assertEqual(count, 1134)  # Titles, people, categories, static pages (with the best-of lists) and blog pages.
                         static = files[worker.OUTPUT + "sitemap_static.xml"].decode()
                         self.assertIn("<loc>https://goodwatch.app/blog</loc>\n    <lastmod>2026-10-12</lastmod>", static)
                         self.assertIn("<loc>https://goodwatch.app/blog/a-post</loc>\n    <lastmod>2026-10-02</lastmod>", static)
