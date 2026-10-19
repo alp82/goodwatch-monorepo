@@ -280,6 +280,21 @@ function History({
 	)
 }
 
+/** A credit link that opens in a new tab, and says so. */
+function NewTab({ href, children }: { href: string; children: string }) {
+	return (
+		<a
+			href={href}
+			target="_blank"
+			rel="noopener noreferrer"
+			className="underline underline-offset-2 hover:text-gray-300"
+		>
+			{children}
+			<span className="sr-only"> (opens in a new tab)</span>
+		</a>
+	)
+}
+
 /** TV Time, streaming services, and the logos' notices. */
 function Notes({
 	onTvTime,
@@ -323,6 +338,21 @@ function Notes({
 				IMDb.com, Inc. or its affiliates. Kodi® is a registered trademark of the
 				Kodi Foundation. This product uses the TMDB API but is not endorsed or
 				certified by TMDB.
+			</p>
+			<p className="text-xs text-gray-500">
+				TV Time logo: "Logo TV Time" by{" "}
+				<NewTab href="https://commons.wikimedia.org/wiki/User:Vegetapple">
+					Vegetapple
+				</NewTab>
+				, from{" "}
+				<NewTab href="https://commons.wikimedia.org/wiki/File:Logo_TV_Time.svg">
+					Wikimedia Commons
+				</NewTab>
+				, licensed under{" "}
+				<NewTab href="https://creativecommons.org/licenses/by-sa/4.0/">
+					CC BY-SA 4.0
+				</NewTab>
+				. Its styles were moved into its shapes; it looks the same.
 			</p>
 		</div>
 	)

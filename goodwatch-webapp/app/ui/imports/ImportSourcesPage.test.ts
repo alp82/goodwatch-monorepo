@@ -277,3 +277,17 @@ test("Undo of a wishlist import says what it takes back and that Not interested 
 	)
 	assert.match(runs.wishlistUndo.text, /Import another file/)
 })
+
+test("the TV Time logo is credited to its creator with its source, license, and the one change made", () => {
+	assert.match(
+		runs.list.text,
+		/TV Time logo: "Logo TV Time" by Vegetapple \(opens in a new tab\), from Wikimedia Commons \(opens in a new tab\), licensed under CC BY-SA 4\.0 \(opens in a new tab\)\. Its styles were moved into its shapes; it looks the same\./,
+	)
+	const markup = runs.serverMarkup as unknown as string
+	for (const href of [
+		"https://commons.wikimedia.org/wiki/User:Vegetapple",
+		"https://commons.wikimedia.org/wiki/File:Logo_TV_Time.svg",
+		"https://creativecommons.org/licenses/by-sa/4.0/",
+	])
+		assert.ok(markup.includes(`href="${href}"`), href)
+})

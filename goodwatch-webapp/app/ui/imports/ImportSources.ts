@@ -104,7 +104,8 @@ const SOURCES: Omit<ImportSourceEntry, "name">[] = [
 	},
 	{
 		id: "tvtime",
-		// TV Time's block mark as redrawn on Wikimedia Commons (File:Logo_TV_Time.svg, CC BY-SA 4.0), colors unchanged.
+		// "Logo TV Time" by Vegetapple on Wikimedia Commons (File:Logo_TV_Time.svg), CC BY-SA 4.0. Its CSS classes were
+		// moved into fill attributes; it looks the same. The Imports page's notices credit it with links.
 		// TV Time closed on July 15, 2026 and publishes no brand terms; members bring an export they saved before then.
 		logo: tvtimeLogo,
 		tile: "TV",
