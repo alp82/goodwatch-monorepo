@@ -1,0 +1,223 @@
+{
+  "status": "candidate_not_executed",
+  "schema_id": "goodwatch.representation-screen.candidate-2",
+  "default": "Smallest neutral frozen evidence-bundle bank; one meaningful disclosed bundle per field/scope is deterministically attached, not selected as an entailment citation.",
+  "assessed_choice_key": "A:<native-value-token>:<profile-id>",
+  "assessed_decode": {
+    "state": "assessed",
+    "value": "exact typed native token",
+    "profile_ref": "predeclared profile id",
+    "reason": "assessed_cited"
+  },
+  "nonassessed_decode": {
+    "U_INSUFFICIENT": {
+      "state": "unknown",
+      "value": null,
+      "profile_ref": null,
+      "reason": "insufficient_evidence"
+    },
+    "U_CONFLICT": {
+      "state": "unknown",
+      "value": null,
+      "profile_ref": null,
+      "reason": "conflicting_evidence"
+    },
+    "U_ID_SCOPE": {
+      "state": "unknown",
+      "value": null,
+      "profile_ref": null,
+      "reason": "identity_or_scope_unresolved"
+    },
+    "NA": {
+      "state": "not_applicable",
+      "value": null,
+      "profile_ref": null,
+      "reason": "structurally_inapplicable"
+    },
+    "NOT_ASSESSED": {
+      "state": "not_assessed",
+      "value": null,
+      "profile_ref": null,
+      "reason": "outside_screen"
+    }
+  },
+  "max_profiles_per_field": 6,
+  "question_options": {
+    "experience.tension": {
+      "native_values": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "max_joint_options_including_states": 35
+    },
+    "humor.absurdist": {
+      "native_values": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "max_joint_options_including_states": 35
+    },
+    "humor.satire": {
+      "native_values": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "max_joint_options_including_states": 35
+    },
+    "screen.retrospective_frame_centrality": {
+      "native_values": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "max_joint_options_including_states": 35
+    },
+    "genres.comedy": {
+      "native_values": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "max_joint_options_including_states": 35
+    },
+    "evaluations.editing": {
+      "native_values": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "max_joint_options_including_states": 35
+    },
+    "screen.observed_violence_peak": {
+      "native_values": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "max_joint_options_including_states": 35
+    },
+    "screen.violence_exposure": {
+      "native_values": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "max_joint_options_including_states": 35
+    },
+    "facts.father_recounts_past_to_children": {
+      "native_values": [
+        false,
+        true
+      ],
+      "max_joint_options_including_states": 17
+    },
+    "facts.person_observed_by_audience": {
+      "native_values": [
+        false,
+        true
+      ],
+      "max_joint_options_including_states": 17
+    },
+    "facts.graphic_violence_present": {
+      "native_values": [
+        false,
+        true
+      ],
+      "max_joint_options_including_states": 17
+    },
+    "facts.strong_language_present": {
+      "native_values": [
+        false,
+        true
+      ],
+      "max_joint_options_including_states": 17
+    },
+    "facts.object_agency_binding": {
+      "native_values": [
+        "literal.tire.telekinetic_killing",
+        "literal.tire.other_supernatural_agency",
+        "literal.other_inanimate_object.telekinetic_killing",
+        "literal.other_inanimate_object.other_supernatural_agency",
+        "metaphorical.tire.telekinetic_killing",
+        "metaphorical.tire.other_supernatural_agency",
+        "metaphorical.other_inanimate_object.telekinetic_killing",
+        "metaphorical.other_inanimate_object.other_supernatural_agency",
+        "hypothetical.tire.telekinetic_killing",
+        "hypothetical.tire.other_supernatural_agency",
+        "hypothetical.other_inanimate_object.telekinetic_killing",
+        "hypothetical.other_inanimate_object.other_supernatural_agency",
+        "none_in_scope"
+      ],
+      "max_joint_options_including_states": 83
+    }
+  },
+  "bounds": {
+    "ordinal_fields": 8,
+    "boolean_fields": 4,
+    "category_fields": 1,
+    "required_assessments": 13,
+    "max_sources": 12,
+    "max_scopes": 3,
+    "max_profiles_per_field": 6,
+    "max_profiles_total": 78,
+    "max_evidence_refs_per_profile": 3,
+    "nonassessed_choice_labels": 5,
+    "atomic_choice_labels_total": 126,
+    "max_joint_choices_per_question": 83,
+    "max_joint_choices_total": 431,
+    "native_decision_questions": 13,
+    "meaning": "Choice inventory upper bounds only; not requests, tokens, dollars or execution permission. No historical question/call cap inherited."
+  },
+  "renderer_rules": [
+    "Trait definition and anchor text must be model-visible; IDs alone are not enough.",
+    "Freeze field target scope and every source-profile byte before dispatch; reject changed metadata.",
+    "Prune structurally incompatible value/profile tuples before dispatch, without prelabeling factual truth.",
+    "Retain raw choices/distributions and invalid outputs; no semantic repair, rounding or probability-to-absence conversion.",
+    "Generative controls use identical schema, meanings and candidate source profiles; no free-form advantage hidden in comparison.",
+    "Provider-specific rendering/token/billing/work limits and first scheduled compatibility remain unverified."
+  ],
+  "native_score": "ExpectedScore remains fractional native data with raw distribution; no silent rounding. A native-Score route not fitting this discrete adapter is not admitted to this contract, not a quality loser. Any later measurement belongs to an explicit manifest extension with no added calls now.",
+  "noul": "Raw binary probability remains adapter metadata; not magnitude, calibration or supported absence.",
+  "revision": "review-v2",
+  "bank_policy": {
+    "default_profiles_per_field": "One neutral disclosed source bundle when sufficient; retain distinct conflicting source bundles or explicit unverified-knowledge paths when meaningful.",
+    "six_is": "Upper bound, not a mechanically instantiated target.",
+    "deterministic_attachment": "With one bundle, select native value/state only and attach input bundle; no claim that model selected supporting citation.",
+    "model_visible": [
+      "Opaque bundle ID",
+      "Disclosed source IDs/classes",
+      "Scope",
+      "Actual source text including its negation/modality",
+      "Trait definitions and all type-compatible value/state options"
+    ],
+    "reference_only": [
+      "Hidden expected values",
+      "negative_fields",
+      "Adjudicated binding/conflict",
+      "Independent safety eligibility",
+      "Referee truth/adjudication"
+    ],
+    "construction": "Only disclosed input availability and type/scope rules; no answer-aware pruning or hidden-reference-derived labels.",
+    "assisted_inputs": "If verified claim annotations are deliberately disclosed, label and cost that assistance as curated-assertion input, not raw extraction."
+  },
+  "probability_policy": "Joint-option probability is not calibrated per-value confidence; retain raw distribution, selected tuple and any explicit per-value aggregation separately."
+}

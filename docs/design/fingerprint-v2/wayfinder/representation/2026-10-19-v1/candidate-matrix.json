@@ -1,0 +1,262 @@
+{
+  "schema_id": "goodwatch.representation-screen.candidate-2",
+  "status": "candidate_reversible_defaults",
+  "human_direction": "develop_ordinal_plus_facts",
+  "human_direction_is_full_schema_approval": false,
+  "fields": [
+    {
+      "id": "experience.tension",
+      "storage": "ordinal_0_4",
+      "family": "intensity",
+      "definition": "Experienced suspense or unease when present; not its duration.",
+      "anchors": {
+        "0": "Supported assessment of no tension in the declared assessed material; insufficient evidence is unknown.",
+        "1": "Mild experienced strength",
+        "2": "Moderate experienced strength",
+        "3": "Strong experienced strength",
+        "4": "Extreme experienced strength"
+      },
+      "legacy_related_key": "tension",
+      "legacy_bridge": "related; no numeric conversion",
+      "similarity": "candidate_separate_family_profile",
+      "native_value_count": 5
+    },
+    {
+      "id": "humor.absurdist",
+      "storage": "ordinal_0_4",
+      "family": "intensity",
+      "definition": "Humor from illogic or bizarre juxtaposition, not literal supernatural agency.",
+      "anchors": {
+        "0": "Supported assessment of no absurdist humor in the declared assessed material; insufficient evidence is unknown.",
+        "1": "Mild experienced strength",
+        "2": "Moderate experienced strength",
+        "3": "Strong experienced strength",
+        "4": "Extreme experienced strength"
+      },
+      "legacy_related_key": "absurdist_humor",
+      "legacy_bridge": "related; no numeric conversion",
+      "similarity": "candidate_separate_family_profile",
+      "native_value_count": 5
+    },
+    {
+      "id": "humor.satire",
+      "storage": "ordinal_0_4",
+      "family": "intensity",
+      "definition": "Strength of humorous critique; not institutional subject presence.",
+      "anchors": {
+        "0": "Supported assessment of no satirical humor in the declared assessed material; insufficient evidence is unknown.",
+        "1": "Mild experienced strength",
+        "2": "Moderate experienced strength",
+        "3": "Strong experienced strength",
+        "4": "Extreme experienced strength"
+      },
+      "legacy_related_key": "satire_parody",
+      "legacy_bridge": "legacy composite also includes parody; not equivalent",
+      "similarity": "candidate_separate_family_profile",
+      "native_value_count": 5
+    },
+    {
+      "id": "screen.retrospective_frame_centrality",
+      "storage": "ordinal_0_4",
+      "family": "centrality",
+      "definition": "How much retrospective narration organizes the work; not percentage of flashbacks.",
+      "anchors": {
+        "0": "Supported assessment of no retrospective framing in the declared assessed material; insufficient evidence is unknown.",
+        "1": "Incidental device",
+        "2": "Meaningful secondary device",
+        "3": "Major organizing device",
+        "4": "Defining narrative frame"
+      },
+      "legacy_related_key": "non_linear_narrative",
+      "legacy_bridge": "changed meaning; legacy nonlinearity is not this centrality field",
+      "similarity": "candidate_separate_family_profile",
+      "native_value_count": 5
+    },
+    {
+      "id": "genres.comedy",
+      "storage": "ordinal_0_4",
+      "family": "membership",
+      "definition": "Use of comedy conventions, independent of a catalog genre label.",
+      "anchors": {
+        "0": "Supported assessment of no comedy conventions in the declared assessed material; insufficient evidence is unknown.",
+        "1": "Trace convention influence",
+        "2": "Substantial hybrid membership",
+        "3": "Clear genre identity",
+        "4": "Conventions define the work"
+      },
+      "legacy_related_key": null,
+      "legacy_bridge": "no direct legacy scalar",
+      "similarity": "exclude",
+      "native_value_count": 5
+    },
+    {
+      "id": "evaluations.editing",
+      "storage": "ordinal_0_4",
+      "family": "quality",
+      "definition": "Evaluative shot assembly/rhythm/transitions, separate from personal enjoyment.",
+      "anchors": {
+        "0": "Severely ineffective execution",
+        "1": "Weak execution",
+        "2": "Competent or mixed execution",
+        "3": "Strong execution",
+        "4": "Exceptional execution"
+      },
+      "legacy_related_key": "editing",
+      "legacy_bridge": "quality excluded from descriptive similarity",
+      "similarity": "exclude",
+      "native_value_count": 5
+    },
+    {
+      "id": "screen.observed_violence_peak",
+      "storage": "ordinal_0_4",
+      "family": "observed_severity",
+      "definition": "Highest severity in explicitly covered material; a lower bound on a work peak if coverage is partial.",
+      "anchors": {
+        "0": "No violence in actually covered material",
+        "1": "Threat or implied harm",
+        "2": "Non-graphic injury or violence",
+        "3": "Graphic injury detail",
+        "4": "Extreme graphic detail"
+      },
+      "legacy_related_key": "violence",
+      "legacy_bridge": "legacy compound is not peak severity",
+      "similarity": "exclude",
+      "native_value_count": 5
+    },
+    {
+      "id": "screen.violence_exposure",
+      "storage": "ordinal_0_4",
+      "family": "frequency",
+      "definition": "Occurrence frequency over the declared complete denominator; unknown if denominator/coverage is inadequate.",
+      "anchors": {
+        "0": "No occurrences in adequately covered scope",
+        "1": "Isolated occurrence",
+        "2": "Recurring but minority presence",
+        "3": "Frequent presence",
+        "4": "Near-continuous presence"
+      },
+      "legacy_related_key": "violence",
+      "legacy_bridge": "not derivable from legacy violence or peak severity",
+      "similarity": "exclude",
+      "native_value_count": 5
+    },
+    {
+      "id": "facts.father_recounts_past_to_children",
+      "storage": "boolean",
+      "family": "factual_presence",
+      "definition": "A father narrates his past to his children; roles are bound in this fixed template.",
+      "native_value_count": 2,
+      "similarity": "targeted_predicate_only"
+    },
+    {
+      "id": "facts.person_observed_by_audience",
+      "storage": "boolean",
+      "family": "factual_presence",
+      "definition": "An audience observes the same person in the cited proposition; knowledge state/time is not represented.",
+      "native_value_count": 2,
+      "similarity": "targeted_predicate_only"
+    },
+    {
+      "id": "facts.graphic_violence_present",
+      "storage": "boolean",
+      "family": "factual_presence",
+      "definition": "Graphic violence is present; false is a supported negative, never missingness.",
+      "native_value_count": 2,
+      "similarity": "targeted_predicate_only"
+    },
+    {
+      "id": "facts.strong_language_present",
+      "storage": "boolean",
+      "family": "factual_presence",
+      "definition": "Strong language is present; this property is distinct from graphic violence.",
+      "native_value_count": 2,
+      "similarity": "targeted_predicate_only"
+    },
+    {
+      "id": "facts.object_agency_binding",
+      "storage": "category",
+      "family": "bounded_role_binding",
+      "definition": "One source-supported mode/object/agency tuple, all bound to the same object. No same-scene or other outcome inference. Multiple incompatible bindings become unknown for this screen.",
+      "values": [
+        "literal.tire.telekinetic_killing",
+        "literal.tire.other_supernatural_agency",
+        "literal.other_inanimate_object.telekinetic_killing",
+        "literal.other_inanimate_object.other_supernatural_agency",
+        "metaphorical.tire.telekinetic_killing",
+        "metaphorical.tire.other_supernatural_agency",
+        "metaphorical.other_inanimate_object.telekinetic_killing",
+        "metaphorical.other_inanimate_object.other_supernatural_agency",
+        "hypothetical.tire.telekinetic_killing",
+        "hypothetical.tire.other_supernatural_agency",
+        "hypothetical.other_inanimate_object.telekinetic_killing",
+        "hypothetical.other_inanimate_object.other_supernatural_agency",
+        "none_in_scope"
+      ],
+      "native_value_count": 13,
+      "similarity": "targeted_predicate_only"
+    }
+  ],
+  "deferred_families": {
+    "remaining_legacy_fields": "not_assessed",
+    "remaining_547_vocabulary": "not_assessed",
+    "suitability_and_audience_context": "not_assessed",
+    "precise_quantities_and_durations": "not_assessed",
+    "open_graph_and_outcomes": "not_assessed",
+    "color_and_presentation_facts": "not_assessed",
+    "other_advisory_topics": "not_assessed",
+    "complete_companion_outputs": "not_assessed"
+  },
+  "bounds": {
+    "ordinal_fields": 8,
+    "boolean_fields": 4,
+    "category_fields": 1,
+    "required_assessments": 13,
+    "max_sources": 12,
+    "max_scopes": 3,
+    "max_profiles_per_field": 6,
+    "max_profiles_total": 78,
+    "max_evidence_refs_per_profile": 3,
+    "nonassessed_choice_labels": 5,
+    "atomic_choice_labels_total": 126,
+    "max_joint_choices_per_question": 83,
+    "max_joint_choices_total": 431,
+    "native_decision_questions": 13,
+    "meaning": "Choice inventory upper bounds only; not requests, tokens, dollars or execution permission. No historical question/call cap inherited."
+  },
+  "nonassessed_choices": {
+    "U_INSUFFICIENT": {
+      "state": "unknown",
+      "value": null,
+      "profile_ref": null,
+      "reason": "insufficient_evidence"
+    },
+    "U_CONFLICT": {
+      "state": "unknown",
+      "value": null,
+      "profile_ref": null,
+      "reason": "conflicting_evidence"
+    },
+    "U_ID_SCOPE": {
+      "state": "unknown",
+      "value": null,
+      "profile_ref": null,
+      "reason": "identity_or_scope_unresolved"
+    },
+    "NA": {
+      "state": "not_applicable",
+      "value": null,
+      "profile_ref": null,
+      "reason": "structurally_inapplicable"
+    },
+    "NOT_ASSESSED": {
+      "state": "not_assessed",
+      "value": null,
+      "profile_ref": null,
+      "reason": "outside_screen"
+    }
+  },
+  "confidence": "Raw distributions/uncertainty stay in adapter receipts, not trait magnitude or evidence verification.",
+  "coverage_policy": "Premise/partial coverage is explicit; no unknown-as-zero, no peak-as-exposure and no strict negative from scores.",
+  "ordinal_policy": "Native integer anchors, uncalibrated and not assumed equidistant. Intensity excludes persistence/frequency; quality zero means poor execution, not absence.",
+  "revision": "review-v2"
+}

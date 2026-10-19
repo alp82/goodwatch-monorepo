@@ -1,0 +1,164 @@
+{
+  "schema_id": "goodwatch.representation-screen.candidate-2",
+  "status": "planning_fixture",
+  "not_complete_title_analysis": true,
+  "primary_scope_ref": "W",
+  "scopes": {
+    "W": {
+      "title_key": "synthetic:work",
+      "unit": "movie_work",
+      "edition": "synthetic-cut-a",
+      "as_of": "2026-10-19",
+      "coverage_unit_ref": null
+    }
+  },
+  "sources": {
+    "S": {
+      "origin_class": "synthetic_fixture",
+      "identity_status": "resolved",
+      "scope_ref": "W",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "coverage": "partial",
+      "coverage_manifest_ref": null,
+      "independently_verified": false,
+      "negative_fields": [],
+      "binding_verified": false,
+      "modality": "asserted",
+      "polarity": "asserted"
+    }
+  },
+  "profiles": {
+    "P": {
+      "fields": [
+        "experience.tension"
+      ],
+      "scope_ref": "W",
+      "evidence_refs": [
+        "S"
+      ],
+      "basis": "synthetic_fixture",
+      "modality": "asserted",
+      "polarity": "asserted",
+      "coverage": "partial",
+      "coverage_manifest_ref": null,
+      "independently_verified": false,
+      "binding_verified": false,
+      "conflict": false
+    }
+  },
+  "field_targets": {
+    "experience.tension": "W",
+    "humor.absurdist": "W",
+    "humor.satire": "W",
+    "screen.retrospective_frame_centrality": "W",
+    "genres.comedy": "W",
+    "evaluations.editing": "W",
+    "screen.observed_violence_peak": "W",
+    "screen.violence_exposure": "W",
+    "facts.father_recounts_past_to_children": "W",
+    "facts.person_observed_by_audience": "W",
+    "facts.graphic_violence_present": "W",
+    "facts.strong_language_present": "W",
+    "facts.object_agency_binding": "W"
+  },
+  "assessments": {
+    "experience.tension": {
+      "state": "assessed",
+      "value": 3,
+      "profile_ref": "P",
+      "reason": "assessed_cited"
+    },
+    "humor.absurdist": {
+      "state": "unknown",
+      "value": null,
+      "profile_ref": null,
+      "reason": "insufficient_evidence"
+    },
+    "humor.satire": {
+      "state": "unknown",
+      "value": null,
+      "profile_ref": null,
+      "reason": "insufficient_evidence"
+    },
+    "screen.retrospective_frame_centrality": {
+      "state": "unknown",
+      "value": null,
+      "profile_ref": null,
+      "reason": "insufficient_evidence"
+    },
+    "genres.comedy": {
+      "state": "unknown",
+      "value": null,
+      "profile_ref": null,
+      "reason": "insufficient_evidence"
+    },
+    "evaluations.editing": {
+      "state": "unknown",
+      "value": null,
+      "profile_ref": null,
+      "reason": "insufficient_evidence"
+    },
+    "screen.observed_violence_peak": {
+      "state": "unknown",
+      "value": null,
+      "profile_ref": null,
+      "reason": "insufficient_evidence"
+    },
+    "screen.violence_exposure": {
+      "state": "unknown",
+      "value": null,
+      "profile_ref": null,
+      "reason": "insufficient_evidence"
+    },
+    "facts.father_recounts_past_to_children": {
+      "state": "unknown",
+      "value": null,
+      "profile_ref": null,
+      "reason": "insufficient_evidence"
+    },
+    "facts.person_observed_by_audience": {
+      "state": "unknown",
+      "value": null,
+      "profile_ref": null,
+      "reason": "insufficient_evidence"
+    },
+    "facts.graphic_violence_present": {
+      "state": "unknown",
+      "value": null,
+      "profile_ref": null,
+      "reason": "insufficient_evidence"
+    },
+    "facts.strong_language_present": {
+      "state": "unknown",
+      "value": null,
+      "profile_ref": null,
+      "reason": "insufficient_evidence"
+    },
+    "facts.object_agency_binding": {
+      "state": "unknown",
+      "value": null,
+      "profile_ref": null,
+      "reason": "insufficient_evidence"
+    }
+  },
+  "deferred": {
+    "remaining_legacy_fields": "not_assessed",
+    "remaining_547_vocabulary": "not_assessed",
+    "suitability_and_audience_context": "not_assessed",
+    "precise_quantities_and_durations": "not_assessed",
+    "open_graph_and_outcomes": "not_assessed",
+    "color_and_presentation_facts": "not_assessed",
+    "other_advisory_topics": "not_assessed",
+    "complete_companion_outputs": "not_assessed"
+  },
+  "provenance": {
+    "producer_ref": "synthetic-schema-example",
+    "model_id": "no-inference",
+    "rubric_version": "candidate-2",
+    "comparison_cell": "schema-fixture",
+    "prompt_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "source_packet_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "candidate_bank_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "coverage_manifests": {}
+}

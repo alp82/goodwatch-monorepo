@@ -1,0 +1,73 @@
+{
+  "status": "static_source_pointers_no_source_bodies_or_live_attestation",
+  "observed_at": "2026-10-19",
+  "files": [
+    {
+      "path": "CONTEXT.md",
+      "sha256": "b0615389d97570279e67e71cc5163f5806f87cbd99c248ba4fc499ce5da4fbe5"
+    },
+    {
+      "path": "docs/design/fingerprint-v2/definition.json",
+      "sha256": "9345d50a12f54c48ffa65f6a56cfc400f4d090592052144d195f73259dd02dc9"
+    },
+    {
+      "path": "docs/design/fingerprint-v2/wayfinder/evidence-index.md",
+      "sha256": "7c5aa57a806012e60a8c246f81b86f6e1b7923a93d204261b1573f2b548f5336"
+    },
+    {
+      "path": "docs/design/fingerprint-v2/wayfinder/architecture-impact.md",
+      "sha256": "6deca62446fa07a313dcf96e14c98ad8f9d59c5b14f7c3936b20980e03cd643b"
+    },
+    {
+      "path": "docs/research/fingerprint-v2-gap-audit/recommended-changes.json",
+      "sha256": "f540dd279dd194fcb4ae94271bd7a14437b6304ddb9d0278015220fbe0151915"
+    },
+    {
+      "path": "docs/research/fingerprint-v2-gap-audit/tropes-narrative-proposals.json",
+      "sha256": "fe88f1d696c3461a8f1df37a2cac43238c00a74426e47c3bc54444aa1449b18b"
+    },
+    {
+      "path": "docs/research/fingerprint-v2-gap-audit/tropes-search-proposals.json",
+      "sha256": "f5d9cb58483df7ee90f45d65920c40f06ca1aeb2ccca06b0c895c9f0ecac0ae5"
+    },
+    {
+      "path": "docs/benchmarks/fingerprint/jev/README.md",
+      "sha256": "f2fe5ef878f309835b4c0ca8345c5f1148c962ffe36e2925e0a95631148da005"
+    },
+    {
+      "path": "goodwatch-webapp/app/server/title-snapshot/format.server.ts",
+      "sha256": "81857b93d4945e65e2e314fb9783a790c1315ba763fb66019fca34ca4815af4f"
+    },
+    {
+      "path": "goodwatch-webapp/app/server/taste/formula.server.ts",
+      "sha256": "f9799dd2c7c443aea6ad9fb17531297ab37d6f2fa302abdc030b202d1a7c6c32"
+    },
+    {
+      "path": "goodwatch-webapp/app/server/utils/fingerprint.ts",
+      "sha256": "bc42b46bbfc565f3b507202fcfa59cc587a71c36a6b339161e6d3dc86695bcb7"
+    },
+    {
+      "path": "goodwatch-webapp/app/domain/moods.ts",
+      "sha256": "5cc12bf5c8fa90f007982865673cc8ee13283620cf587eea3e201cbd3de659a6"
+    },
+    {
+      "path": "goodwatch-webapp/app/ui/details/fingerprint/scales.ts",
+      "sha256": "aa2867599fe58540ea362608a7e178b7541ead2b478a66df3430c1c895e6eb6b"
+    }
+  ],
+  "provider_research_commit": "6b50d8eb01d04f02f1567b29cd97500f7348ee10",
+  "direction_comment": "https://github.com/alp82/goodwatch-monorepo/issues/721#issuecomment-6265510719",
+  "correction": "The original evidence index five-query holdout summary is known wrong; the preserved baseline establishes30 cases. This candidate does not edit historical evidence.",
+  "limitations": [
+    "V2 definitions/proposals are vocabulary, not gold or accepted full schema.",
+    "Current source inspection does not verify live deployment, client behavior, calibration or production compatibility.",
+    "Historical tests compare native/mapped scales under different old conditions; no current run/cap inherited."
+  ],
+  "revision": "review-v2",
+  "correction_inputs": {
+    "representation_review_report": "c7ed57c86c0058b4e15d693312ab33b346f109a3b5eef0e258cafb2b491939bd",
+    "experimental_recommendation_unapproved": "5246bd1655241e99272fcaf1dc35cdfe63079b878c2fe1c23813a109507f8c30",
+    "companion_contract": "7290796d1fb46b89172708b9517fb57a8927e88fd198656e193ab8f292438de9",
+    "companion_ownership_matrix": "03666848383b0b3c439d9e2fb293367e01b0cf67ef3172782544a857ce93dc42"
+  }
+}

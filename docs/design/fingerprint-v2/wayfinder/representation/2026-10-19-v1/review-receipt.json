@@ -1,0 +1,23 @@
+{
+  "revision": "review-v2",
+  "status": "R1_R4_corrections_prepared_pending_focused_rereview",
+  "review_input_seal_sha256": "a368856340861c476c902a73bca218869d7c0bf6806e74f5ebd500e2cdef9bb5",
+  "findings": [
+    "R1 full-source/resolved-manifest coverage",
+    "R2 exact category versus literal presence",
+    "R3 primary work/run-manifest identity",
+    "R4 supported-none zero anchors"
+  ],
+  "Q11_exact_choice": "develop_ordinal_plus_facts",
+  "subset": {
+    "ordinals": 8,
+    "facts": 5
+  },
+  "new_user_approved_arm_choice": null,
+  "renderer_and_companion_boundaries_documented": true,
+  "source_truth_or_model_performance_reviewed": false,
+  "corrected_version_independent_rereview_complete": false,
+  "focused_expectations_matched": 71,
+  "known_v1_failures_reproduced_and_corrected": 4,
+  "intended_layout_links_passed": 28
+}

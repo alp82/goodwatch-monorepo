@@ -1,0 +1,332 @@
+{
+  "status": "synthetic_neutral_input_bank_fixture_not_provider_request",
+  "source_text": "Not included: this fixture demonstrates neutral labels only; no real source or expected answer.",
+  "model_visible": {
+    "scope": {
+      "id": "W",
+      "title_key": "synthetic:work",
+      "unit": "movie_work",
+      "edition": "synthetic-cut-a"
+    },
+    "bundles": [
+      {
+        "id": "B0",
+        "scope_ref": "W",
+        "source_ids": [
+          "S"
+        ],
+        "source_classes": [
+          "synthetic_fixture"
+        ]
+      }
+    ],
+    "questions": [
+      {
+        "field_id": "experience.tension",
+        "definition": "Experienced suspense or unease when present; not its duration.",
+        "native_values": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "anchors": {
+          "0": "Supported assessment of no tension in the declared assessed material; insufficient evidence is unknown.",
+          "1": "Mild experienced strength",
+          "2": "Moderate experienced strength",
+          "3": "Strong experienced strength",
+          "4": "Extreme experienced strength"
+        },
+        "nonassessed_labels": [
+          "U_INSUFFICIENT",
+          "U_CONFLICT",
+          "U_ID_SCOPE",
+          "NA",
+          "NOT_ASSESSED"
+        ],
+        "input_bundle_ref": "B0"
+      },
+      {
+        "field_id": "humor.absurdist",
+        "definition": "Humor from illogic or bizarre juxtaposition, not literal supernatural agency.",
+        "native_values": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "anchors": {
+          "0": "Supported assessment of no absurdist humor in the declared assessed material; insufficient evidence is unknown.",
+          "1": "Mild experienced strength",
+          "2": "Moderate experienced strength",
+          "3": "Strong experienced strength",
+          "4": "Extreme experienced strength"
+        },
+        "nonassessed_labels": [
+          "U_INSUFFICIENT",
+          "U_CONFLICT",
+          "U_ID_SCOPE",
+          "NA",
+          "NOT_ASSESSED"
+        ],
+        "input_bundle_ref": "B0"
+      },
+      {
+        "field_id": "humor.satire",
+        "definition": "Strength of humorous critique; not institutional subject presence.",
+        "native_values": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "anchors": {
+          "0": "Supported assessment of no satirical humor in the declared assessed material; insufficient evidence is unknown.",
+          "1": "Mild experienced strength",
+          "2": "Moderate experienced strength",
+          "3": "Strong experienced strength",
+          "4": "Extreme experienced strength"
+        },
+        "nonassessed_labels": [
+          "U_INSUFFICIENT",
+          "U_CONFLICT",
+          "U_ID_SCOPE",
+          "NA",
+          "NOT_ASSESSED"
+        ],
+        "input_bundle_ref": "B0"
+      },
+      {
+        "field_id": "screen.retrospective_frame_centrality",
+        "definition": "How much retrospective narration organizes the work; not percentage of flashbacks.",
+        "native_values": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "anchors": {
+          "0": "Supported assessment of no retrospective framing in the declared assessed material; insufficient evidence is unknown.",
+          "1": "Incidental device",
+          "2": "Meaningful secondary device",
+          "3": "Major organizing device",
+          "4": "Defining narrative frame"
+        },
+        "nonassessed_labels": [
+          "U_INSUFFICIENT",
+          "U_CONFLICT",
+          "U_ID_SCOPE",
+          "NA",
+          "NOT_ASSESSED"
+        ],
+        "input_bundle_ref": "B0"
+      },
+      {
+        "field_id": "genres.comedy",
+        "definition": "Use of comedy conventions, independent of a catalog genre label.",
+        "native_values": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "anchors": {
+          "0": "Supported assessment of no comedy conventions in the declared assessed material; insufficient evidence is unknown.",
+          "1": "Trace convention influence",
+          "2": "Substantial hybrid membership",
+          "3": "Clear genre identity",
+          "4": "Conventions define the work"
+        },
+        "nonassessed_labels": [
+          "U_INSUFFICIENT",
+          "U_CONFLICT",
+          "U_ID_SCOPE",
+          "NA",
+          "NOT_ASSESSED"
+        ],
+        "input_bundle_ref": "B0"
+      },
+      {
+        "field_id": "evaluations.editing",
+        "definition": "Evaluative shot assembly/rhythm/transitions, separate from personal enjoyment.",
+        "native_values": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "anchors": {
+          "0": "Severely ineffective execution",
+          "1": "Weak execution",
+          "2": "Competent or mixed execution",
+          "3": "Strong execution",
+          "4": "Exceptional execution"
+        },
+        "nonassessed_labels": [
+          "U_INSUFFICIENT",
+          "U_CONFLICT",
+          "U_ID_SCOPE",
+          "NA",
+          "NOT_ASSESSED"
+        ],
+        "input_bundle_ref": "B0"
+      },
+      {
+        "field_id": "screen.observed_violence_peak",
+        "definition": "Highest severity in explicitly covered material; a lower bound on a work peak if coverage is partial.",
+        "native_values": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "anchors": {
+          "0": "No violence in actually covered material",
+          "1": "Threat or implied harm",
+          "2": "Non-graphic injury or violence",
+          "3": "Graphic injury detail",
+          "4": "Extreme graphic detail"
+        },
+        "nonassessed_labels": [
+          "U_INSUFFICIENT",
+          "U_CONFLICT",
+          "U_ID_SCOPE",
+          "NA",
+          "NOT_ASSESSED"
+        ],
+        "input_bundle_ref": "B0"
+      },
+      {
+        "field_id": "screen.violence_exposure",
+        "definition": "Occurrence frequency over the declared complete denominator; unknown if denominator/coverage is inadequate.",
+        "native_values": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "anchors": {
+          "0": "No occurrences in adequately covered scope",
+          "1": "Isolated occurrence",
+          "2": "Recurring but minority presence",
+          "3": "Frequent presence",
+          "4": "Near-continuous presence"
+        },
+        "nonassessed_labels": [
+          "U_INSUFFICIENT",
+          "U_CONFLICT",
+          "U_ID_SCOPE",
+          "NA",
+          "NOT_ASSESSED"
+        ],
+        "input_bundle_ref": "B0"
+      },
+      {
+        "field_id": "facts.father_recounts_past_to_children",
+        "definition": "A father narrates his past to his children; roles are bound in this fixed template.",
+        "native_values": [
+          false,
+          true
+        ],
+        "anchors": null,
+        "nonassessed_labels": [
+          "U_INSUFFICIENT",
+          "U_CONFLICT",
+          "U_ID_SCOPE",
+          "NA",
+          "NOT_ASSESSED"
+        ],
+        "input_bundle_ref": "B0"
+      },
+      {
+        "field_id": "facts.person_observed_by_audience",
+        "definition": "An audience observes the same person in the cited proposition; knowledge state/time is not represented.",
+        "native_values": [
+          false,
+          true
+        ],
+        "anchors": null,
+        "nonassessed_labels": [
+          "U_INSUFFICIENT",
+          "U_CONFLICT",
+          "U_ID_SCOPE",
+          "NA",
+          "NOT_ASSESSED"
+        ],
+        "input_bundle_ref": "B0"
+      },
+      {
+        "field_id": "facts.graphic_violence_present",
+        "definition": "Graphic violence is present; false is a supported negative, never missingness.",
+        "native_values": [
+          false,
+          true
+        ],
+        "anchors": null,
+        "nonassessed_labels": [
+          "U_INSUFFICIENT",
+          "U_CONFLICT",
+          "U_ID_SCOPE",
+          "NA",
+          "NOT_ASSESSED"
+        ],
+        "input_bundle_ref": "B0"
+      },
+      {
+        "field_id": "facts.strong_language_present",
+        "definition": "Strong language is present; this property is distinct from graphic violence.",
+        "native_values": [
+          false,
+          true
+        ],
+        "anchors": null,
+        "nonassessed_labels": [
+          "U_INSUFFICIENT",
+          "U_CONFLICT",
+          "U_ID_SCOPE",
+          "NA",
+          "NOT_ASSESSED"
+        ],
+        "input_bundle_ref": "B0"
+      },
+      {
+        "field_id": "facts.object_agency_binding",
+        "definition": "One source-supported mode/object/agency tuple, all bound to the same object. No same-scene or other outcome inference. Multiple incompatible bindings become unknown for this screen.",
+        "native_values": [
+          "literal.tire.telekinetic_killing",
+          "literal.tire.other_supernatural_agency",
+          "literal.other_inanimate_object.telekinetic_killing",
+          "literal.other_inanimate_object.other_supernatural_agency",
+          "metaphorical.tire.telekinetic_killing",
+          "metaphorical.tire.other_supernatural_agency",
+          "metaphorical.other_inanimate_object.telekinetic_killing",
+          "metaphorical.other_inanimate_object.other_supernatural_agency",
+          "hypothetical.tire.telekinetic_killing",
+          "hypothetical.tire.other_supernatural_agency",
+          "hypothetical.other_inanimate_object.telekinetic_killing",
+          "hypothetical.other_inanimate_object.other_supernatural_agency",
+          "none_in_scope"
+        ],
+        "anchors": null,
+        "nonassessed_labels": [
+          "U_INSUFFICIENT",
+          "U_CONFLICT",
+          "U_ID_SCOPE",
+          "NA",
+          "NOT_ASSESSED"
+        ],
+        "input_bundle_ref": "B0"
+      }
+    ],
+    "attachment": "One shared disclosed input bundle attached deterministically; not a model-selected entailment citation."
+  },
+  "boundary": "No hidden referee/adjudication fields in model_visible. Actual provider rendering, neutral-ID adapter/custody mapping and complete input bounds still required before execution."
+}

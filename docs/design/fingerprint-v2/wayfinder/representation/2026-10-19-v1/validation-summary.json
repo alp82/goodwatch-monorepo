@@ -1,0 +1,37 @@
+{
+  "success": true,
+  "revision": "review-v2",
+  "expectation_rows": 71,
+  "all_expectations_matched": true,
+  "suites": {
+    "existing_author": 16,
+    "reviewer_adverse": 23,
+    "focused_corrections": 28,
+    "known_v1_failure_reproductions": 4
+  },
+  "known_v1_failures_reproduced_and_corrected": 4,
+  "current_source_linked_negative_clearances": 0,
+  "same_subset": {
+    "ordinals": 8,
+    "facts": 5
+  },
+  "Q11_exact_choice": "develop_ordinal_plus_facts",
+  "neutral_default_bundles": 1,
+  "model_visible_hidden_adjudication_key_hits": 0,
+  "public_privacy_key_hits": 0,
+  "intended_layout_relative_links_passed": 28,
+  "source_hashes_matched": 13,
+  "full_schema_or_arm_approval": false,
+  "corrected_independent_rereview_complete": false,
+  "only_public_safe_is_publication_candidate": true,
+  "not_run": [
+    "Inference/provider calls",
+    "Database access",
+    "Model downloads",
+    "Frontend",
+    "Repository/GitHub writes",
+    "Commits/pushes/closure",
+    "Production",
+    "Retrieval benchmark"
+  ]
+}
