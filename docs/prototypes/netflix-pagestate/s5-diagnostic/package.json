@@ -1,0 +1,7 @@
+{
+  "name": "goodwatch-netflix-s5-owner-diagnostic",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": { "test": "node --test --test-concurrency=1 test/*.test.mjs test/*.browser.mjs" }
+}

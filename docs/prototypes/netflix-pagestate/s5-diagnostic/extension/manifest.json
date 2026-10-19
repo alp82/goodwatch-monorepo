@@ -1,0 +1,8 @@
+{
+  "manifest_version": 3,
+  "name": "GoodWatch Netflix S5 (owner-only experiment)",
+  "version": "1.0.0",
+  "description": "Owner-only Q30 experiment for #730. Counts report only; no member feature or membership export.",
+  "permissions": ["activeTab", "scripting"],
+  "action": {"default_popup": "popup.html"}
+}

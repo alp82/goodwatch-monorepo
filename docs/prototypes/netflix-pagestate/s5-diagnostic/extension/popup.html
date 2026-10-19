@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Netflix S5 owner experiment</title><link rel="stylesheet" href="popup.css"></head>
+<body><main>
+  <h1>Netflix S5 diagnostic</h1>
+  <p class="tag"><strong>Owner-only experiment.</strong> Use only on your own account (Q30). Not a member feature. Member release awaits terms research #732.</p>
+  <p>Issues read-only calls using this page's session. No clicks or retries. Limits count S5-issued calls, not independently measured network requests.</p>
+  <p id="state" role="status" aria-live="polite">Checking this tab…</p>
+  <button id="start" type="button" hidden>Start owner-only experiment</button>
+  <button id="stop" type="button" hidden>Stop and show counts</button>
+  <button id="cancel" type="button" hidden>Cancel and release data</button>
+  <button id="copy" type="button" hidden>Copy counts report</button>
+  <pre id="report" hidden></pre>
+</main><script src="popup.js"></script></body>
+</html>

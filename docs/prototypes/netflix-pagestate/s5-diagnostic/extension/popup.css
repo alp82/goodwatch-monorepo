@@ -1,0 +1,16 @@
+:root { color-scheme: light dark; --bg: #fff; --fg: #1b1b1f; --muted: #55565e; --line: #d6d7dd; --accent: #1f5fd1; --accent-fg: #fff; }
+@media (prefers-color-scheme: dark) { :root { --bg: #17181c; --fg: #ececf1; --muted: #a9aab3; --line: #3a3b43; --accent: #8fb3ff; --accent-fg: #0d1426; } }
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--fg); }
+body { width: 380px; font: 14px/1.45 system-ui, sans-serif; }
+main { padding: 14px 16px; }
+h1 { font-size: 16px; margin: 0; }
+.tag { color: var(--muted); font-size: 12px; margin: 2px 0 10px; }
+.state { font-weight: 600; margin: 0; }
+.progress { font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; margin: 6px 0 0; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+button { min-height: 34px; padding: 6px 12px; border: 1px solid var(--line); border-radius: 6px; background: transparent; color: var(--fg); font: inherit; font-weight: 600; cursor: pointer; }
+button.primary { border-color: var(--accent); background: var(--accent); color: var(--accent-fg); }
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+[hidden] { display: none !important; }
+.report { margin-top: 10px; max-height: 260px; overflow: auto; font-size: 11px; border: 1px solid var(--line); border-radius: 6px; padding: 8px; white-space: pre-wrap; overflow-wrap: anywhere; }
