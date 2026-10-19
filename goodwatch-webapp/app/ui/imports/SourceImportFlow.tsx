@@ -51,8 +51,16 @@ export function SourceImportFlow({
 	const history = (query.data?.imports ?? []).filter(
 		(item) => item.source === source && item.status !== "preview",
 	)
+	const resumable =
+		source === "tvtime" && !handoff
+			? (query.data?.imports ?? []).find(
+					(item) => item.source === source && item.status === "preview",
+				)
+			: undefined
 	const latest = history[0]
-	const [openId, setOpenId] = useState<string | null>(initialId ?? null)
+	const [openId, setOpenId] = useState<string | null>(
+		initialId ?? resumable?.id ?? null,
+	)
 	const [uploadOpen, setUploadOpen] = useState(!latest || !!handoff)
 	// A handed-off file is the member's act, so its preview takes focus when it opens.
 	const [acted, setActed] = useState(!!handoff)
@@ -62,8 +70,6 @@ export function SourceImportFlow({
 	const [replaced, setReplaced] = useState<
 		(PreviewUpdate & { id: string }) | null
 	>(null)
-	// The file behind the latest preview, in memory only, so a TV Time preview can run it again.
-	const [file, setFile] = useState<File | null>(null)
 	const shownId =
 		openId ?? (!uploadOpen && latest?.status === "running" ? latest.id : null)
 	useEffect(() => {
@@ -89,7 +95,6 @@ export function SourceImportFlow({
 					key={shownId}
 					id={shownId}
 					focus={acted}
-					file={file}
 					onUploadAnother={upload}
 					onPreviewReplaced={(next, update) => {
 						setReplaced({ id: next.id, ...update })
@@ -141,11 +146,11 @@ export function SourceImportFlow({
 						) : (
 							<SourceImportUploadPanel
 								source={source}
-								onPreview={(summary, chosen) => {
-									setFile(chosen ?? null)
+								onPreview={(summary) => {
 									open(summary.id)
 								}}
 								handoff={pending}
+								onOpenMatching={(id) => open(id)}
 							/>
 						))}
 				</>

@@ -93,9 +93,6 @@ export const TVTIME_COPY = {
 		"This preview reached its lookup limit. Run the import again to match more.",
 	lookupUnavailable:
 		"TMDB's TVDB lookup is unavailable; retry this import later.",
-	/** A rerun reads the file afresh, so matches made in this preview don't carry over. */
-	rerunBeforeMatching:
-		"Run it again before you match movies: a new run starts without your matches.",
 } as const
 
 /** How many rows a rerun can still match: "2,400 rows aren't matched yet." */

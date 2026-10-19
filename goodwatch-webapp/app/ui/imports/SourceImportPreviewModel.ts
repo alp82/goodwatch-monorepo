@@ -1,8 +1,11 @@
 import type { ImportKind, ImportOptions } from "~/domain/imports"
 import type { WishlistPreviewUpdate } from "./WishlistImportPreview"
 
-/** Why a new preview replaced the one on screen: the member's matches, or a TV Time rerun of the same file. */
-export type PreviewUpdate = WishlistPreviewUpdate & { rerun?: boolean }
+/** Why a new preview replaced the one on screen: the member's matches, accepted suggestions, or background matching. */
+export type PreviewUpdate = WishlistPreviewUpdate & {
+	background?: boolean
+	acceptedCount?: number
+}
 
 export function sourceImportRequirements(
 	availableWatches: number,

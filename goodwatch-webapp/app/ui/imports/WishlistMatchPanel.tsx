@@ -29,6 +29,8 @@ import {
 	tvtimeIntentLine,
 	tvtimeMatchEffect,
 	tvtimeReleaseDate,
+	tvtimeSuggestionEvidence,
+	tvtimeSuggestionNote,
 } from "./TvTimeMatchCopy"
 import {
 	errorBox,
@@ -132,6 +134,7 @@ export default function WishlistMatchPanel({
 	onUpdate,
 	onBack,
 	suggest = true,
+	tvtimeBulkAccept,
 	note,
 }: {
 	importId: string
@@ -160,6 +163,8 @@ export default function WishlistMatchPanel({
 	onBack: () => void
 	/** False for a source GoodWatch never suggests matches for, so no suggestions are asked for. */
 	suggest?: boolean
+	/** TV Time accepts the server snapshot across all pages, creating a child preview. */
+	tvtimeBulkAccept?: (token: string) => void
 	/** A line under the heading about how this source's matches apply. */
 	note?: string
 }) {
@@ -167,6 +172,7 @@ export default function WishlistMatchPanel({
 	const loaded = query.data?.pages.flatMap((page) => page.groups) ?? []
 	// Suggestions cover the loaded pages only. An entry a Change opened from elsewhere is matched by hand.
 	const suggestions = useWishlistSuggestions(importId, suggest ? loaded : [])
+	const snapshot = suggestions.bulkAccept
 	const total = query.data?.pages.at(-1)?.total ?? 0
 	// Entries opened by a Change before their page loaded. A page that brings one in takes its place.
 	const [extras, setExtras] = useState<WishlistMatchGroup[]>([])
@@ -452,7 +458,10 @@ export default function WishlistMatchPanel({
 									disabled={locked}
 									onClick={() => {
 										setOpenIndex(group.representativeIndex)
-										setFocus({ index: group.representativeIndex, on: "search" })
+										setFocus({
+											index: group.representativeIndex,
+											on: "search",
+										})
 									}}
 								>
 									<span className="sr-only">Match </span>
@@ -464,7 +473,30 @@ export default function WishlistMatchPanel({
 					</ul>
 				</div>
 			)}
-			{(acceptable.length > 0 || bulkAccepted > 0) && (
+			{tvtimeBulkAccept && snapshot?.token && snapshot.eligibleCount > 0 && (
+				<div className="flex flex-col gap-2">
+					<p className="text-sm text-gray-300">
+						Review the suggestions before accepting them. Nothing is imported
+						until you start the import.
+					</p>
+					<button
+						type="button"
+						className={`${secondaryButton} self-start`}
+						disabled={locked || draft.size > 0}
+						onClick={() => snapshot.token && tvtimeBulkAccept(snapshot.token)}
+					>
+						Accept all {formatCount(snapshot.eligibleCount)}{" "}
+						{snapshot.eligibleCount === 1 ? "suggestion" : "suggestions"}
+					</button>
+					{draft.size > 0 && (
+						<p className="text-sm text-gray-300">
+							Update the preview or discard your changes before accepting all
+							suggestions.
+						</p>
+					)}
+				</div>
+			)}
+			{!tvtimeBulkAccept && (acceptable.length > 0 || bulkAccepted > 0) && (
 				<div className="flex flex-col gap-2">
 					{acceptable.length > 0 && (
 						<p className="text-sm text-gray-300">
@@ -586,6 +618,14 @@ export default function WishlistMatchPanel({
 										setSaid(`${entryName(group)} isn't accepted anymore.`)
 									}}
 									onClear={() => {
+										if (
+											movieOnly(group) &&
+											!savedMatch(group) &&
+											suggestionOf(group)?.state !== "suggested"
+										) {
+											onRevert(group)
+											return
+										}
 										if (!onChoose(group, null)) {
 											setSaid(locked ? "" : FULL)
 											return
@@ -663,6 +703,17 @@ export default function WishlistMatchPanel({
 						{error && (
 							<div className="space-y-3">
 								<p className={errorBox}>{error.message}</p>
+								{tvtimeBulkAccept &&
+									error.code?.startsWith("tvtime_suggestion_") && (
+										<button
+											type="button"
+											className={secondaryButton}
+											disabled={locked || suggestions.loading}
+											onClick={suggestions.refresh}
+										>
+											Refresh suggestions
+										</button>
+									)}
 								{isRestart(error) && (
 									<button
 										type="button"
@@ -730,7 +781,10 @@ function Entry({
 	const note =
 		title || pending || !suggestion || suggestion.state === "suggested"
 			? null
-			: wishlistSuggestionNote(suggestion.state)
+			: movieOnly(group)
+				? (tvtimeSuggestionNote(suggestion.reason) ??
+					wishlistSuggestionNote(suggestion.state))
+				: wishlistSuggestionNote(suggestion.state)
 	const shown = title ?? suggested
 	const poster = shown?.posterPath
 		? tmdbFixedImage("poster", shown.posterPath, POSTER_WIDTH)
@@ -786,8 +840,12 @@ function Entry({
 							<>
 								<span className="font-semibold">Suggested:</span>{" "}
 								{describe(suggested)} · {typeName(suggested.mediaType)} ·{" "}
-								{WISHLIST_SUGGESTION_COPY.reason}
+								{suggestion?.proof
+									? tvtimeSuggestionEvidence(suggestion.proof)
+									: WISHLIST_SUGGESTION_COPY.reason}
 							</>
+						) : pending && movie && !hadMatch ? (
+							"Suggestion turned down"
 						) : hadMatch ? (
 							"Match removed"
 						) : (
@@ -813,6 +871,26 @@ function Entry({
 							onClick={() => onAccept(suggested)}
 						>
 							Accept<span className="sr-only"> the suggestion for {label}</span>
+						</button>
+					)}
+					{suggested && movie && (
+						<button
+							type="button"
+							className={secondaryButton}
+							disabled={disabled || !canChoose}
+							onClick={onClear}
+						>
+							Reject<span className="sr-only"> the suggestion for {label}</span>
+						</button>
+					)}
+					{pending && !title && movie && (
+						<button
+							type="button"
+							className={secondaryButton}
+							disabled={disabled}
+							onClick={onUndoAccept}
+						>
+							Undo reject<span className="sr-only"> for {label}</span>
 						</button>
 					)}
 					<button
@@ -1073,9 +1151,9 @@ function Editor({
 					</p>
 				)}
 				{search && query.isFetching && (
-					<p className="flex items-center gap-2">
+					<div className="flex items-center gap-2">
 						<Spinner size="small" /> Searching
-					</p>
+					</div>
 				)}
 				{search && query.isSuccess && !query.isFetching && (
 					<p>

@@ -15,31 +15,60 @@ import {
 	useMovieLensFiles,
 	useWrongSourceCatch,
 } from "./ImportFileRouting"
-import { usePreviewSourceImport } from "./SourceImportHooks"
+import {
+	ImportRequestError,
+	usePreviewSourceImport,
+	useSourceImports,
+} from "./SourceImportHooks"
+import { tvtimeBusyHint } from "./TvTimeMatchCopy"
 import { errorBox, infoBox, primaryButton, stepHeading } from "./shared"
 
 const sourceName = (source: FileImportSource) => IMPORT_SOURCE_NAMES[source]
 
 type PanelProps = {
 	source: FileImportSource
-	/** The file goes along, so a TV Time preview can run it again without asking for it. */
-	onPreview: (summary: ImportSummary, file?: File) => void
+	onPreview: (summary: ImportSummary) => void
+	onOpenMatching?: (id: string) => void
 	/** A file the page recognized as this source's; it is sent at once. */
 	handoff?: ImportHandoff
 }
 
-function SingleFileUploadPanel({ source, onPreview, handoff }: PanelProps) {
+function SingleFileUploadPanel({
+	source,
+	onPreview,
+	handoff,
+	onOpenMatching,
+}: PanelProps) {
 	const descriptor = IMPORT_SOURCE_UPLOAD[source]
 	const fileLabel = descriptor.label
 	const id = useId()
 	const inputRef = useRef<HTMLInputElement>(null)
 	const [dragging, setDragging] = useState(false)
 	const preview = usePreviewSourceImport()
+	const imports = useSourceImports()
+	const code =
+		preview.error instanceof ImportRequestError ? preview.error.code : null
+	const busyHint = source === "tvtime" ? tvtimeBusyHint(code) : null
+	const existing =
+		code === "tvtime_resolution_member_busy"
+			? imports.data?.imports.find(
+					(item) => item.source === "tvtime" && item.status === "preview",
+				)
+			: undefined
 	const wrongSource = useWrongSourceCatch(source)
 	const upload = (file: File) =>
 		preview.mutate(
 			{ source, file },
-			{ onSuccess: (response) => onPreview(response.import, file) },
+			{
+				onSuccess: (response) => onPreview(response.import),
+				onError: (error) => {
+					if (
+						error instanceof ImportRequestError &&
+						error.code === "tvtime_resolution_member_busy"
+					)
+						void imports.refetch()
+				},
+			},
 		)
 	const send = async (file?: File) => {
 		if (!file || preview.isPending) return
@@ -103,7 +132,23 @@ function SingleFileUploadPanel({ source, onPreview, handoff }: PanelProps) {
 				You will review everything before GoodWatch changes your library.
 			</p>
 			<div aria-live="assertive">
-				{preview.isError && <p className={errorBox}>{preview.error.message}</p>}
+				{preview.isError && (
+					<div className="space-y-3">
+						<p className={errorBox}>
+							{preview.error.message}
+							{busyHint && ` ${busyHint}`}
+						</p>
+						{existing && onOpenMatching && (
+							<button
+								type="button"
+								className={primaryButton}
+								onClick={() => onOpenMatching(existing.id)}
+							>
+								Open the import that's matching
+							</button>
+						)}
+					</div>
+				)}
 			</div>
 		</section>
 	)

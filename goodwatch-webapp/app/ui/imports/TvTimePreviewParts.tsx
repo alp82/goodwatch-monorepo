@@ -1,9 +1,4 @@
-// The parts a TV Time preview adds to the general preview. TV Time also holds watches and show statuses, so it keeps
-// the general preview's data-type and watch-date choices and composes the shipped match panel for the movies TV Time's
-// own export names without a catalog ID. Matches stay in memory until Update preview turns them into a new preview,
-// which replaces this one on screen. A preview that ran out of lookups, or met a lookup outage, offers to run the same
-// file again: a fresh preview, since TV Time's identities are cached and each run matches more.
-import { Suspense, lazy, useState } from "react"
+import { Suspense, lazy, useEffect, useRef, useState } from "react"
 import type { ImportSummary } from "~/domain/imports"
 import { Spinner } from "~/ui/wait/Spinner"
 import { useOpenedOnce } from "~/utils/first-use"
@@ -11,7 +6,9 @@ import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 import {
 	WISHLIST_MATCH_MAX_CHANGES,
 	type WishlistMatchGroup,
-	usePreviewSourceImport,
+	useAcceptTvTimeSuggestions,
+	useDiscardSourceImport,
+	useLoadSourceImport,
 	useResolveWishlistImport,
 } from "./SourceImportHooks"
 import type { PreviewUpdate } from "./SourceImportPreviewModel"
@@ -19,16 +16,11 @@ import {
 	TVTIME_COPY,
 	tvtimeMatchIntro,
 	tvtimeMatchedLine,
+	tvtimeProgress,
 	tvtimeRowsLeft,
 } from "./TvTimeMatchCopy"
 import type { MatchDraft, MatchTitle } from "./WishlistMatchPanel"
-import {
-	errorBox,
-	formatCount,
-	infoBox,
-	primaryButton,
-	secondaryButton,
-} from "./shared"
+import { errorBox, formatCount, infoBox, secondaryButton } from "./shared"
 
 const loadMatchPanel = () => import("./WishlistMatchPanel")
 const WishlistMatchPanel = lazy(reloadOnStaleChunk(loadMatchPanel))
@@ -43,9 +35,44 @@ export function useTvTimeMatching(
 ) {
 	const [draft, setDraft] = useState<MatchDraft>(new Map())
 	const resolve = useResolveWishlistImport(summary.id)
-	const rerun = usePreviewSourceImport()
-	// While Confirm, Update preview, or a rerun runs, no match can change: it would vanish with this preview.
-	const locked = confirming || resolve.isPending || rerun.isPending
+	const bulk = useAcceptTvTimeSuggestions(summary.id)
+	const cancel = useDiscardSourceImport(summary.id)
+	const load = useLoadSourceImport()
+	const leaving = useRef(false)
+	const blocked = useRef(false)
+	// Every action is tied to this preview. Never replace it during a member decision.
+	const locked =
+		confirming ||
+		resolve.isPending ||
+		bulk.isPending ||
+		cancel.isPending ||
+		load.isPending
+	blocked.current =
+		confirming ||
+		resolve.isPending ||
+		bulk.isPending ||
+		cancel.isPending ||
+		draft.size > 0
+	const replacementId = summary.resolution?.replacementId
+	const replacement =
+		replacementId && replacementId !== summary.id ? replacementId : null
+	const loadLatest = () => {
+		if (!replacement || blocked.current || leaving.current) return
+		load.mutate(replacement, {
+			onSuccess: (response) => {
+				if (!leaving.current && !blocked.current)
+					onReplaced?.(response.import, {
+						rewatchReset: false,
+						background: true,
+					})
+			},
+		})
+	}
+	// A failed load is retried explicitly. A late response cannot throw away a choice or follow discard.
+	useEffect(() => {
+		if (replacement && !blocked.current && !leaving.current && load.isIdle)
+			loadLatest()
+	}, [replacement, load.isIdle, loadLatest])
 	const set = (index: number, title: MatchTitle | null | undefined) => {
 		const next = new Map(draft)
 		if (title === undefined) next.delete(index)
@@ -59,7 +86,7 @@ export function useTvTimeMatching(
 		const saved = group.item.wishlistResolution
 		const same = title
 			? saved?.mediaType === title.mediaType && saved.tmdbId === title.tmdbId
-			: !saved
+			: !saved && group.matchScope !== "tvtime_movie"
 		if (!same && !draft.has(index) && draft.size >= WISHLIST_MATCH_MAX_CHANGES)
 			return false
 		set(index, same ? undefined : title)
@@ -85,14 +112,26 @@ export function useTvTimeMatching(
 			},
 		)
 	}
-	const runAgain = (file: File) =>
-		rerun.mutate(
-			{ source: "tvtime", file },
-			{
-				onSuccess: (response) =>
-					onReplaced?.(response.import, { rewatchReset: false, rerun: true }),
+	const acceptAll = (token: string) => {
+		if (locked || draft.size > 0) return
+		bulk.mutate(token, {
+			onSuccess: (response) =>
+				onReplaced?.(response.import, {
+					rewatchReset: false,
+					acceptedCount: response.acceptedCount,
+				}),
+		})
+	}
+	const discardPreview = (onBack: () => void) => {
+		if (locked) return
+		leaving.current = true
+		cancel.mutate(undefined, {
+			onSuccess: onBack,
+			onError: () => {
+				leaving.current = false
 			},
-		)
+		})
+	}
 	return {
 		draft,
 		locked,
@@ -102,8 +141,13 @@ export function useTvTimeMatching(
 		discard: () => !locked && setDraft(new Map()),
 		update,
 		resolve,
-		rerun,
-		runAgain,
+		bulk,
+		acceptAll,
+		cancel,
+		discardPreview,
+		replacement,
+		load,
+		loadLatest,
 	}
 }
 export type TvTimeMatching = ReturnType<typeof useTvTimeMatching>
@@ -112,77 +156,95 @@ export type TvTimeMatching = ReturnType<typeof useTvTimeMatching>
 export function TvTimeUpdatedNotice({ update }: { update: PreviewUpdate }) {
 	return (
 		<p className={infoBox}>
-			{update.rerun
-				? "Ran the import again with the same file. This preview replaces the earlier one."
-				: "Updated with your matches. This preview replaces the earlier one, and the counts include your matches."}{" "}
+			{update.background
+				? "GoodWatch finished matching. This preview replaces the earlier one."
+				: update.acceptedCount !== undefined
+					? `Accepted ${formatCount(update.acceptedCount)} ${update.acceptedCount === 1 ? "suggestion" : "suggestions"}. This preview replaces the earlier one. Nothing is imported until you start the import.`
+					: "Updated with your matches. This preview replaces the earlier one, and the counts include your matches."}{" "}
 			Check your choices before you import.
 		</p>
 	)
 }
 
-/**
- * Rows TV Time couldn't look up. Reaching the lookup limit and a lookup outage read differently, in the server's own
- * words; both can be fixed by running the file again, which needs the file this page still holds or a new choice.
- */
+/** Live progress belongs to the job; row counts still describe the preview on screen. */
 export function TvTimeLookupNotices({
 	summary,
 	matching,
-	file,
-	onBack,
 }: {
 	summary: ImportSummary
 	matching: TvTimeMatching
-	file?: File
-	onBack: () => void
 }) {
+	const progress = summary.resolution
+		? tvtimeProgress(summary.resolution)
+		: null
 	const limit = summary.tvtimeLookupLimitCount ?? 0
 	const outage = summary.tvtimeLookupUnavailableCount ?? 0
-	if (limit === 0 && outage === 0) return null
-	const { rerun } = matching
-	const again = file ? (
-		<button
-			type="button"
-			className={`${limit > 0 ? primaryButton : secondaryButton} self-start`}
-			disabled={matching.locked}
-			onClick={() => matching.runAgain(file)}
-		>
-			{rerun.isPending ? "Running the import again" : "Run the import again"}
-		</button>
-	) : (
-		<button
-			type="button"
-			className={`${secondaryButton} self-start`}
-			disabled={matching.locked}
-			onClick={onBack}
-		>
-			Choose the file again
-		</button>
-	)
-	const matchable = (summary.wishlistMatchCount ?? 0) > 0
 	return (
 		<div className="flex flex-col gap-3">
-			{limit > 0 && (
-				<div className={`${infoBox} flex flex-col gap-1`}>
+			{progress?.active && (
+				<div className={`${infoBox} space-y-2`}>
+					<p className="font-semibold" aria-live="polite">
+						{progress.step}
+					</p>
+					<p>{progress.line}</p>
+					<progress
+						value={summary.resolution?.processed}
+						max={Math.max(summary.resolution?.total ?? 1, 1)}
+						className="h-3 w-full accent-indigo-500"
+						aria-label="Rows checked"
+					/>
+					<p>
+						You can leave this page. Matching keeps going, and your preview is
+						here when you open TV Time again.
+					</p>
+				</div>
+			)}
+			{matching.replacement && (
+				<div className={`${infoBox} space-y-3`}>
+					<p>
+						GoodWatch finished matching. Update the preview or discard your
+						changes, then load the latest preview.
+					</p>
+					<button
+						type="button"
+						className={secondaryButton}
+						disabled={matching.locked || matching.unapplied}
+						onClick={matching.loadLatest}
+					>
+						Load the latest preview
+					</button>
+				</div>
+			)}
+			{!progress?.active && limit > 0 && (
+				<div className={`${infoBox} space-y-1`}>
 					<p className="font-semibold">{TVTIME_COPY.lookupLimit}</p>
 					<p>{tvtimeRowsLeft(limit)}</p>
+					<p>
+						To run it again, discard this preview and choose the file again.
+					</p>
 				</div>
 			)}
-			{outage > 0 && (
-				<div className="flex flex-col gap-1 rounded-lg border border-amber-700 bg-amber-950/50 p-4 text-amber-100">
+			{!progress?.active && outage > 0 && (
+				<div className="space-y-1 rounded-lg border border-amber-700 bg-amber-950/50 p-4 text-amber-100">
 					<p className="font-semibold">{TVTIME_COPY.lookupUnavailable}</p>
 					<p>{tvtimeRowsLeft(outage)}</p>
+					<p>
+						To run it again, discard this preview and choose the file again.
+					</p>
 				</div>
 			)}
-			{/* Either rerun reads the file afresh, so the member's matches don't carry over. */}
-			{matchable && (
-				<p className="text-sm text-gray-300">
-					{TVTIME_COPY.rerunBeforeMatching}
+			{summary.resolution?.state === "failed" && (
+				<p className={errorBox}>
+					Matching couldn't finish. Discard this preview and import the file
+					again to retry.
 				</p>
 			)}
-			{again}
-			<div aria-live="assertive">
-				{rerun.isError && <p className={errorBox}>{rerun.error.message}</p>}
-			</div>
+			{matching.load.isError && (
+				<p className={errorBox}>{matching.load.error.message}</p>
+			)}
+			{matching.cancel.isError && (
+				<p className={errorBox}>{matching.cancel.error.message}</p>
+			)}
 		</div>
 	)
 }
@@ -235,8 +297,14 @@ export function TvTimeMatchSection({
 							request={null}
 							updating={resolve.isPending}
 							locked={matching.locked}
-							error={resolve.isError ? resolve.error : null}
-							suggest={false}
+							error={
+								resolve.isError
+									? resolve.error
+									: matching.bulk.isError
+										? matching.bulk.error
+										: null
+							}
+							tvtimeBulkAccept={matching.acceptAll}
 							note={TVTIME_COPY.watchesFirst}
 							onChoose={matching.choose}
 							onRevert={matching.revert}

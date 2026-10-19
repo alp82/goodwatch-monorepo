@@ -13,6 +13,7 @@ import {
 	type PreviewUpdate,
 	sourceImportRequirements,
 } from "./SourceImportPreviewModel"
+import { tvtimeProgress } from "./TvTimeMatchCopy"
 import {
 	TvTimeLookupNotices,
 	TvTimeMatchSection,
@@ -50,8 +51,6 @@ type PreviewProps = {
 	/** Wishlist and TV Time: a new preview replaced this one on screen. */
 	onPreviewReplaced?: (next: ImportSummary, update: PreviewUpdate) => void
 	updated?: PreviewUpdate
-	/** TV Time: the file behind this preview, so it can run again. */
-	file?: File
 }
 
 export function SourceImportPreview(props: PreviewProps) {
@@ -82,12 +81,16 @@ function GeneralImportPreview({
 	onConfirm,
 	onBack,
 	updated,
-	file,
 	matching,
 }: PreviewProps & { matching?: TvTimeMatching }) {
 	const copy = sourceImportCopy(summary.source)
 	const unapplied = !!matching?.unapplied
 	const locked = !!matching?.locked
+	const stillMatching =
+		!!matching &&
+		!!summary.resolution &&
+		tvtimeProgress(summary.resolution).active
+	const back = matching ? () => matching.discardPreview(onBack) : onBack
 	const available = IMPORT_KINDS.filter((kind) => summary.kinds[kind] > 0)
 	const [kinds, setKinds] = useState<ImportKind[]>(available)
 	const [conflictChoice, setConflictChoice] =
@@ -122,12 +125,7 @@ function GeneralImportPreview({
 			</div>
 			{matching && updated && <TvTimeUpdatedNotice update={updated} />}
 			{matching && (
-				<TvTimeLookupNotices
-					summary={summary}
-					matching={matching}
-					file={file}
-					onBack={onBack}
-				/>
+				<TvTimeLookupNotices summary={summary} matching={matching} />
 			)}
 			{summary.warnings.length > 0 && (
 				<div
@@ -175,7 +173,7 @@ function GeneralImportPreview({
 				<TvTimeMatchSection
 					summary={summary}
 					matching={matching}
-					onBack={onBack}
+					onBack={back}
 				/>
 			)}
 			<div>
@@ -273,6 +271,12 @@ function GeneralImportPreview({
 						: "Choose how to handle watch dates."}
 				</p>
 			)}
+			{stillMatching && (
+				<p className="text-sm text-gray-300">
+					GoodWatch is still matching. Importing now brings in only what's
+					matched so far, and matching stops.
+				</p>
+			)}
 			<div className="flex flex-wrap gap-3">
 				<button
 					type="button"
@@ -294,15 +298,23 @@ function GeneralImportPreview({
 						})
 					}
 				>
-					{confirming ? "Starting import" : "Start import"}
+					{confirming
+						? "Starting import"
+						: stillMatching
+							? "Import what's matched so far"
+							: "Start import"}
 				</button>
 				<button
 					type="button"
 					className={secondaryButton}
 					disabled={confirming || locked}
-					onClick={onBack}
+					onClick={back}
 				>
-					{copy.restart}
+					{matching
+						? matching.cancel.isPending
+							? "Discarding preview"
+							: "Discard and choose another file"
+						: copy.restart}
 				</button>
 			</div>
 			<div aria-live="assertive">

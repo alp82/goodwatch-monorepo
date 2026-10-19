@@ -35,15 +35,12 @@ const skippedCount = (summary: ImportSummary) =>
 export function SourceImportCurrent({
 	id,
 	focus,
-	file,
 	onUploadAnother,
 	onPreviewReplaced,
 	updated,
 }: {
 	id: string
 	focus: boolean
-	/** The file behind this preview, when the page still holds it. */
-	file?: File | null
 	onUploadAnother: () => void
 	onPreviewReplaced?: (next: ImportSummary, update: PreviewUpdate) => void
 	updated?: PreviewUpdate
@@ -91,7 +88,6 @@ export function SourceImportCurrent({
 				onBack={onUploadAnother}
 				onPreviewReplaced={onPreviewReplaced}
 				updated={updated}
-				file={file ?? undefined}
 			/>
 		)
 	if (summary.status === "running") {

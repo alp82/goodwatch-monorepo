@@ -203,11 +203,15 @@ type Net = {
 	summaries?: Record<string, ImportSummary[]>
 	/** The suggestions page to answer. */
 	suggestions?: unknown
+	bulkRefusal?: { status: number; body: unknown }
+	discardRefusal?: { status: number; body: unknown }
 	/** The import list. */
 	list?: ImportSummary[]
+	listAfterRefusal?: ImportSummary[]
 }
 const discarded = new Set<string>()
 let net: Net = {}
+let refused = false
 /** Previews the member confirmed; any other preview stays a preview when asked again. */
 const confirmed = new Set<string>()
 /** The latest answer for each preview, so a refetch returns what the member saw. */
@@ -238,8 +242,10 @@ globalThis.fetch = (async (input: string, init?: RequestInit) => {
 	})
 	const parsed = new URL(url, "https://goodwatch.app")
 	if (parsed.pathname === "/api/imports/preview") {
-		if (net.previewRefusal)
+		if (net.previewRefusal) {
+			refused = true
 			return respond(net.previewRefusal.status, net.previewRefusal.body)
+		}
 		const next = net.previews?.shift()
 		if (next) known.set(next.id, next)
 		return next
@@ -247,6 +253,8 @@ globalThis.fetch = (async (input: string, init?: RequestInit) => {
 			: respond(400, { error: "No preview" })
 	}
 	if (parsed.pathname.endsWith("/accept-suggestions")) {
+		if (net.bulkRefusal)
+			return respond(net.bulkRefusal.status, net.bulkRefusal.body)
 		const child = summary(BULK, { wishlistUnresolvedMatchCount: 1 })
 		known.set(BULK, child)
 		return respond(201, {
@@ -257,6 +265,8 @@ globalThis.fetch = (async (input: string, init?: RequestInit) => {
 		})
 	}
 	if (parsed.pathname.endsWith("/discard")) {
+		if (net.discardRefusal)
+			return respond(net.discardRefusal.status, net.discardRefusal.body)
 		discarded.add(parsed.pathname.split("/")[3])
 		return respond(200, { resolution: { state: "cancelled" } })
 	}
@@ -313,7 +323,9 @@ globalThis.fetch = (async (input: string, init?: RequestInit) => {
 	if (parsed.pathname.endsWith("/items"))
 		return respond(200, { items: [], total: 0 })
 	if (parsed.pathname === "/api/imports")
-		return respond(200, { imports: net.list ?? [] })
+		return respond(200, {
+			imports: (refused ? net.listAfterRefusal : undefined) ?? net.list ?? [],
+		})
 	const id = /^\/api\/imports\/([^/]+)$/.exec(parsed.pathname)?.[1]
 	if (id && discarded.has(id))
 		return respond(404, {
@@ -360,8 +372,10 @@ async function flow(
 	setup: Net = {},
 ) {
 	net = setup
+	refused = false
 	sent = []
 	known.clear()
+	confirmed.clear()
 	discarded.clear()
 	if (props.start) known.set(props.start.id, props.start)
 	const client = new QueryClient({
@@ -518,7 +532,10 @@ const results: Record<string, unknown> = {}
 {
 	// Early Confirm imports what's matched so far.
 	const running = summary(PARENT, { resolution: resolution() })
-	const view = await flow({ start: running }, { summaries: { [PARENT]: [running] } })
+	const view = await flow(
+		{ start: running },
+		{ summaries: { [PARENT]: [running] } },
+	)
 	await view.pick("Preserve dates")
 	results.early = { text: view.text(), buttons: view.buttons() }
 	await view.click("Import what's matched so far")
@@ -569,7 +586,11 @@ const results: Record<string, unknown> = {}
 	await view.click("Use this match")
 	await poll()
 	await poll()
-	results.held = { text: view.text(), buttons: view.buttons(), sent: view.sent() }
+	results.held = {
+		text: view.text(),
+		buttons: view.buttons(),
+		sent: view.sent(),
+	}
 	await view.unmount()
 }
 
@@ -583,7 +604,11 @@ const results: Record<string, unknown> = {}
 		{ summaries: { [PARENT]: [done] }, suggestions: suggested },
 	)
 	await view.click("Match movies")
-	results.suggested = { text: view.text(), buttons: view.buttons(), sent: view.sent() }
+	results.suggested = {
+		text: view.text(),
+		buttons: view.buttons(),
+		sent: view.sent(),
+	}
 	await view.click("Accept all 2 suggestions")
 	results.bulk = { text: view.text(), sent: view.sent() }
 	await view.unmount()
@@ -606,22 +631,91 @@ const results: Record<string, unknown> = {}
 }
 
 {
-	// Busy refusals say so, and when to try again.
-	for (const [name, code, error] of [
-		["busyGlobal", "tvtime_resolution_global_busy", "Two imports are already matching. Try again after one finishes."],
-		["busyMember", "tvtime_resolution_member_busy", "You already have an import matching. Wait for it to finish or discard it."],
-	] as const) {
-		const matching = summary(RERUN, { createdAt: "2026-10-19T09:00:00.000Z" })
-		const view = await flow(
-			{ handoff: true },
-			{
-				previewRefusal: { status: 409, body: { error, code } },
-				list: name === "busyMember" ? [matching] : [],
-			},
-		)
-		results[name] = { text: view.text(), buttons: view.buttons() }
-		await view.unmount()
+	const done = summary(PARENT, {
+		resolution: resolution({ state: "completed", pending: 0 }),
+	})
+	const view = await flow(
+		{ start: done },
+		{ summaries: { [PARENT]: [done] }, suggestions: suggested },
+	)
+	await view.click("Match movies")
+	await view.click("Accept the suggestion")
+	results.individualAccepted = {
+		text: view.text(),
+		startDisabled: view.disabled("Start import"),
+		bulkDisabled: view.disabled("Accept all 2 suggestions"),
 	}
+	await view.click("Update preview")
+	results.individualSent = { sent: view.sent(), text: view.text() }
+	await view.unmount()
+}
+
+{
+	const done = summary(PARENT, {
+		resolution: resolution({ state: "completed", pending: 0 }),
+	})
+	const view = await flow(
+		{ start: done },
+		{
+			summaries: { [PARENT]: [done] },
+			suggestions: suggested,
+			bulkRefusal: {
+				status: 409,
+				body: {
+					code: "tvtime_suggestion_stale",
+					error: "These suggestions have changed. Review them again.",
+				},
+			},
+		},
+	)
+	await view.click("Match movies")
+	await view.click("Accept all 2 suggestions")
+	results.stale = { text: view.text(), buttons: view.buttons() }
+	await view.click("Refresh suggestions")
+	results.refreshed = { sent: view.sent() }
+	await view.unmount()
+}
+
+{
+	const running = summary(PARENT, { resolution: resolution() })
+	const view = await flow(
+		{ start: running },
+		{
+			summaries: { [PARENT]: [running] },
+			discardRefusal: {
+				status: 503,
+				body: { error: "Discard could not finish. Try again." },
+			},
+		},
+	)
+	await view.click("Discard and choose another file")
+	results.discardFailed = { text: view.text(), buttons: view.buttons() }
+	await view.unmount()
+}
+
+// Busy refusals say so, and when to try again.
+for (const [name, code, error] of [
+	[
+		"busyGlobal",
+		"tvtime_resolution_global_busy",
+		"Two imports are already matching. Try again after one finishes.",
+	],
+	[
+		"busyMember",
+		"tvtime_resolution_member_busy",
+		"You already have an import matching. Wait for it to finish or discard it.",
+	],
+] as const) {
+	const matching = summary(RERUN, { createdAt: "2026-10-19T09:00:00.000Z" })
+	const view = await flow(
+		{ handoff: true },
+		{
+			previewRefusal: { status: 409, body: { error, code } },
+			listAfterRefusal: name === "busyMember" ? [matching] : [],
+		},
+	)
+	results[name] = { text: view.text(), buttons: view.buttons() }
+	await view.unmount()
 }
 
 {
@@ -640,7 +734,10 @@ const results: Record<string, unknown> = {}
 		tvtimeLookupLimitCount: 3,
 		resolution: resolution({ state: "limited", pending: 0 }),
 	})
-	const view = await flow({ start: limited }, { summaries: { [PARENT]: [limited] } })
+	const view = await flow(
+		{ start: limited },
+		{ summaries: { [PARENT]: [limited] } },
+	)
 	results.limited = { text: view.text(), buttons: view.buttons() }
 	await view.unmount()
 }

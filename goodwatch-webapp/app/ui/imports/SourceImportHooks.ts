@@ -15,6 +15,7 @@ import type {
 	ImportStatus,
 	ImportSummary,
 	WishlistMatchGroup,
+	WishlistSuggestion,
 	WishlistSuggestionProposal,
 	WishlistSuggestions,
 } from "~/domain/imports"
@@ -235,7 +236,7 @@ export function useWishlistMatchCandidates(
 const SUGGESTIONS_PAGE_SIZE = 10
 
 /** What GoodWatch suggests for one shown entry, or where finding that out stands. */
-export type WishlistRowSuggestion =
+export type WishlistRowSuggestion = (
 	| {
 			state:
 				| "loading"
@@ -245,6 +246,8 @@ export type WishlistRowSuggestion =
 				| "already_resolved"
 	  }
 	| { state: "suggested"; proposal: WishlistSuggestionProposal }
+) &
+	Pick<WishlistSuggestion, "reason" | "proof">
 
 /**
  * GoodWatch's suggestions for the entries shown, in the match list's order. It asks for one page of 10 at a time and
@@ -304,9 +307,14 @@ export function useWishlistSuggestions(
 					? { state: "unavailable" }
 					: found.state === "suggested"
 						? found.proposal
-							? { state: "suggested", proposal: found.proposal }
-							: { state: "manual" }
-						: { state: found.state },
+							? {
+									state: "suggested",
+									proposal: found.proposal,
+									proof: found.proof,
+									reason: found.reason,
+								}
+							: { state: "manual", reason: found.reason }
+						: { state: found.state, reason: found.reason },
 			)
 		}
 	})
@@ -319,7 +327,15 @@ export function useWishlistSuggestions(
 			)
 	return {
 		rows,
+		bulkAccept: pages[0]?.data?.bulkAccept,
 		loading: pages.some((page) => page.isPending),
+		refresh: () =>
+			setRounds(
+				(current) =>
+					new Map(
+						offsets.map((offset) => [offset, (current.get(offset) ?? 0) + 1]),
+					),
+			),
 		retry: () =>
 			setRounds((current) => {
 				const next = new Map(current)
@@ -342,6 +358,43 @@ export function useResolveWishlistImport(id: string) {
 	>({
 		mutationFn: (choices) =>
 			request(`${API}/${encodeURIComponent(id)}/resolve`, post({ choices })),
+		onSuccess: store,
+	})
+}
+
+/** Loads a published replacement only when the member can leave the current preview. */
+export function useLoadSourceImport() {
+	const store = useStoreImport()
+	return useMutation<ImportResponse, ImportRequestError, string>({
+		mutationFn: (id) => request(`${API}/${encodeURIComponent(id)}`),
+		onSuccess: store,
+	})
+}
+
+export function useDiscardSourceImport(id: string) {
+	const client = useQueryClient()
+	return useMutation<unknown, ImportRequestError, void>({
+		mutationFn: () =>
+			request(`${API}/${encodeURIComponent(id)}/discard`, post({})),
+		onSuccess: () => {
+			client.removeQueries({ queryKey: sourceImportKeys.detail(id) })
+			void client.invalidateQueries({ queryKey: sourceImportKeys.list })
+		},
+	})
+}
+
+export function useAcceptTvTimeSuggestions(id: string) {
+	const store = useStoreImport()
+	return useMutation<
+		ImportResponse & { acceptedCount: number; skippedCount: number },
+		ImportRequestError,
+		string
+	>({
+		mutationFn: (token) =>
+			request(
+				`${API}/${encodeURIComponent(id)}/accept-suggestions`,
+				post({ token }),
+			),
 		onSuccess: store,
 	})
 }

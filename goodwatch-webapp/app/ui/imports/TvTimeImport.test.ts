@@ -9,6 +9,7 @@ type Run = {
 	buttons: string[]
 	radios: string[]
 	startDisabled: boolean
+	bulkDisabled: boolean
 }
 
 const runs = JSON.parse(
@@ -42,12 +43,12 @@ test("a TV Time preview keeps its data-type and watch-date choices and adds a mo
 	assert.doesNotMatch(text, /Add to Want to See/)
 })
 
-test("the match panel lists TV Time movies with what TV Time has and what a match adds, without suggestions", () => {
+test("the match panel lists TV Time movies with what TV Time has and what a match adds, with manual matching when no suggestion is available", () => {
 	const { text, sent } = runs.opened
 	assert.ok(
 		urls(runs.opened).includes(`GET /api/imports/${PARENT}/matches?offset=0`),
 	)
-	assert.ok(!sent.some((item) => item.url.includes("/suggestions")))
+	assert.ok(sent.some((item) => item.url.includes("/suggestions")))
 	assert.match(text, /Die Spielzeuggeschichte/)
 	assert.match(text, /November 22, 1995 · 2 watches · For later/)
 	assert.match(
@@ -168,17 +169,29 @@ test("matches not yet in the preview hold back a published replacement until the
 
 test("suggested movies show their evidence in plain words and can all be accepted at once", () => {
 	const { text, buttons, sent } = runs.suggested
-	assert.match(text, /Suggested: Toy Story \(1995\) · Movie · Same title and release date on TMDB/)
+	assert.match(
+		text,
+		/Suggested: Toy Story \(1995\) · Movie · Same title and release date on TMDB/,
+	)
 	assert.ok(buttons.includes("Accept all 2 suggestions"))
 	assert.ok(buttons.some((name) => name.startsWith("Reject")))
-	assert.ok(sent.some((item) => item.url.includes(`/api/imports/${PARENT}/suggestions?offset=0`)))
-	const bulk = runs.bulk.sent.find((item) => item.url.endsWith("/accept-suggestions"))
+	assert.ok(
+		sent.some((item) =>
+			item.url.includes(`/api/imports/${PARENT}/suggestions?offset=0`),
+		),
+	)
+	const bulk = runs.bulk.sent.find((item) =>
+		item.url.endsWith("/accept-suggestions"),
+	)
 	assert.deepEqual(bulk, {
 		method: "POST",
 		url: `/api/imports/${PARENT}/accept-suggestions`,
 		body: { token: "token-1" },
 	})
-	assert.ok(runs.bulk.sent.some((item) => item.url === `/api/imports/${BULK}`) || /Accepted 2 suggestions/.test(runs.bulk.text))
+	assert.ok(
+		runs.bulk.sent.some((item) => item.url === `/api/imports/${BULK}`) ||
+			/Accepted 2 suggestions/.test(runs.bulk.text),
+	)
 	assert.match(
 		runs.bulk.text,
 		/Accepted 2 suggestions\. This preview replaces the earlier one\. Nothing is imported until you start the import\./,
@@ -186,8 +199,13 @@ test("suggested movies show their evidence in plain words and can all be accepte
 })
 
 test("rejecting a suggestion sends no target for that movie, through the manual matching path", () => {
-	assert.match(runs.rejected.text, /Suggestion turned down · Not in this preview yet/)
-	const resolve = runs.rejectSent.sent.find((item) => item.url.endsWith("/resolve"))
+	assert.match(
+		runs.rejected.text,
+		/Suggestion turned down · Not in this preview yet/,
+	)
+	const resolve = runs.rejectSent.sent.find((item) =>
+		item.url.endsWith("/resolve"),
+	)
 	assert.deepEqual(resolve?.body, { choices: [{ index: 2, target: null }] })
 })
 
@@ -214,7 +232,10 @@ test("a limited run says so without a rerun button; choosing the file again star
 		/This preview reached its lookup limit\. Run the import again to match more\.3 rows aren't matched yet\./,
 	)
 	assert.ok(!buttons.includes("Run the import again"))
-	assert.match(text, /To run it again, discard this preview and choose the file again\./)
+	assert.match(
+		text,
+		/To run it again, discard this preview and choose the file again\./,
+	)
 })
 
 test("a lookup outage reads as an outage, not as the lookup limit", () => {
@@ -225,4 +246,42 @@ test("a lookup outage reads as an outage, not as the lookup limit", () => {
 	)
 	assert.doesNotMatch(text, /lookup limit/)
 	assert.ok(!buttons.includes("Run the import again"))
+})
+
+test("accepting one suggestion waits for Update preview and prevents bulk acceptance from dropping that choice", () => {
+	assert.equal(runs.individualAccepted.startDisabled, true)
+	assert.equal(runs.individualAccepted.bulkDisabled, true)
+	assert.match(
+		runs.individualAccepted.text,
+		/Your match: Toy Story \(1995\) · Movie · Accepted/,
+	)
+	const resolve = runs.individualSent.sent.find((item) =>
+		item.url.endsWith("/resolve"),
+	)
+	assert.deepEqual(resolve?.body, {
+		choices: [{ index: 2, target: { mediaType: "movie", tmdbId: 862 } }],
+	})
+	assert.match(runs.individualSent.text, /Updated with your matches/)
+})
+
+test("an expired or changed bulk snapshot can be refreshed without losing the preview", () => {
+	assert.match(
+		runs.stale.text,
+		/These suggestions have changed. Review them again./,
+	)
+	assert.ok(runs.stale.buttons.includes("Refresh suggestions"))
+	assert.equal(
+		runs.refreshed.sent.filter((item) =>
+			item.url.endsWith("/suggestions?offset=0"),
+		).length,
+		2,
+	)
+})
+
+test("a failed discard keeps the preview open and offers the discard again", () => {
+	assert.match(runs.discardFailed.text, /Discard could not finish. Try again./)
+	assert.match(runs.discardFailed.text, /Checked 2,400 of 8,088 rows/)
+	assert.ok(
+		runs.discardFailed.buttons.includes("Discard and choose another file"),
+	)
 })
