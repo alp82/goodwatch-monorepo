@@ -1,6 +1,6 @@
-# Netflix My List capture from the page's own responses: design for review, revision 2
+# Netflix My List capture from the page's own responses: design for review, revision 3
 
-Ticket [#730](https://github.com/alp82/goodwatch-monorepo/issues/730). Design only. Revision 2, written 2026-10-19 after the design review of `a84c685b`, which said "build after changes". Nothing gets built until a re-review passes.
+Ticket [#730](https://github.com/alp82/goodwatch-monorepo/issues/730). Design only. Revision 3, written 2026-10-19 after the re-review of `994e7f8f`, which said "build the diagnostic after changes" and confirmed the snapshot evidence and the `snapshot_unproven` default. Revision 2 answered the review of `a84c685b`. Nothing gets built until the changes below are re-reviewed. Owner question Q26 (what `complete` may claim) is open.
 
 Owner decisions so far:
 
@@ -10,17 +10,18 @@ Owner decisions so far:
 
 The single-extension scope belongs to [#731](https://github.com/alp82/goodwatch-monorepo/issues/731).
 
-## Changes from revision 1
+## Changes from revision 2
 
-| Review item | Where it's handled |
+| Re-review item | Where it's handled |
 | --- | --- |
-| 1. Snapshot consistency (blocking) | "Snapshot evidence", "What `complete` claims", "Verdict rule" |
-| 2. Lifecycle (blocking) | "Session states", "Finalize" |
-| 3. Pass-through contract (blocking before any diagnostic) | "Pass-through contract", "Bounds" |
-| 4. Session binding | "Binding and matching" |
-| 5. Threat notes | "Threat notes" |
-| 6. Diagnostic claims | "Live diagnostic" |
-| 7. Consistency details | "Verdict rule", "Entries", "Module boundary" |
+| 1. Traversal bounds and cleanup rule dropped (blocking before the diagnostic) | "Traversal bounds", "Cleanup" |
+| 2. Pass-through edge cases (blocking before live use) | "Pass-through contract", "Bounds and accounting" |
+| 3. Pending stages, one cutoff, sealing on timeout | "Session states", "Finalize" |
+| 4. Option (a) can't validate the tail | "Owner decision needed" |
+| 5. Reload facts | "If a reload step ever returns" |
+| 6. Gates P4, P7 to P9; bypassed wrappers | `PROTOCOL.md`, "Threat notes", "Live diagnostic" |
+
+Revision 2 changed the design for review items 1 to 7 of `a84c685b`: snapshot evidence, lifecycle, pass-through, binding, threat notes, diagnostic claims and consistency rules.
 
 ## Snapshot evidence (offline, saved page and saved client script)
 
@@ -40,21 +41,14 @@ The design therefore doesn't claim a snapshot-consistent `complete`. It reports 
 
 ## What `complete` claims
 
-`complete` is "as of snapshot S", never "as of Save". S is identified by:
-
-- The document load time.
-- The inline-state fingerprint.
-- The reference total.
-- The section version.
-- The read window: the time from install to the last accepted page.
+`complete` would be "as of snapshot S", never "as of Save". A snapshot needs a server identifier, and none exists in the evidence. The capture's metadata describes the read but doesn't identify a snapshot: document load time, inline-state fingerprint, reference total, section version, and the read window from install to the last accepted page.
 
 | Claim | Requires | Status |
 | --- | --- | --- |
 | Snapshot-consistent complete | A server snapshot identifier that every accepted page is bound to | **Not available.** No identifier exists in the evidence. |
-| Positional coverage | Every position 0 to total − 1 read once, within one read window, with the same version and total throughout, and no change signal | Measurable. Reported always. |
-| Window-bounded complete (owner decision) | Positional coverage, plus a short read window, plus the confirmation described in "Owner decision needed" | Only if the owner accepts this weaker claim, written out in the file's report and the popup |
+| Full positional coverage | Every position 0 to total − 1 read once within one capture, with the same version and total throughout, and no rejection or conflict | Measurable. Always reported. |
 
-Until the owner decides, the design's verdict for full positional coverage is `partial` with reason `snapshot_unproven`, and the report states the coverage. This follows the review: repeated agreeing reads raise confidence but aren't proof.
+`snapshot_unproven` is set whenever snapshot proof is absent, which with the current evidence is always. Full positional coverage therefore gives `partial` with reason `snapshot_unproven`, and the report states the coverage. Repeated agreeing reads raise confidence but aren't proof. What, if anything, may be written as `complete` is owner question Q26.
 
 ## Member flow
 
@@ -100,52 +94,103 @@ interface CardEvidence { sourceId: string; title: string; stable: boolean; owned
 | State | Entered by | Observer | Data |
 | --- | --- | --- | --- |
 | `idle` | Load, or after `finalized` or `discarded` | Not installed | None |
-| `collecting` | Start, once provenance passes and the observer installs | Installed, binding new requests | Buffer grows |
-| `traversal_stopped` | The traversal reached coverage or a bound, or the member chose Stop | Installed. It still resolves requests bound before this point, and binds no new ones. | Kept |
-| `finalizing` | Save | Cutoff set; draining | Frozen after the drain |
+| `collecting` | Start, once provenance passes and the observer installs | Installed. Binds new requests. | Buffer grows |
+| `traversal_stopped` | The traversal reached coverage or a bound, or the member chose Stop. **This is the observation cutoff.** | Installed. Binds no new requests; requests initiated from now on are counted as `after_cutoff`. Pending bindings may still complete. | Kept |
+| `finalizing` | Save | Draining pending work, then sealed | Frozen only after the drain |
 | `finalized` | Finalize computed one result | Removed | One immutable result, held only in the collector |
-| `discarded` | Cancel, termination, profile or navigation change, session timeout | Removed | Cleared |
+| `discarded` | Cancel, termination, profile or navigation change, session timeout, finalize timeout | Removed | Cleared |
 
-- **Generations:** Every session has a generation number and a random session token. Leaving `collecting`, `traversal_stopped` or `finalizing` for `finalized` or `discarded` increments the generation.
-- **Late callbacks:** Every callback checks its binding's generation first. Any callback from an earlier generation is dropped and counted, and can never repopulate a discarded or finalized session.
-- **Stop keeps data:** Stop doesn't clear the buffer. Only finalize and discard do.
+- **Pending:** A My List binding is pending from request initiation until its result has been accepted or rejected **and** transferred to the isolated collector. That covers the network wait, streaming, decoding, validation and the transfer.
+- **Generations:** Every session has a generation number and a random session token. Sealing, finalizing and discarding each increment it.
+- **Late callbacks:** Every callback checks its binding's generation before touching anything. A callback from an earlier generation is dropped and counted (`late_dropped`), and can never change a sealed, finalized or discarded session.
+- **Stop keeps data:** Stop doesn't clear the buffer. Observation doesn't continue through Save: after the cutoff, only already pending bindings resolve.
 
 ## Finalize
 
-1. **Cutoff.** Enter `finalizing` and record a cutoff time. Requests initiated after the cutoff aren't bound; they're counted as `after_cutoff`.
-2. **Drain.** Wait up to 3 seconds for bound My List requests still pending. Any still pending after that sets the sticky code `pending_unresolved`.
-3. **Recheck guards.** Profile (avatar and state), page path, document age, inline-state fingerprint, and row presence. For the empty case, also recheck that no row appeared.
-4. **Compute one result** from the frozen buffer, sticky codes and the module's verdict rule.
-5. **Clean up.** Remove the observer, clear the buffer, increment the generation, enter `finalized`.
-6. **Return** the result. The popup writes exactly this result, or nothing if finalize failed.
+1. **Enter `finalizing`.** If the session is still `collecting`, it first passes through `traversal_stopped`, which sets the cutoff. The cutoff is the moment of `traversal_stopped`, not Save.
+2. **Bounded drain.** Wait up to 3 seconds for every pending binding to finish all of its stages. At the bound:
+   - The observer cancels its own readers and abandons its own decoding and validation for those bindings.
+   - Each unfinished binding sets the sticky code `pending_unresolved`.
+   - The session is **sealed**: the generation increments, so no later callback can mutate it.
+3. **Freeze.** Only now is the buffer frozen.
+4. **Recheck guards.** Profile (avatar and state), page path, document age, inline-state fingerprint and row presence. For the empty case, also recheck that no row appeared.
+5. **Compute one result** from the frozen buffer, the counters, the sticky codes and the module's verdict rule.
+6. **Clean up** (see "Cleanup"), clear the buffer, enter `finalized`.
+7. **Return** the result. The popup writes exactly this result, or nothing if finalize failed.
 
-Finalize as a whole is bounded at 5 seconds; beyond that it ends as `finalize_timeout`, with no file. A **Save again** reruns the guards of step 3 on the stored result and refuses if they fail. The popup never keeps an envelope of its own.
+Finalize as a whole is bounded at 5 seconds. Beyond that, the session is sealed and discarded with `finalize_timeout`, and no file is written. **Save again** reruns the guards of step 4 on the stored immutable result and refuses if they fail. The popup never keeps an envelope of its own.
 
 ## Pass-through contract (blocking before any live diagnostic)
 
-The observer may add some latency (its own synchronous classification, and a cloned response stream), so revision 1's "never delays" and "as if no wrapper existed" are withdrawn. The contract is:
+The observer adds some latency of its own: synchronous classification, a cloned response stream, and a handler on the fetch promise. Revision 1's "never delays" and "as if no wrapper existed" are withdrawn. The contract is:
 
-- **Same call, same result.** The fetch wrapper calls the saved original with exactly the page's arguments (same object references) and `this`. It returns the promise the original returned, unchanged and without awaiting anything. The XHR wrappers call the saved `open` and `send` with the page's arguments.
-- **Request classification without side effects.**
-  - The URL is taken once: a string as is, a `URL` by `href`, a `Request` by `url`. Any other input object is never coerced (no `String(x)`), and is classified `unsupported_input`.
-  - A body is read only when it's a string passed in `init.body` or `xhr.send(string)`. A `Request` with a body, and `FormData`, `Blob`, `ArrayBuffer`, `URLSearchParams` or a stream are never read; they're classified `unsupported_body`.
-  - GET requests are classified from the URL's `operationName` and `variables` parameters only.
-- **Response reading.**
-  - **fetch:** The wrapper attaches its own handler to the original promise before returning that promise. The handler clones the response before any page code can read it, and reads the clone with its own stream reader, counting bytes. At the byte limit it cancels its own reader, which doesn't affect the page's branch, and records `response_too_large`.
-  - **XHR:** A `loadend` listener added with `addEventListener`, never by assigning `onload`. `responseText` is read only when `responseType` is `''` or `'text'`. With `'json'`, `response` is used, and size is bounded by entry and title limits, because bytes can't be counted. Any other `responseType` is classified `unsupported_response_type`.
-- **Never** abort, retry, replace or reorder a request. Never throw into page code. Every observer exception is caught and becomes a sticky code on the session (see "Failure codes").
-- **Pinned endpoints.** Only exact reviewed HTTPS origins and paths are classified, and they're constants in the module, never read from the page: `https://www.netflix.com/graphql`, with others added only by review. Requests to other GraphQL addresses are counted as `endpoint_other` and never accepted.
+- **Same call.** The fetch wrapper calls the saved original with exactly the page's arguments (same references) and `this`. The XHR wrappers call the saved `open` and `send` with the page's arguments.
+- **Same result.** The fetch wrapper returns the promise the original returned, without awaiting anything.
+- **Native synchronous exceptions.** If the original fetch, `open` or `send` throws synchronously, the wrapper rethrows the same exception object unchanged and records no binding. A binding created just before is rolled back.
+- **Rejected fetches.** The observer's handler on the original promise covers both outcomes, and every promise the observer derives ends in its own catch, so the observer never causes an unhandled rejection.
+  - Known observable difference: attaching a handler marks Netflix's promise as handled. If Netflix leaves a rejected fetch unhandled, no `unhandledrejection` event fires for it while the observer is installed. A fixture test asserts this behavior.
+- **No extra getter or accessor calls.** Classification never invokes a getter or accessor the native call wouldn't:
+  - **Strings** are used as they are.
+  - **A `Request` or `URL` input** is read only through the native `url` or `href` getter captured at install, and only when the object's prototype is exactly `Request.prototype` or `URL.prototype` and it has no own `url` or `href` property. Anything else is `unsupported_input`: never coerced and never read.
+  - **`init.body`** is read only when `init` is a plain object and `body` is an own data property holding a string (checked with `Object.getOwnPropertyDescriptor`, never by reading `init.body`). `method` is handled the same way. An accessor property means `unsupported_body`.
+  - **Proxies:** These descriptor and prototype checks are observable on a `Proxy` (trap calls), though they invoke no getters. Netflix's client passes plain objects. The limit is stated and tested.
+- **Non-string bodies** are never read: `Request` with a body, `FormData`, `Blob`, `ArrayBuffer`, `URLSearchParams`, streams. They're classified `unsupported_body`. GET requests are classified from the URL's `operationName` and `variables` parameters only.
+- **Request-string limits** apply before parsing: URL up to 16 KB, string body up to 64 KB, `variables` JSON up to 16 KB. Beyond that, the request isn't parsed and is classified `request_too_large`.
+- **Responses from fetch.** The observer's handler is attached to the original promise before that promise is returned to the page.
+  - The handler checks the native `bodyUsed` getter, then clones and reads the clone with its own stream reader, counting bytes.
+  - **Ordering isn't guaranteed.** The design doesn't claim the clone happens before every page code path: a wrapper installed below the observer, or a service worker, can hand over an already consumed response. A consumed or unclonable response gives `response_unreadable`.
+  - At the byte limit the observer cancels its own reader, which doesn't affect the page's branch, and records `response_too_large`.
+- **Responses from XHR.** XHR state is bound per open generation:
+  - The `open` wrapper increments a per-object counter, kept in a `WeakMap`.
+  - `send` records the counter and adds the observer's own `loadend` listener (with `addEventListener`, never by assigning `onload`).
+  - If the page reopens the object, for example inside its `onload`, before `loadend` reaches the observer, the counters differ and the observer reads nothing. That binding is `xhr_reused`, and if it was a My List binding, `pending_unresolved`.
+  - `responseText` is read only when `responseType` is `''` or `'text'`. With `'json'`, the already parsed `response` is used. Any other type is `unsupported_response_type`.
+- **Never** abort, retry, replace or reorder a request, and never throw into page code. Every observer exception is caught and becomes a sticky code on the session.
+- **Pinned endpoints.** Only exact reviewed HTTPS origins and paths are classified. They're constants in the module, never read from the page: `https://www.netflix.com/graphql`, with others added only by review. Requests to other GraphQL addresses are counted as `endpoint_other` and never accepted.
 
-### Bounds
+### Bounds and accounting
 
 | Bound | Value | On exceeding |
 | --- | --- | --- |
+| Request strings before parsing | URL 16 KB, body 64 KB, variables 16 KB | Not parsed, `request_too_large` (sticky if the endpoint is pinned) |
 | Bytes read per response | 2 MB | Reader cancelled, `response_too_large` (sticky) |
 | Concurrent observer readers | 4 | Not read, `observer_overloaded` (sticky) |
-| Buffered bytes per session | 8 MB | Further reads skipped, `observer_overloaded` (sticky) |
+| Session memory budget | 8 MB, accounted as below | Further reads skipped, `observer_overloaded` (sticky) |
 | Entries per session | 5,000 | `entries_limit` (sticky) |
-| Title length | 1,000 characters, no control characters | Entry malformed, `entry_malformed` (sticky) |
+| Title length | 1,000 characters, no control characters | Entry excluded, `entry_malformed` (sticky) |
+| Traversal of an XHR `json` object | Depth 64, nodes 200,000 | `response_too_large` (sticky) |
 | Session lifetime | 10 minutes from install | `discarded`, `session_timeout` |
+
+**Accounting.** The session budget counts:
+
+- Raw bytes held in the observer's reader chunks.
+- Decoded strings at two bytes per character.
+- Normalized entries, at a fixed 64 bytes plus two bytes per title character.
+
+Chunk and string memory is released after parsing, and entries stay until finalize. For XHR responses with `responseType: 'json'`, the browser allocates the parsed object before the observer sees it. That allocation can't be bounded by the observer; only the observer's own traversal of it is bounded.
+
+### Traversal bounds
+
+These are restored from 0.0.7 and apply to the assisted traversal:
+
+| Bound | Value | On reaching |
+| --- | --- | --- |
+| Click cap | `ceil(total / cards in view at Start) + 3` clicks, plus 3 clicks without a newly accepted position, fixed at Start | Stop at `traversal_stopped`, `advance_limit` |
+| Wait after each click | Until a My List response is accepted, or 8 seconds | Counts toward the stall limit if nothing new was accepted |
+| Stall limit | 3 consecutive clicks without a newly accepted position | `traversal_stopped`, `stalled` |
+| Traversal deadline | 3 minutes from Start, enforced inside every wait: no timer fires past it | `traversal_stopped`, `assist_time_limit` |
+| Coverage reached | All positions 0 to total − 1 accepted | `traversal_stopped`, `coverage_reached` |
+
+The arrow rule is the reviewed 0.0.6 and 0.0.7 rule. If it isn't found safely, the traversal stops clicking and the member may click (`manual_fallback`). The member's clicks don't extend the deadline.
+
+### Cleanup
+
+Cleanup runs on finalize, discard and session timeout:
+
+- **Per wrapped method** (`window.fetch`, `XMLHttpRequest.prototype.open`, `XMLHttpRequest.prototype.send`): if the method is still the observer's own wrapper, restore the saved original. If anything else replaced or wrapped it, never restore over it. Set the observer's wrapper **inert** instead, so it becomes a pure pass-through that classifies and records nothing, for the rest of the document's life.
+- **Listeners:** Remove every `loadend` listener the observer added, using stored references.
+- **Readers:** Cancel every observer-owned reader. This touches only the observer's clone branch, never Netflix's request, response or branch.
+- **Result:** Recorded as `cleanupResult`: `restored`, `inert` or `failed`. `failed` is a sticky code if it happens before the result is computed.
 
 ## Binding and matching
 
@@ -162,16 +207,16 @@ Only bindings with `operationName === 'CarouselPage'` and `rowIdMatches` are **M
 
 **A My List response is accepted** only when every condition holds:
 
-1. Its binding's generation and `documentId` are current, and it arrived before the cutoff, or before the drain ended for a binding made before the cutoff.
+1. Its binding was initiated before the cutoff, its generation and `documentId` are current, and all of its stages finished within the drain.
 2. Status 200, JSON within bounds, and no `errors` array.
 3. `data.node.__typename` is `PinotCarouselSection`, `data.node._id` equals the row ID, and `data.node.displayString` equals the row heading.
 4. `data.node.version` equals the binding's `versionSent`, and equals the reference version.
-5. Exactly one `entities` or `entities(...)` connection. `totalCount` is a safe integer and equals the reference total.
-6. The edges' positions are safe integers, contiguous, starting at `afterPosition + 1`, with at most `pageSize` edges.
-7. Every edge resolves to one entity with a safe-integer `videoId` and a valid title.
+5. Exactly one `entities` or `entities(...)` connection. `totalCount` is an integer from 0 to 5,000 and equals the reference total.
+6. Every cursor decodes to an integer from 0 to 4,999. The edges' positions are contiguous, start at `afterPosition + 1`, are strictly below the total, and number at most `pageSize`. `pageSize` and `afterPosition` come from the binding: `pageSize` from 1 to 200, and `afterPosition` from −1 to total − 2.
+7. Every edge resolves to one entity with a `videoId` that is a positive safe integer and a valid title (see "Bounds and accounting").
 8. `pageInfo.hasNextPage` agrees with the positions: true exactly when the last position is below `total − 1`.
 
-Any failure is a sticky rejection code on the session. A rejected My List response blocks `complete`.
+Each failure has its own code (see "Failure codes"), recorded as sticky on the session. Its evidence is excluded: no entry from a rejected response enters membership. A rejected My List response blocks `complete`.
 
 **Edge cases:**
 
@@ -183,7 +228,7 @@ Any failure is a sticky rejection code on the session. A rejected My List respon
 ## Entries
 
 - **Membership** is the inline entries (positions 0 to 12) plus the accepted responses' entries.
-- **IDs and positions** must be safe integers. A malformed edge makes its whole response rejected.
+- **IDs and positions** follow the ranges in condition 6 and 7 of the matching rule. A malformed edge makes its whole response rejected, and none of that response's entries are kept.
 - **Media type** comes only from a verified entity type name: `Movie` gives `movie` and `Show` gives `show`. Any other type is `unknown` and **withholds `complete`** (`entity_type_unknown`, gate P4 strict). Types are never inferred from titles.
 - **The file's items** are the membership entries, not the cards, so titles Netflix counts but never renders are included.
 - **Zero entries:** Positional coverage is vacuous at zero, so it's never enough. A reported total of 0 also needs:
@@ -200,7 +245,7 @@ Any failure is a sticky rejection code on the session. A rejected My List respon
 3. **Clean observation:** No sticky code, no pending binding at finalize, no unsupported request to a pinned endpoint during the session, and the observer intact on every pull.
 4. **Consistency:** One version and one total throughout, matching the reference.
 5. **Cross-check (downgrade only):** Every stable owned card's ID is in the membership with a matching title. Otherwise the result is `card_outside_entries` or `card_title_conflict`.
-6. **Snapshot:** Withheld as `snapshot_unproven`, unless the owner accepts the window-bounded claim.
+6. **Snapshot:** `snapshot_unproven` whenever snapshot proof is absent, which is always with the current evidence. What full coverage may be written as is owner question Q26.
 
 The carousel's wrap and lap evidence aren't used.
 
@@ -223,7 +268,8 @@ The carousel's wrap and lap evidence aren't used.
 | Coverage | `positionsCovered`, `acceptedRanges` (as counts of contiguous runs), `unobservedPositions`, `overlapConflicts` |
 | Entries | `typeCounts` (movie, show, unknown) |
 | Cards | `cardsSeen`, `cardsOutsideEntries`, `entriesNeverRendered` |
-| Session | `profileInvalidations`, `observerDisplaced`, `cleanupResult` (restored, inert or failed), `advances`, `stalls`, `readWindowSeconds`, `elapsedSeconds` |
+| Session | `profileInvalidations`, `observerDisplaced`, `cleanupResult` (restored, inert or failed), `traversalOutcome` (coverage_reached, advance_limit, stalled, assist_time_limit, manual_fallback, member_stopped), `advances`, `clickCap`, `stalls`, `readWindowSeconds`, `elapsedSeconds` |
+| Bounds | `requestTooLarge`, `responseUnreadable`, `xhrReused`, `budgetPeakBytes` |
 
 ## Failure codes
 
@@ -232,14 +278,17 @@ The carousel's wrap and lap evidence aren't used.
 | `reference_*` | 0.0.7 reference refusals | `unknown`, no observer |
 | `observer_install_failed` | Page world unreachable | `unknown` |
 | `observer_displaced` | A wrapper was replaced after install | Sticky, blocks `complete` |
-| `unsupported_input`, `unsupported_body`, `unsupported_response_type` | A pinned-endpoint request the observer can't classify or read | Sticky |
+| `unsupported_input`, `unsupported_body`, `unsupported_response_type`, `request_too_large` | A pinned-endpoint request the observer can't classify or read | Sticky |
+| `response_unreadable`, `xhr_reused` | Response already consumed or unclonable; XHR reopened before the observer read it | Sticky |
 | `response_too_large`, `observer_overloaded`, `entries_limit`, `observer_error` | Bounds or an internal error | Sticky |
+| `cleanup_failed` | Cleanup failed before the result was computed | Sticky |
 | `response_rejected_*` (`status`, `json`, `errors`, `node`, `row_id`, `label`, `version`, `connection`, `total`, `positions`, `entity`, `has_next`) | A My List response failed matching | Sticky |
 | `entry_malformed`, `entity_type_unknown` | Bad or unrecognized entry | Sticky |
 | `page_conflict`, `position_conflict`, `id_conflict` | Disagreeing reads | Sticky |
 | `pending_unresolved`, `finalize_timeout` | Lifecycle bounds | Sticky, or no file |
+| `advance_limit`, `stalled`, `assist_time_limit` | Traversal bounds (outcomes, not sticky by themselves) | Usually `partial` through `unobserved_positions` |
 | `unobserved_positions` | Coverage gap, cause unknown | `partial` |
-| `snapshot_unproven` | Full coverage, no snapshot proof | `partial`, pending the owner decision |
+| `snapshot_unproven` | No snapshot proof (always, with current evidence) | `partial`, pending owner question Q26 |
 | `card_outside_entries`, `card_title_conflict` | Cross-check downgrade | `partial` |
 | `ended_*`, `session_timeout` | 0.0.7 terminations and the session bound | `partial` or no file |
 
@@ -248,7 +297,7 @@ The carousel's wrap and lap evidence aren't used.
 - **What the results are:** Evidence from a trusted page environment, not authenticated server evidence.
 - **The session token** separates sessions and generations. It isn't authentication. Page scripts can enumerate page-world state.
 - **Wrappers below or above:** A script that wrapped `fetch` or XHR before install (below) or after it (above) can fabricate, alter or hide requests and responses. The integrity check detects replacement of the observer's own wrapper, not wrappers underneath it.
-- **Cached references:** Code that cached the original `fetch` or `XMLHttpRequest` before install bypasses interception entirely. The result is unobserved positions, never a false acceptance, because acceptance needs a bound request.
+- **Cached references:** Code that cached the original `fetch` or `XMLHttpRequest` before install bypasses interception entirely. Before full coverage, that shows up as unobserved positions. After full coverage, it can **hide** contradictory updates, for example a later page with a changed version or total that the observer never sees. Bypass can therefore make a result look cleaner than the page saw it, not only leave gaps.
 - **Third-party scripts** run on netflix.com; the saved page loads a consent manager. They can do any of the above.
 - **Mitigations:** Each limits what forgery can achieve:
   - Request binding with the row ID from the inline state.
@@ -267,8 +316,16 @@ The diagnostic uses the same bounded observer as the capture, writes no file, an
 
 - **Claims:** A position with no accepted response is reported as **"unobserved, cause unknown"**. Candidate causes are a page fetched before install, a cache read, a bypassed or cached wrapper reference, an unsupported request form, another frame or worker, or a failed traversal. The diagnostic doesn't attribute gaps to prefetch.
 - **Controlled comparison** (only if gaps appear): compare an ordinary Start against a fresh load with the observer installed at document start. The fresh-load setup needs an optional, Netflix-only host grant whose lifetime is separate from the observer's: requested for the comparison run, then removed, with no continuous observation. Gaps that disappear only with early install point to pre-install fetching; gaps that remain point elsewhere.
-- **Tests before the owner run**, against a fixture page with its own fetch and XHR:
+- **Tests before the owner run**, in a real browser with native `fetch` and `XMLHttpRequest` on a fixture page (not only mocks):
   - Request and response mutation detection: the page sees byte-identical bodies and the same promise.
+  - Getters and accessors on `init.body`, `init.method`, `URL.href` and `Request.url`, and overridden properties: zero extra accessor calls. A `Proxy` init: the documented trap calls only.
+  - Native synchronous exceptions from `fetch`, `open` and `send`: rethrown unchanged, no binding left behind.
+  - Rejected fetches: no unhandled rejection from observer promises; the handled-marking difference asserted.
+  - Already consumed responses: `response_unreadable`.
+  - XHR reuse: an `onload` handler that reopens the object before `loadend`: `xhr_reused`, nothing read.
+  - Request-string limits and the accounting budget.
+  - Traversal bounds: the click cap, 8-second waits, the stall limit, and the 3-minute deadline enforced inside waits.
+  - Pending stages: a response that finishes streaming, decoding, validation or transfer after the drain bound gives `pending_unresolved`, and nothing changes the sealed session.
   - Delayed and out-of-order responses.
   - Responses after Stop, after finalize and after discard.
   - Repeated Start and Stop.
@@ -276,7 +333,7 @@ The diagnostic uses the same bounded observer as the capture, writes no file, an
   - Wrapper ordering: another wrapper installed before and after the observer, and a cached original reference.
   - `Request` objects with bodies, non-string bodies, and XHR with `json` and `blob` response types.
   - Byte, concurrency, memory, entry and title bounds.
-  - Cleanup: restored, inert when displaced, generation increment.
+  - Cleanup: restored when still owned, inert when displaced, listeners removed, observer readers cancelled while Netflix's response still completes, generation increment, and an immutable result after finalize.
 
 ## Independent reference: the privacy archive
 
@@ -294,14 +351,30 @@ The owner is requesting the archive (netflix.com/account/getmyinfo, up to 30 day
 4. **Early install?** Start with `activeTab`. If early install proves necessary, prefer an optional Netflix-only host grant whose lifetime is separate from the observer's, with no continuous observation.
 5. **Module boundary?** Mostly right, but completeness rules stay per provider. They're now the module's `verdict()`.
 
-## Owner decision needed: what `complete` may claim for Netflix
+## If a reload step ever returns
+
+Revision 2 proposed reloading the tab to reconfirm the first entries and the total. It's out of the initial diagnostic. If it returns, these facts apply:
+
+- **Not every reload is a fresh load.** A normal reload creates a new document. A back-forward cache restore brings back an old document with its old state. A restore (detected by `pageshow` with `persisted: true`) invalidates any session from that document.
+- **A new document doesn't prove fresh server data.** The inline state can come from the HTTP cache or a service worker.
+- **Access correction:** `activeTab` does survive a same-origin reload in Chrome, so revision 2's claim of a fourth member action was wrong.
+- **The provisional capture can't stay in the page world,** which the reload discards. It would live in the extension (for example, session storage keyed by tab). The new document binds to it only if:
+  - The profile key is the same.
+  - The new reference passes provenance on its own.
+  - The new document's identity differs from the old one.
+  - The capture hasn't expired.
+
+## Owner decision needed: what `complete` may claim for Netflix (Q26)
 
 No membership snapshot identifier exists in the evidence, so a Netflix capture can't be proven to be one server snapshot.
 
-| Option | What `complete` means | Risk left |
-| --- | --- | --- |
-| (a) Window-bounded complete | Every position read once within a short read window (for example 60 seconds), with one version and total throughout. Plus a confirmation: after the traversal, the extension reloads the tab once and the fresh inline state must show the same total and the same entries at positions 0 to 12. The popup and file report say "complete as of the capture window", not "server snapshot". | A list edit on another device during the window that exactly preserves the total and the first 13 positions (for example one removal plus one addition after position 12). Measurable as a rare event; not provable. |
-| (b) Never `complete` for Netflix | Full coverage is `partial` with `snapshot_unproven` and the coverage figures. | No false complete, but no reliable complete, against Q20. |
-| (c) Archive-confirmed complete | (a) plus agreement with a recent privacy archive for the same profile. | Requires the archive (up to 30 days); only useful for one-off checks, not routine capture. |
+**A reload can't validate the tail.** Take the reviewer's example, beyond the first 13 entries. A tail [A, B, C, D] is read as [A, B]. The list then changes to [X, B, C, Y], and the next page reads [C, Y]. After a reload, the total and the first 13 entries match, yet [A, B, C, Y] never existed.
 
-**Recommendation:** (a), with the claim worded as window-bounded in the popup, the report and the import receipt, and the reload confirmation counted as part of the read window. It's the only option that meets Q20 without inventing proof the evidence doesn't support. (c) is the way to validate (a) once the archive arrives. The reload is a navigation of the member's own tab, not a request the extension builds, so it stays within the no-own-requests bar. `activeTab` access ends at that navigation, so reading the fresh state needs either one more click on the extension button (a fourth member action) or the optional Netflix-only host grant. That choice is part of the decision.
+| Option | What it gives | Risk left |
+| --- | --- | --- |
+| (a) Full positional coverage, prefix and total reconfirmed | Every position read once within one capture, one version and total throughout, then the first 13 entries and the total reconfirmed by a later read | Any list change in the tail between page reads can produce a set that never existed. Its frequency is unmeasured. This isn't snapshot proof. |
+| (b) Never `complete` for Netflix | Full coverage is `partial` with `snapshot_unproven` and the coverage figures | No false complete; no reliable complete either, against Q20 |
+| (c) Archive-confirmed | Full coverage that agrees with a recent privacy archive for the same profile | Needs the archive (up to 30 days); useful to validate, not for routine capture |
+
+What (a) gives is now named "full positional coverage; prefix and total reconfirmed". It's no longer called window-bounded complete, and the earlier "rare event" wording is withdrawn, because the frequency of such changes hasn't been measured. The diagnostic proceeds with `snapshot_unproven` as the default whatever Q26's answer. The reload experiment isn't part of it.
+
