@@ -11,6 +11,7 @@ export const IMPORT_SOURCES = [
 	"plex",
 	"myanimelist",
 	"wishlist",
+	"tvtime",
 ] as const
 export const IMPORT_SOURCE_NAMES = {
 	letterboxd: "Letterboxd",
@@ -22,6 +23,7 @@ export const IMPORT_SOURCE_NAMES = {
 	plex: "Plex",
 	myanimelist: "MyAnimeList / Kitsu",
 	wishlist: "Watcharr / wishlist file",
+	tvtime: "TV Time",
 } as const
 export type ImportSource = (typeof IMPORT_SOURCES)[number]
 export const IMPORT_MAX_BYTES = 20 * 1024 * 1024
@@ -82,6 +84,14 @@ const csvUpload = {
 }
 /** One source of truth for file controls, validation, instructions and receipt credits. */
 export const IMPORT_SOURCE_UPLOAD = {
+	tvtime: {
+		...uploadDefaults,
+		label: "ZIP, CSV or JSON",
+		extensions: [".zip", ".csv", ".json"],
+		accept: ".zip,.csv,.json,application/zip,text/csv,application/json",
+		invalidFileMessage: "Choose a TV Time ZIP, CSV or JSON export.",
+		oversizeHint: "Choose a smaller TV Time export.",
+	},
 	letterboxd: {
 		...zipUpload,
 		hint: "Drop the ZIP file from Letterboxd here, or choose it from your device.",
@@ -253,6 +263,8 @@ export interface ImportObservation {
 	animeEntry?: AnimeEntry
 	episodeTmdbId?: number | null
 	episodeTvdbId?: number | null
+	/** TheTVDB parent identity; source coordinates never imply TMDB numbering. */
+	showTvdbId?: number | null
 	episodeName?: string | null
 	/** Coordinates are usable only when the adapter explicitly knows their numbering. */
 	episodeNumbering?: "tmdb" | "unknown"
@@ -320,6 +332,7 @@ export interface ImportObservation {
 	}
 	wishlistParent?: { importId: string; rowIndex: number }
 	problem?: {
+		code?: string
 		outcome: "invalid" | "unsupported" | "unmatched"
 		reason: string
 	}

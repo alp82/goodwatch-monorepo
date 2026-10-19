@@ -1,5 +1,4 @@
 import { gunzipSync, inflateRawSync } from "node:zlib"
-import { parseWishlistFile } from "./wishlist.server.ts"
 import { SaxesParser, type SaxesTagPlain } from "saxes"
 import {
 	IMPORT_MAX_BYTES,
@@ -10,13 +9,21 @@ import {
 	type ParsedImport,
 	isFileImportSource,
 } from "../../domain/imports.ts"
+import { isTvTimeFile, parseTvTime } from "./tvtime.server.ts"
+import { parseWishlistFile } from "./wishlist.server.ts"
 
 const MAX_ARCHIVE_FILES = 200
 const MAX_FILTERED_ARCHIVE_FILES = 50_000
 const MAX_ENTRY_BYTES = 32 * 1024 * 1024
 const MAX_UNCOMPRESSED_BYTES = 64 * 1024 * 1024
 
-export class ImportFileError extends Error {}
+export class ImportFileError extends Error {
+	code?: string
+	constructor(message: string, code?: string) {
+		super(message)
+		this.code = code
+	}
+}
 
 interface ArchiveEntry {
 	name: string
@@ -69,8 +76,8 @@ function parseCsv(value: string, backslashQuotes = false): string[][] {
 	return rows
 }
 
-function fail(message: string): never {
-	throw new ImportFileError(message)
+function fail(message: string, code?: string): never {
+	throw new ImportFileError(message, code)
 }
 
 function crc32(bytes: Uint8Array): number {
@@ -691,6 +698,31 @@ export async function parseImportFile(
 	if (!isFileImportSource(source))
 		fail("Use Connect for this source instead of uploading a file.")
 	if (source === "wishlist") return parseWishlistFile(bytes, fail)
+	if (source === "tvtime") {
+		try {
+			checkUploadSize(bytes)
+			const ignored: string[] = []
+			const entries =
+				bytes[0] === 0x50 && bytes[1] === 0x4b
+					? zipEntries(bytes, (name) => {
+							if (isTvTimeFile(name)) return true
+							if (!name.endsWith("/")) ignored.push(name)
+							return false
+						})
+					: [{ name: fileName ?? "tvtime.csv", data: bytes }]
+			return parseTvTime(entries, { readCsvTable, text, fail }, ignored)
+		} catch (error) {
+			if (error instanceof ImportFileError) {
+				if (/password-protected|encrypted/i.test(error.message))
+					fail(
+						"This TV Time ZIP is password-protected. Extract it locally, then upload its tracking CSV files.",
+						"tvtime_zip_encrypted",
+					)
+				error.code ??= "tvtime_file_invalid"
+			}
+			throw error
+		}
+	}
 	if (source === "myanimelist") return myanimelist(bytes, fileName)
 	if (source === "kodi") return kodi(bytes)
 	if (source === "movielens") return movielens(bytes, wishlist)

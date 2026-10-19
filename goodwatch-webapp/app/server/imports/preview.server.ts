@@ -25,7 +25,10 @@ import {
 	createCatalogAnimeLookup,
 	resolveAnimeParent,
 } from "./anime-mapping-data.server.ts"
-import { createCatalogEpisodeResolver } from "./episode-resolver-data.server.ts"
+import {
+	createCatalogEpisodeResolver,
+	createTvdbParentLookup,
+} from "./episode-resolver-data.server.ts"
 import { ImportFileError, parseImportFile } from "./files.server.ts"
 import {
 	type Param,
@@ -54,6 +57,33 @@ type CatalogRow = {
 async function matchCatalog(source: ImportSource, rows: ImportObservation[]) {
 	const animeMappings = createCatalogAnimeLookup()
 	const resolveEpisode = createCatalogEpisodeResolver(animeMappings)
+	const tvdbParent = createTvdbParentLookup()
+	for (const row of rows) {
+		if (source !== "tvtime" || row.problem || row.tmdbId != null) continue
+		if (row.mediaType === "movie" && !row.imdbId) {
+			row.problem = {
+				outcome: "unmatched",
+				code: "tvtime_movie_identity_missing",
+				reason:
+					"This TV Time movie has only a title and release date. It stays unmatched for review; no title-only match was applied.",
+			}
+			continue
+		}
+		if (row.mediaType !== "show") continue
+		const identity = row.showTvdbId
+			? `show:${row.showTvdbId}`
+			: row.episodeTvdbId
+				? `episode:${row.episodeTvdbId}`
+				: null
+		if (identity) row.tmdbId = await tvdbParent(identity)
+		if (!row.tmdbId && !row.imdbId)
+			row.problem = {
+				outcome: "unmatched",
+				code: "tvtime_show_unmatched",
+				reason:
+					"This TV Time show could not be matched uniquely by its TVDB identity. Its episodes and status were not applied.",
+			}
+	}
 	// Tracker identities locate the parent; episode placement is validated separately below.
 	for (const row of rows) {
 		if (
@@ -514,7 +544,7 @@ async function insertItems(id: string, userId: string, items: ImportItem[]) {
 				x.outcome,
 				x.reason,
 				x.tmdbId,
-				x.tmdbId === null ? null : x.mediaType,
+				x.mediaType,
 				x.currentScore ?? null,
 				x.season ?? null,
 				x.episode ?? null,

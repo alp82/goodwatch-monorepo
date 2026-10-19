@@ -47,6 +47,7 @@ const SIZE_LIMIT: Record<ImportFileTarget, number> = {
 	kodi: IMPORT_MAX_BYTES,
 	myanimelist: IMPORT_MAX_BYTES,
 	wishlist: IMPORT_MAX_BYTES,
+	tvtime: IMPORT_MAX_BYTES,
 }
 const LARGEST_IMPORT = Math.max(...Object.values(SIZE_LIMIT))
 const tooLarge = (limit: number): ImportFileRecognition => ({
