@@ -13,6 +13,7 @@ interface Readers {
 	readCsvTable(
 		data: Uint8Array,
 		name: string,
+		remainingRows?: number,
 	): { headers: string[]; rows: string[][] }
 	text(entry: Entry): string
 	fail(message: string, code?: string): never
@@ -142,6 +143,15 @@ export function parseTvTime(
 		observations.push(row)
 	}
 	let rowsRead = 0
+	let sourceRows = 0
+	let unwatchedEpisodes = 0
+	const countSourceRow = () => {
+		if (++sourceRows > 500_000)
+			readers.fail(
+				"That TV Time export has more than 500,000 source rows.",
+				"tvtime_limit",
+			)
+	}
 	const countRow = () => {
 		if (++rowsRead > IMPORT_MAX_ROWS)
 			readers.fail(
@@ -169,6 +179,7 @@ export function parseTvTime(
 	}
 	const plays = new Map<string, ImportObservation>()
 	const undatedMoviePlays = new Map<string, number>()
+	const undatedEpisodePlays = new Map<string, number>()
 	const addPlay = (row: ImportObservation, stamp: unknown) => {
 		const raw = string(stamp)
 		const identity =
@@ -198,10 +209,30 @@ export function parseTvTime(
 	}
 	const jsonMovies = entries.some((e) => fileKind(e.name) === "moviesJson")
 	const jsonShows = entries.some((e) => fileKind(e.name) === "showsJson")
-	const extension = (row: Row, hint: string, csv = false) => {
-		if (!csv) countRow()
+	const extension = (
+		row: Row,
+		hint: string,
+		csv = false,
+		verifiedMovieScale = false,
+	) => {
+		countSourceRow()
 		const episode = hint === "episode" || row.type === "episode"
 		const movie = hint === "movie" || row.type === "movie"
+		const hasRating =
+			row.rating != null &&
+			row.rating !== "" &&
+			row.rating !== 0 &&
+			row.rating !== "0"
+		if (
+			episode &&
+			boolean(row.iswatched) &&
+			!yes(row.iswatched) &&
+			!hasRating
+		) {
+			unwatchedEpisodes++
+			return
+		}
+		countRow()
 		if (csv && (movie ? jsonMovies : jsonShows)) {
 			warnings.push(
 				"TV Time JSON and CSV contain the same export. The JSON representation is used once.",
@@ -263,7 +294,7 @@ export function parseTvTime(
 					},
 					row.watchedat,
 				)
-			else want(base)
+			else unwatchedMovieIntention(base)
 		} else if (row.status === "not_started_yet") want(base)
 		else if (
 			["continuing", "up_to_date", "stopped"].includes(string(row.status))
@@ -291,29 +322,48 @@ export function parseTvTime(
 			row.rating !== "0"
 		) {
 			const score = Number(row.rating)
-			add({
-				...base,
-				key: `${base.key}:${episode ? `episode:${row.tvdbid}:` : ""}rating`,
-				kind: episode ? "unsupported" : "rating",
-				score,
-				...(episode
-					? {
-							problem: {
-								outcome: "unsupported",
-								code: "tvtime_episode_rating",
-								reason: "TV Time episode ratings are not applied.",
-							},
-						}
-					: ![2, 4, 6, 8, 10].includes(score)
+			if (!episode && (!movie || !verifiedMovieScale)) {
+				add({
+					...base,
+					key: `${base.key}:rating`,
+					kind: "unsupported",
+					score,
+					problem: {
+						outcome: "unsupported",
+						code: movie
+							? "tvtime_rating_scale_unknown"
+							: "tvtime_show_rating_unsupported",
+						reason: movie
+							? "This export's rating scale isn't known, so this rating wasn't imported."
+							: "TV Time show ratings haven't been verified, so this rating wasn't imported.",
+					},
+				})
+			} else {
+				add({
+					...base,
+					key: `${base.key}:${episode ? `episode:${row.tvdbid}:` : ""}rating`,
+					kind: episode ? "unsupported" : "rating",
+					score,
+					...(episode
 						? {
 								problem: {
-									outcome: "invalid",
-									code: "tvtime_rating_invalid",
-									reason: "TV Time ratings must be 2, 4, 6, 8 or 10.",
+									outcome: "unsupported",
+									code: "tvtime_episode_rating",
+									reason: "TV Time episode ratings are not applied.",
 								},
 							}
-						: {}),
-			})
+						: ![2, 4, 6, 8, 10].includes(score)
+							? {
+									problem: {
+										outcome: "invalid",
+										code: "tvtime_rating_invalid",
+										reason:
+											"This value isn't on TV Time's rating scale, so it wasn't imported.",
+									},
+								}
+							: {}),
+				})
+			}
 		}
 		if (id(row.rewatchcount))
 			warnings.push(
@@ -331,6 +381,8 @@ export function parseTvTime(
 				completeness: "unknown",
 			},
 		})
+	// Owner decision pending: keep unwatched movies as wishes; isolate this policy for a later preview choice.
+	const unwatchedMovieIntention = (base: ImportObservation) => want(base)
 	for (const entry of entries) {
 		const format = fileKind(entry.name)
 		const content = readers.text(entry)
@@ -369,6 +421,8 @@ export function parseTvTime(
 						rewatchcount: r.rewatch_count,
 					},
 					movie ? "movie" : "show",
+					false,
+					/^(?:shows|movies)\.json$/i.test(basename(entry.name)),
 				)
 				if (!movie)
 					for (const season of array(r.seasons)) {
@@ -395,7 +449,7 @@ export function parseTvTime(
 			}
 			continue
 		}
-		const table = readers.readCsvTable(entry.data, entry.name)
+		const table = readers.readCsvTable(entry.data, entry.name, 500_000)
 		const columns = table.headers.map(normalized)
 		if (new Set(columns).size !== columns.length)
 			readers.fail(
@@ -430,7 +484,10 @@ export function parseTvTime(
 				"tvtime_format_unknown",
 			)
 		for (const cells of table.rows) {
-			countRow()
+			if (kind !== "extension") {
+				countSourceRow()
+				countRow()
+			}
 			const row: Row = Object.fromEntries(
 				table.headers.map((h, i) => [normalized(h), cells[i]]),
 			)
@@ -484,6 +541,10 @@ export function parseTvTime(
 							? "show"
 							: "movie",
 					true,
+					basename(entry.name).toLowerCase() === "activity_history.csv" ||
+						(!/^tvtime-/i.test(basename(entry.name)) &&
+							columns.includes("type") &&
+							columns.includes("iswatchlisted")),
 				)
 				continue
 			}
@@ -512,6 +573,12 @@ export function parseTvTime(
 					row.entitytype === "episode" &&
 					["watch", "rewatch"].includes(string(row.type)))
 			) {
+				if (kind === "v1") {
+					const identity = `${id(row.episodeid) ?? string(row.uuid)}:${string(row.type)}`
+					const ordinal = (undatedEpisodePlays.get(identity) ?? 0) + 1
+					undatedEpisodePlays.set(identity, ordinal)
+					base.key = `tvtime:episode:${identity}:${string(row.typeuuidn) || string(row.createdat) || `undated:${ordinal}`}`
+				}
 				addPlay(
 					{
 						...base,
@@ -576,6 +643,10 @@ export function parseTvTime(
 		}
 	}
 	// Snapshot only after collapsing repeated source plays, before catalog matching.
+	if (unwatchedEpisodes)
+		warnings.push(
+			`${unwatchedEpisodes} unwatched TV Time episode rows were left out before counting import items.`,
+		)
 	for (const row of observations) {
 		if (
 			row.tvtimeMovie &&

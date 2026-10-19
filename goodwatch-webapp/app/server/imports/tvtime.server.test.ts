@@ -375,7 +375,7 @@ test("TV Time prefers JSON over duplicate extension CSVs and keeps malformed row
 	assert.equal(unknown.observations[0].problem?.outcome, "unsupported")
 })
 
-test("TV Time bounds unobserved episode rows as well as output observations", async () => {
+test("TV Time omits unwatched episode rows before applying the import row limit", async () => {
 	const episodes = Array.from({ length: 50001 }, (_, i) => ({
 		id: { tvdb: i + 1 },
 		number: i + 1,
@@ -392,10 +392,23 @@ test("TV Time bounds unobserved episode rows as well as output observations", as
 			},
 		]),
 	)
-	await assert.rejects(
-		parseImportFile("tvtime", file, undefined, "shows.json"),
-		{ code: "tvtime_limit" },
+	const parsed = await parseImportFile("tvtime", file, undefined, "shows.json")
+	assert.equal(parsed.observations.length, 1)
+	assert.equal(parsed.observations[0].showStatus, "watching")
+	assert.ok(parsed.warnings.some((w) => /50001 unwatched/.test(w)))
+	const csv = [
+		"series_tvdb_id,title,season,episode,tvdb_id,is_watched,watched_at\n",
+		"100,Show,1,1,200,false,\n".repeat(50001),
+		"100,Show,1,2,201,true,2024-01-01\n",
+	].join("")
+	const fromCsv = await parseImportFile(
+		"tvtime",
+		Buffer.from(csv),
+		undefined,
+		"tvtime-series-episodes-2026-07-01.csv",
 	)
+	assert.equal(fromCsv.observations.length, 1)
+	assert.equal(fromCsv.observations[0].episodeTvdbId, 201)
 })
 
 test("TV Time never promotes an unidentified episode to a whole-show watch, and keeps zero watches out of legacy overlap", async () => {
@@ -486,5 +499,97 @@ test("official movie snapshots use the final stable play key after timestamp col
 	assert.equal(
 		p.observations[0].wishlistOriginal?.tvtimeMovie?.releaseDate,
 		"1995-11-22",
+	)
+})
+
+test("only Liberator movie scores use the verified scale; extension show scores and TV Time Out scores stay unapplied", async () => {
+	const show = await parseImportFile(
+		"tvtime",
+		Buffer.from(
+			JSON.stringify([
+				{
+					id: { tvdb: 100 },
+					uuid: "s1",
+					title: "Show",
+					status: "continuing",
+					rating: 8,
+					seasons: [],
+				},
+			]),
+		),
+		undefined,
+		"shows.json",
+	)
+	assert.equal(
+		show.observations.find((row) => row.score === 8)?.problem?.code,
+		"tvtime_show_rating_unsupported",
+	)
+	assert.ok(!show.observations.some((row) => row.kind === "rating"))
+	const movie = {
+		id: { tvdb: 300, imdb: "tt0114709" },
+		uuid: "m1",
+		title: "Movie",
+		is_watched: true,
+		rating: 8,
+	}
+	for (const name of ["tvtime-movies-2026-07-01.json", "unknown.json"]) {
+		const parsed = await parseImportFile(
+			"tvtime",
+			Buffer.from(JSON.stringify([movie])),
+			undefined,
+			name,
+		)
+		assert.equal(
+			parsed.observations.find((row) => row.score === 8)?.problem?.code,
+			"tvtime_rating_scale_unknown",
+		)
+		assert.ok(!parsed.observations.some((row) => row.kind === "rating"))
+	}
+	const csv = await parseImportFile(
+		"tvtime",
+		Buffer.from(
+			"uuid,tvdb_id,imdb_id,title,is_watched,rating\nm1,300,tt0114709,Movie,true,8\n",
+		),
+		undefined,
+		"tvtime-movies-2026-07-01.csv",
+	)
+	assert.equal(
+		csv.observations.find((row) => row.score === 8)?.problem?.code,
+		"tvtime_rating_scale_unknown",
+	)
+	const invalid = await parseImportFile(
+		"tvtime",
+		Buffer.from(JSON.stringify([{ ...movie, rating: 3 }])),
+		undefined,
+		"movies.json",
+	)
+	assert.match(
+		invalid.observations.find((row) => row.score === 3)?.problem?.reason ?? "",
+		/isn't on TV Time's rating scale/,
+	)
+})
+
+test("TV Time ZIP failures distinguish password detection from a generic unreadable archive", async () => {
+	await assert.rejects(
+		parseImportFile(
+			"tvtime",
+			zipFixture(
+				{ "tracking-prod-records-v2.csv": "key\ntracking-stats\n" },
+				{ encrypted: "tracking-prod-records-v2.csv" },
+			),
+		),
+		{
+			code: "tvtime_zip_encrypted",
+			message:
+				"This TV Time ZIP is password-protected. Extract it locally, then upload its tracking CSV files.",
+		},
+	)
+	await assert.rejects(
+		parseImportFile("tvtime", Buffer.from("PKinvalid archive")),
+		{
+			code: "tvtime_zip_unreadable",
+			message:
+				"GoodWatch couldn't open this TV Time ZIP. Check the file and try again.",
+		},
 	)
 })

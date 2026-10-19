@@ -718,6 +718,11 @@ export async function parseImportFile(
 						"This TV Time ZIP is password-protected. Extract it locally, then upload its tracking CSV files.",
 						"tvtime_zip_encrypted",
 					)
+				if (!error.code && bytes[0] === 0x50 && bytes[1] === 0x4b)
+					fail(
+						"GoodWatch couldn't open this TV Time ZIP. Check the file and try again.",
+						"tvtime_zip_unreadable",
+					)
 				error.code ??= "tvtime_file_invalid"
 			}
 			throw error

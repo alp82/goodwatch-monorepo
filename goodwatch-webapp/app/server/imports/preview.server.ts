@@ -63,9 +63,12 @@ async function matchCatalog(source: ImportSource, rows: ImportObservation[]) {
 		if (row.mediaType === "movie" && !row.imdbId) {
 			row.problem = {
 				outcome: "unmatched",
-				code: "tvtime_movie_identity_missing",
-				reason:
-					"This TV Time movie has no catalog ID. Choose a movie to match it.",
+				code: row.tvtimeMovie
+					? "tvtime_movie_identity_missing"
+					: "tvtime_movie_imdb_missing",
+				reason: row.tvtimeMovie
+					? "This TV Time movie has no catalog ID. Choose a movie to match it."
+					: "This TV Time movie has no IMDb ID, so it wasn't matched.",
 			}
 			continue
 		}

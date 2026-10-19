@@ -766,3 +766,88 @@ test("TV Time extension payloads cannot opt themselves into official title-only 
 		{ code: "wishlist_row_not_resolvable" },
 	)
 })
+
+test("official v1 episode watches and rewatches sharing an episode UUID all import on a fresh account", async (t) => {
+	setup()
+	t.mock.method(
+		globalThis,
+		"fetch",
+		async (url: string | URL | Request) =>
+			new Response(
+				JSON.stringify(
+					String(url).includes("/find/100?")
+						? { tv_results: [{ id: 1668 }] }
+						: { tv_episode_results: [{ id: 101, show_id: 1668 }] },
+				),
+			),
+	)
+	const file = Buffer.from(
+		"type,entity_type,uuid,type-uuid-n,series_id,episode_id,season_number,episode_number,created_at\nwatch,episode,shared-uuid,watch-e1,100,200,4,24,2022-01-01 12:00:00\nrewatch,episode,shared-uuid,rewatch-e1-1,100,200,4,24,2023-01-01 12:00:00\nrewatch,episode,shared-uuid,rewatch-e1-2,100,200,4,24,2024-01-01 12:00:00\n",
+	)
+	const p = await previewImport(
+		"member",
+		"tvtime",
+		"tracking-prod-records.csv",
+		file,
+	)
+	assert.equal(p.counts.new, 3)
+	const rows = (await getImportItems("member", p.id, undefined, 0, 50)).items
+	assert.equal(new Set(rows.map((r) => r.key)).size, 3)
+	await confirmImport("member", p.id, {
+		kinds: ["watch"],
+		conflictChoice: "keep",
+		watchDates: "preserve",
+	})
+	await done(p.id)
+	assert.equal((await getShowTracking("member", 1668)).log.length, 3)
+	const repeated = await previewImport(
+		"member",
+		"tvtime",
+		"tracking-prod-records.csv",
+		file,
+	)
+	assert.equal(repeated.counts.unchanged, 3)
+	await undoImport("member", p.id)
+	assert.equal((await getShowTracking("member", 1668)).log.length, 0)
+})
+
+test("extension movies without IMDb IDs explain the missing ID and another source's unmatched shows retain their type", async () => {
+	setup()
+	const p = await previewImport(
+		"member",
+		"tvtime",
+		"movies.json",
+		Buffer.from(
+			JSON.stringify([
+				{
+					uuid: "m1",
+					id: { tvdb: 300, imdb: "-1" },
+					title: "Movie",
+					is_watched: false,
+				},
+			]),
+		),
+	)
+	const movie = (await getImportItems("member", p.id, undefined, 0, 50))
+		.items[0]
+	assert.equal(movie.problem?.code, "tvtime_movie_imdb_missing")
+	assert.match(movie.reason ?? "", /no IMDb ID/)
+	const other = await previewImport(
+		"member",
+		"wishlist",
+		"file.json",
+		Buffer.from(
+			JSON.stringify({
+				format: "goodwatch-wishlist",
+				version: 1,
+				source: "example",
+				completeness: "complete",
+				items: [{ title: "Unknown show", mediaType: "show", tmdbId: 999999 }],
+			}),
+		),
+	)
+	const row = (await getImportItems("member", other.id, undefined, 0, 50))
+		.items[0]
+	assert.equal(row.outcome, "unmatched")
+	assert.equal(row.mediaType, "show")
+})
