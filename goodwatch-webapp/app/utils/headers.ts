@@ -37,5 +37,10 @@ export const pageHeaders: HeadersFunction = ({
 			headers.set("Cache-Control", "private, no-store")
 		}
 	}
+	// Remix renders a thrown 503 through the nearest error boundary. Keep its retry hint in the document too.
+	for (const source of [loaderHeaders, actionHeaders, errorHeaders]) {
+		const retryAfter = source?.get("Retry-After")
+		if (retryAfter) headers.set("Retry-After", retryAfter)
+	}
 	return headers
 }

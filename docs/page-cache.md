@@ -139,7 +139,8 @@ A response is stored only when all of these hold:
     [related-map.md](implementation/related-map.md)). It waits 150 ms for its related titles, genre links, and
     collection (1,000 ms for a declared crawler). When a lookup runs out of time or fails, the document goes out
     without that part. The lookup keeps running and fills the data cache, so the next render is complete.
-  - **A show page whose episode grid read failed.** The page renders without the grid.
+  - **A show page whose episode grid read failed or took more than 1,000 ms.** The budget covers the whole read,
+    including localized labels. The page renders without the grid; shared data-cache fills can finish for a retry.
   - **Discover without the title snapshot.** The first view has no titles, only a spinner, and the browser asks for
     them. Search mode has no titles in the document by design and stays storable.
   - **The start page without its start titles.** The section below the living room lists 16 titles from the
@@ -163,6 +164,11 @@ A response is stored only when all of these hold:
 - **The stored headers:** every header of the original response, plus `Accept-Encoding` in `Vary`, an `ETag`, and
   `Age`. A `keyed` page is replayed with `private, max-age=0` and `Vary: Accept-Language, Accept-Encoding`.
 - **`ETag`:** from the HTML, with a suffix per encoding. `If-None-Match` answers 304. `HEAD` answers the headers.
+
+Essential title details have a separate 3,000 ms page deadline across cache reads, SQL and presentation. A timeout
+answers 503 with `private, no-store` and `Retry-After: 5`, rather than holding a document until each dependency's
+deadline or returning a false 404. These responses are never admitted. The related and genre-row budgets cover
+their whole optional operation, including localization. See [title loader measurements](benchmarks/title-page-latency.md).
 
 ## One render per key
 

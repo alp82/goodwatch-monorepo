@@ -10,6 +10,7 @@
 		"build": "patch-package && remix vite:build && node scripts/precompress.mjs",
 		"typecheck": "tsc",
 		"test": "node --test 'app/**/*.test.ts'",
+		"test:title-timeouts": "node --test scripts/title-page-timeouts.test.mjs",
 		"check:share-cards": "vite-node scripts/check-share-cards.tsx",
 		"build:mcp-poster-grid": "node scripts/build-mcp-poster-grid.mjs",
 		"postinstall": "patch-package",

@@ -1,0 +1,3040 @@
+{
+  "date": "2026-10-19",
+  "baseline_commit": "23468c05c68043d005e34cd3d449558f71d8e765",
+  "paths": [
+    "/movie/109424-captain-phillips",
+    "/show/39331-dont-trust-the-b-----in-apartment-23",
+    "/show/2261-the-tonight-show-starring-johnny-carson",
+    "/show/15260-adventure-time",
+    "/show/63926-one-punch-man",
+    "/show/15226-cid",
+    "/movie/221732-rurouni-kenshin-part-iii-the-legend-ends",
+    "/movie/967941-wicked-for-good",
+    "/show/67136-this-is-us",
+    "/show/85937-demon-slayer-kimetsu-no-yaiba",
+    "/movie/39514-red",
+    "/show/86831-love-death-robots",
+    "/show/228305-task",
+    "/movie/346364-it",
+    "/movie/269149-zootopia",
+    "/movie/176-saw",
+    "/movie/299537-captain-marvel",
+    "/show/32692-blue-bloods",
+    "/movie/185-a-clockwork-orange",
+    "/movie/1242404-steve",
+    "/show/124364-from",
+    "/movie/4638-hot-fuzz",
+    "/show/34791-claymore",
+    "/movie/106646-the-wolf-of-wall-street",
+    "/movie/9806-the-incredibles",
+    "/show/67195-legion",
+    "/movie/857-saving-private-ryan",
+    "/movie/30061-justice-league-crisis-on-two-earths",
+    "/show/72350-ducktales",
+    "/show/615-futurama",
+    "/show/30991-cowboy-bebop",
+    "/movie/9614-happy-gilmore",
+    "/show/46639-american-gods",
+    "/show/4057-criminal-minds",
+    "/movie/15-citizen-kane",
+    "/movie/861-total-recall",
+    "/show/107113-only-murders-in-the-building",
+    "/movie/100402-captain-america-the-winter-soldier",
+    "/show/79460-legacies",
+    "/movie/383498-deadpool-2",
+    "/show/1639-heroes",
+    "/movie/808-shrek",
+    "/movie/122906-about-time",
+    "/show/91275-unbelievable",
+    "/show/60705-faking-it",
+    "/movie/552524-lilo-stitch",
+    "/movie/205596-the-imitation-game",
+    "/show/153312-tulsa-king",
+    "/movie/76338-thor-the-dark-world",
+    "/movie/401898-thelma",
+    "/movie/9522-wedding-crashers",
+    "/movie/1465063-forgotten-island",
+    "/movie/848-dragonslayer",
+    "/movie/515001-jojo-rabbit",
+    "/movie/1124620-the-monkey",
+    "/show/194567-the-lazarus-project",
+    "/show/85271-wandavision",
+    "/show/51817-teenage-mutant-ninja-turtles",
+    "/show/76479-the-boys",
+    "/movie/75656-now-you-see-me",
+    "/show/58841-chicago-pd",
+    "/show/135238-gyeongseong-creature",
+    "/movie/1726-iron-man"
+  ],
+  "columns": [
+    "path",
+    "before-clean_googlebot_visit0_ms",
+    "before-clean_googlebot_visit1_ms",
+    "before-clean_googlebot_visit2_ms",
+    "before-clean_browser_visit0_ms",
+    "before-clean_browser_visit1_ms",
+    "before-clean_browser_visit2_ms",
+    "after-clean_googlebot_visit0_ms",
+    "after-clean_googlebot_visit1_ms",
+    "after-clean_googlebot_visit2_ms",
+    "after-clean_browser_visit0_ms",
+    "after-clean_browser_visit1_ms",
+    "after-clean_browser_visit2_ms",
+    "live_googlebot_visit0_ms",
+    "live_googlebot_visit1_ms",
+    "live_googlebot_visit2_ms",
+    "live_browser_visit0_ms",
+    "live_browser_visit1_ms",
+    "live_browser_visit2_ms"
+  ],
+  "rows": [
+    [
+      "/movie/109424-captain-phillips",
+      384,
+      22,
+      28,
+      309,
+      22,
+      18,
+      863,
+      39,
+      32,
+      396,
+      26,
+      21,
+      214,
+      179,
+      114,
+      212,
+      176,
+      147
+    ],
+    [
+      "/show/39331-dont-trust-the-b-----in-apartment-23",
+      292,
+      17,
+      20,
+      285,
+      21,
+      15,
+      304,
+      27,
+      27,
+      229,
+      14,
+      21,
+      229,
+      192,
+      130,
+      241,
+      412,
+      190
+    ],
+    [
+      "/show/2261-the-tonight-show-starring-johnny-carson",
+      267,
+      26,
+      24,
+      309,
+      28,
+      20,
+      322,
+      26,
+      30,
+      244,
+      26,
+      23,
+      465,
+      209,
+      227,
+      224,
+      229,
+      201
+    ],
+    [
+      "/show/15260-adventure-time",
+      377,
+      32,
+      16,
+      236,
+      27,
+      27,
+      445,
+      34,
+      31,
+      323,
+      27,
+      28,
+      321,
+      261,
+      120,
+      338,
+      247,
+      535
+    ],
+    [
+      "/show/63926-one-punch-man",
+      330,
+      22,
+      16,
+      283,
+      23,
+      19,
+      296,
+      30,
+      26,
+      315,
+      23,
+      20,
+      214,
+      194,
+      208,
+      211,
+      261,
+      248
+    ],
+    [
+      "/show/15226-cid",
+      273,
+      36,
+      29,
+      254,
+      31,
+      39,
+      274,
+      34,
+      36,
+      227,
+      31,
+      34,
+      394,
+      410,
+      255,
+      255,
+      242,
+      236
+    ],
+    [
+      "/movie/221732-rurouni-kenshin-part-iii-the-legend-ends",
+      289,
+      22,
+      22,
+      303,
+      18,
+      18,
+      345,
+      18,
+      31,
+      354,
+      21,
+      15,
+      223,
+      223,
+      126,
+      223,
+      248,
+      410
+    ],
+    [
+      "/movie/967941-wicked-for-good",
+      324,
+      23,
+      16,
+      327,
+      24,
+      14,
+      462,
+      61,
+      47,
+      351,
+      27,
+      23,
+      196,
+      308,
+      175,
+      276,
+      475,
+      372
+    ],
+    [
+      "/show/67136-this-is-us",
+      404,
+      19,
+      25,
+      299,
+      18,
+      19,
+      415,
+      36,
+      32,
+      379,
+      23,
+      28,
+      215,
+      219,
+      167,
+      209,
+      249,
+      141
+    ],
+    [
+      "/show/85937-demon-slayer-kimetsu-no-yaiba",
+      213,
+      22,
+      25,
+      291,
+      20,
+      16,
+      437,
+      26,
+      33,
+      321,
+      26,
+      18,
+      253,
+      187,
+      239,
+      1279,
+      152,
+      197
+    ],
+    [
+      "/movie/39514-red",
+      396,
+      18,
+      19,
+      352,
+      22,
+      27,
+      364,
+      26,
+      27,
+      379,
+      26,
+      19,
+      215,
+      220,
+      219,
+      186,
+      251,
+      274
+    ],
+    [
+      "/show/86831-love-death-robots",
+      266,
+      21,
+      21,
+      237,
+      16,
+      24,
+      324,
+      34,
+      23,
+      222,
+      22,
+      25,
+      646,
+      639,
+      141,
+      303,
+      315,
+      232
+    ],
+    [
+      "/show/228305-task",
+      196,
+      12,
+      14,
+      246,
+      26,
+      25,
+      259,
+      13,
+      21,
+      337,
+      45,
+      19,
+      229,
+      186,
+      220,
+      212,
+      210,
+      125
+    ],
+    [
+      "/movie/346364-it",
+      352,
+      17,
+      19,
+      491,
+      19,
+      22,
+      447,
+      28,
+      24,
+      418,
+      17,
+      21,
+      232,
+      204,
+      243,
+      226,
+      244,
+      198
+    ],
+    [
+      "/movie/269149-zootopia",
+      292,
+      17,
+      17,
+      429,
+      16,
+      14,
+      433,
+      13,
+      20,
+      444,
+      22,
+      22,
+      360,
+      234,
+      338,
+      287,
+      364,
+      231
+    ],
+    [
+      "/movie/176-saw",
+      356,
+      26,
+      23,
+      456,
+      19,
+      21,
+      373,
+      18,
+      25,
+      391,
+      17,
+      20,
+      772,
+      562,
+      211,
+      293,
+      203,
+      216
+    ],
+    [
+      "/movie/299537-captain-marvel",
+      647,
+      28,
+      22,
+      378,
+      18,
+      27,
+      365,
+      28,
+      23,
+      340,
+      28,
+      20,
+      327,
+      334,
+      377,
+      183,
+      294,
+      1210
+    ],
+    [
+      "/show/32692-blue-bloods",
+      401,
+      18,
+      17,
+      410,
+      31,
+      16,
+      393,
+      25,
+      20,
+      357,
+      22,
+      20,
+      238,
+      299,
+      226,
+      280,
+      203,
+      287
+    ],
+    [
+      "/movie/185-a-clockwork-orange",
+      398,
+      21,
+      18,
+      351,
+      17,
+      21,
+      484,
+      25,
+      16,
+      453,
+      17,
+      21,
+      280,
+      237,
+      129,
+      222,
+      222,
+      496
+    ],
+    [
+      "/movie/1242404-steve",
+      327,
+      14,
+      21,
+      210,
+      22,
+      19,
+      375,
+      12,
+      22,
+      257,
+      22,
+      22,
+      181,
+      232,
+      208,
+      175,
+      630,
+      185
+    ],
+    [
+      "/show/124364-from",
+      251,
+      28,
+      20,
+      281,
+      25,
+      26,
+      358,
+      23,
+      25,
+      274,
+      24,
+      22,
+      238,
+      217,
+      223,
+      203,
+      240,
+      193
+    ],
+    [
+      "/movie/4638-hot-fuzz",
+      346,
+      15,
+      13,
+      355,
+      22,
+      20,
+      450,
+      20,
+      18,
+      415,
+      28,
+      22,
+      181,
+      211,
+      268,
+      215,
+      249,
+      153
+    ],
+    [
+      "/show/34791-claymore",
+      309,
+      16,
+      30,
+      291,
+      19,
+      16,
+      303,
+      18,
+      24,
+      303,
+      29,
+      20,
+      237,
+      299,
+      221,
+      249,
+      193,
+      215
+    ],
+    [
+      "/movie/106646-the-wolf-of-wall-street",
+      354,
+      21,
+      19,
+      403,
+      19,
+      21,
+      312,
+      26,
+      26,
+      410,
+      14,
+      26,
+      258,
+      252,
+      133,
+      321,
+      241,
+      139
+    ],
+    [
+      "/movie/9806-the-incredibles",
+      392,
+      15,
+      23,
+      359,
+      21,
+      21,
+      333,
+      21,
+      19,
+      403,
+      46,
+      22,
+      225,
+      454,
+      262,
+      250,
+      198,
+      170
+    ],
+    [
+      "/show/67195-legion",
+      373,
+      18,
+      21,
+      272,
+      23,
+      14,
+      286,
+      24,
+      16,
+      279,
+      22,
+      24,
+      329,
+      216,
+      713,
+      182,
+      194,
+      211
+    ],
+    [
+      "/movie/857-saving-private-ryan",
+      434,
+      20,
+      20,
+      460,
+      18,
+      20,
+      423,
+      24,
+      13,
+      304,
+      24,
+      16,
+      178,
+      205,
+      161,
+      243,
+      178,
+      196
+    ],
+    [
+      "/movie/30061-justice-league-crisis-on-two-earths",
+      340,
+      18,
+      14,
+      442,
+      21,
+      21,
+      273,
+      15,
+      18,
+      270,
+      14,
+      17,
+      437,
+      284,
+      159,
+      220,
+      371,
+      115
+    ],
+    [
+      "/show/72350-ducktales",
+      274,
+      22,
+      19,
+      226,
+      20,
+      23,
+      300,
+      19,
+      21,
+      293,
+      27,
+      21,
+      243,
+      202,
+      235,
+      212,
+      211,
+      123
+    ],
+    [
+      "/show/615-futurama",
+      270,
+      21,
+      22,
+      281,
+      25,
+      30,
+      278,
+      22,
+      28,
+      441,
+      25,
+      25,
+      561,
+      218,
+      230,
+      372,
+      387,
+      260
+    ],
+    [
+      "/show/30991-cowboy-bebop",
+      270,
+      15,
+      22,
+      231,
+      22,
+      24,
+      266,
+      20,
+      25,
+      234,
+      22,
+      16,
+      199,
+      246,
+      103,
+      214,
+      222,
+      227
+    ],
+    [
+      "/movie/9614-happy-gilmore",
+      457,
+      17,
+      23,
+      401,
+      20,
+      22,
+      362,
+      19,
+      20,
+      437,
+      22,
+      16,
+      234,
+      383,
+      368,
+      272,
+      247,
+      254
+    ],
+    [
+      "/show/46639-american-gods",
+      298,
+      16,
+      21,
+      262,
+      18,
+      25,
+      346,
+      18,
+      20,
+      235,
+      18,
+      27,
+      311,
+      276,
+      424,
+      271,
+      221,
+      185
+    ],
+    [
+      "/show/4057-criminal-minds",
+      377,
+      23,
+      23,
+      334,
+      25,
+      27,
+      250,
+      22,
+      30,
+      322,
+      22,
+      28,
+      197,
+      242,
+      243,
+      224,
+      297,
+      322
+    ],
+    [
+      "/movie/15-citizen-kane",
+      418,
+      19,
+      19,
+      316,
+      26,
+      20,
+      342,
+      15,
+      16,
+      405,
+      23,
+      25,
+      223,
+      227,
+      283,
+      231,
+      221,
+      118
+    ],
+    [
+      "/movie/861-total-recall",
+      399,
+      12,
+      13,
+      385,
+      17,
+      16,
+      286,
+      14,
+      27,
+      342,
+      14,
+      17,
+      273,
+      291,
+      242,
+      286,
+      222,
+      286
+    ],
+    [
+      "/show/107113-only-murders-in-the-building",
+      388,
+      26,
+      26,
+      311,
+      20,
+      17,
+      328,
+      25,
+      24,
+      279,
+      14,
+      21,
+      210,
+      223,
+      112,
+      282,
+      243,
+      288
+    ],
+    [
+      "/movie/100402-captain-america-the-winter-soldier",
+      402,
+      37,
+      23,
+      507,
+      28,
+      26,
+      317,
+      32,
+      20,
+      466,
+      23,
+      19,
+      241,
+      241,
+      198,
+      217,
+      218,
+      192
+    ],
+    [
+      "/show/79460-legacies",
+      269,
+      30,
+      33,
+      270,
+      20,
+      25,
+      320,
+      17,
+      16,
+      382,
+      17,
+      16,
+      376,
+      204,
+      212,
+      198,
+      182,
+      228
+    ],
+    [
+      "/movie/383498-deadpool-2",
+      417,
+      15,
+      17,
+      358,
+      16,
+      26,
+      430,
+      13,
+      20,
+      373,
+      18,
+      21,
+      349,
+      185,
+      218,
+      218,
+      220,
+      213
+    ],
+    [
+      "/show/1639-heroes",
+      319,
+      18,
+      17,
+      383,
+      16,
+      16,
+      326,
+      25,
+      28,
+      288,
+      22,
+      27,
+      314,
+      292,
+      220,
+      382,
+      211,
+      186
+    ],
+    [
+      "/movie/808-shrek",
+      361,
+      24,
+      23,
+      464,
+      23,
+      17,
+      377,
+      17,
+      26,
+      292,
+      27,
+      23,
+      298,
+      187,
+      224,
+      199,
+      187,
+      257
+    ],
+    [
+      "/movie/122906-about-time",
+      329,
+      14,
+      15,
+      402,
+      54,
+      50,
+      339,
+      20,
+      25,
+      342,
+      27,
+      23,
+      207,
+      188,
+      255,
+      263,
+      258,
+      161
+    ],
+    [
+      "/show/91275-unbelievable",
+      215,
+      23,
+      25,
+      293,
+      50,
+      30,
+      261,
+      27,
+      19,
+      228,
+      23,
+      22,
+      231,
+      333,
+      136,
+      224,
+      217,
+      207
+    ],
+    [
+      "/show/60705-faking-it",
+      216,
+      18,
+      16,
+      335,
+      26,
+      22,
+      208,
+      25,
+      18,
+      241,
+      21,
+      18,
+      379,
+      249,
+      249,
+      197,
+      254,
+      512
+    ],
+    [
+      "/movie/552524-lilo-stitch",
+      280,
+      18,
+      34,
+      363,
+      25,
+      22,
+      352,
+      30,
+      25,
+      406,
+      15,
+      21,
+      244,
+      211,
+      219,
+      325,
+      189,
+      228
+    ],
+    [
+      "/movie/205596-the-imitation-game",
+      371,
+      26,
+      23,
+      364,
+      37,
+      32,
+      389,
+      17,
+      15,
+      443,
+      17,
+      18,
+      235,
+      231,
+      132,
+      251,
+      241,
+      144
+    ],
+    [
+      "/show/153312-tulsa-king",
+      284,
+      19,
+      21,
+      323,
+      20,
+      23,
+      301,
+      21,
+      23,
+      307,
+      18,
+      17,
+      252,
+      468,
+      221,
+      206,
+      246,
+      226
+    ],
+    [
+      "/movie/76338-thor-the-dark-world",
+      374,
+      17,
+      22,
+      370,
+      31,
+      22,
+      435,
+      19,
+      15,
+      338,
+      24,
+      15,
+      409,
+      211,
+      192,
+      220,
+      238,
+      209
+    ],
+    [
+      "/movie/401898-thelma",
+      254,
+      18,
+      26,
+      393,
+      16,
+      19,
+      330,
+      27,
+      26,
+      297,
+      13,
+      14,
+      192,
+      281,
+      218,
+      322,
+      227,
+      237
+    ],
+    [
+      "/movie/9522-wedding-crashers",
+      306,
+      15,
+      26,
+      343,
+      18,
+      21,
+      269,
+      20,
+      18,
+      357,
+      15,
+      24,
+      203,
+      226,
+      222,
+      195,
+      195,
+      113
+    ],
+    [
+      "/movie/1465063-forgotten-island",
+      250,
+      25,
+      27,
+      266,
+      19,
+      20,
+      279,
+      14,
+      21,
+      276,
+      15,
+      13,
+      227,
+      202,
+      229,
+      217,
+      205,
+      308
+    ],
+    [
+      "/movie/848-dragonslayer",
+      284,
+      14,
+      15,
+      259,
+      15,
+      19,
+      251,
+      26,
+      22,
+      293,
+      16,
+      15,
+      245,
+      238,
+      153,
+      2302,
+      259,
+      243
+    ],
+    [
+      "/movie/515001-jojo-rabbit",
+      487,
+      16,
+      15,
+      356,
+      13,
+      23,
+      375,
+      17,
+      15,
+      321,
+      17,
+      17,
+      209,
+      213,
+      122,
+      203,
+      215,
+      295
+    ],
+    [
+      "/movie/1124620-the-monkey",
+      281,
+      25,
+      22,
+      329,
+      11,
+      12,
+      331,
+      26,
+      27,
+      286,
+      14,
+      13,
+      308,
+      208,
+      202,
+      234,
+      222,
+      216
+    ],
+    [
+      "/show/194567-the-lazarus-project",
+      208,
+      22,
+      15,
+      333,
+      17,
+      22,
+      231,
+      20,
+      23,
+      276,
+      12,
+      17,
+      241,
+      288,
+      132,
+      215,
+      199,
+      225
+    ],
+    [
+      "/show/85271-wandavision",
+      291,
+      19,
+      25,
+      193,
+      16,
+      25,
+      263,
+      21,
+      20,
+      259,
+      14,
+      15,
+      196,
+      446,
+      241,
+      210,
+      177,
+      215
+    ],
+    [
+      "/show/51817-teenage-mutant-ninja-turtles",
+      322,
+      17,
+      19,
+      318,
+      29,
+      34,
+      385,
+      27,
+      18,
+      284,
+      19,
+      15,
+      282,
+      271,
+      178,
+      211,
+      265,
+      232
+    ],
+    [
+      "/show/76479-the-boys",
+      330,
+      27,
+      21,
+      294,
+      19,
+      18,
+      276,
+      16,
+      17,
+      306,
+      12,
+      16,
+      232,
+      230,
+      216,
+      242,
+      205,
+      263
+    ],
+    [
+      "/movie/75656-now-you-see-me",
+      304,
+      24,
+      25,
+      323,
+      19,
+      22,
+      433,
+      18,
+      16,
+      321,
+      13,
+      21,
+      226,
+      306,
+      229,
+      205,
+      242,
+      226
+    ],
+    [
+      "/show/58841-chicago-pd",
+      489,
+      25,
+      21,
+      391,
+      24,
+      34,
+      374,
+      26,
+      24,
+      372,
+      17,
+      19,
+      385,
+      202,
+      124,
+      210,
+      289,
+      133
+    ],
+    [
+      "/show/135238-gyeongseong-creature",
+      203,
+      22,
+      21,
+      214,
+      18,
+      16,
+      284,
+      18,
+      20,
+      270,
+      15,
+      13,
+      366,
+      371,
+      221,
+      231,
+      235,
+      130
+    ],
+    [
+      "/movie/1726-iron-man",
+      432,
+      13,
+      19,
+      384,
+      15,
+      24,
+      398,
+      18,
+      16,
+      352,
+      17,
+      16,
+      212,
+      326,
+      318,
+      174,
+      355,
+      193
+    ]
+  ],
+  "summary": {
+    "before-clean.jsonl:0:first": {
+      "n": 63,
+      "p50_ms": 327,
+      "p95_ms": 457,
+      "max_ms": 647
+    },
+    "before-clean.jsonl:0:third": {
+      "n": 63,
+      "p50_ms": 21,
+      "p95_ms": 29,
+      "max_ms": 34
+    },
+    "before-clean.jsonl:1:first": {
+      "n": 63,
+      "p50_ms": 327,
+      "p95_ms": 460,
+      "max_ms": 507
+    },
+    "before-clean.jsonl:1:third": {
+      "n": 63,
+      "p50_ms": 21,
+      "p95_ms": 34,
+      "max_ms": 50
+    },
+    "after-clean.jsonl:0:first": {
+      "n": 63,
+      "p50_ms": 333,
+      "p95_ms": 450,
+      "max_ms": 863
+    },
+    "after-clean.jsonl:0:third": {
+      "n": 63,
+      "p50_ms": 23,
+      "p95_ms": 32,
+      "max_ms": 47
+    },
+    "after-clean.jsonl:1:first": {
+      "n": 63,
+      "p50_ms": 321,
+      "p95_ms": 443,
+      "max_ms": 466
+    },
+    "after-clean.jsonl:1:third": {
+      "n": 63,
+      "p50_ms": 20,
+      "p95_ms": 28,
+      "max_ms": 34
+    },
+    "live.jsonl:0:first": {
+      "n": 63,
+      "p50_ms": 238,
+      "p95_ms": 465,
+      "max_ms": 772
+    },
+    "live.jsonl:0:third": {
+      "n": 63,
+      "p50_ms": 219,
+      "p95_ms": 368,
+      "max_ms": 713
+    },
+    "live.jsonl:1:first": {
+      "n": 63,
+      "p50_ms": 224,
+      "p95_ms": 372,
+      "max_ms": 2302
+    },
+    "live.jsonl:1:third": {
+      "n": 63,
+      "p50_ms": 216,
+      "p95_ms": 496,
+      "max_ms": 1210
+    }
+  },
+  "local_page_cache": "off",
+  "local_cache": "Isolated single-node cluster; cleared except title snapshot before each client pass",
+  "first_visit": "Cold title-details data cache and cold page render; process/catalog stores can already be warm",
+  "live_note": "Initial live cache-header classification omitted: the exploratory harness shared a header scratch file with an overlapping local run. Durations/statuses are independent and valid. Recheck uses separate header files.",
+  "faults": [
+    {
+      "part": "Episode grid",
+      "before_ms": 10027,
+      "before_status": 200,
+      "after_ms": 1035,
+      "after_status": 200,
+      "after_cache_control": "private, no-store"
+    },
+    {
+      "part": "Essential details",
+      "before_ms": 10011,
+      "before_status": 500,
+      "after_ms": 3020,
+      "after_status": 503,
+      "retry_after": "5"
+    }
+  ],
+  "all_recorded_statuses_200": true,
+  "live_recheck": [
+    {
+      "path": "/movie/109424-captain-phillips",
+      "client": "googlebot",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 243,
+      "bytes": 56997,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/109424-captain-phillips",
+      "client": "browser",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 211,
+      "bytes": 57498,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/show/39331-dont-trust-the-b-----in-apartment-23",
+      "client": "googlebot",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 203,
+      "bytes": 57548,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/show/39331-dont-trust-the-b-----in-apartment-23",
+      "client": "browser",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 188,
+      "bytes": 58116,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/show/2261-the-tonight-show-starring-johnny-carson",
+      "client": "googlebot",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 608,
+      "bytes": 73346,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/show/2261-the-tonight-show-starring-johnny-carson",
+      "client": "browser",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 222,
+      "bytes": 74893,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/show/15260-adventure-time",
+      "client": "googlebot",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 247,
+      "bytes": 72727,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/show/15260-adventure-time",
+      "client": "browser",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 236,
+      "bytes": 73446,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/show/63926-one-punch-man",
+      "client": "googlebot",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 216,
+      "bytes": 62208,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/show/63926-one-punch-man",
+      "client": "browser",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 200,
+      "bytes": 62830,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/show/15226-cid",
+      "client": "googlebot",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 286,
+      "bytes": 74555,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/show/15226-cid",
+      "client": "browser",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 367,
+      "bytes": 75448,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/221732-rurouni-kenshin-part-iii-the-legend-ends",
+      "client": "googlebot",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 215,
+      "bytes": 55096,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/221732-rurouni-kenshin-part-iii-the-legend-ends",
+      "client": "browser",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 239,
+      "bytes": 55689,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/967941-wicked-for-good",
+      "client": "googlebot",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 195,
+      "bytes": 59078,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/967941-wicked-for-good",
+      "client": "browser",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 215,
+      "bytes": 59616,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/show/67136-this-is-us",
+      "client": "googlebot",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 328,
+      "bytes": 64757,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/show/67136-this-is-us",
+      "client": "browser",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 228,
+      "bytes": 65216,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/show/85937-demon-slayer-kimetsu-no-yaiba",
+      "client": "googlebot",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 187,
+      "bytes": 62803,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/show/85937-demon-slayer-kimetsu-no-yaiba",
+      "client": "browser",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 181,
+      "bytes": 63408,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/39514-red",
+      "client": "googlebot",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 174,
+      "bytes": 58312,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/39514-red",
+      "client": "browser",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 192,
+      "bytes": 58898,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/show/86831-love-death-robots",
+      "client": "googlebot",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 213,
+      "bytes": 59549,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/show/86831-love-death-robots",
+      "client": "browser",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 282,
+      "bytes": 60107,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/show/228305-task",
+      "client": "googlebot",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 173,
+      "bytes": 55412,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/show/228305-task",
+      "client": "browser",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 171,
+      "bytes": 55996,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/346364-it",
+      "client": "googlebot",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 203,
+      "bytes": 58624,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/346364-it",
+      "client": "browser",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 216,
+      "bytes": 59210,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/269149-zootopia",
+      "client": "googlebot",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 413,
+      "bytes": 57597,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/269149-zootopia",
+      "client": "browser",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 395,
+      "bytes": 58058,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/176-saw",
+      "client": "googlebot",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 317,
+      "bytes": 57912,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/176-saw",
+      "client": "browser",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 292,
+      "bytes": 58566,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/299537-captain-marvel",
+      "client": "googlebot",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 233,
+      "bytes": 57056,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/299537-captain-marvel",
+      "client": "browser",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 219,
+      "bytes": 57579,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/show/32692-blue-bloods",
+      "client": "googlebot",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 218,
+      "bytes": 71854,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/show/32692-blue-bloods",
+      "client": "browser",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 245,
+      "bytes": 72426,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/185-a-clockwork-orange",
+      "client": "googlebot",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 181,
+      "bytes": 58112,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/185-a-clockwork-orange",
+      "client": "browser",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 234,
+      "bytes": 58684,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/1242404-steve",
+      "client": "googlebot",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 172,
+      "bytes": 50059,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/1242404-steve",
+      "client": "browser",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 1330,
+      "bytes": 50644,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/show/124364-from",
+      "client": "googlebot",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 244,
+      "bytes": 60913,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/show/124364-from",
+      "client": "browser",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 199,
+      "bytes": 61524,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/4638-hot-fuzz",
+      "client": "googlebot",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 226,
+      "bytes": 58024,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/4638-hot-fuzz",
+      "client": "browser",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 1236,
+      "bytes": 58544,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/show/34791-claymore",
+      "client": "googlebot",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 237,
+      "bytes": 58258,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/show/34791-claymore",
+      "client": "browser",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 272,
+      "bytes": 58962,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/106646-the-wolf-of-wall-street",
+      "client": "googlebot",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 239,
+      "bytes": 59305,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/106646-the-wolf-of-wall-street",
+      "client": "browser",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 243,
+      "bytes": 59836,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/9806-the-incredibles",
+      "client": "googlebot",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 226,
+      "bytes": 57900,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/9806-the-incredibles",
+      "client": "browser",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 211,
+      "bytes": 58475,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/show/67195-legion",
+      "client": "googlebot",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 189,
+      "bytes": 60114,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/show/67195-legion",
+      "client": "browser",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 217,
+      "bytes": 60721,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/857-saving-private-ryan",
+      "client": "googlebot",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 291,
+      "bytes": 58844,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/857-saving-private-ryan",
+      "client": "browser",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 188,
+      "bytes": 59298,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/30061-justice-league-crisis-on-two-earths",
+      "client": "googlebot",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 320,
+      "bytes": 54881,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/30061-justice-league-crisis-on-two-earths",
+      "client": "browser",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 231,
+      "bytes": 55357,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/show/72350-ducktales",
+      "client": "googlebot",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 200,
+      "bytes": 61394,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/show/72350-ducktales",
+      "client": "browser",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 231,
+      "bytes": 61932,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/show/615-futurama",
+      "client": "googlebot",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 272,
+      "bytes": 69132,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/show/615-futurama",
+      "client": "browser",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 209,
+      "bytes": 69994,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/show/30991-cowboy-bebop",
+      "client": "googlebot",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 199,
+      "bytes": 59345,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/show/30991-cowboy-bebop",
+      "client": "browser",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 196,
+      "bytes": 59952,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/9614-happy-gilmore",
+      "client": "googlebot",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 184,
+      "bytes": 58158,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/9614-happy-gilmore",
+      "client": "browser",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 204,
+      "bytes": 58755,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/show/46639-american-gods",
+      "client": "googlebot",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 1328,
+      "bytes": 59215,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/show/46639-american-gods",
+      "client": "browser",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 166,
+      "bytes": 59746,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/show/4057-criminal-minds",
+      "client": "googlebot",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 216,
+      "bytes": 76521,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/show/4057-criminal-minds",
+      "client": "browser",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 218,
+      "bytes": 77084,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/15-citizen-kane",
+      "client": "googlebot",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 323,
+      "bytes": 56875,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/15-citizen-kane",
+      "client": "browser",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 158,
+      "bytes": 57511,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/861-total-recall",
+      "client": "googlebot",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 226,
+      "bytes": 57834,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/861-total-recall",
+      "client": "browser",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 188,
+      "bytes": 58392,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/show/107113-only-murders-in-the-building",
+      "client": "googlebot",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 236,
+      "bytes": 58856,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/show/107113-only-murders-in-the-building",
+      "client": "browser",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 221,
+      "bytes": 59365,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/100402-captain-america-the-winter-soldier",
+      "client": "googlebot",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 194,
+      "bytes": 57925,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/100402-captain-america-the-winter-soldier",
+      "client": "browser",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 167,
+      "bytes": 58459,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/show/79460-legacies",
+      "client": "googlebot",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 173,
+      "bytes": 61987,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/show/79460-legacies",
+      "client": "browser",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 181,
+      "bytes": 62493,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/383498-deadpool-2",
+      "client": "googlebot",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 191,
+      "bytes": 58606,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/383498-deadpool-2",
+      "client": "browser",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 172,
+      "bytes": 59195,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/show/1639-heroes",
+      "client": "googlebot",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 191,
+      "bytes": 60935,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/show/1639-heroes",
+      "client": "browser",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 207,
+      "bytes": 61672,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/808-shrek",
+      "client": "googlebot",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 195,
+      "bytes": 59018,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/808-shrek",
+      "client": "browser",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 317,
+      "bytes": 59637,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/122906-about-time",
+      "client": "googlebot",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 224,
+      "bytes": 57222,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/122906-about-time",
+      "client": "browser",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 214,
+      "bytes": 57816,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/show/91275-unbelievable",
+      "client": "googlebot",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 277,
+      "bytes": 55781,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/show/91275-unbelievable",
+      "client": "browser",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 211,
+      "bytes": 56358,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/show/60705-faking-it",
+      "client": "googlebot",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 236,
+      "bytes": 57856,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/show/60705-faking-it",
+      "client": "browser",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 255,
+      "bytes": 58502,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/552524-lilo-stitch",
+      "client": "googlebot",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 321,
+      "bytes": 57291,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/552524-lilo-stitch",
+      "client": "browser",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 3342,
+      "bytes": 57800,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/205596-the-imitation-game",
+      "client": "googlebot",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 169,
+      "bytes": 57619,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/205596-the-imitation-game",
+      "client": "browser",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 229,
+      "bytes": 58183,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/show/153312-tulsa-king",
+      "client": "googlebot",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 180,
+      "bytes": 60270,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/show/153312-tulsa-king",
+      "client": "browser",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 216,
+      "bytes": 60824,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/76338-thor-the-dark-world",
+      "client": "googlebot",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 196,
+      "bytes": 57598,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/76338-thor-the-dark-world",
+      "client": "browser",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 246,
+      "bytes": 58177,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/401898-thelma",
+      "client": "googlebot",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 219,
+      "bytes": 56598,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/401898-thelma",
+      "client": "browser",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 238,
+      "bytes": 57207,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/9522-wedding-crashers",
+      "client": "googlebot",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 226,
+      "bytes": 56636,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/9522-wedding-crashers",
+      "client": "browser",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 192,
+      "bytes": 57286,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/1465063-forgotten-island",
+      "client": "googlebot",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 195,
+      "bytes": 50842,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/1465063-forgotten-island",
+      "client": "browser",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 231,
+      "bytes": 51549,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/848-dragonslayer",
+      "client": "googlebot",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 172,
+      "bytes": 53391,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/848-dragonslayer",
+      "client": "browser",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 221,
+      "bytes": 53954,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/515001-jojo-rabbit",
+      "client": "googlebot",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 216,
+      "bytes": 57981,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/515001-jojo-rabbit",
+      "client": "browser",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 180,
+      "bytes": 58417,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/1124620-the-monkey",
+      "client": "googlebot",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 338,
+      "bytes": 56516,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/1124620-the-monkey",
+      "client": "browser",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 182,
+      "bytes": 57148,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/show/194567-the-lazarus-project",
+      "client": "googlebot",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 224,
+      "bytes": 57219,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/show/194567-the-lazarus-project",
+      "client": "browser",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 573,
+      "bytes": 57948,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/show/85271-wandavision",
+      "client": "googlebot",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 168,
+      "bytes": 57189,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/show/85271-wandavision",
+      "client": "browser",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 203,
+      "bytes": 57665,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/show/51817-teenage-mutant-ninja-turtles",
+      "client": "googlebot",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 197,
+      "bytes": 64331,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/show/51817-teenage-mutant-ninja-turtles",
+      "client": "browser",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 238,
+      "bytes": 65004,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/show/76479-the-boys",
+      "client": "googlebot",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 188,
+      "bytes": 61961,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/show/76479-the-boys",
+      "client": "browser",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 226,
+      "bytes": 62505,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/75656-now-you-see-me",
+      "client": "googlebot",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 229,
+      "bytes": 58024,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/75656-now-you-see-me",
+      "client": "browser",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 442,
+      "bytes": 58729,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/show/58841-chicago-pd",
+      "client": "googlebot",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 225,
+      "bytes": 71377,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/show/58841-chicago-pd",
+      "client": "browser",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 218,
+      "bytes": 72103,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/show/135238-gyeongseong-creature",
+      "client": "googlebot",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 194,
+      "bytes": 55664,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/show/135238-gyeongseong-creature",
+      "client": "browser",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 225,
+      "bytes": 56139,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/1726-iron-man",
+      "client": "googlebot",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 228,
+      "bytes": 57354,
+      "page_cache": [
+        "miss"
+      ]
+    },
+    {
+      "path": "/movie/1726-iron-man",
+      "client": "browser",
+      "visit": 0,
+      "status": 200,
+      "exit": 0,
+      "total_ms": 174,
+      "bytes": 57975,
+      "page_cache": [
+        "miss"
+      ]
+    }
+  ],
+  "live_recheck_summary": {
+    "googlebot:miss": {
+      "n": 63,
+      "p50_ms": 218,
+      "p95_ms": 338,
+      "max_ms": 1328
+    },
+    "browser:miss": {
+      "n": 63,
+      "p50_ms": 218,
+      "p95_ms": 573,
+      "max_ms": 3342
+    }
+  }
+}

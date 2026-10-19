@@ -13,6 +13,7 @@ import { useUpdateUrlParams } from "~/hooks/updateUrlParams"
 import { resolveMediaContext } from "~/server/media-context.server"
 import { isCrawler } from "~/server/crawlers.server"
 import { getDetailsForMovie } from "~/server/details.server"
+import { titleDetailsWithin } from "~/server/title-page-budget"
 import { INCOMPLETE_PAGE_HEADERS } from "~/server/incomplete-page"
 import { relatedPrefetchBudgetMs } from "~/server/related-budget"
 import { relatedMapLookup, relatedSectionData } from "~/server/related-map.server"
@@ -95,11 +96,9 @@ export const loader: LoaderFunction = async ({
 	const canonicalContent = isCrawler(request)
 	const language = canonicalContent ? "en" : effectiveContext.language
 	const budgetMs = relatedPrefetchBudgetMs(isCrawler(request))
-	const details = getDetailsForMovie({
-		movieId,
-		country,
-		language,
-	}, { canonical: canonicalContent })
+	const details = titleDetailsWithin(
+		getDetailsForMovie({ movieId, country, language }, { canonical: canonicalContent }),
+	)
 	const relatedWork = relatedMapLookup({ type: "movie", id: Number(movieId), budgetMs, language: canonicalContent ? undefined : language })
 	const parts = Promise.all([
 		details,

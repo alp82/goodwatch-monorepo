@@ -14,6 +14,7 @@ import {
 	overlayTitles,
 } from "~/server/media-overlay.server"
 import type { RelatedMapLookup } from "~/server/related-map.server"
+import { optionalTitlePart } from "~/server/title-page-budget"
 import {
 	MAX_KEYS,
 	type TitleDisplay,
@@ -158,10 +159,9 @@ async function present(keys: TitleKey[], language?: string) {
 // ---------------------------------------------------------------- the row
 
 /**
- * The row for a title page. Waits at most `budgetMs` for cards the store doesn't hold yet after the related map is in;
- * later, the page is incomplete.
+ * The row for a title page. Its caller bounds the complete read, including the related map, cards and localization.
  */
-export async function genreRow(params: {
+async function readGenreRow(params: {
 	mediaType: "movie" | "show"
 	tmdbId: number
 	genres: readonly string[] | null | undefined
@@ -199,41 +199,42 @@ export async function genreRow(params: {
 		exclude: new Set([...known, ...(await params.later)]),
 	}).map((title) => title.key)
 	if (!picks.length) return null
-	let timer: ReturnType<typeof setTimeout> | undefined
-	const late = new Promise<"late">((resolve) => {
-		timer = setTimeout(() => resolve("late"), params.budgetMs)
-	})
-	try {
-		// A pick outside the early read, because the related map took more than the spares, is read now.
-		const read = earlyRead.then(() => readMissing(picks))
-		if ((await Promise.race([read, late])) === "late") return "late"
-		const titles = (await present(picks, params.language)).map(
-			(display): GenreRowTitle => ({
-				tmdb_id: display.tmdb_id,
-				title: display.title,
-				release_year: display.release_year,
-				poster_path: display.poster_path,
-				goodwatch_overall_score_normalized_percent:
-					display.goodwatch_overall_score_normalized_percent,
-				...(display.canonical_title !== undefined && {
-					canonical_title: display.canonical_title,
-				}),
-				...(display.presentation && { presentation: display.presentation }),
+	// A pick outside the early read, because the related map took more than the spares, is read now.
+	await earlyRead
+	await readMissing(picks)
+	const titles = (await present(picks, params.language)).map(
+		(display): GenreRowTitle => ({
+			tmdb_id: display.tmdb_id,
+			title: display.title,
+			release_year: display.release_year,
+			poster_path: display.poster_path,
+			goodwatch_overall_score_normalized_percent:
+				display.goodwatch_overall_score_normalized_percent,
+			...(display.canonical_title !== undefined && {
+				canonical_title: display.canonical_title,
 			}),
-		)
-		return titles.length
-			? {
-					heading: genreRowHeading(page.label, params.mediaType),
-					path: page.path,
-					titles,
-				}
-			: null
-	} catch (error) {
-		console.error("Genre row: cards not read", error)
-		return "late"
-	} finally {
-		clearTimeout(timer)
-	}
+			...(display.presentation && { presentation: display.presentation }),
+		}),
+	)
+	return titles.length
+		? {
+				heading: genreRowHeading(page.label, params.mediaType),
+				path: page.path,
+				titles,
+			}
+		: null
+}
+
+/** A timeout or failed read leaves the document incomplete; late shared reads can still warm the data cache. */
+export async function genreRow(
+	params: Parameters<typeof readGenreRow>[0],
+): Promise<GenreRowResult> {
+	const result = await optionalTitlePart(
+		"genre row",
+		() => readGenreRow(params),
+		params.budgetMs,
+	)
+	return result.complete ? result.value : "late"
 }
 
 /** The titles of a related map lookup: the map shows them, and its hidden links name them. */

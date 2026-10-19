@@ -15,6 +15,11 @@ import { useUpdateUrlParams } from "~/hooks/updateUrlParams"
 import { resolveMediaContext } from "~/server/media-context.server"
 import { isCrawler } from "~/server/crawlers.server"
 import { getDetailsForMovie, getDetailsForShow } from "~/server/details.server"
+import {
+	optionalTitlePart,
+	titleDetailsWithin,
+	TITLE_EPISODES_BUDGET_MS,
+} from "~/server/title-page-budget"
 import { getEpisodeGrid } from "~/server/episode-grid.server"
 import { INCOMPLETE_PAGE_HEADERS } from "~/server/incomplete-page"
 import { relatedPrefetchBudgetMs } from "~/server/related-budget"
@@ -101,13 +106,11 @@ export const loader: LoaderFunction = async ({
 	const canonicalContent = isCrawler(request)
 	const language = canonicalContent ? "en" : effectiveContext.language
 	const budgetMs = relatedPrefetchBudgetMs(isCrawler(request))
-	const details = getDetailsForShow(
-		{
-			showId,
-			country,
-			language,
-		},
-		{ canonical: canonicalContent },
+	const details = titleDetailsWithin(
+		getDetailsForShow(
+			{ showId, country, language },
+			{ canonical: canonicalContent },
+		),
 	)
 	let episodeGridFailed = false
 	const relatedWork = relatedMapLookup({
@@ -118,10 +121,12 @@ export const loader: LoaderFunction = async ({
 	})
 	const parts = Promise.all([
 		details,
-		// A failed grid read hides the grid; it never fails the page. A long grid sends its newest part, which keeps
-		// the page within what search engines read; the rest loads on request (api.episode-grid.ts).
-		getEpisodeGrid({ showId })
-			.then(async (grid) => {
+		// Bound the whole grid read, including localized labels. A failed or late read hides the grid and prevents
+		// page-cache admission. A long grid sends its newest part; the rest loads on request (api.episode-grid.ts).
+		optionalTitlePart(
+			"episode grid",
+			async () => {
+				const grid = await getEpisodeGrid({ showId })
 				if (!grid) return null
 				const first = windowEpisodeGrid(grid)
 				const part =
@@ -143,12 +148,12 @@ export const loader: LoaderFunction = async ({
 					// The whole grid, for the questions section's season summary below.
 					whole: grid,
 				}
-			})
-			.catch((error) => {
-				episodeGridFailed = true
-				console.error("episode grid failed", { showId, error })
-				return null
-			}),
+			},
+			TITLE_EPISODES_BUDGET_MS,
+		).then((result) => {
+			episodeGridFailed = !result.complete
+			return result.value
+		}),
 		relatedWork,
 		// The header's genre links, which the page requested after load before.
 		details.then(
