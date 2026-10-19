@@ -39,7 +39,7 @@ import {
 	summarize,
 } from "./store.server.ts"
 import {
-	isUnknownWishlistSource,
+	isManuallyMatchableWishlistSource,
 	wishlistSourceGroup,
 } from "./wishlist-evidence.server.ts"
 
@@ -95,6 +95,7 @@ async function matchCatalog(source: ImportSource, rows: ImportObservation[]) {
 		const typed = rows
 			.map((row, index) => ({ row, index }))
 			.filter((x) => x.row.mediaType === type && !x.row.problem)
+		const tmdbCandidates = new Map<number, CatalogRow>()
 		const tmdbIds = [
 			...new Set(
 				typed.flatMap((x) =>
@@ -107,20 +108,27 @@ async function matchCatalog(source: ImportSource, rows: ImportObservation[]) {
 				`SELECT tmdb_id, imdb_id, title, release_year FROM ${type} WHERE tmdb_id IN (${marks(batch.length)})`,
 				batch,
 			)
-			const ids = new Set(result.map((r) => Number(r.tmdb_id)))
-			for (const x of typed)
-				if (x.row.tmdbId && ids.has(canonicalTitleId(type, x.row.tmdbId)))
-					found.set(x.index, {
-						tmdbId: canonicalTitleId(type, x.row.tmdbId),
-						mediaType: type,
-					})
+			const byId = new Map(
+				result.map((candidate) => [Number(candidate.tmdb_id), candidate]),
+			)
+			for (const x of typed) {
+				if (!x.row.tmdbId) continue
+				const tmdbId = canonicalTitleId(type, x.row.tmdbId)
+				const candidate = byId.get(tmdbId)
+				if (!candidate) continue
+				tmdbCandidates.set(x.index, candidate)
+				found.set(x.index, { tmdbId, mediaType: type })
+			}
 		}
 		const imdbIds = [
 			...new Set(
 				typed
 					.filter(
 						(x) =>
-							!found.has(x.index) && x.row.imdbId && !x.row.wishlistResolution,
+							(!found.has(x.index) ||
+								(source === "wishlist" && x.row.kind === "want")) &&
+							x.row.imdbId &&
+							!x.row.wishlistResolution,
 					)
 					.flatMap((x) =>
 						typeof x.row.imdbId === "string" ? [x.row.imdbId] : [],
@@ -133,10 +141,35 @@ async function matchCatalog(source: ImportSource, rows: ImportObservation[]) {
 				batch,
 			)
 			for (const x of typed) {
-				if (found.has(x.index) || !x.row.imdbId || x.row.wishlistResolution)
-					continue
+				if (x.row.problem || !x.row.imdbId || x.row.wishlistResolution) continue
 				const matches = result.filter((r) => r.imdb_id === x.row.imdbId)
-				if (matches.length === 1)
+				const tmdb = tmdbCandidates.get(x.index)
+				if (
+					source === "wishlist" &&
+					x.row.kind === "want" &&
+					tmdb &&
+					matches.length === 1 &&
+					canonicalTitleId(type, Number(matches[0].tmdb_id)) !==
+						canonicalTitleId(type, Number(tmdb.tmdb_id))
+				) {
+					const candidates = [tmdb, matches[0]].map((candidate, index) => ({
+						suppliedId: index === 0 ? ("tmdb" as const) : ("imdb" as const),
+						mediaType: type,
+						tmdbId: canonicalTitleId(type, Number(candidate.tmdb_id)),
+						title: candidate.title,
+						year: candidate.release_year,
+					}))
+					x.row.wishlistMatchRequired = "id_conflict"
+					x.row.wishlistIdConflict = { candidates, suggestion: null }
+					x.row.problem = {
+						outcome: "unmatched",
+						reason:
+							"The supplied TMDB and IMDb IDs identify different titles. Choose a match.",
+					}
+					found.delete(x.index)
+					continue
+				}
+				if (!found.has(x.index) && matches.length === 1)
 					found.set(x.index, {
 						tmdbId: canonicalTitleId(type, Number(matches[0].tmdb_id)),
 						mediaType: type,
@@ -148,6 +181,7 @@ async function matchCatalog(source: ImportSource, rows: ImportObservation[]) {
 		if (source === "letterboxd" || source === "csv" || source === "wishlist")
 			for (const x of typed) {
 				if (
+					x.row.problem ||
 					found.has(x.index) ||
 					x.row.wishlistResolution ||
 					x.row.year === null ||
@@ -534,6 +568,109 @@ export async function createParsedPreview(
 		matchCatalog(source, parsed.observations),
 		currentValues(userId),
 	])
+	const conflictShowIds = [
+		...new Set(
+			parsed.observations.flatMap(
+				(row) =>
+					row.wishlistIdConflict?.candidates
+						.filter((candidate) => candidate.mediaType === "show")
+						.map((candidate) => candidate.tmdbId) ?? [],
+			),
+		),
+	]
+	const interactedShows = new Set<number>()
+	for (const batch of chunks(conflictShowIds, 800)) {
+		const states = await select<{ tmdb_id: number; state: string }>(
+			`SELECT tmdb_id, state FROM user_watch_state WHERE user_id = ? AND tmdb_id IN (${marks(batch.length)})`,
+			[userId, ...batch],
+		)
+		for (const state of states)
+			if (state.state !== "not_started")
+				interactedShows.add(Number(state.tmdb_id))
+	}
+	const popularity = new Map<string, number | null>()
+	for (const type of ["movie", "show"] as const) {
+		const ids = [
+			...new Set(
+				parsed.observations.flatMap(
+					(row) =>
+						row.wishlistIdConflict?.candidates
+							.filter((candidate) => candidate.mediaType === type)
+							.map((candidate) => candidate.tmdbId) ?? [],
+				),
+			),
+		]
+		for (const batch of chunks(ids, 800)) {
+			const titles = await select<{
+				tmdb_id: number
+				popularity: number | null
+			}>(
+				`SELECT tmdb_id, popularity FROM ${type} WHERE tmdb_id IN (${marks(batch.length)})`,
+				batch,
+			)
+			for (const title of titles)
+				popularity.set(
+					key(type, Number(title.tmdb_id)),
+					title.popularity == null ? null : Number(title.popularity),
+				)
+		}
+	}
+	for (const row of parsed.observations) {
+		const conflict = row.wishlistIdConflict
+		if (!conflict) continue
+		const interacted = conflict.candidates.filter((candidate) => {
+			const identity = key(candidate.mediaType, candidate.tmdbId)
+			return (
+				current.wants.has(identity) ||
+				current.watched.has(identity) ||
+				current.scores.get(identity)?.score != null ||
+				(candidate.mediaType === "show" &&
+					interactedShows.has(candidate.tmdbId))
+			)
+		})
+		if (interacted.length === 1) {
+			conflict.suggestion = {
+				mediaType: interacted[0].mediaType,
+				tmdbId: interacted[0].tmdbId,
+				signal: "interaction",
+			}
+			continue
+		}
+		const agrees = conflict.candidates.filter(
+			(candidate) =>
+				candidate.title.trim().toLocaleLowerCase() ===
+					row.title.trim().toLocaleLowerCase() &&
+				(row.year === null || candidate.year === row.year),
+		)
+		if (agrees.length === 1) {
+			conflict.suggestion = {
+				mediaType: agrees[0].mediaType,
+				tmdbId: agrees[0].tmdbId,
+				signal: "metadata",
+			}
+			continue
+		}
+		// A small difference or missing popularity is not clear evidence for a default.
+		const [first, second] = conflict.candidates
+		const a = popularity.get(key(first.mediaType, first.tmdbId))
+		const b = popularity.get(key(second.mediaType, second.tmdbId))
+		if (
+			a != null &&
+			b != null &&
+			Number.isFinite(a) &&
+			Number.isFinite(b) &&
+			a > 0 &&
+			b > 0 &&
+			Math.max(a, b) >= 2 * Math.min(a, b)
+		) {
+			const candidate = a > b ? first : second
+			conflict.suggestion = {
+				mediaType: candidate.mediaType,
+				tmdbId: candidate.tmdbId,
+				signal: "popularity",
+			}
+		}
+	}
 	// Suppress duplicate effective identities before calculating any per-title library conflicts.
 	if (source === "wishlist") {
 		const seen = new Set<string>()
@@ -605,7 +742,10 @@ export async function createParsedPreview(
 						? {
 								_wishlistMatchCount: new Set(
 									parsed.observations.flatMap((row, index) =>
-										isUnknownWishlistSource(row.wishlistOriginal)
+										isManuallyMatchableWishlistSource(
+											row.wishlistOriginal,
+											row.wishlistMatchRequired,
+										)
 											? [wishlistSourceGroup(row.wishlistOriginal, index)]
 											: [],
 									),

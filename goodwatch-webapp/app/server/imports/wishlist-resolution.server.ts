@@ -21,7 +21,7 @@ import {
 	select,
 } from "./store.server.ts"
 import {
-	isUnknownWishlistSource as eligible,
+	isManuallyMatchableWishlistSource as eligible,
 	wishlistSourceGroup,
 } from "./wishlist-evidence.server.ts"
 
@@ -131,7 +131,10 @@ export async function resolveWishlistImport(
 	const stored = await itemRows(userId, id)
 	const rows = stored.map((item) =>
 		item.wishlistOriginal
-			? projection(item.wishlistOriginal, item.wishlistResolution)
+			? {
+					...projection(item.wishlistOriginal, item.wishlistResolution),
+					wishlistMatchRequired: item.wishlistMatchRequired,
+				}
 			: preservedIssue(item),
 	)
 	const choices = new Map<string, { target: Target | null; index: number }>()
@@ -151,7 +154,8 @@ export async function resolveWishlistImport(
 				fail("wishlist_row_not_resolvable")
 			fail("wishlist_snapshot_required", 409)
 		}
-		if (!eligible(row.wishlistOriginal)) fail("wishlist_row_not_resolvable")
+		if (!eligible(row.wishlistOriginal, row.wishlistMatchRequired))
+			fail("wishlist_row_not_resolvable")
 		const group = wishlistSourceGroup(row.wishlistOriginal, choice.index)
 		const previous = choices.get(group)
 		if (
@@ -169,7 +173,7 @@ export async function resolveWishlistImport(
 		{ target: Target | null; selected: boolean; index: number }
 	>()
 	for (const [index, row] of rows.entries()) {
-		if (!eligible(row.wishlistOriginal)) continue
+		if (!eligible(row.wishlistOriginal, row.wishlistMatchRequired)) continue
 		const choice = choices.get(wishlistSourceGroup(row.wishlistOriginal, index))
 		if (choice)
 			effective.set(index, {
@@ -209,7 +213,10 @@ export async function resolveWishlistImport(
 		const original = row.wishlistOriginal
 		if (!original) fail("wishlist_snapshot_required", 409)
 		if (!choice.target) {
-			rows[index] = projection(original)
+			rows[index] = {
+				...projection(original),
+				wishlistMatchRequired: row.wishlistMatchRequired,
+			}
 			continue
 		}
 		const catalog = targets.get(ref(choice.target))
@@ -236,6 +243,7 @@ export async function resolveWishlistImport(
 			},
 			catalog.imdb_id,
 		)
+		rows[index].wishlistMatchRequired = row.wishlistMatchRequired
 	}
 	for (const [index, row] of rows.entries())
 		row.wishlistParent = { importId: id, rowIndex: index }
@@ -256,7 +264,7 @@ export async function matchingGroups(
 	const groups = new Map<string, WishlistMatchGroup>()
 	for (const item of items) {
 		const original = item.wishlistOriginal
-		if (!eligible(original)) continue
+		if (!eligible(original, item.wishlistMatchRequired)) continue
 		const key = wishlistSourceGroup(original, item.index)
 		const evidence: WishlistMatchEvidenceVariant = {
 			title: original.title,
@@ -322,7 +330,8 @@ export async function getWishlistMatchGroup(
 	)
 		fail("wishlist_row_not_resolvable")
 	if (!row.wishlistOriginal) fail("wishlist_snapshot_required", 409)
-	if (!eligible(row.wishlistOriginal)) fail("wishlist_row_not_resolvable")
+	if (!eligible(row.wishlistOriginal, row.wishlistMatchRequired))
+		fail("wishlist_row_not_resolvable")
 	const key = wishlistSourceGroup(row.wishlistOriginal, index)
 	const group = (await matchingGroups(userId, id)).find(
 		(group) =>
@@ -368,7 +377,8 @@ export async function searchWishlistMatches(
 			fail("wishlist_row_not_resolvable")
 		fail("wishlist_snapshot_required", 409)
 	}
-	if (!eligible(row.wishlistOriginal)) fail("wishlist_row_not_resolvable")
+	if (!eligible(row.wishlistOriginal, row.wishlistMatchRequired))
+		fail("wishlist_row_not_resolvable")
 	const { withBackendTimeout } = await import("../../utils/backend-timeout.ts")
 	const { searchQuery } = await import("../combined-search/catalog.server.ts")
 	type Candidate = {

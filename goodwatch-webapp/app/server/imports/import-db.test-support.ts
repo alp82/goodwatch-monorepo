@@ -7,6 +7,9 @@ function requiredRow(row: Row | undefined): Row {
 // The fake implements only these statement shapes. Reject changed predicates or columns
 // instead of silently returning empty rows/success. Placeholder lists may vary in length.
 const supportedImportSql = new Set([
+	"SELECT tmdb_id, popularity FROM movie WHERE tmdb_id IN (?)",
+	"SELECT tmdb_id, popularity FROM show WHERE tmdb_id IN (?)",
+	"SELECT tmdb_id, state FROM user_watch_state WHERE user_id = ? AND tmdb_id IN (?)",
 	"SELECT payload, refreshed_at FROM anime_mapping_snapshot WHERE id = ?",
 	"UPDATE doc.user_import SET status = 'failed', error = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
 	"DELETE FROM user_favorite WHERE user_id = ? AND tmdb_id = ? AND media_type = ? AND _seq_no = ? AND _primary_term = ?",
@@ -47,6 +50,7 @@ const supportedImportSql = new Set([
 	"SELECT row_index, source_key, payload, apply_state, undo_outcome FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind = 'state' LIMIT 100001",
 	"SELECT score, review, created_at, updated_at, _seq_no, _primary_term FROM user_score WHERE user_id = ? AND tmdb_id = ? AND media_type = ?",
 	"SELECT tmdb_id, imdb_id, title, release_year FROM movie WHERE imdb_id IN (?)",
+	"SELECT tmdb_id, imdb_id, title, release_year FROM show WHERE imdb_id IN (?)",
 	"SELECT tmdb_id, imdb_id, title, release_year FROM movie WHERE lower(title) = lower(?) AND release_year = ? LIMIT 2",
 	"SELECT tmdb_id, imdb_id, title, release_year FROM movie WHERE tmdb_id IN (?)",
 	"SELECT tmdb_id, imdb_id, title, release_year FROM show WHERE tmdb_id IN (?)",
@@ -86,6 +90,7 @@ export class ImportDb {
 	wishlist: Row[] = []
 	watches: Row[] = []
 	notInterested: Row[] = []
+	showStates: Row[] = []
 	catalog: Row[] = []
 	episodes: Row[] = []
 	catalogQueries: { sql: string; params: Param[] }[] = []
@@ -174,19 +179,32 @@ export class ImportDb {
 					refreshed_at: Date.now(),
 				},
 			] as unknown as T[]
+		if (s.includes("FROM user_watch_state"))
+			return this.showStates.filter(
+				(row) =>
+					row.user_id === params[0] &&
+					params.slice(1).includes(Number(row.tmdb_id)),
+			) as T[]
 		if (s.includes("FROM episode WHERE"))
 			return this.episodes.filter((row) => row.show_id === params[0]) as T[]
 		if (s.includes("FROM movie WHERE") || s.includes("FROM show WHERE")) {
 			this.catalogQueries.push({ sql: s, params: [...params] })
-			const rows = this.catalog.filter((row) =>
-				s.includes("tmdb_id IN")
-					? params.includes(Number(row.tmdb_id))
-					: s.includes("imdb_id IN")
-						? params.includes(String(row.imdb_id))
-						: String(row.title).toLowerCase() ===
-								String(params[0]).toLowerCase() &&
-							row.release_year === params[1],
-			)
+			const rows = this.catalog
+				.filter(
+					(row) =>
+						!row.media_type ||
+						row.media_type ===
+							(s.includes("FROM movie WHERE") ? "movie" : "show"),
+				)
+				.filter((row) =>
+					s.includes("tmdb_id IN")
+						? params.includes(Number(row.tmdb_id))
+						: s.includes("imdb_id IN")
+							? params.includes(String(row.imdb_id))
+							: String(row.title).toLowerCase() ===
+									String(params[0]).toLowerCase() &&
+								row.release_year === params[1],
+				)
 			return rows as T[]
 		}
 		if (s.includes("FROM user_watch_log"))

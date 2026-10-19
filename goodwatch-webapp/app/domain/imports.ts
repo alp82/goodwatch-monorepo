@@ -297,6 +297,22 @@ export interface ImportObservation {
 		parentImportId: string
 		parentRowIndex: number
 	}
+	/** Server-owned eligibility survives a manual selection and subsequent clearing. */
+	wishlistMatchRequired?: "id_conflict"
+	wishlistIdConflict?: {
+		candidates: {
+			suppliedId: "tmdb" | "imdb"
+			mediaType: ImportMediaType
+			tmdbId: number
+			title: string
+			year: number | null
+		}[]
+		suggestion: {
+			mediaType: ImportMediaType
+			tmdbId: number
+			signal: "interaction" | "metadata" | "popularity"
+		} | null
+	}
 	wishlistParent?: { importId: string; rowIndex: number }
 	problem?: {
 		outcome: "invalid" | "unsupported" | "unmatched"
@@ -407,7 +423,7 @@ export interface ImportSummary {
 	total: number
 	applied: { added: number; updated: number; kept: number; failed: number }
 	stalled: boolean
-	/** Originally valid unknown-type source groups, including resolved groups. */
+	/** Manually matchable source groups (unknown type or conflicting IDs), including resolved groups. */
 	wishlistMatchCount?: number
 	canUndo: boolean
 	error: string | null
