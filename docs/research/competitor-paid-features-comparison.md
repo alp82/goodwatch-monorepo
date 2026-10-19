@@ -1,18 +1,61 @@
-# GoodWatch paid-feature parity: comparison and build foundation
+# Movie & TV tools: competitor and feature research overview
 
-**Research snapshot: 2026-10-19. Status: research and proposals, not a release or approved campaign.**
+**Research snapshot: 2026-10-19. Phase 1: overview design using the existing evidence base; expansion research awaits integration.**
 
-GoodWatch can pursue a broad free alternative to useful paid movie/TV tools, but the strongest starting point is **portable history, flexible lists, and dependable return-use features**. Current main already contains substantial discovery, taste, tracking, import and MCP code. It does not yet establish complete export, general private lists, annual/all-time watch analytics, external calendars, outbound alerts, or continuous scrobbling/sync. No GoodWatch feature was independently verified live in this research. That blocks external parity claims, not completion of this comparison.
+Start with the products, then explore what they do. This overview groups **58 competitor families**, **302 offer observations** and **347 capability records** so their free baselines, paid differences, exact limits and uncertainties can be compared without choosing a build order. These counts include adjacent services, historical offers and open evidence; they are not 302 current subscriptions or 347 distinct paid-only features.
 
-“Major” below is an explicit prioritization judgment: a capability is important when it preserves a user's accumulated data, solves a recurring movie/TV task, appears across several independently documented paid offers, or enables a credible switch from a particular product. Frequency in this inventory is evidence of recurring product positioning, **not proof of demand, popularity, market share, or willingness to switch**. Cosmetic/supporter rewards and professional/media-playback services remain visible without being confused with functional consumer gaps.
+The interactive report is an exploratory research tool. Product selection narrows capability records by overlap, while each record retains its full vendor and tier qualifications. GoodWatch appears as a secondary factual comparison, with code, partial behavior, concrete issues and unknowns kept separate. No independently verified live GoodWatch parity claim is established. No new roadmap, implementation priority or campaign is proposed by this design phase.
 
 ## Read and explore
 
-- [Interactive companion](competitor-paid-features-report.html): full searchable/filterable/sortable inventory and opportunity matrix, with current-state, plan, uncertainty and source detail. All three CSVs and four Markdown companions are embedded, including the searchable 302-offer ledger; internal evidence links open an in-page viewer, with complete-file downloads and copy/source fallbacks.
-- [Canonical product inventory](competitor-paid-features-inventory.csv): **58 families**, one row per family.
-- [Plan and offer ledger](competitor-paid-features-plans.csv): **302 rows**, preserving platform, amount, currency, country, period and qualification. Rows include explicit unknowns, free baselines, provisional source/index observations, historical offers and separate professional services; this is not a count of current consumer subscriptions.
-- [Atomic opportunity and scope ledger](competitor-paid-features-opportunities.csv): **347 rows**, including capability-specific comparisons, free benchmarks, migration prerequisites, evidence placeholders and explicit exclusions. It is not a claim that 347 unique features are paid-only or that each row requires a new implementation.
-- Detailed evidence: [core competitors](competitor-paid-features-core.md), [wider landscape](competitor-paid-features-landscape.md), [GoodWatch code/issues audit](competitor-paid-features-goodwatch.md). These remain separate evidence dossiers; the core dossier includes the narrowly authorized SIMKL correction. GoodWatch and landscape dossiers are unchanged. This synthesis is the readable entry point; the CSVs are the reviewable comparison ledger.
+- [Interactive overview](competitor-paid-features-report.html): competitors first, features second, evidence third. All 58 families are initially visible in expanded groups, without pagination. Product details show complete offer observations and source boundaries. Select products to explore their feature records; search and expand grouped capabilities to compare precise free/paid behavior.
+- [Canonical product inventory](competitor-paid-features-inventory.csv): 58 family identities and aliases, statuses, commercial evidence and sources.
+- [Plan and offer ledger](competitor-paid-features-plans.csv): 302 observations, preserving amounts, currencies, periods, platforms, countries, qualifications and exact entitlement/context associations.
+- [Capability ledger](competitor-paid-features-opportunities.csv): 347 stable records, including free benchmarks, unresolved evidence and exclusions. The existing filename and archived priority/wave fields remain for provenance; they are not displayed as recommendations.
+- Evidence dossiers: [core](competitor-paid-features-core.md), [landscape](competitor-paid-features-landscape.md), [GoodWatch code and issues](competitor-paid-features-goodwatch.md). All three CSVs and four Markdown companions are embedded byte-for-byte inside the standalone HTML. Internal dossier/record references open its evidence viewer. View/copy source is the reliable fallback; file downloads are an optional attempt because the Ghostex host has blocked Blob download completion.
+
+## Competitors first: browse groups
+
+The groups are editorial navigation based on the existing inventory's documented user jobs, not exclusive product categories, rankings, market-share claims or new entitlement evidence. A family appears once; detailed coverage explains its overlaps.
+
+| Browse group | Families | Purpose |
+|---|---:|---|
+| Find your next watch | 12 | Streaming search, personal recommendations and discovery. |
+| Log films & connect | 6 | Diaries, opinions, collections and communities. |
+| Keep up with TV | 11 | Episode progress, calendars and broader movie/TV trackers. |
+| Choose a tracking app | 10 | App-focused experiences, often connected to another tracking service. |
+| Explore anime & regional communities | 9 | Specialist catalogs, languages and communities. |
+| Organize across media | 3 | Personal lists and progress across more than movies and TV. |
+| Manage collections & self-host | 7 | Owned media, servers and self-hosted trackers. Adjacent jobs stay distinct. |
+
+The complete inventory remains available on initial load. Search includes names and aliases; category, commercial evidence, public-presence status and documented offer-platform filters are independent. The platform filter means **offer evidence on that surface**, not every supported device or a complete cross-platform entitlement matrix. Price snippets are labeled individual observations, not cheapest-price claims. Product details retain offer state, country, currency, billing period, qualifications and primary citations.
+
+Commercial badges are intentionally scoped: **paid functional features** requires a mapped consumer entitlement outside purely decorative/support rewards; **explicit free baseline** means the dossier describes a free core, not that every function is free; **cosmetic/supporter** can coexist with functional gates; **terms incomplete** preserves missing or disputed matrices. Business APIs, professional services and personal-media playback do not make an unrelated consumer baseline paid. Full commercial wording remains in product details.
+
+### Requested names and phase boundary
+
+Phase 1 retains the existing entries for Reelgood, CineTrak, Showly, Taste and Moviebase without treating new spellings as proven aliases. Separate research is covering **Reelgood, Playpilot, CineTrak, Showly, Taste.io, Streamio/Stremio, Moviebase, Streamguide, Watch Next, Matched and Filmfriend**, plus a deeper discovery sweep. Their incomplete working dossiers are not inputs to this phase. Phase 2 will resolve publisher/store identities, deduplicate aliases, integrate completed evidence and update counts and companions. This overview is not yet the final expanded landscape.
+
+## Features second: compare user jobs
+
+Grouped records preserve atomic controls: iCal is distinct from an in-app calendar, push/email from on-page signals, one-time import from continuous sync, personal scores from predicted scores, and a family purchase license from shared progress. Free competitors remain visible, including where a baseline already matches a paid feature elsewhere.
+
+| Feature group | Included scope |
+|---|---|
+| Find something | Discovery, personal recommendations, streaming availability and precise sorting controls. |
+| Track & rewatch | Viewing history, ratings, rewatches and progress. |
+| Lists & organization | Custom lists, ordering, rules and organization. |
+| Statistics | Watch analytics, summaries and taste statistics. |
+| Calendars & alerts | In-app calendars, external feeds and outbound alerts remain separate. |
+| Shared decisions & social | Group selection, collaboration, social profiles and households. |
+| Imports & exports | One-off imports, exports, backup and migration fidelity. |
+| Sync & integrations | Ongoing sync, integrations and consumer APIs. |
+| Devices, offline & privacy | Device experiences, offline access and account controls. |
+| Appearance, ads & support | Artwork, customization, ad removal and nonfunctional rewards. |
+| Ownership & adjacent services | Collections, playback, editorial and professional/business services; separate from direct tracking parity. |
+| Free benchmarks & open evidence | Broad free baselines, historical context and unresolved feature matrices. |
+
+Groups summarize record counts, not unique features or popularity. Expanding a record shows free behavior, the paid or observed difference, precise numerical limits, primary sources, vendor links and the scoped GoodWatch comparison. Deeper evidence includes the exact offer links, related issues, missing behavior and acceptance requirements. Selecting multiple competitors takes the union of their relevant records; it does not infer that each selected vendor offers every displayed capability or shares another vendor's tier gate.
 
 ## Coverage, identity and confidence
 
@@ -55,7 +98,7 @@ The price ledger is also a bounded entitlement map. All **302 offer observations
 | `feature_association_status`, `entitlement_sources`, `entitlement_scope_note` | State, primary support and limits of the allocation. `paid_matrix_unknown`, `tier_mapping_unknown`, dated/historical, free-baseline and support-only states remain distinct. |
 | Opportunity `entitled_offer_ids` / `context_offer_ids` | Exact reverse associations, separately typed. A multi-product capability row does not transfer one competitor's benefits to another. |
 
-The standalone offer viewer can filter documented entitlements versus context-only/unmapped observations and select an entitlement group. Click OP IDs to inspect capabilities, PLAN IDs to inspect offers, or EG IDs to inspect groups and inheritance. Search includes all fields. Full CSV downloads retain every record regardless of filters.
+The standalone offer viewer can filter documented entitlements versus context-only/unmapped observations and select an entitlement group. Click OP IDs to inspect capabilities, PLAN IDs to inspect offers, or EG IDs to inspect groups and inheritance. Search includes all fields. Complete source and copy/download attempts retain every record regardless of filters. Downloads work on the isolated HTTP test route but may be blocked by the hosting viewer.
 
 Representative safeguards: SIMKL VIP inherits the documented PRO subset with higher caps; Supporter only accelerates a conditional loyalty reward and has no PRO/VIP inheritance. Unproven per-control V2 gates remain contextual. Letterboxd Patron inherits Pro within platform groups, while Android icons remain unconfirmed. TVmaze Silver adds iCal/RSS to Bronze, and Gold adds support/recognition. Next Episode mobile does not inherit web Premium; Showly iOS does not inherit Android source-string benefits; Plex Remote Watch Pass does not inherit Plex Pass downloads/DVR. Criticker's one-time recalculation buys only that operation. Refract's named cosmetic SKU allocation and Bingers Hero/Legend/Icon→Premium mapping remain unknown. Free benchmarks, retired offers and donations never inherit all paid family features.
 
@@ -81,6 +124,29 @@ Current statuses remain separate from planning:
 - **Absent in inspected scope:** No relevant consumer implementation found in the scoped audit; not proof about every private branch.
 - **Unknown:** Exact control, live setting, fidelity or competitor boundary cannot be established.
 - **Concrete issue:** Linked existing scope; no delivery promise. **Related issue** means it does not authorize the proposed equivalent. **Uncommitted suggestion** means this report proposes work only. Professional/playback exclusions and supporter rewards receive explicit dispositions.
+
+## Phase-1 validation and reproducibility
+
+The three CSV ledgers and three evidence dossiers are unchanged by the design phase. The existing stable IDs, 126 entitlement groups, 1,251 documented entitlement edges and 913 context-only edges are preserved. The HTML embeds the exact three CSVs and four Markdown companions, including this overview. Presentation metadata adds navigation groups and short descriptions derived from inventory evidence; it does not add product facts or new plan allocations.
+
+Headless Chromium 156 checks passed on an isolated HTTP route serving **only the HTML**. Initial content is competitors first with all 58 cards visible in seven expanded groups; twelve feature groups preserve all 347 records. Checks cover name/alias search, empty/reset behavior, category/commercial/presence/offer-platform filters, group collapse/expand, multi-product union filtering, exact feature/state search, product-to-feature navigation, modal keyboard focus/Escape return and browser Back. Desktop/light and 390px mobile/dark screenshots were inspected; cards, product details and feature details fit the viewport without horizontal scrolling.
+
+All seven embedded companion texts and all seven HTTP-route downloads were byte-compared with the current source files. The offer ledger exposes all 302 records, search, entitlement/context/group filters, reverse PLAN/OP links, inheritance and exact dossier headings. Complete-file copy works independently of filters; denied clipboard and blocked Blob creation expose selected full-source fallbacks. Actual Ghostex-host download completion was reported blocked by the orchestrator, so the UI labels downloads as an attempt and prominently offers view/copy instead. No report publication or new host check was performed in this phase.
+
+Both browser suites recorded zero JavaScript errors and no network requests beyond the HTML route. Static checks passed for the 58/302/347 counts, stable IDs, 126 acyclic entitlement groups, 1,251 entitlement edges, 913 context edges, reverse associations, 1,119 dossier references and 36 pinned code paths. The main UI does not expose priority or wave controls. Existing CSVs and dossiers remain byte-identical to the phase-start committed versions. Application tests, live competitor checkout/entitlement tests and GoodWatch deployment verification are outside this documentation-only phase. No application changes, issue mutations, commits, pushes or publication were performed.
+
+## Archived planning notes — not the current proposal
+
+The user has deferred build-order and campaign decisions until the landscape is easier to inspect. The following earlier synthesis is retained as provenance only, including its original priorities, wave labels, conditional campaign ideas and risk evidence. **These are not recommendations or approvals from this overview phase.** They are not shown in the main interactive product/feature experience. The CSV's historical priority, wave and disposition fields likewise remain inspectable only in full records.
+
+<details>
+<summary>Archived synthesis, comparison boundaries, build waves and campaign hypotheses</summary>
+
+### Earlier framing (archived)
+
+GoodWatch can pursue a broad free alternative to useful paid movie/TV tools, but the strongest starting point is **portable history, flexible lists, and dependable return-use features**. Current main already contains substantial discovery, taste, tracking, import and MCP code. It does not yet establish complete export, general private lists, annual/all-time watch analytics, external calendars, outbound alerts, or continuous scrobbling/sync. No GoodWatch feature was independently verified live in this research. That blocks external parity claims, not completion of this comparison.
+
+“Major” below is an explicit prioritization judgment: a capability is important when it preserves a user's accumulated data, solves a recurring movie/TV task, appears across several independently documented paid offers, or enables a credible switch from a particular product. Frequency in this inventory is evidence of recurring product positioning, **not proof of demand, popularity, market share, or willingness to switch**. Cosmetic/supporter rewards and professional/media-playback services remain visible without being confused with functional consumer gaps.
 
 ### Normalized capability comparison
 
@@ -177,8 +243,5 @@ The following do not block this deliverable. They constrain future implementatio
 6. Campaign country/platform focus, acceptable migration losses, the free/fair-use policy, ownership scope, and device/group priorities. These need orchestrator/product decisions before implementation promises, not a direct question from this research thread.
 7. Verify the score-writer review risk, #633/#634, actual deployment/flags, account-deletion merge/release, and #572 client acceptance. Current main implementation alone is not released parity.
 
-## Validation and reproducibility
 
-The three evidence dossiers were read critically. The core dossier received narrow SIMKL additions and a loyalty-duration contradiction; the other two dossiers were retained unchanged. The 50 numbered landscape rows were parsed, canonical names/aliases reconciled with nine core families, and Bingers deduplicated. CSVs use quoted fields and explicit unknown values rather than guessed zeros. Plan variants preserve different amounts/currencies/platforms/periods and mark old/provisional offers. Every opportunity has competitor IDs, primary sources, a pinned GoodWatch evidence anchor, a separate plan state, a disposition, a proposed wave and acceptance criteria. Related issues are not promoted into approval.
-
-Local validation covers CSV parsing/IDs/family foreign keys/counts, duplicate-offer review, source/reference structure, dossier checksums, and embedded HTML dataset equality. The HTML is self-contained: inline CSS/JS/data, no external resources, tracking, runtime fetch or hosted app. Headless Chromium 156 checks passed for product/state/wave filters, empty results and reset, alphabetical sorting, pagination, evidence details, keyboard tabs, inventory status counts, and all 58 inventory rows. At 390px, the page has no horizontal overflow (wide tables scroll within their own region); desktop/light and mobile/dark views were inspected. The standalone-publishing check serves only this HTML from an isolated HTTP route, with no sibling files. Companion navigation, dossier headings, offer search, entitlement/context/group filters, bidirectional PLAN/OP links, complete-file downloads and denied-clipboard/manual-source fallbacks passed. All seven downloads were byte-compared with their source files; CSV downloads retained all 58/302/347 records. The embedded Markdown copies match the comparison and three unchanged evidence dossiers. Browser capture recorded zero JavaScript errors and no requests beyond the report itself; primary external citations remain ordinary outbound links. Dossier file/heading references resolve; offer/capability foreign keys and reverse associations agree, inheritance has no cycles, and representative tier allocations were checked; embedded inventory/opportunity data equals the CSV records. These are report checks, not application acceptance. No GoodWatch application suite, live provider checkout, paid entitlement enforcement, deployment or marketing test is represented as executed. No code/configuration/deployment changes, commits or pushes are part of this work.
+</details>
