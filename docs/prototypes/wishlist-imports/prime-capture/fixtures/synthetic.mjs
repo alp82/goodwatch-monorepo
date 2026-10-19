@@ -31,6 +31,9 @@ export function entity(n, { prefix = "/region/eu", link = true, type = true } = 
 	};
 }
 
+/** The continuation link a page hands to its successor. */
+export const nextHref = (next, cursor) => `/region/eu/api/watchlist?startIndex=${next}&token=${cursor}`;
+
 /** One Watchlist page in the viewOutput layout. */
 export function viewOutputPage(ids, { next, total, cursor, opts } = {}) {
 	return {
@@ -41,7 +44,7 @@ export function viewOutputPage(ids, { next, total, cursor, opts } = {}) {
 						items: ids.map((n) => entity(n, opts)),
 						...(next !== undefined ? { nextPageStartIndex: next } : {}),
 						...(total !== undefined ? { totalItems: total } : {}),
-						...(cursor ? { seeMoreHref: `/region/eu/api/watchlist?startIndex=${next}&token=${cursor}` } : {}),
+						...(cursor ? { seeMoreHref: nextHref(next, cursor) } : {}),
 					},
 				},
 				"view-filter": { filters: [{ viewType: "all", text: "All", active: true }] },
