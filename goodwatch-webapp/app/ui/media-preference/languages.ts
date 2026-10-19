@@ -55,3 +55,22 @@ export function ownName(code: string) {
 
 /** "DE", "PT", "ZH": the language part of the code, for the pair on a phone. */
 export const shortCode = (code: string) => code.split("-")[0].toUpperCase()
+
+/** The country whose flag stands for a language on Settings: where most of its titles come from. */
+const LANGUAGE_FLAG: Record<string, string> = {
+	en: "US",
+	de: "DE",
+	fr: "FR",
+	es: "ES",
+	it: "IT",
+	"pt-BR": "BR",
+	"pt-PT": "PT",
+	ja: "JP",
+	ko: "KR",
+	"zh-Hans": "CN",
+	"zh-Hant": "TW",
+	pl: "PL",
+	ru: "RU",
+	ar: "SA",
+}
+export const languageFlag = (code: string) => LANGUAGE_FLAG[code] ?? "US"

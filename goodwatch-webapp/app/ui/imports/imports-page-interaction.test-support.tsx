@@ -182,32 +182,46 @@ async function page(props: Partial<PageProps> = {}) {
 		[...container.querySelectorAll("button")] as unknown as HTMLButtonElement[]
 	return {
 		text: () => (container.textContent ?? "").replace(/\s+/g, " "),
-		rows: () =>
-			buttons()
-				.filter((button) => button.hasAttribute("aria-expanded"))
-				.map((button) => ({
-					name: button.querySelector("[data-source-name]")?.textContent ?? "",
-					label:
-						button.querySelector("[data-source-label]")?.textContent ?? null,
-					open: button.getAttribute("aria-expanded") === "true",
-				})),
-		/** Each row's mark: the logo's file, or the letter tile's text and classes. */
+		/** The source open under the drop zone, if any. */
+		opened: () =>
+			container
+				.querySelector("[data-open-source]")
+				?.getAttribute("data-open-source") ?? null,
+		/** The history's rows: each import's source and date. */
+		history: () =>
+			[...container.querySelectorAll("[data-import-history] li")].map((li) => ({
+				name:
+					li.querySelector(".font-semibold")?.firstChild?.textContent?.trim() ??
+					"",
+				date: li.querySelector("[data-import-date]")?.textContent ?? "",
+				line: li.querySelector(".text-sm")?.textContent ?? "",
+			})),
+		/** Each mark in the logo row: the logo's file, or the letter tile's text. */
 		marks: () =>
 			buttons()
 				.filter((button) => button.hasAttribute("aria-expanded"))
 				.map((button) => {
-					const name =
-						button.querySelector("[data-source-name]")?.textContent ?? ""
-					const mark = button.querySelector("[aria-hidden]")
-					const logo = mark?.querySelector("img")?.getAttribute("src")
+					const name = button.getAttribute("aria-label") ?? ""
+					const logo = button.querySelector("img")?.getAttribute("src")
 					return logo
 						? { name, logo: logo.split("/").at(-1)?.split("?")[0] }
-						: {
-								name,
-								tile: mark?.textContent ?? "",
-								className: mark?.getAttribute("class") ?? "",
-							}
+						: { name, tile: button.textContent ?? "" }
 				}),
+		/** Opens a source from the logo row: its mark, then the pop-out's button. */
+		open: async (name: string) => {
+			const mark = buttons().find((b) => b.getAttribute("aria-label") === name)
+			if (!mark) throw new Error(`No mark "${name}"`)
+			await act(async () => mark.click())
+			await settle()
+			const go = buttons().find(
+				(b) =>
+					b.textContent === `Import from ${name}` ||
+					b.textContent === `Connect ${name}`,
+			)
+			if (!go) throw new Error(`No pop-out button for "${name}"`)
+			await act(async () => go.click())
+			await settle()
+		},
 		/** Chooses the radio button whose label holds `label`. */
 		pick: async (label: string) => {
 			const input = [...container.querySelectorAll('input[type="radio"]')].find(
@@ -221,22 +235,6 @@ async function page(props: Partial<PageProps> = {}) {
 			const button = buttons().find((b) => b.textContent?.includes(label))
 			if (!button) throw new Error(`No button "${label}"`)
 			await act(async () => button.click())
-			await settle()
-		},
-		search: async (query: string) => {
-			const input = container.querySelector(
-				'input[type="search"]',
-			) as unknown as HTMLInputElement
-			const setValue = Object.getOwnPropertyDescriptor(
-				window.HTMLInputElement.prototype,
-				"value",
-			)?.set
-			await act(async () => {
-				setValue?.call(input, query)
-				input.dispatchEvent(
-					new window.Event("input", { bubbles: true }) as unknown as Event,
-				)
-			})
 			await settle()
 		},
 		/** Chooses a file in the file input whose label holds `label`. */
@@ -259,10 +257,22 @@ async function page(props: Partial<PageProps> = {}) {
 			// Recognition reads the file, then the upload and the preview follow.
 			for (let i = 0; i < 5; i++) await settle()
 		},
-		/** The source row that holds keyboard focus, if any. */
-		focusedRow: () =>
-			document.activeElement?.closest("li")?.querySelector("[data-source-name]")
-				?.textContent ?? null,
+		/** Drops a file anywhere on the page, as the page-wide drop takes it. */
+		dropOnPage: async (file: File) => {
+			const drop = new window.Event("drop", { bubbles: true, cancelable: true })
+			Object.defineProperty(drop, "dataTransfer", {
+				value: { types: ["Files"], files: [file] },
+			})
+			await act(async () => {
+				window.dispatchEvent(drop)
+			})
+			for (let i = 0; i < 5; i++) await settle()
+		},
+		/** The opened source that holds keyboard focus, if any. */
+		focused: () =>
+			document.activeElement
+				?.closest("[data-open-source]")
+				?.getAttribute("data-open-source") ?? null,
 		unmount: () => act(async () => root.unmount()),
 	}
 }
@@ -309,27 +319,29 @@ const results: Record<string, unknown> = {}
 			summary("trakt", "undone", "2026-10-11T12:00:00.000Z"),
 		],
 	})
-	results.list = { rows: view.rows(), text: view.text(), marks: view.marks() }
+	results.list = {
+		opened: view.opened(),
+		history: view.history(),
+		text: view.text(),
+		marks: view.marks(),
+	}
 	await view.unmount()
 }
 
 {
 	const view = await page()
-	await view.search("TV Time")
-	results.tvTime = { rows: view.rows(), text: view.text() }
+	results.tvTime = { opened: view.opened(), text: view.text() }
 	await view.click("Open the Trakt import")
-	results.tvTimeOpened = { rows: view.rows(), text: view.text() }
-	await view.search("Blockbuster")
-	results.noMatch = { rows: view.rows(), text: view.text() }
+	results.tvTimeOpened = { opened: view.opened(), text: view.text() }
 	await view.unmount()
 }
 
 {
 	const view = await page()
 	await view.choose("any source", traktZip())
-	results.oneBoxTraktFocus = view.focusedRow()
+	results.oneBoxTraktFocus = view.focused()
 	results.oneBoxTrakt = {
-		rows: view.rows(),
+		opened: view.opened(),
 		text: view.text(),
 		sent: [...sent],
 	}
@@ -347,7 +359,11 @@ const results: Record<string, unknown> = {}
 			{ type: "text/csv" },
 		),
 	)
-	results.oneBoxImdb = { rows: view.rows(), text: view.text(), sent: [...sent] }
+	results.oneBoxImdb = {
+		opened: view.opened(),
+		text: view.text(),
+		sent: [...sent],
+	}
 	await view.unmount()
 }
 
@@ -361,7 +377,7 @@ const results: Record<string, unknown> = {}
 		),
 	)
 	results.oneBoxUnknown = {
-		rows: view.rows(),
+		opened: view.opened(),
 		text: view.text(),
 		sent: [...sent],
 	}
@@ -370,12 +386,16 @@ const results: Record<string, unknown> = {}
 
 {
 	const view = await page()
-	await view.click("Letterboxd")
+	await view.open("Letterboxd")
 	await view.choose("Letterboxd", traktZip())
-	results.caught = { rows: view.rows(), text: view.text(), sent: [...sent] }
+	results.caught = { opened: view.opened(), text: view.text(), sent: [...sent] }
 	await view.click("Import it as Trakt")
 	for (let i = 0; i < 5; i++) await settle()
-	results.importedAs = { rows: view.rows(), text: view.text(), sent: [...sent] }
+	results.importedAs = {
+		opened: view.opened(),
+		text: view.text(),
+		sent: [...sent],
+	}
 	await view.unmount()
 }
 
@@ -391,7 +411,7 @@ const results: Record<string, unknown> = {}
 		),
 	)
 	results.oneBoxMovieLens = {
-		rows: view.rows(),
+		opened: view.opened(),
 		text: view.text(),
 		sent: [...sent],
 	}
@@ -411,16 +431,17 @@ const movielens = (wishlist: boolean) =>
 {
 	const view = await page()
 	await view.choose("any source", movielens(false))
-	await view.choose("any source", movielens(true))
+	// MovieLens is open now, so the second file comes by the page-wide drop.
+	await view.dropOnPage(movielens(true))
 	results.movielensBoth = {
-		rows: view.rows(),
+		opened: view.opened(),
 		text: view.text(),
 		sent: [...sent],
 	}
 	await view.click("Preview import")
 	for (let i = 0; i < 5; i++) await settle()
 	results.movielensBothSent = {
-		rows: view.rows(),
+		opened: view.opened(),
 		text: view.text(),
 		sent: [...sent],
 	}
@@ -429,22 +450,22 @@ const movielens = (wishlist: boolean) =>
 
 {
 	const view = await page()
-	await view.click("MovieLens")
+	await view.open("MovieLens")
 	await view.choose("MovieLens ratings CSV", movielens(true))
 	results.movielensSwap = {
-		rows: view.rows(),
+		opened: view.opened(),
 		text: view.text(),
 		sent: [...sent],
 	}
 	await view.click("Use it as the wishlist")
 	results.movielensSwapped = {
-		rows: view.rows(),
+		opened: view.opened(),
 		text: view.text(),
 		sent: [...sent],
 	}
 	await view.choose("MovieLens wishlist CSV", traktZip())
 	results.movielensWishlistCaught = {
-		rows: view.rows(),
+		opened: view.opened(),
 		text: view.text(),
 		sent: [...sent],
 	}
@@ -453,7 +474,7 @@ const movielens = (wishlist: boolean) =>
 
 {
 	const view = await page()
-	await view.click("Trakt")
+	await view.open("Trakt")
 	await view.choose(
 		"Trakt",
 		new File(
@@ -462,23 +483,10 @@ const movielens = (wishlist: boolean) =>
 		),
 	)
 	results.kitsuCaught = {
-		rows: view.rows(),
+		opened: view.opened(),
 		text: view.text(),
 		sent: [...sent],
 	}
-	await view.unmount()
-}
-
-{
-	const view = await page()
-	await view.search("watcharr")
-	results.watcharrSearch = { rows: view.rows(), text: view.text() }
-	for (const service of ["Netflix", "disney", "crunchyroll"]) {
-		await view.search(service)
-		results[`streaming-${service}`] = { rows: view.rows(), text: view.text() }
-	}
-	await view.click("Open the Trakt import")
-	results.streamingOpened = { rows: view.rows(), text: view.text() }
 	await view.unmount()
 }
 
@@ -501,14 +509,14 @@ const movielens = (wishlist: boolean) =>
 		),
 	)
 	results.oneBoxWatcharr = {
-		rows: view.rows(),
+		opened: view.opened(),
 		text: view.text(),
 		sent: [...sent],
 	}
 	await view.pick("Add it as Want to rewatch")
 	await view.click("Add to Want to See")
 	results.wishlistRewatch = {
-		rows: view.rows(),
+		opened: view.opened(),
 		text: view.text(),
 		sent: [...sent],
 	}
@@ -523,7 +531,7 @@ const movielens = (wishlist: boolean) =>
 		openImport: done.id,
 	})
 	await view.click("Undo import")
-	results.wishlistUndo = { rows: view.rows(), text: view.text() }
+	results.wishlistUndo = { opened: view.opened(), text: view.text() }
 	await view.unmount()
 }
 
@@ -532,9 +540,18 @@ const movielens = (wishlist: boolean) =>
 		initialSource: "plex",
 		connectState: "00000000-0000-4000-8000-0000000000dd",
 	})
-	results.plexReturn = { rows: view.rows(), text: view.text() }
-	await view.click("TMDB")
-	results.plexReturnThenTmdb = { rows: view.rows(), text: view.text() }
+	results.plexReturn = { opened: view.opened(), text: view.text() }
+	await view.click("Pick another source")
+	await view.open("TMDB")
+	results.plexReturnThenTmdb = { opened: view.opened(), text: view.text() }
+	await view.unmount()
+}
+
+{
+	const done = summary("letterboxd", "done", "2026-10-11T12:00:00.000Z")
+	const view = await page({ sourceImports: [done] })
+	await view.click("Open the Letterboxd import")
+	results.historyOpened = { opened: view.opened(), text: view.text() }
 	await view.unmount()
 }
 

@@ -1,7 +1,10 @@
 import type { MetaFunction } from "@remix-run/node"
 import { useLoaderData } from "@remix-run/react"
-import { IMPORTS_HEADING, ImportSourcesPage } from "~/ui/imports/ImportSourcesPage"
-import { SettingsSheet } from "~/ui/settings/SettingsSheet"
+import {
+	IMPORTS_HEADING,
+	ImportSourcesPage,
+} from "~/ui/imports/ImportSourcesPage"
+import { SettingsPage } from "~/ui/settings/SettingsPage"
 
 export { pageHeaders as headers } from "~/utils/headers"
 
@@ -18,11 +21,14 @@ export const meta: MetaFunction = () => [
 export { loader } from "~/server/imports/settings-loader.server"
 import type { loader } from "~/server/imports/settings-loader.server"
 
-// Settings, Imports: a wide sheet, since a source opens in place with its steps and history.
+// Settings, Imports: a page of its own, since a source opens in place with its steps and history.
 export default function SettingsImports() {
 	const data = useLoaderData<typeof loader>()
 	return (
-		<SettingsSheet wide title={IMPORTS_HEADING.title} subtitle={IMPORTS_HEADING.subtitle}>
+		<SettingsPage
+			title={IMPORTS_HEADING.title}
+			intro={IMPORTS_HEADING.subtitle}
+		>
 			<ImportSourcesPage
 				imdbImports={data.imports}
 				sourceImports={data.sourceImports}
@@ -30,6 +36,6 @@ export default function SettingsImports() {
 				connectState={data.connectState}
 				openImport={data.openImport}
 			/>
-		</SettingsSheet>
+		</SettingsPage>
 	)
 }

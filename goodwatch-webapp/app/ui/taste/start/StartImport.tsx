@@ -156,7 +156,7 @@ export function StartDropZone({
 			}}
 			onDragLeave={() => setOver(false)}
 			onDrop={drop}
-			className={`flex w-full flex-col items-center gap-4 rounded-3xl border-2 border-dashed px-6 py-10 text-center md:py-14 ${over ? "border-amber-300 bg-amber-400/10" : "border-white/20 bg-gray-950/50 hover:border-white/35"}`}
+			className={`flex w-full flex-col items-center gap-4 rounded-3xl border-2 border-dashed px-4 py-10 text-center sm:px-6 md:py-14 ${over ? "border-amber-300 bg-amber-400/10" : "border-white/20 bg-gray-950/50 hover:border-white/35"}`}
 		>
 			<ArrowUpTrayIcon
 				className={`size-12 transition-transform duration-300 md:size-14 ${over ? "-translate-y-1 text-amber-300" : "text-gray-400"}`}

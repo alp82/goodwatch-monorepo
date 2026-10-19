@@ -9,7 +9,7 @@ import {
 import { Link, useLoaderData, useRevalidator } from "@remix-run/react"
 import React from "react"
 import { getCachedProfileByUserId } from "~/server/share-lists/view.server"
-import { SettingsSheet } from "~/ui/settings/SettingsSheet"
+import { SettingsPage } from "~/ui/settings/SettingsPage"
 import { profilePath } from "~/ui/share-card/links"
 import { HandlePicker } from "~/ui/share-lists/HandlePicker"
 import { getUserIdFromRequest } from "~/utils/auth"
@@ -37,11 +37,8 @@ export default function SettingsProfile() {
 	const { revalidate } = useRevalidator()
 
 	return (
-		<SettingsSheet
-			title="Public profile"
-			subtitle="Your handle is the address of your public profile, where the lists you share appear, and it signs every list card."
-		>
-			<div className="flex flex-col gap-6 text-base text-gray-300">
+		<SettingsPage title="Public profile" intro="Your handle is the address of your public profile, where the lists you share appear, and it signs every list card.">
+			<div className="flex max-w-2xl flex-col gap-6 rounded-2xl bg-white/[0.04] p-5 text-base text-gray-300 ring-1 ring-white/10 md:p-6">
 				{handle ? (
 					<div className="flex flex-col gap-1">
 						<p className="text-sm font-medium text-gray-300">Handle</p>
@@ -69,6 +66,6 @@ export default function SettingsProfile() {
 					<p className="text-gray-400">Sign in to choose a handle.</p>
 				)}
 			</div>
-		</SettingsSheet>
+		</SettingsPage>
 	)
 }

@@ -1,13 +1,21 @@
-import { EnvelopeIcon } from "@heroicons/react/24/solid";
-import type { MetaFunction } from "@remix-run/node";
-import React from "react";
-import { useSetUserSettings } from "~/routes/api.user-settings.set";
-import { ChangePasswordSection } from "~/ui/settings/ChangePasswordSection";
-import { SettingsSheet } from "~/ui/settings/SettingsSheet";
-import { useAuthClient } from "~/utils/auth-client";
+// Settings, Account and sign-in: who is signed in, one card per way of signing in (the email card changes the
+// password), and Restart setup. Only what works today: no placeholders for controls not built yet.
+import {
+	ArrowPathIcon,
+	CheckCircleIcon,
+	EnvelopeIcon,
+	KeyIcon,
+} from "@heroicons/react/24/outline"
+import type { MetaFunction } from "@remix-run/node"
+import React from "react"
+import { useSetUserSettings } from "~/routes/api.user-settings.set"
+import { ChangePasswordSection } from "~/ui/settings/ChangePasswordSection"
+import { SettingsPage } from "~/ui/settings/SettingsPage"
+import { useUser } from "~/utils/auth"
+import { useAuthClient } from "~/utils/auth-client"
 
 const googleLogo = (
-	<svg aria-hidden="true" viewBox="0 0 24 24">
+	<svg aria-hidden="true" viewBox="0 0 24 24" className="size-6">
 		<path
 			d="M12.0003 4.75C13.7703 4.75 15.3553 5.36002 16.6053 6.54998L20.0303 3.125C17.9502 1.19 15.2353 0 12.0003 0C7.31028 0 3.25527 2.69 1.28027 6.60998L5.27028 9.70498C6.21525 6.86002 8.87028 4.75 12.0003 4.75Z"
 			fill="#EA4335"
@@ -25,7 +33,7 @@ const googleLogo = (
 			fill="#34A853"
 		/>
 	</svg>
-);
+)
 
 export { pageHeaders as headers } from "~/utils/headers"
 
@@ -37,26 +45,81 @@ export const meta: MetaFunction = () => {
 				"Change your GoodWatch password. All movie and tv show ratings and streaming providers on the same page",
 		},
 		{ name: "robots", content: "noindex, follow" },
-	];
-};
+	]
+}
+
+const card =
+	"flex flex-col rounded-2xl bg-white/[0.04] p-5 ring-1 ring-white/10 md:p-6"
+const button =
+	"inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-md border border-gray-600 px-4 text-sm font-semibold text-gray-200 hover:border-gray-400 hover:text-white disabled:cursor-wait disabled:opacity-60"
+
+/** One way to sign in: its mark, its name, the address it uses, and what can be done with it. */
+function MethodCard({
+	icon,
+	name,
+	detail,
+	children,
+}: {
+	icon: React.ReactNode
+	name: string
+	detail: string | null
+	children?: React.ReactNode
+}) {
+	return (
+		<div className={card} data-sign-in-method={name}>
+			<div className="flex items-center gap-4">
+				<span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-white/[0.06] ring-1 ring-white/10">
+					{icon}
+				</span>
+				<div className="min-w-0 flex-1">
+					<p className="font-semibold text-white">{name}</p>
+					{detail && <p className="truncate text-sm text-gray-400">{detail}</p>}
+				</div>
+				<CheckCircleIcon
+					className="size-6 shrink-0 text-emerald-400"
+					aria-label="In use"
+				/>
+			</div>
+			{children}
+		</div>
+	)
+}
+
+function PasswordChange() {
+	const [open, setOpen] = React.useState(false)
+	return (
+		<div className="mt-5 border-t border-white/10 pt-4">
+			{open ? (
+				<ChangePasswordSection onCancel={() => setOpen(false)} />
+			) : (
+				<button type="button" className={button} onClick={() => setOpen(true)}>
+					<KeyIcon className="size-4" aria-hidden /> Change password
+				</button>
+			)}
+		</div>
+	)
+}
 
 export default function SettingsAccount() {
-	const auth = useAuthClient();
+	const auth = useAuthClient()
+	const { user } = useUser()
+	const email = user?.email ?? null
 
-	// How the member signs in: shown as icons, and only a member with a password can change it.
-	const [methods, setMethods] = React.useState<("email" | "google")[]>([]);
+	// How the member signs in: one card each, and only a member with a password can change it.
+	const [methods, setMethods] = React.useState<("email" | "google")[] | null>(
+		null,
+	)
 	React.useEffect(() => {
-		let current = true;
+		let current = true
 		auth.signInMethods().then((found) => {
-			if (current && found) setMethods(found);
-		});
+			if (current) setMethods(found ?? [])
+		})
 		return () => {
-			current = false;
-		};
-	}, [auth]);
-	const userHasEmailIdentity = methods.includes("email");
+			current = false
+		}
+	}, [auth])
 
-	const setUserSettings = useSetUserSettings();
+	const setUserSettings = useSetUserSettings()
 	const handleResetOnboardingFlag = () => {
 		setUserSettings.mutate({
 			settings: {
@@ -64,54 +127,107 @@ export default function SettingsAccount() {
 				onboarding_streaming_completed: "no",
 				onboarding_ratings_completed: "no",
 			},
-		});
-	};
+		})
+	}
 
 	return (
-		<SettingsSheet title="Account and sign-in">
-			<div className="flex flex-col gap-8 text-base text-gray-300">
-				<section className="flex flex-col gap-2">
-					<h3 className="font-semibold text-white">Sign-in</h3>
-					<div className="flex flex-wrap items-center gap-2">
-						<span>You sign in with</span>
-						{methods.map((provider) => (
-							<span key={provider} className="flex items-center gap-1.5 rounded-full bg-white/[0.06] px-2.5 py-1 text-sm ring-1 ring-white/10">
-								<span className="h-4 w-4">
-									{provider === "google" ? googleLogo : <EnvelopeIcon aria-hidden="true" />}
-								</span>
-								{provider === "google" ? "Google" : "Email"}
-							</span>
-						))}
+		<SettingsPage
+			title="Account and sign-in"
+			intro="How you sign in, your password, and starting setup again."
+		>
+			<div className="flex max-w-4xl flex-col gap-10">
+				<section
+					aria-label="Your account"
+					className="flex flex-wrap items-center gap-5 rounded-2xl bg-gradient-to-br from-indigo-950 via-gray-900 to-gray-900 p-5 ring-1 ring-white/10 md:p-6"
+				>
+					<span
+						aria-hidden="true"
+						className="flex size-16 shrink-0 items-center justify-center rounded-full bg-indigo-800 text-2xl font-black text-white uppercase"
+					>
+						{(email ?? "?").slice(0, 1)}
+					</span>
+					<div className="min-w-0 flex-1">
+						<p className="text-sm text-gray-400">Signed in as</p>
+						<p className="truncate text-xl font-black text-white md:text-2xl">
+							{email}
+						</p>
 					</div>
 				</section>
 
-				{userHasEmailIdentity ? <ChangePasswordSection /> : null}
+				{methods?.length !== 0 && (
+					<section className="flex flex-col gap-3">
+						<div>
+							<h2 className="text-lg font-bold text-white">How you sign in</h2>
+							{methods && methods.length > 1 && (
+								<p className="text-sm text-gray-400">
+									Either way opens the same account.
+								</p>
+							)}
+						</div>
+						{methods === null ? (
+							<p className="text-sm text-gray-500">Reading how you sign in…</p>
+						) : (
+							<div className="grid items-start gap-4 md:grid-cols-2">
+								{methods.includes("email") && (
+									<MethodCard
+										icon={
+											<EnvelopeIcon
+												className="size-6 text-gray-300"
+												aria-hidden
+											/>
+										}
+										name="Email and password"
+										detail={email}
+									>
+										<PasswordChange />
+									</MethodCard>
+								)}
+								{methods.includes("google") && (
+									<MethodCard
+										icon={googleLogo}
+										name="Google"
+										detail={email ? `Signed in with ${email}` : null}
+									/>
+								)}
+							</div>
+						)}
+					</section>
+				)}
 
-				<section className="flex flex-col gap-2">
-					<h3 className="font-semibold text-white">Restart setup</h3>
-					<p className="text-sm text-gray-400">
-						Go through the first steps again: your country, your services and
-						your scores. Nothing you saved is lost.
-					</p>
-					<div className="flex flex-wrap items-center gap-3">
+				<section className="flex flex-col gap-3">
+					<h2 className="text-lg font-bold text-white">Start over</h2>
+					<div className={`${card} md:flex-row md:items-center md:gap-6`}>
+						<span className="mb-3 flex size-12 shrink-0 items-center justify-center rounded-xl bg-white/[0.06] ring-1 ring-white/10 md:mb-0">
+							<ArrowPathIcon className="size-6 text-gray-300" aria-hidden />
+						</span>
+						<div className="min-w-0 flex-1">
+							<p className="font-semibold text-white">Restart setup</p>
+							<p className="text-sm text-gray-400">
+								Go through the first steps again: your country, your services
+								and your scores. Nothing you saved is lost.
+							</p>
+							<output
+								aria-live="polite"
+								className="mt-1 block text-sm text-gray-300 empty:hidden"
+							>
+								{setUserSettings.isSuccess
+									? "Done. The first steps show up again."
+									: setUserSettings.isError
+										? "That didn't work. Try again in a moment."
+										: ""}
+							</output>
+						</div>
 						<button
 							type="button"
 							onClick={handleResetOnboardingFlag}
 							disabled={setUserSettings.isPending}
-							className="cursor-pointer rounded-lg border border-gray-600 px-3 py-2 text-sm font-semibold text-gray-200 hover:border-gray-400 hover:text-white disabled:cursor-wait disabled:opacity-60"
+							className={`${button} mt-3 self-start md:mt-0 md:self-center`}
 						>
 							Restart setup
 						</button>
-						<output aria-live="polite" className="text-sm text-gray-400">
-							{setUserSettings.isSuccess
-								? "Done. The first steps show up again."
-								: setUserSettings.isError
-									? "That didn't work. Try again in a moment."
-									: ""}
-						</output>
 					</div>
 				</section>
 			</div>
-		</SettingsSheet>
-	);
+		</SettingsPage>
+	)
 }

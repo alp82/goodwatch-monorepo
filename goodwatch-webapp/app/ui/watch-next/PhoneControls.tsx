@@ -3,6 +3,7 @@ import { mediaFieldLanguage } from "~/utils/media-presentation"
 // services, and sort, each opening its own drawer (owner addendum on #176). The buttons dock above the site's dock.
 // Every drawer is a labeled modal sheet with a focus trap, closing with Escape, the backdrop, a drag down, or its
 // Show button.
+import { SERVICES_PATH } from "~/ui/settings/paths"
 import {
 	ArrowsUpDownIcon,
 	GlobeAltIcon,
@@ -204,7 +205,7 @@ function ServicesBody({
 		return (
 			<div className="px-4 pb-4">
 				<Link
-					to="/settings/where-you-watch"
+					to={SERVICES_PATH}
 					className="flex w-full items-center gap-3 rounded-xl bg-white/[0.05] p-3 text-left ring-1 ring-white/10"
 				>
 					<span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white/10">

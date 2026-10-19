@@ -1,4 +1,4 @@
-// Your services on Where you watch: the services of the country the member is watching from, theirs first. A toggle
+// Your services (/settings/services): the services of the country the member is watching from, theirs first. A toggle
 // saves the whole list at once; saves of the member's settings run one after another (useSetUserSettings' scope), so
 // the last toggle wins. A saved service the country doesn't offer stays listed, so it can be turned off, and the notice
 // says when the country offers some or none of them (services-notice.ts).
@@ -22,7 +22,7 @@ const FIRST = 18
 export const savedServiceIds = (value: string | undefined) =>
 	(value ?? "").split(",").filter(Boolean)
 
-/** The member's saved services and which of them the country doesn't offer: for the sheet and its tile. */
+/** The member's saved services and which of them the country doesn't offer: for the page and its tile. */
 export function useServicesInCountry(country: string) {
 	const settings = useUserSettings()
 	const saved = savedServiceIds(settings.data?.streaming_providers_default)

@@ -1,4 +1,4 @@
-// "Change password" in Account and sign-in. With the cut-over notice on (AUTH_MAINTENANCE, #552) the section says so
+// "Change password" in Account and sign-in, inside the Email and password card. With the cut-over notice on (AUTH_MAINTENANCE, #552) the section says so
 // instead of showing its fields: a new password would not reach the final export of the Supabase users.
 import React from "react";
 import SubmitButton from "~/ui/button/SubmitButton";
@@ -7,7 +7,7 @@ import { PasswordInput } from "~/ui/form/PasswordInput";
 import { useSupabase } from "~/utils/auth";
 import { PASSWORD_MIN, useAuthClient } from "~/utils/auth-client";
 
-export function ChangePasswordSection() {
+export function ChangePasswordSection({ onCancel }: { onCancel?: () => void }) {
 	const { betterAuth, maintenance } = useSupabase();
 	const auth = useAuthClient();
 
@@ -59,8 +59,7 @@ export function ChangePasswordSection() {
 	};
 
 	return (
-		<section className="flex flex-col gap-2">
-			<h3 className="font-semibold text-white">Change password</h3>
+		<section aria-label="Change password" className="flex flex-col gap-2">
 
 			{maintenance || status === "maintenance" ? (
 				<MaintenanceMessage />
@@ -72,7 +71,8 @@ export function ChangePasswordSection() {
 						</p>
 					) : null}
 
-					<div className="max-w-80 flex flex-col gap-2">
+					<div className="flex flex-col gap-3">
+						<div className="grid gap-3 sm:grid-cols-2">
 						{betterAuth && (
 							<PasswordInput
 								id="password-current"
@@ -91,6 +91,7 @@ export function ChangePasswordSection() {
 							error={errors.length > 0 ? errors[0] : undefined}
 							onChange={setPassword}
 						/>
+						</div>
 
 						<p className="text-sm text-gray-400">
 							Other devices are signed out.
@@ -98,12 +99,23 @@ export function ChangePasswordSection() {
 							{betterAuth && " Connected apps keep working."}
 						</p>
 
-						<SubmitButton
-							loading={status === "loading"}
-							onSubmit={handleSubmit}
-						>
-							Change Password
-						</SubmitButton>
+						<div className="flex flex-wrap items-center gap-3">
+							<SubmitButton
+								loading={status === "loading"}
+								onSubmit={handleSubmit}
+							>
+								Change password
+							</SubmitButton>
+							{onCancel && status !== "success" && (
+								<button
+									type="button"
+									onClick={onCancel}
+									className="min-h-10 cursor-pointer rounded-md border border-gray-600 px-4 text-sm font-semibold text-gray-200 hover:border-gray-400 hover:text-white"
+								>
+									Cancel
+								</button>
+							)}
+						</div>
 					</div>
 				</>
 			)}

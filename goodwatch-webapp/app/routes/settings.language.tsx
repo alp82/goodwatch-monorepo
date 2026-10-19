@@ -1,11 +1,10 @@
 // Settings, Show titles in: the language that titles, posters, descriptions and taglines show in. Apart from the
-// country, which changes no language.
+// country, which changes no language. A sample title shows the choice.
 import type { MetaFunction } from "@remix-run/node"
-import {
-	PairStatus,
-	ShowTitlesInList,
-} from "~/ui/media-preference/SettingsPair"
-import { SettingsSheet } from "~/ui/settings/SettingsSheet"
+import { BROWSER } from "~/ui/media-preference/machine"
+import { PairStatus, ShowTitlesInList, useSettingsPair } from "~/ui/media-preference/SettingsPair"
+import { SampleTitleCard } from "~/ui/settings/SampleTitle"
+import { SettingsPage } from "~/ui/settings/SettingsPage"
 
 export { pageHeaders as headers } from "~/utils/headers"
 
@@ -15,15 +14,17 @@ export const meta: MetaFunction = () => [
 ]
 
 export default function SettingsLanguage() {
+	const { p, next } = useSettingsPair()
+	const language = next.language === BROWSER ? p.browserLanguage : next.language
 	return (
-		<SettingsSheet
+		<SettingsPage
 			title="Show titles in"
-			subtitle="Your language for titles, posters and descriptions."
+			intro="Title names, posters, descriptions and taglines show in this language when a translation exists. Menus stay in English."
 		>
 			<div className="flex flex-col gap-2">
 				<PairStatus />
-				<ShowTitlesInList className="h-[28rem]" />
+				<ShowTitlesInList preview={<SampleTitleCard language={language} />} />
 			</div>
-		</SettingsSheet>
+		</SettingsPage>
 	)
 }

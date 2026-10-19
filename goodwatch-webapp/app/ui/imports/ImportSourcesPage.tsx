@@ -1,37 +1,42 @@
-// The Imports page: one box on top that takes any export file and names its source, then every live source in a
-// searchable list, most common first. A source opens in place with its own steps, upload box, and history.
-import { ChevronDownIcon, ClockIcon } from "@heroicons/react/20/solid"
-import { MagnifyingGlassIcon } from "@heroicons/react/20/solid"
-import { useEffect, useId, useState } from "react"
+// The Imports page, built from the Taste start's import step (ui/taste/start): one wide drop zone that takes any
+// export file and names its source, with every source's mark inside it. A file, a picked mark, a return from
+// connecting TMDB or Plex, or a past import opens that source's own import under the zone: its steps, upload or
+// connection, preview, progress, receipt and undo. Under it, every import so far, newest first.
+import { useEffect, useRef, useState } from "react"
 import type { ImdbImportSummary } from "~/domain/imdb-import"
 import type { ImportSummary } from "~/domain/imports"
+import { SourceLogoRow } from "~/ui/taste/start/SourceLogoRow"
+import {
+	PageDrop,
+	SourceHeader,
+	StartDropZone,
+	sourceEntry,
+	useFileTaking,
+} from "~/ui/taste/start/StartImport"
 import { useHydrated } from "~/utils/hydrated"
 import { ImdbImportFlow } from "./ImdbImportFlow"
 import {
-	AnyFileBox,
 	ImportFileRouting,
 	type ImportHandoff,
 	type MovieLensFiles,
 	MovieLensFilesContext,
 } from "./ImportFileRouting"
-import {
-	IMPORT_SOURCE_LIST,
-	type ImportSourceEntry,
-	type ImportSourceId,
-	importSourceName,
-	lastImported,
-	searchImportSources,
-	streamingServiceFor,
-} from "./ImportSources"
+import type { ImportSourceId } from "./ImportSources"
 import { SourceImportFlow } from "./SourceImportFlow"
 import { useSourceImports } from "./SourceImportHooks"
 import { SourceMark } from "./SourceMark"
 import { useImdbImports } from "./api"
-import { formatDate, stepHeading, textLink } from "./shared"
+import {
+	describeOutcome,
+	errorBox,
+	formatCount,
+	formatDate,
+	textLink,
+} from "./shared"
 
-/** The Imports sheet's title and what it says under it. */
+/** The Imports page's title and what it says under it. */
 export const IMPORTS_HEADING = {
-	title: "Import your library",
+	title: "Imports",
 	subtitle:
 		"Bring your ratings, watches, and Want to See from another site or app. GoodWatch shows you everything before your library changes.",
 }
@@ -44,6 +49,9 @@ export interface ImportSourcesPageProps {
 	openImport?: string
 }
 
+/** The source open under the zone, and the import it opens on, if one was chosen. */
+type Open = { id: ImportSourceId; importId?: string }
+
 export function ImportSourcesPage({
 	imdbImports,
 	sourceImports,
@@ -51,217 +59,255 @@ export function ImportSourcesPage({
 	connectState,
 	openImport,
 }: ImportSourcesPageProps) {
-	const imdb = useImdbImports({ imports: imdbImports })
-	const native = useSourceImports({ imports: sourceImports })
-	const imported = lastImported(
-		imdb.data?.imports ?? [],
-		native.data?.imports ?? [],
+	const [open, setOpen] = useState<Open | null>(
+		initialSource ? { id: initialSource, importId: openImport } : null,
 	)
-	const [open, setOpen] = useState<ImportSourceId | null>(initialSource ?? null)
-	const [query, setQuery] = useState("")
-	const found = searchImportSources(query)
-	const streaming = found.length === 0 ? streamingServiceFor(query) : null
-	const listId = useId()
+	// A new address on the same page (a return from connecting) opens what it names.
+	useEffect(() => {
+		if (initialSource) setOpen({ id: initialSource, importId: openImport })
+	}, [initialSource, openImport])
 	// The latest file handed to a source; `count` gives each one a fresh flow.
 	const [handoff, setHandoff] = useState<
 		(ImportHandoff & { count: number }) | null
 	>(null)
+	// Set by the member's own act, so the opened source takes focus then and not on arrival.
+	const [acted, setActed] = useState(0)
+	const show = (next: Open) => {
+		setOpen(next)
+		setActed((n) => n + 1)
+	}
 	const route = (next: ImportHandoff) => {
-		setQuery("")
-		setOpen(next.recognition.source)
 		setHandoff({ ...next, count: (handoff?.count ?? 0) + 1 })
+		show({ id: next.recognition.source })
 	}
-	const toggle = (id: ImportSourceId) => {
+	const files = useFileTaking(route)
+	const pick = (id: ImportSourceId) => {
 		setHandoff(null)
-		setOpen(open === id ? null : id)
+		show({ id })
 	}
-	// Focus moves to the source that took the file, so it is announced, and the page scrolls to it.
-	useEffect(() => {
-		if (!handoff) return
-		const row = document.getElementById(
-			`${listId}-${handoff.recognition.source}-row`,
-		)
-		row?.querySelector("button")?.focus({ preventScroll: true })
-		row?.scrollIntoView?.({ block: "start", behavior: "smooth" })
-	}, [handoff, listId])
 	const movieLensFiles = useState<MovieLensFiles>({})
-	// The date follows the member's time zone, which the server doesn't know.
-	const hydrated = useHydrated()
 
-	const row = (source: ImportSourceEntry) => {
-		const expanded = open === source.id
-		const at = imported.get(source.id)
-		const label = at
-			? hydrated
-				? `Imported ${formatDate(at)}`
-				: "Imported"
-			: source.connect
-				? "Connect"
-				: null
-		const handed =
-			handoff?.recognition.source === source.id ? handoff : undefined
-		return (
-			<li
-				key={source.id}
-				id={`${listId}-${source.id}-row`}
-				className={`scroll-mt-4 ${expanded ? "bg-slate-900" : ""}`}
-			>
-				<button
-					type="button"
-					aria-expanded={expanded}
-					aria-controls={`${listId}-${source.id}`}
-					onClick={() => toggle(source.id)}
-					className="flex min-h-14 w-full cursor-pointer items-center gap-3 px-3 py-2.5 text-left hover:bg-slate-800/70 focus-visible:outline-2 focus-visible:outline-indigo-400"
-				>
-					<SourceMark source={source} />
-					<span className="min-w-0 flex-1">
-						<span className="flex flex-wrap items-center gap-x-2 gap-y-1">
-							<span data-source-name className="font-semibold text-gray-100">
-								{source.name}
-							</span>
-							{label && (
-								<span
-									data-source-label
-									className={`rounded-full px-2 py-0.5 text-xs font-semibold ${at ? "bg-slate-700 text-gray-200" : "bg-indigo-900/80 text-indigo-100"}`}
-								>
-									{label}
-								</span>
-							)}
-						</span>
-						{/* Clamped, not truncated: unbreakable text would widen the settings column on a phone. */}
-						<span className="line-clamp-1 text-sm text-gray-400">
-							{source.gets.join(" · ")}
-						</span>
-					</span>
-					<span className="hidden shrink-0 items-center gap-1 rounded-full border border-slate-700 px-2 py-0.5 text-xs font-semibold text-gray-300 sm:inline-flex">
-						<ClockIcon className="size-3.5" aria-hidden />
-						{source.wait}
-					</span>
-					<ChevronDownIcon
-						className={`size-5 shrink-0 text-gray-400 ${expanded ? "rotate-180" : ""}`}
-						aria-hidden
-					/>
-				</button>
-				{expanded && (
-					<div
-						id={`${listId}-${source.id}`}
-						className="border-t border-slate-800 px-3 pb-6 pt-4 sm:px-4"
-					>
-						{source.id === "imdb" ? (
-							<ImdbImportFlow
-								key={handed?.count ?? 0}
-								initial={{ imports: imdbImports }}
-								handoff={handed}
-							/>
-						) : (
-							<SourceImportFlow
-								key={`${source.id}:${openImport ?? ""}:${connectState ?? ""}:${handed?.count ?? 0}`}
-								source={source.id}
-								handoff={handed}
-								initial={{ imports: sourceImports }}
-								// Only the source the address names takes its connection and import.
-								connectState={
-									source.id === initialSource ? connectState : undefined
-								}
-								initialId={source.id === initialSource ? openImport : undefined}
-							/>
-						)}
-					</div>
-				)}
-			</li>
-		)
-	}
+	// Focus moves to the source that opened, so it is announced, and the page scrolls to it.
+	const card = useRef<HTMLElement>(null)
+	useEffect(() => {
+		if (!acted) return
+		card.current?.focus({ preventScroll: true })
+		card.current?.scrollIntoView?.({ block: "start", behavior: "smooth" })
+	}, [acted])
 
+	const source = open ? sourceEntry(open.id) : null
+	const handed =
+		open && handoff?.recognition.source === open.id ? handoff : undefined
 	return (
 		<ImportFileRouting.Provider value={route}>
 			<MovieLensFilesContext.Provider value={movieLensFiles}>
-				{/* The heading is the Settings sheet's (IMPORTS_HEADING). */}
-				<div className="flex flex-col gap-6 text-base text-gray-300">
-					<AnyFileBox />
-					<section
-						aria-labelledby={`${listId}-heading`}
-						className="flex flex-col gap-3"
-					>
-						<h3 id={`${listId}-heading`} className={stepHeading}>
-							Or choose where your library is now
-						</h3>
-						<label className="relative block">
-							<span className="sr-only">Search sources</span>
-							<MagnifyingGlassIcon
-								className="pointer-events-none absolute left-3 top-1/2 size-5 -translate-y-1/2 text-gray-500"
-								aria-hidden
-							/>
-							<input
-								type="search"
-								value={query}
-								onChange={(event) => setQuery(event.target.value)}
-								placeholder={`Search ${IMPORT_SOURCE_LIST.length} sources, for example Letterboxd`}
-								className="min-h-11 w-full rounded-lg border border-slate-600 bg-slate-900 py-2 pl-10 pr-3 text-base text-gray-100 placeholder:text-gray-500 focus:border-indigo-400 focus:outline-none"
-							/>
-						</label>
-						{found.length > 0 && (
-							<ul className="divide-y divide-slate-800 overflow-hidden rounded-lg border border-slate-700 bg-slate-900/60">
-								{found.map(row)}
-							</ul>
-						)}
-						{streaming && (
-							<div className="flex flex-col items-start text-gray-400">
-								<p className="font-semibold text-gray-100">
-									GoodWatch can't import your {streaming.name} list yet.
+				<div className="flex flex-col gap-10">
+					<PageDrop onFile={files.take} />
+					{open && source ? (
+						<div className="flex flex-col gap-3">
+							{files.unknown && (
+								<p role="alert" className={errorBox}>
+									GoodWatch doesn't recognize{" "}
+									<span className="break-all font-semibold">
+										{files.unknown.fileName}
+									</span>
+									. {files.unknown.hint}
 								</p>
-								<p className="mt-1">
-									If you also keep a watchlist on Trakt, TMDB, or Plex, import
-									it from there. To add titles now, search for them and choose
-									Want to See.
-								</p>
-								{streaming.instead.map((id) => (
-									<button
-										key={id}
-										type="button"
-										className={`${textLink} min-h-11`}
-										onClick={() => {
-											setQuery("")
-											setOpen(id)
-										}}
-									>
-										Open the {importSourceName(id)} import
-									</button>
-								))}
-							</div>
-						)}
-						{found.length === 0 && !streaming && (
-							<p className="text-gray-400">
-								No source called "{query.trim()}". If your site can save a CSV
-								file, try {importSourceName("csv")}.
-							</p>
-						)}
-						<div className="flex flex-col items-start text-sm text-gray-400">
-							<p>
-								Coming from TV Time? TV Time closed on July 15, 2026. Trakt
-								imports a saved TV Time file: import it on Trakt, then upload
-								your Trakt export here.
-							</p>
-							<button
-								type="button"
-								className={`${textLink} min-h-11`}
-								onClick={() => {
-									if (!found.some((source) => source.id === "trakt"))
-										setQuery("")
-									setOpen("trakt")
-								}}
+							)}
+							<section
+								ref={card}
+								tabIndex={-1}
+								aria-label={`${source.name} import`}
+								data-open-source={source.name}
+								className="w-full scroll-mt-20 rounded-2xl bg-gray-900/90 p-5 text-left ring-1 ring-white/10 outline-none md:p-6"
 							>
-								Open the Trakt import
-							</button>
+								<SourceHeader
+									source={source}
+									onOther={() => {
+										setHandoff(null)
+										files.clear()
+										setOpen(null)
+									}}
+								/>
+								{open.id === "imdb" ? (
+									<ImdbImportFlow
+										key={`${handed?.count ?? 0}:${open.importId ?? ""}`}
+										initial={{ imports: imdbImports }}
+										handoff={handed}
+										initialId={open.importId}
+									/>
+								) : (
+									<SourceImportFlow
+										key={`${open.id}:${open.importId ?? ""}:${connectState ?? ""}:${handed?.count ?? 0}`}
+										source={open.id}
+										handoff={handed}
+										initial={{ imports: sourceImports }}
+										// Only the source the address names takes its connection.
+										connectState={
+											open.id === initialSource ? connectState : undefined
+										}
+										initialId={open.importId}
+									/>
+								)}
+							</section>
 						</div>
-						<p className="text-xs text-gray-500">
-							The logos show where a file comes from; no source endorses
-							GoodWatch. IMDb, IMDbPro, STARmeter, and all related logos are
-							trademarks of IMDb.com, Inc. or its affiliates. This product uses
-							the TMDB API but is not endorsed or certified by TMDB.
-						</p>
-					</section>
+					) : (
+						<StartDropZone
+							reading={files.reading}
+							unknown={files.unknown}
+							onFile={files.take}
+						>
+							<SourceLogoRow
+								prompt="Need the file, or want to connect an account? Pick where your library is"
+								pickLabel={(s) => `Import from ${s.name}`}
+								onPick={pick}
+								onConnect={pick}
+							/>
+						</StartDropZone>
+					)}
+					<History
+						imdbImports={imdbImports}
+						sourceImports={sourceImports}
+						onOpen={(id, importId) => {
+							setHandoff(null)
+							show({ id, importId })
+						}}
+					/>
+					<Notes onTrakt={() => pick("trakt")} />
 				</div>
 			</MovieLensFilesContext.Provider>
 		</ImportFileRouting.Provider>
+	)
+}
+
+/** One past import, from either kind of history. */
+interface Past {
+	id: string
+	source: ImportSourceId
+	at: string
+	line: string
+}
+
+const nativeOutcome = (item: ImportSummary) =>
+	item.status === "undone"
+		? "Undone"
+		: item.status === "failed"
+			? "Didn't finish"
+			: item.status === "running"
+				? "In progress"
+				: `${formatCount(item.applied.added)} added, ${formatCount(item.applied.updated)} updated`
+
+/** Every import so far, newest first. A preview is not an import yet, so it isn't listed. */
+function History({
+	imdbImports,
+	sourceImports,
+	onOpen,
+}: {
+	imdbImports: ImdbImportSummary[]
+	sourceImports: ImportSummary[]
+	onOpen: (source: ImportSourceId, importId: string) => void
+}) {
+	const imdb = useImdbImports({ imports: imdbImports })
+	const native = useSourceImports({ imports: sourceImports })
+	// The date follows the member's time zone, which the server doesn't know.
+	const hydrated = useHydrated()
+	const past: Past[] = [
+		...(imdb.data?.imports ?? [])
+			.filter((item) => item.status !== "preview")
+			.map((item) => ({
+				id: item.id,
+				source: "imdb" as const,
+				at: item.finishedAt ?? item.createdAt,
+				line: describeOutcome(item),
+			})),
+		...(native.data?.imports ?? [])
+			.filter((item) => item.status !== "preview")
+			.map((item) => ({
+				id: item.id,
+				source: item.source,
+				at: item.finishedAt ?? item.createdAt,
+				line: nativeOutcome(item),
+			})),
+	].sort((a, b) => b.at.localeCompare(a.at))
+	if (past.length === 0) return null
+	return (
+		<section aria-labelledby="imports-history" className="flex flex-col gap-3">
+			<div>
+				<h2 id="imports-history" className="text-lg font-bold text-white">
+					Brought in so far
+				</h2>
+				<p className="text-sm text-gray-400">
+					Open an import to see what it changed, or to undo it.
+				</p>
+			</div>
+			<ul
+				data-import-history
+				className="divide-y divide-white/10 overflow-hidden rounded-2xl bg-white/[0.03] ring-1 ring-white/10"
+			>
+				{past.map((item) => {
+					const source = sourceEntry(item.source)
+					return (
+						<li
+							key={item.id}
+							className="flex flex-wrap items-center gap-3 px-4 py-3"
+						>
+							<SourceMark source={source} />
+							<span className="min-w-0 flex-1">
+								<span className="block font-semibold text-gray-100">
+									{source.name}{" "}
+									<span data-import-date className="font-normal text-gray-500">
+										· {hydrated ? formatDate(item.at) : "Imported"}
+									</span>
+								</span>
+								<span className="block text-sm text-gray-400">{item.line}</span>
+							</span>
+							<button
+								type="button"
+								className={`${textLink} min-h-11`}
+								onClick={() => onOpen(item.source, item.id)}
+							>
+								Open
+								<span className="sr-only"> the {source.name} import</span>
+							</button>
+						</li>
+					)
+				})}
+			</ul>
+		</section>
+	)
+}
+
+/** TV Time, streaming services, and the logos' notices. */
+function Notes({ onTrakt }: { onTrakt: () => void }) {
+	return (
+		<div className="flex max-w-3xl flex-col gap-4 text-sm text-gray-400">
+			<div className="flex flex-col items-start">
+				<p>
+					Coming from TV Time? TV Time closed on July 15, 2026. Trakt imports a
+					saved TV Time file: import it on Trakt, then upload your Trakt export
+					here.
+				</p>
+				<button
+					type="button"
+					className={`${textLink} min-h-11`}
+					onClick={onTrakt}
+				>
+					Open the Trakt import
+				</button>
+			</div>
+			<p>
+				Netflix, Prime Video, Disney+ and other streaming services don't give
+				you a file of your list yet. If you also keep a watchlist on Trakt,
+				TMDB, or Plex, or your anime on MyAnimeList or Kitsu, import it from
+				there.
+			</p>
+			<p className="text-xs text-gray-500">
+				The logos show where a file comes from; no source endorses GoodWatch.
+				IMDb, IMDbPro, STARmeter, and all related logos are trademarks of
+				IMDb.com, Inc. or its affiliates. Kodi® is a registered trademark of the
+				Kodi Foundation. This product uses the TMDB API but is not endorsed or
+				certified by TMDB.
+			</p>
+		</div>
 	)
 }

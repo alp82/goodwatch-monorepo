@@ -2,6 +2,7 @@ import {
 	MEDIA_LANGUAGES,
 	type LanguageSetting,
 } from "../../utils/media-language"
+import { COUNTRY_PATH, SERVICES_PATH, TITLE_LANGUAGE_PATH } from "~/ui/settings/paths"
 import { query } from "../../utils/crate"
 import {
 	MediaPreferencesConflict,
@@ -28,8 +29,9 @@ export async function readSettings(userId: string, origin: string) {
 		language_note:
 			"Browser follows the language of the browser on the site; MCP supplies no browser locale.",
 		page_url: new URL("/settings", origin).href,
-		country_page_url: new URL("/settings/where-you-watch", origin).href,
-		language_page_url: new URL("/settings/language", origin).href,
+		country_page_url: new URL(COUNTRY_PATH, origin).href,
+		services_page_url: new URL(SERVICES_PATH, origin).href,
+		language_page_url: new URL(TITLE_LANGUAGE_PATH, origin).href,
 	}
 }
 

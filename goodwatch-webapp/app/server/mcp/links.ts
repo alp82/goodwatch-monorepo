@@ -5,6 +5,7 @@ import {
 	sortsFor,
 	statusPage,
 } from "../../domain/my-library.ts"
+import { HIDDEN_PATH } from "~/ui/settings/paths"
 import {
 	discoverParams,
 	hasDiscoverFilters,
@@ -100,7 +101,7 @@ export function withPageLink(
 				dropped: "dropped",
 				unrated: "unrated",
 			}
-			if (filter === "not_interested") path = "/settings/hidden"
+			if (filter === "not_interested") path = HIDDEN_PATH
 			else if (filter === "rated") path = SCORES_PAGE
 			else if (statusOf[filter]) path = statusPage({ status: statusOf[filter] })
 			else {

@@ -2,10 +2,11 @@ import assert from "node:assert/strict"
 import { execFileSync } from "node:child_process"
 import test from "node:test"
 
-type Row = { name: string; label: string | null; open: boolean }
-type Mark = { name: string; logo?: string; tile?: string; className?: string }
+type Past = { name: string; date: string; line: string }
+type Mark = { name: string; logo?: string; tile?: string }
 type Run = {
-	rows: Row[]
+	opened: string | null
+	history: Past[]
 	text: string
 	sent: { url: string; body: unknown }[]
 	marks: Mark[]
@@ -25,57 +26,53 @@ const runs = JSON.parse(
 		.at(-1) ?? "",
 ) as Record<string, Run>
 
-test("the page lists every live source, most common first, and hides sources not built yet", () => {
-	assert.deepEqual(
-		runs.list.rows.map((row) => row.name),
-		[
-			"IMDb",
-			"Letterboxd",
-			"Trakt",
-			"TMDB",
-			"Plex",
-			"MyAnimeList / Kitsu",
-			"Kodi",
-			"MovieLens",
-			"Watcharr / wishlist file",
-			"Generic CSV",
-		],
-	)
-	assert.ok(runs.list.rows.every((row) => !row.open))
-	assert.doesNotMatch(runs.list.text, /Netflix|Simkl|Jellyfin|coming later/i)
+test("the logo row shows every live source, most common first, each with its own logo", () => {
+	assert.deepEqual(runs.list.marks, [
+		{ name: "IMDb", logo: "imdb.svg" },
+		{ name: "Letterboxd", logo: "letterboxd.svg" },
+		{ name: "Trakt", logo: "trakt.svg" },
+		{ name: "TMDB", logo: "tmdb.svg" },
+		{ name: "Plex", logo: "plex.png" },
+		{ name: "MyAnimeList / Kitsu", logo: "myanimelist.svg" },
+		{ name: "Kodi", logo: "kodi.png" },
+		{ name: "MovieLens", logo: "movielens.png" },
+		{ name: "Watcharr / wishlist file", logo: "wishlist.png" },
+		{ name: "Generic CSV", logo: "csv.svg" },
+	])
+	assert.equal(runs.list.opened, null)
+	assert.doesNotMatch(runs.list.text, /Simkl|Jellyfin|coming later/i)
 })
 
-test("a source with a finished import says when; an undone import doesn't count", () => {
-	const label = (name: string) =>
-		runs.list.rows.find((row) => row.name === name)?.label
-	assert.equal(label("IMDb"), "Imported October 2, 2026")
-	assert.equal(label("Letterboxd"), "Imported October 11, 2026")
-	assert.equal(label("Trakt"), null)
-	assert.equal(label("TMDB"), "Connect")
-	assert.equal(label("Plex"), "Connect")
+test("the history lists every import so far, newest first, undone ones included", () => {
+	assert.deepEqual(runs.list.history, [
+		{
+			name: "Letterboxd",
+			date: "· October 11, 2026",
+			line: "1 added, 0 updated",
+		},
+		{ name: "Trakt", date: "· October 11, 2026", line: "Undone" },
+		{ name: "IMDb", date: "· October 2, 2026", line: "1 rating added" },
+	])
+})
+
+test("a history row opens its source on that import", () => {
+	assert.equal(runs.historyOpened.opened, "Letterboxd")
+	assert.match(runs.historyOpened.text, /Import another file|Undo import/)
 })
 
 test("TV Time members are pointed to Trakt, which imports a saved TV Time file", () => {
-	assert.deepEqual(
-		runs.tvTime.rows.map((row) => row.name),
-		["Trakt"],
-	)
 	assert.match(
 		runs.tvTime.text,
 		/Coming from TV Time\? TV Time closed on July 15, 2026\. Trakt imports a saved TV Time file: import it on Trakt, then upload your Trakt export here\./,
 	)
-	assert.deepEqual(
-		runs.tvTimeOpened.rows.find((row) => row.name === "Trakt")?.open,
-		true,
-	)
+	assert.equal(runs.tvTimeOpened.opened, "Trakt")
 	assert.match(runs.tvTimeOpened.text, /Upload your Trakt export/)
 })
 
-test("a search with no source says what to try instead", () => {
-	assert.deepEqual(runs.noMatch.rows, [])
+test("streaming services are named as not importable yet, with where to import from instead", () => {
 	assert.match(
-		runs.noMatch.text,
-		/No source called "Blockbuster"\. If your site can save a CSV file, try Generic CSV\./,
+		runs.list.text,
+		/Netflix, Prime Video, Disney\+ and other streaming services don't give you a file of your list yet\. If you also keep a watchlist on Trakt, TMDB, or Plex, or your anime on MyAnimeList or Kitsu, import it from there\./,
 	)
 })
 
@@ -90,15 +87,11 @@ test("a file in the one box is recognized, opens its source, and goes to that so
 			body: { source: "trakt", file: "file:trakt-export-alp82.zip" },
 		},
 	])
-	assert.deepEqual(
-		run.rows.filter((row) => row.open).map((row) => row.name),
-		["Trakt"],
-	)
+	assert.deepEqual(openRows(run), ["Trakt"])
 	assert.match(run.text, /Check before you import/)
 })
 
-const openRows = (run: Run) =>
-	run.rows.filter((row) => row.open).map((row) => row.name)
+const openRows = (run: Run) => (run.opened ? [run.opened] : [])
 
 test("an IMDb ratings export in the one box goes to the IMDb import", () => {
 	const run = runs.oneBoxImdb
@@ -193,44 +186,31 @@ test("a Kitsu library caught in another source's box is offered as Kitsu", () =>
 	)
 })
 
-test("only IMDb, Trakt, and TMDB show a logo; every other source has the same neutral letter tile", () => {
-	assert.deepEqual(
-		runs.list.marks.filter((mark) => mark.logo).map((mark) => mark.logo),
-		["imdb.svg", "trakt.svg", "tmdb.svg"],
+test("the notices cover the logos that ask for one: IMDb, Kodi and TMDB", () => {
+	assert.match(
+		runs.list.text,
+		/trademarks of IMDb\.com, Inc\. or its affiliates\./,
 	)
-	const tiles = runs.list.marks.filter((mark) => !mark.logo)
-	assert.deepEqual(
-		tiles.map((mark) => `${mark.name}: ${mark.tile}`),
-		[
-			"Letterboxd: Lb",
-			"Plex: Px",
-			"MyAnimeList / Kitsu: MAL",
-			"Kodi: K",
-			"MovieLens: ML",
-			"Watcharr / wishlist file: W",
-			"Generic CSV: CSV",
-		],
+	assert.match(
+		runs.list.text,
+		/Kodi® is a registered trademark of the Kodi Foundation\./,
 	)
-	assert.equal(new Set(tiles.map((mark) => mark.className)).size, 1)
-})
-
-test("the notices cover every logo in the list, TMDB's included", () => {
 	assert.match(
 		runs.list.text,
 		/This product uses the TMDB API but is not endorsed or certified by TMDB\./,
 	)
 })
 
-test("the box's help names the sources from the list itself", () => {
+test("the drop zone says the file is read on the device before anything changes", () => {
 	assert.match(
 		runs.list.text,
-		/Reads files from IMDb, Letterboxd, Trakt, MyAnimeList \/ Kitsu, Kodi, MovieLens, Watcharr \/ wishlist file, and Generic CSV\. To bring TMDB or Plex, open it in the list and connect your account\./,
+		/GoodWatch works out where it's from and reads it on your device first\. Nothing changes until you check it\./,
 	)
 })
 
 test("the server's HTML says Imported without a date, which only the member's browser knows the time zone of", () => {
 	const markup = runs.serverMarkup as unknown as string
-	assert.match(markup, /data-source-label="[^"]*"[^>]*>Imported<\/span>/)
+	assert.match(markup, /data-import-date="[^"]*"[^>]*>· Imported<\/span>/)
 	assert.doesNotMatch(markup, /October/)
 })
 
@@ -242,13 +222,6 @@ test("a return from Plex opens Plex's connection, and no other connect source ta
 	assert.doesNotMatch(runs.plexReturnThenTmdb.text, /Return from TMDB/)
 })
 
-test("Watcharr is found by name and opens the one upload for Watcharr exports and wishlist files", () => {
-	assert.deepEqual(
-		runs.watcharrSearch.rows.map((row) => row.name),
-		["Watcharr / wishlist file"],
-	)
-})
-
 test("a Watcharr export in the one box goes to the wishlist import's preview", () => {
 	const run = runs.oneBoxWatcharr
 	assert.deepEqual(previews(run), [
@@ -258,22 +231,6 @@ test("a Watcharr export in the one box goes to the wishlist import's preview", (
 		},
 	])
 	assert.deepEqual(openRows(run), ["Watcharr / wishlist file"])
-})
-
-test("a search for a streaming service says GoodWatch can't import it yet and points to sources that can", () => {
-	const netflix = runs["streaming-Netflix"]
-	assert.deepEqual(netflix.rows, [])
-	assert.match(
-		netflix.text,
-		/GoodWatch can't import your Netflix list yet\. ?If you also keep a watchlist on Trakt, TMDB, or Plex, import it from there\. To add titles now, search for them and choose Want to See\.Open the Trakt importOpen the TMDB importOpen the Plex import/,
-	)
-	assert.doesNotMatch(netflix.text, /try Generic CSV/)
-	assert.match(runs["streaming-disney"].text, /your Disney\+ list/)
-	assert.match(
-		runs["streaming-crunchyroll"].text,
-		/your Crunchyroll list yet\..*Open the MyAnimeList \/ Kitsu importOpen the Trakt import/,
-	)
-	assert.deepEqual(openRows(runs.streamingOpened), ["Trakt"])
 })
 
 test("a wishlist preview adds seen titles only when the member chooses Want to rewatch", () => {
