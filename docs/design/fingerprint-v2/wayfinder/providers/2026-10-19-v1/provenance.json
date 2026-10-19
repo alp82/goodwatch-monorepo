@@ -1,0 +1,116 @@
+{
+  "created_at": "2026-10-19T09:13:06.066372+00:00",
+  "worktree": "/home/alp/dev/projects/goodwatch/goodwatch-monorepo-fd47ad2f",
+  "branch": "research/fingerprint-provider-contracts-20261019",
+  "base_commit": "30f1c85ff7c73f13cd5a2d9f57ad5d9acf89d1bb",
+  "authenticated_github_dev": "alp82",
+  "no_paid_requests": true,
+  "no_inference_or_model_downloads": true,
+  "no_tracker_mutations": true,
+  "no_commits_pushes": true,
+  "read_inputs": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "c6a1ec620fbb24715ee47116227c960b20404c5973a22cbc0bed365482e0dd74"
+    },
+    {
+      "path": "CONTEXT.md",
+      "sha256": "b0615389d97570279e67e71cc5163f5806f87cbd99c248ba4fc499ce5da4fbe5"
+    },
+    {
+      "path": "docs/agents/issue-tracker.md",
+      "sha256": "0338676fa35c0f41105f0005111f6a33a72feff9e6814ef5fc1bf864101a68bb"
+    },
+    {
+      "path": "docs/agents/triage-labels.md",
+      "sha256": "78be2e38bb25aba2b4276a3f78a792c49b479aef2012856d13707e6f6207e0fd"
+    },
+    {
+      "path": "docs/agents/domain.md",
+      "sha256": "d0640c269fcbdb23628e52fb72bcb6b1b834e82470ec596cc07481d5776240ac"
+    },
+    {
+      "path": "docs/adr/0001-no-jev-for-fingerprint-scoring.md",
+      "sha256": "985e9dba784b1fc96e2143343f4ad8af0a5b9329b880ac8b1571a8e9b80a1428"
+    },
+    {
+      "path": "docs/adr/0002-local-text-embeddings-for-search.md",
+      "sha256": "0c6800aefc9b3e488862da445a642423ab9be90af1d0a05383334558b669341d"
+    },
+    {
+      "path": "docs/adr/0011-search-runs-as-a-role-of-the-webapp-image.md",
+      "sha256": "5641a0235530c268e88bdb15fb5caac8da57a655e814e46ba518200cc7667d63"
+    },
+    {
+      "path": "docs/design/fingerprint-v2/wayfinder/evidence-index.md",
+      "sha256": "7c5aa57a806012e60a8c246f81b86f6e1b7923a93d204261b1573f2b548f5336"
+    },
+    {
+      "path": "goodwatch-flows/windmill/f/dna/generate/fetch.py",
+      "sha256": "ec7528a7fb0dcf082112aef3a4b4697afdf18ff7c92c5b81ef597e0bed10942a"
+    },
+    {
+      "path": "/home/alp/.agents/skills/wayfinder/SKILL.md",
+      "sha256": "fee6e1d0c50f0e736b4ef8a599060c959afae904c9a97d82c97f049fcc3aa0f1"
+    },
+    {
+      "path": "/home/alp/.agents/skills/research/SKILL.md",
+      "sha256": "985569f15739c713d6784887c3d186d4ef9ac85bec5ad9c068d25bf0739928e4"
+    },
+    {
+      "path": "/home/alp/dev/projects/goodwatch/goodwatch-monorepo/docs/design/fingerprint-v2/wayfinder/baseline/2026-10-19-v1/PUBLICATION.md",
+      "sha256": "85513606fe14b220147baa71a5307bbaeb2dee0e411ecb08b8352dec16044475"
+    },
+    {
+      "path": "/home/alp/dev/projects/goodwatch/goodwatch-monorepo/docs/design/fingerprint-v2/wayfinder/evaluation/2026-10-19-v1/evaluation-contract.md",
+      "sha256": "bbbd369ba3407ca6f75600f8853b869ec2aafd90544323f4007692191e1e5187"
+    },
+    {
+      "path": "/tmp/goodwatch-fingerprint-experiment-design/planning-decisions.md",
+      "sha256": "6994ddddccb36940fb916b72d2d64f28b2ed00997674f95197e46885c91811fc"
+    },
+    {
+      "path": "/tmp/goodwatch-fingerprint-experiment-design/protocol-outline.md",
+      "sha256": "87366d4dcfd3c5f774646b6d3a60137160458d4063ed73af29733eada82aeccc"
+    }
+  ],
+  "correction_revision": {
+    "updated_at": "2026-10-19T09:28:10.838436+00:00",
+    "reason": "User-requested R1/R2 corrections after independent Astra review, plus native-representation fairness qualification",
+    "review_receipt": "captures/astra-review-verification.json",
+    "reviewed_at": "2026-10-19T09:24:52.981332+00:00",
+    "reviewer": {
+      "model": "gpt-6-astra",
+      "effort": "high",
+      "turn_id": "01a15373-406f-7883-b0dc-b74a3f011771",
+      "ghostex_session": "S69:P50ai:G6vb4",
+      "agent_session": "01a152e1-a945-7db0-902c-e4ac05f8d1a8"
+    },
+    "review_inputs": [
+      {
+        "path": "/tmp/goodwatch-provider-contract-review/review-report.md",
+        "sha256": "470ae356f763818768d3a504659a71c77928274c91015415c91c4b4ed04d2368"
+      },
+      {
+        "path": "/tmp/goodwatch-provider-contract-review/protocol-impact.md",
+        "sha256": "dd3b0ccb83d055467cc25d6d741f86cbbfbdd066abb6ebefb0fd9c83efb6cff9"
+      },
+      {
+        "path": "/tmp/goodwatch-provider-contract-review/verification.json",
+        "sha256": "d8c771c29ff28880ac74277aabde334e5a474e99d175c02c9d202369bc5b1fe6"
+      }
+    ],
+    "original_capture_bytes_preserved": true,
+    "pre_correction_seal": "captures/pre-correction-SHA256SUMS",
+    "pre_correction_checks": "captures/pre-correction-checks.json",
+    "pending_decisions": {
+      "Q7": "Pending: exact baseline/evaluation publication branch only, excludes provider assets",
+      "Q8": "Pending: evidence-first composition/subset policy",
+      "Q9": "Pending: small representation extension"
+    },
+    "baseline_evaluation_publication_branch_touched": false,
+    "new_network_requests": 0,
+    "new_inference_or_paid_calls": 0,
+    "claims": "Corrections applied by research owner; not a new independent Astra acceptance review"
+  }
+}

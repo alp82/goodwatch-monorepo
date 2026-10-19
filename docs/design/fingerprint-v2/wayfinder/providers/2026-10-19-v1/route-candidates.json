@@ -1,0 +1,580 @@
+{
+  "read_date": "2026-10-19",
+  "execution_authorized": false,
+  "all_compatibility_untested": true,
+  "candidates": [
+    {
+      "candidate_id": "qwen/qwen3.8-flash@alibaba/us-east-1",
+      "status": "Research identity only; not admitted, not tested, not an executable run manifest",
+      "model_parameter": "qwen/qwen3.8-flash",
+      "method": "POST",
+      "url": "https://openrouter.ai/api/v1/chat/completions",
+      "provider_preferences": {
+        "only": [
+          "alibaba/us-east-1"
+        ],
+        "order": [
+          "alibaba/us-east-1"
+        ],
+        "allow_fallbacks": false,
+        "require_parameters": true
+      },
+      "advertised_upstream_name": "Alibaba | qwen/qwen3.8-flash-20260826",
+      "immutable_checkpoint_proven": false,
+      "quantization": "unknown",
+      "advertised_service_tier": null,
+      "context_length": 1000000,
+      "pricing_per_token": {
+        "prompt": "0.00000015",
+        "completion": "0.00000047",
+        "input_cache_read": "0.000000016",
+        "discount": 0
+      },
+      "supported_parameters": [
+        "reasoning",
+        "include_reasoning",
+        "max_tokens",
+        "temperature",
+        "top_p",
+        "seed",
+        "presence_penalty",
+        "response_format",
+        "tools",
+        "structured_outputs",
+        "top_k",
+        "frequency_penalty",
+        "stop",
+        "logprobs",
+        "top_logprobs",
+        "tool_choice"
+      ],
+      "supports_implicit_caching": true,
+      "schema": null,
+      "paid_attempts": 0,
+      "capture_file": "captures/qwen--qwen3.8-flash.json",
+      "proposed_common_cap": {
+        "max_tokens": 8192,
+        "input_billed_tokens_bound": 16000,
+        "deadline_ms": 120000,
+        "outer_retry_max": 1,
+        "hidden_retries": 0
+      },
+      "response_format_candidate": "json_schema strict, full experimental schema pending",
+      "reasoning_candidate": {
+        "enabled": false
+      }
+    },
+    {
+      "candidate_id": "qwen/qwen3.7-flash@alibaba/us-east-1",
+      "status": "Research identity only; not admitted, not tested, not an executable run manifest",
+      "model_parameter": "qwen/qwen3.7-flash",
+      "method": "POST",
+      "url": "https://openrouter.ai/api/v1/chat/completions",
+      "provider_preferences": {
+        "only": [
+          "alibaba/us-east-1"
+        ],
+        "order": [
+          "alibaba/us-east-1"
+        ],
+        "allow_fallbacks": false,
+        "require_parameters": true
+      },
+      "advertised_upstream_name": "Alibaba | qwen/qwen3.7-flash-20260727",
+      "immutable_checkpoint_proven": false,
+      "quantization": "unknown",
+      "advertised_service_tier": null,
+      "context_length": 1000000,
+      "pricing_per_token": {
+        "prompt": "0.0000000345",
+        "completion": "0.0000001495",
+        "input_cache_read": "0.0000000069",
+        "discount": 0,
+        "overrides": [
+          {
+            "min_prompt_tokens": 32000,
+            "prompt": "0.000000115",
+            "completion": "0.00000046",
+            "input_cache_read": "0.000000023"
+          },
+          {
+            "min_prompt_tokens": 256000,
+            "prompt": "0.00000023",
+            "completion": "0.00000092",
+            "input_cache_read": "0.000000046"
+          }
+        ]
+      },
+      "supported_parameters": [
+        "reasoning",
+        "include_reasoning",
+        "max_tokens",
+        "temperature",
+        "top_p",
+        "seed",
+        "presence_penalty",
+        "response_format",
+        "logprobs",
+        "top_logprobs",
+        "tools",
+        "tool_choice"
+      ],
+      "supports_implicit_caching": true,
+      "schema": null,
+      "paid_attempts": 0,
+      "capture_file": "captures/qwen--qwen3.7-flash.json",
+      "proposed_common_cap": {
+        "max_tokens": 8192,
+        "input_billed_tokens_bound": 16000,
+        "deadline_ms": 120000,
+        "outer_retry_max": 1,
+        "hidden_retries": 0
+      },
+      "response_format_candidate": "json_object with local schema validation",
+      "reasoning_candidate": {
+        "enabled": false
+      }
+    },
+    {
+      "candidate_id": "mistralai/mistral-small-2603@mistral",
+      "status": "Research identity only; not admitted, not tested, not an executable run manifest",
+      "model_parameter": "mistralai/mistral-small-2603",
+      "method": "POST",
+      "url": "https://openrouter.ai/api/v1/chat/completions",
+      "provider_preferences": {
+        "only": [
+          "mistral"
+        ],
+        "order": [
+          "mistral"
+        ],
+        "allow_fallbacks": false,
+        "require_parameters": true
+      },
+      "advertised_upstream_name": "Mistral | mistralai/mistral-small-2603",
+      "immutable_checkpoint_proven": false,
+      "quantization": "unknown",
+      "advertised_service_tier": null,
+      "context_length": 262144,
+      "pricing_per_token": {
+        "prompt": "0.00000015",
+        "completion": "0.0000006",
+        "input_cache_read": "0.000000015",
+        "discount": 0
+      },
+      "supported_parameters": [
+        "reasoning",
+        "include_reasoning",
+        "max_tokens",
+        "temperature",
+        "top_p",
+        "stop",
+        "frequency_penalty",
+        "presence_penalty",
+        "seed",
+        "response_format",
+        "structured_outputs",
+        "tools",
+        "tool_choice",
+        "reasoning_effort"
+      ],
+      "supports_implicit_caching": true,
+      "schema": null,
+      "paid_attempts": 0,
+      "capture_file": "captures/mistralai--mistral-small-2603.json",
+      "proposed_common_cap": {
+        "max_tokens": 8192,
+        "input_billed_tokens_bound": 16000,
+        "deadline_ms": 120000,
+        "outer_retry_max": 1,
+        "hidden_retries": 0
+      },
+      "response_format_candidate": "json_schema strict, full experimental schema pending",
+      "reasoning_candidate": {
+        "effort": "none",
+        "unverified_for_route": true
+      }
+    },
+    {
+      "candidate_id": "openai/gpt-oss-20b@darkbloom/fp8",
+      "status": "Research identity only; not admitted, not tested, not an executable run manifest",
+      "model_parameter": "openai/gpt-oss-20b",
+      "method": "POST",
+      "url": "https://openrouter.ai/api/v1/chat/completions",
+      "provider_preferences": {
+        "only": [
+          "darkbloom/fp8"
+        ],
+        "order": [
+          "darkbloom/fp8"
+        ],
+        "allow_fallbacks": false,
+        "require_parameters": true
+      },
+      "advertised_upstream_name": "Darkbloom | openai/gpt-oss-20b",
+      "immutable_checkpoint_proven": false,
+      "quantization": "fp8",
+      "advertised_service_tier": null,
+      "context_length": 131072,
+      "pricing_per_token": {
+        "prompt": "0.000000018",
+        "completion": "0.00000009",
+        "input_cache_read": "0.000000009",
+        "discount": 0
+      },
+      "supported_parameters": [
+        "reasoning",
+        "include_reasoning",
+        "temperature",
+        "top_p",
+        "top_k",
+        "frequency_penalty",
+        "presence_penalty",
+        "repetition_penalty",
+        "stop",
+        "seed",
+        "max_tokens",
+        "response_format",
+        "structured_outputs",
+        "tools",
+        "tool_choice",
+        "logprobs",
+        "top_logprobs",
+        "reasoning_effort"
+      ],
+      "supports_implicit_caching": true,
+      "schema": null,
+      "paid_attempts": 0,
+      "capture_file": "captures/openai--gpt-oss-20b.json",
+      "proposed_common_cap": {
+        "max_tokens": 8192,
+        "input_billed_tokens_bound": 16000,
+        "deadline_ms": 120000,
+        "outer_retry_max": 1,
+        "hidden_retries": 0
+      },
+      "response_format_candidate": "json_schema strict, full experimental schema pending",
+      "reasoning_candidate": {
+        "effort": "low",
+        "unverified_for_route": true
+      }
+    },
+    {
+      "candidate_id": "google/gemini-2.5-flash-lite@google-ai-studio",
+      "status": "Research identity only; not admitted, not tested, not an executable run manifest",
+      "model_parameter": "google/gemini-2.5-flash-lite",
+      "method": "POST",
+      "url": "https://openrouter.ai/api/v1/chat/completions",
+      "provider_preferences": {
+        "only": [
+          "google-ai-studio"
+        ],
+        "order": [
+          "google-ai-studio"
+        ],
+        "allow_fallbacks": false,
+        "require_parameters": true
+      },
+      "advertised_upstream_name": "Google AI Studio | google/gemini-2.5-flash-lite",
+      "immutable_checkpoint_proven": false,
+      "quantization": "unknown",
+      "advertised_service_tier": null,
+      "context_length": 1048576,
+      "pricing_per_token": {
+        "prompt": "0.0000001",
+        "completion": "0.0000004",
+        "image": "0.0000001",
+        "audio": "0.0000003",
+        "input_audio_cache": "0.00000003",
+        "web_search": "0.014",
+        "internal_reasoning": "0.0000004",
+        "input_cache_read": "0.00000001",
+        "input_cache_write": "0.0000000833333333333333",
+        "discount": 0
+      },
+      "supported_parameters": [
+        "reasoning",
+        "include_reasoning",
+        "structured_outputs",
+        "response_format",
+        "max_tokens",
+        "temperature",
+        "top_p",
+        "seed",
+        "tools",
+        "tool_choice",
+        "stop"
+      ],
+      "supports_implicit_caching": false,
+      "schema": null,
+      "paid_attempts": 0,
+      "capture_file": "captures/google--gemini-2.5-flash-lite.json",
+      "proposed_common_cap": {
+        "max_tokens": 8192,
+        "input_billed_tokens_bound": 16000,
+        "deadline_ms": 120000,
+        "outer_retry_max": 1,
+        "hidden_retries": 0
+      },
+      "response_format_candidate": "json_schema strict, full experimental schema pending",
+      "reasoning_candidate": {
+        "effort": "low",
+        "unverified_for_route": true
+      }
+    },
+    {
+      "candidate_id": "typesafe/jev-1.14@typesafe",
+      "status": "Research identity only; not admitted, not tested, not an executable run manifest",
+      "model_parameter": "typesafe/jev-1.14",
+      "method": "POST",
+      "url": "https://openrouter.ai/api/alpha/decisions",
+      "provider_preferences": {
+        "only": [
+          "typesafe"
+        ],
+        "order": [
+          "typesafe"
+        ],
+        "allow_fallbacks": false
+      },
+      "advertised_upstream_name": "TypeSafe | typesafe/jev-1.14-20261014",
+      "immutable_checkpoint_proven": false,
+      "quantization": "unknown",
+      "advertised_service_tier": null,
+      "context_length": 262144,
+      "pricing_per_token": {
+        "prompt": "0.000000042",
+        "completion": "0",
+        "discount": 0
+      },
+      "supported_parameters": [],
+      "supports_implicit_caching": false,
+      "schema": null,
+      "paid_attempts": 0,
+      "capture_file": "captures/typesafe--jev-1.14.json",
+      "unresolved": [
+        "Full finite choices/states/evidence contract",
+        "Single-request capacity",
+        "Provider-specific billed-input upper bound and preflight enforcement",
+        "Actual response identity and charge reconciliation"
+      ],
+      "request_max_tokens_field": null,
+      "assessment_contract_reference": "legacy_assessment_contract"
+    },
+    {
+      "candidate_id": "liquid/d1@liquid",
+      "status": "Research identity only; not admitted, not tested, not an executable run manifest",
+      "model_parameter": "liquid/d1",
+      "method": "POST",
+      "url": "https://openrouter.ai/api/alpha/decisions",
+      "provider_preferences": {
+        "only": [
+          "liquid"
+        ],
+        "order": [
+          "liquid"
+        ],
+        "allow_fallbacks": false
+      },
+      "advertised_upstream_name": "Liquid | liquid/d1-20260930",
+      "immutable_checkpoint_proven": false,
+      "quantization": "unknown",
+      "advertised_service_tier": null,
+      "context_length": 65536,
+      "pricing_per_token": {
+        "prompt": "0.00000002",
+        "completion": "0",
+        "input_cache_read": "0.00000002",
+        "discount": 0
+      },
+      "supported_parameters": [],
+      "supports_implicit_caching": true,
+      "schema": null,
+      "paid_attempts": 0,
+      "capture_file": "captures/liquid--d1.json",
+      "unresolved": [
+        "Full finite choices/states/evidence contract",
+        "Single-request capacity",
+        "Provider-specific billed-input upper bound and preflight enforcement",
+        "Actual response identity and charge reconciliation",
+        "Shared text-state, criteria and wrapper accounting per question, including reconciliation of maker batching-savings claim",
+        "Actual host-specific aggregate billed-input bound; repeated-state scenario is not a verified lower bound"
+      ],
+      "request_max_tokens_field": null,
+      "billing_assessment": {
+        "documented": "Per-question prompt billing and aggregate input usage",
+        "shared_text_state_repetition_verified": false,
+        "criterion_and_wrapper_accounting_verified": false,
+        "maker_batching_savings_claim": true,
+        "actual_bill_or_lower_bound_established": false,
+        "actual_cap_compatibility": "Unresolved; not admitted until bounded",
+        "repeated_state_scenario": {
+          "formula": "B_repeat_scenario = sum_j (S + Q_j + H_j)",
+          "S": "Bounded shared text-state tokens assumed repeated per question in this scenario",
+          "Q_j": "Bounded question instructions, criteria and options",
+          "H_j": "Bounded per-question wrapper and serialization overhead",
+          "reservation_condition": "Only after units, wrapper and selected-host accounting are bounded",
+          "actual_usage_inequality": null,
+          "illustrative_question_count": 98,
+          "illustrative_repeated_state_tokens": 2500,
+          "illustrative_state_only_tokens": 245000,
+          "approved_aggregate_input_cap": 16000,
+          "scenario_exceeds_cap": true,
+          "implies_all_real_encodings_incompatible": false
+        },
+        "evidence": [
+          "https://docs.liquid.ai/lfm/models/decision-models",
+          "https://docs.liquid.ai/lfm/models/d1",
+          "https://www.liquid.ai/blog/d1-decision-model"
+        ]
+      }
+    },
+    {
+      "candidate_id": "cloudflare/clef-flash@cloudflare",
+      "status": "Research identity only; not admitted, not tested, not an executable run manifest",
+      "model_parameter": "cloudflare/clef-flash",
+      "method": "POST",
+      "url": "https://openrouter.ai/api/alpha/decisions",
+      "provider_preferences": {
+        "only": [
+          "cloudflare"
+        ],
+        "order": [
+          "cloudflare"
+        ],
+        "allow_fallbacks": false
+      },
+      "advertised_upstream_name": "Cloudflare | cloudflare/clef-flash",
+      "immutable_checkpoint_proven": false,
+      "quantization": "unknown",
+      "advertised_service_tier": null,
+      "context_length": 24576,
+      "pricing_per_token": {
+        "prompt": "0.000000038",
+        "completion": "0",
+        "discount": 0
+      },
+      "supported_parameters": [],
+      "supports_implicit_caching": false,
+      "schema": null,
+      "paid_attempts": 0,
+      "capture_file": "captures/cloudflare--clef-flash.json",
+      "unresolved": [
+        "Full finite choices/states/evidence contract",
+        "Single-request capacity",
+        "Provider-specific billed-input upper bound and preflight enforcement",
+        "Actual response identity and charge reconciliation",
+        "Selected OpenRouter Cloudflare adapter mapping to Workers AI",
+        "Selected OpenRouter Cloudflare question-count cap and state truncation behavior",
+        "DeepInfra and PrimeIntellect question caps/truncation require separate host evidence; Workers AI cap is not inherited"
+      ],
+      "request_max_tokens_field": null,
+      "selected_route_limit_assessment": {
+        "surface": "OpenRouter Decisions API",
+        "provider_tag": "cloudflare",
+        "max_questions": null,
+        "state_truncation": "Unverified",
+        "workers_ai_adapter_mapping": "Unverified",
+        "status": "Not admitted; not proven incompatible"
+      },
+      "workers_ai_reference_only": {
+        "surface": "Workers AI @cf/cloudflare/clef-flash",
+        "question_min": 1,
+        "question_max": 64,
+        "long_state_truncation_documented": true,
+        "proposed_atomic_stage_fits": false,
+        "limit_proven_for_selected_openrouter_adapter": false,
+        "limit_applies_to_local_weights": false,
+        "source": "https://developers.cloudflare.com/workers-ai/models/clef-flash/"
+      },
+      "other_openrouter_host_limits": [
+        {
+          "provider_tag": "deepinfra/bf16",
+          "max_questions": null,
+          "state_truncation": "Unverified",
+          "status": "Not admitted; not proven incompatible"
+        },
+        {
+          "provider_tag": "primeintellect",
+          "max_questions": null,
+          "state_truncation": "Unverified",
+          "status": "Not admitted; not proven incompatible"
+        }
+      ],
+      "no_hidden_splitting_or_packing": true
+    },
+    {
+      "candidate_id": "jev-1.13.0@typesafe-direct",
+      "status": "Research identity only; not admitted or compatibility tested",
+      "model_parameter": "jev-1.13.0",
+      "method": "POST",
+      "url": "https://api.typesafe.ai/v1/systemone",
+      "price_usd_per_million_input": "0.042",
+      "price_output": "0",
+      "context_limits": {
+        "request_default": 64000,
+        "state_plus_one_question_default": 32000,
+        "exact_k_convention_unverified": true
+      },
+      "long_context_header": null,
+      "request_max_tokens_field": null,
+      "paid_attempts": 0,
+      "schema": null,
+      "source": "https://docs.typesafe.ai/models",
+      "unresolved": [
+        "Organization access/quota/account pricing",
+        "Proprietary input tokenization and billing wrapper bound",
+        "Complete single-request finite adapter",
+        "Actual output coverage and response identity"
+      ],
+      "assessment_contract_reference": "legacy_assessment_contract"
+    },
+    {
+      "candidate_id": "jev-1.14.0@typesafe-direct",
+      "status": "Research identity only; not admitted or compatibility tested",
+      "model_parameter": "jev-1.14.0",
+      "method": "POST",
+      "url": "https://api.typesafe.ai/v1/systemone",
+      "price_usd_per_million_input": "0.042",
+      "price_output": "0",
+      "context_limits": {
+        "request_default": 64000,
+        "state_plus_one_question_default": 32000,
+        "exact_k_convention_unverified": true
+      },
+      "long_context_header": null,
+      "request_max_tokens_field": null,
+      "paid_attempts": 0,
+      "schema": null,
+      "source": "https://docs.typesafe.ai/models",
+      "unresolved": [
+        "Organization access/quota/account pricing",
+        "Proprietary input tokenization and billing wrapper bound",
+        "Complete single-request finite adapter",
+        "Actual output coverage and response identity"
+      ],
+      "assessment_contract_reference": "legacy_assessment_contract"
+    }
+  ],
+  "correction_record": "corrections.md",
+  "pending_decisions": {
+    "Q7": "Unanswered; pending baseline/evaluation publication scope excludes provider assets",
+    "Q8": "Unanswered; evidence-first composition/subset policy",
+    "Q9": "Unanswered; small representation extension"
+  },
+  "legacy_assessment_contract": {
+    "purpose": "Proposed complete-document compatibility; not a fair universal test of best native classifier representation",
+    "legacy_trait_count": 74,
+    "assessed_integer_categories": 11,
+    "explicit_nonordinal_states": [
+      "unknown",
+      "not_applicable",
+      "not_assessed"
+    ],
+    "choice_options_per_trait_candidate": 14,
+    "applies_to": "This proposed native-category and explicit-state adapter only",
+    "coarse_score_projection": "Possible separate design answering another question; no projection, rounding, scale or lineup change approved",
+    "illustrative_atomic_inventory": 98,
+    "inventory_is_universal_minimum": false
+  }
+}

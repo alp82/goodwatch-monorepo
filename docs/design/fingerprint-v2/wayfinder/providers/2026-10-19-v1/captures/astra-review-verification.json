@@ -1,0 +1,1208 @@
+{
+  "status": "Independent review complete; two targeted corrections required before research acceptance",
+  "worker_root": "/home/alp/dev/projects/goodwatch/goodwatch-monorepo-fd47ad2f/docs/design/fingerprint-v2/wayfinder/providers/2026-10-19-v1",
+  "worker_assets_sha256_at_start": {
+    "sources.json": "108098f3567493ddd5ef5314d4771ccd9e343038039ad2b58658eb1805fc841c",
+    "provider-contracts.md": "cc5844acd2307d98aa14a090163f67ae7fc96a5e4d1808c29265db7b6b30beb1",
+    "route-candidates.json": "a3cb996502434e25f56cce34557a8b254b834b41ca927f140d71ce352c356a8a",
+    "provenance.json": "af3cf9fe57aece9c8f5180703c7db8393768054651ad268afbb22e36e8d60668",
+    "proposed-resolution.md": "4b0218a49ac8a64c8fccabe23a262b206aefc64e10c85755f5dac591623f78a0",
+    "checks.json": "aa4b68db6a83fee6e4865c0af0950bba63ff2ef208fc7ee329844bc4a3ca6b7d",
+    "SHA256SUMS": "2a064c8b846633d2edf1215cae4c67f76132275f6b5efb9fde93fbcf35f26424",
+    "captures/issue-719-start.json": "2d2ddda662aab53bdf3e8a2ef3a54debc22cd1a06f56c9517831533f19271d27",
+    "captures/issue-719-timeline-start.json": "18fd7013af3ab10d6636c79aa7bb61f6ab5ec0157ee1eb6e1d2c127c8d8f11aa",
+    "captures/mistralai--mistral-small-2603.json": "414786ee95f810dc76276a7105cdb6b16479bef1e5efb9780d90f4ab06788653",
+    "captures/google--gemini-2.5-flash-lite.json": "9eb8ead54d9f82593a9ab88c63233e90b2818767dc83b5acdcb81573de099c0d",
+    "captures/qwen--qwen3.7-flash.json": "fede47dfb28a532e8486275c51052b8d43508a1122153cb1c683da88fc6c849b",
+    "captures/qwen--qwen3.8-flash.json": "dba31e99c5974df3032fb0239bee0f3032a288e30694a3c0f085729c0af6289c",
+    "captures/deepseek--deepseek-v4-flash.json": "dfff8447dc3fca2937d4f72c671575a676cee72176cc6af7d05b5e71e0fb6791",
+    "captures/openai--gpt-oss-20b.json": "2da2b55139100bee92f009dc3c4dddec7a9ae14ecb900e33349ffa996586fe8e",
+    "captures/z-ai--glm-5.3-flash.json": "965b85ed66a20e50d39abe30b230d9c3c2c42b53adb673dd027f993e09339c8c",
+    "captures/endpoint-fetch-register.json": "97f599854b83dc50e0b00852d663ef017ae47a580a08d3e28d2254678132190b",
+    "captures/local-model-metadata.json": "62486f46c3d82cdba7432a20acb7aa27941f60d704a9e4fbd3519448d7d9314a",
+    "captures/liquid--d1.json": "d79429123623c3c76641bf911daf695d0defa43ed9084dceb55fc445324c4b91",
+    "captures/typesafe--jev-1.13.json": "dbfc5c2adb571a5af0bc7ba627683a4d6060683bf568a2e5784e36e332fcfaa5",
+    "captures/typesafe--jev-1.14.json": "e95ee387c4bb60e207c04553675cccf44bdacce35d75d3dfbb7de9eefa7f2705",
+    "captures/microsoft--microsoft-decision-1.json": "a3748cefb9601f855ed4f42aa385ecfe61cceeb2d58fe24acb65e5d27057e133",
+    "captures/cloudflare--clef-flash.json": "4544b66862b3fab5b9874d8e1900003c15c1e2395d0ad0489d5f57b360ee52b4",
+    "captures/perplexity--pplx-decider-flash-v1.2.json": "8fb28e4630f3c898b1a7671daac3861ded0c641cd2bb833e2ad02d18f5a7e158",
+    "captures/inception--mercury-decide.json": "1d08d4675dff4a6ef7cf46b13f2985a3ca11f29e9a51cf6d419f9e7e658750e6",
+    "captures/upstage--solar-decide-flash.json": "7566ff8d9ccacf3574ac4ae7dadb7b5490069d4091f381d053719e4254e379b8",
+    "captures/decision-endpoint-fetch-register.json": "ce407b4325cf8cee293f71f3161a7c1368e09165298c638806a8e6e33c678ab8",
+    "captures/local-decision-model-metadata.json": "3e4d7d43c7c9cbe515d8b41d93045353762bdbce864c6cf893729235af2bbf5d",
+    "captures/default-catalog-decision-filter.json": "8f522edadfc897454fa73403382ad719602d237ccb5e8b283ae78f6dc1961966",
+    "captures/issue-719-end.json": "2d2ddda662aab53bdf3e8a2ef3a54debc22cd1a06f56c9517831533f19271d27",
+    "captures/issue-719-timeline-end.json": "18fd7013af3ab10d6636c79aa7bb61f6ab5ec0157ee1eb6e1d2c127c8d8f11aa"
+  },
+  "worker_seal_checks": [
+    {
+      "file": "captures/cloudflare--clef-flash.json",
+      "matches": true
+    },
+    {
+      "file": "captures/decision-endpoint-fetch-register.json",
+      "matches": true
+    },
+    {
+      "file": "captures/deepseek--deepseek-v4-flash.json",
+      "matches": true
+    },
+    {
+      "file": "captures/default-catalog-decision-filter.json",
+      "matches": true
+    },
+    {
+      "file": "captures/endpoint-fetch-register.json",
+      "matches": true
+    },
+    {
+      "file": "captures/google--gemini-2.5-flash-lite.json",
+      "matches": true
+    },
+    {
+      "file": "captures/inception--mercury-decide.json",
+      "matches": true
+    },
+    {
+      "file": "captures/issue-719-end.json",
+      "matches": true
+    },
+    {
+      "file": "captures/issue-719-start.json",
+      "matches": true
+    },
+    {
+      "file": "captures/issue-719-timeline-end.json",
+      "matches": true
+    },
+    {
+      "file": "captures/issue-719-timeline-start.json",
+      "matches": true
+    },
+    {
+      "file": "captures/liquid--d1.json",
+      "matches": true
+    },
+    {
+      "file": "captures/local-decision-model-metadata.json",
+      "matches": true
+    },
+    {
+      "file": "captures/local-model-metadata.json",
+      "matches": true
+    },
+    {
+      "file": "captures/microsoft--microsoft-decision-1.json",
+      "matches": true
+    },
+    {
+      "file": "captures/mistralai--mistral-small-2603.json",
+      "matches": true
+    },
+    {
+      "file": "captures/openai--gpt-oss-20b.json",
+      "matches": true
+    },
+    {
+      "file": "captures/perplexity--pplx-decider-flash-v1.2.json",
+      "matches": true
+    },
+    {
+      "file": "captures/qwen--qwen3.7-flash.json",
+      "matches": true
+    },
+    {
+      "file": "captures/qwen--qwen3.8-flash.json",
+      "matches": true
+    },
+    {
+      "file": "captures/typesafe--jev-1.13.json",
+      "matches": true
+    },
+    {
+      "file": "captures/typesafe--jev-1.14.json",
+      "matches": true
+    },
+    {
+      "file": "captures/upstage--solar-decide-flash.json",
+      "matches": true
+    },
+    {
+      "file": "captures/z-ai--glm-5.3-flash.json",
+      "matches": true
+    },
+    {
+      "file": "checks.json",
+      "matches": true
+    },
+    {
+      "file": "proposed-resolution.md",
+      "matches": true
+    },
+    {
+      "file": "provenance.json",
+      "matches": true
+    },
+    {
+      "file": "provider-contracts.md",
+      "matches": true
+    },
+    {
+      "file": "route-candidates.json",
+      "matches": true
+    },
+    {
+      "file": "sources.json",
+      "matches": true
+    }
+  ],
+  "independent_public_gets": [
+    {
+      "url": "https://docs.typesafe.ai/models.md",
+      "read_at": "2026-10-19T09:18:21.126407+00:00",
+      "http_status": 200,
+      "final_url": "https://docs.typesafe.ai/models.md",
+      "sha256": "02b7682a7176d2d6649a2fa4588df45cbbaa3c3460f721828d632a7577e606df",
+      "bytes": 7971,
+      "matches_worker_response_hash": true
+    },
+    {
+      "url": "https://docs.typesafe.ai/primitives/choice.md",
+      "read_at": "2026-10-19T09:18:21.126861+00:00",
+      "http_status": 200,
+      "final_url": "https://docs.typesafe.ai/primitives/choice.md",
+      "sha256": "ae9c49b815ee30b28ed851e22b63041130fba50ae41368d41a5d80b571f383bb",
+      "bytes": 26907,
+      "matches_worker_response_hash": true
+    },
+    {
+      "url": "https://docs.typesafe.ai/primitives/score.md",
+      "read_at": "2026-10-19T09:18:21.127080+00:00",
+      "http_status": 200,
+      "final_url": "https://docs.typesafe.ai/primitives/score.md",
+      "sha256": "a0a39b9c01f5ac3616efae071bf23f879bbe3fb12b0af2169932dbb71dd83d32",
+      "bytes": 43770,
+      "matches_worker_response_hash": true
+    },
+    {
+      "url": "https://docs.typesafe.ai/api.md",
+      "read_at": "2026-10-19T09:18:21.127233+00:00",
+      "http_status": 200,
+      "final_url": "https://docs.typesafe.ai/api.md",
+      "sha256": "37f0f3a41917e17592876f67848bd63329ba576081a89704f28210f0efc3c0f6",
+      "bytes": 12905,
+      "matches_worker_response_hash": true
+    },
+    {
+      "url": "https://docs.typesafe.ai/cookbooks/parallel_questions.md",
+      "read_at": "2026-10-19T09:18:21.127402+00:00",
+      "http_status": 200,
+      "final_url": "https://docs.typesafe.ai/cookbooks/parallel_questions.md",
+      "sha256": "1f4574474139321a1e05b31887a18ffe1dd3235169276aa4b600c6ebc110aee8",
+      "bytes": 48597,
+      "matches_worker_response_hash": true
+    },
+    {
+      "url": "https://docs.typesafe.ai/primitives/advanced.md",
+      "read_at": "2026-10-19T09:18:21.127813+00:00",
+      "http_status": 200,
+      "final_url": "https://docs.typesafe.ai/primitives/advanced.md",
+      "sha256": "650a61153fe3d16619e57c8f81fc03b570d663c40dd2fe94df6e57db6c906f62",
+      "bytes": 18943,
+      "matches_worker_response_hash": true
+    },
+    {
+      "url": "https://openrouter.ai/api/v1/models/typesafe/jev-1.14/endpoints",
+      "read_at": "2026-10-19T09:18:21.128070+00:00",
+      "http_status": 200,
+      "final_url": "https://openrouter.ai/api/v1/models/typesafe/jev-1.14/endpoints",
+      "sha256": "e95ee387c4bb60e207c04553675cccf44bdacce35d75d3dfbb7de9eefa7f2705",
+      "bytes": 1241,
+      "endpoint_data": {
+        "data": {
+          "id": "typesafe/jev-1.14",
+          "name": "TypeSafe: Jev 1.14",
+          "created": 1792021417,
+          "description": "Jev 1.14 is the latest version of Jev, TypeSafe's structured decision model and the first of its System One models. System One models make fast, structured decisions for software, returning...",
+          "architecture": {
+            "tokenizer": "Other",
+            "instruct_type": null,
+            "modality": "text+image->decisions",
+            "input_modalities": [
+              "text",
+              "image"
+            ],
+            "output_modalities": [
+              "decisions"
+            ]
+          },
+          "endpoints": [
+            {
+              "name": "TypeSafe | typesafe/jev-1.14-20261014",
+              "model_id": "typesafe/jev-1.14",
+              "model_name": "TypeSafe: Jev 1.14",
+              "context_length": 262144,
+              "pricing": {
+                "prompt": "0.000000042",
+                "completion": "0",
+                "discount": 0
+              },
+              "provider_name": "TypeSafe",
+              "tag": "typesafe",
+              "service_tier": null,
+              "quantization": "unknown",
+              "max_completion_tokens": 235929,
+              "max_prompt_tokens": 262144,
+              "supported_parameters": [],
+              "supports_tool_choice": {
+                "none": true,
+                "auto": true,
+                "required": true,
+                "function": true
+              },
+              "status": 0,
+              "uptime_last_30m": 100,
+              "uptime_last_5m": 100,
+              "uptime_last_1d": 100,
+              "supports_implicit_caching": false,
+              "native_tools": {},
+              "supports_voice_cloning": false,
+              "supports_multiple_audio_references": false,
+              "supports_image_reference": false,
+              "supports_diarization": false,
+              "latency_last_30m": null,
+              "throughput_last_30m": null
+            }
+          ]
+        }
+      },
+      "material_endpoint_fields_match_worker": true
+    },
+    {
+      "url": "https://openrouter.ai/api/v1/models/typesafe/jev-1.13/endpoints",
+      "read_at": "2026-10-19T09:18:21.128333+00:00",
+      "http_status": 200,
+      "final_url": "https://openrouter.ai/api/v1/models/typesafe/jev-1.13/endpoints",
+      "sha256": "dbfc5c2adb571a5af0bc7ba627683a4d6060683bf568a2e5784e36e332fcfaa5",
+      "bytes": 1237,
+      "endpoint_data": {
+        "data": {
+          "id": "typesafe/jev-1.13",
+          "name": "TypeSafe: Jev 1.13",
+          "created": 1789689684,
+          "description": "Jev is a structured decision model from TypeSafe, and the first of its System One models. System One models make fast, structured decisions for software, returning a typed choice rather...",
+          "architecture": {
+            "tokenizer": "Other",
+            "instruct_type": null,
+            "modality": "text+image->decisions",
+            "input_modalities": [
+              "text",
+              "image"
+            ],
+            "output_modalities": [
+              "decisions"
+            ]
+          },
+          "endpoints": [
+            {
+              "name": "TypeSafe | typesafe/jev-1.13-20260917",
+              "model_id": "typesafe/jev-1.13",
+              "model_name": "TypeSafe: Jev 1.13",
+              "context_length": 262144,
+              "pricing": {
+                "prompt": "0.000000042",
+                "completion": "0",
+                "discount": 0
+              },
+              "provider_name": "TypeSafe",
+              "tag": "typesafe",
+              "service_tier": null,
+              "quantization": "unknown",
+              "max_completion_tokens": 235929,
+              "max_prompt_tokens": 262144,
+              "supported_parameters": [],
+              "supports_tool_choice": {
+                "none": true,
+                "auto": true,
+                "required": true,
+                "function": true
+              },
+              "status": 0,
+              "uptime_last_30m": 100,
+              "uptime_last_5m": 100,
+              "uptime_last_1d": 100,
+              "supports_implicit_caching": false,
+              "native_tools": {},
+              "supports_voice_cloning": false,
+              "supports_multiple_audio_references": false,
+              "supports_image_reference": false,
+              "supports_diarization": false,
+              "latency_last_30m": null,
+              "throughput_last_30m": null
+            }
+          ]
+        }
+      },
+      "material_endpoint_fields_match_worker": true
+    },
+    {
+      "url": "https://openrouter.ai/api/v1/models/qwen/qwen3.8-flash/endpoints",
+      "read_at": "2026-10-19T09:18:21.128671+00:00",
+      "http_status": 200,
+      "final_url": "https://openrouter.ai/api/v1/models/qwen/qwen3.8-flash/endpoints",
+      "sha256": "dba31e99c5974df3032fb0239bee0f3032a288e30694a3c0f085729c0af6289c",
+      "bytes": 2612,
+      "endpoint_data": {
+        "data": {
+          "id": "qwen/qwen3.8-flash",
+          "name": "Qwen: Qwen3.8 Flash",
+          "created": 1787773060,
+          "description": "Qwen3.8 Flash is a multimodal reasoning model from Alibaba. It is suited for coding assistance, agentic workflows, visual understanding, document and codebase analysis, desktop interaction, chart analysis, and long-video analysis.",
+          "architecture": {
+            "tokenizer": "Qwen",
+            "instruct_type": null,
+            "modality": "text+image+video->text",
+            "input_modalities": [
+              "text",
+              "image",
+              "video"
+            ],
+            "output_modalities": [
+              "text"
+            ]
+          },
+          "endpoints": [
+            {
+              "name": "Alibaba | qwen/qwen3.8-flash-20260826",
+              "model_id": "qwen/qwen3.8-flash",
+              "model_name": "Qwen: Qwen3.8 Flash",
+              "context_length": 1000000,
+              "pricing": {
+                "prompt": "0.00000015",
+                "completion": "0.00000047",
+                "input_cache_read": "0.000000016",
+                "discount": 0
+              },
+              "provider_name": "Alibaba",
+              "tag": "alibaba/us-east-1",
+              "service_tier": null,
+              "quantization": "unknown",
+              "max_completion_tokens": 131072,
+              "max_prompt_tokens": 983616,
+              "supported_parameters": [
+                "reasoning",
+                "include_reasoning",
+                "max_tokens",
+                "temperature",
+                "top_p",
+                "seed",
+                "presence_penalty",
+                "response_format",
+                "tools",
+                "structured_outputs",
+                "top_k",
+                "frequency_penalty",
+                "stop",
+                "logprobs",
+                "top_logprobs",
+                "tool_choice"
+              ],
+              "supports_tool_choice": {
+                "none": true,
+                "auto": true,
+                "required": false,
+                "function": false
+              },
+              "status": 0,
+              "uptime_last_30m": 100,
+              "uptime_last_5m": 100,
+              "uptime_last_1d": 100,
+              "supports_implicit_caching": true,
+              "native_tools": {},
+              "supports_voice_cloning": false,
+              "supports_multiple_audio_references": false,
+              "supports_image_reference": false,
+              "supports_diarization": false,
+              "latency_last_30m": null,
+              "throughput_last_30m": null
+            },
+            {
+              "name": "Alibaba | qwen/qwen3.8-flash-20260826",
+              "model_id": "qwen/qwen3.8-flash",
+              "model_name": "Qwen: Qwen3.8 Flash",
+              "context_length": 1000000,
+              "pricing": {
+                "prompt": "0.00000015",
+                "completion": "0.00000047",
+                "input_cache_read": "0.000000016",
+                "input_cache_write": "0.0000002",
+                "discount": 0
+              },
+              "provider_name": "Alibaba",
+              "tag": "alibaba",
+              "service_tier": null,
+              "quantization": "unknown",
+              "max_completion_tokens": 131072,
+              "max_prompt_tokens": 983616,
+              "supported_parameters": [
+                "reasoning",
+                "include_reasoning",
+                "max_tokens",
+                "temperature",
+                "top_p",
+                "seed",
+                "presence_penalty",
+                "response_format",
+                "tools",
+                "structured_outputs",
+                "top_k",
+                "frequency_penalty",
+                "stop",
+                "logprobs",
+                "top_logprobs",
+                "tool_choice"
+              ],
+              "supports_tool_choice": {
+                "none": true,
+                "auto": true,
+                "required": false,
+                "function": false
+              },
+              "status": 0,
+              "uptime_last_30m": 100,
+              "uptime_last_5m": 100,
+              "uptime_last_1d": 100,
+              "supports_implicit_caching": false,
+              "native_tools": {},
+              "supports_voice_cloning": false,
+              "supports_multiple_audio_references": false,
+              "supports_image_reference": false,
+              "supports_diarization": false,
+              "latency_last_30m": null,
+              "throughput_last_30m": null
+            }
+          ]
+        }
+      },
+      "material_endpoint_fields_match_worker": true
+    },
+    {
+      "url": "https://openrouter.ai/api/v1/models/qwen/qwen3.7-flash/endpoints",
+      "read_at": "2026-10-19T09:18:21.128932+00:00",
+      "http_status": 200,
+      "final_url": "https://openrouter.ai/api/v1/models/qwen/qwen3.7-flash/endpoints",
+      "sha256": "fede47dfb28a532e8486275c51052b8d43508a1122153cb1c683da88fc6c849b",
+      "bytes": 3031,
+      "endpoint_data": {
+        "data": {
+          "id": "qwen/qwen3.7-flash",
+          "name": "Qwen: Qwen3.7 Flash",
+          "created": 1785190561,
+          "description": "Qwen3.7 Flash is a vision-language reasoning model from Alibaba. It is suited for multimodal agents, visual coding, search, and computer interaction, with strengths in object recognition, spatial understanding, and real-world...",
+          "architecture": {
+            "tokenizer": "Qwen",
+            "instruct_type": null,
+            "modality": "text+image+video->text",
+            "input_modalities": [
+              "text",
+              "image",
+              "video"
+            ],
+            "output_modalities": [
+              "text"
+            ]
+          },
+          "endpoints": [
+            {
+              "name": "Alibaba | qwen/qwen3.7-flash-20260727",
+              "model_id": "qwen/qwen3.7-flash",
+              "model_name": "Qwen: Qwen3.7 Flash",
+              "context_length": 1000000,
+              "pricing": {
+                "prompt": "0.00000003",
+                "completion": "0.00000013",
+                "input_cache_read": "0.000000006",
+                "input_cache_write": "0.000000038",
+                "discount": 0,
+                "overrides": [
+                  {
+                    "min_prompt_tokens": 32000,
+                    "prompt": "0.0000001",
+                    "completion": "0.0000004",
+                    "input_cache_read": "0.00000002",
+                    "input_cache_write": "0.000000125"
+                  },
+                  {
+                    "min_prompt_tokens": 256000,
+                    "prompt": "0.0000002",
+                    "completion": "0.0000008",
+                    "input_cache_read": "0.00000004",
+                    "input_cache_write": "0.00000025"
+                  }
+                ]
+              },
+              "provider_name": "Alibaba",
+              "tag": "alibaba",
+              "service_tier": null,
+              "quantization": "unknown",
+              "max_completion_tokens": 65536,
+              "max_prompt_tokens": 983616,
+              "supported_parameters": [
+                "reasoning",
+                "include_reasoning",
+                "max_tokens",
+                "temperature",
+                "top_p",
+                "seed",
+                "presence_penalty",
+                "response_format",
+                "logprobs",
+                "top_logprobs",
+                "tools",
+                "tool_choice"
+              ],
+              "supports_tool_choice": {
+                "none": true,
+                "auto": true,
+                "required": false,
+                "function": false
+              },
+              "status": 0,
+              "uptime_last_30m": 100,
+              "uptime_last_5m": 100,
+              "uptime_last_1d": 100,
+              "supports_implicit_caching": false,
+              "native_tools": {},
+              "supports_voice_cloning": false,
+              "supports_multiple_audio_references": false,
+              "supports_image_reference": false,
+              "supports_diarization": false,
+              "latency_last_30m": null,
+              "throughput_last_30m": null
+            },
+            {
+              "name": "Alibaba | qwen/qwen3.7-flash-20260727",
+              "model_id": "qwen/qwen3.7-flash",
+              "model_name": "Qwen: Qwen3.7 Flash",
+              "context_length": 1000000,
+              "pricing": {
+                "prompt": "0.0000000345",
+                "completion": "0.0000001495",
+                "input_cache_read": "0.0000000069",
+                "discount": 0,
+                "overrides": [
+                  {
+                    "min_prompt_tokens": 32000,
+                    "prompt": "0.000000115",
+                    "completion": "0.00000046",
+                    "input_cache_read": "0.000000023"
+                  },
+                  {
+                    "min_prompt_tokens": 256000,
+                    "prompt": "0.00000023",
+                    "completion": "0.00000092",
+                    "input_cache_read": "0.000000046"
+                  }
+                ]
+              },
+              "provider_name": "Alibaba",
+              "tag": "alibaba/us-east-1",
+              "service_tier": null,
+              "quantization": "unknown",
+              "max_completion_tokens": 65536,
+              "max_prompt_tokens": 983616,
+              "supported_parameters": [
+                "reasoning",
+                "include_reasoning",
+                "max_tokens",
+                "temperature",
+                "top_p",
+                "seed",
+                "presence_penalty",
+                "response_format",
+                "logprobs",
+                "top_logprobs",
+                "tools",
+                "tool_choice"
+              ],
+              "supports_tool_choice": {
+                "none": true,
+                "auto": true,
+                "required": false,
+                "function": false
+              },
+              "status": 0,
+              "uptime_last_30m": 100,
+              "uptime_last_5m": 100,
+              "uptime_last_1d": 100,
+              "supports_implicit_caching": true,
+              "native_tools": {},
+              "supports_voice_cloning": false,
+              "supports_multiple_audio_references": false,
+              "supports_image_reference": false,
+              "supports_diarization": false,
+              "latency_last_30m": null,
+              "throughput_last_30m": null
+            }
+          ]
+        }
+      },
+      "material_endpoint_fields_match_worker": true
+    },
+    {
+      "url": "https://docs.liquid.ai/lfm/models/decision-models.md",
+      "read_at": "2026-10-19T09:20:04.998928+00:00",
+      "http_status": 200,
+      "final_url": "https://docs.liquid.ai/lfm/models/decision-models.md",
+      "sha256": "f14678de2b0cc991da8fadcb9ca767a16afc1e8ac1a34449c129a7cd8acc264d",
+      "bytes": 6010,
+      "matches_worker_response_hash": true
+    },
+    {
+      "url": "https://docs.liquid.ai/lfm/models/d1.md",
+      "read_at": "2026-10-19T09:20:04.999382+00:00",
+      "http_status": 200,
+      "final_url": "https://docs.liquid.ai/lfm/models/d1.md",
+      "sha256": "608961bf87c2ecb10f1a1022ed37b044c4e5364c0d7f7b9545e928d15ea324fe",
+      "bytes": 35196,
+      "matches_worker_response_hash": true
+    },
+    {
+      "url": "https://www.liquid.ai/blog/d1-decision-model",
+      "read_at": "2026-10-19T09:20:04.999626+00:00",
+      "http_status": 200,
+      "final_url": "https://www.liquid.ai/blog/d1-decision-model",
+      "sha256": "589ac354bc1cd912266e84ce00155e5681b86ec4d7301d79d76cc181c1009980",
+      "bytes": 224535
+    },
+    {
+      "url": "https://www.liquid.ai/pricing",
+      "read_at": "2026-10-19T09:20:04.999846+00:00",
+      "http_status": 200,
+      "final_url": "https://www.liquid.ai/pricing",
+      "sha256": "af03fdde18008f1bf876475cb94ae55649309b61de6c92c9ed76edc6d5622b58",
+      "bytes": 156374,
+      "matches_worker_response_hash": true
+    },
+    {
+      "url": "https://developers.cloudflare.com/workers-ai/models/clef-flash/index.md",
+      "read_at": "2026-10-19T09:20:05.000132+00:00",
+      "http_status": 200,
+      "final_url": "https://developers.cloudflare.com/workers-ai/models/clef-flash/index.md",
+      "sha256": "34422ff0cc525ae61a8cb506bd5182cf4a0260872b7025dd5ae16a281d4dd0de",
+      "bytes": 9011
+    },
+    {
+      "url": "https://openrouter.ai/api/v1/models/liquid/d1/endpoints",
+      "read_at": "2026-10-19T09:20:05.000761+00:00",
+      "http_status": 200,
+      "final_url": "https://openrouter.ai/api/v1/models/liquid/d1/endpoints",
+      "sha256": "d79429123623c3c76641bf911daf695d0defa43ed9084dceb55fc445324c4b91",
+      "bytes": 1214,
+      "endpoint_data": {
+        "data": {
+          "id": "liquid/d1",
+          "name": "LiquidAI: d1",
+          "created": 1790878711,
+          "description": "d1 is Liquid AI's structured decision model, served as a System One endpoint. Send a state along with typed questions, and it returns a choice, a score, or a yes/no...",
+          "architecture": {
+            "tokenizer": "Other",
+            "instruct_type": null,
+            "modality": "text+image->decisions",
+            "input_modalities": [
+              "text",
+              "image"
+            ],
+            "output_modalities": [
+              "decisions"
+            ]
+          },
+          "endpoints": [
+            {
+              "name": "Liquid | liquid/d1-20260930",
+              "model_id": "liquid/d1",
+              "model_name": "LiquidAI: d1",
+              "context_length": 65536,
+              "pricing": {
+                "prompt": "0.00000002",
+                "completion": "0",
+                "input_cache_read": "0.00000002",
+                "discount": 0
+              },
+              "provider_name": "Liquid",
+              "tag": "liquid",
+              "service_tier": null,
+              "quantization": "unknown",
+              "max_completion_tokens": 58982,
+              "max_prompt_tokens": null,
+              "supported_parameters": [],
+              "supports_tool_choice": {
+                "none": true,
+                "auto": true,
+                "required": true,
+                "function": true
+              },
+              "status": 0,
+              "uptime_last_30m": 100,
+              "uptime_last_5m": 100,
+              "uptime_last_1d": 99.47683109118086,
+              "supports_implicit_caching": true,
+              "native_tools": {},
+              "supports_voice_cloning": false,
+              "supports_multiple_audio_references": false,
+              "supports_image_reference": false,
+              "supports_diarization": false,
+              "latency_last_30m": null,
+              "throughput_last_30m": null
+            }
+          ]
+        }
+      },
+      "material_endpoint_fields_match_worker": true
+    },
+    {
+      "url": "https://openrouter.ai/api/v1/models/cloudflare/clef-flash/endpoints",
+      "read_at": "2026-10-19T09:20:05.001121+00:00",
+      "http_status": 200,
+      "final_url": "https://openrouter.ai/api/v1/models/cloudflare/clef-flash/endpoints",
+      "sha256": "4544b66862b3fab5b9874d8e1900003c15c1e2395d0ad0489d5f57b360ee52b4",
+      "bytes": 2811,
+      "endpoint_data": {
+        "data": {
+          "id": "cloudflare/clef-flash",
+          "name": "Cloudflare: Clef Flash",
+          "created": 1790870973,
+          "description": "Clef-flash is the fast 9B member of Cloudflare's open-source Clef decision model family, a fine-tune of Qwen3.5-9B served on Workers AI. It turns a state (text or structured JSON) plus...",
+          "architecture": {
+            "tokenizer": "Qwen",
+            "instruct_type": null,
+            "modality": "text+image->decisions",
+            "input_modalities": [
+              "text",
+              "image"
+            ],
+            "output_modalities": [
+              "decisions"
+            ]
+          },
+          "endpoints": [
+            {
+              "name": "PrimeIntellect | cloudflare/clef-flash",
+              "model_id": "cloudflare/clef-flash",
+              "model_name": "Cloudflare: Clef Flash",
+              "context_length": 16384,
+              "pricing": {
+                "prompt": "0.000000021",
+                "completion": "0",
+                "discount": 0
+              },
+              "provider_name": "PrimeIntellect",
+              "tag": "primeintellect",
+              "service_tier": null,
+              "quantization": "unknown",
+              "max_completion_tokens": 14745,
+              "max_prompt_tokens": null,
+              "supported_parameters": [],
+              "supports_tool_choice": {
+                "none": true,
+                "auto": true,
+                "required": true,
+                "function": true
+              },
+              "status": 0,
+              "uptime_last_30m": 100,
+              "uptime_last_5m": 100,
+              "uptime_last_1d": 100,
+              "supports_implicit_caching": false,
+              "native_tools": {},
+              "supports_voice_cloning": false,
+              "supports_multiple_audio_references": false,
+              "supports_image_reference": false,
+              "supports_diarization": false,
+              "latency_last_30m": null,
+              "throughput_last_30m": null
+            },
+            {
+              "name": "DeepInfra | cloudflare/clef-flash",
+              "model_id": "cloudflare/clef-flash",
+              "model_name": "Cloudflare: Clef Flash",
+              "context_length": 24576,
+              "pricing": {
+                "prompt": "0.000000038",
+                "completion": "0",
+                "discount": 0
+              },
+              "provider_name": "DeepInfra",
+              "tag": "deepinfra/bf16",
+              "service_tier": null,
+              "quantization": "bf16",
+              "max_completion_tokens": 22118,
+              "max_prompt_tokens": null,
+              "supported_parameters": [],
+              "supports_tool_choice": {
+                "none": true,
+                "auto": true,
+                "required": true,
+                "function": true
+              },
+              "status": 0,
+              "uptime_last_30m": 100,
+              "uptime_last_5m": 100,
+              "uptime_last_1d": 100,
+              "supports_implicit_caching": false,
+              "native_tools": {},
+              "supports_voice_cloning": false,
+              "supports_multiple_audio_references": false,
+              "supports_image_reference": false,
+              "supports_diarization": false,
+              "latency_last_30m": null,
+              "throughput_last_30m": null
+            },
+            {
+              "name": "Cloudflare | cloudflare/clef-flash",
+              "model_id": "cloudflare/clef-flash",
+              "model_name": "Cloudflare: Clef Flash",
+              "context_length": 24576,
+              "pricing": {
+                "prompt": "0.000000038",
+                "completion": "0",
+                "discount": 0
+              },
+              "provider_name": "Cloudflare",
+              "tag": "cloudflare",
+              "service_tier": null,
+              "quantization": "unknown",
+              "max_completion_tokens": 22118,
+              "max_prompt_tokens": null,
+              "supported_parameters": [],
+              "supports_tool_choice": {
+                "none": true,
+                "auto": true,
+                "required": true,
+                "function": true
+              },
+              "status": 0,
+              "uptime_last_30m": 100,
+              "uptime_last_5m": 100,
+              "uptime_last_1d": 100,
+              "supports_implicit_caching": false,
+              "native_tools": {},
+              "supports_voice_cloning": false,
+              "supports_multiple_audio_references": false,
+              "supports_image_reference": false,
+              "supports_diarization": false,
+              "latency_last_30m": null,
+              "throughput_last_30m": null
+            }
+          ]
+        }
+      },
+      "material_endpoint_fields_match_worker": true
+    },
+    {
+      "url": "https://docs.typesafe.ai/primitives.md",
+      "read_at": "2026-10-19T09:20:05.001317+00:00",
+      "http_status": 200,
+      "final_url": "https://docs.typesafe.ai/primitives.md",
+      "sha256": "acffba767407ea5e21373ec6083c6f6a7536380b1bd508023b6d397e8ae6b8a5",
+      "bytes": 24649
+    },
+    {
+      "url": "https://openrouter.ai/docs/guides/community/jev.md",
+      "read_at": "2026-10-19T09:20:05.001566+00:00",
+      "http_status": 200,
+      "final_url": "https://openrouter.ai/docs/guides/community/jev.md",
+      "sha256": "60117066441da96182021740b020a27b38555033e830305bb538fc30b4970820",
+      "bytes": 13625
+    },
+    {
+      "url": "https://openrouter.ai/docs/api/api-reference/alphadecisions/submit-a-decisions-request.md",
+      "read_at": "2026-10-19T09:20:05.001882+00:00",
+      "http_status": 200,
+      "final_url": "https://openrouter.ai/docs/api/api-reference/alphadecisions/submit-a-decisions-request.md",
+      "sha256": "a63f9e075cd62d16fb71fa59012d6a2db290be9bcb8af5876b4aca8e8758ac7d",
+      "bytes": 58041
+    },
+    {
+      "url": "https://openrouter.ai/docs/guides/routing/provider-selection.md",
+      "read_at": "2026-10-19T09:24:52.729738+00:00",
+      "http_status": 200,
+      "final_url": "https://openrouter.ai/docs/guides/routing/provider-selection.md",
+      "sha256": "99582a25feb1b427d02182eff3800a041c4695b10756c51d67e0977ac922ba51",
+      "bytes": 68678
+    },
+    {
+      "url": "https://openrouter.ai/docs/guides/best-practices/reasoning-tokens.md",
+      "read_at": "2026-10-19T09:24:52.730456+00:00",
+      "http_status": 200,
+      "final_url": "https://openrouter.ai/docs/guides/best-practices/reasoning-tokens.md",
+      "sha256": "caeffc06901c92627c793e6b9ec00fcf5fef6c619941e64f7795caf8444d43ab",
+      "bytes": 49265
+    }
+  ],
+  "no_paid_calls": true,
+  "capture_register_checks": [
+    {
+      "file": "qwen--qwen3.8-flash.json",
+      "source_url": "https://openrouter.ai/api/v1/models/qwen/qwen3.8-flash/endpoints",
+      "recorded_hash_matches": true
+    },
+    {
+      "file": "qwen--qwen3.7-flash.json",
+      "source_url": "https://openrouter.ai/api/v1/models/qwen/qwen3.7-flash/endpoints",
+      "recorded_hash_matches": true
+    },
+    {
+      "file": "mistralai--mistral-small-2603.json",
+      "source_url": "https://openrouter.ai/api/v1/models/mistralai/mistral-small-2603/endpoints",
+      "recorded_hash_matches": true
+    },
+    {
+      "file": "openai--gpt-oss-20b.json",
+      "source_url": "https://openrouter.ai/api/v1/models/openai/gpt-oss-20b/endpoints",
+      "recorded_hash_matches": true
+    },
+    {
+      "file": "google--gemini-2.5-flash-lite.json",
+      "source_url": "https://openrouter.ai/api/v1/models/google/gemini-2.5-flash-lite/endpoints",
+      "recorded_hash_matches": true
+    },
+    {
+      "file": "deepseek--deepseek-v4-flash.json",
+      "source_url": "https://openrouter.ai/api/v1/models/deepseek/deepseek-v4-flash/endpoints",
+      "recorded_hash_matches": true
+    },
+    {
+      "file": "z-ai--glm-5.3-flash.json",
+      "source_url": "https://openrouter.ai/api/v1/models/z-ai/glm-5.3-flash/endpoints",
+      "recorded_hash_matches": true
+    },
+    {
+      "file": "typesafe--jev-1.14.json",
+      "source_url": "https://openrouter.ai/api/v1/models/typesafe/jev-1.14/endpoints",
+      "recorded_hash_matches": true
+    },
+    {
+      "file": "typesafe--jev-1.13.json",
+      "source_url": "https://openrouter.ai/api/v1/models/typesafe/jev-1.13/endpoints",
+      "recorded_hash_matches": true
+    },
+    {
+      "file": "liquid--d1.json",
+      "source_url": "https://openrouter.ai/api/v1/models/liquid/d1/endpoints",
+      "recorded_hash_matches": true
+    },
+    {
+      "file": "cloudflare--clef-flash.json",
+      "source_url": "https://openrouter.ai/api/v1/models/cloudflare/clef-flash/endpoints",
+      "recorded_hash_matches": true
+    },
+    {
+      "file": "microsoft--microsoft-decision-1.json",
+      "source_url": "https://openrouter.ai/api/v1/models/microsoft/microsoft-decision-1/endpoints",
+      "recorded_hash_matches": true
+    },
+    {
+      "file": "perplexity--pplx-decider-flash-v1.2.json",
+      "source_url": "https://openrouter.ai/api/v1/models/perplexity/pplx-decider-flash-v1.2/endpoints",
+      "recorded_hash_matches": true
+    },
+    {
+      "file": "upstage--solar-decide-flash.json",
+      "source_url": "https://openrouter.ai/api/v1/models/upstage/solar-decide-flash/endpoints",
+      "recorded_hash_matches": true
+    },
+    {
+      "file": "inception--mercury-decide.json",
+      "source_url": "https://openrouter.ai/api/v1/models/inception/mercury-decide/endpoints",
+      "recorded_hash_matches": true
+    }
+  ],
+  "route_candidate_capture_checks": [
+    {
+      "candidate": "qwen/qwen3.8-flash@alibaba/us-east-1",
+      "capture": "captures/qwen--qwen3.8-flash.json",
+      "matches": true
+    },
+    {
+      "candidate": "qwen/qwen3.7-flash@alibaba/us-east-1",
+      "capture": "captures/qwen--qwen3.7-flash.json",
+      "matches": true
+    },
+    {
+      "candidate": "mistralai/mistral-small-2603@mistral",
+      "capture": "captures/mistralai--mistral-small-2603.json",
+      "matches": true
+    },
+    {
+      "candidate": "openai/gpt-oss-20b@darkbloom/fp8",
+      "capture": "captures/openai--gpt-oss-20b.json",
+      "matches": true
+    },
+    {
+      "candidate": "google/gemini-2.5-flash-lite@google-ai-studio",
+      "capture": "captures/google--gemini-2.5-flash-lite.json",
+      "matches": true
+    },
+    {
+      "candidate": "typesafe/jev-1.14@typesafe",
+      "capture": "captures/typesafe--jev-1.14.json",
+      "matches": true
+    },
+    {
+      "candidate": "liquid/d1@liquid",
+      "capture": "captures/liquid--d1.json",
+      "matches": true
+    },
+    {
+      "candidate": "cloudflare/clef-flash@cloudflare",
+      "capture": "captures/cloudflare--clef-flash.json",
+      "matches": true
+    }
+  ],
+  "reviewed_at_utc": "2026-10-19T09:24:52.981332+00:00",
+  "reviewer": {
+    "model": "gpt-6-astra",
+    "effort": "high",
+    "turn_id": "01a15373-406f-7883-b0dc-b74a3f011771",
+    "ghostex_session": "S69:P50ai:G6vb4",
+    "agent_session": "01a152e1-a945-7db0-902c-e4ac05f8d1a8"
+  },
+  "parallel_primary_source_review": {
+    "task": "/root/liquid_clef_verification",
+    "requested_model": "gpt-6-astra",
+    "scope": "Liquid billing and Cloudflare/OpenRouter question-cap distinctions",
+    "files_written": false,
+    "result": "Two source-scope uncertainties independently corroborated by primary reviewer"
+  },
+  "pending_decisions": {
+    "Q7": "Pending: exact baseline/evaluation publication branch only, excludes provider assets",
+    "Q8": "Pending: evidence-first composition/subset policy",
+    "Q9": "Pending: small representation extension"
+  },
+  "research_ticket_readiness": "Requires R1 and R2 corrections; then sufficient conditional research without executable adapter or paid compatibility result",
+  "protocol_ready": false,
+  "findings": [
+    {
+      "id": "R1",
+      "severity": "Medium; correct before research acceptance",
+      "claim": "Liquid repeated text-state floor treated too strongly",
+      "worker_locations": [
+        "provider-contracts.md:9",
+        "provider-contracts.md:64",
+        "provider-contracts.md:139",
+        "provider-contracts.md:146",
+        "proposed-resolution.md"
+      ],
+      "evidence_urls": [
+        "https://docs.liquid.ai/lfm/models/decision-models",
+        "https://docs.liquid.ai/lfm/models/d1",
+        "https://www.liquid.ai/blog/d1-decision-model"
+      ],
+      "correction": "Label repeated state as conservative scenario, record batching-savings ambiguity, require actual host units; no proved 245k floor/exclusion"
+    },
+    {
+      "id": "R2",
+      "severity": "Medium; correct before research acceptance",
+      "claim": "Workers AI 64-question cap generalized to OpenRouter hosts",
+      "worker_locations": [
+        "provider-contracts.md:9",
+        "provider-contracts.md:65",
+        "provider-contracts.md:177",
+        "provider-contracts.md:192",
+        "route-candidates.json:cloudflare/clef-flash@cloudflare"
+      ],
+      "evidence_urls": [
+        "https://developers.cloudflare.com/workers-ai/models/clef-flash/",
+        "https://openrouter.ai/api/v1/models/cloudflare/clef-flash/endpoints"
+      ],
+      "correction": "Keep Workers AI incompatibility; other OpenRouter host caps/truncation unverified, neither admitted nor proven incompatible"
+    }
+  ],
+  "protocol_qualification": "Native eleven-category compatibility constraint may disadvantage coarser/probabilistic classifiers; disclose before Q8/Q9 answers; no mapping or lineup change applied",
+  "verified_arithmetic": {
+    "legacy_plus_extension_atomic_inventory": 98,
+    "value_evidence_product": 264,
+    "g_cap_token_illustration_usd": "0.00625024",
+    "qwen37_regional_cap_token_illustration_usd": "0.001776704",
+    "g_additive_write_scenario_usd": "0.00945024",
+    "jev_conditional_input_cap_illustration_usd": "0.000672",
+    "liquid_conditional_repeated_state_scenario": 245000,
+    "initial_requests": 72,
+    "max_retries_pooled": 18,
+    "max_title_attempts": 90,
+    "full_run_cost_bound_established": false,
+    "retry_policy": "Reserve costliest eligible attempt for each freely pooled retry; six-per-arm reservation requires enforced partition"
+  },
+  "worker_assets_unchanged": true,
+  "examined_worker_assets": [
+    "provider-contracts.md",
+    "route-candidates.json",
+    "sources.json",
+    "provenance.json",
+    "checks.json",
+    "SHA256SUMS",
+    "proposed-resolution.md",
+    "captures/endpoint-fetch-register.json",
+    "captures/decision-endpoint-fetch-register.json",
+    "captures/qwen--qwen3.8-flash.json",
+    "captures/qwen--qwen3.7-flash.json",
+    "captures/typesafe--jev-1.14.json",
+    "captures/typesafe--jev-1.13.json",
+    "captures/liquid--d1.json",
+    "captures/cloudflare--clef-flash.json"
+  ],
+  "inspection_levels": {
+    "full_read": [
+      "provider-contracts.md",
+      "route-candidates.json",
+      "proposed-resolution.md",
+      "checks.json",
+      "provenance.json"
+    ],
+    "register_and_hash_inspection": [
+      "sources.json",
+      "SHA256SUMS",
+      "all captures"
+    ],
+    "direct_content_and_live_metadata_check": [
+      "Qwen3.8 and Qwen3.7",
+      "Jev1.13 and Jev1.14",
+      "Liquid d1",
+      "Cloudflare Clef Flash"
+    ],
+    "remaining_candidates": "Capture/candidate consistency only where listed; not an independent full re-research of every reserve maker/license/local resource claim"
+  },
+  "browser_sources_examined": [
+    "https://docs.typesafe.ai/models",
+    "https://docs.typesafe.ai/primitives/score",
+    "https://docs.typesafe.ai/primitives/choice",
+    "https://docs.typesafe.ai/primitives",
+    "https://openrouter.ai/docs/guides/community/jev",
+    "https://openrouter.ai/docs/api/api-reference/alphadecisions/submit-a-decisions-request",
+    "https://openrouter.ai/docs/guides/routing/provider-selection",
+    "https://openrouter.ai/docs/guides/best-practices/reasoning-tokens",
+    "https://docs.liquid.ai/lfm/models/decision-models",
+    "https://docs.liquid.ai/lfm/models/d1",
+    "https://www.liquid.ai/blog/d1-decision-model",
+    "https://developers.cloudflare.com/workers-ai/models/clef-flash/"
+  ],
+  "public_get_success_count": 22,
+  "material_endpoint_comparison_count": 6,
+  "material_endpoint_comparisons_all_match": true,
+  "not_performed": [
+    "No auth/account/credential access",
+    "No inference, paid calls, benchmarks or model downloads",
+    "No TV Tropes fetching or production operations",
+    "No worker/repository edits, stage/commit, branch changes, push or tracker/map mutation",
+    "No Q7 approval scope expansion or alteration of prepared baseline/evaluation branch",
+    "No pending human answers inferred",
+    "No native scale/protocol/lineup freeze"
+  ],
+  "output_hashes": {
+    "review-report.md": "470ae356f763818768d3a504659a71c77928274c91015415c91c4b4ed04d2368",
+    "protocol-impact.md": "dd3b0ccb83d055467cc25d6d741f86cbbfbdd066abb6ebefb0fd9c83efb6cff9"
+  },
+  "output_directory_mode": "0700",
+  "output_file_modes": "0600"
+}

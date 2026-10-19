@@ -1,0 +1,58 @@
+[
+  {
+    "model": "qwen/qwen3.8-flash",
+    "url": "https://openrouter.ai/api/v1/models/qwen/qwen3.8-flash/endpoints",
+    "at": "2026-10-19T09:05:13.303625+00:00",
+    "status": 200,
+    "sha256": "dba31e99c5974df3032fb0239bee0f3032a288e30694a3c0f085729c0af6289c",
+    "file": "qwen--qwen3.8-flash.json"
+  },
+  {
+    "model": "qwen/qwen3.7-flash",
+    "url": "https://openrouter.ai/api/v1/models/qwen/qwen3.7-flash/endpoints",
+    "at": "2026-10-19T09:05:13.303571+00:00",
+    "status": 200,
+    "sha256": "fede47dfb28a532e8486275c51052b8d43508a1122153cb1c683da88fc6c849b",
+    "file": "qwen--qwen3.7-flash.json"
+  },
+  {
+    "model": "mistralai/mistral-small-2603",
+    "url": "https://openrouter.ai/api/v1/models/mistralai/mistral-small-2603/endpoints",
+    "at": "2026-10-19T09:05:13.292554+00:00",
+    "status": 200,
+    "sha256": "414786ee95f810dc76276a7105cdb6b16479bef1e5efb9780d90f4ab06788653",
+    "file": "mistralai--mistral-small-2603.json"
+  },
+  {
+    "model": "openai/gpt-oss-20b",
+    "url": "https://openrouter.ai/api/v1/models/openai/gpt-oss-20b/endpoints",
+    "at": "2026-10-19T09:05:13.326966+00:00",
+    "status": 200,
+    "sha256": "2da2b55139100bee92f009dc3c4dddec7a9ae14ecb900e33349ffa996586fe8e",
+    "file": "openai--gpt-oss-20b.json"
+  },
+  {
+    "model": "google/gemini-2.5-flash-lite",
+    "url": "https://openrouter.ai/api/v1/models/google/gemini-2.5-flash-lite/endpoints",
+    "at": "2026-10-19T09:05:13.295926+00:00",
+    "status": 200,
+    "sha256": "9eb8ead54d9f82593a9ab88c63233e90b2818767dc83b5acdcb81573de099c0d",
+    "file": "google--gemini-2.5-flash-lite.json"
+  },
+  {
+    "model": "deepseek/deepseek-v4-flash",
+    "url": "https://openrouter.ai/api/v1/models/deepseek/deepseek-v4-flash/endpoints",
+    "at": "2026-10-19T09:05:13.313192+00:00",
+    "status": 200,
+    "sha256": "dfff8447dc3fca2937d4f72c671575a676cee72176cc6af7d05b5e71e0fb6791",
+    "file": "deepseek--deepseek-v4-flash.json"
+  },
+  {
+    "model": "z-ai/glm-5.3-flash",
+    "url": "https://openrouter.ai/api/v1/models/z-ai/glm-5.3-flash/endpoints",
+    "at": "2026-10-19T09:05:13.404115+00:00",
+    "status": 200,
+    "sha256": "965b85ed66a20e50d39abe30b230d9c3c2c42b53adb673dd027f993e09339c8c",
+    "file": "z-ai--glm-5.3-flash.json"
+  }
+]

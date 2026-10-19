@@ -1,0 +1,222 @@
+[
+  {
+    "id": "Qwen/Qwen3-4B-Instruct-2507",
+    "revision": "cdbee75f17c01a7cc42f958dc650907174af0554",
+    "at": "2026-10-19T09:05:58.387561+00:00",
+    "url": "https://huggingface.co/api/models/Qwen/Qwen3-4B-Instruct-2507",
+    "gated": false,
+    "disabled": false,
+    "license": "apache-2.0",
+    "safetensors": {
+      "parameters": {
+        "BF16": 4022468096
+      },
+      "total": 4022468096
+    },
+    "config": {
+      "architectures": [
+        "Qwen3ForCausalLM"
+      ],
+      "model_type": "qwen3"
+    },
+    "config.json": {
+      "max_position_embeddings": 262144,
+      "hidden_size": 2560,
+      "num_hidden_layers": 36,
+      "num_attention_heads": 32,
+      "num_key_value_heads": 8,
+      "head_dim": 128,
+      "torch_dtype": "bfloat16"
+    },
+    "config.json_url": "https://huggingface.co/Qwen/Qwen3-4B-Instruct-2507/resolve/cdbee75f17c01a7cc42f958dc650907174af0554/config.json",
+    "config.json_sha256": "5beea1a4a34c62782bfb2f911c606741a3bab8f92d80a118fa053c28af12e8ba",
+    "tokenizer_config.json": {
+      "model_max_length": 1010000
+    },
+    "tokenizer_config.json_url": "https://huggingface.co/Qwen/Qwen3-4B-Instruct-2507/resolve/cdbee75f17c01a7cc42f958dc650907174af0554/tokenizer_config.json",
+    "tokenizer_config.json_sha256": "a62ff0a2472a0fa1b8eaabcb57c59b58afa42a22831dc141400b6e0cf2b65ce3"
+  },
+  {
+    "id": "openai/gpt-oss-20b",
+    "revision": "6cee5e81ee83917806bbde320786a8fb61efebee",
+    "at": "2026-10-19T09:05:59.110375+00:00",
+    "url": "https://huggingface.co/api/models/openai/gpt-oss-20b",
+    "gated": false,
+    "disabled": false,
+    "license": "apache-2.0",
+    "safetensors": {
+      "parameters": {
+        "BF16": 1804459584,
+        "U8": 19110297600
+      },
+      "total": 20914757184
+    },
+    "config": {
+      "architectures": [
+        "GptOssForCausalLM"
+      ],
+      "model_type": "gpt_oss",
+      "num_experts_per_tok": 4,
+      "quantization_config": {
+        "modules_to_not_convert": [
+          "model.layers.*.self_attn",
+          "model.layers.*.mlp.router",
+          "model.embed_tokens",
+          "lm_head"
+        ],
+        "quant_method": "mxfp4"
+      }
+    },
+    "config.json": {
+      "max_position_embeddings": 131072,
+      "hidden_size": 2880,
+      "num_hidden_layers": 24,
+      "num_attention_heads": 64,
+      "num_key_value_heads": 8,
+      "head_dim": 64
+    },
+    "config.json_url": "https://huggingface.co/openai/gpt-oss-20b/resolve/6cee5e81ee83917806bbde320786a8fb61efebee/config.json",
+    "config.json_sha256": "3a2a26ded679375b7928ddeca59764df7cea83220c1961035f6d6e232659e9ce",
+    "tokenizer_config.json": {
+      "model_max_length": 1000000000000000019884624838656
+    },
+    "tokenizer_config.json_url": "https://huggingface.co/openai/gpt-oss-20b/resolve/6cee5e81ee83917806bbde320786a8fb61efebee/tokenizer_config.json",
+    "tokenizer_config.json_sha256": "9279e942392b742d633c7adbb89ebe002c98399db8926a7af5125c726f404070"
+  },
+  {
+    "id": "fastino/gliner2-large-v1",
+    "revision": "d7aa8a2850d175a9227ff80358ea380723d03ad2",
+    "at": "2026-10-19T09:05:59.848354+00:00",
+    "url": "https://huggingface.co/api/models/fastino/gliner2-large-v1",
+    "gated": false,
+    "disabled": false,
+    "license": "apache-2.0",
+    "safetensors": {
+      "parameters": {
+        "F32": 486444053
+      },
+      "total": 486444053
+    },
+    "config": {
+      "model_type": "extractor"
+    },
+    "config.json": {
+      "max_width": 8,
+      "model_name": "microsoft/deberta-v3-large"
+    },
+    "config.json_url": "https://huggingface.co/fastino/gliner2-large-v1/resolve/d7aa8a2850d175a9227ff80358ea380723d03ad2/config.json",
+    "config.json_sha256": "c922a9df649bbb3634f4ef6d8f6cf7ed4896501ae31968cffa8cb81531ec9c6e",
+    "tokenizer_config.json": {
+      "model_max_length": 1000000000000000019884624838656
+    },
+    "tokenizer_config.json_url": "https://huggingface.co/fastino/gliner2-large-v1/resolve/d7aa8a2850d175a9227ff80358ea380723d03ad2/tokenizer_config.json",
+    "tokenizer_config.json_sha256": "d53b9e4665ea984792aab93a0b49a326500105b1144e763da1550957b57a7ffa"
+  },
+  {
+    "id": "fastino/gliner2.5-base-v1",
+    "revision": "54785d51df8d86a0d8f2eb212fec15871aad2c4d",
+    "at": "2026-10-19T09:06:00.591288+00:00",
+    "url": "https://huggingface.co/api/models/fastino/gliner2.5-base-v1",
+    "gated": false,
+    "disabled": false,
+    "license": "apache-2.0",
+    "safetensors": {
+      "parameters": {
+        "F32": 193581591
+      },
+      "total": 193581591
+    },
+    "config": {
+      "architectures": [
+        "Gliner2ForSchemaExtraction"
+      ],
+      "model_type": "gliner2"
+    },
+    "config.json": {
+      "max_len": 4096,
+      "encoder_config": {
+        "attention_probs_dropout_prob": 0.1,
+        "bos_token_id": null,
+        "dtype": "float16",
+        "eos_token_id": null,
+        "hidden_act": "gelu",
+        "hidden_dropout_prob": 0.1,
+        "hidden_size": 768,
+        "initializer_range": 0.02,
+        "intermediate_size": 3072,
+        "layer_norm_eps": 1e-07,
+        "legacy": true,
+        "max_position_embeddings": 512,
+        "max_relative_positions": -1,
+        "model_type": "deberta-v2",
+        "norm_rel_ebd": "layer_norm",
+        "num_attention_heads": 12,
+        "num_hidden_layers": 12,
+        "pad_token_id": 0,
+        "pooler_dropout": 0.0,
+        "pooler_hidden_act": "gelu",
+        "pooler_hidden_size": 768,
+        "pos_att_type": [
+          "p2c",
+          "c2p"
+        ],
+        "position_biased_input": false,
+        "position_buckets": 256,
+        "relative_attention": true,
+        "share_att_key": true,
+        "tie_word_embeddings": true,
+        "transformers_version": "5.8.0",
+        "type_vocab_size": 0,
+        "vocab_size": 128011
+      },
+      "model_name": "microsoft/deberta-v3-base",
+      "architecture": "boundary"
+    },
+    "config.json_url": "https://huggingface.co/fastino/gliner2.5-base-v1/resolve/54785d51df8d86a0d8f2eb212fec15871aad2c4d/config.json",
+    "config.json_sha256": "d6b515c21ae2100c12267fb42a3f02c1e99ad87580366aebedb161efd74441c7",
+    "tokenizer_config.json": {
+      "model_max_length": 1000000000000000019884624838656
+    },
+    "tokenizer_config.json_url": "https://huggingface.co/fastino/gliner2.5-base-v1/resolve/54785d51df8d86a0d8f2eb212fec15871aad2c4d/tokenizer_config.json",
+    "tokenizer_config.json_sha256": "0bf3ea0873234bd9bfdd3853c440395009ac6365a925b91654daed5396d655e1"
+  },
+  {
+    "id": "MoritzLaurer/deberta-v3-base-zeroshot-v2.0",
+    "revision": "8e7e5af5983a0ddb1a5b45a38b129ab69e2258e8",
+    "at": "2026-10-19T09:06:01.371769+00:00",
+    "url": "https://huggingface.co/api/models/MoritzLaurer/deberta-v3-base-zeroshot-v2.0",
+    "gated": false,
+    "disabled": false,
+    "license": "mit",
+    "safetensors": {
+      "parameters": {
+        "F16": 184423682
+      },
+      "total": 184423682
+    },
+    "config": {
+      "architectures": [
+        "DebertaV2ForSequenceClassification"
+      ],
+      "model_type": "deberta-v2"
+    },
+    "config.json": {
+      "max_position_embeddings": 512,
+      "id2label": {
+        "0": "entailment",
+        "1": "not_entailment"
+      },
+      "hidden_size": 768,
+      "num_hidden_layers": 12,
+      "num_attention_heads": 12,
+      "torch_dtype": "float16"
+    },
+    "config.json_url": "https://huggingface.co/MoritzLaurer/deberta-v3-base-zeroshot-v2.0/resolve/8e7e5af5983a0ddb1a5b45a38b129ab69e2258e8/config.json",
+    "config.json_sha256": "a1c8011b852ae46d6ac26160d358fa595861d261352885f8f7bfcd2811030d9f",
+    "tokenizer_config.json": {
+      "model_max_length": 512
+    },
+    "tokenizer_config.json_url": "https://huggingface.co/MoritzLaurer/deberta-v3-base-zeroshot-v2.0/resolve/8e7e5af5983a0ddb1a5b45a38b129ab69e2258e8/tokenizer_config.json",
+    "tokenizer_config.json_sha256": "f5a1a74a632c0e9225e09a21ddf60c2e70ef5d3bfc1f261a24fd8ddab27254d2"
+  }
+]

@@ -1,0 +1,42 @@
+{
+  "checked_at": "2026-10-19T09:29:51.046158+00:00",
+  "branch": "research/fingerprint-provider-contracts-20261019",
+  "revision": "R1/R2 and native-representation qualification",
+  "checks_passed": [
+    "Parsed all 30 JSON assets",
+    "Existing isolated research branch and base commit unchanged; no tracked file changes",
+    "All 24 historical capture files match independent review-start hashes byte-for-byte",
+    "Preserved original seal/check receipt and supplied independent review receipt; verified review input hashes",
+    "All 15 registered endpoint captures retain their recorded hashes",
+    "Matched all 8 hosted candidate identities/tags to preserved captures; all 10 candidates remain untested and without an executable schema",
+    "R1: Repeated-state example is scenario-only; 245000 arithmetic retained without an actual-usage inequality, cap exclusion or admission claim",
+    "R2: Workers AI 64-question limit separated from unverified OpenRouter Cloudflare/DeepInfra/PrimeIntellect limits and local weights",
+    "Native-category Choice encoding scoped to proposed legacy compatibility; coarse-Score projection remains a separate unapproved design; Q7-Q9 unanswered",
+    "Read revised conclusions and searched current prose for superseded R1/R2 categorical wording",
+    "Two new source observations match supplied Astra GET hashes/times; historical source records retained and excerpts bounded",
+    "Rechecked existing Decimal cost illustrations and atomic/option arithmetic; no full-run bound asserted",
+    "Whitespace validation passed for all provider assets",
+    "Prior provider worktree remains clean at c5f810b3; this revision wrote only the isolated provider directory"
+  ],
+  "historical_checks": "captures/pre-correction-checks.json; ticket recheck observations retain their original time, not repeated in this correction turn",
+  "corrections": {
+    "R1": "Applied; shared text-state billing unresolved, scenario not actual lower bound",
+    "R2": "Applied; Workers AI limit only, other hosts unverified/not admitted",
+    "native_representation": "Applied; legacy precision is document compatibility, coarse-Score alternative separate"
+  },
+  "pending_decisions": {
+    "Q7": "Unanswered; pending baseline/evaluation publication scope excludes provider assets",
+    "Q8": "Unanswered; evidence-first composition/subset policy",
+    "Q9": "Unanswered; small representation extension"
+  },
+  "limits": [
+    "No new network calls or live ticket refresh in this correction turn",
+    "No inference, paid compatibility, schema rendering, benchmarks or model downloads",
+    "No account inspection, production operations, commits, pushes or GitHub mutations",
+    "No baseline/evaluation publication branch edits or approval scope expansion",
+    "Corrections validated by research owner; no subsequent independent Astra acceptance claimed"
+  ],
+  "evidence_ready": true,
+  "research_resolution_ready": "Conditional proposed resolution ready for orchestrator review after R1/R2 corrections",
+  "executable_protocol_ready": false
+}

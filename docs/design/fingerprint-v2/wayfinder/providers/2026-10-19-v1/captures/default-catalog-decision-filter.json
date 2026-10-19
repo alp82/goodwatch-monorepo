@@ -1,0 +1,8 @@
+{
+  "url": "https://openrouter.ai/api/v1/models",
+  "at": "2026-10-19T09:06:24.380669+00:00",
+  "full_response_sha256": "f9507d9106aa3893999f03ea0bf03bf3f70e82dcdf08bab05a6a5599da469d71",
+  "filter": "architecture.output_modalities contains decisions",
+  "data": [],
+  "limitation": "The default catalog response did not include decision models although per-model endpoint metadata does. This filtered subset is not an exhaustive decision-model availability result."
+}

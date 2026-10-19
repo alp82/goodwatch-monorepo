@@ -1,0 +1,253 @@
+[
+  {
+    "id": "Cloudflare/clef-flash",
+    "revision": "8b2e5fd17c09fd49bc2880b805d5323ec7ff4ff3",
+    "at": "2026-10-19T09:07:59.928768+00:00",
+    "url": "https://huggingface.co/api/models/Cloudflare/clef-flash",
+    "gated": false,
+    "license": "apache-2.0",
+    "safetensors": {
+      "parameters": {
+        "BF16": 9409813744
+      },
+      "total": 9409813744
+    },
+    "config.json_url": "https://huggingface.co/Cloudflare/clef-flash/resolve/8b2e5fd17c09fd49bc2880b805d5323ec7ff4ff3/config.json",
+    "config.json_sha256": "66f87f6fb2616b46604daf2a9c67ddc87938296d07156efa34d59b5be49e3238",
+    "config.json": {
+      "architectures": [
+        "Qwen3_5ForConditionalGeneration"
+      ],
+      "model_type": "qwen3_5",
+      "dtype": "bfloat16",
+      "text_config": {
+        "attention_bias": false,
+        "attention_dropout": 0.0,
+        "attn_output_gate": true,
+        "bos_token_id": null,
+        "dtype": "bfloat16",
+        "eos_token_id": 248044,
+        "full_attention_interval": 4,
+        "head_dim": 256,
+        "hidden_act": "silu",
+        "hidden_size": 4096,
+        "initializer_range": 0.02,
+        "intermediate_size": 12288,
+        "layer_types": [
+          "linear_attention",
+          "linear_attention",
+          "linear_attention",
+          "full_attention",
+          "linear_attention",
+          "linear_attention",
+          "linear_attention",
+          "full_attention",
+          "linear_attention",
+          "linear_attention",
+          "linear_attention",
+          "full_attention",
+          "linear_attention",
+          "linear_attention",
+          "linear_attention",
+          "full_attention",
+          "linear_attention",
+          "linear_attention",
+          "linear_attention",
+          "full_attention",
+          "linear_attention",
+          "linear_attention",
+          "linear_attention",
+          "full_attention",
+          "linear_attention",
+          "linear_attention",
+          "linear_attention",
+          "full_attention",
+          "linear_attention",
+          "linear_attention",
+          "linear_attention",
+          "full_attention"
+        ],
+        "linear_conv_kernel_dim": 4,
+        "linear_key_head_dim": 128,
+        "linear_num_key_heads": 16,
+        "linear_num_value_heads": 32,
+        "linear_value_head_dim": 128,
+        "mamba_ssm_dtype": "float32",
+        "max_position_embeddings": 262144,
+        "mlp_only_layers": [],
+        "model_type": "qwen3_5_text",
+        "mtp_num_hidden_layers": 0,
+        "mtp_use_dedicated_embeddings": false,
+        "num_attention_heads": 16,
+        "num_hidden_layers": 32,
+        "num_key_value_heads": 4,
+        "pad_token_id": null,
+        "partial_rotary_factor": 0.25,
+        "rms_norm_eps": 1e-06,
+        "rope_parameters": {
+          "mrope_interleaved": true,
+          "mrope_section": [
+            11,
+            11,
+            10
+          ],
+          "partial_rotary_factor": 0.25,
+          "rope_theta": 10000000,
+          "rope_type": "default"
+        },
+        "tie_word_embeddings": false,
+        "use_cache": true,
+        "vocab_size": 248320
+      }
+    }
+  },
+  {
+    "id": "LiquidAI/d1-3B",
+    "revision": "051bcc464b01b9f92942b364d9586b0ef5912432",
+    "at": "2026-10-19T09:08:00.383751+00:00",
+    "url": "https://huggingface.co/api/models/LiquidAI/d1-3B",
+    "gated": false,
+    "license": "other",
+    "safetensors": {
+      "parameters": {
+        "BF16": 3123483888
+      },
+      "total": 3123483888
+    },
+    "config.json_url": "https://huggingface.co/LiquidAI/d1-3B/resolve/051bcc464b01b9f92942b364d9586b0ef5912432/config.json",
+    "config.json_sha256": "0cbac0f580bd8036ef94ac83aa632a57a170e66d20f381ef47c3f6486c9a3e8c",
+    "config.json": {
+      "architectures": [
+        "Lfm2VlForConditionalGeneration"
+      ],
+      "model_type": "lfm2_vl",
+      "dtype": "bfloat16",
+      "text_config": {
+        "architectures": [
+          "Lfm2ForCausalLM"
+        ],
+        "block__name_mlp": "parallel_mlp_merged",
+        "block_auto_adjust_ff_dim": false,
+        "block_dim": 2048,
+        "block_ffn_dim_multiplier": 1.0,
+        "block_multiple_of": 256,
+        "block_norm_eps": 1e-05,
+        "block_use_swiglu": true,
+        "bos_token_id": 124894,
+        "conv_L_cache": 3,
+        "conv_bias": false,
+        "conv_dim": 2048,
+        "dtype": "bfloat16",
+        "eos_token_id": 124900,
+        "full_attn_idxs": null,
+        "hidden_size": 2048,
+        "initializer_range": 0.02,
+        "intermediate_size": 10752,
+        "layer_types": [
+          "conv",
+          "conv",
+          "full_attention",
+          "conv",
+          "conv",
+          "full_attention",
+          "conv",
+          "conv",
+          "conv",
+          "full_attention",
+          "conv",
+          "conv",
+          "conv",
+          "full_attention",
+          "conv",
+          "conv",
+          "conv",
+          "full_attention",
+          "conv",
+          "conv",
+          "conv",
+          "full_attention",
+          "conv",
+          "conv",
+          "full_attention",
+          "conv",
+          "conv",
+          "full_attention",
+          "conv",
+          "conv"
+        ],
+        "max_position_embeddings": 32768,
+        "model_type": "lfm2",
+        "norm_eps": 1e-05,
+        "num_attention_heads": 32,
+        "num_heads": 32,
+        "num_hidden_layers": 30,
+        "num_key_value_heads": 8,
+        "output_softcap": 0.0,
+        "pad_token_id": 124893,
+        "rope_parameters": {
+          "rope_theta": 1000000.0,
+          "rope_type": "default"
+        },
+        "tie_word_embeddings": true,
+        "use_cache": true,
+        "use_pos_enc": true,
+        "vocab_size": 128000
+      }
+    }
+  },
+  {
+    "id": "LiquidAI/d1-omni-600M",
+    "revision": "02b55d7076f15129e59ab3f94783f32c4b088674",
+    "at": "2026-10-19T09:08:00.844741+00:00",
+    "url": "https://huggingface.co/api/models/LiquidAI/d1-omni-600M",
+    "gated": false,
+    "license": "other",
+    "safetensors": {
+      "parameters": {
+        "F32": 587161089
+      },
+      "total": 587161089
+    },
+    "config.json_url": "https://huggingface.co/LiquidAI/d1-omni-600M/resolve/02b55d7076f15129e59ab3f94783f32c4b088674/config.json",
+    "config.json_sha256": "dfccae241822f81752426629c88c8b8d7efdd03dd19418b6645c604fad43d619",
+    "config.json": {
+      "architectures": [
+        "D1OmniModel"
+      ],
+      "model_type": "d1_omni",
+      "dtype": "float32",
+      "text_config": {
+        "vocab_size": 65536,
+        "hidden_size": 1024,
+        "intermediate_size": 6656,
+        "num_hidden_layers": 16,
+        "num_attention_heads": 16,
+        "num_key_value_heads": 8,
+        "layer_types": [
+          "conv",
+          "conv",
+          "full_attention",
+          "conv",
+          "conv",
+          "full_attention",
+          "conv",
+          "conv",
+          "full_attention",
+          "conv",
+          "full_attention",
+          "conv",
+          "full_attention",
+          "conv",
+          "full_attention",
+          "conv"
+        ],
+        "norm_eps": 1e-05,
+        "conv_L_cache": 3,
+        "block_ffn_dim_multiplier": 1.0,
+        "block_multiple_of": 256,
+        "max_position_embeddings": 128000,
+        "rope_theta": 1000000.0
+      }
+    }
+  }
+]
