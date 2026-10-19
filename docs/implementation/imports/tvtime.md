@@ -18,9 +18,9 @@ The original research is `docs/research/imports/tv-time-exports.md` at `b202e111
 
 | TV Time evidence | GoodWatch concept / behavior |
 | --- | --- |
-| `s_id`, numeric `series_id`, `tv_show_id`, series `tvdb_id`, JSON `id.tvdb` | `showTvdbId`; unique TMDB find result, then local show catalog validation |
+| `s_id`, numeric `series_id`, `tv_show_id`, series `tvdb_id`, JSON `id.tvdb` | `showTvdbId`; unique stored show TVDB identity or TMDB find result, then local show catalog validation |
 | `ep_id` / `episode_id`, episode `tvdb_id`, JSON episode `id.tvdb` | `episodeTvdbId`; shared #630 resolver validates unique episode and matched parent, returns canonical TMDB episode and coordinates |
-| Episode ID without parent (Liberator activity CSV, older v1 tracking rows) | TMDB find resolves the parent by episode identity first; never catalog title guessing |
+| Episode ID without parent (Liberator activity CSV, older v1 tracking rows) | Stored live episode identity resolves the parent first; missing identities use TMDB find, never catalog title guessing |
 | `s_no` / `season_number`, `ep_no` / `episode_number`, extension season/episode | Source evidence with unknown numbering; zeroed modern fields accept legacy aliases. Numbers alone cannot match an episode |
 | `watch-episode-*`, `rewatch-episode-*`, v1 episode watch/rewatch | One watch per distinct play, including separate undated source events; shared timestamps for one episode collapse to one watch |
 | V1 movie `watch`, `rewatch`; `uuid`, `type-uuid-n` | Movie watch evidence; event IDs retained in source keys; no extra watch from a count |
@@ -77,7 +77,8 @@ The following strings are produced by the new backend. Codes live on `ImportFile
 | `tvtime_rating_scale_unknown` | This export's rating scale isn't known, so this rating wasn't imported. |
 | `tvtime_show_rating_unsupported` | TV Time show ratings haven't been verified, so this rating wasn't imported. |
 | `tvtime_zip_unreadable` | GoodWatch couldn't open this TV Time ZIP. Check the file and try again. |
-| `tvtime_lookup_unavailable` | The TVDB lookup is unavailable or reached this preview's limit. Retry this import later. |
+| `tvtime_lookup_unavailable` | TMDB's TVDB lookup is unavailable; retry this import later. |
+| `tvtime_lookup_budget_exhausted` | This preview reached its lookup limit. Run the import again to match more. |
 | `tvtime_show_unmatched` | This TV Time show could not be matched uniquely by its TVDB identity. Its episodes and status were not applied. |
 
 New receipt warnings:
@@ -103,7 +104,7 @@ Initial domain upload copy: `TV Time`; `ZIP, CSV or JSON`; `Choose a TV Time ZIP
 
 ## Verification and private file
 
-Validation results are recorded in the accompanying handover commit. Parser tests use synthetic headers and source shapes. Service tests exercise the real preview, matching, tracking writer, confirmation, re-import and Undo with fake database/provider boundaries, including specials, foreign episodes, multiple plays on one day, unknown-date selection and protected show statuses/rewatch choices. No schema change or new dependency is needed.
+Validation results are recorded in the accompanying handover commit. Parser tests use synthetic headers and source shapes. Service tests exercise the real preview, matching, tracking writer, confirmation, re-import and Undo with fake database/provider boundaries, including specials, foreign episodes, multiple plays on one day, unknown-date selection and protected show statuses/rewatch choices. The initial adapter needed no schema change or new dependency. The convergence follow-up below adds a nullable show TVDB identity column, with deployment instructions.
 
 The private folder `~/goodwatch-private/tvtime/` was empty during implementation. No real-file parser run, real catalog lookup, browser run or production confirm/Undo has been performed. When a real file arrives, validate locally and report filenames, columns, counts per kind, match/unmatched counts and parse error codes only. Do not call the persisted preview service for this check: it writes journals, and the shared episode resolver can cache TVDB IDs. A real catalog check must use a read-only boundary. A password-protected or unreadable file stops that step.
 
@@ -181,3 +182,49 @@ Final combined Q15 + review validation, 2026-10-19:
 - Biome and `git diff --check` pass for the changed code. No dependency, schema or UI component changes were introduced in Q15/review work.
 - All review items are addressed in new commits; `ec6e982e` and `4aefef10` were neither amended nor rebased. No push, production write, issue edit or resolution comment was made.
 - The private export folder was still empty at the final check. A real file and live TMDB/catalog validation remain unverified. The new commits have not had an independent re-review.
+
+## Large-export convergence follow-up
+
+The owner accepted the re-review of `892a3b04` and merged it to main. This follow-up starts at that fetched main on `fix/tvtime-import-convergence`; it does not amend or rebase the reviewed commits. Q16 remains pending: unwatched extension movies still create Want to See intentions.
+
+TV Time now reads every requested show/episode TVDB ID in **one parameterized Crate query** before any TMDB request: `episode.tvdb_id` for live episodes, unioned with `show.tvdb_id`. Show and episode IDs retain separate namespaces even when their numeric IDs overlap. Only stored positive evidence is trusted; absence in one namespace is not a negative result for the other. Duplicates remain unmatched, removed episodes are excluded, and a 100,001-row sentinel discards a truncated identity read rather than inferring uniqueness. The shared resolver still validates the matched parent and live canonical episode. Other sources keep their existing TMDB revalidation policy.
+
+Stored TV Time identities need no remote revalidation or cache rewrite. Missing IDs use the existing four-request/30-second/2,000-attempt transport, starting its budget **after** the catalog read. Newly resolved episodes retain the existing compare-and-set cache writes. Unique show results are cached best effort with `UPDATE show ... WHERE tvdb_id IS NULL`, at most once per ID per preview. Preview cache writes survive without Confirm, so retrying the same file can resolve the remaining rows; member watches, scores and wishes still require Confirm. Catalog refresh visibility can delay the last few cache entries between immediate real-database previews; retries remain safe and source watch keys remain unchanged.
+
+### Deployment prerequisite
+
+The current Crate show table has no TVDB column; its upstream equivalent is Mongo `tmdb_tv_details.external_ids.tvdb_id`. The normal catalog sync now publishes positive integer values into the new nullable **`show.tvdb_id INTEGER`** field. Apply the existing `f/sync/init/cratedb` initializer **before deploying/exposing this lookup**, which adds the column on existing installations (equivalent single-column migration: `ALTER TABLE doc.show ADD COLUMN tvdb_id INTEGER`). New installations receive it from `SCHEMAS`. No initializer, copy, migration or production write was run in this work.
+
+The normal details copy fills stored Mongo show identities as shows are copied; recopying existing show details can populate them sooner. A full backfill is optional for correctness: missing show IDs use TMDB and successful results fill only empty IDs. Movie schemas and the episode schema are unchanged. Cache writes do not overwrite an existing show identity; a missing/invalid upstream ID uses the copier's normal COALESCE behavior and retains an existing cache value.
+
+### Receipt and frontend contract
+
+Both parent and episode lookup failures now expose identical `item.problem.code` and `item.problem.reason`, with `item.reason` retaining the same member-facing text. They remain `outcome: unmatched`; summary count fields and match-group data do not change. The shared resolver preserves a failed lookup's code through its remaining evidence/fallback path.
+
+| Code | Member-facing reason | Meaning |
+| --- | --- | --- |
+| `tvtime_lookup_budget_exhausted` | This preview reached its lookup limit. Run the import again to match more. | Request cap, elapsed budget, a request cut short by the remaining budget, or Retry-After exceeding that budget |
+| `tvtime_lookup_unavailable` | TMDB's TVDB lookup is unavailable; retry this import later. | HTTP/provider failure, malformed response, ordinary request timeout, or exhausted provider retries |
+
+These are the only changed/new member-facing strings in this follow-up. No UI component or source row changed. Known identity ambiguities keep their existing specific unmatched explanations.
+
+### Reproducible 5,000-episode probe
+
+Run from `goodwatch-webapp`: `node scripts/probe-tvtime-convergence.ts 0`, then `node scripts/probe-tvtime-convergence.ts 150`. Each process starts with 5,000 uncached synthetic catalog episodes and one show carrying its stored TVDB ID, generates an official v2 CSV from the researched headers, and runs two previews against the same persistent fake catalog. Network requests return synthetic identities; `150` uses a real 150 ms delay per request. No real catalog, export, Confirm or member write is used. The baseline used the same fixture with an equivalent persistent episode-cache adapter; main ignored the stored show identity.
+
+| Configuration | Preview 1 matched / unmatched | Preview 2 matched / unmatched | Cached episodes after preview 2 | HTTP attempts 1 / 2 |
+| --- | --- | --- | --- | --- |
+| Main `892a3b04`, request cap | 1,999 / 3,001 | 1,999 / 3,001 | 1,999 | 2,000 / 2,000 |
+| Follow-up, request cap | 2,000 / 3,000 | 4,000 / 1,000 | 4,000 | 2,000 / 2,000 |
+| Main `892a3b04`, 150 ms | 788 / 4,212 | 788 / 4,212 | 788 | 793 / 793 |
+| Follow-up, 150 ms | 792 / 4,208 | 1,580 / 3,420 | 1,580 | 796 / 792 |
+
+The first uncached preview is still bounded. Improvements appear on retry: +2,000 or +788 newly matched episodes, versus zero new episodes on main. All follow-up unmatched probe rows carry `tvtime_lookup_budget_exhausted`; none claim a TMDB outage. Slow-preview elapsed times were 30,344 / 30,311 ms before and 30,386 / 30,362 ms after; parsing, catalog processing and journal insertion add overhead beyond the remote transport's 30 seconds. Counts vary slightly with scheduling, so the original reviewer’s 784 is consistent with the reproduced 788–792 per uncached budget. The fast follow-up previews took 699 / 642 ms while other checks were running. No transport limit was raised.
+
+### Verification
+
+- Test-first regression tests exercised the public preview/receipt service, transport network/time boundary, and catalog publication boundary. Additional cases cover namespace collisions, duplicate stored identities, removed episodes and a 2,100-episode re-preview that makes only 100 new requests after its first 2,000 matches.
+- Imports server: **335 passed**; legacy IMDb: **12 passed**; imports UI: **100 passed**; tracking server/domain: **263 passed**, zero failed, one existing TODO.
+- Catalog publication suites: **61 passed**; details-copy paging: **10 passed**; model keywords: **1 passed**; native import schema: **2 passed**. Python dependencies were installed only in `/tmp/goodwatch-tvtime-tests`, with no project dependency or lockfile change.
+- Typecheck: **185 diagnostics** against **185 on fetched main `892a3b04`**, zero added or removed normalized diagnostics. Both retain the baseline exit status 2.
+- Biome and `git diff --check` pass. The private export folder remained empty; no real-file aggregates or live database/API verification are available. This follow-up has not had an independent review, deployment, push or issue comment.
