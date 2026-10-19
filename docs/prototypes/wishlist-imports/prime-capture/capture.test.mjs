@@ -2,7 +2,9 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import { Window } from "happy-dom";
-import { card, entity, gti, hydration, page, token, viewOutputPage } from "./fixtures/synthetic.mjs";
+import { card, entity, gti, hydration, nextHref, page, token, viewOutputPage } from "./fixtures/synthetic.mjs";
+
+const ALL = { "view-filter": { filters: [{ viewType: "all", active: true }, { viewType: "movie", active: false }] } };
 
 const read = (name) => readFileSync(new URL(`./${name}`, import.meta.url), "utf8");
 const plain = (v) => (v === undefined ? v : JSON.parse(JSON.stringify(v)));
@@ -50,12 +52,12 @@ function world(html, url = EU, routes = {}) {
 const p1 = viewOutputPage([1, 2], { next: 2, total: 5, cursor: "c1" });
 const p2 = viewOutputPage([3, 4], { next: 4, total: 5, cursor: "c2" });
 const p3 = viewOutputPage([5], { next: 5, total: 5 });
-const routes = { "/region/eu/api/watchlist/page2": p2, "/region/eu/api/watchlist/page3": p3 };
+const routes = { [nextHref(2, "c1")]: p2, [nextHref(4, "c2")]: p3 };
 
 async function fullRun(w) {
 	assert.equal(w.command("start").state, "capturing");
-	await w.load("/region/eu/api/watchlist/page2", { show: [3, 4], hide: [1, 2] });
-	await w.load("/region/eu/api/watchlist/page3", { show: [5], hide: [3] });
+	await w.load(nextHref(2, "c1"), { show: [3, 4], hide: [1, 2] });
+	await w.load(nextHref(4, "c2"), { show: [5], hide: [3] });
 	return w.command("stop");
 }
 
@@ -86,7 +88,7 @@ test("mixed two-page-plus-terminal Watchlist is complete, keeps native IDs and e
 		assert.equal(rep.counts.withGti, 5);
 		assert.equal(rep.pagination.pages.length, 3);
 		assert.deepEqual(rep.pagination.reportedTotals, [5]);
-		assert.equal(rep.profileGuard, "state");
+		assert.equal(rep.profileGuard, "state+dom");
 		assert.equal(rep.primaryGroupChosenBy, "structured_overlap");
 		assert.ok(rep.otherCollections.some((c) => c.classification === "excluded" && c.path.includes("recommendations")));
 		assert.ok(rep.otherCollections.some((c) => c.classification === "excluded" && c.path.includes("library")));
@@ -110,7 +112,7 @@ test("stopping before the terminal page is partial with continuation_pending", a
 	const w = world(page({ state: hydration({ page: p1 }), grid: [1, 2] }), EU, routes);
 	try {
 		w.command("start");
-		await w.load("/region/eu/api/watchlist/page2", { show: [3, 4] });
+		await w.load(nextHref(2, "c1"), { show: [3, 4] });
 		const r = w.command("stop");
 		assert.equal(r.completeness, "partial");
 		assert.ok(r.reasons.includes("continuation_pending"));
@@ -134,10 +136,10 @@ test("state without pagination evidence stays unknown", async () => {
 
 test("a repeated cursor on a different page is partial", async () => {
 	const loop = viewOutputPage([3], { next: 2, total: 5, cursor: "c1" });
-	const w = world(page({ state: hydration({ page: p1 }), grid: [1, 2] }), EU, { "/region/eu/api/watchlist/page2": loop });
+	const w = world(page({ state: hydration({ page: p1 }), grid: [1, 2] }), EU, { [nextHref(2, "c1")]: loop });
 	try {
 		w.command("start");
-		await w.load("/region/eu/api/watchlist/page2", { show: [3] });
+		await w.load(nextHref(2, "c1"), { show: [3] });
 		const r = w.command("stop");
 		assert.ok(r.reasons.includes("cursor_repeated"));
 		assert.equal(r.completeness, "partial");
@@ -156,7 +158,7 @@ test("the same page embedded in two hydration scripts is not a repeated cursor",
 		w.command("start");
 		const r = w.command("stop");
 		assert.equal(r.completeness, "complete", JSON.stringify(r.reasons));
-		assert.equal(r.report.pagination.duplicateStatePages, 1);
+		assert.equal(r.report.pagination.duplicatePages, 1);
 	} finally {
 		w.close();
 	}
@@ -168,7 +170,7 @@ test("a missed response leaves visible cards outside the structured set: partial
 		w.command("start");
 		// Page 2 rendered without its response being observed (requested before Start).
 		w.document.getElementById("grid").insertAdjacentHTML("beforeend", card(3) + card(4));
-		await w.load("/region/eu/api/watchlist/page3", { show: [5] });
+		await w.load(nextHref(4, "c2"), { show: [5] });
 		const r = w.command("stop");
 		assert.equal(r.completeness, "partial");
 		assert.ok(r.reasons.includes("visible_not_in_structured"));
@@ -285,8 +287,8 @@ test("containers layout without a Watchlist key: membership comes from cards onl
 		assert.equal(r.completeness, "unknown");
 		assert.ok(r.reasons.includes("no_structured_watchlist"));
 		assert.ok(r.reasons.includes("visible_group_guessed"));
-		assert.equal(r.envelope.items.length, 2, "the recommendation row is not taken as membership");
-		assert.ok(r.envelope.items.every((i) => i.sourceId.startsWith("0SYNTH")), "card-only items keep the detail token");
+		assert.equal(r.envelope.items.length, 0, "cards that can't be tied to the Watchlist stay out of the file");
+		assert.equal(r.report.counts.visibleUnresolved, 2);
 		const other = r.report.otherCollections.find((c) => c.classification === "unclassified");
 		assert.equal(other.path, "props.content.baseOutput.containers.[].entities");
 		assert.equal(other.overlapWithVisible, 2);
@@ -348,7 +350,7 @@ test("an unreadable Watchlist response marks the capture unknown", async () => {
 		const r = w.command("stop");
 		assert.ok(r.reasons.includes("unknown_response_schema"));
 		assert.equal(r.report.responses[0].parsed, true);
-		assert.ok(r.report.responses[0].shape.something, "response shape is kept for offline fixes");
+		assert.equal(r.report.responses[0].shape["<key>"], 1, "unknown keys are only counted");
 	} finally {
 		w.close();
 	}
@@ -441,7 +443,7 @@ test("an unavailable title without a detail link keeps its GTI but can't join a 
 
 test("seasons report whether an explicit show parent was present", async () => {
 	const withParent = { ...entity(3), showId: gti(2) };
-	const state = hydration({ page: { viewOutput: { features: { "legacy-watchlist": { content: { items: [entity(2), withParent], nextPageStartIndex: 2, totalItems: 2 } } } } } });
+	const state = hydration({ page: { viewOutput: { features: { "legacy-watchlist": { content: { items: [entity(2), withParent], nextPageStartIndex: 2, totalItems: 2 } }, ...ALL } } } });
 	const w = world(page({ state, grid: [2, 3] }));
 	try {
 		w.command("start");
@@ -512,9 +514,9 @@ test("review: dotted Amazon IDs, slugs and title keys are redacted in the report
 			const at = text.indexOf(leak);
 			assert.equal(at, -1, `${leak} leaks: ${text.slice(Math.max(0, at - 120), at + 40)}`);
 		}
-		assert.ok(text.includes("okKey"));
-		assert.equal(w.window.__goodwatchPrimeExtract.redactPath("/region/eu/api/amzn1.dv.gti.00000000-0000-4000-8000-000000000009/watchlist"), "/region/eu/api/<id>/watchlist");
-		assert.equal(w.window.__goodwatchPrimeExtract.redactPath("/gp/video/detail/B0ABCDEF12/"), "/gp/video/detail/<id>/");
+		assert.ok(!text.includes("okKey"), "keys outside the report vocabulary are counted, not named");
+		assert.equal(w.window.__goodwatchPrimeExtract.redactPath("/region/eu/api/amzn1.dv.gti.00000000-0000-4000-8000-000000000009/watchlist"), "/region/eu/api/<seg>/watchlist");
+		assert.equal(w.window.__goodwatchPrimeExtract.redactPath("/gp/video/detail/B0ABCDEF12/"), "/gp/video/detail/<seg>/");
 	} finally {
 		w.close();
 	}
@@ -554,7 +556,7 @@ test("review: a card linking to two different titles is skipped, not merged", as
 });
 
 test("review: a Watchlist nested under a profile key is still the Watchlist", async () => {
-	const state = { props: { profiles: { "synthetic-profile-a": { watchlist: { items: [entity(1)], hasMoreItems: false } } }, cerberus: { activeProfile: { id: "p" } } } };
+	const state = { props: { profiles: { "synthetic-profile-a": { watchlist: { items: [entity(1)], hasMoreItems: false } } }, cerberus: { activeProfile: { id: "p" } }, ...ALL } };
 	const w = world(page({ state, grid: [1] }));
 	try {
 		w.command("start");
@@ -570,9 +572,9 @@ test("review: a retried response for the same page isn't a repeated cursor", asy
 	const w = world(page({ state: hydration({ page: p1 }), grid: [1, 2] }), EU, routes);
 	try {
 		w.command("start");
-		await w.load("/region/eu/api/watchlist/page2", { show: [3, 4] });
-		await w.load("/region/eu/api/watchlist/page2");
-		await w.load("/region/eu/api/watchlist/page3", { show: [5] });
+		await w.load(nextHref(2, "c1"), { show: [3, 4] });
+		await w.load(nextHref(2, "c1"));
+		await w.load(nextHref(4, "c2"), { show: [5] });
 		const r = w.command("stop");
 		assert.ok(!r.reasons.includes("cursor_repeated"), JSON.stringify(r.reasons));
 		assert.equal(r.completeness, "complete", JSON.stringify(r.reasons));
@@ -595,7 +597,7 @@ test("review: a live entry counted in the reported total isn't a total mismatch"
 test("review: with a state profile marker, a header label change still discards the capture", async () => {
 	const w = world(page({ state: hydration({ page: p1 }), grid: [1, 2] }));
 	try {
-		assert.equal(w.command("start").profileGuard, "state");
+		assert.equal(w.command("start").profileGuard, "state+dom");
 		w.document.querySelector('[data-testid="pv-nav-profile-button"]').setAttribute("aria-label", "Profile: Other");
 		await w.flush();
 		assert.equal(w.command("status").code, "terminated_profile");

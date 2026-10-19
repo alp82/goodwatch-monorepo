@@ -6,7 +6,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
-import { card, hydration, page, viewOutputPage } from '../fixtures/synthetic.mjs'
+import { card, hydration, nextHref, page, viewOutputPage } from '../fixtures/synthetic.mjs'
 
 const moduleName = process.env.GOODWATCH_PLAYWRIGHT_MODULE
 const { chromium } = await import(moduleName ? pathToFileURL(resolve(moduleName)).href : 'playwright-core')
@@ -23,18 +23,20 @@ function render(show, hide) {
   for (const n of hide) grid.querySelector('a[href*="' + n.toString().padStart(6, '0') + 'X"]')?.closest('li').remove();
   grid.insertAdjacentHTML('beforeend', show.map((n) => cardHtml[n]).join(''));
 }
-window.loadPage2 = () => fetch('/region/eu/api/watchlist/page2?startIndex=2').then((r) => r.json()).then(() => render([3, 4], [1, 2]));
+window.loadPage2 = () => fetch(${JSON.stringify(nextHref(2, 'c1'))}).then((r) => r.json()).then(() => render([3, 4], [1, 2]));
+window.loadAccount = () => fetch('/region/eu/account/settings.json').then((r) => r.json());
 window.loadPage3 = () => new Promise((done) => {
   const x = new XMLHttpRequest();
-  x.open('GET', '/region/eu/api/watchlist/page3?startIndex=4');
+  x.open('GET', ${JSON.stringify(nextHref(4, 'c2'))});
   x.onload = () => { render([5], [3]); done(); };
   x.send();
 });
 </script>`
 const fixture = page({ state: hydration({ page: viewOutputPage([1, 2], { next: 2, total: 5, cursor: 'c1' }) }), grid: [1, 2], script: loader })
 const api = {
-  '/region/eu/api/watchlist/page2': viewOutputPage([3, 4], { next: 4, total: 5, cursor: 'c2' }),
-  '/region/eu/api/watchlist/page3': viewOutputPage([5], { next: 5, total: 5 }),
+  [nextHref(2, 'c1')]: viewOutputPage([3, 4], { next: 4, total: 5, cursor: 'c2' }),
+  [nextHref(4, 'c2')]: viewOutputPage([5], { next: 5, total: 5 }),
+  '/region/eu/account/settings.json': { unrelated: true },
 }
 
 const profile = mkdtempSync(join(tmpdir(), 'goodwatch-prime-mv3-'))
@@ -57,9 +59,10 @@ try {
     const url = new URL(route.request().url())
     if (url.origin === ORIGIN) {
       fulfilled++
-      if (api[url.pathname]) return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(api[url.pathname]) })
+      const json = api[url.pathname + url.search] ?? api[url.pathname]
+      if (json) return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(json) })
       if (url.pathname.endsWith('.png')) return route.fulfill({ status: 200, contentType: 'image/svg+xml', body: '<svg xmlns="http://www.w3.org/2000/svg"/>' })
-      return route.fulfill({ status: 200, contentType: 'text/html', body: fixture })
+      return route.fulfill({ status: 200, contentType: 'text/html; charset=utf-8', body: fixture })
     }
     if (url.protocol === 'chrome-extension:') return route.continue()
     blocked++
@@ -138,13 +141,16 @@ try {
   assert.equal(await popup.evaluate(() => current.counts.structured), 2)
   assert.equal(await popup.evaluate(() => current.counts.visible), 2)
   assert.equal(await tab.evaluate(() => typeof globalThis.__goodwatchPrimeCommand), 'undefined', 'collector stays in the isolated world')
-  assert.equal(await tab.evaluate(() => globalThis.__goodwatchPrimeObserver?.installed), true, 'observer runs in the main world')
+  assert.equal(await tab.evaluate(() => globalThis.__goodwatchPrimeObserver?.active), true, 'observer runs in the main world')
   results.push('Start reads the first page from hydration state and the grid; library and recommendation rows stay out')
 
+  await tab.evaluate(() => window.loadAccount())
   await tab.evaluate(() => window.loadPage2())
   await tab.evaluate(() => window.loadPage3())
   await popup.waitFor(() => run('status').then((r) => { accept(r); render(); return r.counts.structured === 5 && r.counts.visible === 5 }))
-  results.push('page fetch and XMLHttpRequest responses are observed in the main world; virtualized cards accumulate')
+  const observed = await popup.evaluate(() => run('status', { report: true }).then((r) => r.report.responses.length))
+  assert.equal(observed, 2, 'only the two Watchlist responses were read; the unrelated JSON response was not')
+  results.push('linked fetch and XMLHttpRequest pages are observed in the main world; an unrelated same-origin JSON response is not read; virtualized cards accumulate')
 
   await popup.evaluate(() => document.getElementById('stop').click())
   for (let i = 0; i < 100 && finished.length < 2; i++) await new Promise((r) => setTimeout(r, 50))
@@ -156,7 +162,7 @@ try {
   const wish = byName[wishName]
   assert.equal(wish.format, 'goodwatch-wishlist')
   assert.equal(wish.version, 1)
-  assert.equal(wish.completeness, 'complete')
+  assert.equal(wish.completeness, 'complete', JSON.stringify([byName[reportName].partialReasons, byName[reportName].unknownReasons, byName[reportName].pagination.pages]))
   assert.equal(wish.items.length, 5)
   assert.ok(wish.items.every((i) => i.sourceId.startsWith('amzn1.dv.gti.') && !/[?#]/.test(i.sourceUrl) && !/ref=/.test(i.sourceUrl)))
   const report = byName[reportName]
@@ -169,6 +175,9 @@ try {
   assert.ok(report.responses.length >= 2)
   assert.ok(!/Synthetic|Remake|amzn1\.dv\.gti\.0|0SYNTH|synthetic-profile/.test(JSON.stringify(report)), 'report has no titles or IDs')
   results.push('Stop downloads a complete five-item shared wishlist file and a report without titles or IDs')
+  const restored = await tab.evaluate(() => [String(window.fetch).includes('[native code]'), String(XMLHttpRequest.prototype.open).includes('[native code]'), String(XMLHttpRequest.prototype.send).includes('[native code]'), globalThis.__goodwatchPrimeObserver?.active])
+  assert.deepEqual(restored, [true, true, true, false], 'native fetch and XMLHttpRequest restored, observer inactive')
+  results.push('after Stop the page has its native fetch and XMLHttpRequest back and observation is off')
 
   await popup.evaluate(() => document.getElementById('start').click())
   await popup.waitFor(() => current.state === 'capturing')

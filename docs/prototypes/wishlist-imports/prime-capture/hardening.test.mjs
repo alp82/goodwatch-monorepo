@@ -384,6 +384,9 @@ test("7: compare.mjs gives exact counts for a full reference and labels a sample
 		assert.equal(full.evidence, "full");
 		assert.deepEqual([full.reference, full.matched, full.missed, full.extra, full.ambiguous], [3, 2, 1, 1, 0]);
 		assert.equal(full.exactMembership, false);
+		writeFileSync(join(dir, "links.txt"), `# pasted links\nhttps://www.primevideo.com/region/eu/detail/${token(4)}/ref=atv_wl_1\nhttps://www.primevideo.com/region/eu/detail/${token(5)}/\nExtra Title (2000)\n`);
+		const txt = JSON.parse(execFileSync("node", [script, join(dir, "w.json"), join(dir, "links.txt")], { encoding: "utf8" }));
+		assert.deepEqual([txt.evidence, txt.reference, txt.matched, txt.missed, txt.extra, txt.exactMembership], ["full", 3, 3, 0, 0, true]);
 		const sampled = JSON.parse(execFileSync("node", [script, join(dir, "w.json"), join(dir, "sample.json")], { encoding: "utf8" }));
 		assert.equal(sampled.evidence, "sampled");
 		assert.equal(sampled.exactMembership, "not established");

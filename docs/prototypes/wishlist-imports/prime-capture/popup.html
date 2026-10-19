@@ -10,7 +10,7 @@
   <main>
     <header class="head">
       <h1>GoodWatch Watchlist capture</h1>
-      <p class="tag">Prime Video experiment, version 0.1.0. Live capture is unverified.</p>
+      <p class="tag">Prime Video experiment, version 0.2.0. Live capture is unverified.</p>
     </header>
 
     <section class="status" aria-labelledby="status-title">
@@ -51,12 +51,13 @@
         <li>Choose <strong>Start capture</strong>. It keeps running after this popup closes.</li>
         <li>Scroll slowly to the very end of the Watchlist, until no more titles load.</li>
         <li>Open this popup again and choose <strong>Stop and save files</strong>.</li>
+        <li>Refresh or close the Prime Video tab.</li>
       </ol>
     </section>
 
     <details class="more">
       <summary>What this does and doesn't do</summary>
-      <p>It reads the Watchlist only in this tab, only after you choose Start. It reads the page's own data and the title cards you scroll past, and copies of the list data the page loads while you scroll.</p>
+      <p>It reads the Watchlist only in this tab, only after you choose Start. It reads the page's own data, the title cards you scroll past, and copies of the Watchlist data the page loads from Prime Video while you scroll. Other responses aren't read. Reading stops when the capture ends.</p>
       <p>It doesn't scroll, click, open pages, send anything anywhere, read cookies or change your Watchlist.</p>
       <p>It saves two files: the wishlist file for GoodWatch, and a report with counts and field names only, without titles or IDs.</p>
     </details>

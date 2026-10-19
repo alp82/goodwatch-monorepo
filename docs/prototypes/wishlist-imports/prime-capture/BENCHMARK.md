@@ -1,6 +1,6 @@
 # Prime Video Watchlist capture: gates and results
 
-Ticket: [#707](https://github.com/alp82/goodwatch-monorepo/issues/707), on [map #702](https://github.com/alp82/goodwatch-monorepo/issues/702). Route: [#705 resolution](https://github.com/alp82/goodwatch-monorepo/issues/705) and [route research](https://github.com/alp82/goodwatch-monorepo/blob/7ca65bb1/docs/research/wishlist-exploration/prime-route.md). Collector version 0.1.0.
+Ticket: [#707](https://github.com/alp82/goodwatch-monorepo/issues/707), on [map #702](https://github.com/alp82/goodwatch-monorepo/issues/702). Route: [#705 resolution](https://github.com/alp82/goodwatch-monorepo/issues/705) and [route research](https://github.com/alp82/goodwatch-monorepo/blob/7ca65bb1/docs/research/wishlist-exploration/prime-route.md). Collector version 0.2.0.
 
 This file separates three kinds of evidence:
 
@@ -12,44 +12,48 @@ Capture and matching are measured separately. This ticket measures capture. A co
 
 ## Candidate gates for the live run
 
-These gates were written on 2026-10-19, before any live measurement. The owner accepts or changes them at the verdict. They apply to one account, one profile, one regional origin, one locale and one layout. They aren't a population estimate.
+These gates were first written on 2026-10-19, before any live measurement, and revised the same day after the second independent review. Still no live measurement exists. The owner accepts or changes them at the verdict. They apply to one account, one profile, one regional origin, one locale and one layout. They aren't a population estimate.
 
-The reference is the owner's private count and sample, made in Prime Video's own interface, independently of the extension. See [Reference procedure](#reference-procedure).
+The reference is the owner's private record, made in Prime Video's own interface, without the extension. It comes in two modes; see [Reference procedure](#reference-procedure). Only the full mode can establish exact membership.
 
 | Gate | Passes when | Measured from |
 | --- | --- | --- |
-| G0 Precondition | The Watchlist has more than one page of titles and at least one movie and one show. A smaller list can't test pagination; record it as untested. | Report: `pagination.pages` at least 2 |
-| G1 Membership | Captured movie and show counts equal the reference counts. Every sample title is found. | `compare.mjs`: `typeDifference`, `sample` |
-| G2 Contamination | None of the non-Watchlist probe titles is in the file. No library, recommendation, history or live collection was merged. | `compare.mjs`: `contaminationProbes`; report: `otherCollections`, `liveExcluded` |
-| G3 Native identity | Every item has a `sourceId`. Every page-data item kept its GTI. No duplicate `sourceId`, no quarantined identity. Title and type disagreements between the channels are 0, or each is explained. | Report: `counts.withGti`, `quarantined`, `titleDisagreements`; `compare.mjs`: `duplicateSourceIds` |
-| G4 Pagination | Every page of the chain was observed. The last one says it is the end. No cursor repeats. A reported total equals the page-data count. | Report: `pagination` |
+| G0 Precondition | The Watchlist has more than one page and at least one movie and one show. A smaller list is a smoke test only: pagination gates are recorded as untested. Never add or remove Watchlist entries to make it larger. | Report: `pagination.pages` at least 2 |
+| G1 Membership, full mode | Every reference entry matches exactly one captured entry by detail link, or by title and year. Missed, extra, ambiguous and duplicate counts are 0. | `compare.mjs`: `evidence: "full"`, `exactMembership: true` |
+| G1 Membership, sampled mode | Reported as **sampled evidence only**, never as exact membership. Counts per type agree, every sample entry is found, no probe is found. | `compare.mjs`: `evidence: "sampled"` |
+| G2 Contamination | No library, recommendation, history or live collection was merged, and no unresolved card is in the file. In full mode, `extra` is 0. | Report: `otherCollections`, `liveExcluded`, `visibleUnresolved`; `compare.mjs` |
+| G3 Native identity | Every item has a `sourceId`. Every page-data item kept its GTI. No duplicate `sourceId`, no quarantined identity, no title or type disagreement between the channels. | Report: `counts`; `compare.mjs`: `duplicateSourceIds` |
+| G4 Pagination | Every chain starts in the page data, each later page links to its predecessor by continuation or start index, positions match, and the last page ends without contradiction. No cursor repeats; a reported total equals the count. | Report: `pagination.pages[].link`, `terminal` |
 | G5 Channel agreement | `visibleOnly` and `structuredOnly` are 0, or each remaining case is an unavailable title the owner confirms. | Report: `counts` |
-| G6 Scope | The run started on the unfiltered Watchlist on the member's own regional origin. The profile guard is `state` or `dom`. | Report: `filter`, `host`, `lang`, `profileGuard` |
-| G7 Honest reporting | Run A says `complete` only if G1 to G6 pass. Run B, which is deliberately stopped halfway, says `partial` and never `complete`. | Both reports |
+| G6 Scope | The All view was positively shown (`filterEvidence.all` or `domAll`, with no filtered evidence). The profile guard is `state`, `dom` or `state+dom`, and nothing named another profile. The capture ran on the member's own regional origin. | Report: `filterEvidence`, `profileGuard`, `host`, `lang` |
+| G7 Honest reporting | Run A says `complete` only if G1 to G6 pass. Run B, deliberately stopped halfway, says `partial` and never `complete`. | Both reports |
 | G8 Intake | The shipped parser accepts the file. Observations equal items, with no rejected rows. | `parser-check.mjs` |
-| G9 Privacy | The report holds no title, ID, cursor or profile value from the private file. The extension has only `activeTab` and `scripting`. | Agent check against the private file; `chrome://extensions` |
+| G9 Privacy and scope | The report holds no title, ID, cursor, class, name or profile value from the private files. Only Watchlist responses were read, and observation ended after Stop. The extension has only `activeTab` and `scripting`. | Agent check against the private files; report `responses`; `chrome://extensions` |
 
-Recorded alongside the gates: reference size, captured unique items, overlap, misses, extras, pages, observed first-party responses, added requests (expected: 0), elapsed time, owner steps and stop reason.
+Recorded alongside the gates: reference mode and size, captured unique items, matches, misses, extras, ambiguities, pages, observed first-party responses, added requests (expected: 0), elapsed time, owner steps and stop reason.
 
 A live result that fails a gate isn't hidden by a fix. The failure gets a synthetic regression first, then a new collector version, then a new live run.
 
 ## Reference procedure
 
-The owner makes the reference in Prime Video's own interface, without the extension. It stays in `~/goodwatch-private/707/reference.json` and never goes into Git or an issue.
+The owner makes the reference in Prime Video's own interface, without the extension. It stays in `~/goodwatch-private/707/` and never goes into Git or an issue. There are two modes. Times are estimates for a desktop browser.
 
-1. Count the titles. On the Watchlist, choose the **Movies** filter, scroll to the end, and count: rows times titles per row, plus the last row. Then do the same for **TV**. If there are no filters, count **All** instead and enter it as `"all"`.
-2. Write a sample of about 10 titles that are on the Watchlist: the first 3, the last 3, and 4 others. Include a season entry, a title marked unavailable, and two titles with the same name, if the list has them.
-3. Write 3 titles that appear on the same page or nearby but are **not** on the Watchlist, for example from a recommendation row or your purchases.
+### Full membership (exact; recommended up to about 100 titles)
 
-```json
-{
-  "counts": { "movies": 0, "shows": 0 },
-  "sample": ["...", "..."],
-  "notOnWatchlist": ["...", "...", "..."]
-}
-```
+List every Watchlist entry in `members.txt`, one per line. The fastest and most exact way is to copy each card's link (right-click the poster, choose **Copy link address**, paste into the file). A line can also be `Title (Year)`.
 
-`compare.mjs` prints counts only. Equal counts alone don't prove recall: a miss and an extra can cancel out. That's why the sample and the probes exist, and why G5 also requires both channels to agree.
+- Copying links takes about 8 to 10 seconds per title: about 5 minutes for 30 titles, about 15 minutes for 100.
+- Typing `Title (Year)` takes about 15 to 25 seconds per title: about 10 minutes for 30 titles, about 35 minutes for 100.
+
+With a full reference, `compare.mjs` reports exact matches, misses, extras and ambiguities. Same-name entries are told apart by link or year.
+
+### Sampled evidence (quick; can't prove exact membership)
+
+Fill in `reference-sampled.json`: counts per type, about 10 entries that are on the Watchlist (the first 3, the last 3, and 4 others, including a season, an unavailable title or two same-name titles if present), and 3 titles nearby that are **not** on the Watchlist. About 8 to 12 minutes for a list of 100.
+
+To count a long list that loads while you scroll: note the last title on screen, scroll until it's the first title on screen, then count only the titles after it. Repeat to the end. With a Movies and a TV filter, count each separately.
+
+The result is labeled sampled evidence only. Equal counts can hide a miss and an extra, and a title alone can't separate same-name entries.
 
 ## Fixture test matrix
 
@@ -96,6 +100,24 @@ Every case is an invented page with invented titles, IDs and cursors. Field name
 | An avatar URL change alone | No evidence; capture continues | Pass, after a fix |
 | The grid renders after a recommendation row was chosen (review) | Flagged; not `complete` | Pass, after a fix |
 
+| Unrelated or cross-origin responses during capture (second review) | Never copied or read | Pass, after a fix |
+| An oversized list response | Read up to the cap, reported too large, not parsed | Pass, after a fix |
+| Stop, Cancel or leaving the Watchlist | Observation ends; the page's own `fetch` is restored | Pass, after a fix |
+| Names, script IDs, classes and test IDs in the page | Not in the report | Pass, after a fix |
+| Forged messages with private strings, bad URLs and 20,000 items | Strings kept out of the report; invalid URLs dropped; bounded | Pass, after a fix |
+| An enclosing object's `hasMoreItems: false` | Not end evidence for the page | Pass, after a fix |
+| `hasMoreItems: false` next to a continuation token | `pagination_contradiction` | Pass, after a fix |
+| A last page that doesn't link to its predecessor | `chain_gap` | Pass, after a fix |
+| A correctly linked chain | `complete`, links `start`, `cursor`, `cursor` | Pass |
+| A Movies filter held in page state, URL unchanged | `filtered_view` | Pass, after a fix |
+| No positive All-view evidence | `unknown`, `all_view_unconfirmed` | Pass, after a fix |
+| A profile change seen only in new page state, or only in a list response | Capture discarded | Pass, after a fix |
+| Two card lists with identical attributes | Not merged; recommendations stay out | Pass, after a fix |
+| No page-data Watchlist | Guessed cards stay out of the file | Pass, after a fix |
+| Different titles, or a movie/show conflict, between page data and card | Not `complete` | Pass, after a fix |
+| A missing page-data type | Filled from the card | Pass, after a fix |
+| Full reference (JSON or pasted links) and sampled reference | Exact counts, or labeled sampled | Pass, after a fix |
+
 Failure found while building: with no Watchlist-named collection, the first collector draft took the largest card group, which was the recommendation row. It now prefers the group that overlaps the page data. With no overlap, it takes the first group in page order and reports `visible_group_guessed`, which keeps the file `unknown`.
 
 ### Independent review
@@ -104,14 +126,21 @@ A separate reviewer read version 0.1.0 before any live run and probed it with sc
 
 The same review found report keys and path segments that could carry titles or IDs, cards with several links being quarantined, an avatar-URL profile guard that could discard a whole run, a profile-key exclusion that could hide a nested Watchlist, retries counted as loops, live entries breaking totals, and a two-download prompt that could drop the report. Each now has a regression above, and the popup has separate **Save wishlist file** and **Save report** buttons.
 
-Accepted risks, not fixed: a page that bound `fetch` before Start, `responseType: "json"` requests, and pages loaded before Start all leave the page-data channel blind. The file then says `partial` or `unknown`, as designed. The page can forge messages to the collector. The report's per-card rejection counts are per scan pass, not per card.
+### Second independent review
+
+A second reviewer found four blocking and four further issues in 0.1.0 plus the first fixes. Interception read every JSON or text response before checking origin and path, had no bounded read, and stayed active after Stop. The report could carry identifier-shaped names, script IDs, classes and forged values. Terminal evidence was borrowed from enclosing objects, contradictions were ignored, and the chain wasn't checked for gaps. The All view and the profile weren't positively confirmed. Cards were grouped by attributes, and guessed cards could enter the file. Channel disagreements didn't block `complete`, and a count plus a sample was presented as if it could prove membership.
+
+Version 0.2.0 addresses each one, test-first. The reproductions are in `hardening.test.mjs`. The reference now has a full mode that can establish exact membership, and a sampled mode that is labeled as such.
+
+Accepted risks, not fixed: a page that bound `fetch` before Start, `responseType: "json"` requests, and pages loaded before Start all leave the page-data channel blind. The file then says `partial` or `unknown`, as designed. The page can forge messages to the collector: they are validated, bounded and kept out of the report, but a hostile page could still add made-up titles to the file. A first page that the page loads by request before Start makes the chain start unobserved (`unknown`). A continuation sent in a request body rather than the URL can't be linked, so the chain shows a gap (`partial`). Filter evidence relies on option flags in page data or on selected controls with a known filter word; a localized label outside that word list gives `all_view_unconfirmed`. The report's per-card rejection counts are per scan pass, not per card.
 
 ## Results so far
 
 Validated 2026-10-19.
 
-- **Fixture, happy-dom:** 35 of 35 tests pass (`npm test`).
-- **Fixture, real Chromium:** the unpacked MV3 extension loads with no host permissions. The real popup injects the collector into the isolated world and the response reader into the page world. A `fetch` response and an `XMLHttpRequest` response from the invented page are both observed. The grid accumulates while cards are removed. **Stop** downloads both files: a complete five-item wishlist file and a report without titles or IDs. Leaving the Watchlist ends the capture as partial. The harness served 4 requests locally and blocked 0 others. No Amazon request was made.
+- **Fixture, happy-dom:** 55 of 55 tests pass (`npm test`, both suites). The 20 tests in `hardening.test.mjs` were committed failing on e4939330 (fa36202e) before the fixes.
+- **Fixture, real Chromium:** the unpacked MV3 extension loads with no host permissions. The real popup injects the collector into the isolated world and the response reader into the page world. A linked `fetch` page and a linked `XMLHttpRequest` page are observed; an unrelated same-origin JSON response isn't read. The grid accumulates while cards are removed. **Stop** downloads both files: a complete five-item wishlist file and a report without titles or IDs. After **Stop**, the page has its native `fetch` and `XMLHttpRequest` back. Leaving the Watchlist ends the capture as partial. The harness served 5 requests locally and blocked 0 others. No Amazon request was made.
+- **Found by the harness:** served without a charset, the invented page decoded an en dash differently from the UTF-8 responses. The new title-disagreement gate reported it instead of saying `complete`. The fixture now declares UTF-8; a real page with that mismatch would be reported the same way.
 - **Parser:** the shipped `parseWishlistFile` accepts the five-item synthetic file: 5 observations (3 movies, 2 shows), 5 GTI source IDs, completeness `complete`, 0 warnings.
 - **Live:** not run. No signed-in Watchlist, current Prime Video page, real response shape or regional layout has been tested. Every selector and JSON path is a hypothesis until the owner's run.
 

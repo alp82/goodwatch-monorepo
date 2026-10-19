@@ -9,8 +9,8 @@ const POLL_MS = 1500
 const MESSAGES = {
   idle: 'Not capturing. Open your Watchlist on Prime Video in this tab, refresh it, then choose Start capture.',
   capturing: 'Capturing. Scroll slowly to the end of the Watchlist, then open this popup again to stop.',
-  stopped: 'Capture stopped.',
-  cancelled: 'Capture canceled. Nothing was saved.',
+  stopped: 'Capture stopped. Refresh or close this tab now.',
+  cancelled: 'Capture canceled. Nothing was saved. Refresh or close this tab now.',
   terminated_navigation: 'The capture ended because this tab left the Watchlist. You can save what was read before that. It is marked partial.',
   terminated_profile: 'The capture ended because the Prime Video profile changed. Nothing was kept, so the file can\'t mix two lists.',
   limit_items: 'The capture reached its size limit. You can save what was read so far. It is marked partial.',
@@ -37,6 +37,20 @@ const REASONS = {
   unknown_response_schema: 'Prime Video sent list data in a shape this version can\'t read.',
   visible_group_guessed: 'The page has several card groups and the Watchlist grid was guessed.',
   conflicting_identity: 'A title appeared with two different names or IDs and was left out.',
+  pagination_contradiction: 'A page said both that the list ends and that more follows.',
+  chain_gap: 'A page arrived that doesn\'t follow the previous one.',
+  chain_start_unobserved: 'The first page of the list wasn\'t in the page data.',
+  several_chain_starts: 'The page data started the list more than once.',
+  several_watchlist_chains: 'The page data holds more than one Watchlist list.',
+  index_mismatch: 'A page\'s position doesn\'t match the titles read before it.',
+  all_view_unconfirmed: 'The page didn\'t show that the All view is selected.',
+  channel_title_disagreement: 'A title has a different name in the page data than on its card.',
+  channel_type_disagreement: 'A title is a movie in one place and a show in the other.',
+  visible_group_contested: 'Another card group matched the page data better than the chosen grid.',
+  visible_group_unconfirmed: 'The cards couldn\'t be tied to the Watchlist in the page data; they aren\'t in the file.',
+  profile_ambiguous: 'The page data names more than one profile.',
+  collection_overflow: 'A page held more titles than this version reads.',
+  messages_dropped: 'The page sent more list data than this version reads.',
 }
 
 const KNOWN_STATES = new Set(['idle', 'capturing', 'stopped', 'cancelled', 'terminated'])
@@ -129,6 +143,13 @@ function pageCommand(command, probeOnly) {
   return api(command)
 }
 
+// Runs in the page's main world. Ends response observation and restores the
+// page's own fetch and XMLHttpRequest, as a second safeguard after Stop.
+function deactivateObserver() {
+  globalThis.__goodwatchPrimeObserver?.deactivate?.()
+  return globalThis.__goodwatchPrimeObserver?.active === true
+}
+
 // Runs in the page's main world before observer.js, to hand it the nonce.
 function setObserverArgs(nonce) {
   globalThis.__goodwatchPrimeObserverArgs = [nonce]
@@ -143,6 +164,9 @@ async function run(action, { start = false, probeOnly = false, report = false } 
     await chrome.scripting.executeScript({ target: { tabId }, world: 'MAIN', files: ['extract.js', 'observer.js'] })
   }
   const [frame] = await chrome.scripting.executeScript({ target: { tabId }, func: pageCommand, args: [command, probeOnly] })
+  if (action === 'stop' || action === 'cancel') {
+    await chrome.scripting.executeScript({ target: { tabId }, world: 'MAIN', func: deactivateObserver }).catch(() => {})
+  }
   return frame ? frame.result : null
 }
 

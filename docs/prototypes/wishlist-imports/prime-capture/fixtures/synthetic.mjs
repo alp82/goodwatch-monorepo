@@ -47,7 +47,7 @@ export function viewOutputPage(ids, { next, total, cursor, opts } = {}) {
 						...(cursor ? { seeMoreHref: nextHref(next, cursor) } : {}),
 					},
 				},
-				"view-filter": { filters: [{ viewType: "all", text: "All", active: true }] },
+				"view-filter": { filters: [{ viewType: "all", text: "All", active: true }, { viewType: "movie", text: "Movies", active: false }] },
 			},
 		},
 	};
@@ -73,7 +73,7 @@ export function card(n, { prefix = "/region/eu", attrs = true } = {}) {
 
 /** A full Watchlist page: header with profile, the grid, a recommendation row. */
 export function page({ state, grid = [], recs = [60, 61, 62], lang = "en-gb", prefix, script = "" } = {}) {
-	return `<!doctype html><html lang="${lang}"><head><title>Synthetic Watchlist</title></head><body>
+	return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><title>Synthetic Watchlist</title></head><body>
 <header><nav><button data-testid="pv-nav-profile-button" aria-label="Profile: Invented"><img alt="Invented" src="/avatar-a.png"></button>
 <a href="${prefix || "/region/eu"}/detail/0SYNTHNAV0001/">Featured in navigation</a></nav></header>
 <main>
