@@ -1,6 +1,6 @@
 # Prime Video Watchlist capture: gates and results
 
-Ticket: [#707](https://github.com/alp82/goodwatch-monorepo/issues/707), on [map #702](https://github.com/alp82/goodwatch-monorepo/issues/702). Route: [#705 resolution](https://github.com/alp82/goodwatch-monorepo/issues/705) and [route research](https://github.com/alp82/goodwatch-monorepo/blob/7ca65bb1/docs/research/wishlist-exploration/prime-route.md). Collector version 0.3.0.
+Ticket: [#707](https://github.com/alp82/goodwatch-monorepo/issues/707), on [map #702](https://github.com/alp82/goodwatch-monorepo/issues/702). Route: [#705 resolution](https://github.com/alp82/goodwatch-monorepo/issues/705) and [route research](https://github.com/alp82/goodwatch-monorepo/blob/7ca65bb1/docs/research/wishlist-exploration/prime-route.md). Collector version 0.3.1.
 
 This file separates three kinds of evidence:
 
@@ -23,9 +23,9 @@ The reference is the owner's private record, made in Prime Video's own interface
 | G1 Membership, sampled mode | Reported as **sampled evidence only**, never as exact membership. Counts per type agree, every sample entry is found, no probe is found. | `compare.mjs`: `evidence: "sampled"` |
 | G2 Contamination | No library, recommendation, history or live collection was merged; the file holds page-data Watchlist entries only. In full mode, `extra` is 0. | Report: `otherCollections`, `liveExcluded`; `compare.mjs` |
 | G3 Native identity | Every item has a `sourceId`. Every page-data item kept its GTI. No duplicate `sourceId`, no quarantined identity, no title or type disagreement between the channels. | Report: `counts`; `compare.mjs`: `duplicateSourceIds` |
-| G4 Pagination | For a `complete` verdict: one Watchlist page in the page data, ending explicitly on its own object without contradiction, and a reported total equal to the count. A longer list must say `continuation_pending`. | Report: `pagination.pages[].terminal`, reasons |
+| G4 Pagination | For a `complete` verdict: one Watchlist page in the page data, ending explicitly on its own object without contradiction, with a reported total equal to the count. A last page without a total is `unknown` (`no_reported_total`). A page whose end flag or total changes during the capture is a second page, which withholds `complete`. A longer list must say `continuation_pending`. | Report: `pagination.pages[].terminal`, reasons |
 | G5 Channel agreement | `visibleOnly` and `structuredOnly` are 0, or each remaining case is an unavailable title the owner confirms. | Report: `counts` |
-| G6 Scope | The page data beside the Watchlist showed the All view (`watchlistFilters` holds `all` only, `domFilteredControls` is 0). The profile guard is `state`, `dom` or `state+dom`, and nothing named another profile. The capture ran on the member's own regional origin. | Report: `watchlistFilters`, `domFilteredControls`, `profileGuard`, `host`, `lang` |
+| G6 Scope | The Watchlist view filter (a `view-filter` group, or options naming a `viewType`) beside the Watchlist in page data showed the All view (`watchlistFilters` holds `all` only, `domFilteredControls` is 0). The profile guard is `state`, `dom` or `state+dom`, and nothing named another profile. The capture ran on the member's own regional origin. | Report: `watchlistFilters`, `domFilteredControls`, `profileGuard`, `host`, `lang` |
 | G7 Honest reporting | Run A says `complete` only if G1 to G6 pass. Run B, deliberately stopped halfway, says `partial` and never `complete`. | Both reports |
 | G8 Intake | The shipped parser accepts the file. Observations equal items, with no rejected rows. | `parser-check.mjs` |
 | G9 Privacy and scope | The report holds no title, ID, cursor, class, name or profile value from the private files. No response was read (`responsesRead` is 0) and nothing was installed in the page world. The extension has only `activeTab` and `scripting`. | Agent check against the private files; report; `chrome://extensions` |
@@ -127,6 +127,9 @@ Every case is an invented page with invented titles, IDs and cursors. Field name
 | One Watchlist card in a recommendation row | Only that entry, from page data, is in the file | Pass, after a fix |
 | A title-only line in a full reference | Exact verdict withheld | Pass, after a fix |
 | A list longer than the page data's first page | `partial`, `continuation_pending`; only page-data entries in the file | Pass |
+| A script changed in place from a last page to `hasMoreItems: true`, or to another total (fourth review) | Not `complete` | Pass, after a fix |
+| A non-view filter beside the Watchlist (for example audio language) with All selected | Doesn't confirm the All view | Pass, after a fix |
+| A last page without a reported total | `unknown`, `no_reported_total` | Pass, after a fix |
 
 Failure found while building: with no Watchlist-named collection, the first collector draft took the largest card group, which was the recommendation row. It now prefers the group that overlaps the page data. With no overlap, it takes the first group in page order and reports `visible_group_guessed`, which keeps the file `unknown`.
 
@@ -148,13 +151,17 @@ The third review confirmed the report privacy, channel-disagreement and owner-in
 
 Version 0.3.0 fixes these mostly by removing machinery. With no named endpoint in the #705 research, the response reader is gone, and with it the chain links. The file now holds page-data entries only. The popup checks the address before injecting anything. All-view evidence must sit beside the Watchlist in page data. Changed scripts are re-read, and all scripts are re-read in full at **Stop**. The reproductions are in `review3.test.mjs`.
 
+### Fourth independent review
+
+The fourth review judged 0.3.0 safe to load as a private structure probe and found three smaller gaps. A script changed in place could flip its end flag or total without affecting the verdict, any filter beside the Watchlist could confirm the All view, and a last page without a total could be `complete` although G4 required a matching total. Version 0.3.1 puts pagination evidence in the page fingerprint, counts only the Watchlist view filter, and withholds `complete` without a reported total. Reproductions are in `review4.test.mjs`. The owner's v0.3.0 package is unchanged; 0.3.1 is packaged separately.
+
 Accepted risks, not fixed: a Watchlist longer than the page data's first page is always `partial` in this version; that is the intended trade for a truthful verdict. The page data itself is trusted: a page that puts made-up entries into a Watchlist-named collection would put them in the file. Filter evidence relies on option flags beside the Watchlist; other layouts give `all_view_unconfirmed`. A selected type control anywhere on the page counts against the All view, so an unrelated one can make a run `partial`. The report's per-card rejection counts are per scan pass, not per card.
 
 ## Results so far
 
 Validated 2026-10-19.
 
-- **Fixture, happy-dom:** 56 of 56 tests pass (`npm test`, three suites). The second review's reproductions were committed failing on e4939330 (fa36202e), and the third review's on 24e412f1 (88513eab), before their fixes. Tests of the removed response reader were replaced by state-only equivalents or by the r3 tests that prove nothing is read.
+- **Fixture, happy-dom:** 61 of 61 tests pass (`npm test`, four suites). The second review's reproductions were committed failing on e4939330 (fa36202e), the third review's on 24e412f1 (88513eab), and the fourth review's on 541b346a (8f9118c1), before their fixes. Tests of the removed response reader were replaced by state-only equivalents or by the r3 tests that prove nothing is read.
 - **Fixture, real Chromium:** the unpacked MV3 extension loads with no host permissions. **Start** on the Watchlist reads the page data and grid from the isolated world; the page keeps its native `fetch` and `XMLHttpRequest`, and nothing appears in the page world. JSON requests the page makes while scrolling (one `fetch`, one `XMLHttpRequest`) aren't read. Cards accumulate while the grid drops earlier ones. **Stop** downloads a complete five-item wishlist file and a report without titles or IDs (`responsesRead` 0). Leaving the Watchlist ends the capture as partial. **Start** on a non-Watchlist page injects nothing. The harness served 6 requests locally and blocked 0 others. No Amazon request was made.
 - **Found by the harness:** in 0.2.0, the invented page served without a charset decoded an en dash differently from the UTF-8 responses. The new title-disagreement gate reported it instead of saying `complete`. The fixture now declares UTF-8; a real page with that mismatch would be reported the same way.
 - **Parser:** the shipped `parseWishlistFile` accepts the five-item synthetic file: 5 observations (3 movies, 2 shows), 5 GTI source IDs, completeness `complete`, 0 warnings.

@@ -553,7 +553,7 @@ test("review: a card linking to two different titles is skipped, not merged", as
 
 test("review: a Watchlist nested under a profile key is still the Watchlist", async () => {
 	// The Watchlist filter sits beside the Watchlist, inside the profile object.
-	const state = { props: { profiles: { "synthetic-profile-a": { watchlist: { items: [entity(1)], hasMoreItems: false }, ...ALL } }, cerberus: { activeProfile: { id: "p" } } } };
+	const state = { props: { profiles: { "synthetic-profile-a": { watchlist: { items: [entity(1)], hasMoreItems: false, totalItems: 1 }, ...ALL } }, cerberus: { activeProfile: { id: "p" } } } };
 	const w = world(page({ state, grid: [1] }));
 	try {
 		w.command("start");

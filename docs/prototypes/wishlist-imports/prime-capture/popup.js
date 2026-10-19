@@ -45,6 +45,7 @@ const REASONS = {
   visible_group_contested: 'Another card group matched the page data better than the chosen grid.',
   visible_group_unconfirmed: 'The cards couldn\'t be tied to the Watchlist in the page data.',
   profile_ambiguous: 'The page data names more than one profile.',
+  no_reported_total: 'The page data says the list ends but gives no total to check the count against.',
   collection_overflow: 'A page held more titles than this version reads.',
 }
 

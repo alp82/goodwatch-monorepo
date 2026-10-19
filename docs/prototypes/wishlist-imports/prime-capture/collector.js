@@ -17,7 +17,7 @@
 (() => {
 	if (globalThis.__goodwatchPrimeCommand) return;
 	const X = globalThis.__goodwatchPrimeExtract;
-	const VERSION = "0.3.0";
+	const VERSION = "0.3.1";
 	const MAX_ITEMS = 5000;
 	const MAX_TIME = 15 * 60 * 1000;
 	const CARD_LINK = 'a[href*="/detail/"]';
@@ -39,7 +39,7 @@
 		"several_watchlist_chains", "cursor_repeated", "total_changed", "total_mismatch", "visible_not_in_structured",
 		"structured_not_seen_visible", "no_visible_cards", "visible_group_guessed", "visible_group_contested", "visible_group_unconfirmed",
 		"conflicting_identity", "channel_title_disagreement", "channel_type_disagreement", "filter_changed", "filtered_view",
-		"all_view_unconfirmed", "state_truncated", "collection_overflow", "profile_unconfirmed", "profile_ambiguous",
+		"all_view_unconfirmed", "state_truncated", "collection_overflow", "profile_unconfirmed", "profile_ambiguous", "no_reported_total",
 	]);
 
 	let s = fresh();
@@ -196,7 +196,10 @@
 			scopes.push(c.scope);
 			const p = c.pagination;
 			// The same page can be embedded twice, or a script re-read after a change.
-			const sig = X.hash(JSON.stringify([c.chain, p.cursor, c.items.map((i) => i.token || i.gti)]));
+			// Pagination evidence is part of the fingerprint: a page whose end flag
+			// or total changed is a different page, and two pages in one chain
+			// withhold complete.
+			const sig = X.hash(JSON.stringify([c.chain, p.cursor, p.terminal, p.totalItems, p.nextIndex, c.items.map((i) => i.token || i.gti)]));
 			if (s.pageSignatures.has(sig)) {
 				s.duplicatePages++;
 				continue;
@@ -409,6 +412,8 @@
 			if (last.terminal === "conflict") partial.push("pagination_contradiction");
 			else if (last.terminal === false) partial.push("continuation_pending");
 			else if (last.terminal === null) unknown.push("no_terminal_evidence");
+			// An explicit end without a reported total can't show the count is whole.
+			else if (last.totalItems === null) unknown.push("no_reported_total");
 		}
 		if (s.cursorRepeats) partial.push("cursor_repeated");
 		const totals = [...new Set(s.pages.map((p) => p.totalItems).filter((t) => t !== null))];

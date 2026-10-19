@@ -1,6 +1,6 @@
 # GoodWatch Prime Video Watchlist capture (experiment)
 
-This is a throwaway prototype for [ticket #707](https://github.com/alp82/goodwatch-monorepo/issues/707). It isn't a GoodWatch feature, it isn't supported, and it isn't in any extension store. Version 0.3.0 has been tested only against invented pages. Live capture on Prime Video is unverified.
+This is a throwaway prototype for [ticket #707](https://github.com/alp82/goodwatch-monorepo/issues/707). It isn't a GoodWatch feature, it isn't supported, and it isn't in any extension store. Version 0.3.1 has been tested only against invented pages. Live capture on Prime Video is unverified.
 
 The extension reads your Prime Video **Watchlist** while you scroll through it. When you stop, it saves two files:
 
@@ -21,9 +21,9 @@ The file holds **page-data Watchlist entries only**. Cards are a check, not a so
 The file says `complete` only when all of the following hold:
 
 - The page data holds one Watchlist page that ends explicitly, with no contradicting continuation on the same object. Evidence from enclosing objects doesn't count.
-- Any total that Prime Video reports equals what was read.
+- That page reports a total, and the total equals what was read. If the end flag or total changes during the capture, the verdict isn't `complete`.
 - Every page-data entry appeared as a card, every card in the grid is in the page data, and both agree on each title's name and type.
-- The page data beside the Watchlist shows the **All** view. A selected type filter anywhere on the page, a filtered URL or a filter change counts against it; an **All** control alone doesn't count for it.
+- The Watchlist view filter in the page data, beside the Watchlist, shows the **All** view. Other filters, such as audio language, don't count. A selected type filter anywhere on the page, a filtered URL or a filter change counts against it; an **All** control alone doesn't count for it.
 - The profile was confirmed at Start, and no page data or header named another profile during the capture. State scripts are re-read whenever their content changes, and in full at **Stop**.
 
 Otherwise the file says `partial` when there's a known gap, or `unknown` when there's no evidence either way. The popup and the report name the reasons.
@@ -39,8 +39,8 @@ The file keeps provider identity and GoodWatch identity apart:
 
 1. In Chrome, Edge, Brave or another Chromium browser on a computer, go to `chrome://extensions` (Edge: `edge://extensions`).
 2. Turn on **Developer mode**.
-3. Click **Load unpacked** and select this folder, or the copy at `~/goodwatch-private/707/prime-capture-extension-v030/`.
-4. Check that the card shows version 0.3.0. Remove any earlier version first.
+3. Click **Load unpacked** and select this folder, or the copy at `~/goodwatch-private/707/prime-capture-extension-v030/` (0.3.0, the reviewed package) or `prime-capture-extension-v031/` (0.3.1).
+4. Check the version on the card. Remove any other version first. Remove any earlier version first.
 
 To remove the extension, click **Remove** on its card.
 
@@ -82,7 +82,7 @@ Version 0.2.0 also read copies of list responses in the page's own world. The #7
 | `extract.js` | Pure extraction: entity fields, detail links, collections, pagination and filter evidence, report vocabulary |
 | `collector.js` | Isolated-world collector: page data and cards, guards, the completeness gate, the file and report |
 | `popup.html`, `popup.js`, `popup.css` | The popup |
-| `capture.test.mjs`, `hardening.test.mjs`, `review3.test.mjs`, `fixtures/synthetic.mjs` | Fixture tests with invented pages; the second and third reviews' reproductions are in `hardening.test.mjs` and `review3.test.mjs` |
+| `capture.test.mjs`, `hardening.test.mjs`, `review3.test.mjs`, `review4.test.mjs`, `fixtures/synthetic.mjs` | Fixture tests with invented pages; later reviews' reproductions are in `hardening.test.mjs`, `review3.test.mjs` and `review4.test.mjs` |
 | `scripts/browser-integration.mjs` | Loads the real extension in Chromium against invented pages at Prime Video addresses |
 | `scripts/parser-check.mjs` | Runs a file through the shipped GoodWatch wishlist parser, counts only |
 | `scripts/compare.mjs` | Compares a file with the owner's private reference (full or sampled), counts only |

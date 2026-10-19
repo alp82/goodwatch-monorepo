@@ -282,11 +282,12 @@
 		return [...markers];
 	}
 
+	const VIEW_FILTER_KEY = /^(view-?filters?|viewfilters?|watchlist-?view-?filters?)$/i;
 	const ALL_VALUE = /^(all|everything|alle|tout|tous|todo|todos|tutti|tudo|alles)$/i;
 	const FLAG_KEYS = ["active", "applied", "isCurrentlyApplied", "selected", "isSelected"];
 
 	/**
-	 * Filter evidence: groups of two or more options under a key naming a
+	 * Filter evidence: groups of two or more options of the Watchlist view
 	 * filter, each with an on/off flag. One entry per group with its raw key
 	 * path (kept in memory only): "all" (exactly one option on, and it is
 	 * All), "filtered" or "none". The collector counts a group only when it
@@ -299,7 +300,11 @@
 			if (!v || typeof v !== "object" || ++n > 50000 || groups.length > 20) return;
 			if (Array.isArray(v)) {
 				const options = v.filter((o) => o && typeof o === "object" && FLAG_KEYS.some((k) => typeof o[k] === "boolean"));
-				if (underFilter && options.length >= 2) {
+				// Only the Watchlist view filter counts: a group under a view-filter
+				// key, or whose options all name a viewType. Other filters (audio
+				// language, offers, genres) are ignored, never taken as the view.
+				const viewFilter = path.some((k) => VIEW_FILTER_KEY.test(k)) || (options.length > 0 && options.every((o) => typeof o.viewType === "string"));
+				if (underFilter && options.length >= 2 && viewFilter) {
 					const on = options.filter((o) => FLAG_KEYS.some((k) => o[k] === true));
 					const value = (o) => String(o.viewType ?? o.id ?? o.value ?? o.key ?? o.type ?? "").replace(/^.*[-_:]/, "");
 					groups.push({ value: on.length === 0 ? "none" : on.length === 1 && ALL_VALUE.test(value(on[0])) ? "all" : "filtered", path });
