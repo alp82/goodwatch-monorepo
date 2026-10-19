@@ -40,16 +40,34 @@ const scenarios = {
 	"plex-other-type": { items: [...range(7000, 3, "movie"), ...range(7100, 2, "episode")], etag: "page" },
 	// Metadata succeeds once per item, then fails: Seerr's background refresh.
 	refresh: { items: range(7200, 5, "movie", "refresh"), etag: "page" },
+	// Plex answers that repeat the token in their bodies.
+	echo: { items: [...range(7300, 2, "movie", "echo"), ...range(7310, 1, "movie", "echo401")], etag: "page", echo: true },
+	// The list endpoint redirects to another host.
+	redirect: { items: range(7400, 3, "movie"), etag: "page", redirect: true },
 }
+// The token in every form a careless server might echo it.
+const echoes = (token) => [
+	token,
+	encodeURIComponent(token),
+	Buffer.from(token).toString("base64"),
+	JSON.stringify(token).slice(1, -1).replaceAll("/", "\\/"),
+	[...token].map((c) => `\\u${c.charCodeAt(0).toString(16).padStart(4, "0")}`).join(""),
+]
+// Raw JSON text, so escaped forms survive as written.
+const echoJson = (token) => echoes(token).map((form, index) => `"echo${index}":"${form}"`).join(",")
 // Synthetic secrets from the harness select the refresh scenario. Tokens that
 // start with gw712-dryrun-owner- stand in for an owner's token in the
 // owner-plex-check dry run.
 const scenarioFor = (token = "") =>
 	token.startsWith("gw712-synthetic-secret-")
 		? scenarios.refresh
-		: token.startsWith("gw712-dryrun-owner-")
-			? scenarios["plex-normal"]
-			: scenarios[token]
+		: token.startsWith("gw712-dryrun-owner-echo-")
+			? scenarios.echo
+			: token.startsWith("gw712-dryrun-owner-redirect-")
+				? scenarios.redirect
+				: token.startsWith("gw712-dryrun-owner-")
+					? scenarios["plex-normal"]
+					: scenarios[token]
 const metadataServed = new Set()
 
 function send(res, status, body, headers = {}) {
@@ -67,7 +85,16 @@ function plexList(req, res, url) {
 	const size = Number(url.searchParams.get("X-Plex-Container-Size") ?? 20)
 	if (scenario.failList === "after-first" && start > 0)
 		return send(res, 500, { error: "upstream" })
-	const etag = scenario.etag === "list" ? `"${token}-list"` : `"${token}-${start}"`
+	if (scenario.redirect && req.headers.host !== "gw712-redirect-target") {
+		res.writeHead(302, { location: `https://gw712-redirect-target${req.url}` })
+		return res.end()
+	}
+	const etag = scenario.etag === "list" ? `"${token.slice(0, 40)}-list"` : `"${token.slice(0, 40)}-${start}"`
+	if (scenario.echo && req.headers["if-none-match"] !== etag) {
+		const body = JSON.stringify({ MediaContainer: { offset: start, size, totalSize: scenario.items.length, Metadata: scenario.items.slice(start, start + size) } })
+		res.writeHead(200, { "content-type": "application/json", etag })
+		return res.end(`{${echoJson(token)},${body.slice(1, -2)},${echoJson(token)}}}`)
+	}
 	if (req.headers["if-none-match"] === etag) return send(res, 304, undefined, { etag })
 	send(
 		res,
@@ -84,10 +111,21 @@ function plexList(req, res, url) {
 	)
 }
 
-function plexMetadata(res, ratingKey, entry) {
+function plexMetadata(req, res, ratingKey, entry) {
 	const match = /^rk-(movie|show|episode)-(\d+)-(\w+)$/.exec(ratingKey)
 	if (!match) return send(res, 404, {})
 	const [, type, tmdbId, flag] = match
+	const token = req.headers["x-plex-token"] ?? ""
+	if (flag === "echo401") {
+		res.writeHead(401, { "content-type": "application/json" })
+		return res.end(`{"error":"bad token",${echoJson(token)}}`)
+	}
+	if (flag === "echo") {
+		res.writeHead(200, { "content-type": "application/json" })
+		return res.end(
+			`{${echoJson(token)},"MediaContainer":{${echoJson(token)},"Metadata":[{"ratingKey":"${ratingKey}","type":"${type}","title":"Plex ${type} ${tmdbId}",${echoJson(token)},"Guid":[{"id":"tmdb://${tmdbId}"}]}]}}`,
+		)
+	}
 	if (flag === "404") return send(res, 404, {})
 	if (flag === "500") return send(res, 500, {})
 	if (flag === "refresh") {
@@ -122,12 +160,12 @@ function tmdb(res, kind, id) {
 createServer({ cert: readFileSync(certPath), key: readFileSync(keyPath) }, (req, res) => {
 	const url = new URL(req.url, `https://${req.headers.host}`)
 	if (url.pathname === "/__log") return send(res, 200, log)
-	const entry = { host: req.headers.host, path: url.pathname, start: url.searchParams.get("X-Plex-Container-Start") }
+	const entry = { host: req.headers.host, path: url.pathname, start: url.searchParams.get("X-Plex-Container-Start"), withToken: !!req.headers["x-plex-token"] }
 	log.push(entry)
 	const plexMeta = /^\/library\/metadata\/([^/]+)$/.exec(url.pathname)
 	const tmdbItem = /^\/3\/(movie|tv)\/(\d+)$/.exec(url.pathname)
 	if (url.pathname === "/library/sections/watchlist/all") return plexList(req, res, url)
-	if (plexMeta) return plexMetadata(res, plexMeta[1], entry)
+	if (plexMeta) return plexMetadata(req, res, plexMeta[1], entry)
 	if (tmdbItem) return tmdb(res, tmdbItem[1], tmdbItem[2])
 	send(res, 404, { error: "not mocked" })
 }).listen(443, () => console.log("mock upstream ready"))

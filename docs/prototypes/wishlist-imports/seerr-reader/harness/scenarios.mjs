@@ -155,6 +155,8 @@ function check(result, expect) {
 	if (result.leaks?.length) failures.push(`leaked ${result.leaks.length} forbidden strings`)
 	if (result.projectionOk === false) failures.push("extra item fields")
 	if (result.parser?.invalid) failures.push(`${result.parser.invalid} invalid rows`)
+	if (expect.outputTitles !== undefined && result.outputTitles !== expect.outputTitles)
+		failures.push(`${result.outputTitles} titles written, expected ${expect.outputTitles}`)
 	if (expect.noMovieWants && result.parser?.movieWants) failures.push(`${result.parser.movieWants} Plex rows became movie wishes`)
 	if (expect.movieWishesOnlyFrom) {
 		const stray = (result.parser?.movieWishKeys ?? []).filter((key) => !expect.movieWishesOnlyFrom.includes(key))
@@ -300,6 +302,24 @@ const mutateRemoveSeeded = await seedLocal(mutateRemove, 16000, 41)
 await record("trap-removed-during-read", ["L3"], mutateRemoveSeeded.filter((key) => key !== "movie:16000"), () =>
 	readAs(mutateRemove, { onPage: async (done, pass = 1) => pass === 1 && done === 1 && (await removeWish(mutateRemove, "movie:16000")) }),
 	NOT_COMPLETE,
+)
+// L9: every page's total must agree, in both passes: 60, 59, 60.
+await record("stub-page-totals-differ", ["L9"], Array.from({ length: 60 }, (_, i) => `movie:${i + 1}`), () =>
+	readWatchlist(
+		fake((page) => ({
+			page,
+			totalPages: 3,
+			totalResults: page === 2 ? 59 : 60,
+			results: Array.from({ length: 20 }, (_, i) => localRow((page - 1) * 20 + i + 1)),
+		})),
+	),
+	NOT_COMPLETE,
+)
+// L6: rows without a TMDB ID stay separate instead of collapsing into one.
+const noIdRow = (title) => ({ ...localRow(1), tmdbId: null, title })
+await record("stub-rows-without-identity", ["L6", "L9"], ["untyped:No ID A", "untyped:No ID B", "untyped:No ID C"], () =>
+	readWatchlist(fake(() => ({ page: 1, totalPages: 1, totalResults: 3, results: [noIdRow("No ID A"), noIdRow("No ID B"), noIdRow("No ID C")] }))),
+	{ labels: ["unknown"], outputTitles: 3 },
 )
 // L8: an edit that keeps the count. Read pages 1-2, delete row 21, append
 // row 61, read page 3. Counts and page 1 still agree; row 41 is skipped.

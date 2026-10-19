@@ -58,7 +58,7 @@ make_certs() {
 		cd "$dir"
 		openssl req -x509 -newkey rsa:2048 -nodes -keyout ca.key -out ca.pem -days 2 -subj "/CN=gw712 local test CA" 2>/dev/null
 		openssl req -newkey rsa:2048 -nodes -keyout leaf.key -out leaf.csr -subj "/CN=gw712 mock" 2>/dev/null
-		printf 'subjectAltName=DNS:api.themoviedb.org,DNS:discover.provider.plex.tv,DNS:metadata.provider.plex.tv,DNS:plex.tv,DNS:mock\n' >san.ext
+		printf 'subjectAltName=DNS:api.themoviedb.org,DNS:discover.provider.plex.tv,DNS:metadata.provider.plex.tv,DNS:plex.tv,DNS:mock,DNS:gw712-redirect-target\n' >san.ext
 		openssl x509 -req -in leaf.csr -CA ca.pem -CAkey ca.key -CAcreateserial -out leaf.pem -days 2 -extfile san.ext 2>/dev/null
 		chmod 644 ./*.pem ./*.key
 	)
@@ -95,7 +95,7 @@ start_mock() {
 	remove_own gw712-mock
 	docker run -d --name gw712-mock "${OWN_LABELS[@]}" --network "$net" \
 		--network-alias mock --network-alias api.themoviedb.org \
-		--network-alias discover.provider.plex.tv --network-alias metadata.provider.plex.tv --network-alias plex.tv \
+		--network-alias discover.provider.plex.tv --network-alias metadata.provider.plex.tv --network-alias plex.tv --network-alias gw712-redirect-target \
 		-v "$harness:/harness:ro" -v "$certs:/certs:ro" \
 		"$NODE_IMAGE" node /harness/mock-upstream.mjs /certs/leaf.pem /certs/leaf.key >/dev/null
 }
