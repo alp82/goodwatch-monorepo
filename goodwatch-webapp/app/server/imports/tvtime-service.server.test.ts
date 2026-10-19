@@ -1051,8 +1051,119 @@ test("a second large TV Time preview spends its budget on the remaining uncached
 	assert.equal(requests, 100)
 	assert.equal(
 		db.catalogQueries.filter((q) => q.sql.includes("UNION ALL")).length,
-		2,
+		6,
 	)
+})
+
+test("TV Time reads more than 800 stored IDs in bounded batches and holds an ambiguity spanning the boundary", async (t) => {
+	const { db } = setup()
+	db.catalog[0].tvdb_id = 100
+	db.catalog.push({
+		media_type: "show",
+		tmdb_id: 999,
+		tvdb_id: 20000,
+		title: "Overlapping show",
+	})
+	db.episodes = Array.from({ length: 802 }, (_, i) => ({
+		tmdb_id: i + 101,
+		show_id: 1668,
+		season_number: 1,
+		episode_number: i + 1,
+		tvdb_id: i === 801 ? 20000 : i + 20000,
+		name: null,
+	}))
+	const select = db.select.bind(db)
+	let batches = 0
+	t.mock.method(
+		db,
+		"select",
+		async (sql: string, params: Parameters<typeof db.select>[1]) => {
+			if (sql.includes("UNION ALL")) {
+				assert.ok(
+					params.length <= 800,
+					"Catalog reads must bind at most 800 requested IDs",
+				)
+				batches++
+			}
+			return select(sql, params)
+		},
+	)
+	let calls = 0
+	t.mock.method(globalThis, "fetch", async () => {
+		calls++
+		throw new Error(
+			"Stored identities must be read in full before any TMDB request",
+		)
+	})
+	const file = Buffer.from(
+		`key,s_id,ep_id,s_no,ep_no,created_at,is_for_later\n${Array.from({ length: 802 }, (_, i) => `watch-episode-${i},100,${i === 801 ? 20000 : i + 20000},1,${i + 1},2024-01-${i === 801 ? "02" : "01"} 12:00:00,false\n`).join("")}user-series-overlap,20000,,,,,true\n`,
+	)
+	const p = await previewImport(
+		"member",
+		"tvtime",
+		"tracking-prod-records-v2.csv",
+		file,
+	)
+	assert.equal(p.counts.new, 801)
+	assert.equal(p.counts.unmatched, 2)
+	assert.equal(batches, 2)
+	assert.equal(calls, 0)
+	const held = (await getImportItems("member", p.id, "unmatched", 0, 50)).items
+	assert.equal(held.length, 2)
+	assert.ok(held.every((row) => /not match uniquely/.test(row.reason ?? "")))
+})
+
+test("a TV Time catalog sentinel discards earlier batches and also bounds the combined result", async (t) => {
+	for (const lastBatchSize of [50001, 100001]) {
+		const { db } = setup()
+		db.catalog[0].tvdb_id = 100
+		db.episodes = Array.from({ length: 801 }, (_, i) => ({
+			tmdb_id: i + 101,
+			show_id: 1668,
+			season_number: 1,
+			episode_number: i + 1,
+			tvdb_id: i + 20000,
+			name: null,
+		}))
+		const select = db.select.bind(db)
+		let batches = 0
+		t.mock.method(
+			db,
+			"select",
+			async (sql: string, params: Parameters<typeof db.select>[1]) => {
+				const matches = await select(sql, params)
+				if (!sql.includes("UNION ALL")) return matches
+				const count = ++batches === 1 ? 50000 : lastBatchSize
+				return [
+					...matches,
+					...Array.from({ length: count - matches.length }, (_, i) => ({
+						...matches[0],
+						tmdb_id: i + 1000000,
+					})),
+				]
+			},
+		)
+		t.mock.method(
+			globalThis,
+			"fetch",
+			async () => new Response("", { status: 503 }),
+		)
+		const file = Buffer.from(
+			`key,s_id,ep_id,s_no,ep_no,created_at\n${Array.from({ length: 801 }, (_, i) => `watch-episode-${i},100,${i + 20000},1,${i + 1},2024-01-01 12:00:00\n`).join("")}`,
+		)
+		const p = await previewImport(
+			"member",
+			"tvtime",
+			"tracking-prod-records-v2.csv",
+			file,
+		)
+		assert.equal(batches, 2)
+		assert.equal(p.counts.new, 0)
+		assert.equal(p.counts.unmatched, 801)
+		const first = (await getImportItems("member", p.id, undefined, 0, 1))
+			.items[0]
+		assert.equal(first.problem?.code, "tvtime_lookup_unavailable")
+	}
 })
 
 test("ambiguous stored TVDB identities stay unmatched without remote revalidation", async (t) => {

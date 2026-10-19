@@ -1,5 +1,5 @@
 import type { ImportObservation } from "../../domain/imports.ts"
-import { marks, run, select } from "./store.server.ts"
+import { chunks, marks, run, select } from "./store.server.ts"
 import {
 	type TvdbLookup,
 	type TvdbLookupResult,
@@ -28,32 +28,46 @@ export async function createTvtimeCatalogLookup(
 		),
 	]
 	const cached = new Map<number, TvdbLookupResult>()
-	if (episodeIds.length || showIds.length) {
+	const identities = [
+		...episodeIds.map((id) => ({ kind: "episode" as const, id })),
+		...showIds.map((id) => ({ kind: "show" as const, id })),
+	]
+	let records = 0
+	for (const batch of chunks(identities, 800)) {
+		const episodes = batch
+			.filter((id) => id.kind === "episode")
+			.map((id) => id.id)
+		const shows = batch.filter((id) => id.kind === "show").map((id) => id.id)
 		const matches = await select<{
 			kind: "show" | "episode"
 			tvdb_id: number
 			tmdb_id: number
 			show_id: number
 		}>(
-			`SELECT 'episode' AS kind, tvdb_id, tmdb_id, show_id FROM episode WHERE tvdb_id IN (${marks(episodeIds.length) || "NULL"}) AND removed_at IS NULL UNION ALL SELECT 'show' AS kind, tvdb_id, tmdb_id, tmdb_id AS show_id FROM show WHERE tvdb_id IN (${marks(showIds.length) || "NULL"}) LIMIT 100001`,
-			[...episodeIds, ...showIds],
+			`SELECT 'episode' AS kind, tvdb_id, tmdb_id, show_id FROM episode WHERE tvdb_id IN (${marks(episodes.length) || "NULL"}) AND removed_at IS NULL UNION ALL SELECT 'show' AS kind, tvdb_id, tmdb_id, tmdb_id AS show_id FROM show WHERE tvdb_id IN (${marks(shows.length) || "NULL"}) LIMIT 100001`,
+			[...episodes, ...shows],
 		)
-		// Never turn a truncated, potentially ambiguous read into unique evidence.
-		if (matches.length < 100001)
-			for (const row of matches) {
-				let result = cached.get(Number(row.tvdb_id))
-				if (!result) {
-					result = { tv_results: [], tv_episode_results: [] }
-					cached.set(Number(row.tvdb_id), result)
-				}
-				if (row.kind === "show")
-					result.tv_results.push({ id: Number(row.tmdb_id) })
-				else
-					result.tv_episode_results.push({
-						id: Number(row.tmdb_id),
-						show_id: Number(row.show_id),
-					})
+		records += matches.length
+		// Keep the original global bound, including a truncated individual batch.
+		// Discard earlier batches too rather than inferring uniqueness from a partial read.
+		if (records >= 100001) {
+			cached.clear()
+			break
+		}
+		for (const row of matches) {
+			let result = cached.get(Number(row.tvdb_id))
+			if (!result) {
+				result = { tv_results: [], tv_episode_results: [] }
+				cached.set(Number(row.tvdb_id), result)
 			}
+			if (row.kind === "show")
+				result.tv_results.push({ id: Number(row.tmdb_id) })
+			else
+				result.tv_episode_results.push({
+					id: Number(row.tmdb_id),
+					show_id: Number(row.show_id),
+				})
+		}
 	}
 	const remote = createTvdbLookup()
 	const publishedShows = new Set<number>()
