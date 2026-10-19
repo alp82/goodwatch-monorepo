@@ -41,6 +41,7 @@ import {
 	select,
 	summarize,
 } from "./store.server.ts"
+import { TVDB_LOOKUP_LIMITS, createTvdbLookup } from "./tvdb-lookup.server.ts"
 import {
 	isManuallyMatchableWishlistSource,
 	wishlistSourceGroup,
@@ -56,37 +57,57 @@ type CatalogRow = {
 
 async function matchCatalog(source: ImportSource, rows: ImportObservation[]) {
 	const animeMappings = createCatalogAnimeLookup()
-	const resolveEpisode = createCatalogEpisodeResolver(animeMappings)
-	const tvdbParent = createTvdbParentLookup()
-	for (const row of rows) {
-		if (source !== "tvtime" || row.problem || row.tmdbId != null) continue
-		if (row.mediaType === "movie" && !row.imdbId) {
-			row.problem = {
-				outcome: "unmatched",
-				code: row.tvtimeMovie
-					? "tvtime_movie_identity_missing"
-					: "tvtime_movie_imdb_missing",
-				reason: row.tvtimeMovie
-					? "This TV Time movie has no catalog ID. Choose a movie to match it."
-					: "This TV Time movie has no IMDb ID, so it wasn't matched.",
-			}
-			continue
-		}
-		if (row.mediaType !== "show") continue
-		const identity = row.showTvdbId
-			? `show:${row.showTvdbId}`
-			: row.episodeTvdbId
-				? `episode:${row.episodeTvdbId}`
-				: null
-		if (identity) row.tmdbId = await tvdbParent(identity)
-		if (!row.tmdbId && !row.imdbId)
-			row.problem = {
-				outcome: "unmatched",
-				code: "tvtime_show_unmatched",
-				reason:
-					"This TV Time show could not be matched uniquely by its TVDB identity. Its episodes and status were not applied.",
-			}
-	}
+	const lookup = source === "tvtime" ? createTvdbLookup() : undefined
+	const resolveEpisode = createCatalogEpisodeResolver(animeMappings, lookup)
+	const tvdbParent = createTvdbParentLookup(lookup)
+	const unavailableParents = new Set<ImportObservation>()
+	const unavailableProblem = {
+		outcome: "unmatched",
+		code: "tvtime_lookup_unavailable",
+		reason:
+			"The TVDB lookup is unavailable or reached this preview's limit. Retry this import later.",
+	} as const
+	if (source === "tvtime")
+		for (const batch of chunks(rows, TVDB_LOOKUP_LIMITS.concurrency))
+			await Promise.all(
+				batch.map(async (row) => {
+					if (row.problem || row.tmdbId != null) return
+					if (row.mediaType === "movie" && !row.imdbId) {
+						row.problem = {
+							outcome: "unmatched",
+							code: row.tvtimeMovie
+								? "tvtime_movie_identity_missing"
+								: "tvtime_movie_imdb_missing",
+							reason: row.tvtimeMovie
+								? "This TV Time movie has no catalog ID. Choose a movie to match it."
+								: "This TV Time movie has no IMDb ID, so it wasn't matched.",
+						}
+						return
+					}
+					if (row.mediaType !== "show") return
+					const identity = row.showTvdbId
+						? `show:${row.showTvdbId}`
+						: row.episodeTvdbId
+							? `episode:${row.episodeTvdbId}`
+							: null
+					const parent = identity
+						? await tvdbParent(identity)
+						: { status: "unmatched" as const }
+					if (parent.status === "matched") row.tmdbId = parent.showId
+					if (parent.status === "unavailable") unavailableParents.add(row)
+					if (parent.status === "unavailable" && !row.imdbId) {
+						row.problem = unavailableProblem
+						return
+					}
+					if (!row.tmdbId && !row.imdbId)
+						row.problem = {
+							outcome: "unmatched",
+							code: "tvtime_show_unmatched",
+							reason:
+								"This TV Time show could not be matched uniquely by its TVDB identity. Its episodes and status were not applied.",
+						}
+				}),
+			)
 	// Tracker identities locate the parent; episode placement is validated separately below.
 	for (const row of rows) {
 		if (
@@ -247,41 +268,50 @@ async function matchCatalog(source: ImportSource, rows: ImportObservation[]) {
 					})
 			}
 	}
-	for (const [index, title] of found) {
-		const row = rows[index]
-		// Wishlist season/episode rows reuse episode-scope fields as source evidence;
-		// their target is the whole show, so they must skip episode resolution.
-		if (
-			(source === "wishlist" && row.kind === "want") ||
-			title.mediaType !== "show" ||
-			(row.episodeTmdbId == null &&
-				!(row.animeEntry && row.kind === "watch") &&
-				row.episodeTvdbId == null &&
-				!row.episodeGroup &&
-				!row.episodeName &&
-				row.season == null &&
-				row.episode == null)
+	for (const [index, row] of rows.entries())
+		if (unavailableParents.has(row) && !found.has(index))
+			row.problem = unavailableProblem
+	for (const batch of chunks(
+		[...found],
+		source === "tvtime" ? TVDB_LOOKUP_LIMITS.concurrency : 1,
+	))
+		await Promise.all(
+			batch.map(async ([index, title]) => {
+				const row = rows[index]
+				// Wishlist season/episode rows reuse episode-scope fields as source evidence;
+				// their target is the whole show, so they must skip episode resolution.
+				if (
+					(source === "wishlist" && row.kind === "want") ||
+					title.mediaType !== "show" ||
+					(row.episodeTmdbId == null &&
+						!(row.animeEntry && row.kind === "watch") &&
+						row.episodeTvdbId == null &&
+						!row.episodeGroup &&
+						!row.episodeName &&
+						row.season == null &&
+						row.episode == null)
+				)
+					return
+				const result = await resolveEpisode({
+					...row,
+					showId: title.tmdbId,
+					numbering: row.episodeNumbering,
+				})
+				if (result.status === "unmatched") {
+					found.delete(index)
+					row.problem = { outcome: "unmatched", reason: result.reason }
+				} else {
+					if (result.datePolicy && row.kind === "watch") {
+						row.watchedAt = result.watchedAt ?? null
+						row.precision = result.datePolicy
+					}
+					row.episodeTmdbId = result.episodeTmdbId
+					row.season = result.season
+					row.episode = result.episode
+					if (result.special) row.episodeSpecial = true
+				}
+			}),
 		)
-			continue
-		const result = await resolveEpisode({
-			...row,
-			showId: title.tmdbId,
-			numbering: row.episodeNumbering,
-		})
-		if (result.status === "unmatched") {
-			found.delete(index)
-			row.problem = { outcome: "unmatched", reason: result.reason }
-		} else {
-			if (result.datePolicy && row.kind === "watch") {
-				row.watchedAt = result.watchedAt ?? null
-				row.precision = result.datePolicy
-			}
-			row.episodeTmdbId = result.episodeTmdbId
-			row.season = result.season
-			row.episode = result.episode
-			if (result.special) row.episodeSpecial = true
-		}
-	}
 
 	return found
 }

@@ -11,6 +11,7 @@ import {
 	createEpisodeResolver,
 } from "./episode-resolver.server.ts"
 import { run, select } from "./store.server.ts"
+import { type TvdbLookup, createTvdbLookup } from "./tvdb-lookup.server.ts"
 
 const id = z.number().int().positive()
 const summary = z.object({
@@ -72,34 +73,37 @@ function memoize<K, V>(load: (key: K) => Promise<V>) {
 	}
 }
 
-/** Read-only parent resolution; TVDB episode IDs can supply a missing parent. */
-export function createTvdbParentLookup() {
-	return memoize(async (identity: string): Promise<number | null> => {
+/** Read-only parent resolution distinguishes a missing identity from an unavailable lookup. */
+export function createTvdbParentLookup(
+	lookup: TvdbLookup = createTvdbLookup(),
+) {
+	return async (
+		identity: string,
+	): Promise<
+		| { status: "matched"; showId: number }
+		| { status: "unmatched" | "unavailable" }
+	> => {
 		const [kind, externalId] = identity.split(":")
 		try {
-			const result = await tmdb(
-				`find/${externalId}`,
-				z.object({
-					tv_results: z.array(z.object({ id })).default([]),
-					tv_episode_results: z
-						.array(z.object({ id, show_id: id }))
-						.default([]),
-				}),
-				{ external_source: "tvdb_id" },
-			)
+			const result = await lookup(Number(externalId))
 			const parents =
 				kind === "show"
-					? (result.tv_results ?? []).map((row) => row.id)
-					: (result.tv_episode_results ?? []).map((row) => row.show_id)
-			return parents.length === 1 ? parents[0] : null
+					? result.tv_results.map((row) => row.id)
+					: result.tv_episode_results.map((row) => row.show_id)
+			return parents.length === 1
+				? { status: "matched", showId: parents[0] }
+				: { status: "unmatched" }
 		} catch {
-			return null
+			return { status: "unavailable" }
 		}
-	})
+	}
 }
 
 /** One resolver per preview: no process-wide data or credentials retained. */
-export function createCatalogEpisodeResolver(animeMappings: AnimeMappings) {
+export function createCatalogEpisodeResolver(
+	animeMappings: AnimeMappings,
+	tvdbLookup?: TvdbLookup,
+) {
 	return createEpisodeResolver({
 		animeMappings,
 		episodes: memoize((showId: number) =>
@@ -108,15 +112,17 @@ export function createCatalogEpisodeResolver(animeMappings: AnimeMappings) {
 				[showId],
 			),
 		),
-		findTvdb: memoize((tvdbId: number) =>
-			tmdb(
-				`find/${tvdbId}`,
-				z.object({
-					tv_episode_results: z.array(z.object({ id, show_id: id })),
-				}),
-				{ external_source: "tvdb_id" },
+		findTvdb:
+			tvdbLookup ??
+			memoize((tvdbId: number) =>
+				tmdb(
+					`find/${tvdbId}`,
+					z.object({
+						tv_episode_results: z.array(z.object({ id, show_id: id })),
+					}),
+					{ external_source: "tvdb_id" },
+				),
 			),
-		),
 		groups: memoize(
 			async (showId: number) =>
 				(

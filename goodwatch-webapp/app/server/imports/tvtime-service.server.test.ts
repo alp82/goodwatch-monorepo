@@ -851,3 +851,53 @@ test("extension movies without IMDb IDs explain the missing ID and another sourc
 	assert.equal(row.outcome, "unmatched")
 	assert.equal(row.mediaType, "show")
 })
+
+test("a temporary TVDB parent outage is retryable and does not poison later rows in the preview", async (t) => {
+	setup()
+	let calls = 0
+	t.mock.method(globalThis, "fetch", async () =>
+		++calls === 1
+			? new Response("", { status: 503 })
+			: new Response(JSON.stringify({ tv_results: [{ id: 1668 }] })),
+	)
+	const csv = `uuid,tvdb_id,imdb_id,title,status,created_at\n${Array.from(
+		{ length: 5 },
+		(_, i) => `s${i},100,,Show,continuing,\n`,
+	).join("")}`
+	const p = await previewImport(
+		"member",
+		"tvtime",
+		"tvtime-series-2026-07-01.csv",
+		Buffer.from(csv),
+	)
+	const rows = (await getImportItems("member", p.id, undefined, 0, 50)).items
+	assert.equal(p.counts.new, 1)
+	assert.equal(p.counts.unmatched, 4)
+	assert.ok(
+		rows
+			.slice(0, 4)
+			.every((row) => row.problem?.code === "tvtime_lookup_unavailable"),
+	)
+	assert.ok(
+		rows.slice(0, 4).every((row) => /lookup.*retry/i.test(row.reason ?? "")),
+	)
+})
+
+test("an unavailable TVDB parent remains retryable when the supplied IMDb fallback also misses", async (t) => {
+	setup()
+	t.mock.method(
+		globalThis,
+		"fetch",
+		async () => new Response("", { status: 503 }),
+	)
+	const p = await previewImport(
+		"member",
+		"tvtime",
+		"tvtime-series-2026-07-01.csv",
+		Buffer.from(
+			"uuid,tvdb_id,imdb_id,title,status\ns1,100,tt0000001,Show,continuing\n",
+		),
+	)
+	const row = (await getImportItems("member", p.id, undefined, 0, 50)).items[0]
+	assert.equal(row.problem?.code, "tvtime_lookup_unavailable")
+})

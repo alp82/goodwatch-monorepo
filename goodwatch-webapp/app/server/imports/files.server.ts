@@ -699,17 +699,18 @@ export async function parseImportFile(
 		fail("Use Connect for this source instead of uploading a file.")
 	if (source === "wishlist") return parseWishlistFile(bytes, fail)
 	if (source === "tvtime") {
+		const isZip =
+			(bytes[0] === 0x50 && bytes[1] === 0x4b) || /\.zip$/i.test(fileName ?? "")
 		try {
 			checkUploadSize(bytes)
 			const ignored: string[] = []
-			const entries =
-				bytes[0] === 0x50 && bytes[1] === 0x4b
-					? zipEntries(bytes, (name) => {
-							if (isTvTimeFile(name)) return true
-							if (!name.endsWith("/")) ignored.push(name)
-							return false
-						})
-					: [{ name: fileName ?? "tvtime.csv", data: bytes }]
+			const entries = isZip
+				? zipEntries(bytes, (name) => {
+						if (isTvTimeFile(name)) return true
+						if (!name.endsWith("/")) ignored.push(name)
+						return false
+					})
+				: [{ name: fileName ?? "tvtime.csv", data: bytes }]
 			return parseTvTime(entries, { readCsvTable, text, fail }, ignored)
 		} catch (error) {
 			if (error instanceof ImportFileError) {
@@ -718,7 +719,7 @@ export async function parseImportFile(
 						"This TV Time ZIP is password-protected. Extract it locally, then upload its tracking CSV files.",
 						"tvtime_zip_encrypted",
 					)
-				if (!error.code && bytes[0] === 0x50 && bytes[1] === 0x4b)
+				if (!error.code && isZip)
 					fail(
 						"GoodWatch couldn't open this TV Time ZIP. Check the file and try again.",
 						"tvtime_zip_unreadable",

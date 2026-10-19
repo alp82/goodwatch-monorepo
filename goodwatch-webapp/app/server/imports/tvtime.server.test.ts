@@ -573,6 +573,15 @@ test("TV Time ZIP failures distinguish password detection from a generic unreada
 	await assert.rejects(
 		parseImportFile(
 			"tvtime",
+			Buffer.from("broken archive"),
+			undefined,
+			"gdpr-data.zip",
+		),
+		{ code: "tvtime_zip_unreadable" },
+	)
+	await assert.rejects(
+		parseImportFile(
+			"tvtime",
 			zipFixture(
 				{ "tracking-prod-records-v2.csv": "key\ntracking-stats\n" },
 				{ encrypted: "tracking-prod-records-v2.csv" },
