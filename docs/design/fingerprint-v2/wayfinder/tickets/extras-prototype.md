@@ -1,3 +1,5 @@
+Parent map: [Benchmark a richer fingerprint and discovery system](https://github.com/alp82/goodwatch-monorepo/issues/716).
+
 ## Question
 
 Which complete-output pipeline produces useful essence, tags, highlights and companion data most economically without losing factuality, coverage or display/search value?

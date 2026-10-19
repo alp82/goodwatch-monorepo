@@ -1,3 +1,5 @@
+Parent map: [Benchmark a richer fingerprint and discovery system](https://github.com/alp82/goodwatch-monorepo/issues/716).
+
 ## Question
 
 What exact code/configuration, source inventories, historical outputs and data-quality qualifications will every later experiment refer to?

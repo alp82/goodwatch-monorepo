@@ -1,3 +1,5 @@
+Parent map: [Benchmark a richer fingerprint and discovery system](https://github.com/alp82/goodwatch-monorepo/issues/716).
+
 ## Question
 
 How should people understand and explore mixed-scale/sparse fingerprints without overwhelming the existing title, Taste, Discover and Explorer experiences?

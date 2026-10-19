@@ -1,3 +1,5 @@
+Parent map: [Benchmark a richer fingerprint and discovery system](https://github.com/alp82/goodwatch-monorepo/issues/716).
+
 ## Question
 
 Which candidate scales and representations improve annotation reliability and useful similarity/filtering while reducing generation cost and unnecessary precision?

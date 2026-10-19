@@ -1,3 +1,5 @@
+Parent map: [Benchmark a richer fingerprint and discovery system](https://github.com/alp82/goodwatch-monorepo/issues/716).
+
 ## Question
 
 Once candidate configurations and review rules have been selected with the human, do they retain their quality/cost/time behavior on the untouched confirmation set?

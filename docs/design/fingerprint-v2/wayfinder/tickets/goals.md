@@ -1,3 +1,5 @@
+Parent map: [Benchmark a richer fingerprint and discovery system](https://github.com/alp82/goodwatch-monorepo/issues/716).
+
 ## Question
 
 What must improve for a new fingerprint/discovery approach to be worthwhile, and what quality, cost, latency, throughput, review-effort and spending constraints govern the experiments?

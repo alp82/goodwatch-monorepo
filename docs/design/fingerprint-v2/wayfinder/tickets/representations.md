@@ -1,3 +1,5 @@
+Parent map: [Benchmark a richer fingerprint and discovery system](https://github.com/alp82/goodwatch-monorepo/issues/716).
+
 ## Question
 
 Which trait families need presence, coarse ordinal levels, 0–10 strength, categories, sparse concepts, quantities or scoped relations, and how will the experiment compare them fairly?

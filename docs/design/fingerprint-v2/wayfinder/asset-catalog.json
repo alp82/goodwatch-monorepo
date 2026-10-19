@@ -1,7 +1,7 @@
 {
   "scope": "All design and gap-audit assets in this review packet, including source inventories, branch findings, proposals, examples, scripts, ledgers and historical issue captures. Existing tracked historical benchmarks/prototypes remain linked in the evidence indexes.",
   "self_excluded": "This catalog excludes itself to avoid a recursive checksum.",
-  "created_at": "2026-10-19T06:29:21.574393+00:00",
+  "created_at": "2026-10-19T06:31:22.863256+00:00",
   "files": [
     {
       "path": "docs/design/fingerprint-v2/definition.json",
@@ -30,8 +30,8 @@
     },
     {
       "path": "docs/design/fingerprint-v2/wayfinder/README.md",
-      "bytes": 5702,
-      "sha256": "b0a4096dd05484c0d07ae24b379a4fe752ca19987551ad86db734b1f95a35752"
+      "bytes": 6145,
+      "sha256": "219e12b5852acd12ff5754f7effbb444395b78f92affad5fe5516d1830678281"
     },
     {
       "path": "docs/design/fingerprint-v2/wayfinder/architecture-impact.md",
@@ -90,8 +90,8 @@
     },
     {
       "path": "docs/design/fingerprint-v2/wayfinder/manifest.json",
-      "bytes": 6285,
-      "sha256": "0b85a2c6f8e9b1f0535f09775487d0c44b155c5aa0a2617425a26b38ae3a76e6"
+      "bytes": 10616,
+      "sha256": "e5742274aac24ea12dabf12495c15a6edb60cdb88b4e22f7d6e4365f4557ddce"
     },
     {
       "path": "docs/design/fingerprint-v2/wayfinder/map.md",
@@ -100,68 +100,68 @@
     },
     {
       "path": "docs/design/fingerprint-v2/wayfinder/tickets/baseline.md",
-      "bytes": 1872,
-      "sha256": "b34b4b531e7a562954a5ee06b4a4a468db0487265f54fdd156083ad0000f10f2"
+      "bytes": 1996,
+      "sha256": "cd43f47c7078c6719b09b43824dd8a65471bf27f5142cf7267d6f29284e0da6c"
     },
     {
       "path": "docs/design/fingerprint-v2/wayfinder/tickets/corpus.md",
-      "bytes": 2644,
-      "sha256": "4f2f96df6ba116fb914ce267f7b49fe56728b5073fe02f6fd16b2dd31566c7d1"
+      "bytes": 2768,
+      "sha256": "5c1ee4458bb57d8d4a20c3a120553d0be2385f6557e4c0d38d090258b6b6df67"
     },
     {
       "path": "docs/design/fingerprint-v2/wayfinder/tickets/discovery-prototype.md",
-      "bytes": 2013,
-      "sha256": "4728482a7dd89e9dd42c3be7bee5c65c7d0c60829d4cb50c7cd734a2167388a8"
+      "bytes": 2137,
+      "sha256": "b3806bdf797b38b2b80a72d59c9bbbb14a5d95b25978e1d59226e78b2bd9b6e2"
     },
     {
       "path": "docs/design/fingerprint-v2/wayfinder/tickets/display-prototype.md",
-      "bytes": 1695,
-      "sha256": "7fa05c332171e5aa8a1e05a1f50c1f0d508c3eb292814cebabd3df7459d063f2"
+      "bytes": 1819,
+      "sha256": "eac33c8f782a56c09c198004c986995773f6a72be467196458fbe262fa77ee57"
     },
     {
       "path": "docs/design/fingerprint-v2/wayfinder/tickets/extras-prototype.md",
-      "bytes": 1712,
-      "sha256": "eb4cbc110496ea899b348dae81ea1eceabfb194ddcf9cece1371de94d094cb79"
+      "bytes": 1836,
+      "sha256": "f12e7251ef9115b27fbd82af33ac1f314bb64e6182124308ae3b1fa01f204f6c"
     },
     {
       "path": "docs/design/fingerprint-v2/wayfinder/tickets/extras.md",
-      "bytes": 2363,
-      "sha256": "67ed5b68f7f03784840cea50c57c71f3bae83193fb24d5a5c80d6a413edd7284"
+      "bytes": 2487,
+      "sha256": "1d86559d260c65ba3cfe489e1454b7eb31aa18640683635912ae941fbe49e039"
     },
     {
       "path": "docs/design/fingerprint-v2/wayfinder/tickets/goals.md",
-      "bytes": 2201,
-      "sha256": "20d5f3890dc76bc364bfae9b9d3ecb5133566fc67520fa4b464d88d43db493ea"
+      "bytes": 2325,
+      "sha256": "365a4d732a1f0068d5bca1962482a380ff34fcef32707806e41b542931e1e3db"
     },
     {
       "path": "docs/design/fingerprint-v2/wayfinder/tickets/holdout.md",
-      "bytes": 1756,
-      "sha256": "74e5699fe2d733979130a33cdfc4a3c82598872933acbec0dd55d7d836a93bdd"
+      "bytes": 1880,
+      "sha256": "a97f8f62c47e392ab95b489d54f8e8e395f45406a0b6e92cac0bebd7eb74dcfb"
     },
     {
       "path": "docs/design/fingerprint-v2/wayfinder/tickets/knowledge-prototype.md",
-      "bytes": 1911,
-      "sha256": "f148dd6ca0dbbddd03d4467fef14fa7bea7aff24403836a1282b7f78bd4604f1"
+      "bytes": 2035,
+      "sha256": "1e43420b7dee601c7bd85d0434be223901c5d96838ce5dfd204ed896fa481e9d"
     },
     {
       "path": "docs/design/fingerprint-v2/wayfinder/tickets/providers.md",
-      "bytes": 1979,
-      "sha256": "872a4e8733a16a9317159b6a6bd1f9d68761469fb9d26c1e607dbc5d7db4b7e1"
+      "bytes": 2103,
+      "sha256": "740a2f0536f1253db68bb29da7645e62b7a329e5f0d51cc75e2581b7ceb02909"
     },
     {
       "path": "docs/design/fingerprint-v2/wayfinder/tickets/representations.md",
-      "bytes": 2414,
-      "sha256": "a9336ef1ddc685f5f7d03a0b43650e0e0060e5f69ad1cb5b6e8222954c5e8edd"
+      "bytes": 2538,
+      "sha256": "a632455fa174c3837e6e06bbac468247cf62b6fc8806b784c3972b273c157779"
     },
     {
       "path": "docs/design/fingerprint-v2/wayfinder/tickets/scale-prototype.md",
-      "bytes": 1723,
-      "sha256": "4ac0aef7bd2310a5fa296567d13bd31a4056c759839c1145135e6c656140ede9"
+      "bytes": 1847,
+      "sha256": "e2ef2a9e0a03cefeaf4a499d62d0dff0d06ae2d8764860d0a6a1592e014e3a2e"
     },
     {
       "path": "docs/design/fingerprint-v2/wayfinder/tickets/strategy.md",
-      "bytes": 2306,
-      "sha256": "10374e1d34a56ad648d93a237d409c013f0049eed757904a3ef020d178969a3d"
+      "bytes": 2430,
+      "sha256": "507282ace6195a508f735313270886fa4d4f3c4c83de798b0db7714f9428c0b1"
     },
     {
       "path": "docs/research/fingerprint-v2-gap-audit/README.md",

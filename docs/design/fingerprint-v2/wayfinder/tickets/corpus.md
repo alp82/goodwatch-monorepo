@@ -1,3 +1,5 @@
+Parent map: [Benchmark a richer fingerprint and discovery system](https://github.com/alp82/goodwatch-monorepo/issues/716).
+
 ## Question
 
 Which independently reviewable movies, shows, queries, factual probes and evidence conditions will distinguish knowledge, extraction and discovery quality without rewarding memorization or catalog errors?

@@ -1,3 +1,5 @@
+Parent map: [Benchmark a richer fingerprint and discovery system](https://github.com/alp82/goodwatch-monorepo/issues/716).
+
 ## Question
 
 Which current Jev and alternative classifier/generator configurations are feasible challengers for the distinct title-knowledge, evidence-extraction and query-interpretation jobs?

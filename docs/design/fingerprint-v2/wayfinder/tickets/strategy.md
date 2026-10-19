@@ -1,3 +1,5 @@
+Parent map: [Benchmark a richer fingerprint and discovery system](https://github.com/alp82/goodwatch-monorepo/issues/716).
+
 ## Question
 
 What strategy is justified by the reviewed evidence, what uncertainty remains, and what precisely should a subsequent implementation effort build?

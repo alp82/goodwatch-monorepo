@@ -1,3 +1,5 @@
+Parent map: [Benchmark a richer fingerprint and discovery system](https://github.com/alp82/goodwatch-monorepo/issues/716).
+
 ## Question
 
 How do the promising title representations combine with Jev or alternative query interpreters, lexical/dense retrieval, structured filters and ranking on real discovery tasks?

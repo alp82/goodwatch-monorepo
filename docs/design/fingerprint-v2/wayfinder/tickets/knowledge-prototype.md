@@ -1,3 +1,5 @@
+Parent map: [Benchmark a richer fingerprint and discovery system](https://github.com/alp82/goodwatch-monorepo/issues/716).
+
 ## Question
 
 Under the approved matched-input protocol, what do Jev and shortlisted alternatives actually know about movies/shows, what can they extract from supplied evidence, and what does a complete usable pipeline cost compared with Qwen?

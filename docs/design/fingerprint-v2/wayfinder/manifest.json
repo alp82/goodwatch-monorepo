@@ -1,5 +1,5 @@
 {
-  "status": "approved_for_publication",
+  "status": "published",
   "repository": "alp82/goodwatch-monorepo",
   "asset_branch": "planning/fingerprint-discovery-v2-20261019",
   "map_title": "Benchmark a richer fingerprint and discovery system",
@@ -20,7 +20,14 @@
         "wayfinder:grilling",
         "needs-info"
       ],
-      "body_file": "tickets/goals.md"
+      "body_file": "tickets/goals.md",
+      "issue": {
+        "url": "https://github.com/alp82/goodwatch-monorepo/issues/717",
+        "number": 717,
+        "node_id": "I_kwDOJCFabs8AAAABYMzO2A",
+        "id": 5919002328
+      },
+      "parent_attached": true
     },
     {
       "key": "baseline",
@@ -32,7 +39,14 @@
         "wayfinder:task",
         "ready-for-agent"
       ],
-      "body_file": "tickets/baseline.md"
+      "body_file": "tickets/baseline.md",
+      "issue": {
+        "url": "https://github.com/alp82/goodwatch-monorepo/issues/718",
+        "number": 718,
+        "node_id": "I_kwDOJCFabs8AAAABYMzQKw",
+        "id": 5919002667
+      },
+      "parent_attached": true
     },
     {
       "key": "providers",
@@ -44,7 +58,15 @@
         "wayfinder:research",
         "ready-for-agent"
       ],
-      "body_file": "tickets/providers.md"
+      "body_file": "tickets/providers.md",
+      "issue": {
+        "url": "https://github.com/alp82/goodwatch-monorepo/issues/719",
+        "number": 719,
+        "node_id": "I_kwDOJCFabs8AAAABYMzRVg",
+        "id": 5919002966
+      },
+      "parent_attached": true,
+      "claimed_by": "alp82"
     },
     {
       "key": "corpus",
@@ -59,7 +81,18 @@
         "wayfinder:grilling",
         "needs-info"
       ],
-      "body_file": "tickets/corpus.md"
+      "body_file": "tickets/corpus.md",
+      "issue": {
+        "url": "https://github.com/alp82/goodwatch-monorepo/issues/720",
+        "number": 720,
+        "node_id": "I_kwDOJCFabs8AAAABYMzSlg",
+        "id": 5919003286
+      },
+      "parent_attached": true,
+      "dependencies_attached": [
+        "goals",
+        "baseline"
+      ]
     },
     {
       "key": "representations",
@@ -74,7 +107,18 @@
         "wayfinder:grilling",
         "needs-info"
       ],
-      "body_file": "tickets/representations.md"
+      "body_file": "tickets/representations.md",
+      "issue": {
+        "url": "https://github.com/alp82/goodwatch-monorepo/issues/721",
+        "number": 721,
+        "node_id": "I_kwDOJCFabs8AAAABYMzVLQ",
+        "id": 5919003949
+      },
+      "parent_attached": true,
+      "dependencies_attached": [
+        "goals",
+        "baseline"
+      ]
     },
     {
       "key": "extras",
@@ -89,7 +133,18 @@
         "wayfinder:grilling",
         "needs-info"
       ],
-      "body_file": "tickets/extras.md"
+      "body_file": "tickets/extras.md",
+      "issue": {
+        "url": "https://github.com/alp82/goodwatch-monorepo/issues/722",
+        "number": 722,
+        "node_id": "I_kwDOJCFabs8AAAABYMzW1Q",
+        "id": 5919004373
+      },
+      "parent_attached": true,
+      "dependencies_attached": [
+        "goals",
+        "baseline"
+      ]
     },
     {
       "key": "knowledge-prototype",
@@ -106,7 +161,20 @@
         "wayfinder:prototype",
         "needs-info"
       ],
-      "body_file": "tickets/knowledge-prototype.md"
+      "body_file": "tickets/knowledge-prototype.md",
+      "issue": {
+        "url": "https://github.com/alp82/goodwatch-monorepo/issues/723",
+        "number": 723,
+        "node_id": "I_kwDOJCFabs8AAAABYMzYLg",
+        "id": 5919004718
+      },
+      "parent_attached": true,
+      "dependencies_attached": [
+        "providers",
+        "corpus",
+        "representations",
+        "extras"
+      ]
     },
     {
       "key": "scale-prototype",
@@ -122,7 +190,19 @@
         "wayfinder:prototype",
         "needs-info"
       ],
-      "body_file": "tickets/scale-prototype.md"
+      "body_file": "tickets/scale-prototype.md",
+      "issue": {
+        "url": "https://github.com/alp82/goodwatch-monorepo/issues/724",
+        "number": 724,
+        "node_id": "I_kwDOJCFabs8AAAABYMzZoA",
+        "id": 5919005088
+      },
+      "parent_attached": true,
+      "dependencies_attached": [
+        "providers",
+        "corpus",
+        "representations"
+      ]
     },
     {
       "key": "extras-prototype",
@@ -138,7 +218,19 @@
         "wayfinder:prototype",
         "needs-info"
       ],
-      "body_file": "tickets/extras-prototype.md"
+      "body_file": "tickets/extras-prototype.md",
+      "issue": {
+        "url": "https://github.com/alp82/goodwatch-monorepo/issues/725",
+        "number": 725,
+        "node_id": "I_kwDOJCFabs8AAAABYMza9A",
+        "id": 5919005428
+      },
+      "parent_attached": true,
+      "dependencies_attached": [
+        "providers",
+        "corpus",
+        "extras"
+      ]
     },
     {
       "key": "discovery-prototype",
@@ -154,7 +246,19 @@
         "wayfinder:prototype",
         "needs-info"
       ],
-      "body_file": "tickets/discovery-prototype.md"
+      "body_file": "tickets/discovery-prototype.md",
+      "issue": {
+        "url": "https://github.com/alp82/goodwatch-monorepo/issues/726",
+        "number": 726,
+        "node_id": "I_kwDOJCFabs8AAAABYMzcgA",
+        "id": 5919005824
+      },
+      "parent_attached": true,
+      "dependencies_attached": [
+        "knowledge-prototype",
+        "scale-prototype",
+        "extras-prototype"
+      ]
     },
     {
       "key": "display-prototype",
@@ -169,7 +273,18 @@
         "wayfinder:prototype",
         "needs-info"
       ],
-      "body_file": "tickets/display-prototype.md"
+      "body_file": "tickets/display-prototype.md",
+      "issue": {
+        "url": "https://github.com/alp82/goodwatch-monorepo/issues/727",
+        "number": 727,
+        "node_id": "I_kwDOJCFabs8AAAABYMzd8Q",
+        "id": 5919006193
+      },
+      "parent_attached": true,
+      "dependencies_attached": [
+        "scale-prototype",
+        "extras-prototype"
+      ]
     },
     {
       "key": "holdout",
@@ -187,7 +302,21 @@
         "wayfinder:task",
         "ready-for-agent"
       ],
-      "body_file": "tickets/holdout.md"
+      "body_file": "tickets/holdout.md",
+      "issue": {
+        "url": "https://github.com/alp82/goodwatch-monorepo/issues/728",
+        "number": 728,
+        "node_id": "I_kwDOJCFabs8AAAABYMzfcQ",
+        "id": 5919006577
+      },
+      "parent_attached": true,
+      "dependencies_attached": [
+        "knowledge-prototype",
+        "scale-prototype",
+        "extras-prototype",
+        "discovery-prototype",
+        "display-prototype"
+      ]
     },
     {
       "key": "strategy",
@@ -201,12 +330,30 @@
         "wayfinder:grilling",
         "needs-info"
       ],
-      "body_file": "tickets/strategy.md"
+      "body_file": "tickets/strategy.md",
+      "issue": {
+        "url": "https://github.com/alp82/goodwatch-monorepo/issues/729",
+        "number": 729,
+        "node_id": "I_kwDOJCFabs8AAAABYMzg6Q",
+        "id": 5919006953
+      },
+      "parent_attached": true,
+      "dependencies_attached": [
+        "holdout"
+      ]
     }
   ],
   "native_relationships": "Create all issues first; attach each child with GitHub native sub-issues, then add native blocked-by relationships in a second pass. Issue numbers/node IDs will be recorded only after actual creation.",
   "publication_gate": "docs/agents/issue-tracker.md: Do not publish until the ticket breakdown is approved.",
   "paid_execution_gate": "No new inference budget or resource limits are approved by this draft.",
   "approval": "Owner approved publishing the map, 13 children, dependencies and evidence branch; requested sane, bounded grilling.",
-  "grilling_policy": "Keep grilling bounded: ask at most three consequential questions in an initial round, with recommended defaults. Ask a followup only if an answer blocks the next benchmark/prototype or materially changes cost, quality, or scope. Use provisional defaults for reversible details; defer refinements until results reveal a need. Stop once the next experiment can run responsibly. Do not require an exhaustive taxonomy, final architecture, or every attribute decision before a first useful comparison."
+  "grilling_policy": "Keep grilling bounded: ask at most three consequential questions in an initial round, with recommended defaults. Ask a followup only if an answer blocks the next benchmark/prototype or materially changes cost, quality, or scope. Use provisional defaults for reversible details; defer refinements until results reveal a need. Stop once the next experiment can run responsibly. Do not require an exhaustive taxonomy, final architecture, or every attribute decision before a first useful comparison.",
+  "map_issue": {
+    "url": "https://github.com/alp82/goodwatch-monorepo/issues/716",
+    "number": 716,
+    "node_id": "I_kwDOJCFabs8AAAABYMzNaA",
+    "id": 5919001960
+  },
+  "published_at": "2026-10-19T06:30:59.126094+00:00",
+  "verification": "Read back native children and blocked-by relationships; 13 children and all expected dependency edges match."
 }

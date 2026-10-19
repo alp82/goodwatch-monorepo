@@ -1,3 +1,5 @@
+Parent map: [Benchmark a richer fingerprint and discovery system](https://github.com/alp82/goodwatch-monorepo/issues/716).
+
 ## Question
 
 Which current and proposed title-analysis outputs should be generated, extracted from trusted evidence, derived deterministically, reused, replaced or removed?
