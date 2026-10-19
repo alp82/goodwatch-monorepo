@@ -57,8 +57,20 @@ export function createClock() {
 
 // ---- Page state -----------------------------------------------------------
 const uuid = n => `${String(n).padStart(8, '0')}-0000-4000-8000-${String(n).padStart(12, '0')}`
-export function pageStateScript(rows, loadedCount) {
-  const data = { ROOT_QUERY: { __typename: 'Query' } }
+// profile: { profiles: [names], current: name }. The current profile and the
+// browse page that owns the sections are recorded as on the saved page.
+export function pageStateScript(rows, loadedCount, profile = { profiles: ['Synthetic profile', 'Second profile'], current: 'Synthetic profile' }) {
+  const profileKey = i => `Profile:{"guid":"P${i}"}`
+  const data = {
+    ROOT_QUERY: {
+      __typename: 'Query',
+      account: { __typename: 'Account', profiles: profile.profiles.map((_, i) => ({ __ref: profileKey(i) })) },
+      ...(profile.current !== null ? { currentProfile: { __ref: profileKey(profile.profiles.indexOf(profile.current)) } } : {}),
+      'pinotBrowsePage({"categoryId":null})': { __ref: 'PinotDefaultBrowsePage:PS_synthetic' },
+    },
+  }
+  profile.profiles.forEach((name, i) => { data[profileKey(i)] = { __typename: 'Profile', guid: `P${i}`, name } })
+  const sectionRefs = []
   let n = 0
   for (const row of rows) {
     if (!row.inPageState) continue
@@ -70,6 +82,7 @@ export function pageStateScript(rows, loadedCount) {
       data[treatmentKey] = { __typename: 'PinotStandardBoxshotEntityTreatment', unifiedEntity: { __ref: entityKey } }
       return { __typename: 'PinotEntityEdge', node: { __ref: treatmentKey }, cursor: Buffer.from(String(position)).toString('base64') }
     })
+    sectionRefs.push(sectionKey)
     data[sectionKey] = {
       __typename: 'PinotCarouselSection',
       displayString: row.label,
@@ -80,6 +93,10 @@ export function pageStateScript(rows, loadedCount) {
         pageInfo: { __typename: 'PageInfo', hasNextPage: row.stateTotal > edges.length, endCursor: edges.at(-1)?.cursor ?? null },
       },
     }
+  }
+  data['PinotDefaultBrowsePage:PS_synthetic'] = {
+    __typename: 'PinotDefaultBrowsePage',
+    'sections({"after":null,"first":50})': { __typename: 'PinotSectionConnection', edges: sectionRefs.map(ref => ({ node: { __ref: ref } })) },
   }
   // Encode like the saved page: a single-quoted literal with \x22 quotes.
   const json = JSON.stringify({ data })
@@ -112,6 +129,10 @@ const DEFAULTS = {
   contaminants: [],
   emptyRow: 'none',
   avatar: '/avatar-a.png',
+  avatarAlt: 'Synthetic profile',
+  stateProfile: undefined,
+  // Path the document was first loaded at (SPA arrival when it differs).
+  loadedPath: '/browse/my-list',
 }
 
 export function createPage(clock, options = {}) {
@@ -136,11 +157,11 @@ export function createPage(clock, options = {}) {
   if (!o.items.length && o.emptyRow === 'state-only') rows.push({ ...myList, stateTotal: 0, rendered: false })
 
   doc.write(`<!doctype html><html><head></head><body>
-<button data-uia="navigation+profile-menu+trigger"><img data-uia="navigation+profile-menu+Avatar" alt="Synthetic profile" src="${o.avatar}"></button>
+<button data-uia="navigation+profile-menu+trigger"><img data-uia="navigation+profile-menu+Avatar" alt="${o.avatarAlt}" src="${o.avatar}"></button>
 <main data-uia="my-netflix"><div data-uia="browse-page-sections"></div></main></body></html>`)
   if (o.pageState) {
     const script = doc.createElement('script')
-    script.textContent = `window.netflix = window.netflix || {};\n${pageStateScript(rows, o.loaded)}`
+    script.textContent = `window.netflix = window.netflix || {};\n${pageStateScript(rows, o.loaded, o.stateProfile)}`
     doc.head.append(script)
   }
   const host = doc.querySelector('[data-uia="browse-page-sections"]')
@@ -167,11 +188,14 @@ export function createPage(clock, options = {}) {
   return {
     window,
     document: doc,
+    loadedUrl: `https://www.netflix.com${o.loadedPath}`,
     myList: mine,
     groundTruth: o.items.map(item => item.id),
     otherIds: new Set(o.otherRows.flatMap(row => row.items.map(item => item.id))),
     switchProfile() {
-      doc.querySelector('img[data-uia="navigation+profile-menu+Avatar"]').setAttribute('src', '/avatar-b.png')
+      const img = doc.querySelector('img[data-uia="navigation+profile-menu+Avatar"]')
+      img.setAttribute('src', '/avatar-b.png')
+      img.setAttribute('alt', 'Second profile')
     },
     navigateAway() {
       window.history.pushState({}, '', '/browse')
@@ -328,6 +352,8 @@ export function loadCollector(page, clock, collectorPath) {
     clearTimeout: clock.clearTimeout,
     setInterval: clock.setInterval,
     clearInterval: clock.clearInterval,
+    // The document's own navigation entry: where it was first loaded.
+    performance: { getEntriesByType: type => (type === 'navigation' ? [{ name: page.loadedUrl ?? 'https://www.netflix.com/browse/my-list' }] : []) },
   })
   vm.runInContext(source, context)
   return command => context.__goodwatchWishlistCaptureCommand(command)

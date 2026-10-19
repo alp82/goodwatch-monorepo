@@ -70,34 +70,41 @@ async function runOnce(route, scenario, { pageOptions, events, ctx }) {
       await clock.advance(POPUP_POLL_MS)
       if (reloaded) break
       response = command({ action: 'status' })
-      if (response.state !== 'capturing') break
+      if (response.state !== 'capturing' || response.traversal?.outcome === 'manual_fallback') break
     }
     ctx.arrowClicks += response.traversal?.advances ?? 0
-    if (!reloaded) {
+    if (response.traversal?.outcome === 'manual_fallback' && !reloaded) {
+      // The popup asks the member to click through; continue as manual.
+      ctx.actions += 1
+      response = await memberManual(route, scenario, page, clock, ctx, command)
+    } else if (!reloaded) {
       if (response.state === 'capturing') {
         ctx.actions += 1
         response = command({ action: 'stop' })
       }
       ctx.actions += 1 // save
     }
-  } else {
-    const stopAtCount = scenario.member === 'stop-at-count' && route !== 'M0' ? () => command({ action: 'status' }) : null
-    await memberClicksUntilRepeat(page, clock, ctx, { stopAtCount })
-    if (!reloaded) {
-      ctx.actions += 1 // reopen popup
-      response = command({ action: 'status' })
-      if (route !== 'M0' && !stopAtCount && response.state === 'capturing' && response.verdict?.completeness !== 'complete' &&
-          response.verdict?.reason === 'below_total') {
-        // The popup says titles are missing: the member goes round once more.
-        await memberClicksUntilRepeat(page, clock, ctx)
-        ctx.actions += 1
-      }
-      ctx.actions += 1 // stop and save
-      response = command({ action: 'stop' })
-    }
+  } else if (!reloaded) {
+    response = await memberManual(route, scenario, page, clock, ctx, command, () => reloaded)
   }
   page.close()
   return { response, clock, t0, page, reloaded }
+}
+
+async function memberManual(route, scenario, page, clock, ctx, command, wasReloaded = () => false) {
+  const stopAtCount = scenario.member === 'stop-at-count' && route !== 'M0' ? () => command({ action: 'status' }) : null
+  await memberClicksUntilRepeat(page, clock, ctx, { stopAtCount })
+  if (wasReloaded()) return command({ action: 'status' })
+  ctx.actions += 1 // reopen popup
+  let response = command({ action: 'status' })
+  if (route !== 'M0' && !stopAtCount && response.state === 'capturing' && response.verdict?.completeness !== 'complete' &&
+      ['below_total', 'positions_unconfirmed'].includes(response.verdict?.reason)) {
+    // The popup says titles are missing: the member goes round once more.
+    await memberClicksUntilRepeat(page, clock, ctx)
+    ctx.actions += 1
+  }
+  ctx.actions += 1 // stop and save
+  return command({ action: 'stop' })
 }
 
 export async function runScenario(route, scenario) {
@@ -143,7 +150,13 @@ export async function runScenario(route, scenario) {
     falseComplete: completeness === 'complete' && !exact,
     actions: ctx.actions,
     arrowClicks: ctx.arrowClicks,
-    advanceCap: r.traversal?.maxAdvances != null ? r.traversal.maxAdvances + 3 : null,
+    // Protocol G12, computed independently of the implementation's own cap:
+    // ceil(total / visible cards) + 3 advances, plus a stall budget of 3.
+    protocolAdvanceCap: r.traversal?.mode === 'assisted' && r.verdict?.reportedTotal != null
+      ? Math.ceil(r.verdict.reportedTotal / (scenario.page.visible ?? 6)) + 3 + 3 : null,
+    lastRunAdvances: r.traversal?.mode === 'assisted' ? r.traversal.advances : null,
+    collectorElapsedMs: r.elapsedMs ?? null,
+    traversalOutcome: r.traversal?.outcome ?? null,
     assistOutcome: r.traversal?.outcome ?? null,
     elapsedS: Math.round(elapsed / 100) / 10,
     restarted,

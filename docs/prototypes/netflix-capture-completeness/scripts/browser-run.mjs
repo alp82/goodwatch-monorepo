@@ -1,4 +1,4 @@
-// Real Chromium run of the unpacked version 0.0.5 extension against the
+// Real Chromium run of the unpacked extension against the
 // self-running synthetic page, served at a routed netflix.com origin. Never
 // contacts Netflix. Uses real time, so it takes a few minutes.
 //
@@ -54,7 +54,7 @@ try {
   const infos = await settings.evaluate(() => chrome.developerPrivate.getExtensionsInfo({}))
   const info = infos.find(value => value.name === JSON.parse(readFileSync(join(extension, 'manifest.json'))).name)
   assert.ok(info && info.state === 'ENABLED', 'extension loaded')
-  assert.equal(info.version, '0.0.5')
+  assert.equal(info.version, JSON.parse(readFileSync(join(extension, 'manifest.json'))).version)
   assert.deepEqual(info.permissions.runtimeHostPermissions.hosts, [])
   await settings.close()
   await cdp.send('Browser.setDownloadBehavior', { behavior: 'allowAndName', downloadPath: downloads, eventsEnabled: true })

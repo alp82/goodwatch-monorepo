@@ -1,6 +1,6 @@
 'use strict'
 
-// Popup for the experimental My List capture, version 0.0.5. It talks to
+// Popup for the experimental My List capture, version 0.0.6. It talks to
 // capture.js in the active tab through chrome.scripting only, after the member
 // opens the popup. Page values reach the DOM via textContent only.
 
@@ -26,13 +26,22 @@ const REASON_TEXT = {
   loaded_title_missing: 'Some of the first titles weren\'t captured.',
   order_mismatch: 'The first titles didn\'t match Netflix\'s order.',
   not_in_listing: 'A captured title isn\'t one Netflix listed.',
-  lap_not_finished: 'The capture didn\'t reach the end of the row.',
+  lap_not_finished: 'GoodWatch didn\'t see the row come back to its first title, so it can\'t tell the list ended. Short lists that fit on screen stay incomplete.',
+  positions_unconfirmed: 'Some of the first titles weren\'t seen next to each other in Netflix\'s order.',
   conflicting_cards: 'Some titles couldn\'t be read reliably.',
   unreadable_cards: 'Some titles couldn\'t be read reliably.',
   no_profile_guard: 'GoodWatch couldn\'t confirm which profile is open.',
   ended_terminated_boundary: 'My List disappeared from the page.',
   ended_limit_rows: 'The capture reached its size limit.',
   ended_limit_time: 'The capture reached its time limit.',
+}
+
+// Why Netflix's count couldn't be used.
+const REFERENCE_TEXT = {
+  reference_other_profile: 'Netflix\'s count on this page belongs to another profile. Refresh My List and try again.',
+  reference_other_page: 'This tab didn\'t open on My List, so Netflix\'s count may be out of date. Refresh My List and try again.',
+  reference_profile_ambiguous: 'Two profiles share this name, so GoodWatch can\'t tell whose count this is.',
+  reference_no_profile: 'GoodWatch couldn\'t confirm which profile Netflix\'s count belongs to.',
 }
 
 const KNOWN_STATES = new Set(['idle', 'capturing', 'stopped', 'cancelled', 'terminated'])
@@ -82,7 +91,7 @@ function finishedText(r) {
   const captured = count(r.observedCount) ?? 0
   const total = count(v.reportedTotal)
   if (v.completeness === 'complete') return total === 0 ? STATE_TEXT.list_empty : `All ${titles(captured)} on My List captured.`
-  if (total === null) return `${titles(captured)} captured. Netflix didn't report a total, so GoodWatch can't tell if that's all of them.`
+  if (total === null) return `${titles(captured)} captured. GoodWatch can't tell if that's all of them.`
   return `${captured.toLocaleString()} of the ${titles(total)} on My List captured. The file is marked incomplete.`
 }
 
@@ -105,7 +114,7 @@ function render() {
   const state = text(current.state)
   const code = text(current.code)
   const capturing = state === 'capturing'
-  const assisted = current.traversal?.mode === 'assisted' && current.traversal?.outcome !== 'needs_reference'
+  const assisted = current.traversal?.mode === 'assisted' && !['needs_reference', 'manual_fallback'].includes(current.traversal?.outcome)
   const finished = envelope !== null
 
   let line = STATE_TEXT[code] ?? STATE_TEXT[state] ?? 'Something unexpected happened.'
@@ -114,15 +123,18 @@ function render() {
   if (capturing) {
     line = assisted ? 'Going through My List…' : 'Click the next arrow on the My List row until its first title comes back.'
     if (current.traversal?.outcome === 'needs_reference') {
-      detail = 'Netflix didn\'t report a total for this row, so GoodWatch can\'t go through it for you or tell when it\'s complete.'
+      detail = REFERENCE_TEXT[text(current.reference?.reason)] ?? 'Netflix didn\'t report a total for this row, so GoodWatch can\'t go through it for you or tell when it\'s complete.'
+    } else if (current.traversal?.outcome === 'manual_fallback') {
+      line = 'Click the next arrow on the My List row until its first title comes back.'
+      detail = 'GoodWatch couldn\'t safely find the row\'s arrow, so it stopped clicking. Your titles so far are kept.'
     } else if (assisted) {
       detail = 'Keep this tab open and leave the page alone until this finishes.'
-    } else if (current.lapSeen === true && current.verdict?.reason === 'below_total') {
+    } else if (current.lapSeen === true && ['below_total', 'positions_unconfirmed'].includes(current.verdict?.reason)) {
       detail = 'The row is back at its start, but some titles are still missing. Go round once more, a little slower.'
     }
   } else if (finished) {
     line = finishedText(current)
-    if (current.verdict?.completeness !== 'complete') detail = REASON_TEXT[text(current.verdict?.reason)] ?? ''
+    if (current.verdict?.completeness !== 'complete') detail = REASON_TEXT[text(current.verdict?.reason)] ?? REFERENCE_TEXT[text(current.verdict?.reason)] ?? ''
     if (current.verdict?.reason === 'below_total' && current.traversal?.mode === 'assisted') {
       detail = 'The row ended before every title showed up. Netflix may count titles that aren\'t available in your country.'
     }

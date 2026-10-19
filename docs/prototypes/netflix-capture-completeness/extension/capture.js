@@ -1,34 +1,39 @@
-/* Experimental My List collector, version 0.0.5 (ticket #706).
- * Builds on 0.0.4. Adds:
- * - A narrowly scoped page-state reference: Netflix's own reported total for
- *   the selected row, read from the inline page-state script text.
- * - A stable-read check, so a recycled card is accepted only after the same
- *   link and label are seen on two consecutive scans.
- * - A completeness verdict that never relies on silence or a click count.
- * - An optional bounded assisted traversal that clicks only the selected
- *   row's next-arrow button.
+/* Experimental My List collector, version 0.0.6 (ticket #706).
+ * - Page-state reference: Netflix's own reported total for the selected row,
+ *   read from the inline page-state script text, accepted only when it belongs
+ *   to the current profile and to a document first loaded on My List.
+ * - Card ownership: only cards proven to sit in the My List row's own scroller
+ *   (or the My List grid) enter the file, whatever the verdict.
+ * - Stable reads: a card is accepted only after its link and label stay the
+ *   same for STABLE_MS.
+ * - Position checks: every known position is checked against the cards'
+ *   order as it comes into view; a lap needs positive wrap evidence by ID.
+ * - Optional bounded assisted traversal that clicks only the row scroller's
+ *   own next arrow; when unsure, it falls back to manual capture.
  * Selectors come from one saved de-DE page; they remain hypotheses. */
 (() => {
 	if (globalThis.__goodwatchWishlistCaptureCommand) return;
-	const VERSION = '0.0.5';
+	const VERSION = '0.0.6';
 	const BOUNDARIES = '.mainView .gallery, [data-uia="my-list-gallery"]';
 	const EXCLUDED =
-		'[role="dialog"], .bob-card, .previewModal, .recommendations, .billboard-row';
+		'[role="dialog"], [role="alertdialog"], [aria-modal="true"], dialog, .bob-card, .previewModal, .recommendations, .billboard-row';
 	const ROWS = '.lolomoRow, .rowContainer, section.carousel-row';
+	const NESTED_ROWS = '.lolomoRow, section.carousel-row';
 	const MODERN_ROW = 'section.carousel-row';
 	const MODERN_CARD = 'a[data-uia="standard-card"]';
+	const SCROLLER = '[data-uia="carousel-scroller"]';
 	const NEXT_BUTTON = 'button[data-uia="carousel-hawkins-right-button"]';
 	const HEADINGS = 'h1, h2, h3, h4, h5, h6, [role="heading"]';
+	// Containers that mean "some other group", never part of the list itself.
+	const FOREIGN = `section, aside, nav, article, header, footer, [role="region"], [role="group"], [role="navigation"], [role="complementary"], ${EXCLUDED}, ${NESTED_ROWS}`;
 	const MY_LIST_LABELS = new Set(['My List', 'Meine Liste']);
+	const MY_LIST_PATH = /^\/browse\/my-list\/?$/;
 	const STATE_MARKER = "netflix.reactContext.models.graphql = JSON.parse('";
 	const MAX_STATE_CHARS = 8 * 1024 * 1024;
 	const MAX_ROWS = 5000;
 	const MAX_TIME = 10 * 60 * 1000;
-	// A card is accepted only after its link and label stay unchanged this long.
 	const STABLE_MS = 400;
-	// Assisted traversal bounds (gate G12).
 	const ASSIST_SETTLE_MS = 600;
-	// Lazy-loaded cards can take seconds; wait up to this long after a click.
 	const ASSIST_MAX_WAIT_MS = 8000;
 	const MAX_REBINDS = 20;
 	const ASSIST_STALL_LIMIT = 3;
@@ -50,16 +55,24 @@
 	let seenIds = new Set();
 	let rejected = new Set();
 	let pending = new WeakMap();
+	let stableIds = new WeakMap();
 	let reference = null;
 	let referenceReason = 'not_read';
 	let assist = null;
 	let lastMutation = 0;
-	// Lap tracking: the row's first title leaves view and comes back, or the
-	// next arrow disappears after the row has moved.
+	// Positions: Netflix's loaded entries, checked against the cards' order.
+	let idAt = [];
+	let posOf = new Map();
+	let confirmed = new Set();
+	let mismatchSeen = false;
+	let prevWindow = [];
+	let maxWindow = 0;
+	let sinceIds = new Set();
+	// Lap: the first title leaves view and returns, or a card is seen directly
+	// before the first title (the row wrapped). Both are positive, by ID.
 	let firstId = null;
 	let leftStart = false;
 	let lapSeen = false;
-	let startOrder = [];
 	let rebinds = 0;
 	const issues = new Map();
 
@@ -76,27 +89,25 @@
 				: null;
 
 	function isMyList() {
-		return (
-			location.origin === 'https://www.netflix.com' &&
-			/^\/browse\/my-list\/?$/.test(location.pathname)
-		);
+		return location.origin === 'https://www.netflix.com' && MY_LIST_PATH.test(location.pathname);
+	}
+	// The single active-profile avatar. Both alt text and image are required.
+	function avatar() {
+		const triggers = document.querySelectorAll('button[data-uia="navigation+profile-menu+trigger"]');
+		if (triggers.length !== 1) return null;
+		const avatars = triggers[0].querySelectorAll('img[data-uia="navigation+profile-menu+Avatar"]');
+		if (avatars.length !== 1) return null;
+		const alt = (avatars[0].getAttribute('alt') || '').trim();
+		const src = (avatars[0].getAttribute('src') || '').trim();
+		return alt && src ? { alt, src } : null;
 	}
 	function profileMarker() {
-		// Only the active trigger owns this marker. No marker values leave this closure.
-		const triggers = document.querySelectorAll('button[data-uia="navigation+profile-menu+trigger"]');
-		if (triggers.length) {
-			if (triggers.length !== 1) return null;
-			const avatars = triggers[0].querySelectorAll('img[data-uia="navigation+profile-menu+Avatar"]');
-			return avatars.length === 1
-				? JSON.stringify(['modern', avatars[0].getAttribute('alt'), avatars[0].getAttribute('src')])
-				: null;
-		}
-		const nodes = document.querySelectorAll('.account-dropdown-button .profile-icon');
-		return nodes.length === 1
-			? JSON.stringify(['legacy', nodes[0].getAttribute('alt'), nodes[0].getAttribute('src')])
-			: null;
+		// No marker values leave this closure.
+		const a = avatar();
+		return a ? JSON.stringify([a.alt, a.src]) : null;
 	}
 	function headingLabel(heading) {
+		if (!heading) return null;
 		const titles = heading.querySelectorAll('.row-header-title');
 		if (titles.length > 1) return null;
 		return (titles.length === 1 ? titles[0].textContent : heading.getAttribute('aria-label') || heading.textContent)?.trim().replace(/\s+/g, ' ');
@@ -118,8 +129,6 @@
 	}
 
 	// ---- Page-state reference -------------------------------------------
-	// Decodes one JavaScript single-quoted string literal starting at `from`.
-	// Returns null on any malformed escape. No eval: MV3 forbids it.
 	function decodeLiteral(text, from) {
 		let out = '';
 		for (let i = from; i < text.length; i++) {
@@ -160,32 +169,61 @@
 			return null;
 		}
 	}
-	// Reads only the section whose label equals the selected row's heading.
-	// Keeps its reported total and its loaded edges' IDs and positions.
+	// The inline state is written when the document loads. It describes My
+	// List only if this document was first loaded on My List.
+	function loadedOnMyList() {
+		try {
+			const entries = performance.getEntriesByType('navigation');
+			if (entries.length !== 1) return false;
+			const url = new URL(entries[0].name);
+			return url.origin === 'https://www.netflix.com' && MY_LIST_PATH.test(url.pathname);
+		} catch {
+			return false;
+		}
+	}
+	const refuse = reason => ({ reference: null, reason });
+	// Reads only the section whose label equals the selected row's heading,
+	// after checking that the state belongs to the open profile and page.
 	function readReference(label) {
-		if (!label) return { reference: null, reason: 'reference_no_label' };
+		if (!label) return refuse('reference_no_label');
+		if (!loadedOnMyList()) return refuse('reference_other_page');
 		const scripts = [...document.querySelectorAll('script:not([src])')]
 			.filter(script => (script.textContent || '').includes(STATE_MARKER));
-		if (scripts.length !== 1) return { reference: null, reason: scripts.length ? 'reference_ambiguous' : 'reference_missing' };
+		if (scripts.length !== 1) return refuse(scripts.length ? 'reference_ambiguous' : 'reference_missing');
 		const text = scripts[0].textContent;
-		if (text.length > MAX_STATE_CHARS) return { reference: null, reason: 'reference_too_large' };
+		if (text.length > MAX_STATE_CHARS) return refuse('reference_too_large');
 		const literal = decodeLiteral(text, text.indexOf(STATE_MARKER) + STATE_MARKER.length);
 		let data;
 		try {
 			data = JSON.parse(literal)?.data;
 		} catch {
-			return { reference: null, reason: 'reference_unreadable' };
+			return refuse('reference_unreadable');
 		}
-		if (!data || typeof data !== 'object') return { reference: null, reason: 'reference_unreadable' };
-		const sections = Object.values(data).filter(entity =>
+		if (!data || typeof data !== 'object') return refuse('reference_unreadable');
+		// Profile provenance: the state's current profile is the one on screen,
+		// and its name can't be confused with another profile's.
+		const root = data.ROOT_QUERY;
+		const current = data[root?.currentProfile?.__ref];
+		const profiles = Array.isArray(root?.account?.profiles) ? root.account.profiles.map(ref => data[ref?.__ref]) : null;
+		if (!current || typeof current.name !== 'string' || !profiles || profiles.some(p => !p || typeof p.name !== 'string')) return refuse('reference_no_profile');
+		const shown = avatar();
+		if (!shown || shown.alt !== current.name) return refuse('reference_other_profile');
+		if (profiles.filter(p => p.name === current.name).length !== 1) return refuse('reference_profile_ambiguous');
+		const sections = Object.entries(data).filter(([, entity]) =>
 			entity && entity.__typename === 'PinotCarouselSection' && entity.displayString === label);
-		if (sections.length !== 1) return { reference: null, reason: sections.length ? 'reference_ambiguous' : 'reference_missing' };
-		const connections = Object.entries(sections[0])
+		if (sections.length !== 1) return refuse(sections.length ? 'reference_ambiguous' : 'reference_missing');
+		const [sectionKey, section] = sections[0];
+		// Page provenance: the section belongs to the page the state describes.
+		const pages = Object.entries(root).filter(([key]) => /^pinotBrowsePage(\(|$)/.test(key));
+		const page = pages.length === 1 ? data[pages[0][1]?.__ref] : null;
+		const pageSections = page && Object.entries(page).filter(([key, value]) => /^sections(\(|$)/.test(key) && Array.isArray(value?.edges));
+		if (!pageSections || pageSections.length !== 1 || !pageSections[0][1].edges.some(edge => edge?.node?.__ref === sectionKey)) return refuse('reference_not_on_page');
+		const connections = Object.entries(section)
 			.filter(([key, value]) => /^entities(\(|$)/.test(key) && value && typeof value === 'object');
-		if (connections.length !== 1) return { reference: null, reason: 'reference_ambiguous' };
+		if (connections.length !== 1) return refuse('reference_ambiguous');
 		const connection = connections[0][1];
 		const total = connection.totalCount;
-		if (!Number.isSafeInteger(total) || total < 0 || total > MAX_ROWS) return { reference: null, reason: 'reference_no_total' };
+		if (!Number.isSafeInteger(total) || total < 0 || total > MAX_ROWS) return refuse('reference_no_total');
 		const edges = Array.isArray(connection.edges) ? connection.edges : [];
 		const loaded = [];
 		const positions = new Set();
@@ -194,24 +232,41 @@
 			const entity = data[treatment?.unifiedEntity?.__ref];
 			const id = nativeId(entity?.videoId);
 			const position = cursorPosition(edge?.cursor);
-			if (!id || position === null || positions.has(position) || position >= total) {
-				return { reference: null, reason: 'reference_bad_edge' };
+			if (!id || position === null || positions.has(position) || position >= total || loaded.some(e => e.id === id)) {
+				return refuse('reference_bad_edge');
 			}
 			positions.add(position);
 			loaded.push({ id, position });
 		}
-		const hasNextPage = connection.pageInfo?.hasNextPage === true;
-		return { reference: { total, loaded, hasNextPage }, reason: 'reference_found' };
+		loaded.sort((a, b) => a.position - b.position);
+		// Known positions must run 0, 1, 2, ... without gaps.
+		if (loaded.some((edge, k) => edge.position !== k)) return refuse('reference_bad_edge');
+		return { reference: { total, loaded }, reason: 'reference_found' };
 	}
 
-	// ---- Card reading ---------------------------------------------------
-	function excludedCard(card) {
-		if (card.closest(EXCLUDED)) return true;
-		for (let parent = card.parentElement; parent && parent !== boundary; parent = parent.parentElement) {
-			if (parent.matches(ROWS) && (!boundary.matches(ROWS) || parent.matches('.lolomoRow, section.carousel-row') || ownHeadings(parent).length)) return true;
+	// ---- Card ownership ---------------------------------------------------
+	function ownScroller() {
+		if (!boundary?.matches(MODERN_ROW)) return null;
+		const scrollers = [...boundary.querySelectorAll(SCROLLER)].filter(s => s.closest(MODERN_ROW) === boundary);
+		if (scrollers.length !== 1) return null;
+		for (let p = scrollers[0].parentElement; p && p !== boundary; p = p.parentElement) {
+			if (p.matches(FOREIGN)) return null;
 		}
-		return false;
+		return scrollers[0];
 	}
+	// A card counts only when nothing between it and the list container marks
+	// another group: no section-like or dialog element and no heading.
+	function cardOwned(card) {
+		if (!boundary || card.closest(EXCLUDED)) return false;
+		const container = boundary.matches(MODERN_ROW) ? ownScroller() : boundary;
+		if (!container || !container.contains(card)) return false;
+		for (let p = card.parentElement; p && p !== container; p = p.parentElement) {
+			if (p.matches(FOREIGN)) return false;
+			if ([...p.querySelectorAll(HEADINGS)].some(h => !card.contains(h))) return false;
+		}
+		return true;
+	}
+
 	function disconnect() {
 		observer?.disconnect();
 		observer = null;
@@ -227,6 +282,7 @@
 		rejected.clear();
 		issues.clear();
 		pending = new WeakMap();
+		stableIds = new WeakMap();
 	}
 	function terminate(reason, discard) {
 		disconnect();
@@ -247,7 +303,6 @@
 			issues.set(reason, (issues.get(reason) || 0) + 1);
 		}
 	}
-	// Returns {ids, sourceUrl} or a rejection reason string.
 	function cardEvidence(card) {
 		const ids = new Set();
 		const tracking = card.getAttribute('data-ui-tracking-context');
@@ -301,29 +356,28 @@
 			card.querySelector('a[aria-label]')?.getAttribute('aria-label')?.trim();
 		return { ids, sourceUrl, title, modern };
 	}
+	// Returns true when the card is owned (whether or not it was accepted).
 	function readCard(card) {
-		if (excludedCard(card)) return;
+		stableIds.delete(card);
+		if (!cardOwned(card)) return false;
 		const evidence = cardEvidence(card);
-		// Stable-read check: accept a card only after the same evidence has been
-		// seen for STABLE_MS. A recycled card whose link and label change in
-		// separate tasks is never accepted in its half-updated state.
 		const signature = typeof evidence === 'string' ? evidence :
 			JSON.stringify([[...evidence.ids], evidence.title ?? null, evidence.sourceUrl ?? null]);
 		const seen = pending.get(card);
 		if (!seen || seen.signature !== signature) {
 			pending.set(card, { signature, since: Date.now() });
-			return;
+			return true;
 		}
-		if (Date.now() - seen.since < STABLE_MS) return;
+		if (Date.now() - seen.since < STABLE_MS) return true;
 		if (typeof evidence === 'string') {
 			reject(card, evidence);
-			return;
+			return true;
 		}
 		const { ids, sourceUrl, title } = evidence;
 		for (const id of ids) {
 			if (!seenIds.has(id) && seenIds.size >= MAX_ROWS) {
 				terminate('limit_rows', false);
-				return;
+				return true;
 			}
 			seenIds.add(id);
 		}
@@ -334,23 +388,23 @@
 					items.delete(id);
 				}
 			reject(card, ids.size ? 'card_conflicting_ids' : 'card_missing_id');
-			return;
+			return true;
 		}
 		const sourceId = [...ids][0];
-		if (quarantined.has(sourceId)) return;
+		if (quarantined.has(sourceId)) return true;
 		if (!validText(title)) {
 			reject(card, 'card_missing_title');
-			return;
+			return true;
 		}
 		if (items.has(sourceId) && items.get(sourceId).title !== title) {
 			quarantined.add(sourceId);
 			items.delete(sourceId);
 			reject(card, 'card_conflicting_title');
-			return;
+			return true;
 		}
 		if (!items.has(sourceId) && items.size >= MAX_ROWS) {
 			terminate('limit_rows', false);
-			return;
+			return true;
 		}
 		const previous = items.get(sourceId);
 		items.set(sourceId, {
@@ -359,24 +413,78 @@
 			sourceId,
 			...(sourceUrl || previous?.sourceUrl ? { sourceUrl: sourceUrl || previous.sourceUrl } : {}),
 		});
+		stableIds.set(card, sourceId);
+		return true;
+	}
+	function rawId(card) {
+		try {
+			const url = new URL(card.getAttribute('href') || '', location.href);
+			return nativeId(url.searchParams.get('jbv') || '');
+		} catch {
+			return null;
+		}
+	}
+	function ownedCards() {
+		if (!boundary) return [];
+		return [...boundary.querySelectorAll(boundary.matches(MODERN_ROW) ? MODERN_CARD : '.ptrack-content')].filter(cardOwned);
 	}
 	function mountedIds() {
 		if (!boundary?.matches(MODERN_ROW)) return [];
-		return [...boundary.querySelectorAll(MODERN_CARD)].filter(card => !excludedCard(card)).map(card => {
-			try {
-				const url = new URL(card.getAttribute('href') || '', location.href);
-				return nativeId(url.searchParams.get('jbv') || '');
-			} catch {
-				return null;
-			}
-		}).filter(Boolean);
+		return ownedCards().map(rawId).filter(Boolean);
 	}
-	function trackLap() {
+	function adjacentSlots(a, b) {
+		let ca = a;
+		while (ca.parentElement && !ca.parentElement.contains(b)) ca = ca.parentElement;
+		const common = ca.parentElement;
+		if (!common) return false;
+		let cb = b;
+		while (cb.parentElement !== common) cb = cb.parentElement;
+		return ca.nextElementSibling === cb;
+	}
+	// Checks adjacent confirmed cards against Netflix's known positions, and
+	// records positive wrap evidence.
+	function trackPositions(cards) {
+		const ids = cards.map(card => stableIds.get(card) ?? null);
+		const pairs = [];
+		// Neighbors only when their slots are adjacent: an empty or loading slot
+		// between two cards means they aren't consecutive.
+		for (let i = 0; i + 1 < ids.length; i++) if (adjacentSlots(cards[i], cards[i + 1])) pairs.push([ids[i], ids[i + 1]]);
+		// Across windows: when a fully settled window (every card confirmed and
+		// as many cards as the row has shown at once) replaces the previous one
+		// with no overlap, the old last card and the new first card are
+		// neighbors. Paging backward can only cause a mismatch, never complete.
+		// Continuity: every card shown in between must belong to one of the two
+		// windows, or a page went by unconfirmed and the pair is skipped.
+		for (const id of cards.map(rawId)) if (id) sinceIds.add(id);
+		const settled = ids.length > 0 && ids.every(Boolean);
+		if (settled) maxWindow = Math.max(maxWindow, ids.length);
+		if (settled && ids.length >= maxWindow && ids.join(',') !== prevWindow.join(',')) {
+			const continuous = [...sinceIds].every(id => prevWindow.includes(id) || ids.includes(id));
+			if (prevWindow.length && continuous && !ids.some(id => prevWindow.includes(id))) pairs.push([prevWindow.at(-1), ids[0]]);
+			prevWindow = ids;
+			sinceIds = new Set(ids);
+		}
+		for (const [a, b] of pairs) {
+			if (!a || !b || a === b) continue;
+			const pa = posOf.get(a);
+			const pb = posOf.get(b);
+			if (pa !== undefined && pa + 1 < idAt.length) {
+				if (b === idAt[pa + 1]) confirmed.add(pa);
+				else mismatchSeen = true;
+			}
+			if (pb !== undefined && pb > 0 && a !== idAt[pb - 1]) mismatchSeen = true;
+			if (pb === 0 && reference) {
+				// Something directly before the first title: the row wrapped. With
+				// every member known, it must be the last one.
+				const everyKnown = idAt.length === reference.total;
+				if (pa === undefined ? !everyKnown : pa === reference.total - 1) lapSeen = true;
+				else mismatchSeen = true;
+			}
+		}
 		if (!firstId || lapSeen) return;
-		const ids = mountedIds();
-		if (!ids.includes(firstId)) leftStart = true;
-		else if (leftStart) lapSeen = true;
-		if (leftStart && !lapSeen && !nextButton()) lapSeen = true;
+		const raw = cards.map(rawId);
+		if (!raw.includes(firstId)) leftStart = true;
+		else if (leftStart && ids.includes(firstId)) lapSeen = true;
 	}
 	function guard() {
 		if (!isMyList() || location.pathname !== initialUrl) {
@@ -387,39 +495,48 @@
 			terminate('terminated_profile', true);
 			return false;
 		}
-		const found = boundaries();
-		if (!boundary?.isConnected || found.length !== 1 || found[0] !== boundary) {
-			// Netflix may re-render the same row. Rebind only to exactly one row
-			// with the same heading on the same page and profile.
-			const same = found.length === 1 && found[0].matches(MODERN_ROW) && rowLabel &&
-				headingLabel(ownHeadings(found[0])[0]) === rowLabel;
-			if (!same || ++rebinds > MAX_REBINDS) {
-				terminate('terminated_boundary', false);
-				return false;
-			}
-			boundary = found[0];
-		}
-		if (Date.now() - started >= MAX_TIME) {
-			terminate('limit_time', false);
-			return false;
-		}
 		return true;
 	}
 	function scan() {
 		if (state !== 'capturing') return;
 		if (!guard()) return;
+		const found = boundaries();
+		if (!boundary?.isConnected || found.length !== 1 || found[0] !== boundary) {
+			const same = found.length === 1 && found[0].matches(MODERN_ROW) && rowLabel &&
+				headingLabel(ownHeadings(found[0])[0]) === rowLabel;
+			if (!same || ++rebinds > MAX_REBINDS) {
+				terminate('terminated_boundary', false);
+				return;
+			}
+			boundary = found[0];
+		}
+		if (Date.now() - started >= MAX_TIME) {
+			terminate('limit_time', false);
+			return;
+		}
 		const cards = boundary.querySelectorAll(boundary.matches(MODERN_ROW) ? MODERN_CARD : '.ptrack-content');
+		const owned = [];
 		for (let index = 0; index < cards.length && state === 'capturing'; index++) {
 			if (index >= MAX_ROWS) {
 				terminate('limit_rows', false);
 				break;
 			}
-			readCard(cards[index]);
+			if (readCard(cards[index])) owned.push(cards[index]);
 		}
-		if (state === 'capturing') trackLap();
+		if (state === 'capturing') trackPositions(owned);
 	}
 
 	// ---- Completeness verdict -------------------------------------------
+	function positionsConfirmed() {
+		const needed = Math.min(idAt.length, reference.total) - 1;
+		for (let k = 0; k < needed; k++) if (!confirmed.has(k)) return false;
+		return true;
+	}
+	function orderCheck() {
+		if (!reference) return 'not_applicable';
+		if (mismatchSeen) return 'mismatch';
+		return positionsConfirmed() ? 'match' : 'incomplete';
+	}
 	function verdict() {
 		const captured = items.size;
 		const base = { reportedTotal: reference?.total ?? null, captured };
@@ -428,37 +545,36 @@
 		const result = (completeness, reason) => ({ completeness, reason, missingLoaded, ...base });
 		if (state === 'terminated') return result('partial', `ended_${code}`);
 		if (marker === null) return result('partial', 'no_profile_guard');
+		if (code === 'list_empty') return captured === 0 && reference.total === 0 ? result('complete', 'reported_empty') : result('partial', 'unreadable_cards');
 		if (quarantined.size) return result('partial', 'conflicting_cards');
 		if (rejected.size) return result('partial', 'unreadable_cards');
 		if (captured > reference.total) return result('partial', 'above_total');
 		if (missingLoaded) return result('partial', 'loaded_title_missing');
-		if (orderMismatch()) return result('partial', 'order_mismatch');
-		// When Netflix listed every member up front, require the exact set.
-		const fullListing = reference.loaded.length === reference.total;
-		if (fullListing && [...items.keys()].some(id => !reference.loaded.some(edge => edge.id === id))) return result('partial', 'not_in_listing');
+		if (mismatchSeen) return result('partial', 'order_mismatch');
+		const everyKnown = reference.loaded.length === reference.total;
+		if (everyKnown && [...items.keys()].some(id => !posOf.has(id))) return result('partial', 'not_in_listing');
 		if (captured < reference.total) return result('partial', 'below_total');
-		if (!fullListing && !lapSeen) return result('partial', 'lap_not_finished');
+		if (!positionsConfirmed()) return result('partial', 'positions_unconfirmed');
+		if (!lapSeen) return result('partial', 'lap_not_finished');
 		if (state === 'capturing') return result('partial', 'total_reached_still_capturing');
 		return result('complete', 'reached_total');
 	}
 
-	// The cards shown at Start must follow Netflix's loaded positions when the
-	// row starts at its first title. A foreign card among them is caught here.
-	function orderCheck() {
-		if (!reference) return 'not_applicable';
-		const loaded = [...reference.loaded].sort((a, b) => a.position - b.position);
-		if (!loaded.length || loaded[0].position !== 0 || startOrder[0] !== loaded[0].id) return 'not_applicable';
-		const n = Math.min(startOrder.length, loaded.length);
-		for (let k = 0; k < n; k++) if (loaded[k].position !== k || startOrder[k] !== loaded[k].id) return 'mismatch';
-		return 'match';
-	}
-	const orderMismatch = () => orderCheck() === 'mismatch';
-
 	// ---- Bounded assisted traversal -------------------------------------
+	// The only control assisted mode presses: the single next arrow that sits
+	// directly in the row's own scroller (scroller > wrapper > button), outside
+	// any dialog, preview, card or other group. Anything else: don't click.
 	function nextButton() {
-		const buttons = [...boundary.querySelectorAll(NEXT_BUTTON)]
-			.filter(button => button.closest(MODERN_ROW) === boundary);
-		return buttons.length === 1 && !buttons[0].disabled ? buttons[0] : null;
+		const scroller = ownScroller();
+		if (!scroller) return null;
+		const all = boundary.querySelectorAll(NEXT_BUTTON);
+		if (all.length !== 1) return null;
+		const button = all[0];
+		const wrapper = button.parentElement;
+		if (!wrapper || wrapper.parentElement !== scroller) return null;
+		if (wrapper.matches(FOREIGN) || button.closest(`a, ${MODERN_CARD}, ${EXCLUDED}`)) return null;
+		if (button.disabled || (button.getAttribute('type') || 'submit') !== 'button') return null;
+		return button;
 	}
 	function finishAssist(reason) {
 		assist.outcome = reason;
@@ -469,6 +585,15 @@
 		code = 'stopped';
 		ended = Date.now();
 	}
+	// Unsure about the arrow: keep capturing, and let the member click.
+	function fallBackToManual() {
+		if (assist.timer != null) clearTimeout(assist.timer);
+		assist.timer = null;
+		assist.outcome = 'manual_fallback';
+	}
+	const pastDeadline = () => Date.now() - started >= ASSIST_MAX_TIME;
+	// Assisted timers never fire after the deadline.
+	const later = (fn, ms) => setTimeout(fn, Math.max(0, Math.min(ms, started + ASSIST_MAX_TIME - Date.now())));
 	function assistStep() {
 		if (!assist || state !== 'capturing') return;
 		assist.timer = null;
@@ -477,16 +602,11 @@
 			assist.outcome = `ended_${code}`;
 			return;
 		}
+		if (pastDeadline()) return finishAssist('assist_time_limit');
 		if (assist.advances === 0) {
 			assist.countAtStart = items.size;
 			assist.fullCount = mountedIds().length;
-			assist.windows = new Set([[...mountedIds()].sort().join(',')]);
 		} else {
-			// Assisted mode only clicks next, so a settled window of cards seen
-			// before means the row has cycled: a full lap.
-			const window = [...mountedIds()].sort().join(',');
-			if (assist.windows.has(window)) lapSeen = true;
-			assist.windows.add(window);
 			const gained = items.size - assist.countAtAdvance;
 			if (gained > 0) {
 				assist.stalls = 0;
@@ -498,58 +618,51 @@
 				assist.stalls++;
 			}
 		}
-		// Stop at the end of one lap, not when the count first reaches the total:
-		// a title added elsewhere during capture could otherwise fill the gap.
-		const fullListing = reference.loaded.length === reference.total;
-		if (fullListing && items.size >= reference.total) return finishAssist('listing_captured');
 		if (lapSeen && items.size < reference.total && !assist.finalWait) {
-			// The row's end is in view but titles are missing: give the last lazy
-			// cards one more full wait before finishing the lap.
 			assist.finalWait = true;
 			assist.clickedAt = Date.now();
-			assist.timer = setTimeout(assistWait, ASSIST_SETTLE_MS);
+			assist.timer = later(assistWait, ASSIST_SETTLE_MS);
 			return;
 		}
 		if (lapSeen) return finishAssist('lap_complete');
 		if (assist.stalls >= ASSIST_STALL_LIMIT) return finishAssist('stalled');
 		if (assist.maxAdvances !== null && assist.advances >= assist.maxAdvances + ASSIST_STALL_LIMIT) return finishAssist('advance_limit');
-		if (Date.now() - started >= ASSIST_MAX_TIME) return finishAssist('assist_time_limit');
 		const button = nextButton();
-		if (!button) return finishAssist(assist.advances ? 'row_end' : 'next_button_missing');
+		if (!button) return fallBackToManual();
 		assist.countAtAdvance = items.size;
 		assist.before = mountedIds().join(',');
 		assist.advances++;
 		assist.clickedAt = Date.now();
 		button.click();
-		assist.timer = setTimeout(assistWait, ASSIST_SETTLE_MS);
+		assist.timer = later(assistWait, ASSIST_SETTLE_MS);
 	}
-	// Waits until the row has moved, is quiet, and is as full of cards as at
-	// Start (lazy pages have loaded), or until the maximum wait.
 	function assistWait() {
 		if (!assist || state !== 'capturing') return;
+		if (pastDeadline()) {
+			scan();
+			if (state === 'capturing') finishAssist('assist_time_limit');
+			return;
+		}
 		const now = Date.now();
-		const ids = mountedIds();
 		if (assist.finalWait) {
-			// Final wait: until the total is reached or the maximum wait passes.
 			scan();
 			if (items.size >= reference.total || now - assist.clickedAt >= ASSIST_MAX_WAIT_MS) {
-				assist.timer = setTimeout(assistStep, STABLE_MS + 50);
+				assist.timer = later(assistStep, STABLE_MS + 50);
 			} else {
-				assist.timer = setTimeout(assistWait, 150);
+				assist.timer = later(assistWait, 150);
 			}
 			return;
 		}
+		const ids = mountedIds();
 		const moved = ids.join(',') !== assist.before;
 		const quiet = now - lastMutation >= ASSIST_SETTLE_MS;
 		const filled = ids.length >= assist.fullCount;
-		// "Full" is the most cards the row has shown at once once it settled.
 		if (moved && quiet && filled) assist.fullCount = Math.max(assist.fullCount, ids.length);
 		if ((moved && quiet && filled) || now - assist.clickedAt >= ASSIST_MAX_WAIT_MS) {
-			// Wait out the stable-read time so new cards can be confirmed.
 			scan();
-			assist.timer = setTimeout(assistStep, STABLE_MS + 50);
+			assist.timer = later(assistStep, STABLE_MS + 50);
 		} else {
-			assist.timer = setTimeout(assistWait, 150);
+			assist.timer = later(assistWait, 150);
 		}
 	}
 
@@ -587,13 +700,43 @@
 			} : {}),
 		};
 	}
-	function emptyListResult() {
-		// No My List row, but Netflix reports a My List section with zero titles.
+	function emptyListReference() {
 		for (const label of MY_LIST_LABELS) {
 			const read = readReference(label);
 			if (read.reference && read.reference.total === 0) return read.reference;
 		}
 		return null;
+	}
+	function reset() {
+		disconnect();
+		items = new Map();
+		quarantined = new Set();
+		seenIds = new Set();
+		rejected = new Set();
+		pending = new WeakMap();
+		stableIds = new WeakMap();
+		issues.clear();
+		boundary = null;
+		rowLabel = null;
+		marker = null;
+		reference = null;
+		referenceReason = 'not_read';
+		assist = null;
+		idAt = [];
+		posOf = new Map();
+		confirmed = new Set();
+		mismatchSeen = false;
+		prevWindow = [];
+		maxWindow = 0;
+		sinceIds = new Set();
+		firstId = null;
+		leftStart = false;
+		lapSeen = false;
+		rebinds = 0;
+		started = 0;
+		ended = 0;
+		state = 'idle';
+		code = 'idle';
 	}
 
 	globalThis.__goodwatchWishlistCaptureCommand = (command) => {
@@ -604,35 +747,17 @@
 				scan();
 				return result();
 			}
-			disconnect();
-			items = new Map();
-			quarantined = new Set();
-			seenIds = new Set();
-			rejected = new Set();
-			pending = new WeakMap();
-			issues.clear();
-			marker = null;
-			reference = null;
-			referenceReason = 'not_read';
-			assist = null;
-			firstId = null;
-			leftStart = false;
-			lapSeen = false;
-			startOrder = [];
-			rebinds = 0;
-			started = 0;
-			ended = 0;
-			state = 'idle';
-			code = 'idle';
+			reset();
 			if (!isMyList()) return { ...result(), code: 'wrong_page' };
 			const found = boundaries();
 			if (found.length !== 1) {
 				if (!found.length) {
-					const empty = emptyListResult();
+					const empty = emptyListReference();
 					if (empty) {
 						reference = empty;
 						referenceReason = 'reference_found';
 						marker = profileMarker();
+						initialUrl = location.pathname;
 						state = 'stopped';
 						code = 'list_empty';
 						started = ended = Date.now();
@@ -643,11 +768,14 @@
 			}
 			boundary = found[0];
 			rowLabel = boundary.matches(ROWS) ? headingLabel(ownHeadings(boundary)[0]) : null;
-			({ reference, reason: referenceReason } = rowLabel ? readReference(rowLabel) : { reference: null, reason: 'reference_grid_layout' });
+			({ reference, reason: referenceReason } = rowLabel ? readReference(rowLabel) : refuse('reference_grid_layout'));
+			if (reference) {
+				idAt = reference.loaded.map(edge => edge.id);
+				posOf = new Map(reference.loaded.map(edge => [edge.id, edge.position]));
+			}
 			marker = profileMarker();
 			initialUrl = location.pathname;
-			startOrder = mountedIds();
-			firstId = reference?.loaded.find(edge => edge.position === 0)?.id ?? startOrder[0] ?? null;
+			firstId = idAt[0] ?? null;
 			started = Date.now();
 			state = 'capturing';
 			code = 'capturing';
@@ -659,17 +787,15 @@
 			interval = setInterval(scan, 500);
 			scan();
 			if (command.mode === 'assisted') {
-				if (!reference || !boundary.matches(MODERN_ROW)) {
-					// Without a reported total the traversal has no safe bound. The
-					// capture continues as a manual capture.
+				if (!reference || !boundary.matches(MODERN_ROW) || marker === null) {
+					// No safe bound or no profile guard: continue as a manual capture.
 					assist = { advances: 0, stalls: 0, maxAdvances: null, outcome: 'needs_reference', timer: null };
 				} else {
 					assist = {
 						advances: 0, stalls: 0, firstGain: null, maxAdvances: null, outcome: null,
-						countAtStart: 0, countAtAdvance: 0, clickedAt: 0, timer: null,
+						countAtStart: 0, countAtAdvance: 0, clickedAt: 0, timer: null, finalWait: false,
 					};
-					// Let the stable-read check confirm the cards already shown.
-					assist.timer = setTimeout(assistStep, STABLE_MS + 200);
+					assist.timer = later(assistStep, STABLE_MS + 200);
 				}
 			}
 			return result();
@@ -681,7 +807,8 @@
 			code = 'cancelled';
 			return result();
 		}
-		if (state === 'stopped' && code !== 'list_empty') {
+		// Every guard runs on a finished capture too, including an empty one.
+		if (state === 'stopped') {
 			if (!isMyList() || location.pathname !== initialUrl) terminate('terminated_navigation', true);
 			else if (profileMarker() !== marker) terminate('terminated_profile', true);
 		}

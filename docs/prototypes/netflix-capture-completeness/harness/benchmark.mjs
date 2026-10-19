@@ -1,8 +1,8 @@
 // Synthetic benchmark for ticket #706. Compares three routes on the same
 // simulated pages and checks the candidate gates in PROTOCOL.md.
 //   M0: version 0.0.4 collector, member clicks until titles repeat.
-//   M1: version 0.0.5 collector, member clicks, checks the popup's verdict.
-//   A:  version 0.0.5 collector, bounded assisted traversal.
+//   M1: version 0.0.6 collector, member clicks, checks the popup's verdict.
+//   A:  version 0.0.6 collector, bounded assisted traversal.
 // Usage: node harness/benchmark.mjs [--json out.json] [--md out.md]
 import { writeFileSync } from 'node:fs'
 import { runScenario } from './runner.mjs'
@@ -61,9 +61,10 @@ function gates(rows) {
   const byId = (route, id) => rows.find(row => row.route === route && row.scenario === id)
   const check = (gate, pass, detail) => ({ gate, pass, detail })
   const fc = v5.filter(row => row.falseComplete)
+  const assistedRuns = rows.filter(r => r.route === 'A' && r.protocolAdvanceCap !== null && r.lastRunAdvances !== null)
   const completes = v5.filter(row => row.completeness === 'complete')
   return [
-    check('G1 False complete', fc.length === 0, `${fc.length} of ${v5.length} version 0.0.5 runs falsely complete${fc.length ? `: ${fc.map(r => `${r.route}/${r.scenario}`).join(', ')}` : ''}`),
+    check('G1 False complete', fc.length === 0, `${fc.length} of ${v5.length} version 0.0.6 runs falsely complete${fc.length ? `: ${fc.map(r => `${r.route}/${r.scenario}`).join(', ')}` : ''}`),
     check('G2 Recall when complete', completes.every(r => r.recall === 1 && r.contamination === 0), `${completes.filter(r => r.recall === 1 && r.contamination === 0).length} of ${completes.length} complete runs exact`),
     check('G3 Truthful partial', v5.filter(r => r.completeness !== 'complete').every(r => r.reason && (r.reportedTotal !== null || /reference|grid/.test(r.reason) || r.completeness === 'no file')), `${v5.filter(r => r.completeness !== 'complete').length} non-complete runs, each with a reason`),
     check('G4 Duplicates', ['M1', 'A'].every(rt => byId(rt, 'S09').captured === 77 && byId(rt, 'S01').captured === 77), 'Wrap-around counted once; same-name distinct IDs kept (S01, S09)'),
@@ -71,10 +72,10 @@ function gates(rows) {
     check('G6 Recycled cards', ['S04', 'S05', 'S06'].every(id => byId('A', id).recall === 1 && byId('M1', id).recall === 1), ['S04', 'S05', 'S06'].map(id => `${id} M0 ${pct(byId('M0', id).recall)}, M1 ${pct(byId('M1', id).recall)}, A ${pct(byId('A', id).recall)}`).join('; ')),
     check('G7 Lazy loading', byId('A', 'S07').completeness === 'complete', `S07 assisted: ${byId('A', 'S07').completeness}, ${byId('A', 'S07').elapsedS} s`),
     check('G8 Interruption', ['S14', 'S16'].every(id => v5.filter(r => r.scenario === id).every(r => (id === 'S14' ? r.completeness === 'no file' : r.completeness === 'complete' && r.restarted))), 'S14 discards; S16 restart reaches complete with no resume claim'),
-    check('G9 Profile change', v5.filter(r => r.scenario === 'S13').every(r => r.completeness === 'no file' && r.code === 'terminated_profile'), 'S13 discarded in both version 0.0.5 routes'),
+    check('G9 Profile change', v5.filter(r => r.scenario === 'S13').every(r => r.completeness === 'no file' && r.code === 'terminated_profile'), 'S13 discarded in both version 0.0.6 routes'),
     check('G10 Unavailable titles', ['M1', 'A'].every(rt => byId(rt, 'S10').completeness === 'partial' && byId(rt, 'S10').reportedTotal === 30), `S10: ${['M1', 'A'].map(rt => `${rt} ${byId(rt, 'S10').completeness} ${byId(rt, 'S10').captured}/${byId(rt, 'S10').reportedTotal}`).join(', ')}`),
     check('G11 Empty list', v5.filter(r => r.scenario === 'S17').every(r => r.completeness === 'no file' && r.code === 'boundary_missing') && v5.filter(r => r.scenario === 'S18').every(r => r.code === 'list_empty'), 'S17 unknown (no row); S18 empty complete from reported 0'),
-    check('G12 Bounded traversal', rows.filter(r => r.route === 'A' && r.advanceCap !== null).every(r => r.arrowClicks <= r.advanceCap) && rows.filter(r => r.route === 'A').every(r => r.elapsedS <= 180 + 60), `${rows.filter(r => r.route === 'A' && r.advanceCap !== null).length} assisted runs within their advance cap; max ${Math.max(...rows.filter(r => r.route === 'A').map(r => r.elapsedS))} s`),
+    check('G12 Bounded traversal', assistedRuns.every(r => r.lastRunAdvances <= r.protocolAdvanceCap) && assistedRuns.every(r => r.collectorElapsedMs <= 180000), `${assistedRuns.filter(r => r.lastRunAdvances <= r.protocolAdvanceCap).length} of ${assistedRuns.length} assisted runs within ceil(total / visible) + 3 + 3; longest traversal ${Math.max(...assistedRuns.map(r => r.collectorElapsedMs)) / 1000} s of 180 s`),
     check('G13 Effort', ['S01', 'S07'].every(id => byId('A', id).actions <= 3 && byId('A', id).elapsedS <= 60), `S01 assisted ${byId('A', 'S01').actions} actions, ${byId('A', 'S01').elapsedS} s; manual M1 ${byId('M1', 'S01').actions} actions, ${byId('M1', 'S01').elapsedS} s`),
   ]
 }

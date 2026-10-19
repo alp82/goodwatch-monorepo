@@ -1,4 +1,4 @@
-// Rule tests for the version 0.0.5 collector (ticket #706). Synthetic data only.
+// Rule tests for the collector (ticket #706). Synthetic data only.
 import assert from 'node:assert/strict'
 import { join } from 'node:path'
 import { test } from 'node:test'
@@ -20,7 +20,8 @@ test('reads the reported total and loaded positions for the selected row only', 
   assert.deepEqual({ ...r.reference }, { found: true, total: 30, loaded: 13 })
   await clock.advance(1000)
   const s = command({ action: 'status' })
-  assert.equal(s.orderCheck, 'match')
+  // Only the first 7 of 13 known positions are in view at Start.
+  assert.equal(s.orderCheck, 'incomplete')
   assert.equal(s.envelope.items.find(i => i.sourceId === '1001').title, items[0].title)
   page.close()
 })

@@ -10,7 +10,7 @@
   <main>
     <header class="head">
       <h1>GoodWatch My List capture</h1>
-      <p class="tag">Experiment 0.0.5</p>
+      <p class="tag">Experiment 0.0.6</p>
     </header>
 
     <section class="status" aria-labelledby="status-title">
@@ -32,8 +32,8 @@
 
     <details class="more">
       <summary>How this works</summary>
-      <p><strong>Capture My List</strong> clicks the next arrow on your My List row until the row comes back to its first title. It clicks nothing else and changes nothing in your list.</p>
-      <p>Netflix says how many titles are on My List. The file is marked complete only when every one of them was captured and the row reached its end. Otherwise it's marked incomplete.</p>
+      <p><strong>Capture My List</strong> clicks the next arrow on your My List row until the row comes back to its first title. It clicks nothing else and changes nothing in your list. If it can't find that arrow safely, it stops clicking and you click through yourself.</p>
+      <p>Netflix says how many titles are on your profile's My List. The file is marked complete only when every one of them was captured, in Netflix's order, and the row came back to its first title. Otherwise it's marked incomplete.</p>
       <p>Nothing leaves your computer. The file holds titles and Netflix IDs only.</p>
       <p id="diagnostics" class="code" hidden>Diagnostics: <code id="diagnostics-text"></code></p>
     </details>

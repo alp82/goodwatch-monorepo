@@ -1,5 +1,5 @@
 // Randomized timing and layout stress for ticket #706. Seeded, so reruns match.
-// Checks that no version 0.0.5 capture is marked complete unless it is exact.
+// Checks that no version 0.0.6 capture is marked complete unless it is exact.
 // Usage: node harness/stress.mjs [runs=300] [seed=706] [--json out.json]
 import { writeFileSync } from 'node:fs'
 import { runScenario } from './runner.mjs'
@@ -64,7 +64,7 @@ for (let i = 0; i < RUNS; i++) {
     const r = await runScenario(route, s)
     rows.push({
       ...r, n: s.page.items.length, visible: s.page.visible, renderDelay: s.page.renderDelay, fetchDelay: s.page.fetchDelay,
-      recycle: s.page.recycle, staggerMs: s.page.staggerMs, clickMs: s.clickMs, event: s.events[0]?.kind ?? null, eventDetail: s.events[0] ?? null, unavailable: s.page.unavailable.length,
+      recycle: s.page.recycle, visibleCards: s.page.visible, staggerMs: s.page.staggerMs, clickMs: s.clickMs, event: s.events[0]?.kind ?? null, eventDetail: s.events[0] ?? null, unavailable: s.page.unavailable.length,
     })
   }
 }
@@ -81,6 +81,7 @@ for (const route of ['M1', 'A']) {
     // Runs where an exact capture was achievable (no unavailable title, no list change).
     achievable: mine.length - changed.length,
     completeWhenAchievable: complete.filter(r => !(r.event === 'add' || r.event === 'remove' || r.unavailable)).length,
+    g12Violations: mine.filter(r => r.protocolAdvanceCap !== null && r.lastRunAdvances !== null && (r.lastRunAdvances > r.protocolAdvanceCap || r.collectorElapsedMs > 180000)).length,
     meanRecall: Math.round((mine.reduce((sum, r) => sum + (r.recall ?? 0), 0) / mine.length) * 1000) / 10,
     medianSeconds: [...mine.map(r => r.elapsedS)].sort((a, b) => a - b)[Math.floor(mine.length / 2)],
     maxSeconds: Math.max(...mine.map(r => r.elapsedS)),
