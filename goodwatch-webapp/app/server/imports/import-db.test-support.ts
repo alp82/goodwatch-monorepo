@@ -9,7 +9,7 @@ function requiredRow(row: Row | undefined): Row {
 const supportedImportSql = new Set([
 	"SELECT tmdb_id, popularity FROM movie WHERE tmdb_id IN (?)",
 	"SELECT tmdb_id, popularity FROM show WHERE tmdb_id IN (?)",
-	"SELECT tmdb_id, state FROM user_watch_state WHERE user_id = ? AND tmdb_id IN (?)",
+	"SELECT tmdb_id, state FROM user_watch_state WHERE user_id = ? AND media_type = 'show' AND tmdb_id IN (?)",
 	"SELECT payload, refreshed_at FROM anime_mapping_snapshot WHERE id = ?",
 	"UPDATE doc.user_import SET status = 'failed', error = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
 	"DELETE FROM user_favorite WHERE user_id = ? AND tmdb_id = ? AND media_type = ? AND _seq_no = ? AND _primary_term = ?",
@@ -183,6 +183,7 @@ export class ImportDb {
 			return this.showStates.filter(
 				(row) =>
 					row.user_id === params[0] &&
+					row.media_type === "show" &&
 					params.slice(1).includes(Number(row.tmdb_id)),
 			) as T[]
 		if (s.includes("FROM episode WHERE"))

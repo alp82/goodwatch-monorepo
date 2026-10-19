@@ -148,17 +148,27 @@ async function matchCatalog(source: ImportSource, rows: ImportObservation[]) {
 					source === "wishlist" &&
 					x.row.kind === "want" &&
 					tmdb &&
-					matches.length === 1 &&
-					canonicalTitleId(type, Number(matches[0].tmdb_id)) !==
-						canonicalTitleId(type, Number(tmdb.tmdb_id))
+					matches.some(
+						(match) =>
+							canonicalTitleId(type, Number(match.tmdb_id)) !==
+							canonicalTitleId(type, Number(tmdb.tmdb_id)),
+					)
 				) {
-					const candidates = [tmdb, matches[0]].map((candidate, index) => ({
-						suppliedId: index === 0 ? ("tmdb" as const) : ("imdb" as const),
-						mediaType: type,
-						tmdbId: canonicalTitleId(type, Number(candidate.tmdb_id)),
-						title: candidate.title,
-						year: candidate.release_year,
-					}))
+					const seen = new Set<number>()
+					const candidates = [tmdb, ...matches]
+						.filter((candidate) => {
+							const id = canonicalTitleId(type, Number(candidate.tmdb_id))
+							if (seen.has(id)) return false
+							seen.add(id)
+							return true
+						})
+						.map((candidate, index) => ({
+							suppliedId: index === 0 ? ("tmdb" as const) : ("imdb" as const),
+							mediaType: type,
+							tmdbId: canonicalTitleId(type, Number(candidate.tmdb_id)),
+							title: candidate.title,
+							year: candidate.release_year,
+						}))
 					x.row.wishlistMatchRequired = "id_conflict"
 					x.row.wishlistIdConflict = { candidates, suggestion: null }
 					x.row.problem = {
@@ -581,7 +591,7 @@ export async function createParsedPreview(
 	const interactedShows = new Set<number>()
 	for (const batch of chunks(conflictShowIds, 800)) {
 		const states = await select<{ tmdb_id: number; state: string }>(
-			`SELECT tmdb_id, state FROM user_watch_state WHERE user_id = ? AND tmdb_id IN (${marks(batch.length)})`,
+			`SELECT tmdb_id, state FROM user_watch_state WHERE user_id = ? AND media_type = 'show' AND tmdb_id IN (${marks(batch.length)})`,
 			[userId, ...batch],
 		)
 		for (const state of states)
@@ -651,19 +661,17 @@ export async function createParsedPreview(
 			continue
 		}
 		// A small difference or missing popularity is not clear evidence for a default.
-		const [first, second] = conflict.candidates
-		const a = popularity.get(key(first.mediaType, first.tmdbId))
-		const b = popularity.get(key(second.mediaType, second.tmdbId))
-		if (
-			a != null &&
-			b != null &&
-			Number.isFinite(a) &&
-			Number.isFinite(b) &&
-			a > 0 &&
-			b > 0 &&
-			Math.max(a, b) >= 2 * Math.min(a, b)
-		) {
-			const candidate = a > b ? first : second
+		const ranked = conflict.candidates.map((candidate) => ({
+			candidate,
+			value:
+				popularity.get(key(candidate.mediaType, candidate.tmdbId)) ??
+				Number.NaN,
+		}))
+		if (ranked.some(({ value }) => !Number.isFinite(value) || value <= 0))
+			continue
+		ranked.sort((a, b) => b.value - a.value)
+		if (ranked[0].value >= 2 * ranked[1].value) {
+			const candidate = ranked[0].candidate
 			conflict.suggestion = {
 				mediaType: candidate.mediaType,
 				tmdbId: candidate.tmdbId,

@@ -740,3 +740,9 @@ test("coming back to the page doesn't ask again for pages that failed; only Try 
 	assert.match(back.text, /Thirty 10Type unknown · ID 970010Not matched/)
 	assert.deepEqual(suggestionOffsets(matching.cachedRetrying), [0, 10, 20, 0])
 })
+
+test("matching groups only label originally unknown types as Type unknown", () => {
+	assert.doesNotMatch(matching.knownType_movie.text, /Type unknown/)
+	assert.doesNotMatch(matching.knownType_show.text, /Type unknown/)
+	assert.match(matching.opened.text, /Type unknown/)
+})

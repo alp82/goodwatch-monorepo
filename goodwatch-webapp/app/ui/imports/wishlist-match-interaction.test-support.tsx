@@ -1181,6 +1181,27 @@ const thirty = Array.from({ length: 30 }, (_, at) =>
 	await view.unmount()
 }
 
+// Known-type ID conflicts must not be labelled as an unknown source type.
+for (const mediaType of ["movie", "show"] as const) {
+	const item = unknownRow(4, "Known conflict", "known")
+	item.wishlistEvidence = { ...item.wishlistEvidence!, mediaType }
+	item.wishlistOriginal = {
+		...item.wishlistOriginal!,
+		mediaType,
+		wishlistEvidence: item.wishlistEvidence,
+	}
+	item.mediaType = mediaType
+	item.wishlistMatchRequired = "id_conflict"
+	const view = await flow(summary(PARENT, { unmatched: 1 }, 1), {
+		groups: [groupOf(item)],
+		resolve: [],
+	})
+	await view.click("Review matches")
+	await settle(5)
+	results[`knownType_${mediaType}`] = snap(view)
+	await view.unmount()
+}
+
 process.stdout.write(`__WISHLIST_MATCH__${JSON.stringify(results)}`, () =>
 	process.exit(0),
 )

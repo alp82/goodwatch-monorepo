@@ -1015,3 +1015,217 @@ it("does not rank interaction kinds or preselect when both candidates have inter
 	assert.equal(row.outcome, "unmatched")
 	assert.equal(row.wishlistIdConflict?.suggestion, null)
 })
+
+for (const interaction of ["show_state", "want", "rating", "watch"] as const) {
+	it(`ignores a movie ${interaction} with the same numeric ID as a conflicting show candidate`, async () => {
+		const db = setup()
+		db.catalog = [
+			{
+				tmdb_id: 101,
+				imdb_id: "tt0000101",
+				title: "Other show",
+				release_year: 2000,
+				media_type: "show",
+			},
+			{
+				tmdb_id: 202,
+				imdb_id: "tt0000202",
+				title: "Source show",
+				release_year: 2020,
+				media_type: "show",
+			},
+		]
+		const movie = { user_id: "member", tmdb_id: 101, media_type: "movie" }
+		if (interaction === "show_state")
+			db.showStates.push({ ...movie, state: "seen" })
+		if (interaction === "want") db.wishlist.push(movie)
+		if (interaction === "watch") db.watches.push(movie)
+		if (interaction === "rating")
+			db.scores.push({
+				...movie,
+				score: 8,
+				updated_at: "2026-01-01",
+				_seq_no: 1,
+				_primary_term: 1,
+			})
+		const preview = await upload([
+			{
+				title: "Source show",
+				year: 2020,
+				mediaType: "show",
+				tmdbId: 101,
+				imdbId: "tt0000202",
+			},
+		])
+		const row = (await getImportItems("member", preview.id, undefined, 0, 50))
+			.items[0]
+		assert.deepEqual(row.wishlistIdConflict?.suggestion, {
+			mediaType: "show",
+			tmdbId: 202,
+			signal: "metadata",
+		})
+	})
+}
+
+it("holds all typed candidates when a supplied IMDb ID identifies multiple catalog titles", async () => {
+	const db = setup()
+	db.catalog = [
+		{
+			tmdb_id: 101,
+			imdb_id: "tt0000101",
+			title: "First",
+			release_year: 2000,
+			popularity: 10,
+		},
+		{
+			tmdb_id: 202,
+			imdb_id: "tt0000202",
+			title: "Second",
+			release_year: 2001,
+			popularity: 20,
+		},
+		{
+			tmdb_id: 303,
+			imdb_id: "tt0000202",
+			title: "Third",
+			release_year: 2002,
+			popularity: 80,
+		},
+	]
+	const preview = await upload([
+		{
+			title: "Source label",
+			mediaType: "movie",
+			tmdbId: 101,
+			imdbId: "tt0000202",
+		},
+	])
+	const row = (await getImportItems("member", preview.id, undefined, 0, 50))
+		.items[0]
+	assert.equal(row.outcome, "unmatched")
+	assert.equal(row.tmdbId, null)
+	assert.deepEqual(
+		row.wishlistIdConflict?.candidates.map((c) => [c.suppliedId, c.tmdbId]),
+		[
+			["tmdb", 101],
+			["imdb", 202],
+			["imdb", 303],
+		],
+	)
+	assert.deepEqual(row.wishlistIdConflict?.suggestion, {
+		mediaType: "movie",
+		tmdbId: 303,
+		signal: "popularity",
+	})
+	const group = (await getWishlistMatchGroup("member", preview.id, 0)).group
+	assert.equal(group.item.wishlistIdConflict?.candidates.length, 3)
+})
+
+for (const otherType of ["show", null] as const) {
+	it(`keeps a movie TMDB match when its IMDb ID resolves ${otherType ? "only in the show namespace" : "to nothing"}`, async () => {
+		const db = setup()
+		db.catalog = [
+			{
+				tmdb_id: 101,
+				imdb_id: "tt0000101",
+				title: "Movie",
+				release_year: 2000,
+				media_type: "movie",
+			},
+		]
+		if (otherType)
+			db.catalog.push({
+				tmdb_id: 202,
+				imdb_id: "tt0000202",
+				title: "Show",
+				release_year: 2020,
+				media_type: otherType,
+			})
+		const preview = await upload([
+			{ title: "Movie", mediaType: "movie", tmdbId: 101, imdbId: "tt0000202" },
+		])
+		const row = (await getImportItems("member", preview.id, undefined, 0, 50))
+			.items[0]
+		assert.equal(row.outcome, "new")
+		assert.equal(row.tmdbId, 101)
+		assert.equal(row.wishlistIdConflict, undefined)
+	})
+}
+it("keeps Dropped as a show identity signal ahead of metadata", async () => {
+	const db = setup()
+	db.catalog = [
+		{
+			tmdb_id: 101,
+			imdb_id: "tt0000101",
+			title: "Known",
+			release_year: 2000,
+			media_type: "show",
+		},
+		{
+			tmdb_id: 202,
+			imdb_id: "tt0000202",
+			title: "Source",
+			release_year: 2020,
+			media_type: "show",
+		},
+	]
+	db.showStates.push({
+		user_id: "member",
+		tmdb_id: 101,
+		media_type: "show",
+		state: "dropped",
+	})
+	const preview = await upload([
+		{
+			title: "Source",
+			year: 2020,
+			mediaType: "show",
+			tmdbId: 101,
+			imdbId: "tt0000202",
+		},
+	])
+	const row = (await getImportItems("member", preview.id, undefined, 0, 50))
+		.items[0]
+	assert.equal(row.outcome, "unmatched")
+	assert.deepEqual(row.wishlistIdConflict?.suggestion, {
+		mediaType: "show",
+		tmdbId: 101,
+		signal: "interaction",
+	})
+	assert.equal(db.showStates[0].state, "dropped")
+})
+for (const thirdPopularity of [80, null] as const) {
+	it(`leaves no default among multiple IMDb matches when the third popularity is ${thirdPopularity}`, async () => {
+		const db = setup()
+		db.catalog = [
+			{
+				tmdb_id: 101,
+				imdb_id: "tt0000101",
+				title: "First",
+				release_year: 2000,
+				popularity: 80,
+			},
+			{
+				tmdb_id: 202,
+				imdb_id: "tt0000202",
+				title: "Second",
+				release_year: 2001,
+				popularity: 20,
+			},
+			{
+				tmdb_id: 303,
+				imdb_id: "tt0000202",
+				title: "Third",
+				release_year: 2002,
+				popularity: thirdPopularity,
+			},
+		]
+		const preview = await upload([
+			{ title: "Source", mediaType: "movie", tmdbId: 101, imdbId: "tt0000202" },
+		])
+		const row = (await getImportItems("member", preview.id, undefined, 0, 50))
+			.items[0]
+		assert.equal(row.outcome, "unmatched")
+		assert.equal(row.wishlistIdConflict?.suggestion, null)
+	})
+}
