@@ -19,6 +19,7 @@ import type {
 	WishlistSuggestions,
 } from "~/domain/imports"
 import { wishlistMatchErrorMessage } from "~/domain/wishlist-match-copy"
+import { sourceImportNeedsPolling } from "./SourceImportPreviewModel"
 import { buildSourceImportUpload } from "./SourceImportUpload"
 
 const API = "/api/imports"
@@ -114,7 +115,7 @@ export function useSourceImport(id: string) {
 		initialDataUpdatedAt: () =>
 			client.getQueryState(sourceImportKeys.list)?.dataUpdatedAt,
 		refetchInterval: (query) =>
-			query.state.data?.import.status === "running"
+			sourceImportNeedsPolling(query.state.data?.import)
 				? PROGRESS_INTERVAL_MS
 				: false,
 	})
@@ -142,7 +143,10 @@ export function useSourceImportItems(
 
 // Matching wishlist titles by hand. These shapes follow the backend's list, search, and resolve answers.
 export type { WishlistMatchGroup }
-export type WishlistMatchTarget = { mediaType: ImportMediaType; tmdbId: number }
+export type WishlistMatchTarget = {
+	mediaType: ImportMediaType
+	tmdbId: number
+}
 export type WishlistMatchCandidate = WishlistMatchTarget & {
 	title: string
 	year: number | null

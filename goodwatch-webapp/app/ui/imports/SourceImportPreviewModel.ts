@@ -12,3 +12,10 @@ export function sourceImportRequirements(
 		watchDates: watchDates ?? "preserve",
 	}
 }
+
+export const sourceImportNeedsPolling = (
+	summary: { status: string; resolution?: { state: string } } | undefined,
+) =>
+	summary?.status === "running" ||
+	(!!summary?.resolution &&
+		["queued", "running", "editing"].includes(summary.resolution.state))

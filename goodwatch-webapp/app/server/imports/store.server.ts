@@ -173,6 +173,7 @@ export function summarize(row: ImportRow): ImportSummary {
 export async function getImportRow(
 	userId: string,
 	id: string,
+	allowUnpublished = false,
 ): Promise<ImportRow> {
 	const row = (
 		await select<ImportRow>(
@@ -185,6 +186,14 @@ export async function getImportRow(
 			404,
 			"We couldn't find that import. Upload the file again.",
 		)
+	if (row.source === "tvtime" && !allowUnpublished) {
+		const { resolutionVisible } = await import("./resolution-runtime.server.ts")
+		if (!(await resolutionVisible(userId, id)))
+			throw new NativeImportError(
+				404,
+				"We couldn't find that import. Upload the file again.",
+			)
+	}
 	return row
 }
 export const listImportRows = (userId: string) =>
@@ -239,7 +248,7 @@ export async function itemRows(
 	const rows = await select<
 		ItemRow & { undo_outcome: StoredUndoOutcome | null }
 	>(
-		`SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state, undo_outcome FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind <> 'state' ${pendingOnly ? "AND (apply_state IS NULL OR apply_state = 'failed')" : ""} ORDER BY row_index LIMIT 100001`,
+		`SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state, undo_outcome FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind <> 'state' AND kind <> 'resolution' ${pendingOnly ? "AND (apply_state IS NULL OR apply_state = 'failed')" : ""} ORDER BY row_index LIMIT 100001`,
 		[id, userId],
 	)
 	return rows.map((row) => ({
@@ -266,7 +275,7 @@ export async function listItems(
 ) {
 	const summary = summarize(await getImportRow(userId, id))
 	const rows = await select<ItemRow>(
-		`SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind <> 'state' ${outcome ? "AND outcome = ?" : ""} ORDER BY row_index LIMIT ? OFFSET ?`,
+		`SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind <> 'state' AND kind <> 'resolution' ${outcome ? "AND outcome = ?" : ""} ORDER BY row_index LIMIT ? OFFSET ?`,
 		[id, userId, ...(outcome ? [outcome] : []), limit, offset],
 	)
 	const items = rows.map(publicItemRow)
@@ -330,7 +339,7 @@ export async function getImportItem(
 ): Promise<ImportItem | undefined> {
 	await getImportRow(userId, id)
 	const rows = await select<ItemRow>(
-		"SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND row_index = ? AND kind <> 'state' LIMIT 1",
+		"SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND row_index = ? AND kind <> 'state' AND kind <> 'resolution' LIMIT 1",
 		[id, userId, index],
 	)
 	return rows[0] ? publicItemRow(rows[0]) : undefined

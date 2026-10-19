@@ -251,6 +251,9 @@ export type ImportStatus = "preview" | "running" | "done" | "failed" | "undone"
 export const IMPORT_MAX_ROWS = 50_000
 
 export interface ImportObservation {
+	/** Immutable normalized TV Time evidence before any catalog enrichment. */
+	resolutionOriginal?: Omit<ImportObservation, "resolutionOriginal">
+
 	/** Stable within the source, independent of upload/archive and mutable watch dates. */
 	key: string
 	kind: ImportKind | "unsupported"
@@ -302,12 +305,17 @@ export interface ImportObservation {
 	/** Validated source observation, captured before matching; never replaced by a member choice. */
 	wishlistOriginal?: WishlistOriginalObservation
 	/** Official TV Time movie identity; never a catalog ID. */
-	tvtimeMovie?: { sourceId?: string; releaseDate: string | null }
+	tvtimeMovie?: {
+		sourceId?: string
+		releaseDate: string | null
+		country?: string
+	}
 	/** Server-derived holds after canonical duplicate grouping. */
 	wishlistShowChoice?: boolean
 	wishlistRewatchChoice?: boolean
 	wishlistResolution?: {
 		basis: "member"
+		suggestionProof?: TvtimeSuggestionProof
 		mediaType: ImportMediaType
 		tmdbId: number
 		title: string
@@ -375,6 +383,32 @@ export interface WishlistOriginalObservation {
 	problem?: ImportObservation["problem"]
 }
 
+export interface TvtimeSuggestionProof {
+	rule: "tvtime_exact_title_release_date_v1"
+	mediaType: "movie"
+	tmdbId: number
+	sourceFingerprint: string
+	title: {
+		value: string
+		kind: "primary" | "original" | "alternative" | "translation"
+		country?: string
+		locale: string
+	}
+	date: {
+		value: string
+		basis: "primary" | "country"
+		country?: string
+		releaseType?: number
+	}
+	candidateCount: 1
+	sourceCountry: string | null
+	verifiedCandidates: number
+	discoveryBound: { pages: 5; candidates: 100 }
+	discoveryComplete: true
+	pages: number
+	verifiedAt: string
+}
+
 export interface WishlistSuggestionProposal {
 	mediaType: "movie" | "show"
 	tmdbId: number
@@ -389,13 +423,32 @@ export type WishlistSuggestionReason =
 	| "ambiguous_native_id"
 	| "source_metadata_conflict"
 	| "catalog_unavailable"
+	| "tvtime_suggestion_search_incomplete"
+	| "tvtime_suggestion_unavailable"
+	| "tvtime_suggestion_no_exact_match"
+	| "tvtime_suggestion_ambiguous"
+	| "tvtime_suggestion_catalog_missing"
+	| "tvtime_suggestion_rejected"
+	| "tvtime_suggestion_pending"
+	| "tvtime_lookup_budget_exhausted"
 export interface WishlistSuggestion {
+	suggestionId?: string
+	proof?: TvtimeSuggestionProof
+
 	representativeIndex: number
 	state: "suggested" | "manual" | "unavailable" | "already_resolved"
 	proposal?: WishlistSuggestionProposal
 	reason?: WishlistSuggestionReason
 }
 export interface WishlistSuggestions {
+	bulkAccept?: {
+		token: string | null
+		eligibleCount: number
+		previewId: string
+		generation: number
+		expiresAt: string
+	}
+
 	groups: WishlistSuggestion[]
 	total: number
 	offset: number
@@ -424,6 +477,7 @@ export interface WishlistMatchEvidenceVariant {
 	sourceUrl?: string
 	/** TV Time keeps the complete source release date, separately from catalog year. */
 	releaseDate?: string | null
+	country?: string
 }
 export interface WishlistMatchGroup {
 	representativeIndex: number
@@ -446,6 +500,24 @@ export interface ImportOptions {
 }
 
 export interface ImportSummary {
+	resolution?: {
+		jobId: string
+		state: string
+		phase: string
+		total: number
+		processed: number
+		matched: number
+		held: number
+		pending: number
+		failedByCode: Record<string, number>
+		failed: number
+		heldByCode: Record<string, number>
+		attempts: number
+		updatedAt: string
+		deadline: string
+		replacementId: string | null
+	}
+
 	id: string
 	source: ImportSource
 	fileName: string

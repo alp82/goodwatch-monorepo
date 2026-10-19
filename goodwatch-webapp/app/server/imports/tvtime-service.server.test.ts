@@ -13,7 +13,6 @@ const { getShowTracking, getMovieTracking } = await import(
 	"../tracking.server.ts"
 )
 const {
-	previewImport,
 	getImportItems,
 	confirmImport,
 	getImport,
@@ -24,6 +23,9 @@ const {
 	getWishlistSuggestions,
 	searchWishlistMatches,
 } = await import("./service.server.ts")
+// These existing synchronous resolver/apply cases use the normalized preview boundary.
+// The upload/background contract is exercised in resolution-runtime.server.test.ts.
+const { createPreview: previewImport } = await import("./preview.server.ts")
 const { setImportDbForTest } = await import("./store.server.ts")
 const { setImportEffectsForTest } = await import("./apply.server.ts")
 afterEach(() => {

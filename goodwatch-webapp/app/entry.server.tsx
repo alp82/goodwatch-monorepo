@@ -13,8 +13,6 @@ import { createReadableStreamFromReadable } from "@remix-run/node"
 import { RemixServer } from "@remix-run/react"
 import { isbot } from "isbot"
 import { renderToPipeableStream } from "react-dom/server"
-import { registerAuthCluster, registerLazyAuthResolver } from "./server/auth/boot.server.ts"
-import { getRedisCluster } from "./utils/cache"
 import {
 	currentAssetBase,
 	manifestForBase,
@@ -24,11 +22,11 @@ import { applyCachePolicy } from "~/server/cache-identity.server"
 import { startEarlyHints } from "~/server/early-hints.server"
 import { HtmlStream } from "~/server/html-stream.server"
 import { startPlexConnectionCleanup } from "~/server/imports/plex-connect-runtime.server"
+import { startImportResolutionReconciler } from "~/server/imports/resolution-runtime.server"
 import { startTmdbConnectionCleanup } from "~/server/imports/tmdb-connect-runtime.server"
 import { startLifecycle } from "~/server/lifecycle.server"
 import { capLogLines } from "~/server/log-cap.server"
 import { protectMediaResponse } from "~/server/media-read-health.server"
-import { withoutRelatedMapMarkup } from "~/server/related-map-handoff"
 import { routeLabelFor } from "~/server/metrics/http.server"
 import { startMetrics } from "~/server/metrics/index.server"
 import { startHotCards } from "~/server/og-image/hot-cards.server"
@@ -38,10 +36,16 @@ import {
 	startPageCache,
 } from "~/server/page-cache.server"
 import { startProcessStats } from "~/server/process-stats.server"
+import { withoutRelatedMapMarkup } from "~/server/related-map-handoff"
 import { logProcessRole, processRole } from "~/server/role.server"
 import { startStaticFiles } from "~/server/static-files.server"
 import { startTitleSnapshot } from "~/server/title-snapshot/index.server"
 import { startCrateDiagnostics } from "~/utils/crate-diagnostics"
+import {
+	registerAuthCluster,
+	registerLazyAuthResolver,
+} from "./server/auth/boot.server.ts"
+import { getRedisCluster } from "./utils/cache"
 
 // Better Auth itself loads on its first use with BETTER_AUTH_ENABLED on (boot.server.ts).
 registerAuthCluster(getRedisCluster)
@@ -58,6 +62,7 @@ logProcessRole()
 startCrateDiagnostics()
 startLifecycle()
 startTmdbConnectionCleanup()
+startImportResolutionReconciler()
 startPlexConnectionCleanup()
 startMetrics()
 // The per-minute "Process:" line starts here only in a search role, which has no first page to start it. The other

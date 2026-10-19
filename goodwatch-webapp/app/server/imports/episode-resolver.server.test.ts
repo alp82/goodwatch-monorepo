@@ -425,7 +425,7 @@ test("TVDB ambiguity, removed catalog episodes and transport failures stay unmat
 	const codes = [
 		"episode_tvdb_not_found",
 		"episode_tvdb_ambiguous",
-		undefined,
+		"episode_tvdb_catalog_missing",
 		undefined,
 	]
 	const reasons = [
@@ -535,7 +535,7 @@ test("a failed TVDB cache write is logged and does not discard a settled match",
 		special: false,
 	})
 	assert.equal(logged.length, 1)
-	assert.equal(logged[0][0], "Could not cache import episode TVDB identity")
+	assert.deepEqual(logged[0], ["Could not cache import episode TVDB identity"])
 })
 
 test("3 Body Problem: Season 1: Countdown ignores an untrusted season in name fallback", async () => {
@@ -848,7 +848,8 @@ test("reviewed display seasons never replace canonical import identities or impl
 		),
 	)
 	for (const showId of [154526, 70523, 220542]) {
-		const mapping = episodeMapping(showId)!
+		const mapping = episodeMapping(showId)
+		assert.ok(mapping)
 		const fixture =
 			showId === 154526
 				? audited.find(

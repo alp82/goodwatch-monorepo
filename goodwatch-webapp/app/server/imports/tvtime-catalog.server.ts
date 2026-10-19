@@ -9,6 +9,7 @@ import {
 /** Read both identity namespaces together, before starting the remote lookup budget. */
 export async function createTvtimeCatalogLookup(
 	rows: ImportObservation[],
+	remoteLookup?: TvdbLookup,
 ): Promise<TvdbLookup> {
 	const eligible = rows.filter(
 		(row) => !row.problem && row.mediaType === "show",
@@ -69,7 +70,7 @@ export async function createTvtimeCatalogLookup(
 				})
 		}
 	}
-	const remote = createTvdbLookup()
+	const remote = remoteLookup ?? createTvdbLookup()
 	const publishedShows = new Set<number>()
 	return async (id, kind = "episode") => {
 		const stored = cached.get(id)
@@ -99,7 +100,7 @@ export async function createTvtimeCatalogLookup(
 					[id, result.tv_results[0].id],
 				)
 			} catch (error) {
-				console.error("Could not cache import show TVDB identity", { error })
+				console.error("Could not cache import show TVDB identity")
 			}
 		}
 		return evidence

@@ -268,6 +268,14 @@ export async function getWishlistSuggestions(
 ): Promise<WishlistSuggestions> {
 	if (!Number.isSafeInteger(offset) || offset < 0 || offset > 50_000)
 		throw new WishlistMatchError(400, "wishlist_search_invalid")
+	const { getImportRow } = await import("./store.server.ts")
+	const parent = await getImportRow(userId, id)
+	if (parent.source === "tvtime") {
+		const cached = await (
+			await import("./resolution-runtime.server.ts")
+		).resolutionSuggestions(userId, id, offset)
+		if (cached) return cached
+	}
 	const all = await matchingGroups(userId, id)
 	const page = all.slice(offset, offset + 10)
 	const groups: WishlistSuggestion[] = new Array(page.length)

@@ -39,13 +39,21 @@ export class TvdbLookupBudgetExceeded extends Error {
 		)
 	}
 }
+export class TvdbLookupPending extends TvdbLookupBudgetExceeded {
+	constructor() {
+		super()
+		this.message = "GoodWatch is still matching this title."
+	}
+}
 export function tvdbLookupProblem(error: unknown) {
 	return {
 		outcome: "unmatched" as const,
 		code:
-			error instanceof TvdbLookupBudgetExceeded
-				? "tvtime_lookup_budget_exhausted"
-				: "tvtime_lookup_unavailable",
+			error instanceof TvdbLookupPending
+				? "tvtime_lookup_pending"
+				: error instanceof TvdbLookupBudgetExceeded
+					? "tvtime_lookup_budget_exhausted"
+					: "tvtime_lookup_unavailable",
 		reason:
 			error instanceof TvdbLookupBudgetExceeded
 				? error.message

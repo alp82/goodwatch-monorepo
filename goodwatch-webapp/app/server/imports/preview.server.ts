@@ -41,7 +41,12 @@ import {
 	select,
 	summarize,
 } from "./store.server.ts"
-import { TVDB_LOOKUP_LIMITS } from "./tvdb-lookup.server.ts"
+import {
+	TVDB_LOOKUP_LIMITS,
+	type TvdbLookup,
+	TvdbLookupBudgetExceeded,
+	TvdbLookupPending,
+} from "./tvdb-lookup.server.ts"
 import { createTvtimeCatalogLookup } from "./tvtime-catalog.server.ts"
 import {
 	isManuallyMatchableWishlistSource,
@@ -56,10 +61,16 @@ type CatalogRow = {
 	release_year: number | null
 }
 
-async function matchCatalog(source: ImportSource, rows: ImportObservation[]) {
+export async function matchCatalog(
+	source: ImportSource,
+	rows: ImportObservation[],
+	remoteLookup?: TvdbLookup,
+) {
 	const animeMappings = createCatalogAnimeLookup()
 	const lookup =
-		source === "tvtime" ? await createTvtimeCatalogLookup(rows) : undefined
+		source === "tvtime"
+			? await createTvtimeCatalogLookup(rows, remoteLookup)
+			: undefined
 	const resolveEpisode = createCatalogEpisodeResolver(animeMappings, lookup)
 	const tvdbParent = createTvdbParentLookup(lookup)
 	const unavailableParents = new Map<
@@ -564,8 +575,14 @@ const itemColumns = [
 	"watched_at_precision",
 	"pass",
 ]
-async function insertItems(id: string, userId: string, items: ImportItem[]) {
-	for (const batch of chunks(items, 300))
+async function insertItems(
+	id: string,
+	userId: string,
+	items: ImportItem[],
+	guard?: () => Promise<void>,
+) {
+	for (const batch of chunks(items, 300)) {
+		await guard?.()
 		await run(
 			`INSERT INTO doc.user_import_item (${itemColumns.join(",")}) VALUES ${batch.map(() => `(${marks(itemColumns.length)})`).join(",")}`,
 			batch.flatMap((x): Param[] => [
@@ -591,6 +608,7 @@ async function insertItems(id: string, userId: string, items: ImportItem[]) {
 				x.pass ?? 1,
 			]),
 		)
+	}
 }
 
 export async function createPreview(
@@ -599,6 +617,7 @@ export async function createPreview(
 	fileName: string,
 	bytes: Uint8Array,
 	wishlist?: Uint8Array,
+	mode?: { cachedOnly?: boolean; pending?: boolean },
 ): Promise<ImportSummary> {
 	const parsed: ParsedImport = await parseImportFile(
 		source,
@@ -606,10 +625,19 @@ export async function createPreview(
 		wishlist,
 		fileName,
 	)
+	if (source === "tvtime" && mode?.cachedOnly)
+		for (const row of parsed.observations)
+			row.resolutionOriginal = structuredClone(row)
 	const fileHash = createHash("sha256").update(bytes)
 	if (wishlist)
 		fileHash.update(`\0wishlist:${wishlist.length}:`).update(wishlist)
-	return createParsedPreview(userId, fileName, parsed, fileHash.digest("hex"))
+	return createParsedPreview(
+		userId,
+		fileName,
+		parsed,
+		fileHash.digest("hex"),
+		mode,
+	)
 }
 
 /** Trusted server adapters can preview normalized observations without inventing an upload format. */
@@ -618,6 +646,13 @@ export async function createParsedPreview(
 	fileName: string,
 	input: ParsedImport,
 	hash = createHash("sha256").update(JSON.stringify(input)).digest("hex"),
+	mode?: {
+		cachedOnly?: boolean
+		id?: string
+		unpublished?: boolean
+		pending?: boolean
+		guard?: () => Promise<void>
+	},
 ): Promise<ImportSummary> {
 	const parsed = input
 	if (parsed.observations.length > IMPORT_MAX_ROWS)
@@ -655,7 +690,17 @@ export async function createParsedPreview(
 	}
 	const source = parsed.source
 	const [matched, current] = await Promise.all([
-		matchCatalog(source, parsed.observations),
+		matchCatalog(
+			source,
+			parsed.observations,
+			mode?.cachedOnly
+				? async () => {
+						throw mode?.pending
+							? new TvdbLookupPending()
+							: new TvdbLookupBudgetExceeded()
+					}
+				: undefined,
+		),
 		currentValues(userId),
 	])
 	const conflictShowIds = [
@@ -792,7 +837,7 @@ export async function createParsedPreview(
 		parsed.warnings.push(
 			`${specials} episode row(s) map to TMDB specials. They are imported but do not count toward regular show progress.`,
 		)
-	const id = randomUUID()
+	const id = mode?.id ?? randomUUID()
 	const watchPlans = await classifyWatchDuplicates(userId, source, id, items)
 	await classifyShowStatuses(userId, source, items, watchPlans)
 	const countRecord = {
@@ -817,8 +862,9 @@ export async function createParsedPreview(
 	const now = new Date()
 
 	try {
-		await insertItems(id, userId, items)
+		await insertItems(id, userId, items, mode?.guard)
 		await refreshItems()
+		await mode?.guard?.()
 		await run(
 			"INSERT INTO doc.user_import (id,user_id,source,status,file_name,counts,processed,total,added,updated,kept,failed,error,created_at,updated_at,warnings,kinds,file_hash) VALUES (?,?,?,'preview',?,?,0,?,0,0,0,0,NULL,?,?,?,?,?)",
 			[
@@ -861,12 +907,13 @@ export async function createParsedPreview(
 		)
 		await refreshImports()
 	} catch (error) {
+		await mode?.guard?.()
 		await run("DELETE FROM doc.user_import_item WHERE import_id = ?", [
 			id,
 		]).catch(() => null)
 		throw error
 	}
-	return summarize(await getImportRow(userId, id))
+	return summarize(await getImportRow(userId, id, mode?.unpublished))
 }
 
 async function classifyWishlistShows(userId: string, items: ImportItem[]) {

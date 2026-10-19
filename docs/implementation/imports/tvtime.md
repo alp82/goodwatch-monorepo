@@ -4,6 +4,10 @@ Backend built against main `b15b6cbe`, following the owner's 2026-10-19 reopenin
 
 The upload API accepts `source=tvtime` through the existing multipart preview endpoint, then the ordinary kind/date selection, confirm, receipt, re-import, resume and Undo machinery. The Imports page and its Trakt advice are unchanged; a separate frontend thread will expose this adapter. The only UI-module change is the existing file-size table's required `tvtime` entry, to keep the shared source type exhaustive; it adds no recognition rule or source row. Upload descriptor strings in the domain contract are initial integration copy for that thread.
 
+## Background resolution and movie suggestions
+
+The current upload path now returns a cached-only preview and starts an in-process, durable resolution run. See [the as-built job, API and verification contract](tvtime-background.md). It supersedes the earlier per-preview remote lookup workflow described in the historical convergence measurements below. It also adds owner-approved Q28 movie suggestions; suggestions require explicit acceptance, followed by Confirm. The only additional UI change is a polling compatibility guard; the frontend still needs to display progress, follow replacement previews, and expose individual/bulk decisions.
+
 ## Supported files
 
 - Official GDPR `gdpr-data.zip`, also loose tracking CSVs. An in-memory filename allowlist opens only `tracking-prod-records-v2.csv`, `tracking-prod-records.csv`, `followed_tv_show.csv`, `user_tv_show_data.csv` and `ratings-live-votes.csv`. Nested directories, hash prefixes and punctuation/case variants of these names are accepted. Private account/authentication tables are never decompressed or parsed. Other filenames are listed in receipt warnings.

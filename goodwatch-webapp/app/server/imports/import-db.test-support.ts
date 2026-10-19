@@ -7,6 +7,15 @@ function requiredRow(row: Row | undefined): Row {
 // The fake implements only these statement shapes. Reject changed predicates or columns
 // instead of silently returning empty rows/success. Placeholder lists may vary in length.
 const supportedImportSql = new Set([
+	"SELECT source_key, payload FROM doc.user_import_item WHERE import_id LIKE ? AND source_key > ? AND kind = 'resolution' ORDER BY source_key LIMIT 4",
+	"SELECT status, user_id FROM doc.user_import WHERE id = ?",
+	"SELECT payload, _seq_no, _primary_term FROM doc.user_import_item WHERE import_id = ? AND row_index = ? AND kind = 'resolution'",
+	"SELECT source_key, payload FROM doc.user_import_item WHERE import_id LIKE ? AND source_key > ? AND kind = 'resolution' ORDER BY source_key LIMIT 200",
+	"SELECT row_index, payload FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND row_index > ? AND kind NOT IN ('state','resolution') ORDER BY row_index LIMIT 200",
+	"UPDATE doc.user_import_item SET payload = ? WHERE import_id = ? AND row_index = ? AND kind = 'resolution' AND _seq_no = ? AND _primary_term = ?",
+	"INSERT INTO doc.user_import_item (import_id,row_index,user_id,kind,source_key,payload,outcome) VALUES (?, ?, ?, 'resolution', ?, ?, 'unsupported') ON CONFLICT (import_id,row_index) DO NOTHING",
+	"DELETE FROM doc.user_import_item WHERE import_id = ?",
+	"DELETE FROM doc.user_import_item WHERE import_id LIKE ?",
 	"SELECT 'episode' AS kind, tvdb_id, tmdb_id, show_id FROM episode WHERE tvdb_id IN (?) AND removed_at IS NULL UNION ALL SELECT 'show' AS kind, tvdb_id, tmdb_id, tmdb_id AS show_id FROM show WHERE tvdb_id IN (?) LIMIT 100001",
 	"SELECT 'episode' AS kind, tvdb_id, tmdb_id, show_id FROM episode WHERE tvdb_id IN (NULL) AND removed_at IS NULL UNION ALL SELECT 'show' AS kind, tvdb_id, tmdb_id, tmdb_id AS show_id FROM show WHERE tvdb_id IN (?) LIMIT 100001",
 	"SELECT 'episode' AS kind, tvdb_id, tmdb_id, show_id FROM episode WHERE tvdb_id IN (?) AND removed_at IS NULL UNION ALL SELECT 'show' AS kind, tvdb_id, tmdb_id, tmdb_id AS show_id FROM show WHERE tvdb_id IN (NULL) LIMIT 100001",
@@ -36,21 +45,21 @@ const supportedImportSql = new Set([
 	"SELECT DISTINCT tmdb_id, media_type FROM user_watch_log WHERE user_id = ? LIMIT 100000",
 	"SELECT created_at, updated_at, _seq_no, _primary_term FROM user_not_interested WHERE user_id = ? AND tmdb_id = ? AND media_type = ?",
 	"DELETE FROM user_not_interested WHERE user_id = ? AND tmdb_id = ? AND media_type = ? AND _seq_no = ? AND _primary_term = ?",
-	"SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, apply_state, watch_id, undo_outcome FROM doc.user_import_item WHERE import_id = ? AND user_id = ? ORDER BY row_index LIMIT 100001",
+	"SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, apply_state, watch_id, undo_outcome FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind <> 'resolution' ORDER BY row_index LIMIT 100001",
 	"SELECT tmdb_id, title, release_year, poster_path FROM movie WHERE tmdb_id IN (?)",
 	"SELECT tmdb_id, title, release_year, poster_path FROM show WHERE tmdb_id IN (?)",
 	"UPDATE doc.user_import_item SET undo_outcome = ? WHERE import_id = ? AND row_index = ?",
-	"SELECT apply_state, count(*) AS n FROM doc.user_import_item WHERE import_id = ? AND kind <> 'state' GROUP BY apply_state",
+	"SELECT apply_state, count(*) AS n FROM doc.user_import_item WHERE import_id = ? AND kind <> 'state' AND kind <> 'resolution' GROUP BY apply_state",
 	"SELECT created_at, updated_at FROM user_favorite WHERE user_id = ? AND tmdb_id = ? AND media_type = ?",
 	"SELECT created_at, updated_at, _seq_no, _primary_term FROM user_favorite WHERE user_id = ? AND tmdb_id = ? AND media_type = ?",
 	"SELECT created_at, updated_at, _seq_no, _primary_term FROM user_wishlist WHERE user_id = ? AND tmdb_id = ? AND media_type = ?",
 	"SELECT id, user_id, source, status, file_name, counts, processed, total, added, updated, kept, failed, error, created_at, updated_at, confirmed_at, finished_at, options, warnings, kinds, CURRENT_TIMESTAMP AS read_at, _seq_no, _primary_term FROM doc.user_import WHERE id = ?",
 	"SELECT id, user_id, source, status, file_name, counts, processed, total, added, updated, kept, failed, error, created_at, updated_at, confirmed_at, finished_at, options, warnings, kinds, CURRENT_TIMESTAMP AS read_at, _seq_no, _primary_term FROM doc.user_import WHERE user_id = ? AND source IN (?) AND status <> 'preview' ORDER BY created_at DESC LIMIT 100",
-	"SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state, undo_outcome FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind <> 'state' AND (apply_state IS NULL OR apply_state = 'failed') ORDER BY row_index LIMIT 100001",
-	"SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state, undo_outcome FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind <> 'state' ORDER BY row_index LIMIT 100001",
-	"SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind <> 'state' ORDER BY row_index LIMIT ? OFFSET ?",
-	"SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind <> 'state' AND outcome = ? ORDER BY row_index LIMIT ? OFFSET ?",
-	"SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND row_index = ? AND kind <> 'state' LIMIT 1",
+	"SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state, undo_outcome FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind <> 'state' AND kind <> 'resolution' AND (apply_state IS NULL OR apply_state = 'failed') ORDER BY row_index LIMIT 100001",
+	"SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state, undo_outcome FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind <> 'state' AND kind <> 'resolution' ORDER BY row_index LIMIT 100001",
+	"SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind <> 'state' AND kind <> 'resolution' ORDER BY row_index LIMIT ? OFFSET ?",
+	"SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind <> 'state' AND kind <> 'resolution' AND outcome = ? ORDER BY row_index LIMIT ? OFFSET ?",
+	"SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND row_index = ? AND kind <> 'state' AND kind <> 'resolution' LIMIT 1",
 	"SELECT row_index, source_key, payload, apply_state, undo_outcome FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind = 'state' LIMIT 100001",
 	"SELECT score, review, created_at, updated_at, _seq_no, _primary_term FROM user_score WHERE user_id = ? AND tmdb_id = ? AND media_type = ?",
 	"SELECT tmdb_id, imdb_id, title, release_year FROM movie WHERE imdb_id IN (?)",
@@ -178,6 +187,46 @@ export class ImportDb {
 	async select<T extends {}>(sql: string, params: Param[]): Promise<T[]> {
 		const s = sql.replace(/\s+/g, " ").trim()
 		assertSupportedImportSql(s)
+		if (s === "SELECT status, user_id FROM doc.user_import WHERE id = ?")
+			return this.imports
+				.filter((x) => x.id === params[0])
+				.map((x) => ({ ...x })) as T[]
+		if (s.startsWith("SELECT payload, _seq_no, _primary_term"))
+			return this.items
+				.filter(
+					(x) =>
+						x.import_id === params[0] &&
+						x.row_index === params[1] &&
+						x.kind === "resolution",
+				)
+				.map((x) => ({
+					...x,
+					_seq_no: x._seq_no ?? 1,
+					_primary_term: 1,
+				})) as unknown as T[]
+		if (s.startsWith("SELECT source_key, payload"))
+			return this.items
+				.filter(
+					(x) =>
+						String(x.import_id).startsWith(String(params[0]).slice(0, -1)) &&
+						String(x.source_key) > String(params[1]) &&
+						x.kind === "resolution",
+				)
+				.sort((a, b) =>
+					String(a.source_key).localeCompare(String(b.source_key)),
+				)
+				.slice(0, s.endsWith("LIMIT 4") ? 4 : 200) as T[]
+		if (s.startsWith("SELECT row_index, payload"))
+			return this.items
+				.filter(
+					(x) =>
+						x.import_id === params[0] &&
+						x.user_id === params[1] &&
+						Number(x.row_index) > Number(params[2]) &&
+						!["state", "resolution"].includes(String(x.kind)),
+				)
+				.sort((a, b) => Number(a.row_index) - Number(b.row_index))
+				.slice(0, 200) as T[]
 		if (s.includes("FROM anime_mapping_snapshot"))
 			return [
 				{
@@ -286,6 +335,8 @@ export class ImportDb {
 				rows = rows.filter((x) => x.kind === "state")
 			if (s.includes("kind <> 'state'"))
 				rows = rows.filter((x) => x.kind !== "state")
+			if (s.includes("kind <> 'resolution'"))
+				rows = rows.filter((x) => x.kind !== "resolution")
 			if (s.includes("apply_state IS NULL OR apply_state = 'failed'"))
 				rows = rows.filter(
 					(x) => x.apply_state == null || x.apply_state === "failed",
@@ -380,6 +431,46 @@ export class ImportDb {
 				media_type: params[6],
 				apply_state: null,
 			})
+			return { rowcount: 1 }
+		}
+		if (s.includes("VALUES (?, ?, ?, 'resolution',")) {
+			if (
+				this.items.some(
+					(x) => x.import_id === params[0] && x.row_index === params[1],
+				)
+			)
+				return { rowcount: 0 }
+			this.items.push({
+				import_id: params[0],
+				row_index: params[1],
+				user_id: params[2],
+				kind: "resolution",
+				source_key: params[3],
+				payload: params[4],
+				outcome: "unsupported",
+				_seq_no: ++this.version,
+				_primary_term: 1,
+			})
+			return { rowcount: 1 }
+		}
+		if (s.includes("kind = 'resolution' AND _seq_no")) {
+			const row = this.items.find(
+				(x) => x.import_id === params[1] && x.row_index === params[2],
+			)
+			if (!row || row._seq_no !== params[3] || params[4] !== 1)
+				return { rowcount: 0 }
+			row.payload = params[0]
+			row._seq_no = ++this.version
+			return { rowcount: 1 }
+		}
+		if (s === "DELETE FROM doc.user_import_item WHERE import_id LIKE ?") {
+			this.items = this.items.filter(
+				(x) => !String(x.import_id).startsWith(String(params[0]).slice(0, -1)),
+			)
+			return { rowcount: 1 }
+		}
+		if (s === "DELETE FROM doc.user_import_item WHERE import_id = ?") {
+			this.items = this.items.filter((x) => x.import_id !== params[0])
 			return { rowcount: 1 }
 		}
 		if (s.startsWith("INSERT INTO doc.user_import_item (")) {

@@ -13,8 +13,9 @@ const { holdTasteRebuildsForTest } = await import(
 const { setImportDbForTest } = await import(
 	"../app/server/imports/store.server.ts"
 )
-const { previewImport } = await import(
-	"../app/server/imports/service.server.ts"
+// Keep this legacy synchronous transport-cap probe separate from upload/background tests.
+const { createPreview: previewImport } = await import(
+	"../app/server/imports/preview.server.ts"
 )
 holdTasteRebuildsForTest()
 const latencyMs = Number(process.argv[2] ?? 0)

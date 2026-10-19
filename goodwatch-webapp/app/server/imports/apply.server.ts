@@ -402,7 +402,7 @@ async function markItem(
 export async function recount(importId: string) {
 	await refreshItems()
 	const rows = await select<{ apply_state: string | null; n: number }>(
-		"SELECT apply_state, count(*) AS n FROM doc.user_import_item WHERE import_id = ? AND kind <> 'state' GROUP BY apply_state",
+		"SELECT apply_state, count(*) AS n FROM doc.user_import_item WHERE import_id = ? AND kind <> 'state' AND kind <> 'resolution' GROUP BY apply_state",
 		[importId],
 	)
 	const tally = { added: 0, updated: 0, kept: 0, failed: 0, processed: 0 }
@@ -568,6 +568,11 @@ export async function confirmImport(
 	options: ImportOptions,
 ): Promise<ImportSummary> {
 	const row = await getImportRow(userId, id)
+	if (row.source === "tvtime" && row.status === "preview")
+		await (await import("./resolution-runtime.server.ts")).cancelResolution(
+			userId,
+			id,
+		)
 	const stored = row.options
 		? (JSON.parse(row.options) as ImportOptions & { direction?: string })
 		: null

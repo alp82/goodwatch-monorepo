@@ -22,13 +22,19 @@ export const previewImport = async (
 	bytes: Uint8Array,
 	wishlist?: Uint8Array,
 ) =>
-	(await import("./preview.server.ts")).createPreview(
-		userId,
-		source,
-		fileName,
-		bytes,
-		wishlist,
-	)
+	source === "tvtime"
+		? (await import("./resolution-runtime.server.ts")).previewTvtime(
+				userId,
+				fileName,
+				bytes,
+			)
+		: (await import("./preview.server.ts")).createPreview(
+				userId,
+				source,
+				fileName,
+				bytes,
+				wishlist,
+			)
 /** Server-only normalized adapter boundary, sharing the upload preview/apply/receipt/undo. */
 export const previewParsedImport = async (
 	userId: string,
@@ -45,8 +51,19 @@ export const previewParsedImport = async (
 
 export const listImports = async (userId: string): Promise<ImportSummary[]> =>
 	(await listImportRows(userId)).map(summarize)
-export const getImport = async (userId: string, id: string) =>
-	summarize(await getImportRow(userId, id))
+export const getImport = async (userId: string, id: string) => {
+	const row = await getImportRow(userId, id)
+	return {
+		...summarize(row),
+		...(row.source === "tvtime"
+			? {
+					resolution: await (
+						await import("./resolution-runtime.server.ts")
+					).resolutionSummary(userId, id),
+				}
+			: {}),
+	}
+}
 export const getImportItems = (
 	userId: string,
 	id: string,
@@ -139,4 +156,17 @@ export const getWishlistSuggestions = async (
 		id,
 		offset,
 		signal,
+	)
+
+export const acceptSuggestedImport = (
+	userId: string,
+	id: string,
+	input: unknown,
+) =>
+	import("./resolution-runtime.server.ts").then((runtime) =>
+		runtime.acceptResolutionSuggestions(userId, id, input),
+	)
+export const discardImport = (userId: string, id: string) =>
+	import("./resolution-runtime.server.ts").then((runtime) =>
+		runtime.cancelResolution(userId, id),
 	)

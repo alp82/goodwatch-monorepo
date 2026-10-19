@@ -432,7 +432,7 @@ const api = resultApi(select, async (userId, id) => {
 			: null,
 		build: async (): Promise<ImportResult> => {
 			const rows = await select<ResultRow>(
-				"SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, apply_state, watch_id, undo_outcome FROM doc.user_import_item WHERE import_id = ? AND user_id = ? ORDER BY row_index LIMIT 100001",
+				"SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, apply_state, watch_id, undo_outcome FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind <> 'resolution' ORDER BY row_index LIMIT 100001",
 				[id, userId],
 			)
 			return groupImportResult(

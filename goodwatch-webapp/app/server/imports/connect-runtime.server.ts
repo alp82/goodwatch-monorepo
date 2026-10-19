@@ -9,7 +9,7 @@ export async function connectMember(request: Request) {
 }
 
 export function connectionCleanup(
-	source: ConnectionSource,
+	source: ConnectionSource | "import-resolution",
 	sweep: () => Promise<void>,
 	enabled: () => boolean,
 	failureMessage: string,

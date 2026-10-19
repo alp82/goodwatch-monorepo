@@ -129,7 +129,11 @@ async function resolveTvdb(
 			error instanceof TvdbLookupUnavailable
 		) {
 			const problem = tvdbLookupProblem(error)
-			return { status: "unmatched", reason: problem.reason, code: problem.code }
+			return {
+				status: "unmatched",
+				reason: problem.reason,
+				code: problem.code,
+			}
 		}
 		return unmatched(
 			"TMDB's TVDB lookup is unavailable; retry this import later.",
@@ -148,9 +152,12 @@ async function resolveTvdb(
 		}
 	const candidates = episodes.filter((e) => Number(e.tmdb_id) === hits[0].id)
 	if (candidates.length !== 1)
-		return unmatched(
-			"The TVDB episode is missing or ambiguous in this show's current catalog.",
-		)
+		return {
+			...unmatched(
+				"The TVDB episode is missing or ambiguous in this show's current catalog.",
+			),
+			code: "episode_tvdb_catalog_missing",
+		}
 	const episode = candidates[0]
 
 	try {
@@ -165,11 +172,7 @@ async function resolveTvdb(
 			episode.tvdb_id = episodeTvdbId
 		}
 	} catch (error) {
-		console.error("Could not cache import episode TVDB identity", {
-			showId,
-			episodeId: episode.tmdb_id,
-			error,
-		})
+		console.error("Could not cache import episode TVDB identity")
 	}
 	return matched(episode)
 }

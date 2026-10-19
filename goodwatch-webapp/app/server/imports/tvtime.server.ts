@@ -566,6 +566,9 @@ export function parseTvTime(
 				base.tvtimeMovie = {
 					...(string(row.uuid) ? { sourceId: string(row.uuid) } : {}),
 					releaseDate: string(row.releasedate) || null,
+					...(/^[a-z]{2}$/i.test(string(row.country))
+						? { country: string(row.country).toUpperCase() }
+						: {}),
 				}
 				if (!string(row.moviename))
 					base.problem = {

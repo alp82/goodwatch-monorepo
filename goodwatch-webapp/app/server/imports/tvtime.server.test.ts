@@ -647,3 +647,19 @@ test("TV Time ZIP failures distinguish password detection from a generic unreada
 		},
 	)
 })
+
+test("official TV Time movie country survives in immutable matching evidence", async () => {
+	const parsed = await parseImportFile(
+		"tvtime",
+		Buffer.from(
+			"type,entity_type,uuid,movie_name,release_date,country\nfollow,movie,synthetic,Synthetic movie,2001-02-03,de\n",
+		),
+		undefined,
+		"tracking-prod-records.csv",
+	)
+	assert.equal(parsed.observations[0].tvtimeMovie?.country, "DE")
+	assert.equal(
+		parsed.observations[0].wishlistOriginal?.tvtimeMovie?.country,
+		"DE",
+	)
+})

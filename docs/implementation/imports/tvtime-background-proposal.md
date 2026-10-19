@@ -1,6 +1,8 @@
 # TV Time background resolution: job mechanism checkpoint
 
-Status: proposed implementation mechanism, not implemented or enabled. The orchestrator approved background resolution, watched-parent priority and strict movie suggestions with bulk acceptance on 2026-10-19, and explicitly requested a proposal and stop if there was no reusable job mechanism. This document covers that checkpoint. It does not change the approved matching rules or the scope of map #365.
+Status: **superseded** by the 2026-10-19 Fable decision and the [in-process implementation](tvtime-background.md). No Windmill driver, callback, credential, schedule or options envelope was built. The remaining text is the historical proposal, not deployment instructions.
+
+Original checkpoint: proposed implementation mechanism, not implemented or enabled. The orchestrator approved background resolution, watched-parent priority and strict movie suggestions with bulk acceptance on 2026-10-19, and explicitly requested a proposal and stop if there was no reusable job mechanism. This document covers that checkpoint. It does not change the approved matching rules or the scope of map #365.
 
 ## Existing mechanisms and the missing boundary
 

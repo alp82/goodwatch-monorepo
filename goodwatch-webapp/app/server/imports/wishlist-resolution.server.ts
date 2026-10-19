@@ -167,7 +167,33 @@ export async function resolveWishlistImport(
 	id: string,
 	input: unknown,
 ) {
-	const request = schema.safeParse(input)
+	const parent = await ownedPreview(userId, id)
+	if (parent.source !== "tvtime") return resolveChoices(userId, id, input)
+	const runtime = await import("./resolution-runtime.server.ts")
+	const result = await runtime.editResolution(userId, id, (mode) =>
+		resolveChoices(userId, id, input, false, mode),
+	)
+	await runtime.recordMemberChoices(userId, id, result.import.id, input)
+	return result
+}
+export async function resolveSuggestedChoices(
+	userId: string,
+	id: string,
+	input: unknown,
+	mode: Parameters<typeof createParsedPreview>[4],
+) {
+	return resolveChoices(userId, id, input, true, mode)
+}
+async function resolveChoices(
+	userId: string,
+	id: string,
+	input: unknown,
+	bulk = false,
+	mode?: Parameters<typeof createParsedPreview>[4],
+) {
+	const request = (
+		bulk ? schema.extend({ choices: schema.shape.choices.max(50000) }) : schema
+	).safeParse(input)
 	if (!request.success) fail("wishlist_resolution_invalid")
 	const parent = await ownedPreview(userId, id)
 	const stored = await itemRows(userId, id)
@@ -296,18 +322,32 @@ export async function resolveWishlistImport(
 				selectedAt: provenance.selectedAt,
 				parentImportId: provenance.parentImportId,
 				parentRowIndex: provenance.parentRowIndex,
+				...(parent.source === "tvtime"
+					? {
+							suggestionProof: await (
+								await import("./resolution-runtime.server.ts")
+							).choiceProof(userId, id, row, choice.target),
+						}
+					: {}),
 			},
 			catalog.imdb_id,
 		)
 		rows[index].wishlistMatchRequired = row.wishlistMatchRequired
+		rows[index].resolutionOriginal = row.resolutionOriginal
 	}
 	for (const [index, row] of rows.entries())
 		row.wishlistParent = { importId: id, rowIndex: index }
-	const preview = await createParsedPreview(userId, parent.file_name ?? "", {
-		source: parent.source,
-		observations: rows,
-		warnings: JSON.parse(parent.warnings ?? "[]"),
-	})
+	const preview = await createParsedPreview(
+		userId,
+		parent.file_name ?? "",
+		{
+			source: parent.source,
+			observations: rows,
+			warnings: JSON.parse(parent.warnings ?? "[]"),
+		},
+		undefined,
+		mode,
+	)
 	return { import: preview, parentImportId: id }
 }
 
@@ -326,7 +366,12 @@ export async function matchingGroups(
 			title: original.title,
 			year: original.year,
 			...(original.tvtimeMovie
-				? { releaseDate: original.tvtimeMovie.releaseDate }
+				? {
+						releaseDate: original.tvtimeMovie.releaseDate,
+						...(original.tvtimeMovie.country
+							? { country: original.tvtimeMovie.country }
+							: {}),
+					}
 				: {}),
 			...(original.wishlistEvidence.sourceId
 				? { sourceId: original.wishlistEvidence.sourceId }

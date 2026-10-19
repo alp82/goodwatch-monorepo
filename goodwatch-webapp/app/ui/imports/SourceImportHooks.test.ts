@@ -298,3 +298,23 @@ test("MAL and Kitsu uploads send the original XML or gzip and reject unrelated f
 		/20 MB/,
 	)
 })
+test("background resolution keeps the existing preview poll active until it settles", async () => {
+	const { sourceImportNeedsPolling } = await import(
+		"./SourceImportPreviewModel.ts"
+	)
+	assert.equal(
+		sourceImportNeedsPolling({
+			status: "preview",
+			resolution: { state: "running" },
+		}),
+		true,
+	)
+	assert.equal(
+		sourceImportNeedsPolling({
+			status: "preview",
+			resolution: { state: "completed" },
+		}),
+		false,
+	)
+	assert.equal(sourceImportNeedsPolling({ status: "running" }), true)
+})
