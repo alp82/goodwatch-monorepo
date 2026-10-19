@@ -14,11 +14,6 @@ import {
 import { Spinner } from "~/ui/wait/Spinner"
 import { tmdbFixedImage } from "~/utils/tmdb-image"
 import {
-	tvtimeIntentLine,
-	tvtimeMatchEffect,
-	tvtimeReleaseDate,
-} from "./TvTimeMatchCopy"
-import {
 	type ImportRequestError,
 	WISHLIST_MATCH_MAX_CHANGES,
 	type WishlistMatchCandidate,
@@ -30,6 +25,11 @@ import {
 	useWishlistMatchGroups,
 	useWishlistSuggestions,
 } from "./SourceImportHooks"
+import {
+	tvtimeIntentLine,
+	tvtimeMatchEffect,
+	tvtimeReleaseDate,
+} from "./TvTimeMatchCopy"
 import {
 	errorBox,
 	formatCount,

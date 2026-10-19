@@ -436,11 +436,11 @@ test("a TV Time extension CSV the generic import could also read names both, so 
 		file("renamed.csv", "title,tvdb_id,imdb_id,is_watched,watched_at,rating\n"),
 	)
 	assert.equal(result.source, "tvtime")
-	assert.ok(result.source !== null && result.alsoReads?.includes("csv"))
+	assert.ok("alsoReads" in result && result.alsoReads?.includes("csv"))
 	const official = await recognizeImportFile(
 		file("renamed.csv", "key,s_id,ep_id,s_no,ep_no,created_at\n"),
 	)
-	assert.ok(official.source !== null && !official.alsoReads)
+	assert.ok(official.source !== null && !("alsoReads" in official))
 })
 
 test("renamed TV Time JSON is recognized whatever the order of its ID fields, short or long", async () => {
