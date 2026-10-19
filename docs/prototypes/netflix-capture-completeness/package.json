@@ -1,0 +1,13 @@
+{
+  "name": "goodwatch-wishlist-capture-experiment",
+  "private": true,
+  "version": "0.0.5",
+  "type": "module",
+  "scripts": {
+    "test": "node --test harness/*.test.mjs",
+    "benchmark": "node harness/benchmark.mjs --json benchmark/results.json --md benchmark/results.md"
+  },
+  "devDependencies": {
+    "happy-dom": "20.14.5"
+  }
+}

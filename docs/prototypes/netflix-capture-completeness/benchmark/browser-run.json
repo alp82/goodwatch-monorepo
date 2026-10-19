@@ -1,0 +1,56 @@
+{
+  "status": "passed",
+  "synthetic": true,
+  "liveProviderValidated": false,
+  "chromium": "156.0.8078.4",
+  "netflixRequestsFulfilledLocally": 9,
+  "otherRequestsBlocked": 0,
+  "results": [
+    {
+      "run": "assisted-77",
+      "completeness": "complete",
+      "items": 77,
+      "seconds": 26.081,
+      "advances": 12,
+      "outcome": "lap_complete",
+      "untrustedClicks": 12,
+      "memberActions": 3
+    },
+    {
+      "run": "assisted-unavailable",
+      "completeness": "partial",
+      "items": 75,
+      "reportedTotal": 77,
+      "reason": "below_total",
+      "seconds": 35.101
+    },
+    {
+      "run": "manual-77-at-1.2s-clicks",
+      "completeness": "complete",
+      "items": 77,
+      "seconds": 34.708,
+      "arrowClicks": 26,
+      "memberActions": 31,
+      "laps": [
+        {
+          "lap": 1,
+          "captured": 67,
+          "reportedTotal": 77,
+          "reason": "below_total"
+        },
+        {
+          "lap": 2,
+          "captured": 77,
+          "reportedTotal": 77,
+          "reason": "total_reached_still_capturing"
+        }
+      ],
+      "reason": "reached_total"
+    },
+    {
+      "run": "profile-change",
+      "code": "terminated_profile",
+      "fileOffered": false
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GoodWatch My List capture (experiment)</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <main>
+    <header class="head">
+      <h1>GoodWatch My List capture</h1>
+      <p class="tag">Experiment 0.0.5</p>
+    </header>
+
+    <section class="status" aria-labelledby="status-title">
+      <h2 id="status-title" class="visually-hidden">Status</h2>
+      <p id="state" class="state" role="status" aria-live="polite">Checking this tab…</p>
+      <p id="progress" class="progress" hidden></p>
+      <p id="detail" class="detail" hidden></p>
+
+      <div class="actions">
+        <button type="button" id="assist" class="primary" hidden>Capture My List</button>
+        <button type="button" id="manual" hidden>I'll click through myself</button>
+        <button type="button" id="stop" class="primary" hidden>Stop and save file</button>
+        <button type="button" id="save" class="primary" hidden>Save file</button>
+        <button type="button" id="cancel" hidden>Cancel</button>
+      </div>
+
+      <p id="saved-line" class="saved" hidden></p>
+    </section>
+
+    <details class="more">
+      <summary>How this works</summary>
+      <p><strong>Capture My List</strong> clicks the next arrow on your My List row until the row comes back to its first title. It clicks nothing else and changes nothing in your list.</p>
+      <p>Netflix says how many titles are on My List. The file is marked complete only when every one of them was captured and the row reached its end. Otherwise it's marked incomplete.</p>
+      <p>Nothing leaves your computer. The file holds titles and Netflix IDs only.</p>
+      <p id="diagnostics" class="code" hidden>Diagnostics: <code id="diagnostics-text"></code></p>
+    </details>
+  </main>
+  <script src="popup.js"></script>
+</body>
+</html>
