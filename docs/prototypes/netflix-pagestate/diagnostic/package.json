@@ -1,0 +1,10 @@
+{
+  "name": "goodwatch-netflix-diagnostic",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/core.test.mjs",
+    "test:browser": "node --test --test-concurrency=1 test/observer.browser.mjs test/e2e.browser.mjs"
+  }
+}
