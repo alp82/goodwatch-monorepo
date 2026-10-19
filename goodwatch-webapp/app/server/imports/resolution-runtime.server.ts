@@ -653,6 +653,27 @@ export async function recordMemberChoices(
 			target: choice.target,
 		})
 	}
+	await refreshResolution()
+}
+async function memberDecisions(root: string) {
+	const decisions = new Map<string, { target: unknown }>()
+	let after = ""
+	for (;;) {
+		const page = await resolutionRecordsPage(`decision/${root}/`, after)
+		if (!page.length) return decisions
+		for (const row of page) {
+			decisions.set(
+				row.source_key.split("/").at(-1) ?? "",
+				JSON.parse(row.payload) as { target: unknown },
+			)
+			if (decisions.size > 50000)
+				matchingError(
+					"This import has too many match groups.",
+					"tvtime_suggestion_limit",
+				)
+		}
+		after = page.at(-1)?.source_key ?? after
+	}
 }
 export async function resolutionSuggestions(
 	member: string,
@@ -664,15 +685,15 @@ export async function resolutionSuggestions(
 	const j = await resolutionJobs.refreshSnapshot(member, root, id)
 	if (!j || j.member !== member) return undefined
 
+	const decisions = await memberDecisions(root)
+
 	const groups: import("../../domain/imports.ts").WishlistSuggestion[] = []
 	const indexes: { index: number; key: string }[] = []
 	const suggestionFor = async (
 		g: Group,
 		key: string,
 	): Promise<TvtimeMovieSuggestion> => {
-		const decision = (
-			await resolutionStore.read(`decision/${root}/${key.split("/").at(-1)}`)
-		)?.value as { target: unknown } | undefined
+		const decision = decisions.get(key.split("/").at(-1) ?? "")
 		return decision
 			? {
 					state: decision.target ? "already_resolved" : "manual",
@@ -843,6 +864,7 @@ export async function acceptResolutionSuggestions(
 		j.updatedAt + 30 * 60_000 <= Date.now()
 	)
 		matchingError("These suggestions have changed. Review them again.")
+	const decisions = await memberDecisions(root)
 	const choices: {
 		index: number
 		target: { mediaType: "movie"; tmdbId: number }
@@ -853,9 +875,7 @@ export async function acceptResolutionSuggestions(
 		if (!page.length) break
 		for (const row of page) {
 			const g = JSON.parse(row.payload) as Group
-			const decision = await resolutionStore.read(
-				`decision/${root}/${row.source_key.split("/").at(-1)}`,
-			)
+			const decision = decisions.get(row.source_key.split("/").at(-1) ?? "")
 			if (
 				!decision &&
 				g.suggestion?.state === "suggested" &&

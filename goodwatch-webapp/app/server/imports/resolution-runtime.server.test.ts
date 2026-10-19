@@ -343,9 +343,19 @@ test("bulk acceptance covers more than 100 suggestions across pages and rejects 
 		},
 	]
 	setImportDbForTest(db)
+	let decisionsDirty = false
 	let movieProgressUpdates = 0
 	const write = db.run.bind(db)
 	db.run = async (sql, params) => {
+		if (
+			(sql.startsWith("INSERT INTO doc.user_import_item") &&
+				String(params[3]).startsWith("decision/")) ||
+			(sql.startsWith("UPDATE doc.user_import_item SET payload") &&
+				String(params[1]).startsWith("resolution:decision/"))
+		)
+			decisionsDirty = true
+		if (sql === "REFRESH TABLE doc.user_import_item") decisionsDirty = false
+
 		if (sql.startsWith("UPDATE doc.user_import_item SET payload")) {
 			const j = JSON.parse(String(params[0]))
 			if (j.phase === "movies" && j.processed > 0 && j.processed < 105)
@@ -385,7 +395,27 @@ test("bulk acceptance covers more than 100 suggestions across pages and rejects 
 	await runtime.resolutionJobs.run(p.id)
 	const j = await runtime.resolutionJobs.read(p.id)
 	assert.ok(j?.replacementId)
+	let panelReads = 0
+	const read = db.select.bind(db)
+	db.select = async <T extends {}>(
+		sql: string,
+		params: Param[],
+	): Promise<T[]> => {
+		panelReads++
+		if (
+			sql.startsWith("SELECT source_key, payload") &&
+			String(params[0]).startsWith("resolution:decision/") &&
+			decisionsDirty
+		)
+			return []
+
+		return read<T>(sql, params)
+	}
 	const s = await service.getWishlistSuggestions("member", j.replacementId)
+	assert.ok(
+		panelReads <= 24,
+		`Suggestion panel used ${panelReads} reads for 105 groups`,
+	)
 	assert.equal(s.groups.length, 10)
 	assert.deepEqual(
 		s.groups.map((g) => g.representativeIndex),
