@@ -1,0 +1,47 @@
+# Supporting evidence and qualifications
+
+Read on 2026-10-19 in `/home/alp/dev/projects/goodwatch/goodwatch-monorepo`, branch `feat/shared-scoring`. Repository files were read only. These citations support the finalized evaluation contract; they are not new experimental findings or current price quotes. The baseline owner supplies the authoritative versioned manifest; this document does not recreate it.
+
+| Key | Repository path or issue | Supported conclusion and limits |
+|---|---|---|
+| E1 | `docs/design/fingerprint-v2/wayfinder/evidence-index.md`; `discovery-evidence-index.md` in the same directory | Separates measurements, proposals, illustrations, generated assertions and historical decisions. The evidence index's “five-query holdout” wording conflicts with the companion index's 30-query holdout5 and the original contract's approximately 30 queries. Treat “5” as the split name; ask the baseline owner to preserve the discrepancy, not re-extract or rerun data. |
+| E2 | `CONTEXT.md`; `docs/research/fingerprint-v2-gap-audit/README.md` | Title analysis includes companions; fingerprint remains 74 scores in the accepted glossary. Gap review is vocabulary/representation evidence: 334,284 labels computationally screened, 823 prioritized labels semantically reviewed; 256 synthetic queries are not real demand or gold relevance. Sparse concepts, scope, polarity, explicit absence and same-event binding address distinct failure modes. |
+| E3 | `docs/design/fingerprint-v2/wayfinder/architecture-impact.md` | V2 is not a drop-in JSON replacement. Existing scores feed shared filters, vectors, snapshots, Taste, Explorer and display. Companions and catalog facts must remain distinguishable. Trace is static; no all-page runtime compatibility proof. |
+| E4 | `docs/benchmarks/fingerprint/jev/README.md`; `docs/adr/0001-no-jev-for-fingerprint-scoring.md` | Accepted ADR rejects synopsis-only Jev production scoring. Historical Jev MAE against reviewed Qwen: 2.65 versus Qwen repeat 0.51, not factual accuracy. Ten-level and six-level MAE were similar; presence gating worse. Jev ~$0.79/1k scores-only versus Qwen3.8 ~$0.85/1k complete outputs; input enrichment/prose not measured. Sweep total about $0.17; roughly 2,000 requests, not a precise ledger count. |
+| E5 | `docs/benchmarks/fingerprint/protocol.md`; `docs/benchmarks/fingerprint/poc/human-review/results.md` | Earlier protocol froze ten titles and a 13-row lineup; nine configurations produced 90 valid outputs, 87 initially valid, three repairs. 101 total attempts. Observed charges $0.3764186484; reservations $0.3525869667. Qwen3.8 ten-title charge $0.00846388, Qwen3.7 $0.00337971, Grok $0.286144. Stars are assistant synthesis of human notes, with unequal review coverage; four blocked routes were not quality losers. Old $5 target/$10 hard cap is historical only. |
+| E6 | `docs/design/fingerprint-v2/wayfinder/history-issue-33.json`; `docs/benchmarks/fingerprint/poc/repeat-cost/repeatability.md`; `cost-summary.json`; `embedding-cost.md` in that repeat-cost directory | Later owner resolution waived independent Astra/Fable review gates, superseding pending language. Repeat and embedding tasks subsequently completed. Twenty repeats charged $0.01179756 with $0.006466144 held rejection reservations; all ten highlight lists per model changed. Twenty embeddings: 1,881 measured tokens, $0.0003762 rate-derived, invoice charge unknown. Historical ~99% Qwen3.8 prompt-cache hits qualify extrapolation. |
+| E7 | `docs/design/fingerprint-v2/wayfinder/discovery-evidence-index.md`; `docs/prototypes/search-arena/evaluation-contract.md` | Distinct title, interpretation and ranker jobs. Original blind holdout5 belonged to combo-safe-v2: 0.794 nDCG@10 versus r6 0.764 and captured production 0.511. V3's same result is exposed regression evidence. Agent-written/graded queries do not establish user-demand lift. Old thresholds and judging rules are not silently adopted. |
+| E8 | `goodwatch-flows/windmill/f/dna/models.py`; `goodwatch-webapp/app/domain/moods.ts` | Narrow static cross-check: CoreScores are integer traits; mood evaluation substitutes 0 for missing values (lines 196 and 201 when inspected). Future unknown-aware strict exclusions must not inherit that behavior blindly. This is not a full code/configuration audit. |
+| E9 | `docs/research/jev-search-prototypes.md`; `docs/implementation/search-ranking/README.md` | Early prototype costs include differing scopes and historical assistant reports. Later documented 47-query merged-reading comparison: $0.000319 versus $0.000330 per reading, with worse repeat/result stability. Sept 26 search samples separately report cached/fresh whole-search times; before/after populations differ. First usable streaming delivery and full completion are distinct. |
+| E10 | `docs/adr/0002-local-text-embeddings-for-search.md`; `docs/adr/0011-search-runs-as-a-role-of-the-webapp-image.md` | Local embeddings ADR has proposed status despite implementation evidence. Accepted search-role ADR documents resource contention: 5 searches/sec worsened warm page p95 from 124 to 1,520 ms in a shared process; isolation and load/configuration matter. Its stated 1,500 ms deadline and historical throughput do not become this trial's new pass thresholds. |
+| E11 | `AGENTS.md`; `docs/agents/issue-tracker.md`; `docs/agents/triage-labels.md`; `docs/agents/domain.md`; `docs/tvtropes.md` | GitHub Issues is canonical; use single-context glossary/ADRs; standard triage labels. TV Tropes access restrictions apply and no fetching is authorized here. Skill instructions cannot override this assignment's no-publishing/no-repository-edits boundary. |
+
+## Live tracker reading
+
+Used read-only `gh issue view ... --json title,body,comments,...` for:
+
+- [Benchmark a richer fingerprint and discovery system](https://github.com/alp82/goodwatch-monorepo/issues/716): OPEN, no comments at read; planning with separately approved bounded experiments.
+- [Choose the benchmark goals, quality gates, and experiment limits](https://github.com/alp82/goodwatch-monorepo/issues/717): OPEN, assigned to alp82, needs-info / wayfinder:grilling, no comments at read. The initial read had no decision comments; actual Q1–Q3 answers were subsequently relayed in this thread and are preserved in `exact-answers.json`.
+- [Capture the current baseline and audited evidence bundle](https://github.com/alp82/goodwatch-monorepo/issues/718): baseline task owned elsewhere; no comments at read. Depend on its manifest, do not duplicate it.
+- [Research current Jev alternatives and their knowledge and output contracts](https://github.com/alp82/goodwatch-monorepo/issues/719): research task owned elsewhere; no comments at read. Current identities, caps, billing, cache terms and account restrictions belong there.
+
+Read the publication manifest to locate downstream decisions; did not query or modify dependencies. It records corpus, representations and companion-output decisions before title prototypes; discovery prototypes depend on the earlier prototype results. Budget capacity does not bypass those dependencies.
+
+## Historical arithmetic and selected budget
+
+All are historical extrapolations, not new measurements or price verification:
+
+- $0.3764186484 observed + $0.3525869667 reservations = $0.7290056151 accounted exposure.
+- 36 × ($0.00846388 / 10) = $0.030469968 for Qwen3.8 at its old sample average.
+- 36 × ($0.286144 / 10) = $1.0301184 for Grok at its old sample average; 3× = $3.0903552.
+- At the documented $0.000330/reading historical average, 24 reading slots would be $0.00792; the proposed query ceiling is conservative headroom, not a prediction of V2 cost.
+- Selected stage ceilings: $3.50 + $0.50 + $0.50 + $0.10 + $0.40 = $5.00. The earlier $2 option was not selected.
+- Provider attempt ceiling: (72+18) + (12+3) + (48+12) + (2+1) = 168. Every stage also retains its own ceiling; requests are not interchangeable with classifier questions or batch input items.
+
+The selected envelope is informed by historical measured costs, not the old protocol's approved target as justification. Cold-cache input, expanded definitions, extra prose/enrichment, current rates and unavailable captures remain uncertainties. Modern route feasibility is the research owner's gap to close.
+
+## Finalization and baseline qualification
+
+Actual human answers supersede the draft’s pending status, $2 recommendation, review arrangement without mandatory frontier assessment, and unfamiliar/obscure-title sampling suggestion for the initial review. See `exact-answers.json` for the verbatim note and the distinction between answers and reversible defaults. No rating lookup was repeated.
+
+The baseline was reviewed and committed locally as `af0e21b1` at `docs/design/fingerprint-v2/wayfinder/baseline/2026-10-19-v1/`. Read `PUBLICATION.md` with its frozen records: premium eligibility uses a trailing calendar-year interval, 18 grading files are captured despite broad missing-asset wording, and the original verification receipt is preserved separately from fresh checks. Original local-only TV Tropes pages and other unavailable captures are not made portable by their hashes. This session read the addendum and confirmed the local commit; it did not rerun the baseline validator, recreate the manifest or attest to live deployment. Remote publication remains pending; no GitHub blob URL to that unpushed commit is presented as accessible.
