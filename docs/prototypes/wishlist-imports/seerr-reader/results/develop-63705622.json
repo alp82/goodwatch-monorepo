@@ -1,6 +1,7 @@
 {
   "label": "develop (63705622eac5dd4e1006775e9fc43215c3ea0c88 develop)",
-  "scenarios": 27,
+  "scenarios": 33,
+  "failedScenarios": [],
   "falseComplete": 0,
   "routeComparison": {
     "user": "21 local rows and a Plex token (25 Plex rows)",
@@ -14,7 +15,12 @@
     }
   },
   "stableOrder": true,
-  "mockRequests": 451,
+  "mockRequests": 533,
+  "backgroundRefresh": {
+    "secondRead": "plex",
+    "refreshFailuresServed": 10,
+    "seerrAliveAfterRefresh": true
+  },
   "results": [
     {
       "name": "local-1",
@@ -36,6 +42,10 @@
         "accepted": true,
         "wants": 1,
         "invalid": 0,
+        "movieWants": 1,
+        "movieWishKeys": [
+          "movie:10000"
+        ],
         "completeness": "complete"
       },
       "projectionOk": true,
@@ -49,13 +59,26 @@
         "distinctTitles": 1,
         "duplicates": 0,
         "withoutId": 0,
+        "secondPass": {
+          "reportedTotal": 1,
+          "rowsReceived": 1,
+          "distinctTitles": 1,
+          "sameSequence": true
+        },
         "pages": 1,
         "pageOrigins": [
           "local"
         ],
+        "secondPassOrigins": [
+          "local"
+        ],
         "requests": 2,
-        "milliseconds": 46
-      }
+        "milliseconds": 42
+      },
+      "expect": [
+        "complete"
+      ],
+      "failures": []
     },
     {
       "name": "local-20",
@@ -77,6 +100,19 @@
         "accepted": true,
         "wants": 20,
         "invalid": 0,
+        "movieWants": 10,
+        "movieWishKeys": [
+          "movie:11000",
+          "movie:11001",
+          "movie:11002",
+          "movie:11004",
+          "movie:11006",
+          "movie:11008",
+          "movie:11010",
+          "movie:11012",
+          "movie:11014",
+          "movie:11016"
+        ],
         "completeness": "complete"
       },
       "projectionOk": true,
@@ -90,13 +126,26 @@
         "distinctTitles": 20,
         "duplicates": 0,
         "withoutId": 0,
+        "secondPass": {
+          "reportedTotal": 20,
+          "rowsReceived": 20,
+          "distinctTitles": 20,
+          "sameSequence": true
+        },
         "pages": 1,
         "pageOrigins": [
           "local"
         ],
+        "secondPassOrigins": [
+          "local"
+        ],
         "requests": 2,
-        "milliseconds": 46
-      }
+        "milliseconds": 15
+      },
+      "expect": [
+        "complete"
+      ],
+      "failures": []
     },
     {
       "name": "local-21",
@@ -118,6 +167,19 @@
         "accepted": true,
         "wants": 21,
         "invalid": 0,
+        "movieWants": 10,
+        "movieWishKeys": [
+          "movie:12000",
+          "movie:12001",
+          "movie:12002",
+          "movie:12004",
+          "movie:12006",
+          "movie:12008",
+          "movie:12010",
+          "movie:12012",
+          "movie:12014",
+          "movie:12016"
+        ],
         "completeness": "complete"
       },
       "projectionOk": true,
@@ -131,14 +193,28 @@
         "distinctTitles": 21,
         "duplicates": 0,
         "withoutId": 0,
+        "secondPass": {
+          "reportedTotal": 21,
+          "rowsReceived": 21,
+          "distinctTitles": 21,
+          "sameSequence": true
+        },
         "pages": 2,
         "pageOrigins": [
           "local",
           "local"
         ],
-        "requests": 3,
-        "milliseconds": 29
-      }
+        "secondPassOrigins": [
+          "local",
+          "local"
+        ],
+        "requests": 4,
+        "milliseconds": 19
+      },
+      "expect": [
+        "complete"
+      ],
+      "failures": []
     },
     {
       "name": "local-41",
@@ -160,6 +236,29 @@
         "accepted": true,
         "wants": 41,
         "invalid": 0,
+        "movieWants": 20,
+        "movieWishKeys": [
+          "movie:13000",
+          "movie:13001",
+          "movie:13002",
+          "movie:13003",
+          "movie:13004",
+          "movie:13006",
+          "movie:13008",
+          "movie:13010",
+          "movie:13012",
+          "movie:13014",
+          "movie:13016",
+          "movie:13018",
+          "movie:13020",
+          "movie:13022",
+          "movie:13024",
+          "movie:13026",
+          "movie:13028",
+          "movie:13030",
+          "movie:13032",
+          "movie:13034"
+        ],
         "completeness": "complete"
       },
       "projectionOk": true,
@@ -173,15 +272,30 @@
         "distinctTitles": 41,
         "duplicates": 0,
         "withoutId": 0,
+        "secondPass": {
+          "reportedTotal": 41,
+          "rowsReceived": 41,
+          "distinctTitles": 41,
+          "sameSequence": true
+        },
         "pages": 3,
         "pageOrigins": [
           "local",
           "local",
           "local"
         ],
-        "requests": 4,
-        "milliseconds": 47
-      }
+        "secondPassOrigins": [
+          "local",
+          "local",
+          "local"
+        ],
+        "requests": 6,
+        "milliseconds": 31
+      },
+      "expect": [
+        "complete"
+      ],
+      "failures": []
     },
     {
       "name": "local-60",
@@ -205,6 +319,39 @@
         "accepted": true,
         "wants": 60,
         "invalid": 0,
+        "movieWants": 30,
+        "movieWishKeys": [
+          "movie:14000",
+          "movie:14001",
+          "movie:14002",
+          "movie:14003",
+          "movie:14004",
+          "movie:14005",
+          "movie:14006",
+          "movie:14008",
+          "movie:14010",
+          "movie:14012",
+          "movie:14014",
+          "movie:14016",
+          "movie:14018",
+          "movie:14020",
+          "movie:14022",
+          "movie:14024",
+          "movie:14026",
+          "movie:14028",
+          "movie:14030",
+          "movie:14032",
+          "movie:14034",
+          "movie:14036",
+          "movie:14038",
+          "movie:14040",
+          "movie:14042",
+          "movie:14044",
+          "movie:14046",
+          "movie:14048",
+          "movie:14050",
+          "movie:14052"
+        ],
         "completeness": "complete"
       },
       "projectionOk": true,
@@ -218,15 +365,30 @@
         "distinctTitles": 60,
         "duplicates": 0,
         "withoutId": 0,
+        "secondPass": {
+          "reportedTotal": 60,
+          "rowsReceived": 60,
+          "distinctTitles": 60,
+          "sameSequence": true
+        },
         "pages": 3,
         "pageOrigins": [
           "local",
           "local",
           "local"
         ],
-        "requests": 4,
-        "milliseconds": 60
-      }
+        "secondPassOrigins": [
+          "local",
+          "local",
+          "local"
+        ],
+        "requests": 6,
+        "milliseconds": 31
+      },
+      "expect": [
+        "complete"
+      ],
+      "failures": []
     },
     {
       "name": "cli-own-signin-21",
@@ -247,6 +409,19 @@
         "accepted": true,
         "wants": 21,
         "invalid": 0,
+        "movieWants": 10,
+        "movieWishKeys": [
+          "movie:12000",
+          "movie:12001",
+          "movie:12002",
+          "movie:12004",
+          "movie:12006",
+          "movie:12008",
+          "movie:12010",
+          "movie:12012",
+          "movie:12014",
+          "movie:12016"
+        ],
         "completeness": "complete"
       },
       "projectionOk": true,
@@ -260,16 +435,30 @@
         "distinctTitles": 21,
         "duplicates": 0,
         "withoutId": 0,
+        "secondPass": {
+          "reportedTotal": 21,
+          "rowsReceived": 21,
+          "distinctTitles": 21,
+          "sameSequence": true
+        },
         "pages": 2,
         "pageOrigins": [
           "local",
           "local"
         ],
-        "requests": 3,
-        "milliseconds": 54
+        "secondPassOrigins": [
+          "local",
+          "local"
+        ],
+        "requests": 4,
+        "milliseconds": 23
       },
       "exitCode": 0,
-      "wallMs": 319
+      "wallMs": 232,
+      "expect": [
+        "complete"
+      ],
+      "failures": []
     },
     {
       "name": "cli-api-key-60",
@@ -289,6 +478,39 @@
         "accepted": true,
         "wants": 60,
         "invalid": 0,
+        "movieWants": 30,
+        "movieWishKeys": [
+          "movie:14000",
+          "movie:14001",
+          "movie:14002",
+          "movie:14003",
+          "movie:14004",
+          "movie:14005",
+          "movie:14006",
+          "movie:14008",
+          "movie:14010",
+          "movie:14012",
+          "movie:14014",
+          "movie:14016",
+          "movie:14018",
+          "movie:14020",
+          "movie:14022",
+          "movie:14024",
+          "movie:14026",
+          "movie:14028",
+          "movie:14030",
+          "movie:14032",
+          "movie:14034",
+          "movie:14036",
+          "movie:14038",
+          "movie:14040",
+          "movie:14042",
+          "movie:14044",
+          "movie:14046",
+          "movie:14048",
+          "movie:14050",
+          "movie:14052"
+        ],
         "completeness": "complete"
       },
       "projectionOk": true,
@@ -302,17 +524,32 @@
         "distinctTitles": 60,
         "duplicates": 0,
         "withoutId": 0,
+        "secondPass": {
+          "reportedTotal": 60,
+          "rowsReceived": 60,
+          "distinctTitles": 60,
+          "sameSequence": true
+        },
         "pages": 3,
         "pageOrigins": [
           "local",
           "local",
           "local"
         ],
-        "requests": 4,
-        "milliseconds": 100
+        "secondPassOrigins": [
+          "local",
+          "local",
+          "local"
+        ],
+        "requests": 6,
+        "milliseconds": 65
       },
       "exitCode": 0,
-      "wallMs": 130
+      "wallMs": 85,
+      "expect": [
+        "complete"
+      ],
+      "failures": []
     },
     {
       "name": "cli-wrong-key",
@@ -330,12 +567,17 @@
       "parser": {
         "accepted": false,
         "wants": 0,
-        "invalid": 0
+        "invalid": 0,
+        "movieWants": 0
       },
       "projectionOk": true,
       "leaks": [],
       "exitCode": 4,
-      "wallMs": 77
+      "wallMs": 52,
+      "expect": [
+        "no file"
+      ],
+      "failures": []
     },
     {
       "name": "cli-wrong-password",
@@ -353,12 +595,17 @@
       "parser": {
         "accepted": false,
         "wants": 0,
-        "invalid": 0
+        "invalid": 0,
+        "movieWants": 0
       },
       "projectionOk": true,
       "leaks": [],
       "exitCode": 4,
-      "wallMs": 217
+      "wallMs": 190,
+      "expect": [
+        "no file"
+      ],
+      "failures": []
     },
     {
       "name": "cli-other-user",
@@ -377,12 +624,17 @@
       "parser": {
         "accepted": false,
         "wants": 0,
-        "invalid": 0
+        "invalid": 0,
+        "movieWants": 0
       },
       "projectionOk": true,
       "leaks": [],
       "exitCode": 4,
-      "wallMs": 261
+      "wallMs": 210,
+      "expect": [
+        "no file"
+      ],
+      "failures": []
     },
     {
       "name": "cli-unreachable",
@@ -400,12 +652,17 @@
       "parser": {
         "accepted": false,
         "wants": 0,
-        "invalid": 0
+        "invalid": 0,
+        "movieWants": 0
       },
       "projectionOk": true,
       "leaks": [],
       "exitCode": 4,
-      "wallMs": 59
+      "wallMs": 36,
+      "expect": [
+        "no file"
+      ],
+      "failures": []
     },
     {
       "name": "stub-bad-envelope",
@@ -415,7 +672,11 @@
       "expectedTitles": 0,
       "label": "no file",
       "error": "Page 1: Seerr answered with an unexpected layout.",
-      "falseComplete": false
+      "falseComplete": false,
+      "expect": [
+        "no file"
+      ],
+      "failures": []
     },
     {
       "name": "stub-unknown-rows",
@@ -434,6 +695,10 @@
         "accepted": true,
         "wants": 1,
         "invalid": 0,
+        "movieWants": 1,
+        "movieWishKeys": [
+          "movie:5"
+        ],
         "completeness": "unknown"
       },
       "projectionOk": true,
@@ -449,13 +714,226 @@
         "distinctTitles": 1,
         "duplicates": 0,
         "withoutId": 0,
+        "secondPass": {
+          "reportedTotal": 1,
+          "rowsReceived": 1,
+          "distinctTitles": 1,
+          "sameSequence": true
+        },
         "pages": 1,
         "pageOrigins": [
           "unrecognized"
         ],
+        "secondPassOrigins": [
+          "unrecognized"
+        ],
         "requests": 2,
         "milliseconds": 0
-      }
+      },
+      "expect": [
+        "unknown"
+      ],
+      "failures": []
+    },
+    {
+      "name": "stub-reread-plex-shaped",
+      "gates": [
+        "L8",
+        "L9"
+      ],
+      "expectedTitles": 1,
+      "outputTitles": 2,
+      "missing": 0,
+      "extra": 0,
+      "duplicateOut": 1,
+      "exact": false,
+      "label": "unknown",
+      "falseComplete": false,
+      "parser": {
+        "accepted": true,
+        "wants": 2,
+        "invalid": 0,
+        "movieWants": 1,
+        "movieWishKeys": [
+          "movie:5"
+        ],
+        "completeness": "unknown"
+      },
+      "projectionOk": true,
+      "leaks": [],
+      "report": {
+        "source": "mixed",
+        "completeness": "unknown",
+        "reasons": [
+          "Pages came from different Seerr sources.",
+          "Seerr reports every Plex title that isn't a show as a movie, so those titles need a type before import.",
+          "The two passes returned different titles or a different order."
+        ],
+        "reportedTotal": 1,
+        "rowsReceived": 1,
+        "distinctTitles": 1,
+        "duplicates": 0,
+        "withoutId": 0,
+        "secondPass": {
+          "reportedTotal": 1,
+          "rowsReceived": 1,
+          "distinctTitles": 1,
+          "sameSequence": false
+        },
+        "pages": 1,
+        "pageOrigins": [
+          "local"
+        ],
+        "secondPassOrigins": [
+          "plex"
+        ],
+        "requests": 2,
+        "milliseconds": 0
+      },
+      "expect": [
+        "unknown",
+        "no file"
+      ],
+      "failures": []
+    },
+    {
+      "name": "stub-page-999",
+      "gates": [
+        "L9"
+      ],
+      "expectedTitles": 1,
+      "outputTitles": 1,
+      "missing": 0,
+      "extra": 0,
+      "duplicateOut": 0,
+      "exact": true,
+      "label": "unknown",
+      "falseComplete": false,
+      "parser": {
+        "accepted": true,
+        "wants": 1,
+        "invalid": 0,
+        "movieWants": 1,
+        "movieWishKeys": [
+          "movie:5"
+        ],
+        "completeness": "unknown"
+      },
+      "projectionOk": true,
+      "leaks": [],
+      "report": {
+        "source": "local",
+        "completeness": "unknown",
+        "reasons": [
+          "Seerr answered page 999 when asked for page 1.",
+          "Seerr reported 0 pages for 1 titles."
+        ],
+        "reportedTotal": 1,
+        "rowsReceived": 1,
+        "distinctTitles": 1,
+        "duplicates": 0,
+        "withoutId": 0,
+        "secondPass": {
+          "reportedTotal": 1,
+          "rowsReceived": 1,
+          "distinctTitles": 1,
+          "sameSequence": true
+        },
+        "pages": 1,
+        "pageOrigins": [
+          "local"
+        ],
+        "secondPassOrigins": [
+          "local"
+        ],
+        "requests": 2,
+        "milliseconds": 0
+      },
+      "expect": [
+        "unknown",
+        "no file"
+      ],
+      "failures": []
+    },
+    {
+      "name": "stub-wrong-page-number",
+      "gates": [
+        "L9"
+      ],
+      "expectedTitles": 2,
+      "outputTitles": 21,
+      "missing": 0,
+      "extra": 19,
+      "duplicateOut": 0,
+      "exact": false,
+      "label": "unknown",
+      "falseComplete": false,
+      "parser": {
+        "accepted": true,
+        "wants": 21,
+        "invalid": 0,
+        "movieWants": 21,
+        "movieWishKeys": [
+          "movie:1",
+          "movie:2",
+          "movie:3",
+          "movie:4",
+          "movie:5",
+          "movie:6",
+          "movie:7",
+          "movie:8",
+          "movie:9",
+          "movie:10",
+          "movie:11",
+          "movie:12",
+          "movie:13",
+          "movie:14",
+          "movie:15",
+          "movie:16",
+          "movie:17",
+          "movie:18",
+          "movie:19",
+          "movie:20",
+          "movie:21"
+        ],
+        "completeness": "unknown"
+      },
+      "projectionOk": true,
+      "leaks": [],
+      "report": {
+        "source": "local",
+        "completeness": "unknown",
+        "reasons": [
+          "Seerr answered page 1 when asked for page 2."
+        ],
+        "reportedTotal": 21,
+        "rowsReceived": 21,
+        "distinctTitles": 21,
+        "duplicates": 0,
+        "withoutId": 0,
+        "secondPass": {
+          "reportedTotal": 21,
+          "rowsReceived": 21,
+          "distinctTitles": 21,
+          "sameSequence": true
+        },
+        "pages": 2,
+        "pageOrigins": [
+          "local",
+          "local"
+        ],
+        "secondPassOrigins": [
+          "local",
+          "local"
+        ],
+        "requests": 4,
+        "milliseconds": 0
+      },
+      "expect": [
+        "unknown",
+        "no file"
+      ],
+      "failures": []
     },
     {
       "name": "trap-added-during-read",
@@ -474,6 +952,31 @@
         "accepted": true,
         "wants": 42,
         "invalid": 0,
+        "movieWants": 22,
+        "movieWishKeys": [
+          "movie:15000",
+          "movie:15002",
+          "movie:15004",
+          "movie:15006",
+          "movie:15008",
+          "movie:15010",
+          "movie:15012",
+          "movie:15014",
+          "movie:15016",
+          "movie:15018",
+          "movie:15020",
+          "movie:15022",
+          "movie:15024",
+          "movie:15026",
+          "movie:15028",
+          "movie:15030",
+          "movie:15032",
+          "movie:15034",
+          "movie:15036",
+          "movie:15038",
+          "movie:15040",
+          "movie:15999"
+        ],
         "completeness": "unknown"
       },
       "projectionOk": true,
@@ -482,24 +985,39 @@
         "source": "local",
         "completeness": "unknown",
         "reasons": [
-          "Seerr's total changed during the read.",
-          "Page 1 changed during the read.",
-          "Seerr reported 41 titles but sent 42."
+          "Seerr reported 41 titles but sent 42 in the first pass.",
+          "Seerr's total changed between the two passes."
         ],
         "reportedTotal": 41,
         "rowsReceived": 42,
         "distinctTitles": 42,
         "duplicates": 0,
         "withoutId": 0,
+        "secondPass": {
+          "reportedTotal": 42,
+          "rowsReceived": 42,
+          "distinctTitles": 42,
+          "sameSequence": true
+        },
         "pages": 3,
         "pageOrigins": [
           "local",
           "local",
           "local"
         ],
-        "requests": 4,
-        "milliseconds": 79
-      }
+        "secondPassOrigins": [
+          "local",
+          "local",
+          "local"
+        ],
+        "requests": 6,
+        "milliseconds": 28
+      },
+      "expect": [
+        "unknown",
+        "no file"
+      ],
+      "failures": []
     },
     {
       "name": "trap-removed-during-read",
@@ -507,8 +1025,8 @@
         "L3"
       ],
       "expectedTitles": 40,
-      "outputTitles": 40,
-      "missing": 1,
+      "outputTitles": 41,
+      "missing": 0,
       "extra": 1,
       "duplicateOut": 0,
       "exact": false,
@@ -516,8 +1034,32 @@
       "falseComplete": false,
       "parser": {
         "accepted": true,
-        "wants": 40,
+        "wants": 41,
         "invalid": 0,
+        "movieWants": 21,
+        "movieWishKeys": [
+          "movie:16000",
+          "movie:16002",
+          "movie:16004",
+          "movie:16006",
+          "movie:16008",
+          "movie:16010",
+          "movie:16012",
+          "movie:16014",
+          "movie:16016",
+          "movie:16018",
+          "movie:16022",
+          "movie:16024",
+          "movie:16026",
+          "movie:16028",
+          "movie:16030",
+          "movie:16032",
+          "movie:16034",
+          "movie:16036",
+          "movie:16038",
+          "movie:16040",
+          "movie:16020"
+        ],
         "completeness": "unknown"
       },
       "projectionOk": true,
@@ -526,24 +1068,131 @@
         "source": "local",
         "completeness": "unknown",
         "reasons": [
-          "Seerr's total changed during the read.",
-          "Page 1 changed during the read.",
-          "Seerr reported 41 titles but sent 40."
+          "Seerr reported 41 titles but sent 40 in the first pass.",
+          "Seerr's total changed between the two passes."
         ],
         "reportedTotal": 41,
         "rowsReceived": 40,
         "distinctTitles": 40,
         "duplicates": 0,
         "withoutId": 0,
+        "secondPass": {
+          "reportedTotal": 40,
+          "rowsReceived": 40,
+          "distinctTitles": 40,
+          "sameSequence": false
+        },
         "pages": 3,
         "pageOrigins": [
           "local",
           "local",
           "empty"
         ],
-        "requests": 4,
-        "milliseconds": 78
-      }
+        "secondPassOrigins": [
+          "local",
+          "local"
+        ],
+        "requests": 5,
+        "milliseconds": 27
+      },
+      "expect": [
+        "unknown",
+        "no file"
+      ],
+      "failures": []
+    },
+    {
+      "name": "trap-count-preserving-edit",
+      "gates": [
+        "L3",
+        "L8"
+      ],
+      "expectedTitles": 60,
+      "outputTitles": 61,
+      "missing": 0,
+      "extra": 1,
+      "duplicateOut": 0,
+      "exact": false,
+      "label": "unknown",
+      "falseComplete": false,
+      "parser": {
+        "accepted": true,
+        "wants": 61,
+        "invalid": 0,
+        "movieWants": 31,
+        "movieWishKeys": [
+          "movie:20000",
+          "movie:20002",
+          "movie:20004",
+          "movie:20006",
+          "movie:20008",
+          "movie:20010",
+          "movie:20012",
+          "movie:20014",
+          "movie:20016",
+          "movie:20018",
+          "movie:20020",
+          "movie:20022",
+          "movie:20024",
+          "movie:20026",
+          "movie:20028",
+          "movie:20030",
+          "movie:20032",
+          "movie:20034",
+          "movie:20036",
+          "movie:20038",
+          "movie:20042",
+          "movie:20044",
+          "movie:20046",
+          "movie:20048",
+          "movie:20050",
+          "movie:20052",
+          "movie:20054",
+          "movie:20056",
+          "movie:20058",
+          "movie:20999",
+          "movie:20040"
+        ],
+        "completeness": "unknown"
+      },
+      "projectionOk": true,
+      "leaks": [],
+      "report": {
+        "source": "local",
+        "completeness": "unknown",
+        "reasons": [
+          "The two passes returned different titles or a different order."
+        ],
+        "reportedTotal": 60,
+        "rowsReceived": 60,
+        "distinctTitles": 60,
+        "duplicates": 0,
+        "withoutId": 0,
+        "secondPass": {
+          "reportedTotal": 60,
+          "rowsReceived": 60,
+          "distinctTitles": 60,
+          "sameSequence": false
+        },
+        "pages": 3,
+        "pageOrigins": [
+          "local",
+          "local",
+          "local"
+        ],
+        "secondPassOrigins": [
+          "local",
+          "local",
+          "local"
+        ],
+        "requests": 6,
+        "milliseconds": 33
+      },
+      "expect": [
+        "unknown",
+        "no file"
+      ],
+      "failures": []
     },
     {
       "name": "plex-no-token",
@@ -561,7 +1210,8 @@
       "parser": {
         "accepted": false,
         "wants": 0,
-        "invalid": 0
+        "invalid": 0,
+        "movieWants": 0
       },
       "projectionOk": true,
       "leaks": [],
@@ -575,18 +1225,32 @@
         "distinctTitles": 0,
         "duplicates": 0,
         "withoutId": 0,
+        "secondPass": {
+          "reportedTotal": 0,
+          "rowsReceived": 0,
+          "distinctTitles": 0,
+          "sameSequence": true
+        },
         "pages": 1,
         "pageOrigins": [
           "empty"
         ],
+        "secondPassOrigins": [
+          "empty"
+        ],
         "requests": 2,
-        "milliseconds": 19
-      }
+        "milliseconds": 5
+      },
+      "expect": [
+        "no file"
+      ],
+      "failures": []
     },
     {
       "name": "plex-normal",
       "gates": [
-        "P2"
+        "P2",
+        "P7"
       ],
       "expectedTitles": 25,
       "outputTitles": 25,
@@ -600,6 +1264,8 @@
         "accepted": true,
         "wants": 25,
         "invalid": 0,
+        "movieWants": 0,
+        "movieWishKeys": [],
         "completeness": "unknown"
       },
       "projectionOk": true,
@@ -608,27 +1274,43 @@
         "source": "plex",
         "completeness": "unknown",
         "reasons": [
-          "Seerr answered from the Plex fallback, which can drop rows and hide failures."
+          "Seerr answered from the Plex fallback, which can drop rows and hide failures.",
+          "Seerr reports every Plex title that isn't a show as a movie, so those titles need a type before import."
         ],
         "reportedTotal": 25,
         "rowsReceived": 25,
         "distinctTitles": 25,
         "duplicates": 0,
         "withoutId": 0,
+        "secondPass": {
+          "reportedTotal": 25,
+          "rowsReceived": 25,
+          "distinctTitles": 25,
+          "sameSequence": true
+        },
         "pages": 2,
         "pageOrigins": [
           "plex",
           "plex"
         ],
-        "requests": 3,
-        "milliseconds": 53
-      }
+        "secondPassOrigins": [
+          "plex",
+          "plex"
+        ],
+        "requests": 4,
+        "milliseconds": 35
+      },
+      "expect": [
+        "unknown"
+      ],
+      "failures": []
     },
     {
       "name": "plex-missing-guid",
       "gates": [
         "P2",
-        "P3"
+        "P3",
+        "P7"
       ],
       "expectedTitles": 25,
       "outputTitles": 22,
@@ -642,6 +1324,8 @@
         "accepted": true,
         "wants": 22,
         "invalid": 0,
+        "movieWants": 0,
+        "movieWishKeys": [],
         "completeness": "unknown"
       },
       "projectionOk": true,
@@ -650,28 +1334,46 @@
         "source": "plex",
         "completeness": "unknown",
         "reasons": [
+          "Page 2 has 2 titles; Seerr's total implies 5.",
           "Seerr answered from the Plex fallback, which can drop rows and hide failures.",
-          "Seerr reported 25 titles but sent 22."
+          "Seerr reports every Plex title that isn't a show as a movie, so those titles need a type before import.",
+          "Seerr reported 25 titles but sent 22 in the first pass.",
+          "Seerr reported 25 titles but sent 22 in the second pass."
         ],
         "reportedTotal": 25,
         "rowsReceived": 22,
         "distinctTitles": 22,
         "duplicates": 0,
         "withoutId": 0,
+        "secondPass": {
+          "reportedTotal": 25,
+          "rowsReceived": 22,
+          "distinctTitles": 22,
+          "sameSequence": true
+        },
         "pages": 2,
         "pageOrigins": [
           "plex",
           "plex"
         ],
-        "requests": 3,
-        "milliseconds": 59
-      }
+        "secondPassOrigins": [
+          "plex",
+          "plex"
+        ],
+        "requests": 4,
+        "milliseconds": 19
+      },
+      "expect": [
+        "unknown"
+      ],
+      "failures": []
     },
     {
       "name": "plex-metadata-404",
       "gates": [
         "P2",
-        "P3"
+        "P3",
+        "P7"
       ],
       "expectedTitles": 25,
       "outputTitles": 22,
@@ -685,6 +1387,8 @@
         "accepted": true,
         "wants": 22,
         "invalid": 0,
+        "movieWants": 0,
+        "movieWishKeys": [],
         "completeness": "unknown"
       },
       "projectionOk": true,
@@ -693,22 +1397,39 @@
         "source": "plex",
         "completeness": "unknown",
         "reasons": [
+          "Page 2 has 2 titles; Seerr's total implies 5.",
           "Seerr answered from the Plex fallback, which can drop rows and hide failures.",
-          "Seerr reported 25 titles but sent 22."
+          "Seerr reports every Plex title that isn't a show as a movie, so those titles need a type before import.",
+          "Seerr reported 25 titles but sent 22 in the first pass.",
+          "Seerr reported 25 titles but sent 22 in the second pass."
         ],
         "reportedTotal": 25,
         "rowsReceived": 22,
         "distinctTitles": 22,
         "duplicates": 0,
         "withoutId": 0,
+        "secondPass": {
+          "reportedTotal": 25,
+          "rowsReceived": 22,
+          "distinctTitles": 22,
+          "sameSequence": true
+        },
         "pages": 2,
         "pageOrigins": [
           "plex",
           "plex"
         ],
-        "requests": 3,
-        "milliseconds": 58
-      }
+        "secondPassOrigins": [
+          "plex",
+          "plex"
+        ],
+        "requests": 4,
+        "milliseconds": 23
+      },
+      "expect": [
+        "unknown"
+      ],
+      "failures": []
     },
     {
       "name": "plex-metadata-500",
@@ -726,7 +1447,8 @@
       "parser": {
         "accepted": false,
         "wants": 0,
-        "invalid": 0
+        "invalid": 0,
+        "movieWants": 0
       },
       "projectionOk": true,
       "leaks": [],
@@ -740,13 +1462,26 @@
         "distinctTitles": 0,
         "duplicates": 0,
         "withoutId": 0,
+        "secondPass": {
+          "reportedTotal": 0,
+          "rowsReceived": 0,
+          "distinctTitles": 0,
+          "sameSequence": true
+        },
         "pages": 1,
         "pageOrigins": [
           "empty"
         ],
-        "requests": 1,
-        "milliseconds": 24
-      }
+        "secondPassOrigins": [
+          "empty"
+        ],
+        "requests": 2,
+        "milliseconds": 15
+      },
+      "expect": [
+        "no file"
+      ],
+      "failures": []
     },
     {
       "name": "plex-list-500",
@@ -764,7 +1499,8 @@
       "parser": {
         "accepted": false,
         "wants": 0,
-        "invalid": 0
+        "invalid": 0,
+        "movieWants": 0
       },
       "projectionOk": true,
       "leaks": [],
@@ -778,13 +1514,26 @@
         "distinctTitles": 0,
         "duplicates": 0,
         "withoutId": 0,
+        "secondPass": {
+          "reportedTotal": 0,
+          "rowsReceived": 0,
+          "distinctTitles": 0,
+          "sameSequence": true
+        },
         "pages": 1,
         "pageOrigins": [
           "empty"
         ],
-        "requests": 1,
-        "milliseconds": 13
-      }
+        "secondPassOrigins": [
+          "empty"
+        ],
+        "requests": 2,
+        "milliseconds": 7
+      },
+      "expect": [
+        "no file"
+      ],
+      "failures": []
     },
     {
       "name": "plex-token-expired",
@@ -802,7 +1551,8 @@
       "parser": {
         "accepted": false,
         "wants": 0,
-        "invalid": 0
+        "invalid": 0,
+        "movieWants": 0
       },
       "projectionOk": true,
       "leaks": [],
@@ -816,19 +1566,33 @@
         "distinctTitles": 0,
         "duplicates": 0,
         "withoutId": 0,
+        "secondPass": {
+          "reportedTotal": 0,
+          "rowsReceived": 0,
+          "distinctTitles": 0,
+          "sameSequence": true
+        },
         "pages": 1,
         "pageOrigins": [
           "empty"
         ],
-        "requests": 1,
-        "milliseconds": 11
-      }
+        "secondPassOrigins": [
+          "empty"
+        ],
+        "requests": 2,
+        "milliseconds": 8
+      },
+      "expect": [
+        "no file"
+      ],
+      "failures": []
     },
     {
       "name": "plex-fails-on-page-2",
       "gates": [
         "P2",
-        "P4"
+        "P4",
+        "P7"
       ],
       "expectedTitles": 30,
       "outputTitles": 20,
@@ -842,6 +1606,8 @@
         "accepted": true,
         "wants": 20,
         "invalid": 0,
+        "movieWants": 0,
+        "movieWishKeys": [],
         "completeness": "unknown"
       },
       "projectionOk": true,
@@ -851,28 +1617,44 @@
         "completeness": "unknown",
         "reasons": [
           "Seerr answered from the Plex fallback, which can drop rows and hide failures.",
-          "Seerr's total changed during the read.",
-          "Seerr reported 30 titles but sent 20."
+          "Seerr reports every Plex title that isn't a show as a movie, so those titles need a type before import.",
+          "Seerr reported 30 titles but sent 20 in the first pass.",
+          "Seerr reported 30 titles but sent 20 in the second pass."
         ],
         "reportedTotal": 30,
         "rowsReceived": 20,
         "distinctTitles": 20,
         "duplicates": 0,
         "withoutId": 0,
+        "secondPass": {
+          "reportedTotal": 30,
+          "rowsReceived": 20,
+          "distinctTitles": 20,
+          "sameSequence": true
+        },
         "pages": 2,
         "pageOrigins": [
           "plex",
           "empty"
         ],
-        "requests": 3,
-        "milliseconds": 51
-      }
+        "secondPassOrigins": [
+          "plex",
+          "empty"
+        ],
+        "requests": 4,
+        "milliseconds": 19
+      },
+      "expect": [
+        "unknown"
+      ],
+      "failures": []
     },
     {
       "name": "plex-list-wide-etag",
       "gates": [
         "P2",
-        "P5"
+        "P5",
+        "P7"
       ],
       "expectedTitles": 30,
       "outputTitles": 20,
@@ -886,6 +1668,8 @@
         "accepted": true,
         "wants": 20,
         "invalid": 0,
+        "movieWants": 0,
+        "movieWishKeys": [],
         "completeness": "unknown"
       },
       "projectionOk": true,
@@ -894,23 +1678,41 @@
         "source": "plex",
         "completeness": "unknown",
         "reasons": [
+          "Page 2 has 20 titles; Seerr's total implies 10.",
           "Seerr answered from the Plex fallback, which can drop rows and hide failures.",
-          "Seerr reported 30 titles but sent 40.",
-          "20 titles arrived more than once."
+          "Seerr reports every Plex title that isn't a show as a movie, so those titles need a type before import.",
+          "Seerr reported 30 titles but sent 40 in the first pass.",
+          "20 titles arrived more than once in the first pass.",
+          "Seerr reported 30 titles but sent 40 in the second pass.",
+          "20 titles arrived more than once in the second pass."
         ],
         "reportedTotal": 30,
         "rowsReceived": 40,
         "distinctTitles": 20,
         "duplicates": 20,
         "withoutId": 0,
+        "secondPass": {
+          "reportedTotal": 30,
+          "rowsReceived": 40,
+          "distinctTitles": 20,
+          "sameSequence": true
+        },
         "pages": 2,
         "pageOrigins": [
           "plex",
           "plex"
         ],
-        "requests": 3,
-        "milliseconds": 54
-      }
+        "secondPassOrigins": [
+          "plex",
+          "plex"
+        ],
+        "requests": 4,
+        "milliseconds": 19
+      },
+      "expect": [
+        "unknown"
+      ],
+      "failures": []
     },
     {
       "name": "plex-empty",
@@ -928,7 +1730,8 @@
       "parser": {
         "accepted": false,
         "wants": 0,
-        "invalid": 0
+        "invalid": 0,
+        "movieWants": 0
       },
       "projectionOk": true,
       "leaks": [],
@@ -942,13 +1745,83 @@
         "distinctTitles": 0,
         "duplicates": 0,
         "withoutId": 0,
+        "secondPass": {
+          "reportedTotal": 0,
+          "rowsReceived": 0,
+          "distinctTitles": 0,
+          "sameSequence": true
+        },
         "pages": 1,
         "pageOrigins": [
           "empty"
         ],
-        "requests": 1,
-        "milliseconds": 7
-      }
+        "secondPassOrigins": [
+          "empty"
+        ],
+        "requests": 2,
+        "milliseconds": 10
+      },
+      "expect": [
+        "no file"
+      ],
+      "failures": []
+    },
+    {
+      "name": "plex-other-type",
+      "gates": [
+        "P2",
+        "P7"
+      ],
+      "expectedTitles": 5,
+      "outputTitles": 5,
+      "missing": 0,
+      "extra": 0,
+      "duplicateOut": 0,
+      "exact": true,
+      "label": "unknown",
+      "falseComplete": false,
+      "parser": {
+        "accepted": true,
+        "wants": 5,
+        "invalid": 0,
+        "movieWants": 0,
+        "movieWishKeys": [],
+        "completeness": "unknown"
+      },
+      "projectionOk": true,
+      "leaks": [],
+      "report": {
+        "source": "plex",
+        "completeness": "unknown",
+        "reasons": [
+          "Seerr answered from the Plex fallback, which can drop rows and hide failures.",
+          "Seerr reports every Plex title that isn't a show as a movie, so those titles need a type before import."
+        ],
+        "reportedTotal": 5,
+        "rowsReceived": 5,
+        "distinctTitles": 5,
+        "duplicates": 0,
+        "withoutId": 0,
+        "secondPass": {
+          "reportedTotal": 5,
+          "rowsReceived": 5,
+          "distinctTitles": 5,
+          "sameSequence": true
+        },
+        "pages": 1,
+        "pageOrigins": [
+          "plex"
+        ],
+        "secondPassOrigins": [
+          "plex"
+        ],
+        "requests": 2,
+        "milliseconds": 10
+      },
+      "expect": [
+        "unknown"
+      ],
+      "failures": []
     },
     {
       "name": "trap-local-to-plex-switch",
@@ -957,8 +1830,8 @@
         "L3"
       ],
       "expectedTitles": 25,
-      "outputTitles": 25,
-      "missing": 20,
+      "outputTitles": 45,
+      "missing": 0,
       "extra": 20,
       "duplicateOut": 0,
       "exact": false,
@@ -966,8 +1839,21 @@
       "falseComplete": false,
       "parser": {
         "accepted": true,
-        "wants": 25,
+        "wants": 45,
         "invalid": 0,
+        "movieWants": 10,
+        "movieWishKeys": [
+          "movie:17000",
+          "movie:17002",
+          "movie:17004",
+          "movie:17006",
+          "movie:17008",
+          "movie:17010",
+          "movie:17012",
+          "movie:17014",
+          "movie:17016",
+          "movie:17018"
+        ],
         "completeness": "unknown"
       },
       "projectionOk": true,
@@ -977,23 +1863,37 @@
         "completeness": "unknown",
         "reasons": [
           "Pages came from different Seerr sources.",
-          "Seerr's total changed during the read.",
-          "Page 1 changed during the read.",
-          "Seerr reported 21 titles but sent 25."
+          "Seerr reports every Plex title that isn't a show as a movie, so those titles need a type before import.",
+          "Seerr reported 21 titles but sent 25 in the first pass.",
+          "Seerr's total changed between the two passes."
         ],
         "reportedTotal": 21,
         "rowsReceived": 25,
         "distinctTitles": 25,
         "duplicates": 0,
         "withoutId": 0,
+        "secondPass": {
+          "reportedTotal": 25,
+          "rowsReceived": 25,
+          "distinctTitles": 25,
+          "sameSequence": false
+        },
         "pages": 2,
         "pageOrigins": [
           "local",
           "plex"
         ],
-        "requests": 3,
-        "milliseconds": 215
-      }
+        "secondPassOrigins": [
+          "plex",
+          "plex"
+        ],
+        "requests": 4,
+        "milliseconds": 103
+      },
+      "expect": [
+        "unknown"
+      ],
+      "failures": []
     },
     {
       "name": "route-user-local-and-token",
@@ -1013,6 +1913,20 @@
         "accepted": true,
         "wants": 21,
         "invalid": 0,
+        "movieWants": 11,
+        "movieWishKeys": [
+          "movie:17500",
+          "movie:17501",
+          "movie:17502",
+          "movie:17504",
+          "movie:17506",
+          "movie:17508",
+          "movie:17510",
+          "movie:17512",
+          "movie:17514",
+          "movie:17516",
+          "movie:17518"
+        ],
         "completeness": "complete"
       },
       "projectionOk": true,
@@ -1026,14 +1940,85 @@
         "distinctTitles": 21,
         "duplicates": 0,
         "withoutId": 0,
+        "secondPass": {
+          "reportedTotal": 21,
+          "rowsReceived": 21,
+          "distinctTitles": 21,
+          "sameSequence": true
+        },
         "pages": 2,
         "pageOrigins": [
           "local",
           "local"
         ],
-        "requests": 3,
-        "milliseconds": 30
-      }
+        "secondPassOrigins": [
+          "local",
+          "local"
+        ],
+        "requests": 4,
+        "milliseconds": 16
+      },
+      "expect": [
+        "complete"
+      ],
+      "failures": []
+    },
+    {
+      "name": "plex-background-refresh-failure",
+      "gates": [
+        "P2",
+        "S1"
+      ],
+      "expectedTitles": 5,
+      "outputTitles": 5,
+      "missing": 0,
+      "extra": 0,
+      "duplicateOut": 0,
+      "exact": true,
+      "label": "unknown",
+      "falseComplete": false,
+      "parser": {
+        "accepted": true,
+        "wants": 5,
+        "invalid": 0,
+        "movieWants": 0,
+        "movieWishKeys": [],
+        "completeness": "unknown"
+      },
+      "projectionOk": true,
+      "leaks": [],
+      "report": {
+        "source": "plex",
+        "completeness": "unknown",
+        "reasons": [
+          "Seerr answered from the Plex fallback, which can drop rows and hide failures.",
+          "Seerr reports every Plex title that isn't a show as a movie, so those titles need a type before import."
+        ],
+        "reportedTotal": 5,
+        "rowsReceived": 5,
+        "distinctTitles": 5,
+        "duplicates": 0,
+        "withoutId": 0,
+        "secondPass": {
+          "reportedTotal": 5,
+          "rowsReceived": 5,
+          "distinctTitles": 5,
+          "sameSequence": true
+        },
+        "pages": 1,
+        "pageOrigins": [
+          "plex"
+        ],
+        "secondPassOrigins": [
+          "plex"
+        ],
+        "requests": 2,
+        "milliseconds": 9
+      },
+      "expect": [
+        "unknown"
+      ],
+      "failures": []
     }
   ]
 }

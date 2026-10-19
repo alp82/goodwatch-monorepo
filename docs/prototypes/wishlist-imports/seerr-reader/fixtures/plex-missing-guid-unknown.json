@@ -2,108 +2,108 @@
   "format": "goodwatch-wishlist",
   "version": 1,
   "source": "seerr",
-  "exportedAt": "2026-10-19T00:00:52Z",
+  "exportedAt": "2026-10-19T00:38:18Z",
   "completeness": "unknown",
   "items": [
     {
       "title": "Plex movie 5100",
-      "mediaType": "movie",
-      "tmdbId": 5100
+      "mediaType": "unknown",
+      "sourceId": "plex-guid-tmdb:5100"
     },
     {
       "title": "Plex movie 5101",
-      "mediaType": "movie",
-      "tmdbId": 5101
+      "mediaType": "unknown",
+      "sourceId": "plex-guid-tmdb:5101"
     },
     {
       "title": "Plex movie 5102",
-      "mediaType": "movie",
-      "tmdbId": 5102
+      "mediaType": "unknown",
+      "sourceId": "plex-guid-tmdb:5102"
     },
     {
       "title": "Plex movie 5103",
-      "mediaType": "movie",
-      "tmdbId": 5103
+      "mediaType": "unknown",
+      "sourceId": "plex-guid-tmdb:5103"
     },
     {
       "title": "Plex movie 5104",
-      "mediaType": "movie",
-      "tmdbId": 5104
+      "mediaType": "unknown",
+      "sourceId": "plex-guid-tmdb:5104"
     },
     {
       "title": "Plex movie 5105",
-      "mediaType": "movie",
-      "tmdbId": 5105
+      "mediaType": "unknown",
+      "sourceId": "plex-guid-tmdb:5105"
     },
     {
       "title": "Plex movie 5106",
-      "mediaType": "movie",
-      "tmdbId": 5106
+      "mediaType": "unknown",
+      "sourceId": "plex-guid-tmdb:5106"
     },
     {
       "title": "Plex movie 5107",
-      "mediaType": "movie",
-      "tmdbId": 5107
+      "mediaType": "unknown",
+      "sourceId": "plex-guid-tmdb:5107"
     },
     {
       "title": "Plex movie 5108",
-      "mediaType": "movie",
-      "tmdbId": 5108
+      "mediaType": "unknown",
+      "sourceId": "plex-guid-tmdb:5108"
     },
     {
       "title": "Plex movie 5109",
-      "mediaType": "movie",
-      "tmdbId": 5109
+      "mediaType": "unknown",
+      "sourceId": "plex-guid-tmdb:5109"
     },
     {
       "title": "Plex movie 5110",
-      "mediaType": "movie",
-      "tmdbId": 5110
+      "mediaType": "unknown",
+      "sourceId": "plex-guid-tmdb:5110"
     },
     {
       "title": "Plex movie 5111",
-      "mediaType": "movie",
-      "tmdbId": 5111
+      "mediaType": "unknown",
+      "sourceId": "plex-guid-tmdb:5111"
     },
     {
       "title": "Plex movie 5112",
-      "mediaType": "movie",
-      "tmdbId": 5112
+      "mediaType": "unknown",
+      "sourceId": "plex-guid-tmdb:5112"
     },
     {
       "title": "Plex movie 5113",
-      "mediaType": "movie",
-      "tmdbId": 5113
+      "mediaType": "unknown",
+      "sourceId": "plex-guid-tmdb:5113"
     },
     {
       "title": "Plex movie 5114",
-      "mediaType": "movie",
-      "tmdbId": 5114
+      "mediaType": "unknown",
+      "sourceId": "plex-guid-tmdb:5114"
     },
     {
       "title": "Plex movie 5115",
-      "mediaType": "movie",
-      "tmdbId": 5115
+      "mediaType": "unknown",
+      "sourceId": "plex-guid-tmdb:5115"
     },
     {
       "title": "Plex movie 5116",
-      "mediaType": "movie",
-      "tmdbId": 5116
+      "mediaType": "unknown",
+      "sourceId": "plex-guid-tmdb:5116"
     },
     {
       "title": "Plex movie 5117",
-      "mediaType": "movie",
-      "tmdbId": 5117
+      "mediaType": "unknown",
+      "sourceId": "plex-guid-tmdb:5117"
     },
     {
       "title": "Plex movie 5118",
-      "mediaType": "movie",
-      "tmdbId": 5118
+      "mediaType": "unknown",
+      "sourceId": "plex-guid-tmdb:5118"
     },
     {
       "title": "Plex movie 5119",
-      "mediaType": "movie",
-      "tmdbId": 5119
+      "mediaType": "unknown",
+      "sourceId": "plex-guid-tmdb:5119"
     },
     {
       "title": "Plex show 6100",

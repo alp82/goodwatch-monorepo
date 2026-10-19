@@ -1,10 +1,46 @@
 # Shared setup for run.sh and owner-plex-check.sh. Source it; don't run it.
-# Containers and networks carry the label gw712=1; remove_own refuses to
-# remove anything without it.
+#
+# Every container and network carries the labels gw712=1 and
+# gw712.run=<this run>. Cleanup removes exactly what carries this run's
+# label, plus the paths in CLEANUP_PATHS, on every exit: success, error, INT,
+# TERM or HUP. Call install_cleanup before creating anything.
 
 KEY=gw712-local-test-key
-NODE_IMAGE=node:24-bookworm-slim
+# Pinned images. Change a pin only after reviewing the new image.
+SEERR_DEVELOP=ghcr.io/seerr-team/seerr@sha256:3f575171801bbeeb18d15ea570f265f3c244a63736581d8aa580e1c66f032888 # develop, 63705622
+SEERR_V350=ghcr.io/seerr-team/seerr@sha256:27602401178d54f1964442287b9f23f67a3fa2252645ee8065839ea1c3f69e45   # v3.5.0, e2f24cb4
+NODE_IMAGE=node:24-bookworm-slim@sha256:0e0ff40c39bc087845bfb27465a0df4ea419520094bc35842ff83dd8cbe6f9b6
 
+RUN_ID="$(date +%s)-$$"
+CLEANUP_PATHS=()
+OWN_LABELS=(--label gw712=1 --label "gw712.run=$RUN_ID")
+
+cleanup_run() {
+	local status=$?
+	trap - EXIT INT TERM HUP
+	docker ps -aq --filter "label=gw712.run=$RUN_ID" | xargs -r docker rm -f >/dev/null 2>&1
+	docker network ls -q --filter "label=gw712.run=$RUN_ID" | xargs -r docker network rm >/dev/null 2>&1
+	local path
+	for path in "${CLEANUP_PATHS[@]}"; do rm -rf -- "$path"; done
+	exit "$status"
+}
+
+install_cleanup() {
+	trap cleanup_run EXIT
+	trap 'exit 130' INT
+	trap 'exit 143' TERM
+	trap 'exit 129' HUP
+}
+
+# Run a long step in the background and wait, so a signal interrupts the
+# wait at once instead of after the step ends.
+run_waiting() {
+	"$@" &
+	wait $!
+}
+
+# A same-named container from an earlier, interrupted run is removed only
+# when it carries the gw712 label.
 remove_own() {
 	local name="$1"
 	if [ "$(docker inspect -f '{{index .Config.Labels "gw712"}}' "$name" 2>/dev/null || true)" = "1" ]; then
@@ -18,49 +54,70 @@ remove_own() {
 make_certs() {
 	local dir="$1"
 	mkdir -p "$dir"
-	[ -f "$dir/leaf.pem" ] && return 0
 	(
 		cd "$dir"
-		openssl req -x509 -newkey rsa:2048 -nodes -keyout ca.key -out ca.pem -days 30 -subj "/CN=gw712 local test CA" 2>/dev/null
+		openssl req -x509 -newkey rsa:2048 -nodes -keyout ca.key -out ca.pem -days 2 -subj "/CN=gw712 local test CA" 2>/dev/null
 		openssl req -newkey rsa:2048 -nodes -keyout leaf.key -out leaf.csr -subj "/CN=gw712 mock" 2>/dev/null
 		printf 'subjectAltName=DNS:api.themoviedb.org,DNS:discover.provider.plex.tv,DNS:metadata.provider.plex.tv,DNS:plex.tv,DNS:mock\n' >san.ext
-		openssl x509 -req -in leaf.csr -CA ca.pem -CAkey ca.key -CAcreateserial -out leaf.pem -days 30 -extfile san.ext 2>/dev/null
+		openssl x509 -req -in leaf.csr -CA ca.pem -CAkey ca.key -CAcreateserial -out leaf.pem -days 2 -extfile san.ext 2>/dev/null
 		chmod 644 ./*.pem ./*.key
 	)
 }
 
-# ensure_network <name> <internal|external>
+# ensure_network <name> <internal|external>: reuse only a gw712 network with
+# the expected Internal setting; create it otherwise.
 ensure_network() {
-	docker network inspect "$1" >/dev/null 2>&1 && return 0
-	if [ "$2" = internal ]; then
-		docker network create --internal --label gw712=1 "$1" >/dev/null
+	local name="$1" mode="$2" want=false
+	[ "$mode" = internal ] && want=true
+	if docker network inspect "$name" >/dev/null 2>&1; then
+		local label internal
+		label="$(docker network inspect -f '{{index .Labels "gw712"}}' "$name")"
+		internal="$(docker network inspect -f '{{.Internal}}' "$name")"
+		if [ "$label" != "1" ]; then
+			echo "Refusing to use network $name: it exists without the gw712 label. Remove or rename it." >&2
+			exit 1
+		fi
+		if [ "$internal" != "$want" ]; then
+			echo "Refusing to use network $name: Internal is $internal, expected $want. Remove it to let the script recreate it." >&2
+			exit 1
+		fi
+		return 0
+	fi
+	if [ "$want" = true ]; then
+		docker network create --internal "${OWN_LABELS[@]}" "$name" >/dev/null
 	else
-		docker network create --label gw712=1 "$1" >/dev/null
+		docker network create "${OWN_LABELS[@]}" "$name" >/dev/null
 	fi
 }
 
 start_mock() {
 	local net="$1" harness="$2" certs="$3"
 	remove_own gw712-mock
-	docker run -d --name gw712-mock --label gw712=1 --network "$net" \
+	docker run -d --name gw712-mock "${OWN_LABELS[@]}" --network "$net" \
 		--network-alias mock --network-alias api.themoviedb.org \
 		--network-alias discover.provider.plex.tv --network-alias metadata.provider.plex.tv --network-alias plex.tv \
 		-v "$harness:/harness:ro" -v "$certs:/certs:ro" \
 		"$NODE_IMAGE" node /harness/mock-upstream.mjs /certs/leaf.pem /certs/leaf.key >/dev/null
 }
 
-# start_seerr <container> <network> <image> <config dir> [extra docker args...]
-start_seerr() {
-	local name="$1" net="$2" image="$3" config="$4"
-	shift 4
-	docker run -d --name "$name" --label gw712=1 --network "$net" \
-		-e API_KEY="$KEY" -v "$config:/app/config" "$@" "$image" >/dev/null
+# Wait until Seerr answers its status route. Reads no container logs.
+wait_ready() {
+	local name="$1"
 	for _ in $(seq 1 90); do
-		docker logs "$name" 2>&1 | grep -q "Server ready on port" && return 0
+		docker exec "$name" node -e "fetch('http://127.0.0.1:5055/api/v1/status').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))" >/dev/null 2>&1 && return 0
 		sleep 1
 	done
 	echo "Seerr did not start" >&2
 	exit 1
+}
+
+# start_seerr <container> <network> <image> <config dir> [extra docker args...]
+start_seerr() {
+	local name="$1" net="$2" image="$3" config="$4"
+	shift 4
+	docker run -d --name "$name" "${OWN_LABELS[@]}" --network "$net" \
+		-e API_KEY="$KEY" -v "$config:/app/config" "$@" "$image" >/dev/null
+	wait_ready "$name"
 }
 
 # First start creates the database and settings. Then add the administrator

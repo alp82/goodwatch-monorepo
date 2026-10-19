@@ -13,7 +13,7 @@ Ticket: [#712](https://github.com/alp82/goodwatch-monorepo/issues/712), map [#70
 
 | Label | Only when |
 | --- | --- |
-| `complete` | Every page came from the local list, the row count equals `totalResults`, the number of unique `(tmdbId, mediaType)` pairs equals `totalResults`, and a second read of page 1 at the end returns the same `totalResults` and the same rows. |
+| `complete` | Every page came from the local list, the row count equals `totalResults`, the number of unique `(tmdbId, mediaType)` pairs equals `totalResults`, and a second read of page 1 at the end returns the same `totalResults` and the same rows. Superseded after review: see L8. |
 | `unknown` | Any page came from the Plex fallback, any page shape is unrecognized, or the checks for `complete` fail in a way the reader can't explain. |
 | `partial` | Not used by this reader. A count shortfall means rows are missing, but the reader can't tell which, so it reports `unknown` with the shortfall. |
 
@@ -45,6 +45,19 @@ These run against users with zero local rows.
 | P4 | Failure path | A failed Plex list read, an expired token and a metadata 500 never produce a file labelled `complete`. A failure on a later page is detected as a changed `totalResults`. |
 | P5 | Repeated page | If Seerr serves a cached page again for a later page (ETag scope), the reader detects the duplicates. |
 | P6 | Source switch | If the local list empties between pages, so later pages come from Plex, the reader doesn't label the file `complete`. |
+
+## Gates added after the first review
+
+An independent review of `66dac1a0` found false `complete` labels and unsafe token handling. These gates were added on 2026-10-19 with failing reproductions (`f4eb88bf`), before the fixes were measured. The `complete` rule changes from "a reread of page 1 matches" to "two full passes return the same identity sequence". Two agreeing passes are evidence that the list held still, not proof.
+
+| ID | Gate | Pass |
+| --- | --- | --- |
+| L8 | Snapshot | A count-preserving edit during the read (delete row 21 and append row 61 after page 2 of 3) is never labelled `complete`. Rows from the second pass count toward the source check. |
+| L9 | Envelope | A page number that differs from the requested page, a page count that doesn't match `ceil(totalResults / 20)`, or a page with the wrong number of rows is never labelled `complete`. |
+| P7 | Plex type | 0 Plex-derived rows become movie wishes the import could apply without a member's choice. Seerr reports every non-show Plex type as `movie`. |
+| S1 | Secret | Seerr never holds the owner's token. A delayed background-refresh failure with a synthetic token is injected; the synthetic token appears in Seerr's stderr (positive control) and in 0 kept files. In the owner check, Seerr logs with `--log-driver none` and the token appears in no container configuration, no file and no script output. |
+| O1 | Cleanup | Errors, INT and TERM leave 0 owned containers, networks and tmpfs folders. |
+| O2 | Networks | A same-named network without the `gw712` label, or with the wrong `Internal` setting, is refused before any container starts. |
 
 ## Route comparison (informational, no gate)
 

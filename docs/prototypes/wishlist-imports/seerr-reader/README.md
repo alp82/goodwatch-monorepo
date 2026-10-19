@@ -11,11 +11,11 @@ Throwaway prototype for [Can a Seerr Watchlist reader label its coverage truthfu
 
 Seerr returns the local Watchlist when it has rows. With zero local rows, it asks Plex instead, and the response doesn't say which one answered. The reader tells them apart by row shape:
 
-- **`complete`:** every page came from the local list, the counts match Seerr's total, every title is distinct, and a second read of page 1 at the end matches the first.
-- **`unknown`:** anything from Plex, any unrecognized row layout, or any count, duplicate or change-during-read problem. The report lists the reasons.
+- **`complete`:** the reader read every page twice. Every page came from the local list, the page numbers and counts match Seerr's total, every title is distinct, and both passes returned the same titles in the same order. Seerr has no snapshot, so two agreeing passes are evidence that the list held still, not proof.
+- **`unknown`:** anything from Plex, any unrecognized row layout, or any count, page, duplicate or change-during-read problem. The file holds every title seen in either pass, and the report lists the reasons.
 - **No file (exit code 3):** Seerr returned nothing. The report says whether Seerr tried Plex.
 
-Items carry only `title`, `mediaType`, `tmdbId` and, for local rows, `addedAt` (the UTC day the member added the title in Seerr). Seerr's rows also embed the member's email and other account fields. The reader drops those before writing.
+Items carry only `title`, `mediaType`, `tmdbId` and, for local rows, `addedAt`: the UTC date the local Seerr record was created. Seerr reports every Plex type that isn't a show as a movie, so Plex movie rows are written as type `unknown`, with the TMDB number only in `sourceId` (`plex-guid-tmdb:<n>`). The import then waits for the member to pick a match. Seerr's rows also embed the member's email and other account fields. The reader drops those before writing.
 
 ## Run the reader
 
@@ -42,16 +42,32 @@ docs/prototypes/wishlist-imports/seerr-reader/harness/run.sh develop   # the ins
 docs/prototypes/wishlist-imports/seerr-reader/harness/run.sh latest    # release v3.5.0
 ```
 
-Each run takes about 25 seconds. It creates a fresh Seerr on an internal Docker network with no internet access and no published port, seeds it through Seerr's API, runs 27 scenarios and removes its containers. Scratch data goes to `../seerr-712-validation/work/` next to the repository (override with `GW712_WORK`), never into Git. Results land in `work/out-<tag>/results.json`. Containers and the network carry the label `gw712=1`, and the scripts never remove anything without it.
+Each run takes about 45 seconds. It creates a fresh Seerr on an internal Docker network with no internet access and no published port, seeds it through Seerr's API, runs 33 scenarios and exits nonzero if any scenario fails. Images are pinned by digest in `harness/lib.sh`. Seerr's data lives on tmpfs under `/dev/shm`. Results land in `../seerr-712-validation/work/out-<tag>/` next to the repository (override with `GW712_WORK`), never in Git.
+
+Every container and network carries the labels `gw712=1` and `gw712.run=<run>`. On every exit (success, error, Ctrl-C or TERM), the scripts remove what carries their run's label and their tmpfs folder. They refuse to use a same-named network that lacks the `gw712` label or has the wrong `Internal` setting.
+
+The script tests need the same tools, and no `gw712` containers may be running before you start them:
+
+```sh
+docs/prototypes/wishlist-imports/seerr-reader/harness/tests/owner-check-test.sh   # token handling, about 1 minute
+docs/prototypes/wishlist-imports/seerr-reader/harness/tests/cleanup-test.sh       # error, INT and TERM cleanup, about 3 minutes
+docs/prototypes/wishlist-imports/seerr-reader/harness/tests/network-test.sh       # network ownership, about 1 minute
+```
 
 ## Owner step: real Plex check
 
-The mock shows what Seerr does with each Plex answer. Only a real token shows what Plex actually sends. To measure it:
+The mock shows what Seerr does with each Plex answer. Only a real token shows what Plex actually sends. Run this only after the second independent review passes.
 
-1. Get your Plex token. Plex explains how in [Finding an authentication token](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/).
-2. Save it as one line in `~/goodwatch-private/712/plex-token`.
-3. Make sure your Plex Watchlist has at least 21 titles, so it spans two pages.
-4. Run `docs/prototypes/wishlist-imports/seerr-reader/harness/owner-plex-check.sh`.
-5. Share `~/goodwatch-private/712/plex-check.json`. It holds counts only: no titles, IDs or token.
+1. Make sure your Plex Watchlist has at least 21 titles, so it spans two pages.
+2. Get your Plex token. Plex explains how in [Finding an authentication token](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/).
+3. Run `docs/prototypes/wishlist-imports/seerr-reader/harness/owner-plex-check.sh` and paste the token at the hidden prompt. Don't save it in a file.
+4. Share `~/goodwatch-private/712/plex-check.json`. It holds counts only: no titles, IDs or token.
 
-The script starts a fresh Seerr `latest` with no Plex server configured and no published port. It gives one new Seerr user your token and reads that user's Watchlist with the reader. It also reads your Plex Watchlist directly with `GET` requests. Then it removes the token and deletes the container and its data. It writes nothing to Plex or to any existing Seerr. Add `--dry-run` to try it against the mock first.
+What the script does:
+
+- A fetch container gets your token on stdin and reads your Plex Watchlist with `GET` requests, in the order Seerr would make them. It keeps the responses in memory and removes your token from them.
+- The responses go through a pipe to a replay container, which plays Plex for a fresh, pinned Seerr (`v3.5.0`) from memory. Seerr gets a synthetic token, never yours, runs without internet access, logs to nowhere and keeps its data on tmpfs. This matters because Seerr can print a Plex token on stderr when a background refresh fails.
+- The script removes every container and the tmpfs folder on every exit, including errors and Ctrl-C.
+- It writes nothing to Plex or to any existing Seerr.
+
+`--dry-run` uses the local mock instead of Plex and injects that background-refresh failure. `harness/tests/owner-check-test.sh` runs it and checks that the token never appears in a container, a file or the output.

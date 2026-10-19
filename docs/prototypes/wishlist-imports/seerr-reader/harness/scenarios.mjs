@@ -109,7 +109,10 @@ function score(name, gateIds, expected, result, extra = {}) {
 			accepted: true,
 			wants: parsed.observations.filter((o) => o.kind === "want").length,
 			invalid: parsed.observations.filter((o) => o.kind !== "want").length,
-			movieWants: parsed.observations.filter((o) => o.kind === "want" && o.mediaType === "movie").length,
+			// Movie wishes the import could apply without a member's choice. An
+			// unknown-type row is stored on a movie placeholder but blocked.
+			movieWants: parsed.observations.filter((o) => o.kind === "want" && o.mediaType === "movie" && !o.problem).length,
+			movieWishKeys: parsed.observations.filter((o) => o.kind === "want" && o.mediaType === "movie" && !o.problem).map((o) => `movie:${o.tmdbId}`),
 			completeness: parsed.observations[0]?.wishlistEvidence?.completeness,
 		}
 		projectionOk = file.items.every((item) => Object.keys(item).every((key) => ALLOWED_ITEM_KEYS.has(key)))
@@ -153,6 +156,10 @@ function check(result, expect) {
 	if (result.projectionOk === false) failures.push("extra item fields")
 	if (result.parser?.invalid) failures.push(`${result.parser.invalid} invalid rows`)
 	if (expect.noMovieWants && result.parser?.movieWants) failures.push(`${result.parser.movieWants} Plex rows became movie wishes`)
+	if (expect.movieWishesOnlyFrom) {
+		const stray = (result.parser?.movieWishKeys ?? []).filter((key) => !expect.movieWishesOnlyFrom.includes(key))
+		if (stray.length) failures.push(`${stray.length} movie wishes didn't come from the local list`)
+	}
 	result.expect = expect.labels
 	result.failures = failures
 	return result
@@ -350,7 +357,9 @@ await record("trap-local-to-plex-switch", ["P6", "L3"], plexIdentities(6300, 25,
 			for (const key of switchSeeded) await removeWish(switchUser, key)
 		},
 	}),
-	PLEX_UNKNOWN,
+	// Page 1 really came from the local list, so its movies are wishes. No
+	// Plex row may become one.
+	{ labels: ["unknown"], movieWishesOnlyFrom: switchSeeded },
 )
 
 // Route comparison: local rows plus a Plex token.
