@@ -1,0 +1,12 @@
+{
+  "name": "goodwatch-prime-watchlist-capture-experiment",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "test": "node --test capture.test.mjs"
+  },
+  "devDependencies": {
+    "happy-dom": "20.14.5"
+  }
+}

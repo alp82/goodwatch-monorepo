@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GoodWatch Prime Video Watchlist capture (experiment)</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <main>
+    <header class="head">
+      <h1>GoodWatch Watchlist capture</h1>
+      <p class="tag">Prime Video experiment, version 0.1.0. Live capture is unverified.</p>
+    </header>
+
+    <section class="status" aria-labelledby="status-title">
+      <h2 id="status-title" class="visually-hidden">Status</h2>
+      <p id="state" class="state" role="status" aria-live="polite">Checking this tab…</p>
+      <p id="detail" class="detail" hidden></p>
+      <p id="profile-warning" class="warn" hidden>GoodWatch can't tell which Prime Video profile is open. Stay on one profile until you stop.</p>
+
+      <dl class="counts" id="counts" hidden>
+        <div><dt>Titles in file</dt><dd id="items">0</dd></div>
+        <div><dt>From page data</dt><dd id="structured">0</dd></div>
+        <div><dt>Seen as cards</dt><dd id="visible">0</dd></div>
+        <div><dt>In both</dt><dd id="both">0</dd></div>
+      </dl>
+      <p class="coverage" id="coverage" hidden>Coverage: <strong id="completeness">unknown</strong></p>
+      <p class="hint" id="reasons" hidden></p>
+
+      <div class="actions">
+        <button type="button" id="start" class="primary" disabled>Start capture</button>
+        <button type="button" id="stop" class="primary" hidden>Stop and save files</button>
+        <button type="button" id="save" class="primary" hidden>Save files again</button>
+        <button type="button" id="cancel" hidden>Cancel and discard</button>
+      </div>
+
+      <div id="saved" class="saved" hidden>
+        <p id="saved-line"></p>
+        <p>Keep both files private. Don't upload them anywhere except where the test steps say.</p>
+      </div>
+
+      <p id="code-line" class="code" hidden>Code: <code id="code"></code></p>
+    </section>
+
+    <section class="steps" aria-labelledby="steps-title">
+      <h2 id="steps-title">How to capture</h2>
+      <ol>
+        <li>Open your <strong>Watchlist</strong> on Prime Video and refresh the tab. Don't scroll yet. Leave the filter on <strong>All</strong>.</li>
+        <li>Choose <strong>Start capture</strong>. It keeps running after this popup closes.</li>
+        <li>Scroll slowly to the very end of the Watchlist, until no more titles load.</li>
+        <li>Open this popup again and choose <strong>Stop and save files</strong>.</li>
+      </ol>
+    </section>
+
+    <details class="more">
+      <summary>What this does and doesn't do</summary>
+      <p>It reads the Watchlist only in this tab, only after you choose Start. It reads the page's own data and the title cards you scroll past, and copies of the list data the page loads while you scroll.</p>
+      <p>It doesn't scroll, click, open pages, send anything anywhere, read cookies or change your Watchlist.</p>
+      <p>It saves two files: the wishlist file for GoodWatch, and a report with counts and field names only, without titles or IDs.</p>
+    </details>
+  </main>
+  <script src="popup.js"></script>
+</body>
+</html>
