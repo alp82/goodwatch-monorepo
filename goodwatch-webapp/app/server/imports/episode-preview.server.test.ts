@@ -115,7 +115,7 @@ test("Trakt preview keeps canonical TMDB identities and reports specials without
 	assert.equal(summary.counts.unmatched, 0)
 	assert.equal(receipt.items[2].episodeSpecial, true)
 	assert.match(receipt.items[2].reason ?? "", /special/i)
-	assert.ok(summary.warnings.some((w) => /special/i.test(w)))
+	assert.ok(summary.warnings.some((w) => /special/i.test(w.message)))
 	assert.equal(receipt.items[3].reason, null)
 	assert.equal("episodeSpecial" in receipt.items[0], false)
 	assert.equal(receipt.items[0].episodeNumbering, "tmdb")

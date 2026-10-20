@@ -852,7 +852,10 @@ describe("import and Undo result", () => {
 			async () => {},
 			async () => {},
 		)
-		await confirmImport("member", id, { ...options, kinds: ["rating", "want"] })
+		await confirmImport("member", id, {
+			...options,
+			kinds: ["rating", "want"],
+		})
 		await waitFor(db, "done")
 		// The member rates Shōgun again after the import.
 		Object.assign(requiredRow(db.scores.find((x) => x.tmdb_id === 126308)), {
@@ -1478,7 +1481,7 @@ it("CSV preview matches IDs in priority order and only unique exact title/year, 
 	const receipt = await getImport("member", preview.id)
 	assert.equal(receipt.status, "done")
 	assert.equal(receipt.applied.added, 2)
-	assert.match(receipt.warnings.join(" "), /Extra/)
+	assert.match(receipt.warnings.map((w) => w.message).join(" "), /Extra/)
 	await undoImport("member", preview.id)
 	assert.equal((await getImport("member", preview.id)).status, "undone")
 })
@@ -1532,7 +1535,7 @@ it("MovieLens combined upload matches only IDs and applies and undoes ratings an
 	const receipt = await getImport("member", preview.id)
 	assert.equal(receipt.applied.added, 2)
 	assert.match(
-		receipt.warnings.join(" "),
+		receipt.warnings.map((w) => w.message).join(" "),
 		/tags and activity logs are not applied/,
 	)
 	await undoImport("member", preview.id)
@@ -2634,7 +2637,9 @@ it("a fetched source uses the shared preview, receipt and undo without a file", 
 	const { previewFetchedImport } = await import("./service.server.ts")
 	const preview = await previewFetchedImport("member", "TMDB account", {
 		source: "tmdb",
-		warnings: ["Half steps round up: 7.5 becomes 8."],
+		warnings: [
+			{ kind: "info", message: "Half steps round up: 7.5 becomes 8." },
+		],
 		observations: [
 			{
 				key: "tmdb:rating:movie:862",
@@ -2820,7 +2825,10 @@ it("MAL file preview retains season scores and applies On hold with only mapped 
 	assert.ok(tracked.log.every((x) => x.watched_at === null))
 	const receipt = await getImport("member", preview.id)
 	assert.equal(receipt.applied.added, 3)
-	assert.match(receipt.warnings.join(" "), /comments and tags/i)
+	assert.match(
+		receipt.warnings.map((w) => w.message).join(" "),
+		/comments and tags/i,
+	)
 	const repeated = await previewImport(
 		"member",
 		"myanimelist",
@@ -3188,7 +3196,7 @@ it("cour scores retain each entry's full pinned placement through apply and undo
 	const receipt = await getImport("member", preview.id)
 	assert.equal(receipt.applied.added, 1)
 	assert.match(
-		receipt.warnings.join(" "),
+		receipt.warnings.map((w) => w.message).join(" "),
 		/season scores.*kept for later.*not applied/i,
 	)
 	assert.deepEqual(
@@ -3651,4 +3659,21 @@ it("Seen movies stay off Wishlist by default and an existing rewatch wish never 
 		assert.equal(db.wishlist.length, 0)
 		assert.equal(db.watches.length, 1)
 	}
+})
+
+it("stored warnings retain their kind and legacy string warnings stay actionable", async () => {
+	const db = new ImportDb()
+	db.seed()
+	setImportDbForTest(db)
+	db.imports[0].warnings = JSON.stringify([
+		"Legacy reconnect instruction",
+		{ kind: "actionable", message: "Reconnect Plex" },
+		{ kind: "info", message: "RSS coverage note" },
+	])
+	const result = await getImport("member", String(db.imports[0].id))
+	assert.deepEqual(result.warnings, [
+		{ kind: "actionable", message: "Legacy reconnect instruction" },
+		{ kind: "actionable", message: "Reconnect Plex" },
+		{ kind: "info", message: "RSS coverage note" },
+	])
 })

@@ -3,7 +3,10 @@ import { z } from "zod"
 import {
 	IMPORT_MAX_ROWS,
 	type ImportObservation,
+	type ImportWarning,
 	type ParsedImport,
+	importActionable,
+	importInfo,
 } from "../../domain/imports.ts"
 import { PlexError, type PlexHttp, createPlexHttp } from "./plex-http.server.ts"
 
@@ -95,7 +98,10 @@ export function createPlexClient(
 			},
 		})
 		try {
-			return { data: JSON.parse(reply.text) as unknown, headers: reply.headers }
+			return {
+				data: JSON.parse(reply.text) as unknown,
+				headers: reply.headers,
+			}
 		} catch {
 			throw new PlexError()
 		}
@@ -170,7 +176,11 @@ export function createPlexClient(
 		const base = await serverConnection(server, context)
 		checkTime()
 		if (!base)
-			return { source: "plex", observations, warnings: [PLEX_UNREACHABLE] }
+			return {
+				source: "plex",
+				observations,
+				warnings: [importActionable(PLEX_UNREACHABLE)],
+			}
 
 		const cache = new Map<string, z.infer<typeof metadata>>()
 		const getMetadata = async (key: string) => {
@@ -358,11 +368,15 @@ export function createPlexClient(
 					"Plex returned incomplete history. Please connect again.",
 				)
 		}
-		return { source: "plex", observations, warnings }
+		return {
+			source: "plex",
+			observations,
+			warnings: warnings.map(importActionable),
+		}
 	}
 	async function readFeed(feedUrl?: string): Promise<ParsedImport> {
 		const observations: ImportObservation[] = []
-		const warnings: string[] = []
+		const warnings: ImportWarning[] = []
 		if (feedUrl) {
 			try {
 				observations.push(
@@ -375,20 +389,26 @@ export function createPlexClient(
 					),
 				)
 				warnings.push(
-					"Only items present in the Plex watchlist RSS feed were read. The feed may not include your complete watchlist; no missing items were inferred.",
+					importInfo(
+						"Only items present in the Plex watchlist RSS feed were read. The feed may not include your complete watchlist; no missing items were inferred.",
+					),
 				)
 			} catch (error) {
 				warnings.push(
-					`${
-						error instanceof PlexError && error.status === 400
-							? `${error.message} `
-							: ""
-					}The Plex watchlist RSS feed could not be read. No Want to See items from the feed were imported. Generate your personal feed in Plex Watchlist settings and connect again.`,
+					importActionable(
+						`${
+							error instanceof PlexError && error.status === 400
+								? `${error.message} `
+								: ""
+						}The Plex watchlist RSS feed could not be read. No Want to See items from the feed were imported. Generate your personal feed in Plex Watchlist settings and connect again.`,
+					),
 				)
 			}
 		} else
 			warnings.push(
-				"No watchlist RSS feed was supplied; Want to See was not imported. Plex Pass members can generate their personal feed in Plex Watchlist settings.",
+				importActionable(
+					"No watchlist RSS feed was supplied; Want to See was not imported. Plex Pass members can generate their personal feed in Plex Watchlist settings.",
+				),
 			)
 		return { source: "plex", observations, warnings }
 	}
@@ -436,12 +456,14 @@ export function createPlexClient(
 			}
 			const feedUrl = feed ? plexFeedUrl(feed) : undefined
 			const observations: ImportObservation[] = []
-			const warnings: string[] = []
+			const warnings: ImportWarning[] = []
 			const context = { clientId, read, checkTime }
 			const servers = await discoverServers(token, context)
 			if (!servers.length)
 				warnings.push(
-					"Plex reported no servers owned by this account. No server history was imported. Sign in with the account that owns your Plex Media Server and connect again. A watchlist RSS feed can still import Want to See without a server.",
+					importActionable(
+						"Plex reported no servers owned by this account. No server history was imported. Sign in with the account that owns your Plex Media Server and connect again. A watchlist RSS feed can still import Want to See without a server.",
+					),
 				)
 			for (const server of servers) {
 				const result = await readServerHistory(server, context)

@@ -57,8 +57,11 @@ test("TMDB reads all six paginated lists, rounds half steps up and leaves v3 rat
 			(x) => x.watchedAt === undefined && x.imdbId === null,
 		),
 	)
-	assert.match(parsed.warnings.join(" "), /7.5 becomes 8/)
-	assert.match(parsed.warnings.join(" "), /Episode ratings.*not read/)
+	assert.match(parsed.warnings.map((w) => w.message).join(" "), /7.5 becomes 8/)
+	assert.match(
+		parsed.warnings.map((w) => w.message).join(" "),
+		/Episode ratings.*not read/,
+	)
 })
 
 test("v3 authentication uses only the API key, retries 429 and deletes the session", async () => {
@@ -135,7 +138,10 @@ test("invalid ratings stay visible and partial or repeated pages cannot silently
 	assert.equal(parsed.observations[0].problem?.outcome, "invalid")
 	const partial = await build(rows, 101).readAccount("account", "secret")
 	assert.equal(partial.observations.length, 100)
-	assert.match(partial.warnings.join(" "), /100 of 101.*movie rated/)
+	assert.match(
+		partial.warnings.map((w) => w.message).join(" "),
+		/100 of 101.*movie rated/,
+	)
 	await assert.rejects(
 		build([rows[0], rows[0]]).readAccount("account", "secret"),
 		/duplicate/,
@@ -207,7 +213,10 @@ test("v3 rating scores never acquire a date from release dates or unrelated meta
 	assert.equal(parsed.observations[0].score, 9)
 	assert.equal(parsed.observations[0].addedAt, null)
 	assert.equal(parsed.observations[0].watchedAt, undefined)
-	assert.match(parsed.warnings.join(" "), /no rating dates/)
+	assert.match(
+		parsed.warnings.map((w) => w.message).join(" "),
+		/no rating dates/,
+	)
 })
 
 test("revocation accepts a missing session only when the key works and account access rejects the session", async () => {
@@ -281,7 +290,7 @@ test("page counts are bounded in items, and changing counts warn while keeping t
 	huge = false
 	const parsed = await client.readAccount("account", "secret")
 	assert.equal(parsed.observations.length, 12)
-	assert.match(parsed.warnings.join(" "), /changed/)
+	assert.match(parsed.warnings.map((w) => w.message).join(" "), /changed/)
 })
 
 test("a missing-session deletion response cannot discard a session that still reads its account", async () => {

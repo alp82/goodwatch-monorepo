@@ -1,5 +1,6 @@
 import { createElement } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
+import { importInfo } from "~/domain/imports"
 import type { ImportSource, ImportSummary } from "~/domain/imports"
 import { setServerAssetBase } from "~/utils/asset-url"
 import { SourceImportPreview } from "./SourceImportPreview"
@@ -39,7 +40,7 @@ const preview = (source: ImportSource) => {
 			review: 0,
 			show_status: 0,
 		},
-		warnings: ["Check ratings"],
+		warnings: [importInfo("Check ratings")],
 		options: null,
 		processed: 0,
 		total: 1,

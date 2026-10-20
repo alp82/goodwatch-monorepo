@@ -7,6 +7,7 @@ import {
 	type ImportShowStatus,
 	type ImportSource,
 	type ParsedImport,
+	importInfo,
 	isFileImportSource,
 } from "../../domain/imports.ts"
 import { isTvTimeFile, parseTvTime } from "./tvtime.server.ts"
@@ -473,7 +474,11 @@ function letterboxd(entries: ArchiveEntry[]): ParsedImport {
 		warnings.push(
 			"Profile, comments, and list likes aren't part of this import.",
 		)
-	return { source: "letterboxd", observations, warnings }
+	return {
+		source: "letterboxd",
+		observations,
+		warnings: warnings.map(importInfo),
+	}
 }
 
 type JsonRecord = Record<string, unknown>
@@ -685,7 +690,7 @@ function trakt(entries: ArchiveEntry[]): ParsedImport {
 		warnings.push(
 			"Account, social, notes, comments, hidden, and deleted Trakt data aren't part of this import.",
 		)
-	return { source: "trakt", observations, warnings }
+	return { source: "trakt", observations, warnings: warnings.map(importInfo) }
 }
 
 /** Reads an import entirely in memory; MovieLens can include a separate wishlist CSV. */
@@ -899,7 +904,7 @@ function genericCsv(bytes: Uint8Array): ParsedImport {
 	}
 	if (observations.length > IMPORT_MAX_ROWS)
 		fail(`That export produces more than ${rowLimitLabel} import items.`)
-	return { source: "csv", observations, warnings }
+	return { source: "csv", observations, warnings: warnings.map(importInfo) }
 }
 
 function movielens(bytes: Uint8Array, wishlist?: Uint8Array): ParsedImport {
@@ -984,7 +989,11 @@ function movielens(bytes: Uint8Array, wishlist?: Uint8Array): ParsedImport {
 			})
 		}
 	}
-	return { source: "movielens", observations, warnings }
+	return {
+		source: "movielens",
+		observations,
+		warnings: warnings.map(importInfo),
+	}
 }
 
 const MAX_XML_ELEMENTS = 1_000_000
@@ -1256,7 +1265,7 @@ function kodi(bytes: Uint8Array): ParsedImport {
 	return {
 		source: "kodi",
 		observations: unique,
-		warnings: [...new Set(warnings)],
+		warnings: [...new Set(warnings)].map(importInfo),
 	}
 }
 
@@ -1549,6 +1558,6 @@ function myanimelist(bytes: Uint8Array, fileName?: string): ParsedImport {
 			"Comments and tags are not imported. Rewatch counts do not add watches.",
 			"MyAnimeList episode dates are unknown unless a completed entry has matching full start and finish dates, establishing one viewing day. Dates are never spread across episodes.",
 			"Season scores are kept for later and not applied as show ratings. Completed parts never mark the whole show Seen; only reported episode progress is imported.",
-		],
+		].map(importInfo),
 	}
 }

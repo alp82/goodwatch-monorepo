@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto"
+import { importInfo } from "../../domain/imports.ts"
 import {
 	IMPORT_MAX_BYTES,
 	IMPORT_MAX_ROWS,
@@ -99,7 +100,9 @@ function sharedWishlist(input: unknown, fail: Fail): ParsedImport {
 			data.completeness === "complete"
 				? []
 				: [
-						"This file may hold only part of your list. Titles that aren't in the file stay as they are in GoodWatch.",
+						importInfo(
+							"This file may hold only part of your list. Titles that aren't in the file stay as they are in GoodWatch.",
+						),
 					],
 		observations: data.items.map((value) => {
 			const item = object(value) ? value : {}

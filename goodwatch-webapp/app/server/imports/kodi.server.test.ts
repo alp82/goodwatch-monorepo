@@ -172,14 +172,17 @@ test("Kodi keeps malformed scores and dates visible and warns about mass mark-as
 	)
 	assert.equal(invalid.observations[0].problem?.outcome, "invalid")
 	assert.equal(invalid.observations[1].watchedAt, null)
-	assert.match(invalid.warnings.join(" "), /invalid.*date/i)
+	assert.match(
+		invalid.warnings.map((w) => w.message).join(" "),
+		/invalid.*date/i,
+	)
 	const clustered = await parseImportFile(
 		"kodi",
 		Buffer.from(
 			`<videodb>${Array.from({ length: 100 }, (_, i) => movie.replace(">862<", `>${i + 1}<`)).join("")}</videodb>`,
 		),
 	)
-	assert.match(clustered.warnings.join(" "), /100.*day/)
+	assert.match(clustered.warnings.map((w) => w.message).join(" "), /100.*day/)
 })
 
 test("Kodi reads a full export ZIP with hundreds of artwork files without expanding artwork", async () => {

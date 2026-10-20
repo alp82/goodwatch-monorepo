@@ -6,6 +6,7 @@ import {
 	type ImportOutcome,
 	type ImportSource,
 	type ImportSummary,
+	normalizeImportWarnings,
 } from "~/domain/imports"
 import { execute, query } from "~/utils/crate"
 import { csvLine } from "../import-csv.ts"
@@ -131,7 +132,7 @@ export function summarize(row: ImportRow): ImportSummary {
 			invalid: 0,
 		}),
 		kinds: { ...emptyKinds, ...kindCounts },
-		warnings: parse(row.warnings, []),
+		warnings: normalizeImportWarnings(parse(row.warnings, [])),
 		options: storedOptions
 			? {
 					kinds: storedOptions.kinds,

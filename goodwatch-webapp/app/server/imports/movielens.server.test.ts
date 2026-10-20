@@ -47,8 +47,8 @@ test("MovieLens ratings preserve half-stars and normalize external IDs without i
 			],
 		],
 	)
-	assert.match(parsed.warnings.join(" "), /tags/i)
-	assert.match(parsed.warnings.join(" "), /activity log/i)
+	assert.match(parsed.warnings.map((w) => w.message).join(" "), /tags/i)
+	assert.match(parsed.warnings.map((w) => w.message).join(" "), /activity log/i)
 })
 
 test("MovieLens optionally imports wishlist alongside reordered ratings with extra columns", async () => {
@@ -74,7 +74,7 @@ test("MovieLens optionally imports wishlist alongside reordered ratings with ext
 			["want", "movielens:want:2", undefined, 20, "tt12345678"],
 		],
 	)
-	assert.match(parsed.warnings.join(" "), /extra/)
+	assert.match(parsed.warnings.map((w) => w.message).join(" "), /extra/)
 })
 
 test("MovieLens rejects wrong export formats and limits, and exposes invalid ratings", async () => {

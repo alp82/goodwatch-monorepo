@@ -1,6 +1,7 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import { parseImportFile } from "./files.server.ts"
+import { officialAncillaryFiles } from "./tvtime-official-archive.test-support.ts"
 import { zipFixture } from "./zip-fixture.test-support.ts"
 
 // Synthetic records, written from the headers in research/tv-time-exports
@@ -167,7 +168,7 @@ test("TV Time extension CSVs import watched episodes, statuses, IMDb movies and 
 		parsed.observations.find((r) => r.title === "Another movie")?.imdbId,
 		null,
 	)
-	assert.ok(parsed.warnings.some((w) => /rewatch counts/i.test(w)))
+	assert.ok(parsed.warnings.some((w) => /rewatch counts/i.test(w.message)))
 })
 
 test("TV Time JSON and Liberator CSV keep source identity without treating computed watchlisted flags as wishes", async () => {
@@ -270,7 +271,9 @@ test("TV Time ignores private archive payloads and keeps supplemental follows wi
 			.every((r) => r.problem?.outcome === "unsupported"),
 	)
 	assert.ok(
-		!parsed.warnings.some((w) => /access_token|lists-prod-lists/.test(w)),
+		!parsed.warnings.some((w) =>
+			/access_token|lists-prod-lists/.test(w.message),
+		),
 	)
 	assert.ok(!JSON.stringify(parsed).includes("private-user"))
 	await assert.rejects(
@@ -289,7 +292,7 @@ test("TV Time collapses shared-timestamp rewatch counts while preserving distinc
 	)
 	assert.equal(parsed.observations.length, 2)
 	assert.equal(new Set(parsed.observations.map((r) => r.key)).size, 2)
-	assert.ok(parsed.warnings.some((w) => /shared.*timestamp/i.test(w)))
+	assert.ok(parsed.warnings.some((w) => /shared.*timestamp/i.test(w.message)))
 	const again = await parseImportFile(
 		"tvtime",
 		zipFixture({
@@ -357,7 +360,7 @@ test("TV Time rejects unrecognized, mixed or malformed exports with actionable e
 		"tracking-prod-records-v2.csv",
 	)
 	assert.equal(p.observations[0].precision, "unknown")
-	assert.ok(p.warnings.some((w) => /without a date/.test(w)))
+	assert.ok(p.warnings.some((w) => /without a date/.test(w.message)))
 })
 
 test("TV Time follows become wishes only before any exported episode watch, and v2 flags override older follows", async () => {
@@ -402,7 +405,7 @@ test("TV Time prefers JSON over duplicate extension CSVs and keeps malformed row
 		}),
 	)
 	assert.equal(p.observations.filter((r) => r.kind === "watch").length, 1)
-	assert.ok(p.warnings.some((w) => /JSON.*CSV/.test(w)))
+	assert.ok(p.warnings.some((w) => /JSON.*CSV/.test(w.message)))
 	const invalid = await parseImportFile(
 		"tvtime",
 		Buffer.from(
@@ -442,7 +445,7 @@ test("TV Time omits unwatched episode rows before applying the import row limit"
 	const parsed = await parseImportFile("tvtime", file, undefined, "shows.json")
 	assert.equal(parsed.observations.length, 1)
 	assert.equal(parsed.observations[0].showStatus, "watching")
-	assert.ok(parsed.warnings.some((w) => /50001 unwatched/.test(w)))
+	assert.ok(parsed.warnings.some((w) => /50001 unwatched/.test(w.message)))
 	const csv = [
 		"series_tvdb_id,title,season,episode,tvdb_id,is_watched,watched_at\n",
 		"100,Show,1,1,200,false,\n".repeat(50001),
@@ -473,7 +476,7 @@ test("TV Time never promotes an unidentified episode to a whole-show watch, and 
 		p.observations.find((r) => r.episodeTvdbId === null)?.problem?.outcome,
 		"unmatched",
 	)
-	assert.ok(p.warnings.some((w) => /shared.*timestamp/i.test(w)))
+	assert.ok(p.warnings.some((w) => /shared.*timestamp/i.test(w.message)))
 })
 
 test("TV Time accepts renamed loose files with normalized headers and numeric JSON years", async () => {
@@ -676,13 +679,10 @@ test("TV Time official archives skip 51 ancillary files without warnings", async
 		"user_tv_show_data.csv": "tv_show_id,tv_show_name,active,archived\n",
 		"ratings-live-votes.csv": "vote_key,uuid\n",
 		...Object.fromEntries(
-			[
-				"ip_address.csv",
-				"access_token.csv",
-				"meme.csv",
-				"lists-prod-lists.csv",
-				...Array.from({ length: 47 }, (_, i) => `account-detail-${i}.csv`),
-			].map((name) => [name, 'Never parse this,"broken CSV']),
+			officialAncillaryFiles.map((name) => [
+				`gdpr-data/${name}`,
+				'Never parse this,"broken CSV',
+			]),
 		),
 	}
 	const parsed = await parseImportFile("tvtime", zipFixture(files))
@@ -701,11 +701,14 @@ test("TV Time keeps unread history filenames visible while skipping account data
 			"export/ip_address.csv": 'Private,"broken',
 		}),
 	)
-	assert.deepEqual(parsed.warnings, [
-		"TV Time history file not imported: export/seen_history.csv.",
-		"TV Time history file not imported: export/seen_episode.csv.",
-		"TV Time history file not imported: export/tvtime-series-backup.csv.",
-	])
+	assert.deepEqual(
+		parsed.warnings.map((w) => w.message),
+		[
+			"TV Time history file not imported: export/seen_history.csv.",
+			"TV Time history file not imported: export/seen_episode.csv.",
+			"TV Time history file not imported: export/tvtime-series-backup.csv.",
+		],
+	)
 })
 
 test("TV Time counts distinct watches with bulk or invalid dates in one note", async () => {
@@ -719,9 +722,35 @@ test("TV Time counts distinct watches with bulk or invalid dates in one note", a
 	assert.equal(parsed.observations.length, 3)
 	assert.ok(parsed.observations.every((row) => row.precision === "unknown"))
 	assert.deepEqual(
-		parsed.warnings.filter((w) => /bulk|invalid/.test(w)),
+		parsed.warnings
+			.filter((w) => /bulk|invalid/.test(w.message))
+			.map((w) => w.message),
 		[
 			"2 TV Time watches have invalid dates or bulk marks and are imported without a date.",
+		],
+	)
+})
+
+test("TV Time warns for every unknown filename, including episodes and movies", async () => {
+	const parsed = await parseImportFile(
+		"tvtime",
+		zipFixture({
+			"tracking-prod-records-v2.csv":
+				"key,s_id,ep_id,s_no,ep_no,created_at\nwatch-episode-a,100,200,1,1,2024-01-01\n",
+			"episodes.csv": "unknown episode layout",
+			"movies.csv": "unknown movie layout",
+			"account-detail.csv": "unknown data",
+			"ip_address_backup.csv": "not an exact known filename",
+		}),
+	)
+	assert.equal(parsed.observations.length, 1)
+	assert.deepEqual(
+		parsed.warnings.map((w) => w.message),
+		[
+			"TV Time history file not imported: episodes.csv.",
+			"TV Time history file not imported: movies.csv.",
+			"TV Time history file not imported: account-detail.csv.",
+			"TV Time history file not imported: ip_address_backup.csv.",
 		],
 	)
 })

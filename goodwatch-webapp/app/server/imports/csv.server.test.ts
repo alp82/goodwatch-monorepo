@@ -21,7 +21,7 @@ test("generic CSV imports ratings and dated watches using documented columns", a
 	)
 	assert.equal(parsed.observations[0].tmdbId, 862)
 	assert.equal(parsed.observations[0].precision, "day")
-	assert.match(parsed.warnings.join(" "), /Extra/)
+	assert.match(parsed.warnings.map((w) => w.message).join(" "), /Extra/)
 })
 
 test("generic CSV accepts export aliases and rejects malformed or excessive input", async () => {
@@ -72,8 +72,8 @@ test("CSV reordering preserves distinct viewing identities and explains unused m
 			.size,
 		2,
 	)
-	assert.match(a.warnings.join(" "), /Tags/)
-	assert.match(a.warnings.join(" "), /Directors/)
+	assert.match(a.warnings.map((w) => w.message).join(" "), /Tags/)
+	assert.match(a.warnings.map((w) => w.message).join(" "), /Directors/)
 })
 
 test("CSV preserves trailing backslashes and multiline reviews without swallowing rows", async () => {

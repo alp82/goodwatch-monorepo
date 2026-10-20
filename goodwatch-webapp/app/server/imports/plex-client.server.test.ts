@@ -197,8 +197,14 @@ test("documented watchlist RSS imports Want to See and reports its limited cover
 	assert.equal(parsed.observations[0].watchedAt, undefined)
 	assert.equal(parsed.observations[0].addedAt, undefined)
 	assert.match(parsed.observations[2].problem?.reason ?? "", /TMDB or IMDb/)
-	assert.match(parsed.warnings.join(" "), /feed.*complete/i)
-	assert.match(parsed.warnings.join(" "), /Sign in.*owns.*Plex Media Server/)
+	assert.match(
+		parsed.warnings.map((w) => w.message).join(" "),
+		/feed.*complete/i,
+	)
+	assert.match(
+		parsed.warnings.map((w) => w.message).join(" "),
+		/Sign in.*owns.*Plex Media Server/,
+	)
 	assert.doesNotMatch(JSON.stringify(parsed), /private-feed|secret/)
 })
 
@@ -235,7 +241,7 @@ test("unreachable server history becomes an actionable receipt and still permits
 	)
 	assert.equal(parsed.observations.length, 1)
 	assert.match(
-		parsed.warnings.join(" "),
+		parsed.warnings.map((w) => w.message).join(" "),
 		/GoodWatch could not reach.*Remote Access/,
 	)
 	assert.doesNotMatch(JSON.stringify(parsed), /secret/)
@@ -279,7 +285,7 @@ test("private server URLs are blocked by the real Plex network boundary and expl
 	const parsed = await client.readImport("account-secret", "client")
 	assert.equal(parsed.observations.length, 0)
 	assert.match(
-		parsed.warnings.join(" "),
+		parsed.warnings.map((w) => w.message).join(" "),
 		/GoodWatch could not reach.*public HTTPS/,
 	)
 	assert.doesNotMatch(JSON.stringify(parsed), /secret|internal.plex.direct/)
@@ -424,7 +430,10 @@ test("malformed and entity-bearing RSS is not imported or fetched as external da
 			"https://rss.plex.tv/watchlist/feed",
 		)
 		assert.equal(parsed.observations.filter((r) => r.kind === "want").length, 0)
-		assert.match(parsed.warnings.join(" "), /RSS feed could not be read/)
+		assert.match(
+			parsed.warnings.map((w) => w.message).join(" "),
+			/RSS feed could not be read/,
+		)
 	}
 })
 
@@ -579,7 +588,7 @@ test("RSS enforces shared XML complexity bounds and reports an item limit distin
 			"https://rss.plex.tv/watchlist/feed",
 		)
 		assert.deepEqual(parsed.observations, [])
-		assert.match(parsed.warnings.join(" "), warning)
+		assert.match(parsed.warnings.map((w) => w.message).join(" "), warning)
 	}
 })
 
@@ -604,4 +613,16 @@ test("new plays beyond the import limit do not invalidate an already bounded his
 	})
 	const parsed = await client.readImport("secret", "client")
 	assert.equal(parsed.observations.length, 2)
+})
+
+test("three unreachable servers keep actionable warnings separate from working-feed information", async () => {
+	const { threeUnreachableServersWithFeed } = await import(
+		"./plex-unreachable-fixture.test-support.ts"
+	)
+	const parsed = await threeUnreachableServersWithFeed()
+	assert.equal(parsed.observations.length, 1)
+	assert.deepEqual(
+		parsed.warnings.map((warning) => warning.kind),
+		["actionable", "actionable", "actionable", "info"],
+	)
 })

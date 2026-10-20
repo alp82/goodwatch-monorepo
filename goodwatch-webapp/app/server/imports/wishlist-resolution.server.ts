@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { normalizeImportWarnings } from "../../domain/imports.ts"
 import type {
 	ImportItem,
 	ImportObservation,
@@ -343,7 +344,7 @@ async function resolveChoices(
 		{
 			source: parent.source,
 			observations: rows,
-			warnings: JSON.parse(parent.warnings ?? "[]"),
+			warnings: normalizeImportWarnings(JSON.parse(parent.warnings ?? "[]")),
 		},
 		undefined,
 		mode,

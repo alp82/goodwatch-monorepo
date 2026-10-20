@@ -2,6 +2,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { createElement } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
+import { importInfo } from "~/domain/imports"
 import type { ImportItem, ImportSummary } from "~/domain/imports"
 import { SourceItem } from "./SourceImportCounts"
 import { SourceImportCurrent } from "./SourceImportCurrent"
@@ -38,7 +39,7 @@ const summary = (
 			review: 0,
 			show_status: 0,
 		},
-		warnings,
+		warnings: warnings.map(importInfo),
 		options: null,
 		processed: 0,
 		total: 0,
