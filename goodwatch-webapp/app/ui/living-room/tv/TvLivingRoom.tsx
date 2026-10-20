@@ -167,7 +167,6 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 	// here (`ExplorerData`, mounted below): from the moment its tile first has the focus, so the map is there by
 	// the time it opens, and for the rest of the visit, so a title opened from an island is named at once.
 	const [explorer, setExplorer] = useState<TvExplorerReport | null>(null)
-	const [mapWanted, setMapWanted] = useState(false)
 	const onExplorer = screen.name === "explorer"
 	const explorerContext = explorer?.context
 	const onMap = explorer?.known
@@ -226,6 +225,7 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 	const known = useCallback(
 		(key: string) =>
 			tonight.find((one) => tvTitleKey(one.card) === key)?.card ??
+			data.popular?.titles.find((one) => tvTitleKey(one) === key) ??
 			listed.find((one) => tvTitleKey(one) === key) ??
 			// The mini Explorer (slice 7): an island's titles.
 			onMap?.(key) ??
@@ -316,8 +316,8 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 		[shownTitle, nextEpisode],
 	)
 	const titles: TvTitleScreens = useMemo(
-		() => ({ tonight, waiting: !pool && !failed, title }),
-		[tonight, pool, failed, title],
+		() => ({ tonight, waiting: !pool && !failed && (interacted || screen.name === "tonight"), title }),
+		[tonight, pool, failed, title, interacted, screen.name],
 	)
 
 	const google = useContinueWithGoogle()
@@ -404,15 +404,6 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 		}
 	}, [interacted, tv.screen.name, tv.focused])
 
-	// The mini Explorer (slice 7): its code and its map are asked for while its tile has the focus, or by a link
-	// straight to it.
-	useEffect(() => {
-		if (
-			onExplorer ||
-			(interacted && tv.screen.name === "home" && tv.focused === "app:explorer")
-		)
-			setMapWanted(true)
-	}, [onExplorer, interacted, tv.screen.name, tv.focused])
 
 	return (
 		<>
@@ -429,7 +420,7 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 							canvas={canvas}
 							ctx={ctx}
 							apps={apps}
-							sides={data.sides}
+							home={data}
 							toast={toast}
 							titles={titles}
 							discover={discover}
@@ -456,7 +447,7 @@ export function TvLivingRoom({ data }: { data: TvHomeData }) {
 				<DiscoverData screen={screen} member={data.member} report={onList} />
 			)}
 			{/* The mini Explorer (slice 7): its map, from its tile's first focus on. */}
-			{(mapWanted || onExplorer) && (
+			{onExplorer && (
 				<ExplorerData
 					screen={screen}
 					member={data.member}

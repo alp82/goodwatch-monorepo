@@ -33,7 +33,7 @@ export type TvTonightPick = {
 	/** A guest's own Tonight's pick: the last title they added to the Wishlist in their browser. */
 	wished?: boolean
 	/** When the pick is a Next episode: "S2 E3" and its name. */
-	episode?: { code: string; name: string | null; language?: string }
+	episode?: { code: string; name: string | null; language?: string; runtime?: number | null }
 }
 
 /** A show with a Next episode, as My shows lists it on the TV. */
@@ -98,6 +98,15 @@ export type TvHomeData = {
 	 * nothing of them is in the HTML.
 	 */
 	scope?: { country: string; services: number[] }
+	/** Popular catalog candidates, under this member's exclusions and country. Separate from Start titles. */
+	popular?: {
+		titles: TitleCard[]
+		scope: "services" | "mixed" | "all" | "unknown"
+		country: string
+		failed?: boolean
+	}
+	/** A failed personal read is not an empty Wishlist. */
+	homeFailed?: boolean
 	/** "Talked about now" below the room (#557), for this viewer. Absent while the feature is off for them. */
 	talked?: true
 	/**
@@ -235,7 +244,8 @@ export function tvContextOf(
 		nextEpisodes: (data.shows?.next ?? []).map((show) => `show-${show.id}`),
 		toStart: (data.shows?.start ?? []).map((show) => `show-${show.id}`),
 		services: data.services.map((service) => service.id),
-		homeSides: homeSidesContext(data.sides ?? []),
+		homeSides: [],
+		popular: (data.popular?.titles ?? []).map(tvTitleKey),
 	}
 }
 

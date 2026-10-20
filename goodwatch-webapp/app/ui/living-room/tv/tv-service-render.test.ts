@@ -24,7 +24,7 @@ const rendered = JSON.parse(
 ) as {
 	home: Record<
 		| "guest"
-		| "member"
+		| "customServices"
 		| "withPool"
 		| "onNetflix"
 		| "onDisney"
@@ -94,15 +94,13 @@ test("home's items in the markup are the machine's: the apps, then a tile per se
 	assert.deepEqual(rendered.home.guest.items, [
 		"app:tonight",
 		"app:discover",
-		"app:explorer",
 		"app:taste",
 		"service:8",
 		"service:337",
 		"bar:search",
 		"bar:menu",
 	])
-	assert.deepEqual(rendered.home.member.items.slice(4, 7), [
-		"app:shows",
+	assert.deepEqual(rendered.home.customServices.items.slice(3, 5), [
 		"service:337",
 		"service:99",
 	])
@@ -110,7 +108,6 @@ test("home's items in the markup are the machine's: the apps, then a tile per se
 	assert.deepEqual(ids(rendered.home.none.desktop), [
 		"app:tonight",
 		"app:discover",
-		"app:explorer",
 		"app:taste",
 		"bar:search",
 		"bar:menu",
@@ -131,7 +128,7 @@ test("a service's tile shows the Remote's own mark, the catalog's logo with the 
 		assert.deepEqual(marks(disney), ["logo"])
 		assert.match(disney, /image\.tmdb\.org\/t\/p\/w92\/disney\.jpg/)
 		assert.equal(count(disney, ">Disney+<"), 1)
-		const plain = item(rendered.home.member[edition], "service:99")
+		const plain = item(rendered.home.customServices[edition], "service:99")
 		assert.deepEqual(marks(plain), [])
 		assert.equal(count(plain, ">Kanopy<"), 1)
 		assert.match(plain, /aria-label="On Kanopy"/)

@@ -34,6 +34,12 @@ The screen inside the living room where GoodWatch runs. It shows one TV screen a
 **TV screen**:
 One view on the TV, such as home, Watch next, Discover's moods, a streaming service's titles, search, or a title. It replaces the earlier notion of channels.
 
+**TV home**:
+For a member, Watch next leads with the existing Next pick, followed by direct access to My movies and My shows. The existing discovery fallback still applies when there are no personal picks. A secondary Popular row offers more titles; it is not a queue or a taste-group guide. Taste remains a separate TV screen. Guests retain the app-tile home. Explorer is absent from TV navigation; existing TV Explorer bookmarks still work.
+
+**Popular titles on the TV**:
+The living room pool's eligible catalog titles in popularity order, excluding the viewer's hidden, seen, skipped, and Want to See titles as that pool does. Saved-service matches in the member's country come first, with a labelled wider-catalog fallback when fewer than twelve match. Unknown availability and no saved services use the wider catalog, without claiming it is on the member's services. This member-only row is distinct from the shared Start titles below the room.
+
 **Remote**:
 The living room's main control. Everything on the remote is also reachable on the TV itself.
 

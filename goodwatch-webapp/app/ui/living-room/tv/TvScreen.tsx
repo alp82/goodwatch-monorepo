@@ -99,6 +99,7 @@ export type TvScreenProps = {
 	ctx: TvContext
 	/** Home's tiles. */
 	apps: readonly TvAppTile[]
+	home?: TvHomeData
 	/** A member's taste groups on home's guide. */
 	sides?: readonly TvHomeSide[]
 	/** What the TV says for a moment ("On your Wishlist"), or null. */
@@ -159,6 +160,7 @@ export function TvScreen({
 	canvas,
 	ctx,
 	apps,
+	home,
 	sides,
 	toast,
 	titles,
@@ -227,6 +229,8 @@ export function TvScreen({
 								screen={screen}
 								items={items}
 								apps={apps}
+								home={home}
+								member={ctx.member}
 								sides={ctx.homeSides.length ? sides : undefined}
 								titles={titles}
 								discover={discover}
@@ -288,6 +292,8 @@ function ScreenOf({
 	screen,
 	items,
 	apps,
+	home,
+	member,
 	sides,
 	titles,
 	discover,
@@ -300,6 +306,8 @@ function ScreenOf({
 	screen: Screen
 	items: readonly string[]
 	apps: readonly TvAppTile[]
+	home?: TvHomeData
+	member: boolean
 	sides?: readonly TvHomeSide[]
 	titles?: TvTitleScreens
 	discover?: TvDiscoverScreens
@@ -315,6 +323,11 @@ function ScreenOf({
 			return (
 				<Home
 					apps={apps}
+					member={member}
+					pick={titles?.tonight[0] ?? home?.tonight[0]}
+					popular={home?.popular}
+					failed={home?.homeFailed}
+					waiting={titles?.waiting ?? false}
 					services={services?.tiles}
 					sides={sides}
 					items={items}

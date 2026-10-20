@@ -1,12 +1,7 @@
-// Home's guide for a member with Sides of you (#673) as it is drawn: its items are the machine's, in its order,
-// with only the picks of the side that is on; a side is its loved posters and no words while the gate is closed;
-// and the phone keeps the row of tiles.
+// Regression: even a retained loader taste payload cannot replace the member's Watch next home.
 import assert from "node:assert/strict"
 import { execFileSync } from "node:child_process"
 import { test } from "node:test"
-import { FEW_ON_SERVICES, NO_PICKS, SIDES_HEADING } from "./home-sides-copy.ts"
-
-type Drawn = { html: string; items: string[]; focus: string }
 const rendered = JSON.parse(
 	execFileSync(
 		"node_modules/.bin/vite-node",
@@ -19,100 +14,47 @@ const rendered = JSON.parse(
 	)
 		.split("__TV_HOME_SIDES__")
 		.at(-1) ?? "",
-) as Record<
-	"onApp" | "onSide" | "onPick" | "onEmpty" | "phone" | "named",
-	Drawn
->
-
+) as Record<string, { html: string; items: string[]; focus: string }>
 const ids = (html: string) =>
-	[...html.matchAll(/data-tv-item="([^"]+)"/g)].map((match) => match[1])
-const focused = (html: string) =>
-	[...html.matchAll(/data-tv-item="([^"]+)" aria-current="true"/g)].map(
-		(match) => match[1],
+	[...html.matchAll(/data-tv-item="([^"]+)"/g)].map((m) => m[1])
+test("members keep Watch next and library navigation in both editions, with no home taste duplication", () => {
+	for (const { html, items } of Object.values(rendered)) {
+		assert.deepEqual(ids(html), items)
+		assert.match(html, />Watch next<\/h1>/)
+		assert.ok(
+			html.includes("My movies") &&
+				html.includes("My shows") &&
+				html.includes("Taste"),
+		)
+		assert.ok(
+			!/home-side:|watch-next:|Loved b|Dark, tense crime|app:explorer/.test(
+				html,
+			),
+		)
+		assert.ok(!items.includes("service:8"))
+	}
+})
+test("an empty member gets an actionable empty pick and popular loading state", () => {
+	assert.ok(rendered.phone.html.includes("No pick yet"))
+	assert.ok(rendered.phone.html.includes("Loading popular titles"))
+	assert.equal(rendered.phone.focus, "home:movies")
+})
+
+test("the decision uses actual runtime, match and availability; episode runtime is not a show's usual runtime", () => {
+	assert.match(rendered.movie.html, /97 min · 92% match/)
+	assert.ok(rendered.movie.html.includes("On Netflix"))
+	assert.ok(rendered.movie.html.includes("From your Wishlist"))
+	assert.ok(rendered.episode.html.includes("Next episode · S2 E4 · 48 min"))
+	assert.ok(!rendered.episode.html.includes("99 min"))
+	assert.ok(rendered.showToStart.html.includes("55 min episodes"))
+	assert.ok(rendered.noServices.html.includes("Check availability in details"))
+	assert.ok(rendered.noServices.html.includes("Wider catalog"))
+	assert.ok(!rendered.noServices.html.includes("% match"))
+})
+test("failed and pending reads are distinct from empty personal picks", () => {
+	assert.ok(
+		rendered.failed.html.includes("Your Watch next picks could not be loaded"),
 	)
-const APPS = [
-	"app:tonight",
-	"app:discover",
-	"app:explorer",
-	"app:taste",
-	"app:shows",
-]
-const ENTRIES = [...APPS, "home-side:a", "home-side:b", "home-side:c"]
-const BAR = ["bar:search", "bar:menu"]
-test("with an app on, the guide draws the apps, the sides' entries and the bar, and no picks", () => {
-	const { html, items } = rendered.onApp
-	assert.deepEqual(ids(html), [...ENTRIES, ...BAR])
-	assert.ok(items.includes("title:movie-11"))
-	assert.deepEqual(focused(html), ["app:tonight"])
-})
-
-test("with a side on, the guide draws that side's picks and Watch next key, in the machine's order", () => {
-	const side = rendered.onSide
-	assert.deepEqual(ids(side.html), [
-		...APPS,
-		"home-side:a",
-		"home-side:b",
-		"home-side:c",
-		"title:movie-21",
-		"title:movie-22",
-		"watch-next:b",
-		...BAR,
-	])
-	assert.deepEqual(focused(side.html), ["home-side:b"])
-	// The picks follow the machine's reading order.
-	const picks = side.items.filter(
-		(item) => ids(side.html).includes(item) && !ENTRIES.includes(item),
-	)
-	assert.deepEqual(picks, [
-		"title:movie-21",
-		"title:movie-22",
-		"watch-next:b",
-		...BAR,
-	])
-	assert.ok(side.html.includes(FEW_ON_SERVICES))
-})
-
-test("a focused pick keeps its side on and names the pick", () => {
-	const { html } = rendered.onPick
-	assert.deepEqual(focused(html), ["title:movie-12"])
-	assert.ok(html.includes('data-tv-item="title:movie-11"'))
-	assert.ok(!html.includes('data-tv-item="title:movie-21"'))
-	assert.ok(html.includes(">Pick 12<"))
-	assert.ok(!html.includes(FEW_ON_SERVICES))
-})
-
-test("a side without picks says so and keeps its Watch next key", () => {
-	const { html } = rendered.onEmpty
-	assert.ok(html.includes(NO_PICKS))
-	assert.deepEqual(focused(html), ["watch-next:c"])
-})
-
-test("without `words`, a side is its loved posters: no name, no moods, no share", () => {
-	const { html } = rendered.onSide
-	assert.ok(html.includes("/loved-b-1.jpg"))
-	assert.ok(html.includes(SIDES_HEADING))
-	assert.ok(!/of what you love|titles you love|Heavy/.test(html))
-	// A screen reader hears which side it is and the loved titles it is shown by.
-	assert.match(
-		html,
-		/aria-label="Your taste, 2 of 3, with Loved b 1, Loved b 2 and Loved b 3"/,
-	)
-	// Today's H1 is there once, for a screen reader.
-	assert.equal(
-		html.split("Let&#x27;s find something good to watch next.").length - 1,
-		1,
-	)
-})
-
-test("with `words`, the side's name and its moods show", () => {
-	const { html } = rendered.named
-	assert.ok(html.includes("Dark, tense crime"))
-	assert.ok(html.includes("Watch next: Heavy"))
-})
-
-test("the phone keeps the row of tiles, with the services", () => {
-	const { html, items } = rendered.phone
-	assert.deepEqual(ids(html), items)
-	assert.ok(items.includes("service:8"))
-	assert.ok(!items.some((item) => item.startsWith("home-side:")))
+	assert.ok(rendered.failed.html.includes("Popular titles are unavailable"))
+	assert.ok(rendered.loading.html.includes("Finding something to watch next"))
 })
