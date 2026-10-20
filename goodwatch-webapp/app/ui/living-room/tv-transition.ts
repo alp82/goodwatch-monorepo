@@ -121,12 +121,15 @@ function foldBrackets() {
 // ---- The mark: points the transition's CSS at the TV's box until its animation ends.
 
 let clearTimer: ReturnType<typeof setTimeout> | undefined
+let finishFrame: number | undefined
 let endListener: ((e: AnimationEvent) => void) | undefined
 let cancelListener: ((e: KeyboardEvent) => void) | undefined
 
 function unmark() {
 	const html = document.documentElement
 	clearTimeout(clearTimer)
+	if (finishFrame !== undefined) cancelAnimationFrame(finishFrame)
+	finishFrame = undefined
 	if (endListener) html.removeEventListener("animationend", endListener)
 	if (cancelListener) window.removeEventListener("keydown", cancelListener, true)
 	endListener = undefined
@@ -143,6 +146,15 @@ function finish(direction: Direction | null) {
 	unmark()
 }
 
+function finishAfterSnapshots(direction: Direction) {
+	finishFrame = requestAnimationFrame(() => {
+		// animationend precedes the browser releasing the snapshots. Removing the mark while they still
+		// exist restores the UA's default crossfade and flashes the old room at its original size.
+		if (transitionRuns()) finishAfterSnapshots(direction)
+		else finish(direction)
+	})
+}
+
 function mark(direction: Direction, box: TvBox) {
 	const html = document.documentElement
 	unmark()
@@ -150,7 +162,7 @@ function mark(direction: Direction, box: TvBox) {
 	html.dataset.tvTransition = direction
 	// The room's animation is the one that runs the transition's whole length, both ways.
 	endListener = (e) => {
-		if (e.animationName === `living-room-tv-room-${direction}`) finish(direction)
+		if (e.animationName === `living-room-tv-room-${direction}`) finishAfterSnapshots(direction)
 	}
 	html.addEventListener("animationend", endListener)
 	// The transition waits for the page's data, so this only catches a transition that never ran.
