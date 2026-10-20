@@ -189,6 +189,13 @@ export default function Support() {
 						explains what we store, how long we keep it, and how to have it
 						deleted.
 					</p>
+					<p className="leading-relaxed">
+						Our{" "}
+						<Link to="/terms" className={linkClass}>
+							terms of service
+						</Link>{" "}
+						cover accounts, share lists and connected apps.
+					</p>
 				</Tile>
 			</div>
 		</div>
