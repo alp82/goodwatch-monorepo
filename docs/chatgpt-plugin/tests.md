@@ -69,3 +69,7 @@ After installing the deployed integration in ChatGPT:
 - Send invalid selectors/ranges and peer-list IDs; verify no mutation or data leak. Exercise 429 in a controlled test environment or disposable account, not by flooding production. Inspect actual unknown/stale availability and quota fallback responses.
 
 Record actual results, timestamps and unresolved warnings. No screenshot, recording, tool discovery or approval is a substitute for a real representative tool call and matching account state.
+
+## ChatGPT signed-client token-exchange regression
+
+A real ChatGPT connection exposed a 503 in the `private_key_jwt` path that the original public-client harness did not exercise. The isolated signed-client reproduction and root cause are documented in [OAuth connection fix](oauth-connection-fix.md). After the fix, all 47 current auth integration tests, focused types, Biome and the production build passed. The new test verifies assertion replay rejection and fresh-assertion refresh rotation. Track production rollout and actual ChatGPT reconnect separately in [evidence](evidence/oauth-signed-client.json).

@@ -1,4 +1,3 @@
-import type { AnalyticsUser } from "../../telemetry/person-properties.ts"
 import { createHash, randomUUID } from "node:crypto"
 import { type BetterAuthOptions, betterAuth } from "@goodwatch/auth-stack"
 import {
@@ -15,6 +14,7 @@ import { mcp } from "@goodwatch/auth-stack/mcp"
 import { jwt } from "@goodwatch/auth-stack/plugins"
 import { compare } from "bcryptjs"
 import { decodeJwt, jwtVerify } from "jose"
+import type { AnalyticsUser } from "../../telemetry/person-properties.ts"
 import {
 	type AuthSql,
 	crateAuthAdapter,
@@ -277,7 +277,10 @@ export function createGoodwatchAuth(options: {
 			ipAddress: {
 				ipAddressHeaders: [options.trustedIpHeader ?? "x-forwarded-for"],
 			},
-			database: { generateId: "uuid", defaultFindManyLimit: 10000 },
+			// OAuth replay markers supply deterministic non-UUID IDs. The "uuid"
+			// mode discards them before our strict adapter sees the record.
+			// Generate UUIDs normally while preserving provider-supplied IDs.
+			database: { generateId: () => randomUUID(), defaultFindManyLimit: 10000 },
 			cookies: { session_token: { name: "gw.session_token" } },
 		},
 		session: {

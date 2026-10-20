@@ -1,0 +1,20 @@
+{
+  "date": "2026-10-20",
+  "symptom": "Consent succeeded but token exchange returned HTTP 503",
+  "reproduction": {
+    "public_client": "pass",
+    "private_key_jwt_before_fix": "HTTP 503 in isolated production client and local integration"
+  },
+  "root_cause": "UUID-only ID transformation discarded deterministic OAuth assertion replay-marker IDs",
+  "local_after_fix": {
+    "auth_integration_tests": 47,
+    "failed": 0,
+    "focused_typecheck": "pass",
+    "production_build": "pass",
+    "biome": "pass",
+    "assertion_replay": "rejected with invalid_client",
+    "fresh_assertion_refresh": "pass, rotated refresh token"
+  },
+  "production_after_fix": "pending rollout verification",
+  "chatgpt_hosted_reconnect": "owner retry required"
+}

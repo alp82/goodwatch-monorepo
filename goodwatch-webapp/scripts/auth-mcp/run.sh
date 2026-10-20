@@ -53,7 +53,7 @@ if (!ready) throw new Error('Pinned local CrateDB cluster did not become ready')
 await migrateAuthTables(localCrateTransport(['http://127.0.0.1:15548'], 15000))
 JS
 npm run typecheck:auth | tee scripts/auth-mcp/results/typecheck.log
-node --test --test-concurrency=1 app/server/auth/mcp.integration.ts app/server/auth/wiring.integration.ts | tee scripts/auth-mcp/results/integration.log
+node --test --test-concurrency=1 --test-name-pattern="${AUTH_TEST_NAME_PATTERN:-.*}" app/server/auth/mcp.integration.ts app/server/auth/wiring.integration.ts | tee scripts/auth-mcp/results/integration.log
 case "${1:-test}" in
  test) ;;
  serve) node scripts/auth-mcp/serve.mjs ;;

@@ -1389,3 +1389,139 @@ test("a read grant upgrades only after explicit write consent and refresh preser
 	assert.equal(refreshed.status, 200, await refreshed.clone().text())
 	assert.ok((await refreshed.json()).scope.split(" ").includes("mcp:write"))
 })
+
+test("private_key_jwt clients exchange a consented authorization code", async () => {
+	const member = await grant("mcp:read offline_access", undefined, "read")
+	const { generateKeyPair, exportJWK, SignJWT } = await import("jose")
+	const { createHash } = await import("node:crypto")
+	const { publicKey, privateKey } = await generateKeyPair("RS256")
+	const jwk = {
+		...(await exportJWK(publicKey)),
+		kid: "chatgpt-repro",
+		alg: "RS256",
+		use: "sig",
+	}
+	const registration = await memberAuth.handler(
+		new Request(`${origin}/api/auth/oauth2/register`, {
+			method: "POST",
+			headers: {
+				"content-type": "application/json",
+				origin,
+				"x-forwarded-for": "127.0.0.91",
+			},
+			body: JSON.stringify({
+				client_name: "Private key assertion regression",
+				application_type: "web",
+				redirect_uris: ["https://client.example.test/callback"],
+				token_endpoint_auth_method: "private_key_jwt",
+				jwks: { keys: [jwk] },
+				grant_types: ["authorization_code", "refresh_token"],
+				response_types: ["code"],
+				scope: "openid email offline_access mcp:read mcp:write",
+			}),
+		}),
+	)
+	assert.equal(registration.status, 201, await registration.clone().text())
+	const client = await registration.json()
+	const verifier = "assertion-proof-".repeat(5)
+	const query = new URLSearchParams({
+		client_id: client.client_id,
+		redirect_uri: client.redirect_uris[0],
+		response_type: "code",
+		scope: "openid email offline_access mcp:read mcp:write",
+		resource,
+		state: "assertion-test",
+		code_challenge_method: "S256",
+		code_challenge: createHash("sha256").update(verifier).digest("base64url"),
+	})
+	const authorization = await memberAuth.handler(
+		new Request(`${origin}/api/auth/oauth2/authorize?${query}`, {
+			headers: { cookie: member.cookie, accept: "application/json" },
+		}),
+	)
+	assert.equal(authorization.status, 200, await authorization.clone().text())
+	const consentUrl = new URL((await authorization.json()).url, origin)
+	const approved = await decideMcpConsent(
+		new Request(consentUrl, {
+			method: "POST",
+			headers: { cookie: member.cookie, origin },
+			body: new URLSearchParams({ decision: "allow", access: "write" }),
+		}),
+		memberAuth,
+	)
+	assert.equal(approved.status, 302)
+	const callback = approved.headers.get("Location")
+	assert.ok(callback)
+	const code = new URL(callback).searchParams.get("code")
+	assert.ok(code)
+	const assertionId = crypto.randomUUID()
+	const signAssertion = (id: string) =>
+		new SignJWT({})
+			.setProtectedHeader({ alg: "RS256", kid: jwk.kid })
+			.setIssuer(client.client_id)
+			.setSubject(client.client_id)
+			.setAudience(`${origin}/api/auth/oauth2/token`)
+			.setIssuedAt()
+			.setExpirationTime("5m")
+			.setJti(id)
+			.sign(privateKey)
+	const assertion = await signAssertion(assertionId)
+	const token = await memberAuth.handler(
+		new Request(`${origin}/api/auth/oauth2/token`, {
+			method: "POST",
+			headers: { "content-type": "application/x-www-form-urlencoded" },
+			body: new URLSearchParams({
+				grant_type: "authorization_code",
+				client_id: client.client_id,
+				redirect_uri: client.redirect_uris[0],
+				code,
+				code_verifier: verifier,
+				resource,
+				client_assertion_type:
+					"urn:ietf:params:oauth:client-assertion-type:jwt-bearer",
+				client_assertion: assertion,
+			}),
+		}),
+	)
+	assert.equal(token.status, 200, await token.clone().text())
+	const pair = await token.json()
+	assert.ok(pair.access_token)
+	assert.ok(pair.refresh_token)
+	const markerId = createHash("sha256")
+		.update(`private_key_jwt:${client.client_id}:${assertionId}`)
+		.digest()
+		.subarray(0, 24)
+		.toString("base64url")
+	assert.equal(
+		(
+			await sql("SELECT id FROM doc.auth_oauth_client_assertion WHERE id = ?", [
+				markerId,
+			])
+		).rows[0]?.[0],
+		markerId,
+	)
+	const refresh = (clientAssertion: string) =>
+		memberAuth.handler(
+			new Request(`${origin}/api/auth/oauth2/token`, {
+				method: "POST",
+				headers: { "content-type": "application/x-www-form-urlencoded" },
+				body: new URLSearchParams({
+					grant_type: "refresh_token",
+					client_id: client.client_id,
+					refresh_token: pair.refresh_token,
+					resource,
+					client_assertion_type:
+						"urn:ietf:params:oauth:client-assertion-type:jwt-bearer",
+					client_assertion: clientAssertion,
+				}),
+			}),
+		)
+	const replay = await refresh(assertion)
+	assert.equal(replay.status, 400)
+	assert.equal((await replay.json()).error, "invalid_client")
+	const refreshed = await refresh(await signAssertion(crypto.randomUUID()))
+	assert.equal(refreshed.status, 200, await refreshed.clone().text())
+	const next = await refreshed.json()
+	assert.ok(next.access_token)
+	assert.notEqual(next.refresh_token, pair.refresh_token)
+})
