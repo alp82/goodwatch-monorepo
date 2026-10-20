@@ -1,3 +1,4 @@
+import { TitleChipPreview } from "./TitleChipPreview"
 // Under the row: removable chips for every active filter, and the hidden-titles insight ("31 showing, 53 hidden by
 // your filters") with the two largest one-tap recoveries.
 import { PlusIcon, XMarkIcon } from "@heroicons/react/20/solid"
@@ -90,19 +91,21 @@ export function FilterChips({
 									exit={{ opacity: 0, scale: 0.85 }}
 									transition={SPRING}
 								>
-									<motion.button
-										type="button"
-										whileTap={TAP}
-										onClick={() => onChange(chip.remove(state))}
-										aria-label={`Remove ${chip.label}`}
-										className="group flex h-8 items-center gap-2 rounded-full bg-white/[0.06] pl-3 pr-2 text-sm text-gray-100 ring-1 ring-white/10 cursor-pointer outline-none hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-amber-400"
-									>
-										<span
-											className={`h-1.5 w-1.5 rounded-full ${FILTER_ACCENTS[chip.group].dot}`}
-										/>
-										{chip.label}
-										<XMarkIcon className="h-3.5 w-3.5 text-gray-500 group-hover:text-white" />
-									</motion.button>
+									<TitleChipPreview chip={chip}>
+										<motion.button
+											type="button"
+											whileTap={TAP}
+											onClick={() => onChange(chip.remove(state))}
+											aria-label={`Remove ${chip.label}`}
+											className="group flex h-8 items-center gap-2 rounded-full bg-white/[0.06] pl-3 pr-2 text-sm text-gray-100 cursor-pointer outline-none hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-amber-400"
+										>
+											<span
+												className={`h-1.5 w-1.5 rounded-full ${FILTER_ACCENTS[chip.group].dot}`}
+											/>
+											{chip.label}
+											<XMarkIcon className="h-3.5 w-3.5 text-gray-500 group-hover:text-white" />
+										</motion.button>
+									</TitleChipPreview>
 								</motion.li>
 							))}
 						</AnimatePresence>

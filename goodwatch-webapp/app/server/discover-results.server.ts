@@ -1,3 +1,4 @@
+import { inlineTaste } from "~/server/taste/inline.server"
 // Discover's results: in browse mode the catalog, in search mode the search's ranked list, filtered and sorted in
 // memory by the filter bar's state, taste applied (the taste match filter, Best match, For you), and one page of title
 // cards. Serves the Discover route's first
@@ -118,9 +119,16 @@ export async function getDiscoverResults(
 	const { state, sort, ranked } = input
 	const searching = ranked !== undefined
 	const page = Math.min(DISCOVER_MAX_PAGE, Math.max(1, Math.floor(input.page)))
-	const taste = await loadTaste(ctx.viewer)
+	const savedTaste = await loadTaste(ctx.viewer)
+	const snapshotForTaste = getTitleSnapshot()
+	const taste =
+		(snapshotForTaste
+			? inlineTaste(savedTaste, state, snapshotForTaste)
+			: savedTaste) ?? savedTaste
 	const status: ForYouStatus =
-		ctx.viewer.kind === "guest" && taste.ratings < GUEST_FOR_YOU_RATINGS
+		ctx.viewer.kind === "guest" &&
+		taste.signal !== "some" &&
+		taste.ratings < GUEST_FOR_YOU_RATINGS
 			? "signUp"
 			: taste.signal === "some"
 				? "ready"
@@ -132,7 +140,7 @@ export async function getDiscoverResults(
 			includeNotInterested: searching,
 			state,
 			sort,
-			taste,
+			taste: savedTaste,
 			forYou: input.forYou ? (searching ? "search" : "browse") : null,
 			viewer: ctx,
 			keep,
@@ -186,6 +194,8 @@ export async function getDiscoverResults(
 			: null
 	const engine =
 		wantsSides &&
+		!state.loved?.length &&
+		!state.disliked?.length &&
 		groupsByTaste({ searching, forYou: input.forYou, sort: result.sortUsed }) &&
 		snapshot
 			? await loadSides()

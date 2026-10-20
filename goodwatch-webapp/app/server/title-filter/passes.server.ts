@@ -189,6 +189,7 @@ export interface PassInput {
 	/** One set per chosen title or person; a title passes when any set holds it. Empty when off. */
 	similarTo: { option: string; keys: TitleSet }[]
 	people: { option: string; keys: TitleSet }[]
+	productionCountries?: { option: string; keys: TitleSet }[]
 	legacy: TitleSet | null
 	/** Null when the snapshot has no ratings (or the age filter is off for the viewer): then neither group narrows. */
 	ratings: RatingsFilter | null
@@ -265,6 +266,7 @@ export function runPasses(input: PassInput): PassOutput {
 	const minMatch = matches ? input.minMatch : 0
 	const released = input.released
 	const similar = input.similarTo
+	const productionCountries = input.productionCountries ?? []
 	const people = input.people
 	const legacy = input.legacy
 	const notSeen = input.notSeen
@@ -337,6 +339,8 @@ export function runPasses(input: PassInput): PassOutput {
 				mask |= BIT.released
 		}
 		if (similar.length && !inAny(similar, i)) mask |= BIT.similarTo
+		if (productionCountries.length && !inAny(productionCountries, i))
+			mask |= BIT.productionCountries
 		if (people.length && !inAny(people, i)) mask |= BIT.people
 		if (legacy && !inSet(legacy, i)) mask |= BIT.legacy
 		if (ratings) {
@@ -613,6 +617,10 @@ export function runPasses(input: PassInput): PassOutput {
 	}
 	optionCounts.similarTo = setGroup(BIT.similarTo, similar)
 	optionCounts.people = setGroup(BIT.people, people)
+	optionCounts.productionCountries = setGroup(
+		BIT.productionCountries,
+		productionCountries,
+	)
 
 	// Legacy filters: on or off as one.
 	if (legacy) {

@@ -403,3 +403,59 @@ test("themes and styles are filters of the Filters sheet", () => {
 	assert.deepEqual(cleared.styles, [])
 	assert.equal(secondaryFilterCount(cleared), 0)
 })
+
+test("inline preferences preserve arbitrary lists, reject invalid ids, and clear with filters", () => {
+	const loved = Array.from({ length: 45 }, (_, i) => i + 1)
+	const state = parse(`loved=${loved.join(",")},1,-2,nope&disliked=46,47,47`)
+	assert.deepEqual(state.loved, loved)
+	assert.deepEqual(state.disliked, [46, 47])
+	assert.deepEqual(
+		parse(filterStateToParams(state, defaults).toString()),
+		state,
+	)
+	assert.equal(secondaryFilterCount(state), 47)
+	assert.equal(dropFilter(state, "loved").loved, undefined)
+	assert.equal(clearSecondaryFilters(state).disliked, undefined)
+	assert.deepEqual(parse("loved=1,2&disliked=2").loved, [1])
+})
+
+test("preferences expose typed TMDB ids while existing internal-key links still work", () => {
+	const state = parse("loved=show:1416,movie:603&disliked=2000000004586")
+	assert.deepEqual(state.loved, [2000000001416, 1000000000603])
+	const params = filterStateToParams(state, defaults)
+	assert.equal(params.get("loved"), "show:1416,movie:603")
+	assert.equal(params.get("disliked"), "show:4586")
+	assert.deepEqual(parse(params.toString()), state)
+})
+
+test("production countries round-trip, normalize, clear, and have no selection limit", () => {
+	const state = parse("productionCountries=us, GB,us,nope,123,DE")
+	assert.deepEqual(state.productionCountries, ["US", "GB", "DE"])
+	assert.deepEqual(
+		parse(filterStateToParams(state, defaults).toString()),
+		state,
+	)
+	assert.equal(secondaryFilterCount(state), 3)
+	assert.equal(
+		dropFilter(state, "productionCountries").productionCountries,
+		undefined,
+	)
+	assert.equal(clearSecondaryFilters(state).productionCountries, undefined)
+})
+
+test("manual services and streaming country travel together without changing production countries", () => {
+	const state = parse(
+		"services=8,337&streamingCountry=de&productionCountries=US,GB",
+	)
+	assert.equal(state.onMyServices, false)
+	assert.deepEqual(state.services, [8, 337])
+	assert.equal(state.streamingCountry, "DE")
+	assert.deepEqual(state.productionCountries, ["US", "GB"])
+	assert.deepEqual(
+		parse(filterStateToParams(state, defaults).toString()),
+		state,
+	)
+	assert.equal(dropFilter(state, "services").streamingCountry, undefined)
+	assert.equal(clearSecondaryFilters(state).streamingCountry, undefined)
+	assert.equal(parse("streamingCountry=bad").streamingCountry, undefined)
+})

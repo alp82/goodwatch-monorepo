@@ -55,6 +55,7 @@ function passes(
 		minMatch?: number
 		minScore?: number
 		taste?: boolean
+		productionCountries?: PassInput["productionCountries"]
 		ratings?: RatingsFilter
 	},
 ) {
@@ -82,6 +83,7 @@ function passes(
 		releasedOptions: { any: null },
 		similarTo: [],
 		people: [],
+		productionCountries: filters.productionCountries,
 		legacy: null,
 		ratings: filters.ratings ?? null,
 	}
@@ -555,14 +557,20 @@ test("the snapshot loads without ratings whatever goes wrong with the sidecar", 
 
 		// A missing chunk, a changed chunk, a bad manifest field, another title count: each logged once.
 		assert.equal(
-			await loadRatings(redis(() => null), manifest),
+			await loadRatings(
+				redis(() => null),
+				manifest,
+			),
 			null,
 		)
 		assert.match(String(logged[0][1]), /chunk 0 is missing/)
 		const changed = Uint8Array.from(chunks[0])
 		changed[0] = 1
 		assert.equal(
-			await loadRatings(redis(() => changed), manifest),
+			await loadRatings(
+				redis(() => changed),
+				manifest,
+			),
 			null,
 		)
 		assert.match(String(logged[1][1]), /checksum/)
@@ -571,10 +579,7 @@ test("the snapshot loads without ratings whatever goes wrong with the sidecar", 
 			null,
 		)
 		assert.match(String(logged[2][1]), /format 2/)
-		assert.equal(
-			await loadRatings(stored, { ...manifest, count: 3 }),
-			null,
-		)
+		assert.equal(await loadRatings(stored, { ...manifest, count: 3 }), null)
 		assert.match(String(logged[3][1]), /need 9/)
 		// A Redis error on a ratings key doesn't throw either.
 		const failing = {
@@ -860,8 +865,8 @@ test("the passes agree with a title-by-title count for any moods, themes and sty
 test("a fail mask has room for every filter group, the last one included", () => {
 	assert.ok(FILTER_NAMES.length <= 32)
 	assert.ok(FILTER_NAMES.includes("themes") && FILTER_NAMES.includes("styles"))
-	// Sixteen groups: the last one's bit is the sixteenth, and a title only it hides is its recovery.
-	assert.equal(FILTER_NAMES.length, 16)
+	// Every group fits in the mask, including the last content group.
+	assert.equal(FILTER_NAMES.length, 19)
 	assert.equal(FILTER_NAMES.at(-1), "content")
 	const ratings: RatingsFilter = {
 		content: Uint8Array.from(everyRow, (row) => (row === 3 ? 1 : 0)),
@@ -883,4 +888,32 @@ test("a fail mask has room for every filter group, the last one included", () =>
 		{ filter: "themes", titles: 4 },
 		{ filter: "content", titles: 1 },
 	])
+})
+
+test("production countries combine with OR, count co-productions once, and recover independently", () => {
+	const country = (option: string, rows: number[]) => ({
+		option,
+		keys: {
+			keys: new Set(rows.map((row) => columns.pointIds[row])),
+			rows: Uint8Array.from(plain, (row) => (rows.includes(row) ? 1 : 0)),
+		},
+	})
+	const us = country("US", [0, 1])
+	const gb = country("GB", [1, 2])
+	assert.deepEqual(passes(plain, { productionCountries: [us] }).rows, [0, 1])
+	const result = passes(plain, { productionCountries: [us, gb] })
+	assert.deepEqual(result.rows, [0, 1, 2])
+	assert.equal(result.optionCounts.productionCountries.US, 2)
+	assert.equal(
+		result.recoveries.find((r) => r.filter === "productionCountries")?.titles,
+		3,
+	)
+	assert.deepEqual(
+		passes(plain, { productionCountries: [us, gb], minScore: 80 }).rows,
+		[0],
+	)
+	assert.deepEqual(
+		passes(plain, { productionCountries: [country("ZZ", [])] }).rows,
+		[],
+	)
 })

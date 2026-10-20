@@ -1,3 +1,4 @@
+import { productionCountryName } from "~/domain/production-country"
 // What the filter bar says: sort options, option labels, chip labels, and the recovery wording. Every label is a
 // proper, capitalized label ("Top rated", "Crime & mystery", "Philosophical").
 import {
@@ -213,6 +214,9 @@ export const FILTER_ACCENTS: Record<FilterName, { dot: string; bar: string }> =
 		minMatch: { dot: "bg-amber-400", bar: "bg-amber-500" },
 		released: { dot: "bg-cyan-400", bar: "bg-cyan-500" },
 		similarTo: { dot: "bg-rose-400", bar: "bg-rose-500" },
+		loved: { dot: "bg-emerald-300", bar: "bg-emerald-500" },
+		disliked: { dot: "bg-red-400", bar: "bg-red-500" },
+		productionCountries: { dot: "bg-yellow-400", bar: "bg-yellow-500" },
 		people: { dot: "bg-purple-400", bar: "bg-purple-500" },
 		legacy: { dot: "bg-gray-400", bar: "bg-gray-500" },
 		ageLimit: { dot: "bg-violet-400", bar: "bg-violet-500" },
@@ -274,6 +278,11 @@ export function recoveryLabel(
 			return `${n} from other years`
 		case "similarTo":
 			return `${n} less similar`
+		case "loved":
+		case "disliked":
+			return `${n} hidden by taste preferences`
+		case "productionCountries":
+			return `${n} from other production countries`
 		case "people":
 			return `${n} without those people`
 		case "legacy":
@@ -291,7 +300,9 @@ export function recoveryLabel(
  */
 export interface FilterNames {
 	service?: (id: number) => string | undefined
+	serviceLogo?: (id: number) => string | null | undefined
 	title?: (key: number) => string | undefined
+	poster?: (key: number) => string | null | undefined
 	person?: (id: number) => string | undefined
 	ageStep?: (age: number) => string | undefined
 }
@@ -300,6 +311,7 @@ export interface ActiveChip {
 	key: string
 	group: FilterName
 	label: string
+	preview?: { title: string; poster?: string | null; logo?: boolean }[]
 	remove: (state: FilterState) => FilterState
 }
 
@@ -402,8 +414,39 @@ export function activeChips(
 				serviceNames.length <= 2
 					? serviceNames.join(" or ")
 					: plural(state.services.length, "service", "services"),
+			preview: state.services.map((id) => ({
+				title: names.service?.(id) ?? "Loading service…",
+				poster: names.serviceLogo?.(id),
+				logo: true,
+			})),
 			remove: (s) => ({ ...s, services: undefined }),
 		})
+	}
+	for (const group of ["loved", "disliked"] as const) {
+		const keys = state[group] ?? []
+		const label = group === "loved" ? "Loved" : "Disliked"
+		const preview = (chosen: number[]) =>
+			chosen.map((key) => ({
+				title: names.title?.(key) ?? "Loading title…",
+				poster: names.poster?.(key),
+			}))
+		if (keys.length > 2)
+			chips.push({
+				key: group,
+				group,
+				label: `${label}: ${keys.length} titles`,
+				preview: preview(keys),
+				remove: (s) => ({ ...s, [group]: undefined }),
+			})
+		else
+			for (const key of keys)
+				chips.push({
+					key: `${group}-${key}`,
+					group,
+					label: `${label}: ${names.title?.(key) ?? "a title"}`,
+					preview: preview([key]),
+					remove: (s) => ({ ...s, [group]: without(s[group], key) }),
+				})
 	}
 	for (const key of state.similarTo ?? [])
 		chips.push({
@@ -411,6 +454,23 @@ export function activeChips(
 			group: "similarTo",
 			label: `Like ${names.title?.(key) ?? "a title"}`,
 			remove: (s) => ({ ...s, similarTo: without(s.similarTo, key) }),
+		})
+	if (state.streamingCountry)
+		chips.push({
+			key: "streaming-country",
+			group: "services",
+			label: `Streaming in ${productionCountryName(state.streamingCountry)}`,
+			remove: (s) => ({ ...s, streamingCountry: undefined }),
+		})
+	for (const code of state.productionCountries ?? [])
+		chips.push({
+			key: `production-country-${code}`,
+			group: "productionCountries",
+			label: `Produced in ${productionCountryName(code)}`,
+			remove: (s) => ({
+				...s,
+				productionCountries: without(s.productionCountries, code),
+			}),
 		})
 	for (const id of state.people ?? [])
 		chips.push({

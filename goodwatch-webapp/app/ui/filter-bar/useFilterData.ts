@@ -1,3 +1,4 @@
+import useLocale from "~/utils/locale"
 // What the filter bar shows beyond the filter state: the viewer's services with their logos, the country's services
 // for the sheet, and the names of chosen titles and people, plus title and people matches for the sheet's search.
 // All of it comes from existing endpoints.
@@ -27,12 +28,15 @@ const ids = (value: string | null | undefined) =>
  * The viewer's services and country: a member's saved settings, or what a guest chose in the Living room (kept in
  * the browser). `providers` has the logos, in the country's order.
  */
-export function useMyServices(): {
+export function useMyServices(
+	overrides: { country?: string; include?: number[] } = {},
+): {
 	ids: number[]
 	country: string | undefined
 	providers: StreamingProvider[]
 	countryProviders: StreamingProvider[]
 } {
+	const { locale } = useLocale()
 	const { user, loading } = useUser()
 	const settings = useUserSettings()
 	const [guest, setGuest] = useState<{ ids: number[]; country?: string }>({
@@ -52,10 +56,13 @@ export function useMyServices(): {
 		? (settings.data?.streaming_providers_default ?? "")
 		: guest.ids.join(",")
 	const mine = useMemo(() => ids(mineKey), [mineKey])
-	const country = user ? settings.data?.country_default : guest.country
+	const country =
+		overrides.country ||
+		(user ? settings.data?.country_default : guest.country) ||
+		locale.country
 	const list = useStreamingProviders({
 		country,
-		include: mine.map(String),
+		include: [...new Set([...mine, ...(overrides.include ?? [])])].map(String),
 		enabled: Boolean(country),
 	})
 	const countryProviders = list.data ?? []

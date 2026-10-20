@@ -30,7 +30,7 @@ import {
 	titleTypeOf,
 	titleTypeParams,
 } from "~/domain/title-type"
-import { type TitleKey, titleKey } from "~/utils/title-key"
+import { type TitleKey, parseTitleKey, titleKey } from "~/utils/title-key"
 
 /** The filter groups, in the order of the bits of a title's fail mask. */
 export const FILTER_NAMES = [
@@ -48,6 +48,9 @@ export const FILTER_NAMES = [
 	"similarTo",
 	"people",
 	"legacy",
+	"loved",
+	"disliked",
+	"productionCountries",
 	"ageLimit",
 	"content",
 ] as const
@@ -108,6 +111,8 @@ export interface FilterState {
 	onMyServices: boolean
 	/** Explicit services when onMyServices is false; empty means everywhere. */
 	services?: number[]
+	/** Request-local viewing country for streaming offers; never writes saved settings. */
+	streamingCountry?: string
 	notSeenYet: boolean
 	/** Up to MAX_MOODS; a title fits if it belongs to at least one. */
 	moods: MoodKey[]
@@ -125,6 +130,11 @@ export interface FilterState {
 	similarTo?: TitleKey[]
 	/** Titles with any of these people (TMDB person ids) in the cast or crew. */
 	people?: number[]
+	/** Any of these production countries; ISO alpha-2 codes. Co-productions match each listed country. */
+	productionCountries?: string[]
+	/** Temporary high/low rating signals, never saved to the library. */
+	loved?: TitleKey[]
+	disliked?: TitleKey[]
 	legacy?: LegacyFilters
 	/**
 	 * The age limit: the age of a step of the viewer's rating ladder; undefined is off (0 is a limit). An age that
@@ -184,6 +194,9 @@ export function filterStateFromParams(
 	defaults: FilterDefaults,
 ): FilterState {
 	const state = defaultFilterState(defaults)
+	const streamingCountry = params.get("streamingCountry")?.trim().toUpperCase()
+	if (streamingCountry && /^[A-Z]{2}$/.test(streamingCountry))
+		state.streamingCountry = streamingCountry
 	const services = params.get("services")
 	if (services === "mine") state.onMyServices = true
 	else if (services === "all") state.onMyServices = false
@@ -214,6 +227,36 @@ export function filterStateFromParams(
 			: 0
 	state.minMatch = oneOf(MIN_MATCHES, params.get("match")) ?? 0
 	state.released = oneOf(RELEASED, params.get("released")) ?? "any"
+	for (const name of ["loved", "disliked"] as const) {
+		const chosen = [
+			...new Set(
+				(params.get(name) ?? "").split(",").map((value) => {
+					const match = /^(movie|show):(\d+)$/.exec(value.trim())
+					if (match) {
+						const id = Number(match[2])
+						return Number.isSafeInteger(id) && id > 0 && id < 1e12
+							? titleKey(match[1] === "movie" ? "movie" : "show", id)
+							: NaN
+					}
+					// Existing shared URLs used the internal numeric title key.
+					return Number(value)
+				}),
+			),
+		].filter((key) => Number.isSafeInteger(key) && key > 0 && key < 3e12)
+		if (chosen.length) state[name] = chosen
+	}
+	// Disliked wins if a hand-written URL names a title in both groups.
+	if (state.loved)
+		state.loved = state.loved.filter((key) => !state.disliked?.includes(key))
+	const productionCountries = [
+		...new Set(
+			(params.get("productionCountries") ?? "")
+				.split(",")
+				.map((code) => code.trim().toUpperCase()),
+		),
+	].filter((code) => /^[A-Z]{2}$/.test(code))
+	if (productionCountries.length)
+		state.productionCountries = productionCountries
 	const similar = ids(params.get("similar"))
 	if (similar.length) state.similarTo = similar
 	const people = ids(params.get("people"), 1e9)
@@ -244,6 +287,7 @@ export function filterStateToParams(
 		if (value === null) params.delete(name)
 		else params.set(name, value)
 	}
+	set("streamingCountry", state.streamingCountry ?? null)
 	const services = state.onMyServices
 		? "mine"
 		: state.services?.length
@@ -272,6 +316,25 @@ export function filterStateToParams(
 	set("match", state.minMatch ? String(state.minMatch) : null)
 	set("released", state.released === "any" ? null : state.released)
 	set("similar", state.similarTo?.length ? state.similarTo.join(",") : null)
+	for (const name of ["loved", "disliked"] as const)
+		set(
+			name,
+			state[name]?.length
+				? state[name]
+						.map((key) => {
+							if (key < 1e12) return String(key)
+							const { mediaType, tmdbId } = parseTitleKey(key)
+							return `${mediaType}:${tmdbId}`
+						})
+						.join(",")
+				: null,
+		)
+	set(
+		"productionCountries",
+		state.productionCountries?.length
+			? state.productionCountries.join(",")
+			: null,
+	)
 	set("people", state.people?.length ? state.people.join(",") : null)
 	for (const name of LEGACY_PARAMS) set(name, state.legacy?.[name] ?? null)
 	set("age", state.ageLimit === undefined ? null : String(state.ageLimit))
@@ -317,7 +380,12 @@ export function sortFromParams(
 export function dropFilter(state: FilterState, name: FilterName): FilterState {
 	switch (name) {
 		case "services":
-			return { ...state, onMyServices: false, services: undefined }
+			return {
+				...state,
+				onMyServices: false,
+				services: undefined,
+				streamingCountry: undefined,
+			}
 		case "notSeenYet":
 			return { ...state, notSeenYet: false }
 		case "type":
@@ -340,6 +408,11 @@ export function dropFilter(state: FilterState, name: FilterName): FilterState {
 			return { ...state, released: "any" }
 		case "similarTo":
 			return { ...state, similarTo: undefined }
+		case "loved":
+		case "disliked":
+			return { ...state, [name]: undefined }
+		case "productionCountries":
+			return { ...state, productionCountries: undefined }
 		case "people":
 			return { ...state, people: undefined }
 		case "legacy":
@@ -359,6 +432,7 @@ export const clearSecondaryFilters = (state: FilterState): FilterState => ({
 	type: "all",
 	anime: "any",
 	services: undefined,
+	streamingCountry: undefined,
 	moods: [],
 	themes: [],
 	styles: [],
@@ -366,7 +440,10 @@ export const clearSecondaryFilters = (state: FilterState): FilterState => ({
 	minScore: 0,
 	minMatch: 0,
 	released: "any",
+	loved: undefined,
+	disliked: undefined,
 	similarTo: undefined,
+	productionCountries: undefined,
 	people: undefined,
 	legacy: undefined,
 	ageLimit: undefined,
@@ -376,6 +453,7 @@ export const clearSecondaryFilters = (state: FilterState): FilterState => ({
 /** How many of the Filters sheet's filters are active: the badge on the Filters button. */
 export function secondaryFilterCount(state: FilterState): number {
 	return (
+		(state.streamingCountry ? 1 : 0) +
 		(state.type !== "all" ? 1 : 0) +
 		(state.anime !== "any" ? 1 : 0) +
 		(!state.onMyServices && state.services?.length ? 1 : 0) +
@@ -388,6 +466,9 @@ export function secondaryFilterCount(state: FilterState): number {
 		(state.released !== "any" ? 1 : 0) +
 		(state.similarTo?.length ?? 0) +
 		(state.people?.length ?? 0) +
+		(state.productionCountries?.length ?? 0) +
+		(state.loved?.length ?? 0) +
+		(state.disliked?.length ?? 0) +
 		Object.keys(state.legacy ?? {}).length +
 		(state.ageLimit === undefined ? 0 : 1) +
 		Object.keys(changedContent(state.ageLimit, state.content) ?? {}).length

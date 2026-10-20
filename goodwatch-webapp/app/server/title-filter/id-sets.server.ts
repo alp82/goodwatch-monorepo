@@ -100,6 +100,27 @@ export function similarTitles(seed: TitleKey): Promise<Set<TitleKey>> {
 	})
 }
 
+/** All listed production countries count, including each country in a co-production. No language fallback. */
+export function productionCountryTitles(
+	country: string,
+): Promise<Set<TitleKey>> {
+	return cachedKeys("production-country", country, async () => {
+		const found = await Promise.all(
+			(["movie", "show"] as const).map(async (type) => {
+				const limit = 1_000_000
+				const rows = await query<{ tmdb_id: number }>(
+					`SELECT tmdb_id FROM ${type} WHERE ? = ANY(production_country_codes) LIMIT ${limit}`,
+					[country],
+				)
+				if (rows.length >= limit)
+					throw new Error("Production country title set exceeds its read limit")
+				return rows.map((row) => titleKey(type, Number(row.tmdb_id)))
+			}),
+		)
+		return found.flat()
+	})
+}
+
 /** Titles one person appears in or worked on (TMDB person id). */
 export function personTitles(personId: number): Promise<Set<TitleKey>> {
 	return cachedKeys("person", personId, async () => {

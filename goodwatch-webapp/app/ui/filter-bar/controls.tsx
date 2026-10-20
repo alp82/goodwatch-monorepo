@@ -1,3 +1,5 @@
+import { TitleChipPreview } from "./TitleChipPreview"
+import type { ActiveChip } from "./labels"
 // The desktop row's controls. At the row's size (md) every control has a fixed width, so nothing shifts when a label or
 // a count changes. The small size (sm, 36 px high) is for a strip that shares its line with other things, such as
 // Watch next's: there a control is as wide as its words.
@@ -94,6 +96,7 @@ export function ServicesControl({
 	size = "md",
 	labels,
 	titles,
+	everywherePreview,
 }: {
 	on: boolean
 	hasServices: boolean
@@ -105,6 +108,7 @@ export function ServicesControl({
 	labels?: { mine?: string; everywhere?: string }
 	/** A tooltip per half, for a surface where the choice means something else than hiding. */
 	titles?: { mine?: string; everywhere?: string }
+	everywherePreview?: ActiveChip
 }) {
 	const layoutId = useId()
 	const sm = size === "sm"
@@ -146,27 +150,38 @@ export function ServicesControl({
 				)}
 				{hasServices ? (labels?.mine ?? "On my services") : "Add my services"}
 			</motion.button>
-			<motion.button
-				// biome-ignore lint/a11y/useSemanticElements: a segmented control; the buttons carry the radio role and arrow keys
-				type="button"
-				role="radio"
-				aria-checked={!on}
-				tabIndex={on ? -1 : 0}
-				whileTap={TAP}
-				onClick={() => onChange(false)}
-				title={titles?.everywhere}
-				className={`${seg} ${sm ? "" : "w-36"} ${!on ? "text-white" : "text-gray-400 hover:text-gray-200"}`}
+			<TitleChipPreview
+				chip={
+					everywherePreview ?? {
+						key: "everywhere",
+						group: "services",
+						label: "Everywhere",
+						remove: (s) => s,
+					}
+				}
 			>
-				{!on && (
-					<motion.span
-						layoutId={layoutId}
-						transition={SPRING}
-						className="absolute inset-0 -z-10 rounded-xl bg-white/10 ring-1 ring-white/15"
-					/>
-				)}
-				<GlobeAltIcon className="h-4 w-4 shrink-0" />
-				{labels?.everywhere ?? "Everywhere"}
-			</motion.button>
+				<motion.button
+					// biome-ignore lint/a11y/useSemanticElements: a segmented control; the buttons carry the radio role and arrow keys
+					type="button"
+					role="radio"
+					aria-checked={!on}
+					tabIndex={on ? -1 : 0}
+					whileTap={TAP}
+					onClick={() => onChange(false)}
+					title={titles?.everywhere}
+					className={`${seg} ${sm ? "" : "w-36"} ${!on ? "text-white" : "text-gray-400 hover:text-gray-200"}`}
+				>
+					{!on && (
+						<motion.span
+							layoutId={layoutId}
+							transition={SPRING}
+							className="absolute inset-0 -z-10 rounded-xl bg-white/10 ring-1 ring-white/15"
+						/>
+					)}
+					<GlobeAltIcon className="h-4 w-4 shrink-0" />
+					{labels?.everywhere ?? "Everywhere"}
+				</motion.button>
+			</TitleChipPreview>
 		</div>
 	)
 }

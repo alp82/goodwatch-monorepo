@@ -1,3 +1,4 @@
+import { TitleChipPreview } from "./TitleChipPreview"
 // The shared filter bar. Desktop: one row (On my services, Not seen yet, For you where the surface has it, the sort,
 // and Filters), a sub-bar with removable chips and the hidden-titles insight, and the Filters side sheet. Phones: the
 // active chips where the bar sits, and the slab fixed at the bottom. The surface owns the data: it binds the state
@@ -70,8 +71,18 @@ export function FilterBar(props: FilterBarProps) {
 	const navigate = useNavigate()
 	const [sheetOpen, setSheetOpen] = useState(false)
 	const [sortOpen, setSortOpen] = useState(false)
-	const services = useMyServices()
-	const titles = useTitleNames(state.similarTo ?? [], "")
+	const services = useMyServices({
+		country: state.streamingCountry,
+		include: state.services,
+	})
+	const titles = useTitleNames(
+		[
+			...(state.similarTo ?? []),
+			...(state.loved ?? []),
+			...(state.disliked ?? []),
+		],
+		"",
+	)
 	const people = usePeopleNames(state.people ?? [], "")
 	const hasServices = filters.defaults.onMyServices || services.ids.length > 0
 	// The ladder stays while new counts are on their way, so the sheet's Age & content group doesn't come and go.
@@ -89,13 +100,18 @@ export function FilterBar(props: FilterBarProps) {
 			activeChips(applied, {
 				service: (id) =>
 					services.countryProviders.find((p) => p.id === id)?.name,
+				serviceLogo: (id) =>
+					services.countryProviders.find((p) => p.id === id)?.logo_path,
 				title: (key) => titles.byKey.get(key)?.title,
+				poster: (key) => titles.byKey.get(key)?.poster,
 				person: (id) => people.byId.get(id)?.name,
 				ageStep: (age) =>
 					ladder ? ladderStepFor(ladder.steps, age).label : undefined,
 			}),
 		[applied, services.countryProviders, titles.byKey, people.byId, ladder],
 	)
+	// The service selection is already shown in the control above the chips.
+	const displayChips = chips.filter((chip) => chip.key !== "services")
 	const sorts = props.sorts ?? discoverSorts(filters.searching, taste)
 	const sort = props.sort ?? sortShown(filters.sort, filters.searching, taste)
 	const onSort =
@@ -118,6 +134,7 @@ export function FilterBar(props: FilterBarProps) {
 		onChange,
 		myServices: services.ids,
 		countryProviders: services.countryProviders,
+		streamingCountry: services.country,
 		taste,
 		ladder,
 	}
@@ -142,6 +159,13 @@ export function FilterBar(props: FilterBarProps) {
 						on={state.onMyServices}
 						hasServices={hasServices}
 						providers={services.providers}
+						everywherePreview={chips.find((chip) => chip.key === "services")}
+						labels={{
+							everywhere:
+								!state.onMyServices && state.services?.length
+									? `${state.services.length} selected`
+									: "Everywhere",
+						}}
 						onChange={(on) =>
 							filters.set({ onMyServices: on, services: undefined })
 						}
@@ -175,7 +199,7 @@ export function FilterBar(props: FilterBarProps) {
 					</div>
 				</div>
 				<FilterChips
-					chips={chips}
+					chips={displayChips}
 					state={state}
 					onChange={onChange}
 					onClear={filters.clearSecondary}
@@ -199,23 +223,25 @@ export function FilterBar(props: FilterBarProps) {
 				/>
 			</div>
 			<div className="lg:hidden">
-				{(chips.length > 0 || props.chipLead) && (
+				{(displayChips.length > 0 || props.chipLead) && (
 					<ul
 						aria-label="Active filters"
 						className="-mx-4 mt-3 flex gap-2 overflow-x-auto px-4 [scrollbar-width:none]"
 					>
 						{props.chipLead}
-						{chips.map((chip) => (
+						{displayChips.map((chip) => (
 							<li key={chip.key} className="shrink-0">
-								<button
-									type="button"
-									onClick={() => onChange(chip.remove(state))}
-									aria-label={`Remove ${chip.label}`}
-									className="flex h-8 items-center gap-1.5 rounded-full bg-white/[0.07] pl-3 pr-2 text-sm text-gray-100 ring-1 ring-white/10 cursor-pointer"
-								>
-									{chip.label}
-									<XMarkIcon className="h-3.5 w-3.5 text-gray-500" />
-								</button>
+								<TitleChipPreview chip={chip}>
+									<button
+										type="button"
+										onClick={() => onChange(chip.remove(state))}
+										aria-label={`Remove ${chip.label}`}
+										className="flex h-8 items-center gap-1.5 rounded-full bg-white/[0.07] pl-3 pr-2 text-sm text-gray-100 cursor-pointer"
+									>
+										{chip.label}
+										<XMarkIcon className="h-3.5 w-3.5 text-gray-500" />
+									</button>
+								</TitleChipPreview>
 							</li>
 						))}
 					</ul>

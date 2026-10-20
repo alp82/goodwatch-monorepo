@@ -1,3 +1,5 @@
+import { useCountries } from "~/routes/api.countries"
+import { productionCountryName } from "~/domain/production-country"
 // The Filters sheet's content: a search field over every option, then the groups in order (Movies or shows, Anime,
 // Mood, Theme, Style, Genre, GoodWatch score, Taste match, Released, Age & content, Streaming services, Similar to,
 // Cast and crew).
@@ -63,7 +65,6 @@ import {
 } from "./useFilterData"
 
 const POSTER = "https://image.tmdb.org/t/p/w154"
-const MAX_SERVICE_OPTIONS = 12
 
 interface Option {
 	id: string
@@ -102,6 +103,7 @@ export interface FilterGroupsData {
 	onChange: (state: FilterState) => void
 	myServices: number[]
 	countryProviders: StreamingProvider[]
+	streamingCountry?: string
 	/** Whether the viewer has taste, for the Taste match group; ready by default. */
 	taste?: TasteState
 	/** The viewer's rating ladder, for the Age & content group; without it the group doesn't show. */
@@ -109,6 +111,8 @@ export interface FilterGroupsData {
 }
 
 interface Found {
+	countries: { code: string; name: string }[]
+	countryQuery: string
 	titles: { byKey: Map<TitleKey, NamedTitle>; matches: NamedTitle[] }
 	people: { byId: Map<number, NamedPerson>; matches: NamedPerson[] }
 }
@@ -138,19 +142,6 @@ function buildGroups(
 	const genreNames = Object.keys(counts?.optionCounts.genres ?? {})
 	for (const g of state.genres) if (!genreNames.includes(g)) genreNames.push(g)
 	genreNames.sort((a, b) => a.localeCompare(b))
-
-	const serviceCounts = counts?.optionCounts.services ?? {}
-	const chosenServices = state.onMyServices
-		? myServices
-		: (state.services ?? [])
-	const providers = data.countryProviders
-		.filter(
-			(p) =>
-				chosenServices.includes(p.id) ||
-				counts?.approximate ||
-				String(p.id) in serviceCounts,
-		)
-		.slice(0, Math.max(MAX_SERVICE_OPTIONS, chosenServices.length))
 
 	const similar = state.similarTo ?? []
 	const people = state.people ?? []
@@ -359,24 +350,45 @@ function buildGroups(
 		{
 			key: "services",
 			title: "Streaming services",
-			kind: "logos",
-			note: state.onMyServices
-				? "Showing your services. Pick one to look somewhere else."
-				: "Only titles on the services you pick",
-			badge: !state.onMyServices && state.services?.length ? 1 : 0,
-			empty: "Choose a country in your settings to pick services.",
-			options: providers.map((p) => ({
-				id: String(p.id),
-				label: p.name,
-				img: `${PROVIDER_LOGO}${p.logo_path}`,
-				active: chosenServices.includes(p.id),
-				count: count("services", String(p.id)),
-				toggle: () =>
-					state.onMyServices
-						? set({ onMyServices: false, services: [p.id] })
-						: set({ services: toggleIn(state.services, p.id) }),
-			})),
+			badge: state.services?.length ?? 0,
+			options: [],
+			words:
+				`streaming services viewing country everywhere ${data.countryProviders.map((p) => p.name).join(" ")}`.toLowerCase(),
+			body: (
+				<StreamingServices
+					data={data}
+					countries={data.countries}
+					query={data.countryQuery}
+				/>
+			),
 		},
+		{
+			key: "productionCountries",
+			title: "Production countries",
+			badge: state.productionCountries?.length ?? 0,
+			options: [],
+			words: `country countries produced production co-production ${data.countries.map((c) => `${c.code} ${c.name}`).join(" ")}`,
+			body: (
+				<ProductionCountries
+					state={state}
+					onChange={onChange}
+					countries={data.countries}
+					query={data.countryQuery}
+				/>
+			),
+		},
+		...(["loved", "disliked"] as const).map(
+			(group): Group => ({
+				key: group,
+				title: group === "loved" ? "Loved" : "Disliked",
+				badge: state[group]?.length ?? 0,
+				options: [],
+				body: (
+					<PreferencePicker group={group} state={state} onChange={onChange} />
+				),
+				words: "movie show title loved disliked",
+			}),
+		),
 		{
 			key: "similarTo",
 			title: "Similar to",
@@ -497,7 +509,294 @@ function OptionLogo({ option }: { option: Option }) {
 	)
 }
 
-function OptionPoster({ option }: { option: Option }) {
+function StreamingServices({
+	data,
+	countries,
+	query,
+}: {
+	data: FilterGroupsData
+	countries: { code: string; name: string }[]
+	query: string
+}) {
+	const [localSearch, setSearch] = useState<string | null>(null)
+	useEffect(() => setSearch(null), [query])
+	const search =
+		localSearch ??
+		(/^(streaming( services?)?|services?|viewing country|country|everywhere)$/i.test(
+			query.trim(),
+		)
+			? ""
+			: query)
+	const { state, onChange } = data
+	const chosen = state.onMyServices ? data.myServices : (state.services ?? [])
+	const country = state.streamingCountry ?? data.streamingCountry ?? "US"
+	const countryOptions = [
+		...new Set([country, ...countries.map((c) => c.code)]),
+	]
+		.map((code) => ({ code, name: productionCountryName(code) }))
+		.sort((a, b) => a.name.localeCompare(b.name))
+	const term = search.trim().toLowerCase()
+	const selected = data.countryProviders.filter((p) => chosen.includes(p.id))
+	const matches = data.countryProviders.filter(
+		(p) =>
+			!chosen.includes(p.id) && (!term || p.name.toLowerCase().includes(term)),
+	)
+	const options = [...selected, ...(term ? matches : matches.slice(0, 20))]
+	return (
+		<div className="space-y-3">
+			<label className="block text-xs text-gray-400">
+				Streaming country
+				<select
+					aria-label="Streaming country"
+					value={country}
+					onChange={(e) =>
+						onChange({ ...state, streamingCountry: e.target.value })
+					}
+					className="mt-1 block w-full rounded-xl border border-white/15 bg-gray-900 px-3 py-2.5 text-sm text-white"
+				>
+					{countryOptions.map((c) => (
+						<option key={c.code} value={c.code}>
+							{c.name}
+						</option>
+					))}
+				</select>
+			</label>
+			<p className="text-xs text-gray-400">
+				Pick services to include in this search. Your saved services stay
+				unchanged.
+			</p>
+			<button
+				type="button"
+				onClick={() =>
+					onChange({ ...state, onMyServices: false, services: undefined })
+				}
+				className="text-sm text-amber-300 hover:text-amber-200"
+			>
+				Everywhere · clear service selection
+			</button>
+			<label className="flex items-center gap-2 rounded-xl bg-white/5 px-3 py-2.5 ring-1 ring-white/15 focus-within:ring-amber-400">
+				<MagnifyingGlassIcon className="h-4 w-4 text-gray-400" />
+				<input
+					type="search"
+					aria-label="Find a streaming service"
+					placeholder="Find a streaming service…"
+					value={search}
+					onChange={(e) => setSearch(e.target.value)}
+					className="min-w-0 flex-1 bg-transparent text-sm text-white outline-none"
+				/>
+			</label>
+			<div
+				aria-label="Streaming service choices"
+				className="flex flex-wrap gap-3"
+			>
+				{options.map((provider) => (
+					<OptionLogo
+						key={provider.id}
+						option={{
+							id: String(provider.id),
+							label: provider.name,
+							img: `${PROVIDER_LOGO}${provider.logo_path}`,
+							active: chosen.includes(provider.id),
+							count: null,
+							toggle: () =>
+								onChange({
+									...state,
+									onMyServices: false,
+									services: state.onMyServices
+										? [provider.id]
+										: toggleIn(state.services, provider.id),
+								}),
+						}}
+					/>
+				))}
+			</div>
+			{options.length === 0 && (
+				<p className="text-xs text-gray-400">
+					No matching service in this country.
+				</p>
+			)}
+			{!term && matches.length > 20 && (
+				<p className="text-xs text-gray-400">Search to find more services.</p>
+			)}
+		</div>
+	)
+}
+
+function ProductionCountries({
+	state,
+	onChange,
+	countries,
+	query,
+}: {
+	state: FilterState
+	onChange: (state: FilterState) => void
+	countries: { code: string; name: string }[]
+	query: string
+}) {
+	const [localSearch, setSearch] = useState<string | null>(null)
+	useEffect(() => setSearch(null), [query])
+	const search =
+		localSearch ??
+		(/country|countries|production|produced/i.test(query) ? "" : query)
+	const chosen = state.productionCountries ?? []
+	const common = [
+		"US",
+		"GB",
+		"CA",
+		"AU",
+		"DE",
+		"FR",
+		"ES",
+		"IT",
+		"JP",
+		"KR",
+		"IN",
+		"NZ",
+	]
+	const available = new Map(
+		countries.map((c) => [c.code, productionCountryName(c.code)]),
+	)
+	for (const code of [...chosen, ...common])
+		if (!available.has(code)) available.set(code, productionCountryName(code))
+	const term = search.trim().toLowerCase()
+	const options = [...available]
+		.filter(
+			([code, name]) =>
+				chosen.includes(code) ||
+				(term
+					? name.toLowerCase().includes(term) || code.toLowerCase() === term
+					: common.includes(code)),
+		)
+		.sort(
+			([a, an], [b, bn]) =>
+				Number(chosen.includes(b)) - Number(chosen.includes(a)) ||
+				an.localeCompare(bn),
+		)
+	return (
+		<div className="space-y-3">
+			<p className="text-xs text-gray-400">
+				Include titles produced in any selected country, including
+				co-productions. Streaming availability follows your viewing country.
+			</p>
+			<label className="flex items-center gap-2 rounded-xl bg-white/5 px-3 py-2.5 ring-1 ring-white/15 focus-within:ring-amber-400">
+				<MagnifyingGlassIcon className="h-4 w-4 text-gray-400" />
+				<input
+					type="search"
+					aria-label="Find a production country"
+					placeholder="Find a country…"
+					value={search}
+					onChange={(e) => setSearch(e.target.value)}
+					className="min-w-0 flex-1 bg-transparent text-sm text-white outline-none"
+				/>
+			</label>
+			<div className="flex flex-wrap gap-2">
+				{options.map(([code, name]) => (
+					<OptionChip
+						key={code}
+						option={{
+							id: code,
+							label: name,
+							active: chosen.includes(code),
+							count: null,
+							toggle: () =>
+								onChange({
+									...state,
+									productionCountries: toggleIn(chosen, code),
+								}),
+						}}
+					/>
+				))}
+			</div>
+			{options.length === 0 && (
+				<p className="text-xs text-gray-400">
+					{countries.length === 0
+						? "Loading countries…"
+						: "No matching country."}
+				</p>
+			)}
+		</div>
+	)
+}
+
+function PreferencePicker({
+	group,
+	state,
+	onChange,
+}: {
+	group: "loved" | "disliked"
+	state: FilterState
+	onChange: (state: FilterState) => void
+}) {
+	const [search, setSearch] = useState("")
+	const chosen = state[group] ?? []
+	const titles = useTitleNames(chosen, search)
+	const other = group === "loved" ? "disliked" : "loved"
+	const toggle = (key: TitleKey) =>
+		onChange({
+			...state,
+			[group]: toggleIn(chosen, key),
+			[other]: state[other]?.filter((id) => id !== key),
+		})
+	const poster = (key: TitleKey, active: boolean) => {
+		const title = titles.byKey.get(key)
+		return (
+			<OptionPoster
+				key={key}
+				positive={group === "loved"}
+				option={{
+					id: String(key),
+					label: title ? `${title.title} (${title.year})` : "Loading title…",
+					img: title?.poster ? `${POSTER}${title.poster}` : null,
+					active,
+					count: null,
+					toggle: () => toggle(key),
+				}}
+			/>
+		)
+	}
+	return (
+		<div className="space-y-3">
+			<p className="text-xs text-gray-400">
+				{group === "loved"
+					? "Find more like the titles you loved."
+					: "Steer recommendations away from titles you disliked."}
+			</p>
+			<label className="flex items-center gap-2 rounded-xl bg-white/5 px-3 py-2.5 ring-1 ring-white/15 focus-within:ring-amber-400">
+				<MagnifyingGlassIcon className="h-4 w-4 text-gray-400" />
+				<input
+					type="search"
+					value={search}
+					onChange={(e) => setSearch(e.target.value)}
+					aria-label={`Add a movie or show to ${group === "loved" ? "Loved" : "Disliked"}`}
+					placeholder="Add a movie or show…"
+					className="min-w-0 flex-1 bg-transparent text-sm text-white outline-none"
+				/>
+			</label>
+			{search.trim().length >= 2 && (
+				<div
+					aria-label={`Search results for ${group}`}
+					className="flex flex-wrap gap-2.5"
+				>
+					{titles.matches.map((title) => poster(title.key, false))}
+					{titles.matches.length === 0 && (
+						<p className="text-xs text-gray-400">No matching titles yet.</p>
+					)}
+				</div>
+			)}
+			<div
+				aria-label={`${group === "loved" ? "Loved" : "Disliked"} titles`}
+				className="flex flex-wrap gap-2.5"
+			>
+				{chosen.map((key) => poster(key, true))}
+			</div>
+		</div>
+	)
+}
+
+function OptionPoster({
+	option,
+	positive = false,
+}: { option: Option; positive?: boolean }) {
 	return (
 		<motion.button
 			type="button"
@@ -506,7 +805,7 @@ function OptionPoster({ option }: { option: Option }) {
 			title={option.label}
 			whileTap={TAP}
 			onClick={option.toggle}
-			className={`relative w-14 shrink-0 overflow-hidden rounded-lg bg-white/5 cursor-pointer outline-none transition focus-visible:ring-2 focus-visible:ring-amber-400 ${option.active ? "ring-2 ring-rose-400 ring-offset-2 ring-offset-gray-950" : "opacity-60 hover:opacity-100"}`}
+			className={`relative w-14 shrink-0 overflow-hidden rounded-lg bg-white/5 cursor-pointer outline-none transition focus-visible:ring-2 focus-visible:ring-amber-400 ${option.active ? `${positive ? "ring-emerald-400" : "ring-rose-400"} ring-2 ring-offset-2 ring-offset-gray-950` : "opacity-60 hover:opacity-100"}`}
 		>
 			<span className="block aspect-[2/3] w-full">
 				{option.img ? (
@@ -518,7 +817,9 @@ function OptionPoster({ option }: { option: Option }) {
 				)}
 			</span>
 			{option.active && (
-				<span className="absolute top-1 right-1 grid h-4 w-4 place-items-center rounded-full bg-rose-500 text-white">
+				<span
+					className={`absolute top-1 right-1 grid h-4 w-4 place-items-center rounded-full ${positive ? "bg-emerald-500" : "bg-rose-500"} text-white`}
+				>
 					<XMarkIcon className="h-3 w-3" />
 				</span>
 			)}
@@ -601,7 +902,14 @@ export function FilterGroups({
 }) {
 	const [refusal, setRefusal] = useState<Refusal | null>(null)
 	const notice = refusal?.text ?? ""
-	const titles = useTitleNames(data.state.similarTo ?? [], query)
+	const titles = useTitleNames(
+		[
+			...(data.state.similarTo ?? []),
+			...(data.state.loved ?? []),
+			...(data.state.disliked ?? []),
+		],
+		query,
+	)
 	const people = usePeopleNames(data.state.people ?? [], query)
 	const { moods, themes, styles } = data.state
 	const picked = `${moods.join(",")}|${themes.join(",")}|${styles.join(",")}`
@@ -609,9 +917,23 @@ export function FilterGroups({
 	useEffect(() => {
 		setRefusal(null)
 	}, [picked])
-	const groups = buildGroups({ ...data, titles, people }, setRefusal)
+	const countries = useCountries()
+	const groups = buildGroups(
+		{
+			...data,
+			titles,
+			people,
+			countries: countries.data ?? [],
+			countryQuery: query,
+		},
+		setRefusal,
+	)
 	const q = query.trim().toLowerCase()
-	const searchable = (g: Group) => g.key === "similarTo" || g.key === "people"
+	const searchable = (g: Group) =>
+		g.key === "loved" ||
+		g.key === "disliked" ||
+		g.key === "similarTo" ||
+		g.key === "people"
 	const shown = groups
 		.map((g) => ({
 			...g,
@@ -625,8 +947,12 @@ export function FilterGroups({
 			(g) =>
 				!q ||
 				(g.body
-					? g.title.toLowerCase().includes(q) ||
-						g.words?.split(" ").some((word) => word.startsWith(q))
+					? g.key === "loved" ||
+						g.key === "disliked" ||
+						g.title.toLowerCase().includes(q) ||
+						(g.key === "productionCountries" || g.key === "services"
+							? g.words?.toLowerCase().includes(q)
+							: g.words?.split(" ").some((word) => word.startsWith(q)))
 					: g.options.length > 0),
 		)
 	return (

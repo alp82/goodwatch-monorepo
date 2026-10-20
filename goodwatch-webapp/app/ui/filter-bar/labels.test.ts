@@ -265,3 +265,66 @@ test("the recovery says what other themes or styles would show", () => {
 	assert.equal(FILTER_ACCENTS.themes.dot, "bg-orange-400")
 	assert.equal(FILTER_ACCENTS.styles.dot, "bg-green-400")
 })
+
+test("preference chips group more than two titles and retain poster previews", () => {
+	const names = {
+		title: (key: number) => `Title ${key}`,
+		poster: (key: number) => `/${key}.jpg`,
+	}
+	const chips = activeChips(
+		{ ...state, loved: [1, 2, 3], disliked: [4, 5] },
+		names,
+	)
+	assert.equal(chips[0].label, "Loved: 3 titles")
+	assert.deepEqual(
+		chips[0].preview?.map((t) => t.title),
+		["Title 1", "Title 2", "Title 3"],
+	)
+	assert.equal(chips[1].preview?.[0].poster, "/4.jpg")
+	assert.equal(chips.length, 3)
+	assert.equal(chips[0].remove({ ...state, loved: [1, 2, 3] }).loved, undefined)
+})
+
+test("production country chips name the country and remove only that choice", () => {
+	const chosen = { ...state, productionCountries: ["US", "GB"] }
+	const chips = activeChips(chosen)
+	assert.deepEqual(
+		chips.map((c) => c.label),
+		["Produced in United States", "Produced in United Kingdom"],
+	)
+	assert.deepEqual(chips[0].remove(chosen).productionCountries, ["GB"])
+})
+
+test("streaming country is labelled separately from production countries", () => {
+	const chips = activeChips({
+		...state,
+		streamingCountry: "DE",
+		productionCountries: ["US"],
+	})
+	assert.deepEqual(
+		chips.map((c) => c.label),
+		["Streaming in Germany", "Produced in United States"],
+	)
+	assert.deepEqual(
+		chips[0].remove({
+			...state,
+			streamingCountry: "DE",
+			productionCountries: ["US"],
+		}).productionCountries,
+		["US"],
+	)
+})
+
+test("manually selected services provide names and logos for hover previews", () => {
+	const chips = activeChips(
+		{ ...state, services: [8, 9], onMyServices: false },
+		{
+			service: (id) => (id === 8 ? "Netflix" : "Prime Video"),
+			serviceLogo: (id) => `/${id}.jpg`,
+		},
+	)
+	assert.deepEqual(chips[0].preview, [
+		{ title: "Netflix", poster: "/8.jpg", logo: true },
+		{ title: "Prime Video", poster: "/9.jpg", logo: true },
+	])
+})

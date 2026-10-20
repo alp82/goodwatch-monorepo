@@ -1,3 +1,4 @@
+import { TitleChipPreview } from "./TitleChipPreview"
 // The desktop Filters sheet: 480 px from the right, a search field focused on open, the active filters (each one
 // scrolls to its group, or comes off), the groups with live counts, and a footer with Clear all, the hidden count, and
 // a live "Show N titles".
@@ -183,19 +184,21 @@ function SheetContent({
 						{chips.map((chip) => (
 							<li
 								key={chip.key}
-								className="flex h-8 items-center rounded-full bg-white/[0.06] text-sm text-gray-100 ring-1 ring-white/10"
+								className="flex h-8 items-center rounded-full bg-white/[0.06] text-sm text-gray-100"
 							>
-								<button
-									type="button"
-									onClick={() => goTo(chip)}
-									aria-label={`Go to ${chip.label}`}
-									className="flex h-8 items-center gap-2 rounded-l-full pr-1 pl-3 cursor-pointer outline-none hover:text-white focus-visible:ring-2 focus-visible:ring-amber-400"
-								>
-									<span
-										className={`h-1.5 w-1.5 rounded-full ${FILTER_ACCENTS[chip.group].dot}`}
-									/>
-									{chip.label}
-								</button>
+								<TitleChipPreview chip={chip}>
+									<button
+										type="button"
+										onClick={() => goTo(chip)}
+										aria-label={`Go to ${chip.label}`}
+										className="flex h-8 items-center gap-2 rounded-l-full pr-1 pl-3 cursor-pointer outline-none hover:text-white focus-visible:ring-2 focus-visible:ring-amber-400"
+									>
+										<span
+											className={`h-1.5 w-1.5 rounded-full ${FILTER_ACCENTS[chip.group].dot}`}
+										/>
+										{chip.label}
+									</button>
+								</TitleChipPreview>
 								<button
 									type="button"
 									onClick={() => data.onChange(chip.remove(data.state))}

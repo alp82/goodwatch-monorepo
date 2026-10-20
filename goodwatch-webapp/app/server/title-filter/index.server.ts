@@ -1,3 +1,4 @@
+import { inlineTaste } from "~/server/taste/inline.server"
 // The title filter: the in-memory engine behind the filter bar on Discover, Watch next, and Explorer. It filters and
 // sorts a universe of titles by the filter state, counts what each filter hides and what each option would leave, and
 // applies taste: the taste match filter, the Best match sort, and For you. Everything runs over the title snapshot and the availability index in webapp memory; only the
@@ -34,6 +35,7 @@ import type { TitleKey } from "~/utils/title-key"
 import {
 	legacyTitles,
 	personTitles,
+	productionCountryTitles,
 	similarTitles,
 	titlesOnServicesByColumn,
 } from "./id-sets.server"
@@ -154,29 +156,37 @@ export async function filterTitles(input: FilterInput): Promise<FilterResult> {
 	const universeKeys =
 		input.universe === "catalog" ? "catalog" : [...input.universe]
 
-	const [similarTo, people, legacy, services] = await Promise.all([
-		Promise.all(
-			(state.similarTo ?? []).map(async (seed) => ({
-				option: String(seed),
-				keys: await similarTitles(seed),
-			})),
-		),
-		Promise.all(
-			(state.people ?? []).map(async (person) => ({
-				option: String(person),
-				keys: await personTitles(person),
-			})),
-		),
-		state.legacy
-			? legacyTitles(
-					state.legacy,
-					universeKeys === "catalog" ? undefined : universeKeys,
-				)
-			: null,
-		servicesFilterBase(state, viewer),
-	])
+	const [similarTo, people, legacy, services, productionCountries] =
+		await Promise.all([
+			Promise.all(
+				(state.similarTo ?? []).map(async (seed) => ({
+					option: String(seed),
+					keys: await similarTitles(seed),
+				})),
+			),
+			Promise.all(
+				(state.people ?? []).map(async (person) => ({
+					option: String(person),
+					keys: await personTitles(person),
+				})),
+			),
+			state.legacy
+				? legacyTitles(
+						state.legacy,
+						universeKeys === "catalog" ? undefined : universeKeys,
+					)
+				: null,
+			servicesFilterBase(state, viewer),
+			Promise.all(
+				(state.productionCountries ?? []).map(async (country) => ({
+					option: country,
+					keys: await productionCountryTitles(country),
+				})),
+			),
+		])
 
-	const taste = input.taste?.signal === "some" ? input.taste : null
+	const contextualTaste = inlineTaste(input.taste, state, snapshot)
+	const taste = contextualTaste?.signal === "some" ? contextualTaste : null
 	const sortUsed = sortToUse(
 		input.sort,
 		taste !== null,
@@ -259,6 +269,7 @@ export async function filterTitles(input: FilterInput): Promise<FilterResult> {
 		releasedOptions,
 		similarTo: sets(similarTo),
 		people: sets(people),
+		productionCountries: sets(productionCountries),
 		legacy: legacy && titleSet(legacy, snapshot),
 		ratings:
 			ladder && snapshot.columns.ratings
@@ -272,7 +283,12 @@ export async function filterTitles(input: FilterInput): Promise<FilterResult> {
 			: passing
 	let ordered = Array.from(inOrder, (i) => keys[i])
 	let personalOrder: PersonalOrderExposure | undefined
-	if (universeKeys === "catalog" && sortUsed === "match") {
+	if (
+		universeKeys === "catalog" &&
+		sortUsed === "match" &&
+		!state.loved?.length &&
+		!state.disliked?.length
+	) {
 		const member = viewer.viewer.kind === "member" ? viewer.viewer.userId : null
 		const read = member
 			? await loadPersonalOrder(member, snapshot)

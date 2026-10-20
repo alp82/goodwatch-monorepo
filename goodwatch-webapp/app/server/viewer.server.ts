@@ -80,7 +80,10 @@ export async function getViewerContext(
 	const ctx = !userId ? guestContext(guest, guessedCountry) : await getMemberViewerContext(userId, guessedCountry)
 	const api = new URL(request.url).pathname.startsWith("/api/")
 	const language = api ? apiDisplayLanguage(request) : await liveMediaLanguage(request, userId)
-	return { ...ctx, language: isbot(request.headers.get("user-agent")) ? undefined : language }
+	return { ...ctx,
+		country: countryCode(new URL(request.url).searchParams.get("streamingCountry")) ?? ctx.country,
+		language: isbot(request.headers.get("user-agent")) ? undefined : language,
+	}
 }
 
 /** A member's viewer context by user id, for callers that already know the member (and scripts). */

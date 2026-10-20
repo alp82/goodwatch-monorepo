@@ -368,3 +368,31 @@ test("clear prevents an old flight from storing over a new run", async () => {
 	assert.equal(await cache.run("key", async () => result()), fresh)
 	assert.equal(cache.stats().keys, 1)
 })
+
+test("production-country selections never reuse another country's anonymous results", () => {
+	const base = input()
+	const us = discoverFilterKey({
+		...base,
+		state: { ...base.state, productionCountries: ["US"] },
+	})
+	const gb = discoverFilterKey({
+		...base,
+		state: { ...base.state, productionCountries: ["GB"] },
+	})
+	assert.notEqual(us, gb)
+	assert.notEqual(us, discoverFilterKey(base))
+})
+
+test("manual streaming countries have different anonymous filter cache entries", () => {
+	const base = input()
+	assert.notEqual(
+		discoverFilterKey({
+			...base,
+			state: { ...base.state, services: [8], streamingCountry: "US" },
+		}),
+		discoverFilterKey({
+			...base,
+			state: { ...base.state, services: [8], streamingCountry: "DE" },
+		}),
+	)
+})
