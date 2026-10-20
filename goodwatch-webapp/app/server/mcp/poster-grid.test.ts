@@ -146,7 +146,8 @@ test("The poster grid resource is listed and read as an MCP App with a tight CSP
 	const [content] = read.contents
 	assert.equal(content.uri, POSTER_GRID_URI)
 	assert.equal(content.mimeType, "text/html;profile=mcp-app")
-	assert.equal(content._meta.ui.domain, "https://goodwatch.app")
+	assert.equal(Object.hasOwn(content._meta.ui, "domain"), false)
+	assert.equal(Object.hasOwn(listed._meta.ui, "domain"), false)
 	assert.equal(content._meta["openai/widgetDomain"], "https://goodwatch.app")
 	assert.deepEqual(content._meta.ui.csp, {
 		resourceDomains: ["https://image.tmdb.org", "https://goodwatch.app"],

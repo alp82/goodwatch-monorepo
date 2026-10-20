@@ -7,7 +7,7 @@ import type { ReadToolName } from "./tools.server.ts"
 // support reads this resource and shows the tool result as posters next to the answer. Every other client ignores the
 // metadata and gets the same text and structuredContent. Change the URI's version when the widget's data contract
 // changes: hosts may cache the resource by URI.
-export const POSTER_GRID_URI = "ui://goodwatch/posters-v3.html"
+export const POSTER_GRID_URI = "ui://goodwatch/posters-v4.html"
 export const MCP_APP_MIME_TYPE = "text/html;profile=mcp-app"
 export const POSTER_GRID_TOOLS: ReadonlySet<ReadToolName> = new Set([
 	"search_titles",
@@ -43,7 +43,9 @@ export function posterGridHtml(origin: string): string {
 export function registerPosterGrid(server: McpServer, origin: string) {
 	const site = new URL(origin).origin
 	const csp = posterGridCsp(site)
-	const ui = { csp, domain: site, prefersBorder: false }
+	// Let each MCP Apps host choose its sandbox origin; stable domains are host-specific.
+	// This app makes no API requests and needs no CORS allowlist.
+	const ui = { csp, prefersBorder: false }
 	server.registerResource(
 		"goodwatch-posters",
 		POSTER_GRID_URI,

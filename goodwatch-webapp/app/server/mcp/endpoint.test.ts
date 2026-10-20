@@ -718,7 +718,7 @@ test("Batch write tools list items up to 50, the file import for whole histories
 			/[Ff]ull history \(hundreds of titles or more\).*http:\/\/localhost:3336\/settings\/imports/,
 			name,
 		)
-		assert.match(tool.description, /undo_watch with that batch_id/, name)
+		assert.match(tool.description, /batch_id identifies the complete reversible batch/, name)
 		assert.equal(tool.annotations.destructiveHint, true, name)
 	}
 	const undo = byName.get("undo_watch") as {

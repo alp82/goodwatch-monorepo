@@ -352,7 +352,7 @@ const batchItems = counter(
 
 /** How a batch tool's description explains items, the cap and the file import for whole histories. */
 export const batchHint = (origin: string) =>
-	`To change many titles at once, pass items instead of one title: up to ${MAX_BATCH_ITEMS} per call. Items are written independently and each reports done, already_set, not_found, ambiguous (with candidates; nothing written) or error, with a summary count and a batch_id; undo_watch with that batch_id takes back the whole call. Full history (hundreds of titles or more) file import is available at: ${new URL(IMPORT_PATH, origin).href}`
+	`To change many titles at once, pass items instead of one title: up to ${MAX_BATCH_ITEMS} per call. Items are written independently and each reports done, already_set, not_found, ambiguous (with candidates; nothing written) or error, with a summary count and a batch_id; batch_id identifies the complete reversible batch. Full history (hundreds of titles or more) file import is available at: ${new URL(IMPORT_PATH, origin).href}`
 
 export function registerWriteTools(
 	server: McpServer,
