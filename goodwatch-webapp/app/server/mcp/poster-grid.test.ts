@@ -113,7 +113,7 @@ const call = async (
 test("Search, My library and Watch next point at the versioned poster grid; other tools don't", async () => {
 	const { tools } = (await call("tools/list", {})).result
 	const withUi = tools
-		.filter((tool: { _meta?: unknown }) => tool._meta)
+		.filter((tool: { _meta?: { ui?: unknown } }) => tool._meta?.ui)
 		.map((tool: { name: string }) => tool.name)
 	assert.deepEqual(withUi, [
 		"search_titles",
@@ -125,8 +125,11 @@ test("Search, My library and Watch next point at the versioned poster grid; othe
 		"get_person",
 		"get_list",
 	])
-	for (const tool of tools.filter((t: { _meta?: unknown }) => t._meta))
+	for (const tool of tools.filter(
+		(t: { _meta?: { ui?: unknown } }) => t._meta?.ui,
+	))
 		assert.deepEqual(tool._meta, {
+			securitySchemes: [{ type: "oauth2", scopes: ["mcp:read"] }],
 			ui: { resourceUri: POSTER_GRID_URI },
 			"ui/resourceUri": POSTER_GRID_URI,
 			"openai/outputTemplate": POSTER_GRID_URI,
@@ -143,6 +146,8 @@ test("The poster grid resource is listed and read as an MCP App with a tight CSP
 	const [content] = read.contents
 	assert.equal(content.uri, POSTER_GRID_URI)
 	assert.equal(content.mimeType, "text/html;profile=mcp-app")
+	assert.equal(content._meta.ui.domain, "https://goodwatch.app")
+	assert.equal(content._meta["openai/widgetDomain"], "https://goodwatch.app")
 	assert.deepEqual(content._meta.ui.csp, {
 		resourceDomains: ["https://image.tmdb.org", "https://goodwatch.app"],
 		connectDomains: [],

@@ -13,12 +13,13 @@ export const USE_WITH_AI_PATH = "/use-with-ai"
 export const CONNECTED_APPS_PATH = "/settings/connected-apps"
 export const PRIVACY_CONNECTED_APPS_PATH = "/privacy#connected-apps"
 
-// From the tool set decided in #535 (14 tools). The consent page lists the same.
+// Shared capability summary for the current 25-tool integration and its consent page.
 export const APP_CAN_SEE = [
 	"Your ratings, Wishlist and Not interested titles",
 	"What you've watched and where you are in each show",
 	"Your taste profile and recommendations",
-	"Your country and streaming services",
+	"Your country, title language and streaming services",
+	"Your share lists, including unlisted lists",
 ] as const
 
 export const APP_CAN_CHANGE = [
@@ -26,7 +27,8 @@ export const APP_CAN_CHANGE = [
 	"Rate titles and mark them Not interested",
 	"Add titles to your Wishlist and remove them",
 	"Set a show to Watching, On hold or Dropped",
-	"Change your country and streaming services",
+	"Change your country, title language and streaming services",
+	"Create public or unlisted share lists and change their titles and order",
 ] as const
 
 export const APP_CAN_NEVER = [

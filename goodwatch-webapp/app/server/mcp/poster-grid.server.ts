@@ -43,7 +43,7 @@ export function posterGridHtml(origin: string): string {
 export function registerPosterGrid(server: McpServer, origin: string) {
 	const site = new URL(origin).origin
 	const csp = posterGridCsp(site)
-	const ui = { csp, prefersBorder: false }
+	const ui = { csp, domain: site, prefersBorder: false }
 	server.registerResource(
 		"goodwatch-posters",
 		POSTER_GRID_URI,
@@ -66,6 +66,7 @@ export function registerPosterGrid(server: McpServer, origin: string) {
 							connect_domains: [],
 							resource_domains: csp.resourceDomains,
 						},
+						"openai/widgetDomain": site,
 						"openai/widgetPrefersBorder": false,
 						"openai/widgetDescription":
 							"GoodWatch posters for the titles in this answer, with taste match and links to their GoodWatch pages.",

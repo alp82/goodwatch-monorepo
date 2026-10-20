@@ -328,7 +328,10 @@ export function createToolServer(
 					idempotentHint: true,
 					openWorldHint: false,
 				},
-				...(posters ? { _meta: posterGridToolMeta } : {}),
+				_meta: {
+					securitySchemes: [{ type: "oauth2", scopes: ["mcp:read"] }],
+					...(posters ? posterGridToolMeta : {}),
+				},
 			},
 			async (args: ReadArgs, context) => {
 				const start = performance.now()

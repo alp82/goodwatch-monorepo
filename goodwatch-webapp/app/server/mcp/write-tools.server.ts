@@ -368,11 +368,18 @@ export function registerWriteTools(
 				title: tool.title,
 				description: `${tool.description}${isBatchTool(tool.name) ? ` ${batchHint(origin)}` : ""} For title actions, title_id takes precedence; title_name and year are ignored when an ID is supplied. Without title_id, title_name is required and year is optional. Replayed results describe the original action, not current state; a new read returns current state.`,
 				inputSchema: tool.schema,
+				_meta: {
+					securitySchemes: [
+						{ type: "oauth2", scopes: ["mcp:read", "mcp:write"] },
+					],
+				},
 				annotations: {
 					readOnlyHint: false,
 					destructiveHint: tool.destructive,
 					idempotentHint: true,
-					openWorldHint: false,
+					openWorldHint: ["create_list", "update_list_titles"].includes(
+						tool.name,
+					),
 				},
 			},
 			async (args) => {

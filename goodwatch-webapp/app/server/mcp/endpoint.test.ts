@@ -305,6 +305,9 @@ test("A member sees separate catalog and personal read tools, with valid schemas
 		],
 	)
 	for (const tool of tools) {
+		assert.deepEqual(tool._meta.securitySchemes, [
+			{ type: "oauth2", scopes: ["mcp:read"] },
+		])
 		assert.equal(tool.annotations.readOnlyHint, true)
 		assert.equal(tool.annotations.idempotentHint, true)
 		assert.equal(tool.annotations.destructiveHint, false)
@@ -459,6 +462,13 @@ test("Write scopes expose all writes with destructive hints on every write and n
 		],
 	)
 	for (const tool of writes) {
+		assert.deepEqual(tool._meta.securitySchemes, [
+			{ type: "oauth2", scopes: ["mcp:read", "mcp:write"] },
+		])
+		assert.equal(
+			tool.annotations.openWorldHint,
+			["create_list", "update_list_titles"].includes(tool.name),
+		)
 		assert.equal(tool.annotations.readOnlyHint, false)
 		assert.equal(tool.annotations.destructiveHint, true)
 		assert.equal(tool.annotations.idempotentHint, true)
