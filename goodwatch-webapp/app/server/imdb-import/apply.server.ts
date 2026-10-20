@@ -1,3 +1,8 @@
+import {
+	captureProductEvent,
+	withProductContext,
+	eventUuid,
+} from "~/telemetry/product-analytics.server"
 // Confirming an import writes its ratings to user_score; undo takes them back.
 //
 // Crate has no transactions, and a write that filters on anything but the whole primary key only sees rows after a
@@ -17,7 +22,11 @@
 //   A watch the member logged is never touched. Settling again writes nothing, so it runs before the items are
 //   marked and a run that broke off settles them again.
 import type { StoredUndoOutcome } from "~/domain/import-result"
-import type { ImdbConflictChoice, ImdbImportCounts, ImdbImportSummary } from "~/domain/imdb-import"
+import type {
+	ImdbConflictChoice,
+	ImdbImportCounts,
+	ImdbImportSummary,
+} from "~/domain/imdb-import"
 import { resetOnboardingMediaCache } from "~/server/onboarding-media.server"
 import { markTasteChanged } from "~/server/taste/index.server"
 import { getTitleSnapshot } from "~/server/title-snapshot/index.server"
@@ -58,14 +67,20 @@ export async function ratingsChanged(userId: string) {
 		resetOnboardingMediaCache({ userId, searchTerm: "" }),
 	])
 	for (const result of results)
-		if (result.status === "rejected") console.error("IMDb import: clearing a cache failed:", result.reason)
+		if (result.status === "rejected")
+			console.error("IMDb import: clearing a cache failed:", result.reason)
 }
 
 /** The movie rule for the movies among an import's titles, after their scores were written or taken back. */
-export const settleImportedMovies = (userId: string, items: readonly { tmdb_id: number; media_type: ImportMediaType }[]) =>
+export const settleImportedMovies = (
+	userId: string,
+	items: readonly { tmdb_id: number; media_type: ImportMediaType }[],
+) =>
 	settleMovies(
 		userId,
-		items.filter((item) => item.media_type === "movie").map((item) => Number(item.tmdb_id)),
+		items
+			.filter((item) => item.media_type === "movie")
+			.map((item) => Number(item.tmdb_id)),
 	)
 
 /** A row the import still has to write. */
@@ -82,7 +97,8 @@ type Tally = Record<ApplyState, number>
 
 function groupBy<T>(list: T[], key: (item: T) => string): T[][] {
 	const groups = new Map<string, T[]>()
-	for (const item of list) groups.set(key(item), [...(groups.get(key(item)) ?? []), item])
+	for (const item of list)
+		groups.set(key(item), [...(groups.get(key(item)) ?? []), item])
 	return [...groups.values()]
 }
 
@@ -99,10 +115,20 @@ async function writeBatch(userId: string, stamp: Date, batch: Pending[]) {
 			`INSERT INTO user_score (user_id, tmdb_id, media_type, score, created_at, updated_at)
 			 VALUES ${inserts.map(() => "(?, ?, ?, ?, ?, ?)").join(", ")}
 			 ON CONFLICT (user_id, tmdb_id, media_type) DO NOTHING`,
-			inserts.flatMap((item): Param[] => [userId, Number(item.tmdb_id), item.media_type, Number(item.imdb_score), stamp, stamp]),
+			inserts.flatMap((item): Param[] => [
+				userId,
+				Number(item.tmdb_id),
+				item.media_type,
+				Number(item.imdb_score),
+				stamp,
+				stamp,
+			]),
 		)
 	const updates = batch.filter((item) => item.current_score !== null)
-	for (const group of groupBy(updates, (item) => `${item.media_type}:${item.imdb_score}:${item.current_score}`))
+	for (const group of groupBy(
+		updates,
+		(item) => `${item.media_type}:${item.imdb_score}:${item.current_score}`,
+	))
 		await runUnlessTimeout(
 			`UPDATE user_score SET score = ?, updated_at = ?
 			 WHERE user_id = ? AND media_type = ? AND score = ? AND tmdb_id IN (${marks(group.length)})`,
@@ -121,15 +147,24 @@ async function writeBatch(userId: string, stamp: Date, batch: Pending[]) {
 async function readBack(userId: string, stamp: Date, batch: Pending[]) {
 	const now = new Map<string, { score: number | null; ours: boolean }>()
 	for (const group of groupBy(batch, (item) => item.media_type)) {
-		const rows = await select<{ tmdb_id: number; score: number | null; updated_at: number | string | Date | null }>(
+		const rows = await select<{
+			tmdb_id: number
+			score: number | null
+			updated_at: number | string | Date | null
+		}>(
 			`SELECT tmdb_id, score, updated_at FROM user_score
 			 WHERE user_id = ? AND media_type = ? AND tmdb_id IN (${marks(group.length)})`,
-			[userId, group[0].media_type, ...group.map((item) => Number(item.tmdb_id))],
+			[
+				userId,
+				group[0].media_type,
+				...group.map((item) => Number(item.tmdb_id)),
+			],
 		)
 		for (const row of rows)
 			now.set(titleRef(group[0].media_type, Number(row.tmdb_id)), {
 				score: row.score === null ? null : Number(row.score),
-				ours: row.updated_at !== null && toMs(row.updated_at) === stamp.getTime(),
+				ours:
+					row.updated_at !== null && toMs(row.updated_at) === stamp.getTime(),
 			})
 	}
 	return now
@@ -148,15 +183,35 @@ async function applyBatch(userId: string, stamp: Date, batch: Pending[]) {
 			const row = now.get(titleRef(item.media_type, Number(item.tmdb_id)))
 			const insert = item.current_score === null
 			let state: ApplyState
-			if (row?.ours && row.score === Number(item.imdb_score)) state = insert ? "added" : "updated"
+			if (row?.ours && row.score === Number(item.imdb_score))
+				state = insert ? "added" : "updated"
 			// No row where one was inserted, or the old score where one was updated: the write didn't land.
-			else if (insert ? !row : row?.score === Number(item.current_score)) state = "failed"
+			else if (insert ? !row : row?.score === Number(item.current_score))
+				state = "failed"
 			// Anything else is the member's doing since the preview: they rated it, changed it or removed it.
 			else state = "kept"
 			states.set(item.row_index, state)
 		}
 		todo = todo.filter((item) => states.get(item.row_index) === "failed")
 	}
+	for (const item of batch)
+		if (["added", "updated"].includes(states.get(item.row_index) ?? ""))
+			captureProductEvent(
+				userId,
+				"rating saved",
+				{
+					tmdb_id: Number(item.tmdb_id),
+					media_type: item.media_type,
+					score: Number(item.imdb_score),
+					origin: "import",
+					import_source: "imdb",
+				},
+				{
+					uuid: eventUuid(
+						`import-rating:${userId}:${item.media_type}:${item.tmdb_id}:${stamp.toISOString()}`,
+					),
+				},
+			)
 	return states
 }
 
@@ -169,7 +224,12 @@ async function recordStates(importId: string, states: Map<number, ApplyState>) {
 			`UPDATE doc.user_import_item
 			 SET apply_state = ?${written ? ", prior_score = current_score, applied_score = imdb_score, applied_at = ?" : ""}
 			 WHERE import_id = ? AND row_index IN (${marks(group.length)})`,
-			[state, ...(written ? [at] : []), importId, ...group.map(([rowIndex]) => rowIndex)],
+			[
+				state,
+				...(written ? [at] : []),
+				importId,
+				...group.map(([rowIndex]) => rowIndex),
+			],
 		)
 	}
 }
@@ -181,12 +241,16 @@ async function readTally(importId: string): Promise<Tally> {
 		[importId],
 	)
 	const tally: Tally = { added: 0, updated: 0, kept: 0, failed: 0 }
-	for (const row of rows) if (row.apply_state in tally) tally[row.apply_state as ApplyState] = Number(row.n)
+	for (const row of rows)
+		if (row.apply_state in tally)
+			tally[row.apply_state as ApplyState] = Number(row.n)
 	return tally
 }
 
 /** How many of the titles this import wrote have no fingerprint, so they don't count toward Taste yet. */
-async function countWithoutFingerprint(importId: string): Promise<number | null> {
+async function countWithoutFingerprint(
+	importId: string,
+): Promise<number | null> {
 	const snapshot = getTitleSnapshot()
 	if (!snapshot) return null
 	const rows = await select<{ tmdb_id: number; media_type: ImportMediaType }>(
@@ -194,7 +258,10 @@ async function countWithoutFingerprint(importId: string): Promise<number | null>
 		 WHERE import_id = ? AND apply_state IN ('added', 'updated') LIMIT ${MAX_ROWS}`,
 		[importId],
 	)
-	return rows.filter((row) => !snapshot.fingerprint(titleKey(row.media_type, Number(row.tmdb_id)))).length
+	return rows.filter(
+		(row) =>
+			!snapshot.fingerprint(titleKey(row.media_type, Number(row.tmdb_id))),
+	).length
 }
 
 /**
@@ -205,8 +272,16 @@ function startHeartbeat(importId: string) {
 	let beat: Promise<unknown> | null = null
 	const timer = setInterval(() => {
 		// A report that Crate hasn't answered yet is not sent again.
-		beat ??= run("UPDATE doc.user_import SET updated_at = CURRENT_TIMESTAMP WHERE id = ?", [importId])
-			.catch((error) => console.error(`IMDb import ${importId}: reporting that it's alive failed:`, error))
+		beat ??= run(
+			"UPDATE doc.user_import SET updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+			[importId],
+		)
+			.catch((error) =>
+				console.error(
+					`IMDb import ${importId}: reporting that it's alive failed:`,
+					error,
+				),
+			)
 			.finally(() => {
 				beat = null
 			})
@@ -220,12 +295,13 @@ function startHeartbeat(importId: string) {
 }
 
 /** The background task. Picks up whatever the import hasn't settled yet, so starting and resuming are the same. */
-async function apply(userId: string, importId: string) {
+async function applyStored(userId: string, importId: string) {
 	let wrote = false
 	const stopHeartbeat = startHeartbeat(importId)
 	try {
 		const row = await getImportRow(userId, importId)
-		if (!row.confirmed_at || !row.conflict_choice) throw new Error("The import was never confirmed")
+		if (!row.confirmed_at || !row.conflict_choice)
+			throw new Error("The import was never confirmed")
 		const stamp = new Date(row.confirmed_at)
 		const useImdb = row.conflict_choice === "imdb"
 
@@ -251,7 +327,14 @@ async function apply(userId: string, importId: string) {
 		const report = () =>
 			run(
 				"UPDATE doc.user_import SET processed = ?, added = ?, updated = ?, kept = ?, failed = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
-				[processed, tally.added, tally.updated, tally.kept, tally.failed, importId],
+				[
+					processed,
+					tally.added,
+					tally.updated,
+					tally.kept,
+					tally.failed,
+					importId,
+				],
 			)
 		await report()
 
@@ -267,10 +350,15 @@ async function apply(userId: string, importId: string) {
 
 		await refreshItems()
 		const final = await readTally(importId)
-		const withoutFingerprint = await countWithoutFingerprint(importId).catch((error) => {
-			console.error("IMDb import: counting titles without a fingerprint failed:", error)
-			return null
-		})
+		const withoutFingerprint = await countWithoutFingerprint(importId).catch(
+			(error) => {
+				console.error(
+					"IMDb import: counting titles without a fingerprint failed:",
+					error,
+				)
+				return null
+			},
+		)
 		// From here on updated_at belongs to the result: a late heartbeat would change it under a resume.
 		await stopHeartbeat()
 		const now = new Date()
@@ -297,11 +385,19 @@ async function apply(userId: string, importId: string) {
 	} catch (error) {
 		console.error(`IMDb import ${importId} stopped:`, error)
 		await stopHeartbeat()
-		await run("UPDATE doc.user_import SET status = 'failed', error = ?, updated_at = ? WHERE id = ?", [
-			"The import stopped before it finished. Nothing is lost: try again to finish it.",
-			new Date(),
-			importId,
-		]).catch((failure) => console.error(`IMDb import ${importId}: recording the failure failed:`, failure))
+		await run(
+			"UPDATE doc.user_import SET status = 'failed', error = ?, updated_at = ? WHERE id = ?",
+			[
+				"The import stopped before it finished. Nothing is lost: try again to finish it.",
+				new Date(),
+				importId,
+			],
+		).catch((failure) =>
+			console.error(
+				`IMDb import ${importId}: recording the failure failed:`,
+				failure,
+			),
+		)
 	} finally {
 		await refreshImports().catch(() => null)
 		if (wrote) await ratingsChanged(userId)
@@ -318,12 +414,21 @@ function startApply(userId: string, importId: string) {
  * Starts the import, or resumes one that failed or stalled, and returns at once with status `running`.
  * A resumed import keeps the conflict choice it was started with, because part of it is already written.
  */
-export async function confirmImport(userId: string, importId: string, choice: ImdbConflictChoice): Promise<ImdbImportSummary> {
+export async function confirmImport(
+	userId: string,
+	importId: string,
+	choice: ImdbConflictChoice,
+): Promise<ImdbImportSummary> {
 	// The look for another running import below filters on more than the key, so it needs the latest state searchable.
 	await refreshImports()
 	const row = await getImportRow(userId, importId)
-	if (row.status === "done") throw new ImdbImportError(409, "This import is already finished.")
-	if (row.status === "undone") throw new ImdbImportError(409, "This import was undone. Upload the file again to import it.")
+	if (row.status === "done")
+		throw new ImdbImportError(409, "This import is already finished.")
+	if (row.status === "undone")
+		throw new ImdbImportError(
+			409,
+			"This import was undone. Upload the file again to import it.",
+		)
 	if (row.status === "running" && !isStalled(row)) return summarize(row)
 
 	// Each claim holds only for the row as it was read above: a preview that is still a preview, or a failed or stalled
@@ -332,16 +437,24 @@ export async function confirmImport(userId: string, importId: string, choice: Im
 	if (row.status === "preview") {
 		const running = await listImportRows(userId, "running")
 		if (running.some((other) => !isStalled(other)))
-			throw new ImdbImportError(409, "Another import is still running. Wait for it to finish, then try again.")
+			throw new ImdbImportError(
+				409,
+				"Another import is still running. Wait for it to finish, then try again.",
+			)
 		const counts = JSON.parse(row.counts) as ImdbImportCounts
-		const total = counts.new + counts.update + (choice === "imdb" ? counts.conflict : 0)
-		claimed = await claimImport(row, "status = 'running', conflict_choice = ?, total = ?, confirmed_at = ?, updated_at = CURRENT_TIMESTAMP", [
-			choice,
-			total,
-			new Date(),
-		])
+		const total =
+			counts.new + counts.update + (choice === "imdb" ? counts.conflict : 0)
+		claimed = await claimImport(
+			row,
+			"status = 'running', conflict_choice = ?, total = ?, confirmed_at = ?, updated_at = CURRENT_TIMESTAMP",
+			[choice, total, new Date()],
+		)
 	} else {
-		claimed = await claimImport(row, "status = 'running', error = NULL, updated_at = CURRENT_TIMESTAMP", [])
+		claimed = await claimImport(
+			row,
+			"status = 'running', error = NULL, updated_at = CURRENT_TIMESTAMP",
+			[],
+		)
 	}
 	if (claimed) startApply(userId, importId)
 	await refreshImports()
@@ -365,25 +478,38 @@ async function scoresNow(userId: string, rows: Written[]) {
 		for (const batch of chunks(group, UNDO_BATCH)) {
 			const found = await select<{ tmdb_id: number; score: number | null }>(
 				`SELECT tmdb_id, score FROM user_score WHERE user_id = ? AND media_type = ? AND tmdb_id IN (${marks(batch.length)})`,
-				[userId, batch[0].media_type, ...batch.map((item) => Number(item.tmdb_id))],
+				[
+					userId,
+					batch[0].media_type,
+					...batch.map((item) => Number(item.tmdb_id)),
+				],
 			)
-			for (const row of found) now.set(titleRef(batch[0].media_type, Number(row.tmdb_id)), row.score === null ? null : Number(row.score))
+			for (const row of found)
+				now.set(
+					titleRef(batch[0].media_type, Number(row.tmdb_id)),
+					row.score === null ? null : Number(row.score),
+				)
 		}
-	return (item: Written) => now.get(titleRef(item.media_type, Number(item.tmdb_id)))
+	return (item: Written) =>
+		now.get(titleRef(item.media_type, Number(item.tmdb_id)))
 }
 
 /** Whether the rating is as it was before the import: the earlier score, or no rating. */
 const asBefore = (item: Written, score: number | null | undefined) =>
-	item.prior_score === null ? score === undefined : score === Number(item.prior_score)
+	item.prior_score === null
+		? score === undefined
+		: score === Number(item.prior_score)
 
-async function recordUndoOutcomes(importId: string, outcomes: [number, StoredUndoOutcome][]) {
+async function recordUndoOutcomes(
+	importId: string,
+	outcomes: [number, StoredUndoOutcome][],
+) {
 	for (const group of groupBy(outcomes, ([, outcome]) => outcome))
 		for (const batch of chunks(group, UNDO_BATCH))
-			await run(`UPDATE doc.user_import_item SET undo_outcome = ? WHERE import_id = ? AND row_index IN (${marks(batch.length)})`, [
-				batch[0][1],
-				importId,
-				...batch.map(([rowIndex]) => rowIndex),
-			])
+			await run(
+				`UPDATE doc.user_import_item SET undo_outcome = ? WHERE import_id = ? AND row_index IN (${marks(batch.length)})`,
+				[batch[0][1], importId, ...batch.map(([rowIndex]) => rowIndex)],
+			)
 }
 
 const undoing = new Set<string>()
@@ -392,11 +518,16 @@ const undoing = new Set<string>()
  * Takes back what a finished import wrote, where the member hasn't changed it since: a rating that still holds the
  * imported score goes back to what it was, or is removed if there was none and no review has been written for it.
  */
-export async function undoImport(userId: string, importId: string): Promise<ImdbImportSummary> {
+async function undoImportStored(
+	userId: string,
+	importId: string,
+): Promise<ImdbImportSummary> {
 	const row = await getImportRow(userId, importId)
 	if (row.status === "undone") return summarize(row)
-	if (row.status !== "done") throw new ImdbImportError(409, "Only a finished import can be undone.")
-	if (undoing.has(importId)) throw new ImdbImportError(409, "This import is already being undone.")
+	if (row.status !== "done")
+		throw new ImdbImportError(409, "Only a finished import can be undone.")
+	if (undoing.has(importId))
+		throw new ImdbImportError(409, "This import is already being undone.")
 	undoing.add(importId)
 	try {
 		await Promise.all([refreshItems(), refreshScores()])
@@ -408,18 +539,35 @@ export async function undoImport(userId: string, importId: string): Promise<Imdb
 		// Rows an earlier, interrupted Undo already settled keep their outcome. Before writing, a rating that isn't the
 		// imported one any more was changed or removed by the member; one already as before is this Undo's own work
 		// only where an earlier run marked it.
-		const open = written.filter((item) => !item.undo_outcome || item.undo_outcome === "reverting")
+		const open = written.filter(
+			(item) => !item.undo_outcome || item.undo_outcome === "reverting",
+		)
 		const before = await scoresNow(userId, open)
 		const settled: [number, StoredUndoOutcome][] = []
 		const todo: Written[] = []
 		for (const item of open) {
 			const score = before(item)
 			if (score === Number(item.applied_score)) todo.push(item)
-			else settled.push([Number(item.row_index), item.undo_outcome === "reverting" && asBefore(item, score) ? "reverted" : "left"])
+			else
+				settled.push([
+					Number(item.row_index),
+					item.undo_outcome === "reverting" && asBefore(item, score)
+						? "reverted"
+						: "left",
+				])
 		}
-		await recordUndoOutcomes(importId, [...settled, ...todo.map((item): [number, StoredUndoOutcome] => [Number(item.row_index), "reverting"])])
+		await recordUndoOutcomes(importId, [
+			...settled,
+			...todo.map((item): [number, StoredUndoOutcome] => [
+				Number(item.row_index),
+				"reverting",
+			]),
+		])
 		const now = new Date()
-		for (const group of groupBy(todo, (item) => `${item.media_type}:${item.applied_score}:${item.prior_score}`)) {
+		for (const group of groupBy(
+			todo,
+			(item) => `${item.media_type}:${item.applied_score}:${item.prior_score}`,
+		)) {
 			const { media_type, applied_score, prior_score } = group[0]
 			for (const batch of chunks(group, UNDO_BATCH)) {
 				const ids = batch.map((item) => Number(item.tmdb_id))
@@ -433,7 +581,14 @@ export async function undoImport(userId: string, importId: string): Promise<Imdb
 					await run(
 						`UPDATE user_score SET score = ?, updated_at = ?
 						 WHERE user_id = ? AND media_type = ? AND score = ? AND tmdb_id IN (${marks(ids.length)})`,
-						[Number(prior_score), now, userId, media_type, Number(applied_score), ...ids],
+						[
+							Number(prior_score),
+							now,
+							userId,
+							media_type,
+							Number(applied_score),
+							...ids,
+						],
 					)
 			}
 		}
@@ -443,17 +598,96 @@ export async function undoImport(userId: string, importId: string): Promise<Imdb
 		const after = await scoresNow(userId, todo)
 		await recordUndoOutcomes(
 			importId,
-			todo.map((item): [number, StoredUndoOutcome] => [Number(item.row_index), asBefore(item, after(item)) ? "reverted" : "left"]),
+			todo.map((item): [number, StoredUndoOutcome] => [
+				Number(item.row_index),
+				asBefore(item, after(item)) ? "reverted" : "left",
+			]),
 		)
+		for (const item of todo)
+			if (asBefore(item, after(item)))
+				captureProductEvent(
+					userId,
+					item.prior_score == null ? "rating cleared" : "rating saved",
+					{
+						tmdb_id: Number(item.tmdb_id),
+						media_type: item.media_type,
+						score: item.prior_score,
+						origin: "undo",
+						import_id: importId,
+					},
+					{
+						uuid: eventUuid(
+							`imdb-undo-score:${userId}:${importId}:${item.row_index}`,
+						),
+					},
+				)
 		// Every statement above is a no-op the second time, so an undo that broke off here can simply run again.
-		await run("UPDATE doc.user_import_item SET apply_state = 'undone' WHERE import_id = ? AND apply_state IN ('added', 'updated')", [
-			importId,
-		])
-		await run("UPDATE doc.user_import SET status = 'undone', updated_at = ? WHERE id = ?", [now, importId])
+		await run(
+			"UPDATE doc.user_import_item SET apply_state = 'undone' WHERE import_id = ? AND apply_state IN ('added', 'updated')",
+			[importId],
+		)
+		await run(
+			"UPDATE doc.user_import SET status = 'undone', updated_at = ? WHERE id = ?",
+			[now, importId],
+		)
+		captureProductEvent(
+			userId,
+			"import undone",
+			{ import_id: importId, origin: "undo", import_source: "imdb" },
+			{ uuid: eventUuid(`import:${userId}:${importId}:undone`) },
+		)
 		await Promise.all([refreshItems(), refreshImports()])
 	} finally {
 		undoing.delete(importId)
 		await ratingsChanged(userId)
 	}
 	return summarize(await getImportRow(userId, importId))
+}
+
+async function apply(userId: string, importId: string) {
+	return withProductContext(
+		{ origin: "import", import_id: importId, batch_id: importId },
+		async () => {
+			captureProductEvent(
+				userId,
+				"import started",
+				{ import_id: importId },
+				{ uuid: eventUuid(`import:${userId}:${importId}:started`) },
+			)
+			try {
+				return await applyStored(userId, importId)
+			} finally {
+				try {
+					const row = await getImportRow(userId, importId)
+					if (row.status === "done" || row.status === "failed")
+						captureProductEvent(
+							userId,
+							row.status === "done" ? "import completed" : "import failed",
+							{
+								import_id: importId,
+								import_source: row.source,
+								added: row.added,
+								updated: row.updated,
+								kept: row.kept,
+								failed: row.failed,
+							},
+							{
+								uuid: eventUuid(
+									`import:${userId}:${importId}:${row.status}:${row.finished_at ?? row.updated_at}`,
+								),
+							},
+						)
+				} catch {
+					/* An analytics read must not change an import's outcome. */
+				}
+			}
+		},
+	)
+}
+
+export async function undoImport(userId: string, importId: string) {
+	return withProductContext(
+		{ origin: "undo", import_id: importId, batch_id: importId },
+		() => undoImportStored(userId, importId),
+	)
 }

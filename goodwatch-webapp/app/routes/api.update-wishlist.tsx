@@ -1,10 +1,10 @@
+import { analyticsAction } from "~/telemetry/product-analytics.server"
 import type { ActionFunction, ActionFunctionArgs } from "@remix-run/node"
 import { updateWishList } from "~/server/wishList.server"
 import { getUserIdFromRequest } from "~/utils/auth"
 
-export const action: ActionFunction = async ({
-	request,
-}: ActionFunctionArgs) => {
+export const action: ActionFunction = analyticsAction(
+	async ({ request }: ActionFunctionArgs) => {
 	if (request.method !== "POST") {
 		return new Response("Method not allowed", { status: 405 })
 	}
@@ -20,4 +20,5 @@ export const action: ActionFunction = async ({
 	})
 
 	return result
-}
+},
+)

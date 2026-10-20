@@ -1,3 +1,8 @@
+import {
+	captureProductEvent,
+	withProductContext,
+	eventUuid,
+} from "~/telemetry/product-analytics.server"
 // Tracking on the server: the one writer for the watch log and the watch state, and their reads
 // (docs/implementation/tracking/data-model.md, ADR 0008, ADR 0009).
 //
@@ -292,7 +297,7 @@ async function readLog(userId: string, title: TrackedTitle): Promise<LogRow[]> {
 
 /** One multi-row insert per 500 rows. A row whose `watch_id` is stored already is left as it is. */
 async function insertLog(userId: string, rows: readonly LogRow[], now: number) {
-	return insertRows(
+	const result = await insertRows(
 		"user_watch_log",
 		LOG_COLUMNS,
 		rows.map((r) => [
@@ -314,16 +319,41 @@ async function insertLog(userId: string, rows: readonly LogRow[], now: number) {
 		]),
 		{ conflict: ["user_id", "watch_id"] },
 	)
+	if (result.rowcount)
+		captureProductEvent(userId, "watch logged", {
+			watch_count: result.rowcount,
+			tmdb_id:
+				new Set(rows.map((r) => r.tmdb_id)).size === 1
+					? rows[0]?.tmdb_id
+					: undefined,
+			media_type: rows[0]?.media_type,
+			tmdb_ids: [...new Set(rows.map((r) => r.tmdb_id))].slice(0, 100),
+			origin: rows[0]?.origin,
+			import_id: rows[0]?.import_id ?? undefined,
+			batch_id: rows[0]?.group_id ?? undefined,
+			watch_id: rows.length === 1 ? rows[0]?.watch_id : undefined,
+			season_number:
+				rows.length === 1 ? (rows[0]?.season_number ?? undefined) : undefined,
+			episode_number:
+				rows.length === 1 ? (rows[0]?.episode_number ?? undefined) : undefined,
+			date_precision:
+				rows.length === 1 ? rows[0]?.watched_at_precision : undefined,
+		})
+	return result
 }
 
 /** Deletes log rows by their whole key, which Crate does in real time. */
 async function deleteLog(userId: string, watchIds: readonly string[]) {
 	for (let start = 0; start < watchIds.length; start += DELETE_CHUNK) {
 		const ids = watchIds.slice(start, start + DELETE_CHUNK)
-		await run(
+		const removed = await run(
 			`DELETE FROM user_watch_log WHERE user_id = ? AND watch_id IN (${marks(ids.length)})`,
 			[userId, ...ids],
 		)
+		if (removed.rowcount)
+			captureProductEvent(userId, "watch removed", {
+				removed_count: removed.rowcount,
+			})
 	}
 }
 
@@ -412,6 +442,32 @@ async function insertState(
  * another action on the show changed, made or removed the row in between.
  */
 async function writeState(
+	userId: string,
+	title: TrackedTitle,
+	write: "insert" | "update" | "delete" | "none",
+	row: StateRow | null,
+	before: StoredState | null,
+	now: number,
+): Promise<boolean> {
+	const applied = await writeStateStored(userId, title, write, row, before, now)
+	if (
+		applied &&
+		write !== "none" &&
+		((before?.state ?? "not_started") !== (row?.state ?? "not_started") ||
+			(before?.pass ?? 1) !== (row?.pass ?? 1))
+	)
+		captureProductEvent(userId, "watch state changed", {
+			tmdb_id: title.tmdbId,
+			media_type: title.mediaType,
+			from_state: before?.state ?? "not_started",
+			to_state: row?.state ?? "not_started",
+			pass: row?.pass ?? 1,
+			previous_pass: before?.pass ?? 1,
+		})
+	return applied
+}
+
+async function writeStateStored(
 	userId: string,
 	title: TrackedTitle,
 	write: "insert" | "update" | "delete" | "none",
@@ -542,6 +598,12 @@ async function clearIntentions(
 		if (notInterested)
 			await clearNotInterested(userId, title.tmdbId, title.mediaType)
 	}
+	if (wantToSeeAddedAt)
+		captureProductEvent(userId, "want to see removed", {
+			tmdb_id: title.tmdbId,
+			media_type: title.mediaType,
+			origin: "tracking",
+		})
 	// Taste is built from scores and Want to See, so it changed when a Want to See row went.
 	if (wantToSeeAddedAt) await markTasteChanged(userId)
 	return { wantToSeeAddedAt, notInterested }
@@ -706,6 +768,57 @@ const listed = (rows: readonly EpisodeListRow[]): ListedEpisode[] =>
  * kept changing its state in between, and whatever Crate throws.
  */
 export async function applyTrackingEvent(
+	userId: string,
+	title: TrackedTitle,
+	event: TrackingAction,
+	actionId?: string,
+): Promise<TrackingResult> {
+	return withProductContext(
+		{
+			tmdb_id: canonicalTitleId(title.mediaType, title.tmdbId),
+			media_type: title.mediaType,
+			action: event.type,
+		},
+		async () => {
+			const result = await applyTrackingEventStored(
+				userId,
+				title,
+				event,
+				actionId,
+			)
+			if (result.status === "applied") {
+				const properties = {
+					action: event.type,
+					to_state: result.state?.state,
+					pass: result.state?.pass,
+					watch_count: result.inserted.length,
+					removed_count: result.deleted.length,
+					season_number: "season" in event ? event.season : undefined,
+					episode_number: "number" in event ? event.number : undefined,
+				}
+				captureProductEvent(
+					userId,
+					"tracking action applied",
+					properties,
+					actionId
+						? {
+								uuid: eventUuid(
+									`tracking:${userId}:${title.mediaType}:${title.tmdbId}:${event.type}:${actionId}`,
+								),
+							}
+						: {},
+				)
+				if (event.type === "editWatchDate" || event.type === "setGroupDate")
+					captureProductEvent(userId, "watch date changed", {
+						action: event.type,
+					})
+			}
+			return result
+		},
+	)
+}
+
+async function applyTrackingEventStored(
 	userId: string,
 	title: TrackedTitle,
 	event: TrackingAction,
@@ -1044,7 +1157,13 @@ export async function settleMovie(
 	let state = stateOnly(before)
 	if (settled.stateWrite === "insert") {
 		state = movieStateRow(now)
-		await insertState(userId, title, state, now)
+		if (await insertState(userId, title, state, now))
+			captureProductEvent(userId, "watch state changed", {
+				tmdb_id: title.tmdbId,
+				media_type: "movie",
+				from_state: "not_started",
+				to_state: "seen",
+			})
 	}
 	if (settled.stateWrite === "delete") {
 		state = null
@@ -1053,6 +1172,13 @@ export async function settleMovie(
 			[userId, title.tmdbId, "movie"],
 		)
 	}
+	if (settled.stateWrite === "delete")
+		captureProductEvent(userId, "watch state changed", {
+			tmdb_id: title.tmdbId,
+			media_type: "movie",
+			from_state: "seen",
+			to_state: "not_started",
+		})
 	return {
 		seen: settled.seen,
 		state,
@@ -1123,8 +1249,8 @@ export async function settleMovies(
 		}
 		await insertLog(userId, insert, now)
 		await deleteLog(userId, remove)
-		if (stateInsert.length)
-			await insertRows(
+		if (stateInsert.length) {
+			const insertedStates = await insertRows(
 				"user_watch_state",
 				STATE_COLUMNS,
 				stateInsert.map((movieId) => [
@@ -1137,11 +1263,35 @@ export async function settleMovies(
 				]),
 				{ conflict: STATE_KEY },
 			)
-		if (stateDelete.length)
-			await run(
+			if (insertedStates.rowcount)
+				captureProductEvent(userId, "watch state changed", {
+					media_type: "movie",
+					from_state: "not_started",
+					to_state: "seen",
+					watch_count: insertedStates.rowcount,
+					tmdb_ids:
+						insertedStates.rowcount === stateInsert.length
+							? stateInsert.slice(0, 100)
+							: undefined,
+				})
+		}
+		if (stateDelete.length) {
+			const deletedStates = await run(
 				`DELETE FROM user_watch_state WHERE user_id = ? AND media_type = 'movie' AND tmdb_id IN (${marks(stateDelete.length)})`,
 				[userId, ...stateDelete],
 			)
+			if (deletedStates.rowcount)
+				captureProductEvent(userId, "watch state changed", {
+					media_type: "movie",
+					from_state: "seen",
+					to_state: "not_started",
+					removed_count: deletedStates.rowcount,
+					tmdb_ids:
+						deletedStates.rowcount === stateDelete.length
+							? stateDelete.slice(0, 100)
+							: undefined,
+				})
+		}
 		inserted.push(...insert.map((r) => r.watch_id))
 		deleted.push(...remove)
 	}

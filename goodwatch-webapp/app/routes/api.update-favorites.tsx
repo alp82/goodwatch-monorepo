@@ -1,10 +1,10 @@
+import { analyticsAction } from "~/telemetry/product-analytics.server"
 import type { ActionFunction, ActionFunctionArgs } from "@remix-run/node"
 import { updateFavorites } from "~/server/favorites.server"
 import { getUserIdFromRequest } from "~/utils/auth"
 
-export const action: ActionFunction = async ({
-	request,
-}: ActionFunctionArgs) => {
+export const action: ActionFunction = analyticsAction(
+	async ({ request }: ActionFunctionArgs) => {
 	const params = await request.json()
 	const user_id = await getUserIdFromRequest({ request })
 
@@ -14,4 +14,5 @@ export const action: ActionFunction = async ({
 	})
 
 	return result
-}
+},
+)

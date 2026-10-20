@@ -1,3 +1,4 @@
+import { useProductExposure } from "~/telemetry/useProductAnalytics"
 import useLocale from "~/utils/locale"
 // The TV's search results: the full search for the query in the address, then the first four cards of Discover's
 // own results over its ranked list. Two requests, the two the Discover page makes for `/discover?q=`:
@@ -98,6 +99,17 @@ export function useTvSearch({
 	const data =
 		ranked?.length && !results.isPlaceholderData ? results.data : undefined
 	const cards = useMemo(() => searchCards(data?.cards ?? []), [data])
+	useProductExposure(
+		"discovery results shown",
+		data ? `${q}:${cards.length}` : null,
+		{
+			source: "living_room",
+			surface: "search",
+			has_query: Boolean(q),
+			query_length: q?.length ?? 0,
+			result_count: cards.length,
+		},
+	)
 	const failed =
 		q !== null && search.isError
 			? search.error.message

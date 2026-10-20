@@ -1,9 +1,20 @@
+import {
+	useProductExposure,
+	useProductAnalytics,
+} from "~/telemetry/useProductAnalytics"
 import useLocale from "~/utils/locale"
 import { mediaLanguageUrl } from "~/utils/media-presentation"
 // Binds the taste quiz flow to the person: the title queue from smart-titles, scores through useTasteScoring (guest
 // progress for guests, the account for members), and the picks those scores make. Both the /taste/quiz page and the
 // Living room TV render from what this hook returns.
-import { useCallback, useEffect, useMemo, useReducer, useState } from "react"
+import {
+	useCallback,
+	useEffect,
+	useMemo,
+	useReducer,
+	useState,
+	useRef,
+} from "react"
 import { fetchSmartTitles } from "~/routes/api.smart-titles"
 import { useUserData } from "~/routes/api.user-data"
 import type { Score } from "~/server/scores.server"
@@ -40,7 +51,18 @@ export function useTasteQuiz({
 	/** Fetch the picks now, whatever this hook's own state says (the TV keeps its quiz step in the URL). */
 	wantPicks?: boolean
 }) {
-	const { interactions, addScore, addSkip, addPlanToWatch } = useTasteScoring({
+	const track = useProductAnalytics({ source: "taste_quiz" })
+	useProductExposure("taste quiz started", enabled ? "quiz" : null, {
+		source: "taste_quiz",
+	})
+	const {
+		interactions,
+		addScore,
+		addSkip,
+		addPlanToWatch,
+		confirmedRatingCount: confirmed,
+		hasScored,
+	} = useTasteScoring({
 		isAuthenticated: member,
 	})
 	const { data: userData } = useUserData()
@@ -53,6 +75,18 @@ export function useTasteQuiz({
 		{ progress: 0, member, showPicks },
 		initialQuizState,
 	)
+	const completedGoals = useRef(new Set<number>())
+	useEffect(() => {
+		if (
+			!enabled ||
+			!hasScored ||
+			confirmed < state.goal ||
+			completedGoals.current.has(state.goal)
+		)
+			return
+		completedGoals.current.add(state.goal)
+		track("taste quiz completed", { rating_count: confirmed, goal: state.goal })
+	}, [confirmed, enabled, hasScored, state.goal, track])
 	// Guest progress lives in this browser, so it is read after hydration.
 	useEffect(() => {
 		if (member) return

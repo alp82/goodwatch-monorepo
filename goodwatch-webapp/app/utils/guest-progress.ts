@@ -1,3 +1,4 @@
+import { captureProductEvent } from "~/telemetry/product-analytics"
 import { canonicalTitleId } from "~/utils/title-identity"
 import { useSyncExternalStore } from "react"
 import type { TasteInteraction } from "~/ui/taste/types"
@@ -17,7 +18,9 @@ let memoryOnly = false
 const empty: TasteInteraction[] = []
 let lastRaw = ""
 let cached = empty
-export function normalizeGuestInteractions(parsed: unknown): TasteInteraction[] {
+export function normalizeGuestInteractions(
+	parsed: unknown,
+): TasteInteraction[] {
 	const unique = new Map<string, TasteInteraction>()
 	if (Array.isArray(parsed))
 		for (const value of parsed) {
@@ -131,8 +134,64 @@ export function updateGuestInteraction(
 			timestamp: Date.now(),
 		})
 	write(next)
+	const before = items.find(
+		(i) => i.media_type === mediaType && i.tmdb_id === tmdbId,
+	)
+	if (!remove && before && before.type !== type)
+		captureGuestMark(before, true, "replacement")
+	if (!remove || (before && before.type === type))
+		captureGuestMark(
+			{
+				media_type: mediaType,
+				tmdb_id: tmdbId,
+				type,
+				score: score ?? undefined,
+				timestamp: Date.now(),
+			},
+			remove,
+			"manual",
+			before?.score,
+		)
+
 	return true
 }
+function captureGuestMark(
+	item: TasteInteraction,
+	remove: boolean,
+	origin: string,
+	previousScore?: Score,
+) {
+	const event =
+		item.type === "score"
+			? remove
+				? "rating cleared"
+				: "rating saved"
+			: item.type === "plan"
+				? remove
+					? "want to see removed"
+					: "want to see added"
+				: item.type === "skip"
+					? remove
+						? "title unskipped"
+						: "title skipped"
+					: remove
+						? "not interested removed"
+						: "not interested added"
+	captureProductEvent(event, {
+		tmdb_id: item.tmdb_id,
+		media_type: item.media_type,
+		storage: "guest",
+		origin,
+		score:
+			item.type === "score"
+				? remove
+					? null
+					: (item.score ?? null)
+				: undefined,
+		previous_score: previousScore,
+	})
+}
+
 /** A title's guest interactions as they are now, for putting them back later with restoreGuestInteractions. */
 export function guestInteractionsOf(mediaType: MediaType, tmdbId: number) {
 	tmdbId = canonicalTitleId(mediaType, tmdbId)
@@ -147,12 +206,24 @@ export function restoreGuestInteractions(
 	previous: TasteInteraction[],
 ) {
 	tmdbId = canonicalTitleId(mediaType, tmdbId)
+	const current = guestInteractionsOf(mediaType, tmdbId)
 	write([
 		...readGuestInteractions().filter(
 			(i) => !(i.media_type === mediaType && i.tmdb_id === tmdbId),
 		),
 		...previous,
 	])
+	for (const item of current)
+		if (!previous.some((p) => p.type === item.type))
+			captureGuestMark(item, true, "undo")
+	for (const item of previous)
+		if (!current.some((c) => c.type === item.type && c.score === item.score))
+			captureGuestMark(
+				item,
+				false,
+				"undo",
+				current.find((c) => c.type === "score")?.score,
+			)
 }
 export function guestUserData(interactions: TasteInteraction[]): UserData {
 	const data: UserData = {
@@ -171,7 +242,8 @@ export function guestUserData(interactions: TasteInteraction[]): UserData {
 			data.scores[key] = { score: item.score!, review: null, updatedAt }
 		else if (item.type === "plan")
 			data.wishlist[key] = { createdAt: updatedAt, updatedAt }
-		else if (item.type === "not-interested") data.notInterested[key] = { updatedAt }
+		else if (item.type === "not-interested")
+			data.notInterested[key] = { updatedAt }
 		else data.skipped[key] = { updatedAt }
 	}
 	return data

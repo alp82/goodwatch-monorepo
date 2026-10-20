@@ -1,3 +1,4 @@
+import { useProductExposure } from "~/telemetry/useProductAnalytics"
 import { hasGoodwatchScore } from "~/utils/ratings"
 import { mediaFieldLanguage } from "~/utils/media-presentation"
 import { mediaTextAttributes } from "~/ui/media-text/media-text"
@@ -43,7 +44,15 @@ export function TitleData({
 }: Parameters<typeof useTvTitle>[0] & {
 	report: (title: TvTitleReport | null) => void
 }) {
-	useReport(report, useTvTitle(title))
+	const current = useTvTitle(title)
+	const ref = current.title ? parseTvTitleKey(current.title.key) : null
+	useProductExposure("title opened", current.title?.key ?? null, {
+		source: "living_room",
+		surface: "title",
+		tmdb_id: ref?.tmdbId,
+		media_type: ref?.mediaType,
+	})
+	useReport(report, current)
 	return null
 }
 
@@ -133,12 +142,19 @@ export function TitleView({
 					{where && <span className="text-white/80">{where}</span>}
 				</div>
 				{!P && line && (
-					<div {...mediaTextAttributes(lineLanguage ?? mediaFieldLanguage(title, "tagline"))} className="mt-3 line-clamp-2 max-w-[760px] text-[28px] leading-snug text-white/90">
+					<div
+						{...mediaTextAttributes(
+							lineLanguage ?? mediaFieldLanguage(title, "tagline"),
+						)}
+						className="mt-3 line-clamp-2 max-w-[760px] text-[28px] leading-snug text-white/90"
+					>
 						{line}
 					</div>
 				)}
 				{/* The phone: two keys to a row; the last row's right half is the Expand key's corner. */}
-				<div className={P ? "mt-3.5 grid grid-cols-2 gap-2" : "mt-8 flex gap-4"}>
+				<div
+					className={P ? "mt-3.5 grid grid-cols-2 gap-2" : "mt-8 flex gap-4"}
+				>
 					{keys.map((key) => (
 						<Item
 							key={key.id}

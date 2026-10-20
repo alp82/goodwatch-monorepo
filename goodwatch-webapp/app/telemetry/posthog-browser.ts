@@ -1,3 +1,7 @@
+import {
+	analyticsUserProperties,
+	setAnalyticsSession,
+} from "./product-analytics"
 // PostHog for the browser. Only telemetry.ts imports this module, with a dynamic import, so the SDK stays out of the
 // scripts a page needs to become interactive.
 import posthog from "posthog-js"
@@ -98,7 +102,25 @@ export function startPostHog({
 		// api_host: 'https://eu.i.posthog.com',
 		api_host: "https://a.goodwatch.app",
 		before_send: (event) =>
-			tagRoute(redactSearchTelemetry(applyPageViewOverrides(event))),
+			tagRoute(
+				redactSearchTelemetry(
+					applyPageViewOverrides(
+						event
+							? {
+									...event,
+									properties: {
+										...analyticsUserProperties(),
+										...event.properties,
+										user_id:
+											event.properties?.user_id ??
+											analyticsUserProperties().user_id ??
+											event.properties?.distinct_id,
+									},
+								}
+							: event,
+					),
+				),
+			),
 		capture_performance: WEB_VITALS_CAPTURE,
 		// The page sends its own page views: the landing page view below, with the values of the page load, and one per
 		// navigation inside the app (`capturePageView`). PostHog's `history_change` mode can't report a navigation made
@@ -114,6 +136,7 @@ export function startPostHog({
 		person_profiles: "identified_only", // or 'always' to create profiles for anonymous users as well
 	})
 
+	posthog.onSessionId((id) => setAnalyticsSession(id))
 	keepScrollDepthPerPage()
 
 	posthog.capture(

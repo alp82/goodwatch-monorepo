@@ -1,7 +1,9 @@
+import { analyticsAction } from "~/telemetry/product-analytics.server"
 import { type ActionFunctionArgs, json } from "@remix-run/node"
 import { importId, withMember } from "~/server/imports/http.server"
 import { undoImport } from "~/server/imports/service.server"
-export const action = ({ request, params }: ActionFunctionArgs) =>
+export const action = analyticsAction(
+	({ request, params }: ActionFunctionArgs) =>
 	withMember(request, async (userId, headers) =>
 		request.method === "POST"
 			? json(
@@ -9,4 +11,5 @@ export const action = ({ request, params }: ActionFunctionArgs) =>
 					{ headers },
 				)
 			: json({ error: "Method not allowed" }, { status: 405, headers }),
-	)
+	),
+)

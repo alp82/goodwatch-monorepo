@@ -1,3 +1,4 @@
+import { captureProductEvent } from "~/telemetry/product-analytics.server"
 import { markTasteChanged } from "~/server/taste/index.server"
 import { canonicalTitleId } from "~/utils/title-identity"
 import { resetOnboardingMediaCache } from "~/server/onboarding-media.server"
@@ -41,15 +42,24 @@ export const updateNotInterested = async ({
 			// Use upsert for adding Not interested titles
 			const result = await upsert({
 				table: "user_not_interested",
-				data: [{
-					user_id,
-					tmdb_id,
-					media_type: media_type,
-				}],
+				data: [
+					{
+						user_id,
+						tmdb_id,
+						media_type: media_type,
+					},
+				],
 				conflictColumns: ["user_id", "tmdb_id", "media_type"],
 				ignoreUpdate: true, // Just ignore if already exists
 			})
-			if (result.rowcount) markPersonalOrderChanged(user_id)
+			if (result.rowcount) {
+				captureProductEvent(
+					user_id,
+					action === "add" ? "not interested added" : "not interested removed",
+					{ tmdb_id, media_type },
+				)
+				markPersonalOrderChanged(user_id)
+			}
 		} else {
 			// Use execute for deleting Not interested titles
 			const sql = `
@@ -58,7 +68,14 @@ export const updateNotInterested = async ({
 			`
 			const params = [user_id, tmdb_id, media_type]
 			const result = await execute(sql, params)
-			if (result.rowcount) markPersonalOrderChanged(user_id)
+			if (result.rowcount) {
+				captureProductEvent(
+					user_id,
+					action === "add" ? "not interested added" : "not interested removed",
+					{ tmdb_id, media_type },
+				)
+				markPersonalOrderChanged(user_id)
+			}
 		}
 
 		if (action === "add") {
@@ -67,7 +84,14 @@ export const updateNotInterested = async ({
 				[user_id, tmdb_id, media_type],
 			)
 			// Removing Want to See changes taste; the hide itself is never a taste signal.
-			if (removed.rowcount) await markTasteChanged(user_id)
+			if (removed.rowcount) {
+				captureProductEvent(user_id, "want to see removed", {
+					tmdb_id,
+					media_type,
+					origin: "not_interested",
+				})
+				await markTasteChanged(user_id)
+			}
 		}
 		await resetUserDataCache({ user_id })
 		await resetOnboardingMediaCache({ userId: user_id, searchTerm: "" })

@@ -1,3 +1,4 @@
+import { productAnalyticsFetch } from "~/telemetry/product-analytics"
 // One show's tracking on its page, for a member (#384). The hero box and the episode list are separate chunks that
 // load at different times, so what they share lives here, outside React: the show's session (the browser's copy
 // and the actions on their way), the toast, the dialog that sets a group's date, and the request to open an
@@ -71,7 +72,7 @@ async function readShow(
 	showId: number,
 	language = "en",
 ): Promise<ShowTrackingPage> {
-	const response = await fetch(
+	const response = await productAnalyticsFetch(
 		mediaLanguageUrl(`${ENDPOINT}?id=${showId}`, language),
 	)
 	if (!response.ok)
@@ -80,7 +81,7 @@ async function readShow(
 }
 
 async function sendAction(showId: number, body: object): Promise<ActionAnswer> {
-	const response = await fetch(ENDPOINT, {
+	const response = await productAnalyticsFetch(ENDPOINT, {
 		method: "POST",
 		body: JSON.stringify({ id: showId, ...body }),
 	})

@@ -1,3 +1,4 @@
+import { analyticsAction } from "~/telemetry/product-analytics.server"
 import { type ActionFunctionArgs, json } from "@remix-run/node"
 import { z } from "zod"
 import {
@@ -29,7 +30,7 @@ const bodySchema = z.union([
 	}),
 ])
 
-export async function action({ request }: ActionFunctionArgs) {
+async function productAction({ request }: ActionFunctionArgs) {
 	if (request.method !== "POST")
 		return json({ error: "Method not allowed" }, { status: 405, headers })
 	const userId = await getUserIdFromRequest({ request })
@@ -48,3 +49,5 @@ export async function action({ request }: ActionFunctionArgs) {
 	await undoFinishTitle(userId, body.undo)
 	return json({ ok: true }, { headers })
 }
+
+export const action = analyticsAction(productAction)

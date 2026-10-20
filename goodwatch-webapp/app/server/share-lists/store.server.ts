@@ -1,3 +1,4 @@
+import { captureProductEvent } from "~/telemetry/product-analytics.server"
 // Share lists and public profiles in Crate (doc.user_list, doc.user_profile, doc.user_handle).
 // Every write validates its input and checks ownership; reads right after a write refresh the table first,
 // because Crate makes writes visible to reads about once a second.
@@ -5,16 +6,51 @@
 // A handle is chosen once and never changes. The list card and link preview print it, so nobody signs as someone else.
 // The signature and display_name columns are no longer read or written.
 import { createHash, randomBytes } from "node:crypto"
-import { entryKey, type ListEntry, parseTitleKey, resolveCardTitles } from "~/server/share-lists/titles.server"
+import {
+	entryKey,
+	type ListEntry,
+	parseTitleKey,
+	resolveCardTitles,
+} from "~/server/share-lists/titles.server"
 import { isDesignKey } from "~/ui/share-card/designs"
-import { isPromptId, isThemeKey, LIST_SIZE, type ThemeKey, TITLE_MAX_LENGTH } from "~/ui/share-card/model"
+import {
+	isPromptId,
+	isThemeKey,
+	LIST_SIZE,
+	type ThemeKey,
+	TITLE_MAX_LENGTH,
+} from "~/ui/share-card/model"
 import { execute, query } from "~/utils/crate"
-import { HANDLE_MAX, handleFromText, handleProblem, normalizeHandle } from "~/utils/handles"
+import {
+	HANDLE_MAX,
+	handleFromText,
+	handleProblem,
+	normalizeHandle,
+} from "~/utils/handles"
 
-import { LIST_COLUMNS, type ListRow, fromRow, getList, getProfileByUserId, resetListView, resetProfileViews } from "./view.server"
+import {
+	LIST_COLUMNS,
+	type ListRow,
+	fromRow,
+	getList,
+	getProfileByUserId,
+	resetListView,
+	resetProfileViews,
+} from "./view.server"
 
-export { type ListView, getList, getListView, getProfileByUserId, resetListView } from "./view.server"
-export { HANDLE_MAX, HANDLE_MIN, handleProblem, normalizeHandle } from "~/utils/handles"
+export {
+	type ListView,
+	getList,
+	getListView,
+	getProfileByUserId,
+	resetListView,
+} from "./view.server"
+export {
+	HANDLE_MAX,
+	HANDLE_MIN,
+	handleProblem,
+	normalizeHandle,
+} from "~/utils/handles"
 
 export type Visibility = "public" | "unlisted"
 
@@ -62,12 +98,19 @@ export class ShareListError extends Error {
 
 /** Lists are published under the owner's handle, so every write that shares one needs a claimed handle first. */
 async function requireHandle(userId: string) {
-	if (!(await getProfileByUserId(userId))) throw new ShareListError(403, "Choose your handle before you share lists.", "handle_required")
+	if (!(await getProfileByUserId(userId)))
+		throw new ShareListError(
+			403,
+			"Choose your handle before you share lists.",
+			"handle_required",
+		)
 }
 
 // Crate's client types its parameters narrowly; list items are objects.
-const run = (sql: string, params: unknown[]) => execute(sql, params as (string | number | Date)[])
-const select = <T extends {}>(sql: string, params: unknown[]) => query<T>(sql, params as (string | number | Date)[])
+const run = (sql: string, params: unknown[]) =>
+	execute(sql, params as (string | number | Date)[])
+const select = <T extends {}>(sql: string, params: unknown[]) =>
+	query<T>(sql, params as (string | number | Date)[])
 
 const BASE62 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 export function newListId(length = 10) {
@@ -82,33 +125,60 @@ export function newListId(length = 10) {
 }
 
 /** Identifies what a list's card shows. The card image URL carries it. */
-export function contentHash(list: Pick<ShareList, "design" | "theme" | "title" | "items">) {
-	const content = JSON.stringify([list.design, list.theme, list.title, list.items.map(entryKey)])
+export function contentHash(
+	list: Pick<ShareList, "design" | "theme" | "title" | "items">,
+) {
+	const content = JSON.stringify([
+		list.design,
+		list.theme,
+		list.title,
+		list.items.map(entryKey),
+	])
 	return createHash("sha256").update(content).digest("base64url").slice(0, 12)
 }
 
-const clean = (text: unknown) => (typeof text === "string" ? text.replace(/\s+/g, " ").trim() : "")
+const clean = (text: unknown) =>
+	typeof text === "string" ? text.replace(/\s+/g, " ").trim() : ""
 
 /** Checks and normalizes a list, including that every title exists in the catalog. */
 export async function validateList(input: ShareListInput) {
 	const title = clean(input.title)
 	if (!title) throw new ShareListError(400, "Give the list a title.")
-	if (title.length > TITLE_MAX_LENGTH) throw new ShareListError(400, `Titles can be up to ${TITLE_MAX_LENGTH} characters.`)
-	if (!isDesignKey(input.design)) throw new ShareListError(400, "Unknown card design.")
-	if (!isThemeKey(input.theme)) throw new ShareListError(400, "Unknown color theme.")
-	const promptId = input.promptId && isPromptId(input.promptId) ? input.promptId : null
+	if (title.length > TITLE_MAX_LENGTH)
+		throw new ShareListError(
+			400,
+			`Titles can be up to ${TITLE_MAX_LENGTH} characters.`,
+		)
+	if (!isDesignKey(input.design))
+		throw new ShareListError(400, "Unknown card design.")
+	if (!isThemeKey(input.theme))
+		throw new ShareListError(400, "Unknown color theme.")
+	const promptId =
+		input.promptId && isPromptId(input.promptId) ? input.promptId : null
 	const visibility = input.visibility ?? "public"
-	if (visibility !== "public" && visibility !== "unlisted") throw new ShareListError(400, "Unknown visibility.")
+	if (visibility !== "public" && visibility !== "unlisted")
+		throw new ShareListError(400, "Unknown visibility.")
 
-	if (!Array.isArray(input.items) || input.items.length !== LIST_SIZE) throw new ShareListError(400, `A list has exactly ${LIST_SIZE} titles.`)
+	if (!Array.isArray(input.items) || input.items.length !== LIST_SIZE)
+		throw new ShareListError(400, `A list has exactly ${LIST_SIZE} titles.`)
 	const items = input.items.map((key) => parseTitleKey(String(key)))
-	if (items.some((item) => !item)) throw new ShareListError(400, "Unknown title.")
+	if (items.some((item) => !item))
+		throw new ShareListError(400, "Unknown title.")
 	const entries = items as ListEntry[]
-	if (new Set(entries.map(entryKey)).size !== entries.length) throw new ShareListError(400, "Each title can appear once.")
+	if (new Set(entries.map(entryKey)).size !== entries.length)
+		throw new ShareListError(400, "Each title can appear once.")
 	const found = await resolveCardTitles(entries)
-	if (found.length !== entries.length) throw new ShareListError(400, "Some titles aren't in the catalog.")
+	if (found.length !== entries.length)
+		throw new ShareListError(400, "Some titles aren't in the catalog.")
 
-	return { title, design: input.design, theme: input.theme, promptId, visibility, items: entries }
+	return {
+		title,
+		design: input.design,
+		theme: input.theme,
+		promptId,
+		visibility,
+		items: entries,
+	}
 }
 
 const refreshLists = () => run("REFRESH TABLE doc.user_list", [])
@@ -116,84 +186,173 @@ const refreshLists = () => run("REFRESH TABLE doc.user_list", [])
 async function ownedList(userId: string, id: string) {
 	const list = await getList(id)
 	if (!list) throw new ShareListError(404, "This list doesn't exist.")
-	if (list.userId !== userId) throw new ShareListError(403, "Only the list's owner can change it.")
+	if (list.userId !== userId)
+		throw new ShareListError(403, "Only the list's owner can change it.")
 	return list
 }
 
 export async function listsByUser(userId: string): Promise<ShareList[]> {
-	const rows = await select<ListRow>(`SELECT ${LIST_COLUMNS} FROM doc.user_list WHERE user_id = ? AND deleted_at IS NULL ORDER BY updated_at DESC LIMIT 200`, [userId])
+	const rows = await select<ListRow>(
+		`SELECT ${LIST_COLUMNS} FROM doc.user_list WHERE user_id = ? AND deleted_at IS NULL ORDER BY updated_at DESC LIMIT 200`,
+		[userId],
+	)
 	return rows.map(fromRow)
 }
 
 export { publicListsByUser, getProfileByHandle } from "./view.server"
 
-export async function createList(userId: string, input: ShareListInput): Promise<ShareList> {
+export async function createList(
+	userId: string,
+	input: ShareListInput,
+): Promise<ShareList> {
 	await requireHandle(userId)
 	const valid = await validateList(input)
-	const remixedFrom = input.remixedFrom ? ((await getList(input.remixedFrom))?.id ?? null) : null
+	const remixedFrom = input.remixedFrom
+		? ((await getList(input.remixedFrom))?.id ?? null)
+		: null
 	const now = new Date()
 	const id = newListId()
 	const hash = contentHash(valid)
 	try {
 		await run(
 			`INSERT INTO doc.user_list (${LIST_COLUMNS}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-			[id, userId, valid.title, valid.promptId, valid.design, valid.theme, valid.items, valid.visibility, remixedFrom, hash, now, now],
+			[
+				id,
+				userId,
+				valid.title,
+				valid.promptId,
+				valid.design,
+				valid.theme,
+				valid.items,
+				valid.visibility,
+				remixedFrom,
+				hash,
+				now,
+				now,
+			],
 		)
 		await refreshLists()
 	} finally {
 		await resetListView(id)
 	}
-	return (await getList(id)) as ShareList
+	const saved = (await getList(id)) as ShareList
+	if (saved) captureProductEvent(userId, "list saved", {
+		list_id: id,
+		item_count: saved.items.length,
+		visibility: saved.visibility,
+	})
+	return saved
 }
 
-export async function updateList(userId: string, id: string, input: ShareListInput, options: { expectedContentHash?: string; expectedUpdatedAt?: string } = {}): Promise<ShareList> {
+export async function updateList(
+	userId: string,
+	id: string,
+	input: ShareListInput,
+	options: { expectedContentHash?: string; expectedUpdatedAt?: string } = {},
+): Promise<ShareList> {
 	await requireHandle(userId)
 	const current = await ownedList(userId, id)
-	if (options.expectedContentHash !== undefined && current.contentHash !== options.expectedContentHash)
-		throw new ShareListError(409, "The list changed. Read it again before editing.")
-	const valid = await validateList({ ...input, visibility: input.visibility ?? current.visibility })
+	if (
+		options.expectedContentHash !== undefined &&
+		current.contentHash !== options.expectedContentHash
+	)
+		throw new ShareListError(
+			409,
+			"The list changed. Read it again before editing.",
+		)
+	const valid = await validateList({
+		...input,
+		visibility: input.visibility ?? current.visibility,
+	})
 	// MCP edits keep the five-title invariant without overwriting an intervening site or MCP edit.
 	// The full primary-key read is real-time; CAS must use only the primary key and version predicates.
 	let version: { seq: number; term: number } | undefined
 	if (options.expectedContentHash !== undefined) {
-		const [row] = await select<{ user_id: string; content_hash: string; updated_at: number; deleted_at: number | null; seq: number; term: number }>(
-			"SELECT user_id, content_hash, updated_at, deleted_at, _seq_no AS seq, _primary_term AS term FROM doc.user_list WHERE id = ?", [id])
-		if (!row || row.user_id !== userId || row.deleted_at != null || row.content_hash !== options.expectedContentHash ||
-			(options.expectedUpdatedAt !== undefined && new Date(row.updated_at).toISOString() !== options.expectedUpdatedAt))
-			throw new ShareListError(409, "The list changed. Read it again before editing.")
+		const [row] = await select<{
+			user_id: string
+			content_hash: string
+			updated_at: number
+			deleted_at: number | null
+			seq: number
+			term: number
+		}>(
+			"SELECT user_id, content_hash, updated_at, deleted_at, _seq_no AS seq, _primary_term AS term FROM doc.user_list WHERE id = ?",
+			[id],
+		)
+		if (
+			!row ||
+			row.user_id !== userId ||
+			row.deleted_at != null ||
+			row.content_hash !== options.expectedContentHash ||
+			(options.expectedUpdatedAt !== undefined &&
+				new Date(row.updated_at).toISOString() !== options.expectedUpdatedAt)
+		)
+			throw new ShareListError(
+				409,
+				"The list changed. Read it again before editing.",
+			)
 		version = row
 	}
 	try {
 		const result = await run(
 			`UPDATE doc.user_list SET title = ?, prompt_id = ?, design = ?, theme = ?, items = ?, visibility = ?,
 			 content_hash = ?, updated_at = ? WHERE id = ? AND ${version ? "_seq_no = ? AND _primary_term = ?" : "user_id = ? AND deleted_at IS NULL"}`,
-			[valid.title, valid.promptId, valid.design, valid.theme, valid.items, valid.visibility, contentHash(valid), new Date(), id, ...(version ? [version.seq, version.term] : [userId])],
+			[
+				valid.title,
+				valid.promptId,
+				valid.design,
+				valid.theme,
+				valid.items,
+				valid.visibility,
+				contentHash(valid),
+				new Date(),
+				id,
+				...(version ? [version.seq, version.term] : [userId]),
+			],
 		)
 		if (result.rowcount !== 1 && options.expectedContentHash !== undefined)
-			throw new ShareListError(409, "The list changed. Read it again before editing.")
+			throw new ShareListError(
+				409,
+				"The list changed. Read it again before editing.",
+			)
 		await refreshLists()
 	} finally {
 		await resetListView(id)
 	}
-	return (await getList(id)) as ShareList
+	const saved = (await getList(id)) as ShareList
+	if (saved) captureProductEvent(userId, "list saved", {
+		list_id: id,
+		item_count: saved.items.length,
+		visibility: saved.visibility,
+	})
+	return saved
 }
 
-export async function setListVisibility(userId: string, id: string, visibility: Visibility): Promise<ShareList> {
-	if (visibility !== "public" && visibility !== "unlisted") throw new ShareListError(400, "Unknown visibility.")
+export async function setListVisibility(
+	userId: string,
+	id: string,
+	visibility: Visibility,
+): Promise<ShareList> {
+	if (visibility !== "public" && visibility !== "unlisted")
+		throw new ShareListError(400, "Unknown visibility.")
 	await requireHandle(userId)
 	await ownedList(userId, id)
 	try {
-		await run("UPDATE doc.user_list SET visibility = ?, updated_at = ? WHERE id = ? AND user_id = ? AND deleted_at IS NULL", [
-			visibility,
-			new Date(),
-			id,
-			userId,
-		])
+		await run(
+			"UPDATE doc.user_list SET visibility = ?, updated_at = ? WHERE id = ? AND user_id = ? AND deleted_at IS NULL",
+			[visibility, new Date(), id, userId],
+		)
 		await refreshLists()
 	} finally {
 		await resetListView(id)
 	}
-	return (await getList(id)) as ShareList
+	const saved = (await getList(id)) as ShareList
+	if (saved) captureProductEvent(userId, "list saved", {
+		list_id: id,
+		item_count: saved.items.length,
+		visibility: saved.visibility,
+	})
+	return saved
 }
 
 /** Soft-deletes a list: it keeps its row with deleted_at set, and every read treats it as gone. */
@@ -201,7 +360,12 @@ export async function deleteList(userId: string, id: string): Promise<void> {
 	await ownedList(userId, id)
 	const now = new Date()
 	try {
-		await run("UPDATE doc.user_list SET deleted_at = ?, updated_at = ? WHERE id = ? AND user_id = ? AND deleted_at IS NULL", [now, now, id, userId])
+		const deleted = await run(
+			"UPDATE doc.user_list SET deleted_at = ?, updated_at = ? WHERE id = ? AND user_id = ? AND deleted_at IS NULL",
+			[now, now, id, userId],
+		)
+		if (deleted.rowcount)
+			captureProductEvent(userId, "list deleted", { list_id: id })
 		await refreshLists()
 	} finally {
 		await resetListView(id)
@@ -212,8 +376,12 @@ export async function deleteList(userId: string, id: string): Promise<void> {
 export const UNDO_DELETE_MS = 10 * 60 * 1000
 
 /** Undoes a recent delete. Only the owner can, and only within UNDO_DELETE_MS. */
-export async function restoreList(userId: string, id: string): Promise<ShareList> {
-	if (!/^[0-9A-Za-z]{10}$/.test(id)) throw new ShareListError(404, "This list doesn't exist.")
+export async function restoreList(
+	userId: string,
+	id: string,
+): Promise<ShareList> {
+	if (!/^[0-9A-Za-z]{10}$/.test(id))
+		throw new ShareListError(404, "This list doesn't exist.")
 	await requireHandle(userId)
 	try {
 		await run(
@@ -225,7 +393,8 @@ export async function restoreList(userId: string, id: string): Promise<ShareList
 		await resetListView(id)
 	}
 	const list = await getList(id)
-	if (!list || list.userId !== userId) throw new ShareListError(404, "This list can't be restored anymore.")
+	if (!list || list.userId !== userId)
+		throw new ShareListError(404, "This list can't be restored anymore.")
 	return list
 }
 
@@ -237,12 +406,18 @@ export async function restoreList(userId: string, id: string): Promise<ShareList
 
 // Reads by primary key are real-time in Crate, so this sees a claim made a moment ago.
 async function handleOwner(handle: string): Promise<string | null> {
-	const [row] = await select<{ user_id: string }>("SELECT user_id FROM doc.user_handle WHERE handle = ?", [handle])
+	const [row] = await select<{ user_id: string }>(
+		"SELECT user_id FROM doc.user_handle WHERE handle = ?",
+		[handle],
+	)
 	return row?.user_id ?? null
 }
 
 /** Whether someone else has the handle. Deleted accounts keep theirs. */
-export async function isHandleTaken(handle: string, userId?: string): Promise<boolean> {
+export async function isHandleTaken(
+	handle: string,
+	userId?: string,
+): Promise<boolean> {
 	const owner = await handleOwner(handle)
 	return owner !== null && owner !== userId
 }
@@ -251,8 +426,13 @@ export async function isHandleTaken(handle: string, userId?: string): Promise<bo
  * The first free handle among the candidates, trying each as is and then with 2 to 9 appended. Candidates are free
  * text (an account name, the name part of an email address); unusable ones are skipped. Null when none is free.
  */
-export async function suggestHandle(userId: string, candidates: (string | null | undefined)[]): Promise<string | null> {
-	const bases = [...new Set(candidates.map(handleFromText).filter((h): h is string => !!h))]
+export async function suggestHandle(
+	userId: string,
+	candidates: (string | null | undefined)[],
+): Promise<string | null> {
+	const bases = [
+		...new Set(candidates.map(handleFromText).filter((h): h is string => !!h)),
+	]
 	for (const base of bases) {
 		for (const suffix of ["", "2", "3", "4", "5", "6", "7", "8", "9"]) {
 			const handle = `${base.slice(0, HANDLE_MAX - suffix.length)}${suffix}`
@@ -267,7 +447,10 @@ export async function suggestHandle(userId: string, candidates: (string | null |
  * Claims the person's handle. It can be claimed once: someone who already has a handle gets 409, unless they claim
  * the same one again. Exactly one of two people claiming the same handle at once succeeds.
  */
-export async function claimHandle(userId: string, rawHandle: string): Promise<Profile> {
+export async function claimHandle(
+	userId: string,
+	rawHandle: string,
+): Promise<Profile> {
 	const handle = normalizeHandle(rawHandle)
 	const problem = handleProblem(handle)
 	if (problem) throw new ShareListError(400, problem)
@@ -275,22 +458,30 @@ export async function claimHandle(userId: string, rawHandle: string): Promise<Pr
 	const current = await getProfileByUserId(userId)
 	if (current) {
 		if (current.handle === handle) return current
-		throw new ShareListError(409, "Your handle is already set and can't be changed.")
+		throw new ShareListError(
+			409,
+			"Your handle is already set and can't be changed.",
+		)
 	}
 
 	const now = new Date()
-	const ids = await select<{ id: string }>("SELECT id FROM doc.user_list WHERE user_id = ? LIMIT 1000", [userId])
+	const ids = await select<{ id: string }>(
+		"SELECT id FROM doc.user_list WHERE user_id = ? LIMIT 1000",
+		[userId],
+	)
 	try {
-		await run("INSERT INTO doc.user_handle (handle, user_id, claimed_at) VALUES (?, ?, ?) ON CONFLICT (handle) DO NOTHING", [handle, userId, now])
+		await run(
+			"INSERT INTO doc.user_handle (handle, user_id, claimed_at) VALUES (?, ?, ?) ON CONFLICT (handle) DO NOTHING",
+			[handle, userId, now],
+		)
 		await run("REFRESH TABLE doc.user_handle", [])
-		if ((await handleOwner(handle)) !== userId) throw new ShareListError(409, "That handle is taken.")
+		if ((await handleOwner(handle)) !== userId)
+			throw new ShareListError(409, "That handle is taken.")
 
-		await run("INSERT INTO doc.user_profile (user_id, handle, created_at, updated_at) VALUES (?, ?, ?, ?) ON CONFLICT (user_id) DO NOTHING", [
-			userId,
-			handle,
-			now,
-			now,
-		])
+		await run(
+			"INSERT INTO doc.user_profile (user_id, handle, created_at, updated_at) VALUES (?, ?, ?, ?) ON CONFLICT (user_id) DO NOTHING",
+			[userId, handle, now, now],
+		)
 		await run("REFRESH TABLE doc.user_profile", [])
 	} finally {
 		await Promise.all(ids.map(({ id }) => resetListView(id)))
@@ -306,12 +497,27 @@ export async function claimHandle(userId: string, rawHandle: string): Promise<Pr
  */
 export async function deleteAccountData(userId: string): Promise<void> {
 	const now = new Date()
-	const ids = await select<{ id: string }>("SELECT id FROM doc.user_list WHERE user_id = ? LIMIT 1000", [userId])
+	const ids = await select<{ id: string }>(
+		"SELECT id FROM doc.user_list WHERE user_id = ? LIMIT 1000",
+		[userId],
+	)
 	try {
-		await run("UPDATE doc.user_list SET deleted_at = ?, updated_at = ? WHERE user_id = ? AND deleted_at IS NULL", [now, now, userId])
-		await run("UPDATE doc.user_profile SET deleted_at = ?, updated_at = ? WHERE user_id = ? AND deleted_at IS NULL", [now, now, userId])
-		await run("UPDATE doc.user_handle SET deleted_at = ? WHERE user_id = ? AND deleted_at IS NULL", [now, userId])
-		await run("REFRESH TABLE doc.user_list, doc.user_profile, doc.user_handle", [])
+		await run(
+			"UPDATE doc.user_list SET deleted_at = ?, updated_at = ? WHERE user_id = ? AND deleted_at IS NULL",
+			[now, now, userId],
+		)
+		await run(
+			"UPDATE doc.user_profile SET deleted_at = ?, updated_at = ? WHERE user_id = ? AND deleted_at IS NULL",
+			[now, now, userId],
+		)
+		await run(
+			"UPDATE doc.user_handle SET deleted_at = ? WHERE user_id = ? AND deleted_at IS NULL",
+			[now, userId],
+		)
+		await run(
+			"REFRESH TABLE doc.user_list, doc.user_profile, doc.user_handle",
+			[],
+		)
 	} finally {
 		await Promise.all(ids.map(({ id }) => resetListView(id)))
 		await resetProfileViews(userId)

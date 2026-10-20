@@ -1,3 +1,4 @@
+import { captureProductEvent } from "~/telemetry/product-analytics.server"
 import { randomUUID } from "node:crypto"
 import { execute, query, upsert } from "../utils/crate.ts"
 import {
@@ -154,5 +155,9 @@ export async function writeMediaPreferences(
 	const stored = await readMediaPreferences(userId)
 	if (options.adoptOnly && stored.record) return stored.record
 	if (stored.raw !== raw) throw new MediaPreferencesConflict()
+	captureProductEvent(userId, "settings changed", {
+		setting_keys: ["country", "language"],
+		country: record.country,
+	})
 	return record
 }

@@ -1,3 +1,8 @@
+import {
+	captureProductEvent,
+	withProductContext,
+	eventUuid,
+} from "~/telemetry/product-analytics.server"
 import type { UndoOutcome } from "~/domain/import-result"
 import type { ImportItem, ImportOptions, ImportSummary } from "~/domain/imports"
 import { canImportWantToSee } from "../../domain/imports.ts"
@@ -426,7 +431,11 @@ export async function recount(importId: string) {
 	return tally
 }
 
-async function applyRun(userId: string, id: string, options: ImportOptions) {
+async function applyRunStored(
+	userId: string,
+	id: string,
+	options: ImportOptions,
+) {
 	if (activeRuns.has(id)) return
 	activeRuns.add(id)
 	let beat: NodeJS.Timeout | undefined
@@ -512,6 +521,30 @@ async function applyRun(userId: string, id: string, options: ImportOptions) {
 			}
 			tally[state]++
 			await markItem(id, item, state)
+			if (
+				(state === "added" || state === "updated") &&
+				(item.kind === "rating" ||
+					item.kind === "review" ||
+					isWant(item) ||
+					item.kind === "favorite")
+			)
+				captureProductEvent(
+					userId,
+					isWant(item)
+						? "want to see added"
+						: item.kind === "favorite"
+							? "favorite added"
+							: item.kind === "review" ? "review saved" : "rating saved",
+					{
+						tmdb_id: item.tmdbId ?? undefined,
+						media_type: item.mediaType,
+						score: item.score ?? undefined,
+						has_review: Boolean(item.review),
+						origin: "import",
+						import_id: id,
+					},
+					{ uuid: eventUuid(`import-item:${userId}:${id}:${item.index}`) },
+				)
 			await recount(id)
 		}
 		// tracking.server.ts completes watch items and stores its plans; imported lazily to keep parser-only tests light.
@@ -660,6 +693,23 @@ async function undoScore(
 			],
 		)
 	}
+	if (result.rowcount)
+		captureProductEvent(
+			userId,
+			item.kind === "review" ? "review saved" : journal.before.score == null ? "rating cleared" : "rating saved",
+			{
+				tmdb_id: item.tmdbId ?? undefined,
+				media_type: item.mediaType,
+				score: journal.before.score ?? null,
+				origin: "undo",
+				import_id: importId,
+			},
+			{
+				uuid: eventUuid(
+					`import-undo-score:${userId}:${importId}:${item.index}`,
+				),
+			},
+		)
 	return result.rowcount === 0 ? "left" : "reverted"
 }
 
@@ -705,7 +755,7 @@ async function undoSet(
 	return result.rowcount === 0 ? "left" : "reverted"
 }
 
-export async function undoImport(
+async function undoImportStored(
 	userId: string,
 	id: string,
 ): Promise<ImportSummary> {
@@ -801,6 +851,12 @@ export async function undoImport(
 			"UPDATE doc.user_import SET status = 'undone', updated_at = CURRENT_TIMESTAMP, finished_at = CURRENT_TIMESTAMP WHERE id = ?",
 			[id],
 		)
+		captureProductEvent(
+			userId,
+			"import undone",
+			{ import_id: id, origin: "undo", import_source: row.source },
+			{ uuid: eventUuid(`import:${userId}:${id}:undone`) },
+		)
 		await resetMemberData(userId)
 		await refreshImports()
 		return summarize(await getImportRow(userId, id))
@@ -815,4 +871,52 @@ export async function undoImport(
 		clearInterval(beat)
 		activeRuns.delete(id)
 	}
+}
+
+async function applyRun(userId: string, id: string, options: ImportOptions) {
+	return withProductContext(
+		{ origin: "import", import_id: id, batch_id: id },
+		async () => {
+			captureProductEvent(
+				userId,
+				"import started",
+				{ import_id: id },
+				{ uuid: eventUuid(`import:${userId}:${id}:started`) },
+			)
+			try {
+				return await applyRunStored(userId, id, options)
+			} finally {
+				try {
+					const row = await getImportRow(userId, id)
+					if (row.status === "done" || row.status === "failed")
+						captureProductEvent(
+							userId,
+							row.status === "done" ? "import completed" : "import failed",
+							{
+								import_id: id,
+								import_source: row.source,
+								added: row.added,
+								updated: row.updated,
+								kept: row.kept,
+								failed: row.failed,
+							},
+							{
+								uuid: eventUuid(
+									`import:${userId}:${id}:${row.status}:${row.finished_at ?? row.updated_at}`,
+								),
+							},
+						)
+				} catch {
+					/* An analytics read must not change an import's outcome. */
+				}
+			}
+		},
+	)
+}
+
+export async function undoImport(userId: string, importId: string) {
+	return withProductContext(
+		{ origin: "undo", import_id: importId, batch_id: importId },
+		() => undoImportStored(userId, importId),
+	)
 }

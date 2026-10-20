@@ -1,3 +1,4 @@
+import { analyticsAction } from "~/telemetry/product-analytics.server"
 import { type ActionFunctionArgs, json } from "@remix-run/node"
 import { z } from "zod"
 import { IMPORT_KINDS } from "~/domain/imports"
@@ -12,7 +13,8 @@ const schema = z
 		wishlistShows: z.boolean().optional(),
 	})
 	.strict()
-export const action = ({ request, params }: ActionFunctionArgs) =>
+export const action = analyticsAction(
+	({ request, params }: ActionFunctionArgs) =>
 	withMember(request, async (userId, headers) => {
 		if (request.method !== "POST")
 			return json({ error: "Method not allowed" }, { status: 405, headers })
@@ -26,4 +28,5 @@ export const action = ({ request, params }: ActionFunctionArgs) =>
 			{ import: await confirmImport(userId, importId(params), parsed.data) },
 			{ headers },
 		)
-	})
+	}),
+)

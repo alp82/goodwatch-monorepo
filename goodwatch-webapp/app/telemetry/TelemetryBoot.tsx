@@ -1,3 +1,7 @@
+import {
+	installProductInteractions,
+	setAnalyticsUser,
+} from "./product-analytics"
 import { useLocation, useMatches, useNavigationType } from "@remix-run/react"
 import { useEffect, useRef } from "react"
 import { useUser } from "~/utils/auth"
@@ -40,6 +44,8 @@ export function TelemetryBoot() {
 	}, [location])
 
 	useEffect(() => {
+		setAnalyticsUser(user?.id ?? null)
+		installProductInteractions()
 		setTelemetryMember(Boolean(user))
 		startTelemetry()
 		// The call waits until PostHog has loaded, so a sign-in before that point is still identified.
@@ -52,15 +58,10 @@ export function TelemetryBoot() {
 				return
 			}
 
-			posthog.identify(user.email, user)
-
-			posthog.capture("$set", {
-				$set_once: { initial_login: new Date() },
-			})
-
-			posthog.capture("Pageview", {
-				full_referrer: document.referrer,
-			})
+			// Link the legacy email identity before switching to the immutable account ID.
+			if (posthog.get_distinct_id() === user.email)
+				posthog.alias(user.id, user.email)
+			posthog.identify(user.id, { user_id: user.id })
 
 			identified.current = true
 		})

@@ -1,3 +1,4 @@
+import { useProductExposure } from "~/telemetry/useProductAnalytics"
 import { SERVICES_PATH } from "~/ui/settings/paths"
 import {
 	AdjustmentsHorizontalIcon,
@@ -122,6 +123,8 @@ export default function WhereToWatch({
 		]),
 	) as Record<OfferTab, StreamingLink[]>
 	const links = linksByTab[type]
+ useProductExposure("availability checked", preview ? null : `${media.details.tmdb_id}:${country}:${type}`,
+  { tmdb_id: media.details.tmdb_id, media_type: media.mediaType, country, offer_type: type, result_count: links.length })
 	const countries = useMemo(
 		() => countriesWithOffers(media, type),
 		[media, type],
@@ -261,7 +264,7 @@ export default function WhereToWatch({
 						return (
 							<a
 								key={l.id}
-								href={l.url}
+								href={l.url} data-product-event="streaming service clicked" data-provider-id={l.id} data-tmdb-id={media.details.tmdb_id} data-media-type={media.mediaType} data-country={country} data-offer-type={l.type}
 								target="_blank"
 								rel="noreferrer"
 								data-provider

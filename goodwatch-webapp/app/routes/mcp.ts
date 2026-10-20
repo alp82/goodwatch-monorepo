@@ -1,3 +1,4 @@
+import { withProductContext } from "~/telemetry/product-analytics.server"
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node"
 
 // The MCP SDK and the tools load on the first request to /mcp, not at server start.
@@ -10,7 +11,9 @@ function handle(request: Request) {
 			throw error
 		},
 	)
-	return handler.then((answer) => answer(request))
+	return handler.then((answer) =>
+		withProductContext({ source: "mcp" }, () => answer(request)),
+	)
 }
 export const loader = ({ request }: LoaderFunctionArgs) => handle(request)
 export const action = ({ request }: ActionFunctionArgs) => handle(request)

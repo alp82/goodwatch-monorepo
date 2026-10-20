@@ -1,3 +1,4 @@
+import { captureProductEvent } from "~/telemetry/product-analytics.server"
 import { canonicalTitleId } from "~/utils/title-identity"
 import { resetOnboardingMediaCache } from "~/server/onboarding-media.server"
 import { resetUserDataCache } from "~/server/userData.server"
@@ -43,11 +44,13 @@ export const updateSkipped = async ({
 		// Use upsert for adding skipped items
 		result = await upsert({
 			table: "user_skipped",
-			data: [{
-				user_id,
-				tmdb_id,
-				media_type: media_type,
-			}],
+			data: [
+				{
+					user_id,
+					tmdb_id,
+					media_type: media_type,
+				},
+			],
 			conflictColumns: ["user_id", "tmdb_id", "media_type"],
 			ignoreUpdate: true, // Just ignore if already exists
 		})
@@ -61,6 +64,12 @@ export const updateSkipped = async ({
 		result = await execute(sql, params)
 	}
 
+	if (result.rowcount)
+		captureProductEvent(
+			user_id,
+			action === "add" ? "title skipped" : "title unskipped",
+			{ tmdb_id, media_type },
+		)
 	if (result.rowcount) markPersonalOrderChanged(user_id)
 	await resetUserDataCache({ user_id })
 	await resetOnboardingMediaCache({ userId: user_id, searchTerm: "" })

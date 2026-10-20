@@ -1,3 +1,4 @@
+import { analyticsAction } from "~/telemetry/product-analytics.server"
 import { type ActionFunctionArgs, json } from "@remix-run/node"
 import { z } from "zod"
 import {
@@ -12,7 +13,7 @@ import { NativeImportError } from "~/server/imports/store.server"
 const sourceSchema = z.enum(IMPORT_SOURCES)
 const MAX_MULTIPART_BYTES = IMPORT_MAX_BYTES + 1024 * 1024
 const oversizedMessage = `That export is larger than ${IMPORT_MAX_BYTES / 1024 / 1024} MB. For Kodi, upload videodb.xml by itself.`
-export const action = ({ request }: ActionFunctionArgs) =>
+export const action = analyticsAction(({ request }: ActionFunctionArgs) =>
 	withMember(request, async (userId, headers) => {
 		if (request.method !== "POST")
 			return json({ error: "Method not allowed" }, { status: 405, headers })
@@ -96,4 +97,5 @@ export const action = ({ request }: ActionFunctionArgs) =>
 			},
 			{ headers },
 		)
-	})
+	}),
+)

@@ -1,3 +1,4 @@
+import { productAnalyticsFetch } from "~/telemetry/product-analytics"
 // A movie's watch log in the browser: the read under its own key per movie, and one function that does an action in
 // the log. The browser shows what it expects at once (the log, and the movie's entry in the member data); the
 // server's answer replaces the log, and the refetched member data replaces the entry. On an error both go back to
@@ -8,10 +9,7 @@ import { toast } from "react-toastify"
 import { afterWatchLog } from "~/domain/member-data-updates-watch-log"
 import type { WatchLogEntry } from "~/domain/watch-log"
 import { getQueryKeyUserData } from "~/routes/api.user-data"
-import type {
-	WatchLogAction,
-	WatchLogAnswer,
-} from "~/server/watch-log.server"
+import type { WatchLogAction, WatchLogAnswer } from "~/server/watch-log.server"
 import type {
 	ActionTimestamp,
 	UserData,
@@ -30,7 +28,7 @@ export const newWatchId = () =>
 const NOT_SAVED = "Couldn't save that. Your watches are as they were."
 
 async function request(init?: RequestInit, query = ""): Promise<Response> {
-	const response = await fetch(`/api/watch-log${query}`, init)
+	const response = await productAnalyticsFetch(`/api/watch-log${query}`, init)
 	if (!response.ok) throw new Error(`The watch log answered ${response.status}`)
 	return response
 }
@@ -41,9 +39,11 @@ export function useWatchLog(movieId: number) {
 	return useQuery<WatchLogEntry[]>({
 		queryKey: watchLogKey(user?.id, movieId),
 		queryFn: async () =>
-			((await (await request(undefined, `?tmdb_id=${movieId}`)).json()) as {
-				watches: WatchLogEntry[]
-			}).watches,
+			(
+				(await (await request(undefined, `?tmdb_id=${movieId}`)).json()) as {
+					watches: WatchLogEntry[]
+				}
+			).watches,
 		enabled: Boolean(user?.id),
 	})
 }

@@ -1,11 +1,22 @@
+import {
+	captureProductEvent,
+	eventUuid,
+} from "../../telemetry/product-analytics.server.ts"
 import { captureMessage } from "@sentry/remix"
 import type { User } from "@supabase/auth-js"
 import Redis, { type Cluster } from "ioredis"
 import { registerBetterAuthResolver } from "../../utils/auth-session.ts"
 import { onShutdown } from "../lifecycle.server.ts"
 import { fillWebFetchGaps } from "../web-fetch-gaps.server.ts"
-import { createGoodwatchAuth, jsonResponse, setCookiesOf } from "./auth.server.ts"
-import { crateAuthTransport, localCrateTransport } from "./crate-adapter.server.ts"
+import {
+	createGoodwatchAuth,
+	jsonResponse,
+	setCookiesOf,
+} from "./auth.server.ts"
+import {
+	crateAuthTransport,
+	localCrateTransport,
+} from "./crate-adapter.server.ts"
 import { AuthMailQueue, smtpTransport } from "./mail.server.ts"
 import { startAuthMaintenance } from "./maintenance-worker.server.ts"
 import { parseAuthEncryptionKeys } from "./payload-codec.server.ts"
@@ -59,6 +70,15 @@ export async function getBetterAuth(): Promise<AuthService> {
 		)
 		const storage = new ValkeyAuthStorage(() => clusterProvider())
 		const auth = createGoodwatchAuth({
+			analytics: (userId, event, properties) =>
+				captureProductEvent(
+					userId,
+					event,
+					properties,
+					event === "sign in succeeded"
+						? {}
+						: { uuid: eventUuid(`auth:${userId}:${event}`) },
+				),
 			sql,
 			encryptionSecret,
 			encryptionKeys,

@@ -1,6 +1,11 @@
+import { analyticsAction } from "~/telemetry/product-analytics.server"
 // Share lists API. GET tells the editor who is sharing: signed in or not, their handle, or a suggested one.
 // POST writes: create, update, set visibility, delete, and undo a recent delete. The signed-in person must own the list.
-import { type ActionFunctionArgs, json, type LoaderFunctionArgs } from "@remix-run/node"
+import {
+	type ActionFunctionArgs,
+	json,
+	type LoaderFunctionArgs,
+} from "@remix-run/node"
 import { getCachedProfileByUserId } from "~/server/share-lists/view.server"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { warmShareCard } from "~/server/share-card/images.server"
@@ -25,7 +30,10 @@ type Body =
 	| { intent: "delete"; id: string }
 	| { intent: "restore"; id: string }
 
-export type ShareListResponse = { list: ShareList } | { deleted: true } | { error: string; code?: "handle_required" }
+export type ShareListResponse =
+	| { list: ShareList }
+	| { deleted: true }
+	| { error: string; code?: "handle_required" }
 
 /** Who is sharing, and their handle. Without one, a free suggestion from the account's name or email address. */
 export type ShareViewer =
@@ -37,7 +45,11 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	const user = await getUserFromRequest({ request })
 	if (!user) return json<ShareViewer>({ signedIn: false }, noStore)
 	const profile = await getCachedProfileByUserId(user.id)
-	if (profile) return json<ShareViewer>({ signedIn: true, handle: profile.handle, suggestedHandle: null }, noStore)
+	if (profile)
+		return json<ShareViewer>(
+			{ signedIn: true, handle: profile.handle, suggestedHandle: null },
+			noStore,
+		)
 	const meta = user.user_metadata ?? {}
 	const suggestedHandle = await suggestHandle(user.id, [
 		meta.user_name,
@@ -46,10 +58,13 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		meta.name,
 		user.email?.split("@")[0],
 	])
-	return json<ShareViewer>({ signedIn: true, handle: null, suggestedHandle }, noStore)
+	return json<ShareViewer>(
+		{ signedIn: true, handle: null, suggestedHandle },
+		noStore,
+	)
 }
 
-export async function action({ request }: ActionFunctionArgs) {
+async function productAction({ request }: ActionFunctionArgs) {
 	if (request.method !== "POST") return json({ error: "Method not allowed" }, { status: 405 })
 	const userId = await getUserIdFromRequest({ request })
 	if (!userId) return json({ error: "Sign in to save and share lists." }, { status: 401 })
@@ -60,7 +75,8 @@ export async function action({ request }: ActionFunctionArgs) {
 	} catch {
 		return json({ error: "Invalid request." }, { status: 400 })
 	}
-	const hasList = (b: Body) => (b.intent === "create" || b.intent === "update" ? typeof b.list === "object" && b.list !== null : true)
+	const hasList = (b: Body) =>
+		b.intent === "create" || b.intent === "update" ? typeof b.list === "object" && b.list !== null : true
 	if (typeof body !== "object" || body === null || typeof body.intent !== "string" || !hasList(body)) {
 		return json({ error: "Invalid request." }, { status: 400 })
 	}
@@ -78,7 +94,13 @@ export async function action({ request }: ActionFunctionArgs) {
 				return json({ list })
 			}
 			case "visibility":
-				return json({ list: await setListVisibility(userId, String(body.id), body.visibility) })
+				return json({
+					list: await setListVisibility(
+						userId,
+						String(body.id),
+						body.visibility,
+					),
+				})
 			case "delete":
 				await deleteList(userId, String(body.id))
 				return json({ deleted: true })
@@ -88,7 +110,11 @@ export async function action({ request }: ActionFunctionArgs) {
 				return json({ error: "Unknown request." }, { status: 400 })
 		}
 	} catch (error) {
-		if (error instanceof ShareListError) return json({ error: error.message, code: error.code }, { status: error.status })
+		if (error instanceof ShareListError)
+			return json(
+				{ error: error.message, code: error.code },
+				{ status: error.status },
+			)
 		console.error("[share-lists] write failed", error)
 		return json({ error: "Saving failed. Try again." }, { status: 500 })
 	}
@@ -116,7 +142,11 @@ export const fetchShareViewer = async (): Promise<ShareViewer> => {
 
 /** The signed-in person's handle, or a suggestion when they have none yet. Pass enabled: false for guests. */
 export const useShareViewer = (enabled: boolean) =>
-	useQuery<ShareViewer>({ queryKey: shareViewerQueryKey, queryFn: fetchShareViewer, enabled })
+	useQuery<ShareViewer>({
+		queryKey: shareViewerQueryKey,
+		queryFn: fetchShareViewer,
+		enabled,
+	})
 
 export const useCreateShareList = () =>
 	useMutation({
@@ -127,7 +157,11 @@ export const useCreateShareList = () =>
 				body: JSON.stringify({ intent: "create", list }),
 			})
 			const result = await response.json().catch(() => ({}))
-			if (!response.ok) throw new ShareListRequestError(result.error ?? "Saving the list failed. Try again.", result.code)
+			if (!response.ok)
+				throw new ShareListRequestError(
+					result.error ?? "Saving the list failed. Try again.",
+					result.code,
+				)
 			return result.list
 		},
 	})
@@ -140,14 +174,22 @@ export type ShareListOwnerAction =
 
 export const useShareListOwnerAction = () =>
 	useMutation({
-		mutationFn: async (action: ShareListOwnerAction): Promise<ShareListResponse> => {
+		mutationFn: async (
+			action: ShareListOwnerAction,
+		): Promise<ShareListResponse> => {
 			const response = await fetch("/api/share-lists", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify(action),
 			})
 			const result = await response.json().catch(() => ({}))
-			if (!response.ok) throw new ShareListRequestError(result.error ?? "That didn't work. Try again.", result.code)
+			if (!response.ok)
+				throw new ShareListRequestError(
+					result.error ?? "That didn't work. Try again.",
+					result.code,
+				)
 			return result
 		},
 	})
+
+export const action = analyticsAction(productAction)

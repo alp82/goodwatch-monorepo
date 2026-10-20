@@ -1,3 +1,4 @@
+import { analyticsAction } from "~/telemetry/product-analytics.server"
 import { apiDisplayLanguage } from "~/server/media-payload.server"
 import {
 	type ActionFunctionArgs,
@@ -39,12 +40,20 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	if (typeof userId !== "string") return userId
 	const id = new URL(request.url).searchParams.get("id") ?? ""
 	if (!/^[1-9]\d{0,9}$/.test(id)) return fail("Send ?id=<show id>", 400)
-	return json<ShowTrackingPage>(await getShowTrackingPage(userId, Number(id), undefined, apiDisplayLanguage(request)), {
-		headers,
-	})
+	return json<ShowTrackingPage>(
+		await getShowTrackingPage(
+			userId,
+			Number(id),
+			undefined,
+			apiDisplayLanguage(request),
+		),
+		{
+			headers,
+		},
+	)
 }
 
-export async function action({ request }: ActionFunctionArgs) {
+async function productAction({ request }: ActionFunctionArgs) {
 	if (request.method !== "POST") return fail("Method not allowed", 405)
 	const userId = await member(request)
 	if (typeof userId !== "string") return userId
@@ -60,3 +69,5 @@ export async function action({ request }: ActionFunctionArgs) {
 		throw error
 	}
 }
+
+export const action = analyticsAction(productAction)

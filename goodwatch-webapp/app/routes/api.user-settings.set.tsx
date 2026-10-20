@@ -1,3 +1,4 @@
+import { analyticsAction } from "~/telemetry/product-analytics.server"
 import { parseLocalizationPair } from "~/utils/media-language"
 import {
 	saveMediaPreferences,
@@ -28,39 +29,38 @@ export interface SetUserSettingsOptions {
 
 // API endpoint
 
-export const action: ActionFunction = async ({
-	request,
-}: ActionFunctionArgs) => {
-	if (request.method !== "POST")
+export const action: ActionFunction = analyticsAction(
+	async ({ request }: ActionFunctionArgs) => {
+		if (request.method !== "POST")
 		return json(
 			{ error: "Use POST" },
 			{ status: 405, headers: { "Cache-Control": "no-store" } },
 		)
-	const origin = request.headers.get("Origin")
-	// Coolify terminates TLS, so use the public origin rather than the internal HTTP URL.
-	const expectedOrigin =
+		const origin = request.headers.get("Origin")
+		// Coolify terminates TLS, so use the public origin rather than the internal HTTP URL.
+		const expectedOrigin =
 		process.env.APP_ORIGIN ||
 		(process.env.NODE_ENV === "production"
 			? "https://goodwatch.app"
 			: new URL(request.url).origin)
-	if (origin && origin !== expectedOrigin)
+		if (origin && origin !== expectedOrigin)
 		return json(
 			{ error: "Origin mismatch" },
 			{ status: 403, headers: { "Cache-Control": "no-store" } },
 		)
-	let params
-	try {
+		let params
+		try {
 		params = await request.json()
 	} catch {
 		return json({ error: "Invalid JSON" }, { status: 400 })
 	}
-	if (!params || typeof params !== "object" || Array.isArray(params))
+		if (!params || typeof params !== "object" || Array.isArray(params))
 		return json({ error: "Invalid request" }, { status: 400 })
-	const user_id = await getUserIdFromRequest({ request })
+		const user_id = await getUserIdFromRequest({ request })
 
-	if ("pair" in params) {
-		const pair = parseLocalizationPair(params.pair)
-		if (
+		if ("pair" in params) {
+			const pair = parseLocalizationPair(params.pair)
+			if (
 			!pair ||
 			typeof params.clientId !== "string" ||
 			!/^[\w-]{8,80}$/.test(params.clientId) ||
@@ -76,17 +76,20 @@ export const action: ActionFunction = async ({
 				{ status: 400, headers: { "Cache-Control": "no-store" } },
 			)
 		}
-		try {
-			const saved = await saveMediaPreferences(request, user_id, {
+			try {
+				const saved = await saveMediaPreferences(request, user_id, {
 				pair,
 				clientId: params.clientId,
 				sequence: params.sequence,
 				expectedVersion: params.expectedVersion,
 			})
-			return json(saved.response, {
-				headers: { "Set-Cookie": saved.setCookie, "Cache-Control": "no-store" },
-			})
-		} catch (error) {
+				return json(saved.response, {
+					headers: {
+						"Set-Cookie": saved.setCookie,
+						"Cache-Control": "no-store",
+					},
+				})
+			} catch (error) {
 			const conflict = error instanceof MediaPreferencesConflict
 			let current = null
 			if (conflict) {
@@ -116,13 +119,14 @@ export const action: ActionFunction = async ({
 				},
 			)
 		}
-	}
+		}
 
-	return await setUserSettings({
-		...params,
-		user_id,
-	})
-}
+		return await setUserSettings({
+			...params,
+			user_id,
+		})
+	},
+)
 
 // Query hook
 

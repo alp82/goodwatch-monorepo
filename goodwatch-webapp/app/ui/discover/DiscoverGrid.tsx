@@ -60,6 +60,7 @@ export function DiscoverGrid({
 					return (
 						<motion.div
 							key={card.key}
+ data-result-position={index + 1}
 							layout={reduce ? false : "position"}
 							initial={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.9 }}
 							animate={{

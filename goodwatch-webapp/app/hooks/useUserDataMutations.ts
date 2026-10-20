@@ -1,3 +1,4 @@
+import { productAnalyticsFetch } from "~/telemetry/product-analytics"
 import { updateGuestInteraction } from "~/utils/guest-progress"
 import { useCallback } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
@@ -63,7 +64,11 @@ const updateWishlistOptimistic = (
 	if (!data) return data
 
 	const key = createMediaKey(mediaType, tmdbId)
-	const updated = { ...data, wishlist: { ...data.wishlist }, notInterested: { ...data.notInterested } }
+	const updated = {
+		...data,
+		wishlist: { ...data.wishlist },
+		notInterested: { ...data.notInterested },
+	}
 
 	if (action === "add") {
 		delete updated.notInterested[key]
@@ -125,7 +130,11 @@ const updateNotInterestedOptimistic = (
 	if (!data) return data
 
 	const key = createMediaKey(mediaType, tmdbId)
-	const updated = { ...data, notInterested: { ...data.notInterested }, wishlist: { ...data.wishlist } }
+	const updated = {
+		...data,
+		notInterested: { ...data.notInterested },
+		wishlist: { ...data.wishlist },
+	}
 
 	if (action === "add") {
 		updated.notInterested[key] ??= { updatedAt: new Date() }
@@ -159,7 +168,7 @@ export const useScoreMutation = () => {
 				)
 				return { status: "success" }
 			}
-			const response = await fetch("/api/update-scores", {
+			const response = await productAnalyticsFetch("/api/update-scores", {
 				method: "POST",
 				body: JSON.stringify({
 					tmdb_id: tmdbId,
@@ -225,7 +234,7 @@ export const useWishlistMutation = () => {
 				)
 				return { status: "success" }
 			}
-			const response = await fetch("/api/update-wishlist", {
+			const response = await productAnalyticsFetch("/api/update-wishlist", {
 				method: "POST",
 				body: JSON.stringify({
 					tmdb_id: tmdbId,
@@ -267,7 +276,9 @@ export const useWatchedMutation = () => {
 		MutationContext
 	>({
 		mutationFn: async ({ mediaType, tmdbId, action }) => {
-			const response = await fetch("/api/update-watch-history", {
+			const response = await productAnalyticsFetch(
+				"/api/update-watch-history",
+				{
 				method: "POST",
 				body: JSON.stringify({
 					tmdb_id: tmdbId,
@@ -277,7 +288,8 @@ export const useWatchedMutation = () => {
 					action_id:
 						action === "add" ? globalThis.crypto?.randomUUID?.() : undefined,
 				}),
-			})
+			},
+			)
 			return await response.json()
 		},
 		onMutate: async ({ mediaType, tmdbId, action }) => {
@@ -301,7 +313,9 @@ export const useWatchedMutation = () => {
 			void queryClient.invalidateQueries({ queryKey: userDataQueryKey })
 			// A movie's watches changed: its log is read again when it next opens (`watchLogKey` of useWatchLog.ts).
 			if (user && mediaType === "movie")
-				void queryClient.invalidateQueries({ queryKey: ["watch-log", user.id, tmdbId] })
+				void queryClient.invalidateQueries({
+				queryKey: ["watch-log", user.id, tmdbId],
+			})
 		},
 	})
 }
@@ -318,7 +332,7 @@ export const useFavoriteMutation = () => {
 		MutationContext
 	>({
 		mutationFn: async ({ mediaType, tmdbId, action }) => {
-			const response = await fetch("/api/update-favorites", {
+			const response = await productAnalyticsFetch("/api/update-favorites", {
 				method: "POST",
 				body: JSON.stringify({
 					tmdb_id: tmdbId,
@@ -369,7 +383,7 @@ export const useSkippedMutation = () => {
 				)
 				return { status: "success" }
 			}
-			const response = await fetch("/api/update-skipped", {
+			const response = await productAnalyticsFetch("/api/update-skipped", {
 				method: "POST",
 				body: JSON.stringify({
 					tmdb_id: tmdbId,
@@ -421,14 +435,17 @@ export const useNotInterestedMutation = () => {
 				)
 				return { status: "success" }
 			}
-			const response = await fetch("/api/update-not-interested", {
+			const response = await productAnalyticsFetch(
+				"/api/update-not-interested",
+				{
 				method: "POST",
 				body: JSON.stringify({
 					tmdb_id: tmdbId,
 					media_type: mediaType,
 					action,
 				}),
-			})
+			},
+			)
 			const result: MutationResult = await response.json()
 			if (!response.ok || result.status !== "success") throw new Error("Updating Not interested failed")
 			return result

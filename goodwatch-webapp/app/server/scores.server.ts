@@ -1,10 +1,11 @@
+import { captureProductEvent } from "~/telemetry/product-analytics.server"
 import { clearNotInterested } from "~/server/not-interested-store.server"
 import { canonicalTitleId } from "~/utils/title-identity"
 import { resetOnboardingMediaCache } from "~/server/onboarding-media.server"
 import { markTasteChanged } from "~/server/taste/index.server"
 import { applyTrackingEvent } from "~/server/tracking.server"
 import { resetUserDataCache } from "~/server/userData.server"
-import { execute, upsert } from "~/utils/crate"
+import { execute, query, upsert } from "~/utils/crate"
 import { markPersonalOrderChanged } from "./personal-order/rebuild.server.ts"
 
 export type Score = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10
@@ -56,19 +57,25 @@ export const updateScores = async ({
 
 	tmdb_id = canonicalTitleId(media_type, tmdb_id)
 
+	const [previous] = await query<{ score: number | null }>(
+		"SELECT score FROM user_score WHERE user_id = ? AND tmdb_id = ? AND media_type = ?",
+		[user_id, tmdb_id, media_type],
+	)
 	let result: { rowcount?: number }
 
 	if (score) {
 		// Use upsert for adding/updating scores
 		result = await upsert({
 			table: "user_score",
-			data: [{
+			data: [
+				{
 				user_id,
 				tmdb_id,
 				media_type: media_type,
 				score,
 				review: review || null,
-			}],
+			},
+			],
 			conflictColumns: ["user_id", "tmdb_id", "media_type"],
 			ignoreUpdate: false, // Update score and review on conflict
 		})
@@ -82,6 +89,15 @@ export const updateScores = async ({
 		result = await execute(sql, params)
 	}
 
+	if (result.rowcount)
+		captureProductEvent(user_id, score ? "rating saved" : "rating cleared", {
+			tmdb_id,
+			media_type,
+			score: score ?? null,
+			previous_score: previous?.score ?? null,
+			has_review: Boolean(review),
+			source: by_hand === false ? "taste_quiz" : undefined,
+		})
 	if (result.rowcount) markPersonalOrderChanged(user_id)
 	if (score != null) await clearNotInterested(user_id, tmdb_id, media_type)
 

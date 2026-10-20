@@ -53,6 +53,12 @@ export function setCookiesOf(headers: Headers): string[] {
 }
 
 export function createGoodwatchAuth(options: {
+	analytics?: (
+		userId: string,
+		event: "account created" | "email verified" | "sign in succeeded",
+		properties: { method?: string },
+	) => void
+
 	sql: AuthSql
 	storage: ValkeyAuthStorage
 	mail: AuthMailQueue
@@ -657,6 +663,19 @@ export function createGoodwatchAuth(options: {
 			},
 		},
 		databaseHooks: {
+			user: {
+				create: {
+					after: async (user) => {
+						options.analytics?.(user.id, "account created", {})
+					},
+				},
+				update: {
+					after: async (user) => {
+						if (user.emailVerified)
+							options.analytics?.(user.id, "email verified", {})
+					},
+				},
+			},
 			session: {
 				create: {
 					before: async (session, context) => {
@@ -826,6 +845,27 @@ export function createGoodwatchAuth(options: {
 						{ error: "temporarily_unavailable" },
 						{ status: 503 },
 					)
+				}
+			}
+			if (
+				response.status < 400 &&
+				(path === "/api/auth/sign-in/email" ||
+					path.startsWith("/api/auth/callback/"))
+			) {
+				try {
+					const session = await core.api.getSession({
+						headers: new Headers({
+							cookie: setCookiesOf(response.headers)
+								.map((cookie) => cookie.split(";")[0])
+								.join("; "),
+						}),
+					})
+					if (session)
+						options.analytics?.(session.user.id, "sign in succeeded", {
+							method: path.endsWith("/email") ? "email" : "google",
+						})
+				} catch {
+					/* Telemetry must never affect issuing a session. */
 				}
 			}
 			if (response.status >= 500)

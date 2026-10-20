@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import {
 	useScoreMutation,
 	useSkippedMutation,
@@ -25,6 +25,23 @@ export const useTasteScoring = ({ isAuthenticated }: UseTasteScoringProps) => {
 	const [memberInteractions, setInteractions] = useState<TasteInteraction[]>([])
 	const interactions = isAuthenticated ? memberInteractions : guestInteractions
 
+	const [confirmedRatings, setConfirmedRatings] = useState<string[]>([])
+	const [hasScored, setHasScored] = useState(false)
+	useEffect(() => {
+		if (!isAuthenticated)
+			setConfirmedRatings(
+				readGuestInteractions()
+					.filter((i) => i.type === "score")
+					.map((i) => `${i.media_type}-${i.tmdb_id}`),
+			)
+	}, [isAuthenticated])
+	const noteScoreSaved = useCallback((media: ScoringMedia) => {
+		const key = `${media.media_type}-${media.tmdb_id}`
+		setConfirmedRatings((previous) =>
+			previous.includes(key) ? previous : [...previous, key],
+		)
+		setHasScored(true)
+	}, [])
 	const scoreMutation = useScoreMutation()
 	const skippedMutation = useSkippedMutation()
 	const wishlistMutation = useWishlistMutation()
@@ -66,17 +83,32 @@ export const useTasteScoring = ({ isAuthenticated }: UseTasteScoringProps) => {
 	const addScore = useCallback(
 		(media: ScoringMedia, score: Score): number | undefined => {
 			if (!isAuthenticated) {
-				updateGuestInteraction(media.media_type, media.tmdb_id, "score", score)
+				if (
+					updateGuestInteraction(
+						media.media_type,
+						media.tmdb_id,
+						"score",
+						score,
+					)
+				)
+					noteScoreSaved(media)
 				return readGuestInteractions().filter((i) => i.type === "score").length
 			}
 			if (isAuthenticated) {
-				scoreMutation.mutate({
-					mediaType: media.media_type,
-					tmdbId: media.tmdb_id,
-					score,
-					// A quiz score on a show never asks "Have you seen all of it?".
-					byHand: false,
-				})
+				void scoreMutation
+					.mutateAsync({
+						mediaType: media.media_type,
+						tmdbId: media.tmdb_id,
+						score,
+						// A quiz score on a show never asks "Have you seen all of it?".
+						byHand: false,
+					})
+					.then(
+						(result) => {
+							if (result.status === "success") noteScoreSaved(media)
+						},
+						() => {},
+					)
 			}
 
 			let newCount: number | undefined
@@ -104,7 +136,7 @@ export const useTasteScoring = ({ isAuthenticated }: UseTasteScoringProps) => {
 			})
 			return newCount
 		},
-		[isAuthenticated, scoreMutation],
+		[isAuthenticated, scoreMutation, noteScoreSaved],
 	)
 
 	const addSkip = useCallback(
@@ -157,6 +189,8 @@ export const useTasteScoring = ({ isAuthenticated }: UseTasteScoringProps) => {
 
 	return {
 		interactions,
+		confirmedRatingCount: confirmedRatings.length,
+		hasScored,
 		addScore,
 		addSkip,
 		addPlanToWatch,

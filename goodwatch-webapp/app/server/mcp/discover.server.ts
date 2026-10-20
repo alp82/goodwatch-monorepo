@@ -1,3 +1,4 @@
+import { captureProductEvent } from "~/telemetry/product-analytics.server"
 import {
 	getStreamingProviders,
 	slimStreamingProviders,
@@ -51,6 +52,15 @@ export async function readDiscover(
 	const limit = args.limit ?? 40
 	const keys = result.keys.slice(offset, offset + limit)
 	const displays = await getDisplayFields(keys)
+	captureProductEvent(userId, "discovery results shown", {
+		source: "mcp",
+		result_count: keys.length,
+		country: ctx.country,
+		for_you: view.forYou,
+		sort: result.sortUsed,
+		on_my_services: view.state.onMyServices,
+		moods: view.state.moods,
+	})
 	return {
 		items: keys.flatMap((key) => {
 			const title = displays.get(key)

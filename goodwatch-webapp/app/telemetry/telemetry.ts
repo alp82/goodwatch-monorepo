@@ -1,3 +1,4 @@
+import { trackDiscoveryNavigation } from "./product-analytics"
 // The page's one door to analytics and error tracking (PostHog, Sentry, the Google tag). The tools load after the page
 // is interactive, so nothing here imports an SDK statically. Calls made before a tool loaded wait in a queue.
 import type { PostHog } from "posthog-js"
@@ -159,6 +160,7 @@ export function telemetryLocationChanged(to: {
 	navigationType: NavigationType
 }): void {
 	if (typeof window === "undefined") return
+	trackDiscoveryNavigation(to.href)
 	state.pageViews ??= createPageViewTracker(
 		readEarlyTelemetry(window).landing.href,
 	)

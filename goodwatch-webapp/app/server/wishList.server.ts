@@ -1,9 +1,10 @@
+import { captureProductEvent } from "~/telemetry/product-analytics.server"
 import { clearNotInterested } from "~/server/not-interested-store.server"
 import { canonicalTitleId } from "~/utils/title-identity"
-import { resetOnboardingMediaCache } from "~/server/onboarding-media.server";
-import { markTasteChanged } from "~/server/taste/index.server";
-import { resetUserDataCache } from "~/server/userData.server";
-import { execute, upsert } from "~/utils/crate";
+import { resetOnboardingMediaCache } from "~/server/onboarding-media.server"
+import { markTasteChanged } from "~/server/taste/index.server"
+import { resetUserDataCache } from "~/server/userData.server"
+import { execute, upsert } from "~/utils/crate"
 import { markPersonalOrderChanged } from "./personal-order/rebuild.server.ts"
 
 interface UpdateWishListParams {
@@ -23,7 +24,7 @@ export interface UpdateWishListPayload {
 }
 
 export interface UpdateWishListResult {
-	status: "success" | "failed";
+	status: "success" | "failed"
 }
 
 export const updateWishList = async ({
@@ -36,26 +37,28 @@ export const updateWishList = async ({
 	if (!user_id || !tmdb_id) {
 		return {
 			status: "failed",
-		};
+		}
 	}
 
 	tmdb_id = canonicalTitleId(media_type, tmdb_id)
 
-	let result: { rowcount?: number };
+	let result: { rowcount?: number }
 
 	if (action === "add") {
 		// Use upsert for adding wishlist items
 		result = await upsert({
 			table: "user_wishlist",
-			data: [{
+			data: [
+				{
 				user_id,
 				tmdb_id,
 				media_type: media_type,
 				...(addedAt ? { created_at: addedAt } : {}),
-			}],
+			},
+			],
 			conflictColumns: ["user_id", "tmdb_id", "media_type"],
 			ignoreUpdate: true, // Just ignore if already exists
-		});
+		})
 	} else {
 		// Use execute for deleting wishlist items
 		const sql = `
@@ -66,14 +69,20 @@ export const updateWishList = async ({
 		result = await execute(sql, params);
 	}
 
+	if (result.rowcount)
+		captureProductEvent(
+			user_id,
+			action === "add" ? "want to see added" : "want to see removed",
+			{ tmdb_id, media_type, origin: addedAt ? "undo" : "manual" },
+		)
 	if (result.rowcount) markPersonalOrderChanged(user_id)
 	if (action === "add") await clearNotInterested(user_id, tmdb_id, media_type)
 
-	await resetUserDataCache({ user_id });
-	if (result.rowcount) await markTasteChanged(user_id);
-	await resetOnboardingMediaCache({ userId: user_id, searchTerm: "" });
+	await resetUserDataCache({ user_id })
+	if (result.rowcount) await markTasteChanged(user_id)
+	await resetOnboardingMediaCache({ userId: user_id, searchTerm: "" })
 
 	return {
 		status: (result.rowcount || 0) >= 1 ? "success" : "failed",
-	};
-};
+	}
+}

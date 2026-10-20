@@ -1,3 +1,4 @@
+import { useProductExposure } from "~/telemetry/useProductAnalytics"
 // The titles of one choice on mini Discover: Discover's own results for that one mood, theme or style, read with
 // the results hook of `/api/discover/results` (members GET, guests POST their browser's progress; the answer is
 // never stored by a cache). The request returns Discover's first page of 40 cards and the TV shows the first
@@ -52,6 +53,16 @@ export function useTvDiscover({
 	// The hook keeps the last answer while the next loads; on the TV that would be another choice's titles.
 	const data = results.isPlaceholderData ? undefined : results.data
 	const cards = useMemo(() => listCards(data?.cards ?? []), [data])
+	useProductExposure(
+		"discovery results shown",
+		data ? `${tab}:${choice}:${cards.length}` : null,
+		{
+			source: "living_room",
+			surface: "discover",
+			result_count: cards.length,
+			moods: tab === "moods" && choice ? [choice] : undefined,
+		},
+	)
 	const waiting = Boolean(choice) && !data && !results.isError
 	// The same object while nothing changed: every new one is another render of the scene (`useReport`).
 	return useMemo(

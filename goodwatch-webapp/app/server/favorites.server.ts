@@ -1,6 +1,7 @@
+import { captureProductEvent } from "~/telemetry/product-analytics.server"
 import { canonicalTitleId } from "~/utils/title-identity"
-import { resetUserDataCache } from "~/server/userData.server";
-import { execute, upsert } from "~/utils/crate";
+import { resetUserDataCache } from "~/server/userData.server"
+import { execute, upsert } from "~/utils/crate"
 
 interface UpdateFavoritesParams {
 	user_id?: string;
@@ -16,7 +17,7 @@ export interface UpdateFavoritesPayload {
 }
 
 export interface UpdateFavoritesResult {
-	status: "success" | "failed";
+	status: "success" | "failed"
 }
 
 export const updateFavorites = async ({
@@ -28,25 +29,27 @@ export const updateFavorites = async ({
 	if (!user_id || !tmdb_id) {
 		return {
 			status: "failed",
-		};
+		}
 	}
 
 	tmdb_id = canonicalTitleId(media_type, tmdb_id)
 
-	let result: { rowcount?: number };
+	let result: { rowcount?: number }
 
 	if (action === "add") {
 		// Use upsert for adding favorite items
 		result = await upsert({
 			table: "user_favorite",
-			data: [{
-				user_id,
-				tmdb_id,
-				media_type: media_type,
-			}],
+			data: [
+				{
+					user_id,
+					tmdb_id,
+					media_type: media_type,
+				},
+			],
 			conflictColumns: ["user_id", "tmdb_id", "media_type"],
 			ignoreUpdate: true, // Just ignore if already exists
-		});
+		})
 	} else {
 		// Use execute for deleting favorite items
 		const sql = `
@@ -57,9 +60,15 @@ export const updateFavorites = async ({
 		result = await execute(sql, params);
 	}
 
-	await resetUserDataCache({ user_id });
+	if (result.rowcount)
+		captureProductEvent(
+			user_id,
+			action === "add" ? "favorite added" : "favorite removed",
+			{ tmdb_id, media_type },
+		)
+	await resetUserDataCache({ user_id })
 
 	return {
 		status: (result.rowcount || 0) >= 1 ? "success" : "failed",
-	};
-};
+	}
+}

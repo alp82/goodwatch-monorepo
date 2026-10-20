@@ -70,6 +70,12 @@ export default function Streaming({
 							return (
 								<a
 									key={link.provider_id}
+									data-product-event="streaming service clicked"
+									data-provider-id={link.provider_id}
+									data-tmdb-id={details.tmdb_id}
+									data-media-type={media_type}
+									data-country={currentCountryCode}
+									data-offer-type={link.stream_type}
 									href={getStreamingUrl(
 										link,
 										details,
@@ -102,6 +108,12 @@ export default function Streaming({
 							return (
 								<a
 									key={link.display_priority}
+									data-product-event="streaming service clicked"
+									data-provider-id={link.provider_id}
+									data-tmdb-id={details.tmdb_id}
+									data-media-type={media_type}
+									data-country={currentCountryCode}
+									data-offer-type={link.stream_type}
 									href={getStreamingUrl(
 										link,
 										details,
@@ -134,6 +146,12 @@ export default function Streaming({
 							return (
 								<a
 									key={link.display_priority}
+									data-product-event="streaming service clicked"
+									data-provider-id={link.provider_id}
+									data-tmdb-id={details.tmdb_id}
+									data-media-type={media_type}
+									data-country={currentCountryCode}
+									data-offer-type={link.stream_type}
 									href={getStreamingUrl(
 										link,
 										details,

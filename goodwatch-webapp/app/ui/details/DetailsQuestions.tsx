@@ -236,7 +236,7 @@ function AnswerVisual({ media, country, faq }: { media: Media; country: string; 
 		return (
 			<div className="mt-4 flex flex-wrap gap-2">
 				{links.slice(0, 8).map((l) => (
-					<a key={l.id} href={l.url} target="_blank" rel="noreferrer" className="flex h-10 items-center gap-2 rounded-lg border border-white/15 bg-white/5 pr-3 hover:bg-white/10">
+					<a key={l.id} href={l.url} data-product-event="streaming service clicked" data-provider-id={l.id} data-tmdb-id={media.details.tmdb_id} data-media-type={media.mediaType} data-country={country} data-offer-type={l.type} target="_blank" rel="noreferrer" className="flex h-10 items-center gap-2 rounded-lg border border-white/15 bg-white/5 pr-3 hover:bg-white/10">
 						<TmdbImage kind="logo" path={l.logoPath} width={40} ratio={1} className="h-full w-auto aspect-square rounded-md" />
 						<span className="text-sm font-medium">{l.name}</span>
 					</a>

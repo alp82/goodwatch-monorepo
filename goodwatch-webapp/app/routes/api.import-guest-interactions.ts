@@ -1,18 +1,30 @@
-import { readMediaPreferences, writeMediaPreferences } from "~/server/media-preferences-store.server";
+import {
+	analyticsAction,
+	withProductContext,
+	captureProductEvent,
+	eventUuid,
+} from "~/telemetry/product-analytics.server"
+import {
+	readMediaPreferences,
+	writeMediaPreferences,
+} from "~/server/media-preferences-store.server"
 import {
 	json,
 	type LoaderFunctionArgs,
 	type ActionFunctionArgs,
-} from "@remix-run/node";
-import { z } from "zod";
-import { getAuthFromRequest } from "~/utils/auth";
-import { execute, query, upsert } from "~/utils/crate";
-import { canonicalTitleId } from "~/utils/title-identity";
-import { resetGuestImportCaches } from "~/server/guest-import.server";
-import { updateNotInterested } from "~/server/not-interested.server";
-import { readNotInterested, clearNotInterested } from "~/server/not-interested-store.server";
-import { applyTrackingEvent } from "~/server/tracking.server";
-import { getUserData } from "~/server/userData.server";
+} from "@remix-run/node"
+import { z } from "zod"
+import { getAuthFromRequest } from "~/utils/auth"
+import { execute, query, upsert } from "~/utils/crate"
+import { canonicalTitleId } from "~/utils/title-identity"
+import { resetGuestImportCaches } from "~/server/guest-import.server"
+import { updateNotInterested } from "~/server/not-interested.server"
+import {
+	readNotInterested,
+	clearNotInterested,
+} from "~/server/not-interested-store.server"
+import { applyTrackingEvent } from "~/server/tracking.server"
+import { getUserData } from "~/server/userData.server"
 
 const changeSchema = z
 	.object({
@@ -31,41 +43,41 @@ const changeSchema = z
 				(!/^(10|[1-9])$/.test(c.value) ||
 					(c.before !== null && !/^(10|[1-9])$/.test(c.before)))) ||
 			(c.kind === "country" && !/^[A-Z]{2}$/.test(c.value)) ||
-			(c.kind === "services" && !/^(\d+(,\d+)*)?$/.test(c.value));
+			(c.kind === "services" && !/^(\d+(,\d+)*)?$/.test(c.value))
 		if (invalid)
-			ctx.addIssue({ code: "custom", message: "Invalid selected change" });
-	});
+			ctx.addIssue({ code: "custom", message: "Invalid selected change" })
+	})
 const requestSchema = z.object({
 	id: z.string().uuid(),
 	accountId: z.string().uuid(),
 	changes: z.array(changeSchema),
-});
-type Change = z.infer<typeof changeSchema>;
-type Journal = { changes: Change[]; completed: string[]; done: boolean };
-const wait = () => new Promise((resolve) => setTimeout(resolve, 250));
+})
+type Change = z.infer<typeof changeSchema>
+type Journal = { changes: Change[]; completed: string[]; done: boolean }
+const wait = () => new Promise((resolve) => setTimeout(resolve, 250))
 async function visible<T>(
 	read: () => Promise<T>,
 	matches: (value: T) => boolean,
 ): Promise<T> {
 	for (let attempt = 0; attempt < 24; attempt++) {
-		const value = await read();
-		if (matches(value)) return value;
-		await wait();
+		const value = await read()
+		if (matches(value)) return value
+		await wait()
 	}
 	throw new Error(
 		"Persistence could not be confirmed. Your selection is retained; retry to finish.",
-	);
+	)
 }
 async function setting(userId: string, key: string) {
 	if (key === "country_default") {
-		const { record } = await readMediaPreferences(userId);
-		if (record) return record.country;
+		const { record } = await readMediaPreferences(userId)
+		if (record) return record.country
 	}
 	const rows = await query<{ value: string }>(
 		"SELECT value FROM user_setting WHERE user_id = ? AND key = ?",
 		[userId, key],
-	);
-	return rows[0]?.value ?? null;
+	)
+	return rows[0]?.value ?? null
 }
 async function saveJournal(
 	userId: string,
@@ -79,132 +91,175 @@ async function saveJournal(
 			data: [{ user_id: userId, key, value: JSON.stringify(journal) }],
 			conflictColumns: ["user_id", "key"],
 			ignoreUpdate: true,
-		});
+		})
 		return JSON.parse(
 			(await visible(
 				() => setting(userId, key),
 				(v) => v !== null,
 			))!,
-		) as Journal;
+		) as Journal
 	}
 	// Completion only advances, including overlapping retries in separate browser tabs/processes.
 	for (let attempt = 0; attempt < 24; attempt++) {
-		const prior = await setting(userId, key);
+		const prior = await setting(userId, key)
 		if (!prior) {
-			await wait();
-			continue;
+			await wait()
+			continue
 		}
-		const current = JSON.parse(prior) as Journal;
+		const current = JSON.parse(prior) as Journal
 		if (JSON.stringify(current.changes) !== JSON.stringify(journal.changes))
-			throw new Error("The confirmed selection cannot change during retry.");
+			throw new Error("The confirmed selection cannot change during retry.")
 		const next = {
 			changes: current.changes,
 			completed: [...new Set([...current.completed, ...journal.completed])],
 			done: current.done || journal.done,
-		};
-		if (JSON.stringify(next) === prior) return current;
+		}
+		if (JSON.stringify(next) === prior) return current
 		const result = await execute(
 			"UPDATE user_setting SET value = ?, updated_at = CURRENT_TIMESTAMP WHERE user_id = ? AND key = ? AND value = ?",
 			[JSON.stringify(next), userId, key, prior],
-		);
+		)
 		if (result.rowcount === 1) {
 			const stored = await visible(
 				() => setting(userId, key),
 				(v) => {
-					if (!v) return false;
-					const observed = JSON.parse(v) as Journal;
+					if (!v) return false
+					const observed = JSON.parse(v) as Journal
 					return (
 						(!next.done || observed.done) &&
 						next.completed.every((id) => observed.completed.includes(id))
-					);
+					)
 				},
-			);
-			return JSON.parse(stored!) as Journal;
+			)
+			return JSON.parse(stored!) as Journal
 		}
-		await wait();
+		await wait()
 	}
 	throw new Error(
 		"Persistence could not be confirmed. Your selection is retained; retry to finish.",
-	);
+	)
 }
-async function persistChange(userId: string, c: Change) {
+async function persistChange(userId: string, c: Change, transferId: string) {
+	return withProductContext(
+		{ origin: "guest_transfer", batch_id: transferId },
+		async () => {
+			await persistChangeStored(userId, c)
+			if (c.kind === "score" || c.kind === "plan")
+				captureProductEvent(
+					userId,
+					c.kind === "score" ? "rating saved" : "want to see added",
+					{
+						tmdb_id: canonicalTitleId(c.media_type!, c.tmdb_id!),
+						media_type: c.media_type,
+						score: c.kind === "score" ? Number(c.value) : undefined,
+						previous_score:
+							c.kind === "score" && c.before !== null
+								? Number(c.before)
+								: undefined,
+					},
+					{
+						uuid: eventUuid(
+							`guest-transfer-item:${userId}:${transferId}:${c.id}`,
+						),
+					},
+				)
+		},
+	)
+}
+async function persistChangeStored(userId: string, c: Change) {
 	if (c.kind === "country" || c.kind === "services") {
 		const key =
-			c.kind === "country" ? "country_default" : "streaming_providers_default";
-		const current = await setting(userId, key);
+			c.kind === "country" ? "country_default" : "streaming_providers_default"
+		const current = await setting(userId, key)
 		if (current !== c.value) {
 			if (current !== c.before)
 				throw new Error(
 					"An account preference changed since this review. Your transfer is retained; restore that preference before retrying.",
-				);
-			const pair = c.kind === "country" ? (await readMediaPreferences(userId)).record : null;
+				)
+			const pair =
+				c.kind === "country"
+					? (await readMediaPreferences(userId)).record
+					: null
 			if (pair)
-				await writeMediaPreferences(userId, { country: c.value, language: pair.language }, { expectedVersion: pair.version });
+				await writeMediaPreferences(
+					userId,
+					{ country: c.value, language: pair.language },
+					{ expectedVersion: pair.version },
+				)
 			else if (current === null)
 				await upsert({
 					table: "user_setting",
 					data: [{ user_id: userId, key, value: c.value }],
 					conflictColumns: ["user_id", "key"],
 					ignoreUpdate: true,
-				});
+				})
 			else
 				await execute(
 					"UPDATE user_setting SET value = ?, updated_at = CURRENT_TIMESTAMP WHERE user_id = ? AND key = ? AND value = ?",
 					[c.value, userId, key, current],
-				);
+				)
 		}
 		await visible(
 			() => setting(userId, key),
 			(v) => v === c.value,
-		);
+		)
 		const completedKey =
 			c.kind === "country"
 				? "onboarding_country_completed"
-				: "onboarding_streaming_completed";
+				: "onboarding_streaming_completed"
 		await upsert({
 			table: "user_setting",
 			data: [{ user_id: userId, key: completedKey, value: "yes" }],
 			conflictColumns: ["user_id", "key"],
-		});
+		})
 		await visible(
 			() => setting(userId, completedKey),
 			(v) => v === "yes",
-		);
-		return;
+		)
+		return
 	}
-	const id = canonicalTitleId(c.media_type!, c.tmdb_id!);
+	const id = canonicalTitleId(c.media_type!, c.tmdb_id!)
 	if (c.kind === "not-interested") {
-		const result = await updateNotInterested({ user_id: userId, tmdb_id: id, media_type: c.media_type!, action: "add" });
-		if (result.status !== "success") throw new Error("Persistence could not be confirmed. Retry to finish.");
+		const result = await updateNotInterested({
+			user_id: userId,
+			tmdb_id: id,
+			media_type: c.media_type!,
+			action: "add",
+		})
+		if (result.status !== "success")
+			throw new Error("Persistence could not be confirmed. Retry to finish.")
 		await visible(
 			() => readNotInterested(userId),
-			(rows) => rows.some((row) => row.tmdb_id === id && row.media_type === c.media_type),
-		);
-		return;
+			(rows) =>
+				rows.some(
+					(row) => row.tmdb_id === id && row.media_type === c.media_type,
+				),
+		)
+		return
 	}
-	const table = c.kind === "score" ? "user_score" : "user_wishlist";
+	const table = c.kind === "score" ? "user_score" : "user_wishlist"
 	const read = () =>
 		query<{ score?: number }>(
 			`SELECT ${c.kind === "score" ? "score" : "tmdb_id"} FROM ${table} WHERE user_id = ? AND tmdb_id = ? AND media_type = ?`,
 			[userId, id, c.media_type!],
-		);
-	const current = (await read())[0];
+		)
+	const current = (await read())[0]
 	if (c.kind === "score") {
 		if (current && String(current.score) !== c.value) {
 			if (String(current.score) !== c.before)
 				throw new Error(
 					"An account rating changed since this review. Your transfer is retained; restore that rating before retrying.",
-				);
+				)
 			// Only score changes: never overwrite an existing written review or independent library flags.
 			await execute(
 				"UPDATE user_score SET score = ?, updated_at = CURRENT_TIMESTAMP WHERE user_id = ? AND tmdb_id = ? AND media_type = ? AND score = ?",
 				[Number(c.value), userId, id, c.media_type!, Number(c.before)],
-			);
+			)
 		} else if (!current) {
 			if (c.before !== null)
 				throw new Error(
 					"An account rating was removed since review. Your transfer remains pending.",
-				);
+				)
 			await upsert({
 				table,
 				data: [
@@ -217,7 +272,7 @@ async function persistChange(userId: string, c: Change) {
 				],
 				conflictColumns: ["user_id", "tmdb_id", "media_type"],
 				ignoreUpdate: true,
-			});
+			})
 		}
 	} else if (!current)
 		await upsert({
@@ -225,13 +280,13 @@ async function persistChange(userId: string, c: Change) {
 			data: [{ user_id: userId, tmdb_id: id, media_type: c.media_type }],
 			conflictColumns: ["user_id", "tmdb_id", "media_type"],
 			ignoreUpdate: true,
-		});
-	await clearNotInterested(userId, id, c.media_type!);
+		})
+	await clearNotInterested(userId, id, c.media_type!)
 	await visible(
 		read,
 		(rows) =>
 			!!rows[0] && (c.kind !== "score" || String(rows[0].score) === c.value),
-	);
+	)
 	// A transferred score counts as any other: a rated movie is Seen through the watch its score owns, and leaves the
 	// Wishlist. Not by hand, so a show's score asks no question. Sent again on a retry, it writes nothing twice.
 	if (c.kind === "score" && c.media_type)
@@ -239,25 +294,23 @@ async function persistChange(userId: string, c: Change) {
 			userId,
 			{ mediaType: c.media_type, tmdbId: id },
 			{ type: "rate", score: Number(c.value), byHand: false },
-		);
+		)
 }
-export async function action({ request }: ActionFunctionArgs) {
-	const { user, headers } = await getAuthFromRequest({ request, fresh: true });
-	headers.set("Cache-Control", "private, no-store");
+async function productAction({ request }: ActionFunctionArgs) {
+	const { user, headers } = await getAuthFromRequest({ request, fresh: true })
+	headers.set("Cache-Control", "private, no-store")
 	if (!user)
 		return json(
 			{ error: "Sign in again to finish transferring your progress." },
 			{ status: 401, headers },
-		);
-	const parsed = requestSchema.safeParse(
-		await request.json().catch(() => null),
-	);
+		)
+	const parsed = requestSchema.safeParse(await request.json().catch(() => null))
 	if (!parsed.success)
 		return json(
 			{ error: "Invalid transfer selection." },
 			{ status: 400, headers },
-		);
-	const { id, accountId, changes } = parsed.data;
+		)
+	const { id, accountId, changes } = parsed.data
 	if (accountId !== user.id)
 		return json(
 			{
@@ -265,16 +318,16 @@ export async function action({ request }: ActionFunctionArgs) {
 					"This transfer belongs to another account. Sign into the original account to continue.",
 			},
 			{ status: 403, headers },
-		);
+		)
 	if (new Set(changes.map((c) => c.id)).size !== changes.length)
 		return json(
 			{ error: "Duplicate selected changes." },
 			{ status: 400, headers },
-		);
-	const key = `browser_transfer:${id}`;
-	let completed: string[] = [];
+		)
+	const key = `browser_transfer:${id}`
+	let completed: string[] = []
 	try {
-		const prior = await setting(user.id, key);
+		const prior = await setting(user.id, key)
 		const journal = prior
 			? (JSON.parse(prior) as Journal)
 			: await saveJournal(
@@ -282,23 +335,33 @@ export async function action({ request }: ActionFunctionArgs) {
 					key,
 					{ changes, completed: [], done: false },
 					true,
-				);
+				)
 		if (JSON.stringify(journal.changes) !== JSON.stringify(changes))
 			return json(
 				{ error: "The confirmed selection cannot change during retry." },
 				{ status: 409, headers },
-			);
-		completed = journal.completed;
+			)
+		completed = journal.completed
 		if (!journal.done) {
 			for (const c of changes) {
-				if (completed.includes(c.id)) continue;
-				await persistChange(user.id, c);
-				completed = [...completed, c.id];
-				await saveJournal(user.id, key, { changes, completed, done: false });
+				if (completed.includes(c.id)) continue
+				await persistChange(user.id, c, key)
+				completed = [...completed, c.id]
+				await saveJournal(user.id, key, { changes, completed, done: false })
 			}
-			await saveJournal(user.id, key, { changes, completed, done: true });
+			await saveJournal(user.id, key, { changes, completed, done: true })
+			captureProductEvent(
+				user.id,
+				"guest progress transferred",
+				{
+					item_count: completed.length,
+					origin: "guest_transfer",
+					batch_id: key,
+				},
+				{ uuid: eventUuid(`guest-transfer:${user.id}:${key}`) },
+			)
 		}
-		return json({ success: true, completed }, { headers });
+		return json({ success: true, completed }, { headers })
 	} catch (error) {
 		return json(
 			{
@@ -310,27 +373,27 @@ export async function action({ request }: ActionFunctionArgs) {
 				completed,
 			},
 			{ status: 503, headers },
-		);
+		)
 	} finally {
-		await resetGuestImportCaches(user.id);
+		await resetGuestImportCaches(user.id)
 	}
 }
 
 export async function loader({ request }: LoaderFunctionArgs) {
-	const { user, headers } = await getAuthFromRequest({ request });
-	headers.set("Cache-Control", "private, no-store");
+	const { user, headers } = await getAuthFromRequest({ request })
+	headers.set("Cache-Control", "private, no-store")
 	if (!user)
 		return json(
 			{ error: "Sign in to review your progress." },
 			{ status: 401, headers },
-		);
+		)
 	const [data, rows] = await Promise.all([
 		getUserData({ user_id: user.id }),
 		query<{ key: string; value: string }>(
 			"SELECT key, value FROM user_setting WHERE user_id = ?",
 			[user.id],
 		),
-	]);
+	])
 	return json(
 		{
 			accountId: user.id,
@@ -342,5 +405,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			),
 		},
 		{ headers },
-	);
+	)
 }
+
+export const action = analyticsAction(productAction)

@@ -1,3 +1,4 @@
+import { analyticsAction } from "~/telemetry/product-analytics.server"
 import {
 	type ActionFunctionArgs,
 	type LoaderFunctionArgs,
@@ -100,7 +101,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	return answer({ watches: await getMovieWatchLog(viewer.userId, id.data) })
 }
 
-export async function action({ request }: ActionFunctionArgs) {
+async function productAction({ request }: ActionFunctionArgs) {
 	if (request.method !== "POST")
 		return answer({ error: "Method not allowed" }, 405)
 	const viewer = await member(request)
@@ -119,3 +120,5 @@ export async function action({ request }: ActionFunctionArgs) {
 		)) satisfies WatchLogAnswer,
 	)
 }
+
+export const action = analyticsAction(productAction)

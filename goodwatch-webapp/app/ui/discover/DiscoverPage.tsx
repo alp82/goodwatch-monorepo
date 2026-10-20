@@ -1,3 +1,5 @@
+import { useProductExposure } from "~/telemetry/useProductAnalytics"
+import { discoveryProperties } from "~/telemetry/product-events"
 // Discover on the shared filter bar, browsing and searching on one page: the heading (tap it to search; the query
 // becomes the heading) with the explanation at the top right, the bar with For you before the sort, and the grid of
 // title cards, loaded 40 at a time as the person scrolls. The grid is never replaced between browsing and searching:
@@ -142,7 +144,11 @@ export function DiscoverPage({
 		enabled: guest !== undefined,
 	})
 
-	const browseQuery = withSides(filters.query, side, params.get("layout") !== "grid")
+	const browseQuery = withSides(
+		filters.query,
+		side,
+		params.get("layout") !== "grid",
+	)
 	const browse = useDiscoverBrowse({
 		query: browseQuery,
 		forYou: forYou.on,
@@ -193,8 +199,24 @@ export function DiscoverPage({
 	const first: DiscoverResults | null = pages[0] ?? null
 	const cards = useMemo(() => pages.flatMap((page) => page.cards), [pages])
 	const answered = !browse.isPlaceholderData && Boolean(first)
-	// Until a search's own results land, the grid keeps the last list, and the counts wait.
 	const stale = searching ? !first?.searching || !answered : false
+	useProductExposure(
+		"discovery results shown",
+		answered && !stale
+			? `${params.toString()}:${cards.map((c) => c.key).join(",")}`
+			: null,
+		{
+			...discoveryProperties(params),
+			result_count: cards.length,
+			source: searching ? "search" : "discover",
+			on_my_services: filters.state.onMyServices,
+			for_you: forYou.on,
+			sort: filters.sort,
+			moods: filters.state.moods,
+			country: scope.country,
+			service_ids: scope.services,
+		},
+	)
 
 	// Movement marks: positions before the flip against the order that answers it.
 	const [flip, setFlip] = useState<Flip | null>(null)

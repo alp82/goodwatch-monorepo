@@ -1,3 +1,4 @@
+import { captureProductEvent } from "~/telemetry/product-analytics.server"
 import {
 	AVAILABILITY_MAX_AGE_MS,
 	type AvailabilityEvidence,
@@ -26,6 +27,14 @@ export async function watchAvailability(
 		...scope,
 		serviceIds: ctx.services,
 	})
+	if (ctx.viewer.kind === "member")
+		captureProductEvent(ctx.viewer.userId, "availability checked", {
+			source: "mcp",
+			tmdb_id: title.tmdb_id,
+			media_type: title.media_type,
+			country: ctx.country,
+			result_count: evaluated.offers.length,
+		})
 	if (!evaluated.offers.length)
 		return linkedAvailability(evaluated, title, ctx.country, new Map(), [])
 	const ids = [
