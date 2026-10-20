@@ -128,7 +128,7 @@ test("a poster says where a press leads; on the phone the focused show's line sa
 	// Six posters of one size, w342 on the desktop and w185 on the phone.
 	assert.equal(count(desktop, "/t/p/w342/poster-"), 6)
 	assert.equal(count(phone, "/t/p/w185/poster-"), 6)
-	assert.equal(count(desktop, 'style="width:172px;height:258px"'), 6)
+	assert.equal(count(desktop, 'style="width:163px;height:244px"'), 6)
 })
 
 test("the New episodes signal: what is new under the screen's name, and New on its shows", () => {
@@ -155,7 +155,7 @@ test("a member without a show to continue or to start is told how one gets here"
 		assert.deepEqual(ids(html), rendered.emptyItems)
 		assert.match(
 			html,
-			/>No show for tonight\. Want to See on a show puts it here to start\./,
+			/>No show to watch next\. Want to See on a show puts it here to start\./,
 		)
 	}
 })

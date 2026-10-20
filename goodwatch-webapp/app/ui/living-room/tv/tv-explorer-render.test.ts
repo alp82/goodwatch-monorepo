@@ -178,7 +178,7 @@ test("an island: the focused title's name and facts over four posters, and Sail 
 	assert.equal(count(html, "/w342/poster-70"), 4)
 	assert.match(
 		tag(html, "title:movie-702"),
-		/aria-label="Title 702" class="tvc-item [^"]*tvc-tile[^"]*" style="width:172px;height:258px"/,
+		/aria-label="Title 702" class="tvc-item [^"]*tvc-tile[^"]*" style="width:163px;height:244px"/,
 	)
 	assert.match(html, /data-tv-row=""/)
 	assert.match(html, />Sail to</)

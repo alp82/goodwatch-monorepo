@@ -117,7 +117,7 @@ test("Tonight shows one pick at a time, says which, and wraps", () => {
 		assert.deepEqual(focused(guest[edition]), ["details"])
 		assert.equal(label(guest[edition], "details"), "Details")
 		assert.equal(label(guest[edition], "another"), "Another one")
-		assert.match(guest[edition], />Tonight</)
+		assert.match(guest[edition], />Watch next</)
 		assert.match(guest[edition], />Best rated right now</)
 	}
 })
@@ -138,7 +138,7 @@ test("a pick's facts: the score, the match once there is one, where it streams, 
 	assert.match(guest.desktop, />Line 1\.</)
 	// The phone has no room for the kicker and the line.
 	assert.ok(!guest.phone.includes("Line 1."))
-	assert.ok(!guest.phone.includes("Pick 1 of 3"))
+	assert.ok(guest.phone.includes("Pick 1 of 3"))
 	assert.match(guest.phone, />On Netflix</)
 	assert.match(member.desktop, /<b>92%<\/b> <span[^>]*>match<\/span>/)
 })
@@ -167,8 +167,10 @@ test("Tonight without picks says whether they are on their way, and keeps its ba
 test("the title screen's items in the markup are the machine's, in reading order, in every state", () => {
 	assert.deepEqual(rendered.title.items, [
 		"watch",
+		"trailer",
 		"want-to-see",
 		"seen",
+		"fingerprint",
 		"expand",
 		...BAR,
 	])
@@ -181,11 +183,11 @@ test("the title screen's items in the markup are the machine's, in reading order
 		assert.deepEqual(focused(rendered.title.known[edition]), ["watch"])
 })
 
-test("every key of the title screen is a real button, 74 canvas px tall on the desktop", () => {
+test("every key of the title screen is a real button, 64 canvas px tall on the desktop", () => {
 	const { known } = rendered.title
-	assert.equal(count(known.desktop, "<button"), 7)
-	assert.equal(count(known.desktop, '<button type="button" data-tv-item='), 7)
-	assert.equal(count(known.desktop, "h-[74px]"), 3)
+	assert.equal(count(known.desktop, "<button"), 9)
+	assert.equal(count(known.desktop, '<button type="button" data-tv-item='), 9)
+	assert.equal(count(known.desktop, "h-[64px]"), 9)
 	// The desktop's keys are drawn as designed; the rule is the phone's.
 	assert.equal(rendered.keySizes.desktop, 74)
 	assert.deepEqual(sizes(known.desktop), [])
@@ -231,7 +233,7 @@ test("on every phone of the room's table every key is 44 px or more on the phone
 test("on the phone the keys stand two to a row, and what they say is cut short before it spills", () => {
 	for (const p of rendered.phones) {
 		assert.match(p.title, /class="mt-3\.5 grid grid-cols-2 gap-2"/)
-		assert.equal(count(p.title, '<span class="truncate">'), 3)
+		assert.equal(count(p.title, '<span class="truncate">'), 5)
 		// Three keys fill the two rows but the last cell; two keys stand in the left column.
 		assert.equal(count(p.title, "col-start-1"), 0)
 		assert.equal(count(p.tonight, "col-start-1"), 2)
@@ -272,25 +274,14 @@ test("the title screen names the title, its facts and its line", () => {
 	assert.match(show.desktop, />2019 · Show · 55 min episodes</)
 	assert.match(show.desktop, /<b>91%<\/b>/)
 	// The phone leaves the kicker and the line out.
-	assert.ok(!known.phone.includes("2h 10m"))
+	assert.ok(known.phone.includes("2h 10m"))
 	assert.ok(!known.phone.includes("Free your mind."))
 })
 
-test("the Watch key says Watch on the person's service, On another's, and Not streaming as a quiet key", () => {
-	const { known, another, nowhere, nowhereFocusedElsewhere, unknown } =
-		rendered.title
-	for (const edition of EDITIONS) {
-		assert.equal(label(known[edition], "watch"), "Watch on Netflix")
-		assert.equal(label(another[edition], "watch"), "On Netflix")
-		assert.equal(label(nowhere[edition], "watch"), "Not streaming")
-		assert.equal(label(unknown[edition], "watch"), "Where to watch")
-	}
-	// The quiet key is dimmed only while it does not have the focus: focused, its words are black on white.
-	assert.match(
-		nowhereFocusedElsewhere.desktop,
-		/data-tv-item="watch" class="[^"]*\[&amp;:not\(\.tvc-on\)\]:text-white\/55/,
-	)
-	assert.ok(!known.desktop.includes("text-white/55"))
+test("without an offer URL the watch action honestly leads to Where to watch", () => {
+	for (const state of [rendered.title.known, rendered.title.another, rendered.title.nowhere, rendered.title.unknown])
+		for (const edition of EDITIONS)
+			assert.equal(label(state[edition], "watch"), "Where to watch")
 })
 
 test("Want to See and Seen it say what is", () => {

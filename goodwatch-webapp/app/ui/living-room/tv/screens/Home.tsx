@@ -21,7 +21,7 @@ import type {
 import { HomeGuide } from "./HomeGuide"
 import { AppArt, artFiles } from "./app-art"
 
-export const HOME_HEADLINE = "Let's find something good for tonight."
+export const HOME_HEADLINE = "Let's find something good to watch next."
 
 /**
  * The headline's tag: the start page's H1, unless the page has an H1 of its own ("How GoodWatch works" below the

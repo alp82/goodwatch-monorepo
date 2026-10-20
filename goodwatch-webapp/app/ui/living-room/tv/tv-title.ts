@@ -22,6 +22,10 @@ export type TvKnownTitle = Pick<TitleCard, "media_type" | "tmdb_id" | "title"> &
 
 /** The title on the title screen and on the rating after Seen it, with the person's marks. */
 export type TvTitleOnScreen = {
+	extras?: import("./title-extras").TvTitleExtras | null
+	extrasFailed?: boolean
+	panel?: "fingerprint" | "trailer"
+	group?: number
 	/** `movie-603`, as in the URL. */
 	key: string
 	/** What is known of the title: what a list knew, then its card. Null until either is there. */

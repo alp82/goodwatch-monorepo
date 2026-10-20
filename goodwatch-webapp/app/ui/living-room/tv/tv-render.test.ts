@@ -46,7 +46,7 @@ const focused = (html: string) =>
 		(match) => match[1],
 	)
 const count = (html: string, part: string) => html.split(part).length - 1
-const H1 = "Let&#x27;s find something good for tonight."
+const H1 = "Let&#x27;s find something good to watch next."
 
 test("home's items in the markup are exactly the machine's, in reading order, in both editions", () => {
 	for (const edition of ["desktop", "phone"] as const) {
@@ -105,12 +105,12 @@ test("the home is the page's H1, the same sentence for a guest and a member, onc
 })
 
 test("the home shows the focused app large, and while the focus is on the bar the first app", () => {
-	assert.match(rendered.home.guest.desktop, />Tonight<\/div>/)
+	assert.match(rendered.home.guest.desktop, />Watch next<\/div>/)
 	assert.match(
 		rendered.home.guest.desktop,
 		/One pick at a time, best rated right now\./,
 	)
-	assert.match(rendered.home.focusOnBar, />Tonight<\/div>/)
+	assert.match(rendered.home.focusOnBar, />Watch next<\/div>/)
 	assert.match(
 		rendered.home.member.desktop,
 		/One pick at a time, your next episode first\./,

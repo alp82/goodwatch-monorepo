@@ -40,7 +40,7 @@ export default function ConnectedApps() {
 					<div className="rounded-xl border border-gray-700 bg-gray-800/40 p-6 text-center">
 						<p className="font-semibold text-gray-100">No apps connected</p>
 						<p className="mx-auto mt-1 max-w-md text-sm text-gray-400">
-							Add GoodWatch to Claude or ChatGPT to log watches, rate titles and pick tonight's movie by chatting.
+							Add GoodWatch to Claude or ChatGPT to log watches, rate titles and pick your next movie by chatting.
 						</p>
 						<Link to={USE_WITH_AI_PATH} prefetch="intent" className="mt-3 inline-block text-sm font-semibold text-amber-500 hover:text-amber-400">
 							See what it looks like

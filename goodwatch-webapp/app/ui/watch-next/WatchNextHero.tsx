@@ -375,7 +375,7 @@ export function WatchNextHero({
 											onClick={() => onPass(hero)}
 											className="inline-flex h-12 cursor-pointer items-center rounded-lg px-4 font-semibold text-gray-300 hover:bg-white/10"
 										>
-											Not tonight
+											Not now
 										</button>
 									)}
 								</div>

@@ -22,7 +22,7 @@ export const meta: MetaFunction = () => [
 	{
 		name: "description",
 		content:
-			"The top of your Wishlist for tonight: sorted your way, narrowed by mood, on your streaming services.",
+			"What to watch next from your Wishlist: sorted your way, narrowed by mood, on your streaming services.",
 	},
 	// Personal to each viewer.
 	{ name: "robots", content: "noindex, follow" },

@@ -186,7 +186,7 @@ export function heroLabel(
 	const m = picks ? picks.words : moodWords(moods)
 	switch (sort) {
 		case "match":
-			return m ? `Best match for ${m} tonight` : "Best match for you tonight"
+			return m ? `Best match for ${m}` : "Best match for you"
 		case "waiting":
 			return m ? `Waiting longest in ${m}` : "Waiting longest on your Wishlist"
 		case "added":
@@ -215,12 +215,12 @@ export function movieHeroLabel(
 ): string {
 	const limit = time === null ? "" : timeLabel(time).toLowerCase()
 	if (note === "nothingInTime")
-		return `Tonight's movie · Nothing ${limit}; the closest`
+		return `Watch next · Nothing ${limit}; the closest`
 	const line = heroLabel(sort, moods, note, picks).replace(
 		/ (on|to) your Wishlist/,
 		" of your movies",
 	)
-	return `Tonight's movie · ${line}${limit && !note ? `, ${limit}` : ""}`
+	return `Watch next · ${line}${limit && !note ? `, ${limit}` : ""}`
 }
 
 const DAY_MS = 86_400_000
@@ -297,8 +297,8 @@ export const TIER_LABEL: Record<WatchNextTierKey, string> = {
 	closeToTaste: TITLE_SIDES_COPY.close,
 	elsewhere: "Elsewhere",
 	close: "Close",
-	notTonight: "Not tonight",
-	notTonightsFit: "Not tonight's fit",
+	notTonight: "Not now",
+	notTonightsFit: "Not a fit right now",
 }
 
 export const TIER_NOTE: Partial<Record<WatchNextTierKey, string>> = {

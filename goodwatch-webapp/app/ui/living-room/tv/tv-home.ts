@@ -294,7 +294,7 @@ export type TvAppTile = {
 export type TvTileSignal = { badge: string; tile: string; door: string }
 
 const APP_NAME: Record<TvApp, string> = {
-	tonight: "Tonight",
+	tonight: "Watch next",
 	discover: "Discover",
 	explorer: "Explorer",
 	taste: "Taste",

@@ -32,7 +32,7 @@ The 16 titles the start page links to below the living room: the most popular ti
 The screen inside the living room where GoodWatch runs. It shows one TV screen at a time.
 
 **TV screen**:
-One view on the TV, such as home, Tonight, Discover's moods, a streaming service's titles, search, or a title. It replaces the earlier notion of channels.
+One view on the TV, such as home, Watch next, Discover's moods, a streaming service's titles, search, or a title. It replaces the earlier notion of channels.
 
 **Intro**:
 The short film the TV plays a guest on the start page after its boot screen: one scene per chapter (Let's watch, One score, Streaming, For you, How it feels, Search, Filters, Explorer, Tracking, Your ratings), with a chapter bar, ending in the quiz ("Tap three you loved"), which gives a real pick. It never starts over in the same tab: coming back resumes where the visitor was, or shows the TV's home after they left it. "What is GoodWatch?" in the TV's menu plays it again, for anyone. "How GoodWatch works" below the room is the same chapters as page content.
@@ -66,14 +66,17 @@ _Avoid_: Film
 The person's collection of titles marked Want to See, movies and shows together. It has no manual order; the person chooses a sort. My movies lists its movies and My shows lists its shows to start.
 
 **Watch next**:
-The top of My movies, or of the shows to start in My shows, under the person's chosen sort and moods. It is a view of the Want to See titles of one kind, not a separate list, and nothing but Want to See adds to it.
-_Avoid_: Queue, Up next, Priority queue
+The choice of what to watch next, labelled Next in compact navigation. On the TV it is the screen formerly called Tonight: the existing next episode and Wishlist picks, with the existing discovery fallback when there are no personal picks. On My movies and the shows to start in My shows it is the top of the Want to See titles under the person's chosen sort and moods, not a separate list; nothing but Want to See adds to those lists. This shared name changes no recommendation order, fallback, eligibility, or watch-state rule. Internal `tonight` identifiers and links remain compatible.
+_Avoid_: Tonight, Queue, Up next, Priority queue
 
-**Tonight's pick**:
-The single title or episode GoodWatch puts forward for tonight. For a member, the Next episode of the Watching show they were last active on in the last 90 days, by a watch or by their own move of the show to Watching; without one, the first movie of My movies; without one, the first show to start.
+**Next pick**:
+The single title or episode GoodWatch puts forward to watch next. For a member, the Next episode of the Watching show they were last active on in the last 90 days, by a watch or by their own move of the show to Watching; without one, the first movie of My movies; without one, the first show to start. The former name was Tonight’s pick; existing `tonight` routes, query keys, and functions keep their identities.
+
+**Not now**:
+The Watch next action that moves a passed title to the end of the current visit’s view. It changes no Wishlist membership, rating, or watch state. The code and request parameter retain `notTonight`.
 
 **My shows**:
-The page for a member's shows tonight: one list of shows to Continue, ordered by each show's Next episode air date, newest first, with last activity breaking ties; then the shows to Pick up, then the Want to See shows to start. Between Continue and Pick up one row says which shows are Waiting for episodes. Under the list are the On hold and Dropped shows.
+The page for a member's shows to watch next: one list of shows to Continue, ordered by each show's Next episode air date, newest first, with last activity breaking ties; then the shows to Pick up, then the Want to See shows to start. Between Continue and Pick up one row says which shows are Waiting for episodes. Under the list are the On hold and Dropped shows.
 _Avoid_: Shows, Watchlist, Continue watching, Up next
 
 **Pick up**:
@@ -96,7 +99,7 @@ A member's Want to See title, or a show they are Watching or have On hold, that 
 _Avoid_: Arrival (the member arriving on a page), Notification, Alert, Release
 
 **Recently landed**:
-A Newly available title in the 14 days from the day it landed, the day itself included, whether the member has opened its page since or not. For those days My movies and My shows list it in one row that names the latest title with its service and day and opens to all of them, the title carries the service's logo with "New", and on the TV it comes first among Tonight's movies, or among the shows to start of Tonight and My shows. Nothing is stored for it. A show the member is in the middle of is listed and marked and keeps its place.
+A Newly available title in the 14 days from the day it landed, the day itself included, whether the member has opened its page since or not. For those days My movies and My shows list it in one row that names the latest title with its service and day and opens to all of them, the title carries the service's logo with "New", and on the TV it comes first among Watch next’s movies, or among the shows to start of Watch next and My shows. Nothing is stored for it. A show the member is in the middle of is listed and marked and keeps its place.
 _Avoid_: Fresh, Just arrived, Arrival, New release
 
 **My movies visit**:
@@ -216,7 +219,7 @@ One of the six parts of a title's fingerprint shown on the title page: Energy, H
 _Avoid_: Pillar
 
 **Slider group**:
-One of the three groups of sliders on the title page's fingerprint: Feel (pace, energy, intensity, tone, heart, humor), Story (attention, setting, world), and Look (style, craft). Each slider belongs to one area. A slider group is not a fingerprint family, even where the names match.
+One of the three groups of sliders on the title page's fingerprint: Feel (pace, energy, intensity, tone, heart, humor), Story (attention, setting, world), and Look (style, craft). Each slider belongs to one area. A slider group is not a fingerprint family, even where the names match. On the TV these groups are read-only indicators, with Summary, Feel, Story, and Look views on a phone.
 
 **You vs everyone**:
 The comparison of a person's ratings with the GoodWatch score of the same titles. "Everyone" means the GoodWatch score, not other members.

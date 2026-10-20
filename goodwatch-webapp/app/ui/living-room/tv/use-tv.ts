@@ -28,11 +28,13 @@ import {
 	TV_CANVAS_ATTR,
 	TV_INPUT_ATTR,
 	TV_ITEM_ATTR,
+	TV_ROW_ATTR,
 	bringIntoView,
 	inputElement,
 	itemElement,
 	measureItems,
 	roomElement,
+	restoreRowPosition,
 } from "./tv-dom"
 import {
 	type TvAction,
@@ -60,6 +62,9 @@ const leaves = (effect: TvEffect) =>
 
 const reducedMotion = () =>
 	window.matchMedia("(prefers-reduced-motion: reduce)").matches
+
+// History entries retain their row position as well as their focus. Bounded to the current tab's recent visits.
+const rowPositions = new Map<string, number[]>()
 
 /** The keys that stay the Remote's while the search screen's line has the browser's focus. Every other key types. */
 const REMOTE_KEYS_WHILE_TYPING = new Set([
@@ -173,6 +178,16 @@ export function useTv(ctx: TvContext, onEffect: (effect: TvEffect) => void) {
 	const dispatch = useCallback(
 		(action: TvAction) => {
 			const now = latest.current
+			// Remote OK uses the same native link click as pointer/keyboard activation, including analytics.
+			if (action.type === "ok" || action.type === "choose") {
+				const el = itemElement(
+					action.type === "choose" ? action.item : now.focused,
+				)
+				if (el instanceof HTMLAnchorElement && el.href) {
+					el.click()
+					return
+				}
+			}
 			const next = transition(now.state, action, now.ctx)
 			setPower(next.state.power)
 			setMenu((m) =>
@@ -203,6 +218,45 @@ export function useTv(ctx: TvContext, onEffect: (effect: TvEffect) => void) {
 		},
 		[navigate],
 	)
+
+	useIsoLayoutEffect(() => {
+		const root = roomElement()
+		if (!root) return
+		const saved = rowPositions.get(entry)
+		const restored = new WeakSet<HTMLElement>()
+		const rows = () =>
+			Array.from(root.querySelectorAll<HTMLElement>(`[${TV_ROW_ATTR}]`))
+		const restore = () =>
+			rows().forEach((row, i) => {
+				if (
+					saved?.[i] !== undefined &&
+					!restored.has(row) &&
+					row.querySelector(`[${TV_ITEM_ATTR}]`)
+				) {
+					restoreRowPosition(row, saved[i])
+					restored.add(row)
+				}
+			})
+		const remember = () => {
+			const current = rows()
+			if (!current.length) return
+			rowPositions.set(
+				entry,
+				current.map((row) => row.scrollLeft),
+			)
+			if (rowPositions.size > 60)
+				rowPositions.delete(rowPositions.keys().next().value!)
+		}
+		restore()
+		// A list's lazy code or data can arrive after this history entry. Restore that row before its next paint.
+		const observer = new MutationObserver(restore)
+		observer.observe(root, { childList: true, subtree: true })
+		root.addEventListener("scroll", remember, true)
+		return () => {
+			observer.disconnect()
+			root.removeEventListener("scroll", remember, true)
+		}
+	}, [entry])
 
 	// Turning the set on boots, then shows home.
 	useEffect(() => {
@@ -287,6 +341,7 @@ export function useTv(ctx: TvContext, onEffect: (effect: TvEffect) => void) {
 	// anywhere else (a key of the Remote was clicked, an idea was reached with Tab), a key that types gives the
 	// line the focus first and then lands in it, so H, M and S are letters there.
 	useEffect(() => {
+		let lastDirectionAt = 0
 		const onKey = (e: KeyboardEvent) => {
 			const target = e.target as HTMLElement
 			const typing = Boolean(target.closest(`[${TV_INPUT_ATTR}]`))
@@ -302,6 +357,14 @@ export function useTv(ctx: TvContext, onEffect: (effect: TvEffect) => void) {
 				return
 			// Scrolled out of the window, the room takes no input: the keys are the page's.
 			if (roomElement()?.hasAttribute("inert")) return
+			if (e.key.startsWith("Arrow")) {
+				const now = performance.now()
+				if (e.repeat && now - lastDirectionAt < 120) {
+					e.preventDefault()
+					return
+				}
+				lastDirectionAt = now
+			}
 			if (latest.current.state.power === "off") {
 				press({ type: "power", on: true })
 				e.preventDefault()
@@ -310,7 +373,10 @@ export function useTv(ctx: TvContext, onEffect: (effect: TvEffect) => void) {
 			// What is typed belongs to the line of the screen on show. Backspace deletes there while there is
 			// something to delete; on an empty line it is Back, as everywhere.
 			const line = typing ? null : inputElement()
-			if (line && (e.key.length === 1 || (e.key === "Backspace" && line.value))) {
+			if (
+				line &&
+				(e.key.length === 1 || (e.key === "Backspace" && line.value))
+			) {
 				line.focus({ preventScroll: true })
 				return
 			}
@@ -370,15 +436,7 @@ export function useTv(ctx: TvContext, onEffect: (effect: TvEffect) => void) {
 			press,
 			point: (item) => dispatch({ type: "focus", item }),
 		}),
-		[
-			power,
-			menu.open,
-			state.screen.name,
-			framed,
-			openService,
-			press,
-			dispatch,
-		],
+		[power, menu.open, state.screen.name, framed, openService, press, dispatch],
 	)
 
 	return {

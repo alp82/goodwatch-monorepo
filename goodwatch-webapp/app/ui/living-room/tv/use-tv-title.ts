@@ -1,5 +1,8 @@
 import useLocale from "~/utils/locale"
-import { mediaLanguageUrl, canonicalMediaTitle } from "~/utils/media-presentation"
+import {
+	mediaLanguageUrl,
+	canonicalMediaTitle,
+} from "~/utils/media-presentation"
 // The title on the TV's title screen and on the rating after Seen it: what the screens show of it, and the effects
 // the machine names for it.
 //
@@ -43,7 +46,6 @@ import {
 	parseTvTitleKey,
 	ratedToast,
 	recordsWatch,
-	watchKey,
 } from "./tv-title"
 
 async function fetchCards(
@@ -90,13 +92,39 @@ export function useTvTitle({
 }): TvTitleReport {
 	const key =
 		screen.name === "title" || screen.name === "rate" ? screen.title : null
+	const panel = screen.name === "title" ? screen.panel : undefined
+	const group = screen.name === "title" ? screen.group : undefined
 	const ref = useMemo(() => (key ? parseTvTitleKey(key) : null), [key])
 	const { locale } = useLocale()
 	const cards = useQuery({
-		queryKey: ["tv-title-card", member ? "member" : "guest", key, locale.language],
+		queryKey: [
+			"tv-title-card",
+			member ? "member" : "guest",
+			key,
+			locale.language,
+		],
 		enabled: Boolean(ref),
 		queryFn: () =>
-			fetchCards(ref ? [titleKey(ref.mediaType, ref.tmdbId)] : [], member, locale.language),
+			fetchCards(
+				ref ? [titleKey(ref.mediaType, ref.tmdbId)] : [],
+				member,
+				locale.language,
+			),
+	})
+	const extras = useQuery<import("./title-extras").TvTitleExtras>({
+		queryKey: ["tv-title-extras", key, locale.country, locale.language],
+		enabled: Boolean(ref),
+		queryFn: async ({ signal }) => {
+			const response = await fetch(
+				mediaLanguageUrl(
+					`/api/tv-title?type=${ref!.mediaType}&id=${ref!.tmdbId}&country=${locale.country}`,
+					locale.language,
+				),
+				{ signal },
+			)
+			if (!response.ok) throw new Error("Title details unavailable")
+			return response.json()
+		},
 	})
 	const card = cards.data?.cards[0] ?? null
 	const mine = cards.data?.services
@@ -108,6 +136,10 @@ export function useTvTitle({
 		const mediaKey = `${ref.mediaType}-${ref.tmdbId}` as const
 		return {
 			key,
+			extras: extras.data,
+			extrasFailed: extras.isError,
+			panel,
+			group,
 			title: shown,
 			missing: Boolean(cards.data) && !card,
 			mine: mine ?? [],
@@ -116,7 +148,19 @@ export function useTvTitle({
 			seen: marks ? isSeen(marks, mediaKey) : (shown?.seen ?? false),
 			score: marks?.scores[mediaKey]?.score ?? null,
 		}
-	}, [key, ref, card, mine, known, marks, cards.data])
+	}, [
+		key,
+		ref,
+		card,
+		mine,
+		known,
+		marks,
+		cards.data,
+		extras.data,
+		extras.isError,
+		panel,
+		group,
+	])
 
 	const leave = useLeaveThroughTv()
 	const { mutate: setWish } = useWishlistMutation()
@@ -145,9 +189,11 @@ export function useTvTitle({
 			switch (effect.type) {
 				case "watch": {
 					const shown = now.title.title
-					// "Not streaming" does nothing; without the title's name its page has no address to scroll in.
-					if (!shown || !watchKey(shown, now.title.mine).goes) return true
-					const href = watchHref(effect.title, { titleName: canonicalMediaTitle(shown) })
+					// Where to watch is the fallback when no direct offer link is available.
+					if (!shown) return true
+					const href = watchHref(effect.title, {
+						titleName: canonicalMediaTitle(shown),
+					})
 					const arrival: StreamingArrival = { highlight: STREAMING_BLOCK }
 					if (href) leave(href, arrival)
 					return true

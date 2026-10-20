@@ -51,7 +51,7 @@ export function ConnectAside({ app }: { app: ConsentApp }) {
 				<GoodWatchBadge size="lg" />
 			</div>
 			<h2 className="mb-4 text-4xl font-bold">Connect {app.name}</h2>
-			<p className="text-xl text-gray-200">Log watches, rate titles and pick tonight's movie by chatting with {app.name}.</p>
+			<p className="text-xl text-gray-200">Log watches, rate titles and pick your next movie by chatting with {app.name}.</p>
 		</div>
 	)
 }

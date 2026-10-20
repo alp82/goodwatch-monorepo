@@ -227,7 +227,7 @@ function HubContent() {
 	}
 	const watchSubtitle = user
 		? pick
-			? `${pick.title.title} tonight`
+			? `${pick.title.title} next`
 			: "Your Wishlist, best first"
 		: `${wishlistCount} on your Wishlist`
 	// A link to the page the person is already on changes no location, so close on any link click.
@@ -253,7 +253,7 @@ function HubContent() {
 							destination={d.myShows}
 							subtitle={
 								pickOn === "myShows" && pick
-									? `${pick.title.title}${pick.episode ? ` ${pick.episode.code}` : ""} tonight`
+									? `${pick.title.title}${pick.episode ? ` ${pick.episode.code}` : ""} next`
 									: "Continue, or start one"
 							}
 							here={here === "myShows"}
@@ -264,7 +264,7 @@ function HubContent() {
 							destination={d.myMovies}
 							subtitle={
 								pickOn === "myMovies" && pick
-									? `${pick.title.title} tonight`
+									? `${pick.title.title} next`
 									: "Movies you want to see"
 							}
 							here={here === "myMovies"}

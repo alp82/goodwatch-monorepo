@@ -75,7 +75,7 @@ export function TonightsPickThumb({
 			prefetch="intent"
 			aria-label={
 				pick?.href && title
-					? `Tonight's pick: ${title.title}${pick.episode ? `, ${pick.episode.code}` : ""}`
+					? `Watch next: ${title.title}${pick.episode ? `, ${pick.episode.code}` : ""}`
 					: title
 						? `Watch next: ${title.title}`
 						: "Watch next"
@@ -99,7 +99,7 @@ export function TonightsPickThumb({
 			{label && (
 				<span className="flex min-w-0 flex-col leading-[1.15]">
 					<small className="text-[11px] font-bold text-amber-400">
-						{user ? "Tonight" : "Wishlist"}
+						{user ? "Next" : "Wishlist"}
 						{pick?.episode && ` · ${pick.episode.code}`}
 					</small>
 					<b className="max-w-[118px] truncate text-[13.5px] text-gray-100">

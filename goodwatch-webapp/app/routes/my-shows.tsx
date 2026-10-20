@@ -25,7 +25,7 @@ export const meta: MetaFunction = () => [
 	{
 		name: "description",
 		content:
-			"Your shows for tonight: the next episode of each show you are watching, then the shows you want to start.",
+			"Your shows to watch next: the next episode of each show you are watching, then the shows you want to start.",
 	},
 	// Personal to each viewer.
 	{ name: "robots", content: "noindex, follow" },
