@@ -89,7 +89,6 @@ test("a guest's home before the pool is drawn from the start titles alone", () =
 		[
 			["tonight", "Watch next"],
 			["discover", "Discover"],
-			["explorer", "Explorer"],
 			["taste", "Taste"],
 		],
 	)
@@ -103,9 +102,8 @@ test("a guest's home before the pool is drawn from the start titles alone", () =
 		kind: "posters",
 		paths: ["/start-0.jpg", "/start-2.jpg", "/start-3.jpg", "/start-4.jpg"],
 	})
-	assert.deepEqual(apps[2].art, { kind: "map" })
-	assert.deepEqual(apps[3].art, { kind: "print" })
-	assert.equal(apps[3].line, "Rate 5 titles, get picks made for you.")
+	assert.deepEqual(apps[2].art, { kind: "print" })
+	assert.equal(apps[2].line, "Rate 5 titles, get picks made for you.")
 	// Nothing to pick from yet: Tonight has no items of its own.
 	assert.deepEqual(tvContextOf(guest, null).tonight, [])
 })
@@ -117,10 +115,10 @@ test("the home's tiles are the machine's apps, for a guest and a member", () => 
 		[member, null],
 	] as const)
 		assert.deepEqual(
-			homeApps(data, p).map((tile) => `app:${tile.app}`),
+			homeApps(data, p).map((tile) => `app:${tile.app}`).sort(),
 			tvItems({ name: "home" }, tvContextOf(data, p)).filter((item) =>
 				item.startsWith("app:"),
-			),
+			).sort(),
 		)
 })
 
@@ -148,17 +146,17 @@ test("a member's Tonight and My shows come with the loader, and need no pool", (
 	const apps = homeApps(member, null)
 	assert.deepEqual(
 		apps.map((tile) => tile.app),
-		["tonight", "discover", "explorer", "taste", "shows"],
+		["tonight", "discover", "taste", "shows"],
 	)
 	assert.deepEqual(apps[0].art, { kind: "backdrop", path: "/backdrop-10.jpg" })
 	assert.equal(apps[0].line, "One pick at a time, your next episode first.")
 	assert.equal(
-		homeApps(member, null, true)[3].line,
+		homeApps(member, null, true)[2].line,
 		`${TASTE_GROUPS_NAME.title}.`,
 	)
-	assert.equal(apps[4].name, "My shows")
+	assert.equal(apps[3].name, "My shows")
 	// The first show to continue is Tonight's pick: the My shows tile shows the next show.
-	assert.deepEqual(apps[4].art, { kind: "backdrop", path: "/backdrop-11.jpg" })
+	assert.deepEqual(apps[3].art, { kind: "backdrop", path: "/backdrop-11.jpg" })
 	const ctx = tvContextOf(member, null)
 	assert.deepEqual(ctx.tonight, [
 		{ title: "show-10", href: "/my-shows" },
@@ -362,7 +360,6 @@ test("the machine's context names the person's two services by their ids, in the
 	assert.deepEqual(tvItems({ name: "home" }, tvContextOf(keyed, null)), [
 		"app:tonight",
 		"app:discover",
-		"app:explorer",
 		"app:taste",
 		"service:8",
 		"service:337",
@@ -373,8 +370,8 @@ test("the machine's context names the person's two services by their ids, in the
 		tvItems(
 			{ name: "home" },
 			tvContextOf({ ...member, services: [disney, netflix] }, null),
-		).slice(4, 7),
-		["app:shows", "service:337", "service:8"],
+		).filter((id) => id.startsWith("service:")),
+		[],
 	)
 })
 

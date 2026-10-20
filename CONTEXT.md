@@ -38,6 +38,12 @@ One view on the TV, such as home, Watch next, Discover's moods, a streaming serv
 The short film the TV plays a guest on the start page after its boot screen: one scene per chapter (Let's watch, One score, Streaming, For you, How it feels, Search, Filters, Explorer, Tracking, Your ratings), with a chapter bar, ending in the quiz ("Tap three you loved"), which gives a real pick. It never starts over in the same tab: coming back resumes where the visitor was, or shows the TV's home after they left it. "What is GoodWatch?" in the TV's menu plays it again, for anyone. "How GoodWatch works" below the room is the same chapters as page content.
 _Avoid_: Onboarding, tour, explainer video
 
+**TV home**:
+For a member, Watch next leads with the existing Next pick, followed by direct access to My movies and My shows. The existing discovery fallback still applies when there are no personal picks. A secondary Popular row offers more titles; it is not a queue or a taste-group guide. Taste remains a separate TV screen. Guests retain the app-tile home. Explorer is absent from TV navigation; existing TV Explorer bookmarks still work.
+
+**Popular titles on the TV**:
+The living room pool's eligible catalog titles in popularity order, excluding the viewer's hidden, seen, skipped, and Want to See titles as that pool does. Saved-service matches in the member's country come first, with a labelled wider-catalog fallback when fewer than twelve match. Unknown availability and no saved services use the wider catalog, without claiming it is on the member's services. This member-only row is distinct from the shared Start titles below the room.
+
 **Remote**:
 The living room's main control. Everything on the remote is also reachable on the TV itself.
 

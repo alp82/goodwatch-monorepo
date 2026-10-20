@@ -62,7 +62,6 @@ test("home's items in the markup are exactly the machine's, in reading order, in
 	assert.deepEqual(rendered.items.homeGuest, [
 		"app:tonight",
 		"app:discover",
-		"app:explorer",
 		"app:taste",
 		"bar:search",
 		"bar:menu",
@@ -73,7 +72,7 @@ test("home's items in the markup are exactly the machine's, in reading order, in
 test("every item is a real button, and exactly one has the focus", () => {
 	const html = rendered.home.guest.desktop
 	assert.equal(count(html, "<button"), rendered.items.homeGuest.length)
-	assert.equal(count(html, '<button type="button" data-tv-item='), 6)
+	assert.equal(count(html, '<button type="button" data-tv-item='), 5)
 	assert.deepEqual(focused(html), ["app:tonight"])
 	assert.deepEqual(focused(rendered.home.focusOnBar), ["bar:menu"])
 	// On the phone the bar's keys are icons, so they carry their names.
@@ -87,13 +86,16 @@ test("every item is a real button, and exactly one has the focus", () => {
 	)
 })
 
-test("the home is the page's H1, the same sentence for a guest and a member, once per edition", () => {
+test("home has one H1: the guest invitation or the member Watch next", () => {
 	for (const html of [
 		...Object.values(rendered.home.guest),
-		...Object.values(rendered.home.member),
 	]) {
 		assert.equal(count(html, "<h1"), 1)
 		assert.ok(html.includes(`>${H1}</h1>`))
+	}
+	for (const html of Object.values(rendered.home.member)) {
+		assert.equal(count(html, "<h1"), 1)
+		assert.ok(html.includes(">Watch next</h1>"))
 	}
 	// No other screen has one.
 	for (const html of [
@@ -113,7 +115,7 @@ test("the home shows the focused app large, and while the focus is on the bar th
 	assert.match(rendered.home.focusOnBar, />Watch next<\/div>/)
 	assert.match(
 		rendered.home.member.desktop,
-		/One pick at a time, your next episode first\./,
+		/Next episode · S2 E4/,
 	)
 })
 
@@ -137,11 +139,11 @@ test("a guest's first picture is the first start title's backdrop: w1280 on the 
 	}
 })
 
-test("a member's tiles show their own Tonight and My shows", () => {
+test("a member sees their Next pick and library actions", () => {
 	const html = rendered.home.member.desktop
 	assert.ok(html.includes("/w1280/show-backdrop-10.jpg"))
-	// The first show to continue is Tonight's pick, so the My shows tile shows the next one.
-	assert.ok(html.includes("/w1280/show-backdrop-11.jpg"))
+	assert.ok(html.includes("My shows"))
+	assert.ok(html.includes("My movies"))
 	assert.ok(!html.includes("first-picture"))
 })
 

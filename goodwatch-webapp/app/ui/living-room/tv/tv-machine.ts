@@ -36,7 +36,6 @@ export type TvApp = "tonight" | "discover" | "explorer" | "taste" | "shows"
 export const TV_APPS: readonly TvApp[] = [
 	"tonight",
 	"discover",
-	"explorer",
 	"taste",
 	"shows",
 ]
@@ -135,6 +134,8 @@ export type TvContext = {
 	/** The person has a taste with sides: Taste shows them. */
 	taste: boolean
 	tonight: readonly TvPick[]
+	/** The member home's secondary popular row. */
+	popular: readonly string[]
 	/**
 	 * The titles of the list on screen: Discover's results, an island's or a side's titles, the search results,
 	 * and on Taste without sides the quiz's picks. On the quiz, the one title it asks about.
@@ -174,6 +175,7 @@ export const EMPTY_CONTEXT: TvContext = {
 	member: false,
 	taste: false,
 	tonight: [],
+	popular: [],
 	titles: [],
 	islands: [],
 	hops: [],
@@ -548,10 +550,14 @@ const typed = (ctx: TvContext) => ctx.draft.trim().length > 0
 function contentItems(screen: TvScreen, ctx: TvContext): string[] {
 	switch (screen.name) {
 		case "home": {
+			if (ctx.member) return [
+				...(ctx.tonight.length ? ["home:next"] : []),
+				"home:movies", "app:shows", "app:tonight", "app:discover", "app:taste",
+				...titleItems(ctx.popular, 12),
+			]
 			const apps = TV_APPS.filter((app) => app !== "shows" || ctx.member).map(
 				(app) => `app:${app}`,
 			)
-			if (ctx.homeSides.length) return [...apps, ...guideSideItems(ctx)]
 			return [...apps, ...ctx.services.map((id) => `service:${id}`)]
 		}
 		case "tonight": {
@@ -1191,6 +1197,12 @@ function choose(state: TvState, item: string, ctx: TvContext): TvTransition {
 			? none(state, [{ type: "quiz-skip" }])
 			: none(state)
 	switch (kind) {
+		case "home":
+			if (s.name !== "home" || !ctx.member) return none(state)
+			if (arg === "movies") return none(state, [{ type: "expand", href: DOOR_HREF.movie }])
+			return arg === "next" && ctx.tonight[0]
+				? push(state, { name: "title", title: ctx.tonight[0].title })
+				: none(state)
 		case "app":
 			return push(state, APP_SCREEN[arg as TvApp])
 		case "details": {
@@ -1305,7 +1317,6 @@ export function transition(
 			// The rating strip and home's guide name some moves themselves, before the rule.
 			const to =
 				stripMove(state, from, action.dir, items) ??
-				guideMove(state, from, action.dir, ctx) ??
 				nextInDirection(
 					action.boxes.filter((box) => items.includes(box.id)),
 					from,

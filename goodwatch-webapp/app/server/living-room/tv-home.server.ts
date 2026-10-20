@@ -108,7 +108,7 @@ export function memberHome(
 				card,
 				href: DOOR_HREF.continue,
 				...(next && {
-					episode: { code: episodeCode(next), name: next.name, ...(next.textPresentation ? { language: next.textPresentation.name.language } : {}) },
+					episode: { code: episodeCode(next), name: next.name, runtime: next.runtime, ...(next.textPresentation ? { language: next.textPresentation.name.language } : {}) },
 				}),
 			})
 	}

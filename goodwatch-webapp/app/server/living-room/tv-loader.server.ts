@@ -11,8 +11,7 @@
 // Prime Video, read from nowhere, so a guest's HTML stays the same for every guest. A member's are their first two
 // saved services (`loadTvServices`), filled up with Netflix and Prime Video.
 //
-// A member with Sides of you gets them for home's guide (`loadHomeSides`, tv-sides.server.ts), read beside
-// Tonight and My shows. Without them in time, home is the row of tiles.
+// Members lead with their existing Next pick and get a secondary popular row. Taste groups load only on Taste.
 import { json } from "@remix-run/node"
 import { presentCatalogLoader } from "~/server/media-payload.server"
 import { talkedAboutNowEnabled } from "~/server/talked-about-now/flags.server"
@@ -33,7 +32,7 @@ import {
 import type { TvHomeData, TvService } from "~/ui/living-room/tv/tv-home"
 import { titleKey } from "~/utils/title-key"
 import { livingRoomAuth } from "./data.server"
-import { loadHomeSides } from "./tv-sides.server"
+import { loadTvPopular } from "./tv-popular.server"
 import { loadStartTitlesAndPicture } from "./start-titles.server"
 import {
 	guestHome,
@@ -100,27 +99,33 @@ export async function loadTvHome(request: Request) {
 	const services = viewer
 		.then((v) => loadTvServices(v.services))
 		.catch(() => tvServices([]))
-	const sides = loadHomeSides(user.id, () => viewer)
+	const taste = loadMemberTaste(user.id)
+	const popular = Promise.all([viewer, taste])
+		.then(([v, t]) => loadTvPopular(v, t))
+		.catch((error): NonNullable<TvHomeData["popular"]> => {
+			console.error("The TV: loading popular titles failed", error)
+			return { titles: [], scope: "unknown", country: "", failed: true }
+		})
 	const own = (async () => {
-		const [taste, v] = await Promise.all([loadMemberTaste(user.id), viewer])
+		const [t, v] = await Promise.all([taste, viewer])
 		return {
-			...(await loadMemberHome(v, taste)),
+			...(await loadMemberHome(v, t)),
 			// What the Discover page's loader hands its search (`searchScope`), for the TV's.
 			scope: { country: v.country, services: v.services },
 		}
-	})().catch((error): Pick<TvHomeData, "tonight" | "shows" | "scope"> => {
+	})().catch((error): Pick<TvHomeData, "tonight" | "shows" | "scope" | "homeFailed"> => {
 		console.error(
 			"The TV: loading a member's Tonight and My shows failed",
 			error,
 		)
-		return { tonight: [], shows: { next: [], start: [] } }
+		return { tonight: [], shows: { next: [], start: [] }, homeFailed: true }
 	})
 	const data: TvHomeData = {
 		...guestHome(await start, await services),
 		member: true,
 		...(await own),
 		...talked,
-		sides: await sides,
+		popular: await popular,
 	}
 	return { data, headers }
 }

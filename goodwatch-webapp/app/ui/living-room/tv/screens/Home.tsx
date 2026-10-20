@@ -3,7 +3,7 @@
 // service's mark, which opens "On <service>" as its key on the Remote does. Nothing here leaves the TV: OK on a
 // tile opens it on the TV.
 //
-// A member with Sides of you gets home as a guide instead, on the desktop edition (HomeGuide.tsx, #673).
+// Members use their Next pick and a secondary popular row. Taste stays on its own screen.
 //
 // The headline is the start page's H1, the same sentence for a guest and a member. Until the pool is there, a
 // guest's home is drawn from the start titles alone, so the server's HTML is the same for every guest.
@@ -15,10 +15,12 @@ import type {
 	TvAppArt,
 	TvAppTile,
 	TvHomeSide,
+	TvHomeData,
+	TvTonightPick,
 	TvService,
 	TvServiceTile,
 } from "../tv-home"
-import { HomeGuide } from "./HomeGuide"
+import { MemberHome } from "./MemberHome"
 import { AppArt, artFiles } from "./app-art"
 
 export const HOME_HEADLINE = "Let's find something good to watch next."
@@ -47,7 +49,17 @@ export function Home({
 	services = [],
 	sides = [],
 	items,
+	member = false,
+	pick,
+	popular,
+	failed,
+	waiting = false,
 }: {
+	member?: boolean
+	pick?: TvTonightPick
+	popular?: TvHomeData["popular"]
+	failed?: boolean
+	waiting?: boolean
 	apps: readonly TvAppTile[]
 	/** The person's two streaming services, after the apps. */
 	services?: readonly TvServiceTile[]
@@ -56,16 +68,7 @@ export function Home({
 	/** The screen's items, from `tvItems`. */
 	items: readonly string[]
 }) {
-	const phone = useTvView().canvas.edition === "phone"
-	if (sides.length && !phone)
-		return (
-			<HomeGuide
-				headline={HOME_HEADLINE}
-				apps={apps}
-				sides={sides}
-				items={items}
-			/>
-		)
+	if (member) return <MemberHome pick={pick} popular={popular} failed={failed} waiting={waiting} items={items} signal={apps.find((a) => a.app === "shows")?.signal} />
 	return <HomeRow apps={apps} services={services} items={items} />
 }
 

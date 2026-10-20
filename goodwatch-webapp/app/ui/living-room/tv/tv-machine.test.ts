@@ -250,7 +250,6 @@ describe("the screens and their items, in reading order", () => {
 		assert.deepEqual(items("", keyed), [
 			"app:tonight",
 			"app:discover",
-			"app:explorer",
 			"app:taste",
 			"service:8",
 			"service:337",
@@ -258,12 +257,12 @@ describe("the screens and their items, in reading order", () => {
 			"bar:menu",
 		])
 		assert.deepEqual(items("", { ...member, services: [9] }), [
+			"home:next",
+			"home:movies",
+			"app:shows",
 			"app:tonight",
 			"app:discover",
-			"app:explorer",
 			"app:taste",
-			"app:shows",
-			"service:9",
 			"bar:search",
 			"bar:menu",
 		])
@@ -299,17 +298,17 @@ describe("the screens and their items, in reading order", () => {
 		assert.deepEqual(items(""), [
 			"app:tonight",
 			"app:discover",
-			"app:explorer",
 			"app:taste",
 			"bar:search",
 			"bar:menu",
 		])
 		assert.deepEqual(items("", member), [
+			"home:next",
+			"home:movies",
+			"app:shows",
 			"app:tonight",
 			"app:discover",
-			"app:explorer",
 			"app:taste",
-			"app:shows",
 			"bar:search",
 			"bar:menu",
 		])
@@ -571,7 +570,6 @@ describe("history: what pushes", () => {
 		for (const [app, to] of [
 			["tonight", "tv=tonight"],
 			["discover", "tv=discover"],
-			["explorer", "tv=explorer"],
 			["taste", "tv=taste"],
 			["shows", "tv=shows"],
 		]) {
@@ -1632,8 +1630,7 @@ describe("focus", () => {
 	const home = [
 		box("app:tonight", 0, 300),
 		box("app:discover", 120, 300),
-		box("app:explorer", 240, 300),
-		box("app:taste", 360, 300),
+		box("app:taste", 240, 300),
 		box("bar:search", 240, 0),
 		box("bar:menu", 360, 0),
 	]
@@ -1699,7 +1696,7 @@ describe("focus", () => {
 	it("does not move to a box that is not an item of the screen", () => {
 		const stale = [home[0], box("title:movie-11", 120, 300), home[2]]
 		const t = run(at(""), guest, { type: "move", dir: "right", boxes: stale })
-		assert.equal(t.state.focus, "app:explorer")
+		assert.equal(t.state.focus, "app:taste")
 	})
 
 	it("hands the canvas scale to the direction rule", () => {
@@ -1707,12 +1704,12 @@ describe("focus", () => {
 		const boxes: TvBox[] = [
 			{ id: "app:tonight", left: 600, top: 0, width: 200, height: 100 },
 			{ id: "app:discover", left: 1400, top: 120, width: 200, height: 100 },
-			{ id: "app:explorer", left: 600, top: 190, width: 200, height: 100 },
+			{ id: "app:taste", left: 600, top: 190, width: 200, height: 100 },
 		]
 		const down = (scale?: number) =>
 			run(at(""), guest, { type: "move", dir: "down", boxes, scale }).state
 				.focus
-		assert.equal(down(2), "app:explorer")
+		assert.equal(down(2), "app:taste")
 		assert.equal(down(), "app:discover")
 	})
 

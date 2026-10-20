@@ -267,11 +267,11 @@ console.log(
 		home: {
 			// A guest before the pool: the server's HTML.
 			guest: homeOf(home([NETFLIX, DISNEY]), null, null),
-			member: homeOf(home([DISNEY, PLAIN], true), null, null),
+			customServices: homeOf(home([DISNEY, PLAIN]), null, null),
 			withPool: homeOf(home([NETFLIX, DISNEY]), pool, null),
 			onNetflix: homeOf(home([NETFLIX, DISNEY]), pool, "service:8"),
 			onDisney: homeOf(home([NETFLIX, DISNEY]), null, "service:337"),
-			onPlain: homeOf(home([DISNEY, PLAIN], true), null, "service:99"),
+			onPlain: homeOf(home([DISNEY, PLAIN]), null, "service:99"),
 			none: homeOf(home([]), null, null),
 		},
 		service: {

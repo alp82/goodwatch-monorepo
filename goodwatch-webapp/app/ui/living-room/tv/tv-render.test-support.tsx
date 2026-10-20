@@ -100,6 +100,7 @@ function screenHtml(
 			canvas={canvas}
 			ctx={ctx}
 			apps={homeApps(data, null)}
+			home={data}
 			toast={toast}
 		/>,
 	)
@@ -145,6 +146,7 @@ const roomHtml = (data: TvHomeData, power: RoomTv["power"] = "on") =>
 						canvas={canvas}
 						ctx={tvContextOf(data, null)}
 						apps={homeApps(data, null)}
+			home={data}
 						toast={null}
 					/>
 				)}

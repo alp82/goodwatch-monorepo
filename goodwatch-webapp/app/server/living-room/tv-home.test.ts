@@ -187,7 +187,7 @@ test("Tonight's pick is the Next episode of the first show to continue, then the
 		["movie-1", "/my-movies"],
 		["movie-2", "/my-movies"],
 	])
-	assert.deepEqual(tonight[0].episode, { code: "S2 E4", name: "Episode 4" })
+	assert.deepEqual(tonight[0].episode, { code: "S2 E4", name: "Episode 4", runtime: 48 })
 	assert.equal(tonight[1].episode, undefined)
 })
 
