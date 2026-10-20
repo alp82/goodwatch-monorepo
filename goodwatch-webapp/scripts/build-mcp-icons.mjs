@@ -1,10 +1,10 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { Resvg } from "@resvg/resvg-js"
 
-// Use the existing amber GoodWatch mark, centered on the site's dark background.
+// Use the existing white GoodWatch mark, centered on the site's dark background.
 // Preserve its aspect ratio and leave 10% padding; no new brand artwork.
 const source = readFileSync(
-	new URL("../app/img/goodwatch-logo-amber.svg", import.meta.url),
+	new URL("../app/img/goodwatch-logo-white.svg", import.meta.url),
 	"utf8",
 )
 const nested = source
@@ -18,7 +18,7 @@ mkdirSync(output, { recursive: true })
 for (const size of [48, 128, 512]) {
 	const renderer = new Resvg(square, { fitTo: { mode: "width", value: size } })
 	writeFileSync(
-		new URL(`goodwatch-${size}.png`, output),
+		new URL(`goodwatch-white-${size}.png`, output),
 		renderer.render().asPng(),
 	)
 }

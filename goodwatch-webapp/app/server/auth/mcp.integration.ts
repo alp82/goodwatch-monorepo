@@ -73,7 +73,7 @@ test("MCP clients discover the canonical resource and issuer with CIMD, DCR and 
 			assert.equal(metadata.resource_name, "GoodWatch")
 			assert.equal(
 				metadata.logo_uri,
-				"https://goodwatch.app/mcp-icons/goodwatch-512.png",
+				"https://goodwatch.app/mcp-icons/goodwatch-white-512.png",
 			)
 		} else {
 			assert.equal(metadata.client_id_metadata_document_supported, true, path)

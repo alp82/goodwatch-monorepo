@@ -7,17 +7,17 @@
 	"websiteUrl": "https://goodwatch.app/use-with-ai",
 	"icons": [
 		{
-			"src": "https://goodwatch.app/mcp-icons/goodwatch-48.png",
+			"src": "https://goodwatch.app/mcp-icons/goodwatch-white-48.png",
 			"mimeType": "image/png",
 			"sizes": ["48x48"]
 		},
 		{
-			"src": "https://goodwatch.app/mcp-icons/goodwatch-128.png",
+			"src": "https://goodwatch.app/mcp-icons/goodwatch-white-128.png",
 			"mimeType": "image/png",
 			"sizes": ["128x128"]
 		},
 		{
-			"src": "https://goodwatch.app/mcp-icons/goodwatch-512.png",
+			"src": "https://goodwatch.app/mcp-icons/goodwatch-white-512.png",
 			"mimeType": "image/png",
 			"sizes": ["512x512"]
 		}
