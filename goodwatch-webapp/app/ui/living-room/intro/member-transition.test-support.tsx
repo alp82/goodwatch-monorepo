@@ -9,6 +9,7 @@ for (const name of [
 	"HTMLElement",
 	"Node",
 	"Event",
+	"CustomEvent",
 	"sessionStorage",
 ])
 	Object.defineProperty(globalThis, name, {
@@ -67,8 +68,8 @@ assert.deepEqual(JSON.parse(sessionStorage.getItem(PROGRESS_KEY)!), {
 	left: true,
 })
 await act(async () => {
-	browser.dispatchEvent(
-		new browser.CustomEvent<string>(FILM_CHAPTER_EVENT, { detail: "closer" }),
+	window.dispatchEvent(
+		new CustomEvent<string>(FILM_CHAPTER_EVENT, { detail: "closer" }),
 	)
 })
 assert.equal(
