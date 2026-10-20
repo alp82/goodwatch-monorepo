@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { createElement } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
+import { importInfo } from "~/domain/imports"
 import type { FileImportSource, ImportSummary } from "~/domain/imports"
 import { SourceImportCurrent } from "./SourceImportCurrent"
 import { sourceImportKeys } from "./SourceImportHooks"
@@ -74,8 +75,10 @@ const receipt = () => {
 		source: "myanimelist",
 		status: "done",
 		warnings: [
-			"Comments and tags are not imported.",
-			"Season scores are kept for later and not applied as show ratings.",
+			importInfo("Comments and tags are not imported."),
+			importInfo(
+				"Season scores are kept for later and not applied as show ratings.",
+			),
 		],
 	}
 	client.setQueryData(sourceImportKeys.detail(item.id), { import: item })

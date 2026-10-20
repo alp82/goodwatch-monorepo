@@ -4,6 +4,8 @@ import {
 	IMPORT_MAX_ROWS,
 	type ImportObservation,
 	type ParsedImport,
+	importActionable,
+	importInfo,
 } from "../../domain/imports.ts"
 import {
 	TMDB_TIMEOUT_DEFAULT_MS,
@@ -213,7 +215,7 @@ export function createTmdbClient(options: {
 			const warnings = [
 				"TMDB half-step ratings round up to whole numbers: 7.5 becomes 8; 0.5 becomes 1.",
 				"Episode ratings on TMDB were not read. TMDB v3 provides no rating dates or watch history; imported ratings are undated.",
-			]
+			].map(importInfo)
 			for (const mediaType of ["movie", "show"] as const) {
 				for (const [list, kind] of [
 					["rated", "rating"],
@@ -260,7 +262,9 @@ export function createTmdbClient(options: {
 							data.total_results !== expected
 						) {
 							warnings.push(
-								`The TMDB ${mediaType} ${list} count changed while reading. Review this partial import or connect again.`,
+								importActionable(
+									`The TMDB ${mediaType} ${list} count changed while reading. Review this partial import or connect again.`,
+								),
 							)
 						}
 						for (const item of data.results) {
@@ -315,7 +319,9 @@ export function createTmdbClient(options: {
 					}
 					if (ids.size !== expected)
 						warnings.push(
-							`Read ${ids.size} of ${expected} TMDB ${mediaType} ${list} items. The list may have changed; review this partial import or connect again.`,
+							importActionable(
+								`Read ${ids.size} of ${expected} TMDB ${mediaType} ${list} items. The list may have changed; review this partial import or connect again.`,
+							),
 						)
 				}
 			}

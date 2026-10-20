@@ -471,10 +471,32 @@ export interface WishlistSuggestions {
 	nextOffset: number | null
 }
 
+/** Actionable failures stay visible; export context may be collapsed. */
+export interface ImportWarning {
+	kind: "actionable" | "info"
+	message: string
+}
+export const importInfo = (message: string): ImportWarning => ({
+	kind: "info",
+	message,
+})
+export const importActionable = (message: string): ImportWarning => ({
+	kind: "actionable",
+	message,
+})
+
+/** Stored previews from before warning kinds existed are kept visible conservatively. */
+export const normalizeImportWarnings = (
+	warnings: (ImportWarning | string)[],
+): ImportWarning[] =>
+	warnings.map((warning) =>
+		typeof warning === "string" ? importActionable(warning) : warning,
+	)
+
 export interface ParsedImport {
 	source: ImportSource
 	observations: ImportObservation[]
-	warnings: string[]
+	warnings: ImportWarning[]
 }
 
 export interface ImportItem extends ImportObservation {
@@ -541,7 +563,7 @@ export interface ImportSummary {
 	finishedAt: string | null
 	counts: Record<ImportOutcome, number> & { rows: number }
 	kinds: Record<ImportKind, number>
-	warnings: string[]
+	warnings: ImportWarning[]
 	options: ImportOptions | null
 	processed: number
 	total: number

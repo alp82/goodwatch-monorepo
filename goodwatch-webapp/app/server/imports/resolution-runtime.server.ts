@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto"
+import { normalizeImportWarnings } from "../../domain/imports.ts"
 import type {
 	ImportItem,
 	ImportObservation,
@@ -388,7 +389,7 @@ async function publish(ctx: ResolutionContext) {
 		{
 			source: "tvtime",
 			observations,
-			warnings: JSON.parse(root.warnings ?? "[]"),
+			warnings: normalizeImportWarnings(JSON.parse(root.warnings ?? "[]")),
 		},
 		undefined,
 		{

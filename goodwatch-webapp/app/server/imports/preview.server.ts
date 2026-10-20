@@ -14,6 +14,7 @@ import {
 	IMPORT_SHOW_STATUS_LABELS,
 	IMPORT_SOURCE_NAMES,
 	canImportWantToSee,
+	importInfo,
 	isApplicableStatus,
 } from "../../domain/imports.ts"
 import { PROTECTED_STATES } from "../../domain/tracking/machine.ts"
@@ -835,7 +836,9 @@ export async function createParsedPreview(
 	const specials = items.filter((item) => item.episodeSpecial).length
 	if (specials)
 		parsed.warnings.push(
-			`${specials} episode row(s) map to TMDB specials. They are imported but do not count toward regular show progress.`,
+			importInfo(
+				`${specials} episode row(s) map to TMDB specials. They are imported but do not count toward regular show progress.`,
+			),
 		)
 	const id = mode?.id ?? randomUUID()
 	const watchPlans = await classifyWatchDuplicates(userId, source, id, items)

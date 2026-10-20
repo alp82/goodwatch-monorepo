@@ -2,6 +2,8 @@ import {
 	IMPORT_MAX_ROWS,
 	type ImportObservation,
 	type ParsedImport,
+	importActionable,
+	importInfo,
 } from "../../domain/imports.ts"
 
 type Entry = { name: string; data: Uint8Array }
@@ -98,6 +100,62 @@ function fileKind(name: string) {
 		return "extension"
 	return null
 }
+// Exact ancillary basenames in TV Time's official 56-file GDPR export.
+// Unknown filenames must stay visible: a future export may put history in them.
+const officialAncillaryFiles = new Set([
+	"_user_creation_ip.csv",
+	"show_comment_like.csv",
+	"user_report_count.csv",
+	"ip_address.csv",
+	"user_social_data.csv",
+	"ad_identifier.csv",
+	"access_token.csv",
+	"show_seen_episode_latest.csv",
+	"user_setting.csv",
+	"user_device.csv",
+	"user_leaderboard.csv",
+	"user_last_updated.csv",
+	"webhook_data.csv",
+	"device_token.csv",
+	"user_show_special_status.csv",
+	"comment_translation.csv",
+	"meme.csv",
+	"install_tracking.csv",
+	"friend.csv",
+	"refresh_token.csv",
+	"user_facebook_data.csv",
+	"gdpr_requests.csv",
+	"episode_emotion.csv",
+	"user_badge.csv",
+	"device_data.csv",
+	"user_platform.csv",
+	"user.csv",
+	"_appsflyer_ids.csv",
+	"recommended_show_excluded.csv",
+	"watched_on_episode.csv",
+	"show_addiction_score.csv",
+	"user_session.csv",
+	"user_statistics.csv",
+	"user_connection.csv",
+	"episode_comment_like.csv",
+	"show_character_episode_vote.csv",
+	"episode_comment.csv",
+	"tv_show_user_emotion_count.csv",
+	"tracking-deployment-prod-tracks.csv",
+	"lists-prod-lists.csv",
+	"tracking-prod-count-by-timeframe.csv",
+	"recommendations-prod-user-shows.csv",
+	"auth-prod-login.csv",
+	"stats-prod-cache.csv",
+	"recommendations-prod-user-scores.csv",
+	"notifications-prod-notifications.csv",
+	"emotions-3-prod-episode_votes.csv",
+	"ratings-3-prod-episode_votes.csv",
+	"emotions-live-votes.csv",
+	"where-to-watch-prod-table.csv",
+	"comments-prod-comments.csv",
+])
+
 export const isTvTimeFile = (name: string) => fileKind(name) !== null
 
 export function parseTvTime(
@@ -126,15 +184,12 @@ export function parseTvTime(
 			"These files come from different TV Time export variants. Upload one export at a time.",
 			"tvtime_variants_mixed",
 		)
-	// GDPR archives include account, device and social data that is not viewing history.
-	// Keep a note only when an unread file could hold history from another layout.
-	const warnings = ignored
-		.filter((name) =>
-			/tracking|history|watch|rating|followed|usertvshow|seenepisode|tvtimeseries|tvtimemovies/.test(
-				normalized(basename(name)),
-			),
+	const unreadWarnings = ignored
+		.filter((name) => !officialAncillaryFiles.has(basename(name)))
+		.map((name) =>
+			importActionable(`TV Time history file not imported: ${name}.`),
 		)
-		.map((name) => `TV Time history file not imported: ${name}.`)
+	const warnings: string[] = []
 	const add = (row: ImportObservation) => {
 		if (observations.length >= IMPORT_MAX_ROWS)
 			readers.fail(
@@ -720,6 +775,6 @@ export function parseTvTime(
 					v2Shows.has(row.showTvdbId)
 				),
 		),
-		warnings: [...new Set(warnings)],
+		warnings: [...unreadWarnings, ...[...new Set(warnings)].map(importInfo)],
 	}
 }

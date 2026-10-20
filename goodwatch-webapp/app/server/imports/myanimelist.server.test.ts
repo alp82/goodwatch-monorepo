@@ -55,8 +55,11 @@ test("MAL plain XML and original gzip retain a season score, status and only rep
 					row.precision === "unknown",
 			),
 	)
-	assert.match(plain.warnings.join(" "), /comments and tags/i)
-	assert.match(plain.warnings.join(" "), /rewatch/i)
+	assert.match(
+		plain.warnings.map((w) => w.message).join(" "),
+		/comments and tags/i,
+	)
+	assert.match(plain.warnings.map((w) => w.message).join(" "), /rewatch/i)
 	assert.doesNotMatch(JSON.stringify(plain), /Private/)
 })
 
@@ -194,7 +197,10 @@ test("Kitsu XML never supplies viewing dates, even when its completion click set
 			(row) => !row.animeEntry?.startedAt && !row.animeEntry?.finishedAt,
 		),
 	)
-	assert.match(parsed.warnings.join(" "), /Kitsu.*click.*undated/i)
+	assert.match(
+		parsed.warnings.map((w) => w.message).join(" "),
+		/Kitsu.*click.*undated/i,
+	)
 	const renamedShape = await parseImportFile(
 		"myanimelist",
 		xml(
@@ -221,7 +227,7 @@ test("many entries sharing one start/finish day warn about click or migration da
 	).join("")
 	const parsed = await parseImportFile("myanimelist", xml(rows))
 	assert.match(
-		parsed.warnings.join(" "),
+		parsed.warnings.map((w) => w.message).join(" "),
 		/100 anime entries share.*day.*click or migration/i,
 	)
 	assert.equal(

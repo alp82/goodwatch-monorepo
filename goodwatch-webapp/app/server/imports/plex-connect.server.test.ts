@@ -19,7 +19,7 @@ function fixture() {
 		readImport: async () => ({
 			source: "plex",
 			observations: [],
-			warnings: ["Server unreachable"],
+			warnings: [{ kind: "actionable", message: "Server unreachable" }],
 		}),
 	}
 	const flow = createPlexConnect({

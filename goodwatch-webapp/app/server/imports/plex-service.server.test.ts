@@ -70,7 +70,12 @@ test("Plex preview, apply, receipt, repeat import and undo preserve separate pla
 	)
 	const parsed: ParsedImport = {
 		source: "plex",
-		warnings: ["A second Plex server could not be reached."],
+		warnings: [
+			{
+				kind: "actionable",
+				message: "A second Plex server could not be reached.",
+			},
+		],
 		observations: [
 			...[1, 2].map((i) => ({
 				key: `plex:watch:server:/status/sessions/history/${i}`,
@@ -127,7 +132,10 @@ test("Plex preview, apply, receipt, repeat import and undo preserve separate pla
 	const done = await getImport("member", preview.id)
 	assert.equal(done.status, "done", done.error ?? "")
 	assert.equal(done.applied.added, 4)
-	assert.match(done.warnings.join(" "), /could not be reached/)
+	assert.match(
+		done.warnings.map((w) => w.message).join(" "),
+		/could not be reached/,
+	)
 	const movie = await getMovieTracking("member", 862)
 	assert.equal(movie.log.length, 2)
 	assert.equal(
