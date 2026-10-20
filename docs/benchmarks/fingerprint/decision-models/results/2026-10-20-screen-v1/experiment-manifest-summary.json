@@ -1,0 +1,160 @@
+{
+  "format": "public-experiment-summary-v1",
+  "artifact_status": "PUBLICATION_CANDIDATE",
+  "study_date": "2026-10-20",
+  "bounded_screen_status": "completed_reviewed",
+  "overall_research_goal_complete": false,
+  "human_selection_status": "HUMANSELECTIONPENDING",
+  "next_calls_authorized": false,
+  "production_replacement": false,
+  "canonical_acceptance": false,
+  "public_runtime_code_commit": "eb00414af3d03e531971761db691a44f89b40584",
+  "field_contract_relative_path": "../../v1-contract.json",
+  "runtime_documentation_relative_path": "../../README.md",
+  "aggregate_relative_path": "aggregate.json",
+  "purpose": "Diagnostic V1 attribute-score compatibility and reviewer assessment; not search embeddings or a native-representation optimization verdict",
+  "study_titles": [
+    {
+      "title": "Fight Club",
+      "year": 1999,
+      "media_type": "movie",
+      "scope": "Movie; edition unrecorded"
+    },
+    {
+      "title": "How I Met Your Mother",
+      "first_air_year": 2005,
+      "media_type": "show",
+      "scope": "Overall series through 2014"
+    },
+    {
+      "title": "Death Note",
+      "first_air_year": 2006,
+      "media_type": "anime show",
+      "scope": "Overall series through 2007; dub/version unrecorded"
+    }
+  ],
+  "model_display_names": [
+    "Jev1.14",
+    "Span02",
+    "Perplexity Flash1.2",
+    "Microsoft Decision1",
+    "Liquid d1"
+  ],
+  "input_recipe": {
+    "synopsis_only": true,
+    "trait_count": 74,
+    "order": "Published V1 declaration order",
+    "scale": "Eleven numeric choices map directly to integers 0 through 10; declared nonordinal choices remain null",
+    "nonordinal_states": [
+      "insufficient support",
+      "conflicting support",
+      "identity or scope unresolved",
+      "not applicable",
+      "not assessed"
+    ],
+    "held_equal_within_each_title": [
+      "Title identity and declared scope",
+      "Stored synopsis",
+      "All 74 question definitions and declared order",
+      "Sixteen-option meanings and descriptions",
+      "Shared whole-title scoring task policy"
+    ],
+    "differences": [
+      "Requested model",
+      "Pinned route policy",
+      "Server tariff filters"
+    ],
+    "not_model_inputs": [
+      "Catalog comparator scores",
+      "Personal ratings or account information",
+      "Prior model responses",
+      "Reviewer reference passages or hints"
+    ],
+    "probabilities_not_trait_intensity_or_calibrated_factual_confidence": true
+  },
+  "schedule": {
+    "frozen_before_outputs": true,
+    "rotation": "Fixed shared-title rounds with deterministic model-order rotation; no opportunistic reordering",
+    "external_POST_attempts": 16,
+    "returned_outputs": 15,
+    "failed_DREX_POSTs": 1,
+    "retired_unattempted_DREX_chunks": 5,
+    "inference_retries": 0,
+    "within_configuration_repeats": 0,
+    "DREX_chunk_plan": [
+      64,
+      10
+    ],
+    "DREX_failed_requested_slots": 64,
+    "DREX_unattempted_slots": 158,
+    "DREX_predictions": 0,
+    "no_partial_DREX_vector_ranked": true,
+    "original_plan_positions": 21,
+    "prior_stage_POSTs_separate": 3,
+    "cumulative_initial_POSTs": 19,
+    "capacity_reuse_or_automatic_finalists": false
+  },
+  "numerical_lanes": {
+    "original": "Historical raw/parser/runtime flags preserved; use per-field eligibility masks",
+    "original_mass_epsilon": "1e-12",
+    "retrospective_Span_only_mass_epsilon": "1e-6",
+    "selected_argmax_epsilon": "1e-12",
+    "renormalization": false,
+    "Jev": "All three whole attempts ineligible; raw observations only",
+    "Span": "Original numeric cells withheld; explicitly retrospective diagnostic lane only",
+    "common_eligible_all_five": 0,
+    "four_family_diagnostic_common_by_title": {
+      "Fight Club": 67,
+      "How I Met Your Mother": 62,
+      "Death Note": 62
+    },
+    "not_factual_quality_or_canonical_acceptance": true
+  },
+  "accounting_as_of": "2026-10-20 root terminal review",
+  "accounting": {
+    "currency": "USD",
+    "reconciled_15_returned_outputs": "0.006150356",
+    "includes_invalid_or_originally_withheld_outputs": true,
+    "all_16_screen_actual_charge_total": null,
+    "failed_DREX_actual_charge": null,
+    "cumulative_cash_including_prior_stage": "0.009770586",
+    "prior_stage_cash": "0.003620230",
+    "pending_prior_stage": "0.209146240",
+    "pending_failed_DREX": "0.503316480",
+    "pending_total": "0.712462720",
+    "old_stage_hold_retired": true,
+    "avoided_unreserved_DREX_ceilings_are_not_released_cash": true,
+    "price_scope": "Scores-only; not accepted-vector pricing or complete-pipeline savings",
+    "read_counts": {
+      "public_metadata_GETs": 96,
+      "allowance_GETs": 16,
+      "ordinary_generation_GETs": 45,
+      "separately_authorized_generation_GETs": 16
+    },
+    "native_internal_work": "Provider-native scoring groups, passes and actual internal fanout remain unobserved; external POST count is not internal-work count"
+  },
+  "review": {
+    "assessment": "Independent frontier-model review plus assisted human final selection pending",
+    "tentative_next_validation": "Liquid d1",
+    "conditional_targeted_followup": "Microsoft Decision1 applicability and coverage",
+    "confidence": "Moderate for prioritizing further validation; low for production suitability",
+    "complete_numeric_outputs_of_three": {
+      "Liquid d1": 3,
+      "Microsoft Decision1": 0,
+      "Span02": 0,
+      "Perplexity Flash1.2": 1,
+      "Jev1.14": 0
+    },
+    "no_new_experiment_or_provider_selection_approval": true
+  },
+  "reproducibility_limits": [
+    "Exact request, response, synopsis and reference-source bytes and detailed custody remain private outside the public repository",
+    "Public code, schema and aggregate allow inspection of mechanics and arithmetic, not independent exact rerun or verification of every source passage",
+    "No factual gold or known original catalog producer/model/prompt/version/episode cutoff",
+    "Familiar exposed development cases, including prior exposure to unscheduled synthetic drafts; not a fresh holdout",
+    "No new configuration repeats or paired current Qwen/generative control; historical runs are not equivalent controls",
+    "No companions, search, embeddings or full-pipeline measurement",
+    "Three POST latency observations per family are not throughput or a reliability distribution",
+    "Advertised and returned model names do not prove immutable weights or independently attested serving region"
+  ]
+}

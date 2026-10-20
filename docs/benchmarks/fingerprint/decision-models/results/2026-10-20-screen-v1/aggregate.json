@@ -1,0 +1,490 @@
+{
+  "artifact_status": "PUBLIC_SAFE_AGGREGATE_CANDIDATE_NOT_PUBLISHED",
+  "study": {
+    "titles": [
+      "Fight Club",
+      "How I Met Your Mother",
+      "Death Note"
+    ],
+    "selection": "Familiar exposed development titles, one film edition unspecified and two declared overall-series scopes; not a holdout",
+    "models": 5,
+    "title_observations_per_model": 3,
+    "declared_traits": 74,
+    "returned_responses": 15,
+    "returned_trait_entries": 1110,
+    "raw_numeric_predictions": 1060,
+    "semantic_unknown_predictions": 13,
+    "not_applicable_predictions": 17,
+    "not_assessed_predictions": 20,
+    "missing_entries_in_returned_responses": 0,
+    "screen_POST_attempts_including_failed_route": 16,
+    "retired_unattempted_chunks": 5,
+    "prior_stage_POSTs_separate": 3,
+    "cumulative_POSTs": 19,
+    "inference_retries": 0,
+    "within_configuration_repeats": 0
+  },
+  "models": [
+    {
+      "model": "Jev1.14",
+      "titles": 3,
+      "raw_answers": 222,
+      "raw_numeric": 211,
+      "semantic_unknown": 5,
+      "NA": 0,
+      "not_assessed": 6,
+      "missing": 0,
+      "original_parser_numeric_eligible": 0,
+      "retrospective_diagnostic_numeric_eligible": 0,
+      "original_format_failures": 3,
+      "old_mass_flag_count": 14,
+      "structural_mass_failure_count": 14,
+      "selected_not_argmax_count": 4,
+      "reported_cost_sum_usd": "0.001590666",
+      "reconciled_cost_sum_usd": "0.001590666",
+      "scores_only_per1000_title_attempts_arithmetic_usd": "0.530222000",
+      "POST_wall_seconds_observations": [
+        0.4969685819814913,
+        0.41204437700798735,
+        0.4046795479953289
+      ],
+      "POST_wall_seconds_min": 0.4046795479953289,
+      "POST_wall_seconds_median": 0.41204437700798735,
+      "POST_wall_seconds_max": 0.4969685819814913,
+      "native_input_range": [
+        12598,
+        12657
+      ],
+      "native_output_range": [
+        12241,
+        12251
+      ]
+    },
+    {
+      "model": "Span02",
+      "titles": 3,
+      "raw_answers": 222,
+      "raw_numeric": 207,
+      "semantic_unknown": 8,
+      "NA": 2,
+      "not_assessed": 5,
+      "missing": 0,
+      "original_parser_numeric_eligible": 0,
+      "retrospective_diagnostic_numeric_eligible": 207,
+      "original_format_failures": 0,
+      "old_mass_flag_count": 222,
+      "structural_mass_failure_count": 0,
+      "selected_not_argmax_count": 0,
+      "reported_cost_sum_usd": "0.00146641",
+      "reconciled_cost_sum_usd": "0.00146641",
+      "scores_only_per1000_title_attempts_arithmetic_usd": "0.4888033333333333333333333333",
+      "POST_wall_seconds_observations": [
+        2.4376282829907723,
+        2.452005358005408,
+        2.6828118260018528
+      ],
+      "POST_wall_seconds_min": 2.4376282829907723,
+      "POST_wall_seconds_median": 2.452005358005408,
+      "POST_wall_seconds_max": 2.6828118260018528,
+      "native_input_range": [
+        46685,
+        51569
+      ],
+      "native_output_range": [
+        0,
+        0
+      ]
+    },
+    {
+      "model": "Perplexity Flash1.2",
+      "titles": 3,
+      "raw_answers": 222,
+      "raw_numeric": 219,
+      "semantic_unknown": 0,
+      "NA": 3,
+      "not_assessed": 0,
+      "missing": 0,
+      "original_parser_numeric_eligible": 219,
+      "retrospective_diagnostic_numeric_eligible": 219,
+      "original_format_failures": 0,
+      "old_mass_flag_count": 0,
+      "structural_mass_failure_count": 0,
+      "selected_not_argmax_count": 0,
+      "reported_cost_sum_usd": "0.00135684",
+      "reconciled_cost_sum_usd": "0.00135684",
+      "scores_only_per1000_title_attempts_arithmetic_usd": "0.45228000",
+      "POST_wall_seconds_observations": [
+        4.791935065004509,
+        3.5285356389940716,
+        3.8546386109665036
+      ],
+      "POST_wall_seconds_min": 3.5285356389940716,
+      "POST_wall_seconds_median": 3.8546386109665036,
+      "POST_wall_seconds_max": 4.791935065004509,
+      "native_input_range": [
+        43156,
+        47744
+      ],
+      "native_output_range": [
+        74,
+        74
+      ]
+    },
+    {
+      "model": "Microsoft Decision1",
+      "titles": 3,
+      "raw_answers": 222,
+      "raw_numeric": 201,
+      "semantic_unknown": 0,
+      "NA": 12,
+      "not_assessed": 9,
+      "missing": 0,
+      "original_parser_numeric_eligible": 201,
+      "retrospective_diagnostic_numeric_eligible": 201,
+      "original_format_failures": 0,
+      "old_mass_flag_count": 0,
+      "structural_mass_failure_count": 0,
+      "selected_not_argmax_count": 0,
+      "reported_cost_sum_usd": "0.001223460",
+      "reconciled_cost_sum_usd": "0.001223460",
+      "scores_only_per1000_title_attempts_arithmetic_usd": "0.407820000",
+      "POST_wall_seconds_observations": [
+        1.0245589499827474,
+        1.1604222640162334,
+        1.6727096320246346
+      ],
+      "POST_wall_seconds_min": 1.0245589499827474,
+      "POST_wall_seconds_median": 1.1604222640162334,
+      "POST_wall_seconds_max": 1.6727096320246346,
+      "native_input_range": [
+        9682,
+        9744
+      ],
+      "native_output_range": [
+        74,
+        74
+      ]
+    },
+    {
+      "model": "Liquid d1",
+      "titles": 3,
+      "raw_answers": 222,
+      "raw_numeric": 222,
+      "semantic_unknown": 0,
+      "NA": 0,
+      "not_assessed": 0,
+      "missing": 0,
+      "original_parser_numeric_eligible": 222,
+      "retrospective_diagnostic_numeric_eligible": 222,
+      "original_format_failures": 0,
+      "old_mass_flag_count": 0,
+      "structural_mass_failure_count": 0,
+      "selected_not_argmax_count": 0,
+      "reported_cost_sum_usd": "0.00051298",
+      "reconciled_cost_sum_usd": "0.00051298",
+      "scores_only_per1000_title_attempts_arithmetic_usd": "0.1709933333333333333333333333",
+      "POST_wall_seconds_observations": [
+        0.8846431839629076,
+        0.6127764749689959,
+        0.7784055139636621
+      ],
+      "POST_wall_seconds_min": 0.6127764749689959,
+      "POST_wall_seconds_median": 0.7784055139636621,
+      "POST_wall_seconds_max": 0.8846431839629076,
+      "native_input_range": [
+        8519,
+        8581
+      ],
+      "native_output_range": [
+        0,
+        0
+      ]
+    }
+  ],
+  "per_title": [
+    {
+      "model": "Jev1.14",
+      "title": "Fight Club",
+      "raw_answer_count": 74,
+      "raw_numeric_count": 73,
+      "semantic_unknown_count": 0,
+      "NA_count": 0,
+      "not_assessed_count": 1,
+      "missing_count": 0,
+      "original_parser_format_valid": false,
+      "original_parser_numeric_eligible_count": 0,
+      "diagnostic_numeric_eligible_count": 0,
+      "reconciled_cost_usd": "0.000529956",
+      "POST_wall_seconds": 0.4969685819814913
+    },
+    {
+      "model": "Perplexity Flash1.2",
+      "title": "Fight Club",
+      "raw_answer_count": 74,
+      "raw_numeric_count": 74,
+      "semantic_unknown_count": 0,
+      "NA_count": 0,
+      "not_assessed_count": 0,
+      "missing_count": 0,
+      "original_parser_format_valid": true,
+      "original_parser_numeric_eligible_count": 74,
+      "diagnostic_numeric_eligible_count": 74,
+      "reconciled_cost_usd": "0.00044784",
+      "POST_wall_seconds": 4.791935065004509
+    },
+    {
+      "model": "Span02",
+      "title": "Fight Club",
+      "raw_answer_count": 74,
+      "raw_numeric_count": 71,
+      "semantic_unknown_count": 2,
+      "NA_count": 0,
+      "not_assessed_count": 1,
+      "missing_count": 0,
+      "original_parser_format_valid": true,
+      "original_parser_numeric_eligible_count": 0,
+      "diagnostic_numeric_eligible_count": 71,
+      "reconciled_cost_usd": "0.00048387",
+      "POST_wall_seconds": 2.4376282829907723
+    },
+    {
+      "model": "Microsoft Decision1",
+      "title": "Fight Club",
+      "raw_answer_count": 74,
+      "raw_numeric_count": 69,
+      "semantic_unknown_count": 0,
+      "NA_count": 4,
+      "not_assessed_count": 1,
+      "missing_count": 0,
+      "original_parser_format_valid": true,
+      "original_parser_numeric_eligible_count": 69,
+      "diagnostic_numeric_eligible_count": 69,
+      "reconciled_cost_usd": "0.000407568",
+      "POST_wall_seconds": 1.0245589499827474
+    },
+    {
+      "model": "Liquid d1",
+      "title": "Fight Club",
+      "raw_answer_count": 74,
+      "raw_numeric_count": 74,
+      "semantic_unknown_count": 0,
+      "NA_count": 0,
+      "not_assessed_count": 0,
+      "missing_count": 0,
+      "original_parser_format_valid": true,
+      "original_parser_numeric_eligible_count": 74,
+      "diagnostic_numeric_eligible_count": 74,
+      "reconciled_cost_usd": "0.00017098",
+      "POST_wall_seconds": 0.8846431839629076
+    },
+    {
+      "model": "Perplexity Flash1.2",
+      "title": "How I Met Your Mother",
+      "raw_answer_count": 74,
+      "raw_numeric_count": 73,
+      "semantic_unknown_count": 0,
+      "NA_count": 1,
+      "not_assessed_count": 0,
+      "missing_count": 0,
+      "original_parser_format_valid": true,
+      "original_parser_numeric_eligible_count": 73,
+      "diagnostic_numeric_eligible_count": 73,
+      "reconciled_cost_usd": "0.00043156",
+      "POST_wall_seconds": 3.5285356389940716
+    },
+    {
+      "model": "Span02",
+      "title": "How I Met Your Mother",
+      "raw_answer_count": 74,
+      "raw_numeric_count": 70,
+      "semantic_unknown_count": 2,
+      "NA_count": 1,
+      "not_assessed_count": 1,
+      "missing_count": 0,
+      "original_parser_format_valid": true,
+      "original_parser_numeric_eligible_count": 0,
+      "diagnostic_numeric_eligible_count": 70,
+      "reconciled_cost_usd": "0.00046685",
+      "POST_wall_seconds": 2.452005358005408
+    },
+    {
+      "model": "Microsoft Decision1",
+      "title": "How I Met Your Mother",
+      "raw_answer_count": 74,
+      "raw_numeric_count": 64,
+      "semantic_unknown_count": 0,
+      "NA_count": 7,
+      "not_assessed_count": 3,
+      "missing_count": 0,
+      "original_parser_format_valid": true,
+      "original_parser_numeric_eligible_count": 64,
+      "diagnostic_numeric_eligible_count": 64,
+      "reconciled_cost_usd": "0.000406644",
+      "POST_wall_seconds": 1.1604222640162334
+    },
+    {
+      "model": "Liquid d1",
+      "title": "How I Met Your Mother",
+      "raw_answer_count": 74,
+      "raw_numeric_count": 74,
+      "semantic_unknown_count": 0,
+      "NA_count": 0,
+      "not_assessed_count": 0,
+      "missing_count": 0,
+      "original_parser_format_valid": true,
+      "original_parser_numeric_eligible_count": 74,
+      "diagnostic_numeric_eligible_count": 74,
+      "reconciled_cost_usd": "0.00017038",
+      "POST_wall_seconds": 0.6127764749689959
+    },
+    {
+      "model": "Jev1.14",
+      "title": "How I Met Your Mother",
+      "raw_answer_count": 74,
+      "raw_numeric_count": 69,
+      "semantic_unknown_count": 3,
+      "NA_count": 0,
+      "not_assessed_count": 2,
+      "missing_count": 0,
+      "original_parser_format_valid": false,
+      "original_parser_numeric_eligible_count": 0,
+      "diagnostic_numeric_eligible_count": 0,
+      "reconciled_cost_usd": "0.000529116",
+      "POST_wall_seconds": 0.41204437700798735
+    },
+    {
+      "model": "Span02",
+      "title": "Death Note",
+      "raw_answer_count": 74,
+      "raw_numeric_count": 66,
+      "semantic_unknown_count": 4,
+      "NA_count": 1,
+      "not_assessed_count": 3,
+      "missing_count": 0,
+      "original_parser_format_valid": true,
+      "original_parser_numeric_eligible_count": 0,
+      "diagnostic_numeric_eligible_count": 66,
+      "reconciled_cost_usd": "0.00051569",
+      "POST_wall_seconds": 2.6828118260018528
+    },
+    {
+      "model": "Microsoft Decision1",
+      "title": "Death Note",
+      "raw_answer_count": 74,
+      "raw_numeric_count": 68,
+      "semantic_unknown_count": 0,
+      "NA_count": 1,
+      "not_assessed_count": 5,
+      "missing_count": 0,
+      "original_parser_format_valid": true,
+      "original_parser_numeric_eligible_count": 68,
+      "diagnostic_numeric_eligible_count": 68,
+      "reconciled_cost_usd": "0.000409248",
+      "POST_wall_seconds": 1.6727096320246346
+    },
+    {
+      "model": "Liquid d1",
+      "title": "Death Note",
+      "raw_answer_count": 74,
+      "raw_numeric_count": 74,
+      "semantic_unknown_count": 0,
+      "NA_count": 0,
+      "not_assessed_count": 0,
+      "missing_count": 0,
+      "original_parser_format_valid": true,
+      "original_parser_numeric_eligible_count": 74,
+      "diagnostic_numeric_eligible_count": 74,
+      "reconciled_cost_usd": "0.00017162",
+      "POST_wall_seconds": 0.7784055139636621
+    },
+    {
+      "model": "Jev1.14",
+      "title": "Death Note",
+      "raw_answer_count": 74,
+      "raw_numeric_count": 69,
+      "semantic_unknown_count": 2,
+      "NA_count": 0,
+      "not_assessed_count": 3,
+      "missing_count": 0,
+      "original_parser_format_valid": false,
+      "original_parser_numeric_eligible_count": 0,
+      "diagnostic_numeric_eligible_count": 0,
+      "reconciled_cost_usd": "0.000531594",
+      "POST_wall_seconds": 0.4046795479953289
+    },
+    {
+      "model": "Perplexity Flash1.2",
+      "title": "Death Note",
+      "raw_answer_count": 74,
+      "raw_numeric_count": 72,
+      "semantic_unknown_count": 0,
+      "NA_count": 2,
+      "not_assessed_count": 0,
+      "missing_count": 0,
+      "original_parser_format_valid": true,
+      "original_parser_numeric_eligible_count": 72,
+      "diagnostic_numeric_eligible_count": 72,
+      "reconciled_cost_usd": "0.00047744",
+      "POST_wall_seconds": 3.8546386109665036
+    }
+  ],
+  "comparison_denominators": {
+    "all_five_models_original_common_numeric_cells": 0,
+    "all_five_models_retrospective_common_numeric_cells": 0,
+    "four_models_excluding_Jev_retrospective_by_title": [
+      {
+        "title": "Fight Club",
+        "common_numeric_cells": 67,
+        "possible_traits": 74
+      },
+      {
+        "title": "How I Met Your Mother",
+        "common_numeric_cells": 62,
+        "possible_traits": 74
+      },
+      {
+        "title": "Death Note",
+        "common_numeric_cells": 62,
+        "possible_traits": 74
+      }
+    ]
+  },
+  "accounting": {
+    "reported_returned_output_subtotal_usd": "0.006150356",
+    "reconciled_returned_output_subtotal_usd": "0.006150356",
+    "failed_retired_route_actual_charge_usd": null,
+    "failed_retired_route_pending_full_bound_usd": "0.503316480",
+    "prior_stage_pending_separate_usd": "0.20914624",
+    "failed_output_charges_included": "All15returned-response charges, including three structurally failed Jev and three originally numeric-withheld Span responses; failed route charge unknown",
+    "not_total_pipeline_cost": true
+  },
+  "numerical_policy": {
+    "lane": "Explicit retrospective diagnostic overlay on Span only; original parser/runtime untouched",
+    "mass_epsilon": "0.000001",
+    "pairwise_epsilon": "0.000000000001",
+    "probabilities_renormalized": false,
+    "source_contract_flags_preserved": true,
+    "whole_attempt_structural_failure_not_rescued": true
+  },
+  "token_counter_example": {
+    "model": "Perplexity Flash1.2",
+    "title": "Death Note",
+    "native_input": 47744,
+    "native_output": 74,
+    "generic_input": 6932,
+    "generic_output": 10212,
+    "not_additive_or_substitutable": true,
+    "reasoning_and_cache": "Unknown nullable telemetry; not assumed zero"
+  },
+  "limitations": [
+    "No factual-quality score, gold-label assumption, model winner or production acceptance",
+    "Three titles without configuration repeats do not estimate stability or establish statistical significance",
+    "POST caller-wall time only; not inference-only latency, throughput or complete-pipeline latency",
+    "Per1000is arithmetic scaling of three scores-only title attempts including failed/withheld outputs; excludes companions, infrastructure and unobserved fees",
+    "Catalog comparator producer/version/prompt/cutoff unknown; historical prior trials and prior-stage charges are separate",
+    "Zero-valued trait predictions do not establish source-supported absence; unknown/N/A/not-assessed remain distinct",
+    "Failed retired route has no predictions and is not ranked; unattempted chunks are not semantic unknowns",
+    "Reconciled charges do not erase original guard errors or establish factual acceptance"
+  ],
+  "accounting_as_of_date": "2026-10-20"
+}
