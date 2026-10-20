@@ -1,0 +1,20 @@
+{
+  "commit": "a8975af98d4596b69dee6934e101aed4cede681b",
+  "date": "2026-10-20",
+  "page_build": "pass",
+  "mcp_tests": {
+    "passed": 91,
+    "failed": 0
+  },
+  "both_search_roles": {
+    "commit": "a8975af98d4596b69dee6934e101aed4cede681b",
+    "healthy": true,
+    "query_models_ready": true,
+    "rolling_release": true
+  },
+  "live_contract_matches_source": true,
+  "live_privacy_capability_summary": "pass: share lists and title language present",
+  "secrets_changed": false,
+  "firewall_changes": false,
+  "generic_smoke": "see smoke-investigation.json"
+}

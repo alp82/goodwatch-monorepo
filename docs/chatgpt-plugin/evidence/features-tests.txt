@@ -1,0 +1,6 @@
+PASS: exactly eight table DML grants; profile, handle, catalog, Favorite mutations and DDL remain denied
+PASS: indexed people search/paging, real person links, role filters, taste/defaults, full-list sorts and unseen filtering
+PASS: settings pair CAS/readback, independent country/language edits, browser default, services parity, idempotency and member isolation
+PASS: five-title create/edit/read/list links, redundant selectors, durable retries, ownership, duplicate rejection, handle prerequisite and stale-edit conflict
+PASS: inclusive ranges and dated whole seasons use one receipt, skip already watched episodes, auto-See, keep unknown dates, reject invalid targets and isolate members
+PASS: every new mutation and range parameter requires mcp:write; receipt IDs cannot cross tools

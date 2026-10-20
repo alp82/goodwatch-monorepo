@@ -1,0 +1,48 @@
+{
+  "full_smoke": "64 passed, 2 failed, 2 warnings, 6 skipped",
+  "search_role_smokes": "both passed, 31 checks each",
+  "findings": [
+    {
+      "check": "api-related-panel",
+      "cause": "Stale smoke URL /api/related removed by 0642ea1c; current product uses /api/related-map."
+    },
+    {
+      "check": "static:mode",
+      "cause": "Smoke parser only sees src/href attributes; home intentionally delays module creation until after paint using startAfterPaintScript."
+    },
+    {
+      "check": "share-list paths skipped",
+      "cause": "Private fixture paths intentionally not supplied to generic smoke."
+    }
+  ],
+  "targeted_checks": [
+    {
+      "url": "https://goodwatch.app/api/related-map?key=m603",
+      "status": 200,
+      "content_type": "application/json; charset=utf-8"
+    },
+    {
+      "url": "https://static.goodwatch.app/assets/manifest-4587709f.js",
+      "status": 200,
+      "content_type": "text/javascript; charset=utf-8",
+      "cache_control": "public, max-age=31536000, immutable",
+      "cors": "*"
+    },
+    {
+      "url": "https://static.goodwatch.app/assets/root-B7zwOtXu.js",
+      "status": 200,
+      "content_type": "text/javascript; charset=utf-8",
+      "cache_control": "public, max-age=31536000, immutable",
+      "cors": "*"
+    },
+    {
+      "url": "https://static.goodwatch.app/assets/_index-D1RQECjy.js",
+      "status": 200,
+      "content_type": "text/javascript; charset=utf-8",
+      "cache_control": "public, max-age=31536000, immutable",
+      "cors": "*"
+    }
+  ],
+  "remaining": "Generic benchmark fixture/parser maintenance remains. Hosted ChatGPT scans still pending.",
+  "request_note": "Initial Python default-user-agent asset GETs returned HTTP errors; repeated GETs using a browser User-Agent returned 200 for all three assets with CORS and immutable caching. curl HEAD also returned 200. No claim about the precise CDN rule is made."
+}

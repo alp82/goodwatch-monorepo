@@ -1,0 +1,31 @@
+{
+  "checked_at": "2026-10-20T08:17:40.518087+00:00",
+  "commit": "1946e00cfc5faf9dba0ee9ae63ed30d6d94f9dfd",
+  "deployment": "Pushed only the new terms route and Support link to main; existing automatic Coolify rollout. Initially mixed 200/404 during rolling update; subsequently eight consecutive 200 responses with expected page content, ten seconds apart.",
+  "local_checks": {
+    "production_build": "pass",
+    "biome": "pass",
+    "diff_check": "pass"
+  },
+  "public_checks": [
+    {
+      "url": "https://goodwatch.app/terms",
+      "http_status": 200,
+      "canonical": [
+        "https://goodwatch.app/terms"
+      ],
+      "h1_count": 1,
+      "terms_link_present": false
+    },
+    {
+      "url": "https://goodwatch.app/support",
+      "http_status": 200,
+      "canonical": [
+        "https://goodwatch.app/support"
+      ],
+      "h1_count": 1,
+      "terms_link_present": true
+    }
+  ],
+  "authorization": "Owner explicitly requested creation and shipping of the terms page. Plugin submission/publication remains unauthorized."
+}

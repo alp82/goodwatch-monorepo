@@ -1,0 +1,39 @@
+Integration logs: /tmp/goodwatch-mcp-details.PvCrod
+PASS: full search default, seen filtering before paging, distinct Arrival works and canonical alias deduplication
+PASS: real title details, member marks, unknown dates and availability
+PASS: My shows, current pass, next episode, unknown dates and peer isolation
+PASS: Tonight agrees with My shows and show progress
+PASS: real Taste counts, honest unavailable model and member isolation
+PASS: library added dates, oldest-first wishlist, and all native My library sorts agree
+PASS: real Valkey member limits shared by clients, with independent peer budget
+PASS: schema rejection, ambiguity, missing titles, prior passes and recorded dates
+PASS: isolated member library, scores and pagination
+PASS: catalog name lookup, pagination and canonical URLs over local CrateDB
+PASS: scoped identity has exactly seven table DML grants; catalog/favorite writes and DDL denied; shared refreshes allowed
+PASS: legacy ID/year receipts replay without mutation and receive ready-made links
+PASS: movie watches, undated wording, durable exact retry and peer isolation
+PASS: scores own one undated movie watch; clearing removes only that watch
+PASS: Want to See setters, exact retries and old removal retries preserve newer choices
+PASS: Not interested clears Wishlist, invalidates member/taste caches and replays safely
+PASS: show ratings preserve status; hold/drop/resume and Seen preserve dates and retry safely
+PASS: Remove a watch is bound to the original selected watch across retries, with exact removed date
+PASS: services resolve by name/ID, country and removals are explicit, cached settings are fresh
+PASS: every title write rejects ambiguity without changing member data; services also resolve safely
+PASS: durable pending actions, concurrent retries, parameter conflicts and per-member action namespaces
+PASS: concurrent distinct writes report only their own added watch IDs
+PASS: receipt survives a fresh MCP process and never reapplies the original watch
+PASS: explicit ranked search reserves one member query; normalized cache hits and paging are free
+PASS: full first page and For you defaults; native seen filtering, free filter changes and stable inherited cursor views
+PASS: detached native search work retains the member's in-flight place after its response
+PASS: 20/day quota is shared across OAuth clients; peers, name lookup and write resolution are independent
+PASS: quota resets at UTC midnight; surviving cache hits remain free on the new day
+PASS: member and shared search-role admission reject before executing; rejection does not spend quota
+PASS: cursors are member-bound; flags, role refusal, failed attempts and bounded usage/cost metrics
+PASS: real combinedSearch uses local paid SDK fixtures, native price accounting and cached MCP results
+PASS: shared Crate budget halt prevents provider calls; native basic fallback is reported honestly
+PASS: real GoodWatch taste scores and labels, default full-library match order, explicit sorts, missing fingerprints, peer isolation and unavailable-taste degradation
+PASS: Watch next and title availability link only owned services, in Watching from country, using the site deep link
+PASS: all title-returning read tools and write receipts carry runtime/taste; personalized presentation never enters public caches or durable receipts
+PASS: scoped identity has exactly seven table DML grants; catalog/favorite writes and DDL denied; shared refreshes allowed
+PASS: rich details include defaults/selection, linked cast/creators, score scales, analysis/trailer, real season scores and paged episodes
+PASS: real Qdrant neighbors through scoped SDK calls, For you, taste match, canonical links/posters, seen/hidden/type filters, paging, missing fingerprint, member isolation and policy

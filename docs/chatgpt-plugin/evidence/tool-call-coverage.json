@@ -1,0 +1,30 @@
+{
+  "source": "local synthetic integration traces, not production or ChatGPT",
+  "tools": {
+    "search_titles": true,
+    "discover_titles": true,
+    "get_discover_filters": true,
+    "get_title": true,
+    "get_similar_titles": true,
+    "get_my_shows": true,
+    "get_show_progress": true,
+    "get_tonight": true,
+    "get_library": true,
+    "get_taste": true,
+    "search_people": true,
+    "get_person": true,
+    "get_my_lists": true,
+    "get_list": true,
+    "get_settings": true,
+    "log_watch": true,
+    "rate_title": true,
+    "set_want_to_see": true,
+    "set_not_interested": true,
+    "set_show_status": true,
+    "undo_watch": true,
+    "set_my_services": true,
+    "set_settings": true,
+    "create_list": true,
+    "update_list_titles": true
+  }
+}

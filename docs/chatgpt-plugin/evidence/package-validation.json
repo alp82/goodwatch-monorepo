@@ -1,0 +1,22 @@
+{
+  "package_validation": "pass",
+  "schema_version": "Agent Plugins 1.0.0",
+  "files": [
+    "plugin.json",
+    "mcp.json",
+    "assets/logo.png"
+  ],
+  "positive_cases": 5,
+  "negative_cases": 3,
+  "zip": "docs/chatgpt-plugin/goodwatch-1.0.0.zip",
+  "sha256": "e3f4347de8bcdf4b7230a94c5143277151bb562521d4238dbb1db1fd5fb99f37",
+  "submission_readiness": "blocked",
+  "remaining_checks": [
+    "verified_identity_category_countries",
+    "demo_recording_accessible",
+    "hosted_all_tools_and_review_cases_pass",
+    "hosted_permissions_confirmations_refresh_isolation_pass",
+    "portal_domain_oauth_scan_clean",
+    "review.demo_recording_url missing"
+  ]
+}

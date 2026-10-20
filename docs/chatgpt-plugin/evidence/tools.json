@@ -1,0 +1,2059 @@
+{
+  "source": "Authenticated production SDK tools/list after metadata deployment; no account data",
+  "tools": [
+    {
+      "name": "search_titles",
+      "title": "Search titles by name",
+      "description": "Search movie and show names across the GoodWatch catalog, separate from your library. Name lookup by default; for descriptive queries, explicitly set ranked=true for an optional smarter match, ordered For you by default. Defaults to everywhere and includes seen titles. Use the shared Discover filters to narrow by type, genres, years, runtime, score, services, moods and more; get_discover_filters lists genres/provider IDs. Repeat filters with offset cursors; ranked cursors inherit their view. Use discover_titles whenever no name or descriptive query is given. Except when paging with a ranked cursor, a missing, empty or whitespace-only query runs the same Discover path, filters and For you default as discover_titles; ranked is ignored and no smarter-match attempt is charged. exclude_seen=true filters seen titles before paging. Returns up to 40 results by default. Different works can share a name and year; runtime_minutes can distinguish them. Smarter matches allow 20 uncached attempts per member per UTC day, one in flight, normalized queries cached for 60 seconds and paging is free.",
+      "inputSchema": {
+        "type": "object",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "all",
+              "movie",
+              "show"
+            ]
+          },
+          "genres": {
+            "description": "Exact genre names from get_discover_filters; a single name or an array, matching any selected genre.",
+            "anyOf": [
+              {
+                "maxItems": 20,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 80
+                }
+              },
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 80
+              }
+            ]
+          },
+          "min_year": {
+            "type": "integer",
+            "minimum": 1800,
+            "maximum": 2100
+          },
+          "max_year": {
+            "type": "integer",
+            "minimum": 1800,
+            "maximum": 2100
+          },
+          "min_runtime": {
+            "description": "Inclusive minutes; movie duration or usual episode length for shows. Unknown runtimes do not pass.",
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "max_runtime": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "minimum_score": {
+            "description": "GoodWatch score, 0\u2013100; inclusive minimum.",
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "on_my_services": {
+            "description": "Default false (everywhere). Uses saved country and services. Without saved services this does not narrow, as on the site.",
+            "type": "boolean"
+          },
+          "providers": {
+            "description": "Specific provider IDs from get_discover_filters, in your saved country. Matches any selected provider; mutually exclusive with on_my_services=true.",
+            "maxItems": 20,
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 999999999
+            }
+          },
+          "anime": {
+            "type": "string",
+            "enum": [
+              "any",
+              "only",
+              "none"
+            ]
+          },
+          "moods": {
+            "maxItems": 3,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "funny",
+                "feelgood",
+                "romance",
+                "action",
+                "scary",
+                "crime",
+                "mind",
+                "heavy",
+                "worlds",
+                "history",
+                "growing"
+              ]
+            }
+          },
+          "themes": {
+            "maxItems": 3,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "crime",
+                "mystery",
+                "war",
+                "politics",
+                "true",
+                "history",
+                "growing",
+                "family",
+                "mind",
+                "showbiz",
+                "sports",
+                "money",
+                "future",
+                "fantasy"
+              ]
+            }
+          },
+          "styles": {
+            "maxItems": 3,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "animated",
+                "documentary",
+                "spectacle",
+                "stylized",
+                "music",
+                "slow",
+                "fast",
+                "talky",
+                "nonlinear",
+                "graphic"
+              ]
+            }
+          },
+          "minimum_match": {
+            "description": "GoodWatch taste match threshold; does not narrow when taste is unavailable, as on the site.",
+            "anyOf": [
+              {
+                "type": "number",
+                "const": 0
+              },
+              {
+                "type": "number",
+                "const": 70
+              },
+              {
+                "type": "number",
+                "const": 80
+              },
+              {
+                "type": "number",
+                "const": 90
+              }
+            ]
+          },
+          "released": {
+            "type": "string",
+            "enum": [
+              "any",
+              "recent",
+              "2010s",
+              "2000s",
+              "before2000"
+            ]
+          },
+          "age_limit": {
+            "description": "Uses the saved country's age-rating ladder, when available.",
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 18
+          },
+          "hide_content": {
+            "maxItems": 5,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "violence",
+                "sex",
+                "disturbing",
+                "language",
+                "drugs"
+              ]
+            }
+          },
+          "show_content": {
+            "maxItems": 5,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "violence",
+                "sex",
+                "disturbing",
+                "language",
+                "drugs"
+              ]
+            }
+          },
+          "order": {
+            "description": "Default For you (popular with the site's taste adjustment). Other orders disable that adjustment unless for_you=true is explicitly supplied. Match uses the site's Best match order.",
+            "type": "string",
+            "enum": [
+              "for_you",
+              "popularity",
+              "newest",
+              "score",
+              "match"
+            ]
+          },
+          "query": {
+            "default": "",
+            "description": "A title name or descriptive query. For recommendations without a query use discover_titles; blank queries run discovery.",
+            "type": "string",
+            "maxLength": 120
+          },
+          "ranked": {
+            "default": false,
+            "description": "Use an optional smarter match for descriptive queries instead of name lookup. Costs one of 20 daily attempts unless cached; paging is free.",
+            "type": "boolean"
+          },
+          "cursor": {
+            "type": "string",
+            "pattern": "^(offset:[0-9]{1,8}|ranked:[a-f0-9]{32}:[0-9]{1,8})$"
+          },
+          "limit": {
+            "default": 40,
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 40
+          },
+          "for_you": {
+            "description": "Smarter matches: use the site's For you ordering (default true). Keep unchanged when paging; a cursor inherits its original filters.",
+            "type": "boolean"
+          },
+          "exclude_seen": {
+            "description": "Default false: include seen titles. True uses the site's Not seen yet rule: exclude rated, watched, in-progress, on-hold, dropped and quiz-skipped titles. Apply natively before paging.",
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp:read"
+            ]
+          }
+        ],
+        "ui": {
+          "resourceUri": "ui://goodwatch/posters-v3.html"
+        },
+        "ui/resourceUri": "ui://goodwatch/posters-v3.html",
+        "openai/outputTemplate": "ui://goodwatch/posters-v3.html"
+      }
+    },
+    {
+      "name": "discover_titles",
+      "title": "Discover movies and shows",
+      "description": "Discover without a query using the same catalog, filters and ordering as GoodWatch Discover/Explore. For you by default; everywhere and seen titles included. Choose popularity, newest, score or match ordering. Use on_my_services=true for saved services, or providers for specific services, in your saved country. get_discover_filters lists valid genres and providers. Filters apply before pagination. Repeat filters when paging with offset cursors. Returns up to 40 titles and a matching Discover grid page_url.",
+      "inputSchema": {
+        "type": "object",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "all",
+              "movie",
+              "show"
+            ]
+          },
+          "genres": {
+            "description": "Exact genre names from get_discover_filters; a single name or an array, matching any selected genre.",
+            "anyOf": [
+              {
+                "maxItems": 20,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 80
+                }
+              },
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 80
+              }
+            ]
+          },
+          "min_year": {
+            "type": "integer",
+            "minimum": 1800,
+            "maximum": 2100
+          },
+          "max_year": {
+            "type": "integer",
+            "minimum": 1800,
+            "maximum": 2100
+          },
+          "min_runtime": {
+            "description": "Inclusive minutes; movie duration or usual episode length for shows. Unknown runtimes do not pass.",
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "max_runtime": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "minimum_score": {
+            "description": "GoodWatch score, 0\u2013100; inclusive minimum.",
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "on_my_services": {
+            "description": "Default false (everywhere). Uses saved country and services. Without saved services this does not narrow, as on the site.",
+            "type": "boolean"
+          },
+          "providers": {
+            "description": "Specific provider IDs from get_discover_filters, in your saved country. Matches any selected provider; mutually exclusive with on_my_services=true.",
+            "maxItems": 20,
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 999999999
+            }
+          },
+          "anime": {
+            "type": "string",
+            "enum": [
+              "any",
+              "only",
+              "none"
+            ]
+          },
+          "moods": {
+            "maxItems": 3,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "funny",
+                "feelgood",
+                "romance",
+                "action",
+                "scary",
+                "crime",
+                "mind",
+                "heavy",
+                "worlds",
+                "history",
+                "growing"
+              ]
+            }
+          },
+          "themes": {
+            "maxItems": 3,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "crime",
+                "mystery",
+                "war",
+                "politics",
+                "true",
+                "history",
+                "growing",
+                "family",
+                "mind",
+                "showbiz",
+                "sports",
+                "money",
+                "future",
+                "fantasy"
+              ]
+            }
+          },
+          "styles": {
+            "maxItems": 3,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "animated",
+                "documentary",
+                "spectacle",
+                "stylized",
+                "music",
+                "slow",
+                "fast",
+                "talky",
+                "nonlinear",
+                "graphic"
+              ]
+            }
+          },
+          "minimum_match": {
+            "description": "GoodWatch taste match threshold; does not narrow when taste is unavailable, as on the site.",
+            "anyOf": [
+              {
+                "type": "number",
+                "const": 0
+              },
+              {
+                "type": "number",
+                "const": 70
+              },
+              {
+                "type": "number",
+                "const": 80
+              },
+              {
+                "type": "number",
+                "const": 90
+              }
+            ]
+          },
+          "released": {
+            "type": "string",
+            "enum": [
+              "any",
+              "recent",
+              "2010s",
+              "2000s",
+              "before2000"
+            ]
+          },
+          "age_limit": {
+            "description": "Uses the saved country's age-rating ladder, when available.",
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 18
+          },
+          "hide_content": {
+            "maxItems": 5,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "violence",
+                "sex",
+                "disturbing",
+                "language",
+                "drugs"
+              ]
+            }
+          },
+          "show_content": {
+            "maxItems": 5,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "violence",
+                "sex",
+                "disturbing",
+                "language",
+                "drugs"
+              ]
+            }
+          },
+          "order": {
+            "description": "Default For you (popular with the site's taste adjustment). Other orders disable that adjustment unless for_you=true is explicitly supplied. Match uses the site's Best match order.",
+            "type": "string",
+            "enum": [
+              "for_you",
+              "popularity",
+              "newest",
+              "score",
+              "match"
+            ]
+          },
+          "cursor": {
+            "type": "string",
+            "pattern": "^offset:[0-9]{1,8}$"
+          },
+          "limit": {
+            "default": 40,
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 40
+          },
+          "for_you": {
+            "type": "boolean"
+          },
+          "exclude_seen": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp:read"
+            ]
+          }
+        ],
+        "ui": {
+          "resourceUri": "ui://goodwatch/posters-v3.html"
+        },
+        "ui/resourceUri": "ui://goodwatch/posters-v3.html",
+        "openai/outputTemplate": "ui://goodwatch/posters-v3.html"
+      }
+    },
+    {
+      "name": "get_discover_filters",
+      "title": "Get Discover filter options",
+      "description": "List exact genre names, provider IDs/names available in your saved country (plus saved providers), and saved services for search_titles/discover_titles. Other filter choices are enumerated in those tools schemas. Reads existing settings without changing them.",
+      "inputSchema": {
+        "type": "object",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp:read"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "get_title",
+      "title": "Get a title",
+      "description": "Catalog details, trailer, availability evidence and your marks. Default include=[cast,scores,analysis] adds five top-billed people and directors/creators, each with a ready-made person link, provider scores on labelled scales, and title analysis (moods, themes, tags, featured tropes). Pass include=[] for the smallest answer, or add seasons/episodes for the website\u2019s season/episode ratings. Episodes use the website\u2019s displayed numbering, which can differ from tracking; page with episode_cursor/episode_limit and optionally season_number. Unknown scores and watch dates stay unknown.",
+      "inputSchema": {
+        "type": "object",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "title_id": {
+            "type": "string",
+            "pattern": "^(movie|show):[1-9]\\d{0,9}$"
+          },
+          "title_name": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 120
+          },
+          "year": {
+            "type": "integer",
+            "minimum": 1800,
+            "maximum": 2100
+          },
+          "include": {
+            "default": [
+              "cast",
+              "scores",
+              "analysis"
+            ],
+            "maxItems": 5,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "cast",
+                "scores",
+                "analysis",
+                "seasons",
+                "episodes"
+              ]
+            }
+          },
+          "season_number": {
+            "description": "Displayed season: 0 for Specials; -1 for Additional episodes in a reviewed presentation.",
+            "type": "integer",
+            "minimum": -1,
+            "maximum": 10000
+          },
+          "episode_cursor": {
+            "type": "string",
+            "pattern": "^offset:[0-9]{1,8}$"
+          },
+          "episode_limit": {
+            "default": 20,
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 50
+          }
+        },
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp:read"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "get_similar_titles",
+      "title": "More like this",
+      "description": "Find more like a movie or show from GoodWatch\u2019s own title-page fingerprint neighbors (up to 80 candidates), with each result\u2019s GoodWatch taste match and posters. Ordered For you by default; for_you=false keeps similarity order. Similarity describes the source title, never your taste match. Searches everywhere and includes seen titles by default; exclude_seen=true applies Not seen yet before paging. Not interested and Dropped are always hidden. kind filters all/movie/show. Keep title and filters unchanged when paging. No paid descriptive search is used.",
+      "inputSchema": {
+        "type": "object",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "title_id": {
+            "type": "string",
+            "pattern": "^(movie|show):[1-9]\\d{0,9}$"
+          },
+          "title_name": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 120
+          },
+          "year": {
+            "type": "integer",
+            "minimum": 1800,
+            "maximum": 2100
+          },
+          "cursor": {
+            "type": "string",
+            "pattern": "^offset:[0-9]{1,8}$"
+          },
+          "limit": {
+            "default": 40,
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 40
+          },
+          "for_you": {
+            "default": true,
+            "type": "boolean"
+          },
+          "exclude_seen": {
+            "default": false,
+            "type": "boolean"
+          },
+          "kind": {
+            "default": "all",
+            "type": "string",
+            "enum": [
+              "all",
+              "movie",
+              "show"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp:read"
+            ]
+          }
+        ],
+        "ui": {
+          "resourceUri": "ui://goodwatch/posters-v3.html"
+        },
+        "ui/resourceUri": "ui://goodwatch/posters-v3.html",
+        "openai/outputTemplate": "ui://goodwatch/posters-v3.html"
+      }
+    },
+    {
+      "name": "get_my_shows",
+      "title": "Get my shows",
+      "description": "Only your shows: Continue, Pick up, Waiting for episodes, Want to See, On hold and Dropped.",
+      "inputSchema": {
+        "type": "object",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "cursor": {
+            "type": "string",
+            "pattern": "^offset:[0-9]{1,8}$"
+          },
+          "limit": {
+            "default": 20,
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 20
+          }
+        },
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp:read"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "get_show_progress",
+      "title": "Get show progress",
+      "description": "Your current pass, next episode and paged watches. Dates are unknown unless recorded.",
+      "inputSchema": {
+        "type": "object",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "title_id": {
+            "type": "string",
+            "pattern": "^(movie|show):[1-9]\\d{0,9}$"
+          },
+          "title_name": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 120
+          },
+          "year": {
+            "type": "integer",
+            "minimum": 1800,
+            "maximum": 2100
+          },
+          "cursor": {
+            "type": "string",
+            "pattern": "^offset:[0-9]{1,8}$"
+          },
+          "limit": {
+            "default": 20,
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 20
+          }
+        },
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp:read"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "get_tonight",
+      "title": "Watch next",
+      "description": "Choose one thing to watch next, using your saved country and services: a next episode from a show you are watching, otherwise a Wishlist movie or show to start (or a suggestion if the Wishlist is empty). For the full Wishlist / Want to See list (including sorting by date added), use get_library with filter=want_to_see.",
+      "inputSchema": {
+        "type": "object",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp:read"
+            ]
+          }
+        ],
+        "ui": {
+          "resourceUri": "ui://goodwatch/posters-v3.html"
+        },
+        "ui/resourceUri": "ui://goodwatch/posters-v3.html",
+        "openai/outputTemplate": "ui://goodwatch/posters-v3.html"
+      }
+    },
+    {
+      "name": "get_library",
+      "title": "Get my library",
+      "description": "Your marked titles, including scores, Wishlist / Want to See, watch progress and Not interested. Use filter=want_to_see for your Wishlist; get_tonight chooses one thing to watch next. Includes added_at (Wishlist date, null when absent), runtime_minutes (movie duration or usual show episode length), and GoodWatch match. Defaults to match (Best match by your taste) when taste is available, otherwise the usual date sort. Use sort=runtime for the longest titles first across your entire filtered library, without per-title lookups. Explicit sorts are preserved. Sorts match My library: added (last added), last (last watched), score (highest first), title (ignores leading articles); waiting puts the oldest Wishlist additions first. Separate from search_titles.",
+      "inputSchema": {
+        "type": "object",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "filter": {
+            "default": "all",
+            "type": "string",
+            "enum": [
+              "all",
+              "want_to_see",
+              "seen",
+              "not_interested",
+              "rated",
+              "watching",
+              "on_hold",
+              "dropped",
+              "unrated"
+            ]
+          },
+          "cursor": {
+            "type": "string",
+            "pattern": "^offset:[0-9]{1,8}$"
+          },
+          "limit": {
+            "default": 20,
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 20
+          },
+          "sort": {
+            "type": "string",
+            "enum": [
+              "added",
+              "waiting",
+              "last",
+              "score",
+              "title",
+              "match",
+              "runtime"
+            ]
+          },
+          "kind": {
+            "default": "all",
+            "type": "string",
+            "enum": [
+              "all",
+              "movie",
+              "show"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp:read"
+            ]
+          }
+        ],
+        "ui": {
+          "resourceUri": "ui://goodwatch/posters-v3.html"
+        },
+        "ui/resourceUri": "ui://goodwatch/posters-v3.html",
+        "openai/outputTemplate": "ui://goodwatch/posters-v3.html"
+      }
+    },
+    {
+      "name": "get_taste",
+      "title": "Get my taste",
+      "description": "Your real taste signal and strongest attributes; explains when there is not enough evidence.",
+      "inputSchema": {
+        "type": "object",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp:read"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "search_people",
+      "title": "Search people",
+      "description": "Search cast and crew matching the name query, most popular first (TMDB popularity). Results include each person\u2019s ready-made link. Use the returned person_id with get_person for their acting, directing and writing filmography.",
+      "inputSchema": {
+        "type": "object",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "query": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 120
+          },
+          "cursor": {
+            "type": "string",
+            "pattern": "^offset:[0-9]{1,8}$"
+          },
+          "limit": {
+            "default": 20,
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 20
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp:read"
+            ]
+          }
+        ],
+        "ui": {
+          "resourceUri": "ui://goodwatch/posters-v3.html"
+        },
+        "ui/resourceUri": "ui://goodwatch/posters-v3.html",
+        "openai/outputTemplate": "ui://goodwatch/posters-v3.html"
+      }
+    },
+    {
+      "name": "get_person",
+      "title": "Get a person's filmography",
+      "description": "A person's catalog credits with your GoodWatch taste match. Results include the subject\u2019s ready-made person link and title links for credits. Includes every title, even without a poster or score. Defaults to For you, everywhere, including seen titles. Newest and score sort the whole filmography before paging; exclude_seen uses the site's Not seen yet rule. Links open the person's real GoodWatch page; its grouping can differ.",
+      "inputSchema": {
+        "type": "object",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "person_id": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 2000000000
+          },
+          "role": {
+            "default": "all",
+            "type": "string",
+            "enum": [
+              "all",
+              "acting",
+              "directing",
+              "writing"
+            ]
+          },
+          "sort": {
+            "default": "for_you",
+            "type": "string",
+            "enum": [
+              "for_you",
+              "newest",
+              "score"
+            ]
+          },
+          "exclude_seen": {
+            "default": false,
+            "type": "boolean"
+          },
+          "cursor": {
+            "type": "string",
+            "pattern": "^offset:[0-9]{1,8}$"
+          },
+          "limit": {
+            "default": 20,
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 20
+          }
+        },
+        "required": [
+          "person_id"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp:read"
+            ]
+          }
+        ],
+        "ui": {
+          "resourceUri": "ui://goodwatch/posters-v3.html"
+        },
+        "ui/resourceUri": "ui://goodwatch/posters-v3.html",
+        "openai/outputTemplate": "ui://goodwatch/posters-v3.html"
+      }
+    },
+    {
+      "name": "get_my_lists",
+      "title": "Get my share lists",
+      "description": "Your share lists from Lists, including unlisted lists, newest updated first. Each list has exactly five ranked titles and the share link produced by the site.",
+      "inputSchema": {
+        "type": "object",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "cursor": {
+            "type": "string",
+            "pattern": "^offset:[0-9]{1,8}$"
+          },
+          "limit": {
+            "default": 20,
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 20
+          }
+        },
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp:read"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "get_list",
+      "title": "Get a share list",
+      "description": "Read one of your share lists and its five titles in rank order, with taste match and the site's share link. Other members' lists are not exposed by this tool.",
+      "inputSchema": {
+        "type": "object",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "list_id": {
+            "type": "string",
+            "pattern": "^[0-9A-Za-z]{10}$"
+          }
+        },
+        "required": [
+          "list_id"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp:read"
+            ]
+          }
+        ],
+        "ui": {
+          "resourceUri": "ui://goodwatch/posters-v3.html"
+        },
+        "ui/resourceUri": "ui://goodwatch/posters-v3.html",
+        "openai/outputTemplate": "ui://goodwatch/posters-v3.html"
+      }
+    },
+    {
+      "name": "get_settings",
+      "title": "Get my settings",
+      "description": "Read Watching from (country), Show titles in (language), and saved streaming service IDs. Browser language is a saved setting, not a language inferred from your country. No browser locale is supplied by MCP.",
+      "inputSchema": {
+        "type": "object",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp:read"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "log_watch",
+      "title": "Log a watch",
+      "description": "Log one movie or episode watch, an inclusive episode range (season, episode, episode_end), or a whole season (season, whole_season=true). Ranges use the catalog season/episode numbers from get_show_progress, mark only aired regular episodes missing in the current pass, never duplicate existing watches, and produce one receipt. Dates remain unknown unless explicitly supplied. Results report every added watch. Batch items are movies, episode ranges or whole seasons; to mark a whole show as watched, use set_show_status with Seen. To change many titles at once, pass items instead of one title: up to 50 per call. Items are written independently and each reports done, already_set, not_found, ambiguous (with candidates; nothing written) or error, with a summary count and a batch_id; undo_watch with that batch_id takes back the whole call. Full history (hundreds of titles or more) file import is available at: https://goodwatch.app/settings/imports For title actions, title_id takes precedence; title_name and year are ignored when an ID is supplied. Without title_id, title_name is required and year is optional. Replayed results describe the original action, not current state; a new read returns current state.",
+      "inputSchema": {
+        "type": "object",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "action_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "description": "Stable ID for this exact action. Reuse it for retries; use a different ID for a new action."
+          },
+          "title_id": {
+            "description": "Use this ID when available; it takes precedence over title_name and year.",
+            "type": "string",
+            "pattern": "^(movie|show):[1-9]\\d{0,9}$"
+          },
+          "title_name": {
+            "description": "Required only without title_id. Ignored when an ID is supplied.",
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 120
+          },
+          "year": {
+            "description": "Optional name disambiguation, used only without title_id.",
+            "type": "integer",
+            "minimum": 1800,
+            "maximum": 2100
+          },
+          "season": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "episode": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100000
+          },
+          "episode_end": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100000
+          },
+          "whole_season": {
+            "type": "boolean"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+          },
+          "items": {
+            "description": "Up to 50 titles in one call, in place of title_id or title_name. Each item takes title_id, or title_name with an optional year, plus this tool's fields; a field given at the top level applies to every item that leaves it out.",
+            "minItems": 1,
+            "maxItems": 50,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "title_id": {
+                  "description": "Use this ID when available; it takes precedence over title_name and year.",
+                  "type": "string",
+                  "pattern": "^(movie|show):[1-9]\\d{0,9}$"
+                },
+                "title_name": {
+                  "description": "Required only without title_id. Ignored when an ID is supplied.",
+                  "type": "string",
+                  "minLength": 2,
+                  "maxLength": 120
+                },
+                "year": {
+                  "description": "Optional name disambiguation, used only without title_id.",
+                  "type": "integer",
+                  "minimum": 1800,
+                  "maximum": 2100
+                },
+                "season": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "episode": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 100000
+                },
+                "episode_end": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 100000
+                },
+                "whole_season": {
+                  "type": "boolean"
+                },
+                "date": {
+                  "type": "string",
+                  "format": "date",
+                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "action_id"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp:read",
+              "mcp:write"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "rate_title",
+      "title": "Rate a title",
+      "description": "Set a score from 1 to 10, or clear it with null. Clearing a score is destructive. A movie rating can own one undated watch; show ratings never log episodes or change show status. The result reports the previous score and exact watch changes. To change many titles at once, pass items instead of one title: up to 50 per call. Items are written independently and each reports done, already_set, not_found, ambiguous (with candidates; nothing written) or error, with a summary count and a batch_id; undo_watch with that batch_id takes back the whole call. Full history (hundreds of titles or more) file import is available at: https://goodwatch.app/settings/imports For title actions, title_id takes precedence; title_name and year are ignored when an ID is supplied. Without title_id, title_name is required and year is optional. Replayed results describe the original action, not current state; a new read returns current state.",
+      "inputSchema": {
+        "type": "object",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "action_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "description": "Stable ID for this exact action. Reuse it for retries; use a different ID for a new action."
+          },
+          "title_id": {
+            "description": "Use this ID when available; it takes precedence over title_name and year.",
+            "type": "string",
+            "pattern": "^(movie|show):[1-9]\\d{0,9}$"
+          },
+          "title_name": {
+            "description": "Required only without title_id. Ignored when an ID is supplied.",
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 120
+          },
+          "year": {
+            "description": "Optional name disambiguation, used only without title_id.",
+            "type": "integer",
+            "minimum": 1800,
+            "maximum": 2100
+          },
+          "score": {
+            "description": "Required for a single title. With items, give it per item, or once here for every item.",
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 10
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "items": {
+            "description": "Up to 50 titles in one call, in place of title_id or title_name. Each item takes title_id, or title_name with an optional year, plus this tool's fields; a field given at the top level applies to every item that leaves it out.",
+            "minItems": 1,
+            "maxItems": 50,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "title_id": {
+                  "description": "Use this ID when available; it takes precedence over title_name and year.",
+                  "type": "string",
+                  "pattern": "^(movie|show):[1-9]\\d{0,9}$"
+                },
+                "title_name": {
+                  "description": "Required only without title_id. Ignored when an ID is supplied.",
+                  "type": "string",
+                  "minLength": 2,
+                  "maxLength": 120
+                },
+                "year": {
+                  "description": "Optional name disambiguation, used only without title_id.",
+                  "type": "integer",
+                  "minimum": 1800,
+                  "maximum": 2100
+                },
+                "score": {
+                  "anyOf": [
+                    {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 10
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "action_id"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp:read",
+              "mcp:write"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "set_want_to_see",
+      "title": "Set Want to See",
+      "description": "Add or remove a title from your Wishlist. Removal is destructive. Adding a Seen title means Want to rewatch and preserves watches. Reports previous membership and added-at time. To change many titles at once, pass items instead of one title: up to 50 per call. Items are written independently and each reports done, already_set, not_found, ambiguous (with candidates; nothing written) or error, with a summary count and a batch_id; undo_watch with that batch_id takes back the whole call. Full history (hundreds of titles or more) file import is available at: https://goodwatch.app/settings/imports For title actions, title_id takes precedence; title_name and year are ignored when an ID is supplied. Without title_id, title_name is required and year is optional. Replayed results describe the original action, not current state; a new read returns current state.",
+      "inputSchema": {
+        "type": "object",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "action_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "description": "Stable ID for this exact action. Reuse it for retries; use a different ID for a new action."
+          },
+          "title_id": {
+            "description": "Use this ID when available; it takes precedence over title_name and year.",
+            "type": "string",
+            "pattern": "^(movie|show):[1-9]\\d{0,9}$"
+          },
+          "title_name": {
+            "description": "Required only without title_id. Ignored when an ID is supplied.",
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 120
+          },
+          "year": {
+            "description": "Optional name disambiguation, used only without title_id.",
+            "type": "integer",
+            "minimum": 1800,
+            "maximum": 2100
+          },
+          "want_to_see": {
+            "description": "Required for a single title. With items, give it per item, or once here for every item.",
+            "type": "boolean"
+          },
+          "items": {
+            "description": "Up to 50 titles in one call, in place of title_id or title_name. Each item takes title_id, or title_name with an optional year, plus this tool's fields; a field given at the top level applies to every item that leaves it out.",
+            "minItems": 1,
+            "maxItems": 50,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "title_id": {
+                  "description": "Use this ID when available; it takes precedence over title_name and year.",
+                  "type": "string",
+                  "pattern": "^(movie|show):[1-9]\\d{0,9}$"
+                },
+                "title_name": {
+                  "description": "Required only without title_id. Ignored when an ID is supplied.",
+                  "type": "string",
+                  "minLength": 2,
+                  "maxLength": 120
+                },
+                "year": {
+                  "description": "Optional name disambiguation, used only without title_id.",
+                  "type": "integer",
+                  "minimum": 1800,
+                  "maximum": 2100
+                },
+                "want_to_see": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "action_id"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp:read",
+              "mcp:write"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "set_not_interested",
+      "title": "Set Not interested",
+      "description": "Set or clear Not interested for an unseen, unrated title. Setting it removes an existing Wishlist entry and is destructive. Reports both marks before and after. To change many titles at once, pass items instead of one title: up to 50 per call. Items are written independently and each reports done, already_set, not_found, ambiguous (with candidates; nothing written) or error, with a summary count and a batch_id; undo_watch with that batch_id takes back the whole call. Full history (hundreds of titles or more) file import is available at: https://goodwatch.app/settings/imports For title actions, title_id takes precedence; title_name and year are ignored when an ID is supplied. Without title_id, title_name is required and year is optional. Replayed results describe the original action, not current state; a new read returns current state.",
+      "inputSchema": {
+        "type": "object",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "action_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "description": "Stable ID for this exact action. Reuse it for retries; use a different ID for a new action."
+          },
+          "title_id": {
+            "description": "Use this ID when available; it takes precedence over title_name and year.",
+            "type": "string",
+            "pattern": "^(movie|show):[1-9]\\d{0,9}$"
+          },
+          "title_name": {
+            "description": "Required only without title_id. Ignored when an ID is supplied.",
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 120
+          },
+          "year": {
+            "description": "Optional name disambiguation, used only without title_id.",
+            "type": "integer",
+            "minimum": 1800,
+            "maximum": 2100
+          },
+          "not_interested": {
+            "description": "Required for a single title. With items, give it per item, or once here for every item.",
+            "type": "boolean"
+          },
+          "items": {
+            "description": "Up to 50 titles in one call, in place of title_id or title_name. Each item takes title_id, or title_name with an optional year, plus this tool's fields; a field given at the top level applies to every item that leaves it out.",
+            "minItems": 1,
+            "maxItems": 50,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "title_id": {
+                  "description": "Use this ID when available; it takes precedence over title_name and year.",
+                  "type": "string",
+                  "pattern": "^(movie|show):[1-9]\\d{0,9}$"
+                },
+                "title_name": {
+                  "description": "Required only without title_id. Ignored when an ID is supplied.",
+                  "type": "string",
+                  "minLength": 2,
+                  "maxLength": 120
+                },
+                "year": {
+                  "description": "Optional name disambiguation, used only without title_id.",
+                  "type": "integer",
+                  "minimum": 1800,
+                  "maximum": 2100
+                },
+                "not_interested": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "action_id"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp:read",
+              "mcp:write"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "set_show_status",
+      "title": "Set show status",
+      "description": "Apply a native show-status transition. Dropped and bulk Seen are destructive. Seen logs aired episodes with no dates. Watching from Seen starts a new pass while retaining earlier watches. Not started never erases watches. Reports previous/new status, pass and watch changes. To change many titles at once, pass items instead of one title: up to 50 per call. Items are written independently and each reports done, already_set, not_found, ambiguous (with candidates; nothing written) or error, with a summary count and a batch_id; undo_watch with that batch_id takes back the whole call. Full history (hundreds of titles or more) file import is available at: https://goodwatch.app/settings/imports For title actions, title_id takes precedence; title_name and year are ignored when an ID is supplied. Without title_id, title_name is required and year is optional. Replayed results describe the original action, not current state; a new read returns current state.",
+      "inputSchema": {
+        "type": "object",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "action_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "description": "Stable ID for this exact action. Reuse it for retries; use a different ID for a new action."
+          },
+          "title_id": {
+            "description": "Use this ID when available; it takes precedence over title_name and year.",
+            "type": "string",
+            "pattern": "^(movie|show):[1-9]\\d{0,9}$"
+          },
+          "title_name": {
+            "description": "Required only without title_id. Ignored when an ID is supplied.",
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 120
+          },
+          "year": {
+            "description": "Optional name disambiguation, used only without title_id.",
+            "type": "integer",
+            "minimum": 1800,
+            "maximum": 2100
+          },
+          "status": {
+            "description": "Required for a single title. With items, give it per item, or once here for every item.",
+            "type": "string",
+            "enum": [
+              "Not started",
+              "Watching",
+              "On hold",
+              "Dropped",
+              "Seen"
+            ]
+          },
+          "items": {
+            "description": "Up to 50 titles in one call, in place of title_id or title_name. Each item takes title_id, or title_name with an optional year, plus this tool's fields; a field given at the top level applies to every item that leaves it out.",
+            "minItems": 1,
+            "maxItems": 50,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "title_id": {
+                  "description": "Use this ID when available; it takes precedence over title_name and year.",
+                  "type": "string",
+                  "pattern": "^(movie|show):[1-9]\\d{0,9}$"
+                },
+                "title_name": {
+                  "description": "Required only without title_id. Ignored when an ID is supplied.",
+                  "type": "string",
+                  "minLength": 2,
+                  "maxLength": 120
+                },
+                "year": {
+                  "description": "Optional name disambiguation, used only without title_id.",
+                  "type": "integer",
+                  "minimum": 1800,
+                  "maximum": 2100
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "Not started",
+                    "Watching",
+                    "On hold",
+                    "Dropped",
+                    "Seen"
+                  ]
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "action_id"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp:read",
+              "mcp:write"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "undo_watch",
+      "title": "Remove a watch",
+      "description": "Remove one watch record. Choose a watch_id, or omit it for the most recently logged individual watch of this title. Destructive: results identify the exact removed watch, date, pass and resulting marks; retrying the same action never removes a different watch. Or pass only batch_id (from a batch result) to take back every change that batch call made, title by title, through the same undo the site uses; a title changed again since keeps its newer value, and each title reports undone, partly_undone, already_undone, changed_since, not_undoable or error. A batch is undone once: undoing it again returns the first undo's result. For title actions, title_id takes precedence; title_name and year are ignored when an ID is supplied. Without title_id, title_name is required and year is optional. Replayed results describe the original action, not current state; a new read returns current state.",
+      "inputSchema": {
+        "type": "object",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "action_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "description": "Stable ID for this exact action. Reuse it for retries; use a different ID for a new action."
+          },
+          "title_id": {
+            "description": "Use this ID when available; it takes precedence over title_name and year.",
+            "type": "string",
+            "pattern": "^(movie|show):[1-9]\\d{0,9}$"
+          },
+          "title_name": {
+            "description": "Required only without title_id. Ignored when an ID is supplied.",
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 120
+          },
+          "year": {
+            "description": "Optional name disambiguation, used only without title_id.",
+            "type": "integer",
+            "minimum": 1800,
+            "maximum": 2100
+          },
+          "watch_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "batch_id": {
+            "description": "The batch_id of a batch result. Alone (no title or watch_id), it takes back that whole call.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          }
+        },
+        "required": [
+          "action_id"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp:read",
+              "mcp:write"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "set_my_services",
+      "title": "Set my country and services",
+      "description": "Replace your saved country and streaming services. Country changes and removed services are destructive. Services accept exact names or numeric TMDB IDs; unknown/ambiguous names return choices without writing. Reports the full previous/new country and service IDs. For title actions, title_id takes precedence; title_name and year are ignored when an ID is supplied. Without title_id, title_name is required and year is optional. Replayed results describe the original action, not current state; a new read returns current state.",
+      "inputSchema": {
+        "type": "object",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "action_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "description": "Stable ID for this exact action. Reuse it for retries; use a different ID for a new action."
+          },
+          "country": {
+            "type": "string",
+            "pattern": "^[A-Za-z]{2}$"
+          },
+          "services": {
+            "maxItems": 500,
+            "type": "array",
+            "items": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991
+                },
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 100
+                }
+              ]
+            }
+          }
+        },
+        "required": [
+          "action_id",
+          "country",
+          "services"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp:read",
+              "mcp:write"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "set_settings",
+      "title": "Change Watching from or Show titles in",
+      "description": "Change your saved country (Watching from) and/or title language (Show titles in). Omitted fields and streaming services are preserved. Country and language are independent. Language browser follows your browser on the site. Reports previous and new preferences; concurrent changes return conflict. For title actions, title_id takes precedence; title_name and year are ignored when an ID is supplied. Without title_id, title_name is required and year is optional. Replayed results describe the original action, not current state; a new read returns current state.",
+      "inputSchema": {
+        "type": "object",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "action_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "description": "Stable ID for this exact action. Reuse it for retries; use a different ID for a new action."
+          },
+          "country": {
+            "type": "string",
+            "pattern": "^[A-Za-z]{2}$"
+          },
+          "language": {
+            "type": "string",
+            "enum": [
+              "browser",
+              "en",
+              "de",
+              "fr",
+              "es",
+              "it",
+              "pt-BR",
+              "pt-PT",
+              "ja",
+              "ko",
+              "zh-Hans",
+              "zh-Hant",
+              "pl",
+              "ru",
+              "ar"
+            ]
+          }
+        },
+        "required": [
+          "action_id"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp:read",
+              "mcp:write"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "create_list",
+      "title": "Create a share list",
+      "description": "Create a share list of exactly five distinct titles in rank order. Requires an existing site handle; if missing, returns handle_required and the Lists page. Uses the site's default card and Ember theme. Public by default; unlisted is accessible to anyone with the share link. Returns the site's real share link. Does not change ratings or Wishlist. For title actions, title_id takes precedence; title_name and year are ignored when an ID is supplied. Without title_id, title_name is required and year is optional. Replayed results describe the original action, not current state; a new read returns current state.",
+      "inputSchema": {
+        "type": "object",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "action_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "description": "Stable ID for this exact action. Reuse it for retries; use a different ID for a new action."
+          },
+          "list_name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "titles": {
+            "minItems": 5,
+            "maxItems": 5,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "title_id": {
+                  "description": "Use this ID when available; it takes precedence over title_name and year.",
+                  "type": "string",
+                  "pattern": "^(movie|show):[1-9]\\d{0,9}$"
+                },
+                "title_name": {
+                  "description": "Required only without title_id. Ignored when an ID is supplied.",
+                  "type": "string",
+                  "minLength": 2,
+                  "maxLength": 120
+                },
+                "year": {
+                  "description": "Optional name disambiguation, used only without title_id.",
+                  "type": "integer",
+                  "minimum": 1800,
+                  "maximum": 2100
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "visibility": {
+            "default": "public",
+            "type": "string",
+            "enum": [
+              "public",
+              "unlisted"
+            ]
+          }
+        },
+        "required": [
+          "action_id",
+          "list_name",
+          "titles"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp:read",
+              "mcp:write"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "update_list_titles",
+      "title": "Add and remove share-list titles",
+      "description": "Atomically add and remove titles from one of your share lists. A share list always contains exactly five distinct titles: provide additions and removals together, with equal counts. Remaining titles keep their rank; added titles go at the end in supplied order. Returns previous/new rankings and the site's share link. A concurrent edit returns conflict; read again before choosing a new action. No ratings or Wishlist changes. For title actions, title_id takes precedence; title_name and year are ignored when an ID is supplied. Without title_id, title_name is required and year is optional. Replayed results describe the original action, not current state; a new read returns current state.",
+      "inputSchema": {
+        "type": "object",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "action_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "description": "Stable ID for this exact action. Reuse it for retries; use a different ID for a new action."
+          },
+          "list_id": {
+            "type": "string",
+            "pattern": "^[0-9A-Za-z]{10}$"
+          },
+          "add_titles": {
+            "minItems": 1,
+            "maxItems": 5,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "title_id": {
+                  "description": "Use this ID when available; it takes precedence over title_name and year.",
+                  "type": "string",
+                  "pattern": "^(movie|show):[1-9]\\d{0,9}$"
+                },
+                "title_name": {
+                  "description": "Required only without title_id. Ignored when an ID is supplied.",
+                  "type": "string",
+                  "minLength": 2,
+                  "maxLength": 120
+                },
+                "year": {
+                  "description": "Optional name disambiguation, used only without title_id.",
+                  "type": "integer",
+                  "minimum": 1800,
+                  "maximum": 2100
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "remove_title_ids": {
+            "minItems": 1,
+            "maxItems": 5,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^(movie|show):[1-9]\\d{0,9}$"
+            }
+          }
+        },
+        "required": [
+          "action_id",
+          "list_id",
+          "add_titles",
+          "remove_title_ids"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "_meta": {
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "mcp:read",
+              "mcp:write"
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

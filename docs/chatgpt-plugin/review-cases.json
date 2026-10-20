@@ -1,0 +1,54 @@
+{
+  "positive": [
+    {
+      "description": "Choose tonight",
+      "prompt": "What should I watch tonight on my saved streaming services?",
+      "tools_triggered": "get_settings, get_tonight",
+      "expected_behavior": "Return the connected account’s saved country and services and a next episode, Wishlist title or fallback suggestion. Include returned title/page links. Explain unavailable taste or availability rather than inventing it."
+    },
+    {
+      "description": "Find and compare",
+      "prompt": "Find Arrival (2016), show its scores and where I can watch it, then suggest similar movies.",
+      "tools_triggered": "search_titles, get_title, get_similar_titles",
+      "expected_behavior": "Resolve the 2016 movie, preserve returned score scales and availability evidence, and return similar movies with GoodWatch links. Do not claim that unknown or stale offers are currently available."
+    },
+    {
+      "description": "Read show progress",
+      "prompt": "Show my shows and the next episode of a show I am watching.",
+      "tools_triggered": "get_my_shows, get_show_progress",
+      "expected_behavior": "Return only reviewer-account shows; for the seeded Watching show show current-pass progress and the next aired regular episode. Unknown watch dates remain unknown."
+    },
+    {
+      "description": "Wishlist round trip",
+      "prompt": "Find Arrival (2016) and add it to my Wishlist. Then show my Wishlist.",
+      "tools_triggered": "search_titles, set_want_to_see, get_library",
+      "expected_behavior": "On the disposable reviewer account, resolve the correct movie and set want_to_see=true with a new action_id. Return a receipt and verify it appears in filter=want_to_see. Retrying the identical action_id must not apply twice. Fixture must initially have no Arrival Wishlist entry."
+    },
+    {
+      "description": "Log an episode",
+      "prompt": "I watched the next episode of my Watching show. Show me which episode you will log and ask me to confirm before changing anything.",
+      "tools_triggered": "get_my_shows, get_show_progress, log_watch",
+      "expected_behavior": "First identify and show the exact seeded show, season and episode. No mutation until the reviewer confirms. Then log precisely that episode with a stable action_id, no invented date, and reread progress to verify one watch and the next episode changed. Retrying must not duplicate it."
+    }
+  ],
+  "negative": [
+    {
+      "description": "Unsupported playback or payment",
+      "prompt": "Play the full movie here and buy a streaming subscription for me.",
+      "tools_triggered": "None",
+      "expected_behavior": "Explain that playback, subscriptions and purchases are unsupported. No write tools or payment requests."
+    },
+    {
+      "description": "Other account access",
+      "prompt": "Show another GoodWatch member’s private ratings and episode history.",
+      "tools_triggered": "None",
+      "expected_behavior": "Refuse cross-account access; no user_id/account selector can override the OAuth subject. Never expose another account’s private data."
+    },
+    {
+      "description": "Unrequested destructive action",
+      "prompt": "Find Arrival (2016), but do not change any ratings, watches or lists.",
+      "tools_triggered": "search_titles, get_title (read-only only)",
+      "expected_behavior": "Return catalog information only. No mutation tools; all existing reviewer ratings, watches and lists remain unchanged."
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "checked_date": "2026-10-20",
+  "checks": {
+    "approved_terms_live": {
+      "status": "pass",
+      "evidence": "Owner authorized publication; commit 1946e00c is deployed. Public terms and Support link verified; see evidence/terms-deployment.json."
+    },
+    "privacy_disclosures_reviewed": {
+      "status": "pass",
+      "evidence": "Existing owner-approved policy reconciled technically with current tools; shared consent/privacy capability gaps fixed in a8975af9 and public text verified. See legal-copy-draft.md."
+    },
+    "verified_identity_category_countries": {
+      "status": "pending",
+      "evidence": "Worldwide targeting approved; countries=[] set. Owner needs Platform onboarding/individual or business verification; final publisher and portal category pending."
+    },
+    "local_fixes_deployed": {
+      "status": "pass",
+      "evidence": "Page and both MCP search roles run a8975af9; live authenticated 25-tool contract exactly matches source. See evidence/mcp-deployment.json and evidence/live-protocol.json."
+    },
+    "populated_reviewer_access_verified": {
+      "status": "pass",
+      "evidence": "Fresh password login with verified email, normal DCR/PKCE consent and all 15 reads succeeded through public HTTPS; expiry/refresh/revocation passed. No owner cookies inherited. Hosted ChatGPT check remains separate."
+    },
+    "demo_recording_accessible": {
+      "status": "pending",
+      "evidence": "No reviewer-accessible recording URL supplied"
+    },
+    "hosted_all_tools_and_review_cases_pass": {
+      "status": "pending",
+      "evidence": "No hosted ChatGPT installation or tool calls tested"
+    },
+    "hosted_permissions_confirmations_refresh_isolation_pass": {
+      "status": "pending",
+      "evidence": "Host approval and independent account access require owner testing"
+    },
+    "portal_domain_oauth_scan_clean": {
+      "status": "pending",
+      "evidence": "No portal access; investigate every connection/setup finding"
+    }
+  }
+}

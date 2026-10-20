@@ -1,0 +1,11 @@
+npm run build: PASS (exit 0)
+npm warn Unknown project config "onnxruntime-node-install". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+[warn] Fetcher persistence behavior is changing in React Router v7
+[warn] Route discovery/manifest behavior is changing in React Router v7
+[warn] Relative routing behavior for splat routes is changing in React Router v7
+[warn] Data fetching is changing to a single fetch in React Router v7
+[warn] The format of errors thrown on aborted requests is changing in React Router v7
+✓ built in 14.35s
+✓ built in 12.13s
+Precompressed 994 files: original 23359065 bytes, Brotli 5674859 bytes, gzip 6676493 bytes, 6526 ms
+Other warnings: dependency source-map original-location warnings and existing mixed dynamic/static imports; build completed. Existing build hook uploaded source maps to Sentry. No deployment performed.

@@ -1,0 +1,37 @@
+{
+  "source": "Fresh direct HTTP OAuth and MCP check, not a ChatGPT hosted-client test",
+  "checks": {
+    "fresh_verified_password_login": "pass",
+    "dcr_pkce_s256_state_and_write_consent": "pass",
+    "live_25_tools_scopes_and_annotations": "pass",
+    "read_get_settings": "pass",
+    "read_get_library": "pass",
+    "read_get_taste": "pass",
+    "read_get_my_shows": "pass",
+    "read_get_show_progress": "pass",
+    "read_get_my_lists": "pass",
+    "read_get_tonight": "pass",
+    "read_search_titles": "pass",
+    "read_get_title": "pass",
+    "read_get_similar_titles": "pass",
+    "read_get_discover_filters": "pass",
+    "read_discover_titles": "pass",
+    "read_search_people": "pass",
+    "read_get_person": "pass",
+    "read_get_list": "pass",
+    "live_poster_resource_domain_csp": {
+      "status": "pass",
+      "uri": "ui://goodwatch/posters-v3.html"
+    },
+    "expired_access_rejected_401": "pass",
+    "refresh_after_actual_expiry_and_rotation": "pass",
+    "revoked_grant_rejected_401": "pass",
+    "readonly_15_tools_forced_write_rejected_403": "pass",
+    "preparation_grants_revoked_session_signed_out": "pass"
+  },
+  "checked_at": "2026-10-20T08:52:10.519922+00:00",
+  "deployment_commit": "a8975af98d4596b69dee6934e101aed4cede681b",
+  "live_contract_equals_current_source": true,
+  "production_member_content_writes": 0,
+  "limits": "Protocol harness, not ChatGPT installation/selection/approval/rendering; peer-account isolation remains covered locally, not by this production run."
+}
