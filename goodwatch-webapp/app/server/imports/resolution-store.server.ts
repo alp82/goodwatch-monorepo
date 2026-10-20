@@ -28,6 +28,8 @@ export const resolutionStore: ResolutionStore = {
 		const payload = JSON.stringify(value)
 		if (Buffer.byteLength(payload) > 2 * 1024 * 1024)
 			throw Error("Resolution checkpoint is too large")
+		// Crate OCC writes allow only the full primary key and version predicates.
+		// read() checks kind; its version fences any subsequent change to that row.
 		const result =
 			version === null
 				? await run(
@@ -35,7 +37,7 @@ export const resolutionStore: ResolutionStore = {
 						[id, index, "resolution", key, payload],
 					)
 				: await run(
-						"UPDATE doc.user_import_item SET payload = ? WHERE import_id = ? AND row_index = ? AND kind = 'resolution' AND _seq_no = ? AND _primary_term = ?",
+						"UPDATE doc.user_import_item SET payload = ? WHERE import_id = ? AND row_index = ? AND _seq_no = ? AND _primary_term = ?",
 						[payload, id, index, ...String(version).split(":").map(Number)],
 					)
 		return result.rowcount === 1

@@ -13,7 +13,7 @@ const supportedImportSql = new Set([
 	"SELECT payload, _seq_no, _primary_term FROM doc.user_import_item WHERE import_id = ? AND row_index = ? AND kind = 'resolution'",
 	"SELECT source_key, payload FROM doc.user_import_item WHERE import_id LIKE ? AND source_key > ? AND kind = 'resolution' ORDER BY source_key LIMIT 200",
 	"SELECT row_index, payload FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND row_index > ? AND kind NOT IN ('state','resolution') ORDER BY row_index LIMIT 200",
-	"UPDATE doc.user_import_item SET payload = ? WHERE import_id = ? AND row_index = ? AND kind = 'resolution' AND _seq_no = ? AND _primary_term = ?",
+	"UPDATE doc.user_import_item SET payload = ? WHERE import_id = ? AND row_index = ? AND _seq_no = ? AND _primary_term = ?",
 	"INSERT INTO doc.user_import_item (import_id,row_index,user_id,kind,source_key,payload,outcome) VALUES (?, ?, ?, 'resolution', ?, ?, 'unsupported') ON CONFLICT (import_id,row_index) DO NOTHING",
 	"INSERT INTO doc.user_import_item (import_id,row_index,user_id,kind,source_key,payload,outcome) VALUES (?) ON CONFLICT (import_id,row_index) DO NOTHING",
 	"DELETE FROM doc.user_import_item WHERE import_id = ?",
@@ -93,6 +93,16 @@ const supportedImportSql = new Set([
 	"UPDATE user_score SET score = ?, review = ?, updated_at = ? WHERE user_id = ? AND tmdb_id = ? AND media_type = ? AND _seq_no = ? AND _primary_term = ?",
 ])
 function assertSupportedImportSql(sql: string) {
+	// Crate rejects non-key predicates on an OCC write, even with the full PK.
+	// The real database regression is resolution-store.integration.ts.
+	if (
+		sql.startsWith("UPDATE doc.user_import_item SET payload") &&
+		sql.includes("_seq_no") &&
+		sql.includes("kind =")
+	)
+		throw new Error(
+			"VersioningValidationException: non-key predicate on OCC write",
+		)
 	const shape = sql
 		.replace(/\?(?:,\?)+/g, "?")
 		.replace(/\(\?\)(?:,\(\?\))+/g, "(?)")
@@ -477,7 +487,10 @@ export class ImportDb {
 			})
 			return { rowcount: 1 }
 		}
-		if (s.includes("kind = 'resolution' AND _seq_no")) {
+		if (
+			s.startsWith("UPDATE doc.user_import_item SET payload") &&
+			s.includes("AND _seq_no = ? AND _primary_term = ?")
+		) {
 			const row = this.items.find(
 				(x) => x.import_id === params[1] && x.row_index === params[2],
 			)
