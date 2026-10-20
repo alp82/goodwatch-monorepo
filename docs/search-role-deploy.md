@@ -136,6 +136,11 @@ vector1 has 16 cores and 30 GB, with about 14 GB available on October 9, 2026, a
 
 A push to `main` deploys the page instances and leaves the roles alone. Deploy the roles when the smoke check warns that they're behind, or when a change is meant for them.
 
+This includes MCP changes: `/mcp` runs on the search roles. MCP analytics also needs
+`POSTHOG_API_KEY`, `POSTHOG_HOST`, and `POSTHOG_DISABLED` in the roles' `.env`, copied
+privately from the page instance. Setting them in Coolify updates only the page
+instances; redeploy the search roles after updating their environment.
+
 1. Wait until the page instances run the commit: `./bench.sh smoke --commit <sha>` passes. Only then does the registry have the image.
 2. On vector1, in the checkout's `goodwatch-search/`:
 
