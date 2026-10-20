@@ -433,9 +433,9 @@ test("a Seen show with new episodes stays Seen, says how many are new, and offer
 			running.seen.mode,
 			running.seen.newEpisodes,
 		],
-		["Caught up · 1 new", 1, 203, "markNew", 1],
+		["1 new episode", 1, 203, "markNew", 1],
 	)
-	assert.equal(view(seen, later).derived.label, "Seen · 1 new episode")
+	assert.equal(view(seen, later).derived.label, "1 new episode")
 	const marked = after(
 		[[{ type: "pressSeen", today: "2026-10-09" }, "press-000002"]],
 		seen,

@@ -21,8 +21,8 @@ prototype of those rules produced 27 surprises. The owner asked for a state mach
   exactly one, and Seen is no longer computed from the watches.
 - **The catalog never changes a state.** An episode airing, a season starting, a show ending, TMDB re-adding an
   episode: none is a transition. No job rewrites members' rows when the catalog changes.
-- **What the calendar can change is derived when it is read:** the label (a Seen show that is still running reads
-  "Caught up"), progress, the Next episode, and how many episodes are new. A Seen show with new episodes stays Seen
+- **What the calendar can change is derived when it is read:** the display state (a running Seen show with nothing aired unwatched is
+  "Caught up"; a Seen show with aired episodes unwatched is "New episodes"), progress, the Next episode, and how many episodes are new. A Seen show with new episodes stays Seen
   and says how many are new until the member acts.
 - **A Seen show with new episodes can be put on hold or dropped** (rows 28 and 29, added 2026-10-08 after the
   owner used the show page). A member who has seen the earlier seasons and will not continue had no way to say so
@@ -89,3 +89,17 @@ Rejected:
   received new episodes and is still Seen, depends on when the member last acted.
 - **An import replays as if the member acted now.** An old watch in a file would resume a show the member has put
   on hold or dropped here.
+
+## Amendment: returning shows and announcements (2026-10-20)
+
+The owner confirmed that Seen with aired, unwatched regular episodes has the explicit derived display state
+`new_episodes`, labelled with the count in amber. A running Seen show with none is `caught_up`; an ended one is
+`seen`. These are read-time projections; airing episodes never changes the stored state. Continue uses one rule for every eligible show: the air date of its Next episode, newest first, then last activity.
+A show's most recently aired episode cannot promote an older unwatched Next episode. Both grouping and the signal use the UTC episode calendar rather than
+the potentially stale show-level aired count. Tonight's pick still selects the active Watching show.
+
+Episode announcements are independent of this state machine. Immutable per-member release snapshots and separate
+acknowledgments persist in `user_setting`. A visit never acknowledges episodes. Explicit dismissal or watching
+any episode in the announced batch acknowledges that batch; a later release can announce again after catch-up.
+Dismissal leaves the show in Continue. The existing My shows visit still clears streaming-service arrival news.
+The explanatory ordering paragraph is removed from My shows.

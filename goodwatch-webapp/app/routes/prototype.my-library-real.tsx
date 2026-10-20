@@ -113,6 +113,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			shows,
 			arrival: {
 				since: fresh.since,
+				announcements: fresh.shows,
 				titles: fresh.shows.map((show) => show.title),
 			},
 			landed: landed.shows,
@@ -162,7 +163,9 @@ function installFetch(setup: string) {
 		}
 		const what =
 			url.origin === location.origin ? route[url.pathname] : undefined
-		return what ? real(to(what, url.search), init) : real(input, init)
+		if (!what) return real(input, init)
+		const target = new URL(to(what, url.search), location.origin)
+		return real(input instanceof Request ? new Request(target, input) : target, init)
 	}
 	return () => {
 		window.fetch = real

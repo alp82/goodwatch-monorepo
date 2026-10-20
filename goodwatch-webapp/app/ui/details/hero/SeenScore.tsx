@@ -188,11 +188,7 @@ export default function SeenScore({
 			<StatusFace
 				tone={entry?.state ?? "none"}
 				label={
-					entry
-						? entry.state === "seen" && show?.details.in_production
-							? "Caught up"
-							: STATUS_LOOK[entry.state].word
-						: "Not started"
+					entry ? STATUS_LOOK[entry.state].word : "Not started"
 				}
 				detail={
 					entry

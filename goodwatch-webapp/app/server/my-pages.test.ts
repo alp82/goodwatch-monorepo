@@ -236,6 +236,10 @@ function seedShows() {
 		...season(101, 6, 2),
 		...season(102, 10),
 		...season(103, 7),
+		...season(104, 6),
+		...season(105, 5),
+		...season(106, 8),
+		...season(107, 5),
 		...season(108, 3),
 	])
 	db.seed("user_watch_state", [
@@ -272,8 +276,8 @@ test("My shows answers in the page's groups: Continue, Pick up, Start, waiting, 
 	seedShows()
 	const page = await getMyShows(viewer, { now: NOW })
 	const names = (rows: { title: string }[]) => rows.map((row) => row.title)
-	// Watched yesterday, then two days ago; the Seen show with a new episode follows the Watching shows.
-	assert.deepEqual(names(page.continue), ["Slow Horses", "Severance", "Only Murders in the Building"])
+	// The next episode aired most recently on the returning show, followed by the two Watching shows.
+	assert.deepEqual(names(page.continue), ["Only Murders in the Building", "Slow Horses", "Severance"])
 	// Not watched for 90 days.
 	assert.deepEqual(names(page.pickUp), ["Shōgun"])
 	assert.deepEqual(names(page.waiting), ["The White Lotus"])
@@ -287,7 +291,7 @@ test("My shows answers in the page's groups: Continue, Pick up, Start, waiting, 
 test("a Continue row carries its Next episode from the cached episode list, and its progress from the member data", async () => {
 	seedShows()
 	const page = await getMyShows(viewer, { now: NOW })
-	const [slow, severance, murders] = page.continue
+	const [murders, slow, severance] = page.continue
 	assert.deepEqual(
 		[slow.kind, slow.watched, slow.aired, slow.left],
 		["next", 3, 6, 3],
@@ -367,7 +371,7 @@ test("a Pick up row carries its Next episode as a Continue row does", async () =
 function seedMoved() {
 	seedShows()
 	db.seed("show", [show(109, "Star Trek: Picard", 30), show(110, "Lost", 100)])
-	db.seed("episode", [...season(109, 30)])
+	db.seed("episode", [...season(109, 30), ...season(110, 100)])
 	db.seed("user_watch_state", [
 		stateRow("show", 109, "watching", NOW - 2 * 3_600_000),
 		stateRow("show", 110, "watching", daysAgo(2)),
@@ -382,14 +386,14 @@ function seedMoved() {
 	])
 }
 
-test("a show the member moved to Watching this morning leads Continue, with watches that are old and have no date", async () => {
+test("a Watching show with a newer next episode precedes a Seen show with new episodes", async () => {
 	seedMoved()
 	const page = await getMyShows(viewer, { now: NOW })
 	assert.deepEqual(
 		page.continue.map((row) => row.title),
-		["Star Trek: Picard", "Slow Horses", "Severance", "Only Murders in the Building"],
+		["Star Trek: Picard", "Only Murders in the Building", "Slow Horses", "Severance"],
 	)
-	const [picard] = page.continue
+	const picard = page.continue.find(row => row.id === 109)!
 	assert.deepEqual(
 		[picard.kind, picard.watched, picard.left, picard.next?.number],
 		["next", 18, 12, 19],
@@ -423,7 +427,7 @@ const firstToContinue = (shows: Awaited<ReturnType<typeof getMyShows>>) => {
 	return first && { title: first.title, backdrop_path: first.backdrop_path, episode: first.episode && { code: first.episode.code, name: first.episode.name } }
 }
 
-test("home's My shows leads with the show the member moved to Watching last", async () => {
+test("home's My shows leads with the newest next episode", async () => {
 	seedMoved()
 	const shows = await getMyShows(viewer, { now: NOW, episodeLists: 1, upcoming: false })
 	assert.deepEqual(firstToContinue(shows), {
@@ -431,7 +435,7 @@ test("home's My shows leads with the show the member moved to Watching last", as
 		backdrop_path: "/b109.jpg",
 		episode: { code: "S1 E19", name: "Episode 1.19" },
 	})
-	assert.equal(placedWords(shows.continue[0], NOW), "Watching since today")
+	assert.equal(placedWords(shows.continue.find(row => row.id === 109)!, NOW), "Watching since today")
 	// Three more in Continue, two to pick up.
 	assert.equal(shows.continue.length + shows.pickUp.length - 1, 5)
 })
@@ -451,13 +455,13 @@ test("without a show in Continue, home's My shows leads with the first show to p
 	assert.equal(shows.continue.length + shows.pickUp.length - 1, 0)
 })
 
-test("home's My shows reads one episode list", async () => {
+test("home resolves all Continue candidates before ordering, even when it displays one row", async () => {
 	seedShows()
 	const page = await getMyShows(viewer, { now: NOW, episodeLists: 1, upcoming: false })
-	assert.deepEqual(selects("episode").map((s) => s.params[0]), [101])
-	assert.equal(page.continue[0].next?.number, 4)
-	assert.equal(page.continue[1].next, null)
-	assert.equal(selects("user_watch_log").length, 1)
+	assert.deepEqual(selects("episode").filter(s => s.sql.includes("WHERE show_id = ?")).map((s) => s.params[0]), [101, 108, 103])
+	assert.equal(page.continue[0].next?.number, 7)
+	assert.equal(page.continue[1].next?.number, 4)
+	assert.equal(selects("user_watch_log").length, 2)
 })
 
 /**
@@ -508,7 +512,6 @@ test("a waiting show says which episode airs next and when, and the group comes 
 			["Fallout", { id: 204104, season: 1, number: 4, name: "Episode 1.4", airDate: "2026-10-28" }],
 			// Without a date, in the order they had: the show watched last first.
 			["Silo", null],
-			["Shrinking", null],
 		],
 	)
 })
@@ -516,22 +519,22 @@ test("a waiting show says which episode airs next and when, and the group comes 
 test("the next air dates of all waiting shows are one read, and no waiting show's episode list is read", async () => {
 	seedWaiting()
 	await getMyShows(viewer, { now: NOW })
-	const episodes = selects("episode")
+	const episodes = selects("episode").filter(s => s.sql.includes("air_date > ?"))
 	assert.equal(episodes.length, 1)
-	assert.match(episodes[0].sql, /WHERE show_id IN \(\?, \?, \?, \?, \?\) AND season_number > 0 AND removed_at IS NULL AND air_date > \?/)
-	assert.deepEqual([...episodes[0].params].sort(), [201, 202, 203, 204, 205, Date.parse("2026-10-08T00:00:00Z")].sort())
+	assert.match(episodes[0].sql, /WHERE show_id IN \(\?, \?, \?, \?\) AND season_number > 0 AND removed_at IS NULL AND air_date > \?/)
+	assert.deepEqual([...episodes[0].params].sort(), [201, 202, 203, 204, Date.parse("2026-10-08T00:00:00Z")].sort())
 })
 
 test("when the read of the next air dates fails, My shows still answers, without the days", async () => {
 	seedWaiting()
 	db.before = (statement) => {
-		if (statement.sql.includes("FROM episode WHERE show_id IN")) throw new Error("Crate is busy")
+		if (statement.sql.includes("FROM episode WHERE show_id IN") && statement.sql.includes("air_date > ?")) throw new Error("Crate is busy")
 	}
 	const errors = console.error
 	console.error = () => {}
 	try {
 		const page = await getMyShows(viewer, { now: NOW })
-		assert.equal(page.waiting.length, 5)
+		assert.equal(page.waiting.length, 4)
 		assert.ok(page.waiting.every((row) => row.upcoming === null))
 	} finally {
 		console.error = errors
@@ -541,8 +544,8 @@ test("when the read of the next air dates fails, My shows still answers, without
 test("home's doors do not ask when waiting shows return", async () => {
 	seedWaiting()
 	const page = await getMyShows(viewer, { now: NOW, episodeLists: 1, upcoming: false })
-	assert.equal(selects("episode").length, 0)
-	assert.deepEqual(page.waiting.map((row) => row.upcoming), [null, null, null, null, null])
+	assert.equal(selects("episode").filter(s => s.sql.includes("air_date > ?")).length, 0)
+	assert.deepEqual(page.waiting.map((row) => row.upcoming), [null, null, null, null])
 })
 
 test("a member who tracks nothing has an empty page, and the catalog is not read", async () => {
@@ -622,10 +625,10 @@ test("the shows whose Next episode aired after the member last opened My shows a
 	seedNew()
 	visited(VISIT)
 	assert.deepEqual(await getNewShows(user, { now: NOW }), {
-		since: { day: "2026-10-04", visited: true },
+		since: { day: "2026-10-01", visited: true },
 		shows: [
-			{ id: 402, title: "Wednesday", season: 2, number: 1, airDate: "2026-10-07", episodes: 8 },
-			{ id: 401, title: "Slow Horses", season: 1, number: 4, airDate: "2026-10-06", episodes: 1 },
+			{ id: 402, title: "Wednesday", season: 2, number: 1, airDate: "2026-10-07", episodes: 8, token: "show_release:402:1:200001" },
+			{ id: 401, title: "Slow Horses", season: 1, number: 4, airDate: "2026-10-06", episodes: 1, token: "show_release:401:1:100004" },
 		],
 	})
 })
@@ -637,31 +640,25 @@ test("what is new is found with one read of the episodes aired since, and a list
 	const [since, ...lists] = selects("episode")
 	// The Watching and Seen shows; the On hold show is not asked for.
 	assert.match(since.sql, /^SELECT show_id FROM episode WHERE show_id IN \(\?, \?, \?, \?, \?\) AND season_number > 0 AND removed_at IS NULL AND air_date > \? AND air_date <= \?/)
-	assert.deepEqual([...since.params].sort(), [401, 402, 403, 404, 406, day("2026-10-04"), day("2026-10-08")].sort())
+	assert.deepEqual([...since.params].sort(), [401, 402, 403, 404, 406, day("2026-10-01"), day("2026-10-08")].sort())
 	assert.deepEqual(lists.map((s) => s.params[0]).sort(), [401, 402, 403, 404])
 	// The catalog is asked for the names of the new shows only, and the log for nothing but the member data.
 	assert.deepEqual(selects("show").map((s) => [...s.params].sort()), [[401, 402]])
-	assert.equal(selects("user_watch_log").length, 1)
+	assert.equal(selects("user_watch_log").length, 2)
 })
 
-test("opening My shows clears what is new, and the visit is the member's own row", async () => {
-	seedNew()
-	visited(VISIT)
-	await recordMyShowsVisit(user, NOW)
-	assert.deepEqual(await getNewShows(user, { now: NOW }), {
-		since: { day: "2026-10-08", visited: true },
-		shows: [],
-	})
-	assert.deepEqual(
-		db.table("user_setting").map((row) => [row.user_id, row.key, row.value]),
-		[[user, "my_shows_visited_at", "2026-10-08T20:00:00.000Z"]],
-	)
+test("opening My shows preserves episode announcements while recording the visit for streaming arrivals", async () => {
+ seedNew()
+ const before = await getNewShows(user, { now: NOW })
+ await recordMyShowsVisit(user, NOW)
+ assert.deepEqual(await getNewShows(user, { now: NOW }), before)
+ assert.ok(db.table("user_setting").some(row => row.key === "my_shows_visited_at"))
 })
 
 test("a member who never opened My shows is shown what aired in the last seven days", async () => {
 	seedNew()
 	const fresh = await getNewShows(user, { now: NOW })
-	assert.deepEqual(fresh.since, { day: "2026-10-01", visited: false })
+	assert.deepEqual(fresh.since, { day: "2026-10-01", visited: true })
 	assert.deepEqual(fresh.shows.map((s) => s.title), ["Wednesday", "Slow Horses"])
 })
 
@@ -1064,4 +1061,86 @@ test("the edges aren't asked for without a taste group picked", () => {
 	plan680({ taste: ["movie-11"] }, groups)
 	// Only the titles one pick short are placed.
 	assert.deepEqual(named(asked).sort(), ["M3", "M4", "S9"])
+})
+
+test("a returning Seen show uses the episode calendar even when the catalog count is stale", async () => {
+ seedNew()
+ db.table("show").find(row => row.tmdb_id === 402)!.aired_episode_count = 3
+ const page = await getMyShows(viewer, { now: NOW })
+ const returning = page.continue.find(row => row.id === 402)
+ assert.ok(returning, "returning show must be in Continue, not Waiting")
+ assert.equal(returning.left, 8)
+ assert.equal(returning.next?.season, 2)
+ assert.equal(page.continue[0].id, 402)
+ assert.ok(!page.waiting.some(row => row.id === 402))
+})
+
+test("pending announcements survive page visits and the initial seven-day window", async () => {
+ seedNew()
+ const first = await getNewShows(user, { now: NOW })
+ await recordMyShowsVisit(user, NOW + 10 * DAY)
+ const later = await getNewShows(user, { now: NOW + 10 * DAY })
+ assert.deepEqual(later.shows, first.shows)
+})
+
+test("dismissal covers one release batch, keeps Continue, and a later release can announce again", async () => {
+ seedNew()
+ const { acknowledgeRelease } = await import("./show-announcements.server.ts")
+ const first = (await getNewShows(user, { now: NOW })).shows.find(show => show.id === 402)!
+ assert.equal(await acknowledgeRelease("another-member", first.token), false)
+ assert.equal(await acknowledgeRelease(user, "invalid"), false)
+ assert.equal(await acknowledgeRelease(user, first.token), true)
+ assert.ok(!(await getNewShows(user, { now: NOW })).shows.some(show => show.id === 402))
+ assert.ok((await getMyShows(viewer, { now: NOW })).continue.some(show => show.id === 402))
+ const { resetUserDataCache } = await import("./userData.server.ts")
+ db.seed("user_watch_log", Array.from({length: 8}, (_, i) => watch(402, 2, i + 1, NOW)))
+ await resetUserDataCache({ user_id: user })
+ db.seed("episode", [episode(402, 3, 1, NOW + 2 * DAY)])
+ setRedisClusterForTest(new Redis())
+ const later = (await getNewShows(user, { now: NOW + 3 * DAY })).shows.find(show => show.id === 402)!
+ assert.ok(later)
+ assert.notEqual(later.token, first.token)
+ // A stale tab dismissing the old batch does not acknowledge the later one.
+ await acknowledgeRelease(user, first.token)
+ assert.ok((await getNewShows(user, { now: NOW + 3 * DAY })).shows.some(show => show.token === later.token))
+})
+
+test("watching any first episode of the announced batch acknowledges its entire season", async () => {
+ seedNew()
+ await getNewShows(user, { now: NOW })
+ db.seed("user_watch_log", [watch(402, 2, 3, NOW)])
+ const fresh = await getNewShows(user, { now: NOW })
+ assert.ok(!fresh.shows.some(show => show.id === 402))
+ assert.ok((await getMyShows(viewer, { now: NOW })).continue.some(show => show.id === 402))
+})
+
+test("undated and future episodes do not promote a caught-up show, even with an inflated show count", async () => {
+ seedWaiting()
+ db.table("show").find(row => row.tmdb_id === 203)!.aired_episode_count = 4
+ const page = await getMyShows(viewer, { now: NOW })
+ assert.ok(page.waiting.some(row => row.id === 203))
+ assert.ok(!page.continue.some(row => row.id === 203))
+ assert.ok(!(await getNewShows(user, { now: NOW })).shows.some(show => show.id === 203))
+})
+
+
+test("Watching with only future or undated episodes waits instead of offering something to watch", async () => {
+ db.seed("show", [show(407, "Future show", 2)])
+ db.seed("episode", [episode(407, 1, 1, NOW + DAY), episode(407, 1, 2, null)])
+ db.seed("user_watch_state", [stateRow("show", 407, "watching", NOW)])
+ const page = await getMyShows(viewer, {now: NOW})
+ assert.deepEqual(page.continue, [])
+ assert.deepEqual(page.pickUp, [])
+ assert.equal(page.waiting[0]?.id, 407)
+ assert.equal(page.waiting[0]?.aired, 0)
+})
+
+
+test("a fresh weekly episode leads a returning season, while a show behind on older episodes stays below both", async () => {
+ seedNew()
+ db.table("episode").find(row => row.show_id === 401 && row.season_number === 1 && row.episode_number === 4)!.air_date = day("2026-10-08")
+ db.refresh("episode")
+ const page = await getMyShows(viewer, {now: NOW})
+ assert.deepEqual(page.continue.map(row => row.id), [401, 402, 403])
+ assert.deepEqual(page.continue.map(row => row.next?.airDate), ["2026-10-08", "2026-10-07", "2026-07-08"])
 })

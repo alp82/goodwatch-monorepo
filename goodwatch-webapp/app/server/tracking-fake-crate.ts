@@ -412,8 +412,17 @@ export class FakeTrackingCrate {
 		if (select) {
 			const [, columnList, name, where, groupBy] = select
 			const table = known(name, sql)
+			const airedThrough = columnList === "show_id, count(*) FILTER (WHERE air_date <= ?) AS aired" ? Number(take()) : null
 			const matched = this.match(name, table, where, take, sql)
 			if (groupBy) {
+				if (name === "episode" && groupBy === " GROUP BY show_id") {
+					const counts = new Map<unknown, number>()
+					for (const row of matched) {
+						const aired = airedThrough === null || (row.air_date != null && Number(row.air_date) <= airedThrough)
+						counts.set(row.show_id, (counts.get(row.show_id) ?? 0) + Number(aired))
+					}
+					return done([...counts].map(([show_id, aired]) => ({ show_id, aired })))
+				}
 				if (
 					name !== "user_watch_log" ||
 					groupBy !== " GROUP BY tmdb_id, media_type, pass"

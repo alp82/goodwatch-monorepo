@@ -3,11 +3,10 @@ import { mediaLanguageUrl } from "~/utils/media-presentation"
 // The signal that something new aired for a member's shows (#442), for the Browse button, the dock's key, the My
 // shows tile and home's Continue door. For a member with a Watching or Seen show; everyone else sends no
 // request. It refetches when the member's watch state changes, since watching the new episode takes
-// its show out, and My shows clears it when it is opened.
+// its show out, and opening My shows leaves episode announcements pending.
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useEffect, useMemo } from "react"
 import {
-	NOTHING_NEW,
 	type NewEpisodes,
 	type SignalWords,
 	signalWords,
@@ -57,7 +56,7 @@ export function useNewEpisodes(): SignalWords | null {
 	return useMemo(() => (fresh ? signalWords(fresh) : null), [fresh])
 }
 
-/** My shows is open: the visit is recorded, and the signal is cleared wherever it shows. */
+/** Record the My shows visit for streaming-service news; episode announcements stay pending. */
 export function useMyShowsVisit(): void {
 	const queryClient = useQueryClient()
 	const { user } = useUser()
@@ -65,19 +64,21 @@ export function useMyShowsVisit(): void {
 	useEffect(() => {
 		if (!userId) return
 		const queryKey = keyOf(userId)
-		fetch(ENDPOINT, { method: "POST" })
+		fetch(ENDPOINT, {
+			method: "POST",
+			body: new URLSearchParams({ intent: "visit" }),
+		})
 			.then(async (response) => {
-				// The answer says nothing new: let go of it, or the request stays open.
+				// Let go of the visit response body.
 				void response.body?.cancel()
 				if (!response.ok) return
 				// A read that left before the visit was stored would bring the old answer back.
 				await queryClient.cancelQueries({ queryKey })
-				queryClient.setQueriesData({ queryKey }, NOTHING_NEW)
 				await queryClient.invalidateQueries({ queryKey })
 				// The visit clears the shows that landed on a service too (#456).
 				await clearLanded(queryClient, userId, "shows")
 			})
-			// The signal then stays until the next visit.
+			// A failed visit must not clear pending news.
 			.catch(() => {})
 	}, [userId, queryClient])
 }

@@ -1,13 +1,12 @@
 import { mediaFieldLanguage } from "~/utils/media-presentation"
 import { canonicalMediaTitle } from "~/utils/media-presentation"
-// My shows (#385): one list for tonight. Continue comes first, the show the member was last active on on top and the
-// Seen shows with new episodes after it; then Pick up, the Watching shows without activity for 90 days; then Start,
-// the Want to See shows not started, best taste match first. The page states that rule, each group has a label, and
+// My shows (#385): one list for tonight. Continue is ordered by the air date of each next unwatched episode; then Pick up, the Watching shows without activity for 90 days; then Start,
+// the Want to See shows not started, best taste match first. Each group has a label, and
 // each row shows the one fact that places it. The whole row opens the show's page: there is no Watched button and no
 // tick in the list. Under the list are the shows the member set aside: On hold and Dropped.
 // The waiting shows are one row between Continue and Pick up, which names the show that returns first and opens to
-// all of them with the day each returns, soonest first, by the member's day (#442). Opening the page is the visit
-// that clears the signal outside it, and the page says once what was new.
+// all of them with the day each returns, soonest first, by the member's day (#442). Episode announcements persist
+// until explicitly dismissed or their first new episode watched. Visits clear only streaming-service news.
 // The shows that landed on the member's services in the last 14 days are one row above the list, which names the
 // latest and opens to all of them with their days, and each of them carries the service's logo on its row (#489).
 import { ChevronRightIcon } from "@heroicons/react/20/solid"
@@ -23,7 +22,6 @@ import {
 } from "~/domain/my-shows"
 import {
 	type Arrival,
-	arrivalWords,
 	deviceDay,
 	upcomingWords,
 	waitingWords,
@@ -50,6 +48,7 @@ import {
 	NewOnSticker,
 	NewOnWords,
 } from "~/ui/my-pages/LandedRow"
+import { EpisodeAnnouncements } from "./EpisodeAnnouncements"
 import { useMyShowsVisit } from "~/ui/navigation/useNewEpisodes"
 import { titleToDashed } from "~/utils/helpers"
 
@@ -83,7 +82,7 @@ const isNew = (airDate: string | null, now: number) =>
 
 const TAG = {
 	next: "bg-amber-400 text-black",
-	seenNew: "bg-sky-400 text-black",
+	seenNew: "bg-amber-400 text-black",
 	start: "bg-emerald-400 text-black",
 } as const
 const Tag = ({
@@ -518,9 +517,6 @@ export function MyShowsPage({
 		new Date(now).toISOString().slice(0, 10),
 	)
 	useEffect(() => setToday(deviceDay()), [])
-	// The line stays for the visit, also when the page's data is read again.
-	const [arrived] = useState(arrival)
-	const fresh = arrived && arrivalWords(arrived.since, arrived.titles, today)
 	const { hash } = useLocation()
 	// Home's Start door lands on the Start group.
 	useEffect(() => {
@@ -536,14 +532,6 @@ export function MyShowsPage({
 	const starts = data.start.slice(0, shown).map(startRow)
 	const total = data.continue.length + data.pickUp.length + data.start.length
 	const pickUpLeft = data.pickUp.length - pickUps.length
-	const jump = (id: string, label: string) => (
-		<a
-			href={`#${id}`}
-			className="font-bold text-gray-200 underline decoration-white/30 underline-offset-4 hover:text-white"
-		>
-			{label}
-		</a>
-	)
 	const lastWatch = (row: MyShowsRow) => activityWords(row.lastActivityAt, now)
 	const newOn = useMemo(
 		() =>
@@ -586,52 +574,10 @@ export function MyShowsPage({
 			/>
 			<div className={`${WRAP} flex flex-col gap-10 pt-2`}>
 				<section data-section="tonight">
-					<h2 className={`${DISPLAY} text-2xl text-white md:text-3xl`}>
+					<h2 className={`${DISPLAY} mb-4 text-2xl text-white md:text-3xl`}>
 						Tonight
 					</h2>
-					{fresh && (
-						<p
-							className="mt-2 flex max-w-3xl items-baseline gap-2 text-sm text-sky-200"
-							data-arrival
-						>
-							<span
-								className="h-2 w-2 shrink-0 -translate-y-px rounded-full bg-sky-400"
-								aria-hidden
-							/>
-							<span>
-								<b className="font-bold">{fresh.lead}</b> {fresh.names}
-							</span>
-						</p>
-					)}
-					<p
-						className="mb-4 mt-1 max-w-3xl text-sm text-gray-400"
-						data-order-rule
-					>
-						{continues.length > 0 && (
-							<>
-								{jump("continue", "Continue")} comes first, the show you watched
-								last on top.{" "}
-							</>
-						)}
-						{pickUps.length > 0 && (
-							<>
-								{continues.length ? "Then " : "Shows to "}
-								{jump("pick-up", continues.length ? "Pick up" : "pick up")}:
-								shows you started and have not watched for {ACTIVE_DAYS} days.{" "}
-							</>
-						)}
-						{data.start.length > 0 && (
-							<>
-								{continues.length || pickUps.length ? "Then " : "Shows to "}
-								{jump(
-									"start",
-									continues.length || pickUps.length ? "Start" : "start",
-								)}
-								: the shows you want to see, best taste match first.{" "}
-							</>
-						)}
-						{total > 0 && "A row opens the show."}
-					</p>
+					<EpisodeAnnouncements initial={arrival?.announcements ?? []} />
 					<LandedRow
 						landed={landed}
 						note={(show) =>
@@ -654,7 +600,7 @@ export function MyShowsPage({
 								<GroupLabel
 									id="continue"
 									name="Continue"
-									rule="last watched first"
+									rule="newest episode first"
 									count={continues.length}
 								/>
 							)}

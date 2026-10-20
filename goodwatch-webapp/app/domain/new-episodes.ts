@@ -276,6 +276,7 @@ export function summaryOf(fresh: readonly NewShow[]): NewEpisodes {
 
 /** What was new when the member opened My shows: the shows, the latest to air first, and since when. */
 export interface Arrival {
+	announcements?: { id: number; title: string; token: string; episodes: number }[]
 	since: Since
 	titles: string[]
 }

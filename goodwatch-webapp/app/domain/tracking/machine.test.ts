@@ -155,10 +155,10 @@ test("catching up on a running show, then episodes air", () => {
 	)
 	assert.deepEqual(labels.slice(4), [
 		"Caught up",
-		"Caught up · 1 new",
+		"1 new episode",
 		"Caught up",
-		"Caught up · 1 new",
-		"Caught up · 4 new",
+		"1 new episode",
+		"4 new episodes",
 		"Watching",
 	])
 	assert.equal(r.view.watched, 7)
@@ -177,7 +177,7 @@ test("a Seen show reads Caught up while it runs and Seen once it has ended, and 
 		{ type: "seasonAirs" },
 		{ type: "showEnds" },
 	])
-	assert.equal(fresh.view.label, "Seen · 3 new episodes")
+	assert.equal(fresh.view.label, "3 new episodes")
 })
 
 test("Seen, then Seen again, removes exactly the press's group", () => {
@@ -228,7 +228,7 @@ test("a Seen press on a Seen show marks only the new episodes, and its undo keep
 	const r = run("weekly", [SEEN, { type: "episodeAirs" }, SEEN, AGAIN])
 	assert.deepEqual(r.rows, ["11", "catalog", "12", "13"])
 	assert.deepEqual(r.states, ["seen", "catalog", "seen", "seen"])
-	assert.equal(r.view.label, "Caught up · 1 new")
+	assert.equal(r.view.label, "1 new episode")
 	assert.equal(r.world.record.watches.length, 5)
 	const button = seenButton(
 		play(findShow("weekly"), [SEEN, { type: "episodeAirs" }]).world,
@@ -964,7 +964,7 @@ test("what the filters read", () => {
 test("a Seen show with new episodes stays Seen and says how many are new", () => {
 	const stays = run("weekly", findPreset("seen-new-episodes").steps)
 	assert.deepEqual(stays.states, ["seen", "catalog", "catalog"])
-	assert.equal(stays.view.label, "Caught up · 4 new")
+	assert.equal(stays.view.label, "4 new episodes")
 	assert.equal(stays.view.newEpisodes, 4)
 	assert.equal(nextLabel(stays.view), "S2 E3")
 	assert.deepEqual(stays.world.record.seenPress, {

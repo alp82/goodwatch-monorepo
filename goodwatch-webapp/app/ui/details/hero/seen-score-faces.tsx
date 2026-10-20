@@ -141,7 +141,7 @@ export function SeenFace({
 	)
 }
 
-export type StatusTone = "none" | "watching" | "on_hold" | "dropped" | "seen"
+export type StatusTone = "none" | "watching" | "on_hold" | "dropped" | "seen" | "new_episodes"
 
 const STATUS_TONE: Record<StatusTone, string> = {
 	none: "text-gray-200",
@@ -149,6 +149,7 @@ const STATUS_TONE: Record<StatusTone, string> = {
 	on_hold: "bg-violet-500 text-white",
 	dropped: "bg-pink-500 text-black",
 	seen: "bg-green-500 text-black",
+	new_episodes: "bg-amber-400 text-black",
 }
 
 // The status icons (Heroicons 20 solid, MIT), as the status menu draws them.
@@ -166,7 +167,7 @@ function StatusIcon({ tone }: { tone: StatusTone }) {
 		return (
 			<EyeSlashIcon className="h-4 w-4 shrink-0 text-gray-400 lg:group-data-[big]/split:h-5 lg:group-data-[big]/split:w-5" />
 		)
-	if (tone === "seen")
+	if (tone === "seen" || tone === "new_episodes")
 		return (
 			<EyeIcon className="h-4 w-4 shrink-0 lg:group-data-[big]/split:h-5 lg:group-data-[big]/split:w-5" />
 		)

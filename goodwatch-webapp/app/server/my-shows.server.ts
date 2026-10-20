@@ -14,6 +14,7 @@ import {
 	nextEpisodeAfter,
 	nextEpisodeInGap,
 	planMyShows,
+	orderContinue,
 } from "~/domain/my-shows"
 import {
 	type UpcomingEpisode,
@@ -139,7 +140,7 @@ export async function readShows(
 }
 
 /** The regular episodes some shows' log rows name, per show and pass: for the Next episode of a show with a gap. */
-async function readWatchedEpisodes(
+export async function readWatchedEpisodes(
 	userId: string,
 	ids: number[],
 ): Promise<Map<number, { season: number; number: number; pass: number }[]>> {
@@ -285,6 +286,22 @@ async function plan(viewer: MyShowsViewer, userData: UserData, now: number) {
 		(id) => !(`show-${id}` in userData.watchState),
 	)
 	const catalog = await readShows([...new Set([...tracked, ...wanted])])
+	// Grouping and the signal use the same UTC episode calendar, not the stale show count.
+	const counts = tracked.length
+		? await query<{ show_id: number; aired: number }>(
+				`SELECT show_id, count(*) FILTER (WHERE air_date <= ?) AS aired FROM episode
+				 WHERE show_id IN (${tracked.map(() => "?").join(", ")})
+				 AND season_number > 0 AND removed_at IS NULL GROUP BY show_id`,
+				[Date.parse(`${utcDay(now)}T00:00:00Z`), ...tracked],
+			)
+		: []
+	const aired = new Map(
+		counts.map((row) => [Number(row.show_id), Number(row.aired)]),
+	)
+	for (const id of tracked) {
+		const row = catalog.get(id)
+		if (row) row.aired_episode_count = aired.get(id) ?? null
+	}
 	const keys = wanted.map((id) => titleKey("show", id))
 	// Best match orders by where a title falls in the person's own range; the number shown is coarser.
 	const percentiles = viewer.taste.percentile(keys)
@@ -322,6 +339,7 @@ async function plan(viewer: MyShowsViewer, userData: UserData, now: number) {
 export interface NextOfShow {
 	next: NextEpisode | null
 	aired: number
+	released: { season: number; number: number; airDate: string }[]
 }
 
 /**
@@ -357,11 +375,13 @@ export async function readNextEpisodes(
 	const gaps: number[] = []
 	for (const show of shows) {
 		const list = lists.get(show.id) ?? []
-		const aired = list.filter(
-			(e) => e.season > 0 && e.airDate !== null && e.airDate <= today,
-		).length
+		const released = list.filter(
+			(e): e is typeof e & { airDate: string } =>
+				e.season > 0 && e.airDate !== null && e.airDate <= today,
+		)
+		const aired = released.length
 		const after = nextEpisodeAfter(list, show.furthest, today)
-		found.set(show.id, { next: after, aired })
+		found.set(show.id, { next: after, aired, released })
 		const watched = userData.watchState[`show-${show.id}`]?.episodesWatched ?? 0
 		if (!after && list.length && watched < aired) gaps.push(show.id)
 	}
@@ -376,7 +396,11 @@ export async function readNextEpisodes(
 			)
 			const inGap = nextEpisodeInGap(lists.get(id) ?? [], keys, today)
 			if (inGap)
-				found.set(id, { next: inGap, aired: found.get(id)?.aired ?? 0 })
+				found.set(id, {
+					next: inGap,
+					aired: found.get(id)?.aired ?? 0,
+					released: found.get(id)?.released ?? [],
+				})
 		}
 	}
 	return found
@@ -390,9 +414,8 @@ const cardOf = (id: number, row: CatalogRow | undefined) => ({
 })
 
 /**
- * A member's shows for tonight, in the page's groups. `episodeLists` bounds how many rows get their Next episode
- * from the show's cached episode list, Continue first and then Pick up: the page reads them for the rows it draws
- * first, home for three (home-doors.server.ts). `upcoming: false` leaves out when the waiting shows return, which only the
+ * A member's shows for tonight, in the page's groups. All Continue candidates get their Next episode before
+ * release-date ordering. `episodeLists` budgets additional Pick up rows after those Continue candidates. `upcoming: false` leaves out when the waiting shows return, which only the
  * page shows.
  */
 export async function getMyShows(
@@ -404,11 +427,12 @@ export async function getMyShows(
 	const { shows, catalog, matchOf } = await plan(viewer, userData, now)
 	const today = utcDay(now)
 
-	// The Next episode of the Continue and Pick up rows, and beside them when the waiting shows return.
-	const named = [...shows.continue, ...shows.pickUp].slice(
-		0,
-		options.episodeLists ?? 30,
-	)
+	// Resolve every Continue candidate before ordering it. Truncating this read first
+	// could hide the freshest episode below the cut-off. Pick up keeps its display budget.
+	const named = [
+		...shows.continue,
+		...shows.pickUp.slice(0, Math.max(0, (options.episodeLists ?? 30) - shows.continue.length)),
+	]
 	const [next, upcoming] = await Promise.all([
 		readNextEpisodes(viewer.userId, userData, named, today),
 		options.upcoming === false
@@ -442,7 +466,7 @@ export async function getMyShows(
 			upcoming: null,
 		}))
 	const page: MyShows = {
-		continue: rows(shows.continue),
+		continue: orderContinue(rows(shows.continue)),
 		start: shows.start.map((row, i) => {
 			const show = catalog.get(row.id)
 			return {

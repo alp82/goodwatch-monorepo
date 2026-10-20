@@ -102,7 +102,7 @@ export function memberHome(
 	const tonight: TvTonightPick[] = []
 	if (choice?.kind === "episode") {
 		const card = showCard(choice.showId)
-		const next = shows.continue[0].next
+		const next = shows.continue.find((row) => row.id === choice.showId)?.next
 		if (card)
 			tonight.push({
 				card,

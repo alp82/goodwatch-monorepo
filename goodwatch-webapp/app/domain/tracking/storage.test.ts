@@ -12,6 +12,7 @@ import {
 	type TrackingEvent,
 	type World,
 	derive,
+	displayState,
 	newRecord,
 	seenButton,
 	stateLabel,
@@ -164,6 +165,7 @@ function listView(stored: Stored, show: Show) {
 	const entry = watchStateOf(states, groups)[`show-${SHOW_ID}`]
 	return {
 		state,
+		displayState: displayState(state, show.running, newEpisodes),
 		label: stateLabel(state, show.running, newEpisodes),
 		pass: totals.pass,
 		watched: totals.episodesWatched,
@@ -915,7 +917,7 @@ test("every preset: the rows rebuild the record and every list value after each 
 			prompts: "",
 			log: "5 seen p1",
 			computed: "5, 5, S2 E2",
-			reads: "Caught up · 4 new, 5 of 9, next S2 E3",
+			reads: "4 new episodes, 5 of 9, next S2 E3",
 		},
 	})
 })

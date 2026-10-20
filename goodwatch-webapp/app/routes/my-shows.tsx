@@ -75,6 +75,7 @@ async function canonicalLoader({ request }: LoaderFunctionArgs) {
 	])
 	const arrival: Arrival | null = fresh && {
 		since: fresh.since,
+		announcements: fresh.shows,
 		titles: fresh.shows.map((show) => show.title),
 	}
 	return json(

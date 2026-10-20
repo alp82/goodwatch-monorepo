@@ -1,25 +1,31 @@
-// New episodes for the shows a member tracks (#442): which shows are new since the member last opened My shows, and
-// the one stored fact that takes, the time of that visit. A show is new when its Next episode aired after the day of
-// the visit (domain/new-episodes.ts). What has aired goes by the UTC date and the episode table, not by
-// `show.aired_episode_count`, which is up to a day behind the calendar.
-//
-// Reads, for a member with Watching or Seen shows: the member data (cached), the visit by key, and one statement
-// that names the shows with an episode aired since. Only those shows get their cached episode list, and only the
-// shows that turn out new are read from the catalog, for their names
-// (docs/implementation/tracking/data-model.md, "New episodes").
+// Persistent new-episode announcements, independent of My shows visits.
 import {
 	type NewCandidate,
-	type NewShow,
 	type Since,
 	newShowsOf,
 	sinceOf,
 } from "~/domain/new-episodes"
 import { utcDay } from "~/domain/tracking/machine"
-import { readNextEpisodes, readShows } from "~/server/my-shows.server"
+import {
+	readNextEpisodes,
+	readShows,
+	readWatchedEpisodes,
+} from "~/server/my-shows.server"
 import { MY_SHOWS_VISIT_QUERY, airedSinceQuery } from "~/server/tracking-sql"
 import { getUserData } from "~/server/userData.server"
 import { type MediaKey, parseMediaKey } from "~/types/user-data"
 import { query, upsert } from "~/utils/crate"
+import {
+	type AnnouncedShow,
+	type Release,
+	acknowledgeRelease,
+	acknowledgedReleases,
+	announcementBaseline,
+	readReleases,
+	releaseKey,
+	rememberRelease,
+	sequence,
+} from "./show-announcements.server"
 
 /** The member's row of `user_setting` that holds when they last opened My shows, as an ISO time. */
 export const MY_SHOWS_VISIT_KEY = "my_shows_visited_at"
@@ -36,7 +42,7 @@ export async function readMyShowsVisit(userId: string): Promise<number | null> {
 	return Number.isNaN(at) ? null : at
 }
 
-/** The member has opened My shows: what aired up to today is no longer new. */
+/** Record a visit for streaming-service news. It never acknowledges episode announcements. */
 export async function recordMyShowsVisit(
 	userId: string,
 	now = Date.now(),
@@ -57,10 +63,10 @@ export async function recordMyShowsVisit(
 export interface NewShows {
 	since: Since
 	/** The latest to air first. */
-	shows: NewShow[]
+	shows: AnnouncedShow[]
 }
 
-/** The member's shows whose Next episode aired after they last opened My shows. */
+/** Pending releases, retained until explicit dismissal or the first watch of their batch. */
 export async function getNewShows(
 	userId: string,
 	options: { now?: number } = {},
@@ -77,7 +83,7 @@ export async function getNewShows(
 		)
 	if (!tracked.length) return { since: sinceOf(null, now), shows: [] }
 
-	const since = sinceOf(await readMyShowsVisit(userId), now)
+	const since = sinceOf(await announcementBaseline(userId, now), now)
 	const today = utcDay(now)
 	if (since.day >= today) return { since, shows: [] }
 	const aired = await query<{ show_id: number }>(
@@ -89,7 +95,11 @@ export async function getNewShows(
 		],
 	)
 	const hit = new Set(aired.map((row) => Number(row.show_id)))
-	const shows = tracked.filter((show) => hit.has(show.tmdbId))
+	const previous = await readReleases(userId)
+	const pendingIds = new Set(previous.map((release) => release.id))
+	const shows = tracked.filter(
+		(show) => hit.has(show.tmdbId) || pendingIds.has(show.tmdbId),
+	)
 	if (!shows.length) return { since, shows: [] }
 
 	const next = await readNextEpisodes(
@@ -104,22 +114,103 @@ export async function getNewShows(
 			id: tmdbId,
 			title: "",
 			state: entry.state,
-			next: found?.next ?? null,
+			next:
+				entry.state === "watching" &&
+				found?.next?.airDate &&
+				(!entry.lastActivityAt ||
+					found.next.airDate <=
+						utcDay(new Date(entry.lastActivityAt).getTime()))
+					? null
+					: (found?.next ?? null),
 			unwatched: Math.max(0, (found?.aired ?? 0) - entry.episodesWatched),
 		}
 	})
-	const fresh = newShowsOf(candidates, since.day)
-	if (!fresh.length) return { since, shows: [] }
-	const catalog = await readShows(fresh.map((show) => show.id))
-	return {
-		since,
-		// The names decide the order of shows that aired on one day.
-		shows: newShowsOf(
-			candidates.map((candidate) => ({
-				...candidate,
-				title: catalog.get(candidate.id)?.title ?? "Unknown show",
-			})),
-			since.day,
-		),
+	const releases: Release[] = [...previous]
+	for (const fresh of newShowsOf(candidates, since.day)) {
+		const entry = userData.watchState[`show-${fresh.id}`]
+		const history = previous.filter(
+			(release) => release.id === fresh.id && release.pass === entry.pass,
+		)
+		// Acknowledgment covers the entire observed batch, not just its first episode.
+		if (history.some((release) => sequence(fresh) <= release.through)) continue
+		const released = next.get(fresh.id)?.released ?? []
+		const release: Release = {
+			id: fresh.id,
+			pass: entry.pass,
+			season: fresh.season,
+			number: fresh.number,
+			airDate: fresh.airDate,
+			episodes: fresh.episodes,
+			through: Math.max(sequence(fresh), ...released.map(sequence)),
+			aired: released
+				.filter((episode) => sequence(episode) >= sequence(fresh))
+				.map(sequence),
+		}
+		releases.push(await rememberRelease(userId, release))
 	}
+	const eligible = releases.filter((release) => {
+		const entry = userData.watchState[`show-${release.id}`]
+		return (
+			entry &&
+			["seen", "watching"].includes(entry.state) &&
+			entry.pass === release.pass
+		)
+	})
+	const acknowledged = await acknowledgedReleases(userId, eligible)
+	const outstanding = eligible.filter(
+		(release) => !acknowledged.has(releaseKey(release)),
+	)
+	const watched = outstanding.length
+		? await readWatchedEpisodes(userId, [
+				...new Set(outstanding.map((release) => release.id)),
+			])
+		: new Map()
+	const pending: Release[] = []
+	for (const release of outstanding) {
+		const started = (watched.get(release.id) ?? []).some(
+			(watch: { pass: number; season: number; number: number }) =>
+				watch.pass === release.pass && release.aired.includes(sequence(watch)),
+		)
+		if (started) {
+			await acknowledgeRelease(userId, releaseKey(release))
+			continue
+		}
+		// A removed/undated catalog episode must not keep an obsolete announcement alive.
+		if (
+			!next
+				.get(release.id)
+				?.released.some((episode) => sequence(episode) === sequence(release))
+		)
+			continue
+		pending.push(release)
+	}
+	const catalog = pending.length
+		? await readShows(pending.map((show) => show.id))
+		: new Map()
+	const fresh: AnnouncedShow[] = pending
+		.map((release) => ({
+			id: release.id,
+			title: catalog.get(release.id)?.title ?? "Unknown show",
+			season: release.season,
+			number: release.number,
+			airDate: release.airDate,
+			episodes: release.episodes,
+			token: releaseKey(release),
+			...(() => {
+				const episode = next.get(release.id)?.next
+				return episode?.displaySeason === undefined
+					? {}
+					: {
+							displaySeason: episode.displaySeason,
+							displayNumber: episode.displayNumber,
+						}
+			})(),
+		}))
+		.sort(
+			(a, b) =>
+				b.airDate.localeCompare(a.airDate) ||
+				a.title.localeCompare(b.title) ||
+				a.id - b.id,
+		)
+	return { since, shows: fresh }
 }

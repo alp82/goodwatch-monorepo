@@ -28,6 +28,7 @@ import {
 	getRecentlyLanded,
 	recordMyMoviesVisit,
 } from "~/server/newly-available.server"
+import { acknowledgeRelease } from "~/server/show-announcements.server"
 import { updateScores } from "~/server/scores.server"
 import {
 	type ShowAction,
@@ -995,8 +996,9 @@ export const harness = {
 			{ now },
 		)
 	},
-	/** What is new for the member's shows, and the visit of My shows that clears it. */
+	/** Pending episode announcements; visits clear only streaming-service news. */
 	newShows: (now: number) => getNewShows(HARNESS_MEMBER, { now }),
+	dismissRelease: (token: string) => acknowledgeRelease(HARNESS_MEMBER, token),
 	visit: (now: number) => recordMyShowsVisit(HARNESS_MEMBER, now),
 	/** What landed on the member's services (#456), and the visit of My movies that clears its movies. */
 	landed: async () => getNewlyAvailable(await viewer()),

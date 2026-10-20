@@ -7,6 +7,7 @@ import { episodeCode } from "./episode-label.ts"
 /** What the navigation and home's Continue door are told: how many shows are new, and the show when it is one. */
 export interface NewEpisodes {
 	shows: number
+	announcements?: { id: number; title: string; token: string; episodes: number }[]
 	/** Their TMDB ids, so that a show that also landed on one of the member's services (#456) is counted once. */
 	ids?: number[]
 	only: {

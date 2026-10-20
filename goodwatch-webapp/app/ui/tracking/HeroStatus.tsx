@@ -74,7 +74,7 @@ export default function HeroStatus({
 			onRewatch={toggleWant}
 			face={
 				<StatusFace
-					tone={derived.state}
+					tone={derived.displayState === "new_episodes" ? "new_episodes" : derived.state}
 					label={derived.label}
 					detail={progressOf(tracking)}
 					chevron={view.menu.length > 0}

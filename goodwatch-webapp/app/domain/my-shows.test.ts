@@ -5,7 +5,7 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import "../server/title-filter/test-alias.ts"
 
-const { planMyShows, nextEpisodeAfter, nextEpisodeInGap, tonightsPickOf, activityWords, placedWords } =
+const { planMyShows, orderContinue, nextEpisodeAfter, nextEpisodeInGap, tonightsPickOf, activityWords, placedWords } =
 	await import("./my-shows.ts")
 
 const NOW = Date.parse("2026-10-08T20:00:00Z")
@@ -132,7 +132,7 @@ test("since when a show is Watching counts for a Watching show only", () => {
 	)
 })
 
-test("Seen shows with new episodes follow the Watching shows in Continue and say how many are new", () => {
+test("Seen shows with new episodes are eligible for Continue and say how many are new", () => {
 	const plan = planMyShows({
 		shows: [
 			show(1, "seen", 20, 23, daysAgo(200)),
@@ -142,12 +142,12 @@ test("Seen shows with new episodes follow the Watching shows in Continue and say
 		starts: [],
 		now: NOW,
 	})
-	assert.deepEqual(ids(plan.continue), [2, 3, 1])
+	assert.deepEqual(ids(plan.continue), [3, 2, 1])
 	assert.deepEqual(
 		plan.continue.map((row) => [row.kind, row.left]),
 		[
-			["next", 5],
 			["seenNew", 1],
+			["next", 5],
 			["seenNew", 3],
 		],
 	)
@@ -369,4 +369,23 @@ test("a row placed by the member's move to Watching says since when, and one pla
 	assert.equal(placedWords(row(daysAgo(3), daysAgo(3)), NOW), "Watched 3 days ago")
 	assert.equal(placedWords(row(daysAgo(3), null), NOW), "Watched 3 days ago")
 	assert.equal(placedWords(row(null, null), NOW), "No date for your last watch")
+})
+
+
+test("Continue orders the next unwatched episode by air date, regardless of show state", () => {
+ const rows = [
+  {id: 1, state: "watching", activeAt: NOW, next: {airDate: "2020-01-01"}},
+  {id: 2, state: "seen", activeAt: daysAgo(300).getTime(), next: {airDate: "2026-10-07"}},
+  {id: 3, state: "watching", activeAt: daysAgo(2).getTime(), next: {airDate: "2026-10-08"}},
+  {id: 4, state: "watching", activeAt: NOW, next: {airDate: "2026-10-07"}},
+  {id: 5, state: "seen", activeAt: NOW, next: null},
+ ]
+ assert.deepEqual(ids(orderContinue(rows)), [3, 4, 2, 1, 5])
+ assert.deepEqual(ids(rows), [1, 2, 3, 4, 5], "ordering does not mutate its input")
+})
+
+test("Tonight's pick still uses last activity even when Continue is ordered by release date", () => {
+ const plan = planMyShows({shows: [show(1, "watching", 3, 10, daysAgo(1)), show(2, "watching", 3, 10, daysAgo(2))], starts: [], now: NOW})
+ plan.continue.reverse()
+ assert.deepEqual(tonightsPickOf(plan, null), {kind: "episode", showId: 1})
 })

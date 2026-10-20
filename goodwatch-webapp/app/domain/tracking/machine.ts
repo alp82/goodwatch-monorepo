@@ -8,7 +8,7 @@
 // interpreter: it applies what the event does to the watches, then takes the first row that matches. Everything a
 // member reads (label, progress, next episode, filters, prompts) is worked out in `derive()` and never stored.
 //
-// The owner's decisions are built in: a running Seen show reads "Caught up"; On hold and Dropped survive having
+// The owner's decisions are built in: a running Seen show with nothing new reads "Caught up"; On hold and Dropped survive having
 // nothing watched; the page offers Not interested before the first watch and Drop after it; Watch again is built and
 // needs a watched regular episode; rating a never-started show asks once whether it was seen; a Seen show with new
 // episodes stays Seen, and can be put on hold or dropped.
@@ -1552,8 +1552,22 @@ export function step(
 // Derived: everything a member reads. Never stored.
 // ---------------------------------------------------------------------------------------------------------
 
+export type DisplayState = State | "caught_up" | "new_episodes"
+
+/** Seen retains the member's decision; its display state follows aired progress. */
+export function displayState(
+	state: State,
+	running: boolean,
+	newEpisodes: number,
+): DisplayState {
+	if (state !== "seen") return state
+	if (newEpisodes > 0) return "new_episodes"
+	return running ? "caught_up" : "seen"
+}
+
 export interface Derived {
 	state: State
+	displayState: DisplayState
 	/** The state in member words. */
 	label: string
 	running: boolean
@@ -1578,7 +1592,7 @@ const plural = (count: number, word: string) =>
 	`${count} ${word}${count === 1 ? "" : "s"}`
 
 /**
- * The label of a state. A Seen show that is still running reads "Caught up"; with new episodes either says how many.
+ * The display label. Seen with unwatched aired episodes says how many are new; otherwise a running Seen show is Caught up.
  * Shared by the show page (exact counts) and the lists (counts from the grouped query).
  */
 export function stateLabel(
@@ -1586,12 +1600,10 @@ export function stateLabel(
 	running: boolean,
 	newEpisodes: number,
 ): string {
-	if (state !== "seen") return STATE_LABEL[state]
-	if (running)
-		return newEpisodes > 0 ? `Caught up · ${newEpisodes} new` : "Caught up"
-	return newEpisodes > 0
-		? `Seen · ${plural(newEpisodes, "new episode")}`
-		: "Seen"
+	const display = displayState(state, running, newEpisodes)
+	if (display === "new_episodes") return plural(newEpisodes, "new episode")
+	if (display === "caught_up") return "Caught up"
+	return STATE_LABEL[display]
 }
 
 /**
@@ -1630,6 +1642,7 @@ export function derive(world: World): Derived {
 	).size
 	return {
 		state,
+		displayState: displayState(state, show.running, newEpisodes),
 		label: stateLabel(state, show.running, newEpisodes),
 		running: show.running,
 		pass: record.pass,

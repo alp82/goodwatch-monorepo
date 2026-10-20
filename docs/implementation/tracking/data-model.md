@@ -2075,3 +2075,14 @@ imported watch at all yet. The grouped query for the member with the most watche
 ## Reviewed episode presentation
 
 Selected shows share display seasons with the ratings grid ([ADR 0012](../../adr/0012-episode-presentation-preserves-watch-identity.md)). Stored episode IDs, canonical numbers, passes and import semantics stay the same. `markEpisodes` and `unmarkEpisodes` validate the display row's exact eligible membership and presentation version; a stale request is refused and refetched. Existing canonical `markSeason`, `unmarkSeason`, `watchUpTo`, Seen and restore events retain their semantics. See the [implementation plan](episode-season-alignment-plan.md) and [catalog audit](../../research/season-episode-scores/episode-alignment-audit.md).
+
+### 2026-10-20 amendment: episode announcements and Continue
+
+The owner replaced visit-based episode clearing with immutable release snapshots and acknowledgments in the
+existing `user_setting` table. See [the current announcement contract](new-episodes/README.md#changed-on-2026-10-20-returning-shows-and-persistent-announcements)
+for keys, discovery, clearing, and reads. My shows visits retain their streaming-service news behavior only.
+Continue grouping now counts regular, non-removed episodes by known air date through UTC today in one batched
+read; it no longer trusts `show.aired_episode_count`. Continue sorts all eligible shows by their Next episode air date, newest first, with activity breaking ties.
+All Continue candidates get their cached episode list before ordering; the display budget limits additional
+Pick up rows. The explicit derived
+display states `new_episodes` and `caught_up` do not add stored show states or catalog-triggered transitions.

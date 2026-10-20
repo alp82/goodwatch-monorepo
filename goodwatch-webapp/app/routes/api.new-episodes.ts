@@ -1,19 +1,19 @@
-import { localizeApiTitlePayload } from "~/server/media-payload.server"
 import {
 	type ActionFunctionArgs,
 	type LoaderFunctionArgs,
 	json,
 } from "@remix-run/node"
 import { summaryOf } from "~/domain/new-episodes"
-import { NOTHING_NEW, type NewEpisodes } from "~/domain/new-episodes-signal"
+import type { NewEpisodes } from "~/domain/new-episodes-signal"
+import { localizeApiTitlePayload } from "~/server/media-payload.server"
 import { getNewShows, recordMyShowsVisit } from "~/server/new-episodes.server"
+import { acknowledgeRelease } from "~/server/show-announcements.server"
 import { getUserIdFromRequest } from "~/utils/auth"
 
 // What is new for the member's shows (#442): the signal on the Browse button, the dock's key, the My shows tile
 // and home's Continue door.
-//   GET  /api/new-episodes   how many shows have a Next episode that aired since the member last opened My shows,
-//                            and the show when it is one
-//   POST /api/new-episodes   the member has opened My shows: nothing is new any more
+//   GET  /api/new-episodes   pending release announcements and their summary
+//   POST /api/new-episodes   dismiss a displayed release, or record a visit for streaming-service news
 // For members: 401 for a guest. The member is the session's; nothing in the request says whose shows they are.
 
 const headers = { "Cache-Control": "private, no-store" }
@@ -29,8 +29,28 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	if (typeof userId !== "string") return userId
 	const { shows } = await getNewShows(userId)
 	const summary = summaryOf(shows)
-	const presented = summary.only && shows[0] ? await localizeApiTitlePayload({ ...summary.only, media_type: "show", tmdb_id: shows[0].id }, request) : null
-	return json<NewEpisodes>({ ...summary, only: presented }, { headers })
+	const presented =
+		summary.only && shows[0]
+			? await localizeApiTitlePayload(
+					{ ...summary.only, media_type: "show", tmdb_id: shows[0].id },
+					request,
+				)
+			: null
+	return json<NewEpisodes>(
+		{
+			...summary,
+			only: presented,
+			announcements: await localizeApiTitlePayload(
+				shows.map((show) => ({
+					...show,
+					media_type: "show",
+					tmdb_id: show.id,
+				})),
+				request,
+			),
+		},
+		{ headers },
+	)
 }
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -38,6 +58,15 @@ export async function action({ request }: ActionFunctionArgs) {
 		return json({ error: "Method not allowed" }, { status: 405, headers })
 	const userId = await member(request)
 	if (typeof userId !== "string") return userId
+	const form = request.headers.get("content-type")
+		? await request.formData()
+		: new FormData()
+	if (form.get("intent") === "dismiss") {
+		const token = form.get("token")
+		if (typeof token !== "string" || !(await acknowledgeRelease(userId, token)))
+			return json({ error: "Unknown announcement" }, { status: 400, headers })
+		return json({ ok: true }, { headers })
+	}
 	await recordMyShowsVisit(userId)
-	return json<NewEpisodes>(NOTHING_NEW, { headers })
+	return json({ ok: true }, { headers })
 }

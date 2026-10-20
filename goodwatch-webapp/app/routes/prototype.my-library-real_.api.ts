@@ -7,7 +7,6 @@ import {
 } from "@remix-run/node"
 import { libraryChoiceOf } from "~/domain/my-library"
 import { summaryOf } from "~/domain/new-episodes"
-import { NOTHING_NEW } from "~/domain/new-episodes-signal"
 import { signalOf } from "~/domain/newly-available"
 import {
 	harness,
@@ -73,8 +72,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		])
 		return json({ pick, ...(landed ? { landed } : {}) }, { headers })
 	}
-	if (what === "new-episodes")
-		return json(summaryOf((await harness.newShows(now)).shows), { headers })
+	if (what === "new-episodes") {
+		const { shows } = await harness.newShows(now)
+		return json({ ...summaryOf(shows), announcements: shows }, { headers })
+	}
 	// As GET /api/tracking/show answers a member: the show's state, watches and episode list.
 	if (what === "tracking-show") {
 		const id = params.get("id") ?? ""
@@ -94,8 +95,14 @@ export async function action({ request }: ActionFunctionArgs) {
 	}
 	// My shows is open: the visit, as POST /api/new-episodes records it.
 	if (params.get("what") === "new-episodes") {
+		const form = request.headers.get("content-type") ? await request.formData() : new FormData()
+		if (form.get("intent") === "dismiss") {
+			const token = form.get("token")
+			const ok = typeof token === "string" && await harness.dismissRelease(token)
+			return json(ok ? { ok: true } : { error: "Unknown announcement" }, { status: ok ? 200 : 400, headers })
+		}
 		await harness.visit(now)
-		return json(NOTHING_NEW, { headers })
+		return json({ ok: true }, { headers })
 	}
 	// One action on a show's tracking, as POST /api/tracking/show applies it for a member.
 	if (params.get("what") === "tracking-show") {

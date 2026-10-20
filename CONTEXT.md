@@ -73,7 +73,7 @@ _Avoid_: Queue, Up next, Priority queue
 The single title or episode GoodWatch puts forward for tonight. For a member, the Next episode of the Watching show they were last active on in the last 90 days, by a watch or by their own move of the show to Watching; without one, the first movie of My movies; without one, the first show to start.
 
 **My shows**:
-The page for a member's shows tonight: one list with the Next episode of each show to continue, then the shows to Pick up, then the Want to See shows to start. Between Continue and Pick up one row says which shows are Waiting for episodes. Under the list are the On hold and Dropped shows.
+The page for a member's shows tonight: one list of shows to Continue, ordered by each show's Next episode air date, newest first, with last activity breaking ties; then the shows to Pick up, then the Want to See shows to start. Between Continue and Pick up one row says which shows are Waiting for episodes. Under the list are the On hold and Dropped shows.
 _Avoid_: Shows, Watchlist, Continue watching, Up next
 
 **Pick up**:
@@ -85,10 +85,10 @@ The shows of My shows with nothing to watch right now: a Seen show that is still
 _Avoid_: Upcoming, Schedule, Release calendar
 
 **My shows visit**:
-A member opening My shows. The time of the last one is stored per member, and it is the only thing the New episodes signal stores. Loading the page ahead of a tap is not a visit.
+A member opening My shows. The time of the last one is stored per member, and it clears Newly available streaming-service news. It never acknowledges New episodes. Loading the page ahead of a tap is not a visit.
 
 **New episodes signal**:
-The number outside My shows that says how many of a member's shows are new: on the Browse button, the phone dock's key, the My shows tile and the My shows tile on the TV's home. A show is new when its Next episode aired after the day of the last My shows visit, and for a member without a visit yet, in the last seven days. An On hold show, a Dropped show and a show the member was already behind on are never new. A My shows visit clears it, and a show leaves it when its new episode is watched. One new show is named; several are counted.
+The number outside My shows that counts shows with pending episode announcements: on the Browse button, the phone dock's key, the My shows tile and the My shows tile on the TV's home. The first read considers releases in the last seven days and freezes that starting day. A show qualifies when its Next episode aired after that day; a Watching show must also have last been active before that episode aired. On hold, Dropped and shows already behind do not qualify. A release snapshot persists until explicitly dismissed or the member watches any episode in that snapshot. Opening My shows or title details does not clear it. Dismissal covers only that snapshot; a later release can announce again after the member catches up. One show counts once. Streaming-service news joins the same signal under its own visit rule.
 _Avoid_: Notification, Unread count, Alert, Badge
 
 **Newly available**:
@@ -119,7 +119,7 @@ One run through a show's episodes. Watch again on a Seen show begins a new pass,
 _Avoid_: Rewatch session
 
 **Seen**:
-A movie the person has watched or rated; rating a movie records a watch, so the two are one rule. Marking a movie not seen removes its score and every watch the member logged, so it asks first; it is offered in the score picker, beside the title. Clearing the score of a movie with no other watch makes it not seen too, so that asks the same. For a show, the show status reached by watching its last aired regular episode or by pressing Seen; pressing Seen again takes that press back. A show stays Seen when later episodes air, and then says how many are new. Rating a show never changes its show status; a rated show still counts as Seen wherever titles are filtered or marked as seen, such as Not seen yet.
+A movie the person has watched or rated; rating a movie records a watch, so the two are one rule. Marking a movie not seen removes its score and every watch the member logged, so it asks first; it is offered in the score picker, beside the title. Clearing the score of a movie with no other watch makes it not seen too, so that asks the same. For a show, the show status reached by watching its last aired regular episode or by pressing Seen; pressing Seen again takes that press back. A show stays Seen when later episodes air, and then has the derived display state New episodes. Rating a show never changes its show status; a rated show still counts as Seen wherever titles are filtered or marked as seen, such as Not seen yet.
 _Avoid_: Finished, Completed, Watched
 
 **Show status**:
@@ -133,7 +133,10 @@ The show status of a show the person has started and intends to continue. The fi
 _Avoid_: In progress, Currently watching, Continue watching
 
 **Caught up**:
-What a Seen show is called while it is still running. It is a label, not a show status; once the show has ended it reads Seen.
+The derived display state of a Seen show that is still running and has no aired regular episode unwatched. Once the show has ended it reads Seen. Neither is a stored show status.
+
+**New episodes**:
+The derived display state of a Seen show with aired regular episodes unwatched: a show the member previously marked Seen, now with more to watch. It reads "1 new episode" or "10 new episodes" in amber and belongs in Continue, ordered by its Next episode air date like every Watching show. Dismissing an announcement does not change it. Watching an episode follows the stored state machine: Watching if aired episodes remain, Seen otherwise. A future or undated season does not qualify.
 
 **On hold**:
 The show status of a show the person has set aside and may return to. The person sets it from Watching or from a Seen show with new episodes. An import can bring it without watches, while preserving an existing On hold, Dropped or Seen decision.

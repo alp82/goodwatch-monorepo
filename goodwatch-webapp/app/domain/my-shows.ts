@@ -11,7 +11,7 @@ import type { WatchStateEntry } from "./tracking/storage"
 export const ACTIVE_DAYS = 90
 const DAY_MS = 86_400_000
 
-/** What the catalog says about a show: `show.aired_episode_count`, and whether `show.status` is neither Ended nor Canceled. */
+/** What the catalog says about a show: regular episodes counted by UTC air date, and whether `show.status` is neither Ended nor Canceled. */
 export interface ShowCatalogFacts {
 	/** Null while the catalog has no count for the show. */
 	airedEpisodes: number | null
@@ -55,7 +55,7 @@ export interface ShowRow {
 	lastActivityAt: number | null
 	/** Since when the member has had the show in Watching by their own action, in milliseconds; null otherwise. */
 	watchingSince: number | null
-	/** The later of the two: what places a Watching show in Continue or in Pick up, and orders every group. */
+	/** The later of the two: Continue/Pick up eligibility, other groups' order, and Continue's date tie-breaker. */
 	activeAt: number | null
 }
 
@@ -65,7 +65,7 @@ export interface StartRow {
 }
 
 export interface MyShowsPlan {
-	/** Watching with a Next episode and activity in the last 90 days, most recent first; then Seen with new episodes. */
+	/** Eligible shows; `orderContinue` applies release-date ordering once their Next episodes are resolved. */
 	continue: ShowRow[]
 	/** Want to See shows not started, best taste match first. */
 	start: StartRow[]
@@ -84,9 +84,25 @@ const time = (value: Date | string | number | null | undefined) =>
 	value === null || value === undefined ? null : new Date(value).getTime()
 
 // Most recent first; shows without an activity date last, then by id so the order never flickers.
-const byActivity = (a: ShowRow, b: ShowRow) =>
+const byActivity = (
+	a: Pick<ShowRow, "id" | "activeAt">,
+	b: Pick<ShowRow, "id" | "activeAt">,
+) =>
 	(b.activeAt ?? Number.NEGATIVE_INFINITY) -
 		(a.activeAt ?? Number.NEGATIVE_INFINITY) || a.id - b.id
+
+/** One ordering rule for every Continue show, independent of its stored state. */
+export function orderContinue<
+	T extends Pick<ShowRow, "id" | "activeAt"> & {
+		next: { airDate: string | null } | null
+	},
+>(rows: readonly T[]): T[] {
+	return [...rows].sort(
+		(a, b) =>
+			(b.next?.airDate ?? "").localeCompare(a.next?.airDate ?? "") ||
+			byActivity(a, b),
+	)
+}
 
 export function planMyShows(input: {
 	shows: readonly TrackedShow[]
@@ -102,7 +118,6 @@ export function planMyShows(input: {
 		dropped: [],
 		total: 0,
 	}
-	const seenNew: ShowRow[] = []
 	const since = input.now - ACTIVE_DAYS * DAY_MS
 	const tracked = new Set<number>()
 	for (const { id, entry, catalog } of input.shows) {
@@ -135,7 +150,7 @@ export function planMyShows(input: {
 		if (entry.state === "on_hold") plan.onHold.push(row)
 		else if (entry.state === "dropped") plan.dropped.push(row)
 		else if (entry.state === "seen") {
-			if (row.left > 0) seenNew.push({ ...row, kind: "seenNew" })
+			if (row.left > 0) plan.continue.push({ ...row, kind: "seenNew" })
 			else if (row.running) plan.waiting.push(row)
 			// Seen, ended and nothing new: not on this page. It is in My library.
 		} else if (aired !== null && row.left === 0) plan.waiting.push(row)
@@ -144,7 +159,6 @@ export function planMyShows(input: {
 		else plan.pickUp.push({ ...row, kind: "next" })
 	}
 	plan.continue.sort(byActivity)
-	plan.continue.push(...seenNew.sort(byActivity))
 	for (const group of [plan.pickUp, plan.waiting, plan.onHold, plan.dropped])
 		group.sort(byActivity)
 	plan.start = input.starts
@@ -239,7 +253,7 @@ export function tonightsPickOf(
 	plan: Pick<MyShowsPlan, "continue" | "start">,
 	firstMovie: number | null,
 ): TonightChoice | null {
-	const first = plan.continue[0]
+	const first = plan.continue.filter((row) => row.kind === "next").sort(byActivity)[0]
 	if (first?.kind === "next") return { kind: "episode", showId: first.id }
 	if (firstMovie !== null) return { kind: "movie", movieId: firstMovie }
 	const start = plan.start[0]

@@ -74,7 +74,7 @@ async function trackedPick(
 			reason: parts.newOn.start ? "landed" : "startShow",
 			href: DOOR_HREF.start,
 		}
-	const next = parts.shows.continue[0].next
+	const next = parts.shows.continue.find((row) => row.id === choice.showId)?.next
 	return {
 		title,
 		reason: "nextEpisode",

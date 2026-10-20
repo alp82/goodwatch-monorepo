@@ -66,14 +66,15 @@ LIMIT 20000`
 
 /**
  * Q9. Which of some shows had a regular episode air after one UTC date and by another: the shows that can be new
- * since the member last opened My shows. The last two parameters are midnight UTC of the day of the visit and of
- * today. One row per such episode. Public data.
+ * since the member's fixed announcement baseline. The last two parameters are midnight UTC of that day and of
+ * today. One row per show, so a long-running baseline cannot exhaust the episode limit. Public data.
  */
 export const airedSinceQuery = (shows: number) => `
 SELECT show_id
 FROM episode
 WHERE show_id IN (${Array.from({ length: shows }, () => "?").join(", ")})
   AND season_number > 0 AND removed_at IS NULL AND air_date > ? AND air_date <= ?
+GROUP BY show_id
 LIMIT 20000`
 
 /** Q10. When the member last opened My shows: their row of `user_setting`, by the whole key. */

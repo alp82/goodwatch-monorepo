@@ -360,6 +360,9 @@ export function useShowTracking(showId: number): ShowTracking {
 		queryClient.setQueryData<UserData>(getQueryKeyUserData(userId), (old) =>
 			afterShowTracking(old, showId, watchStateEntryOf(copy)),
 		)
+		// A confirmed copy can have the same signature as its optimistic one. Refetch
+		// after confirmation too, so an earlier read cannot leave its announcement pending.
+		void queryClient.invalidateQueries({ queryKey: ["new-episodes", userId] })
 	}, [ready, copy, userId, showId, queryClient])
 
 	return {

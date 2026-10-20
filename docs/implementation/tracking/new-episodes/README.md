@@ -15,6 +15,38 @@ The signal has a second source since [#456](https://github.com/alp82/goodwatch-m
 landed on one of the member's services. What opens the hub then shows the sum, and the My shows tile counts a show
 once. See [newly-available/README.md](../newly-available/README.md).
 
+## Changed on 2026-10-20: returning shows and persistent announcements
+
+The owner confirmed these changes after Cyberpunk: Edgerunners appeared in Waiting while its details and the
+signal showed a new season. My shows grouped by `show.aired_episode_count`, while the signal read episode dates.
+My shows now groups using one batched UTC count of regular, non-removed episodes with known dates that have come.
+The cached show-level count no longer decides placement. Unknown/future dates never make an episode aired.
+
+- Seen with aired episodes unwatched has derived display state `new_episodes`, labelled by count in amber.
+  Continue sorts every eligible show by its Next episode air date, newest first, then last activity. A new weekly
+  episode and a returning season follow the same rule; an older unwatched episode stays below newer ones.
+  Seen, running and nothing unwatched is `caught_up`. Stored status never changes
+  without a member action. Tonight's pick still uses the active Watching show and its own episode.
+- Every Continue candidate's Next episode is resolved before ordering and before choosing the home's first rows.
+  The episode-list budget limits additional Pick up rows, not the candidates needed for Continue ordering.
+- Episode announcements remain until explicitly dismissed or any episode in the announced snapshot is watched.
+  Visiting My shows or title details does not clear them. The number outside My shows counts pending shows.
+- A first read freezes an initial seven-day baseline in `user_setting` under `show_release_since`.
+  Immutable snapshots use `show_release:<show>:<pass>:<first-episode-sequence>`; each records the first episode,
+  its air date, the batch's aired episode sequences and last sequence. Acknowledgments use
+  `show_release_ack:<show>:<pass>:<first-episode-sequence>`. The sequence is catalog season * 100000 + episode.
+  No schema migration is needed. Prefetch may discover a release but never dismisses one or records a visit.
+- Snapshot inserts use ON CONFLICT DO NOTHING and refresh new snapshots before answering prefix reads.
+  Acknowledgments are read by whole primary keys together. An old tab can dismiss only its displayed snapshot.
+  Watching any episode in that snapshot persists the acknowledgment on the next signal read. Dismissal does
+  not change stored show status or Continue placement. A subsequent release can announce after catch-up.
+- On hold, Dropped, and already-behind shows generate no new announcement. A Watching show's next episode must
+  also have aired after its last activity day. An undated or removed episode cannot keep an obsolete announcement.
+- My shows visits still record `my_shows_visited_at` for streaming-service news. That behavior is unchanged.
+- Removed the paragraph explaining ordering and row navigation. Each pending show has its own Dismiss button.
+
+The earlier sections below describe the original implementation and are superseded by these rules where they differ.
+
 ## Changed on 2026-10-12: Pick up, the waiting row, and what counts as activity
 
 Decided by the owner after looking at the page with their own shows. Still behind `REC_TRACKING`; the rule and the
