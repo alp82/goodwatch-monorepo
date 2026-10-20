@@ -11,6 +11,7 @@ import {
 	isDiscoverySearch,
 	validDiscoverRanges,
 } from "./discover-filters.ts"
+import { instrumentMcpServer } from "./analytics.server.ts"
 import { mcpServerInfo } from "./identity.ts"
 import { resultFacts, withPageLink } from "./links.ts"
 import { readToolEnabled } from "./policy.server.ts"
@@ -313,6 +314,7 @@ export function createToolServer(
 	const server = new McpServer(mcpServerInfo, {
 		instructions: resultFacts,
 	})
+	instrumentMcpServer(server, userId)
 	for (const tool of readToolDefinitions) {
 		if (!readToolEnabled(userId, tool.name)) continue
 		const posters = POSTER_GRID_TOOLS.has(tool.name)
