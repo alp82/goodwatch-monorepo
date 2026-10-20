@@ -94,7 +94,7 @@ export const readToolDefinitions: {
 		name: "search_titles",
 		title: "Search titles by name",
 		description:
-			"Search movie and show names across the GoodWatch catalog, separate from your library. Name lookup by default; for descriptive queries, explicitly set ranked=true for an optional smarter match, ordered For you by default. Defaults to everywhere and includes seen titles. Use the shared Discover filters to narrow by type, genres, years, runtime, score, services, moods and more; get_discover_filters lists genres/provider IDs. Repeat filters with offset cursors; ranked cursors inherit their view. Use discover_titles whenever no name or descriptive query is given. Except when paging with a ranked cursor, a missing, empty or whitespace-only query runs the same Discover path, filters and For you default as discover_titles; ranked is ignored and no smarter-match attempt is charged. exclude_seen=true filters seen titles before paging. Returns up to 40 results by default. Different works can share a name and year; runtime_minutes can distinguish them. Smarter matches allow 20 uncached attempts per member per UTC day, one in flight, normalized queries cached for 60 seconds and paging is free.",
+			"Search movie and show names across the GoodWatch catalog, separate from your library. Name lookup by default; for descriptive queries, explicitly set ranked=true for an optional smarter match, ordered For you by default. Defaults to everywhere and includes seen titles. Use the shared Discover filters to narrow by type, genres, years, runtime, score, services, moods and more; filters accept catalog genre and provider IDs. Repeat filters with offset cursors; ranked cursors inherit their view. Except when paging with a ranked cursor, a missing, empty or whitespace-only query runs the native Discover path, filters and For you default; ranked is ignored and no smarter-match attempt is charged. exclude_seen=true returns only unseen results, filtered before pagination. Returns up to 40 results by default; limit bounds the page size. Different works can share a name and year: use runtime_minutes to distinguish them. Smarter matches allow 20 uncached attempts per member per UTC day, one in flight, normalized queries cached for 60 seconds and paging is free.",
 		schema: z
 			.object({
 				...discoverFilters,
@@ -104,7 +104,7 @@ export const readToolDefinitions: {
 					.max(120)
 					.default("")
 					.describe(
-						"A title name or descriptive query. For recommendations without a query use discover_titles; blank queries run discovery.",
+						"A title name or descriptive query. Blank queries run discovery.",
 					),
 				ranked: z
 					.boolean()
@@ -149,7 +149,7 @@ export const readToolDefinitions: {
 		name: "discover_titles",
 		title: "Discover movies and shows",
 		description:
-			"Discover without a query using the same catalog, filters and ordering as GoodWatch Discover/Explore. For you by default; everywhere and seen titles included. Choose popularity, newest, score or match ordering. Use on_my_services=true for saved services, or providers for specific services, in your saved country. get_discover_filters lists valid genres and providers. Filters apply before pagination. Repeat filters when paging with offset cursors. Returns up to 40 titles and a matching Discover grid page_url.",
+			"Discover without a query using the same catalog, filters and ordering as GoodWatch Discover/Explore. For you by default; everywhere and seen titles included. Choose popularity, newest, score or match ordering. Use on_my_services=true for saved services, or providers for specific services, in your saved country. Filters apply before pagination. Repeat filters when paging with offset cursors. Returns up to 40 titles and a matching Discover grid page_url.",
 		schema: z
 			.object({
 				...discoverFilters,
@@ -168,7 +168,7 @@ export const readToolDefinitions: {
 		name: "get_discover_filters",
 		title: "Get Discover filter options",
 		description:
-			"List exact genre names, provider IDs/names available in your saved country (plus saved providers), and saved services for search_titles/discover_titles. Other filter choices are enumerated in those tools schemas. Reads existing settings without changing them.",
+			"List exact genre names, provider IDs/names available in your saved country (plus saved providers), and saved services for catalog discovery. Reads existing settings without changing them.",
 		schema: z.object({}).strict(),
 	},
 	{
@@ -203,14 +203,14 @@ export const readToolDefinitions: {
 		name: "get_tonight",
 		title: "Watch next",
 		description:
-			"Choose one thing to watch next, using your saved country and services: a next episode from a show you are watching, otherwise a Wishlist movie or show to start (or a suggestion if the Wishlist is empty). For the full Wishlist / Want to See list (including sorting by date added), use get_library with filter=want_to_see.",
+			"Choose one thing to watch next, using your saved country and services: a next episode from a show you are watching, otherwise a Wishlist movie or show to start (or a suggestion if the Wishlist is empty). Returns one recommendation rather than the complete Wishlist.",
 		schema: z.object({}).strict(),
 	},
 	{
 		name: "get_library",
 		title: "Get my library",
 		description:
-			"Your marked titles, including scores, Wishlist / Want to See, watch progress and Not interested. Use filter=want_to_see for your Wishlist; get_tonight chooses one thing to watch next. Includes added_at (Wishlist date, null when absent), runtime_minutes (movie duration or usual show episode length), and GoodWatch match. Defaults to match (Best match by your taste) when taste is available, otherwise the usual date sort. Use sort=runtime for the longest titles first across your entire filtered library, without per-title lookups. Explicit sorts are preserved. Sorts match My library: added (last added), last (last watched), score (highest first), title (ignores leading articles); waiting puts the oldest Wishlist additions first. Separate from search_titles.",
+			"Your marked titles, including scores, Wishlist / Want to See, watch progress and Not interested. filter=want_to_see selects your Wishlist. Includes added_at (Wishlist date, null when absent), runtime_minutes (movie duration or usual show episode length), and GoodWatch match. Defaults to match (Best match by your taste) when taste is available, otherwise the usual date sort. Use sort=runtime for the longest titles first across your entire filtered library, without per-title lookups. Explicit sorts are preserved. Sorts match My library: added (last added), last (last watched), score (highest first), title (ignores leading articles); waiting puts the oldest Wishlist additions first.",
 		schema: z
 			.object({
 				filter: z
@@ -253,7 +253,7 @@ export const readToolDefinitions: {
 		name: "search_people",
 		title: "Search people",
 		description:
-			"Search cast and crew matching the name query, most popular first (TMDB popularity). Results include each person’s ready-made link. Use the returned person_id with get_person for their acting, directing and writing filmography.",
+			"Search cast and crew by name. Returns canonical person_id values and GoodWatch person links.",
 		schema: z
 			.object({ query: z.string().trim().min(2).max(120), ...paging })
 			.strict(),
@@ -262,7 +262,7 @@ export const readToolDefinitions: {
 		name: "get_person",
 		title: "Get a person's filmography",
 		description:
-			"A person's catalog credits with your GoodWatch taste match. Results include the subject’s ready-made person link and title links for credits. Includes every title, even without a poster or score. Defaults to For you, everywhere, including seen titles. Newest and score sort the whole filmography before paging; exclude_seen uses the site's Not seen yet rule. Links open the person's real GoodWatch page; its grouping can differ.",
+			"A person's catalog credits with your GoodWatch taste match. Returns the subject’s person link and a link for each credited title. Includes every title, even without a poster or score. Defaults to For you, everywhere, including seen titles. Newest and score sort the whole filmography before paging; exclude_seen uses the site's Not seen yet rule. Links open the person's real GoodWatch page; its grouping can differ.",
 		schema: z
 			.object({
 				person_id: z.number().int().positive().max(2_000_000_000),
@@ -323,6 +323,7 @@ export function createToolServer(
 				description: tool.description,
 				inputSchema: tool.schema,
 				annotations: {
+					title: tool.title,
 					readOnlyHint: true,
 					destructiveHint: false,
 					idempotentHint: true,

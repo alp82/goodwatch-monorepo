@@ -182,7 +182,7 @@ export const writeToolDefinitions: {
 		name: "log_watch",
 		title: "Log a watch",
 		description:
-			"Log one movie or episode watch, an inclusive episode range (season, episode, episode_end), or a whole season (season, whole_season=true). Ranges use the catalog season/episode numbers from get_show_progress, mark only aired regular episodes missing in the current pass, never duplicate existing watches, and produce one receipt. Dates remain unknown unless explicitly supplied. Results report every added watch. Batch items are movies, episode ranges or whole seasons; to mark a whole show as watched, use set_show_status with Seen.",
+			"Log one movie or episode watch, an inclusive episode range (season, episode, episode_end), or a whole season (season, whole_season=true). Ranges use the catalog tracking season/episode numbers, mark only aired regular episodes missing in the current pass, never duplicate existing watches, and produce one receipt. Dates remain unknown unless explicitly supplied. Results report every added watch. Batch items are movies, episode ranges or whole seasons; whole-show status transitions are not supported by this tool.",
 		destructive: true,
 		schema: batchable(itemSchemas.log_watch, logWatchFields),
 	},
@@ -374,6 +374,7 @@ export function registerWriteTools(
 					],
 				},
 				annotations: {
+					title: tool.title,
 					readOnlyHint: false,
 					destructiveHint: tool.destructive,
 					idempotentHint: true,

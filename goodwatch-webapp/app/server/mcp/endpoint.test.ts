@@ -308,6 +308,7 @@ test("A member sees separate catalog and personal read tools, with valid schemas
 		assert.deepEqual(tool._meta.securitySchemes, [
 			{ type: "oauth2", scopes: ["mcp:read"] },
 		])
+		assert.equal(tool.annotations.title, tool.title)
 		assert.equal(tool.annotations.readOnlyHint, true)
 		assert.equal(tool.annotations.idempotentHint, true)
 		assert.equal(tool.annotations.destructiveHint, false)
@@ -462,6 +463,7 @@ test("Write scopes expose all writes with destructive hints on every write and n
 		],
 	)
 	for (const tool of writes) {
+		assert.equal(tool.annotations.title, tool.title)
 		assert.deepEqual(tool._meta.securitySchemes, [
 			{ type: "oauth2", scopes: ["mcp:read", "mcp:write"] },
 		])
@@ -618,7 +620,7 @@ test("Search, library and Watch next expose the requested client contract", asyn
 	assert.equal(search.inputSchema.properties.exclude_seen.type, "boolean")
 	assert.match(
 		search.description,
-		/exclude_seen=true filters seen titles before paging/,
+		/exclude_seen=true returns only unseen results, filtered before pagination/,
 	)
 	const library = tools.find(
 		(tool: { name: string }) => tool.name === "get_library",
@@ -638,7 +640,7 @@ test("Search, library and Watch next expose the requested client contract", asyn
 	)
 	assert.equal(next.title, "Watch next")
 	assert.match(next.description, /next episode/)
-	assert.match(next.description, /get_library/)
+	assert.match(next.description, /rather than the complete Wishlist/)
 })
 
 test("All read and write descriptions omit answer-formatting commands and retain native library sorting", async () => {
