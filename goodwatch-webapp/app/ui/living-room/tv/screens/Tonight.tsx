@@ -29,10 +29,10 @@ export default function Tonight({
 }) {
 	if (!picks.length)
 		return (
-			<Frame name="Tonight" items={items} dim={0.82}>
+			<Frame name="Watch next" items={items} dim={0.82}>
 				<div className="flex min-h-full flex-col justify-center text-[26px] text-white/70">
 					{waiting
-						? "Tonight's picks are on their way."
+						? "Your next picks are on their way."
 						: "No picks right now. Try again in a moment."}
 				</div>
 			</Frame>
@@ -42,7 +42,7 @@ export default function Tonight({
 	const words = tonightWords(shown, at, picks.length)
 	return (
 		<TitleView
-			name="Tonight"
+			name="Watch next"
 			crumb={words.crumb}
 			items={items}
 			title={shown.card}

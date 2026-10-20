@@ -24,7 +24,7 @@ export const meta: MetaFunction = () => [
 	{
 		name: "description",
 		content:
-			"The movies you want to see, for tonight: sorted your way, narrowed by mood, your streaming services and the time you have.",
+			"The movies you want to see next: sorted your way, narrowed by mood, your streaming services and the time you have.",
 	},
 	// Personal to each viewer.
 	{ name: "robots", content: "noindex, follow" },

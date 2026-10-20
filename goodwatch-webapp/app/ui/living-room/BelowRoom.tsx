@@ -117,7 +117,7 @@ export function BelowRoom({
 				{talked && <StartRowSlot />}
 				<header className="lrb-head">
 					<div>
-						<p className="lrb-eye">On GoodWatch tonight</p>
+						<p className="lrb-eye">On GoodWatch now</p>
 						<h2 id="browse-title">
 							{titles.length ? "Popular right now" : "Browse GoodWatch"}
 						</h2>

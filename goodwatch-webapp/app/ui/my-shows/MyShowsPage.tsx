@@ -587,7 +587,7 @@ export function MyShowsPage({
 			<div className={`${WRAP} flex flex-col gap-10 pt-2`}>
 				<section data-section="tonight">
 					<h2 className={`${DISPLAY} text-2xl text-white md:text-3xl`}>
-						Tonight
+						Watch next
 					</h2>
 					{fresh && (
 						<p
@@ -640,7 +640,7 @@ export function MyShowsPage({
 						className="mb-4"
 					/>
 					{total === 0 && (
-						<Empty title="No show for tonight">
+						<Empty title="No show to watch next">
 							Want to See on a show puts it here to start, with how long it is
 							and where it streams. Once you mark an episode watched on a show's
 							page, its next episode leads this list.

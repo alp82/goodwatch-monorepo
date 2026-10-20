@@ -87,7 +87,7 @@ test("a guest's home before the pool is drawn from the start titles alone", () =
 	assert.deepEqual(
 		apps.map((tile) => [tile.app, tile.name]),
 		[
-			["tonight", "Tonight"],
+			["tonight", "Watch next"],
 			["discover", "Discover"],
 			["explorer", "Explorer"],
 			["taste", "Taste"],

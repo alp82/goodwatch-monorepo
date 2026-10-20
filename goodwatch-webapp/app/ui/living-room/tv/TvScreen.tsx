@@ -80,7 +80,7 @@ export { EpisodeCode, EpisodeData, ShowsCode, ShowsData } from "./screen-code"
 /** A screen's name, as its top bar shows it and as it is announced when the screen changes. */
 const SCREEN_NAME: Record<Screen["name"], string> = {
 	home: "Home",
-	tonight: "Tonight",
+	tonight: "Watch next",
 	discover: "Discover",
 	explorer: "Explorer",
 	taste: "Taste",

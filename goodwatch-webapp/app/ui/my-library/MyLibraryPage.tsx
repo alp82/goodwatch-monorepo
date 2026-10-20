@@ -684,7 +684,7 @@ export function MyLibraryPage({
 		>
 			<PageHead
 				name="My library"
-				line="Every title you have marked, by where you stand with it. Picking one for tonight happens in My shows and My movies."
+				line="Every title you have marked, by where you stand with it. Choosing what to watch next happens in My shows and My movies."
 				links={[
 					{ label: "My shows", to: MY_SHOWS },
 					{ label: "My movies", to: MY_MOVIES },

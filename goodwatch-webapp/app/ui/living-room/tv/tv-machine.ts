@@ -97,7 +97,7 @@ export type TvScreen =
 	/** A member's My shows. */
 	| { name: "shows" }
 	/** A title as `<media_type>-<tmdb_id>`. */
-	| { name: "title"; title: string }
+	| { name: "title"; title: string; panel?: "fingerprint" | "trailer"; group?: number }
 	/** "How was it?" after Seen it. */
 	| { name: "rate"; title: string }
 	/** "On <service>": titles to watch on one streaming service, by its TMDB provider id. */
@@ -286,7 +286,19 @@ function readScreen(params: URLSearchParams, member: boolean): TvScreen {
 		case "title":
 		case "rate": {
 			const title = readTitleKey(params.get("title"))
-			return title ? { name, title } : HOME
+			if (!title) return HOME
+			const panel = params.get("panel")
+			const group = params.get("group")
+			return name === "title" && (panel === "fingerprint" || panel === "trailer")
+				? {
+						name,
+						title,
+						panel,
+						...(group !== null
+							? { group: /^(-1|[012])$/.test(group) ? Number(group) : -1 }
+							: {}),
+					}
+				: { name, title }
 		}
 		case "search":
 			return { name, query: params.get("q")?.trim() || null }
@@ -340,6 +352,8 @@ const TV_KEYS = [
 	"side",
 	"pick",
 	"title",
+	"panel",
+	"group",
 	"q",
 	"focus",
 	"service",
@@ -375,6 +389,10 @@ export function writeTvParams(
 		case "title":
 		case "rate":
 			out.set("title", screen.title)
+			if (screen.name === "title" && screen.panel) {
+				out.set("panel", screen.panel)
+				if (screen.group !== undefined) out.set("group", String(screen.group))
+			}
 			break
 		case "search":
 			if (screen.query) out.set("q", screen.query)
@@ -567,7 +585,9 @@ function contentItems(screen: TvScreen, ctx: TvContext): string[] {
 				...titleItems(ctx.toStart, SHOWS_PER_GROUP),
 			]
 		case "title":
-			return ["watch", "want-to-see", "seen"]
+			return screen.panel
+				? ["close", ...(screen.panel === "fingerprint" ? ["group:-1", "group:0", "group:1", "group:2"] : [])]
+				: ["watch", "trailer", "want-to-see", "seen", "fingerprint"]
 		case "service":
 			return titleItems(ctx.titles, SERVICE_TITLES)
 		case "search":
@@ -590,7 +610,7 @@ function contentItems(screen: TvScreen, ctx: TvContext): string[] {
 export function tvItems(screen: TvScreen, ctx: TvContext): string[] {
 	return [
 		...contentItems(screen, ctx),
-		...(destinationHref(screen, ctx) ? ["expand"] : []),
+		...(destinationHref(screen, ctx) && !(screen.name === "title" && screen.panel) ? ["expand"] : []),
 		...(screen.name === "home" ? [] : ["bar:back"]),
 		...(screen.name === "search" ? [] : ["bar:search"]),
 		"bar:menu",
@@ -721,7 +741,12 @@ function leave(
 
 /** Back: close the menu, else one step back, home included. A deep link falls back to home; home itself stays. */
 function back(state: TvState): TvTransition {
-	return state.menuOpen ? none(closeMenu(state)) : leave(state, HOME)
+	if (state.menuOpen) return none(closeMenu(state))
+	if (state.screen.name === "title" && state.screen.panel) {
+		const next = leave(state, { name: "title", title: state.screen.title })
+		return next.history === "replace" ? { ...next, state: { ...next.state, focus: state.screen.panel } } : next
+	}
+	return leave(state, HOME)
 }
 
 /** A jump from the menu or the Remote: a new screen, unless that screen is already showing. */
@@ -1206,6 +1231,15 @@ function choose(state: TvState, item: string, ctx: TvContext): TvTransition {
 		}
 		case "title":
 			return push(state, { name: "title", title: arg })
+		case "fingerprint":
+		case "trailer":
+			return s.name === "title" ? push(state, { name: "title", title: s.title, panel: kind }) : none(state)
+		case "group":
+			return s.name === "title" && s.panel === "fingerprint"
+				? { ...none({ ...state, focus: item }), state: { ...state, screen: { ...s, group: Number(arg) }, focus: item }, history: "replace" }
+				: none(state)
+		case "close":
+			return back(state)
 		case "watch":
 		case "want-to-see":
 			return s.name === "title"

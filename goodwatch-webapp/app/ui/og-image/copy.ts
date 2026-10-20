@@ -72,7 +72,7 @@ export const collectionCopy = (
 // Home, and every page without its own entry below.
 export const HOME_COPY: PageCopy = {
 	tag: "GoodWatch",
-	title: "What should you watch tonight?",
+	title: "What should you watch next?",
 	subtitle:
 		"Every streaming service, every rating, one place. Find movies and shows by mood, vibe, and where they stream.",
 }
@@ -152,7 +152,7 @@ export const STATIC_PAGE_COPY: Record<string, PageCopy> = {
 export const DISCOVERY_COPY = {
 	discover: {
 		tag: "Discover",
-		lines: ["What’s good", "tonight?"],
+		lines: ["What’s good", "next?"],
 		subtitle: "Only the good stuff, on the services you have.",
 	},
 	explorer: {

@@ -85,6 +85,38 @@ const choose = (query: string, item: string, ctx = guest, depth = 1) =>
 	run(at(query, depth, ctx), ctx, { type: "choose", item })
 
 describe("TV state in the URL", () => {
+	for (const group of ["0.5", "-0.5", "nope", "NaN", "Infinity", "-2", "3", "99", "", " ", "0x1"]) {
+		it(`defaults malformed Fingerprint group ${JSON.stringify(group)} to Summary`, () => {
+			const params = new URLSearchParams("tv=title&title=movie-1946&panel=fingerprint")
+			params.set("group", group)
+			const linked = readTvState(params, guest)
+			assert.deepEqual(linked.screen, {
+				name: "title", title: "movie-1946", panel: "fingerprint", group: -1,
+			})
+			assert.equal(writeTvParams(linked.screen).get("group"), "-1")
+			const back = transition(linked, { type: "back" }, guest)
+			assert.equal(back.history, "replace")
+			assert.equal(back.state.focus, "fingerprint")
+			assert.deepEqual(back.state.screen, { name: "title", title: "movie-1946" })
+		})
+	}
+	for (const group of [-1, 0, 1, 2]) {
+		it(`roundtrips Fingerprint group ${group} and returns to the invoking action`, () => {
+			const linked = at(`tv=title&title=movie-1946&panel=fingerprint&group=${group}`)
+			assert.deepEqual(linked.screen, {
+				name: "title", title: "movie-1946", panel: "fingerprint", group,
+			})
+			assert.deepEqual(readTvState(writeTvParams(linked.screen), guest).screen, linked.screen)
+			const opened = transition(at("tv=title&title=movie-1946"), { type: "choose", item: "fingerprint" }, guest)
+			assert.equal(opened.history, "push")
+			const selected = transition(opened.state, { type: "choose", item: `group:${group}` }, guest)
+			assert.equal(selected.history, "replace")
+			assert.deepEqual(selected.state.screen, linked.screen)
+			assert.equal(transition(selected.state, { type: "back" }, guest).history, "back")
+			const closed = transition(linked, { type: "choose", item: "close" }, guest)
+			assert.equal(closed.state.focus, "fingerprint")
+		})
+	}
 	it("shows home when the URL has no TV screen", () => {
 		assert.deepEqual(at("").screen, { name: "home" })
 		assert.equal(url(at("")), "")
@@ -453,8 +485,10 @@ describe("the screens and their items, in reading order", () => {
 	it("a title: Watch, Want to See, Seen it", () => {
 		assert.deepEqual(items("tv=title&title=movie-1"), [
 			"watch",
+			"trailer",
 			"want-to-see",
 			"seen",
+			"fingerprint",
 			"expand",
 			...BAR,
 		])
@@ -822,16 +856,16 @@ describe("history: what changes nothing", () => {
 	it("a focus move, by direction, by the wheel and by the pointer", () => {
 		const boxes: TvBox[] = [
 			{ id: "watch", left: 0, top: 0, width: 100, height: 50 },
-			{ id: "want-to-see", left: 120, top: 0, width: 100, height: 50 },
+			{ id: "trailer", left: 120, top: 0, width: 100, height: 50 },
 		]
 		for (const action of [
 			{ type: "move", dir: "right", boxes },
 			{ type: "step", by: 1 },
-			{ type: "focus", item: "want-to-see" },
+			{ type: "focus", item: "trailer" },
 		] as const) {
 			const t = run(at("tv=title&title=movie-1", 1), guest, action)
 			assert.equal(t.history, "none")
-			assert.equal(focusedItem(t.state, guest), "want-to-see")
+			assert.equal(focusedItem(t.state, guest), "trailer")
 			assert.equal(t.url, "tv=title&title=movie-1")
 			assert.deepEqual(t.effects, [])
 		}

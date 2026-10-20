@@ -115,7 +115,7 @@ export function TitleList({
 			label={title.says ?? title.title}
 			// The phone: as tall as the row, and no taller than lets four stand side by side.
 			className={`tvc-tile shrink-0 bg-[#10131c] ${P ? "aspect-[2/3] h-full max-h-[156px]" : ""}`}
-			style={P ? undefined : { width: 172, height: 258 }}
+			style={P ? undefined : { width: 163, height: 244 }}
 		>
 			{title.poster && (
 				<Img
@@ -148,7 +148,7 @@ export function TitleList({
 			<Frame {...frame}>
 				<div className="flex h-full flex-col">
 					{shown ? (
-						<div key={shown.key} className="tvc-fade shrink-0">
+						<div key={shown.key} className="tvc-fade h-[64px] shrink-0">
 							<div
 								{...mediaTextAttributes(mediaFieldLanguage(shown))}
 								className="truncate text-[30px] font-bold leading-none tracking-tight"
@@ -160,7 +160,7 @@ export function TitleList({
 							</div>
 						</div>
 					) : (
-						<div className="shrink-0 text-[24px] leading-tight text-white/70">
+						<div className="h-[64px] shrink-0 text-[24px] leading-tight text-white/70">
 							{empty}
 						</div>
 					)}
@@ -193,8 +193,8 @@ export function TitleList({
 	}
 	return (
 		<Frame {...frame} reserve>
-			<div className="flex min-h-full flex-col justify-between">
-				<div className="w-[820px]">
+			<div className="flex h-full flex-col justify-between">
+				<div className="h-[136px] w-[820px] shrink-0">
 					{shown ? (
 						<div key={shown.key} className="tvc-fade">
 							<div
@@ -212,10 +212,10 @@ export function TitleList({
 						<div className="text-[32px] text-white/70">{empty}</div>
 					)}
 				</div>
-				<div className="flex items-end gap-8">
+				<div className="flex min-h-0 shrink-0 items-end gap-8">
 					<div
 						{...{ [TV_ROW_ATTR]: "" }}
-						className="relative -mx-6 flex min-w-0 flex-1 gap-6 overflow-hidden px-6 py-7"
+						className="relative -mx-6 flex min-w-0 flex-1 gap-6 overflow-hidden px-6 py-5"
 					>
 						{posters}
 					</div>

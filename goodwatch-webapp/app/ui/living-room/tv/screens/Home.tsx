@@ -21,7 +21,7 @@ import type {
 import { HomeGuide } from "./HomeGuide"
 import { AppArt, artFiles } from "./app-art"
 
-export const HOME_HEADLINE = "Let's find something good for tonight."
+export const HOME_HEADLINE = "Let's find something good to watch next."
 
 /** A tile of home's row: an app, or a streaming service. */
 type Tile = {

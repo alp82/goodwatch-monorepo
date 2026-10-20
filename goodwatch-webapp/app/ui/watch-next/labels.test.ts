@@ -7,7 +7,7 @@ const { heroLabel, movieHeroLabel, runtimeLabel, tierGridClass, TIER_LABEL } =
 	await import("./labels.ts")
 
 test("Watch next's hero line is unchanged", () => {
-	assert.equal(heroLabel("match", [], null), "Best match for you tonight")
+	assert.equal(heroLabel("match", [], null), "Best match for you")
 	assert.equal(heroLabel("top", [], null), "Top rated on your Wishlist")
 	assert.equal(
 		heroLabel("match", [], "nothingOnServices"),
@@ -18,42 +18,42 @@ test("Watch next's hero line is unchanged", () => {
 test("My movies' hero line names tonight's movie and the time chosen", () => {
 	assert.equal(
 		movieHeroLabel("match", [], null, null),
-		"Tonight's movie · Best match for you tonight",
+		"Watch next · Best match for you",
 	)
 	assert.equal(
 		movieHeroLabel("match", [], null, 120),
-		"Tonight's movie · Best match for you tonight, up to 2h",
+		"Watch next · Best match for you, up to 2h",
 	)
 	assert.equal(
 		movieHeroLabel("top", ["funny"], null, 90),
-		"Tonight's movie · Top rated in Funny, up to 1h 30",
+		"Watch next · Top rated in Funny, up to 1h 30",
 	)
 	assert.equal(
 		movieHeroLabel("waiting", [], null, null),
-		"Tonight's movie · Waiting longest of your movies",
+		"Watch next · Waiting longest of your movies",
 	)
 	assert.equal(
 		movieHeroLabel("added", [], null, null),
-		"Tonight's movie · Last added of your movies",
+		"Watch next · Last added of your movies",
 	)
 	assert.equal(
 		movieHeroLabel("popular", [], null, null),
-		"Tonight's movie · Most popular of your movies right now",
+		"Watch next · Most popular of your movies right now",
 	)
 })
 
 test("when nothing fits, My movies says what the closest movie is closest to", () => {
 	assert.equal(
 		movieHeroLabel("match", [], "nothingInTime", 90),
-		"Tonight's movie · Nothing up to 1h 30; the closest",
+		"Watch next · Nothing up to 1h 30; the closest",
 	)
 	assert.equal(
 		movieHeroLabel("match", ["funny"], "closestToMoods", null),
-		"Tonight's movie · Closest to your moods",
+		"Watch next · Closest to your moods",
 	)
 	assert.equal(
 		movieHeroLabel("match", [], "nothingOnServices", null),
-		"Tonight's movie · Nothing on your services; closest",
+		"Watch next · Nothing on your services; closest",
 	)
 })
 
@@ -81,7 +81,7 @@ test("no line of My movies says film or Wishlist", () => {
 		runtimeLabel({ media_type: "movie", runtime: 132 }, "Movie"),
 		"2h 12m",
 	)
-	assert.equal(TIER_LABEL.notTonightsFit, "Not tonight's fit")
+	assert.equal(TIER_LABEL.notTonightsFit, "Not a fit right now")
 })
 
 test("a closed group is hidden at every width, not re-shown by a desktop display class", () => {
@@ -129,7 +129,7 @@ test("the taste picker's picks in words: one kind with or, kinds with and (#677)
 	assert.equal(picksShort(picker), "Any mood")
 	assert.equal(
 		heroLabel("match", [], null, picksWords(mixed)),
-		"Best match for Dark, psychological thrillers and Slow burn tonight",
+		"Best match for Dark, psychological thrillers and Slow burn",
 	)
 	assert.equal(
 		heroLabel("match", [], "closestToMoods", picksWords(mixed)),

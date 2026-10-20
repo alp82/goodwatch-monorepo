@@ -16,7 +16,7 @@ export const meta: MetaFunction = () => {
 	const pageMeta: PageMeta = {
 		title: "Use GoodWatch in Claude and ChatGPT | GoodWatch",
 		description:
-			"Add GoodWatch to Claude, Claude Code or ChatGPT. Ask what to watch tonight, log what you watched and rate titles by chatting.",
+			"Add GoodWatch to Claude, Claude Code or ChatGPT. Ask what to watch next, log what you watched and rate titles by chatting.",
 		url: "https://goodwatch.app/connect",
 		image: "https://goodwatch.app/images/heroes/hero-movies.png",
 		alt: "Use GoodWatch in Claude and ChatGPT",

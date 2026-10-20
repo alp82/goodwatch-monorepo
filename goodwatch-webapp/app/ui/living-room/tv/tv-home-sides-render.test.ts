@@ -99,7 +99,7 @@ test("without `words`, a side is its loved posters: no name, no moods, no share"
 	)
 	// Today's H1 is there once, for a screen reader.
 	assert.equal(
-		html.split("Let&#x27;s find something good for tonight.").length - 1,
+		html.split("Let&#x27;s find something good to watch next.").length - 1,
 		1,
 	)
 })

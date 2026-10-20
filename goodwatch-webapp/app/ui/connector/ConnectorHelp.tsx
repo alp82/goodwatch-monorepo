@@ -59,7 +59,7 @@ const APPS: {
 ]
 
 const EXAMPLES = [
-	"What should I watch tonight? Something funny, under two hours.",
+	"What should I watch next? Something funny, under two hours.",
 	"I just watched episode 4 of Severance season 2.",
 	"Where am I in The Bear?",
 	"Rate Dune: Part Two 9 out of 10.",
@@ -78,7 +78,7 @@ export function ConnectorHelp() {
 					Use GoodWatch in Claude and ChatGPT
 				</h1>
 				<p className="text-lg leading-relaxed text-gray-300">
-					Add GoodWatch to your AI assistant. Then ask it what to watch tonight,
+					Add GoodWatch to your AI assistant. Then ask it what to watch next,
 					tell it what you just watched, or rate a title, in your own words. It
 					works with your GoodWatch account: your ratings, your shows, your
 					streaming services.

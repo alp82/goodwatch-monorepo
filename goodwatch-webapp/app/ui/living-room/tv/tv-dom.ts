@@ -16,6 +16,14 @@ export const TV_INPUT_ATTR = "data-tv-input"
 
 /** How far from a row's edge a focused item stays, in TV canvas pixels, so the item before or after it shows. */
 const ROW_MARGIN = 30
+const rowMotion = new WeakMap<HTMLElement, number>()
+
+export function restoreRowPosition(row: HTMLElement, left: number) {
+	const pending = rowMotion.get(row)
+	if (pending !== undefined) cancelAnimationFrame(pending)
+	rowMotion.delete(row)
+	row.scrollTo({ left, behavior: "instant" })
+}
 
 /** The room: its TV is the one the keys drive. */
 export const roomElement = () => document.getElementById(ROOM_ID)
@@ -49,34 +57,70 @@ export function inputElement(): HTMLInputElement | null {
  * scale and the focused item's growth don't count.
  */
 export function bringIntoView(item: HTMLElement, smooth: boolean) {
+	const vertical = item.closest<HTMLElement>("[data-tv-scroll]")
+	if (vertical && vertical.scrollHeight > vertical.clientHeight) {
+		const viewport = vertical.getBoundingClientRect()
+		const box = item.getBoundingClientRect()
+		const scale = viewport.height / vertical.clientHeight
+		const delta =
+			box.top < viewport.top
+				? box.top - viewport.top
+				: box.bottom > viewport.bottom
+					? box.bottom - viewport.bottom
+					: 0
+		if (delta)
+			vertical.scrollTo({
+				top: vertical.scrollTop + delta / scale,
+				behavior: "instant",
+			})
+	}
 	const row = item.closest<HTMLElement>(`[${TV_ROW_ATTR}]`)
 	if (!row || row.scrollWidth <= row.clientWidth) return
 	const left = item.offsetLeft
 	const right = left + item.offsetWidth
+	// Reserve the next poster, rather than waiting for the current one to reach the rim.
+	const margin = Math.max(
+		ROW_MARGIN,
+		Math.min(row.clientWidth * 0.28, (row.clientWidth - item.offsetWidth) / 2),
+	)
 	const from = row.scrollLeft
 	const to =
-		left - ROW_MARGIN < from
-			? left - ROW_MARGIN
-			: right + ROW_MARGIN > from + row.clientWidth
-				? right + ROW_MARGIN - row.clientWidth
+		left - margin < from
+			? left - margin
+			: right + margin > from + row.clientWidth
+				? right + margin - row.clientWidth
 				: from
 	const target = Math.max(0, Math.min(to, row.scrollWidth - row.clientWidth))
-	// "instant" also ends a smooth paging still on its way, so a measurement right after it sees the row at rest.
-	row.scrollTo({ left: target, behavior: smooth ? "smooth" : "instant" })
+	const pending = rowMotion.get(row)
+	if (pending !== undefined) cancelAnimationFrame(pending)
+	if (!smooth || Math.abs(target - from) < 1) {
+		row.scrollTo({ left: target, behavior: "instant" })
+		rowMotion.delete(row)
+		return
+	}
+	// Native smooth-scroll duration grows with distance and restarts under held arrows. Finish each move in a
+	// bounded 120 ms; a new focus retargets from the current position, never queues another page of motion.
+	const started = performance.now()
+	const tick = (now: number) => {
+		const p = Math.min(1, (now - started) / 120)
+		row.scrollLeft = from + (target - from) * (1 - (1 - p) ** 3)
+		if (p < 1 && row.isConnected)
+			rowMotion.set(row, requestAnimationFrame(tick))
+		else rowMotion.delete(row)
+	}
+	rowMotion.set(row, requestAnimationFrame(tick))
 }
 
 /**
  * The boxes of the items of the topmost layer, on the window, with how many window pixels a canvas pixel is.
- * `focused` is brought into view first, so its row is where it will be.
+ * Read the current geometry without cancelling the row's in-flight motion.
  */
-export function measureItems(focused: string): {
+export function measureItems(_focused: string): {
 	boxes: TvBox[]
 	scale: number
 } {
 	const layer = topLayer()
 	if (!layer) return { boxes: [], scale: 1 }
-	const at = itemElement(focused)
-	if (at) bringIntoView(at, false)
 	const canvas = layer.closest<HTMLElement>(`[${TV_CANVAS_ATTR}]`)
 	const scale =
 		canvas && canvas.offsetWidth > 0

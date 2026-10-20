@@ -126,8 +126,12 @@ export function Item({
 	className = "",
 	style,
 	children,
+	href,
+	linkData,
 }: {
 	id: string
+	href?: string
+	linkData?: Record<string, string | number>
 	/** For a screen reader, where the item shows a picture or an icon alone. */
 	label?: string
 	/** For an item that is on or off, such as a tab: whether it is on. */
@@ -143,15 +147,20 @@ export function Item({
 	// An item that arrives with the focus is in view at once: its row pages to it before the first paint. A screen
 	// can arrive with the focus far along a row (a reload, a link, Back from a page), and the room draws its screen
 	// anew once it has measured the window. A focus that moves later is paged to by the TV's hook (use-tv.ts).
-	const el = useRef<HTMLButtonElement>(null)
+	const el = useRef<HTMLButtonElement & HTMLAnchorElement>(null)
 	const arrivedOn = useRef(on)
 	useIsoLayoutEffect(() => {
 		if (arrivedOn.current && el.current) bringIntoView(el.current, false)
 	}, [])
+	const Tag = href ? "a" : "button"
 	return (
-		<button
+		<Tag
 			ref={el}
-			type="button"
+			href={href}
+			target={href ? "_blank" : undefined}
+			rel={href ? "noreferrer" : undefined}
+			{...linkData}
+			type={href ? undefined : "button"}
 			{...{ [TV_ITEM_ATTR]: id }}
 			aria-current={on || undefined}
 			aria-label={label}
@@ -165,12 +174,12 @@ export function Item({
 				if (!on && e.pointerType === "mouse")
 					view.dispatch({ type: "focus", item: id })
 			}}
-			onClick={() => view.dispatch({ type: "choose", item: id })}
+			onClick={() => view.dispatch({ type: href ? "focus" : "choose", item: id })}
 			className={`tvc-item ${on ? "tvc-on" : ""} ${className}`}
 			style={style}
 		>
 			{children}
-		</button>
+		</Tag>
 	)
 }
 
