@@ -6,6 +6,7 @@
 // The rules (`introStart`):
 // - Nothing kept (a new tab): a guest gets the boot screen, then the film from its first scene; a member the boot
 //   screen and the TV's home.
+// - A member returning with guest progress goes to the TV's home; only an explicit replay opens the film.
 // - The visitor left the film (Just look around, a member's boot): the TV's home, no boot.
 // - The film was playing: it goes on from that scene, no boot.
 // - The visitor has tapped titles in the quiz: the quiz, as they left it, no boot.
@@ -45,10 +46,8 @@ export function introStart({
 	scenes: number
 }): IntroStart {
 	if (replay) return { kind: "film", scene: 0, boot: false }
-	if (!progress)
-		return member
-			? { kind: "home", boot: true }
-			: { kind: "film", scene: 0, boot: true }
+	if (member) return { kind: "home", boot: !progress }
+	if (!progress) return { kind: "film", scene: 0, boot: true }
 	if ("left" in progress) return { kind: "home", boot: false }
 	if (tapped) return { kind: "film", scene: quizScene, boot: false }
 	const scene =

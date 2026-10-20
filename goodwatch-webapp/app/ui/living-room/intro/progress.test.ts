@@ -48,6 +48,13 @@ describe("introStart", () => {
 			{ kind: "film", scene: 10, boot: false },
 		)
 	})
+	it("takes a member home even when the tab still holds their guest quiz or unfinished film", () => {
+		for (const tapped of [false, true])
+			assert.deepEqual(
+				introStart({ ...base, member: true, tapped, progress: { scene: 4 } }),
+				{ kind: "home", boot: false },
+			)
+	})
 	it("never shows the quiz for taps of a visitor who left the film", () => {
 		assert.deepEqual(
 			introStart({ ...base, tapped: true, progress: { left: true } }),

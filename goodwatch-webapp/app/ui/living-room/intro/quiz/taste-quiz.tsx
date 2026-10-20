@@ -9,6 +9,7 @@ import { Link } from "@remix-run/react"
 import { type CSSProperties, useEffect, useRef, useState } from "react"
 import ScoreRing from "~/ui/details/hero/ScoreRing"
 import type { IntroCard } from "~/ui/living-room/intro/data"
+import { useUser } from "~/utils/auth"
 import { tmdbImageUrl } from "~/utils/tmdb-image"
 import { TAPS_KEY } from "../progress"
 
@@ -145,6 +146,7 @@ export function TasteQuiz({
 	cards,
 	onLeave,
 }: { cards: IntroCard[]; onLeave: () => void }) {
+	const { user } = useUser()
 	const pool = cards.filter((c) => c.poster_path).slice(0, 12)
 	const [picked, setPicked] = useState<IntroCard[]>([])
 	const [pick, setPick] = useState<Pick | null>(null)
@@ -392,10 +394,16 @@ export function TasteQuiz({
 							className="quiz-acts quiz-in"
 							style={{ "--d": "0.72s" } as CSSProperties}
 						>
-							<Link to="/sign-up" className="quiz-cta">
-								Keep my taste
-							</Link>
-							<button type="button" className="quiz-ghost" onClick={onLeave}>
+							{!user && (
+								<Link to="/sign-up" className="quiz-cta">
+									Keep my taste
+								</Link>
+							)}
+							<button
+								type="button"
+								className={user ? "quiz-cta" : "quiz-ghost"}
+								onClick={onLeave}
+							>
 								Look around
 							</button>
 							<button type="button" className="quiz-text" onClick={again}>

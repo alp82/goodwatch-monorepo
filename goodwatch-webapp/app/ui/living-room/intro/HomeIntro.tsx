@@ -131,6 +131,13 @@ export function useHomeIntro({ member }: { member: boolean }): HomeIntro {
 		writeProgress({ left: true })
 		setShowing({ kind: "home" })
 	}, [])
+	// Auth can finish resolving after the intro chose its guest screen. A member should not remain on that quiz.
+	// Only react to becoming a member: members can still explicitly replay "What is GoodWatch?" afterwards.
+	const previousMember = useRef(member)
+	useEffect(() => {
+		if (member && !previousMember.current) leave()
+		previousMember.current = member
+	}, [member, leave])
 	const play = useCallback((scene: number) => {
 		runs.current += 1
 		writeProgress({ scene })
