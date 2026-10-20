@@ -22,6 +22,9 @@ The experience of developing preferences, discovering suggestions, exploring tit
 **Discovery context**:
 The search, filters, sorting, results position, and current Taste card that describe where a person is in their exploration.
 
+**TV discovery context**:
+On the TV, Discover and Search retain the query, filters, sort, page, selected poster, and row position while opening title details and returning. Filters narrow the existing server result set; changing one starts again at the first page. Search runs when submitted, using the ranked search results as its candidate set, rather than searching again for each typed character. Expand carries the query, filters, sort, and page to Discover; the full page's own presentation and position behavior still apply.
+
 **Living room**:
 The start page, presented as a cozy room seen from the sofa: a TV on the wall and a remote in the person's hand. The page continues below the living room with the start titles and links to the hubs; a visit starts with the page held still in the room, and the control at the room's bottom edge is the way down. After the first arrival below, the page scrolls freely for the rest of the tab's session.
 
@@ -191,7 +194,7 @@ How well a title's fingerprint fits the person's taste, shown from 50 to 99 perc
 _Avoid_: Match score, Similarity
 
 **For you**:
-The switch that blends taste match into whichever sort is chosen: the higher a title's taste match, the further it rises, and the best matches go to the top. It is on by default and never replaces the sort. Under Best match it shows on.
+The switch that blends taste match into whichever sort is chosen: the higher a title's taste match, the further it rises, and the best matches go to the top. It is on by default and never replaces the sort. Under Best match it shows on. Choosing Best match preserves the underlying For you preference; turning For you off under Best match requires leaving Best match for a plain sort.
 _Avoid_: Personalized sort, Recommended sort
 
 **Best match**:

@@ -84,6 +84,7 @@ test("the choice screen's items in the markup are the machine's, in reading orde
 		for (const edition of EDITIONS)
 			assert.deepEqual(ids(screen[edition]), screen.items)
 	assert.deepEqual(rendered.choice.themes.items, [
+		"browse:all",
 		...TABS,
 		"theme:crime",
 		"theme:mystery",
@@ -218,6 +219,7 @@ test("the list's items in the markup are the machine's, in reading order, in bot
 		"title:movie-388",
 		"title:show-1399",
 		"title:movie-120",
+		"browse:filters",
 		"change",
 		"expand",
 		...BAR,
@@ -225,18 +227,23 @@ test("the list's items in the markup are the machine's, in reading order, in bot
 	assert.deepEqual(drawn(rendered.list.two.items), [
 		"title:movie-161",
 		"title:movie-388",
+		"browse:filters",
 		"change",
 		...BAR,
 	])
-	assert.deepEqual(drawn(rendered.list.none.items), ["change", ...BAR])
+	assert.deepEqual(drawn(rendered.list.none.items), [
+		"browse:filters",
+		"change",
+		...BAR,
+	])
 })
 
 test("the list says whose titles these are, and names the focused one with its facts", () => {
 	const { mood, theme, style, second } = rendered.list
 	for (const edition of EDITIONS) {
-		assert.match(mood[edition], />Funny</)
-		assert.match(theme[edition], />Crime</)
-		assert.match(style[edition], />Slow burn</)
+		assert.match(mood[edition], />Funny · Page 1/)
+		assert.match(theme[edition], />Crime · Page 1/)
+		assert.match(style[edition], />Slow burn · Page 1/)
 		for (const screen of [mood, theme, style]) {
 			assert.match(screen[edition], />Discover</)
 			assert.deepEqual(focused(screen[edition]), ["title:movie-161"])
@@ -279,12 +286,12 @@ test("the list's pictures: a poster per title, and the focused title's backdrop 
 test("Change says Change, and the list without titles says why", () => {
 	const { theme, waiting, unreported, none } = rendered.list
 	for (const edition of EDITIONS) {
-		assert.match(theme[edition], />Change</)
+		assert.match(theme[edition], />Moods</)
 		assert.match(waiting[edition], />Titles are on their way\.</)
 		assert.match(unreported[edition], />Titles are on their way\.</)
 		assert.match(none[edition], />Nothing fits\.</)
 		for (const screen of [waiting, unreported, none]) {
-			assert.deepEqual(focused(screen[edition]), ["change"])
+			assert.deepEqual(focused(screen[edition]), ["browse:filters"])
 			assert.equal(count(screen[edition], "<img"), 0)
 		}
 	}
@@ -297,7 +304,10 @@ test("the Expand key stands in its corner on both screens, in both editions", ()
 		rendered.list.theme.desktop,
 		rendered.list.theme.phone,
 	]) {
-		assert.match(html, /<div data-tv-expand-place="true"[^>]*><button type="button" data-tv-item="expand"[^>]*aria-label="Expand"[^>]*>.*?Expand<\/button><\/div>/)
+		assert.match(
+			html,
+			/<div data-tv-expand-place="true"[^>]*><button type="button" data-tv-item="expand"[^>]*aria-label="Expand"[^>]*>.*?Expand<\/button><\/div>/,
+		)
 		assert.equal(count(html, 'data-tv-item="expand"'), 1)
 	}
 	// On the desktop the band under the content is kept free for it.

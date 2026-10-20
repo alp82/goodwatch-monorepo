@@ -1,3 +1,4 @@
+import { browseIdentity } from "./tv-browse"
 // The start page's scene with the new TV: the room (TvRoom.tsx), the TV's state (use-tv.ts), what is on the TV
 // (TvScreen.tsx), the data behind it and the effects the machine names. The route hands it the loader's data.
 import { useLocation, useRevalidator } from "@remix-run/react"
@@ -206,7 +207,8 @@ export function TvLivingRoom({
 		setList(report)
 		if (report?.cards.length) setListed(report.cards)
 	}, [])
-	const choosing = screen.name === "discover" && Boolean(screen.choice)
+	const choosing =
+		screen.name === "discover" && Boolean(screen.choice || screen.all)
 	// Slice 6b. "On <service>": the titles to watch there are held by a component of the service screen's chunk,
 	// which reports them here (`ServiceData`, mounted below) while the address names a service.
 	const [onService, setOnService] = useState<TvServiceReport | null>(null)
@@ -233,17 +235,31 @@ export function TvLivingRoom({
 	const [draft, setDraft] = useState("")
 	const asking = screen.name === "search" && !screen.query
 	useEffect(() => {
-		if (!asking) setDraft("")
-	}, [asking])
+		if (screen.name === "search" && screen.query) setDraft(screen.query)
+	}, [screen])
 	const [found, setFound] = useState<TvSearchReport | null>(null)
 	const onFound = useCallback((report: TvSearchReport | null) => {
 		setFound(report)
 		if (report?.cards.length) setListed(report.cards)
 	}, [])
 	const searched = screen.name === "search" && Boolean(screen.query)
+	const currentList =
+		choosing &&
+		list?.id === browseIdentity(screen as Parameters<typeof browseIdentity>[0])
+			? list
+			: null
+	const currentFound =
+		searched &&
+		found?.id === browseIdentity(screen as Parameters<typeof browseIdentity>[0])
+			? found
+			: null
+	const browseList = choosing ? currentList : currentFound
 	const discover: TvDiscoverScreens = useMemo(
-		() => ({ art: pool?.choiceArt ?? {}, list }),
-		[pool, list],
+		() => ({
+			art: pool?.choiceArt ?? {},
+			list: screen.name === "discover" && screen.filters ? list : currentList,
+		}),
+		[pool, currentList, screen, list],
 	)
 	// What the lists on the page know of a title before its card is there.
 	const known = useCallback(
@@ -297,9 +313,9 @@ export function TvLivingRoom({
 	}, [revalidator.state, location.key, revalidate])
 	// The titles of the list on screen.
 	const listTitles = choosing
-		? list?.titles
+		? (currentList?.titles ?? [])
 		: searched
-			? found?.titles
+			? (currentFound?.titles ?? [])
 			: serviceList?.titles
 	const tasteCtx = onTaste ? mine?.ctx : undefined
 	const ctx = useMemo(
@@ -307,6 +323,11 @@ export function TvLivingRoom({
 			...tvContextOf(data, pool, wished),
 			titleName,
 			draft,
+			browseNext: browseList?.next ?? false,
+			browseFailed: Boolean(browseList?.failed),
+			browseReady: Boolean(browseList && !browseList.waiting),
+			browseTaste: (choosing ? list : found)?.hasTaste ?? false,
+			browseDefaults: (choosing ? list : found)?.controls,
 			...(listTitles && { titles: listTitles }),
 			// The mini Explorer (slice 7): its islands, and an island's titles and hops, while it is on screen.
 			...explorerContext,
@@ -324,6 +345,10 @@ export function TvLivingRoom({
 			titleName,
 			draft,
 			listTitles,
+			browseList,
+			list,
+			found,
+			choosing,
 			explorerContext,
 			tasteCtx,
 			edition,
@@ -340,7 +365,11 @@ export function TvLivingRoom({
 		[shownTitle, nextEpisode],
 	)
 	const titles: TvTitleScreens = useMemo(
-		() => ({ tonight, waiting: !pool && !failed && (interacted || screen.name === "tonight"), title }),
+		() => ({
+			tonight,
+			waiting: !pool && !failed && (interacted || screen.name === "tonight"),
+			title,
+		}),
 		[tonight, pool, failed, title, interacted, screen.name],
 	)
 
@@ -358,6 +387,21 @@ export function TvLivingRoom({
 			// My shows (slice 9): Seen it on a show the member is midway through.
 			if (episodeEffect?.(effect)) return
 			switch (effect.type) {
+				case "draft-key":
+					setDraft((old) =>
+						effect.key === "clear"
+							? ""
+							: effect.key === "delete"
+								? old.slice(0, -1)
+								: (old + (effect.key === "space" ? " " : effect.key)).slice(
+										0,
+										512,
+									),
+					)
+					return
+				case "retry-results":
+					browseList?.retry()
+					return
 				// The Expand key: the picture grows into the page.
 				case "expand":
 					leave(effect.href)
@@ -373,13 +417,24 @@ export function TvLivingRoom({
 					return
 			}
 		},
-		[google, say, leave, titleEffect, tasteEffect, episodeEffect],
+		[google, say, leave, titleEffect, tasteEffect, episodeEffect, browseList],
 	)
 	const tv = useTv(ctx, onEffect)
 	const tvPower = tv.room.power
 	useEffect(() => onPower?.(tvPower), [onPower, tvPower])
 	// Typing puts the TV's focus on the key that searches for what is typed (the machine's `typed`).
 	const { dispatch } = tv
+	useEffect(() => {
+		if (
+			(screen.name === "search" || screen.name === "discover") &&
+			!screen.filters &&
+			browseList &&
+			!browseList.waiting &&
+			!browseList.failed &&
+			(screen.page ?? 1) > browseList.pages
+		)
+			dispatch({ type: "browse-page", page: browseList.pages })
+	}, [screen, browseList, dispatch])
 	const onDraft = useCallback(
 		(text: string) => {
 			setDraft(text)
@@ -388,8 +443,12 @@ export function TvLivingRoom({
 		[dispatch],
 	)
 	const search: TvSearchScreens = useMemo(
-		() => ({ draft, onDraft, list: searched ? found : null }),
-		[draft, onDraft, searched, found],
+		() => ({
+			draft,
+			onDraft,
+			list: screen.name === "search" && screen.filters ? found : currentFound,
+		}),
+		[draft, onDraft, currentFound, screen, found],
 	)
 	useEffect(() => {
 		if (
@@ -430,7 +489,6 @@ export function TvLivingRoom({
 			EpisodeCode.load().catch(() => {})
 		}
 	}, [interacted, tv.screen.name, tv.focused])
-
 
 	return (
 		<>

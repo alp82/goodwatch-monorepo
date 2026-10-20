@@ -1,20 +1,9 @@
+import BrowseFilters from "./BrowseFilters"
+import { browseActions, selectionNames } from "./browse-actions"
 import { copyMediaPresentation } from "~/utils/media-presentation"
-// Mini Discover. Its first screen is three tabs, Moods, Themes and Styles, with six options each; one choice leads
-// to the first titles of Discover's own results for it, and a title to its title screen. Change leads back to the
-// tabs. Choices never combine on the TV: combining is the Discover page's, one Expand away, with the choice
-// already set. A chunk the TV asks for on first use (screen-code.tsx).
-//
-// The tabs stand under the top bar, at the left. A tab opens when the direction keys land on it; the pointer over
-// a tab only gives it the focus, and a click or a tap opens it (tv-machine.ts, "Mini Discover"). The open tab is
-// marked whether or not it has the focus.
-//
-// A tile is its option's picture under its own colour, with its name on it: one title that has the mood, theme
-// or style, which the pool names (`choiceArt`). Until the pool is there, and for an option without a title, the
-// tile is the option's colour alone.
-//
-// On the phone every key is a touch target, 44 px or more on the phone's screen (`keySize` in kit.tsx): the tabs
-// share the width, the six tiles stand three by three, and the last row holds the focused option's line, or
-// Change, beside the Expand key's corner at the bottom right.
+// Discover keeps its established mood/theme/style choices and adds catalog browsing, filters and paging.
+// Results use the shared stable TitleList; filter edits stay in a dedicated step until Done/Back applies them.
+// This screen and its filter UI are lazy, loaded only when Discover is opened.
 import { useRef } from "react"
 import { tmdbImageUrl } from "~/utils/tmdb-image"
 import { TitleList, type TvListTitle } from "../TitleList"
@@ -30,7 +19,6 @@ import {
 import {
 	DISCOVER_TAB_KEYS,
 	type TvDiscoverOption,
-	discoverOption,
 	discoverOptions,
 	listEmptyLine,
 	listFacts,
@@ -92,6 +80,12 @@ function Choice({
 			className={`flex shrink-0 ${P ? "gap-2" : "mb-5 gap-3"}`}
 			style={{ height: P ? keySize(canvas, 52) : 64 }}
 		>
+			<Item
+				id="browse:all"
+				className={`${TAB} px-4 ${P ? "text-[22px]" : "text-[28px]"}`}
+			>
+				All
+			</Item>
 			{DISCOVER_TAB_KEYS.filter((key) => items.includes(key.item)).map(
 				(key) => (
 					<Item
@@ -194,17 +188,14 @@ function Choice({
 	)
 }
 
-/** Change: the way back to the tabs. */
-const CHANGE = [{ id: "change", label: "Change" }]
-
 /** The titles of one choice, in the list every app shows its titles in (../TitleList.tsx). */
 function List({
 	items,
-	option,
+	screen,
 	list,
 }: {
 	items: readonly string[]
-	option: TvDiscoverOption | null
+	screen: Extract<TvScreen, { name: "discover" }>
 	list: TvDiscoverReport | null
 }) {
 	const titles: TvListTitle[] = (list?.cards ?? []).map((card) => ({
@@ -218,11 +209,12 @@ function List({
 	return (
 		<TitleList
 			name="Discover"
-			crumb={option?.name}
+			crumb={`${selectionNames(screen) || "All titles"} · Page ${screen.page ?? 1}${list ? ` of ${list.pages} · ${list.total} titles` : ""}`}
 			items={items}
 			titles={titles}
-			empty={listEmptyLine(list?.waiting ?? true)}
-			actions={CHANGE}
+			empty={list?.failed ?? listEmptyLine(list?.waiting ?? true)}
+			actions={browseActions(screen, list)}
+			actionsLabel={list?.summary}
 		/>
 	)
 }
@@ -241,12 +233,18 @@ export default function Discover({
 	/** The titles of the choice on screen; null until their data component has reported. */
 	list: TvDiscoverReport | null
 }) {
-	return screen.choice ? (
-		<List
-			items={items}
-			option={discoverOption(screen.tab, screen.choice)}
-			list={list}
-		/>
+	if (screen.filters)
+		return (
+			<BrowseFilters
+				screen={screen}
+				items={items}
+				summary={list?.summary}
+				controls={list?.controls}
+				hasTaste={list?.hasTaste}
+			/>
+		)
+	return screen.choice || screen.all ? (
+		<List items={items} screen={screen} list={list} />
 	) : (
 		<Choice items={items} tab={screen.tab} art={art} />
 	)

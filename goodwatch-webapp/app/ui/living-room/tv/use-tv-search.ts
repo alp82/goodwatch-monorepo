@@ -1,21 +1,13 @@
 import { useProductExposure } from "~/telemetry/useProductAnalytics"
 import useLocale from "~/utils/locale"
-// The TV's search results: the full search for the query in the address, then the first four cards of Discover's
-// own results over its ranked list. Two requests, the two the Discover page makes for `/discover?q=`:
-// - `POST /api/combined-search` through `requestSearch`, with the page's body. It spends the paid inference
-//   budget and writes a history row, so it runs once per query the person asked for with OK, and never again by
-//   itself: not on a retry, not when the window gets the focus back, and not when the results are shown again
-//   (Back from a title) while the answer is still kept.
-// - `/api/discover/results?ranked=<the ranked list>` through `useDiscoverResults` (members GET, guests POST their
-//   browser's progress), which filters the list as the page does and answers the cards.
-//
-// The answer is kept under the Discover page's own key, so the page behind the Expand key draws from it.
-//
-// None of this is in the page's first view: the hook runs in `SearchData` (screens/Search.tsx), which arrives with
-// the search screen's chunk and reports up to the scene (`TvSearchReport`). The scene imports this file's types
-// only.
+// Explicit combined search followed by Discover's filtering/sorting/pagination of the full ranked list (up to 100).
+// Only query/type/service eligibility reruns ranking; other filters and pages reuse the ranking's query key.
+// Search never retries automatically or on focus/remount. The user can explicitly Retry a failed request.
+// Interaction-only: mounted by the lazy Search screen. No previous-query placeholder cards are reported.
 import { useQuery } from "@tanstack/react-query"
-import { useMemo } from "react"
+import { useCallback, useMemo } from "react"
+import { browseIdentity, browseQuery, pageInfo } from "./tv-browse"
+import { resultSummary } from "./use-tv-discover"
 import { useDiscoverResults } from "~/routes/api.discover_.results"
 import type { TitleCard } from "~/server/title-cards.server"
 import { requestSearch } from "~/ui/search/search-client"
@@ -37,7 +29,15 @@ import {
 
 /** What the search's data component reports up to the scene. */
 export type TvSearchReport = {
-	/** The titles found, at most four, in the search's order. */
+	/** The current server page of the ranked search. */
+	id: string
+	total: number
+	pages: number
+	next: boolean
+	retry: () => void
+	hasTaste: boolean
+	summary: string
+	controls: Record<string, string>
 	cards: readonly TitleCard[]
 	/** Their keys on the TV, for the machine's context. */
 	titles: readonly string[]
@@ -66,8 +66,12 @@ export function useTvSearch({
 		return { interactions, country, services }
 	}, [member, q])
 	const filters = useMemo(
-		() => tvSearchFilters(guest ? guestSearchScope(guest) : scope),
-		[guest, scope],
+		() =>
+			tvSearchFilters(
+				guest ? guestSearchScope(guest) : scope,
+				screen.name === "search" ? screen.browse : undefined,
+			),
+		[guest, scope, screen.name === "search" ? screen.browse : undefined],
 	)
 	const search = useQuery({
 		queryKey: tvSearchKey(q ?? "", filters, locale.language),
@@ -82,7 +86,7 @@ export function useTvSearch({
 					unavailable: SEARCH_UNAVAILABLE,
 				}),
 			),
-		enabled: q !== null,
+		enabled: q !== null && !(screen.name === "search" && screen.filters),
 		// One search per OK (see the header).
 		retry: false,
 		refetchOnMount: false,
@@ -91,17 +95,22 @@ export function useTvSearch({
 	})
 	const ranked = q !== null ? search.data?.ranked : undefined
 	const results = useDiscoverResults({
-		query: ranked?.length ? tvResultsQuery(ranked) : "",
+		query: ranked?.length
+			? `${tvResultsQuery(ranked)}&${screen.name === "search" ? browseQuery(screen) : ""}`
+			: "",
+		page: screen.name === "search" ? (screen.page ?? 1) : 1,
 		guest,
-		enabled: Boolean(ranked?.length),
+		enabled:
+			Boolean(ranked?.length) && !(screen.name === "search" && screen.filters),
 	})
 	// The hook keeps the last answer while the next loads; on the TV that would be another search's titles.
 	const data =
 		ranked?.length && !results.isPlaceholderData ? results.data : undefined
 	const cards = useMemo(() => searchCards(data?.cards ?? []), [data])
+	const id = screen.name === "search" ? browseIdentity(screen) : ""
 	useProductExposure(
 		"discovery results shown",
-		data ? `${q}:${cards.length}` : null,
+		data ? `${id}:${cards.length}` : null,
 		{
 			source: "living_room",
 			surface: "search",
@@ -110,6 +119,24 @@ export function useTvSearch({
 			result_count: cards.length,
 		},
 	)
+	const info = pageInfo(data)
+	const summary = resultSummary(results.data)
+	const controls = useMemo(
+		(): Record<string, string> =>
+			results.data
+				? {
+						services: results.data.state.onMyServices ? "mine" : "all",
+						unseen: results.data.state.notSeenYet ? "1" : "0",
+						foryou: results.data.forYou.on ? "1" : "0",
+						sort: results.data.sortUsed,
+					}
+				: {},
+		[results.data],
+	)
+	const retry = useCallback(() => {
+		if (search.isError) void search.refetch()
+		else void results.refetch()
+	}, [search.isError, search.refetch, results.refetch])
 	const failed =
 		q !== null && search.isError
 			? search.error.message
@@ -121,7 +148,30 @@ export function useTvSearch({
 		q !== null && !failed && (!ranked || (ranked.length > 0 && !data))
 	// The same object while nothing changed: every new one is another render of the scene (`useReport`).
 	return useMemo(
-		() => ({ cards, titles: cards.map(tvTitleKey), waiting, failed }),
-		[cards, waiting, failed],
+		() => ({
+			id,
+			cards,
+			titles: cards.map(tvTitleKey),
+			waiting,
+			failed,
+			retry,
+			...info,
+			hasTaste: results.data?.hasTaste ?? false,
+			summary,
+			controls,
+		}),
+		[
+			id,
+			cards,
+			waiting,
+			failed,
+			retry,
+			info.total,
+			info.pages,
+			info.next,
+			results.data?.hasTaste,
+			summary,
+			controls,
+		],
 	)
 }
