@@ -9,6 +9,7 @@ import {
 } from "~/domain/imports"
 import { Spinner } from "~/ui/wait/Spinner"
 import { FocusHeading } from "./FocusHeading"
+import { ImportNotes } from "./ImportNotes"
 import { ImportResult } from "./ImportResult"
 import { sourceImportCopy } from "./SourceImportCopy"
 import {
@@ -250,18 +251,12 @@ function Receipt({
 					.
 				</p>
 			))}
-			{summary.warnings.length > 0 && (
-				<div className="rounded-lg border border-amber-800 bg-amber-950/40 p-4">
-					<p className="font-semibold text-amber-100">
-						{summary.source === "wishlist" ? "About this file" : "Export notes"}
-					</p>
-					<ul className="mt-2 list-disc pl-5 text-amber-100">
-						{summary.warnings.map((warning) => (
-							<li key={warning}>{warning}</li>
-						))}
-					</ul>
-				</div>
-			)}
+			<ImportNotes
+				warnings={summary.warnings}
+				title={
+					summary.source === "wishlist" ? "About this file" : "Export notes"
+				}
+			/>
 			<div className="flex flex-wrap items-center gap-3">
 				{skipped > 0 && summary.status !== "undone" && (
 					<a

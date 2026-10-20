@@ -7,6 +7,7 @@ import {
 	type ImportSummary,
 } from "~/domain/imports"
 import { FocusHeading } from "./FocusHeading"
+import { ImportNotes } from "./ImportNotes"
 import { sourceImportCopy } from "./SourceImportCopy"
 import { SourceOutcomeRow } from "./SourceImportCounts"
 import {
@@ -140,20 +141,7 @@ function GeneralImportPreview({
 			{matching && (
 				<TvTimeLookupNotices summary={summary} matching={matching} />
 			)}
-			{summary.warnings.length > 0 && (
-				<div
-					className="rounded-lg border border-amber-700 bg-amber-950/50 p-4 text-amber-100"
-					// biome-ignore lint/a11y/useSemanticElements: a warning group contains block content
-					role="status"
-				>
-					<p className="font-semibold">{copy.details}</p>
-					<ul className="mt-2 list-disc space-y-1 pl-5">
-						{summary.warnings.map((warning) => (
-							<li key={warning}>{warning}</li>
-						))}
-					</ul>
-				</div>
-			)}
+			<ImportNotes warnings={summary.warnings} title={copy.details} />
 			<fieldset>
 				<legend className="mb-2 font-semibold text-gray-100">
 					What should GoodWatch import?

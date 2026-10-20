@@ -14,6 +14,7 @@ import { Spinner } from "~/ui/wait/Spinner"
 import { useOpenedOnce } from "~/utils/first-use"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 import { FocusHeading } from "./FocusHeading"
+import { ImportNotes } from "./ImportNotes"
 import { SourceOutcomeRow } from "./SourceImportCounts"
 import {
 	WISHLIST_MATCH_MAX_CHANGES,
@@ -240,20 +241,7 @@ export function WishlistImportPreview({
 							: " Your choice for titles you've already seen is back to Leave them as Seen.")}
 				</p>
 			)}
-			{summary.warnings.length > 0 && (
-				<div
-					className="rounded-lg border border-amber-700 bg-amber-950/50 p-4 text-amber-100"
-					// biome-ignore lint/a11y/useSemanticElements: a warning group contains block content
-					role="status"
-				>
-					<p className="font-semibold">About this file</p>
-					<ul className="mt-2 list-disc space-y-1 pl-5">
-						{summary.warnings.map((warning) => (
-							<li key={warning}>{warning}</li>
-						))}
-					</ul>
-				</div>
-			)}
+			<ImportNotes warnings={summary.warnings} title="About this file" />
 			<div className="space-y-1 text-sm text-gray-400">
 				<p>
 					Importing only adds titles to Want to See. It never removes anything

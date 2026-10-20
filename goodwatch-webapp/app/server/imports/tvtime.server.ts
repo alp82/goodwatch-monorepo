@@ -126,7 +126,15 @@ export function parseTvTime(
 			"These files come from different TV Time export variants. Upload one export at a time.",
 			"tvtime_variants_mixed",
 		)
-	const warnings = ignored.map((name) => `TV Time file not imported: ${name}.`)
+	// GDPR archives include account, device and social data that is not viewing history.
+	// Keep a note only when an unread file could hold history from another layout.
+	const warnings = ignored
+		.filter((name) =>
+			/tracking|history|watch|rating|followed|usertvshow|seenepisode|tvtimeseries|tvtimemovies/.test(
+				normalized(basename(name)),
+			),
+		)
+		.map((name) => `TV Time history file not imported: ${name}.`)
 	const add = (row: ImportObservation) => {
 		if (observations.length >= IMPORT_MAX_ROWS)
 			readers.fail(
@@ -177,6 +185,7 @@ export function parseTvTime(
 		if (legacy) legacyFollowRows.add(row)
 		add(row)
 	}
+	let invalidWatchDates = 0
 	const plays = new Map<string, ImportObservation>()
 	const undatedMoviePlays = new Map<string, number>()
 	const undatedEpisodePlays = new Map<string, number>()
@@ -189,10 +198,6 @@ export function parseTvTime(
 					: row.key
 				: row.key.split(":").slice(0, 3).join(":")
 		const ref = raw ? `${row.mediaType}:${identity}:${raw}` : row.key
-		if (raw && row.precision === "unknown")
-			warnings.push(
-				"A TV Time watch date is invalid or records a bulk mark; the watch is imported without a date.",
-			)
 		const prior = plays.get(ref)
 		if (prior) {
 			if (!prior.showTvdbId && row.showTvdbId) prior.showTvdbId = row.showTvdbId
@@ -204,6 +209,7 @@ export function parseTvTime(
 			)
 			return
 		}
+		if (raw && row.precision === "unknown") invalidWatchDates++
 		plays.set(ref, row)
 		add(row)
 	}
@@ -698,6 +704,12 @@ export function parseTvTime(
 		}
 	}
 
+	if (invalidWatchDates > 0)
+		warnings.push(
+			invalidWatchDates === 1
+				? "1 TV Time watch has an invalid date or bulk mark and is imported without a date."
+				: `${invalidWatchDates} TV Time watches have invalid dates or bulk marks and are imported without a date.`,
+		)
 	return {
 		source: "tvtime",
 		observations: observations.filter(
