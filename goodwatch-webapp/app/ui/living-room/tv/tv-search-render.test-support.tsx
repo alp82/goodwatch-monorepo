@@ -84,10 +84,18 @@ const cards = [
 	}),
 ]
 const report = (rest: Partial<TvSearchReport> = {}): TvSearchReport => ({
+	id: "fixture",
+	total: 4,
+	pages: 1,
+	next: false,
+	failed: null,
+	retry: () => {},
+	hasTaste: false,
+	summary: "",
+	controls: {},
 	cards,
 	titles: cards.map(tvTitleKey),
 	waiting: false,
-	failed: null,
 	...rest,
 })
 const none = (rest: Partial<TvSearchReport> = {}) =>

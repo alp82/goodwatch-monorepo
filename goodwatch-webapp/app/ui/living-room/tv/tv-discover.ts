@@ -158,9 +158,8 @@ export function discoverQuery(tab: TvDiscoverTab, key: string): string {
 	return `${discoverTab(tab).param}=${encodeURIComponent(key)}`
 }
 
-/** The titles the list shows: the first four of Discover's results. */
-export const listCards = (cards: readonly TitleCard[]) =>
-	cards.slice(0, LIST_TITLES)
+/** The entire current server page, without a client truncation. */
+export const listCards = (cards: readonly TitleCard[]) => cards
 
 /**
  * A title's line of facts under its name: "2001 · Movie · 1h 56m · 82 score · 91% match · On Netflix". A fact

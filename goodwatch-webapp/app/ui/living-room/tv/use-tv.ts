@@ -353,11 +353,15 @@ export function useTv(ctx: TvContext, onEffect: (effect: TvEffect) => void) {
 				return
 			if (e.metaKey || e.ctrlKey || e.altKey) return
 			// Buttons have their own Enter and Space.
-			if ((e.key === "Enter" || e.key === " ") && target.closest("button, a"))
+			if (
+				(e.key === "Enter" || (e.key === " " && !inputElement())) &&
+				target.closest("button, a")
+			)
 				return
 			// Scrolled out of the window, the room takes no input: the keys are the page's.
 			if (roomElement()?.hasAttribute("inert")) return
 			if (e.key.startsWith("Arrow")) {
+				if (typing) target.blur()
 				const now = performance.now()
 				if (e.repeat && now - lastDirectionAt < 120) {
 					e.preventDefault()
@@ -377,7 +381,16 @@ export function useTv(ctx: TvContext, onEffect: (effect: TvEffect) => void) {
 				line &&
 				(e.key.length === 1 || (e.key === "Backspace" && line.value))
 			) {
-				line.focus({ preventScroll: true })
+				e.preventDefault()
+				const value =
+					e.key === "Backspace"
+						? line.value.slice(0, -1)
+						: (line.value + e.key).slice(0, 512)
+				Object.getOwnPropertyDescriptor(
+					HTMLInputElement.prototype,
+					"value",
+				)?.set?.call(line, value)
+				line.dispatchEvent(new Event("input", { bubbles: true }))
 				return
 			}
 			switch (e.key) {

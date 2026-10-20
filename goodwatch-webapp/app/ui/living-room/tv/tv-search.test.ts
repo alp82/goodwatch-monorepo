@@ -126,12 +126,9 @@ describe("what the search screen says", () => {
 		)
 	})
 
-	it("shows the first four titles found", () => {
+	it("shows the entire server page in order", () => {
 		const cards = Array.from({ length: 9 }, (_, id) => ({ tmdb_id: id }))
-		assert.deepEqual(
-			searchCards(cards as unknown as TitleCard[]),
-			cards.slice(0, LIST_TITLES),
-		)
+		assert.deepEqual(searchCards(cards as unknown as TitleCard[]), cards)
 		assert.equal(LIST_TITLES, 4)
 	})
 

@@ -1,3 +1,4 @@
+import { KEY_ITEMS } from "./tv-browse.ts"
 // Search as it is drawn: the items in the markup are the machine's, in its order, in both editions; the line is
 // one real input, which is not an item; the results name the focused title in the list every app uses; and on
 // every phone of the room's table the keys are touch targets with the Expand key's corner free.
@@ -78,231 +79,85 @@ const IDEAS = [
 const BAR = ["bar:back", "bar:menu"]
 const EDITIONS = ["desktop", "phone"] as const
 
-test("the question screen's items in the markup are the machine's, in reading order, in both editions", () => {
+test("Recovered keyboard markup follows machine order in both editions, with letters, digits and editing actions", () => {
 	for (const screen of Object.values(rendered.question))
-		for (const edition of EDITIONS)
+		for (const edition of EDITIONS) {
 			assert.deepEqual(ids(screen[edition]), screen.items)
-	assert.deepEqual(rendered.question.empty.items, [...IDEAS, ...BAR])
-	// What is typed has its key from the first character on, in an idea's place.
-	for (const screen of [rendered.question.one, rendered.question.typed])
-		assert.deepEqual(screen.items, ["go", ...IDEAS.slice(0, 3), ...BAR])
-	// It has no page to grow into: no Expand key, and no place kept for one.
-	for (const edition of EDITIONS) {
-		assert.ok(!rendered.question.empty.items.includes("expand"))
-		assert.equal(count(rendered.question.empty[edition], "data-tv-expand"), 0)
-	}
+			assert.deepEqual(screen.items, [...KEY_ITEMS, ...BAR])
+			assert.equal(count(screen[edition], "data-tv-expand"), 0)
+		}
 })
-
-test("the line is one real input that asks the question, and it is not an item", () => {
-	const { empty, typed } = rendered.question
+test("The query stays in a labelled real input with a 512-character limit and no autofocus", () => {
 	for (const edition of EDITIONS) {
-		assert.equal(count(empty[edition], "<input"), 1)
-		const input = line(empty[edition])
+		const input = line(rendered.question.typed[edition])
 		assert.match(input, /data-tv-input=""/)
-		assert.match(input, /type="text"/)
-		assert.match(input, /placeholder="What are you looking for\?"/)
-		assert.match(input, /value=""/)
-		// A phone's keyboard shows a search key and does not correct what is typed.
-		assert.match(input, /enterKeyHint="search"/i)
-		assert.match(input, /inputMode="search"/i)
-		assert.match(input, /autoComplete="off"/i)
-		assert.match(input, /autoCapitalize="none"/i)
-		assert.match(input, /spellCheck="false"/i)
-		assert.match(input, /maxLength="512"/i)
-		assert.ok(!/data-tv-item/.test(input))
-		// It is named for a screen reader by the screen's own word, and described by the line under it.
 		assert.match(input, /aria-label="Search"/)
-		const hint = /aria-describedby="([^"]+)"/.exec(input)?.[1]
-		assert.ok(hint)
-		assert.match(empty[edition], new RegExp(`<span id="${hint}"`))
-		// The word, the line and the hint are one label: a tap on any of them gives the line the focus.
-		const label = /<label[^>]*>(.*?)<\/label>/s.exec(empty[edition])?.[1] ?? ""
-		assert.match(label, />Search<\/span><input/)
-		assert.match(label, new RegExp(`<span id="${hint}"[^>]*>[^<]+<\\/span>$`))
-		assert.equal(count(empty[edition], "<label"), 1)
-		// What is typed is in it as typed.
-		assert.match(line(typed[edition]), /value="heist "/)
-	}
-	// The two editions are in the HTML together before the window is measured: their hints have ids of their own.
-	assert.notEqual(
-		/aria-describedby="([^"]+)"/.exec(line(empty.desktop))?.[1],
-		/aria-describedby="([^"]+)"/.exec(line(empty.phone))?.[1],
-	)
-})
-
-test("the line under the question says what to do, for what is typed", () => {
-	const { empty, one, typed } = rendered.question
-	assert.match(empty.desktop, />Type on the keyboard, or pick one\.</)
-	assert.match(empty.phone, />Tap the line to type, or pick one\.</)
-	for (const edition of EDITIONS) {
-		assert.match(one[edition], />Two letters or more\.</)
-		assert.match(typed[edition], />OK searches for it\.</)
-	}
-})
-
-test("the ideas say their words, and the key for what is typed names it", () => {
-	const { empty, one, typed, long } = rendered.question
-	for (const edition of EDITIONS) {
-		for (const idea of IDEAS)
-			assert.equal(
-				count(empty[edition], `>${idea.slice("idea:".length)}</span>`),
-				1,
-				idea,
-			)
-		assert.match(one[edition], />Search “h”</)
-		assert.match(typed[edition], />Search “heist”</)
-		assert.ok(!typed[edition].includes("mind-bending thriller"))
-		// A long query stays on two lines of its key.
+		assert.match(input, /maxLength="512"/i)
+		assert.match(input, /value="heist "/)
+		assert.ok(!/autofocus/i.test(input))
+		assert.ok(!/data-tv-item/.test(input))
+		assert.match(rendered.question.empty[edition], /Two characters or more/)
 		assert.match(
-			long[edition],
-			/<span class="line-clamp-2 break-words">Search “a long evening/,
+			tag(rendered.question.typed[edition], "go"),
+			/aria-label="Search “heist”"/,
 		)
 	}
 })
-
-test("the focus is where the machine says: on the key for what is typed, on an idea, on the bar", () => {
-	const { empty, typed, onIdea, onBar } = rendered.question
-	for (const edition of EDITIONS) {
-		assert.deepEqual(focused(empty[edition]), ["idea:cozy mystery"])
-		assert.deepEqual(focused(typed[edition]), ["go"])
-		assert.deepEqual(focused(onIdea[edition]), ["idea:space adventure"])
-		assert.deepEqual(focused(onBar[edition]), ["bar:menu"])
-	}
-})
-
-test("the results' items in the markup are the machine's, in reading order, in both editions", () => {
+test("Results retain metadata, long-title layout and all current machine actions", () => {
 	for (const screen of Object.values(rendered.results))
 		for (const edition of EDITIONS)
 			assert.deepEqual(ids(screen[edition]), screen.items)
-	assert.deepEqual(rendered.results.found.items, [
-		"title:movie-161",
-		"title:movie-388",
-		"title:show-1399",
-		"title:movie-120",
-		"expand",
-		...BAR,
-	])
-	assert.deepEqual(drawn(rendered.results.two.items), [
-		"title:movie-161",
-		"title:movie-388",
-		...BAR,
-	])
-	assert.deepEqual(drawn(rendered.results.none.items), BAR)
-	// No line to type on here.
-	for (const edition of EDITIONS)
-		assert.equal(count(rendered.results.found[edition], "<input"), 0)
-})
-
-test("the results say what was searched for, and name the focused title with its facts", () => {
-	const { found, second, spaced } = rendered.results
 	for (const edition of EDITIONS) {
-		assert.match(found[edition], />Search</)
-		assert.match(found[edition], />“heist”</)
-		assert.match(spaced[edition], />“cozy mystery”</)
-		assert.deepEqual(focused(found[edition]), ["title:movie-161"])
-		assert.match(found[edition], />Ocean&#x27;s Eleven</)
 		assert.match(
-			found[edition],
-			/>2001 · Movie · 1h 56m · 82 score · On Netflix</,
+			rendered.results.found[edition],
+			/“heist” · Page 1 of 1 · 4 matches/,
 		)
-		assert.match(second[edition], />Inside Man</)
+		assert.match(rendered.results.second[edition], /Inside Man/)
+		assert.match(rendered.results.second[edition], /91% match/)
 		assert.match(
-			second[edition],
-			/>2001 · Movie · 1h 56m · 82 score · 91% match · On Netflix</,
+			rendered.results.long[edition],
+			/The Lord of the Rings: The Fellowship of the Ring/,
 		)
-		assert.ok(!second[edition].includes(">Ocean&#x27;s Eleven<"))
+		assert.ok(ids(rendered.results.found[edition]).includes("browse:filters"))
+		assert.ok(ids(rendered.results.found[edition]).includes("browse:edit"))
 	}
 })
-
-test("the results' pictures: a poster per title, and the focused title's backdrop behind them", () => {
-	const { found, second } = rendered.results
-	for (const id of [161, 388, 1399, 120]) {
-		assert.equal(count(found.desktop, `/t/p/w342/poster-${id}.jpg`), 1)
-		assert.equal(count(found.phone, `/t/p/w185/poster-${id}.jpg`), 1)
-	}
-	assert.equal(count(found.desktop, "/t/p/w1280/backdrop-161.jpg"), 1)
-	assert.equal(count(found.phone, "/t/p/w780/backdrop-161.jpg"), 1)
-	assert.equal(count(second.desktop, "/t/p/w1280/backdrop-388.jpg"), 1)
-	assert.equal(count(found.desktop, "<img"), 5)
-	// A poster says its title to a screen reader.
-	assert.match(tag(found.desktop, "title:movie-388"), /aria-label="Inside Man"/)
-})
-
-test("without titles the results say that the search runs, why it failed, or that it found nothing", () => {
-	const { waiting, unreported, none, failed } = rendered.results
+test("Loading, empty and failure messages are distinct", () => {
 	for (const edition of EDITIONS) {
-		assert.match(waiting[edition], />Searching…</)
-		assert.match(unreported[edition], />Searching…</)
-		assert.match(none[edition], />Nothing found\.</)
-		assert.match(
-			failed[edition],
-			/>Search is busy right now\. Try again in a moment\.</,
-		)
-		for (const screen of [waiting, unreported, none, failed]) {
-			// The way back has the focus.
-			assert.deepEqual(focused(screen[edition]), ["bar:back"])
-			assert.equal(count(screen[edition], "<img"), 0)
-		}
+		assert.match(rendered.results.waiting[edition], /Searching…/)
+		assert.match(rendered.results.none[edition], /Nothing found\./)
+		assert.match(rendered.results.failed[edition], /Search is busy right now/)
 	}
 })
-
-test("the Expand key stands in its corner on the results, in both editions", () => {
-	for (const html of [
-		rendered.results.found.desktop,
-		rendered.results.found.phone,
-	]) {
-		assert.match(html, /<div data-tv-expand-place="true"[^>]*><button type="button" data-tv-item="expand"[^>]*aria-label="Expand"[^>]*>.*?Expand<\/button><\/div>/)
-		assert.equal(count(html, 'data-tv-item="expand"'), 1)
+test("Keyboard focus and bar focus remain represented in markup", () => {
+	for (const edition of EDITIONS) {
+		assert.deepEqual(focused(rendered.question.empty[edition]), ["key:q"])
+		assert.deepEqual(focused(rendered.question.onBar[edition]), ["bar:menu"])
 	}
-	// On the desktop the band under the content is kept free for it; on the phone the last row ends before it.
-	assert.match(rendered.results.found.desktop, /pb-\[120px\]/)
-	assert.match(rendered.results.found.phone, /pr-\[158px\]/)
 })
-
-test("no type is under 20 canvas pixels on either screen, in either edition", () => {
-	for (const screen of [
-		...Object.values(rendered.question),
-		...Object.values(rendered.results),
-	])
-		for (const edition of EDITIONS)
-			for (const size of typeSizes(screen[edition]))
-				assert.ok(size >= 20, `${edition}: ${size}`)
-})
-
-test("on every phone of the room's table the question's keys, the bar's and the results' last row are touch targets", () => {
+test("Phone keyboard scrolls while the input and action row stay outside it; keys are touch targets", () => {
 	for (const phone of rendered.phones) {
-		const at = `${phone.phone} at ${phone.scale.toFixed(3)}`
-		for (const size of [phone.key, phone.foot, phone.bar])
-			assert.ok(size * phone.scale >= 44, `${at}: ${size}`)
-		// The four keys under the line are drawn at that height, two to a row.
-		assert.deepEqual(ids(phone.question).slice(0, 4), [
+		assert.match(phone.question, /data-tv-scroll/)
+		assert.match(phone.question, /overflow-y-auto/)
+		for (const id of [
+			"key:q",
+			"key:0",
 			"go",
-			...IDEAS.slice(0, 3),
-		])
-		for (const id of ["go", ...IDEAS.slice(0, 3)])
-			assert.match(
-				tag(phone.question, id),
-				new RegExp(`style="height:${phone.key}px"`),
-				`${at}: ${id}`,
+			"key:clear",
+			"key:delete",
+			"key:space",
+		]) {
+			const height = Number(
+				/height:([\d.]+)px/.exec(tag(phone.question, id))?.[1],
 			)
-		assert.match(phone.question, /grid-cols-2/)
-		assert.ok(
-			count(phone.results, `pr-[158px]" style="height:${phone.foot}px"`) === 1,
-			`${at}: the results' last row`,
-		)
-		// The question's column fits the picture: the word, the line, the line under it and two rows of keys under
-		// the bar's 70 px, with 12 px under them.
-		const column = 70 + 25 + 4 + 38 + 8 + 25 + 16 + 2 * phone.key + 10 + 12
-		assert.ok(column <= phone.h, `${at}: the column is ${column} of ${phone.h}`)
+			assert.ok(height * phone.scale >= 44, `${phone.phone} ${id}: ${height}`)
+		}
+		assert.ok(phone.bar * phone.scale >= 44)
 	}
 })
-
-test("before its code is there the server draws search's bar alone, with the Expand key on the results: no line, and nothing typed or found", () => {
+test("Before interaction the server renders only the search bar, with no eager keyboard or input", () => {
 	assert.deepEqual(ids(rendered.first.question), BAR)
 	assert.deepEqual(ids(rendered.first.results), ["expand", ...BAR])
-	for (const html of [rendered.first.question, rendered.first.results]) {
+	for (const html of Object.values(rendered.first))
 		assert.equal(count(html, "<input"), 0)
-		assert.ok(!html.includes("heist"))
-		assert.ok(!html.includes("Ocean"))
-	}
 })

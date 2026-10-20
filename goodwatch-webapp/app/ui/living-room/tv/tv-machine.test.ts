@@ -1,3 +1,4 @@
+import { KEY_ITEMS } from "./tv-browse.ts"
 import assert from "node:assert/strict"
 import { describe, it } from "node:test"
 import { searchHref } from "../../navigation/destinations.ts"
@@ -85,35 +86,78 @@ const choose = (query: string, item: string, ctx = guest, depth = 1) =>
 	run(at(query, depth, ctx), ctx, { type: "choose", item })
 
 describe("TV state in the URL", () => {
-	for (const group of ["0.5", "-0.5", "nope", "NaN", "Infinity", "-2", "3", "99", "", " ", "0x1"]) {
+	for (const group of [
+		"0.5",
+		"-0.5",
+		"nope",
+		"NaN",
+		"Infinity",
+		"-2",
+		"3",
+		"99",
+		"",
+		" ",
+		"0x1",
+	]) {
 		it(`defaults malformed Fingerprint group ${JSON.stringify(group)} to Summary`, () => {
-			const params = new URLSearchParams("tv=title&title=movie-1946&panel=fingerprint")
+			const params = new URLSearchParams(
+				"tv=title&title=movie-1946&panel=fingerprint",
+			)
 			params.set("group", group)
 			const linked = readTvState(params, guest)
 			assert.deepEqual(linked.screen, {
-				name: "title", title: "movie-1946", panel: "fingerprint", group: -1,
+				name: "title",
+				title: "movie-1946",
+				panel: "fingerprint",
+				group: -1,
 			})
 			assert.equal(writeTvParams(linked.screen).get("group"), "-1")
 			const back = transition(linked, { type: "back" }, guest)
 			assert.equal(back.history, "replace")
 			assert.equal(back.state.focus, "fingerprint")
-			assert.deepEqual(back.state.screen, { name: "title", title: "movie-1946" })
+			assert.deepEqual(back.state.screen, {
+				name: "title",
+				title: "movie-1946",
+			})
 		})
 	}
 	for (const group of [-1, 0, 1, 2]) {
 		it(`roundtrips Fingerprint group ${group} and returns to the invoking action`, () => {
-			const linked = at(`tv=title&title=movie-1946&panel=fingerprint&group=${group}`)
+			const linked = at(
+				`tv=title&title=movie-1946&panel=fingerprint&group=${group}`,
+			)
 			assert.deepEqual(linked.screen, {
-				name: "title", title: "movie-1946", panel: "fingerprint", group,
+				name: "title",
+				title: "movie-1946",
+				panel: "fingerprint",
+				group,
 			})
-			assert.deepEqual(readTvState(writeTvParams(linked.screen), guest).screen, linked.screen)
-			const opened = transition(at("tv=title&title=movie-1946"), { type: "choose", item: "fingerprint" }, guest)
+			assert.deepEqual(
+				readTvState(writeTvParams(linked.screen), guest).screen,
+				linked.screen,
+			)
+			const opened = transition(
+				at("tv=title&title=movie-1946"),
+				{ type: "choose", item: "fingerprint" },
+				guest,
+			)
 			assert.equal(opened.history, "push")
-			const selected = transition(opened.state, { type: "choose", item: `group:${group}` }, guest)
+			const selected = transition(
+				opened.state,
+				{ type: "choose", item: `group:${group}` },
+				guest,
+			)
 			assert.equal(selected.history, "replace")
 			assert.deepEqual(selected.state.screen, linked.screen)
-			assert.equal(transition(selected.state, { type: "back" }, guest).history, "back")
-			const closed = transition(linked, { type: "choose", item: "close" }, guest)
+			assert.equal(
+				transition(selected.state, { type: "back" }, guest).history,
+				"back",
+			)
+			const closed = transition(
+				linked,
+				{ type: "choose", item: "close" },
+				guest,
+			)
 			assert.equal(closed.state.focus, "fingerprint")
 		})
 	}
@@ -331,6 +375,7 @@ describe("the screens and their items, in reading order", () => {
 
 	it("Discover, the choice: the three tabs, then the open tab's six", () => {
 		assert.deepEqual(items("tv=discover"), [
+			"browse:all",
 			...TABS,
 			"mood:funny",
 			"mood:feelgood",
@@ -342,6 +387,7 @@ describe("the screens and their items, in reading order", () => {
 			...BAR,
 		])
 		assert.deepEqual(items("tv=discover&tab=themes"), [
+			"browse:all",
 			...TABS,
 			"theme:crime",
 			"theme:mystery",
@@ -353,6 +399,7 @@ describe("the screens and their items, in reading order", () => {
 			...BAR,
 		])
 		assert.deepEqual(items("tv=discover&tab=styles"), [
+			"browse:all",
 			...TABS,
 			"style:animated",
 			"style:spectacle",
@@ -378,6 +425,8 @@ describe("the screens and their items, in reading order", () => {
 					"title:show-12",
 					"title:movie-13",
 					"title:movie-14",
+					"title:movie-15",
+					"browse:filters",
 					"change",
 					"expand",
 					...BAR,
@@ -494,7 +543,11 @@ describe("the screens and their items, in reading order", () => {
 	})
 
 	it("the rating: the same strip without Haven't seen it, no Expand", () => {
-		assert.deepEqual(items("tv=rate&title=movie-1"), [...LEVELS, ...SCORES, ...BAR])
+		assert.deepEqual(items("tv=rate&title=movie-1"), [
+			...LEVELS,
+			...SCORES,
+			...BAR,
+		])
 		assert.deepEqual(items("tv=rate&title=movie-1", desktop), [
 			...LEVELS,
 			...SCORES,
@@ -509,24 +562,9 @@ describe("the screens and their items, in reading order", () => {
 	})
 
 	it("search without a query: the ideas, and what is typed from its first character on; no Search, no Expand", () => {
-		const ideas = [
-			"idea:cozy mystery",
-			"idea:space adventure",
-			"idea:feel-good comedy",
-			"idea:mind-bending thriller",
-		]
-		assert.deepEqual(items("tv=search"), [...ideas, "bar:back", "bar:menu"])
-		// Spaces alone are nothing typed.
-		assert.deepEqual(items("tv=search", { ...guest, draft: "  " }), [
-			...ideas,
-			"bar:back",
-			"bar:menu",
-		])
-		// What is typed has its own key, in an idea's place, also while it is too short to search for.
-		for (const draft of ["h", " he ", "heist movies"])
+		for (const draft of ["", " ", "h", "heist"])
 			assert.deepEqual(items("tv=search", { ...guest, draft }), [
-				"go",
-				...ideas.slice(0, 3),
+				...KEY_ITEMS,
 				"bar:back",
 				"bar:menu",
 			])
@@ -538,6 +576,9 @@ describe("the screens and their items, in reading order", () => {
 			"title:show-12",
 			"title:movie-13",
 			"title:movie-14",
+			"title:movie-15",
+			"browse:filters",
+			"browse:edit",
 			"expand",
 			"bar:back",
 			"bar:menu",
@@ -929,7 +970,13 @@ describe("the Expand key's destinations", () => {
 	})
 
 	it("a screen without a page has no name for one", () => {
-		for (const query of ["", "tv=quiz", "tv=about", "tv=search", "tv=rate&title=movie-603"])
+		for (const query of [
+			"",
+			"tv=quiz",
+			"tv=about",
+			"tv=search",
+			"tv=rate&title=movie-603",
+		])
 			assert.equal(name(query), null, query)
 	})
 
@@ -1002,7 +1049,10 @@ describe("the Expand key's destinations", () => {
 
 	it("Taste: Taste; a side: Taste on that side", () => {
 		assert.equal(dest("tv=taste"), "/taste")
-		assert.equal(dest("tv=taste&side=dark-crime", member), "/taste?side=dark-crime")
+		assert.equal(
+			dest("tv=taste&side=dark-crime", member),
+			"/taste?side=dark-crime",
+		)
 	})
 
 	it("My shows: My shows", () => {
@@ -1245,8 +1295,13 @@ describe("the rating strip", () => {
 
 	it("every exact score can be selected on the phone in quiz and title rating", () => {
 		for (let score = 1; score <= 10; score++) {
-			assert.deepEqual(choose("tv=quiz", `score:${score}`, guest).effects, [{ type: "quiz-rate", score }])
-			assert.deepEqual(choose("tv=rate&title=movie-1", `score:${score}`, guest).effects, [{ type: "rate", title: "movie-1", score }])
+			assert.deepEqual(choose("tv=quiz", `score:${score}`, guest).effects, [
+				{ type: "quiz-rate", score },
+			])
+			assert.deepEqual(
+				choose("tv=rate&title=movie-1", `score:${score}`, guest).effects,
+				[{ type: "rate", title: "movie-1", score }],
+			)
 		}
 	})
 
@@ -1326,7 +1381,11 @@ describe("the rating strip", () => {
 		const open = run(at("tv=quiz", 1, desktop), desktop, {
 			type: "toggle-menu",
 		})
-		const t = run(open.state, desktop, { type: "move", dir: "down", boxes: [] })
+		const t = run(open.state, desktop, {
+			type: "move",
+			dir: "down",
+			boxes: [],
+		})
 		assert.equal(focusedItem(t.state, desktop), "menu:home")
 		assert.equal(t.state.focus, open.state.focus)
 	})
@@ -1412,8 +1471,9 @@ describe("search", () => {
 
 	it("starts on the typed query once it has a key, and OK searches for it", () => {
 		const typing = { ...guest, draft: "heist " }
-		assert.equal(focusedItem(at("tv=search", 1), typing), "go")
-		const t = run(at("tv=search", 1), typing, { type: "ok" })
+		const start = run(at("tv=search", 1), typing, { type: "typed" }).state
+		assert.equal(focusedItem(start, typing), "go")
+		const t = run(start, typing, { type: "ok" })
 		assert.equal(t.history, "replace")
 		assert.equal(t.url, "tv=search&q=heist")
 	})
@@ -1449,11 +1509,8 @@ describe("search", () => {
 
 	it("with the line emptied again the focus is back where the screen starts, and an idea is chosen by OK", () => {
 		const start = run(at("tv=search", 1), guest, { type: "typed" }).state
-		assert.equal(focusedItem(start, guest), "idea:cozy mystery")
-		assert.equal(
-			run(start, guest, { type: "ok" }).url,
-			"tv=search&q=cozy+mystery",
-		)
+		assert.equal(focusedItem(start, guest), "go")
+		assert.equal(run(start, guest, { type: "ok" }).history, "none")
 	})
 
 	it("typing is the search screen's alone", () => {
@@ -1487,10 +1544,12 @@ describe("search", () => {
 	})
 
 	it("an idea searches for its words", () => {
-		const t = choose("tv=search", "idea:cozy mystery")
+		const t = run(at("tv=search", 1), guest, {
+			type: "submit-search",
+			query: "cozy mystery",
+		})
 		assert.equal(t.history, "replace")
 		assert.equal(t.url, "tv=search&q=cozy+mystery")
-		assert.deepEqual(t.state.screen, { name: "search", query: "cozy mystery" })
 	})
 
 	it("the Search key on the empty search screen goes back", () => {
@@ -1647,7 +1706,7 @@ describe("focus", () => {
 			["tv=quiz", "level:7"],
 			["tv=title&title=movie-1", "watch"],
 			["tv=rate&title=movie-1", "level:7"],
-			["tv=search", "idea:cozy mystery"],
+			["tv=search", "key:q"],
 			["tv=about", "got-it"],
 		])
 			assert.equal(focusedItem(at(query), guest), first, query)
@@ -1657,14 +1716,14 @@ describe("focus", () => {
 		const empty = { ...guest, titles: [] }
 		assert.equal(
 			focusedItem(at("tv=discover&mood=funny"), empty),
-			"change",
+			"browse:filters",
 		)
 		assert.equal(focusedItem(at("tv=explorer&island=i1"), empty), "hop:i2")
 	})
 
 	it("starts on Back when a screen has nothing of its own", () => {
 		const empty = { ...guest, titles: [] }
-		assert.equal(focusedItem(at("tv=search&q=zzz"), empty), "bar:back")
+		assert.equal(focusedItem(at("tv=search&q=zzz"), empty), "browse:filters")
 		assert.equal(focusedItem(at("tv=tonight"), EMPTY_CONTEXT), "bar:back")
 	})
 
@@ -1805,7 +1864,10 @@ describe("mini Discover: the tabs", () => {
 		return layout(kind, keys)
 	}
 	/** Presses direction keys one after another, each over the boxes of the tab then open. */
-	function press(start: TvState, ...dirs: ("up" | "down" | "left" | "right")[]) {
+	function press(
+		start: TvState,
+		...dirs: ("up" | "down" | "left" | "right")[]
+	) {
 		let state = start
 		let last = transition(state, { type: "focus", item: "" }, guest)
 		for (const dir of dirs) {
@@ -1830,8 +1892,24 @@ describe("mini Discover: the tabs", () => {
 			DISCOVER_TABS.map((one) => [one.tab, ...one.keys]),
 			[
 				["moods", "funny", "feelgood", "romance", "action", "scary", "mind"],
-				["themes", "crime", "mystery", "family", "growing", "future", "fantasy"],
-				["styles", "animated", "spectacle", "slow", "fast", "talky", "nonlinear"],
+				[
+					"themes",
+					"crime",
+					"mystery",
+					"family",
+					"growing",
+					"future",
+					"fantasy",
+				],
+				[
+					"styles",
+					"animated",
+					"spectacle",
+					"slow",
+					"fast",
+					"talky",
+					"nonlinear",
+				],
 			],
 		)
 	})
@@ -1920,10 +1998,7 @@ describe("mini Discover: the tabs", () => {
 		assert.match(bar.focus, /^bar:/)
 		assert.equal(bar.url, "tv=discover&tab=themes")
 		for (const key of ["bar:back", "bar:search", "bar:menu"]) {
-			const down = press(
-				{ ...start, focus: key },
-				"down",
-			)
+			const down = press({ ...start, focus: key }, "down")
 			assert.equal(down.history, "none", key)
 			assert.equal(down.focus, "tab:themes", key)
 			assert.equal(down.url, "tv=discover&tab=themes")
@@ -1949,7 +2024,10 @@ describe("mini Discover: the tabs", () => {
 		assert.equal(focusedItem(over.state, guest), "tab:themes")
 		// The options on show are still the open tab's.
 		assert.ok(tvItems(over.state.screen, guest).includes("mood:funny"))
-		const click = run(over.state, guest, { type: "choose", item: "tab:themes" })
+		const click = run(over.state, guest, {
+			type: "choose",
+			item: "tab:themes",
+		})
 		assert.equal(click.history, "replace")
 		assert.equal(click.url, "tv=discover&tab=themes")
 		assert.equal(focusedItem(click.state, guest), "tab:themes")
@@ -1965,7 +2043,12 @@ describe("mini Discover: the tabs", () => {
 		assert.equal(t.history, "none")
 		assert.equal(focusedItem(t.state, guest), "tab:themes")
 		assert.equal(t.url, "tv=discover")
-		const on = run(t.state, guest, { type: "step", by: 1 }, { type: "step", by: 1 })
+		const on = run(
+			t.state,
+			guest,
+			{ type: "step", by: 1 },
+			{ type: "step", by: 1 },
+		)
 		assert.equal(focusedItem(on.state, guest), "mood:funny")
 	})
 
@@ -2104,7 +2187,10 @@ describe("the Remote's streaming keys", () => {
 	})
 
 	it("a dark TV takes no key", () => {
-		const off = run(at("", 1, keyed), keyed, { type: "power", on: false }).state
+		const off = run(at("", 1, keyed), keyed, {
+			type: "power",
+			on: false,
+		}).state
 		const t = run(off, keyed, key(8))
 		assert.equal(t.history, "none")
 		assert.equal(t.state, off)

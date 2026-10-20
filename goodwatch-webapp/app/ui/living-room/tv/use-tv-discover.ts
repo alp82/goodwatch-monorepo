@@ -1,26 +1,28 @@
-// The titles of one choice on mini Discover: Discover's own results for that one mood, theme or style, read with
-// the results hook of `/api/discover/results` (members GET, guests POST their browser's progress; the answer is
-// never stored by a cache). The request returns Discover's first page of 40 cards and the TV shows the first
-// four: it is the request the Discover page makes for the same filter, so both show the same titles in the same
-// order.
-//
-// Until the title snapshot is loaded the endpoint answers 503; the list then says "Nothing fits." after the
-// query's retries, as an empty result does.
-//
-// None of this is in the page's first view: the hook runs in `DiscoverData` (screens/Discover.tsx), which arrives
-// with the Discover screen's chunk and reports up to the scene (`TvDiscoverReport`). The scene imports this
-// file's types only.
-import { useMemo } from "react"
+// A complete server page from Discover's existing results endpoint. Members GET; guests send browser progress.
+// Placeholder cards are never reported for a changed filter/page. The scene also checks the report identity.
+// Disabled while editing filters; Done/Back applies the query. Failures are distinct from empty lists and retryable.
+import { useCallback, useMemo } from "react"
+import { listCards } from "./tv-discover"
+import { browseIdentity, browseQuery, pageInfo } from "./tv-browse"
 import { useDiscoverResults } from "~/routes/api.discover_.results"
 import type { TitleCard } from "~/server/title-cards.server"
 import { snapshotGuestProgress } from "~/utils/guest-progress"
-import { discoverQuery, listCards } from "./tv-discover"
+
 import { tvTitleKey } from "./tv-home"
 import type { TvScreen } from "./tv-machine"
 
 /** What Discover's data component reports up to the scene. */
 export type TvDiscoverReport = {
-	/** The titles of the choice on screen, at most four, best first. */
+	/** This server page, in its actual order. */
+	id: string
+	total: number
+	pages: number
+	next: boolean
+	failed: string | null
+	retry: () => void
+	hasTaste: boolean
+	summary: string
+	controls: Record<string, string>
 	cards: readonly TitleCard[]
 	/** Their keys on the TV, for the machine's context. */
 	titles: readonly string[]
@@ -43,19 +45,97 @@ export function useTvDiscover({
 		if (member) return null
 		const { interactions, country, services } = snapshotGuestProgress()
 		return { interactions, country, services }
-	}, [member, tab, choice])
+	}, [member, tab, choice, screen])
 	const results = useDiscoverResults({
-		query: tab && choice ? discoverQuery(tab, choice) : "",
+		query: screen.name === "discover" ? browseQuery(screen) : "",
+		page: screen.name === "discover" ? (screen.page ?? 1) : 1,
 		guest,
-		enabled: Boolean(tab && choice),
+		enabled:
+			screen.name === "discover" &&
+			!screen.filters &&
+			Boolean(choice || screen.all),
 	})
 	// The hook keeps the last answer while the next loads; on the TV that would be another choice's titles.
 	const data = results.isPlaceholderData ? undefined : results.data
 	const cards = useMemo(() => listCards(data?.cards ?? []), [data])
-	const waiting = Boolean(choice) && !data && !results.isError
+	const id = screen.name === "discover" ? browseIdentity(screen) : ""
+	const retry = useCallback(() => {
+		void results.refetch()
+	}, [results.refetch])
+	const failed = results.isError ? "Titles are unavailable. Try again." : null
+	const info = pageInfo(data)
+	const summary = resultSummary(results.data)
+	const controls = useMemo(
+		(): Record<string, string> =>
+			results.data
+				? {
+						services: results.data.state.onMyServices ? "mine" : "all",
+						unseen: results.data.state.notSeenYet ? "1" : "0",
+						foryou: results.data.forYou.on ? "1" : "0",
+						sort: results.data.sortUsed,
+					}
+				: {},
+		[results.data],
+	)
+	const waiting = !data && !results.isError
 	// The same object while nothing changed: every new one is another render of the scene (`useReport`).
 	return useMemo(
-		() => ({ cards, titles: cards.map(tvTitleKey), waiting }),
-		[cards, waiting],
+		() => ({
+			id,
+			cards,
+			titles: cards.map(tvTitleKey),
+			waiting,
+			failed,
+			retry,
+			...info,
+			hasTaste: results.data?.hasTaste ?? false,
+			summary,
+			controls,
+		}),
+		[
+			id,
+			cards,
+			waiting,
+			failed,
+			retry,
+			info.total,
+			info.pages,
+			info.next,
+			results.data?.hasTaste,
+			summary,
+			controls,
+		],
 	)
+}
+
+export function resultSummary(data?: {
+	state: { type: string; onMyServices: boolean; notSeenYet: boolean }
+	sortUsed: string
+	forYou: { on: boolean; applied: boolean; status: string }
+}) {
+	if (!data) return ""
+	const sorts: Record<string, string> = {
+		popular: "Popular",
+		top: "Top rated",
+		newest: "Newest",
+		relevance: "Relevance",
+		match: "Best match",
+	}
+	return [
+		data.state.type === "all"
+			? "Movies & shows"
+			: data.state.type === "movie"
+				? "Movies"
+				: "Shows",
+		data.state.onMyServices ? "On my services" : "Everywhere",
+		data.state.notSeenYet ? "Not seen yet" : "Include seen",
+		sorts[data.sortUsed],
+		data.forYou.applied
+			? "For you"
+			: data.forYou.on && data.forYou.status !== "ready"
+				? "For you needs taste"
+				: null,
+	]
+		.filter(Boolean)
+		.join(" · ")
 }

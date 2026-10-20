@@ -93,6 +93,7 @@ export function TitleList({
 	const P = canvas.edition === "phone"
 	const on = titles.filter((title) => items.includes(`title:${title.key}`))
 	const keys = actions.filter((action) => items.includes(action.id))
+	const browse = actions.some((action) => action.id.startsWith("browse:"))
 	// The title the screen names and shows behind everything: the one with the focus, and while the focus is on a
 	// key or the bar, the one that had it last.
 	const last = useRef<string | null>(null)
@@ -148,7 +149,10 @@ export function TitleList({
 			<Frame {...frame}>
 				<div className="flex h-full flex-col">
 					{shown ? (
-						<div key={shown.key} className="tvc-fade h-[64px] shrink-0">
+						<div
+							key={shown.key}
+							className={`tvc-fade shrink-0 ${browse ? "h-[84px]" : "h-[64px]"}`}
+						>
 							<div
 								{...mediaTextAttributes(mediaFieldLanguage(shown))}
 								className="truncate text-[30px] font-bold leading-none tracking-tight"
@@ -158,9 +162,19 @@ export function TitleList({
 							<div className="mt-2 truncate text-[20px] leading-tight text-white/75">
 								<MediaFact text={shown.facts} media={shown.factMedia} />
 							</div>
+							{browse && (
+								<div
+									className="truncate text-[18px] leading-tight text-white/70"
+									title={actionsLabel}
+								>
+									{actionsLabel}
+								</div>
+							)}
 						</div>
 					) : (
-						<div className="h-[64px] shrink-0 text-[24px] leading-tight text-white/70">
+						<div
+							className={`${browse ? "h-[84px]" : "h-[64px]"} shrink-0 text-[24px] leading-tight text-white/70`}
+						>
 							{empty}
 						</div>
 					)}
@@ -171,7 +185,8 @@ export function TitleList({
 						{posters}
 					</div>
 					<div
-						className={`flex shrink-0 items-center gap-2 ${PHONE_CORNER}`}
+						{...(keys.length > 2 ? { [TV_ROW_ATTR]: "" } : {})}
+						className={`flex shrink-0 items-center gap-2 ${keys.length > 2 ? "mr-[158px] overflow-hidden" : PHONE_CORNER}`}
 						style={{ height }}
 					>
 						{keys.map((action) => (
@@ -180,7 +195,7 @@ export function TitleList({
 								id={action.id}
 								label={action.says}
 								// Two keys share the row: each has less room around its words.
-								className={`tvc-btn flex min-w-0 items-center text-[21px] ${keys.length > 1 ? "px-4" : "px-6"}`}
+								className={`tvc-btn flex shrink-0 items-center text-[21px] ${keys.length > 1 ? "px-4" : "px-6"}`}
 								style={{ height }}
 							>
 								<span className="truncate">{action.label}</span>
@@ -220,9 +235,21 @@ export function TitleList({
 						{posters}
 					</div>
 					{keys.length > 0 && (
-						<div className="flex shrink-0 flex-col gap-3 pb-7">
+						<div
+							className={
+								browse
+									? "grid w-[320px] shrink-0 grid-cols-2 gap-3 pb-5"
+									: "flex shrink-0 flex-col gap-3 pb-7"
+							}
+						>
 							{actionsLabel && (
-								<span className="text-[24px] text-white/70">
+								<span
+									className={
+										browse
+											? "col-span-2 h-[48px] line-clamp-2 text-[20px] leading-tight text-white/70"
+											: "max-w-[260px] text-[20px] leading-tight text-white/70"
+									}
+								>
 									{actionsLabel}
 								</span>
 							)}
@@ -231,7 +258,7 @@ export function TitleList({
 									key={action.id}
 									id={action.id}
 									label={action.says}
-									className={`tvc-btn flex h-[68px] items-center whitespace-nowrap px-8 text-[26px] ${action.mark ? "gap-3.5" : "justify-center"}`}
+									className={`tvc-btn flex items-center whitespace-nowrap ${browse ? "h-[58px] px-3 text-[22px]" : "h-[68px] px-8 text-[26px]"} ${action.mark ? "gap-3.5" : "justify-center"}`}
 								>
 									{action.mark && (
 										<span

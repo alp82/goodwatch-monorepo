@@ -1,3 +1,17 @@
+import {
+	BROWSE_KEYS,
+	BROWSE_OPTIONS,
+	type BrowseState,
+	KEY_ITEMS,
+	KEY_ROWS,
+	bestMatchActive,
+	browseHref,
+	browseQuery,
+	filterItems,
+	readBrowse,
+	validPage,
+	writeBrowse,
+} from "./tv-browse.ts"
 // The new TV on the start page ("apps", in the look "Cinema"), shared by the desktop and phone editions.
 //
 // A pure state machine: `transition(state, action, context)` returns the next state, how the browser history
@@ -86,7 +100,11 @@ export type TvScreen =
 	 * Mini Discover. Without a choice: its three tabs, `tab` open, with that tab's six options. With one (a mood,
 	 * a theme or a style of `tab`, by its key): up to four titles of it.
 	 */
-	| { name: "discover"; tab: TvDiscoverTab; choice: string | null }
+	| ({
+			name: "discover"
+			tab: TvDiscoverTab
+			choice: string | null
+	  } & BrowseState)
 	/** The small map without an island, an island's titles with one. */
 	| { name: "explorer"; island: string | null }
 	/** The sides of the person's taste (or the way to one) without a side, a side's titles with one. */
@@ -96,13 +114,18 @@ export type TvScreen =
 	/** A member's My shows. */
 	| { name: "shows" }
 	/** A title as `<media_type>-<tmdb_id>`. */
-	| { name: "title"; title: string; panel?: "fingerprint" | "trailer"; group?: number }
+	| {
+			name: "title"
+			title: string
+			panel?: "fingerprint" | "trailer"
+			group?: number
+	  }
 	/** "How was it?" after Seen it. */
 	| { name: "rate"; title: string }
 	/** "On <service>": titles to watch on one streaming service, by its TMDB provider id. */
 	| { name: "service"; service: number }
 	/** The question line without a query, the results with one. */
-	| { name: "search"; query: string | null }
+	| ({ name: "search"; query: string | null } & BrowseState)
 	/** What is GoodWatch? */
 	| { name: "about" }
 
@@ -131,6 +154,11 @@ export type TvPick = { title: string; href?: string | null }
  */
 export type TvContext = {
 	member: boolean
+	browseNext?: boolean
+	browseFailed?: boolean
+	browseReady?: boolean
+	browseTaste?: boolean
+	browseDefaults?: Record<string, string>
 	/** The person has a taste with sides: Taste shows them. */
 	taste: boolean
 	tonight: readonly TvPick[]
@@ -191,6 +219,8 @@ export const EMPTY_CONTEXT: TvContext = {
 }
 
 export type TvEffect =
+	| { type: "draft-key"; key: string }
+	| { type: "retry-results" }
 	/** The Expand key: grow the picture into the page at `href`. */
 	| { type: "expand"; href: string }
 	/** "Watch on <service>": open the title's page at its streaming block (`watchHref`), which it highlights. */
@@ -211,6 +241,7 @@ export type TvEffect =
 export type TvHistory = "push" | "replace" | "back" | "none"
 
 export type TvAction =
+	| { type: "browse-page"; page: number }
 	/** A direction, with the boxes of the items on show (the menu's while it is open). See `tv-move.ts`. */
 	| { type: "move"; dir: TvDir; boxes: readonly TvBox[]; scale?: number }
 	/** The wheel's drag and scroll: one item on or back in reading order. */
@@ -274,7 +305,7 @@ function readScreen(params: URLSearchParams, member: boolean): TvScreen {
 		case "tonight":
 			return { name, pick: readInt(params, "pick") }
 		case "discover":
-			return readDiscover(params)
+			return { ...readDiscover(params), ...readBrowse(params) }
 		case "explorer":
 			return { name, island: params.get("island") || null }
 		case "taste":
@@ -291,7 +322,8 @@ function readScreen(params: URLSearchParams, member: boolean): TvScreen {
 			if (!title) return HOME
 			const panel = params.get("panel")
 			const group = params.get("group")
-			return name === "title" && (panel === "fingerprint" || panel === "trailer")
+			return name === "title" &&
+				(panel === "fingerprint" || panel === "trailer")
 				? {
 						name,
 						title,
@@ -303,7 +335,14 @@ function readScreen(params: URLSearchParams, member: boolean): TvScreen {
 				: { name, title }
 		}
 		case "search":
-			return { name, query: params.get("q")?.trim() || null }
+			return {
+				name,
+				query:
+					(params.get("q")?.trim().slice(0, 512) ?? "").length >= 2
+						? params.get("q")!.trim().slice(0, 512)
+						: null,
+				...readBrowse(params),
+			}
 		case "service": {
 			const service = readServiceId(params.get("service"))
 			return service ? { name, service } : HOME
@@ -345,6 +384,9 @@ export function readTvState(
 
 /** The TV's params, and the old TV's, which go when a screen is written. */
 const TV_KEYS = [
+	...BROWSE_KEYS,
+	"filters",
+	"all",
 	"tv",
 	"tab",
 	"mood",
@@ -381,6 +423,7 @@ export function writeTvParams(
 			break
 		case "discover":
 			writeDiscover(screen, out)
+			writeBrowse(screen, out)
 			break
 		case "explorer":
 			if (screen.island) out.set("island", screen.island)
@@ -398,6 +441,7 @@ export function writeTvParams(
 			break
 		case "search":
 			if (screen.query) out.set("q", screen.query)
+			writeBrowse(screen, out)
 			break
 		case "service":
 			out.set("service", String(screen.service))
@@ -447,7 +491,7 @@ export function destinationHref(
 			// A guest's picks are Discover's best. `/watch-next` shows a guest nothing.
 			return (ctx.member && tonightPick(screen, ctx).pick?.href) || "/discover"
 		case "discover":
-			return discoverHref(screen)
+			return screen.filters ? null : browseHref(screen)
 		case "explorer": {
 			const query = new URLSearchParams({ grouping: "mood" })
 			if (screen.island) query.set("island", screen.island)
@@ -469,9 +513,7 @@ export function destinationHref(
 				: `/${mediaType}/${tmdbId}`
 		}
 		case "search":
-			return screen.query
-				? `/discover?q=${encodeURIComponent(screen.query)}`
-				: null
+			return screen.query ? (screen.filters ? null : browseHref(screen)) : null
 		// Discover with that one service: its own parameter, which turns On my services off.
 		case "service":
 			return `/discover?services=${screen.service}`
@@ -550,11 +592,16 @@ const typed = (ctx: TvContext) => ctx.draft.trim().length > 0
 function contentItems(screen: TvScreen, ctx: TvContext): string[] {
 	switch (screen.name) {
 		case "home": {
-			if (ctx.member) return [
-				...(ctx.tonight.length ? ["home:next"] : []),
-				"home:movies", "app:shows", "app:tonight", "app:discover", "app:taste",
-				...titleItems(ctx.popular, 12),
-			]
+			if (ctx.member)
+				return [
+					...(ctx.tonight.length ? ["home:next"] : []),
+					"home:movies",
+					"app:shows",
+					"app:tonight",
+					"app:discover",
+					"app:taste",
+					...titleItems(ctx.popular, 12),
+				]
 			const apps = TV_APPS.filter((app) => app !== "shows" || ctx.member).map(
 				(app) => `app:${app}`,
 			)
@@ -592,18 +639,20 @@ function contentItems(screen: TvScreen, ctx: TvContext): string[] {
 			]
 		case "title":
 			return screen.panel
-				? ["close", ...(screen.panel === "fingerprint" ? ["group:-1", "group:0", "group:1", "group:2"] : [])]
+				? [
+						"close",
+						...(screen.panel === "fingerprint"
+							? ["group:-1", "group:0", "group:1", "group:2"]
+							: []),
+					]
 				: ["watch", "trailer", "want-to-see", "seen", "fingerprint"]
 		case "service":
 			return titleItems(ctx.titles, SERVICE_TITLES)
 		case "search":
-			if (screen.query) return titleItems(ctx.titles)
-			return [
-				...(typed(ctx) ? [SEARCH_GO] : []),
-				...SEARCH_IDEAS.slice(0, typed(ctx) ? 3 : 4).map(
-					(idea) => `idea:${idea}`,
-				),
-			]
+			if (screen.filters) return filterItems
+			if (screen.query) return browseItems(screen, ctx)
+			return KEY_ITEMS
+
 		case "about":
 			return ["got-it", "rate"]
 	}
@@ -616,7 +665,10 @@ function contentItems(screen: TvScreen, ctx: TvContext): string[] {
 export function tvItems(screen: TvScreen, ctx: TvContext): string[] {
 	return [
 		...contentItems(screen, ctx),
-		...(destinationHref(screen, ctx) && !(screen.name === "title" && screen.panel) ? ["expand"] : []),
+		...(destinationHref(screen, ctx) &&
+		!(screen.name === "title" && screen.panel)
+			? ["expand"]
+			: []),
 		...(screen.name === "home" ? [] : ["bar:back"]),
 		...(screen.name === "search" ? [] : ["bar:search"]),
 		"bar:menu",
@@ -648,7 +700,8 @@ function screenFocus(state: TvState, ctx: TvContext): string {
 	// The focus starts on the screen's first own item, never on the Expand key and never on a tab (Discover starts
 	// on the open tab's first option); an empty screen starts on the bar.
 	return items.find(
-		(item) => item !== "expand" && !item.startsWith("tab:"),
+		(item) =>
+			item !== "expand" && item !== "browse:all" && !item.startsWith("tab:"),
 	) as string
 }
 
@@ -686,6 +739,15 @@ const none = (state: TvState, effects: TvEffect[] = []): TvTransition => ({
 	effects,
 })
 
+function cleanScreen(screen: TvScreen): TvScreen {
+	if (screen.name !== "search" && screen.name !== "discover") return screen
+	return Object.fromEntries(
+		Object.entries(screen).filter(
+			([k, v]) => v !== undefined && !(k === "page" && v === 1),
+		),
+	) as TvScreen
+}
+
 function push(
 	state: TvState,
 	screen: TvScreen,
@@ -694,7 +756,7 @@ function push(
 	return {
 		state: {
 			...state,
-			screen,
+			screen: cleanScreen(screen),
 			focus: null,
 			menuOpen: false,
 			menuFocus: null,
@@ -713,7 +775,13 @@ function replace(
 	focus: string | null = null,
 ): TvTransition {
 	return {
-		state: { ...state, screen, focus, menuOpen: false, menuFocus: null },
+		state: {
+			...state,
+			screen: cleanScreen(screen),
+			focus,
+			menuOpen: false,
+			menuFocus: null,
+		},
 		history: "replace",
 		effects,
 	}
@@ -748,9 +816,21 @@ function leave(
 /** Back: close the menu, else one step back, home included. A deep link falls back to home; home itself stays. */
 function back(state: TvState): TvTransition {
 	if (state.menuOpen) return none(closeMenu(state))
+	if (
+		(state.screen.name === "discover" || state.screen.name === "search") &&
+		state.screen.filters
+	)
+		return replace(
+			state,
+			{ ...state.screen, filters: undefined },
+			[],
+			"browse:filters",
+		)
 	if (state.screen.name === "title" && state.screen.panel) {
 		const next = leave(state, { name: "title", title: state.screen.title })
-		return next.history === "replace" ? { ...next, state: { ...next.state, focus: state.screen.panel } } : next
+		return next.history === "replace"
+			? { ...next, state: { ...next.state, focus: state.screen.panel } }
+			: next
 	}
 	return leave(state, HOME)
 }
@@ -774,9 +854,15 @@ function openSearch(state: TvState): TvTransition {
  * on what is typed or on an idea. Nothing searches while the person types.
  */
 function submitSearch(state: TvState, text: string): TvTransition {
-	const query = text.trim()
+	const query = text.trim().slice(0, 512)
 	if (query.length < MIN_QUERY_LENGTH) return none(state)
-	const screen: TvScreen = { name: "search", query }
+	const screen: TvScreen = {
+		...(state.screen.name === "search" ? state.screen : {}),
+		name: "search",
+		query,
+		page: undefined,
+		filters: undefined,
+	}
 	return state.screen.name === "search"
 		? replace(state, screen)
 		: push(state, screen)
@@ -791,6 +877,99 @@ function typedOnSearch(state: TvState): TvTransition {
 	return s.name === "search" && !s.query && !state.menuOpen
 		? none({ ...state, focus: SEARCH_GO })
 		: none(state)
+}
+
+function browseItems(
+	screen: BrowseState & { name: string },
+	ctx: TvContext,
+): string[] {
+	return [
+		...titleItems(ctx.titles, 40),
+		"browse:filters",
+		...(screen.name === "discover" ? ["change"] : []),
+		...(screen.name === "search" ? ["browse:edit"] : []),
+		...((screen.page ?? 1) > 1 ? ["browse:prev"] : []),
+		...(ctx.browseNext && ctx.browseReady ? ["browse:next"] : []),
+		...(ctx.browseFailed ? ["browse:retry"] : []),
+	]
+}
+function chooseBrowse(
+	state: TvState,
+	item: string,
+	ctx: TvContext,
+): TvTransition {
+	const s = state.screen
+	if (s.name !== "search" && s.name !== "discover") return none(state)
+	const arg = item.split(":")[1]
+	if (item.startsWith("filter:")) {
+		const key = BROWSE_KEYS.find((k) => k === arg)
+		if (!key || !s.filters) return none(state)
+		const p = new URLSearchParams(browseQuery(s))
+		p.delete("q")
+		const options = (BROWSE_OPTIONS[key] as readonly string[]).filter(
+			(v) =>
+				key !== "sort" ||
+				((v !== "relevance" || s.name === "search") &&
+					(v !== "match" || ctx.browseTaste)),
+		)
+		const defaults: Record<string, string> = {
+			type: "all",
+			sort: s.name === "search" ? "relevance" : "popular",
+			...ctx.browseDefaults,
+		}
+		if (
+			key === "foryou" &&
+			bestMatchActive(p, defaults, ctx.browseTaste ?? false)
+		) {
+			// Match shows On without changing the underlying preference. Turning it
+			// Off must also leave taste ordering, using this screen's plain default.
+			p.set("foryou", "0")
+			p.set("sort", s.name === "search" ? "relevance" : "popular")
+		} else {
+			const current = p.get(key) ?? defaults[key] ?? ""
+			p.set(key, options[(options.indexOf(current) + 1) % options.length])
+		}
+		return replace(
+			state,
+			{ ...s, browse: p.toString(), page: undefined },
+			[],
+			item,
+		)
+	}
+	switch (arg) {
+		case "filters":
+			return replace(state, { ...s, filters: true }, [], "browse:done")
+		case "done":
+			return replace(state, { ...s, filters: undefined }, [], "browse:filters")
+		case "reset":
+			return replace(
+				state,
+				{
+					...s,
+					browse: undefined,
+					page: undefined,
+					...(s.name === "discover" ? { choice: null, all: true } : {}),
+				},
+				[],
+				item,
+			)
+		case "all":
+			return push(state, { ...s, all: true, page: undefined })
+		case "edit":
+			return s.name === "search"
+				? replace(state, { ...s, query: null }, [], "key:q")
+				: none(state)
+		case "prev":
+		case "next":
+			return replace(state, {
+				...s,
+				page: validPage((s.page ?? 1) + (arg === "next" ? 1 : -1)),
+			})
+		case "retry":
+			return none(state, [{ type: "retry-results" }])
+		default:
+			return none(state)
+	}
 }
 
 // ---------------------------------------------------------------------------------------------------------
@@ -871,9 +1050,11 @@ function discoverHref(screen: DiscoverScreen): string {
 }
 
 function discoverItems(screen: DiscoverScreen, ctx: TvContext): string[] {
-	if (screen.choice) return [...titleItems(ctx.titles), "change"]
+	if (screen.filters) return filterItems
+	if (screen.choice || screen.all) return browseItems(screen, ctx)
 	const { kind, keys } = discoverTab(screen.tab)
 	return [
+		"browse:all",
 		...DISCOVER_TABS.map(({ tab }) => `tab:${tab}`),
 		...keys.map((key) => `${kind}:${key}`),
 	]
@@ -926,12 +1107,12 @@ function chooseInDiscover(
 ): TvTransition {
 	if (kind === "tab") return openTab(state, screen, arg)
 	if (kind === "change")
-		return screen.choice
+		return screen.choice || screen.all
 			? leave(state, discoverChoice(screen.tab))
 			: none(state)
 	return screen.choice
 		? none(state)
-		: push(state, { name: "discover", tab: screen.tab, choice: arg })
+		: push(state, { ...screen, choice: arg, page: undefined })
 }
 
 // ---------------------------------------------------------------------------------------------------------
@@ -1175,6 +1356,13 @@ function chooseInMenu(state: TvState, item: string): TvTransition {
 /** Chooses an item of the screen on show. The caller has checked that the screen has it and put the focus on it. */
 function choose(state: TvState, item: string, ctx: TvContext): TvTransition {
 	const s = state.screen
+	if (
+		(s.name === "search" || s.name === "discover") &&
+		(item.startsWith("browse:") || item.startsWith("filter:"))
+	)
+		return chooseBrowse(state, item, ctx)
+	if (s.name === "search" && !s.query && item.startsWith("key:"))
+		return none(state, [{ type: "draft-key", key: item.slice(4) }])
 	const [kind, ...rest] = item.split(":")
 	const arg = rest.join(":")
 	if (
@@ -1199,7 +1387,8 @@ function choose(state: TvState, item: string, ctx: TvContext): TvTransition {
 	switch (kind) {
 		case "home":
 			if (s.name !== "home" || !ctx.member) return none(state)
-			if (arg === "movies") return none(state, [{ type: "expand", href: DOOR_HREF.movie }])
+			if (arg === "movies")
+				return none(state, [{ type: "expand", href: DOOR_HREF.movie }])
 			return arg === "next" && ctx.tonight[0]
 				? push(state, { name: "title", title: ctx.tonight[0].title })
 				: none(state)
@@ -1245,10 +1434,20 @@ function choose(state: TvState, item: string, ctx: TvContext): TvTransition {
 			return push(state, { name: "title", title: arg })
 		case "fingerprint":
 		case "trailer":
-			return s.name === "title" ? push(state, { name: "title", title: s.title, panel: kind }) : none(state)
+			return s.name === "title"
+				? push(state, { name: "title", title: s.title, panel: kind })
+				: none(state)
 		case "group":
 			return s.name === "title" && s.panel === "fingerprint"
-				? { ...none({ ...state, focus: item }), state: { ...state, screen: { ...s, group: Number(arg) }, focus: item }, history: "replace" }
+				? {
+						...none({ ...state, focus: item }),
+						state: {
+							...state,
+							screen: { ...s, group: Number(arg) },
+							focus: item,
+						},
+						history: "replace",
+					}
 				: none(state)
 		case "close":
 			return back(state)
@@ -1291,6 +1490,49 @@ function choose(state: TvState, item: string, ctx: TvContext): TvTransition {
 	}
 }
 
+/** Scrollable keyboard rows use their logical neighbors, so the fixed Search key cannot intercept Down. */
+function keyboardMove(
+	state: TvState,
+	from: string,
+	dir: TvDir,
+	boxes: readonly TvBox[],
+): string | null {
+	if (
+		state.screen.name !== "search" ||
+		state.screen.query ||
+		state.screen.filters ||
+		state.menuOpen
+	)
+		return null
+	const q = boxes.find((b) => b.id === "key:q"),
+		y = boxes.find((b) => b.id === "key:y")
+	const phone = q && y && Math.abs(q.top - y.top) > 10
+	const rows = (
+		phone
+			? KEY_ROWS.flatMap((row) =>
+					[row.slice(0, 5), row.slice(5)].filter(Boolean),
+				)
+			: KEY_ROWS
+	).map((row) => [...row].map((c) => `key:${c}`))
+	rows.unshift(["bar:back", "bar:menu"])
+	rows.push(["key:delete", "key:space", "key:clear", "go"])
+	const r = rows.findIndex((row) => row.includes(from))
+	if (r < 0) return null
+	const c = rows[r].indexOf(from)
+	if (dir === "left" || dir === "right")
+		return rows[r][
+			Math.max(0, Math.min(rows[r].length - 1, c + (dir === "right" ? 1 : -1)))
+		]
+	const next =
+		rows[Math.max(0, Math.min(rows.length - 1, r + (dir === "down" ? 1 : -1)))]
+	return next[
+		Math.min(
+			next.length - 1,
+			Math.floor(((c + 0.5) * next.length) / rows[r].length),
+		)
+	]
+}
+
 export function transition(
 	state: TvState,
 	action: TvAction,
@@ -1316,6 +1558,7 @@ export function transition(
 			const from = focusedItem(state, ctx)
 			// The rating strip and home's guide name some moves themselves, before the rule.
 			const to =
+				keyboardMove(state, from, action.dir, action.boxes) ??
 				stripMove(state, from, action.dir, items) ??
 				nextInDirection(
 					action.boxes.filter((box) => items.includes(box.id)),
@@ -1366,6 +1609,10 @@ export function transition(
 			return jump(state, HOME)
 		case "toggle-menu":
 			return none({ ...state, menuOpen: !state.menuOpen, menuFocus: null })
+		case "browse-page":
+			return state.screen.name === "search" || state.screen.name === "discover"
+				? replace(state, { ...state.screen, page: validPage(action.page) })
+				: none(state)
 		case "open-search":
 			return openSearch(state)
 		case "submit-search":

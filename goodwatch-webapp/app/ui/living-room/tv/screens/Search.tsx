@@ -1,20 +1,12 @@
+import { browseActions } from "./browse-actions"
 import { copyMediaPresentation } from "~/utils/media-presentation"
-// Search on the TV. Its first screen is one line to type into and a few ideas; OK on what is typed, or on an idea,
-// runs the full search and shows the first titles it found in the list every app shows its titles in. A title
-// leads to its title screen. A chunk the TV asks for at the first interaction (screen-code.tsx).
-//
-// The line is a real input dressed as the question: a phone has no keyboard until an input has the browser's
-// focus. It takes that focus when the screen opens, and a tap gives it too. While it has it, every key types,
-// except the arrows, Enter and Escape, which stay the Remote's (use-tv.ts): the arrows move the TV's focus, Enter
-// is OK, Escape is Back. Typing puts the TV's focus on the key that searches for what is typed (tv-machine.ts).
-//
-// Nothing is asked for while the person types: no search, no suggestions. The ideas are fixed queries. The search
-// starts with OK and with nothing else (use-tv-search.ts).
-//
-// On the phone every key is a touch target, 44 px or more on the phone's screen (`keySize` in kit.tsx). The
-// question screen has no page to grow into, so no Expand key; the results have one, and the list keeps its corner
-// free.
-import { useEffect, useRef } from "react"
+// Search is explicit: a real input for physical/touch typing and a directional screen keyboard.
+// QWERTY rows and Space/Delete/Search actions recover the pre-6a85a3de TV keyboard; digits and Clear are added.
+// On phones the rows wrap and scroll between a fixed query and action row. No input auto-focus steals remote OK.
+// The entire screen, keyboard, filter panel and data code arrive with Search's lazy screen chunk.
+import { useEffect } from "react"
+import { KEY_ROWS } from "../tv-browse"
+import BrowseFilters from "./BrowseFilters"
 import { preloadSearchRequest } from "~/ui/search/search-client"
 import { TitleList, type TvListTitle } from "../TitleList"
 import { CornerBar, Item, Shade, keySize, useReport, useTvView } from "../kit"
@@ -28,7 +20,6 @@ import {
 	searchCrumb,
 	searchEmptyLine,
 	searchFacts,
-	searchLine,
 } from "../tv-search"
 import { type TvSearchReport, useTvSearch } from "../use-tv-search"
 
@@ -47,9 +38,6 @@ export function SearchData({
 	return null
 }
 
-/** An idea's words from its item, `idea:cozy mystery`. */
-const ideaOf = (item: string) => item.slice("idea:".length)
-
 function Question({
 	items,
 	draft,
@@ -61,87 +49,95 @@ function Question({
 }) {
 	const { canvas, dispatch } = useTvView()
 	const P = canvas.edition === "phone"
-	const line = useRef<HTMLInputElement>(null)
-	// The line takes the browser's focus when the screen opens, so what is typed lands in it and a phone that
-	// lets a page open its keyboard opens it. Not before the window is measured: both editions are drawn then.
-	// The code for the search request is asked for now, so OK does not wait for it.
 	useEffect(() => {
-		if (canvas.first) return
-		preloadSearchRequest()
-		line.current?.focus({ preventScroll: true })
+		if (!canvas.first) preloadSearchRequest()
 	}, [canvas.first])
-	// The two editions are in the HTML together before the window is measured: each hint has an id of its own.
 	const hint = `tv-search-hint-${canvas.edition}`
-	const answers = items.filter(
-		(item) => item === SEARCH_GO || item.startsWith("idea:"),
-	)
-	const height = P ? keySize(canvas, 52) : 116
 	return (
 		<>
-			<Shade dim={0.82} />
+			<Shade dim={0.86} />
 			<div
-				className={`absolute inset-0 flex flex-col justify-center ${P ? "px-5 pb-3 pt-[70px]" : "px-14 pt-16"}`}
+				className={`absolute inset-x-0 flex flex-col gap-3 ${P ? "top-[72px] bottom-3 px-5" : "top-[100px] bottom-[76px] px-14"}`}
 			>
-				{/* A phone's keyboard may send its search key as the form's submit and not as a key. */}
 				<form
+					className="shrink-0"
 					onSubmit={(e) => {
 						e.preventDefault()
-						dispatch({ type: "ok" })
+						dispatch({ type: "submit-search", query: draft })
 					}}
 				>
-					{/* One target for a finger: a tap on the word, the line or the hint gives the line the focus. */}
-					<label className="block cursor-text">
-						<span
-							className={`block font-bold uppercase tracking-[0.16em] text-white/75 ${P ? "text-[20px]" : "text-[24px]"}`}
-						>
-							Search
-						</span>
-						<input
-							ref={line}
-							{...{ [TV_INPUT_ATTR]: "" }}
-							type="text"
-							aria-label="Search"
-							aria-describedby={hint}
-							inputMode="search"
-							enterKeyHint="search"
-							autoComplete="off"
-							autoCorrect="off"
-							autoCapitalize="none"
-							spellCheck={false}
-							maxLength={SEARCH_MAX_LENGTH}
-							placeholder={SEARCH_QUESTION}
-							value={draft}
-							onChange={(e) => onDraft(e.target.value)}
-							className={`block w-full appearance-none rounded-none border-0 bg-transparent p-0 font-bold tracking-tight text-white caret-amber-400 shadow-none outline-none ring-0 placeholder:text-white focus:outline-none focus:ring-0 ${P ? "mt-1" : "mt-2"}`}
-							style={{
-								fontSize: P ? 32 : 60,
-								height: P ? 38 : 70,
-								lineHeight: 1.02,
-							}}
-						/>
-						<span
-							id={hint}
-							className={`block text-white/80 ${P ? "mt-2 text-[20px] leading-tight" : "mt-3 text-[30px]"}`}
-						>
-							{searchLine(draft, P)}
-						</span>
-					</label>
+					<input
+						type="text"
+						{...{ [TV_INPUT_ATTR]: "" }}
+						aria-label="Search"
+						aria-describedby={hint}
+						inputMode="search"
+						enterKeyHint="search"
+						autoComplete="off"
+						autoCapitalize="none"
+						spellCheck={false}
+						maxLength={SEARCH_MAX_LENGTH}
+						value={draft}
+						onChange={(e) => onDraft(e.target.value)}
+						placeholder={SEARCH_QUESTION}
+						className={`w-full rounded-xl border-0 bg-white/10 px-4 font-bold text-white placeholder:text-white/65 ${P ? "text-[28px]" : "text-[40px]"}`}
+						style={{ height: keySize(canvas, 56) }}
+					/>
 				</form>
 				<div
-					className={`grid ${P ? "mt-4 grid-cols-2 gap-2.5" : "mt-10 grid-cols-4 gap-5"}`}
+					id={hint}
+					className={`shrink-0 text-white/70 ${P ? "text-[20px]" : "text-[24px]"}`}
 				>
-					{answers.map((item) => (
+					{draft.length}/{SEARCH_MAX_LENGTH} · Two characters or more. Type or
+					use the keys.
+				</div>
+				<div data-tv-scroll className="min-h-0 flex-1 overflow-y-auto p-2">
+					{(P
+						? KEY_ROWS.flatMap((row) =>
+								[row.slice(0, 5), row.slice(5)].filter(Boolean),
+							)
+						: KEY_ROWS
+					).map((row) => (
+						<div key={row} className="mb-2 flex justify-center gap-1.5">
+							{[...row].map((c) => (
+								<Item
+									key={c}
+									id={`key:${c}`}
+									className={`tvc-btn flex shrink-0 items-center justify-center font-bold uppercase ${P ? "text-[25px]" : "text-[30px]"}`}
+									style={{
+										width: P ? keySize(canvas, 0) : 76,
+										height: keySize(canvas, 52),
+									}}
+								>
+									{c}
+								</Item>
+							))}
+						</div>
+					))}
+				</div>
+				<div className="flex shrink-0 gap-2">
+					{[
+						["delete", "Delete"],
+						["space", "Space"],
+						["clear", "Clear"],
+					].map(([key, label]) => (
 						<Item
-							key={item}
-							id={item}
-							className={`tvc-btn flex min-w-0 items-center justify-center text-center ${P ? "px-3 text-[20px] leading-[1.1]" : "rounded-[26px] px-4 text-[32px] leading-tight"}`}
-							style={{ height }}
+							key={key}
+							id={`key:${key}`}
+							className="tvc-btn flex-1 px-2 text-[22px]"
+							style={{ height: keySize(canvas, 52) }}
 						>
-							<span className="line-clamp-2 break-words">
-								{item === SEARCH_GO ? goLabel(draft) : ideaOf(item)}
-							</span>
+							{label}
 						</Item>
 					))}
+					<Item
+						id={SEARCH_GO}
+						label={goLabel(draft)}
+						className="tvc-btn flex-1 bg-amber-400 px-2 text-[22px] text-black"
+						style={{ height: keySize(canvas, 52) }}
+					>
+						Search
+					</Item>
 				</div>
 			</div>
 			<CornerBar items={items} />
@@ -153,10 +149,12 @@ function Question({
 function Results({
 	items,
 	query,
+	screen,
 	list,
 }: {
 	items: readonly string[]
 	query: string
+	screen: Extract<TvScreen, { name: "search" }>
 	list: TvSearchReport | null
 }) {
 	const titles: TvListTitle[] = (list?.cards ?? []).map((card) => ({
@@ -170,7 +168,9 @@ function Results({
 	return (
 		<TitleList
 			name="Search"
-			crumb={searchCrumb(query)}
+			crumb={`${searchCrumb(query)} · Page ${screen.page ?? 1}${list ? ` of ${list.pages} · ${list.total} matches` : ""}`}
+			actions={browseActions(screen, list)}
+			actionsLabel={list?.summary}
 			items={items}
 			titles={titles}
 			empty={searchEmptyLine({
@@ -197,8 +197,18 @@ export default function Search({
 	/** The titles found for the query in the address; null until their data component has reported. */
 	list: TvSearchReport | null
 }) {
+	if (screen.filters)
+		return (
+			<BrowseFilters
+				screen={screen}
+				items={items}
+				summary={list?.summary}
+				controls={list?.controls}
+				hasTaste={list?.hasTaste}
+			/>
+		)
 	return screen.query ? (
-		<Results items={items} query={screen.query} list={list} />
+		<Results items={items} query={screen.query} screen={screen} list={list} />
 	) : (
 		<Question items={items} draft={draft} onDraft={onDraft} />
 	)

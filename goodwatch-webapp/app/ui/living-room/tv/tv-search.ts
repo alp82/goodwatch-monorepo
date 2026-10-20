@@ -1,3 +1,4 @@
+import { searchFiltersKey } from "../../../server/combined-search/search-filters.ts"
 import { hasGoodwatchScore } from "../../../utils/ratings.ts"
 import { presentationLanguage } from "../../../utils/media-presentation.ts"
 // What the TV's search says, and the search it asks for. Pure.
@@ -125,10 +126,19 @@ export const guestSearchScope = (guest: {
  * guess of their country on the page, which the TV does not know: the ranking is then not narrowed, and the
  * results are still narrowed to their services in memory, by the same endpoint.
  */
-export function tvSearchFilters(scope: TvSearchScope | null): SearchFilters {
+export function tvSearchFilters(
+	scope: TvSearchScope | null,
+	browse?: string,
+): SearchFilters {
+	const params = new URLSearchParams(browse)
+	const type = params.get("type")
+	const filters: SearchFilters =
+		type === "movie" || type === "show" ? { type } : {}
+	if (params.get("services") === "all") return filters
 	if (!scope?.services.length || !/^[A-Z]{2}$/.test(scope.country ?? ""))
-		return {}
+		return filters
 	return {
+		...filters,
 		streaming: {
 			country: scope.country as string,
 			providerIds: [...new Set(scope.services)].slice(0, 50),
@@ -148,12 +158,16 @@ export const tvSearchBody = (q: string, filters: SearchFilters) => ({
  * The key the Discover page keeps a search's answer under (`useDiscoverSearch`). The TV keeps its answer under the
  * same one, so the page behind the Expand key draws from it and does not search a second time.
  */
-export function tvSearchKey(q: string, filters: SearchFilters, language?: string): string[] {
-	const streaming = filters.streaming
-	const key = streaming?.providerIds.length
-		? `s=${streaming.country}:${[...streaming.providerIds].sort((a, b) => a - b).join(",")}`
-		: ""
-	return ["discover-search", `${language ? `${presentationLanguage(language)}:` : ""}${q}|${key}|0`]
+export function tvSearchKey(
+	q: string,
+	filters: SearchFilters,
+	language?: string,
+): string[] {
+	const key = searchFiltersKey(filters)
+	return [
+		"discover-search",
+		`${language ? `${presentationLanguage(language)}:` : ""}${q}|${key}|0`,
+	]
 }
 
 /** A search's answer as the Discover page keeps it: the ranked list as title keys, in the ranking's order. */
@@ -187,6 +201,5 @@ export function tvSearchResult(
 export const tvResultsQuery = (ranked: readonly TitleKey[]) =>
 	`ranked=${ranked.join(",")}`
 
-/** The titles the results show: the first four. */
-export const searchCards = (cards: readonly TitleCard[]) =>
-	cards.slice(0, LIST_TITLES)
+/** The entire current server page, without a client truncation. */
+export const searchCards = (cards: readonly TitleCard[]) => cards

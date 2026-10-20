@@ -160,8 +160,9 @@ describe("the options of mini Discover's tabs", () => {
 				EMPTY_CONTEXT,
 			).screen
 			assert.deepEqual(
-				tvItems(screen, EMPTY_CONTEXT).slice(0, 9),
+				tvItems(screen, EMPTY_CONTEXT).slice(0, 10),
 				[
+					"browse:all",
 					...DISCOVER_TAB_KEYS.map((key) => key.item),
 					...discoverOptions(tab).map((option) => option.item),
 				],
@@ -214,12 +215,11 @@ describe("the titles of one choice", () => {
 			}
 	})
 
-	it("the list shows the first four of Discover's results, in their order", () => {
+	it("the list shows the entire server page in its order", () => {
 		const cards = Array.from({ length: 40 }, (_, key) => ({ key }) as TitleCard)
-		assert.equal(LIST_TITLES, 4)
 		assert.deepEqual(
 			listCards(cards).map((card) => card.key),
-			[0, 1, 2, 3],
+			cards.map((card) => card.key),
 		)
 		assert.deepEqual(
 			listCards(cards.slice(0, 2)).map((card) => card.key),
