@@ -47,6 +47,7 @@ process.env.SUPABASE_ANON_KEY = "test-anon-key"
 const {
 	resolveSession,
 	resetAuthSessionForTest,
+	registerSessionUserObserver,
 	authCheckCounts,
 	AUTH_MEMO_MS,
 } = await import("./auth-session.ts")
@@ -315,3 +316,23 @@ for (const endpoint of ["user", "token"]) {
 		}
 	})
 }
+
+test("account observer receives verified sessions including memo hits and cannot break authentication", async () => {
+	const header = cookie(await token("observed"))
+	const seen: string[] = []
+	registerSessionUserObserver((member) => {
+		seen.push(member.id)
+	})
+	try {
+		await resolveSession(header)
+		await resolveSession(header)
+		await resolveSession(null)
+		assert.deepEqual(seen, ["observed", "observed"])
+		registerSessionUserObserver(() => {
+			throw new Error("analytics down")
+		})
+		assert.equal((await resolveSession(header)).user?.id, "observed")
+	} finally {
+		registerSessionUserObserver(undefined)
+	}
+})

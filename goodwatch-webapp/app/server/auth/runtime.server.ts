@@ -70,15 +70,13 @@ export async function getBetterAuth(): Promise<AuthService> {
 		)
 		const storage = new ValkeyAuthStorage(() => clusterProvider())
 		const auth = createGoodwatchAuth({
-			analytics: (userId, event, properties) =>
-				captureProductEvent(
-					userId,
-					event,
-					properties,
-					event === "sign in succeeded"
+			analytics: (userId, event, properties, user) =>
+				captureProductEvent(userId, event, properties, {
+					user,
+					...(event === "sign in succeeded"
 						? {}
-						: { uuid: eventUuid(`auth:${userId}:${event}`) },
-				),
+						: { uuid: eventUuid(`auth:${userId}:${event}`) }),
+				}),
 			sql,
 			encryptionSecret,
 			encryptionKeys,

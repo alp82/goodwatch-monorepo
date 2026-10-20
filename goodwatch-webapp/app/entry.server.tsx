@@ -1,3 +1,5 @@
+import { registerSessionUserObserver } from "./utils/auth-session.ts"
+import { identifyProductUser } from "./telemetry/product-analytics.server.ts"
 // The server entry: renders a page with React and hands the HTML to the response.
 //
 // It is Remix's default Node entry with two changes, both measured in docs/benchmarks/viral-spike-render-profile.md:
@@ -50,6 +52,7 @@ import { getRedisCluster } from "./utils/cache"
 // Better Auth itself loads on its first use with BETTER_AUTH_ENABLED on (boot.server.ts).
 registerAuthCluster(getRedisCluster)
 registerLazyAuthResolver()
+registerSessionUserObserver(identifyProductUser)
 
 // While the server build loads, before `remix-serve` registers its signal listeners and before the first request:
 // readiness and the shutdown sequence (see lifecycle.server.ts), and the title snapshot's first load, which readiness

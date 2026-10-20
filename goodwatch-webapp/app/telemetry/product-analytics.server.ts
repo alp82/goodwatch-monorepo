@@ -1,12 +1,13 @@
 import { AsyncLocalStorage } from "node:async_hooks"
 import { createHash, randomUUID } from "node:crypto"
 import { onShutdown } from "../server/lifecycle.server.ts"
+import { type AnalyticsUser, personProperties } from "./person-properties.ts"
 import {
-	INTERNAL_USER_IDS,
-	productProperties,
-	discoveryProperties,
 	type EventProperties,
+	INTERNAL_USER_IDS,
 	type ProductEvent,
+	discoveryProperties,
+	productProperties,
 } from "./product-events.ts"
 
 interface Context {
@@ -81,7 +82,7 @@ export function productEnvelope(
 	userId: string,
 	event: ProductEvent,
 	properties: EventProperties = {},
-	options: { timestamp?: Date; uuid?: string } = {},
+	options: { timestamp?: Date; uuid?: string; user?: AnalyticsUser } = {},
 ): ProductEnvelope {
 	const current = context.getStore()
 	return {
@@ -91,6 +92,9 @@ export function productEnvelope(
 		properties: {
 			...productProperties(current?.properties ?? {}),
 			...productProperties(properties),
+			...(options.user?.id === userId
+				? { $set: personProperties(options.user) }
+				: {}),
 			distinct_id: userId,
 			user_id: userId,
 			$user_id: userId,
@@ -108,6 +112,31 @@ export function productEnvelope(
 		},
 	}
 }
+const profiles = new Map<string, { signature: string; at: number }>()
+/** Refresh a signed-in person's profile without recording a product action. */
+export function identifyProductUser(user: AnalyticsUser): void {
+	if (
+		!user.id ||
+		process.env.NODE_ENV !== "production" ||
+		process.env.POSTHOG_DISABLED === "true"
+	)
+		return
+	const signature = createHash("sha256")
+		.update(JSON.stringify(personProperties(user)))
+		.digest("hex")
+	const previous = profiles.get(user.id)
+	if (previous?.signature === signature && Date.now() - previous.at < 300_000)
+		return
+	const envelope = productEnvelope(user.id, "sign in succeeded", {}, { user })
+	envelope.event = "$set"
+	if (enqueue(envelope)) {
+		if (profiles.size >= 5000) {
+			const oldest = profiles.keys().next().value
+			if (oldest !== undefined) profiles.delete(oldest)
+		}
+		profiles.set(user.id, { signature, at: Date.now() })
+	}
+}
 export function eventUuid(key: string): string {
 	const hex = createHash("sha256").update(key).digest("hex").slice(0, 32)
 	return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-5${hex.slice(13, 16)}-a${hex.slice(17, 20)}-${hex.slice(20)}`
@@ -121,20 +150,24 @@ export function captureProductEvent(
 	userId: string,
 	event: ProductEvent,
 	properties: EventProperties = {},
-	options: { timestamp?: Date; uuid?: string } = {},
+	options: { timestamp?: Date; uuid?: string; user?: AnalyticsUser } = {},
 ): void {
+	if (!userId) return
+	enqueue(productEnvelope(userId, event, properties, options))
+}
+function enqueue(envelope: ProductEnvelope): boolean {
 	if (
-		!userId ||
 		process.env.NODE_ENV !== "production" ||
 		process.env.POSTHOG_DISABLED === "true"
 	)
-		return
+		return false
+
 	if (queue.length >= 2000) {
 		if (++dropped % 100 === 1)
 			console.warn("Product analytics queue full", { dropped })
-		return
+		return false
 	}
-	queue.push(productEnvelope(userId, event, properties, options))
+	queue.push(envelope)
 	if (!timer) {
 		timer = setTimeout(() => {
 			timer = undefined
@@ -142,6 +175,7 @@ export function captureProductEvent(
 		}, 250)
 		timer.unref()
 	}
+	return true
 }
 export async function flushProductEvents(): Promise<void> {
 	if (sending) {

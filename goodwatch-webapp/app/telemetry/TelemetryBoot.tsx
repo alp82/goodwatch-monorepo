@@ -1,3 +1,4 @@
+import { personProperties } from "./person-properties"
 import {
 	installProductInteractions,
 	setAnalyticsUser,
@@ -61,7 +62,7 @@ export function TelemetryBoot() {
 			// Link the legacy email identity before switching to the immutable account ID.
 			if (posthog.get_distinct_id() === user.email)
 				posthog.alias(user.id, user.email)
-			posthog.identify(user.id, { user_id: user.id })
+			posthog.identify(user.id, personProperties(user))
 
 			identified.current = true
 		})

@@ -1,4 +1,4 @@
-import { analyticsAction } from "~/telemetry/product-analytics.server"
+import { analyticsAction } from "../telemetry/product-analytics.server.ts"
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node"
 import { handleAuthRequest } from "../server/auth/boot.server.ts"
 

@@ -1,3 +1,4 @@
+import type { AnalyticsUser } from "../../telemetry/person-properties.ts"
 import { createHash, randomUUID } from "node:crypto"
 import { type BetterAuthOptions, betterAuth } from "@goodwatch/auth-stack"
 import {
@@ -57,6 +58,7 @@ export function createGoodwatchAuth(options: {
 		userId: string,
 		event: "account created" | "email verified" | "sign in succeeded",
 		properties: { method?: string },
+		user?: AnalyticsUser,
 	) => void
 
 	sql: AuthSql
@@ -666,13 +668,13 @@ export function createGoodwatchAuth(options: {
 			user: {
 				create: {
 					after: async (user) => {
-						options.analytics?.(user.id, "account created", {})
+						options.analytics?.(user.id, "account created", {}, user)
 					},
 				},
 				update: {
 					after: async (user) => {
 						if (user.emailVerified)
-							options.analytics?.(user.id, "email verified", {})
+							options.analytics?.(user.id, "email verified", {}, user)
 					},
 				},
 			},
@@ -861,9 +863,14 @@ export function createGoodwatchAuth(options: {
 						}),
 					})
 					if (session)
-						options.analytics?.(session.user.id, "sign in succeeded", {
-							method: path.endsWith("/email") ? "email" : "google",
-						})
+						options.analytics?.(
+							session.user.id,
+							"sign in succeeded",
+							{
+								method: path.endsWith("/email") ? "email" : "google",
+							},
+							session.user,
+						)
 				} catch {
 					/* Telemetry must never affect issuing a session. */
 				}

@@ -54,7 +54,26 @@ function definitive(error: { status?: number; name?: string } | null): boolean {
 	)
 }
 
+let userObserver: ((user: User) => void) | undefined
+/** Supplied by the server entry: auth never imports a server telemetry module into the browser. */
+export function registerSessionUserObserver(observer: typeof userObserver) {
+	userObserver = observer
+}
 export function resolveSession(
+	cookieHeader: string | null,
+	options?: { fresh?: boolean },
+): Promise<ResolvedSession> {
+	const promise = resolveSessionValue(cookieHeader, options)
+	void promise.then((result) => {
+		if (result.user) {
+			try { userObserver?.(result.user) } catch { /* Analytics never breaks authentication. */ }
+		}
+	}).catch(() => {})
+	// Preserve the shared promise used by concurrent session callers.
+	return promise
+}
+
+function resolveSessionValue(
 	cookieHeader: string | null,
 	options?: { fresh?: boolean },
 ): Promise<ResolvedSession> {

@@ -1,14 +1,16 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { productProperties, discoveryProperties } from "./product-events.ts"
+import { personProperties } from "./person-properties.ts"
 import {
 	analyticsAction,
 	captureProductEvent,
 	eventUuid,
 	flushProductEvents,
+	identifyProductUser,
 	productEnvelope,
 	withProductContext,
 } from "./product-analytics.server.ts"
+import { discoveryProperties, productProperties } from "./product-events.ts"
 
 test("event properties exclude raw search, reviews, credentials and unexpected nested objects", () => {
 	assert.deepEqual(
@@ -108,6 +110,88 @@ test("transport retries the same batch and isolates ingestion failure from produ
 		}
 		assert.doesNotThrow(() => captureProductEvent("member", "rating cleared"))
 		await assert.doesNotReject(flushProductEvents())
+	} finally {
+		globalThis.fetch = original
+		process.env = env
+	}
+})
+
+test("account profiles normalize both auth shapes without leaking other account data", () => {
+	assert.deepEqual(
+		personProperties({
+			id: "native",
+			email: "member@example.com",
+			name: "Member",
+			image: "https://example.com/avatar",
+			createdAt: new Date("2026-01-02"),
+			emailVerified: false,
+		}),
+		{
+			user_id: "native",
+			email: "member@example.com",
+			name: "Member",
+			$avatar: "https://example.com/avatar",
+			account_created_at: "2026-01-02T00:00:00.000Z",
+			email_verified: false,
+		},
+	)
+	const profile = personProperties({
+		id: "legacy",
+		email: "member@example.com",
+		created_at: "",
+		user_metadata: {
+			full_name: "Member",
+			avatar_url: "https://example.com/avatar",
+			password: "secret",
+			arbitrary: "private",
+		},
+		app_metadata: { provider: "google", token: "secret" },
+	})
+	assert.equal(profile.name, "Member")
+	assert.equal(profile.auth_provider, "google")
+	assert.equal(profile.account_created_at, undefined)
+	assert.equal(JSON.stringify(profile).includes("secret"), false)
+	assert.equal(JSON.stringify(profile).includes("private"), false)
+	assert.equal(personProperties({ id: "id", email: "" }).email, undefined)
+})
+test("server profile fields can only be attached to the matching authenticated account", () => {
+	const user = { id: "a", email: "a@example.com" }
+	assert.deepEqual(
+		productEnvelope("a", "rating saved", {}, { user }).properties.$set,
+		{ user_id: "a", email: "a@example.com" },
+	)
+	assert.equal(
+		productEnvelope("b", "rating saved", {}, { user }).properties.$set,
+		undefined,
+	)
+})
+test("profile refreshes are bounded and changes update the same account without inventing activity", async () => {
+	const env = { ...process.env }
+	const original = globalThis.fetch
+	const batches: {
+		batch: { event: string; properties: Record<string, unknown> }[]
+	}[] = []
+	process.env.NODE_ENV = "production"
+	process.env.POSTHOG_API_KEY = "test"
+	process.env.POSTHOG_DISABLED = "false"
+	globalThis.fetch = async (_input, init) => {
+		batches.push(JSON.parse(String(init?.body)))
+		return new Response("{}")
+	}
+	try {
+		identifyProductUser({ id: "profile-test", email: "old@example.com" })
+		identifyProductUser({ id: "profile-test", email: "old@example.com" })
+		identifyProductUser({ id: "profile-test", email: "new@example.com" })
+		await flushProductEvents()
+		assert.equal(batches[0].batch.length, 2)
+		assert.deepEqual(
+			batches[0].batch.map((event) => event.event),
+			["$set", "$set"],
+		)
+		assert.deepEqual(batches[0].batch[1].properties.$set, {
+			user_id: "profile-test",
+			email: "new@example.com",
+		})
 	} finally {
 		globalThis.fetch = original
 		process.env = env

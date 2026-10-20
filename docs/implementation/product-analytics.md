@@ -78,7 +78,12 @@ also do not represent separate viewing decisions.
 ## Identity and transport
 
 Members use immutable account IDs for `distinct_id`, `user_id` and server
-`$user_id`. Browser identification sends only the allowlisted member ID. Anonymous
+`$user_id`. Browser and server identification populate the person profile using the shared
+`personProperties` mapper: account ID, email, name, first/last name, avatar, account
+creation date, email verification, and auth provider when available. Profile fields
+are separate from action properties; raw auth payloads and arbitrary metadata are
+never copied. Signed-in server sessions refresh profiles at most every five minutes
+per unchanged account per process; changed fields refresh immediately. Anonymous
 browser events retain their PostHog identity, with `is_guest: true`. The two existing
 internal member IDs are tagged and the project's test-user exclusions include
 both their old email IDs and their immutable IDs.
@@ -160,3 +165,21 @@ not the date someone says they watched a title.
 For live engagement/activation reports exclude `backfilled=true`; distinguish
 manual actions, imports, undo, guest transfers and score-created watches. Do not
 present surviving-row backfills as a complete historical activity log.
+
+## Account profile repair
+
+`backfill-persons.mjs` runs inside an auth-configured production container. It reads
+nondeleted auth users, decrypts each payload in memory, and sends only the shared
+allowlisted profile fields under `$set`, keyed by the immutable account ID. It
+updates existing people without replaying product actions or inventing sign-ins.
+The script defaults to dry-run; use `--apply` with `POSTHOG_API_KEY`,
+`AUTH_CODEC_PATH` if source files are not in the image, and `ANALYTICS_PERSON_STATE`
+for a durable checkpoint. Checkpoints contain IDs only and are separate from the
+legacy alias migration ledger. Preserve them outside replaced containers.
+
+The October 20 repair submitted 738 nondeleted account profiles. Receipts are on
+the page host at `/root/.local/state/goodwatch/analytics-persons.json`.
+The production page application now has the three PostHog runtime settings in
+Coolify; the search role environment template includes them too.
+Anonymous visitor IDs cannot be assigned an account until a verified sign-in links
+them. A missing name stays absent so PostHog can show the email instead.
