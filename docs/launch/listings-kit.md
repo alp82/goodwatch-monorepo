@@ -29,11 +29,11 @@ One repo change came with this kit: `goodwatch-webapp/public/site.webmanifest` h
 | 4 | Launching Next | 10 min | Nothing |
 | 5 | Tiny Startups (the free route may ask for a verification post) | 10 to 15 min | Nothing |
 | 6 | Registry login and publish (DNS has propagated by now) | 10 min | Step 1 |
-| 7 | Claude directory: capture the carousel shots in Claude.ai, then fill the portal | 2 to 3 h | The TMDB decision, see [section 6](#6-claude-connectors-directory) |
+| 7 | Claude directory: capture the carousel shots in Claude.ai, then fill the portal | 2 to 3 h | Nothing: the owner decided on 2026-10-18 to go ahead without asking TMDB first |
 
 Steps 1 to 6 take about 1.5 hours. Step 1 comes first so that the TXT record propagates while you do the listing sites.
 
-The backlinks research lists an open owner question about TMDB's API terms (commercial use "in connection with ... chatbots"). The research suggests holding the Claude directory until you decide it. The registry and the four listing sites can go ahead either way.
+The backlinks research raised TMDB's API terms (commercial use "in connection with ... chatbots"). The owner decided on 2026-10-18 to go ahead without asking TMDB first, so nothing here waits on it.
 
 ## Shared copy
 
@@ -65,10 +65,10 @@ Some sites reject links, emails, or phone numbers in descriptions (AlternativeTo
 | Up to 60 | Find what to watch for your taste, and see where it streams | 59 |
 | Up to 80 | Every score, every streaming service and picks for your taste, in one place | 75 |
 
-### Short description (153 characters)
+### Short description (158 characters)
 
 <!-- short-description:start -->
-Free movie and TV show finder: one score from IMDb, Rotten Tomatoes, Metacritic and TMDB, where titles stream in 139 countries, and picks for your taste.
+Free movie and TV show finder: one score from IMDb, Rotten Tomatoes and Metacritic, where it streams in 139 countries, picks for your taste, episode tracking.
 <!-- short-description:end -->
 
 ### Long description
@@ -79,16 +79,16 @@ GoodWatch helps you decide what to watch tonight. It brings the scores, the stre
 - One score: critics and audiences from IMDb, Rotten Tomatoes, Metacritic and TMDB, combined into one GoodWatch score for every movie and show.
 - Where it streams: 325 streaming services in 139 countries. Pick your services and see what's on them tonight, and see when a title on your Wishlist arrives on one of them.
 - Picks for your taste: rate a few titles you loved, and GoodWatch shows how well every other title fits you, and why.
+- Use it with AI: connect GoodWatch to Claude, ChatGPT and other apps that support MCP. Ask "what should we watch tonight?" and get picks for your taste on your services, then log episodes and rate titles in the same chat.
 - Search by feeling: every title is read on 74 traits, such as tense, heartwarming or funny. Type "a mind-blowing space adventure" and get the titles that fit.
 - Discover: narrow 1.5 million titles down by your services, mood, genre, age rating and score, and hide what you've already seen.
 - Tracking: a Wishlist, your ratings, and episode progress for the shows you watch, with the next episode ready. Shows have season and episode ratings.
 - Imports: bring your ratings and watch history from IMDb, Letterboxd, Trakt, TMDB, Plex, Kodi, MovieLens, MyAnimeList, Kitsu or a CSV file.
-- AI apps: connect GoodWatch to Claude, ChatGPT and other apps that support MCP, then ask what to watch, log episodes and rate titles by chatting.
 
 GoodWatch is free, with no ads. You can browse without an account; a free account keeps your ratings, Wishlist and progress.
 <!-- long-description:end -->
 
-That's 1,461 characters. For a form with a lower limit, cut bullets from the end, keeping "One score", "Where it streams", and "Picks for your taste".
+That's 1,537 characters. For a form with a lower limit, cut bullets from the end, keeping "One score", "Where it streams", "Picks for your taste", and "Use it with AI".
 
 ### Medium description (for forms that want one paragraph)
 
@@ -267,7 +267,7 @@ Rules: [AlternativeTo FAQ](https://alternativeto.net/faq), read October 18, 2026
 | Field | Value |
 | --- | --- |
 | Name | GoodWatch |
-| Short description or tagline | The [short description](#short-description-153-characters) |
+| Short description or tagline | The [short description](#short-description-158-characters) |
 | Description | The [long description](#long-description) |
 | Category | Video & Movies (add Online Services if it asks for a second) |
 | Platforms | Online. Nothing else: there's no native app. |
@@ -358,7 +358,7 @@ Rules and fields: [submit page](https://www.tinystartups.com/submit) and its pag
 | --- | --- | --- | --- |
 | 1 | Your startup's URL | | `goodwatch.app` |
 | 2 | Name | 60 characters, 3 words | GoodWatch |
-| 2 | Tagline | 10 to 200 | The [short description](#short-description-153-characters) (153) |
+| 2 | Tagline | 10 to 200 | The [short description](#short-description-158-characters) (158) |
 | 2 | Category | Choose one | Other. There's no media or entertainment category. AI would undersell what the site is. |
 | 2 | Three things that set it apart | 60 each | One score from IMDb, Rotten Tomatoes, Metacritic, TMDB (54) / Where it streams: 325 services in 139 countries (47) / Picks for your taste, also inside Claude and ChatGPT (52) |
 | 2 | Longer description | 50 to 500 | The [medium description](#medium-description-for-forms-that-want-one-paragraph) (387) |
@@ -397,18 +397,16 @@ I reread the [submission page](https://claude.com/docs/connectors/building/submi
 
 ### Two review risks
 
-1. **Data handling and the TMDB terms.** The portal asks whether the API is your own, proxied with permission, or a third party's. GoodWatch's API is first-party, but titles, posters, and availability come from TMDB and others. Answer truthfully, and settle the TMDB question first.
+1. **Data handling and the TMDB terms.** The portal asks whether the API is your own, proxied with permission, or a third party's. GoodWatch's API is first-party, but titles, posters, and availability come from TMDB and others. Answer truthfully. The owner decided on 2026-10-18 to go ahead without asking TMDB first.
 2. **Tool wording resolved October 19.** The owner chose to remove all answer-formatting and promotional directives from all 25 tool descriptions and replace initialization instructions with neutral result-field facts. Canonical title/person URLs, ready-made links and list `page_url` fields remain. The [cleanup report](../implementation/mcp-description-cleanup-2026-10-19.md) lists every description before/after and explains the current [review checklist](https://claude.com/docs/connectors/building/review-criteria) and [directory policy](https://support.claude.com/en/articles/13145358-anthropic-software-directory-policy). Deploy this change before submitting; directory acceptance remains Anthropic’s decision.
 
 ### Steps
 
-1. Decide the TMDB question.
-2. Deploy the October 19 description cleanup before submitting.
-3. In Claude.ai, add `https://goodwatch.app/mcp` as a custom connector and sign in as the reviewer account (password from the root-only file named in the kit).
-4. Run every tool once in Claude, and once in MCP Inspector (`npx @modelcontextprotocol/inspector`, transport Streamable HTTP, the same URL).
-5. Run the five carousel prompts from the kit. Capture only the response, as PNG, at least 1,000 px wide. Check the size with `file *.png`.
-6. Open the [developer portal](https://claude.ai/directory/manage), select **Submit new**, choose **MCP connector**, and follow the ten steps in the kit's "Owner submission steps" section.
-7. Track the status in the portal. By default an automated scan lists it as a Community connector. Escalations go to the address in the submission docs.
+1. In Claude.ai, add `https://goodwatch.app/mcp` as a custom connector and sign in as the reviewer account (password from the root-only file named in the kit).
+2. Run every tool once in Claude, and once in MCP Inspector (`npx @modelcontextprotocol/inspector`, transport Streamable HTTP, the same URL).
+3. Run the five carousel prompts from the kit. Capture only the response, as PNG, at least 1,000 px wide. Check the size with `file *.png`.
+4. Open the [developer portal](https://claude.ai/directory/manage), select **Submit new**, choose **MCP connector**, and follow the ten steps in the kit's "Owner submission steps" section.
+5. Track the status in the portal. By default an automated scan lists it as a Community connector. Escalations go to the address in the submission docs.
 
 ## After submitting
 
