@@ -2,6 +2,10 @@
 
 Isolated Node 24 / ws service. Durable mutations, account/catalog access, room credentials and private own state belong to the YepWatch HTTP API. This gateway has no Crate adapter, database credentials, OAuth implementation, HTTP room commands or UI. Only files in this directory are owned by this slice. No deployment configuration is included.
 
+## Solo multiplayer demo
+
+Run `npm run simulator`, then open **http://127.0.0.1:8120** to create a fresh demo with one to three clearly labelled artificial guests beside the actual host app. Automatic/manual steps, agreement, empty-shortlist disagreement, slow-person pacing, pause/resume and disconnect/reconnect use real independent API/WS identities. See [simulator instructions and evidence](simulator/README.md). Existing rooms/services are never selected or reset.
+
 ## Local build and run
 
 From the monorepo root:

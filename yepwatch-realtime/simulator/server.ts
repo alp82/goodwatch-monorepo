@@ -1,0 +1,80 @@
+import { createServer } from 'node:http'
+import { randomBytes, timingSafeEqual } from 'node:crypto'
+import { readFile } from 'node:fs/promises'
+import type { ServerResponse } from 'node:http'
+import { Simulator, type Scenario } from './engine.js'
+
+const port = Number(process.env.YEPWATCH_SIM_PORT ?? '8120')
+if (!Number.isSafeInteger(port) || port < 1024 || port > 65535) throw new Error('Choose a local simulator port from 1024 to 65535')
+const origin = `http://127.0.0.1:${port}`
+const simulator = new Simulator({ apiOrigin: process.env.YEPWATCH_SIM_API_ORIGIN ?? 'http://127.0.0.1:15995',
+  wsOrigin: process.env.YEPWATCH_SIM_WS_ORIGIN ?? 'ws://127.0.0.1:4319', appOrigin: process.env.YEPWATCH_SIM_APP_ORIGIN ?? 'http://127.0.0.1:8101' })
+const token = randomBytes(32).toString('base64url')
+const clients = new Set<ServerResponse>()
+function cookieValid(value: string | undefined) {
+  const candidate = value?.split(';').map(v => v.trim()).find(v => v.startsWith('yepwatch_sim_control='))?.slice('yepwatch_sim_control='.length)
+  return !!candidate && Buffer.byteLength(candidate) === Buffer.byteLength(token) && timingSafeEqual(Buffer.from(candidate), Buffer.from(token))
+}
+function event(response: ServerResponse) {
+  // Private controlled-bot state is sent ONLY to this local operator UI, never to the room bus/WS.
+  if (response.writableLength > 256_000) { response.destroy(); clients.delete(response); return }
+  response.write(`data: ${JSON.stringify(simulator.state())}\n\n`)
+}
+simulator.on('change', () => { for (const response of clients) event(response) })
+const server = createServer(async (request, response) => {
+  const reply = (status: number, data: unknown) => { response.writeHead(status, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }); response.end(JSON.stringify(data)) }
+  if (request.headers.host !== `127.0.0.1:${port}`) { reply(403, { error: 'Open the fixed 127.0.0.1 simulator URL' }); return }
+  response.setHeader('X-Content-Type-Options', 'nosniff')
+  response.setHeader('Referrer-Policy', 'no-referrer')
+  response.setHeader('Cache-Control', 'no-store')
+  response.setHeader('Content-Security-Policy', `default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; frame-src ${simulator.config.appOrigin}; base-uri 'none'; frame-ancestors 'self'`)
+  if (request.method === 'GET' && ['/', '/ui.js', '/style.css'].includes(request.url ?? '')) {
+    const file = request.url === '/' ? 'ui.html' : request.url!.slice(1)
+    response.setHeader('Content-Type', file.endsWith('.html') ? 'text/html; charset=utf-8' : file.endsWith('.js') ? 'text/javascript; charset=utf-8' : 'text/css; charset=utf-8')
+    if (file === 'ui.html') response.setHeader('Set-Cookie', `yepwatch_sim_control=${token}; Path=/simulator/; HttpOnly; SameSite=Strict`)
+    response.end(await readFile(new URL(file, import.meta.url))); return
+  }
+  if (!cookieValid(request.headers.cookie) || (request.headers.origin && request.headers.origin !== origin)) { reply(403, { error: 'Open this local control page first' }); return }
+  if (request.method === 'GET' && request.url === '/simulator/events') {
+    response.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-store', Connection: 'keep-alive' })
+    clients.add(response); event(response); request.on('close', () => clients.delete(response)); return
+  }
+  if (request.method !== 'POST' || request.headers.origin !== origin || request.headers['content-type'] !== 'application/json') {
+    reply(403, { error: 'Same-origin JSON control action required' }); return
+  }
+  try {
+    let body = ''; for await (const chunk of request) { body += chunk; if (Buffer.byteLength(body) > 8192) throw new Error('Control input too large') }
+    const input = JSON.parse(body)
+    if (request.url === '/simulator/new') {
+      const result = await simulator.fresh({ count: input.count, scenario: input.scenario, paceMs: input.paceMs })
+      // Forward the API's EXACT HttpOnly cookie onto the same loopback hostname.
+      // Ports do not scope cookies. The normal app invite route recovers the host.
+      response.setHeader('Set-Cookie', result.cookie)
+      reply(200, { hostAppUrl: result.hostAppUrl }); return
+    }
+    if (request.url === '/simulator/controls') {
+      await simulator.controls(input as { automatic?: boolean; paceMs?: number; scenario?: Scenario }); reply(200, { ok: true }); return
+    }
+    if (request.url === '/simulator/action') {
+      if (!['step', 'watch', 'pass', 'finish', 'accept', 'decline', 'undo', 'pause', 'resume', 'disconnect', 'reconnect', 'retry'].includes(input.action)) throw new Error('Unknown control action')
+      await simulator.action(input.actorId, input.action); reply(200, { ok: true }); return
+    }
+    if (request.url === '/simulator/step') {
+      const actors = simulator.state().actors.filter(a => !a.host && a.connected && !a.paused)
+      await Promise.all(actors.map(a => simulator.action(a.id, 'step'))); reply(200, { ok: true }); return
+    }
+    reply(404, { error: 'Unknown local control route' })
+  } catch (error) {
+    reply(400, { error: error instanceof Error ? error.message : 'Local control action failed' })
+  }
+})
+server.requestTimeout = 10_000; server.headersTimeout = 5000; server.maxConnections = 32
+const keepalive = setInterval(() => { for (const response of clients) response.write(': local simulator alive\n\n') }, 15_000)
+server.listen(port, '127.0.0.1', () => console.info(`YepWatch local simulator: ${origin} · artificial guests, fresh demo rooms only`))
+let closing = false
+for (const signal of ['SIGINT', 'SIGTERM']) process.on(signal, () => {
+  if (closing) return
+  closing = true; clearInterval(keepalive); simulator.close()
+  for (const response of clients) response.end()
+  server.close(); server.closeAllConnections()
+})

@@ -1,0 +1,22 @@
+{
+  "scope": "P3 simulator private-read repair follow-up; original pin preserved; source-only, retained8120 not restarted",
+  "recordedAt": "2026-10-21T15:46:13.410102+00:00",
+  "baseHead": "ec25ccabb7ce40f58e6272a415a686dc9a0e36f3",
+  "originalManifest": "/tmp/yepwatch-simulator-review-20261021/manifest.json",
+  "originalManifestSha256": "3ce2b3d96429772a4d4ddfde876d8167cc2b9f9e4e8c9308693ec5aee940f2f6",
+  "files": {
+    "yepwatch-realtime/simulator/engine.ts": "d8e4002b0dd91cf6e2ddacc58728af8a432f58c9bb1918ffb42dca92f68e0193",
+    "yepwatch-realtime/test/backend.integration.test.ts": "fd8515523b51bbea4fdf1d96723a052bc1e16121d9c12ce7f3769883c4c5d1d7",
+    "yepwatch-realtime/simulator/README.md": "9eb44b5493c00ea6c4f7e883883cf32a09273e7b4c8643778f5038f3e0ee7574"
+  },
+  "checks": {
+    "buildTypecheck": "PASS",
+    "fullOptInTests": 22,
+    "passed": 22,
+    "failed": 0,
+    "skipped": 0,
+    "heldPrivateReadAcrossNewRound": "PASS"
+  },
+  "retainedSimulatorPid": 2852397,
+  "retainedSimulatorRestarted": false
+}

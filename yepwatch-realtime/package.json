@@ -9,7 +9,8 @@
     "build": "npm run typecheck && esbuild src/main.ts --bundle --platform=node --format=esm --target=node24 --external:ws --external:ioredis --external:zod --outfile=dist/main.js",
     "start": "node --env-file-if-exists=.env dist/main.js",
     "dev": "tsx --env-file-if-exists=.env src/main.ts",
-    "test": "tsx --test test/*.test.ts"
+    "test": "tsx --test test/*.test.ts",
+    "simulator": "tsx simulator/server.ts"
   },
   "dependencies": {
     "@goodwatch/yepwatch-contracts": "file:../goodwatch-webapp/packages/yepwatch-contracts",

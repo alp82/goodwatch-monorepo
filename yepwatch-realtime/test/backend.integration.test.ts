@@ -5,6 +5,7 @@ import { execFile, spawn } from 'node:child_process'
 import { promisify } from 'node:util'
 import { createServer } from 'node:net'
 import { paths, type ApiError, type GuestAdmission, type GuestCredential, type RoomCommand, type RoomSnapshot } from '@goodwatch/yepwatch-contracts'
+import { Simulator } from '../simulator/engine.js'
 import { createGateway } from '../src/gateway.js'
 import { ValkeyBus } from '../src/bus.js'
 import { HttpAuthority } from '../src/authority.js'
@@ -32,6 +33,7 @@ test('Actual backend HTTP hooks + two gateways: guest movies/new shows, continua
   const secret = randomBytes(32).toString('base64url')
   const child = spawn(process.execPath, ['--experimental-transform-types', 'goodwatch-webapp/app/server/yepwatch/local-test-server.ts'], {
     cwd: new URL('../..', import.meta.url), env: { PATH: process.env.PATH, YEPWATCH_LOCAL_FIXTURES: '1',
+      YEPWATCH_ALLOWED_ORIGINS: 'http://localhost:8081,http://127.0.0.1:8081',
       YEPWATCH_SECRET: secret, YEPWATCH_GATEWAY_SECRET: serviceSecret, YEPWATCH_LOCAL_PORT: String(apiPort),
       YEPWATCH_REVISION_REDIS_URL: `redis://127.0.0.1:${busPort}` }, stdio: ['ignore', 'pipe', 'pipe'],
   })
@@ -166,6 +168,87 @@ test('Actual backend HTTP hooks + two gateways: guest movies/new shows, continua
   const revision = next.snapshot.shared.revision
   await exec('docker', ['start', name])
   await until(() => snapshots(b.frames).at(-1)!.snapshot.revision >= revision, 6000)
+  // The local simulator is a real API/WS client; fresh() cannot attach retained rooms.
+  const simulator = new Simulator({ apiOrigin: origin, wsOrigin: new URL(urls[0]).origin, appOrigin: 'http://127.0.0.1:8081' })
+  t.after(() => simulator.close())
+  const demo = await simulator.fresh({ count: 3, scenario: 'agreement', paceMs: 700 })
+  const initial = simulator.state()
+  assert.equal(initial.actors.length, 4)
+  assert(initial.actors.every(actor => actor.connected))
+  assert(initial.actors.filter(actor => !actor.host).every(actor => actor.name.startsWith('Sim ')))
+  assert.equal(initial.privacyFailures, 0)
+  const isolatedRoom = initial.shared!.roomId
+  const oldCookie = demo.cookie.split(';')[0]
+  await simulator.action(initial.actors[1].id, 'disconnect')
+  await simulator.action(initial.actors[1].id, 'reconnect')
+  assert(simulator.state().actors[1].connected)
+  // Reconnecting an already-live guest replaces its socket rather than leaking subscriptions.
+  for (let retry = 0; retry < 5; retry++) await simulator.action(initial.actors[1].id, 'reconnect')
+  assert(simulator.state().actors[1].connected)
+  const nextDemo = await simulator.fresh({ count: 1, scenario: 'slow', paceMs: 1500 })
+  assert.notEqual(simulator.state().shared!.roomId, isolatedRoom)
+  const previousRoom = await fetch(new URL(paths.snapshot(isolatedRoom), origin), { headers: { Cookie: oldCookie } })
+  assert.equal(previousRoom.status, 200)
+  assert.equal((await previousRoom.json() as RoomSnapshot).shared.participants.length, 4)
+  await t.test('Simulator private repair drains a newer shared revision arriving during a held own read', async () => {
+    const roomId = simulator.state().shared!.roomId
+    const botId = simulator.state().actors.find(actor => !actor.host)!.id
+    const cookie = nextDemo.cookie.split(';')[0]
+    async function hostRead() {
+      const response = await fetch(new URL(paths.snapshot(roomId), origin), { headers: { Cookie: cookie } })
+      assert.equal(response.status, 200)
+      return await response.json() as RoomSnapshot
+    }
+    async function hostCommand(command: RoomCommand) {
+      const state = await hostRead()
+      const response = await fetch(new URL(paths.commands(roomId), origin), { method: 'POST',
+        headers: { Cookie: cookie, Origin: 'http://127.0.0.1:8081', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ commandId: randomBytes(16).toString('hex'), sequence: state.own.nextSequence, command }) })
+      assert.equal(response.status, 200)
+    }
+    let state = await hostRead()
+    await hostCommand({ type: 'start_round', hostReady: true, expectedRosterVersion: state.shared.rosterVersion, expectedContextVersion: state.shared.contextVersion })
+    await until(() => simulator.state().phase === 'voting')
+    await simulator.action(botId, 'watch')
+    await until(() => !simulator.state().actors.find(actor => actor.id === botId)!.busy)
+    const originalFetch = globalThis.fetch
+    let holdNext = true, entered = false, privateReads = 0
+    let release!: () => void
+    const held = new Promise<void>(resolve => { release = resolve })
+    globalThis.fetch = async (input, init) => {
+      const response = await originalFetch(input, init)
+      const headers = new Headers(init?.headers)
+      if (String(input) === new URL(paths.snapshot(roomId), origin).href && headers.get('x-yepwatch-participant') === botId) {
+        privateReads++
+        if (holdNext) {
+          holdNext = false
+          const bytes = await response.arrayBuffer()
+          entered = true
+          await held
+          return new Response(bytes, { status: response.status, headers: response.headers })
+        }
+      }
+      return response
+    }
+    try {
+      state = await hostRead()
+      await hostCommand({ type: 'vote', roundVersion: state.shared.round!.version,
+        candidateId: state.shared.candidates[0].id, expectedVoteRevision: 0, value: 'watch' })
+      await until(() => entered)
+      state = await hostRead()
+      await hostCommand({ type: 'new_round', expectedRevision: state.shared.revision })
+      await until(() => simulator.state().phase === 'setup')
+      const readsBeforeRelease = privateReads
+      release()
+      await until(() => {
+        const actor = simulator.state().actors.find(actor => actor.id === botId)!
+        return !actor.busy && actor.privateAnswered === 0 && actor.privateCard === null && actor.status === 'Setup'
+      })
+      assert(privateReads > readsBeforeRelease, 'A newer shared revision must cause a follow-up private GET without an operator action')
+      assert.equal(simulator.state().actors.find(actor => actor.id === botId)!.needsRecovery, false)
+    } finally { release(); globalThis.fetch = originalFetch }
+  })
+  simulator.close()
   for (const client of [a, b]) {
     const serialized = JSON.stringify(client.frames)
     for (const privateKey of ['"own"', '"votes"', '"receipt"', '"nextEpisodeId"', '"approvedEpisodeId"', '"sequence"', '"shortlistPreference"']) assert(!serialized.includes(privateKey), privateKey)
