@@ -1477,6 +1477,32 @@ const POPULAR: Popular[] = [
 	{ id: "episodes", label: "Short episodes", key: "length", on: (s) => s.legacy?.maxRuntime === "35", apply: (ctx) => ({ type: "show", ...legacyPatch(ctx.data.state, { minRuntime: null, maxRuntime: 35 }) }) },
 ]
 
+/**
+ * The popular filters as quiet one-tap links, for the count line when nothing is set: "Try + Comedy + Score 80+ …".
+ */
+export function PopularInline({ data, max = 5 }: { data: FilterGroupsData; max?: number }) {
+	const ctx = { data, set: (patch: Partial<FilterState>) => data.onChange({ ...data.state, ...patch }) } as unknown as Ctx
+	const picks = POPULAR.filter((p) => !p.on(data.state) && (!p.logo || p.logo(ctx))).slice(0, max)
+	if (!picks.length) return null
+	return (
+		<span className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
+			<span className="text-sm text-gray-500">Try</span>
+			{picks.map((p) => (
+				<motion.button
+					key={p.id}
+					type="button"
+					whileTap={TAP}
+					onClick={() => ctx.set(p.apply(ctx))}
+					className="flex items-center gap-1.5 rounded-md text-sm font-semibold whitespace-nowrap text-gray-300 cursor-pointer outline-none hover:text-white focus-visible:ring-2 focus-visible:ring-amber-400"
+				>
+					<PlusIcon className="h-3.5 w-3.5 text-gray-500" />
+					{p.label}
+				</motion.button>
+			))}
+		</span>
+	)
+}
+
 type QuickStyle = "chips" | "tiles" | "cards"
 
 function PopularPicks({ ctx, style, onPick }: { ctx: Ctx; style: QuickStyle; onPick: (p: Popular) => void }) {

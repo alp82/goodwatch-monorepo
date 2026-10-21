@@ -6,6 +6,7 @@ import {
 	PlusIcon,
 	XMarkIcon,
 } from "@heroicons/react/20/solid"
+import { useQueries } from "@tanstack/react-query"
 import { AnimatePresence, motion } from "framer-motion"
 import {
 	type ComponentProps,
@@ -59,7 +60,8 @@ export function ForYouSortSplit({
 					className={`flex h-full items-center gap-2.5 pr-3.5 pl-1.5 text-sm font-bold whitespace-nowrap outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${disabled ? "cursor-not-allowed text-gray-500" : lit ? "cursor-pointer text-amber-100" : "cursor-pointer text-gray-400 hover:text-gray-200"}`}
 				>
 					For you
-					<MovedUp on={lit} movedUp={movedUp} />
+					{/* The moved count takes room only when there is one. */}
+					{lit && movedUp > 0 && <MovedUp on={lit} movedUp={movedUp} />}
 					<Knob on={lit} />
 				</motion.button>
 			</div>
@@ -158,7 +160,7 @@ const GROUP_LABELS: Record<string, string> = {
 	released: "Released",
 	length: "Length",
 	sources: "Scores",
-	gap: "Critics vs audiences",
+	gap: "Critics",
 	similarTo: "Similar to",
 	loved: "Loved",
 	disliked: "Disliked",
@@ -177,7 +179,25 @@ interface ChipGroup {
 	chips: ActiveChip[]
 }
 
-function grouped(chips: ActiveChip[]): ChipGroup[] {
+/** TMDB's combined TV genres, shown under the movie genre they were merged into. */
+const TV_GENRE_OF: Record<string, string[]> = {
+	"Action & Adventure": ["Action", "Adventure"],
+	"Sci-Fi & Fantasy": ["Science Fiction", "Fantasy"],
+	"War & Politics": ["War"],
+}
+
+function grouped(all: ActiveChip[]): ChipGroup[] {
+	// A merged TV genre rides along with its movie genre: one chip, and its × takes both off.
+	const labels = new Set(all.map((c) => c.label))
+	const riders = all.filter((c) => c.group === "genres" && TV_GENRE_OF[c.label]?.some((m) => labels.has(m)))
+	const chips = all
+		.filter((c) => !riders.includes(c))
+		.map((c) => {
+			const mine = riders.filter((r) => TV_GENRE_OF[r.label].includes(c.label))
+			if (!mine.length) return c
+			const label = c.label === "Science Fiction" ? "Sci-Fi" : c.label
+			return { ...c, label, remove: (s: FilterState) => mine.reduce((acc, r) => r.remove(acc), c.remove(s)) }
+		})
 	const out: ChipGroup[] = []
 	for (const chip of chips) {
 		const id = groupOf(chip)
@@ -200,7 +220,9 @@ function Popover({
 	trigger,
 	children,
 	align = "left",
+	width = "w-72",
 }: {
+	width?: string
 	open: boolean
 	onClose: () => void
 	trigger: ReactNode
@@ -221,7 +243,7 @@ function Popover({
 						animate={{ opacity: 1, y: 0, scale: 1 }}
 						exit={{ opacity: 0, y: -4, scale: 0.98 }}
 						transition={{ duration: 0.14 }}
-						className={`absolute z-40 mt-2 w-72 max-w-[calc(100vw-2rem)] p-1.5 ${align === "right" ? "right-0 origin-top-right" : "left-0 origin-top-left"} ${MENU}`}
+						className={`absolute z-40 mt-2 ${width} max-w-[calc(100vw-2rem)] p-1.5 ${align === "right" ? "right-0 origin-top-right" : "left-0 origin-top-left"} ${MENU}`}
 					>
 						{children}
 					</motion.div>
@@ -673,9 +695,63 @@ export function FilterStatusRow({
 
 // ---------------------------------------------------------------- round 7: the count line, improved; phone quick row
 
+/** The older-style filters, each with the URL parameters it owns and how its recovery reads. */
+const LEGACY_GROUPS = [
+	{ id: "released", params: ["minYear", "maxYear"], label: (n: string) => `${n} from other years` },
+	{ id: "length", params: ["minRuntime", "maxRuntime"], label: (n: string) => `${n} of other lengths` },
+	{ id: "sources", params: ["minImdb", "minTomatometer", "minRtAudience", "minMetacritic"], label: (n: string) => `${n} with lower source scores` },
+	{ id: "gap", params: ["scoreGap"], label: (n: string) => `${n} without critics vs audiences` },
+] as const
+
 /**
- * The live count line, kept as it looks (meter, "N showing, M hidden by your filters", the two biggest one-tap
- * recoveries in amber), with More (every filter that hides titles, and every active value to take off) and Clear all.
+ * The server counts the older-style filters (years, length, source scores, critics vs audiences) as one. With two or
+ * more on, the prototype asks for each one's own number: the same results without that filter's parameters.
+ */
+function useLegacySplit(state: FilterState, total: number | null) {
+	const on = LEGACY_GROUPS.filter((g) => g.params.some((p) => state.legacy?.[p as keyof typeof state.legacy]))
+	const search = typeof window === "undefined" ? "" : window.location.search
+	const results = useQueries({
+		queries: on.map((g) => ({
+			queryKey: ["proto-legacy-split", g.id, search],
+			queryFn: async () => {
+				const p = new URLSearchParams(search)
+				for (const k of g.params) p.delete(k)
+				for (const k of ["variant", "order", "as"]) p.delete(k)
+				const r = await (await fetch(`/api/discover/results?${p}`)).json()
+				return r.total as number
+			},
+			enabled: on.length > 1 && total !== null,
+			staleTime: 60_000,
+		})),
+	})
+	if (on.length < 2 || total === null) return null
+	return on
+		.map((g, i) => ({ group: g, titles: results[i].data != null ? (results[i].data as number) - total : null }))
+		.filter((x) => x.titles === null || x.titles > 0)
+}
+
+/** "22 showing · 62k hidden": the count, short. */
+function ShortCount({ counts, searching }: { counts: FilterBarCounts | null; searching?: boolean }) {
+	if (!counts) return <span className="text-sm text-gray-500">Counting…</span>
+	return (
+		<span className="text-sm whitespace-nowrap text-gray-400">
+			<RollingNumber value={counts.total} className="font-bold text-white" />{" "}
+			{searching ? (counts.total === 1 ? "match" : "matches") : "showing"}
+			{counts.hidden > 0 && <span className="text-gray-500"> · {compactCount(counts.hidden)} hidden</span>}
+		</span>
+	)
+}
+
+interface Recovery {
+	id: string
+	titles: number | null
+	label: string
+	drop: () => void
+}
+
+/**
+ * The live count line, kept as it looks (meter, the count, the two biggest one-tap recoveries in amber), with More
+ * (what else hides titles, and your filters by type to take off) and Clear all. Without filters it offers popular ones.
  */
 export function InsightLine({
 	counts,
@@ -686,6 +762,7 @@ export function InsightLine({
 	onClear,
 	searching,
 	lead,
+	popular,
 }: {
 	counts: FilterBarCounts | null
 	chips: ActiveChip[]
@@ -695,9 +772,25 @@ export function InsightLine({
 	onClear: () => void
 	searching?: boolean
 	lead?: ReactNode
+	popular?: ReactNode
 }) {
 	const [open, setOpen] = useState(false)
-	const recoveries = counts?.recoveries ?? []
+	const split = useLegacySplit(state, counts?.total ?? null)
+	const recoveries: Recovery[] = (counts?.recoveries ?? []).flatMap((r): Recovery[] => {
+		if (r.filter === "legacy" && split)
+			return split.map((x) => ({
+				id: x.group.id,
+				titles: x.titles,
+				label: x.group.label(x.titles === null ? "…" : x.titles.toLocaleString("en")),
+				drop: () => {
+					const legacy = { ...(state.legacy ?? {}) } as Record<string, string>
+					for (const k of x.group.params) delete legacy[k]
+					onChange({ ...state, legacy: Object.keys(legacy).length ? (legacy as FilterState["legacy"]) : undefined })
+				},
+			}))
+		return [{ id: r.filter, titles: r.titles, label: protoRecoveryLabel(r.filter, r.titles, state), drop: () => onDrop(r.filter) }]
+	})
+	recoveries.sort((a, b) => (b.titles ?? 0) - (a.titles ?? 0))
 	const top = recoveries.slice(0, 2)
 	const rest = recoveries.slice(2)
 	const groups = grouped(chips)
@@ -707,25 +800,27 @@ export function InsightLine({
 			{lead}
 			<div className="flex items-center gap-3" aria-live="polite">
 				<HiddenMeter counts={counts} className="w-32" />
-				<CountLine counts={counts} searching={searching} />
+				<ShortCount counts={counts} searching={searching} />
 			</div>
 			{top.map((r) => (
 				<motion.button
-					key={r.filter}
+					key={r.id}
 					type="button"
 					whileTap={TAP}
-					onClick={() => onDrop(r.filter)}
-					className="flex items-center gap-1.5 rounded-md text-sm font-bold text-amber-400 cursor-pointer outline-none hover:text-amber-300 focus-visible:ring-2 focus-visible:ring-amber-400"
+					onClick={r.drop}
+					className="flex items-center gap-1.5 rounded-md text-sm font-bold whitespace-nowrap text-amber-400 cursor-pointer outline-none hover:text-amber-300 focus-visible:ring-2 focus-visible:ring-amber-400"
 				>
 					<PlusIcon className="h-3.5 w-3.5" />
 					<span className="sr-only">Show </span>
-					{protoRecoveryLabel(r.filter, r.titles, state)}
+					{r.label}
 				</motion.button>
 			))}
 			{hasMore && (
 				<Popover
 					open={open}
 					onClose={() => setOpen(false)}
+					align="right"
+					width="w-[24rem]"
 					trigger={
 						<button
 							type="button"
@@ -739,50 +834,66 @@ export function InsightLine({
 						</button>
 					}
 				>
-					<div className="max-h-[60vh] w-80 max-w-full overflow-y-auto">
+					<div className="max-h-[65vh] overflow-y-auto p-1">
 						{rest.length > 0 && (
-							<div className="pb-1">
-								<div className="px-2.5 pt-1.5 pb-1 text-[12px] font-semibold text-gray-400">Also hiding titles</div>
+							<section className="mb-3">
+								<h4 className="px-2 pb-1 text-[12px] text-gray-500">Also hiding titles</h4>
 								{rest.map((r) => (
 									<button
-										key={r.filter}
+										key={r.id}
 										type="button"
 										role="menuitem"
 										onClick={() => {
-											onDrop(r.filter)
+											r.drop()
 											setOpen(false)
 										}}
-										className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-[13px] font-semibold text-amber-400 cursor-pointer hover:bg-white/[0.07]"
+										className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[13px] font-semibold text-amber-400 cursor-pointer hover:bg-white/[0.06]"
 									>
 										<PlusIcon className="h-3.5 w-3.5 shrink-0" />
-										{protoRecoveryLabel(r.filter, r.titles, state)}
+										{r.label}
 									</button>
 								))}
-							</div>
+							</section>
 						)}
 						{groups.length > 0 && (
-							<div className={rest.length ? "mt-1 border-t border-white/[0.07] pt-1" : ""}>
-								<div className="px-2.5 pt-1.5 text-[12px] font-semibold text-gray-400">Your filters</div>
-								{groups.map((g) => (
-									<div key={g.id} className="pb-0.5">
-										<div className="flex items-center gap-2 px-2.5 pt-1.5 pb-0.5">
-											<span className={`h-1.5 w-1.5 rounded-full ${g.dot}`} />
-											<span className="flex-1 text-[12px] text-gray-500">{g.label}</span>
+							<section>
+								<h4 className="px-2 pb-1.5 text-[12px] text-gray-500">Your filters</h4>
+								<div className="space-y-2.5 px-2">
+									{groups.map((g) => (
+										<div key={g.id} className="flex items-start gap-3">
+											<span className="flex w-24 shrink-0 items-center gap-1.5 pt-1.5 text-[13px] font-semibold text-gray-200">
+												<span className={`h-1.5 w-1.5 shrink-0 rounded-full ${g.dot}`} />
+												<span className="truncate">{g.label}</span>
+											</span>
+											<span className="flex min-w-0 flex-1 flex-wrap gap-1.5">
+												{g.chips.map((c) => (
+													<button
+														key={c.key}
+														type="button"
+														role="menuitem"
+														onClick={() => onChange(c.remove(state))}
+														aria-label={`Remove ${c.label}`}
+														className="group flex h-7 max-w-full items-center gap-1 rounded-full bg-white/[0.07] pr-1.5 pl-2.5 text-[13px] text-gray-100 cursor-pointer hover:bg-white/[0.12]"
+													>
+														<span className="truncate">{c.label.replace(/^Produced in /, "")}</span>
+														<XMarkIcon className="h-3.5 w-3.5 shrink-0 text-gray-500 group-hover:text-white" />
+													</button>
+												))}
+											</span>
 										</div>
-										{g.chips.map((c) => (
-											<MenuValue key={c.key} chip={c} onRemove={() => onChange(c.remove(state))} />
-										))}
-									</div>
-								))}
-							</div>
+									))}
+								</div>
+							</section>
 						)}
 					</div>
 				</Popover>
 			)}
-			{chips.length > 0 && (
+			{chips.length > 0 ? (
 				<button type="button" onClick={onClear} className="text-sm text-gray-500 cursor-pointer hover:text-white">
 					Clear all
 				</button>
+			) : (
+				popular
 			)}
 		</div>
 	)
@@ -798,7 +909,9 @@ function protoRecoveryLabel(filter: FilterName, titles: number, state: FilterSta
 		(l.minImdb || l.minTomatometer || l.minRtAudience || l.minMetacritic) && "source scores",
 		l.scoreGap && "critics vs audiences",
 	].filter(Boolean)
-	return `${titles.toLocaleString("en")} hidden by ${names.length ? names.join(" and ") : "older filters"}`
+	return names.length === 1
+		? `${titles.toLocaleString("en")} hidden by ${names[0]}`
+		: `${titles.toLocaleString("en")} hidden by ${names.length || "other"} filters`
 }
 
 /** A quick button on the phone row: the filter's name, or what's set, and a chevron; it opens the sheet there. */

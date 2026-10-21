@@ -474,8 +474,9 @@ export function SortControl<K extends string>({
 	const chosen = options.find((s) => s.key === value)
 	const label = chosen?.label ?? ""
 	const sm = size === "sm"
+	// No AnimatePresence here: it removed a menu opened again right after a pick (the button needed three clicks).
 	const menu = (
-		<AnimatePresence>
+		<>
 			{open && (!portal || box) && (
 				<motion.div
 					id={menuId}
@@ -501,7 +502,7 @@ export function SortControl<K extends string>({
 					/>
 				</motion.div>
 			)}
-		</AnimatePresence>
+		</>
 	)
 	return (
 		<div ref={root} className="relative shrink-0">

@@ -22,7 +22,7 @@ import { FiltersSheet } from "./FiltersSheet"
 // PROTOTYPE - throwaway: the member preview of the Filters sheet prototype.
 import { PREVIEW_SERVICES, useFilterSheetVariant, useMemberPreview } from "./FilterGroups.prototype"
 import { ForYouSortSplit, InsightLine, PhoneQuickRow } from "./FilterBar.prototype"
-import { focusSheetOn } from "./FilterGroups.prototype"
+import { PopularInline, focusSheetOn } from "./FilterGroups.prototype"
 import { FILTER_ACCENTS } from "./labels"
 import { FOR_YOU_SWITCH, ForYouSwitch, useForYouUnderBestMatch } from "./ForYou"
 import {
@@ -254,6 +254,7 @@ export function FilterBar(props: FilterBarProps) {
 							onClear={filters.clearSecondary}
 							searching={filters.searching}
 							lead={props.insightLead}
+							popular={<PopularInline data={groups} />}
 						/>
 					</div>
 				) : (
