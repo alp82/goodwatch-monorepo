@@ -1,5 +1,5 @@
 import type { RealtimeTicket, SharedRoomSnapshot } from '@goodwatch/yepwatch-contracts';
-import { ApiFailure } from './errors';
+import { ApiFailure, isRoomExpired } from './errors';
 import { parseRealtimeFrame } from './wire';
 
 export type Connection = 'connecting' | 'live' | 'reconnecting' | 'background' | 'unavailable' | 'expired';
@@ -11,7 +11,7 @@ type Timer = number | ReturnType<typeof setTimeout>;
 export interface RealtimeOptions {
   roomId: string; ticket: () => Promise<RealtimeTicket>; socket: (path: string) => SocketLike;
   snapshot: (snapshot: SharedRoomSnapshot) => void; refetchPrivate: () => Promise<unknown>;
-  status: (status: Connection) => void; revision: () => number | null;
+  status: (status: Connection) => void; revision: () => number | null; roomExpiresAt?: () => number | null;
   random?: () => number; later?: (callback: () => void, ms: number) => Timer; cancel?: (timer: Timer) => void;
 }
 /** Strictly no polling. Each reconnect authenticates with a fresh, one-use ticket. */
@@ -75,14 +75,20 @@ export class RoomRealtime {
         else if (frame.type === 'resync_required' && frame.roomId === this.o.roomId) this.retry(epoch);
         else if (frame.type === 'degraded' || frame.type === 'restarting') this.retry(epoch, frame.retryAfterMs);
         else if (frame.type === 'error') {
-          if (['expired', 'unauthorized', 'forbidden'].includes(frame.code)) { this.stop(); this.o.status(frame.code === 'expired' ? 'expired' : 'unavailable'); }
+          if (frame.code === 'expired') {
+            // Gateway leases expire independently of rooms. Repair HTTP and get a new ticket.
+            const deadline = this.o.roomExpiresAt?.();
+            if (deadline != null && deadline <= Date.now()) { this.stop(); this.o.status('expired'); }
+            else { this.refetch(); this.retry(epoch); }
+          } else if (['unauthorized', 'forbidden'].includes(frame.code)) { this.stop(); this.o.status('unavailable'); }
           else this.retry(epoch);
         }
       };
       socket.onclose = () => this.retry(epoch); socket.onerror = () => this.retry(epoch);
     } catch (error) {
       if (!this.active || epoch !== this.epoch) return;
-      if (error instanceof ApiFailure && ['not_implemented', 'unauthorized', 'forbidden', 'expired'].includes(error.code)) { this.stop(); this.o.status(error.code === 'expired' ? 'expired' : 'unavailable'); }
+      if (isRoomExpired(error)) { this.stop(); this.o.status('expired'); }
+      else if (error instanceof ApiFailure && ['not_implemented', 'unauthorized', 'forbidden'].includes(error.code)) { this.stop(); this.o.status(error.code === 'expired' ? 'expired' : 'unavailable'); }
       else this.retry(epoch);
     }
   }

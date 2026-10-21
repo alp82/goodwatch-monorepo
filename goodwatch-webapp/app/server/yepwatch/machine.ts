@@ -1,4 +1,4 @@
-import type { Candidate, CommandEnvelope, EpisodeIdentity, ProgressConflict, RoomSnapshot, SharedRoomSnapshot } from '../../../packages/yepwatch-contracts/index.ts'
+import type { Candidate, CommandEnvelope, EpisodeIdentity, ProgressConflict, RoomCommand, RoomSnapshot, SharedRoomSnapshot } from '../../../packages/yepwatch-contracts/index.ts'
 import type { Participant, Room } from './types.ts'
 import { LIMITS } from './types.ts'
 import { requireRoom } from './errors.ts'
@@ -59,6 +59,13 @@ function host(room: Room, p: Participant) { requireRoom(room.hostId === p.id, 'f
 function setup(room: Room) { requireRoom(room.phase === 'setup', 'conflict', 'Start a new round before changing setup') }
 function fence(actual: number, expected: number) { requireRoom(actual === expected, 'conflict', 'State version changed') }
 function included(room: Room, p: Participant) { requireRoom(room.round?.memberIds.includes(p.id), 'forbidden', 'Participant waits until next round', 403) }
+/** Reused before discovery and at the authoritative transition; adapter work grants no permission to commit. */
+export function preflightStartRound(room: Room, actorId: string, command: Extract<RoomCommand, { type: 'start_round' }>, now: number) {
+  live(room, now)
+  host(room, participant(room, actorId)); setup(room)
+  fence(room.rosterVersion, command.expectedRosterVersion); fence(room.contextVersion, command.expectedContextVersion)
+  requireRoom(room.participants.every(m => m.ready && m.screenId), 'needs_context', 'Everyone must confirm a viewing screen and be ready')
+}
 export function transition(original: Room, actorId: string, envelope: CommandEnvelope, now: number, prepared?: Candidate[], rechecked?: Candidate['availability'], proposedEpisode?: EpisodeIdentity): Room {
   const room = structuredClone(original); live(room, now)
   const p = participant(room, actorId); const c = envelope.command
@@ -98,8 +105,7 @@ export function transition(original: Room, actorId: string, envelope: CommandEnv
       break
     }
     case 'start_round': {
-      host(room, p); setup(room); fence(room.rosterVersion, c.expectedRosterVersion); fence(room.contextVersion, c.expectedContextVersion)
-      requireRoom(room.participants.every(m => m.ready && m.screenId), 'needs_context', 'Everyone must confirm a viewing screen and be ready')
+      preflightStartRound(room, actorId, c, now)
       requireRoom(prepared, 'catalog_unavailable', 'Candidate adapter unavailable', 503)
       requireRoom(prepared.length > 0, 'no_intersection', 'No eligible candidates; adjust context or progress')
       requireRoom(prepared.length <= LIMITS.deck && new Set(prepared.map(x => x.id)).size === prepared.length, 'catalog_unavailable', 'Invalid candidate deck', 503)

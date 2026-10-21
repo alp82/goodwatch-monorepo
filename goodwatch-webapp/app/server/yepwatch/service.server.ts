@@ -1,7 +1,7 @@
 import type { Candidate, CommandEnvelope, CommandResult, GuestAdmission, GuestAdmissionRequest, JoinRoomRequest, RealtimeAttachment, RealtimeTicket, RealtimeViewResponse, ShowProgressResponse } from '../../../packages/yepwatch-contracts/index.ts'
 import { equal, hash, keyed, random, sign, verify } from './crypto.server.ts'
 import { IndeterminateWrite, requireRoom, RoomError } from './errors.ts'
-import { live, participant, progressConflicts, shared, snapshot, transition } from './machine.ts'
+import { live, participant, preflightStartRound, progressConflicts, shared, snapshot, transition } from './machine.ts'
 import { continuationProposal } from './progress.ts'
 import { LIMITS, type CatalogPort, type Participant, type RevisionPublisher, type Room, type RoomRepository, type StoredRoom } from './types.ts'
 export interface ActorCredential { participantId: string; token: string }
@@ -105,7 +105,10 @@ export class YepWatchService {
         requireRoom(input.state !== 'continue' || episodes.some(e => e.tmdbId === input.nextEpisodeId), 'invalid_request', 'Unknown canonical episode', 400)
         requireRoom(progressCommand.approvedEpisodeId === null || episodes.some(e => e.tmdbId === progressCommand.approvedEpisodeId), 'invalid_request', 'Unknown approved episode', 400)
       }
-      if (envelope.command.type === 'start_round') prepared = await this.catalog.candidates(previous.room)
+      if (envelope.command.type === 'start_round') {
+        preflightStartRound(previous.room, actor.id, envelope.command, this.now())
+        prepared = await this.catalog.candidates(previous.room)
+      }
       if (envelope.command.type === 'decide') {
         const candidate = previous.room.candidates.find(c => c.id === previous.room.proposedId)
         requireRoom(candidate, 'conflict', 'No active candidate'); rechecked = await this.catalog.recheck(previous.room, candidate)

@@ -52,3 +52,17 @@ test('rising shared revisions during an in-flight own repair cause a follow-up r
   const observed = reads; client.stop(); releases[1]?.();
   assert.equal(observed, 2);
 });
+test('ambiguous subscription expiry repairs and reconnects; only confirmed deadline is terminal', async () => {
+  let socket!: Socket; let reads = 0; let deadline = Date.now() + 60000;
+  const statuses: Connection[] = []; const retries: (() => void)[] = [];
+  const client = new RoomRealtime({ roomId: 'fixture-room', ticket: async () => ({ ticket: 't', expiresAt: Date.now() + 30000, websocketPath: '/api/yepwatch/v1/realtime' }), socket: () => (socket = new Socket()), snapshot: () => undefined, revision: () => 0, status: s => statuses.push(s), refetchPrivate: async () => { reads++; }, roomExpiresAt: () => deadline, later: (fn, ms) => { if (ms < 10000) retries.push(fn); return 1; }, cancel: () => undefined });
+  client.start(); await tick(); socket.frame({ type: 'error', code: 'expired', message: 'Expired' }); await tick();
+  assert.equal(reads, 1); assert.equal(statuses.at(-1), 'reconnecting'); retries[0](); await tick();
+  deadline = Date.now() - 1; socket.frame({ type: 'error', code: 'expired', message: 'Expired' });
+  assert.equal(statuses.at(-1), 'expired'); assert.equal(socket.closed, true); client.stop();
+});
+test('HTTP410 while requesting ticket is authoritative expiry even without JSON error code', async () => {
+  const statuses: Connection[] = [];
+  const client = new RoomRealtime({ roomId: 'fixture-room', ticket: async () => { throw new ApiFailure('outcome_unknown', 'Gone', undefined, 410); }, socket: () => { throw new Error('No socket'); }, snapshot: () => undefined, revision: () => null, status: s => statuses.push(s), refetchPrivate: async () => undefined });
+  client.start(); await tick(); assert.equal(statuses.at(-1), 'expired'); client.stop();
+});

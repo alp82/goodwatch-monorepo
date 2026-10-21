@@ -6,12 +6,13 @@ import { paths } from '../../../packages/yepwatch-contracts/index.ts'
 import { createYepWatchHandler } from './http.server.ts'
 import { YepWatchService } from './service.server.ts'
 import { fixtureCatalog, MemoryRoomRepository } from './test-support.ts'
+import type { CatalogPort } from './types.ts'
 const secret = 'test-only-server-secret-32-characters-long'
 const gateway = 'test-only-gateway-secret-32-characters-long'
 const admission = (nickname = 'A') => ({ commandId: randomBytes(12).toString('hex'), admissionSecret: randomBytes(32).toString('base64url'), nickname })
-async function harness() {
+async function harness(catalog: CatalogPort = fixtureCatalog) {
   const repo = new MemoryRoomRepository(); let now = Date.now(); const events: unknown[] = []
-  const service = new YepWatchService(repo, fixtureCatalog, secret, async event => { events.push(event) }, () => now)
+  const service = new YepWatchService(repo, catalog, secret, async event => { events.push(event) }, () => now)
   const a = await service.create(admission()); const id = a.credential.roomId
   const actor = (c: typeof a.credential) => ({ participantId: c.participantId, token: c.token })
   const send = async (c: typeof a.credential, command: RoomCommand) => { const own = (await service.read(id, actor(c))).own; return service.command(id, actor(c), { commandId: randomBytes(12).toString('hex'), sequence: own.nextSequence, command }) }
@@ -116,4 +117,56 @@ test('Private progress cannot be probed through arbitrary show queries or missin
   assert.equal(after.conflicts[0].reason, 'missing_progress'); assert.equal(after.conflicts[0].proposedEpisode?.tmdbId, 101)
   assert.deepEqual((await h.service.read(h.id, h.actor(h.b.credential))).shared.episodeProposals[0].episode, after.conflicts[0].proposedEpisode)
   assert.equal((await h.service.showProgress(h.id, h.actor(h.b.credential), 999)).conflicts[0].proposedEpisode, null)
+})
+
+test('Start-round preflight rejects forbidden, stale and not-ready requests with zero discovery; valid start and replay scan once', async () => {
+  let scans = 0
+  const h = await harness({ ...fixtureCatalog, async candidates(room) { scans++; return fixtureCatalog.candidates(room) } })
+  await h.setup()
+  const current = await h.service.read(h.id, h.actor(h.a.credential))
+  const command: Extract<RoomCommand, { type: 'start_round' }> = { type: 'start_round', expectedRosterVersion: current.shared.rosterVersion, expectedContextVersion: current.shared.contextVersion }
+  const rejectWithoutScan = async (credential: typeof h.a.credential, attempt: typeof command, code: string) => {
+    const before = await h.service.read(h.id, h.actor(credential))
+    await assert.rejects(h.send(credential, attempt), { code })
+    assert.equal(scans, 0)
+    assert.deepEqual(await h.service.read(h.id, h.actor(credential)), before)
+  }
+  await rejectWithoutScan(h.b.credential, command, 'forbidden')
+  await rejectWithoutScan(h.a.credential, { ...command, expectedRosterVersion: command.expectedRosterVersion - 1 }, 'conflict')
+  await rejectWithoutScan(h.a.credential, { ...command, expectedContextVersion: command.expectedContextVersion - 1 }, 'conflict')
+  await rejectWithoutScan(h.a.credential, command, 'needs_context')
+  for (const credential of [h.a.credential, h.b.credential]) await h.send(credential, { type: 'ready', expectedContextVersion: command.expectedContextVersion, ready: true })
+  const envelope = { commandId: 'valid_start', sequence: (await h.service.read(h.id, h.actor(h.a.credential))).own.nextSequence, command }
+  const result = await h.service.command(h.id, h.actor(h.a.credential), envelope)
+  assert.equal(result.snapshot.shared.phase, 'voting'); assert.equal(scans, 1)
+  const replay = await h.service.command(h.id, h.actor(h.a.credential), envelope)
+  assert.equal(replay.receipt.replayed, true); assert.equal(scans, 1)
+})
+
+test('Start-round preflight rejects a new start in voting phase before discovery', async () => {
+  const h = await harness(); await h.setup(); await h.start()
+  let scans = 0
+  const service = new YepWatchService(h.repo, { ...fixtureCatalog, async candidates() { scans++; throw new Error('Discovery must not run') } }, secret)
+  const before = await service.read(h.id, h.actor(h.a.credential))
+  await assert.rejects(service.command(h.id, h.actor(h.a.credential), { commandId: 'wrong_phase', sequence: before.own.nextSequence,
+    command: { type: 'start_round', expectedRosterVersion: before.shared.rosterVersion, expectedContextVersion: before.shared.contextVersion } }), { code: 'conflict' })
+  assert.equal(scans, 0); assert.deepEqual(await service.read(h.id, h.actor(h.a.credential)), before)
+})
+
+test('Readiness withdrawal during discovery defeats start CAS and retry rejects before another catalog scan', async () => {
+  let scans = 0
+  let enter!: () => void; let release!: () => void
+  const entered = new Promise<void>(resolve => { enter = resolve }); const released = new Promise<void>(resolve => { release = resolve })
+  const h = await harness({ ...fixtureCatalog, async candidates(room) { scans++; enter(); await released; return fixtureCatalog.candidates(room) } })
+  await h.setup()
+  for (const credential of [h.a.credential, h.b.credential]) await h.send(credential, { type: 'ready', expectedContextVersion: 2, ready: true })
+  const start = h.service.read(h.id, h.actor(h.a.credential)).then(s => h.send(h.a.credential, { type: 'start_round', expectedRosterVersion: s.shared.rosterVersion, expectedContextVersion: s.shared.contextVersion }))
+  const rejected = assert.rejects(start, { code: 'needs_context' })
+  await entered
+  await h.send(h.b.credential, { type: 'ready', expectedContextVersion: 2, ready: false })
+  const afterWithdrawal = await h.service.read(h.id, h.actor(h.a.credential))
+  release(); await rejected
+  assert.equal(scans, 1)
+  assert.deepEqual(await h.service.read(h.id, h.actor(h.a.credential)), afterWithdrawal)
+  assert.equal(afterWithdrawal.shared.phase, 'setup'); assert.equal(afterWithdrawal.shared.round, null)
 })
