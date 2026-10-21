@@ -1,0 +1,21 @@
+{
+  "name": "@goodwatch/yepwatch-realtime",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=24" },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build": "npm run typecheck && esbuild src/main.ts --bundle --platform=node --format=esm --target=node24 --external:ws --external:ioredis --external:zod --outfile=dist/main.js",
+    "start": "node --env-file-if-exists=.env dist/main.js",
+    "dev": "tsx --env-file-if-exists=.env src/main.ts",
+    "test": "tsx --test test/*.test.ts"
+  },
+  "dependencies": {
+    "@goodwatch/yepwatch-contracts": "file:../goodwatch-webapp/packages/yepwatch-contracts",
+    "ioredis": "^5.8.2",
+    "ws": "^8.22.0",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": { "@types/node": "^24.0.0", "@types/ws": "^8.18.1", "esbuild": "^0.25.0", "tsx": "^4.20.0", "typescript": "^5.9.0" }
+}
