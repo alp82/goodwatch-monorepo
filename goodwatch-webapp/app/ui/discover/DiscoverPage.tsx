@@ -51,6 +51,12 @@ import { Spinner } from "~/ui/wait/Spinner"
 import type { TitleKey } from "~/utils/title-key"
 import { DiscoverGrid } from "./DiscoverGrid"
 import { DiscoverHeading } from "./DiscoverHeading"
+// PROTOTYPE - throwaway: full-width heading variants.
+import {
+	DiscoverHeadingPrototype,
+	HeadingSwitcher,
+	useHeadingVariant,
+} from "./DiscoverHeading.prototype"
 import { ForYouNeedsTaste, ForYouSignUp } from "./ForYouStates"
 import { HiddenTitles } from "./HiddenTitles"
 import { SignUpKey } from "./SignUpKey"
@@ -424,23 +430,45 @@ export function DiscoverPage({
 		return `${pathname}?${next}`
 	}, [pathname, locationSearch])
 
+	// PROTOTYPE: the heading variant, and whether its explanation line has anything to say (mirrors TasteExplanation).
+	const headingVariant = useHeadingVariant()
+	const hasExplanation =
+		q !== null ||
+		status === "needsTaste" ||
+		(applied && leanings.length > 0) ||
+		(!member && status !== "signUp")
+	const explanationFor = (oneLine: boolean) => (
+		<TasteExplanation
+			status={status}
+			on={applied}
+			leanings={leanings}
+			guest={!member}
+			search={q ? { q, reading: search.reading } : null}
+			oneLine={oneLine}
+		/>
+	)
+
 	return (
 		<MotionConfig reducedMotion="user">
+			<HeadingSwitcher />
 			<div className={`mx-auto max-w-7xl px-4 pt-5 lg:pt-8 ${SLAB_CLEARANCE}`}>
-				<DiscoverHeading
-					q={q}
-					onSearch={onSearch}
-					onClear={clearSearch}
-					explanation={
-						<TasteExplanation
-							status={status}
-							on={applied}
-							leanings={leanings}
-							guest={!member}
-							search={q ? { q, reading: search.reading } : null}
-						/>
-					}
-				/>
+				{headingVariant === "now" ? (
+					<DiscoverHeading
+						q={q}
+						onSearch={onSearch}
+						onClear={clearSearch}
+						explanation={explanationFor(false)}
+					/>
+				) : (
+					<DiscoverHeadingPrototype
+						variant={headingVariant}
+						q={q}
+						onSearch={onSearch}
+						onClear={clearSearch}
+						hasExplanation={hasExplanation}
+						explanation={explanationFor(headingVariant === "C")}
+					/>
+				)}
 				<div className="lg:mt-7">
 					<FilterBar
 						filters={filters}

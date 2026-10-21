@@ -27,6 +27,7 @@ export function TasteExplanation({
 	leanings,
 	guest,
 	search = null,
+	oneLine = false,
 	className = "",
 }: {
 	status: ForYouStatus
@@ -35,6 +36,8 @@ export function TasteExplanation({
 	guest: boolean
 	/** Set while searching: "Read as" replaces the taste. */
 	search?: SearchExplanation | null
+	/** PROTOTYPE: one row at every width, scrolling sideways. */
+	oneLine?: boolean
 	className?: string
 }) {
 	const view = search
@@ -55,7 +58,7 @@ export function TasteExplanation({
 						initial="enter"
 						animate="center"
 						exit="leave"
-						className={`flex items-center gap-x-2 gap-y-1.5 text-xs text-gray-400 sm:text-sm ${search ? "flex-nowrap lg:flex-wrap" : "flex-wrap"}`}
+						className={`flex items-center gap-x-2 gap-y-1.5 text-xs text-gray-400 sm:text-sm ${oneLine ? "flex-nowrap overflow-x-auto [scrollbar-width:none] [&_ul]:!flex-nowrap [&_li]:shrink-0 [&_li]:whitespace-nowrap [&>span]:shrink-0 [&>span]:whitespace-nowrap" : search ? "flex-nowrap lg:flex-wrap" : "flex-wrap"}`}
 						aria-live={search ? "polite" : undefined}
 					>
 						<FingerPrintIcon

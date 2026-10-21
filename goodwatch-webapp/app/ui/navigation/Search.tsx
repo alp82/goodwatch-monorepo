@@ -1,10 +1,8 @@
 // The navigation's search entry: the omnibox in the desktop header, the phone header's search bar, and the hub sheet's
 // search field all open one dialog holding the command palette, as do ⌘K / Ctrl K and "/" outside text fields.
 import { MagnifyingGlassIcon } from "@heroicons/react/24/solid"
-import { useLocation } from "@remix-run/react"
 import { useEffect, useState } from "react"
 import { useNavigation } from "./NavigationContext"
-import { currentSearchQuery } from "./destinations"
 
 const SEARCH_LABEL = "Search titles, people, moods"
 
@@ -54,17 +52,10 @@ function useShortcutLabel() {
 	return label
 }
 
-/** The search query on screen (Discover's search mode), shown in the omnibox. */
-function useCurrentQuery() {
-	const { pathname, search } = useLocation()
-	return currentSearchQuery(pathname, search)
-}
-
 /** The desktop header's omnibox: looks like an input with its shortcut, opens the search dialog. */
 export function Omnibox() {
 	const navigation = useNavigation()
 	const shortcut = useShortcutLabel()
-	const q = useCurrentQuery()
 	return (
 		<button
 			type="button"
@@ -79,9 +70,7 @@ export function Omnibox() {
 				className="h-[18px] w-[18px] shrink-0 text-amber-400"
 				aria-hidden
 			/>
-			<span className={`truncate ${q ? "text-gray-100" : ""}`}>
-				{q || SEARCH_LABEL}
-			</span>
+			<span className="truncate">{SEARCH_LABEL}</span>
 			{shortcut && (
 				<kbd className="ml-auto rounded-full bg-white/10 px-[7px] py-0.5 font-sans text-xs text-gray-300">
 					{shortcut}
@@ -94,7 +83,6 @@ export function Omnibox() {
 /** The phone header's search bar: opens the search dialog with the keyboard up. */
 export function HeaderSearchBar() {
 	const navigation = useNavigation()
-	const q = useCurrentQuery()
 	const open = navigation.searchOpen
 	return (
 		<button
@@ -105,7 +93,7 @@ export function HeaderSearchBar() {
 			}}
 			{...preloadOnIntent}
 			aria-haspopup="dialog"
-			aria-label={q ? `${SEARCH_LABEL}: ${q}` : SEARCH_LABEL}
+			aria-label={SEARCH_LABEL}
 			className={`flex h-10 min-w-0 flex-1 items-center gap-2 rounded-full bg-linear-180 from-white/[0.09] to-white/[0.04] pr-3 pl-3 text-left text-[14px] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.12),0_6px_18px_-10px_rgba(0,0,0,0.9)] transition-shadow ${
 				open
 					? "shadow-[inset_0_0_0_1.5px_rgba(251,191,36,0.75),0_0_18px_-4px_rgba(245,158,11,0.45)]"
@@ -116,11 +104,8 @@ export function HeaderSearchBar() {
 				className="h-[18px] w-[18px] shrink-0 text-amber-400"
 				aria-hidden
 			/>
-			<span
-				aria-hidden
-				className={`truncate ${q ? "text-gray-100" : "text-gray-400"}`}
-			>
-				{q || "Search"}
+			<span aria-hidden className="truncate text-gray-400">
+				Search
 			</span>
 		</button>
 	)
