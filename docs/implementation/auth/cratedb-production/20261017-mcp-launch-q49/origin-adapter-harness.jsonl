@@ -1,0 +1,2 @@
+{"case":"installed_default","protocol":"http","url":"http://goodwatch.app/mcp"}
+{"case":"isolated_harness_trusts_loopback","protocol":"https","url":"https://goodwatch.app/mcp"}
