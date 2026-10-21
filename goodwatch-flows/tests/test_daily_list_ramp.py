@@ -118,6 +118,36 @@ class DailyRampTests(unittest.TestCase):
         self.assertEqual({row['appeared_source'] for row in self.store.crate.history.values()}, {'backfill'})
         self.assertEqual({row['appeared_precision'] for row in self.store.crate.history.values()}, {'unknown'})
 
+    def test_shortfall_baseline_cannot_make_the_next_days_arrival_exact(self):
+        self.ids = {'AR': []}
+        phase, original = [1], self.respond
+        def respond(url, **kwargs):
+            params = kwargs['params']
+            if '/discover/movie' not in url:
+                return original(url, **kwargs)
+            ids = list(range(1, 1000 if phase[0] == 1 else 1001))
+            if params['sort_by'] == 'primary_release_date.desc':
+                ids.reverse()
+            page = params['page']
+            return Mock(status_code=200, json=lambda: dict(page=page, total_pages=50, total_results=1000,
+                results=[{'id': i} for i in ids[(page - 1) * 20:page * 20]]))
+        self.session.get.side_effect = respond
+        first = self.run_job(baseline_max_requests=5000, baseline_max_memberships=2000)
+        checkpoint = self.store.load('AR:movie:8')
+        self.assertEqual(first['lists'][0]['count_shortfall'], 1)
+        phase[0] = 2
+        class FollowingDay(FixedDateTime):
+            @classmethod
+            def now(cls, tz=None):
+                return datetime(2026, 10, 18, 14, tzinfo=timezone.utc)
+        with patch(__name__ + '.FixedDateTime', FollowingDay):
+            second = self.run_job(baseline_max_requests=5000, baseline_max_memberships=2000)
+        arrival = next(row for row in self.store.crate.history.values() if row['media_tmdb_id'] == 1000)
+        self.assertEqual((second['lists_completed'], second['lists_failed']), (2, 0))
+        self.assertEqual(arrival['appeared_precision'], 'unknown')
+        self.assertIs(checkpoint['complete'], False)
+        self.assertIs(self.store.load('AR:movie:8')['complete'], True)
+
     def test_a_torn_gb_movie_list_preserves_its_stays_and_commits_the_other_29_lists(self):
         from test_daily_provider_lists import TMDB
         seed = TMDB(ids=[99])
@@ -199,6 +229,46 @@ class DailyRampTests(unittest.TestCase):
         self.assertEqual(report['countries_partial'], {'AR': ['AR:show:8']})
         self.assertEqual(report['requests_new_baselines'], 1)
         self.assertEqual(report['baseline_deferred_reason'], 'requests')
+
+    def test_publication_stop_reports_every_list_already_committed_in_its_country(self):
+        for error_type in (job.RequestBudgetExceeded, job.TMDBAccessDenied, job.LeaseLost):
+            for after_commit in (False, True):
+                with self.subTest(error=error_type.__name__, after_commit=after_commit):
+                    self.setUp()
+                    self.ids = {'AR': [42]}
+                    original_lease = self.store.lease
+                    @contextmanager
+                    def lease(identity):
+                        stop = identity == 'AR:show:8'
+                        if stop and not after_commit:
+                            raise error_type('Injected publication stop')
+                        with original_lease(identity) as owned:
+                            yield owned
+                        if stop:
+                            raise error_type('Injected publication stop after commit')
+                    output = io.StringIO()
+                    with patch.object(self.store, 'lease', lease), redirect_stdout(output):
+                        if error_type is job.RequestBudgetExceeded:
+                            report = self.run_job()
+                        else:
+                            with self.assertRaises(error_type) as stopped:
+                                self.run_job()
+                            events = [json.loads(line) for line in output.getvalue().splitlines()
+                                      if line.startswith('{')]
+                            summaries = [event['report'] for event in events
+                                         if event.get('event') == 'daily_list_run_stopped']
+                            self.assertEqual(len(summaries), 1)
+                            report = summaries[0]
+                            self.assertEqual(stopped.exception.report, report)
+                    expected = {'AR:movie:8', 'AR:show:8'} if after_commit else {'AR:movie:8'}
+                    self.assertEqual(set(self.store.snapshots), expected)
+                    self.assertEqual({row['key'] for row in report['lists']}, expected)
+                    self.assertEqual(report['lists_completed'], len(expected))
+                    self.assertEqual(report['countries_started'], ['AR'])
+                    self.assertEqual(report['countries_partial'], {} if after_commit else {'AR': ['AR:show:8']})
+                    self.assertEqual(report['countries_remaining'], [] if after_commit else ['AR'])
+                    self.assertEqual(report['baseline_memberships'], len(expected))
+                    self.assertEqual(report['requests_new_baselines'], 4)
 
     def test_twenty_failing_baselines_stop_http_work_across_partial_countries(self):
         self.ids = {country: [42] for country in ('AR', 'BS', 'CD', 'CO', 'CV', 'GH',

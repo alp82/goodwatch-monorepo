@@ -58,8 +58,12 @@ still read. Empty lists are read and baselined too. Explicit `countries` and
 For a list, a checkpoint holds its UTC read time, sorted discover IDs, verified
 eligible offer types for members, and IDs where discover and the title check
 disagreed. It also records version 1, completeness, and cache-bypass provenance.
-Only a successful complete read advances it. An already completed UTC day's
-list is skipped on rerun. Gaps are retained: they cannot establish exact days.
+Only a successful accepted read advances it. Its `complete` flag is true only
+when `count_shortfall == 0`; an accepted two-sort shortfall saves `complete: false`.
+Such a checkpoint retains its IDs and read day but cannot prove a missing title's
+absence on the next day. A later zero-shortfall read restores completeness for
+following comparisons. An already completed UTC day's list is skipped on rerun.
+Gaps are retained: they cannot establish exact days.
 
 The first read verifies listed titles and opens missing stays with unknown
 precision and `appeared_source='backfill'`, without substituting a premiere. These
@@ -71,7 +75,7 @@ check keeps it open and queues another check. Failed checks leave the checkpoint
 unchanged. No first-read transition is exact. An empty first read establishes an
 absence baseline for later arrivals.
 
-After the baseline, the job compares today's discover IDs with the last complete
+After the baseline, the job compares today's discover IDs with the last accepted
 checkpoint. It also includes unresolved disagreements and interrupted publications.
 Every changed title is checked with a fresh `/movie/{id}/watch/providers` or
 `/tv/{id}/watch/providers` GET. The response must have the requested title ID and
@@ -161,6 +165,10 @@ one-title gap in 1,723 can pass, while a one-title gap in 999 cannot. This handl
 TMDB's observed counted-but-unreturned title without admitting the earlier
 mixed-page snapshots. `count_shortfall` and `count_agreements` report the admitted
 count and the vote range, reported total, and returned total of each agreement.
+The shared writer receives the saved completeness flag; no separate arrival-day
+rule is added. Existing checkpoints are not rewritten by this code change. Deploy
+it before the first accepted shortfall is checkpointed, or separately review any
+older shortfall checkpoint still marked complete before the following daily read.
 
 If neither sort passes, discard both and retry once with an equivalent query:
 add `vote_count.gte=0.0` at the root and spell each existing lower range bound as
@@ -449,6 +457,12 @@ hypothetical starts without persisting them. A partially started country appears
 in both `countries_started` and `countries_remaining`. Once no countries remain, every run
 performs the complete daily reread and has zero new-baseline requests.
 
+Country summaries, membership totals, and inventory are finalized even when a
+budget, access, or lease error interrupts publication. A checkpoint committed
+before lease release is included too. Access and lease errors remain fatal; the
+entrypoint logs `daily_list_run_stopped` with the partial report and attaches that
+report to the exception. No source request or publication continues after it.
+
 The original grouping models about 116k, 142k, 169k, 195k, 214k, and 238k total
 requests on successive days, including a 15% discover reserve and 5,000 daily
 title checks. Estimated reads are 2.9–5.2 hours/day before apply overhead.
@@ -567,6 +581,15 @@ increase the request budget/runtime before enabling that larger scope; oversized
 indivisible bins remain explicit failures rather than truncated lists.
 
 ## Verification and files
+
+The October 22 review follow-up ran **138 focused tests: 131 passed, seven opt-in
+Windmill previews skipped**, with disposable local Crate and a Mongo replica set.
+The reader and ramp regressions first reproduced a false exact arrival after a
+one-title shortfall. Six publication-stop cases first lost committed summaries;
+they now retain counts, countries, and membership totals, including commits before
+lease release fails. The strengthened retry test rejects a deliberately widened
+upper bound that the older test accepted, and checks both spellings return the
+same ID set. The full monorepo suite and production Windmill previews were not run.
 
 Tests were written red before implementation at the agreed seams. The two
 re-review scratch cases (genuine pending removal and retained offer after an

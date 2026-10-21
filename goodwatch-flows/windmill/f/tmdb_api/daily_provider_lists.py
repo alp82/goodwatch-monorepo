@@ -390,7 +390,7 @@ def read_daily_list(client, store, title_reads, country, media_type, service_id,
         if not store.dry_run:
             store.save(identity, {'checked_at': at, 'ids': ids,
                 'members': {key: kinds for key, kinds in members.items() if kinds}, 'retry_ids': retry_ids,
-                'version': 1, 'complete': True, 'cache_bypassed': True})
+                'version': 1, 'complete': diagnostics['count_shortfall'] == 0, 'cache_bypassed': True})
         return dict(key=identity, titles=len(ids), changes_checked=len(candidates), baseline=previous is None,
                     retry_titles=len(retry_ids), **diagnostics)
 

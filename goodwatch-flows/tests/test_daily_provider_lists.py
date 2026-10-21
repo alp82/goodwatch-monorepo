@@ -483,6 +483,7 @@ class DailyListTests(unittest.TestCase):
 
     def test_gb_partition_retry_changes_query_key_without_changing_its_vote_bounds(self):
         original = self.api.get
+        bounds, returned_ids = [], {int: set(), float: set()}
         def cached(path, **params):
             if not path.startswith('/discover/'):
                 return original(path, **params)
@@ -495,6 +496,8 @@ class DailyListTests(unittest.TestCase):
                 page = params['page']
                 fresh = type(low) is float  # HTTP serializes 50.0 on another origin query key.
                 ids = ([41, 42] if page == 1 else [43]) if fresh else ([41, 42] if page == 1 else [42, 43])
+                bounds.append((low, high))
+                returned_ids[type(low)].update(ids)
                 return dict(page=page, total_pages=2, total_results=3 if fresh or page == 1 else 4,
                             results=[{'id': i} for i in ids])
             return dict(page=1, total_pages=0, total_results=0, results=[])
@@ -504,6 +507,14 @@ class DailyListTests(unittest.TestCase):
         self.assertEqual((report['lists_completed'], report['lists_failed']), (1, 0), report)
         self.assertEqual(report['lists'][0]['titles'], 3)
         self.assertEqual(report['lists'][0]['query_retries'], 1)
+        integer_bounds = [(low, high) for low, high in bounds if type(low) is int]
+        float_bounds = [(low, high) for low, high in bounds if type(low) is float]
+        self.assertTrue(integer_bounds)
+        self.assertTrue(float_bounds)
+        self.assertTrue(all(low == 50 and high == 99 for low, high in integer_bounds))
+        self.assertTrue(all(low == 50.0 and high == 99 for low, high in float_bounds))
+        self.assertEqual(returned_ids[int], {41, 42, 43})
+        self.assertEqual(returned_ids[float], {41, 42, 43})
 
     def test_gb_amazon_shortfalls_from_all_three_jobs_require_independent_set_agreement(self):
         # Reported/returned counts in the actual Oct 18, 19, and 20 runs.
@@ -615,6 +626,30 @@ class DailyListTests(unittest.TestCase):
         checks = [path for path, _ in self.api.calls if path.endswith('/watch/providers')]
         self.assertIn('/tv/1723/watch/providers', checks)
         self.assertEqual(checks.count('/tv/42/watch/providers'), 2)  # Baseline and departure.
+
+    def test_shortfall_checkpoint_cannot_prove_the_next_days_new_title_was_absent(self):
+        original = self.api.get
+        phase = [1]
+        def discover(path, **params):
+            if not path.startswith('/discover/'):
+                return original(path, **params)
+            ids = list(range(1, 1000 if phase[0] == 1 else 1001))
+            if params['sort_by'] == 'first_air_date.desc':
+                ids.reverse()
+            page = params['page']
+            return dict(page=page, total_pages=50, total_results=1000,
+                        results=[{'id': i} for i in ids[(page - 1) * 20:page * 20]])
+        self.api.get = discover
+        first = self.run_day('2026-10-17T20:00:00', dry_run=False)
+        checkpoint = self.store.load('US:show:8')
+        self.assertEqual(first['lists'][0]['count_shortfall'], 1)
+        phase[0] = 2
+        second = self.run_day('2026-10-18T20:00:00', dry_run=False)
+        arrival = next(row for row in self.store.crate.history.values() if row['media_tmdb_id'] == 1000)
+        self.assertEqual((second['lists_completed'], second['lists_failed']), (1, 0))
+        self.assertEqual(arrival['appeared_precision'], 'unknown')
+        self.assertIs(checkpoint['complete'], False)
+        self.assertIs(self.store.load('US:show:8')['complete'], True)
 
     def test_complete_query_retry_can_cover_a_new_snapshot_total(self):
         original = self.api.get
