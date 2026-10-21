@@ -20,16 +20,16 @@
   ],
   "graphs": [
     {
-      "folder": "dist",
+      "folder": "dist-guest",
       "sourceMaps": 9,
-      "modules": 985,
+      "modules": 987,
       "sharedContractPresent": true,
       "webappOrServerCodePresent": false
     },
     {
       "folder": "dist-native",
       "sourceMaps": 2,
-      "modules": 2647,
+      "modules": 2651,
       "sharedContractPresent": true,
       "webappOrServerCodePresent": false
     }

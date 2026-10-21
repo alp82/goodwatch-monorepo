@@ -3,7 +3,7 @@ import { Animated, Image, PanResponder, View } from 'react-native';
 import type { Candidate, RoomCommand, RoomSnapshot, VoteValue } from '@goodwatch/yepwatch-contracts';
 import { Button, Heading, Notice, Panel, Row, Words, colors, useReducedMotion } from '../components/ui';
 import { nextCandidate } from '../core/room-state';
-import { episodeLabel } from './ShowProgress';
+import { episodeLabel } from '../core/episode';
 
 export function TitleCard({ candidate }: { candidate: Candidate }) {
   return <Panel>{candidate.posterUrl && <Image source={{ uri: candidate.posterUrl }} accessibilityLabel={`${candidate.title} poster`} resizeMode="contain" style={{ width: '100%', height: 250, backgroundColor: '#101010', borderRadius: 10 }} />}

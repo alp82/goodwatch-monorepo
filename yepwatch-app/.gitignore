@@ -48,3 +48,6 @@ test-results/
 artifacts/browser-traces/
 artifacts/lint.json
 .env
+
+# Separate retained simplified guest development export
+dist-guest/

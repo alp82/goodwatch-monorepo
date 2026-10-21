@@ -1,5 +1,7 @@
 /** Public origin only. This is never a database endpoint or embedded credential. */
 export const apiOrigin = (process.env.EXPO_PUBLIC_API_ORIGIN ?? 'https://yepwatch.com').replace(/\/$/, '');
+// Browser invitations stay on the participating app; native shares the configured public app host.
+export const appOrigin = (process.env.EXPO_PUBLIC_APP_ORIGIN ?? (typeof window !== 'undefined' && window.location?.origin ? window.location.origin : 'https://yepwatch.com')).replace(/\/$/, '');
 export const fixturesEnabled = process.env.EXPO_PUBLIC_ENABLE_FIXTURES === 'true';
 export const developmentNotice = process.env.EXPO_PUBLIC_DEVELOPMENT_NOTICE;
 export function apiUrl(path: string) {

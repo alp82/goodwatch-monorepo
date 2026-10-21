@@ -1,0 +1,19 @@
+{
+  "retainedFiles": 81,
+  "allUnchanged": true,
+  "httpChecks": [
+    {
+      "port": 8099,
+      "htmlAndScriptsUnchanged": true,
+      "scriptCount": 3
+    },
+    {
+      "port": 8100,
+      "htmlAndScriptsUnchanged": true,
+      "scriptCount": 3
+    }
+  ],
+  "fontLicenseUnchanged": true,
+  "tests": "dist-test on8097",
+  "newPlayable": "dist-guest on8101"
+}

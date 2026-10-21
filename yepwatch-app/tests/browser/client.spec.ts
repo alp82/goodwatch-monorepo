@@ -21,12 +21,16 @@ test('invitation intent, optional sign-in failure, browser guest admission and h
   await expect(page.getByText('GoodWatch sign-in is not connected yet.', { exact: false })).toBeVisible();
   expect(requests.find(r => r.path.endsWith('/member/start'))?.body).toEqual({ returnTo: '/r/JOIN-THIS' });
   await page.getByRole('button', { name: 'Continue as guest', exact: true }).click();
-  await expect(page.getByRole('textbox', { name: 'Room code or invitation link' })).toHaveValue('JOIN-THIS');
+  await expect(page.getByRole('textbox', { name: 'Room code or invitation link' })).toHaveCount(0);
   await page.getByRole('textbox', { name: 'Your nickname' }).fill('Alex');
   await page.getByRole('button', { name: 'Join room', exact: true }).click();
   await expect(page.getByText('Live connection unavailable', { exact: false })).toBeVisible();
-  await expect(page.getByText('Who’s watching where?')).toBeVisible();
+  await expect(page.getByText('Ready to pick?')).toBeVisible();
+  await expect(page.getByRole('textbox', { name: 'Find a show to continue' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Use movies & new shows' })).toBeVisible();
+  expect(requests.some(r => r.path.endsWith('/commands'))).toBe(false);
   expect(requests.find(r => r.path.endsWith('/join'))?.headers.authorization).toBeUndefined();
+  expect(requests.find(r => r.path.endsWith('/join'))?.body).toMatchObject({ inviteCode: 'JOIN-THIS' });
   const stored = await page.evaluate(() => sessionStorage.getItem('yepwatch.room.fixture-room'));
   expect(JSON.parse(stored!).token).toBe('');
   const before = requests.length; await page.waitForTimeout(1200); expect(requests.length).toBe(before);
@@ -39,7 +43,7 @@ test('fixture components cover mixed screens, all media kinds, accessible voting
   await expect(page.getByText('Fixture data only.', { exact: false })).toBeVisible();
   await expect(page.getByText('Our TV', { exact: true })).toBeVisible();
   await expect(page.getByText('Jo’s screen', { exact: true })).toBeVisible();
-  await expect(page.getByText('Movies · Shows to start · Shows to continue', { exact: false })).toBeVisible();
+  await expect(page.getByText('Movies · New shows', { exact: false })).toBeVisible();
   await page.getByRole('button', { name: 'Voting', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Pass tonight', exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Would watch', exact: true }).focus(); await page.keyboard.press('Enter');

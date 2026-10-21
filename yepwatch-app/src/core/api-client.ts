@@ -20,7 +20,7 @@ export class YepApi {
       const result: T | ApiError = await response.json();
       if (!response.ok) {
         const failure = result as ApiError;
-        throw new ApiFailure(failure.error?.code ?? 'outcome_unknown', failure.error?.message ?? 'YepWatch is temporarily unavailable.', failure.snapshot, response.status);
+        throw new ApiFailure(failure.error?.code ?? 'outcome_unknown', failure.error?.message ?? 'YepWatch is temporarily unavailable.', failure.snapshot, response.status, failure.error?.details);
       }
       return result as T;
     } catch (error) {
@@ -41,4 +41,3 @@ export class YepApi {
   ticket = (access: RoomAccess) => this.request<RealtimeTicket>(paths.realtimeTicket(access.roomId), {}, access);
   memberStart = (body: MemberStartRequest, access?: RoomAccess) => this.request<MemberStartResponse>(paths.memberStart, body, access);
 }
-

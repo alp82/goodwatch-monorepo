@@ -5,7 +5,9 @@ import { fixtureSnapshot } from '../../src/dev/fixtures';
 async function roomHarness(page: Page, initialStatus = 200) {
   const snapshot = fixtureSnapshot();
   snapshot.shared.phase = 'voting';
-  snapshot.shared.round = { version: 1, rosterVersion: 1, contextVersion: 1, candidateCount: 3, completed: false };
+  snapshot.shared.constraints.kinds = ['movie', 'show_start'];
+  snapshot.shared.candidates = snapshot.shared.candidates.filter(c => c.identity.kind !== 'show_continue');
+  snapshot.shared.round = { version: 1, rosterVersion: 1, contextVersion: 1, candidateCount: 2, completed: false };
   let status = initialStatus; let commandStatus = 200; let tickets = 0; let reads = 0;
   let hold = false; let release: (() => void) | undefined;
   const sockets: WebSocketRoute[] = [];

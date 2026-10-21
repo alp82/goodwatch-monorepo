@@ -11,7 +11,7 @@ const resolutions = ['react', 'react-native', 'react-native-web', 'expo'].map(na
 });
 function files(root) { return fs.readdirSync(root, { withFileTypes: true }).flatMap(e => e.isDirectory() ? files(path.join(root, e.name)) : [path.join(root, e.name)]); }
 function mapSources(map) { return [...(map.sources ?? []), ...(map.sections ?? []).flatMap(section => mapSources(section.map))]; }
-const graphs = ['dist', 'dist-native'].map(folder => {
+const graphs = [process.env.WEB_EXPORT_DIR ?? 'dist', process.env.NATIVE_EXPORT_DIR ?? 'dist-native'].map(folder => {
   const maps = files(path.join(app, folder)).filter(file => file.endsWith('.map'));
   assert.ok(maps.length, `Export ${folder} with --source-maps first`);
   const sources = maps.flatMap(file => mapSources(JSON.parse(fs.readFileSync(file, 'utf8')))).filter(s => typeof s === 'string');

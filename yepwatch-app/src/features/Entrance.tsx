@@ -13,7 +13,7 @@ import { queryClient, roomKey } from '../core/providers';
 import type { GuestAdmissionRequest } from '@goodwatch/yepwatch-contracts';
 
 export function Entrance({ invite }: { invite?: string }) {
-  const [guest, setGuest] = useState(false); const [nickname, setNickname] = useState(''); const [code, setCode] = useState(invite ?? '');
+  const [guest, setGuest] = useState(false); const [joining, setJoining] = useState(Boolean(invite)); const [nickname, setNickname] = useState(''); const [code, setCode] = useState(invite ?? '');
   const [busy, setBusy] = useState(false); const [error, setError] = useState('');
   const [checkingInvite, setCheckingInvite] = useState(Boolean(invite)); const [recoveryBlocked, setRecoveryBlocked] = useState(false); const [checkVersion, setCheckVersion] = useState(0);
   const [admission, setAdmission] = useState<{ request: GuestAdmissionRequest; code: string } | null>(null);
@@ -96,11 +96,12 @@ export function Entrance({ invite }: { invite?: string }) {
     {error && <Notice error>{error}</Notice>}
     {checkingInvite && <Notice>Checking whether you’re already in this room…</Notice>}
     {recoveryBlocked && <Button secondary onPress={() => { setRecoveryBlocked(false); setCheckingInvite(true); setError(''); setCheckVersion(v => v + 1); }}>Retry membership check</Button>}
-    {!guest ? <Panel><Words>Bring your GoodWatch account, or jump straight in.</Words><Button onPress={() => void signIn()} disabled={busy || checkingInvite || recoveryBlocked}>Sign in with GoodWatch</Button><Button secondary onPress={() => setGuest(true)} disabled={busy || checkingInvite || recoveryBlocked}>Continue as guest</Button><Words muted>Your individual votes stay private. Shared results can still reveal preferences in small groups.</Words></Panel> : <Panel>
-      {!invite && <Words muted>To create a room, add your nickname and leave the room code empty. Enter a code to join friends instead.</Words>}
+    {!guest ? <Panel><Button onPress={() => setGuest(true)} disabled={busy || checkingInvite || recoveryBlocked}>Continue as guest</Button><Button secondary onPress={() => void signIn()} disabled={busy || checkingInvite || recoveryBlocked}>Sign in with GoodWatch</Button><Words muted>GoodWatch sign-in and saved show progress are not connected yet.</Words><Words muted>Your individual votes stay private. Shared results can still reveal preferences in small groups.</Words></Panel> : <Panel>
+      <Words>{invite || joining ? 'Join your friends' : 'Create a room'}</Words>
       <Field label="Your nickname" value={nickname} onChange={v => { if (!admission) setNickname(v); }} placeholder="What should the room call you?" />
-      <Field label="Room code or invitation link" value={code} onChange={v => { if (!admission) setCode(v); }} placeholder="Paste a link or enter a code" />
-      <Row><Button disabled={busy || !nickname.trim()} onPress={() => void enter(Boolean(invite || code.trim()))}>{busy ? 'Connecting…' : admission ? 'Retry room request' : invite || code.trim() ? 'Join room' : 'Create a room'}</Button><Button secondary disabled={busy || Boolean(admission)} onPress={() => setGuest(false)}>Back</Button></Row>
+      {!invite && joining && <Field label="Room code or invitation link" value={code} onChange={v => { if (!admission) setCode(v); }} placeholder="Paste a link or enter a code" />}
+      <Row><Button disabled={busy || !nickname.trim() || (joining && !code.trim())} onPress={() => void enter(Boolean(invite || joining))}>{busy ? 'Connecting…' : admission ? 'Retry room request' : invite || joining ? 'Join room' : 'Create a room'}</Button><Button secondary disabled={busy || Boolean(admission)} onPress={() => setGuest(false)}>Back</Button></Row>
+      {!invite && <Button secondary disabled={busy || Boolean(admission)} onPress={() => { setJoining(v => !v); setCode(''); setError(''); }}>{joining ? 'Create a room instead' : 'Join with a code'}</Button>}
       {admission && <Words muted>Your room request is awaiting confirmation. Retry keeps the same identity and room intent.</Words>}
       <Words muted>One couch, separate screens, or a bit of both. No streaming account connection needed.</Words>
     </Panel>}

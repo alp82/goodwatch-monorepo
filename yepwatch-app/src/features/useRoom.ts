@@ -5,6 +5,7 @@ import * as Crypto from 'expo-crypto';
 import type { CommandEnvelope, RoomCommand, RoomSnapshot } from '@goodwatch/yepwatch-contracts';
 import { api, ApiFailure } from '../core/api';
 import { isRoomExpired } from '../core/errors';
+import { recoveryMessage } from '../core/recovery';
 import { loadAccess, type RoomAccess } from '../core/credentials';
 import { queryClient, roomKey } from '../core/providers';
 import { CommandQueue, mergeShared, mergeSnapshot } from '../core/room-state';
@@ -65,15 +66,16 @@ export function useRoom(roomId: string) {
   }, [access, roomId, refetch, checkExpiry, expire]);
   async function send(command?: RoomCommand) {
     const snapshot = queryClient.getQueryData<RoomSnapshot>(roomKey(roomId));
-    if (checkExpiry() || !snapshot || !access || queue.current.busy || privateError) return;
+    if (checkExpiry() || !snapshot || !access || queue.current.busy || privateError) return false;
     setBusy(true); setError('');
     if (command?.type === 'vote' && command.value !== null) setPendingId(command.candidateId);
-    try { const value = await queue.current.send(command, snapshot, body => api.command(access, body)); apply(value); setPendingId(undefined); }
+    try { const value = await queue.current.send(command, snapshot, body => api.command(access, body)); apply(value); setPendingId(undefined); return !terminal.current; }
     catch (e) {
-      if (checkExpiry(e)) return;
+      if (checkExpiry(e)) return false;
       if (e instanceof ApiFailure && e.snapshot) apply(e.snapshot);
-      setError(e instanceof Error ? e.message : 'This action could not be confirmed.');
+      setError(recoveryMessage(e));
       if (!queue.current.pending) { setPendingId(undefined); void refetch().catch(() => undefined); }
+      return false;
     } finally { setPending(terminal.current ? null : queue.current.pending); setBusy(false); }
   }
   return { room, access, expired, connection, error, privateError, busy, pendingId, pending, send, refetch, reconnect: () => { if (!checkExpiry()) realtime.current?.start(); } };

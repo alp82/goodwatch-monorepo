@@ -1,0 +1,9 @@
+{
+  "src/app/room/[id].tsx": "60ab8a2a62553fb1303899bebbd05f364c6b17e53d5ff03bf6f65bdf545a420c",
+  "src/core/errors.ts": "e8006ef9f1b8a815690c28e33a7934d32fcf0821ecd83619020fd55eacb35afa",
+  "src/core/realtime.ts": "b42ac19715100a10e66da61f403bab17127ecc7e68e56835e03538836ede38fe",
+  "src/features/useRoom.ts": "4cc1503f72577c7073607ac86768ee78d9d28f83fb5ee2296a7d2ce79b5bcfdb",
+  "tests/realtime.test.ts": "e79048621145a22ddc928e8d79083e13ad598299e87d91b920598ad706bca353",
+  "tests/browser/expiry.spec.ts": "1b969d09c4a67611340886ebbcc31123bd0d8d1c6aa3168f9f945cee727bd1e8",
+  "docs/verification.md": "6cf95dd66aab812e38633e80f25b99e08d4f031e4a47472d24f08fd3304b00e0"
+}

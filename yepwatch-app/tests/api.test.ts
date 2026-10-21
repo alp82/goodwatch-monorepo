@@ -32,3 +32,8 @@ test('the deadline covers a real response that flushes headers then stalls its b
   server.closeAllConnections(); await request; await new Promise<void>(resolve => server.close(() => resolve())); globalThis.setTimeout = original;
   assert.equal(result, true);
 });
+test('structured public recovery details survive the HTTP adapter', async () => {
+  const details = { type: 'access', reason: 'member_auth_unavailable', actions: ['use_guest_modes'] };
+  const api = new YepApi((async () => Response.json({ error: { code: 'member_required', message: 'Sign in required', retryable: false, details } }, { status: 403 })) as typeof fetch);
+  await assert.rejects(api.snapshot(access), e => e instanceof ApiFailure && e.code === 'member_required' && JSON.stringify(e.details) === JSON.stringify(details));
+});

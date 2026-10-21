@@ -1,6 +1,6 @@
-import type { RoomSnapshot } from '@goodwatch/yepwatch-contracts';
+import type { FailureDetails, RoomSnapshot } from '@goodwatch/yepwatch-contracts';
 export class ApiFailure extends Error {
-  constructor(readonly code: string, message: string, readonly snapshot?: RoomSnapshot, readonly status?: number) { super(message); this.name = 'ApiFailure'; }
+  constructor(readonly code: string, message: string, readonly snapshot?: RoomSnapshot, readonly status?: number, readonly details?: FailureDetails) { super(message); this.name = 'ApiFailure'; }
 }
 
 /** HTTP expiry is authoritative; WebSocket lease expiry alone is not. */
