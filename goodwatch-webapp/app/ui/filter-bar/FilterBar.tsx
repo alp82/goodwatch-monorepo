@@ -20,7 +20,9 @@ import {
 import type { FilterGroupsData } from "./FilterGroups"
 import { FiltersSheet } from "./FiltersSheet"
 // PROTOTYPE - throwaway: the member preview of the Filters sheet prototype.
-import { PREVIEW_SERVICES, useMemberPreview } from "./FilterGroups.prototype"
+import { PREVIEW_SERVICES, useFilterSheetVariant, useMemberPreview } from "./FilterGroups.prototype"
+import { FiltersRow, ForYouSortSplit } from "./FilterBar.prototype"
+import { FILTER_ACCENTS } from "./labels"
 import { FOR_YOU_SWITCH, ForYouSwitch, useForYouUnderBestMatch } from "./ForYou"
 import {
 	type SortOption,
@@ -88,6 +90,8 @@ export function FilterBar(props: FilterBarProps) {
 	const people = usePeopleNames(state.people ?? [], "")
 	// PROTOTYPE: ?as=member pretends Netflix, Prime Video and Disney+ are saved when nothing is.
 	const memberPreview = useMemberPreview()
+	// PROTOTYPE: the variants also try the bar: For you | Sort split, Filters merged with the chips.
+	const protoBar = useFilterSheetVariant() !== "now"
 	const myIds =
 		memberPreview && services.ids.length === 0
 			? PREVIEW_SERVICES.filter((id) =>
@@ -191,9 +195,24 @@ export function FilterBar(props: FilterBarProps) {
 						hides={notSeenHides}
 						onChange={(on) => filters.set({ notSeenYet: on })}
 					/>
-					{forYou && <ForYouSwitch forYou={forYou} />}
+					{forYou && !protoBar && <ForYouSwitch forYou={forYou} />}
 					</>
 					)}
+					{protoBar ? (
+						<ForYouSortSplit
+							forYou={props.signUpKey ? undefined : forYou}
+							sort={{
+								options: sorts,
+								value: sort,
+								onChange: pick,
+								footnote: sortFootnote,
+								footer: props.sortFooter,
+								open: sortOpen,
+								onOpenChange: setSortOpen,
+								outsideIgnore: FOR_YOU_SWITCH,
+							}}
+						/>
+					) : (
 					<SortControl
 						options={sorts}
 						value={sort}
@@ -204,6 +223,8 @@ export function FilterBar(props: FilterBarProps) {
 						onOpenChange={setSortOpen}
 						outsideIgnore={FOR_YOU_SWITCH}
 					/>
+					)}
+					{!protoBar && (
 					<div className="ml-auto flex items-center gap-2.5">
 						{props.rowTrail}
 						<FiltersButton
@@ -212,7 +233,21 @@ export function FilterBar(props: FilterBarProps) {
 							onClick={() => setSheetOpen(true)}
 						/>
 					</div>
+					)}
 				</div>
+				{protoBar ? (
+					<div className="mt-3">
+						<FiltersRow
+							count={secondaryCount}
+							chips={displayChips}
+							state={state}
+							onChange={onChange}
+							onOpen={() => setSheetOpen(true)}
+							onClear={filters.clearSecondary}
+							expanded={sheetOpen}
+						/>
+					</div>
+				) : (
 				<FilterChips
 					chips={displayChips}
 					state={state}
@@ -221,6 +256,7 @@ export function FilterBar(props: FilterBarProps) {
 					lead={props.chipLead}
 					className="mt-3"
 				/>
+				)}
 				<HiddenInsight
 					counts={counts}
 					state={state}
@@ -253,12 +289,28 @@ export function FilterBar(props: FilterBarProps) {
 										aria-label={`Remove ${chip.label}`}
 										className="flex h-8 items-center gap-1.5 rounded-full bg-white/[0.07] pl-3 pr-2 text-sm text-gray-100 cursor-pointer"
 									>
+										{protoBar && (
+											<span
+												className={`h-1.5 w-1.5 rounded-full ${FILTER_ACCENTS[chip.group].dot}`}
+											/>
+										)}
 										{chip.label}
 										<XMarkIcon className="h-3.5 w-3.5 text-gray-500" />
 									</button>
 								</TitleChipPreview>
 							</li>
 						))}
+						{protoBar && displayChips.length > 1 && (
+							<li className="shrink-0">
+								<button
+									type="button"
+									onClick={filters.clearSecondary}
+									className="flex h-8 items-center px-2 text-sm text-gray-500 cursor-pointer"
+								>
+									Clear
+								</button>
+							</li>
+						)}
 					</ul>
 				)}
 				<Slab

@@ -404,7 +404,10 @@ export function SortControl<K extends string>({
 	open: openProp,
 	onOpenChange,
 	outsideIgnore,
+	bare = false,
 }: {
+	/** PROTOTYPE: no shell of its own, for the For you | Sort split control. */
+	bare?: boolean
 	options: SortOption<K>[]
 	value: K
 	onChange: (key: K) => void
@@ -519,7 +522,7 @@ export function SortControl<K extends string>({
 						setOpen(true)
 					}
 				}}
-				className={`flex items-center text-sm cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${sm ? "h-9 gap-1.5 px-3 whitespace-nowrap" : "h-12 w-52 gap-2 px-4"} ${SHELL} ${open ? "ring-white/25" : "hover:ring-white/20"}`}
+				className={`flex items-center text-sm cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${sm ? "h-9 gap-1.5 px-3 whitespace-nowrap" : bare ? "h-12 gap-2 px-4 whitespace-nowrap" : "h-12 w-52 gap-2 px-4"} ${bare ? `rounded-r-2xl ${open ? "bg-white/[0.06]" : "hover:bg-white/[0.05]"}` : `${SHELL} ${open ? "ring-white/25" : "hover:ring-white/20"}`}`}
 			>
 				<ArrowsUpDownIcon
 					className={`h-4 w-4 shrink-0 ${chosen?.taste ? "text-amber-400" : "text-gray-400"}`}

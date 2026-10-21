@@ -1,37 +1,48 @@
-// PROTOTYPE - throwaway. Round 2 of the Filters sheet layouts (desktop side sheet and phone sheet), switched with
-// ?variant=, the group order with ?order=, and a signed-in preview with ?as=member. "now" is the live list. A search
-// in the sheet falls back to the live list. Round 1 (A-D) is in commit b877654c.
+// PROTOTYPE - throwaway. Round 3 of the Filters sheet layouts (desktop side sheet and phone sheet), switched with
+// ?variant=, the group order with ?order= (What first by default), and a signed-in preview with ?as=member. "now" is
+// the live list. A search in the sheet falls back to the live list. Round 1 (A-D) is b877654c, round 2 (E-G) 9eb7afe4.
 //
-// E  Essentials, then everything: five essentials trimmed, one "All filters" opens the rest in place, in full.
-// F  Unfolding tiles: essentials, then tiles; a tile opens under its row, in place.
-// G  Compact rows: one row per group with hover; small controls sit in the row, big groups fold.
+// F  Tiles that open in place: essentials as cards, every other filter a tile that opens under its row.
+// H  Every filter a tile: the same treatment for all; tiles with something set, and Movies or shows and Genre, open.
+// I  Add filters as you go: only what's set (plus Movies or shows and Genre) shows; "Add a filter" picks the next one.
 //
-// Shared: calmer chips, segmented Movies or shows + Anime, threshold bars for score and taste match, range sliders
-// for year and length (the legacy minYear/maxYear and minRuntime/maxRuntime filters, which still apply), merged
-// TMDB TV genres, searchable service pills, inline search for Similar to and Cast and crew.
+// Shared: cards per filter with Clear, segmented Movies or shows + Anime, threshold bars for score and taste match,
+// range sliders for year and length (the legacy minYear/maxYear and minRuntime/maxRuntime filters), merged TMDB TV
+// genres, streaming by country (anywhere, my services, all in a country, or some), fast title and people pickers.
 import {
 	ChevronDownIcon,
 	MagnifyingGlassIcon,
+	PlusIcon,
 	XMarkIcon,
 } from "@heroicons/react/20/solid"
 import { useSearchParams } from "@remix-run/react"
-import { motion } from "framer-motion"
-import { type ReactNode, useEffect, useMemo, useState } from "react"
+import { useQuery } from "@tanstack/react-query"
+import { AnimatePresence, motion } from "framer-motion"
+import {
+	type ReactNode,
+	type RefObject,
+	useEffect,
+	useLayoutEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react"
 import { ladderStepFor } from "~/domain/age-content"
-import type { FilterName, FilterState } from "~/domain/filter-state"
+import { type FilterName, type FilterState, dropFilter } from "~/domain/filter-state"
 import { productionCountryName } from "~/domain/production-country"
 import { goodwatchVibeIndex } from "~/utils/ratings"
-import type { TitleKey } from "~/utils/title-key"
+import { type TitleKey, titleKey } from "~/utils/title-key"
 import {
 	type FilterGroupsData,
 	type Group,
 	NeedsTaste,
 	type Option,
-	OptionPoster,
 	type Refusal,
 } from "./FilterGroups"
+import { TitleChipPreview } from "./TitleChipPreview"
 import {
 	ANIME_LABELS,
+	type ActiveChip,
 	FILTER_ACCENTS,
 	MATCH_LABELS,
 	RELEASED_LABELS,
@@ -44,7 +55,6 @@ import {
 	type NamedPerson,
 	type NamedTitle,
 	PROVIDER_LOGO,
-	usePeopleNames,
 	useTitleNames,
 } from "./useFilterData"
 
@@ -52,9 +62,9 @@ import {
 
 export const FILTER_SHEET_VARIANTS = {
 	now: "Live today",
-	E: "Essentials, then everything",
-	F: "Unfolding tiles",
-	G: "Compact rows",
+	F: "Tiles that open in place",
+	H: "Every filter a tile",
+	I: "Add filters as you go",
 } as const
 export type FilterSheetVariant = keyof typeof FILTER_SHEET_VARIANTS
 
@@ -62,25 +72,27 @@ export type FilterSheetVariant = keyof typeof FILTER_SHEET_VARIANTS
 type Key = FilterName | "length"
 
 export const FILTER_SHEET_ORDERS: Record<string, { label: string; keys: Key[] }> = {
-	where: {
-		label: "Where, what, how good",
-		keys: ["services", "type", "genres", "moods", "minScore", "released", "length", "minMatch", "themes", "styles", "similarTo", "people", "ageLimit", "productionCountries", "loved", "disliked"],
-	},
 	what: {
 		label: "What first",
-		keys: ["type", "genres", "moods", "minScore", "services", "released", "length", "themes", "styles", "minMatch", "people", "similarTo", "ageLimit", "productionCountries", "loved", "disliked"],
+		keys: ["type", "genres", "moods", "minScore", "services", "released", "length", "themes", "styles", "minMatch", "people", "ageLimit", "productionCountries", "similarTo", "loved", "disliked"],
+	},
+	where: {
+		label: "Where, what, how good",
+		keys: ["services", "type", "genres", "moods", "minScore", "released", "length", "minMatch", "themes", "styles", "people", "ageLimit", "productionCountries", "similarTo", "loved", "disliked"],
 	},
 	quick: {
 		label: "Quick controls first",
-		keys: ["type", "minScore", "services", "genres", "moods", "released", "length", "minMatch", "ageLimit", "themes", "styles", "similarTo", "people", "productionCountries", "loved", "disliked"],
+		keys: ["type", "minScore", "services", "genres", "moods", "released", "length", "minMatch", "ageLimit", "themes", "styles", "people", "productionCountries", "similarTo", "loved", "disliked"],
 	},
 	vibe: {
 		label: "Vibe first",
-		keys: ["moods", "genres", "type", "minScore", "services", "styles", "themes", "minMatch", "released", "length", "similarTo", "loved", "disliked", "people", "ageLimit", "productionCountries"],
+		keys: ["moods", "genres", "type", "minScore", "services", "styles", "themes", "minMatch", "released", "length", "people", "ageLimit", "productionCountries", "similarTo", "loved", "disliked"],
 	},
 }
 
 const ESSENTIALS = new Set<Key>(["services", "type", "genres", "moods", "minScore"])
+/** What H and I show open before anything is set. */
+const OPEN_AT_START = new Set<Key>(["type", "genres"])
 
 export function useFilterSheetVariant(): FilterSheetVariant {
 	const [params] = useSearchParams()
@@ -90,7 +102,7 @@ export function useFilterSheetVariant(): FilterSheetVariant {
 
 export function useFilterSheetOrder(): Key[] {
 	const [params] = useSearchParams()
-	return (FILTER_SHEET_ORDERS[params.get("order") ?? ""] ?? FILTER_SHEET_ORDERS.where).keys
+	return (FILTER_SHEET_ORDERS[params.get("order") ?? ""] ?? FILTER_SHEET_ORDERS.what).keys
 }
 
 /** ?as=member: the sheet and bar as a member with services and taste sees them, over this visitor's results. */
@@ -107,7 +119,8 @@ export function FilterSheetSwitcher() {
 	const [params, setParams] = useSearchParams()
 	const keys = Object.keys(FILTER_SHEET_VARIANTS) as FilterSheetVariant[]
 	const raw = params.get("variant")
-	const current: FilterSheetVariant = raw && raw in FILTER_SHEET_VARIANTS ? (raw as FilterSheetVariant) : "now"
+	const current: FilterSheetVariant =
+		raw && raw in FILTER_SHEET_VARIANTS ? (raw as FilterSheetVariant) : "now"
 	const set = (name: string, value: string) => {
 		const p = new URLSearchParams(params)
 		p.set(name, value)
@@ -129,7 +142,7 @@ export function FilterSheetSwitcher() {
 	if (process.env.NODE_ENV === "production") return null
 	const member = params.get("as") === "member"
 	return (
-		<div className="fixed top-2 left-1/2 z-[2000] flex w-max max-w-[96vw] -translate-x-1/2 lg:left-4 lg:translate-x-0 flex-wrap items-center justify-center gap-1.5 rounded-3xl bg-white px-2 py-1.5 text-[13px] font-semibold text-black shadow-2xl ring-2 ring-fuchsia-500">
+		<div className="fixed top-2 left-1/2 z-[2000] flex w-max max-w-[96vw] -translate-x-1/2 flex-wrap items-center justify-center gap-1.5 rounded-3xl bg-white px-2 py-1.5 text-[13px] font-semibold text-black shadow-2xl ring-2 ring-fuchsia-500 lg:left-4 lg:translate-x-0">
 			<span className="flex items-center">
 				<button type="button" onClick={() => go(-1)} className="rounded-full px-2 py-0.5 hover:bg-neutral-200" aria-label="Previous variant">
 					←
@@ -143,7 +156,7 @@ export function FilterSheetSwitcher() {
 			</span>
 			<select
 				aria-label="Group order"
-				value={params.get("order") ?? "where"}
+				value={params.get("order") ?? "what"}
 				onChange={(e) => set("order", e.target.value)}
 				className="rounded-full border-0 bg-neutral-100 py-0.5 pr-7 pl-2.5 text-[13px] font-semibold text-black"
 			>
@@ -186,6 +199,7 @@ type Ctx = Props & {
 	order: Key[]
 	summaries: Partial<Record<Key, string>>
 	set: (patch: Partial<FilterState>) => void
+	replace: (state: FilterState) => void
 }
 
 const YEAR_MIN = 1920
@@ -225,6 +239,15 @@ function lengthRange(state: FilterState): [number, number] {
 const fmtLen = (m: number) =>
 	m >= LEN_MAX ? "4 h+" : m < 60 ? `${m} min` : `${Math.floor(m / 60)} h${m % 60 ? ` ${m % 60}` : ""}`
 
+/**
+ * Whether "All services in <country>" is on. The server folds duplicate services into base ones, so the list that
+ * comes back is shorter than the one sent; the prototype remembers the choice instead (production would want a real
+ * "streaming anywhere in the country" option).
+ */
+let allServicesOn = false
+const allPicked = (data: FilterGroupsData) =>
+	allServicesOn && !data.state.onMyServices && (data.state.services?.length ?? 0) > 0
+
 function useSummaries(p: Props): Partial<Record<Key, string>> {
 	const { state, ladder } = p.data
 	const chips = activeChips(state, {
@@ -246,6 +269,7 @@ function useSummaries(p: Props): Partial<Record<Key, string>> {
 	const [ylo, yhi] = yearRange(state)
 	const yearsSet = state.legacy?.minYear || state.legacy?.maxYear
 	const [llo, lhi] = lengthRange(state)
+	const country = productionCountryName(state.streamingCountry ?? p.data.streamingCountry ?? "US")
 	return {
 		type:
 			state.anime === "any"
@@ -255,7 +279,11 @@ function useSummaries(p: Props): Partial<Record<Key, string>> {
 		minMatch: MATCH_LABELS[state.minMatch as keyof typeof MATCH_LABELS] ?? `${state.minMatch}%+`,
 		released: yearsSet ? `${ylo}–${yhi >= YEAR_MAX ? "now" : yhi}` : RELEASED_LABELS[state.released],
 		length: llo === 0 && lhi >= LEN_MAX ? "Any length" : `${fmtLen(llo)} – ${fmtLen(lhi)}`,
-		services: state.onMyServices ? "My services" : list("services", "Everywhere"),
+		services: state.onMyServices
+			? "My services"
+			: allPicked(p.data)
+				? `Streaming in ${country}`
+				: list("services", "Anywhere"),
 		genres: list("genres", "Any"),
 		moods: list("moods", "Any"),
 		themes: list("themes", "Any"),
@@ -279,8 +307,19 @@ function isSet(ctx: Ctx, k: Key): boolean {
 	return (ctx.groups.find((g) => g.key === k)?.badge ?? 0) > 0
 }
 
+/** The state without this group's choice. */
+function cleared(ctx: Ctx, k: Key): FilterState {
+	const s = ctx.data.state
+	if (k === "length") return { ...s, ...legacyPatch(s, { minRuntime: null, maxRuntime: null }) }
+	if (k === "released") return { ...s, released: "any", ...legacyPatch(s, { minYear: null, maxYear: null }) }
+	if (k === "type") return { ...s, type: "all", anime: "any" }
+	if (k === "services") return { ...s, onMyServices: false, services: undefined }
+	if (k === "ageLimit") return dropFilter(dropFilter(s, "ageLimit"), "content")
+	return dropFilter(s, k)
+}
+
 const TITLES: Record<Key, string> = {
-	services: "Streaming services",
+	services: "Streaming",
 	type: "Movies or shows",
 	genres: "Genre",
 	moods: "Mood",
@@ -302,6 +341,26 @@ const TITLES: Record<Key, string> = {
 	content: "Content",
 }
 
+/** One line on what a filter does, for the picker in I. */
+const HINTS: Partial<Record<Key, string>> = {
+	services: "Where you can watch it",
+	type: "Movies, shows, anime",
+	genres: "Drama, comedy, sci-fi…",
+	moods: "Funny, scary, feel-good…",
+	minScore: "Only well-rated titles",
+	minMatch: "How well it fits your taste",
+	released: "A year range or a decade",
+	length: "Short movies, short episodes",
+	themes: "Crime, family, the future…",
+	styles: "Slow burn, fast-paced…",
+	similarTo: "Like titles you pick",
+	people: "Actors and directors",
+	ageLimit: "Age rating and content",
+	productionCountries: "Where it was made",
+	loved: "Steer toward titles you loved",
+	disliked: "Steer away from titles",
+}
+
 const accent = (k: Key) => (k === "length" ? "bg-sky-400" : FILTER_ACCENTS[k].dot)
 
 // ---------------------------------------------------------------- atoms
@@ -310,7 +369,7 @@ const compact = (n: number) =>
 	n >= 10000 ? `${Math.round(n / 1000)}k` : n >= 1000 ? `${(n / 1000).toFixed(1).replace(/\.0$/, "")}k` : String(n)
 
 /** The calm chip: 32 px, the count quiet, white when on. */
-function Chip({ o }: { o: Option }) {
+function Chip({ o, img }: { o: Option; img?: string | null }) {
 	const dead = o.disabled || (!o.active && o.count === 0)
 	return (
 		<motion.button
@@ -319,7 +378,7 @@ function Chip({ o }: { o: Option }) {
 			aria-disabled={o.disabled || undefined}
 			whileTap={o.disabled ? undefined : TAP}
 			onClick={() => !o.disabled && o.toggle()}
-			className={`flex h-8 items-center gap-1.5 rounded-full px-3 text-[13px] whitespace-nowrap outline-none transition-colors focus-visible:ring-2 focus-visible:ring-amber-400 ${o.disabled ? "cursor-not-allowed" : "cursor-pointer"} ${
+			className={`flex h-8 items-center gap-1.5 rounded-full text-[13px] whitespace-nowrap outline-none transition-colors focus-visible:ring-2 focus-visible:ring-amber-400 ${img !== undefined ? "pr-3 pl-1" : "px-3"} ${o.disabled ? "cursor-not-allowed" : "cursor-pointer"} ${
 				o.active
 					? "bg-white font-semibold text-gray-950"
 					: dead
@@ -327,6 +386,12 @@ function Chip({ o }: { o: Option }) {
 						: "bg-white/[0.06] text-gray-200 hover:bg-white/[0.11] hover:text-white"
 			}`}
 		>
+			{img !== undefined &&
+				(img ? (
+					<img src={img} alt="" className="h-6 w-6 rounded-full object-cover" />
+				) : (
+					<span className="h-6 w-6 rounded-full bg-white/10" />
+				))}
 			{o.swatch}
 			{o.label}
 			{!o.active && o.count !== null && (
@@ -336,7 +401,7 @@ function Chip({ o }: { o: Option }) {
 	)
 }
 
-function More({ hidden, open, onClick }: { hidden: number; open: boolean; onClick: () => void }) {
+function More({ hidden, open, onClick, label }: { hidden: number; open: boolean; onClick: () => void; label?: string }) {
 	return (
 		<button
 			type="button"
@@ -344,7 +409,7 @@ function More({ hidden, open, onClick }: { hidden: number; open: boolean; onClic
 			aria-expanded={open}
 			className="flex h-8 items-center gap-1 rounded-full px-2.5 text-[13px] font-medium text-amber-300/90 cursor-pointer outline-none hover:text-amber-200 focus-visible:ring-2 focus-visible:ring-amber-400"
 		>
-			{open ? "Show fewer" : `+${hidden} more`}
+			{open ? "Show fewer" : (label ?? `+${hidden} more`)}
 		</button>
 	)
 }
@@ -404,7 +469,7 @@ function Segmented<T extends string>({
 						role="radio"
 						aria-checked={on}
 						onClick={() => onChange(o.id)}
-						className={`relative flex items-center justify-center gap-1.5 rounded-[10px] px-2 whitespace-nowrap cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${small ? "text-xs" : "text-[13px]"} ${on ? "font-semibold text-gray-950" : "text-gray-300 hover:bg-white/[0.05] hover:text-white"}`}
+						className={`relative flex min-w-0 items-center justify-center gap-1.5 rounded-[10px] px-2 whitespace-nowrap cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${small ? "text-xs" : "text-[13px]"} ${on ? "font-semibold text-gray-950" : "text-gray-300 hover:bg-white/[0.05] hover:text-white"}`}
 					>
 						{on && (
 							<motion.span
@@ -413,7 +478,7 @@ function Segmented<T extends string>({
 								className="absolute inset-0 rounded-[10px] bg-white"
 							/>
 						)}
-						<span className="relative">{o.label}</span>
+						<span className="relative truncate">{o.label}</span>
 						{!on && o.count != null && (
 							<span className="relative text-[11px] tabular-nums text-gray-500">{compact(o.count)}</span>
 						)}
@@ -424,10 +489,7 @@ function Segmented<T extends string>({
 	)
 }
 
-/**
- * "And up" as a bar: one segment per step, every segment from the chosen one to the right lit, so the bar reads as
- * the part of the scale that stays in.
- */
+/** "And up" as a bar: every segment from the chosen one to the right lit. */
 function ThresholdBar({
 	steps,
 	value,
@@ -450,11 +512,7 @@ function ThresholdBar({
 		steps.findIndex((s) => s.v === value),
 	)
 	return (
-		<div
-			role="radiogroup"
-			aria-label={label}
-			className={`grid auto-cols-fr grid-flow-col gap-1 ${disabled ? "opacity-40" : ""}`}
-		>
+		<div role="radiogroup" aria-label={label} className={`grid auto-cols-fr grid-flow-col gap-1 ${disabled ? "opacity-40" : ""}`}>
 			{steps.map((s, i) => {
 				const lit = i >= at && value !== 0
 				const on = i === at
@@ -469,12 +527,8 @@ function ThresholdBar({
 						onClick={() => onChange(s.v)}
 						className="group flex flex-col items-stretch gap-1.5 rounded-md py-1 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-amber-400 disabled:cursor-not-allowed"
 					>
-						<span
-							className={`h-2 rounded-full transition-colors ${lit ? color(s.v) : on ? "bg-white" : "bg-white/[0.09] group-hover:bg-white/20"}`}
-						/>
-						<span
-							className={`text-left text-[12px] leading-tight ${on ? "font-semibold text-white" : "text-gray-400 group-hover:text-gray-200"}`}
-						>
+						<span className={`h-2 rounded-full transition-colors ${lit ? color(s.v) : on ? "bg-white" : "bg-white/[0.09] group-hover:bg-white/20"}`} />
+						<span className={`text-left text-[12px] leading-tight ${on ? "font-semibold text-white" : "text-gray-400 group-hover:text-gray-200"}`}>
 							{s.label}
 							{!on && n != null && <span className="ml-1 text-[11px] text-gray-600">{compact(n)}</span>}
 						</span>
@@ -524,68 +578,60 @@ function RangeSlider({
 			</div>
 			<div className="relative h-6">
 				<div className="absolute inset-x-0 top-[10px] h-1 rounded-full bg-white/10" />
-				<div
-					className={`absolute top-[10px] h-1 rounded-full ${full ? "bg-white/25" : "bg-amber-400"}`}
-					style={{ left: `${pct(v[0])}%`, right: `${100 - pct(v[1])}%` }}
-				/>
-				<input
-					type="range"
-					aria-label={`${label} from`}
-					min={min}
-					max={max}
-					step={step}
-					value={v[0]}
-					onChange={(e) => setV([Math.min(Number(e.target.value), v[1] - step), v[1]])}
-					className={thumb}
-				/>
-				<input
-					type="range"
-					aria-label={`${label} to`}
-					min={min}
-					max={max}
-					step={step}
-					value={v[1]}
-					onChange={(e) => setV([v[0], Math.max(Number(e.target.value), v[0] + step)])}
-					className={thumb}
-				/>
+				<div className={`absolute top-[10px] h-1 rounded-full ${full ? "bg-white/25" : "bg-amber-400"}`} style={{ left: `${pct(v[0])}%`, right: `${100 - pct(v[1])}%` }} />
+				<input type="range" aria-label={`${label} from`} min={min} max={max} step={step} value={v[0]} onChange={(e) => setV([Math.min(Number(e.target.value), v[1] - step), v[1]])} className={thumb} />
+				<input type="range" aria-label={`${label} to`} min={min} max={max} step={step} value={v[1]} onChange={(e) => setV([v[0], Math.max(Number(e.target.value), v[0] + step)])} className={thumb} />
 			</div>
 		</div>
 	)
 }
 
-/** A small search field inside a group. */
-function MiniSearch({
+function Spinner() {
+	return <span aria-hidden className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-white/15 border-t-amber-400 motion-reduce:animate-none" />
+}
+
+/** A search field inside a group: icon, a spinner while it looks, and a labeled Clear at the right. */
+function SearchField({
 	value,
 	onChange,
 	placeholder,
+	loading,
+	onFocus,
+	inputRef,
 	autoFocus,
 }: {
 	value: string
 	onChange: (v: string) => void
 	placeholder: string
+	loading?: boolean
+	onFocus?: () => void
+	inputRef?: RefObject<HTMLInputElement>
 	autoFocus?: boolean
 }) {
 	return (
-		<label className="flex h-9 items-center gap-2 rounded-lg bg-white/[0.05] px-2.5 focus-within:ring-1 focus-within:ring-amber-500/60">
+		<label className="flex h-10 items-center gap-2 rounded-xl bg-white/[0.05] pr-1.5 pl-3 ring-1 ring-white/[0.06] focus-within:ring-amber-500/60">
 			<MagnifyingGlassIcon className="h-4 w-4 shrink-0 text-gray-500" />
 			<input
+				ref={inputRef}
 				type="search"
 				value={value}
 				// biome-ignore lint/a11y/noAutofocus: opened by the person to type
 				autoFocus={autoFocus}
+				onFocus={onFocus}
 				onChange={(e) => onChange(e.target.value)}
 				placeholder={placeholder}
 				aria-label={placeholder}
 				className="min-w-0 flex-1 border-0 bg-transparent p-0 text-[13px] text-white outline-none placeholder:text-gray-500 focus:ring-0 [&::-webkit-search-cancel-button]:hidden"
 			/>
+			{loading && <Spinner />}
 			{value && (
 				<button
 					type="button"
 					onClick={() => onChange("")}
-					aria-label="Clear"
-					className="text-gray-500 hover:text-white"
+					className="flex h-7 items-center gap-1 rounded-lg px-2 text-[12px] text-gray-400 cursor-pointer hover:bg-white/[0.08] hover:text-white"
 				>
-					<XMarkIcon className="h-4 w-4" />
+					<XMarkIcon className="h-3.5 w-3.5" />
+					Clear
 				</button>
 			)}
 		</label>
@@ -595,9 +641,7 @@ function MiniSearch({
 // ---------------------------------------------------------------- controls per group
 
 const toggleIn = <T,>(list: T[] | undefined, value: T) => {
-	const next = (list ?? []).includes(value)
-		? (list ?? []).filter((v) => v !== value)
-		: [...(list ?? []), value]
+	const next = (list ?? []).includes(value) ? (list ?? []).filter((v) => v !== value) : [...(list ?? []), value]
 	return next.length ? next : undefined
 }
 
@@ -611,11 +655,7 @@ function TypeControl({ ctx }: { ctx: Ctx }) {
 					label="Movies or shows"
 					value={state.type}
 					onChange={(type) => ctx.set({ type })}
-					options={(["all", "movie", "show"] as const).map((id) => ({
-						id,
-						label: id === "all" ? "Both" : TYPE_LABELS[id],
-						count: c("type", id),
-					}))}
+					options={(["all", "movie", "show"] as const).map((id) => ({ id, label: id === "all" ? "Both" : TYPE_LABELS[id], count: c("type", id) }))}
 				/>
 			</div>
 			<div className="flex">
@@ -624,11 +664,7 @@ function TypeControl({ ctx }: { ctx: Ctx }) {
 					small
 					value={state.anime}
 					onChange={(anime) => ctx.set({ anime })}
-					options={(["any", "only", "none"] as const).map((id) => ({
-						id,
-						label: id === "any" ? "With anime" : ANIME_LABELS[id],
-						count: c("anime", id),
-					}))}
+					options={(["any", "only", "none"] as const).map((id) => ({ id, label: id === "any" ? "With anime" : ANIME_LABELS[id], count: c("anime", id) }))}
 				/>
 			</div>
 		</div>
@@ -670,11 +706,30 @@ function genreOptions(ctx: Ctx): Option[] {
 	})
 }
 
+/**
+ * Streaming: Anywhere (no streaming filter), My services, or Streaming in a country, where every service of that
+ * country is the start and a tap on one narrows to the ones picked.
+ */
 function ServicesControl({ ctx, limit }: { ctx: Ctx; limit: number }) {
 	const { state, myServices, countryProviders } = ctx.data
 	const [search, setSearch] = useState("")
 	const [open, setOpen] = useState(false)
-	const chosen = state.onMyServices ? myServices : (state.services ?? [])
+	const [streaming, setStreaming] = useState(!!state.services?.length)
+	const [wantAll, setWantAllState] = useState(allPicked(ctx.data))
+	const setWantAll = (on: boolean) => {
+		allServicesOn = on
+		setWantAllState(on)
+	}
+	const all = allPicked(ctx.data)
+	const allIds = countryProviders.map((p) => p.id)
+	const allKey = allIds.join(",")
+	// "All" follows the country: a new country's services once they load.
+	// biome-ignore lint/correctness/useExhaustiveDependencies: only when the country's list changes
+	useEffect(() => {
+		if (wantAll && streaming && allIds.length && !state.services?.length) ctx.set({ onMyServices: false, services: allIds })
+	}, [allKey, wantAll, streaming])
+	const mode = state.onMyServices ? "mine" : streaming || state.services?.length ? "streaming" : "any"
+	const chosen = state.onMyServices ? myServices : all ? [] : (state.services ?? [])
 	const term = search.trim().toLowerCase()
 	const rank = (id: number) => (chosen.includes(id) ? 0 : myServices.includes(id) ? 1 : 2)
 	const sorted = countryProviders
@@ -683,99 +738,107 @@ function ServicesControl({ ctx, limit }: { ctx: Ctx; limit: number }) {
 		.map(({ p }) => p)
 	const matches = term ? sorted.filter((p) => p.name.toLowerCase().includes(term)) : sorted
 	const keep = Math.max(limit, chosen.length)
-	const shown = term || open ? matches.slice(0, 60) : matches.slice(0, keep)
-	const everywhere = !state.onMyServices && !state.services?.length
+	const shown = term || open ? matches.slice(0, 80) : matches.slice(0, keep)
 	const country = state.streamingCountry ?? ctx.data.streamingCountry ?? "US"
 	const countryCodes = [...new Set([country, ...ctx.countries.map((c) => c.code)])]
+	const pickMode = (m: string) => {
+		if (m === "any") {
+			setStreaming(false)
+			setWantAll(false)
+			ctx.set({ onMyServices: false, services: undefined })
+		} else if (m === "mine") {
+			setStreaming(false)
+			ctx.set({ onMyServices: true, services: undefined })
+		} else {
+			setStreaming(true)
+			setWantAll(true)
+			ctx.set({ onMyServices: false, services: allIds })
+		}
+	}
+	const pick = (id: number) => {
+		setStreaming(true)
+		setWantAll(false)
+		// From All (or My services), a tap means "just this one"; then taps add and remove.
+		const next = all || state.onMyServices ? [id] : toggleIn(state.services, id)
+		if (!next) {
+			setWantAll(true)
+			ctx.set({ onMyServices: false, services: allIds })
+		} else ctx.set({ onMyServices: false, services: next })
+	}
 	return (
-		<div className="space-y-2.5">
-			<div className="flex items-center gap-2">
-				{myServices.length === 0 ? (
-					<p className="flex-1 text-[13px] text-gray-400">
-						{everywhere ? "All services. Pick some to narrow." : `${chosen.length} picked`}
-					</p>
-				) : (
+		<div className="space-y-3">
+			<div className="flex">
 				<Segmented
-					label="Where"
-					value={state.onMyServices ? "mine" : everywhere ? "all" : "picked"}
-					onChange={(v) =>
-						v === "mine"
-							? ctx.set({ onMyServices: true, services: undefined })
-							: v === "all"
-								? ctx.set({ onMyServices: false, services: undefined })
-								: undefined
-					}
+					label="Streaming"
+					value={mode}
+					onChange={pickMode}
 					options={[
+						{ id: "any", label: "Anywhere" },
 						...(myServices.length ? [{ id: "mine", label: "My services" }] : []),
-						{ id: "all", label: "Everywhere" },
-						...(!everywhere && !state.onMyServices
-							? [{ id: "picked", label: `${chosen.length} picked` }]
-							: []),
+						{ id: "streaming", label: "Streaming in…" },
 					]}
 				/>
-				)}
-				<select
-					aria-label="Streaming country"
-					value={country}
-					onChange={(e) => ctx.set({ streamingCountry: e.target.value })}
-					className="h-10 max-w-[10rem] shrink-0 rounded-xl border-0 bg-white/[0.05] py-0 pr-7 pl-2.5 text-[13px] text-gray-300"
-				>
-					{countryCodes
-						.map((code) => ({ code, name: productionCountryName(code) }))
-						.sort((a, b) => a.name.localeCompare(b.name))
-						.map((c) => (
-							<option key={c.code} value={c.code}>
-								{c.name}
-							</option>
-						))}
-				</select>
 			</div>
-			{(open || term) && (
-				<MiniSearch value={search} onChange={setSearch} placeholder="Find a service" autoFocus />
-			)}
-			<div className="flex flex-wrap gap-1.5">
-				{shown.map((p) => {
-					const on = chosen.includes(p.id)
-					return (
-						<motion.button
-							key={p.id}
-							type="button"
-							whileTap={TAP}
-							aria-pressed={on}
-							onClick={() =>
-								ctx.set({
-									onMyServices: false,
-									services: state.onMyServices ? [p.id] : toggleIn(state.services, p.id),
-								})
-							}
-							className={`flex h-8 items-center gap-1.5 rounded-full pr-3 pl-1 text-[13px] whitespace-nowrap cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${on ? "bg-white font-semibold text-gray-950" : "bg-white/[0.06] text-gray-200 hover:bg-white/[0.11]"}`}
+			{mode === "any" && <p className="text-[12px] text-gray-500">Every title, streaming or not.</p>}
+			{mode === "mine" && <p className="text-[12px] text-gray-500">Titles on the services in your settings.</p>}
+			{mode === "streaming" && (
+				<>
+					<div className="flex items-center gap-2">
+						<select
+							aria-label="Streaming country"
+							value={country}
+							onChange={(e) => ctx.set({ streamingCountry: e.target.value, services: wantAll ? undefined : state.services })}
+							className="h-9 min-w-0 flex-1 rounded-xl border-0 bg-white/[0.05] py-0 pr-8 pl-3 text-[13px] text-white ring-1 ring-white/[0.06]"
 						>
-							<img
-								src={`${PROVIDER_LOGO}${p.logo_path}`}
-								alt=""
-								className="h-6 w-6 rounded-full object-cover"
+							{countryCodes
+								.map((code) => ({ code, name: productionCountryName(code) }))
+								.sort((a, b) => a.name.localeCompare(b.name))
+								.map((c) => (
+									<option key={c.code} value={c.code}>
+										{c.name}
+									</option>
+								))}
+						</select>
+						<button
+							type="button"
+							onClick={() => setOpen(!open)}
+							aria-label="Find a service"
+							className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl cursor-pointer ring-1 ring-white/[0.06] ${open ? "bg-white/[0.12] text-white" : "bg-white/[0.05] text-gray-400 hover:text-white"}`}
+						>
+							<MagnifyingGlassIcon className="h-4 w-4" />
+						</button>
+					</div>
+					{open && <SearchField value={search} onChange={setSearch} placeholder={`Find a service in ${productionCountryName(country)}`} autoFocus />}
+					<div className="flex flex-wrap gap-1.5">
+						{!term && (
+							<Chip
+								o={{
+									id: "all",
+									label: `All ${countryProviders.length} services`,
+									active: all,
+									count: null,
+									toggle: () => pickMode("streaming"),
+								}}
 							/>
-							{p.name.replace(/ (Amazon Channel|Apple TV Channel)$/, "")}
-						</motion.button>
-					)
-				})}
-				{!term && matches.length > keep && (
-					<More hidden={matches.length - keep} open={open} onClick={() => setOpen(!open)} />
-				)}
-				{!open && !term && (
-					<button
-						type="button"
-						onClick={() => setOpen(true)}
-						aria-label="Find a service"
-						className="grid h-8 w-8 place-items-center rounded-full text-gray-400 cursor-pointer hover:bg-white/[0.08] hover:text-white"
-					>
-						<MagnifyingGlassIcon className="h-4 w-4" />
-					</button>
-				)}
-				{term && matches.length === 0 && (
-					<p className="text-[13px] text-gray-500">No service called “{search}” in this country.</p>
-				)}
-			</div>
+						)}
+						{shown.map((p) => (
+							<Chip
+								key={p.id}
+								img={`${PROVIDER_LOGO}${p.logo_path}`}
+								o={{
+									id: String(p.id),
+									label: p.name.replace(/ (Amazon Channel|Apple TV Channel)$/, ""),
+									active: chosen.includes(p.id),
+									count: null,
+									toggle: () => pick(p.id),
+								}}
+							/>
+						))}
+						{!term && !open && matches.length > keep && <More hidden={matches.length - keep} open={false} onClick={() => setOpen(true)} />}
+						{term && matches.length === 0 && <p className="text-[13px] text-gray-500">No service called “{search}” here.</p>}
+					</div>
+				</>
+			)}
 		</div>
 	)
 }
@@ -789,19 +852,15 @@ function YearControl({ ctx }: { ctx: Ctx }) {
 	return (
 		<div className="space-y-3">
 			<div className="flex flex-wrap gap-1.5">
-				{(["recent", "2010s", "2000s", "before2000"] as const).map((r) => (
+				{(["any", "recent", "2010s", "2000s", "before2000"] as const).map((r) => (
 					<Chip
 						key={r}
 						o={{
 							id: r,
 							label: RELEASED_LABELS[r],
 							active: !yearsSet && state.released === r,
-							count: c(r),
-							toggle: () =>
-								ctx.set({
-									released: state.released === r && !yearsSet ? "any" : r,
-									...clearYears,
-								}),
+							count: yearsSet ? null : r === "any" ? null : c(r),
+							toggle: () => ctx.set({ released: state.released === r && !yearsSet ? "any" : r, ...clearYears }),
 						}}
 					/>
 				))}
@@ -814,18 +873,9 @@ function YearControl({ ctx }: { ctx: Ctx }) {
 				value={range}
 				format={(y) => (y <= YEAR_MIN ? "Any year" : y >= YEAR_MAX ? "Now" : String(y))}
 				onCommit={([lo, hi]) => {
-					const preset = (
-						Object.entries(RELEASED_RANGE) as [FilterState["released"], [number, number]][]
-					).find(([, r]) => r[0] === lo && r[1] === hi)
+					const preset = (Object.entries(RELEASED_RANGE) as [FilterState["released"], [number, number]][]).find(([, r]) => r[0] === lo && r[1] === hi)
 					if (preset) ctx.set({ released: preset[0], ...clearYears })
-					else
-						ctx.set({
-							released: "any",
-							...legacyPatch(state, {
-								minYear: lo <= YEAR_MIN ? null : lo,
-								maxYear: hi >= YEAR_MAX ? null : hi,
-							}),
-						})
+					else ctx.set({ released: "any", ...legacyPatch(state, { minYear: lo <= YEAR_MIN ? null : lo, maxYear: hi >= YEAR_MAX ? null : hi }) })
 				}}
 			/>
 		</div>
@@ -833,6 +883,7 @@ function YearControl({ ctx }: { ctx: Ctx }) {
 }
 
 const LENGTH_PRESETS: { label: string; range: [number, number] }[] = [
+	{ label: "Any length", range: [0, LEN_MAX] },
 	{ label: "Under 90 min", range: [0, 90] },
 	{ label: "90 min – 2 h", range: [90, 120] },
 	{ label: "Over 2 h", range: [120, LEN_MAX] },
@@ -842,104 +893,256 @@ const LENGTH_PRESETS: { label: string; range: [number, number] }[] = [
 function LengthControl({ ctx }: { ctx: Ctx }) {
 	const { state } = ctx.data
 	const range = lengthRange(state)
-	const commit = ([lo, hi]: [number, number]) =>
-		ctx.set(
-			legacyPatch(state, {
-				minRuntime: lo <= 0 ? null : lo,
-				maxRuntime: hi >= LEN_MAX ? null : hi,
-			}),
-		)
+	const commit = ([lo, hi]: [number, number]) => ctx.set(legacyPatch(state, { minRuntime: lo <= 0 ? null : lo, maxRuntime: hi >= LEN_MAX ? null : hi }))
 	return (
 		<div className="space-y-3">
 			<div className="flex flex-wrap gap-1.5">
 				{LENGTH_PRESETS.map((p) => {
 					const on = range[0] === p.range[0] && range[1] === p.range[1]
-					return (
-						<Chip
-							key={p.label}
-							o={{
-								id: p.label,
-								label: p.label,
-								active: on,
-								count: null,
-								toggle: () => commit(on ? [0, LEN_MAX] : p.range),
-							}}
-						/>
-					)
+					return <Chip key={p.label} o={{ id: p.label, label: p.label, active: on, count: null, toggle: () => commit(on ? [0, LEN_MAX] : p.range) }} />
 				})}
 			</div>
-			<RangeSlider
-				label="Length"
-				min={0}
-				max={LEN_MAX}
-				step={5}
-				value={range}
-				format={(m) => (m <= 0 ? "Any" : fmtLen(m))}
-				onCommit={commit}
-			/>
+			<RangeSlider label="Length" min={0} max={LEN_MAX} step={5} value={range} format={(m) => (m <= 0 ? "Any" : fmtLen(m))} onCommit={commit} />
 			<p className="text-[12px] text-gray-500">Movie length, or episode length for shows.</p>
 		</div>
 	)
 }
 
-function SimilarControl({ ctx }: { ctx: Ctx }) {
-	const { state } = ctx.data
-	const [search, setSearch] = useState("")
-	const chosen = state.similarTo ?? []
-	const titles = useTitleNames(chosen, search)
-	const poster = (t: NamedTitle | undefined, key: TitleKey, active: boolean) => (
-		<OptionPoster
-			key={key}
-			positive
-			option={{
-				id: String(key),
-				label: t ? `${t.title} (${t.year})` : "Title",
-				img: t?.poster ? `https://image.tmdb.org/t/p/w154${t.poster}` : null,
-				active,
-				count: null,
-				toggle: () => ctx.set({ similarTo: toggleIn(chosen, key) }),
-			}}
-		/>
-	)
+/** Typing waits a moment before it asks. */
+function useDebounced<T>(value: T, ms = 220): T {
+	const [v, setV] = useState(value)
+	useEffect(() => {
+		const id = setTimeout(() => setV(value), ms)
+		return () => clearTimeout(id)
+	}, [value, ms])
+	return v
+}
+
+interface Found {
+	key: TitleKey
+	title: string
+	year: string
+	poster: string | null
+}
+
+/** The site's quick title search (the header's typeahead), about a quarter second. */
+function useQuickTitles(text: string) {
+	const term = useDebounced(text.trim())
+	const q = useQuery<{ searchResults: { id: number; media_type: "movie" | "show"; title?: string; name?: string; release_date?: string; first_air_date?: string; poster_path?: string | null }[] }>({
+		queryKey: ["proto-quick-titles", term],
+		queryFn: async () => (await fetch(`/api/search?query=${encodeURIComponent(term)}`)).json(),
+		enabled: term.length >= 2,
+		staleTime: 60_000,
+	})
+	const found: Found[] = (term.length >= 2 ? (q.data?.searchResults ?? []) : []).map((r) => ({
+		key: titleKey(r.media_type, r.id),
+		title: r.title ?? r.name ?? "",
+		year: (r.release_date ?? r.first_air_date ?? "").slice(0, 4),
+		poster: r.poster_path ?? null,
+	}))
+	return { found, loading: text.trim().length >= 2 && (q.isFetching || term !== text.trim()) }
+}
+
+const POSTER = "https://image.tmdb.org/t/p/w154"
+
+/** A poster you can pick or take off; the ring says loved (green), disliked (red), or chosen. */
+function Poster({
+	t,
+	active,
+	tone,
+	onClick,
+}: {
+	t: Found | undefined
+	active: boolean
+	tone: "pos" | "neg"
+	onClick: () => void
+}) {
 	return (
-		<div className="space-y-2.5">
-			<MiniSearch value={search} onChange={setSearch} placeholder="Add a movie or show" />
-			{(chosen.length > 0 || titles.matches.length > 0) && (
-				<div className="flex flex-wrap gap-2">
-					{chosen.map((k) => poster(titles.byKey.get(k), k, true))}
-					{titles.matches.slice(0, 8).map((t) => poster(t, t.key, false))}
+		<motion.button
+			type="button"
+			whileTap={TAP}
+			aria-pressed={active}
+			aria-label={t ? `${t.title} (${t.year})` : "Loading title"}
+			title={t ? `${t.title} (${t.year})` : undefined}
+			onClick={onClick}
+			className={`group relative w-[4.25rem] shrink-0 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-amber-400 rounded-lg`}
+		>
+			<span className={`block aspect-[2/3] overflow-hidden rounded-lg bg-white/[0.06] ${active ? `ring-2 ring-offset-2 ring-offset-gray-950 ${tone === "pos" ? "ring-emerald-400" : "ring-rose-400"}` : "opacity-80 group-hover:opacity-100"}`}>
+				{t ? (
+					t.poster ? (
+						<img src={`${POSTER}${t.poster}`} alt="" className="h-full w-full object-cover" />
+					) : (
+						<span className="grid h-full place-items-center p-1 text-[10px] leading-tight text-gray-400">{t.title}</span>
+					)
+				) : (
+					<span className="block h-full w-full animate-pulse bg-white/[0.08] motion-reduce:animate-none" />
+				)}
+			</span>
+			<span className="mt-1 block truncate text-left text-[11px] text-gray-400">{t ? t.title : "…"}</span>
+			{active && (
+				<span className={`absolute top-1 right-1 grid h-4 w-4 place-items-center rounded-full text-white ${tone === "pos" ? "bg-emerald-500" : "bg-rose-500"}`}>
+					<XMarkIcon className="h-3 w-3" />
+				</span>
+			)}
+		</motion.button>
+	)
+}
+
+/**
+ * Similar to, Loved, Disliked: the chosen posters, and a search that shows results while the field has focus; picking
+ * one closes the results until the field is tapped again. Eight results, then "More results".
+ */
+function TitlePicker({ ctx, group }: { ctx: Ctx; group: "similarTo" | "loved" | "disliked" }) {
+	const { state } = ctx.data
+	const [text, setText] = useState("")
+	const [showResults, setShowResults] = useState(false)
+	const [more, setMore] = useState(false)
+	const input = useRef<HTMLInputElement>(null)
+	const chosen = state[group] ?? []
+	const names = useTitleNames(chosen, "")
+	const { found, loading } = useQuickTitles(text)
+	// What a pick already told us, so its poster shows at once.
+	const [seen, setSeen] = useState(() => new Map<TitleKey, Found>())
+	const known = (key: TitleKey): Found | undefined => {
+		const n = names.byKey.get(key)
+		return seen.get(key) ?? (n ? { key, title: n.title, year: n.year, poster: n.poster } : undefined)
+	}
+	const other = group === "loved" ? "disliked" : group === "disliked" ? "loved" : null
+	const toggle = (t: Found) => {
+		setSeen((m) => new Map(m).set(t.key, t))
+		ctx.set({
+			[group]: toggleIn(chosen, t.key),
+			...(other ? { [other]: state[other]?.filter((k) => k !== t.key) } : {}),
+		} as Partial<FilterState>)
+		setShowResults(false)
+		input.current?.blur()
+	}
+	const tone = group === "disliked" ? "neg" : "pos"
+	const list = more ? found : found.slice(0, 8)
+	return (
+		<div className="space-y-3">
+			{chosen.length > 0 && (
+				<div className="flex flex-wrap gap-2.5">
+					{chosen.map((k) => {
+						const t = known(k)
+						return <Poster key={k} t={t} active tone={tone} onClick={() => t && toggle(t)} />
+					})}
+				</div>
+			)}
+			<SearchField
+				inputRef={input}
+				value={text}
+				onChange={(v) => {
+					setText(v)
+					setMore(false)
+					setShowResults(true)
+				}}
+				onFocus={() => setShowResults(true)}
+				loading={loading}
+				placeholder={group === "similarTo" ? "Add a movie or show" : group === "loved" ? "Add a title you loved" : "Add a title you disliked"}
+			/>
+			{showResults && text.trim().length >= 2 && (
+				<div>
+					{found.length === 0 && !loading && <p className="text-[13px] text-gray-500">No title called “{text}”.</p>}
+					{found.length === 0 && loading && (
+						<div className="flex gap-2.5">
+							{[0, 1, 2, 3, 4].map((i) => (
+								<Poster key={i} t={undefined} active={false} tone={tone} onClick={() => {}} />
+							))}
+						</div>
+					)}
+					<div className="flex flex-wrap gap-2.5">
+						{list.map((t) => (
+							<Poster key={t.key} t={t} active={chosen.includes(t.key)} tone={tone} onClick={() => toggle(t)} />
+						))}
+					</div>
+					{found.length > 8 && <More hidden={found.length - 8} open={more} onClick={() => setMore(!more)} label={`More results (${found.length - 8})`} />}
 				</div>
 			)}
 		</div>
 	)
 }
 
-function PeopleControl({ ctx }: { ctx: Ctx }) {
+const PROFILE = "https://image.tmdb.org/t/p/w92"
+
+function PeoplePicker({ ctx }: { ctx: Ctx }) {
 	const { state } = ctx.data
-	const [search, setSearch] = useState("")
+	const [text, setText] = useState("")
+	const [showResults, setShowResults] = useState(false)
+	const [more, setMore] = useState(false)
+	const input = useRef<HTMLInputElement>(null)
 	const chosen = state.people ?? []
-	const people = usePeopleNames(chosen, search)
-	const opt = (id: number, name: string, active: boolean): Option => ({
-		id: String(id),
-		label: name,
-		active,
-		count: null,
-		toggle: () => {
-			ctx.set({ people: toggleIn(chosen, id) })
-			setSearch("")
-		},
+	const term = useDebounced(text.trim())
+	const q = useQuery<{ castMembers: { tmdb_id: number; name: string; profile_path: string | null; popularity: number | null }[] }>({
+		queryKey: ["proto-people", term],
+		queryFn: async () => (await fetch(`/api/cast?${new URLSearchParams({ text: term, withCast: "", withoutCast: "" })}`)).json(),
+		enabled: term.length >= 2,
+		staleTime: 60_000,
 	})
+	const names = useQuery<{ castMembers: { tmdb_id: number; name: string; profile_path: string | null }[] }>({
+		queryKey: ["proto-people-chosen", chosen.join(",")],
+		queryFn: async () => (await fetch(`/api/cast?${new URLSearchParams({ text: "", withCast: chosen.join(","), withoutCast: "" })}`)).json(),
+		enabled: chosen.length > 0,
+		placeholderData: (p) => p,
+	})
+	const [seen, setSeen] = useState(() => new Map<number, { name: string; profile: string | null }>())
+	const nameOf = (id: number) => seen.get(id) ?? (() => {
+		const p = names.data?.castMembers.find((m) => m.tmdb_id === id)
+		return p ? { name: p.name, profile: p.profile_path } : undefined
+	})()
+	// The cast search ranks loosely: faces and the better-known first.
+	const found = (term.length >= 2 ? (q.data?.castMembers ?? []) : [])
+		.slice()
+		.sort((a, b) => Number(!!b.profile_path) - Number(!!a.profile_path) || (b.popularity ?? 0) - (a.popularity ?? 0))
+	const loading = text.trim().length >= 2 && (q.isFetching || term !== text.trim())
+	const pick = (id: number, name: string, profile: string | null) => {
+		setSeen((m) => new Map(m).set(id, { name, profile }))
+		ctx.set({ people: toggleIn(chosen, id) })
+		setShowResults(false)
+		input.current?.blur()
+	}
+	const list = more ? found.slice(0, 40) : found.slice(0, 8)
 	return (
-		<div className="space-y-2.5">
-			<MiniSearch value={search} onChange={setSearch} placeholder="Add an actor or director" />
-			<div className="flex flex-wrap gap-1.5">
-				{chosen.map((id) => (
-					<Chip key={id} o={opt(id, people.byId.get(id)?.name ?? "…", true)} />
-				))}
-				{people.matches.map((p) => (
-					<Chip key={p.id} o={opt(p.id, p.name, false)} />
-				))}
-			</div>
+		<div className="space-y-3">
+			{chosen.length > 0 && (
+				<div className="flex flex-wrap gap-1.5">
+					{chosen.map((id) => {
+						const p = nameOf(id)
+						return (
+							<Chip
+								key={id}
+								img={p?.profile ? `${PROFILE}${p.profile}` : null}
+								o={{ id: String(id), label: p?.name ?? "…", active: true, count: null, toggle: () => pick(id, p?.name ?? "", p?.profile ?? null) }}
+							/>
+						)
+					})}
+				</div>
+			)}
+			<SearchField
+				inputRef={input}
+				value={text}
+				onChange={(v) => {
+					setText(v)
+					setMore(false)
+					setShowResults(true)
+				}}
+				onFocus={() => setShowResults(true)}
+				loading={loading}
+				placeholder="Add an actor or director"
+			/>
+			{showResults && text.trim().length >= 2 && (
+				<div className="flex flex-wrap gap-1.5">
+					{found.length === 0 && !loading && <p className="text-[13px] text-gray-500">No one called “{text}”.</p>}
+					{list.map((p) => (
+						<Chip
+							key={p.tmdb_id}
+							img={p.profile_path ? `${PROFILE}${p.profile_path}` : null}
+							o={{ id: String(p.tmdb_id), label: p.name, active: chosen.includes(p.tmdb_id), count: null, toggle: () => pick(p.tmdb_id, p.name, p.profile_path) }}
+						/>
+					))}
+					{found.length > 8 && <More hidden={found.length - 8} open={more} onClick={() => setMore(!more)} label={`More people (${Math.min(found.length, 40) - 8})`} />}
+				</div>
+			)}
 		</div>
 	)
 }
@@ -967,16 +1170,14 @@ function Control({ ctx, k, trim }: { ctx: Ctx; k: Key; trim: boolean }) {
 		case "type":
 			return <TypeControl ctx={ctx} />
 		case "genres":
-			return <ChipList options={genreOptions(ctx)} limit={trim ? 8 : 99} sort />
+			return <ChipList options={genreOptions(ctx)} limit={trim ? 8 : 12} sort />
 		case "moods":
 		case "themes":
 		case "styles":
 			return g ? (
 				<>
-					<ChipList options={g.options} limit={trim ? 6 : 99} />
-					{ctx.refusal?.group === k && (
-						<p className="mt-2 text-xs text-amber-300">{ctx.refusal.text}</p>
-					)}
+					<ChipList options={g.options} limit={trim ? 6 : 8} />
+					{ctx.refusal?.group === k && <p className="mt-2 text-xs text-amber-300">{ctx.refusal.text}</p>}
 				</>
 			) : null
 		case "minScore":
@@ -1000,9 +1201,7 @@ function Control({ ctx, k, trim }: { ctx: Ctx; k: Key; trim: boolean }) {
 						onChange={(minMatch) => ctx.set({ minMatch: minMatch as FilterState["minMatch"] })}
 						color={() => "bg-amber-400"}
 						disabled={!!g?.needs}
-						counts={
-							g?.needs ? undefined : (v) => counts?.optionCounts.minMatch?.[String(v)] ?? null
-						}
+						counts={g?.needs ? undefined : (v) => counts?.optionCounts.minMatch?.[String(v)] ?? null}
 					/>
 					{g?.needs && <NeedsTaste needs={g.needs} />}
 				</>
@@ -1012,94 +1211,123 @@ function Control({ ctx, k, trim }: { ctx: Ctx; k: Key; trim: boolean }) {
 		case "length":
 			return <LengthControl ctx={ctx} />
 		case "similarTo":
-			return <SimilarControl ctx={ctx} />
+		case "loved":
+		case "disliked":
+			return <TitlePicker ctx={ctx} group={k} />
 		case "people":
-			return <PeopleControl ctx={ctx} />
+			return <PeoplePicker ctx={ctx} />
 		default:
 			return g?.body ? <>{g.body}</> : null
 	}
 }
 
 /** The keys this viewer gets: Age & content only with a ladder. */
-const available = (ctx: Ctx, keys: Key[]) =>
-	keys.filter((k) => k === "length" || k === "released" || ctx.groups.some((g) => g.key === k))
+const available = (ctx: Ctx, keys: Key[]) => keys.filter((k) => k === "length" || k === "released" || ctx.groups.some((g) => g.key === k))
 
-function Label({ k, ctx, right, fit }: { k: Key; ctx: Ctx; right?: ReactNode; fit?: boolean }) {
+function Label({ k, ctx, fit }: { k: Key; ctx: Ctx; fit?: boolean }) {
 	const on = isSet(ctx, k)
 	return (
-		<span className="flex min-w-0 flex-1 items-center gap-2">
-			<span className={`h-1.5 w-1.5 shrink-0 rounded-full ${accent(k)}`} />
+		<span className="flex min-w-0 items-center gap-2">
+			<span className={`h-2 w-2 shrink-0 rounded-full ${accent(k)}`} />
 			<span className={`${fit ? "truncate" : "shrink-0"} text-[14px] font-semibold text-gray-100`}>{TITLES[k]}</span>
 			{on && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400" />}
-			{right}
 		</span>
 	)
 }
 
-/** A plain section: label, then the control. */
-function Section({ ctx, k, trim }: { ctx: Ctx; k: Key; trim: boolean }) {
+function ClearButton({ ctx, k }: { ctx: Ctx; k: Key }) {
+	if (!isSet(ctx, k)) return null
 	return (
-		<section aria-label={TITLES[k]}>
-			<div className="mb-2.5 flex items-center">
-				<Label k={k} ctx={ctx} />
-			</div>
-			<Control ctx={ctx} k={k} trim={trim} />
-		</section>
+		<button
+			type="button"
+			onClick={(e) => {
+				e.stopPropagation()
+				ctx.replace(cleared(ctx, k))
+			}}
+			className="rounded-md px-1.5 py-0.5 text-[12px] text-gray-400 cursor-pointer hover:bg-white/[0.08] hover:text-white"
+		>
+			Clear
+		</button>
 	)
 }
 
-// ---------------------------------------------------------------- E: essentials, then everything
-
-function VariantE({ ctx }: { ctx: Ctx }) {
-	const keys = available(ctx, ctx.order)
-	const essentials = keys.filter((k) => ESSENTIALS.has(k))
-	const rest = keys.filter((k) => !ESSENTIALS.has(k))
-	const setInRest = rest.filter((k) => isSet(ctx, k))
-	const [all, setAll] = useState(setInRest.length > 0)
+/**
+ * A filter as a card: its own surface, so filter types read as separate things. The header carries Clear (once set)
+ * and, when given, a fold or remove action.
+ */
+function Card({
+	ctx,
+	k,
+	trim,
+	onFold,
+	onRemove,
+	highlight,
+}: {
+	ctx: Ctx
+	k: Key
+	trim: boolean
+	onFold?: () => void
+	onRemove?: () => void
+	highlight?: boolean
+}) {
+	const ref = useRef<HTMLElement>(null)
+	useLayoutEffect(() => {
+		if (!highlight || !ref.current) return
+		ref.current.scrollIntoView({ block: "nearest", behavior: "smooth" })
+		ref.current.animate([{ boxShadow: "0 0 0 2px rgba(251,191,36,.6)" }, { boxShadow: "0 0 0 2px rgba(251,191,36,0)" }], { duration: 1200 })
+	}, [highlight])
 	return (
-		<div className="flex flex-col gap-7">
-			{essentials.map((k) => (
-				<Section key={k} ctx={ctx} k={k} trim />
-			))}
-			<div>
-				<button
-					type="button"
-					onClick={() => setAll(!all)}
-					aria-expanded={all}
-					className="group flex w-full items-center gap-3 rounded-2xl bg-white/[0.04] px-4 py-3 text-left cursor-pointer outline-none hover:bg-white/[0.07] focus-visible:ring-2 focus-visible:ring-amber-400"
-				>
-					<span className="min-w-0 flex-1">
-						<span className="block text-[14px] font-semibold text-white">
-							{all ? "Fewer filters" : `All filters (${rest.length} more)`}
-						</span>
-						<span className="block truncate text-[12px] text-gray-400">
-							{setInRest.length
-								? `Set: ${setInRest.map((k) => TITLES[k]).join(", ")}`
-								: rest.map((k) => TITLES[k]).join(", ")}
-						</span>
+		<motion.section
+			ref={ref}
+			layout="position"
+			initial={false}
+			aria-label={TITLES[k]}
+			className="rounded-2xl bg-white/[0.035] p-4 ring-1 ring-white/[0.06]"
+		>
+			<div className="-mt-1 mb-3 flex min-h-8 items-center gap-2">
+				{onFold ? (
+					<button type="button" onClick={onFold} aria-expanded className="flex min-w-0 flex-1 items-center gap-2 rounded-md text-left cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-amber-400">
+						<Label k={k} ctx={ctx} />
+					</button>
+				) : (
+					<span className="flex min-w-0 flex-1">
+						<Label k={k} ctx={ctx} />
 					</span>
-					<ChevronDownIcon
-						className={`h-5 w-5 shrink-0 text-gray-400 transition-transform group-hover:text-white ${all ? "rotate-180" : ""}`}
-					/>
-				</button>
-				{all && (
-					<motion.div
-						initial={{ opacity: 0 }}
-						animate={{ opacity: 1 }}
-						transition={{ duration: 0.2 }}
-						className="mt-7 flex flex-col gap-7"
-					>
-						{rest.map((k) => (
-							<Section key={k} ctx={ctx} k={k} trim={false} />
-						))}
-					</motion.div>
+				)}
+				<ClearButton ctx={ctx} k={k} />
+				{onFold && (
+					<button type="button" onClick={onFold} aria-label={`Fold ${TITLES[k]}`} className="grid h-7 w-7 place-items-center rounded-md text-gray-500 cursor-pointer hover:bg-white/[0.08] hover:text-white">
+						<ChevronDownIcon className="h-4 w-4 rotate-180" />
+					</button>
+				)}
+				{onRemove && (
+					<button type="button" onClick={onRemove} aria-label={`Remove ${TITLES[k]}`} className="grid h-7 w-7 place-items-center rounded-md text-gray-500 cursor-pointer hover:bg-white/[0.08] hover:text-white">
+						<XMarkIcon className="h-4 w-4" />
+					</button>
 				)}
 			</div>
-		</div>
+			<Control ctx={ctx} k={k} trim={trim} />
+		</motion.section>
 	)
 }
 
-// ---------------------------------------------------------------- F: unfolding tiles
+/** A folded filter: name and what's set, on a tile. */
+function Tile({ ctx, k, on, onClick }: { ctx: Ctx; k: Key; on?: boolean; onClick: () => void }) {
+	const set = isSet(ctx, k)
+	return (
+		<button
+			type="button"
+			onClick={onClick}
+			aria-expanded={!!on}
+			className={`flex min-h-[3.75rem] min-w-0 flex-col justify-center gap-0.5 rounded-2xl px-3.5 py-2 text-left cursor-pointer outline-none transition-colors focus-visible:ring-2 focus-visible:ring-amber-400 ${on ? "bg-white/[0.11] ring-1 ring-white/25" : set ? "bg-white/[0.07] ring-1 ring-amber-400/25 hover:bg-white/[0.1]" : "bg-white/[0.035] ring-1 ring-white/[0.06] hover:bg-white/[0.07]"}`}
+		>
+			<Label k={k} ctx={ctx} fit />
+			<span className={`truncate pl-4 text-[12px] ${set ? "text-amber-200/90" : "text-gray-500"}`}>{ctx.summaries[k]}</span>
+		</button>
+	)
+}
+
+// ---------------------------------------------------------------- F: tiles that open in place
 
 function VariantF({ ctx }: { ctx: Ctx }) {
 	const keys = available(ctx, ctx.order)
@@ -1109,121 +1337,133 @@ function VariantF({ ctx }: { ctx: Ctx }) {
 	const rows: Key[][] = []
 	for (let i = 0; i < rest.length; i += 2) rows.push(rest.slice(i, i + 2))
 	return (
-		<div className="flex flex-col gap-7">
+		<div className="flex flex-col gap-3">
 			{essentials.map((k) => (
-				<Section key={k} ctx={ctx} k={k} trim />
+				<Card key={k} ctx={ctx} k={k} trim />
 			))}
-			<section aria-label="More filters">
-				<h3 className="mb-2.5 text-[14px] font-semibold text-gray-100">More filters</h3>
-				<div className="flex flex-col gap-2">
-					{rows.map((row) => (
-						<div key={row.join()} className="flex flex-col gap-2">
-							<div className="grid grid-cols-2 gap-2">
-								{row.map((k) => {
-									const on = open === k
-									const set = isSet(ctx, k)
-									return (
-										<button
-											key={k}
-											type="button"
-											onClick={() => setOpen(on ? null : k)}
-											aria-expanded={on}
-											className={`flex min-h-[3.75rem] flex-col justify-center gap-0.5 rounded-2xl px-3.5 py-2 text-left cursor-pointer outline-none transition-colors focus-visible:ring-2 focus-visible:ring-amber-400 ${on ? "bg-white/[0.11] ring-1 ring-white/25" : set ? "bg-white/[0.07] hover:bg-white/[0.1]" : "bg-white/[0.035] hover:bg-white/[0.07]"}`}
-										>
-											<Label k={k} ctx={ctx} fit />
-											<span
-												className={`truncate pl-3.5 text-[12px] ${set ? "text-amber-200/90" : "text-gray-500"}`}
-											>
-												{ctx.summaries[k]}
-											</span>
-										</button>
-									)
-								})}
-							</div>
-							{open && row.includes(open) && (
-								<motion.div
-									key={open}
-									initial={{ opacity: 0, y: -6 }}
-									animate={{ opacity: 1, y: 0 }}
-									transition={{ duration: 0.18 }}
-									className="rounded-2xl bg-white/[0.04] p-4 ring-1 ring-white/10"
-								>
-									<Control ctx={ctx} k={open} trim={false} />
-								</motion.div>
-							)}
-						</div>
-					))}
+			<h3 className="mt-4 mb-0.5 text-[14px] font-semibold text-gray-300">More filters</h3>
+			{rows.map((row) => (
+				<div key={row.join()} className="flex flex-col gap-2">
+					<div className="grid grid-cols-2 gap-2">
+						{row.map((k) => (
+							<Tile key={k} ctx={ctx} k={k} on={open === k} onClick={() => setOpen(open === k ? null : k)} />
+						))}
+					</div>
+					{open && row.includes(open) && (
+						<motion.div key={open} initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.18 }}>
+							<Card ctx={ctx} k={open} trim={false} onFold={() => setOpen(null)} />
+						</motion.div>
+					)}
 				</div>
-			</section>
+			))}
 		</div>
 	)
 }
 
-// ---------------------------------------------------------------- G: compact rows
+// ---------------------------------------------------------------- H: every filter a tile
 
-/** Groups small enough to sit open in their row, always. */
-const INLINE = new Set<Key>(["type", "minScore", "minMatch"])
-
-function VariantG({ ctx }: { ctx: Ctx }) {
+/**
+ * Every filter is a tile, in the chosen order. A tile opens into a card in its place; Movies or shows and Genre start
+ * open, and so does every filter with something set. Folded tiles pack two to a row between the open cards.
+ */
+function VariantH({ ctx }: { ctx: Ctx }) {
 	const keys = available(ctx, ctx.order)
-	const [open, setOpen] = useState<Set<Key>>(
-		() => new Set(keys.filter((k) => ESSENTIALS.has(k) || isSet(ctx, k))),
-	)
+	const [open, setOpen] = useState<Set<Key>>(() => new Set(keys.filter((k) => OPEN_AT_START.has(k) || isSet(ctx, k))))
 	const toggle = (k: Key) =>
 		setOpen((s) => {
 			const n = new Set(s)
 			n.has(k) ? n.delete(k) : n.add(k)
 			return n
 		})
+	// Runs: an open card on its own, folded tiles together.
+	const runs: { open: boolean; keys: Key[] }[] = []
+	for (const k of keys) {
+		const o = open.has(k)
+		const last = runs[runs.length - 1]
+		if (!o && last && !last.open) last.keys.push(k)
+		else runs.push({ open: o, keys: [k] })
+	}
 	return (
-		<div className="-mx-2 flex flex-col">
-			{keys.map((k) => {
-				const inline = INLINE.has(k)
-				const isOpen = inline || open.has(k)
-				return (
-					<section key={k} aria-label={TITLES[k]} className="border-b border-white/[0.05] last:border-0">
-						{inline ? (
-							<div className="flex min-h-12 items-center px-2">
-								<Label k={k} ctx={ctx} />
-							</div>
-						) : (
-							<button
-								type="button"
-								onClick={() => toggle(k)}
-								aria-expanded={isOpen}
-								className="group flex min-h-12 w-full items-center gap-2 rounded-xl px-2 text-left cursor-pointer outline-none hover:bg-white/[0.04] focus-visible:ring-2 focus-visible:ring-amber-400"
-							>
-								<Label
-									k={k}
-									ctx={ctx}
-									right={
-										!isOpen && (
-											<span
-												className={`ml-auto min-w-0 truncate pl-3 text-[13px] ${isSet(ctx, k) ? "text-amber-200/90" : "text-gray-500 group-hover:text-gray-400"}`}
-											>
-												{ctx.summaries[k]}
-											</span>
-										)
-									}
-								/>
-								<ChevronDownIcon
-									className={`h-4 w-4 shrink-0 text-gray-500 transition-transform group-hover:text-white ${isOpen ? "rotate-180" : ""}`}
-								/>
-							</button>
-						)}
-						{isOpen && (
-							<motion.div
-								initial={inline ? false : { opacity: 0, y: -4 }}
-								animate={{ opacity: 1, y: 0 }}
-								transition={{ duration: 0.16 }}
-								className="px-2 pb-4"
-							>
-								<Control ctx={ctx} k={k} trim={ESSENTIALS.has(k)} />
-							</motion.div>
-						)}
-					</section>
-				)
-			})}
+		<div className="flex flex-col gap-2">
+			{runs.map((run) =>
+				run.open ? (
+					<Card key={run.keys[0]} ctx={ctx} k={run.keys[0]} trim={ESSENTIALS.has(run.keys[0])} onFold={() => toggle(run.keys[0])} />
+				) : (
+					<div key={run.keys.join()} className="grid grid-cols-2 gap-2">
+						{run.keys.map((k) => (
+							<Tile key={k} ctx={ctx} k={k} onClick={() => toggle(k)} />
+						))}
+					</div>
+				),
+			)}
+		</div>
+	)
+}
+
+// ---------------------------------------------------------------- I: add filters as you go
+
+/**
+ * Only the filters in use show, plus Movies or shows and Genre to start. "Add a filter" opens a picker of the rest;
+ * a pick adds its card in order and scrolls to it. A card's × clears it and takes it away.
+ */
+function VariantI({ ctx }: { ctx: Ctx }) {
+	const keys = available(ctx, ctx.order)
+	const [added, setAdded] = useState<Set<Key>>(() => new Set(keys.filter((k) => OPEN_AT_START.has(k) || isSet(ctx, k))))
+	const [picking, setPicking] = useState(false)
+	const [fresh, setFresh] = useState<Key | null>(null)
+	// Anything set from elsewhere (a chip, a recovery) gets its card too.
+	const shown = keys.filter((k) => added.has(k) || isSet(ctx, k))
+	const left = keys.filter((k) => !shown.includes(k))
+	const add = (k: Key) => {
+		setAdded((s) => new Set(s).add(k))
+		setFresh(k)
+		setPicking(false)
+	}
+	const remove = (k: Key) => {
+		ctx.replace(cleared(ctx, k))
+		setAdded((s) => {
+			const n = new Set(s)
+			n.delete(k)
+			return n
+		})
+	}
+	return (
+		<div className="flex flex-col gap-3">
+			<AnimatePresence initial={false}>
+				{shown.map((k) => (
+					<motion.div key={k} initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.98 }} transition={{ duration: 0.18 }}>
+						<Card ctx={ctx} k={k} trim={ESSENTIALS.has(k)} onRemove={() => remove(k)} highlight={fresh === k} />
+					</motion.div>
+				))}
+			</AnimatePresence>
+			{left.length > 0 && (
+				<div className="rounded-2xl ring-1 ring-dashed ring-white/15">
+					<button
+						type="button"
+						onClick={() => setPicking(!picking)}
+						aria-expanded={picking}
+						className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl text-[14px] font-semibold text-gray-200 cursor-pointer outline-none hover:bg-white/[0.04] focus-visible:ring-2 focus-visible:ring-amber-400"
+					>
+						<PlusIcon className={`h-4 w-4 transition-transform ${picking ? "rotate-45" : ""}`} />
+						{picking ? "Close" : "Add a filter"}
+					</button>
+					{picking && (
+						<motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-2 gap-1.5 px-2 pb-2">
+							{left.map((k) => (
+								<button
+									key={k}
+									type="button"
+									onClick={() => add(k)}
+									className="flex min-w-0 flex-col gap-0.5 rounded-xl px-3 py-2.5 text-left cursor-pointer outline-none hover:bg-white/[0.06] focus-visible:ring-2 focus-visible:ring-amber-400"
+								>
+									<Label k={k} ctx={ctx} fit />
+									<span className="truncate pl-4 text-[12px] text-gray-500">{HINTS[k]}</span>
+								</button>
+							))}
+						</motion.div>
+					)}
+				</div>
+			)}
 		</div>
 	)
 }
@@ -1240,6 +1480,7 @@ export function PrototypeFilterGroups(props: Props) {
 			order,
 			summaries,
 			set: (patch) => data.onChange({ ...data.state, ...patch }),
+			replace: (state) => data.onChange(state),
 		}),
 		[props, order, summaries, data],
 	)
@@ -1248,9 +1489,87 @@ export function PrototypeFilterGroups(props: Props) {
 			<p aria-live="polite" className="sr-only">
 				{props.refusal?.text ?? ""}
 			</p>
-			{variant === "E" && <VariantE ctx={ctx} />}
 			{variant === "F" && <VariantF ctx={ctx} />}
-			{variant === "G" && <VariantG ctx={ctx} />}
+			{variant === "H" && <VariantH ctx={ctx} />}
+			{variant === "I" && <VariantI ctx={ctx} />}
 		</div>
 	)
 }
+
+// ---------------------------------------------------------------- bar and header pieces
+
+/**
+ * Active filters on one row; what doesn't fit folds into "+N", which shows them all (or, with `onMore`, does that
+ * instead, for example opening the sheet).
+ */
+export function OneRowChips({
+	chips,
+	state,
+	onChange,
+	onMore,
+	trailing,
+	className = "",
+}: {
+	chips: ActiveChip[]
+	state: FilterState
+	onChange: (state: FilterState) => void
+	onMore?: () => void
+	trailing?: ReactNode
+	className?: string
+}) {
+	const list = useRef<HTMLUListElement>(null)
+	const [hidden, setHidden] = useState(0)
+	const [all, setAll] = useState(false)
+	const sig = chips.map((c) => c.key).join("|")
+	// biome-ignore lint/correctness/useExhaustiveDependencies: measure again when the chips change
+	useLayoutEffect(() => {
+		const el = list.current
+		if (!el) return
+		const measure = () => {
+			const items = [...el.children] as HTMLElement[]
+			if (!items.length) return setHidden(0)
+			const top = items[0].offsetTop
+			setHidden(items.filter((i) => i.offsetTop > top + 4).length)
+		}
+		measure()
+		const ro = new ResizeObserver(measure)
+		ro.observe(el)
+		return () => ro.disconnect()
+	}, [sig, all])
+	if (!chips.length) return null
+	return (
+		<div className={`relative flex min-w-0 items-start gap-1.5 ${className}`}>
+			<ul aria-label="Active filters" ref={list} className={`flex min-w-0 flex-1 flex-wrap gap-1.5 ${all ? "" : "max-h-8 overflow-hidden"}`}>
+				{chips.map((chip) => (
+					<li key={chip.key} className="flex h-8 items-center rounded-full bg-white/[0.06] text-[13px] text-gray-100">
+						<TitleChipPreview chip={chip}>
+							<span className="flex h-8 items-center gap-1.5 pr-1 pl-3">
+								<span className={`h-1.5 w-1.5 rounded-full ${FILTER_ACCENTS[chip.group].dot}`} />
+								{chip.label}
+							</span>
+						</TitleChipPreview>
+						<button
+							type="button"
+							onClick={() => onChange(chip.remove(state))}
+							aria-label={`Remove ${chip.label}`}
+							className="grid h-8 w-7 place-items-center rounded-r-full text-gray-500 cursor-pointer hover:text-white"
+						>
+							<XMarkIcon className="h-3.5 w-3.5" />
+						</button>
+					</li>
+				))}
+			</ul>
+			{(hidden > 0 || all) && (
+				<button
+					type="button"
+					onClick={() => (onMore && !all ? onMore() : setAll(!all))}
+					className="h-8 shrink-0 rounded-full bg-white/[0.06] px-3 text-[13px] font-semibold text-gray-200 cursor-pointer hover:bg-white/[0.11]"
+				>
+					{all ? "Less" : `+${hidden}`}
+				</button>
+			)}
+			{trailing}
+		</div>
+	)
+}
+

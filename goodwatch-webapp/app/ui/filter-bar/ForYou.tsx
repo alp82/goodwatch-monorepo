@@ -124,7 +124,7 @@ export function ForYouExplanation({
 }
 
 /** The fingerprint icon; hovering (mouse), focusing, or tapping it shows the explanation. Fixed width. */
-function FingerprintTip({
+export function FingerprintTip({
 	on,
 	explanation,
 }: {
@@ -195,7 +195,7 @@ function FingerprintTip({
 }
 
 /** "↑12k" in a fixed slot; the full number is read out, and the explanation shows it. */
-function MovedUp({ on, movedUp }: { on: boolean; movedUp: number }) {
+export function MovedUp({ on, movedUp }: { on: boolean; movedUp: number }) {
 	const shown = on && movedUp > 0
 	return (
 		<span

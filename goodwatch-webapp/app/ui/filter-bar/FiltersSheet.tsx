@@ -15,7 +15,7 @@ import { RollingNumber, TAP } from "./motion"
 import type { FilterBarCounts } from "./types"
 import { useModalDialog } from "./useModalDialog"
 // PROTOTYPE - throwaway: the variants' one-line active filters.
-import { useFilterSheetVariant } from "./FilterGroups.prototype"
+import { OneRowChips, useFilterSheetVariant } from "./FilterGroups.prototype"
 
 /** "Show N titles", counting as the state changes; it closes the sheet. */
 export function ShowTitlesButton({
@@ -190,7 +190,15 @@ function SheetContent({
 					inputRef={searchRef}
 					className="mt-4"
 				/>
-				{chips.length > 0 && (
+				{oneLine && (
+					<OneRowChips
+						chips={chips}
+						state={data.state}
+						onChange={data.onChange}
+						className="mt-3"
+					/>
+				)}
+				{!oneLine && chips.length > 0 && (
 					<ul
 						aria-label="Active filters"
 						// Three rows exactly (3 × 32 px + 2 × 6 px), so a fourth row never peeks in half.
