@@ -252,8 +252,8 @@ export function NotSeenSwitch({
 
 /**
  * The sort choices as a menu of radio items, with arrow keys. Used in the desktop popover and the phone menu. A
- * disabled choice shows dimmed with its reason and can't be picked; `footer` goes under the list, for example the
- * sign-up prompt for a sort that needs taste. Each item carries `data-sort`.
+ * disabled choice shows dimmed with its reason and can't be picked. `signUp`, the prompt for the sorts that need taste,
+ * leads the list and takes the place of those sorts while they're out of reach. Each item carries `data-sort`.
  */
 export function SortItems<K extends string>({
 	options,
@@ -261,14 +261,14 @@ export function SortItems<K extends string>({
 	onPick,
 	dense = false,
 	footnote,
-	footer,
+	signUp,
 }: {
 	options: SortOption<K>[]
 	value: K
 	onPick: (key: K) => void
 	dense?: boolean
 	footnote?: string
-	footer?: ReactNode
+	signUp?: ReactNode
 }) {
 	const layoutId = useId()
 	const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
@@ -291,7 +291,8 @@ export function SortItems<K extends string>({
 	}
 	return (
 		<div className="flex flex-col" onKeyDown={onKeyDown}>
-			{options.map((s) => {
+			{signUp}
+			{(signUp ? options.filter((s) => !(s.disabled && s.taste)) : options).map((s) => {
 				const on = s.key === value
 				return (
 					<motion.button
@@ -331,7 +332,6 @@ export function SortItems<K extends string>({
 			{footnote && (
 				<p className="px-3 pt-1.5 pb-2 text-xs text-gray-500">{footnote}</p>
 			)}
-			{footer}
 		</div>
 	)
 }
@@ -401,7 +401,7 @@ export function SortControl<K extends string>({
 	value,
 	onChange,
 	footnote,
-	footer,
+	signUp,
 	size = "md",
 	align = "left",
 	portal = false,
@@ -417,7 +417,8 @@ export function SortControl<K extends string>({
 	value: K
 	onChange: (key: K) => void
 	footnote?: string
-	footer?: ReactNode
+	/** The prompt for the sorts that need taste, in their place at the top of the menu. */
+	signUp?: ReactNode
 	size?: "md" | "sm"
 	align?: "left" | "right"
 	portal?: boolean
@@ -499,7 +500,7 @@ export function SortControl<K extends string>({
 						options={options}
 						value={value}
 						footnote={footnote}
-						footer={footer}
+						signUp={signUp}
 						onPick={(key) => {
 							onChange(key)
 							setOpen(false)

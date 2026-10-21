@@ -466,7 +466,7 @@ export function DiscoverPage({
 						onSearch={onSearch}
 						onClear={clearSearch}
 						hasExplanation={hasExplanation}
-						explanation={explanationFor(headingVariant === "C")}
+						explanation={explanationFor(headingVariant === "C" || headingVariant === "J")}
 					/>
 				)}
 				<div className="lg:mt-7">
@@ -476,9 +476,9 @@ export function DiscoverPage({
 						counts={counts}
 						forYou={forYouControl}
 						taste={taste}
-						sortFooter={
+						sortSignUp={
 							taste === "signUp" ? (
-								<div className="px-1 pt-2 pb-0.5">
+								<div className="px-1 pt-0.5 pb-1.5">
 									<SignUpPanel feature="bestMatch" needs="signUp" />
 								</div>
 							) : undefined
