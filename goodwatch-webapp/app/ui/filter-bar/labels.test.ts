@@ -328,3 +328,14 @@ test("manually selected services provide names and logos for hover previews", ()
 		{ title: "Prime Video", poster: "/9.jpg", logo: true },
 	])
 })
+
+test("every legacy filter from an old URL gets a chip, runtime too", () => {
+	const chips = activeChips({
+		...state,
+		legacy: { minRuntime: "90", maxRuntime: "120", minYear: "1997" },
+	})
+	assert.deepEqual(
+		chips.filter((chip) => chip.group === "legacy").map((chip) => chip.label),
+		["At least 90 min", "Up to 120 min", "From 1997"],
+	)
+})
