@@ -942,6 +942,7 @@ export function FilterGroups({
 				refusal={refusal}
 				titles={titles}
 				people={people}
+				countries={countries.data ?? []}
 				className={className}
 			/>
 		)

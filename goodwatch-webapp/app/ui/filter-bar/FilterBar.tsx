@@ -19,6 +19,8 @@ import {
 } from "./controls"
 import type { FilterGroupsData } from "./FilterGroups"
 import { FiltersSheet } from "./FiltersSheet"
+// PROTOTYPE - throwaway: the member preview of the Filters sheet prototype.
+import { PREVIEW_SERVICES, useMemberPreview } from "./FilterGroups.prototype"
 import { FOR_YOU_SWITCH, ForYouSwitch, useForYouUnderBestMatch } from "./ForYou"
 import {
 	type SortOption,
@@ -84,7 +86,20 @@ export function FilterBar(props: FilterBarProps) {
 		"",
 	)
 	const people = usePeopleNames(state.people ?? [], "")
-	const hasServices = filters.defaults.onMyServices || services.ids.length > 0
+	// PROTOTYPE: ?as=member pretends Netflix, Prime Video and Disney+ are saved when nothing is.
+	const memberPreview = useMemberPreview()
+	const myIds =
+		memberPreview && services.ids.length === 0
+			? PREVIEW_SERVICES.filter((id) =>
+					services.countryProviders.some((p) => p.id === id),
+				)
+			: services.ids
+	const previewProviders =
+		memberPreview && services.ids.length === 0
+			? services.countryProviders.filter((p) => myIds.includes(p.id))
+			: services.providers
+	const hasServices =
+		filters.defaults.onMyServices || myIds.length > 0
 	// The ladder stays while new counts are on their way, so the sheet's Age & content group doesn't come and go.
 	const lastLadder = useRef(counts?.ladder ?? null)
 	if (counts) lastLadder.current = counts.ladder ?? null
@@ -132,7 +147,7 @@ export function FilterBar(props: FilterBarProps) {
 		state,
 		counts,
 		onChange,
-		myServices: services.ids,
+		myServices: myIds,
 		countryProviders: services.countryProviders,
 		streamingCountry: services.country,
 		taste,
@@ -158,7 +173,7 @@ export function FilterBar(props: FilterBarProps) {
 					<ServicesControl
 						on={state.onMyServices}
 						hasServices={hasServices}
-						providers={services.providers}
+						providers={previewProviders}
 						everywherePreview={chips.find((chip) => chip.key === "services")}
 						labels={{
 							everywhere:
@@ -254,7 +269,7 @@ export function FilterBar(props: FilterBarProps) {
 					onClear={filters.clearSecondary}
 					secondaryCount={secondaryCount}
 					hasServices={hasServices}
-					providers={services.providers}
+					providers={previewProviders}
 					onAddServices={onAddServices}
 					sorts={sorts}
 					sort={sort}

@@ -46,8 +46,7 @@ import {
 } from "~/ui/filter-bar"
 import { sortShown } from "~/ui/filter-bar/labels"
 // PROTOTYPE - throwaway: the Filters sheet layouts.
-import { FILTER_SHEET_VARIANTS } from "~/ui/filter-bar/FilterGroups.prototype"
-import { PrototypeSwitcher } from "~/ui/prototype/PrototypeSwitcher"
+import { FilterSheetSwitcher, useMemberPreview } from "~/ui/filter-bar/FilterGroups.prototype"
 import { SearchPeople } from "~/ui/search/SearchPeople"
 import { SignUpPrompt } from "~/ui/sign-up-prompt/SignUpPrompt"
 import { Spinner } from "~/ui/wait/Spinner"
@@ -391,8 +390,11 @@ export function DiscoverPage({
 
 	// A visitor without services, without Not seen yet and without taste gets one sign-up key in place of the three
 	// controls. A visitor using any of them keeps the controls, so nothing they turned on is hidden.
+	// PROTOTYPE: ?as=member previews a member with services and taste over this visitor's results.
+	const memberPreview = useMemberPreview()
 	const signUpKey =
 		!member &&
+		!memberPreview &&
 		status === "signUp" &&
 		!defaults.onMyServices &&
 		!defaults.notSeenYet &&
@@ -429,10 +431,7 @@ export function DiscoverPage({
 
 	return (
 		<MotionConfig reducedMotion="user">
-			<PrototypeSwitcher
-				variants={FILTER_SHEET_VARIANTS}
-				position="top-2 left-1/2 -translate-x-1/2"
-			/>
+			<FilterSheetSwitcher />
 			<div className={`mx-auto max-w-7xl px-4 pt-5 lg:pt-8 ${SLAB_CLEARANCE}`}>
 				<DiscoverHeading
 					q={q}
@@ -454,9 +453,9 @@ export function DiscoverPage({
 						signUpKey={signUpKey}
 						counts={counts}
 						forYou={forYouControl}
-						taste={taste}
+						taste={memberPreview ? "ready" : taste}
 						sortFooter={
-							taste === "signUp" ? (
+							taste === "signUp" && !memberPreview ? (
 								<div className="px-2 pt-2 pb-1">
 									<SignUpPrompt feature="bestMatch" stage="learn" size="chip" />
 								</div>

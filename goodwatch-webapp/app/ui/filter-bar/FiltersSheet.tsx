@@ -14,6 +14,8 @@ import { type ActiveChip, FILTER_ACCENTS } from "./labels"
 import { RollingNumber, TAP } from "./motion"
 import type { FilterBarCounts } from "./types"
 import { useModalDialog } from "./useModalDialog"
+// PROTOTYPE - throwaway: the variants' one-line active filters.
+import { useFilterSheetVariant } from "./FilterGroups.prototype"
 
 /** "Show N titles", counting as the state changes; it closes the sheet. */
 export function ShowTitlesButton({
@@ -68,6 +70,18 @@ export function FiltersSheet({
 	const search = useRef<HTMLInputElement>(null)
 	const titleId = useId()
 	useModalDialog({ open, onClose, container: panel, initialFocus: search })
+	// The page behind the sheet stays put while the sheet is open (the scrollbar's room is kept, so nothing shifts).
+	useEffect(() => {
+		if (!open) return
+		const root = document.documentElement
+		const before = { overflow: root.style.overflow, gutter: root.style.scrollbarGutter }
+		root.style.scrollbarGutter = "stable"
+		root.style.overflow = "hidden"
+		return () => {
+			root.style.overflow = before.overflow
+			root.style.scrollbarGutter = before.gutter
+		}
+	}, [open])
 	return (
 		<AnimatePresence>
 			{open && (
@@ -127,6 +141,7 @@ function SheetContent({
 	searchRef: React.RefObject<HTMLInputElement>
 }) {
 	const [query, setQuery] = useState("")
+	const oneLine = useFilterSheetVariant() !== "now"
 	const scroller = useRef<HTMLDivElement>(null)
 	// The group a chip was tapped for; it is scrolled to once the groups show it (a search may have hidden it).
 	const [target, setTarget] = useState<{ group: string } | null>(null)
@@ -179,7 +194,12 @@ function SheetContent({
 					<ul
 						aria-label="Active filters"
 						// Three rows exactly (3 × 32 px + 2 × 6 px), so a fourth row never peeks in half.
-						className="mt-3 flex max-h-[6.75rem] flex-wrap gap-1.5 overflow-y-auto"
+						// PROTOTYPE: the variants keep it to one line that scrolls sideways, fading at the end.
+						className={
+							oneLine
+								? "-mx-6 mt-3 flex gap-1.5 overflow-x-auto px-6 [mask-image:linear-gradient(to_right,transparent,black_24px,black_calc(100%-40px),transparent)] [scrollbar-width:none] [&>li]:shrink-0"
+								: "mt-3 flex max-h-[6.75rem] flex-wrap gap-1.5 overflow-y-auto"
+						}
 					>
 						{chips.map((chip) => (
 							<li
