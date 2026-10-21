@@ -114,7 +114,7 @@ def main():
         @contextmanager
         def lease(self, *args): yield lambda: None
         @contextmanager
-        def country_checkpoints(self): yield
+        def checkpoint_batch(self): yield
         def inventory(self): return deepcopy(self.state)
         def load(self, identity): return deepcopy(self.state.get(identity))
         def pending(self, identity): return set()

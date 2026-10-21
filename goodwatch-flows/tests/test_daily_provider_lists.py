@@ -102,7 +102,7 @@ class Storage:
         return deepcopy(self.snapshots)
 
     @contextmanager
-    def country_checkpoints(self):
+    def checkpoint_batch(self):
         before = deepcopy(self.snapshots)
         try:
             yield
@@ -228,9 +228,16 @@ class DailyListTests(unittest.TestCase):
                         raise job.TMDBDeletedTitle('Deleted title', endpoint=path, http_status=404)
                     return get(path, **params)
                 first, second = datetime(2026, 10, 13, 23), datetime(2026, 10, 14, 1)
-                times = [first] * 3 + [second if crosses_midnight else first] * 3
-                with patch.object(api, 'get', side_effect=deleted), patch.object(job, 'datetime') as clock:
-                    clock.now.side_effect = times
+                current = [first]
+                original_lease = store.lease
+                @contextmanager
+                def lease(identity):
+                    current[0] = second if crosses_midnight and identity.startswith('DE:') else first
+                    with original_lease(identity) as owned:
+                        yield owned
+                with patch.object(api, 'get', side_effect=deleted), patch.object(store, 'lease', lease), \
+                     patch.object(job, 'datetime') as clock:
+                    clock.now.side_effect = lambda *args: current[0]
                     result = job.run_daily_lists(api, store, countries=['US', 'DE'],
                                                 service_ids=[8], media_types=['show'])
                 self.assertEqual((result['lists_failed'], result['lists_completed']), (0, 2), result)
@@ -340,6 +347,69 @@ class DailyListTests(unittest.TestCase):
                 self.assertEqual(self.store.crate.history, history)
         self.api.get = original
 
+    def test_late_title_failure_on_a_reread_cannot_close_earlier_batches_or_write_exact_days(self):
+        self.api.ids = list(range(1, 202))
+        self.run_day('2026-10-17T20:00:00', dry_run=False)
+        prior_history = deepcopy(self.store.crate.history)
+        prior_checkpoint = deepcopy(self.store.snapshots)
+        self.api.ids = []
+        self.api.results = {}
+        original = self.api.get
+        def fail_late(path, **params):
+            if path == '/tv/201/watch/providers':
+                raise TimeoutError('Last title check failed')
+            return original(path, **params)
+        self.api.get = fail_late
+        report = self.run_day('2026-10-18T20:00:00', dry_run=False)
+        self.assertEqual(report['lists_failed'], 1)
+        self.assertEqual(self.store.snapshots, prior_checkpoint)
+        self.assertEqual(self.store.crate.history, prior_history)
+        self.assertTrue(all(stay['dropped_on'] is None for stay in self.store.crate.history.values()))
+
+    def test_long_reread_renews_its_list_lease_while_confirming_all_changes(self):
+        self.api.ids = list(range(1, 202))
+        self.run_day('2026-10-17T20:00:00', dry_run=False)
+        self.api.ids, self.api.results = [], {}
+        original_get, original_lease = self.api.get, self.store.lease
+        title_reads, renewed_at = [0], [0]
+        def get(path, **params):
+            if path.endswith('/watch/providers'):
+                title_reads[0] += 1
+            return original_get(path, **params)
+        @contextmanager
+        def lease(identity):
+            with original_lease(identity):
+                def owned():
+                    if title_reads[0] - renewed_at[0] > 200:
+                        raise job.LeaseLost('Simulated expiry during a long source confirmation')
+                    renewed_at[0] = title_reads[0]
+                yield owned
+        self.api.get = get
+        with patch.object(self.store, 'lease', lease):
+            report = self.run_day('2026-10-18T20:00:00', dry_run=False)
+        self.assertEqual((report['lists_completed'], report['lists_failed']), (1, 0))
+        self.assertEqual(title_reads[0], 201)
+        self.assertTrue(all(stay['dropped_precision'] == 'exact' for stay in self.store.crate.history.values()))
+
+    def test_rejected_cross_day_title_check_keeps_its_title_and_endpoint_in_the_report(self):
+        first, following = datetime(2026, 10, 17, 23), datetime(2026, 10, 18, 0)
+        current, original = [first], self.api.get
+        def get(path, **params):
+            if path.endswith('/watch/providers'):
+                current[0] = following
+            return original(path, **params)
+        self.api.get = get
+        with patch.object(job, 'datetime') as clock:
+            clock.now.side_effect = lambda *args: current[0]
+            report = job.run_daily_lists(self.api, self.store, countries=['US'],
+                                        media_types=['show'], service_ids=[8])
+        self.assertEqual((report['lists_completed'], report['lists_failed']), (0, 1))
+        failure = report['lists'][0]
+        self.assertEqual((failure['key'], failure['tmdb_id'], failure['endpoint']),
+                         ('US:show:8', 42, '/tv/42/watch/providers'))
+        self.assertEqual(self.store.snapshots, {})
+        self.assertEqual(self.store.crate.history, {})
+
     def test_paging_metadata_change_tries_a_clean_second_sort(self):
         original = self.api.get
         def changing(path, **params):
@@ -410,6 +480,30 @@ class DailyListTests(unittest.TestCase):
         self.assertEqual(report['lists'][0]['titles'], 4750)
         self.assertEqual(report['lists'][0]['query_retries'], 1)
         self.assertEqual(report['lists'][0]['count_shortfall'], 0)
+
+    def test_gb_partition_retry_changes_query_key_without_changing_its_vote_bounds(self):
+        original = self.api.get
+        def cached(path, **params):
+            if not path.startswith('/discover/'):
+                return original(path, **params)
+            low, high = params.get('vote_count.gte'), params.get('vote_count.lte')
+            if high is None and (low is None or low == 0):
+                return dict(page=1, total_pages=1001, total_results=20001, results=[])
+            if high == 99 and (low is None or low == 0):
+                return dict(page=1, total_pages=501, total_results=3, results=[])
+            if low == 50:
+                page = params['page']
+                fresh = type(low) is float  # HTTP serializes 50.0 on another origin query key.
+                ids = ([41, 42] if page == 1 else [43]) if fresh else ([41, 42] if page == 1 else [42, 43])
+                return dict(page=page, total_pages=2, total_results=3 if fresh or page == 1 else 4,
+                            results=[{'id': i} for i in ids])
+            return dict(page=1, total_pages=0, total_results=0, results=[])
+        self.api.get = cached
+        report = job.run_daily_lists(self.api, self.store, countries=['GB'], service_ids=[9],
+            media_types=['movie'], now=datetime(2026, 10, 21, 20))
+        self.assertEqual((report['lists_completed'], report['lists_failed']), (1, 0), report)
+        self.assertEqual(report['lists'][0]['titles'], 3)
+        self.assertEqual(report['lists'][0]['query_retries'], 1)
 
     def test_gb_amazon_shortfalls_from_all_three_jobs_require_independent_set_agreement(self):
         # Reported/returned counts in the actual Oct 18, 19, and 20 runs.

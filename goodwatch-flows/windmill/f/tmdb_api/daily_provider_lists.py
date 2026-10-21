@@ -218,10 +218,13 @@ def read_list(client, country, media_type, service_id, diagnostics=None):
                   with_watch_monetization_types='flatrate|free|ads', include_adult='false')
     diagnostics = {} if diagnostics is None else diagnostics
     diagnostics.update(sort_fallbacks=0, partitions=0, query_retries=0)
+    equivalent_query = False
     def read_range(lo=None, hi=None):
         extra = {}
         if lo is not None:
-            extra['vote_count.gte'] = lo
+            # Numerically identical float spelling also changes a bounded leaf's
+            # origin cache key (50 -> 50.0); adding zero only changes the root.
+            extra['vote_count.gte'] = float(lo) if equivalent_query else lo
         if hi is not None:
             extra['vote_count.lte'] = hi
         previous_read, expected, last_count = None, None, 0
@@ -281,6 +284,7 @@ def read_list(client, country, media_type, service_id, diagnostics=None):
         # Discard both failed traversals. Judge the retry by its own snapshot;
         # a live catalog need not keep the first traversal's total.
         diagnostics['query_retries'] = 1
+        equivalent_query = True
         ids, gaps = read_range(0)
     diagnostics.update(count_shortfall=sum(gap['missing_count'] for gap in gaps),
                        count_agreements=gaps)
@@ -295,6 +299,22 @@ def list_candidates(store, identity, previous, listed, country, media_type, serv
     candidates |= store.pending(identity)
     store.stage(identity, candidates)
     return sorted(candidates)
+
+
+def confirm_list(title_reads, country, media_type, service_id, listed, at, candidates, clock, owned=None):
+    """Validate every source response before this list can publish any history."""
+    api_media = 'tv' if media_type == 'show' else 'movie'
+    for offset in range(0, len(candidates), 200):
+        if owned is not None:
+            owned()
+        reads = title_reads.read(api_media, candidates[offset:offset + 200], country, service_id, listed, at)
+        for tmdb_id, _, proof in reads:
+            if utc_day(proof['checked_at']) != utc_day(at):
+                error = IncompleteList('List read crossed UTC midnight')
+                error.tmdb_id, error.endpoint = tmdb_id, f'/{api_media}/{tmdb_id}/watch/providers'
+                raise error
+    if utc_day(utc_ms(clock())) != utc_day(at):
+        raise IncompleteList('List read crossed UTC midnight')
 
 
 def publish_list_changes(store, title_reads, country, media_type, service_id, listed, previous, at, candidates, owned):
@@ -360,6 +380,7 @@ def read_daily_list(client, store, title_reads, country, media_type, service_id,
             raise
         listed = set(ids)
         candidates = list_candidates(store, identity, previous, listed, country, media_type, service_id)
+        confirm_list(title_reads, country, media_type, service_id, listed, at, candidates, clock, owned)
         members, retry_ids = publish_list_changes(store, title_reads, country, media_type, service_id,
                                                   listed, previous, at, candidates, owned)
         if utc_day(utc_ms(clock())) != utc_day(at):

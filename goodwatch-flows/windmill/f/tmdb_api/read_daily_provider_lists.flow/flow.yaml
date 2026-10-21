@@ -78,7 +78,7 @@ schema:
       type: integer
       default: 570000
       minimum: 0
-      description: Maximum new title/list checks; admit complete countries only.
+      description: Maximum new title/list checks; failed lists do not block siblings.
     max_requests:
       type: integer
       default: 350000

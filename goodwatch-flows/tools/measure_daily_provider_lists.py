@@ -142,6 +142,13 @@ def main():
                     countries = args.countries or ['BR', 'DE', 'NG']
                     if args.ramp:
                         from f.tmdb_api.daily_list_ramp import run_ramp
+                        if args.countries:
+                            # An explicitly selected-country preview must not reread
+                            # the entire production inventory. Live main is unchanged.
+                            inventory = store.inventory
+                            selected = set(args.countries)
+                            store.inventory = lambda: {key: value for key, value in inventory().items()
+                                                       if key.split(':')[0] in selected}
                         countries = args.countries or sorted({row['iso_3166_1'] for row in
                             client.get('/watch/providers/regions')['results']} | set(store.countries()))
                         report = run_ramp(client, store, countries=countries, service_ids=list(job.SERVICE_NAMES),
