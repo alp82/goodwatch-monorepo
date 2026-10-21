@@ -5,6 +5,8 @@ the [absent-country departure](https://github.com/alp82/goodwatch-monorepo/issue
 Research: `docs/research/offer-arrival-everywhere.md` and
 `docs/research/availability-history.md` on `origin/research/offer-arrival-everywhere`.
 The existing [history contract](../availability-history/README.md) remains authoritative.
+The [October 21 production diagnosis](october-21-completeness.md) records the
+rollout, corrected job dates, exact-day counts, and the revised completeness rule.
 
 ## Scope and entrypoints
 
@@ -141,25 +143,46 @@ than a guaranteed daily allowance. See its [rate-limit documentation](https://de
 The 15/second default leaves headroom for existing fetchers; unrelated jobs do not
 share this in-process limiter.
 
-Each list first uses `title.asc` for movies or `name.asc` for shows. Page numbers,
-totals, and page counts must remain consistent. Unique IDs must match
-`total_results`. Otherwise it reads the second sort (`primary_release_date.desc`
-or `first_air_date.desc`). Stable short reads can union their IDs against the
-same total. Changed paging metadata discards that traversal's IDs and tries a
-clean second sort; a changed second-sort total also requires an independently
-complete second read. A second incomplete traversal is rejected before staging
-or history publication. If both sorts are torn, the error reports the last
-observed distinct-title count, without treating that read as complete.
+Each list first uses `title.asc` for movies or `name.asc` for shows. Within a
+traversal, all page numbers, totals, and page counts must agree, and IDs must not
+repeat within or across pages. An internally consistent traversal returning
+exactly its own `total_results` succeeds. Otherwise the second sort is read
+(`primary_release_date.desc` or `first_air_date.desc`). A complete second sort
+can represent a newer catalog; it need not keep the earlier total. Partial sorts
+are never unioned to manufacture completeness.
+
+A stable count overstatement is accepted only when **both independent sorts**
+have identical totals and return **exactly the same ID set**, with no duplicate
+IDs or changing metadata in either traversal. The gap must be positive, **at
+most five titles and at most 0.1%** of the reported total, per leaf range. Thus a
+one-title gap in 1,723 can pass, while a one-title gap in 999 cannot. This handles
+TMDB's observed counted-but-unreturned title without admitting the earlier
+mixed-page snapshots. `count_shortfall` and `count_agreements` report the admitted
+count and the vote range, reported total, and returned total of each agreement.
+
+If neither sort passes, discard both and retry once with `vote_count.gte=0`, an
+equivalent query that avoids mixed origin-cache snapshots even when `cb` bypasses
+the CDN. Judge that retry by its own totals and the same rules. Never require its
+total to equal an older failed traversal's total. If it still fails, retain the
+checkpoint and report the last observed distinct-title count. No changes are
+staged or published before the list passes.
 
 Lists beyond TMDB's 500-page limit split into disjoint integer `vote_count`
 ranges. This retains undated titles that date splits can exclude. Each leaf gets
-the same completeness/fallback checks. The lower range is read first: increasing
-vote counts can repeat a title in the upper range, so the ranges are unioned.
-Changed uncapped parent cardinality rejects the read. TMDB caps reported
-`total_results` at **20,001**, so larger partitioned lists cannot compare their
-union with that capped parent total. An indivisible oversized bin fails safely. This
-does not turn a changing upstream API into a transactional snapshot; per-title
-confirmation remains necessary even after cardinality matches.
+the same checks. Read the lower range first; increasing vote counts can repeat a
+title in the upper range, so union the independently verified ranges. An uncapped
+parent total must equal that union's size plus only the shortfalls explicitly
+agreed by the child sorts; other changes reject the read. TMDB caps reported
+`total_results` at **20,001**, so larger lists cannot compare their union with
+that capped parent total. An indivisible oversized bin fails safely.
+
+TMDB provides no transactional snapshot. These checks reject observable torn
+pagination (metadata changes, duplicate drift, disagreeing short sets) and large
+omissions. They cannot prove that a small title omission shared by both sorts is
+impossible; the narrowly bounded exception explicitly trusts that shared catalog
+view. Every detected arrival or departure still requires its existing per-title
+check, and the existing history writer alone decides exact days, first-read
+baselines, gaps, and returns. No history precision or offer publication rules change.
 
 One fresh per-title response covers every country/service. A compressed,
 temporary SQLite cache shares it within the run, with bounded Python memory and
@@ -263,12 +286,11 @@ This is not a stable filtered-count shortfall, so a 1% tolerance would be unsafe
 Adding `vote_count.gte=0` returned all 5,474 IDs in both independent sorts, with
 stable paging metadata. After both ordinary sorts fail, the reader now discards
 them and retries once with this nonnegative vote floor, retaining the same
-catalog and all existing count/metadata checks. As an additional safety gate,
-the equivalent retry's total must equal the first traversal's page-one total
-when that total is below TMDB's 20,001 cap. If they differ, fail this read and
-retain the checkpoint; a subsequent day's stable read can recover it.
-`query_retries` reports this
-fallback. If both retry sorts are also torn, the list still fails; no shortfall is accepted. The
+catalog and the metadata checks. The October 17 implementation additionally
+required the retry total to equal the original total. That gate rejected complete
+newer snapshots in production; the October 21 fix removes it. `query_retries`
+reports this fallback. Torn retry traversals still fail; the bounded agreement
+exception above applies only to internally consistent reads. The
 adult-inclusive control returned one additional softcore title, which does not
 explain the paging gap.
 
@@ -635,8 +657,9 @@ full local report is `/tmp/rollout682/ramp-day1-preview.json`.
 
 The earlier 23-country preview predates the scoped 404 and baseline-source
 corrections above. Its measured request/time costs remain historical evidence;
-its history row plans are superseded. No apply has run. The stricter retry-total
-gate may reject that preview's mixed 5,473/5,474 snapshot until the read is stable.
+its history row plans are superseded. No apply had run at that point. The
+stricter retry-total gate introduced then was removed after the October 21
+production investigation described above.
 
 The reviewer's `test_deleted_baseline.py` scenario is now an assertion-based
 regression: one listed 404 during DE's baseline leaves the US stay untouched, and

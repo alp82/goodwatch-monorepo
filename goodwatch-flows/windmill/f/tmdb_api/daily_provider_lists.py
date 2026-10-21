@@ -211,33 +211,25 @@ class IncompleteList(ValueError):
 
 
 def read_list(client, country, media_type, service_id, diagnostics=None):
-    """Accept a stable total and that many distinct IDs, using both sorts if needed."""
+    """Read one stable traversal, or two agreeing sorts with a tiny count overstatement."""
     api_media = 'tv' if media_type == 'show' else 'movie'
     sorts = ('name.asc', 'first_air_date.desc') if media_type == 'show' else ('title.asc', 'primary_release_date.desc')
     params = dict(watch_region=country, with_watch_providers=service_id,
                   with_watch_monetization_types='flatrate|free|ads', include_adult='false')
     diagnostics = {} if diagnostics is None else diagnostics
     diagnostics.update(sort_fallbacks=0, partitions=0, query_retries=0)
-    first_total = None
-    def read_range(lo=None, hi=None, expected_total=None):
-        nonlocal first_total
+    def read_range(lo=None, hi=None):
         extra = {}
         if lo is not None:
             extra['vote_count.gte'] = lo
         if hi is not None:
             extra['vote_count.lte'] = hi
-        ids, expected, last_count = set(), None, 0
+        previous_read, expected, last_count = None, None, 0
         for index, sort in enumerate(sorts):
             if index:
                 diagnostics['sort_fallbacks'] += 1
             first = client.get('/discover/' + api_media, **params, **extra, sort_by=sort, page=1)
             total, pages = first['total_results'], first['total_pages']
-            if first_total is None:
-                first_total = total
-            if expected_total is not None and total != expected_total:
-                raise IncompleteList(f'Retry total {total} differs from first read {expected_total}')
-            if expected is not None and total != expected:
-                ids.clear()  # A changed total needs an independently complete second read.
             expected = total
             if pages > 500:
                 diagnostics['partitions'] += 1
@@ -245,37 +237,54 @@ def read_list(client, country, media_type, service_id, diagnostics=None):
                 if lo == hi and lo is not None:
                     raise IncompleteList('An indivisible vote-count bin exceeds 500 pages')
                 cut = ((lo or 0) + hi + 1) // 2 if hi is not None else max(100, (lo or 0) * 2)
-                left, right = set(read_range(lo, cut - 1)), set(read_range(cut, hi))
+                left_ids, left_gaps = read_range(lo, cut - 1)
+                right_ids, right_gaps = read_range(cut, hi)
+                left, right = set(left_ids), set(right_ids)
+                gaps = left_gaps + right_gaps
                 # TMDB caps reported total_results at 20,001 (research §1).
                 # Read the lower bin first: growing vote counts can repeat a
                 # title in the upper bin, so union the independently complete bins.
-                if total < 20001 and len(left | right) != total:
+                if total < 20001 and len(left | right) + sum(gap['missing_count'] for gap in gaps) != total:
                     raise IncompleteList('Partition totals changed during read')
-                return sorted(left | right)
+                return sorted(left | right), gaps
             rest = get_many(client, [('/discover/' + api_media, dict(params, **extra, sort_by=sort, page=page))
                                      for page in range(2, pages + 1)])
             results = [first, *rest]
-            read_ids = {row['id'] for result in results for row in result['results']}
+            rows = [row['id'] for result in results for row in result['results']]
+            read_ids = set(rows)
             last_count = len(read_ids)
             if any(result['total_results'] != expected or result['total_pages'] != pages or result['page'] != page
                    for page, result in enumerate(results, 1)):
-                ids.clear()  # Do not mix a torn page traversal into the fallback.
+                previous_read = None  # Do not mix a torn page traversal into the fallback.
                 continue
-            ids.update(read_ids)
-            last_count = len(ids)
-            if len(ids) == expected:
-                return sorted(ids)
+            if len(rows) != len(read_ids):
+                previous_read = None  # Duplicated IDs can hide omissions even at a matching total.
+                continue
+            if len(read_ids) == expected:
+                return sorted(read_ids), []
+            missing = expected - len(read_ids)
+            # TMDB can count a title that neither sort returns. Never union
+            # partial traversals: require the very same set and total twice.
+            # Both an absolute and relative bound prevent truncated small lists.
+            if (previous_read == (expected, read_ids)
+                    and 0 < missing <= 5 and missing * 1000 <= expected):
+                return sorted(read_ids), [dict(vote_min=lo, vote_max=hi,
+                    reported_total=expected, returned_total=len(read_ids), missing_count=missing)]
+            previous_read = (expected, read_ids)
         raise IncompleteList(f'Expected {expected} distinct titles, read {last_count}')
 
     try:
-        return read_range()
+        ids, gaps = read_range()
     except IncompleteList:
         # cb bypasses the CDN, but TMDB can retain mixed origin page snapshots.
         # A nonnegative vote floor keeps the same catalog on another query key.
-        # Discard both failed traversals; require full counts/stable metadata
-        # again, with no further query retry if this traversal is also torn.
+        # Discard both failed traversals. Judge the retry by its own snapshot;
+        # a live catalog need not keep the first traversal's total.
         diagnostics['query_retries'] = 1
-        return read_range(0, expected_total=first_total if first_total < 20001 else None)
+        ids, gaps = read_range(0)
+    diagnostics.update(count_shortfall=sum(gap['missing_count'] for gap in gaps),
+                       count_agreements=gaps)
+    return ids
 
 
 def list_candidates(store, identity, previous, listed, country, media_type, service_id):

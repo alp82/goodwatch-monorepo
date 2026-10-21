@@ -307,7 +307,7 @@ class DailyListTests(unittest.TestCase):
         self.assertEqual(stay['dropped_on'], day('2026-10-16'))
         self.assertEqual(stay['dropped_precision'], 'exact')
 
-    def test_title_sort_shortfall_uses_second_sort_union_before_checkpoint(self):
+    def test_disagreeing_short_sorts_cannot_be_unioned_into_a_complete_checkpoint(self):
         original = self.api.get
         def paging(path, **params):
             if path.startswith('/discover/'):
@@ -317,10 +317,9 @@ class DailyListTests(unittest.TestCase):
             return original(path, **params)
         self.api.get = paging
         report = self.run_day('2026-10-14T20:00:00', dry_run=False)
-        self.assertEqual(report['lists_completed'], 1)
-        self.assertEqual(next(iter(self.store.snapshots.values()))['ids'], [41, 42, 43])
-        self.assertEqual(len(self.store.crate.history), 3)
-        self.assertEqual(report['lists'][0]['sort_fallbacks'], 1)
+        self.assertEqual(report['lists_failed'], 1)
+        self.assertEqual(self.store.snapshots, {})
+        self.assertEqual(self.store.crate.history, {})
 
     def test_short_list_or_failed_title_check_never_advances_checkpoint(self):
         self.run_day('2026-10-14T20:00:00', dry_run=False)
@@ -392,7 +391,138 @@ class DailyListTests(unittest.TestCase):
         self.assertEqual(len(self.store.crate.history), 5)
         self.assertEqual({row['appeared_precision'] for row in self.store.crate.history.values()}, {'unknown'})
 
-    def test_equivalent_query_retry_rejects_a_different_total_from_the_first_read(self):
+    def test_oct18_us_movie_netflix_accepts_a_complete_retry_after_one_title_leaves(self):
+        original = self.api.get
+        def snapshots(path, **params):
+            if not path.startswith('/discover/'):
+                return original(path, **params)
+            retry = params.get('vote_count.gte') == 0
+            page = params['page']
+            total = 4750 if retry else (4751 if page == 1 else 4750)
+            ids = list(range(1, 4751))[(page - 1) * 20:page * 20]
+            return dict(page=page, total_pages=238, total_results=total,
+                        results=[{'id': i} for i in ids])
+        self.api.get = snapshots
+        report = job.run_daily_lists(self.api, self.store, countries=['US'], service_ids=[8],
+            media_types=['movie'], now=datetime(2026, 10, 18, 20))
+        self.assertEqual(report['lists_failed'], 0, report)
+        self.assertEqual(report['lists_completed'], 1)
+        self.assertEqual(report['lists'][0]['titles'], 4750)
+        self.assertEqual(report['lists'][0]['query_retries'], 1)
+        self.assertEqual(report['lists'][0]['count_shortfall'], 0)
+
+    def test_gb_amazon_shortfalls_from_all_three_jobs_require_independent_set_agreement(self):
+        # Reported/returned counts in the actual Oct 18, 19, and 20 runs.
+        for reported, returned in ((1718, 1717), (1723, 1722), (1721, 1720)):
+            with self.subTest(reported=reported, returned=returned):
+                self.api, self.store = TMDB(), Storage()
+                self.api.results = {'GB': {'flatrate': [{'provider_id': 9}]}}
+                original = self.api.get
+                def shortfall(path, **params):
+                    if not path.startswith('/discover/'):
+                        return original(path, **params)
+                    page = params['page']
+                    ids = list(range(1, returned + 1))
+                    if params['sort_by'] == 'primary_release_date.desc':
+                        ids.reverse()
+                    return dict(page=page, total_pages=(reported + 19) // 20, total_results=reported,
+                        results=[{'id': i} for i in ids[(page - 1) * 20:page * 20]])
+                self.api.get = shortfall
+                report = job.run_daily_lists(self.api, self.store, countries=['GB'], service_ids=[9],
+                    media_types=['movie'], now=datetime(2026, 10, 19, 20))
+                self.assertEqual(report['lists_failed'], 0, report)
+                row = report['lists'][0]
+                self.assertEqual(row['titles'], returned)
+                self.assertEqual(row['sort_fallbacks'], 1)
+                self.assertEqual(row['query_retries'], 0)
+                self.assertEqual(row['count_shortfall'], 1)
+                self.assertEqual(row['count_agreements'][0]['reported_total'], reported)
+
+    def test_oct20_lc_netflix_retry_can_complete_after_three_titles_leave(self):
+        original = self.api.get
+        def snapshots(path, **params):
+            if not path.startswith('/discover/'):
+                return original(path, **params)
+            retry = params.get('vote_count.gte') == 0
+            page = params['page']
+            total = 4829 if retry else (4832 if page == 1 else 4829)
+            ids = list(range(1, 4830))[(page - 1) * 20:page * 20]
+            return dict(page=page, total_pages=(total + 19) // 20, total_results=total,
+                        results=[{'id': i} for i in ids])
+        self.api.get = snapshots
+        report = job.run_daily_lists(self.api, self.store, countries=['LC'], service_ids=[8],
+            media_types=['movie'], now=datetime(2026, 10, 20, 20))
+        self.assertEqual(report['lists_failed'], 0, report)
+        self.assertEqual(report['lists'][0]['titles'], 4829)
+        self.assertEqual(report['lists'][0]['query_retries'], 1)
+
+    def test_duplicate_page_drift_is_rejected_even_when_distinct_count_matches_total(self):
+        original = self.api.get
+        def duplicate(path, **params):
+            if not path.startswith('/discover/'):
+                return original(path, **params)
+            ids = [41, 42] if params['page'] == 1 else [42, 43]
+            return dict(page=params['page'], total_pages=2, total_results=3,
+                        results=[{'id': i} for i in ids])
+        self.api.get = duplicate
+        report = self.run_day('2026-10-14T20:00:00', dry_run=False)
+        self.assertEqual(report['lists_failed'], 1)
+        self.assertEqual(self.store.snapshots, {})
+        self.assertEqual(self.store.crate.history, {})
+
+    def test_small_shortfall_is_rejected_without_matching_sets_and_both_size_bounds(self):
+        for total, missing, disagree in ((1723, 1, True), (999, 1, False), (10000, 6, False)):
+            with self.subTest(total=total, missing=missing, disagree=disagree):
+                self.api, self.store = TMDB(), Storage()
+                original = self.api.get
+                def shortfall(path, **params):
+                    if not path.startswith('/discover/'):
+                        return original(path, **params)
+                    ids = list(range(1, total - missing + 1))
+                    if disagree and params['sort_by'] == 'first_air_date.desc':
+                        ids[-1] = total
+                    page = params['page']
+                    return dict(page=page, total_pages=(total + 19) // 20, total_results=total,
+                        results=[{'id': i} for i in ids[(page - 1) * 20:page * 20]])
+                self.api.get = shortfall
+                report = self.run_day('2026-10-14T20:00:00', dry_run=False)
+                self.assertEqual(report['lists_failed'], 1)
+                self.assertEqual(report['lists'][0]['error'], 'IncompleteList')
+                self.assertEqual(self.store.intents, {})
+                self.assertEqual(self.store.snapshots, {})
+                self.assertEqual(self.store.crate.history, {})
+
+    def test_agreeing_shortfall_keeps_exact_days_and_requires_title_confirmation(self):
+        # A real stay exists for 42. Other unchanged IDs need no history writes.
+        self.run_day('2026-10-17T20:00:00', dry_run=False)
+        self.store.snapshots['US:show:8']['ids'] = list(range(1, 1723))
+        original = self.api.get
+        def shortfall(path, **params):
+            if not path.startswith('/discover/'):
+                payload = original(path, **params)
+                if '/42/' in path:
+                    payload['results'] = {}
+                return payload
+            ids = [i for i in range(1, 1724) if i != 42]
+            if params['sort_by'] == 'first_air_date.desc':
+                ids.reverse()
+            page = params['page']
+            return dict(page=page, total_pages=87, total_results=1723,
+                results=[{'id': i} for i in ids[(page - 1) * 20:page * 20]])
+        self.api.get = shortfall
+        report = self.run_day('2026-10-18T20:00:00', dry_run=False)
+        self.assertEqual(report['lists_failed'], 0, report)
+        self.assertEqual(report['lists'][0]['changes_checked'], 2)
+        stays = {row['media_tmdb_id']: row for row in self.store.crate.history.values()}
+        self.assertEqual((stays[42]['dropped_precision'], stays[42]['dropped_on']),
+                         ('exact', day('2026-10-18')))
+        self.assertEqual((stays[1723]['appeared_precision'], stays[1723]['appeared_on']),
+                         ('exact', day('2026-10-18')))
+        checks = [path for path, _ in self.api.calls if path.endswith('/watch/providers')]
+        self.assertIn('/tv/1723/watch/providers', checks)
+        self.assertEqual(checks.count('/tv/42/watch/providers'), 2)  # Baseline and departure.
+
+    def test_complete_query_retry_can_cover_a_new_snapshot_total(self):
         original = self.api.get
         def snapshots(path, **params):
             if not path.startswith('/discover/'):
@@ -402,10 +532,10 @@ class DailyListTests(unittest.TestCase):
                         results=[{'id': i} for i in (41, 42, 43)])
         self.api.get = snapshots
         report = self.run_day('2026-10-14T20:00:00', dry_run=False)
-        self.assertEqual(report['lists_failed'], 1)
-        self.assertIn('Retry total 3 differs from first read 4', report['lists'][0]['reason'])
-        self.assertEqual(self.store.snapshots, {})
-        self.assertEqual(self.store.crate.history, {})
+        self.assertEqual(report['lists_failed'], 0)
+        self.assertEqual(report['lists'][0]['titles'], 3)
+        self.assertEqual(self.store.snapshots['US:show:8']['ids'], [41, 42, 43])
+        self.assertEqual(len(self.store.crate.history), 3)
 
     def test_large_lists_are_partitioned_without_losing_titles_with_no_release_date(self):
         original = self.api.get
@@ -434,6 +564,31 @@ class DailyListTests(unittest.TestCase):
         result = self.run_day('2026-10-14T20:00:00', dry_run=False)
         self.assertEqual(result['lists_completed'], 1)
         self.assertEqual(next(iter(self.store.snapshots.values()))['ids'], [41, 42, 43])
+
+    def test_partition_parent_allows_only_the_count_gap_agreed_by_its_child_sorts(self):
+        for parent_total, failures in ((5001, 0), (5002, 1)):
+            with self.subTest(parent_total=parent_total):
+                self.api, self.store = TMDB(), Storage()
+                original = self.api.get
+                def partitioned(path, **params):
+                    if not path.startswith('/discover/'):
+                        return original(path, **params)
+                    if params.get('vote_count.gte', 0) == 0 and 'vote_count.lte' not in params:
+                        return dict(page=1, total_pages=501, total_results=parent_total, results=[])
+                    left = 'vote_count.lte' in params
+                    ids = list(range(1, 2501)) if left else list(range(2501, 5001))
+                    if params['sort_by'] == 'first_air_date.desc':
+                        ids.reverse()
+                    page = params['page']
+                    return dict(page=page, total_pages=126 if left else 125,
+                        total_results=2501 if left else 2500,
+                        results=[{'id': i} for i in ids[(page - 1) * 20:page * 20]])
+                self.api.get = partitioned
+                report = self.run_day('2026-10-14T20:00:00')
+                self.assertEqual(report['lists_failed'], failures, report)
+                if not failures:
+                    self.assertEqual(report['lists'][0]['titles'], 5000)
+                    self.assertEqual(report['lists'][0]['count_shortfall'], 1)
 
     def test_same_day_rerun_is_inert_but_gap_cannot_claim_exact_day(self):
         self.api.ids = []

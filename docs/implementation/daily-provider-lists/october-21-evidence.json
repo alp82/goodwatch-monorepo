@@ -1,0 +1,881 @@
+{
+  "production_data_writes": 0,
+  "daily_runs": [
+    {
+      "id": "01a15476-475e-24d5-f32b-729c4587e03a",
+      "created_at": "2026-10-19T14:00:00.030414Z",
+      "created_by": "schedule-f-tmdb_api-read_daily_provider_lists",
+      "started_at": "2026-10-20T14:00:00.013147Z",
+      "duration_ms": 19033750,
+      "success": false,
+      "counts": {
+        "lists_failed": 31,
+        "lists_completed": 2339,
+        "lists_skipped": 0,
+        "requests": {
+          "title": 98125,
+          "catalog": 1,
+          "refused": 0,
+          "retries": 0,
+          "discover": 87436,
+          "requests": 185562,
+          "deleted_responses": 18
+        },
+        "requests_rereads": 68134,
+        "requests_new_baselines": 117427,
+        "baseline_deferred_country": "FJ",
+        "countries_started": [
+          "JP",
+          "ME",
+          "NO",
+          "PF",
+          "PG",
+          "PH",
+          "RO",
+          "RS",
+          "UA",
+          "YE",
+          "ZW",
+          "AD",
+          "AT",
+          "BA",
+          "BH",
+          "BR",
+          "BY",
+          "CA",
+          "CH",
+          "CU",
+          "CZ",
+          "EE"
+        ],
+        "countries_remaining": [
+          "GB",
+          "FJ",
+          "GY",
+          "JM",
+          "KE",
+          "KR",
+          "MD",
+          "NI",
+          "PK",
+          "PL",
+          "PS",
+          "QA",
+          "SM",
+          "AL",
+          "BE",
+          "BG",
+          "CI",
+          "CM",
+          "DK",
+          "DZ",
+          "ES",
+          "FR",
+          "HR",
+          "IS",
+          "IT",
+          "LU",
+          "LV",
+          "MW",
+          "OM",
+          "PA",
+          "PT",
+          "TD",
+          "TH",
+          "VA",
+          "VE",
+          "ZM",
+          "AU",
+          "AZ",
+          "BB",
+          "BF",
+          "CL",
+          "GF",
+          "GP",
+          "GQ",
+          "GT",
+          "HK",
+          "HN",
+          "HU",
+          "LB",
+          "LI",
+          "LY",
+          "ML",
+          "MX",
+          "MY",
+          "NE",
+          "NL",
+          "NZ",
+          "TN",
+          "TT",
+          "UG",
+          "XK"
+        ]
+      },
+      "failure_examples": [
+        {
+          "key": "LC:movie:8",
+          "error": "IncompleteList",
+          "reason": "Retry total 4829 differs from first read 4832",
+          "tmdb_id": null,
+          "endpoint": "/discover/movie",
+          "media_type": "movie",
+          "http_status": null
+        },
+        {
+          "key": "GB:movie:9",
+          "error": "IncompleteList",
+          "reason": "Expected 1721 distinct titles, read 1720",
+          "tmdb_id": null,
+          "endpoint": "/discover/movie",
+          "media_type": "movie",
+          "http_status": null
+        }
+      ]
+    },
+    {
+      "id": "01a14f4f-eb29-4557-4446-3f2e1e1bfb1b",
+      "created_at": "2026-10-18T14:00:00.029125Z",
+      "created_by": "schedule-f-tmdb_api-read_daily_provider_lists",
+      "started_at": "2026-10-19T14:00:00.021790Z",
+      "duration_ms": 15441178,
+      "success": false,
+      "counts": {
+        "lists_failed": 30,
+        "lists_completed": 1680,
+        "lists_skipped": 0,
+        "requests": {
+          "title": 103733,
+          "catalog": 1,
+          "refused": 0,
+          "retries": 0,
+          "discover": 66249,
+          "requests": 169983,
+          "deleted_responses": 21
+        },
+        "requests_rereads": 49982,
+        "requests_new_baselines": 120000,
+        "baseline_deferred_country": "JP",
+        "countries_started": [
+          "US",
+          "CY",
+          "DE",
+          "DO",
+          "EC",
+          "EG",
+          "GI",
+          "GR",
+          "IN"
+        ],
+        "countries_remaining": [
+          "GB",
+          "JP",
+          "ME",
+          "NO",
+          "PF",
+          "PG",
+          "PH",
+          "RO",
+          "RS",
+          "UA",
+          "YE",
+          "ZW",
+          "AD",
+          "AT",
+          "BA",
+          "BH",
+          "BR",
+          "BY",
+          "CA",
+          "CH",
+          "CU",
+          "CZ",
+          "EE",
+          "FJ",
+          "GY",
+          "JM",
+          "KE",
+          "KR",
+          "MD",
+          "NI",
+          "PK",
+          "PL",
+          "PS",
+          "QA",
+          "SM",
+          "AL",
+          "BE",
+          "BG",
+          "CI",
+          "CM",
+          "DK",
+          "DZ",
+          "ES",
+          "FR",
+          "HR",
+          "IS",
+          "IT",
+          "LU",
+          "LV",
+          "MW",
+          "OM",
+          "PA",
+          "PT",
+          "TD",
+          "TH",
+          "VA",
+          "VE",
+          "ZM",
+          "AU",
+          "AZ",
+          "BB",
+          "BF",
+          "CL",
+          "GF",
+          "GP",
+          "GQ",
+          "GT",
+          "HK",
+          "HN",
+          "HU",
+          "LB",
+          "LI",
+          "LY",
+          "ML",
+          "MX",
+          "MY",
+          "NE",
+          "NL",
+          "NZ",
+          "TN",
+          "TT",
+          "UG",
+          "XK"
+        ]
+      },
+      "failure_examples": [
+        {
+          "key": "GB:movie:9",
+          "error": "IncompleteList",
+          "reason": "Expected 1723 distinct titles, read 1722",
+          "tmdb_id": null,
+          "endpoint": "/discover/movie",
+          "media_type": "movie",
+          "http_status": null
+        }
+      ]
+    },
+    {
+      "id": "01a14af9-f15d-da8e-f3dc-e8d4bc9189f9",
+      "created_at": "2026-10-17T17:47:36.624583Z",
+      "created_by": "schedule-f-tmdb_api-read_daily_provider_lists",
+      "started_at": "2026-10-18T14:00:00.021096Z",
+      "duration_ms": 14915544,
+      "success": false,
+      "counts": {
+        "lists_failed": 60,
+        "lists_completed": 1410,
+        "lists_skipped": 0,
+        "requests": {
+          "title": 77637,
+          "catalog": 1,
+          "refused": 0,
+          "retries": 0,
+          "discover": 48276,
+          "requests": 125914,
+          "deleted_responses": 18
+        },
+        "requests_rereads": 22577,
+        "requests_new_baselines": 103336,
+        "baseline_deferred_country": "CY",
+        "countries_started": [
+          "AO",
+          "BM",
+          "CR",
+          "FI",
+          "IE",
+          "IL",
+          "JO",
+          "KW",
+          "LT",
+          "MG",
+          "MT",
+          "MU",
+          "PE",
+          "SE",
+          "SG",
+          "SI",
+          "TR",
+          "TW",
+          "TZ",
+          "UY",
+          "ZA",
+          "AE",
+          "AG",
+          "BO",
+          "BZ"
+        ],
+        "countries_remaining": [
+          "US",
+          "GB",
+          "CY",
+          "DE",
+          "DO",
+          "EC",
+          "EG",
+          "GI",
+          "GR",
+          "IN",
+          "JP",
+          "ME",
+          "NO",
+          "PF",
+          "PG",
+          "PH",
+          "RO",
+          "RS",
+          "UA",
+          "YE",
+          "ZW",
+          "AD",
+          "AT",
+          "BA",
+          "BH",
+          "BR",
+          "BY",
+          "CA",
+          "CH",
+          "CU",
+          "CZ",
+          "EE",
+          "FJ",
+          "GY",
+          "JM",
+          "KE",
+          "KR",
+          "MD",
+          "NI",
+          "PK",
+          "PL",
+          "PS",
+          "QA",
+          "SM",
+          "AL",
+          "BE",
+          "BG",
+          "CI",
+          "CM",
+          "DK",
+          "DZ",
+          "ES",
+          "FR",
+          "HR",
+          "IS",
+          "IT",
+          "LU",
+          "LV",
+          "MW",
+          "OM",
+          "PA",
+          "PT",
+          "TD",
+          "TH",
+          "VA",
+          "VE",
+          "ZM",
+          "AU",
+          "AZ",
+          "BB",
+          "BF",
+          "CL",
+          "GF",
+          "GP",
+          "GQ",
+          "GT",
+          "HK",
+          "HN",
+          "HU",
+          "LB",
+          "LI",
+          "LY",
+          "ML",
+          "MX",
+          "MY",
+          "NE",
+          "NL",
+          "NZ",
+          "TN",
+          "TT",
+          "UG",
+          "XK"
+        ]
+      },
+      "failure_examples": [
+        {
+          "key": "US:movie:8",
+          "error": "IncompleteList",
+          "reason": "Retry total 4750 differs from first read 4751",
+          "tmdb_id": null,
+          "endpoint": "/discover/movie",
+          "media_type": "movie",
+          "http_status": null
+        },
+        {
+          "key": "GB:movie:9",
+          "error": "IncompleteList",
+          "reason": "Expected 1718 distinct titles, read 1717",
+          "tmdb_id": null,
+          "endpoint": "/discover/movie",
+          "media_type": "movie",
+          "http_status": null
+        }
+      ]
+    }
+  ],
+  "recent_release_runs": [
+    {
+      "id": "01a1543f-5944-9be8-b078-195e3cc777ff",
+      "created_at": "2026-10-19T13:00:00.026275Z",
+      "created_by": "schedule-f-tmdb_api-recheck_recent_releases",
+      "started_at": "2026-10-20T13:00:00.012587Z",
+      "duration_ms": 1407510,
+      "success": true,
+      "schedule_path": "f/tmdb_api/recheck_recent_releases"
+    },
+    {
+      "id": "01a152db-5c43-78da-abe3-f1b89a44af14",
+      "created_at": "2026-10-19T06:31:10.101767Z",
+      "created_by": "schedule-f-tmdb_api-recheck_recent_releases",
+      "started_at": "2026-10-19T13:00:00.011535Z",
+      "duration_ms": 1420284,
+      "success": true,
+      "schedule_path": "f/tmdb_api/recheck_recent_releases"
+    },
+    {
+      "id": "01a152db-5c53-a61c-7636-637ab59e79c9",
+      "created_at": "2026-10-19T06:31:10.101767Z",
+      "created_by": "Alp",
+      "started_at": "2026-10-19T06:31:10.175468Z",
+      "duration_ms": 218,
+      "success": true,
+      "schedule_path": null
+    },
+    {
+      "id": "01a151d5-a1a8-cd87-8350-80960b8352fd",
+      "created_at": "2026-10-19T01:45:17.409933Z",
+      "created_by": "Alp",
+      "started_at": "2026-10-19T01:45:17.503800Z",
+      "duration_ms": 224,
+      "success": true,
+      "schedule_path": null
+    },
+    {
+      "id": "01a150ee-0737-db4b-c002-c09996c37ce0",
+      "created_at": "2026-10-18T21:32:19.062134Z",
+      "created_by": "Alp",
+      "started_at": "2026-10-18T21:32:19.136632Z",
+      "duration_ms": 67,
+      "success": true,
+      "schedule_path": null
+    }
+  ],
+  "queued": {
+    "f/tmdb_api/read_daily_provider_lists": [
+      {
+        "id": "01a1599c-a321-c141-c9a9-2162961c7bea",
+        "created_at": "2026-10-20T14:00:00.022077Z",
+        "created_by": "schedule-f-tmdb_api-read_daily_provider_lists",
+        "started_at": null,
+        "scheduled_for": "2026-10-21T14:00:00Z",
+        "running": false,
+        "schedule_path": "f/tmdb_api/read_daily_provider_lists"
+      }
+    ],
+    "f/tmdb_api/recheck_recent_releases": [
+      {
+        "id": "01a15965-b49c-9783-575d-9cb3ef62aef6",
+        "created_at": "2026-10-20T13:00:00.019238Z",
+        "created_by": "schedule-f-tmdb_api-recheck_recent_releases",
+        "started_at": null,
+        "scheduled_for": "2026-10-21T13:00:00Z",
+        "running": false,
+        "schedule_path": "f/tmdb_api/recheck_recent_releases"
+      }
+    ]
+  },
+  "day1_countries": [
+    "AR",
+    "BS",
+    "CD",
+    "CO",
+    "CV",
+    "GH",
+    "ID",
+    "IQ",
+    "LC",
+    "MA",
+    "MC",
+    "MK",
+    "MZ",
+    "NG",
+    "PY",
+    "RU",
+    "SA",
+    "SC",
+    "SK",
+    "SN",
+    "SV",
+    "TC"
+  ],
+  "rereads": {
+    "2026-10-20": {
+      "job_id": "01a15476-475e-24d5-f32b-729c4587e03a",
+      "successful_rereads": 659,
+      "by_country": {
+        "AR": 30,
+        "BS": 30,
+        "CD": 30,
+        "CO": 30,
+        "CV": 30,
+        "GH": 30,
+        "ID": 30,
+        "IQ": 30,
+        "LC": 29,
+        "MA": 30,
+        "MC": 30,
+        "MK": 30,
+        "MZ": 30,
+        "NG": 30,
+        "PY": 30,
+        "RU": 30,
+        "SA": 30,
+        "SC": 30,
+        "SK": 30,
+        "SN": 30,
+        "SV": 30,
+        "TC": 30
+      },
+      "failures": [
+        {
+          "key": "LC:movie:8",
+          "error": "IncompleteList",
+          "reason": "Retry total 4829 differs from first read 4832",
+          "tmdb_id": null,
+          "endpoint": "/discover/movie",
+          "media_type": "movie",
+          "http_status": null
+        }
+      ]
+    },
+    "2026-10-19": {
+      "job_id": "01a14f4f-eb29-4557-4446-3f2e1e1bfb1b",
+      "successful_rereads": 660,
+      "by_country": {
+        "AR": 30,
+        "BS": 30,
+        "CD": 30,
+        "CO": 30,
+        "CV": 30,
+        "GH": 30,
+        "ID": 30,
+        "IQ": 30,
+        "LC": 30,
+        "MA": 30,
+        "MC": 30,
+        "MK": 30,
+        "MZ": 30,
+        "NG": 30,
+        "PY": 30,
+        "RU": 30,
+        "SA": 30,
+        "SC": 30,
+        "SK": 30,
+        "SN": 30,
+        "SV": 30,
+        "TC": 30
+      },
+      "failures": []
+    },
+    "2026-10-18": {
+      "job_id": "01a14af9-f15d-da8e-f3dc-e8d4bc9189f9",
+      "successful_rereads": 660,
+      "by_country": {
+        "AR": 30,
+        "BS": 30,
+        "CD": 30,
+        "CO": 30,
+        "CV": 30,
+        "GH": 30,
+        "ID": 30,
+        "IQ": 30,
+        "LC": 30,
+        "MA": 30,
+        "MC": 30,
+        "MK": 30,
+        "MZ": 30,
+        "NG": 30,
+        "PY": 30,
+        "RU": 30,
+        "SA": 30,
+        "SC": 30,
+        "SK": 30,
+        "SN": 30,
+        "SV": 30,
+        "TC": 30
+      },
+      "failures": []
+    }
+  },
+  "exact_history_counts": {
+    "arrivals": {
+      "2026-10-18": 176,
+      "2026-10-19": 167,
+      "2026-10-20": 154
+    },
+    "drops": {
+      "2026-10-18": 40,
+      "2026-10-19": 60,
+      "2026-10-20": 245,
+      "2026-10-21": 1
+    }
+  },
+  "history_scope": {
+    "countries": "Day-1 22 countries",
+    "services": [
+      8,
+      1796,
+      9,
+      119,
+      2100,
+      337,
+      1899,
+      350,
+      15,
+      386,
+      387,
+      531,
+      2303,
+      283,
+      11
+    ],
+    "offer_types": [
+      "flatrate",
+      "free",
+      "ads"
+    ],
+    "attribution": "Existing shared writer; row counts do not uniquely identify list-job writes."
+  },
+  "gb_probe": {
+    "scope": "GB:movie:9",
+    "vote_range": [
+      50,
+      99
+    ],
+    "requests": {
+      "requests": 361,
+      "retries": 0,
+      "refused": 0,
+      "discover": 361,
+      "title": 0,
+      "catalog": 0,
+      "deleted_responses": 0
+    },
+    "seconds": 25.943,
+    "all_four_sets_equal": true,
+    "reads": [
+      {
+        "retry": false,
+        "sort": "title.asc",
+        "first_total": 1721,
+        "page_count": 87,
+        "distinct": 1720,
+        "rows": 1720,
+        "duplicates": {},
+        "metadata_values": [
+          [
+            1721,
+            87
+          ]
+        ],
+        "short_interior_pages": [
+          13
+        ]
+      },
+      {
+        "retry": false,
+        "sort": "primary_release_date.desc",
+        "first_total": 1721,
+        "page_count": 87,
+        "distinct": 1720,
+        "rows": 1720,
+        "duplicates": {},
+        "metadata_values": [
+          [
+            1721,
+            87
+          ]
+        ],
+        "short_interior_pages": [
+          59
+        ]
+      },
+      {
+        "retry": true,
+        "sort": "title.asc",
+        "first_total": 1721,
+        "page_count": 87,
+        "distinct": 1720,
+        "rows": 1720,
+        "duplicates": {},
+        "metadata_values": [
+          [
+            1721,
+            87
+          ]
+        ],
+        "short_interior_pages": [
+          13
+        ]
+      },
+      {
+        "retry": true,
+        "sort": "primary_release_date.desc",
+        "first_total": 1721,
+        "page_count": 87,
+        "distinct": 1720,
+        "rows": 1720,
+        "duplicates": {},
+        "metadata_values": [
+          [
+            1721,
+            87
+          ]
+        ],
+        "short_interior_pages": [
+          59
+        ]
+      }
+    ]
+  },
+  "fixed_reader_preview": {
+    "started_at": "2026-10-21T11:31:59.584190+00:00",
+    "production_data_writes": 0,
+    "gb_discover": {
+      "titles": 26956,
+      "diagnostics": {
+        "sort_fallbacks": 1,
+        "partitions": 6,
+        "query_retries": 0,
+        "count_shortfall": 1,
+        "count_agreements": [
+          {
+            "vote_min": 50,
+            "vote_max": 99,
+            "reported_total": 1721,
+            "returned_total": 1720,
+            "missing_count": 1
+          }
+        ]
+      },
+      "requests": {
+        "requests": 1444,
+        "retries": 0,
+        "refused": 0,
+        "discover": 1444,
+        "title": 0,
+        "catalog": 0,
+        "deleted_responses": 0
+      },
+      "seconds": 97.942
+    },
+    "lc_daily_entrypoint": {
+      "lists_completed": 1,
+      "lists_failed": 0,
+      "lists_skipped": 0,
+      "dry_run": true,
+      "lists": [
+        {
+          "key": "LC:movie:8",
+          "titles": 4822,
+          "changes_checked": 63,
+          "baseline": false,
+          "retry_titles": 41,
+          "sort_fallbacks": 0,
+          "partitions": 0,
+          "query_retries": 0,
+          "count_shortfall": 0,
+          "count_agreements": []
+        }
+      ],
+      "requests": 305,
+      "seconds": 22.511,
+      "history": {
+        "planned_rows": 20,
+        "published_titles": 0,
+        "planned_exact_arrivals": 0,
+        "planned_unknown_arrivals": 4,
+        "planned_exact_drops": 0,
+        "planned_unknown_drops": 16
+      }
+    },
+    "requests": {
+      "requests": 1749,
+      "retries": 0,
+      "refused": 0,
+      "discover": 1686,
+      "title": 63,
+      "catalog": 0,
+      "deleted_responses": 0
+    },
+    "seconds": 121.312,
+    "finished_at": "2026-10-21T11:34:00.896376+00:00"
+  },
+  "schedule_audit": {
+    "checked_at": "2026-10-21T11:36:03.611163+00:00",
+    "f/tmdb_api/read_daily_provider_lists": {
+      "schedule": {
+        "path": "f/tmdb_api/read_daily_provider_lists",
+        "enabled": true,
+        "schedule": "0 0 14 * * *",
+        "timezone": "UTC",
+        "edited_at": "2026-10-17T17:47:36.465863Z",
+        "edited_by": "Alp",
+        "error": null,
+        "script_path": "f/tmdb_api/read_daily_provider_lists"
+      },
+      "queued": [
+        {
+          "id": "01a1599c-a321-c141-c9a9-2162961c7bea",
+          "created_at": "2026-10-20T14:00:00.022077Z",
+          "created_by": "schedule-f-tmdb_api-read_daily_provider_lists",
+          "scheduled_for": "2026-10-21T14:00:00Z",
+          "started_at": null,
+          "running": false
+        }
+      ]
+    },
+    "f/tmdb_api/recheck_recent_releases": {
+      "schedule": {
+        "path": "f/tmdb_api/recheck_recent_releases",
+        "enabled": true,
+        "schedule": "0 0 13 * * *",
+        "timezone": "UTC",
+        "edited_at": "2026-10-16T23:11:28.748755Z",
+        "edited_by": "Alp",
+        "error": null,
+        "script_path": "f/tmdb_api/recheck_recent_releases"
+      },
+      "queued": [
+        {
+          "id": "01a15965-b49c-9783-575d-9cb3ef62aef6",
+          "created_at": "2026-10-20T13:00:00.019238Z",
+          "created_by": "schedule-f-tmdb_api-recheck_recent_releases",
+          "scheduled_for": "2026-10-21T13:00:00Z",
+          "started_at": null,
+          "running": false
+        }
+      ]
+    }
+  },
+  "assembled_at": "2026-10-21T11:39:17.723283+00:00"
+}

@@ -89,6 +89,33 @@ class DailyRampTests(unittest.TestCase):
         self.assertEqual({row['appeared_precision'] for row in self.store.crate.history.values()}, {'unknown'})
         self.assertEqual({row['appeared_source'] for row in self.store.crate.history.values()}, {'backfill'})
 
+    def test_gb_count_overstatement_does_not_withhold_its_other_29_baselines(self):
+        self.ids = {'GB': []}
+        original = self.session.get.side_effect
+        def respond(url, **kwargs):
+            params = kwargs['params']
+            if '/discover/movie' in url and params['with_watch_providers'] == 9:
+                self.calls.append((url, params))
+                ids = list(range(1, 1723))
+                if params['sort_by'] == 'primary_release_date.desc':
+                    ids.reverse()
+                page = params['page']
+                return Mock(status_code=200, json=lambda: dict(page=page, total_pages=87,
+                    total_results=1723, results=[{'id': i} for i in ids[(page - 1) * 20:page * 20]]))
+            if '/watch/providers' in url:
+                return Mock(status_code=200, json=lambda: dict(id=int(url.split('/')[-3]),
+                    results={'GB': {'flatrate': [{'provider_id': 9}]}}))
+            return original(url, **kwargs)
+        self.session.get.side_effect = respond
+        report = self.run_job(service_ids=list(job.SERVICE_NAMES), baseline_max_requests=5000,
+                              baseline_max_memberships=5000)
+        self.assertEqual(report['countries_started'], ['GB'])
+        self.assertEqual((report['lists_completed'], report['lists_failed']), (30, 0))
+        self.assertEqual(len(self.store.snapshots), 30)
+        self.assertEqual(len(self.store.snapshots['GB:movie:9']['ids']), 1722)
+        self.assertEqual({row['appeared_source'] for row in self.store.crate.history.values()}, {'backfill'})
+        self.assertEqual({row['appeared_precision'] for row in self.store.crate.history.values()}, {'unknown'})
+
     def test_report_warns_when_the_next_country_cannot_fit_after_progress(self):
         self.ids = {'AR': [42], 'DE': [42]}
         report = self.run_job(baseline_max_memberships=3)
