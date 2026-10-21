@@ -198,7 +198,11 @@ export function SlabShell({
 	const folded = useScrollFold()
 	return (
 		<DockStrip>
-			<motion.div layout transition={SPRING} className="relative min-w-0 flex-1">
+			<motion.div
+				layout
+				transition={SPRING}
+				className="relative min-w-0 flex-1"
+			>
 				<AnimatePresence initial={false}>
 					{!folded && line && (
 						<motion.div
@@ -247,12 +251,17 @@ export interface SlabProps {
 	line?: ReactNode
 	/** In place of the strip's first three segments (Discover's sign-up key for visitors). */
 	signUpKey?: ReactNode
+	/** Each change opens the sheet tall (the quick filter buttons above the grid). */
+	openSheet?: number
 }
 
 export function Slab(props: SlabProps) {
 	const { state, counts, onChange, onDrop, searching, hasServices, providers } =
 		props
 	const [sheet, setSheet] = useState(-1)
+	useEffect(() => {
+		if (props.openSheet) setSheet(1)
+	}, [props.openSheet])
 	const [menu, setMenu] = useState<"sort" | "explain" | null>(null)
 	// For you under Best match: flipping it opens the sort menu, or, inside the sheet, leaves the sorts below it to pick.
 	const { forYou, pick } = useForYouUnderBestMatch({
@@ -332,91 +341,91 @@ export function Slab(props: SlabProps) {
 				strip={
 					<>
 						{props.signUpKey ?? (
-						<>
-						<motion.button
-							type="button"
-							role="switch"
-							aria-checked={mineOn}
-							aria-label="On my services"
-							whileTap={TAP}
-							onClick={() =>
-								hasServices
-									? onChange({
-											...state,
-											onMyServices: !mineOn,
-											services: undefined,
-										})
-									: props.onAddServices()
-							}
-							className={`${SLAB_SEGMENT} ${mineOn ? "text-white" : "text-gray-400"}`}
-						>
-							{mineOn && (
-								<motion.span
-									layoutId={`${sortId}-mine`}
-									className="absolute inset-0 rounded-[14px] bg-linear-to-b from-emerald-600 to-emerald-800 shadow-[inset_0_1px_0_rgba(255,255,255,.25)]"
-								/>
-							)}
-							<span className="relative">
-								{mineOn ? (
-									<ServiceStack providers={providers} on size={16} />
-								) : hasServices ? (
-									<GlobeAltIcon className="h-4 w-4" />
-								) : (
-									<PlusIcon className="h-4 w-4" />
-								)}
-							</span>
-							<span className="relative w-full truncate px-0.5 text-center">
-								{mineOn
-									? "My services"
-									: hasServices
-										? "Everywhere"
-										: "Add services"}
-							</span>
-						</motion.button>
-						<motion.button
-							type="button"
-							role="switch"
-							aria-checked={state.notSeenYet}
-							aria-label="Not seen yet"
-							whileTap={TAP}
-							onClick={() =>
-								onChange({ ...state, notSeenYet: !state.notSeenYet })
-							}
-							className={`${SLAB_SEGMENT} ${state.notSeenYet ? "text-white" : "text-gray-400"}`}
-						>
-							{state.notSeenYet && (
-								<motion.span
-									layoutId={`${sortId}-seen`}
-									className="absolute inset-0 rounded-[14px] bg-linear-to-b from-blue-600 to-blue-800 shadow-[inset_0_1px_0_rgba(255,255,255,.25)]"
-								/>
-							)}
-							<span className="relative">
-								{state.notSeenYet ? (
-									<EyeSlashIcon className="h-4 w-4" />
-								) : (
-									<EyeIcon className="h-4 w-4" />
-								)}
-							</span>
-							<span className="relative w-full truncate px-0.5 text-center">
-								{state.notSeenYet ? "Not seen" : "Seen too"}
-							</span>
-						</motion.button>
-						{forYou &&
-							(forYou.replacement ? (
-								<div className={`${SLAB_SEGMENT} !flex-[0.85]`}>
-									{forYou.replacement}
-								</div>
-							) : (
-								<SlabForYou
-									forYou={forYou}
-									explainOpen={menu === "explain"}
-									explainId={explainId}
-									onExplain={() =>
-										setMenu((m) => (m === "explain" ? null : "explain"))
+							<>
+								<motion.button
+									type="button"
+									role="switch"
+									aria-checked={mineOn}
+									aria-label="On my services"
+									whileTap={TAP}
+									onClick={() =>
+										hasServices
+											? onChange({
+													...state,
+													onMyServices: !mineOn,
+													services: undefined,
+												})
+											: props.onAddServices()
 									}
-								/>
-							))}
-						</>
+									className={`${SLAB_SEGMENT} ${mineOn ? "text-white" : "text-gray-400"}`}
+								>
+									{mineOn && (
+										<motion.span
+											layoutId={`${sortId}-mine`}
+											className="absolute inset-0 rounded-[14px] bg-linear-to-b from-emerald-600 to-emerald-800 shadow-[inset_0_1px_0_rgba(255,255,255,.25)]"
+										/>
+									)}
+									<span className="relative">
+										{mineOn ? (
+											<ServiceStack providers={providers} on size={16} />
+										) : hasServices ? (
+											<GlobeAltIcon className="h-4 w-4" />
+										) : (
+											<PlusIcon className="h-4 w-4" />
+										)}
+									</span>
+									<span className="relative w-full truncate px-0.5 text-center">
+										{mineOn
+											? "My services"
+											: hasServices
+												? "Everywhere"
+												: "Add services"}
+									</span>
+								</motion.button>
+								<motion.button
+									type="button"
+									role="switch"
+									aria-checked={state.notSeenYet}
+									aria-label="Not seen yet"
+									whileTap={TAP}
+									onClick={() =>
+										onChange({ ...state, notSeenYet: !state.notSeenYet })
+									}
+									className={`${SLAB_SEGMENT} ${state.notSeenYet ? "text-white" : "text-gray-400"}`}
+								>
+									{state.notSeenYet && (
+										<motion.span
+											layoutId={`${sortId}-seen`}
+											className="absolute inset-0 rounded-[14px] bg-linear-to-b from-blue-600 to-blue-800 shadow-[inset_0_1px_0_rgba(255,255,255,.25)]"
+										/>
+									)}
+									<span className="relative">
+										{state.notSeenYet ? (
+											<EyeSlashIcon className="h-4 w-4" />
+										) : (
+											<EyeIcon className="h-4 w-4" />
+										)}
+									</span>
+									<span className="relative w-full truncate px-0.5 text-center">
+										{state.notSeenYet ? "Not seen" : "Seen too"}
+									</span>
+								</motion.button>
+								{forYou &&
+									(forYou.replacement ? (
+										<div className={`${SLAB_SEGMENT} !flex-[0.85]`}>
+											{forYou.replacement}
+										</div>
+									) : (
+										<SlabForYou
+											forYou={forYou}
+											explainOpen={menu === "explain"}
+											explainId={explainId}
+											onExplain={() =>
+												setMenu((m) => (m === "explain" ? null : "explain"))
+											}
+										/>
+									))}
+							</>
 						)}
 						<motion.button
 							ref={sortTrigger}
@@ -536,23 +545,18 @@ export function Slab(props: SlabProps) {
 	)
 }
 
-/** The sheet, top to bottom in reach order: what's hidden, the sort, every other filter, then the two first controls. */
+/**
+ * The sheet, top to bottom: what's hidden, the sort as one row of chips with the chosen sort's line under it, Not seen
+ * yet, then the filters (whose Streaming card holds My services and Everywhere).
+ */
 function SheetBody(props: SlabProps) {
 	const { state, counts, onChange, onDrop, forYou } = props
 	const [query, setQuery] = useState("")
 	const hides = counts?.optionCounts.notSeenYet
 	const seenHidden = hides ? Math.max(0, (hides.off ?? 0) - (hides.on ?? 0)) : 0
-	const mineMore = counts?.optionCounts.services
-	const moreEverywhere =
-		mineMore && state.onMyServices
-			? Math.max(0, (mineMore.all ?? 0) - (mineMore.mine ?? 0))
-			: 0
 	const pickSort = (sort: SortOption) =>
 		!sort.disabled && props.onSort(sort.key)
-	const pick = (mine: boolean) =>
-		mine && !props.hasServices
-			? props.onAddServices()
-			: onChange({ ...state, onMyServices: mine, services: undefined })
+	const current = props.sorts.find((s) => s.key === props.sort)
 	return (
 		<div className="pb-6">
 			<h2 className="sr-only">Filters</h2>
@@ -573,7 +577,7 @@ function SheetBody(props: SlabProps) {
 					</div>
 				)}
 				<div
-					className="grid grid-cols-2 gap-2"
+					className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none]"
 					role="radiogroup"
 					aria-label="Sort"
 					onKeyDown={(event) =>
@@ -594,34 +598,56 @@ function SheetBody(props: SlabProps) {
 								data-sort={s.key}
 								whileTap={s.disabled ? undefined : TAP}
 								onClick={() => pickSort(s)}
-								className={`relative min-h-16 rounded-2xl bg-white/[0.03] px-3.5 py-2.5 text-left ring-1 ring-white/10 outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${s.disabled ? "cursor-default opacity-60" : "cursor-pointer"}`}
+								className={`flex h-9 shrink-0 items-center rounded-full px-3.5 text-sm whitespace-nowrap outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${s.disabled ? "cursor-default text-gray-600 ring-1 ring-white/5" : "cursor-pointer"} ${
+									on
+										? s.taste
+											? "bg-amber-500/[0.18] font-bold text-amber-100 ring-1 ring-amber-500/45"
+											: "bg-white font-bold text-gray-950"
+										: s.disabled
+											? ""
+											: "bg-white/[0.06] text-gray-200 ring-1 ring-white/10"
+								}`}
 							>
-								{on && (
-									<motion.span
-										layoutId="filter-sheet-sort"
-										transition={SPRING}
-										// Amber marks what taste decides: Best match.
-										className={`absolute inset-0 rounded-2xl ring-1 ${s.taste ? "bg-amber-500/[0.14] ring-amber-500/45" : "bg-white/[0.08] ring-white/30"}`}
-									/>
-								)}
-								<span
-									className={`relative block text-sm font-bold ${on ? "text-white" : "text-gray-300"}`}
-								>
-									{s.label}
-								</span>
-								<span
-									className={`relative block text-[11px] text-gray-500 ${s.disabled ? "leading-snug" : "truncate"}`}
-								>
-									{s.hint}
-								</span>
+								{s.label}
 							</motion.button>
 						)
 					})}
 				</div>
+				{current && (
+					<p className="mt-1.5 text-xs text-gray-500">{current.hint}</p>
+				)}
 				{props.sortFooter}
+				<motion.button
+					type="button"
+					role="switch"
+					aria-checked={state.notSeenYet}
+					whileTap={TAP}
+					onClick={() => onChange({ ...state, notSeenYet: !state.notSeenYet })}
+					className={`mt-3 flex h-12 w-full items-center gap-3 rounded-2xl px-3.5 ring-1 cursor-pointer outline-none transition-colors focus-visible:ring-2 focus-visible:ring-amber-400 ${state.notSeenYet ? "bg-blue-900/40 ring-blue-400/30" : "bg-white/[0.05] ring-white/10"}`}
+				>
+					{state.notSeenYet ? (
+						<EyeSlashIcon className="h-5 w-5 text-blue-400" />
+					) : (
+						<EyeIcon className="h-5 w-5 text-gray-400" />
+					)}
+					<span className="flex-1 text-left">
+						<span className="block text-sm font-bold text-white">
+							Not seen yet
+						</span>
+						<span className="block text-[11px] text-gray-400">
+							{state.notSeenYet
+								? `Hiding ${seenHidden.toLocaleString("en")} you watched, rated, or skipped`
+								: "Showing titles you've seen too"}
+						</span>
+					</span>
+					<Knob
+						on={state.notSeenYet}
+						onClass="bg-blue-600 shadow-[0_0_16px_rgba(37,99,235,.55)]"
+					/>
+				</motion.button>
 			</Block>
 			<Block
-				title="More filters"
+				title="Filters"
 				right={
 					props.secondaryCount > 0 && (
 						<button
@@ -636,105 +662,6 @@ function SheetBody(props: SlabProps) {
 			>
 				<FilterSearchField value={query} onChange={setQuery} />
 				<FilterGroups data={props.groups} query={query} className="mt-5" />
-			</Block>
-			<Block title="Show me">
-				<div className="flex flex-col gap-2.5">
-					<div
-						role="radiogroup"
-						aria-label="Where to watch"
-						onKeyDown={(event) =>
-							radioKeys(event, (index) => pick(index === 0))
-						}
-						className="relative grid h-16 grid-cols-2 rounded-2xl bg-white/[0.05] p-1 ring-1 ring-white/10"
-					>
-						{[true, false].map((mine) => {
-							const on = state.onMyServices === mine
-							return (
-								<motion.button
-									key={String(mine)}
-									// biome-ignore lint/a11y/useSemanticElements: a segmented control; the buttons carry the radio role and arrow keys
-									type="button"
-									role="radio"
-									aria-checked={on}
-									tabIndex={on ? 0 : -1}
-									whileTap={TAP}
-									onClick={() => pick(mine)}
-									className="relative flex flex-col items-center justify-center rounded-xl cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
-								>
-									{on && (
-										<motion.span
-											layoutId="filter-sheet-services"
-											transition={SPRING}
-											className={`absolute inset-0 rounded-xl ${mine ? "bg-linear-to-b from-emerald-600 to-emerald-800 shadow-[inset_0_1px_0_rgba(255,255,255,.25)]" : "bg-white/10 ring-1 ring-white/15"}`}
-										/>
-									)}
-									<span
-										className={`relative flex items-center gap-2 text-sm font-bold ${on ? "text-white" : "text-gray-400"}`}
-									>
-										{mine ? (
-											props.hasServices ? (
-												<ServiceStack
-													providers={props.providers}
-													on={on}
-													size={18}
-												/>
-											) : (
-												<PlusIcon className="h-4 w-4" />
-											)
-										) : (
-											<GlobeAltIcon className="h-4 w-4" />
-										)}
-										{mine
-											? props.hasServices
-												? "My services"
-												: "Add my services"
-											: "Everywhere"}
-									</span>
-									<span
-										className={`relative mt-0.5 text-[11px] ${on ? "text-white/70" : "text-gray-500"}`}
-									>
-										{mine
-											? "Your saved services"
-											: moreEverywhere
-												? `+${moreEverywhere.toLocaleString("en")} more titles`
-												: "Every service"}
-									</span>
-								</motion.button>
-							)
-						})}
-					</div>
-					<motion.button
-						type="button"
-						role="switch"
-						aria-checked={state.notSeenYet}
-						whileTap={TAP}
-						onClick={() =>
-							onChange({ ...state, notSeenYet: !state.notSeenYet })
-						}
-						className={`flex h-14 items-center gap-3 rounded-2xl px-4 ring-1 cursor-pointer outline-none transition-colors focus-visible:ring-2 focus-visible:ring-amber-400 ${state.notSeenYet ? "bg-blue-900/40 ring-blue-400/30" : "bg-white/[0.05] ring-white/10"}`}
-					>
-						{state.notSeenYet ? (
-							<EyeSlashIcon className="h-5 w-5 text-blue-400" />
-						) : (
-							<EyeIcon className="h-5 w-5 text-gray-400" />
-						)}
-						<span className="flex-1 text-left">
-							<span className="block text-sm font-bold text-white">
-								Not seen yet
-							</span>
-							<span className="block text-[11px] text-gray-400">
-								{state.notSeenYet
-									? `Hiding ${seenHidden.toLocaleString("en")} you watched, rated, or skipped`
-									: "Showing titles you've seen too"}
-							</span>
-						</span>
-						<Knob
-							on={state.notSeenYet}
-							size="lg"
-							onClass="bg-blue-600 shadow-[0_0_16px_rgba(37,99,235,.55)]"
-						/>
-					</motion.button>
-				</div>
 			</Block>
 		</div>
 	)

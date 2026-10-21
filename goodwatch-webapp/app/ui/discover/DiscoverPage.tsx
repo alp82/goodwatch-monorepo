@@ -46,7 +46,7 @@ import {
 } from "~/ui/filter-bar"
 import { sortShown } from "~/ui/filter-bar/labels"
 import { SearchPeople } from "~/ui/search/SearchPeople"
-import { SignUpPrompt } from "~/ui/sign-up-prompt/SignUpPrompt"
+import { SignUpPanel } from "~/ui/filter-bar/SignUpPanel"
 import { Spinner } from "~/ui/wait/Spinner"
 import type { TitleKey } from "~/utils/title-key"
 import { DiscoverGrid } from "./DiscoverGrid"
@@ -450,8 +450,8 @@ export function DiscoverPage({
 						taste={taste}
 						sortFooter={
 							taste === "signUp" ? (
-								<div className="px-2 pt-2 pb-1">
-									<SignUpPrompt feature="bestMatch" stage="learn" size="chip" />
+								<div className="px-1 pt-2 pb-0.5">
+									<SignUpPanel feature="bestMatch" needs="signUp" />
 								</div>
 							) : undefined
 						}

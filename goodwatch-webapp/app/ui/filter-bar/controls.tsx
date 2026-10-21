@@ -198,12 +198,15 @@ export function NotSeenSwitch({
 	hides = null,
 	onChange,
 	size = "md",
+	compact = false,
 	className = "",
 }: {
 	on: boolean
 	hides?: number | null
 	onChange: (on: boolean) => void
 	size?: "md" | "sm"
+	/** Below 1280 px only the eye and the switch show, so a full row stays on one line. */
+	compact?: boolean
 	className?: string
 }) {
 	const shown = on && hides ? hides : 0
@@ -220,19 +223,21 @@ export function NotSeenSwitch({
 			}
 			whileTap={TAP}
 			onClick={() => onChange(!on)}
-			className={`relative flex shrink-0 items-center gap-2 text-sm font-bold whitespace-nowrap cursor-pointer outline-none transition-colors focus-visible:ring-2 focus-visible:ring-amber-400 ${sm ? "h-9 px-3" : "h-12 w-56 px-3.5"} ${SHELL} ${on ? "text-white" : "text-gray-400 hover:text-gray-200"} ${className}`}
+			className={`relative flex shrink-0 items-center gap-2 text-sm font-bold whitespace-nowrap cursor-pointer outline-none transition-colors focus-visible:ring-2 focus-visible:ring-amber-400 ${sm ? "h-9 px-3" : compact ? "h-12 px-3.5 xl:w-56" : "h-12 w-56 px-3.5"} ${SHELL} ${on ? "text-white" : "text-gray-400 hover:text-gray-200"} ${className}`}
 		>
 			{on ? (
 				<EyeSlashIcon className="h-4 w-4 shrink-0 text-blue-400" />
 			) : (
 				<EyeIcon className="h-4 w-4 shrink-0" />
 			)}
-			<span className="flex-1 text-left">Not seen yet</span>
+			<span className={`flex-1 text-left ${compact ? "max-xl:sr-only" : ""}`}>
+				Not seen yet
+			</span>
 			{/* The small size has no fixed slot: the count shows only on a surface that counts. */}
 			{(!sm || hides !== null) && (
 				<span
 					aria-hidden
-					className={`w-9 shrink-0 text-right text-xs tabular-nums ${shown ? "text-blue-300/80" : "text-transparent"}`}
+					className={`w-9 shrink-0 text-right text-xs tabular-nums ${shown ? "text-blue-300/80" : "text-transparent"} ${compact && !shown ? "max-xl:hidden" : ""}`}
 				>
 					{hiddenShort(shown)}
 				</span>
@@ -404,7 +409,10 @@ export function SortControl<K extends string>({
 	open: openProp,
 	onOpenChange,
 	outsideIgnore,
+	bare = false,
 }: {
+	/** Without a shell of its own, for the For you | Sort control. */
+	bare?: boolean
 	options: SortOption<K>[]
 	value: K
 	onChange: (key: K) => void
@@ -521,7 +529,7 @@ export function SortControl<K extends string>({
 						setOpen(true)
 					}
 				}}
-				className={`flex items-center text-sm cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${sm ? "h-9 gap-1.5 px-3 whitespace-nowrap" : "h-12 w-52 gap-2 px-4"} ${SHELL} ${open ? "ring-white/25" : "hover:ring-white/20"}`}
+				className={`flex items-center text-sm cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${sm ? "h-9 gap-1.5 px-3 whitespace-nowrap" : bare ? "h-12 gap-2 px-4 whitespace-nowrap" : "h-12 w-52 gap-2 px-4"} ${bare ? `rounded-r-2xl ${open ? "bg-white/[0.06]" : "hover:bg-white/[0.05]"}` : `${SHELL} ${open ? "ring-white/25" : "hover:ring-white/20"}`}`}
 			>
 				<ArrowsUpDownIcon
 					className={`h-4 w-4 shrink-0 ${chosen?.taste ? "text-amber-400" : "text-gray-400"}`}
@@ -561,11 +569,14 @@ export function FiltersButton({
 	onClick,
 	expanded,
 	children,
+	compact = false,
 }: {
 	count: number
 	onClick: () => void
 	expanded: boolean
 	children?: ReactNode
+	/** Below 1280 px only the icon and the count show, so a full row stays on one line. */
+	compact?: boolean
 }) {
 	return (
 		<motion.button
@@ -578,7 +589,9 @@ export function FiltersButton({
 			className={`flex h-12 shrink-0 items-center gap-2 px-4 text-sm font-bold text-white cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${SHELL} hover:ring-white/25`}
 		>
 			<AdjustmentsHorizontalIcon className="h-4 w-4" />
-			{children ?? "Filters"}
+			<span className={compact ? "max-xl:sr-only" : undefined}>
+				{children ?? "Filters"}
+			</span>
 			<span
 				aria-hidden
 				className={`grid h-5 min-w-5 place-items-center rounded-full px-1.5 text-xs tabular-nums ${count ? "bg-amber-500 text-gray-950" : "bg-white/10 text-gray-400"}`}

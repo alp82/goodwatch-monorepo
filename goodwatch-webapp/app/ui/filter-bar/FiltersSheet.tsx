@@ -1,4 +1,3 @@
-import { TitleChipPreview } from "./TitleChipPreview"
 // The desktop Filters sheet: 480 px from the right, a search field focused on open, the active filters (each one
 // scrolls to its group, or comes off), the groups with live counts, and a footer with Clear all, the hidden count, and
 // a live "Show N titles".
@@ -10,7 +9,9 @@ import {
 	type FilterGroupsData,
 	FilterSearchField,
 } from "./FilterGroups"
-import { type ActiveChip, FILTER_ACCENTS } from "./labels"
+import { OneLineChips } from "./ActiveFilters"
+import { cardOf } from "./filter-cards"
+import type { ActiveChip } from "./labels"
 import { RollingNumber, TAP } from "./motion"
 import type { FilterBarCounts } from "./types"
 import { useModalDialog } from "./useModalDialog"
@@ -68,6 +69,21 @@ export function FiltersSheet({
 	const search = useRef<HTMLInputElement>(null)
 	const titleId = useId()
 	useModalDialog({ open, onClose, container: panel, initialFocus: search })
+	// The page behind the sheet stays put while it's open; the scrollbar keeps its room, so nothing shifts.
+	useEffect(() => {
+		if (!open) return
+		const root = document.documentElement
+		const before = {
+			overflow: root.style.overflow,
+			gutter: root.style.scrollbarGutter,
+		}
+		root.style.scrollbarGutter = "stable"
+		root.style.overflow = "hidden"
+		return () => {
+			root.style.overflow = before.overflow
+			root.style.scrollbarGutter = before.gutter
+		}
+	}, [open])
 	return (
 		<AnimatePresence>
 			{open && (
@@ -107,9 +123,8 @@ export function FiltersSheet({
 	)
 }
 
-// The group a chip's filter is set in. Content is part of the Age & content group, which the age limit names.
-const groupOf = (chip: ActiveChip) =>
-	chip.group === "content" ? "ageLimit" : chip.group
+// The card a chip's filter is set in.
+const cardFor = (chip: ActiveChip) => cardOf(chip.group) ?? chip.group
 
 function SheetContent({
 	titleId,
@@ -132,9 +147,9 @@ function SheetContent({
 	const [target, setTarget] = useState<{ group: string } | null>(null)
 	useEffect(() => {
 		if (!target) return
-		const section = scroller.current
-			?.querySelector(`#filter-group-${target.group}`)
-			?.closest("section")
+		const section = scroller.current?.querySelector<HTMLElement>(
+			`#filter-card-${target.group}`,
+		)
 		if (!section) return
 		const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches
 		section.scrollIntoView({
@@ -151,7 +166,7 @@ function SheetContent({
 	}, [target])
 	const goTo = (chip: ActiveChip) => {
 		setQuery("")
-		setTarget({ group: groupOf(chip) })
+		setTarget({ group: cardFor(chip) })
 	}
 	return (
 		<>
@@ -175,42 +190,13 @@ function SheetContent({
 					inputRef={searchRef}
 					className="mt-4"
 				/>
-				{chips.length > 0 && (
-					<ul
-						aria-label="Active filters"
-						// Three rows exactly (3 × 32 px + 2 × 6 px), so a fourth row never peeks in half.
-						className="mt-3 flex max-h-[6.75rem] flex-wrap gap-1.5 overflow-y-auto"
-					>
-						{chips.map((chip) => (
-							<li
-								key={chip.key}
-								className="flex h-8 items-center rounded-full bg-white/[0.06] text-sm text-gray-100"
-							>
-								<TitleChipPreview chip={chip}>
-									<button
-										type="button"
-										onClick={() => goTo(chip)}
-										aria-label={`Go to ${chip.label}`}
-										className="flex h-8 items-center gap-2 rounded-l-full pr-1 pl-3 cursor-pointer outline-none hover:text-white focus-visible:ring-2 focus-visible:ring-amber-400"
-									>
-										<span
-											className={`h-1.5 w-1.5 rounded-full ${FILTER_ACCENTS[chip.group].dot}`}
-										/>
-										{chip.label}
-									</button>
-								</TitleChipPreview>
-								<button
-									type="button"
-									onClick={() => data.onChange(chip.remove(data.state))}
-									aria-label={`Remove ${chip.label}`}
-									className="grid h-8 w-7 place-items-center rounded-r-full text-gray-500 cursor-pointer outline-none hover:text-white focus-visible:ring-2 focus-visible:ring-amber-400"
-								>
-									<XMarkIcon className="h-3.5 w-3.5" />
-								</button>
-							</li>
-						))}
-					</ul>
-				)}
+				<OneLineChips
+					chips={chips}
+					state={data.state}
+					onChange={data.onChange}
+					onGoTo={goTo}
+					className="mt-3"
+				/>
 			</header>
 			<div
 				ref={scroller}

@@ -6,10 +6,11 @@
 import { ArrowUpIcon } from "@heroicons/react/20/solid"
 import { FingerPrintIcon } from "@heroicons/react/24/solid"
 import { AnimatePresence, motion } from "framer-motion"
-import { useEffect, useId, useRef, useState } from "react"
+import { type ComponentProps, useEffect, useId, useRef, useState } from "react"
 import { BROWSE_QUALITY_FLOOR, browseLiftRange } from "~/domain/for-you"
 import { ReasonChips } from "~/ui/title-card/ReasonChips"
 import { compactCount } from "./labels"
+import { SortControl } from "./controls"
 import { Knob, MENU, TAP } from "./motion"
 import type { ForYouControl } from "./types"
 
@@ -124,7 +125,7 @@ export function ForYouExplanation({
 }
 
 /** The fingerprint icon; hovering (mouse), focusing, or tapping it shows the explanation. Fixed width. */
-function FingerprintTip({
+export function FingerprintTip({
 	on,
 	explanation,
 }: {
@@ -346,5 +347,59 @@ export function ForYouRow({
 			</span>
 			<Knob on={lit} />
 		</motion.button>
+	)
+}
+
+/**
+ * For you and Sort as one control: For you lights its half amber, Sort opens its menu from the other half. With the
+ * For you switch replaced (a guest's sign-up), or without For you, the sort stands alone.
+ */
+export function ForYouSort({
+	forYou,
+	sort,
+}: {
+	forYou?: ForYouControl
+	sort: ComponentProps<typeof SortControl>
+}) {
+	if (!forYou || forYou.replacement)
+		return (
+			<>
+				{forYou?.replacement && (
+					<div className="flex h-12 shrink-0 items-center">
+						{forYou.replacement}
+					</div>
+				)}
+				<SortControl {...sort} />
+			</>
+		)
+	const { on, onChange, movedUp, explanation, disabled } = forYou
+	const lit = on && !disabled
+	return (
+		<div
+			className={`flex h-12 shrink-0 items-stretch rounded-2xl bg-white/[0.04] ring-1 transition-[box-shadow] duration-300 ${lit ? "ring-amber-500/40 shadow-[0_0_30px_-10px_rgba(245,158,11,.55)]" : "ring-white/10"}`}
+		>
+			<div
+				className={`flex items-center rounded-l-2xl pl-1.5 transition-colors ${lit ? "bg-amber-500/[0.14]" : ""}`}
+			>
+				<FingerprintTip on={lit} explanation={explanation} />
+				<motion.button
+					type="button"
+					role="switch"
+					aria-checked={lit}
+					aria-disabled={disabled || undefined}
+					whileTap={disabled ? undefined : TAP}
+					data-for-you-switch
+					onClick={() => !disabled && onChange(!on)}
+					className={`flex h-full items-center gap-2.5 pr-3.5 pl-1.5 text-sm font-bold whitespace-nowrap outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${disabled ? "cursor-not-allowed text-gray-500" : lit ? "cursor-pointer text-amber-100" : "cursor-pointer text-gray-400 hover:text-gray-200"}`}
+				>
+					For you
+					{/* The moved count takes room only when there is one. */}
+					{lit && movedUp > 0 && <MovedUp on={lit} movedUp={movedUp} />}
+					<Knob on={lit} />
+				</motion.button>
+			</div>
+			<span aria-hidden className="my-2.5 w-px bg-white/10" />
+			<SortControl {...sort} bare />
+		</div>
 	)
 }

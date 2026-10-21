@@ -1,8 +1,8 @@
 import { useCountries } from "~/routes/api.countries"
 import { productionCountryName } from "~/domain/production-country"
-// The Filters sheet's content: a search field over every option, then the groups in order (Movies or shows, Anime,
-// Mood, Theme, Style, Genre, GoodWatch score, Taste match, Released, Age & content, Streaming services, Similar to,
-// Cast and crew).
+// The Filters sheet's content. Without a search it is the cards (FilterCards.tsx). A search lists the groups in order
+// (Movies or shows, Anime, Mood, Theme, Style, Genre, Score, Taste match, Released, Age & content, Streaming services,
+// Similar to, Cast and crew) with just the options that match.
 // Each option shows what the result would be if tapped; an option that would leave nothing is dimmed. Typing two
 // letters or more also finds titles for Similar to and people for Cast and crew. Taste match needs taste: without it
 // the group shows dimmed with the way to get it. Age & content needs the viewer's rating ladder: without it the group
@@ -14,7 +14,14 @@ import {
 } from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
 import { motion } from "framer-motion"
-import { type ReactNode, type RefObject, useEffect, useState } from "react"
+import {
+	type ReactNode,
+	type RefObject,
+	Suspense,
+	lazy,
+	useEffect,
+	useState,
+} from "react"
 import {
 	CONTENT_KINDS,
 	type ViewerLadder,
@@ -41,6 +48,8 @@ import { SignUpPrompt } from "~/ui/sign-up-prompt/SignUpPrompt"
 import { goodwatchVibeIndex } from "~/utils/ratings"
 import type { TitleKey } from "~/utils/title-key"
 import { AgeLimit, ContentChecklist } from "./AgeContent"
+import { onFirstInteraction } from "~/utils/first-interaction"
+import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 import {
 	AGE_CONTENT_WORDS,
 	ANIME_LABELS,
@@ -66,7 +75,7 @@ import {
 
 const POSTER = "https://image.tmdb.org/t/p/w154"
 
-interface Option {
+export interface Option {
 	id: string
 	label: string
 	active: boolean
@@ -79,7 +88,7 @@ interface Option {
 	disabled?: boolean
 }
 
-interface Group {
+export interface Group {
 	key: FilterName
 	title: string
 	note?: string
@@ -125,7 +134,7 @@ const toggleIn = <T,>(list: T[] | undefined, value: T) => {
 }
 
 /** A pick the group refused because it is full, said under that group. */
-interface Refusal {
+export interface Refusal {
 	group: FilterName
 	text: string
 }
@@ -257,7 +266,7 @@ function buildGroups(
 		},
 		{
 			key: "minScore",
-			title: "GoodWatch score",
+			title: "Score",
 			badge: state.minScore ? 1 : 0,
 			options: MIN_SCORES.map((score) => ({
 				id: String(score),
@@ -890,6 +899,29 @@ export function FilterSearchField({
 	)
 }
 
+// The cards load on first use: fetched at the first interaction with the page, so they are there when the sheet opens,
+// and never for a visitor who only reads the page.
+const loadCards = reloadOnStaleChunk(() => import("./FilterCards"))
+const FilterCards = lazy(loadCards)
+if (typeof window !== "undefined")
+	onFirstInteraction(() => void loadCards().catch(() => {}))
+
+/** Where the cards go while they load: the starting cards' outlines. */
+function CardsLoading() {
+	return (
+		<div aria-busy="true" className="flex flex-col gap-3">
+			{[96, 128, 96, 96].map((h, i) => (
+				<div
+					// biome-ignore lint/suspicious/noArrayIndexKey: fixed placeholders
+					key={i}
+					className="animate-pulse rounded-2xl bg-white/[0.035] ring-1 ring-white/[0.06] motion-reduce:animate-none"
+					style={{ height: h }}
+				/>
+			))}
+		</div>
+	)
+}
+
 /** The groups, narrowed by `query`. */
 export function FilterGroups({
 	data,
@@ -929,6 +961,25 @@ export function FilterGroups({
 		setRefusal,
 	)
 	const q = query.trim().toLowerCase()
+	// Without a search the sheet is the cards, added as you go; a search lists the matching options of every group.
+	if (!q)
+		return (
+			<div className={className}>
+				<p aria-live="polite" className="sr-only">
+					{notice}
+				</p>
+				<Suspense fallback={<CardsLoading />}>
+					<FilterCards
+						groups={groups}
+						data={data}
+						refusal={refusal}
+						titles={titles}
+						people={people}
+						countries={countries.data ?? []}
+					/>
+				</Suspense>
+			</div>
+		)
 	const searchable = (g: Group) =>
 		g.key === "loved" ||
 		g.key === "disliked" ||

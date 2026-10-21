@@ -1,25 +1,23 @@
-import { TitleChipPreview } from "./TitleChipPreview"
-// The shared filter bar. Desktop: one row (On my services, Not seen yet, For you where the surface has it, the sort,
-// and Filters), a sub-bar with removable chips and the hidden-titles insight, and the Filters side sheet. Phones: the
-// active chips where the bar sits, and the slab fixed at the bottom. The surface owns the data: it binds the state
+// The shared filter bar. Desktop: one row (On my services, Not seen yet, For you and the sort as one control, and
+// Filters at the end), the count line under it (what shows and hides, the biggest recoveries, the active filters under
+// "N more", Clear all; popular filters while none is set), and the Filters side sheet. Phones: Filters and the most used
+// filters as buttons where the bar sits, each opening the slab's sheet, and the slab fixed at the bottom. The surface owns the data: it binds the state
 // with useFilterState, fetches counts for `filters.query`, and passes them in. It also says whether the viewer has
 // taste (`taste`), which Best match and the Taste match filter need.
 import { SERVICES_PATH } from "~/ui/settings/paths"
 import { useNavigate } from "@remix-run/react"
 import { MotionConfig } from "framer-motion"
 import { type ReactNode, useMemo, useRef, useState } from "react"
-import { XMarkIcon } from "@heroicons/react/20/solid"
 import { ladderStepFor } from "~/domain/age-content"
 import { secondaryFilterCount, stateAsApplied } from "~/domain/filter-state"
-import {
-	FiltersButton,
-	NotSeenSwitch,
-	ServicesControl,
-	SortControl,
-} from "./controls"
+import { FilterInsight } from "./ActiveFilters"
+import { FiltersButton, NotSeenSwitch, ServicesControl } from "./controls"
+import { PopularInline } from "./PopularFilters"
+import { focusSheetOn } from "./filter-cards"
 import type { FilterGroupsData } from "./FilterGroups"
 import { FiltersSheet } from "./FiltersSheet"
-import { FOR_YOU_SWITCH, ForYouSwitch, useForYouUnderBestMatch } from "./ForYou"
+import { FOR_YOU_SWITCH, ForYouSort, useForYouUnderBestMatch } from "./ForYou"
+import { PhoneFilterRow } from "./PhoneFilterRow"
 import {
 	type SortOption,
 	type TasteState,
@@ -28,7 +26,6 @@ import {
 	sortShown,
 } from "./labels"
 import { Slab } from "./Slab"
-import { FilterChips, HiddenInsight } from "./SubBar"
 import type { FilterBarCounts, ForYouControl } from "./types"
 import { useMyServices, usePeopleNames, useTitleNames } from "./useFilterData"
 import type { FilterStateBinding } from "./useFilterState"
@@ -71,6 +68,8 @@ export function FilterBar(props: FilterBarProps) {
 	const navigate = useNavigate()
 	const [sheetOpen, setSheetOpen] = useState(false)
 	const [sortOpen, setSortOpen] = useState(false)
+	// Each tap on the phone's quick filter buttons opens the slab's sheet.
+	const [phoneSheet, setPhoneSheet] = useState(0)
 	const services = useMyServices({
 		country: state.streamingCountry,
 		include: state.services,
@@ -121,8 +120,7 @@ export function FilterBar(props: FilterBarProps) {
 		props.sorts || filters.searching
 			? undefined
 			: "Relevance joins once you search."
-	const onAddServices =
-		props.onAddServices ?? (() => navigate(SERVICES_PATH))
+	const onAddServices = props.onAddServices ?? (() => navigate(SERVICES_PATH))
 	const onChange = (next: typeof state) => filters.update(() => next)
 	const notSeen = counts?.optionCounts.notSeenYet
 	const notSeenHides = notSeen
@@ -154,40 +152,51 @@ export function FilterBar(props: FilterBarProps) {
 				<div className="flex flex-wrap items-center gap-2.5">
 					{props.rowLead}
 					{props.signUpKey?.row ?? (
-					<>
-					<ServicesControl
-						on={state.onMyServices}
-						hasServices={hasServices}
-						providers={services.providers}
-						everywherePreview={chips.find((chip) => chip.key === "services")}
-						labels={{
-							everywhere:
-								!state.onMyServices && state.services?.length
-									? `${state.services.length} selected`
-									: "Everywhere",
-						}}
-						onChange={(on) =>
-							filters.set({ onMyServices: on, services: undefined })
-						}
-						onAddServices={onAddServices}
-					/>
-					<NotSeenSwitch
-						on={state.notSeenYet}
-						hides={notSeenHides}
-						onChange={(on) => filters.set({ notSeenYet: on })}
-					/>
-					{forYou && <ForYouSwitch forYou={forYou} />}
-					</>
+						<>
+							<ServicesControl
+								on={state.onMyServices}
+								hasServices={hasServices}
+								providers={services.providers}
+								everywherePreview={chips.find(
+									(chip) => chip.key === "services",
+								)}
+								labels={{
+									everywhere:
+										!state.onMyServices && state.services?.length
+											? `${state.services.length} selected`
+											: !state.onMyServices && state.anyService
+												? "Any service"
+												: "Everywhere",
+								}}
+								onChange={(on) =>
+									filters.set({
+										onMyServices: on,
+										anyService: undefined,
+										services: undefined,
+									})
+								}
+								onAddServices={onAddServices}
+							/>
+							<NotSeenSwitch
+								on={state.notSeenYet}
+								hides={notSeenHides}
+								onChange={(on) => filters.set({ notSeenYet: on })}
+								compact
+							/>
+						</>
 					)}
-					<SortControl
-						options={sorts}
-						value={sort}
-						onChange={pick}
-						footnote={sortFootnote}
-						footer={props.sortFooter}
-						open={sortOpen}
-						onOpenChange={setSortOpen}
-						outsideIgnore={FOR_YOU_SWITCH}
+					<ForYouSort
+						forYou={props.signUpKey ? undefined : forYou}
+						sort={{
+							options: sorts,
+							value: sort,
+							onChange: pick,
+							footnote: sortFootnote,
+							footer: props.sortFooter,
+							open: sortOpen,
+							onOpenChange: setSortOpen,
+							outsideIgnore: FOR_YOU_SWITCH,
+						}}
 					/>
 					<div className="ml-auto flex items-center gap-2.5">
 						{props.rowTrail}
@@ -195,23 +204,27 @@ export function FilterBar(props: FilterBarProps) {
 							count={secondaryCount}
 							expanded={sheetOpen}
 							onClick={() => setSheetOpen(true)}
+							compact
 						/>
 					</div>
 				</div>
-				<FilterChips
+				<FilterInsight
+					counts={counts}
 					chips={displayChips}
 					state={state}
 					onChange={onChange}
-					onClear={filters.clearSecondary}
-					lead={props.chipLead}
-					className="mt-3"
-				/>
-				<HiddenInsight
-					counts={counts}
-					state={state}
 					onDrop={filters.drop}
+					onClear={filters.clearSecondary}
 					searching={filters.searching}
-					lead={props.insightLead}
+					lead={
+						props.chipLead || props.insightLead ? (
+							<>
+								{props.chipLead}
+								{props.insightLead}
+							</>
+						) : undefined
+					}
+					idle={<PopularInline data={groups} />}
 					className="mt-5"
 				/>
 				<FiltersSheet
@@ -223,29 +236,15 @@ export function FilterBar(props: FilterBarProps) {
 				/>
 			</div>
 			<div className="lg:hidden">
-				{(displayChips.length > 0 || props.chipLead) && (
-					<ul
-						aria-label="Active filters"
-						className="-mx-4 mt-3 flex gap-2 overflow-x-auto px-4 [scrollbar-width:none]"
-					>
-						{props.chipLead}
-						{displayChips.map((chip) => (
-							<li key={chip.key} className="shrink-0">
-								<TitleChipPreview chip={chip}>
-									<button
-										type="button"
-										onClick={() => onChange(chip.remove(state))}
-										aria-label={`Remove ${chip.label}`}
-										className="flex h-8 items-center gap-1.5 rounded-full bg-white/[0.07] pl-3 pr-2 text-sm text-gray-100 cursor-pointer"
-									>
-										{chip.label}
-										<XMarkIcon className="h-3.5 w-3.5 text-gray-500" />
-									</button>
-								</TitleChipPreview>
-							</li>
-						))}
-					</ul>
-				)}
+				<PhoneFilterRow
+					count={secondaryCount}
+					chips={displayChips}
+					state={state}
+					onOpen={(key) => {
+						focusSheetOn(key)
+						setPhoneSheet((n) => n + 1)
+					}}
+				/>
 				<Slab
 					state={state}
 					counts={counts}
@@ -266,6 +265,7 @@ export function FilterBar(props: FilterBarProps) {
 					groups={groups}
 					line={props.slabLine}
 					signUpKey={props.signUpKey?.slab}
+					openSheet={phoneSheet}
 				/>
 			</div>
 		</MotionConfig>
