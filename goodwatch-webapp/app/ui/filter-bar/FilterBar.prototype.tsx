@@ -13,13 +13,15 @@ import {
 	useRef,
 	useState,
 } from "react"
-import type { FilterState } from "~/domain/filter-state"
+import { type FilterState, dropFilter } from "~/domain/filter-state"
 import { OneRowChips } from "./FilterGroups.prototype"
 import { FingerprintTip, MovedUp } from "./ForYou"
 import { TitleChipPreview } from "./TitleChipPreview"
 import { SortControl, useMenu } from "./controls"
-import { type ActiveChip, FILTER_ACCENTS } from "./labels"
-import { Knob, MENU, TAP } from "./motion"
+import { HiddenMeter } from "./SubBar"
+import { type ActiveChip, FILTER_ACCENTS, compactCount } from "./labels"
+import { Knob, MENU, RollingNumber, TAP } from "./motion"
+import type { FilterBarCounts } from "./types"
 import type { ForYouControl } from "./types"
 
 /** For you | Sort in one shell: For you lights its half amber, Sort opens its menu from the other half. */
@@ -439,5 +441,231 @@ export function ActiveFiltersRow({
 			))}
 			<li>{clearAll}</li>
 		</ul>
+	)
+}
+
+// ---------------------------------------------------------------- one filter row: status + what hides titles (round 6)
+
+/**
+ * The count line and the active filters as one row. It starts with what shows ("22 showing", the meter, what's
+ * hidden); then one chip per filter, ordered by how many titles it hides, each with what taking it off brings back
+ * (+5.6k) and its ×; a tap on a chip with several values opens them. What doesn't fit goes under More; Clear all ends
+ * the row. `lines` is 1 (one line) or 2 (taller: the count above, the chips below).
+ */
+export function FilterStatusRow({
+	lines,
+	counts,
+	chips,
+	state,
+	onChange,
+	onClear,
+	searching,
+}: {
+	lines: 1 | 2
+	counts: FilterBarCounts | null
+	chips: ActiveChip[]
+	state: FilterState
+	onChange: (s: FilterState) => void
+	onClear: () => void
+	searching?: boolean
+}) {
+	const [menu, setMenu] = useState<string | null>(null)
+	const list = useRef<HTMLUListElement>(null)
+	const [hiddenIds, setHiddenIds] = useState<string[]>([])
+	const recovered = new Map((counts?.recoveries ?? []).map((r) => [r.filter as string, r.titles]))
+	// The top row's filters that hide titles (On my services, picked services, Not seen yet) join the row too.
+	const extra: ActiveChip[] = []
+	if ((state.onMyServices || state.services?.length) && recovered.get("services"))
+		extra.push({
+			key: "row-services",
+			group: "services",
+			label: state.onMyServices ? "My services" : `${state.services?.length} services`,
+			remove: (s) => dropFilter(s, "services"),
+		})
+	if (state.notSeenYet && recovered.get("notSeenYet"))
+		extra.push({ key: "row-notSeenYet", group: "notSeenYet", label: "Not seen yet", remove: (s) => ({ ...s, notSeenYet: false }) })
+	const groups = grouped([...chips, ...extra])
+	const legacyGroups = groups.filter((g) => g.chips.some((c) => c.group === "legacy"))
+	// What taking a filter off brings back. The older-style filters (years, length, scores) share one number, so it
+	// shows only when one of them is on.
+	const back = (g: ChipGroup): number | null => {
+		const legacy = g.chips.some((c) => c.group === "legacy")
+		if (legacy) return legacyGroups.length === 1 ? (recovered.get("legacy") ?? null) : null
+		const key = g.chips[0].group
+		return recovered.get(key) ?? recovered.get(g.id) ?? null
+	}
+	const ordered = [...groups].sort((a, b) => (back(b) ?? -1) - (back(a) ?? -1))
+	const sig = ordered.map((g) => `${g.id}:${g.chips.length}`).join("|")
+	// biome-ignore lint/correctness/useExhaustiveDependencies: measure again when the chips change
+	useLayoutEffect(() => {
+		const el = list.current
+		if (!el) return
+		// Fill the line in order, skipping a chip that doesn't fit so smaller ones after it still can.
+		const measure = () => {
+			const items = [...el.children] as HTMLElement[]
+			for (const i of items) i.style.display = ""
+			const widths = items.map((i) => i.offsetWidth)
+			const gap = 6
+			let used = 0
+			const out: string[] = []
+			items.forEach((i, n) => {
+				const need = widths[n] + (used ? gap : 0)
+				if (used + need <= el.clientWidth + 1) used += need
+				else {
+					i.style.display = "none"
+					if (i.dataset.id) out.push(i.dataset.id)
+				}
+			})
+			setHiddenIds((prev) => (prev.join() === out.join() ? prev : out))
+		}
+		measure()
+		let last = el.clientWidth
+		const ro = new ResizeObserver(() => {
+			if (el.clientWidth === last) return
+			last = el.clientWidth
+			measure()
+		})
+		ro.observe(el)
+		return () => ro.disconnect()
+	}, [sig, lines])
+	const more = ordered.filter((g) => hiddenIds.includes(g.id))
+	const plus = (n: number | null) =>
+		n ? (
+			<span className="text-[12px] font-semibold tabular-nums text-amber-400" title={`${n.toLocaleString("en")} more without it`}>
+				+{compactCount(n)}
+			</span>
+		) : null
+
+	const status = (
+		<div className="flex shrink-0 items-center gap-2.5" aria-live="polite">
+			<HiddenMeter counts={counts} className="w-16" />
+			<span className="text-sm whitespace-nowrap text-gray-400">
+				{counts ? (
+					<>
+						<RollingNumber value={counts.total} className="font-bold text-white" />{" "}
+						{searching ? (counts.total === 1 ? "match" : "matches") : "showing"}
+						{counts.hidden > 0 && (
+							<span className="text-gray-500">
+								{" · "}
+								{compactCount(counts.hidden)} hidden
+							</span>
+						)}
+					</>
+				) : (
+					"Counting…"
+				)}
+			</span>
+		</div>
+	)
+
+	const chipRow = (
+		<ul ref={list} aria-label="Active filters" className="flex h-8 min-w-0 flex-1 gap-1.5 overflow-hidden">
+			{ordered.map((g) => {
+				const n = back(g)
+				const values = g.chips.map((c) => c.label.replace(/^Produced in /, "")).join(", ")
+				return (
+					<li key={g.id} data-id={g.id} className="shrink-0">
+						<Popover
+							open={menu === g.id}
+							onClose={() => setMenu(null)}
+							trigger={
+								<span className="flex h-8 items-center rounded-full bg-white/[0.06] text-sm text-gray-100 transition-colors hover:bg-white/[0.09]">
+									<button
+										type="button"
+										aria-haspopup={g.chips.length > 1 ? "menu" : undefined}
+										aria-expanded={g.chips.length > 1 ? menu === g.id : undefined}
+										onClick={() => g.chips.length > 1 && setMenu(menu === g.id ? null : g.id)}
+										title={g.label}
+										className={`flex h-8 max-w-[16rem] items-center gap-1.5 rounded-l-full pr-1 pl-3 ${g.chips.length > 1 ? "cursor-pointer" : "cursor-default"}`}
+									>
+										<span className={`h-1.5 w-1.5 shrink-0 rounded-full ${g.dot}`} />
+										<span className="truncate">{values}</span>
+										{plus(n)}
+									</button>
+									<button
+										type="button"
+										onClick={() => onChange(removeAll(g.chips, state))}
+										aria-label={`Remove ${g.label}`}
+										className="grid h-8 w-7 place-items-center rounded-r-full text-gray-500 cursor-pointer hover:text-white"
+									>
+										<XMarkIcon className="h-3.5 w-3.5" />
+									</button>
+								</span>
+							}
+						>
+							<div className="px-2.5 pt-1.5 pb-1 text-[12px] font-semibold text-gray-400">{g.label}</div>
+							{g.chips.map((c) => (
+								<MenuValue key={c.key} chip={c} onRemove={() => onChange(c.remove(state))} />
+							))}
+						</Popover>
+					</li>
+				)
+			})}
+		</ul>
+	)
+
+	const tail = (
+		<div className="flex shrink-0 items-center gap-1">
+			{more.length > 0 && (
+				<Popover
+					open={menu === "more"}
+					onClose={() => setMenu(null)}
+					align="right"
+					trigger={
+						<button
+							type="button"
+							aria-haspopup="menu"
+							aria-expanded={menu === "more"}
+							onClick={() => setMenu(menu === "more" ? null : "more")}
+							className="flex h-8 items-center gap-1 rounded-full bg-white/[0.06] pr-2 pl-3 text-sm font-semibold text-gray-200 cursor-pointer hover:bg-white/[0.09]"
+						>
+							{more.length} more
+							<ChevronDownIcon className={`h-4 w-4 text-gray-400 transition-transform ${menu === "more" ? "rotate-180" : ""}`} />
+						</button>
+					}
+				>
+					<div className="max-h-[60vh] overflow-y-auto">
+						{more.map((g) => (
+							<div key={g.id} className="pb-1">
+								<div className="flex items-center gap-2 px-2.5 pt-2 pb-1">
+									<span className={`h-1.5 w-1.5 rounded-full ${g.dot}`} />
+									<span className="flex-1 text-[12px] font-semibold text-gray-400">{g.label}</span>
+									{plus(back(g))}
+								</div>
+								{g.chips.map((c) => (
+									<MenuValue key={c.key} chip={c} onRemove={() => onChange(c.remove(state))} />
+								))}
+							</div>
+						))}
+					</div>
+				</Popover>
+			)}
+			{chips.length > 0 && (
+				<button type="button" onClick={onClear} className="h-8 px-2 text-sm whitespace-nowrap text-gray-500 cursor-pointer hover:text-white">
+					Clear all
+				</button>
+			)}
+		</div>
+	)
+
+	if (lines === 2)
+		return (
+			<div className="rounded-2xl bg-white/[0.03] px-3.5 pt-2.5 pb-3 ring-1 ring-white/[0.06]">
+				{status}
+				{chips.length > 0 && (
+					<div className="mt-2 flex items-center gap-2">
+						{chipRow}
+						{tail}
+					</div>
+				)}
+			</div>
+		)
+	return (
+		<div className="flex min-h-12 items-center gap-3 rounded-2xl bg-white/[0.03] px-3.5 py-2 ring-1 ring-white/[0.06]">
+			{status}
+			{chips.length > 0 && <span aria-hidden className="h-5 w-px shrink-0 bg-white/10" />}
+			{chipRow}
+			{tail}
+		</div>
 	)
 }

@@ -65,9 +65,8 @@ import {
 
 export const FILTER_SHEET_VARIANTS = {
 	now: "Live today",
-	L: "Chips + Clear all",
-	M: "One row + Clear menu",
-	N: "Grouped by filter",
+	O: "One filter row",
+	P: "One filter row, taller",
 } as const
 export type FilterSheetVariant = keyof typeof FILTER_SHEET_VARIANTS
 

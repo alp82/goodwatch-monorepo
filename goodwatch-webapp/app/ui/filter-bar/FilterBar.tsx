@@ -21,7 +21,7 @@ import type { FilterGroupsData } from "./FilterGroups"
 import { FiltersSheet } from "./FiltersSheet"
 // PROTOTYPE - throwaway: the member preview of the Filters sheet prototype.
 import { PREVIEW_SERVICES, useFilterSheetVariant, useMemberPreview } from "./FilterGroups.prototype"
-import { ActiveFiltersRow, ForYouSortSplit } from "./FilterBar.prototype"
+import { ForYouSortSplit, FilterStatusRow } from "./FilterBar.prototype"
 import { OneRowChips } from "./FilterGroups.prototype"
 import { FILTER_ACCENTS } from "./labels"
 import { FOR_YOU_SWITCH, ForYouSwitch, useForYouUnderBestMatch } from "./ForYou"
@@ -94,7 +94,7 @@ export function FilterBar(props: FilterBarProps) {
 	// PROTOTYPE: the variants also try the bar: For you | Sort split, Filters merged with the chips.
 	const protoVariant = useFilterSheetVariant()
 	const protoBar = protoVariant !== "now"
-	const rowStyle = protoVariant === "M" ? "menu" : protoVariant === "N" ? "grouped" : "wrap"
+	const rowLines = protoVariant === "P" ? 2 : 1
 	const myIds =
 		memberPreview && services.ids.length === 0
 			? PREVIEW_SERVICES.filter((id) =>
@@ -239,17 +239,18 @@ export function FilterBar(props: FilterBarProps) {
 					)}
 				</div>
 				{protoBar ? (
-					displayChips.length > 0 && (
-						<div className="mt-3">
-							<ActiveFiltersRow
-								style={rowStyle}
-								chips={displayChips}
-								state={state}
-								onChange={onChange}
-								onClear={filters.clearSecondary}
-							/>
-						</div>
-					)
+					// PROTOTYPE: one row in place of the chips and the count line.
+					<div className="mt-3">
+						<FilterStatusRow
+							lines={rowLines}
+							counts={counts}
+							chips={displayChips}
+							state={state}
+							onChange={onChange}
+							onClear={filters.clearSecondary}
+							searching={filters.searching}
+						/>
+					</div>
 				) : (
 				<FilterChips
 					chips={displayChips}
@@ -260,14 +261,14 @@ export function FilterBar(props: FilterBarProps) {
 					className="mt-3"
 				/>
 				)}
-				<HiddenInsight
+				{!protoBar && <HiddenInsight
 					counts={counts}
 					state={state}
 					onDrop={filters.drop}
 					searching={filters.searching}
 					lead={props.insightLead}
 					className="mt-5"
-				/>
+				/>}
 				<FiltersSheet
 					open={sheetOpen}
 					onClose={() => setSheetOpen(false)}
