@@ -23,6 +23,8 @@ import {
 import { ShowTitlesButton } from "./FiltersSheet"
 import { FOR_YOU_SWITCH, ForYouRow, useForYouUnderBestMatch } from "./ForYou"
 import { SnapSheet } from "./SnapSheet"
+// PROTOTYPE - throwaway: a shorter phone sheet for the ?variant= layouts.
+import { useFilterSheetVariant } from "./FilterGroups.prototype"
 import { HiddenMeter, RecoveryList } from "./SubBar"
 import { ServiceStack, SortItems, radioKeys, useMenu } from "./controls"
 import { type SortOption, compactCount, recoveryLabel } from "./labels"
@@ -536,8 +538,141 @@ export function Slab(props: SlabProps) {
 	)
 }
 
-/** The sheet, top to bottom in reach order: what's hidden, the sort, every other filter, then the two first controls. */
+// PROTOTYPE - throwaway: the variants get a shorter sheet; "now" keeps the live one.
 function SheetBody(props: SlabProps) {
+	const variant = useFilterSheetVariant()
+	return variant === "now" ? (
+		<LiveSheetBody {...props} />
+	) : (
+		<ProtoSheetBody {...props} />
+	)
+}
+
+/**
+ * PROTOTYPE - throwaway. The sheet for the variants: what's hidden, the sort as one row of chips with the chosen
+ * sort's line under it, Not seen yet, then the filters. Streaming services moved into the filters, so the Show me
+ * block's My services / Everywhere is gone.
+ */
+function ProtoSheetBody(props: SlabProps) {
+	const { state, counts, onChange, onDrop, forYou } = props
+	const [query, setQuery] = useState("")
+	const hides = counts?.optionCounts.notSeenYet
+	const seenHidden = hides ? Math.max(0, (hides.off ?? 0) - (hides.on ?? 0)) : 0
+	const pickSort = (sort: SortOption) =>
+		!sort.disabled && props.onSort(sort.key)
+	const current = props.sorts.find((s) => s.key === props.sort)
+	return (
+		<div className="pb-6">
+			<h2 className="sr-only">Filters</h2>
+			{counts && counts.hidden > 0 && (
+				<Block
+					title={`${counts.hidden.toLocaleString("en")} hidden by your filters`}
+					right={<HiddenMeter counts={counts} className="w-24" />}
+				>
+					<div className="-mx-3">
+						<RecoveryList counts={counts} state={state} onDrop={onDrop} />
+					</div>
+				</Block>
+			)}
+			<Block title="Sort">
+				{forYou && !forYou.replacement && (
+					<div className="mb-2">
+						<ForYouRow forYou={forYou} />
+					</div>
+				)}
+				<div
+					className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none]"
+					role="radiogroup"
+					aria-label="Sort"
+					onKeyDown={(event) =>
+						radioKeys(event, (index) => pickSort(props.sorts[index]))
+					}
+				>
+					{props.sorts.map((s) => {
+						const on = s.key === props.sort
+						return (
+							<motion.button
+								key={s.key}
+								// biome-ignore lint/a11y/useSemanticElements: a segmented control; the buttons carry the radio role and arrow keys
+								type="button"
+								role="radio"
+								aria-checked={on}
+								aria-disabled={s.disabled || undefined}
+								tabIndex={on ? 0 : -1}
+								data-sort={s.key}
+								whileTap={s.disabled ? undefined : TAP}
+								onClick={() => pickSort(s)}
+								className={`flex h-9 shrink-0 items-center rounded-full px-3.5 text-sm whitespace-nowrap outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${s.disabled ? "cursor-default text-gray-600 ring-1 ring-white/5" : "cursor-pointer"} ${
+									on
+										? s.taste
+											? "bg-amber-500/[0.18] font-bold text-amber-100 ring-1 ring-amber-500/45"
+											: "bg-white font-bold text-gray-950"
+										: s.disabled
+											? ""
+											: "bg-white/[0.06] text-gray-200 ring-1 ring-white/10"
+								}`}
+							>
+								{s.label}
+							</motion.button>
+						)
+					})}
+				</div>
+				{current && (
+					<p className="mt-1.5 text-xs text-gray-500">{current.hint}</p>
+				)}
+				{props.sortFooter}
+				<motion.button
+					type="button"
+					role="switch"
+					aria-checked={state.notSeenYet}
+					whileTap={TAP}
+					onClick={() => onChange({ ...state, notSeenYet: !state.notSeenYet })}
+					className={`mt-3 flex h-12 w-full items-center gap-3 rounded-2xl px-3.5 ring-1 cursor-pointer outline-none transition-colors focus-visible:ring-2 focus-visible:ring-amber-400 ${state.notSeenYet ? "bg-blue-900/40 ring-blue-400/30" : "bg-white/[0.05] ring-white/10"}`}
+				>
+					{state.notSeenYet ? (
+						<EyeSlashIcon className="h-5 w-5 text-blue-400" />
+					) : (
+						<EyeIcon className="h-5 w-5 text-gray-400" />
+					)}
+					<span className="flex-1 text-left">
+						<span className="block text-sm font-bold text-white">
+							Not seen yet
+						</span>
+						<span className="block text-[11px] text-gray-400">
+							{state.notSeenYet
+								? `Hiding ${seenHidden.toLocaleString("en")} you watched, rated, or skipped`
+								: "Showing titles you've seen too"}
+						</span>
+					</span>
+					<Knob
+						on={state.notSeenYet}
+						onClass="bg-blue-600 shadow-[0_0_16px_rgba(37,99,235,.55)]"
+					/>
+				</motion.button>
+			</Block>
+			<Block
+				title="Filters"
+				right={
+					props.secondaryCount > 0 && (
+						<button
+							type="button"
+							onClick={props.onClear}
+							className="text-xs text-gray-400 cursor-pointer"
+						>
+							Clear {props.secondaryCount}
+						</button>
+					)
+				}
+			>
+				<FilterSearchField value={query} onChange={setQuery} />
+				<FilterGroups data={props.groups} query={query} className="mt-5" />
+			</Block>
+		</div>
+	)
+}
+
+/** The sheet, top to bottom in reach order: what's hidden, the sort, every other filter, then the two first controls. */
+function LiveSheetBody(props: SlabProps) {
 	const { state, counts, onChange, onDrop, forYou } = props
 	const [query, setQuery] = useState("")
 	const hides = counts?.optionCounts.notSeenYet

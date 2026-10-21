@@ -45,6 +45,9 @@ import {
 	useFilterState,
 } from "~/ui/filter-bar"
 import { sortShown } from "~/ui/filter-bar/labels"
+// PROTOTYPE - throwaway: the Filters sheet layouts.
+import { FILTER_SHEET_VARIANTS } from "~/ui/filter-bar/FilterGroups.prototype"
+import { PrototypeSwitcher } from "~/ui/prototype/PrototypeSwitcher"
 import { SearchPeople } from "~/ui/search/SearchPeople"
 import { SignUpPrompt } from "~/ui/sign-up-prompt/SignUpPrompt"
 import { Spinner } from "~/ui/wait/Spinner"
@@ -426,6 +429,10 @@ export function DiscoverPage({
 
 	return (
 		<MotionConfig reducedMotion="user">
+			<PrototypeSwitcher
+				variants={FILTER_SHEET_VARIANTS}
+				position="top-2 left-1/2 -translate-x-1/2"
+			/>
 			<div className={`mx-auto max-w-7xl px-4 pt-5 lg:pt-8 ${SLAB_CLEARANCE}`}>
 				<DiscoverHeading
 					q={q}

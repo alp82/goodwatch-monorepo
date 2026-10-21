@@ -41,6 +41,8 @@ import { SignUpPrompt } from "~/ui/sign-up-prompt/SignUpPrompt"
 import { goodwatchVibeIndex } from "~/utils/ratings"
 import type { TitleKey } from "~/utils/title-key"
 import { AgeLimit, ContentChecklist } from "./AgeContent"
+// PROTOTYPE - throwaway: the sheet layouts behind ?variant=.
+import { PrototypeFilterGroups, useFilterSheetVariant } from "./FilterGroups.prototype"
 import {
 	AGE_CONTENT_WORDS,
 	ANIME_LABELS,
@@ -66,7 +68,7 @@ import {
 
 const POSTER = "https://image.tmdb.org/t/p/w154"
 
-interface Option {
+export interface Option {
 	id: string
 	label: string
 	active: boolean
@@ -79,7 +81,7 @@ interface Option {
 	disabled?: boolean
 }
 
-interface Group {
+export interface Group {
 	key: FilterName
 	title: string
 	note?: string
@@ -110,7 +112,7 @@ export interface FilterGroupsData {
 	ladder?: ViewerLadder | null
 }
 
-interface Found {
+export interface Found {
 	countries: { code: string; name: string }[]
 	countryQuery: string
 	titles: { byKey: Map<TitleKey, NamedTitle>; matches: NamedTitle[] }
@@ -125,12 +127,12 @@ const toggleIn = <T,>(list: T[] | undefined, value: T) => {
 }
 
 /** A pick the group refused because it is full, said under that group. */
-interface Refusal {
+export interface Refusal {
 	group: FilterName
 	text: string
 }
 
-function buildGroups(
+export function buildGroups(
 	data: FilterGroupsData & Found,
 	onRefused: (refusal: Refusal) => void,
 ): Group[] {
@@ -442,7 +444,7 @@ function buildGroups(
 	]
 }
 
-function OptionChip({ option }: { option: Option }) {
+export function OptionChip({ option }: { option: Option }) {
 	const dead = option.disabled || (!option.active && option.count === 0)
 	return (
 		<motion.button
@@ -477,7 +479,7 @@ function OptionChip({ option }: { option: Option }) {
 	)
 }
 
-function OptionLogo({ option }: { option: Option }) {
+export function OptionLogo({ option }: { option: Option }) {
 	const dead = !option.active && option.count === 0
 	return (
 		<motion.button
@@ -793,7 +795,7 @@ function PreferencePicker({
 	)
 }
 
-function OptionPoster({
+export function OptionPoster({
 	option,
 	positive = false,
 }: { option: Option; positive?: boolean }) {
@@ -828,7 +830,7 @@ function OptionPoster({
 }
 
 /** Under the Taste match group while the viewer has no taste: how to get it. */
-function NeedsTaste({ needs }: { needs: Exclude<TasteState, "ready"> }) {
+export function NeedsTaste({ needs }: { needs: Exclude<TasteState, "ready"> }) {
 	if (needs === "signUp")
 		return (
 			<SignUpPrompt
@@ -929,6 +931,20 @@ export function FilterGroups({
 		setRefusal,
 	)
 	const q = query.trim().toLowerCase()
+	// PROTOTYPE - throwaway: a variant draws the groups its own way until a search starts.
+	const variant = useFilterSheetVariant()
+	if (variant !== "now" && !q)
+		return (
+			<PrototypeFilterGroups
+				variant={variant}
+				groups={groups}
+				data={data}
+				refusal={refusal}
+				titles={titles}
+				people={people}
+				className={className}
+			/>
+		)
 	const searchable = (g: Group) =>
 		g.key === "loved" ||
 		g.key === "disliked" ||

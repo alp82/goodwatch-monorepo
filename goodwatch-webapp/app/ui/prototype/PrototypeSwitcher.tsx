@@ -24,7 +24,7 @@ export function PrototypeSwitcher({ variants, position = "bottom-6 left-1/2 -tra
 	})
 	if (process.env.NODE_ENV === "production") return null
 	return (
-		<div className={`fixed ${position} z-50 flex items-center gap-2 rounded-full bg-white px-2 py-1.5 text-sm font-semibold text-black shadow-2xl ring-2 ring-fuchsia-500`}>
+		<div className={`fixed ${position} z-[2000] flex items-center gap-2 rounded-full bg-white px-2 py-1.5 text-sm font-semibold text-black shadow-2xl ring-2 ring-fuchsia-500`}>
 			<button type="button" onClick={() => go(-1)} className="rounded-full px-3 py-1 hover:bg-neutral-200" aria-label="Previous variant">
 				←
 			</button>
