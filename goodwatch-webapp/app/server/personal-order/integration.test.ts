@@ -52,7 +52,7 @@ registerHooks({
 		else if (url.endsWith("/availability-index.server.ts"))
 			source = `export const countryServices = () => null; export const isOnServices = (_c, _s, k) => k !== 1e12 + 4;`
 		else if (url.endsWith("/title-filter/id-sets.server.ts"))
-			source = `export const similarTitles = async () => new Set(); export const personTitles = similarTitles; export const legacyTitles = similarTitles; export const titlesOnServicesByColumn = similarTitles;`
+			source = `export const similarTitles = async () => new Set(); export const personTitles = similarTitles; export const legacyTitles = similarTitles; export const titlesOnServicesByColumn = similarTitles; export const productionCountryTitles = similarTitles; export const titlesOnAnyService = similarTitles; export const rangeScoreTitles = () => null;`
 		else if (url.endsWith("/title-filter/matches.server.ts"))
 			source = `export const universeTaste = (_s, taste, _rows, keys) => ({ matches: Uint8Array.from(taste.match([...keys])), percentiles: Float32Array.from(taste.percentile([...keys])) });`
 		else if (url.endsWith("/taste/index.server.ts"))

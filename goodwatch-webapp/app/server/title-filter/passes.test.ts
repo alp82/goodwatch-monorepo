@@ -56,6 +56,11 @@ function passes(
 		minScore?: number
 		taste?: boolean
 		productionCountries?: PassInput["productionCountries"]
+		years?: PassInput["years"]
+		runtime?: PassInput["runtime"]
+		sourceScores?: PassInput["sourceScores"]
+		scoreGap?: PassInput["scoreGap"]
+		services?: PassInput["services"]
 		ratings?: RatingsFilter
 	},
 ) {
@@ -63,7 +68,11 @@ function passes(
 		columns,
 		rows: Int32Array.from(order),
 		keys: Float64Array.from(order, (row) => columns.pointIds[row]),
-		services: { kind: "column", kept: null, onMyServices: false },
+		services: filters.services ?? {
+			kind: "column",
+			kept: null,
+			onMyServices: false,
+		},
 		notSeen: null,
 		seenOrSkipped: noTitles,
 		type: "all",
@@ -84,6 +93,10 @@ function passes(
 		similarTo: [],
 		people: [],
 		productionCountries: filters.productionCountries,
+		years: filters.years,
+		runtime: filters.runtime,
+		sourceScores: filters.sourceScores,
+		scoreGap: filters.scoreGap,
 		legacy: null,
 		ratings: filters.ratings ?? null,
 	}
@@ -865,9 +878,10 @@ test("the passes agree with a title-by-title count for any moods, themes and sty
 test("a fail mask has room for every filter group, the last one included", () => {
 	assert.ok(FILTER_NAMES.length <= 32)
 	assert.ok(FILTER_NAMES.includes("themes") && FILTER_NAMES.includes("styles"))
-	// Every group fits in the mask, including the last content group.
-	assert.equal(FILTER_NAMES.length, 19)
-	assert.equal(FILTER_NAMES.at(-1), "content")
+	// Appending groups preserves the existing content bit and fits the new last group.
+	assert.equal(FILTER_NAMES.length, 23)
+	assert.equal(FILTER_NAMES[18], "content")
+	assert.equal(FILTER_NAMES.at(-1), "scoreGap")
 	const ratings: RatingsFilter = {
 		content: Uint8Array.from(everyRow, (row) => (row === 3 ? 1 : 0)),
 		ages: null,
@@ -915,5 +929,69 @@ test("production countries combine with OR, count co-productions once, and recov
 	assert.deepEqual(
 		passes(plain, { productionCountries: [country("ZZ", [])] }).rows,
 		[],
+	)
+})
+
+test("years, runtime, source scores and gap have independent fail bits and recoveries", () => {
+	const keeping = (except: number[]) => ({
+		keys: new Set(
+			plain.filter((i) => !except.includes(i)).map((i) => columns.pointIds[i]),
+		),
+		rows: Uint8Array.from(plain, (i) => (except.includes(i) ? 0 : 1)),
+	})
+	const out = passes(plain, {
+		years: keeping([1, 5]),
+		runtime: keeping([2, 5]),
+		sourceScores: keeping([3]),
+		scoreGap: keeping([4]),
+	})
+	assert.deepEqual(out.rows, [0])
+	assert.deepEqual(
+		out.recoveries,
+		["years", "runtime", "sourceScores", "scoreGap"].map((filter) => ({
+			filter,
+			titles: 1,
+		})),
+	)
+	for (const name of [
+		"years",
+		"runtime",
+		"sourceScores",
+		"scoreGap",
+	] as const) {
+		assert.deepEqual(
+			passes(plain, { [name]: keeping([1, 2]) }).rows,
+			[0, 3, 4, 5],
+		)
+		assert.deepEqual(out.optionCounts[name], {}) // No extra SQL for option counts.
+	}
+})
+
+test("any service uses the country's offers and shares the services recovery", () => {
+	const services: PassInput["services"] = {
+		kind: "index",
+		anyService: true,
+		index: {
+			services: [8, 9],
+			offsets: Uint32Array.from([0, 1, 2, 4]),
+			entries: Uint16Array.from([0, 1, 0, 1]),
+			loadedAt: 1,
+			rowOf: () => -1,
+			indexOfService: (id) => [8, 9].indexOf(id),
+		},
+		availabilityRows: Int32Array.from([0, 1, 2, -1, -1, -1]),
+		kept: [],
+		mine: [0],
+		chosen: [],
+	}
+	const out = passes(plain, { services })
+	assert.deepEqual(out.rows, [0, 1, 2])
+	assert.deepEqual(out.recoveries, [{ filter: "services", titles: 3 }])
+	assert.equal(out.optionCounts.services.any, 3)
+	assert.equal(out.optionCounts.services.all, 6)
+	assert.equal(out.optionCounts.services.mine, 2)
+	assert.deepEqual(
+		passes(plain, { services: { ...services, anyService: false } }).rows,
+		plain,
 	)
 })

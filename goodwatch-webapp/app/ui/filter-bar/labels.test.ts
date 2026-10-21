@@ -133,8 +133,10 @@ test("the taste match filter has a label per option, a chip, and its recovery wo
 
 test("every filter group has its own accent, and amber is the taste match's", () => {
 	assert.deepEqual(Object.keys(FILTER_ACCENTS).sort(), [...FILTER_NAMES].sort())
-	const dots = FILTER_NAMES.map((name) => FILTER_ACCENTS[name].dot)
-	assert.equal(new Set(dots).size, dots.length)
+	assert.equal(FILTER_ACCENTS.years.dot, FILTER_ACCENTS.released.dot)
+	assert.equal(FILTER_ACCENTS.runtime.dot, "bg-sky-400")
+	assert.equal(FILTER_ACCENTS.sourceScores.dot, "bg-yellow-400")
+	assert.equal(FILTER_ACCENTS.scoreGap.dot, "bg-rose-400")
 	assert.equal(FILTER_ACCENTS.minMatch.dot, "bg-amber-400")
 })
 
@@ -329,13 +331,54 @@ test("manually selected services provide names and logos for hover previews", ()
 	])
 })
 
-test("every legacy filter from an old URL gets a chip, runtime too", () => {
-	const chips = activeChips({
+test("range, source, gap and any-service chips use the agreed wording and remove their own value", () => {
+	const chosen = {
 		...state,
-		legacy: { minRuntime: "90", maxRuntime: "120", minYear: "1997" },
-	})
+		years: { min: 1990, max: 2005 },
+		runtime: { min: 90, max: 120 },
+		sourceScores: { imdb: 80, rtCritics: 90, rtAudience: 85, metacritic: 75 },
+		scoreGap: "agree" as const,
+		anyService: true,
+		streamingCountry: "DE",
+	}
+	const chips = activeChips(chosen)
 	assert.deepEqual(
-		chips.filter((chip) => chip.group === "legacy").map((chip) => chip.label),
-		["At least 90 min", "Up to 120 min", "From 1997"],
+		chips.map((c) => c.label),
+		[
+			"1990–2005",
+			"90–120 min",
+			"IMDb 8.0+",
+			"Rotten Tomatoes 90%+",
+			"RT audience 85%+",
+			"Metacritic 75+",
+			"Critics and audiences agree",
+			"Streaming in Germany",
+		],
 	)
+	assert.deepEqual(
+		chips.find((c) => c.key === "source-imdb")!.remove(chosen).sourceScores,
+		{ rtCritics: 90, rtAudience: 85, metacritic: 75 },
+	)
+	assert.equal(
+		chips.find((c) => c.key === "anyService")!.remove(chosen).anyService,
+		undefined,
+	)
+	for (const [fields, label] of [
+		[{ years: { min: 1990 } }, "From 1990"],
+		[{ years: { max: 2005 } }, "Until 2005"],
+		[{ runtime: { max: 90 } }, "Up to 90 min"],
+		[{ runtime: { min: 0, max: 90 } }, "Up to 90 min"],
+		[{ runtime: { min: 120 } }, "At least 120 min"],
+		[{ scoreGap: "critics" as const }, "Critics liked it more"],
+		[{ scoreGap: "audience" as const }, "Audiences liked it more"],
+		[{ anyService: true }, "On any service"],
+	] as const)
+		assert.equal(activeChips({ ...state, ...fields })[0].label, label)
+	for (const [filter, wording] of [
+		["years", "from other years"],
+		["runtime", "of other lengths"],
+		["sourceScores", "with lower source scores"],
+		["scoreGap", "without critics vs audiences"],
+	] as const)
+		assert.equal(recoveryLabel(filter, 12, chosen), `12 ${wording}`)
 })

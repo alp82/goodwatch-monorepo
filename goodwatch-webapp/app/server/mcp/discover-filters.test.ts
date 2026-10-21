@@ -50,7 +50,7 @@ test("every Discover parameter uses the site's URL codec and preserves its meani
 	)
 	assert.equal(params.get("sort"), "newest")
 	assert.equal(params.get("foryou"), "0")
-	assert.equal(view.state.legacy?.minRuntime, "20")
+	assert.equal(view.state.runtime?.min, 20)
 	assert.equal(view.state.minScore, 75)
 	const result = withPageLink(
 		"https://goodwatch.app",
@@ -195,4 +195,26 @@ test("single genre names normalize to the same filter model as arrays", () => {
 	)
 	for (const genres of ["", "  ", 3])
 		assert.equal(schema.safeParse({ genres }).success, false)
+})
+
+test("MCP exposes source scores, gap and any-service through the shared codec", () => {
+	const args = schema.parse({
+		source_scores: { imdb: 80, rtCritics: 90 },
+		score_gap: "critics",
+		any_service: true,
+	})
+	const view = discoverView(args, false)
+	assert.deepEqual(view.state.sourceScores, { imdb: 80, rtCritics: 90 })
+	assert.equal(view.state.scoreGap, "critics")
+	assert.equal(view.state.anyService, true)
+	assert.equal(view.state.onMyServices, false)
+	assert.equal(
+		schema.safeParse({ any_service: true, on_my_services: true }).success,
+		false,
+	)
+	assert.equal(
+		schema.safeParse({ source_scores: { imdb: 101 } }).success,
+		false,
+	)
+	assert.notEqual(discoverViewKey(args), discoverViewKey({}))
 })

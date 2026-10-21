@@ -141,7 +141,7 @@ test("keys include every filter dependency", () => {
 		{ people: [2] },
 		{ ageLimit: 12 },
 		{ content: { violence: "hide" } },
-		{ legacy: { minYear: "2000" } },
+		{ legacy: { maxScore: "80" } },
 	]
 	for (const change of states)
 		assert.notEqual(
@@ -154,7 +154,7 @@ test("keys normalize object order and viewer services but preserve option order"
 	const base = input()
 	base.state = {
 		...state(),
-		legacy: { minYear: "2000", maxYear: "2020" },
+		legacy: { maxScore: "80", fingerprintPillars: "heart" },
 		content: { violence: "hide", sex: "show" },
 	}
 	const reordered = {
@@ -162,7 +162,11 @@ test("keys normalize object order and viewer services but preserve option order"
 		viewer: { ...viewer(), services: [9, 8, 9], forYou: false },
 		state: {
 			...Object.fromEntries(Object.entries(base.state).reverse()),
-			legacy: { maxYear: "2020", minYear: "2000", maxScore: undefined },
+			legacy: {
+				fingerprintPillars: "heart",
+				maxScore: "80",
+				fingerprintConditions: undefined,
+			},
 			content: { sex: "show", violence: "hide", drugs: undefined },
 			ageLimit: undefined,
 		} as FilterState,
@@ -393,6 +397,39 @@ test("manual streaming countries have different anonymous filter cache entries",
 		discoverFilterKey({
 			...base,
 			state: { ...base.state, services: [8], streamingCountry: "DE" },
+		}),
+	)
+})
+
+test("range, source score, gap and any-service state have distinct stable cache identities", () => {
+	const base = input()
+	const variants: Partial<FilterState>[] = [
+		{ years: { min: 1990 } },
+		{ years: { max: 2005 } },
+		{ runtime: { min: 0, max: 90 } },
+		{ runtime: { min: 120 } },
+		{ sourceScores: { imdb: 80 } },
+		{ sourceScores: { imdb: 75 } },
+		{ scoreGap: "agree" },
+		{ scoreGap: "critics" },
+		{ scoreGap: "audience" },
+		{ anyService: true },
+	]
+	const keys = [
+		discoverFilterKey(base),
+		...variants.map((fields) =>
+			discoverFilterKey({ ...base, state: { ...base.state, ...fields } }),
+		),
+	]
+	assert.equal(new Set(keys).size, keys.length)
+	assert.equal(
+		discoverFilterKey({
+			...base,
+			state: { ...base.state, sourceScores: { imdb: 80, rtCritics: 90 } },
+		}),
+		discoverFilterKey({
+			...base,
+			state: { ...base.state, sourceScores: { rtCritics: 90, imdb: 80 } },
 		}),
 	)
 })

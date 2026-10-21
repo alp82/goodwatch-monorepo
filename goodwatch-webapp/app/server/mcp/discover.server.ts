@@ -78,11 +78,13 @@ export async function readDiscover(
 		next_cursor:
 			offset + limit < result.total ? `offset:${offset + limit}` : null,
 		country: ctx.country,
-		availability: view.state.onMyServices
-			? "mine"
-			: view.state.services?.length
-				? "providers"
-				: "everywhere",
+		availability: view.state.anyService
+			? "any"
+			: view.state.onMyServices
+				? "mine"
+				: view.state.services?.length
+					? "providers"
+					: "everywhere",
 		exclude_seen: view.state.notSeenYet,
 		for_you: view.forYou,
 		for_you_applied: !!result.moved,

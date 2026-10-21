@@ -1,6 +1,8 @@
 import * as z from "zod4"
 import { CONTENT_KINDS, MAX_AGE } from "../../domain/age-content.ts"
 import {
+	SCORE_GAPS,
+	SOURCE_KEYS,
 	type FilterState,
 	MIN_MATCHES,
 	RELEASED,
@@ -21,6 +23,11 @@ export function isDiscoverySearch(args: {
 
 /** Names map onto the site's filter state; the engine and URL codec own their semantics. */
 export const discoverFilters = {
+	source_scores: z
+		.partialRecord(z.enum(SOURCE_KEYS), z.number().int().min(0).max(100))
+		.optional(),
+	score_gap: z.enum(SCORE_GAPS).optional(),
+	any_service: z.boolean().optional(),
 	type: z.enum(["all", "movie", "show"]).optional(),
 	genres: z
 		.union([
@@ -123,7 +130,8 @@ export function validDiscoverRanges(args: DiscoverFilterArgs) {
 			args.max_runtime !== undefined &&
 			args.min_runtime > args.max_runtime
 		) &&
-		!(args.on_my_services && args.providers?.length)
+		!(args.on_my_services && args.providers?.length) &&
+		!(args.any_service && (args.on_my_services || args.providers?.length))
 	)
 }
 export function discoverView(args: DiscoverFilterArgs, searching: boolean) {
@@ -131,7 +139,10 @@ export function discoverView(args: DiscoverFilterArgs, searching: boolean) {
 		...defaultFilterState({ onMyServices: false, notSeenYet: false }),
 		type: args.type ?? "all",
 		anime: args.anime ?? "any",
-		onMyServices: args.on_my_services ?? false,
+		onMyServices: args.any_service ? false : (args.on_my_services ?? false),
+		...(args.any_service ? { anyService: true } : {}),
+		...(args.source_scores ? { sourceScores: args.source_scores } : {}),
+		...(args.score_gap ? { scoreGap: args.score_gap } : {}),
 		...(args.providers?.length ? { services: args.providers } : {}),
 		notSeenYet: args.exclude_seen ?? false,
 		genres: args.genres ?? [],
@@ -143,15 +154,18 @@ export function discoverView(args: DiscoverFilterArgs, searching: boolean) {
 		released: args.released ?? "any",
 		...(args.age_limit === undefined ? {} : { ageLimit: args.age_limit }),
 	}
-	const legacy: FilterState["legacy"] = {}
-	for (const [name, value] of [
-		["minYear", args.min_year],
-		["maxYear", args.max_year],
-		["minRuntime", args.min_runtime],
-		["maxRuntime", args.max_runtime],
-	] as const)
-		if (value !== undefined) legacy[name] = String(value)
-	if (Object.keys(legacy).length) state.legacy = legacy
+	if (args.min_year !== undefined || args.max_year !== undefined) {
+		state.years = {
+			...(args.min_year === undefined ? {} : { min: args.min_year }),
+			...(args.max_year === undefined ? {} : { max: args.max_year }),
+		}
+		state.released = "any"
+	}
+	if (args.min_runtime !== undefined || args.max_runtime !== undefined)
+		state.runtime = {
+			...(args.min_runtime === undefined ? {} : { min: args.min_runtime }),
+			...(args.max_runtime === undefined ? {} : { max: args.max_runtime }),
+		}
 	if (args.hide_content?.length || args.show_content?.length) {
 		state.content = {}
 		for (const kind of args.show_content ?? []) state.content[kind] = "show"

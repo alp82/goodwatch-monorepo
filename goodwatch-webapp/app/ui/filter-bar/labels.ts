@@ -8,6 +8,7 @@ import {
 	withoutContentChoice,
 } from "~/domain/age-content"
 import {
+	SOURCE_KEYS,
 	type FilterName,
 	type FilterState,
 	type LegacyParam,
@@ -202,6 +203,10 @@ const capitalized = (text: string) => text[0].toUpperCase() + text.slice(1)
  */
 export const FILTER_ACCENTS: Record<FilterName, { dot: string; bar: string }> =
 	{
+		years: { dot: "bg-cyan-400", bar: "bg-cyan-500" },
+		runtime: { dot: "bg-sky-400", bar: "bg-sky-500" },
+		sourceScores: { dot: "bg-yellow-400", bar: "bg-yellow-500" },
+		scoreGap: { dot: "bg-rose-400", bar: "bg-rose-500" },
 		services: { dot: "bg-emerald-400", bar: "bg-emerald-500" },
 		notSeenYet: { dot: "bg-blue-400", bar: "bg-blue-500" },
 		type: { dot: "bg-teal-400", bar: "bg-teal-500" },
@@ -228,6 +233,10 @@ export const FILTER_ACCENTS: Record<FilterName, { dot: string; bar: string }> =
  * recovery keeps the neutral gray rather than a second amber.
  */
 export const METER_COLORS: Partial<Record<FilterName, string>> = {
+	years: "bg-cyan-600",
+	runtime: "bg-sky-600",
+	sourceScores: "bg-yellow-600",
+	scoreGap: "bg-rose-600",
 	services: "bg-emerald-600",
 	notSeenYet: "bg-blue-600",
 }
@@ -274,8 +283,15 @@ export function recoveryLabel(
 			return `${n} below ${state.minScore}`
 		case "minMatch":
 			return `${n} below ${state.minMatch}% match`
+		case "years":
 		case "released":
 			return `${n} from other years`
+		case "runtime":
+			return `${n} of other lengths`
+		case "sourceScores":
+			return `${n} with lower source scores`
+		case "scoreGap":
+			return `${n} without critics vs audiences`
 		case "similarTo":
 			return `${n} less similar`
 		case "loved":
@@ -316,14 +332,10 @@ export interface ActiveChip {
 }
 
 const LEGACY_LABELS: Record<LegacyParam, (value: string) => string> = {
-	minYear: (value) => `From ${value}`,
-	maxYear: (value) => `Until ${value}`,
 	maxScore: (value) => `Score up to ${value}`,
 	fingerprintConditions: () => "Fingerprint conditions",
 	fingerprintPillars: () => "Fingerprint pillars",
 	fingerprintPillarMinTier: (value) => `Fingerprint tier ${value}`,
-	minRuntime: (value) => `At least ${value} min`,
-	maxRuntime: (value) => `Up to ${value} min`,
 }
 
 const without = <T>(list: T[] | undefined, value: T) => {
@@ -341,6 +353,76 @@ export function activeChips(
 	names: FilterNames = {},
 ): ActiveChip[] {
 	const chips: ActiveChip[] = []
+	for (const group of ["years", "runtime"] as const) {
+		const range = state[group]
+		if (!range || (range.min === undefined && range.max === undefined)) continue
+		const { min, max } = range
+		const label =
+			group === "years"
+				? min === undefined
+					? `Until ${max}`
+					: max === undefined
+						? `From ${min}`
+						: `${min}–${max}`
+				: max === undefined
+					? `At least ${min} min`
+					: min === undefined || min === 0
+						? `Up to ${max} min`
+						: `${min}–${max} min`
+		chips.push({
+			key: group,
+			group,
+			label,
+			remove: (s) => dropFilter(s, group),
+		})
+	}
+	for (const source of SOURCE_KEYS) {
+		const score = state.sourceScores?.[source]
+		if (score === undefined) continue
+		const label =
+			source === "imdb"
+				? `IMDb ${(score / 10).toFixed(1)}+`
+				: source === "rtCritics"
+					? `Rotten Tomatoes ${score}%+`
+					: source === "rtAudience"
+						? `RT audience ${score}%+`
+						: `Metacritic ${score}+`
+		chips.push({
+			key: `source-${source}`,
+			group: "sourceScores",
+			label,
+			remove: (s) => {
+				const sourceScores = { ...s.sourceScores }
+				delete sourceScores[source]
+				return {
+					...s,
+					sourceScores: Object.keys(sourceScores).length
+						? sourceScores
+						: undefined,
+				}
+			},
+		})
+	}
+	if (state.scoreGap)
+		chips.push({
+			key: "scoreGap",
+			group: "scoreGap",
+			label: {
+				agree: "Critics and audiences agree",
+				critics: "Critics liked it more",
+				audience: "Audiences liked it more",
+			}[state.scoreGap],
+			remove: (s) => dropFilter(s, "scoreGap"),
+		})
+	if (state.anyService)
+		chips.push({
+			key: "anyService",
+			group: "services",
+			label: state.streamingCountry
+				? `Streaming in ${productionCountryName(state.streamingCountry)}`
+				: "On any service",
+			remove: (s) => dropFilter(s, "services"),
+		})
 	if (state.type !== "all")
 		chips.push({
 			key: "type",
@@ -397,14 +479,14 @@ export function activeChips(
 			label: `Match ${state.minMatch}%+`,
 			remove: (s) => ({ ...s, minMatch: 0 }),
 		})
-	if (state.released !== "any")
+	if (!state.years && state.released !== "any")
 		chips.push({
 			key: "released",
 			group: "released",
 			label: RELEASED_LABELS[state.released],
 			remove: (s) => ({ ...s, released: "any" }),
 		})
-	if (!state.onMyServices && state.services?.length) {
+	if (!state.anyService && !state.onMyServices && state.services?.length) {
 		const serviceNames = state.services
 			.map((id) => names.service?.(id))
 			.filter(Boolean)
@@ -457,7 +539,7 @@ export function activeChips(
 			label: `Like ${names.title?.(key) ?? "a title"}`,
 			remove: (s) => ({ ...s, similarTo: without(s.similarTo, key) }),
 		})
-	if (state.streamingCountry)
+	if (state.streamingCountry && !state.anyService)
 		chips.push({
 			key: "streaming-country",
 			group: "services",

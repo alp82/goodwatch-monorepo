@@ -459,3 +459,81 @@ test("manual services and streaming country travel together without changing pro
 	assert.equal(clearSecondaryFilters(state).streamingCountry, undefined)
 	assert.equal(parse("streamingCountry=bad").streamingCountry, undefined)
 })
+
+test("new filter URLs round trip and old range names become first-class filters", () => {
+	for (const query of [
+		"years=1990-2005",
+		"years=1990-",
+		"years=-2005",
+		"runtime=0-90",
+		"runtime=120-",
+		"sources=imdb:80,rtCritics:90&gap=agree",
+		"gap=critics",
+		"gap=audience",
+		"services=any&streamingCountry=DE",
+	]) {
+		const state = parse(query)
+		assert.deepEqual(
+			parse(filterStateToParams(state, defaults).toString()),
+			state,
+		)
+	}
+	const old = new URLSearchParams(
+		"minYear=1990&maxYear=2005&minRuntime=0&maxRuntime=90&maxScore=80",
+	)
+	const state = filterStateFromParams(old, defaults)
+	assert.deepEqual(state.years, { min: 1990, max: 2005 })
+	assert.deepEqual(state.runtime, { min: 0, max: 90 })
+	assert.deepEqual(state.legacy, { maxScore: "80" })
+	const next = filterStateToParams(state, defaults, old)
+	assert.equal(next.get("years"), "1990-2005")
+	assert.equal(next.get("runtime"), "0-90")
+	for (const name of ["minYear", "maxYear", "minRuntime", "maxRuntime"])
+		assert.equal(next.has(name), false)
+	assert.equal(parse("years=1990-&released=recent").released, "any")
+	assert.deepEqual(parse("years=-2005&minYear=1990").years, { max: 2005 })
+	for (const value of [
+		"-",
+		"-5-90",
+		"90-0",
+		"1.5-2",
+		"NaN-",
+		"9007199254740992-",
+	])
+		assert.equal(parse(`runtime=${value}`).runtime, undefined)
+	assert.deepEqual(
+		parse("sources=unknown:90,imdb:101,rtAudience:0,metacritic:75")
+			.sourceScores,
+		{ rtAudience: 0, metacritic: 75 },
+	)
+	assert.equal(parse("gap=invalid").scoreGap, undefined)
+})
+
+test("each new group drops independently and any service overrides saved services", () => {
+	const state = parse(
+		"years=1990-&runtime=0-90&sources=imdb:80&gap=agree&services=any&streamingCountry=DE",
+	)
+	assert.equal(secondaryFilterCount(state), 5)
+	for (const name of [
+		"years",
+		"runtime",
+		"sourceScores",
+		"scoreGap",
+	] as const) {
+		assert.deepEqual(dropFilter(state, name), { ...state, [name]: undefined })
+		assert.equal(clearSecondaryFilters(state)[name], undefined)
+	}
+	assert.equal(dropFilter(state, "services").anyService, undefined)
+	assert.equal(clearSecondaryFilters(state).anyService, undefined)
+	const mineDefaults = { onMyServices: true, notSeenYet: true }
+	const any = filterStateFromParams(
+		new URLSearchParams("services=any"),
+		mineDefaults,
+	)
+	assert.equal(any.onMyServices, false)
+	assert.equal(any.services, undefined)
+	assert.equal(filterStateToParams(any, mineDefaults).get("services"), "any")
+	assert.equal(parse("services=all").anyService, undefined)
+	assert.equal(parse("services=mine").onMyServices, true)
+	assert.deepEqual(parse("services=8,9").services, [8, 9])
+})

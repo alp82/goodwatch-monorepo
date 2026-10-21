@@ -55,6 +55,11 @@ export function discoverFilterKey(input: {
 
 	// Explicit fields keep insertion order stable and make new FilterState fields fail typecheck here.
 	const serialized: Record<keyof FilterState, unknown> = {
+		years: state.years && [state.years.min, state.years.max],
+		runtime: state.runtime && [state.runtime.min, state.runtime.max],
+		sourceScores: sortedFields(state.sourceScores),
+		scoreGap: state.scoreGap,
+		anyService: state.anyService,
 		type: state.type,
 		anime: state.anime,
 		onMyServices: state.onMyServices,
@@ -78,6 +83,7 @@ export function discoverFilterKey(input: {
 		content: sortedFields(state.content),
 	}
 	return JSON.stringify([
+		"discover-filters:v2",
 		input.snapshotVersion,
 		viewer.country,
 		input.availabilityLoadedAt,

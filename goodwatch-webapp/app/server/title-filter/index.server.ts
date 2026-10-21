@@ -34,6 +34,8 @@ import { duplicateProviderMapping } from "~/utils/streaming-links"
 import type { TitleKey } from "~/utils/title-key"
 import {
 	legacyTitles,
+	rangeScoreTitles,
+	titlesOnAnyService,
 	personTitles,
 	productionCountryTitles,
 	similarTitles,
@@ -87,11 +89,12 @@ export interface FilterResult {
 	 */
 	recoveries: { filter: FilterName; titles: number }[]
 	/**
-	 * What each option would leave, the other filters unchanged. Keys: services `all`, `mine`, and service ids;
+	 * What each option would leave, the other filters unchanged. Keys: services `all`, `any`, `mine`, and service ids;
 	 * notSeenYet `on`, `off`; type `all`, `movie`, `show`; anime `any`, `only`, `none`; moods, themes and styles by
 	 * key; genres by name;
 	 * minScore `0`, `60`, `70`, `80`; minMatch `0`, `70`, `80`, `90`; released by option; similarTo and people only for the chosen options (what
 	 * removing each would leave); legacy `on`, `off`.
+	 * years, runtime, sourceScores and scoreGap are empty: their SQL sets are only read for active choices.
 	 *
 	 * ageLimit: `off` and each step of `ladder` by its age (`0`, `6`, `12`, ...). Choosing a step also changes what
 	 * content hides, so each counts what that step would leave with the content it sets by itself plus the person's
@@ -151,39 +154,71 @@ export class SnapshotNotLoaded extends Error {
 export async function filterTitles(input: FilterInput): Promise<FilterResult> {
 	const snapshot = getTitleSnapshot()
 	if (!snapshot) throw new SnapshotNotLoaded()
-	const { state, viewer } = input
+	const { state } = input
+	const viewer = state.streamingCountry
+		? { ...input.viewer, country: state.streamingCountry }
+		: input.viewer
 	// Materialize once: ranked/Wishlist universes may be single-use iterables.
 	const universeKeys =
 		input.universe === "catalog" ? "catalog" : [...input.universe]
 
-	const [similarTo, people, legacy, services, productionCountries] =
-		await Promise.all([
-			Promise.all(
-				(state.similarTo ?? []).map(async (seed) => ({
-					option: String(seed),
-					keys: await similarTitles(seed),
-				})),
-			),
-			Promise.all(
-				(state.people ?? []).map(async (person) => ({
-					option: String(person),
-					keys: await personTitles(person),
-				})),
-			),
-			state.legacy
-				? legacyTitles(
-						state.legacy,
-						universeKeys === "catalog" ? undefined : universeKeys,
-					)
-				: null,
-			servicesFilterBase(state, viewer),
-			Promise.all(
-				(state.productionCountries ?? []).map(async (country) => ({
-					option: country,
-					keys: await productionCountryTitles(country),
-				})),
-			),
-		])
+	const [
+		similarTo,
+		people,
+		legacy,
+		services,
+		productionCountries,
+		years,
+		runtime,
+		sourceScores,
+		scoreGap,
+	] = await Promise.all([
+		Promise.all(
+			(state.similarTo ?? []).map(async (seed) => ({
+				option: String(seed),
+				keys: await similarTitles(seed),
+			})),
+		),
+		Promise.all(
+			(state.people ?? []).map(async (person) => ({
+				option: String(person),
+				keys: await personTitles(person),
+			})),
+		),
+		state.legacy
+			? legacyTitles(
+					state.legacy,
+					universeKeys === "catalog" ? undefined : universeKeys,
+				)
+			: null,
+		servicesFilterBase(state, viewer),
+		Promise.all(
+			(state.productionCountries ?? []).map(async (country) => ({
+				option: country,
+				keys: await productionCountryTitles(country),
+			})),
+		),
+		rangeScoreTitles(
+			state,
+			"years",
+			universeKeys === "catalog" ? undefined : universeKeys,
+		),
+		rangeScoreTitles(
+			state,
+			"runtime",
+			universeKeys === "catalog" ? undefined : universeKeys,
+		),
+		rangeScoreTitles(
+			state,
+			"sourceScores",
+			universeKeys === "catalog" ? undefined : universeKeys,
+		),
+		rangeScoreTitles(
+			state,
+			"scoreGap",
+			universeKeys === "catalog" ? undefined : universeKeys,
+		),
+	])
 
 	const contextualTaste = inlineTaste(input.taste, state, snapshot)
 	const taste = contextualTaste?.signal === "some" ? contextualTaste : null
@@ -265,7 +300,11 @@ export async function filterTitles(input: FilterInput): Promise<FilterResult> {
 		minScore: state.minScore,
 		minMatch: state.minMatch,
 		matches,
-		released: releasedOptions[state.released],
+		released: state.years ? null : releasedOptions[state.released],
+		years: years && titleSet(years, snapshot),
+		runtime: runtime && titleSet(runtime, snapshot),
+		sourceScores: sourceScores && titleSet(sourceScores, snapshot),
+		scoreGap: scoreGap && titleSet(scoreGap, snapshot),
 		releasedOptions,
 		similarTo: sets(similarTo),
 		people: sets(people),
@@ -407,7 +446,8 @@ async function servicesFilterBase(
 	state: FilterState,
 	viewer: ViewerContext,
 ): Promise<ServicesBase> {
-	const explicit = state.onMyServices ? [] : expand(state.services ?? [])
+	const explicit =
+		state.anyService || state.onMyServices ? [] : expand(state.services ?? [])
 	// On my services without saved services has nothing to keep by: it doesn't narrow.
 	const kept = state.onMyServices ? viewer.services : explicit
 	const index = countryServices(viewer.country)
@@ -422,6 +462,7 @@ async function servicesFilterBase(
 			kind: "index",
 			index,
 			// A choice of services none of which carries anything keeps nothing: mark it with an impossible index.
+			anyService: state.anyService,
 			kept: kept.length && !keptIndexes.length ? [-1] : keptIndexes,
 			mine: indexes(viewer.services),
 			chosen: indexes(explicit),
@@ -429,9 +470,11 @@ async function servicesFilterBase(
 	}
 	return {
 		kind: "column",
-		kept: kept.length
-			? await titlesOnServicesByColumn(viewer.country, kept)
-			: null,
+		kept: state.anyService
+			? await titlesOnAnyService(viewer.country)
+			: kept.length
+				? await titlesOnServicesByColumn(viewer.country, kept)
+				: null,
 		onMyServices: state.onMyServices && viewer.services.length > 0,
 	}
 }

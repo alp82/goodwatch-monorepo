@@ -8,16 +8,21 @@
 // cluster, and without a connected cluster nothing is cached.
 import { createHash } from "node:crypto"
 import Redis from "ioredis"
-import type { LegacyFilters } from "~/domain/filter-state"
+import type { FilterState, LegacyFilters } from "~/domain/filter-state"
 import { fingerprintFilterConditions } from "~/server/discover.server"
 import { query } from "~/utils/crate"
 import { MEDIA_COLLECTION, recommend } from "~/utils/qdrant"
 import { type TitleKey, parseTitleKey, titleKey } from "~/utils/title-key"
 import { MIN_VOTES } from "./order.server"
 
+import {
+	rangeScoreConditions,
+	type RangeScoreFilter,
+} from "./range-score-conditions.server"
+
 const KEEP_SECONDS = 30 * 60
 // Bump when a set's meaning changes, so cached sets of the old meaning are never read.
-const CACHE_PREFIX = "title-filter:v1"
+const CACHE_PREFIX = "title-filter:v2"
 const SIMILAR_LIMIT = 5000
 const CREDITS_LIMIT = 5000
 const LEGACY_LIMIT = 100_000
@@ -166,62 +171,35 @@ export function legacyTitles(
 		conditions.push("m.goodwatch_overall_score_normalized_percent <= ?")
 		params.push(maxScore)
 	}
-	const minYear = number(legacy.minYear)
-	if (minYear !== null) {
-		conditions.push("m.release_year >= ?")
-		params.push(minYear)
-	}
-	const maxYear = number(legacy.maxYear)
-	if (maxYear !== null) {
-		conditions.push("m.release_year <= ?")
-		params.push(maxYear)
-	}
-	const minRuntime = number(legacy.minRuntime)
-	const maxRuntime = number(legacy.maxRuntime)
-	if (!conditions.length && minRuntime === null && maxRuntime === null)
-		return null
-	return cachedKeys(
-		"legacy",
-		{ conditions, params, minRuntime, maxRuntime, universe },
-		async () => {
-			const found = await Promise.all(
-				(["movie", "show"] as const).map(async (type) => {
-					const ids = universe?.flatMap((key) => {
-						const parsed = parseTitleKey(key)
-						return parsed.mediaType === type &&
-							Number.isSafeInteger(parsed.tmdbId) &&
-							parsed.tmdbId > 0
-							? [parsed.tmdbId]
-							: []
-					})
-					if (ids && !ids.length) return []
-					// Parsed positive integer IDs are safe SQL literals; filter values stay bound.
-					const eligible = ids
-						? `m.tmdb_id IN (${ids.join(",")})`
-						: `m.goodwatch_overall_score_voting_count >= ${MIN_VOTES} AND m.poster_path IS NOT NULL`
-					const runtime =
-						type === "movie" ? "m.runtime" : "m.episode_runtime[1]"
-					const runtimeConditions = [
-						...(minRuntime === null ? [] : [`${runtime} >= ?`]),
-						...(maxRuntime === null ? [] : [`${runtime} <= ?`]),
-					]
-					const rows = await query<{ tmdb_id: number }>(
-						`SELECT m.tmdb_id FROM ${type} m
+	if (!conditions.length) return null
+	return cachedKeys("legacy", { conditions, params, universe }, async () => {
+		const found = await Promise.all(
+			(["movie", "show"] as const).map(async (type) => {
+				const ids = universe?.flatMap((key) => {
+					const parsed = parseTitleKey(key)
+					return parsed.mediaType === type &&
+						Number.isSafeInteger(parsed.tmdbId) &&
+						parsed.tmdbId > 0
+						? [parsed.tmdbId]
+						: []
+				})
+				if (ids && !ids.length) return []
+				// Parsed positive integer IDs are safe SQL literals; filter values stay bound.
+				const eligible = ids
+					? `m.tmdb_id IN (${ids.join(",")})`
+					: `m.goodwatch_overall_score_voting_count >= ${MIN_VOTES} AND m.poster_path IS NOT NULL`
+				const rows = await query<{ tmdb_id: number }>(
+					`SELECT m.tmdb_id FROM ${type} m
 					 WHERE ${eligible}
-					 AND ${[...conditions, ...runtimeConditions].join(" AND ")}
+					 AND ${conditions.join(" AND ")}
 					 LIMIT ${LEGACY_LIMIT}`,
-						[
-							...params,
-							...(minRuntime === null ? [] : [minRuntime]),
-							...(maxRuntime === null ? [] : [maxRuntime]),
-						],
-					)
-					return rows.map((row) => titleKey(type, Number(row.tmdb_id)))
-				}),
-			)
-			return found.flat()
-		},
-	)
+					params,
+				)
+				return rows.map((row) => titleKey(type, Number(row.tmdb_id)))
+			}),
+		)
+		return found.flat()
+	})
 }
 
 /**
@@ -249,5 +227,67 @@ export function titlesOnServicesByColumn(
 			}),
 		)
 		return found.flat()
+	})
+}
+
+/** Independent cached sets, with a hard bound that fails rather than silently dropping matching titles. */
+export function rangeScoreTitles(
+	state: FilterState,
+	name: RangeScoreFilter,
+	universe?: readonly TitleKey[],
+): Promise<Set<TitleKey>> | null {
+	if (!rangeScoreConditions(state, name, "movie").conditions.length) return null
+	return cachedKeys(
+		name,
+		{ ...rangeScoreConditions(state, name, "movie"), universe },
+		async () => {
+			const found = await Promise.all(
+				(["movie", "show"] as const).map(async (type) => {
+					const { conditions, params } = rangeScoreConditions(state, name, type)
+					const ids = universe?.flatMap((key) => {
+						const parsed = parseTitleKey(key)
+						return parsed.mediaType === type &&
+							Number.isSafeInteger(parsed.tmdbId) &&
+							parsed.tmdbId > 0
+							? [parsed.tmdbId]
+							: []
+					})
+					if (ids && !ids.length) return []
+					const eligible = ids
+						? `tmdb_id IN (${ids.join(",")})`
+						: `goodwatch_overall_score_voting_count >= ${MIN_VOTES} AND poster_path IS NOT NULL`
+					const limit = 1_000_000
+					const rows = await query<{ tmdb_id: number }>(
+						`SELECT tmdb_id FROM ${type} WHERE ${eligible} AND ${conditions.join(" AND ")} LIMIT ${limit}`,
+						params,
+					)
+					if (rows.length >= limit)
+						throw new Error(`${name} title set exceeds its read limit`)
+					return rows.map((row) => titleKey(type, Number(row.tmdb_id)))
+				}),
+			)
+			return found.flat()
+		},
+	)
+}
+
+/** Same offer types as the availability index, only used while that country's index loads. */
+export function titlesOnAnyService(country: string): Promise<Set<TitleKey>> {
+	return cachedKeys("any-service", country, async () => {
+		const limit = 1_000_000
+		const rows = await query<{ media_type: string; media_tmdb_id: number }>(
+			`SELECT media_type, media_tmdb_id FROM streaming_availability
+			 WHERE country_code = ? AND streaming_type IN ('flatrate', 'free', 'ads')
+			 GROUP BY media_type, media_tmdb_id LIMIT ${limit}`,
+			[country],
+		)
+		if (rows.length >= limit)
+			throw new Error("Any service title set exceeds its read limit")
+		return rows.map((row) =>
+			titleKey(
+				row.media_type === "show" ? "show" : "movie",
+				Number(row.media_tmdb_id),
+			),
+		)
 	})
 }

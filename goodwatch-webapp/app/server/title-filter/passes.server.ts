@@ -72,6 +72,7 @@ export interface DayRange {
 export type ServicesFilter =
 	| {
 			kind: "index"
+			anyService?: boolean
 			index: CountryServices
 			/** Availability row per universe title (-1 on no service). */
 			availabilityRows: Int32Array
@@ -190,6 +191,10 @@ export interface PassInput {
 	similarTo: { option: string; keys: TitleSet }[]
 	people: { option: string; keys: TitleSet }[]
 	productionCountries?: { option: string; keys: TitleSet }[]
+	years?: TitleSet | null
+	runtime?: TitleSet | null
+	sourceScores?: TitleSet | null
+	scoreGap?: TitleSet | null
 	legacy: TitleSet | null
 	/** Null when the snapshot has no ratings (or the age filter is off for the viewer): then neither group narrows. */
 	ratings: RatingsFilter | null
@@ -297,6 +302,12 @@ export function runPasses(input: PassInput): PassOutput {
 	const onServices = (i: number) => {
 		if (services.kind === "column")
 			return services.kept ? inSet(services.kept, i) : true
+		if (services.anyService) {
+			const at = services.availabilityRows[i]
+			return (
+				at >= 0 && services.index.offsets[at + 1] > services.index.offsets[at]
+			)
+		}
 		if (!keptServices) return true
 		const at = services.availabilityRows[i]
 		if (at < 0) return false
@@ -306,7 +317,9 @@ export function runPasses(input: PassInput): PassOutput {
 		return false
 	}
 	const servicesOn =
-		services.kind === "index" ? keptServices !== null : services.kept !== null
+		services.kind === "index"
+			? services.anyService || keptServices !== null
+			: services.kept !== null
 
 	// Pass 1: fail masks.
 	for (let i = 0; i < n; i++) {
@@ -343,6 +356,11 @@ export function runPasses(input: PassInput): PassOutput {
 			mask |= BIT.productionCountries
 		if (people.length && !inAny(people, i)) mask |= BIT.people
 		if (legacy && !inSet(legacy, i)) mask |= BIT.legacy
+		if (input.years && !inSet(input.years, i)) mask |= BIT.years
+		if (input.runtime && !inSet(input.runtime, i)) mask |= BIT.runtime
+		if (input.sourceScores && !inSet(input.sourceScores, i))
+			mask |= BIT.sourceScores
+		if (input.scoreGap && !inSet(input.scoreGap, i)) mask |= BIT.scoreGap
 		if (ratings) {
 			if (ageLimit >= 0 && ageOf(ratings, row) > ageLimit) mask |= BIT.ageLimit
 			if (hiddenContent && row >= 0 && ratings.content[row] & hiddenContent)
@@ -421,11 +439,13 @@ export function runPasses(input: PassInput): PassOutput {
 		const counts = new ToggleCounts(size)
 		const { offsets, entries } = index
 		let mineCount = 0
+		let anyCount = 0
 		for (let i = 0; i < n; i++) {
 			if (!passesOthers(i, BIT.services)) continue
 			const at = availabilityRows[i]
 			const from = at < 0 ? 0 : offsets[at]
 			const to = at < 0 ? 0 : offsets[at + 1]
+			if (to > from) anyCount++
 			let onMine = false
 			let hits = 0
 			let hit = 0
@@ -441,7 +461,10 @@ export function runPasses(input: PassInput): PassOutput {
 			if (counts.observe(hits, hit))
 				for (let e = from; e < to; e++) counts.add[entries[e]]++
 		}
-		const serviceCounts: Record<string, number> = { all: counts.all }
+		const serviceCounts: Record<string, number> = {
+			all: counts.all,
+			any: anyCount,
+		}
 		if (services.mine.length) serviceCounts.mine = mineCount
 		const options = Array.from({ length: size }, (_, s) => ({
 			s,

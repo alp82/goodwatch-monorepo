@@ -1,7 +1,7 @@
 // The filter bar's state: what Discover, Watch next, and Explorer filter and sort by, and how it reads from and writes
 // to URL parameters. Pure and shared by the server (the title filter) and the browser (the filter bar).
 //
-// URL parameters (defaults are omitted): services=mine|all|<ids>, unseen=0|1, type, anime=only|none, moods=funny,scary,
+// URL parameters (defaults are omitted): services=mine|all|any|<ids>, unseen=0|1, type, anime=only|none, moods=funny,scary,
 // themes=war,future, styles=animated,slow, genres, score, match, released, similar, people, sort, foryou=0|1. Type and anime are the type filter every page shares. The parameters of old Discover filters the sheet doesn't offer keep
 // their old names and apply as legacy filters. The age and content filter: age=12 (the age of a ladder step),
 // hide=disturbing,drugs and ok=violence (the person's choices per kind of content, kept as given).
@@ -53,6 +53,10 @@ export const FILTER_NAMES = [
 	"productionCountries",
 	"ageLimit",
 	"content",
+	"years",
+	"runtime",
+	"sourceScores",
+	"scoreGap",
 ] as const
 export type FilterName = (typeof FILTER_NAMES)[number]
 
@@ -94,16 +98,35 @@ export const LEGACY_PARAMS = [
 	"fingerprintConditions",
 	"fingerprintPillars",
 	"fingerprintPillarMinTier",
-	"minYear",
-	"maxYear",
 	"maxScore",
-	"minRuntime",
-	"maxRuntime",
 ] as const
 export type LegacyParam = (typeof LEGACY_PARAMS)[number]
 export type LegacyFilters = Partial<Record<LegacyParam, string>>
 
+export const SOURCE_KEYS = [
+	"imdb",
+	"rtCritics",
+	"rtAudience",
+	"metacritic",
+] as const
+export type SourceKey = (typeof SOURCE_KEYS)[number]
+export const SCORE_GAPS = ["agree", "critics", "audience"] as const
+export type ScoreGap = (typeof SCORE_GAPS)[number]
+export interface FilterRange {
+	min?: number
+	max?: number
+}
+
 export interface FilterState {
+	/** Inclusive release years; overrides the released preset. */
+	years?: FilterRange
+	/** Inclusive minutes: movie duration or usual episode runtime. */
+	runtime?: FilterRange
+	/** AND of minimum normalized scores (0–100); a missing score fails. */
+	sourceScores?: Partial<Record<SourceKey, number>>
+	scoreGap?: ScoreGap
+	/** Any streaming offer in the viewing country; supersedes saved and explicit services. */
+	anyService?: boolean
 	type: TitleFormat
 	/** With anime, only anime, or without it. */
 	anime: AnimeChoice
@@ -189,6 +212,31 @@ const oneOf = <T extends string | number>(
 	value: unknown,
 ): T | undefined => options.find((option) => String(option) === value)
 
+// Empty, negative, non-integer and reversed ranges are ignored. New names take precedence.
+function rangeFromParams(
+	params: URLSearchParams,
+	name: string,
+	oldMin: string,
+	oldMax: string,
+): FilterRange | undefined {
+	const raw = params.has(name)
+		? params.get(name)!
+		: `${params.get(oldMin) ?? ""}-${params.get(oldMax) ?? ""}`
+	const match = /^(\d*)-(\d*)$/.exec(raw)
+	if (!match || (!match[1] && !match[2])) return undefined
+	const min = match[1] ? Number(match[1]) : undefined
+	const max = match[2] ? Number(match[2]) : undefined
+	if (
+		[min, max].some((n) => n !== undefined && !Number.isSafeInteger(n)) ||
+		(min !== undefined && max !== undefined && min > max)
+	)
+		return undefined
+	return {
+		...(min === undefined ? {} : { min }),
+		...(max === undefined ? {} : { max }),
+	}
+}
+
 export function filterStateFromParams(
 	params: URLSearchParams,
 	defaults: FilterDefaults,
@@ -199,7 +247,10 @@ export function filterStateFromParams(
 		state.streamingCountry = streamingCountry
 	const services = params.get("services")
 	if (services === "mine") state.onMyServices = true
-	else if (services === "all") state.onMyServices = false
+	else if (services === "any") {
+		state.anyService = true
+		state.onMyServices = false
+	} else if (services === "all") state.onMyServices = false
 	else if (services) {
 		const chosen = ids(services, 1e9)
 		state.onMyServices = false
@@ -226,7 +277,23 @@ export function filterStateFromParams(
 			? Number(score)
 			: 0
 	state.minMatch = oneOf(MIN_MATCHES, params.get("match")) ?? 0
-	state.released = oneOf(RELEASED, params.get("released")) ?? "any"
+	const years = rangeFromParams(params, "years", "minYear", "maxYear")
+	if (years) state.years = years
+	const runtime = rangeFromParams(params, "runtime", "minRuntime", "maxRuntime")
+	if (runtime) state.runtime = runtime
+	state.released = state.years
+		? "any"
+		: (oneOf(RELEASED, params.get("released")) ?? "any")
+	const sources: Partial<Record<SourceKey, number>> = {}
+	for (const part of list(params.get("sources"))) {
+		const [key, value] = part.split(":")
+		const source = oneOf(SOURCE_KEYS, key)
+		if (source && /^\d{1,3}$/.test(value ?? "") && Number(value) <= 100)
+			sources[source] = Number(value)
+	}
+	if (Object.keys(sources).length) state.sourceScores = sources
+	const gap = oneOf(SCORE_GAPS, params.get("gap"))
+	if (gap) state.scoreGap = gap
 	for (const name of ["loved", "disliked"] as const) {
 		const chosen = [
 			...new Set(
@@ -288,11 +355,13 @@ export function filterStateToParams(
 		else params.set(name, value)
 	}
 	set("streamingCountry", state.streamingCountry ?? null)
-	const services = state.onMyServices
-		? "mine"
-		: state.services?.length
-			? state.services.join(",")
-			: "all"
+	const services = state.anyService
+		? "any"
+		: state.onMyServices
+			? "mine"
+			: state.services?.length
+				? state.services.join(",")
+				: "all"
 	set(
 		"services",
 		services === (defaults.onMyServices ? "mine" : "all") ? null : services,
@@ -314,7 +383,28 @@ export function filterStateToParams(
 	set("genres", state.genres.length ? state.genres.join(",") : null)
 	set("score", state.minScore ? String(state.minScore) : null)
 	set("match", state.minMatch ? String(state.minMatch) : null)
-	set("released", state.released === "any" ? null : state.released)
+	set(
+		"released",
+		state.years || state.released === "any" ? null : state.released,
+	)
+	for (const name of ["years", "runtime"] as const) {
+		const range = state[name]
+		set(
+			name,
+			range && (range.min !== undefined || range.max !== undefined)
+				? `${range.min ?? ""}-${range.max ?? ""}`
+				: null,
+		)
+	}
+	for (const name of ["minYear", "maxYear", "minRuntime", "maxRuntime"])
+		params.delete(name)
+	set(
+		"sources",
+		SOURCE_KEYS.filter((key) => state.sourceScores?.[key] !== undefined)
+			.map((key) => `${key}:${state.sourceScores![key]}`)
+			.join(",") || null,
+	)
+	set("gap", state.scoreGap ?? null)
 	set("similar", state.similarTo?.length ? state.similarTo.join(",") : null)
 	for (const name of ["loved", "disliked"] as const)
 		set(
@@ -379,10 +469,16 @@ export function sortFromParams(
 /** The state with one filter group back at its widest: what a one-tap recovery does. */
 export function dropFilter(state: FilterState, name: FilterName): FilterState {
 	switch (name) {
+		case "years":
+		case "runtime":
+		case "sourceScores":
+		case "scoreGap":
+			return { ...state, [name]: undefined }
 		case "services":
 			return {
 				...state,
 				onMyServices: false,
+				anyService: undefined,
 				services: undefined,
 				streamingCountry: undefined,
 			}
@@ -429,6 +525,11 @@ export function dropFilter(state: FilterState, name: FilterName): FilterState {
 /** The Filters sheet's filters cleared; On my services and Not seen yet stay as they are. */
 export const clearSecondaryFilters = (state: FilterState): FilterState => ({
 	...state,
+	years: undefined,
+	runtime: undefined,
+	sourceScores: undefined,
+	scoreGap: undefined,
+	anyService: undefined,
 	type: "all",
 	anime: "any",
 	services: undefined,
@@ -453,7 +554,11 @@ export const clearSecondaryFilters = (state: FilterState): FilterState => ({
 /** How many of the Filters sheet's filters are active: the badge on the Filters button. */
 export function secondaryFilterCount(state: FilterState): number {
 	return (
-		(state.streamingCountry ? 1 : 0) +
+		(state.streamingCountry || state.anyService ? 1 : 0) +
+		(state.years ? 1 : 0) +
+		(state.runtime ? 1 : 0) +
+		Object.keys(state.sourceScores ?? {}).length +
+		(state.scoreGap ? 1 : 0) +
 		(state.type !== "all" ? 1 : 0) +
 		(state.anime !== "any" ? 1 : 0) +
 		(!state.onMyServices && state.services?.length ? 1 : 0) +
