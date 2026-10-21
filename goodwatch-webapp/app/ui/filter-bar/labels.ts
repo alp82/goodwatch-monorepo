@@ -322,6 +322,8 @@ const LEGACY_LABELS: Record<LegacyParam, (value: string) => string> = {
 	fingerprintConditions: () => "Fingerprint conditions",
 	fingerprintPillars: () => "Fingerprint pillars",
 	fingerprintPillarMinTier: (value) => `Fingerprint tier ${value}`,
+	minRuntime: (value) => `At least ${value} min`,
+	maxRuntime: (value) => `Up to ${value} min`,
 }
 
 const without = <T>(list: T[] | undefined, value: T) => {
