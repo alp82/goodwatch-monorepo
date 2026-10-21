@@ -27,7 +27,7 @@ function reads(): CatalogReads {
   }
 }
 test('Real deck logic supports all three kinds across every occupied screen and keeps episode evidence title-scoped', async () => {
-  const r = await room()
+  const r = await room(); r.constraints.kinds = ['movie', 'show_start', 'show_continue']
   r.episodeProposals = [{ showId: 10, episode: { tmdbId: 102, season: 1, number: 2 }, version: 1 }]
   for (const p of r.participants) p.progress = [{ showId: 10, input: { state: 'continue', nextEpisodeId: 102 }, approvedEpisodeId: 102 }]
   const port = reads(); let fresh = false; const base = port.availability; port.availability = async (...args) => { fresh = args[2]; return base(...args) }
@@ -78,4 +78,37 @@ test('Country-separated existing evidence evaluator never merges same-title coun
   await availability([movie], r.screens, true); assert.equal(freshCalls, 2)
   const stale = createAvailabilityAdapter({ async names() { return new Map() }, async batch() { return new Map([['movie-1', evidence('DE')]]) }, async fresh() { return null } }, () => now + 31 * 86400_000)
   assert.equal((await stale([movie], [r.screens[0]], false)).get(movie.key)![0].state, 'unknown')
+})
+
+test('Deck errors identify unknown coverage, known exclusion, episode gaps and budget limits separately', async () => {
+  const r = await room(); r.constraints.kinds = ['movie']
+  const unknown = reads(); unknown.rankedKeys = async () => [movie.key]
+  unknown.availability = async (titles, screens) => new Map(titles.map(t => [t.key, screens.map(s => ({ screenId: s.id, state: 'unknown', scope: 'title', checkedAt: null, offers: [] }))]))
+  await assert.rejects(createDeckAdapter(unknown).candidates(r), error => {
+    const e = error as { code: string; details: { reason: string; scanComplete: boolean; uncertainTitles: number; screens: { unknown: number; serviceIds: number[] }[] } }
+    assert.equal(e.code, 'catalog_unavailable'); assert.equal(e.details.reason, 'availability_unknown'); assert.equal(e.details.scanComplete, true); assert.equal(e.details.uncertainTitles, 1)
+    assert.equal(e.details.screens[0].unknown, 1); assert.deepEqual(e.details.screens[0].serviceIds, [8]); return true
+  })
+  const blocked = reads(); blocked.rankedKeys = async () => [movie.key]
+  blocked.availability = async (titles, screens) => new Map(titles.map(t => [t.key, screens.map(s => ({ screenId: s.id, state: s.id === 'couch' ? 'no_match' : 'unknown', scope: 'title', checkedAt: null, offers: [] }))]))
+  await assert.rejects(createDeckAdapter(blocked).candidates(r), { code: 'no_intersection', details: { type: 'deck', reason: 'verified_no_intersection', reasons: ['verified_no_intersection'], actions: ['review_screen_services', 'review_constraints'], scannedTitles: 1, poolSize: 1, scanComplete: true, uncertainTitles: 0, noMatchTitles: 1, missingMetadataTitles: 0, missingEpisodeTitles: 0, screens: [ { screenId: 'couch', country: 'DE', serviceIds: [8], watchable: 0, noMatch: 1, unknown: 0 }, { screenId: 'remote', country: 'JP', serviceIds: [9], watchable: 0, noMatch: 0, unknown: 1 } ] } })
+  const episodes = reads(); const showRoom = structuredClone(r); showRoom.constraints.kinds = ['show_start']; episodes.rankedKeys = async () => [start.key]; episodes.episodes = async () => []
+  await assert.rejects(createDeckAdapter(episodes).candidates(showRoom), error => { assert.equal((error as { details: { reason: string } }).details.reason, 'episode_catalog_unavailable'); return true })
+  await assert.rejects(createDeckAdapter(unknown, { scanLimit: 0 }).candidates(r), error => { assert.equal((error as { details: { reason: string } }).details.reason, 'scan_limit'); return true })
+  await assert.rejects(createDeckAdapter(unknown, { deadlineMs: 0 }).candidates(r), error => { assert.equal((error as { details: { reason: string } }).details.reason, 'deadline'); return true })
+})
+
+test('Excluded media kinds cannot turn known empty movie intersection into an unknown-coverage failure', async () => {
+  const r = await room(); r.constraints.kinds = ['movie']; const p = reads()
+  p.availability = async (titles, screens) => new Map(titles.map(t => [t.key, screens.map(s => ({ screenId: s.id, state: t.mediaType === 'movie' ? 'no_match' : 'unknown', scope: 'title', checkedAt: null, offers: [] }))]))
+  await assert.rejects(createDeckAdapter(p).candidates(r), { code: 'no_intersection' })
+})
+
+test('Guest show-start selection ignores legacy manual continuation inputs and proposals when continuation is disabled', async () => {
+  const r = await room(); r.constraints.kinds = ['show_start']
+  r.episodeProposals = [{ showId: 10, episode: { tmdbId: 102, season: 1, number: 2 }, version: 1 }]
+  r.participants[0].progress = [{ showId: 10, input: { state: 'continue', nextEpisodeId: 102 }, approvedEpisodeId: 102 }]
+  const p = reads(); p.rankedKeys = async () => [continuation.key]
+  const deck = await createDeckAdapter(p).candidates(r)
+  assert.equal(deck[0].identity.kind, 'show_start'); assert.equal(deck[0].identity.tmdbId, 10)
 })

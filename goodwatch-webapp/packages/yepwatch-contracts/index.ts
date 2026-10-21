@@ -3,6 +3,8 @@ export const API_PREFIX = "/api/yepwatch/v1" as const
 export const CONTRACT_VERSION = 1 as const
 export type RoomPhase = "setup" | "voting" | "shortlist" | "decided" | "expired"
 export type CandidateKind = "movie" | "show_start" | "show_continue"
+/** Continuation uses linked GoodWatch saved progress; never a guest/manual-history default. */
+export const GUEST_CANDIDATE_KINDS = ["movie", "show_start"] as const
 export type VoteValue = "watch" | "pass" | "veto"
 export type Presence = "unknown" | "connected" | "reconnecting"
 export interface EpisodeIdentity {
@@ -169,9 +171,10 @@ export type RoomCommand =
   | { type: "setup"; expectedContextVersion: number; screens: ScreenContext[]; constraints: RoomConstraints; screenId: string | null }
   | { type: "assign_screen"; expectedContextVersion: number; screenId: string }
   | { type: "ready"; expectedContextVersion: number; ready: boolean }
+  /** @deprecated Rejected: progress comes only from authenticated GoodWatch reads, never client-entered history. */
   | { type: "show_progress"; showId: number; input: ShowProgressInput; approvedEpisodeId: number | null }
   | { type: "propose_episode"; expectedContextVersion: number; showId: number; episodeId: number }
-  | { type: "start_round"; expectedRosterVersion: number; expectedContextVersion: number }
+  | { type: "start_round"; expectedRosterVersion: number; expectedContextVersion: number; hostReady?: boolean }
   | { type: "vote"; roundVersion: number; candidateId: string; expectedVoteRevision: number; value: VoteValue | null }
   | { type: "complete_round"; roundVersion: number }
   | { type: "shortlist_preference"; shortlistVersion: number; candidateId: string }
@@ -183,9 +186,30 @@ export interface CommandReceipt { commandId: string; sequence: number; appliedRe
 export interface CommandResult { receipt: CommandReceipt; snapshot: RoomSnapshot }
 export type ErrorCode = "invalid_request" | "unauthorized" | "forbidden" | "not_found" | "expired"
   | "conflict" | "busy" | "outcome_unknown" | "limit_reached" | "needs_context"
-  | "needs_progress" | "no_intersection" | "catalog_unavailable" | "not_implemented"
+  | "needs_progress" | "no_intersection" | "catalog_unavailable" | "not_implemented" | "member_required"
+export type RecoveryAction = "retry" | "review_screen_services" | "review_constraints" | "use_guest_modes"
+export type DeckFailureReason = "availability_unknown" | "episode_catalog_unavailable" | "catalog_metadata_missing" | "scan_limit" | "deadline" | "filtered_catalog_empty" | "verified_no_intersection"
+export interface DeckFailureDetails {
+  type: "deck"
+  reason: DeckFailureReason
+  reasons: DeckFailureReason[]
+  actions: RecoveryAction[]
+  scannedTitles: number
+  poolSize: number
+  scanComplete: boolean
+  uncertainTitles: number
+  noMatchTitles: number
+  missingMetadataTitles: number
+  missingEpisodeTitles: number
+  screens: { screenId: string; country: string; serviceIds: number[]; watchable: number; noMatch: number; unknown: number }[]
+}
+export type FailureDetails = DeckFailureDetails | { type: "catalog"; reason: "catalog_loading"; actions: RecoveryAction[] } | {
+  type: "access"
+  reason: "member_auth_unavailable" | "manual_progress_not_supported"
+  actions: RecoveryAction[]
+}
 export interface ApiError {
-  error: { code: ErrorCode; message: string; retryable: boolean; commandId?: string }
+  error: { code: ErrorCode; message: string; retryable: boolean; commandId?: string; details?: FailureDetails }
   /** Supplied only to the authenticated caller, never to shared activity. */
   snapshot?: RoomSnapshot
 }

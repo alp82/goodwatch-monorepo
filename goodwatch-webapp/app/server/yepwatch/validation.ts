@@ -14,7 +14,7 @@ export const commandSchema = z.object({ commandId: id, sequence: n.min(1), comma
   z.object({ type: z.literal('ready'), expectedContextVersion: n, ready: z.boolean() }),
   z.object({ type: z.literal('show_progress'), showId: episodeId, input: progress, approvedEpisodeId: episodeId.nullable() }),
   z.object({ type: z.literal('propose_episode'), expectedContextVersion: n, showId: episodeId, episodeId }),
-  z.object({ type: z.literal('start_round'), expectedRosterVersion: n, expectedContextVersion: n }),
+  z.object({ type: z.literal('start_round'), expectedRosterVersion: n, expectedContextVersion: n, hostReady: z.boolean().optional() }),
   z.object({ type: z.literal('vote'), roundVersion: n, candidateId: id, expectedVoteRevision: n, value: z.enum(['watch', 'pass', 'veto']).nullable() }),
   z.object({ type: z.literal('complete_round'), roundVersion: n }),
   z.object({ type: z.literal('shortlist_preference'), shortlistVersion: n, candidateId: id }),

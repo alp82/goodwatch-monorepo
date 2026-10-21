@@ -1,4 +1,4 @@
-import type { Candidate, EpisodeChoice, ScreenAvailability, ScreenContext } from '../../../packages/yepwatch-contracts/index.ts'
+import type { Candidate, DeckFailureDetails, DeckFailureReason, EpisodeChoice, ScreenAvailability, ScreenContext } from '../../../packages/yepwatch-contracts/index.ts'
 import { RoomError, requireRoom } from './errors.ts'
 import { continuationProposal } from './progress.ts'
 import { LIMITS, type Room } from './types.ts'
@@ -23,7 +23,7 @@ export function createDeckAdapter(reads: CatalogReads, options: { scanLimit?: nu
     async candidates(room: Room): Promise<Candidate[]> {
       const screens = occupiedScreens(room); const now = clock(); const deadline = now + (options.deadlineMs ?? 12_000)
       const participants = room.participants
-      const selectedShows = new Set(room.episodeProposals.map(p => p.showId))
+      const selectedShows = new Set(room.constraints.kinds.includes('show_continue') ? room.episodeProposals.map(p => p.showId) : [])
       const progressPlans = new Map<number, ReturnType<typeof continuationProposal>>()
       if (room.constraints.kinds.includes('show_continue')) {
         for (const showId of selectedShows) {
@@ -38,20 +38,35 @@ export function createDeckAdapter(reads: CatalogReads, options: { scanLimit?: nu
       const continueKeys = [...selectedShows].map(id => 2_000_000_000_000 + id).filter(key => !room.constraints.moods.length || allKeys.includes(key))
       const ordered = [...new Set([...continueKeys, ...allKeys])]
       const scanLimit = options.scanLimit ?? 1200
-      const results: Candidate[] = []; let unknownEvidence = false; let episodeCatalogMissing = false; let scanned = 0
-      let exhausted = true
+      const results: Candidate[] = []; let scanned = 0
+      let uncertainTitles = 0; let noMatchTitles = 0; let missingMetadataTitles = 0; let missingEpisodeTitles = 0
+      const screenCounts = screens.map(s => ({ screenId: s.id, country: s.country!, serviceIds: [...s.serviceIds], watchable: 0, noMatch: 0, unknown: 0 }))
+      let budgetReason: 'scan_limit' | 'deadline' | null = null
       // Bounded work is explicit: hitting a scan/deadline budget is NOT a verified empty catalog intersection.
       for (let offset = 0; offset < ordered.length; offset += 40) {
-        if (scanned >= scanLimit || clock() >= deadline) { exhausted = false; break }
+        if (scanned >= scanLimit) { budgetReason = 'scan_limit'; break }
+        if (clock() >= deadline) { budgetReason = 'deadline'; break }
         const keys = ordered.slice(offset, offset + Math.min(40, scanLimit - scanned)); scanned += keys.length
         const displays = await reads.displays(keys)
         const availability = await reads.availability([...displays.values()], screens, false)
         for (const key of keys) {
-          const title = displays.get(key); if (!title) continue
-          if (room.constraints.maxMinutes != null && (title.runtimeMinutes == null || title.runtimeMinutes > room.constraints.maxMinutes)) continue
+          const title = displays.get(key)
+          const mediaType = title?.mediaType ?? (key >= 2_000_000_000_000 ? 'show' : 'movie')
+          if (mediaType === 'movie' ? !room.constraints.kinds.includes('movie') : !room.constraints.kinds.some(k => k !== 'movie')) continue
+          if (!title) { missingMetadataTitles++; continue }
+          if (room.constraints.maxMinutes != null) {
+            if (title.runtimeMinutes == null) { missingMetadataTitles++; continue }
+            if (title.runtimeMinutes > room.constraints.maxMinutes) continue
+          }
           const offers = availability.get(key) ?? []
-          if (offers.length !== screens.length || offers.some(a => a.state === 'unknown')) { unknownEvidence = true; continue }
-          if (offers.some(a => a.state !== 'watchable')) continue
+          const states = screens.map((screen, index) => {
+            const state = offers.find(a => a.screenId === screen.id)?.state ?? 'unknown'
+            screenCounts[index][state === 'no_match' ? 'noMatch' : state]++
+            return state
+          })
+          // One verified exclusion rules out the all-screen intersection, even if another screen is unknown.
+          if (states.includes('no_match')) { noMatchTitles++; continue }
+          if (states.includes('unknown')) { uncertainTitles++; continue }
           let identity: Candidate['identity']
           if (title.mediaType === 'movie') {
             if (!room.constraints.kinds.includes('movie')) continue
@@ -64,7 +79,7 @@ export function createDeckAdapter(reads: CatalogReads, options: { scanLimit?: nu
               if (!room.constraints.kinds.includes('show_start') || hasContinuing) continue
               const episodes = await reads.episodes(title.tmdbId)
               const first = [...episodes].sort((a, b) => a.season - b.season || a.number - b.number)[0]
-              if (!first) { episodeCatalogMissing = true; continue }
+              if (!first) { missingEpisodeTitles++; continue }
               identity = { kind: 'show_start', tmdbId: title.tmdbId, episode: episodeIdentity(first) }
             }
           }
@@ -74,9 +89,28 @@ export function createDeckAdapter(reads: CatalogReads, options: { scanLimit?: nu
         }
       }
       if (results.length) return results
-      if (scanned < ordered.length) exhausted = false
-      if (unknownEvidence || episodeCatalogMissing || !exhausted) throw new RoomError('catalog_unavailable', 'No verified deck yet: coverage, episode data or bounded scan is incomplete', 503, true)
-      throw new RoomError('no_intersection', 'No eligible titles in the checked catalog pool; adjust screen services, progress or constraints')
+      if (scanned < ordered.length && !budgetReason) budgetReason = scanned >= scanLimit ? 'scan_limit' : 'deadline'
+      const reasons: DeckFailureReason[] = []
+      if (budgetReason) reasons.push(budgetReason)
+      if (uncertainTitles) reasons.push('availability_unknown')
+      if (missingEpisodeTitles) reasons.push('episode_catalog_unavailable')
+      if (missingMetadataTitles) reasons.push('catalog_metadata_missing')
+      const incomplete = reasons.length > 0
+      if (!incomplete) reasons.push(ordered.length ? 'verified_no_intersection' : 'filtered_catalog_empty')
+      const details: DeckFailureDetails = { type: 'deck', reason: reasons[0], reasons,
+        actions: incomplete ? ['retry', 'review_screen_services', 'review_constraints'] : ['review_screen_services', 'review_constraints'],
+        scannedTitles: scanned, poolSize: ordered.length, scanComplete: !budgetReason,
+        uncertainTitles, noMatchTitles, missingMetadataTitles, missingEpisodeTitles, screens: screenCounts }
+      const messages: Record<DeckFailureReason, string> = {
+        availability_unknown: 'Current offers could not be verified for the selected screens and services. Review your screen services or retry; no settings were changed.',
+        episode_catalog_unavailable: 'Titles matched your services, but their episode catalog is unavailable. Try movies or retry later.',
+        catalog_metadata_missing: 'Some matching catalog details are unavailable. Retry or review your constraints.',
+        scan_limit: 'The candidate search reached its scan limit before finding a verified deck. Retry or review your constraints; this does not prove nothing is available.',
+        deadline: 'The candidate search ran out of time before finding a verified deck. Retry; your screen services and constraints were not changed.',
+        filtered_catalog_empty: 'No titles passed the current catalog filters. Review your media, mood or time constraints.',
+        verified_no_intersection: 'No included, free or ad-supported offers matched every screen in the checked catalog pool. Review your selected services or constraints.',
+      }
+      throw new RoomError(incomplete ? 'catalog_unavailable' : 'no_intersection', messages[details.reason], incomplete ? 503 : 409, incomplete, details)
     },
     async recheck(room: Room, candidate: Candidate) {
       const screens = occupiedScreens(room)

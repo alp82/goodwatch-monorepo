@@ -52,14 +52,11 @@ test('Ambiguous committed write retries same receipt; changed payload and stale 
   await assert.rejects(h.service.command(h.id, h.actor(h.a.credential), { ...command, command: { ...command.command as Extract<RoomCommand, { type: 'vote' }>, value: 'pass' } }), { code: 'conflict' })
   await assert.rejects(h.send(h.a.credential, { type: 'vote', roundVersion: 1, candidateId: 'candidate_0', expectedVoteRevision: 0, value: null }), { code: 'conflict' })
 })
-test('Continuation requires known canonical progress and individual explicit episode agreement', async () => {
-  const h = await harness(); await h.setup(['show_continue'])
-  await assert.rejects(h.start(), { code: 'needs_progress' })
-  await assert.rejects(h.send(h.a.credential, { type: 'show_progress', showId: 10, input: { state: 'continue', nextEpisodeId: 999 }, approvedEpisodeId: 999 }), { code: 'invalid_request' })
-  await h.send(h.a.credential, { type: 'propose_episode', expectedContextVersion: (await h.service.read(h.id, h.actor(h.a.credential))).shared.contextVersion, showId: 10, episodeId: 102 })
-  for (const c of [h.a.credential, h.b.credential]) await h.send(c, { type: 'show_progress', showId: 10, input: { state: 'continue', nextEpisodeId: c === h.a.credential ? 101 : 102 }, approvedEpisodeId: 102 })
-  const result = await h.start(); assert.equal(result.snapshot.shared.candidates[0].identity.kind, 'show_continue')
-  assert.ok(!JSON.stringify(result.snapshot.shared).includes('nextEpisodeId')); assert.equal(result.snapshot.own.progress[0].input.state, 'continue')
+test('Guest continuation and manual progress cannot bypass the saved-member-progress boundary', async () => {
+  const h = await harness(); const before = await h.service.read(h.id, h.actor(h.a.credential))
+  await assert.rejects(h.setup(['show_continue']), { code: 'member_required' })
+  await assert.rejects(h.send(h.a.credential, { type: 'show_progress', showId: 10, input: { state: 'continue', nextEpisodeId: 102 }, approvedEpisodeId: 102 }), { code: 'invalid_request' })
+  assert.deepEqual(await h.service.read(h.id, h.actor(h.a.credential)), before)
 })
 test('Tickets consume exactly once, lease expiry/epoch checked and expired room never leaks state', async () => {
   const h = await harness(); const ticket = await h.service.ticket(h.id, h.actor(h.a.credential))
@@ -102,21 +99,14 @@ test('Browser invite re-admission resumes existing host instead of replacing coo
   assert.equal(recovered.snapshot.own.canHost, true); assert.equal(recovered.snapshot.shared.participants.length, 1)
   assert.equal(joined.headers.get('set-cookie')!.split(';')[0], cookie)
 })
-test('Private progress cannot be probed through arbitrary show queries or missing/unknown inputs; explicit proposals are intentionally shared', async () => {
-  const h = await harness(); await h.setup(['show_continue'])
-  await h.send(h.a.credential, { type: 'show_progress', showId: 10, input: { state: 'continue', nextEpisodeId: 102 }, approvedEpisodeId: 102 })
-  const before = await h.service.showProgress(h.id, h.actor(h.b.credential), 10)
-  assert.equal(before.conflicts[0].proposedEpisode, null); assert.equal(before.conflicts[0].ownNextEpisodeId, null)
-  const arbitrary = await h.service.showProgress(h.id, h.actor(h.b.credential), 999)
-  assert.equal(arbitrary.conflicts[0].proposedEpisode, null)
-  await h.send(h.b.credential, { type: 'show_progress', showId: 10, input: { state: 'unknown' }, approvedEpisodeId: null })
-  assert.equal((await h.service.showProgress(h.id, h.actor(h.b.credential), 10)).conflicts[0].proposedEpisode, null)
-  const s = await h.service.read(h.id, h.actor(h.a.credential))
-  await h.send(h.a.credential, { type: 'propose_episode', expectedContextVersion: s.shared.contextVersion, showId: 10, episodeId: 101 })
-  const after = await h.service.showProgress(h.id, h.actor(h.b.credential), 10)
-  assert.equal(after.conflicts[0].reason, 'missing_progress'); assert.equal(after.conflicts[0].proposedEpisode?.tmdbId, 101)
-  assert.deepEqual((await h.service.read(h.id, h.actor(h.b.credential))).shared.episodeProposals[0].episode, after.conflicts[0].proposedEpisode)
-  assert.equal((await h.service.showProgress(h.id, h.actor(h.b.credential), 999)).conflicts[0].proposedEpisode, null)
+test('Private progress cannot be probed through arbitrary show queries, including legacy private inputs', async () => {
+  const h = await harness(); await h.setup()
+  const stored = (await h.repo.read(h.id))!
+  stored.room.participants[0].progress = [{ showId: 10, input: { state: 'continue', nextEpisodeId: 102 }, approvedEpisodeId: 102 }]
+  await h.repo.compareAndSwap(stored, stored.room, false)
+  for (const showId of [10, 999]) await assert.rejects(h.service.showProgress(h.id, h.actor(h.b.credential), showId), { code: 'member_required' })
+  await assert.rejects(h.send(h.a.credential, { type: 'propose_episode', expectedContextVersion: 2, showId: 10, episodeId: 101 }), { code: 'member_required' })
+  assert.deepEqual((await h.service.read(h.id, h.actor(h.b.credential))).shared.episodeProposals, [])
 })
 
 test('Start-round preflight rejects forbidden, stale and not-ready requests with zero discovery; valid start and replay scan once', async () => {

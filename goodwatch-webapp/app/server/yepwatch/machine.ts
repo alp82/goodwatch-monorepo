@@ -1,7 +1,7 @@
 import type { Candidate, CommandEnvelope, EpisodeIdentity, ProgressConflict, RoomCommand, RoomSnapshot, SharedRoomSnapshot } from '../../../packages/yepwatch-contracts/index.ts'
 import type { Participant, Room } from './types.ts'
 import { LIMITS } from './types.ts'
-import { requireRoom } from './errors.ts'
+import { memberProgressRequired, rejectManualProgress, requireRoom } from './errors.ts'
 export function live(room: Room, now: number) { requireRoom(room.expiresAt > now, 'expired', 'Room expired', 410) }
 export function participant(room: Room, id: string): Participant {
   const p = room.participants.find(p => p.id === id)
@@ -59,19 +59,31 @@ function host(room: Room, p: Participant) { requireRoom(room.hostId === p.id, 'f
 function setup(room: Room) { requireRoom(room.phase === 'setup', 'conflict', 'Start a new round before changing setup') }
 function fence(actual: number, expected: number) { requireRoom(actual === expected, 'conflict', 'State version changed') }
 function included(room: Room, p: Participant) { requireRoom(room.round?.memberIds.includes(p.id), 'forbidden', 'Participant waits until next round', 403) }
+/** Legacy guest-entered history cannot authorize an existing continuation round after the saved-progress policy change. */
+export function preflightGuestRoundCommand(room: Room, command: RoomCommand) {
+  if (room.round && room.candidates.some(c => c.identity.kind === 'show_continue') && ['vote', 'complete_round', 'shortlist_preference', 'propose', 'consent', 'decide'].includes(command.type)) memberProgressRequired()
+}
 /** Reused before discovery and at the authoritative transition; adapter work grants no permission to commit. */
 export function preflightStartRound(room: Room, actorId: string, command: Extract<RoomCommand, { type: 'start_round' }>, now: number) {
   live(room, now)
   host(room, participant(room, actorId)); setup(room)
   fence(room.rosterVersion, command.expectedRosterVersion); fence(room.contextVersion, command.expectedContextVersion)
-  requireRoom(room.participants.every(m => m.ready && m.screenId), 'needs_context', 'Everyone must confirm a viewing screen and be ready')
+  // No linked-member progress integration exists yet; never substitute guest-entered history.
+  if (room.constraints.kinds.includes('show_continue')) memberProgressRequired()
+  if (command.hostReady) {
+    const own = participant(room, actorId)
+    requireRoom(room.screens.some(s => s.id === own.screenId && s.confirmed && s.country && s.serviceIds.length), 'needs_context', 'Confirm your viewing screen before starting')
+  }
+  requireRoom(room.participants.every(m => m.screenId && (m.ready || (m.id === actorId && command.hostReady === true))), 'needs_context', 'Everyone else must confirm a viewing screen and be ready')
 }
-export function transition(original: Room, actorId: string, envelope: CommandEnvelope, now: number, prepared?: Candidate[], rechecked?: Candidate['availability'], proposedEpisode?: EpisodeIdentity): Room {
+export function transition(original: Room, actorId: string, envelope: CommandEnvelope, now: number, prepared?: Candidate[], rechecked?: Candidate['availability']): Room {
   const room = structuredClone(original); live(room, now)
   const p = participant(room, actorId); const c = envelope.command
+  preflightGuestRoundCommand(room, c)
   switch (c.type) {
     case 'setup':
       host(room, p); setup(room); fence(room.contextVersion, c.expectedContextVersion)
+      if (c.constraints.kinds.includes('show_continue')) memberProgressRequired()
       room.screens = c.screens; room.constraints = c.constraints; room.contextVersion++
       for (const member of room.participants) { member.ready = false; if (!c.screens.some(s => s.id === member.screenId)) member.screenId = null }
       p.screenId = c.screenId
@@ -87,23 +99,10 @@ export function transition(original: Room, actorId: string, envelope: CommandEnv
       p.ready = c.ready
       break
     case 'show_progress':
-      setup(room)
-      p.progress = [...p.progress.filter(s => s.showId !== c.showId), { showId: c.showId, input: c.input, approvedEpisodeId: c.approvedEpisodeId }]
-      requireRoom(p.progress.length <= 30, 'limit_reached', 'Too many continuation selections', 400)
-      p.ready = false; room.contextVersion++
-      // Changing private inputs invalidates readiness without publishing those inputs.
-      for (const member of room.participants) member.ready = false
-      break
-    case 'propose_episode': {
+      rejectManualProgress()
+    case 'propose_episode':
       host(room, p); setup(room); fence(room.contextVersion, c.expectedContextVersion)
-      requireRoom(proposedEpisode?.tmdbId === c.episodeId, 'catalog_unavailable', 'Canonical episode unavailable', 503)
-      const previous = room.episodeProposals.find(s => s.showId === c.showId)
-      room.episodeProposals = [...room.episodeProposals.filter(s => s.showId !== c.showId), { showId: c.showId, episode: projectEpisode(proposedEpisode), version: (previous?.version ?? 0) + 1 }]
-      requireRoom(room.episodeProposals.length <= 30, 'limit_reached', 'Too many proposed shows')
-      room.contextVersion++
-      for (const member of room.participants) { member.ready = false; const progress = member.progress.find(s => s.showId === c.showId); if (progress) progress.approvedEpisodeId = null }
-      break
-    }
+      memberProgressRequired()
     case 'start_round': {
       preflightStartRound(room, actorId, c, now)
       requireRoom(prepared, 'catalog_unavailable', 'Candidate adapter unavailable', 503)
@@ -116,6 +115,7 @@ export function transition(original: Room, actorId: string, envelope: CommandEnv
       requireRoom(room.participants.every(m => progressConflicts(room, m).length === 0), 'needs_progress', 'Continuation requires each person’s explicit episode agreement')
       for (const member of room.participants) { member.votes = {}; member.complete = false; member.preference = null; member.consent = null }
       room.roundVersion++; room.round = { version: room.roundVersion, rosterVersion: room.rosterVersion, contextVersion: room.contextVersion, memberIds: room.participants.map(m => m.id) }
+      if (c.hostReady) p.ready = true
       room.phase = 'voting'; break
     }
     case 'vote': {

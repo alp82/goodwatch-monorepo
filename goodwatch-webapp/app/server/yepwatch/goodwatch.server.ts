@@ -3,6 +3,7 @@ import type { ViewerContext } from '../viewer.server'
 import { createDeckAdapter, type CatalogReads } from './catalog-adapter.ts'
 import type { CatalogPort } from './types.ts'
 import { RoomError } from './errors.ts'
+import { requireCatalogSnapshot } from './catalog-startup.ts'
 /** Read-only adapters. Existing methods retain catalog/filter/evidence/link semantics. */
 async function serviceCatalog() {
   const { searchQuery } = await import('../combined-search/catalog.server')
@@ -24,8 +25,7 @@ async function episodes(showId: number) {
 export const goodwatchReads: CatalogReads = {
   async rankedKeys(room) {
     const [{ filterTitles }, { defaultFilterState }, { getTitleSnapshot, presentableAt }, { isMoodKey }] = await Promise.all([import('../title-filter/index.server'), import('../../domain/filter-state'), import('../title-snapshot/index.server'), import('../../domain/moods')])
-    const snapshot = getTitleSnapshot()
-    if (!snapshot) throw new RoomError('catalog_unavailable', 'GoodWatch recommendation catalog is starting or unavailable', 503, true)
+    const snapshot = await requireCatalogSnapshot(getTitleSnapshot)
     if (!room.constraints.moods.every(isMoodKey)) throw new RoomError('invalid_request', 'Unknown GoodWatch mood', 400)
     const state = defaultFilterState({ onMyServices: false, notSeenYet: false })
     state.type = !room.constraints.kinds.includes('movie') ? 'show' : room.constraints.kinds.length === 1 ? 'movie' : 'all'

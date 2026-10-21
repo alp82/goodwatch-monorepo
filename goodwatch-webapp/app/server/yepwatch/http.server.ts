@@ -88,7 +88,7 @@ export function createYepWatchHandler(service: YepWatchService, options: HttpOpt
       throw new RoomError('not_found', 'Endpoint unavailable', 404)
     } catch (error) {
       const e = error instanceof RoomError ? error : new RoomError('busy', 'Service unavailable', 503, true)
-      return reply({ error: { code: e.code, message: e.message, retryable: e.retryable } }, e.status)
+      return reply({ error: { code: e.code, message: e.message, retryable: e.retryable, ...(e.details ? { details: e.details } : {}) } }, e.status)
     }
   }
 }

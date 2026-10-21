@@ -1,8 +1,8 @@
 import type { Candidate, CommandEnvelope, CommandResult, GuestAdmission, GuestAdmissionRequest, JoinRoomRequest, RealtimeAttachment, RealtimeTicket, RealtimeViewResponse, ShowProgressResponse } from '../../../packages/yepwatch-contracts/index.ts'
+import { GUEST_CANDIDATE_KINDS } from '../../../packages/yepwatch-contracts/index.ts'
 import { equal, hash, keyed, random, sign, verify } from './crypto.server.ts'
-import { IndeterminateWrite, requireRoom, RoomError } from './errors.ts'
-import { live, participant, preflightStartRound, progressConflicts, shared, snapshot, transition } from './machine.ts'
-import { continuationProposal } from './progress.ts'
+import { IndeterminateWrite, memberProgressRequired, rejectManualProgress, requireRoom, RoomError } from './errors.ts'
+import { live, participant, preflightGuestRoundCommand, preflightStartRound, shared, snapshot, transition } from './machine.ts'
 import { LIMITS, type CatalogPort, type Participant, type RevisionPublisher, type Room, type RoomRepository, type StoredRoom } from './types.ts'
 export interface ActorCredential { participantId: string; token: string }
 interface Lease { roomId: string; participantId: string; epoch: number; expiresAt: number; scope: 'shared:read' }
@@ -41,7 +41,7 @@ export class YepWatchService {
       const existing = await this.repository.read(id)
       if (existing) { live(existing.room, this.now()); const result = this.admitted(existing.room, request); await this.notify(id); return result }
       const room: Room = { format: 1, id, revision: 1, expiresAt: this.now() + LIMITS.roomMs, hostId: identity.id, inviteHash: hash(this.invite(id)), phase: 'setup', rosterVersion: 1, contextVersion: 1, roundVersion: 0,
-        screens: [], constraints: { kinds: ['movie', 'show_start', 'show_continue'], maxMinutes: null, moods: [] }, episodeProposals: [], participants: [this.member(identity.id, request.nickname, identity.token, identity.digest, request.commandId)], round: null, candidates: [], shortlist: null, shortlistVersion: 0, proposalVersion: 0, proposedId: null, decision: null, tickets: [] }
+        screens: [], constraints: { kinds: [...GUEST_CANDIDATE_KINDS], maxMinutes: null, moods: [] }, episodeProposals: [], participants: [this.member(identity.id, request.nickname, identity.token, identity.digest, request.commandId)], round: null, candidates: [], shortlist: null, shortlistVersion: 0, proposalVersion: 0, proposedId: null, decision: null, tickets: [] }
       try { await this.repository.insert(room) } catch (e) { if (!(e instanceof IndeterminateWrite)) throw e }
       // Always recover the authoritative post-commit result by full primary key, never return a locally proposed aggregate.
     }
@@ -90,20 +90,14 @@ export class YepWatchService {
       }
       requireRoom(envelope.sequence >= actor.nextSequence, 'outcome_unknown', 'Receipt no longer retained; resnapshot and reconcile')
       requireRoom(envelope.sequence === actor.nextSequence, 'conflict', 'Commands must be sent in sequence')
+      preflightGuestRoundCommand(previous.room, envelope.command)
       let prepared: Candidate[] | undefined; let rechecked: Candidate['availability'] | undefined
-      let proposedEpisode: import('../../../packages/yepwatch-contracts/index.ts').EpisodeIdentity | undefined
       if (envelope.command.type === 'propose_episode') {
         requireRoom(previous.room.hostId === actor.id, 'forbidden', 'Host capability required', 403)
-        const c = envelope.command; proposedEpisode = (await this.catalog.episodes(c.showId)).find(e => e.tmdbId === c.episodeId)
-        requireRoom(proposedEpisode, 'catalog_unavailable', 'Canonical episode unavailable', 503)
+        memberProgressRequired()
       }
       if (envelope.command.type === 'show_progress') {
-        const progressCommand = envelope.command
-        const episodes = await this.catalog.episodes(progressCommand.showId)
-        const input = progressCommand.input
-        requireRoom(episodes.length, 'catalog_unavailable', 'Episode catalog unavailable', 503)
-        requireRoom(input.state !== 'continue' || episodes.some(e => e.tmdbId === input.nextEpisodeId), 'invalid_request', 'Unknown canonical episode', 400)
-        requireRoom(progressCommand.approvedEpisodeId === null || episodes.some(e => e.tmdbId === progressCommand.approvedEpisodeId), 'invalid_request', 'Unknown approved episode', 400)
+        rejectManualProgress()
       }
       if (envelope.command.type === 'start_round') {
         preflightStartRound(previous.room, actor.id, envelope.command, this.now())
@@ -113,7 +107,7 @@ export class YepWatchService {
         const candidate = previous.room.candidates.find(c => c.id === previous.room.proposedId)
         requireRoom(candidate, 'conflict', 'No active candidate'); rechecked = await this.catalog.recheck(previous.room, candidate)
       }
-      const room = transition(previous.room, actor.id, envelope, this.now(), prepared, rechecked, proposedEpisode)
+      const room = transition(previous.room, actor.id, envelope, this.now(), prepared, rechecked)
       const changed = participant(room, actor.id); changed.nextSequence++
       changed.receipts.push({ commandId: envelope.commandId, sequence: envelope.sequence, digest, revision: room.revision })
       changed.receipts = changed.receipts.slice(-LIMITS.receipts)
@@ -128,10 +122,8 @@ export class YepWatchService {
     throw new RoomError(uncertain ? 'outcome_unknown' : 'busy', 'Retain and retry the same command', 503, true)
   }
   async showProgress(id: string, credential: ActorCredential, showId: number): Promise<ShowProgressResponse> {
-    const { room } = await this.get(id); const actor = this.auth(room, credential)
-    const own = actor.progress.find(p => p.showId === showId) ?? { showId, input: { state: 'unknown' as const }, approvedEpisodeId: null }
-    try { const episodes = await this.catalog.episodes(showId); const conflicts = room.phase === 'setup' ? continuationProposal(room, showId, episodes).conflicts.get(actor.id) ?? [] : progressConflicts(room, actor).filter(c => c.showId === showId); return { showId, own, episodes, conflicts, catalogState: episodes.length ? 'ready' : 'unavailable', source: 'guest' } }
-    catch { return { showId, own, episodes: [], conflicts: [{ showId, reason: 'episode_catalog_unavailable', ownNextEpisodeId: own.input.state === 'continue' ? own.input.nextEpisodeId : null, proposedEpisode: null }], catalogState: 'unavailable', source: 'guest' } }
+    const { room } = await this.get(id); this.auth(room, credential)
+    return memberProgressRequired()
   }
   async ticket(id: string, credential: ActorCredential): Promise<RealtimeTicket> {
     for (let attempt = 0; attempt < 6; attempt++) {
