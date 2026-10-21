@@ -1,0 +1,20 @@
+{
+  "result": "PASS",
+  "origin": "http://127.0.0.1:8121",
+  "browserIsolation": "Fresh independent Playwright context; no 8120 access or cookies",
+  "freshDemoOnly": true,
+  "actualHostApp": "http://127.0.0.1:8101",
+  "api": "http://127.0.0.1:15995",
+  "websocket": "ws://127.0.0.1:4319",
+  "checks": [
+    "Empty initial controller",
+    "Fresh HttpOnly host admission and normal app recovery",
+    "Actual host Start",
+    "Real simulated private step",
+    "Pause/resume",
+    "Disconnect retains required identity",
+    "Fresh-ticket reconnect retains own answer"
+  ],
+  "javascriptErrors": [],
+  "capabilitiesAndInvitesRedacted": true
+}

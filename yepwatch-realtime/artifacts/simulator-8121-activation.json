@@ -1,0 +1,165 @@
+{
+  "recordedAt": "2026-10-21T15:53:31.191908+00:00",
+  "result": "PASS",
+  "latest": {
+    "url": "http://127.0.0.1:8121",
+    "pid": 3067136,
+    "bind": "127.0.0.1",
+    "state": "Clean empty controller ready for a new operator demo",
+    "command": "cd yepwatch-realtime && YEPWATCH_SIM_PORT=8121 npm run simulator"
+  },
+  "preservedOriginal": {
+    "url": "http://127.0.0.1:8120",
+    "pid": 2852397,
+    "version": "Pre-fix source already loaded in original process",
+    "accessedOrRestarted": false,
+    "memoryDemoAndPendingState": "Preserved; deliberately not queried"
+  },
+  "upstreams": {
+    "app": "http://127.0.0.1:8101",
+    "api": "http://127.0.0.1:15995",
+    "websocket": "ws://127.0.0.1:4319",
+    "revisionBus": "127.0.0.1:46397"
+  },
+  "listenerPids": {
+    "8120": 2852397,
+    "8121": 3067136,
+    "15995": 271191,
+    "4319": 156786,
+    "8101": 2627213,
+    "15996": 3807338,
+    "4318": 3799881,
+    "8100": 3817599,
+    "15997": 3410395,
+    "4317": 3410466,
+    "8099": 3434776
+  },
+  "retainedServicePidsUnchanged": true,
+  "fresh8121Smoke": {
+    "result": "PASS",
+    "origin": "http://127.0.0.1:8121",
+    "browserIsolation": "Fresh independent Playwright context; no 8120 access or cookies",
+    "freshDemoOnly": true,
+    "actualHostApp": "http://127.0.0.1:8101",
+    "api": "http://127.0.0.1:15995",
+    "websocket": "ws://127.0.0.1:4319",
+    "checks": [
+      "Empty initial controller",
+      "Fresh HttpOnly host admission and normal app recovery",
+      "Actual host Start",
+      "Real simulated private step",
+      "Pause/resume",
+      "Disconnect retains required identity",
+      "Fresh-ticket reconnect retains own answer"
+    ],
+    "javascriptErrors": [],
+    "capabilitiesAndInvitesRedacted": true
+  },
+  "cleanHandover": "Only the newly created 8121 smoke process was stopped after its fresh-demo checks; new 8121 PID3067136 then started with empty memory and clean readiness was checked in a fresh isolated browser context",
+  "reviewedSource": {
+    "pin": "/tmp/yepwatch-simulator-review-20261021/fixed-manifest.json",
+    "all13MatchedBeforeActivationDocumentation": true,
+    "files": {
+      "yepwatch-realtime/README.md": {
+        "sha256": "c0f83c1072ad6af359242a619cb402b9f90afd710498d35811dffc7442ecdf82",
+        "fixedPinSha256": "c8e70011267927606c6446206bd18b05497e63dcf0a467612a42ff615a838f29",
+        "matchesFixedPin": false,
+        "activationDocumentationOnly": true
+      },
+      "yepwatch-realtime/package-lock.json": {
+        "sha256": "189201d13d995a09cd18dc159057126196de0155f8d27790b06734b63e7b6342",
+        "fixedPinSha256": "189201d13d995a09cd18dc159057126196de0155f8d27790b06734b63e7b6342",
+        "matchesFixedPin": true,
+        "activationDocumentationOnly": false
+      },
+      "yepwatch-realtime/package.json": {
+        "sha256": "74699fedf2b0cd7fe9f15e964b9ddbbc7f93bc59f1b2a72861f31fd3370a0ad5",
+        "fixedPinSha256": "74699fedf2b0cd7fe9f15e964b9ddbbc7f93bc59f1b2a72861f31fd3370a0ad5",
+        "matchesFixedPin": true,
+        "activationDocumentationOnly": false
+      },
+      "yepwatch-realtime/simulator/README.md": {
+        "sha256": "29cc9c32e4c106a5bf1b36eb7efed5e0aab7771c118ee28ac8f4d59b22253b18",
+        "fixedPinSha256": "9eb44b5493c00ea6c4f7e883883cf32a09273e7b4c8643778f5038f3e0ee7574",
+        "matchesFixedPin": false,
+        "activationDocumentationOnly": true
+      },
+      "yepwatch-realtime/simulator/engine.ts": {
+        "sha256": "d8e4002b0dd91cf6e2ddacc58728af8a432f58c9bb1918ffb42dca92f68e0193",
+        "fixedPinSha256": "d8e4002b0dd91cf6e2ddacc58728af8a432f58c9bb1918ffb42dca92f68e0193",
+        "matchesFixedPin": true,
+        "activationDocumentationOnly": false
+      },
+      "yepwatch-realtime/simulator/prove.cjs": {
+        "sha256": "1687ebb0b91c729385f175deea6000d2cb07444c0ea6d280d62c6b073ea2d7c5",
+        "fixedPinSha256": "1687ebb0b91c729385f175deea6000d2cb07444c0ea6d280d62c6b073ea2d7c5",
+        "matchesFixedPin": true,
+        "activationDocumentationOnly": false
+      },
+      "yepwatch-realtime/simulator/server.ts": {
+        "sha256": "e55b1bbf72562aa83a49546d6e87d5e6caaf81b9dcacc4f812574153b5e02544",
+        "fixedPinSha256": "e55b1bbf72562aa83a49546d6e87d5e6caaf81b9dcacc4f812574153b5e02544",
+        "matchesFixedPin": true,
+        "activationDocumentationOnly": false
+      },
+      "yepwatch-realtime/simulator/style.css": {
+        "sha256": "908a7669c8270d1cda92a95ca43a7182dcdab6f6d15fb66c86be84be658503cf",
+        "fixedPinSha256": "908a7669c8270d1cda92a95ca43a7182dcdab6f6d15fb66c86be84be658503cf",
+        "matchesFixedPin": true,
+        "activationDocumentationOnly": false
+      },
+      "yepwatch-realtime/simulator/ui.html": {
+        "sha256": "b2b071b1dc31edf22e04c6fccc30bfbada8a9f5438ef0aecbb61342e8a1fb6db",
+        "fixedPinSha256": "b2b071b1dc31edf22e04c6fccc30bfbada8a9f5438ef0aecbb61342e8a1fb6db",
+        "matchesFixedPin": true,
+        "activationDocumentationOnly": false
+      },
+      "yepwatch-realtime/simulator/ui.js": {
+        "sha256": "7a9e2335ad4b2e15d92dc0321adf9c8b6126eddaa88dbe64bbe0a6fe46a463cc",
+        "fixedPinSha256": "7a9e2335ad4b2e15d92dc0321adf9c8b6126eddaa88dbe64bbe0a6fe46a463cc",
+        "matchesFixedPin": true,
+        "activationDocumentationOnly": false
+      },
+      "yepwatch-realtime/test/backend.integration.test.ts": {
+        "sha256": "fd8515523b51bbea4fdf1d96723a052bc1e16121d9c12ce7f3769883c4c5d1d7",
+        "fixedPinSha256": "fd8515523b51bbea4fdf1d96723a052bc1e16121d9c12ce7f3769883c4c5d1d7",
+        "matchesFixedPin": true,
+        "activationDocumentationOnly": false
+      },
+      "yepwatch-realtime/test/simulator.test.ts": {
+        "sha256": "1c630b49efa5bb93c9b9df29a53586d012a9d3e15cb971306a4137f0831f49ed",
+        "fixedPinSha256": "1c630b49efa5bb93c9b9df29a53586d012a9d3e15cb971306a4137f0831f49ed",
+        "matchesFixedPin": true,
+        "activationDocumentationOnly": false
+      },
+      "yepwatch-realtime/tsconfig.json": {
+        "sha256": "4ad6e12dcafdf40be9d6906a52594dd7107b9a8398c7759c4b6dd8f49e9c4b7f",
+        "fixedPinSha256": "4ad6e12dcafdf40be9d6906a52594dd7107b9a8398c7759c4b6dd8f49e9c4b7f",
+        "matchesFixedPin": true,
+        "activationDocumentationOnly": false
+      }
+    }
+  },
+  "execution": {
+    "simulator": "Reviewed TypeScript executed through tsx; no separate bundled simulator artifact",
+    "gatewayBuildSha256": "97fb2418850fa5424e1295a6a668f19e49f52ef84a100cebe12183eb781c2cdc",
+    "gatewayBuildUsedBySimulator": false,
+    "buildOrFullSuiteRerunForActivation": false,
+    "priorFixedPinVerification": "Independent fixed-pin build/typecheck and representative scenarios passed; this activation rechecked hashes and isolated live controls only"
+  },
+  "screenshots": [
+    "simulator-8121-activation.png",
+    "simulator-8121-ready.png"
+  ],
+  "limits": [
+    "Use a different browser profile or isolated private session from 8120: unchanged control cookie name is shared across ports; a normal second window is not isolated",
+    "Finite real catalog sample and memory-only API room state",
+    "Simulator identities and pending command recovery are memory-only",
+    "Artificial guests are explicitly labeled; normal app shared frames remain subject to gateway projection checks",
+    "No source expansion, production config changes, service restarts, existing-room mutations, commit or push"
+  ],
+  "capabilitiesAndInvitesRedacted": true,
+  "supersededBy": "simulator-cookie-isolation.json",
+  "historicalRecordOnly": true,
+  "currentSeparateBrowserProfileRequired": false
+}

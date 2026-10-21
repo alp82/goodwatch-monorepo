@@ -9,18 +9,21 @@ From the repository root, with the retained local POC app/API/gateway already av
 ```bash
 cd yepwatch-realtime
 npm ci
-npm run simulator
+YEPWATCH_SIM_PORT=8121 npm run simulator
 ```
 
-At handover the controller is already running on **http://127.0.0.1:8120** (PID `2852397`); open that URL instead of starting a duplicate process. The start command above is for a later stopped/fresh workspace.
+The **latest version with private-repair and control-cookie isolation fixes** is running at **http://127.0.0.1:8121**, PID `3145807`. It sets/reads only `yepwatch_sim_control_8121`; instance names derive from the validated listening port. The original 8120 process still uses its legacy `yepwatch_sim_control` cookie. The new instance never sets, reads or deletes that legacy name. **Both controls work in the same browser profile; no separate profile/private session is required.** Host room-cookie forwarding is unchanged.
 
-Open **http://127.0.0.1:8120**. Click **Create fresh demo + open host app**, then **Start a round** in the real app on the right. Choose No/Watch and finish your own round there. You can also open the host in its own browser window.
+The **original pre-fix instance remains on 8120**, PID `2852397`, preserving its memory-only demo identities and pending action state. Do not stop or restart it to use the latest instance. All retained app/API/gateway processes and existing rooms remain untouched.
+
+Open **http://127.0.0.1:8121** in your normal browser profile. Click **Create fresh demo + open host app**, then **Start a round** in the real app on the right. Choose No/Watch and finish your own round there. The default source port is still 8120; the explicit environment override above selects the new instance. Do not start a duplicate process when 8121 is already running.
 
 Defaults:
 
 | Service | Local address | Owner |
 | --- | --- | --- |
-| Simulator controls | `http://127.0.0.1:8120` | This package |
+| Latest fixed controls | `http://127.0.0.1:8121` | This package, new independent process |
+| Original preserved controls | `http://127.0.0.1:8120` | This package, pre-fix process/state |
 | Actual host app | `http://127.0.0.1:8101` | App thread |
 | Room API | `http://127.0.0.1:15995` | Backend thread |
 | Room WebSocket | `ws://127.0.0.1:4319` | Gateway thread |
@@ -89,3 +92,16 @@ All results are local POC evidence over a finite catalog sample and memory rooms
 ## Narrow private-repair follow-up
 
 Independent review found a simulator-only stale-view race: a newer shared revision could arrive while a private GET was held, and the queued-read flag discarded that later demand. The follow-up retains the highest per-actor revision, drains bounded private reads to that target, and labels the actor as refreshing while private state lags. A deterministic actual API/gateway/Valkey regression holds a bot’s voted snapshot across host new_round, releases the old response and verifies a follow-up private GET automatically restores empty votes/card and Setup. Build/typecheck and 22 tests pass. Original review pin remains unchanged under `/tmp/yepwatch-simulator-review-20261021`; this is a separate dirty-source follow-up. Retained controller 8120 was deliberately not restarted during review, so this source fix requires a coordinated later restart before it is active there.
+
+
+## Activation history and cookie-isolation evidence
+
+The earlier 8121 activation matched all 13 independently reviewed fixed-pin source hashes before activation documentation edits, and passed fresh-demo host recovery, Start, step, pause/resume and reconnect. Its original evidence remains in `../artifacts/simulator-8121-activation.json`; that activation's cookie/profile restriction is historical and superseded below.
+
+The narrow cookie-isolation follow-up changes only the control-cookie name in `server.ts`: it is derived from the already validated simulator instance port. Cookie Path, HttpOnly, SameSite, exact Origin/Host checks and the API's exact host room-cookie forwarding remain unchanged. Independent instances no longer overwrite each other's control token, and a generic legacy cookie is neither accepted nor modified by the new server.
+
+A two-process regression reproduces the original bug (the first controller returns 403 after the second root load), then passes with the fix. It uses one shared cookie jar, alternates root loads, controls and live SSE updates for both instances, preserves a legacy generic cookie and rejects wrong-instance/generic credentials. A disposable upstream records **zero requests**, so no API or user room is involved. `npm run build` (including typecheck) and `node --import tsx --test test/simulator.test.ts` pass: **3 tests, zero skipped**. No full-suite rerun is claimed for this follow-up.
+
+Before replacing 8121, an authenticated read immediately confirmed `room:false`, no actors, no creation in flight and automation off. Only that empty process (PID `3067136`) was stopped. Updated 8121 is PID **3145807**, with clean controls ready. The original 8120 PID **2852397**, its memory demo/pending state, and all retained app/API/gateway processes remain untouched. A live Chromium check against 8121 preserves an existing generic cookie through root/reload, authenticates SSE and controls, and reports zero API requests or JavaScript errors. No new demo room was created for this cookie follow-up.
+
+Current evidence: `../artifacts/simulator-cookie-isolation.json` and `simulator-cookie-isolation-ready.png`. The manifest records exact source/build hashes, PID inventory, empty-state restart guard and red/green test results. The simulator runs TypeScript through tsx; the separately hashed gateway bundle is not a simulator bundle. Limits remain finite catalog sample, memory rooms, memory-only pending commands and explicitly artificial local guests. No production configuration, source expansion beyond this cookie fix/regression, commit or push.

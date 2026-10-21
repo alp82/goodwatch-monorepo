@@ -6,13 +6,15 @@ import { Simulator, type Scenario } from './engine.js'
 
 const port = Number(process.env.YEPWATCH_SIM_PORT ?? '8120')
 if (!Number.isSafeInteger(port) || port < 1024 || port > 65535) throw new Error('Choose a local simulator port from 1024 to 65535')
+// Loopback cookies span ports. Never replace another instance's control cookie.
+const controlCookieName = `yepwatch_sim_control_${port}`
 const origin = `http://127.0.0.1:${port}`
 const simulator = new Simulator({ apiOrigin: process.env.YEPWATCH_SIM_API_ORIGIN ?? 'http://127.0.0.1:15995',
   wsOrigin: process.env.YEPWATCH_SIM_WS_ORIGIN ?? 'ws://127.0.0.1:4319', appOrigin: process.env.YEPWATCH_SIM_APP_ORIGIN ?? 'http://127.0.0.1:8101' })
 const token = randomBytes(32).toString('base64url')
 const clients = new Set<ServerResponse>()
 function cookieValid(value: string | undefined) {
-  const candidate = value?.split(';').map(v => v.trim()).find(v => v.startsWith('yepwatch_sim_control='))?.slice('yepwatch_sim_control='.length)
+  const candidate = value?.split(';').map(v => v.trim()).find(v => v.startsWith(`${controlCookieName}=`))?.slice(controlCookieName.length + 1)
   return !!candidate && Buffer.byteLength(candidate) === Buffer.byteLength(token) && timingSafeEqual(Buffer.from(candidate), Buffer.from(token))
 }
 function event(response: ServerResponse) {
@@ -31,7 +33,7 @@ const server = createServer(async (request, response) => {
   if (request.method === 'GET' && ['/', '/ui.js', '/style.css'].includes(request.url ?? '')) {
     const file = request.url === '/' ? 'ui.html' : request.url!.slice(1)
     response.setHeader('Content-Type', file.endsWith('.html') ? 'text/html; charset=utf-8' : file.endsWith('.js') ? 'text/javascript; charset=utf-8' : 'text/css; charset=utf-8')
-    if (file === 'ui.html') response.setHeader('Set-Cookie', `yepwatch_sim_control=${token}; Path=/simulator/; HttpOnly; SameSite=Strict`)
+    if (file === 'ui.html') response.setHeader('Set-Cookie', `${controlCookieName}=${token}; Path=/simulator/; HttpOnly; SameSite=Strict`)
     response.end(await readFile(new URL(file, import.meta.url))); return
   }
   if (!cookieValid(request.headers.cookie) || (request.headers.origin && request.headers.origin !== origin)) { reply(403, { error: 'Open this local control page first' }); return }
