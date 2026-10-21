@@ -47,3 +47,21 @@ Owner visible Glow proof (fixed32 shared/17 activity frames, zero JS errors) and
 Backend/member auth/catalog and the Glow app require their own immutable ready pins and review. This stage does not establish saved-history continuation, progressive-retention/CAS race safety, protected reload recovery, account linking or real-client activity TTL rendering. Gateway source validation cannot prove how an unreviewed client renders or repairs state. No synthetic actors belong in the real product; only the isolated operator simulator created them here.
 
 At owner handover, retained8122 remains the pre-fix simulator; owner reports separately starting fixed8124. Neither was accessed by this reviewer. Source verification is not a statement about every retained process. Prior security/cookie/private-repair baseline checks passed in the safe suite; no speculative production hardening or cosmetic rewrite is proposed.
+
+
+## Narrow real-simulator configuration companion (2026-10-22)
+
+**Passed; no new finding.** Reviewed the separate final-source companion without replacing either original/fixed pin. Every gateway executable `src/` hash is identical to the passed fixed pin. Simulator changes add a validated optional positive safe-integer service ID (default1), explicit `synthetic|real-sample` label (default synthetic), and server-only environment wiring. The setup uses exactly that provider; no extra API/account/storage authority or service fallback is introduced. Existing fresh/admission/generation/close fences remain intact.
+
+Independent checks on the companion: **26 tests pass, 6 opt-in skips; build/typecheck pass.** A focused independent harness rejects14 malformed constructor configurations and verifies defaults/valid IDs. Four malformed server environment configurations exit before any API request. Actual temporary controller processes against a copied memory API/gateway with synthetic doubles exercise both default1/synthetic and explicit8/real-sample: setup retains DE, the exact provider, confirmed screen and guest kinds; request-body provider337/catalog extras cannot override the server environment. Session notices carry the configured label. These checks establish configuration behavior; the `real-sample` label is descriptive configuration, not independent attestation that the API returned real catalog data. All temporary processes are closed; no retained stack was accessed.
+
+The browser helper's candidate-count parameterization and separate `continuous-simulator-real-*` artifacts were inspected. The manual protocol helper correctly makes gesture/beat optional while retaining its allowed-field list. Neither helper was run against retained services. A later helper-only change permits the real app's “Inspect N matches” label alongside “Inspect N shared matches”; it was read and separately pinned, not substituted for the frozen source or claimed as a browser run. Owner real seven-card/six-trailer proof remains attributed.
+
+Companion workspace `/tmp/yepwatch-continuous-review-20261022/real-simulator-companion/` preserves:
+
+- `manifest.json`: final41-file source/contract pin, SHA-256 `2dd3acd664de401b473138b3f36fc99c44bd7946fee3c80ea336478c4edada35`.
+- `changed-manifest.json`: exact before/after deltas from the reviewed fixed pin, SHA-256 `c09f26ff1a835d33e6a0d50cd873d6a561e283db153fecd80d800a24aaa6a344`.
+- `independent-config.ts`, `independent-config-result.json`, safe test/build logs and `source-recheck.json`. At cutoff all final-pin paths match checkout except the separately preserved selector-only proof helper (`later-proof-helper/`, SHA-256 `4170cab4fd3dd279d029166c89acca21357f8af1033eb05f5c1d0655bcf7bc21`).
+- Dependency/build-free `companion-sources-and-checks.tar.gz`, SHA-256 `ea26881ab36f6c6b74ebe3d2c27a562f316fffd7c1fba2f68e661336be6c8ccc`.
+
+This companion does not change the pending backend/member-auth/app review scope or establish native-device, real-client or real-catalog readiness. No implementation edits or commits were made by the reviewer.

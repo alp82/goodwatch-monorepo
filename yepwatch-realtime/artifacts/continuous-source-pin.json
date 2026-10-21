@@ -1,0 +1,67 @@
+{
+  "recordedAt": "2026-10-21T23:33:12.848314+00:00",
+  "baseHead": "39b3927d97ec724b3d1da56c5684ed55223e41c4",
+  "sourceSha256": {
+    "yepwatch-realtime/src/projection.ts": "6974095bc3cfa1f352a5dc1dc5380a1436347b6d5570e346133f009a1625ccd0",
+    "yepwatch-realtime/src/authority.ts": "c06a3b7dce802bf3779140c1369bbb2e144d5500aa16a95898d3c32448c32008",
+    "yepwatch-realtime/src/bus.ts": "9467551ca40db2c0daf8cebf125600094a96720cbdaeed48b13148c42a2b6fe5",
+    "yepwatch-realtime/src/gateway.ts": "c6028ceef9d3c366a4429d6791715f4b29863bd6cfa7bfb73f75a1d78b0bb125",
+    "yepwatch-realtime/src/main.ts": "2d51f8362f92cd18bb5df67c10c8b7ca960e85bdbd9c63660055e821aaa7f679",
+    "yepwatch-realtime/src/continuous-projection.ts": "b71cc23ec5ac22bc7f9f4e0ce69dcdf1981ae26294e35543162c5514ce2834c2",
+    "yepwatch-realtime/src/activity-protocol.ts": "29a9f7675c325776d998d6cf9f2d09d753d1bd107d169f9c84b012f7821eec57",
+    "yepwatch-realtime/src/activity.ts": "01f9eb44e09768eed4abf80915704829491345220e772ff1e0212d732a053736",
+    "yepwatch-realtime/test/fixture.ts": "0df4c22217222e5fe49219ae89c5e0b08adf6192c96736c7e015ee96230c0ace",
+    "yepwatch-realtime/test/gateway.test.ts": "4f9f05b46753b1396ddc3891e6fb25a7f2b50cd0671c964cc001106af0458b1f",
+    "yepwatch-realtime/test/client.ts": "7ae9f2e81e22e74d95cfc952d477bbf70c6df2a65e1faf074d68c28d6174bc5e",
+    "yepwatch-realtime/test/valkey.test.ts": "02bd6dd3c5f80efe41a166cec311bb211605d487435fa4c51952ab2601f5b7bc",
+    "yepwatch-realtime/test/backend.integration.test.ts": "fd8515523b51bbea4fdf1d96723a052bc1e16121d9c12ce7f3769883c4c5d1d7",
+    "yepwatch-realtime/test/simulator.test.ts": "6a7a6c4feb297d47de1bccfe77276ae6956f9521e74addfcc25142e4f86a6b2e",
+    "yepwatch-realtime/test/continuous.test.ts": "0b5cc5fbb829d89da3d5f1faa23c3d758f551875432f5cd1d6784879f6671a48",
+    "yepwatch-realtime/test/continuous-valkey.test.ts": "7eebbf40686652030f1edbf984f44d46aef65650958fc36185e24e55c1b932b4",
+    "yepwatch-realtime/test/continuous-live-smoke.ts": "ad6ce3d5b2726c4ed844c2bee703368497850d1cc8ff653646a1b1e429eda328",
+    "yepwatch-realtime/test/continuous-simulator.test.ts": "3cb00968404d1cd497faddf8fe1884327f357b3b6db5c88730ef51d6b7db60d6",
+    "yepwatch-realtime/simulator/engine.ts": "d8e4002b0dd91cf6e2ddacc58728af8a432f58c9bb1918ffb42dca92f68e0193",
+    "yepwatch-realtime/simulator/server.ts": "e83e3dbb58b51f38b7b3f4bed544a133fe3632e80e83d3114cbb91ae5441ece1",
+    "yepwatch-realtime/simulator/ui.html": "b2b071b1dc31edf22e04c6fccc30bfbada8a9f5438ef0aecbb61342e8a1fb6db",
+    "yepwatch-realtime/simulator/style.css": "908a7669c8270d1cda92a95ca43a7182dcdab6f6d15fb66c86be84be658503cf",
+    "yepwatch-realtime/simulator/ui.js": "7a9e2335ad4b2e15d92dc0321adf9c8b6126eddaa88dbe64bbe0a6fe46a463cc",
+    "yepwatch-realtime/simulator/prove.cjs": "1687ebb0b91c729385f175deea6000d2cb07444c0ea6d280d62c6b073ea2d7c5",
+    "yepwatch-realtime/simulator/README.md": "1c939627fcb55a4ee35e77c32245d88855901776fe944d8012757c35c535e23f",
+    "yepwatch-realtime/simulator-continuous/engine.ts": "0bacb01c9f606d62b27f83d258e46dfa1b26b6c85f99706bea4ca0975144be56",
+    "yepwatch-realtime/simulator-continuous/server.ts": "b61ebbee982d1b5796a6467a44d022095ddc0e94d9e611b11172a3022dd320da",
+    "yepwatch-realtime/simulator-continuous/ui.html": "a33364da8fd676abc41a92500ae5d3f62766e81c7ef92728eaf3053788a50f5d",
+    "yepwatch-realtime/simulator-continuous/ui.js": "488532742d38a67b625fa823e55d4bdfe54f6771d227478a51167262884f490a",
+    "yepwatch-realtime/package.json": "2871a2568e8ddf54bfabe681caebdced0d273c3f0e3b7b677920daafe4090387",
+    "yepwatch-realtime/package-lock.json": "189201d13d995a09cd18dc159057126196de0155f8d27790b06734b63e7b6342",
+    "yepwatch-realtime/tsconfig.json": "8164786383aede53fc3a79c3f0f7a88693e52509c5573d77f36f5ccd370b56e8",
+    "yepwatch-realtime/README.md": "a17b07c00e8a624e6cf8bf21fb3fee58540e36fa40db2dfd6c6e75daf7deaaad",
+    "yepwatch-realtime/README-continuous.md": "6eac37e9c6d3bbfe70375973eeb3dd9049c87fe5c73b03debe63b7361e2c59ae",
+    "yepwatch-realtime/.continuous.env.example": "2b06c7015a71254d0d4fd193eae5fbdf50b38fba5c7c795faa6bd08c7470a1ac"
+  },
+  "gatewayBuildSha256": "e3a8ec9f3b41eddbfbe7760e24a040628beb153c8882dff93bdcc5d4e9b58e80",
+  "tests": {
+    "result": "PASS",
+    "passed": 32,
+    "skipped": 0,
+    "command": "YEPWATCH_TEST_BACKEND=1 YEPWATCH_TEST_VALKEY_IMAGE=valkey/valkey:8.1 YEPWATCH_TEST_CONTINUOUS_LIVE=1 npm test",
+    "build": "npm run build (includes typecheck)"
+  },
+  "runtime": {
+    "gateway": {
+      "url": "ws://127.0.0.1:4321/api/yepwatch/v1/continuous/realtime",
+      "pid": 1694346
+    },
+    "simulator": {
+      "url": "http://127.0.0.1:8122",
+      "pid": 1790844
+    },
+    "api": "http://127.0.0.1:15994",
+    "app": "http://127.0.0.1:8131",
+    "broker": "redis://127.0.0.1:46398"
+  },
+  "catalogEvidence": "Explicitly synthetic catalog over actual isolated durable Crate/HTTP API, real Valkey and real gateways",
+  "liveEvidence": "continuous-live-smoke.json",
+  "visibleUiSimulatorEvidence": "Pending app-owner layout-ready signal; deliberately not run",
+  "secretsExcluded": true,
+  "retainedOldServicesRestarted": false
+}

@@ -3,6 +3,7 @@ import { randomBytes } from 'node:crypto'
 import { EventEmitter } from 'node:events'
 import { paths, type RealtimeAttachment, type SharedRoomSnapshot, type RoomInvalidation } from '@goodwatch/yepwatch-contracts'
 import type { RevisionBus } from '../src/bus.js'
+import { paths as continuousPaths, type SharedRoomSnapshot as ContinuousSnapshot } from '@goodwatch/yepwatch-contracts/continuous'
 import { HttpAuthority } from '../src/authority.js'
 
 export const secret = 'fixture-only-' + 'x'.repeat(40)
@@ -22,9 +23,18 @@ export class FakeBus extends EventEmitter implements RevisionBus {
   hint(revision: number, roomId = 'room-1') { this.emit('hint', { roomId, revision } satisfies RoomInvalidation) }
 }
 // Explicit HTTP fixture. No Crate, catalog, account, backend domain or production data.
-export async function fixture() {
+export function continuousSnapshot(): ContinuousSnapshot {
+  const legacy = snapshot()
+  return { contractVersion: 2, roomId: legacy.roomId, revision: 1, phase: 'setup', expiresAt: legacy.expiresAt,
+    hostParticipantId: legacy.hostParticipantId, rosterVersion: 1, contextVersion: 1, generation: 1,
+    participants: legacy.participants.map(({ participantId, nickname, screenId, ready }) => ({ participantId, nickname, screenId, ready })),
+    screens: [], constraints: { ...legacy.constraints, kinds: ['movie', 'show_start'] }, candidates: [],
+    matches: [], stream: { version: 1, state: 'ready', reason: null }, agreement: { version: 1, state: 'none', error: null }, decision: null }
+}
+export async function fixture(continuous = false) {
+  const routes = continuous ? continuousPaths : paths
   const state = {
-    shared: snapshot() as any, leaseMs: 2000, revoked: false, unavailable: false, viewCalls: 0,
+    shared: (continuous ? continuousSnapshot() : snapshot()) as any, leaseMs: 2000, revoked: false, unavailable: false, viewCalls: 0,
     beforeView: undefined as undefined | (() => Promise<void>),
     corruptAttachment: undefined as undefined | Record<string, unknown>,
   }
@@ -47,13 +57,13 @@ export async function fixture() {
     try { let raw = ''; for await (const chunk of req) raw += chunk; body = JSON.parse(raw) }
     catch { reply(400, {}); return }
     if (state.unavailable) { reply(503, {}); return }
-    if (req.url === paths.realtimeAttach) {
+    if (req.url === routes.realtimeAttach) {
       const t = tickets.get(body.ticket)
       if (!t || t.expiresAt <= Date.now() || t.roomId !== body.roomId) { reply(401, {}); return }
       tickets.delete(body.ticket)
       reply(200, { ...lease(t.participantId), ...state.corruptAttachment }); return
     }
-    if (req.url === paths.realtimeView) {
+    if (req.url === routes.realtimeView) {
       state.viewCalls++
       const a = leases.get(body.lease)
       if (state.revoked || !a || a.leaseExpiresAt <= Date.now() || a.roomId !== body.roomId) { reply(403, {}); return }
@@ -68,6 +78,6 @@ export async function fixture() {
   const address = server.address()
   if (!address || typeof address === 'string') throw new Error('Fixture address')
   const origin = `http://127.0.0.1:${address.port}`
-  return { state, ticket, origin, authority: new HttpAuthority(origin, secret, 500),
+  return { state, ticket, origin, authority: new HttpAuthority(origin, secret, 500, 2_000_000, routes),
     async close() { server.closeAllConnections(); await new Promise<void>(resolve => server.close(() => resolve())) } }
 }

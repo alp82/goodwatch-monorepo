@@ -1,0 +1,25 @@
+{
+  "result": "PASS",
+  "scope": "Ephemeral controller using exact retained8122 source; actual Glow8131/API15994/WS4321; fresh rooms only",
+  "catalog": "Explicitly synthetic catalog over actual durable disposable Crate",
+  "independentInitialClients": 3,
+  "clientsAfterLateJoin": 4,
+  "scenarios": [
+    "Independent cards and one-person action isolation",
+    "Neutral trailer view cue",
+    "Disconnect/reconnect retains required voter",
+    "Immediate matches and private picks",
+    "Latejoin invalidates matches/picks",
+    "All current picks automatic Done",
+    "Disagreement keeps choosing/no majority substitute",
+    "Slow/pause/resume waits"
+  ],
+  "hostVotes": 2,
+  "sharedFrames": 32,
+  "activityFrames": 17,
+  "privateFieldsOnSharedFrames": false,
+  "javascriptErrors": [],
+  "retained8122Accessed": false,
+  "retainedAppsApisGatewaysRestarted": false,
+  "invitesCredentialsAndPrivateVotesRedacted": true
+}

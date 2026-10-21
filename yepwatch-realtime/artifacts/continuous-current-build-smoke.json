@@ -1,0 +1,13 @@
+{
+  "result": "PASS",
+  "buildSha256": "093e0307324905b2a67bde17de1de80af7fe09793d5a7342024e8774911901c4",
+  "checks": [
+    "Exact current compiled bundle starts on its own loopback port",
+    "Actual real API fresh native admission/ticket",
+    "Authorized v2 snapshot then activity session",
+    "Graceful1012 drain and process exit0"
+  ],
+  "freshRoomOnly": true,
+  "retainedProcessesRestarted": false,
+  "credentialsAndInvitesRedacted": true
+}

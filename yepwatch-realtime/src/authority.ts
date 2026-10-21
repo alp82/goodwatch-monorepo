@@ -19,13 +19,18 @@ export function validateAttachment(input: unknown, roomId: string, maxLeaseMs: n
   return result
 }
 export function validateView(input: unknown, previous: RealtimeAttachment, maxLeaseMs: number) {
+  return validateScopedView(input, previous, maxLeaseMs, sharedProjection)
+}
+export function validateScopedView<S extends { expiresAt: number; phase: string; participants: { participantId: string }[] }>(
+  input: unknown, previous: RealtimeAttachment, maxLeaseMs: number, projection: (input: unknown, roomId: string) => S,
+) {
   if (!input || typeof input !== 'object' || Array.isArray(input)) throw new AuthorityError(false)
   const { snapshot, ...rest } = input as Record<string, unknown>
   const attachment = validateAttachment(rest, previous.roomId, maxLeaseMs)
   if (attachment.participantId !== previous.participantId || attachment.capabilityEpoch !== previous.capabilityEpoch) {
     throw new AuthorityError(true)
   }
-  const shared = sharedProjection(snapshot, previous.roomId)
+  const shared = projection(snapshot, previous.roomId)
   if (shared.expiresAt !== attachment.roomExpiresAt || shared.phase === 'expired' ||
       !shared.participants.some(p => p.participantId === attachment.participantId)) throw new AuthorityError(true)
   return { attachment, snapshot: shared }
@@ -34,7 +39,8 @@ export function validateView(input: unknown, previous: RealtimeAttachment, maxLe
 export class HttpAuthority implements Authority {
   private shutdown = new AbortController()
   close() { this.shutdown.abort() }
-  constructor(private base: string, private secret: string, private timeoutMs = 3000, private maxBytes = 2_000_000) {
+  constructor(private base: string, private secret: string, private timeoutMs = 3000, private maxBytes = 2_000_000,
+    private routes: { realtimeAttach: string; realtimeView: string } = paths) {
     const url = new URL(base)
     if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password || url.search || url.hash || url.pathname !== '/') throw new Error('Invalid API origin')
     if (secret.length < 32) throw new Error('Service credential must contain at least 32 characters')
@@ -70,7 +76,7 @@ export class HttpAuthority implements Authority {
     }
   }
   async attach(request: RealtimeAttachRequest): Promise<RealtimeAttachment> {
-    return attachmentSchema.parse(await this.post(paths.realtimeAttach, request))
+    return attachmentSchema.parse(await this.post(this.routes.realtimeAttach, request))
   }
-  view(request: RealtimeViewRequest) { return this.post(paths.realtimeView, request) }
+  view(request: RealtimeViewRequest) { return this.post(this.routes.realtimeView, request) }
 }

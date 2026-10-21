@@ -1,0 +1,29 @@
+{
+  "result": "PASS",
+  "scope": "Ephemeral controller using current fixed source; actual configured Glow/API/WS; fresh rooms only",
+  "api": "http://127.0.0.1:15993",
+  "gateway": "ws://127.0.0.1:4322",
+  "app": "http://127.0.0.1:8132",
+  "catalog": "Finite real-catalog sample over actual durable disposable Crate",
+  "cardCount": 7,
+  "independentInitialClients": 3,
+  "clientsAfterLateJoin": 4,
+  "scenarios": [
+    "Independent cards and one-person action isolation",
+    "Neutral trailer view cue",
+    "Disconnect/reconnect retains required voter",
+    "Immediate matches and private picks",
+    "Latejoin invalidates matches/picks",
+    "All current picks automatic Done",
+    "Disagreement keeps choosing/no majority substitute",
+    "Slow/pause/resume waits"
+  ],
+  "hostVotes": 7,
+  "sharedFrames": 65,
+  "activityFrames": 36,
+  "privateFieldsOnSharedFrames": false,
+  "javascriptErrors": [],
+  "retained8122Accessed": false,
+  "retainedAppsApisGatewaysRestarted": false,
+  "invitesCredentialsAndPrivateVotesRedacted": true
+}

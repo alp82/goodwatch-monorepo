@@ -22,7 +22,7 @@ test('Simulator only accepts controlled fresh-demo actor IDs and bounded choices
   assert.equal(sim.state().room, false)
 })
 
-test('Two controller instances keep independent authorization in one cookie jar across root, actions and SSE', { timeout: 20_000 }, async t => {
+for (const entrypoint of ['simulator/server.ts', 'simulator-continuous/server.ts']) test(`Two controller instances keep independent authorization in one cookie jar across root, actions and SSE (${entrypoint})`, { timeout: 20_000 }, async t => {
   let upstreamRequests = 0
   const upstream = createServer((_request, response) => { upstreamRequests++; response.writeHead(500).end() })
   await new Promise<void>(resolve => upstream.listen(0, '127.0.0.1', resolve))
@@ -39,7 +39,7 @@ test('Two controller instances keep independent authorization in one cookie jar 
   do { ports[1] = await unusedPort() } while (ports[1] === ports[0])
   const origins = ports.map(port => `http://127.0.0.1:${port}`)
   for (const port of ports) {
-    const child = spawn(process.execPath, ['--import', 'tsx', 'simulator/server.ts'], {
+    const child = spawn(process.execPath, ['--import', 'tsx', entrypoint], {
       cwd: new URL('..', import.meta.url), stdio: ['ignore', 'pipe', 'pipe'],
       env: { PATH: process.env.PATH, YEPWATCH_SIM_PORT: String(port),
         YEPWATCH_SIM_API_ORIGIN: `http://127.0.0.1:${upstreamAddress.port}`,
@@ -54,7 +54,7 @@ test('Two controller instances keep independent authorization in one cookie jar 
       child.once('error', error => { clearTimeout(timer); reject(error) })
       child.once('exit', () => { clearTimeout(timer); reject(new Error('Disposable simulator exited')) })
       child.stderr.resume()
-      child.stdout.on('data', chunk => { if (chunk.toString().includes('YepWatch local simulator:')) { clearTimeout(timer); resolve() } })
+      child.stdout.on('data', chunk => { if (chunk.toString().includes('simulator:')) { clearTimeout(timer); resolve() } })
     })
   }
   // Cookies are shared by hostname/path across ports, just as in one browser profile.

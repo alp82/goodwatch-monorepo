@@ -5,9 +5,9 @@ export async function until(check: () => boolean, ms = 1800) {
   const end = Date.now() + ms
   while (!check()) { if (Date.now() > end) throw new Error('Condition timeout'); await sleep(5) }
 }
-export async function connect(url: string, ticket?: string, options: ClientOptions | string[] = {}, roomId = 'room-1') {
+export async function connect<F = ServerRealtimeFrame>(url: string, ticket?: string, options: ClientOptions | string[] = {}, roomId = 'room-1') {
   const ws = Array.isArray(options) ? new WebSocket(url, options) : new WebSocket(url, options)
-  const frames: ServerRealtimeFrame[] = []
+  const frames: F[] = []
   let closed: number | undefined
   ws.on('message', data => frames.push(JSON.parse(data.toString())))
   ws.on('close', code => { closed = code })

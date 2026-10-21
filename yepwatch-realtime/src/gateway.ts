@@ -1,8 +1,11 @@
 import { createServer } from 'node:http'
 import type { Socket } from 'node:net'
 import { WebSocket, WebSocketServer } from 'ws'
-import { paths, type RealtimeAttachment, type ServerRealtimeFrame } from '@goodwatch/yepwatch-contracts'
-import { AuthorityError, validateAttachment, validateView, type Authority } from './authority.js'
+import { paths, type RealtimeAttachment, type ServerRealtimeFrame, type SharedRoomSnapshot } from '@goodwatch/yepwatch-contracts'
+import { paths as continuousPaths, type ServerRealtimeFrame as ContinuousFrame, type SharedRoomSnapshot as ContinuousSnapshot } from '@goodwatch/yepwatch-contracts/continuous'
+import { AuthorityError, validateAttachment, validateView, validateScopedView, type Authority } from './authority.js'
+import { continuousProjection } from './continuous-projection.js'
+import { ActivityRelay, type ActivityBus, type ActivitySender } from './activity.js'
 import type { RevisionBus } from './bus.js'
 import { authenticateSchema } from './projection.js'
 
@@ -22,11 +25,16 @@ interface Client {
   lastRevision: number; initial: boolean; degraded: boolean; alive: boolean
   frames: number; unauthControlFrames: number; windowAt: number; authTimer: NodeJS.Timeout; expiryTimer?: NodeJS.Timeout; closeTimer?: NodeJS.Timeout
   room?: Room
+  activity?: ActivitySender; participantIds?: Set<string>
 }
 interface Room { id: string; clients: Set<Client>; target: number; epoch: number; running: boolean }
+type OutputFrame = Exclude<ServerRealtimeFrame | ContinuousFrame, { snapshot: unknown }> |
+  { type: 'room.snapshot' | 'room.updated'; snapshot: SharedRoomSnapshot | ContinuousSnapshot }
 
-export function createGateway(authority: Authority, bus: RevisionBus, overrides: Partial<GatewayOptions> = {}) {
-  const options = { ...defaults, ...overrides }
+export function createGateway(authority: Authority, bus: RevisionBus, overrides: Partial<GatewayOptions> = {}, continuous?: { activityBus: ActivityBus }) {
+  const options = { ...defaults, ...(continuous ? { maxFramesPerWindow: 64 } : {}), ...overrides }
+  const routes = continuous ? continuousPaths : paths
+  const deliveryReady = () => bus.ready && (!continuous || continuous.activityBus.ready)
   let draining = false
   const clients = new Set<Client>()
   const rooms = new Map<string, Room>()
@@ -35,11 +43,11 @@ export function createGateway(authority: Authority, bus: RevisionBus, overrides:
   let backpressureClosures = 0
   const cancellations = new Set<() => void>()
   const server = createServer((request, response) => {
-    const health = request.method === 'GET' && request.url === `${paths.realtime}/health`
-    response.writeHead(health && !draining && bus.ready ? 200 : health ? 503 : 404, {
+    const health = request.method === 'GET' && request.url === `${routes.realtime}/health`
+    response.writeHead(health && !draining && deliveryReady() ? 200 : health ? 503 : 404, {
       'Content-Type': 'application/json', 'Cache-Control': 'no-store',
     })
-    response.end(health ? JSON.stringify({ ready: !draining && bus.ready }) : '{}')
+    response.end(health ? JSON.stringify({ ready: !draining && deliveryReady() }) : '{}')
   })
   server.maxConnections = options.maxConnections * 2
   server.headersTimeout = 5000
@@ -48,7 +56,7 @@ export function createGateway(authority: Authority, bus: RevisionBus, overrides:
   const wss = new WebSocketServer({ noServer: true, perMessageDeflate: false,
     maxPayload: options.maxPayloadBytes, maxFragments: 32, maxBufferedChunks: 64, autoPong: false, clientTracking: false })
 
-  function send(client: Client, frame: ServerRealtimeFrame): boolean {
+  function send(client: Client, frame: OutputFrame): boolean {
     if (client.ws.readyState !== WebSocket.OPEN) return false
     const data = JSON.stringify(frame)
     if (client.ws.bufferedAmount + Buffer.byteLength(data) > options.maxBufferedBytes) {
@@ -64,6 +72,7 @@ export function createGateway(authority: Authority, bus: RevisionBus, overrides:
     client.closeTimer ??= setTimeout(() => client.ws.terminate(), options.drainMs)
   }
   function fail(client: Client, code: 'unauthorized' | 'invalid_request' | 'expired' | 'limit_reached') {
+    client.degraded = true
     send(client, { type: 'error', code })
     close(client, 1008, code)
   }
@@ -102,7 +111,7 @@ export function createGateway(authority: Authority, bus: RevisionBus, overrides:
     queueMicrotask(pump)
   }
   function pump() {
-    if (draining || !bus.ready) return
+    if (draining || !deliveryReady()) return
     for (const room of pending) {
       if (running >= options.maxConcurrentRooms) break
       if (room.running) continue
@@ -112,7 +121,7 @@ export function createGateway(authority: Authority, bus: RevisionBus, overrides:
   }
   async function refresh(room: Room) {
     // Bounded retries close attach races without spinning on a hint ahead of durable state.
-    for (let attempt = 0; attempt < 3 && !draining && bus.ready; attempt++) {
+    for (let attempt = 0; attempt < 3 && !draining && deliveryReady(); attempt++) {
       const epoch = room.epoch
       const target = room.target
       for (const client of room.clients) {
@@ -124,16 +133,23 @@ export function createGateway(authority: Authority, bus: RevisionBus, overrides:
           const previous = client.attachment
           const raw = await bounded(authority.view({ roomId: room.id, lease: previous.lease }))
           if (client.ws.readyState !== WebSocket.OPEN || draining) continue
-          const result = validateView(raw, previous, options.maxLeaseMs)
+          const result = continuous ? validateScopedView(raw, previous, options.maxLeaseMs, continuousProjection) : validateView(raw, previous, options.maxLeaseMs)
           if (previous.leaseExpiresAt <= Date.now()) { fail(client, 'expired'); continue }
           client.attachment = result.attachment
           expiry(client)
           // Never forward reads made across a bus outage or a concurrently newer hint.
-          if (!bus.ready || room.epoch !== epoch || result.snapshot.revision < room.target ||
+          if (!deliveryReady() || room.epoch !== epoch || result.snapshot.revision < room.target ||
               result.snapshot.revision < client.lastRevision) { degrade(client); continue }
           if (client.initial || client.degraded || result.snapshot.revision > client.lastRevision) {
             if (send(client, { type: client.initial || client.degraded ? 'room.snapshot' : 'room.updated', snapshot: result.snapshot })) {
               client.lastRevision = result.snapshot.revision; client.initial = false; client.degraded = false
+              client.participantIds = new Set(result.snapshot.participants.map(p => p.participantId))
+              if (relay && !client.activity) {
+                client.activity = relay.open(room.id, result.attachment.participantId,
+                  () => !draining && !client.degraded && !client.initial && client.lastRevision >= room.target && deliveryReady() && client.ws.readyState === WebSocket.OPEN,
+                  () => Math.min(client.attachment!.leaseExpiresAt, client.attachment!.roomExpiresAt))
+                send(client, { type: 'activity.session', roomId: room.id, sessionId: client.activity.sessionId, serverTime: Date.now() })
+              }
             }
           }
         } catch (error) {
@@ -158,14 +174,25 @@ export function createGateway(authority: Authority, bus: RevisionBus, overrides:
     for (const room of rooms.values()) {
       room.epoch++
       for (const client of room.clients) degrade(client)
-      if (ready) enqueue(room)
+      if (ready && deliveryReady()) enqueue(room)
     }
   }
+  const relay = continuous ? new ActivityRelay(continuous.activityBus, frame => {
+    const room = rooms.get(frame.roomId)
+    if (!room || !deliveryReady() || draining) return
+    for (const client of room.clients) {
+      const a = client.attachment
+      if (!a || client.initial || client.degraded || client.lastRevision < room.target || a.participantId === frame.participantId ||
+          a.leaseExpiresAt <= Date.now() || a.roomExpiresAt <= Date.now() || !client.participantIds?.has(frame.participantId)) continue
+      send(client, frame)
+    }
+  }, () => onState(false)) : undefined
+  continuous?.activityBus.on('state', onState)
   bus.on('hint', onHint).on('state', onState)
   server.on('upgrade', (request, socket, head) => {
     const ip = (socket as Socket).remoteAddress ?? 'unknown'
     // Exact URL rejects query secrets; subprotocols are deliberately unsupported.
-    const valid = request.method === 'GET' && request.url === paths.realtime &&
+    const valid = request.method === 'GET' && request.url === routes.realtime &&
       !request.headers['sec-websocket-protocol'] &&
       (!request.headers.origin || options.origins.includes(request.headers.origin))
     const full = clients.size >= options.maxConnections || [...clients].filter(c => c.ip === ip).length >= options.maxPerIp
@@ -180,6 +207,8 @@ export function createGateway(authority: Authority, bus: RevisionBus, overrides:
       clients.add(client)
       ws.on('error', () => { /* ws lifecycle handles transport errors; no frame logging. */ })
       ws.on('close', () => {
+        if (client.activity) relay?.disconnect(client.activity, !draining && !client.degraded && !client.initial && deliveryReady() &&
+          client.lastRevision >= (client.room?.target ?? 0) && Math.min(client.attachment!.leaseExpiresAt, client.attachment!.roomExpiresAt) > Date.now())
         clearTimeout(client.authTimer); clearTimeout(client.expiryTimer); clearTimeout(client.closeTimer); clients.delete(client)
         const room = client.room
         if (room) {
@@ -196,6 +225,10 @@ export function createGateway(authority: Authority, bus: RevisionBus, overrides:
         try { input = JSON.parse(data.toString()) } catch { fail(client, 'invalid_request'); return }
         if (client.attachment) {
           if (input && typeof input === 'object' && Object.keys(input).length === 1 && (input as { type?: unknown }).type === 'ping') send(client, { type: 'pong' })
+          else if (relay && client.activity) {
+            const result = relay.accept(client.activity, input)
+            if (result === 'invalid') fail(client, 'invalid_request')
+          }
           else fail(client, 'invalid_request')
           return
         }
@@ -221,7 +254,7 @@ export function createGateway(authority: Authority, bus: RevisionBus, overrides:
               rooms.set(room.id, room)
             }
             client.room = room; room.clients.add(client)
-            if (!bus.ready) degrade(client)
+            if (!deliveryReady()) degrade(client)
             // Global subscription ACK is required before ANY final authorized read.
             enqueue(room)
           } catch (error) {
@@ -252,11 +285,13 @@ export function createGateway(authority: Authority, bus: RevisionBus, overrides:
     async listen() {
       await new Promise<void>((resolve, reject) => { server.once('error', reject); server.listen(options.port, options.host, () => { server.off('error', reject); resolve() }) })
       void bus.start()
+      if (continuous) void continuous.activityBus.start()
       return server.address()
     },
     async close() {
       draining = true; clearInterval(audit); clearInterval(heartbeat)
       bus.off('hint', onHint).off('state', onState); bus.close()
+      continuous?.activityBus.off('state', onState); relay?.close()
       pending.clear()
       for (const cancel of cancellations) cancel()
       cancellations.clear(); authority.close?.()

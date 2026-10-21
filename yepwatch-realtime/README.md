@@ -2,6 +2,10 @@
 
 Isolated Node 24 / ws service. Durable mutations, account/catalog access, room credentials and private own state belong to the YepWatch HTTP API. This gateway has no Crate adapter, database credentials, OAuth implementation, HTTP room commands or UI. Only files in this directory are owned by this slice. No deployment configuration is included.
 
+## Continuous Glow v2
+
+The additive contractVersion2 gateway and separate simulator are documented in [continuous transport/runbook](README-continuous.md). New local stack uses API15994, WS4321, app8131 and latest fixed simulator8124 (first continuous8122 retained). Legacy round-based rooms and controllers below remain separate and running. The first new integration uses disposable Crate with an explicitly synthetic catalog. A separate finite real-catalog stack now runs API15993/WS4322/app8132 with the latest real simulator at **http://127.0.0.1:8125**;7 real cards/6 trailers and a three-to-four-client visible flow passed. Both gateway/admission and simulator-config independent reviews passed. See the runbook for exact commands, evidence and sample limits.
+
 ## Solo multiplayer demo
 
 The latest fixed instance is **http://127.0.0.1:8121**; start it with `YEPWATCH_SIM_PORT=8121 npm run simulator` if stopped. It can share a browser profile with original 8120 because control-cookie names are scoped by instance port. Open it to create a fresh demo with one to three clearly labelled artificial guests beside the actual host app. Automatic/manual steps, agreement, empty-shortlist disagreement, slow-person pacing, pause/resume and disconnect/reconnect use real independent API/WS identities. See [simulator instructions and evidence](simulator/README.md). Existing rooms/services are never selected or reset.

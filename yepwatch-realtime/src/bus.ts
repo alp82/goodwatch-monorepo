@@ -25,7 +25,7 @@ export class ValkeyBus extends EventEmitter implements RevisionBus {
   private health?: NodeJS.Timeout
   private probing = false
   private options: RedisOptions
-  constructor(private config: BusConfig) {
+  constructor(private config: BusConfig, private channel: string = REVISION_CHANNEL) {
     super()
     this.options = { enableOfflineQueue: false, maxRetriesPerRequest: 0,
       connectTimeout: 1000, commandTimeout: 1500, lazyConnect: true,
@@ -71,7 +71,8 @@ export class ValkeyBus extends EventEmitter implements RevisionBus {
       this.retry = setTimeout(() => this.selectSubscriber(), 200)
     })
     subscriber.on('message', (channel, message) => {
-      if (this.subscriber !== subscriber || !this.ready || channel !== REVISION_CHANNEL || message.length > 1024) return
+      if (this.subscriber !== subscriber || !this.ready || channel !== this.channel || message.length > 4096) return
+      this.emit('payload', message)
       try {
         const hint = hintSchema.safeParse(JSON.parse(message))
         if (hint.success) this.emit('hint', hint.data)
@@ -81,7 +82,7 @@ export class ValkeyBus extends EventEmitter implements RevisionBus {
   }
   private async subscribe(subscriber: Redis) {
     try {
-      await subscriber.subscribe(REVISION_CHANNEL)
+      await subscriber.subscribe(this.channel)
       if (this.subscriber === subscriber && subscriber.status === 'ready' && (!this.discovery || this.discovery.status === 'ready')) this.state(true)
     } catch { this.state(false) }
   }
