@@ -235,3 +235,13 @@ Source inspection: 2026-10-21, including the app owner's in-flight binary UI pat
 | Legacy continuation and optional login | [Legacy round](../../yepwatch-app/src/features/LegacyRound.tsx#L4), [entrance](../../yepwatch-app/src/features/Entrance.tsx), [member boundary](../../goodwatch-webapp/app/server/yepwatch/errors.ts#L11) | Manual progress forbidden and guest modes explicit; saved-member continuation/auth integration unimplemented. No new policy chooses whose saved episode wins. |
 
 No user decision is blocking review of this model. The few follow-ups needing product/implementation agreement are how to recover an absent required member (currently never auto-remove), whether a private preference should eventually influence ranking (currently no effect), and a safe finalization/re-entry policy for future saved-progress continuation. They must not be smuggled into current behavior by simulator convenience or optimistic UI.
+
+## Simulator verification update
+
+2026-10-21: the gateway/simulator owner reports a local controller on 8120 exercising the actual host app 8101, memory API 15995 and gateway 4319 with fresh rooms, independent guest credentials, private HTTP reads and ticket-authenticated sockets. See the [simulator runbook](../../yepwatch-realtime/simulator/README.md) and [sanitized proof report](../../yepwatch-realtime/artifacts/simulator-proof.json).
+
+- **Owner-reported visible proof:** S02 independent choosing/no early shortlist, S03 agreement through proposal/consent/decision, S04 genuine empty shortlist when one simulated guest answers No to every card, and S05 slow/paused/disconnected participants remaining required.
+- **Partial S14:** reconnect with a fresh ticket and private recovery is demonstrated. This visible run does not establish every S14 branch, such as bus outage, server restart or lease expiry; those require their separate test evidence.
+- **Owner-reported automated checks:** 21 tests pass, including preserving previous room membership when creating another fresh demo. No retained services restarted. Simulated actors' private diagnostics stay in operator controls; actual host shared frames contain no per-actor card/value payloads.
+
+This documentation task read the runbook but did not rerun the simulator tests/browser proof. These results remain attributed local POC evidence over finite real catalog data and memory rooms, not production durability, full-catalog, physical-device or load verification. Other S01–S16 branches remain acceptance criteria unless separately evidenced.
