@@ -3,6 +3,7 @@
 import {
 	AdjustmentsHorizontalIcon,
 	ChevronDownIcon,
+	PlusIcon,
 	XMarkIcon,
 } from "@heroicons/react/20/solid"
 import { AnimatePresence, motion } from "framer-motion"
@@ -13,13 +14,13 @@ import {
 	useRef,
 	useState,
 } from "react"
-import { type FilterState, dropFilter } from "~/domain/filter-state"
+import { type FilterName, type FilterState, dropFilter } from "~/domain/filter-state"
 import { OneRowChips } from "./FilterGroups.prototype"
 import { FingerprintTip, MovedUp } from "./ForYou"
 import { TitleChipPreview } from "./TitleChipPreview"
 import { SortControl, useMenu } from "./controls"
-import { HiddenMeter } from "./SubBar"
-import { type ActiveChip, FILTER_ACCENTS, compactCount } from "./labels"
+import { CountLine, HiddenMeter } from "./SubBar"
+import { type ActiveChip, FILTER_ACCENTS, compactCount, recoveryLabel } from "./labels"
 import { Knob, MENU, RollingNumber, TAP } from "./motion"
 import type { FilterBarCounts } from "./types"
 import type { ForYouControl } from "./types"
@@ -666,6 +667,187 @@ export function FilterStatusRow({
 			{chips.length > 0 && <span aria-hidden className="h-5 w-px shrink-0 bg-white/10" />}
 			{chipRow}
 			{tail}
+		</div>
+	)
+}
+
+// ---------------------------------------------------------------- round 7: the count line, improved; phone quick row
+
+/**
+ * The live count line, kept as it looks (meter, "N showing, M hidden by your filters", the two biggest one-tap
+ * recoveries in amber), with More (every filter that hides titles, and every active value to take off) and Clear all.
+ */
+export function InsightLine({
+	counts,
+	chips,
+	state,
+	onChange,
+	onDrop,
+	onClear,
+	searching,
+	lead,
+}: {
+	counts: FilterBarCounts | null
+	chips: ActiveChip[]
+	state: FilterState
+	onChange: (s: FilterState) => void
+	onDrop: (filter: FilterName) => void
+	onClear: () => void
+	searching?: boolean
+	lead?: ReactNode
+}) {
+	const [open, setOpen] = useState(false)
+	const recoveries = counts?.recoveries ?? []
+	const top = recoveries.slice(0, 2)
+	const rest = recoveries.slice(2)
+	const groups = grouped(chips)
+	const hasMore = rest.length > 0 || groups.length > 0
+	return (
+		<div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+			{lead}
+			<div className="flex items-center gap-3" aria-live="polite">
+				<HiddenMeter counts={counts} className="w-32" />
+				<CountLine counts={counts} searching={searching} />
+			</div>
+			{top.map((r) => (
+				<motion.button
+					key={r.filter}
+					type="button"
+					whileTap={TAP}
+					onClick={() => onDrop(r.filter)}
+					className="flex items-center gap-1.5 rounded-md text-sm font-bold text-amber-400 cursor-pointer outline-none hover:text-amber-300 focus-visible:ring-2 focus-visible:ring-amber-400"
+				>
+					<PlusIcon className="h-3.5 w-3.5" />
+					<span className="sr-only">Show </span>
+					{protoRecoveryLabel(r.filter, r.titles, state)}
+				</motion.button>
+			))}
+			{hasMore && (
+				<Popover
+					open={open}
+					onClose={() => setOpen(false)}
+					trigger={
+						<button
+							type="button"
+							aria-haspopup="menu"
+							aria-expanded={open}
+							onClick={() => setOpen(!open)}
+							className="flex items-center gap-1 rounded-md text-sm font-semibold text-gray-300 cursor-pointer outline-none hover:text-white focus-visible:ring-2 focus-visible:ring-amber-400"
+						>
+							{rest.length ? `${rest.length} more` : "Your filters"}
+							<ChevronDownIcon className={`h-4 w-4 text-gray-500 transition-transform ${open ? "rotate-180" : ""}`} />
+						</button>
+					}
+				>
+					<div className="max-h-[60vh] w-80 max-w-full overflow-y-auto">
+						{rest.length > 0 && (
+							<div className="pb-1">
+								<div className="px-2.5 pt-1.5 pb-1 text-[12px] font-semibold text-gray-400">Also hiding titles</div>
+								{rest.map((r) => (
+									<button
+										key={r.filter}
+										type="button"
+										role="menuitem"
+										onClick={() => {
+											onDrop(r.filter)
+											setOpen(false)
+										}}
+										className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-[13px] font-semibold text-amber-400 cursor-pointer hover:bg-white/[0.07]"
+									>
+										<PlusIcon className="h-3.5 w-3.5 shrink-0" />
+										{protoRecoveryLabel(r.filter, r.titles, state)}
+									</button>
+								))}
+							</div>
+						)}
+						{groups.length > 0 && (
+							<div className={rest.length ? "mt-1 border-t border-white/[0.07] pt-1" : ""}>
+								<div className="px-2.5 pt-1.5 text-[12px] font-semibold text-gray-400">Your filters</div>
+								{groups.map((g) => (
+									<div key={g.id} className="pb-0.5">
+										<div className="flex items-center gap-2 px-2.5 pt-1.5 pb-0.5">
+											<span className={`h-1.5 w-1.5 rounded-full ${g.dot}`} />
+											<span className="flex-1 text-[12px] text-gray-500">{g.label}</span>
+										</div>
+										{g.chips.map((c) => (
+											<MenuValue key={c.key} chip={c} onRemove={() => onChange(c.remove(state))} />
+										))}
+									</div>
+								))}
+							</div>
+						)}
+					</div>
+				</Popover>
+			)}
+			{chips.length > 0 && (
+				<button type="button" onClick={onClear} className="text-sm text-gray-500 cursor-pointer hover:text-white">
+					Clear all
+				</button>
+			)}
+		</div>
+	)
+}
+
+/** The live recovery label, with the older-style filters named for what they are now. */
+function protoRecoveryLabel(filter: FilterName, titles: number, state: FilterState) {
+	if (filter !== "legacy") return recoveryLabel(filter, titles, state)
+	const l = state.legacy ?? {}
+	const names = [
+		(l.minYear || l.maxYear) && "year",
+		(l.minRuntime || l.maxRuntime) && "length",
+		(l.minImdb || l.minTomatometer || l.minRtAudience || l.minMetacritic) && "source scores",
+		l.scoreGap && "critics vs audiences",
+	].filter(Boolean)
+	return `${titles.toLocaleString("en")} hidden by ${names.length ? names.join(" and ") : "older filters"}`
+}
+
+/** A quick button on the phone row: the filter's name, or what's set, and a chevron; it opens the sheet there. */
+export interface QuickButton {
+	key: string
+	label: string
+	value?: string
+}
+
+/**
+ * Phones: in place of the chip strip, Filters (with its count) and the most important filters as buttons in one
+ * scrolling row. Each opens the filter sheet at that filter; a set filter shows its value, lit.
+ */
+export function PhoneQuickRow({
+	count,
+	buttons,
+	onOpen,
+}: {
+	count: number
+	buttons: QuickButton[]
+	onOpen: (key: string | null) => void
+}) {
+	return (
+		<div className="-mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-0.5 [scrollbar-width:none]">
+			<motion.button
+				type="button"
+				whileTap={TAP}
+				onClick={() => onOpen(null)}
+				aria-label={count ? `Filters, ${count} active` : "Filters"}
+				className="flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-white/[0.08] pr-2.5 pl-3 text-sm font-bold text-white ring-1 ring-white/15 cursor-pointer"
+			>
+				<AdjustmentsHorizontalIcon className="h-4 w-4" />
+				Filters
+				{count > 0 && (
+					<span className="grid h-5 min-w-5 place-items-center rounded-full bg-amber-500 px-1.5 text-xs tabular-nums text-gray-950">{count}</span>
+				)}
+			</motion.button>
+			{buttons.map((b) => (
+				<motion.button
+					key={b.key}
+					type="button"
+					whileTap={TAP}
+					onClick={() => onOpen(b.key)}
+					className={`flex h-9 max-w-[13rem] shrink-0 items-center gap-1 rounded-full pr-2 pl-3.5 text-sm cursor-pointer ${b.value ? "bg-white font-semibold text-gray-950" : "bg-white/[0.06] text-gray-200 ring-1 ring-white/10"}`}
+				>
+					<span className="truncate">{b.value ?? b.label}</span>
+					<ChevronDownIcon className={`h-4 w-4 shrink-0 ${b.value ? "text-gray-500" : "text-gray-500"}`} />
+				</motion.button>
+			))}
 		</div>
 	)
 }

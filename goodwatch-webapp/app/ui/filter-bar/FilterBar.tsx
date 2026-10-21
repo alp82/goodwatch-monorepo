@@ -21,8 +21,8 @@ import type { FilterGroupsData } from "./FilterGroups"
 import { FiltersSheet } from "./FiltersSheet"
 // PROTOTYPE - throwaway: the member preview of the Filters sheet prototype.
 import { PREVIEW_SERVICES, useFilterSheetVariant, useMemberPreview } from "./FilterGroups.prototype"
-import { ForYouSortSplit, FilterStatusRow } from "./FilterBar.prototype"
-import { OneRowChips } from "./FilterGroups.prototype"
+import { ForYouSortSplit, InsightLine, PhoneQuickRow } from "./FilterBar.prototype"
+import { focusSheetOn } from "./FilterGroups.prototype"
 import { FILTER_ACCENTS } from "./labels"
 import { FOR_YOU_SWITCH, ForYouSwitch, useForYouUnderBestMatch } from "./ForYou"
 import {
@@ -94,7 +94,8 @@ export function FilterBar(props: FilterBarProps) {
 	// PROTOTYPE: the variants also try the bar: For you | Sort split, Filters merged with the chips.
 	const protoVariant = useFilterSheetVariant()
 	const protoBar = protoVariant !== "now"
-	const rowLines = protoVariant === "P" ? 2 : 1
+	// PROTOTYPE: phones' quick filter buttons open the slab's sheet at a filter.
+	const [openSignal, setOpenSignal] = useState(0)
 	const myIds =
 		memberPreview && services.ids.length === 0
 			? PREVIEW_SERVICES.filter((id) =>
@@ -197,6 +198,7 @@ export function FilterBar(props: FilterBarProps) {
 						on={state.notSeenYet}
 						hides={notSeenHides}
 						onChange={(on) => filters.set({ notSeenYet: on })}
+						className={protoBar ? "max-xl:w-auto max-xl:[&_.flex-1]:sr-only" : ""}
 					/>
 					{forYou && !protoBar && <ForYouSwitch forYou={forYou} />}
 					</>
@@ -234,21 +236,24 @@ export function FilterBar(props: FilterBarProps) {
 							count={secondaryCount}
 							expanded={sheetOpen}
 							onClick={() => setSheetOpen(true)}
-						/>
+						>
+							{protoBar ? <span className="max-xl:sr-only">Filters</span> : undefined}
+						</FiltersButton>
 					</div>
 					)}
 				</div>
 				{protoBar ? (
-					// PROTOTYPE: one row in place of the chips and the count line.
-					<div className="mt-3">
-						<FilterStatusRow
-							lines={rowLines}
+					// PROTOTYPE: the count line, kept as it looks, carries the filters: More and Clear all.
+					<div className="mt-5">
+						<InsightLine
 							counts={counts}
 							chips={displayChips}
 							state={state}
 							onChange={onChange}
+							onDrop={filters.drop}
 							onClear={filters.clearSecondary}
 							searching={filters.searching}
+							lead={props.insightLead}
 						/>
 					</div>
 				) : (
@@ -278,7 +283,30 @@ export function FilterBar(props: FilterBarProps) {
 				/>
 			</div>
 			<div className="lg:hidden">
-				{(displayChips.length > 0 || props.chipLead) && (
+				{protoBar && (
+					<PhoneQuickRow
+						count={secondaryCount}
+						onOpen={(key) => {
+							focusSheetOn(key)
+							setOpenSignal((n) => n + 1)
+						}}
+						buttons={(() => {
+							const val = (...groups: string[]) => {
+								const l = chips.filter((c) => groups.includes(c.group)).map((c) => c.label)
+								return l.length ? (l.length > 1 ? `${l[0]} +${l.length - 1}` : l[0]) : undefined
+							}
+							return [
+								{ key: "type", label: "Movies & shows", value: val("type", "anime") },
+								{ key: "moods", label: "Mood", value: val("moods") },
+								{ key: "genres", label: "Genre", value: val("genres") },
+								{ key: "minScore", label: "Score", value: val("minScore") },
+								{ key: "services", label: "Streaming", value: state.onMyServices ? "My services" : val("services") },
+								{ key: "minMatch", label: "Taste match", value: val("minMatch") },
+							]
+						})()}
+					/>
+				)}
+				{!protoBar && (displayChips.length > 0 || props.chipLead) && (
 					<ul
 						aria-label="Active filters"
 						className="-mx-4 mt-3 flex gap-2 overflow-x-auto px-4 [scrollbar-width:none]"
@@ -337,6 +365,7 @@ export function FilterBar(props: FilterBarProps) {
 					groups={groups}
 					line={props.slabLine}
 					signUpKey={props.signUpKey?.slab}
+					openSignal={openSignal}
 				/>
 			</div>
 		</MotionConfig>

@@ -65,8 +65,7 @@ import {
 
 export const FILTER_SHEET_VARIANTS = {
 	now: "Live today",
-	O: "One filter row",
-	P: "One filter row, taller",
+	Q: "Count line + More, phone quick row",
 } as const
 export type FilterSheetVariant = keyof typeof FILTER_SHEET_VARIANTS
 
@@ -1429,6 +1428,14 @@ function Card({
 	)
 }
 
+// ---------------------------------------------------------------- focus from outside the sheet
+
+let sheetFocus: string | null = null
+/** Ask the sheet, when it opens, to show and point at this filter. */
+export function focusSheetOn(key: string | null) {
+	sheetFocus = key
+}
+
 // ---------------------------------------------------------------- popular quick adds
 
 /** A one-tap filter most people look for: it sets the value and brings in its card. */
@@ -1577,9 +1584,14 @@ function PopularPicks({ ctx, style, onPick }: { ctx: Ctx; style: QuickStyle; onP
  */
 function AddAsYouGo({ ctx, style }: { ctx: Ctx; style: QuickStyle }) {
 	const keys = available(ctx, ctx.order)
-	const [added, setAdded] = useState<Set<Key>>(() => new Set(keys.filter((k) => OPEN_AT_START.has(k) || isSet(ctx, k))))
+	// A quick button outside the sheet may ask for a filter: it shows (added if needed) and gets pointed at.
+	const [asked] = useState(() => sheetFocus)
+	useEffect(() => focusSheetOn(null), [])
+	const [added, setAdded] = useState<Set<Key>>(
+		() => new Set(keys.filter((k) => OPEN_AT_START.has(k) || isSet(ctx, k) || k === asked)),
+	)
 	const [picking, setPicking] = useState(false)
-	const [fresh, setFresh] = useState<{ k: Key; n: number } | null>(null)
+	const [fresh, setFresh] = useState<{ k: Key; n: number } | null>(asked ? { k: asked as Key, n: 1 } : null)
 	// Anything set from elsewhere (a chip, a recovery) gets its card too.
 	const shown = keys.filter((k) => added.has(k) || isSet(ctx, k))
 	const left = keys.filter((k) => !shown.includes(k))

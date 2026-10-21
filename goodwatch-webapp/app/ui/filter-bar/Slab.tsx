@@ -249,12 +249,18 @@ export interface SlabProps {
 	line?: ReactNode
 	/** In place of the strip's first three segments (Discover's sign-up key for visitors). */
 	signUpKey?: ReactNode
+	/** PROTOTYPE: a change opens the sheet tall (the phone's quick filter buttons). */
+	openSignal?: number
 }
 
 export function Slab(props: SlabProps) {
 	const { state, counts, onChange, onDrop, searching, hasServices, providers } =
 		props
 	const [sheet, setSheet] = useState(-1)
+	// PROTOTYPE: the quick filter buttons above the grid open the sheet.
+	useEffect(() => {
+		if (props.openSignal) setSheet(1)
+	}, [props.openSignal])
 	const [menu, setMenu] = useState<"sort" | "explain" | null>(null)
 	// For you under Best match: flipping it opens the sort menu, or, inside the sheet, leaves the sorts below it to pick.
 	const { forYou, pick } = useForYouUnderBestMatch({
