@@ -243,7 +243,7 @@ export interface SlabProps {
 	onSort: (sort: string) => void
 	sortFootnote?: string
 	/** Under the sorts, in the menu and in the sheet. */
-	sortFooter?: ReactNode
+	sortSignUp?: ReactNode
 	forYou?: ForYouControl
 	searching: boolean
 	groups: FilterGroupsData
@@ -496,7 +496,7 @@ export function Slab(props: SlabProps) {
 								value={props.sort}
 								dense
 								footnote={props.sortFootnote}
-								footer={props.sortFooter}
+								signUp={props.sortSignUp}
 								onPick={(key) => {
 									pick(key)
 									setMenu(null)
@@ -557,6 +557,9 @@ function SheetBody(props: SlabProps) {
 	const pickSort = (sort: SortOption) =>
 		!sort.disabled && props.onSort(sort.key)
 	const current = props.sorts.find((s) => s.key === props.sort)
+	const sheetSorts = props.sortSignUp
+		? props.sorts.filter((s) => !(s.disabled && s.taste))
+		: props.sorts
 	return (
 		<div className="pb-6">
 			<h2 className="sr-only">Filters</h2>
@@ -576,15 +579,17 @@ function SheetBody(props: SlabProps) {
 						<ForYouRow forYou={forYou} />
 					</div>
 				)}
+				{/* The sign-up prompt leads, in place of the sorts that need taste. */}
+				{props.sortSignUp && <div className="mb-2">{props.sortSignUp}</div>}
 				<div
 					className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none]"
 					role="radiogroup"
 					aria-label="Sort"
 					onKeyDown={(event) =>
-						radioKeys(event, (index) => pickSort(props.sorts[index]))
+						radioKeys(event, (index) => pickSort(sheetSorts[index]))
 					}
 				>
-					{props.sorts.map((s) => {
+					{sheetSorts.map((s) => {
 						const on = s.key === props.sort
 						return (
 							<motion.button
@@ -616,7 +621,6 @@ function SheetBody(props: SlabProps) {
 				{current && (
 					<p className="mt-1.5 text-xs text-gray-500">{current.hint}</p>
 				)}
-				{props.sortFooter}
 				<motion.button
 					type="button"
 					role="switch"

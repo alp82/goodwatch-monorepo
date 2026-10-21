@@ -252,8 +252,9 @@ export function NotSeenSwitch({
 
 /**
  * The sort choices as a menu of radio items, with arrow keys. Used in the desktop popover and the phone menu. A
- * disabled choice shows dimmed with its reason and can't be picked; `footer` goes under the list, for example the
- * sign-up prompt for a sort that needs taste. Each item carries `data-sort`.
+ * disabled choice shows dimmed with its reason and can't be picked. `signUp`, the prompt for the sorts that need taste,
+ * leads the list and takes the place of those sorts while they're out of reach; `footer` goes under the list. Each item
+ * carries `data-sort`.
  */
 export function SortItems<K extends string>({
 	options,
@@ -261,6 +262,7 @@ export function SortItems<K extends string>({
 	onPick,
 	dense = false,
 	footnote,
+	signUp,
 	footer,
 }: {
 	options: SortOption<K>[]
@@ -268,6 +270,7 @@ export function SortItems<K extends string>({
 	onPick: (key: K) => void
 	dense?: boolean
 	footnote?: string
+	signUp?: ReactNode
 	footer?: ReactNode
 }) {
 	const layoutId = useId()
@@ -289,9 +292,14 @@ export function SortItems<K extends string>({
 						items.length
 		items[next]?.focus()
 	}
+	// The sign-up prompt stands in for the sorts that need taste.
+	const shown = signUp
+		? options.filter((s) => !(s.disabled && s.taste))
+		: options
 	return (
 		<div className="flex flex-col" onKeyDown={onKeyDown}>
-			{options.map((s) => {
+			{signUp}
+			{shown.map((s) => {
 				const on = s.key === value
 				return (
 					<motion.button
@@ -401,6 +409,7 @@ export function SortControl<K extends string>({
 	value,
 	onChange,
 	footnote,
+	signUp,
 	footer,
 	size = "md",
 	align = "left",
@@ -417,6 +426,9 @@ export function SortControl<K extends string>({
 	value: K
 	onChange: (key: K) => void
 	footnote?: string
+	/** The prompt for the sorts that need taste, in their place at the top of the menu. */
+	signUp?: ReactNode
+	/** Under the sorts, for example Watch next's sign-up prompt. */
 	footer?: ReactNode
 	size?: "md" | "sm"
 	align?: "left" | "right"
@@ -499,6 +511,7 @@ export function SortControl<K extends string>({
 						options={options}
 						value={value}
 						footnote={footnote}
+						signUp={signUp}
 						footer={footer}
 						onPick={(key) => {
 							onChange(key)

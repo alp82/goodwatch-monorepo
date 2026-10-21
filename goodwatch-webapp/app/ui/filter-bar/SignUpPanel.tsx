@@ -1,6 +1,7 @@
-// The way in to a taste feature from inside a filter control (the Taste match card, the sort menu under Best match):
-// one amber panel you tap anywhere, in the voice of the bar's sign-up key. A faint preview of the control it unlocks,
-// the fingerprint, what it gives, and "Sign up free". A member with too few liked titles gets "Rate titles" instead.
+// The ways in to a taste feature from inside a filter control. The Taste match card: one amber panel you tap anywhere,
+// in the voice of the bar's sign-up key, with a faint preview of the control it unlocks, the fingerprint, what it gives,
+// and "Sign up free"; a member with too few liked titles gets "Rate titles" instead. The sort menu: Best match as an
+// amber row shaped like the other sorts, which leads to sign-up.
 import { FingerPrintIcon } from "@heroicons/react/24/solid"
 import { Link } from "@remix-run/react"
 import { useAuthHref } from "~/utils/auth-href"
@@ -17,17 +18,36 @@ const WORDS = {
 			"Then every title gets a taste match",
 		],
 	},
-	bestMatch: {
-		signUp: [
-			"Order everything by your taste",
-			"Best match learns from your ratings",
-		],
-		rateMore: [
-			"Rate a few titles you love",
-			"Then Best match orders by your taste",
-		],
-	},
 } as const
+
+/**
+ * Best match for a visitor, in the sort menu: the same box as a sort item (SortItems), tinted amber, with the
+ * fingerprint where the check goes. `dense` matches the phone menu's tighter rows.
+ */
+export function BestMatchSignUp({ dense = false }: { dense?: boolean }) {
+	const authHref = useAuthHref()
+	return (
+		<Link
+			to={authHref("sign-up")}
+			rel="nofollow"
+			role="menuitem"
+			className={`mb-1 flex items-center gap-3 rounded-xl bg-amber-500/[0.07] px-3 ${dense ? "py-2" : "py-2.5"} text-left outline-none transition-colors cursor-pointer hover:bg-amber-500/[0.12] focus-visible:ring-2 focus-visible:ring-amber-400`}
+		>
+			<span className="min-w-0 flex-1">
+				<span className="block text-sm font-bold text-amber-100">
+					Best match
+				</span>
+				<span className="block text-xs text-amber-200/60">
+					Sign up free to order by your taste
+				</span>
+			</span>
+			<FingerPrintIcon
+				className="h-5 w-5 shrink-0 text-amber-500"
+				aria-hidden
+			/>
+		</Link>
+	)
+}
 
 export function SignUpPanel({
 	feature,

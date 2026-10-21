@@ -44,13 +44,6 @@ export function searchHref(q: string): string {
 	return text ? `/discover?q=${encodeURIComponent(text)}` : "/discover"
 }
 
-/** The query of the search on screen (Discover's search mode), for prefilling a search field. */
-export function currentSearchQuery(pathname: string, search: string): string {
-	return pathname.startsWith("/discover")
-		? (new URLSearchParams(search).get("q") ?? "")
-		: ""
-}
-
 export function getDestinations(): Record<DestinationKey, Destination> {
 	return {
 		home: {

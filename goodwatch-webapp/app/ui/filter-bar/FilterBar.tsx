@@ -38,8 +38,8 @@ export interface FilterBarProps {
 	forYou?: ForYouControl
 	/** Whether the viewer has taste, or why not (tasteStateOf of the results); ready by default. */
 	taste?: TasteState
-	/** Under the sorts in their menu, for example the sign-up prompt while Best match needs an account. */
-	sortFooter?: ReactNode
+	/** The way in to the sorts that need taste (Best match) while the viewer has no account; leads the sort menu. */
+	sortSignUp?: ReactNode
 	/** The sort choices; Discover's by default (Relevance only while searching). */
 	sorts?: SortOption[]
 	sort?: string
@@ -192,7 +192,7 @@ export function FilterBar(props: FilterBarProps) {
 							value: sort,
 							onChange: pick,
 							footnote: sortFootnote,
-							footer: props.sortFooter,
+							signUp: props.sortSignUp,
 							open: sortOpen,
 							onOpenChange: setSortOpen,
 							outsideIgnore: FOR_YOU_SWITCH,
@@ -259,7 +259,7 @@ export function FilterBar(props: FilterBarProps) {
 					sort={sort}
 					onSort={onSort}
 					sortFootnote={sortFootnote}
-					sortFooter={props.sortFooter}
+					sortSignUp={props.sortSignUp}
 					forYou={props.forYou}
 					searching={filters.searching}
 					groups={groups}

@@ -1,4 +1,4 @@
-// The explanation at the top right of Discover. Browsing with For you lifting titles: what the person's taste leans
+// The explanation under Discover's heading. Browsing with For you lifting titles: what the person's taste leans
 // to, as small chips in the fingerprint's colors (the rule itself is in For you's own tooltip); without enough liked
 // titles, a nudge to rate a few more. Searching: "Read as" and
 // how the search read the query, as chips, in the same slot (phones: one sideways-scrolling row, without the "Read as"). Guests with taste also get the sign-up prompt to keep it.
@@ -19,6 +19,28 @@ export interface SearchExplanation {
 	q: string
 	/** The reading's chips; null until the reading arrives, empty when the basic search served. */
 	reading: ReadingChip[] | null
+}
+
+/** Whether the explanation has anything to show; the heading leaves its line out when it doesn't. */
+export function explanationShows({
+	status,
+	on,
+	leanings,
+	guest,
+	searching,
+}: {
+	status: ForYouStatus
+	on: boolean
+	leanings: string[]
+	guest: boolean
+	searching: boolean
+}): boolean {
+	return (
+		searching ||
+		status === "needsTaste" ||
+		(on && leanings.length > 0) ||
+		(guest && status !== "signUp")
+	)
 }
 
 export function TasteExplanation({

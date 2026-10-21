@@ -1,35 +1,82 @@
-// Discover's heading, shared by browsing and searching. Browsing, it names the list ("Discover"); tapping it turns it
-// into the search field: the heading and the field share one plate that morphs in 240 ms while their words cross-fade,
-// so text never stretches. Typing searches after 800 ms or on Enter, and the query becomes the heading, with a clear
-// button that returns to browsing. The explanation (taste chips or "Read as") sits at the top right.
+// Discover's heading, shared by browsing and searching: one full-width row over a hairline, with the explanation
+// (taste chips, or "Read as" while searching) under it. Browsing, the row names the list ("Discover") with a Search
+// button; tapping either opens the field. With a search on, the row stays an input showing the query, so it can be
+// edited in place. Typing searches after 800 ms or on Enter; Escape puts the search back; Clear returns to browsing.
 //
-// Search text is private: the heading and the field are masked from session replay (as the search page was).
+// The query's text shrinks to fit the row: from the title's size down to a floor (42 to 22 px wide, 32 to 18 px on
+// phones). Past the floor the field scrolls sideways, and its end fades out while it isn't being edited.
+//
+// Search text is private: the field is masked from session replay (as the search page was).
 import { MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/20/solid"
 import {
-	AnimatePresence,
-	LayoutGroup,
-	type Transition,
-	motion,
-	useReducedMotion,
-} from "framer-motion"
-import { type ReactNode, useEffect, useId, useRef, useState } from "react"
+	type ReactNode,
+	useEffect,
+	useId,
+	useLayoutEffect,
+	useRef,
+	useState,
+} from "react"
 import { SEARCH_MAX_CHARS } from "~/domain/discover-search"
-import { TAP } from "~/ui/filter-bar/motion"
-import { EASE_SPRING, Swap } from "./motion"
+import { fitSize } from "./heading-fit"
 
 /** Typing searches once it pauses this long. */
 const COMMIT_MS = 800
-/** Enter closes the field when the new query lands, or after this long at most. */
-const CLOSE_MS = 150
-
-// The plate's morph: a tween that overshoots a hair and settles on time.
-const PLATE: Transition = { duration: 0.24, ease: EASE_SPRING }
-const CONTENT = {
-	initial: { opacity: 0 },
-	animate: { opacity: 1, transition: { duration: 0.14, delay: 0.06 } },
-	exit: { opacity: 0, transition: { duration: 0.06 } },
-}
 const PRIVATE = "search-private ph-no-capture sentry-mask"
+/** The query's size range in px; the top is the title's size. Phones below `WIDE_FROM` px of row. */
+const WIDE = { max: 42, min: 22 }
+const NARROW = { max: 32, min: 18 }
+const WIDE_FROM = 640
+/** The row's width the text can't have: the magnifier and its gap, and Clear when it shows (just its icon on phones). */
+const ICON_ROOM = 32
+const CLEAR_ROOM = { wide: 92, narrow: 44 }
+const FADE = "linear-gradient(to right, black calc(100% - 3rem), transparent)"
+
+let canvas: HTMLCanvasElement | undefined
+
+// The text's width at 100 px in the input's own font.
+function measure(input: HTMLInputElement, text: string) {
+	canvas ??= document.createElement("canvas")
+	const ctx = canvas.getContext("2d")
+	if (!ctx) return 0
+	const style = getComputedStyle(input)
+	ctx.font = `${style.fontWeight} 100px ${style.fontFamily}`
+	return ctx.measureText(text || input.placeholder).width
+}
+
+function useFit(
+	text: string,
+	row: HTMLElement | null,
+	input: HTMLInputElement | null,
+	clear: boolean,
+) {
+	const [width, setWidth] = useState(0)
+	useLayoutEffect(() => {
+		if (!row) return
+		const observer = new ResizeObserver(([entry]) =>
+			setWidth(entry.contentRect.width),
+		)
+		observer.observe(row)
+		return () => observer.disconnect()
+	}, [row])
+	// The heading font may arrive after the first measure.
+	const [fonts, setFonts] = useState(0)
+	useEffect(() => {
+		let live = true
+		document.fonts?.ready.then(() => live && setFonts((n) => n + 1))
+		return () => {
+			live = false
+		}
+	}, [])
+	const [fit, setFit] = useState({ size: WIDE.max, overflows: false })
+	useLayoutEffect(() => {
+		if (!input || !width) return
+		const wide = width >= WIDE_FROM
+		const room =
+			width - ICON_ROOM - (clear ? CLEAR_ROOM[wide ? "wide" : "narrow"] : 0) - 4
+		setFit(fitSize(measure(input, text), room, wide ? WIDE : NARROW))
+	}, [text, width, input, clear, fonts])
+	return fit
+}
 
 export function DiscoverHeading({
 	q,
@@ -42,19 +89,19 @@ export function DiscoverHeading({
 	/** Search for the text (already trimmed); empty text returns to browsing. */
 	onSearch: (text: string) => void
 	onClear: () => void
-	/** The explanation at the top right. */
+	/** The line under the row (taste chips or "Read as"), or null when it has nothing to say. */
 	explanation: ReactNode
 }) {
-	const [editing, setEditing] = useState(false)
+	const searching = q !== null
+	const [open, setOpen] = useState(false)
 	const [draft, setDraft] = useState(q ?? "")
+	const [focused, setFocused] = useState(false)
+	const [row, setRow] = useState<HTMLDivElement | null>(null)
+	const [input, setInput] = useState<HTMLInputElement | null>(null)
 	const timer = useRef<ReturnType<typeof setTimeout>>()
-	const closing = useRef<ReturnType<typeof setTimeout>>()
-	const latest = useRef({ onSearch, q })
-	latest.current = { onSearch, q }
+	const latest = useRef({ q, onSearch, draft })
+	latest.current = { q, onSearch, draft }
 	const inputId = useId()
-	// With reduced motion, the plate doesn't morph and nothing moves: the heading and the field cross-fade.
-	const reduce = useReducedMotion() ?? false
-	const plate = reduce ? undefined : "discover-plate"
 
 	// Follow the URL when the query changes elsewhere (the palette, back and forward, a clear).
 	const shown = q ?? ""
@@ -63,202 +110,122 @@ export function DiscoverHeading({
 		if (last.current === shown) return
 		last.current = shown
 		setDraft(shown)
+		if (!shown) setOpen(false)
 	}, [shown])
-	useEffect(
-		() => () => {
-			clearTimeout(timer.current)
-			clearTimeout(closing.current)
-		},
-		[],
-	)
+	useEffect(() => () => clearTimeout(timer.current), [])
 
 	const run = (text: string) => {
 		const trimmed = text.trim()
-		if (trimmed === (latest.current.q ?? "")) return false
+		if (trimmed === (latest.current.q ?? "")) return
 		last.current = trimmed
 		latest.current.onSearch(trimmed)
-		return true
 	}
 	const type = (text: string) => {
 		setDraft(text)
 		clearTimeout(timer.current)
 		timer.current = setTimeout(() => run(text), COMMIT_MS)
 	}
-	// Enter and Done commit at once. Closing waits for the new query, so the plate and the grid start on the same frame.
-	const done = () => {
+	const clear = () => {
 		clearTimeout(timer.current)
-		clearTimeout(closing.current)
-		if (!run(draft)) return setEditing(false)
-		closing.current = setTimeout(() => setEditing(false), CLOSE_MS)
-	}
-	useEffect(() => {
-		if (!closing.current) return
-		clearTimeout(closing.current)
-		closing.current = undefined
-		setEditing(false)
-	}, [q])
-	const cancel = () => {
-		clearTimeout(timer.current)
-		setDraft(latest.current.q ?? "")
-		setEditing(false)
+		last.current = ""
+		setDraft("")
+		setOpen(false)
+		onClear()
 	}
 
+	const showClear = searching || draft !== ""
+	const { size, overflows } = useFit(draft, row, input, showClear)
+	const fade = overflows && !focused ? FADE : undefined
+	const field = searching || open
+
 	return (
-		<LayoutGroup id="discover-heading">
-			<div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 lg:min-h-16">
-				<AnimatePresence mode="popLayout" initial={false}>
-					{editing ? (
-						<motion.div
-							key="field"
-							exit={{ opacity: 0, transition: { duration: 0.18 } }}
-							className={`relative flex h-14 w-full items-center px-4 lg:h-16 lg:max-w-2xl ${PRIVATE}`}
-						>
-							<motion.span
-								layoutId={plate}
-								transition={PLATE}
-								className="absolute inset-0 rounded-2xl bg-white/[0.07] shadow-[0_20px_60px_-24px_rgba(0,0,0,.9)] ring-1 ring-white/25"
-							/>
-							<motion.div
-								{...CONTENT}
-								className="relative flex h-full min-w-0 flex-1 items-center gap-2.5"
-							>
-								<label htmlFor={inputId} className="sr-only">
-									Search Discover
-								</label>
-								<MagnifyingGlassIcon
-									className="h-5 w-5 shrink-0 text-gray-400"
-									aria-hidden
-								/>
-								<input
-									id={inputId}
-									type="search"
-									value={draft}
-									// The field opens on the person's tap, so focusing it is what they asked for.
-									// biome-ignore lint/a11y/noAutofocus: opened by the person
-									autoFocus
-									autoComplete="off"
-									enterKeyHint="search"
-									maxLength={SEARCH_MAX_CHARS}
-									data-ph-no-capture
-									placeholder="What’s the mood?"
-									onChange={(e) => type(e.target.value)}
-									onKeyDown={(e) => {
-										if (e.key === "Enter") {
-											e.preventDefault()
-											done()
-										}
-										if (e.key === "Escape") {
-											e.preventDefault()
-											cancel()
-										}
-									}}
-									className="brand-header h-full min-w-0 flex-1 border-0 bg-transparent p-0 text-2xl text-white outline-none placeholder:text-gray-500 focus:ring-0 lg:text-3xl [&::-webkit-search-cancel-button]:hidden"
-								/>
-								{draft && (
-									<button
-										type="button"
-										onMouseDown={(e) => e.preventDefault()}
-										onClick={() => type("")}
-										aria-label="Clear the text"
-										className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-gray-400 cursor-pointer hover:bg-white/10 hover:text-white"
-									>
-										<XMarkIcon className="h-4 w-4" />
-									</button>
-								)}
-								<button
-									type="button"
-									onClick={done}
-									className="shrink-0 rounded-full px-3 py-1.5 text-sm font-bold text-gray-400 cursor-pointer hover:bg-white/10 hover:text-white"
-								>
-									Done
-								</button>
-							</motion.div>
-						</motion.div>
-					) : (
-						<motion.div
-							key="heading"
-							exit={{ opacity: 0, transition: { duration: 0.18 } }}
-							className="relative flex min-w-0 max-w-full items-center gap-3"
-						>
-							<motion.span
-								layoutId={plate}
-								transition={PLATE}
-								className="absolute -inset-x-3 -inset-y-2 rounded-2xl bg-white/0 ring-1 ring-white/0"
-							/>
-							<motion.div
-								{...CONTENT}
-								className="relative flex min-w-0 items-center gap-3"
-							>
-								<button
-									type="button"
-									onClick={() => setEditing(true)}
-									aria-label={q ? `Edit the search ${q}` : "Search Discover"}
-									className="group flex min-w-0 items-center gap-3 rounded-xl text-left cursor-text outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
-								>
-									<h1
-										className={`brand-header min-w-0 overflow-hidden text-white ${q ? `text-xl lg:text-5xl ${PRIVATE}` : "text-3xl lg:text-4xl"}`}
-									>
-										<Swap
-											k={q ?? "browse"}
-											className="-my-1 max-w-full py-1 align-middle"
-											origin="0% 60%"
-										>
-											<span className="block truncate">{q ?? "Discover"}</span>
-										</Swap>
-									</h1>
-									<motion.span
-										layout={reduce ? false : "position"}
-										transition={PLATE}
-										className={`grid shrink-0 place-items-center rounded-full ring-1 transition-colors ${q ? "h-9 w-9 text-gray-500 ring-white/10 group-hover:text-white" : "h-11 w-11 bg-white/[0.06] text-gray-200 ring-white/15 group-hover:bg-white/10"}`}
-									>
-										<MagnifyingGlassIcon className="h-5 w-5" />
-									</motion.span>
-								</button>
-								<AnimatePresence initial={false} mode="popLayout">
-									{q && (
-										<motion.button
-											key="clear"
-											type="button"
-											layout={reduce ? false : "position"}
-											initial={
-												reduce ? { opacity: 0 } : { opacity: 0, scale: 0.6 }
-											}
-											animate={{
-												opacity: 1,
-												scale: 1,
-												transition: { duration: 0.16, ease: [0.16, 1, 0.3, 1] },
-											}}
-											exit={{
-												opacity: 0,
-												...(reduce ? {} : { scale: 0.6 }),
-												transition: { duration: 0.1 },
-											}}
-											whileTap={TAP}
-											onClick={() => {
-												clearTimeout(timer.current)
-												last.current = ""
-												setDraft("")
-												onClear()
-											}}
-											aria-label="Clear the search, back to Discover"
-											className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/[0.06] text-gray-300 ring-1 ring-white/10 cursor-pointer hover:bg-white/10 hover:text-white"
-										>
-											<XMarkIcon className="h-5 w-5" />
-										</motion.button>
-									)}
-								</AnimatePresence>
-							</motion.div>
-						</motion.div>
-					)}
-				</AnimatePresence>
-				<motion.div
-					layout={reduce ? false : "position"}
-					transition={PLATE}
-					className="w-full lg:w-auto lg:max-w-[34rem]"
+		<div className="group/heading">
+			{field ? (
+				<div
+					ref={setRow}
+					className={`flex h-14 w-full min-w-0 items-center gap-3 lg:h-16 ${PRIVATE}`}
 				>
-					{explanation}
-				</motion.div>
-			</div>
-		</LayoutGroup>
+					{searching && <h1 className="sr-only">Search: {q}</h1>}
+					<label htmlFor={inputId} className="sr-only">
+						Search Discover
+					</label>
+					<MagnifyingGlassIcon
+						className={`h-5 w-5 shrink-0 ${searching ? "text-amber-400" : "text-gray-400"}`}
+						aria-hidden
+					/>
+					<input
+						ref={setInput}
+						id={inputId}
+						type="search"
+						value={draft}
+						// Opened by the person's tap while browsing; a search on screen doesn't take focus.
+						// biome-ignore lint/a11y/noAutofocus: opened by the person
+						autoFocus={!searching}
+						autoComplete="off"
+						enterKeyHint="search"
+						maxLength={SEARCH_MAX_CHARS}
+						data-ph-no-capture
+						placeholder="What’s the mood?"
+						onChange={(e) => type(e.target.value)}
+						onFocus={() => setFocused(true)}
+						onBlur={() => {
+							setFocused(false)
+							if (latest.current.q === null && !latest.current.draft.trim())
+								setOpen(false)
+						}}
+						onKeyDown={(e) => {
+							if (e.key === "Enter") {
+								e.preventDefault()
+								clearTimeout(timer.current)
+								run(draft)
+								// Phones: puts the keyboard away to show the results.
+								input?.blur()
+							}
+							if (e.key === "Escape") {
+								e.preventDefault()
+								clearTimeout(timer.current)
+								setDraft(latest.current.q ?? "")
+								input?.blur()
+								if (latest.current.q === null) setOpen(false)
+							}
+						}}
+						style={{ fontSize: size, maskImage: fade, WebkitMaskImage: fade }}
+						className="brand-header h-full min-w-0 flex-1 border-0 bg-transparent p-0 leading-tight text-white outline-none transition-[font-size] duration-150 placeholder:text-gray-500 focus:ring-0 motion-reduce:transition-none [&::-webkit-search-cancel-button]:hidden"
+					/>
+					{showClear && (
+						<button
+							type="button"
+							onMouseDown={(e) => e.preventDefault()}
+							onClick={clear}
+							aria-label="Clear the search, back to Discover"
+							className="inline-flex h-8 min-w-8 shrink-0 items-center justify-center gap-1 rounded-md px-2 text-sm font-semibold text-amber-400 outline-none transition-colors cursor-pointer hover:bg-amber-400/10 hover:text-amber-300 focus-visible:ring-2 focus-visible:ring-amber-400"
+						>
+							<XMarkIcon className="h-4 w-4" aria-hidden />
+							<span className="hidden sm:inline">Clear</span>
+						</button>
+					)}
+				</div>
+			) : (
+				<button
+					type="button"
+					onClick={() => setOpen(true)}
+					aria-label="Search Discover"
+					className="group flex h-14 w-full min-w-0 items-center gap-3 rounded-lg text-left cursor-text outline-none focus-visible:ring-2 focus-visible:ring-amber-400 lg:h-16"
+				>
+					<h1 className="brand-header text-[32px] leading-tight text-white lg:text-[42px]">
+						Discover
+					</h1>
+					<span className="ml-auto inline-flex h-10 shrink-0 items-center gap-2 rounded-lg bg-white/[0.06] px-3.5 text-sm font-semibold text-gray-200 transition-colors group-hover:bg-white/10 group-hover:text-white">
+						<MagnifyingGlassIcon className="h-4 w-4" aria-hidden />
+						Search
+					</span>
+				</button>
+			)}
+			{/* Brightest at the left, amber while the field is being edited. */}
+			<div className="h-px bg-linear-to-r from-white/25 via-white/10 to-transparent transition-colors group-focus-within/heading:from-amber-400/80 group-focus-within/heading:via-amber-400/20" />
+			{explanation && (
+				<div className="overflow-hidden pt-2.5">{explanation}</div>
+			)}
+		</div>
 	)
 }

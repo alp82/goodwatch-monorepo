@@ -1,7 +1,7 @@
 import useLocale from "~/utils/locale"
 import MediaText from "~/ui/media-text/MediaText"
 // The command palette: one field that goes anywhere. As soon as anything is typed, its first suggestion is
-// "Search for …" (Discover's search mode), then up to eight matching titles ending in "Show 120 more" (Discover's
+// "Search Discover" (Discover's search mode), then up to eight matching titles ending in "Show 120 more" (Discover's
 // search mode again) when more match, then matching destinations ("Go to Taste"), then Sign up
 // for guests. Empty, it shows the destinations. The field sits in the dialog's header and the destinations
 // are compact rows, so the search leads. A combobox over a listbox: Up and Down move the active option, Enter runs
@@ -32,7 +32,6 @@ import { tmdbImage, useSignUpHref } from "./bits"
 import {
 	type DestinationKey,
 	currentDestination,
-	currentSearchQuery,
 	getDestinations,
 	searchHref,
 } from "./destinations"
@@ -95,11 +94,12 @@ function usePaletteTitles(q: string): PaletteTitles {
 
 export function CommandPalette({ onDone }: { onDone: () => void }) {
 	const navigate = useNavigate()
-	const { pathname, search } = useLocation()
+	const { pathname } = useLocation()
 	const { user } = useUser()
 	const signUp = useSignUpHref()
 	const { pick } = useTonightsPick()
-	const [q, setQ] = useState(() => currentSearchQuery(pathname, search))
+	// Opens empty: Discover's own field already shows the search on screen.
+	const [q, setQ] = useState("")
 	const [active, setActive] = useState(0)
 	const { titles, more } = usePaletteTitles(q)
 	const id = useId()
@@ -120,7 +120,9 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 		if (trimmed)
 			result.push({
 				key: "search",
-				label: `Search for “${trimmed}”`,
+				// The field above already shows the text: the row only names where Enter goes.
+				label: "Search Discover",
+				sub: "Moods, titles, and people",
 				href: searchHref(trimmed),
 				icon: MagnifyingGlassIcon,
 			})

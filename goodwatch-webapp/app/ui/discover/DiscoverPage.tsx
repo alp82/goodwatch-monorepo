@@ -1,7 +1,7 @@
 import { useProductExposure } from "~/telemetry/useProductAnalytics"
 import { discoveryProperties } from "~/telemetry/product-events"
-// Discover on the shared filter bar, browsing and searching on one page: the heading (tap it to search; the query
-// becomes the heading) with the explanation at the top right, the bar with For you before the sort, and the grid of
+// Discover on the shared filter bar, browsing and searching on one page: the heading (tap it to search; with a search
+// on it stays the search field) with the explanation under it, the bar with For you before the sort, and the grid of
 // title cards, loaded 40 at a time as the person scrolls. The grid is never replaced between browsing and searching:
 // titles in both lists glide to their new places.
 //
@@ -46,7 +46,7 @@ import {
 } from "~/ui/filter-bar"
 import { sortShown } from "~/ui/filter-bar/labels"
 import { SearchPeople } from "~/ui/search/SearchPeople"
-import { SignUpPanel } from "~/ui/filter-bar/SignUpPanel"
+import { BestMatchSignUp } from "~/ui/filter-bar/SignUpPanel"
 import { Spinner } from "~/ui/wait/Spinner"
 import type { TitleKey } from "~/utils/title-key"
 import { DiscoverGrid } from "./DiscoverGrid"
@@ -55,7 +55,7 @@ import { ForYouNeedsTaste, ForYouSignUp } from "./ForYouStates"
 import { HiddenTitles } from "./HiddenTitles"
 import { SignUpKey } from "./SignUpKey"
 import { SideBanner, SideRows, sideRowsOf } from "./SideRows"
-import { TasteExplanation } from "./TasteExplanation"
+import { TasteExplanation, explanationShows } from "./TasteExplanation"
 import {
 	type InitialBrowse,
 	browseKey,
@@ -432,13 +432,21 @@ export function DiscoverPage({
 					onSearch={onSearch}
 					onClear={clearSearch}
 					explanation={
-						<TasteExplanation
-							status={status}
-							on={applied}
-							leanings={leanings}
-							guest={!member}
-							search={q ? { q, reading: search.reading } : null}
-						/>
+						explanationShows({
+							status,
+							on: applied,
+							leanings,
+							guest: !member,
+							searching: q !== null,
+						}) ? (
+							<TasteExplanation
+								status={status}
+								on={applied}
+								leanings={leanings}
+								guest={!member}
+								search={q ? { q, reading: search.reading } : null}
+							/>
+						) : null
 					}
 				/>
 				<div className="lg:mt-7">
@@ -448,13 +456,7 @@ export function DiscoverPage({
 						counts={counts}
 						forYou={forYouControl}
 						taste={taste}
-						sortFooter={
-							taste === "signUp" ? (
-								<div className="px-1 pt-2 pb-0.5">
-									<SignUpPanel feature="bestMatch" needs="signUp" />
-								</div>
-							) : undefined
-						}
+						sortSignUp={taste === "signUp" ? <BestMatchSignUp /> : undefined}
 						insightLead={
 							busy && searching ? (
 								<ArrowPathIcon

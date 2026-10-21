@@ -1,17 +1,10 @@
-// Discover's motion between browsing and searching: text swaps nudge 10 px into place in 200 ms on a curve that
-// overshoots a hair and settles on time. With reduced motion (MotionConfig reducedMotion="user"), only the opacity fades.
-import {
-	AnimatePresence,
-	type Variants,
-	motion,
-	useReducedMotion,
-} from "framer-motion"
-import type { ReactNode } from "react"
+// Discover's motion between browsing and searching: the explanation's text nudges 10 px into place in 200 ms on a curve
+// that overshoots a hair and settles on time. With reduced motion (MotionConfig reducedMotion="user"), only the opacity
+// fades.
+import { type Variants, useReducedMotion } from "framer-motion"
 
 /** Overshoots a hair and settles, so it reads as a spring but ends on time. */
-export const EASE_SPRING: [number, number, number, number] = [
-	0.3, 1.35, 0.55, 1,
-]
+const EASE_SPRING: [number, number, number, number] = [0.3, 1.35, 0.55, 1]
 /** Fast start, soft landing. */
 export const EASE_OUT: [number, number, number, number] = [0.16, 1, 0.3, 1]
 const EASE_IN: [number, number, number, number] = [0.4, 0, 1, 1]
@@ -34,49 +27,4 @@ const FADE: Variants = {
 /** The nudge's variants, or a plain fade with reduced motion. */
 export function useNudge(): Variants {
 	return useReducedMotion() ? FADE : NUDGE
-}
-
-/**
- * Swaps its children when `k` changes: the new text nudges up into place while the old one leaves. The leaving copy
- * pops out of flow, so the slot takes the new size at once and nothing next to it moves twice.
- */
-export function Swap({
-	k,
-	children,
-	className = "",
-	block = false,
-	origin = "0% 50%",
-}: {
-	k: string
-	children: ReactNode
-	className?: string
-	block?: boolean
-	origin?: string
-}) {
-	const variants = useNudge()
-	const Cell = block ? motion.div : motion.span
-	const Outer = block ? "div" : "span"
-	return (
-		<Outer
-			className={`relative ${block ? "block" : "inline-block"} ${className}`}
-		>
-			<AnimatePresence initial={false} mode="popLayout">
-				<Cell
-					key={k}
-					variants={variants}
-					initial="enter"
-					animate="center"
-					exit="leave"
-					style={{ transformOrigin: origin }}
-					className={
-						block
-							? "block min-w-0"
-							: "inline-block min-w-0 max-w-full whitespace-nowrap"
-					}
-				>
-					{children}
-				</Cell>
-			</AnimatePresence>
-		</Outer>
-	)
 }
