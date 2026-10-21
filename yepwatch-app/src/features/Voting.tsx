@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Animated, Image, PanResponder, View } from 'react-native';
-import type { Candidate, RoomCommand, RoomSnapshot, VoteValue } from '@goodwatch/yepwatch-contracts';
-import { Button, Heading, Notice, Panel, Row, Words, colors, useReducedMotion } from '../components/ui';
+import type { Candidate, RoomCommand, RoomSnapshot } from '@goodwatch/yepwatch-contracts';
+import { Button, Heading, Notice, Panel, Row, Words, useReducedMotion } from '../components/ui';
 import { nextCandidate } from '../core/room-state';
 import { episodeLabel } from '../core/episode';
 
@@ -19,7 +19,7 @@ export function Voting({ snapshot, disabled, pendingId, send }: { snapshot: Room
   const [undoId, setUndoId] = useState<string>();
   const candidate = nextCandidate(snapshot, pendingId); const round = snapshot.shared.round!;
   const votedCount = snapshot.own.votes.filter(v => v.value !== null).length;
-  const vote = useCallback((value: VoteValue) => {
+  const vote = useCallback((value: 'pass' | 'watch') => {
     if (disabled || !candidate) return;
     setUndoId(candidate.id);
     send({ type: 'vote', roundVersion: round.version, candidateId: candidate.id, expectedVoteRevision: snapshot.own.votes.find(v => v.candidateId === candidate.id)?.revision ?? 0, value });
@@ -30,11 +30,10 @@ export function Voting({ snapshot, disabled, pendingId, send }: { snapshot: Room
   const completed = snapshot.shared.participants.find(p => p.participantId === snapshot.own.participantId)?.participation === 'waiting';
   if (completed) return <><Heading>You’re in for the next round</Heading><Words muted>This round’s group and screens are fixed. Your vote will count when a new round starts.</Words></>;
   if (snapshot.own.roundCompleted) return <><Heading>Your round is finished</Heading><Notice>Waiting for everyone to finish. The shared shortlist will arrive when all required rounds are confirmed.</Notice></>;
-  return <><Heading>Would you watch this?</Heading><Words muted>Your round · {votedCount} of {round.candidateCount} confirmed. The shortlist comes after everyone finishes.</Words>
-    <View accessibilityRole="progressbar" accessibilityLabel="Your confirmed votes" accessibilityValue={{ min: 0, max: round.candidateCount, now: votedCount }} style={{ height: 5, backgroundColor: colors.raised, borderRadius: 3 }}><View style={{ height: 5, backgroundColor: colors.amber, width: `${round.candidateCount ? Math.min(100, votedCount / round.candidateCount * 100) : 0}%` }} /></View>
-    {candidate ? <><Animated.View {...handlers.panHandlers} style={{ transform: [{ translateX: translation }] }}><TitleCard candidate={candidate} /></Animated.View><Row><Button secondary disabled={disabled} onPress={() => vote('pass')}>Pass tonight</Button><Button disabled={disabled} onPress={() => vote('watch')}>Would watch</Button><Button secondary disabled={disabled} onPress={() => vote('veto')}>Not okay tonight</Button></Row></> : <Panel><Words>You’ve reached the end of this deck.</Words><Button disabled={disabled || votedCount < round.candidateCount} onPress={() => send({ type: 'complete_round', roundVersion: round.version })}>Finish my round</Button><Words muted>We’ll wait for everyone’s confirmed round, then show the shared shortlist.</Words></Panel>}
+  return <><Heading>Would you watch this?</Heading><Words muted>Choose for yourself. The shortlist comes after everyone finishes.</Words>
+    {candidate ? <><Animated.View {...handlers.panHandlers} style={{ transform: [{ translateX: translation }] }}><TitleCard candidate={candidate} /></Animated.View><Row><Button secondary disabled={disabled} onPress={() => vote('pass')}>No</Button><Button disabled={disabled} onPress={() => vote('watch')}>Watch</Button></Row></> : <Panel><Words>You’ve reached the end of this deck.</Words><Button disabled={disabled || votedCount < round.candidateCount} onPress={() => send({ type: 'complete_round', roundVersion: round.version })}>Finish my round</Button><Words muted>We’ll wait for everyone’s confirmed round, then show the shared shortlist.</Words></Panel>}
     {(votedCount > 0 || pendingId) && <Button secondary disabled={disabled} onPress={undo}>Undo my last choice</Button>}
     {pendingId && <Notice>Your latest choice is pending confirmation.</Notice>}
-    <Words muted>Swipe left to pass or right to watch. The buttons do the same thing. “Not okay tonight” is a room veto. None of these actions changes your GoodWatch history.</Words>
+    <Words muted>Swipe left for No or right to Watch. The buttons do the same thing. Your choices do not change your GoodWatch history.</Words>
   </>;
 }

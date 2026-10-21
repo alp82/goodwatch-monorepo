@@ -1,0 +1,77 @@
+{
+  "result": "pass",
+  "url": "http://127.0.0.1:8101/",
+  "servedExport": ".expo/exports/guest-binary-20261021",
+  "serverPid": 2627213,
+  "configuration": {
+    "apiOrigin": "http://127.0.0.1:15995",
+    "websocketOrigin": "ws://127.0.0.1:4319",
+    "fixturesEnabled": false
+  },
+  "htmlSha256": "f422d34aa59d44e93ddebddb2657718e3a3ac088fada022691536a2245d6ccd7",
+  "servedJavaScriptHashes": {
+    "index.html": "f422d34aa59d44e93ddebddb2657718e3a3ac088fada022691536a2245d6ccd7",
+    "_expo/static/js/web/__common-b4f89f9ff719cf470441aad26921280c.js": "715712a8dd02f07849e65a6b342432cd5037cc52ec64926ac4f8d654593ec587",
+    "_expo/static/js/web/[id]-05cc4b4965d562bec2e2b0200061fdc5.js": "e6e9050d7ba2a18559812e2617f0ae3ebf53536d4b3e457ab1c5fc9dfb716ba7",
+    "_expo/static/js/web/__expo-metro-runtime-8c088df87a31e4e6accd81c554ec290d.js": "1dda0ff5ea4566f7514a446ddb5cf9de51f44e09d2e18c05c9bb1fdc85bc7860",
+    "_expo/static/js/web/_layout-6c5575278c2c0fc889ebfd255fbd0246.js": "e4b8fe7d1d04f767f272119cde9f173eca244b4006008cf08b1f29fedec6852e",
+    "_expo/static/js/web/entry-1b6051993a71f83339350c88d90d2571.js": "b2128f1b2c1d33fca350e26311b068dac9d5e3cfa793a82c405d34bd8c24c628",
+    "_expo/static/js/web/index-a13c24b2e3050cca12e18b201176552a.js": "7798f99a02082b3af0cbf9b7e548618219fbc4e003032331c9c029b6214095c5",
+    "_expo/static/js/web/callback-8c0dff6c29dc7c5a331df08753be00c8.js": "d55adb45ad7fdfd9b2c0a6eb1f9065cb4e2a85fcd56b2d892c9841b7dff96c27",
+    "_expo/static/js/web/[invite]-ad9f4227077f3e08e49cac25874cd661.js": "e810c625b1e5cd9b56394b146d8908ccb39ac507512b5a6070545e99e796b3e3",
+    "_expo/static/js/web/preview-ad32c4ebd5da258a7d4b969ec0c12c8c.js": "8a12737ccfcdaf439f48ec8cb5a2e4ab9e1fc23e43b41e0e9f3c5a86069cea07",
+    "_expo/static/js/web/__common-00f6f89c600dd2351fff38d2a3eb5a17.js": "9a9db630d97a6107fc1e15836fb4a95579913be99451b8cb79679b63cc7360b8",
+    "_expo/static/js/web/__common-563f2394f247e295829122849054b818.js": "124ec15eb2ad903687b90164b32f9b19797b394e46bda27885dcf26ef45946a7",
+    "_expo/static/js/web/[id]-9b692cfed55be1d2f9473edc5fad0462.js": "b3e8521b8b5e68881a89ab15c8eaa87316d65e792a2f3a3a98676b5bc63beef1",
+    "_expo/static/js/web/entry-c41b6452a93556b41199594f328704ce.js": "4894eace67384ad2a4ace94c2b23f7b79b85b564c49d855afc56fa2d25bbefe6"
+  },
+  "fullExportManifest": "binary-voting-build.json",
+  "rollbackExport": ".expo/exports/guest-recovery-reviewed-20261021",
+  "rollbackExportUnchanged": true,
+  "otherObservableListenerPidSetsUnchanged": true,
+  "otherListeners": {
+    "8099": [
+      "3434776"
+    ],
+    "8100": [
+      "3817599"
+    ],
+    "15995": [
+      "271191"
+    ],
+    "15996": [
+      "3807338"
+    ],
+    "4319": [
+      "156786"
+    ],
+    "4318": [
+      "3799881"
+    ],
+    "4317": [
+      "3410466"
+    ],
+    "15997": [
+      "3410395"
+    ],
+    "46397": [],
+    "15990": []
+  },
+  "retained8099and8100FilesAndFontLicenseUnchanged": true,
+  "apiGatewayCacheRestartPerformed": false,
+  "checks": {
+    "typecheck": "pass",
+    "lint": "pass",
+    "unit": 23,
+    "browser": 16,
+    "noButtonToPass": "actual API200",
+    "leftSwipeToPass": "Chromium CDP/RN PanResponder fixture PASS",
+    "historicalVetoUndo": "browser fixture PASS",
+    "finishThenShortlist": "fixture and actual API PASS",
+    "freshInviteAndTwoClientsVoting": "actual API+gateway PASS",
+    "sharedChoicesExposed": false
+  },
+  "scope": "Actual finite36-title real catalog sample with memory rooms; only fresh UI smoke rooms. Existing user and simulator rooms untouched.",
+  "temporary8097Stopped": true,
+  "capabilitiesRedacted": true
+}

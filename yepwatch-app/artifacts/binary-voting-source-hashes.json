@@ -1,0 +1,48 @@
+{
+  "paths": {
+    "src/features/Entrance.tsx": {
+      "before": "70fa7105f16adc0acd03c251b4ce8e0ab46604a824cdbbf75be7259adf3f89f4",
+      "after": "cf57b61bc7ed5f89e68a491543ab6d2cc204f4137043df5fbc06d710e7160ae9"
+    },
+    "src/features/Lobby.tsx": {
+      "before": "8b9b1b91b1daa6479d6630c231fc1f310db18586ec12a31f931b341f0df619a7",
+      "after": "7c63ebebaca04c30afcfe71614d20e2785849e0b68f059ed9cafcf3fa4f23136"
+    },
+    "src/features/Voting.tsx": {
+      "before": "b652f9b3035c6b459364f262b0203f7467585dff295c896869d69d042840816e",
+      "after": "da3ea5305eba7a02cef9287db39078106357e88d7ce1e1e2ccd0acab90575f13"
+    },
+    "tests/browser/client.spec.ts": {
+      "before": "b3002ef7dc8a5862d2b6965b8b17dad5d7785a7e7e698b41b083b11c3620d18e",
+      "after": "03744027b656387172eaa92323ff2f4000a9a39bc4e161c81477d6b7ca05d713"
+    },
+    "tests/browser/expiry.spec.ts": {
+      "before": "78dfcd640ff1c90821e2c86f5882b35ab06771487173e4cf0e5de1445f5a4741",
+      "after": "74331ece0bcbd85b246024061c28de479751bc3f7e325268403d524a09da59aa"
+    },
+    "tests/browser/recovery.spec.ts": {
+      "before": "3234c9f42621d88aae8d6d11e73a8adeb4bafee29f6d61dbf43c843fb955d1c7",
+      "after": "4539d8ffd63615897838961a382eb04d2e1af6f1e511f6fcc55b61ab3edcb8d9"
+    },
+    "tests/browser/legacy-round.spec.ts": {
+      "before": "87b3ce086a042f1b555239af1f46df51a4c51c0eabac4a50571f0bcf66281c23",
+      "after": "ebff7bf1d00faff9cecd30fb3cf319d7c0b55ca30c4488a266bd3f521246fde8"
+    },
+    "tests/browser/binary-voting.spec.ts": {
+      "before": null,
+      "after": "01cce7125a4950ac18e471ef73a6905a7a82393f4e06650bbdd15d107183b6ec"
+    },
+    "scripts/poc-guest-browser.cjs": {
+      "after": "d2e0a79e8e5276d327a6dcce1416674ba44eb5859d4aa67d4eff6bf3714a76b3"
+    },
+    "README.md": {
+      "after": "78d2642226f9413b3eb7c1e371afabbba84ec9f6f5a411305cbc95ad6c3a3eec"
+    },
+    "docs/verification.md": {
+      "after": "1aba9127b5d456eb6089d9e2f511a87812bd94d77be0c4d59ddfc8f4b9d3e111"
+    }
+  },
+  "servedBuild": ".expo/exports/guest-binary-20261021",
+  "proof": "23 unit+16 browser+typecheck+lint+separate real export+visible actual API/gateway smoke",
+  "scope": "yepwatch-app only"
+}

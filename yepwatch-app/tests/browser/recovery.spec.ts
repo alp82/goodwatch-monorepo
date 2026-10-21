@@ -15,7 +15,7 @@ test('public deck errors give plain distinct recovery, without raw counters or p
     else await route.fulfill({ headers: cors, json: snapshot });
   });
   await page.goto('/room/fixture-room');
-  const start = page.getByRole('button', { name: 'Start a short round', exact: true });
+  const start = page.getByRole('button', { name: 'Start a round', exact: true });
   await start.click(); await expect(page.getByText('The search did not finish.', { exact: false })).toBeVisible();
   await expect(page.getByText('12345', { exact: false })).toHaveCount(0);
   reason = 'availability_unknown'; await start.click(); await expect(page.getByText('Availability could not be verified yet.', { exact: false })).toBeVisible();

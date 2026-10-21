@@ -30,8 +30,8 @@ async function roomHarness(page: Page, initialStatus = 200) {
   await page.goto('/room/fixture-room');
   return { snapshot, sockets, get tickets() { return tickets; }, get reads() { return reads; }, setStatus: (value: number) => { status = value; }, setCommandStatus: (value: number) => { commandStatus = value; }, hold: () => { hold = true; }, release: () => release?.() };
 }
-async function live(page: Page) { await expect(page.getByText('Live room connected', { exact: true })).toBeVisible(); await expect(page.getByRole('button', { name: 'Would watch', exact: true })).toBeEnabled(); }
-async function terminal(page: Page) { await expect(page.getByText('This room has expired', { exact: true })).toBeVisible(); await expect(page.getByRole('button', { name: 'Create another room' })).toBeVisible(); await expect(page.getByRole('button', { name: /Would watch|Pass tonight|Refresh room|Reconnect|Retry pending/ })).toHaveCount(0); }
+async function live(page: Page) { await expect(page.getByText('Live room connected', { exact: true })).toBeVisible(); await expect(page.getByRole('button', { name: 'Watch', exact: true })).toBeEnabled(); }
+async function terminal(page: Page) { await expect(page.getByText('This room has expired', { exact: true })).toBeVisible(); await expect(page.getByRole('button', { name: 'Create another room' })).toBeVisible(); await expect(page.getByRole('button', { name: /Watch|No|Refresh room|Reconnect|Retry pending/ })).toHaveCount(0); }
 
 test('cached room closes only after ambiguous WS expiry is confirmed by HTTP410', async ({ page }) => {
   const h = await roomHarness(page); await live(page); h.setStatus(410);
@@ -48,7 +48,7 @@ test('subscription lease expiry with live HTTP state reconnects rather than endi
 test('HTTP command410 ends cached room and late successful repair cannot restore controls', async ({ page }) => {
   const h = await roomHarness(page); await live(page); await expect.poll(() => h.reads).toBeGreaterThan(1);
   h.hold(); await page.getByRole('button', { name: 'Refresh room' }).click(); await expect.poll(() => h.reads).toBeGreaterThan(2);
-  h.setCommandStatus(410); await page.getByRole('button', { name: 'Would watch', exact: true }).click(); await terminal(page);
+  h.setCommandStatus(410); await page.getByRole('button', { name: 'Watch', exact: true }).click(); await terminal(page);
   h.release(); await page.waitForTimeout(200); await terminal(page);
 });
 test('initial HTTP410 is terminal while503 remains manually recoverable', async ({ page }) => {
@@ -73,7 +73,7 @@ test('authoritative shared expired snapshot fences a delayed successful command'
   const h = await roomHarness(page); await live(page);
   let release!: () => void;
   await page.route('**/rooms/fixture-room/commands', async route => { await new Promise<void>(resolve => { release = resolve; }); await route.fulfill({ json: h.snapshot, headers: { 'Access-Control-Allow-Origin': 'http://127.0.0.1:8097', 'Access-Control-Allow-Credentials': 'true' } }); });
-  await page.getByRole('button', { name: 'Would watch', exact: true }).click(); await expect.poll(() => Boolean(release)).toBe(true);
+  await page.getByRole('button', { name: 'Watch', exact: true }).click(); await expect.poll(() => Boolean(release)).toBe(true);
   h.sockets[0].send(JSON.stringify({ type: 'room.updated', snapshot: { ...h.snapshot.shared, revision: 2, phase: 'expired' } }));
   await terminal(page); release(); await page.waitForTimeout(200); await terminal(page);
   await page.getByRole('button', { name: 'Create another room' }).click(); await expect(page.getByRole('button', { name: 'Continue as guest' })).toBeVisible();

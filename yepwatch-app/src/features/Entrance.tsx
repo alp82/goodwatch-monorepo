@@ -92,7 +92,7 @@ export function Entrance({ invite }: { invite?: string }) {
   }
   return <Page eyebrow={invite ? 'You’re invited' : 'Something good. Together.'}>
     <Heading>Less browsing.{'\n'}More watching.</Heading>
-    <Words muted>A short round. Everyone gets a say. Then choose from your shared shortlist.</Words>
+    <Words muted>Everyone gets a say. Then choose from your shared shortlist.</Words>
     {error && <Notice error>{error}</Notice>}
     {checkingInvite && <Notice>Checking whether you’re already in this room…</Notice>}
     {recoveryBlocked && <Button secondary onPress={() => { setRecoveryBlocked(false); setCheckingInvite(true); setError(''); setCheckVersion(v => v + 1); }}>Retry membership check</Button>}

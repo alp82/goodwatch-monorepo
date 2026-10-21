@@ -34,17 +34,31 @@ async function main() {
     expect(config.kinds).toEqual(['movie', 'show_start']); expect(config.screens).toEqual([{ country: 'DE', serviceIds: [8], confirmed: true }]); expect(config.hostReadyBeforeStart).toBe(false);
     await host.screenshot({ path: 'artifacts/guest-lobby-mobile.png', fullPage: true });
     const started = host.waitForResponse(r => r.url().endsWith('/commands') && r.request().postDataJSON()?.command.type === 'start_round');
-    await action(() => host.getByRole('button', { name: 'Start a short round', exact: true }).click());
+    await action(() => host.getByRole('button', { name: 'Start a round', exact: true }).click());
     const startResponse = await started;
     if (startResponse.status() !== 200) { const b = await startResponse.json(); fs.writeFileSync('artifacts/guest-start-failure.json', JSON.stringify({ status: startResponse.status(), code: b.error?.code, message: b.error?.message, details: b.error?.details ?? null, config, interactionsToAttempt: actions, capabilitiesRedacted: true }, null, 2) + '\n'); await host.screenshot({ path: 'artifacts/guest-start-recovery-mobile.png', fullPage: true }); throw Error(`Start failed: ${b.error?.code}, ${b.error?.message}, ${b.error?.details?.reason ?? 'no structured reason'}`); }
-    await expect(host.getByRole('button', { name: 'Would watch', exact: true })).toBeEnabled();
+    await expect(host.getByRole('button', { name: 'Watch', exact: true })).toBeEnabled();
+    await expect(host.getByRole('button', { name: 'No', exact: true })).toHaveCount(1);
+    await expect(host.getByRole('button', { name: 'Watch', exact: true })).toHaveCount(1);
+    await expect(host.getByRole('progressbar')).toHaveCount(0);
+    await expect(host.getByText(/Not okay tonight|Your round ·|short round/)).toHaveCount(0);
+    const noConfirmed = host.waitForResponse(r => r.url().endsWith('/commands') && r.request().postDataJSON()?.command.type === 'vote');
+    await host.getByRole('button', { name: 'No', exact: true }).click();
+    const noResponse = await noConfirmed; expect(noResponse.status()).toBe(200); expect(noResponse.request().postDataJSON().command.value).toBe('pass');
+    const undoConfirmed = host.waitForResponse(r => r.url().endsWith('/commands') && r.request().postDataJSON()?.command.type === 'vote');
+    await host.getByRole('button', { name: 'Undo my last choice', exact: true }).click();
+    const undoResponse = await undoConfirmed; expect(undoResponse.status()).toBe(200); expect(undoResponse.request().postDataJSON().command.value).toBe(null);
+    await host.setViewportSize({ width: 390, height: 1600 });
+    await host.getByRole('button', { name: 'Watch', exact: true }).scrollIntoViewIfNeeded();
     await host.screenshot({ path: 'artifacts/guest-voting-mobile.png', fullPage: true });
+    await host.screenshot({ path: 'artifacts/binary-voting-real-mobile.png', fullPage: true });
+    await host.setViewportSize({ width: 390, height: 844 });
     const startState = (await startResponse.json()).snapshot;
     const kinds = [...new Set(startState.shared.candidates.map(c => c.identity.kind))];
-    // One watch choice confirms real command/own-state behavior, then finish the short round.
+    // One watch choice confirms real command/own-state behavior, then finish the round.
     for (let i = 0; i < startState.shared.round.candidateCount; i++) {
       const confirmed = host.waitForResponse(r => r.url().endsWith('/commands') && r.request().postDataJSON()?.command.type === 'vote');
-      await host.getByRole('button', { name: 'Would watch', exact: true }).click(); expect((await confirmed).status()).toBe(200); voted++;
+      await host.getByRole('button', { name: 'Watch', exact: true }).click(); expect((await confirmed).status()).toBe(200); voted++;
     }
     await host.getByRole('button', { name: 'Finish my round', exact: true }).click(); await expect(host.getByText('Your shared shortlist', { exact: true })).toBeVisible();
     await host.screenshot({ path: 'artifacts/guest-shortlist-mobile.png', fullPage: true });
@@ -59,16 +73,16 @@ async function main() {
     await guest.goto(invitation); await guest.getByRole('button', { name: 'Continue as guest', exact: true }).click();
     await guest.getByRole('textbox', { name: 'Your nickname', exact: true }).fill('Sam'); await guest.getByRole('button', { name: 'Join room', exact: true }).click();
     await expect(guest.getByRole('button', { name: 'Ready on Our screen', exact: true })).toBeEnabled();
-    await expect(host.getByRole('button', { name: 'Start a short round', exact: true })).toBeDisabled();
+    await expect(host.getByRole('button', { name: 'Start a round', exact: true })).toBeDisabled();
     await guest.getByRole('button', { name: 'Ready on Our screen', exact: true }).click();
     await expect(guest.getByText('You’re ready. Waiting for the host to start.', { exact: true })).toBeVisible();
-    await expect(host.getByRole('button', { name: 'Start a short round', exact: true })).toBeEnabled();
-    await host.getByRole('button', { name: 'Start a short round', exact: true }).click();
-    await expect(guest.getByRole('button', { name: 'Would watch', exact: true })).toBeEnabled();
-    await expect(host.getByRole('button', { name: 'Would watch', exact: true })).toBeEnabled();
+    await expect(host.getByRole('button', { name: 'Start a round', exact: true })).toBeEnabled();
+    await host.getByRole('button', { name: 'Start a round', exact: true }).click();
+    await expect(guest.getByRole('button', { name: 'Watch', exact: true })).toBeEnabled();
+    await expect(host.getByRole('button', { name: 'Watch', exact: true })).toBeEnabled();
     await guest.screenshot({ path: 'artifacts/guest-joined-voting-mobile.png', fullPage: true });
     expect(errors).toEqual([]);
-    const report = { result: 'pass', scope: 'Actual real-catalog API15995 + gateway4319, finite36-title local sample, memory rooms. Visible UI only; fresh isolated rooms.', appOrigin: origin, interactionsToFirstRound: actions, interactionsDefinition: 'Each click or field fill counts once; country locale suggestion accepted and one actual service selected. Excludes navigation and screenshots.', beforeMinimumAttempt: { interactions: 13, evidence: 'Retained pre-simplification source: guest,nickname,create,edit,add screen,find country,select country,find service,select service,confirm screen,save,ready,start. Minimum attempt, not diagnosis of user incident.' }, config, candidateKinds: kinds, candidateCount: startState.shared.round.candidateCount, confirmedVotes: voted, hostReadySent: true, manualProgressControls: false, freshBrowserInviteJoined: true, appOriginInvite: true, guestReadinessExplicit: true, twoClientsVoting: true, sharedFrameCount: sharedFrames.length, privateFieldsOnSharedFrames: false, commands, pageErrors: errors, capabilitiesRedacted: true };
+    const report = { result: 'pass', scope: 'Actual real-catalog API15995 + gateway4319, finite36-title local sample, memory rooms. Visible UI only; fresh isolated rooms.', appOrigin: origin, interactionsToFirstRound: actions, interactionsDefinition: 'Each click or field fill counts once; country locale suggestion accepted and one actual service selected. Excludes navigation and screenshots.', beforeMinimumAttempt: { interactions: 13, evidence: 'Retained pre-simplification source: guest,nickname,create,edit,add screen,find country,select country,find service,select service,confirm screen,save,ready,start. Minimum attempt, not diagnosis of user incident.' }, config, candidateKinds: kinds, candidateCount: startState.shared.round.candidateCount, confirmedVotes: voted, hostReadySent: true, binaryChoiceUi: true, noMapsToPassConfirmed: true, undoPassConfirmed: true, votingProgressBarAbsent: true, manualProgressControls: false, freshBrowserInviteJoined: true, appOriginInvite: true, guestReadinessExplicit: true, twoClientsVoting: true, sharedFrameCount: sharedFrames.length, privateFieldsOnSharedFrames: false, commands, pageErrors: errors, capabilitiesRedacted: true };
     fs.writeFileSync('artifacts/guest-connected-poc.json', JSON.stringify(report, null, 2) + '\n'); console.log(JSON.stringify({ result: 'pass', interactionsToFirstRound: actions, candidateCount: report.candidateCount, confirmedVotes: voted, twoClientsVoting: true }));
   } finally { for (const context of contexts) await context.close(); await browser.close(); }
 }

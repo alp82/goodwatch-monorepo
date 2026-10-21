@@ -31,12 +31,16 @@
   "candidateCount": 7,
   "confirmedVotes": 7,
   "hostReadySent": true,
+  "binaryChoiceUi": true,
+  "noMapsToPassConfirmed": true,
+  "undoPassConfirmed": true,
+  "votingProgressBarAbsent": true,
   "manualProgressControls": false,
   "freshBrowserInviteJoined": true,
   "appOriginInvite": true,
   "guestReadinessExplicit": true,
   "twoClientsVoting": true,
-  "sharedFrameCount": 16,
+  "sharedFrameCount": 18,
   "privateFieldsOnSharedFrames": false,
   "commands": [
     {
@@ -45,6 +49,14 @@
     },
     {
       "type": "start_round",
+      "status": 200
+    },
+    {
+      "type": "vote",
+      "status": 200
+    },
+    {
+      "type": "vote",
       "status": 200
     },
     {

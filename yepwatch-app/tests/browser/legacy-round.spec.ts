@@ -28,7 +28,7 @@ for (const role of ['host', 'completed host', 'guest'] as const) {
     });
     await page.goto('/room/fixture-room');
     await expect(page.getByText('This round needs saved progress', { exact: true })).toBeVisible();
-    await expect(page.getByRole('button', { name: /Would watch|Pass tonight|Finish my round|Undo my last choice/ })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: /Watch|No|Finish my round|Undo my last choice/ })).toHaveCount(0);
     expect(commands).toEqual([]);
     if (role === 'host') await page.screenshot({ path: 'artifacts/legacy-host-recovery-mobile.png', fullPage: true });
     if (role === 'guest') {
@@ -39,7 +39,7 @@ for (const role of ['host', 'completed host', 'guest'] as const) {
       await expect(page.getByRole('button', { name: 'Use movies & new shows', exact: true })).toBeVisible();
       expect(commands).toEqual([{ type: 'new_round', expectedRevision: 1 }]);
       await page.getByRole('button', { name: 'Use movies & new shows', exact: true }).click();
-      await expect(page.getByRole('button', { name: 'Start a short round', exact: true })).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Start a round', exact: true })).toBeVisible();
       expect(commands[1].type).toBe('setup'); expect((commands[1].constraints as { kinds: string[] }).kinds).toEqual(['movie', 'show_start']);
     }
   });

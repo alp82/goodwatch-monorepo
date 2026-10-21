@@ -45,8 +45,8 @@ test('fixture components cover mixed screens, all media kinds, accessible voting
   await expect(page.getByText('Jo’s screen', { exact: true })).toBeVisible();
   await expect(page.getByText('Movies · New shows', { exact: false })).toBeVisible();
   await page.getByRole('button', { name: 'Voting', exact: true }).click();
-  await expect(page.getByRole('button', { name: 'Pass tonight', exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Would watch', exact: true }).focus(); await page.keyboard.press('Enter');
+  await expect(page.getByRole('button', { name: 'No', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Watch', exact: true }).focus(); await page.keyboard.press('Enter');
   await expect(page.getByText('Fixture action: vote.', { exact: false })).toBeVisible();
   await page.screenshot({ path: 'artifacts/voting-fixture-mobile.png', fullPage: true });
   await page.getByRole('button', { name: 'Shortlist', exact: true }).click();
