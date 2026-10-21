@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import { describe, it } from "node:test"
-import { TV_PROPERTIES, type TvTrip, WAY_BACK_LIVES, bracketArm, pagesFromTv, parseTrip, tvProperties, wayBackShows } from "./tv-way-back.ts"
+import { TV_PROPERTIES, type TvTrip, WAY_BACK_LIVES, bracketArm, openedByTv, pagesFromTv, parseTrip, tvProperties, wayBackShows } from "./tv-way-back.ts"
 
 const trip: TvTrip = { idx: 4, to: "/discover", box: { left: 18, top: 145, width: 1080, height: 583 }, w: 1440, h: 900, art: null, out: true }
 
@@ -40,6 +40,20 @@ describe("pagesFromTv", () => {
 		assert.equal(pagesFromTv(trip, 4, "/"), 0)
 		assert.equal(pagesFromTv(trip, 2, "/discover"), 0)
 		assert.equal(pagesFromTv(null, 5, "/discover"), 0)
+	})
+})
+
+describe("openedByTv", () => {
+	const trip = { idx: 3, to: "/discover", box: null, w: 1920, h: 1080, art: null, out: true }
+	it("is the page the TV just opened, on the entry after the TV's", () => {
+		assert.equal(openedByTv(trip, 4, "/discover"), true)
+	})
+	it("is no other page: another path, another entry, no trip, or once the person is back on the TV", () => {
+		assert.equal(openedByTv(trip, 4, "/taste"), false)
+		assert.equal(openedByTv(trip, 5, "/discover"), false)
+		assert.equal(openedByTv(trip, 3, "/discover"), false)
+		assert.equal(openedByTv(null, 4, "/discover"), false)
+		assert.equal(openedByTv({ ...trip, out: false }, 4, "/discover"), false)
 	})
 })
 

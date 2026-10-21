@@ -96,6 +96,9 @@ function screenHtml(
 				focused: focusedItem(state, ctx),
 				screenFocus: focusedItem({ ...state, menuOpen: false }, ctx),
 				dispatch: () => {},
+				ringOff: false,
+				byPointer: false,
+				unpoint: () => {},
 			}}
 			canvas={canvas}
 			ctx={ctx}
@@ -107,9 +110,14 @@ function screenHtml(
 }
 
 /** A screen that is a chunk of its own, drawn as it is once its code is there. */
-function codeHtml(canvas: TvCanvas, focused: string, node: React.ReactNode) {
+function codeHtml(
+	canvas: TvCanvas,
+	focused: string,
+	node: React.ReactNode,
+	member = false,
+) {
 	return renderToStaticMarkup(
-		<TvViewProvider value={{ canvas, focused, dispatch: () => {} }}>
+		<TvViewProvider value={{ canvas, focused, dispatch: () => {}, member }}>
 			<Layer>{node}</Layer>
 		</TvViewProvider>,
 	)
@@ -142,6 +150,9 @@ const roomHtml = (data: TvHomeData, power: RoomTv["power"] = "on") =>
 							focused: "app:tonight",
 							screenFocus: "app:tonight",
 							dispatch: () => {},
+							ringOff: false,
+							byPointer: false,
+							unpoint: () => {},
 						}}
 						canvas={canvas}
 						ctx={tvContextOf(data, null)}
@@ -180,7 +191,12 @@ console.log(
 				codeHtml(canvas, "menu:home", <Menu items={menuItems(guestCtx)} />),
 			),
 			member: editions((canvas) =>
-				codeHtml(canvas, "menu:home", <Menu items={menuItems(memberCtx)} />),
+				codeHtml(
+					canvas,
+					"menu:home",
+					<Menu items={menuItems(memberCtx)} />,
+					true,
+				),
 			),
 		},
 		menuOpen: screenHtml(

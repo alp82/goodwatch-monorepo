@@ -85,9 +85,9 @@ export function tonightShowIds(parts: TonightParts): number[] {
 
 /**
  * A member's Tonight and My shows, shaped from what home's doors read.
- * - Tonight: up to three picks. The first is Tonight's pick, as `getTonightsPick` decides it with tracking: the
- *   Next episode of the first show to continue, else the first movie of My movies, else the first show to start.
- *   The movies follow, then the first show to start.
+ * - Tonight: up to `TONIGHT_PICKS` (ten) picks. The first is Tonight's pick, as `getTonightsPick` decides it
+ *   with tracking: the Next episode of the first show to continue, else the first movie of My movies, else the
+ *   first show to start. The movies follow, then the first show to start.
  * - My shows: the first three shows to continue, or to pick up when there is none, and the first three to start.
  * `showCards` are the cards of `tonightShowIds`; a show the catalog lacks is left out.
  */

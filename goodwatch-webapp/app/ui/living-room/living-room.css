@@ -850,31 +850,54 @@ main:has(.lr-page) + footer {
 	}
 }
 
-/* The frame around the picture while the Expand key has the focus (TvRoom.tsx): four amber brackets 14 px inside
-   the picture's edge, where the brackets of the way out stand at the press (`[data-tv-bracket]`, main.css). Those
-   take their place for as long as a transition is marked, so the two sets never show together. They do not
-   move: nothing of the frame animates at rest (#190). */
+/* The hint while the Expand key has the focus (TvRoom.tsx): four amber brackets 14 px inside the picture's edge,
+   where the brackets of the way out stand at the press (`[data-tv-bracket]`, main.css). They come in from a little
+   inside the corners and move out to them three times, then rest: the picture is about to grow into a page. The
+   picture and what is on it keep their size. Those of the way out take their place for as long as a transition is
+   marked, so the two sets never show together. Transform and opacity, once (#190); with reduced motion they stand
+   at the corners. */
 .tvr-bracket {
 	position: absolute;
 	box-sizing: border-box;
 	border: 0 solid #fbbf24;
 	pointer-events: none;
+	filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.45));
+	animation: tvr-bracket-out 0.8s ease-in-out 3 alternate both;
+}
+@keyframes tvr-bracket-out {
+	from {
+		opacity: 0.35;
+		transform: translate(calc(var(--tvr-x) * -22px), calc(var(--tvr-y) * -16px));
+	}
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.tvr-bracket {
+		animation: none;
+	}
 }
 .tvr-bracket:is([data-corner="0"], [data-corner="1"]) {
 	top: 14px;
 	border-top-width: 3px;
+	--tvr-y: -1;
 }
 .tvr-bracket:is([data-corner="2"], [data-corner="3"]) {
 	bottom: 14px;
 	border-bottom-width: 3px;
+	--tvr-y: 1;
 }
 .tvr-bracket:is([data-corner="0"], [data-corner="2"]) {
 	left: 14px;
 	border-left-width: 3px;
+	--tvr-x: -1;
 }
 .tvr-bracket:is([data-corner="1"], [data-corner="3"]) {
 	right: 14px;
 	border-right-width: 3px;
+	--tvr-x: 1;
 }
 html[data-tv-transition] .tvr-bracket {
 	visibility: hidden;
@@ -1455,6 +1478,53 @@ html[data-tv-transition] .tvr-bracket {
 		border-radius: 999px;
 		font-weight: 700;
 	}
+	/* Focus by density, for the screens of the signed-in TV (Start, Watch next, Popular, Taste, a title). The ring is
+	   3 px of white inside the item's own edge (`tvc-ring`), so it never reaches a neighbour in a dense row or a
+	   stack; a card or a poster that is all picture also comes forward a little (`tvc-lift`). A poster with a
+	   caption lifts and rings its picture alone (`tvc-pt` inside it), so the caption under it never moves or touches
+	   the ring. Opacity and transform, once per move (#190). */
+	.tvc-ring::before {
+		content: "";
+		position: absolute;
+		inset: 0;
+		z-index: 3;
+		border-radius: inherit;
+		box-shadow: inset 0 0 0 3px #fff;
+		opacity: 0;
+		transition: opacity 0.18s;
+		pointer-events: none;
+	}
+	.tvc-ring.tvc-on::before {
+		opacity: 1;
+	}
+	.tvc-lift.tvc-on {
+		transform: scale(1.045);
+		box-shadow: 0 14px 30px rgba(0, 0, 0, 0.6);
+		z-index: 2;
+	}
+	.tvc-pt {
+		position: relative;
+		overflow: hidden;
+		transition: transform 0.18s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.18s;
+	}
+	.tvc-pt::after {
+		content: "";
+		position: absolute;
+		inset: 0;
+		z-index: 2;
+		border-radius: inherit;
+		box-shadow: inset 0 0 0 3px #fff;
+		opacity: 0;
+		transition: opacity 0.18s;
+		pointer-events: none;
+	}
+	.tvc-on .tvc-pt {
+		transform: scale(1.045);
+		box-shadow: 0 14px 30px rgba(0, 0, 0, 0.6);
+	}
+	.tvc-on .tvc-pt::after {
+		opacity: 1;
+	}
 	/* The top bar's keys: quiet dark pills. */
 	.tvc-act {
 		background: rgba(0, 0, 0, 0.4);
@@ -1492,6 +1562,54 @@ html[data-tv-transition] .tvr-bracket {
 		color: #000;
 		transform: scale(1.06);
 		box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
+	}
+	/* The navigation along the top (kit.tsx, NavBar): its tabs are quiet words, the screen on show is marked, and the
+	   focus is white as on every key. */
+	.tvc-nav:not(.tvc-on) {
+		background: transparent;
+		color: rgba(255, 255, 255, 0.65);
+	}
+	.tvc-here:not(.tvc-on) {
+		background: rgba(255, 255, 255, 0.15);
+		color: #fff;
+	}
+	/* The menu's keys: rows, not pills. They stand 8 px apart, so the focus lifts them only a little. */
+	.tvc-menu-key {
+		border-radius: 14px;
+	}
+	.tvc-menu-key:not(.tvc-on):not(.tvc-here) {
+		background: rgba(255, 255, 255, 0.05);
+	}
+	.tvc-menu-key.tvc-on {
+		transform: scale(1.03);
+	}
+	/* Watch next's Watch key: amber like the title page's, white with the focus like every key. */
+	.tvc-watch:not(.tvc-on) {
+		background: linear-gradient(180deg, #fcd34d, #f59e0b);
+		color: #000;
+	}
+	/* A title's details rise in over its picture as the screen arrives: what the lists left out comes forward. */
+	.tvc-rise {
+		animation: tvc-rise 0.36s cubic-bezier(0.2, 0.7, 0.2, 1) 0.1s both;
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.tvc-rise {
+			animation: none;
+		}
+	}
+	/* Watch next's stack slides by a card, once per move (#190). */
+	.tvc-stack {
+		transition: transform 0.32s cubic-bezier(0.2, 0.7, 0.2, 1);
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.tvc-stack {
+			transition: none;
+		}
+	}
+	/* Your taste's sign-up: amber like the site's own, white with the focus like every key. */
+	.tvc-cta:not(.tvc-on) {
+		background: linear-gradient(180deg, #fcd34d, #f59e0b);
+		color: #000;
 	}
 	/* The Expand key: a dark glass pill with an amber outline, amber once it has the focus. */
 	.tvc-x {
@@ -1551,22 +1669,6 @@ html[data-tv-transition] .tvr-bracket {
 		transform: none;
 		animation: tvc-x-out 0.9s ease-in-out 3 alternate both;
 	}
-	/* With the Expand key focused the whole picture steps back into its frame (`data-tv-framed` on the TV's box,
-	   TvRoom.tsx). The key keeps its place: it is moved against the step by as much (kit.tsx, `ExpandCorner`), so
-	   what points at it still does. One-shot transitions of `transform`. */
-	.tvc,
-	.tvc-x-place {
-		transition: transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
-	}
-	.tvc-x-place {
-		transform-origin: 100% 100%;
-	}
-	[data-tv-framed] .tvc {
-		transform: scale(0.94);
-	}
-	[data-tv-framed] .tvc-x-place {
-		transform: translate(var(--tvx-x), var(--tvx-y)) scale(1.0638);
-	}
 	/* Mini Discover's tabs: quiet until open. The open one is marked whether or not it has the focus. */
 	.tvc-tab {
 		color: rgba(255, 255, 255, 0.72);
@@ -1594,6 +1696,19 @@ html[data-tv-transition] .tvr-bracket {
 	.tvc-menu {
 		background: rgba(0, 0, 0, 0.6);
 		animation: tvc-fade 0.2s both;
+	}
+	/* The menu over the intro film. The film (intro.css, `.film-screen`, z-index 25) lies over the canvas, which is
+	   a stacking context of its own (it is scaled), so no z-index inside it reaches over the film. While the menu
+	   is open the canvas comes over the film instead, with nothing of it showing but the menu: the film plays on
+	   under the menu's shade. */
+	:has(> .film-screen) > [data-tv-canvas]:has(.tvc-menu) {
+		z-index: 26;
+	}
+	:has(> .film-screen) > [data-tv-canvas]:has(.tvc-menu) [data-tv-layer]:not(.tvc-menu) {
+		visibility: hidden;
+	}
+	:has(> .film-screen) > [data-tv-canvas]:has(.tvc-menu) .tvc {
+		background: transparent;
 	}
 	.tvc-toast {
 		background: #fff;
@@ -1653,5 +1768,12 @@ html[data-tv-transition] .tvr-bracket {
 	.tvc *::after {
 		animation: none !important;
 		transition: none !important;
+	}
+}
+
+@keyframes tvc-rise {
+	from {
+		opacity: 0;
+		transform: translateY(14px);
 	}
 }

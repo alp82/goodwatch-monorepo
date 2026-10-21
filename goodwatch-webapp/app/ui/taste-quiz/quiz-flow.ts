@@ -6,6 +6,7 @@
 // picks returns to the same page. The machine never fetches or stores anything; `useTasteQuiz` binds it to the
 // person's ratings and picks.
 import type { Score } from "~/server/scores.server"
+import { isRepeatPress } from "../scoring/score-ack.ts"
 
 export const QUIZ_GOAL = 5
 export const PICKS_PER_PAGE = 3
@@ -145,4 +146,18 @@ export function readQuizKey(
 		if (key === "ArrowLeft") return { type: "turn", by: -1 }
 	}
 	return null
+}
+
+/**
+ * A keydown on the quiz: what it asks for, "held" for a held key's repeat of an answer (it answers nothing, so a
+ * held key can't answer the next title; the page still keeps the key to itself), or null for a key the quiz doesn't
+ * take. Turning the picks repeats while the key is held.
+ */
+export function readQuizPress(
+	press: Pick<KeyboardEvent, "key" | "repeat">,
+	state: Pick<QuizState, "screen" | "pickedBefore">,
+): QuizKeyIntent | "held" | null {
+	const intent = readQuizKey(press.key, state)
+	if (!intent) return null
+	return isRepeatPress(press) && intent.type !== "turn" ? "held" : intent
 }

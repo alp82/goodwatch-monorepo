@@ -18,22 +18,27 @@ const member = {
 	homeSides: [{ id: "old", picks: ["movie-99"], watchNext: "/watch-next" }],
 }
 const home = readTvState(new URLSearchParams(), member)
-test("member home leads with the existing Next pick, then library navigation and popular titles", () => {
-	assert.equal(focusedItem(home, member), "home:next")
+test("member home is Start: Watch next first, the other screens, then the navigation", () => {
+	assert.equal(focusedItem(home, member), "start:tonight")
 	assert.deepEqual(tvItems(home.screen, member), [
-		"home:next",
-		"home:movies",
-		"app:shows",
-		"app:tonight",
-		"app:discover",
-		"app:taste",
-		"title:movie-1",
-		"title:movie-2",
-		"bar:search",
+		"start:tonight",
+		"start:popular",
+		"start:discover",
+		"start:search",
+		"start:quiz",
+		"start:taste",
+		"start:shows",
+		"start:about",
+		"nav:home",
+		"nav:tonight",
+		"nav:popular",
+		"nav:discover",
+		"nav:search",
+		"nav:quiz",
 		"bar:menu",
 	])
 	const opened = transition(home, { type: "ok" }, member)
-	assert.deepEqual(opened.state.screen, { name: "title", title: "show-10" })
+	assert.deepEqual(opened.state.screen, { name: "tonight", pick: 0 })
 	assert.equal(opened.history, "push")
 	assert.deepEqual(opened.effects, [])
 	assert.equal(
@@ -41,25 +46,37 @@ test("member home leads with the existing Next pick, then library navigation and
 		"back",
 	)
 })
-test("popular opens details; My movies leaves for its existing page without writing watch state", () => {
+test("Popular opens the wall; My shows its screen; nothing on Start writes watch state", () => {
+	const popular = transition(
+		home,
+		{ type: "choose", item: "start:popular" },
+		member,
+	)
+	assert.deepEqual(popular.state.screen, { name: "popular", pick: 0 })
+	assert.deepEqual(popular.effects, [])
+	// The wall's poster opens its title.
 	assert.deepEqual(
-		transition(home, { type: "choose", item: "title:movie-2" }, member).state
+		transition(popular.state, { type: "choose", item: "pick:1" }, member).state
 			.screen,
 		{ name: "title", title: "movie-2" },
 	)
-	assert.deepEqual(
-		transition(home, { type: "choose", item: "home:movies" }, member).effects,
-		[{ type: "expand", href: "/my-movies" }],
-	)
-	assert.deepEqual(
-		transition(home, { type: "choose", item: "app:shows" }, member).state
-			.screen,
-		{ name: "shows" },
-	)
+	const shows = transition(home, { type: "choose", item: "start:shows" }, member)
+	assert.deepEqual(shows.state.screen, { name: "shows" })
+	assert.deepEqual(shows.effects, [])
+	// The old home's keys are gone.
+	for (const item of ["home:next", "home:movies", "app:shows", "title:movie-2"])
+		assert.equal(
+			transition(home, { type: "choose", item }, member).history,
+			"none",
+			item,
+		)
 })
-test("empty members retain useful navigation and guests retain their app/service home", () => {
+test("empty members keep Start without Popular, and guests retain their app/service home", () => {
 	const empty = { ...member, tonight: [], popular: [] }
-	assert.equal(focusedItem(home, empty), "home:movies")
+	assert.equal(focusedItem(home, empty), "start:tonight")
+	const items = tvItems(home.screen, empty)
+	assert.ok(!items.includes("start:popular"))
+	assert.ok(!items.includes("nav:popular"))
 	assert.deepEqual(tvItems(home.screen, { ...EMPTY_CONTEXT, services: [8] }), [
 		"app:tonight",
 		"app:discover",

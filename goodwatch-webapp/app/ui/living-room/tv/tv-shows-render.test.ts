@@ -67,6 +67,18 @@ const focused = (html: string) =>
 		.find(Boolean)
 const count = (html: string, part: string) => html.split(part).length - 1
 
+/**
+ * The phone's last row with the Expand key at its right end (kit.tsx, `PhoneFoot`): its height and what stands
+ * before the key, or null when the screen has no such row.
+ */
+const phoneFoot = (html: string) => {
+	const m =
+		/<div class="flex shrink-0 items-center gap-2[^"]*" style="height:(\d+)px"><div class="flex min-w-0 flex-1 items-center gap-2">(.*?)<\/div><button type="button" data-tv-item="expand"/.exec(
+			html,
+		)
+	return m ? { height: Number(m[1]), before: m[2] } : null
+}
+
 test("My shows draws the machine's items in its order, in both editions", () => {
 	assert.deepEqual(rendered.items, [
 		"title:show-10",
@@ -83,8 +95,13 @@ test("My shows draws the machine's items in its order, in both editions", () => 
 	for (const html of Object.values(rendered.shows.signal)) {
 		assert.deepEqual(ids(html), rendered.items)
 		assert.equal(focused(html), "title:show-10")
-		// The Expand key stands in its corner.
-		assert.match(html, /<div data-tv-expand-place="true"[^>]*><button type="button" data-tv-item="expand"[^>]*aria-label="Expand"[^>]*>.*?Expand<\/button><\/div>/)
+		// The Expand key, once: in its corner on the desktop, at the end of the last row on the phone.
+		assert.equal(count(html, 'data-tv-item="expand"'), 1)
+		assert.ok(
+			/<div data-tv-expand-place="true"[^>]*><button type="button" data-tv-item="expand"[^>]*aria-label="Expand"[^>]*>.*?Expand<\/button><\/div>/.test(
+				html,
+			) !== Boolean(phoneFoot(html)),
+		)
 	}
 })
 
@@ -219,19 +236,20 @@ test("on every phone of the room's table every key of My shows and of a show's t
 			heights(p.shows).map((item) => item.id),
 			["expand", "bar:back", "bar:search", "bar:menu"],
 		)
-		// The Expand key's row under the posters is a key tall, and empty.
-		const row = Number(
-			/<div class="flex shrink-0 items-center gap-2 pr-\[158px\]" style="height:(\d+)px"><\/div>/.exec(
-				p.shows,
-			)?.[1],
-		)
-		assert.ok(row * p.scale >= 44, `${p.phone}: the corner's row is ${row}`)
-		// The title screen of a show: its three keys and the bar's.
+		// The row under the posters is a key tall, has no key of its own, and ends with the Expand key.
+		const foot = phoneFoot(p.shows)
+		const row = foot?.height ?? 0
+		assert.ok(row * p.scale >= 44, `${p.phone}: the last row is ${row}`)
+		assert.ok(!/data-tv-item=/.test(foot?.before ?? "x"), `${p.phone}: the last row has only the Expand key`)
+		assert.ok(!p.shows.includes("data-tv-expand-place"), p.phone)
+		// The title screen of a show: its keys and the bar's take their height from the rule. The Fingerprint is a
+		// card as tall as its readings, in the markup between them.
 		const title = heights(p.title)
 		assert.deepEqual(
 			title.map((item) => item.id),
-			rendered.titleItems,
+			rendered.titleItems.filter((id) => id !== "fingerprint"),
 		)
+		assert.deepEqual(ids(p.title), rendered.titleItems)
 		for (const item of title)
 			assert.ok(item.height * p.scale >= 44, `${p.phone} title ${item.id}`)
 	}
@@ -240,10 +258,12 @@ test("on every phone of the room's table every key of My shows and of a show's t
 test("the menu's keys are touch targets on every phone, and the menu fits the picture", () => {
 	assert.deepEqual(rendered.guestMenu, [
 		"menu:home",
+		"menu:tonight",
+		"menu:discover",
 		"menu:search",
-		"menu:sign-in",
+		"menu:quiz",
+		"menu:taste",
 		"menu:about",
-		"menu:off",
 	])
 	for (const p of rendered.phones) {
 		for (const [html, items, layout] of [
@@ -263,35 +283,39 @@ test("the menu's keys are touch targets on every phone, and the menu fits the pi
 					`${p.phone} ${item.id}: ${item.height} canvas px at ${p.scale}`,
 				)
 			}
-			// The column is as tall as its keys, its gaps and, where it stands, the word over them: inside the
-			// picture, with room to spare at both ends.
-			const gaps = items.length - 1 + (layout.head ? 1 : 0)
+			// The keys stand two to a row. The column is as tall as its rows, its gaps and, where it stands, the
+			// wordmark over them (44 canvas px with its space): inside the picture, with room to spare at both ends.
+			const rows = Math.ceil(items.length / 2)
 			const column =
-				items.length * layout.key + gaps * layout.gap + (layout.head ? 22 : 0)
+				rows * layout.key + (rows - 1) * layout.gap + (layout.head ? 44 : 0)
 			assert.ok(
 				column <= p.h - 12,
 				`${p.phone}: ${column} canvas px of ${p.h}`,
 			)
 			assert.ok(layout.gap >= 4 && layout.gap <= 8, `${p.phone} gap`)
 			assert.match(html, new RegExp(`style="gap:${layout.gap}px"`))
-			// The word "Menu" stands over the keys only where it has room; the menu's name is read out either way.
-			assert.equal(count(html, ">Menu</div>"), layout.head ? 1 : 0, p.phone)
+			assert.match(html, /class="grid grid-cols-2"/)
+			// The wordmark stands over the keys only where it has room; the menu's name is read out either way.
+			assert.equal(
+				count(html, 'role="img" aria-label="GoodWatch"'),
+				layout.head ? 1 : 0,
+				p.phone,
+			)
 			assert.match(html, /role="menu" aria-label="Menu"/)
 		}
 	}
-	// Where the word has room: every phone but the short one, where five keys fill the picture.
+	// Two keys to a row leave the wordmark room on every phone, for a guest's seven keys and a member's eight.
 	assert.deepEqual(
 		rendered.phones.map((p) => [p.phone, p.key, p.menuLayout.head]),
 		[
 			["360x740", 67, true],
-			["375x667", 64, false],
+			["375x667", 64, true],
 			["390x700", 61, true],
 			["390x844", 61, true],
 			["430x932", 55, true],
 			["844x390", 48, true],
 		],
 	)
-	// A member's menu has one key less, so the word stands on the short phone too.
 	assert.ok(rendered.phones.every((p) => p.memberMenuLayout.head))
 	// Before the window is measured nobody knows the scale: the design's size.
 	assert.deepEqual(rendered.firstMenu, { key: 48, gap: 8, head: true })
@@ -309,13 +333,16 @@ test("the menu lies over everything of the screen under it", () => {
 	assert.equal(count(rendered.underMenu, "data-tv-layer"), 2)
 })
 
-test("the desktop's menu is as it was", () => {
+test("the desktop's menu: a column of keys at the right edge, under the GoodWatch wordmark", () => {
 	const { desktop } = rendered.menu
 	assert.deepEqual(ids(desktop), rendered.guestMenu)
-	assert.equal(count(desktop, "h-[76px] px-9 text-[30px]"), 5)
-	assert.match(desktop, /w-\[440px\] gap-4 px-10/)
+	assert.equal(count(desktop, "h-[54px] gap-4 px-6 text-[23px]"), 7)
+	assert.match(desktop, /w-\[440px\] gap-1\.5 border-l border-white\/10 px-9/)
+	// A member's nine keys fit the canvas's 648 px with the wordmark (30 px type, 8 px under it): 9 × 54 px and
+	// 8 gaps of 6 px.
+	assert.ok(9 * 54 + 8 * 6 + 38 + 8 < 648)
 	assert.ok(!desktop.includes('style="gap:'))
-	assert.match(desktop, />Menu<\/div>/)
+	assert.equal(count(desktop, 'role="img" aria-label="GoodWatch"'), 1)
 })
 
 test("What is GoodWatch?: its two answers are touch targets on every phone, under the bar's keys", () => {

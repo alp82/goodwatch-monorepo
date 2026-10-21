@@ -23,7 +23,7 @@ export type RoomKey =
 /** What the room shows of the TV's state, and where the Remotes' keys go. */
 export type RoomTv = {
 	power: "off" | "booting" | "on"
-	/** The Expand key has the focus: the picture stands back in its frame of brackets. */
+	/** The Expand key has the focus: brackets come out to the picture's corners (the picture keeps its size). */
 	framed?: boolean
 	menuOpen: boolean
 	/** The search screen is showing: the Remotes' Search key is lit. */
@@ -47,4 +47,31 @@ export type TvCanvas = {
 	 * HTML then and CSS shows the one that fits the window (living-room.css, `tvr-first`). The scale is not known yet.
 	 */
 	first?: boolean
+}
+
+/** The keyboard's keys for the Remote's. */
+const KEYS: Record<string, RoomKey> = {
+	ArrowUp: { type: "move", dir: "up" },
+	ArrowDown: { type: "move", dir: "down" },
+	ArrowLeft: { type: "move", dir: "left" },
+	ArrowRight: { type: "move", dir: "right" },
+	Enter: { type: "ok" },
+	Escape: { type: "back" },
+	Backspace: { type: "back" },
+	h: { type: "home" },
+	H: { type: "home" },
+	m: { type: "menu" },
+	M: { type: "menu" },
+	s: { type: "search" },
+	S: { type: "search" },
+}
+
+/**
+ * The Remote's key a keyboard's keydown presses, "held" for a held Enter's repeat, or null for a key the TV
+ * doesn't take. A held OK presses once: its repeats would choose again on what the first press brought, such as
+ * the next title of the taste quiz (ui/scoring/score-ack.ts). The arrows repeat while held.
+ */
+export function keyboardKey(press: { key: string; repeat: boolean }): RoomKey | "held" | null {
+	const key = KEYS[press.key] ?? null
+	return key?.type === "ok" && press.repeat ? "held" : key
 }

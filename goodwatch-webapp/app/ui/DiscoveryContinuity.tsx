@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react"
 import { useLocation } from "@remix-run/react"
+import { TRIP_KEY, openedByTv, parseTrip } from "~/ui/living-room/tv-way-back"
 
 const key = "goodwatch_discovery"
 type Visit = { url: string; y: number }
@@ -26,6 +27,19 @@ const isDiscovery = (path: string) =>
 	/^\/(taste|discover|wishlist|search|movie|show|movies|shows|explore|lists|categories)(\/|$)/.test(
 		path,
 	)
+/** This arrival is the page the living room's TV just opened (tv-way-back.ts): it starts at its top. */
+function arrivedThroughTv(pathname: string) {
+	try {
+		return openedByTv(
+			parseTrip(sessionStorage.getItem(TRIP_KEY)),
+			(window.history.state as { idx?: number } | null)?.idx ?? 0,
+			pathname,
+		)
+	} catch {
+		return false
+	}
+}
+
 export function DiscoveryContinuity() {
 	const location = useLocation()
 	const previousPath = useRef<string | null>(null)
@@ -36,9 +50,12 @@ export function DiscoveryContinuity() {
 		const url = location.pathname + location.search
 		const stored = read()
 		const previous = stored.routes[location.pathname]
+		// A page the TV opened starts at its top with what the TV sent, not where or how an earlier visit left it.
+		const fromTv = entering && arrivedThroughTv(location.pathname)
 		// Restore a listing's last filters when revisiting its unqualified entry point.
 		if (
 			entering &&
+			!fromTv &&
 			!location.pathname.startsWith("/taste") &&
 			!location.search &&
 			previous?.url.includes("?") &&
@@ -52,7 +69,7 @@ export function DiscoveryContinuity() {
 		// rules (ui/living-room/use-below-room.ts), and the TV changes the query on every step. A position restored
 		// here would move the page under the Remote, or against the room's lock.
 		const ownPlace = location.pathname === "/"
-		const target = ownPlace ? 0 : stored.positions[url] || 0
+		const target = ownPlace || fromTv ? 0 : stored.positions[url] || 0
 		let restoring = target > 0
 		let frame = 0
 		const started = performance.now()

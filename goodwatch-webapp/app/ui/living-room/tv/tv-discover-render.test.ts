@@ -70,12 +70,32 @@ const open = (html: string) =>
 		...html.matchAll(/data-tv-item="(tab:[a-z]+)"[^>]*aria-pressed="true"/g),
 	].map((match) => match[1])
 const count = (html: string, part: string) => html.split(part).length - 1
+
+/**
+ * The phone's last row with the Expand key at its right end (kit.tsx, `PhoneFoot`): its height and what stands
+ * before the key, or null when the screen has no such row.
+ */
+const phoneFoot = (html: string) => {
+	const m =
+		/<div class="flex shrink-0 items-center gap-2[^"]*" style="height:(\d+)px"><div class="flex min-w-0 flex-1 items-center gap-2">(.*?)<\/div><button type="button" data-tv-item="expand"/.exec(
+			html,
+		)
+	return m ? { height: Number(m[1]), before: m[2] } : null
+}
 /** A screen's own items and its bar's, without the Expand key: for the lists written out here. */
 const drawn = (items: string[]) => items.filter((item) => item !== "expand")
 /** An item's own tag. */
 const tag = (html: string, id: string) =>
 	new RegExp(`<button[^>]*data-tv-item="${id}"[^>]*>`).exec(html)?.[0] ?? ""
-const BAR = ["bar:back", "bar:search", "bar:menu"]
+/** Discover's navigation along the top, in the bar's place. */
+const BAR = [
+	"nav:home",
+	"nav:tonight",
+	"nav:discover",
+	"nav:search",
+	"nav:quiz",
+	"bar:menu",
+]
 const TABS = ["tab:moods", "tab:themes", "tab:styles"]
 const EDITIONS = ["desktop", "phone"] as const
 
@@ -297,13 +317,8 @@ test("Change says Change, and the list without titles says why", () => {
 	}
 })
 
-test("the Expand key stands in its corner on both screens, in both editions", () => {
-	for (const html of [
-		rendered.choice.themes.desktop,
-		rendered.choice.themes.phone,
-		rendered.list.theme.desktop,
-		rendered.list.theme.phone,
-	]) {
+test("the Expand key stands in its corner on the desktop and ends the last row on the phone", () => {
+	for (const html of [rendered.choice.themes.desktop, rendered.list.theme.desktop]) {
 		assert.match(
 			html,
 			/<div data-tv-expand-place="true"[^>]*><button type="button" data-tv-item="expand"[^>]*aria-label="Expand"[^>]*>.*?Expand<\/button><\/div>/,
@@ -313,9 +328,15 @@ test("the Expand key stands in its corner on both screens, in both editions", ()
 	// On the desktop the band under the content is kept free for it.
 	assert.match(rendered.choice.themes.desktop, /pb-\[120px\]/)
 	assert.match(rendered.list.theme.desktop, /pb-\[120px\]/)
-	// On the phone the last row ends before the corner.
-	assert.match(rendered.choice.themes.phone, /pr-\[158px\]/)
-	assert.match(rendered.list.theme.phone, /pr-\[158px\]/)
+	// On the phone the key carries its words, so it stands in the last row, after what the row says: nothing lies
+	// under it, and no corner is kept.
+	for (const html of [rendered.choice.themes.phone, rendered.list.theme.phone]) {
+		assert.ok(phoneFoot(html), "the last row ends with the Expand key")
+		assert.equal(count(html, 'data-tv-item="expand"'), 1)
+		assert.ok(!html.includes("data-tv-expand-place"))
+		assert.ok(!html.includes("158px"))
+	}
+	assert.match(phoneFoot(rendered.list.theme.phone)?.before ?? "", /data-tv-item="browse:filters"/)
 })
 
 test("on every phone of the room's table the tabs, the bar's keys and the last row are touch targets", () => {
@@ -328,12 +349,10 @@ test("on every phone of the room's table the tabs, the bar's keys and the last r
 			phone.choice.includes(`style="height:${phone.tab}px"><button`),
 			`${at}: the tabs`,
 		)
-		assert.ok(
-			count(phone.choice, `pr-[158px]" style="height:${phone.foot}px"`) === 1,
-			`${at}: the choice's last row`,
-		)
-		assert.ok(
-			count(phone.list, `pr-[158px]" style="height:${phone.foot}px"`) === 1,
+		assert.equal(phoneFoot(phone.choice)?.height, phone.foot, `${at}: the choice's last row`)
+		assert.equal(
+			phoneFoot(phone.list)?.height,
+			phone.foot,
 			`${at}: the list's last row`,
 		)
 		// What is left for the two rows of tiles: each at least a touch target tall. The Frame's content starts 78
@@ -344,7 +363,7 @@ test("on every phone of the room's table the tabs, the bar's keys and the last r
 	}
 })
 
-test("before its code is there the server draws Discover's bar and Expand key alone, and nothing of a list", () => {
+test("before its code is there the server draws Discover's navigation and Expand key alone, and nothing of a list", () => {
 	for (const html of [rendered.first.choice, rendered.first.list]) {
 		assert.deepEqual(ids(html), ["expand", ...BAR])
 		assert.ok(!html.includes("Ocean"))

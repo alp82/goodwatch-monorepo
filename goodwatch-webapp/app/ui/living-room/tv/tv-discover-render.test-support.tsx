@@ -167,6 +167,9 @@ function first(screen: Screen) {
 				focused: focusedItem(state, base),
 				screenFocus: focusedItem(state, base),
 				dispatch: () => {},
+				ringOff: false,
+				byPointer: false,
+				unpoint: () => {},
 			}}
 			canvas={CANVAS.desktop}
 			ctx={base}

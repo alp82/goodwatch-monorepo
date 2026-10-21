@@ -16,6 +16,7 @@ import {
 	tvItems,
 	focusedItem,
 	destinationHref,
+	searchIdeas,
 } from "./tv-machine.ts"
 import { tvSearchFilters, tvSearchKey, tvSearchBody } from "./tv-search.ts"
 const ctx = {
@@ -197,8 +198,13 @@ test("Recovered QWERTY rows include digits, editing controls and explicit Search
 	assert.deepEqual(KEY_ROWS.slice(0, 3), ["qwertyuiop", "asdfghjkl", "zxcvbnm"])
 	const s = at("tv=search")
 	assert.deepEqual(tvItems(s.screen, ctx), [
+		...searchIdeas(),
 		...KEY_ITEMS,
-		"bar:back",
+		"nav:home",
+		"nav:tonight",
+		"nav:discover",
+		"nav:search",
+		"nav:quiz",
 		"bar:menu",
 	])
 	for (const key of [..."qz09", "delete", "space", "clear"])
@@ -230,4 +236,40 @@ test("Remote Down follows scrollable keyboard rows, not the fixed footer, and ed
 		),
 		"key:q",
 	)
+})
+test("Up from the keys reaches the ideas under the line, then the navigation; Down comes back", () => {
+	const box = (id: string, left: number, top: number) => ({
+		id,
+		left,
+		top,
+		width: 44,
+		height: 44,
+	})
+	const ideas = searchIdeas()
+	const boxes = [
+		box("nav:home", 0, 0),
+		box("nav:search", 300, 0),
+		box("bar:menu", 600, 0),
+		...ideas.map((id, n) => box(id, n * 160, 80)),
+		...[..."qwertyuiop"].map((c, n) => box(`key:${c}`, n * 64, 160)),
+		...[..."asdfghjkl"].map((c, n) => box(`key:${c}`, n * 64, 220)),
+	]
+	const move = (focus: string, dir: "up" | "down" | "left" | "right") =>
+		focusedItem(
+			transition(
+				{ ...at("tv=search"), focus },
+				{ type: "move", dir, boxes },
+				ctx,
+			).state,
+			ctx,
+		)
+	assert.equal(move("key:q", "up"), ideas[0])
+	assert.equal(move("key:p", "up"), ideas[3])
+	assert.equal(move(ideas[0], "up"), "nav:home")
+	assert.equal(move(ideas[3], "up"), "bar:menu")
+	// Down from an idea: the key under its middle.
+	assert.equal(move(ideas[0], "down"), "key:w")
+	assert.equal(move("nav:home", "down"), ideas[0])
+	assert.equal(move(ideas[1], "right"), ideas[2])
+	assert.equal(move(ideas[0], "left"), ideas[0])
 })

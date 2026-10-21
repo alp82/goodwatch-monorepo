@@ -184,3 +184,36 @@ export function tonightWords(
 		line: episode?.name ?? card.tagline ?? null,
 	}
 }
+
+/** A runtime in minutes as the TV says it: "45 min", "1 h 56 min". */
+const minutes = (runtime: number) =>
+	runtime < 60 ? `${runtime} min` : `${Math.floor(runtime / 60)} h ${runtime % 60} min`
+
+/**
+ * A pick's facts: "2016 · Movie · 1 h 56 min", "2022 · Show · 30 min episodes" for a show to start, and for a Next
+ * episode its own runtime, "2008 · Show · 48 min", never the show's usual one; none when the episode's isn't known.
+ * `code` puts the episode's code in ("2008 · Show · S2 E4 · 48 min") where nothing else on the card names it.
+ */
+export function pickFacts(
+	pick: Pick<TvTonightPick, "card" | "episode">,
+	{ code = false }: { code?: boolean } = {},
+) {
+	const { card, episode } = pick
+	const runtime = episode
+		? episode.runtime
+			? minutes(episode.runtime)
+			: null
+		: card.runtime
+			? card.media_type === "show"
+				? `${card.runtime} min episodes`
+				: minutes(card.runtime)
+			: null
+	return [
+		card.release_year,
+		card.media_type === "show" ? "Show" : "Movie",
+		code ? episode?.code : null,
+		runtime,
+	]
+		.filter(Boolean)
+		.join(" · ")
+}

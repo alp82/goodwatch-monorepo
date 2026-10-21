@@ -1,35 +1,13 @@
 // The six areas a fingerprint groups its traits into, with their colors and words. The interface calls them
 // "areas", never "pillars".
 
-import {
-	type CoreScores,
-	PILLAR_ATTRIBUTES,
-	type PillarTiers,
-} from "~/server/utils/fingerprint"
+import { type CoreScores, PILLAR_ATTRIBUTES } from "~/server/utils/fingerprint"
 import * as F from "~/ui/fingerprint/fingerprintText"
+import { AREAS, AREA_COLOR, type Area } from "./area-colors"
 
-export type Area = keyof PillarTiers
+export { AREAS, AREA_COLOR, type Area }
 export type Scores = CoreScores
 export type TraitKey = keyof CoreScores
-
-/** In the order the band and the slider groups show them. */
-export const AREAS: readonly Area[] = [
-	"Energy",
-	"Heart",
-	"Humor",
-	"World",
-	"Craft",
-	"Style",
-]
-
-export const AREA_COLOR: Record<Area, string> = {
-	Energy: "#f59e0b",
-	Heart: "#f43f5e",
-	Humor: "#14b8a6",
-	World: "#10b981",
-	Craft: "#8b5cf6",
-	Style: "#0ea5e9",
-}
 
 /**
  * The level word for each area and tier (0 to 4): the word the area's slider shows, and the word the band, the area

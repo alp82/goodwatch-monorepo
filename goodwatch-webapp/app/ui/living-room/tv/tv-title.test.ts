@@ -5,6 +5,7 @@ import type { CardService, TitleCard } from "~/server/title-cards.server"
 import type { TvTonightPick } from "./tv-home.ts"
 import {
 	parseTvTitleKey,
+	pickFacts,
 	ratedToast,
 	recordsWatch,
 	seenLabel,
@@ -194,4 +195,25 @@ test("a member's next episode is named, with its own name in the title's line", 
 	})
 	// An episode without a name leaves the show's own line.
 	assert.equal(tonightWords(episode(null), 0, 3).line, "Free your mind.")
+})
+
+test("a Next episode's facts give its own runtime, never the show's usual one", () => {
+	const show = card({ media_type: "show", release_year: 2008, runtime: 99 })
+	const episode = { code: "S2 E4", name: "Down", runtime: 48 }
+	assert.equal(pickFacts({ card: show, episode }), "2008 · Show · 48 min")
+	assert.ok(!pickFacts({ card: show, episode }).includes("99"))
+	// Where nothing else names the episode, its code too.
+	assert.equal(pickFacts({ card: show, episode }, { code: true }), "2008 · Show · S2 E4 · 48 min")
+	// An episode without a known runtime has none, not the show's.
+	assert.equal(pickFacts({ card: show, episode: { ...episode, runtime: null } }), "2008 · Show")
+})
+
+test("a show to start gives its usual episode length; a movie its runtime", () => {
+	assert.equal(
+		pickFacts({ card: card({ media_type: "show", release_year: 2022, runtime: 30 }) }),
+		"2022 · Show · 30 min episodes",
+	)
+	assert.equal(pickFacts({ card: card({ release_year: 2014, runtime: 169 }) }), "2014 · Movie · 2 h 49 min")
+	assert.equal(pickFacts({ card: card({ release_year: 2019, runtime: 45 }) }), "2019 · Movie · 45 min")
+	assert.equal(pickFacts({ card: card({ release_year: 1999 }) }), "1999 · Movie")
 })

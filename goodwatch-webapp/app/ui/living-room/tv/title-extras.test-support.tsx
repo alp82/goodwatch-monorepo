@@ -3,12 +3,12 @@ import { renderToStaticMarkup } from "react-dom/server"
 import { matrix } from "~/ui/details/fingerprint/titles.test-support"
 import { composeHeadline, segmentText } from "~/ui/details/fingerprint/headline"
 import { SCALE_GROUPS, readScale } from "~/ui/details/fingerprint/scales"
-import { directOffers, primaryOffer } from "./title-extras"
+import { directOffers, primaryOffer, sourceScores, whereRows } from "./title-extras"
 import { TvViewProvider } from "./kit"
 import TitlePanel from "./screens/TitlePanel"
 import Title from "./screens/Title"
 import { readTvState, transition, tvItems, writeTvParams } from "./tv-machine"
-import { tvContextOf } from "./tv-home"
+import { ownedServices, tvContextOf } from "./tv-home"
 
 const ctx = tvContextOf(
 	{
@@ -74,7 +74,62 @@ const details = {
 		quality: "HD",
 	})),
 }
-assert.deepEqual(directOffers(details), [offer])
+// The service's logo comes along when the catalog has one.
+assert.deepEqual(directOffers(details), [{ ...offer, logo: null }])
+assert.equal(
+	directOffers({
+		...details,
+		streaming_services: [{ ...details.streaming_services[0], logo: "/netflix.png" }],
+	})[0].logo,
+	"/netflix.png",
+)
+
+// Where to watch: streaming only, the viewer's own first, one row per service, three at most.
+const service = (id: number, name: string, type = "flatrate") => ({
+	id,
+	name,
+	type,
+	url: `https://example.com/${id}`,
+})
+assert.deepEqual(whereRows([], []), { rows: [], more: true })
+assert.deepEqual(whereRows([service(2, "Apple TV", "rent")], []), {
+	rows: [],
+	more: true,
+})
+assert.deepEqual(
+	whereRows([service(9, "Prime Video"), service(8, "Netflix")], [{ id: 8 }]),
+	{ rows: [service(8, "Netflix"), service(9, "Prime Video")], more: false },
+)
+assert.deepEqual(
+	whereRows(
+		[service(8, "Netflix"), service(8, "Netflix", "ads"), service(9, "Prime Video")],
+		[],
+	).rows.map((row) => row.name),
+	["Netflix", "Prime Video"],
+)
+const four = [
+	service(1, "One"),
+	service(2, "Two"),
+	service(3, "Three"),
+	service(4, "Four"),
+]
+assert.deepEqual(whereRows(four, [{ id: 4 }]), {
+	rows: [service(4, "Four"), service(1, "One")],
+	more: true,
+})
+assert.deepEqual(whereRows(four.slice(0, 3), []).more, false)
+
+// The source scores, written as the title page's chips write them.
+assert.deepEqual(
+	sourceScores({
+		imdb_user_score_original: 8.66,
+		metacritic_meta_score_original: 73.9,
+		metacritic_user_score_original: 8.25,
+		rotten_tomatoes_tomato_score_original: 88.4,
+		rotten_tomatoes_audience_score_original: 0,
+	} as never),
+	{ imdb: "8.7", mc: "73", mcUser: "8.3", rt: "88%", rtUser: null },
+)
 
 const title = {
 	key: "movie-603",
@@ -138,4 +193,29 @@ for (const group of [0, 1, 2]) {
 	assert.ok(rendered.includes(`aria-label="${SCALE_GROUPS[group].name}"`))
 	for (const sc of SCALE_GROUPS[group].scales)
 		assert.ok(rendered.includes(readScale(sc, matrix).word), sc.name)
+}
+
+// Watch next's Watch goes to a service the member has, out of all their saved services, not the Remote's two keys
+// (which are filled up with Netflix and Prime Video). Saved Netflix, Disney+ and Paramount+ (8, 337, 20); the
+// Remote has keys for the first two. The title streams on Stan (15, not saved) first, then on Paramount+.
+{
+	const at = (id: number, name: string) => ({ ...offer, id, name })
+	const offers = [at(15, "Stan"), at(20, "Paramount+")]
+	const member = { scope: { country: "AU", services: [8, 337, 20] } }
+	const remoteKeys = [8, 337].map((id) => ({ id }))
+	assert.equal(primaryOffer(offers, remoteKeys)?.id, 15, "the keys alone miss the third saved service")
+	const mine = ownedServices(member, true)
+	assert.deepEqual(mine, [8, 337, 20])
+	assert.equal(primaryOffer(offers, mine.map((id) => ({ id })))?.id, 20)
+	// A default key is no subscription: saved Disney+ alone, so the Remote pads with Netflix. A title on Netflix
+	// first and Disney+ second plays on Disney+.
+	const padded = [at(8, "Netflix"), at(337, "Disney+")]
+	const one = ownedServices({ scope: { country: "US", services: [337] } }, true)
+	assert.equal(primaryOffer(padded, one.map((id) => ({ id })))?.id, 337)
+	// A guest owns nothing here, whatever the Remote's default keys are: the first streaming offer.
+	assert.deepEqual(ownedServices(member, false), [])
+	assert.equal(primaryOffer(padded, [])?.id, 8)
+	// A member whose home read failed has no scope: no service counts as theirs.
+	assert.deepEqual(ownedServices({}, true), [])
+	assert.deepEqual(ownedServices(undefined, true), [])
 }

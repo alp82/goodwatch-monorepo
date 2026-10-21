@@ -75,15 +75,23 @@ const IDEAS = [
 	"idea:feel-good comedy",
 	"idea:mind-bending thriller",
 ]
-/** The search screens have no Search key: the person is there. */
-const BAR = ["bar:back", "bar:menu"]
+/** The search screens have the TV's navigation along the top, its Search tab the screen on show. */
+const BAR = [
+	"nav:home",
+	"nav:tonight",
+	"nav:discover",
+	"nav:search",
+	"nav:quiz",
+	"bar:menu",
+]
 const EDITIONS = ["desktop", "phone"] as const
 
 test("Recovered keyboard markup follows machine order in both editions, with letters, digits and editing actions", () => {
 	for (const screen of Object.values(rendered.question))
 		for (const edition of EDITIONS) {
 			assert.deepEqual(ids(screen[edition]), screen.items)
-			assert.deepEqual(screen.items, [...KEY_ITEMS, ...BAR])
+			// The ideas under the line come before the keys.
+			assert.deepEqual(screen.items, [...IDEAS, ...KEY_ITEMS, ...BAR])
 			assert.equal(count(screen[edition], "data-tv-expand"), 0)
 		}
 })
@@ -131,7 +139,8 @@ test("Loading, empty and failure messages are distinct", () => {
 })
 test("Keyboard focus and bar focus remain represented in markup", () => {
 	for (const edition of EDITIONS) {
-		assert.deepEqual(focused(rendered.question.empty[edition]), ["key:q"])
+		// The screen starts on its first idea.
+		assert.deepEqual(focused(rendered.question.empty[edition]), [IDEAS[0]])
 		assert.deepEqual(focused(rendered.question.onBar[edition]), ["bar:menu"])
 	}
 })

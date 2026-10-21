@@ -396,6 +396,18 @@ const streamsOn = (card: Pick<TitleCard, "services">, service: TvService) =>
 	Boolean(card.services?.some((one) => one.id === service.id))
 
 /**
+ * The services a person has, by TMDB provider id, for choosing where a title plays: a member's saved services in
+ * their account's country, all of them. Not the Remote's keys: those are two at most and filled up with Netflix and
+ * Prime Video, which nobody has to have. A guest has none here.
+ */
+export function ownedServices(
+	data: Pick<TvHomeData, "scope"> | null | undefined,
+	member: boolean,
+): readonly number[] {
+	return member ? (data?.scope?.services ?? []) : []
+}
+
+/**
  * Home's tiles for the person's services, in the order of the Remote's keys. A tile's picture is the first of
  * Tonight's picks and then of the pool's titles that streams on the service, a picture no tile before it shows
  * (Tonight's tile and the service before it) while there is such a title.

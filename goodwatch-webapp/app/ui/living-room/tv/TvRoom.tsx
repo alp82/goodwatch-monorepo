@@ -334,7 +334,7 @@ export function TvRoom({
 						</div>
 					))}
 					{screenOverlay}
-					{/* The frame the picture stands in while the Expand key has the focus. */}
+					{/* The hint while the Expand key has the focus: brackets that come out to the picture's corners. */}
 					{tv.framed &&
 						L &&
 						[0, 1, 2, 3].map((corner) => (

@@ -10,7 +10,7 @@ import BrowseFilters from "./BrowseFilters"
 import { preloadSearchRequest } from "~/ui/search/search-client"
 import { TitleList, type TvListTitle } from "../TitleList"
 import { CornerBar, Item, Shade, keySize, useReport, useTvView } from "../kit"
-import { TV_INPUT_ATTR } from "../tv-dom"
+import { TV_INPUT_ATTR, TV_ROW_ATTR } from "../tv-dom"
 import { tvTitleKey } from "../tv-home"
 import { SEARCH_GO, type TvScreen } from "../tv-machine"
 import {
@@ -84,12 +84,32 @@ function Question({
 						style={{ height: keySize(canvas, 56) }}
 					/>
 				</form>
+				{/* For a screen reader: what the line takes. On screen the ideas stand under it instead. */}
+				<div id={hint} className="sr-only">
+					Two characters or more. Type, use the keys, or choose an idea.
+				</div>
 				<div
-					id={hint}
-					className={`shrink-0 text-white/70 ${P ? "text-[20px]" : "text-[24px]"}`}
+					className={`flex shrink-0 items-center ${P ? "gap-2 overflow-x-auto [scrollbar-width:none]" : "gap-3"}`}
+					{...(P && { [TV_ROW_ATTR]: "" })}
 				>
-					{draft.length}/{SEARCH_MAX_LENGTH} · Two characters or more. Type or
-					use the keys.
+					<span
+						className={`shrink-0 text-white/55 ${P ? "text-[18px]" : "text-[22px]"}`}
+					>
+						Try
+					</span>
+					{items
+						.filter((id) => id.startsWith("idea:"))
+						.map((id) => (
+							<Item
+								key={id}
+								id={id}
+								label={`Search for ${id.slice("idea:".length)}`}
+								className={`tvc-btn flex shrink-0 items-center whitespace-nowrap px-5 ${P ? "text-[19px]" : "text-[22px]"}`}
+								style={{ height: keySize(canvas, P ? 44 : 48) }}
+							>
+								{id.slice("idea:".length)}
+							</Item>
+						))}
 				</div>
 				<div data-tv-scroll className="min-h-0 flex-1 overflow-y-auto p-2">
 					{(P

@@ -171,6 +171,9 @@ function mark(direction: Direction, box: TvBox) {
 
 const transitionRuns = () => document.getAnimations().some((a) => ((a.effect as KeyframeEffect | null)?.pseudoElement ?? "").startsWith("::view-transition"))
 
+/** An address without its `#fragment`. */
+export const withoutFragment = (href: string) => href.split("#")[0]
+
 /**
  * Navigates out of the living room: the room zooms into the TV when motion is allowed. `state` goes into the
  * new history entry's state: what the page should know about this arrival and a shared link must not carry.
@@ -186,9 +189,12 @@ export function useLeaveThroughTv() {
 		writeTrip(null)
 	}, [key])
 	return useCallback(
-		(href: string, state?: unknown) => {
+		(to: string, state?: unknown) => {
 			// A second press while the page is on its way changes nothing: the first is being answered.
 			if (cancelListener) return
+			// Every page the TV opens starts at its top, where its Back to TV key is: a section of it travels in the
+			// history entry's state (the streaming block's glow), never as a fragment that scrolls.
+			const href = withoutFragment(to)
 			const box = canAnimate() ? tvBox() : null
 			writeTrip({
 				idx: historyIdx(),

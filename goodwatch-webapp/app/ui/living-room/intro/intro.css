@@ -4762,6 +4762,7 @@
 		transition: none !important;
 	}
 }
+/* Over the TV's canvas. The TV's menu comes over it while it is open (living-room.css, "The menu over the intro film"). */
 .film-screen {
 	position: absolute;
 	inset: 0;

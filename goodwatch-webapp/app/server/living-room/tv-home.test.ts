@@ -174,7 +174,7 @@ test("a guest's home holds the start titles and the first picture, and nothing p
 	)
 })
 
-test("Tonight's pick is the Next episode of the first show to continue, then the movies", () => {
+test("Tonight's pick is the Next episode of the first show to continue, then the movies, then the first show to start", () => {
 	const p = parts({ continue: [row(10), row(11)], start: [toStart(20)] }, [
 		card("movie", 1),
 		card("movie", 2),
@@ -186,6 +186,8 @@ test("Tonight's pick is the Next episode of the first show to continue, then the
 		["show-10", "/my-shows"],
 		["movie-1", "/my-movies"],
 		["movie-2", "/my-movies"],
+		["movie-3", "/my-movies"],
+		["show-20", "/my-shows#start"],
 	])
 	assert.deepEqual(tonight[0].episode, { code: "S2 E4", name: "Episode 4", runtime: 48 })
 	assert.equal(tonight[1].episode, undefined)
@@ -202,20 +204,15 @@ test("without a show to continue the first movie is the pick, and the first show
 		["movie-2", "/my-movies"],
 		["show-20", "/my-shows#start"],
 	])
-	// Three movies leave no place for it.
+	// Watch next holds up to ten: ten movies leave no place for it.
+	const ten = Array.from({ length: 10 }, (_, i) => card("movie", i + 1))
 	assert.deepEqual(
-		tonightOf(
-			parts({ start: [toStart(20)] }, [
-				card("movie", 1),
-				card("movie", 2),
-				card("movie", 3),
-			]),
-		),
-		[
-			["movie-1", "/my-movies"],
-			["movie-2", "/my-movies"],
-			["movie-3", "/my-movies"],
-		],
+		tonightOf(parts({ start: [toStart(20)] }, ten)),
+		ten.map((one) => [`movie-${one.tmdb_id}`, "/my-movies"]),
+	)
+	assert.deepEqual(
+		tonightOf(parts({ start: [toStart(20)] }, ten.slice(0, 9))).at(-1),
+		["show-20", "/my-shows#start"],
 	)
 })
 

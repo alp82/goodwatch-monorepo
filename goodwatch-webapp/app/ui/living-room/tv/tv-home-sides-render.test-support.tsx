@@ -69,7 +69,7 @@ function draw(
 ) {
 	const ctx = {
 		...tvContextOf(data, null),
-		...(edition === "phone" && { homeSides: [] }),
+		...(edition === "phone" && { homeSides: [], phone: true }),
 	}
 	const state: TvState = {
 		screen: { name: "home" },
@@ -86,6 +86,9 @@ function draw(
 				focused: focusedItem(state, ctx),
 				screenFocus: focusedItem(state, ctx),
 				dispatch: () => {},
+				ringOff: false,
+				byPointer: false,
+				unpoint: () => {},
 			}}
 			canvas={CANVAS[edition]}
 			ctx={ctx}

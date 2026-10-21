@@ -41,7 +41,6 @@ import {
 import type { Score } from "~/server/scores.server"
 import { titlePath } from "../../../utils/helpers.ts"
 import { parseTitleKey } from "../../../utils/title-key.ts"
-import { QUIZ_GOAL } from "../../taste-quiz/quiz-flow.ts"
 import { RATING_LEVELS, SCORES, levelOf } from "../../scoring/score-model.ts"
 import { type TvBox, type TvDir, nextInDirection } from "./tv-move.ts"
 
@@ -65,8 +64,10 @@ export const DOOR_HREF: Record<DoorKey, string> = {
 	movie: "/my-movies",
 }
 
-/** How many of each kind a screen shows. */
-export const TONIGHT_PICKS = 3
+/** How many of each kind a screen shows. Watch next's stack holds ten picks. */
+export const TONIGHT_PICKS = 10
+/** The Popular wall: two rows of five. */
+export const POPULAR_WALL = 10
 export const LIST_TITLES = 4
 export const MAP_ISLANDS = 6
 export const ISLAND_HOPS = 2
@@ -78,7 +79,7 @@ export const SERVICE_TITLES = 12
 /** A side's picks on home's guide. */
 export const HOME_TASTE_GROUP_PICKS = 12
 
-/** The search screen's ideas. Four show, three once what is typed has its own key. */
+/** The search screen's ideas: under its line, four of them; OK on one searches for it. */
 export const SEARCH_IDEAS: readonly string[] = [
 	"cozy mystery",
 	"space adventure",
@@ -87,6 +88,10 @@ export const SEARCH_IDEAS: readonly string[] = [
 	"true story",
 	"animated for adults",
 ]
+/** The ideas the search screen shows under its line. */
+export const searchIdeas = () =>
+	SEARCH_IDEAS.slice(0, 4).map((idea) => `idea:${idea}`)
+
 /** The shortest query the search takes (`SEARCH_MIN_CHARS`, domain/discover-search.ts). */
 export const MIN_QUERY_LENGTH = 2
 /** The key that searches for what is typed on the search screen. */
@@ -94,8 +99,10 @@ export const SEARCH_GO = "go"
 
 export type TvScreen =
 	| { name: "home" }
-	/** One pick at a time; `pick` counts from 0. */
+	/** Watch next: one pick at a time, the rest in a stack beside it; `pick` counts from 0. */
 	| { name: "tonight"; pick: number }
+	/** A member's Popular titles as a wall of posters; `pick` is the one named beside it. */
+	| { name: "popular"; pick: number }
 	/**
 	 * Mini Discover. Without a choice: its three tabs, `tab` open, with that tab's six options. With one (a mood,
 	 * a theme or a style of `tab`, by its key): up to four titles of it.
@@ -174,6 +181,14 @@ export type TvContext = {
 	/** The islands next door to the one on screen, nearest first. */
 	hops: readonly string[]
 	sides: readonly string[]
+	/** The TV is drawn in its phone edition: the navigation has fewer tabs (`navItems`). */
+	phone?: boolean
+	/**
+	 * The title screen's Where to watch: how many rows open a service (`offer:<n>`), and whether a row leads to all
+	 * of them on the title's page (`where`). Both unknown until the title's offers are there.
+	 */
+	titleOffers?: number
+	titleWhere?: boolean
 	/** My shows: the shows with a Next episode, then the shows to start. */
 	nextEpisodes: readonly string[]
 	toStart: readonly string[]
@@ -237,6 +252,8 @@ export type TvEffect =
 	| { type: "quiz-skip" }
 	/** Continue with Google, back to the same TV screen. */
 	| { type: "sign-in" }
+	/** Your taste's sign-up: the site's sign-up page, back to Your taste (the page builds the address). */
+	| { type: "sign-up" }
 
 export type TvHistory = "push" | "replace" | "back" | "none"
 
@@ -246,7 +263,8 @@ export type TvAction =
 	| { type: "move"; dir: TvDir; boxes: readonly TvBox[]; scale?: number }
 	/** The wheel's drag and scroll: one item on or back in reading order. */
 	| { type: "step"; by: 1 | -1 }
-	| { type: "focus"; item: string }
+	/** `pointer`: a mouse or a finger gave it (no list scrolls to it: what it points at is in view). */
+	| { type: "focus"; item: string; pointer?: boolean }
 	| { type: "ok" }
 	/** Activate an item directly (pointer or touch). */
 	| { type: "choose"; item: string }
@@ -261,6 +279,11 @@ export type TvAction =
 	| { type: "service-key"; service: number }
 	| { type: "power"; on: boolean }
 	| { type: "boot-done" }
+	/**
+	 * The quiz reached its goal: its last answer was saved and its acknowledgement held (ui/scoring/score-ack.ts).
+	 * The quiz gives way to Your taste.
+	 */
+	| { type: "quiz-done" }
 
 export type TvTransition = {
 	state: TvState
@@ -304,6 +327,9 @@ function readScreen(params: URLSearchParams, member: boolean): TvScreen {
 	switch (name) {
 		case "tonight":
 			return { name, pick: readInt(params, "pick") }
+		// Popular is a member's: a guest's home has no Popular row to read from.
+		case "popular":
+			return member ? { name, pick: readInt(params, "pick") } : HOME
 		case "discover":
 			return { ...readDiscover(params), ...readBrowse(params) }
 		case "explorer":
@@ -334,15 +360,14 @@ function readScreen(params: URLSearchParams, member: boolean): TvScreen {
 					}
 				: { name, title }
 		}
-		case "search":
+		case "search": {
+			const query = (params.get("q") ?? "").trim().slice(0, 512)
 			return {
 				name,
-				query:
-					(params.get("q")?.trim().slice(0, 512) ?? "").length >= 2
-						? params.get("q")!.trim().slice(0, 512)
-						: null,
+				query: query.length >= 2 ? query : null,
 				...readBrowse(params),
 			}
+		}
 		case "service": {
 			const service = readServiceId(params.get("service"))
 			return service ? { name, service } : HOME
@@ -419,6 +444,7 @@ export function writeTvParams(
 	if (screen.name !== "home") out.set("tv", screen.name)
 	switch (screen.name) {
 		case "tonight":
+		case "popular":
 			if (screen.pick) out.set("pick", String(screen.pick))
 			break
 		case "discover":
@@ -488,8 +514,11 @@ export function destinationHref(
 ): string | null {
 	switch (screen.name) {
 		case "tonight":
-			// A guest's picks are Discover's best. `/watch-next` shows a guest nothing.
+			// A member's Watch next opens the page of its pick: My movies or My shows (`/watch-next` sends a member
+			// there, #385). A guest's picks are Discover's best. `/watch-next` shows a guest nothing.
 			return (ctx.member && tonightPick(screen, ctx).pick?.href) || "/discover"
+		case "popular":
+			return "/discover"
 		case "discover":
 			return screen.filters ? null : browseHref(screen)
 		case "explorer": {
@@ -504,6 +533,9 @@ export function destinationHref(
 				: "/taste"
 		case "shows":
 			return DOOR_HREF.continue
+		// The quiz on the site goes on where the TV's left off: the person's answers are the same.
+		case "quiz":
+			return "/taste/quiz"
 		case "title": {
 			const [, mediaType, tmdbId] = TITLE_KEY.exec(screen.title) ?? []
 			if (!mediaType) return null
@@ -547,12 +579,47 @@ export function destinationName(
 			return "Explorer"
 		case "taste":
 			return "Taste"
+		case "quiz":
+			return "the taste quiz"
 		case "shows":
 			return "My shows"
 		case "title":
 			return ctx.titleName ?? "Title page"
 		default:
 			return "Discover"
+	}
+}
+
+/** The Expand key's words for the pages it opens, by the page's path. */
+const PAGE_LABEL: Record<string, string> = {
+	"/my-movies": "All my movies",
+	"/my-shows": "All my shows",
+	"/discover": "Explore all titles",
+	"/taste": "Full taste profile",
+	"/taste/quiz": "Full taste quiz",
+	"/explorer": "Full Explorer",
+}
+
+/**
+ * The Expand key's words, short and about the page it opens ("Full details", "Search all titles"), or null for a
+ * screen without a page. Discover with what was chosen there is the full Discover; Discover from the Popular row
+ * or a service is all of the catalog.
+ */
+export function destinationLabel(
+	screen: TvScreen,
+	ctx: TvContext,
+): string | null {
+	const href = destinationHref(screen, ctx)
+	if (!href) return null
+	switch (screen.name) {
+		case "title":
+			return "Full details"
+		case "search":
+			return "Search all titles"
+		case "discover":
+			return "Full Discover"
+		default:
+			return PAGE_LABEL[href.split(/[?#]/)[0]] ?? "Full page"
 	}
 }
 
@@ -581,6 +648,10 @@ export function watchHref(
 const titleItems = (keys: readonly string[], max = LIST_TITLES) =>
 	keys.slice(0, max).map((key) => `title:${key}`)
 
+/** Watch next's stack and Popular's wall: `pick:<n>`, from 0. */
+const pickItems = (count: number) =>
+	Array.from({ length: count }, (_, i) => `pick:${i}`)
+
 /**
  * Something is typed on the search screen: it has its own key from the first character on, so the focus is on what
  * OK would search for and never on an idea the person did not choose. Until the query is long enough the key does
@@ -592,15 +663,17 @@ const typed = (ctx: TvContext) => ctx.draft.trim().length > 0
 function contentItems(screen: TvScreen, ctx: TvContext): string[] {
 	switch (screen.name) {
 		case "home": {
+			// A member's home is Start: Watch next, then the other screens, then Your taste and the intro.
 			if (ctx.member)
 				return [
-					...(ctx.tonight.length ? ["home:next"] : []),
-					"home:movies",
-					"app:shows",
-					"app:tonight",
-					"app:discover",
-					"app:taste",
-					...titleItems(ctx.popular, 12),
+					"start:tonight",
+					...(ctx.popular.length ? ["start:popular"] : []),
+					"start:discover",
+					"start:search",
+					"start:quiz",
+					"start:taste",
+					"start:shows",
+					"start:about",
 				]
 			const apps = TV_APPS.filter((app) => app !== "shows" || ctx.member).map(
 				(app) => `app:${app}`,
@@ -609,7 +682,18 @@ function contentItems(screen: TvScreen, ctx: TvContext): string[] {
 		}
 		case "tonight": {
 			const { count } = tonightPick(screen, ctx)
-			return [...(count ? ["details"] : []), ...(count > 1 ? ["another"] : [])]
+			if (!count) return []
+			return [
+				"watch",
+				"trailer",
+				"details",
+				...(count > 1 ? ["another"] : []),
+				...pickItems(count),
+			]
+		}
+		case "popular": {
+			const count = Math.min(ctx.popular.length, POPULAR_WALL)
+			return count ? [...pickItems(count), "trailer", "details"] : []
 		}
 		case "discover":
 			return discoverItems(screen, ctx)
@@ -622,14 +706,17 @@ function contentItems(screen: TvScreen, ctx: TvContext): string[] {
 				: ctx.islands.slice(0, MAP_ISLANDS).map((id) => `island:${id}`)
 		case "taste":
 			if (screen.side) return titleItems(ctx.titles)
-			// Without sides: the quiz's picks once there are some, and the way into the quiz.
+			// Without sides: the quiz's picks once there are some, and the way into the quiz. A guest can save it.
 			return [
 				...(ctx.taste
 					? ctx.sides.slice(0, TASTE_SIDES).map((id) => `side:${id}`)
 					: titleItems(ctx.titles)),
 				"start-quiz",
+				...(ctx.member ? [] : ["sign-up"]),
 			]
+		// Taste on the TV is the quiz, with Your taste one key away.
 		case "quiz":
+			return [...stripItems(screen, ctx), "your-taste"]
 		case "rate":
 			return stripItems(screen, ctx)
 		case "shows":
@@ -645,13 +732,21 @@ function contentItems(screen: TvScreen, ctx: TvContext): string[] {
 							? ["group:-1", "group:0", "group:1", "group:2"]
 							: []),
 					]
-				: ["watch", "trailer", "want-to-see", "seen", "fingerprint"]
+				: [
+						"watch",
+						"trailer",
+						"want-to-see",
+						"seen",
+						"fingerprint",
+						...Array.from({ length: ctx.titleOffers ?? 0 }, (_, i) => `offer:${i}`),
+						...(ctx.titleWhere ? ["where"] : []),
+					]
 		case "service":
 			return titleItems(ctx.titles, SERVICE_TITLES)
 		case "search":
 			if (screen.filters) return filterItems
 			if (screen.query) return browseItems(screen, ctx)
-			return KEY_ITEMS
+			return [...searchIdeas(), ...KEY_ITEMS]
 
 		case "about":
 			return ["got-it", "rate"]
@@ -669,21 +764,70 @@ export function tvItems(screen: TvScreen, ctx: TvContext): string[] {
 		!(screen.name === "title" && screen.panel)
 			? ["expand"]
 			: []),
-		...(screen.name === "home" ? [] : ["bar:back"]),
-		...(screen.name === "search" ? [] : ["bar:search"]),
+		...(hasNav(screen, ctx)
+			? navItems(ctx)
+			: [
+					...(screen.name === "home" ? [] : ["bar:back"]),
+					...(screen.name === "search" ? [] : ["bar:search"]),
+					"bar:menu",
+				]),
+	]
+}
+
+/**
+ * The TV's own screens have its navigation along the top instead of Back and Search: the white G, which returns to
+ * Start (home), a tab for each screen and Menu. Back stays the Remote's and the keyboard's. A member's home is Start;
+ * a guest's home keeps its row of apps and its bar.
+ */
+const NAV_SCREENS: ReadonlySet<TvScreenName> = new Set([
+	"tonight",
+	"popular",
+	"discover",
+	"search",
+	"quiz",
+])
+export const hasNav = (screen: TvScreen, ctx: Pick<TvContext, "member">) =>
+	NAV_SCREENS.has(screen.name) || (screen.name === "home" && ctx.member)
+
+/** The navigation's items, left to right. Popular is a member's. */
+export function navItems(
+	ctx: Pick<TvContext, "member" | "popular" | "phone">,
+): string[] {
+	// The phone has room for three tabs: Watch next, Discover and Search. The menu has every screen.
+	return [
+		"nav:home",
+		"nav:tonight",
+		...(ctx.member && ctx.popular.length && !ctx.phone ? ["nav:popular"] : []),
+		"nav:discover",
+		"nav:search",
+		...(ctx.phone ? [] : ["nav:quiz"]),
 		"bar:menu",
 	]
 }
 
-/** The menu, an overlay on every screen. Sign in is a guest's. */
-export function menuItems(ctx: Pick<TvContext, "member">): string[] {
+/**
+ * The menu, an overlay on every screen: the TV's own screens, nothing else. Pages of the site open from the screen
+ * they belong to (the Expand key). Popular is a member's.
+ */
+export function menuItems(ctx: Pick<TvContext, "member" | "popular">): string[] {
 	return [
 		"menu:home",
+		"menu:tonight",
+		...(ctx.member && ctx.popular.length ? ["menu:popular"] : []),
+		"menu:discover",
 		"menu:search",
-		...(ctx.member ? [] : ["menu:sign-in"]),
+		"menu:quiz",
+		"menu:taste",
+		// My shows is a member's TV screen too.
+		...(ctx.member ? ["menu:shows"] : []),
 		"menu:about",
-		"menu:off",
 	]
+}
+
+/** The menu opens on the screen on show, where it lists it; else on its first key. */
+function menuStart(state: TvState, ctx: TvContext): string | null {
+	const here = `menu:${state.screen.name}`
+	return menuItems(ctx).includes(here) ? here : null
 }
 
 /** What the focus moves through right now: the menu while it is open, else the screen's items. */
@@ -697,6 +841,11 @@ function screenFocus(state: TvState, ctx: TvContext): string {
 	if (state.focus && items.includes(state.focus)) return state.focus
 	// The rating strip starts on Good.
 	if (items.includes(STRIP_START) && onStrip(state.screen)) return STRIP_START
+	// Popular starts on the poster it names.
+	const shown = `pick:${state.screen.name === "popular" ? state.screen.pick : -1}`
+	if (items.includes(shown)) return shown
+	// Search starts on the keys, not on an idea: OK at once must not search for something the person didn't choose.
+	if (items.includes("key:q") && items.some((item) => item.startsWith("idea:"))) return "key:q"
 	// The focus starts on the screen's first own item, never on the Expand key and never on a tab (Discover starts
 	// on the open tab's first option); an empty screen starts on the bar.
 	return items.find(
@@ -1188,12 +1337,9 @@ function chooseScore(
 		return leave(state, { name: "title", title: screen.title }, [
 			{ type: "rate", title: screen.title, score },
 		])
-	const effects: TvEffect[] = [{ type: "quiz-rate", score }]
-	// The score that reaches the goal ends the quiz. Until then, and when rating more after it, the focus stays
-	// where it was, so the next title takes the same press.
-	return ctx.quizProgress + 1 === QUIZ_GOAL
-		? leave(state, { name: "taste", side: null }, effects)
-		: none(state, effects)
+	// The focus stays where it was, so the next title takes the same press. The answer that reaches the goal ends
+	// the quiz once it is saved and held (`quiz-done`): the person sees what they gave before Your taste comes.
+	return none(state, [{ type: "quiz-rate", score }])
 }
 
 // ---------------------------------------------------------------------------------------------------------
@@ -1336,18 +1482,73 @@ const APP_SCREEN: Record<TvApp, TvScreen> = {
 	shows: { name: "shows" },
 }
 
+/** What Start's tiles open: Taste is the quiz, Your taste is Taste's screen. */
+const START_SCREEN: Record<string, TvScreen | undefined> = {
+	tonight: APP_SCREEN.tonight,
+	popular: { name: "popular", pick: 0 },
+	discover: APP_SCREEN.discover,
+	search: { name: "search", query: null },
+	quiz: { name: "quiz" },
+	taste: APP_SCREEN.taste,
+	shows: APP_SCREEN.shows,
+	about: { name: "about" },
+}
+
+/**
+ * The title Watch next or Popular is on: the pick `at`, or the one on show (Watch next steps through its picks and
+ * wraps; Popular names the one picked last). Null on any other screen.
+ */
+function pickedTitle(
+	screen: TvScreen,
+	ctx: TvContext,
+	at?: number,
+): string | null {
+	if (screen.name === "tonight") {
+		const { count } = tonightPick(screen, ctx)
+		return count ? (ctx.tonight[(at ?? screen.pick) % count]?.title ?? null) : null
+	}
+	if (screen.name === "popular") {
+		const count = Math.min(ctx.popular.length, POPULAR_WALL)
+		return count ? (ctx.popular[(at ?? screen.pick) % count] ?? null) : null
+	}
+	return null
+}
+
+/**
+ * Watch next and Popular show the pick that has the focus: a focus that comes to a pick puts it on show, in place,
+ * so the address names it (Back, a reload and a link find it there). The focus stays where it went.
+ */
+function showPick(state: TvState, next: TvTransition): TvTransition {
+	const s = next.state.screen
+	if (next.history !== "none" || state.menuOpen) return next
+	if (s.name !== "tonight" && s.name !== "popular") return next
+	const focus = next.state.focus
+	if (!focus?.startsWith("pick:")) return next
+	const pick = Number(focus.slice("pick:".length))
+	if (pick === s.pick) return next
+	return replace(next.state, { ...s, pick }, next.effects, focus)
+}
+
 function chooseInMenu(state: TvState, item: string): TvTransition {
 	switch (item) {
 		case "menu:home":
 			return jump(state, HOME)
+		case "menu:tonight":
+			return jump(state, APP_SCREEN.tonight)
+		case "menu:popular":
+			return jump(state, { name: "popular", pick: 0 })
+		case "menu:discover":
+			return jump(state, APP_SCREEN.discover)
 		case "menu:search":
 			return openSearch(state)
-		case "menu:sign-in":
-			return none(closeMenu(state), [{ type: "sign-in" }])
+		case "menu:quiz":
+			return jump(state, { name: "quiz" })
+		case "menu:taste":
+			return jump(state, APP_SCREEN.taste)
+		case "menu:shows":
+			return jump(state, APP_SCREEN.shows)
 		case "menu:about":
 			return jump(state, { name: "about" })
-		case "menu:off":
-			return none({ ...closeMenu(state), power: "off" })
 		default:
 			return none(state)
 	}
@@ -1385,20 +1586,21 @@ function choose(state: TvState, item: string, ctx: TvContext): TvTransition {
 			? none(state, [{ type: "quiz-skip" }])
 			: none(state)
 	switch (kind) {
-		case "home":
+		case "start": {
 			if (s.name !== "home" || !ctx.member) return none(state)
-			if (arg === "movies")
-				return none(state, [{ type: "expand", href: DOOR_HREF.movie }])
-			return arg === "next" && ctx.tonight[0]
-				? push(state, { name: "title", title: ctx.tonight[0].title })
-				: none(state)
+			const to = START_SCREEN[arg]
+			if (!to) return none(state)
+			return arg === "search" ? openSearch(state) : push(state, to)
+		}
 		case "app":
 			return push(state, APP_SCREEN[arg as TvApp])
+		case "pick": {
+			const title = pickedTitle(s, ctx, Number(arg))
+			return title ? push(state, { name: "title", title }) : none(state)
+		}
 		case "details": {
-			const pick = s.name === "tonight" ? tonightPick(s, ctx).pick : null
-			return pick
-				? push(state, { name: "title", title: pick.title })
-				: none(state)
+			const title = pickedTitle(s, ctx)
+			return title ? push(state, { name: "title", title }) : none(state)
 		}
 		case "another": {
 			if (s.name !== "tonight") return none(state)
@@ -1433,10 +1635,15 @@ function choose(state: TvState, item: string, ctx: TvContext): TvTransition {
 		case "title":
 			return push(state, { name: "title", title: arg })
 		case "fingerprint":
-		case "trailer":
-			return s.name === "title"
-				? push(state, { name: "title", title: s.title, panel: kind })
+		case "trailer": {
+			if (s.name === "title")
+				return push(state, { name: "title", title: s.title, panel: kind })
+			// Watch next's and Popular's Trailer: the trailer of the title on show, straight away.
+			const title = kind === "trailer" ? pickedTitle(s, ctx) : null
+			return title
+				? push(state, { name: "title", title, panel: "trailer" })
 				: none(state)
+		}
 		case "group":
 			return s.name === "title" && s.panel === "fingerprint"
 				? {
@@ -1451,10 +1658,24 @@ function choose(state: TvState, item: string, ctx: TvContext): TvTransition {
 				: none(state)
 		case "close":
 			return back(state)
-		case "watch":
+		case "watch": {
+			const title = s.name === "title" ? s.title : pickedTitle(s, ctx)
+			return title ? none(state, [{ type: kind, title }]) : none(state)
+		}
 		case "want-to-see":
 			return s.name === "title"
 				? none(state, [{ type: kind, title: s.title }])
+				: none(state)
+		// Where to watch's row to all the services: the title's page, where it streams (the Watch key's way there).
+		case "where":
+			return s.name === "title"
+				? none(state, [{ type: "watch", title: s.title }])
+				: none(state)
+		case "your-taste":
+			return s.name === "quiz" ? push(state, APP_SCREEN.taste) : none(state)
+		case "sign-up":
+			return s.name === "taste" && !ctx.member
+				? none(state, [{ type: "sign-up" }])
 				: none(state)
 		// Seen it asks how it was.
 		case "seen":
@@ -1484,7 +1705,10 @@ function choose(state: TvState, item: string, ctx: TvContext): TvTransition {
 				? back(state)
 				: arg === "search"
 					? openSearch(state)
-					: none({ ...state, menuOpen: true, menuFocus: null })
+					: none({ ...state, menuOpen: true, menuFocus: menuStart(state, ctx) })
+		// The navigation goes to the screen of a tab; on that screen already it stays.
+		case "nav":
+			return chooseInMenu(state, `menu:${arg}`)
 		default:
 			return none(state)
 	}
@@ -1504,8 +1728,8 @@ function keyboardMove(
 		state.menuOpen
 	)
 		return null
-	const q = boxes.find((b) => b.id === "key:q"),
-		y = boxes.find((b) => b.id === "key:y")
+	const q = boxes.find((b) => b.id === "key:q")
+	const y = boxes.find((b) => b.id === "key:y")
 	const phone = q && y && Math.abs(q.top - y.top) > 10
 	const rows = (
 		phone
@@ -1514,7 +1738,12 @@ function keyboardMove(
 				)
 			: KEY_ROWS
 	).map((row) => [...row].map((c) => `key:${c}`))
-	rows.unshift(["bar:back", "bar:menu"])
+	// Up from the top row of keys: the ideas under the line, then the navigation along the top (or the bar's keys
+	// on a screen without it).
+	const ids = boxes.map((box) => box.id)
+	const ideas = ids.filter((id) => id.startsWith("idea:"))
+	if (ideas.length) rows.unshift(ideas)
+	rows.unshift(ids.filter((id) => id.startsWith("nav:") || id.startsWith("bar:")))
 	rows.push(["key:delete", "key:space", "key:clear", "go"])
 	const r = rows.findIndex((row) => row.includes(from))
 	if (r < 0) return null
@@ -1569,24 +1798,30 @@ export function transition(
 			// Discover's tabs name two moves themselves, on what the rule gives.
 			const named = moveInDiscover(state, from, to)
 			if (named) return named
-			return none(to ? focusOn(state, to, ctx) : state)
+			return showPick(state, none(to ? focusOn(state, to, ctx) : state))
 		}
 		case "step": {
 			const items = activeItems(state, ctx)
 			const at = items.indexOf(focusedItem(state, ctx))
-			return none(
-				focusOn(
-					state,
-					items[(at + action.by + items.length) % items.length],
-					ctx,
+			return showPick(
+				state,
+				none(
+					focusOn(
+						state,
+						items[(at + action.by + items.length) % items.length],
+						ctx,
+					),
 				),
 			)
 		}
 		case "focus":
-			return none(
-				activeItems(state, ctx).includes(action.item)
-					? focusOn(state, action.item, ctx)
-					: state,
+			return showPick(
+				state,
+				none(
+					activeItems(state, ctx).includes(action.item)
+						? focusOn(state, action.item, ctx)
+						: state,
+				),
 			)
 		case "ok": {
 			const item = focusedItem(state, ctx)
@@ -1608,7 +1843,11 @@ export function transition(
 		case "home":
 			return jump(state, HOME)
 		case "toggle-menu":
-			return none({ ...state, menuOpen: !state.menuOpen, menuFocus: null })
+			return none(
+				state.menuOpen
+					? closeMenu(state)
+					: { ...state, menuOpen: true, menuFocus: menuStart(state, ctx) },
+			)
 		case "browse-page":
 			return state.screen.name === "search" || state.screen.name === "discover"
 				? replace(state, { ...state.screen, page: validPage(action.page) })
@@ -1621,5 +1860,9 @@ export function transition(
 			return typedOnSearch(state)
 		case "service-key":
 			return serviceKey(state, action.service)
+		case "quiz-done":
+			return state.screen.name === "quiz"
+				? leave(closeMenu(state), APP_SCREEN.taste)
+				: none(state)
 	}
 }

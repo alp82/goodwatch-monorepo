@@ -17,6 +17,7 @@ import { TitleList } from "../TitleList"
 import {
 	Frame,
 	Item,
+	PhoneFoot,
 	backdropSize,
 	keySize,
 	useReport,
@@ -45,9 +46,6 @@ export function ExplorerData({
 	useReport(report, useTvExplorer(explorer))
 	return null
 }
-
-/** How wide the Expand key's corner is on the phone, in canvas pixels: the row beside it ends before it. */
-const PHONE_CORNER = 158
 
 const COUNT_WORDS = ["No", "One", "Two", "Three", "Four", "Five", "Six"]
 
@@ -141,6 +139,7 @@ function IslandMap({
 			items={items}
 			art={art}
 			dim={0.88}
+			inlineExpand
 		>
 			{P ? (
 				// The phone: the islands three by two, in their reading order. The row under them is the Expand
@@ -151,17 +150,14 @@ function IslandMap({
 							<Island key={island.id} island={island} place={place} phone />
 						))}
 					</div>
-					<div
-						className="mt-2.5 flex shrink-0 items-center"
-						style={{ height: foot, paddingRight: PHONE_CORNER }}
-					>
+					<PhoneFoot items={items} height={foot} className="mt-2.5">
 						<div
 							key={shown.id}
 							className="tvc-fade line-clamp-2 text-[20px] leading-tight text-white/80"
 						>
 							{shown.apart} · {islandCount(shown.count)}
 						</div>
-					</div>
+					</PhoneFoot>
 				</div>
 			) : (
 				<div className="relative h-full">

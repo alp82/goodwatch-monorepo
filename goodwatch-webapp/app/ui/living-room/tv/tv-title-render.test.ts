@@ -73,8 +73,8 @@ const sizes = (html: string) =>
 	[...html.matchAll(/data-tv-item="([^"]+)"[^>]*style="([^"]*)"/g)].map(
 		([, id, style]) => ({
 			id,
-			height: Number(/height:(\d+)px/.exec(style)?.[1]),
-			width: Number(/width:(\d+)px/.exec(style)?.[1] ?? Number.NaN),
+			height: Number(/height:([\d.]+)px/.exec(style)?.[1]),
+			width: Number(/width:([\d.]+)px/.exec(style)?.[1] ?? Number.NaN),
 		}),
 	)
 const focused = (html: string) =>
@@ -85,6 +85,22 @@ const count = (html: string, part: string) => html.split(part).length - 1
 /** A screen's own items and its bar's, without the Expand key: for the lists written out here. */
 const drawn = (items: string[]) => items.filter((item) => item !== "expand")
 const BAR = ["bar:back", "bar:search", "bar:menu"]
+/** Watch next has the TV's navigation along the top, in the bar's place. */
+const NAV = [
+	"nav:home",
+	"nav:tonight",
+	"nav:discover",
+	"nav:search",
+	"nav:quiz",
+	"bar:menu",
+]
+/** What a screen says, its tags and React's text markers left out, a "|" between its pieces. */
+const text = (html: string) =>
+	html
+		.replace(/<!-- -->/g, "")
+		.replace(/<svg[\s\S]*?<\/svg>/g, "")
+		.replace(/<[^>]+>/g, "|")
+		.replace(/\|+/g, "|")
 /** The side of a bar's key on a phone's canvas shown at `scale`. */
 const keySize54 = (scale: number) => Math.max(54, Math.ceil(44 / scale))
 const EDITIONS = ["desktop", "phone"] as const
@@ -93,32 +109,50 @@ test("Tonight's items in the markup are the machine's, in reading order, in both
 	for (const screen of Object.values(rendered.tonight))
 		for (const edition of EDITIONS)
 			assert.deepEqual(ids(screen[edition]), screen.items)
+	// Watch, Trailer, Details, Not now, then the stack of picks.
 	assert.deepEqual(rendered.tonight.guest.items, [
+		"watch",
+		"trailer",
 		"details",
 		"another",
+		"pick:0",
+		"pick:1",
+		"pick:2",
+		"pick:3",
 		"expand",
-		...BAR,
+		...NAV,
 	])
 	// One pick has nothing to step to; no pick has nothing to open.
-	assert.deepEqual(drawn(rendered.tonight.one.items), ["details", ...BAR])
-	assert.deepEqual(drawn(rendered.tonight.none.items), BAR)
+	assert.deepEqual(drawn(rendered.tonight.one.items), [
+		"watch",
+		"trailer",
+		"details",
+		"pick:0",
+		...NAV,
+	])
+	assert.deepEqual(drawn(rendered.tonight.none.items), NAV)
 })
 
 test("Tonight shows one pick at a time, says which, and wraps", () => {
 	const { guest, second, wrapped } = rendered.tonight
-	assert.match(guest.desktop, />Pick 1 of 3</)
-	assert.match(guest.desktop, />Title 1</)
-	assert.match(second.desktop, />Pick 2 of 3</)
-	assert.match(second.desktop, />Title 2</)
-	// `pick=4` of three is the second.
-	assert.match(wrapped.desktop, />Pick 2 of 3</)
-	assert.match(wrapped.desktop, />Title 2</)
+	assert.match(text(guest.desktop), /\|Title 1\|/)
+	assert.ok(text(guest.desktop).includes("|Watch next|1 of 4|"))
+	assert.ok(text(second.desktop).includes("|Watch next|2 of 4|"))
+	assert.match(text(second.desktop), /^\|Best rated right now\|Title 2\|/)
+	// `pick=5` of four is the second.
+	assert.ok(text(wrapped.desktop).includes("|Watch next|2 of 4|"))
+	assert.match(text(wrapped.desktop), /^\|Best rated right now\|Title 2\|/)
+	assert.ok(text(guest.phone).includes("|1 / 4|"))
 	for (const edition of EDITIONS) {
-		assert.deepEqual(focused(guest[edition]), ["details"])
+		assert.deepEqual(focused(guest[edition]), ["watch"])
+		assert.equal(label(guest[edition], "watch"), "Where to watch")
+		assert.equal(label(guest[edition], "trailer"), "Trailer")
 		assert.equal(label(guest[edition], "details"), "Details")
-		assert.equal(label(guest[edition], "another"), "Another one")
-		assert.match(guest[edition], />Watch next</)
+		assert.equal(label(guest[edition], "another"), "Not now")
 		assert.match(guest[edition], />Best rated right now</)
+		// Each pick of the stack is named for a screen reader.
+		for (const [i, name] of ["Title 1", "Title 2", "Title 3", "Title 4"].entries())
+			assert.match(guest[edition], new RegExp(`data-tv-item="pick:${i}" aria-label="${name}"`))
 	}
 })
 
@@ -126,21 +160,23 @@ test("Tonight's picture is the pick's backdrop: w1280 on the desktop, w780 on th
 	const { guest } = rendered.tonight
 	assert.equal(count(guest.desktop, "/t/p/w1280/backdrop-1.jpg"), 1)
 	assert.equal(count(guest.phone, "/t/p/w780/backdrop-1.jpg"), 1)
-	assert.equal(count(guest.desktop, "<img"), 1)
 	assert.equal(count(guest.phone, "w1280"), 0)
+	// The stack: a backdrop per pick on the desktop, a poster per pick on the phone.
+	assert.equal(count(guest.desktop, "/t/p/w300/backdrop-"), 4)
+	assert.equal(count(guest.phone, "/t/p/w154/poster-"), 4)
 })
 
-test("a pick's facts: the score, the match once there is one, where it streams, and its line on the desktop", () => {
+test("a pick's facts: the GoodWatch score, its year, kind and length, and where it streams", () => {
 	const { guest, member } = rendered.tonight
-	assert.match(guest.desktop, /<b>86<\/b> <span[^>]*>score<\/span>/)
-	assert.ok(!guest.desktop.includes("match"))
-	assert.match(guest.desktop, />On Netflix</)
-	assert.match(guest.desktop, />Line 1\.</)
-	// The phone has no room for the kicker and the line.
-	assert.ok(!guest.phone.includes("Line 1."))
-	assert.ok(guest.phone.includes("Pick 1 of 3"))
-	assert.match(guest.phone, />On Netflix</)
-	assert.match(member.desktop, /<b>92%<\/b> <span[^>]*>match<\/span>/)
+	const desktop = text(guest.desktop)
+	assert.ok(desktop.includes("|Title 1|2019 · Movie · 2 h 10 min|86|Excellent|GoodWatch score|Netflix|"))
+	// A Next episode's length is its own, not the show's usual one (130 min episodes in the fixture).
+	assert.ok(text(member.desktop).includes("|2019 · Show · 50 min|"))
+	assert.ok(!text(member.desktop).includes("130 min episodes"))
+	// The phone has the ring without its words, and no room for where it streams.
+	const phone = text(guest.phone)
+	assert.ok(phone.includes("|Title 1|86|2019 · Movie · 2 h 10 min|"))
+	assert.ok(!phone.includes("GoodWatch score"))
 })
 
 test("a member's Tonight names the next episode, then their Wishlist; a guest's own pick leads", () => {
@@ -151,10 +187,8 @@ test("a member's Tonight names the next episode, then their Wishlist; a guest's 
 		assert.match(wished[edition], />From your Wishlist</)
 		assert.match(wished[edition], />Title 9</)
 	}
-	// The episode's name stands where the show's line would.
-	assert.match(member.desktop, />Cicada</)
-	assert.ok(!member.desktop.includes("Line 10."))
-	assert.match(member.desktop, />Pick 1 of 2</)
+	assert.ok(text(member.desktop).includes("|Watch next|1 of 2|"))
+	assert.ok(text(memberSecond.desktop).includes("|Watch next|2 of 2|"))
 })
 
 test("Tonight without picks says whether they are on their way, and keeps its bar", () => {
@@ -165,6 +199,7 @@ test("Tonight without picks says whether they are on their way, and keeps its ba
 })
 
 test("the title screen's items in the markup are the machine's, in reading order, in every state", () => {
+	// The keys first, then the Fingerprint's card; Where to watch's rows come with the title's offers.
 	assert.deepEqual(rendered.title.items, [
 		"watch",
 		"trailer",
@@ -183,14 +218,21 @@ test("the title screen's items in the markup are the machine's, in reading order
 		assert.deepEqual(focused(rendered.title.known[edition]), ["watch"])
 })
 
-test("every key of the title screen is a real button, 64 canvas px tall on the desktop", () => {
+test("every key of the title screen is a real button, 54 canvas px tall on the desktop", () => {
 	const { known } = rendered.title
 	assert.equal(count(known.desktop, "<button"), 9)
 	assert.equal(count(known.desktop, '<button type="button" data-tv-item='), 9)
-	assert.equal(count(known.desktop, "h-[64px]"), 9)
-	// The desktop's keys are drawn as designed; the rule is the phone's.
+	// The four keys take their height from the rule; the Expand key and the bar's keys are drawn as designed.
+	assert.deepEqual(sizes(known.desktop), [
+		{ id: "watch", height: 54, width: Number.NaN },
+		{ id: "trailer", height: 54, width: Number.NaN },
+		{ id: "want-to-see", height: 54, width: Number.NaN },
+		{ id: "seen", height: 54, width: Number.NaN },
+	])
+	assert.equal(count(known.desktop, "h-[64px]"), 4)
+	// The Fingerprint is a card as tall as its readings.
+	assert.match(known.desktop, /data-tv-item="fingerprint" aria-label="Fingerprint: all readings"/)
 	assert.equal(rendered.keySizes.desktop, 74)
-	assert.deepEqual(sizes(known.desktop), [])
 })
 
 test("on every phone of the room's table every key is 44 px or more on the phone's screen", () => {
@@ -200,7 +242,8 @@ test("on every phone of the room's table every key is 44 px or more on the phone
 	)
 	for (const p of rendered.phones) {
 		for (const [screen, items] of [
-			["title", rendered.title.items],
+			// The Fingerprint is a card as tall as its readings, not a key.
+			["title", rendered.title.items.filter((id) => id !== "fingerprint")],
 			["tonight", rendered.tonight.guest.items],
 			["rate", rendered.rate.items],
 		] as const) {
@@ -216,8 +259,9 @@ test("on every phone of the room's table every key is 44 px or more on the phone
 					item.height * p.scale >= 44,
 					`${p.phone} ${screen} ${item.id}: ${item.height} canvas px at ${p.scale}`,
 				)
-				// The bar's keys are round.
-				if (item.id.startsWith("bar:")) assert.equal(item.width, item.height)
+				// The bar's keys and the white G are round.
+				if (item.id.startsWith("bar:") || item.id === "nav:home")
+					assert.equal(item.width, item.height, `${p.phone} ${item.id}`)
 			}
 		}
 	}
@@ -230,13 +274,16 @@ test("on every phone of the room's table every key is 44 px or more on the phone
 	assert.equal(rendered.keySizes.first, 52)
 })
 
-test("on the phone the keys stand two to a row, and what they say is cut short before it spills", () => {
+test("on the phone the keys stand in one row that pages sideways, and the Expand key ends the details", () => {
 	for (const p of rendered.phones) {
-		assert.match(p.title, /class="mt-3\.5 grid grid-cols-2 gap-2"/)
-		assert.equal(count(p.title, '<span class="truncate">'), 5)
-		// Three keys fill the two rows but the last cell; two keys stand in the left column.
-		assert.equal(count(p.title, "col-start-1"), 0)
-		assert.equal(count(p.tonight, "col-start-1"), 2)
+		for (const html of [p.title, p.tonight]) {
+			assert.match(html, /data-tv-row="true" class="[^"]*overflow-x-auto/)
+			assert.equal(count(html, "col-start-1"), 0)
+		}
+		// The title's keys share one row.
+		const row = /<div data-tv-row="true" [^>]*>([\s\S]*?)<\/div>/.exec(p.title)?.[1] ?? ""
+		assert.deepEqual(ids(row), ["watch", "trailer", "want-to-see", "seen"])
+		assert.match(p.title, /<div class="flex justify-end"><button type="button" data-tv-item="expand"/)
 	}
 })
 
@@ -266,16 +313,18 @@ test("the title screen names the title, its facts and its line", () => {
 	assert.match(known.desktop, />2019 · Movie · 2h 10m</)
 	assert.match(known.desktop, />The Matrix</)
 	assert.match(known.desktop, />Free your mind\.</)
-	assert.match(known.desktop, /<b>86<\/b>/)
-	assert.match(known.desktop, />On Netflix</)
+	assert.ok(text(known.desktop).includes("|86|Excellent|GoodWatch score|"))
 	assert.equal(count(known.desktop, "/t/p/w1280/backdrop-603.jpg"), 1)
 	assert.equal(count(known.phone, "/t/p/w780/backdrop-603.jpg"), 1)
+	assert.equal(count(known.desktop, "/t/p/w342/poster-603.jpg"), 1)
 	assert.match(show.desktop, />Show</)
 	assert.match(show.desktop, />2019 · Show · 55 min episodes</)
-	assert.match(show.desktop, /<b>91%<\/b>/)
-	// The phone leaves the kicker and the line out.
-	assert.ok(known.phone.includes("2h 10m"))
+	// The phone has the name and the facts in the bar, and leaves the line out.
+	assert.ok(text(known.phone).endsWith("|The Matrix|2019 · Movie · 2h 10m|"))
 	assert.ok(!known.phone.includes("Free your mind."))
+	// Where to watch says it is looking until the title's offers are there.
+	for (const edition of EDITIONS)
+		assert.match(known[edition], />Looking for where it streams\.</)
 })
 
 test("without an offer URL the watch action honestly leads to Where to watch", () => {
@@ -299,7 +348,8 @@ test("a title is drawn from what a list knew, from its key alone, and says when 
 	const { fromList, waiting, missing } = rendered.title
 	// A list's name and poster: the name is there, the keys work, the facts follow with the card.
 	assert.match(fromList.desktop, />The Matrix</)
-	assert.equal(count(fromList.desktop, "<img"), 0)
+	assert.equal(count(fromList.desktop, "/t/p/w342/p.jpg"), 1)
+	assert.equal(count(fromList.desktop, "/t/p/w1280/"), 0)
 	assert.equal(label(fromList.desktop, "watch"), "Where to watch")
 	// The key alone says movie or show.
 	assert.match(waiting.desktop, />Movie</)
@@ -307,14 +357,13 @@ test("a title is drawn from what a list knew, from its key alone, and says when 
 	assert.match(missing.desktop, />GoodWatch doesn&#x27;t have this title\.</)
 })
 
-test("the Expand key stands in its corner on Tonight and on the title screen", () => {
-	for (const html of [
-		rendered.tonight.guest.desktop,
-		rendered.tonight.guest.phone,
-		rendered.title.known.desktop,
-		rendered.title.known.phone,
-	]) {
+test("the Expand key stands in its corner on the desktop, and ends the phone's content", () => {
+	for (const html of [rendered.tonight.guest.desktop, rendered.title.known.desktop]) {
 		assert.match(html, /<div data-tv-expand-place="true"[^>]*><button type="button" data-tv-item="expand"[^>]*aria-label="Expand"[^>]*>.*?Expand<\/button><\/div>/)
+		assert.equal(count(html, 'data-tv-item="expand"'), 1)
+	}
+	for (const html of [rendered.tonight.guest.phone, rendered.title.known.phone]) {
+		assert.ok(!html.includes("data-tv-expand-place"))
 		assert.equal(count(html, 'data-tv-item="expand"'), 1)
 	}
 })
@@ -338,7 +387,7 @@ test("the rating asks how the title was, on the strip's levels from low to high"
 
 test("a screen in a chunk of its own is not in the server's HTML: its bar alone is, and no h1", () => {
 	// With the Expand key where the screen has a page: a focus that came back to it is on something.
-	assert.deepEqual(ids(rendered.first.tonight), ["expand", ...BAR])
+	assert.deepEqual(ids(rendered.first.tonight), ["expand", ...NAV])
 	assert.deepEqual(ids(rendered.first.title), ["expand", ...BAR])
 	assert.deepEqual(ids(rendered.first.rate), BAR)
 	for (const html of Object.values(rendered.first)) {

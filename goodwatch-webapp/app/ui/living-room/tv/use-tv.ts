@@ -23,7 +23,7 @@ import {
 	useState,
 } from "react"
 import { focusKey, tabFocusMemory } from "./focus-memory"
-import type { RoomKey, RoomTv } from "./room-tv"
+import { type RoomKey, type RoomTv, keyboardKey } from "./room-tv"
 import {
 	TV_CANVAS_ATTR,
 	TV_INPUT_ATTR,
@@ -175,9 +175,28 @@ export function useTv(ctx: TvContext, onEffect: (effect: TvEffect) => void) {
 		}
 	}, [memory])
 
+	// ---- How the focus last moved, and the pointer's ring. A focus a mouse or a finger gave never scrolls a list: what
+	// it points at is in view, and a list that moved under it would move what it points at. When the mouse leaves
+	// the items (for the picture's background, or off the TV) the focus stays for the Remote but stops showing; the
+	// next key shows it again before it moves anything.
+	const byPointer = useRef(false)
+	const [ringOff, setRingOff] = useState(false)
+	const ringOffRef = useRef(false)
+	const ringTimer = useRef<ReturnType<typeof setTimeout>>()
+	const showRing = useCallback(() => {
+		clearTimeout(ringTimer.current)
+		ringOffRef.current = false
+		setRingOff(false)
+	}, [])
+	useEffect(() => () => clearTimeout(ringTimer.current), [])
+
 	const dispatch = useCallback(
 		(action: TvAction) => {
 			const now = latest.current
+			if (action.type === "focus" && action.pointer) {
+				byPointer.current = true
+				showRing()
+			} else if (action.type !== "focus") byPointer.current = false
 			// Remote OK uses the same native link click as pointer/keyboard activation, including analytics.
 			if (action.type === "ok" || action.type === "choose") {
 				const el = itemElement(
@@ -216,8 +235,17 @@ export function useTv(ctx: TvContext, onEffect: (effect: TvEffect) => void) {
 				setFocus({ entry: now.entry, item: next.state.focus })
 			for (const effect of next.effects) now.onEffect(effect)
 		},
-		[navigate],
+		[navigate, showRing],
 	)
+	/** The mouse left the item `id`: a moment later, unless it came onto another, the focus stops showing. */
+	const unpoint = useCallback((id: string) => {
+		clearTimeout(ringTimer.current)
+		ringTimer.current = setTimeout(() => {
+			if (latest.current.focused !== id) return
+			ringOffRef.current = true
+			setRingOff(true)
+		}, 140)
+	}, [])
 
 	useIsoLayoutEffect(() => {
 		const root = roomElement()
@@ -244,8 +272,8 @@ export function useTv(ctx: TvContext, onEffect: (effect: TvEffect) => void) {
 				entry,
 				current.map((row) => row.scrollLeft),
 			)
-			if (rowPositions.size > 60)
-				rowPositions.delete(rowPositions.keys().next().value!)
+			const oldest = rowPositions.keys().next().value
+			if (rowPositions.size > 60 && oldest !== undefined) rowPositions.delete(oldest)
 		}
 		restore()
 		// A list's lazy code or data can arrive after this history entry. Restore that row before its next paint.
@@ -273,7 +301,7 @@ export function useTv(ctx: TvContext, onEffect: (effect: TvEffect) => void) {
 		if (power !== "on") return
 		const el = itemElement(focused)
 		if (!el) return
-		bringIntoView(el, !reducedMotion())
+		if (!byPointer.current) bringIntoView(el, !reducedMotion())
 		const active = document.activeElement
 		// The search screen's line keeps the browser's focus while the TV's focus moves: what is typed goes on
 		// landing in it, and a phone's keyboard stays open.
@@ -303,6 +331,11 @@ export function useTv(ctx: TvContext, onEffect: (effect: TvEffect) => void) {
 	// ---- The Remotes.
 	const press = useCallback(
 		(key: RoomKey) => {
+			// The first arrow after the pointer left shows where the focus is, and moves nothing yet.
+			if (ringOffRef.current) {
+				showRing()
+				if (key.type === "move" || key.type === "step") return
+			}
 			switch (key.type) {
 				case "move": {
 					const { focused } = latest.current
@@ -330,7 +363,7 @@ export function useTv(ctx: TvContext, onEffect: (effect: TvEffect) => void) {
 					return dispatch({ type: key.type })
 			}
 		},
-		[dispatch],
+		[dispatch, showRing],
 	)
 
 	// ---- The keyboard works like the Remote: the arrows move, Enter is OK, Escape and Backspace are Back, H is
@@ -393,41 +426,9 @@ export function useTv(ctx: TvContext, onEffect: (effect: TvEffect) => void) {
 				line.dispatchEvent(new Event("input", { bubbles: true }))
 				return
 			}
-			switch (e.key) {
-				case "ArrowUp":
-					press({ type: "move", dir: "up" })
-					break
-				case "ArrowDown":
-					press({ type: "move", dir: "down" })
-					break
-				case "ArrowLeft":
-					press({ type: "move", dir: "left" })
-					break
-				case "ArrowRight":
-					press({ type: "move", dir: "right" })
-					break
-				case "Enter":
-					press({ type: "ok" })
-					break
-				case "Escape":
-				case "Backspace":
-					press({ type: "back" })
-					break
-				case "h":
-				case "H":
-					press({ type: "home" })
-					break
-				case "m":
-				case "M":
-					press({ type: "menu" })
-					break
-				case "s":
-				case "S":
-					press({ type: "search" })
-					break
-				default:
-					return
-			}
+			const key = keyboardKey(e)
+			if (!key) return
+			if (key !== "held") press(key)
 			e.preventDefault()
 		}
 		window.addEventListener("keydown", onKey)
@@ -435,7 +436,8 @@ export function useTv(ctx: TvContext, onEffect: (effect: TvEffect) => void) {
 	}, [press])
 
 	// The menu lies over the screen and its key; a dark or booting TV shows no screen.
-	const framed = power === "on" && !menu.open && focused === "expand"
+	const framed =
+		power === "on" && !menu.open && focused === "expand" && !ringOff
 	const openService =
 		state.screen.name === "service" ? state.screen.service : null
 	const room: RoomTv = useMemo(
@@ -447,7 +449,7 @@ export function useTv(ctx: TvContext, onEffect: (effect: TvEffect) => void) {
 			// A streaming key is lit while its service's screen shows.
 			openService,
 			press,
-			point: (item) => dispatch({ type: "focus", item }),
+			point: (item) => dispatch({ type: "focus", item, pointer: true }),
 		}),
 		[power, menu.open, state.screen.name, framed, openService, press, dispatch],
 	)
@@ -462,6 +464,11 @@ export function useTv(ctx: TvContext, onEffect: (effect: TvEffect) => void) {
 		dispatch,
 		/** What the room shows of the TV, and where the Remotes' keys go. */
 		room,
+		/** The pointer left the items: the focus is kept but not shown (`Item`, kit.tsx). */
+		ringOff,
+		/** The focus came from a mouse or a finger last: lists hold still under it. */
+		byPointer: byPointer.current,
+		unpoint,
 	}
 }
 

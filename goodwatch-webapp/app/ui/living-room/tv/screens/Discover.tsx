@@ -11,6 +11,7 @@ import {
 	Frame,
 	Img,
 	Item,
+	PhoneFoot,
 	backdropSize,
 	keySize,
 	useReport,
@@ -41,9 +42,6 @@ export function DiscoverData({
 	useReport(report, useTvDiscover(on))
 	return null
 }
-
-/** How wide the Expand key's corner is on the phone: the last row ends before it. */
-const CORNER = "pr-[158px]"
 
 /** A tab: quiet until it is open, and white while it has the focus (living-room.css, `tvc-tab`). */
 const TAB = "tvc-tab flex items-center justify-center whitespace-nowrap"
@@ -151,7 +149,7 @@ function Choice({
 	if (P) {
 		const row = { flex: `1 0 ${keySize(canvas, 0)}px` }
 		return (
-			<Frame name="Discover" items={items} art={behind} dim={0.86}>
+			<Frame name="Discover" items={items} art={behind} dim={0.86} inlineExpand>
 				<div className="flex h-full flex-col">
 					{tabs}
 					<div className="min-h-[5px] shrink basis-[10px]" />
@@ -163,10 +161,7 @@ function Choice({
 						{tiles.slice(3)}
 					</div>
 					<div className="min-h-[5px] shrink basis-[10px]" />
-					<div
-						className={`flex shrink-0 items-center ${CORNER}`}
-						style={{ height: keySize(canvas, 54) }}
-					>
+					<PhoneFoot items={items} height={keySize(canvas, 54)}>
 						{shown && (
 							<span
 								key={shown.item}
@@ -175,7 +170,7 @@ function Choice({
 								{shown.line}
 							</span>
 						)}
-					</div>
+					</PhoneFoot>
 				</div>
 			</Frame>
 		)

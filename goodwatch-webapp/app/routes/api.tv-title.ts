@@ -4,6 +4,7 @@ import { resolveMediaContext } from "~/server/media-context.server"
 import { getUserIdFromRequest } from "~/utils/auth"
 import {
 	directOffers,
+	sourceScores,
 	type TvTitleExtras,
 } from "~/ui/living-room/tv/title-extras"
 
@@ -36,6 +37,11 @@ export async function loader({ request }: LoaderFunctionArgs) {
 					fingerprint: media.fingerprint,
 				}
 			: null,
+		facts: {
+			synopsis: media.details.synopsis || null,
+			genres: media.details.genres ?? [],
+			scores: sourceScores(media.details),
+		},
 	}
 	return json(result, { headers: { "Cache-Control": "private, no-store" } })
 }

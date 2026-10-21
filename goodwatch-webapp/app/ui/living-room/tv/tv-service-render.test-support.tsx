@@ -131,6 +131,9 @@ function homeOf(data: TvHomeData, p: TvPool | null, focus: string | null) {
 						focused: focusedItem(state, ctx),
 						screenFocus: focusedItem(state, ctx),
 						dispatch: () => {},
+						ringOff: false,
+						byPointer: false,
+						unpoint: () => {},
 					}}
 					canvas={canvas}
 					ctx={ctx}
@@ -208,6 +211,9 @@ function first(screen: Screen) {
 				focused: focusedItem(state, base),
 				screenFocus: focusedItem(state, base),
 				dispatch: () => {},
+				ringOff: false,
+				byPointer: false,
+				unpoint: () => {},
 			}}
 			canvas={CANVAS.desktop}
 			ctx={base}

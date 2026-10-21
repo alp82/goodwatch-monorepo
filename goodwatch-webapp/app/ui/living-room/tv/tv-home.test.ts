@@ -108,11 +108,10 @@ test("a guest's home before the pool is drawn from the start titles alone", () =
 	assert.deepEqual(tvContextOf(guest, null).tonight, [])
 })
 
-test("the home's tiles are the machine's apps, for a guest and a member", () => {
+test("a guest's home tiles are the machine's apps; a member's home is Start, without them", () => {
 	for (const [data, p] of [
 		[guest, null],
 		[guest, pool],
-		[member, null],
 	] as const)
 		assert.deepEqual(
 			homeApps(data, p).map((tile) => `app:${tile.app}`).sort(),
@@ -120,9 +119,17 @@ test("the home's tiles are the machine's apps, for a guest and a member", () => 
 				item.startsWith("app:"),
 			).sort(),
 		)
+	const start = tvItems({ name: "home" }, tvContextOf(member, null))
+	assert.deepEqual(
+		start.filter((item) => item.startsWith("app:")),
+		[],
+	)
+	// Each of the member's apps has its tile on Start.
+	for (const tile of homeApps(member, null))
+		assert.ok(start.includes(`start:${tile.app}`), tile.app)
 })
 
-test("the pool swaps in a guest's own picks: Tonight's three, and the Discover tile's posters", () => {
+test("the pool swaps in a guest's own picks: Watch next's, and the Discover tile's posters", () => {
 	assert.deepEqual(artOf(guest, pool, "tonight"), {
 		kind: "backdrop",
 		path: "/backdrop-1.jpg",
@@ -132,11 +139,11 @@ test("the pool swaps in a guest's own picks: Tonight's three, and the Discover t
 		paths: ["/poster-1.jpg", "/poster-2.jpg", "/poster-3.jpg", "/poster-4.jpg"],
 	})
 	const ctx = tvContextOf(guest, pool)
-	assert.deepEqual(ctx.tonight, [
-		{ title: "movie-1", href: null },
-		{ title: "movie-2", href: null },
-		{ title: "movie-3", href: null },
-	])
+	// The pool's six, all of them: Watch next shows up to ten.
+	assert.deepEqual(
+		ctx.tonight,
+		[1, 2, 3, 4, 5, 6].map((id) => ({ title: `movie-${id}`, href: null })),
+	)
 	assert.equal(ctx.member, false)
 	// A guest's Tonight grows into Discover.
 	assert.equal(destinationHref({ name: "tonight", pick: 0 }, ctx), "/discover")
@@ -213,7 +220,7 @@ test("a member with nothing to pick from gets the pool's best, as a guest does",
 	})
 	assert.deepEqual(
 		tvContextOf(empty, pool).tonight.map((pick) => pick.title),
-		["movie-1", "movie-2", "movie-3"],
+		["movie-1", "movie-2", "movie-3", "movie-4", "movie-5", "movie-6"],
 	)
 })
 
@@ -230,6 +237,7 @@ test("a guest's own Tonight's pick leads the pool's best, and is not named twice
 		{ card: wished, href: null, wished: true },
 		{ card: best.suggestions[0], href: null },
 		{ card: best.suggestions[1], href: null },
+		{ card: best.suggestions[2], href: null },
 	])
 	// The pick is among the pool's best: once, first.
 	assert.deepEqual(
@@ -297,7 +305,7 @@ test("Tonight offers what streams on the person's services first, then what stre
 	assert.deepEqual(titlesOf(tonightOrder(pool)), [3, 5, 2, 4, 1, 6])
 	assert.deepEqual(
 		titlesOf(tonightPicks(guest, pool).map((pick) => pick.card)),
-		[3, 5, 2],
+		[3, 5, 2, 4, 1, 6],
 	)
 	// The tile on home shows the first pick's picture.
 	assert.deepEqual(homeApps(guest, pool)[0].art, {
@@ -320,7 +328,7 @@ test("when too few titles stream, the picks are filled up with the pool's best o
 	}
 	assert.deepEqual(
 		titlesOf(tonightPicks(guest, pool).map((pick) => pick.card)),
-		[3, 1, 2],
+		[3, 1, 2, 4],
 	)
 	// Nothing streams, or nobody knows yet: the pool's own order.
 	for (const services of [[], null])
@@ -342,7 +350,7 @@ test("a guest's own pick still leads, and a member's Tonight is not reordered", 
 	const wished = streams(9, [])
 	assert.deepEqual(
 		titlesOf(tonightPicks(guest, pool, wished).map((pick) => pick.card)),
-		[9, 2, 3],
+		[9, 2, 3, 1],
 	)
 	assert.deepEqual(tonightPicks(member, pool), member.tonight)
 })
@@ -441,4 +449,15 @@ test("a member's service tiles draw from their own Tonight before the pool is as
 		homeServices(own, null).map((tile) => tile.picture),
 		["/backdrop-11.jpg", "/backdrop-12.jpg"],
 	)
+})
+
+test("Watch next takes up to ten of a guest's picks", () => {
+	const twelve: TvPool = {
+		suggestions: Array.from({ length: 12 }, (_, i) => card("movie", i + 1)),
+	}
+	const picks = tonightPicks(guest, twelve)
+	assert.equal(picks.length, 10)
+	assert.equal(picks[9].card.tmdb_id, 10)
+	// With a guest's own pick first, still ten.
+	assert.equal(tonightPicks(guest, twelve, { ...card("movie", 99), key: 99 }).length, 10)
 })

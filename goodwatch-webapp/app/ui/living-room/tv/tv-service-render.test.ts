@@ -70,6 +70,18 @@ const focused = (html: string) =>
 		(match) => match[1],
 	)
 const count = (html: string, part: string) => html.split(part).length - 1
+
+/**
+ * The phone's last row with the Expand key at its right end (kit.tsx, `PhoneFoot`): its height and what stands
+ * before the key, or null when the screen has no such row.
+ */
+const phoneFoot = (html: string) => {
+	const m =
+		/<div class="flex shrink-0 items-center gap-2[^"]*" style="height:(\d+)px"><div class="flex min-w-0 flex-1 items-center gap-2">(.*?)<\/div><button type="button" data-tv-item="expand"/.exec(
+			html,
+		)
+	return m ? { height: Number(m[1]), before: m[2] } : null
+}
 /** A screen's own items and its bar's, without the Expand key: for the lists written out here. */
 const drawn = (items: string[]) => items.filter((item) => item !== "expand")
 /** An item with what is in it. */
@@ -305,18 +317,19 @@ test("without titles the list says so, under the service's mark, with the bar", 
 	}
 })
 
-test("the Expand key stands in its corner, and the desktop keeps the band under the posters for it", () => {
+test("the Expand key stands in its corner on the desktop, over the band kept for it, and ends the phone's last row", () => {
 	const { netflix } = rendered.service
-	for (const edition of EDITIONS) {
-		assert.match(
-			netflix[edition],
-			/<div data-tv-expand-place="true"[^>]*><button type="button" data-tv-item="expand"[^>]*>.*?Expand<\/button><\/div>/,
-		)
-		assert.equal(count(netflix[edition], 'data-tv-item="expand"'), 1)
-	}
+	assert.match(
+		netflix.desktop,
+		/<div data-tv-expand-place="true"[^>]*><button type="button" data-tv-item="expand"[^>]*>.*?Expand<\/button><\/div>/,
+	)
 	assert.match(netflix.desktop, /pb-\[120px\]/)
-	// The phone's last row ends before the corner.
-	assert.match(netflix.phone, /pr-\[158px\]/)
+	// The phone's key carries its words: it ends the last row, after the row's keys, and no corner is kept.
+	assert.ok(phoneFoot(netflix.phone))
+	assert.ok(!netflix.phone.includes("data-tv-expand-place"))
+	assert.ok(!netflix.phone.includes("158px"))
+	for (const edition of EDITIONS)
+		assert.equal(count(netflix[edition], 'data-tv-item="expand"'), 1)
 })
 
 test("on every phone of the room's table the bar's keys are touch targets and the posters fit the row", () => {

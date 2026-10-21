@@ -12,6 +12,7 @@ import {
 } from "react"
 import { useTonightsPick } from "~/ui/navigation/useTonightsPick"
 import { useContinueWithGoogle, whenAuthFails } from "~/utils/auth-client"
+import { useAuthHref } from "~/utils/auth-href"
 import { onFirstInteraction } from "~/utils/first-interaction"
 import { useLeaveThroughTv, useReturnIntoTv } from "../tv-transition"
 import { TvRoom } from "./TvRoom"
@@ -21,6 +22,7 @@ import {
 	EpisodeCode,
 	EpisodeData,
 	ExplorerData,
+	PopularCode,
 	QuizCode,
 	RateCode,
 	SearchData,
@@ -52,8 +54,16 @@ import {
 	tvContextOf,
 	tvTitleKey,
 } from "./tv-home"
-import { type TvEffect, type TvPower, readTvState } from "./tv-machine"
+import {
+	STREAMING_BLOCK,
+	type TvEffect,
+	type TvPower,
+	readTvState,
+	watchHref,
+} from "./tv-machine"
+import { canonicalMediaTitle } from "~/utils/media-presentation"
 import type { TvKnownTitle, TvTitleScreens } from "./tv-title"
+import { whereRows } from "./title-extras"
 import { useTv } from "./use-tv"
 import type { TvDiscoverReport } from "./use-tv-discover"
 import type { TvEpisodeReport } from "./use-tv-episode"
@@ -283,6 +293,13 @@ export function TvLivingRoom({
 	const [one, setOne] = useState<TvTitleReport | null>(null)
 	const onTitle = screen.name === "title" || screen.name === "rate"
 	const titleName = one?.titleName ?? null
+	const offers = one?.title?.extras?.offers
+	const ownServices = one?.title?.mine
+	const titleWhere = useMemo(() => {
+		if (!offers) return {}
+		const where = whereRows(offers, ownServices ?? [])
+		return { titleOffers: where.rows.length, titleWhere: where.more }
+	}, [offers, ownServices])
 	// My shows (slice 9): on a show the member is midway through, Seen it marks the Next episode. Which one that
 	// is, and the mark, are held by a component of a chunk of its own, which reports here (`EpisodeData`, mounted
 	// below for a member on a show's title screen).
@@ -333,10 +350,12 @@ export function TvLivingRoom({
 			...explorerContext,
 			// Slice 8: Taste's sides and lists, the quiz's title and progress, and where the strip has exact scores.
 			...tasteCtx,
-			// Home's guide is the desktop's (#673): the phone keeps the row of tiles.
-			...(edition === "phone" && { homeSides: [] }),
+			// Home's guide is the desktop's (#673): the phone keeps the row of tiles. The phone's navigation has fewer tabs.
+			...(edition === "phone" && { homeSides: [], phone: true }),
 			// My shows (slice 9): Seen it marks the Next episode of the show on screen.
 			nextEpisode: Boolean(nextEpisode),
+			// The title screen's Where to watch rows, once its offers are there.
+			...titleWhere,
 		}),
 		[
 			data,
@@ -353,6 +372,7 @@ export function TvLivingRoom({
 			tasteCtx,
 			edition,
 			nextEpisode,
+			titleWhere,
 		],
 	)
 	// The title screen's Seen it key names the episode it marks.
@@ -374,6 +394,7 @@ export function TvLivingRoom({
 	)
 
 	const google = useContinueWithGoogle()
+	const authHref = useAuthHref()
 	const leave = useLeaveThroughTv()
 	const titleEffect = one?.onEffect
 	const tasteEffect = mine?.onEffect
@@ -406,6 +427,21 @@ export function TvLivingRoom({
 				case "expand":
 					leave(effect.href)
 					return
+				// Watch on Watch next or Popular without a direct offer: the title's page, where it streams.
+				case "watch": {
+					const card = known(effect.title)
+					const href = watchHref(effect.title, {
+						titleName: card ? canonicalMediaTitle(card) : null,
+					})
+					if (href) leave(href, { highlight: STREAMING_BLOCK })
+					return
+				}
+				// Your taste's sign-up: the site's sign-up page, through the TV, back to the same TV screen.
+				case "sign-up":
+					leave(
+						authHref("sign-up", `${here.current.pathname}${here.current.search}`),
+					)
+					return
 				// Continue with Google, back to the same TV screen.
 				case "sign-in":
 					whenAuthFails(
@@ -417,7 +453,17 @@ export function TvLivingRoom({
 					return
 			}
 		},
-		[google, say, leave, titleEffect, tasteEffect, episodeEffect, browseList],
+		[
+			known,
+			google,
+			authHref,
+			say,
+			leave,
+			titleEffect,
+			tasteEffect,
+			episodeEffect,
+			browseList,
+		],
 	)
 	const tv = useTv(ctx, onEffect)
 	const tvPower = tv.room.power
@@ -435,6 +481,15 @@ export function TvLivingRoom({
 		)
 			dispatch({ type: "browse-page", page: browseList.pages })
 	}, [screen, browseList, dispatch])
+	// The quiz reached its goal once its last answer was saved and held: Your taste takes its place, and the
+	// quiz asks on next time.
+	const quizDone = mine?.done ?? false
+	const rateMore = mine?.rateMore
+	useEffect(() => {
+		if (!quizDone) return
+		dispatch({ type: "quiz-done" })
+		rateMore?.()
+	}, [quizDone, rateMore, dispatch])
 	const onDraft = useCallback(
 		(text: string) => {
 			setDraft(text)
@@ -461,8 +516,19 @@ export function TvLivingRoom({
 	// while its tile has the focus; the rating's on the title screen.
 	useEffect(() => {
 		if (!interacted) return
-		if (tv.screen.name === "home" && tv.focused === "app:tonight")
+		const onHome = tv.screen.name === "home"
+		if (onHome && (tv.focused === "app:tonight" || tv.focused === "start:tonight"))
 			TonightCode.load().catch(() => {})
+		// Start's tiles (a member's home): each screen's code while its tile has the focus.
+		if (onHome && tv.focused === "start:popular")
+			PopularCode.load().catch(() => {})
+		if (onHome && tv.focused === "start:quiz") QuizCode.load().catch(() => {})
+		if (onHome && tv.focused === "start:taste") TasteCode.load().catch(() => {})
+		if (onHome && tv.focused === "start:discover")
+			DiscoverCode.load().catch(() => {})
+		// On Watch next and Popular the title screen's, which Details and a pick open.
+		if (tv.screen.name === "tonight" || tv.screen.name === "popular")
+			TitleCode.load().catch(() => {})
 		if (tv.screen.name === "title") RateCode.load().catch(() => {})
 		// Discover's while its tile has the focus; on Discover the title screen's, which a title opens.
 		if (tv.screen.name === "home" && tv.focused === "app:discover")

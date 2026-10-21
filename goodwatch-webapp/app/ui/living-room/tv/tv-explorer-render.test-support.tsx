@@ -115,6 +115,9 @@ function tv(screen: Screen, view: TvExplorerView | null) {
 				focused: focusedItem(state, ctx),
 				screenFocus: focusedItem(state, ctx),
 				dispatch: () => {},
+				ringOff: false,
+				byPointer: false,
+				unpoint: () => {},
 			}}
 			canvas={CANVAS.desktop}
 			ctx={ctx}

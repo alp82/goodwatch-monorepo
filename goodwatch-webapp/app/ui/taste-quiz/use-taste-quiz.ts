@@ -19,6 +19,7 @@ import { fetchSmartTitles } from "~/routes/api.smart-titles"
 import { useUserData } from "~/routes/api.user-data"
 import type { Score } from "~/server/scores.server"
 import type { ScoringMedia } from "~/ui/scoring/types"
+import { ackView, useScoreAck } from "~/ui/scoring/use-score-ack"
 import { useTasteScoring } from "~/ui/taste/hooks/useTasteScoring"
 import { useTitleQueue } from "~/ui/taste/hooks/useTitleQueue"
 import { canGuestRate, readGuestInteractions } from "~/utils/guest-progress"
@@ -58,7 +59,8 @@ export function useTasteQuiz({
 	const {
 		interactions,
 		addScore,
-		addSkip,
+		saveScore,
+		saveSkip,
 		addPlanToWatch,
 		confirmedRatingCount: confirmed,
 		hasScored,
@@ -156,15 +158,25 @@ export function useTasteQuiz({
 	})
 	const pages = pickPages(picks.length)
 
+
+	// An answer lights at once, is saved, and holds for a moment before the next title (ui/scoring/score-ack.ts).
+	// Presses while it is on its way or held change nothing; a failed save keeps the title.
+	const ack = useScoreAck()
 	const title = queue.current
-	// The queue can fill before guest progress hydrates; step past titles already answered.
+	// The queue can fill before guest progress hydrates; step past titles already answered. Not the title whose
+	// answer was just given: it stays while the answer is held, and the hold moves on.
+	const answering = ack.state.phase !== "idle" && title && ack.state.key === keyOf(title)
 	useEffect(() => {
-		if (title && interactions.some((i) => keyOf(i) === keyOf(title)))
+		if (
+			title &&
+			!answering &&
+			interactions.some((i) => keyOf(i) === keyOf(title))
+		)
 			queue.advance()
-	}, [title, interactions, queue.advance])
+	}, [title, answering, interactions, queue.advance])
 	const rate = useCallback(
 		(score: Score) => {
-			if (!title) return
+			if (!title || ack.busy) return
 			if (!member && !canGuestRate(title.media_type, title.tmdb_id)) {
 				addScore(title, score) // Raises the guest limit prompt.
 				return
@@ -172,24 +184,34 @@ export function useTasteQuiz({
 			const already = interactions.some(
 				(i) => i.type === "score" && keyOf(i) === keyOf(title),
 			)
-			addScore(title, score)
-			keep(title, score)
-			queue.advance()
-			send({ type: "scored", progress: progress + (already ? 0 : 1) })
+			ack.answer(
+				keyOf(title),
+				{ kind: "score", score },
+				() => saveScore(title, score),
+				() => {
+					keep(title, score)
+					queue.advance()
+					send({ type: "scored", progress: progress + (already ? 0 : 1) })
+				},
+			)
 		},
-		[title, member, interactions, addScore, keep, queue.advance, progress],
+		[title, member, interactions, addScore, saveScore, keep, queue.advance, progress, ack],
 	)
 	const skip = useCallback(() => {
-		if (!title) return
-		addSkip(title)
-		queue.advance()
-	}, [title, addSkip, queue.advance])
+		if (!title || ack.busy) return
+		ack.answer(
+			keyOf(title),
+			{ kind: "skip" },
+			() => saveSkip(title),
+			queue.advance,
+		)
+	}, [title, saveSkip, queue.advance, ack])
 	const wantToSee = useCallback(() => {
-		if (!title) return
+		if (!title || ack.busy) return
 		addPlanToWatch(title)
 		keep(title, null)
 		queue.advance()
-	}, [title, addPlanToWatch, keep, queue.advance])
+	}, [title, addPlanToWatch, keep, queue.advance, ack.busy])
 
 	const dispatch = useCallback((action: QuizAction) => send(action), [])
 
@@ -199,6 +221,10 @@ export function useTasteQuiz({
 		member,
 		/** The title being rated; null when the queue is empty. */
 		title,
+		/** The answer just given for it: its score lit, the line, and whether it is on its way out. */
+		answered: ackView(ack.state, title ? keyOf(title) : null),
+		/** Ends an answer on its way or held without moving on (the TV leaves its quiz). */
+		cancelAnswer: ack.cancel,
 		nextTitle: queue.next,
 		loadingTitles: !title && queue.isLoading,
 		progress,

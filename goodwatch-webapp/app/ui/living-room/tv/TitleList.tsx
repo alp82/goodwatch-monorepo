@@ -19,7 +19,7 @@ import { MediaFact } from "./MediaFact"
 // it out of every page's shell (vite.config.js, rule 3).
 import { type ReactNode, useRef } from "react"
 import { tmdbImageUrl } from "~/utils/tmdb-image"
-import { Frame, Img, Item, backdropSize, keySize, useTvView } from "./kit"
+import { Frame, Img, Item, PhoneFoot, backdropSize, keySize, useTvView } from "./kit"
 import { TV_ROW_ATTR } from "./tv-dom"
 
 /** A title as a list shows it. */
@@ -51,9 +51,6 @@ export type TvListAction = {
 	/** A mark in this colour before the label on the desktop: the island a key sails to, as it is on the map. */
 	mark?: string
 }
-
-/** How wide the Expand key's corner is on the phone: the last row ends before it. */
-const PHONE_CORNER = "pr-[158px]"
 
 /** A long name is set smaller, so it stays on two lines. */
 const nameSize = (name: string) =>
@@ -146,7 +143,7 @@ export function TitleList({
 	if (P) {
 		const height = keySize(canvas, 54)
 		return (
-			<Frame {...frame}>
+			<Frame {...frame} inlineExpand>
 				<div className="flex h-full flex-col">
 					{shown ? (
 						<div
@@ -184,11 +181,11 @@ export function TitleList({
 					>
 						{posters}
 					</div>
-					<div
-						{...(keys.length > 2 ? { [TV_ROW_ATTR]: "" } : {})}
-						className={`flex shrink-0 items-center gap-2 ${keys.length > 2 ? "mr-[158px] overflow-hidden" : PHONE_CORNER}`}
-						style={{ height }}
-					>
+					<PhoneFoot items={items} height={height}>
+						<div
+							{...(keys.length > 2 ? { [TV_ROW_ATTR]: "" } : {})}
+							className={`flex min-w-0 items-center gap-2 ${keys.length > 2 ? "overflow-hidden" : ""}`}
+						>
 						{keys.map((action) => (
 							<Item
 								key={action.id}
@@ -201,7 +198,8 @@ export function TitleList({
 								<span className="truncate">{action.label}</span>
 							</Item>
 						))}
-					</div>
+						</div>
+					</PhoneFoot>
 				</div>
 			</Frame>
 		)

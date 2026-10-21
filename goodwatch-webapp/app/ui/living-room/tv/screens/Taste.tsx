@@ -6,6 +6,7 @@
 // A chunk the TV asks for on first use (screen-code.tsx).
 import { type ReactNode, useRef } from "react"
 import { useTasteQuiz } from "~/ui/taste-quiz/use-taste-quiz"
+import { GoodWatchG } from "~/ui/brand/GoodWatchWordmark"
 import { tmdbImageUrl } from "~/utils/tmdb-image"
 import { TASTE_GROUPS_NAME } from "../../../taste/taste-groups-name"
 import { TitleList } from "../TitleList"
@@ -13,6 +14,7 @@ import {
 	Frame,
 	Img,
 	Item,
+	PhoneFoot,
 	backdropSize,
 	keySize,
 	useReport,
@@ -89,7 +91,7 @@ function Ask({
 	const P = canvas.edition === "phone"
 	return (
 		<Frame
-			name="Taste"
+			name="Your taste"
 			items={items}
 			art={backdrop ? tmdbImageUrl(backdrop, backdropSize(canvas)) : undefined}
 			dim={0.8}
@@ -109,7 +111,9 @@ function Ask({
 					</div>
 				)}
 				{items.includes("start-quiz") && (
-					<div className={`flex ${P ? "mt-6" : "mt-9"}`}>
+					<div
+							className={`flex flex-wrap items-center ${P ? "mt-6 gap-2.5" : "mt-9 gap-5"}`}
+						>
 						<Item
 							id="start-quiz"
 							className={`tvc-btn flex items-center ${P ? "px-7 text-[22px]" : "h-[76px] px-10 text-[30px]"}`}
@@ -117,6 +121,7 @@ function Ask({
 						>
 							{label}
 						</Item>
+							{items.includes("sign-up") && <SignUp />}
 					</div>
 				)}
 			</div>
@@ -140,18 +145,32 @@ function RateMore() {
 }
 
 /**
- * The phone's last row: what a screen puts beside the Expand key, which has the right end of it. As tall as a key
- * with or without one, so nothing above it reaches into the Expand key's corner.
+ * A guest's way to keep what they rated: the site's sign-up, through the TV, back to Your taste (tv-machine.ts,
+ * `sign-up`). Their progress in this browser moves to the account they make.
  */
-function Foot({ children }: { children?: ReactNode }) {
+function SignUp() {
+	const { canvas } = useTvView()
+	const P = canvas.edition === "phone"
+	return (
+		<Item
+			id="sign-up"
+			label="Sign up to save your scores and taste"
+			className={`tvc-btn tvc-cta flex shrink-0 items-center gap-3 whitespace-nowrap ${P ? "px-5 text-[20px]" : "h-[70px] px-8 text-[26px]"}`}
+			style={P ? { height: keySize(canvas, 54) } : undefined}
+		>
+			<GoodWatchG height={P ? 22 : 30} color="currentColor" />
+			{P ? "Sign up to save" : "Sign up to save your scores and taste"}
+		</Item>
+	)
+}
+
+/** The phone's last row: what a screen puts there, then the Expand key (kit.tsx, `PhoneFoot`). As tall as a key. */
+function Foot({ items, children }: { items: readonly string[]; children?: ReactNode }) {
 	const { canvas } = useTvView()
 	return (
-		<div
-			className="mt-2.5 flex shrink-0 items-center gap-2 pr-[158px]"
-			style={{ height: keySize(canvas, 54) }}
-		>
+		<PhoneFoot items={items} height={keySize(canvas, 54)} className="mt-2.5">
 			{children}
-		</div>
+		</PhoneFoot>
 	)
 }
 
@@ -211,7 +230,7 @@ function Sides({
 		</Item>
 	)
 	const frame = {
-		name: "Taste",
+		name: "Your taste",
 		crumb: TASTE_GROUPS_NAME.title,
 		items,
 		art: shown?.backdrop
@@ -224,7 +243,7 @@ function Sides({
 	// beside the Expand key's corner.
 	if (P)
 		return (
-			<Frame {...frame}>
+			<Frame {...frame} inlineExpand>
 				<div className="flex h-full flex-col">
 					<div
 						key={shown?.id}
@@ -240,7 +259,10 @@ function Sides({
 					>
 						{sides.map(tile)}
 					</div>
-					<Foot>{more && <RateMore />}</Foot>
+					<Foot items={items}>
+							{more && <RateMore />}
+							{items.includes("sign-up") && <SignUp />}
+						</Foot>
 				</div>
 			</Frame>
 		)
@@ -254,17 +276,20 @@ function Sides({
 			>
 				{sides.map(tile)}
 			</div>
-			{more && (
-				<div className="mt-8 flex">
-					<RateMore />
-				</div>
-			)}
+			{(more || items.includes("sign-up")) && (
+					<div className="mt-8 flex gap-5">
+						{more && <RateMore />}
+						{items.includes("sign-up") && <SignUp />}
+					</div>
+				)}
 		</Frame>
 	)
 }
 
 /** "Rate more" as a list's key. */
 const RATE_MORE = [{ id: "start-quiz", label: "Rate more" }]
+/** A guest's sign-up, as a list's key. */
+const SIGN_UP = { id: "sign-up", label: "Sign up to save your scores and taste" }
 
 export default function Taste({
 	items,
@@ -282,7 +307,7 @@ export default function Taste({
 		const shown = sides.find((one) => one.id === side)
 		return (
 			<TitleList
-				name="Taste"
+				name="Your taste"
 				items={items}
 				crumb={shown?.name ?? "Fits your taste"}
 				titles={shown?.titles ?? []}
@@ -317,11 +342,13 @@ export default function Taste({
 		case "picks":
 			return (
 				<TitleList
-					name="Taste"
+					name="Your taste"
 					items={items}
 					crumb="Made for you"
 					titles={taste.picks}
-					actions={RATE_MORE}
+					actions={
+						items.includes("sign-up") ? [...RATE_MORE, SIGN_UP] : RATE_MORE
+					}
 					empty={
 						taste.waiting
 							? "Your picks are on their way."

@@ -1,7 +1,7 @@
 // Where the Remote should be for the spot it points at: the geometry of pointing (pointing.ts), pure, so the
 // tests run it as it is. Three Remotes aim in three ways:
-// - in the hand on the desktop it turns about the wrist toward the cursor while that is over the picture or within
-//   `AIM_PAD` of its edges (elsewhere it rests): a swing of up to 42 degrees under the TV, a nod of 13 beside it,
+// - in the hand on the desktop it turns about the wrist toward the cursor while that is over the picture (anywhere
+//   else, even a pixel outside its edge, it rests): a swing of up to 42 degrees under the TV, a nod of 13 beside it,
 //   where a swing would carry it over the picture;
 // - the phone's Remote under the TV (portrait) stays in its place: it turns a few degrees about the grip, leans
 //   back and slides a little, and only for a spot on the picture;
@@ -60,8 +60,11 @@ const clamp = (n: number, lo: number, hi: number) =>
 const degrees = (radians: number) => (radians * 180) / Math.PI
 const radians = (deg: number) => (deg * Math.PI) / 180
 
-/** How far outside the picture's edges the cursor still has the desktop Remote aim at it. */
-export const AIM_PAD = 40
+/**
+ * How far outside the picture's edges the cursor still has the desktop Remote aim at it: nowhere. Outside the TV's
+ * screen the Remote stays still (owner, October 21, 2026); it used to follow a 40 px margin round the picture.
+ */
+export const AIM_PAD = 0
 
 export const inside = (spot: { x: number; y: number }, r: Rect, pad = 0) =>
 	spot.x >= r.left - pad &&

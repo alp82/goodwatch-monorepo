@@ -30,6 +30,7 @@ import {
 	getViewerContext,
 } from "~/server/viewer.server"
 import type { TvHomeData, TvService } from "~/ui/living-room/tv/tv-home"
+import { TONIGHT_PICKS } from "~/ui/living-room/tv/tv-machine"
 import { titleKey } from "~/utils/title-key"
 import { livingRoomAuth } from "./data.server"
 import { loadTvPopular } from "./tv-popular.server"
@@ -63,7 +64,10 @@ export async function loadMemberHome(
 	taste: Taste,
 	now = Date.now(),
 ) {
-	const parts = await getTonightParts(viewer, taste, now)
+	// Watch next's stack: the Next episode, then the first movies, then a show to start (tv-home.server.ts).
+	const parts = await getTonightParts(viewer, taste, now, {
+		movies: TONIGHT_PICKS - 2,
+	})
 	const ids = tonightShowIds(parts)
 	const cards = ids.length
 		? await getTitleCards(

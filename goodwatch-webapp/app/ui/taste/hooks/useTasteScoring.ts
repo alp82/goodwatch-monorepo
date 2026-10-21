@@ -1,4 +1,6 @@
+import { useQueryClient } from "@tanstack/react-query"
 import { useCallback, useEffect, useState } from "react"
+import { queryKeyUserData } from "~/routes/api.user-data"
 import {
 	useScoreMutation,
 	useSkippedMutation,
@@ -42,6 +44,7 @@ export const useTasteScoring = ({ isAuthenticated }: UseTasteScoringProps) => {
 		)
 		setHasScored(true)
 	}, [])
+	const queryClient = useQueryClient()
 	const scoreMutation = useScoreMutation()
 	const skippedMutation = useSkippedMutation()
 	const wishlistMutation = useWishlistMutation()
@@ -177,6 +180,77 @@ export const useTasteScoring = ({ isAuthenticated }: UseTasteScoringProps) => {
 		[isAuthenticated, wishlistMutation, updateInteractions],
 	)
 
+	/** Puts an answer in this visit's list, after it was saved. */
+	const record = useCallback(
+		(media: ScoringMedia, type: "score" | "skip", score?: Score) =>
+			setInteractions((prev) => [
+				...prev.filter(
+					(i) =>
+						!(i.tmdb_id === media.tmdb_id && i.media_type === media.media_type),
+				),
+				{
+					tmdb_id: media.tmdb_id,
+					media_type: media.media_type,
+					type,
+					...(type === "score" ? { score } : {}),
+					timestamp: Date.now(),
+				},
+			]),
+		[],
+	)
+	/** A write the server answered without saving: the person's marks are read again, so none stays half-done. */
+	const refused = useCallback(() => {
+		void queryClient.invalidateQueries({ queryKey: queryKeyUserData })
+		throw new Error("The answer was not saved")
+	}, [queryClient])
+
+	/**
+	 * Saves a score and settles when it is saved: in the browser for a guest (it fails over the guest limit, which
+	 * raises its prompt), on the account for a member. Only a saved score joins this visit's list. Rejects when it
+	 * isn't saved, so a page that waits for it can keep the title (ui/scoring/score-ack.ts).
+	 */
+	const saveScore = useCallback(
+		async (media: ScoringMedia, score: Score) => {
+			if (!isAuthenticated) {
+				if (
+					!updateGuestInteraction(media.media_type, media.tmdb_id, "score", score)
+				)
+					throw new Error("Over the guest limit")
+				noteScoreSaved(media)
+				return
+			}
+			const result = await scoreMutation.mutateAsync({
+				mediaType: media.media_type,
+				tmdbId: media.tmdb_id,
+				score,
+				// A quiz score on a show never asks "Have you seen all of it?".
+				byHand: false,
+			})
+			if (result.status !== "success") refused()
+			noteScoreSaved(media)
+			record(media, "score", score)
+		},
+		[isAuthenticated, scoreMutation, noteScoreSaved, record, refused],
+	)
+
+	/** Saves "Haven't seen it" (skipped in the taste quiz) and settles when it is saved, as `saveScore` does. */
+	const saveSkip = useCallback(
+		async (media: ScoringMedia) => {
+			if (!isAuthenticated) {
+				updateGuestInteraction(media.media_type, media.tmdb_id, "skip")
+				return
+			}
+			const result = await skippedMutation.mutateAsync({
+				mediaType: media.media_type,
+				tmdbId: media.tmdb_id,
+				action: "add",
+			})
+			if (result.status !== "success") refused()
+			record(media, "skip")
+		},
+		[isAuthenticated, skippedMutation, record, refused],
+	)
+
 	const clearInteractions = useCallback(() => {
 		if (!isAuthenticated) {
 			setInteractions([])
@@ -193,6 +267,8 @@ export const useTasteScoring = ({ isAuthenticated }: UseTasteScoringProps) => {
 		hasScored,
 		addScore,
 		addSkip,
+		saveScore,
+		saveSkip,
 		addPlanToWatch,
 		clearInteractions,
 		ratingsCount,

@@ -13,7 +13,7 @@ import { titleToDashed } from "~/utils/helpers"
 import { getVibeColorValue } from "~/utils/ratings"
 import { GoogleMark } from "./GoogleMark"
 import { useContinueWithGoogle } from "~/utils/auth-client"
-import { QUIZ_GOAL, readQuizKey } from "./quiz-flow"
+import { QUIZ_GOAL, readQuizPress } from "./quiz-flow"
 import type { QuizPick } from "./use-quiz-picks"
 import { type TasteQuiz, useTasteQuiz } from "./use-taste-quiz"
 
@@ -63,9 +63,10 @@ function useQuizKeys(q: TasteQuiz) {
 				)
 			)
 				return
-			const intent = readQuizKey(e.key, q.state)
+			const intent = readQuizPress(e, q.state)
 			if (!intent) return
 			e.preventDefault()
+			if (intent === "held") return
 			if (intent.type === "score") q.rate(intent.score)
 			else if (intent.type === "skip") q.skip()
 			else if (intent.type === "show-picks") q.showPicks()
@@ -168,6 +169,7 @@ function PhoneDock({ children }: { children: ReactNode }) {
 
 function QuizStep({ q }: { q: TasteQuiz }) {
 	const x = q.title
+	const a = q.answered
 	const rateMore = q.state.pickedBefore || q.member
 	if (!x)
 		return (
@@ -218,23 +220,39 @@ function QuizStep({ q }: { q: TasteQuiz }) {
 						}
 					/>
 					<div className="mt-6 flex flex-col gap-5 sm:flex-row sm:gap-8">
+						{/* The title leaves after its answer's hold and the next one rises in (main.css, score-ack). */}
 						<img
 							key={`${x.media_type}-${x.tmdb_id}`}
 							src={posterUrl(x.poster_path, "w342")}
 							alt={`Poster for ${x.title}`}
-							className="mx-auto aspect-[2/3] w-36 shrink-0 rounded-md border-2 border-gray-800 object-cover shadow-2xl sm:mx-0 sm:w-48"
+							className={`${a.leaving ? "score-ack-leave" : "score-ack-enter"} mx-auto aspect-[2/3] w-36 shrink-0 rounded-md border-2 border-gray-800 object-cover shadow-2xl sm:mx-0 sm:w-48`}
 						/>
 						<div className="min-w-0 flex-1">
-							<div className="text-2xl font-extrabold leading-tight md:text-3xl">
-								<span lang={mediaFieldLanguage(x)}>{x.title}</span>
+							<div
+								key={`${x.media_type}-${x.tmdb_id}`}
+								className={a.leaving ? "score-ack-leave" : "score-ack-enter"}
+							>
+								<div className="text-2xl font-extrabold leading-tight md:text-3xl">
+									<span lang={mediaFieldLanguage(x)}>{x.title}</span>
+								</div>
+								<div className="mt-1 text-sm text-gray-400">
+									{[x.release_year, x.genres?.slice(0, 3).join(", ")]
+										.filter(Boolean)
+										.join(" · ")}
+								</div>
 							</div>
-							<div className="mt-1 text-sm text-gray-400">
-								{[x.release_year, x.genres?.slice(0, 3).join(", ")]
-									.filter(Boolean)
-									.join(" · ")}
-							</div>
-							<div className="mt-5">
-								<ScoreControl onRate={q.rate} />
+							<p
+								aria-live="polite"
+								className={`mt-2 min-h-6 font-bold ${a.failed ? "text-red-300" : "text-amber-300"}`}
+							>
+								{a.line}
+							</p>
+							<div className="mt-3">
+								<ScoreControl
+									value={a.score}
+									acknowledged={a.score != null}
+									onRate={q.rate}
+								/>
 							</div>
 							<div className="mt-3 flex flex-wrap items-center gap-2">
 								<button type="button" className={ghost} onClick={q.skip}>

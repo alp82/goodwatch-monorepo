@@ -11,6 +11,8 @@ export interface ScoreControlProps {
 	size?: "full" | "compact"
 	fit?: "screen" | "box"
 	busy?: boolean
+	/** `value` is an answer just given and held (ui/scoring/score-ack.ts): its choices light. */
+	acknowledged?: boolean
 }
 
 /** Four words above all ten exact scores, on phones as well as wide screens. */
@@ -19,6 +21,7 @@ export function ScoreControl({
 	onRate,
 	onClear,
 	busy = false,
+	acknowledged = false,
 }: ScoreControlProps) {
 	const [hot, setHot] = useState<number | null>(null)
 	return (
@@ -54,6 +57,7 @@ export function ScoreControl({
 				value={value}
 				hot={hot}
 				disabled={busy}
+				acknowledged={acknowledged}
 				className={busy ? "opacity-70" : ""}
 				renderChoice={(choice) => (
 					<button
@@ -67,7 +71,7 @@ export function ScoreControl({
 						onMouseEnter={() => setHot(choice.level)}
 						onFocus={() => setHot(choice.level)}
 						style={choice.style}
-						className={`flex min-w-0 cursor-pointer items-center justify-center gap-1.5 font-extrabold text-white transition hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-wait ${choice.kind === "level" ? "h-14 rounded-xl text-[11px] @lg:h-16 @lg:text-sm @xl:text-base" : "h-11 rounded-md text-xs tabular-nums @lg:h-12 @lg:text-sm"}`}
+						className={`${choice.acknowledged ? "score-ack" : ""} flex min-w-0 cursor-pointer items-center justify-center gap-1.5 font-extrabold text-white transition hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-wait ${choice.kind === "level" ? "h-14 rounded-xl text-[11px] @lg:h-16 @lg:text-sm @xl:text-base" : "h-11 rounded-md text-xs tabular-nums @lg:h-12 @lg:text-sm"}`}
 					>
 						{choice.children}
 					</button>

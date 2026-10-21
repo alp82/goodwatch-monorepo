@@ -59,6 +59,18 @@ const tag = (html: string, id: string) =>
 		html,
 	)?.[0] ?? ""
 const count = (html: string, part: string) => html.split(part).length - 1
+
+/**
+ * The phone's last row with the Expand key at its right end (kit.tsx, `PhoneFoot`): its height and what stands
+ * before the key, or null when the screen has no such row.
+ */
+const phoneFoot = (html: string) => {
+	const m =
+		/<div class="flex shrink-0 items-center gap-2[^"]*" style="height:(\d+)px"><div class="flex min-w-0 flex-1 items-center gap-2">(.*?)<\/div><button type="button" data-tv-item="expand"/.exec(
+			html,
+		)
+	return m ? { height: Number(m[1]), before: m[2] } : null
+}
 const BAR = ["bar:back", "bar:search", "bar:menu"]
 /** A screen's own items and its bar's, without the Expand key: for the lists written out here. */
 const drawn = (items: string[]) => items.filter((item) => item !== "expand")
@@ -78,7 +90,14 @@ test("every screen's items in the markup are exactly the machine's, in reading o
 			assert.deepEqual(ids(html), items, `${name} ${edition}`)
 			assert.equal(count(html, "<button"), items.length)
 			assert.equal(focused(html).length, 1, `${name} ${edition}: one focus`)
-			assert.match(html, /data-tv-expand-place/)
+			// The desktop's Expand key is in its corner; the phone's ends the last row where the screen has one.
+			if (edition === "desktop") assert.match(html, /data-tv-expand-place/)
+			else
+				assert.ok(
+					html.includes("data-tv-expand-place") !== Boolean(phoneFoot(html)),
+					`${name} phone: the corner or the last row, not both`,
+				)
+			assert.equal(count(html, 'data-tv-item="expand"'), items.includes("expand") ? 1 : 0)
 			assert.match(html, />Explorer</)
 			assert.equal(count(html, "<h1"), 0)
 		}
@@ -160,11 +179,15 @@ test("the phone's map is three by two, with the focused island's line beside the
 		assert.match(island, /max-h-\[108px\]/)
 	}
 	assert.match(html, /text-\[25px\]">Thrilling<\/span>/)
-	// The last row ends before the corner, 158 canvas px wide.
+	// The last row says what sets the focused island apart, and ends with the Expand key: no corner.
+	const foot = phoneFoot(html)
+	assert.equal(foot?.height, 62)
 	assert.match(
-		html,
-		/style="height:62px;padding-right:158px"><div class="tvc-fade line-clamp-2 [^"]*">A bleak outlook and suspense · 1,943 titles</,
+		foot?.before ?? "",
+		/<div class="tvc-fade line-clamp-2 [^"]*">A bleak outlook and suspense · 1,943 titles</,
 	)
+	assert.ok(!html.includes("data-tv-expand-place"))
+	assert.ok(!html.includes("158px"))
 })
 
 test("an island: the focused title's name and facts over four posters, and Sail to its two nearest", () => {
@@ -268,8 +291,9 @@ test("on every phone of the room's table the keys are touch targets, and the cor
 			}
 		// The last row of both screens is as tall as a key and ends before the corner. The island's is the shared
 		// list's (TitleList.tsx), which writes the corner as a class.
-		assert.ok(p.map.includes(`style="height:${p.key}px;padding-right:158px"`))
-		assert.ok(p.island.includes(`pr-[158px]" style="height:${p.key}px"`))
+		assert.equal(phoneFoot(p.map)?.height, p.key, `${p.phone} map`)
+		assert.equal(phoneFoot(p.island)?.height, p.key, `${p.phone} island`)
+		for (const html of [p.map, p.island]) assert.ok(!html.includes("data-tv-expand-place"), p.phone)
 		// What a key says is cut short before it spills.
 		assert.equal(count(p.island, '<span class="truncate">'), 2)
 	}

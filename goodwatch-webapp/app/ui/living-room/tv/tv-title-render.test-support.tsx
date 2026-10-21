@@ -1,6 +1,7 @@
 // Run by tv-title-render.test.ts through vite-node: renders Tonight, the title screen and the rating the way they
 // are drawn once their code is there, and prints the HTML with the item ids the machine lists for each.
-import { renderToStaticMarkup } from "react-dom/server"
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { renderToStaticMarkup as renderMarkup } from "react-dom/server"
 import type { CardService, TitleCard } from "~/server/title-cards.server"
 import { TvScreen } from "./TvScreen"
 import { Layer, TvViewProvider, keySize } from "./kit"
@@ -70,7 +71,7 @@ const member: TvHomeData = {
 		{
 			card: card("show", 10, { match: 92 }),
 			href: "/my-shows",
-			episode: { code: "S2 E4", name: "Cicada" },
+			episode: { code: "S2 E4", name: "Cicada", runtime: 50 },
 		},
 		{ card: card("movie", 11, { match: 88 }), href: "/my-movies" },
 	],
@@ -97,6 +98,12 @@ const PHONES = [
 	// Landscape: the canvas is shown at about its own size.
 	{ phone: "844x390", scale: 0.98, h: 373 },
 ]
+
+/** The page's query client: Watch next asks for the pick's offers, as the title screen does. Nothing is fetched here. */
+const renderToStaticMarkup = (node: React.ReactNode) =>
+	renderMarkup(
+		<QueryClientProvider client={new QueryClient()}>{node}</QueryClientProvider>,
+	)
 
 /** A screen drawn as it is once its code is there. */
 const html = (canvas: TvCanvas, focused: string, node: React.ReactNode) =>
@@ -167,6 +174,9 @@ function first(screen: Screen, titles: TvTitleScreens) {
 				focused: focusedItem(state, titleCtx),
 				screenFocus: focusedItem(state, titleCtx),
 				dispatch: () => {},
+				ringOff: false,
+				byPointer: false,
+				unpoint: () => {},
 			}}
 			canvas={CANVAS.desktop}
 			ctx={titleCtx}
@@ -201,6 +211,9 @@ const toastHtml = (screen: Screen, canvas: TvCanvas, menuOpen = false) => {
 				focused: focusedItem(tv, titleCtx),
 				screenFocus: focusedItem({ ...tv, menuOpen: false }, titleCtx),
 				dispatch: () => {},
+				ringOff: false,
+				byPointer: false,
+				unpoint: () => {},
 			}}
 			canvas={canvas}
 			ctx={titleCtx}
@@ -248,7 +261,7 @@ console.log(
 			guest: tonightOf(guest, pool, 0),
 			second: tonightOf(guest, pool, 1),
 			// The URL counts on; the screen wraps.
-			wrapped: tonightOf(guest, pool, 4),
+			wrapped: tonightOf(guest, pool, 5),
 			wished: tonightOf(guest, pool, 0, card("movie", 9)),
 			one: tonightOf(guest, { suggestions: [card("movie", 1)] }, 0),
 			member: tonightOf(member, null, 0),

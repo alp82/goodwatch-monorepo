@@ -34,6 +34,7 @@ import { useUser } from "~/utils/auth"
 import { canGuestRate, snapshotGuestProgress } from "~/utils/guest-progress"
 import { titleKey } from "~/utils/title-key"
 import { useLeaveThroughTv } from "../tv-transition"
+import { useTvTitleExtras } from "./use-tv-extras"
 import {
 	STREAMING_BLOCK,
 	type TvEffect,
@@ -111,21 +112,7 @@ export function useTvTitle({
 				locale.language,
 			),
 	})
-	const extras = useQuery<import("./title-extras").TvTitleExtras>({
-		queryKey: ["tv-title-extras", key, locale.country, locale.language],
-		enabled: Boolean(ref),
-		queryFn: async ({ signal }) => {
-			const response = await fetch(
-				mediaLanguageUrl(
-					`/api/tv-title?type=${ref!.mediaType}&id=${ref!.tmdbId}&country=${locale.country}`,
-					locale.language,
-				),
-				{ signal },
-			)
-			if (!response.ok) throw new Error("Title details unavailable")
-			return response.json()
-		},
-	})
+	const extras = useTvTitleExtras(key)
 	const card = cards.data?.cards[0] ?? null
 	const mine = cards.data?.services
 	const { data: marks } = useUserData()

@@ -63,8 +63,24 @@ export type TvQuizTitle = PresentedMedia & {
 	key: string
 	title: string
 	backdrop: string | null
+	poster: string | null
 	/** "2019 · Movie". */
 	facts: string
+}
+
+/** The answer just given for the quiz's title (ui/scoring/use-score-ack.ts, `ackView`). */
+export type TvQuizAnswered = {
+	score: Score | null
+	leaving: boolean
+	line: string | null
+	failed: boolean
+}
+
+export const NOT_ANSWERED: TvQuizAnswered = {
+	score: null,
+	leaving: false,
+	line: null,
+	failed: false,
 }
 
 export type TvQuizOnScreen = {
@@ -73,6 +89,8 @@ export type TvQuizOnScreen = {
 	waiting: boolean
 	/** The person's scores toward the goal. */
 	rated: number
+	/** The answer just given: lit at once, held, then the next title (the same as on /taste/quiz). */
+	answered: TvQuizAnswered
 }
 
 /** What Taste, a side's screen and the quiz draw from. */
@@ -187,6 +205,7 @@ export function quizTitle(title: ScoringMedia): TvQuizTitle {
 		...copyMediaPresentation(title),
 		title: title.title,
 		backdrop: title.backdrop_path || null,
+		poster: title.poster_path || null,
 		facts: join([title.release_year, kind(title.media_type)]),
 	}
 }

@@ -61,8 +61,8 @@ const phone = (
 	rig: L.rig,
 })
 
-/** The farthest spots the Remote still aims at, just inside the margin round the picture's corners: top left, top
- * right, bottom left, bottom right. */
+/** The farthest spots the Remote still aims at, a pixel inside the picture's corners: top left, top right, bottom
+ * left, bottom right. */
 const corners = ({ tv }: AimScene) => {
 	const pad = AIM_PAD - 1
 	const [l, t] = [tv.left - pad, tv.top - pad]
@@ -117,17 +117,19 @@ describe("the Remote in the hand, under the TV", () => {
 		assert.notEqual(aimFor(scene, { ...over, tap: true }, false), REST)
 	})
 
-	it("aims only at the picture and a margin round its edges, and rests anywhere else", () => {
+	it("aims only while the cursor is over the picture, and rests a pixel outside any edge", () => {
 		const { tv } = scene
-		const mid = tv.top + tv.height / 2
-		for (const x of [tv.left - AIM_PAD + 1, tv.left + tv.width + AIM_PAD - 1])
-			assert.notEqual(aimFor(scene, at(x, mid), false), REST)
-		for (const x of [tv.left - AIM_PAD - 1, tv.left + tv.width + AIM_PAD + 1])
-			assert.equal(aimFor(scene, at(x, mid), false), REST)
-		assert.equal(
-			aimFor(scene, at(tv.left + 10, tv.top - AIM_PAD - 1), false),
-			REST,
-		)
+		const [l, t, r, b] = [tv.left, tv.top, tv.left + tv.width, tv.top + tv.height]
+		const [mx, my] = [l + tv.width / 2, t + tv.height / 2]
+		assert.equal(AIM_PAD, 0)
+		// Just inside each edge: it aims. The bottom edge is tried off centre: in the middle the Remote's own top
+		// reaches over the picture, and over the Remote it rests (the test before this one).
+		for (const [x, y] of [[l + 1, my], [r - 1, my], [mx, t + 1], [l + 60, b - 1]])
+			assert.notEqual(aimFor(scene, at(x, y), false), REST, `inside at ${x},${y}`)
+		// 1, 10 and 39 px outside each edge: it rests.
+		for (const d of [1, 10, 39])
+			for (const [x, y] of [[l - d, my], [r + d, my], [mx, t - d], [mx, b + d]])
+				assert.equal(aimFor(scene, at(x, y), false), REST, `${d} px outside at ${x},${y}`)
 	})
 
 	it("is at rest once the cursor left, while the TV is off, and with reduced motion", () => {

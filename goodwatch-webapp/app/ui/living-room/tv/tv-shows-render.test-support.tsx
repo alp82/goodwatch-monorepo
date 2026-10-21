@@ -149,6 +149,9 @@ function first(menuOpen = false) {
 				focused: focusedItem(state, ctx),
 				screenFocus: focusedItem(state, ctx),
 				dispatch: () => {},
+				ringOff: false,
+				byPointer: false,
+				unpoint: () => {},
 			}}
 			canvas={CANVAS.desktop}
 			ctx={ctx}
@@ -159,8 +162,8 @@ function first(menuOpen = false) {
 	)
 }
 
-const guestMenu = menuItems({ member: false })
-const memberMenu = menuItems({ member: true })
+const guestMenu = menuItems({ member: false, popular: [] })
+const memberMenu = menuItems({ member: true, popular: [] })
 const aboutItems = tvItems({ name: "about" }, ctx)
 const homeItems = tvItems({ name: "home" }, ctx)
 

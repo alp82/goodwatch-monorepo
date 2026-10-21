@@ -21,6 +21,7 @@ import {
 	tvItems,
 } from "./tv-machine.ts"
 import {
+	NOT_ANSWERED,
 	type TvTasteScreens,
 	carryOutQuiz,
 	pickListTitle,
@@ -293,6 +294,7 @@ describe("what Taste and the quiz say", () => {
 			key: "show-2316",
 			title: "The Office",
 			backdrop: "/b.jpg",
+			poster: "/p.jpg",
 			facts: "2005 · Show",
 		})
 		assert.deepEqual(quizWords({ rated: 0, title: asked }), {
@@ -321,6 +323,7 @@ describe("what Taste and the quiz say", () => {
 			key: "movie-1",
 			title: "Bare",
 			backdrop: null,
+			poster: "/p.jpg",
 			facts: "Movie",
 		})
 	})
@@ -331,7 +334,7 @@ const screensOf = (
 	quiz: Partial<TvTasteScreens["quiz"]> = {},
 ): TvTasteScreens => ({
 	taste,
-	quiz: { title: null, waiting: false, rated: 0, ...quiz },
+	quiz: { title: null, waiting: false, rated: 0, answered: NOT_ANSWERED, ...quiz },
 })
 const TASTE: TvScreen = { name: "taste", side: null }
 const QUIZ: TvScreen = { name: "quiz" }
@@ -339,6 +342,7 @@ const asked = {
 	key: "show-2316",
 	title: "The Office",
 	backdrop: null,
+	poster: null,
 	facts: "",
 }
 const picks = [
@@ -349,6 +353,14 @@ const picks = [
 	"movie-14",
 ].map((key) => ({ key, title: key, poster: null, backdrop: null, facts: "" }))
 const BAR = ["bar:back", "bar:search", "bar:menu"]
+const NAV = [
+	"nav:home",
+	"nav:tonight",
+	"nav:discover",
+	"nav:search",
+	"nav:quiz",
+	"bar:menu",
+]
 const ctxOf = (
 	screen: TvScreen,
 	shown: TvTasteScreens,
@@ -370,11 +382,17 @@ describe("the machine's context for Taste, and the items it gives", () => {
 				titles: [],
 				quizProgress: 2,
 			})
+			// A guest can sign up to keep it; a member cannot.
 			assert.deepEqual(tvItems(TASTE, ctxOf(TASTE, shown)), [
 				"start-quiz",
+				"sign-up",
 				"expand",
 				...BAR,
 			])
+			assert.deepEqual(
+				tvItems(TASTE, { ...ctxOf(TASTE, shown), member: true }),
+				["start-quiz", "expand", ...BAR],
+			)
 		}
 	})
 
@@ -385,6 +403,7 @@ describe("the machine's context for Taste, and the items it gives", () => {
 			"side:gentle-comedy",
 			"side:big-ideas",
 			"start-quiz",
+			"sign-up",
 			"expand",
 			...BAR,
 		])
@@ -410,6 +429,7 @@ describe("the machine's context for Taste, and the items it gives", () => {
 		assert.deepEqual(tvItems(TASTE, ctxOf(TASTE, shown)), [
 			...picks.slice(0, 4).map((pick) => `title:${pick.key}`),
 			"start-quiz",
+			"sign-up",
 			"expand",
 			...BAR,
 		])
@@ -434,13 +454,19 @@ describe("the machine's context for Taste, and the items it gives", () => {
 			...levels,
 			...STRIP_SCORES.map((score) => `score:${score}`),
 			"skip",
-			...BAR,
+			"your-taste",
+			"expand",
+			...NAV,
 		])
 		const waiting = screensOf(
 			{ state: "start", rated: 3, backdrop: null },
 			{ waiting: true },
 		)
-		assert.deepEqual(tvItems(QUIZ, ctxOf(QUIZ, waiting)), BAR)
+		assert.deepEqual(tvItems(QUIZ, ctxOf(QUIZ, waiting)), [
+			"your-taste",
+			"expand",
+			...NAV,
+		])
 	})
 
 	it("nothing of Taste on another screen", () => {
@@ -532,15 +558,19 @@ describe("the quiz's write path", () => {
 		assert.equal(next.history, "none")
 	})
 
-	it("the score that reaches the goal is stored, and the quiz returns to Taste", () => {
+	it("the score that reaches the goal is stored and held; the quiz returns to Taste once done", () => {
 		const quiz = recorder()
 		const last = screensOf(
 			{ state: "start", rated: 4, backdrop: null },
 			{ title: asked, rated: 4 },
 		)
-		const next = press("level:7", ctxOf(QUIZ, last), quiz)
+		const ctx = ctxOf(QUIZ, last)
+		const next = press("level:7", ctx, quiz)
 		assert.deepEqual(quiz.stored, [7])
-		assert.equal(next.history, "back")
+		assert.equal(next.history, "none")
+		const done = transition(next.state, { type: "quiz-done" }, ctx)
+		assert.equal(done.history, "back")
+		assert.deepEqual(done.effects, [])
 	})
 
 	it("without a title to ask about nothing can be pressed", () => {

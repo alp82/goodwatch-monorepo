@@ -17,6 +17,7 @@ import { useImdbImports } from "~/ui/imports/api"
 import { primaryButton } from "~/ui/imports/shared"
 import type { ScoringMedia } from "~/ui/scoring/types"
 import { RatingDots } from "~/ui/taste-quiz/TasteQuizPage"
+import { ackView, useScoreAck } from "~/ui/scoring/use-score-ack"
 import { ScoreControl } from "~/ui/title-actions/ScoreControl"
 import useLocale from "~/utils/locale"
 import { useTasteScoring } from "../hooks/useTasteScoring"
@@ -54,9 +55,12 @@ export function TasteStart() {
 	const { locale } = useLocale()
 	const revalidator = useRevalidator()
 	const { data: userData } = useUserData()
-	const { addScore, addSkip, isSubmitting } = useTasteScoring({
+	const { saveScore, saveSkip, isSubmitting } = useTasteScoring({
 		isAuthenticated: true,
 	})
+	// An answer lights at once, is saved, and holds for a moment before the next title (ui/scoring/score-ack.ts).
+	const ack = useScoreAck()
+	const holding = ack.state.phase === "idle" ? null : ack.state.key
 	const imdbImports = useImdbImports()
 	const sourceImports = useSourceImports()
 
@@ -88,8 +92,11 @@ export function TasteStart() {
 	// The best-known titles the member hasn't rated or skipped; more when the queue runs low.
 	const scores = userData?.scores
 	const scored = useMemo(() => new Set(Object.keys(scores ?? {})), [scores])
+	// The title whose answer was just given stays first while it is held, though its score is saved already.
 	const queue = titles.filter(
-		(t) => !done.includes(keyOf(t)) && !scored.has(keyOf(t)),
+		(t) =>
+			!done.includes(keyOf(t)) &&
+			(keyOf(t) === holding || !scored.has(keyOf(t))),
 	)
 	const fetching = useRef(false)
 	useEffect(() => {
@@ -175,15 +182,23 @@ export function TasteStart() {
 		}
 	}, [revalidator.state, asked])
 
-	const rate = (title: ScoringMedia, score: Score) => {
-		addScore(title, score)
-		setRated((r) => [...r, { title, score }])
-		setDone((d) => [...d, keyOf(title)])
-	}
-	const skip = (title: ScoringMedia) => {
-		addSkip(title)
-		setDone((d) => [...d, keyOf(title)])
-	}
+	const rate = (title: ScoringMedia, score: Score) =>
+		ack.answer(
+			keyOf(title),
+			{ kind: "score", score },
+			() => saveScore(title, score),
+			() => {
+				setRated((r) => [...r, { title, score }])
+				setDone((d) => [...d, keyOf(title)])
+			},
+		)
+	const skip = (title: ScoringMedia) =>
+		ack.answer(
+			keyOf(title),
+			{ kind: "skip" },
+			() => saveSkip(title),
+			() => setDone((d) => [...d, keyOf(title)]),
+		)
 	const seeTaste = () => {
 		setAsked(true)
 		revalidator.revalidate()
@@ -315,6 +330,7 @@ export function TasteStart() {
 							)}
 							<RateCard
 								title={queue[0]}
+								answered={ackView(ack.state, queue[0] ? keyOf(queue[0]) : null)}
 								loading={loading}
 								onRate={rate}
 								onSkip={skip}
@@ -380,11 +396,13 @@ export function TasteStart() {
 
 function RateCard({
 	title: x,
+	answered: a,
 	loading,
 	onRate,
 	onSkip,
 }: {
 	title: ScoringMedia | undefined
+	answered: ReturnType<typeof ackView>
 	loading: boolean
 	onRate: (title: ScoringMedia, score: Score) => void
 	onSkip: (title: ScoringMedia) => void
@@ -406,21 +424,34 @@ function RateCard({
 					className="absolute inset-0 h-full w-full object-cover opacity-20"
 				/>
 			)}
+			{/* The title leaves after its answer's hold and the next one rises in (main.css, score-ack). */}
 			<img
+				key={keyOf(x)}
 				src={image(x.poster_path, "w342")}
 				alt=""
-				className="relative w-32 shrink-0 self-start rounded-lg shadow-xl md:w-44"
+				className={`${a.leaving ? "score-ack-leave" : "score-ack-enter"} relative w-32 shrink-0 self-start rounded-lg shadow-xl md:w-44`}
 			/>
 			<div className="relative min-w-0 flex-1">
 				<div className="text-xs font-bold uppercase tracking-wider text-amber-400/90">
 					Seen it? How was it?
 				</div>
-				<h2 className="mt-1 text-2xl font-extrabold md:text-3xl">{x.title}</h2>
-				<div className="mb-4 text-sm text-gray-300">
-					{[x.release_year, x.genres?.slice(0, 3).join(", ")]
-						.filter(Boolean)
-						.join(" · ")}
+				<div
+					key={keyOf(x)}
+					className={a.leaving ? "score-ack-leave" : "score-ack-enter"}
+				>
+					<h2 className="mt-1 text-2xl font-extrabold md:text-3xl">{x.title}</h2>
+					<div className="text-sm text-gray-300">
+						{[x.release_year, x.genres?.slice(0, 3).join(", ")]
+							.filter(Boolean)
+							.join(" · ")}
+					</div>
 				</div>
+				<p
+					aria-live="polite"
+					className={`mb-3 mt-1 min-h-6 font-bold ${a.failed ? "text-red-300" : "text-amber-300"}`}
+				>
+					{a.line}
+				</p>
 				<button
 					type="button"
 					className={`${ghostButton} mb-4`}
@@ -430,6 +461,8 @@ function RateCard({
 				</button>
 				<ScoreControl
 					key={keyOf(x)}
+					value={a.score}
+					acknowledged={a.score != null}
 					onRate={(v) => onRate(x, v)}
 					fit="screen"
 				/>

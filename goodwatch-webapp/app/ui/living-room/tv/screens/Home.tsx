@@ -3,7 +3,7 @@
 // service's mark, which opens "On <service>" as its key on the Remote does. Nothing here leaves the TV: OK on a
 // tile opens it on the TV.
 //
-// Members use their Next pick and a secondary popular row. Taste stays on its own screen.
+// A member's home is Start (Start.tsx): Watch next, then the TV's other screens as tiles.
 //
 // The headline is the start page's H1, the same sentence for a guest and a member. Until the pool is there, a
 // guest's home is drawn from the start titles alone, so the server's HTML is the same for every guest.
@@ -20,7 +20,7 @@ import type {
 	TvService,
 	TvServiceTile,
 } from "../tv-home"
-import { MemberHome } from "./MemberHome"
+import { Start } from "./Start"
 import { AppArt, artFiles } from "./app-art"
 
 export const HOME_HEADLINE = "Let's find something good to watch next."
@@ -50,16 +50,18 @@ export function Home({
 	sides = [],
 	items,
 	member = false,
-	pick,
+	picks = [],
 	popular,
-	failed,
 	waiting = false,
+	failed = false,
 }: {
 	member?: boolean
-	pick?: TvTonightPick
+	/** A member's Watch next picks, the next one first. */
+	picks?: readonly TvTonightPick[]
 	popular?: TvHomeData["popular"]
-	failed?: boolean
 	waiting?: boolean
+	/** The member's picks couldn't be read: not the same as an empty Wishlist. */
+	failed?: boolean
 	apps: readonly TvAppTile[]
 	/** The person's two streaming services, after the apps. */
 	services?: readonly TvServiceTile[]
@@ -68,7 +70,18 @@ export function Home({
 	/** The screen's items, from `tvItems`. */
 	items: readonly string[]
 }) {
-	if (member) return <MemberHome pick={pick} popular={popular} failed={failed} waiting={waiting} items={items} signal={apps.find((a) => a.app === "shows")?.signal} />
+	// A member's home is Start.
+	if (member)
+		return (
+			<Start
+				picks={picks}
+				popular={popular}
+				waiting={waiting}
+				failed={failed}
+				items={items}
+				signal={apps.find((a) => a.app === "shows")?.signal}
+			/>
+		)
 	return <HomeRow apps={apps} services={services} items={items} />
 }
 

@@ -35,11 +35,15 @@ export interface TonightParts {
 	newOn: { movie: string | null; start: string | null }
 }
 
-/** A member's shows and first movies for tonight. `ctx` is a member's. */
+/**
+ * A member's shows and first movies for tonight. `ctx` is a member's. `movies` is how many of My movies' first
+ * movies to read: three for home's doors, more for the TV's Watch next stack. The order is the same either way.
+ */
 export async function getTonightParts(
 	ctx: ViewerContext,
 	taste: Taste,
 	now = Date.now(),
+	{ movies: movieCount = FAN }: { movies?: number } = {},
 ): Promise<TonightParts> {
 	if (ctx.viewer.kind !== "member") throw new Error("Members only")
 	const [shows, outside, landed] = await Promise.all([
@@ -77,7 +81,7 @@ export async function getTonightParts(
 		plan.head.map((entry) => entry.key),
 		landed.movies.map(({ key }) => key),
 		fits,
-	).slice(0, FAN)
+	).slice(0, movieCount)
 	const toStart = new Set(shows.start.map((show) => show.id))
 	const startIds = landedFirst(
 		shows.start.map((show) => show.id),

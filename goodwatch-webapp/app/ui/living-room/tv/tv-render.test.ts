@@ -47,6 +47,15 @@ const focused = (html: string) =>
 	)
 const count = (html: string, part: string) => html.split(part).length - 1
 const H1 = "Let&#x27;s find something good to watch next."
+/** The TV's navigation along the top of its own screens and a member's Start. */
+const NAV = [
+	"nav:home",
+	"nav:tonight",
+	"nav:discover",
+	"nav:search",
+	"nav:quiz",
+	"bar:menu",
+]
 
 test("home's items in the markup are exactly the machine's, in reading order, in both editions", () => {
 	for (const edition of ["desktop", "phone"] as const) {
@@ -66,7 +75,17 @@ test("home's items in the markup are exactly the machine's, in reading order, in
 		"bar:search",
 		"bar:menu",
 	])
-	assert.ok(rendered.items.homeMember.includes("app:shows"))
+	// A member's home is Start: a tile per screen, then the navigation.
+	assert.deepEqual(rendered.items.homeMember, [
+		"start:tonight",
+		"start:discover",
+		"start:search",
+		"start:quiz",
+		"start:taste",
+		"start:shows",
+		"start:about",
+		...NAV,
+	])
 })
 
 test("every item is a real button, and exactly one has the focus", () => {
@@ -86,7 +105,7 @@ test("every item is a real button, and exactly one has the focus", () => {
 	)
 })
 
-test("home has one H1: the guest invitation or the member Watch next", () => {
+test("home has one H1, the invitation: drawn for a guest, read out on a member's Start", () => {
 	for (const html of [
 		...Object.values(rendered.home.guest),
 	]) {
@@ -95,7 +114,7 @@ test("home has one H1: the guest invitation or the member Watch next", () => {
 	}
 	for (const html of Object.values(rendered.home.member)) {
 		assert.equal(count(html, "<h1"), 1)
-		assert.ok(html.includes(">Watch next</h1>"))
+		assert.ok(html.includes(`<h1 class="sr-only">${H1}</h1>`))
 	}
 	// No other screen has one.
 	for (const html of [
@@ -113,9 +132,11 @@ test("the home shows the focused app large, and while the focus is on the bar th
 		/One pick at a time, best rated right now\./,
 	)
 	assert.match(rendered.home.focusOnBar, />Watch next<\/div>/)
+	// Start's big tile is Watch next, with the pick up next.
+	assert.match(rendered.home.member.desktop, />Watch next<\/span>/)
 	assert.match(
 		rendered.home.member.desktop,
-		/Next episode · S2 E4/,
+		/1 pick for you · <span class="text-amber-300">Show 10<\/span> is up next/,
 	)
 })
 
@@ -139,11 +160,19 @@ test("a guest's first picture is the first start title's backdrop: w1280 on the 
 	}
 })
 
-test("a member sees their Next pick and library actions", () => {
+test("a member's Start shows their next pick and a key to each screen", () => {
 	const html = rendered.home.member.desktop
-	assert.ok(html.includes("/w1280/show-backdrop-10.jpg"))
-	assert.ok(html.includes("My shows"))
-	assert.ok(html.includes("My movies"))
+	assert.ok(html.includes("/w780/show-backdrop-10.jpg"))
+	assert.ok(html.includes("/w185/show-poster-10.jpg"))
+	for (const name of [
+		"Discover",
+		"Search",
+		"Taste",
+		"Your taste",
+		"My shows",
+		"What is GoodWatch?",
+	])
+		assert.ok(html.includes(`>${name}<`), name)
 	assert.ok(!html.includes("first-picture"))
 })
 
@@ -175,15 +204,34 @@ test("What is GoodWatch? and the menu draw the machine's items", () => {
 	])
 	assert.deepEqual(rendered.items.menuGuest, [
 		"menu:home",
+		"menu:tonight",
+		"menu:discover",
 		"menu:search",
-		"menu:sign-in",
+		"menu:quiz",
+		"menu:taste",
 		"menu:about",
-		"menu:off",
 	])
-	// A member has no Sign in.
-	assert.ok(!rendered.items.menuMember.includes("menu:sign-in"))
-	assert.match(rendered.menu.guest.desktop, />Sign in</)
-	assert.match(rendered.menu.guest.desktop, />Turn off</)
+	// My shows is a member's.
+	assert.deepEqual(rendered.items.menuMember, [
+		...rendered.items.menuGuest.slice(0, -1),
+		"menu:shows",
+		"menu:about",
+	])
+	// The menu lists the TV's screens by their names: no Sign in, no Turn off.
+	for (const name of [
+		"Home",
+		"Watch next",
+		"Discover",
+		"Search",
+		"Taste",
+		"Your taste",
+		"What is GoodWatch?",
+	])
+		assert.ok(rendered.menu.guest.desktop.includes(`>${name}<`), name)
+	assert.match(rendered.menu.member.desktop, />Start</)
+	assert.match(rendered.menu.member.desktop, />My shows</)
+	assert.ok(!rendered.menu.guest.desktop.includes(">Sign in<"))
+	assert.ok(!rendered.menu.guest.desktop.includes(">Turn off<"))
 	assert.match(rendered.about.desktop, />Got it</)
 })
 
@@ -201,14 +249,10 @@ test("a screen in a chunk of its own is not in the server's HTML: its bar alone 
 })
 
 test("every screen has its own code: before it is there the server draws the screen's bar alone", () => {
-	// No Search key on the search screens: the person is there.
-	assert.deepEqual(ids(rendered.lazy.search), ["bar:back", "bar:menu"])
+	// The search screens have the navigation in the bar's place.
+	assert.deepEqual(ids(rendered.lazy.search), NAV)
 	// A screen with a page has its Expand key too: a focus that came back to it is on something.
-	assert.deepEqual(ids(rendered.lazy.results), [
-		"expand",
-		"bar:back",
-		"bar:menu",
-	])
+	assert.deepEqual(ids(rendered.lazy.results), ["expand", ...NAV])
 	assert.deepEqual(ids(rendered.lazy.shows), [
 		"expand",
 		"bar:back",
@@ -219,26 +263,28 @@ test("every screen has its own code: before it is there the server draws the scr
 		assert.ok(!html.includes("not built"))
 })
 
-test("the Expand key says Expand, and a screen reader hears where it leads", () => {
+test("the Expand key says what it opens, and a screen reader hears where it leads", () => {
 	assert.match(
 		rendered.lazy.results,
-		/data-tv-item="expand"[^>]*aria-label="Expand: Discover"/,
+		/data-tv-item="expand"[^>]*aria-label="Search all titles: opens Discover on GoodWatch"/,
 	)
 	assert.match(
 		rendered.lazy.shows,
-		/data-tv-item="expand"[^>]*aria-label="Expand: My shows"/,
+		/data-tv-item="expand"[^>]*aria-label="All my shows: opens My shows on GoodWatch"/,
 	)
+	assert.match(rendered.lazy.results, /<\/span>Search all titles<\/button>/)
+	assert.match(rendered.lazy.shows, /<\/span>All my shows<\/button>/)
 	for (const html of [rendered.lazy.results, rendered.lazy.shows]) {
-		// A small picture in four brackets, and one word.
+		// A small picture in four brackets, and the key's words.
 		assert.equal(count(html, "tvc-x-arm"), 4)
-		assert.match(html, /<\/span>Expand<\/button>/)
 		assert.ok(!html.includes("Open full"))
 	}
-	// The key keeps its place while the picture steps back to 94%: it is moved against the step by as much.
+	// The picture no longer steps back: the key stays in its corner, with nothing moving it.
 	assert.match(
 		rendered.lazy.results,
-		/data-tv-expand-place="true"[^>]*style="right:56px;bottom:40px;--tvx-x:34\.72px;--tvx-y:18\.13px"/,
+		/data-tv-expand-place="true"[^>]*style="right:56px;bottom:40px"/,
 	)
+	assert.ok(!rendered.lazy.results.includes("--tvx-"))
 })
 
 test("while the TV boots it shows the wordmark and no item; the toast stands in the bar's row", () => {

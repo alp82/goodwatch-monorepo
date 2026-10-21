@@ -20,6 +20,7 @@ import {
 	DiscoverCode,
 	ExplorerCode,
 	MenuCode,
+	PopularCode,
 	QuizCode,
 	RateCode,
 	ServiceCode,
@@ -31,17 +32,20 @@ import {
 } from "./screen-code"
 import { Home } from "./screens/Home"
 import type { TvExplorerView } from "./tv-explorer"
-import type {
-	TvAppTile,
-	TvHomeData,
-	TvHomeSide,
-	TvService,
-	TvServiceTile,
+import {
+	type TvAppTile,
+	type TvHomeData,
+	type TvHomeSide,
+	type TvService,
+	type TvServiceTile,
+	ownedServices,
 } from "./tv-home"
 import {
 	type TvContext,
 	type TvScreen as Screen,
+	destinationLabel,
 	destinationName,
+	hasNav,
 	menuItems,
 	tvItems,
 	writeTvParams,
@@ -59,6 +63,7 @@ import type { TvShowsReport } from "./use-tv-shows"
 export {
 	DiscoverCode,
 	DiscoverData,
+	PopularCode,
 	QuizCode,
 	RateCode,
 	TasteCode,
@@ -81,6 +86,7 @@ export { EpisodeCode, EpisodeData, ShowsCode, ShowsData } from "./screen-code"
 const SCREEN_NAME: Record<Screen["name"], string> = {
 	home: "Home",
 	tonight: "Watch next",
+	popular: "Popular",
 	discover: "Discover",
 	explorer: "Explorer",
 	taste: "Taste",
@@ -94,7 +100,10 @@ const SCREEN_NAME: Record<Screen["name"], string> = {
 }
 
 export type TvScreenProps = {
-	tv: Pick<Tv, "state" | "focused" | "screenFocus" | "dispatch">
+	tv: Pick<
+		Tv,
+		"state" | "focused" | "screenFocus" | "dispatch" | "ringOff" | "byPointer" | "unpoint"
+	>
 	canvas: TvCanvas
 	ctx: TvContext
 	/** Home's tiles. */
@@ -171,18 +180,57 @@ export function TvScreen({
 	search,
 	shows,
 }: TvScreenProps) {
-	const { state, focused, screenFocus, dispatch } = tv
+	const { state, focused, screenFocus, dispatch, ringOff, byPointer, unpoint } =
+		tv
 	const { screen } = state
 	// The menu's items have the focus while it is open; the screen under it keeps showing its own.
 	// The Expand key says where it leads.
 	const expands = destinationName(screen, ctx)
+	const expandLabel = destinationLabel(screen, ctx)
+	// The navigation marks the screen on show; a member's home is Start.
+	const here = hasNav(screen, ctx)
+		? `nav:${screen.name === "home" ? "home" : screen.name}`
+		: null
+	const { member } = ctx
 	const under = useMemo<TvView>(
-		() => ({ canvas, focused: screenFocus, dispatch, expands }),
-		[canvas, screenFocus, dispatch, expands],
+		() => ({
+			canvas,
+			focused: screenFocus,
+			dispatch,
+			expands,
+			expandLabel,
+			here,
+			member,
+			ringOff,
+			byPointer,
+			unpoint,
+		}),
+		[
+			canvas,
+			screenFocus,
+			dispatch,
+			expands,
+			expandLabel,
+			here,
+			member,
+			ringOff,
+			byPointer,
+			unpoint,
+		],
 	)
+	// The menu marks the screen on show.
+	const menuHere = `menu:${screen.name}`
 	const over = useMemo<TvView>(
-		() => ({ canvas, focused, dispatch }),
-		[canvas, focused, dispatch],
+		() => ({
+			canvas,
+			focused,
+			dispatch,
+			here: menuHere,
+			member,
+			ringOff,
+			unpoint,
+		}),
+		[canvas, focused, dispatch, menuHere, member, ringOff, unpoint],
 	)
 	// A screen arrives with a short zoom out of the picture. The screen the TV starts on is there at once.
 	// Discover's tabs are one screen: a change of tab is no arrival.
@@ -324,10 +372,10 @@ function ScreenOf({
 				<Home
 					apps={apps}
 					member={member}
-					pick={titles?.tonight[0] ?? home?.tonight[0]}
+					picks={titles?.tonight ?? home?.tonight ?? []}
 					popular={home?.popular}
-					failed={home?.homeFailed}
 					waiting={titles?.waiting ?? false}
+					failed={home?.homeFailed}
 					services={services?.tiles}
 					sides={sides}
 					items={items}
@@ -341,7 +389,18 @@ function ScreenOf({
 					items={items}
 					picks={titles?.tonight ?? []}
 					pick={screen.pick}
+					mine={ownedServices(home, member)}
 					waiting={titles?.waiting ?? true}
+					failed={home?.homeFailed}
+					first={first}
+				/>
+			)
+		case "popular":
+			return (
+				<PopularCode.Screen
+					items={items}
+					popular={home?.popular}
+					pick={screen.pick}
 					first={first}
 				/>
 			)

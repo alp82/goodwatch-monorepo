@@ -42,10 +42,10 @@ The short film the TV plays a guest on the start page after its boot screen: one
 _Avoid_: Onboarding, tour, explainer video
 
 **TV home**:
-For a member, Watch next leads with the existing Next pick, followed by direct access to My movies and My shows. The existing discovery fallback still applies when there are no personal picks. A secondary Popular row offers more titles; it is not a queue or a taste-group guide. Taste remains a separate TV screen. Guests retain the app-tile home. Explorer is absent from TV navigation; existing TV Explorer bookmarks still work.
+For a member, the TV's home is **Start**: a large Watch next tile that shows its picks (the Next pick first), then tiles for Popular, Discover, Search, and Taste, and keys for Your taste, My shows, and What is GoodWatch?. Every tile opens a TV screen; only a screen's Expand key leaves the TV for a full page. Watch next's Expand key opens the page of its pick, My movies or My shows. The existing discovery fallback still applies when there are no personal picks, and a failed read of the picks says so instead of looking like an empty Wishlist. Start, Watch next, Popular, Discover, Search, and Taste carry a navigation row (the white G for Start, the screens as tabs, and Menu); the menu lists the TV's own screens only. Guests retain the app-tile home. Explorer is absent from TV navigation; existing TV Explorer bookmarks still work.
 
 **Popular titles on the TV**:
-The living room pool's eligible catalog titles in popularity order, excluding the viewer's hidden, seen, skipped, and Want to See titles as that pool does. Saved-service matches in the member's country come first, with a labelled wider-catalog fallback when fewer than twelve match. Unknown availability and no saved services use the wider catalog, without claiming it is on the member's services. This member-only row is distinct from the shared Start titles below the room.
+The living room pool's eligible catalog titles in popularity order, excluding the viewer's hidden, seen, skipped, and Want to See titles as that pool does. Saved-service matches in the member's country come first, with a labelled wider-catalog fallback when fewer than twelve match. Unknown availability and no saved services use the wider catalog, without claiming it is on the member's services. On the TV they are the member-only Popular screen: a wall of posters with the focused title named beside it. Its Expand key opens Discover. This list is distinct from the shared Start titles below the room.
 
 **Remote**:
 The living room's main control. Everything on the remote is also reachable on the TV itself.
@@ -188,6 +188,9 @@ _Avoid_: Format, Form
 **Taste**:
 What a person's ratings and Want to See say about the fingerprints they enjoy. A guest has a taste too, built from their guest progress.
 _Avoid_: Taste profile
+
+**Score acknowledgement**:
+What a score press shows while one-title-at-a-time scoring moves on: the chosen score stays marked, a line names it ("Scored 8 · Great", or "Not seen · next title"), and the title leaves 0.7 seconds after the press, or when the write succeeds if that takes longer. The first press counts; presses during the acknowledgement do nothing. A refused write keeps the title and says "Couldn't save that. Try again." The taste quiz page, the taste start on /taste, and the TV's Taste screen share it (`ui/scoring/score-ack.ts`).
 
 **Taste match**:
 How well a title's fingerprint fits the person's taste, shown from 50 to 99 percent once the person has rated 5 titles they liked. It places the title within the person's own range, and high numbers are rare: 90 means the title fits better than about 99 percent of well-known titles would. The highest numbers need more liked titles: with 5 the scale ends at 85, from 100 at 99.

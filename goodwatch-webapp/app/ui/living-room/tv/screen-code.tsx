@@ -55,6 +55,8 @@ export const MenuCode = screenCode(() => import("./screens/Menu"))
 export const AboutCode = screenCode(() => import("./screens/About"))
 // Tonight draws with the title screen's parts, so its chunk brings the title screen's along: Details finds it there.
 export const TonightCode = screenCode(() => import("./screens/Tonight"))
+// Popular's wall shares Watch next's parts.
+export const PopularCode = screenCode(() => import("./screens/Popular"))
 export const TitleCode = screenCode(() => import("./screens/Title"))
 export const RateCode = screenCode(() => import("./screens/Rate"))
 

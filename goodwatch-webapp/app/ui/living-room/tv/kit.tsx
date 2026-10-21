@@ -20,7 +20,7 @@ import {
 	useRef,
 	useState,
 } from "react"
-import { GoodWatchWordmark } from "~/ui/brand/GoodWatchWordmark"
+import { GoodWatchG, GoodWatchWordmark } from "~/ui/brand/GoodWatchWordmark"
 import { ICON, Icon } from "../Remote"
 import type { TvCanvas } from "./room-tv"
 import { TV_ITEM_ATTR, TV_LAYER_ATTR, bringIntoView } from "./tv-dom"
@@ -34,6 +34,18 @@ export type TvView = {
 	dispatch: (action: TvAction) => void
 	/** The page the screen's Expand key opens, as a screen reader hears it ("Discover"). */
 	expands?: string | null
+	/** The Expand key's words: short and about the page ("Full details", `destinationLabel`). */
+	expandLabel?: string | null
+	/** The navigation's item of the screen on show (`nav:tonight`), marked in the bar; null on other screens. */
+	here?: string | null
+	/** The person is a member: the white G says Start, not Home. */
+	member?: boolean
+	/** The pointer left the items: the focused item keeps the focus but does not show it. */
+	ringOff?: boolean
+	/** The focus came from a mouse or a finger last: a list holds still under it. */
+	byPointer?: boolean
+	/** The mouse left an item. */
+	unpoint?: (id: string) => void
 }
 
 const ViewContext = createContext<TvView | null>(null)
@@ -143,12 +155,14 @@ export function Item({
 	children: ReactNode
 }) {
 	const view = useTvView()
-	const on = view.focused === id
+	const focused = view.focused === id
+	// The focus shows unless the pointer left the items (use-tv.ts): then it waits for the next key.
+	const on = focused && !view.ringOff
 	// An item that arrives with the focus is in view at once: its row pages to it before the first paint. A screen
 	// can arrive with the focus far along a row (a reload, a link, Back from a page), and the room draws its screen
 	// anew once it has measured the window. A focus that moves later is paged to by the TV's hook (use-tv.ts).
 	const el = useRef<HTMLButtonElement & HTMLAnchorElement>(null)
-	const arrivedOn = useRef(on)
+	const arrivedOn = useRef(focused)
 	useIsoLayoutEffect(() => {
 		if (arrivedOn.current && el.current) bringIntoView(el.current, false)
 	}, [])
@@ -162,7 +176,7 @@ export function Item({
 			{...linkData}
 			type={href ? undefined : "button"}
 			{...{ [TV_ITEM_ATTR]: id }}
-			aria-current={on || undefined}
+			aria-current={focused || undefined}
 			aria-label={label}
 			aria-pressed={pressed}
 			role={role}
@@ -172,7 +186,10 @@ export function Item({
 			// must not take the focus from the keys.
 			onPointerMove={(e) => {
 				if (!on && e.pointerType === "mouse")
-					view.dispatch({ type: "focus", item: id })
+					view.dispatch({ type: "focus", item: id, pointer: true })
+			}}
+			onPointerLeave={(e) => {
+				if (e.pointerType === "mouse") view.unpoint?.(id)
 			}}
 			onClick={() => view.dispatch({ type: href ? "focus" : "choose", item: id })}
 			className={`tvc-item ${on ? "tvc-on" : ""} ${className}`}
@@ -374,14 +391,87 @@ export function Bar({
 	)
 }
 
-/** Where a screen without a `Frame` puts the bar: the picture's top right corner. */
+/** Where a screen without a `Frame` puts the bar: the picture's top right corner, or the navigation along the top. */
 export function CornerBar({ items }: { items: readonly string[] }) {
 	const P = usePhone()
+	if (items.includes("nav:home")) return <NavBar items={items} />
 	return (
 		<Bar
 			items={items}
 			className={`absolute z-10 ${P ? "right-5 top-3" : "right-14 top-[22px]"}`}
 		/>
+	)
+}
+
+/** The navigation's tabs, by item: their words, and the phone's shorter ones. */
+const NAV_TABS: Record<string, { label: string; short?: string }> = {
+	"nav:tonight": { label: "Watch next", short: "Next" },
+	"nav:popular": { label: "Popular" },
+	"nav:discover": { label: "Discover" },
+	"nav:search": { label: "Search" },
+	"nav:quiz": { label: "Taste" },
+}
+
+/**
+ * The navigation along the top of the TV's own screens (tv-machine.ts, `navItems`): the white G, which returns to
+ * Start, a tab per screen with the one on show marked, and Menu at the right. On the phone the G and Menu are round
+ * touch targets and the tabs say Next, Discover and Search.
+ */
+export function NavBar({ items }: { items: readonly string[] }) {
+	const { canvas, here, member } = useTvView()
+	const P = canvas.edition === "phone"
+	const side = keyLength(canvas, P ? 54 : 56)
+	return (
+		<nav
+			aria-label="TV"
+			className={`absolute inset-x-0 top-0 z-10 flex items-center ${P ? "h-[78px] gap-1.5 px-4" : "h-[108px] gap-2 px-12"}`}
+		>
+			{items.includes("nav:home") && (
+				<Item
+					id="nav:home"
+					label={member ? "Start" : "Home"}
+					pressed={here === "nav:home"}
+					className={`tvc-act flex shrink-0 items-center justify-center ${here === "nav:home" ? "tvc-here" : ""}`}
+					style={{ width: side, height: side }}
+				>
+					<GoodWatchG height={P ? 26 : 28} />
+				</Item>
+			)}
+			<span aria-hidden className={P ? "w-1" : "w-3"} />
+			{items
+				.filter((id) => NAV_TABS[id])
+				.map((id) => {
+					const on = here === id
+					return (
+						<Item
+							key={id}
+							id={id}
+							pressed={on}
+							className={`tvc-act tvc-nav flex shrink-0 items-center whitespace-nowrap font-bold ${on ? "tvc-here" : ""} ${P ? "px-3 text-[20px]" : "px-5 text-[23px]"}`}
+							style={{ height: side }}
+						>
+							{P ? (NAV_TABS[id].short ?? NAV_TABS[id].label) : NAV_TABS[id].label}
+							{on && (
+								<span
+									aria-hidden
+									className="ml-2 inline-block h-2 w-2 shrink-0 rounded-full bg-amber-400"
+								/>
+							)}
+						</Item>
+					)
+				})}
+			{items.includes("bar:menu") && (
+				<Item
+					id="bar:menu"
+					label="Menu"
+					className={`tvc-act ml-auto flex shrink-0 items-center justify-center ${P ? "" : "gap-2.5 px-5 text-[23px]"}`}
+					style={P ? { width: side, height: side } : { height: side }}
+				>
+					<Icon d={MENU_ICON} className="h-[26px] w-[26px]" />
+					{!P && "Menu"}
+				</Item>
+			)}
+		</nav>
 	)
 }
 
@@ -392,18 +482,20 @@ export function CornerBar({ items }: { items: readonly string[] }) {
 const MOTIF = { w: 44, h: 32, arm: 9 }
 
 /**
- * The Expand key: amber corner brackets around a small picture, and the word "Expand". OK on it grows the TV's
- * picture into the page the screen stands for (`destinationHref`, tv-machine.ts). While it has the focus the
- * whole picture steps back into a frame of the same brackets (TvRoom.tsx, living-room.css), and its own brackets move out
- * from the small picture twice and rest open: nothing loops (#190).
+ * The Expand key: amber corner brackets around a small picture, and the words of where it goes ("Full details",
+ * `destinationLabel`). OK on it grows the TV's picture into the page the screen stands for (`destinationHref`,
+ * tv-machine.ts). While it has the focus the same brackets come out to the picture's corners (TvRoom.tsx,
+ * living-room.css) and its own move out from the small picture: both rest after a few strokes (#190). The picture
+ * keeps its size.
  */
-function Expand() {
-	const { canvas, expands } = useTvView()
+export function Expand() {
+	const { canvas, expands, expandLabel } = useTvView()
 	const P = canvas.edition === "phone"
+	const words = expandLabel ?? "Expand"
 	return (
 		<Item
 			id="expand"
-			label={expands ? `Expand: ${expands}` : "Expand"}
+			label={expands ? `${words}: opens ${expands} on GoodWatch` : words}
 			className={`tvc-x flex shrink-0 items-center whitespace-nowrap ${P ? "gap-2.5 px-3.5 text-[20px]" : "h-[64px] gap-4 px-6 text-[26px]"}`}
 			style={P ? { height: keyLength(canvas, 54) } : undefined}
 		>
@@ -421,37 +513,48 @@ function Expand() {
 					/>
 				))}
 			</span>
-			Expand
+			{words}
 		</Item>
 	)
 }
 
-/** How far the picture steps back while the Expand key has the focus (living-room.css, `data-tv-framed`). */
-const FRAMED = 0.94
-
 /**
  * The Expand key in its place, the picture's bottom right corner, on the desktop and on the phone; nothing where
- * the screen has no page to grow into (`items` are the screen's, from `tvItems`). The key stays where it is while
- * the picture steps back around it: a pointer or a finger on it is still on it. Its place is moved against the
- * picture's step by as much (`--tvx-x`, `--tvx-y`; living-room.css applies them).
+ * the screen has no page to grow into (`items` are the screen's, from `tvItems`).
  */
+/**
+ * A phone screen's last row: what the screen puts there, then the Expand key at its right end. The key carries
+ * where it goes ("Search all titles"), so it is as wide as its words: in the row, what comes before it gives way,
+ * where a fixed corner would lie over the last key. The screen's `Frame` takes `inlineExpand`.
+ */
+export function PhoneFoot({
+	items,
+	height,
+	className = "",
+	children,
+}: {
+	items: readonly string[]
+	height: number
+	className?: string
+	children?: ReactNode
+}) {
+	return (
+		<div className={`flex shrink-0 items-center gap-2 ${className}`} style={{ height }}>
+			<div className="flex min-w-0 flex-1 items-center gap-2">{children}</div>
+			{items.includes("expand") && <Expand />}
+		</div>
+	)
+}
+
 export function ExpandCorner({ items }: { items: readonly string[] }) {
 	const { canvas } = useTvView()
 	const P = canvas.edition === "phone"
 	const [right, bottom] = P ? [20, 20] : [56, 40]
-	const back = (1 - FRAMED) / FRAMED
 	return (
 		<div
 			data-tv-expand-place
 			className="tvc-x-place absolute z-10"
-			style={
-				{
-					right,
-					bottom,
-					"--tvx-x": `${((canvas.w / 2 - right) * back).toFixed(2)}px`,
-					"--tvx-y": `${((canvas.h / 2 - bottom) * back).toFixed(2)}px`,
-				} as CSSProperties
-			}
+			style={{ right, bottom }}
 		>
 			{items.includes("expand") && <Expand />}
 		</div>
@@ -472,6 +575,7 @@ export function Frame({
 	art,
 	dim = 0.6,
 	reserve = false,
+	inlineExpand = false,
 	mark,
 	edge,
 	children,
@@ -483,6 +587,8 @@ export function Frame({
 	art?: string
 	dim?: number
 	reserve?: boolean
+	/** On the phone the screen draws the Expand key itself, at the end of its scrolling content, instead of the corner. */
+	inlineExpand?: boolean
 	/** What stands before the screen's name in the top bar. */
 	mark?: ReactNode
 	/** A colour for a thin line along the picture's top edge. */
@@ -490,6 +596,7 @@ export function Frame({
 	children: ReactNode
 }) {
 	const P = usePhone()
+	const nav = items.includes("nav:home")
 	const words = (
 		<>
 			<div
@@ -520,10 +627,26 @@ export function Frame({
 			<div
 				className={`absolute inset-x-0 bottom-0 ${P ? "top-[78px] overflow-hidden px-5 pb-5" : `top-[108px] px-14 ${reserve ? "pb-[120px]" : "pb-10"}`}`}
 			>
-				{children}
+				{/* The navigation takes the bar's place, so the crumb stands over the content. */}
+				{nav && crumb ? (
+					<div className="flex h-full flex-col">
+						<div
+							className={`shrink-0 truncate leading-tight text-white/70 ${P ? "pb-1.5 text-[18px]" : "-mt-2 pb-2 text-[21px]"}`}
+						>
+							{crumb}
+						</div>
+						<div className="relative min-h-0 flex-1">{children}</div>
+					</div>
+				) : (
+					children
+				)}
 			</div>
-			<ExpandCorner items={items} />
-			{/* The bar is last in the markup, as in `tvItems`: the items are met in reading order. */}
+			{!(P && inlineExpand) && <ExpandCorner items={items} />}
+			{/* The bar is last in the markup, as in `tvItems`: the items are met in reading order. A screen with the
+			    navigation shows it in the bar's place, and its name is the marked tab. */}
+			{nav ? (
+				<NavBar items={items} />
+			) : (
 			<div
 				className={`absolute inset-x-0 top-0 flex items-center justify-between gap-4 ${P ? "h-[78px] px-5" : "h-[108px] px-14"}`}
 			>
@@ -536,6 +659,7 @@ export function Frame({
 				</div>
 				<Bar items={items} />
 			</div>
+			)}
 		</>
 	)
 }

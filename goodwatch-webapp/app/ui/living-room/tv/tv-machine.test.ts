@@ -9,6 +9,7 @@ import {
 	EMPTY_CONTEXT,
 	STRIP_LEVELS,
 	STRIP_SCORES,
+	SEARCH_IDEAS,
 	STRIP_START,
 	type TvAction,
 	type TvContext,
@@ -16,12 +17,14 @@ import {
 	type TvState,
 	activeItems,
 	destinationHref,
+	destinationLabel,
 	destinationName,
 	focusLeftBehind,
 	focusedItem,
 	isTvOnlyChange,
 	menuItems,
 	readTvState,
+	searchIdeas,
 	transition,
 	tvItems,
 	watchHref,
@@ -59,6 +62,25 @@ const member: TvContext = {
 const keyed: TvContext = { ...guest, services: [8, 337] }
 
 const BAR = ["bar:back", "bar:search", "bar:menu"]
+/** The TV's navigation along the top of its own screens (Watch next, Discover, Search, the quiz, a member's Start). */
+const NAV = [
+	"nav:home",
+	"nav:tonight",
+	"nav:discover",
+	"nav:search",
+	"nav:quiz",
+	"bar:menu",
+]
+/** A member's Start: Watch next, the other screens, Your taste, My shows and the intro. */
+const START = [
+	"start:tonight",
+	"start:discover",
+	"start:search",
+	"start:quiz",
+	"start:taste",
+	"start:shows",
+	"start:about",
+]
 const TABS = ["tab:moods", "tab:themes", "tab:styles"]
 /** The rating strip: its levels low to high, and the exact scores the desktop shows under them. */
 const LEVELS = ["level:3", "level:5", "level:7", "level:9"]
@@ -300,16 +322,8 @@ describe("the screens and their items, in reading order", () => {
 			"bar:search",
 			"bar:menu",
 		])
-		assert.deepEqual(items("", { ...member, services: [9] }), [
-			"home:next",
-			"home:movies",
-			"app:shows",
-			"app:tonight",
-			"app:discover",
-			"app:taste",
-			"bar:search",
-			"bar:menu",
-		])
+		// A member's home is Start: no service tiles, the navigation instead of the bar.
+		assert.deepEqual(items("", { ...member, services: [9] }), [...START, ...NAV])
 	})
 
 	it("on a service: up to twelve titles in a row that pages, then Expand and the bar", () => {
@@ -346,31 +360,94 @@ describe("the screens and their items, in reading order", () => {
 			"bar:search",
 			"bar:menu",
 		])
-		assert.deepEqual(items("", member), [
-			"home:next",
-			"home:movies",
-			"app:shows",
-			"app:tonight",
-			"app:discover",
-			"app:taste",
-			"bar:search",
+		assert.deepEqual(items("", member), [...START, ...NAV])
+	})
+
+	it("Start: Popular after Watch next once the member has Popular titles, and a Popular tab", () => {
+		const popular = { ...member, popular: ["movie-41", "movie-42"] }
+		assert.deepEqual(items("", popular), [
+			"start:tonight",
+			"start:popular",
+			...START.slice(1),
+			"nav:home",
+			"nav:tonight",
+			"nav:popular",
+			...NAV.slice(2),
+		])
+		// The phone's navigation has three tabs: no Popular, no Taste.
+		assert.deepEqual(items("", { ...popular, phone: true }), [
+			"start:tonight",
+			"start:popular",
+			...START.slice(1),
+			"nav:home",
+			"nav:tonight",
+			"nav:discover",
+			"nav:search",
 			"bar:menu",
 		])
 	})
 
-	it("Tonight: Details and Another one", () => {
+	it("Tonight: Watch, Trailer, Details, Another one, then each pick", () => {
 		assert.deepEqual(items("tv=tonight"), [
+			"watch",
+			"trailer",
 			"details",
 			"another",
+			"pick:0",
+			"pick:1",
+			"pick:2",
+			"pick:3",
 			"expand",
-			...BAR,
+			...NAV,
 		])
+	})
+
+	it("Tonight shows up to ten picks", () => {
+		const twelve = Array.from({ length: 12 }, (_, at) => ({
+			title: `movie-${at + 1}`,
+		}))
+		const picks = items("tv=tonight", { ...guest, tonight: twelve }).filter(
+			(id) => id.startsWith("pick:"),
+		)
+		assert.equal(picks.length, 10)
+		assert.equal(picks.at(-1), "pick:9")
 	})
 
 	it("Tonight with one pick has no Another one, and without a pick neither", () => {
 		const one = { ...guest, tonight: [{ title: "movie-1" }] }
-		assert.deepEqual(items("tv=tonight", one), ["details", "expand", ...BAR])
-		assert.deepEqual(items("tv=tonight", EMPTY_CONTEXT), ["expand", ...BAR])
+		assert.deepEqual(items("tv=tonight", one), [
+			"watch",
+			"trailer",
+			"details",
+			"pick:0",
+			"expand",
+			...NAV,
+		])
+		assert.deepEqual(items("tv=tonight", EMPTY_CONTEXT), ["expand", ...NAV])
+	})
+
+	it("Popular: a member's wall of up to ten posters, then Trailer and Details", () => {
+		const twelve = Array.from({ length: 12 }, (_, at) => `movie-${at + 41}`)
+		const popular = { ...member, popular: twelve }
+		assert.deepEqual(items("tv=popular", popular), [
+			...Array.from({ length: 10 }, (_, at) => `pick:${at}`),
+			"trailer",
+			"details",
+			"expand",
+			"nav:home",
+			"nav:tonight",
+			"nav:popular",
+			...NAV.slice(2),
+		])
+		// It starts on the poster the address names.
+		assert.equal(
+			focusedItem(at("tv=popular&pick=3", 0, popular), popular),
+			"pick:3",
+		)
+		// Without Popular titles the wall is empty.
+		assert.deepEqual(items("tv=popular", member), ["expand", ...NAV])
+		// A guest has no Popular screen: the address reads as home.
+		assert.equal(url(at("tv=popular", 0, guest)), "")
 	})
 
 	it("Discover, the choice: the three tabs, then the open tab's six", () => {
@@ -384,7 +461,7 @@ describe("the screens and their items, in reading order", () => {
 			"mood:scary",
 			"mood:mind",
 			"expand",
-			...BAR,
+			...NAV,
 		])
 		assert.deepEqual(items("tv=discover&tab=themes"), [
 			"browse:all",
@@ -396,7 +473,7 @@ describe("the screens and their items, in reading order", () => {
 			"theme:future",
 			"theme:fantasy",
 			"expand",
-			...BAR,
+			...NAV,
 		])
 		assert.deepEqual(items("tv=discover&tab=styles"), [
 			"browse:all",
@@ -408,7 +485,7 @@ describe("the screens and their items, in reading order", () => {
 			"style:talky",
 			"style:nonlinear",
 			"expand",
-			...BAR,
+			...NAV,
 		])
 	})
 
@@ -429,7 +506,7 @@ describe("the screens and their items, in reading order", () => {
 					"browse:filters",
 					"change",
 					"expand",
-					...BAR,
+					...NAV,
 				],
 				query,
 			)
@@ -462,8 +539,10 @@ describe("the screens and their items, in reading order", () => {
 	})
 
 	it("Taste without a taste: Start rating, after the quiz's picks once there are some", () => {
+		// A guest can sign up to keep it.
 		assert.deepEqual(items("tv=taste", { ...guest, titles: [] }), [
 			"start-quiz",
+			"sign-up",
 			"expand",
 			...BAR,
 		])
@@ -472,6 +551,13 @@ describe("the screens and their items, in reading order", () => {
 			"title:show-12",
 			"title:movie-13",
 			"title:movie-14",
+			"start-quiz",
+			"sign-up",
+			"expand",
+			...BAR,
+		])
+		// A member without a taste yet has no Sign up.
+		assert.deepEqual(items("tv=taste", { ...member, taste: false, titles: [] }), [
 			"start-quiz",
 			"expand",
 			...BAR,
@@ -500,8 +586,15 @@ describe("the screens and their items, in reading order", () => {
 		])
 	})
 
-	it("the quiz: the strip's four levels from low to high, Haven't seen it, no Expand", () => {
-		assert.deepEqual(items("tv=quiz"), [...LEVELS, ...SCORES, "skip", ...BAR])
+	it("the quiz: the strip's four levels from low to high, Haven't seen it, Your taste, then Expand", () => {
+		assert.deepEqual(items("tv=quiz"), [
+			...LEVELS,
+			...SCORES,
+			"skip",
+			"your-taste",
+			"expand",
+			...NAV,
+		])
 	})
 
 	it("the quiz on the desktop: the ten exact scores under the levels", () => {
@@ -509,12 +602,18 @@ describe("the screens and their items, in reading order", () => {
 			...LEVELS,
 			...SCORES,
 			"skip",
-			...BAR,
+			"your-taste",
+			"expand",
+			...NAV,
 		])
 	})
 
-	it("the quiz without a title to ask about: the bar alone", () => {
-		assert.deepEqual(items("tv=quiz", { ...desktop, titles: [] }), BAR)
+	it("the quiz without a title to ask about: Your taste, Expand and the navigation", () => {
+		assert.deepEqual(items("tv=quiz", { ...desktop, titles: [] }), [
+			"your-taste",
+			"expand",
+			...NAV,
+		])
 	})
 
 	it("My shows: up to three Next episodes and up to three shows to start", () => {
@@ -542,6 +641,28 @@ describe("the screens and their items, in reading order", () => {
 		])
 	})
 
+	it("a title: a row per service it streams on, then the row to all of them", () => {
+		assert.deepEqual(
+			items("tv=title&title=movie-1", {
+				...guest,
+				titleOffers: 2,
+				titleWhere: true,
+			}),
+			[
+				"watch",
+				"trailer",
+				"want-to-see",
+				"seen",
+				"fingerprint",
+				"offer:0",
+				"offer:1",
+				"where",
+				"expand",
+				...BAR,
+			],
+		)
+	})
+
 	it("the rating: the same strip without Haven't seen it, no Expand", () => {
 		assert.deepEqual(items("tv=rate&title=movie-1"), [
 			...LEVELS,
@@ -564,10 +685,15 @@ describe("the screens and their items, in reading order", () => {
 	it("search without a query: the ideas, and what is typed from its first character on; no Search, no Expand", () => {
 		for (const draft of ["", " ", "h", "heist"])
 			assert.deepEqual(items("tv=search", { ...guest, draft }), [
+				...searchIdeas(),
 				...KEY_ITEMS,
-				"bar:back",
-				"bar:menu",
+				...NAV,
 			])
+		// Four ideas, from the list of them.
+		assert.deepEqual(
+			searchIdeas(),
+			SEARCH_IDEAS.slice(0, 4).map((idea) => `idea:${idea}`),
+		)
 	})
 
 	it("search with a query: up to four titles; no Search", () => {
@@ -580,8 +706,7 @@ describe("the screens and their items, in reading order", () => {
 			"browse:filters",
 			"browse:edit",
 			"expand",
-			"bar:back",
-			"bar:menu",
+			...NAV,
 		])
 	})
 
@@ -589,20 +714,39 @@ describe("the screens and their items, in reading order", () => {
 		assert.deepEqual(items("tv=about"), ["got-it", "rate", ...BAR])
 	})
 
-	it("the menu: Home, Search, Sign in for a guest, What is GoodWatch?, Turn off", () => {
+	it("the menu: the TV's own screens, Popular and My shows a member's", () => {
 		assert.deepEqual(menuItems(guest), [
 			"menu:home",
+			"menu:tonight",
+			"menu:discover",
 			"menu:search",
-			"menu:sign-in",
+			"menu:quiz",
+			"menu:taste",
 			"menu:about",
-			"menu:off",
 		])
 		assert.deepEqual(menuItems(member), [
 			"menu:home",
+			"menu:tonight",
+			"menu:discover",
 			"menu:search",
+			"menu:quiz",
+			"menu:taste",
+			"menu:shows",
 			"menu:about",
-			"menu:off",
 		])
+		assert.deepEqual(menuItems({ ...member, popular: ["movie-41"] }), [
+			"menu:home",
+			"menu:tonight",
+			"menu:popular",
+			"menu:discover",
+			"menu:search",
+			"menu:quiz",
+			"menu:taste",
+			"menu:shows",
+			"menu:about",
+		])
+		// Popular is a member's, whatever a guest's context holds.
+		assert.ok(!menuItems({ ...guest, popular: ["movie-41"] }).includes("menu:popular"))
 	})
 })
 
@@ -612,14 +756,55 @@ describe("history: what pushes", () => {
 			["tonight", "tv=tonight"],
 			["discover", "tv=discover"],
 			["taste", "tv=taste"],
-			["shows", "tv=shows"],
 		]) {
-			const t = choose("", `app:${app}`, member, 0)
+			const t = choose("", `app:${app}`, guest, 0)
 			assert.equal(t.history, "push", app)
 			assert.equal(t.url, to)
 			assert.equal(t.state.depth, 1)
 			assert.deepEqual(t.effects, [])
 		}
+	})
+
+	it("a tile of Start opens its screen", () => {
+		const popular = { ...member, popular: ["movie-41"] }
+		for (const [tile, to] of [
+			["tonight", "tv=tonight"],
+			["popular", "tv=popular"],
+			["discover", "tv=discover"],
+			["search", "tv=search"],
+			["quiz", "tv=quiz"],
+			["taste", "tv=taste"],
+			["shows", "tv=shows"],
+			["about", "tv=about"],
+		]) {
+			const t = choose("", `start:${tile}`, popular, 0)
+			assert.equal(t.history, "push", tile)
+			assert.equal(t.url, to, tile)
+			assert.equal(t.state.depth, 1)
+			assert.deepEqual(t.effects, [])
+		}
+		// A guest's home has no Start.
+		assert.equal(choose("", "start:tonight", guest, 0).history, "none")
+	})
+
+	it("a tab of the navigation opens its screen; on that screen already it stays", () => {
+		const popular = { ...member, popular: ["movie-41"] }
+		for (const [tab, to] of [
+			["home", ""],
+			["tonight", "tv=tonight"],
+			["popular", "tv=popular"],
+			["discover", "tv=discover"],
+			["search", "tv=search"],
+			["quiz", "tv=quiz"],
+		]) {
+			const from = tab === "quiz" ? "tv=discover" : "tv=quiz"
+			const t = choose(from, `nav:${tab}`, popular)
+			assert.equal(t.history, "push", tab)
+			assert.equal(t.url, to, tab)
+		}
+		const stay = choose("tv=tonight", "nav:tonight", popular)
+		assert.equal(stay.history, "none")
+		assert.equal(stay.url, "tv=tonight")
 	})
 
 	it("a guest has no My shows to open", () => {
@@ -691,11 +876,12 @@ describe("history: what pushes", () => {
 	})
 
 	it("search, from the Remote, the bar and the menu", () => {
-		for (const action of [
-			{ type: "open-search" },
-			{ type: "choose", item: "bar:search" },
+		for (const [from, action] of [
+			["tv=tonight", { type: "open-search" }],
+			["tv=tonight", { type: "choose", item: "nav:search" }],
+			["tv=taste", { type: "choose", item: "bar:search" }],
 		] as const) {
-			const t = run(at("tv=tonight", 1), guest, action)
+			const t = run(at(from, 1), guest, action)
 			assert.equal(t.history, "push")
 			assert.equal(t.url, "tv=search")
 			assert.equal(t.state.depth, 2)
@@ -734,20 +920,26 @@ describe("history: what pushes", () => {
 })
 
 describe("history: what replaces", () => {
-	it("Another one on Tonight, which steps through three picks, wraps and keeps the focus", () => {
+	it("Another one on Tonight, which steps through the picks, wraps and keeps the focus", () => {
 		const second = choose("tv=tonight", "another")
 		assert.equal(second.history, "replace")
 		assert.equal(second.url, "tv=tonight&pick=1")
 		assert.equal(second.state.depth, 1)
 		assert.equal(focusedItem(second.state, guest), "another")
-		const t = run(second.state, guest, { type: "ok" }, { type: "ok" })
+		const t = run(
+			second.state,
+			guest,
+			{ type: "ok" },
+			{ type: "ok" },
+			{ type: "ok" },
+		)
 		assert.equal(t.history, "replace")
 		assert.equal(t.url, "tv=tonight")
 	})
 
 	it("Another one counts a pick past the end from the pick it shows", () => {
 		assert.equal(
-			choose("tv=tonight&pick=7", "another").url,
+			choose("tv=tonight&pick=5", "another").url,
 			"tv=tonight&pick=2",
 		)
 	})
@@ -805,11 +997,24 @@ describe("history: what goes back", () => {
 		assert.equal(choose("tv=about", "got-it").history, "back")
 	})
 
-	it("the quiz score that reaches the goal, with the effect that stores it", () => {
+	it("the quiz score that reaches the goal stays, with the effect that stores it", () => {
 		const last = { ...guest, quizProgress: 4 }
 		const t = choose("tv=quiz", "level:7", last)
-		assert.equal(t.history, "back")
+		assert.equal(t.history, "none")
+		assert.equal(t.url, "tv=quiz")
+		assert.equal(focusedItem(t.state, last), "level:7")
 		assert.deepEqual(t.effects, [{ type: "quiz-rate", score: 7 }])
+	})
+
+	it("the quiz once its last answer is saved and held", () => {
+		const t = run(at("tv=quiz", 1), guest, { type: "quiz-done" })
+		assert.equal(t.history, "back")
+		assert.deepEqual(t.effects, [])
+		// Anywhere but the quiz it does nothing.
+		assert.equal(
+			run(at("tv=taste", 1), guest, { type: "quiz-done" }).history,
+			"none",
+		)
 	})
 
 	it("a rating level, with the effect that stores it", () => {
@@ -850,11 +1055,15 @@ describe("history: a deep link has nothing to go back to", () => {
 		assert.equal(t.state, start)
 	})
 
-	it("the last quiz score shows Taste", () => {
-		const t = choose("tv=quiz", "level:9", { ...guest, quizProgress: 4 }, 0)
+	it("the quiz, once done, shows Taste", () => {
+		const last = { ...guest, quizProgress: 4 }
+		const scored = choose("tv=quiz", "level:9", last, 0)
+		assert.equal(scored.history, "none")
+		assert.deepEqual(scored.effects, [{ type: "quiz-rate", score: 9 }])
+		const t = run(scored.state, last, { type: "quiz-done" })
 		assert.equal(t.history, "replace")
 		assert.equal(t.url, "tv=taste")
-		assert.deepEqual(t.effects, [{ type: "quiz-rate", score: 9 }])
+		assert.deepEqual(t.effects, [])
 	})
 
 	it("a rating level shows the title", () => {
@@ -948,9 +1157,9 @@ describe("the Expand key's destinations", () => {
 
 	it("the key says where it leads, by the page's name", () => {
 		assert.equal(name("tv=tonight"), "Discover")
+		// A member's Watch next opens the Watch next page, whichever pick is on show.
 		assert.equal(name("tv=tonight", member), "My shows")
 		assert.equal(name("tv=tonight&pick=1", member), "My movies")
-		assert.equal(name("tv=tonight&pick=2", member), "My shows")
 		assert.equal(name("tv=tonight", { ...member, tonight: [] }), "Discover")
 		assert.equal(name("tv=discover"), "Discover")
 		assert.equal(name("tv=discover&theme=crime"), "Discover")
@@ -959,6 +1168,29 @@ describe("the Expand key's destinations", () => {
 		assert.equal(name("tv=taste"), "Taste")
 		assert.equal(name("tv=shows", member), "My shows")
 		assert.equal(name("tv=search&q=heist"), "Discover")
+		assert.equal(name("tv=quiz"), "the taste quiz")
+		assert.equal(name("tv=popular", member), "Discover")
+	})
+
+	it("the key's words are about the page it opens", () => {
+		const label = (query: string, ctx: TvContext = guest) =>
+			destinationLabel(at(query, 0, ctx).screen, ctx)
+		assert.equal(label("tv=title&title=movie-603"), "Full details")
+		assert.equal(label("tv=search&q=heist"), "Search all titles")
+		assert.equal(label("tv=discover"), "Full Discover")
+		assert.equal(label("tv=discover&mood=funny"), "Full Discover")
+		assert.equal(label("tv=tonight", member), "All my shows")
+		assert.equal(label("tv=tonight&pick=1", member), "All my movies")
+		assert.equal(label("tv=tonight"), "Explore all titles")
+		assert.equal(label("tv=popular", member), "Explore all titles")
+		assert.equal(label("tv=service&service=8"), "Explore all titles")
+		assert.equal(label("tv=taste"), "Full taste profile")
+		assert.equal(label("tv=taste&side=dark-crime", member), "Full taste profile")
+		assert.equal(label("tv=quiz"), "Full taste quiz")
+		assert.equal(label("tv=explorer&island=i3"), "Full Explorer")
+		assert.equal(label("tv=shows", member), "All my shows")
+		for (const query of ["", "tv=about", "tv=search", "tv=rate&title=movie-603"])
+			assert.equal(label(query), null, query)
 	})
 
 	it("a title's page goes by the title's name once the page knows it", () => {
@@ -972,7 +1204,6 @@ describe("the Expand key's destinations", () => {
 	it("a screen without a page has no name for one", () => {
 		for (const query of [
 			"",
-			"tv=quiz",
 			"tv=about",
 			"tv=search",
 			"tv=rate&title=movie-603",
@@ -1087,10 +1318,18 @@ describe("the Expand key's destinations", () => {
 			)
 	})
 
-	it("home, the quiz, the rating, search before a query and What is GoodWatch? have no page", () => {
+	it("the quiz: the site's taste quiz, which goes on where the TV's left off", () => {
+		assert.equal(dest("tv=quiz"), "/taste/quiz")
+		assert.equal(items("tv=quiz").includes("expand"), true)
+	})
+
+	it("Popular: Discover", () => {
+		assert.equal(dest("tv=popular", member), "/discover")
+	})
+
+	it("home, the rating, search before a query and What is GoodWatch? have no page", () => {
 		for (const q of [
 			"",
-			"tv=quiz",
 			"tv=rate&title=movie-1",
 			"tv=search",
 			"tv=about",
@@ -1386,7 +1625,8 @@ describe("the rating strip", () => {
 			dir: "down",
 			boxes: [],
 		})
-		assert.equal(focusedItem(t.state, desktop), "menu:home")
+		// The menu opens on the screen on show, Taste.
+		assert.equal(focusedItem(t.state, desktop), "menu:quiz")
 		assert.equal(t.state.focus, open.state.focus)
 	})
 
@@ -1438,13 +1678,21 @@ describe("the taste quiz", () => {
 		}
 	})
 
-	it("ends with the score that reaches the goal, whichever key gave it", () => {
+	it("stays on the score that reaches the goal, whichever key gave it, until it is saved and held", () => {
 		const last = { ...desktop, quizProgress: 4 }
 		for (const item of ["level:5", "score:10"]) {
 			const t = choose("tv=quiz", item, last)
-			assert.equal(t.history, "back")
+			assert.equal(t.history, "none")
 			assert.equal(t.effects.length, 1)
+			assert.equal(run(t.state, last, { type: "quiz-done" }).history, "back")
 		}
+	})
+
+	it("Your taste opens Taste's screen from the quiz", () => {
+		const t = choose("tv=quiz", "your-taste")
+		assert.equal(t.history, "push")
+		assert.equal(t.url, "tv=taste")
+		assert.equal(choose("tv=taste", "your-taste").history, "none")
 	})
 
 	it("goes on past the goal when rating more", () => {
@@ -1457,6 +1705,100 @@ describe("the taste quiz", () => {
 		const t = run(start, guest, { type: "choose", item: "skip" })
 		assert.equal(t.state, start)
 		assert.deepEqual(t.effects, [])
+	})
+})
+
+describe("Watch next and Popular show the pick with the focus", () => {
+	const popular = {
+		...member,
+		popular: ["movie-41", "movie-42", "show-43", "movie-44"],
+	}
+
+	it("a focus that comes to a pick puts it on show, in place, and the focus stays", () => {
+		for (const [query, ctx] of [
+			["tv=tonight", guest],
+			["tv=popular", popular],
+		] as const) {
+			const t = run(at(query, 1, ctx), ctx, { type: "focus", item: "pick:2" })
+			assert.equal(t.history, "replace", query)
+			assert.equal(t.url, `${query}&pick=2`)
+			assert.equal(t.state.depth, 1)
+			assert.equal(focusedItem(t.state, ctx), "pick:2")
+			// The pick already on show: nothing changes in the address.
+			assert.equal(
+				run(t.state, ctx, { type: "focus", item: "pick:2" }).history,
+				"none",
+			)
+		}
+	})
+
+	it("the pointer and the wheel put a pick on show too", () => {
+		const over = run(at("tv=popular", 1, popular), popular, {
+			type: "focus",
+			item: "pick:3",
+			pointer: true,
+		})
+		assert.equal(over.history, "replace")
+		assert.equal(over.url, "tv=popular&pick=3")
+		const step = run(at("tv=popular", 1, popular), popular, {
+			type: "step",
+			by: 1,
+		})
+		assert.equal(step.history, "replace")
+		assert.equal(step.url, "tv=popular&pick=1")
+		assert.equal(focusedItem(step.state, popular), "pick:1")
+	})
+
+	it("a focus on any other item leaves the pick on show", () => {
+		const t = run(at("tv=tonight&pick=2", 1), guest, {
+			type: "focus",
+			item: "details",
+		})
+		assert.equal(t.history, "none")
+		assert.equal(t.url, "tv=tonight&pick=2")
+	})
+
+	it("with the menu open the screen's picks stay as they are", () => {
+		const open = run(at("tv=popular", 1, popular), popular, {
+			type: "toggle-menu",
+		}).state
+		const t = run(open, popular, { type: "step", by: 1 })
+		assert.equal(t.history, "none")
+		assert.equal(t.url, "tv=popular")
+	})
+
+	it("OK on a pick opens its title; Details, Trailer and Watch are for the pick on show", () => {
+		assert.equal(
+			choose("tv=tonight", "pick:3").url,
+			"tv=title&title=movie-4",
+		)
+		assert.equal(
+			choose("tv=popular&pick=2", "details", popular).url,
+			"tv=title&title=show-43",
+		)
+		assert.equal(
+			choose("tv=popular", "pick:1", popular).url,
+			"tv=title&title=movie-42",
+		)
+		const trailer = choose("tv=popular&pick=3", "trailer", popular)
+		assert.equal(trailer.history, "push")
+		assert.equal(trailer.url, "tv=title&title=movie-44&panel=trailer")
+		assert.equal(
+			choose("tv=tonight&pick=1", "trailer").url,
+			"tv=title&title=movie-2&panel=trailer",
+		)
+		const watch = choose("tv=tonight&pick=2", "watch")
+		assert.equal(watch.history, "none")
+		assert.deepEqual(watch.effects, [{ type: "watch", title: "show-3" }])
+	})
+})
+
+describe("a title's where to watch", () => {
+	it("the row to all the services opens the title's page where it streams, as Watch does", () => {
+		const ctx = { ...guest, titleOffers: 1, titleWhere: true }
+		const t = choose("tv=title&title=movie-1", "where", ctx)
+		assert.equal(t.history, "none")
+		assert.deepEqual(t.effects, [{ type: "watch", title: "movie-1" }])
 	})
 })
 
@@ -1570,12 +1912,30 @@ describe("the menu", () => {
 	const open = (query: string, ctx: TvContext, depth = 1) =>
 		run(at(query, depth, ctx), ctx, { type: "toggle-menu" }).state
 
-	it("opens from the bar and starts on Home", () => {
+	it("opens from the bar on the screen on show, else on Home", () => {
 		const t = choose("tv=tonight", "bar:menu")
 		assert.equal(t.state.menuOpen, true)
 		assert.equal(t.history, "none")
-		assert.equal(focusedItem(t.state, guest), "menu:home")
+		assert.equal(focusedItem(t.state, guest), "menu:tonight")
 		assert.deepEqual(activeItems(t.state, guest), menuItems(guest))
+		for (const [query, ctx, start] of [
+			["", guest, "menu:home"],
+			["tv=quiz", guest, "menu:quiz"],
+			["tv=taste", guest, "menu:taste"],
+			["tv=about", guest, "menu:about"],
+			["tv=shows", member, "menu:shows"],
+			["tv=popular", { ...member, popular: ["movie-41"] }, "menu:popular"],
+			// A screen the menu does not list: its first key.
+			["tv=title&title=movie-1", guest, "menu:home"],
+			["tv=explorer", guest, "menu:home"],
+		] as const) {
+			assert.equal(focusedItem(open(query, ctx), ctx), start, query)
+			assert.equal(
+				focusedItem(choose(query, "bar:menu", ctx).state, ctx),
+				start,
+				query,
+			)
+		}
 	})
 
 	it("takes the focus while open, without touching the URL or the screen's focus", () => {
@@ -1595,7 +1955,7 @@ describe("the menu", () => {
 			{ type: "focus", item: "details" },
 		)
 		assert.equal(t.history, "none")
-		assert.equal(focusedItem(t.state, guest), "menu:sign-in")
+		assert.equal(focusedItem(t.state, guest), "menu:search")
 		assert.equal(t.url, "tv=tonight")
 		const closed = run(t.state, guest, { type: "back" })
 		assert.equal(closed.state.menuOpen, false)
@@ -1611,19 +1971,40 @@ describe("the menu", () => {
 		assert.equal(t.state.menuOpen, false)
 	})
 
-	it("Sign in names the effect and closes; a member has no such item", () => {
+	it("has no Sign in: choosing it only closes the menu, and a guest signs up from Taste", () => {
 		const t = run(open("tv=tonight", guest), guest, {
 			type: "choose",
 			item: "menu:sign-in",
 		})
 		assert.equal(t.history, "none")
 		assert.equal(t.state.menuOpen, false)
-		assert.deepEqual(t.effects, [{ type: "sign-in" }])
-		const m = run(open("tv=tonight", member), member, {
-			type: "choose",
-			item: "menu:sign-in",
-		})
-		assert.deepEqual(m.effects, [])
+		assert.deepEqual(t.effects, [])
+		const up = choose("tv=taste", "sign-up", guest)
+		assert.equal(up.history, "none")
+		assert.deepEqual(up.effects, [{ type: "sign-up" }])
+		assert.deepEqual(choose("tv=taste", "sign-up", member).effects, [])
+	})
+
+	it("each key opens its screen", () => {
+		const popular = { ...member, popular: ["movie-41"] }
+		for (const [item, to] of [
+			["menu:tonight", "tv=tonight"],
+			["menu:popular", "tv=popular"],
+			["menu:discover", "tv=discover"],
+			["menu:search", "tv=search"],
+			["menu:quiz", "tv=quiz"],
+			["menu:taste", "tv=taste"],
+			["menu:shows", "tv=shows"],
+			["menu:about", "tv=about"],
+		]) {
+			const t = run(open("tv=title&title=movie-1", popular), popular, {
+				type: "choose",
+				item,
+			})
+			assert.equal(t.history, "push", item)
+			assert.equal(t.url, to, item)
+			assert.equal(t.state.menuOpen, false)
+		}
 	})
 
 	// The plan's history table says "replace" here. That would take the screen under the menu out of the history,
@@ -1656,8 +2037,11 @@ describe("the menu", () => {
 		}
 	})
 
-	it("turns the TV off", () => {
-		const t = run(open("", guest), guest, { type: "choose", item: "menu:off" })
+	it("has no Turn off: the power key turns the TV off and closes the menu", () => {
+		const off = run(open("", guest), guest, { type: "choose", item: "menu:off" })
+		assert.equal(off.state.power, "on")
+		assert.equal(off.state.menuOpen, false)
+		const t = run(open("", guest), guest, { type: "power", on: false })
 		assert.equal(t.state.power, "off")
 		assert.equal(t.state.menuOpen, false)
 	})
@@ -1697,7 +2081,7 @@ describe("focus", () => {
 	it("starts on the screen's first own item, on the rating strip on Good, never on the bar or the Expand key", () => {
 		for (const [query, first] of [
 			["", "app:tonight"],
-			["tv=tonight", "details"],
+			["tv=tonight", "watch"],
 			["tv=discover", "mood:funny"],
 			["tv=discover&tab=themes", "theme:crime"],
 			["tv=discover&tab=styles", "style:animated"],
@@ -1706,10 +2090,18 @@ describe("focus", () => {
 			["tv=quiz", "level:7"],
 			["tv=title&title=movie-1", "watch"],
 			["tv=rate&title=movie-1", "level:7"],
+			// Search starts on the keys: OK at once doesn't search for an idea nobody chose.
 			["tv=search", "key:q"],
 			["tv=about", "got-it"],
 		])
 			assert.equal(focusedItem(at(query), guest), first, query)
+		// A member's Start starts on Watch next; Popular on the poster the address names.
+		assert.equal(focusedItem(at("", 0, member), member), "start:tonight")
+		const popular = { ...member, popular: ["movie-41", "movie-42"] }
+		assert.equal(
+			focusedItem(at("tv=popular", 0, popular), popular),
+			"pick:0",
+		)
 	})
 
 	it("starts on the first action of a list with no titles", () => {
@@ -1724,7 +2116,9 @@ describe("focus", () => {
 	it("starts on Back when a screen has nothing of its own", () => {
 		const empty = { ...guest, titles: [] }
 		assert.equal(focusedItem(at("tv=search&q=zzz"), empty), "browse:filters")
-		assert.equal(focusedItem(at("tv=tonight"), EMPTY_CONTEXT), "bar:back")
+		assert.equal(focusedItem(at("tv=taste&side=x", 0, member), { ...member, titles: [] }), "bar:back")
+		// A screen with the navigation starts on its first tab.
+		assert.equal(focusedItem(at("tv=tonight"), EMPTY_CONTEXT), "nav:home")
 	})
 
 	it("moves in four directions over the boxes it is given", () => {
@@ -1836,7 +2230,7 @@ describe("focus", () => {
 })
 
 describe("mini Discover: the tabs", () => {
-	// The choice screen as the desktop lays it out: the bar at the top right, the tabs at the left under it, the
+	// The choice screen as the desktop lays it out: the navigation along the top, the tabs at the left under it, the
 	// six options three by three, the Expand key at the bottom right.
 	const box = (
 		id: string,
@@ -1846,8 +2240,11 @@ describe("mini Discover: the tabs", () => {
 		height = 150,
 	): TvBox => ({ id, left, top, width, height })
 	const layout = (kind: string, keys: readonly string[]): TvBox[] => [
-		box("bar:back", 700, 20, 120, 60),
-		box("bar:search", 830, 20, 140, 60),
+		box("nav:home", 40, 20, 60, 60),
+		box("nav:tonight", 120, 20, 160, 60),
+		box("nav:discover", 300, 20, 140, 60),
+		box("nav:search", 460, 20, 120, 60),
+		box("nav:quiz", 600, 20, 120, 60),
 		box("bar:menu", 980, 20, 120, 60),
 		box("tab:moods", 56, 108, 150, 64),
 		box("tab:themes", 218, 108, 160, 64),
@@ -1992,12 +2389,12 @@ describe("mini Discover: the tabs", () => {
 		}
 	})
 
-	it("Up again reaches the top bar, and Down from the bar lands on the open tab again", () => {
+	it("Up again reaches the navigation, and Down from it lands on the open tab again", () => {
 		const start = at("tv=discover&tab=themes&focus=theme%3Afamily")
 		const bar = press(start, "up", "up")
-		assert.match(bar.focus, /^bar:/)
+		assert.match(bar.focus, /^(nav|bar):/)
 		assert.equal(bar.url, "tv=discover&tab=themes")
-		for (const key of ["bar:back", "bar:search", "bar:menu"]) {
+		for (const key of NAV) {
 			const down = press({ ...start, focus: key }, "down")
 			assert.equal(down.history, "none", key)
 			assert.equal(down.focus, "tab:themes", key)
@@ -2094,11 +2491,12 @@ describe("mini Discover: the tabs", () => {
 			{
 				type: "move",
 				dir: "down",
-				boxes: [box("menu:home", 0, 0), box("menu:search", 0, 200)],
+				boxes: [box("menu:home", 0, 0), box("menu:discover", 0, 200)],
 			},
 			guest,
 		)
-		assert.equal(t.state.menuFocus, "menu:search")
+		// The menu opens on Discover; Down from it has nothing under it, and no tab takes the move.
+		assert.equal(t.state.menuFocus, "menu:discover")
 		assert.equal(t.state.focus, menu.focus)
 	})
 
@@ -2389,21 +2787,30 @@ describe("every screen", () => {
 		}
 	})
 
-	it("ends with the Expand key exactly where it has a page, then the bar", () => {
+	it("ends with the Expand key exactly where it has a page, then the navigation or the bar", () => {
+		const nav = new Set(["tonight", "popular", "discover", "search", "quiz"])
 		for (const [screen, ctx] of screens) {
 			const all = tvItems(screen, ctx)
 			const tail = all.slice(
-				all.findIndex((i) => i === "expand" || i.startsWith("bar:")),
+				all.findIndex(
+					(i) => i === "expand" || i.startsWith("bar:") || i.startsWith("nav:"),
+				),
 			)
+			const withNav =
+				nav.has(screen.name) || (screen.name === "home" && ctx.member)
 			assert.deepEqual(
 				tail,
 				[
 					...(destinationHref(screen, ctx) ? ["expand"] : []),
-					...(screen.name === "home" ? [] : ["bar:back"]),
-					...(screen.name === "search" ? [] : ["bar:search"]),
+					...(withNav
+						? NAV.slice(0, -1)
+						: [
+								...(screen.name === "home" ? [] : ["bar:back"]),
+								"bar:search",
+							]),
 					"bar:menu",
 				],
-				screen.name,
+				`${screen.name} ${ctx.member ? "member" : "guest"}`,
 			)
 		}
 	})

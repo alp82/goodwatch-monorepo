@@ -14,6 +14,11 @@ export interface ScoreChoice {
 	kind: "level" | "score"
 	label: string
 	selected: boolean
+	/**
+	 * The answer just given and held (score-ack.ts): the chosen choices light with the `score-ack` class of main.css.
+	 * A level lights with the score it gives.
+	 */
+	acknowledged: boolean
 	style: CSSProperties
 	children: ReactNode
 }
@@ -25,12 +30,15 @@ export function ScoreChoices({
 	renderChoice,
 	className = "",
 	disabled = false,
+	acknowledged = false,
 }: {
 	value: Score | null
 	hot: number | null
 	renderChoice: (choice: ScoreChoice) => ReactNode
 	className?: string
 	disabled?: boolean
+	/** `value` is an answer just given (score-ack.ts): its choices light. */
+	acknowledged?: boolean
 }) {
 	const mine = value == null ? -1 : levelOf(value)
 	return (
@@ -49,6 +57,7 @@ export function ScoreChoices({
 					kind: "level",
 					label: `${level.name}, ${level.score}`,
 					selected: mine === i,
+					acknowledged: acknowledged && mine === i,
 					style: {
 						gridColumn: `span ${level.hi - level.lo + 1}`,
 						borderTop: `3px solid ${color}`,
@@ -83,6 +92,7 @@ export function ScoreChoices({
 					kind: "score",
 					label: `${score}, ${scoreLabels[score]}`,
 					selected,
+					acknowledged: acknowledged && selected,
 					style: {
 						color: "#fff",
 						background: `color-mix(in srgb, ${color} ${selected ? 42 : lit ? 35 : 25}%, #181b20)`,

@@ -69,6 +69,14 @@ export function pagesFromTv(trip: TvTrip | null, idx: number, pathname: string):
 
 export const wayBackShows = (pages: number) => pages >= 1 && pages <= WAY_BACK_LIVES
 
+/**
+ * The page the TV has just opened, on its own history entry (the one after the TV's): it starts at its top, where
+ * its Back to TV key is, whatever an earlier visit of the same address left it at (ui/DiscoveryContinuity.tsx).
+ * False on the way back (`out` is cleared) and on every other page.
+ */
+export const openedByTv = (trip: TvTrip | null, idx: number, pathname: string) =>
+	Boolean(trip?.out && trip.to === pathname && idx === trip.idx + 1)
+
 /** How far the brackets stand inside the picture's edge, and inside the window's. */
 export const BRACKET_INSET = 14
 

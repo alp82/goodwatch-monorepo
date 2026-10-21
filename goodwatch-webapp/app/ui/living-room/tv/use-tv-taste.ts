@@ -17,7 +17,7 @@ import { mediaLanguageUrl } from "~/utils/media-presentation"
 // None of this is in the page's first view: the hooks run in `TasteData` (screens/Taste.tsx), which arrives with
 // Taste's chunk and reports up to the scene (`TvTasteReport`). The scene imports this file's types only.
 import { useQuery } from "@tanstack/react-query"
-import { useCallback, useMemo, useRef } from "react"
+import { useCallback, useEffect, useMemo, useRef } from "react"
 import { useUserData } from "~/routes/api.user-data"
 import type { SidesView } from "~/server/taste-portrait/view"
 import type { TasteQuiz } from "~/ui/taste-quiz/use-taste-quiz"
@@ -28,6 +28,7 @@ import {
 import { QUIZ_GOAL } from "../../taste-quiz/quiz-flow"
 import { LIST_TITLES, type TvEffect, type TvScreen } from "./tv-machine"
 import {
+	NOT_ANSWERED,
 	type TvTasteOnScreen,
 	type TvTasteScreens,
 	carryOutQuiz,
@@ -137,6 +138,12 @@ export type TvTasteReport = {
 	known: (key: string) => TvKnownTitle | null
 	/** Carries out an effect of the machine that is the quiz's; answers whether it was. */
 	onEffect: (effect: TvEffect) => boolean
+	/**
+	 * The quiz on show reached its goal: its last answer is saved and was held. The TV gives way to Your taste
+	 * (`quiz-done`) and calls `rateMore`, so the next visit of the quiz asks on.
+	 */
+	done: boolean
+	rateMore: () => void
 }
 
 /** Puts the two reads together. `quiz` is null while the quiz is not running. */
@@ -163,13 +170,28 @@ export function useTasteReport(
 	}, [state, rated, next, view, picks, picksLoading])
 
 	const waiting = quiz ? quiz.loadingTitles : true
+	const answered = quiz?.answered ?? NOT_ANSWERED
+	const { score, leaving, line, failed } = answered
 	const screens: TvTasteScreens = useMemo(
 		() => ({
 			taste,
-			quiz: { title: asked ? quizTitle(asked) : null, waiting, rated },
+			quiz: {
+				title: asked ? quizTitle(asked) : null,
+				waiting,
+				rated,
+				answered: { score, leaving, line, failed },
+			},
 		}),
-		[taste, asked, waiting, rated],
+		[taste, asked, waiting, rated, score, leaving, line, failed],
 	)
+	// An answer on its way or held belongs to the quiz on show: leaving it for Taste ends the hold. The score is
+	// saved anyway; nothing moves on later.
+	const cancelAnswer = quiz?.cancelAnswer
+	useEffect(() => {
+		if (screen.name !== "quiz") cancelAnswer?.()
+	}, [screen.name, cancelAnswer])
+	const done = screen.name === "quiz" && (quiz?.screen ?? "quiz") !== "quiz"
+	const rateMore = quiz?.rateMore
 
 	const latest = useRef({ quiz, screens })
 	latest.current = { quiz, screens }
@@ -184,9 +206,12 @@ export function useTasteReport(
 	)
 
 	const ctx = useMemo(() => tasteContext(screen, screens), [screen, screens])
+	const latestMore = useRef(rateMore)
+	latestMore.current = rateMore
+	const more = useCallback(() => latestMore.current?.(), [])
 	// The same object while nothing changed: every new one is another render of the scene (`useReport`).
 	return useMemo(
-		() => ({ screens, ctx, known, onEffect }),
-		[screens, ctx, known, onEffect],
+		() => ({ screens, ctx, known, onEffect, done, rateMore: more }),
+		[screens, ctx, known, onEffect, done, more],
 	)
 }

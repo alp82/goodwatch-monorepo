@@ -19,6 +19,7 @@ import {
 	tvItems,
 } from "./tv-machine"
 import {
+	NOT_ANSWERED,
 	type TvQuizOnScreen,
 	type TvSide,
 	type TvTasteOnScreen,
@@ -74,6 +75,7 @@ const ASKED = {
 	key: "show-2316",
 	title: "The Office",
 	backdrop: "/office.jpg",
+	poster: "/office-poster.jpg",
 	facts: "2005 · Show",
 }
 
@@ -82,7 +84,7 @@ const screensOf = (
 	quiz: Partial<TvQuizOnScreen> = {},
 ): TvTasteScreens => ({
 	taste,
-	quiz: { title: null, waiting: false, rated: 0, ...quiz },
+	quiz: { title: null, waiting: false, rated: 0, answered: NOT_ANSWERED, ...quiz },
 })
 /** The machine's context as the scene builds it: Taste's part; both editions have exact scores. */
 const ctxOf = (
@@ -212,7 +214,15 @@ function first(screen: Screen, taste?: TvTasteScreens) {
 	const focused = focusedItem(state, ctx)
 	return renderToStaticMarkup(
 		<TvScreen
-			tv={{ state, focused, screenFocus: focused, dispatch: () => {} }}
+			tv={{
+				state,
+				focused,
+				screenFocus: focused,
+				dispatch: () => {},
+				ringOff: false,
+				byPointer: false,
+				unpoint: () => {},
+			}}
 			canvas={CANVAS.desktop}
 			ctx={ctx}
 			apps={[]}
