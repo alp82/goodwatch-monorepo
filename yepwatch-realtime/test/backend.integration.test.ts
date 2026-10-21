@@ -4,7 +4,7 @@ import { randomBytes } from 'node:crypto'
 import { execFile, spawn } from 'node:child_process'
 import { promisify } from 'node:util'
 import { createServer } from 'node:net'
-import { paths, type GuestAdmission, type GuestCredential, type RoomCommand, type RoomSnapshot } from '@goodwatch/yepwatch-contracts'
+import { paths, type ApiError, type GuestAdmission, type GuestCredential, type RoomCommand, type RoomSnapshot } from '@goodwatch/yepwatch-contracts'
 import { createGateway } from '../src/gateway.js'
 import { ValkeyBus } from '../src/bus.js'
 import { HttpAuthority } from '../src/authority.js'
@@ -20,7 +20,7 @@ async function port() {
 }
 // This imports the BACKEND OWNER'S real handler/service in its own subprocess.
 // Explicit opt-in: disposable bus + memory repository + synthetic catalog, no live data.
-test('Actual backend HTTP hooks + two gateways: all candidate kinds, private voting through decision, bus recovery', {
+test('Actual backend HTTP hooks + two gateways: guest movies/new shows, continuation denials, private voting and bus recovery', {
   skip: process.env.YEPWATCH_TEST_BACKEND !== '1' || !process.env.YEPWATCH_TEST_VALKEY_IMAGE, timeout: 30_000,
 }, async t => {
   const apiPort = await port(), busPort = await port()
@@ -54,6 +54,7 @@ test('Actual backend HTTP hooks + two gateways: all candidate kinds, private vot
   }
   const admission = (nickname: string) => ({ commandId: randomBytes(16).toString('hex'), admissionSecret: randomBytes(32).toString('base64url'), nickname })
   const host = await request<GuestAdmission>(paths.rooms, admission('Host'))
+  assert.deepEqual(host.snapshot.shared.constraints.kinds, ['movie', 'show_start'])
   const id = host.credential.roomId
   const guest = await request<GuestAdmission>(paths.join(id), { ...admission('Remote guest'), inviteCode: host.invite.code })
   const gateways = [0, 1].map(() => createGateway(new HttpAuthority(origin, serviceSecret),
@@ -87,22 +88,59 @@ test('Actual backend HTTP hooks + two gateways: all candidate kinds, private vot
     const current = await read(c)
     return request<{ snapshot: RoomSnapshot }>(paths.commands(id), { commandId: randomBytes(16).toString('hex'), sequence: current.own.nextSequence, command: cmd }, c)
   }
-  await command(host.credential, { type: 'setup', expectedContextVersion: 1,
-    screens: [{ id: 'couch', label: 'Couch', country: 'DE', serviceIds: [1], confirmed: true }, { id: 'remote', label: 'Remote', country: 'JP', serviceIds: [1], confirmed: true }],
-    constraints: { kinds: ['movie', 'show_start', 'show_continue'], maxMinutes: null, moods: [] }, screenId: 'couch' })
+  const beforeDenials = await read()
+  async function denied(path: string, body: unknown | undefined, c: GuestCredential,
+    status: number, code: ApiError['error']['code'], reason: 'member_auth_unavailable' | 'manual_progress_not_supported') {
+    const response = await fetch(new URL(path, origin), {
+      method: body === undefined ? 'GET' : 'POST', headers: { 'content-type': 'application/json',
+        Authorization: `Bearer ${c.token}`, 'X-YepWatch-Participant': c.participantId },
+      body: body === undefined ? undefined : JSON.stringify(body),
+    })
+    assert.equal(response.status, status)
+    const failure = await response.json() as ApiError
+    assert.equal(failure.error.code, code)
+    assert.equal(failure.error.retryable, false)
+    assert.deepEqual(failure.error.details, { type: 'access', reason, actions: ['use_guest_modes'] })
+    assert.equal(failure.snapshot, undefined)
+  }
+  async function deniedCommand(cmd: RoomCommand, status: number, code: ApiError['error']['code'],
+    reason: 'member_auth_unavailable' | 'manual_progress_not_supported') {
+    const current = await read()
+    await denied(paths.commands(id), { commandId: randomBytes(16).toString('hex'),
+      sequence: current.own.nextSequence, command: cmd }, host.credential, status, code, reason)
+  }
+  const screens = [{ id: 'couch', label: 'Couch', country: 'DE', serviceIds: [1], confirmed: true },
+    { id: 'remote', label: 'Remote', country: 'JP', serviceIds: [1], confirmed: true }]
+  await deniedCommand({ type: 'setup', expectedContextVersion: beforeDenials.shared.contextVersion, screens,
+    constraints: { kinds: ['movie', 'show_start', 'show_continue'], maxMinutes: null, moods: [] }, screenId: 'couch' },
+    403, 'member_required', 'member_auth_unavailable')
+  await deniedCommand({ type: 'propose_episode', expectedContextVersion: beforeDenials.shared.contextVersion,
+    showId: 10, episodeId: 102 }, 403, 'member_required', 'member_auth_unavailable')
+  for (const showId of [10, 999]) {
+    await denied(paths.showProgress(id, showId), undefined, guest.credential, 403, 'member_required', 'member_auth_unavailable')
+  }
+  for (const input of [{ state: 'unknown' }, { state: 'not_started' }, { state: 'continue', nextEpisodeId: 102 }] as const) {
+    await deniedCommand({ type: 'show_progress', showId: 10, input, approvedEpisodeId: input.state === 'continue' ? 102 : null },
+      400, 'invalid_request', 'manual_progress_not_supported')
+  }
+  // Denials must not consume sequence, mutate public state or commit manual history.
+  assert.deepEqual(await read(), beforeDenials)
+  const member = await fetch(new URL(paths.memberStart, origin), { method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ returnTo: '/room' }) })
+  assert.equal(member.status, 501)
+  assert.equal((await member.json() as ApiError).error.code, 'not_implemented')
+  await command(host.credential, { type: 'setup', expectedContextVersion: beforeDenials.shared.contextVersion, screens,
+    constraints: { kinds: ['movie', 'show_start'], maxMinutes: null, moods: [] }, screenId: 'couch' })
   await command(guest.credential, { type: 'assign_screen', expectedContextVersion: (await read()).shared.contextVersion, screenId: 'remote' })
-  await command(host.credential, { type: 'propose_episode', expectedContextVersion: (await read()).shared.contextVersion, showId: 10, episodeId: 102 })
-  for (const c of [host.credential, guest.credential]) {
-    await command(c, { type: 'show_progress', showId: 10, input: { state: 'continue', nextEpisodeId: c === host.credential ? 101 : 102 }, approvedEpisodeId: 102 })
-  }
-  for (const c of [host.credential, guest.credential]) {
-    await command(c, { type: 'ready', expectedContextVersion: (await read()).shared.contextVersion, ready: true })
-  }
+  await command(guest.credential, { type: 'ready', expectedContextVersion: (await read()).shared.contextVersion, ready: true })
+  // The visible host start action can include readiness without a separate ready command.
+  assert.equal((await read()).shared.participants.find(p => p.participantId === host.credential.participantId)?.ready, false)
   let current = await read()
-  const startedRound = await command(host.credential, { type: 'start_round', expectedContextVersion: current.shared.contextVersion, expectedRosterVersion: current.shared.rosterVersion })
+  const startedRound = await command(host.credential, { type: 'start_round', hostReady: true, expectedContextVersion: current.shared.contextVersion, expectedRosterVersion: current.shared.rosterVersion })
   const round = startedRound.snapshot.shared.round!.version
   await until(() => snapshots(a.frames).at(-1)?.snapshot.phase === 'voting' && snapshots(b.frames).at(-1)?.snapshot.phase === 'voting')
-  assert.deepEqual(snapshots(b.frames).at(-1)!.snapshot.candidates.map(c => c.identity.kind), ['movie', 'show_start', 'show_continue'])
+  assert.deepEqual(snapshots(b.frames).at(-1)!.snapshot.candidates.map(c => c.identity.kind), ['movie', 'show_start'])
+  assert.equal(snapshots(b.frames).at(-1)!.snapshot.participants.find(p => p.participantId === host.credential.participantId)?.ready, true)
   const candidates = startedRound.snapshot.shared.candidates
   for (const c of [host.credential, guest.credential]) {
     for (const candidate of candidates) await command(c, { type: 'vote', roundVersion: round, candidateId: candidate.id, expectedVoteRevision: 0, value: 'watch' })
@@ -112,7 +150,7 @@ test('Actual backend HTTP hooks + two gateways: all candidate kinds, private vot
       await until(() => snapshots(b.frames).at(-1)!.snapshot.revision >= revision)
       const shared = snapshots(b.frames).at(-1)!.snapshot
       assert.equal(shared.phase, 'voting'); assert.equal(shared.shortlist, null)
-      assert.equal(shared.participants.find(p => p.participantId === host.credential.participantId)?.completedCount, 3)
+      assert.equal(shared.participants.find(p => p.participantId === host.credential.participantId)?.completedCount, candidates.length)
     } else await command(c, { type: 'complete_round', roundVersion: round })
   }
   current = await read(); assert.equal(current.shared.phase, 'shortlist')
