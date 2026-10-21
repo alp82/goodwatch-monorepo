@@ -62,37 +62,37 @@ import {
 
 export const FILTER_SHEET_VARIANTS = {
 	now: "Live today",
-	F: "Tiles that open in place",
-	H: "Every filter a tile",
-	I: "Add filters as you go",
+	I: "Popular as chips",
+	J: "Popular as tiles",
+	K: "Popular as cards",
 } as const
 export type FilterSheetVariant = keyof typeof FILTER_SHEET_VARIANTS
 
 /** A group of the sheet, plus Length (runtime), which the live sheet doesn't offer. */
-type Key = FilterName | "length"
+type Key = FilterName | "length" | "sources" | "gap"
 
 export const FILTER_SHEET_ORDERS: Record<string, { label: string; keys: Key[] }> = {
 	what: {
 		label: "What first",
-		keys: ["type", "genres", "moods", "minScore", "services", "released", "length", "themes", "styles", "minMatch", "people", "ageLimit", "productionCountries", "similarTo", "loved", "disliked"],
+		keys: ["type", "genres", "moods", "minMatch", "minScore", "sources", "gap", "services", "released", "length", "themes", "styles", "people", "ageLimit", "productionCountries", "similarTo", "loved", "disliked"],
 	},
 	where: {
 		label: "Where, what, how good",
-		keys: ["services", "type", "genres", "moods", "minScore", "released", "length", "minMatch", "themes", "styles", "people", "ageLimit", "productionCountries", "similarTo", "loved", "disliked"],
+		keys: ["services", "type", "genres", "moods", "minScore", "sources", "gap", "released", "length", "minMatch", "themes", "styles", "people", "ageLimit", "productionCountries", "similarTo", "loved", "disliked"],
 	},
 	quick: {
 		label: "Quick controls first",
-		keys: ["type", "minScore", "services", "genres", "moods", "released", "length", "minMatch", "ageLimit", "themes", "styles", "people", "productionCountries", "similarTo", "loved", "disliked"],
+		keys: ["type", "minScore", "sources", "gap", "services", "genres", "moods", "released", "length", "minMatch", "ageLimit", "themes", "styles", "people", "productionCountries", "similarTo", "loved", "disliked"],
 	},
 	vibe: {
 		label: "Vibe first",
-		keys: ["moods", "genres", "type", "minScore", "services", "styles", "themes", "minMatch", "released", "length", "people", "ageLimit", "productionCountries", "similarTo", "loved", "disliked"],
+		keys: ["moods", "genres", "type", "minScore", "sources", "gap", "services", "styles", "themes", "minMatch", "released", "length", "people", "ageLimit", "productionCountries", "similarTo", "loved", "disliked"],
 	},
 }
 
 const ESSENTIALS = new Set<Key>(["services", "type", "genres", "moods", "minScore"])
-/** What H and I show open before anything is set. */
-const OPEN_AT_START = new Set<Key>(["type", "genres"])
+/** The cards the sheet starts with, before anything is set. */
+const OPEN_AT_START = new Set<Key>(["type", "moods", "minMatch", "minScore"])
 
 export function useFilterSheetVariant(): FilterSheetVariant {
 	const [params] = useSearchParams()
@@ -208,7 +208,7 @@ const LEN_MAX = 240
 
 const num = (v: string | undefined) => (v === undefined || v === "" ? null : Number(v))
 
-function legacyPatch(state: FilterState, patch: Record<string, number | null>): Partial<FilterState> {
+function legacyPatch(state: FilterState, patch: Record<string, number | string | null>): Partial<FilterState> {
 	const legacy = { ...(state.legacy ?? {}) } as Record<string, string>
 	for (const [k, v] of Object.entries(patch)) {
 		if (v === null) delete legacy[k]
@@ -279,6 +279,11 @@ function useSummaries(p: Props): Partial<Record<Key, string>> {
 		minMatch: MATCH_LABELS[state.minMatch as keyof typeof MATCH_LABELS] ?? `${state.minMatch}%+`,
 		released: yearsSet ? `${ylo}–${yhi >= YEAR_MAX ? "now" : yhi}` : RELEASED_LABELS[state.released],
 		length: llo === 0 && lhi >= LEN_MAX ? "Any length" : `${fmtLen(llo)} – ${fmtLen(lhi)}`,
+		sources:
+			SOURCES.filter((src) => state.legacy?.[src.param])
+				.map((src) => `${src.name.replace("Rotten Tomatoes", "RT")} ${src.fmt(Number(state.legacy?.[src.param]))}`)
+				.join(", ") || "Any",
+		gap: GAPS.find((g) => g.id === (state.legacy?.scoreGap ?? ""))?.label ?? "Any",
 		services: state.onMyServices
 			? "My services"
 			: allPicked(p.data)
@@ -301,6 +306,8 @@ function useSummaries(p: Props): Partial<Record<Key, string>> {
 function isSet(ctx: Ctx, k: Key): boolean {
 	const s = ctx.data.state
 	if (k === "length") return !!(s.legacy?.minRuntime || s.legacy?.maxRuntime)
+	if (k === "sources") return SOURCES.some((src) => !!s.legacy?.[src.param])
+	if (k === "gap") return !!s.legacy?.scoreGap
 	if (k === "released") return s.released !== "any" || !!(s.legacy?.minYear || s.legacy?.maxYear)
 	if (k === "type") return s.type !== "all" || s.anime !== "any"
 	if (k === "services") return s.onMyServices || !!s.services?.length
@@ -311,6 +318,8 @@ function isSet(ctx: Ctx, k: Key): boolean {
 function cleared(ctx: Ctx, k: Key): FilterState {
 	const s = ctx.data.state
 	if (k === "length") return { ...s, ...legacyPatch(s, { minRuntime: null, maxRuntime: null }) }
+	if (k === "sources") return { ...s, ...legacyPatch(s, Object.fromEntries(SOURCES.map((src) => [src.param, null]))) }
+	if (k === "gap") return { ...s, ...legacyPatch(s, { scoreGap: null }) }
 	if (k === "released") return { ...s, released: "any", ...legacyPatch(s, { minYear: null, maxYear: null }) }
 	if (k === "type") return { ...s, type: "all", anime: "any" }
 	if (k === "services") return { ...s, onMyServices: false, services: undefined }
@@ -323,7 +332,9 @@ const TITLES: Record<Key, string> = {
 	type: "Movies or shows",
 	genres: "Genre",
 	moods: "Mood",
-	minScore: "GoodWatch score",
+	minScore: "Score",
+	sources: "Scores by source",
+	gap: "Critics vs audiences",
 	minMatch: "Taste match",
 	released: "Released",
 	length: "Length",
@@ -348,6 +359,8 @@ const HINTS: Partial<Record<Key, string>> = {
 	genres: "Drama, comedy, sci-fi…",
 	moods: "Funny, scary, feel-good…",
 	minScore: "Only well-rated titles",
+	sources: "IMDb, Rotten Tomatoes, Metacritic",
+	gap: "Where critics and audiences differ",
 	minMatch: "How well it fits your taste",
 	released: "A year range or a decade",
 	length: "Short movies, short episodes",
@@ -361,7 +374,23 @@ const HINTS: Partial<Record<Key, string>> = {
 	disliked: "Steer away from titles",
 }
 
-const accent = (k: Key) => (k === "length" ? "bg-sky-400" : FILTER_ACCENTS[k].dot)
+const accent = (k: Key) =>
+	k === "length" ? "bg-sky-400" : k === "sources" ? "bg-yellow-300" : k === "gap" ? "bg-rose-300" : FILTER_ACCENTS[k].dot
+
+/** Score by source: the legacy-style parameter, the 0-100 steps, and how a step reads. */
+const SOURCES = [
+	{ param: "minImdb", name: "IMDb", color: "bg-yellow-400", steps: [65, 75, 80], fmt: (v: number) => `${(v / 10).toFixed(1)}+` },
+	{ param: "minTomatometer", name: "Rotten Tomatoes critics", color: "bg-red-500", steps: [60, 80, 90], fmt: (v: number) => `${v}%+` },
+	{ param: "minRtAudience", name: "Rotten Tomatoes audience", color: "bg-orange-400", steps: [70, 85, 90], fmt: (v: number) => `${v}%+` },
+	{ param: "minMetacritic", name: "Metacritic", color: "bg-emerald-500", steps: [60, 75, 81], fmt: (v: number) => `${v}+` },
+] as const
+
+const GAPS = [
+	{ id: "", label: "Any" },
+	{ id: "agree", label: "Both agree" },
+	{ id: "critics", label: "Critics liked it more" },
+	{ id: "audience", label: "Audiences liked it more" },
+] as const
 
 // ---------------------------------------------------------------- atoms
 
@@ -1147,6 +1176,30 @@ function PeoplePicker({ ctx }: { ctx: Ctx }) {
 	)
 }
 
+/** One "and up" bar per source; the sources filter together (all must pass). */
+function SourcesControl({ ctx }: { ctx: Ctx }) {
+	const { state } = ctx.data
+	return (
+		<div className="space-y-3.5">
+			{SOURCES.map((src) => {
+				const value = Number(state.legacy?.[src.param] ?? 0)
+				return (
+					<div key={src.param}>
+						<p className="mb-1 text-[12px] text-gray-400">{src.name}</p>
+						<ThresholdBar
+							label={src.name}
+							steps={[{ v: 0, label: "Any" }, ...src.steps.map((v) => ({ v, label: src.fmt(v) }))]}
+							value={value}
+							onChange={(v) => ctx.set(legacyPatch(state, { [src.param]: v || null }))}
+							color={() => src.color}
+						/>
+					</div>
+				)
+			})}
+		</div>
+	)
+}
+
 const SCORE_STEPS = [
 	{ v: 0, label: "Any" },
 	{ v: 60, label: "60+" },
@@ -1183,7 +1236,7 @@ function Control({ ctx, k, trim }: { ctx: Ctx; k: Key; trim: boolean }) {
 		case "minScore":
 			return (
 				<ThresholdBar
-					label="GoodWatch score"
+					label="Score"
 					steps={SCORE_STEPS}
 					value={state.minScore}
 					onChange={(minScore) => ctx.set({ minScore: minScore as FilterState["minScore"] })}
@@ -1206,6 +1259,28 @@ function Control({ ctx, k, trim }: { ctx: Ctx; k: Key; trim: boolean }) {
 					{g?.needs && <NeedsTaste needs={g.needs} />}
 				</>
 			)
+		case "sources":
+			return <SourcesControl ctx={ctx} />
+		case "gap":
+			return (
+				<div className="space-y-2.5">
+					<div className="flex flex-wrap gap-1.5">
+						{GAPS.map((g) => (
+							<Chip
+								key={g.id}
+								o={{
+									id: g.id || "any",
+									label: g.label,
+									active: (state.legacy?.scoreGap ?? "") === g.id,
+									count: null,
+									toggle: () => ctx.set(legacyPatch(state, { scoreGap: g.id || null })),
+								}}
+							/>
+						))}
+					</div>
+					<p className="text-[12px] text-gray-500">Critics: Rotten Tomatoes critics or Metacritic. Audiences: IMDb or Rotten Tomatoes audience. "Differ" is 15 points or more.</p>
+				</div>
+			)
 		case "released":
 			return <YearControl ctx={ctx} />
 		case "length":
@@ -1222,7 +1297,8 @@ function Control({ ctx, k, trim }: { ctx: Ctx; k: Key; trim: boolean }) {
 }
 
 /** The keys this viewer gets: Age & content only with a ladder. */
-const available = (ctx: Ctx, keys: Key[]) => keys.filter((k) => k === "length" || k === "released" || ctx.groups.some((g) => g.key === k))
+const available = (ctx: Ctx, keys: Key[]) =>
+	keys.filter((k) => k === "length" || k === "released" || k === "sources" || k === "gap" || ctx.groups.some((g) => g.key === k))
 
 function Label({ k, ctx, fit }: { k: Key; ctx: Ctx; fit?: boolean }) {
 	const on = isSet(ctx, k)
@@ -1311,112 +1387,163 @@ function Card({
 	)
 }
 
-/** A folded filter: name and what's set, on a tile. */
-function Tile({ ctx, k, on, onClick }: { ctx: Ctx; k: Key; on?: boolean; onClick: () => void }) {
-	const set = isSet(ctx, k)
-	return (
-		<button
-			type="button"
-			onClick={onClick}
-			aria-expanded={!!on}
-			className={`flex min-h-[3.75rem] min-w-0 flex-col justify-center gap-0.5 rounded-2xl px-3.5 py-2 text-left cursor-pointer outline-none transition-colors focus-visible:ring-2 focus-visible:ring-amber-400 ${on ? "bg-white/[0.11] ring-1 ring-white/25" : set ? "bg-white/[0.07] ring-1 ring-amber-400/25 hover:bg-white/[0.1]" : "bg-white/[0.035] ring-1 ring-white/[0.06] hover:bg-white/[0.07]"}`}
-		>
-			<Label k={k} ctx={ctx} fit />
-			<span className={`truncate pl-4 text-[12px] ${set ? "text-amber-200/90" : "text-gray-500"}`}>{ctx.summaries[k]}</span>
-		</button>
-	)
+// ---------------------------------------------------------------- popular quick adds
+
+/** A one-tap filter most people look for: it sets the value and brings in its card. */
+interface Popular {
+	id: string
+	label: string
+	key: Key
+	on: (s: FilterState) => boolean
+	apply: (ctx: Ctx) => Partial<FilterState>
+	count?: (ctx: Ctx) => number | null
+	logo?: (ctx: Ctx) => string | null
 }
 
-// ---------------------------------------------------------------- F: tiles that open in place
+const addTo = <T,>(list: T[] | undefined, v: T) => [...new Set([...(list ?? []), v])]
+const oc = (ctx: Ctx, g: FilterName, o: string) => ctx.data.counts?.optionCounts[g]?.[o] ?? null
 
-function VariantF({ ctx }: { ctx: Ctx }) {
-	const keys = available(ctx, ctx.order)
-	const essentials = keys.filter((k) => ESSENTIALS.has(k))
-	const rest = keys.filter((k) => !ESSENTIALS.has(k))
-	const [open, setOpen] = useState<Key | null>(null)
-	const rows: Key[][] = []
-	for (let i = 0; i < rest.length; i += 2) rows.push(rest.slice(i, i + 2))
-	return (
-		<div className="flex flex-col gap-3">
-			{essentials.map((k) => (
-				<Card key={k} ctx={ctx} k={k} trim />
-			))}
-			<h3 className="mt-4 mb-0.5 text-[14px] font-semibold text-gray-300">More filters</h3>
-			{rows.map((row) => (
-				<div key={row.join()} className="flex flex-col gap-2">
-					<div className="grid grid-cols-2 gap-2">
-						{row.map((k) => (
-							<Tile key={k} ctx={ctx} k={k} on={open === k} onClick={() => setOpen(open === k ? null : k)} />
-						))}
-					</div>
-					{open && row.includes(open) && (
-						<motion.div key={open} initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.18 }}>
-							<Card ctx={ctx} k={open} trim={false} onFold={() => setOpen(null)} />
-						</motion.div>
-					)}
-				</div>
-			))}
-		</div>
-	)
-}
+const POPULAR: Popular[] = [
+	{
+		id: "netflix",
+		label: "On Netflix",
+		key: "services",
+		on: (s) => !s.onMyServices && !!s.services?.includes(8),
+		apply: () => ({ onMyServices: false, services: [8] }),
+		logo: (ctx) => {
+			const p = ctx.data.countryProviders.find((x) => x.id === 8)
+			return p ? `${PROVIDER_LOGO}${p.logo_path}` : null
+		},
+	},
+	{ id: "comedy", label: "Comedy", key: "genres", on: (s) => s.genres.includes("Comedy"), apply: (ctx) => ({ genres: addTo(ctx.data.state.genres, "Comedy") }), count: (ctx) => oc(ctx, "genres", "Comedy") },
+	{ id: "feelgood", label: "Feel-good", key: "moods", on: (s) => s.moods.includes("feelgood"), apply: (ctx) => ({ moods: addTo(ctx.data.state.moods, "feelgood").slice(-3) as FilterState["moods"] }), count: (ctx) => oc(ctx, "moods", "feelgood") },
+	{ id: "score80", label: "Score 80+", key: "minScore", on: (s) => s.minScore >= 80, apply: () => ({ minScore: 80 as FilterState["minScore"] }), count: (ctx) => oc(ctx, "minScore", "80") },
+	{ id: "recent", label: "Last 3 years", key: "released", on: (s) => s.released === "recent", apply: (ctx) => ({ released: "recent", ...legacyPatch(ctx.data.state, { minYear: null, maxYear: null }) }), count: (ctx) => oc(ctx, "released", "recent") },
+	{ id: "short", label: "Under 90 min", key: "length", on: (s) => s.legacy?.maxRuntime === "90", apply: (ctx) => legacyPatch(ctx.data.state, { minRuntime: null, maxRuntime: 90 }) },
+	{ id: "agree", label: "Critics and audiences agree", key: "gap", on: (s) => s.legacy?.scoreGap === "agree", apply: (ctx) => legacyPatch(ctx.data.state, { scoreGap: "agree" }) },
+	{ id: "mind", label: "Mind-bending", key: "moods", on: (s) => s.moods.includes("mind"), apply: (ctx) => ({ moods: addTo(ctx.data.state.moods, "mind").slice(-3) as FilterState["moods"] }), count: (ctx) => oc(ctx, "moods", "mind") },
+	{ id: "imdb8", label: "IMDb 8.0+", key: "sources", on: (s) => Number(s.legacy?.minImdb ?? 0) >= 80, apply: (ctx) => legacyPatch(ctx.data.state, { minImdb: 80 }) },
+	{ id: "horror", label: "Horror", key: "genres", on: (s) => s.genres.includes("Horror"), apply: (ctx) => ({ genres: addTo(ctx.data.state.genres, "Horror") }), count: (ctx) => oc(ctx, "genres", "Horror") },
+	{ id: "noanime", label: "No anime", key: "type", on: (s) => s.anime === "none", apply: () => ({ anime: "none" }), count: (ctx) => oc(ctx, "anime", "none") },
+	{ id: "episodes", label: "Short episodes", key: "length", on: (s) => s.legacy?.maxRuntime === "35", apply: (ctx) => ({ type: "show", ...legacyPatch(ctx.data.state, { minRuntime: null, maxRuntime: 35 }) }) },
+]
 
-// ---------------------------------------------------------------- H: every filter a tile
+type QuickStyle = "chips" | "tiles" | "cards"
 
-/**
- * Every filter is a tile, in the chosen order. A tile opens into a card in its place; Movies or shows and Genre start
- * open, and so does every filter with something set. Folded tiles pack two to a row between the open cards.
- */
-function VariantH({ ctx }: { ctx: Ctx }) {
-	const keys = available(ctx, ctx.order)
-	const [open, setOpen] = useState<Set<Key>>(() => new Set(keys.filter((k) => OPEN_AT_START.has(k) || isSet(ctx, k))))
-	const toggle = (k: Key) =>
-		setOpen((s) => {
-			const n = new Set(s)
-			n.has(k) ? n.delete(k) : n.add(k)
-			return n
-		})
-	// Runs: an open card on its own, folded tiles together.
-	const runs: { open: boolean; keys: Key[] }[] = []
-	for (const k of keys) {
-		const o = open.has(k)
-		const last = runs[runs.length - 1]
-		if (!o && last && !last.open) last.keys.push(k)
-		else runs.push({ open: o, keys: [k] })
+function PopularPicks({ ctx, style, onPick }: { ctx: Ctx; style: QuickStyle; onPick: (p: Popular) => void }) {
+	const picks = POPULAR.filter((p) => !p.on(ctx.data.state) && (!p.logo || p.logo(ctx)))
+	if (!picks.length) return null
+	const meta = (p: Popular) => {
+		const n = p.count?.(ctx)
+		return n != null ? `${compact(n)} titles` : TITLES[p.key]
 	}
 	return (
-		<div className="flex flex-col gap-2">
-			{runs.map((run) =>
-				run.open ? (
-					<Card key={run.keys[0]} ctx={ctx} k={run.keys[0]} trim={ESSENTIALS.has(run.keys[0])} onFold={() => toggle(run.keys[0])} />
-				) : (
-					<div key={run.keys.join()} className="grid grid-cols-2 gap-2">
-						{run.keys.map((k) => (
-							<Tile key={k} ctx={ctx} k={k} onClick={() => toggle(k)} />
-						))}
-					</div>
-				),
+		<section aria-label="Popular filters" className="mt-1">
+			<h3 className="mb-2 text-[13px] font-semibold text-gray-400">Popular</h3>
+			{style === "chips" && (
+				<div className="flex flex-wrap gap-1.5">
+					{picks.map((p) => {
+						const logo = p.logo?.(ctx)
+						const n = p.count?.(ctx)
+						return (
+							<motion.button
+								key={p.id}
+								type="button"
+								whileTap={TAP}
+								onClick={() => onPick(p)}
+								className={`flex h-8 items-center gap-1.5 rounded-full bg-white/[0.06] text-[13px] text-gray-200 ring-1 ring-white/[0.06] cursor-pointer outline-none hover:bg-white/[0.11] hover:text-white focus-visible:ring-2 focus-visible:ring-amber-400 ${logo ? "pr-3 pl-1" : "pr-3 pl-2"}`}
+							>
+								{logo ? (
+									<img src={logo} alt="" className="h-6 w-6 rounded-full object-cover" />
+								) : (
+									<PlusIcon className="h-3.5 w-3.5 text-gray-500" />
+								)}
+								{p.label}
+								{n != null && <span className="text-[11px] tabular-nums text-gray-500">{compact(n)}</span>}
+							</motion.button>
+						)
+					})}
+				</div>
 			)}
-		</div>
+			{style === "tiles" && (
+				<div className="grid grid-cols-2 gap-1.5">
+					{picks.slice(0, 8).map((p) => {
+						const logo = p.logo?.(ctx)
+						return (
+							<motion.button
+								key={p.id}
+								type="button"
+								whileTap={TAP}
+								onClick={() => onPick(p)}
+								className="flex min-w-0 items-center gap-2.5 rounded-xl bg-white/[0.035] px-3 py-2.5 text-left ring-1 ring-white/[0.06] cursor-pointer outline-none hover:bg-white/[0.07] focus-visible:ring-2 focus-visible:ring-amber-400"
+							>
+								{logo ? (
+									<img src={logo} alt="" className="h-7 w-7 shrink-0 rounded-lg object-cover" />
+								) : (
+									<span className={`grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-white/[0.06]`}>
+										<span className={`h-2 w-2 rounded-full ${accent(p.key)}`} />
+									</span>
+								)}
+								<span className="min-w-0">
+									<span className="block truncate text-[13px] font-semibold text-gray-100">{p.label}</span>
+									<span className="block truncate text-[11px] text-gray-500">{meta(p)}</span>
+								</span>
+							</motion.button>
+						)
+					})}
+				</div>
+			)}
+			{style === "cards" && (
+				<div className="-mx-6 flex gap-2 overflow-x-auto px-6 pb-1 [scrollbar-width:none] max-lg:-mx-4 max-lg:px-4">
+					{picks.map((p) => {
+						const logo = p.logo?.(ctx)
+						return (
+							<motion.button
+								key={p.id}
+								type="button"
+								whileTap={TAP}
+								onClick={() => onPick(p)}
+								className="relative flex h-[5.5rem] w-[8.5rem] shrink-0 flex-col justify-between overflow-hidden rounded-2xl bg-white/[0.04] p-3 text-left ring-1 ring-white/[0.07] cursor-pointer outline-none hover:bg-white/[0.08] focus-visible:ring-2 focus-visible:ring-amber-400"
+							>
+								<span className="flex items-center justify-between">
+									{logo ? (
+										<img src={logo} alt="" className="h-6 w-6 rounded-md object-cover" />
+									) : (
+										<span className={`h-2 w-2 rounded-full ${accent(p.key)}`} />
+									)}
+									<PlusIcon className="h-4 w-4 text-gray-500" />
+								</span>
+								<span>
+									<span className="block text-[13px] leading-tight font-semibold text-gray-100">{p.label}</span>
+									<span className="block truncate text-[11px] text-gray-500">{meta(p)}</span>
+								</span>
+							</motion.button>
+						)
+					})}
+				</div>
+			)}
+		</section>
 	)
 }
 
-// ---------------------------------------------------------------- I: add filters as you go
+// ---------------------------------------------------------------- the sheet: add filters as you go
 
 /**
- * Only the filters in use show, plus Movies or shows and Genre to start. "Add a filter" opens a picker of the rest;
- * a pick adds its card in order and scrolls to it. A card's × clears it and takes it away.
+ * Cards for Movies or shows, Mood, Taste match, and Score to start, plus anything set. Popular filters sit above
+ * "Add a filter": a tap sets the value and brings in (and points at) its card. "Add a filter" opens a picker of the
+ * rest; a card's × clears it and takes it away.
  */
-function VariantI({ ctx }: { ctx: Ctx }) {
+function AddAsYouGo({ ctx, style }: { ctx: Ctx; style: QuickStyle }) {
 	const keys = available(ctx, ctx.order)
 	const [added, setAdded] = useState<Set<Key>>(() => new Set(keys.filter((k) => OPEN_AT_START.has(k) || isSet(ctx, k))))
 	const [picking, setPicking] = useState(false)
-	const [fresh, setFresh] = useState<Key | null>(null)
+	const [fresh, setFresh] = useState<{ k: Key; n: number } | null>(null)
 	// Anything set from elsewhere (a chip, a recovery) gets its card too.
 	const shown = keys.filter((k) => added.has(k) || isSet(ctx, k))
 	const left = keys.filter((k) => !shown.includes(k))
 	const add = (k: Key) => {
 		setAdded((s) => new Set(s).add(k))
-		setFresh(k)
+		setFresh((f) => ({ k, n: (f?.n ?? 0) + 1 }))
 		setPicking(false)
 	}
 	const remove = (k: Key) => {
@@ -1432,10 +1559,18 @@ function VariantI({ ctx }: { ctx: Ctx }) {
 			<AnimatePresence initial={false}>
 				{shown.map((k) => (
 					<motion.div key={k} initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.98 }} transition={{ duration: 0.18 }}>
-						<Card ctx={ctx} k={k} trim={ESSENTIALS.has(k)} onRemove={() => remove(k)} highlight={fresh === k} />
+						<Card key={fresh?.k === k ? `${k}-${fresh.n}` : k} ctx={ctx} k={k} trim={ESSENTIALS.has(k)} onRemove={() => remove(k)} highlight={fresh?.k === k} />
 					</motion.div>
 				))}
 			</AnimatePresence>
+			<PopularPicks
+				ctx={ctx}
+				style={style}
+				onPick={(p) => {
+					ctx.set(p.apply(ctx))
+					add(p.key)
+				}}
+			/>
 			{left.length > 0 && (
 				<div className="rounded-2xl ring-1 ring-dashed ring-white/15">
 					<button
@@ -1489,9 +1624,7 @@ export function PrototypeFilterGroups(props: Props) {
 			<p aria-live="polite" className="sr-only">
 				{props.refusal?.text ?? ""}
 			</p>
-			{variant === "F" && <VariantF ctx={ctx} />}
-			{variant === "H" && <VariantH ctx={ctx} />}
-			{variant === "I" && <VariantI ctx={ctx} />}
+			<AddAsYouGo ctx={ctx} style={variant === "J" ? "tiles" : variant === "K" ? "cards" : "chips"} />
 		</div>
 	)
 }
@@ -1529,7 +1662,14 @@ export function OneRowChips({
 			const items = [...el.children] as HTMLElement[]
 			if (!items.length) return setHidden(0)
 			const top = items[0].offsetTop
-			setHidden(items.filter((i) => i.offsetTop > top + 4).length)
+			// A chip that doesn't fit whole (on a later line, or cut at the right) hides and counts in "+N".
+			let n = 0
+			for (const i of items) {
+				const out = !all && (i.offsetTop > top + 4 || i.offsetLeft + i.offsetWidth > el.clientWidth + 1)
+				i.style.visibility = out ? "hidden" : ""
+				if (out) n++
+			}
+			setHidden(n)
 		}
 		measure()
 		const ro = new ResizeObserver(measure)
@@ -1559,7 +1699,8 @@ export function OneRowChips({
 					</li>
 				))}
 			</ul>
-			{(hidden > 0 || all) && (
+			{/* When none fits, the Filters count says it already. */}
+			{(all || (hidden > 0 && hidden < chips.length)) && (
 				<button
 					type="button"
 					onClick={() => (onMore && !all ? onMore() : setAll(!all))}

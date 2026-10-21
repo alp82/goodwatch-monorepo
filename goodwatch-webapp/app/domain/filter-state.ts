@@ -99,6 +99,12 @@ export const LEGACY_PARAMS = [
 	"maxScore",
 	"minRuntime",
 	"maxRuntime",
+	// PROTOTYPE - throwaway: score by source and the critics/audience gap, for the Filters sheet prototype.
+	"minImdb",
+	"minTomatometer",
+	"minRtAudience",
+	"minMetacritic",
+	"scoreGap",
 ] as const
 export type LegacyParam = (typeof LEGACY_PARAMS)[number]
 export type LegacyFilters = Partial<Record<LegacyParam, string>>

@@ -21,7 +21,8 @@ import type { FilterGroupsData } from "./FilterGroups"
 import { FiltersSheet } from "./FiltersSheet"
 // PROTOTYPE - throwaway: the member preview of the Filters sheet prototype.
 import { PREVIEW_SERVICES, useFilterSheetVariant, useMemberPreview } from "./FilterGroups.prototype"
-import { FiltersRow, ForYouSortSplit } from "./FilterBar.prototype"
+import { ForYouSortSplit } from "./FilterBar.prototype"
+import { OneRowChips } from "./FilterGroups.prototype"
 import { FILTER_ACCENTS } from "./labels"
 import { FOR_YOU_SWITCH, ForYouSwitch, useForYouUnderBestMatch } from "./ForYou"
 import {
@@ -224,6 +225,32 @@ export function FilterBar(props: FilterBarProps) {
 						outsideIgnore={FOR_YOU_SWITCH}
 					/>
 					)}
+					{protoBar && (
+						// PROTOTYPE: Filters at the row's end, the active filters on one line beside it.
+						<div className="flex min-w-[14rem] flex-1 items-center gap-2">
+							<FiltersButton
+								count={secondaryCount}
+								expanded={sheetOpen}
+								onClick={() => setSheetOpen(true)}
+							/>
+							<OneRowChips
+								chips={displayChips}
+								state={state}
+								onChange={onChange}
+								onMore={() => setSheetOpen(true)}
+								className="flex-1"
+								trailing={
+									<button
+										type="button"
+										onClick={filters.clearSecondary}
+										className="h-8 shrink-0 px-1.5 text-[13px] text-gray-500 cursor-pointer hover:text-white"
+									>
+										Clear
+									</button>
+								}
+							/>
+						</div>
+					)}
 					{!protoBar && (
 					<div className="ml-auto flex items-center gap-2.5">
 						{props.rowTrail}
@@ -235,19 +262,7 @@ export function FilterBar(props: FilterBarProps) {
 					</div>
 					)}
 				</div>
-				{protoBar ? (
-					<div className="mt-3">
-						<FiltersRow
-							count={secondaryCount}
-							chips={displayChips}
-							state={state}
-							onChange={onChange}
-							onOpen={() => setSheetOpen(true)}
-							onClear={filters.clearSecondary}
-							expanded={sheetOpen}
-						/>
-					</div>
-				) : (
+				{protoBar ? null : (
 				<FilterChips
 					chips={displayChips}
 					state={state}

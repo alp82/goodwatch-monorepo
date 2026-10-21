@@ -176,6 +176,27 @@ export function legacyTitles(
 		conditions.push("m.release_year <= ?")
 		params.push(maxYear)
 	}
+	// PROTOTYPE - throwaway: score by source, each 0-100 like the GoodWatch score, and the critics/audience gap.
+	const bySource: [string | undefined, string][] = [
+		[legacy.minImdb, "m.imdb_user_score_normalized_percent"],
+		[legacy.minTomatometer, "m.rotten_tomatoes_tomato_score_normalized_percent"],
+		[legacy.minRtAudience, "m.rotten_tomatoes_audience_score_normalized_percent"],
+		[legacy.minMetacritic, "m.metacritic_meta_score_normalized_percent"],
+	]
+	for (const [value, column] of bySource) {
+		const n = number(value)
+		if (n === null) continue
+		conditions.push(`${column} >= ?`)
+		params.push(n)
+	}
+	const critics =
+		"COALESCE(m.rotten_tomatoes_tomato_score_normalized_percent, m.metacritic_meta_score_normalized_percent)"
+	const audience =
+		"COALESCE(m.imdb_user_score_normalized_percent, m.rotten_tomatoes_audience_score_normalized_percent)"
+	if (legacy.scoreGap === "critics") conditions.push(`${critics} - ${audience} >= 15`)
+	if (legacy.scoreGap === "audience") conditions.push(`${audience} - ${critics} >= 15`)
+	if (legacy.scoreGap === "agree")
+		conditions.push(`${critics} - ${audience} BETWEEN -5 AND 5 AND ${critics} >= 70`)
 	const minRuntime = number(legacy.minRuntime)
 	const maxRuntime = number(legacy.maxRuntime)
 	if (!conditions.length && minRuntime === null && maxRuntime === null)

@@ -305,7 +305,11 @@ export function DiscoverPage({
 		flip,
 	])
 
-	const status = first?.forYou.status ?? (member ? "ready" : "signUp")
+	// PROTOTYPE: ?as=member previews a member with services and taste over this visitor's results: no sign-up anywhere.
+	const memberPreview = useMemberPreview()
+	const status = memberPreview
+		? "ready"
+		: (first?.forYou.status ?? (member ? "ready" : "signUp"))
 	const taste = tasteStateOf(first)
 	// Best match is the sort in use: For you shows on, with nothing to move.
 	const bestMatch = sortShown(filters.sort, searching, taste) === "match"
@@ -390,8 +394,6 @@ export function DiscoverPage({
 
 	// A visitor without services, without Not seen yet and without taste gets one sign-up key in place of the three
 	// controls. A visitor using any of them keeps the controls, so nothing they turned on is hidden.
-	// PROTOTYPE: ?as=member previews a member with services and taste over this visitor's results.
-	const memberPreview = useMemberPreview()
 	const signUpKey =
 		!member &&
 		!memberPreview &&
@@ -442,7 +444,7 @@ export function DiscoverPage({
 							status={status}
 							on={applied}
 							leanings={leanings}
-							guest={!member}
+							guest={!member && !memberPreview}
 							search={q ? { q, reading: search.reading } : null}
 						/>
 					}

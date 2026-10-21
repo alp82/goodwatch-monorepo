@@ -324,6 +324,17 @@ const LEGACY_LABELS: Record<LegacyParam, (value: string) => string> = {
 	fingerprintPillarMinTier: (value) => `Fingerprint tier ${value}`,
 	minRuntime: (value) => `At least ${value} min`,
 	maxRuntime: (value) => `Up to ${value} min`,
+	// PROTOTYPE - throwaway: score by source and the gap.
+	minImdb: (value) => `IMDb ${(Number(value) / 10).toFixed(1)}+`,
+	minTomatometer: (value) => `Tomatometer ${value}%+`,
+	minRtAudience: (value) => `RT audience ${value}%+`,
+	minMetacritic: (value) => `Metacritic ${value}+`,
+	scoreGap: (value) =>
+		value === "critics"
+			? "Critics liked it more"
+			: value === "audience"
+				? "Audiences liked it more"
+				: "Critics and audiences agree",
 }
 
 const without = <T>(list: T[] | undefined, value: T) => {
