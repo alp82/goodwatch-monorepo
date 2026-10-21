@@ -1,0 +1,222 @@
+{
+  "config": {
+    "argv": [
+      "/home/alp/.local/share/fnm/node-versions/v24.15.0/installation/bin/node",
+      "/home/alp/dev/projects/goodwatch/goodwatch-monorepo/yepwatch-app/node_modules/.bin/playwright",
+      "test"
+    ],
+    "configFile": "/home/alp/dev/projects/goodwatch/goodwatch-monorepo/yepwatch-app/playwright.config.ts",
+    "rootDir": "/home/alp/dev/projects/goodwatch/goodwatch-monorepo/yepwatch-app/tests/browser",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/alp/dev/projects/goodwatch/goodwatch-monorepo/yepwatch-app/artifacts/browser-traces",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/alp/dev/projects/goodwatch/goodwatch-monorepo/yepwatch-app/tests/browser",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "filteredProjects": [
+      {
+        "grep": {},
+        "grepInvert": null,
+        "outputDir": "/home/alp/dev/projects/goodwatch/goodwatch-monorepo/yepwatch-app/artifacts/browser-traces",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "name": "",
+        "testDir": "/home/alp/dev/projects/goodwatch/goodwatch-monorepo/yepwatch-app/tests/browser",
+        "snapshotDir": "/home/alp/dev/projects/goodwatch/goodwatch-monorepo/yepwatch-app/tests/browser",
+        "testIgnore": [],
+        "testMatch": "**/*.@(spec|test).?(c|m)[jt]s?(x)",
+        "timeout": 30000,
+        "use": {
+          "baseURL": "http://127.0.0.1:8097",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "reducedMotion": "reduce",
+          "trace": "retain-on-failure"
+        },
+        "dependencies": [],
+        "ignoreSnapshots": false,
+        "__projectId": ""
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "artifacts/browser-results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "default",
+    "updateSourceMethod": "patch",
+    "version": "1.64.1",
+    "workers": 1,
+    "webServer": {
+      "command": "EXPO_PUBLIC_ENABLE_FIXTURES=true npx expo export --platform web --source-maps --output-dir dist-test && EXPORT_DIR=dist-test PORT=8097 node scripts/serve.cjs",
+      "url": "http://127.0.0.1:8097",
+      "reuseExistingServer": false,
+      "timeout": 120000
+    }
+  },
+  "suites": [
+    {
+      "title": "client.spec.ts",
+      "file": "client.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "invitation intent, optional sign-in failure, browser guest admission and honest transport state",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3068,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-21T12:05:22.614Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e8997666eb3abf7f4bb0-ce1591e848a613cab46b",
+          "file": "client.spec.ts",
+          "line": 5,
+          "column": 5
+        },
+        {
+          "title": "fixture components cover mixed screens, all media kinds, accessible voting, shortlist and episode caveat",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1027,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-21T12:05:25.722Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e8997666eb3abf7f4bb0-888f235643c157fce9f5",
+          "file": "client.spec.ts",
+          "line": 36,
+          "column": 5
+        },
+        {
+          "title": "entry fits mobile and desktop without a forced account or horizontal scrolling",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 935,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-21T12:05:26.754Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e8997666eb3abf7f4bb0-760ec25b43deedf9a765",
+          "file": "client.spec.ts",
+          "line": 56,
+          "column": 5
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-21T12:05:20.557Z",
+    "duration": 7161.442,
+    "expected": 3,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

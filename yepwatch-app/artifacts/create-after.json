@@ -1,0 +1,40 @@
+{
+  "landingUrl": "http://127.0.0.1:8099/",
+  "apiOrigin": "http://127.0.0.1:15997",
+  "writes": [
+    {
+      "path": "/api/yepwatch/v1/rooms",
+      "status": 200,
+      "type": "admission-or-ticket"
+    },
+    {
+      "path": "/api/yepwatch/v1/rooms/<REDACTED>/realtime-ticket",
+      "status": 200,
+      "type": "admission-or-ticket"
+    },
+    {
+      "path": "/api/yepwatch/v1/rooms",
+      "status": 200,
+      "type": "admission-or-ticket"
+    },
+    {
+      "path": "/api/yepwatch/v1/rooms/<REDACTED>/realtime-ticket",
+      "status": 200,
+      "type": "admission-or-ticket"
+    },
+    {
+      "path": "/api/yepwatch/v1/guest/resolve-invite",
+      "status": 200,
+      "type": "admission-or-ticket"
+    },
+    {
+      "path": "/api/yepwatch/v1/rooms/<REDACTED>/realtime-ticket",
+      "status": 200,
+      "type": "admission-or-ticket"
+    }
+  ],
+  "cleanCreation": true,
+  "secondCreationWithExistingCookie": true,
+  "reopenedInvitePreservesHost": true,
+  "freshInviteJoin": true
+}

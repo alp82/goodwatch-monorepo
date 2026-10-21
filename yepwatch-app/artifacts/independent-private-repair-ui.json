@@ -1,0 +1,8 @@
+{
+  "result": "pass",
+  "url": "http://127.0.0.1:8100/",
+  "injectedPrivateFailures": 1,
+  "staleCommandsDisabled": true,
+  "visibleManualRefresh": true,
+  "manualRepairRestoresCommands": true
+}
