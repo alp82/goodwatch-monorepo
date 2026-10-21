@@ -46,7 +46,11 @@ import {
 } from "~/ui/filter-bar"
 import { sortShown } from "~/ui/filter-bar/labels"
 import { SearchPeople } from "~/ui/search/SearchPeople"
-import { SignUpPanel } from "~/ui/filter-bar/SignUpPanel"
+// PROTOTYPE - throwaway: the Best match sign-up row variants.
+import {
+	BestMatchSignUpRow,
+	SortRowSwitcher,
+} from "~/ui/filter-bar/SortSignUp.prototype"
 import { Spinner } from "~/ui/wait/Spinner"
 import type { TitleKey } from "~/utils/title-key"
 import { DiscoverGrid } from "./DiscoverGrid"
@@ -54,7 +58,6 @@ import { DiscoverHeading } from "./DiscoverHeading"
 // PROTOTYPE - throwaway: full-width heading variants.
 import {
 	DiscoverHeadingPrototype,
-	HeadingSwitcher,
 	useHeadingVariant,
 } from "./DiscoverHeading.prototype"
 import { ForYouNeedsTaste, ForYouSignUp } from "./ForYouStates"
@@ -450,7 +453,7 @@ export function DiscoverPage({
 
 	return (
 		<MotionConfig reducedMotion="user">
-			<HeadingSwitcher />
+			<SortRowSwitcher />
 			<div className={`mx-auto max-w-7xl px-4 pt-5 lg:pt-8 ${SLAB_CLEARANCE}`}>
 				{headingVariant === "now" ? (
 					<DiscoverHeading
@@ -478,9 +481,7 @@ export function DiscoverPage({
 						taste={taste}
 						sortSignUp={
 							taste === "signUp" ? (
-								<div className="px-1 pt-0.5 pb-1.5">
-									<SignUpPanel feature="bestMatch" needs="signUp" />
-								</div>
+								<BestMatchSignUpRow />
 							) : undefined
 						}
 						insightLead={

@@ -14,7 +14,6 @@ import {
 	useState,
 } from "react"
 import { SEARCH_MAX_CHARS } from "~/domain/discover-search"
-import { PrototypeSwitcher } from "~/ui/prototype/PrototypeSwitcher"
 
 export const HEADING_VARIANTS = {
 	D: "Hairline",
@@ -37,11 +36,9 @@ export type HeadingVariant = keyof typeof HEADING_VARIANTS
 export function useHeadingVariant(): HeadingVariant {
 	const [params] = useSearchParams()
 	const v = params.get("variant")
-	return v && v in HEADING_VARIANTS ? (v as HeadingVariant) : "D"
-}
-
-export function HeadingSwitcher() {
-	return <PrototypeSwitcher variants={HEADING_VARIANTS} />
+	// Round 3: D won; the switcher now flips the sort menu's Best match row.
+	void v
+	return "D"
 }
 
 const COMMIT_MS = 800
@@ -51,9 +48,10 @@ interface Range {
 	max: number
 	min: number
 }
-/** Wide screens: 48 px down to 22 px. Phones: 30 px down to 18 px. */
-const WIDE: Range = { max: 48, min: 22 }
-const NARROW: Range = { max: 30, min: 18 }
+/** The "Discover" title's size is the most the query grows to. Wide screens: 42 px down to 22 px. Phones: 32 px down
+ * to 18 px. */
+const WIDE: Range = { max: 42, min: 22 }
+const NARROW: Range = { max: 32, min: 18 }
 
 // The size at which the text fills the room it has, between the floor and the ceiling. Past the floor the field
 // scrolls sideways like any input, and its end fades while it isn't being edited. The room is the row's width minus
@@ -174,7 +172,7 @@ function useQueryField({ q, onSearch, onClear }: HeadingProps) {
 	}
 }
 
-/** Clear: a small labeled pill. */
+/** Clear: amber words, a quiet tint behind them on hover. */
 function ClearButton({ onClick }: { onClick: () => void }) {
 	return (
 		<button
@@ -182,9 +180,9 @@ function ClearButton({ onClick }: { onClick: () => void }) {
 			onMouseDown={(e) => e.preventDefault()}
 			onClick={onClick}
 			aria-label="Clear the search, back to Discover"
-			className="group/clear inline-flex h-8 min-w-8 shrink-0 items-center justify-center gap-1 rounded-full bg-white/[0.06] px-2 text-xs font-semibold sm:pr-3 text-gray-300 ring-1 ring-inset ring-white/10 transition-colors cursor-pointer hover:bg-white/[0.12] hover:text-white"
+			className="inline-flex h-8 min-w-8 shrink-0 items-center justify-center gap-1 rounded-md px-2 text-sm font-semibold text-amber-400 outline-none transition-colors cursor-pointer hover:bg-amber-400/10 hover:text-amber-300 focus-visible:ring-2 focus-visible:ring-amber-400"
 		>
-			<XMarkIcon className="h-4 w-4 text-gray-400 transition-colors group-hover/clear:text-white sm:h-3.5 sm:w-3.5" />
+			<XMarkIcon className="h-4 w-4" />
 			<span className="hidden sm:inline">Clear</span>
 		</button>
 	)
@@ -243,7 +241,7 @@ function FieldRow({
 				aria-label="Search Discover"
 				className={`group flex w-full min-w-0 items-center gap-3 text-left cursor-text outline-none ${height}`}
 			>
-				<h1 className="brand-header text-3xl text-white lg:text-4xl">
+				<h1 className="brand-header text-[32px] leading-tight text-white lg:text-[42px]">
 					Discover
 				</h1>
 				<span className="ml-auto grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white/[0.06] text-gray-200 ring-1 ring-white/15 group-hover:bg-white/10">
