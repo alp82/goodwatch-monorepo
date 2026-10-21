@@ -2,9 +2,9 @@
 
 Client work stayed in `yepwatch-app/`, in the main checkout. No commits, pushes, deployments, issue publication, DNS/store/account changes, root workspace changes or edits to shared/server/webapp code. Contract additions were requested from and implemented by their backend owner, then consumed read-only.
 
-## Current real-catalog connected POC
+## Historical all-kind real-catalog POC
 
-**Open http://127.0.0.1:8100/** for the current complete flow. API15996 and gateway4318 use actual GoodWatch catalog adapters, a finite **36-real-title local recommendation snapshot**, disposable local Valkey and **memory room storage**. No production room/table writes and no live Crate-backed client persistence claim. Backend metadata returned all **251 countries and 964 services**; the exercised group chose DE, Netflix and Disney Plus. This sample is a test fixture of real catalog records, not a product country/service/catalog restriction.
+The retained http://127.0.0.1:8100/ records the earlier all-kind prototype, before the user required signed-in saved progress. The current simplified client is http://127.0.0.1:8101/. API15996 and gateway4318 use actual GoodWatch catalog adapters, a finite **36-real-title local recommendation snapshot**, disposable local Valkey and **memory room storage**. No production room/table writes and no live Crate-backed client persistence claim. Backend metadata returned all **251 countries and 964 services**; the exercised group chose DE, Netflix and Disney Plus. This sample is a test fixture of real catalog records, not a product country/service/catalog restriction.
 
 The [machine-readable report](../artifacts/real-catalog-poc.json) records **three independent browser clients, two viewing screens, eight real candidates spanning movies/shows-to-start/shows-to-continue, 133 shared frames and zero JavaScript errors**. The script [poc-real-browser.cjs](../scripts/poc-real-browser.cjs) drives visible landing create and fresh invite joins, configures two people sharing Our TV and another person on a separate screen, searches Breaking Bad through the API, selects canonical episode 62085 from backend episode choices, and explicitly presses **Propose this episode to group** as host. Each participant separately supplies private progress and approves that public proposal. Private inputs never generate a shared episode proposal.
 
@@ -14,18 +14,7 @@ The same connected run blocks initial own HTTP reads, observes a private-state e
 
 [Real shortlist screenshot](../artifacts/real-catalog-poc-shortlist-mobile.png), [chosen continuation](../artifacts/real-catalog-poc-choice-mobile.png), [remote screen](../artifacts/real-catalog-poc-remote-choice-mobile.png). Screenshots use mobile width with a taller viewport to capture the complete view. The development banner names real sample reads and memory rooms.
 
-Gateway/backend owners retain API15996, WS4318, revision Valkey46397 and sample snapshot15990; both API/gateway explicitly allow app8100. Their runbooks own service credentials and processes. With those services ready, from `yepwatch-app/`:
-
-```bash
-EXPO_PUBLIC_ENABLE_FIXTURES=false \
-EXPO_PUBLIC_API_ORIGIN=http://127.0.0.1:15996 \
-EXPO_PUBLIC_WS_ORIGIN=ws://127.0.0.1:4318 \
-EXPO_PUBLIC_DEVELOPMENT_NOTICE='Local POC: real catalog reads, finite 36-title sample, memory rooms.' \
-npx expo export --platform web --source-maps --output-dir dist-real
-EXPORT_DIR=dist-real PORT=8100 node scripts/serve.cjs
-# In another terminal:
-node scripts/poc-real-browser.cjs
-```
+The old API15996/WS4318/client8100 and original user room are retained unchanged. Do not overwrite `dist-real` or replay the historical manual-progress runner against the new guest client. The new client uses API15995/WS4319 and separate `dist-guest` on8101.
 
 ## Creation and membership regression
 
@@ -36,8 +25,8 @@ The test-output collision is also fixed: component tests build only `dist-test` 
 ## Other checks
 
 - Typecheck and Expo lint pass.
-- **Fifteen** state/API/reconnect tests pass. Four new regression tests ran red before correction: delayed equal-sequence private state after another actor's new round, intermediate HTTP repair despite a newer push, dropped repair demand during an in-flight request, and a real HTTP response flushing headers then stalling its JSON body. The full request deadline includes body parsing and caller cancellation.
-- Three browser component/entry tests pass: preserved invite through unsupported sign-in, guest cookie transport without bearer storage, unavailable-live honesty/no normal polling, mixed/all-kind views, keyboard voting, shortlist/episode caveats, mobile/desktop layout. These mock-HTTP/component checks are separate from actual connected POC evidence.
+- **Twenty-two** state/API/reconnect/default/recovery tests pass. Four new regression tests ran red before correction: delayed equal-sequence private state after another actor's new round, intermediate HTTP repair despite a newer push, dropped repair demand during an in-flight request, and a real HTTP response flushing headers then stalling its JSON body. The full request deadline includes body parsing and caller cancellation.
+- Eleven browser component/entry/expiry/recovery tests pass: preserved invite through unsupported sign-in, guest cookie transport without bearer storage, unavailable-live honesty/no normal polling, mixed/all-kind views, keyboard voting, shortlist/episode caveats, mobile/desktop layout. These mock-HTTP/component checks are separate from actual connected POC evidence.
 - Expo web exports pass for retained synthetic and current real-sample clients. Latest Android/iOS Hermes exports pass. [Dependency isolation evidence](../artifacts/resolution.json) checks local React/RN/Expo resolution, the copied shared contract and client sourcemaps; no webapp/server/database/cache source is present.
 - GoodWatch was visually inspected in a real browser. Actual source supplied Gabarito, dark neutral surfaces, amber accents, spacing and rounded controls. [Reference screenshot](../artifacts/goodwatch-reference-desktop.png). No existing webapp assets were changed.
 - Native generation succeeds. Android debug compilation was attempted: system Java27 failed Gradle semantic analysis, and the installed JDK21 runtime lacks `jlink` for an Android SDK transform. No APK/device execution is claimed. [Build log](../artifacts/android-build.log). Native projects are generated and ignored, not handwritten.
@@ -45,10 +34,40 @@ The test-output collision is also fixed: component tests build only `dist-test` 
 
 ## Historical synthetic POC
 
-The earlier [connected-poc.json](../artifacts/connected-poc.json) and `connected-poc-*.png` record the initial synthetic catalog/memory-room check with85 shared frames. They predate the intentional public host episode-proposal protocol and are historical evidence. The older15997/4317 services were intentionally left unchanged while testing the new client membership guard against an unfixed server; retained8099 is useful for creation/resume regression. Use8100 and `poc-real-browser.cjs` for the current complete flow. The old `poc-browser.cjs` describes that earlier test and is not the current protocol runner.
+The earlier [connected-poc.json](../artifacts/connected-poc.json) and `connected-poc-*.png` record the initial synthetic catalog/memory-room check with85 shared frames. They predate the intentional public host episode-proposal protocol and are historical evidence. The older15997/4317 services were intentionally left unchanged while testing the new client membership guard against an unfixed server; retained8099 is useful for creation/resume regression. The retained8100 and `poc-real-browser.cjs` describe that historical all-kind flow; the latest client intentionally has no manual progress controls. Use8101 and `poc-guest-browser.cjs` for the current guest policy. The old `poc-browser.cjs` describes that earlier test and is not the current protocol runner.
 
 ## Remaining limits
 
 The full private production recommendation snapshot is inaccessible locally; only the stated finite real sample was exercised. Member login remains `not_implemented`; no successful GoodWatch OAuth/native callback/account-prefill claim. No live Crate-backed client room persistence, installed native app, on-device SecureStore, VoiceOver/TalkBack, universal/app-link registration, real provider playback, production proxy/TLS or catalog-wide entitlement coverage was verified here. Duplicate same-name provider IDs remain distinct; no client alias/entitlement inference was invented.
 
-Cached room panels may remain after a transport expiry error until refresh; server expiry enforcement rejects expired commands. This remaining UI follow-up was not expanded during the create/connected-POC priority. No episode choice writes viewing history. The full development/release milestone is not declared complete.
+The expiry follow-up now replaces cached room controls with a terminal view on HTTP410/expired, a confirmed expired shared phase, or the previously server-confirmed room deadline. Ambiguous gateway lease expiry repairs HTTP and reconnects with a new ticket when the room is still live. Late successful reads/commands cannot restore terminal controls; recoverable outages keep manual repair. The separate expiry pin passed17 unit tests and10 browser tests, including seven isolated HTTP/WS expiry fixture cases. The current guest follow-up passes22 unit tests and11 browser tests. Independent actual ephemeral API/gateway verification passed six cases: cached410, reload410, room deadline with cookie expiration, live short-lease reconnection, late real200 after410, and recoverable503/manual repair. Fixture tests alone do not prove actual transport expiry. No episode choice writes viewing history. The full development/release milestone is not declared complete.
+
+## Simplified guest follow-up
+
+The latest policy supersedes the historical manual continuation prototype: guests choose movies and shows to start. Continuing shows requires real GoodWatch member auth and saved progress, currently unavailable. The manual editor is deleted. Legacy setup requires an explicit host action before switching kinds; no room setup is silently rewritten. Optional settings preserve separate and mixed screens, all metadata, mood and time.
+
+The [new actual guest POC](../artifacts/guest-connected-poc.json) used a fresh ordinary landing-page room with a DE locale hint, explicit Netflix8 selection and host-only `hostReady:true`. Six counted interactions reached the first real round (clicks/field fills, including nickname). The old source required at least13 interactions to attempt the same setup/start: guest, nickname, create, edit, add screen, country search/select, service search/select, confirm, save, ready, start. The13 is a source-derived minimum attempt, not a successful replay or diagnosis of the original user incident. An unavailable country hint requires an explicit country selection; extra services add explicit actions.
+
+Seven real movie/show-start cards, seven confirmed votes and shortlist were exercised. A fresh browser followed the invitation displayed by the app, explicitly got ready on the shared screen and entered a second round with the host.Sixteen shared frames, no private vote/history/activity fields and no page errors were observed; the ordinary flow passed on8097 and again on the new8101 export. Only public configuration/counts appear in the artifact; invite capabilities are hidden in screenshots and omitted from reports.
+
+The first known-config DE8 fresh smoke returned503 before a recommendation snapshot finished loading. The API owner independently reproduced zero scans before the snapshot loaded and added a bounded local loader wait; the same services then passed on the first Start click. The original screenshot's selected service remains unknown; its exact root cause is unassigned. No service was silently changed.
+
+New playable client8101 uses separate `dist-guest`, API15995/gateway4319, memory rooms and the existing finite36-title real sample. Original15996/user room,8099/8100 and their exports remain untouched. No member auth, installed device, production room persistence or full-catalog coverage is claimed. Plain structured error rendering has isolated HTTP tests for loading, incomplete search, unknown availability and verified no matches, without exposing evidence counters as controls.
+
+Latest simplified source also passed fresh Android/iOS Hermes exports and copied-package resolution checks against `dist-guest` plus `dist-native`. This is bundle validation; no APK/device/auth validation is implied. [Isolation proof](../artifacts/guest-isolation.json) verifies every retained export/font file plus served HTML and JS bundles on8099/8100 stayed unchanged.
+
+## Legacy active-round recovery
+
+Review inspection confirmed that a pre-policy voting round containing a continuation candidate had no visible restart action, while the new API correctly rejected vote/completion/consent commands. An isolated browser regression failed before the fix. The room route now shows an explicit host **Return to setup** action before voting/shortlist controls for precisely those active continuation decks. Guests are told to ask the host. Returning sends only revision-fenced `new_round`, with a warning that votes will be cleared; switching to guest kinds is a separate explicit setup confirmation. No settings or history are silently rewritten.
+
+Twenty-three unit tests and14 browser tests, typecheck, lint and the isolated Expo web export pass. Tests cover host, completed host, guest, the separate guest-mode confirmation, shortlist policy and ordinary movie/start-show decks under older constraints. Expiry transport fixtures now use a guest-eligible deck so they remain independent of this policy guard. The original guest-ready pin and previous8101 export remain unchanged on disk; the authorized serving update below now serves the reviewed recovery build. Independent actual ephemeral API/gateway replay passed: host restart sends only new_round, legacy kinds remain intact until separate confirmation, then guest voting starts successfully. The original baseline reproduced vote403 with no visible recovery. [Independent recovery evidence](../artifacts/independent-legacy-recovery.json).
+
+## Final reviewed build served on8101
+
+The exact URL is **http://127.0.0.1:8101/**. A clean Expo web export built the reviewed guest+recovery source into `.expo/exports/guest-recovery-reviewed-20261021` with API `http://127.0.0.1:15995`, WS `ws://127.0.0.1:4319`, and fixture preview disabled. Preflight on temporary8097 passed before switching only the8101 static server. Previous `dist-guest` is unchanged and retained for rollback; six previous hashed assets were copied into the new export for already-open tabs. All served JS/index hashes were checked against the final files. [Final serving record](../artifacts/served-8101-final.json), [full export hashes](../artifacts/served-8101-build.json).
+
+After the switch, a fresh visible guest flow again confirmed first-click Start, seven real cards, seven votes/shortlist and a fresh-browser app-origin invitation with two clients voting. The final served build also rendered **Return to setup** and hid unsafe voting under an explicitly labelled isolated HTTP fixture; no real legacy/user room was changed. The production-disabled preview was verified in the browser. [Final recovery rendering](../artifacts/served-8101-recovery-render.json), [fixture-labelled screenshot](../artifacts/served-8101-recovery-fixture.png), [real guest result](../artifacts/guest-connected-poc.json).
+
+Original8099/8100 file hashes/HTML and all other observable API/gateway/cache listener PID sets stayed unchanged. No backend/gateway/cache restart occurred; existing memory rooms were preserved. Only fresh disposable smoke rooms were created. Temporary8097 was stopped. No application source changed during the serving update; it matched the immutable reviewed recovery pin. Only handover evidence and these docs were updated.
+
+For rollback, verify the current8101 listener PID/export against the final serving record, stop only that static process, and run `EXPORT_DIR=dist-guest PORT=8101 node scripts/serve.cjs`. Keep the API/gateway processes and memory rooms running. Both local exports are ignored build artifacts and must be retained locally while this POC is in use.

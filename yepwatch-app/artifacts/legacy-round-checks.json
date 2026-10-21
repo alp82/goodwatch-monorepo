@@ -1,0 +1,12 @@
+{
+  "unitTests": 23,
+  "browserTests": 14,
+  "typecheck": "pass",
+  "lint": "pass",
+  "webExport": "dist-test",
+  "redRegression": "missing legacy host recovery",
+  "retained8099and8100FilesUnchanged": true,
+  "retained8101Rebuilt": false,
+  "originalGuestPinChanged": false,
+  "actualRuntime": "Independent ephemeral actual API/gateway with memory/FakeBus/synthetic catalog PASS: explicit restart, no silent scope change, explicit guest correction, successful guest voting"
+}

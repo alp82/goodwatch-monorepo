@@ -1,0 +1,8 @@
+{
+  "result": "pass",
+  "scope": "Fresh isolated browser HTTP fixture using final real-mode compiled export; no real room mutation",
+  "build": ".expo/exports/guest-recovery-reviewed-20261021",
+  "checkedOrigin": "http://127.0.0.1:8101",
+  "hostRecoveryVisible": true,
+  "unsafeVotingHidden": true
+}
