@@ -15,7 +15,9 @@ import {
 	PlusIcon,
 	XMarkIcon,
 } from "@heroicons/react/20/solid"
-import { useSearchParams } from "@remix-run/react"
+import { FingerPrintIcon } from "@heroicons/react/24/solid"
+import { Link, useSearchParams } from "@remix-run/react"
+import { useAuthHref } from "~/utils/auth-href"
 import { useQuery } from "@tanstack/react-query"
 import { AnimatePresence, motion } from "framer-motion"
 import {
@@ -45,6 +47,7 @@ import {
 	type ActiveChip,
 	FILTER_ACCENTS,
 	MATCH_LABELS,
+	RATE_TITLES_PATH,
 	RELEASED_LABELS,
 	SCORE_LABELS,
 	TYPE_LABELS,
@@ -62,9 +65,9 @@ import {
 
 export const FILTER_SHEET_VARIANTS = {
 	now: "Live today",
-	I: "Popular as chips",
-	J: "Popular as tiles",
-	K: "Popular as cards",
+	L: "Chips + Clear all",
+	M: "One row + Clear menu",
+	N: "Grouped by filter",
 } as const
 export type FilterSheetVariant = keyof typeof FILTER_SHEET_VARIANTS
 
@@ -1176,6 +1179,45 @@ function PeoplePicker({ ctx }: { ctx: Ctx }) {
 	)
 }
 
+/**
+ * Taste match before the viewer has taste: the whole card body is one way in. A faint preview of the bar, what it
+ * gives, and the same "Sign up free" voice as the bar's sign-up key (or "Rate titles" for a member with too few).
+ */
+function TasteLocked({ needs }: { needs: "signUp" | "rateMore" }) {
+	const authHref = useAuthHref()
+	const signUp = needs === "signUp"
+	return (
+		<Link
+			to={signUp ? authHref("sign-up") : RATE_TITLES_PATH}
+			rel="nofollow"
+			className="group block rounded-xl bg-amber-500/[0.07] p-3 ring-1 ring-inset ring-amber-500/25 cursor-pointer outline-none transition-colors hover:bg-amber-500/[0.12] focus-visible:ring-2 focus-visible:ring-amber-400"
+		>
+			<span aria-hidden className="grid grid-cols-4 gap-1">
+				{[0.12, 0.22, 0.34, 0.5].map((o, i) => (
+					<span key={o} className="flex flex-col gap-1">
+						<span className="h-2 rounded-full bg-amber-400" style={{ opacity: o }} />
+						<span className="text-[11px] text-amber-200/40">{["Any", "70%+", "80%+", "90%+"][i]}</span>
+					</span>
+				))}
+			</span>
+			<span className="mt-2.5 flex items-center gap-3">
+				<FingerPrintIcon className="h-7 w-7 shrink-0 text-amber-500" aria-hidden />
+				<span className="min-w-0 flex-1">
+					<span className="block text-[13px] font-semibold text-amber-50">
+						{signUp ? "See how well every title fits you" : "Rate a few titles you love"}
+					</span>
+					<span className="block text-[12px] text-amber-200/60">
+						{signUp ? "Your taste match comes from your ratings" : "Then every title gets a taste match"}
+					</span>
+				</span>
+				<span className="shrink-0 text-[11px] font-black uppercase tracking-wider text-amber-300 group-hover:text-amber-200">
+					{signUp ? "Sign up free" : "Rate titles"}
+				</span>
+			</span>
+		</Link>
+	)
+}
+
 /** One "and up" bar per source; the sources filter together (all must pass). */
 function SourcesControl({ ctx }: { ctx: Ctx }) {
 	const { state } = ctx.data
@@ -1245,6 +1287,7 @@ function Control({ ctx, k, trim }: { ctx: Ctx; k: Key; trim: boolean }) {
 				/>
 			)
 		case "minMatch":
+			if (g?.needs) return <TasteLocked needs={g.needs} />
 			return (
 				<>
 					<ThresholdBar
@@ -1624,7 +1667,8 @@ export function PrototypeFilterGroups(props: Props) {
 			<p aria-live="polite" className="sr-only">
 				{props.refusal?.text ?? ""}
 			</p>
-			<AddAsYouGo ctx={ctx} style={variant === "J" ? "tiles" : variant === "K" ? "cards" : "chips"} />
+			{/* Round 5: the sheet is J (popular as tiles) for every variant; the variants differ in the bar's row. */}
+			<AddAsYouGo ctx={ctx} style="tiles" />
 		</div>
 	)
 }

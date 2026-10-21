@@ -21,7 +21,7 @@ import type { FilterGroupsData } from "./FilterGroups"
 import { FiltersSheet } from "./FiltersSheet"
 // PROTOTYPE - throwaway: the member preview of the Filters sheet prototype.
 import { PREVIEW_SERVICES, useFilterSheetVariant, useMemberPreview } from "./FilterGroups.prototype"
-import { ForYouSortSplit } from "./FilterBar.prototype"
+import { ActiveFiltersRow, ForYouSortSplit } from "./FilterBar.prototype"
 import { OneRowChips } from "./FilterGroups.prototype"
 import { FILTER_ACCENTS } from "./labels"
 import { FOR_YOU_SWITCH, ForYouSwitch, useForYouUnderBestMatch } from "./ForYou"
@@ -92,7 +92,9 @@ export function FilterBar(props: FilterBarProps) {
 	// PROTOTYPE: ?as=member pretends Netflix, Prime Video and Disney+ are saved when nothing is.
 	const memberPreview = useMemberPreview()
 	// PROTOTYPE: the variants also try the bar: For you | Sort split, Filters merged with the chips.
-	const protoBar = useFilterSheetVariant() !== "now"
+	const protoVariant = useFilterSheetVariant()
+	const protoBar = protoVariant !== "now"
+	const rowStyle = protoVariant === "M" ? "menu" : protoVariant === "N" ? "grouped" : "wrap"
 	const myIds =
 		memberPreview && services.ids.length === 0
 			? PREVIEW_SERVICES.filter((id) =>
@@ -225,33 +227,7 @@ export function FilterBar(props: FilterBarProps) {
 						outsideIgnore={FOR_YOU_SWITCH}
 					/>
 					)}
-					{protoBar && (
-						// PROTOTYPE: Filters at the row's end, the active filters on one line beside it.
-						<div className="flex min-w-[14rem] flex-1 items-center gap-2">
-							<FiltersButton
-								count={secondaryCount}
-								expanded={sheetOpen}
-								onClick={() => setSheetOpen(true)}
-							/>
-							<OneRowChips
-								chips={displayChips}
-								state={state}
-								onChange={onChange}
-								onMore={() => setSheetOpen(true)}
-								className="flex-1"
-								trailing={
-									<button
-										type="button"
-										onClick={filters.clearSecondary}
-										className="h-8 shrink-0 px-1.5 text-[13px] text-gray-500 cursor-pointer hover:text-white"
-									>
-										Clear
-									</button>
-								}
-							/>
-						</div>
-					)}
-					{!protoBar && (
+					{(
 					<div className="ml-auto flex items-center gap-2.5">
 						{props.rowTrail}
 						<FiltersButton
@@ -262,7 +238,19 @@ export function FilterBar(props: FilterBarProps) {
 					</div>
 					)}
 				</div>
-				{protoBar ? null : (
+				{protoBar ? (
+					displayChips.length > 0 && (
+						<div className="mt-3">
+							<ActiveFiltersRow
+								style={rowStyle}
+								chips={displayChips}
+								state={state}
+								onChange={onChange}
+								onClear={filters.clearSecondary}
+							/>
+						</div>
+					)
+				) : (
 				<FilterChips
 					chips={displayChips}
 					state={state}
