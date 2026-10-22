@@ -1,0 +1,596 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Discord card prototype</title>
+<!-- PROTOTYPE for #738. Throwaway: the chosen designs move into app/server/discord/cards.ts (ticket 12). -->
+<link rel="icon" href="goodwatch-avatar.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+	--page: #0c0c0f; --page-2: #16161b; --page-line: #26262e; --page-text: #e7e5e4; --page-muted: #a8a29e;
+	--amber: #fbbf24;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--page); color: var(--page-text); font-family: "Noto Sans", system-ui, sans-serif; }
+a { color: inherit; }
+
+/* ---------- page chrome (not Discord) ---------- */
+.bar { position: sticky; top: 0; z-index: 20; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; padding: 10px 16px; background: rgba(12,12,15,.94); border-bottom: 1px solid var(--page-line); }
+.bar .brand { font-weight: 800; letter-spacing: -.01em; }
+.bar .brand b { color: var(--amber); }
+.seg { display: inline-flex; border: 1px solid var(--page-line); border-radius: 999px; overflow: hidden; }
+.seg button { background: transparent; color: var(--page-muted); border: 0; padding: 6px 12px; font: inherit; font-size: 13px; cursor: pointer; }
+.seg button.on { background: var(--amber); color: #111; font-weight: 700; }
+.bar nav { display: flex; flex-wrap: wrap; gap: 6px; margin-left: auto; }
+.bar nav a { font-size: 12px; color: var(--page-muted); text-decoration: none; border: 1px solid var(--page-line); border-radius: 999px; padding: 4px 10px; }
+.bar nav a:hover { color: var(--amber); border-color: var(--amber); }
+main { max-width: 1480px; margin: 0 auto; padding: 24px 16px 120px; }
+.intro { color: var(--page-muted); max-width: 760px; line-height: 1.55; font-size: 14px; }
+.intro strong { color: var(--page-text); }
+section.card { margin-top: 48px; }
+section.card > h2 { font-size: 22px; margin: 0 0 4px; letter-spacing: -.01em; }
+section.card > h2 span { color: var(--amber); margin-right: 8px; }
+section.card > p.note { color: var(--page-muted); font-size: 14px; margin: 0 0 16px; max-width: 820px; line-height: 1.5; }
+.variants { display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 680px), 1fr)); }
+body.phone .variants { grid-template-columns: repeat(auto-fit, minmax(min(100%, 390px), 1fr)); }
+.variant { background: var(--page-2); border: 1px solid var(--page-line); border-radius: 12px; padding: 14px; min-width: 0; }
+.vhead { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 10px; }
+.vletter { flex: none; width: 30px; height: 30px; border-radius: 8px; background: var(--amber); color: #111; font-weight: 800; display: grid; place-items: center; font-size: 16px; }
+.vtitle { font-weight: 700; font-size: 15px; }
+.vwhy { color: var(--page-muted); font-size: 13px; line-height: 1.45; margin-top: 2px; }
+.vmeta { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 10px; }
+.chip { font-size: 12px; border-radius: 999px; padding: 3px 9px; border: 1px solid var(--page-line); color: var(--page-muted); font-variant-numeric: tabular-nums; }
+.chip.ok { color: #86efac; border-color: #14532d; }
+.chip.bad { color: #fca5a5; border-color: #7f1d1d; }
+.states { display: inline-flex; gap: 4px; flex-wrap: wrap; }
+.states button { font: inherit; font-size: 12px; background: transparent; color: var(--page-muted); border: 1px solid var(--page-line); border-radius: 999px; padding: 3px 10px; cursor: pointer; }
+.states button.on { color: #111; background: #e7e5e4; border-color: #e7e5e4; font-weight: 600; }
+details.payload { margin-top: 10px; }
+details.payload summary { cursor: pointer; color: var(--page-muted); font-size: 12px; }
+details.payload pre { max-height: 320px; overflow: auto; font-size: 11px; background: #08080a; border: 1px solid var(--page-line); border-radius: 8px; padding: 10px; color: #d6d3d1; }
+.errs { color: #fca5a5; font-size: 12px; }
+.toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%) translateY(20px); opacity: 0; background: #111214; color: #f2f3f5; border: 1px solid #3f4147; border-radius: 8px; padding: 10px 14px; font-size: 13px; transition: opacity .15s, transform .15s; z-index: 50; max-width: calc(100% - 32px); pointer-events: none; }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ---------- Discord (classic dark / light) ---------- */
+.dc {
+	--chat: #313338; --ct: #2b2d31; --ct-line: #3a3c42; --text: #dbdee1; --hdr: #f2f3f5; --muted: #949ba4; --link: #00a8fc;
+	--sep: #3f4147; --b-sec: #4e5058; --b-sec-h: #6d6f78; --b-sec-t: #fff; --sel: #1e1f22; --sel-line: #1e1f22; --menu: #2b2d31; --menu-h: #35373c;
+	--mention: rgba(88,101,242,.3); --mention-t: #c9cdfb; --tsp: rgba(255,255,255,.06); --hover: #2e3035;
+	font-family: "gg sans", "Noto Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+	font-size: 16px; line-height: 1.375; background: var(--chat); color: var(--text);
+	border-radius: 8px; padding: 16px 16px 14px 0; overflow: hidden;
+}
+body.light .dc {
+	--chat: #ffffff; --ct: #f2f3f5; --ct-line: #e3e5e8; --text: #313338; --hdr: #060607; --muted: #5c5e66; --link: #006ce7;
+	--sep: #d4d7dc; --b-sec: #e1e2e4; --b-sec-h: #d4d5d8; --b-sec-t: #313338; --sel: #ebedef; --sel-line: #e3e5e8; --menu: #ffffff; --menu-h: #ebedef;
+	--mention: rgba(88,101,242,.15); --mention-t: #505cdc; --tsp: rgba(6,6,7,.06); --hover: #f7f7f8;
+}
+body.phone .dc { max-width: 390px; padding-right: 12px; }
+.dc .reply { display: flex; align-items: center; gap: 4px; font-size: 14px; color: var(--muted); margin: 0 0 4px 72px; position: relative; white-space: nowrap; overflow: hidden; }
+body.phone .dc .reply { margin-left: 64px; }
+.dc .reply::before { content: ""; position: absolute; left: -38px; top: 9px; width: 30px; height: 12px; border-left: 2px solid #4e5058; border-top: 2px solid #4e5058; border-top-left-radius: 6px; }
+.dc .reply .uav { width: 16px; height: 16px; border-radius: 50%; background: #3ba55d; color: #fff; font-size: 9px; font-weight: 700; display: grid; place-items: center; flex: none; }
+.dc .reply .un { color: var(--hdr); font-weight: 500; }
+.dc .reply .cmd { color: var(--link); }
+.dc .msg { display: flex; gap: 16px; padding-left: 16px; }
+body.phone .dc .msg { gap: 8px; padding-left: 12px; }
+.dc .av { width: 40px; height: 40px; border-radius: 50%; flex: none; background: #fff; }
+.dc .mb { min-width: 0; flex: 1; }
+.dc .hd { display: flex; align-items: center; gap: 4px; margin-bottom: 4px; }
+.dc .hd .nm { color: var(--hdr); font-weight: 500; }
+.dc .hd .app { background: #5865f2; color: #fff; font-size: 10px; font-weight: 600; border-radius: 3px; padding: 1px 4px; line-height: 15px; letter-spacing: .02em; }
+.dc .hd .ts { color: var(--muted); font-size: 12px; margin-left: 4px; }
+.dc .comps { display: flex; flex-direction: column; gap: 8px; max-width: 560px; }
+.dc .eph { display: flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 12px; color: var(--muted); }
+.dc .eph a { color: var(--link); text-decoration: none; cursor: pointer; }
+.dc .eph a:hover { text-decoration: underline; }
+
+.dc .ct { background: var(--ct); border: 1px solid var(--ct-line); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.dc .ct.accent { box-shadow: inset 4px 0 0 var(--accent); padding-left: 20px; }
+body.phone .dc .ct { padding: 12px; }
+body.phone .dc .ct.accent { padding-left: 16px; }
+.dc .sec { display: flex; gap: 12px; align-items: flex-start; min-width: 0; }
+.dc .sec.btnacc { align-items: center; }
+.dc .sec .tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.dc .sec .acc { flex: none; }
+.dc .th { width: 85px; border-radius: 8px; display: block; }
+body.phone .dc .th { width: 64px; }
+.dc .td { overflow-wrap: anywhere; }
+.dc .td h1, .dc .td h2, .dc .td h3 { margin: 0; color: var(--hdr); line-height: 1.25; font-weight: 700; }
+.dc .td h1 { font-size: 24px; } .dc .td h2 { font-size: 20px; } .dc .td h3 { font-size: 16px; }
+.dc .td * + h1, .dc .td * + h2, .dc .td * + h3 { margin-top: 8px; }
+.dc .td .sub { font-size: 13px; color: var(--muted); line-height: 1.3; }
+.dc .td .sub .em { width: 1.1em; height: 1.1em; }
+.dc .td strong { font-weight: 700; color: var(--hdr); }
+.dc .td a { color: var(--link); text-decoration: none; }
+.dc .td a:hover { text-decoration: underline; }
+.dc .td ul { margin: 2px 0; padding-left: 20px; }
+.dc .td .gap { height: .5em; }
+.dc .em { width: 1.375em; height: 1.375em; vertical-align: -.3em; object-fit: contain; display: inline-block; border-radius: 4px; }
+.dc h1 .em, .dc h2 .em, .dc h3 .em { width: 1.2em; height: 1.2em; vertical-align: -.2em; }
+.dc .mn { background: var(--mention); color: var(--mention-t); border-radius: 3px; padding: 0 2px; font-weight: 500; }
+.dc .tsp { background: var(--tsp); border-radius: 3px; padding: 0 2px; }
+.dc .sep { height: 1px; background: var(--sep); margin: 0; }
+.dc .sep.large { margin: 8px 0; }
+.dc .sep.blank { background: transparent; }
+
+.dc .gal { display: grid; gap: 4px; border-radius: 8px; overflow: hidden; }
+.dc .gal img { width: 100%; height: 100%; object-fit: cover; display: block; background: #1e1f22; }
+.dc .gal.n1 { display: block; border-radius: 0; overflow: visible; }
+.dc .gal.n1 img { width: auto; max-width: 100%; height: auto; max-height: 350px; border-radius: 8px; }
+.dc .gal.n1.poster img { max-height: 340px; }
+.dc .gal .cell { aspect-ratio: 1; overflow: hidden; }
+.dc .gal .cell.wide { aspect-ratio: 16/9; grid-column: 1 / -1; }
+.dc .gal.n3 { grid-template-columns: 2fr 1fr; }
+.dc .gal.n3 .cell:first-child { grid-row: span 2; }
+
+.dc .row { display: flex; flex-wrap: wrap; gap: 8px; }
+.dc .btn { height: 32px; min-width: 60px; padding: 2px 14px; border-radius: 8px; border: 0; font: inherit; font-size: 14px; font-weight: 500; display: inline-flex; align-items: center; justify-content: center; gap: 6px; color: #fff; cursor: pointer; white-space: nowrap; transition: background .12s; text-decoration: none; }
+.dc .btn.primary { background: #5865f2; } .dc .btn.primary:hover { background: #4752c4; }
+.dc .btn.secondary, .dc .btn.link { background: var(--b-sec); color: var(--b-sec-t); } .dc .btn.secondary:hover, .dc .btn.link:hover { background: var(--b-sec-h); }
+.dc .btn.success { background: #248046; } .dc .btn.success:hover { background: #1a6334; }
+.dc .btn.danger { background: #da373c; } .dc .btn.danger:hover { background: #a12828; }
+.dc .btn[disabled] { opacity: .5; cursor: not-allowed; }
+.dc .btn .em { width: 18px; height: 18px; vertical-align: 0; }
+.dc .btn svg { flex: none; }
+
+.dc .selw { position: relative; width: 100%; max-width: 400px; }
+.dc .sel { width: 100%; height: 40px; background: var(--sel); border: 1px solid var(--sel-line); border-radius: 8px; display: flex; align-items: center; justify-content: space-between; padding: 0 8px 0 12px; color: var(--muted); font: inherit; font-size: 14px; cursor: pointer; }
+.dc .opts { display: none; position: absolute; left: 0; right: 0; top: 44px; background: var(--menu); border: 1px solid var(--sel-line); border-radius: 8px; z-index: 10; max-height: 290px; overflow: auto; box-shadow: 0 8px 16px rgba(0,0,0,.3); }
+.dc .selw.open .opts { display: block; }
+.dc .opt { display: flex; gap: 8px; align-items: center; padding: 8px 12px; cursor: pointer; }
+.dc .opt:hover { background: var(--menu-h); }
+.dc .opt .ol { color: var(--hdr); font-size: 14px; font-weight: 500; }
+.dc .opt .od { color: var(--muted); font-size: 12px; }
+.dc .opt .em { width: 22px; height: 22px; flex: none; }
+
+/* Discord modal mock */
+.modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,.7); display: none; place-items: center; z-index: 40; padding: 16px; }
+.modal-bg.show { display: grid; }
+.modal { width: 440px; max-width: 100%; border-radius: 8px; overflow: hidden; }
+.modal .mh { padding: 16px; display: flex; gap: 10px; align-items: center; }
+.modal .mh img { width: 24px; height: 24px; border-radius: 50%; background: #fff; }
+.modal .mh b { color: var(--hdr); font-size: 20px; }
+.modal .mbody { padding: 0 16px 16px; }
+.modal label { display: block; font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; letter-spacing: .02em; }
+.modal .scores { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.modal .scores button { height: 44px; border-radius: 8px; border: 1px solid var(--sel-line); background: var(--sel); color: var(--hdr); font: inherit; font-weight: 700; cursor: pointer; }
+.modal .scores button.on { outline: 2px solid #5865f2; }
+.modal .mf { display: flex; justify-content: flex-end; gap: 8px; padding: 16px; background: var(--ct); }
+.modal .plink { background: none; border: 0; color: var(--hdr); font: inherit; font-size: 14px; cursor: pointer; padding: 0 12px; }
+</style>
+</head>
+<body>
+<div class="bar">
+	<div class="brand">Good<b>Watch</b> · Discord cards</div>
+	<div class="seg" id="theme"><button data-v="dark">Dark</button><button data-v="light">Light</button></div>
+	<div class="seg" id="width"><button data-v="desktop">Desktop</button><button data-v="phone">Phone</button></div>
+	<nav id="nav"></nav>
+</div>
+<main>
+	<p class="intro"><strong>Prototype for #738.</strong> Pick one variant per card. Every card is built from a Components V2 tree, so the counter and the payload below each mock are what the bot would send. Data: real GoodWatch titles, scores, and availability in Germany, October 23, 2026. Buttons that change the card work here (Yep, Nope, Undo, Another, Rate, menus); other buttons show what they would do. Score badges and service logos inside text are <strong>app emojis</strong> (Discord custom emojis the app uploads), because Discord text can't be colored.</p>
+	<div id="cards"></div>
+</main>
+<div class="modal-bg" id="modal"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ---------- real data (GoodWatch MCP, country DE, 2026-10-23) ----------
+const TM = "https://image.tmdb.org/t/p/";
+const AMBER = "#fbbf24";
+const LABELS = ["What's your score?", "Unwatchable", "Terrible", "Bad", "Weak", "Mediocre", "Decent", "Good", "Great", "Excellent", "Masterpiece"];
+const VIBE = { 0: "#7f1d1d", 10: "#991b1b", 20: "#b91c1c", 30: "#c2410c", 40: "#d97706", 50: "#ca8a04", 60: "#a3a323", 70: "#50a33d", 80: "#25a73d", 90: "#16b34a", 100: "#05b724" };
+const label = (s) => LABELS[Math.max(1, Math.round(s / 10))]; // ScoreRing.tsx
+const vibe = (s) => VIBE[Math.min(100, Math.floor(s / 10) * 10)]; // goodwatchVibeIndex
+const rt = (m) => (m >= 60 ? `${Math.floor(m / 60)}h${m % 60 ? ` ${m % 60}m` : ""}` : `${m}m`);
+const P = {
+	netflix: { name: "Netflix", logo: TM + "w92/rK1KljqmbvO9HQa1PBFLILWah72.png" },
+	prime: { name: "Prime Video", logo: TM + "w92/gMZdpavHmxFNnLpMHwVxfqeux2g.png" },
+	disney: { name: "Disney+", logo: TM + "w92/5eZ872CghnHFLB1j8grszbrx0dx.png" },
+};
+const mk = (o) => ({ kind: "Movie", ...o, poster: TM + "w342/" + o.poster + ".jpg", backdrop: o.backdrop && TM + "w780/" + o.backdrop + ".jpg", og: `https://goodwatch.app/og/movie/${o.slug}.jpg?brand=D2`, url: `https://goodwatch.app/movie/${o.slug}` });
+const T = {
+	phm: mk({ name: "Project Hail Mary", year: 2026, score: 85, runtime: 157, match: 70, slug: "687163-project-hail-mary", genres: ["Science Fiction", "Adventure"], providers: ["prime"], poster: "iOb2fjXLbpJgyQXe46n1WtGCnaa", backdrop: "8Tfys3mDZVp4tNoH2ktm06a0Tau", overview: "Science teacher Ryland Grace wakes up on a spaceship light years from home with no recollection of who he is or how he got there. As his memory returns, he begins to uncover his mission: solve the riddle of the mysterious substance causing the sun to die out." }),
+	spirited: mk({ name: "Spirited Away", year: 2001, score: 92, runtime: 125, match: 76, slug: "129-spirited-away", genres: ["Animation", "Family", "Fantasy"], providers: ["netflix"], poster: "jUo8cNmU400WtZiJss45HNXlQ2e", backdrop: "dyJvKsNs2KP8qQnAXbRwDjblViy", overview: "A young girl, Chihiro, becomes trapped in a strange new world of spirits. When her parents undergo a mysterious transformation, she must call upon the courage she never knew she had to free her family." }),
+	howl: mk({ name: "Howl's Moving Castle", year: 2004, score: 85, runtime: 119, match: 88, myScore: 7, slug: "4935-howls-moving-castle", genres: ["Fantasy", "Animation", "Adventure"], providers: ["netflix"], poster: "13kOl2v0nD2OLbVSHnHk8GUFEhO", backdrop: "nv5wwZou159v5OC61i4ElR7OqyY", overview: "Sophie, a young milliner, is turned into an elderly woman by a witch who enters her shop and curses her. She encounters a wizard named Howl and gets caught up in his resistance to fighting for the king." }),
+	coco: mk({ name: "Coco", year: 2017, score: 87, runtime: 105, match: 66, slug: "354912-coco", genres: ["Family", "Animation", "Music", "Adventure"], providers: ["disney"], poster: "6Ryitt95xrO8KXuqRGm1fUuNwqF", backdrop: "g7CHF8gTLGooTbP4GznIGwaqAGL", overview: "Despite his family's baffling generations-old ban on music, Miguel dreams of becoming an accomplished musician like his idol, Ernesto de la Cruz." }),
+	io2: mk({ name: "Inside Out 2", year: 2024, score: 80, runtime: 97, match: 69, slug: "1022789-inside-out-2", genres: ["Animation", "Adventure", "Comedy", "Family"], providers: ["disney"], poster: "vpnVM9B6NMmQpWeZvzLvDESb2QY", backdrop: "p5ozvmdgsmbWe0H8Xk7Rc8SCwAB", overview: "Teenager Riley's mind headquarters is undergoing a sudden demolition to make room for something entirely unexpected: new Emotions." }),
+};
+const D = (name, year, score, runtime, slug, poster) => mk({ name, year, score, runtime, slug, poster, genres: [], providers: [] });
+const DISCOVER = [
+	D("Toy Story 5", 2026, 80, 102, "1084244-toy-story-5", "sfQtVlIHljToOwYjhe21KPGzZWK"),
+	D("Sense and Sensibility", 2026, 76, 132, "1503762-sense-and-sensibility", "czsyPHosFNbh4PPqXfqWu1aBXnA"),
+	D("The Nightmare Before Christmas", 1993, 85, 76, "9479-the-nightmare-before-christmas", "oQffRNjK8e19rF7xVYEN8ew0j7b"),
+	D("Minions & Monsters", 2026, 74, 90, "1315772-minions-monsters", "4LwvU9SZc8QQzW1X1FAPhNbXnEU"),
+	D("Zootopia 2", 2025, 81, 108, "1084242-zootopia-2", "oJ7g2CifqpStmoYQyaLQgEU32qO"),
+	T.coco,
+	D("Forgotten Island", 2026, 81, 109, "1465063-forgotten-island", "myd1K3gefdNAWFsGNRDdMeiK9Qg"),
+	D("Avatar Aang: The Last Airbender", 2026, 82, 99, "980431-avatar-aang-the-last-airbender", "3sgnSfNT27Bx5O5ukr7B26mhEQq"),
+	D("Harry Potter and the Philosopher's Stone", 2001, 75, 152, "671-harry-potter-and-the-philosophers-stone", "wuMc08IPKEatf9rnMNXvIDxqP4W"),
+	D("The Wild Robot", 2024, 88, 102, "1184918-the-wild-robot", "wTnV3PCVW5O92JMrFvvrRcV39RU"),
+];
+const DECK = [T.spirited, T.coco, T.howl, T.io2];
+const LINK_URL = "https://goodwatch.app/discord/link";
+
+// ---------- Components V2 builders ----------
+const C = (children, accent) => ({ t: "container", accent, children: children.filter(Boolean) });
+const S = (texts, acc) => ({ t: "section", texts, acc });
+const X = (md) => ({ t: "text", md });
+const Th = (url, alt) => ({ t: "thumb", url, alt });
+const G = (items) => ({ t: "gallery", items });
+const Sep = (divider = true, spacing = "small") => ({ t: "sep", divider, spacing });
+const R = (...items) => ({ t: "row", items: items.filter(Boolean) });
+const B = (label, style = "secondary", o = {}) => ({ t: "button", label, style, ...o });
+const Sel = (placeholder, options, id = "open") => ({ t: "select", placeholder, options, id });
+
+const genres = (t) => t.genres.join(", ");
+const prov = (t) => t.providers.map((k) => `{e:${k}} **${P[k].name}**`).join("   ");
+const short = (t, n = 120) => { const o = t.overview; if (o.length <= n) return o; const cut = o.slice(0, n); return cut.slice(0, cut.lastIndexOf(" ")).replace(/[,.;:]$/, "") + "…"; };
+const scoreText = (t) => `**${t.score} · ${label(t.score)}**`;
+const titleOpt = (t) => ({ label: `${t.name} (${t.year})`, desc: `${t.score} · ${label(t.score)} · ${rt(t.runtime)}`, emoji: `{s:${t.score}}` });
+const guestButtons = (t) => R(B("Where to watch", "secondary", { id: "where" }), B("Similar", "secondary", { id: "similar" }), B("Open on GoodWatch", "link", { url: t.url }), B("Share to channel", "primary", { id: "share" }));
+const ogItem = (t) => ({ url: t.og, alt: `${t.name} (${t.year}) on GoodWatch: poster and GoodWatch score`, shape: "wide" });
+
+// ---------- app emoji images (would be uploaded as application emojis) ----------
+const emojiCache = {};
+function scoreEmoji(s) {
+	if (emojiCache[s]) return emojiCache[s];
+	const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="${vibe(s)}"/><text x="32" y="44" text-anchor="middle" font-family="Arial Black,Arial,sans-serif" font-weight="900" font-size="32" fill="#fff">${s}</text></svg>`;
+	return (emojiCache[s] = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg));
+}
+
+// ---------- markdown (Discord subset) ----------
+const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+function inline(s) {
+	s = esc(s);
+	s = s.replace(/\{s:(\d+)\}/g, (_, n) => `<img class="em" alt=":gw_${n}:" title="app emoji :gw_${n}:" src="${scoreEmoji(+n)}">`);
+	s = s.replace(/\{e:(\w+)\}/g, (_, k) => `<img class="em" alt=":${k}:" title="app emoji :${k}:" src="${P[k].logo}">`);
+	s = s.replace(/\{t:([^}]+)\}/g, (_, x) => `<span class="tsp">${x}</span>`);
+	s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+	s = s.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+	s = s.replace(/(^|[\s(])@(\w+)/g, '$1<span class="mn">@$2</span>');
+	s = s.replace(/(^|\s)(\/[a-z]+)\b/g, '$1<span class="mn">$2</span>');
+	return s;
+}
+function md(src) {
+	const out = []; let list = null;
+	for (const line of src.split("\n")) {
+		if (line.startsWith("- ")) { (list ??= []).push(`<li>${inline(line.slice(2))}</li>`); continue; }
+		if (list) { out.push(`<ul>${list.join("")}</ul>`); list = null; }
+		if (line.startsWith("-# ")) out.push(`<div class="sub">${inline(line.slice(3))}</div>`);
+		else if (line.startsWith("### ")) out.push(`<h3>${inline(line.slice(4))}</h3>`);
+		else if (line.startsWith("## ")) out.push(`<h2>${inline(line.slice(3))}</h2>`);
+		else if (line.startsWith("# ")) out.push(`<h1>${inline(line.slice(2))}</h1>`);
+		else if (line === "") out.push('<div class="gap"></div>');
+		else out.push(`<div>${inline(line)}</div>`);
+	}
+	if (list) out.push(`<ul>${list.join("")}</ul>`);
+	return out.join("");
+}
+
+// ---------- render ----------
+const EXT = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>';
+const CHEV = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m6 9 6 6 6-6"/></svg>';
+function renderNode(n, vid) {
+	switch (n.t) {
+		case "container": return `<div class="ct${n.accent ? " accent" : ""}" style="${n.accent ? `--accent:${n.accent}` : ""}">${n.children.map((c) => renderNode(c, vid)).join("")}</div>`;
+		case "section": return `<div class="sec${n.acc.t === "button" ? " btnacc" : ""}"><div class="tx">${n.texts.map((m) => `<div class="td">${md(m)}</div>`).join("")}</div><div class="acc">${renderNode(n.acc, vid)}</div></div>`;
+		case "text": return `<div class="td">${md(n.md)}</div>`;
+		case "thumb": return `<img class="th" src="${n.url}" alt="${esc(n.alt || "")}" loading="lazy">`;
+		case "sep": return `<div class="sep ${n.spacing}${n.divider ? "" : " blank"}"></div>`;
+		case "gallery": {
+			const k = n.items.length;
+			if (k === 1) return `<div class="gal n1 ${n.items[0].shape}"><img src="${n.items[0].url}" alt="${esc(n.items[0].alt || "")}" loading="lazy"></div>`;
+			const rows = { 2: [2], 4: [2, 2], 5: [2, 3], 6: [3, 3], 7: [1, 3, 3], 8: [2, 3, 3], 9: [3, 3, 3], 10: [1, 3, 3, 3] }[k];
+			if (k === 3) return `<div class="gal n3">${n.items.map((i) => `<div class="cell"><img src="${i.url}" alt="${esc(i.alt || "")}" loading="lazy"></div>`).join("")}</div>`;
+			let i = 0;
+			return rows.map((c) => `<div class="gal" style="grid-template-columns:repeat(${c},1fr)">${n.items.slice(i, (i += c)).map((it) => `<div class="cell${c === 1 ? " wide" : ""}"><img src="${it.url}" alt="${esc(it.alt || "")}" loading="lazy"></div>`).join("")}</div>`).join("");
+		}
+		case "row": return `<div class="row">${n.items.map((c) => renderNode(c, vid)).join("")}</div>`;
+		case "button": {
+			const em = n.emoji ? inline(n.emoji) : "";
+			if (n.style === "link") return `<a class="btn link" href="${n.url}" target="_blank" rel="noopener">${em}${esc(n.label)}${EXT}</a>`;
+			return `<button class="btn ${n.style}" data-v="${vid}" data-act="${n.id || ""}" data-label="${esc(n.label)}"${n.disabled ? " disabled" : ""}>${em}${esc(n.label)}</button>`;
+		}
+		case "select": return `<div class="selw"><div class="sel" data-sel>${esc(n.placeholder)}${CHEV}</div><div class="opts">${n.options.map((o, i) => `<div class="opt" data-v="${vid}" data-opt="${i}" data-sid="${n.id}" data-label="${esc(o.label)}">${o.emoji ? inline(o.emoji) : ""}<div><div class="ol">${esc(o.label)}</div>${o.desc ? `<div class="od">${esc(o.desc)}</div>` : ""}</div></div>`).join("")}</div></div>`;
+	}
+}
+
+// ---------- limits ----------
+function count(n) {
+	switch (n.t) {
+		case "container": return 1 + n.children.reduce((a, c) => a + count(c), 0);
+		case "section": return 1 + n.texts.length + count(n.acc);
+		case "row": return 1 + n.items.reduce((a, c) => a + count(c), 0);
+		default: return 1; // text, thumbnail, gallery (items are not components), separator, button, select
+	}
+}
+function textLen(n) {
+	if (n.t === "text") return n.md.length;
+	if (n.t === "section") return n.texts.join("").length;
+	if (n.t === "container") return n.children.reduce((a, c) => a + textLen(c), 0);
+	return 0;
+}
+function validate(tree) {
+	const errs = [];
+	const walk = (n, depth) => {
+		if (n.t === "container") { if (depth > 0) errs.push("container inside a container"); n.children.forEach((c) => walk(c, depth + 1)); }
+		if (n.t === "section") { if (n.texts.length < 1 || n.texts.length > 3) errs.push("section needs 1 to 3 text displays"); if (!n.acc || !["thumb", "button"].includes(n.acc.t)) errs.push("section needs a thumbnail or button accessory"); }
+		if (n.t === "gallery" && (n.items.length < 1 || n.items.length > 10)) errs.push("media gallery holds 1 to 10 items");
+		if (n.t === "row") {
+			const sels = n.items.filter((i) => i.t === "select").length;
+			if (sels && n.items.length > 1) errs.push("a select needs its own action row");
+			if (n.items.length > 5) errs.push("action row holds at most 5 buttons");
+			n.items.forEach((b) => { if (b.t === "button" && b.label.length > 80) errs.push("button label over 80 characters"); if (b.t === "select" && b.options.length > 25) errs.push("select holds at most 25 options"); });
+		}
+	};
+	tree.forEach((n) => walk(n, 0));
+	const total = tree.reduce((a, n) => a + count(n), 0);
+	if (total > 40) errs.push(`${total} components, the limit is 40`);
+	const chars = tree.reduce((a, n) => a + textLen(n), 0);
+	if (chars > 4000) errs.push(`${chars} text characters, the limit is 4000`);
+	return { total, errs, chars };
+}
+
+// ---------- Discord payload ----------
+const STYLE = { primary: 1, secondary: 2, success: 3, danger: 4, link: 5 };
+const content = (m) => m.replace(/\{s:(\d+)\}/g, "<:gw_$1:EMOJI_ID>").replace(/\{e:(\w+)\}/g, "<:$1:EMOJI_ID>").replace(/\{t:[^}]+\}/g, "<t:UNIX:R>");
+const emojiObj = (e) => { const m = e && e.match(/\{s:(\d+)\}|\{e:(\w+)\}/); return m ? { id: "EMOJI_ID", name: m[1] ? `gw_${m[1]}` : m[2] } : undefined; };
+function payload(n) {
+	switch (n.t) {
+		case "container": return { type: 17, ...(n.accent ? { accent_color: parseInt(n.accent.slice(1), 16) } : {}), components: n.children.map(payload) };
+		case "section": return { type: 9, components: n.texts.map((m) => ({ type: 10, content: content(m) })), accessory: payload(n.acc) };
+		case "text": return { type: 10, content: content(n.md) };
+		case "thumb": return { type: 11, media: { url: n.url }, ...(n.alt ? { description: n.alt } : {}) };
+		case "gallery": return { type: 12, items: n.items.map((i) => ({ media: { url: i.url }, ...(i.alt ? { description: i.alt } : {}) })) };
+		case "sep": return { type: 14, divider: n.divider, spacing: n.spacing === "large" ? 2 : 1 };
+		case "row": return { type: 1, components: n.items.map(payload) };
+		case "button": return n.style === "link" ? { type: 2, style: 5, label: n.label, url: n.url } : { type: 2, style: STYLE[n.style], label: n.label, custom_id: `gw:${n.id || "noop"}:…`, ...(n.disabled ? { disabled: true } : {}) };
+		case "select": return { type: 3, custom_id: `gw:${n.id}:…`, placeholder: n.placeholder, options: n.options.map((o, i) => ({ label: o.label, value: String(i), ...(o.desc ? { description: o.desc } : {}), ...(emojiObj(o.emoji) ? { emoji: emojiObj(o.emoji) } : {}) })) };
+	}
+}
+
+// ---------- cards ----------
+const guestRowTitle = guestButtons;
+const memberStatus = (t, st, vs) => {
+	if (vs.rated) return `You rated it **${vs.rated} · ${LABELS[vs.rated]}**`;
+	return st === "want" ? "In your Want to see" : `Seen · you rated it **${t.myScore} · ${LABELS[t.myScore]}**`;
+};
+const memberRow = (st, vs) => {
+	const rated = vs.rated || (st === "rated" ? T.howl.myScore : null);
+	return R(
+		st === "want" ? B("In Want to see", "success", { id: "want" }) : B("Want to see", "secondary", { id: "want" }),
+		st === "rated" || vs.rated ? B("Seen", "success", { id: "seen" }) : B("Seen", "secondary", { id: "seen" }),
+		B(rated ? `Rated ${rated}` : "Rate", "secondary", { id: "rate" }),
+	);
+};
+const personalTitle = (st) => (st === "want" ? T.phm : T.howl);
+const rateHandler = { rate: (vs, rerender) => openRateModal((s) => { vs.rated = s; rerender(); }) };
+const PERSONAL_STATES = [{ k: "want", l: "In Want to see" }, { k: "rated", l: "Seen and rated" }];
+
+const watchPicks = { guest: [T.spirited, T.coco, T.howl], member: [T.phm, T.io2] };
+const watchEyebrow = (st) => (st === "guest" ? "-# Tonight's pick from every service in Germany. Admins can set the server's services with /setup." : "-# Tonight's pick from your Want to see, on your services");
+const another = { another: (vs) => { vs.i = (vs.i || 0) + 1; return true; } };
+const pickOf = (vs) => { const list = watchPicks[vs.state]; return list[(vs.i || 0) % list.length]; };
+const WATCH_STATES = [{ k: "guest", l: "Guest" }, { k: "member", l: "Linked member" }];
+
+const togetherHead = (st) => st === "lobby"
+	? X("## Movie night\n@alp started a group pick: **feel-good movies**.\n-# Press Join to vote privately. A title matches when everyone votes Yep.")
+	: X("## Movie night · feel-good movies\n-# Started by @alp · closes {t:in 23 hours}\n**4** participants · **2** still voting");
+const togetherRows = (pick = true) => [pick && R(Sel("Pick a match", [titleOpt(T.spirited)], "pick")), R(B("Join", "primary", { id: "join" }), B("End", "secondary", { id: "end" }))];
+const lobbyTree = () => [C([togetherHead("lobby"), X("-# Nobody has voted yet · closes {t:in 24 hours}"), ...togetherRows(false)], AMBER)];
+const TOGETHER_STATES = [{ k: "lobby", l: "Lobby" }, { k: "voting", l: "Voting", def: true }, { k: "decided", l: "Decided" }];
+
+const deckVote = { yep: (vs) => { vs.i = (vs.i || 0) + 1; return true; }, nope: (vs) => { vs.i = (vs.i || 0) + 1; return true; }, undo: (vs) => { if (vs.i) vs.i--; return true; }, leave: (vs) => { vs.left = true; return true; }, rejoin: (vs) => { vs.left = false; vs.i = 0; return true; } };
+const voteRow = (vs) => R(B("Yep", "success", { id: "yep" }), B("Nope", "danger", { id: "nope" }), B("Undo", "secondary", { id: "undo", disabled: !vs.i }), B("Leave", "secondary", { id: "leave" }));
+const leftTree = () => [S(["You left the movie night. Your votes are removed."], B("Join again", "primary", { id: "rejoin" }))];
+
+const WRITE_STATES = [{ k: "rate", l: "/rate 8" }, { k: "seen", l: "/seen" }, { k: "want", l: "/want" }];
+const writeCopy = { rate: `Rated **Project Hail Mary** **8 · Great**`, seen: `Logged a watch of **Project Hail Mary** today`, want: `Added **Project Hail Mary** to Want to see` };
+const undoneCopy = { rate: "Removed your score for **Project Hail Mary**.", seen: "Removed today's watch of **Project Hail Mary**.", want: "Removed **Project Hail Mary** from Want to see." };
+const undo = { undo: (vs) => { vs.undone = true; return true; }, redo: (vs) => { vs.undone = false; return true; } };
+
+const CARDS = [
+	{
+		id: "title", n: 1, title: "Guest title card", cmd: "/search title: Project Hail Mary",
+		note: "What anyone sees for /search, and what Share to channel posts. Score color can only come from the container's accent bar, an image, or an app emoji.",
+		variants: [
+			{ name: "Poster beside the facts", why: "Closest to the title page: poster thumbnail on the right, accent bar in the score's vibe color, everything as real text.",
+				build: () => { const t = T.phm; return [C([S([`## ${t.name}`, `${scoreText(t)}  ·  ${t.year}  ·  ${rt(t.runtime)}\n-# ${genres(t)}`, short(t)], Th(t.poster, `${t.name} poster`)), Sep(), X(`-# Where to watch in Germany\n${prov(t)}`), guestButtons(t)], vibe(t.score))]; } },
+			{ name: "OG card as the hero", why: "Reuses the existing /og image, so the poster, title, and colored score are pixel-identical to link previews. Fewest components; the title lives in the image (alt text carries it).",
+				build: () => { const t = T.phm; return [C([G([ogItem(t)]), X(short(t, 170)), X(`-# ${genres(t)} · where to watch in Germany\n${prov(t)}`), guestButtons(t)], AMBER)]; } },
+			{ name: "Cinematic backdrop", why: "Wide backdrop for a film-poster feel, score as a vibe-colored app emoji next to the label, no accent bar.",
+				build: () => { const t = T.phm; return [C([G([{ url: t.backdrop, alt: `${t.name} backdrop`, shape: "wide" }]), X(`# ${t.name}\n{s:${t.score}} **${label(t.score)}**  ·  ${t.year}  ·  ${rt(t.runtime)}  ·  ${genres(t)}`), X(short(t)), Sep(), X(`-# Where to watch in Germany\n${prov(t)}`), guestButtons(t)])]; } },
+		],
+	},
+	{
+		id: "personal", n: 2, title: "Personal title card", cmd: "/search title: …  (linked member)",
+		note: "A linked member's card adds the taste match, seen or rated state, and Want to see, Seen, Rate. Rate opens a modal here. Share still posts the guest card.",
+		variants: [
+			{ name: "Guest card plus a member line", why: "Same layout as 1A with the match and state in the section, member buttons on their own row above the shared ones.", states: PERSONAL_STATES, on: rateHandler,
+				build: (vs) => { const t = personalTitle(vs.state); return [C([S([`## ${t.name}`, `${scoreText(t)}  ·  ${t.year}  ·  ${rt(t.runtime)}\n-# ${genres(t)}`, `**${t.match}%** taste match  ·  ${memberStatus(t, vs.state, vs)}`], Th(t.poster, `${t.name} poster`)), X(short(t)), Sep(), X(`-# Where to watch in Germany\n${prov(t)}`), memberRow(vs.state, vs), guestButtons(t)], vibe(t.score))]; } },
+			{ name: "OG hero plus a member line", why: "Same as 1B; the match and state sit directly under the image, where the eye lands first.", states: PERSONAL_STATES, on: rateHandler,
+				build: (vs) => { const t = personalTitle(vs.state); return [C([G([ogItem(t)]), X(`### ${t.match}% taste match\n-# ${memberStatus(t, vs.state, vs)}`), X(short(t)), X(`-# Where to watch in Germany\n${prov(t)}`), memberRow(vs.state, vs), guestButtons(t)], AMBER)]; } },
+			{ name: "Two containers: title and you", why: "The top container is exactly what Share posts; the amber container below holds only the member's part, so nothing private leaks by habit.", states: PERSONAL_STATES, on: rateHandler,
+				build: (vs) => { const t = personalTitle(vs.state); return [C([S([`## ${t.name}`, `${scoreText(t)}  ·  ${t.year}  ·  ${rt(t.runtime)}\n-# ${genres(t)}`, short(t)], Th(t.poster, `${t.name} poster`)), Sep(), X(`-# Where to watch in Germany\n${prov(t)}`), guestButtons(t)], vibe(t.score)), C([X(`### ${t.match}% taste match\n-# ${memberStatus(t, vs.state, vs)}`), memberRow(vs.state, vs)], AMBER)]; } },
+		],
+	},
+	{
+		id: "watch", n: 3, title: "/watch pick", cmd: "/watch type: movie",
+		note: "One pick for tonight. Another swaps in the next pick. Guests get the link prompt.",
+		variants: [
+			{ name: "Poster pick with an inline link prompt", why: "Title card layout with a one-line eyebrow; the guest prompt is a section with the link button beside it.", states: WATCH_STATES, on: another,
+				build: (vs) => { const t = pickOf(vs); const m = vs.state === "member"; return [C([X(watchEyebrow(vs.state)), S([`## ${t.name}`, `${scoreText(t)}  ·  ${t.year}  ·  ${rt(t.runtime)}${m ? `\n**${t.match}%** taste match` : ""}\n-# ${genres(t)}`, short(t)], Th(t.poster, `${t.name} poster`)), X(prov(t)), R(B("Another", "primary", { id: "another" }), B("Where to watch", "secondary", { id: "where" }), B("Open on GoodWatch", "link", { url: t.url })), !m && Sep(), !m && S(["**Link GoodWatch for picks that fit your taste**\n-# Your taste match on every title, from your own services."], B("Link GoodWatch", "link", { url: LINK_URL }))], vibe(t.score))]; } },
+			{ name: "OG hero pick", why: "The /og image does the talking; the guest prompt is the spec's full-label link button on its own row.", states: WATCH_STATES, on: another,
+				build: (vs) => { const t = pickOf(vs); const m = vs.state === "member"; return [C([X(watchEyebrow(vs.state)), G([ogItem(t)]), X(`${m ? `**${t.match}%** taste match\n` : ""}${short(t)}\n${prov(t)}`), R(B("Another", "primary", { id: "another" }), B("Where to watch", "secondary", { id: "where" }), B("Open on GoodWatch", "link", { url: t.url })), !m && R(B("Link GoodWatch for picks that fit your taste", "link", { url: LINK_URL }))], AMBER)]; } },
+			{ name: "Backdrop pick, quiet prompt", why: "Cinematic backdrop with an app emoji score; the guest prompt is a markdown link in small text, the least pushy option.", states: WATCH_STATES, on: another,
+				build: (vs) => { const t = pickOf(vs); const m = vs.state === "member"; return [C([G([{ url: t.backdrop, alt: `${t.name} backdrop`, shape: "wide" }]), X(`-# Tonight's pick\n# ${t.name}\n{s:${t.score}} **${label(t.score)}**  ·  ${t.year}  ·  ${rt(t.runtime)}${m ? `  ·  **${t.match}%** taste match` : ""}`), X(short(t)), X(prov(t)), R(B("Another", "primary", { id: "another" }), B("Where to watch", "secondary", { id: "where" }), B("Open on GoodWatch", "link", { url: t.url })), !m && X(`-# [Link GoodWatch](${LINK_URL}) for picks that fit your taste.`)])]; } },
+		],
+	},
+	{
+		id: "discover", n: 4, title: "/discover page", cmd: "/discover mood: feel-good type: movie",
+		note: "Ten titles per page, Previous and Next, and a menu that opens one as a title card. Discord crops gallery cells to the grid, so posters lose their top and bottom.",
+		variants: [
+			{ name: "Poster mosaic", why: "One media gallery with all ten posters, Discord's 1 + 3 + 3 + 3 mosaic; names live in the menu.",
+				build: () => [C([X("### Feel-good movies\n-# Popular · every service in Germany · page 1 of 222"), G(DISCOVER.map((t) => ({ url: t.poster, alt: `${t.name} (${t.year})`, shape: "poster" }))), R(Sel("Open a title", DISCOVER.map(titleOpt))), R(B("Previous", "secondary", { id: "prev", disabled: true }), B("Page 1 of 222", "secondary", { disabled: true }), B("Next", "secondary", { id: "next" }))], AMBER)] },
+			{ name: "Ranked text with score emojis", why: "Densest and fastest to scan on phones; no images, the colored score emoji carries the GoodWatch look.",
+				build: () => [C([X("### Feel-good movies\n-# Popular · every service in Germany · page 1 of 222"), X(DISCOVER.map((t, i) => `**${i + 1}**  {s:${t.score}}  **${t.name}**  ·  ${t.year}  ·  ${rt(t.runtime)}`).join("\n")), R(Sel("Open a title", DISCOVER.map(titleOpt))), R(B("Previous", "secondary", { id: "prev", disabled: true }), B("Page 1 of 222", "secondary", { disabled: true }), B("Next", "secondary", { id: "next" }))], AMBER)] },
+			{ name: "Ten poster rows", why: "Every title gets an uncropped poster thumbnail; uses 38 of 40 components and is long on phones.",
+				build: () => [C([X("### Feel-good movies\n-# Popular · every service in Germany · page 1 of 222"), ...DISCOVER.map((t) => S([`**${t.name}**\n{s:${t.score}} ${label(t.score)}  ·  ${t.year}  ·  ${rt(t.runtime)}`], Th(t.poster, `${t.name} poster`))), R(Sel("Open a title", DISCOVER.map(titleOpt))), R(B("Previous", "secondary", { id: "prev", disabled: true }), B("Page 1 of 222", "secondary", { disabled: true }), B("Next", "secondary", { id: "next" }))])] },
+		],
+	},
+	{
+		id: "together", n: 5, title: "/together public message", cmd: "/together mood: feel-good type: movie", public: true,
+		note: "Public in the channel, edited by the bot. Example: 4 participants, 2 still voting, Spirited Away matched, Coco is a possible match waiting for 2.",
+		variants: [
+			{ name: "Scoreboard", why: "All text: matches and possible matches as score-emoji lines. Calm, compact, and cheap to edit often.", states: TOGETHER_STATES,
+				build: (vs) => {
+					if (vs.state === "lobby") return lobbyTree();
+					if (vs.state === "decided") { const t = T.spirited; return [C([X("-# Movie night · feel-good movies · decided"), S([`# ${t.name}`, `Everyone picked it. **4 of 4** participants.`, `${scoreText(t)}  ·  ${t.year}  ·  ${rt(t.runtime)}\n{e:netflix} Streaming on **Netflix** in Germany`], Th(t.poster, `${t.name} poster`)), R(B("Open on GoodWatch", "link", { url: t.url }), B("Where to watch", "secondary", { id: "where" }))], vibe(t.score))]; }
+					return [C([togetherHead(), Sep(), X(`### Match\n{s:92} **Spirited Away**  ·  2001  ·  {e:netflix} Netflix\n-# Picked by 2 of 4`), X(`### Possible match\n{s:87} **Coco**  ·  2017  ·  {e:disney} Disney+  ·  waiting for 2`), ...togetherRows()], AMBER)];
+				} },
+			{ name: "Match posters", why: "Each match or possible match is a section with its poster, so the channel sees the films, not a list. Decided uses the OG image.", states: TOGETHER_STATES,
+				build: (vs) => {
+					if (vs.state === "lobby") return lobbyTree();
+					if (vs.state === "decided") { const t = T.spirited; return [C([X(`## Decided: ${t.name}\nEveryone picked it. **4 of 4** participants.`), G([ogItem(t)]), X(`{e:netflix} Streaming on **Netflix** in Germany`), R(B("Open on GoodWatch", "link", { url: t.url }), B("Where to watch", "secondary", { id: "where" }))], AMBER)]; }
+					return [C([togetherHead(), Sep(), S([`### Spirited Away`, `{s:92} **Excellent**  ·  2001  ·  {e:netflix} Netflix`, `**Match**  ·  picked by 2 of 4`], Th(T.spirited.poster, "Spirited Away poster")), S([`### Coco`, `{s:87} **Excellent**  ·  2017  ·  {e:disney} Disney+`, `**Possible match**  ·  waiting for 2`], Th(T.coco.poster, "Coco poster")), ...togetherRows()], AMBER)];
+				} },
+			{ name: "Poster wall", why: "Matches as one media gallery (side by side, cropped), captions below. Decided is a full backdrop announcement.", states: TOGETHER_STATES,
+				build: (vs) => {
+					if (vs.state === "lobby") return lobbyTree();
+					if (vs.state === "decided") { const t = T.spirited; return [C([G([{ url: t.backdrop, alt: `${t.name} backdrop`, shape: "wide" }]), X(`-# Movie night · decided\n# ${t.name}\n{s:${t.score}} **${label(t.score)}**  ·  ${t.year}  ·  ${rt(t.runtime)}  ·  {e:netflix} Netflix\n-# Everyone picked it. 4 of 4 participants.`), R(B("Open on GoodWatch", "link", { url: t.url }), B("Where to watch", "secondary", { id: "where" }))], vibe(t.score))]; }
+					return [C([togetherHead(), G([{ url: T.spirited.poster, alt: "Spirited Away, match" }, { url: T.coco.poster, alt: "Coco, possible match" }]), X(`**Spirited Away** · match, picked by 2 of 4\n**Coco** · possible match, waiting for 2`), ...togetherRows()], AMBER)];
+				} },
+		],
+	},
+	{
+		id: "vote", n: 6, title: "/together private voting card", cmd: "Join", replyKind: "button",
+		note: "Only the voter sees it. Each press replaces the card with the next title. Try Yep, Nope, Undo, and Leave.",
+		variants: [
+			{ name: "Poster thumbnail", why: "Compact like the title card; buttons stay in the same place for fast thumb voting on phones.", on: deckVote,
+				build: (vs) => { if (vs.left) return leftTree(); const t = DECK[(vs.i || 0) % DECK.length]; return [C([X(`-# Movie night · title ${7 + (vs.i || 0)} of 30 · your votes are private`), S([`## ${t.name}`, `${scoreText(t)}  ·  ${t.year}  ·  ${rt(t.runtime)}\n-# ${genres(t)}`, prov(t)], Th(t.poster, `${t.name} poster`)), voteRow(vs)], vibe(t.score))]; } },
+			{ name: "Big poster", why: "The poster is the card, like swiping in YepWatch; bold, but on phones the buttons sit below a tall image.", on: deckVote,
+				build: (vs) => { if (vs.left) return leftTree(); const t = DECK[(vs.i || 0) % DECK.length]; return [C([G([{ url: t.poster, alt: `${t.name} poster`, shape: "poster" }]), X(`### ${t.name}\n{s:${t.score}} **${label(t.score)}**  ·  ${t.year}  ·  ${rt(t.runtime)}  ·  ${prov(t)}\n-# Title ${7 + (vs.i || 0)} of 30 · your votes are private`), voteRow(vs)], vibe(t.score))]; } },
+		],
+	},
+	{
+		id: "write", n: 7, title: "Write confirmation with Undo", cmd: "/rate title: Project Hail Mary score: 8",
+		note: "Answers /rate, /seen, /want, and the member buttons. Undo works until the receipt expires, not just for 15 minutes.",
+		variants: [
+			{ name: "One line", why: "Three components, no container: the action is the news, Undo sits beside it.", states: WRITE_STATES, on: undo,
+				build: (vs) => vs.undone ? [S([undoneCopy[vs.state]], B("Redo", "secondary", { id: "redo" }))] : [S([`${writeCopy[vs.state]}\n-# [Open on GoodWatch](${T.phm.url})`], B("Undo", "secondary", { id: "undo" }))] },
+			{ name: "Mini title card", why: "Poster thumbnail confirms the right title at a glance; accent shows the member's score color for /rate.", states: WRITE_STATES, on: undo,
+				build: (vs) => { const t = T.phm; if (vs.undone) return [S([undoneCopy[vs.state]], B("Redo", "secondary", { id: "redo" }))]; return [C([S([`### ${writeCopy[vs.state]}`, `-# ${t.name} · ${t.year} · ${scoreText(t)} on GoodWatch`], Th(t.poster, `${t.name} poster`)), R(B("Undo", "secondary", { id: "undo" }), B("Open on GoodWatch", "link", { url: t.url }))], vs.state === "rate" ? vibe(80) : AMBER)]; } },
+		],
+	},
+	{
+		id: "link", n: 8, title: "Link prompt for guests", cmd: "/rate title: Project Hail Mary  (guest)",
+		note: "What a guest gets from a member command or /link.",
+		variants: [
+			{ name: "Inline", why: "One section, link button beside the reason. Short, not salesy.",
+				build: () => [S(["/rate needs a linked GoodWatch account.\n-# Link once to rate, log, and save titles from any server."], B("Link GoodWatch", "link", { url: LINK_URL }))] },
+			{ name: "Benefit card", why: "Amber container with three concrete benefits and the privacy line; better for /link where the person asked.",
+				build: () => [C([X("## Link GoodWatch\n- Your taste match on every title\n- Picks from your own services\n- Rate, log, and save without leaving Discord"), R(B("Link GoodWatch", "link", { url: LINK_URL })), X("-# Takes about a minute. Unlink any time with /unlink.")], AMBER)] },
+		],
+	},
+	{
+		id: "slow", n: 9, title: "Slow down", cmd: "/search title: Dune",
+		note: "Over 30 interactions a minute or 500 an hour. The time is a Discord timestamp, so it counts down in each viewer's own time.",
+		variants: [
+			{ name: "One line", why: "One text display; the relative timestamp does the work.", build: () => [X("**Slow down.** Try again {t:in 42 seconds}.")] },
+			{ name: "Quiet card", why: "Neutral grey container with the limit spelled out, so it reads as a rule, not an error.", build: () => [C([X("### Slow down\nYou can send 30 commands a minute. Try again {t:in 42 seconds}.")], "#4e5058")] },
+		],
+	},
+];
+
+// ---------- page ----------
+const LETTERS = "ABC";
+const vstate = {};
+const $ = (s, el = document) => el.querySelector(s);
+function frame(card, v, vid) {
+	const tree = v.build(vstate[vid]);
+	const reply = card.replyKind === "button"
+		? `<div class="reply"><span class="uav">A</span><span class="un">alp</span> pressed <span class="cmd">Join</span></div>`
+		: `<div class="reply"><span class="uav">A</span><span class="un">alp</span> used <span class="cmd">${esc(card.cmd.split(" ")[0])}</span></div>`;
+	const eph = card.public ? "" : `<div class="eph"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 5C5.6 5 2 12 2 12s3.6 7 10 7 10-7 10-7-3.6-7-10-7Zm0 11a4 4 0 1 1 0-8 4 4 0 0 1 0 8Z"/></svg>Only you can see this · <a data-dismiss>Dismiss message</a></div>`;
+	return { tree, html: `<div class="dc">${reply}<div class="msg"><img class="av" src="goodwatch-avatar.png" alt=""><div class="mb"><div class="hd"><span class="nm">GoodWatch</span><span class="app">APP</span><span class="ts">Today at 21:04</span></div><div class="comps">${tree.map((n) => renderNode(n, vid)).join("")}</div>${eph}</div></div></div>` };
+}
+function renderVariant(card, vi) {
+	const v = card.variants[vi]; const vid = `${card.id}-${vi}`;
+	const forced = new URLSearchParams(location.search).get("s");
+	vstate[vid] ??= { state: v.states?.some((x) => x.k === forced) ? forced : v.states?.find((x) => x.def)?.k ?? v.states?.[0].k };
+	const el = document.getElementById(vid);
+	const { tree, html } = frame(card, v, vid);
+	const { total, errs, chars } = validate(tree);
+	const flags = card.public ? 32768 : 32768 | 64;
+	el.innerHTML = `<div class="vhead"><div class="vletter">${LETTERS[vi]}</div><div><div class="vtitle">${card.n}${LETTERS[vi]} · ${esc(v.name)}</div><div class="vwhy">${esc(v.why)}</div></div></div>
+	<div class="vmeta"><span class="chip ${total <= 40 && !errs.length ? "ok" : "bad"}">components: ${total}/40</span><span class="chip">${card.public ? "public" : "ephemeral"}</span>${v.states ? `<span class="states">${v.states.map((s) => `<button data-state="${s.k}" data-v="${vid}" class="${vstate[vid].state === s.k ? "on" : ""}">${esc(s.l)}</button>`).join("")}</span>` : ""}</div>
+	${errs.length ? `<div class="errs">${errs.map(esc).join("<br>")}</div>` : ""}
+	${html}
+	<details class="payload"><summary>Discord payload (${chars} of 4000 text characters)</summary><pre>${esc(JSON.stringify({ flags, components: tree.map(payload) }, null, 2))}</pre></details>`;
+	el.querySelector("details").open = !!vstate[vid].payloadOpen;
+	el.querySelector("details").ontoggle = (e) => (vstate[vid].payloadOpen = e.target.open);
+}
+function renderAll() {
+	$("#cards").innerHTML = CARDS.map((c) => `<section class="card" id="${c.id}"><h2><span>${c.n}</span>${esc(c.title)}</h2><p class="note">${esc(c.note)} <code style="color:#a8a29e">${esc(c.cmd)}</code></p><div class="variants">${c.variants.map((_, i) => `<div class="variant" id="${c.id}-${i}"></div>`).join("")}</div></section>`).join("");
+	$("#nav").innerHTML = CARDS.map((c) => `<a href="#${c.id}">${c.n} ${esc(c.title.replace(/^\/together /, "").replace(" with Undo", ""))}</a>`).join("");
+	CARDS.forEach((c) => c.variants.forEach((_, i) => renderVariant(c, i)));
+}
+const find = (vid) => { const [cid, i] = [vid.slice(0, vid.lastIndexOf("-")), +vid.slice(vid.lastIndexOf("-") + 1)]; const card = CARDS.find((c) => c.id === cid); return { card, vi: i, v: card.variants[i] }; };
+
+let toastTimer;
+function toast(msg) { const t = $("#toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), 2200); }
+const WOULD = { where: "Would answer with every offer in Germany: stream, rent, buy", similar: "Would answer with up to 10 similar titles", share: "Would post the guest card in the channel", seen: "Would log a watch today and confirm with Undo", want: "Would toggle Want to see and confirm with Undo", join: "Would open the private voting card (see card 6)", end: "Only the starter can end the session", next: "Would load page 2", prev: "Already on page 1" };
+
+function openRateModal(onSubmit) {
+	const m = $("#modal"); let pick = 8;
+	const draw = () => {
+		m.innerHTML = `<div class="dc modal" style="padding:0"><div class="mh"><img src="goodwatch-avatar.png" alt=""><b>Rate Project Hail Mary</b></div><div class="mbody"><label>Your score</label><div class="scores">${[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((s) => `<button data-s="${s}" class="${s === pick ? "on" : ""}" style="color:${vibe(s * 10)}">${s}</button>`).join("")}</div><div class="td" style="margin-top:10px"><div class="sub">${pick} · ${LABELS[pick]}</div></div></div><div class="mf"><button class="plink" data-x>Cancel</button><button class="btn primary" data-ok>Submit</button></div></div>`;
+	};
+	draw(); m.classList.add("show");
+	m.onclick = (e) => {
+		const s = e.target.closest("[data-s]"); if (s) { pick = +s.dataset.s; draw(); return; }
+		if (e.target.closest("[data-ok]")) { m.classList.remove("show"); onSubmit(pick); toast(`Saved ${pick} · ${LABELS[pick]}. The confirmation would offer Undo.`); return; }
+		if (e.target.closest("[data-x]") || e.target === m) m.classList.remove("show");
+	};
+}
+
+document.addEventListener("click", (e) => {
+	const st = e.target.closest("[data-state]");
+	if (st) { const { card, vi } = find(st.dataset.v); Object.assign(vstate[st.dataset.v], { state: st.dataset.state, i: 0, undone: false, rated: null, left: false }); renderVariant(card, vi); return; }
+	const sel = e.target.closest("[data-sel]");
+	document.querySelectorAll(".selw.open").forEach((w) => { if (!sel || w !== sel.parentElement) w.classList.remove("open"); });
+	if (sel) { sel.parentElement.classList.toggle("open"); return; }
+	const opt = e.target.closest("[data-opt]");
+	if (opt) { toast(opt.dataset.sid === "pick" ? `Your pick: ${opt.dataset.label}. Decides when every participant picks it.` : `Would open ${opt.dataset.label} as a title card`); return; }
+	if (e.target.closest("[data-dismiss]")) { toast("Dismiss removes the ephemeral message for this person"); return; }
+	const btn = e.target.closest("button[data-act]");
+	if (btn) {
+		const vid = btn.dataset.v; const { card, vi, v } = find(vid); const act = btn.dataset.act;
+		const h = v.on?.[act];
+		if (h) { const changed = h(vstate[vid], () => renderVariant(card, vi)); if (changed) renderVariant(card, vi); return; }
+		toast(WOULD[act] || `${btn.dataset.label}`);
+	}
+});
+
+// theme + width, kept in the URL
+const params = new URLSearchParams(location.search);
+function setMode(key, val) {
+	params.set(key, val); history.replaceState(null, "", "?" + params.toString() + location.hash);
+	document.body.classList.toggle("light", params.get("theme") === "light");
+	document.body.classList.toggle("phone", params.get("w") === "phone");
+	document.querySelectorAll("#theme button").forEach((b) => b.classList.toggle("on", b.dataset.v === (params.get("theme") || "dark")));
+	document.querySelectorAll("#width button").forEach((b) => b.classList.toggle("on", b.dataset.v === (params.get("w") || "desktop")));
+}
+$("#theme").onclick = (e) => e.target.dataset.v && setMode("theme", e.target.dataset.v);
+$("#width").onclick = (e) => e.target.dataset.v && setMode("w", e.target.dataset.v);
+setMode("theme", params.get("theme") || "dark");
+setMode("w", params.get("w") || "desktop");
+renderAll();
+</script>
+</body>
+</html>
