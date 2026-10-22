@@ -4,11 +4,6 @@ on:
   workflow_dispatch:
   push:
     branches: [feat/yepwatch-shared-services]
-    paths:
-      - 'goodwatch-webapp/**'
-      - 'yepwatch-app/**'
-      - 'yepwatch-realtime/**'
-      - '.github/workflows/yepwatch-release.yml'
 
 permissions:
   contents: read
