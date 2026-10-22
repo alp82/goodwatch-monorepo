@@ -29,6 +29,7 @@ test('standalone variants coexist with development and use explicit version coun
 test('release config fails closed on local endpoints, fixtures, or unsupported versions', () => {
   assert.throws(() => configured('preview', { EXPO_PUBLIC_API_ORIGIN: 'http://127.0.0.1:15992' }), /https/);
   assert.throws(() => configured('production', { EXPO_PUBLIC_ENABLE_FIXTURES: 'true' }), /fixtures disabled/);
-  assert.throws(() => configured('production', { EXPO_PUBLIC_GUEST_ONLY: 'false' }), /guest-only/);
+  assert.equal(configured('production', { EXPO_PUBLIC_GUEST_ONLY: 'false' }).scheme, 'yepwatch');
+  assert.throws(() => configured('production', { EXPO_PUBLIC_GUEST_ONLY: 'maybe' }), /explicit guest mode/);
   assert.throws(() => configured('production', { APP_BUILD_NUMBER: '0' }), /positive integer/);
 });

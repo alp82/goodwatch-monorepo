@@ -74,6 +74,7 @@ test(
 			)
 			const operatorEnv = {
 				PATH: process.env.PATH,
+				NODE_ENV: "test" as const,
 				YEPWATCH_PROPOSAL_CRATEDB_ORIGIN: `http://127.0.0.1:${port}`,
 				YEPWATCH_PROPOSAL_CRATEDB_USERNAME: "crate",
 				YEPWATCH_PROPOSAL_SECRET: secret,
@@ -111,7 +112,7 @@ test(
 				if (
 					result.rowcount === 1 &&
 					((loseControl && stmt.startsWith("UPDATE " + CONTROL_TABLE)) ||
-						(loseRoom && stmt.startsWith("UPDATE doc.yepwatch_room_v3 SET")))
+						(loseRoom && stmt.startsWith("UPDATE doc.yepwatch_room SET")))
 				) {
 					if (stmt.startsWith("UPDATE " + CONTROL_TABLE)) loseControl = false
 					else loseRoom = false
@@ -124,7 +125,7 @@ test(
 					new CrateRoomRepository<ProposalRoom>(
 						connection,
 						secret,
-						"doc.yepwatch_room_v3"
+						"doc.yepwatch_room", true
 					),
 					proposalFixtureCatalog,
 					secret,
@@ -280,7 +281,7 @@ test(
 								new URL("./proposal-test-support.ts", import.meta.url).href
 							)});
               const sql=crateSql(input.origin,'crate','');
-              const service=new ProposalService(new CrateRoomRepository(sql,input.secret,'doc.yepwatch_room_v3'),proposalFixtureCatalog,input.secret,async()=>{},Date.now,new ReleaseControl(sql,input.policy));
+              const service=new ProposalService(new CrateRoomRepository(sql,input.secret,'doc.yepwatch_room',true),proposalFixtureCatalog,input.secret,async()=>{},Date.now,new ReleaseControl(sql,input.policy));
               const s=await service.read(input.id,input.credential);
               console.log(JSON.stringify({actor:s.own.participantId,host:s.shared.hostParticipantId,sequence:s.own.nextSequence}));
             `
@@ -328,7 +329,7 @@ test(
 			const repository = new CrateRoomRepository<ProposalRoom>(
 				sql,
 				secret,
-				"doc.yepwatch_room_v3"
+				"doc.yepwatch_room", true
 			)
 			const stored = (await repository.read(id))!,
 				dbNow = Number((await sql("SELECT CURRENT_TIMESTAMP")).rows[0][0]),

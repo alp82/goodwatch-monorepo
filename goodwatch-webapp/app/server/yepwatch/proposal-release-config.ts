@@ -1,3 +1,4 @@
+import { releaseMemberConfig } from "./proposal-release-members.ts"
 import { readFile } from "node:fs/promises"
 export type Env = Record<string, string | undefined>
 const secretNames = [
@@ -5,6 +6,7 @@ const secretNames = [
 	"YEPWATCH_PROPOSAL_GATEWAY_SECRET",
 	"YEPWATCH_PROPOSAL_CRATEDB_PASSWORD",
 	"YEPWATCH_PROPOSAL_REVISION_REDIS_URL",
+	"YEPWATCH_PROPOSAL_REDIS_PASSWORD",
 	"CRATE_PASS",
 	"REDIS_PASS",
 ] as const
@@ -110,20 +112,29 @@ export function releaseConfig(env: Env) {
 		env.YEPWATCH_PROPOSAL_ALLOWED_ORIGINS &&
 		env.YEPWATCH_PROPOSAL_ALLOWED_ORIGINS !== publicUrl.origin
 	)
-		throw new Error("Guest release allows only its public same-origin browser")
+		throw new Error("Release allows only its public same-origin browser")
 	const gatewaySecret = required(env, "YEPWATCH_PROPOSAL_GATEWAY_SECRET")
 	if (gatewaySecret.length < 32)
 		throw new Error("Gateway secret must have at least 32 characters")
-	const revisionUrl = required(env, "YEPWATCH_PROPOSAL_REVISION_REDIS_URL")
-	url(revisionUrl, ["redis:", "rediss:"])
+	const revisionUrl = env.YEPWATCH_PROPOSAL_REVISION_REDIS_URL
+	const redisNodes = env.YEPWATCH_PROPOSAL_REDIS_NODES
+		? JSON.parse(env.YEPWATCH_PROPOSAL_REDIS_NODES) as { host: string; port: number }[] : undefined
+	if (Boolean(revisionUrl) === Boolean(redisNodes)) throw new Error("Configure Redis cluster nodes or a standalone URL, not both")
+	if (revisionUrl) url(revisionUrl, ["redis:", "rediss:"])
+	if (redisNodes && (!Array.isArray(redisNodes) || !redisNodes.length || redisNodes.length > 12 || redisNodes.some(n => !n || typeof n.host !== "string" || !n.host || !Number.isInteger(n.port) || n.port < 1 || n.port > 65535))) throw new Error("Invalid Redis cluster nodes")
+	if (redisNodes && (!env.YEPWATCH_PROPOSAL_REDIS_USER || !env.YEPWATCH_PROPOSAL_REDIS_PASSWORD)) throw new Error("Shared Redis requires dedicated messaging credentials")
 	for (const name of ["CRATE_HOSTS", "REDIS_HOST", "REDIS_PORT"])
 		required(env, name)
 	return {
 		...releaseStoreConfig(env),
 		control: releaseControlConfig(env),
 		publicOrigin: publicUrl.origin,
+		member: releaseMemberConfig(env, publicUrl.origin),
 		gatewaySecret,
 		revisionUrl,
+		redisNodes,
+		redisUsername: env.YEPWATCH_PROPOSAL_REDIS_USER,
+		redisPassword: env.YEPWATCH_PROPOSAL_REDIS_PASSWORD,
 		host: env.HOST ?? "0.0.0.0",
 		port: integer(env, "PORT", 3000, 0, 65535),
 		sourceCommit: env.SOURCE_COMMIT ?? "unknown",

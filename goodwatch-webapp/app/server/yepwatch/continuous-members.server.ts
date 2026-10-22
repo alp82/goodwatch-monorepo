@@ -31,13 +31,14 @@ export interface MemberIssuer {
 	verify(token: string): Promise<{ userId: string; expiresAt: number }>
 }
 export interface MemberReads {
-	prefill(userId: string): Promise<MemberPrefill>
-	progress?(userId: string): Promise<MemberProgressResponse>
+	prefill(userId: string, accessToken?: string): Promise<MemberPrefill>
+	progress?(userId: string, accessToken?: string): Promise<MemberProgressResponse>
 }
 export interface MemberFlowConfig {
 	callbackUrl: string
 	browserOrigins: string[]
 	nativeReturnUri: string
+	nativeReturnUris?: string[]
 }
 export interface MemberIntent {
 	stateHash: string
@@ -102,7 +103,7 @@ export class ContinuousMembers {
 			)
 		else
 			requireRoom(
-				u.href === this.config.nativeReturnUri,
+				[this.config.nativeReturnUri, ...(this.config.nativeReturnUris ?? [])].includes(u.href),
 				"invalid_request",
 				"Native return destination not allowed",
 				400,
@@ -287,7 +288,7 @@ export class ContinuousMembers {
 			redirectUri: this.config.callbackUrl,
 		})
 		const grant = await this.issuer.verify(tokens.accessToken)
-		const prefill = await this.reads.prefill(grant.userId)
+		const prefill = await this.reads.prefill(grant.userId, tokens.accessToken)
 		for (let attempt = 0; attempt < 6; attempt++) {
 			const old = await this.get(id)
 			const room = structuredClone(old.room)
@@ -359,7 +360,7 @@ export class ContinuousMembers {
 			"Saved progress reader unavailable",
 			501,
 		)
-		return this.reads.progress(userId)
+		return this.reads.progress(userId, actor(room, participantId).memberGrant!.accessToken)
 	}
 	async ownProgress(id: string, participantId: string) {
 		return this.progress((await this.get(id)).room, participantId)
@@ -373,7 +374,7 @@ export class ContinuousMembers {
 		if (!p.memberGrant) return { state: "guest", prefill: null }
 		try {
 			const userId = await this.identity(room, p.id)
-			return { state: "linked", prefill: await this.reads.prefill(userId) }
+			return { state: "linked", prefill: await this.reads.prefill(userId, p.memberGrant.accessToken) }
 		} catch {
 			return { state: "unavailable", prefill: null }
 		}

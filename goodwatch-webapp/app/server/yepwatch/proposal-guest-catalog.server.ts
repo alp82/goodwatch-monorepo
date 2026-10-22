@@ -2,11 +2,14 @@ import { createContinuousCatalog } from "./continuous-catalog.ts"
 import { goodwatchCatalog, goodwatchReads } from "./goodwatch.server.ts"
 import { enrichContinuousCandidates } from "./continuous-presentation.server.ts"
 import { proposalCatalog } from "./proposal-catalog.server.ts"
-/** Guest release: existing full catalog/filter/evidence reads, no member/issuer/local-fixture module. */
-export function guestProposalCatalog() {
+import type { ContinuousMembers } from "./continuous-members.server.ts"
+import { sharedSavedContinuations } from "./continuous-saved-progress.ts"
+/** Full catalog/evidence reads, with optional remote saved progress; no issuer or local fixtures. */
+export function guestProposalCatalog(members?: ContinuousMembers) {
 	const base = createContinuousCatalog(
 		goodwatchReads,
-		goodwatchCatalog.metadata
+		goodwatchCatalog.metadata,
+		members ? { savedContinuations: async room => sharedSavedContinuations(await Promise.all(room.participants.map(p => members.progress(room, p.id)))) } : undefined
 	)
 	return proposalCatalog({
 		...base,

@@ -3,7 +3,7 @@ from pathlib import Path
 import hashlib, json, os, secrets, shutil, subprocess
 
 APP = Path(__file__).resolve().parent.parent
-BUILD = int(os.environ.get('APP_BUILD_NUMBER', '3'))
+BUILD = int(os.environ.get('APP_BUILD_NUMBER', '4'))
 assert BUILD >= 1, 'Positive APP_BUILD_NUMBER required.'
 RUN = APP / f'.expo/release/preview-r{BUILD}'
 PROJECT = RUN / 'yepwatch-app'
@@ -22,7 +22,7 @@ if not private.exists():
 credentials = json.loads(private.read_text())
 env = dict(os.environ, APP_VARIANT='preview', APP_BUILD_NUMBER=str(BUILD), EXPO_NO_DOTENV='1', CI='1',
     EXPO_PUBLIC_API_ORIGIN='https://yepwatch.com', EXPO_PUBLIC_APP_ORIGIN='https://yepwatch.com',
-    EXPO_PUBLIC_WS_ORIGIN='wss://yepwatch.com', EXPO_PUBLIC_ENABLE_FIXTURES='false', EXPO_PUBLIC_GUEST_ONLY='true',
+    EXPO_PUBLIC_WS_ORIGIN='wss://yepwatch.com', EXPO_PUBLIC_ENABLE_FIXTURES='false', EXPO_PUBLIC_GUEST_ONLY=os.environ.get('EXPO_PUBLIC_GUEST_ONLY', 'false'),
     YEPWATCH_LOCAL_PREVIEW_SIGNING='1', YEPWATCH_PREVIEW_KEYSTORE=str(SIGNING/'preview.jks'),
     YEPWATCH_PREVIEW_STORE_PASSWORD=credentials['storePassword'], YEPWATCH_PREVIEW_KEY_PASSWORD=credentials['keyPassword'],
     JAVA_HOME=str(JAVA), ANDROID_HOME=str(SDK), ANDROID_SDK_ROOT=str(SDK),

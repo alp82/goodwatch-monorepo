@@ -7,15 +7,15 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     throw new Error('APP_VARIANT must be development, preview or production.');
   if (variant === 'development') return config as ExpoConfig;
   const preview = variant === 'preview';
-  const build = Number(process.env.APP_BUILD_NUMBER ?? '3');
+  const build = Number(process.env.APP_BUILD_NUMBER ?? '4');
   if (!Number.isSafeInteger(build) || build < 1) throw new Error('APP_BUILD_NUMBER must be a positive integer.');
   for (const key of ['EXPO_PUBLIC_API_ORIGIN', 'EXPO_PUBLIC_APP_ORIGIN']) {
     if (process.env[key] !== 'https://yepwatch.com') throw new Error(`${key} must be https://yepwatch.com for release builds.`);
   }
   if (process.env.EXPO_PUBLIC_WS_ORIGIN !== 'wss://yepwatch.com' ||
       process.env.EXPO_PUBLIC_ENABLE_FIXTURES !== 'false' ||
-      process.env.EXPO_PUBLIC_GUEST_ONLY !== 'true' || process.env.EXPO_PUBLIC_DEVELOPMENT_NOTICE)
-    throw new Error('Release builds require public WSS, guest-only mode, fixtures disabled and no development notice.');
+      !['true', 'false'].includes(process.env.EXPO_PUBLIC_GUEST_ONLY ?? '') || process.env.EXPO_PUBLIC_DEVELOPMENT_NOTICE)
+    throw new Error('Release builds require public WSS, explicit guest mode, fixtures disabled and no development notice.');
   const id = preview ? 'com.yepwatch.preview' : 'com.yepwatch.app';
   return {
     ...config,

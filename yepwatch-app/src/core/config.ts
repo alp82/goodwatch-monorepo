@@ -24,5 +24,5 @@ export function continuousRealtimeUrl(path: string) {
   return `${url.origin}${path}`;
 }
 
-/** Guest-only private beta; member linking remains available in development builds. */
+/** Optional guest-only build; member-enabled releases reuse the central GoodWatch signup/login flow. */
 export const guestOnly = process.env.EXPO_PUBLIC_GUEST_ONLY === 'true';

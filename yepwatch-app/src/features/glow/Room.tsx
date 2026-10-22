@@ -750,11 +750,11 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
             <GText bold>GoodWatch connected</GText>
           ) : (
             <Pill
-              label="Sign in with GoodWatch"
+              label="Connect GoodWatch"
               disabled={memberBusy || disabled}
               onPress={() => void signin()}
             >
-              {memberBusy ? 'Connecting GoodWatch…' : 'Sign in with GoodWatch'}
+              {memberBusy ? 'Connecting GoodWatch…' : 'Connect GoodWatch'}
             </Pill>
           ))}
           {notice && (

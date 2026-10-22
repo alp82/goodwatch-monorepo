@@ -52,6 +52,27 @@
   handle @commands {
     reverse_proxy api:3000
   }
+  @member_callback {
+    method GET
+    path /api/yepwatch/v1/proposal/member/callback
+  }
+  handle @member_callback {
+    reverse_proxy api:3000
+  }
+  @member_write {
+    method POST
+    path /api/yepwatch/v1/proposal/member/start /api/yepwatch/v1/proposal/member/exchange
+  }
+  handle @member_write {
+    reverse_proxy api:3000
+  }
+  @member_read {
+    method GET
+    path_regexp member ^/api/yepwatch/v1/proposal/rooms/[A-Za-z0-9_-]{1,256}/member(/progress)?$
+  }
+  handle @member_read {
+    reverse_proxy api:3000
+  }
   @unknown_api path /api /api/*
   handle @unknown_api {
     respond "Not found" 404

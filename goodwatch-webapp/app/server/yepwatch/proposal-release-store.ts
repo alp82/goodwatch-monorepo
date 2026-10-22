@@ -1,8 +1,8 @@
 import { keyed, equal } from "./crypto.server.ts"
 import { CONTINUOUS_LIMITS } from "./continuous-types.ts"
 import { installRoomTable, type Sql } from "./repository.server.ts"
-export const RELEASE_TABLE = "doc.yepwatch_room_v3"
-export const RELEASE_CONFIG_TABLE = "doc.yepwatch_room_v3_runtime"
+export const RELEASE_TABLE = "doc.yepwatch_room"
+export const RELEASE_CONFIG_TABLE = "doc.yepwatch_runtime"
 export function storeMarker(secret: string) {
 	return keyed(secret, "proposal3-store-key", "guest-release")
 }
@@ -40,7 +40,7 @@ export async function provisionReleaseStore(
 	keyId: string,
 	secret: string
 ) {
-	await installRoomTable(sql, replicas, RELEASE_TABLE)
+	await installRoomTable(sql, replicas, RELEASE_TABLE, true)
 	await sql(
 		`CREATE TABLE IF NOT EXISTS ${RELEASE_CONFIG_TABLE} (id TEXT PRIMARY KEY,format_version INTEGER NOT NULL,key_id TEXT NOT NULL,key_check TEXT NOT NULL,room_ttl_ms BIGINT NOT NULL) CLUSTERED INTO 1 SHARDS WITH (number_of_replicas=${replicas}, "write.wait_for_active_shards"='${
 			replicas + 1

@@ -1,3 +1,4 @@
+import { createReleaseBus } from "./proposal-release-bus.ts"
 import Redis from "ioredis"
 import { loadReleaseSecrets, releaseConfig } from "./proposal-release-config.ts"
 import { crateSql } from "./repository.server.ts"
@@ -42,19 +43,14 @@ const [{ guestProposalCatalog }, { searchQuery }, cache] = await Promise.all([
 	import("../../utils/cache.ts"),
 ])
 assertNoSharedCatalogWriter(cache.getRedisCluster)
-const bus = new Redis(config.revisionUrl, {
-	lazyConnect: true,
-	connectTimeout: 2000,
-	commandTimeout: 3000,
-	maxRetriesPerRequest: 1,
-	enableOfflineQueue: false,
-})
+const bus = createReleaseBus(config)
 bus.on("error", () => {})
-await bus.connect().catch(() => {}) // A missing bus keeps readiness red and reconnects; no startup room writes.
+void bus.connect().catch(() => {}) // A missing bus keeps readiness red and reconnects; no startup room writes.
 snapshot.startTitleSnapshot()
 const runtime = createReleaseRuntime(config, {
 	sql: crateSql(config.origin, config.username, config.password),
 	catalog: guestProposalCatalog(),
+	memberCatalog: guestProposalCatalog,
 	bus,
 	snapshot: snapshot.getTitleSnapshot,
 	async catalogProbe() {
@@ -87,7 +83,7 @@ readyLog.unref()
 console.info(
 	JSON.stringify({
 		event: "yepwatch_release_listening",
-		mode: "guest",
+		mode: config.member ? "member" : "guest",
 		contractVersion: 3,
 		derivedCache: "disabled",
 		sharedCatalogWriterInitialized: false,

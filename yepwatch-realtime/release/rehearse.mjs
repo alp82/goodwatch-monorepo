@@ -50,7 +50,7 @@ const secret = async (name, value) => { const path = join(secrets, name); await 
 const nonce = () => randomBytes(32).toString('base64url')
 let started = false, browser, clients = [], proof
 const status = text => console.info(text) // Fixed summaries only; never frames, room IDs, invites or commands.
-const composeFiles = ['-f', join(release, 'compose.yaml'), '-f', join(work, 'rehearsal.yaml')]
+const composeFiles = ['-f', join(release, 'compose.isolated.yaml'), '-f', join(work, 'rehearsal.yaml')]
 async function compose(...command) { return exec('docker', ['compose', '-p', name, '--env-file', join(work, 'release.env'), ...composeFiles, ...command], { maxBuffer: 4_000_000, timeout: 180_000 }) }
 const lookup = (_host, options, callback) => options?.all ? callback(null, [{ address: '127.0.0.1', family: 4 }]) : callback(null, '127.0.0.1', 4)
 let ca

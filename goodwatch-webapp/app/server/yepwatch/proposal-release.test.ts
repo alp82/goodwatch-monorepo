@@ -193,9 +193,9 @@ test("Operator provisioning is explicit and idempotent; ordinary startup only re
 		writes = 0
 	const sql: Sql = async (stmt) => {
 		if (!stmt.startsWith("SELECT")) writes++
-		if (stmt.includes("INSERT INTO doc.yepwatch_room_v3_runtime"))
+		if (stmt.includes("INSERT INTO doc.yepwatch_runtime"))
 			installed = true
-		const rows = stmt.includes("SELECT id FROM doc.yepwatch_room_v3_runtime")
+		const rows = stmt.includes("SELECT id FROM doc.yepwatch_runtime")
 			? installed
 				? [["proposal3"]]
 				: []
@@ -233,4 +233,19 @@ test("Container listener uses configured bind/port and preserves Secure HttpOnly
 	} finally {
 		await new Promise<void>((resolve) => server.close(() => resolve()))
 	}
+})
+
+test('shared Redis uses explicit cluster nodes and separate messaging credentials', () => {
+  const input = env()
+  delete input.YEPWATCH_PROPOSAL_REVISION_REDIS_URL
+  input.YEPWATCH_PROPOSAL_REDIS_NODES = JSON.stringify([{ host: 'redis1.internal', port: 6379 }, { host: 'redis2.internal', port: 6379 }])
+  input.YEPWATCH_PROPOSAL_REDIS_USER = 'yepwatch_messaging'
+  input.YEPWATCH_PROPOSAL_REDIS_PASSWORD = 'fixture-messaging-password'
+  const config = releaseConfig(input)
+  assert.equal(config.redisNodes?.length, 2)
+  assert.equal(config.redisUsername, 'yepwatch_messaging')
+  assert.equal(config.revisionUrl, undefined)
+  assert.throws(() => releaseConfig({ ...input, YEPWATCH_PROPOSAL_REVISION_REDIS_URL: 'redis://localhost:6379' }), /not both/)
+  assert.throws(() => releaseConfig({ ...input, YEPWATCH_PROPOSAL_REDIS_PASSWORD: '' }), /dedicated/)
+  assert.throws(() => releaseConfig({ ...input, YEPWATCH_PROPOSAL_REDIS_NODES: '[{"host":"r","port":0}]' }), /Invalid/)
 })

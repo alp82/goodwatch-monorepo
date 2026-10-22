@@ -1,3 +1,5 @@
+> Current source uses shared Redis, stable table names and optional GoodWatch accounts. Follow [SHARED-SERVICES.md](SHARED-SERVICES.md). The R4 image hashes/topology below describe the preserved earlier guest release.
+
 # R4 activation handoff — prepared, not executed
 
 Accepted packaging/evidence: `c84e5e31`; API source `e96519f5`, client `932d14c0`.

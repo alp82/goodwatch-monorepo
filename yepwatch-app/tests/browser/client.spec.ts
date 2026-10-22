@@ -17,7 +17,7 @@ test('invitation intent, optional sign-in failure, browser guest admission and h
     await route.fulfill({ status, json: response, headers: { 'Access-Control-Allow-Origin': 'http://127.0.0.1:8097', 'Access-Control-Allow-Credentials': 'true' } });
   });
   await page.goto('/r/JOIN-THIS');
-  await page.getByRole('button', { name: 'Sign in with GoodWatch' }).click();
+  await page.getByRole('button', { name: 'Connect GoodWatch' }).click();
   await expect(page.getByText('GoodWatch sign-in is not connected yet.', { exact: false })).toBeVisible();
   expect(requests.find(r => r.path.endsWith('/member/start'))?.body).toEqual({ returnTo: '/r/JOIN-THIS' });
   await page.getByRole('button', { name: 'Continue as guest', exact: true }).click();

@@ -1,3 +1,5 @@
+> Superseded deployment topology: current source supports shared Redis and GoodWatch account linking, and uses stable table names. See [SCHEMA.md](SCHEMA.md) and [shared-services setup](../../../../yepwatch-realtime/release/SHARED-SERVICES.md). Earlier evidence below remains historical.
+
 # Guest-only proposal 3 private beta
 
 Prepared 2026-10-22 from clean committed `779a2752`, with read-only release r3 integrated as `d3702ac1` and separate capacity-control r4, separately from the dirty main checkout and frozen unreviewed member refresh. This is a deployable guest runtime and operator procedure, **not a production deployment or auth/retention signoff**. Hosting/container/proxy files belong to `yepwatch-realtime/release/`; no existing process, physical tester room, issuer, client registration or key is migrated by these commands.

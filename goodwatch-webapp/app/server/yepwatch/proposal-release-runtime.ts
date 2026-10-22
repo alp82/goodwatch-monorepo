@@ -1,3 +1,5 @@
+import { releaseMembers } from "./proposal-release-members.ts"
+import type { ContinuousMembers } from "./continuous-members.server.ts"
 import { ReleaseControl } from "./proposal-release-control.ts"
 import {
 	API_PREFIX,
@@ -16,6 +18,7 @@ export const RELEASE_HEALTH = {
 export interface ReleaseDependencies {
 	sql: Sql
 	catalog: ProposalCatalog
+	memberCatalog?: (members: ContinuousMembers) => ProposalCatalog
 	snapshot(): { count: number; version: string } | null
 	catalogProbe(): Promise<void>
 	bus: {
@@ -33,12 +36,15 @@ export function createReleaseRuntime(
 	const repository = new CrateRoomRepository<ProposalRoom>(
 		deps.sql,
 		config.secret,
-		"doc.yepwatch_room_v3"
+		"doc.yepwatch_room",
+		true
 	)
+	const members = config.member ? releaseMembers(repository, config.member) : undefined
+	if (members && !deps.memberCatalog) throw new Error("Member catalog adapter required")
 	const control = new ReleaseControl(deps.sql, config.control)
 	const service = new ProposalService(
 		repository,
-		deps.catalog,
+		members ? deps.memberCatalog!(members) : deps.catalog,
 		config.secret,
 		async (event) => {
 			await deps.bus.publish(REVISION_CHANNEL, JSON.stringify(event))
@@ -50,6 +56,7 @@ export function createReleaseRuntime(
 		serviceSecret: config.gatewaySecret,
 		allowedOrigins: [config.publicOrigin],
 		secureCookies: true,
+		members,
 	})
 	let draining = false
 	let initialized = false
@@ -98,7 +105,7 @@ export function createReleaseRuntime(
 			checks: { ...checks, snapshot: loaded },
 			sourceCommit: config.sourceCommit,
 			contractVersion: 3,
-			mode: "guest",
+			mode: members ? "member" : "guest",
 		}
 	}
 	async function handler(request: Request) {

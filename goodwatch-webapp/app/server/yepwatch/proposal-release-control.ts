@@ -3,7 +3,7 @@ import { RoomError, IndeterminateWrite } from "./errors.ts"
 import type { Sql } from "./repository.server.ts"
 import { CONTINUOUS_LIMITS } from "./continuous-types.ts"
 import type { ProposalRoom } from "./proposal-types.ts"
-export const CONTROL_TABLE = "doc.yepwatch_room_v3_control"
+export const CONTROL_TABLE = "doc.yepwatch_control"
 const ID = "proposal3",
 	WINDOW_MS = 60_000
 export interface ControlPolicy {
@@ -80,8 +80,8 @@ export async function provisionControl(
 		await sql(`SELECT payload FROM ${CONTROL_TABLE} WHERE id=?`, [ID])
 	).rows[0]
 	if (!existing) {
-		await sql("REFRESH TABLE doc.yepwatch_room_v3")
-		const count = (await sql("SELECT count(*) FROM doc.yepwatch_room_v3"))
+		await sql("REFRESH TABLE doc.yepwatch_room")
+		const count = (await sql("SELECT count(*) FROM doc.yepwatch_room"))
 			.rows[0]
 		if (Number(count?.[0]) !== 0)
 			throw new Error(

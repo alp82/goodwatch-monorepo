@@ -1,3 +1,5 @@
+> Current source uses shared Redis, stable table names and optional GoodWatch accounts. Follow [SHARED-SERVICES.md](SHARED-SERVICES.md). The R4 image hashes/topology below describe the preserved earlier guest release.
+
 # Backend activation handoff — prepared only, 2026-10-22
 
 No role/table/file/proxy/container mutation below has been performed. Public activation remains an owner action after final approval. Backend source `e96519f5`; exact r4 bundle is `/tmp/yepwatch-capacity-r4-20261022/bundle`, server SHA256 `6b4e21e75a5c4f91de0c646c0307d97e196349720b2ce8aefd599f3e4ff688d6`. Hosting owns exact image/config/digest and compatible client mapping.

@@ -3,12 +3,14 @@ export interface MemberIntent {
   expectedState: string;
   verifier: string;
   expiresAt: number;
+  returnUri?: string;
 }
 /** Fixed callback identity and locally retained state; neither a URL roomId nor a code establishes membership. */
 export function nativeMemberCallback(raw: string, pending: MemberIntent, now = Date.now()) {
   const url = new URL(raw);
   if (
-    url.protocol !== 'yepwatch:' ||
+    `${url.protocol}//${url.host}${url.pathname}` !== (pending.returnUri ?? 'yepwatch://auth/callback') ||
+    !['yepwatch:', 'yepwatch-preview:'].includes(url.protocol) ||
     url.hostname !== 'auth' ||
     url.pathname !== '/callback' ||
     url.hash ||
@@ -48,4 +50,10 @@ export function secureAuthorizeUrl(raw: string) {
     throw new Error('Sign-in requires a secure issuer.');
   if (url.username || url.password) throw new Error('Unexpected sign-in destination.');
   return url.href;
+}
+
+export function memberReturnUri(scheme: string | string[] | undefined) {
+  const selected = Array.isArray(scheme) ? scheme[0] : scheme;
+  if (!selected || !['yepwatch', 'yepwatch-preview'].includes(selected)) throw new Error('This app build has no configured GoodWatch return link.');
+  return `${selected}://auth/callback`;
 }

@@ -1,15 +1,16 @@
+import Constants from 'expo-constants';
 import * as Crypto from 'expo-crypto';
 import * as SecureStore from 'expo-secure-store';
 import * as WebBrowser from 'expo-web-browser';
 import { loadAccess, type RoomAccess } from '../credentials';
 import { continuousApi } from './api';
-import { nativeMemberCallback, secureAuthorizeUrl, type MemberIntent } from './member-state';
+import { memberReturnUri, nativeMemberCallback, secureAuthorizeUrl, type MemberIntent } from './member-state';
 const key = 'yepwatch.v2.member-intent';
-const callback = 'yepwatch://auth/callback';
 let exchanging: Promise<string> | null = null;
 let exchangingUrl: string | null = null;
 let completed: { callback: string; roomId: string } | null = null;
 export async function beginMember(access: RoomAccess) {
+  const callback = memberReturnUri(Constants.expoConfig?.scheme);
   const bytes = await Crypto.getRandomBytesAsync(32);
   const verifier = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
   const challenge = (
@@ -31,6 +32,7 @@ export async function beginMember(access: RoomAccess) {
     roomId: access.roomId,
     verifier,
     expectedState: result.state,
+    returnUri: callback,
     expiresAt: result.expiresAt,
   };
   await SecureStore.setItemAsync(key, JSON.stringify(pending), {

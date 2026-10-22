@@ -231,7 +231,7 @@ test('unavailable account start stays an honest guest state inside the room draw
 }) => {
   await fixture(page);
   await page.getByRole('button', { name: 'Open room', exact: true }).click();
-  await page.getByRole('button', { name: 'Sign in with GoodWatch', exact: true }).click();
+  await page.getByRole('button', { name: 'Connect GoodWatch', exact: true }).click();
   await expect(
     page
       .getByText(
@@ -259,7 +259,7 @@ test('the creator invitation survives a full navigation/reload without bearer st
   await page.getByRole('button', { name: 'Open room', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Share invitation', exact: true })).toBeEnabled();
   await expect(
-    page.getByText('http://127.0.0.1:8097/r/isolated-invite', { exact: true })
+    page.getByText(`${new URL(page.url()).origin}/r/isolated-invite`, { exact: true })
   ).toBeVisible();
 });
 
@@ -351,10 +351,10 @@ for (const viewport of [{width: 320, height: 568}, {width: 844, height: 390}, {w
     await page.screenshot({path: `artifacts/glow/layout-entry-${viewport.width}.png`});
     if (await page.getByRole('button', {name: 'More options', exact: true}).count()) {
       await page.getByRole('button', {name: 'More options', exact: true}).click();
-      await reachable('Sign in with GoodWatch');
+      await reachable('Connect GoodWatch');
       await page.getByRole('button', {name: 'Join with an invitation', exact: true}).click();
     } else {
-      await reachable('Sign in with GoodWatch');
+      await reachable('Connect GoodWatch');
       await page.getByRole('button', {name: 'Join with an invitation', exact: true}).click();
     }
     await page.getByLabel('Room code or invitation').fill('isolated-code');
