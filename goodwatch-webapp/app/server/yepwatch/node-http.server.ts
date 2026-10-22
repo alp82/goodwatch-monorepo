@@ -10,7 +10,9 @@ export function listenYepWatch(handler: (request: Request) => Promise<Response>,
       const request = new Request(`http://127.0.0.1:${address.port}${incoming.url}`, { method: incoming.method, headers: incoming.headers as Record<string, string>, ...(incoming.method !== 'GET' && incoming.method !== 'HEAD' ? { body: Readable.toWeb(incoming) as ReadableStream, duplex: 'half' } : {}) })
       const response = await handler(request)
       const headers: Record<string, string | string[]> = Object.fromEntries(response.headers)
-      const cookies = response.headers.getSetCookie()
+      // Remix's fetch polyfill exposes raw(), native Headers exposes getSetCookie().
+      const cookieHeaders = response.headers as Headers & { raw?: () => Record<string, string[]> }
+      const cookies = typeof cookieHeaders.getSetCookie === 'function' ? cookieHeaders.getSetCookie() : cookieHeaders.raw?.()['set-cookie'] ?? (cookieHeaders.get('set-cookie') ? [cookieHeaders.get('set-cookie')!] : [])
       if (cookies.length) headers['set-cookie'] = cookies
       outgoing.writeHead(response.status, headers); outgoing.end(Buffer.from(await response.arrayBuffer()))
     } catch { outgoing.writeHead(503); outgoing.end() }

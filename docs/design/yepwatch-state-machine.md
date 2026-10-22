@@ -1,76 +1,80 @@
-# YepWatch continuous choosing state machine
+# YepWatch proposal state machine
 
-2026-10-22 · Implementation agreement, contract2. The approved Glow prototype at isolated commit `7e60f253` supplies product behavior, not production state/storage. This replaces the earlier complete-round/shortlist/proposal/consent proposal. The single [domain glossary](../../CONTEXT.md) and tracking/episode ADRs remain authoritative: Yep never records a Watch; wire `pass` is Nope, not a show's Pass.
+2026-10-22 · Contract 3 implementation agreement, approved hybrid prototype `5c4e53cf`. This supersedes independent private picks **for new protocol 3 rooms**; existing contract 2 rooms keep their own behavior and namespace. The single [domain glossary](../../CONTEXT.md) and tracking/episode ADRs remain authoritative. Yep and Agree never record a Watch or change global taste/Seen/history.
 
-## Confirmed flow
+Exact portable shapes: [proposal.ts](../../goodwatch-webapp/packages/yepwatch-contracts/proposal.ts); timing/activity rules: [PROPOSAL.md](../../goodwatch-webapp/packages/yepwatch-contracts/PROPOSAL.md). API-only clients use `/api/yepwatch/v1/proposal`, separate Crate table `doc.yepwatch_room_v3`, cookie and channels. No migration or silent reinterpretation.
 
 ```mermaid
 stateDiagram-v2
     [*] --> Entry
-    Entry --> Setup: Create / join / recover own identity
-    Setup --> Choosing: Host starts with confirmed screens and readiness
+    Entry --> Setup: Create / join / recover same actor
+    Setup --> Choosing: Host starts; screens confirmed, others ready
     Choosing --> Choosing: Private Nope / Yep / undo / refill
-    Choosing --> Matches: Inspect immediate unanimous matches
-    Matches --> Matches: Set or replace own pick
-    Matches --> Choosing: Keep voting at exact prior card; pick retained
-    Matches --> Checking: All current required people hold same valid match
-    Checking --> Choosing: Roster / undo / pick change defeats stale check
-    Checking --> Matches: Fresh evidence unavailable; picks retained for repair
-    Checking --> Decided: Fresh per-screen evidence + CAS
+    Choosing --> Matches: Inspect immediate all-Yep matches
+    Matches --> Choosing: Return to exact own card
+    Matches --> Proposed: Anyone proposes current match; proposer agrees
+    Proposed --> Proposed: Replace resets approvals
+    Proposed --> Proposed: Late join retains proposal; newcomer required
+    Proposed --> Proposed: Agree / withdraw; navigation retains agreement
+    Proposed --> Choosing: Nope / undo invalidates proposal
+    Proposed --> Checking: Everyone explicitly agrees; usable screens
+    Checking --> Proposed: Roster / vote / proposal / withdrawal defeats stale CAS
+    Checking --> Proposed: Unknown / unavailable evidence; explicit retry
+    Checking --> Decided: Fresh per-screen evidence + aggregate CAS
     Decided --> Setup: Explicit host restart
+    Setup --> Expired: Authoritative deadline
+    Choosing --> Expired: Authoritative deadline
+    Proposed --> Expired: Authoritative deadline
+    Checking --> Expired: Authoritative deadline
+    Decided --> Expired: Authoritative deadline
 ```
 
-Only setup/choosing/decided are durable live phases. Matches is private navigation; checking is a durable agreement substate of choosing, not a blocking modal. New matches signal without pulling anyone out of voting. Every admitted participant counts immediately, with no invented votes, pick, readiness or progress. Disconnect/away never removes required people. No finish bar, deck-completion command, forced shortlist, proposal/consent dialog or host finalize exists in this version.
+Matches/Proposed are views or derived states inside durable `choosing`, not extra stored phases. Match signals never interrupt voting. There is no deck completion barrier, shortlist, completion bar, host-finalize dialog or automatic timeout removal.
 
-## Commands and transitions
+## Durable transitions
 
-All mutating intents have actor sequence + idempotent command ID/body. On ambiguous response retry exactly that envelope; authoritative read/CAS and retained receipts govern recovery. Known stale intents refresh before a new intent. Client and server never accept a shared event as private command acknowledgment.
+All commands use actor credentials, deterministic command IDs, monotonically increasing actor sequence and relevant state versions. Exact retries return retained receipts plus a current snapshot. Uncertain outcomes keep the same envelope for retry. A conflict requires reconciliation before a new intent; it is not permission to replay an old intent against new context.
 
-| Event / actor | Guard | Durable effect | UI / failure recovery |
+| Event / actor | Guard | Effect | UI / failure and retry |
 | --- | --- | --- | --- |
-| Create / guest | Contract2 admission, nickname, bootstrap secret | Setup room with guest movies/new shows; host identity | Country hint only; confirm actual screen services. Browser cookie/native scoped bearer. Exact admission retry; no replacement host. |
-| Join / invitee | Valid invite, capacity, recover existing credential first | Add required member immediately, no responses/pick; roster version advances, matches recompute and invalid picks clear | Joined notice; explain picks affected. Select existing couch screen or explicitly configure remote screen. No waiting-next-round fiction. Proposed closed-room admission refusal after decision, pending coordination. |
-| Setup / host | Context fence, allowed kinds/screens | Explicit screen/constraint change invalidates old generation/candidates/answers/picks; readiness clears | Setup settings explain reset. No silent widening, provider defaults or scope change. Guests cannot enable continuation. |
-| Assign screen / participant | Context fence, existing screen | Own assignment, own readiness clears; roster/context eligibility invalidates stale checks | Couch shares configured screen; mixed/remote separate contexts. All occupied screens required for evidence. |
-| Ready / participant | Own confirmed country/usable services | Only own ready changes | No guessed subscriptions. Start may explicitly ready host only. |
-| Start / host | Setup, exact roster/context, everyone ready and assigned | First verified page, generation advances, choosing begins | Loading/incomplete/known-empty stay distinguishable; failed start does not change filters or create partial state. |
-| Vote / included actor | Choosing, generation, retained candidate, own vote revision | Set watch/pass/null; immediate matches recompute against all required members; invalid picks clear | Own animation only; no public title/index/direction/value events. Match arrival never interrupts. Undo remains possible until decision. |
-| Pick / actor | Choosing, generation+roster fence, own pick revision, candidate is current match or null | Replace/clear own pick; increment own revision and agreement version | One tap; shared anonymous counts plus own pick only. Returning to exact card preserves still-valid pick. |
-| Refill / actor | Choosing, generation+stream fence, bounded capacity | Append deduped catalog candidates; retain unresolved and matched titles; bounded retention | Near-end prefetch; no invented finite seed guarantee. Exhausted, unknown and capacity recovery honest; no automatic restart. |
-| Automatic check / server | Every required member picks same still-current match | Durable agreement state checking; fresh evidence for every occupied screen; fenced CAS commits decision | No host confirmation/modal. Failed evidence records public safe code; retry repair without changing subscriptions or manufacturing episode entitlement. |
-| Join / undo / pick during check | Any valid concurrent mutation | Recompute unanimity; increment agreement fence; CAS defeats stale checker | No stale decision survives new required member or broken match. Old response cannot overwrite newer own state. |
-| Restart / host | Exact revision, live room | Explicit new setup/generation; clear answers/picks/decision, retain members/screens/settings and deadline | Destructive reset explicit; no automatic refill-as-restart. Disconnect does not remove absent members even on restart. |
-| Deadline / server or known client clock | Known expiresAt passed or HTTP410 | No more commands/read access | Terminal expired even if another request lacks cookie at known deadline. Distinct from live-room access loss/temporary offline. |
+| Create / anyone | Contract 3 bootstrap, live TTL | Host guest identity; movies + new shows defaults | Minimal lobby, no assumed services; exact lost-ack retry |
+| Join / invite holder | Live room/capacity, not already decided | Required participant immediately, zero votes/agreement, roster increments | Current proposal/approvals retained; no automatic quorum reduction |
+| Setup / host | Current context; continuation requires linked saved-progress grants | Confirm per-screen countries/services; reset generation/votes/proposal/approvals | Country hint and personal services require confirmation for actual shared screen |
+| Assign screen / own participant | Current context, known screen | Own assignment changes roster, refreshes watchability, cancels stale final check | Concurrent assignments share stable context; host context edits still fence stale confirmation |
+| Ready / own participant | Confirmed assigned screen | Own readiness only | Start explicitly expresses host readiness; never another participant's |
+| Start / host | Setup, current roster/context, usable screens, others ready | Bounded real page, choosing generation | Loading/unknown/incomplete remains uncertainty; known empty distinct; never broaden filters silently |
+| Yep / own participant | Choosing, generation, candidate, exact own vote revision | Private watch plus optional active exposure; immediate all-roster match | No navigation; own animation provisional until commit |
+| Nope / undo / own participant | Same vote fences | Private pass/null, clear timing; invalidate broken match/proposal | One Nope; own Undo restores exact card; no public direction/card identity |
+| Propose / anyone | Current generation/roster/proposal version and actual current match | New proposal version, previous title, clear approvals, proposer agrees | No public proposer identity. Same-title re-propose no-op; approval uses Agree |
+| Agree / own participant | Exact title/proposal/roster/generation/own agreement revision | Explicit own approval; unvoted newcomer gets implied Yep without timing | Shared anonymous count, own approval private; guest cannot Agree to continuation |
+| Withdraw / own participant | Same proposal fences | Clear own approval, retain Yep/time and proposal | Back/details/trailer/voting never withdraw automatically |
+| Late join during proposal | Live/capacity | Preserve proposal/approvals, add required person, cancel held checker | Pending proposal can be absent from matches; mean then null; no invented answers |
+| Newcomer undo after explicit/implied Yep | Exact own vote revision | Invalidate proposal as for original participants | Nobody finalizes against absent vote |
+| Refill / anyone | Current generation/stream and usable screens | Append unseen page; retire fully answered nonmatches except proposal/last-answer pins | Slow people pin cards; honest exhausted/incomplete/capacity, no infinite/full-catalog guarantee |
+| Final check / server | Current proposal, every required person approved and Yep, usable screens | Persist checking, fresh occupied-screen evidence, CAS Done | No host finalize. Join/undo/replacement/withdraw defeats stale CAS; unknown retains proposal |
+| Retry / participant | Exact checker and proposal versions, complete agreement | New durable checking attempt | Explicit recovery; unavailable is not a decision |
+| Restart / host | Exact room revision | New setup/context/roster/generation; clear candidates/votes/proposal | Explicit only, never automatic after no match/away |
 
-## Projections and overlays
+## Orthogonal state
 
-[Portable contract](../../goodwatch-webapp/packages/yepwatch-contracts/continuous.ts), [integration agreement](../../goodwatch-webapp/packages/yepwatch-contracts/CONTINUOUS.md).
+- **Participant:** Guest/linked member, screen, readiness, private ordered votes, private own agreement revision. Disconnect/away never removes quorum or withdraws agreement. No leave/kick/transfer UI here. Revocation retains required roster and blocks completion rather than silently reducing it.
+- **Navigation:** Entry/lobby/choosing with matches/details/trailer views and Done. Exact card remains local/private across inspection. Navigation has no durable agreement command.
+- **Connection/private sync:** Connecting/live/degraded/reconnecting is independent of phase. Shared revisioned WebSocket snapshots and private HTTP state reconcile separately. Resume gets a fresh ticket/snapshot; no normal live polling.
+- **Pending command:** One envelope stays pending while uncertain. Own optimistic motion is not committed Yep/Agree/Done. Late private responses must not overwrite newer authoritative state; client persistence is separately verified by app owner.
+- **Expiry/access loss:** `expiresAt`/410 ends room. Live unauthorized/not-found is access loss, not proof of expiry. Never silently re-admit as another actor. Logical TTL does not establish physical deletion.
 
-- Shared: room revisions, live roster/screens, common candidates, immediate matches with aggregate pick counts, agreement checking/error, committed decision. Never individual vote/pick/history, current card, participant answer count or per-person consent.
-- Own: ordered vote revisions, own one pick/revision, next unanswered candidate identity, next sequence, private account status/prefill. Client preserves exact browsing focus across matches/trailer/room drawers. No toy global state becomes authority.
-- Navigation: entry/lobby/voting/matches/details/trailer/decision. Opening/closing details/trailer never votes or changes pick. Unknown trailer/artwork/score stays honestly missing.
-- Connection: connecting/live/reconnecting/background/access lost/expired. HTTP commands + server-pushed shared revisions; reconnect snapshot and private repair. No normal polling. Missing revisions repair; old private responses cannot roll back own state at equal nextSequence.
-- Pending: idle/inflight/uncertain. Exact pending envelope blocks new ordered commands; protected reload recovery remains required, not a claim that in-memory queue is sufficient.
-- Ephemeral Glow: named neutral voting/matches/trailer/away, reach/handle/release and answer beat. Server-assigned session/actor/time, bounded rate and TTL; view renewal generates no fake pulses. No coordinates/title/index/choice/direction/red-green/pick owner leak. Own actor filtered; one disconnected session does not mark another session absent.
+## Timing, lenses and co-presence
 
-## Data and compatibility
+Quickest is the arithmetic mean of client-reported **active time to Yep** from every current required participant, only for a current all-Yep match. Missing, implied, pending newcomer or incomplete roster means null, never zero. Measure only exact foreground interactive voting card; pause for background/details/trailer/matches and uncertain commands. Integer bound 0–1,200,000 ms; overflow becomes unavailable. It is self-reported exposure, not verified human attention. Only own timing is private HTTP; only complete-roster mean is shared.
 
-New contract2 export/routes/table/processes are isolated from retained contract1 rooms and demos. No destructive migration or reinterpretation of old phases. All client access remains namespaced API only; Crate aggregate CAS/receipts are authority, Pub/Sub is an at-most-once hint. Durable pending agreement and revision repair must survive commit-before-publish/checker crashes.
+`viewingDuration` is actual movie or canonical episode runtime, otherwise null. Current adapter exposes real movie runtime, leaves episode duration null, and never uses a show average as a specific episode length. Shortest can conservatively rank movies; optional scores/genres/trailers come from real catalog reads. Dice/lenses inspect, never approve.
 
-Continuous delivery needs exact dedupe with bounded active candidates, retained seen IDs, receipts and private votes. Retire only answered nonmatches safe for every required participant; never evict a current match/pick or fabricate an answer for a slow/late member. At bounds report explicit capacity rather than lose dedupe or imply full-catalog exhaustion. Finite local real sample does not prove all-country/provider coverage. Fresh title-level evidence remains title-level for shows.
+Ephemeral named/session presence supports voting/matches/trailer/away and neutral motion. Poster inspection can name only a current shared match; lens/dice contain no candidate. It is an action pulse (1.5 seconds), never repeated by view heartbeat. A pending proposal absent from matches has no poster-target pulse. No current voting title/index, direction/value, per-person exposure, proposer, approval identity or private pick in shared/event payloads. Small-room aggregate changes can still permit social inference.
 
-Optional member login/prefill/saved-history continuation is included work. Reuse GoodWatch central issuer/accounts and read methods; cookies do not cross unrelated domains. Until the real issuer linkage is runnable, status is honest unavailable and guest movies/new shows remain usable. Manual history never substitutes. Future continuation reconciles canonical saved tracking with explicit rewind/spoiler disagreement rather than choosing a person's progress silently; episode presentation preserves identity.
+## Availability and member compatibility
 
-## Verification scenarios for the real implementation
+Each occupied viewing screen confirms its country/usable services; couch participants share that context. Different screens may use different providers. Full GoodWatch coverage is intent, not proof every offer/entitlement is known. Fresh show title evidence remains title-scoped and cannot prove individual episode entitlement. Unknown/stale and known-empty remain distinct.
 
-1. Two independent users Yep one title: immediate match without navigation; votes on other titles continue.
-2. Picks differ, replace one, all agree: automatic fresh-evidence decision, no host command. Own pick survives return to exact card.
-3. Hold final evidence; late join or undo or pick replacement commits: stale final CAS loses. Newcomer has no votes and immediately counts.
-4. Disconnect/away before voting or picking: quorum unchanged; no timeout exclusion.
-5. Multiple refill callers, retries/lost acknowledgments: one append, no duplicate title, bounded state; honest incomplete/end/capacity results.
-6. Unknown/stale/no matching offer and multi-country screens: no hidden provider/filter changes, no title-to-episode entitlement invention.
-7. Real Crate insert/read/CAS, lost write acknowledgment, API/store restart and pending-agreement/revision repair; independent clients/tickets and strict privacy projection.
-8. Valid/expired/replayed tickets, missing access, terminal expiry, per-session activity rate/TTL and background resume.
-9. Browser/native guest -> real GoodWatch member retains same actor; private prefill only; saved progress source verified and manual input rejected.
+Guests use movies/new shows. Continuation uses exact-common canonical next episodes from signed-in GoodWatch saved tracking through existing reads, never manual history or a silent rewind. Missing/disagreeing saved progress stays conservative. The handler accepts the established member module with an explicitly configured protocol 3 callback. The isolated guest runner does not register clients/reseed identity; its member entry is honestly unconfigured until separate callback configuration is authorized.
 
-Implementation/test results belong in backend runbooks and review evidence. This spec records current confirmed behavior and flags proposed resource/leave/revoke/post-decision policies; it does not claim those tests or production release are already complete.
+Functional tests/run results and exact runtime evidence are recorded in [PROPOSAL-RUNBOOK.md](../../goodwatch-webapp/app/server/yepwatch/PROPOSAL-RUNBOOK.md). App/gateway own connected browser/Android evidence; an Android build is not physical-device proof.

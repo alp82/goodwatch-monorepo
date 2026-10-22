@@ -5,7 +5,8 @@
   "type": "module",
   "exports": {
     ".": "./index.ts",
-    "./continuous": "./continuous.ts"
+    "./continuous": "./continuous.ts",
+    "./proposal": "./proposal.ts"
   },
   "types": "./index.ts"
 }
