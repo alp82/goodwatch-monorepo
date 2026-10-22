@@ -179,7 +179,7 @@ export function Remote({
 		>
 			<div
 				className="remote-body relative flex flex-col px-5 pb-6 pt-4"
-				style={{ minHeight: REMOTE_H }}
+				style={{ height: REMOTE_H }}
 			>
 				<div className="flex w-full items-center justify-between">
 					<button

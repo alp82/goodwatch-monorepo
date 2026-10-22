@@ -18,13 +18,48 @@ const rendered = JSON.parse(
 const ids = (html: string) =>
 	[...html.matchAll(/data-tv-item="([^"]+)"/g)].map((m) => m[1])
 const H1 = "Let&#x27;s find something good to watch next."
+/**
+ * The items a page of a screen draws: the machine's, in its order (on the phone a page of them, 2026-10-22), and
+ * page arrows (`jump:<item>`) to items of the screen that the page doesn't draw.
+ */
+function assertPageOf(html: string, items: readonly string[]) {
+	const drawn = ids(html)
+	const own = drawn.filter((id) => !id.startsWith("jump:"))
+	assert.deepEqual(
+		own,
+		items.filter((id) => own.includes(id)),
+		"in the machine's order",
+	)
+	for (const id of own) assert.ok(items.includes(id), id)
+	for (const id of drawn.filter((one) => one.startsWith("jump:"))) {
+		const target = id.slice("jump:".length)
+		assert.ok(items.includes(target) && !own.includes(target), id)
+	}
+	return { own, drawn }
+}
+
 test("members get Start in both editions, with no home taste duplication", () => {
-	for (const { html, items } of Object.values(rendered)) {
-		assert.deepEqual(ids(html), items)
+	for (const [name, { html, items }] of Object.entries(rendered)) {
+		const phone =
+			items.at(-2) === "nav:home" &&
+			items.at(-1) === "bar:menu" &&
+			!items.includes("nav:tonight")
+		if (phone) {
+			// The phone's Start pages (2026-10-22): Watch next and four tiles first, an arrow to Your taste, My shows
+			// and What is GoodWatch?.
+			const { drawn } = assertPageOf(html, items)
+			assert.ok(drawn.includes("jump:start:taste"), name)
+		} else assert.deepEqual(ids(html), items)
 		// The start page's H1 stays, read out but not drawn.
 		assert.ok(html.includes(`<h1 class="sr-only">${H1}</h1>`))
-		for (const name of ["Watch next", "Discover", "Search", "Taste", "Your taste", "My shows"])
-			assert.ok(html.includes(`>${name}<`), name)
+		for (const word of [
+			"Watch next",
+			"Discover",
+			"Search",
+			"Taste",
+			...(phone ? [] : ["Your taste", "My shows"]),
+		])
+			assert.ok(html.includes(`>${word}<`), word)
 		assert.ok(
 			!/home-side:|watch-next:|Loved b|Dark, tense crime|app:explorer/.test(
 				html,
@@ -82,9 +117,18 @@ test("on the phone the Popular fan ends above the tile's name", () => {
 	const tileH = Number(/style="height:(\d+)px"/.exec(tile)?.[1])
 	const fanTop = Number(/absolute flex right-\d top-(\d+)/.exec(tile)?.[1]) * 4
 	const posterH = Number(/h-\[(\d+)px\] w-\[\d+px\]/.exec(tile)?.[1])
-	assert.ok(tileH > 0 && posterH > 0 && fanTop > 0, `${tileH} ${fanTop} ${posterH}`)
-	// The name and its line at the tile's bottom: 16 px of padding, 24 px type and 16 px type with their leading.
-	const nameTop = tileH - (16 + 30 + 23)
+	assert.ok(
+		tileH > 0 && posterH > 0 && fanTop > 0,
+		`${tileH} ${fanTop} ${posterH}`,
+	)
+	// The name at the tile's bottom (2026-10-22, the 480 x 270 canvas): 8 px of padding and 19 px type with its
+	// leading; the line under it is read out, not drawn.
+	assert.match(tile, /text-\[19px\]">Popular</)
+	assert.match(tile, /sr-only">Titles many people watch</)
+	const nameTop = tileH - (8 + 24)
 	// A poster turned by 7 degrees reaches a little lower: 4 px at these sizes.
-	assert.ok(fanTop + posterH + 4 <= nameTop, `the fan ends at ${fanTop + posterH + 4}, the name starts at ${nameTop}`)
+	assert.ok(
+		fanTop + posterH + 4 <= nameTop,
+		`the fan ends at ${fanTop + posterH + 4}, the name starts at ${nameTop}`,
+	)
 })

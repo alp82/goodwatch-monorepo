@@ -9,6 +9,7 @@ import {
 	CornerBar,
 	ExpandCorner,
 	Layer,
+	PHONE_HEAD,
 	Shade,
 	type TvView,
 	TvViewProvider,
@@ -192,6 +193,16 @@ export function TvScreen({
 		? `nav:${screen.name === "home" ? "home" : screen.name}`
 		: null
 	const { member } = ctx
+	// The phone's header says the screen's name; a member's home is Start, and a service's screen its name.
+	const screenName =
+		screen.name === "home"
+			? member
+				? "Start"
+				: "Home"
+			: screen.name === "service"
+				? (services?.tiles.find((tile) => tile.service.id === screen.service)
+						?.service.name ?? SCREEN_NAME.service)
+				: SCREEN_NAME[screen.name]
 	const under = useMemo<TvView>(
 		() => ({
 			canvas,
@@ -204,8 +215,10 @@ export function TvScreen({
 			ringOff,
 			byPointer,
 			unpoint,
+			screenName,
 		}),
 		[
+			screenName,
 			canvas,
 			screenFocus,
 			dispatch,
@@ -229,15 +242,20 @@ export function TvScreen({
 			member,
 			ringOff,
 			unpoint,
+			screenName: "Menu",
 		}),
 		[canvas, focused, dispatch, menuHere, member, ringOff, unpoint],
 	)
-	// A screen arrives with a short zoom out of the picture. The screen the TV starts on is there at once.
-	// Discover's tabs are one screen: a change of tab is no arrival.
+	// A screen arrives with a short fade. The screen the TV starts on is there at once. Discover's tabs are one
+	// screen: a change of tab is no arrival. Nor is another pick on Watch next or Popular: the pick follows the
+	// focus, so a pointer moving over the posters changed it with every poster, and the whole screen came anew and
+	// flickered (the owner, 2026-10-22).
 	const key = writeTvParams(
 		screen.name === "discover" && !screen.choice
 			? { ...screen, tab: "moods" }
-			: screen,
+			: screen.name === "tonight" || screen.name === "popular"
+				? { ...screen, pick: 0 }
+				: screen,
 	).toString()
 	const arrived = useRef({ first: key, moved: false })
 	if (key !== arrived.current.first) arrived.current.moved = true
@@ -255,7 +273,7 @@ export function TvScreen({
 	// (`data-tv-toast`; kit.tsx's Frame and the home's wordmark listen). It ends before the bar's keys, which are
 	// three touch targets on the phone. The menu lies over everything: while it is open there is no toast.
 	const says = state.power === "on" && !state.menuOpen ? toast : null
-	const toastWidth = phone ? canvas.w - 72 - 3 * keySize(canvas, 54) : 640
+	const toastWidth = phone ? canvas.w - 40 - 2 * keySize(canvas, 54) : 640
 	return (
 		<div
 			className="tvc absolute inset-0 overflow-hidden"
@@ -318,13 +336,22 @@ export function TvScreen({
 			</div>
 			{says && (
 				<div
-					className={`pointer-events-none absolute left-0 top-0 z-30 flex items-center ${phone ? "h-[78px] pl-5" : "h-[108px] pl-14"}`}
-					style={{ maxWidth: toastWidth }}
+					// In the header's row, at the screen's name: between the G and Menu on the phone, where it covers no key.
+					className={
+						phone
+							? "pointer-events-none absolute top-0 z-30 flex items-center"
+							: "pointer-events-none absolute left-0 top-0 z-30 flex items-center h-[108px] pl-14"
+					}
+					style={
+						phone
+							? { left: keySize(canvas, 54) + 22, height: PHONE_HEAD, maxWidth: toastWidth }
+							: { maxWidth: toastWidth }
+					}
 				>
 					<output
 						className={
 							phone
-								? "tvc-toast rounded-[22px] px-4 py-2 text-[20px] leading-tight"
+								? "tvc-toast truncate rounded-[22px] px-4 py-2 text-[19px] leading-tight"
 								: "tvc-toast"
 						}
 					>

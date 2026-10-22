@@ -19,12 +19,18 @@ import {
 	useLayoutEffect,
 	useRef,
 	useState,
+	useSyncExternalStore,
 } from "react"
+import { useInRouterContext, useLocation } from "@remix-run/react"
 import { GoodWatchG, GoodWatchWordmark } from "~/ui/brand/GoodWatchWordmark"
+import { TrailerMark } from "~/ui/details/hero/trailer-mark"
 import { ICON, Icon } from "../Remote"
 import type { TvCanvas } from "./room-tv"
+import { listKeys, tabListMemory } from "./focus-memory"
+import { PHONE_TV_CANVAS } from "./room-layout"
+import { fitCount, pageAt } from "./screens/phone-paging"
 import { TV_ITEM_ATTR, TV_LAYER_ATTR, bringIntoView } from "./tv-dom"
-import type { TvAction } from "./tv-machine"
+import { type TvAction, jumpItem, jumpTarget } from "./tv-machine"
 
 /** What a screen knows about the TV it is drawn on. */
 export type TvView = {
@@ -46,6 +52,8 @@ export type TvView = {
 	byPointer?: boolean
 	/** The mouse left an item. */
 	unpoint?: (id: string) => void
+	/** The screen's name, as the phone's header shows it ("Watch next"). */
+	screenName?: string
 }
 
 const ViewContext = createContext<TvView | null>(null)
@@ -57,7 +65,37 @@ export function useTvView(): TvView {
 	return view
 }
 
-/** The phone edition: its canvas is 500 wide and its bar's keys are icons. */
+/**
+ * The phone's header, in canvas pixels: the white G, the screen's name and Menu (`PhoneHeader`). A phone screen
+ * draws under it, in the 480 x 270 canvas's remaining 204 px, and nothing on it scrolls: a list pages by its
+ * arrows (`usePage`, `PageArrow`).
+ */
+export const PHONE_HEAD = 66
+/** The phone screen's content box under the header: its sides and its bottom margin, in canvas pixels. */
+export const PHONE_SIDE = 16
+export const PHONE_FOOT = 10
+
+/**
+ * The width a phone screen's content has: the canvas less its sides. 448 upright; on its side the canvas is as wide
+ * as the TV is (room-layout.ts, 480 to 810), and so is this.
+ */
+export const phoneSpan = (canvas: Pick<TvCanvas, "w">) => canvas.w - 2 * PHONE_SIDE
+
+/**
+ * How many of a phone row's items show: `base` on the upright canvas, one more for every `step` canvas px the
+ * canvas is wider, and never more than `most`. The upright phone keeps exactly what it drew before.
+ */
+export function phoneFit(
+	canvas: Pick<TvCanvas, "w" | "edition">,
+	base: number,
+	step: number,
+	most: number,
+): number {
+	if (canvas.edition !== "phone") return base
+	return fitCount(canvas.w, base, step, most, PHONE_TV_CANVAS.w)
+}
+
+/** The phone edition: its canvas is 480 x 270 (wider on its side) and its bar's keys are icons. */
 export const usePhone = () => useTvView().canvas.edition === "phone"
 
 /** The smallest side of a touch target, in pixels of the phone's screen. */
@@ -213,10 +251,10 @@ export function Item({
  * depend on the window's size: the first paint draws it before anything is measured, and hydration keeps its file.
  */
 export function backdropSize(canvas: TvCanvas, width = canvas.w): string {
-	return canvas.edition === "desktop" &&
-		(width >= canvas.w || width * canvas.scale >= 900)
-		? "w1280"
-		: "w780"
+	if (canvas.edition === "phone")
+		// A phone on its side draws its wide canvas larger than the file of 780 (2026-10-22): the next file up.
+		return !canvas.first && width * canvas.scale > 780 ? "w1280" : "w780"
+	return width >= canvas.w || width * canvas.scale >= 900 ? "w1280" : "w780"
 }
 
 export function Img({
@@ -398,6 +436,7 @@ export function Bar({
 /** Where a screen without a `Frame` puts the bar: the picture's top right corner, or the navigation along the top. */
 export function CornerBar({ items }: { items: readonly string[] }) {
 	const P = usePhone()
+	if (P) return <PhoneHeader items={items} />
 	if (items.includes("nav:home")) return <NavBar items={items} />
 	return (
 		<Bar
@@ -424,6 +463,7 @@ const NAV_TABS: Record<string, { label: string; short?: string }> = {
 export function NavBar({ items }: { items: readonly string[] }) {
 	const { canvas, here, member } = useTvView()
 	const P = canvas.edition === "phone"
+	if (P) return <PhoneHeader items={items} />
 	const side = keyLength(canvas, P ? 54 : 56)
 	return (
 		<nav
@@ -476,6 +516,225 @@ export function NavBar({ items }: { items: readonly string[] }) {
 				</Item>
 			)}
 		</nav>
+	)
+}
+
+/**
+ * The phone's header on every screen (the owner, 2026-10-22): the white G, which returns to Start (Home for a
+ * guest), the screen's name, and Menu, which lists every TV screen. No tabs: they crowded a phone's width. Back
+ * is the Remote's.
+ */
+export function PhoneHeader({
+	items,
+	name,
+	mark,
+}: {
+	items: readonly string[]
+	/** The screen's name; the screen's own from the TV (`screenName`) when there is none. */
+	name?: string
+	/** What stands before the name: a service's mark. */
+	mark?: ReactNode
+}) {
+	const { canvas, here, member, screenName } = useTvView()
+	const side = keyLength(canvas, 54)
+	const words = name ?? screenName ?? ""
+	// Both keys are every phone screen's (tv-machine.ts, `navItems`). Before the window is measured the screen is
+	// drawn with the desktop's items, and the header already has them: nothing appears once the phone is known.
+	void items
+	return (
+		<nav
+			aria-label="TV"
+			className="absolute inset-x-0 top-0 z-10 flex items-center gap-3 px-3"
+			style={{ height: PHONE_HEAD }}
+		>
+			<Item
+				id="nav:home"
+				label={member ? "Start" : "Home"}
+				pressed={here === "nav:home"}
+				className={`tvc-act flex shrink-0 items-center justify-center ${here === "nav:home" ? "tvc-here" : ""}`}
+				style={{ width: side, height: side }}
+			>
+				<GoodWatchG height={26} />
+			</Item>
+			{/* The toast takes this place while it shows (TvScreen.tsx). */}
+			<div className="flex min-w-0 flex-1 items-center gap-2.5 transition-opacity [[data-tv-toast]_&]:opacity-0">
+				{mark}
+				{/* A long name (a title's) takes two lines at a smaller size rather than losing its end. */}
+				<span
+					className={`font-bold ${words.length > 24 ? "line-clamp-2 text-[18px] leading-[1.1]" : "truncate text-[23px] leading-tight"}`}
+				>
+					{words}
+				</span>
+			</div>
+			<Item
+				id="bar:menu"
+				label="Menu"
+				className="tvc-act flex shrink-0 items-center justify-center"
+				style={{ width: side, height: side }}
+			>
+				<Icon d={MENU_ICON} className="h-[26px] w-[26px]" />
+			</Item>
+		</nav>
+	)
+}
+
+// ---------------------------------------------------------------------------------------------------------
+// Pages: a phone's list shows a page at a time, with an arrow to either side. Nothing scrolls.
+
+/**
+ * The page of `ids` a phone list shows: the one with the focus, else the one it showed last (the focus went to an
+ * arrow, the header or a key). The arrows move the focus to the first item of the next page or to the last one of
+ * the page before (`jump:<item>`, tv-machine.ts), and the page follows the focus.
+ */
+export function usePage(
+	ids: readonly string[],
+	per: number,
+	/**
+	 * The item the list's page holds while the focus is outside it and nothing on this mount set the page yet: what
+	 * the screen's navigation state names (Popular's pick in the address, `useListAnchor`). Back from Details returns
+	 * the focus to Details and draws the screen anew; the page comes back with it.
+	 */
+	anchor?: string | null,
+) {
+	const { focused } = useTvView()
+	// The item the page was set by on this mount; the page follows it, so a page size that changes with the window
+	// (a phone turned on its side) keeps the same item in view.
+	const last = useRef<string | null>(null)
+	if (ids.includes(focused)) last.current = focused
+	return pageAt(ids, per, last.current && ids.includes(last.current) ? last.current : anchor)
+}
+
+/**
+ * The places a list is remembered under, each the list's own (`owner`): its history entry, and the list's own
+ * address (the TV's address without the filters step and the focus), which a step that takes the entry's place
+ * keeps (Filters, then Done). The filter grid of that step is another list under the same address: with its own
+ * name it never takes the results' place (Standards, 2026-10-22). A changed filter changes the address, so the
+ * results start again at their first page.
+ */
+const useEntry = (owner: string): readonly string[] =>
+	listKeys(owner, useLocation())
+const noEntry = (_owner: string): readonly string[] => []
+const noSubscription = () => () => {}
+
+/**
+ * A list's place under the history entry on show (focus-memory.ts, `tabListMemory`): the list's item that had the
+ * focus last on this entry, remembered as it changes, so a list drawn anew (Back from Details, from a real page)
+ * finds its page and its picture again. Null where nothing is remembered, or outside a router (a screen drawn by
+ * itself, in the tests). A component is always drawn inside a router or always outside one, so the hooks keep their
+ * order.
+ */
+export function useListAnchor(
+	/** Which list of the screen: its place is its own, never another list's under the same address. */
+	owner: string,
+	ids: readonly string[],
+): string | null {
+	const { focused } = useTvView()
+	const [entry, list] = (useInRouterContext() ? useEntry : noEntry)(owner)
+	const memory = () => tabListMemory()
+	// Read after hydration only (the server knows no tab's memory), so the server's HTML and the first render agree.
+	const byEntry = useSyncExternalStore(
+		noSubscription,
+		() => (entry ? memory().recall(entry) : null),
+		() => null,
+	)
+	const byList = useSyncExternalStore(
+		noSubscription,
+		() => (list ? memory().recall(list) : null),
+		() => null,
+	)
+	const on = ids.includes(focused)
+	useEffect(() => {
+		if (!on) return
+		if (entry) memory().remember(entry, focused)
+		if (list) memory().remember(list, focused)
+	}, [entry, list, on, focused])
+	return [byEntry, byList].find((one) => one && ids.includes(one)) ?? null
+}
+
+const CHEVRON = { prev: "M15 5l-7 7 7 7", next: "M9 5l7 7-7 7" }
+
+/**
+ * A page arrow: a round key with a chevron, or its place kept empty at the list's end, so nothing shifts. `to` is
+ * the arrow's item from `usePage`.
+ */
+export function PageArrow({
+	to,
+	dir,
+	label,
+	size,
+	className = "",
+}: {
+	to: string | null
+	dir: "prev" | "next"
+	/** What a screen reader hears: "Next titles". */
+	label: string
+	/** Its side; a key's height on this canvas by default. */
+	size?: number
+	className?: string
+}) {
+	const { canvas } = useTvView()
+	const side = size ?? keySize(canvas, 54)
+	if (!to)
+		return <span aria-hidden className={`block shrink-0 ${className}`} style={{ width: side, height: side }} />
+	return (
+		<Item
+			id={to}
+			label={label}
+			className={`tvc-btn tvc-arrow flex shrink-0 items-center justify-center ${className}`}
+			style={{ width: side, height: side }}
+		>
+			<svg viewBox="0 0 24 24" aria-hidden="true" className="h-[26px] w-[26px]" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
+				<path d={CHEVRON[dir]} />
+			</svg>
+		</Item>
+	)
+}
+
+/** Where a phone list is: "2 / 5", in quiet type. Nothing where it has one page. */
+export function PageCount({ page, pages, className = "" }: { page: number; pages: number; className?: string }) {
+	if (pages < 2) return null
+	return (
+		<span className={`shrink-0 text-[17px] font-semibold tabular-nums text-white/60 ${className}`}>
+			<span className="sr-only">Page </span>
+			{page + 1} / {pages}
+		</span>
+	)
+}
+
+/** Whether an item is a page arrow, and where it leads. */
+export { jumpItem, jumpTarget }
+
+// ---------------------------------------------------------------------------------------------------------
+// Keys in the site's own looks.
+
+/**
+ * The Trailer key: the title page's Trailer button at TV size, a white pill with the red play mark
+ * (ui/details/hero/trailer-mark.tsx). The focus rings it; it never grows.
+ */
+export function TrailerKey({
+	label = "Trailer",
+	says,
+	height,
+	className = "",
+	id = "trailer",
+}: {
+	label?: string
+	says?: string
+	height: number
+	className?: string
+	id?: string
+}) {
+	const P = usePhone()
+	return (
+		<Item
+			id={id}
+			label={says ?? label}
+			className={`tvc-btn tvc-trailer flex shrink-0 items-center whitespace-nowrap ${P ? "gap-2 pl-2 pr-4 text-[19px]" : "gap-3 pl-3 pr-6 text-[23px]"} ${className}`}
+			style={{ height }}
+		>
+			<TrailerMark size={P ? 32 : 40} />
+			{label}
+		</Item>
 	)
 }
 
@@ -628,17 +887,16 @@ export function Frame({
 					style={{ background: edge }}
 				/>
 			)}
-			{/* On the phone the content scrolls when a short picture can't hold it (living-room.css): the keys stay
-			    touch targets and the posters keep a size, and a finger or the focus brings the rest into view. */}
+			{/* On the phone the content fits the box under the header: nothing scrolls, a list pages (`usePage`). */}
 			<div
-				{...(P ? { "data-tv-scroll": "" } : {})}
-				className={`absolute inset-x-0 bottom-0 ${P ? "top-[78px] overflow-hidden px-5 pb-5" : `top-[108px] px-14 ${reserve ? "pb-[120px]" : "pb-10"}`}`}
+				className={`absolute inset-x-0 bottom-0 ${P ? "overflow-hidden" : `top-[108px] px-14 ${reserve ? "pb-[120px]" : "pb-10"}`}`}
+				style={P ? { top: PHONE_HEAD, paddingLeft: PHONE_SIDE, paddingRight: PHONE_SIDE, paddingBottom: PHONE_FOOT } : undefined}
 			>
 				{/* The navigation takes the bar's place, so the crumb stands over the content. */}
-				{nav && crumb ? (
+				{(nav || P) && crumb ? (
 					<div className="flex h-full flex-col">
 						<div
-							className={`shrink-0 truncate leading-tight text-white/70 ${P ? "pb-1.5 text-[18px]" : "-mt-2 pb-2 text-[21px]"}`}
+							className={`shrink-0 truncate leading-tight text-white/70 ${P ? "pb-1.5 text-[17px]" : "-mt-2 pb-2 text-[21px]"}`}
 						>
 							{crumb}
 						</div>
@@ -651,7 +909,9 @@ export function Frame({
 			{!(P && inlineExpand) && <ExpandCorner items={items} />}
 			{/* The bar is last in the markup, as in `tvItems`: the items are met in reading order. A screen with the
 			    navigation shows it in the bar's place, and its name is the marked tab. */}
-			{nav ? (
+			{P ? (
+				<PhoneHeader items={items} name={name} mark={mark} />
+			) : nav ? (
 				<NavBar items={items} />
 			) : (
 			<div

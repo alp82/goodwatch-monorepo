@@ -73,17 +73,16 @@ test("the room's HTML is the same on every render and holds nothing that depends
 		"tvr-f-phand",
 	])
 		assert.equal(count(room, `${part}"`) + count(room, `${part} `), 1, part)
-	// The phone's Remote in both its forms, each by itself.
+	// The phone's Remote: held, its one form (2026-10-22).
 	assert.equal(count(room, 'data-tvr-form="hand"'), 1)
-	assert.equal(count(room, 'data-tvr-form="table"'), 1)
+	assert.equal(count(room, 'data-tvr-form="table"'), 0)
 	assert.equal(count(room, 'data-phone-remote="hand"'), 1)
-	assert.equal(count(room, 'data-phone-remote="table"'), 1)
-	assert.equal(count(room, "tvr-f-premote"), 2)
+	assert.equal(count(room, "tvr-f-premote"), 1)
 	// The phone Remote's printed words: each key has its own name, so a screen reader does not hear it twice.
 	const words = [...room.matchAll(/<span[^>]*text-\[8px\][^>]*>/g)].map(
 		(m) => m[0],
 	)
-	assert.equal(words.length, 8)
+	assert.equal(words.length, 4)
 	for (const word of words) assert.match(word, /aria-hidden="true"/)
 	// Each photo asks for nothing where the other room is drawn: the desktop's once, the phone's twice.
 	assert.equal(
@@ -125,12 +124,12 @@ test("living-room.css's first paint seats the room where the layouts do, at ever
 	assert.match(first, /--f-tvw: calc\(var\(--f-w\) - 2 \* var\(--f-pad\)\);/)
 	assert.match(
 		first,
-		/--f-fit: clamp\(0px, \(var\(--f-under\) - 252\.08px\) \* 10000 \+ 1px, 1px\)/,
+		/--f-fit: clamp\(0px, \(var\(--f-under\) - 280\.6px\) \* 10000 \+ 1px, 1px\)/,
 	)
 	assert.match(first, /--f-rl: calc\(var\(--f-w\) \/ 2 - 156 \* var\(--f-r\)\)/)
 	assert.match(
 		first,
-		/--f-height: max\(var\(--f-h\), var\(--f-rt\) \+ 548 \* var\(--f-r\) \+ 8px\)/,
+		/--f-height: max\(var\(--f-h\), var\(--f-rt\) \+ 610 \* var\(--f-r\) \+ 8px\)/,
 	)
 	assert.match(
 		css,
@@ -144,11 +143,11 @@ test("living-room.css's first paint seats the room where the layouts do, at ever
 			const tvw = w - 2 * pad(w)
 			const tvh = tvw / 1.851515151515
 			const under = h - tvt - tvh + 18 - 8
-			const fit = Math.min(1, Math.max(0, (under - 252.08) * 10000 + 1))
+			const fit = Math.min(1, Math.max(0, (under - 280.6) * 10000 + 1))
 			const free = Math.min(0.68, Math.max(0.5, h / 1800))
-			const r = free + (Math.min(0.8, under / 548) - free) * fit
-			const rt = tvt + tvh - 18 + (h - 8 - 548 * r - tvt - tvh + 18) * fit
-			const height = Math.max(h, rt + 548 * r + 8)
+			const r = free + (Math.min(0.8, under / 610) - free) * fit
+			const rt = tvt + tvh - 18 + (h - 8 - 610 * r - tvt - tvh + 18) * fit
+			const height = Math.max(h, rt + 610 * r + 8)
 			const L = layoutRoom(w, h)
 			const at = `${w} x ${h}`
 			assert.ok(
@@ -173,94 +172,83 @@ test("living-room.css's first paint seats the room where the layouts do, at ever
 				`${at}: the content's height`,
 			)
 		}
-	// The phone upright: the forms in the hand from 385 px over the picture's full height, and the held Remote's
-	// spare height over it but for a grip of 40 of its pixels.
-	for (const [w, h] of [
-		[390, 686.67],
-		[360, 661.67],
-		[767, 1001],
-	])
-		assert.equal(
-			layoutPhoneRoom(w, h, 60).form,
-			h - 385 >= (w - 28) / 1.2 ? "hand" : "table",
+	// Both phone rooms (2026-10-22), as written there: a 16:9 TV under the reserve, the phone's fixed canvas, the
+	// held Remote lower where the room is taller than it needs, its palm at the body's end.
+	assert.match(
+		css,
+		/--f-ph: max\(60px, min\(\(var\(--f-w\) - 28px\) \* 0\.5625, var\(--f-av\) - 105px\)\);/,
+	)
+	assert.match(
+		css,
+		/--f-u: max\(1px, min\(1\.3px, var\(--f-w\) \* 0\.68 \/ 236, \(var\(--f-av\) - 18px\) \/ 288\)\);/,
+	)
+	assert.match(
+		css,
+		/--f-pt: max\(var\(--f-ph\) \+ 41px, var\(--f-av\) - 10px - 388 \* var\(--f-u\)\);/,
+	)
+	assert.match(
+		css,
+		/top: calc\(var\(--f-pt\) \+ 388 \* var\(--f-u\) - 1128 \* 236 \* var\(--f-u\) \/ 382\);/,
+	)
+	assert.match(css, /--f-cw: 480px;/)
+	assert.match(css, /width: var\(--f-cw\);\s*height: 270px;/)
+	const seat = (w: number, h: number, reserve: number) => {
+		const av = h - reserve
+		const ph = Math.max(60, Math.min((w - 28) * 0.5625, av - 105))
+		const u = Math.max(1, Math.min(1.3, (w * 0.68) / 236, (av - 18) / 288))
+		const pt = Math.max(ph + 41, av - 10 - 388 * u)
+		return { ph, pw: ph * 1.777777777778, u, pt }
+	}
+	const same = (
+		L: {
+			tv: { width: number; height: number }
+			remote: { u: number; top: number; left: number }
+			height: number
+			h: number
+		},
+		w: number,
+		h: number,
+		reserve: number,
+	) => {
+		const f = seat(w, h, reserve)
+		const at = `${w} x ${h}`
+		assert.ok(
+			Math.abs(L.tv.height - f.ph) < 1e-6,
+			`${at}: the TV's height ${L.tv.height} vs ${f.ph}`,
 		)
-	assert.match(
-		css,
-		/2px \+ \(var\(--f-h\) - 385px - var\(--f-pw\) \/ 1\.2\) \* 10000/,
-	)
-	assert.match(
-		css,
-		/max\(0px, var\(--f-h\) - 97px - var\(--f-ph\) - 288 \* var\(--f-u\) - 40 \* var\(--f-u\)\)/,
-	)
+		assert.ok(Math.abs(L.tv.width - f.pw) < 1e-6, `${at}: the TV's width`)
+		assert.ok(Math.abs(L.remote.u - f.u) < 1e-9, `${at}: the Remote's size`)
+		assert.ok(
+			Math.abs(L.remote.top - f.pt) < 1e-6,
+			`${at}: the Remote's top ${L.remote.top} vs ${f.pt}`,
+		)
+		assert.ok(
+			Math.abs(L.remote.left - (w - 236 * f.u) / 2) < 1e-6,
+			`${at}: centred`,
+		)
+		assert.equal(L.height, h, `${at}: no scrolling`)
+	}
 	for (let w = 320; w < 768; w += 37)
-		for (let h = 520; h <= 1200; h += 41) {
-			const L = layoutPhoneRoom(w, h, 60)
-			if (L.form !== "hand") continue
-			const ph = L.tv.height
-			const u = Math.max(
-				1,
-				Math.min(1.3, (w * 0.68) / 236, (h - 97 - ph) / 288),
-			)
-			const pt = ph + 31 + Math.max(0, h - 97 - ph - 288 * u - 40 * u)
-			assert.ok(
-				Math.abs(L.remote.u - u) < 1e-9,
-				`${w} x ${h}: the held Remote's size`,
-			)
-			assert.ok(
-				Math.abs(L.remote.top - pt) < 1e-6,
-				`${w} x ${h}: the held Remote's top ${L.remote.top} vs ${pt}`,
-			)
+		for (let h = 400; h <= 1800; h += 41)
+			same(layoutPhoneRoom(w, h, 60), w, h, 60)
+	// On its side nothing is reserved at any width: the lip is a tab at the right.
+	assert.match(css, /--f-res: 0px;/)
+	// On its side the TV takes the width, its canvas 270 tall and as wide as the picture's shape (480 to 810).
+	assert.match(css, /--f-cw: clamp\(480px, round\(nearest, 270px \* tan\(atan2\(var\(--f-wid\), var\(--f-ph\)\)\), 1px\), 810px\);/)
+	assert.match(css, /--f-pw: calc\(var\(--f-ph\) \* tan\(atan2\(var\(--f-cw\), 270px\)\)\);/)
+	for (let w = 568; w <= 1400; w += 47)
+		for (let h = 300; h <= 540; h += 17) {
+			const reserve = 0
+			const L = layoutPhoneLandscape(w, h, reserve)
+			const f = seat(w, h, reserve)
+			const cw = Math.max(480, Math.min(810, Math.round((270 * (w - 28)) / f.ph)))
+			const at = `${w} x ${h}`
+			assert.ok(Math.abs(L.tv.height - f.ph) < 1e-6, `${at}: the TV's height`)
+			assert.equal(L.canvas.w, cw, `${at}: the canvas`)
+			assert.ok(Math.abs(L.tv.width - (cw * f.ph) / 270) < 1e-6, `${at}: the TV's width`)
+			assert.ok(Math.abs(L.remote.u - f.u) < 1e-9 && Math.abs(L.remote.top - f.pt) < 1e-6, `${at}: the Remote`)
 			assert.equal(L.height, h)
 		}
-	// The phone in landscape: the TV across the room, a canvas no larger than 1.15, the Remote under it.
-	assert.match(
-		css,
-		/--f-cw: max\(500px, round\(nearest, var\(--f-pw\) \/ 1\.15, 1px\)\)/,
-	)
-	assert.match(css, /--f-pt: calc\(var\(--f-ph\) \+ 43px\)/)
-	assert.match(css, /--f-rtv: 46px;/)
-	for (let w = 768; w <= 1400; w += 47)
-		for (let h = 348; h <= 540; h += 17) {
-			const L = layoutPhoneLandscape(w, h, { tv: 46, remote: 46 })
-			if (L.form !== "hand") continue
-			const pw = w - 28
-			const ph = Math.max(60, Math.min(Math.max(60, h - 46 - 26), pw / 1.2))
-			const cw = Math.max(500, Math.round(pw / 1.15))
-			const u = Math.max(
-				1,
-				Math.min(1.3, (w * 0.68) / 236, (h - 16 - 46) / 288),
-			)
-			const pt = ph + 43
-			const height = Math.max(h, pt + 288 * u + 40 + 46)
-			const at = `${w} x ${h}`
-			assert.ok(
-				Math.abs(L.tv.width - pw) < 1e-6 && Math.abs(L.tv.height - ph) < 1e-6,
-				`${at}: the TV`,
-			)
-			assert.equal(L.canvas.w, cw, `${at}: the canvas`)
-			assert.ok(Math.abs(L.remote.u - u) < 1e-9, `${at}: the Remote's size`)
-			assert.ok(Math.abs(L.remote.top - pt) < 1e-6, `${at}: the Remote's top`)
-			assert.ok(
-				Math.abs(L.remote.left - (w - 236 * u) / 2) < 1e-6,
-				`${at}: centred`,
-			)
-			assert.ok(
-				Math.abs(L.height - height) < 1e-6,
-				`${at}: the content's height`,
-			)
-		}
-	// Landscape: in the hand from 348 px of room with the tab, 362 px with the bar.
-	for (const [reserve, h] of [
-		[{ tv: 46, remote: 46 }, 348],
-		[{ tv: 60, remote: 60 }, 362],
-	] as const) {
-		assert.equal(layoutPhoneLandscape(900, h, reserve).form, "hand")
-		assert.equal(layoutPhoneLandscape(900, h - 0.01, reserve).form, "table")
-	}
-	assert.match(css, /@container tvr \(min-height: 348px\)/)
-	assert.match(css, /@container tvr \(min-height: 362px\)/)
-	// The held Remote's fingers come round at its streaming keys: 234 of its pixels down.
-	assert.match(css, /top: calc\(var\(--f-pt\) \+ 234 \* var\(--f-u\)/)
 })
 
 test("the section below the room follows it, with its lip, its 16 titles and its hubs", () => {

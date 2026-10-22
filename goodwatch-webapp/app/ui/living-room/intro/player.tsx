@@ -1,5 +1,7 @@
 // Plays the film's scenes (film.ts) one after another on the TV's picture, with a hand-over between them, the
-// chapter bar under them and a Next button that turns into Replay once the quiz shows.
+// chapter bar under them and a Next button at the bottom right. Once the quiz shows, Next and the chapter bar go
+// and Replay stands at the bottom left (the owner, 2026-10-22): a quick second press of Next lands nowhere near it,
+// and a press that reaches Replay as it appears does nothing (REPLAY_GUARD_MS).
 import {
 	type CSSProperties,
 	type ReactNode,
@@ -16,6 +18,9 @@ const OVERLAP: Record<Enter, number> = {
 	wipe: 900,
 	deal: 800,
 }
+
+/** How long Replay takes no press after it appears: a double press of Next at the last chapter never restarts the film. */
+export const REPLAY_GUARD_MS = 700
 
 /** The stage: fills the TV's picture, sizes scenes by container units, scales all their timing by `k`. */
 export function Stage({ k, children }: { k: number; children: ReactNode }) {
@@ -72,6 +77,8 @@ export function Player({
 		setJumps((n) => n + 1)
 	}
 	const enterOf = (i: number): Enter => scenes[i]?.enter ?? "fade"
+	// When Replay appeared: a press before REPLAY_GUARD_MS has passed is the end of a double press of Next.
+	const replayFrom = useRef(0)
 	const overlap = OVERLAP[enterOf(at)]
 
 	useEffect(() => atRef.current?.(at), [at])
@@ -117,6 +124,10 @@ export function Player({
 		)
 	}
 	const chapters = chapterCount(scenes)
+	const ended = at >= chapters
+	useEffect(() => {
+		if (ended) replayFrom.current = performance.now()
+	}, [ended])
 	return (
 		<>
 			{prev !== null && slot(prev, "out")}
@@ -153,7 +164,10 @@ export function Player({
 				<button
 					type="button"
 					className="film-skip film-replay"
-					onClick={() => jump(0)}
+					onClick={() => {
+						if (performance.now() - replayFrom.current < REPLAY_GUARD_MS) return
+						jump(0)
+					}}
 					aria-label="Replay the intro"
 				>
 					<svg viewBox="0 0 24 24" aria-hidden="true">

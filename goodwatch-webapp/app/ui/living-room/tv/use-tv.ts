@@ -22,7 +22,12 @@ import {
 	useRef,
 	useState,
 } from "react"
-import { focusKey, tabFocusMemory } from "./focus-memory"
+import {
+	filterChangeForgets,
+	focusKey,
+	tabFocusMemory,
+	tabListMemory,
+} from "./focus-memory"
 import { type RoomKey, type RoomTv, keyboardKey } from "./room-tv"
 import {
 	TV_CANVAS_ATTR,
@@ -190,6 +195,13 @@ export function useTv(ctx: TvContext, onEffect: (effect: TvEffect) => void) {
 	}, [])
 	useEffect(() => () => clearTimeout(ringTimer.current), [])
 
+	/** The menu closes when the entry its choice navigated to arrives (`dispatch`). */
+	const closeOnArrival = useRef(false)
+	useIsoLayoutEffect(() => {
+		if (!closeOnArrival.current) return
+		closeOnArrival.current = false
+		setMenu({ open: false, focus: null })
+	}, [entry])
 	const dispatch = useCallback(
 		(action: TvAction) => {
 			const now = latest.current
@@ -209,11 +221,18 @@ export function useTv(ctx: TvContext, onEffect: (effect: TvEffect) => void) {
 			}
 			const next = transition(now.state, action, now.ctx)
 			setPower(next.state.power)
-			setMenu((m) =>
-				m.open === next.state.menuOpen && m.focus === next.state.menuFocus
-					? m
-					: { open: next.state.menuOpen, focus: next.state.menuFocus },
-			)
+			// A choice of the menu that goes to another screen closes the menu when that screen's entry arrives, not
+			// now: the router commits the new address a render later, and the screen under the menu showed for that
+			// frame (the owner saw Start flash before "What is GoodWatch?", 2026-10-22).
+			const closesOnArrival =
+				now.state.menuOpen && !next.state.menuOpen && next.history !== "none"
+			closeOnArrival.current = closesOnArrival
+			if (!closesOnArrival)
+				setMenu((m) =>
+					m.open === next.state.menuOpen && m.focus === next.state.menuFocus
+						? m
+						: { open: next.state.menuOpen, focus: next.state.menuFocus },
+				)
 			left.current =
 				next.history !== "none" || next.effects.some(leaves)
 					? focusLeftBehind(now.state, action, now.ctx)
@@ -223,6 +242,16 @@ export function useTv(ctx: TvContext, onEffect: (effect: TvEffect) => void) {
 			else if (next.history !== "none") {
 				arriving.current = { item: next.state.focus }
 				const search = writeTvParams(next.state.screen, now.params).toString()
+				// A changed filter starts the results again at their first page, even at an address seen before.
+				const chosen =
+					action.type === "choose" ? action.item : action.type === "ok" ? now.focused : null
+				const forget =
+					chosen &&
+					filterChangeForgets(chosen, {
+						pathname: window.location.pathname,
+						search: search ? `?${search}` : "",
+					})
+				if (forget) tabListMemory().remember(forget, null)
 				navigate(
 					{ search: search ? `?${search}` : "" },
 					{

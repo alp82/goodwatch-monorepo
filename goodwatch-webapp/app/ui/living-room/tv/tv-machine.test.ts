@@ -1,15 +1,15 @@
-import { KEY_ITEMS } from "./tv-browse.ts"
 import assert from "node:assert/strict"
 import { describe, it } from "node:test"
 import { searchHref } from "../../navigation/destinations.ts"
 import { RATING_LEVELS, levelOf } from "../../taste-quiz/quiz-flow.ts"
+import { KEY_ITEMS } from "./tv-browse.ts"
 import {
 	DISCOVER_TABS,
 	DOOR_HREF,
 	EMPTY_CONTEXT,
+	SEARCH_IDEAS,
 	STRIP_LEVELS,
 	STRIP_SCORES,
-	SEARCH_IDEAS,
 	STRIP_START,
 	type TvAction,
 	type TvContext,
@@ -323,7 +323,10 @@ describe("the screens and their items, in reading order", () => {
 			"bar:menu",
 		])
 		// A member's home is Start: no service tiles, the navigation instead of the bar.
-		assert.deepEqual(items("", { ...member, services: [9] }), [...START, ...NAV])
+		assert.deepEqual(items("", { ...member, services: [9] }), [
+			...START,
+			...NAV,
+		])
 	})
 
 	it("on a service: up to twelve titles in a row that pages, then Expand and the bar", () => {
@@ -374,15 +377,12 @@ describe("the screens and their items, in reading order", () => {
 			"nav:popular",
 			...NAV.slice(2),
 		])
-		// The phone's navigation has three tabs: no Popular, no Taste.
+		// The phone's header has no tabs (2026-10-22): the white G and Menu, the screen's name between them.
 		assert.deepEqual(items("", { ...popular, phone: true }), [
 			"start:tonight",
 			"start:popular",
 			...START.slice(1),
 			"nav:home",
-			"nav:tonight",
-			"nav:discover",
-			"nav:search",
 			"bar:menu",
 		])
 	})
@@ -557,11 +557,10 @@ describe("the screens and their items, in reading order", () => {
 			...BAR,
 		])
 		// A member without a taste yet has no Sign up.
-		assert.deepEqual(items("tv=taste", { ...member, taste: false, titles: [] }), [
-			"start-quiz",
-			"expand",
-			...BAR,
-		])
+		assert.deepEqual(
+			items("tv=taste", { ...member, taste: false, titles: [] }),
+			["start-quiz", "expand", ...BAR],
+		)
 	})
 
 	it("Taste with a taste: each side, then Rate more", () => {
@@ -588,8 +587,7 @@ describe("the screens and their items, in reading order", () => {
 
 	it("the quiz: the strip's four levels from low to high, Haven't seen it, Your taste, then Expand", () => {
 		assert.deepEqual(items("tv=quiz"), [
-			...LEVELS,
-			...SCORES,
+			...LEVELS, ...SCORES,
 			"skip",
 			"your-taste",
 			"expand",
@@ -599,13 +597,17 @@ describe("the screens and their items, in reading order", () => {
 
 	it("the quiz on the desktop: the ten exact scores under the levels", () => {
 		assert.deepEqual(items("tv=quiz", desktop), [
-			...LEVELS,
-			...SCORES,
+			...LEVELS, ...SCORES,
 			"skip",
 			"your-taste",
 			"expand",
 			...NAV,
 		])
+		// The phone's band has the same order: the four levels over their scores.
+		assert.deepEqual(
+			items("tv=quiz", { ...desktop, phone: true }).slice(0, 14),
+			[...LEVELS, ...SCORES],
+		)
 	})
 
 	it("the quiz without a title to ask about: Your taste, Expand and the navigation", () => {
@@ -664,20 +666,11 @@ describe("the screens and their items, in reading order", () => {
 	})
 
 	it("the rating: the same strip without Haven't seen it, no Expand", () => {
-		assert.deepEqual(items("tv=rate&title=movie-1"), [
-			...LEVELS,
-			...SCORES,
-			...BAR,
-		])
-		assert.deepEqual(items("tv=rate&title=movie-1", desktop), [
-			...LEVELS,
-			...SCORES,
-			...BAR,
-		])
+		assert.deepEqual(items("tv=rate&title=movie-1"), [...LEVELS, ...SCORES, ...BAR])
+		assert.deepEqual(items("tv=rate&title=movie-1", desktop), [...LEVELS, ...SCORES, ...BAR])
 		// Its title is in the address: the strip is there whatever list the page holds.
 		assert.deepEqual(items("tv=rate&title=movie-1", { ...guest, titles: [] }), [
-			...LEVELS,
-			...SCORES,
+			...LEVELS, ...SCORES,
 			...BAR,
 		])
 	})
@@ -746,7 +739,9 @@ describe("the screens and their items, in reading order", () => {
 			"menu:about",
 		])
 		// Popular is a member's, whatever a guest's context holds.
-		assert.ok(!menuItems({ ...guest, popular: ["movie-41"] }).includes("menu:popular"))
+		assert.ok(
+			!menuItems({ ...guest, popular: ["movie-41"] }).includes("menu:popular"),
+		)
 	})
 })
 
@@ -1185,11 +1180,19 @@ describe("the Expand key's destinations", () => {
 		assert.equal(label("tv=popular", member), "Explore all titles")
 		assert.equal(label("tv=service&service=8"), "Explore all titles")
 		assert.equal(label("tv=taste"), "Full taste profile")
-		assert.equal(label("tv=taste&side=dark-crime", member), "Full taste profile")
+		assert.equal(
+			label("tv=taste&side=dark-crime", member),
+			"Full taste profile",
+		)
 		assert.equal(label("tv=quiz"), "Full taste quiz")
 		assert.equal(label("tv=explorer&island=i3"), "Full Explorer")
 		assert.equal(label("tv=shows", member), "All my shows")
-		for (const query of ["", "tv=about", "tv=search", "tv=rate&title=movie-603"])
+		for (const query of [
+			"",
+			"tv=about",
+			"tv=search",
+			"tv=rate&title=movie-603",
+		])
 			assert.equal(label(query), null, query)
 	})
 
@@ -1328,12 +1331,7 @@ describe("the Expand key's destinations", () => {
 	})
 
 	it("home, the rating, search before a query and What is GoodWatch? have no page", () => {
-		for (const q of [
-			"",
-			"tv=rate&title=movie-1",
-			"tv=search",
-			"tv=about",
-		]) {
+		for (const q of ["", "tv=rate&title=movie-1", "tv=search", "tv=about"]) {
 			assert.equal(dest(q), null, q)
 			assert.equal(items(q).includes("expand"), false, q)
 		}
@@ -1768,10 +1766,7 @@ describe("Watch next and Popular show the pick with the focus", () => {
 	})
 
 	it("OK on a pick opens its title; Details, Trailer and Watch are for the pick on show", () => {
-		assert.equal(
-			choose("tv=tonight", "pick:3").url,
-			"tv=title&title=movie-4",
-		)
+		assert.equal(choose("tv=tonight", "pick:3").url, "tv=title&title=movie-4")
 		assert.equal(
 			choose("tv=popular&pick=2", "details", popular).url,
 			"tv=title&title=show-43",
@@ -2038,7 +2033,10 @@ describe("the menu", () => {
 	})
 
 	it("has no Turn off: the power key turns the TV off and closes the menu", () => {
-		const off = run(open("", guest), guest, { type: "choose", item: "menu:off" })
+		const off = run(open("", guest), guest, {
+			type: "choose",
+			item: "menu:off",
+		})
 		assert.equal(off.state.power, "on")
 		assert.equal(off.state.menuOpen, false)
 		const t = run(open("", guest), guest, { type: "power", on: false })
@@ -2098,10 +2096,7 @@ describe("focus", () => {
 		// A member's Start starts on Watch next; Popular on the poster the address names.
 		assert.equal(focusedItem(at("", 0, member), member), "start:tonight")
 		const popular = { ...member, popular: ["movie-41", "movie-42"] }
-		assert.equal(
-			focusedItem(at("tv=popular", 0, popular), popular),
-			"pick:0",
-		)
+		assert.equal(focusedItem(at("tv=popular", 0, popular), popular), "pick:0")
 	})
 
 	it("starts on the first action of a list with no titles", () => {
@@ -2116,7 +2111,10 @@ describe("focus", () => {
 	it("starts on Back when a screen has nothing of its own", () => {
 		const empty = { ...guest, titles: [] }
 		assert.equal(focusedItem(at("tv=search&q=zzz"), empty), "browse:filters")
-		assert.equal(focusedItem(at("tv=taste&side=x", 0, member), { ...member, titles: [] }), "bar:back")
+		assert.equal(
+			focusedItem(at("tv=taste&side=x", 0, member), { ...member, titles: [] }),
+			"bar:back",
+		)
 		// A screen with the navigation starts on its first tab.
 		assert.equal(focusedItem(at("tv=tonight"), EMPTY_CONTEXT), "nav:home")
 	})
@@ -2804,10 +2802,7 @@ describe("every screen", () => {
 					...(destinationHref(screen, ctx) ? ["expand"] : []),
 					...(withNav
 						? NAV.slice(0, -1)
-						: [
-								...(screen.name === "home" ? [] : ["bar:back"]),
-								"bar:search",
-							]),
+						: [...(screen.name === "home" ? [] : ["bar:back"]), "bar:search"]),
 					"bar:menu",
 				],
 				`${screen.name} ${ctx.member ? "member" : "guest"}`,
@@ -2826,5 +2821,185 @@ describe("every screen", () => {
 					`${screen.name} ${item}`,
 				)
 			}
+	})
+})
+
+describe("the phone edition (2026-10-22): a header, pages, sections, and the phone's own keyboard", () => {
+	const phone: TvContext = {
+		...member,
+		phone: true,
+		titleOffers: 6,
+		titleWhere: true,
+		popular: ["movie-41", "movie-42", "movie-43"],
+	}
+	const guestPhone: TvContext = { ...guest, phone: true }
+
+	it("every screen ends with the header's two keys, the white G and Menu, and has no tabs", () => {
+		for (const [query, ctx] of [
+			["", guestPhone],
+			["", phone],
+			["tv=tonight", phone],
+			["tv=popular", phone],
+			["tv=title&title=movie-1", phone],
+			["tv=search", phone],
+			["tv=taste", phone],
+			["tv=quiz", guestPhone],
+			["tv=about", guestPhone],
+		] as const) {
+			const all = items(query, ctx)
+			assert.deepEqual(all.slice(-2), ["nav:home", "bar:menu"], query)
+			assert.ok(
+				!all.some(
+					(id) => id.startsWith("bar:back") || id.startsWith("bar:search"),
+				),
+				query,
+			)
+			assert.ok(
+				!all.some((id) =>
+					/^nav:(tonight|popular|discover|search|quiz)$/.test(id),
+				),
+				query,
+			)
+		}
+	})
+
+	it("Watch next shows one pick at a time: its arrows step through the picks and keep the focus", () => {
+		// In reading order: the arrows beside the pick's name, over its keys. The focus starts on Watch.
+		assert.deepEqual(items("tv=tonight", phone).slice(0, 6), [
+			"prev-pick",
+			"next-pick",
+			"watch",
+			"trailer",
+			"details",
+			"another",
+		])
+		assert.equal(focusedItem(at("tv=tonight", 0, phone), phone), "watch")
+		const next = choose("tv=tonight&pick=0", "next-pick", phone)
+		assert.equal(next.history, "replace")
+		assert.equal(next.url, "tv=tonight&pick=1")
+		assert.equal(focusedItem(next.state, phone), "next-pick")
+		// Back from the first pick wraps to the last.
+		assert.equal(
+			choose("tv=tonight&pick=0", "prev-pick", phone).url,
+			"tv=tonight&pick=2",
+		)
+		// The desktop has no arrows.
+		assert.ok(!items("tv=tonight", member).includes("next-pick"))
+	})
+
+	it("a page arrow moves the focus to the item it names, and a pick it reaches is on show", () => {
+		const t = choose("tv=popular&pick=0", "jump:pick:2", phone)
+		assert.equal(focusedItem(t.state, phone), "pick:2")
+		assert.equal(t.url, "tv=popular&pick=2")
+		// Only to an item of the screen.
+		const none = choose("tv=popular&pick=0", "jump:pick:9", phone)
+		assert.equal(focusedItem(none.state, phone), "pick:0")
+		// An arrow on show takes the focus by a direction, and keeps it.
+		const start = at("tv=title&title=movie-1&panel=watch", 1, phone)
+		const boxes: TvBox[] = [
+			{ id: "offer:0", left: 0, top: 0, width: 300, height: 50 },
+			{ id: "jump:offer:3", left: 320, top: 0, width: 50, height: 50 },
+		]
+		const moved = transition(
+			start,
+			{ type: "move", dir: "right", boxes },
+			phone,
+		)
+		assert.equal(focusedItem(moved.state, phone), "jump:offer:3")
+		const chosen = transition(moved.state, { type: "ok" }, phone)
+		assert.equal(focusedItem(chosen.state, phone), "offer:3")
+	})
+
+	it("a title has three sections: the overview, Where to watch and the fingerprint, each with the sections' keys", () => {
+		const sections = ["section:overview", "section:watch", "fingerprint"]
+		// The sections' keys stand at the top of each section, first in reading order; the focus starts on the content.
+		assert.deepEqual(items("tv=title&title=movie-1", phone), [
+			...sections,
+			"expand",
+			"watch",
+			"trailer",
+			"want-to-see",
+			"seen",
+			"nav:home",
+			"bar:menu",
+		])
+		assert.deepEqual(items("tv=title&title=movie-1&panel=watch", phone), [
+			...sections,
+			...Array.from({ length: 6 }, (_, i) => `offer:${i}`),
+			"where",
+			"nav:home",
+			"bar:menu",
+		])
+		assert.deepEqual(
+			items("tv=title&title=movie-1&panel=fingerprint", phone),
+			[...sections, "group:-1", "group:0", "group:1", "group:2", "nav:home", "bar:menu"],
+		)
+		for (const [query, first] of [
+			["tv=title&title=movie-1", "watch"],
+			["tv=title&title=movie-1&panel=watch", "offer:0"],
+			["tv=title&title=movie-1&panel=fingerprint", "group:-1"],
+		] as const)
+			assert.equal(focusedItem(at(query, 0, phone), phone), first, query)
+	})
+
+	it("a section is a step from the overview; another section takes its place; Back returns to the key that opened it", () => {
+		const watch = choose("tv=title&title=movie-1", "section:watch", phone)
+		assert.equal(watch.history, "push")
+		assert.equal(watch.url, "tv=title&title=movie-1&panel=watch")
+		const print = run(watch.state, phone, {
+			type: "choose",
+			item: "fingerprint",
+		})
+		assert.equal(print.history, "replace")
+		assert.equal(print.url, "tv=title&title=movie-1&panel=fingerprint")
+		assert.equal(
+			run(watch.state, phone, { type: "choose", item: "section:overview" })
+				.history,
+			"back",
+		)
+		// A deep link to a section: Back takes the overview's place, on the section's key.
+		const deep = run(
+			at("tv=title&title=movie-1&panel=watch", 0, phone),
+			phone,
+			{ type: "back" },
+		)
+		assert.equal(deep.url, "tv=title&title=movie-1")
+		assert.equal(focusedItem(deep.state, phone), "section:watch")
+	})
+
+	it("search types with the phone's own keyboard: no TV keys, and its line opens it", () => {
+		assert.deepEqual(items("tv=search", phone), [
+			"field",
+			...searchIdeas(),
+			"go",
+			"nav:home",
+			"bar:menu",
+		])
+		assert.ok(!items("tv=search", phone).some((id) => id.startsWith("key:")))
+		assert.deepEqual(choose("tv=search", "field", phone).effects, [
+			{ type: "focus-input" },
+		])
+		// The desktop keeps its keyboard.
+		assert.ok(items("tv=search", member).includes("key:q"))
+	})
+})
+
+describe("Where to watch on the desktop (panel=watch): the overview, which holds the offers", () => {
+	const desk: TvContext = { ...member, titleOffers: 3, titleWhere: true }
+	it("has the overview's items with Expand, not the fingerprint's Close", () => {
+		const all = items("tv=title&title=movie-1&panel=watch", desk)
+		assert.deepEqual(all.slice(0, 5), ["watch", "trailer", "want-to-see", "seen", "fingerprint"])
+		assert.ok(all.includes("offer:0") && all.includes("where") && all.includes("expand"))
+		assert.ok(!all.includes("close") && !all.includes("group:-1"))
+	})
+	it("starts on its first service, else its row to all of them", () => {
+		assert.equal(focusedItem(at("tv=title&title=movie-1&panel=watch", 0, desk), desk), "offer:0")
+		const none = { ...desk, titleOffers: 0 }
+		assert.equal(focusedItem(at("tv=title&title=movie-1&panel=watch", 0, none), none), "where")
+	})
+	it("keeps the address, so Back is one step; a link's Back lands on the overview", () => {
+		assert.equal(url(at("tv=title&title=movie-1&panel=watch", 0, desk)), "tv=title&title=movie-1&panel=watch")
+		assert.equal(run(at("tv=title&title=movie-1&panel=watch", 2, desk), desk, { type: "back" }).history, "back")
+		assert.equal(run(at("tv=title&title=movie-1&panel=watch", 0, desk), desk, { type: "back" }).url, "tv=title&title=movie-1")
 	})
 })

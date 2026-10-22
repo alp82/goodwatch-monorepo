@@ -65,6 +65,7 @@ export default function Shows({
 		<TitleList
 			name="My shows"
 			crumb={showsCrumb(shows, news)}
+			phoneNote={news.words?.tile}
 			items={items}
 			titles={titles}
 			empty={SHOWS_EMPTY}

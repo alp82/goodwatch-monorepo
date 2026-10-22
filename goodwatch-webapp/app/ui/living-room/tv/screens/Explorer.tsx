@@ -15,12 +15,13 @@ import { useRef } from "react"
 import { tmdbImageUrl } from "~/utils/tmdb-image"
 import { TitleList } from "../TitleList"
 import {
+	Expand,
 	Frame,
 	Item,
-	PhoneFoot,
 	backdropSize,
 	keySize,
 	useReport,
+	useListAnchor,
 	useTvView,
 } from "../kit"
 import {
@@ -58,7 +59,9 @@ function useArt(path: string | null | undefined) {
 /** What the focus was on last among `ids`, so the screen keeps showing it while the focus is on the bar. */
 function useShown(ids: readonly string[], kind: string): string | undefined {
 	const { focused } = useTvView()
-	const last = useRef(ids[0])
+	// Drawn anew (Back from a real page), it starts from the one shown last on this history entry.
+	const anchor = useListAnchor(`explorer-${kind}`, ids.map((id) => `${kind}:${id}`))
+	const last = useRef(anchor?.slice(kind.length + 1) ?? ids[0])
 	const at = ids.find((id) => `${kind}:${id}` === focused)
 	if (at) last.current = at
 	return ids.includes(last.current) ? last.current : ids[0]
@@ -92,7 +95,7 @@ function Island({
 	return (
 		<Item
 			id={`island:${island.id}`}
-			className={`tvc-tile flex items-center justify-center text-center ${phone ? "max-h-[108px] min-h-0 self-center px-2" : "absolute px-5"}`}
+			className={`tvc-tile flex items-center justify-center text-center ${phone ? "h-full min-h-0 px-2" : "absolute px-5"}`}
 			style={{
 				background: island.color,
 				color: inkOn(island.color),
@@ -100,7 +103,7 @@ function Island({
 				// The shallows around an island at rest; the focused one has the tile's white edge instead.
 				outline: on ? undefined : `${phone ? 4 : 7}px solid ${island.color}38`,
 				...(phone
-					? { height: "100%" }
+					? {}
 					: {
 							left: at.left,
 							top: at.top,
@@ -110,9 +113,15 @@ function Island({
 			}}
 		>
 			<span
-				className={`font-bold leading-none tracking-tight ${phone ? "text-[25px]" : "text-[38px]"}`}
+				className={phone ? "font-bold tracking-tight text-[20px] leading-[1.05]" : "font-bold leading-none tracking-tight text-[38px]"}
 			>
 				{island.name}
+				{/* On the phone the island says how many titles it has; the line under the map says what sets it apart. */}
+				{phone && (
+					<span className="mt-0.5 block text-[16px] font-semibold opacity-75">
+						{islandCount(island.count)}
+					</span>
+				)}
 			</span>
 		</Item>
 	)
@@ -135,29 +144,34 @@ function IslandMap({
 	return (
 		<Frame
 			name="Explorer"
-			crumb={`${COUNT_WORDS[islands.length]} ${islands.length === 1 ? "island" : "islands"}`}
+			crumb={
+				P
+					? undefined
+					: `${COUNT_WORDS[islands.length]} ${islands.length === 1 ? "island" : "islands"}`
+			}
 			items={items}
 			art={art}
 			dim={0.88}
 			inlineExpand
 		>
 			{P ? (
-				// The phone: the islands three by two, in their reading order. The row under them is the Expand
-				// key's; beside the key it says what sets the focused island apart.
-				<div className="flex h-full flex-col">
-					<div className="grid min-h-0 flex-1 grid-cols-3 grid-rows-2 gap-2.5 pt-2">
+				// The phone (nothing scrolls): the islands three by two, then what the focused one is beside the Expand
+				// key.
+				<div className="flex h-full flex-col gap-[4px]">
+					<div className="grid min-h-0 flex-1 grid-cols-3 grid-rows-2 gap-x-[6px] gap-y-[4px]">
 						{islands.map((island, place) => (
 							<Island key={island.id} island={island} place={place} phone />
 						))}
 					</div>
-					<PhoneFoot items={items} height={foot} className="mt-2.5">
+					<div className="flex shrink-0 items-center gap-2" style={{ height: foot }}>
 						<div
 							key={shown.id}
-							className="tvc-fade line-clamp-2 text-[20px] leading-tight text-white/80"
+							className="tvc-fade min-w-0 flex-1 text-[17px] leading-[1.1] text-white/85"
 						>
-							{shown.apart} · {islandCount(shown.count)}
+							{shown.apart}
 						</div>
-					</PhoneFoot>
+						{items.includes("expand") && <Expand />}
+					</div>
 				</div>
 			) : (
 				<div className="relative h-full">
@@ -218,7 +232,8 @@ function IslandTitles({
 		<TitleList
 			name="Explorer"
 			// The desktop has room for what sets the island apart.
-			crumb={P ? island.name : `${island.name} · ${island.apart}`}
+			crumb={`${island.name} · ${island.apart}`}
+			phoneName={island.name}
 			items={items}
 			titles={island.titles}
 			empty="Nothing on this island right now."

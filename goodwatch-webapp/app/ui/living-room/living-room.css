@@ -690,9 +690,10 @@ main:has(.lr-page) + footer {
 	}
 }
 
-/* Phone landscape keeps the room over the whole window, above the site header. The lip is a tab at the bottom
-   left, and going below slides the room up out of the window (transform only) with the section under it. */
-@media (orientation: landscape) and (max-height: 540px) and (min-width: 768px) {
+/* Phone landscape keeps the room over the whole window, above the site header, at every width (2026-10-22: a phone
+   under 768 px wide on its side got a TV of 74 px between the header and the dock). The lip is a tab, and going
+   below slides the room up out of the window (transform only) with the section under it. */
+@media (orientation: landscape) and (max-height: 540px) {
 	.living-room.lr-page {
 		position: fixed;
 		inset: 0;
@@ -820,7 +821,7 @@ main:has(.lr-page) + footer {
 
 /* A phone in landscape: the TV is on the left, down to the room's bottom edge, so the lip's tab, which
    living-room.css puts at the bottom left, goes to the right, under the keys of the Remote. */
-@media (orientation: landscape) and (max-height: 540px) and (min-width: 768px) {
+@media (orientation: landscape) and (max-height: 540px) {
 	.tvr + .lrb .lrb-lip {
 		left: auto;
 		right: 12px;
@@ -985,9 +986,7 @@ html[data-tv-transition] .tvr-bracket {
      lengths, so a value computed in a child is in pixels for every part under it.
    - Which layout: the window's width (PHONE, under 768 px) and its landscape query (LANDSCAPE), as in TvRoom.tsx
      and as living-room.css lays out the lip.
-     The desktop's Remote is under the TV in every room.
-   - Which form of the phone's Remote: the rig's width says it, 2 px in the hand and 1 px on the table, and the two
-     forms ask the rig (`tvr-form`). The phone's condition joins its width and height, which no query can.
+     The desktop's Remote is under the TV in every room; the phone's is always held.
    - Scales are lengths here (a scale of 0.8 is 0.8px); tan(atan2(x, 1px)) turns one into the number scale() needs.
    - The rules are the first paint's only: a part's class `tvr-f-*` goes when the window is measured. */
 @property --f-w {
@@ -1016,19 +1015,19 @@ html[data-tv-transition] .tvr-bracket {
 	--f-tvh: calc(var(--f-tvw) / 1.851515151515);
 	--f-tvl: calc((var(--f-w) - var(--f-tvw)) / 2);
 	--f-under: calc(var(--f-h) - var(--f-tvt) - var(--f-tvh) + 18px - 8px);
-	--f-fit: clamp(0px, (var(--f-under) - 252.08px) * 10000 + 1px, 1px);
+	--f-fit: clamp(0px, (var(--f-under) - 280.6px) * 10000 + 1px, 1px);
 	--f-r: calc(
 		clamp(0.5px, var(--f-h) / 1800, 0.68px) +
-		(min(0.8px, var(--f-under) / 548) - clamp(0.5px, var(--f-h) / 1800, 0.68px)) *
+		(min(0.8px, var(--f-under) / 610) - clamp(0.5px, var(--f-h) / 1800, 0.68px)) *
 		tan(atan2(var(--f-fit), 1px))
 	);
 	--f-rl: calc(var(--f-w) / 2 - 156 * var(--f-r));
 	--f-rt: calc(
 		var(--f-tvt) + var(--f-tvh) - 18px +
-		(var(--f-h) - 8px - 548 * var(--f-r) - var(--f-tvt) - var(--f-tvh) + 18px) *
+		(var(--f-h) - 8px - 610 * var(--f-r) - var(--f-tvt) - var(--f-tvh) + 18px) *
 		tan(atan2(var(--f-fit), 1px))
 	);
-	--f-height: max(var(--f-h), var(--f-rt) + 548 * var(--f-r) + 8px);
+	--f-height: max(var(--f-h), var(--f-rt) + 610 * var(--f-r) + 8px);
 }
 .tvr[data-room="unmeasured"] .tvr-f-photo {
 	left: calc(var(--f-tvl) - 531 * var(--f-tvw) / 611);
@@ -1084,14 +1083,14 @@ html[data-tv-transition] .tvr-bracket {
 	left: var(--f-rl);
 	top: var(--f-rt);
 	width: calc(312 * var(--f-r));
-	height: calc(866 * var(--f-r));
+	height: calc(610 * var(--f-r));
 	transform-origin: 50% 62%;
 	transform: perspective(1400px) rotateX(12deg);
 }
-/* The hand photo around the Remote: HAND in room-layout.ts at the Remote's scale. */
+/* The hand photo around the Remote: HAND in room-layout.ts at the Remote's scale, the Remote's end in its palm. */
 .tvr[data-room="unmeasured"] .tvr-f-dhand {
 	left: calc(-262.17801 * var(--f-r));
-	top: calc(-55.539267 * var(--f-r));
+	top: calc(-311.298429 * var(--f-r));
 	width: calc(836.356021 * var(--f-r));
 	height: calc(1254.534031 * var(--f-r));
 }
@@ -1102,35 +1101,77 @@ html[data-tv-transition] .tvr-bracket {
 	display: none;
 }
 
-/* A phone upright (`layoutPhoneRoom`, the lip's 60 px reserved): the framed TV on the wall, the sideboard, the
-   Remote in the hand or on the table. */
+/* Both phone rooms (`seatPhone` in room-layout.ts): a 16:9 TV across the top, as wide as the room but for the
+   wall, shorter (and narrower) where the Remote's top must still show over the reserve (--f-res); the phone's
+   fixed canvas of 480 x 270 scaled to it; the Remote held under it, as large as its share of the width allows and
+   its keys never taller than the room, lower where the room is taller than it needs, with the hand round it. */
+@media (max-width: 767.98px), (orientation: landscape) and (max-height: 540px) {
+	.tvr[data-room="unmeasured"] > * {
+		--f-res: 60px;
+		--f-height: var(--f-h);
+		--f-av: calc(var(--f-h) - var(--f-res));
+		--f-ph: max(60px, min((var(--f-w) - 28px) * 0.5625, var(--f-av) - 105px));
+		--f-pw: calc(var(--f-ph) * 1.777777777778);
+		--f-k: calc(var(--f-pw) / 480);
+		--f-cw: 480px;
+		--f-ol: calc((var(--f-w) - var(--f-pw)) / 2 - 5px);
+		--f-seam: calc(var(--f-ph) + 27px);
+		--f-u: max(1px, min(1.3px, var(--f-w) * 0.68 / 236, (var(--f-av) - 18px) / 288));
+		--f-pt: max(var(--f-ph) + 41px, var(--f-av) - 10px - 388 * var(--f-u));
+		--f-pl2: calc((var(--f-w) - 236 * var(--f-u)) / 2);
+	}
+	.tvr[data-room="unmeasured"] :is(.tvr-f-remote, .tvr-f-cv-desktop, .tvr-f-desk) {
+		display: none;
+	}
+	.tvr[data-room="unmeasured"] :is(.tvr-f-rig, .tvr-f-cv-phone) {
+		display: block;
+	}
+	.tvr[data-room="unmeasured"] .tvr-f-tv {
+		left: calc(var(--f-ol) + 5px);
+		top: 13px;
+		width: var(--f-pw);
+		height: var(--f-ph);
+		border-radius: 3px;
+		box-shadow: none;
+	}
+	.tvr[data-room="unmeasured"][data-tv-power="on"] .tvr-f-tv {
+		box-shadow: none;
+	}
+	.tvr[data-room="unmeasured"] .tvr-f-cv-phone {
+		width: var(--f-cw);
+		height: 270px;
+		transform: translate(0px, 0px) scale(tan(atan2(var(--f-k), 1px)));
+		--tv-key: round(up, 44px / tan(atan2(var(--f-k), 1px)), 1px);
+	}
+	.tvr[data-room="unmeasured"] .tvr-f-premote {
+		left: var(--f-pl2);
+		top: var(--f-pt);
+		width: calc(236 * var(--f-u));
+	}
+	.tvr[data-room="unmeasured"] .tvr-f-pscale {
+		transform: scale(tan(atan2(var(--f-u), 1px)));
+	}
+	/* The hand: its palm holds the body's end (388 units down), its fingers come round the body above it. */
+	.tvr[data-room="unmeasured"] .tvr-f-phand {
+		left: calc(var(--f-pl2) - 321 * 236 * var(--f-u) / 382);
+		top: calc(var(--f-pt) + 388 * var(--f-u) - 1128 * 236 * var(--f-u) / 382);
+		width: calc(1024 * 236 * var(--f-u) / 382);
+		height: calc(1536 * 236 * var(--f-u) / 382);
+	}
+}
+/* Upright (`layoutPhoneRoom`): the wall with the TV on it, stretched to the TV's height, and the sideboard. */
 @media not all and (orientation: landscape) and (max-height: 540px) {
 	@media (max-width: 767.98px) {
 		.tvr[data-room="unmeasured"] > * {
-			--f-pw: calc(var(--f-w) - 28px);
-			--f-height: var(--f-h);
-			--f-ph: min(var(--f-pw) / 1.2, var(--f-h) - 273px);
-			--f-k: calc(var(--f-pw) / 500);
-			--f-seam: calc(var(--f-ph) + 27px);
-			--f-ps: calc((var(--f-w) - 18px) * 0.985 / 611);
-			--f-pl: calc(var(--f-w) / 2 - 534.5 * var(--f-ps));
+			--f-ps: calc((var(--f-pw) + 10px) * 0.985 / 611);
+			--f-ws: max(var(--f-ps), var(--f-w) / 1068);
+			--f-pl: calc(var(--f-w) / 2 - 534.5 * var(--f-ws));
 		}
-		.tvr[data-room="unmeasured"] :is(.tvr-f-photo, .tvr-f-remote, .tvr-f-cv-desktop) {
+		.tvr[data-room="unmeasured"] :is(.tvr-f-photo, .tvr-f-side) {
 			display: none;
 		}
-		.tvr[data-room="unmeasured"] :is(.tvr-f-up, .tvr-f-cv-phone) {
+		.tvr[data-room="unmeasured"] .tvr-f-up {
 			display: block;
-		}
-		.tvr[data-room="unmeasured"] .tvr-f-tv {
-			left: 14px;
-			top: 13px;
-			width: var(--f-pw);
-			height: var(--f-ph);
-			border-radius: 3px;
-			box-shadow: none;
-		}
-		.tvr[data-room="unmeasured"][data-tv-power="on"] .tvr-f-tv {
-			box-shadow: none;
 		}
 		.tvr[data-room="unmeasured"] .tvr-f-wall {
 			height: var(--f-seam);
@@ -1140,19 +1181,19 @@ html[data-tv-transition] .tvr-bracket {
 		.tvr[data-room="unmeasured"] .tvr-f-wallimg {
 			left: var(--f-pl);
 			top: calc(-30 * var(--f-seam) / 448);
-			width: calc(1068 * var(--f-ps));
-			height: calc(1602 * var(--f-ps));
+			width: calc(1068 * var(--f-ws));
+			height: calc(1602 * var(--f-ws));
 			transform-origin: 0 0;
-			transform: scaleY(tan(atan2(var(--f-seam), calc(448 * var(--f-ps)))));
+			transform: scaleY(tan(atan2(var(--f-seam), calc(448 * var(--f-ws)))));
 		}
 		.tvr[data-room="unmeasured"] .tvr-f-floor {
 			top: var(--f-seam);
 		}
 		.tvr[data-room="unmeasured"] .tvr-f-floorimg {
 			left: var(--f-pl);
-			top: calc(-478 * var(--f-ps));
-			width: calc(1068 * var(--f-ps));
-			height: calc(1602 * var(--f-ps));
+			top: calc(-478 * var(--f-ws));
+			width: calc(1068 * var(--f-ws));
+			height: calc(1602 * var(--f-ws));
 		}
 		.tvr[data-room="unmeasured"] .tvr-f-pgrad {
 			background: radial-gradient(
@@ -1174,134 +1215,40 @@ html[data-tv-transition] .tvr-bracket {
 			height: 5px;
 		}
 		.tvr[data-room="unmeasured"] .tvr-f-pbody {
-			left: 9px;
+			left: var(--f-ol);
 			top: 8px;
-			width: calc(var(--f-w) - 18px);
+			width: calc(var(--f-pw) + 10px);
 			height: calc(var(--f-ph) + 10px);
-		}
-		/* In the hand where the keys leave the TV its full height: H - 319 >= (W - 28) / 1.2. */
-		.tvr[data-room="unmeasured"] .tvr-f-rig {
-			display: block;
-			width: clamp(
-				1px,
-				2px + (var(--f-h) - 385px - var(--f-pw) / 1.2) * 10000,
-				2px
-			);
-		}
-		/* Each form by its own numbers (PHONE_REMOTE): the spare height goes part above the Remote, part under it. */
-		.tvr[data-room="unmeasured"] .tvr-f-form[data-tvr-form="hand"] {
-			--f-Rw: 236;
-			--f-u: max(
-				1px,
-				min(
-					1.3px,
-					var(--f-w) * 0.68 / 236,
-					(var(--f-h) - 97px - var(--f-ph)) / 288
-				)
-			);
-			--f-pt: calc(
-				var(--f-ph) + 31px +
-				max(0px, var(--f-h) - 97px - var(--f-ph) - 288 * var(--f-u) - 40 * var(--f-u))
-			);
-			--f-pl2: calc((var(--f-w) - 236 * var(--f-u)) / 2);
-		}
-		.tvr[data-room="unmeasured"] .tvr-f-form[data-tvr-form="table"] {
-			--f-Rw: 336;
-			--f-u: max(
-				1px,
-				min(
-					1.25px,
-					var(--f-w) * 0.935 / 336,
-					(var(--f-h) - 97px - var(--f-ph)) / 176
-				)
-			);
-			--f-pt: calc(
-				var(--f-ph) + 31px +
-				min((var(--f-h) - 97px - var(--f-ph) - 176 * var(--f-u)) * 0.78, 150px)
-			);
-			--f-pl2: calc((var(--f-w) - 336 * var(--f-u)) / 2);
 		}
 	}
 }
-
-/* A phone in landscape (`layoutPhoneLandscape`): the framed TV across the room's width in front of the desktop's
-   photo, as tall as the room allows, and the phone's Remote centred under it, below the fold. The lip is a tab of
-   46 px from 768 px of width, a bar of 60 px below. */
+/* On its side (`layoutPhoneLandscape`): the framed TV in front of the desktop's photo. The lip is a tab at the
+   right, clear of the Remote, at every width. */
 @media (orientation: landscape) and (max-height: 540px) {
 	.tvr[data-room="unmeasured"] > * {
-		--f-rr: 46px;
-		--f-rtv: 46px;
-		/* On the table (PHONE_REMOTE.table): its width, keys, growth, share of the width, and the room under it. */
-		--f-Rw: 336;
-		--f-Rk: 176;
-		--f-grow: 1.25px;
-		--f-share: 0.935;
-		--f-tail: 16px;
-		--f-keys: calc(var(--f-h) - 14px - var(--f-rr));
-		--f-phm: max(60px, var(--f-h) - var(--f-rtv) - 26px);
-		--f-pw: calc(var(--f-w) - 28px);
-		--f-ph: max(60px, min(var(--f-phm), var(--f-pw) / 1.2));
-		/* The canvas: wider than 500 where the picture is, so it is drawn at 1.15 at most. */
-		--f-cw: max(500px, round(nearest, var(--f-pw) / 1.15, 1px));
-		--f-k: min(var(--f-pw) / 500, 1.15px);
-		--f-ot: 8px;
-		--f-u: max(
-			1px,
-			min(
-				var(--f-grow),
-				var(--f-w) * var(--f-share) / var(--f-Rw),
-				(var(--f-h) - 16px - var(--f-rr)) / var(--f-Rk)
-			)
-		);
-		--f-pl2: calc((var(--f-w) - var(--f-Rw) * var(--f-u)) / 2);
-		--f-pt: calc(var(--f-ph) + 43px);
-		--f-height: max(
-			var(--f-h),
-			var(--f-pt) + var(--f-Rk) * var(--f-u) + var(--f-tail) + var(--f-rr)
-		);
+		--f-res: 0px;
+	}
+	/* Full width, wider than 16:9 where the height caps it (`seatPhone`, on its side): the canvas keeps 270 px of
+	   height and is as wide as the picture's shape, from 480 to 810; the picture is that canvas at its scale. */
+	.tvr[data-room="unmeasured"] > * {
+		--f-wid: calc(var(--f-w) - 28px);
+		--f-cw: clamp(480px, round(nearest, 270px * tan(atan2(var(--f-wid), var(--f-ph))), 1px), 810px);
+		--f-pw: calc(var(--f-ph) * tan(atan2(var(--f-cw), 270px)));
+		--f-k: calc(var(--f-ph) / 270);
 		--f-cx: calc(var(--f-w) / 2);
-		--f-cy: calc(var(--f-ot) + var(--f-ph) / 2 + 5px);
+		--f-cy: calc(13px + var(--f-ph) / 2);
 		--f-ls: max(
 			(var(--f-pw) + 10px) * 0.985 / 611,
 			var(--f-cx) / 836.5,
 			(var(--f-w) - var(--f-cx)) / 835.5,
 			var(--f-cy) / 255,
-			(var(--f-height) - var(--f-cy)) / 686
+			(var(--f-h) - var(--f-cy)) / 686
 		);
 	}
-	@media (max-width: 767.98px) {
-		.tvr[data-room="unmeasured"] > * {
-			--f-rr: 60px;
-			--f-rtv: 60px;
-		}
-	}
-	/* In the hand where its keys fit the height: H - 14 - reserve >= 288. */
-	@media (min-width: 768px) {
-		@container tvr (min-height: 348px) {
-			.tvr[data-room="unmeasured"] > * {
-				--f-Rw: 236;
-				--f-Rk: 288;
-				--f-grow: 1.3px;
-				--f-share: 0.68;
-				--f-tail: 40px;
-			}
-		}
-	}
-	@media (max-width: 767.98px) {
-		@container tvr (min-height: 362px) {
-			.tvr[data-room="unmeasured"] > * {
-				--f-Rw: 236;
-				--f-Rk: 288;
-				--f-grow: 1.3px;
-				--f-share: 0.68;
-				--f-tail: 40px;
-			}
-		}
-	}
-	.tvr[data-room="unmeasured"] :is(.tvr-f-remote, .tvr-f-cv-desktop, .tvr-f-desk, .tvr-f-up) {
+	.tvr[data-room="unmeasured"] :is(.tvr-f-up) {
 		display: none;
 	}
-	.tvr[data-room="unmeasured"] :is(.tvr-f-photo, .tvr-f-side, .tvr-f-rig, .tvr-f-cv-phone) {
+	.tvr[data-room="unmeasured"] :is(.tvr-f-photo, .tvr-f-side) {
 		display: block;
 	}
 	.tvr[data-room="unmeasured"] .tvr-f-photo {
@@ -1309,17 +1256,6 @@ html[data-tv-transition] .tvr-bracket {
 		top: calc(var(--f-cy) - 255 * var(--f-ls));
 		width: calc(1672 * var(--f-ls));
 		height: calc(941 * var(--f-ls));
-	}
-	.tvr[data-room="unmeasured"] .tvr-f-tv {
-		left: 14px;
-		top: calc(var(--f-ot) + 5px);
-		width: var(--f-pw);
-		height: var(--f-ph);
-		border-radius: 3px;
-		box-shadow: none;
-	}
-	.tvr[data-room="unmeasured"][data-tv-power="on"] .tvr-f-tv {
-		box-shadow: none;
 	}
 	.tvr[data-room="unmeasured"] .tvr-f-lgrad {
 		background: radial-gradient(
@@ -1329,59 +1265,20 @@ html[data-tv-transition] .tvr-bracket {
 		);
 	}
 	.tvr[data-room="unmeasured"] .tvr-f-lbody {
-		left: 9px;
-		top: var(--f-ot);
+		left: var(--f-ol);
+		top: 8px;
 		width: calc(var(--f-pw) + 10px);
 		height: calc(var(--f-ph) + 10px);
 	}
-	/* The room's height chose the form above; the rig says the same to the forms. */
-	.tvr[data-room="unmeasured"] .tvr-f-rig {
-		width: clamp(1px, 2px + (var(--f-keys) - 288px) * 10000, 2px);
+}
+/* The raised phone Remote and its hand slide over the TV's lower part, and back (TvRoom.tsx). */
+.tvr-lift {
+	transition: transform 240ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+	.tvr-lift {
+		transition: none;
 	}
-}
-
-/* Both phone rooms: the canvas keeps its width and shows as much height as the picture has; the keys the server
-   draws are as tall as they will be (`keyLength`, kit.tsx: 44 px of the phone's screen at the least). */
-.tvr[data-room="unmeasured"] .tvr-f-cv-phone {
-	width: var(--f-cw, 500px);
-	height: calc(var(--f-ph) / tan(atan2(var(--f-k), 1px)));
-	transform: translate(0px, 0px) scale(tan(atan2(var(--f-k), 1px)));
-	--tv-key: round(up, 44px / tan(atan2(var(--f-k), 1px)), 1px);
-}
-.tvr[data-room="unmeasured"] .tvr-f-form {
-	display: none;
-}
-@container tvr-form (min-width: 1.5px) {
-	.tvr[data-room="unmeasured"] .tvr-f-form[data-tvr-form="hand"] {
-		display: block;
-	}
-}
-@container tvr-form (max-width: 1.5px) {
-	.tvr[data-room="unmeasured"] .tvr-f-form[data-tvr-form="table"] {
-		display: block;
-	}
-}
-.tvr[data-room="unmeasured"] .tvr-f-rig {
-	container: tvr-form / inline-size;
-}
-.tvr[data-room="unmeasured"] .tvr-f-premote {
-	left: var(--f-pl2);
-	top: var(--f-pt);
-	width: calc(var(--f-Rw) * var(--f-u));
-}
-.tvr[data-room="unmeasured"] .tvr-f-pscale {
-	transform: scale(tan(atan2(var(--f-u), 1px)));
-}
-/* Held, the body runs on under the room's bottom edge, into the hand. */
-.tvr[data-room="unmeasured"] .tvr-f-grip {
-	height: calc((var(--f-height, var(--f-h)) - var(--f-pt)) / tan(atan2(var(--f-u), 1px)) + 60px);
-}
-/* The hand around the held Remote: its fingers come round the body at the streaming keys. */
-.tvr[data-room="unmeasured"] .tvr-f-phand {
-	left: calc(var(--f-pl2) - 321 * var(--f-Rw) * var(--f-u) / 382);
-	top: calc(var(--f-pt) + 234 * var(--f-u) - 680 * var(--f-Rw) * var(--f-u) / 382);
-	width: calc(1024 * var(--f-Rw) * var(--f-u) / 382);
-	height: calc(1536 * var(--f-Rw) * var(--f-u) / 382);
 }
 /* In a narrow desktop room the lip's tab has its first line alone: with its second it reaches over the
    Remote's right streaming key, centred under the TV. The lip is outside the room, so the window decides, the
@@ -1412,7 +1309,9 @@ html[data-tv-transition] .tvr-bracket {
 }
 
 /* The TV's screens, in the look "Cinema" (kit.tsx). In the components layer, so a utility on an item wins.
-   Rendering budget (#190): transform, opacity, a shadow and a colour change once per focus move; nothing loops. */
+   Rendering budget (#190): opacity, a shadow, an outline and a colour change once per focus move; nothing loops.
+   The focus never changes an item's size (the owner, 2026-10-22: no zoom on posters, keys or cards): it rings the
+   item, and a key turns white. */
 @layer components {
 	.tvc {
 		color: #fff;
@@ -1425,8 +1324,7 @@ html[data-tv-transition] .tvr-bracket {
 		outline: none;
 		border-radius: 14px;
 		-webkit-tap-highlight-color: transparent;
-		transition: transform 0.18s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.18s,
-			background-color 0.18s, color 0.18s;
+		transition: box-shadow 0.15s, background-color 0.15s, color 0.15s;
 	}
 	/* A tile is a picture without a frame. The focused one comes forward; the others sit back in the dark, under
 	   a plain overlay (a brightness filter would repaint every picture). */
@@ -1444,15 +1342,18 @@ html[data-tv-transition] .tvr-bracket {
 		pointer-events: none;
 	}
 	.tvc-tile.tvc-on {
-		transform: scale(1.09);
-		box-shadow: 0 0 0 4px #fff, 0 26px 60px rgba(0, 0, 0, 0.75);
+		outline: 4px solid #fff;
+		outline-offset: -4px;
+		box-shadow: 0 18px 44px rgba(0, 0, 0, 0.7);
 		z-index: 2;
 	}
 	.tvc-tile.tvc-on::after {
 		opacity: 0;
 	}
+	/* A key: the site's secondary button at TV size, a quiet pill with a hairline edge and room around its words. */
 	.tvc-btn {
-		background: rgba(255, 255, 255, 0.16);
+		background: rgba(255, 255, 255, 0.14);
+		box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
 		border-radius: 999px;
 		font-weight: 700;
 	}
@@ -1476,14 +1377,13 @@ html[data-tv-transition] .tvr-bracket {
 		opacity: 1;
 	}
 	.tvc-lift.tvc-on {
-		transform: scale(1.045);
 		box-shadow: 0 14px 30px rgba(0, 0, 0, 0.6);
 		z-index: 2;
 	}
 	.tvc-pt {
 		position: relative;
 		overflow: hidden;
-		transition: transform 0.18s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.18s;
+		transition: box-shadow 0.15s;
 	}
 	.tvc-pt::after {
 		content: "";
@@ -1497,7 +1397,6 @@ html[data-tv-transition] .tvr-bracket {
 		pointer-events: none;
 	}
 	.tvc-on .tvc-pt {
-		transform: scale(1.045);
 		box-shadow: 0 14px 30px rgba(0, 0, 0, 0.6);
 	}
 	.tvc-on .tvc-pt::after {
@@ -1513,7 +1412,7 @@ html[data-tv-transition] .tvr-bracket {
 	/* An entry of home's guide (#673, HomeGuide.tsx). Its plate fades in and it comes forward: opacity and transform
 	   only, so a move along the list paints its words once and nothing per frame. */
 	.tvc-entry {
-		transition: transform 0.18s cubic-bezier(0.2, 0.8, 0.2, 1);
+		transition: color 0.15s;
 	}
 	.tvc-entry::before {
 		content: "";
@@ -1529,7 +1428,6 @@ html[data-tv-transition] .tvr-bracket {
 	}
 	.tvc-entry.tvc-on {
 		color: #000;
-		transform: scale(1.04);
 	}
 	.tvc-entry.tvc-on::before {
 		opacity: 1;
@@ -1538,8 +1436,17 @@ html[data-tv-transition] .tvr-bracket {
 	.tvc-act.tvc-on {
 		background: #fff;
 		color: #000;
-		transform: scale(1.06);
-		box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
+		box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.35), 0 12px 30px rgba(0, 0, 0, 0.5);
+	}
+	/* The Trailer key (kit.tsx, TrailerKey): the title page's white pill with the red mark. White already, so the
+	   focus rings it with a dark gap and a white edge. */
+	.tvc-trailer {
+		background: #fff;
+		color: #000;
+		box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.6);
+	}
+	.tvc-trailer.tvc-on {
+		box-shadow: 0 0 0 3px #05060a, 0 0 0 6px #fff, 0 12px 30px rgba(0, 0, 0, 0.5);
 	}
 	/* The navigation along the top (kit.tsx, NavBar): its tabs are quiet words, the screen on show is marked, and the
 	   focus is white as on every key. */
@@ -1558,9 +1465,7 @@ html[data-tv-transition] .tvr-bracket {
 	.tvc-menu-key:not(.tvc-on):not(.tvc-here) {
 		background: rgba(255, 255, 255, 0.05);
 	}
-	.tvc-menu-key.tvc-on {
-		transform: scale(1.03);
-	}
+
 	/* Watch next's Watch key: amber like the title page's, white with the focus like every key. */
 	.tvc-watch:not(.tvc-on) {
 		background: linear-gradient(180deg, #fcd34d, #f59e0b);
@@ -1600,8 +1505,7 @@ html[data-tv-transition] .tvr-bracket {
 	.tvc-x.tvc-on {
 		background: #fbbf24;
 		color: #000;
-		transform: scale(1.06);
-		box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
+		box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.35), 0 12px 30px rgba(0, 0, 0, 0.5);
 	}
 	/* Its motif: four brackets at the corners of a small picture. At rest they stand close to the picture; with
 	   the focus they move out twice and rest open. `transform` only, and the animation ends (#190). */
@@ -1661,15 +1565,14 @@ html[data-tv-transition] .tvr-bracket {
 	.tvc-tab.tvc-on {
 		background: #fff;
 		color: #000;
-		transform: scale(1.05);
-		box-shadow: 0 14px 34px rgba(0, 0, 0, 0.55);
+		box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
 	}
 	.tvc-fade {
 		animation: tvc-fade 0.42s ease-out both;
 	}
-	/* A screen arrives with a short zoom out of the picture. */
+	/* A screen arrives with a short fade: nothing grows. */
 	.tvc-screen {
-		animation: tvc-in 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+		animation: tvc-fade 0.2s ease-out both;
 	}
 	.tvc-menu {
 		background: rgba(0, 0, 0, 0.6);
@@ -1751,12 +1654,6 @@ html[data-tv-transition] .tvr-bracket {
 @keyframes tvc-fade {
 	from {
 		opacity: 0;
-	}
-}
-@keyframes tvc-in {
-	from {
-		opacity: 0;
-		transform: scale(1.04);
 	}
 }
 @keyframes tvc-x-out {

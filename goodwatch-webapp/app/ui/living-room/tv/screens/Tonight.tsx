@@ -9,21 +9,37 @@
 // the ends. A pointer only points: the stack holds still under it, and cards out of view take no pointer. The card
 // with the focus is the pick on show, and the address names it (tv-machine.ts, `showPick`).
 //
+// The phone shows the same pick on its fixed canvas without scrolling, in one of two designs to compare (a
+// prototype, ../prototype/watch-next-variant.tsx): A, one pick at a time with an arrow to either side and a swipe
+// to the next; B, a compact strip of the picks' posters that pages by its arrows.
+//
 // A chunk the TV asks for on first use (screen-code.tsx).
-import { useEffect, useRef, useState } from "react"
+import { type ReactNode, useEffect, useRef, useState } from "react"
 import ScoreRing from "~/ui/details/hero/ScoreRing"
 import { tmdbImageUrl } from "~/utils/tmdb-image"
 import {
 	Ambient,
 	CornerBar,
+	Expand,
 	ExpandCorner,
 	Img,
 	Item,
-	PhoneFoot,
+	PHONE_FOOT,
+	PHONE_HEAD,
+	PHONE_SIDE,
+	PageArrow,
+	TrailerKey,
 	backdropSize,
 	keySize,
+	phoneFit,
+	usePage,
 	useTvView,
 } from "../kit"
+import {
+	type WatchNextVariant,
+	WatchNextVariantSwitcher,
+	useWatchNextVariant,
+} from "../prototype/watch-next-variant"
 import { primaryOffer } from "../title-extras"
 import type { TvTonightPick } from "../tv-home"
 import { pickFacts, tonightWords } from "../tv-title"
@@ -132,6 +148,7 @@ export default function Tonight({
 }) {
 	const { canvas, focused, byPointer, dispatch } = useTvView()
 	const P = canvas.edition === "phone"
+	const variant = useWatchNextVariant()
 	const count = picks.length
 	const at = count ? pick % count : 0
 	const shown = picks[at]
@@ -208,7 +225,7 @@ export default function Tonight({
 					? `Watch on ${offer.name} (opens in a new tab)`
 					: "Where to watch, on its page"
 			}
-			className={`tvc-btn tvc-watch flex shrink-0 items-center gap-2.5 whitespace-nowrap ${P ? "px-5 text-[20px]" : "px-7 text-[24px]"}`}
+			className={`tvc-btn tvc-watch flex shrink-0 items-center gap-2.5 whitespace-nowrap ${P ? "px-4 text-[19px]" : "px-7 text-[24px]"}`}
 			style={{ height: h }}
 		>
 			{offer && !P
@@ -218,16 +235,9 @@ export default function Tonight({
 					: "Where to watch"}
 		</Item>
 	)
-	const keyClass = `tvc-btn flex shrink-0 items-center justify-center gap-2 whitespace-nowrap ${P ? "px-4 text-[20px]" : "px-7 text-[24px]"}`
+	const keyClass = `tvc-btn flex shrink-0 items-center justify-center gap-2 whitespace-nowrap ${P ? "px-3.5 text-[19px]" : "px-7 text-[24px]"}`
 	const trailer = items.includes("trailer") && (
-		<Item
-			id="trailer"
-			label="Trailer"
-			className={keyClass}
-			style={{ height: h }}
-		>
-			Trailer
-		</Item>
+		<TrailerKey height={h} says={`Trailer: ${card.title}`} />
 	)
 	const details = items.includes("details") && (
 		<Item
@@ -255,86 +265,14 @@ export default function Tonight({
 
 	if (P)
 		return (
-			<div ref={root} className="absolute inset-0">
-				{backdrop && <Ambient src={backdrop} />}
-				<div
-					className="absolute inset-0"
-					style={{
-						background:
-							"linear-gradient(0deg, rgba(7,8,12,1) 0%, rgba(7,8,12,.85) 38%, rgba(7,8,12,.15) 70%, rgba(7,8,12,.75) 100%)",
-					}}
-				/>
-				{/* Anchored at the bottom; on a short phone it scrolls (mt-auto, not justify-end, so its top stays in
-				    reach). */}
-				<div
-					data-tv-scroll
-					className="absolute inset-x-0 bottom-2 top-[78px] flex flex-col overflow-hidden [&>*]:shrink-0"
-				>
-					<div className="mt-auto px-5">
-						{canvas.h >= 380 && (
-							<div className="flex items-center justify-between text-[18px] font-semibold text-amber-300">
-								<span className="truncate">{words.crumb}</span>
-								<span className="shrink-0 text-white/70">
-									{at + 1} / {count}
-								</span>
-							</div>
-						)}
-						<div className="mt-1 flex h-[70px] items-end">
-							<div className="line-clamp-2 text-[32px] font-extrabold leading-[1.05] tracking-tight">
-								{card.title}
-							</div>
-						</div>
-						<div className="mt-2 flex items-center gap-3 text-[18px] text-white/80">
-							<ScoreRing {...ring} size={38} label={false} />
-							<span className="truncate">{pickFacts(shown)}</span>
-						</div>
-					</div>
-					{/* One row of keys; it pages sideways with the focus, and a finger can swipe it. The stack's cards are
-					    items too, on a row of their own under it, for the keys and the Remote's wheel. */}
-					<div
-						data-tv-row
-						className="mt-1.5 flex items-center gap-2.5 overflow-x-auto px-5 py-2 [scrollbar-width:none]"
-					>
-						{watch}
-						{trailer}
-						{details}
-						{another}
-					</div>
-					{/* The stack's row gives way to the Expand key, which ends it (kit.tsx, `PhoneFoot`): its words say where
-					    it goes, so it is as wide as they are and never rides past the picture's edge. */}
-					<PhoneFoot
-						items={items}
-						height={Math.max(64, h) * 1.5 + 8}
-						className="px-5"
-					>
-						<div
-							data-tv-row
-							className="flex min-w-0 flex-1 gap-2 overflow-x-auto py-1 [scrollbar-width:none]"
-						>
-							{picks.map((p, i) => (
-								<Item
-									key={`${p.card.media_type}-${p.card.tmdb_id}`}
-									id={`pick:${i}`}
-									label={p.card.title}
-									className="tvc-ring tvc-lift block shrink-0 overflow-hidden rounded-[10px]"
-									style={{
-										width: Math.max(64, h),
-										height: Math.max(64, h) * 1.5,
-									}}
-								>
-									{p.card.poster_path && (
-										<Img
-											src={tmdbImageUrl(p.card.poster_path, "w154")}
-											className="absolute inset-0 h-full w-full"
-										/>
-									)}
-								</Item>
-							))}
-						</div>
-					</PhoneFoot>
-				</div>
-				<CornerBar items={items} />
-			</div>
+			<PhoneTonight
+				variant={variant}
+				items={items}
+				picks={picks}
+				at={at}
+				backdrop={backdrop}
+				keys={{ watch, trailer, details, another }}
+			/>
 		)
 
 	return (
@@ -429,6 +367,211 @@ export default function Tonight({
 			</div>
 			<ExpandCorner items={items} />
 			<CornerBar items={items} />
+		</div>
+	)
+}
+
+// ---------------------------------------------------------------------------------------------------------
+// The phone: the canvas's 448 x 194 under the header, in three rows as tall as a key, and nothing scrolls.
+
+/** How tall a title is set on the phone: long names smaller, so they stay on their line. */
+const phoneName = (name: string) => (name.length > 30 ? 18 : name.length > 22 ? 21 : 25)
+
+/** A pick's name and its facts with its score, on one line each. `short` leaves the runtime out where it is narrow. */
+function PhoneTitle({
+	pick,
+	at,
+	count,
+	short = false,
+}: { pick: TvTonightPick; at: number; count: number; short?: boolean }) {
+	const card = pick.card
+	const facts = short
+		? [card.release_year, card.media_type === "show" ? "Show" : "Movie", pick.episode?.code]
+				.filter(Boolean)
+				.join(" · ")
+		: pickFacts(pick)
+	return (
+		<div className="min-w-0 flex-1">
+			<div
+				className="truncate font-extrabold leading-[1.15] tracking-tight"
+				style={{ fontSize: phoneName(card.title) }}
+			>
+				{card.title}
+			</div>
+			<div className="mt-1 flex items-center gap-2 text-[16px] leading-tight text-white/80">
+				<ScoreRing media={{ details: card }} size={26} label={false} />
+				<span className="shrink-0 font-semibold text-amber-300">
+					{at + 1} of {count}
+				</span>
+				<span className="min-w-0 truncate">{facts}</span>
+			</div>
+		</div>
+	)
+}
+
+/**
+ * A swipe across the picture: sideways, far enough and more sideways than down. It shows the pick before or after;
+ * the finger's pointing (pointing.ts) is cancelled first, so letting go chooses nothing under it.
+ */
+function useSwipe(onSwipe: (by: 1 | -1) => void) {
+	const start = useRef<{ id: number; x: number; y: number } | null>(null)
+	const latest = useRef(onSwipe)
+	latest.current = onSwipe
+	return {
+		onPointerDown: (e: React.PointerEvent) => {
+			if (e.pointerType === "mouse") return
+			start.current = { id: e.pointerId, x: e.clientX, y: e.clientY }
+		},
+		onPointerUp: (e: React.PointerEvent) => {
+			const from = start.current
+			start.current = null
+			if (!from || from.id !== e.pointerId) return
+			const dx = e.clientX - from.x
+			const dy = e.clientY - from.y
+			if (Math.abs(dx) < 36 || Math.abs(dx) < Math.abs(dy) * 1.4) return
+			window.dispatchEvent(
+				new PointerEvent("pointercancel", { pointerId: e.pointerId, pointerType: e.pointerType }),
+			)
+			latest.current(dx < 0 ? 1 : -1)
+		},
+		onPointerCancel: () => {
+			start.current = null
+		},
+	}
+}
+
+function PhoneTonight({
+	variant,
+	items,
+	picks,
+	at,
+	backdrop,
+	keys,
+}: {
+	variant: WatchNextVariant
+	items: readonly string[]
+	picks: readonly TvTonightPick[]
+	at: number
+	backdrop: string | null
+	keys: Record<"watch" | "trailer" | "details" | "another", ReactNode>
+}) {
+	const { canvas, dispatch } = useTvView()
+	const count = picks.length
+	const key = keySize(canvas, 54)
+	const swipe = useSwipe((by) => {
+		const arrow = by > 0 ? "next-pick" : "prev-pick"
+		if (items.includes(arrow)) dispatch({ type: "choose", item: arrow })
+	})
+	const shown = picks[at]
+	const arrow = (id: "prev-pick" | "next-pick") =>
+		items.includes(id) ? (
+			<Item
+				id={id}
+				label={id === "next-pick" ? "Next pick" : "Previous pick"}
+				className="tvc-btn tvc-arrow flex shrink-0 items-center justify-center"
+				style={{ width: key, height: key }}
+			>
+				<svg viewBox="0 0 24 24" aria-hidden="true" className="h-[26px] w-[26px]" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
+					<path d={id === "next-pick" ? "M9 5l7 7-7 7" : "M15 5l-7 7 7 7"} />
+				</svg>
+			</Item>
+		) : (
+			<span aria-hidden className="shrink-0" style={{ width: key }} />
+		)
+	const row = "flex items-center gap-2"
+	// B's strip: four posters a page. Worked out for A too, so the hooks stay the same whichever is on show.
+	const ids = picks.map((_, i) => `pick:${i}`).filter((id) => items.includes(id))
+	// Four posters a page upright, up to seven on a phone's wide canvas; the page holds the pick on show, so Back
+	// from Details comes back to it.
+	const page = usePage(
+		ids,
+		phoneFit(canvas, 4, Math.round(((key + 4) * 2) / 3) + 8, 7),
+		`pick:${at}`,
+	)
+	const expand = items.includes("expand") && <Expand />
+	let body: ReactNode
+	if (variant === "b") {
+		// B: the strip of posters, a page of four, then the pick on show and its keys.
+		const posterH = key + 4
+		body = (
+			<>
+				<div className={row} style={{ height: posterH }}>
+					<PageArrow to={page.prev} dir="prev" label="Previous picks" />
+					<div className="flex min-w-0 flex-1 items-center gap-2">
+						{page.shown.map((id) => {
+							const p = picks[Number(id.slice(5))]
+							return (
+								<Item
+									key={id}
+									id={id}
+									label={p.card.title}
+									pressed={id === `pick:${at}`}
+									className={`tvc-ring block shrink-0 overflow-hidden rounded-[8px] bg-[#161a24] ${id === `pick:${at}` ? "shadow-[0_0_0_2px_#fbbf24]" : "opacity-80"}`}
+									style={{ width: Math.round((posterH * 2) / 3), height: posterH }}
+								>
+									{p.card.poster_path && (
+										<Img src={tmdbImageUrl(p.card.poster_path, "w154")} className="absolute inset-0 h-full w-full" />
+									)}
+								</Item>
+							)
+						})}
+					</div>
+					<PageArrow to={page.next} dir="next" label="More picks" />
+					{keys.another}
+				</div>
+				<div className={`${row} mt-1`} style={{ height: key }}>
+					<PhoneTitle pick={shown} at={at} count={count} short />
+					{expand}
+				</div>
+				<div className={`${row} mt-1`} style={{ height: key }}>
+					{keys.watch}
+					{keys.trailer}
+					{keys.details}
+				</div>
+			</>
+		)
+	} else {
+		// A: one pick at a time, an arrow to either side; then its keys, and Not now beside the way to all of them.
+		body = (
+			<>
+				<div className={row} style={{ height: key }}>
+					{arrow("prev-pick")}
+					<div key={at} className="tvc-fade min-w-0 flex-1 px-1">
+						<PhoneTitle pick={shown} at={at} count={count} />
+					</div>
+					{arrow("next-pick")}
+				</div>
+				<div className={`${row} mt-1.5`} style={{ height: key }}>
+					{keys.watch}
+					{keys.trailer}
+					{keys.details}
+				</div>
+				<div className={`${row} mt-1.5 justify-between`} style={{ height: key }}>
+					{keys.another}
+					{expand}
+				</div>
+			</>
+		)
+	}
+	return (
+		<div className="absolute inset-0" {...(variant === "a" ? swipe : {})}>
+			{backdrop && <Ambient src={backdrop} />}
+			<div
+				className="absolute inset-0"
+				style={{
+					background:
+						"linear-gradient(0deg, rgba(7,8,12,.96) 0%, rgba(7,8,12,.86) 55%, rgba(7,8,12,.55) 100%)",
+				}}
+			/>
+			<div
+				data-watch-next-variant={variant}
+				className="absolute inset-x-0 bottom-0 flex flex-col justify-end"
+				style={{ top: PHONE_HEAD, paddingLeft: PHONE_SIDE, paddingRight: PHONE_SIDE, paddingBottom: PHONE_FOOT }}
+			>
+				{body}
+			</div>
+			<CornerBar items={items} />
+			<WatchNextVariantSwitcher variant={variant} />
 		</div>
 	)
 }

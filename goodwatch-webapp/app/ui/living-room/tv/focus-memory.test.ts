@@ -3,9 +3,12 @@ import { describe, it } from "node:test"
 import {
 	FOCUS_STORAGE_KEY,
 	type FocusStorage,
+	LIST_STORAGE_KEY,
 	MAX_ENTRIES,
 	createFocusMemory,
+	filterChangeForgets,
 	focusKey,
+	listKeys,
 	tabFocusMemory,
 } from "./focus-memory.ts"
 
@@ -201,5 +204,61 @@ describe("the tab's memory", () => {
 		} finally {
 			browser.window = undefined
 		}
+	})
+})
+
+describe("a list's place, beside the focus (2026-10-22)", () => {
+	it("is kept under its own key: the focus's memory and the list's never mix", () => {
+		const store = new Map<string, string>()
+		const storage = {
+			getItem: (key: string) => store.get(key) ?? null,
+			setItem: (key: string, value: string) => void store.set(key, value),
+		}
+		const focus = createFocusMemory(storage)
+		const list = createFocusMemory(storage, LIST_STORAGE_KEY)
+		focus.remember("k1?tv=popular&pick=7", "details")
+		list.remember("k1?tv=popular&pick=7", "pick:7")
+		assert.equal(focus.recall("k1?tv=popular&pick=7"), "details")
+		assert.equal(list.recall("k1?tv=popular&pick=7"), "pick:7")
+		assert.ok(store.has(FOCUS_STORAGE_KEY) && store.has(LIST_STORAGE_KEY))
+		// A page drawn anew reads it back from storage.
+		assert.equal(createFocusMemory(storage, LIST_STORAGE_KEY).recall("k1?tv=popular&pick=7"), "pick:7")
+	})
+})
+
+describe("listKeys: where a list's place is remembered", () => {
+	const results = { key: "k1", pathname: "/", search: "?tv=search&q=the&page=2" }
+	const filters = { key: "k2", pathname: "/", search: "?tv=search&q=the&page=2&filters=1" }
+	const done = { key: "k3", pathname: "/", search: "?tv=search&q=the&page=2" }
+	it("the filters step and Done keep the results' list address, so an unchanged filter keeps their place", () => {
+		assert.equal(listKeys("titles", filters)[1], listKeys("titles", results)[1])
+		assert.equal(listKeys("titles", done)[1], listKeys("titles", results)[1])
+	})
+	it("the filter grid's place is its own, never the results' under the same address", () => {
+		assert.notEqual(listKeys("filters", filters)[1], listKeys("titles", filters)[1])
+		assert.notEqual(listKeys("filters", filters)[0], listKeys("titles", filters)[0])
+	})
+	it("a changed filter is another address: the results start again", () => {
+		const changed = { key: "k4", pathname: "/", search: "?tv=search&q=the&browse=type%3Dmovie" }
+		assert.notEqual(listKeys("titles", changed)[1], listKeys("titles", results)[1])
+	})
+})
+
+describe("filterChangeForgets: a changed filter starts the results again", () => {
+	const movie = { pathname: "/", search: "?tv=search&q=the&type=movie&filters=1" }
+	it("forgets the destination's results fallback, the key the results list reads", () => {
+		assert.equal(
+			filterChangeForgets("filter:type", movie),
+			listKeys("titles", { key: "x", pathname: "/", search: "?tv=search&q=the&type=movie" })[1],
+		)
+		assert.equal(filterChangeForgets("browse:reset", movie), listKeys("titles", { key: "x", ...movie })[1])
+	})
+	it("forgets nothing for any other step: Done, Filters, a title, an arrow", () => {
+		for (const item of ["browse:done", "browse:filters", "title:movie-1", "jump:title:movie-7", "browse:next"])
+			assert.equal(filterChangeForgets(item, movie), null)
+	})
+	it("never a history entry's memory: Back to an older filter keeps its page", () => {
+		assert.ok(!filterChangeForgets("filter:type", movie)?.includes("@x"))
+		assert.ok(filterChangeForgets("filter:type", movie)?.startsWith("titles@list:"))
 	})
 })

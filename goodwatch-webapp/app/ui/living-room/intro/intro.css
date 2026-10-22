@@ -9,6 +9,17 @@
 	color: #fff;
 	font-family: "Gabarito", ui-sans-serif, system-ui, sans-serif;
 }
+/* A picture much wider than a TV's (a phone on its side, about 2.9:1 since 2026-10-22): the film keeps a 16:9 stage,
+   centred, with the picture's dark beside it, so no scene is stretched or cut. The desktop's picture (1.85:1) and an
+   upright phone's (16:9) fill as before. */
+@container (min-aspect-ratio: 2/1) {
+	.film-stage {
+		right: auto;
+		left: 50%;
+		width: calc(100cqh * 16 / 9);
+		translate: -50% 0;
+	}
+}
 .film-slot {
 	position: absolute;
 	inset: 0;
@@ -223,7 +234,7 @@
 	opacity: 1;
 	transform: translate(-50%, 0);
 }
-@container (max-width: 520px) {
+@container (max-width: 760px) or (max-height: 360px) {
 	.film-chapter-now {
 		display: none;
 	}
@@ -258,7 +269,10 @@
 	width: max(12px, 1.4cqw);
 	height: max(12px, 1.4cqw);
 }
+/* Replay: at the bottom left, away from where Next was (player.tsx). The chapter bar has gone by then. */
 .film-replay {
+	right: auto;
+	left: 3cqw;
 	background: #fbbf24;
 	color: #111;
 	animation: film-fade-in 0.4s ease-out both;
@@ -266,7 +280,7 @@
 .film-replay:hover {
 	background: #fcd34d;
 }
-@container (max-width: 520px) {
+@container (max-width: 760px) or (max-height: 360px) {
 	.film-chapters {
 		right: 22cqw;
 	}
@@ -329,7 +343,7 @@
 	-webkit-line-clamp: 2;
 	line-height: 1.05;
 }
-@container (max-width: 520px) {
+@container (max-width: 760px) or (max-height: 360px) {
 	.intro-lite-wish-btn .intro-feed-pill {
 		font-size: 2.6cqw;
 		padding: 0.8cqw 2cqw;
@@ -430,7 +444,7 @@
 	height: 100%;
 	object-fit: cover;
 }
-@container (max-width: 520px) {
+@container (max-width: 760px) or (max-height: 360px) {
 	.intro-ask-chip {
 		font-size: 10px;
 		padding: 3px 7px;
@@ -708,7 +722,7 @@
 	font-size: 2cqw;
 	color: rgba(255, 255, 255, 0.75);
 }
-@container (max-width: 520px) {
+@container (max-width: 760px) or (max-height: 360px) {
 	.intro-atlas-h {
 		font-size: 8.6cqw;
 	}
@@ -928,7 +942,7 @@
 .intro-score-grey {
 	filter: grayscale(1) brightness(0.55);
 }
-@container (max-width: 520px) {
+@container (max-width: 760px) or (max-height: 360px) {
 	.intro-score-head {
 		font-size: 9cqw;
 	}
@@ -957,12 +971,12 @@
 	text-align: center;
 	font-size: 4.6cqw;
 }
-@container (max-width: 520px) {
+@container (max-width: 760px) or (max-height: 360px) {
 	.intro-score-at-top {
 		font-size: 6cqw;
 	}
 }
-@container (max-width: 520px) {
+@container (max-width: 760px) or (max-height: 360px) {
 	.intro-score-at-kick {
 		display: none;
 	}
@@ -1129,7 +1143,7 @@
 	font-weight: 800;
 	font-size: max(14px, 3.4cqw);
 }
-@container (max-width: 520px) {
+@container (max-width: 760px) or (max-height: 360px) {
 	.intro-turn-h {
 		font-size: 9cqw;
 	}
@@ -1353,7 +1367,7 @@
 .intro-feel-ring {
 	width: 7.4cqw;
 }
-@container (max-width: 520px) {
+@container (max-width: 760px) or (max-height: 360px) {
 	.intro-feel-word {
 		font-size: max(26px, 12.5cqw);
 	}
@@ -1640,7 +1654,7 @@
 		transform: translate(var(--tx, 0), var(--ty, 0));
 	}
 }
-@container (max-width: 520px) {
+@container (max-width: 760px) or (max-height: 360px) {
 	.intro-isle-region {
 		font-size: 2.3cqw;
 	}
@@ -1879,7 +1893,7 @@
 		transform: scale(1.6);
 	}
 }
-@container (max-width: 520px) {
+@container (max-width: 760px) or (max-height: 360px) {
 	.intro-brand-card {
 		width: 17cqw;
 		height: 26cqh;
@@ -1995,7 +2009,7 @@
 	background: #fbbf24;
 	animation: intro-search-blink calc(1000ms * var(--k)) steps(1, end) infinite;
 }
-@container (max-width: 520px) {
+@container (max-width: 760px) or (max-height: 360px) {
 	.intro-mood-huge {
 		top: 30cqh;
 	}
@@ -2078,7 +2092,7 @@
 		transform: translateY(3cqh) scale(0.94);
 	}
 }
-@container (max-width: 520px) {
+@container (max-width: 760px) or (max-height: 360px) {
 	.intro-calm-explorer {
 		--intro-calm-isl: 1.45;
 	}
@@ -2096,7 +2110,7 @@
 	font-size: var(--t);
 	box-sizing: border-box;
 }
-@container (max-width: 520px) {
+@container (max-width: 760px) or (max-height: 360px) {
 	.intro-calm-explorer {
 		--intro-calm-isl: 1.22;
 	}
@@ -2693,7 +2707,7 @@
 			rgba(5, 6, 10, 0.9) 100%
 		), linear-gradient(180deg, rgba(5, 6, 10, 0.25), rgba(5, 6, 10, 0.8));
 }
-@container (max-width: 520px) {
+@container (max-width: 760px) or (max-height: 360px) {
 	.intro-chat-window {
 		width: 94cqw;
 	}
@@ -3232,7 +3246,7 @@
 		transform: scale(1.6);
 	}
 }
-@container (max-width: 520px) {
+@container (max-width: 760px) or (max-height: 360px) {
 	.intro-feed-line,
 	.intro-feed-card-line {
 		display: none;
@@ -3309,7 +3323,7 @@
 	top: auto;
 	bottom: 12cqh;
 }
-@container (max-width: 520px) {
+@container (max-width: 760px) or (max-height: 360px) {
 	.intro-feed-flow .intro-feed-example {
 		left: 50%;
 		transform: translateX(-50%);
@@ -3317,7 +3331,7 @@
 		top: 4cqh;
 	}
 }
-@container (max-width: 520px) {
+@container (max-width: 760px) or (max-height: 360px) {
 	.intro-feed-flow-side .intro-feed-feedview {
 		-webkit-mask-image: linear-gradient(
 			180deg,
@@ -3770,7 +3784,7 @@
 		transform: translate(-50%, -50%) scale(0.4);
 	}
 }
-@container (max-width: 520px) {
+@container (max-width: 760px) or (max-height: 360px) {
 	.intro-switch-h {
 		left: 4cqw;
 		top: 5cqh;
@@ -4052,7 +4066,7 @@
 	width: 100%;
 	box-shadow: 0 1cqw 2.6cqw rgba(0, 0, 0, 0.55);
 }
-@container (max-width: 520px) {
+@container (max-width: 760px) or (max-height: 360px) {
 	.intro-intake-head .intro-feed-h {
 		white-space: normal;
 	}
@@ -4690,7 +4704,7 @@
 	border-radius: 0.8cqw;
 	box-shadow: 0 1cqw 3cqw rgba(0, 0, 0, 0.6);
 }
-@container (max-width: 520px) {
+@container (max-width: 760px) or (max-height: 360px) {
 	.quiz-ask {
 		padding: 4.5cqh 3.5cqw 3cqh;
 	}
@@ -4774,4 +4788,106 @@
 }
 .tvr:has(.film-screen) [data-tvr-part="tv"] {
 	isolation: isolate;
+}
+
+/* The phone's picture is a TV's shape too (16:9, room-layout.ts), about 350 x 200 upright and up to 760 wide on its
+   side or on a tall phone: the narrow rules above hold up to 760 px, and here the smallest words get a floor so every
+   line reads on a phone. Decorations too small to read there (a chat's times, an island's title count) go. */
+@container (max-width: 760px) or (max-height: 360px) {
+	.intro-chat {
+		--u: max(1.83cqh, 1.2cqw);
+	}
+	.intro-chat-time,
+	.intro-isle-island-sub {
+		display: none;
+	}
+	.intro-calm-isl-text {
+		--intro-calm-isl: 1.35;
+	}
+	.intro-chat-card-text span {
+		font-size: max(9.5px, calc(1.7 * var(--u)));
+	}
+	.intro-feed-example {
+		white-space: nowrap;
+	}
+	.intro-atlas-note-app,
+	.intro-atlas-example,
+	.intro-feed-example,
+	.intro-switch-foot {
+		font-size: max(9.5px, 2.6cqw);
+	}
+	.intro-atlas-kicker,
+	.intro-isle-region,
+	.intro-isle-chip,
+	.intro-feed-kicker,
+	.intro-feed-pill,
+	.intro-ask-kicker,
+	.quiz-kicker {
+		font-size: max(10px, 2.7cqw);
+	}
+}
+/* On a phone the film's Next and Replay are small on the picture: each takes a finger's press a little beyond its edge. */
+@container (max-width: 760px) or (max-height: 360px) {
+	.film-skip::before {
+		content: "";
+		position: absolute;
+		inset: -12px -8px;
+	}
+}
+
+/* The phone's picture (upright about 350 x 200, on its side up to 816 x 285 and wider than 16:9): no word of the film
+   under 12 px, and Next and Replay at 13 px or more (the owner, 2026-10-22). Each rule keeps its own size where that
+   is larger. The scenes that were crowded show fewer items on the phone instead (their own rules above and
+   explorer.tsx), so the larger words don't overlap. */
+@container (max-width: 760px) or (max-height: 360px) {
+	.film-skip {
+		font-size: max(13px, 1.3cqw);
+	}
+	.intro-chat-bubble {
+		font-size: max(12px, calc(2.7 * var(--u)));
+	}
+	.intro-chat-card-text b {
+		font-size: max(12.5px, calc(2.3 * var(--u)));
+	}
+	.intro-chat-card-text span {
+		font-size: max(12px, calc(1.7 * var(--u)));
+	}
+	.intro-brand-n small {
+		font-size: max(12px, 0.42em);
+	}
+	.intro-atlas-kicker,
+	.intro-ask-kicker,
+	.intro-feed-kicker,
+	.intro-isle-region,
+	.intro-calm-region,
+	.quiz-kicker {
+		font-size: max(12px, 2.7cqw);
+	}
+	.intro-calm-isl-text {
+		font-size: max(12px, calc(var(--t) * var(--intro-calm-isl, 1)));
+	}
+	.intro-calm-merged-text {
+		font-size: max(12px, calc(var(--t) * 1.15));
+	}
+	.intro-search-chip,
+	.intro-mood-chips .intro-search-chip {
+		font-size: max(12px, 3.1cqw);
+	}
+	.intro-switch-label,
+	.intro-switch-number-caption {
+		font-size: max(12px, 2.6cqw);
+	}
+	.intro-switch-score {
+		font-size: max(12px, 2.6cqw);
+	}
+	.intro-feed-example,
+	.intro-feed-pill,
+	.intro-lite-wish-btn .intro-feed-pill,
+	.intro-intake-thing-score,
+	.intro-atlas-note-app,
+	.intro-atlas-example,
+	.intro-switch-foot,
+	.intro-isle-chip {
+		font-size: max(12px, 2.6cqw);
+	}
 }

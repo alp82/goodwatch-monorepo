@@ -1,4 +1,5 @@
 import { PlayIcon } from "@heroicons/react/24/solid"
+import { TrailerMark } from "./trailer-mark"
 import { Suspense, lazy, useRef, useState } from "react"
 import { usePosterImpression } from "~/hooks/usePosterImpression"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
@@ -58,9 +59,7 @@ export function PlayPill({ label = "Play trailer" }: { label?: string }) {
 			aria-hidden="true"
 			className="absolute left-1/2 top-1/2 inline-flex h-11 -translate-x-1/2 -translate-y-1/2 items-center gap-2 whitespace-nowrap rounded-full bg-white px-4 text-sm font-bold text-black shadow-[0_0_0_1px_rgba(0,0,0,.4),0_8px_24px_rgba(0,0,0,.6)] transition-transform group-hover:scale-105 group-active:scale-95 motion-reduce:transition-none md:h-12 md:px-5 md:text-base"
 		>
-			<span className="flex h-6 w-6 items-center justify-center rounded-full bg-red-600 text-white">
-				<PlayIcon className="h-3.5 w-3.5 translate-x-px" />
-			</span>
+			<TrailerMark size={24} />
 			{label}
 		</span>
 	)

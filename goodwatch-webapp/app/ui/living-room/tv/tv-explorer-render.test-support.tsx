@@ -15,8 +15,8 @@ import {
 import { MOOD_ISLANDS, MOOD_MAP, mapTitle } from "./tv-explorer.fixture"
 import { type TvHomeData, homeApps, tvContextOf } from "./tv-home"
 import {
-	type TvContext,
 	type TvScreen as Screen,
+	type TvContext,
 	type TvState,
 	focusedItem,
 	tvItems,
@@ -33,17 +33,18 @@ const guest: TvHomeData = {
 
 const CANVAS: Record<"desktop" | "phone", TvCanvas> = {
 	desktop: { edition: "desktop", ...TV_CANVAS, scale: 1 },
-	phone: { edition: "phone", ...PHONE_TV_CANVAS, scale: 0.72 },
+	phone: { edition: "phone", ...PHONE_TV_CANVAS, scale: 0.75 },
 }
 
 /** The phones of the room's table (docs/implementation/tv-screen-revamp/room), and landscape. */
 const PHONES = [
-	{ phone: "360x740", scale: 332 / 500, h: 417 },
-	{ phone: "375x667", scale: 347 / 500, h: 372 },
-	{ phone: "390x700", scale: 362 / 500, h: 402 },
-	{ phone: "390x844", scale: 362 / 500, h: 417 },
-	{ phone: "430x932", scale: 402 / 500, h: 417 },
-	{ phone: "844x390", scale: 0.98, h: 373 },
+	// The phone's fixed canvas (480 x 270) at the scale of each phone's 16:9 TV (room-layout.ts, `seatPhone`).
+	{ phone: "360x740", scale: 332 / 480, h: 270 },
+	{ phone: "375x667", scale: 347 / 480, h: 270 },
+	{ phone: "390x700", scale: 362 / 480, h: 270 },
+	{ phone: "390x844", scale: 362 / 480, h: 270 },
+	{ phone: "430x932", scale: 402 / 480, h: 270 },
+	{ phone: "844x390", scale: 507 / 480, h: 270 },
 ]
 
 type ExplorerScreen = Extract<Screen, { name: "explorer" }>
@@ -65,7 +66,8 @@ function draw(
 	view: TvExplorerView,
 	focus: string | null = null,
 ) {
-	const ctx = ctxOf(view)
+	// The page hands the phone's screens the phone's items (its header: the G and Menu).
+	const ctx = { ...ctxOf(view), phone: canvas.edition === "phone" }
 	const items = tvItems(screen, ctx)
 	const state: TvState = {
 		screen,

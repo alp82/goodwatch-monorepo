@@ -1,13 +1,15 @@
-// TV uses the same word/number layout and selection treatment as the web picker (ui/scoring/ScoreChoices.tsx).
+// TV uses the same word/number layout and selection treatment as the web picker (ui/scoring/ScoreChoices.tsx): four
+// level keys over one row of ten numbers. On the phone it is one band (the owner, 2026-10-22: the ten numbers in one
+// row under the four categories), each level joined over its own scores and every key a touch target; the desktop
+// keeps its approved strip.
 // Item registers each choice with the remote navigation machine. An answer just given lights and holds the same
 // way as on /taste/quiz (ui/scoring/score-ack.ts, the `score-ack` classes of main.css).
 import type { ReactNode } from "react"
 import type { Score } from "~/server/scores.server"
-import { ScoreChoices } from "~/ui/scoring/ScoreChoices"
 import { mediaTextAttributes } from "~/ui/media-text/media-text"
+import { ScoreChoices } from "~/ui/scoring/ScoreChoices"
 import { tmdbImageUrl } from "~/utils/tmdb-image"
 import { MediaFact } from "./MediaFact"
-import type { TvQuizAnswered } from "./tv-taste"
 import {
 	Ambient,
 	CornerBar,
@@ -15,12 +17,15 @@ import {
 	ExpandCorner,
 	Img,
 	Item,
+	PHONE_HEAD,
+	PhoneHeader,
 	Shade,
 	backdropSize,
-	useKeySize,
+	keySize,
 	useTvView,
 } from "./kit"
 import { stripFocus, stripSays } from "./tv-strip"
+import type { TvQuizAnswered } from "./tv-taste"
 
 export function RatingStrip({
 	items,
@@ -35,14 +40,15 @@ export function RatingStrip({
 	const { canvas, focused } = useTvView()
 	const phone = canvas.edition === "phone"
 	const focus = stripFocus(focused)
-	const phoneKey = useKeySize(58)
-	const numberKey = useKeySize(44)
+	// The phone's two rows of the band: each a touch target, 44 px or more on the phone's screen.
+	const phoneKey = keySize(canvas, 50)
 	return (
 		<div className="@container [&_[data-score-range]]:text-[18px]">
 			<ScoreChoices
 				value={value as Score | null}
 				acknowledged={acknowledged}
 				hot={focus?.at ?? null}
+				layout={phone ? "band" : undefined}
 				renderChoice={(choice) =>
 					items.includes(choice.id) ? (
 						<Item
@@ -50,16 +56,16 @@ export function RatingStrip({
 							id={choice.id}
 							label={choice.label}
 							pressed={choice.selected}
-							className={`${choice.acknowledged ? "score-ack" : ""} flex min-w-0 items-center justify-center gap-1.5 text-white ${choice.kind === "level" ? `tvc-lvl ${phone ? "text-[16px]" : "text-[26px]"}` : `tvc-num ${phone ? "text-[18px]" : "text-[30px]"}`}`}
+							className={`${choice.acknowledged ? "score-ack" : ""} flex min-w-0 items-center justify-center gap-1.5 text-white ${phone ? "whitespace-nowrap" : ""} ${choice.kind === "level" ? `tvc-lvl ${phone ? "text-[16px]" : "text-[26px]"}` : `tvc-num ${phone ? "text-[18px]" : "text-[30px]"}`}`}
 							style={{
 								...choice.style,
-								height: phone
-									? choice.kind === "level"
-										? phoneKey
-										: numberKey
-									: choice.kind === "level"
-										? 92
-										: 64,
+								height: phone ? phoneKey : choice.kind === "level" ? 92 : 64,
+								// The band: a level's top corners round, its scores' bottom ones, so each level and its scores
+								// read as one part.
+								...(phone &&
+									(choice.kind === "level"
+										? { borderRadius: "14px 14px 3px 3px" }
+										: { borderRadius: "3px 3px 12px 12px", marginTop: 3 })),
 							}}
 						>
 							{choice.children}
@@ -94,6 +100,8 @@ export function RatingScreen({
 	answered,
 	titleKey,
 	children,
+	title,
+	progress,
 }: {
 	/** The screen's items, from `tvItems`. */
 	items: readonly string[]
@@ -116,10 +124,13 @@ export function RatingScreen({
 	answered?: TvQuizAnswered
 	/** The title asked about: a new one rises in. */
 	titleKey?: string
+	/** The title's name alone, for the phone's header: the quiz's question is the title. */
+	title?: string
+	/** How far the person is, on the phone beside the keys: "2 of 5". */
+	progress?: string
 }) {
 	const { canvas, focused } = useTvView()
 	const P = canvas.edition === "phone"
-	const short = canvas.h < 400
 	const given = answered?.line ?? null
 	const says = given ?? stripSays(focused, P)
 	const sayClass = answered?.failed
@@ -138,51 +149,43 @@ export function RatingScreen({
 			)}
 			<Shade dim={0.82} />
 			{P ? (
-				// The phone: the strip stands at the bottom, as large as a thumb needs, and the words in what is left
-				// over it, under the bar's keys. Both words and exact scores stay visible. On a short phone it scrolls
-				// rather than squeeze the words under the strip (living-room.css).
+				// The phone: the question in the header, where the screen's name stands, and under it the band to answer
+				// with, as large as a thumb needs, and the keys under the band. Nothing else: no kicker, no line under
+				// the question (an answer just given takes the question's place for its moment, and the band lights).
+				// A screen without keys under the band (the rating) has room for the question over the band too.
 				<div
-					data-tv-scroll
-					className="absolute inset-x-0 bottom-0 top-[78px] flex flex-col px-5 pb-4 pt-1.5"
+					className="absolute inset-x-0 bottom-0 flex flex-col justify-end gap-1.5 px-4 pb-2.5"
+					style={{ top: PHONE_HEAD }}
 				>
-					<div
-						key={titleKey}
-						className={`flex flex-1 flex-col justify-center ${titleKey ? motion : ""}`}
-					>
-						<div
-							className={
-								short
-									? "sr-only"
-									: "shrink-0 truncate text-[16px] font-bold uppercase leading-tight tracking-[0.12em] text-white/75"
-							}
-						>
-							{kicker}
-						</div>
-						<div
-							className="mt-1 shrink-0 line-clamp-2 font-bold leading-[1.05] tracking-tight"
-							{...mediaTextAttributes(questionLanguage ?? "en")}
-							style={{ fontSize: questionSize(question, 26, 22) }}
-						>
-							<MediaFact text={question} media={questionMedia} />
-						</div>
-						<div
-							aria-live="polite"
-							className={
-								short && !given
-									? "sr-only"
-									: `mt-1 h-[20px] shrink-0 truncate text-[16px] font-bold leading-tight text-white/85 ${sayClass}`
-							}
-						>
-							{says ?? line}
-						</div>
+					<div aria-live="polite" className="sr-only">
+						{given}
 					</div>
-					<div className="mt-2.5 shrink-0">
+					{!(children || expands) && (
+						<div
+							key={titleKey}
+							className={`flex min-h-0 flex-1 items-center ${titleKey ? motion : ""}`}
+						>
+							<div
+								className="line-clamp-2 font-bold leading-[1.1] tracking-tight"
+								{...mediaTextAttributes(questionLanguage ?? "en")}
+								style={{ fontSize: 22 }}
+							>
+								<MediaFact text={question} media={questionMedia} />
+							</div>
+						</div>
+					)}
+					<div className="shrink-0">
 						<RatingStrip items={items} value={shownValue} acknowledged={lit} />
 					</div>
 					{(children || expands) && (
-						<div className="mt-2.5 flex shrink-0 gap-2.5">
+						<div className="flex shrink-0 items-center gap-1.5">
 							{children}
 							{expands && <Expand />}
+							{progress && (
+								<span className="ml-auto min-w-0 shrink text-right text-[17px] font-semibold leading-tight text-white/65">
+									{progress}
+								</span>
+							)}
 						</div>
 					)}
 				</div>
@@ -224,8 +227,27 @@ export function RatingScreen({
 					{expands && <ExpandCorner items={items} />}
 				</div>
 			)}
-			{/* The bar is last in the markup, as in `tvItems`: the items are met in reading order. */}
-			<CornerBar items={items} />
+			{/* The bar is last in the markup, as in `tvItems`: the items are met in reading order. On the phone it names
+			    the title asked about, or the answer just given. */}
+			{P ? (
+				<PhoneHeader
+					items={items}
+					name={
+						given
+							? phoneSays(given, Boolean(answered?.failed))
+							: children || expands
+								? (title ?? question)
+								: undefined
+					}
+				/>
+			) : (
+				<CornerBar items={items} />
+			)}
 		</>
 	)
+}
+
+/** An answer's line, short enough for the phone's header: "Scored 8 · Great", "Not seen · next title". */
+export function phoneSays(line: string, failed: boolean): string {
+	return failed ? "Not saved. Try again." : line
 }

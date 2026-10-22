@@ -119,17 +119,40 @@ describe("the Remote in the hand, under the TV", () => {
 
 	it("aims only while the cursor is over the picture, and rests a pixel outside any edge", () => {
 		const { tv } = scene
-		const [l, t, r, b] = [tv.left, tv.top, tv.left + tv.width, tv.top + tv.height]
+		const [l, t, r, b] = [
+			tv.left,
+			tv.top,
+			tv.left + tv.width,
+			tv.top + tv.height,
+		]
 		const [mx, my] = [l + tv.width / 2, t + tv.height / 2]
 		assert.equal(AIM_PAD, 0)
 		// Just inside each edge: it aims. The bottom edge is tried off centre: in the middle the Remote's own top
 		// reaches over the picture, and over the Remote it rests (the test before this one).
-		for (const [x, y] of [[l + 1, my], [r - 1, my], [mx, t + 1], [l + 60, b - 1]])
-			assert.notEqual(aimFor(scene, at(x, y), false), REST, `inside at ${x},${y}`)
+		for (const [x, y] of [
+			[l + 1, my],
+			[r - 1, my],
+			[mx, t + 1],
+			[l + 60, b - 1],
+		])
+			assert.notEqual(
+				aimFor(scene, at(x, y), false),
+				REST,
+				`inside at ${x},${y}`,
+			)
 		// 1, 10 and 39 px outside each edge: it rests.
 		for (const d of [1, 10, 39])
-			for (const [x, y] of [[l - d, my], [r + d, my], [mx, t - d], [mx, b + d]])
-				assert.equal(aimFor(scene, at(x, y), false), REST, `${d} px outside at ${x},${y}`)
+			for (const [x, y] of [
+				[l - d, my],
+				[r + d, my],
+				[mx, t - d],
+				[mx, b + d],
+			])
+				assert.equal(
+					aimFor(scene, at(x, y), false),
+					REST,
+					`${d} px outside at ${x},${y}`,
+				)
 	})
 
 	it("is at rest once the cursor left, while the TV is off, and with reduced motion", () => {
@@ -164,7 +187,6 @@ describe("the Remote in the hand at 1440 x 800", () => {
 
 describe("the phone's Remote under the TV", () => {
 	const held = layoutPhoneRoom(390, 708, 60)
-	const lying = layoutPhoneRoom(375, 531, 60)
 	const spots = (tv: Rect) => {
 		const out: Spot[] = []
 		for (let x = tv.left; x <= tv.left + tv.width; x += tv.width / 12)
@@ -173,9 +195,9 @@ describe("the phone's Remote under the TV", () => {
 		return out
 	}
 
-	it("is held at 390 x 844 and lies on the table at 375 x 667", () => {
+	it("is held at every size (2026-10-22: the phone's Remote has one form)", () => {
 		assert.equal(held.form, "hand")
-		assert.equal(lying.form, "table")
+		assert.equal(layoutPhoneRoom(375, 531, 60).form, "hand")
 	})
 
 	it("held, it turns 11 degrees at most, leans back up to 11 and slides up to 8 px", () => {
@@ -202,20 +224,10 @@ describe("the phone's Remote under the TV", () => {
 		assert.ok(left.rz < 0 && left.ry < 0 && left.tx < 0)
 	})
 
-	it("lying, it turns 3.5 degrees at most and does not lean", () => {
-		const scene = phone(lying)
-		for (const spot of spots(lying.tv)) {
-			const a = aimFor(scene, spot, false)
-			assert.ok(Math.abs(a.rz) <= 3.5 && Math.abs(a.tx) <= 6)
-			assert.equal(a.rx, 0)
-			assert.equal(Math.abs(a.ry), 0)
-		}
-	})
-
 	it("turned, its leading corner never rises into the TV: the hand lowers it by as much", () => {
 		for (const L of [
 			held,
-			lying,
+			layoutPhoneRoom(375, 531, 60),
 			layoutPhoneRoom(360, 604, 60),
 			layoutPhoneRoom(430, 796, 60),
 			layoutPhoneRoom(390, 564, 60),
@@ -254,15 +266,14 @@ describe("the phone's Remote under the TV", () => {
 describe("the phone's Remote under the TV, in landscape", () => {
 	// Since 2026-10-21 the Remote stands centred under a full-width TV in landscape too, so it aims as it does
 	// on a phone upright: a few degrees about its grip, toward the spot's side, leaning back.
-	const TAB = { tv: 46, remote: 46 }
-	const BAR = { tv: 60, remote: 60 }
+	const TAB = 0
+	const BAR = 60
 	const layouts = [
 		layoutPhoneLandscape(844, 390, TAB),
 		layoutPhoneLandscape(932, 430, TAB),
 		layoutPhoneLandscape(915, 412, TAB),
 		layoutPhoneLandscape(667, 375, BAR),
 		layoutPhoneLandscape(1100, 500, TAB),
-		// Too short to hold it: it lies on the table.
 		layoutPhoneLandscape(844, 281, TAB),
 	]
 	const spots = (tv: Rect) => {
@@ -286,23 +297,22 @@ describe("the phone's Remote under the TV, in landscape", () => {
 			for (const spot of spots(L.tv)) {
 				const a = aimFor(scene, spot, false)
 				assert.ok(Math.abs(a.rz) <= 11 + 1e-9, `${L.w} x ${L.h}: ${a.rz}`)
-				assert.ok(a.rx <= 11 + 1e-9 && Math.abs(a.tx) <= 8 + 1e-9, `${L.w} x ${L.h}`)
+				assert.ok(
+					a.rx <= 11 + 1e-9 && Math.abs(a.tx) <= 8 + 1e-9,
+					`${L.w} x ${L.h}`,
+				)
 			}
 			const { tv } = L
 			const left = aimFor(scene, at(tv.left + 10, tv.top + 100, true), false)
-			const right = aimFor(scene, at(tv.left + tv.width - 10, tv.top + 100, true), false)
-			assert.ok(left.rz < 0 && right.rz > 0, `${L.w} x ${L.h}: ${left.rz} ${right.rz}`)
-		}
-	})
-
-	it("lying, it only shifts on the table: 3.5 degrees at most, no lean", () => {
-		const L = layouts.at(-1)
-		assert.ok(L)
-		assert.equal(L.form, "table")
-		for (const spot of spots(L.tv)) {
-			const a = aimFor(phone(L), spot, false)
-			assert.ok(Math.abs(a.rz) <= 3.5 + 1e-9)
-			assert.equal(a.rx, 0)
+			const right = aimFor(
+				scene,
+				at(tv.left + tv.width - 10, tv.top + 100, true),
+				false,
+			)
+			assert.ok(
+				left.rz < 0 && right.rz > 0,
+				`${L.w} x ${L.h}: ${left.rz} ${right.rz}`,
+			)
 		}
 	})
 

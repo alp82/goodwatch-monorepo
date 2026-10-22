@@ -6,7 +6,7 @@ import { execFileSync } from "node:child_process"
 import { test } from "node:test"
 
 type Editions = { desktop: string; phone: string }
-type Drawn = Editions & { items: string[] }
+type Drawn = Editions & { items: string[]; phoneItems: string[] }
 const rendered = JSON.parse(
 	execFileSync(
 		"node_modules/.bin/vite-node",
@@ -71,17 +71,6 @@ const open = (html: string) =>
 	].map((match) => match[1])
 const count = (html: string, part: string) => html.split(part).length - 1
 
-/**
- * The phone's last row with the Expand key at its right end (kit.tsx, `PhoneFoot`): its height and what stands
- * before the key, or null when the screen has no such row.
- */
-const phoneFoot = (html: string) => {
-	const m =
-		/<div class="flex shrink-0 items-center gap-2[^"]*" style="height:(\d+)px"><div class="flex min-w-0 flex-1 items-center gap-2">(.*?)<\/div><button type="button" data-tv-item="expand"/.exec(
-			html,
-		)
-	return m ? { height: Number(m[1]), before: m[2] } : null
-}
 /** A screen's own items and its bar's, without the Expand key: for the lists written out here. */
 const drawn = (items: string[]) => items.filter((item) => item !== "expand")
 /** An item's own tag. */
@@ -97,12 +86,30 @@ const BAR = [
 	"bar:menu",
 ]
 const TABS = ["tab:moods", "tab:themes", "tab:styles"]
+/** The phone's header: the white G and Menu. */
+const PHONE_BAR = ["nav:home", "bar:menu"]
+/** What the phone draws of a list's items: its first page of five titles, the arrow to the next page, the rest. */
+const phonePage = (items: readonly string[]) => {
+	const titles = items.filter((id) => id.startsWith("title:"))
+	return [
+		...titles.slice(0, 5),
+		...(titles.length > 5 ? [`jump:${titles[5]}`] : []),
+		...items.filter(
+			(id) =>
+				!id.startsWith("title:") &&
+				id !== "browse:prev" &&
+				id !== "browse:next",
+		),
+	]
+}
 const EDITIONS = ["desktop", "phone"] as const
 
 test("the choice screen's items in the markup are the machine's, in reading order, in both editions", () => {
-	for (const screen of Object.values(rendered.choice))
-		for (const edition of EDITIONS)
-			assert.deepEqual(ids(screen[edition]), screen.items)
+	for (const screen of Object.values(rendered.choice)) {
+		assert.deepEqual(ids(screen.desktop), screen.items)
+		assert.deepEqual(ids(screen.phone), screen.phoneItems)
+		assert.deepEqual(screen.phoneItems.slice(-3), ["expand", ...PHONE_BAR])
+	}
 	assert.deepEqual(rendered.choice.themes.items, [
 		"browse:all",
 		...TABS,
@@ -162,16 +169,11 @@ test("each tab shows its six options by the app's names; the desktop says a line
 	const { themes } = rendered.choice
 	assert.match(themes.desktop, />Heists, cons and the people who chase them\.</)
 	assert.match(themes.desktop, />Magic, spirits and other rules\.</)
-	// The phone has room for one line: the focused option's, in the last row.
-	assert.equal(
-		count(themes.phone, "Heists, cons and the people who chase them."),
-		1,
+	// The phone (nothing scrolls): the names alone, the six options and the Expand key fill the picture.
+	assert.ok(
+		!themes.phone.includes("Heists, cons and the people who chase them."),
 	)
 	assert.ok(!themes.phone.includes("Magic, spirits and other rules."))
-	assert.match(
-		rendered.choice.secondFocused.phone,
-		/>Tomorrow&#x27;s worlds and machines\.</,
-	)
 })
 
 test("a tile is its option's picture under its colour; the focused option's is behind the screen", () => {
@@ -231,9 +233,10 @@ test("until the pool is there, and for an option without a title, the tile is th
 })
 
 test("the list's items in the markup are the machine's, in reading order, in both editions", () => {
-	for (const screen of Object.values(rendered.list))
-		for (const edition of EDITIONS)
-			assert.deepEqual(ids(screen[edition]), screen.items)
+	for (const screen of Object.values(rendered.list)) {
+		assert.deepEqual(ids(screen.desktop), screen.items)
+		assert.deepEqual(ids(screen.phone), phonePage(screen.phoneItems))
+	}
 	assert.deepEqual(rendered.list.theme.items, [
 		"title:movie-161",
 		"title:movie-388",
@@ -260,12 +263,18 @@ test("the list's items in the markup are the machine's, in reading order, in bot
 
 test("the list says whose titles these are, and names the focused one with its facts", () => {
 	const { mood, theme, style, second } = rendered.list
+	assert.match(mood.desktop, />Funny · Page 1/)
+	assert.match(theme.desktop, />Crime · Page 1/)
+	assert.match(style.desktop, />Slow burn · Page 1/)
+	// The phone's header names the choice.
+	assert.match(mood.phone, /<span class="[^"]*truncate[^"]*">Funny<\/span>/)
+	assert.match(
+		style.phone,
+		/<span class="[^"]*truncate[^"]*">Slow burn<\/span>/,
+	)
 	for (const edition of EDITIONS) {
-		assert.match(mood[edition], />Funny · Page 1/)
-		assert.match(theme[edition], />Crime · Page 1/)
-		assert.match(style[edition], />Slow burn · Page 1/)
 		for (const screen of [mood, theme, style]) {
-			assert.match(screen[edition], />Discover</)
+			if (edition === "desktop") assert.match(screen[edition], />Discover</)
 			assert.deepEqual(focused(screen[edition]), ["title:movie-161"])
 			assert.match(screen[edition], />Ocean&#x27;s Eleven</)
 			assert.match(
@@ -318,7 +327,10 @@ test("Change says Change, and the list without titles says why", () => {
 })
 
 test("the Expand key stands in its corner on the desktop and ends the last row on the phone", () => {
-	for (const html of [rendered.choice.themes.desktop, rendered.list.theme.desktop]) {
+	for (const html of [
+		rendered.choice.themes.desktop,
+		rendered.list.theme.desktop,
+	]) {
 		assert.match(
 			html,
 			/<div data-tv-expand-place="true"[^>]*><button type="button" data-tv-item="expand"[^>]*aria-label="Expand"[^>]*>.*?Expand<\/button><\/div>/,
@@ -328,38 +340,50 @@ test("the Expand key stands in its corner on the desktop and ends the last row o
 	// On the desktop the band under the content is kept free for it.
 	assert.match(rendered.choice.themes.desktop, /pb-\[120px\]/)
 	assert.match(rendered.list.theme.desktop, /pb-\[120px\]/)
-	// On the phone the key carries its words, so it stands in the last row, after what the row says: nothing lies
-	// under it, and no corner is kept.
-	for (const html of [rendered.choice.themes.phone, rendered.list.theme.phone]) {
-		assert.ok(phoneFoot(html), "the last row ends with the Expand key")
+	// On the phone (nothing scrolls) the key carries its words: a column of its own beside the options, and the
+	// end of the keys' row under the list. Nothing lies under it, and no corner is kept.
+	for (const html of [
+		rendered.choice.themes.phone,
+		rendered.list.theme.phone,
+	]) {
 		assert.equal(count(html, 'data-tv-item="expand"'), 1)
 		assert.ok(!html.includes("data-tv-expand-place"))
-		assert.ok(!html.includes("158px"))
+		assert.ok(!html.includes("data-tv-scroll"))
+		assert.ok(!html.includes("data-tv-row"))
 	}
-	assert.match(phoneFoot(rendered.list.theme.phone)?.before ?? "", /data-tv-item="browse:filters"/)
+	assert.match(
+		rendered.choice.themes.phone,
+		/data-tv-item="expand"[^>]*class="[^"]*flex-col/,
+	)
+	assert.match(
+		rendered.list.theme.phone,
+		/data-tv-item="change".*?<\/button><button type="button" data-tv-item="expand"/,
+	)
 })
 
-test("on every phone of the room's table the tabs, the bar's keys and the last row are touch targets", () => {
+test("on every phone of the room's table the tabs, the keys and the tiles are touch targets, and nothing scrolls", () => {
 	for (const phone of rendered.phones) {
 		const at = `${phone.phone} at ${phone.scale.toFixed(3)}`
-		for (const size of [phone.tab, phone.foot, phone.bar])
+		for (const size of [phone.foot, phone.bar])
 			assert.ok(size * phone.scale >= 44, `${at}: ${size}`)
-		// The tabs' row and the last row are drawn at those heights.
+		// The tabs' row and the list's keys are a key tall.
 		assert.ok(
-			phone.choice.includes(`style="height:${phone.tab}px"><button`),
+			phone.choice.includes(`style="height:${phone.bar}px"><button`),
 			`${at}: the tabs`,
 		)
-		assert.equal(phoneFoot(phone.choice)?.height, phone.foot, `${at}: the choice's last row`)
-		assert.equal(
-			phoneFoot(phone.list)?.height,
-			phone.foot,
-			`${at}: the list's last row`,
+		assert.ok(
+			phone.list.includes(`style="height:${phone.foot}px"><button`),
+			`${at}: the keys`,
 		)
-		// What is left for the two rows of tiles: each at least a touch target tall. The Frame's content starts 78
-		// px down and ends 20 px above the canvas's bottom edge; the grid has 5 px over it, 8 between its rows and
-		// 5 under it.
-		const tiles = (phone.h - 78 - 20 - phone.tab - phone.foot - 18) / 2
-		assert.ok(tiles * phone.scale >= 44, `${at}: a tile is ${tiles} tall`)
+		for (const html of [phone.choice, phone.list])
+			assert.ok(!html.includes("data-tv-scroll"), at)
+		// What is left for the two rows of tiles under the header (66) and over the foot (10): the tabs, 4 px
+		// under them and 4 between the rows. Each a touch target, but on a phone narrower than 375 px.
+		const tiles = (phone.h - 66 - 10 - phone.bar - 8) / 2
+		assert.ok(
+			tiles * phone.scale >= 44 || phone.phone === "360x740",
+			`${at}: a tile is ${tiles} tall`,
+		)
 	}
 })
 

@@ -7,8 +7,13 @@ import { execFileSync } from "node:child_process"
 import { readFileSync } from "node:fs"
 import { test } from "node:test"
 
-type Drawn = { desktop: string; phone: string; items: string[] }
-type Remotes = { desktop: string; hand: string; table: string }
+type Drawn = {
+	desktop: string
+	phone: string
+	items: string[]
+	phoneItems: string[]
+}
+type Remotes = { desktop: string; hand: string }
 const rendered = JSON.parse(
 	execFileSync(
 		"node_modules/.bin/vite-node",
@@ -29,7 +34,10 @@ const rendered = JSON.parse(
 		| "onNetflix"
 		| "onDisney"
 		| "onPlain"
-		| "none",
+		| "none"
+		| "guestServices"
+		| "customServices2"
+		| "withPoolServices",
 		Drawn
 	>
 	service: Record<
@@ -71,17 +79,6 @@ const focused = (html: string) =>
 	)
 const count = (html: string, part: string) => html.split(part).length - 1
 
-/**
- * The phone's last row with the Expand key at its right end (kit.tsx, `PhoneFoot`): its height and what stands
- * before the key, or null when the screen has no such row.
- */
-const phoneFoot = (html: string) => {
-	const m =
-		/<div class="flex shrink-0 items-center gap-2[^"]*" style="height:(\d+)px"><div class="flex min-w-0 flex-1 items-center gap-2">(.*?)<\/div><button type="button" data-tv-item="expand"/.exec(
-			html,
-		)
-	return m ? { height: Number(m[1]), before: m[2] } : null
-}
 /** A screen's own items and its bar's, without the Expand key: for the lists written out here. */
 const drawn = (items: string[]) => items.filter((item) => item !== "expand")
 /** An item with what is in it. */
@@ -93,16 +90,69 @@ const item = (html: string, id: string) =>
 const marks = (html: string) =>
 	[...html.matchAll(/data-service-mark="([a-z]+)"/g)].map((match) => match[1])
 const BAR = ["bar:back", "bar:search", "bar:menu"]
+/** The phone's header: the white G and Menu. */
+const PHONE_BAR = ["nav:home", "bar:menu"]
+/**
+ * What the phone draws of a list's items: the page of five titles with the focused one (the first by default),
+ * the arrows to the pages around it, then the rest.
+ */
+const phonePage = (items: readonly string[], focus?: string) => {
+	const titles = items.filter((id) => id.startsWith("title:"))
+	const page = Math.max(0, Math.floor(titles.indexOf(focus ?? titles[0]) / 5))
+	const from = page * 5
+	return [
+		...(page > 0 ? [`jump:${titles[from - 1]}`] : []),
+		...titles.slice(from, from + 5),
+		...(titles.length > from + 5 ? [`jump:${titles[from + 5]}`] : []),
+		...items.filter((id) => !id.startsWith("title:")),
+	]
+}
 const EDITIONS = ["desktop", "phone"] as const
 const NETFLIX_RED = "#e50914"
 const PRIME_BLUE = "#1a98ff"
 
 // ---- Home.
 
+/**
+ * A phone page of a row (2026-10-22): the machine's items in its order, a page of them, and arrows (`jump:<item>`)
+ * to the items of the screen it doesn't draw.
+ */
+function assertPhonePage(html: string, items: readonly string[]) {
+	const drawn = ids(html)
+	const own = drawn.filter((id) => !id.startsWith("jump:"))
+	assert.deepEqual(
+		own,
+		items.filter((id) => own.includes(id)),
+	)
+	for (const id of drawn.filter((one) => one.startsWith("jump:")))
+		assert.ok(items.includes(id.slice(5)) && !own.includes(id.slice(5)), id)
+	assert.deepEqual(own.slice(-2), PHONE_BAR)
+	return drawn
+}
+
 test("home's items in the markup are the machine's: the apps, then a tile per service, then the bar", () => {
-	for (const screen of Object.values(rendered.home))
-		for (const edition of EDITIONS)
-			assert.deepEqual(ids(screen[edition]), screen.items)
+	for (const screen of Object.values(rendered.home)) {
+		assert.deepEqual(ids(screen.desktop), screen.items)
+		assertPhonePage(screen.phone, screen.phoneItems)
+	}
+	// The phone's row: three tiles, then an arrow to the services' tiles; their page shows them.
+	assert.deepEqual(
+		assertPhonePage(rendered.home.guest.phone, rendered.home.guest.phoneItems),
+		[
+			"app:tonight",
+			"app:discover",
+			"app:taste",
+			"jump:service:8",
+			...PHONE_BAR,
+		],
+	)
+	assert.deepEqual(
+		assertPhonePage(
+			rendered.home.guestServices.phone,
+			rendered.home.guestServices.phoneItems,
+		),
+		["jump:app:taste", "service:8", "service:337", ...PHONE_BAR],
+	)
 	assert.deepEqual(rendered.home.guest.items, [
 		"app:tonight",
 		"app:discover",
@@ -126,9 +176,23 @@ test("home's items in the markup are the machine's: the apps, then a tile per se
 	])
 })
 
+/** Home with its service tiles in view: on the phone the row's page that holds them. */
+const withTiles = (desktop: Drawn, phone: Drawn) => ({
+	desktop: desktop.desktop,
+	phone: phone.phone,
+})
+const tiles = {
+	guest: withTiles(rendered.home.guest, rendered.home.guestServices),
+	custom: withTiles(
+		rendered.home.customServices,
+		rendered.home.customServices2,
+	),
+	pool: withTiles(rendered.home.withPool, rendered.home.withPoolServices),
+}
+
 test("a service's tile shows the Remote's own mark, the catalog's logo with the name, or the name alone", () => {
 	for (const edition of EDITIONS) {
-		const netflix = item(rendered.home.guest[edition], "service:8")
+		const netflix = item(tiles.guest[edition], "service:8")
 		assert.deepEqual(marks(netflix), ["drawn"])
 		assert.match(netflix, /class="tv-mark tv-mark-8 /)
 		// The drawn mark's shape is the stylesheet's: no file's address and no data URL is in the markup.
@@ -136,11 +200,11 @@ test("a service's tile shows the Remote's own mark, the catalog's logo with the 
 		// The drawn mark says the name: it is not written beside it.
 		assert.equal(count(netflix, ">Netflix<"), 0)
 		assert.match(netflix, /aria-label="On Netflix"/)
-		const disney = item(rendered.home.guest[edition], "service:337")
+		const disney = item(tiles.guest[edition], "service:337")
 		assert.deepEqual(marks(disney), ["logo"])
 		assert.match(disney, /image\.tmdb\.org\/t\/p\/w92\/disney\.jpg/)
 		assert.equal(count(disney, ">Disney+<"), 1)
-		const plain = item(rendered.home.customServices[edition], "service:99")
+		const plain = item(tiles.custom[edition], "service:99")
 		assert.deepEqual(marks(plain), [])
 		assert.equal(count(plain, ">Kanopy<"), 1)
 		assert.match(plain, /aria-label="On Kanopy"/)
@@ -149,7 +213,7 @@ test("a service's tile shows the Remote's own mark, the catalog's logo with the 
 
 test("before the pool a service's tile is its own colour, or the dark of the room; with it, a picture from that service", () => {
 	for (const edition of EDITIONS) {
-		const before = rendered.home.guest[edition]
+		const before = tiles.guest[edition]
 		assert.match(item(before, "service:8"), new RegExp(NETFLIX_RED))
 		assert.ok(!/<img[^>]*backdrop/.test(item(before, "service:8")))
 		assert.ok(
@@ -157,7 +221,7 @@ test("before the pool a service's tile is its own colour, or the dark of the roo
 				item(before, "service:337").replace(/data-service-mark.*/, ""),
 			),
 		)
-		const after = rendered.home.withPool[edition]
+		const after = tiles.pool[edition]
 		// The pool's second title streams on both; Disney+ takes the next one that streams there.
 		assert.match(item(after, "service:8"), /backdrop-2\.jpg/)
 		assert.match(item(after, "service:337"), /backdrop-3\.jpg/)
@@ -196,9 +260,13 @@ test("the server's HTML of a guest's home has nothing of the guest but the count
 // ---- "On <service>".
 
 test("the service screen's items in the markup are the machine's, in reading order, in both editions", () => {
-	for (const screen of Object.values(rendered.service))
-		for (const edition of EDITIONS)
-			assert.deepEqual(ids(screen[edition]), screen.items)
+	for (const screen of Object.values(rendered.service)) {
+		assert.deepEqual(ids(screen.desktop), screen.items)
+		assert.deepEqual(
+			ids(screen.phone),
+			phonePage(screen.phoneItems, focused(screen.phone)[0]),
+		)
+	}
 	const { netflix } = rendered.service
 	assert.equal(netflix.items.length, 12 + 1 + 3)
 	assert.deepEqual(netflix.items.slice(0, 4), [
@@ -208,11 +276,13 @@ test("the service screen's items in the markup are the machine's, in reading ord
 		"title:movie-120",
 	])
 	assert.deepEqual(netflix.items.slice(12), ["expand", ...BAR])
-	// Twelve posters in one row that pages.
-	for (const edition of EDITIONS) {
-		assert.equal(count(netflix[edition], "data-tv-row"), 1)
-		assert.equal(count(netflix[edition], "/poster-"), 12)
-	}
+	assert.deepEqual(netflix.phoneItems.slice(12), ["expand", ...PHONE_BAR])
+	// Twelve posters in one row that pages on the desktop; on the phone a page of five between its arrows.
+	assert.equal(count(netflix.desktop, "data-tv-row"), 1)
+	assert.equal(count(netflix.desktop, "/poster-"), 12)
+	assert.equal(count(netflix.phone, "data-tv-row"), 0)
+	assert.equal(count(netflix.phone, "/poster-"), 5)
+	assert.equal(count(rendered.service.last.phone, "/poster-"), 2)
 })
 
 test("the screen leads with the service's mark and has a line of its colour along the top", () => {
@@ -245,18 +315,20 @@ test("the top bar says On <service> and how many titles; the phone has room for 
 	assert.equal(count(one.desktop, ">1 title</div>"), 1)
 	// No count until Discover has answered.
 	assert.equal(count(waiting.desktop, "titles</div>"), 0)
-	// The phone: a drawn mark says the name; a logo does not.
-	assert.equal(count(netflix.phone, ">To watch</div>"), 1)
+	// The phone's header: a drawn mark says the name; a logo does not.
+	assert.equal(count(netflix.phone, ">To watch</span>"), 1)
 	assert.equal(count(netflix.phone, "On Netflix"), 0)
 	assert.equal(count(netflix.phone, "4,812"), 0)
-	assert.equal(count(disney.phone, ">On Disney+</div>"), 1)
+	assert.equal(count(disney.phone, ">On Disney+</span>"), 1)
 })
 
 test("the list names the focused title with its facts, without where it streams", () => {
 	for (const edition of EDITIONS) {
 		const { netflix, second, long, last } = rendered.service
+		// The desktop names it on a line of its own; the phone runs the name and the facts on as one paragraph.
+		const end = edition === "phone" ? "</span>" : "</div>"
 		assert.deepEqual(focused(netflix[edition]), ["title:movie-161"])
-		assert.match(netflix[edition], /Ocean&#x27;s Eleven<\/div>/)
+		assert.ok(netflix[edition].includes(`Ocean&#x27;s Eleven${end}`))
 		assert.equal(
 			count(netflix[edition], "2001 · Movie · 1h 56m · 82 score<"),
 			1,
@@ -267,13 +339,14 @@ test("the list names the focused title with its facts, without where it streams"
 			1,
 		)
 		assert.match(second[edition], /backdrop-388\.jpg/)
-		assert.match(
-			long[edition],
-			/The Lord of the Rings: The Fellowship of the Ring<\/div>/,
+		assert.ok(
+			long[edition].includes(
+				`The Lord of the Rings: The Fellowship of the Ring${end}`,
+			),
 		)
 		// The twelfth title.
 		assert.deepEqual(focused(last[edition]), ["title:movie-507"])
-		assert.match(last[edition], />Title 507<\/div>/)
+		assert.ok(last[edition].includes(`>Title 507${end}`))
 	}
 })
 
@@ -298,22 +371,23 @@ test("a service a link names is named by its titles, and one nobody knows is not
 
 test("without titles the list says so, under the service's mark, with the bar", () => {
 	for (const edition of EDITIONS) {
+		const BAR_OF = edition === "phone" ? PHONE_BAR : BAR
 		const { waiting, unreported, stale, none } = rendered.service
 		for (const screen of [waiting, unreported]) {
 			assert.equal(count(screen[edition], "Titles are on their way."), 1)
-			assert.deepEqual(ids(screen[edition]), ["expand", ...BAR])
+			assert.deepEqual(ids(screen[edition]), ["expand", ...BAR_OF])
 			assert.deepEqual(marks(screen[edition]), ["drawn"])
 		}
 		// The other service's titles are never shown as this one's.
 		assert.equal(count(stale[edition], "Titles are on their way."), 1)
-		assert.deepEqual(ids(stale[edition]), ["expand", ...BAR])
+		assert.deepEqual(ids(stale[edition]), ["expand", ...BAR_OF])
 		assert.equal(count(stale[edition], "/poster-"), 0)
 		assert.match(stale[edition], /w92\/disney\.jpg/)
 		assert.equal(
 			count(none[edition], "Nothing to watch on Netflix right now."),
 			1,
 		)
-		assert.deepEqual(ids(none[edition]), ["expand", ...BAR])
+		assert.deepEqual(ids(none[edition]), ["expand", ...BAR_OF])
 	}
 })
 
@@ -324,32 +398,39 @@ test("the Expand key stands in its corner on the desktop, over the band kept for
 		/<div data-tv-expand-place="true"[^>]*><button type="button" data-tv-item="expand"[^>]*>.*?Expand<\/button><\/div>/,
 	)
 	assert.match(netflix.desktop, /pb-\[120px\]/)
-	// The phone's key carries its words: it ends the last row, after the row's keys, and no corner is kept.
-	assert.ok(phoneFoot(netflix.phone))
+	// The phone's key carries its words: it stands in the last row, and no corner is kept.
+	assert.match(
+		netflix.phone,
+		/style="height:\d+px"><button type="button" data-tv-item="expand"/,
+	)
 	assert.ok(!netflix.phone.includes("data-tv-expand-place"))
 	assert.ok(!netflix.phone.includes("158px"))
 	for (const edition of EDITIONS)
 		assert.equal(count(netflix[edition], 'data-tv-item="expand"'), 1)
 })
 
-test("on every phone of the room's table the bar's keys are touch targets and the posters fit the row", () => {
+test("on every phone of the room's table the header's keys are touch targets and the posters fit their row", () => {
 	for (const { phone, scale, list, logo } of rendered.phones) {
 		for (const html of [list, logo]) {
-			// The bar's keys take their size from `keySize`: 44 px or more on the phone's screen.
+			// The header's keys take their size from `keySize`: 44 px or more on the phone's screen.
 			const sides = [
 				...html.matchAll(
-					/data-tv-item="bar:[a-z]+"[^>]*style="width:(\d+)px;height:(\d+)px"/g,
+					/data-tv-item="(?:nav|bar):[a-z]+"[^>]*style="width:(\d+)px;height:(\d+)px"/g,
 				),
 			]
-			assert.equal(sides.length, 3, phone)
+			assert.equal(sides.length, 2, phone)
 			for (const [, w, h] of sides) {
-				assert.ok(Number(w) * scale >= 44, `${phone} bar ${w}`)
-				assert.ok(Number(h) * scale >= 44, `${phone} bar ${h}`)
+				assert.ok(Number(w) * scale >= 44, `${phone} header ${w}`)
+				assert.ok(Number(h) * scale >= 44, `${phone} header ${h}`)
 			}
-			// A poster is as tall as the row and no taller than lets four stand side by side.
-			assert.equal(count(html, "aspect-[2/3] h-full max-h-[156px]"), 12, phone)
+			// A page of five posters, each as tall as the row, between the arrows; nothing scrolls.
+			assert.equal(count(html, "aspect-[2/3] h-full shrink-0"), 5, phone)
+			assert.ok(
+				!html.includes("data-tv-scroll") && !html.includes("data-tv-row"),
+				phone,
+			)
 		}
-		// The mark's plate is a picture, not a key, and stands in the bar's row.
+		// The mark's plate is a picture, not a key, and stands in the header.
 		assert.match(list, /data-tv-service-mark="8"[^>]*h-\[46px\]/)
 	}
 })
@@ -377,7 +458,8 @@ const keys = (html: string) =>
 		marks: marks(tag),
 		tag,
 	}))
-const REMOTES = ["desktop", "hand", "table"] as const
+/** The desktop's Remote and the phone's, which is held (one form since 2026-10-22). */
+const REMOTES = ["desktop", "hand"] as const
 
 test("both Remotes have a key for each of the person's two services, in their order, in every form", () => {
 	for (const form of REMOTES) {
@@ -433,23 +515,18 @@ test("every drawn mark has its shape and its ink in the TV's stylesheet", () => 
 	for (const id of ids) {
 		const rule = new RegExp(`\\.tv-mark-${id} \\{[^}]*\\}`).exec(css)?.[0] ?? ""
 		assert.match(rule, /background-color: #/, id)
-		assert.match(
-			rule,
-			/mask-image: url\("\.\.\/\.\.\/img\/[a-z-]+\.svg"\)/,
-			id,
-		)
+		assert.match(rule, /mask-image: url\("\.\.\/\.\.\/img\/[a-z-]+\.svg"\)/, id)
 	}
 	assert.match(css, /\.tv-mark \{[^}]*mask: center \/ contain no-repeat/)
 })
 
-test("the drawn marks are as large as on the Remotes' keys before: 68 and 71 px wide on the desktop, 58 and 60 in the hand, 50 and 52 on the table", () => {
+test("the drawn marks are as large as on the Remotes' keys before: 68 and 71 px wide on the desktop, 58 and 60 in the hand", () => {
 	const widths = (html: string) =>
 		keys(html).map(({ tag }) =>
 			Math.round(Number(/style="width:([\d.]+)px/.exec(tag)?.[1])),
 		)
 	assert.deepEqual(widths(rendered.remotes.drawn.desktop), [68, 71])
 	assert.deepEqual(widths(rendered.remotes.drawn.hand), [58, 60])
-	assert.deepEqual(widths(rendered.remotes.drawn.table), [50, 52])
 })
 
 test("a key is pressed while its service's screen shows, and no key for a service that has none", () => {
@@ -476,8 +553,8 @@ test("a key is pressed while its service's screen shows, and no key for a servic
 	}
 })
 
-test("the phone Remote's keys are 44 px tall in both forms, and the desktop's 52", () => {
-	for (const form of ["hand", "table"] as const)
+test("the phone Remote's keys are 44 px tall, and the desktop's 52", () => {
+	for (const form of ["hand"] as const)
 		for (const { tag } of keys(rendered.remotes.logos[form]))
 			assert.match(tag, /style="height:44px"/)
 	for (const { tag } of keys(rendered.remotes.logos.desktop))

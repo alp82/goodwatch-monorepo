@@ -5,14 +5,28 @@
 //
 // The headline stays the start page's H1 for the page's outline (`HomeHeading`), read out but not drawn: Start's
 // tiles say what the TV offers.
-import { useContext } from "react"
+//
+// On the phone Start is two pages, nothing scrolls: Watch next and a tile each for Popular, Discover, Search and
+// Taste, then (by the arrow) Your taste, My shows and What is GoodWatch?.
+import { useContext, useRef } from "react"
 // A file of its own, not inlined into the script: Start is a member's home, and an inlined copy, shared with the
 // title page's, became a script that every guest's start page and every title page loaded.
 import fingerprintIcon from "~/img/fingerprint-72.webp?no-inline"
 import { AREAS, AREA_COLOR } from "~/ui/details/fingerprint/area-colors"
 import { assetUrl } from "~/utils/asset-url"
 import { tmdbImageUrl } from "~/utils/tmdb-image"
-import { CornerBar, Img, Item, useTvView } from "../kit"
+import {
+	CornerBar,
+	Img,
+	Item,
+	PHONE_FOOT,
+	PHONE_HEAD,
+	PHONE_SIDE,
+	PageArrow,
+	jumpItem,
+	keySize,
+	useTvView,
+} from "../kit"
 import type { TvHomeData, TvTonightPick } from "../tv-home"
 import { HOME_HEADLINE, HomeHeading } from "./Home"
 
@@ -55,6 +69,9 @@ function PosterFan({
 	)
 }
 
+/** The phone's second page of Start. */
+const SECOND = ["start:taste", "start:shows", "start:about"]
+
 export function Start({
 	picks,
 	popular,
@@ -75,15 +92,19 @@ export function Start({
 	/** The screen's items, from `tvItems`. */
 	items: readonly string[]
 }) {
-	const { canvas } = useTvView()
+	const { canvas, focused } = useTvView()
 	const P = canvas.edition === "phone"
 	const Heading = useContext(HomeHeading)
+	// The phone's page: the one with the focus, else the one shown last.
+	const lastPage = useRef(0)
+	if (SECOND.includes(focused)) lastPage.current = 1
+	else if (focused.startsWith("start:")) lastPage.current = 0
 	const posters = picks
 		.map((pick) => pick.card.poster_path)
 		.filter((path): path is string => Boolean(path))
 		.slice(0, P ? 5 : 6)
 	const next = picks[0]?.card
-	const tileHeight = P ? 150 : 192
+	const tileHeight = P ? 93 : 192
 
 	const hero = (
 		<Item
@@ -106,21 +127,26 @@ export function Start({
 				{posters.length > 0 && (
 					<PosterFan
 						posters={posters}
-						width={P ? 70 : 116}
-						step={P ? 58 : 86}
-						top={P ? 14 : 30}
+						width={P ? 50 : 116}
+						step={P ? 29 : 86}
+						top={P ? 12 : 30}
 					/>
 				)}
-				<span className={`absolute inset-x-0 bottom-0 ${P ? "px-4 pb-3.5" : "px-7 pb-6"}`}>
+				<span className={`absolute inset-x-0 bottom-0 ${P ? "px-3 pb-2.5" : "px-7 pb-6"}`}>
 					<span
-						className={`block font-extrabold leading-none tracking-tight ${P ? "text-[30px]" : "text-[50px]"}`}
+						className={`block font-extrabold leading-none tracking-tight ${P ? "text-[25px]" : "text-[50px]"}`}
 					>
 						Watch next
 					</span>
 					<span
-						className={`mt-1.5 block truncate text-white/75 ${P ? "text-[16px]" : "text-[20px]"}`}
+						className={`mt-1.5 block text-white/75 ${P ? "text-[16px] leading-tight" : "truncate text-[20px]"}`}
 					>
-						{next ? (
+						{next && P ? (
+							<>
+								{picks.length} {picks.length === 1 ? "pick" : "picks"} for you
+								<span className="block truncate text-amber-300">{next.title}</span>
+							</>
+						) : next ? (
 							<>
 								{picks.length} {picks.length === 1 ? "pick" : "picks"} for you ·{" "}
 								<span className="text-amber-300">{next.title}</span> is up next
@@ -143,19 +169,19 @@ export function Start({
 			<Item
 				key={id}
 				id={id}
-				className="tvc-ring tvc-lift block w-full rounded-[22px]"
+				className={`tvc-ring tvc-lift block w-full ${P ? "rounded-[16px]" : "rounded-[22px]"}`}
 				style={{ height: tileHeight }}
 			>
-				<span className="absolute inset-0 overflow-hidden rounded-[22px] border border-white/[.08] bg-[#151821]">
+				<span className={`absolute inset-0 overflow-hidden border border-white/[.08] bg-[#151821] ${P ? "rounded-[16px]" : "rounded-[22px]"}`}>
 					{art}
-					<span className={`absolute inset-x-0 bottom-0 ${P ? "p-4" : "p-5"}`}>
+					<span className={`absolute inset-x-0 bottom-0 ${P ? "px-2.5 pb-2" : "p-5"}`}>
 						<span
-							className={`block font-extrabold tracking-tight ${P ? "text-[24px]" : "text-[28px]"}`}
+							className={`block font-extrabold leading-tight tracking-tight ${P ? "text-[19px]" : "text-[28px]"}`}
 						>
 							{name}
 						</span>
 						<span
-							className={`block truncate text-white/65 ${P ? "text-[16px]" : "text-[18px]"}`}
+							className={`block truncate text-white/65 ${P ? "sr-only" : "text-[18px]"}`}
 						>
 							{line}
 						</span>
@@ -174,11 +200,11 @@ export function Start({
 			"Popular",
 			"Titles many people watch",
 			// On the phone's shorter tile the fan is smaller, so it ends above the tile's name.
-			<span aria-hidden className={`absolute flex ${P ? "right-3 top-3" : "right-4 top-4"}`}>
+			<span aria-hidden className={`absolute flex ${P ? "right-2 top-2" : "right-4 top-4"}`}>
 				{popularPosters.map((path, i) => (
 					<span
 						key={path}
-						className={`relative overflow-hidden rounded-lg shadow-xl ring-2 ring-[#151821] ${P ? "-ml-5 h-[60px] w-[40px]" : "-ml-8 h-[96px] w-[64px]"}`}
+						className={`relative overflow-hidden rounded-lg shadow-xl ring-2 ring-[#151821] ${P ? "-ml-4 h-[40px] w-[27px]" : "-ml-8 h-[96px] w-[64px]"}`}
 						style={{ transform: `rotate(${(i - 1) * 7}deg)`, zIndex: 3 - i }}
 					>
 						<Img src={tmdbImageUrl(path, "w154")} className="h-full w-full" />
@@ -190,9 +216,9 @@ export function Start({
 			"start:discover",
 			"Discover",
 			"Moods, themes and styles",
-			<span aria-hidden className="absolute left-5 top-5 flex flex-wrap gap-1.5">
+			<span aria-hidden className={`absolute flex flex-wrap ${P ? "left-2.5 top-3 gap-1" : "left-5 top-5 gap-1.5"}`}>
 				{MOOD_HUES.map((hue) => (
-					<span key={hue} className="h-5 w-5 rounded-full" style={{ background: hue }} />
+					<span key={hue} className={`rounded-full ${P ? "h-[10px] w-[10px]" : "h-5 w-5"}`} style={{ background: hue }} />
 				))}
 			</span>,
 		),
@@ -203,7 +229,7 @@ export function Start({
 			<svg
 				aria-hidden="true"
 				viewBox="0 0 24 24"
-				className={`absolute right-5 top-4 text-white/20 ${P ? "h-[60px] w-[60px]" : "h-[84px] w-[84px]"}`}
+				className={`absolute text-white/20 ${P ? "right-2 top-2 h-[40px] w-[40px]" : "right-5 top-4 h-[84px] w-[84px]"}`}
 			>
 				<path
 					fill="currentColor"
@@ -216,8 +242,8 @@ export function Start({
 			"Taste",
 			"Score what you've seen",
 			// The site's fingerprint mark (the title page's Fingerprint heading) over the areas' colours.
-			<span aria-hidden className="absolute inset-x-5 top-5 flex items-start gap-3">
-				<span className="mt-1.5 flex h-3 flex-1 gap-1">
+			<span aria-hidden className={`absolute flex items-start ${P ? "inset-x-2.5 top-2 gap-2" : "inset-x-5 top-5 gap-3"}`}>
+				<span className={`mt-1.5 flex flex-1 gap-1 ${P ? "h-2" : "h-3"}`}>
 					{AREAS.map((area) => (
 						<span
 							key={area}
@@ -230,14 +256,14 @@ export function Start({
 					src={assetUrl(fingerprintIcon)}
 					alt=""
 					draggable={false}
-					className={`shrink-0 ${P ? "h-[52px] w-[52px]" : "h-[72px] w-[72px]"}`}
+					className={`shrink-0 ${P ? "h-[38px] w-[38px]" : "h-[72px] w-[72px]"}`}
 				/>
 			</span>,
 		),
 	]
 
 	const more = (
-		<div className={`flex items-center ${P ? "flex-wrap gap-2.5" : "gap-3"}`}>
+		<div className={`flex items-center ${P ? "min-w-0 flex-1 gap-2" : "gap-3"}`}>
 			{[
 				{ id: "start:taste", label: "Your taste", d: "M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4L12 2Z" },
 				{
@@ -256,10 +282,10 @@ export function Start({
 					<Item
 						key={key.id}
 						id={key.id}
-						className={`tvc-btn flex items-center gap-2 ${P ? "px-4 text-[18px]" : "h-[50px] px-5 text-[19px]"}`}
-						style={P ? { height: Math.max(50, canvas.first ? 50 : Math.ceil(44 / canvas.scale)) } : undefined}
+						className={`tvc-btn flex items-center ${P ? "min-w-0 flex-1 flex-col justify-center gap-2 rounded-[16px] px-2 text-center text-[19px] leading-tight" : "h-[50px] gap-2 px-5 text-[19px]"}`}
+						style={P ? { height: 120 } : undefined}
 					>
-						<svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5 opacity-70">
+						<svg aria-hidden="true" viewBox="0 0 24 24" className={P ? "h-7 w-7 opacity-70" : "h-5 w-5 opacity-70"}>
 							<path fill="currentColor" d={key.d} />
 						</svg>
 						{key.label}
@@ -290,17 +316,7 @@ export function Start({
 			/>
 			<Heading className="sr-only">{HOME_HEADLINE}</Heading>
 			{P ? (
-				<div
-					data-tv-scroll
-					className="absolute inset-x-0 bottom-0 top-[78px] overflow-hidden px-3 pt-1"
-				>
-					<div className="grid gap-3 pb-6">
-						{/* On a short phone the tile fits the picture whole under the navigation. */}
-						<div style={{ height: canvas.h < 380 ? 200 : 214 }}>{hero}</div>
-						<div className="grid grid-cols-2 gap-3">{tiles}</div>
-						{more}
-					</div>
-				</div>
+				<PhonePages page={lastPage.current} items={items} hero={hero} tiles={tiles} more={more} />
 			) : (
 				<div className="absolute inset-x-12 top-[104px]">
 					<div className="grid h-[404px] grid-cols-[1.18fr_1fr] gap-5">
@@ -313,5 +329,49 @@ export function Start({
 			{/* Last in the markup, as in `tvItems`: the items are met in reading order. */}
 			<CornerBar items={items} />
 		</>
+	)
+}
+
+/**
+ * The phone's Start, one page at a time: Watch next and four tiles, then the other three keys. The arrow moves the
+ * focus to the other page's first key (or last, going back), and the page follows the focus.
+ */
+function PhonePages({
+	page,
+	items,
+	hero,
+	tiles,
+	more,
+}: {
+	page: number
+	items: readonly string[]
+	hero: React.ReactNode
+	tiles: React.ReactNode
+	more: React.ReactNode
+}) {
+	const { canvas } = useTvView()
+	const second = SECOND.filter((id) => items.includes(id))
+	const first = items.filter((id) => id.startsWith("start:") && !SECOND.includes(id))
+	const arrow = keySize(canvas, 54)
+	return (
+		<div
+			className="absolute inset-x-0 bottom-0 flex items-center gap-2"
+			style={{ top: PHONE_HEAD, paddingLeft: PHONE_SIDE, paddingRight: PHONE_SIDE, paddingBottom: PHONE_FOOT }}
+		>
+			{page === 0 || !second.length ? (
+				<>
+					<div className="h-full w-[176px] shrink-0">{hero}</div>
+					<div className="grid min-w-0 flex-1 grid-cols-2 gap-2">{tiles}</div>
+					{second.length > 0 && (
+						<PageArrow to={jumpItem(second[0])} dir="next" label="More: Your taste, My shows, What is GoodWatch?" size={arrow} />
+					)}
+				</>
+			) : (
+				<>
+					<PageArrow to={jumpItem(first[first.length - 1])} dir="prev" label="Back to Watch next and the screens" size={arrow} />
+					{more}
+				</>
+			)}
+		</div>
 	)
 }

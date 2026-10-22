@@ -4,12 +4,10 @@
 // The screen on show is marked, and the menu opens on it. A chunk the TV asks for at the first interaction
 // (screen-code.tsx).
 //
-// On the phone the menu covers the picture, its keys two to a row, every key a touch target of 44 px or more on
-// the phone's screen (`keySize` in kit.tsx): up to 67 canvas px each on the narrowest phone. The wordmark is there
-// only where it has room (`menuLayout`).
+// On the phone the menu covers the picture, its keys three to a row, every key a touch target of 44 px or more on
+// the phone's screen (`keySize` in kit.tsx). Nothing scrolls.
 import { GoodWatchWordmark } from "~/ui/brand/GoodWatchWordmark"
-import { Item, keySize, useTvView } from "../kit"
-import type { TvCanvas } from "../room-tv"
+import { Item, PHONE_FOOT, PHONE_HEAD, PHONE_SIDE, keySize, phoneSpan, useTvView } from "../kit"
 
 const LABEL: Record<string, string> = {
 	"menu:tonight": "Watch next",
@@ -40,49 +38,47 @@ const ICON: Record<string, string> = {
 		"M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm1 15h-2v-6h2v6Zm0-8h-2V7h2v2Z",
 }
 
-/** The wordmark over the keys on the phone, with the space under it, and the least the column keeps free at each end. */
-const HEAD = 44
-const EDGE = 6
-
-/**
- * The phone's menu: how tall a key is, the gap between two rows of keys, and whether the wordmark stands over them.
- * The keys keep their height on every phone. The wordmark goes first when the picture is too short for all of it,
- * then the gaps narrow from 8 to no less than 4.
- */
-export function menuLayout(
-	canvas: TvCanvas,
-	count: number,
-): { key: number; gap: number; head: boolean } {
-	const key = keySize(canvas, 48)
-	const rows = Math.ceil(count / 2)
-	const gaps = Math.max(1, rows - 1)
-	const room = canvas.h - 2 * EDGE - rows * key
-	const head = room >= HEAD + gaps * 8
-	const gap = Math.max(4, Math.min(8, Math.floor(room / gaps)))
-	return { key, gap: head ? 8 : gap, head }
+export default function Menu({ items }: { items: readonly string[] }) {
+	const { canvas } = useTvView()
+	return canvas.edition === "phone" ? <PhoneMenu items={items} /> : <TvMenu items={items} />
 }
 
-export default function Menu({ items }: { items: readonly string[] }) {
+/**
+ * The phone's menu (nothing scrolls): over the whole picture, every TV screen three to a row under a band with the
+ * wordmark and Close. The band takes no item: a press there reaches the shade under the menu, which closes it, as
+ * Back does. Each key's words may take two lines, so none is cut.
+ */
+function PhoneMenu({ items }: { items: readonly string[] }) {
 	const { canvas, here, member } = useTvView()
-	const P = canvas.edition === "phone"
-	const phone = menuLayout(canvas, items.length)
+	const key = keySize(canvas, 54)
+	// Three to a row upright, four on a phone's wide canvas.
+	const cols = phoneSpan(canvas) >= 600 ? 4 : 3
+	const rows = Math.ceil(items.length / cols)
+	// The band gives way where a narrow phone's keys are taller: the rows always fit the picture.
+	const band = Math.min(PHONE_HEAD, canvas.h - PHONE_FOOT - rows * key - (rows - 1) * 6)
 	return (
 		<div
 			role="menu"
 			aria-label="Menu"
-			// On the phone it scrolls when a short picture can't hold its keys (living-room.css), centred while it fits:
-			// the auto margins of the column inside, not justify-center, so its top stays in reach.
-			{...(P ? { "data-tv-scroll": "" } : {})}
-			className={`absolute inset-y-0 right-0 flex flex-col bg-[#0b0c11]/95 ${P ? "w-full px-5" : "w-[440px] justify-center gap-1.5 border-l border-white/10 px-9"}`}
+			className="pointer-events-none absolute inset-0 flex flex-col bg-[#0b0c11]/95"
+			style={{ paddingLeft: PHONE_SIDE, paddingRight: PHONE_SIDE, paddingBottom: PHONE_FOOT }}
 		>
-			<div className={P ? "my-auto flex flex-col py-1.5" : "contents"} style={P ? { gap: phone.gap } : undefined}>
-			{(!P || phone.head) && (
-				<GoodWatchWordmark
-					fontSize={P ? 24 : 30}
-					className={P ? "mb-1" : "mb-2"}
-				/>
-			)}
-			<div className={P ? "grid grid-cols-2" : "grid gap-1.5"} style={P ? { gap: phone.gap } : undefined}>
+			<div aria-hidden className="flex shrink-0 items-center justify-between" style={{ height: band }}>
+				<GoodWatchWordmark fontSize={22} />
+				<span className="flex items-center gap-2 text-[18px] font-bold text-white/75">
+					Close
+					<svg viewBox="0 0 24 24" className="h-[22px] w-[22px]" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round">
+						<path d="M6 6l12 12M18 6L6 18" />
+					</svg>
+				</span>
+			</div>
+			<div
+				className="pointer-events-auto grid min-h-0 flex-1 gap-[6px]"
+				style={{
+					gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
+					gridTemplateRows: `repeat(${rows}, ${key}px)`,
+				}}
+			>
 				{items.map((id) => {
 					const on = here === id
 					return (
@@ -91,27 +87,56 @@ export default function Menu({ items }: { items: readonly string[] }) {
 							id={id}
 							role="menuitem"
 							label={on ? `${label(id, member)}, showing now` : undefined}
-							className={`tvc-btn tvc-menu-key flex min-w-0 shrink-0 items-center ${on ? "tvc-here" : ""} ${P ? "gap-2.5 px-4 text-[19px]" : "h-[54px] gap-4 px-6 text-[23px]"}`}
-							style={P ? { height: phone.key } : undefined}
+							className={`tvc-btn tvc-menu-key flex h-full min-w-0 items-center gap-2 px-3 text-[17px] leading-[1.1] ${on ? "tvc-here" : ""}`}
 						>
 							<svg
 								viewBox="0 0 24 24"
 								aria-hidden="true"
-								className={`shrink-0 ${P ? "h-[22px] w-[22px]" : "h-[24px] w-[24px]"} ${on ? "text-amber-400" : "opacity-70"}`}
+								className={`h-[20px] w-[20px] shrink-0 ${on ? "text-amber-400" : "opacity-70"}`}
 							>
 								<path d={ICON[id]} fill="currentColor" />
 							</svg>
-							<span className="min-w-0 flex-1 truncate">{label(id, member)}</span>
-							{on && (
-								<span
-									aria-hidden
-									className="h-2.5 w-2.5 shrink-0 rounded-full bg-amber-400"
-								/>
-							)}
+							<span className="min-w-0 flex-1">{label(id, member)}</span>
 						</Item>
 					)
 				})}
 			</div>
+		</div>
+	)
+}
+
+function TvMenu({ items }: { items: readonly string[] }) {
+	const { here, member } = useTvView()
+	return (
+		<div
+			role="menu"
+			aria-label="Menu"
+			className="absolute inset-y-0 right-0 flex flex-col bg-[#0b0c11]/95 w-[440px] justify-center gap-1.5 border-l border-white/10 px-9"
+		>
+			<GoodWatchWordmark fontSize={30} className="mb-2" />
+			<div className="grid gap-1.5">
+				{items.map((id) => {
+					const on = here === id
+					return (
+						<Item
+							key={id}
+							id={id}
+							role="menuitem"
+							label={on ? `${label(id, member)}, showing now` : undefined}
+							className={`tvc-btn tvc-menu-key flex min-w-0 shrink-0 items-center ${on ? "tvc-here" : ""} h-[54px] gap-4 px-6 text-[23px]`}
+						>
+							<svg
+								viewBox="0 0 24 24"
+								aria-hidden="true"
+								className={`h-[24px] w-[24px] shrink-0 ${on ? "text-amber-400" : "opacity-70"}`}
+							>
+								<path d={ICON[id]} fill="currentColor" />
+							</svg>
+							<span className="min-w-0 flex-1 truncate">{label(id, member)}</span>
+							{on && <span aria-hidden className="h-2.5 w-2.5 shrink-0 rounded-full bg-amber-400" />}
+						</Item>
+					)
+				})}
 			</div>
 		</div>
 	)

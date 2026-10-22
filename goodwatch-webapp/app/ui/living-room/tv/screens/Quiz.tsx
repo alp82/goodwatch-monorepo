@@ -1,3 +1,4 @@
+import { QUIZ_GOAL } from "~/ui/taste-quiz/quiz-flow"
 import { mediaFieldLanguage } from "~/utils/media-presentation"
 // Taste on the TV: the taste quiz, one widely seen title at a time over its picture, with its poster, and the
 // rating strip to answer with across the picture's width (../RatingStrip.tsx, the screen "How was it?" also is).
@@ -6,7 +7,14 @@ import { mediaFieldLanguage } from "~/utils/media-presentation"
 // keys of their own under the strip. Once the goal is reached Your taste takes its place (tv-machine.ts,
 // `quiz-done`). Its page is the site's quiz (the Expand key). A chunk the TV asks for on first use (screen-code.tsx).
 import { RatingScreen } from "../RatingStrip"
-import { CornerBar, ExpandCorner, Item, Shade, useKeySize, usePhone } from "../kit"
+import {
+	CornerBar,
+	ExpandCorner,
+	Item,
+	Shade,
+	useKeySize,
+	usePhone,
+} from "../kit"
 import { type TvQuizOnScreen, quizWords } from "../tv-taste"
 
 export default function Quiz({
@@ -19,9 +27,9 @@ export default function Quiz({
 }) {
 	const P = usePhone()
 	// On the phone the keys are touch targets, 44 px or more on the phone's screen.
-	const height = useKeySize(P ? 52 : 64)
+	const height = useKeySize(P ? 50 : 64)
 	const words = quizWords(quiz)
-	const key = `tvc-btn flex shrink-0 items-center justify-center whitespace-nowrap ${P ? "min-w-0 flex-1 px-3 text-[20px]" : "px-8 text-[26px]"}`
+	const key = `tvc-btn flex shrink-0 items-center justify-center whitespace-nowrap ${P ? "px-3.5 text-[17px]" : "px-8 text-[26px]"}`
 	const yourTaste = items.includes("your-taste") && (
 		<Item id="your-taste" className={key} style={{ height }}>
 			Your taste
@@ -65,13 +73,22 @@ export default function Quiz({
 			line={words.line}
 			answered={quiz.answered}
 			titleKey={quiz.title.key}
+			title={quiz.title.title}
+			progress={
+				P
+					? quiz.rated < QUIZ_GOAL
+						? `${quiz.rated} of ${QUIZ_GOAL}`
+						: `${quiz.rated} rated`
+					: undefined
+			}
 		>
 			{items.includes("skip") && (
 				<Item id="skip" className={key} style={{ height }}>
 					Haven't seen it
 				</Item>
 			)}
-			{yourTaste}
+			{/* The phone's row holds "Haven't seen it" and the Expand key; Your taste is in the menu there. */}
+			{!P && yourTaste}
 		</RatingScreen>
 	)
 }

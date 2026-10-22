@@ -5,8 +5,8 @@
 // state keeps the corner free.
 // A chunk the TV asks for on first use (screen-code.tsx).
 import { type ReactNode, useRef } from "react"
-import { useTasteQuiz } from "~/ui/taste-quiz/use-taste-quiz"
 import { GoodWatchG } from "~/ui/brand/GoodWatchWordmark"
+import { useTasteQuiz } from "~/ui/taste-quiz/use-taste-quiz"
 import { tmdbImageUrl } from "~/utils/tmdb-image"
 import { TASTE_GROUPS_NAME } from "../../../taste/taste-groups-name"
 import { TitleList } from "../TitleList"
@@ -15,9 +15,12 @@ import {
 	Frame,
 	Img,
 	Item,
-	PhoneFoot,
+	PageArrow,
 	backdropSize,
 	keySize,
+	phoneFit,
+	useListAnchor,
+	usePage,
 	useReport,
 	useTvView,
 } from "../kit"
@@ -90,44 +93,73 @@ function Ask({
 }) {
 	const { canvas } = useTvView()
 	const P = canvas.edition === "phone"
+	const art = backdrop
+		? tmdbImageUrl(backdrop, backdropSize(canvas))
+		: undefined
+	if (P) {
+		// The phone: the headline and its line on one line each, then the keys; a guest's sign-up on a row of its
+		// own, so no key is squeezed or cut.
+		const h = keySize(canvas, 54)
+		const start = items.includes("start-quiz") && (
+			<Item
+				id="start-quiz"
+				className="tvc-btn flex shrink-0 items-center whitespace-nowrap px-6 text-[19px]"
+				style={{ height: h }}
+			>
+				{label}
+			</Item>
+		)
+		return (
+			<Frame name="Your taste" items={items} art={art} dim={0.8} inlineExpand>
+				<div className="flex h-full flex-col justify-center gap-1.5">
+					<div className="text-[28px] font-bold leading-[32px] tracking-tight">
+						{headline}
+					</div>
+					{line && (
+						<div className="text-[17px] leading-[20px] text-white/80">
+							{line}
+						</div>
+					)}
+					{/* In the machine's order: the way into the quiz, a guest's sign-up, then the Expand key, on a row of its
+					    own where the sign-up leaves it no room. */}
+					<div className="mt-1.5 flex items-center gap-2">
+						{start}
+						{items.includes("sign-up") ? (
+							<SignUp />
+						) : (
+							items.includes("expand") && <Expand />
+						)}
+					</div>
+					{items.includes("sign-up") && items.includes("expand") && (
+						<div className="flex">
+							<Expand />
+						</div>
+					)}
+				</div>
+			</Frame>
+		)
+	}
 	return (
-		<Frame
-			name="Your taste"
-			items={items}
-			art={backdrop ? tmdbImageUrl(backdrop, backdropSize(canvas)) : undefined}
-			dim={0.8}
-			inlineExpand
-		>
+		<Frame name="Your taste" items={items} art={art} dim={0.8} inlineExpand>
 			<div className="flex min-h-full flex-col justify-center">
 				<div
 					className="font-bold leading-[1.02] tracking-tight"
-					style={{ fontSize: P ? 36 : 72 }}
+					style={{ fontSize: 72 }}
 				>
 					{headline}
 				</div>
-				{line && (
-					<div
-						className={`text-white/80 ${P ? "mt-2 text-[21px]" : "mt-3 text-[30px]"}`}
-					>
-						{line}
-					</div>
-				)}
-				{(items.includes("start-quiz") || (P && items.includes("expand"))) && (
-					<div
-							className={`flex flex-wrap items-center ${P ? "mt-6 gap-2.5" : "mt-9 gap-5"}`}
-						>
+				{line && <div className="mt-3 text-[30px] text-white/80">{line}</div>}
+				{(items.includes("start-quiz") || items.includes("sign-up")) && (
+					<div className="mt-9 flex flex-wrap items-center gap-5">
 						{items.includes("start-quiz") && (
-						<Item
-							id="start-quiz"
-							className={`tvc-btn flex items-center ${P ? "px-7 text-[22px]" : "h-[76px] px-10 text-[30px]"}`}
-							style={P ? { height: keySize(canvas, 54) } : undefined}
-						>
-							{label}
-						</Item>
+							<Item
+								id="start-quiz"
+								className="tvc-btn flex h-[76px] items-center px-10 text-[30px]"
+							>
+								{label}
+							</Item>
 						)}
-							{items.includes("sign-up") && <SignUp />}
-						{/* On the phone the Expand key wraps with the keys, so no key lands under a corner. */}
-						{P && items.includes("expand") && <Expand />}
+						{items.includes("sign-up") && <SignUp />}
 					</div>
 				)}
 			</div>
@@ -142,7 +174,7 @@ function RateMore() {
 	return (
 		<Item
 			id="start-quiz"
-			className={`tvc-btn flex shrink-0 items-center whitespace-nowrap ${P ? "px-6 text-[21px]" : "h-[70px] px-9 text-[27px]"}`}
+			className={`tvc-btn flex shrink-0 items-center whitespace-nowrap ${P ? "px-5 text-[19px]" : "h-[70px] px-9 text-[27px]"}`}
 			style={P ? { height: keySize(canvas, 54) } : undefined}
 		>
 			Rate more
@@ -161,22 +193,12 @@ function SignUp() {
 		<Item
 			id="sign-up"
 			label="Sign up to save your scores and taste"
-			className={`tvc-btn tvc-cta flex shrink-0 items-center gap-3 whitespace-nowrap ${P ? "px-5 text-[20px]" : "h-[70px] px-8 text-[26px]"}`}
+			className={`tvc-btn tvc-cta flex shrink-0 items-center gap-3 whitespace-nowrap ${P ? "px-5 text-[19px]" : "h-[70px] px-8 text-[26px]"}`}
 			style={P ? { height: keySize(canvas, 54) } : undefined}
 		>
 			<GoodWatchG height={P ? 22 : 30} color="currentColor" />
 			{P ? "Sign up to save" : "Sign up to save your scores and taste"}
 		</Item>
-	)
-}
-
-/** The phone's last row: what a screen puts there, then the Expand key (kit.tsx, `PhoneFoot`). As tall as a key. */
-function Foot({ items, children }: { items: readonly string[]; children?: ReactNode }) {
-	const { canvas } = useTvView()
-	return (
-		<PhoneFoot items={items} height={keySize(canvas, 54)} className="mt-2.5">
-			{children}
-		</PhoneFoot>
 	)
 }
 
@@ -191,7 +213,8 @@ function Sides({
 	const P = canvas.edition === "phone"
 	const more = items.includes("start-quiz")
 	// The picture and the line follow the focused side, and stay on the last one while the focus is elsewhere.
-	const last = useRef(sides[0]?.id)
+	const anchor = useListAnchor("taste-sides", sides.map((side) => `side:${side.id}`))
+	const last = useRef(anchor?.slice("side:".length) ?? sides[0]?.id)
 	const at = sides.find((side) => `side:${side.id}` === focused)
 	if (at) last.current = at.id
 	const shown = sides.find((side) => side.id === last.current) ?? sides[0]
@@ -218,10 +241,10 @@ function Sides({
 				}}
 			/>
 			<span
-				className={`absolute ${P ? "inset-x-3 bottom-3" : five ? "inset-x-3.5 bottom-4" : "inset-x-5 bottom-5"}`}
+				className={`absolute ${P ? "inset-x-2.5 bottom-2" : five ? "inset-x-3.5 bottom-4" : "inset-x-5 bottom-5"}`}
 			>
 				<span
-					className={`line-clamp-3 font-bold leading-[1.05] ${five ? "hyphens-auto [overflow-wrap:break-word]" : ""} ${P ? (five ? "text-[17px]" : many ? "text-[20px]" : "text-[22px]") : five ? "text-[21px]" : many ? "text-[30px]" : "text-[36px]"}`}
+					className={`font-bold leading-[1.05] ${P ? "hyphens-auto text-[17px] [overflow-wrap:break-word]" : `line-clamp-3 ${five ? "hyphens-auto text-[21px] [overflow-wrap:break-word]" : many ? "text-[30px]" : "text-[36px]"}`}`}
 				>
 					{side.name}
 				</span>
@@ -244,34 +267,39 @@ function Sides({
 			: undefined,
 		dim: 0.86,
 	}
-	// The phone: the sides side by side (four stand two by two, five three over two), the focused one's line over
-	// them, and Rate more
-	// beside the Expand key's corner.
-	if (P)
+	// The phone: three sides a page, with arrows where there are more, and Rate more and the Expand key under them.
+	// A guest's sign-up joins Rate more, the Expand key takes a row of its own, and the sides give up their height
+	// for it (no line over them).
+	if (P) {
+		const guest = items.includes("sign-up")
+		const h = keySize(canvas, 54)
 		return (
-			<Frame {...frame} inlineExpand>
-				<div className="flex h-full flex-col">
+			<Frame {...frame} crumb={guest ? undefined : frame.crumb} inlineExpand>
+				<div className="flex h-full flex-col gap-1.5">
+					<SidesPage
+						items={items}
+						sides={sides}
+						tile={tile}
+						height={guest ? h : undefined}
+					/>
 					<div
-						key={shown?.id}
-						className="tvc-fade shrink-0 truncate text-[20px] leading-tight text-white/85"
+						className="flex shrink-0 items-center gap-2"
+						style={{ height: h }}
 					>
-						{shown?.line}
+						{/* In the machine's order: Rate more, a guest's sign-up, then the Expand key, on a row of its own
+						    where the sign-up leaves it no room. */}
+						{more && <RateMore />}
+						{guest ? <SignUp /> : items.includes("expand") && <Expand />}
 					</div>
-					<div
-						className="mt-2.5 grid min-h-0 flex-1 gap-3"
-						style={{
-							gridTemplateColumns: `repeat(${five ? 3 : many ? 2 : sides.length}, minmax(0, 1fr))`,
-						}}
-					>
-						{sides.map(tile)}
-					</div>
-					<Foot items={items}>
-							{more && <RateMore />}
-							{items.includes("sign-up") && <SignUp />}
-						</Foot>
+					{guest && items.includes("expand") && (
+						<div className="flex shrink-0">
+							<Expand />
+						</div>
+					)}
 				</div>
 			</Frame>
 		)
+	}
 	return (
 		<Frame {...frame}>
 			<div
@@ -283,19 +311,76 @@ function Sides({
 				{sides.map(tile)}
 			</div>
 			{(more || items.includes("sign-up")) && (
-					<div className="mt-8 flex gap-5">
-						{more && <RateMore />}
-						{items.includes("sign-up") && <SignUp />}
-					</div>
-				)}
+				<div className="mt-8 flex gap-5">
+					{more && <RateMore />}
+					{items.includes("sign-up") && <SignUp />}
+				</div>
+			)}
 		</Frame>
+	)
+}
+
+/** The phone's sides: three a page, an arrow to either side where there are more. */
+function SidesPage({
+	items,
+	sides,
+	tile,
+	height,
+}: {
+	items: readonly string[]
+	sides: readonly TvSide[]
+	tile: (side: TvSide, n: number) => ReactNode
+	/** The row's height; the room that is left by default. */
+	height?: number
+}) {
+	const ids = sides
+		.map((side) => `side:${side.id}`)
+		.filter((id) => items.includes(id))
+	const { canvas } = useTvView()
+	// Three a page upright, up to five on a phone's wide canvas; the page holds the side shown last.
+	const per = phoneFit(canvas, 3, 120, 5)
+	const page = usePage(ids, per, useListAnchor("taste-sides", ids))
+	return (
+		<div
+			className={`flex items-stretch gap-2 ${height ? "shrink-0" : "min-h-0 flex-1"}`}
+			style={height ? { height } : undefined}
+		>
+			{page.pages > 1 && (
+				<PageArrow
+					to={page.prev}
+					dir="prev"
+					label="Sides before"
+					className="self-center"
+				/>
+			)}
+			<div
+				className="grid min-w-0 flex-1 gap-2"
+				style={{ gridTemplateColumns: `repeat(${per}, minmax(0, 1fr))` }}
+			>
+				{page.shown.map((id) => {
+					const n = sides.findIndex((side) => `side:${side.id}` === id)
+					return tile(sides[n], n)
+				})}
+			</div>
+			{page.pages > 1 && (
+				<PageArrow
+					to={page.next}
+					dir="next"
+					label="More sides"
+					className="self-center"
+				/>
+			)}
+		</div>
 	)
 }
 
 /** "Rate more" as a list's key. */
 const RATE_MORE = [{ id: "start-quiz", label: "Rate more" }]
 /** A guest's sign-up, as a list's key. */
-const SIGN_UP = { id: "sign-up", label: "Sign up to save your scores and taste" }
+const SIGN_UP = {
+	id: "sign-up",
+	label: "Sign up to save your scores and taste",
+}
 
 export default function Taste({
 	items,
@@ -316,6 +401,8 @@ export default function Taste({
 				name="Your taste"
 				items={items}
 				crumb={shown?.name ?? "Fits your taste"}
+				// The phone's header names the side, where the desktop has the crumb.
+				phoneName={shown?.name ?? "Fits your taste"}
 				titles={shown?.titles ?? []}
 				empty={
 					taste.state === "reading"
@@ -351,6 +438,7 @@ export default function Taste({
 					name="Your taste"
 					items={items}
 					crumb="Made for you"
+					phoneName="Made for you"
 					titles={taste.picks}
 					actions={
 						items.includes("sign-up") ? [...RATE_MORE, SIGN_UP] : RATE_MORE

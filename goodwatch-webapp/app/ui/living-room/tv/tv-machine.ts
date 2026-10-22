@@ -124,7 +124,8 @@ export type TvScreen =
 	| {
 			name: "title"
 			title: string
-			panel?: "fingerprint" | "trailer"
+			/** The phone's title has three sections: the overview (no panel), Where to watch and the fingerprint. */
+			panel?: "fingerprint" | "trailer" | "watch"
 			group?: number
 	  }
 	/** "How was it?" after Seen it. */
@@ -252,6 +253,8 @@ export type TvEffect =
 	| { type: "quiz-skip" }
 	/** Continue with Google, back to the same TV screen. */
 	| { type: "sign-in" }
+	/** The phone's search field: the browser's focus goes to the line, and the phone's own keyboard opens. */
+	| { type: "focus-input" }
 	/** Your taste's sign-up: the site's sign-up page, back to Your taste (the page builds the address). */
 	| { type: "sign-up" }
 
@@ -349,7 +352,7 @@ function readScreen(params: URLSearchParams, member: boolean): TvScreen {
 			const panel = params.get("panel")
 			const group = params.get("group")
 			return name === "title" &&
-				(panel === "fingerprint" || panel === "trailer")
+				(panel === "fingerprint" || panel === "trailer" || panel === "watch")
 				? {
 						name,
 						title,
@@ -648,6 +651,30 @@ export function watchHref(
 const titleItems = (keys: readonly string[], max = LIST_TITLES) =>
 	keys.slice(0, max).map((key) => `title:${key}`)
 
+/**
+ * A page arrow of a list on the phone (kit.tsx, `PageArrow`): `jump:<item>`, the item it moves the focus to, the
+ * first of the next page or the last of the one before. It is one of the screen's items whenever its target is.
+ */
+export const JUMP = "jump:"
+export const jumpItem = (target: string) => `${JUMP}${target}`
+export const jumpTarget = (item: string) =>
+	item.startsWith(JUMP) ? item.slice(JUMP.length) : null
+/** Whether `item` is one of `items`, or a page arrow to one of them. */
+export const amongItems = (items: readonly string[], item: string) => {
+	const target = jumpTarget(item)
+	return items.includes(target ?? item)
+}
+
+/** The phone's title sections, as their keys at the top of each: the overview, Where to watch, the fingerprint. */
+export const TITLE_SECTIONS = ["section:overview", "section:watch", "fingerprint"]
+
+/** Keys that stand over a phone screen's content, where its focus never starts. */
+const SECTION_KEYS: ReadonlySet<string> = new Set([
+	...TITLE_SECTIONS,
+	"prev-pick",
+	"next-pick",
+])
+
 /** Watch next's stack and Popular's wall: `pick:<n>`, from 0. */
 const pickItems = (count: number) =>
 	Array.from({ length: count }, (_, i) => `pick:${i}`)
@@ -684,6 +711,9 @@ function contentItems(screen: TvScreen, ctx: TvContext): string[] {
 			const { count } = tonightPick(screen, ctx)
 			if (!count) return []
 			return [
+				// The phone shows one pick at a time with an arrow to either side (`prev-pick`, `next-pick`), over its
+				// keys, in reading order.
+				...(ctx.phone && count > 1 ? ["prev-pick", "next-pick"] : []),
 				"watch",
 				"trailer",
 				"details",
@@ -725,7 +755,30 @@ function contentItems(screen: TvScreen, ctx: TvContext): string[] {
 				...titleItems(ctx.toStart, SHOWS_PER_GROUP),
 			]
 		case "title":
-			return screen.panel
+			// The phone's sections: the overview's keys, Where to watch's rows, the fingerprint's groups, and the
+			// sections' own keys at the top of each.
+			if (ctx.phone && screen.panel !== "trailer")
+				// The sections' keys stand at the top of each section: first in reading order.
+				return screen.panel === "watch"
+					? [
+							...TITLE_SECTIONS,
+							...Array.from({ length: ctx.titleOffers ?? 0 }, (_, i) => `offer:${i}`),
+							...(ctx.titleWhere ? ["where"] : []),
+						]
+					: screen.panel === "fingerprint"
+						? [...TITLE_SECTIONS, "group:-1", "group:0", "group:1", "group:2"]
+						: // The overview's Expand key (Full details) stands with the sections' keys at its top.
+							[
+								...TITLE_SECTIONS,
+								...(destinationHref(screen, ctx) ? ["expand"] : []),
+								"watch",
+								"trailer",
+								"want-to-see",
+								"seen",
+							]
+			// The desktop has no Where to watch section: its overview holds the offers, so `panel=watch` (a link, or a
+			// phone turned or widened to the desktop) is the overview there, and stays in the address for Back.
+			return screen.panel && screen.panel !== "watch"
 				? [
 						"close",
 						...(screen.panel === "fingerprint"
@@ -746,6 +799,8 @@ function contentItems(screen: TvScreen, ctx: TvContext): string[] {
 		case "search":
 			if (screen.filters) return filterItems
 			if (screen.query) return browseItems(screen, ctx)
+			// The phone types with its own keyboard: the line (`field`) opens it, and there are no TV keys.
+			if (ctx.phone) return ["field", ...searchIdeas(), SEARCH_GO]
 			return [...searchIdeas(), ...KEY_ITEMS]
 
 		case "about":
@@ -761,10 +816,14 @@ export function tvItems(screen: TvScreen, ctx: TvContext): string[] {
 	return [
 		...contentItems(screen, ctx),
 		...(destinationHref(screen, ctx) &&
-		!(screen.name === "title" && screen.panel)
+		!(
+			screen.name === "title" &&
+			((screen.panel && screen.panel !== "watch") || ctx.phone)
+		)
 			? ["expand"]
 			: []),
-		...(hasNav(screen, ctx)
+		// The phone's header on every screen: the white G (Start) and Menu, with the screen's name between them.
+		...(hasNav(screen, ctx) || ctx.phone
 			? navItems(ctx)
 			: [
 					...(screen.name === "home" ? [] : ["bar:back"]),
@@ -793,7 +852,8 @@ export const hasNav = (screen: TvScreen, ctx: Pick<TvContext, "member">) =>
 export function navItems(
 	ctx: Pick<TvContext, "member" | "popular" | "phone">,
 ): string[] {
-	// The phone has room for three tabs: Watch next, Discover and Search. The menu has every screen.
+	// The phone's header has the white G and Menu only, the screen's name between them: the menu has every screen.
+	if (ctx.phone) return ["nav:home", "bar:menu"]
 	return [
 		"nav:home",
 		"nav:tonight",
@@ -838,9 +898,14 @@ export function activeItems(state: TvState, ctx: TvContext): string[] {
 /** The screen's focused item under the menu: where the focus starts unless it was moved to an item still there. */
 function screenFocus(state: TvState, ctx: TvContext): string {
 	const items = tvItems(state.screen, ctx)
-	if (state.focus && items.includes(state.focus)) return state.focus
+	if (state.focus && amongItems(items, state.focus)) return state.focus
 	// The rating strip starts on Good.
 	if (items.includes(STRIP_START) && onStrip(state.screen)) return STRIP_START
+	// The desktop's overview reached as Where to watch starts on its first service, else its row to all of them.
+	if (state.screen.name === "title" && state.screen.panel === "watch" && !ctx.phone) {
+		const offer = items.find((item) => item.startsWith("offer:") || item === "where")
+		if (offer) return offer
+	}
 	// Popular starts on the poster it names.
 	const shown = `pick:${state.screen.name === "popular" ? state.screen.pick : -1}`
 	if (items.includes(shown)) return shown
@@ -848,10 +913,17 @@ function screenFocus(state: TvState, ctx: TvContext): string {
 	if (items.includes("key:q") && items.some((item) => item.startsWith("idea:"))) return "key:q"
 	// The focus starts on the screen's first own item, never on the Expand key and never on a tab (Discover starts
 	// on the open tab's first option); an empty screen starts on the bar.
-	return items.find(
+	// Nor on a phone's arrows to another pick, nor on a title section's keys: on the section's own content.
+	const content = items.find(
 		(item) =>
-			item !== "expand" && item !== "browse:all" && !item.startsWith("tab:"),
-	) as string
+			item !== "expand" &&
+			item !== "browse:all" &&
+			!item.startsWith("tab:") &&
+			!SECTION_KEYS.has(item),
+	)
+	return (content ??
+		items.find((item) => item !== "expand" && !item.startsWith("tab:")) ??
+		items[0]) as string
 }
 
 /** The focused item id: the menu's while it is open, else the screen's. */
@@ -977,8 +1049,11 @@ function back(state: TvState): TvTransition {
 		)
 	if (state.screen.name === "title" && state.screen.panel) {
 		const next = leave(state, { name: "title", title: state.screen.title })
+		// The key that opened the panel: Where to watch's is the phone's section key.
+		const focus =
+			state.screen.panel === "watch" ? "section:watch" : state.screen.panel
 		return next.history === "replace"
-			? { ...next, state: { ...next.state, focus: state.screen.panel } }
+			? { ...next, state: { ...next.state, focus } }
 			: next
 	}
 	return leave(state, HOME)
@@ -1634,8 +1709,37 @@ function choose(state: TvState, item: string, ctx: TvContext): TvTransition {
 		}
 		case "title":
 			return push(state, { name: "title", title: arg })
+		// The phone's title sections: one at a time, each a step of its own from the overview, so Back returns there;
+		// from one section to another takes its place.
+		case "section":
+			if (s.name !== "title") return none(state)
+			if (arg === "overview") return s.panel ? back(state) : none(state)
+			if (arg !== "watch" || s.panel === "watch") return none(state)
+			return s.panel
+				? replace(state, { name: "title", title: s.title, panel: "watch" })
+				: push(state, { name: "title", title: s.title, panel: "watch" })
+		case "prev-pick":
+		case "next-pick": {
+			if (s.name !== "tonight") return none(state)
+			const { at, count } = tonightPick(s, ctx)
+			const by = kind === "next-pick" ? 1 : count - 1
+			// The focus stays on the arrow, so the next press shows the next pick.
+			return replace(state, { name: "tonight", pick: (at + by) % count }, [], item)
+		}
+		case "field":
+			return s.name === "search" ? none(state, [{ type: "focus-input" }]) : none(state)
+		case "jump": {
+			const target = jumpTarget(item)
+			return target && tvItems(s, ctx).includes(target)
+				? none(focusOn(state, target, ctx))
+				: none(state)
+		}
 		case "fingerprint":
 		case "trailer": {
+			if (s.name === "title" && kind === "fingerprint" && s.panel === "fingerprint")
+				return none(state)
+			if (s.name === "title" && s.panel && s.panel !== "trailer" && kind === "fingerprint")
+				return replace(state, { name: "title", title: s.title, panel: kind })
 			if (s.name === "title")
 				return push(state, { name: "title", title: s.title, panel: kind })
 			// Watch next's and Popular's Trailer: the trailer of the title on show, straight away.
@@ -1790,7 +1894,7 @@ export function transition(
 				keyboardMove(state, from, action.dir, action.boxes) ??
 				stripMove(state, from, action.dir, items) ??
 				nextInDirection(
-					action.boxes.filter((box) => items.includes(box.id)),
+					action.boxes.filter((box) => amongItems(items, box.id)),
 					from,
 					action.dir,
 					action.scale,
@@ -1818,7 +1922,7 @@ export function transition(
 			return showPick(
 				state,
 				none(
-					activeItems(state, ctx).includes(action.item)
+					amongItems(activeItems(state, ctx), action.item)
 						? focusOn(state, action.item, ctx)
 						: state,
 				),
@@ -1827,7 +1931,7 @@ export function transition(
 			const item = focusedItem(state, ctx)
 			return state.menuOpen
 				? chooseInMenu(state, item)
-				: choose(state, item, ctx)
+				: showPick(state, choose(state, item, ctx))
 		}
 		case "choose":
 			// With the menu open, pressing anything behind it only closes it.
@@ -1835,8 +1939,8 @@ export function transition(
 				return menuItems(ctx).includes(action.item)
 					? chooseInMenu(state, action.item)
 					: none(closeMenu(state))
-			return tvItems(state.screen, ctx).includes(action.item)
-				? choose(focusOn(state, action.item, ctx), action.item, ctx)
+			return amongItems(tvItems(state.screen, ctx), action.item)
+				? showPick(state, choose(focusOn(state, action.item, ctx), action.item, ctx))
 				: none(state)
 		case "back":
 			return back(state)

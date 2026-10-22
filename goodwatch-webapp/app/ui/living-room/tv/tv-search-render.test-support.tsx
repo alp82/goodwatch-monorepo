@@ -51,18 +51,18 @@ const guest: TvHomeData = {
 
 const CANVAS: Record<"desktop" | "phone", TvCanvas> = {
 	desktop: { edition: "desktop", ...TV_CANVAS, scale: 1 },
-	phone: { edition: "phone", ...PHONE_TV_CANVAS, scale: 0.72 },
+	phone: { edition: "phone", ...PHONE_TV_CANVAS, scale: 0.75 },
 }
 /** The phones of the room's table (docs/implementation/tv-screen-revamp/room), as tv-title-render has them. */
 const PHONES = [
-	// The smallest phone still in use: a picture of 292 x 159, too short to spare the actions' row.
-	{ phone: "320x568", scale: 292 / 500, h: 272 },
-	{ phone: "360x740", scale: 332 / 500, h: 417 },
-	{ phone: "375x667", scale: 347 / 500, h: 372 },
-	{ phone: "390x700", scale: 362 / 500, h: 402 },
-	{ phone: "390x844", scale: 362 / 500, h: 417 },
-	{ phone: "430x932", scale: 402 / 500, h: 417 },
-	{ phone: "844x390", scale: 0.98, h: 373 },
+	// The phone's fixed canvas (480 x 270) at the scale of each phone's 16:9 TV (room-layout.ts, `seatPhone`).
+	{ phone: "320x568", scale: 292 / 480, h: 270 },
+	{ phone: "360x740", scale: 332 / 480, h: 270 },
+	{ phone: "375x667", scale: 347 / 480, h: 270 },
+	{ phone: "390x700", scale: 362 / 480, h: 270 },
+	{ phone: "390x844", scale: 362 / 480, h: 270 },
+	{ phone: "430x932", scale: 402 / 480, h: 270 },
+	{ phone: "844x390", scale: 507 / 480, h: 270 },
 ]
 
 const html = (canvas: TvCanvas, focused: string, node: React.ReactNode) =>
@@ -75,6 +75,8 @@ const editions = <T,>(draw: (canvas: TvCanvas) => T) => ({
 	desktop: draw(CANVAS.desktop),
 	phone: draw(CANVAS.phone),
 })
+/** The page hands the phone's screens the phone's items (its header, its own keyboard). */
+const phoneOf = (ctx: TvContext): TvContext => ({ ...ctx, phone: true })
 
 const base = tvContextOf(guest, null)
 const cards = [
@@ -111,14 +113,16 @@ const HEIST: SearchScreen = { name: "search", query: "heist" }
 function questionOf(draft: string, focused?: string) {
 	const ctx: TvContext = { ...base, draft }
 	const items = tvItems(QUESTION, ctx)
+	const phoneItems = tvItems(QUESTION, phoneOf(ctx))
 	return {
 		items,
+		phoneItems,
 		...editions((canvas) =>
 			html(
 				canvas,
-				focused ?? items[0],
+				focused ?? (canvas.edition === "phone" ? phoneItems : items)[0],
 				<Search
-					items={items}
+					items={canvas.edition === "phone" ? phoneItems : items}
 					screen={QUESTION}
 					draft={draft}
 					onDraft={() => {}}
@@ -135,6 +139,7 @@ function resultsOf(
 ) {
 	const ctx: TvContext = { ...base, titles: list?.titles ?? [] }
 	const items = tvItems(screen, ctx)
+	const phoneItems = tvItems(screen, phoneOf(ctx))
 	// Where the machine starts the focus: on the first title, and without one on the way back.
 	const start = focusedItem(
 		{
@@ -149,12 +154,13 @@ function resultsOf(
 	)
 	return {
 		items,
+		phoneItems,
 		...editions((canvas) =>
 			html(
 				canvas,
 				focused ?? start,
 				<Search
-					items={items}
+					items={canvas.edition === "phone" ? phoneItems : items}
 					screen={screen}
 					draft=""
 					onDraft={() => {}}
@@ -235,8 +241,8 @@ console.log(
 				h,
 				scale,
 			}
-			const typing: TvContext = { ...base, draft: "heist" }
-			const found: TvContext = { ...base, titles: report().titles }
+			const typing: TvContext = phoneOf({ ...base, draft: "heist" })
+			const found: TvContext = phoneOf({ ...base, titles: report().titles })
 			return {
 				phone,
 				scale,

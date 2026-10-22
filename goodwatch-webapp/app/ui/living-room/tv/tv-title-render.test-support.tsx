@@ -5,7 +5,12 @@ import { renderToStaticMarkup as renderMarkup } from "react-dom/server"
 import type { CardService, TitleCard } from "~/server/title-cards.server"
 import { TvScreen } from "./TvScreen"
 import { Layer, TvViewProvider, keySize } from "./kit"
-import { PHONE_TV_CANVAS, TV_CANVAS } from "./room-layout"
+import {
+	PHONE_TV_CANVAS,
+	TV_CANVAS,
+	layoutPhoneLandscape,
+	layoutPhoneRoom,
+} from "./room-layout"
 import type { TvCanvas } from "./room-tv"
 import Rate from "./screens/Rate"
 import Title from "./screens/Title"
@@ -19,8 +24,8 @@ import {
 	tvContextOf,
 } from "./tv-home"
 import {
-	type TvContext,
 	type TvScreen as Screen,
+	type TvContext,
 	type TvState,
 	focusedItem,
 	tvItems,
@@ -28,7 +33,11 @@ import {
 import type { TvTitleOnScreen, TvTitleScreens } from "./tv-title"
 
 const netflix: CardService = { id: 8, name: "Netflix", logo_path: "/n.jpg" }
-const disney: CardService = { id: 337, name: "Disney Plus", logo_path: "/d.jpg" }
+const disney: CardService = {
+	id: 337,
+	name: "Disney Plus",
+	logo_path: "/d.jpg",
+}
 
 const card = (
 	media_type: "movie" | "show",
@@ -62,7 +71,12 @@ const guest: TvHomeData = {
 	services: [],
 }
 const pool: TvPool = {
-	suggestions: [card("movie", 1), card("show", 2), card("movie", 3), card("movie", 4)],
+	suggestions: [
+		card("movie", 1),
+		card("show", 2),
+		card("movie", 3),
+		card("movie", 4),
+	],
 }
 const member: TvHomeData = {
 	...guest,
@@ -78,31 +92,39 @@ const member: TvHomeData = {
 	shows: { next: [], start: [] },
 }
 
+/**
+ * The phones of the room's table (docs/implementation/tv-screen-revamp/room): the window and how large the phone's
+ * fixed canvas of 480 x 270 is shown there, from the room's layouts (2026-10-22: a 16:9 TV on every phone). The
+ * page's header (64) and dock (72) and the lip (60) upright; the whole window on its side, the lip a tab.
+ */
+const upright = (w: number, h: number) =>
+	layoutPhoneRoom(w, h - 136, 60).canvas.scale
+const PHONES = [
+	{ phone: "360x740", scale: upright(360, 740), h: PHONE_TV_CANVAS.h },
+	{ phone: "375x667", scale: upright(375, 667), h: PHONE_TV_CANVAS.h },
+	{ phone: "390x700", scale: upright(390, 700), h: PHONE_TV_CANVAS.h },
+	{ phone: "390x844", scale: upright(390, 844), h: PHONE_TV_CANVAS.h },
+	{ phone: "430x932", scale: upright(430, 932), h: PHONE_TV_CANVAS.h },
+	{
+		phone: "844x390",
+		scale: layoutPhoneLandscape(844, 390, 0).canvas.scale,
+		h: PHONE_TV_CANVAS.h,
+	},
+]
+
 const CANVAS: Record<"desktop" | "phone" | "short", TvCanvas> = {
 	desktop: { edition: "desktop", ...TV_CANVAS, scale: 1 },
-	phone: { edition: "phone", ...PHONE_TV_CANVAS, scale: 0.72 },
-	// A short phone shows less of the canvas's height.
-	short: { edition: "phone", w: PHONE_TV_CANVAS.w, h: 372, scale: 0.69 },
+	phone: { edition: "phone", ...PHONE_TV_CANVAS, scale: upright(390, 844) },
+	// The shortest phone of the table: the same canvas, shown smaller.
+	short: { edition: "phone", ...PHONE_TV_CANVAS, scale: upright(375, 667) },
 }
-
-/**
- * The phones of the room's table (docs/implementation/tv-screen-revamp/room): the window, how large the canvas is
- * shown and how much of its height. The Remote is in the hand on the tall ones and on the table on the short.
- */
-const PHONES = [
-	{ phone: "360x740", scale: 332 / 500, h: 417 },
-	{ phone: "375x667", scale: 347 / 500, h: 372 },
-	{ phone: "390x700", scale: 362 / 500, h: 402 },
-	{ phone: "390x844", scale: 362 / 500, h: 417 },
-	{ phone: "430x932", scale: 402 / 500, h: 417 },
-	// Landscape: the canvas is shown at about its own size.
-	{ phone: "844x390", scale: 0.98, h: 373 },
-]
 
 /** The page's query client: Watch next asks for the pick's offers, as the title screen does. Nothing is fetched here. */
 const renderToStaticMarkup = (node: React.ReactNode) =>
 	renderMarkup(
-		<QueryClientProvider client={new QueryClient()}>{node}</QueryClientProvider>,
+		<QueryClientProvider client={new QueryClient()}>
+			{node}
+		</QueryClientProvider>,
 	)
 
 /** A screen drawn as it is once its code is there. */
@@ -126,22 +148,31 @@ const tonightOf = (
 	const ctx = tvContextOf(data, from, wished)
 	const screen: Screen = { name: "tonight", pick: at }
 	const items = tvItems(screen, ctx)
+	// The page hands the phone's screens the phone's items (its arrows and its header).
+	const phoneItems = tvItems(screen, { ...ctx, phone: true })
 	const picks: TvTonightPick[] = tonightPicks(data, from, wished)
 	return {
 		items,
-		...editions((canvas) =>
-			html(
+		phoneItems,
+		...editions((canvas) => {
+			const own = canvas.edition === "phone" ? phoneItems : items
+			// Where the machine starts the focus: on Watch, not on the phone's arrows over it.
+			const start: TvState = { screen, focus: null, power: "on", menuOpen: false, menuFocus: null, depth: 0 }
+			return html(
 				canvas,
-				items[0],
-				<Tonight items={items} picks={picks} pick={at} waiting={!from} />,
-			),
-		),
+				focusedItem(start, canvas.edition === "phone" ? { ...ctx, phone: true } : ctx),
+				<Tonight items={own} picks={picks} pick={at} waiting={!from} />,
+			)
+		}),
 	}
 }
 
 const on = (rest: Partial<TvTitleOnScreen> = {}): TvTitleOnScreen => ({
 	key: "movie-603",
-	title: card("movie", 603, { title: "The Matrix", tagline: "Free your mind." }),
+	title: card("movie", 603, {
+		title: "The Matrix",
+		tagline: "Free your mind.",
+	}),
 	missing: false,
 	mine: [netflix],
 	want: false,
@@ -149,13 +180,36 @@ const on = (rest: Partial<TvTitleOnScreen> = {}): TvTitleOnScreen => ({
 	score: null,
 	...rest,
 })
-const titleCtx: TvContext = { ...tvContextOf(guest, pool), titleName: "The Matrix" }
+const titleCtx: TvContext = {
+	...tvContextOf(guest, pool),
+	titleName: "The Matrix",
+}
 const TITLE: Screen = { name: "title", title: "movie-603" }
 const RATE: Screen = { name: "rate", title: "movie-603" }
 const titleItems = tvItems(TITLE, titleCtx)
 const rateItems = tvItems(RATE, titleCtx)
+const phoneCtx: TvContext = { ...titleCtx, phone: true }
+const titlePhoneItems = tvItems(TITLE, phoneCtx)
+const ratePhoneItems = tvItems(RATE, phoneCtx)
+const WATCH: Screen = { name: "title", title: "movie-603", panel: "watch" }
+const PRINT: Screen = {
+	name: "title",
+	title: "movie-603",
+	panel: "fingerprint",
+}
+const watchPhoneItems = tvItems(WATCH, phoneCtx)
+const printPhoneItems = tvItems(PRINT, phoneCtx)
 const titleOf = (title: TvTitleOnScreen, focused = "watch") =>
-	editions((canvas) => html(canvas, focused, <Title items={titleItems} title={title} />))
+	editions((canvas) =>
+		html(
+			canvas,
+			focused,
+			<Title
+				items={canvas.edition === "phone" ? titlePhoneItems : titleItems}
+				title={title}
+			/>,
+		),
+	)
 
 /** What the TV draws for a screen before its code is there, as the server does. */
 function first(screen: Screen, titles: TvTitleScreens) {
@@ -204,19 +258,20 @@ const state = (screen: Screen, menuOpen = false): TvState => ({
 /** The TV with a toast, as the server draws it. */
 const toastHtml = (screen: Screen, canvas: TvCanvas, menuOpen = false) => {
 	const tv = state(screen, menuOpen)
+	const ctx = canvas.edition === "phone" ? phoneCtx : titleCtx
 	return renderToStaticMarkup(
 		<TvScreen
 			tv={{
 				state: tv,
-				focused: focusedItem(tv, titleCtx),
-				screenFocus: focusedItem({ ...tv, menuOpen: false }, titleCtx),
+				focused: focusedItem(tv, ctx),
+				screenFocus: focusedItem({ ...tv, menuOpen: false }, ctx),
 				dispatch: () => {},
 				ringOff: false,
 				byPointer: false,
 				unpoint: () => {},
 			}}
 			canvas={canvas}
-			ctx={titleCtx}
+			ctx={ctx}
 			apps={homeApps(guest, pool)}
 			toast="Rated 10 · Masterpiece"
 		/>,
@@ -227,23 +282,52 @@ console.log(
 	`__TV_TITLE_RENDER__${JSON.stringify({
 		// Every screen of the slice on every phone of the room's table.
 		phones: PHONES.map(({ phone, scale, h }) => {
-			const canvas: TvCanvas = { edition: "phone", w: PHONE_TV_CANVAS.w, h, scale }
+			const canvas: TvCanvas = {
+				edition: "phone",
+				w: PHONE_TV_CANVAS.w,
+				h,
+				scale,
+			}
 			return {
 				phone,
 				scale,
 				key: keySize(canvas, 52),
-				title: html(canvas, "watch", <Title items={titleItems} title={on()} />),
+				title: html(
+					canvas,
+					"watch",
+					<Title items={titlePhoneItems} title={on()} />,
+				),
+				watch: html(
+					canvas,
+					"section:watch",
+					<Title items={watchPhoneItems} title={on({ panel: "watch" })} />,
+				),
+				print: html(
+					canvas,
+					"group:-1",
+					<Title
+						items={printPhoneItems}
+						title={on({ panel: "fingerprint" })}
+					/>,
+				),
 				tonight: html(
 					canvas,
 					"details",
 					<Tonight
-						items={tvItems({ name: "tonight", pick: 0 }, tvContextOf(guest, pool))}
+						items={tvItems(
+							{ name: "tonight", pick: 0 },
+							{ ...tvContextOf(guest, pool), phone: true },
+						)}
 						picks={picksOf}
 						pick={0}
 						waiting={false}
 					/>,
 				),
-				rate: html(canvas, "level:9", <Rate items={rateItems} title={on()} />),
+				rate: html(
+					canvas,
+					"level:9",
+					<Rate items={ratePhoneItems} title={on()} />,
+				),
 				toast: toastHtml(TITLE, canvas),
 			}
 		}),
@@ -271,8 +355,15 @@ console.log(
 		},
 		title: {
 			items: titleItems,
+			phoneItems: titlePhoneItems,
+			watchItems: watchPhoneItems,
+			printItems: printPhoneItems,
 			known: titleOf(on()),
-			short: html(CANVAS.short, "watch", <Title items={titleItems} title={on()} />),
+			short: html(
+				CANVAS.short,
+				"watch",
+				<Title items={titlePhoneItems} title={on()} />,
+			),
 			another: titleOf(on({ mine: [] })),
 			nowhere: titleOf(on({ title: card("movie", 603, { services: [] }) })),
 			nowhereFocusedElsewhere: titleOf(
@@ -305,8 +396,16 @@ console.log(
 		},
 		rate: {
 			items: rateItems,
+			phoneItems: ratePhoneItems,
 			...editions((canvas) =>
-				html(canvas, "level:9", <Rate items={rateItems} title={on()} />),
+				html(
+					canvas,
+					"level:9",
+					<Rate
+						items={canvas.edition === "phone" ? ratePhoneItems : rateItems}
+						title={on()}
+					/>,
+				),
 			),
 			waiting: html(
 				CANVAS.desktop,

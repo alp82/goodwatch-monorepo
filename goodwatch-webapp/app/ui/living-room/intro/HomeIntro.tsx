@@ -23,6 +23,7 @@ import type { HomeHeadingTag } from "../tv/screens/Home"
 import type { TvPower } from "../tv/tv-machine"
 import { BOOT_MS, Boot } from "./boot"
 import { FILM_CHAPTER_EVENT, FILM_LEAVE_EVENT } from "./events"
+import { holdKind, holdState } from "./hold"
 import {
 	type IntroStart,
 	hasTaps,
@@ -37,6 +38,11 @@ const FilmScreen = lazy(() => import("./FilmScreen"))
 
 /** The film's first scene deals in this long into the boot screen, as the boot screen fades. */
 const FILM_AFTER_BOOT = BOOT_MS - 350
+/**
+ * The longest the picture stays dark after the boot screen for a film that doesn't come (its code or data is slow):
+ * then the TV's home shows.
+ */
+const HOLD_MS = 9000
 
 /**
  * How long ago the page painted first, or 0 without paint timing. The server's boot screen plays from the first paint,
@@ -62,7 +68,15 @@ const useHydrated = () =>
 
 /** What the TV shows: the film from a scene (`run` starts it again), or its home. */
 type Showing =
-	| { kind: "film"; scene: number; enter: Enter; wait: number; run: number }
+	/** `held`: the dark hold stays up until the film's stage is on the picture (hold.ts). */
+	| {
+			kind: "film"
+			scene: number
+			enter: Enter
+			wait: number
+			run: number
+			held: boolean
+	  }
 	| { kind: "home" }
 	/** The TV is off: nothing of the intro shows or plays. */
 	| { kind: "off" }
@@ -84,6 +98,12 @@ export function useHomeIntro({ member }: { member: boolean }): HomeIntro {
 	const tvScreen = params.get("tv")
 	const [showing, setShowing] = useState<Showing | null>(null)
 	const [boot, setBoot] = useState(true)
+	// The film after the boot screen is on the picture: the dark hold under the boot screen can go. Until then the
+	// TV's home, under everything, must not show between the boot screen fading and the film's first scene (the owner
+	// saw it flash there, 2026-10-22).
+	const [filmShown, setFilmShown] = useState(false)
+	/** The film didn't come within the hold's longest wait: the hold falls and the TV's home shows. */
+	const [gaveUp, setGaveUp] = useState(false)
 	/** Counts the boots: each power-on mounts a new boot screen, so its animation plays from the start. */
 	const [boots, setBoots] = useState(0)
 	const runs = useRef(0)
@@ -117,6 +137,8 @@ export function useHomeIntro({ member }: { member: boolean }): HomeIntro {
 			enter: start.boot ? "deal" : "fade",
 			wait: start.boot ? Math.max(0, FILM_AFTER_BOOT - sinceFirstPaint()) : 0,
 			run: runs.current,
+			// After the boot screen, or asked for by the address: dark until it shows. A film that resumes fades in.
+			held: start.boot || tvScreen === "about",
 		})
 	}, [hydrated, member, tvScreen])
 
@@ -138,8 +160,11 @@ export function useHomeIntro({ member }: { member: boolean }): HomeIntro {
 		if (member && !previousMember.current) leave()
 		previousMember.current = member
 	}, [member, leave])
+	// Asked for by a person (What is GoodWatch?, a chapter link): the hold covers the TV until the film is there.
 	const play = useCallback((scene: number) => {
 		runs.current += 1
+		setFilmShown(false)
+		setGaveUp(false)
 		writeProgress({ scene })
 		setShowing({
 			kind: "film",
@@ -147,6 +172,7 @@ export function useHomeIntro({ member }: { member: boolean }): HomeIntro {
 			enter: "fade",
 			wait: 0,
 			run: runs.current,
+			held: true,
 		})
 	}, [])
 
@@ -168,6 +194,8 @@ export function useHomeIntro({ member }: { member: boolean }): HomeIntro {
 			setBoot(true)
 			setBoots((n) => n + 1)
 			runs.current += 1
+			setFilmShown(false)
+			setGaveUp(false)
 			if (member) {
 				setShowing({ kind: "home" })
 				return
@@ -179,6 +207,7 @@ export function useHomeIntro({ member }: { member: boolean }): HomeIntro {
 				enter: "deal",
 				wait: FILM_AFTER_BOOT,
 				run: runs.current,
+				held: true,
 			})
 		},
 		[member],
@@ -213,6 +242,25 @@ export function useHomeIntro({ member }: { member: boolean }): HomeIntro {
 	}, [leave, play])
 
 	const onAt = useCallback((scene: number) => writeProgress({ scene }), [])
+	const onShown = useCallback(() => setFilmShown(true), [])
+	// Dark from a guest's first paint (a returning tab hides it before it paints, boot.css), from the render that asks
+	// for the film (the TV's About screen and its home never show for a frame), and for a held run until the film's
+	// stage is on the picture (hold.ts). The film's stage is dark itself, so the hold falls with nothing between.
+	const asked = hydrated && decided.current && tvScreen === "about"
+	const holding = holdState({
+		member,
+		boot: !hydrated || boot,
+		showing,
+		asked,
+		shown: filmShown,
+		gaveUp,
+	})
+	// Only a safety net for a film that never comes (its code or data is very slow): then the TV's home shows.
+	useEffect(() => {
+		if (!holding || !hydrated) return
+		const timer = setTimeout(() => setGaveUp(true), HOLD_MS)
+		return () => clearTimeout(timer)
+	}, [holding, hydrated])
 	const film = showing?.kind === "film" &&
 		(!tvScreen || tvScreen === "about") && (
 			<Suspense fallback={null}>
@@ -222,6 +270,7 @@ export function useHomeIntro({ member }: { member: boolean }): HomeIntro {
 					firstEnter={showing.enter}
 					waitMs={showing.wait}
 					onAt={onAt}
+					onShown={onShown}
 					onFail={leave}
 				/>
 			</Suspense>
@@ -230,6 +279,15 @@ export function useHomeIntro({ member }: { member: boolean }): HomeIntro {
 		screen: (
 			<>
 				{film}
+				{holding && (
+					<div
+						className="film-hold"
+						aria-hidden="true"
+						// A hold for a film asked for or playing (`run`) shows in a returning tab too: the tab's mark hides only
+						// the start's boot screen and the hold under it (boot.css).
+						data-film-hold={holdKind(showing, asked)}
+					/>
+				)}
 				{(!hydrated || boot) && <Boot key={boots} />}
 			</>
 		),

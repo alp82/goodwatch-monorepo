@@ -5,7 +5,7 @@ import { renderToStaticMarkup } from "react-dom/server"
 import type { TvListTitle } from "./TitleList"
 import { TvScreen } from "./TvScreen"
 import { Layer, TvViewProvider } from "./kit"
-import { PHONE_TV_CANVAS, TV_CANVAS } from "./room-layout"
+import { PHONE_TV_CANVAS, TV_CANVAS, layoutPhoneLandscape } from "./room-layout"
 import type { TvCanvas } from "./room-tv"
 import Quiz from "./screens/Quiz"
 import Rate from "./screens/Rate"
@@ -34,17 +34,21 @@ const CANVAS: Record<"desktop" | "phone", TvCanvas> = {
 }
 
 /**
- * The phones of the room's table (docs/implementation/tv-screen-revamp/room): the window, how large the canvas is
- * shown and how much of its height. The Remote is in the hand on the tall ones and on the table on the short.
+ * Phones from the room's table: the window and how large the phone's fixed canvas (480 x 270) is shown there
+ * (room-layout.ts, `layoutPhoneRoom` and `layoutPhoneLandscape`).
  */
 const PHONES = [
-	{ phone: "360x740", scale: 332 / 500, h: 417 },
-	{ phone: "375x667", scale: 347 / 500, h: 372 },
-	{ phone: "390x700", scale: 362 / 500, h: 402 },
-	{ phone: "390x844", scale: 362 / 500, h: 417 },
-	{ phone: "430x932", scale: 402 / 500, h: 417 },
-	// Landscape: the canvas is shown at about its own size.
-	{ phone: "844x390", scale: 0.98, h: 373 },
+	{ phone: "360x740", scale: 332 / 480, h: PHONE_TV_CANVAS.h },
+	{ phone: "375x667", scale: 347 / 480, h: PHONE_TV_CANVAS.h },
+	{ phone: "390x700", scale: 362 / 480, h: PHONE_TV_CANVAS.h },
+	{ phone: "390x844", scale: 362 / 480, h: PHONE_TV_CANVAS.h },
+	{ phone: "430x932", scale: 402 / 480, h: PHONE_TV_CANVAS.h },
+	// Landscape: a 16:9 TV under which the Remote's top still shows.
+	{
+		phone: "844x390",
+		scale: layoutPhoneLandscape(844, 390).canvas.scale,
+		h: PHONE_TV_CANVAS.h,
+	},
 ]
 
 const listTitle = (key: string, n: number): TvListTitle => ({
@@ -84,7 +88,13 @@ const screensOf = (
 	quiz: Partial<TvQuizOnScreen> = {},
 ): TvTasteScreens => ({
 	taste,
-	quiz: { title: null, waiting: false, rated: 0, answered: NOT_ANSWERED, ...quiz },
+	quiz: {
+		title: null,
+		waiting: false,
+		rated: 0,
+		answered: NOT_ANSWERED,
+		...quiz,
+	},
 })
 /** The machine's context as the scene builds it: Taste's part; both editions have exact scores. */
 const ctxOf = (
@@ -94,6 +104,8 @@ const ctxOf = (
 ): TvContext => ({
 	...EMPTY_CONTEXT,
 	...tasteContext(screen, shown),
+	// The phone's items (its header, the quiz's keys), as the page gives them.
+	...(canvas.edition === "phone" && { phone: true }),
 })
 
 /** A screen drawn as it is once its code is there. */
@@ -190,6 +202,7 @@ const rateOf = (title: TvTitleOnScreen, focus?: string) =>
 	editions((canvas) => {
 		const ctx: TvContext = {
 			...EMPTY_CONTEXT,
+			...(canvas.edition === "phone" && { phone: true }),
 		}
 		const items = tvItems(RATE, ctx)
 		return {

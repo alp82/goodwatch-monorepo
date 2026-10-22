@@ -86,7 +86,8 @@
 .boot-lockup {
 	display: flex;
 	align-items: flex-end;
-	font-size: 102px;
+	/* As large as the desktop's, and never wider than the picture: the lockup is about 5.7 em wide. */
+	font-size: min(102px, 15cqw);
 	font-weight: 700;
 	line-height: 1;
 	white-space: nowrap;
@@ -151,11 +152,6 @@
 		opacity: 1;
 	}
 }
-@container (max-width: 520px) {
-	.boot-lockup {
-		font-size: 60px;
-	}
-}
 @media (prefers-reduced-motion: reduce) {
 	.boot,
 	.boot * {
@@ -169,7 +165,20 @@
 		display: none;
 	}
 }
-/* Back in the same tab (progress kept, progress.ts): the start page's inline script marks the page before it paints. */
-html[data-gw-intro="seen"] .boot {
+/* Under the boot screen while a guest's film is on its way (HomeIntro.tsx, `FilmHold`): the picture stays dark until the
+   film's first scene comes in, so the TV's home never shows between the boot screen and the film. In the server's
+   HTML, so it holds from the first paint. */
+.film-hold {
+	position: absolute;
+	inset: 0;
+	z-index: 25;
+	background: #05060a;
+	pointer-events: none;
+}
+/* Back in the same tab (progress kept, progress.ts): the start page's inline script marks the page before it paints.
+   It hides the start's boot screen and the hold under it, never the hold of a film asked for now (HomeIntro.tsx,
+   `data-film-hold="run"`): a member who reloads and asks for "What is GoodWatch?" gets the dark hold too. */
+html[data-gw-intro="seen"] .boot,
+html[data-gw-intro="seen"] .film-hold:not([data-film-hold="run"]) {
 	display: none;
 }

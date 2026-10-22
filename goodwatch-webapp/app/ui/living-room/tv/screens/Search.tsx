@@ -1,16 +1,26 @@
 import { browseActions } from "./browse-actions"
 import { copyMediaPresentation } from "~/utils/media-presentation"
-// Search is explicit: a real input for physical/touch typing and a directional screen keyboard.
+// Search is explicit: a real input for physical/touch typing and, on the desktop, a directional screen keyboard.
 // QWERTY rows and Space/Delete/Search actions recover the pre-6a85a3de TV keyboard; digits and Clear are added.
-// On phones the rows wrap and scroll between a fixed query and action row. No input auto-focus steals remote OK.
+// A phone types with its own keyboard only (the owner, 2026-10-22). No input auto-focus steals remote OK.
 // The entire screen, keyboard, filter panel and data code arrive with Search's lazy screen chunk.
-import { type ReactNode, useEffect } from "react"
+import { type CSSProperties, useEffect } from "react"
 import { KEY_ROWS } from "../tv-browse"
 import BrowseFilters from "./BrowseFilters"
 import { preloadSearchRequest } from "~/ui/search/search-client"
 import { TitleList, type TvListTitle } from "../TitleList"
-import { CornerBar, Item, Shade, keySize, useReport, useTvView } from "../kit"
-import { TV_INPUT_ATTR, TV_ROW_ATTR } from "../tv-dom"
+import {
+	CornerBar,
+	Item,
+	PHONE_FOOT,
+	PHONE_HEAD,
+	PHONE_SIDE,
+	Shade,
+	keySize,
+	useReport,
+	useTvView,
+} from "../kit"
+import { TV_INPUT_ATTR } from "../tv-dom"
 import { tvTitleKey } from "../tv-home"
 import { SEARCH_GO, type TvScreen } from "../tv-machine"
 import {
@@ -47,14 +57,165 @@ function Question({
 	draft: string
 	onDraft: (text: string) => void
 }) {
-	const { canvas, dispatch } = useTvView()
-	const P = canvas.edition === "phone"
+	const { canvas } = useTvView()
 	useEffect(() => {
 		if (!canvas.first) preloadSearchRequest()
 	}, [canvas.first])
-	// Delete, Space, Clear and Search: under the scrolling column, and at its end on a picture too short to
-	// spare their row (the keys would show less than a row).
-	const inColumn = P && canvas.h < 330
+	return canvas.edition === "phone" ? (
+		<PhoneQuestion items={items} draft={draft} onDraft={onDraft} />
+	) : (
+		<TvQuestion items={items} draft={draft} onDraft={onDraft} />
+	)
+}
+
+/** The search's line: a real input, for a keyboard, a phone's own keyboard, and the TV's keys on the desktop. */
+function Line({
+	draft,
+	onDraft,
+	className,
+	style,
+	hint,
+}: {
+	draft: string
+	onDraft: (text: string) => void
+	className: string
+	style?: CSSProperties
+	hint: string
+}) {
+	const { dispatch } = useTvView()
+	return (
+		<form
+			className="contents"
+			onSubmit={(e) => {
+				e.preventDefault()
+				// The phone's keyboard goes once the search starts: the results take the whole picture.
+				const line = e.currentTarget.querySelector("input")
+				line?.blur()
+				dispatch({ type: "submit-search", query: draft })
+			}}
+		>
+			<input
+				type="text"
+				{...{ [TV_INPUT_ATTR]: "" }}
+				aria-label="Search"
+				aria-describedby={hint}
+				inputMode="search"
+				enterKeyHint="search"
+				autoComplete="off"
+				autoCapitalize="none"
+				autoCorrect="off"
+				spellCheck={false}
+				maxLength={SEARCH_MAX_LENGTH}
+				value={draft}
+				onChange={(e) => onDraft(e.target.value)}
+				// Enter in the line (a phone keyboard's search key) searches for what it holds. Not the Remote's OK: that
+				// presses the TV's focused item, which is the line's own key after Edit search, and nothing was searched.
+				onKeyDown={(e) => {
+					if (e.key === "Enter" && !e.nativeEvent.isComposing) e.stopPropagation()
+				}}
+				placeholder={SEARCH_QUESTION}
+				className={className}
+				style={style}
+			/>
+		</form>
+	)
+}
+
+/**
+ * The phone (the owner, 2026-10-22): the phone's own keyboard and no TV keys. The line is a real input a tap
+ * focuses; with the Remote, OK on it (`field`) does the same. Search searches, as the keyboard's search key does,
+ * and the keyboard goes with it. Under them, four ideas, two by two. Nothing scrolls.
+ */
+function PhoneQuestion({
+	items,
+	draft,
+	onDraft,
+}: {
+	items: readonly string[]
+	draft: string
+	onDraft: (text: string) => void
+}) {
+	const { canvas } = useTvView()
+	const key = keySize(canvas, 54)
+	const hint = "tv-search-hint-phone"
+	// Two rows of ideas where the picture holds them at a key's height, else one (a phone 360 px wide).
+	const rows = Math.max(
+		1,
+		Math.min(2, Math.floor((canvas.h - PHONE_HEAD - PHONE_FOOT - key) / (key + 5))),
+	)
+	const ideas = items.filter((id) => id.startsWith("idea:")).slice(0, rows * 2)
+	return (
+		<>
+			<Shade dim={0.86} />
+			<div
+				className="absolute inset-x-0 bottom-0 flex flex-col gap-[5px]"
+				style={{ top: PHONE_HEAD, paddingLeft: PHONE_SIDE, paddingRight: PHONE_SIDE, paddingBottom: PHONE_FOOT }}
+			>
+				<div className="flex shrink-0 gap-2" style={{ height: key }}>
+					{/* The field: the TV's item behind the real input, so the Remote's focus rings it and OK on it gives the
+					    line the browser's focus. A tap reaches the input itself. */}
+					<div className="relative min-w-0 flex-1">
+						{items.includes("field") && (
+							<Item
+								id="field"
+								label="Search: type here"
+								className="tvc-ring absolute inset-0 rounded-xl bg-white/10"
+							>
+								<span className="sr-only">Search</span>
+							</Item>
+						)}
+						<Line
+							draft={draft}
+							onDraft={onDraft}
+							hint={hint}
+							className="absolute inset-0 h-full w-full rounded-xl border-0 bg-transparent px-4 text-[22px] font-bold text-white placeholder:text-white/65 focus:outline-none focus:ring-[3px] focus:ring-inset focus:ring-amber-300"
+						/>
+					</div>
+					{items.includes(SEARCH_GO) && (
+						<Item
+							id={SEARCH_GO}
+							label={goLabel(draft)}
+							className="tvc-btn tvc-watch flex h-full shrink-0 items-center justify-center px-5 text-[20px]"
+						>
+							Search
+						</Item>
+					)}
+				</div>
+				<div id={hint} className="sr-only">
+					Two characters or more. Type with your phone's keyboard, or choose an idea.
+				</div>
+				<div
+					className="grid shrink-0 grid-cols-2 gap-[5px]"
+					style={{ gridTemplateRows: `repeat(${rows}, ${key}px)` }}
+				>
+					{ideas.map((id) => (
+						<Item
+							key={id}
+							id={id}
+							label={`Search for ${id.slice("idea:".length)}`}
+							className="tvc-btn flex h-full items-center justify-center px-3 text-center text-[18px] leading-tight"
+						>
+							{id.slice("idea:".length)}
+						</Item>
+					))}
+				</div>
+			</div>
+			<CornerBar items={items} />
+		</>
+	)
+}
+
+/** The desktop: the line, the ideas, the TV's keyboard with digits, and Delete, Space, Clear and Search. */
+function TvQuestion({
+	items,
+	draft,
+	onDraft,
+}: {
+	items: readonly string[]
+	draft: string
+	onDraft: (text: string) => void
+}) {
+	const { canvas } = useTvView()
 	const actions = (
 		<div className="flex shrink-0 gap-2">
 			{[
@@ -81,98 +242,55 @@ function Question({
 			</Item>
 		</div>
 	)
-	const hint = `tv-search-hint-${canvas.edition}`
+	const hint = "tv-search-hint-desktop"
 	return (
 		<>
 			<Shade dim={0.86} />
-			<div
-				className={`absolute inset-x-0 flex flex-col gap-3 ${P ? "top-[78px] bottom-3 px-5" : "top-[100px] bottom-[76px] px-14"}`}
-			>
-				<PhoneColumn phone={P}>
-					<form
-						className="shrink-0"
-						onSubmit={(e) => {
-							e.preventDefault()
-							dispatch({ type: "submit-search", query: draft })
-						}}
-					>
-						<input
-							type="text"
-							{...{ [TV_INPUT_ATTR]: "" }}
-							aria-label="Search"
-							aria-describedby={hint}
-							inputMode="search"
-							enterKeyHint="search"
-							autoComplete="off"
-							autoCapitalize="none"
-							spellCheck={false}
-							maxLength={SEARCH_MAX_LENGTH}
-							value={draft}
-							onChange={(e) => onDraft(e.target.value)}
-							placeholder={SEARCH_QUESTION}
-							className={`w-full rounded-xl border-0 bg-white/10 px-4 font-bold text-white placeholder:text-white/65 ${P ? "text-[28px]" : "text-[40px]"}`}
-							style={{ height: keySize(canvas, 56) }}
-						/>
-					</form>
-					{/* For a screen reader: what the line takes. On screen the ideas stand under it instead. */}
-					<div id={hint} className="sr-only">
-						Two characters or more. Type, use the keys, or choose an idea.
-					</div>
-					<div
-						className={`flex shrink-0 items-center ${P ? "gap-2 overflow-x-auto [scrollbar-width:none]" : "gap-3"}`}
-						{...(P && { [TV_ROW_ATTR]: "" })}
-					>
-						<span
-							className={`shrink-0 text-white/55 ${P ? "text-[18px]" : "text-[22px]"}`}
-						>
-							Try
-						</span>
-						{items
-							.filter((id) => id.startsWith("idea:"))
-							.map((id) => (
+			<div className="absolute inset-x-0 bottom-[76px] top-[100px] flex flex-col gap-3 px-14">
+				<Line
+					draft={draft}
+					onDraft={onDraft}
+					hint={hint}
+					className="w-full shrink-0 rounded-xl border-0 bg-white/10 px-4 text-[40px] font-bold text-white placeholder:text-white/65"
+					style={{ height: keySize(canvas, 56) }}
+				/>
+				{/* For a screen reader: what the line takes. On screen the ideas stand under it instead. */}
+				<div id={hint} className="sr-only">
+					Two characters or more. Type, use the keys, or choose an idea.
+				</div>
+				<div className="flex shrink-0 items-center gap-3">
+					<span className="shrink-0 text-[22px] text-white/55">Try</span>
+					{items
+						.filter((id) => id.startsWith("idea:"))
+						.map((id) => (
+							<Item
+								key={id}
+								id={id}
+								label={`Search for ${id.slice("idea:".length)}`}
+								className="tvc-btn flex shrink-0 items-center whitespace-nowrap px-5 text-[22px]"
+								style={{ height: keySize(canvas, 48) }}
+							>
+								{id.slice("idea:".length)}
+							</Item>
+						))}
+				</div>
+				<div data-tv-scroll className="min-h-0 flex-1 overflow-y-auto p-2">
+					{KEY_ROWS.map((row) => (
+						<div key={row} className="mb-2 flex justify-center gap-1.5">
+							{[...row].map((c) => (
 								<Item
-									key={id}
-									id={id}
-									label={`Search for ${id.slice("idea:".length)}`}
-									className={`tvc-btn flex shrink-0 items-center whitespace-nowrap px-5 ${P ? "text-[19px]" : "text-[22px]"}`}
-									style={{ height: keySize(canvas, P ? 44 : 48) }}
+									key={c}
+									id={`key:${c}`}
+									className="tvc-btn flex shrink-0 items-center justify-center text-[30px] font-bold uppercase"
+									style={{ width: 76, height: keySize(canvas, 52) }}
 								>
-									{id.slice("idea:".length)}
+									{c}
 								</Item>
 							))}
-					</div>
-					<div
-						{...(P ? {} : { "data-tv-scroll": "" })}
-						className={
-							P ? "-mx-1 shrink-0 px-1" : "min-h-0 flex-1 overflow-y-auto p-2"
-						}
-					>
-						{(P
-							? KEY_ROWS.flatMap((row) =>
-									[row.slice(0, 5), row.slice(5)].filter(Boolean),
-								)
-							: KEY_ROWS
-						).map((row) => (
-							<div key={row} className="mb-2 flex justify-center gap-1.5">
-								{[...row].map((c) => (
-									<Item
-										key={c}
-										id={`key:${c}`}
-										className={`tvc-btn flex shrink-0 items-center justify-center font-bold uppercase ${P ? "text-[25px]" : "text-[30px]"}`}
-										style={{
-											width: P ? keySize(canvas, 0) : 76,
-											height: keySize(canvas, 52),
-										}}
-									>
-										{c}
-									</Item>
-								))}
-							</div>
-						))}
-					</div>
-					{inColumn && actions}
-				</PhoneColumn>
-				{!inColumn && actions}
+						</div>
+					))}
+				</div>
+				{actions}
 			</div>
 			<CornerBar items={items} />
 		</>
@@ -202,6 +320,7 @@ function Results({
 	return (
 		<TitleList
 			name="Search"
+			phoneName={searchCrumb(query)}
 			crumb={`${searchCrumb(query)} · Page ${screen.page ?? 1}${list ? ` of ${list.pages} · ${list.total} matches` : ""}`}
 			actions={browseActions(screen, list)}
 			actionsLabel={list?.summary}
@@ -245,25 +364,5 @@ export default function Search({
 		<Results items={items} query={screen.query} screen={screen} list={list} />
 	) : (
 		<Question items={items} draft={draft} onDraft={onDraft} />
-	)
-}
-
-/**
- * On the phone the field, the ideas and the keys scroll together, by touch and with the focus, and the row of
- * Delete, Space, Clear and Search stays under them. The keys are touch targets, five to a row, so they are
- * taller than the picture: in a box of their own they showed a row and a half. On the desktop all of it fits.
- */
-function PhoneColumn({
-	phone,
-	children,
-}: { phone: boolean; children: ReactNode }) {
-	if (!phone) return <>{children}</>
-	return (
-		<div
-			data-tv-scroll
-			className="-mx-2 flex min-h-0 flex-1 flex-col gap-3 px-2"
-		>
-			{children}
-		</div>
 	)
 }

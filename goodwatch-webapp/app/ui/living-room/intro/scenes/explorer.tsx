@@ -9,6 +9,7 @@ import type {
 	IslandsData,
 } from "~/ui/living-room/intro/data"
 import { onePerFranchise } from "~/ui/living-room/intro/parts/franchise"
+import { useFilmPhone } from "~/ui/living-room/intro/parts/film-phone"
 import { Clicks, pos } from "~/ui/living-room/intro/parts/island-kit"
 import {
 	BlobDefs,
@@ -70,7 +71,19 @@ const SPOTS = [
 	{ x: 5.7, y: 7.6 },
 ]
 
-function layout(m: IslandsData, picks: IslandCombo["of"]): Laid[] {
+/**
+ * On a phone's picture each region shows one island (its pick, or its first), larger, so its name reads at 12 px or
+ * more: five to a region were names of 8 px (the owner, 2026-10-22). The map, its three regions and the two clicks
+ * that merge stay.
+ */
+const PHONE_W = 22
+const PHONE_TEXT = 2.7
+
+function layout(
+	m: IslandsData,
+	picks: IslandCombo["of"],
+	phone = false,
+): Laid[] {
 	const out: Laid[] = []
 	REGIONS.forEach((r, g) => {
 		const all = m.islands.filter((i) => i.grouping === r.grouping)
@@ -84,10 +97,10 @@ function layout(m: IslandsData, picks: IslandCombo["of"]): Laid[] {
 		]
 		const here = order
 			.flatMap((id) => all.find((i) => has(i, id)) ?? [])
-			.slice(0, 5)
+			.slice(0, phone ? 1 : 5)
 		const max = Math.max(...here.map((i) => i.count))
 		here.forEach((island, n) => {
-			const w = 8.6 + Math.sqrt(island.count / max) * 1.6
+			const w = phone ? PHONE_W : 8.6 + Math.sqrt(island.count / max) * 1.6
 			out.push({
 				island,
 				x: r.cx + SPOTS[n].x,
@@ -248,7 +261,9 @@ function Combine({ data }: SceneProps) {
 	if (!m || !two) return empty
 	// One shared title per franchise (TMDB collection, else the name), best-known first.
 	const combo = { ...two, titles: onePerFranchise(data, two.titles, 6) }
-	const laid = layout(m, combo.of)
+	const phone = useFilmPhone()
+	const laid = layout(m, combo.of, phone)
+	const text = phone ? PHONE_TEXT : 1.75
 	const picks = combo.of
 		.map((ref) =>
 			laid.find(
@@ -319,7 +334,8 @@ function Combine({ data }: SceneProps) {
 									<div
 										className="intro-isle-region intro-calm-region intro-atlas-a"
 										style={play(
-											["intro-atlas-rise", 450 + g * 120, 700],
+											// On the phone the two-line headline covers their place until it leaves.
+											["intro-atlas-rise", (phone ? HEAD_OUT : 450) + g * 120, 700],
 											["intro-atlas-fade-out", t.dim, 500],
 										)}
 									>
@@ -359,7 +375,7 @@ function Combine({ data }: SceneProps) {
 												colors={[l.island.color]}
 												picture={img(l.island.picture, "w300")}
 												w={l.w}
-												text={1.75}
+												text={text}
 											/>
 										</div>
 									</div>
@@ -406,7 +422,7 @@ function Combine({ data }: SceneProps) {
 													colors={[p.island.color]}
 													picture={img(p.island.picture, "w500")}
 													w={p.w}
-													text={1.75}
+													text={text}
 													ring={t.clicks[k] + 60}
 												/>
 											</div>

@@ -24,7 +24,7 @@ export type TvKnownTitle = Pick<TitleCard, "media_type" | "tmdb_id" | "title"> &
 export type TvTitleOnScreen = {
 	extras?: import("./title-extras").TvTitleExtras | null
 	extrasFailed?: boolean
-	panel?: "fingerprint" | "trailer"
+	panel?: "fingerprint" | "trailer" | "watch"
 	group?: number
 	/** `movie-603`, as in the URL. */
 	key: string

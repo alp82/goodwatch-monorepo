@@ -334,7 +334,13 @@ const screensOf = (
 	quiz: Partial<TvTasteScreens["quiz"]> = {},
 ): TvTasteScreens => ({
 	taste,
-	quiz: { title: null, waiting: false, rated: 0, answered: NOT_ANSWERED, ...quiz },
+	quiz: {
+		title: null,
+		waiting: false,
+		rated: 0,
+		answered: NOT_ANSWERED,
+		...quiz,
+	},
 })
 const TASTE: TvScreen = { name: "taste", side: null }
 const QUIZ: TvScreen = { name: "quiz" }
@@ -361,10 +367,7 @@ const NAV = [
 	"nav:quiz",
 	"bar:menu",
 ]
-const ctxOf = (
-	screen: TvScreen,
-	shown: TvTasteScreens,
-): TvContext => ({
+const ctxOf = (screen: TvScreen, shown: TvTasteScreens): TvContext => ({
 	...EMPTY_CONTEXT,
 	...tasteContext(screen, shown),
 })

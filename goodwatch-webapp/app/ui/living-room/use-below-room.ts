@@ -34,8 +34,7 @@ export const ROOM_ID = "room"
 export const isBelowHash = (hash: string) => hash === `#${BELOW_ID}`
 
 /** living-room.css has the same query for the room that covers the window. */
-const LANDSCAPE =
-	"(orientation: landscape) and (max-height: 540px) and (min-width: 768px)"
+const LANDSCAPE = "(orientation: landscape) and (max-height: 540px)"
 
 const OPEN_KEY = "living-room:open"
 let openInMemory = false

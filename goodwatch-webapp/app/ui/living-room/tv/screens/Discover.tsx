@@ -11,12 +11,13 @@ import {
 	Frame,
 	Img,
 	Item,
-	PhoneFoot,
 	backdropSize,
 	keySize,
+	useListAnchor,
 	useReport,
 	useTvView,
 } from "../kit"
+import { ExpandStack } from "./phone-parts"
 import {
 	DISCOVER_TAB_KEYS,
 	type TvDiscoverOption,
@@ -67,7 +68,9 @@ function Choice({
 	const options = discoverOptions(tab)
 	// The option the screen says a line about and shows behind everything: the one with the focus, and while the
 	// focus is on a tab or the bar, the one that had it last on this tab.
-	const last = useRef(options[0]?.item)
+	// Drawn anew (Back from Full Discover), it starts from the one shown last on this history entry.
+	const anchor = useListAnchor("discover-options", options.map((option) => option.item))
+	const last = useRef(anchor ?? options[0]?.item)
 	if (options.some((option) => option.item === focused)) last.current = focused
 	const shown =
 		options.find((option) => option.item === last.current) ?? options[0]
@@ -120,10 +123,10 @@ function Choice({
 					}}
 				/>
 				<span
-					className={`absolute ${P ? "inset-x-3 bottom-2.5" : "inset-x-5 bottom-4"}`}
+					className={`absolute ${P ? "inset-x-2.5 bottom-2" : "inset-x-5 bottom-4"}`}
 				>
 					<span
-						className={`block font-bold leading-none ${P ? "text-[22px]" : "text-[38px]"}`}
+						className={`block font-bold ${P ? "text-[19px] leading-[1.05] [overflow-wrap:break-word]" : "text-[38px] leading-none"}`}
 					>
 						{option.name}
 					</span>
@@ -143,34 +146,33 @@ function Choice({
 		? tmdbImageUrl(picture, backdropSize(canvas))
 		: undefined
 
-	// The phone: the six options three by three, and the focused one's line beside the Expand key's corner. The two
-	// rows of tiles share what the tabs and the last row leave. On a short phone the gaps give way first, so a tile
-	// stays a touch target.
+	// The phone (nothing scrolls): the tabs, the six options three by three, and the Expand key in a column of its
+	// own beside them, where its words have the two lines they need. Each option says its name; its line is the
+	// desktop's, where there is room for it.
 	if (P) {
-		const row = { flex: `1 0 ${keySize(canvas, 0)}px` }
+		const key = keySize(canvas, 54)
 		return (
 			<Frame name="Discover" items={items} art={behind} dim={0.86} inlineExpand>
-				<div className="flex h-full flex-col">
-					{tabs}
-					<div className="min-h-[5px] shrink basis-[10px]" />
-					<div className="grid min-h-0 grid-cols-3 gap-x-3" style={row}>
-						{tiles.slice(0, 3)}
-					</div>
-					<div className="min-h-[8px] shrink basis-[12px]" />
-					<div className="grid min-h-0 grid-cols-3 gap-x-3" style={row}>
-						{tiles.slice(3)}
-					</div>
-					<div className="min-h-[5px] shrink basis-[10px]" />
-					<PhoneFoot items={items} height={keySize(canvas, 54)}>
-						{shown && (
-							<span
-								key={shown.item}
-								className="tvc-fade line-clamp-2 min-w-0 text-[20px] leading-tight text-white/85"
+				<div className="flex h-full flex-col gap-[4px]">
+					<div className="flex shrink-0 gap-2" style={{ height: key }}>
+						<Item id="browse:all" className={`${TAB} px-4 text-[20px]`}>
+							All
+						</Item>
+						{DISCOVER_TAB_KEYS.filter((one) => items.includes(one.item)).map((one) => (
+							<Item
+								key={one.item}
+								id={one.item}
+								pressed={one.tab === tab}
+								className={`${TAB} ${one.tab === tab ? "tvc-tab-open" : ""} min-w-0 flex-1 text-[20px]`}
 							>
-								{shown.line}
-							</span>
-						)}
-					</PhoneFoot>
+								{one.name}
+							</Item>
+						))}
+					</div>
+					<div className="flex min-h-0 flex-1 gap-[6px]">
+						<div className="grid min-h-0 flex-1 grid-cols-3 grid-rows-2 gap-x-[6px] gap-y-[4px]">{tiles}</div>
+						{items.includes("expand") && <ExpandStack className="h-full w-[104px] shrink-0" />}
+					</div>
 				</div>
 			</Frame>
 		)
@@ -204,6 +206,7 @@ function List({
 	return (
 		<TitleList
 			name="Discover"
+			phoneName={selectionNames(screen) || "All titles"}
 			crumb={`${selectionNames(screen) || "All titles"} · Page ${screen.page ?? 1}${list ? ` of ${list.pages} · ${list.total} titles` : ""}`}
 			items={items}
 			titles={titles}

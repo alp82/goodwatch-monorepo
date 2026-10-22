@@ -8,13 +8,13 @@ import { PHONE_TV_CANVAS, TV_CANVAS } from "./room-layout"
 import type { TvCanvas } from "./room-tv"
 import About from "./screens/About"
 import { Home } from "./screens/Home"
-import Menu, { menuLayout } from "./screens/Menu"
+import Menu from "./screens/Menu"
 import Shows from "./screens/Shows"
 import Title from "./screens/Title"
 import { type TvHomeData, homeApps, tvContextOf } from "./tv-home"
 import {
-	type TvContext,
 	type TvScreen as Screen,
+	type TvContext,
 	type TvState,
 	focusedItem,
 	menuItems,
@@ -82,13 +82,14 @@ const CANVAS: Record<"desktop" | "phone", TvCanvas> = {
  * shown and how much of its height.
  */
 const PHONES = [
-	{ phone: "360x740", scale: 332 / 500, h: 417 },
-	{ phone: "375x667", scale: 347 / 500, h: 372 },
-	{ phone: "390x700", scale: 362 / 500, h: 402 },
-	{ phone: "390x844", scale: 362 / 500, h: 417 },
-	{ phone: "430x932", scale: 402 / 500, h: 417 },
-	// Landscape: the canvas is shown at about its own size.
-	{ phone: "844x390", scale: 0.98, h: 373 },
+	// The phone's fixed canvas (480 x 270) at the scale of each phone's 16:9 TV (room-layout.ts, `seatPhone`).
+	{ phone: "360x740", scale: 332 / 480, h: 270 },
+	{ phone: "375x667", scale: 347 / 480, h: 270 },
+	{ phone: "390x700", scale: 362 / 480, h: 270 },
+	{ phone: "390x844", scale: 362 / 480, h: 270 },
+	{ phone: "430x932", scale: 402 / 480, h: 270 },
+	// Landscape: the TV is as tall as leaves the Remote's top in view, 507 px wide at 844 x 390.
+	{ phone: "844x390", scale: 507 / 480, h: 270 },
 ]
 
 const html = (canvas: TvCanvas, focused: string, node: React.ReactNode) =>
@@ -105,22 +106,43 @@ const editions = <T,>(draw: (canvas: TvCanvas) => T) => ({
 const SHOWS: Screen = { name: "shows" }
 const ctx: TvContext = tvContextOf(member, null)
 const items = tvItems(SHOWS, ctx)
+// The phone's screens take the phone's items (its header: the G and Menu), as the page hands them.
+const phoneCtx: TvContext = { ...ctx, phone: true }
+const phoneItems = tvItems(SHOWS, phoneCtx)
+const empty: TvHomeData = { ...member, shows: { next: [], start: [] } }
+const emptyItems = tvItems(SHOWS, tvContextOf(empty, null))
+const emptyPhoneItems = tvItems(SHOWS, {
+	...tvContextOf(empty, null),
+	phone: true,
+})
 const showsOf = (
 	list: TvShows | null,
 	news: TvShowsSignal | null,
 	focused = items[0],
 	own: readonly string[] = items,
+	ownPhone: readonly string[] = phoneItems,
 ) =>
 	editions((canvas) =>
-		html(canvas, focused, <Shows items={own} shows={list} signal={news} />),
+		html(
+			canvas,
+			// The bar's Back is the phone header's G.
+			canvas.edition === "phone" && focused === "bar:back"
+				? "nav:home"
+				: focused,
+			<Shows
+				items={canvas.edition === "phone" ? ownPhone : own}
+				shows={list}
+				signal={news}
+			/>,
+		),
 	)
-const empty: TvHomeData = { ...member, shows: { next: [], start: [] } }
-const emptyItems = tvItems(SHOWS, tvContextOf(empty, null))
 
 // The title screen of a show the member is midway through.
 const TITLE: Screen = { name: "title", title: "show-10" }
 const midway: TvContext = { ...ctx, titleName: "Severance", nextEpisode: true }
 const titleItems = tvItems(TITLE, midway)
+// The phone's title and What is GoodWatch? take the phone's items (its sections and its header), as the page hands them.
+const titlePhoneItems = tvItems(TITLE, { ...midway, phone: true })
 const on = (rest: Partial<TvTitleOnScreen> = {}): TvTitleOnScreen => ({
 	key: "show-10",
 	title: { media_type: "show", tmdb_id: 10, title: "Severance" },
@@ -165,13 +187,18 @@ function first(menuOpen = false) {
 const guestMenu = menuItems({ member: false, popular: [] })
 const memberMenu = menuItems({ member: true, popular: [] })
 const aboutItems = tvItems({ name: "about" }, ctx)
+const aboutPhoneItems = tvItems({ name: "about" }, phoneCtx)
 const homeItems = tvItems({ name: "home" }, ctx)
 
 console.log(
 	`__TV_SHOWS_RENDER__${JSON.stringify({
 		items,
+		phoneItems,
 		emptyItems,
+		emptyPhoneItems,
 		titleItems,
+		titlePhoneItems,
+		aboutPhoneItems,
 		guestMenu,
 		memberMenu,
 		aboutItems,
@@ -181,14 +208,23 @@ console.log(
 			// The focus on the fifth show, a name of two lines.
 			long: showsOf(shows, signal, "title:show-21"),
 			onBar: showsOf(shows, signal, "bar:back"),
-			empty: showsOf(empty.shows, null, "bar:back", emptyItems),
+			empty: showsOf(
+				empty.shows,
+				null,
+				"bar:back",
+				emptyItems,
+				emptyPhoneItems,
+			),
 		},
 		title: {
 			episode: editions((canvas) =>
 				html(
 					canvas,
 					"seen",
-					<Title items={titleItems} title={on({ episode: "S2 E4" })} />,
+					<Title
+						items={canvas.edition === "phone" ? titlePhoneItems : titleItems}
+						title={on({ episode: "S2 E4" })}
+					/>,
 				),
 			),
 			// Rated and midway: the key still names the episode.
@@ -229,7 +265,13 @@ console.log(
 			html(canvas, guestMenu[0], <Menu items={guestMenu} />),
 		),
 		about: editions((canvas) =>
-			html(canvas, aboutItems[0], <About items={aboutItems} />),
+			html(
+				canvas,
+				aboutItems[0],
+				<About
+					items={canvas.edition === "phone" ? aboutPhoneItems : aboutItems}
+				/>,
+			),
 		),
 		first: first(),
 		underMenu: first(true),
@@ -248,25 +290,19 @@ console.log(
 				key: keySize(canvas, 48),
 				shows: html(
 					canvas,
-					items[0],
-					<Shows items={items} shows={shows} signal={signal} />,
+					phoneItems[0],
+					<Shows items={phoneItems} shows={shows} signal={signal} />,
 				),
 				title: html(
 					canvas,
 					"seen",
-					<Title items={titleItems} title={on({ episode: "S2 E4" })} />,
+					<Title items={titlePhoneItems} title={on({ episode: "S2 E4" })} />,
 				),
 				menu: html(canvas, guestMenu[0], <Menu items={guestMenu} />),
 				memberMenu: html(canvas, memberMenu[0], <Menu items={memberMenu} />),
-				menuLayout: menuLayout(canvas, guestMenu.length),
-				memberMenuLayout: menuLayout(canvas, memberMenu.length),
-				about: html(canvas, aboutItems[0], <About items={aboutItems} />),
+				menuKey: keySize(canvas, 54),
+				about: html(canvas, aboutItems[0], <About items={aboutPhoneItems} />),
 			}
 		}),
-		// Before the window is measured nobody knows the scale, and nothing is painted.
-		firstMenu: menuLayout(
-			{ ...CANVAS.phone, scale: 1, first: true },
-			guestMenu.length,
-		),
 	})}`,
 )

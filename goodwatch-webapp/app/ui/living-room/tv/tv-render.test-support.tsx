@@ -88,7 +88,8 @@ function screenHtml(
 	state: TvState,
 	toast: string | null = null,
 ) {
-	const ctx = tvContextOf(data, null)
+	// The phone edition is drawn with the phone's items, as the page does once it knows the window.
+	const ctx = { ...tvContextOf(data, null), phone: canvas.edition === "phone" }
 	return renderToStaticMarkup(
 		<TvScreen
 			tv={{
@@ -127,6 +128,8 @@ const HOME: Screen = { name: "home" }
 const ABOUT: Screen = { name: "about" }
 const guestCtx = tvContextOf(guest, null)
 const memberCtx = tvContextOf(member, null)
+const guestPhone = { ...guestCtx, phone: true }
+const memberPhone = { ...memberCtx, phone: true }
 
 const roomTv: RoomTv = {
 	power: "on",
@@ -157,7 +160,7 @@ const roomHtml = (data: TvHomeData, power: RoomTv["power"] = "on") =>
 						canvas={canvas}
 						ctx={tvContextOf(data, null)}
 						apps={homeApps(data, null)}
-			home={data}
+						home={data}
 						toast={null}
 					/>
 				)}
@@ -182,7 +185,16 @@ console.log(
 			),
 		},
 		about: editions((canvas) =>
-			codeHtml(canvas, "got-it", <About items={tvItems(ABOUT, guestCtx)} />),
+			codeHtml(
+				canvas,
+				"got-it",
+				<About
+					items={tvItems(
+						ABOUT,
+						canvas.edition === "phone" ? guestPhone : guestCtx,
+					)}
+				/>,
+			),
 		),
 		// The server draws the bar alone until the screen's code is there.
 		aboutFirst: screenHtml(guest, CANVAS.desktop, stateOf(ABOUT)),
@@ -206,7 +218,11 @@ console.log(
 		),
 		// Every screen but home is a chunk of its own: before its code is there, the server draws its bar alone.
 		lazy: {
-			search: screenHtml(guest, CANVAS.desktop, stateOf({ name: "search", query: null })),
+			search: screenHtml(
+				guest,
+				CANVAS.desktop,
+				stateOf({ name: "search", query: null }),
+			),
 			results: screenHtml(
 				guest,
 				CANVAS.desktop,
@@ -232,6 +248,11 @@ console.log(
 			homeGuest: tvItems(HOME, guestCtx),
 			homeMember: tvItems(HOME, memberCtx),
 			about: tvItems(ABOUT, guestCtx),
+			phone: {
+				homeGuest: tvItems(HOME, guestPhone),
+				homeMember: tvItems(HOME, memberPhone),
+				about: tvItems(ABOUT, guestPhone),
+			},
 			menuGuest: menuItems(guestCtx),
 			menuMember: menuItems(memberCtx),
 		},

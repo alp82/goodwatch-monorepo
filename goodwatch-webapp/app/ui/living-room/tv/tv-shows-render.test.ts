@@ -6,7 +6,6 @@ import { execFileSync } from "node:child_process"
 import { test } from "node:test"
 
 type Editions = { desktop: string; phone: string }
-type MenuLayout = { key: number; gap: number; head: boolean }
 const rendered = JSON.parse(
 	execFileSync(
 		"node_modules/.bin/vite-node",
@@ -21,8 +20,12 @@ const rendered = JSON.parse(
 		.at(-1) ?? "",
 ) as {
 	items: string[]
+	phoneItems: string[]
+	emptyPhoneItems: string[]
 	emptyItems: string[]
 	titleItems: string[]
+	titlePhoneItems: string[]
+	aboutPhoneItems: string[]
 	guestMenu: string[]
 	memberMenu: string[]
 	aboutItems: string[]
@@ -42,11 +45,22 @@ const rendered = JSON.parse(
 		title: string
 		menu: string
 		memberMenu: string
-		menuLayout: MenuLayout
-		memberMenuLayout: MenuLayout
+		menuKey: number
 		about: string
 	}[]
-	firstMenu: MenuLayout
+}
+
+/**
+ * What the phone draws of a list's items: its first page of five titles, the arrow to the next page (an item that
+ * moves the focus to the sixth), then the rest.
+ */
+const phonePage = (items: readonly string[]) => {
+	const titles = items.filter((id) => id.startsWith("title:"))
+	return [
+		...titles.slice(0, 5),
+		...(titles.length > 5 ? [`jump:${titles[5]}`] : []),
+		...items.filter((id) => !id.startsWith("title:")),
+	]
 }
 
 /** The item ids in the markup, in its order. */
@@ -92,17 +106,25 @@ test("My shows draws the machine's items in its order, in both editions", () => 
 		"bar:search",
 		"bar:menu",
 	])
-	for (const html of Object.values(rendered.shows.signal)) {
-		assert.deepEqual(ids(html), rendered.items)
+	// The phone's header has the G and Menu; Back is the Remote's.
+	assert.deepEqual(rendered.phoneItems.slice(-3), [
+		"expand",
+		"nav:home",
+		"bar:menu",
+	])
+	const { desktop, phone } = rendered.shows.signal
+	assert.deepEqual(ids(desktop), rendered.items)
+	assert.deepEqual(ids(phone), phonePage(rendered.phoneItems))
+	for (const html of [desktop, phone]) {
 		assert.equal(focused(html), "title:show-10")
-		// The Expand key, once: in its corner on the desktop, at the end of the last row on the phone.
+		// The Expand key, once: in its corner on the desktop, in the last row on the phone.
 		assert.equal(count(html, 'data-tv-item="expand"'), 1)
-		assert.ok(
-			/<div data-tv-expand-place="true"[^>]*><button type="button" data-tv-item="expand"[^>]*aria-label="Expand"[^>]*>.*?Expand<\/button><\/div>/.test(
-				html,
-			) !== Boolean(phoneFoot(html)),
-		)
 	}
+	assert.match(
+		desktop,
+		/<div data-tv-expand-place="true"[^>]*><button type="button" data-tv-item="expand"/,
+	)
+	assert.ok(!phone.includes("data-tv-expand-place"))
 })
 
 test("the focused show is named with its line, and its backdrop is the picture", () => {
@@ -144,7 +166,9 @@ test("a poster says where a press leads; on the phone the focused show's line sa
 	assert.match(phone, /aria-label="Andor, Start"/)
 	// Six posters of one size, w342 on the desktop and w185 on the phone.
 	assert.equal(count(desktop, "/t/p/w342/poster-"), 6)
-	assert.equal(count(phone, "/t/p/w185/poster-"), 6)
+	// The phone shows a page of five, and an arrow to the sixth.
+	assert.equal(count(phone, "/t/p/w185/poster-"), 5)
+	assert.match(phone, /data-tv-item="jump:title:show-22"/)
 	assert.equal(count(desktop, 'style="width:163px;height:244px"'), 6)
 })
 
@@ -168,8 +192,12 @@ test("a member without a show to continue or to start is told how one gets here"
 		"bar:search",
 		"bar:menu",
 	])
-	for (const html of Object.values(rendered.shows.empty)) {
-		assert.deepEqual(ids(html), rendered.emptyItems)
+	assert.deepEqual(rendered.emptyPhoneItems, ["expand", "nav:home", "bar:menu"])
+	for (const [edition, html] of Object.entries(rendered.shows.empty)) {
+		assert.deepEqual(
+			ids(html),
+			edition === "phone" ? rendered.emptyPhoneItems : rendered.emptyItems,
+		)
 		assert.match(
 			html,
 			/>No show to watch next\. Want to See on a show puts it here to start\./,
@@ -191,10 +219,15 @@ test("the server draws My shows as its bar and Expand key alone, and nothing of 
 test("Seen it on a show the member is midway through names the episode it marks", () => {
 	const key = (html: string) =>
 		/data-tv-item="seen"[^>]*>(?:<span[^>]*>)?([^<]*)</.exec(html)?.[1]
-	for (const html of Object.values(rendered.title.episode)) {
-		assert.deepEqual(ids(html), rendered.titleItems)
+	assert.deepEqual(ids(rendered.title.episode.desktop), rendered.titleItems)
+	// The phone's overview draws the machine's items but its own section's key (2026-10-22: sections).
+	const phone = ids(rendered.title.episode.phone)
+	assert.deepEqual(
+		[...phone].sort(),
+		rendered.titlePhoneItems.filter((id) => id !== "section:overview").sort(),
+	)
+	for (const html of Object.values(rendered.title.episode))
 		assert.equal(key(html), "Seen S2 E4")
-	}
 	// A score does not take the episode's place; without an episode the key is as on any title.
 	assert.equal(key(rendered.title.rated), "Seen S2 E5")
 	assert.equal(key(rendered.title.plain), "8 · Great")
@@ -227,29 +260,25 @@ test("on every phone of the room's table every key of My shows and of a show's t
 		["360x740", "375x667", "390x700", "390x844", "430x932", "844x390"],
 	)
 	for (const p of rendered.phones) {
-		// My shows: the bar's keys take their size from the rule; the posters share the height the name, the facts
-		// and the Expand key's row leave, and the drive script measures them on the page.
-		assert.deepEqual(ids(p.shows), rendered.items)
+		// My shows: every key takes its size from the rule, the posters share the height the name, the facts and
+		// the keys' row leave, and the arrow, the Expand key and the header's keys are touch targets.
+		assert.deepEqual(ids(p.shows), phonePage(rendered.phoneItems))
 		for (const item of heights(p.shows))
 			assert.ok(item.height * p.scale >= 44, `${p.phone} shows ${item.id}`)
 		assert.deepEqual(
 			heights(p.shows).map((item) => item.id),
-			["expand", "bar:back", "bar:search", "bar:menu"],
+			["jump:title:show-22", "expand", "nav:home", "bar:menu"],
 		)
-		// The row under the posters is a key tall, has no key of its own, and ends with the Expand key.
-		const foot = phoneFoot(p.shows)
-		const row = foot?.height ?? 0
-		assert.ok(row * p.scale >= 44, `${p.phone}: the last row is ${row}`)
-		assert.ok(!/data-tv-item=/.test(foot?.before ?? "x"), `${p.phone}: the last row has only the Expand key`)
 		assert.ok(!p.shows.includes("data-tv-expand-place"), p.phone)
-		// The title screen of a show: its keys and the bar's take their height from the rule. The Fingerprint is a
-		// card as tall as its readings, in the markup between them.
+		assert.ok(!p.shows.includes("data-tv-scroll"), p.phone)
+		assert.ok(!p.shows.includes("data-tv-row"), p.phone)
+		// The title screen of a show (2026-10-22: the overview of three sections): every key and the header's take
+		// their height from the rule.
 		const title = heights(p.title)
 		assert.deepEqual(
-			title.map((item) => item.id),
-			rendered.titleItems.filter((id) => id !== "fingerprint"),
+			title.map((item) => item.id).sort(),
+			rendered.titlePhoneItems.filter((id) => id !== "section:overview").sort(),
 		)
-		assert.deepEqual(ids(p.title), rendered.titleItems)
 		for (const item of title)
 			assert.ok(item.height * p.scale >= 44, `${p.phone} title ${item.id}`)
 	}
@@ -265,60 +294,38 @@ test("the menu's keys are touch targets on every phone, and the menu fits the pi
 		"menu:taste",
 		"menu:about",
 	])
+	// The phone (the owner, 2026-10-22: nothing scrolls): every key three to a row under the band with the
+	// wordmark and Close, as tall as a key of that phone (44 px or more on its screen), inside the 270 px canvas.
 	for (const p of rendered.phones) {
-		for (const [html, items, layout] of [
-			[p.menu, rendered.guestMenu, p.menuLayout],
-			[p.memberMenu, rendered.memberMenu, p.memberMenuLayout],
+		for (const [html, items] of [
+			[p.menu, rendered.guestMenu],
+			[p.memberMenu, rendered.memberMenu],
 		] as const) {
-			const drawn = heights(html)
-			assert.deepEqual(
-				drawn.map((item) => item.id),
-				items,
-				p.phone,
-			)
-			for (const item of drawn) {
-				assert.equal(item.height, layout.key)
-				assert.ok(
-					item.height * p.scale >= 44,
-					`${p.phone} ${item.id}: ${item.height} canvas px at ${p.scale}`,
-				)
-			}
-			// The keys stand two to a row. The column is as tall as its rows, its gaps and, where it stands, the
-			// wordmark over them (44 canvas px with its space): inside the picture, with room to spare at both ends.
-			const rows = Math.ceil(items.length / 2)
-			const column =
-				rows * layout.key + (rows - 1) * layout.gap + (layout.head ? 44 : 0)
+			assert.deepEqual(ids(html), items, p.phone)
 			assert.ok(
-				column <= p.h - 12,
-				`${p.phone}: ${column} canvas px of ${p.h}`,
+				p.menuKey * p.scale >= 44,
+				`${p.phone}: ${p.menuKey} canvas px at ${p.scale}`,
 			)
-			assert.ok(layout.gap >= 4 && layout.gap <= 8, `${p.phone} gap`)
-			assert.match(html, new RegExp(`style="gap:${layout.gap}px"`))
-			assert.match(html, /class="grid grid-cols-2"/)
-			// The wordmark stands over the keys only where it has room; the menu's name is read out either way.
-			assert.equal(
-				count(html, 'role="img" aria-label="GoodWatch"'),
-				layout.head ? 1 : 0,
+			const rows = Math.ceil(items.length / 3)
+			assert.match(
+				html,
+				new RegExp(`grid-template-rows:repeat\\(${rows}, ${p.menuKey}px\\)`),
 				p.phone,
 			)
+			// Three to a row on an upright phone's canvas (480 wide); four on a phone's wide canvas on its side.
+			assert.match(html, /grid-template-columns:repeat\(3, minmax\(0, 1fr\)\)/)
+			// The rows, their 6 px gaps and the foot (10) inside the canvas; the band over them (66 at most) keeps
+			// room for the wordmark and Close on every phone of the table.
+			const band = Math.min(66, 270 - 10 - rows * p.menuKey - (rows - 1) * 6)
+			assert.ok(
+				band >= 44,
+				`${p.phone}: a band of ${band} over ${rows} rows of ${p.menuKey}`,
+			)
+			assert.match(html, new RegExp(`style="height:${band}px"`), p.phone)
 			assert.match(html, /role="menu" aria-label="Menu"/)
+			assert.equal(count(html, 'role="img" aria-label="GoodWatch"'), 1, p.phone)
 		}
 	}
-	// Two keys to a row leave the wordmark room on every phone, for a guest's seven keys and a member's eight.
-	assert.deepEqual(
-		rendered.phones.map((p) => [p.phone, p.key, p.menuLayout.head]),
-		[
-			["360x740", 67, true],
-			["375x667", 64, true],
-			["390x700", 61, true],
-			["390x844", 61, true],
-			["430x932", 55, true],
-			["844x390", 48, true],
-		],
-	)
-	assert.ok(rendered.phones.every((p) => p.memberMenuLayout.head))
-	// Before the window is measured nobody knows the scale: the design's size.
-	assert.deepEqual(rendered.firstMenu, { key: 48, gap: 8, head: true })
 })
 
 test("the menu lies over everything of the screen under it", () => {
@@ -337,7 +344,10 @@ test("the desktop's menu: a column of keys at the right edge, under the GoodWatc
 	const { desktop } = rendered.menu
 	assert.deepEqual(ids(desktop), rendered.guestMenu)
 	assert.equal(count(desktop, "h-[54px] gap-4 px-6 text-[23px]"), 7)
-	assert.match(desktop, /w-\[440px\] justify-center gap-1\.5 border-l border-white\/10 px-9/)
+	assert.match(
+		desktop,
+		/w-\[440px\] justify-center gap-1\.5 border-l border-white\/10 px-9/,
+	)
 	// A member's nine keys fit the canvas's 648 px with the wordmark (30 px type, 8 px under it): 9 × 54 px and
 	// 8 gaps of 6 px.
 	assert.ok(9 * 54 + 8 * 6 + 38 + 8 < 648)
@@ -345,7 +355,7 @@ test("the desktop's menu: a column of keys at the right edge, under the GoodWatc
 	assert.equal(count(desktop, 'role="img" aria-label="GoodWatch"'), 1)
 })
 
-test("What is GoodWatch?: its two answers are touch targets on every phone, under the bar's keys", () => {
+test("What is GoodWatch?: its two answers are touch targets on every phone, under the header", () => {
 	assert.deepEqual(rendered.aboutItems, [
 		"got-it",
 		"rate",
@@ -353,11 +363,17 @@ test("What is GoodWatch?: its two answers are touch targets on every phone, unde
 		"bar:search",
 		"bar:menu",
 	])
+	assert.deepEqual(rendered.aboutPhoneItems, [
+		"got-it",
+		"rate",
+		"nav:home",
+		"bar:menu",
+	])
 	for (const p of rendered.phones) {
 		const drawn = heights(p.about)
 		assert.deepEqual(
 			drawn.map((item) => item.id),
-			rendered.aboutItems,
+			rendered.aboutPhoneItems,
 			p.phone,
 		)
 		for (const item of drawn)
@@ -365,10 +381,10 @@ test("What is GoodWatch?: its two answers are touch targets on every phone, unde
 				item.height * p.scale >= 44,
 				`${p.phone} ${item.id}: ${item.height} canvas px at ${p.scale}`,
 			)
-		// The words start under the bar's keys: 12 px from the top and a key tall.
+		// The words start under the header (66 canvas px, kit.tsx PHONE_HEAD), whose keys fit in it.
 		const bar = drawn.find((item) => item.id === "bar:menu")?.height ?? 0
-		assert.ok(12 + bar <= 84, `${p.phone}: the bar ends at ${12 + bar}`)
-		assert.match(p.about, /px-5 pb-3 pt-\[84px\]/)
+		assert.ok(bar <= 66, `${p.phone}: the header's key is ${bar} tall`)
+		assert.match(p.about, /style="top:66px"/)
 	}
 	// The desktop's answers are as they were.
 	assert.equal(count(rendered.about.desktop, "h-[116px] rounded-[26px]"), 2)

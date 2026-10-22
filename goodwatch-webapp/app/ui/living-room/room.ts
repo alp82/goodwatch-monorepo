@@ -37,8 +37,11 @@ export const REMOTE_W = 312
 /** The hand photo (1024 x 1536) and the placeholder the Remote replaces in it. */
 export const HAND = { w: 1024, h: 1536, x: 321, y: 68, pw: 382, ph: 1060 }
 
-/** In the hand the Remote is as long as the placeholder; the extra length is a plain grip with the logo. */
-export const REMOTE_H = Math.round((REMOTE_W * HAND.ph) / HAND.pw)
+/**
+ * The Remote's length: its keys and a short grip with the logo (the owner, 2026-10-22: no long empty body). It is
+ * shorter than the hand's placeholder; its end lies in the palm, where the placeholder ends.
+ */
+export const REMOTE_H = 610
 
 /** The Remote leans back toward the screen. */
 export const REMOTE_TILT_DEG = 12

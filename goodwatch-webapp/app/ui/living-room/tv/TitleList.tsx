@@ -19,7 +19,21 @@ import { MediaFact } from "./MediaFact"
 // it out of every page's shell (vite.config.js, rule 3).
 import { type ReactNode, useRef } from "react"
 import { tmdbImageUrl } from "~/utils/tmdb-image"
-import { Frame, Img, Item, PhoneFoot, backdropSize, keySize, useTvView } from "./kit"
+import {
+	Expand,
+	Frame,
+	Img,
+	Item,
+	PageArrow,
+	PageCount,
+	backdropSize,
+	keySize,
+	phoneFit,
+	useListAnchor,
+	usePage,
+	useTvView,
+} from "./kit"
+import { listArrows } from "./screens/phone-paging"
 import { TV_ROW_ATTR } from "./tv-dom"
 
 /** A title as a list shows it. */
@@ -67,6 +81,8 @@ export function TitleList({
 	art,
 	mark,
 	edge,
+	phoneName,
+	phoneNote,
 }: {
 	/** The screen's name in the top bar, and what stands under it. */
 	name: string
@@ -85,6 +101,10 @@ export function TitleList({
 	mark?: ReactNode
 	/** A colour for a thin line along the picture's top edge: a service's own. */
 	edge?: string
+	/** The phone header's words, where the screen's name says too little ("Funny", "“space”"). */
+	phoneName?: string
+	/** On the phone, a word over the list's count that the crumb says on the desktop: "New in 2 shows". */
+	phoneNote?: string
 }) {
 	const { canvas, focused } = useTvView()
 	const P = canvas.edition === "phone"
@@ -93,10 +113,17 @@ export function TitleList({
 	const browse = actions.some((action) => action.id.startsWith("browse:"))
 	// The title the screen names and shows behind everything: the one with the focus, and while the focus is on a
 	// key or the bar, the one that had it last.
+	// A list drawn anew (Back from a title's details, from a real page) starts from the one it had last on this
+	// history entry (`useListAnchor`), so its picture, its words and its page come back with it.
+	const anchor = useListAnchor("titles", on.map((title) => `title:${title.key}`))
 	const last = useRef<string | null>(null)
 	const at = on.find((title) => `title:${title.key}` === focused)
 	if (at) last.current = at.key
-	const shown = on.find((title) => title.key === last.current) ?? on[0] ?? null
+	const shown =
+		on.find((title) => title.key === last.current) ??
+		on.find((title) => `title:${title.key}` === anchor) ??
+		on[0] ??
+		null
 	const behind = shown?.backdrop ?? art
 	const frame = {
 		name,
@@ -138,71 +165,22 @@ export function TitleList({
 		</Item>
 	))
 
-	// The phone: one line of name, one of facts, the posters as tall as is left, and the keys beside the Expand
-	// key's corner. The row is as tall as a key with or without one, so nothing above it reaches into the corner.
+	// The phone (the owner, 2026-10-22: nothing scrolls): the focused title's name and facts, a page of posters
+	// between two arrows, and the screen's keys with the Expand key under them. A list the server pages too goes on
+	// to the server's next page at the last arrow (`listArrows`).
 	if (P) {
-		const height = keySize(canvas, 54)
+		const key = keySize(canvas, 54)
 		return (
-			<Frame {...frame} inlineExpand>
-				<div className="flex h-full flex-col">
-					{shown ? (
-						<div
-							key={shown.key}
-							className={`tvc-fade shrink-0 ${browse ? "h-[84px]" : "h-[64px]"}`}
-						>
-							<div
-								{...mediaTextAttributes(mediaFieldLanguage(shown))}
-								className="truncate text-[30px] font-bold leading-none tracking-tight"
-							>
-								{shown.title}
-							</div>
-							<div className="mt-2 truncate text-[20px] leading-tight text-white/75">
-								<MediaFact text={shown.facts} media={shown.factMedia} />
-							</div>
-							{browse && (
-								<div
-									className="truncate text-[18px] leading-tight text-white/70"
-									title={actionsLabel}
-								>
-									{actionsLabel}
-								</div>
-							)}
-						</div>
-					) : (
-						<div
-							className={`${browse ? "h-[84px]" : "h-[64px]"} shrink-0 text-[24px] leading-tight text-white/70`}
-						>
-							{empty}
-						</div>
-					)}
-					<div
-						{...{ [TV_ROW_ATTR]: "" }}
-						// Never shorter than this (posters a touch target wide): on a short phone the screen scrolls instead.
-						className="relative -mx-5 flex min-h-[140px] flex-1 gap-3.5 overflow-hidden px-5 py-3.5"
-					>
-						{posters}
-					</div>
-					<PhoneFoot items={items} height={height}>
-						<div
-							{...(keys.length > 2 ? { [TV_ROW_ATTR]: "" } : {})}
-							className={`flex min-w-0 items-center gap-2 ${keys.length > 2 ? "overflow-hidden" : ""}`}
-						>
-						{keys.map((action) => (
-							<Item
-								key={action.id}
-								id={action.id}
-								label={action.says}
-								// Two keys share the row: each has less room around its words.
-								className={`tvc-btn flex shrink-0 items-center text-[21px] ${keys.length > 1 ? "px-4" : "px-6"}`}
-								style={{ height }}
-							>
-								<span className="truncate">{action.label}</span>
-							</Item>
-						))}
-						</div>
-					</PhoneFoot>
-				</div>
-			</Frame>
+			<PhoneList
+				frame={{ ...frame, name: phoneName ?? name }}
+				items={items}
+				titles={on}
+				shown={shown}
+				keys={keys.filter((action) => action.id !== "browse:prev" && action.id !== "browse:next")}
+				empty={empty}
+				keyHeight={key}
+				note={phoneNote}
+			/>
 		)
 	}
 	return (
@@ -272,6 +250,121 @@ export function TitleList({
 						</div>
 					)}
 				</div>
+			</div>
+		</Frame>
+	)
+}
+
+/** Posters on one phone page, between the two arrows. */
+const PHONE_POSTERS = 5
+
+/**
+ * The phone's list: 194 canvas px under the header. The name and facts (44), the posters (as tall as the keys
+ * leave, 2:3), and the keys (one row, as tall as a key). Each key's words may wrap to two lines; none is cut.
+ */
+function PhoneList({
+	frame,
+	items,
+	titles,
+	shown,
+	keys,
+	empty,
+	keyHeight,
+	note,
+}: {
+	note?: string
+	frame: Omit<Parameters<typeof Frame>[0], "children">
+	items: readonly string[]
+	titles: readonly TvListTitle[]
+	shown: TvListTitle | null
+	keys: readonly TvListAction[]
+	empty: string
+	keyHeight: number
+}) {
+	const { canvas } = useTvView()
+	const ids = titles.map((title) => `title:${title.key}`)
+	// Five posters a page upright, up to eight on a phone's wide canvas; the page holds the title shown.
+	const page = usePage(
+		ids,
+		phoneFit(canvas, PHONE_POSTERS, 56, 8),
+		shown ? `title:${shown.key}` : null,
+	)
+	const arrows = listArrows(page, items)
+	const expand = items.includes("expand")
+	const onPage = titles.filter((title) => page.shown.includes(`title:${title.key}`))
+	return (
+		<Frame {...frame} crumb={undefined} inlineExpand>
+			<div className="flex h-full flex-col gap-[6px]">
+				<div className="flex h-[44px] shrink-0 items-start gap-3">
+					{shown ? (
+						// The name and its facts run on as one paragraph of two lines: a long name keeps all its words.
+						<p key={shown.key} className="tvc-fade line-clamp-2 min-w-0 flex-1 text-[17px] leading-[21px] text-white/75">
+							<span
+								{...mediaTextAttributes(mediaFieldLanguage(shown))}
+								className="mr-2 text-[20px] font-bold tracking-tight text-white"
+							>
+								{shown.title}
+							</span>
+							<MediaFact text={shown.facts} media={shown.factMedia} />
+						</p>
+					) : (
+						<div className="min-w-0 flex-1 text-[19px] leading-tight text-white/75">{empty}</div>
+					)}
+					{(note || page.pages > 1) && (
+						<div className="flex shrink-0 flex-col items-end pt-[2px] text-right">
+							{note && <span className="text-[17px] font-bold leading-[21px] text-sky-300">{note}</span>}
+							<PageCount page={page.page} pages={page.pages} />
+						</div>
+					)}
+				</div>
+				<div className="flex min-h-0 flex-1 items-center gap-[6px]">
+					{ids.length > 0 && <PageArrow to={arrows.prev} dir="prev" label="Previous titles" />}
+					<div className="flex h-full min-w-0 flex-1 items-center justify-center gap-[6px]">
+						{onPage.map((title) => (
+							<Item
+								key={title.key}
+								id={`title:${title.key}`}
+								label={title.says ?? title.title}
+								className="tvc-tile aspect-[2/3] h-full shrink-0 bg-[#10131c]"
+							>
+								{title.poster && (
+									<Img
+										src={tmdbImageUrl(title.poster, "w185")}
+										className="absolute inset-0 h-full w-full"
+									/>
+								)}
+								{title.mark && (
+									<span className="absolute left-0 top-0 z-[1] rounded-br-[8px] bg-sky-300 px-1.5 py-1 text-[15px] font-bold uppercase leading-none text-black">
+										{title.mark}
+									</span>
+								)}
+							</Item>
+						))}
+					</div>
+					{ids.length > 0 && <PageArrow to={arrows.next} dir="next" label="More titles" />}
+				</div>
+				{(keys.length > 0 || expand) && (
+					<div className="flex shrink-0 items-center gap-2" style={{ height: keyHeight }}>
+						{keys.map((action) => (
+							<Item
+								key={action.id}
+								id={action.id}
+								label={action.says}
+								className="tvc-btn flex h-full min-w-0 flex-1 items-center justify-center gap-2 px-3 text-center text-[18px] leading-[1.1]"
+							>
+								{action.mark && (
+									<span
+										aria-hidden="true"
+										className="h-[16px] w-[22px] shrink-0 rounded-[50%]"
+										style={{ background: action.mark }}
+									/>
+								)}
+								<span className="line-clamp-2">{action.label}</span>
+							</Item>
+						))}
+						{expand && <Expand />}
+					</div>
+				)}
 			</div>
 		</Frame>
 	)

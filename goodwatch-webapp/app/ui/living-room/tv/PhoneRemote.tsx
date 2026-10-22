@@ -1,18 +1,16 @@
-// The phone's Remote. The Remote in the hand is 866 units long and does not fit under a TV on a phone, so the
-// phone gets a shorter one. It is the same object: the desktop Remote's dark body, its wheel with OK, its round
-// keys with their icons and words, its streaming keys (the `remote-*` classes of living-room.css). Every key is
-// 44 px or more in both directions.
+// The phone's Remote: the desktop Remote's dark body, its wheel with OK, its round keys with their icons and words,
+// its streaming keys (the `remote-*` classes of living-room.css), on a body as long as its keys and a short grip
+// with the mark, held in the hand. Every key is 44 px or more in both directions.
 //
 // The two streaming keys stand for the person's own two services (`services`): each shows its service's mark,
 // opens the TV screen "On <service>", and is pressed while that screen shows.
 //
-// Two forms; the scene's height chooses (`layoutPhoneRoom`):
-//   hand    upright, held in the hand, rising from the bottom edge: the wheel, a round key in each corner of a box
-//           a little taller than it (Search, Menu, Back, Home), the streaming keys under it, then the grip and
-//           the fingers
-//   table   lying in front of the TV: a wide, short body, the wheel in the middle and three keys on either side
-// Neither has the power key: "Turn off" is in the TV's menu, and a dark TV turns on with any key here.
+// The wheel, a round key in each corner of a box a little taller than it (Search, Menu, Back, Home), the
+// streaming keys under it, then the grip. It has no power key: "Turn off" is in the TV's menu, and a dark TV turns
+// on with any key here. Where the window is short it rests with its top showing and a tap raises it (TvRoom.tsx).
 import type { ReactNode } from "react"
+import gwLogo from "~/img/goodwatch-logo-white.svg"
+import { assetUrl } from "~/utils/asset-url"
 import {
 	ICON,
 	Icon,
@@ -54,12 +52,11 @@ const WORD =
 	"pointer-events-none whitespace-nowrap text-[8px] font-semibold uppercase leading-[11px] tracking-[0.08em] text-white/60"
 
 /**
- * How large a streaming key's print is in each form: a drawn mark's width against the desktop Remote's key (58
- * and 60 px in the hand, 50 and 52 on the table), and a catalog logo's side.
+ * How large a streaming key's print is: a drawn mark's width against the desktop Remote's key (58 and 60 px), and
+ * a catalog logo's side.
  */
 const MARK: Record<PhoneRemoteForm, { drawn: number; logo: number }> = {
 	hand: { drawn: 0.85, logo: 30 },
-	table: { drawn: 0.735, logo: 30 },
 }
 
 export type PhoneRemoteProps = {
@@ -72,8 +69,6 @@ export type PhoneRemoteProps = {
 	 * places it then (`tvr-f-*`, the first paint).
 	 */
 	at?: { left: number; top: number; u: number; width: number }
-	/** The scene's height: held, the body runs on under the scene's bottom edge, into the hand. */
-	bottom?: number
 }
 
 export function PhoneRemote({
@@ -81,7 +76,6 @@ export function PhoneRemote({
 	services,
 	form,
 	at,
-	bottom,
 }: PhoneRemoteProps) {
 	// A dark TV: the first key only turns it on.
 	const press = (key: RoomKey) => () =>
@@ -166,93 +160,51 @@ export function PhoneRemote({
 		</div>
 	)
 	const R = PHONE_REMOTE[form]
-	let body: ReactNode
-	if (form === "hand") {
-		// A key in each corner of a box a little taller than the wheel: the wheel is round, so the corners are free.
-		const corner = (
-			key: ReactNode,
-			word: string,
-			where: string,
-			wordAt: string,
-		) => (
-			<>
-				<div className={`absolute ${where}`}>{key}</div>
-				<span aria-hidden className={`absolute ${WORD} ${wordAt}`}>
-					{word}
-				</span>
-			</>
-		)
-		body = (
-			// The body runs on under the scene's edge, into the hand: only its top is rounded in view.
+	// A key in each corner of a box a little taller than the wheel: the wheel is round, so the corners are free.
+	const corner = (key: ReactNode, word: string, where: string, wordAt: string) => (
+		<>
+			<div className={`absolute ${where}`}>{key}</div>
+			<span aria-hidden className={`absolute ${WORD} ${wordAt}`}>
+				{word}
+			</span>
+		</>
+	)
+	const body = (
+		<div
+			className="remote-body relative flex flex-col"
+			style={{ width: R.w, height: R.body, borderRadius: 34, padding: 10 }}
+		>
 			<div
-				className={`remote-body relative ${at ? "" : "tvr-f-grip"}`}
-				style={{
-					width: R.w,
-					...(at &&
-						bottom !== undefined && { height: (bottom - at.top) / at.u + 60 }),
-					borderRadius: 34,
-					padding: 10,
-				}}
+				className="relative flex shrink-0 items-center justify-center"
+				style={{ height: HELD }}
 			>
-				<div
-					className="relative flex items-center justify-center"
-					style={{ height: HELD }}
-				>
-					{wheel}
-					{corner(keys.search, "Search", "left-0 top-0", "left-0 top-[46px]")}
-					{corner(keys.menu, "Menu", "right-0 top-0", "right-0 top-[46px]")}
-					{corner(keys.back, "Back", "bottom-0 left-0", "bottom-[46px] left-0")}
-					{corner(
-						keys.home,
-						"Home",
-						"bottom-0 right-0",
-						"bottom-[46px] right-0",
-					)}
-				</div>
-				<div className="mt-[14px] grid grid-cols-2 gap-2">
-					{first}
-					{second}
-				</div>
-			</div>
-		)
-	} else {
-		const column = (
-			a: ReactNode,
-			wordA: string,
-			b: ReactNode,
-			wordB: string,
-			c: ReactNode,
-		) => (
-			<div className="flex w-[72px] shrink-0 flex-col items-center">
-				{a}
-				<span aria-hidden className={WORD}>
-					{wordA}
-				</span>
-				{b}
-				<span aria-hidden className={WORD}>
-					{wordB}
-				</span>
-				{c}
-			</div>
-		)
-		body = (
-			<div
-				className="remote-body flex items-center justify-between"
-				style={{ width: R.w, height: R.keys, borderRadius: 40, padding: 10 }}
-			>
-				{column(keys.back, "Back", keys.search, "Search", first)}
 				{wheel}
-				{column(keys.home, "Home", keys.menu, "Menu", second)}
+				{corner(keys.search, "Search", "left-0 top-0", "left-0 top-[46px]")}
+				{corner(keys.menu, "Menu", "right-0 top-0", "right-0 top-[46px]")}
+				{corner(keys.back, "Back", "bottom-0 left-0", "bottom-[46px] left-0")}
+				{corner(keys.home, "Home", "bottom-0 right-0", "bottom-[46px] right-0")}
 			</div>
-		)
-	}
+			<div className="mt-[14px] grid shrink-0 grid-cols-2 gap-2">
+				{first}
+				{second}
+			</div>
+			{/* The grip: the mark, where the palm holds it. */}
+			<img
+				src={assetUrl(gwLogo)}
+				alt=""
+				aria-hidden
+				draggable={false}
+				className="mx-auto mb-3 mt-auto h-5 opacity-20"
+			/>
+		</div>
+	)
 	return (
 		// biome-ignore lint/a11y/useKeyWithClickEvents: only drops focus after pointer presses; keys need nothing
 		<section
 			data-remote
 			data-phone-remote={form}
 			aria-label="Remote control"
-			className={`absolute select-none ${at ? "" : "tvr-f-premote"}`}
+			className={`pointer-events-auto absolute select-none ${at ? "" : "tvr-f-premote"}`}
 			style={at && { left: at.left, top: at.top, width: at.width }}
 			// As on the desktop Remote: a press by a finger or the pointer must not leave the key focused, or the
 			// next Enter of a keyboard repeats it instead of reaching the TV's focused item, and a streaming key

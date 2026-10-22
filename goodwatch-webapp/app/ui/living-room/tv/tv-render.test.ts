@@ -28,13 +28,9 @@ const rendered = JSON.parse(
 	toast: Editions
 	room: { guest: string; again: string; member: string; off: string }
 	items: Record<
-		| "homeGuest"
-		| "homeMember"
-		| "about"
-		| "menuGuest"
-		| "menuMember",
+		"homeGuest" | "homeMember" | "about" | "menuGuest" | "menuMember",
 		string[]
-	>
+	> & { phone: Record<"homeGuest" | "homeMember" | "about", string[]> }
 }
 
 /** The item ids in the markup, in its order. */
@@ -58,16 +54,30 @@ const NAV = [
 ]
 
 test("home's items in the markup are exactly the machine's, in reading order, in both editions", () => {
-	for (const edition of ["desktop", "phone"] as const) {
+	assert.deepEqual(ids(rendered.home.guest.desktop), rendered.items.homeGuest)
+	assert.deepEqual(ids(rendered.home.member.desktop), rendered.items.homeMember)
+	// The phone's items: the same screen's, with the header's G and Menu (2026-10-22).
+	// A phone screen draws a page of its items at a time, with arrows to the rest (2026-10-22): the guest's row of
+	// three tiles, Start's Watch next and four tiles.
+	for (const [html, items] of [
+		[rendered.home.guest.phone, rendered.items.phone.homeGuest],
+		[rendered.home.member.phone, rendered.items.phone.homeMember],
+	] as const) {
+		const drawn = ids(html)
+		const own = drawn.filter((id) => !id.startsWith("jump:"))
 		assert.deepEqual(
-			ids(rendered.home.guest[edition]),
-			rendered.items.homeGuest,
+			own,
+			items.filter((id) => own.includes(id)),
 		)
-		assert.deepEqual(
-			ids(rendered.home.member[edition]),
-			rendered.items.homeMember,
-		)
+		for (const id of drawn.filter((one) => one.startsWith("jump:")))
+			assert.ok(items.includes(id.slice(5)) && !own.includes(id.slice(5)), id)
+		assert.deepEqual(own.slice(-2), ["nav:home", "bar:menu"])
 	}
+	assert.ok(ids(rendered.home.member.phone).includes("jump:start:taste"))
+	assert.deepEqual(rendered.items.phone.homeGuest.slice(-2), [
+		"nav:home",
+		"bar:menu",
+	])
 	assert.deepEqual(rendered.items.homeGuest, [
 		"app:tonight",
 		"app:discover",
@@ -101,14 +111,12 @@ test("every item is a real button, and exactly one has the focus", () => {
 	)
 	assert.match(
 		rendered.home.guest.phone,
-		/data-tv-item="bar:search" aria-label="Search"/,
+		/data-tv-item="nav:home" aria-label="Home"/,
 	)
 })
 
 test("home has one H1, the invitation: drawn for a guest, read out on a member's Start", () => {
-	for (const html of [
-		...Object.values(rendered.home.guest),
-	]) {
+	for (const html of [...Object.values(rendered.home.guest)]) {
 		assert.equal(count(html, "<h1"), 1)
 		assert.ok(html.includes(`>${H1}</h1>`))
 	}
@@ -178,7 +186,10 @@ test("a member's Start shows their next pick and a key to each screen", () => {
 
 test("What is GoodWatch? and the menu draw the machine's items", () => {
 	for (const edition of ["desktop", "phone"] as const) {
-		assert.deepEqual(ids(rendered.about[edition]), rendered.items.about)
+		assert.deepEqual(
+			ids(rendered.about[edition]),
+			edition === "phone" ? rendered.items.phone.about : rendered.items.about,
+		)
 		// A screen reader meets a menu of menu items, each named by its word.
 		const menu = rendered.menu.guest[edition]
 		assert.match(menu, /role="menu" aria-label="Menu"/)
@@ -298,12 +309,19 @@ test("while the TV boots it shows the wordmark and no item; the toast stands in 
 	)
 	assert.match(
 		rendered.toast.phone,
-		/<output class="tvc-toast [^"]*text-\[20px\][^"]*">On your Wishlist<\/output>/,
+		/<output class="tvc-toast [^"]*text-\[19px\][^"]*">On your Wishlist<\/output>/,
 	)
-	for (const html of Object.values(rendered.toast)) {
+	for (const html of Object.values(rendered.toast))
 		assert.match(html, /^<div class="tvc [^"]*" data-tv-toast="">/)
-		assert.match(html, /\[\[data-tv-toast\]_&amp;\]:opacity-0[^>]*>GoodWatch</)
-	}
+	assert.match(
+		rendered.toast.desktop,
+		/\[\[data-tv-toast\]_&amp;\]:opacity-0[^>]*>GoodWatch</,
+	)
+	// On the phone the header names the screen, and the name steps back for the toast (2026-10-22).
+	assert.match(
+		rendered.toast.phone,
+		/\[\[data-tv-toast\]_&amp;\]:opacity-0[^>]*>(<span[^>]*>)?Home</,
+	)
 	assert.ok(!rendered.home.guest.desktop.includes("tvc-toast"))
 	assert.ok(!rendered.home.guest.desktop.includes("data-tv-toast="))
 })
@@ -333,9 +351,13 @@ test("before the window is measured the room holds both editions of the screen, 
 		assert.equal(count(screen, "<img"), 6)
 		assert.equal(count(screen, 'loading="lazy"'), 6)
 	}
+	// Before the window is measured both editions are drawn with the desktop's items; the phone's header has its G
+	// and Menu already, which every phone screen has.
 	assert.deepEqual(ids(room), [
 		...rendered.items.homeGuest,
-		...rendered.items.homeGuest,
+		...rendered.items.homeGuest.filter((id) => id.startsWith("app:")),
+		"nav:home",
+		"bar:menu",
 	])
 	// The phone's top bar keys are as tall as they will be once the window is measured (living-room.css, `--tv-key`).
 	assert.match(

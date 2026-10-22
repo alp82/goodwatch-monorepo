@@ -9,7 +9,22 @@
 // guest's home is drawn from the start titles alone, so the server's HTML is the same for every guest.
 import { type ReactNode, createContext, useContext, useRef } from "react"
 import { ServiceMark, hasDrawnMark, serviceColor } from "../../Remote"
-import { CornerBar, Cross, Item, Shade, backdropSize, useTvView } from "../kit"
+import {
+	CornerBar,
+	Cross,
+	Item,
+	PHONE_FOOT,
+	PHONE_HEAD,
+	PHONE_SIDE,
+	PageArrow,
+	Shade,
+	backdropSize,
+	keySize,
+	phoneFit,
+	useListAnchor,
+	usePage,
+	useTvView,
+} from "../kit"
 import { TV_ROW_ATTR } from "../tv-dom"
 import type {
 	TvAppArt,
@@ -25,11 +40,17 @@ import { AppArt, artFiles } from "./app-art"
 
 export const HOME_HEADLINE = "Let's find something good to watch next."
 
-/** The phone's column of the headline and the row; on the TV they stand in their own places. */
+/**
+ * The phone's column of the headline and the row, under the header: it fits the phone's canvas, and the row shows
+ * three tiles at a time with an arrow to either side. On the TV they stand in their own places.
+ */
 function HomeColumn({ phone, children }: { phone: boolean; children: ReactNode }) {
 	if (!phone) return <>{children}</>
 	return (
-		<div data-tv-scroll className="absolute inset-x-0 bottom-0 top-[82px] flex flex-col overflow-hidden [&>*]:shrink-0">
+		<div
+			className="absolute inset-x-0 bottom-0 flex flex-col justify-end"
+			style={{ top: PHONE_HEAD, paddingLeft: PHONE_SIDE, paddingRight: PHONE_SIDE, paddingBottom: PHONE_FOOT }}
+		>
 			{children}
 		</div>
 	)
@@ -124,54 +145,65 @@ function HomeRow({
 	]
 	// The tile the home shows large: the one that has the focus, and while the focus is on the bar, the one that
 	// had it last.
-	const last = useRef(tiles[0].id)
+	const anchor = useListAnchor("home-tiles", tiles.map((tile) => tile.id))
+	const last = useRef(anchor ?? tiles[0].id)
 	if (tiles.some((tile) => tile.id === focused)) last.current = focused
 	const shown = tiles.find((tile) => tile.id === last.current) ?? tiles[0]
 	// One file per picture: a tile shows the file the whole picture uses, so its app's picture is there when the
 	// tile takes the focus.
 	const backdrop = backdropSize(canvas)
 	const whole = artFiles(shown.art, backdrop, "w342")
+	// The phone's row: three tiles a page.
+	const page = usePage(
+		tiles.map((tile) => tile.id),
+		phoneFit(canvas, 3, 104, 5),
+		shown.id,
+	)
+	const rowTiles = P ? tiles.filter((tile) => page.shown.includes(tile.id)) : tiles
+	const arrow = Math.min(keySize(canvas, 54), 70)
 	return (
 		<>
 			<Cross id={`${shown.id} ${whole.join(" ")}`} files={whole}>
 				<AppArt art={shown.art} files={whole} className="h-full w-full" />
 			</Cross>
 			<Shade dim={0.5} />
-			<div
-				// The toast takes this place while it shows (TvScreen.tsx).
-				className={`absolute font-bold uppercase tracking-[0.22em] text-white/80 transition-opacity [[data-tv-toast]_&]:opacity-0 ${P ? "left-5 top-[28px] text-[20px]" : "left-14 top-11 text-[22px]"}`}
-			>
-				GoodWatch
-			</div>
-			{/* On the phone the words and the row are one column under the name: on a short picture (a phone on its
-			    side) they don't both fit at their size, and the column scrolls by touch and with the focus (kit.tsx).
-			    Where they fit, the row stays at the bottom (mt-auto). */}
+			{/* The phone's header names the screen; the TV's corner has the wordmark. */}
+			{!P && (
+				<div
+					// The toast takes this place while it shows (TvScreen.tsx).
+					className="absolute left-14 top-11 font-bold uppercase tracking-[0.22em] text-white/80 transition-opacity [[data-tv-toast]_&]:opacity-0 text-[22px]"
+				>
+					GoodWatch
+				</div>
+			)}
+			{/* On the phone the words and the row are one column under the header, and the row pages. */}
 			<HomeColumn phone={P}>
 				<div
-					className={P ? "px-5" : "absolute left-14 top-[136px] w-[780px]"}
+					className={P ? "" : "absolute left-14 top-[136px] w-[780px]"}
 				>
-					<Heading className={`text-white/75 ${P ? "text-[20px]" : "text-[28px]"}`}>
+					<Heading className={`text-white/75 ${P ? "text-[17px] leading-tight" : "text-[28px]"}`}>
 						{HOME_HEADLINE}
 					</Heading>
 					<div key={shown.id} className="tvc-fade">
 						<div
 							className="font-bold leading-[0.95] tracking-tight"
-							style={{ fontSize: P ? 56 : 108 }}
+							style={{ fontSize: P ? 38 : 108 }}
 						>
 							{shown.name}
 						</div>
 						<div
-							className={`leading-snug text-white/85 ${P ? "mt-2 text-[21px]" : "mt-4 text-[32px]"}`}
+							className={`text-white/85 ${P ? "mt-1 text-[17px] leading-tight" : "mt-4 text-[32px] leading-snug"}`}
 						>
 							{shown.line}
 						</div>
 					</div>
 				</div>
 				<div
-					{...{ [TV_ROW_ATTR]: "" }}
-					className={`flex overflow-hidden ${P ? "mt-auto gap-3.5 px-5 pb-5 pt-4" : "absolute inset-x-0 bottom-0 gap-[22px] px-14 pb-12 pt-6"}`}
+					{...(!P && { [TV_ROW_ATTR]: "" })}
+					className={`flex ${P ? "mt-2 items-center gap-2" : "absolute inset-x-0 bottom-0 gap-[22px] overflow-hidden px-14 pb-12 pt-6"}`}
 				>
-					{tiles.map((a) => (
+					{P && <PageArrow to={page.prev} dir="prev" label="Previous tiles" size={arrow} />}
+					{rowTiles.map((a) => (
 						<Item
 							key={a.id}
 							id={a.id}
@@ -179,7 +211,7 @@ function HomeRow({
 							label={a.service ? `On ${a.service.name}` : undefined}
 							className="tvc-tile shrink-0"
 							style={
-								P ? { width: 172, height: 110 } : { width: 200, height: 128 }
+								P ? { width: 96, height: 68 } : { width: 200, height: 128 }
 							}
 						>
 							<AppArt
@@ -189,12 +221,12 @@ function HomeRow({
 							/>
 							<span className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
 							{a.service ? (
-								<span className="absolute inset-x-4 bottom-3 flex items-center gap-2.5">
-									<ServiceMark service={a.service} height={P ? 24 : 28} />
+								<span className={`absolute flex items-center gap-2.5 ${P ? "inset-x-2.5 bottom-2" : "inset-x-4 bottom-3"}`}>
+									<ServiceMark service={a.service} height={P ? 20 : 28} />
 									{/* A drawn mark says the name; a logo from the catalog does not. */}
 									{!hasDrawnMark(a.service) && (
 										<span
-											className={`truncate font-bold leading-none ${P ? "text-[21px]" : "text-[23px]"}`}
+											className={`truncate font-bold leading-none ${P ? "text-[17px]" : "text-[23px]"}`}
 										>
 											{a.name}
 										</span>
@@ -202,7 +234,7 @@ function HomeRow({
 								</span>
 							) : (
 								<span
-									className={`absolute bottom-3 left-4 font-bold leading-none ${P ? "text-[23px]" : "text-[26px]"}`}
+									className={`absolute font-bold leading-none ${P ? "bottom-2 left-2.5 text-[18px]" : "bottom-3 left-4 text-[26px]"}`}
 								>
 									{a.name}
 								</span>
@@ -212,7 +244,7 @@ function HomeRow({
 								<>
 									<span
 										aria-hidden
-										className="absolute right-2.5 top-2.5 z-[1] flex h-[36px] min-w-[36px] items-center justify-center rounded-full bg-sky-300 px-2 text-[22px] font-bold leading-none text-black"
+										className={`absolute z-[1] flex items-center justify-center rounded-full bg-sky-300 font-bold leading-none text-black ${P ? "right-1.5 top-1.5 h-[26px] min-w-[26px] px-1.5 text-[17px]" : "right-2.5 top-2.5 h-[36px] min-w-[36px] px-2 text-[22px]"}`}
 									>
 										{a.signal.badge}
 									</span>
@@ -221,6 +253,8 @@ function HomeRow({
 							)}
 						</Item>
 					))}
+					{P && <span className="flex-1" />}
+					{P && <PageArrow to={page.next} dir="next" label="More tiles" size={arrow} />}
 				</div>
 			</HomeColumn>
 			{/* Last in the markup, as in `tvItems`: the items are met in reading order. */}

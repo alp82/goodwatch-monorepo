@@ -1,8 +1,8 @@
 import { useNavigationType } from "@remix-run/react"
 // The new TV's room (docs/implementation/tv-screen-revamp, slice 2): the softened room photo, the TV as large as
 // the window allows, and the Remote in the hand centred under it, at every size. A scene narrower than
-// PHONE_BELOW is the phone's room: a framed TV on the wall, the sideboard under it, and the phone's Remote. A
-// phone in landscape has the framed TV on the left and the phone's Remote on the right. The section with the
+// PHONE_BELOW is the phone's room: a wide framed TV on the wall, the sideboard under it, and the phone's Remote
+// held under it; a phone in landscape the same, in front of the desktop's photo. The section with the
 // start titles and the hubs follows the room, as on the start page today (BelowRoom.tsx).
 //
 // The room draws no TV screen and holds no TV state: `tv` is the seam to the machine (room-tv.ts) and
@@ -73,14 +73,6 @@ const LANDSCAPE = "(orientation: landscape) and (max-height: 540px)"
  * out the lip and living-room.css the first paint: on a desktop with a scrollbar's gutter the two differ by its width.
  */
 const PHONE = `(max-width: ${PHONE_BELOW - 0.02}px)`
-/**
- * The lip in landscape: a tab of 46 px at the window's bottom edge (living-room.css). The full-width TV ends
- * above it, and the Remote under the TV keeps its keys clear of it.
- */
-const LANDSCAPE_TAB = { tv: 46, remote: 46 }
-/** Under 768 px of width the room is not the whole window in landscape, and the lip is a bar across it. */
-const LANDSCAPE_BAR = { tv: PHONE_LIP, remote: PHONE_LIP }
-
 export type TvRoomProps = {
 	tv: RoomTv
 	/** Draws the TV's screen on the canvas of the edition the window has. Nothing is drawn while the TV is off. */
@@ -185,7 +177,8 @@ export function TvRoom({
 				? layoutPhoneLandscape(
 						size.w,
 						size.h,
-						size.phone ? LANDSCAPE_BAR : LANDSCAPE_TAB,
+						// The lip is a tab at the right, clear of the Remote in the middle, at every width.
+						0,
 						want?.form ?? "auto",
 					)
 				: null,
@@ -240,6 +233,7 @@ export function TvRoom({
 
 	const on = tv.power !== "off"
 	const { press } = tv
+	const [raise, setRaise] = useState(false)
 
 	// ---- Pointing moves this element, the desktop Remote in its hand or the phone's Remote with its, and the ring.
 	const remoteEl = useRef<HTMLDivElement>(null)
@@ -275,11 +269,15 @@ export function TvRoom({
 	// layout has. Once measured, each part that stays keeps its node, so a picture is not drawn anew.
 	const first = !L
 	const canvases = canvas ? [canvas] : FIRST_CANVASES
-	const forms: PhoneRemoteForm[] = held
-		? [held.form]
-		: first
-			? ["hand", "table"]
-			: []
+	const forms: PhoneRemoteForm[] = held ? [held.form] : first ? ["hand"] : []
+	// The phone's Remote where its keys don't all show at rest: a tap raises it over the TV's lower part, a tap
+	// beside it lowers it again. While it rests, a tap on it only raises it: no key is pressed by the tap that
+	// brings it up.
+	const peek = Boolean(held?.remote.peek)
+	const raised = peek && raise
+	useEffect(() => {
+		if (!peek) setRaise(false)
+	}, [peek])
 	// The frame's brackets are as long as those of the way out, which stand in the same place at the press.
 	const arm = L && tv.framed ? bracketArm(L.tv) : 0
 	const tvCenter = {
@@ -438,9 +436,34 @@ export function TvRoom({
 						</div>
 					)}
 
-					{/* The phone: the Remote and the hand that holds it move as one when the Remote aims. Before the window is
-				    measured both forms are here, and the rig's width tells living-room.css which one the window's height holds. */}
-					{(first || held) && (
+					{/* A tap beside the raised Remote lowers it, and reaches nothing under it. */}
+				{raised && (
+					<button
+						key="lower"
+						type="button"
+						aria-label="Lower the Remote"
+						data-remote-lower
+						className="absolute inset-0 cursor-default"
+						onClick={() => setRaise(false)}
+					/>
+				)}
+				{/* The phone: the Remote and the hand that holds it move as one when the Remote aims, and rise as one. Before
+				    the window is measured the form is placed by living-room.css. */}
+				{(first || held) && (
+					<div
+						key="lift"
+						data-remote-lift={peek ? (raised ? "up" : "rest") : undefined}
+						className="tvr-lift pointer-events-none absolute inset-0"
+						style={
+							held && raised
+								? { transform: `translateY(${-held.remote.lift}px)` }
+								: undefined
+						}
+						// A key reached by Tab raises the Remote, so the key it focuses is in view.
+						onFocus={() => {
+							if (peek) setRaise(true)
+						}}
+					>
 						<div
 							key="rig"
 							ref={held ? remoteEl : undefined}
@@ -458,25 +481,40 @@ export function TvRoom({
 									data-tvr-form={form}
 									className={first ? "tvr-f-form" : undefined}
 								>
-									{form === "hand" && (
-										<Hand
-											style={held?.hand ?? undefined}
-											className={first ? "tvr-f-phand" : ""}
-										/>
-									)}
+									<Hand
+										style={held?.hand ?? undefined}
+										className={first ? "tvr-f-phand" : ""}
+									/>
 									<StillPhoneRemote
 										tv={tv}
 										services={services}
 										form={form}
 										at={held?.remote}
-										bottom={held?.height}
 									/>
 								</div>
 							))}
 						</div>
-					)}
+						{/* At rest a tap on the Remote raises it and presses nothing. */}
+						{held && peek && !raised && (
+							<button
+								type="button"
+								aria-label="Raise the Remote"
+								data-remote-raise
+								tabIndex={-1}
+								className="pointer-events-auto absolute cursor-pointer"
+								style={{
+									left: held.remote.left,
+									top: held.remote.top,
+									width: held.remote.width,
+									height: held.height - held.remote.top,
+								}}
+								onClick={() => setRaise(true)}
+							/>
+						)}
+					</div>
+				)}
 
-					{/* The TV's own pointer: over the picture it takes the system cursor's place. */}
+				{/* The TV's own pointer: over the picture it takes the system cursor's place. */}
 					{L && (
 						<TvPointer
 							key="pointer"

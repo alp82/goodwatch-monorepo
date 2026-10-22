@@ -9,22 +9,41 @@
 // to watch and opens the title's page. Trailer and Fingerprint are lazy panels with their own history entry; Back
 // restores the invoking key. A chunk the TV asks for on first use (screen-code.tsx).
 //
-// On the phone the title's name and facts stand in the bar at the top, where they stay while the details scroll
-// under them with the focus; the keys stand in one row that pages sideways. Every key is a touch target, 44 px or
-// more on the phone's screen (`keySize` in kit.tsx).
-import { lazy, Suspense } from "react"
+// On the phone the details are three sections, one at a time and none scrolls (the owner, 2026-10-22): the
+// overview (the name in the header, the score, the facts, a short synopsis and the keys), Where to watch (its rows,
+// a page at a time) and the fingerprint (the headline, and each group's readings). Each starts with the sections'
+// keys; each is a step of its own, so Back returns to the overview (tv-machine.ts, `section`). Every key is a touch
+// target, 44 px or more on the phone's screen (`keySize` in kit.tsx).
+import { Suspense, lazy } from "react"
 import { useProductExposure } from "~/telemetry/useProductAnalytics"
-import { composeHeadline } from "~/ui/details/fingerprint/headline"
 import { AREA_COLOR } from "~/ui/details/fingerprint/areas"
+import { composeHeadline } from "~/ui/details/fingerprint/headline"
+import { SCALE_GROUPS, readScale } from "~/ui/details/fingerprint/scales"
 import { standoutReadings } from "~/ui/details/fingerprint/standout"
-import ScoreRing from "~/ui/details/hero/ScoreRing"
 import { RatingChipRow } from "~/ui/details/hero/RatingChips"
-import { mediaTextAttributes } from "~/ui/media-text/media-text"
+import ScoreRing from "~/ui/details/hero/ScoreRing"
 import type * as F from "~/ui/fingerprint/fingerprintText"
+import { mediaTextAttributes } from "~/ui/media-text/media-text"
 import { mediaFieldLanguage } from "~/utils/media-presentation"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 import { tmdbImageUrl } from "~/utils/tmdb-image"
-import { Expand, Frame, Img, Item, backdropSize, keySize, useReport, useTvView } from "../kit"
+import {
+	Expand,
+	Frame,
+	Img,
+	Item,
+	PageArrow,
+	PageCount,
+	TrailerKey,
+	backdropSize,
+	keySize,
+	phoneSpan,
+	useListAnchor,
+	usePage,
+	usePhone,
+	useReport,
+	useTvView,
+} from "../kit"
 import { type TvOffer, primaryOffer, whereRows } from "../title-extras"
 import {
 	type TvTitleOnScreen,
@@ -34,6 +53,7 @@ import {
 	wantLabel,
 } from "../tv-title"
 import { type TvTitleReport, useTvTitle } from "../use-tv-title"
+import { shortSynopsis } from "./short-synopsis"
 
 const TitlePanel = lazy(reloadOnStaleChunk(() => import("./TitlePanel")))
 
@@ -89,7 +109,10 @@ function offerData(
 }
 
 /** The fingerprint in short: its headline in one colour, and two readings as a word on a quiet track. */
-function Preview({ fingerprint, P }: { fingerprint: F.TitleInput; P: boolean }) {
+function Preview({
+	fingerprint,
+	P,
+}: { fingerprint: F.TitleInput; P: boolean }) {
 	const headline = composeHeadline(fingerprint)
 		.map((segment) => segment.text)
 		.join("")
@@ -188,7 +211,7 @@ function Details({
 					{offer ? `Watch on ${offer.name}` : "Where to watch"}
 				</Item>
 			)}
-			{key("trailer", "Trailer", "")}
+			{items.includes("trailer") && <TrailerKey height={keyH} />}
 			{key("want-to-see", wantLabel(on.want), "")}
 			{key("seen", seenLabel(on.score, on.seen, on.episode), "")}
 		</>
@@ -212,7 +235,9 @@ function Details({
 					<Preview fingerprint={extras.fingerprint} P={P} />
 				) : (
 					<span className="block text-[18px] text-white/60">
-						{extras ? "No fingerprint for this title yet." : "Reading its fingerprint."}
+						{extras
+							? "No fingerprint for this title yet."
+							: "Reading its fingerprint."}
 					</span>
 				)}
 			</span>
@@ -272,7 +297,9 @@ function Details({
 				)}
 				{!extras && (
 					<span className="text-[17px] text-white/55">
-						{on.extrasFailed ? "Where it streams isn't available right now." : "Looking for where it streams."}
+						{on.extrasFailed
+							? "Where it streams isn't available right now."
+							: "Looking for where it streams."}
 					</span>
 				)}
 			</div>
@@ -284,11 +311,7 @@ function Details({
 		</span>
 	)
 	const ring = title && (
-		<ScoreRing
-			media={{ details: title }}
-			size={P ? 44 : 54}
-			label={!P}
-		/>
+		<ScoreRing media={{ details: title }} size={P ? 44 : 54} label={!P} />
 	)
 	const kind = title ? titleKicker(title) : ""
 	const backdrop = title?.backdrop_path
@@ -296,35 +319,7 @@ function Details({
 		: undefined
 	const lang = mediaFieldLanguage(title)
 
-	if (P)
-		return (
-			<Frame name={name} crumb={kind} items={items} art={backdrop} dim={0.72} inlineExpand>
-				<div data-tv-scroll className="h-full overflow-y-auto [scrollbar-width:none]">
-					<div className="tvc-rise grid gap-3 pb-4">
-						<div data-tv-row className="-mx-1.5 flex gap-2.5 overflow-x-auto px-1.5 py-1.5 [scrollbar-width:none]">
-							{keys}
-						</div>
-						{fingerprintCard}
-						<div className="flex items-center gap-3">
-							{ring}
-							{chips}
-						</div>
-						{facts?.synopsis && (
-							<p className="line-clamp-4 text-[17px] leading-snug text-white/80">
-								{facts.synopsis}
-							</p>
-						)}
-						{whereCard}
-						{/* Inline at the end, so it never covers the details on a short phone. */}
-						{items.includes("expand") && (
-							<div className="flex justify-end">
-								<Expand />
-							</div>
-						)}
-					</div>
-				</div>
-			</Frame>
-		)
+	if (P) return <PhoneDetails items={items} on={on} />
 	return (
 		<Frame
 			name={title?.media_type === "show" ? "Show" : "Movie"}
@@ -333,7 +328,9 @@ function Details({
 			dim={0.55}
 		>
 			{/* The keys first, as in `tvItems`: they stand at the bottom left, under the details. */}
-			<div className="absolute bottom-[40px] left-14 flex items-center gap-3.5">{keys}</div>
+			<div className="absolute bottom-[40px] left-14 flex items-center gap-3.5">
+				{keys}
+			</div>
 			<div className="tvc-rise absolute left-14 top-0 w-[620px]">
 				<div className="flex items-end gap-6">
 					{title?.poster_path && (
@@ -343,7 +340,9 @@ function Details({
 						/>
 					)}
 					<div className="min-w-0 flex-1 pb-1">
-						<div className="text-[19px] font-semibold text-white/70">{kind}</div>
+						<div className="text-[19px] font-semibold text-white/70">
+							{kind}
+						</div>
 						<div
 							{...mediaTextAttributes(lang)}
 							className="mt-1 line-clamp-2 font-extrabold leading-[1.05] tracking-tight [text-wrap:balance]"
@@ -392,7 +391,12 @@ export default function Title({
 	items: readonly string[]
 	title: TvTitleOnScreen
 }) {
-	if (on.panel)
+	const P = usePhone()
+	// The phone's sections are drawn here; the trailer is a panel on both editions.
+	if (P && on.panel !== "trailer") return <PhoneDetails items={items} on={on} />
+	// The desktop has no Where to watch section: its overview holds the offers. A phone's section on a window that
+	// grew past a phone's (or a link to it) shows the overview, its address kept, so Back keeps its meaning.
+	if (on.panel && on.panel !== "watch")
 		return (
 			<Suspense
 				fallback={
@@ -411,4 +415,359 @@ export default function Title({
 			</Suspense>
 		)
 	return <Details items={items} on={on} />
+}
+
+// ---------------------------------------------------------------------------------------------------------
+// The phone: three sections.
+
+const SECTION_WORDS: Record<string, string> = {
+	"section:overview": "Overview",
+	"section:watch": "Where to watch",
+	fingerprint: "Fingerprint",
+}
+
+/**
+ * The sections' keys at the top of each section: the one on show marked. The overview leaves its own key out and
+ * has the Expand key there instead, so the title's page is one key away.
+ */
+function Sections({
+	items,
+	here,
+	end,
+}: {
+	items: readonly string[]
+	here: "section:overview" | "section:watch" | "fingerprint"
+	end?: React.ReactNode
+}) {
+	const { canvas } = useTvView()
+	const h = keySize(canvas, 54)
+	const keys = Object.keys(SECTION_WORDS).filter(
+		(id) => items.includes(id) && !(here === "section:overview" && id === here),
+	)
+	return (
+		<div className="flex shrink-0 items-center gap-[5px]" style={{ height: h }}>
+			{keys.map((id) => (
+				<Item
+					key={id}
+					id={id}
+					pressed={id === here}
+					label={
+						id === here
+							? `${SECTION_WORDS[id]}, showing now`
+							: SECTION_WORDS[id]
+					}
+					className={`tvc-btn flex shrink-0 items-center whitespace-nowrap px-3 text-[17px] ${id === here ? "tvc-tab-open" : ""}`}
+					style={{ height: h }}
+				>
+					{SECTION_WORDS[id]}
+				</Item>
+			))}
+			{end}
+		</div>
+	)
+}
+
+function PhoneDetails({
+	items,
+	on,
+}: { items: readonly string[]; on: TvTitleOnScreen }) {
+	const { canvas } = useTvView()
+	const title = on.title
+	const name = on.missing ? "Not on GoodWatch" : (title?.title ?? "")
+	const backdrop = title?.backdrop_path
+		? tmdbImageUrl(title.backdrop_path, backdropSize(canvas))
+		: undefined
+	const section =
+		on.panel === "watch"
+			? "watch"
+			: on.panel === "fingerprint"
+				? "fingerprint"
+				: "overview"
+	return (
+		<Frame name={name} items={items} art={backdrop} dim={0.82} inlineExpand>
+			<div className="flex h-full flex-col gap-1.5">
+				{section === "watch" ? (
+					<WatchSection items={items} on={on} />
+				) : section === "fingerprint" ? (
+					<FingerprintSection items={items} on={on} />
+				) : (
+					<Overview items={items} on={on} />
+				)}
+			</div>
+		</Frame>
+	)
+}
+
+function Overview({
+	items,
+	on,
+}: { items: readonly string[]; on: TvTitleOnScreen }) {
+	const { canvas } = useTvView()
+	const title = on.title
+	const extras = on.extras
+	const offer = primaryOffer(extras?.offers ?? [], on.mine)
+	const keyH = keySize(canvas, 54)
+	const synopsis = extras?.facts?.synopsis
+	const key = (id: string, label: string, aria?: string) =>
+		items.includes(id) && (
+			<Item
+				key={id}
+				id={id}
+				label={aria}
+				className="tvc-btn flex shrink-0 items-center justify-center whitespace-nowrap px-3 text-[17px]"
+				style={{ height: keyH }}
+			>
+				{label}
+			</Item>
+		)
+	return (
+		<>
+			<Sections
+				items={items}
+				here="section:overview"
+				end={items.includes("expand") && <Expand />}
+			/>
+			<div className="tvc-rise flex min-h-0 flex-1 flex-col justify-center">
+				<div className="flex h-[20px] items-center gap-2 text-[17px] leading-[20px] text-white/85">
+					{title && (
+						<ScoreRing media={{ details: title }} size={24} label={false} />
+					)}
+					<span className="whitespace-nowrap">
+						{title ? titleKicker(title) : ""}
+					</span>
+				</div>
+				{synopsis ? (
+					<p
+						{...mediaTextAttributes(mediaFieldLanguage(title, "overview"))}
+						className="mt-0.5 line-clamp-2 text-[17px] leading-[19px] text-white/80"
+					>
+						{shortSynopsis(synopsis)}
+					</p>
+				) : (
+					!extras && (
+						<p className="mt-1 text-[17px] leading-[20px] text-white/60">
+							{on.extrasFailed
+								? "Details aren't available right now."
+								: "Reading the details."}
+						</p>
+					)
+				)}
+			</div>
+			<div className="flex shrink-0 items-center gap-1">
+				{items.includes("watch") && (
+					<Item
+						key="watch"
+						id="watch"
+						href={offer?.url}
+						linkData={offer ? offerData(offer, on) : undefined}
+						label={
+							offer
+								? `Watch on ${offer.name} (opens in a new tab)`
+								: "Where to watch, on the title's page"
+						}
+						// Without a direct offer its words are longer: upright they take two lines, so the row keeps its four
+						// keys; a phone's wide canvas has room for one.
+						className={`tvc-btn tvc-watch flex shrink-0 items-center justify-center px-3.5 text-[17px] ${offer || phoneSpan(canvas) >= 600 ? "whitespace-nowrap" : "w-[92px] text-center leading-[1.05]"}`}
+						style={{ height: keyH }}
+					>
+						{/* Honest without a direct offer: it leads to where the title streams, on its page. */}
+						{offer ? "Watch" : "Where to watch"}
+					</Item>
+				)}
+				{items.includes("trailer") && (
+					<TrailerKey height={keyH} className="!pr-3 !text-[17px]" />
+				)}
+				{key("want-to-see", wantLabel(on.want))}
+				{key("seen", seenLabel(on.score, on.seen, on.episode))}
+			</div>
+		</>
+	)
+}
+
+/** Where to watch: two rows a page, an arrow to either side of the page. */
+function WatchSection({
+	items,
+	on,
+}: { items: readonly string[]; on: TvTitleOnScreen }) {
+	const { canvas } = useTvView()
+	const extras = on.extras
+	const where = whereRows(extras?.offers ?? [], on.mine)
+	const rowH = keySize(canvas, 44)
+	const ids = [
+		...where.rows
+			.map((_, i) => `offer:${i}`)
+			.filter((id) => items.includes(id)),
+		...(items.includes("where") ? ["where"] : []),
+	]
+	// Two rows a page upright; four in two columns on a phone's wide canvas. The page holds the row shown last.
+	const wide = phoneSpan(canvas) >= 600
+	const page = usePage(ids, wide ? 4 : 2, useListAnchor("title-offers", ids))
+	return (
+		<>
+			<Sections
+				items={items}
+				here="section:watch"
+				end={
+					<PageCount page={page.page} pages={page.pages} className="ml-auto" />
+				}
+			/>
+			<div className="flex min-h-0 flex-1 items-center gap-2">
+				<div className={`grid min-w-0 flex-1 gap-1.5 ${wide ? "grid-cols-2" : ""}`}>
+					{!extras && (
+						<span className="text-[18px] text-white/65">
+							{on.extrasFailed
+								? "Where it streams isn't available right now."
+								: "Looking for where it streams."}
+						</span>
+					)}
+					{page.shown.map((id) => {
+						if (id === "where")
+							return (
+								<Item
+									key={id}
+									id={id}
+									className="tvc-ring flex w-full items-center justify-center rounded-[12px] bg-white/[.08] px-3 text-[18px] font-semibold text-white/85"
+									style={{ height: rowH }}
+								>
+									{where.rows.length
+										? "All services, rent and buy ›"
+										: "Not streaming here · rent or buy ›"}
+								</Item>
+							)
+						const o = where.rows[Number(id.slice("offer:".length))]
+						return (
+							<Item
+								key={id}
+								id={id}
+								href={o.url}
+								linkData={offerData(o, on)}
+								label={`${o.name}: ${OFFER_KIND[o.type] ?? o.type} (opens in a new tab)`}
+								className="tvc-ring flex w-full items-center gap-3 rounded-[12px] bg-white/[.08] pr-4 text-[18px]"
+								style={{ height: rowH }}
+							>
+								{o.logo ? (
+									<Img
+										src={tmdbImageUrl(o.logo, "w92")}
+										className="h-full shrink-0 rounded-[12px]"
+										width={92}
+										height={92}
+									/>
+								) : (
+									<span className="w-2" />
+								)}
+								<span className="min-w-0 flex-1 truncate font-semibold">
+									{o.name}
+								</span>
+								<span className="shrink-0 text-[17px] text-white/65">
+									{OFFER_KIND[o.type] ?? o.type}
+								</span>
+							</Item>
+						)
+					})}
+				</div>
+				{page.pages > 1 && (
+					<div className="flex shrink-0 flex-col gap-1.5">
+						<PageArrow to={page.prev} dir="prev" label="Services before" />
+						<PageArrow to={page.next} dir="next" label="More services" />
+					</div>
+				)}
+			</div>
+		</>
+	)
+}
+
+const GROUP_KEYS = [{ name: "Summary" }, ...SCALE_GROUPS]
+
+/** The fingerprint: the summary's headline, or one group's readings, a group a key. */
+function FingerprintSection({
+	items,
+	on,
+}: { items: readonly string[]; on: TvTitleOnScreen }) {
+	const { canvas } = useTvView()
+	const t = on.extras?.fingerprint
+	const keyH = keySize(canvas, 54)
+	const group =
+		Number.isInteger(on.group) && SCALE_GROUPS[on.group as number]
+			? (on.group as number)
+			: -1
+	return (
+		<>
+			<Sections items={items} here="fingerprint" />
+			<div
+				className="flex shrink-0 items-center gap-1.5"
+				style={{ height: keyH }}
+			>
+				{GROUP_KEYS.map((g, at) => {
+					const id = `group:${at - 1}`
+					return (
+						items.includes(id) && (
+							<Item
+								key={id}
+								id={id}
+								pressed={group === at - 1}
+								className={`tvc-btn flex shrink-0 items-center whitespace-nowrap px-4 text-[18px] ${group === at - 1 ? "tvc-tab-open" : ""}`}
+								style={{ height: keyH }}
+							>
+								{g.name}
+							</Item>
+						)
+					)
+				})}
+			</div>
+			<div
+				className="flex min-h-0 flex-1 flex-col justify-center"
+				data-tv-fingerprint
+			>
+				{!t ? (
+					<output className="block text-[18px] text-white/70">
+						{!on.extras
+							? on.extrasFailed
+								? "The fingerprint isn't available right now."
+								: "Reading its fingerprint."
+							: "No fingerprint for this title yet."}
+					</output>
+				) : group < 0 ? (
+					<p className="line-clamp-2 text-[19px] font-bold leading-[24px]">
+						{composeHeadline(t).map((seg, i) => (
+							<span
+								// biome-ignore lint/suspicious/noArrayIndexKey: the headline's segments have no other identity
+								key={i}
+								style={{
+									color: seg.area
+										? AREA_COLOR[seg.area]
+										: seg.tone === "muted"
+											? "#a8a29e"
+											: undefined,
+								}}
+							>
+								{seg.text}
+							</span>
+						))}
+					</p>
+				) : (
+					<dl className="grid grid-cols-2 gap-x-5">
+						{SCALE_GROUPS[group].scales.map((sc) => {
+							const { word } = readScale(sc, t)
+							return (
+								<div
+									key={sc.name}
+									className="flex items-center gap-2 text-[17px] leading-[20px]"
+								>
+									<span
+										aria-hidden
+										className="h-2.5 w-2.5 shrink-0 rounded-full"
+										style={{ background: AREA_COLOR[sc.area] }}
+									/>
+									<dt className="shrink-0 text-white/65">{sc.name}</dt>
+									<dd className="ml-auto whitespace-nowrap text-right font-semibold">
+										{word}
+									</dd>
+								</div>
+							)
+						})}
+					</dl>
+				)}
+			</div>
+		</>
+	)
 }

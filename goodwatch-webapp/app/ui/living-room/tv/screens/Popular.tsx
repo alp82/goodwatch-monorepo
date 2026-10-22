@@ -4,10 +4,29 @@
 // row's own order and shows no ranks. Its page is Discover (the Expand key).
 //
 // The poster with the focus is the one named, and the address names it (tv-machine.ts, `showPick`), so Back from
-// its details finds it again. A chunk the TV asks for on first use (screen-code.tsx).
+// its details finds it again. On the phone the wall shows a page of five posters at a time, with an arrow to either
+// side; nothing scrolls. A chunk the TV asks for on first use (screen-code.tsx).
 import ScoreRing from "~/ui/details/hero/ScoreRing"
 import { tmdbImageUrl } from "~/utils/tmdb-image"
-import { Ambient, CornerBar, Expand, ExpandCorner, Img, Item, backdropSize, keySize, useTvView } from "../kit"
+import {
+	Ambient,
+	CornerBar,
+	Expand,
+	ExpandCorner,
+	Img,
+	Item,
+	PHONE_FOOT,
+	PHONE_HEAD,
+	PHONE_SIDE,
+	PageArrow,
+	PageCount,
+	TrailerKey,
+	backdropSize,
+	keySize,
+	phoneFit,
+	usePage,
+	useTvView,
+} from "../kit"
 import type { TvHomeData } from "../tv-home"
 import { pickFacts } from "../tv-title"
 import { StreamLine } from "./Tonight"
@@ -39,7 +58,11 @@ export default function Popular({
 	)
 	const at = titles.length ? pick % titles.length : 0
 	const shown = titles[at]
-	const h = keySize(canvas, P ? 50 : 52)
+	const h = keySize(canvas, P ? 54 : 52)
+	const ids = titles.map((_, i) => `pick:${i}`)
+	// Five posters a page upright, up to eight on a phone's wide canvas; the page holds the pick the address names,
+	// so Back from Details comes back to it.
+	const page = usePage(ids, phoneFit(canvas, 5, 60, 8), `pick:${at}`)
 	if (!shown)
 		return (
 			<>
@@ -60,7 +83,7 @@ export default function Popular({
 			key={card.key}
 			id={`pick:${i}`}
 			label={card.title}
-			className="tvc-ring tvc-lift block aspect-[2/3] w-full overflow-hidden rounded-[12px] bg-[#161a24]"
+			className={`tvc-ring tvc-lift block aspect-[2/3] overflow-hidden bg-[#161a24] ${P ? "h-[78px] shrink-0 rounded-[8px]" : "w-full rounded-[12px]"}`}
 		>
 			{card.poster_path && (
 				<Img
@@ -72,14 +95,7 @@ export default function Popular({
 	))
 	const keyClass = `tvc-btn flex shrink-0 items-center justify-center whitespace-nowrap ${P ? "px-4 text-[19px]" : "px-6 text-[23px]"}`
 	const trailer = items.includes("trailer") && (
-		<Item
-			id="trailer"
-			label={`Trailer: ${shown.title}`}
-			className={keyClass}
-			style={{ height: h }}
-		>
-			Trailer
-		</Item>
+		<TrailerKey height={h} says={`Trailer: ${shown.title}`} />
 	)
 	const details = items.includes("details") && (
 		<Item
@@ -101,42 +117,50 @@ export default function Popular({
 			style={{ background: "linear-gradient(0deg, rgba(7,8,12,.94), rgba(7,8,12,.72))" }}
 		/>
 	)
-	if (P)
+	if (P) {
+		// The phone: the poster named over a page of the wall, its keys and the way to Discover under it.
+		const posterH = 78
 		return (
 			<>
 				{backdrop && <Ambient src={backdrop} />}
 				{shade}
 				<div
-					data-tv-scroll
-					className="absolute inset-x-0 bottom-0 overflow-hidden px-3 pt-1.5"
-					style={{ top: 78 + h + 12 }}
+					className="absolute inset-x-0 bottom-0 flex flex-col justify-end gap-1.5"
+					style={{ top: PHONE_HEAD, paddingLeft: PHONE_SIDE, paddingRight: PHONE_SIDE, paddingBottom: PHONE_FOOT }}
 				>
-					<div className="grid grid-cols-5 gap-2">{posters}</div>
-					<div className="flex justify-end pb-4 pt-3">
+					<div className="flex items-end gap-3">
+						<div className="min-w-0 flex-1">
+							<div
+								className="truncate font-extrabold leading-[1.15] tracking-tight"
+								style={{ fontSize: shown.title.length > 30 ? 18 : shown.title.length > 22 ? 21 : 24 }}
+							>
+								{shown.title}
+							</div>
+							<div className="mt-0.5 flex items-center gap-2 text-[16px] leading-tight text-white/75">
+								<ScoreRing {...ring} size={24} label={false} />
+								<span className="truncate">{pickFacts({ card: shown })}</span>
+							</div>
+						</div>
+						<PageCount page={page.page} pages={page.pages} className="pb-0.5" />
+					</div>
+					<div className="flex items-center gap-2" style={{ height: posterH }}>
+						<PageArrow to={page.prev} dir="prev" label="Previous posters" size={Math.min(h, posterH)} />
+						<div className="flex min-w-0 flex-1 justify-center gap-2">
+							{page.shown.map((id) => posters[Number(id.slice(5))])}
+						</div>
+						<PageArrow to={page.next} dir="next" label="More posters" size={Math.min(h, posterH)} />
+					</div>
+					<div className="flex items-center gap-2" style={{ height: h }}>
+						{trailer}
+						{details}
+						<span className="flex-1" />
 						{items.includes("expand") && <Expand />}
 					</div>
-				</div>
-				{/* The title with the focus stays named at the top while the wall scrolls under it. After the wall in the
-				    markup, as in `tvItems`: the posters come first in reading order. */}
-				<div
-					className="absolute inset-x-3 top-[78px] z-10 flex items-center gap-2.5"
-					style={{ height: h + 8 }}
-				>
-					<div className="min-w-0 flex-1 px-1">
-						<div className="truncate text-[22px] font-extrabold leading-tight">
-							{shown.title}
-						</div>
-						<div className="flex items-center gap-2 text-[15px] text-white/70">
-							<ScoreRing {...ring} size={24} label={false} />
-							<span className="truncate">{pickFacts({ card: shown })}</span>
-						</div>
-					</div>
-					{trailer}
-					{details}
 				</div>
 				<CornerBar items={items} />
 			</>
 		)
+	}
 	return (
 		<>
 			{backdrop && <Ambient src={backdrop} />}

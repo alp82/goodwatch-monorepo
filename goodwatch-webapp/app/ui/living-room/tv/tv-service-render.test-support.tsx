@@ -68,16 +68,17 @@ const home = (services: TvService[], member = false): TvHomeData => ({
 
 const CANVAS: Record<"desktop" | "phone", TvCanvas> = {
 	desktop: { edition: "desktop", ...TV_CANVAS, scale: 1 },
-	phone: { edition: "phone", ...PHONE_TV_CANVAS, scale: 0.72 },
+	phone: { edition: "phone", ...PHONE_TV_CANVAS, scale: 0.75 },
 }
 /** The phones of the room's table (docs/implementation/tv-screen-revamp/room), as tv-title-render has them. */
 const PHONES = [
-	{ phone: "360x740", scale: 332 / 500, h: 417 },
-	{ phone: "375x667", scale: 347 / 500, h: 372 },
-	{ phone: "390x700", scale: 362 / 500, h: 402 },
-	{ phone: "390x844", scale: 362 / 500, h: 417 },
-	{ phone: "430x932", scale: 402 / 500, h: 417 },
-	{ phone: "844x390", scale: 0.98, h: 373 },
+	// The phone's fixed canvas (480 x 270) at the scale of each phone's 16:9 TV (room-layout.ts, `seatPhone`).
+	{ phone: "360x740", scale: 332 / 480, h: 270 },
+	{ phone: "375x667", scale: 347 / 480, h: 270 },
+	{ phone: "390x700", scale: 362 / 480, h: 270 },
+	{ phone: "390x844", scale: 362 / 480, h: 270 },
+	{ phone: "430x932", scale: 402 / 480, h: 270 },
+	{ phone: "844x390", scale: 507 / 480, h: 270 },
 ]
 
 const stateOf = (screen: Screen, rest: Partial<TvState> = {}): TvState => ({
@@ -119,12 +120,16 @@ const pool: TvPool = {
 	],
 }
 function homeOf(data: TvHomeData, p: TvPool | null, focus: string | null) {
-	const ctx = tvContextOf(data, p)
+	const desktopCtx = tvContextOf(data, p)
+	// The page hands the phone's screens the phone's items (its header: the G and Menu).
+	const phoneCtx = { ...desktopCtx, phone: true }
 	const state = stateOf(HOME, { focus })
 	return {
-		items: tvItems(HOME, ctx),
-		...editions((canvas) =>
-			renderToStaticMarkup(
+		items: tvItems(HOME, desktopCtx),
+		phoneItems: tvItems(HOME, phoneCtx),
+		...editions((canvas) => {
+			const ctx = canvas.edition === "phone" ? phoneCtx : desktopCtx
+			return renderToStaticMarkup(
 				<TvScreen
 					tv={{
 						state,
@@ -141,8 +146,8 @@ function homeOf(data: TvHomeData, p: TvPool | null, focus: string | null) {
 					toast={null}
 					services={{ tiles: homeServices(data, p), list: null }}
 				/>,
-			),
-		),
+			)
+		}),
 	}
 }
 
@@ -184,13 +189,28 @@ function serviceOf(
 		titles: list?.id === id ? list.titles : [],
 	}
 	const items = tvItems(screen, ctx)
-	const draw = (canvas: TvCanvas) =>
-		html(
+	// The page hands the phone's screens the phone's items (its header: the G and Menu).
+	const phoneCtx: TvContext = { ...ctx, phone: true }
+	const phoneItems = tvItems(screen, phoneCtx)
+	const draw = (canvas: TvCanvas) => {
+		const phone = canvas.edition === "phone"
+		return html(
 			canvas,
-			focused ?? focusedItem(stateOf(screen), ctx),
-			<Service items={items} screen={screen} own={own} list={list} />,
+			focused ?? focusedItem(stateOf(screen), phone ? phoneCtx : ctx),
+			<Service
+				items={phone ? phoneItems : items}
+				screen={screen}
+				own={own}
+				list={list}
+			/>,
 		)
-	return { items, desktop: draw(canvases.desktop), phone: draw(canvases.phone) }
+	}
+	return {
+		items,
+		phoneItems,
+		desktop: draw(canvases.desktop),
+		phone: draw(canvases.phone),
+	}
 }
 /** The cards of a service a link names: they say where they stream. */
 const hulu = cards.slice(0, 4).map((one) => ({
@@ -249,7 +269,7 @@ const desktopRemote = (services: TvService[], open: number | null) =>
 		/>,
 	)
 const phoneRemote = (
-	form: "hand" | "table",
+	form: "hand",
 	services: TvService[],
 	open: number | null,
 ) =>
@@ -259,13 +279,11 @@ const phoneRemote = (
 			services={services}
 			form={form}
 			at={{ left: 0, top: 400, u: 1, width: 300 }}
-			bottom={700}
 		/>,
 	)
 const remotes = (services: TvService[], open: number | null = null) => ({
 	desktop: desktopRemote(services, open),
 	hand: phoneRemote("hand", services, open),
-	table: phoneRemote("table", services, open),
 })
 
 console.log(
@@ -276,6 +294,11 @@ console.log(
 			customServices: homeOf(home([DISNEY, PLAIN]), null, null),
 			withPool: homeOf(home([NETFLIX, DISNEY]), pool, null),
 			onNetflix: homeOf(home([NETFLIX, DISNEY]), pool, "service:8"),
+			// The phone's row shows three tiles a page (2026-10-22): the services' tiles are on its second page, which
+			// the focus on one of them shows.
+			guestServices: homeOf(home([NETFLIX, DISNEY]), null, "service:337"),
+			customServices2: homeOf(home([DISNEY, PLAIN]), null, "service:337"),
+			withPoolServices: homeOf(home([NETFLIX, DISNEY]), pool, "service:337"),
 			onDisney: homeOf(home([NETFLIX, DISNEY]), null, "service:337"),
 			onPlain: homeOf(home([DISNEY, PLAIN]), null, "service:99"),
 			none: homeOf(home([]), null, null),

@@ -42,6 +42,7 @@ import {
 	loadFirstScreens,
 } from "./TvScreen"
 import { useReport } from "./kit"
+import { inputElement } from "./tv-dom"
 import type { TvCanvas } from "./room-tv"
 import { HomeHeading, type HomeHeadingTag } from "./screens/Home"
 import {
@@ -419,6 +420,10 @@ export function TvLivingRoom({
 										512,
 									),
 					)
+					return
+				// The phone's search field: the line takes the browser's focus, and the phone's keyboard opens.
+				case "focus-input":
+					inputElement()?.focus()
 					return
 				case "retry-results":
 					browseList?.retry()

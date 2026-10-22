@@ -17,6 +17,23 @@ const rendered = JSON.parse(
 ) as { name: string; scenario: string; edition: string; html: string }[]
 for (const { name, scenario, edition, html } of rendered) {
 	test(`${name} ${edition}: For you agrees with ${scenario} Best match state`, () => {
+		// The phone shows four filters a page (nothing scrolls): with the focus on For you, its page, without Sort.
+		if (edition === "phone") {
+			assert.match(
+				html,
+				scenario === "entered" || scenario === "deep"
+					? /For you: On/
+					: /For you: Off/,
+			)
+			assert.doesNotMatch(
+				html,
+				scenario === "entered" || scenario === "deep"
+					? /For you: Off/
+					: /For you: On/,
+			)
+			assert.doesNotMatch(html, /data-tv-scroll/)
+			return
+		}
 		if (scenario === "entered" || scenario === "deep") {
 			assert.match(html, /Sort: Best match/)
 			assert.match(html, /For you: On/)

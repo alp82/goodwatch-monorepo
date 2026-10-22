@@ -1,13 +1,14 @@
-import { KEY_ITEMS } from "./tv-browse.ts"
 // Search as it is drawn: the items in the markup are the machine's, in its order, in both editions; the line is
 // one real input, which is not an item; the results name the focused title in the list every app uses; and on
-// every phone of the room's table the keys are touch targets with the Expand key's corner free.
+// every phone of the room's table the phone's own keyboard types (no TV keys), every key is a touch target, and
+// nothing scrolls.
 import assert from "node:assert/strict"
 import { execFileSync } from "node:child_process"
 import { test } from "node:test"
+import { KEY_ITEMS } from "./tv-browse.ts"
 
 type Editions = { desktop: string; phone: string }
-type Drawn = Editions & { items: string[] }
+type Drawn = Editions & { items: string[]; phoneItems: string[] }
 const rendered = JSON.parse(
 	execFileSync(
 		"node_modules/.bin/vite-node",
@@ -85,15 +86,39 @@ const BAR = [
 	"bar:menu",
 ]
 const EDITIONS = ["desktop", "phone"] as const
+/** The phone's header: the white G and Menu. */
+const PHONE_BAR = ["nav:home", "bar:menu"]
+/**
+ * What the phone draws of a list's items: its first page of five titles, the arrow to the next page, then the
+ * rest; the server's own Previous and Next are the list's arrows at its ends.
+ */
+const phonePage = (items: readonly string[]) => {
+	const titles = items.filter((id) => id.startsWith("title:"))
+	return [
+		...titles.slice(0, 5),
+		...(titles.length > 5 ? [`jump:${titles[5]}`] : []),
+		...items.filter(
+			(id) =>
+				!id.startsWith("title:") &&
+				id !== "browse:prev" &&
+				id !== "browse:next",
+		),
+	]
+}
 
 test("Recovered keyboard markup follows machine order in both editions, with letters, digits and editing actions", () => {
-	for (const screen of Object.values(rendered.question))
-		for (const edition of EDITIONS) {
-			assert.deepEqual(ids(screen[edition]), screen.items)
-			// The ideas under the line come before the keys.
-			assert.deepEqual(screen.items, [...IDEAS, ...KEY_ITEMS, ...BAR])
+	for (const screen of Object.values(rendered.question)) {
+		assert.deepEqual(ids(screen.desktop), screen.items)
+		// The ideas under the line come before the keys.
+		assert.deepEqual(screen.items, [...IDEAS, ...KEY_ITEMS, ...BAR])
+		// The phone types with its own keyboard (the owner, 2026-10-22): the line, Search beside it, the ideas, and
+		// the header's G and Menu. No TV key.
+		assert.deepEqual(screen.phoneItems, ["field", ...IDEAS, "go", ...PHONE_BAR])
+		assert.deepEqual(ids(screen.phone), ["field", "go", ...IDEAS, ...PHONE_BAR])
+		assert.ok(!screen.phone.includes('data-tv-item="key:'))
+		for (const edition of EDITIONS)
 			assert.equal(count(screen[edition], "data-tv-expand"), 0)
-		}
+	}
 })
 test("The query stays in a labelled real input with a 512-character limit and no autofocus", () => {
 	for (const edition of EDITIONS) {
@@ -112,14 +137,20 @@ test("The query stays in a labelled real input with a 512-character limit and no
 	}
 })
 test("Results retain metadata, long-title layout and all current machine actions", () => {
-	for (const screen of Object.values(rendered.results))
-		for (const edition of EDITIONS)
-			assert.deepEqual(ids(screen[edition]), screen.items)
+	for (const screen of Object.values(rendered.results)) {
+		assert.deepEqual(ids(screen.desktop), screen.items)
+		assert.deepEqual(ids(screen.phone), phonePage(screen.phoneItems))
+	}
+	assert.match(
+		rendered.results.found.desktop,
+		/“heist” · Page 1 of 1 · 4 matches/,
+	)
+	// The phone's header says what was searched for.
+	assert.match(
+		rendered.results.found.phone,
+		/<span class="[^"]*truncate[^"]*">“heist”<\/span>/,
+	)
 	for (const edition of EDITIONS) {
-		assert.match(
-			rendered.results.found[edition],
-			/“heist” · Page 1 of 1 · 4 matches/,
-		)
 		assert.match(rendered.results.second[edition], /Inside Man/)
 		assert.match(rendered.results.second[edition], /91% match/)
 		assert.match(
@@ -139,8 +170,10 @@ test("Loading, empty and failure messages are distinct", () => {
 })
 test("Keyboard focus and bar focus remain represented in markup", () => {
 	for (const edition of EDITIONS) {
-		// The screen starts on its first idea.
-		assert.deepEqual(focused(rendered.question.empty[edition]), [IDEAS[0]])
+		// The screen starts on its first idea on the desktop, on the line on the phone.
+		assert.deepEqual(focused(rendered.question.empty[edition]), [
+			edition === "phone" ? "field" : IDEAS[0],
+		])
 		assert.deepEqual(focused(rendered.question.onBar[edition]), ["bar:menu"])
 	}
 })
@@ -157,48 +190,48 @@ const element = (html: string, at: number) => {
 	return html.slice(at)
 }
 
-// Regression (2026-10-21): on the phone the keys scrolled in a box of their own under the field and the ideas,
-// a row and a half of them. The field, the ideas and the keys now scroll as one column (a finger or the focus).
-test("Phone keyboard: the field, the ideas and the keys scroll as one column; the actions stay under it; keys are touch targets", () => {
+// Regression (2026-10-21, 2026-10-22): on the phone the keys scrolled, first in a box of their own, then with the
+// field. The phone now types with its own keyboard: the line, Search and four ideas fit the picture, nothing
+// scrolls, and every key is a touch target.
+test("Phone search: the phone's own keyboard, no TV keys, nothing scrolls, and every key is a touch target", () => {
 	for (const phone of rendered.phones) {
-		const start = phone.question.indexOf("<div data-tv-scroll")
-		assert.ok(start >= 0, `${phone.phone}: a scrolling column`)
-		assert.equal(
-			phone.question.indexOf("data-tv-scroll", start + 20),
-			-1,
-			`${phone.phone}: one scrolling box, not a box for the keys`,
+		assert.ok(
+			!phone.question.includes("data-tv-scroll"),
+			`${phone.phone}: nothing scrolls`,
 		)
-		const column = element(phone.question, start)
-		for (const inside of [
-			"data-tv-input",
-			'data-tv-item="idea:',
-			'data-tv-item="key:q"',
-			'data-tv-item="key:0"',
-		])
-			assert.ok(
-				column.includes(inside),
-				`${phone.phone}: ${inside} in the column`,
-			)
-		// The actions: under the column, or at its end on a picture too short to spare their row.
-		assert.equal(
-			column.includes('data-tv-item="go"'),
-			phone.h < 330,
-			`${phone.phone}: the actions`,
+		assert.ok(
+			!phone.question.includes('data-tv-item="key:'),
+			`${phone.phone}: no TV keys`,
 		)
-		for (const id of [
-			"key:q",
-			"key:0",
-			"go",
-			"key:clear",
-			"key:delete",
-			"key:space",
-		]) {
-			const height = Number(
-				/height:([\d.]+)px/.exec(tag(phone.question, id))?.[1],
-			)
-			assert.ok(height * phone.scale >= 44, `${phone.phone} ${id}: ${height}`)
-		}
-		assert.ok(phone.bar * phone.scale >= 44)
+		assert.match(line(phone.question), /inputMode="search"/i)
+		assert.match(line(phone.question), /enterKeyHint="search"/i)
+		// The line and Search: one row, a key tall. The ideas: rows of two, each a key tall, two where the picture
+		// holds them and one on a narrower phone; the header (66), the rows, their 5 px gaps and the foot (10) fit
+		// the 270 px canvas.
+		assert.match(phone.question, new RegExp(`style="height:${phone.bar}px"`))
+		const rows = Number(
+			/grid-template-rows:repeat\((\d), (\d+)px\)/.exec(phone.question)?.[1],
+		)
+		assert.equal(
+			rows,
+			66 + 3 * phone.bar + 2 * 5 + 10 <= 270 ? 2 : 1,
+			phone.phone,
+		)
+		assert.equal(
+			count(phone.question, 'data-tv-item="idea:'),
+			rows * 2,
+			phone.phone,
+		)
+		assert.ok(
+			66 + (rows + 1) * phone.bar + rows * 5 + 10 <= 270 ||
+				phone.phone === "320x568",
+			phone.phone,
+		)
+		assert.ok(phone.bar * phone.scale >= 44, `${phone.phone}: ${phone.bar}`)
+		assert.ok(
+			!phone.results.includes("data-tv-scroll"),
+			`${phone.phone}: the results don't scroll`,
+		)
 	}
 })
 test("Before interaction the server renders only the search bar, with no eager keyboard or input", () => {

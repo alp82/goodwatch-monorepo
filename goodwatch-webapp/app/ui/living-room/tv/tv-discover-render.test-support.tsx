@@ -52,16 +52,17 @@ const guest: TvHomeData = {
 
 const CANVAS: Record<"desktop" | "phone", TvCanvas> = {
 	desktop: { edition: "desktop", ...TV_CANVAS, scale: 1 },
-	phone: { edition: "phone", ...PHONE_TV_CANVAS, scale: 0.72 },
+	phone: { edition: "phone", ...PHONE_TV_CANVAS, scale: 0.75 },
 }
 /** The phones of the room's table (docs/implementation/tv-screen-revamp/room), as tv-title-render has them. */
 const PHONES = [
-	{ phone: "360x740", scale: 332 / 500, h: 417 },
-	{ phone: "375x667", scale: 347 / 500, h: 372 },
-	{ phone: "390x700", scale: 362 / 500, h: 402 },
-	{ phone: "390x844", scale: 362 / 500, h: 417 },
-	{ phone: "430x932", scale: 402 / 500, h: 417 },
-	{ phone: "844x390", scale: 0.98, h: 373 },
+	// The phone's fixed canvas (480 x 270) at the scale of each phone's 16:9 TV (room-layout.ts, `seatPhone`).
+	{ phone: "360x740", scale: 332 / 480, h: 270 },
+	{ phone: "375x667", scale: 347 / 480, h: 270 },
+	{ phone: "390x700", scale: 362 / 480, h: 270 },
+	{ phone: "390x844", scale: 362 / 480, h: 270 },
+	{ phone: "430x932", scale: 402 / 480, h: 270 },
+	{ phone: "844x390", scale: 507 / 480, h: 270 },
 ]
 
 const html = (canvas: TvCanvas, focused: string, node: React.ReactNode) =>
@@ -70,6 +71,8 @@ const html = (canvas: TvCanvas, focused: string, node: React.ReactNode) =>
 			<Layer>{node}</Layer>
 		</TvViewProvider>,
 	)
+/** The page hands the phone's screens the phone's items (its header: the G and Menu). */
+const phoneOf = (ctx: TvContext): TvContext => ({ ...ctx, phone: true })
 const editions = <T,>(draw: (canvas: TvCanvas) => T) => ({
 	desktop: draw(CANVAS.desktop),
 	phone: draw(CANVAS.phone),
@@ -120,13 +123,20 @@ function choiceOf(
 ) {
 	const screen = choice(tab)
 	const items = tvItems(screen, base)
+	const phoneItems = tvItems(screen, phoneOf(base))
 	return {
 		items,
+		phoneItems,
 		...editions((canvas) =>
 			html(
 				canvas,
 				focused ?? items[3],
-				<Discover items={items} screen={screen} art={pictures} list={null} />,
+				<Discover
+					items={canvas.edition === "phone" ? phoneItems : items}
+					screen={screen}
+					art={pictures}
+					list={null}
+				/>,
 			),
 		),
 	}
@@ -138,13 +148,20 @@ function listOf(
 ) {
 	const ctx: TvContext = { ...base, titles: list?.titles ?? [] }
 	const items = tvItems(screen, ctx)
+	const phoneItems = tvItems(screen, phoneOf(ctx))
 	return {
 		items,
+		phoneItems,
 		...editions((canvas) =>
 			html(
 				canvas,
 				focused ?? items[0],
-				<Discover items={items} screen={screen} art={art} list={list} />,
+				<Discover
+					items={canvas.edition === "phone" ? phoneItems : items}
+					screen={screen}
+					art={art}
+					list={list}
+				/>,
 			),
 		),
 	}
@@ -245,7 +262,7 @@ console.log(
 					canvas,
 					"theme:crime",
 					<Discover
-						items={tvItems(themes, base)}
+						items={tvItems(themes, phoneOf(base))}
 						screen={themes}
 						art={art}
 						list={null}
@@ -255,7 +272,7 @@ console.log(
 					canvas,
 					`title:${tvTitleKey(cards[0])}`,
 					<Discover
-						items={tvItems(CRIME, ctx)}
+						items={tvItems(CRIME, phoneOf(ctx))}
 						screen={CRIME}
 						art={art}
 						list={report()}
