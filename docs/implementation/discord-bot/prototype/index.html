@@ -156,10 +156,14 @@ body.phone .dc .th { width: 64px; }
 .modal .mh img { width: 24px; height: 24px; border-radius: 50%; background: #fff; }
 .modal .mh b { color: var(--hdr); font-size: 20px; }
 .modal .mbody { padding: 0 16px 16px; }
-.modal label { display: block; font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; letter-spacing: .02em; }
-.modal .scores { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
-.modal .scores button { height: 44px; border-radius: 8px; border: 1px solid var(--sel-line); background: var(--sel); color: var(--hdr); font: inherit; font-weight: 700; cursor: pointer; }
-.modal .scores button.on { outline: 2px solid #5865f2; }
+.modal { max-height: calc(100vh - 32px); overflow: auto; }
+.modal .mh .mx { margin-left: auto; color: var(--muted); cursor: pointer; font-size: 18px; }
+.modal .mbody .td { margin-bottom: 16px; }
+.modal .lbl { color: var(--hdr); font-size: 16px; font-weight: 600; }
+.modal .lbl .req { color: #f23f43; }
+.modal .ldesc { color: var(--muted); font-size: 14px; margin: 2px 0 8px; }
+.modal .selw { max-width: none; }
+.modal .opts { position: static; margin-top: 4px; }
 .modal .mf { display: flex; justify-content: flex-end; gap: 8px; padding: 16px; background: var(--ct); }
 .modal .plink { background: none; border: 0; color: var(--hdr); font: inherit; font-size: 14px; cursor: pointer; padding: 0 12px; }
 </style>
@@ -172,7 +176,7 @@ body.phone .dc .th { width: 64px; }
 	<nav id="nav"></nav>
 </div>
 <main>
-	<p class="intro"><strong>Prototype for #738.</strong> Pick one variant per card. Every card is built from a Components V2 tree, so the counter and the payload below each mock are what the bot would send. Data: real GoodWatch titles, scores, and availability in Germany, October 23, 2026. Buttons that change the card work here (Yep, Nope, Undo, Another, Rate, menus); other buttons show what they would do. Score badges and service logos inside text are <strong>app emojis</strong> (Discord custom emojis the app uploads), because Discord text can't be colored.</p>
+	<p class="intro"><strong>Prototype for #738.</strong> Pick one variant per card. Every card is built from a Components V2 tree, so the counter and the payload below each mock are what the bot would send. Payloads use sample values for app emoji IDs, custom_id suffixes, and timestamps (October 23, 2026, 21:04 in Berlin); the bot fills in its own. Data: real GoodWatch titles, scores, and availability in Germany, October 23, 2026. Buttons that change the card work here (Yep, Nope, Undo, Another, Rate, menus); other buttons show what they would do. Score badges and service logos inside text are <strong>app emojis</strong> (Discord custom emojis the app uploads), because Discord text can't be colored.</p>
 	<div id="cards"></div>
 </main>
 <div class="modal-bg" id="modal"></div>
@@ -338,8 +342,14 @@ function validate(tree) {
 
 // ---------- Discord payload ----------
 const STYLE = { primary: 1, secondary: 2, success: 3, danger: 4, link: 5 };
-const content = (m) => m.replace(/\{s:(\d+)\}/g, "<:gw_$1:EMOJI_ID>").replace(/\{e:(\w+)\}/g, "<:$1:EMOJI_ID>").replace(/\{t:[^}]+\}/g, "<t:UNIX:R>");
-const emojiObj = (e) => { const m = e && e.match(/\{s:(\d+)\}|\{e:(\w+)\}/); return m ? { id: "EMOJI_ID", name: m[1] ? `gw_${m[1]}` : m[2] } : undefined; };
+// Sample values: application emoji IDs are snowflakes Discord assigns on upload; timestamps count from the mock's 21:04.
+const hash = (x) => { let h = 2166136261; for (const c of x) h = Math.imul(h ^ c.charCodeAt(0), 16777619) >>> 0; return h; };
+const snowflake = (name) => { const h = hash(name); return "1430" + String(h).padStart(10, "0") + String(h % 99991).padStart(5, "0"); };
+const NOW = Date.UTC(2026, 9, 23, 19, 4) / 1000;
+const unix = (x) => { const m = x.match(/in (\d+) (second|minute|hour)/); return NOW + (m ? +m[1] * { second: 1, minute: 60, hour: 3600 }[m[2]] : 0); };
+const content = (m) => m.replace(/\{s:(\d+)\}/g, (_, n) => `<:gw_${n}:${snowflake("gw_" + n)}>`).replace(/\{e:(\w+)\}/g, (_, k) => `<:${k}:${snowflake(k)}>`).replace(/\{t:([^}]+)\}/g, (_, x) => `<t:${unix(x)}:R>`);
+const emojiObj = (e) => { const m = e && e.match(/\{s:(\d+)\}|\{e:(\w+)\}/); if (!m) return undefined; const name = m[1] ? `gw_${m[1]}` : m[2]; return { id: snowflake(name), name }; };
+const cid = (id, label = "") => `gw:${id || "noop"}:${hash(id + label).toString(36)}`;
 function payload(n) {
 	switch (n.t) {
 		case "container": return { type: 17, ...(n.accent ? { accent_color: parseInt(n.accent.slice(1), 16) } : {}), components: n.children.map(payload) };
@@ -349,45 +359,68 @@ function payload(n) {
 		case "gallery": return { type: 12, items: n.items.map((i) => ({ media: { url: i.url }, ...(i.alt ? { description: i.alt } : {}) })) };
 		case "sep": return { type: 14, divider: n.divider, spacing: n.spacing === "large" ? 2 : 1 };
 		case "row": return { type: 1, components: n.items.map(payload) };
-		case "button": return n.style === "link" ? { type: 2, style: 5, label: n.label, url: n.url } : { type: 2, style: STYLE[n.style], label: n.label, custom_id: `gw:${n.id || "noop"}:…`, ...(n.disabled ? { disabled: true } : {}) };
-		case "select": return { type: 3, custom_id: `gw:${n.id}:…`, placeholder: n.placeholder, options: n.options.map((o, i) => ({ label: o.label, value: String(i), ...(o.desc ? { description: o.desc } : {}), ...(emojiObj(o.emoji) ? { emoji: emojiObj(o.emoji) } : {}) })) };
+		case "button": return n.style === "link" ? { type: 2, style: 5, label: n.label, url: n.url } : { type: 2, style: STYLE[n.style], label: n.label, custom_id: cid(n.id, n.label), ...(n.disabled ? { disabled: true } : {}) };
+		case "select": return { type: 3, custom_id: cid(n.id, n.placeholder), placeholder: n.placeholder, options: n.options.map((o, i) => ({ label: o.label, value: String(i), ...(o.desc ? { description: o.desc } : {}), ...(emojiObj(o.emoji) ? { emoji: emojiObj(o.emoji) } : {}) })) };
 	}
 }
 
 // ---------- cards ----------
-const guestRowTitle = guestButtons;
-const memberStatus = (t, st, vs) => {
-	if (vs.rated) return `You rated it **${vs.rated} · ${LABELS[vs.rated]}**`;
-	return st === "want" ? "In your Want to see" : `Seen · you rated it **${t.myScore} · ${LABELS[t.myScore]}**`;
-};
-const memberRow = (st, vs) => {
-	const rated = vs.rated || (st === "rated" ? T.howl.myScore : null);
-	return R(
-		st === "want" ? B("In Want to see", "success", { id: "want" }) : B("Want to see", "secondary", { id: "want" }),
-		st === "rated" || vs.rated ? B("Seen", "success", { id: "seen" }) : B("Seen", "secondary", { id: "seen" }),
-		B(rated ? `Rated ${rated}` : "Rate", "secondary", { id: "rate" }),
-	);
-};
+// Taste match: tasteMatchLabel (ui/title-card/TasteMatchPill.tsx) plus the Explorer's band names (domain/explorer.ts MATCH_BANDS).
+const MATCH_BANDS = [{ name: "Near you", min: 70 }, { name: "A step out", min: 60 }, { name: "Unexplored", min: 0 }];
+const matchText = (t) => `**${t.match}% taste match** · ${MATCH_BANDS.find((b) => t.match >= b.min).name}`;
+// Member state: defaults from the scenario, overridden by presses in the mock. Labels never change; style shows the state.
+const mstate = (vs, d) => ({ want: vs.want ?? d.want, seen: vs.seen ?? d.seen, rated: vs.rated ?? d.rated ?? null });
+const memberStatus = (ms) => [ms.want && "In your Want to see", ms.seen ? "Seen" : "Not seen yet", ms.rated && `you rated it **${ms.rated} · ${LABELS[ms.rated]}**`].filter(Boolean).join("  ·  ");
+const memberRow = (ms) => R(B("Want to see", ms.want ? "success" : "secondary", { id: "want" }), B("Seen", ms.seen ? "success" : "secondary", { id: "seen" }), B("Rate", ms.rated ? "success" : "secondary", { id: "rate" }));
+const memberOn = (titleOf, defaults) => ({
+	want: (vs) => { vs.want = !mstate(vs, defaults(vs)).want; toast(vs.want ? "Added to Want to see. The confirmation would offer Undo." : "Removed from Want to see. The confirmation would offer Undo."); return true; },
+	seen: (vs) => { vs.seen = !mstate(vs, defaults(vs)).seen; toast(vs.seen ? "Logged a watch today. The confirmation would offer Undo." : "Removed today's watch. The confirmation would offer Undo."); return true; },
+	rate: (vs, rerender) => openRateModal(titleOf(vs), mstate(vs, defaults(vs)).rated, (sc) => { vs.rated = sc; rerender(); }),
+});
 const personalTitle = (st) => (st === "want" ? T.phm : T.howl);
-const rateHandler = { rate: (vs, rerender) => openRateModal((s) => { vs.rated = s; rerender(); }) };
+const personalDefaults = (vs) => (vs.state === "want" ? { want: true, seen: false } : { want: false, seen: true, rated: T.howl.myScore });
+const personalMs = (vs) => mstate(vs, personalDefaults(vs));
+const personalOn = memberOn((vs) => personalTitle(vs.state), personalDefaults);
 const PERSONAL_STATES = [{ k: "want", l: "In Want to see" }, { k: "rated", l: "Seen and rated" }];
 
-const watchPicks = { guest: [T.spirited, T.coco, T.howl], member: [T.phm, T.io2] };
-const watchEyebrow = (st) => (st === "guest" ? "-# Tonight's pick from every service in Germany. Admins can set the server's services with /setup." : "-# Tonight's pick from your Want to see, on your services");
-const another = { another: (vs) => { vs.i = (vs.i || 0) + 1; return true; } };
+const watchPicks = { guest: [T.spirited, T.coco, T.howl], member: [T.phm, T.io2], shared: [T.phm] };
+const watchEyebrow = (st) => (st === "guest" ? "-# Tonight's pick from every service in Germany. Admins can set the server's services with /setup." : st === "shared" ? "-# Shared by @alp" : "-# Tonight's pick from your Want to see, on your services");
 const pickOf = (vs) => { const list = watchPicks[vs.state]; return list[(vs.i || 0) % list.length]; };
-const WATCH_STATES = [{ k: "guest", l: "Guest" }, { k: "member", l: "Linked member" }];
+const watchDefaults = () => ({ want: true, seen: false });
+const watchMs = (vs) => mstate(vs, watchDefaults());
+const watchOn = { ...memberOn(pickOf, watchDefaults), another: (vs) => { vs.i = (vs.i || 0) + 1; vs.want = vs.seen = undefined; vs.rated = null; return true; } };
+const watchRow = (t) => R(B("Another", "primary", { id: "another" }), B("Where to watch", "secondary", { id: "where" }), B("Open on GoodWatch", "link", { url: t.url }), B("Share to channel", "secondary", { id: "share" }));
+// The shared copy is the guest card: no match, no member state, no member or personal buttons.
+const sharedRow = (t) => R(B("Where to watch", "secondary", { id: "where" }), B("Similar", "secondary", { id: "similar" }), B("Open on GoodWatch", "link", { url: t.url }));
+const WATCH_STATES = [{ k: "guest", l: "Guest" }, { k: "member", l: "Linked member" }, { k: "shared", l: "Shared copy" }];
 
+const SESSION = "## Movie night · feel-good movies";
 const togetherHead = (st) => st === "lobby"
-	? X("## Movie night\n@alp started a group pick: **feel-good movies**.\n-# Press Join to vote privately. A title matches when everyone votes Yep.")
-	: X("## Movie night · feel-good movies\n-# Started by @alp · closes {t:in 23 hours}\n**4** participants · **2** still voting");
+	? X("## Movie night\n@alp started a group pick: **feel-good movies**.\n-# Press Join to vote privately. You count as a participant from your first vote. A title matches when everyone votes Yep.")
+	: X(`${SESSION}\n-# Started by @alp · closes {t:in 23 hours}\n**4** participants · **2** still voting`);
 const togetherRows = (pick = true) => [pick && R(Sel("Pick a match", [titleOpt(T.spirited)], "pick")), R(B("Join", "primary", { id: "join" }), B("End", "secondary", { id: "end" }))];
 const lobbyTree = () => [C([togetherHead("lobby"), X("-# Nobody has voted yet · closes {t:in 24 hours}"), ...togetherRows(false)], AMBER)];
-const TOGETHER_STATES = [{ k: "lobby", l: "Lobby" }, { k: "voting", l: "Voting", def: true }, { k: "decided", l: "Decided" }];
+// Deck exhausted: 120 titles, no match. The three titles with the most Yep votes; only the starter's choice counts.
+const TOP_YEP = [{ t: T.spirited, y: 3 }, { t: T.coco, y: 3 }, { t: T.howl, y: 2 }];
+const exhaustedHead = () => X(`${SESSION}\nNo match in all 120 titles. @alp, choose one of the three titles with the most Yep votes.\n-# Only the starter can choose · closes {t:in 9 hours}`);
+const exhaustedRows = () => [R(Sel("Choose the movie", TOP_YEP.map(({ t, y }) => ({ ...titleOpt(t), desc: `${y} of 4 voted Yep · ${t.score} · ${label(t.score)} · ${rt(t.runtime)}` })), "starter")), R(B("End", "secondary", { id: "end" }))];
+const yepLine = ({ t, y }) => `{s:${t.score}} **${t.name}**  ·  ${t.year}  ·  ${prov(t)}  ·  ${y} of 4 Yep`;
+const closedTree = (st) => [C([X(st === "ended"
+	? `${SESSION}\nEnded by @alp before the group decided.\n-# 4 participants · votes are deleted`
+	: `${SESSION}\nThis movie night closed after 24 hours without a decision.\n-# Start a new one with /together. Votes are deleted.`)], "#4e5058")];
+const TOGETHER_STATES = [{ k: "lobby", l: "Lobby" }, { k: "voting", l: "Voting", def: true }, { k: "decided", l: "Decided" }, { k: "exhausted", l: "Deck exhausted" }, { k: "ended", l: "Ended" }, { k: "expired", l: "Expired" }];
 
-const deckVote = { yep: (vs) => { vs.i = (vs.i || 0) + 1; return true; }, nope: (vs) => { vs.i = (vs.i || 0) + 1; return true; }, undo: (vs) => { if (vs.i) vs.i--; return true; }, leave: (vs) => { vs.left = true; return true; }, rejoin: (vs) => { vs.left = false; vs.i = 0; return true; } };
-const voteRow = (vs) => R(B("Yep", "success", { id: "yep" }), B("Nope", "danger", { id: "nope" }), B("Undo", "secondary", { id: "undo", disabled: !vs.i }), B("Leave", "secondary", { id: "leave" }));
-const leftTree = () => [S(["You left the movie night. Your votes are removed."], B("Join again", "primary", { id: "rejoin" }))];
+// Voting card position: the deck is 30 titles and grows in steps of 30 up to 120.
+const VOTE_START = { joined: 1, voting: 7, exhausted: 121 };
+const votePos = (vs) => VOTE_START[vs.state] + (vs.i || 0);
+const deckOf = (pos) => Math.min(120, Math.ceil(pos / 30) * 30);
+const voteEyebrow = (vs) => { const p = votePos(vs); return `Title ${p} of ${deckOf(p)} · ${p === 1 ? "you count as a participant from your first vote" : "your votes are private"}`; };
+const step = (vs) => { if (votePos(vs) <= 120) vs.i = (vs.i || 0) + 1; return true; };
+const deckVote = { yep: step, nope: step, undo: (vs) => { if (votePos(vs) > 1) vs.i = (vs.i || 0) - 1; return true; }, leave: (vs) => { vs.left = true; return true; }, rejoin: (vs) => { vs.left = false; vs.i = 0; return true; } };
+const voteRow = (vs) => R(B("Yep", "success", { id: "yep" }), B("Nope", "danger", { id: "nope" }), B("Undo", "secondary", { id: "undo", disabled: votePos(vs) <= 1 }), B("Leave", "secondary", { id: "leave" }));
+const leftTree = () => [S(["You left the movie night. Your votes are removed."], B("Join", "primary", { id: "rejoin" }))];
+const deckDoneTree = () => [C([X("### You voted on all 120 titles\nThe group has no match. @alp chooses from the three titles with the most Yep votes on the channel message."), R(B("Undo", "secondary", { id: "undo" }), B("Leave", "secondary", { id: "leave" }))], AMBER)];
+const VOTE_STATES = [{ k: "joined", l: "Just joined" }, { k: "voting", l: "Voting", def: true }, { k: "exhausted", l: "Deck exhausted" }];
 
 const WRITE_STATES = [{ k: "rate", l: "/rate 8" }, { k: "seen", l: "/seen" }, { k: "want", l: "/want" }];
 const writeCopy = { rate: `Rated **Project Hail Mary** **8 · Great**`, seen: `Logged a watch of **Project Hail Mary** today`, want: `Added **Project Hail Mary** to Want to see` };
@@ -409,26 +442,26 @@ const CARDS = [
 	},
 	{
 		id: "personal", n: 2, title: "Personal title card", cmd: "/search title: …  (linked member)",
-		note: "A linked member's card adds the taste match, seen or rated state, and Want to see, Seen, Rate. Rate opens a modal here. Share still posts the guest card.",
+		note: "A linked member's card adds the taste match, seen or rated state, and Want to see, Seen, Rate. Button labels never change; green means on. Want to see and Seen toggle here, Rate opens the modal. Share still posts the guest card (see card 1).",
 		variants: [
-			{ name: "Guest card plus a member line", why: "Same layout as 1A with the match and state in the section, member buttons on their own row above the shared ones.", states: PERSONAL_STATES, on: rateHandler,
-				build: (vs) => { const t = personalTitle(vs.state); return [C([S([`## ${t.name}`, `${scoreText(t)}  ·  ${t.year}  ·  ${rt(t.runtime)}\n-# ${genres(t)}`, `**${t.match}%** taste match  ·  ${memberStatus(t, vs.state, vs)}`], Th(t.poster, `${t.name} poster`)), X(short(t)), Sep(), X(`-# Where to watch in Germany\n${prov(t)}`), memberRow(vs.state, vs), guestButtons(t)], vibe(t.score))]; } },
-			{ name: "OG hero plus a member line", why: "Same as 1B; the match and state sit directly under the image, where the eye lands first.", states: PERSONAL_STATES, on: rateHandler,
-				build: (vs) => { const t = personalTitle(vs.state); return [C([G([ogItem(t)]), X(`### ${t.match}% taste match\n-# ${memberStatus(t, vs.state, vs)}`), X(short(t)), X(`-# Where to watch in Germany\n${prov(t)}`), memberRow(vs.state, vs), guestButtons(t)], AMBER)]; } },
-			{ name: "Two containers: title and you", why: "The top container is exactly what Share posts; the amber container below holds only the member's part, so nothing private leaks by habit.", states: PERSONAL_STATES, on: rateHandler,
-				build: (vs) => { const t = personalTitle(vs.state); return [C([S([`## ${t.name}`, `${scoreText(t)}  ·  ${t.year}  ·  ${rt(t.runtime)}\n-# ${genres(t)}`, short(t)], Th(t.poster, `${t.name} poster`)), Sep(), X(`-# Where to watch in Germany\n${prov(t)}`), guestButtons(t)], vibe(t.score)), C([X(`### ${t.match}% taste match\n-# ${memberStatus(t, vs.state, vs)}`), memberRow(vs.state, vs)], AMBER)]; } },
+			{ name: "Guest card plus a member line", why: "Same layout as 1A with the match and state in the section, member buttons on their own row above the shared ones.", states: PERSONAL_STATES, on: personalOn,
+				build: (vs) => { const t = personalTitle(vs.state); return [C([S([`## ${t.name}`, `${scoreText(t)}  ·  ${t.year}  ·  ${rt(t.runtime)}\n-# ${genres(t)}`, `${matchText(t)}\n-# ${memberStatus(personalMs(vs))}`], Th(t.poster, `${t.name} poster`)), X(short(t)), Sep(), X(`-# Where to watch in Germany\n${prov(t)}`), memberRow(personalMs(vs)), guestButtons(t)], vibe(t.score))]; } },
+			{ name: "OG hero plus a member line", why: "Same as 1B; the match and state sit directly under the image, where the eye lands first.", states: PERSONAL_STATES, on: personalOn,
+				build: (vs) => { const t = personalTitle(vs.state); return [C([G([ogItem(t)]), X(`### ${matchText(t)}\n-# ${memberStatus(personalMs(vs))}`), X(short(t)), X(`-# Where to watch in Germany\n${prov(t)}`), memberRow(personalMs(vs)), guestButtons(t)], AMBER)]; } },
+			{ name: "Two containers: title and you", why: "The top container is exactly what Share posts; the amber container below holds only the member's part, so nothing private leaks by habit.", states: PERSONAL_STATES, on: personalOn,
+				build: (vs) => { const t = personalTitle(vs.state); return [C([S([`## ${t.name}`, `${scoreText(t)}  ·  ${t.year}  ·  ${rt(t.runtime)}\n-# ${genres(t)}`, short(t)], Th(t.poster, `${t.name} poster`)), Sep(), X(`-# Where to watch in Germany\n${prov(t)}`), guestButtons(t)], vibe(t.score)), C([X(`### ${matchText(t)}\n-# ${memberStatus(personalMs(vs))}`), memberRow(personalMs(vs))], AMBER)]; } },
 		],
 	},
 	{
 		id: "watch", n: 3, title: "/watch pick", cmd: "/watch type: movie",
-		note: "One pick for tonight. Another swaps in the next pick. Guests get the link prompt.",
+		note: "One pick for tonight. Another swaps in the next pick. Guests get the link prompt. Members get their match, seen or rated state, and Want to see, Seen, Rate on a second row. Shared copy is what Share to channel posts: the guest card, public, with no member data.",
 		variants: [
-			{ name: "Poster pick with an inline link prompt", why: "Title card layout with a one-line eyebrow; the guest prompt is a section with the link button beside it.", states: WATCH_STATES, on: another,
-				build: (vs) => { const t = pickOf(vs); const m = vs.state === "member"; return [C([X(watchEyebrow(vs.state)), S([`## ${t.name}`, `${scoreText(t)}  ·  ${t.year}  ·  ${rt(t.runtime)}${m ? `\n**${t.match}%** taste match` : ""}\n-# ${genres(t)}`, short(t)], Th(t.poster, `${t.name} poster`)), X(prov(t)), R(B("Another", "primary", { id: "another" }), B("Where to watch", "secondary", { id: "where" }), B("Open on GoodWatch", "link", { url: t.url })), !m && Sep(), !m && S(["**Link GoodWatch for picks that fit your taste**\n-# Your taste match on every title, from your own services."], B("Link GoodWatch", "link", { url: LINK_URL }))], vibe(t.score))]; } },
-			{ name: "OG hero pick", why: "The /og image does the talking; the guest prompt is the spec's full-label link button on its own row.", states: WATCH_STATES, on: another,
-				build: (vs) => { const t = pickOf(vs); const m = vs.state === "member"; return [C([X(watchEyebrow(vs.state)), G([ogItem(t)]), X(`${m ? `**${t.match}%** taste match\n` : ""}${short(t)}\n${prov(t)}`), R(B("Another", "primary", { id: "another" }), B("Where to watch", "secondary", { id: "where" }), B("Open on GoodWatch", "link", { url: t.url })), !m && R(B("Link GoodWatch for picks that fit your taste", "link", { url: LINK_URL }))], AMBER)]; } },
-			{ name: "Backdrop pick, quiet prompt", why: "Cinematic backdrop with an app emoji score; the guest prompt is a markdown link in small text, the least pushy option.", states: WATCH_STATES, on: another,
-				build: (vs) => { const t = pickOf(vs); const m = vs.state === "member"; return [C([G([{ url: t.backdrop, alt: `${t.name} backdrop`, shape: "wide" }]), X(`-# Tonight's pick\n# ${t.name}\n{s:${t.score}} **${label(t.score)}**  ·  ${t.year}  ·  ${rt(t.runtime)}${m ? `  ·  **${t.match}%** taste match` : ""}`), X(short(t)), X(prov(t)), R(B("Another", "primary", { id: "another" }), B("Where to watch", "secondary", { id: "where" }), B("Open on GoodWatch", "link", { url: t.url })), !m && X(`-# [Link GoodWatch](${LINK_URL}) for picks that fit your taste.`)])]; } },
+			{ name: "Poster pick with an inline link prompt", why: "Title card layout with a one-line eyebrow; the guest prompt is a section with the link button beside it.", states: WATCH_STATES, on: watchOn,
+				build: (vs) => { const t = pickOf(vs); const m = vs.state === "member", g = vs.state === "guest", sh = vs.state === "shared"; return [C([X(watchEyebrow(vs.state)), S([`## ${t.name}`, `${scoreText(t)}  ·  ${t.year}  ·  ${rt(t.runtime)}\n-# ${genres(t)}`, short(t)], Th(t.poster, `${t.name} poster`)), m && X(`${matchText(t)}\n-# ${memberStatus(watchMs(vs))}`), X(prov(t)), sh ? sharedRow(t) : watchRow(t), m && memberRow(watchMs(vs)), g && Sep(), g && S(["**Link GoodWatch for picks that fit your taste**\n-# Your taste match on every title, from your own services."], B("Link GoodWatch", "link", { url: LINK_URL }))], vibe(t.score))]; } },
+			{ name: "OG hero pick", why: "The /og image does the talking; the guest prompt is the spec's full-label link button on its own row.", states: WATCH_STATES, on: watchOn,
+				build: (vs) => { const t = pickOf(vs); const m = vs.state === "member", g = vs.state === "guest", sh = vs.state === "shared"; return [C([X(watchEyebrow(vs.state)), G([ogItem(t)]), X(`${m ? `${matchText(t)}\n-# ${memberStatus(watchMs(vs))}\n` : ""}${short(t)}\n${prov(t)}`), sh ? sharedRow(t) : watchRow(t), m && memberRow(watchMs(vs)), g && R(B("Link GoodWatch for picks that fit your taste", "link", { url: LINK_URL }))], AMBER)]; } },
+			{ name: "Backdrop pick, quiet prompt", why: "Cinematic backdrop with an app emoji score; the guest prompt is a markdown link in small text, the least pushy option.", states: WATCH_STATES, on: watchOn,
+				build: (vs) => { const t = pickOf(vs); const m = vs.state === "member", g = vs.state === "guest", sh = vs.state === "shared"; return [C([G([{ url: t.backdrop, alt: `${t.name} backdrop`, shape: "wide" }]), X(`-# ${sh ? "Shared by @alp" : "Tonight's pick"}\n# ${t.name}\n{s:${t.score}} **${label(t.score)}**  ·  ${t.year}  ·  ${rt(t.runtime)}${m ? `\n${matchText(t)}  ·  ${memberStatus(watchMs(vs))}` : ""}`), X(short(t)), X(prov(t)), sh ? sharedRow(t) : watchRow(t), m && memberRow(watchMs(vs)), g && X(`-# [Link GoodWatch](${LINK_URL}) for picks that fit your taste.`)])]; } },
 		],
 	},
 	{
@@ -445,23 +478,29 @@ const CARDS = [
 	},
 	{
 		id: "together", n: 5, title: "/together public message", cmd: "/together mood: feel-good type: movie", public: true,
-		note: "Public in the channel, edited by the bot. Example: 4 participants, 2 still voting, Spirited Away matched, Coco is a possible match waiting for 2.",
+		note: "Public in the channel, edited by the bot. Example: 4 participants, 2 still voting, Spirited Away matched, Coco is a possible match waiting for 2. Pressing Join leaves the count at 4 until that person votes. Deck exhausted: 120 titles without a match, the starter chooses from the three with the most Yep votes. Ended and Expired close the session.",
 		variants: [
 			{ name: "Scoreboard", why: "All text: matches and possible matches as score-emoji lines. Calm, compact, and cheap to edit often.", states: TOGETHER_STATES,
 				build: (vs) => {
 					if (vs.state === "lobby") return lobbyTree();
+					if (vs.state === "ended" || vs.state === "expired") return closedTree(vs.state);
+					if (vs.state === "exhausted") return [C([exhaustedHead(), Sep(), X(TOP_YEP.map(yepLine).join("\n")), ...exhaustedRows()], AMBER)];
 					if (vs.state === "decided") { const t = T.spirited; return [C([X("-# Movie night · feel-good movies · decided"), S([`# ${t.name}`, `Everyone picked it. **4 of 4** participants.`, `${scoreText(t)}  ·  ${t.year}  ·  ${rt(t.runtime)}\n{e:netflix} Streaming on **Netflix** in Germany`], Th(t.poster, `${t.name} poster`)), R(B("Open on GoodWatch", "link", { url: t.url }), B("Where to watch", "secondary", { id: "where" }))], vibe(t.score))]; }
 					return [C([togetherHead(), Sep(), X(`### Match\n{s:92} **Spirited Away**  ·  2001  ·  {e:netflix} Netflix\n-# Picked by 2 of 4`), X(`### Possible match\n{s:87} **Coco**  ·  2017  ·  {e:disney} Disney+  ·  waiting for 2`), ...togetherRows()], AMBER)];
 				} },
 			{ name: "Match posters", why: "Each match or possible match is a section with its poster, so the channel sees the films, not a list. Decided uses the OG image.", states: TOGETHER_STATES,
 				build: (vs) => {
 					if (vs.state === "lobby") return lobbyTree();
+					if (vs.state === "ended" || vs.state === "expired") return closedTree(vs.state);
+					if (vs.state === "exhausted") return [C([exhaustedHead(), Sep(), ...TOP_YEP.map(({ t, y }) => S([`### ${t.name}`, `{s:${t.score}} **${label(t.score)}**  ·  ${t.year}  ·  ${prov(t)}`, `**${y} of 4** voted Yep`], Th(t.poster, `${t.name} poster`))), ...exhaustedRows()], AMBER)];
 					if (vs.state === "decided") { const t = T.spirited; return [C([X(`## Decided: ${t.name}\nEveryone picked it. **4 of 4** participants.`), G([ogItem(t)]), X(`{e:netflix} Streaming on **Netflix** in Germany`), R(B("Open on GoodWatch", "link", { url: t.url }), B("Where to watch", "secondary", { id: "where" }))], AMBER)]; }
 					return [C([togetherHead(), Sep(), S([`### Spirited Away`, `{s:92} **Excellent**  ·  2001  ·  {e:netflix} Netflix`, `**Match**  ·  picked by 2 of 4`], Th(T.spirited.poster, "Spirited Away poster")), S([`### Coco`, `{s:87} **Excellent**  ·  2017  ·  {e:disney} Disney+`, `**Possible match**  ·  waiting for 2`], Th(T.coco.poster, "Coco poster")), ...togetherRows()], AMBER)];
 				} },
 			{ name: "Poster wall", why: "Matches as one media gallery (side by side, cropped), captions below. Decided is a full backdrop announcement.", states: TOGETHER_STATES,
 				build: (vs) => {
 					if (vs.state === "lobby") return lobbyTree();
+					if (vs.state === "ended" || vs.state === "expired") return closedTree(vs.state);
+					if (vs.state === "exhausted") return [C([exhaustedHead(), G(TOP_YEP.map(({ t }) => ({ url: t.poster, alt: `${t.name} poster` }))), X(TOP_YEP.map(({ t, y }) => `**${t.name}** · ${y} of 4 voted Yep`).join("\n")), ...exhaustedRows()], AMBER)];
 					if (vs.state === "decided") { const t = T.spirited; return [C([G([{ url: t.backdrop, alt: `${t.name} backdrop`, shape: "wide" }]), X(`-# Movie night · decided\n# ${t.name}\n{s:${t.score}} **${label(t.score)}**  ·  ${t.year}  ·  ${rt(t.runtime)}  ·  {e:netflix} Netflix\n-# Everyone picked it. 4 of 4 participants.`), R(B("Open on GoodWatch", "link", { url: t.url }), B("Where to watch", "secondary", { id: "where" }))], vibe(t.score))]; }
 					return [C([togetherHead(), G([{ url: T.spirited.poster, alt: "Spirited Away, match" }, { url: T.coco.poster, alt: "Coco, possible match" }]), X(`**Spirited Away** · match, picked by 2 of 4\n**Coco** · possible match, waiting for 2`), ...togetherRows()], AMBER)];
 				} },
@@ -469,12 +508,12 @@ const CARDS = [
 	},
 	{
 		id: "vote", n: 6, title: "/together private voting card", cmd: "Join", replyKind: "button",
-		note: "Only the voter sees it. Each press replaces the card with the next title. Try Yep, Nope, Undo, and Leave.",
+		note: "Only the voter sees it. Each press replaces the card with the next title. Try Yep, Nope, Undo, and Leave. Just joined is title 1, before the first vote makes the person a participant. The deck grows in steps of 30 up to 120; after title 120 the card says the deck is done.",
 		variants: [
-			{ name: "Poster thumbnail", why: "Compact like the title card; buttons stay in the same place for fast thumb voting on phones.", on: deckVote,
-				build: (vs) => { if (vs.left) return leftTree(); const t = DECK[(vs.i || 0) % DECK.length]; return [C([X(`-# Movie night · title ${7 + (vs.i || 0)} of 30 · your votes are private`), S([`## ${t.name}`, `${scoreText(t)}  ·  ${t.year}  ·  ${rt(t.runtime)}\n-# ${genres(t)}`, prov(t)], Th(t.poster, `${t.name} poster`)), voteRow(vs)], vibe(t.score))]; } },
-			{ name: "Big poster", why: "The poster is the card, like swiping in YepWatch; bold, but on phones the buttons sit below a tall image.", on: deckVote,
-				build: (vs) => { if (vs.left) return leftTree(); const t = DECK[(vs.i || 0) % DECK.length]; return [C([G([{ url: t.poster, alt: `${t.name} poster`, shape: "poster" }]), X(`### ${t.name}\n{s:${t.score}} **${label(t.score)}**  ·  ${t.year}  ·  ${rt(t.runtime)}  ·  ${prov(t)}\n-# Title ${7 + (vs.i || 0)} of 30 · your votes are private`), voteRow(vs)], vibe(t.score))]; } },
+			{ name: "Poster thumbnail", why: "Compact like the title card; buttons stay in the same place for fast thumb voting on phones.", states: VOTE_STATES, on: deckVote,
+				build: (vs) => { if (vs.left) return leftTree(); if (votePos(vs) > 120) return deckDoneTree(); const t = DECK[votePos(vs) % DECK.length]; return [C([X(`-# Movie night · ${voteEyebrow(vs).replace(/^T/, "t")}`), S([`## ${t.name}`, `${scoreText(t)}  ·  ${t.year}  ·  ${rt(t.runtime)}\n-# ${genres(t)}`, prov(t)], Th(t.poster, `${t.name} poster`)), voteRow(vs)], vibe(t.score))]; } },
+			{ name: "Big poster", why: "The poster is the card, like swiping in YepWatch; bold, but on phones the buttons sit below a tall image.", states: VOTE_STATES, on: deckVote,
+				build: (vs) => { if (vs.left) return leftTree(); if (votePos(vs) > 120) return deckDoneTree(); const t = DECK[votePos(vs) % DECK.length]; return [C([G([{ url: t.poster, alt: `${t.name} poster`, shape: "poster" }]), X(`### ${t.name}\n{s:${t.score}} **${label(t.score)}**  ·  ${t.year}  ·  ${rt(t.runtime)}  ·  ${prov(t)}\n-# ${voteEyebrow(vs)}`), voteRow(vs)], vibe(t.score))]; } },
 		],
 	},
 	{
@@ -531,7 +570,7 @@ function renderVariant(card, vi) {
 	<div class="vmeta"><span class="chip ${total <= 40 && !errs.length ? "ok" : "bad"}">components: ${total}/40</span><span class="chip">${card.public ? "public" : "ephemeral"}</span>${v.states ? `<span class="states">${v.states.map((s) => `<button data-state="${s.k}" data-v="${vid}" class="${vstate[vid].state === s.k ? "on" : ""}">${esc(s.l)}</button>`).join("")}</span>` : ""}</div>
 	${errs.length ? `<div class="errs">${errs.map(esc).join("<br>")}</div>` : ""}
 	${html}
-	<details class="payload"><summary>Discord payload (${chars} of 4000 text characters)</summary><pre>${esc(JSON.stringify({ flags, components: tree.map(payload) }, null, 2))}</pre></details>`;
+	<details class="payload"><summary>Discord payload with sample IDs (${chars} of 4000 text characters)</summary><pre>${esc(JSON.stringify({ flags, components: tree.map(payload) }, null, 2))}</pre></details>`;
 	el.querySelector("details").open = !!vstate[vid].payloadOpen;
 	el.querySelector("details").ontoggle = (e) => (vstate[vid].payloadOpen = e.target.open);
 }
@@ -544,29 +583,54 @@ const find = (vid) => { const [cid, i] = [vid.slice(0, vid.lastIndexOf("-")), +v
 
 let toastTimer;
 function toast(msg) { const t = $("#toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), 2200); }
-const WOULD = { where: "Would answer with every offer in Germany: stream, rent, buy", similar: "Would answer with up to 10 similar titles", share: "Would post the guest card in the channel", seen: "Would log a watch today and confirm with Undo", want: "Would toggle Want to see and confirm with Undo", join: "Would open the private voting card (see card 6)", end: "Only the starter can end the session", next: "Would load page 2", prev: "Already on page 1" };
+const WOULD = { where: "Would answer with every offer in Germany: stream, rent, buy", similar: "Would answer with up to 10 similar titles", share: "Would post the guest card in the channel", seen: "Would log a watch today and confirm with Undo", want: "Would toggle Want to see and confirm with Undo", join: "Would open the private voting card (see card 6). The count stays at 4 participants until this person votes", end: "Only the starter can end the session", next: "Would load page 2", prev: "Already on page 1" };
 
-function openRateModal(onSubmit) {
-	const m = $("#modal"); let pick = 8;
+// A real Discord modal: a title (max 45 characters), a Text Display, and a Label (type 18) around a String Select.
+const clip = (x, n) => (x.length <= n ? x : x.slice(0, n - 1) + "…");
+function ratePayload(t, current) {
+	const intro = `**${t.name}** (${t.year})  ·  {s:${t.score}} ${label(t.score)} on GoodWatch${current ? `\n-# You rated it ${current} · ${LABELS[current]}. A new score replaces it.` : ""}`;
+	const options = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => ({ label: String(n), value: String(n), description: LABELS[n], ...(n === current ? { default: true } : {}) }));
+	return {
+		intro,
+		json: { type: 9, data: { custom_id: `gw:rate:movie:${t.slug.split("-")[0]}`, title: clip(`Rate ${t.name}`, 45), components: [
+			{ type: 10, content: content(intro) },
+			{ type: 18, label: "Your score", description: "1 is Unwatchable, 10 is Masterpiece.", component: { type: 3, custom_id: "score", placeholder: "Choose a score", min_values: 1, max_values: 1, required: true, options } },
+		] } },
+	};
+}
+function openRateModal(t, current, onSubmit) {
+	const m = $("#modal"); let pick = current || null; let open = false; let showJson = false; let err = false;
+	const { intro, json } = ratePayload(t, current);
 	const draw = () => {
-		m.innerHTML = `<div class="dc modal" style="padding:0"><div class="mh"><img src="goodwatch-avatar.png" alt=""><b>Rate Project Hail Mary</b></div><div class="mbody"><label>Your score</label><div class="scores">${[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((s) => `<button data-s="${s}" class="${s === pick ? "on" : ""}" style="color:${vibe(s * 10)}">${s}</button>`).join("")}</div><div class="td" style="margin-top:10px"><div class="sub">${pick} · ${LABELS[pick]}</div></div></div><div class="mf"><button class="plink" data-x>Cancel</button><button class="btn primary" data-ok>Submit</button></div></div>`;
+		m.innerHTML = `<div class="dc modal" style="padding:0"><div class="mh"><img src="goodwatch-avatar.png" alt=""><b>${esc(json.data.title)}</b><span class="mx" data-x>✕</span></div><div class="mbody">
+			<div class="td">${md(intro)}</div>
+			<div class="lbl">Your score <span class="req">*</span></div><div class="ldesc">1 is Unwatchable, 10 is Masterpiece.</div>
+			<div class="selw${open ? " open" : ""}"><div class="sel" data-msel style="${pick ? "color:var(--hdr)" : ""}">${pick ? String(pick) : "Choose a score"}${CHEV}</div><div class="opts">${[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => `<div class="opt" data-mopt="${n}"><div><div class="ol">${n}</div><div class="od">${LABELS[n]}</div></div></div>`).join("")}</div></div>
+			${err ? `<div class="errs" style="margin-top:6px">This field is required.</div>` : ""}
+		</div><div class="mf"><button class="plink" data-x>Cancel</button><button class="btn primary" data-ok>Submit</button></div>
+		<details class="payload" style="margin:0;padding:0 16px 16px;background:var(--ct)"${showJson ? " open" : ""}><summary>Modal payload with sample IDs (interaction response type 9)</summary><pre>${esc(JSON.stringify(json, null, 2))}</pre></details></div>`;
+		m.querySelector("details").ontoggle = (e) => (showJson = e.target.open);
 	};
 	draw(); m.classList.add("show");
 	m.onclick = (e) => {
-		const s = e.target.closest("[data-s]"); if (s) { pick = +s.dataset.s; draw(); return; }
-		if (e.target.closest("[data-ok]")) { m.classList.remove("show"); onSubmit(pick); toast(`Saved ${pick} · ${LABELS[pick]}. The confirmation would offer Undo.`); return; }
-		if (e.target.closest("[data-x]") || e.target === m) m.classList.remove("show");
+		e.stopPropagation();
+		if (e.target.closest("summary, pre")) return;
+		const o = e.target.closest("[data-mopt]"); if (o) { pick = +o.dataset.mopt; open = false; err = false; draw(); return; }
+		if (e.target.closest("[data-msel]")) { open = !open; draw(); return; }
+		if (e.target.closest("[data-ok]")) { if (!pick) { err = true; draw(); return; } m.classList.remove("show"); onSubmit(pick); toast(`Saved ${pick} · ${LABELS[pick]} for ${t.name}. The confirmation would offer Undo.`); return; }
+		if (e.target.closest("[data-x]") || e.target === m) { m.classList.remove("show"); return; }
+		if (open) { open = false; draw(); }
 	};
 }
 
 document.addEventListener("click", (e) => {
 	const st = e.target.closest("[data-state]");
-	if (st) { const { card, vi } = find(st.dataset.v); Object.assign(vstate[st.dataset.v], { state: st.dataset.state, i: 0, undone: false, rated: null, left: false }); renderVariant(card, vi); return; }
+	if (st) { const { card, vi } = find(st.dataset.v); Object.assign(vstate[st.dataset.v], { state: st.dataset.state, i: 0, undone: false, rated: null, want: undefined, seen: undefined, left: false }); renderVariant(card, vi); return; }
 	const sel = e.target.closest("[data-sel]");
 	document.querySelectorAll(".selw.open").forEach((w) => { if (!sel || w !== sel.parentElement) w.classList.remove("open"); });
 	if (sel) { sel.parentElement.classList.toggle("open"); return; }
 	const opt = e.target.closest("[data-opt]");
-	if (opt) { toast(opt.dataset.sid === "pick" ? `Your pick: ${opt.dataset.label}. Decides when every participant picks it.` : `Would open ${opt.dataset.label} as a title card`); return; }
+	if (opt) { toast(opt.dataset.sid === "pick" ? `Your pick: ${opt.dataset.label}. Decides when every participant picks it.` : opt.dataset.sid === "starter" ? `Only @alp can choose. If @alp picks ${opt.dataset.label}, the bot announces it as decided; anyone else gets a private "Only the starter can choose" answer.` : `Would open ${opt.dataset.label} as a title card`); return; }
 	if (e.target.closest("[data-dismiss]")) { toast("Dismiss removes the ephemeral message for this person"); return; }
 	const btn = e.target.closest("button[data-act]");
 	if (btn) {
