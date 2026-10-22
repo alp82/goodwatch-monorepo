@@ -1,0 +1,22 @@
+{
+  "nativeEmulator": "emulator-5562",
+  "nativeGateway": "ws://127.0.0.1:4323",
+  "browserGateway": "ws://127.0.0.1:4322",
+  "browserOrigin": "http://127.0.0.1:8132",
+  "api": "http://127.0.0.1:15993",
+  "catalog": "Real finite36-title sample",
+  "checks": [
+    "Ordinary native host invite and independent browser admission/readiness reached choosing over separate real gateways",
+    "Native received the browser answer as an immediate confirmed match without another native command",
+    "Browser final pick produced server-confirmed Done on both platforms; native received the peer decision"
+  ],
+  "physicalDevice": false,
+  "authOrCredentialTesting": false,
+  "browserFrames": {
+    "shared": 9,
+    "activity": 9
+  },
+  "browserJavaScriptErrors": [],
+  "passed": true,
+  "completedAt": "2026-10-22T01:04:14.908287+00:00"
+}

@@ -1,0 +1,18 @@
+{
+  "emulator": "emulator-5562",
+  "api": "http://127.0.0.1:15993",
+  "catalog": "Real finite36-title sample",
+  "checks": [
+    "Native connection reached live only after the authenticated shared snapshot",
+    "Native guest create, explicit DE/Netflix8 setup and actual API-backed title deck rendered",
+    "Native Nope and authoritative Undo restore the same real title",
+    "Native immediate match, pick and server-confirmed fresh-check Done succeeded",
+    "Ordinary background/resume retained the confirmed decision"
+  ],
+  "physicalDevice": false,
+  "authOrCredentialTesting": false,
+  "webSocketOrigin": "ws://127.0.0.1:4323",
+  "requiresLive": true,
+  "passed": true,
+  "completedAt": "2026-10-22T00:59:45.001943+00:00"
+}

@@ -1,0 +1,50 @@
+{
+  "sourceCommit": "a72308ab75f35a9c760b5bfeb7626f139f90ada0",
+  "runtimeAppSourceChanged": false,
+  "packageChanges": false,
+  "generatedOutputsCommitted": false,
+  "ownerBuildAndUiChecks": "PASS",
+  "independentNativeReview": "Not performed",
+  "priorIndependentReviewGaps": [
+    "r12/layout",
+    "r13/guest recovery"
+  ],
+  "memberRefresh": "Excluded",
+  "paths": [
+    {
+      "path": "docs/native-build.md",
+      "sha256": "f91a060200089cac767df7bfee37ef955675de657980369939171b0c0f2f4949"
+    },
+    {
+      "path": "docs/glow-implementation.md",
+      "sha256": "75fdd807f62d43cabe15126fed4aaf008294e2231ffd9a7d29ce61700909c3b9"
+    },
+    {
+      "path": "scripts/native-android-smoke.py",
+      "sha256": "b07d9eabdda93197d1674d74d09f72ad422833b79b00e1d344dc5cad04ef5d11"
+    },
+    {
+      "path": "scripts/native-browser-peer.cjs",
+      "sha256": "91386c1f59abf0f8df5da8577e6947abb5cb5c943225279bc70870262b6f4256"
+    },
+    {
+      "path": "scripts/native-mixed-smoke.py",
+      "sha256": "9e5fc6e47282b0a3c1957ae20eb7ba1808dc67480ddf47f290d6f542cc8ad689"
+    }
+  ],
+  "evidence": [
+    "artifacts/native/android-build.json",
+    "artifacts/native/android-ui-smoke.json",
+    "artifacts/native/android-browser-mixed.json",
+    "artifacts/native/toolchain.json",
+    "artifacts/native/source.json",
+    "artifacts/native/retained-web-unchanged.json"
+  ],
+  "retainedForInspection": {
+    "emulator": "emulator-5562, read-only Pixel8 API35",
+    "metro": "http://127.0.0.1:8140",
+    "nativeGateway": "ws://127.0.0.1:4323",
+    "browserApp": "http://127.0.0.1:8132, unchanged",
+    "metroPid": 3286493
+  }
+}

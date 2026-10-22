@@ -1,0 +1,27 @@
+{
+  "sourceCommit": "a72308ab75f35a9c760b5bfeb7626f139f90ada0",
+  "apk": "/home/alp/dev/projects/goodwatch/goodwatch-monorepo/yepwatch-app/.expo/native-build/a72308ab/yepwatch-app/android/app/build/outputs/apk/debug/app-debug.apk",
+  "sha256": "ee91eeb3a4708eaa46f7c9ac32f80c836935b477dfd74edcb3b26a79cc27ec55",
+  "bytes": 146240993,
+  "buildCompletedAt": "2026-10-22T00:53:24.087322+00:00",
+  "variant": "debug",
+  "debugServerPort": 8140,
+  "javaScriptDelivery": "Development Metro8140, not an offline standalone release bundle",
+  "package": "dev.yepwatch.foundation",
+  "versionName": "0.1.0",
+  "versionCode": 1,
+  "compileSdk": 37,
+  "targetSdk": 36,
+  "minSdk": 24,
+  "architectures": [
+    "arm64-v8a",
+    "x86_64"
+  ],
+  "buildResult": "BUILD SUCCESSFUL in4m34s;380 actionable tasks executed",
+  "install": "adb install Success",
+  "launch": "Activity dev.yepwatch.foundation/.MainActivity Status ok",
+  "sourceConfigChanged": false,
+  "packageFilesChanged": false,
+  "productionSigningChanges": false,
+  "toolchain": "artifacts/native/toolchain.json"
+}
