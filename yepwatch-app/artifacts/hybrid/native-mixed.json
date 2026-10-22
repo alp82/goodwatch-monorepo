@@ -1,0 +1,18 @@
+{
+  "serial": "emulator-5562",
+  "physicalDevice": false,
+  "package": "dev.yepwatch.hybrid",
+  "api": "http://127.0.0.1:15992",
+  "gateway": "ws://127.0.0.1:4324",
+  "browser": "http://127.0.0.1:8133",
+  "checks": [
+    "Native explicit proposal received independent browser agreement without unilateral Done",
+    "Browser replacement cleared native approval; native Agree and withdrawal were explicit and live",
+    "All three current identities explicitly agreed to replacement; fresh availability produced confirmed Done on native and browsers"
+  ],
+  "passed": true,
+  "sharedFrames": 41,
+  "activityFrames": 51,
+  "javascriptErrors": [],
+  "completedAt": "2026-10-22T10:42:39Z"
+}

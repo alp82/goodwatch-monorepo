@@ -16,9 +16,9 @@ export function realtimeUrl(path: string) {
   if (url.protocol !== 'wss:' && !(['localhost', '127.0.0.1', '[::1]'].includes(url.hostname) && url.protocol === 'ws:')) throw new Error('Realtime requires WSS outside loopback development.');
   return `${url.origin}${path}`;
 }
-/** v2 is isolated from retained contract1 deployments. */
+/** Contract3 is isolated from retained contract1/2 deployments. */
 export function continuousRealtimeUrl(path: string) {
-  if (path !== '/api/yepwatch/v1/continuous/realtime') throw new Error('Unexpected continuous realtime path.');
+  if (path !== '/api/yepwatch/v1/proposal/realtime') throw new Error('Unexpected continuous realtime path.');
   const url = new URL(process.env.EXPO_PUBLIC_WS_ORIGIN ?? apiOrigin.replace(/^http/, 'ws'));
   if (url.protocol !== 'wss:' && !(['localhost', '127.0.0.1', '[::1]'].includes(url.hostname) && url.protocol === 'ws:')) throw new Error('Realtime requires WSS outside loopback.');
   return `${url.origin}${path}`;

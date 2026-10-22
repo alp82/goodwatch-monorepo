@@ -4,11 +4,12 @@ import { useQuery } from '@tanstack/react-query';
 import * as Crypto from 'expo-crypto';
 import type {
   ActivityGesture,
+  MatchInspection,
   ActivityView,
   CommandEnvelope,
   RoomCommand,
   RoomSnapshot,
-} from '@goodwatch/yepwatch-contracts/continuous';
+} from '@goodwatch/yepwatch-contracts/proposal';
 import { continuousApi as api, RoomFailure } from './api';
 import { loadAccess, nativeClient, saveAccess, type RoomAccess } from '../credentials';
 import { queryClient } from '../providers';
@@ -19,7 +20,7 @@ import { mergeRoom, mergePublic, PersistentCommands, type CachedRoom } from './s
 import { readPending, writePending } from './storage';
 import { ContinuousRealtime } from './realtime';
 import { applyActivity, pruneActivity, type PeerActivity } from './activity';
-export const continuousKey = (id: string) => ['continuous-room', id] as const;
+export const continuousKey = (id: string) => ['proposal-room', id] as const;
 export function useContinuousRoom(roomId: string) {
   const [access, setAccess] = useState<RoomAccess | null>();
   const [connection, setConnection] = useState<Connection>('connecting');
@@ -187,10 +188,20 @@ export function useContinuousRoom(roomId: string) {
         else if (!terminalRef.current) setConnection(state);
       },
       clearActivity: () => setActivities(new Map()),
-      activity: (frame) =>
+      activity: (frame) => {
+        if (
+          frame.inspection?.kind === 'poster' &&
+          !cached()?.shared.matches.some(
+            (m) =>
+              m.candidateId ===
+              (frame.inspection?.kind === 'poster' ? frame.inspection.candidateId : null)
+          )
+        )
+          return;
         setActivities((old) =>
           applyActivity(old, frame, cached()?.own.participantId ?? '', Date.now() + clock.current)
-        ),
+        );
+      },
     });
     channel.current = realtime;
     if (AppState.currentState === 'active') realtime.start();
@@ -247,8 +258,8 @@ export function useContinuousRoom(roomId: string) {
           e instanceof RoomFailure
             ? publicFailureMessage(e.code, e.message, e.details)
             : e instanceof Error
-            ? e.message
-            : 'Your action could not be confirmed.'
+              ? e.message
+              : 'Your action could not be confirmed.'
         );
       if (!queue.current.pending) void refetch().catch(() => undefined);
       return false;
@@ -274,6 +285,8 @@ export function useContinuousRoom(roomId: string) {
     activities,
     activityNow: () => Date.now() + clock.current,
     setView: (view: ActivityView) => channel.current?.setView(view),
+    inspect: (inspection: MatchInspection) =>
+      channel.current?.sendActivity('matches', undefined, undefined, inspection),
     activity: (gesture?: ActivityGesture, beat?: 'answer') =>
       channel.current?.sendActivity(undefined, gesture, beat),
   };

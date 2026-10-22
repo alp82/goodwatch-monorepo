@@ -1,0 +1,30 @@
+{
+  "base": "f5e06a2b",
+  "sourceHash": "f989c97f9c002f5d0d18d01e7c8efe266c9ed71a5e21c07f3b5a979182feff2d",
+  "sourceManifest": "source-manifest.json",
+  "apk": "/home/alp/dev/projects/goodwatch/goodwatch-monorepo/yepwatch-app/.expo/native-build/hybrid-r1/yepwatch-app/android/app/build/outputs/apk/debug/app-debug.apk",
+  "apkSha256": "37865aa22d4a744033d729b43277385c321d25856fa6147575500a933e67ae3c",
+  "apkBytes": 146241025,
+  "abis": [
+    "arm64-v8a",
+    "x86_64"
+  ],
+  "nativeResult": "BUILD SUCCESSFUL in 2m 4s; 380 tasks executed",
+  "java": "Temurin21.0.12.1+1",
+  "compileSdk": 37,
+  "targetSdk": 36,
+  "gradle": "9.4.1",
+  "agp": "9.2.1",
+  "debug": true,
+  "offlineRelease": false,
+  "metro": "http://127.0.0.1:8141",
+  "appPackage": "dev.yepwatch.hybrid",
+  "stagingOnlyConfigChanges": {
+    "name": "YepWatch Hybrid",
+    "android.package": "dev.yepwatch.hybrid"
+  },
+  "mainAppConfigSha256": "6030581d01a7d6356a597e13712c24ea31dce42a74ccd4289b5baa7c2a12d1b4",
+  "stagedAppConfigSha256": "ef1738d9de36d3f28785aa07d6dd0beefbddad05966e84e80e7b45318d32d146",
+  "nativeJsSourceMatchesMain": true,
+  "mainPackageOrLockfileChanged": false
+}

@@ -1,4 +1,4 @@
-import { ACTIVITY_LIMITS, type ServerActivity } from '@goodwatch/yepwatch-contracts/continuous';
+import { ACTIVITY_LIMITS, type ServerActivity } from '@goodwatch/yepwatch-contracts/proposal';
 export interface PeerActivity {
   frame: ServerActivity;
   pulse: ServerActivity | null;
@@ -30,7 +30,7 @@ export function applyActivity(
     return next;
   }
   const pulse =
-    (incoming.gesture || incoming.beat) && incoming.serverTime + ACTIVITY_LIMITS.pulseTtlMs > now
+    (incoming.gesture || incoming.beat || incoming.inspection) && incoming.serverTime + ACTIVITY_LIMITS.pulseTtlMs > now
       ? incoming
       : old?.pulse && old.pulse.serverTime + ACTIVITY_LIMITS.pulseTtlMs > now
       ? old.pulse

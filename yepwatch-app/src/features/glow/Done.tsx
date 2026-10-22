@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Image, View } from 'react-native';
+import { titleYear } from './decision-model';
 import type { GlowTitle } from './model';
 import { GText, Icon, Pill, Press, glow } from './theme';
 /** Only rendered for a confirmed server decision after its fresh availability check. */
@@ -72,7 +73,7 @@ export function Done({
         {title.posterUrl ? (
           <Image
             source={{ uri: title.posterUrl }}
-            accessibilityLabel={`${title.title} poster`}
+            accessibilityLabel={`${titleYear(title)} poster`}
             style={{ width: '100%', height: '100%' }}
           />
         ) : (
@@ -98,7 +99,7 @@ export function Done({
           lines={2}
           style={{ textAlign: 'center', letterSpacing: -0.7 }}
         >
-          {title.title}
+          {titleYear(title)}
         </GText>
         {title.episodeLabel && (
           <GText size={14} color={glow.soft}>
@@ -106,7 +107,7 @@ export function Done({
           </GText>
         )}
         <GText size={14} color={glow.muted}>
-          Everyone picked it. Enjoy your watch.
+          Everyone agrees. Enjoy your watch.
         </GText>
         <View style={{ width: '100%', maxWidth: 440, gap: 4, marginTop: compact ? 0 : 6 }}>
           <Pill label="Where to watch" icon="external" gold onPress={where}>

@@ -3,7 +3,7 @@ import type {
   RoomCommand,
   RoomSnapshot,
   SharedRoomSnapshot,
-} from '@goodwatch/yepwatch-contracts/continuous';
+} from '@goodwatch/yepwatch-contracts/proposal';
 export type CachedRoom = RoomSnapshot & { ownRevision: number };
 export function mergeRoom(current: CachedRoom | undefined, incoming: RoomSnapshot): CachedRoom {
   if (!current || current.shared.roomId !== incoming.shared.roomId)

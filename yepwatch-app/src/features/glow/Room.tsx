@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Image, Linking, Share, View, useWindowDimensions } from 'react-native';
+import { Linking, Share, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useContinuousRoom } from '../../core/continuous/useRoom';
@@ -20,6 +20,9 @@ import { Poster } from './Poster';
 import { Drawer } from './Drawer';
 import { Trailer } from './Trailer';
 import { Done } from './Done';
+import { DecisionRoom } from './DecisionRoom';
+import { titleYear } from './decision-model';
+import { useActiveTime } from './useActiveTime';
 import { Lobby } from './Lobby';
 export function GlowRoom({ id, signin: initialSignin = false }: { id: string; signin?: boolean }) {
   const state = useContinuousRoom(id);
@@ -87,6 +90,24 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
       });
     }
   }, [snapshot, state.busy, state.pending, state.privateError, state.terminal, send]);
+  const observedCard = snapshot ? ownCard(snapshot, optimistic) : null;
+  const observedVote = snapshot?.own.votes.find((v) => v.candidateId === observedCard?.id);
+  const exposureKey =
+    snapshot && observedCard
+      ? `${snapshot.shared.generation}:${observedCard.id}:${observedVote?.revision ?? 0}`
+      : null;
+  const activeTime = useActiveTime(
+    id,
+    exposureKey,
+    Boolean(observedCard) &&
+      view === 'voting' &&
+      !drawer &&
+      !state.busy &&
+      !state.pending &&
+      !state.privateError &&
+      !state.terminal &&
+      snapshot?.shared.phase === 'choosing'
+  );
   const terminalText =
     state.terminal === 'expired' ? 'This room has expired' : 'Your room access ended';
   if (state.terminal || state.access === null)
@@ -139,9 +160,7 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
   const matches = shared.matches
     .map((m) => ({ ...m, candidate: shared.candidates.find((c) => c.id === m.candidateId) }))
     .filter((m) => m.candidate);
-  const pickId = shared.matches.some((m) => m.candidateId === own.pick.candidateId)
-    ? own.pick.candidateId
-    : null;
+  const pickId = shared.proposal?.candidateId ?? null;
   const activeId = boundedMatch(
     matches.map((m) => m.candidateId),
     active,
@@ -150,8 +169,8 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
   const card = decided
     ? shared.candidates.find((c) => c.id === shared.decision?.candidateId)
     : view === 'matches'
-    ? matches.find((m) => m.candidateId === activeId)?.candidate
-    : ownCard(snapshot, optimistic);
+      ? shared.candidates.find((c) => c.id === activeId)
+      : ownCard(snapshot, optimistic);
   const title = card ? titlePresentation(card) : null;
   const dimensions = presentationSize(stage.width, stage.height, wide);
   const disabled = state.busy || Boolean(state.pending) || state.privateError;
@@ -164,6 +183,38 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
     state.connection === 'live' ? groupActivity(state.activities, state.activityNow()) : new Map();
   const invite = invitation.data;
   const undoTarget = latestRetainedVote(snapshot);
+  const decisionItems = shared.candidates
+    .filter(
+      (c) =>
+        shared.matches.some((m) => m.candidateId === c.id) || shared.proposal?.candidateId === c.id
+    )
+    .map((c) => ({
+      title: titlePresentation(c),
+      averageYepMs: shared.matches.find((m) => m.candidateId === c.id)?.averageYepMs ?? null,
+    }));
+  const previousProposal = shared.candidates.find(
+    (c) => c.id === shared.proposal?.previousCandidateId
+  );
+  const inspectionCues = [...activity.values()].flatMap((a) => {
+    const pulse = a.pulse;
+    if (a.frame.view !== 'matches' || pulse?.view !== 'matches' || !pulse.inspection) return [];
+    if (
+      pulse.inspection.kind === 'poster' &&
+      !shared.matches.some(
+        (m) =>
+          m.candidateId ===
+          (pulse.inspection?.kind === 'poster' ? pulse.inspection.candidateId : null)
+      )
+    )
+      return [];
+    return [
+      {
+        participantId: pulse.participantId,
+        key: `${pulse.sessionId}:${pulse.sequence}`,
+        ...pulse.inspection,
+      },
+    ];
+  });
   async function vote(yes: boolean) {
     if (!card || disabled) return;
     const current = own.votes.find((v) => v.candidateId === card.id);
@@ -175,13 +226,9 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
       candidateId: card.id,
       expectedVoteRevision: current?.revision ?? 0,
       value: yes ? 'watch' : 'pass',
+      activeExposureMs: yes ? activeTime() : null,
     });
     setOptimistic(undefined);
-  }
-  function browse(direction: number) {
-    const index = matches.findIndex((m) => m.candidateId === activeId);
-    if (matches.length)
-      setActive(matches[Math.max(0, Math.min(matches.length - 1, index + direction))].candidateId);
   }
   async function undoVote() {
     if (!undoTarget || disabled) return;
@@ -193,14 +240,26 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
       value: null,
     });
   }
-  async function pick() {
-    if (!activeId || disabled) return;
+  async function propose(candidateId: string) {
+    if (disabled) return;
     await send({
-      type: 'pick',
+      type: 'propose',
       generation: shared.generation,
       expectedRosterVersion: shared.rosterVersion,
-      candidateId: activeId,
-      expectedPickRevision: own.pick.revision,
+      expectedProposalVersion: shared.proposalVersion,
+      candidateId,
+    });
+  }
+  async function agree(agreed: boolean) {
+    if (!shared.proposal || disabled) return;
+    await send({
+      type: 'agree',
+      generation: shared.generation,
+      expectedRosterVersion: shared.rosterVersion,
+      expectedProposalVersion: shared.proposalVersion,
+      candidateId: shared.proposal.candidateId,
+      expectedOwnAgreementRevision: own.agreement.revision,
+      agreed,
     });
   }
   async function signin() {
@@ -214,8 +273,8 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
         e instanceof RoomFailure && e.code === 'not_implemented'
           ? 'GoodWatch sign-in is not connected yet. Your guest place is saved; account services and progress have not been imported.'
           : e instanceof Error
-          ? e.message
-          : 'Sign-in could not start.'
+            ? e.message
+            : 'Sign-in could not start.'
       );
     } finally {
       setMemberBusy(false);
@@ -234,19 +293,22 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
         borderRadius: 28,
       }}
     >
-      {view === 'voting' && !decided ? (
+      {
         <>
           <Press
             label={
-              matches.length ? `Inspect ${matches.length} matches` : 'Matches will appear here'
+              matches.length
+                ? `Inspect ${matches.length} matches`
+                : shared.proposal
+                  ? 'Inspect proposal'
+                  : 'Matches will appear here'
             }
             onPress={() => {
-              if (matches.length) {
-                setActive(pickId ?? matches[0].candidateId);
+              if (matches.length || shared.proposal) {
                 setView('matches');
               }
             }}
-            disabled={!matches.length}
+            disabled={!matches.length && !shared.proposal}
             style={{
               flexDirection: 'row',
               gap: 12,
@@ -266,7 +328,11 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
                   : 'Matches'}
               </GText>
               <GText size={12} color={glow.muted}>
-                {matches.length ? 'Tap to reveal together' : 'Keep choosing. Matches appear here.'}
+                {shared.proposal
+                  ? 'A proposal is waiting. Inspect together.'
+                  : matches.length
+                    ? 'Tap to reveal together'
+                    : 'Keep choosing. Matches appear here.'}
               </GText>
             </View>
             <View style={{ flexDirection: 'row', gap: 4 }}>
@@ -321,70 +387,7 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
             />
           </View>
         </>
-      ) : !decided ? (
-        <>
-          <View
-            style={{
-              flexDirection: 'row',
-              height: 62,
-              gap: 7,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            {matches
-              .slice(
-                Math.max(0, matches.findIndex((m) => m.candidateId === activeId) - 2),
-                Math.max(5, matches.findIndex((m) => m.candidateId === activeId) + 3)
-              )
-              .map((m) => (
-                <Press
-                  key={m.candidateId}
-                  label={`Inspect ${m.candidate!.title}`}
-                  selected={activeId === m.candidateId}
-                  onPress={() => setActive(m.candidateId)}
-                  style={{
-                    width: 36,
-                    height: 54,
-                    minWidth: 36,
-                    borderRadius: 7,
-                    overflow: 'hidden',
-                    borderWidth: activeId === m.candidateId ? 2 : 0,
-                    borderColor: glow.amber,
-                  }}
-                >
-                  {m.candidate!.posterUrl ? (
-                    <Image
-                      source={{ uri: m.candidate!.posterUrl! }}
-                      style={{ width: '100%', height: '100%' }}
-                    />
-                  ) : (
-                    <Icon name="tickets" size={17} />
-                  )}
-                </Press>
-              ))}
-          </View>
-          <View style={[s.row, { height: 64 }]}>
-            <Pill label="Keep voting" onPress={() => setView('voting')} style={{ flex: 1 }}>
-              Keep voting
-            </Pill>
-            <Pill
-              label={pickId === activeId ? 'Picked' : 'Pick this'}
-              gold
-              onPress={() => void pick()}
-              disabled={disabled || !activeId}
-              icon="check"
-              style={{ flex: 1 }}
-            >
-              {pickId === activeId ? 'Picked' : 'Pick this'}
-            </Pill>
-          </View>
-        </>
-      ) : (
-        <Pill label="Where to watch" gold onPress={() => setDrawer('details')} icon="external">
-          Where to watch
-        </Pill>
-      )}
+      }
     </View>
   );
   return (
@@ -433,11 +436,11 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
               (state.privateError
                 ? 'Private state needs a refresh before choosing.'
                 : state.pending
-                ? 'Your choice is awaiting confirmation.'
-                : state.error ||
-                  (state.connection === 'background'
-                    ? 'Updates paused while away.'
-                    : 'Connecting to the room…'))}
+                  ? 'Your choice is awaiting confirmation.'
+                  : state.error ||
+                    (state.connection === 'background'
+                      ? 'Updates paused while away.'
+                      : 'Connecting to the room…'))}
           </GText>
           <Press
             label={state.pending ? 'Retry pending action' : 'Refresh room'}
@@ -477,11 +480,61 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
           where={() => setDrawer('details')}
           restart={() => void send({ type: 'restart', expectedRevision: shared.revision })}
         />
+      ) : view === 'matches' ? (
+        <DecisionRoom
+          items={decisionItems}
+          proposal={
+            shared.proposal
+              ? {
+                  candidateId: shared.proposal.candidateId,
+                  version: shared.proposal.version,
+                  count: shared.proposal.agreeCount,
+                  ownAgreed:
+                    own.agreement.proposalVersion === shared.proposalVersion &&
+                    own.agreement.agreed,
+                  isOwn:
+                    own.agreement.proposalVersion === shared.proposalVersion &&
+                    own.agreement.isProposer,
+                  previousTitle: previousProposal
+                    ? titleYear(titlePresentation(previousProposal))
+                    : null,
+                }
+              : null
+          }
+          total={shared.proposal?.requiredCount ?? shared.participants.length}
+          matchCount={shared.matches.length}
+          checking={shared.agreement.state === 'checking'}
+          unavailable={shared.agreement.state === 'unavailable'}
+          disabled={disabled}
+          wide={wide}
+          focus={active}
+          setFocus={setActive}
+          keepVoting={() => setView('voting')}
+          propose={(id) => void propose(id)}
+          agree={() => void agree(true)}
+          withdraw={() => void agree(false)}
+          retry={() =>
+            void send({
+              type: 'retry_agreement',
+              generation: shared.generation,
+              expectedAgreementVersion: shared.agreement.version,
+              expectedProposalVersion: shared.proposalVersion,
+            })
+          }
+          inspect={(kind, candidateId) => {
+            if (kind === 'poster') {
+              if (candidateId && shared.matches.some((m) => m.candidateId === candidateId))
+                state.inspect({ kind, candidateId });
+            } else state.inspect({ kind });
+          }}
+          cues={inspectionCues}
+          people={people}
+        />
       ) : (
         <View
           style={{
             flex: 1,
-            flexDirection: wide ? (view === 'matches' ? 'row-reverse' : 'row') : 'column',
+            flexDirection: wide ? 'row' : 'column',
             justifyContent: 'center',
             width: '100%',
             maxWidth: 1220,
@@ -492,11 +545,7 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
           {wide && (
             <View style={{ flex: 1, justifyContent: 'center', paddingRight: 44, gap: 22 }}>
               <GText size={14} bold color={glow.amber}>
-                {decided
-                  ? 'IT’S A YEP'
-                  : view === 'matches'
-                  ? 'YOUR MATCHES'
-                  : title?.genres.join(' · ').toUpperCase() ?? ''}
+                {decided ? 'IT’S A YEP' : (title?.genres.join(' · ').toUpperCase() ?? '')}
               </GText>
               <GText size={58} bold lines={3} style={{ letterSpacing: -2 }}>
                 {title?.title ?? 'Something good is out there.'}
@@ -525,7 +574,7 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
               )}
               <GText color={glow.soft} size={18} lines={5}>
                 {title?.overview ??
-                  'Choose independently. Discover your matches, then pick together.'}
+                  'Choose independently. Discover your matches, then propose what to watch together.'}
               </GText>
             </View>
           )}
@@ -560,14 +609,14 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
                     desktop={wide}
                   />
                   <Poster
-                    showText={!wide && view === 'voting' && !decided}
+                    showText={!wide}
                     title={title}
                     width={dimensions.width}
                     height={dimensions.height}
-                    mode={decided ? 'decided' : view}
+                    mode="voting"
                     disabled={disabled}
                     onVote={(yes) => void vote(yes)}
-                    onBrowse={browse}
+                    onBrowse={() => undefined}
                     onDetails={() => setDrawer('details')}
                     onTrailer={() => setDrawer('trailer')}
                     onGesture={state.activity}
@@ -579,63 +628,25 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
                     height={dimensions.height}
                     desktop={wide}
                   />
-                  {view === 'matches' && !decided && (
-                    <>
-                      <Press
-                        label="Previous match"
-                        disabled={matches.findIndex((m) => m.candidateId === activeId) <= 0}
-                        onPress={() => browse(-1)}
-                        style={{
-                          position: 'absolute',
-                          left: 8,
-                          width: 44,
-                          backgroundColor: '#141414aa',
-                          borderRadius: 22,
-                        }}
-                      >
-                        <Icon name="left" />
-                      </Press>
-                      <Press
-                        label="Next match"
-                        disabled={
-                          matches.findIndex((m) => m.candidateId === activeId) >= matches.length - 1
-                        }
-                        onPress={() => browse(1)}
-                        style={{
-                          position: 'absolute',
-                          right: 8,
-                          width: 44,
-                          backgroundColor: '#141414aa',
-                          borderRadius: 22,
-                        }}
-                      >
-                        <Icon name="right" />
-                      </Press>
-                    </>
-                  )}
                 </>
               ) : (
                 <View style={{ padding: 30, gap: 18, alignItems: 'center' }}>
                   <Icon name="tickets" size={46} color={glow.amber} />
                   <GText size={24} bold style={{ textAlign: 'center' }}>
-                    {view === 'matches'
-                      ? 'The shared matches changed'
-                      : shared.stream.reason === 'awaiting_answers'
+                    {shared.stream.reason === 'awaiting_answers'
                       ? 'You’re caught up'
                       : shared.stream.state === 'unavailable'
-                      ? 'Suggestions couldn’t load'
-                      : shared.stream.state === 'capacity'
-                      ? 'This room reached its suggestion limit'
-                      : 'No more suggestions right now'}
+                        ? 'Suggestions couldn’t load'
+                        : shared.stream.state === 'capacity'
+                          ? 'This room reached its suggestion limit'
+                          : 'No more suggestions right now'}
                   </GText>
                   <GText size={14} color={glow.muted} style={{ textAlign: 'center' }}>
-                    {view === 'matches'
-                      ? 'A new person or changed answer can change the matches. Keep voting to discover more.'
-                      : shared.stream.reason === 'awaiting_answers'
+                    {shared.stream.reason === 'awaiting_answers'
                       ? 'Keep this room open while friends choose. Your screen will update when more suggestions are available.'
                       : 'Availability may be incomplete. Retry, inspect your matches, or ask the host to review the services.'}
                   </GText>
-                  {view === 'voting' && (
+                  {
                     <Pill
                       label="Try more suggestions"
                       disabled={disabled}
@@ -649,61 +660,10 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
                     >
                       Try again
                     </Pill>
-                  )}
+                  }
                 </View>
               )}
             </View>
-            {(view === 'matches' || decided) && (
-              <View
-                style={{
-                  height: !wide ? 68 : 36,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 4,
-                  paddingHorizontal: 20,
-                }}
-              >
-                <>
-                  {!wide && title && (
-                    <GText bold size={22} lines={1}>
-                      {title.title}
-                    </GText>
-                  )}
-                </>
-                <GText size={14} color={decided ? glow.amber : glow.muted}>
-                  {decided
-                    ? `Everyone picked it. Enjoy your watch.${
-                        title?.kind === 'show_continue' && title.episodeLabel
-                          ? ` · ${title.episodeLabel}`
-                          : ''
-                      }`
-                    : shared.agreement.state === 'checking'
-                    ? 'Checking availability for everyone…'
-                    : `${matches.find((m) => m.candidateId === activeId)?.pickCount ?? 0} ${
-                        matches.find((m) => m.candidateId === activeId)?.pickCount === 1
-                          ? 'pick'
-                          : 'picks'
-                      } · Pick when you’re ready`}
-                </GText>
-              </View>
-            )}
-            {shared.agreement.state === 'unavailable' && (
-              <Press
-                label="Retry availability check"
-                onPress={() =>
-                  void send({
-                    type: 'retry_agreement',
-                    generation: shared.generation,
-                    expectedAgreementVersion: shared.agreement.version,
-                  })
-                }
-                disabled={disabled}
-              >
-                <GText size={13} color={glow.amber}>
-                  Availability needs another check · Retry
-                </GText>
-              </Press>
-            )}
             {bottom}
           </View>
         </View>
@@ -827,8 +787,8 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
                     o.kind === 'search'
                       ? 'Search'
                       : o.kind === 'where_to_watch'
-                      ? 'Where to watch on'
-                      : 'Open'
+                        ? 'Where to watch on'
+                        : 'Open'
                   } ${o.name}`}
                   icon="external"
                   disabled={!o.url}
@@ -842,8 +802,8 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
                   {o.kind === 'search'
                     ? `Search ${o.name}`
                     : o.kind === 'where_to_watch'
-                    ? `Where to watch · ${o.name}`
-                    : o.name}
+                      ? `Where to watch · ${o.name}`
+                      : o.name}
                 </Pill>
               ))}
             </View>
@@ -853,7 +813,6 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
       {drawer === 'trailer' && title?.trailerUrl && (
         <Drawer title="Trailer" close={() => setDrawer(null)}>
           <Trailer key={title.id} url={title.trailerUrl} />
-
         </Drawer>
       )}
     </SafeAreaView>

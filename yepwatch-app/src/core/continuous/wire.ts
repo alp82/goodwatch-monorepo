@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { ServerRealtimeFrame } from '@goodwatch/yepwatch-contracts/continuous';
+import type { ServerRealtimeFrame } from '@goodwatch/yepwatch-contracts/proposal';
 const n = z.number().int().nonnegative();
 const id = z.string().min(1).max(512);
 const episode = z
@@ -44,6 +44,10 @@ const candidate = z
     overview: z.string().nullable(),
     posterUrl: z.string().nullable(),
     runtimeMinutes: n.nullable(),
+    viewingDuration: z
+      .object({ minutes: n, scope: z.enum(['movie', 'episode']) })
+      .strict()
+      .nullable(),
     availability: z.array(availability),
     backdropUrl: z.string().nullable().optional(),
     trailerUrl: z.string().nullable().optional(),
@@ -128,7 +132,7 @@ const details = z.union([
 ]);
 export const sharedSchema = z
   .object({
-    contractVersion: z.literal(2),
+    contractVersion: z.literal(3),
     roomId: id,
     revision: n,
     phase: z.enum(['setup', 'choosing', 'decided', 'expired']),
@@ -175,7 +179,21 @@ export const sharedSchema = z
           .nullable(),
       })
       .strict(),
-    matches: z.array(z.object({ candidateId: id, pickCount: n }).strict()),
+    matches: z.array(
+      z.object({ candidateId: id, averageYepMs: z.number().nonnegative().nullable() }).strict()
+    ),
+    proposalVersion: n,
+    proposal: z
+      .object({
+        candidateId: id,
+        version: n,
+        previousCandidateId: id.nullable(),
+        agreeCount: n,
+        requiredCount: n,
+        averageYepMs: z.number().nonnegative().nullable(),
+      })
+      .strict()
+      .nullable(),
     agreement: z
       .object({
         version: n,
@@ -186,7 +204,7 @@ export const sharedSchema = z
     decision: z
       .object({
         candidateId: id,
-        agreementVersion: n,
+        proposalVersion: n,
         decidedAt: n,
         availability: z.array(availability),
       })
@@ -208,6 +226,13 @@ const frame = z.discriminatedUnion('type', [
       view: z.enum(['voting', 'matches', 'trailer', 'away']),
       gesture: z.enum(['reach', 'handle', 'release']).optional(),
       beat: z.literal('answer').optional(),
+      inspection: z
+        .discriminatedUnion('kind', [
+          z.object({ kind: z.literal('poster'), candidateId: id }).strict(),
+          z.object({ kind: z.literal('lens') }).strict(),
+          z.object({ kind: z.literal('dice') }).strict(),
+        ])
+        .optional(),
       roomId: id,
       participantId: id,
       serverTime: n,
@@ -225,7 +250,14 @@ export function parseFrame(raw: unknown): ServerRealtimeFrame | null {
   if (typeof raw !== 'string' || raw.length > 1024 * 1024) return null;
   try {
     const result = frame.safeParse(JSON.parse(raw));
-    return result.success ? result.data : null;
+    return result.success &&
+      !(
+        result.data.type === 'activity' &&
+        ((result.data.inspection && result.data.view !== 'matches') ||
+          (result.data.beat && result.data.view !== 'voting'))
+      )
+      ? result.data
+      : null;
   } catch {
     return null;
   }

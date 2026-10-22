@@ -2,7 +2,7 @@
 
 **Have a Mac? [Build and test the iPhone Simulator app](docs/ios-quickstart.md).**
 
-Expo SDK58 / React Native0.88 / TypeScript / Expo Router, with native and browser guest participation. The current source implements continuous contract2 and the approved Glow design. Individual Yep/Nope choices stay private; server-confirmed matches appear while choosing. Inspect matches, pick or keep voting; unanimous current picks automatically produce a freshly checked decision.
+Expo SDK58 / React Native0.88 / TypeScript / Expo Router, with native and browser guest participation. The current source implements proposal contract3 and the approved hybrid Glow room. Individual Yep/Nope choices stay private; server-confirmed matches appear while choosing. Inspect together, propose a match and explicitly Agree; everyone agreeing triggers a fresh availability check and confirmed decision.
 
 ```bash
 cd yepwatch-app
@@ -16,7 +16,7 @@ The app depends on a copied local `@goodwatch/yepwatch-contracts` package with `
 
 Guests can create/join with one shared screen, confirm an editable country and actual services, and choose movies/new shows. Remote/mixed screens, media/mood/time settings are available in drawers. Continuing shows requires real linked GoodWatch saved progress, with no manual history. Browser linking and saved-progress continuation are verified locally with the existing central issuer and disposable identity/tracking data. Production account authorization and physical native callback/player behavior still require validation; an unavailable endpoint is never presented as a verified sign-in.
 
-[Implementation and verification notes](docs/glow-implementation.md) describe the state model, transport, privacy, auth, tests and retained development runtimes. Earlier foundation evidence in `docs/verification.md` and older artifacts describes historical v1 builds, not the current continuous source.
+[Hybrid room, USB testing and current verification](docs/hybrid-decision-room.md) describe the current contract3 build. [Earlier Glow implementation notes](docs/glow-implementation.md) describe the earlier contract2 state model and retained development runtimes. Earlier foundation evidence in `docs/verification.md` and older artifacts describes historical v1 builds, not the current continuous source.
 
 ```bash
 npm run typecheck

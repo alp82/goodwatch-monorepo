@@ -13,7 +13,7 @@ import { queryClient } from '../core/providers';
 import { continuousKey as roomKey } from '../core/continuous/useRoom';
 import { saveInvite } from '../core/continuous/invite-store';
 import { mergeRoom } from '../core/continuous/state';
-import type { GuestAdmissionRequest } from '@goodwatch/yepwatch-contracts/continuous';
+import type { GuestAdmissionRequest } from '@goodwatch/yepwatch-contracts/proposal';
 
 export function Entrance({ invite }: { invite?: string }) {
   const [joining, setJoining] = useState(Boolean(invite));
@@ -84,7 +84,7 @@ export function Entrance({ invite }: { invite?: string }) {
         const bytes = await Crypto.getRandomBytesAsync(32);
         saved = {
           request: {
-            contractVersion: 2,
+            contractVersion: 3,
             commandId: Crypto.randomUUID(),
             admissionSecret: Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join(''),
             nickname: nickname.trim(),

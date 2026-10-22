@@ -37,7 +37,7 @@ function harness(overrides: Partial<RealtimeOptions> = {}) {
     ticket: async () => ({
       ticket: `ticket-${++tickets}`,
       expiresAt: Date.now() + 10000,
-      websocketPath: '/api/yepwatch/v1/continuous/realtime',
+      websocketPath: '/api/yepwatch/v1/proposal/realtime',
     }),
     socket: () => {
       const s = new Socket();
@@ -118,9 +118,15 @@ test('activity requires authenticated live snapshot and a fresh session; backgro
     sequence: 2,
     view: 'matches',
     gesture: 'release',
-    beat: 'answer',
   });
+  h.client.sendActivity('matches', undefined, undefined, {kind: 'lens'});
+  assert.deepEqual(JSON.parse(s.sent[3]).inspection, {kind: 'lens'});
   h.run(3000);
+  assert.equal(JSON.parse(s.sent.at(-1)!).inspection, undefined);
+  h.client.setView('voting');
+  h.client.sendActivity('voting', undefined, 'answer', {kind: 'dice'});
+  assert.equal(JSON.parse(s.sent.at(-1)!).beat, 'answer');
+  assert.equal(JSON.parse(s.sent.at(-1)!).inspection, undefined);
   assert.equal(JSON.parse(s.sent.at(-1)!).gesture, undefined);
   h.client.pause();
   assert.equal(JSON.parse(s.sent.at(-1)!).view, 'away');
@@ -234,7 +240,7 @@ test('lease expiry stays reconnectable; authoritative deadline and410 stop termi
   });
   late.client.start();
   late.client.pause();
-  release({ ticket: 'late', expiresAt: 1, websocketPath: '/api/yepwatch/v1/continuous/realtime' });
+  release({ ticket: 'late', expiresAt: 1, websocketPath: '/api/yepwatch/v1/proposal/realtime' });
   await tick();
   assert.equal(late.sockets.length, 0);
 });

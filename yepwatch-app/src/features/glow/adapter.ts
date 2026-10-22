@@ -1,4 +1,4 @@
-import type { Candidate } from '@goodwatch/yepwatch-contracts/continuous';
+import type { Candidate } from '@goodwatch/yepwatch-contracts/proposal';
 import type { GlowTitle } from './model';
 export function titlePresentation(c: Candidate): GlowTitle {
   return {
@@ -10,7 +10,7 @@ export function titlePresentation(c: Candidate): GlowTitle {
     posterUrl: c.posterUrl,
     backdropUrl: c.backdropUrl ?? null,
     trailerUrl: c.trailerUrl ?? null,
-    runtimeMinutes: c.runtimeMinutes,
+    runtimeMinutes: c.viewingDuration && c.viewingDuration.scope === (c.identity.kind === 'movie' ? 'movie' : 'episode') ? c.viewingDuration.minutes : null,
     episodeLabel:
       c.identity.kind === 'movie'
         ? null

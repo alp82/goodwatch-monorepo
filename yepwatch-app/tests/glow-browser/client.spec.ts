@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import type { CommandEnvelope, RoomSnapshot } from '@goodwatch/yepwatch-contracts/continuous';
+import type { CommandEnvelope, RoomSnapshot } from '@goodwatch/yepwatch-contracts/proposal';
 import { continuousFixture } from '../continuous-fixture';
 
 async function fixture(page: Page, setupGuest = false) {
@@ -12,8 +12,8 @@ async function fixture(page: Page, setupGuest = false) {
     title: 'Another hidden match',
   });
   room.shared.matches = [
-    { candidateId: 'c2', pickCount: 0 },
-    { candidateId: 'c3', pickCount: 0 },
+    { candidateId: 'c2', averageYepMs: null },
+    { candidateId: 'c3', averageYepMs: null },
   ];
   room.shared.stream = { state: 'exhausted', version: 1, reason: 'catalog_end' };
   if (setupGuest) {
@@ -25,7 +25,7 @@ async function fixture(page: Page, setupGuest = false) {
   const commands: CommandEnvelope[] = [];
   let loseNext = false;
   const receipts = new Set<string>();
-  await page.route('**/api/yepwatch/v1/continuous/**', async (route) => {
+  await page.route('**/api/yepwatch/v1/proposal/**', async (route) => {
     const url = new URL(route.request().url());
     if (url.pathname.endsWith('/catalog/metadata')) return route.fulfill({json: {countries: [{code: 'DE', name: 'Germany'}], services: [{id: 8, name: 'Netflix', logoUrl: null}], moods: [{id: 'relaxed', label: 'Relaxed'}]}});
     if (url.pathname.endsWith('/member/start'))
@@ -65,6 +65,8 @@ async function fixture(page: Page, setupGuest = false) {
             candidateId: c.candidateId,
             value: c.value,
             revision: (old?.revision ?? 0) + 1,
+            activeExposureMs: c.activeExposureMs ?? null,
+            timingSource: c.activeExposureMs == null ? 'unavailable' : 'active_exposure',
           });
           room.own.nextCandidateId =
             room.shared.candidates.find(
@@ -87,8 +89,16 @@ async function fixture(page: Page, setupGuest = false) {
             });
           room.shared.participants[0].ready = c.ready;
         }
-        if (c.type === 'pick')
-          room.own.pick = { candidateId: c.candidateId, revision: room.own.pick.revision + 1 };
+        if (c.type === 'propose') {
+          const previousCandidateId = room.shared.proposal?.candidateId ?? null;
+          room.shared.proposalVersion++;
+          room.shared.proposal = { candidateId: c.candidateId, version: room.shared.proposalVersion, previousCandidateId, agreeCount: 1, requiredCount: 2, averageYepMs: null };
+          room.own.agreement = { proposalVersion: room.shared.proposalVersion, agreed: true, revision: room.own.agreement.revision + 1, isProposer: true };
+        }
+        if (c.type === 'agree') {
+          room.own.agreement = { proposalVersion: room.shared.proposalVersion, agreed: c.agreed, revision: room.own.agreement.revision + 1, isProposer: false };
+          if (room.shared.proposal) room.shared.proposal.agreeCount = c.agreed ? 2 : 1;
+        }
       }
       if (loseNext) {
         loseNext = false;
@@ -140,24 +150,21 @@ for (const viewport of [
     expect(poster!.height).toBeGreaterThan(200);
     expect(no!.y + no!.height).toBeLessThanOrEqual(viewport.height);
   });
-test('inspection, replacement pick and Keep voting preserve own card; no local unilateral Done', async ({
-  page,
-}) => {
+test('inspection and dice never propose; shared proposal replacement and Keep voting preserve own card', async ({ page }) => {
   const f = await fixture(page);
   const initial = await page.getByTestId('poster').innerText();
   await page.getByRole('button', { name: 'Inspect 2 matches', exact: true }).click();
-  await page.getByRole('button', { name: 'Pick this', exact: true }).click();
-  await expect(page.getByRole('button', { name: 'Picked', exact: true })).toBeVisible();
-  await expect(
-    page.getByText('Everyone picked it. Enjoy your watch.', { exact: true })
-  ).toHaveCount(0);
-  await page.getByRole('button', { name: 'Next match', exact: true }).click();
-  await page.getByRole('button', { name: 'Pick this', exact: true }).click();
-  expect(
-    f.commands
-      .filter((c) => c.command.type === 'pick')
-      .map((c) => c.command.type === 'pick' && c.command.candidateId)
-  ).toEqual(['c2', 'c3']);
+  await expect(page.getByRole('button', {name: 'Watch trailer', exact: true})).toHaveCount(0);
+  await page.getByRole('button', {name: /Surprise me:/}).click();
+  expect(f.commands).toHaveLength(0);
+  if (await page.getByRole('button',{name:'Stop looking',exact:true}).count()) await page.getByRole('button',{name:'Stop looking',exact:true}).click();
+  await page.getByRole('button', {name: /Inspect Hidden shared title/}).click();
+  await page.getByRole('button', {name: 'Propose Hidden shared title (2020)', exact: true}).click();
+  await expect(page.getByRole('button', {name: /You agree to Hidden shared title/})).toBeVisible();
+  await page.getByRole('button', {name: /Inspect Another hidden match/}).click();
+  await page.getByRole('button', {name: 'Propose Another hidden match (2020) instead', exact: true}).click();
+  expect(f.commands.filter(c => c.command.type === 'propose').map(c => c.command.type === 'propose' && c.command.candidateId)).toEqual(['c2', 'c3']);
+  await expect(page.getByText('Everyone agrees. Enjoy your watch.', {exact: true})).toHaveCount(0);
   await page.getByRole('button', { name: 'Keep voting', exact: true }).click();
   await expect.poll(() => page.getByTestId('poster').innerText()).toBe(initial);
 });
@@ -249,7 +256,7 @@ test('the creator invitation survives a full navigation/reload without bearer st
   await fixture(page);
   await page.evaluate(() =>
     sessionStorage.setItem(
-      'yepwatch.v2.invite.test-room',
+      'yepwatch.v3.invite.test-room',
       JSON.stringify({ code: 'isolated-invite', path: '/r/isolated-invite' })
     )
   );
@@ -265,7 +272,9 @@ for (const error of [101, 150])
   test(`embedding refusal ${error} offers YouTube and closing preserves card and pick`, async ({ page }) => {
     const f = await fixture(page);
     f.room.shared.candidates[0].trailerUrl = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
-    f.room.own.pick = { candidateId: 'c2', revision: 1 };
+    f.room.shared.proposalVersion = 1;
+    f.room.shared.proposal = {candidateId:'c2',version:1,previousCandidateId:null,agreeCount:1,requiredCount:2,averageYepMs:null};
+    f.room.own.agreement = { proposalVersion: 1, agreed: true, revision: 1, isProposer: true };
     // Isolated player fixture: external playback evidence is recorded separately against real URLs.
     await page.route('https://www.youtube.com/iframe_api', route => route.fulfill({
       contentType: 'application/javascript',
@@ -284,7 +293,7 @@ for (const error of [101, 150])
     await expect.poll(() => page.getByTestId('poster').innerText()).toBe(card);
     expect(f.commands).toHaveLength(0);
     await page.getByRole('button', { name: 'Inspect 2 matches', exact: true }).click();
-    await expect(page.getByRole('button', { name: 'Picked', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: /You agree to Hidden shared title/ })).toBeVisible();
   });
 
 test('authoritative Undo survives an accepted vote followed by a full reload', async ({ page }) => {
@@ -369,7 +378,7 @@ for (const viewport of [{width: 320, height: 568}, {width: 844, height: 390}, {w
     f.room.shared.phase = 'decided';
     f.room.shared.revision++;
     f.room.shared.candidates[0].title = 'A very long chosen title that takes two full lines on a narrow screen';
-    f.room.shared.decision = {candidateId: 'c1', agreementVersion: 1, decidedAt: Date.now(), availability: []};
+    f.room.shared.decision = {candidateId: 'c1', proposalVersion: 1, decidedAt: Date.now(), availability: []};
     await page.reload();
     await reachable('Where to watch');
     await reachable('Choose again');
@@ -405,4 +414,75 @@ test('retained continuing-only setup has an explicit guest fallback without sile
   await page.reload();
   expect(f.room.shared.constraints.kinds).toEqual(['movie', 'show_start']);
   await expect(page.getByRole('button', {name: 'Start choosing', exact: true})).toBeEnabled();
+});
+
+for (const viewport of [{width:375,height:667},{width:390,height:844},{width:1440,height:900}])
+  test(`hybrid wall fits all posters and exposes no trailer at ${viewport.width}x${viewport.height}`, async ({page}) => {
+    await page.setViewportSize(viewport);
+    const f = await fixture(page);
+    for (let n = 4; n <= 10; n++) {
+      f.room.shared.candidates.push({...f.room.shared.candidates[1], id:`c${n}`, title:`Match ${n}`, goodwatchScore:90-n});
+      f.room.shared.matches.push({candidateId:`c${n}`, averageYepMs:n*1000});
+    }
+    await page.reload();
+    await page.getByRole('button', {name:'Inspect 9 matches',exact:true}).click();
+    await expect(page.getByRole('button', {name:/^Inspect .*\(2020\),/})).toHaveCount(9);
+    const buttons = page.getByRole('button', {name:/^Inspect .*\(2020\),/});
+    for (const button of await buttons.all()) {
+      const b = await button.boundingBox();
+      expect(b!.y).toBeGreaterThanOrEqual(0);
+      expect(b!.y+b!.height).toBeLessThanOrEqual(viewport.height);
+    }
+    await expect(page.getByRole('button', {name:/Watch trailer/})).toHaveCount(0);
+    await page.getByRole('button', {name:/Shortest:/}).click();
+    await expect(page.getByRole('button',{name:/^Inspect .*90 min/})).toHaveCount(9);
+    const doc = await page.evaluate(() => ({h:document.documentElement.scrollHeight,w:document.documentElement.scrollWidth}));
+    expect(doc.h).toBeLessThanOrEqual(viewport.height);
+    expect(doc.w).toBeLessThanOrEqual(viewport.width);
+    await expect(page.getByRole('button', {name:'Keep voting',exact:true})).toBeVisible();
+    expect(f.commands).toHaveLength(0);
+    await page.screenshot({path:`artifacts/hybrid/wall-fixture-${viewport.width}.png`});
+  });
+
+test('late newcomer can inspect and Agree to preserved nonmatch proposal with exact version fences, without exposure input', async ({page}) => {
+  const f = await fixture(page);
+  f.room.shared.matches = [];
+  f.room.shared.proposalVersion = 4;
+  f.room.shared.proposal = {candidateId:'c2',version:4,previousCandidateId:null,agreeCount:1,requiredCount:2,averageYepMs:null};
+  f.room.own.agreement = {proposalVersion:4,agreed:false,revision:3,isProposer:false};
+  await page.reload();
+  await page.getByRole('button',{name:'Inspect proposal',exact:true}).click();
+  await page.getByRole('button',{name:'Agree to Hidden shared title (2020). 1 of 2 agree',exact:true}).click();
+  expect(f.commands.at(-1)?.command).toEqual({type:'agree',generation:1,expectedRosterVersion:1,expectedProposalVersion:4,candidateId:'c2',expectedOwnAgreementRevision:3,agreed:true});
+  await page.getByRole('button',{name:'Take back your agreement',exact:true}).click();
+  expect(f.commands.at(-1)?.command.type).toBe('agree');
+  await page.getByRole('button',{name:'Keep voting',exact:true}).click();
+  await expect(page.getByRole('button',{name:'Yep',exact:true})).toBeVisible();
+});
+
+test('measured Yep exposure pauses for details and match inspection; missing reload measurements stay null', async ({page}) => {
+  const f = await fixture(page);
+  const wallStart = Date.now();
+  await page.waitForTimeout(200);
+  await page.getByTestId('poster').click({position:{x:20,y:20}});
+  await page.getByRole('dialog').waitFor();
+  await page.waitForTimeout(700);
+  await page.getByRole('button',{name:'Close panel',exact:true}).last().click();
+  await page.getByRole('button',{name:'Inspect 2 matches',exact:true}).click();
+  await page.waitForTimeout(700);
+  await page.getByRole('button',{name:'Keep voting',exact:true}).click();
+  await page.waitForTimeout(200);
+  await page.getByRole('button',{name:'Yep',exact:true}).click();
+  const measured = f.commands.at(-1)?.command;
+  expect(measured?.type).toBe('vote');
+  if (measured?.type !== 'vote') throw new Error('No explicit vote');
+  expect(measured.activeExposureMs).toBeGreaterThan(0);
+  expect(measured.activeExposureMs!).toBeLessThan(Date.now()-wallStart-1100);
+  await page.getByRole('button',{name:'Yep',exact:true}).waitFor();
+  await page.waitForTimeout(150);
+  await page.reload();
+  await page.getByRole('button',{name:'Yep',exact:true}).click();
+  const afterReload = f.commands.at(-1)?.command;
+  if (afterReload?.type !== 'vote') throw new Error('No explicit reloaded vote');
+  expect(afterReload.activeExposureMs).toBeNull();
 });

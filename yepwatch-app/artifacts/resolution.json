@@ -20,16 +20,16 @@
   ],
   "graphs": [
     {
-      "folder": ".expo/exports/glow-real-r13",
-      "sourceMaps": 9,
-      "modules": 1033,
+      "folder": ".expo/exports/hybrid-r2",
+      "sourceMaps": 11,
+      "modules": 1804,
       "sharedContractPresent": true,
       "webappOrServerCodePresent": false
     },
     {
-      "folder": ".expo/exports/glow-native-r13",
+      "folder": ".expo/exports/hybrid-native-r2",
       "sourceMaps": 2,
-      "modules": 2936,
+      "modules": 2946,
       "sharedContractPresent": true,
       "webappOrServerCodePresent": false
     }

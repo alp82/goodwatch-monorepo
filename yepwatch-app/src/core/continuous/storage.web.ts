@@ -1,5 +1,5 @@
-import type { CommandEnvelope } from '@goodwatch/yepwatch-contracts/continuous';
-const key = (id: string) => `yepwatch.v2.pending.${id}`;
+import type { CommandEnvelope } from '@goodwatch/yepwatch-contracts/proposal';
+const key = (id: string) => `yepwatch.v3.pending.${id}`;
 /** Own pending command only, no bearer or account data; HttpOnly cookies authenticate HTTP. */
 export async function readPending(id: string): Promise<CommandEnvelope | null> {
   const raw = sessionStorage.getItem(key(id));

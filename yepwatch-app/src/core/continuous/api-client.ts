@@ -14,7 +14,7 @@ import {
   type MemberStatusResponse,
   type MemberProgressResponse,
   type MemberExchangeRequest,
-} from '@goodwatch/yepwatch-contracts/continuous';
+} from '@goodwatch/yepwatch-contracts/proposal';
 import { apiUrl } from '../config';
 import type { RoomAccess } from '../credentials';
 export class RoomFailure extends Error {

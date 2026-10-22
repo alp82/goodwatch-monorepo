@@ -20,7 +20,7 @@ export interface GlowPerson {
 }
 export interface GlowMatch {
   title: GlowTitle;
-  pickCount: number;
+  averageYepMs: number | null;
 }
 export type GlowView = 'voting' | 'matches';
 export type GesturePhase = 'reach' | 'handle' | 'release';

@@ -1,0 +1,16 @@
+{
+  "serial": "emulator-5562",
+  "physicalDevice": false,
+  "package": "dev.yepwatch.hybrid",
+  "api": "http://127.0.0.1:15992",
+  "gateway": "ws://127.0.0.1:4324",
+  "metro": 8141,
+  "catalog": "Finite real catalog sample; actual durable API",
+  "checks": [
+    "Native guest create, explicit DE/Netflix8 and authenticated WebSocket choosing",
+    "Native Yep, immediate match, honest lenses, explicit proposal and fresh-check Done",
+    "Native background/resume preserves confirmed decision"
+  ],
+  "passed": true,
+  "completedAt": "2026-10-22T10:40:50Z"
+}

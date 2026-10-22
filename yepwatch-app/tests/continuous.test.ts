@@ -17,22 +17,22 @@ import { continuousFixture, activityFixture } from './continuous-fixture';
 
 test('continuous snapshots preserve separate own authority across pushes, late joins and restarts', () => {
   const old = continuousFixture();
-  old.own.votes = [{ candidateId: 'c1', value: 'watch', revision: 1 }];
-  old.own.pick = { candidateId: 'c1', revision: 1 };
-  old.shared.matches = [{ candidateId: 'c1', pickCount: 1 }];
+  old.own.votes = [{ candidateId: 'c1', value: 'watch', revision: 1, activeExposureMs: null, timingSource: 'unavailable' }];
+  old.own.agreement = { proposalVersion: 1, agreed: true, revision: 1, isProposer: true };
+  old.shared.matches = [{ candidateId: 'c1', averageYepMs: null }];
   let cache = mergeRoom(undefined, old);
   const pushed = { ...old.shared, revision: 4, rosterVersion: 2, matches: [] };
   cache = mergePublic(cache, pushed)!;
   assert.deepEqual(cache.shared.matches, []);
-  assert.equal(cache.own.pick.candidateId, 'c1');
+  assert.equal(cache.own.agreement.agreed, true);
   const fresh = continuousFixture();
   fresh.shared = { ...pushed, revision: 3 };
-  fresh.own.pick = { candidateId: null, revision: 2 };
+  fresh.own.agreement = { proposalVersion: 1, agreed: false, revision: 2, isProposer: false };
   cache = mergeRoom(cache, fresh);
   assert.equal(cache.shared.revision, 4);
-  assert.equal(cache.own.pick.candidateId, null);
+  assert.equal(cache.own.agreement.agreed, false);
   cache = mergeRoom(cache, old);
-  assert.equal(cache.own.pick.candidateId, null);
+  assert.equal(cache.own.agreement.agreed, false);
   assert.equal(cache.shared.rosterVersion, 2);
   const restarted = continuousFixture();
   restarted.shared.revision = 5;
@@ -164,7 +164,7 @@ test('neutral activity sessions expire independently; own events, replay and sta
   assert.equal(pruneActivity(pulse, 2600).get('session')?.pulse, null);
   assert.equal(pruneActivity(pulse, 2600).size, 1);
 });
-test('v2 HTTP namespace, native bearer and browser cookie split are real, and caller cancellation reaches body reads', async () => {
+test('v3 HTTP namespace, native bearer and browser cookie split are real, and caller cancellation reaches body reads', async () => {
   const access = {
     roomId: 'room',
     participantId: 'host',
@@ -174,7 +174,7 @@ test('v2 HTTP namespace, native bearer and browser cookie split are real, and ca
   let headers: HeadersInit | undefined;
   let credentials: RequestCredentials | undefined;
   const fetcher: typeof fetch = async (url, init) => {
-    assert.match(String(url), /\/continuous\/rooms\/room$/);
+    assert.match(String(url), /\/proposal\/rooms\/room$/);
     headers = init?.headers;
     credentials = init?.credentials;
     return Response.json(continuousFixture());
@@ -198,7 +198,7 @@ test('v2 HTTP namespace, native bearer and browser cookie split are real, and ca
         },
       })
     );
-  }).request('/api/yepwatch/v1/continuous/rooms/room', undefined, access, controller.signal);
+  }).request('/api/yepwatch/v1/proposal/rooms/room', undefined, access, controller.signal);
   controller.abort();
   await assert.rejects(pending);
   assert.equal(aborted, true);
@@ -225,13 +225,13 @@ test('canonical trailers and reported playback never turn requested audio into a
 test('authoritative retained Undo survives reload/replay, ignores null and retired votes, and clears with generation', () => {
   const room = continuousFixture();
   room.own.votes = [
-    {candidateId: 'c1', value: 'watch', revision: 1},
-    {candidateId: 'c2', value: 'pass', revision: 1},
-    {candidateId: 'retired', value: 'watch', revision: 1},
-    {candidateId: 'already-undone', value: null, revision: 2},
+    {candidateId: 'c1', value: 'watch', revision: 1, activeExposureMs: null, timingSource: 'unavailable'},
+    {candidateId: 'c2', value: 'pass', revision: 1, activeExposureMs: null, timingSource: 'unavailable'},
+    {candidateId: 'retired', value: 'watch', revision: 1, activeExposureMs: null, timingSource: 'unavailable'},
+    {candidateId: 'already-undone', value: null, revision: 2, activeExposureMs: null, timingSource: 'unavailable'},
   ];
   assert.equal(latestRetainedVote(JSON.parse(JSON.stringify(room)))?.candidateId, 'c2');
-  room.own.votes[1] = {...room.own.votes[1], value: null, revision: 2};
+  room.own.votes[1] = {...room.own.votes[1], value: null, revision: 2, activeExposureMs: null, timingSource: 'unavailable'};
   assert.equal(latestRetainedVote(room)?.candidateId, 'c1');
   room.shared.candidates = room.shared.candidates.filter(c => c.id !== 'c1');
   assert.equal(latestRetainedVote(room), undefined);
@@ -319,4 +319,18 @@ test('native member callbacks require fixed URI, retained room, unexpired local 
       10001
     )
   );
+});
+
+test('inspection is matches-only, action scoped, exact and expires without heartbeat replay', () => {
+  const frame = activityFixture({view: 'matches', inspection: {kind: 'poster', candidateId: 'c1'}});
+  assert.ok(parseFrame(JSON.stringify(frame)));
+  assert.equal(parseFrame(JSON.stringify({...frame, view: 'voting'})), null);
+  for (const inspection of [{kind: 'lens', candidateId: 'c1'}, {kind: 'dice', agreed: true}, {kind: 'poster', candidateId: 'c1', participantApproval: true}])
+    assert.equal(parseFrame(JSON.stringify({...frame, inspection})), null);
+  let sessions = applyActivity(new Map(), frame, 'host', 1000);
+  assert.equal(sessions.get('session')?.pulse?.inspection?.kind, 'poster');
+  sessions = applyActivity(sessions, activityFixture({view: 'matches', sequence: 2, serverTime: 2000, expiresAt: 8000}), 'host', 2000);
+  assert.equal(sessions.get('session')?.pulse?.serverTime, 1000);
+  assert.equal(pruneActivity(sessions, 2500).get('session')?.pulse, null);
+  assert.equal(pruneActivity(sessions, 2500).get('session')?.frame.view, 'matches');
 });

@@ -1,6 +1,6 @@
 import * as SecureStore from 'expo-secure-store';
-import type { CommandEnvelope } from '@goodwatch/yepwatch-contracts/continuous';
-const key = (id: string) => `yepwatch.v2.pending.${id.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+import type { CommandEnvelope } from '@goodwatch/yepwatch-contracts/proposal';
+const key = (id: string) => `yepwatch.v3.pending.${id.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
 export async function readPending(id: string): Promise<CommandEnvelope | null> {
   const raw = await SecureStore.getItemAsync(key(id));
   return raw ? JSON.parse(raw) : null;

@@ -55,6 +55,9 @@ export function GText({
   );
 }
 export type IconName =
+  | 'star'
+  | 'clock'
+  | 'dice'
   | 'cursor'
   | 'tickets'
   | 'close'
@@ -87,7 +90,7 @@ export function Icon({
       strokeLinejoin="round"
       accessible={false}
     >
-      {name === 'cursor' ? (
+      {name === 'star' ? <Path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9Z" /> : name === 'clock' ? <><Circle cx="12" cy="12" r="9" /><Path d="M12 7v5l3 2" /></> : name === 'dice' ? <><Rect x="3" y="3" width="18" height="18" rx="4" /><Circle cx="8" cy="8" r="1" fill={color} /><Circle cx="16" cy="8" r="1" fill={color} /><Circle cx="12" cy="12" r="1" fill={color} /><Circle cx="8" cy="16" r="1" fill={color} /><Circle cx="16" cy="16" r="1" fill={color} /></> : name === 'cursor' ? (
         <Path d="M4 3 19 12 12 14 9 21Z" fill={color} stroke="#fff" strokeWidth={1.4} />
       ) : name === 'tickets' ? (
         <>

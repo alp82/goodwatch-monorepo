@@ -2,10 +2,11 @@ import {
   paths,
   type ActivityView,
   type ActivityGesture,
+  type MatchInspection,
   type RealtimeTicket,
   type ServerActivity,
   type SharedRoomSnapshot,
-} from '@goodwatch/yepwatch-contracts/continuous';
+} from '@goodwatch/yepwatch-contracts/proposal';
 import type { SocketLike, Connection } from '../realtime';
 import { RoomFailure } from './api-client';
 import { parseFrame } from './wire';
@@ -90,7 +91,7 @@ export class ContinuousRealtime {
       this.sendActivity(view);
     }
   }
-  sendActivity(view = this.view, gesture?: ActivityGesture, beat?: 'answer') {
+  sendActivity(view = this.view, gesture?: ActivityGesture, beat?: 'answer', inspection?: MatchInspection) {
     if (!this.active || !this.live || !this.session || !this.socket) return;
     this.socket.send(
       JSON.stringify({
@@ -99,7 +100,8 @@ export class ContinuousRealtime {
         sequence: ++this.sequence,
         view,
         ...(gesture ? { gesture } : {}),
-        ...(beat ? { beat } : {}),
+        ...(view === 'voting' && beat ? { beat } : {}),
+        ...(view === 'matches' && inspection ? { inspection } : {}),
       })
     );
   }

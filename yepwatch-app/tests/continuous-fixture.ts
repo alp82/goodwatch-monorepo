@@ -2,7 +2,7 @@ import type {
   Candidate,
   RoomSnapshot,
   ServerActivity,
-} from '@goodwatch/yepwatch-contracts/continuous';
+} from '@goodwatch/yepwatch-contracts/proposal';
 export function continuousFixture(): RoomSnapshot {
   const candidate = (id: string): Candidate => ({
     id,
@@ -12,11 +12,12 @@ export function continuousFixture(): RoomSnapshot {
     overview: null,
     posterUrl: null,
     runtimeMinutes: 90,
+    viewingDuration: { minutes: 90, scope: 'movie' },
     availability: [],
   });
   return {
     shared: {
-      contractVersion: 2,
+      contractVersion: 3,
       roomId: 'test-room',
       revision: 1,
       phase: 'choosing',
@@ -31,6 +32,8 @@ export function continuousFixture(): RoomSnapshot {
       candidates: [candidate('c1'), candidate('c2')],
       stream: { version: 1, state: 'ready', reason: null },
       matches: [],
+      proposalVersion: 0,
+      proposal: null,
       agreement: { version: 0, state: 'none', error: null },
       decision: null,
     },
@@ -39,7 +42,7 @@ export function continuousFixture(): RoomSnapshot {
       nextSequence: 1,
       canHost: true,
       votes: [],
-      pick: { candidateId: null, revision: 0 },
+      agreement: { proposalVersion: 0, agreed: false, revision: 0, isProposer: false },
       nextCandidateId: 'c1',
       member: { state: 'guest', prefill: null },
     },

@@ -6,7 +6,7 @@ import type {
   RoomCommand,
   RoomSnapshot,
   ScreenContext,
-} from '@goodwatch/yepwatch-contracts/continuous';
+} from '@goodwatch/yepwatch-contracts/proposal';
 import { queryClient } from '../../core/providers';
 import { continuousKey } from '../../core/continuous/useRoom';
 import { continuousApi } from '../../core/continuous/api';
