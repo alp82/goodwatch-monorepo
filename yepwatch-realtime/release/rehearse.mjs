@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict'
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
-import { mkdtemp, mkdir, readFile, writeFile } from 'node:fs/promises'
+import { access, mkdtemp, mkdir, readFile, writeFile } from 'node:fs/promises'
 import { randomBytes, createHash, X509Certificate } from 'node:crypto'
 import { request as httpsRequest } from 'node:https'
 import { createServer, createConnection } from 'node:net'
@@ -18,6 +18,14 @@ const release = resolve('release'), args = new Map()
 for (let n = 2; n < process.argv.length; n += 2) args.set(process.argv[n], process.argv[n + 1])
 assert(args.has('--catalog-env'), 'Explicit backend-owned private catalog env required')
 assert(args.has('--api-image'), 'Explicit reviewed API image required; superseded r1/r2 must stay paused')
+const resultName = args.get('--result')
+assert(typeof resultName === 'string' && /^[A-Za-z0-9][A-Za-z0-9._-]{0,100}\.json$/.test(resultName), 'Explicit new --result JSON filename under artifacts required')
+const resultPath = resolve('artifacts', resultName), screenshotName = `${resultName.slice(0, -5)}-browser-done.png`
+const screenshotPath = resolve('artifacts', screenshotName)
+for (const path of [resultPath, screenshotPath]) {
+  try { await access(path); throw new Error('Refusing to overwrite existing rehearsal evidence') }
+  catch (error) { if (error.code !== 'ENOENT') throw error }
+}
 const metadata = {
   YEPWATCH_SOURCE_COMMIT: args.get('--source-commit') ?? 'local-release-rehearsal',
   YEPWATCH_FRONT_IMAGE: args.get('--front-image') ?? 'yepwatch-front:release-r3-20261022',
@@ -172,7 +180,7 @@ try {
   const done = await command(peer.credential, s => ({ type: 'agree', generation: s.shared.generation, expectedRosterVersion: s.shared.rosterVersion, expectedProposalVersion: s.shared.proposalVersion, candidateId: target, expectedOwnAgreementRevision: s.own.agreement.revision, agreed: true }))
   assert.equal(done.shared.phase, 'decided'); await until(() => observer.frames.some(f => f.type === 'room.updated' && f.snapshot.phase === 'decided'), 10_000)
   await expect(page.getByText('Everyone agrees. Enjoy your watch.', { exact: true })).toBeVisible({ timeout: 15000 })
-  await page.screenshot({ path: resolve('artifacts/release-local-browser-done.png') })
+  await writeFile(screenshotPath, await page.screenshot(), { flag: 'wx' })
   for (const f of [...observer.frames, ...browserFrames]) if (f.type === 'room.snapshot' || f.type === 'room.updated') proposalProjection(f.snapshot, room)
   assert.deepEqual(errors, [])
   status('Real HTTPS browser/native-protocol three-person decision passed; checking gateway1012 and API/store recovery.')
@@ -201,10 +209,11 @@ try {
       'Three independent guest identities; actual standalone web build and two native protocol clients', 'Automatic screen readiness without guest Ready button', 'Unanimous match, explicit proposal/agreement and fresh-check Done',
       'Strict shared-only frames', 'Gateway SIGTERM1012 and fresh-ticket recovery', 'API restart preserves actor and durable decision without installer'],
     browserSharedFrames: browserFrames.filter(f => f.type === 'room.snapshot' || f.type === 'room.updated').length, javaScriptErrors: 0, apiRestartRecoveryMs: Date.now() - restartAt, apiContainerMemoryAfterReload: apiStats,
+    screenshot: `artifacts/${screenshotName}`,
     physicalPhoneOrPublicTlsClaimed: false, retainedProcessesChanged: false, credentialsInvitesAndRoomIdentifiersRedacted: true }
   // Keep source image references; remove host-private metadata paths from public evidence.
   proof.images = Object.fromEntries(Object.entries(metadata).filter(([key]) => /_IMAGE$|SOURCE_COMMIT/.test(key)))
-  await writeFile(resolve('artifacts/release-rehearsal.json'), JSON.stringify(proof, null, 2) + '\n'); status('PASS local release container/HTTPS/WSS rehearsal; sanitized artifact recorded.')
+  await writeFile(resultPath, JSON.stringify(proof, null, 2) + '\n', { flag: 'wx' }); status('PASS local release container/HTTPS/WSS rehearsal; sanitized incremental artifact recorded.')
 } catch (error) {
   if (started) { const logs = await compose('logs', '--no-color').catch(() => ({ stdout: '' })); await writeFile(join(work, 'diagnostics.log'), logs.stdout, { mode: 0o600 }) }
   console.error(`Local release rehearsal failed: ${error.message}. Private diagnostics retained at ${work}`); process.exitCode = 1

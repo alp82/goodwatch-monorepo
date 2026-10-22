@@ -149,7 +149,8 @@ node --import tsx release/rehearse.mjs \
   --source-commit REVIEWED_SOURCE_COMMIT \
   --api-image yepwatch-api:FINAL_RELEASE_ID \
   --front-image yepwatch-front:FINAL_RELEASE_ID \
-  --gateway-image yepwatch-gateway:FINAL_RELEASE_ID
+  --gateway-image yepwatch-gateway:FINAL_RELEASE_ID \
+  --result release-rehearsal-r4.json
 ```
 
 It requires Docker/Compose, OpenSSL and the app workspace's installed Playwright
@@ -164,7 +165,10 @@ The proof covers static/invite/association/download routing, actual browser
 cookie and WSS session, two independent native-protocol guests, three-person
 proposal/agreement/fresh Done, shared-only output, gateway SIGTERM1012/fresh ticket
 reconnect, and API restart preserving its durable actor/decision. Sanitized result
-is `artifacts/release-rehearsal.json` only after success. Failure logs/config stay
+is `artifacts/<result-name>` from `--result` only after success. A matching
+`*-browser-done.png` is recorded too. Existing result/screenshot paths are refused
+before creating a project, and writes are exclusive: preserve the committed r3
+`release-rehearsal.json` and use new names for follow-up runs. Failure logs/config stay
 private under a unique `/tmp/yepwatch-release-rehearsal-*`; do not publish them.
 The earlier paused r1 attempt was not a successful release rehearsal.
 
