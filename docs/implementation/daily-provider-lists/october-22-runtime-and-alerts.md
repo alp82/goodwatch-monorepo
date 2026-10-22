@@ -68,7 +68,7 @@ requests / 2.70h baselining. Its planning allowance uses 15% extra reread reques
 measured residual cost. The steady-state allowance adds 15% requests. These are
 capacity estimates for similar catalog churn and backend latency, not guarantees
 against outages or widespread origin-cache failures. Membership preflight may
-leave countries for another day; request exhaustion remains a systemic failure.
+leave countries for another day; hard-cap exhaustion remains a systemic failure.
 
 **Keep six HTTP workers, 15 requests/s, the 350k hard stop, existing ramp budgets,
 and the eight-hour timeout.** The steady state is well below 6.5 hours; increasing
@@ -119,12 +119,12 @@ metadata values, and the rejection reason for each traversal.
 ## Alerting changes
 
 The report succeeds with isolated failures and returns them in `failed_lists`.
-It fails for access errors, exhausted request budgets, **more than 1%** of attempted
+It fails for access errors, exhausted hard request budgets, **more than 1%** of attempted
 lists failing, or any list failing on **three consecutive UTC calendar days**.
 Exactly 1% succeeds unless another gate applies. The denominator is completed plus
 failed lists; skipped lists cannot dilute it. Existing fatal access/lease stops,
 the skipped-run guard, the 20-consecutive-TMDB-error stop, and a country too large
-to ever fit its nonzero admission budget remain failures.
+to ever fit its nonzero membership admission budget remain failures.
 
 Streaks use `failure_day`, `consecutive_failure_days`, and `last_failure` fields on
 the existing `tmdb_daily_provider_list_pending` document. Repeated attempts on one
@@ -138,7 +138,12 @@ Inspect `ids` separately from failure trackers when checking pending history wor
 No new table, collection, index, or schedule is needed. Existing retired-list
 cleanup still archives both checkpoint and pending document. Planned membership
 deferral warns; an explicit zero budget still pauses expansion without failing
-rereads. Exhausting a nonzero HTTP budget fails the report.
+rereads. Exhausting the daily new-baseline request budget is normal ramp deferral,
+even when no country has completed yet. Only the shared hard-cap stop
+(`hard_budget_exceeded` / `RequestBudgetExceeded`) or `rereads_budget_exceeded`
+is fatal for request budgeting. Discovery, confirmation, and publication preserve
+the hard-cap flag alongside partial progress; catching a hard-cap exception cannot
+turn it into a successful deferral. `BaselineBudgetExceeded` remains nonfatal.
 
 Verification covers the public daily coordinator/entrypoint and real storage with
 simulated TMDB, plus disposable localhost Crate and a Mongo replica set. Tests
@@ -146,8 +151,17 @@ first reproduced isolated-failure alerting, absent persistent streaks, absent
 traversal rejection evidence, explicit-pause misclassification, and the torn
 decimal-root retry before each correction. The completeness bounds and shared history writer are unchanged.
 
-Final verification: **148 tests, 141 passed, seven opt-in Windmill previews skipped**,
+Initial verification: **148 tests, 141 passed, seven opt-in Windmill previews skipped**,
 including disposable localhost Crate 5.10.16 and Mongo 8.0 replica-set tests.
 The unchanged bounded retry regression still asserts the float `50.0` floor,
 upper bound `99`, and equal integer/float result sets. `git diff --check` passed.
 No full monorepo test run or remote Windmill preview was performed.
+
+The budget correction for the October 23 run first reproduced normal new-baseline request
+stops failing the report and hard-cap stops losing their identity in all three
+baseline steps. The corrected public-entrypoint/report tests include deferral
+before any completed country, retained completed lists, and the real TMDB
+client's 350k guard with a simulated prior request count. Final focused checks:
+**152 tests, 145 passed, seven opt-in Windmill previews skipped**, with disposable
+localhost Crate 5.10.16 and Mongo 8.0 replica set. No production operations were
+performed for this correction.

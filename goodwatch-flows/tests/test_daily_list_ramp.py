@@ -225,18 +225,103 @@ class DailyRampTests(unittest.TestCase):
         with self.assertWarnsRegex(RuntimeWarning, 'AR.*requests'):
             self.assertIs(namespace['main'](report), report)
 
-    def test_report_fails_when_the_first_country_cannot_fit_the_daily_budget(self):
+    def test_first_country_http_deferral_succeeds_but_oversized_memberships_alert(self):
         self.ids = {'AR': [42, 43]}
-        for limits in ({'baseline_max_memberships': 3}, {'baseline_max_requests': 3}):
+        for limits, budget in (({'baseline_max_memberships': 3}, 'memberships'),
+                               ({'baseline_max_requests': 3, 'baseline_max_memberships': 10}, 'requests')):
             with self.subTest(limits=limits):
                 report = self.run_job(**limits)
                 self.assertEqual(report['baseline_deferred_country'], 'AR')
                 self.assertEqual(report['baseline_deferred_reason'], 'country_exceeds_budget')
                 namespace = {}
                 exec((Path(job.__file__).parent / 'read_daily_provider_lists.flow/report.inline_script.py').read_text(), namespace)
-                with self.assertRaisesRegex(RuntimeError, 'AR.*budget'):
-                    namespace['main'](report)
+                self.assertEqual(report['baseline_deferred_budget'], budget)
+                if budget == 'memberships':
+                    with self.assertRaisesRegex(RuntimeError, 'AR.*budget'):
+                        namespace['main'](report)
+                else:
+                    with self.assertWarnsRegex(RuntimeWarning, 'AR.*requests'):
+                        self.assertIs(namespace['main'](report), report)
                 self.assertEqual(self.store.snapshots, {})
+
+    def test_new_baseline_request_budget_defers_without_failing_the_report(self):
+        namespace = {}
+        exec((Path(job.__file__).parent / 'read_daily_provider_lists.flow/report.inline_script.py').read_text(), namespace)
+        for ids, budget, committed in (([], 1, 1), ([42], 3, 1), ([42, 43], 3, 0)):
+            with self.subTest(ids=ids, budget=budget):
+                self.setUp()
+                self.ids = {'AR': ids}
+                report = self.run_job(baseline_max_requests=budget, baseline_max_memberships=10)
+                self.assertEqual(report['lists_completed'], committed)
+                self.assertEqual(report['lists_failed'], 0)
+                self.assertEqual(report['requests']['requests'], budget)
+                self.assertEqual(report['baseline_deferred_country'], 'AR')
+                self.assertEqual(report['baseline_deferred_budget'], 'requests')
+                self.assertFalse(report.get('hard_budget_exceeded', False))
+                with self.assertWarnsRegex(RuntimeWarning, 'AR.*requests'):
+                    self.assertIs(namespace['main'](report), report)
+                self.assertEqual(len(self.store.snapshots), committed)
+
+    def test_hard_cap_during_each_baseline_step_remains_fatal_in_the_report(self):
+        namespace = {}
+        exec((Path(job.__file__).parent / 'read_daily_provider_lists.flow/report.inline_script.py').read_text(), namespace)
+        client_type = job.TMDBClient
+        for step, ids, remaining in (('discovery', [], 1), ('confirmation', [42], 3), ('publication', [42], 4)):
+            with self.subTest(step=step):
+                self.setUp()
+                self.ids = {'AR': ids}
+                def near_hard_cap(*args, **kwargs):
+                    client = client_type(*args, **kwargs)
+                    # Simulate the earlier countries' requests, then exercise
+                    # the real client's 350k guard with just a few HTTP calls.
+                    client.stats['requests'] = 350000 - remaining
+                    return client
+                original_lease = self.store.lease
+                @contextmanager
+                def lease(identity):
+                    if step == 'publication' and identity == 'AR:show:8':
+                        raise job.RequestBudgetExceeded('Daily list request budget exhausted',
+                                                       endpoint='/tv/42/watch/providers')
+                    with original_lease(identity) as owned:
+                        yield owned
+                with patch.object(job, 'TMDBClient', side_effect=near_hard_cap), patch.object(self.store, 'lease', lease):
+                    report = self.run_job(baseline_max_memberships=10)
+                self.assertEqual(report['requests']['requests'], 350000)
+                self.assertEqual(report['requests_new_baselines'], remaining)
+                self.assertEqual(report['lists_completed'], 1)
+                self.assertEqual(set(self.store.snapshots), {'AR:movie:8'})
+                self.assertTrue(report.get('hard_budget_exceeded', False))
+                self.assertFalse(report['rereads_budget_exceeded'])
+                with self.assertRaisesRegex(RuntimeError, 'hard.*budget'):
+                    namespace['main'](report)
+
+    def test_baseline_request_deferral_during_publication_is_nonfatal(self):
+        self.ids = {'AR': [42]}
+        original_lease = self.store.lease
+        @contextmanager
+        def lease(identity):
+            if identity == 'AR:show:8':
+                raise job.BaselineBudgetExceeded('New baseline request budget exhausted')
+            with original_lease(identity) as owned:
+                yield owned
+        with patch.object(self.store, 'lease', lease):
+            report = self.run_job()
+        self.assertFalse(report['hard_budget_exceeded'])
+        self.assertEqual(report['baseline_deferred_country'], 'AR')
+        self.assertEqual(report['baseline_deferred_budget'], 'requests')
+        self.assertEqual(report['lists_completed'], 1)
+        self.assertEqual(set(self.store.snapshots), {'AR:movie:8'})
+        namespace = {}
+        exec((Path(job.__file__).parent / 'read_daily_provider_lists.flow/report.inline_script.py').read_text(), namespace)
+        with self.assertWarnsRegex(RuntimeWarning, 'AR.*requests'):
+            self.assertIs(namespace['main'](report), report)
+
+    def test_predicted_reread_hard_budget_overrun_is_fatal_in_the_report(self):
+        namespace = {}
+        exec((Path(job.__file__).parent / 'read_daily_provider_lists.flow/report.inline_script.py').read_text(), namespace)
+        with self.assertRaisesRegex(RuntimeError, 'rereads.*budget'):
+            namespace['main'](dict(lists_completed=199, lists_failed=0, lists=[],
+                                   rereads_complete=True, rereads_budget_exceeded=True))
 
     def test_oldest_checkpoints_are_reread_first_after_budget_starvation(self):
         for country in ('AR', 'US'):

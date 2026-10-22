@@ -1317,11 +1317,11 @@ class DailyListTests(unittest.TestCase):
         self.assertIs(namespace['main'](at_limit), at_limit)
         with self.assertRaisesRegex(RuntimeError, 'more than 1%'):
             namespace['main'](dict(lists_completed=98, lists_failed=1, lists=[ordinary]))
-        for error in ('TMDBAccessDenied', 'RequestBudgetExceeded', 'BaselineBudgetExceeded'):
+        for error in ('TMDBAccessDenied', 'RequestBudgetExceeded'):
             with self.subTest(error=error), self.assertRaisesRegex(RuntimeError, 'access|budget'):
                 namespace['main'](dict(lists_completed=199, lists_failed=1,
                                       lists=[dict(ordinary, error=error)]))
-        with self.assertRaisesRegex(RuntimeError, 'budget'):
+        with self.assertWarnsRegex(RuntimeWarning, 'DE.*requests'):
             namespace['main'](dict(lists_completed=199, lists_failed=0, lists=[],
                 baseline_deferred_country='DE', baseline_deferred_budget='requests',
                 baseline_deferred_reason='requests'))

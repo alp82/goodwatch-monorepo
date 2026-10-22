@@ -16,7 +16,7 @@ records phase timings, projections, PY page evidence, and systemic alert thresho
 
 `f/tmdb_api/read_daily_provider_lists` calls `f/tmdb_api/daily_provider_lists` and
 returns isolated failed lists without failing the flow. Its report fails for access
-errors, exhausted request budgets, more than 1% failed lists, three consecutive
+errors, exhausted hard request budgets, more than 1% failed lists, three consecutive
 failed days for one list, or a skipped run. Both default to `dry_run: true`; only
 an explicit Boolean `false` enables publication. A null flow argument cannot enable data publication.
 Windmill CE v1.803 ignores `concurrent_limit`; the main entrypoint instead takes
@@ -417,11 +417,14 @@ budgeting. Failed lists are reported and excluded from that preflight. If the
 successful lists do not fit, none starts and the run stops adding countries. It does not skip ahead to smaller
 countries. Discovery for this deferred country still counts toward the new-request
 budget, but no history or checkpoint writes occur for it. The report names that
-country and the limiting budget. Membership deferrals warn; exhausting a nonzero
-request budget fails the report. If the
-first pending country cannot fit a nonzero budget, the reason is
+country and the limiting budget. New-baseline request and membership deferrals
+warn. Exhausting the shared hard request budget is fatal: discovery, confirmation,
+and publication preserve `hard_budget_exceeded` in the report even when they keep
+already completed lists. `rereads_budget_exceeded` is also fatal. If the first
+pending country cannot fit a nonzero membership budget, the reason is
 `country_exceeds_budget` and the report step fails, exposing a ramp that would
-otherwise stall each day. Explicit zero budgets pause expansion with a warning.
+otherwise stall each day. A request-budget deferral succeeds even before the
+first country completes. Explicit zero budgets pause expansion with a warning.
 
 Each list now succeeds independently. All its source checks must finish before
 publication; a failed discovery or title check publishes no history and receives
@@ -588,6 +591,12 @@ increase the request budget/runtime before enabling that larger scope; oversized
 indivisible bins remain explicit failures rather than truncated lists.
 
 ## Verification and files
+
+The correction before the October 23 run passed **152 focused tests: 145 passed, seven
+opt-in Windmill previews skipped**, with disposable localhost Crate and Mongo.
+New-baseline HTTP deferrals succeed at discovery, confirmation, and publication;
+real 350k hard-cap stops remain fatal through all three steps and preserve
+completed checkpoints. Predicted reread hard-budget overruns also fail the report.
 
 The October 22 runtime/alert follow-up ran **148 focused tests: 141 passed, seven
 opt-in Windmill previews skipped**, including disposable localhost Crate and Mongo

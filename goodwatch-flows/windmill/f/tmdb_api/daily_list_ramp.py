@@ -79,7 +79,9 @@ def prepare_country(client, store, country, missing, clock, report):
                 candidates = sorted(set(ids) | store.open_ids(country, media_type, service_id) | store.pending(key))
                 prepared.append(PreparedList(country, media_type, service_id, at, ids, candidates, diagnostics))
                 client.consecutive_list_failures = 0
-        except job.RequestBudgetExceeded:
+        except job.RequestBudgetExceeded as error:
+            if not isinstance(error, job.BaselineBudgetExceeded):
+                report['hard_budget_exceeded'] = True
             return prepared, True
         except (job.TMDBAccessDenied, job.LeaseLost):
             raise
@@ -98,7 +100,9 @@ def confirm_country(title_reads, prepared, clock, client, store, report):
                                  set(item.ids), item.at, item.candidates, clock)
                 confirmed.append(item)
                 client.consecutive_list_failures = 0
-        except job.RequestBudgetExceeded:
+        except job.RequestBudgetExceeded as error:
+            if not isinstance(error, job.BaselineBudgetExceeded):
+                report['hard_budget_exceeded'] = True
             return confirmed, True
         except (job.TMDBAccessDenied, job.LeaseLost):
             raise
@@ -152,6 +156,7 @@ def run_ramp(client, store, *, countries, service_ids, baseline_max_requests=120
     estimated_rereads = sum(max(1, math.ceil(len(value.get('ids', [])) / 20))
                             + len(value.get('retry_ids', [])) for value in inventory.values())
     report = dict(lists_completed=0, lists_failed=0, lists_skipped=0, dry_run=store.dry_run, lists=[],
+                  hard_budget_exceeded=False,
                   rereads_estimated_requests=estimated_rereads, rereads_complete=True,
                   rereads_budget_exceeded=estimated_rereads > client.max_requests - reread_start)
     with job.TitleChecks(client, clock) as title_reads:
@@ -159,7 +164,7 @@ def run_ramp(client, store, *, countries, service_ids, baseline_max_requests=120
             job.run_daily_lists(client, store, countries=[], service_ids=[], scopes=scopes,
                                 title_reads=title_reads, report=report)
         except job.RequestBudgetExceeded:
-            report.update(rereads_complete=False, rereads_budget_exceeded=True)
+            report.update(rereads_complete=False, rereads_budget_exceeded=True, hard_budget_exceeded=True)
         report.update(countries_started=started, requests_rereads=client.stats['requests'] - reread_start,
                       requests_new_baselines=0, baseline_deferred_reason=None,
                       baseline_deferred_country=None, baseline_deferred_budget=None)
@@ -188,7 +193,9 @@ def run_ramp(client, store, *, countries, service_ids, baseline_max_requests=120
                         break
                     prepared, confirmation_budget_stop = confirm_country(title_reads, prepared, clock, client, store, report)
                     publish_country(store, title_reads, prepared, clock, client, report, summaries)
-                except job.RequestBudgetExceeded:
+                except job.RequestBudgetExceeded as error:
+                    if not isinstance(error, job.BaselineBudgetExceeded):
+                        report['hard_budget_exceeded'] = True
                     report.update(baseline_deferred_country=country, baseline_deferred_budget='requests',
                                   baseline_deferred_reason='requests' if started or summaries else 'country_exceeds_budget')
                     break
