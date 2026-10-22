@@ -50,9 +50,19 @@ export {
 
 const CHECK_EVERY_MS = 60_000
 
-interface SnapshotRedis {
+export interface SnapshotRedis {
 	get(key: string): Promise<string | null>
 	getBuffer(key: string): Promise<Buffer | null>
+}
+
+let injectedReader: SnapshotRedis | undefined
+let loadingHasStarted = false
+
+/** Optional read-only source, configured before the first load. Caller owns its connection lifecycle. */
+export function configureTitleSnapshotReader(reader: SnapshotRedis): void {
+	if (loadingHasStarted)
+		throw new Error("Configure the snapshot reader before loading starts")
+	injectedReader = reader
 }
 
 let cancelReload: (() => void) | undefined
@@ -87,6 +97,7 @@ let reportedMissing = false
 let singleRedis: Redis | undefined
 
 async function snapshotRedis(): Promise<SnapshotRedis | null> {
+	if (injectedReader) return injectedReader
 	const url = process.env.TITLE_SNAPSHOT_REDIS_URL
 	if (url) {
 		singleRedis ??= new Redis(url, { maxRetriesPerRequest: 1 })
@@ -185,6 +196,7 @@ function schedule(delayMs: number) {
 /** Starts loading the snapshot in the background and checking for new versions. Safe to call more than once. */
 export function startTitleSnapshot(): void {
 	if (started) return
+	loadingHasStarted = true
 	started = true
 	addReadinessCheck("title snapshot", () => settled)
 	onShutdown("title snapshot", stopTitleSnapshot)

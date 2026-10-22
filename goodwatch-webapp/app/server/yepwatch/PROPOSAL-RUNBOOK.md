@@ -1,5 +1,9 @@
 # Proposal protocol 3 local build
 
+For the standalone guest-only private-beta build from clean `779a2752`, see
+[GUEST-RELEASE.md](./GUEST-RELEASE.md). The original local-stack instructions below
+remain for retained development rooms; they are not the release entrypoint.
+
 Base `f5e06a2b`; approved prototype `5c4e53cf`. Implementation isolated at `/tmp/yepwatch-hybrid-backend-f5e06a2b`, excluding frozen unreviewed refresh and unrelated auth/analytics dirt. No commits, production writes, issuer registration or deployment.
 
 ## Modules and compatibility
