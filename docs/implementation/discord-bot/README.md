@@ -4,7 +4,7 @@ This spec describes the GoodWatch Discord bot. In Discord, people can search tit
 together what a group watches. Members who link their GoodWatch account also get personal matches and can rate, log,
 and save titles without leaving Discord.
 
-Status: draft for owner review, October 22, 2026. The ticket breakdown is in [Ticket breakdown](#ticket-breakdown).
+Status: approved by the owner, October 23, 2026, including proposals P1 to P7 and the ticket breakdown. The ticket breakdown is in [Ticket breakdown](#ticket-breakdown).
 
 ## Goal
 
@@ -31,9 +31,9 @@ The owner made these decisions on October 22, 2026:
 4. **The personal pick is `/watch`,** not `/tonight`. Guests can use it too.
 5. **There is no feature switch.** The bot is available once its Discord app exists and its commands are registered.
 
-## Proposed decisions for owner review
+## Proposed decisions, approved
 
-These follow from the preceding decisions. Each has a recommendation.
+These follow from the preceding decisions. The owner approved all seven on October 23, 2026.
 
 | # | Question | Recommendation |
 |---|---|---|
