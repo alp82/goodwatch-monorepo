@@ -1,0 +1,43 @@
+{
+  "cli": {
+    "version": ">= 18.0.0",
+    "appVersionSource": "local"
+  },
+  "build": {
+    "base": {
+      "node": "24.15.0",
+      "env": {
+        "APP_VARIANT": "production",
+        "APP_BUILD_NUMBER": "1",
+        "EXPO_PUBLIC_API_ORIGIN": "https://yepwatch.com",
+        "EXPO_PUBLIC_APP_ORIGIN": "https://yepwatch.com",
+        "EXPO_PUBLIC_WS_ORIGIN": "wss://yepwatch.com",
+        "EXPO_PUBLIC_ENABLE_FIXTURES": "false",
+        "EXPO_PUBLIC_GUEST_ONLY": "true",
+        "NPM_CONFIG_INSTALL_LINKS": "true"
+      }
+    },
+    "preview": {
+      "extends": "base",
+      "distribution": "internal",
+      "developmentClient": false,
+      "env": {
+        "APP_VARIANT": "preview"
+      },
+      "android": {
+        "buildType": "apk"
+      },
+      "ios": {
+        "simulator": true
+      }
+    },
+    "production": {
+      "extends": "base",
+      "distribution": "store",
+      "developmentClient": false,
+      "android": {
+        "buildType": "app-bundle"
+      }
+    }
+  }
+}

@@ -1,3 +1,4 @@
+import { guestOnly } from '../core/config';
 import { useEffect, useState } from 'react';
 import { View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -272,17 +273,17 @@ export function Entrance({ invite }: { invite?: string }) {
                     {joining ? 'Create a room instead' : 'Join with an invitation'}
                   </Pill>
                 )}
-                <Pill
+                {!guestOnly && <Pill
                   label="Sign in with GoodWatch"
                   disabled={locked || !nickname.trim() || (joining && !code.trim())}
                   onPress={() => void enter(Boolean(invite || joining), true)}
                 >
                   Sign in with GoodWatch
-                </Pill>
+                </Pill>}
               </>
             )}
             <GText size={12} color={glow.muted}>
-              Continue as a guest, or connect GoodWatch for saved preferences and show progress.
+              {guestOnly ? 'Choose together. No account needed.' : 'Continue as a guest, or connect GoodWatch for saved preferences and show progress.'}
             </GText>
             {admission && (
               <GText size={12} color={glow.muted}>
@@ -309,13 +310,13 @@ export function Entrance({ invite }: { invite?: string }) {
               {joining ? 'Create a room instead' : 'Join with an invitation'}
             </Pill>
           )}
-          <Pill
+          {!guestOnly && <Pill
             label="Sign in with GoodWatch"
             disabled={locked || !nickname.trim() || (joining && !code.trim())}
             onPress={() => void enter(Boolean(invite || joining), true)}
           >
             Sign in with GoodWatch
-          </Pill>
+          </Pill>}
         </Drawer>
       )}
     </SafeAreaView>

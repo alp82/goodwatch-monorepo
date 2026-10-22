@@ -1,0 +1,37 @@
+{
+  "apk": "/home/alp/dev/projects/goodwatch/goodwatch-monorepo/yepwatch-app/.expo/release/preview-r1/yepwatch-app/android/app/build/outputs/apk/release/app-release.apk",
+  "sha256": "e6b059d942f0d10c53daff0afafac1b7f52198a86534897bc340c389e1aa9a53",
+  "package": "com.yepwatch.preview",
+  "version": "0.1.0",
+  "versionCode": 1,
+  "signing": "Dedicated private local preview key; NOT production/store ownership",
+  "bundledJavascript": true,
+  "metroRequired": false,
+  "publicBackendDeployed": false,
+  "api": "https://yepwatch.com",
+  "websocket": "wss://yepwatch.com",
+  "physicalDeviceInstalled": false,
+  "build": "Gradle assembleRelease PASS, 2m59s, 618 tasks",
+  "signatureVerified": true,
+  "certificateSha256": "7A:4B:9F:AA:19:4C:06:82:22:94:0E:BE:16:61:AB:6F:8F:D3:D7:14:78:5A:15:BF:76:D2:33:52:A9:75:2D:1D",
+  "architectures": [
+    "arm64-v8a",
+    "x86_64"
+  ],
+  "android": {
+    "minSdk": 24,
+    "targetSdk": 36,
+    "compileSdk": 37
+  },
+  "emulator": {
+    "installed": true,
+    "coldLaunch": "Status ok / COLD / own MainActivity",
+    "entryVisuallyVerified": true,
+    "screenshot": "artifacts/release/android-preview-entry.png",
+    "metroRequired": false,
+    "roomJourneyRun": false,
+    "device": "Existing Android emulator, explicit emulator target only"
+  },
+  "productionSigningCreated": false,
+  "publicRoomConnectivityVerified": false
+}

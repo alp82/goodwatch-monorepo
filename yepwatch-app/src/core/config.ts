@@ -23,3 +23,6 @@ export function continuousRealtimeUrl(path: string) {
   if (url.protocol !== 'wss:' && !(['localhost', '127.0.0.1', '[::1]'].includes(url.hostname) && url.protocol === 'ws:')) throw new Error('Realtime requires WSS outside loopback.');
   return `${url.origin}${path}`;
 }
+
+/** Guest-only private beta; member linking remains available in development builds. */
+export const guestOnly = process.env.EXPO_PUBLIC_GUEST_ONLY === 'true';

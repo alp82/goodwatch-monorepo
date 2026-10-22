@@ -1,3 +1,4 @@
+import { guestOnly } from '../../core/config';
 import { useState } from 'react';
 import { View, useWindowDimensions } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
@@ -39,7 +40,7 @@ export function Lobby({
   const [constraints, setConstraints] = useState(shared.constraints);
   const [minutes, setMinutes] = useState('');
   const canContinue =
-    own.member.state === 'linked' && Boolean(own.member.prefill?.savedProgressAvailable);
+    !guestOnly && own.member.state === 'linked' && Boolean(own.member.prefill?.savedProgressAvailable);
   const unsupportedContinuation = constraints.kinds.includes('show_continue') && !canContinue;
   const selected = screens.find((s) => s.id === selectedId);
   const metadata = useQuery({
@@ -464,8 +465,7 @@ export function Lobby({
                 ))}
               </Row>
               <GText color={glow.muted} size={14}>
-                Continuing shows uses saved GoodWatch progress after sign-in. No history is entered
-                manually.
+                {guestOnly ? 'Continuing shows is not included in this guest beta.' : 'Continuing shows uses saved GoodWatch progress after sign-in. No history is entered manually.'}
               </GText>
             </>
           )}

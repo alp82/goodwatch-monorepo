@@ -1,0 +1,45 @@
+{
+  "schema": "Current installed EAS CLI schema/resolver",
+  "passed": true,
+  "profiles": [
+    {
+      "platform": "android",
+      "profile": "preview",
+      "distribution": "internal",
+      "developmentClient": false,
+      "variant": "preview",
+      "guestOnly": "true",
+      "buildType": "apk"
+    },
+    {
+      "platform": "android",
+      "profile": "production",
+      "distribution": "store",
+      "developmentClient": false,
+      "variant": "production",
+      "guestOnly": "true",
+      "buildType": "app-bundle"
+    },
+    {
+      "platform": "ios",
+      "profile": "preview",
+      "distribution": "internal",
+      "developmentClient": false,
+      "variant": "preview",
+      "guestOnly": "true",
+      "simulator": true
+    },
+    {
+      "platform": "ios",
+      "profile": "production",
+      "distribution": "store",
+      "developmentClient": false,
+      "variant": "production",
+      "guestOnly": "true",
+      "simulator": false
+    }
+  ],
+  "account": "Not logged in",
+  "projectConfigured": false,
+  "cloudBuildRun": false
+}

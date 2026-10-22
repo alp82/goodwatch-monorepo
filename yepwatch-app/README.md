@@ -1,5 +1,7 @@
 # YepWatch Expo client
 
+[Guest-only private beta packaging, standalone APK and EAS profiles](docs/private-beta-builds.md).
+
 **Have a Mac? [Build and test the iPhone Simulator app](docs/ios-quickstart.md).**
 
 Expo SDK58 / React Native0.88 / TypeScript / Expo Router, with native and browser guest participation. The current source implements proposal contract3 and the approved hybrid Glow room. Individual Yep/Nope choices stay private; server-confirmed matches appear while choosing. Inspect together, propose a match and explicitly Agree; everyone agreeing triggers a fresh availability check and confirmed decision.
@@ -31,4 +33,4 @@ WEB_EXPORT_DIR=.expo/exports/my-web-check NATIVE_EXPORT_DIR=.expo/exports/my-nat
 
 Browser component tests use isolated `dist-test` on8097. Current browser tests live in `tests/glow-browser`; old v1 specs remain in `tests/browser` for historical reference. Component fixtures cannot prove multiplayer. Real three-browser integration scripts under `scripts/glow-*` create only fresh rooms on their explicitly configured local runtime; coordinate before using them. Preserve all retained demo exports and backend memory/durable rooms.
 
-Native room credentials and pending auth/commands use SecureStore. Browser auth uses HttpOnly cookies; sessionStorage has routing IDs and own pending commands, never bearer/account grants. Installed links, secure storage, player behavior and VoiceOver/TalkBack require device testing. The `yepwatch` development scheme and placeholder app identifiers do not claim universal-link hosting or store registration. No commits, deployment, DNS or store setup is part of this client build.
+Native room credentials and pending auth/commands use SecureStore. Browser auth uses HttpOnly cookies; sessionStorage has routing IDs and own pending commands, never bearer/account grants. Installed links, secure storage, player behavior and VoiceOver/TalkBack require device testing. Default development identifiers remain unchanged. Release variants reserve separate preview/production identifiers and request invite app links; association hosting and store registration are not implied. No commits, deployment, DNS or store setup is part of this client build.

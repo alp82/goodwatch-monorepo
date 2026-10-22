@@ -51,3 +51,7 @@ artifacts/lint.json
 
 # Separate retained simplified guest development export
 dist-guest/
+
+# Private local release signing; never upload to source control
+credentials.json
+*.keystore

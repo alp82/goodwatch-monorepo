@@ -8,7 +8,7 @@ import { groupActivity } from '../../core/continuous/activity';
 import { useQuery } from '@tanstack/react-query';
 import { loadInvite, type StoredInvite } from '../../core/continuous/invite-store';
 import { appInviteUrl } from '../../core/invites';
-import { developmentNotice } from '../../core/config';
+import { developmentNotice, guestOnly } from '../../core/config';
 import { RoomFailure } from '../../core/continuous/api';
 import { beginMember } from '../../core/continuous/member';
 import { titlePresentation } from './adapter';
@@ -49,7 +49,7 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
   const signinStarted = useRef(false);
   const send = state.send;
   useEffect(() => {
-    if (initialSignin && state.access && state.room.data && !signinStarted.current) {
+    if (!guestOnly && initialSignin && state.access && state.room.data && !signinStarted.current) {
       signinStarted.current = true;
       void signin();
     }
@@ -277,7 +277,7 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
     });
   }
   async function signin() {
-    if (!state.access || memberBusy) return;
+    if (guestOnly || !state.access || memberBusy) return;
     setMemberBusy(true);
     try {
       await beginMember(state.access);
@@ -744,7 +744,7 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
               ))}
             </>
           )}
-          {own.member.state === 'linked' ? (
+          {!guestOnly && (own.member.state === 'linked' ? (
             <GText bold>GoodWatch connected</GText>
           ) : (
             <Pill
@@ -754,7 +754,7 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
             >
               {memberBusy ? 'Connecting GoodWatch…' : 'Sign in with GoodWatch'}
             </Pill>
-          )}
+          ))}
           {notice && (
             <GText size={14} color="#fca5a5">
               {notice}

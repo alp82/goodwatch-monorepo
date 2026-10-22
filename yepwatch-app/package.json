@@ -46,7 +46,10 @@
     "test:browser": "playwright test",
     "export:web": "expo export --platform web --source-maps",
     "export:native": "expo export --platform ios --platform android --source-maps --output-dir dist-native",
-    "check:resolution": "node scripts/check-resolution.cjs"
+    "check:resolution": "node scripts/check-resolution.cjs",
+    "release:config": "node scripts/release-env.cjs config --type public",
+    "release:web": "node scripts/release-env.cjs export --platform web --output-dir .expo/exports/beta-web-r1 --clear",
+    "release:preview:android": "python3 scripts/build-preview-android.py"
   },
   "private": true
 }
