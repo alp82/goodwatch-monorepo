@@ -1,4 +1,6 @@
 # Coolify: Docker Compose from Git; base directory /; file /yepwatch-app/compose.yaml.
+# Paths are relative to Coolify's explicit repository-root --project-directory.
+# Local use: docker compose --project-directory . -f yepwatch-app/compose.yaml ...
 # Domain on front only: https://yepwatch.com:8080 (8080 is the internal port).
 x-common: &common
   restart: unless-stopped
@@ -16,7 +18,7 @@ services:
   front:
     <<: *common
     build:
-      context: ..
+      context: .
       dockerfile: yepwatch-realtime/release/Dockerfile.repository
       target: front
     expose: ["8080"]
@@ -28,7 +30,7 @@ services:
   api:
     <<: *common
     build:
-      context: ..
+      context: .
       dockerfile: yepwatch-realtime/release/Dockerfile.repository
       target: api
     expose: ["3000"]
@@ -69,7 +71,7 @@ services:
   gateway:
     <<: *common
     build:
-      context: ..
+      context: .
       dockerfile: yepwatch-realtime/release/Dockerfile.repository
       target: gateway
     expose: ["4311"]

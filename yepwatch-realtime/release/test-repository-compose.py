@@ -12,7 +12,7 @@ values = dict(base, YEPWATCH_ROOM_KEY='test-room-key-not-a-secret-0000000000',
               YEPWATCH_REDIS_PASSWORD='test-existing-redis', YEPWATCH_REDIS_USER='existing-user')
 
 def render(env):
-    return subprocess.run(['docker', 'compose', '--env-file', '/dev/null', '-f', 'yepwatch-app/compose.yaml',
+    return subprocess.run(['docker', 'compose', '--env-file', '/dev/null', '--project-directory', str(root), '-f', 'yepwatch-app/compose.yaml',
                            'config', '--format', 'json'], cwd=root, env=env, capture_output=True, text=True)
 
 assert render(base).returncode != 0, 'Missing runtime secrets must fail'
@@ -26,6 +26,9 @@ assert api['REDIS_PASS'] == api['YEPWATCH_PROPOSAL_REDIS_PASSWORD'] == gateway['
 assert 'environment' not in services['front']
 assert 'CRATE_PASS' not in gateway
 for name, service in services.items():
+    build = service['build']
+    assert Path(build['context']).resolve() == root, 'Coolify project directory must resolve to repository root'
+    assert (Path(build['context']) / build['dockerfile']).is_file(), 'Dockerfile must exist inside resolved context'
     assert service['build']['target'] == name
     assert not service['build'].get('args'), 'Runtime secrets must not be build arguments'
     assert not service.get('ports'), 'Only Coolify proxy should publish the front'

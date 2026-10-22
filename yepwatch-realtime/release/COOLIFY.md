@@ -5,7 +5,7 @@ This is the normal deployment path. No registry account, image archive, host-sid
 ## In Coolify
 
 1. **New project → Production → New resource → Application from Git.** Select `alp82/goodwatch-monorepo` and branch **`main`**.
-2. Select **Docker Compose**, base directory **`/`**, Compose location **`/yepwatch-app/compose.yaml`**. Load/parse the file. It defines `front`, `api`, and `gateway` with repository build targets.
+2. Select **Docker Compose**, base directory **`/`**, Compose location **`/yepwatch-app/compose.yaml`**. Load/parse the file. It defines `front`, `api`, and `gateway` with repository build targets. Coolify passes the repository root as `--project-directory`, so build contexts use `.` even though the Compose file lives in a subfolder. For local Compose commands use `docker compose --project-directory . -f yepwatch-app/compose.yaml …` from the repository root.
 3. Assign **`https://yepwatch.com:8080` to `front` only**. In Coolify the suffix selects the internal container port; visitors use `https://yepwatch.com` without a port. Leave API and gateway domains blank. Use Coolify's generated routing/certificate; do not install the older `traefik-yepwatch.yaml` alongside it.
 4. Add the variables below in **Environment Variables**. Keep secrets runtime-only, not build variables. Save them and keep a private backup of both generated keys.
 5. Complete the one-time database preparation below, then **Deploy**. Coolify builds all three images. Wait for the full catalog/API/gateway checks to become healthy.
