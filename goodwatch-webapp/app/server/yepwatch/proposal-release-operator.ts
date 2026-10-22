@@ -1,8 +1,14 @@
+import {
+	provisionControl,
+	ReleaseControl,
+	CONTROL_TABLE,
+} from "./proposal-release-control.ts"
 import { open } from "node:fs/promises"
 import { createHash } from "node:crypto"
 import {
 	loadReleaseSecrets,
 	releaseStoreConfig,
+	releaseControlConfig,
 } from "./proposal-release-config.ts"
 import { crateSql } from "./repository.server.ts"
 import {
@@ -13,6 +19,7 @@ import {
 await loadReleaseSecrets(process.env)
 const config = releaseStoreConfig(process.env)
 const sql = crateSql(config.origin, config.username, config.password)
+const control = new ReleaseControl(sql, releaseControlConfig(process.env))
 const [command = "check", ...args] = process.argv.slice(2)
 if (command === "provision") {
 	if (!args.includes("--apply"))
@@ -28,9 +35,11 @@ if (command === "provision") {
 			"Zero replicas is restricted to disposable loopback storage"
 		)
 	await provisionReleaseStore(sql, replicas, config.keyId, config.secret)
+	await provisionControl(sql, control.policy, replicas)
 	console.log(JSON.stringify({ operation: "provision", ready: true, replicas }))
 } else if (command === "check") {
 	await checkReleaseStore(sql, config.keyId, config.secret)
+	await control.check()
 	console.log(JSON.stringify({ operation: "check", ready: true }))
 } else if (command === "inventory") {
 	await checkReleaseStore(sql, config.keyId, config.secret)
@@ -42,6 +51,7 @@ if (command === "provision") {
 	console.log(
 		JSON.stringify({
 			operation: "inventory",
+			controls: await control.summary(),
 			total: row?.[0] ?? 0,
 			logicallyExpired: row?.[1] ?? 0,
 			firstExpiry: row?.[2] ?? null,
@@ -67,12 +77,20 @@ if (command === "provision") {
 	try {
 		await line({
 			type: "yepwatch-proposal3-backup",
-			format: 1,
+			format: 2,
 			keyId: config.keyId,
 			createdAt: new Date().toISOString(),
 			requiresMatchingSecret: true,
 			globallyConsistentOnlyWithWritersStopped: true,
 		})
+		const capacity = (
+			await sql(`SELECT payload FROM ${CONTROL_TABLE} WHERE id=?`, [
+				"proposal3",
+			])
+		).rows[0]
+		if (!capacity)
+			throw new Error("Capacity control record missing from backup")
+		await line({ type: "capacity-control", payload: capacity[0] })
 		for (;;) {
 			const rows = (
 				await sql(
@@ -108,7 +126,8 @@ if (command === "provision") {
 			operation: "backup",
 			rows: count,
 			sha256: checksum.digest("hex"),
-			encrypted: true,
+			encryptedRoomPayloads: true,
+			controlIncluded: true,
 			secretIncluded: false,
 		})
 	)

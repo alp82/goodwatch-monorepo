@@ -44,6 +44,32 @@ function integer(
 		throw new Error(`Invalid ${name}`)
 	return value
 }
+export function releaseControlConfig(env: Env) {
+	return {
+		rooms: integer(env, "YEPWATCH_PROPOSAL_MAX_ACTIVE_ROOMS", 20, 1, 100),
+		admissions: integer(
+			env,
+			"YEPWATCH_PROPOSAL_ADMISSIONS_PER_MINUTE",
+			20,
+			1,
+			120
+		),
+		commands: integer(
+			env,
+			"YEPWATCH_PROPOSAL_COMMANDS_PER_MINUTE",
+			600,
+			1,
+			2400
+		),
+		actorCommands: integer(
+			env,
+			"YEPWATCH_PROPOSAL_ACTOR_COMMANDS_PER_MINUTE",
+			60,
+			1,
+			120
+		),
+	}
+}
 export function releaseStoreConfig(env: Env) {
 	const origin = url(required(env, "YEPWATCH_PROPOSAL_CRATEDB_ORIGIN"), [
 		"http:",
@@ -94,6 +120,7 @@ export function releaseConfig(env: Env) {
 		required(env, name)
 	return {
 		...releaseStoreConfig(env),
+		control: releaseControlConfig(env),
 		publicOrigin: publicUrl.origin,
 		gatewaySecret,
 		revisionUrl,

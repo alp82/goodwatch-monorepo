@@ -348,6 +348,10 @@ export function createProposalHandler(
 				error instanceof RoomError
 					? error
 					: new RoomError("busy", "Service unavailable", 503, true)
+			const retryAfter =
+				"retryAfterSeconds" in e ? Number(e.retryAfterSeconds) : NaN
+			if (Number.isInteger(retryAfter) && retryAfter > 0)
+				headers.set("retry-after", String(retryAfter))
 			return reply(
 				{
 					error: {

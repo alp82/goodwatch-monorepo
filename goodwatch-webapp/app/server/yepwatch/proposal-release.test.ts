@@ -1,3 +1,4 @@
+import { controlFingerprint } from "./proposal-release-control.ts"
 import { test } from "node:test"
 import assert from "node:assert/strict"
 import {
@@ -100,7 +101,25 @@ test("Readiness stays red indefinitely without loaded snapshot; probes recover a
 		reads++
 		if (!stmt.startsWith("SELECT")) writes++
 		return {
-			rows: stmt.includes("format_version")
+			rows: stmt.includes(
+				"SELECT payload,_seq_no,_primary_term,CURRENT_TIMESTAMP"
+			)
+				? [
+						[
+							JSON.stringify({
+								format: 1,
+								fingerprint: controlFingerprint(config.control),
+								window: -1,
+								rooms: [],
+								admissions: [],
+								commands: [],
+							}),
+							0,
+							1,
+							clock,
+						],
+				  ]
+				: stmt.includes("format_version")
 				? [[3, "test-key", storeMarker(secret), CONTINUOUS_LIMITS.roomMs]]
 				: [],
 			rowcount: 0,

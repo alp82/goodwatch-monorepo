@@ -38,18 +38,27 @@ interface Lease {
 	scope: "shared:read"
 	format: 3
 }
+/** Optional release-only guard; legacy runtimes retain existing behavior. */
+export interface ProposalOperationGuard {
+	active(room: Pick<ProposalRoom, "id" | "expiresAt">): Promise<void>
+	create(roomId: string, admissionDigest: string): Promise<number>
+	join(roomId: string, actorId: string, admissionDigest: string): Promise<void>
+	command(roomId: string, actorId: string, commandDigest: string): Promise<void>
+}
 export class ProposalService {
 	readonly repository: ProposalRepository
 	readonly catalog: ProposalCatalog
 	private secret: string
 	private publish: (event: RoomInvalidation) => Promise<void>
+	private guard?: ProposalOperationGuard
 	private now: () => number
 	constructor(
 		repository: ProposalRepository,
 		catalog: ProposalCatalog,
 		secret: string,
 		publish: (event: RoomInvalidation) => Promise<void> = async () => {},
-		now: () => number = Date.now
+		now: () => number = Date.now,
+		guard?: ProposalOperationGuard
 	) {
 		if (secret.length < 32) throw new Error("Room secret too short")
 		this.repository = repository
@@ -57,6 +66,7 @@ export class ProposalService {
 		this.secret = secret
 		this.publish = publish
 		this.now = now
+		this.guard = guard
 	}
 	private async get(id: string): Promise<ProposalStored> {
 		const stored = await this.repository.read(id)
@@ -67,6 +77,7 @@ export class ProposalService {
 			404
 		)
 		continuousLive(stored.room, this.now())
+		await this.guard?.active(stored.room)
 		return stored
 	}
 	private auth(room: ProposalRoom, credential: ActorCredential) {
@@ -157,8 +168,12 @@ export class ProposalService {
 			const existing = await this.repository.read(id)
 			if (existing) {
 				continuousLive(existing.room, this.now())
+				await this.guard?.active(existing.room)
 				return this.admission(existing.room, request)
 			}
+			const expiresAt =
+				(await this.guard?.create(id, hash(JSON.stringify(request)))) ??
+				this.now() + L.roomMs
 			const p = this.member(id, request)
 			const room: ProposalRoom = {
 				format: 2,
@@ -168,7 +183,7 @@ export class ProposalService {
 				id,
 				hostId: p.id,
 				revision: 1,
-				expiresAt: this.now() + L.roomMs,
+				expiresAt,
 				inviteHash: hash(this.invite(id)),
 				phase: "setup",
 				rosterVersion: 1,
@@ -246,6 +261,7 @@ export class ProposalService {
 				)
 				p.screenId = screenId
 			}
+			await this.guard?.join(id, p.id, p.admissionHash)
 			room.participants.push(p)
 			room.rosterVersion++
 			room.revision++
@@ -338,6 +354,7 @@ export class ProposalService {
 				"Commands must be sent in order"
 			)
 			preflight(old.room, p.id, envelope, this.now())
+			await this.guard?.command(id, p.id, digest)
 			let page
 			if (
 				envelope.command.type === "start" ||

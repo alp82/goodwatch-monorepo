@@ -1,3 +1,4 @@
+import { ReleaseControl } from "./proposal-release-control.ts"
 import {
 	API_PREFIX,
 	REVISION_CHANNEL,
@@ -34,13 +35,16 @@ export function createReleaseRuntime(
 		config.secret,
 		"doc.yepwatch_room_v3"
 	)
+	const control = new ReleaseControl(deps.sql, config.control)
 	const service = new ProposalService(
 		repository,
 		deps.catalog,
 		config.secret,
 		async (event) => {
 			await deps.bus.publish(REVISION_CHANNEL, JSON.stringify(event))
-		}
+		},
+		Date.now,
+		control
 	)
 	const handle = createProposalHandler(service, {
 		serviceSecret: config.gatewaySecret,
@@ -55,6 +59,7 @@ export function createReleaseRuntime(
 		snapshot: false,
 		catalog: false,
 		rooms: false,
+		control: false,
 		realtime: false,
 	}
 	async function probe() {
@@ -66,6 +71,7 @@ export function createReleaseRuntime(
 				}),
 				deps.catalogProbe(),
 				checkReleaseStore(deps.sql, config.keyId, config.secret),
+				control.check(),
 				deps.bus.ping(),
 			])
 			for (const [i, key] of (
